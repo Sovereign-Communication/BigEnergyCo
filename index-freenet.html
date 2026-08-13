@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BigEnergyCo — Free Offline Solar &amp; Battery Estimator</title>
+  <meta name="description" content="A free offline solar and battery storage cost estimator. No signup, nothing for sale. Works on Freenet. Educational estimates only — verify with a licensed professional.">
+  <style>
+/* BigEnergyCo Design System - Premium Dark Glassmorphic Energy Aesthetic */
+:root {
+  --bg-dark: #090d16;
+  --bg-card: rgba(18, 26, 44, 0.85);
+  --bg-card-hover: rgba(28, 40, 66, 0.95);
+  --border-glow: rgba(0, 230, 153, 0.35);
+  --border-card: rgba(255, 255, 255, 0.12);
+
+  --primary-accent: #00e699; /* Energy Emerald */
+  --primary-glow: rgba(0, 230, 153, 0.5);
+  --secondary-accent: #3b82f6; /* Cyber Blue */
+  --warning-orange: #f59e0b; /* Amber Caution */
+  --danger-red: #ef4444;
+
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --text-bright: #ffffff;
+
+  --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  line-height: 1.6;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(0, 230, 153, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 85% 70%, rgba(59, 130, 246, 0.12) 0%, transparent 45%);
+  background-attachment: fixed;
+}
+
+a {
+  color: var(--primary-accent);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  text-shadow: 0 0 10px var(--primary-glow);
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Header & Navigation */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(9, 13, 22, 0.9);
+  border-bottom: 1px solid var(--border-card);
+  padding: 1rem 0;
+}
+
+.nav-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ffffff 0%, var(--primary-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo .highlight {
+  color: var(--primary-accent);
+  -webkit-text-fill-color: var(--primary-accent);
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.nav-links a:hover {
+  color: var(--text-bright);
+}
+
+.header-cta {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.4rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #00e699 0%, #00b377 100%);
+  color: #04120c;
+  font-weight: 700;
+  box-shadow: 0 0 15px rgba(0, 230, 153, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(0, 230, 153, 0.5);
+}
+
+.btn-secondary {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.btn-secondary:hover {
+  background: rgba(59, 130, 246, 0.3);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-card);
+}
+
+.btn-outline:hover {
+  border-color: var(--primary-accent);
+  color: var(--primary-accent);
+}
+
+.btn-full {
+  width: 100%;
+}
+
+/* Hero Section */
+.hero {
+  padding: 5rem 0 4rem;
+  text-align: center;
+  position: relative;
+}
+
+.hero-tag {
+  display: inline-block;
+  background: rgba(0, 230, 153, 0.12);
+  color: var(--primary-accent);
+  border: 1px solid var(--primary-glow);
+  padding: 0.35rem 1.1rem;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.5px;
+}
+
+.hero h1 {
+  font-size: 3.25rem;
+  font-weight: 900;
+  line-height: 1.15;
+  margin-bottom: 1.5rem;
+  letter-spacing: -1px;
+}
+
+.hero h1 span {
+  background: linear-gradient(135deg, #00e699 0%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  max-width: 800px;
+  margin: 0 auto 2.5rem;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 3.5rem;
+}
+
+.hero-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  border-color: var(--border-glow);
+  transform: translateY(-4px);
+}
+
+.stat-val {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--primary-accent);
+  font-family: var(--font-mono);
+}
+
+.stat-label {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+/* Calculator Section */
+.calc-section {
+  padding: 4rem 0;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.section-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+}
+
+.section-desc {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  margin-top: 0.5rem;
+}
+
+.calc-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glow);
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+}
+
+@media (max-width: 900px) {
+  .calc-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: rgba(9, 13, 22, 0.85);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 1rem;
+  font-family: var(--font-mono);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-accent);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.results-box {
+  background: rgba(9, 13, 22, 0.9);
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.savings-highlight {
+  text-align: center;
+  padding: 1.5rem;
+  background: rgba(0, 230, 153, 0.08);
+  border: 1px solid var(--primary-glow);
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.savings-num {
+  font-size: 2.75rem;
+  font-weight: 900;
+  color: var(--primary-accent);
+  font-family: var(--font-mono);
+}
+
+.savings-sub {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.comparison-table th, .comparison-table td {
+  padding: 0.75rem 0;
+  text-align: left;
+  border-bottom: 1px solid var(--border-card);
+  font-size: 0.95rem;
+}
+
+.comparison-table td:last-child {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.calc-footer {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+/* BOM Section */
+.bom-section {
+  padding: 4rem 0;
+}
+
+.bom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.bom-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  padding: 1.75rem;
+  border-radius: 14px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.bom-card:hover {
+  border-color: var(--border-glow);
+  transform: translateY(-4px);
+}
+
+.bom-badge {
+  display: inline-block;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  margin-bottom: 0.75rem;
+}
+
+.bom-card h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.bom-card p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+.bom-price {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--primary-accent);
+}
+
+/* Legal Cards Section */
+.legal-section {
+  padding: 4rem 0;
+}
+
+.legal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.legal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  padding: 1.75rem;
+  border-radius: 14px;
+}
+
+.legal-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.legal-card p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: #0d1322;
+  border: 1px solid var(--border-glow);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 680px;
+  width: 92%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-card);
+  padding-bottom: 1rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.75rem;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: #fff;
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border-card);
+  padding: 3rem 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 4rem;
+}
+  </style>
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header>
+    <div class="container nav-flex">
+      <div class="logo">
+        <span>⚡</span>
+        <span>BigEnergy<span class="highlight">Co</span></span>
+      </div>
+      <nav class="nav-links">
+        <a href="#calculator">Estimator</a>
+        <a href="#bom">Hardware Reference</a>
+        <a href="#legal">Terms &amp; Disclaimer</a>
+      </nav>
+      <div class="header-cta">
+        <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;">♡ Support</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-tag">🌍 Free for everyone, everywhere • No signup • Nothing for sale</div>
+      <h1>Free Offline Battery Cost Reference <br><span>Compare DIY vs. packaged battery costs, anywhere</span></h1>
+      <p>
+        A free offline tool for comparing the cost of self-sourced battery components against packaged retail batteries.
+        Educational estimates only &mdash; not engineering, not a quote, and nothing here is for sale.
+        Built and given away by <strong>Lucas Ballek</strong>.
+      </p>
+
+      <div class="hero-actions">
+        <div id="btnHeroCompare" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.9rem 2rem; cursor: pointer;">
+          📊 See Cost Comparison
+        </div>
+      </div>
+
+      <div class="hero-stats-grid">
+        <div class="stat-card">
+          <div class="stat-val">$0</div>
+          <div class="stat-label">Free, always &mdash; donations optional</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">No signup</div>
+          <div class="stat-label">No account, no email required</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">Offline</div>
+          <div class="stat-label">Works on Freenet, no internet needed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">Estimates only</div>
+          <div class="stat-label">Verify with a licensed pro before building</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Comparison & Calculator Section -->
+  <section id="calculator" class="calc-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">DIY Battery Cost Comparison</h2>
+        <p class="section-desc">A static offline comparison between self-sourced LFP cells and packaged retail batteries, using published list prices from August 2026. Indicative only &mdash; real costs vary enormously by country, freight, duty, and what you can actually source locally.</p>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-controls">
+          <div class="form-group">
+            <label for="targetKwh">Storage Target (kWh Usable):</label>
+            <input type="range" id="targetKwh" min="20" max="300" value="100" step="10" style="width: 100%; margin-bottom: 0.5rem;">
+            <div id="targetKwhVal" style="font-family: var(--font-mono); font-weight: 700; color: var(--primary-accent);">100 kWh Usable Storage</div>
+          </div>
+
+          <div class="form-group">
+            <label for="chemistryType">Battery Chemistry:</label>
+            <select id="chemistryType" class="form-control">
+              <option value="LFP" selected>LFP (EVE MB31 3.2V 314Ah Prismatic)</option>
+              <option value="NaIon">Sodium-Ion (HiNa 3.0V 210Ah)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="results-box">
+          <div class="savings-highlight">
+            <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Indicative component cost difference</div>
+            <div id="netSavingsVal" class="savings-num">$75,185</div>
+            <div id="savingsPctVal" class="savings-sub">Component cost only &mdash; excludes freight, duty, tools, and labor</div>
+          </div>
+
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Option</th>
+                <th>Capacity</th>
+                <th>Component cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Packaged retail battery <span style="font-size:0.8em;color:var(--text-muted);">(list price, Aug 2026)</span></td>
+                <td id="teslaKwhVal">100 kWh</td>
+                <td>$85,185</td>
+              </tr>
+              <tr style="color: var(--primary-accent);">
+                <td>Self-sourced LFP cells + BMS</td>
+                <td id="tableKwhVal">100 kWh</td>
+                <td id="tableCostVal">$5,000</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.75rem; line-height: 1.5;">
+            Component cost only. It excludes international freight, customs duty, taxes, tools, enclosure,
+            wiring, permits, and any labor &mdash; which together are often a large share of the real total.
+            The retail figure is a published list price used as a reference point, not a quote, and a
+            packaged product includes certification, warranty, and installer support that self-sourced parts
+            do not. Do not treat this as a savings promise.
+          </p>
+
+          <div class="calc-footer">
+            <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;">♡ Support this tool</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Factory BOM Breakdown Section -->
+  <section id="bom" class="bom-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">What a ~100 kWh DIY Build Is Made Of</h2>
+        <p class="section-desc">A reference parts list so you know what the components are and roughly what they cost. Prices are indicative figures from the open market as of August 2026 and change constantly. Nothing here is sold by this site.</p>
+      </div>
+
+      <div class="bom-grid">
+        <div class="bom-card">
+          <div class="bom-badge">Cells</div>
+          <h3>EVE MB31 3.2V 314Ah Cells</h3>
+          <p>Brand new Grade-A prismatic LFP cells. 16S configuration per pack (51.2V nominal). QR codes verified clean.</p>
+          <div class="bom-price">~$43.50 / cell <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative, Aug 2026)</span></div>
+        </div>
+
+        <div class="bom-card">
+          <div class="bom-badge">BMS</div>
+          <h3>JK 200A Active Balance BMS</h3>
+          <p>Smart active balancing (2A balance current), dual temperature probes, RS485/CANbus comms with Sol-Ark & Victron.</p>
+          <div class="bom-price">~$92.00 / unit <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative, Aug 2026)</span></div>
+        </div>
+
+        <div class="bom-card">
+          <div class="bom-badge">Fusing</div>
+          <h3>Eaton Class-T 200A Fuses</h3>
+          <p>20kA AIC interrupt rating @ 160V DC. Trips short circuit overcurrent in &lt;2ms before BMS MOSFET stress.</p>
+          <div class="bom-price">~$14.50 / unit <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative, Aug 2026)</span></div>
+        </div>
+
+        <div class="bom-card">
+          <div class="bom-badge">Rack & Compression</div>
+          <h3>300 kgf Compression Racks</h3>
+          <p>Uniform Belleville spring washer compression endplates. Maintains 3,000 N pressure to double cycle life.</p>
+          <div class="bom-price">~$28.00 / rack <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative, Aug 2026)</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Support / Donation Section -->
+  <section id="support" class="legal-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Support This Tool</h2>
+        <p class="section-desc">This is free and always will be. If it helped you and you want to chip in toward hosting costs, here's where.</p>
+      </div>
+
+      <div style="max-width: 640px; margin: 0 auto;">
+        <div class="legal-card" style="text-align: center;">
+          <p style="margin-bottom: 1.25rem;">
+            Contributions go directly to <strong>Lucas Ballek</strong> personally as a gift.
+          </p>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-bottom: 1.5rem;">
+            <a href="https://www.paypal.me/LBallek" target="_blank" rel="noopener noreferrer"
+               class="btn btn-outline" style="text-decoration: none;">PayPal</a>
+            <a href="https://venmo.com/u/lucas-ballek" target="_blank" rel="noopener noreferrer"
+               class="btn btn-outline" style="text-decoration: none;">Venmo — @lucas-ballek</a>
+            <a href="https://cash.app/$luball" target="_blank" rel="noopener noreferrer"
+               class="btn btn-outline" style="text-decoration: none;">Cash App — $luball</a>
+          </div>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; text-align: left;">
+            <strong>Please read before sending anything.</strong> Contributions are voluntary gifts to an
+            individual, not payment for a service. They are <strong>gifts, not tax-deductible</strong> — this is
+            not a charity or a registered nonprofit. They buy nothing: no priority, no features, no personal
+            advice, no support obligation, and no continued availability of this site. Everyone gets exactly
+            the same free tool whether they contribute or not. Please don't send money you need. If you were
+            hoping to pay for professional engineering help, spend it on a licensed local engineer or
+            electrician instead.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Terms & Disclaimer Section -->
+  <section id="legal" class="legal-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Terms &amp; Disclaimer</h2>
+        <p class="section-desc">Short version: this is a free offline reference tool that produces rough estimates, run by one person, with no warranty of any kind.</p>
+      </div>
+
+      <div class="legal-grid">
+        <div class="legal-card">
+          <h3>Estimates, not engineering</h3>
+          <p>Output is an automated reference estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.</p>
+          <div id="btnLegalTerms1" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; cursor: pointer; display: inline-block;">Read full terms →</div>
+        </div>
+
+        <div class="legal-card">
+          <h3>No accounts, no tracking</h3>
+          <p>No signup, no cookies for advertising, no analytics profile, no internet connection required. This tool is fully offline and works on Freenet. Don't share personal data with anyone.</p>
+          <div id="btnLegalTerms3" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; cursor: pointer; display: inline-block;">Read privacy note →</div>
+        </div>
+
+        <div class="legal-card">
+          <h3>DIY component reference</h3>
+          <p>Prices are indicative market figures from August 2026. They are not quotes and do not include freight, duty, tools, or labor. Component availability and pricing vary by country and season.</p>
+        </div>
+      </div>
+
+      <div style="max-width: 640px; margin: 2.5rem auto 0; text-align: center;">
+        <div class="legal-card">
+          <h3>Questions or feedback?</h3>
+          <p style="margin-bottom: 1rem;">
+            You're welcome to email me:
+            <a href="mailto:lucasballek@gmail.com" style="color: var(--primary-accent);">lucasballek@gmail.com</a>
+          </p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+            This is one person answering email in his own time, as a favor &mdash; not a support desk. I read
+            what I can and reply when I'm able, but I can't promise a response or a timeframe. Anything I
+            send back is a friendly opinion for your own further research, <strong>not professional
+            engineering, electrical, or financial advice</strong>, and it doesn't create any
+            professional relationship or obligation. For anything you're going to actually build, energize,
+            or spend real money on, please talk to a licensed electrician or engineer in your area.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div style="margin-bottom: 1rem; font-size: 1.25rem; font-weight: 800; color: #fff;">
+        ⚡ BigEnergy<span style="color: var(--primary-accent);">Co</span>
+      </div>
+      <p style="margin-bottom: 0.75rem;">
+        A free tool built and given away by <strong>Lucas Ballek</strong>. Not a company, not incorporated,
+        nothing for sale. Fully offline and available on Freenet.
+      </p>
+      <p style="font-size: 0.85rem; max-width: 720px; margin: 0 auto; line-height: 1.6;">
+        Provided free and <strong>as-is, with no warranty of any kind</strong>, express or implied. Estimates are
+        educational reference only and may be inaccurate. Working with batteries, high DC current, and mains wiring can
+        cause fire, serious injury, and death &mdash; you are responsible for your own safety, your own
+        decisions, and compliance with your local electrical code. Verify everything with a licensed
+        professional before building.
+        &nbsp;·&nbsp; <a href="#legal" style="color: var(--primary-accent);">Terms</a>
+        &nbsp;·&nbsp; <a href="#support" style="color: var(--primary-accent);">Support</a>
+        &nbsp;·&nbsp; <a href="mailto:lucasballek@gmail.com" style="color: var(--primary-accent);">lucasballek@gmail.com</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Terms & Disclaimer Modal -->
+  <div id="legalModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 700px;">
+      <div class="modal-header">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff;">⚖️ Terms of Use &amp; Disclaimer</h3>
+          <span style="font-size: 0.8rem; color: var(--primary-accent);">Free offline tool · no warranty · last updated 3 August 2026</span>
+        </div>
+        <div id="btnCloseLegal" class="close-btn" style="cursor: pointer;">&times;</div>
+      </div>
+      <div class="modal-body" style="max-height: 440px; overflow-y: auto; color: var(--text-muted); font-size: 0.95rem;">
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">1. What this is</h4>
+        <p style="margin-bottom: 1rem;">This is a free, personal, non-commercial educational tool operated by an individual, Lucas Ballek. It is not a company, not incorporated, and not a licensed engineering, electrical contracting, or financial advisory practice. Nothing on this site is for sale and no service is being offered or promised to you.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">2. Estimates only — no reliance</h4>
+        <p style="margin-bottom: 1rem;">All output is an automated educational reference estimate produced from market data as of August 2026. It is not a design, not a stamped drawing, not a quote, not a safety assessment, and not a code-compliance review. It may contain errors. <strong>Do not rely on it.</strong> Independently verify every figure — capacity, wire sizing, fuse ratings, and equipment compatibility — with a licensed electrician or professional engineer in your jurisdiction before purchasing, building, or energizing anything.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">3. Safety</h4>
+        <p style="margin-bottom: 1rem;">Battery banks, high DC currents, and mains wiring can cause arc flash, electric shock, fire, toxic gas release, serious injury, and death. Lithium cells can enter thermal runaway. You are solely responsible for your own safety and for the safety of anyone affected by what you build. You are solely responsible for permits, inspections, and compliance with your local electrical and fire codes.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">4. No warranty</h4>
+        <p style="margin-bottom: 1rem;">THIS SITE AND ITS OUTPUT ARE PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, AND NON-INFRINGEMENT. There is no guarantee of availability, correctness, or continued operation, and the site may change or disappear at any time without notice.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">5. Limitation of liability</h4>
+        <p style="margin-bottom: 1rem;">To the fullest extent permitted by applicable law, the operator shall not be liable for any direct, indirect, incidental, consequential, special, or punitive damages — including property damage, fire, personal injury, lost savings, or business interruption — arising from your use of or reliance on this free tool. Some jurisdictions do not allow certain exclusions, in which case they apply only to the extent permitted. Nothing here excludes liability that cannot lawfully be excluded, including liability for death or personal injury caused by negligence, or for fraud.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">6. Contributions</h4>
+        <p style="margin-bottom: 1rem;">Any contribution you choose to send is a voluntary gift to an individual. It is a <strong>gift, not tax-deductible</strong>, is not payment for goods or services, creates no contract, entitles you to nothing, and is not refundable in exchange for any obligation. Contributing does not change the service you receive in any way.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">7. Privacy</h4>
+        <p>This tool works offline on Freenet and requires no internet connection. No personal details are collected, stored, or transmitted. You are in full control of your data. Please do not enter personal, financial, or otherwise sensitive information into any web form on any site.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inlined JavaScript — static calculator only, no API calls -->
+  <script>
+    window.openLegalModal = function() {
+      var modal = document.getElementById('legalModal');
+      if (modal) modal.style.display = 'flex';
+    };
+
+    window.closeLegalModal = function() {
+      var modal = document.getElementById('legalModal');
+      if (modal) modal.style.display = 'none';
+    };
+
+    window.scrollToCalc = function() {
+      var calcElem = document.getElementById('calculator');
+      if (calcElem) calcElem.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    function updateCalc() {
+      var targetKwhInput = document.getElementById('targetKwh');
+      if (!targetKwhInput) return;
+
+      var targetKwh = parseFloat(targetKwhInput.value);
+      var chemistryTypeSelect = document.getElementById('chemistryType');
+      var chemistryType = chemistryTypeSelect ? chemistryTypeSelect.value : 'LFP';
+
+      var targetKwhVal = document.getElementById('targetKwhVal');
+      if (targetKwhVal) targetKwhVal.innerText = targetKwh + ' kWh Usable Storage';
+
+      // Component cost only. No service fee — this tool is free and sells nothing.
+      var hwPerKwh = (chemistryType === 'NaIon') ? 38.00 : 49.80;
+      var totalBigEnergyCost = targetKwh * hwPerKwh;
+
+      var teslaPerKwh = 851.85;
+      var teslaTotalCost = targetKwh * teslaPerKwh;
+      var netSavings = teslaTotalCost - totalBigEnergyCost;
+
+      var netSavingsVal = document.getElementById('netSavingsVal');
+      if (netSavingsVal) netSavingsVal.innerText = '~$' + Math.round(netSavings).toLocaleString();
+
+      var tableKwhVal = document.getElementById('tableKwhVal');
+      if (tableKwhVal) tableKwhVal.innerText = targetKwh + ' kWh';
+
+      var tableCostVal = document.getElementById('tableCostVal');
+      if (tableCostVal) tableCostVal.innerText = '$' + Math.round(totalBigEnergyCost).toLocaleString();
+    }
+
+    function setupEventListeners() {
+      var heroCompare = document.getElementById('btnHeroCompare');
+      var terms1 = document.getElementById('btnLegalTerms1');
+      var terms3 = document.getElementById('btnLegalTerms3');
+
+      var closeLegal = document.getElementById('btnCloseLegal');
+      var targetKwhInput = document.getElementById('targetKwh');
+      var chemistryTypeSelect = document.getElementById('chemistryType');
+
+      if (heroCompare) heroCompare.addEventListener('click', window.scrollToCalc);
+      if (terms1) terms1.addEventListener('click', window.openLegalModal);
+      if (terms3) terms3.addEventListener('click', window.openLegalModal);
+      if (closeLegal) closeLegal.addEventListener('click', window.closeLegalModal);
+
+      if (targetKwhInput) targetKwhInput.addEventListener('input', updateCalc);
+      if (chemistryTypeSelect) chemistryTypeSelect.addEventListener('change', updateCalc);
+
+      updateCalc();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupEventListeners);
+    } else {
+      setupEventListeners();
+    }
+  </script>
+</body>
+</html>
