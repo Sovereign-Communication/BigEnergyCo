@@ -1,0 +1,53 @@
+# Secrets — never commit these
+*.env
+.env*
+groq.env
+*.key
+*.pem
+secrets.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Admin panel — local only, never publish
+admin.html
+admin.js
+admin.js.map
+
+# Dev/test scripts
+test_*.py
+verify_*.py
+live_verify.py
+debug_*.py
+dump_*.py
+click_*.py
+full_verification.py
+set_worker_url.py
+patch_and_publish.py
+start_and_publish_tunnel.py
+start_tunnel.py
+
+# Local server files
+proxy_server.py
+server.py
+launcher.py
+leads.jsonl
+tunnel_url.txt
+*.log
+
+# Large binaries
+cloudflared.exe
+
+# Scratch / legacy
+scratch/
+legacy_scripts/
+.backup/
+.claude/
+.launcher_pids.json
+freenet_web_dist/
+
+# OS
+.DS_Store
+Thumbs.db
