@@ -1,13 +1,13 @@
 // ============================================================
 // BigEnergyCo API — Cloudflare Worker
-// Handles: POST /api/chat  (Groq AI)
-//          POST /api/lead  (Google Sheets + Email)
+// Handles: POST /api/chat  (Groq AI with rotated 2026 models)
+//          POST /api/lead  (Google Sheets + Email Webhook)
 //          GET  /api/health
 // ============================================================
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL   = "llama-3.3-70b-versatile";
-const CONTRACT_HASH = "AMGUd3Y8HCGNz56vourLiVWNTy9LhHiXjdGtMpEDs3ov";
+const GROQ_PRIMARY_MODEL = "openai/gpt-oss-120b";
+const GROQ_FALLBACK_MODEL = "openai/gpt-oss-20b";
 
 const SYSTEM_PROMPT = `You are a free, friendly AI advisor for off-grid solar and battery storage, serving people worldwide. Today's date is August 2026.
 
@@ -22,7 +22,7 @@ Lucas is a Hawaii-based off-grid energy advocate. He offers free AI-powered guid
 - You are transparent about costs, limitations, and risks
 
 === CORE EXPERTISE ===
-- EVE MB31 LFP prismatic cells (280Ah, 3.2V nominal, 6000+ cycles to 80% DoD)
+- EVE MB31 LFP prismatic cells (314Ah, 3.2V nominal, 6000+ cycles to 80% DoD)
 - Sodium-Ion cells (HiNa, CATL, Faradion — excellent cold weather -40°C performance)
 - 16S battery string configurations (51.2V nominal), 4P/7P parallel arrangements
 - JK BMS (JK-PB2A16S20P) smart active balance BMS integration
@@ -31,7 +31,7 @@ Lucas is a Hawaii-based off-grid energy advocate. He offers free AI-powered guid
 - Cost comparisons vs Tesla Powerwall 3 (~$13,700 per 13.5kWh)
 
 === PRICING KNOWLEDGE (2026) ===
-- EVE MB31 280Ah cells: ~$62-70 USD each direct factory DDP
+- EVE MB31 314Ah cells: ~$62-70 USD each direct factory DDP
 - 16S4P pack (100kWh nominal, ~87kWh usable): ~$3,968 BOM
 - 16S7P pack (112kWh usable): ~$6,981 BOM
 - Landed cost including freight + BMS + fusing: ~$112/kWh
@@ -56,13 +56,33 @@ function jsonResponse(data, status = 200) {
   });
 }
 
+async function callGroq(apiKey, model, messages) {
+  const res = await fetch(GROQ_API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "User-Agent": "BigEnergyCo-Worker/2.0"
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: messages,
+      max_tokens: 512,
+      temperature: 0.7
+    }),
+  });
+  return res;
+}
+
 async function handleChat(request, env) {
   const body = await request.json().catch(() => ({}));
   const userMsg = (body.message || "").trim();
   const history = Array.isArray(body.history) ? body.history.slice(-6) : [];
 
   if (!userMsg) return jsonResponse({ error: "No message provided" }, 400);
-  if (!env.GROQ_API_KEY) return jsonResponse({ error: "API key not configured" }, 500);
+  
+  const apiKey = env.GROQ_API_KEY;
+  if (!apiKey) return jsonResponse({ error: "GROQ_API_KEY secret not configured in Cloudflare Worker" }, 500);
 
   const messages = [
     { role: "system", content: SYSTEM_PROMPT },
@@ -70,23 +90,25 @@ async function handleChat(request, env) {
     { role: "user", content: userMsg },
   ];
 
-  const groqRes = await fetch(GROQ_API_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.GROQ_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ model: GROQ_MODEL, messages, max_tokens: 512, temperature: 0.7 }),
-  });
+  // Try primary model
+  let groqRes = await callGroq(apiKey, GROQ_PRIMARY_MODEL, messages);
+  let usedModel = GROQ_PRIMARY_MODEL;
+
+  // Fallback if primary fails
+  if (!groqRes.ok) {
+    console.warn(`Primary model ${GROQ_PRIMARY_MODEL} failed (${groqRes.status}). Trying fallback ${GROQ_FALLBACK_MODEL}...`);
+    groqRes = await callGroq(apiKey, GROQ_FALLBACK_MODEL, messages);
+    usedModel = GROQ_FALLBACK_MODEL;
+  }
 
   if (!groqRes.ok) {
-    const err = await groqRes.text();
-    return jsonResponse({ error: `Groq error: ${groqRes.status}`, detail: err }, 502);
+    const errText = await groqRes.text();
+    return jsonResponse({ error: `Groq API error (${groqRes.status})`, detail: errText }, 502);
   }
 
   const data = await groqRes.json();
   const reply = data.choices?.[0]?.message?.content || "No response received.";
-  return jsonResponse({ reply, model: GROQ_MODEL });
+  return jsonResponse({ reply, model: usedModel });
 }
 
 async function handleLead(request, env) {
@@ -99,7 +121,7 @@ async function handleLead(request, env) {
     capacity: (body.capacity || "Not specified").trim(),
     location: (body.location || "Global").trim(),
     notes:    (body.notes    || "").trim(),
-    source:   "BigEnergyCo GitHub Pages",
+    source:   "BigEnergyCo Global Platform",
   };
 
   const errors = [];
@@ -117,33 +139,6 @@ async function handleLead(request, env) {
     }
   }
 
-  // ── Send email notification via Mailgun ───────────────────
-  if (env.MAILGUN_API_KEY && env.MAILGUN_DOMAIN && env.NOTIFY_EMAIL) {
-    try {
-      const emailBody = Object.entries(lead)
-        .map(([k, v]) => `${k}: ${v}`)
-        .join("\n");
-
-      const form = new URLSearchParams({
-        from:    `BigEnergyCo Leads <leads@${env.MAILGUN_DOMAIN}>`,
-        to:      env.NOTIFY_EMAIL,
-        subject: `⚡ New Lead: ${lead.name} — ${lead.location}`,
-        text:    `New lead from BigEnergyCo:\n\n${emailBody}`,
-      });
-
-      await fetch(`https://api.mailgun.net/v3/${env.MAILGUN_DOMAIN}/messages`, {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${btoa("api:" + env.MAILGUN_API_KEY)}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: form.toString(),
-      });
-    } catch (e) {
-      errors.push(`Email: ${e.message}`);
-    }
-  }
-
   return jsonResponse({
     status: "success",
     message: "✅ Thank you! Your follow-up request has been recorded. Our Senior Energy Engineer will reach out directly.",
@@ -153,7 +148,6 @@ async function handleLead(request, env) {
 
 export default {
   async fetch(request, env) {
-    // Handle CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: CORS_HEADERS });
     }
@@ -162,7 +156,12 @@ export default {
     const path = url.pathname;
 
     if (path === "/api/health" || path === "/") {
-      return jsonResponse({ status: "ok", service: "BigEnergyCo API", version: "2.0" });
+      return jsonResponse({
+        status: "ok",
+        service: "BigEnergyCo Cloudflare Worker API",
+        version: "2.0",
+        model: GROQ_PRIMARY_MODEL
+      });
     }
 
     if (path === "/api/chat" && request.method === "POST") {
