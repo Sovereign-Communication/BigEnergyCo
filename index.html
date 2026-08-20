@@ -1107,13 +1107,16 @@ footer {
         });
       }
 
-      // Same-origin first — works on the local proxy AND through the tunnel, and keeps
-      // working when the tunnel hostname rotates. Only fall back to the absolute URL for
-      // copies served from somewhere that can't reach the API itself (e.g. a Freenet node).
-      postTo('/api/chat')
-        .catch(function() {
-          if (!CF_API_URL) throw new Error('no fallback');
-          return postTo(CF_API_URL + '/api/chat');
+      var apiBase = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+        ? ''
+        : (CF_API_URL || '');
+
+      postTo(apiBase + '/api/chat')
+        .catch(function(err) {
+          if (apiBase === '' && CF_API_URL) {
+            return postTo(CF_API_URL + '/api/chat');
+          }
+          throw err;
         })
         .then(function(data) {
           var loading = document.getElementById('loadingMsg');
@@ -1124,13 +1127,13 @@ footer {
             renderBotReply('⚠️ No reply received. Please try again.');
           }
         })
-        .catch(function() {
+        .catch(function(err) {
+          console.error("Chat API error:", err);
           var loading = document.getElementById('loadingMsg');
           if (loading && loading.parentNode) loading.parentNode.removeChild(loading);
           renderBotReply(
             '⚠️ The AI advisor is unreachable right now.\n\n' +
-            'This is a free tool running on one person\'s machine, so it is not up 24/7. ' +
-            'Please try again later. The cost comparison on the main page still works offline.'
+            'Please try again in a moment.'
           );
         });
     }

@@ -245,27 +245,31 @@ def process_bot_query(user_msg, history=[]):
 
     if groq_key:
         url = "https://api.groq.com/openai/v1/chat/completions"
-        req_data = json.dumps({
-            "model": "llama-3.3-70b-versatile",
-            "messages": messages,
-            "temperature": 0.4,
-            "max_tokens": 1024
-        }).encode('utf-8')
+        primary_model = "openai/gpt-oss-120b"
+        fallback_model = "openai/gpt-oss-20b"
 
-        try:
-            req = urllib.request.Request(url, data=req_data, headers={
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {groq_key}',
-                'User-Agent': 'curl/8.5.0'
-            })
-            with urllib.request.urlopen(req, timeout=25) as resp:
-                res_json = json.loads(resp.read().decode('utf-8'))
-                reply = res_json['choices'][0]['message']['content']
-                reply = validate_groq_response(reply)
-                print(f"[GROQ SUCCESS] '{user_msg[:40]}' -> '{reply[:60]}...'")
-                return {"status": "success", "reply": reply, "engine": "Groq Llama-3.3-70b"}
-        except Exception as e:
-            print(f"[GROQ API ERROR] {e}")
+        for model_choice in [primary_model, fallback_model]:
+            req_data = json.dumps({
+                "model": model_choice,
+                "messages": messages,
+                "temperature": 0.4,
+                "max_tokens": 1024
+            }).encode('utf-8')
+
+            try:
+                req = urllib.request.Request(url, data=req_data, headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {groq_key}',
+                    'User-Agent': 'BigEnergyCo/2.0'
+                })
+                with urllib.request.urlopen(req, timeout=25) as resp:
+                    res_json = json.loads(resp.read().decode('utf-8'))
+                    reply = res_json['choices'][0]['message']['content']
+                    reply = validate_groq_response(reply)
+                    print(f"[GROQ SUCCESS] ({model_choice}) '{user_msg[:40]}' -> '{reply[:60]}...'")
+                    return {"status": "success", "reply": reply, "engine": f"Groq {model_choice}"}
+            except Exception as e:
+                print(f"[GROQ API ERROR ({model_choice})] {e}")
 
     return {
         "status": "success",
