@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://bigenergyco.github.io/sitemap.xml
+Sitemap: https://treystu.github.io/BigEnergyCo/sitemap.xml
