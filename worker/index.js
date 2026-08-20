@@ -77,12 +77,17 @@ async function callGroq(apiKey, model, messages) {
 async function handleChat(request, env) {
   const body = await request.json().catch(() => ({}));
   const userMsg = (body.message || "").trim();
-  const history = Array.isArray(body.history) ? body.history.slice(-6) : [];
+  const rawHistory = Array.isArray(body.history) ? body.history.slice(-6) : [];
 
   if (!userMsg) return jsonResponse({ error: "No message provided" }, 400);
   
   const apiKey = env.GROQ_API_KEY;
   if (!apiKey) return jsonResponse({ error: "GROQ_API_KEY secret not configured in Cloudflare Worker" }, 500);
+
+  const history = rawHistory.map(m => ({
+    role: (m.role === 'bot' || m.role === 'assistant') ? 'assistant' : 'user',
+    content: typeof m.content === 'string' ? m.content : ''
+  })).filter(m => m.content.trim().length > 0);
 
   const messages = [
     { role: "system", content: SYSTEM_PROMPT },

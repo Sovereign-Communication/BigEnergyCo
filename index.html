@@ -1094,7 +1094,14 @@ footer {
       chatWindow.appendChild(loadingDiv);
       chatWindow.scrollTop = chatWindow.scrollHeight;
 
-      var payload = JSON.stringify({ message: userMsg, history: chatHistory.slice(-6) });
+      var cleanHistory = chatHistory.slice(-6).map(function(m) {
+        return {
+          role: (m.role === 'bot' || m.role === 'assistant') ? 'assistant' : 'user',
+          content: m.content || ''
+        };
+      });
+
+      var payload = JSON.stringify({ message: userMsg, history: cleanHistory });
 
       function postTo(url) {
         return fetch(url, {
