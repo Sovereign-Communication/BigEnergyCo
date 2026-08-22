@@ -253,7 +253,7 @@ def process_bot_query(user_msg, history=[]):
                 "model": model_choice,
                 "messages": messages,
                 "temperature": 0.4,
-                "max_tokens": 1024
+                "max_tokens": 2048
             }).encode('utf-8')
 
             try:
