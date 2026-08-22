@@ -231,7 +231,14 @@ def process_bot_query(user_msg, history=[]):
         "=== ON DONATIONS ===\n"
         "If a user asks about donating, say:\n"
         "'Donations are voluntary gifts that don't change your access or the help I give. If you found this "
-        "useful and want to support it, that's kind—but the tool works exactly the same with or without one.'"
+        "useful and want to support it, that's kind—but the tool works exactly the same with or without one.'\n\n"
+
+        "=== RESPONSE STYLE & COMPLETION PROTOCOL ===\n"
+        "- You have ample token capacity (2,048 tokens per turn) and seamless multi-message auto-continuation enabled.\n"
+        "- Never truncate responses, cut calculations short, or leave plans half-finished.\n"
+        "- When sizing or detailed plans are requested, provide the complete, step-by-step engineering breakdown: "
+        "daily demand, autonomy days, chemistry choice with climate reasoning, 16S string configuration, cell counts, BOM cost, and inverter/safety tips.\n"
+        "- For greetings or general questions, answer conversationally and concisely."
     )
 
     messages = [{"role": "system", "content": system_instruction}]
@@ -249,27 +256,51 @@ def process_bot_query(user_msg, history=[]):
         fallback_model = "openai/gpt-oss-20b"
 
         for model_choice in [primary_model, fallback_model]:
-            req_data = json.dumps({
-                "model": model_choice,
-                "messages": messages,
-                "temperature": 0.4,
-                "max_tokens": 2048
-            }).encode('utf-8')
+            current_messages = list(messages)
+            full_reply = ""
+            turns = 0
+            max_continuations = 2
+            success = False
 
-            try:
-                req = urllib.request.Request(url, data=req_data, headers={
-                    'Content-Type': 'application/json',
-                    'Authorization': f'Bearer {groq_key}',
-                    'User-Agent': 'BigEnergyCo/2.0'
-                })
-                with urllib.request.urlopen(req, timeout=25) as resp:
-                    res_json = json.loads(resp.read().decode('utf-8'))
-                    reply = res_json['choices'][0]['message']['content']
-                    reply = validate_groq_response(reply)
-                    print(f"[GROQ SUCCESS] ({model_choice}) '{user_msg[:40]}' -> '{reply[:60]}...'")
-                    return {"status": "success", "reply": reply, "engine": f"Groq {model_choice}"}
-            except Exception as e:
-                print(f"[GROQ API ERROR ({model_choice})] {e}")
+            while turns <= max_continuations:
+                req_data = json.dumps({
+                    "model": model_choice,
+                    "messages": current_messages,
+                    "temperature": 0.4,
+                    "max_tokens": 2048
+                }).encode('utf-8')
+
+                try:
+                    req = urllib.request.Request(url, data=req_data, headers={
+                        'Content-Type': 'application/json',
+                        'Authorization': f'Bearer {groq_key}',
+                        'User-Agent': 'BigEnergyCo/2.0'
+                    })
+                    with urllib.request.urlopen(req, timeout=25) as resp:
+                        res_json = json.loads(resp.read().decode('utf-8'))
+                        choice = res_json.get('choices', [{}])[0]
+                        chunk = choice.get('message', {}).get('content', '')
+                        finish_reason = choice.get('finish_reason')
+                        full_reply += chunk
+                        turns += 1
+                        success = True
+
+                        if finish_reason != 'length' or not chunk.strip() or turns > max_continuations:
+                            break
+
+                        current_messages.append({'role': 'assistant', 'content': chunk})
+                        current_messages.append({
+                            'role': 'user',
+                            'content': 'Continue immediately from where you stopped without repeating prior text.'
+                        })
+                except Exception as e:
+                    print(f"[GROQ API ERROR ({model_choice})] turn {turns}: {e}")
+                    break
+
+            if success and full_reply.strip():
+                reply = validate_groq_response(full_reply)
+                print(f"[GROQ SUCCESS] ({model_choice}) '{user_msg[:40]}' -> '{reply[:60]}...' (turns: {turns})")
+                return {"status": "success", "reply": reply, "engine": f"Groq {model_choice}"}
 
     return {
         "status": "success",

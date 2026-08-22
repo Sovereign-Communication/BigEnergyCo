@@ -64,26 +64,50 @@ def process_bot_query(user_msg, history=[]):
         fallback_model = "openai/gpt-oss-20b"
 
         for model_choice in [primary_model, fallback_model]:
-            req_data = json.dumps({
-                "model": model_choice,
-                "messages": messages,
-                "temperature": 0.4,
-                "max_tokens": 2048
-            }).encode('utf-8')
-            
-            try:
-                req = urllib.request.Request(url, data=req_data, headers={
-                    'Content-Type': 'application/json',
-                    'Authorization': f'Bearer {groq_key}',
-                    'User-Agent': 'BigEnergyCo/2.0'
-                })
-                with urllib.request.urlopen(req, timeout=25) as resp:
-                    res_json = json.loads(resp.read().decode('utf-8'))
-                    reply = res_json['choices'][0]['message']['content']
-                    print(f"[GROQ SUCCESS] Prompt: '{user_msg[:40]}' -> Reply: '{reply[:60]}...'")
-                    return {"status": "success", "reply": reply, "engine": f"Groq {model_choice}"}
-            except Exception as e:
-                print(f"[GROQ API ERROR ({model_choice})] {e}")
+            current_messages = list(messages)
+            full_reply = ""
+            turns = 0
+            max_continuations = 2
+            success = False
+
+            while turns <= max_continuations:
+                req_data = json.dumps({
+                    "model": model_choice,
+                    "messages": current_messages,
+                    "temperature": 0.4,
+                    "max_tokens": 2048
+                }).encode('utf-8')
+                
+                try:
+                    req = urllib.request.Request(url, data=req_data, headers={
+                        'Content-Type': 'application/json',
+                        'Authorization': f'Bearer {groq_key}',
+                        'User-Agent': 'BigEnergyCo/2.0'
+                    })
+                    with urllib.request.urlopen(req, timeout=25) as resp:
+                        res_json = json.loads(resp.read().decode('utf-8'))
+                        choice = res_json.get('choices', [{}])[0]
+                        chunk = choice.get('message', {}).get('content', '')
+                        finish_reason = choice.get('finish_reason')
+                        full_reply += chunk
+                        turns += 1
+                        success = True
+
+                        if finish_reason != 'length' or not chunk.strip() or turns > max_continuations:
+                            break
+
+                        current_messages.append({'role': 'assistant', 'content': chunk})
+                        current_messages.append({
+                            'role': 'user',
+                            'content': 'Continue immediately from where you stopped without repeating prior text.'
+                        })
+                except Exception as e:
+                    print(f"[GROQ API ERROR ({model_choice})] turn {turns}: {e}")
+                    break
+
+            if success and full_reply.strip():
+                print(f"[GROQ SUCCESS] Prompt: '{user_msg[:40]}' -> Reply: '{full_reply[:60]}...' (turns: {turns})")
+                return {"status": "success", "reply": full_reply, "engine": f"Groq {model_choice}"}
 
     reply = "Aloha! I am the BigEnergyCo Senior Sourcing Advisor. How can I help you size or source your off-grid battery array today?"
     return {"status": "success", "reply": reply, "engine": "Fallback Advisor"}

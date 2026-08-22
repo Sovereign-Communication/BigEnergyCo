@@ -43,11 +43,20 @@ All guidance is educational estimates only — recommend verification with a lic
 - Landed cost including freight + BMS + fusing: ~$112/kWh
 - Typical savings vs turnkey equivalents: 85-90%
 
-=== RESPONSE STYLE ===
-- Keep responses conversational and under 200 words unless technical depth is requested
-- Use bullet points for specs/numbers
-- Always end with an invitation to ask follow-up questions, and point to the free estimator at https://treystu.github.io/BigEnergyCo/ for sizing
-- Use ⚡ emoji occasionally for energy topics`;
+=== RESPONSE STYLE & COMPLETION PROTOCOL ===
+- You have ample token capacity (2,048 tokens per turn) and seamless multi-message auto-continuation enabled.
+- Never truncate responses, cut calculations short, or leave plans half-finished.
+- When an off-grid sizing request or detailed technical question is asked, provide the complete plan:
+  1. Estimated daily & monthly consumption (kWh)
+  2. Recommended autonomy days and usable/nominal battery bank capacity (kWh)
+  3. Recommended battery chemistry (Sodium-Ion vs LFP) with climate rationale
+  4. Cell string configuration (e.g. 16S4P / 16S7P) & cell count
+  5. Approximate BOM landed cost estimate
+  6. Inverter / safety / next step guidance
+- For general greetings or simple questions, keep responses concise, conversational, and direct.
+- Use bullet points and tables for specs/numbers.
+- Always end with an invitation to ask follow-up questions, and point to the free estimator at https://treystu.github.io/BigEnergyCo/ for sizing.
+- Use ⚡ emoji occasionally for energy topics.`;
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -95,31 +104,58 @@ async function handleChat(request, env) {
     content: typeof m.content === 'string' ? m.content : ''
   })).filter(m => m.content.trim().length > 0);
 
-  const messages = [
+  let currentMessages = [
     { role: "system", content: SYSTEM_PROMPT },
     ...history,
     { role: "user", content: userMsg },
   ];
 
-  // Try primary model
-  let groqRes = await callGroq(apiKey, GROQ_PRIMARY_MODEL, messages);
   let usedModel = GROQ_PRIMARY_MODEL;
+  let fullReply = "";
+  let turns = 0;
+  const maxContinuations = 2;
 
-  // Fallback if primary fails
-  if (!groqRes.ok) {
-    console.warn(`Primary model ${GROQ_PRIMARY_MODEL} failed (${groqRes.status}). Trying fallback ${GROQ_FALLBACK_MODEL}...`);
-    groqRes = await callGroq(apiKey, GROQ_FALLBACK_MODEL, messages);
-    usedModel = GROQ_FALLBACK_MODEL;
+  while (turns <= maxContinuations) {
+    let groqRes = await callGroq(apiKey, usedModel, currentMessages);
+
+    // Fallback if primary fails on turn 0
+    if (!groqRes.ok && turns === 0 && usedModel === GROQ_PRIMARY_MODEL) {
+      console.warn(`Primary model ${GROQ_PRIMARY_MODEL} failed (${groqRes.status}). Trying fallback ${GROQ_FALLBACK_MODEL}...`);
+      usedModel = GROQ_FALLBACK_MODEL;
+      groqRes = await callGroq(apiKey, usedModel, currentMessages);
+    }
+
+    if (!groqRes.ok) {
+      if (fullReply.length > 0) {
+        break; // Return whatever complete text was accumulated
+      }
+      const errText = await groqRes.text();
+      return jsonResponse({ error: `Groq API error (${groqRes.status})`, detail: errText }, 502);
+    }
+
+    const data = await groqRes.json();
+    const choice = data.choices?.[0];
+    const chunk = choice?.message?.content || "";
+    const finishReason = choice?.finish_reason;
+
+    fullReply += chunk;
+    turns++;
+
+    // If completed naturally, stop
+    if (finishReason !== "length" || !chunk.trim() || turns > maxContinuations) {
+      break;
+    }
+
+    // Auto-continue to complete communication without truncation
+    currentMessages.push({ role: "assistant", content: chunk });
+    currentMessages.push({
+      role: "user",
+      content: "Continue immediately from where you stopped without repeating prior text."
+    });
   }
 
-  if (!groqRes.ok) {
-    const errText = await groqRes.text();
-    return jsonResponse({ error: `Groq API error (${groqRes.status})`, detail: errText }, 502);
-  }
-
-  const data = await groqRes.json();
-  const reply = data.choices?.[0]?.message?.content || "No response received.";
-  return jsonResponse({ reply, model: usedModel });
+  const reply = fullReply || "No response received.";
+  return jsonResponse({ reply, model: usedModel, continuations: turns - 1 });
 }
 
 async function handleLead(request, env) {
