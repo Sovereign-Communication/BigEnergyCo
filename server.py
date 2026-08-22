@@ -35,17 +35,53 @@ def get_system_groq_key():
             pass
     return None
 
+def sanitize_and_close_reply(text):
+    """Ensure reply terminates cleanly, closes unclosed markdown, and trims dangling text."""
+    if not text or not text.strip():
+        return text
+
+    cleaned = text.rstrip()
+
+    # 1. Close unclosed code blocks
+    code_block_count = cleaned.count('```')
+    if code_block_count % 2 !== 0 if False else code_block_count % 2 != 0:
+        cleaned += '\n```'
+
+    # 2. Check if the text ends on an unfinished markdown table row
+    lines = cleaned.split('\n')
+    while lines and lines[-1].strip().startswith('|') and (not lines[-1].strip().endswith('|') or lines[-1].strip() == '| ~'):
+        lines.pop()
+    cleaned = '\n'.join(lines).rstrip()
+
+    # 3. Ensure sentence closes cleanly
+    terminal_punct = ('.', '!', '?', ':', '🌞', '⚡', '🌺', '✅', '👉', ')', '`', '"', "'", '*', '_')
+    if not cleaned.endswith(terminal_punct):
+        match = re.search(r'([\.\!\?])\s+[^\.\!\?]*$', cleaned)
+        if match:
+            cleaned = cleaned[:match.end(1)].rstrip()
+            cleaned += "\n\n*(Feel free to ask for Part 2 or let me know if you'd like to dive deeper into any of these specs! ⚡)*"
+
+    return cleaned
+
 def process_bot_query(user_msg, history=[]):
     groq_key = get_system_groq_key()
     
     system_instruction = (
-        "You are the BigEnergyCo Senior Sourcing Advisor, a 100% autonomous off-grid energy, battery electrochemistry engineer, and direct-factory procurement AI assistant powered by Groq (Llama-3.3-70b).\n"
+        "You are the BigEnergyCo Senior Sourcing Advisor, a 100% autonomous off-grid energy, battery electrochemistry engineer, and direct-factory procurement AI assistant powered by Groq (GPT-OSS).\n"
         "Today's date is August 1, 2026.\n\n"
         "YOUR ROLE & PERSONALITY:\n"
         "- Friendly, highly knowledgeable, professional off-grid energy consultant based in Hawaii.\n"
-        "- Answer ANY question naturally, conversationally, and accurately (e.g. greetings like 'hi', general questions like 'what\'s today\'s date?', technical battery questions about EVE MB31 314Ah LFP cells, Sodium-Ion vs LFP performance, JK BMS 200A active balance, Eaton Class-T fuses, 16S4P/16S7P string configurations, UN3480 DDP ocean freight, or system sizing).\n"
-        "- If the user asks for a battery quote, capacity sizing, or mentions an electric bill / kWh storage target, provide real landed engineering estimates based on ~$100/kWh landed for LFP ($43.50/cell) or ~$130/kWh landed for Sodium-Ion ($32/cell) vs $850/kWh Tesla Powerwall 3 retail baseline.\n"
-        "- NEVER output rigid repetitive boilerplate templates for simple greetings or non-sizing questions! Respond fluidly and directly like an expert human engineer."
+        "- Answer ANY question naturally, conversationally, and accurately.\n"
+        "- If the user asks for a battery quote, capacity sizing, or mentions an electric bill / kWh storage target, provide real landed engineering estimates based on ~$100/kWh landed for LFP ($43.50/cell) or ~$130/kWh landed for Sodium-Ion ($32/cell) vs $850/kWh Tesla Powerwall 3 retail baseline.\n\n"
+        "=== DYNAMIC PACING, LENGTH BUDGET & MULTI-PART PROTOCOL ===\n"
+        "- Operational Length Budget: Aim for concise, high-density responses (typically 350–700 words, maximum ~1,000 words per response).\n"
+        "- Self-Balancing & Relevance: Dynamically assess how complex the question is against your length budget. Be crisp, direct, and high-signal; avoid repetitive prose or bloated preambles.\n"
+        "- Multi-Part Protocol for Massive Requests: If the user asks for a very broad or multi-layered build (e.g. asking for sizing + full wiring diagrams + BMS programming + inverter configuration + code permits all in one prompt), do NOT try to write an unreadable encyclopedia at once. Instead:\n"
+        "  * Open cleanly: 'Off-grid setups have several key layers, so I've structured this into a clear, actionable overview (Part 1). Whenever you're ready, just ask for Part 2 to cover wiring, schematics, or permits!'\n"
+        "  * Deliver the primary core calculation, sizing breakdown, chemistry recommendation, and BOM table fully.\n"
+        "  * Clearly offer specific next-step questions the user can ask to trigger Part 2.\n"
+        "- Never Cut Off Mid-Thought: Every response MUST conclude cleanly with a complete sentence, proper markdown table closing, and sign-off. Never leave a hanging sentence, dangling bullet point, or unclosed table.\n"
+        "- For greetings or general questions, answer conversationally and concisely."
     )
 
     messages = [{"role": "system", "content": system_instruction}]
@@ -106,8 +142,9 @@ def process_bot_query(user_msg, history=[]):
                     break
 
             if success and full_reply.strip():
-                print(f"[GROQ SUCCESS] Prompt: '{user_msg[:40]}' -> Reply: '{full_reply[:60]}...' (turns: {turns})")
-                return {"status": "success", "reply": full_reply, "engine": f"Groq {model_choice}"}
+                reply = sanitize_and_close_reply(full_reply)
+                print(f"[GROQ SUCCESS] Prompt: '{user_msg[:40]}' -> Reply: '{reply[:60]}...' (turns: {turns})")
+                return {"status": "success", "reply": reply, "engine": f"Groq {model_choice}"}
 
     reply = "Aloha! I am the BigEnergyCo Senior Sourcing Advisor. How can I help you size or source your off-grid battery array today?"
     return {"status": "success", "reply": reply, "engine": "Fallback Advisor"}

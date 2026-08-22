@@ -110,6 +110,36 @@ def validate_groq_response(reply_text):
 
     return reply_text  # Always return, validation is advisory only
 
+
+def sanitize_and_close_reply(text):
+    """Ensure reply terminates cleanly, closes unclosed markdown, and trims dangling text."""
+    if not text or not text.strip():
+        return text
+
+    cleaned = text.rstrip()
+
+    # 1. Close unclosed code blocks
+    code_block_count = cleaned.count('```')
+    if code_block_count % 2 != 0:
+        cleaned += '\n```'
+
+    # 2. Check if the text ends on an unfinished markdown table row
+    lines = cleaned.split('\n')
+    while lines and lines[-1].strip().startswith('|') and (not lines[-1].strip().endswith('|') or lines[-1].strip() == '| ~'):
+        lines.pop()
+    cleaned = '\n'.join(lines).rstrip()
+
+    # 3. Ensure sentence closes cleanly
+    terminal_punct = ('.', '!', '?', ':', '🌞', '⚡', '🌺', '✅', '👉', ')', '`', '"', "'", '*', '_')
+    if not cleaned.endswith(terminal_punct):
+        match = re.search(r'([\.\!\?])\s+[^\.\!\?]*$', cleaned)
+        if match:
+            cleaned = cleaned[:match.end(1)].rstrip()
+            cleaned += "\n\n*(Feel free to ask for Part 2 or let me know if you'd like to dive deeper into any of these specs! ⚡)*"
+
+    return cleaned
+
+
 # Freenet long-polling / streaming URL prefixes we should NOT attempt to buffer
 STREAMING_PREFIXES = (
     '/v1/contract/subscribe',
@@ -233,11 +263,14 @@ def process_bot_query(user_msg, history=[]):
         "'Donations are voluntary gifts that don't change your access or the help I give. If you found this "
         "useful and want to support it, that's kind—but the tool works exactly the same with or without one.'\n\n"
 
-        "=== RESPONSE STYLE & COMPLETION PROTOCOL ===\n"
-        "- You have ample token capacity (2,048 tokens per turn) and seamless multi-message auto-continuation enabled.\n"
-        "- Never truncate responses, cut calculations short, or leave plans half-finished.\n"
-        "- When sizing or detailed plans are requested, provide the complete, step-by-step engineering breakdown: "
-        "daily demand, autonomy days, chemistry choice with climate reasoning, 16S string configuration, cell counts, BOM cost, and inverter/safety tips.\n"
+        "=== DYNAMIC PACING, LENGTH BUDGET & MULTI-PART PROTOCOL ===\n"
+        "- Operational Length Budget: Aim for concise, high-density responses (typically 350–700 words, maximum ~1,000 words per response).\n"
+        "- Self-Balancing & Relevance: Dynamically assess how complex the question is against your length budget. Be crisp, direct, and high-signal; avoid repetitive prose or bloated preambles.\n"
+        "- Multi-Part Protocol for Massive Requests: If the user asks for a very broad or multi-layered build (e.g. asking for sizing + full wiring diagrams + BMS programming + inverter configuration + code permits all in one prompt), do NOT try to write an unreadable encyclopedia at once. Instead:\n"
+        "  * Open cleanly: 'Off-grid setups have several key layers, so I've structured this into a clear, actionable overview (Part 1). Whenever you're ready, just ask for Part 2 to cover wiring, schematics, or permits!'\n"
+        "  * Deliver the primary core calculation, sizing breakdown, chemistry recommendation, and BOM table fully.\n"
+        "  * Clearly offer specific next-step questions the user can ask to trigger Part 2.\n"
+        "- Never Cut Off Mid-Thought: Every response MUST conclude cleanly with a complete sentence, proper markdown table closing, and sign-off. Never leave a hanging sentence, dangling bullet point, or unclosed table.\n"
         "- For greetings or general questions, answer conversationally and concisely."
     )
 
@@ -298,7 +331,8 @@ def process_bot_query(user_msg, history=[]):
                     break
 
             if success and full_reply.strip():
-                reply = validate_groq_response(full_reply)
+                reply = sanitize_and_close_reply(full_reply)
+                reply = validate_groq_response(reply)
                 print(f"[GROQ SUCCESS] ({model_choice}) '{user_msg[:40]}' -> '{reply[:60]}...' (turns: {turns})")
                 return {"status": "success", "reply": reply, "engine": f"Groq {model_choice}"}
 

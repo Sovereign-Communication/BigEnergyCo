@@ -43,17 +43,14 @@ All guidance is educational estimates only — recommend verification with a lic
 - Landed cost including freight + BMS + fusing: ~$112/kWh
 - Typical savings vs turnkey equivalents: 85-90%
 
-=== RESPONSE STYLE & COMPLETION PROTOCOL ===
-- You have ample token capacity (2,048 tokens per turn) and seamless multi-message auto-continuation enabled.
-- Never truncate responses, cut calculations short, or leave plans half-finished.
-- When an off-grid sizing request or detailed technical question is asked, provide the complete plan:
-  1. Estimated daily & monthly consumption (kWh)
-  2. Recommended autonomy days and usable/nominal battery bank capacity (kWh)
-  3. Recommended battery chemistry (Sodium-Ion vs LFP) with climate rationale
-  4. Cell string configuration (e.g. 16S4P / 16S7P) & cell count
-  5. Approximate BOM landed cost estimate
-  6. Inverter / safety / next step guidance
-- For general greetings or simple questions, keep responses concise, conversational, and direct.
+=== DYNAMIC PACING, LENGTH BUDGET & MULTI-PART PROTOCOL ===
+- Operational Length Budget: Aim for concise, high-density responses (typically 350–700 words, maximum ~1,000 words per response).
+- Self-Balancing & Relevance: Dynamically assess how complex the question is against your length budget. Be crisp, direct, and high-signal; avoid repetitive prose or bloated preambles.
+- Multi-Part Protocol for Massive Requests: If the user asks for a very broad or multi-layered build (e.g. asking for sizing + full wiring diagrams + BMS programming + inverter configuration + code permits all in one prompt), do NOT try to write an unreadable encyclopedia at once. Instead:
+  * Open cleanly: "Off-grid setups have several key layers, so I've structured this into a clear, actionable overview (Part 1). Whenever you're ready, just ask for Part 2 to cover [wiring / schematics / permits]!"
+  * Deliver the primary core calculation, sizing breakdown, chemistry recommendation, and BOM table fully.
+  * Clearly offer specific next-step questions the user can ask to trigger Part 2.
+- Never Cut Off Mid-Thought: Every response MUST conclude cleanly with a complete sentence, proper markdown table closing, and sign-off. Never leave a hanging sentence, dangling bullet point, or unclosed table.
 - Use bullet points and tables for specs/numbers.
 - Always end with an invitation to ask follow-up questions, and point to the free estimator at https://treystu.github.io/BigEnergyCo/ for sizing.
 - Use ⚡ emoji occasionally for energy topics.`;
@@ -69,6 +66,42 @@ function jsonResponse(data, status = 200) {
     status,
     headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
   });
+}
+
+function sanitizeAndCloseReply(text) {
+  if (!text || typeof text !== "string") return text;
+  let cleaned = text.trimEnd();
+
+  // 1. Close unclosed markdown code blocks
+  const codeBlockCount = (cleaned.match(/```/g) || []).length;
+  if (codeBlockCount % 2 !== 0) {
+    cleaned += "\n```";
+  }
+
+  // 2. Remove unfinished markdown table row
+  let lines = cleaned.split("\n");
+  while (lines.length > 0) {
+    const lastLine = lines[lines.length - 1].trim();
+    if (lastLine.startsWith("|") && (!lastLine.endsWith("|") || lastLine === "| ~")) {
+      lines.pop();
+    } else {
+      break;
+    }
+  }
+  cleaned = lines.join("\n").trimEnd();
+
+  // 3. Ensure sentence closes cleanly if it was cut off mid-thought
+  const terminalChars = [".", "!", "?", ":", "🌞", "⚡", "🌺", "✅", "👉", ")", "`", '"', "'", "*", "_"];
+  const lastChar = cleaned.slice(-1);
+  if (lastChar && !terminalChars.includes(lastChar)) {
+    const lastPunctMatch = cleaned.match(/([\.\!\?])\s+[^\.\!\?]*$/);
+    if (lastPunctMatch && lastPunctMatch.index !== undefined) {
+      cleaned = cleaned.slice(0, lastPunctMatch.index + 1).trimEnd();
+      cleaned += "\n\n*(Feel free to ask for Part 2 or let me know if you'd like to dive deeper into any of these specs! ⚡)*";
+    }
+  }
+
+  return cleaned;
 }
 
 async function callGroq(apiKey, model, messages) {
@@ -154,7 +187,8 @@ async function handleChat(request, env) {
     });
   }
 
-  const reply = fullReply || "No response received.";
+  const rawReply = fullReply || "No response received.";
+  const reply = sanitizeAndCloseReply(rawReply);
   return jsonResponse({ reply, model: usedModel, continuations: turns - 1 });
 }
 
