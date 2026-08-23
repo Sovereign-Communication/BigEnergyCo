@@ -6,7 +6,7 @@ import {
   cellTemp, tempFactor, arrayEfficiency, buildE1kw,
   flatProfile, shapedProfile, applianceProfile, expandProfile,
   simulate, sizeForTier, sizeAllTiers, RELIABILITY_TIERS,
-  downsampleEnvelope, dailyMinimums,
+  downsampleEnvelope, dailyExtremes,
 } from "../assets/js/sizing/engine.js";
 
 const EPS = 1e-6;
@@ -283,23 +283,44 @@ test("downsampleEnvelope preserves the exact min/max envelope", () => {
   assert.ok(b.lo <= -0.2 + EPS, "dips survive downsampling");
 });
 
-test("dailyMinimums: one honest number per day, dips land in the right day", () => {
-  // 3 days of hourly SOC. Day 1 flat 0.8, day 2 has a sharp dip to 0.1 at
-  // hour 30 (day index 1), day 3 recovers to 0.9.
+test("dailyExtremes: captures the full daily range, dips and peaks", () => {
+  // Day 1 flat 0.8. Day 2: dip to 0.1 at hour 30, spike to 0.97 at hour 40.
+  // Day 3 recovers to 0.9.
   const s = new Float64Array(72);
   for (let i = 0; i < 24; i++) s[i] = 0.8;
-  for (let i = 24; i < 48; i++) s[i] = i === 30 ? 0.1 : 0.6;
+  for (let i = 24; i < 48; i++) s[i] = i === 30 ? 0.1 : (i === 40 ? 0.97 : 0.6);
   for (let i = 48; i < 72; i++) s[i] = 0.9;
-  const d = dailyMinimums(s);
-  assert.equal(d.length, 3);
-  assert.ok(Math.abs(d[0] - 0.8) < EPS);
-  assert.ok(Math.abs(d[1] - 0.1) < EPS);
-  assert.ok(Math.abs(d[2] - 0.9) < EPS);
+  const { min, max } = dailyExtremes(s);
+  assert.equal(min.length, 3);
+  assert.ok(Math.abs(min[0] - 0.8) < EPS && Math.abs(max[0] - 0.8) < EPS);
+  assert.ok(Math.abs(min[1] - 0.1) < EPS, "dip captured");
+  assert.ok(Math.abs(max[1] - 0.97) < EPS, "peak captured");
+  assert.ok(Math.abs(min[2] - 0.9) < EPS && Math.abs(max[2] - 0.9) < EPS);
+});
 
-  // partial trailing day still yields its own (lower-bound-safe) entry
-  const d2 = dailyMinimums(new Float64Array([0.5, 0.4]));
-  assert.equal(d2.length, 1);
-  assert.ok(Math.abs(d2[0] - 0.4) < EPS);
+test("GATE: every tier's battery reaches ~100% on charging days", () => {
+  // This is the user-facing promise of percent SOC: full is full, whatever
+  // the system size. The chart's top edge must reflect it.
+  const w = makeWeather(24 * 200, 4242, { seasonalAmp: 0.35, baseTemp: 20, tempAmp: 10 });
+  const e1 = buildE1kw(w);
+  const load = expandProfile(flatProfile(8), e1.length);
+  const temps = Float64Array.from(w, (x) => x.tAmb);
+  const results = sizeAllTiers({
+    e1kw: e1, loadWh: load, tempsC: temps, chemistry: "lfp",
+    years: 200 / 365, pvMax: 15, battMax: 60,
+  });
+  let checked = 0;
+  for (const { tier, sizing } of results) {
+    if (!sizing) continue;
+    const traced = simulate({ pvKw: sizing.pvKw, battKwhUsable: sizing.battKwh, e1kw: e1, loadWh: load, chemistry: "lfp", tempsC: temps, capture: true });
+    const ext = dailyExtremes(traced.socSeries);
+    const maxOfMax = Math.max(...ext.max);
+    assert.ok(maxOfMax >= 0.999, `${tier.id} must reach full (got ${(maxOfMax * 100).toFixed(1)}%)`);
+    const fullDays = [...ext.max].filter((v) => v >= 0.995).length;
+    assert.ok(fullDays > 30, `${tier.id} should reach full on many days (got ${fullDays})`);
+    checked++;
+  }
+  assert.ok(checked >= 2, "at least two tiers solvable in this scenario");
 });
 
 test("battery-life math: smaller banks cycle more but LFP still lasts years", () => {

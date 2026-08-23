@@ -319,7 +319,7 @@ function run() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260823c", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260823d", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") renderResults(ev.data.payload);
       else if (ev.data?.type === "error") setStatus("⚠️ " + ev.data.message);
@@ -359,7 +359,7 @@ function drawSocChart(history, chemLabel) {
   const canvas = $("socCanvas");
   if (!wrap || !canvas) return;
 
-  const solvable = history.tiers.filter((t) => t.dailyMin && t.dailyMin.length);
+  const solvable = history.tiers.filter((t) => t.dailyMin && t.dailyMax && t.dailyMin.length);
   if (!solvable.length) {
     // Data arrived but in an unexpected shape — almost certainly a stale
     // cached module. Never fail silently: say so.
@@ -392,7 +392,8 @@ function drawSocChart(history, chemLabel) {
   function drawBand(t, top) {
     const color = TIER_COLORS[t.id] || "#888";
     const plotH = BAND_H - padT - padB;
-    const X = (i) => padL + (i / (t.dailyMin.length - 1)) * plotW;
+    const n = t.dailyMin.length;
+    const X = (i) => padL + (i / (n - 1)) * plotW;
     const Y = (socPct) => top + padT + (1 - socPct / 100) * plotH;
 
     // frame
@@ -414,25 +415,34 @@ function drawSocChart(history, chemLabel) {
     ctx.fillStyle = "rgba(239,68,68,0.85)"; ctx.textAlign = "left";
     ctx.fillText("empty", W - padR - 38, Y(0) - 4);
 
-    // area under daily-minimum line
+    // FULL daily range: fill between each day's highest and lowest charge.
+    // The top edge is the battery charging back to full — every system's
+    // band touches 100%; the bottom edge shows how deep the nights dig.
     ctx.beginPath();
-    ctx.moveTo(X(0), Y(t.dailyMin[0]));
-    for (let i = 1; i < t.dailyMin.length; i++) ctx.lineTo(X(i), Y(t.dailyMin[i]));
-    ctx.lineTo(X(t.dailyMin.length - 1), Y(0));
-    ctx.lineTo(X(0), Y(0));
+    ctx.moveTo(X(0), Y(t.dailyMax[0]));
+    for (let i = 1; i < n; i++) ctx.lineTo(X(i), Y(t.dailyMax[i]));
+    for (let i = n - 1; i >= 0; i--) ctx.lineTo(X(i), Y(t.dailyMin[i]));
     ctx.closePath();
-    ctx.globalAlpha = 0.15;
+    ctx.globalAlpha = 0.22;
     ctx.fillStyle = color;
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    // the line
+    // stroke both edges so the range reads crisply
     ctx.strokeStyle = color;
-    ctx.lineWidth = 1.3;
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.6;
     ctx.beginPath();
-    ctx.moveTo(X(0), Y(t.dailyMin[0]));
-    for (let i = 1; i < t.dailyMin.length; i++) ctx.lineTo(X(i), Y(t.dailyMin[i]));
+    for (let i = 0; i < n; i++) { const y = Y(t.dailyMin[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
     ctx.stroke();
+
+    // top edge thicker: "does it reach full?" should be unmistakable
+    ctx.globalAlpha = 0.95;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) { const y = Y(t.dailyMax[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
 
     // label: tier name + one-sentence verdict
     ctx.textAlign = "left";
@@ -441,12 +451,11 @@ function drawSocChart(history, chemLabel) {
     ctx.fillText(TIER_NAMES[t.id] || t.id, padL + 2, top + 13);
     ctx.font = "11px system-ui, sans-serif";
     ctx.fillStyle = t.emptyDays > 0 ? "rgba(245,158,11,0.95)" : color;
-    ctx.fillText(
-      t.emptyDays > 0
-        ? `lowest point: ${Math.max(0, Math.round(t.minPct))}% · hit empty on ${t.emptyDays} day${t.emptyDays === 1 ? "" : "s"} in five years`
-        : `never dropped below ${Math.max(0, Math.round(t.minPct))}% all five years`,
-      padL + 2, top + padT + 14
-    );
+    const charged = `charged to 100% on ${fmt(t.fullDays)} of ${fmt(t.totalDays)} days`;
+    const verdict = t.emptyDays > 0
+      ? `${charged} · but hit empty on ${t.emptyDays} day${t.emptyDays === 1 ? "" : "s"}`
+      : `${charged} · never went empty`;
+    ctx.fillText(`lowest point ${Math.max(0, Math.round(t.minPct))}% — ${verdict}`, padL + 2, top + padT + 14);
   }
 
   solvable.forEach((t, idx) => drawBand(t, idx * (BAND_H + GAP)));
@@ -461,8 +470,10 @@ function drawSocChart(history, chemLabel) {
   }
 
   $("socCaption").textContent =
-    `Each line is the lowest the battery got on that day, ${history.startYear}–${history.endYear}, in real satellite weather (${chemLabel}). ` +
-    `High and calm means dependable; dives toward the red line are days a generator would have covered.`;
+    `Each band spans one day: top edge = fullest the battery got, bottom edge = deepest discharge, ` +
+    `${history.startYear}–${history.endYear} of real satellite weather (${chemLabel}). Every healthy system ` +
+    `charges all the way back to 100% on sunny days — the difference between systems is how far the bottom ` +
+    `edge dives toward empty during bad weather. Touch the red line and a generator is covering you.`;
 }
 
 function renderResults(p) {

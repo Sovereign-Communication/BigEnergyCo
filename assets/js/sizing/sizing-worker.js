@@ -3,10 +3,10 @@
 // Message out: { type: "ok", payload } | { type: "error", message }
 import {
   buildE1kw, flatProfile, expandProfile, sizeAllTiers, simulate,
-  dailyMinimums, CHEMISTRIES,
+  dailyExtremes, CHEMISTRIES,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER,
-} from "./engine.js?v=20260823c";
-import { fetchHourlyCached } from "./nasa.js?v=20260823c";
+} from "./engine.js?v=20260823d";
+import { fetchHourlyCached } from "./nasa.js?v=20260823d";
 
 self.onmessage = async (ev) => {
   const msg = ev.data;
@@ -39,23 +39,30 @@ self.onmessage = async (ev) => {
         const cyclesPerYear = sizing.result.cyclesEquivalent / series.meta.years;
         batteryLifeYears = cyclesPerYear > 0 ? chem.cyclesTo80 / cyclesPerYear : null;
 
-        // One clean number per day: the lowest the battery got that day.
+        // Full daily range: the band between each day's lowest and highest
+        // charge. Top edge touches 100% on charging days for EVERY system —
+        // that is the whole point of using percent.
         const traced = simulate({
           pvKw: sizing.pvKw, battKwhUsable: sizing.battKwh,
           e1kw, loadWh, chemistry, tempsC, capture: true,
         });
-        const mins = dailyMinimums(traced.socSeries);
-        let minPct = 100, emptyDays = 0;
-        for (const v of mins) {
-          const p = v * 100;
-          if (p < minPct) minPct = p;
-          if (p < 5) emptyDays++;
+        const ext = dailyExtremes(traced.socSeries);
+        let minPct = 100, emptyDays = 0, fullDays = 0;
+        const nDays = ext.min.length;
+        for (let d = 0; d < nDays; d++) {
+          const lo = ext.min[d] * 100;
+          if (lo < minPct) minPct = lo;
+          if (lo < 5) emptyDays++;
+          if (ext.max[d] >= 0.995) fullDays++;
         }
         historyTiers.push({
           id: tier.id,
-          dailyMin: Array.from(mins, (v) => Math.round(v * 1000) / 10),
+          dailyMin: Array.from(ext.min, (v) => Math.round(v * 1000) / 10),
+          dailyMax: Array.from(ext.max, (v) => Math.round(v * 1000) / 10),
           minPct: Math.max(0, Math.round(minPct)),
           emptyDays,
+          fullDays,
+          totalDays: nDays,
         });
       }
 

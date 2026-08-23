@@ -224,22 +224,28 @@ export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp",
 }
 
 /**
- * Lowest state of charge reached on each calendar day (data is Local Solar
- * Time, so every 24 consecutive samples is exactly one day starting midnight).
- * The daily minimum IS the reliability signal: it shows how deep each system
- * digs into its reserve during bad weather, with no hourly noise.
- * @returns {Float64Array} length ceil(n/24)
+ * Lowest and highest state of charge reached on each calendar day (data is
+ * Local Solar Time, so every 24 consecutive samples is one day from midnight).
+ * The pair gives the FULL daily range of use: max shows the battery charging
+ * back to full, min shows how deep bad weather digs into the reserve.
+ * @returns {{min:Float64Array, max:Float64Array}} length ceil(n/24)
  */
-export function dailyMinimums(series) {
-  const out = new Float64Array(Math.ceil(series.length / 24));
-  for (let d = 0; d < out.length; d++) {
+export function dailyExtremes(series) {
+  const n = Math.ceil(series.length / 24);
+  const min = new Float64Array(n);
+  const max = new Float64Array(n);
+  for (let d = 0; d < n; d++) {
     const s = d * 24;
     const e = Math.min(series.length, s + 24);
-    let lo = Infinity;
-    for (let i = s; i < e; i++) if (series[i] < lo) lo = series[i];
-    out[d] = lo;
+    let lo = Infinity, hi = -Infinity;
+    for (let i = s; i < e; i++) {
+      if (series[i] < lo) lo = series[i];
+      if (series[i] > hi) hi = series[i];
+    }
+    min[d] = lo;
+    max[d] = hi;
   }
-  return out;
+  return { min, max };
 }
 
 /**
