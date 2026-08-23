@@ -30,6 +30,7 @@ const RATE_MAP_CLEAR_SIZE = 10000;
 // which makes browsers refuse to read the response.
 const ALLOWED_ORIGINS = new Set([
   "https://treystu.github.io",
+  "https://bigenergyco.pages.dev",
   "http://127.0.0.1:7510",
   "http://localhost:7510",
 ]);
@@ -183,6 +184,21 @@ async function handleChat(request, env, origin) {
   }
 
   // Rate limit BEFORE any paid call, including for requests that would fail later.
+  // Layer 1 (hard): Cloudflare Rate Limiting binding — consistent across isolates
+  // within a location. Layer 2 (soft): in-isolate daily/global counters.
+  if (env.RL_CHAT_PER_MIN) {
+    try {
+      const rl = await env.RL_CHAT_PER_MIN.limit({ key: "chat:" + getClientIp(request) });
+      if (!rl.success) {
+        return jsonResponse(
+          { error: "Rate limit exceeded. Please wait a minute before trying again." },
+          429,
+          origin,
+          { "Retry-After": "60" }
+        );
+      }
+    } catch { /* binding unavailable -> fall through to soft limits */ }
+  }
   const { allowed, retryAfter } = checkRateLimit(getClientIp(request));
   if (!allowed) {
     return jsonResponse(
@@ -215,7 +231,25 @@ async function handleChat(request, env, origin) {
   while (turns <= maxContinuations) {
     let groqRes = await callGroq(apiKey, usedModel, currentMessages);
 
-    // Fallback if primary fails on turn 0
+    // Upstream rate limit (shared org TPM pool): do NOT hammer the fallback model —
+    // it draws from the same pool. Return a sanitized, retryable response.
+    if (groqRes.status === 429) {
+      let retryAfter = 30;
+      try {
+        const errBody = await groqRes.json();
+        const m = /try again in ([\d.]+)s/i.exec(errBody?.error?.message || "");
+        if (m) retryAfter = Math.max(5, Math.ceil(parseFloat(m[1]) + 1));
+      } catch { /* keep default */ }
+      return jsonResponse(
+        { error: "The AI provider is busy right now. Please try again shortly." },
+        503,
+        origin,
+        { "Retry-After": String(retryAfter) }
+      );
+    }
+
+    // Fallback to the smaller model only for other upstream failures (outage, 5xx),
+    // and only before any partial output exists.
     if (!groqRes.ok && turns === 0 && usedModel === GROQ_PRIMARY_MODEL) {
       console.warn(`Primary model ${GROQ_PRIMARY_MODEL} failed (${groqRes.status}). Trying fallback ${GROQ_FALLBACK_MODEL}...`);
       usedModel = GROQ_FALLBACK_MODEL;
@@ -226,8 +260,7 @@ async function handleChat(request, env, origin) {
       if (fullReply.length > 0) {
         break; // Return whatever complete text was accumulated
       }
-      const errText = await groqRes.text();
-      return jsonResponse({ error: `Groq API error (${groqRes.status})`, detail: errText }, 502, origin);
+      return jsonResponse({ error: `AI provider error (${groqRes.status}). Please try again later.` }, 502, origin);
     }
 
     const data = await groqRes.json();

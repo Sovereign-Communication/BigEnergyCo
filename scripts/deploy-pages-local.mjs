@@ -1,0 +1,81 @@
+// Local GitHub Pages deployment (no GitHub Actions required).
+//
+// Builds the SAME allowlist as .github/workflows/deploy.yml and force-pushes
+// it as a single orphan commit to the `gh-pages` branch. Point Pages source
+// at gh-pages /root (legacy builder) while Actions is unavailable; when the
+// billing lock is lifted, switch back to build_type=workflow and delete this
+// branch.
+//
+// Usage: node scripts/deploy-pages-local.mjs [--check]
+//   --check: build only, print contents, do not push
+import { cpSync, mkdirSync, rmSync, readdirSync, statSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { join, resolve } from "node:path";
+
+const ROOT = resolve(new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
+const STAGE = join(ROOT, "_pages_staging");
+const CHECK = process.argv.includes("--check");
+
+const ALLOWLIST = [
+  "index.html",
+  "robots.txt",
+  "sitemap.xml",
+  "blog/index.html",
+  "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html",
+  "assets", // copied recursively (og-card.png + js/sizing/*)
+];
+
+function sh(cmd, opts = {}) {
+  return execSync(cmd, { cwd: ROOT, stdio: opts.quiet ? "pipe" : "inherit", encoding: "utf8" });
+}
+
+console.log(`Staging allowlisted files into _pages_staging/ ...`);
+rmSync(STAGE, { recursive: true, force: true });
+mkdirSync(join(STAGE, "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage"), { recursive: true });
+
+for (const entry of ALLOWLIST) {
+  const src = join(ROOT, entry);
+  if (statSync(src).isDirectory()) {
+    cpSync(src, join(STAGE, entry), { recursive: true });
+  } else {
+    cpSync(src, join(STAGE, entry));
+  }
+}
+
+// Safety net: refuse to publish anything outside expectations
+const allowedTop = new Set(["index.html", "robots.txt", "sitemap.xml", "blog", "assets"]);
+for (const name of readdirSync(STAGE)) {
+  if (!allowedTop.has(name)) throw new Error(`Unexpected file in staging: ${name}`);
+}
+
+function listDir(dir, prefix = "") {
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) listDir(p, prefix + name + "/");
+    else console.log("  " + prefix + name);
+  }
+}
+console.log("Deployable files:");
+listDir(STAGE);
+
+if (CHECK) {
+  console.log("\n--check: built staging only, not pushing.");
+  process.exit(0);
+}
+
+console.log("\nCreating orphan commit on gh-pages ...");
+const idxFile = join(ROOT, ".git", "pages-index-tmp");
+const idxEnv = { ...process.env, GIT_INDEX_FILE: idxFile, GIT_WORK_TREE: STAGE };
+execSync("git add -A", { cwd: ROOT, env: idxEnv, stdio: "pipe" });
+const tree = execSync("git write-tree", { cwd: ROOT, env: idxEnv, encoding: "utf8" }).trim();
+const commitEnv = { ...process.env };
+delete commitEnv.GIT_INDEX_FILE;
+delete commitEnv.GIT_WORK_TREE;
+const commit = execSync(`git commit-tree ${tree} -m "Publish site (local allowlist build, ${new Date().toISOString()})"`, {
+  cwd: ROOT, env: commitEnv, encoding: "utf8",
+}).trim();
+rmSync(idxFile, { force: true });
+
+console.log(`Commit ${commit.slice(0, 10)} -> refs/heads/gh-pages (force)`);
+sh(`git push origin ${commit}:refs/heads/gh-pages --force`);
+console.log("\nPushed. If Pages source = gh-pages /root, the site updates in ~30-60s.");
