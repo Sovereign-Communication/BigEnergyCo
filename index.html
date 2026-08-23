@@ -655,29 +655,76 @@ footer {
       <div class="calc-card">
         <div class="calc-controls">
           <div class="form-group">
-            <label for="cityPreset">Location:</label>
-            <select id="cityPreset" class="form-control">
-              <option value="custom" selected>Custom coordinates</option>
+            <label for="cityPreset">Where is this system going? <span style="font-weight:400;color:var(--text-muted);">(nearest big city is fine)</span></label>
+            <div style="display: flex; gap: 0.6rem;">
+              <select id="cityPreset" class="form-control" style="flex: 1;"></select>
+              <div id="btnGeoLocate" class="btn btn-outline" style="white-space: nowrap; cursor: pointer; font-size: 0.9rem;">📍 My location</div>
+            </div>
+            <div id="locNote" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;"></div>
+            <details id="coordDetails" style="margin-top: 0.5rem;">
+              <summary style="cursor: pointer; font-size: 0.8rem; color: var(--text-muted);">Advanced: exact coordinates</summary>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.6rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="latInput">Latitude (&minus;90 to 90):</label>
+                  <input type="number" id="latInput" class="form-control" value="21.31" step="0.01">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="lonInput">Longitude (&minus;180 to 180):</label>
+                  <input type="number" id="lonInput" class="form-control" value="-157.86" step="0.01">
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <div class="form-group">
+            <label for="loadMode">How much power do you use?</label>
+            <select id="loadMode" class="form-control">
+              <option value="appliances" selected>Let me pick my appliances</option>
+              <option value="bill">I know my monthly electric bill</option>
+              <option value="kwh">I know my kWh/day (advanced)</option>
             </select>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div class="form-group">
-              <label for="latInput">Latitude (&minus;90 to 90):</label>
-              <input type="number" id="latInput" class="form-control" value="19.5" step="0.01">
-            </div>
-            <div class="form-group">
-              <label for="lonInput">Longitude (&minus;180 to 180):</label>
-              <input type="number" id="lonInput" class="form-control" value="-155.0" step="0.01">
-            </div>
+          <div id="panelAppliances">
+            <div id="applianceList"></div>
+            <div id="readoutAppliances" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.5;">
+              Wattages are typical values &mdash; yours may differ. Fridges, freezers and air conditioners don't run
+              flat-out all day, so the hours slider means "hours it actually runs," which is already built into the defaults.
+            </p>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div id="panelBill" style="display: none;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="billAmount">Monthly electric bill (in your currency, rough number):</label>
+                <input type="number" id="billAmount" class="form-control" placeholder="e.g. 150" min="1">
+              </div>
+              <div class="form-group">
+                <label for="tariffSelect">Electricity price where you live:</label>
+                <select id="tariffSelect" class="form-control"></select>
+              </div>
+            </div>
+            <div id="customRate" style="display: none;" class="form-group">
+              <label for="customRateVal">Your price per kWh:</label>
+              <input type="number" id="customRateVal" class="form-control" placeholder="e.g. 0.31" step="0.01" min="0.01">
+            </div>
+            <div id="readoutBill" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem;">
+              Bills include fixed charges and taxes, so this slightly overestimates real use &mdash; which is a safe direction to err.
+            </p>
+          </div>
+
+          <div id="panelKwh" style="display: none;">
             <div class="form-group">
               <label for="dailyKwhInput">Daily energy use (kWh/day):</label>
               <input type="number" id="dailyKwhInput" class="form-control" value="10" min="0.5" max="500" step="1">
             </div>
-            <div class="form-group">
+            <div id="readoutKwh" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;">
               <label for="chemSelect">Battery chemistry:</label>
               <select id="chemSelect" class="form-control">
                 <option value="lfp" selected>LFP (LiFePO4)</option>
@@ -687,7 +734,7 @@ footer {
             </div>
           </div>
 
-          <div id="btnRunSizing" class="btn btn-primary btn-full" style="cursor:pointer;">☀️ Size My System (5-yr simulation)</div>
+          <div id="btnRunSizing" class="btn btn-primary btn-full" style="cursor:pointer; margin-top: 0.5rem;">☀️ Size My System (5-yr simulation)</div>
           <div id="sizingStatus" style="font-size:0.85rem;color:var(--text-muted);margin-top:0.75rem;line-height:1.5;">First run downloads ~2 MB of satellite weather data, then caches it in your browser.</div>
         </div>
 
