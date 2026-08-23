@@ -1,4 +1,4 @@
-User-agent: *
+﻿User-agent: *
 Allow: /
 
-Sitemap: https://treystu.github.io/BigEnergyCo/sitemap.xml
+Sitemap: https://sovereign-communication.github.io/BigEnergyCo/sitemap.xml
