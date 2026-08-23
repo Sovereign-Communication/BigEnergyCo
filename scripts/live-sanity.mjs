@@ -19,7 +19,11 @@ for (const m of [
   'rel="canonical"', 'id="systemGoal"', "Cut my grid bill",
   'value="auto" selected', "compare all three by lifetime cost",
   'id="exportRate"', "Lead-Acid (AGM)", 'data-i18n="heroTag"', 'id="langSelect"',
-  "ui.js?v=20260823l",
+  "ui.js?v=20260823m",
+  // PWA
+  'rel="manifest"', "./sw.js", 'name="theme-color"',
+  // SEO
+  'id="faq"', "application/ld+json", '"WebApplication"',
 ]) check("marker: " + m.slice(0, 40), html.includes(m));
 
 // stale artifacts absent
@@ -43,8 +47,13 @@ for (const [path, needle] of mods) {
 }
 
 // 4. Freenet page is intentionally NOT on Pages (allowlist ships it nowhere;
-// it distributes via Freenet/launcher). Blog + 404 must serve.
-for (const [p, want] of [["index-freenet.html", 404], ["blog/", 200], ["404.html", 200]]) {
+// it distributes via Freenet/launcher). Blog + 404 + PWA assets must serve.
+for (const [p, want] of [
+  ["index-freenet.html", 404], ["blog/", 200], ["404.html", 200],
+  ["blog/off-grid-vs-grid-tie-payback/", 200],
+  ["sw.js", 200], ["manifest.webmanifest", 200], ["assets/icon.svg", 200],
+  ["assets/js/sizing/profiles.js", 200],
+]) {
   const r = await fetch(BASE + p, { cache: "no-store" });
   check(`HTTP ${want}: ${p} (got ${r.status})`, r.status === want);
 }
