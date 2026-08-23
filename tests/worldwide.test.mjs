@@ -8,10 +8,25 @@ import {
 } from "../assets/js/sizing/engine.js";
 import { fullRange, battOnlyCost } from "../assets/js/sizing/pricing.js";
 
-test("capacityScaleFor: LFP and sodium are unscaled; AGM loses to rate", () => {
+test("GATE: sodium on LFP voltage settings = less capacity but LONGER life", () => {
+  // The ~40 V LFP low cutoff sits above true sodium empty: shallower
+  // effective DoD protects the pack, so life EXCEEDS the deep-cycle rating
+  // even though usable capacity shrinks.
+  assert.equal(CHEMISTRIES.naion.usableScale, 0.85);
+  assert.ok(CHEMISTRIES.naion.cyclesTo80 > 4500, "shallow effective DoD must extend rated life");
+  assert.ok(CHEMISTRIES.naion.cyclesTo80 < CHEMISTRIES.lfp.cyclesTo80, "still below LFP's proven benchmark");
+});
+
+test("GATE: lead-acid assumes NO active balancing (typical DIY strings)", () => {
+  assert.ok(CHEMISTRIES.agm.cyclesTo80 <= 550,
+    "manufacturer lab ratings are not achieved without balancers");
+});
+
+test("capacityScaleFor: sodium keeps 0.85 rate scale; cold drags AGM below it", () => {
   assert.equal(capacityScaleFor("lfp"), 1);
-  assert.equal(capacityScaleFor("naion"), 1);
-  assert.ok(capacityScaleFor("agm") < 1, "AGM rate loss must be reflected");
+  assert.equal(capacityScaleFor("naion"), 0.85);
+  assert.ok(capacityScaleFor("agm", 5) < capacityScaleFor("naion", 5),
+    "cold-site AGM loses capacity on top of its rate loss; sodium's cold story is about charging, not capacity");
 });
 
 test("coldCapacityScale: hot sites 1.0, cold sites floor at 0.6 (lead-acid only)", () => {

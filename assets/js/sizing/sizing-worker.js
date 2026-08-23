@@ -1,4 +1,4 @@
-// Sizing web worker: keeps multi-second searches off the main thread.
+﻿// Sizing web worker: keeps multi-second searches off the main thread.
 // Message in:  { type: "run", latitude, longitude, dailyKwh,
 //                chemistry: "auto" | "naion" | "lfp" | "agm",
 //                tariff, exportRate, mode: "offgrid" | "gridtie" }
@@ -7,17 +7,24 @@ import {
   buildE1kw, flatProfile, expandProfile, sizeAllTiers, simulate,
   sizeAllBillTargets, simulateOffset, dailyExtremes, CHEMISTRIES,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER, capacityScaleFor,
-} from "./engine.js?v=20260823k";
-import { fetchHourlyCached } from "./nasa.js?v=20260823j";
-import { fullRange, getScope, POWMR_CATALOG } from "./pricing.js?v=20260823j";
+} from "./engine.js?v=20260823l";
+import { fetchHourlyCached } from "./nasa.js?v=20260823l";
+import { fullRange, getScope, POWMR_CATALOG } from "./pricing.js?v=20260823l";
 import {
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
   lifetimeCostUsd, exportValueUsd,
-} from "./money.js?v=20260823k";
+} from "./money.js?v=20260823l";
 
 const AUTO_COMPARE_NOTE = {
-  offgrid: "compared at the middle reliability tier (99% — generator as rare backup)",
+  offgrid: "compared at the middle reliability tier (99% â€” generator as rare backup)",
   gridtie: "compared at the ~80% bill-cut target",
+};
+
+// One-line, plain-language reason each bank's numbers look the way they do.
+const AUTO_CARD_NOTES = {
+  naion: "Runs on standard LFP voltage settings (the common case): the ~40 V low cutoff protects it from deep discharge, so it gives up a little capacity but lasts longer than its deep-cycle rating.",
+  lfp: "The benchmark: uses most of its nameplate every day and still outlives everything else.",
+  agm: "Half the bank is untouchable reserve (50% DoD rule), and without active balancing â€” typical for DIY series strings â€” the whole string wears at the weakest block's pace.",
 };
 
 self.onmessage = async (ev) => {
@@ -86,6 +93,21 @@ self.onmessage = async (ev) => {
       };
     }
 
+    // Nameplate-relative bands for the AUTO comparison chart: how deep each
+    // bank digs into ITS OWN hardware. Same-job systems deliver similar
+    // energy, so the honest difference is the reserve each chemistry must
+    // carry — lead-acid's whole working range sits in the bottom half of its
+    // nameplate while lithium/sodium use nearly all of theirs.
+    function nameplateBands(sim, effectiveCapWh, nameplateWh) {
+      if (!sim.socSeries || !(effectiveCapWh > 0) || !(nameplateWh > 0)) return null;
+      const ext = dailyExtremes(sim.socSeries);
+      const toPct = (v) => Math.round((v * effectiveCapWh / nameplateWh) * 1000) / 10;
+      return {
+        min: Array.from(ext.min, toPct),
+        max: Array.from(ext.max, toPct),
+      };
+    }
+
     const basePayload = () => ({
       meta: series.meta,
       annualYieldPerKw: Math.round(annualYield),
@@ -95,7 +117,7 @@ self.onmessage = async (ev) => {
       annualGridSpendUsd: gridSpend === null ? null : Math.round(gridSpend),
       pricing: {
         basisLabel: "ex-factory China through PowMr-class budget retail",
-        source: "cell market indications → PowMr public catalog, Aug 2026",
+        source: "cell market indications â†’ PowMr public catalog, Aug 2026",
         catalog: POWMR_CATALOG,
       },
       assumptions: {
@@ -103,14 +125,14 @@ self.onmessage = async (ev) => {
         gammaPerC: GAMMA_PMAX,
         noctC: NOCT,
         etaInverter: ETA_INVERTER,
-        dataYears: `${series.meta.startYear}–${series.meta.endYear} (${series.meta.years} yr)`,
+        dataYears: `${series.meta.startYear}â€“${series.meta.endYear} (${series.meta.years} yr)`,
         source: series.meta.source,
         capacityScale: +capacityScaleFor(chemistry === "auto" ? "lfp" : chemistry, meanTempC).toFixed(3),
         meanTempC: Math.round(meanTempC),
       },
     });
 
-    // ── GRID-TIE ────────────────────────────────────────────────────────────
+    // â”€â”€ GRID-TIE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (mode === "gridtie") {
       const historyTiers = [];
 
@@ -136,8 +158,9 @@ self.onmessage = async (ev) => {
           const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
           const pbLo = savingsUsd ? paybackYears(m.cost.lo, savingsUsd + exportVal) : null;
           const pbHi = savingsUsd ? paybackYears(m.cost.hi, savingsUsd + exportVal) : null;
-          auto.push({
+          const entry = {
             chemistry: chemId,
+            cardNote: AUTO_CARD_NOTES[chemId] ?? null,
             chemLabel: m.chemObj.label,
             usableDod: m.chemObj.usableDod,
             solvable: true,
@@ -163,13 +186,13 @@ self.onmessage = async (ev) => {
               });
               return l === null ? null : +l.toFixed(4);
             })(),
-          });
+          };
           const sim = simulateOffset({
             pvKw: hit.sizing.pvKw, battKwhUsable: hit.sizing.battKwh,
             e1kw, loadWh, chemistry: chemId, tempsC, capacityScale: capScale, capture: true,
           });
-          const band = socBand(`auto-${chemId}`, sim);
-          if (band) historyTiers.push(band);
+          entry.socNameplatePct = nameplateBands(sim, hit.sizing.battKwh * 1000 * capScale, entry.battNameplateKwh * 1000);
+          auto.push(entry);
         }
         const payload = basePayload();
         payload.mode = "gridtie";
@@ -177,13 +200,14 @@ self.onmessage = async (ev) => {
         payload.autoNote = AUTO_COMPARE_NOTE.gridtie;
         payload.targets = [];
         payload.history = {
-          kind: "gridtie", startYear: series.meta.startYear, endYear: series.meta.endYear,
-          days: Math.ceil(hours.length / 24), tiers: historyTiers,
+          kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear,
+          days: Math.ceil(hours.length / 24), tiers: [],
         };
         payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
         payload.assumptions.money =
           `Auto mode sizes each chemistry to deliver the same ~80% bill cut within its depth-of-discharge window ` +
-          `(AGM banks are ~2× nameplate; lithium/sodium ~1.1×). Lifetime cost adds every bank swap PLUS install labor each time over 25 years. ` +
+          `(AGM banks are ~2Ã— nameplate; lithium/sodium ~1.1Ã—; sodium modeled on LFP voltage settings â€” slightly less capacity, gentler discharge). ` +
+          `Lifetime cost adds every bank swap PLUS install labor each time over 25 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings). ` +
           `Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; fixed connection fees not counted.`;
         self.postMessage({ type: "ok", payload });
         return;
@@ -258,7 +282,7 @@ self.onmessage = async (ev) => {
       return;
     }
 
-    // ── OFF-GRID ────────────────────────────────────────────────────────────
+    // â”€â”€ OFF-GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const historyTiers = [];
 
     // AUTO: one representative system per chemistry (middle tier).
@@ -282,8 +306,9 @@ self.onmessage = async (ev) => {
           replacements: m.replacements25y,
           annualServedKwh: servedKwhPerYear,
         });
-        auto.push({
+        const entry = {
           chemistry: chemId,
+          cardNote: AUTO_CARD_NOTES[chemId] ?? null,
           chemLabel: m.chemObj.label,
           usableDod: m.chemObj.usableDod,
           solvable: true,
@@ -302,13 +327,13 @@ self.onmessage = async (ev) => {
           lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
           paybackYearsLo: gridSpend ? paybackYears(m.cost.lo, gridSpend) : null,
           paybackYearsHi: gridSpend ? paybackYears(m.cost.hi, gridSpend) : null,
-        });
+        };
         const sim = simulate({
           pvKw: sizing.pvKw, battKwhUsable: sizing.battKwh,
           e1kw, loadWh, chemistry: chemId, tempsC, capture: true, capacityScale: capScale,
         });
-        const band = socBand(`auto-${chemId}`, sim);
-        if (band) historyTiers.push(band);
+        entry.socNameplatePct = nameplateBands(sim, sizing.battKwh * 1000 * capScale, entry.battNameplateKwh * 1000);
+        auto.push(entry);
       }
       const payload = basePayload();
       payload.mode = "offgrid";
@@ -316,12 +341,12 @@ self.onmessage = async (ev) => {
       payload.autoNote = AUTO_COMPARE_NOTE.offgrid;
       payload.tiers = [];
       payload.history = {
-        kind: "offgrid", startYear: series.meta.startYear, endYear: series.meta.endYear,
-        days: Math.ceil(hours.length / 24), tiers: historyTiers,
+        kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear,
+        days: Math.ceil(hours.length / 24), tiers: [],
       };
       payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
       payload.assumptions.money =
-        `Auto mode sizes each chemistry for the same job — lights stay on with a generator as rare backup — inside its depth-of-discharge window (AGM keeps a 50% reserve; lithium/sodium use ~90%). Lifetime cost adds every bank swap PLUS install labor each time over 25 years. That is why lead-acid's sticker price misleads.`;
+        `Auto mode sizes each chemistry for the same job â€” lights stay on with a generator as rare backup â€” inside its depth-of-discharge window (AGM keeps a 50% reserve; lithium/sodium use ~90%). Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 25 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) â€” that is why its sticker price misleads.`;
       self.postMessage({ type: "ok", payload });
       return;
     }

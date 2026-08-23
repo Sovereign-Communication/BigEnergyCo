@@ -44,9 +44,14 @@ export const CHEMISTRIES = {
     roundTrip: 0.90,
     chargeMinC: -20,
     dischargeMinC: -40,
-    cyclesTo80: 4500,     // conservative mid-range for current packs
-    usableScale: 1.00,    // holds capacity in cold better than any lithium
-    note: "Cold-capable; check local availability and certification (UL 9540 rare as of Aug 2026).",
+    // Field reality (2026): most hybrid inverters only offer LFP voltage
+    // profiles. On a 16S LFP window the ~40-42 V low cutoff sits ABOVE true
+    // sodium empty, and the LFP absorb voltage ends charge early — so you
+    // lose ~15% effective capacity but the pack never sees deep discharge,
+    // which EXTENDS life versus the deep-cycle rating.
+    usableScale: 0.85,
+    cyclesTo80: 5500,     // uprated from ~4500 deep-cycle figure for shallow effective DoD
+    note: "Cold-capable. Modeled on standard LFP voltage settings (the common case): slightly less usable capacity, gentler discharge, longer life. A native sodium inverter profile restores full capacity.",
   },
   agm: {
     label: "Lead-Acid (AGM)",
@@ -54,14 +59,14 @@ export const CHEMISTRIES = {
     roundTrip: 0.85,
     chargeMinC: -20,
     dischargeMinC: -20,
-    cyclesTo80: 600,
-    // Reality adjustments the marketing gloss hides:
-    //  - datasheet Ah is a 20-hour (C/20) figure; home cycling at ~C/5-C/10
-    //    delivers roughly 85% of it,
-    //  - capacity drops ~0.8%/°C below 25 °C annual mean (floor 60%),
+    // Field reality: DIY banks are series strings of 12 V blocks, usually
+    // WITHOUT active balancing (top-balancing at best, often misconfigured).
+    // Cells drift and one laggard drags the whole string, so manufacturer
+    // lab ratings (~600 cycles) aren't achieved. 500 is the honest number.
+    cyclesTo80: 500,
     usableScale: 0.85,
     coldPctPerC: 0.008,
-    note: "Cheapest upfront; short cycle life at deep discharge — expect several bank replacements over 25 years.",
+    note: "Cheapest upfront. Modeled WITHOUT active balancing (typical DIY series strings) — expect several bank replacements over 25 years. Proper balancing helps; physics still wins.",
   },
 };
 
