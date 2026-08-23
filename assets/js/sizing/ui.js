@@ -5,7 +5,7 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260823l";
+import { CITY_PRESETS, } from "./nasa.js?v=20260823m";
 import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260823l";
 import { BOM_ITEMS } from "../shared/content.js?v=20260823l";
 import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260823l";
@@ -853,7 +853,8 @@ function renderResults(p) {
   const inp = readInputs();
   lastPayload = p;
   const isGT = p.mode === "gridtie";
-  setStatus(`✅ ${p.meta.years} yr of hourly data (${p.meta.dataYears}) · ${fmt(p.annualYieldPerKw)} kWh/yr per kW of panel.`);
+  setStatus(`✅ ${p.meta.years} yr of hourly data (${p.meta.dataYears}) · ${fmt(p.annualYieldPerKw)} kWh/yr per kW of panel.` +
+    (p.meta.offline ? " · 📴 offline typical-year mode" : ""));
 
   renderMoneyBar(p);
   if (p.auto && p.auto.length) renderAutoCards(p);
@@ -872,6 +873,7 @@ function renderResults(p) {
     `the low end is components before freight/duty/BMS, the high end is shipped retail with BMS and enclosure included. ` +
     (a.money ? a.money + " " : "") +
     (a.capacityNote ? a.capacityNote + " " : "") +
+    (a.offline ? "OFFLINE MODE: this run used the bundled typical-year profile for " + p.meta.offlineCity + " — a close approximation, not your exact site. Re-run online for five years of point-specific weather. " : "") +
     (inp.tariff ? `Grid spend assumes $${inp.tariff}/kWh at ${fmtKwh(inp.dailyKwh)} kWh/day.` : "No tariff entered, so payback is not shown.");
 
   let briefLines;

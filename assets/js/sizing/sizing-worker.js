@@ -8,7 +8,7 @@ import {
   sizeAllBillTargets, simulateOffset, dailyExtremes, CHEMISTRIES,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER, capacityScaleFor,
 } from "./engine.js?v=20260823l";
-import { fetchHourlyCached } from "./nasa.js?v=20260823l";
+import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260823m";
 import { fullRange, getScope, POWMR_CATALOG } from "./pricing.js?v=20260823l";
 import {
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
@@ -36,7 +36,34 @@ self.onmessage = async (ev) => {
       tariff = null, exportRate = null, mode = "offgrid",
     } = msg;
 
-    const series = await fetchHourlyCached({ latitude, longitude, years });
+    // Weather: live NASA POWER (cached in the browser), falling back to the
+    // bundled typical-year profile for the nearest preset city when the
+    // network is unavailable — full sizer, zero connectivity.
+    let series;
+    try {
+      series = await fetchHourlyCached({ latitude, longitude, years });
+    } catch (netErr) {
+      const { OFFLINE_PROFILES, PROFILE_YEAR } = await import("./profiles.js?v=20260823m");
+      let best = null, bestD = Infinity;
+      for (const p of OFFLINE_PROFILES) {
+        const d = (p.lat - latitude) ** 2 + ((p.lon - longitude) * Math.cos(latitude * Math.PI / 180)) ** 2;
+        if (d < bestD) { bestD = d; best = p; }
+      }
+      if (!best) throw netErr;
+      series = {
+        hours: synthesizeFromProfile(best),
+        meta: {
+          latitude, longitude,
+          startYear: PROFILE_YEAR, endYear: PROFILE_YEAR, years: 1,
+          source: `bundled typical-year weather for ${best.name} (OFFLINE MODE)`,
+          offline: true,
+          offlineCity: best.name,
+          retrievedAt: new Date().toISOString(),
+          timeStandard: "LST",
+          parameters: ["ALLSKY_SFC_SW_DWN", "T2M"],
+        },
+      };
+    }
     const hours = series.hours;
     const e1kw = buildE1kw(hours);
     const loadWh = expandProfile(flatProfile(dailyKwh), hours.length);
@@ -127,6 +154,7 @@ self.onmessage = async (ev) => {
         etaInverter: ETA_INVERTER,
         dataYears: `${series.meta.startYear}–${series.meta.endYear} (${series.meta.years} yr)`,
         source: series.meta.source,
+        offline: !!series.meta.offline,
         capacityScale: +capacityScaleFor(chemistry === "auto" ? "lfp" : chemistry, meanTempC).toFixed(3),
         meanTempC: Math.round(meanTempC),
       },

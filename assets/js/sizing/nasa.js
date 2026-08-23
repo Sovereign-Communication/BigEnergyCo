@@ -101,8 +101,28 @@ export async function fetchHourlyCached(opts, store = typeof localStorage !== "u
   return data;
 }
 
-/** Preset cities so nobody needs GPS coordinates. Grouped for the dropdown. */
-export const CITY_PRESETS = [
+// ── Offline typical-year synthesis ──────────────────────────────────────────
+
+const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+/**
+ * Expand a bundled monthly/hourly profile into an hourly series shaped
+ * exactly like fetchHourlySeries output, so the whole deterministic
+ * pipeline (derates, SOC sim, tier search, charts) runs unchanged offline.
+ */
+export function synthesizeFromProfile(profile) {
+  const hours = [];
+  for (let m = 0; m < 12; m++) {
+    for (let d = 0; d < MONTH_DAYS[m]; d++) {
+      for (let h = 0; h < 24; h++) {
+        hours.push({ ghi: profile.ghi[m][h], tAmb: profile.tAmb[m][h] });
+      }
+    }
+  }
+  return hours;
+}
+
+/** Preset cities so nobody needs GPS coordinates. Grouped for the dropdown. */export const CITY_PRESETS = [
   // North America
   { name: "Honolulu, USA", r: "North America", lat: 21.31, lon: -157.86 },
   { name: "Los Angeles, USA", r: "North America", lat: 34.05, lon: -118.24 },
