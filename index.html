@@ -659,7 +659,7 @@ footer {
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">Size Your System</h2>
-        <p class="section-desc">Enter your daily energy use and location. The calculator simulates your site hour-by-hour against five years of NASA satellite weather and finds the smallest system that keeps the lights on &mdash; at three levels of generator independence. Educational estimates only.</p>
+        <p class="section-desc">Enter your daily energy use and location. The calculator simulates your site hour-by-hour against five years of NASA satellite weather: go fully off-grid at three levels of generator independence, or stay connected and find the smallest system that cuts your bill. Educational estimates only.</p>
       </div>
 
       <div class="calc-card">
@@ -732,6 +732,14 @@ footer {
               <input type="number" id="dailyKwhInput" class="form-control" value="10" min="0.5" max="500" step="1">
             </div>
             <div id="readoutKwh" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="systemGoal">What do you want this system to do?</label>
+            <select id="systemGoal" class="form-control">
+              <option value="offgrid" selected>Power me fully off-grid</option>
+              <option value="gridtie">Cut my grid bill, stay connected</option>
+            </select>
           </div>
 
           <div class="form-group" style="margin-bottom: 0;">
@@ -1172,7 +1180,7 @@ footer {
   <div id="printSheet"></div>
 
   <!-- Inlined JavaScript with JSONP Web-Bridge for Freenet CSP Passthrough -->
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260823h"></script>
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260823i"></script>
   <script>
     // ── Cloudflare API Bridge URL (updated automatically by patch_and_publish.py) ──
     var CF_API_URL = 'https://bigenergyco-api.bigenergyco.workers.dev';

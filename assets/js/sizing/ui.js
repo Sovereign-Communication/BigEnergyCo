@@ -5,9 +5,9 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260823h";
-import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260823h";
-import { BOM_ITEMS } from "../shared/content.js?v=20260823h";
+import { CITY_PRESETS, } from "./nasa.js?v=20260823i";
+import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260823i";
+import { BOM_ITEMS } from "../shared/content.js?v=20260823i";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -332,6 +332,7 @@ function readInputs() {
     chemistry: $("chemSelect").value,
     years: 5,
     tariff: getTariff(),
+    mode: $("systemGoal") ? $("systemGoal").value : "offgrid",
     basis,
   };
 }
@@ -347,7 +348,9 @@ function run() {
     setStatus("⚠️ Tell us your power use — tick some appliances, or enter a bill or kWh figure.");
     return;
   }
-  setStatus("⏳ Fetching 5 years of hourly satellite weather and searching system sizes…");
+  setStatus(inp.mode === "gridtie"
+    ? "⏳ Fetching five years of satellite weather and searching bill-cutting system sizes…"
+    : "⏳ Fetching 5 years of hourly satellite weather and searching system sizes…");
   const btn = $("btnRunSizing");
   btn.disabled = true;
   btn.innerHTML = '<span class="spin">◐</span> Running 5-year simulation…';
@@ -364,7 +367,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260823h", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260823i", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
@@ -537,27 +540,22 @@ function drawSocChart(history, chemLabel) {
     `edge dives toward empty during bad weather. Touch the red line and a generator is covering you.`;
 }
 
-function renderResults(p) {
-  const inp = readInputs();
-  lastPayload = p;
-  setStatus(`✅ ${p.meta.years} yr of hourly data (${p.meta.dataYears}) · ${fmt(p.annualYieldPerKw)} kWh/yr per kW of panel.`);
+function renderMoneyBar(p) {
+  const moneyBar = $("moneyBar");
+  if (!moneyBar) return;
+  if (!p.annualGridSpendUsd || !p.tariff) {
+    moneyBar.style.display = "none";
+    return;
+  }
+  moneyBar.style.display = "block";
+  moneyBar.textContent = p.mode === "gridtie"
+    ? `At $${p.tariff.toFixed(2)}/kWh, your power costs about $${fmt(p.annualGridSpendUsd)} per year today. Each option below shows the bill after solar and how fast it repays itself out of the savings.`
+    : `At $${p.tariff.toFixed(2)}/kWh, this use costs about $${fmt(p.annualGridSpendUsd)} per year in grid power. Payback figures below compare system cost against that spend.`;
+}
+
+function renderTierCards(p) {
   const grid = $("tierResults");
   grid.innerHTML = "";
-
-  // Money bar: what your current use costs on the grid, so every card's
-  // payback figure below has context.
-  const moneyBar = $("moneyBar");
-  if (moneyBar) {
-    if (p.annualGridSpendUsd) {
-      moneyBar.style.display = "block";
-      moneyBar.textContent =
-        `At $${p.tariff.toFixed(2)}/kWh, this use costs about $${fmt(p.annualGridSpendUsd)} per year in grid power.` +
-        ` Payback figures below compare system cost against that spend.`;
-    } else {
-      moneyBar.style.display = "none";
-    }
-  }
-
   for (const t of p.tiers) {
     const card = el("div", { class: "bom-card" });
     card.style.borderColor = t.id === "tier100" ? "var(--border-glow)" : "var(--border-card)";
@@ -569,43 +567,100 @@ function renderResults(p) {
 
     if (!t.solvable) {
       card.appendChild(el("p", {}, "No system found within search limits for this load — the daily consumption may be too high for a practical off-grid build at this site."));
-    } else {
-      const perKwh = `${t.battPerKwhLo}–${t.battPerKwhHi}`;
-      const rows = [
-        ["Solar array", `${t.pvKw} kW`],
-        ["Battery (usable)", `${fmt(t.battKwh)} kWh`],
-        ["Component cost", `~$${fmt(t.costLo)}–${fmt(t.costHi)}`],
-        ["  · panels + inverter", `~$${fmt(t.pvCostLo)}–${fmt(t.pvCostHi)}`],
-        ["  · battery bank", `~$${fmt(t.battCostLo)}–${fmt(t.battCostHi)}`],
-        ["  · battery unit price", `≈$${t.battPerKwhLo}–${t.battPerKwhHi}/kWh stored`],
-        ["Unmet hours", `${fmt(t.unmetHoursPerYear)} h/yr`],
-        ["Longest gap", `${fmt(t.longestGapHours)} h`],
-        ["Battery life est.", fmtLife(t.batteryLifeYears)],
-        [`Cycles on the bank`, `~${fmt(t.cyclesPerYear)}/yr`],
-      ];
-      if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
-        rows.push(["Pays for itself in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi)]);
-      }
-      if (Number.isFinite(t.lcoeUsdPerKwh)) {
-        rows.push(["Your solar power costs", `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` +
-          (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}¢)` : "")]);
-      }
-      if (t.replacements25y > 0) {
-        rows.push(["Battery swaps over 25 yr", `~${t.replacements25y}× included in cost above`]);
-      }
-      for (const [k, v] of rows) {
-        const line = el("div", { style: "display:flex;justify-content:space-between;font-size:0.9rem;padding:0.2rem 0;border-bottom:1px solid var(--border-card);" });
-        line.appendChild(el("span", { style: "color:var(--text-muted);" }, k));
-        line.appendChild(el("span", {
-          style: "font-family:var(--font-mono);font-weight:700;color:" + ((k.startsWith("Cost") || k.startsWith("Pays") || k.startsWith("Your solar")) ? "var(--primary-accent)" : "var(--text-main)"),
-        }, v));
-        card.appendChild(line);
-      }
-      card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
-        "Battery + panel component estimate only; excludes inverter, BOS, freight, labor."));
+      grid.appendChild(card);
+      continue;
     }
+
+    const rows = [
+      ["Solar array", `${t.pvKw} kW`],
+      ["Battery (usable)", `${fmt(t.battKwh)} kWh`],
+      ["Component cost", `~$${fmt(t.costLo)}–${fmt(t.costHi)}`],
+      ["  · panels + inverter", `~$${fmt(t.pvCostLo)}–${fmt(t.pvCostHi)}`],
+      ["  · battery bank", `~$${fmt(t.battCostLo)}–${fmt(t.battCostHi)}`],
+      ["  · battery unit price", `≈$${t.battPerKwhLo}–${t.battPerKwhHi}/kWh stored`],
+      ["Unmet hours", `${fmt(t.unmetHoursPerYear)} h/yr`],
+      ["Longest gap", `${fmt(t.longestGapHours)} h`],
+      ["Battery life est.", fmtLife(t.batteryLifeYears)],
+      [`Cycles on the bank`, `~${fmt(t.cyclesPerYear)}/yr`],
+    ];
+    if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
+      rows.push(["Pays for itself in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi)]);
+    }
+    if (Number.isFinite(t.lcoeUsdPerKwh)) {
+      rows.push(["Your solar power costs", `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` +
+        (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}¢)` : "")]);
+    }
+    if (t.replacements25y > 0) {
+      rows.push(["Battery swaps over 25 yr", `~${t.replacements25y}× included in cost above`]);
+    }
+    appendRows(card, rows);
+    card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
+      "Battery + panel component estimate only; excludes inverter, BOS, freight, labor."));
     grid.appendChild(card);
   }
+}
+
+function renderTargetCards(p) {
+  const grid = $("tierResults");
+  grid.innerHTML = "";
+  for (const t of p.targets) {
+    const card = el("div", { class: "bom-card" });
+    card.style.borderColor = t.id === "cut80" ? "var(--border-glow)" : "var(--border-card)";
+    card.appendChild(el("div", { class: "bom-badge" }, t.solvable ? `Bill −${t.cutPct}%` : "Not reachable"));
+    card.appendChild(el("h3", {}, t.label));
+
+    if (!t.solvable) {
+      card.appendChild(el("p", {}, "Even a large array can't cut the bill this far at this location — check the off-grid sizer instead."));
+      grid.appendChild(card);
+      continue;
+    }
+
+    const rows = [
+      ["Solar array", `${t.pvKw} kW`],
+      ["Battery (usable)", t.battKwh > 0 ? `${fmt(t.battKwh)} kWh` : "none needed"],
+      ["Component cost", `~$${fmt(t.costLo)}–${fmt(t.costHi)}`],
+      ["Bill after solar", t.billAfterMonthlyUsd !== null ? `≈$${fmt(t.billAfterMonthlyUsd)}/mo (was ≈$${fmt(Math.round(p.annualGridSpendUsd / 12))})` : "needs your tariff"],
+      ["Imported from grid", `${fmt(t.importedKwhPerYear)} kWh/yr`],
+    ];
+    if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
+      rows.push(["Pays for itself in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi)]);
+    }
+    if (Number.isFinite(t.lcoeUsdPerKwh)) {
+      rows.push(["Your solar power costs", `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` +
+        (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}¢)` : "")]);
+    }
+    if (t.replacements25y > 0 && t.battKwh > 0) {
+      rows.push(["Battery swaps over 25 yr", `~${t.replacements25y}× included`]);
+    }
+    if (t.clippedKwhPerYear > 50) {
+      rows.push(["Sun clipped (no export)", `${fmt(t.clippedKwhPerYear)} kWh/yr wasted beyond storage`]);
+    }
+    appendRows(card, rows);
+    card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
+      "Simulated hour-by-hour across five years of real weather. The system never exports; surplus beyond storage is clipped."));
+    grid.appendChild(card);
+  }
+}
+
+function appendRows(card, rows) {
+  for (const [k, v] of rows) {
+    const line = el("div", { style: "display:flex;justify-content:space-between;font-size:0.9rem;padding:0.2rem 0;border-bottom:1px solid var(--border-card);" });
+    line.appendChild(el("span", { style: "color:var(--text-muted);" }, k));
+    line.appendChild(el("span", {
+      style: "font-family:var(--font-mono);font-weight:700;color:" + ((k.startsWith("Cost") || k.startsWith("Pays") || k.startsWith("Your solar") || k.startsWith("Bill")) ? "var(--primary-accent)" : "var(--text-main)"),
+    }, v));
+    card.appendChild(line);
+  }
+}
+
+function renderResults(p) {
+  const inp = readInputs();
+  lastPayload = p;
+  const isGT = p.mode === "gridtie";
+  setStatus(`✅ ${p.meta.years} yr of hourly data (${p.meta.dataYears}) · ${fmt(p.annualYieldPerKw)} kWh/yr per kW of panel.`);
+
+  renderMoneyBar(p);
+  if (isGT) renderTargetCards(p); else renderTierCards(p);
 
   const a = p.assumptions;
   const pr = p.pricing || {};
@@ -620,13 +675,19 @@ function renderResults(p) {
     (a.money ? a.money + " " : "") +
     (inp.tariff ? `Grid spend assumes $${inp.tariff}/kWh at ${fmtKwh(inp.dailyKwh)} kWh/day.` : "No tariff entered, so payback is not shown.");
 
-  const tierLines = p.tiers.filter((t) => t.solvable)
-    .map((t) => `- ${t.label}: ${t.pvKw} kW PV + ${fmt(t.battKwh)} kWh usable (~$${fmt(t.costLo)}–${fmt(t.costHi)}, ex-factory to budget-retail range)`)
-    .join("\n");
+  let briefLines;
+  if (isGT) {
+    briefLines = p.targets.filter((t) => t.solvable)
+      .map((t) => `- ${t.label}: ${t.pvKw} kW PV + ${t.battKwh > 0 ? fmt(t.battKwh) + " kWh usable" : "no battery"} (~$${fmt(t.costLo)}–${fmt(t.costHi)}) → bill −${t.cutPct}%` +
+        (t.billAfterMonthlyUsd !== null ? `, ≈$${fmt(t.billAfterMonthlyUsd)}/mo after` : ""));
+  } else {
+    briefLines = p.tiers.filter((t) => t.solvable)
+      .map((t) => `- ${t.label}: ${t.pvKw} kW PV + ${fmt(t.battKwh)} kWh usable (~$${fmt(t.costLo)}–${fmt(t.costHi)}, ex-factory to budget-retail range)`);
+  }
   window.lastSizingBrief =
     `I sized a system with your calculator for ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)}, ` +
-    `${inp.dailyKwh.toFixed(1)} kWh/day from ${inp.basis}, ` +
-    `${p.chemistry.toUpperCase()}:\n${tierLines}\n` +
+    `${inp.dailyKwh.toFixed(1)} kWh/day from ${inp.basis}, ${p.chemistry.toUpperCase()}, ` +
+    `${isGT ? "staying connected to the grid (no export)" : "fully off-grid"}:\n${briefLines.join("\n")}\n` +
     `[ADVISOR INSTRUCTION: These numbers were computed deterministically from NASA POWER hourly weather ` +
     `${p.meta.dataYears}. Do not recompute or invent different figures — explain, sanity-check and add caveats ` +
     `(seasonal variation, inverter/BOS costs, installation, degradation) around THESE results.]`;
@@ -640,6 +701,7 @@ function renderResults(p) {
   populatePrintSheet(p, inp);
 
   if (p.history) drawSocChart(p.history, p.chemLabel || "battery");
+  else $("socChartWrap").style.display = "none";
 }
 
 // ── Shareable results ───────────────────────────────────────────────────────
@@ -671,8 +733,12 @@ function updateShareHash(p, inp) {
       kw: Math.round(inp.dailyKwh * 100) / 100,
       ch: inp.chemistry,
     };
+    if (inp.mode === "gridtie") o.g = 1;
     if (inp.tariff) o.tf = inp.tariff;
-    o.t = p.tiers.filter((t) => t.solvable).map((t) => [t.pvKw, t.battKwh]);
+    const sized = p.mode === "gridtie"
+      ? p.targets.filter((t) => t.solvable).map((t) => [t.pvKw, t.battKwh])
+      : p.tiers.filter((t) => t.solvable).map((t) => [t.pvKw, t.battKwh]);
+    if (sized.length) o.t = sized;
     history.replaceState(null, "", "#s=" + b64urlEncode(o));
   } catch { /* sharing is best-effort; never block a result on it */ }
 }
@@ -689,6 +755,7 @@ function restoreFromShare() {
   setCoords(lat, lon, "Shared result loaded — sunshine data for this location");
   $("loadMode").value = "kwh";
   setLoadPanel();
+  if ($("systemGoal")) $("systemGoal").value = o.g === 1 ? "gridtie" : "offgrid";
   $("dailyKwhInput").value = String(kw);
   if (o.ch && CHEM_KEYS.has(o.ch)) $("chemSelect").value = o.ch;
   if (Number.isFinite(o.tf) && o.tf > 0) {
@@ -709,39 +776,50 @@ function restoreFromShare() {
 function populatePrintSheet(p, inp) {
   const sheet = $("printSheet");
   if (!sheet) return;
-  const rows = p.tiers.filter((t) => t.solvable).map((t) => {
-    const cells = [
-      t.label.replace(/—/g, "·"),
-      `${t.pvKw} kW`,
-      `${fmt(t.battKwh)} kWh`,
-      `$${fmt(t.costLo)}–${fmt(t.costHi)}`,
-      t.paybackYearsLo !== null ? fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) : "n/a",
-      Number.isFinite(t.lcoeUsdPerKwh) ? `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` : "n/a",
-    ];
-    return "<tr><td>" + cells.join("</td><td>") + "</td></tr>";
-  }).join("");
+  const isGT = p.mode === "gridtie";
+  const rows = isGT
+    ? p.targets.filter((t) => t.solvable).map((t) => {
+        const cells = [
+          t.label,
+          `${t.pvKw} kW`,
+          t.battKwh > 0 ? `${fmt(t.battKwh)} kWh` : "none",
+          `$${fmt(t.costLo)}–${fmt(t.costHi)}`,
+          `−${t.cutPct}% bill`,
+          t.billAfterMonthlyUsd !== null ? `≈$${fmt(t.billAfterMonthlyUsd)}/mo` : "n/a",
+          t.paybackYearsLo !== null ? fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) : "n/a",
+        ];
+        return "<tr><td>" + cells.join("</td><td>") + "</td></tr>";
+      }).join("")
+    : p.tiers.filter((t) => t.solvable).map((t) => {
+        const cells = [
+          t.label.replace(/—/g, "·"),
+          `${t.pvKw} kW`,
+          `${fmt(t.battKwh)} kWh`,
+          `$${fmt(t.costLo)}–${fmt(t.costHi)}`,
+          t.paybackYearsLo !== null ? fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) : "n/a",
+          Number.isFinite(t.lcoeUsdPerKwh) ? `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` : "n/a",
+        ];
+        return "<tr><td>" + cells.join("</td><td>") + "</td></tr>";
+      }).join("");
+  const head = isGT
+    ? "<tr><th>Goal</th><th>Solar</th><th>Battery</th><th>Component cost</th><th>Bill cut</th><th>Bill after</th><th>Payback</th></tr>"
+    : "<tr><th>System</th><th>Solar</th><th>Battery (usable)</th><th>Component cost</th><th>Payback vs. grid</th><th>Energy cost</th></tr>";
   sheet.innerHTML = `
-    <h1 style="font-size:20pt;margin-bottom:2pt;">BigEnergyCo — Off-Grid System Estimate</h1>
+    <h1 style="font-size:20pt;margin-bottom:2pt;">BigEnergyCo — ${isGT ? "Grid-Connected Bill-Cutting" : "Off-Grid System"} Estimate</h1>
     <p style="font-size:9pt;color:#444;margin-bottom:10pt;">
       Generated ${new Date().toISOString().slice(0, 10)} · free educational estimate ·
       ${location.origin + location.pathname}
     </p>
     <table style="border-collapse:collapse;width:100%;font-size:10pt;margin-bottom:10pt;">
-      <tr style="background:#eef2f7;">
-        <th style="border:1px solid #999;padding:4pt 6pt;text-align:left;">System</th>
-        <th style="border:1px solid #999;padding:4pt 6pt;text-align:left;">Solar</th>
-        <th style="border:1px solid #999;padding:4pt 6pt;text-align:left;">Battery (usable)</th>
-        <th style="border:1px solid #999;padding:4pt 6pt;text-align:left;">Component cost</th>
-        <th style="border:1px solid #999;padding:4pt 6pt;text-align:left;">Payback vs. grid</th>
-        <th style="border:1px solid #999;padding:4pt 6pt;text-align:left;">Energy cost</th>
-      </tr>
+      <tr style="background:#eef2f7;">${head}</tr>
       ${rows}
     </table>
     <p style="font-size:9.5pt;margin:0 0 4pt;"><strong>Basis:</strong> ${inp.basis} · ${fmtKwh(inp.dailyKwh)} kWh/day ·
       ${p.chemistry.toUpperCase()} battery · location ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)} ·
       ${p.tariff ? `grid price $${p.tariff}/kWh (≈$${fmt(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
     <p style="font-size:9.5pt;margin:0 0 4pt;"><strong>Method:</strong> hourly simulation of ${p.meta.dataYears} of
-      NASA POWER satellite weather (${p.meta.source}). Derates: soiling ${(p.assumptions.derates.soiling * 100).toFixed(0)}%,
+      NASA POWER satellite weather (${p.meta.source})${isGT ? "; the system never exports power to the grid" : ""}.
+      Derates: soiling ${(p.assumptions.derates.soiling * 100).toFixed(0)}%,
       wiring ${(p.assumptions.derates.wiring * 100).toFixed(0)}%, mismatch ${(p.assumptions.derates.mismatch * 100).toFixed(0)}%,
       MPPT ${(p.assumptions.derates.mppt * 100).toFixed(0)}%; cell-temp model NOCT ${p.assumptions.noctC}°C,
       ${(p.assumptions.gammaPerC * 100).toFixed(2)}%/°C; inverter ${(p.assumptions.etaInverter * 100).toFixed(0)}%.

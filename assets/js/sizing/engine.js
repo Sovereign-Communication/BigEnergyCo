@@ -352,3 +352,140 @@ export function sizeAllTiers(opts) {
     return { tier: t, sizing: best };
   });
 }
+
+// ── Grid-connected mode: bill reduction without exporting ───────────────────
+
+export const BILL_TARGETS = [
+  { id: "cut60", label: "Cut ~60% of your bill", minFraction: 0.6 },
+  { id: "cut80", label: "Cut ~80% of your bill", minFraction: 0.8 },
+  { id: "cut95", label: "Cut ~95% of your bill", minFraction: 0.95 },
+];
+
+/**
+ * Hourly simulation of a grid-connected home that does NOT export:
+ *   PV serves the load directly; surplus charges the battery (clipped when
+ *   the bank is full or too cold); deficits draw from the battery first and
+ *   the grid covers whatever remains. The battery never pushes power out.
+ *
+ * @returns {{directWh:number, battWhAc:number, importedWh:number,
+ *            curtailedWh:number, cyclesEquivalent:number, finalSoc:number,
+ *            minSoc:number}}
+ */
+export function simulateOffset({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp", startSoc = 0.5, tempsC = null }) {
+  const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
+  const eta = Math.sqrt(chem.roundTrip);
+  const cap = Math.max(0, battKwhUsable) * 1000;
+
+  let soc = startSoc;
+  let direct = 0, fromBatt = 0, imported = 0, curtailed = 0;
+  let throughputDc = 0, minSoc = cap > 0 ? soc : 0;
+  const n = e1kw.length;
+  if (loadWh.length !== n) throw new Error("load series must match e1kw length");
+
+  for (let i = 0; i < n; i++) {
+    const pvAc = pvKw * e1kw[i] * ETA_INVERTER;
+    const load = loadWh[i];
+    const d = Math.min(pvAc, load);
+    direct += d;
+    const surplus = pvAc - d;
+    const deficit = load - d;
+
+    // charge from surplus only (no grid charging, no export)
+    if (cap > 0 && surplus > 0 && !(tempsC && tempsC[i] < chem.chargeMinC)) {
+      const room = cap - soc * cap;
+      const charged = Math.min(surplus * eta, room);
+      curtailed += surplus - charged / eta;
+      soc += charged / cap;
+      throughputDc += charged;
+    } else if (surplus > 0) {
+      curtailed += surplus;
+    }
+
+    // deficit: battery first, grid picks up the rest
+    if (deficit > 0 && cap > 0) {
+      const availableAc = soc * cap * eta;
+      const covered = Math.min(deficit, availableAc);
+      soc -= covered / eta / cap;
+      throughputDc += covered / eta;
+      fromBatt += covered;
+      imported += deficit - covered;
+    } else {
+      imported += deficit;
+    }
+
+    if (cap > 0 && soc < minSoc) minSoc = soc;
+  }
+
+  return {
+    directWh: direct,
+    battWhAc: fromBatt,
+    importedWh: imported,
+    curtailedWh: curtailed,
+    cyclesEquivalent: cap > 0 ? throughputDc / cap : 0,
+    finalSoc: soc,
+    minSoc: cap > 0 ? minSoc : 0,
+  };
+}
+
+/**
+ * Find minimum-cost (pvKw, battKwh >= 0) whose average imported energy stays
+ * under (1 - minFraction) of total load. Imports are monotonically
+ * non-increasing in PV for a fixed battery (extra PV can only serve load,
+ * fill the bank, or clip), so each battery row binary-searches its smallest
+ * sufficient PV — far fewer simulations than a full lattice scan.
+ *
+ * @returns {{pvKw:number, battKwh:number, result:object, cost:number} | null}
+ */
+export function sizeForBillCut({
+  e1kw, loadWh, tempsC = null, chemistry = "lfp",
+  minFraction = 0.8, years = 1,
+  costPerWpv = 0.35, costPerKwhBatt = 140,
+  pvMax = 30, battMax = 100, battStep = 1,
+}) {
+  const loadTotal = [...loadWh].reduce((a, b) => a + b, 0);
+  const importBudget = loadTotal * (1 - minFraction);
+  const evaluate = (pv, batt) => simulateOffset({ pvKw: pv, battKwhUsable: batt, e1kw, loadWh, chemistry, tempsC });
+  const meets = (r) => r.importedWh <= importBudget + 1e-6;
+
+  let best = null;
+  for (let b = 0; b <= battMax; b += battStep) {
+    // With a bigger bank, the required PV cannot be larger than before.
+    const pvFloor = best ? Math.max(0.05, best.pvKw - 1) : 0.05;
+    let lo = pvFloor, hi = pvMax;
+    if (!meets(evaluate(hi, b))) continue;
+    while (hi - lo > 0.25) {
+      const mid = (lo + hi) / 2;
+      if (meets(evaluate(mid, b))) hi = mid; else lo = mid;
+    }
+    const r = evaluate(hi, b);
+    const cost = hi * 1000 * costPerWpv + b * costPerKwhBatt;
+    if (!best || cost < best.cost) best = { pvKw: +hi.toFixed(2), battKwh: b, result: r, cost };
+  }
+
+  if (!best) return null;
+
+  // Local refinement around the coarse winner.
+  let improved = true;
+  while (improved) {
+    improved = false;
+    for (const db of [-battStep, 0, battStep]) {
+      const b = best.battKwh + db;
+      if (b < 0) continue;
+      let lo = 0.05, hi = Math.min(pvMax, best.pvKw + 2);
+      if (!meets(evaluate(hi, b))) continue;
+      while (hi - lo > 0.25) {
+        const mid = (lo + hi) / 2;
+        if (meets(evaluate(mid, b))) hi = mid; else lo = mid;
+      }
+      const r = evaluate(hi, b);
+      const cost = hi * 1000 * costPerWpv + b * costPerKwhBatt;
+      if (cost < best.cost - 1e-9) { best = { pvKw: +hi.toFixed(2), battKwh: b, result: r, cost }; improved = true; }
+    }
+  }
+  return best;
+}
+
+/** Size all bill-cut targets at once, aligned with BILL_TARGETS order. */
+export function sizeAllBillTargets(opts) {
+  return BILL_TARGETS.map((t) => ({ target: t, sizing: sizeForBillCut({ ...opts, minFraction: t.minFraction }) }));
+}
