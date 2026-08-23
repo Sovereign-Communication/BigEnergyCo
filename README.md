@@ -48,6 +48,15 @@ Freenet (offline): index-freenet.html → static cost calc, no API calls.
 | `LIABILITY.md` | Liability, tax, and privacy posture. Read before promoting the site |
 | `legacy_scripts/`, `.backup/` | Superseded material, kept locally only (not deployed, not tracked) |
 
+## Search Console & indexing
+
+The site verifies via the `google-site-verification` meta tag in `index.html`. To keep indexing healthy:
+
+1. **Google Search Console** — open [search.google.com/search-console](https://search.google.com/search-console), select the verified property for `sovereign-communication.github.io/BigEnergyCo/`, then **Sitemaps → submit** `https://sovereign-communication.github.io/BigEnergyCo/sitemap.xml` (re-submit after any new page ships).
+2. **URL Inspection** → "Request indexing" after publishing a new blog post.
+3. **Bing Webmaster Tools** — import from Google Search Console (one click); same sitemap applies.
+4. Structured data is embedded on-page: `WebApplication` + `FAQPage` (home), `Article` + `FAQPage` (each post). Validate changes at [validator.schema.org](https://validator.schema.org) before deploying.
+
 ## Abuse limits
 
 `/api/chat` is public and unauthenticated, so the **Cloudflare Worker enforces**: 8/min and

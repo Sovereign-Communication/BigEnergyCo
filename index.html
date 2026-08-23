@@ -22,6 +22,69 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
   <meta name="theme-color" content="#090d16">
+
+  <!-- Structured data: what this tool is, and the questions people ask it -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://sovereign-communication.github.io/BigEnergyCo/#app",
+        "name": "BigEnergyCo — Free Off-Grid Energy Estimator",
+        "url": "https://sovereign-communication.github.io/BigEnergyCo/",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any (web browser)",
+        "browserRequirements": "Requires JavaScript",
+        "description": "Free solar and battery sizing for anywhere on Earth. Simulates your location against five years of NASA satellite weather: fully off-grid systems at three reliability levels, or grid-connected bill cutting. Nothing for sale.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "featureList": [
+          "Off-grid sizing with 5-year hourly weather simulation",
+          "Grid-tie bill-cutting targets",
+          "Battery lifetime cost comparison (LFP, sodium-ion, lead-acid)",
+          "Payback and levelized cost of energy",
+          "Works offline after first visit"
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://sovereign-communication.github.io/BigEnergyCo/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How accurate are the estimates?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Every number comes from testable code simulating your exact location against five years of NASA satellite weather — not an AI guessing. Real-world results still vary with shading, installation quality, and hardware, so have a licensed professional verify anything you build." }
+          },
+          {
+            "@type": "Question",
+            "name": "Will a solar and battery system pay for itself?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Where grid power is expensive — Hawaii, islands, much of Europe, Africa, South Asia — properly built solar plus storage commonly repays its component cost in one to four years, then runs nearly free for decades. The calculator shows your personal payback from your own tariff." }
+          },
+          {
+            "@type": "Question",
+            "name": "What does an off-grid battery system actually cost?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Battery banks self-built from prismatic cells typically land around $80–125 per usable kWh shipped and duty-paid; budget retail packs run roughly $110–165. Panels add about $0.16–0.38 per watt. Every result states its price scope honestly." }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need a generator with an off-grid system?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Only if you want near-total independence through weeks of bad weather. The three off-grid options show exactly that trade-off: one never needs a generator, one needs it about a day a year, one only now and then. Grid-connected users skip this entirely." }
+          },
+          {
+            "@type": "Question",
+            "name": "Does the calculator work without internet?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes. After your first visit the tool installs itself as an offline app: sizing math runs entirely in your browser, and if the network is down it falls back to bundled typical-year weather for the nearest of 66 reference cities." }
+          },
+          {
+            "@type": "Question",
+            "name": "Is building my own battery safe?",
+            "acceptedAnswer": { "@type": "Answer", "text": "It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. Proper fusing, BMS use, and code compliance are essential — and a licensed electrician should check anything before you energize it." }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
   <style>
 /* BigEnergyCo Design System - Premium Dark Glassmorphic Energy Aesthetic */
 :root {
@@ -929,6 +992,44 @@ footer {
           <h3>300 kgf Compression Racks</h3>
           <p>Belleville spring washer endplates hold uniform compression (about 3,000 N). Manufacturers cite cycle-life benefits; treat specific gains as unverified.</p>
           <div class="bom-price">~$28.00 / rack <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative, Aug 2026)</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="legal-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Common Questions</h2>
+        <p class="section-desc">Short answers to what people ask most. The AI advisor can go deeper on any of these.</p>
+      </div>
+      <div class="legal-grid">
+        <div class="legal-card">
+          <h3>How accurate are the estimates?</h3>
+          <p>Every number comes from testable code simulating your exact location against five years of NASA satellite weather — not an AI guessing. Real-world results still vary with shading, installation quality, and hardware, so have a licensed professional verify anything you build.</p>
+        </div>
+        <div class="legal-card">
+          <h3>Will a system pay for itself?</h3>
+          <p>Where grid power is expensive — Hawaii, islands, much of Europe, Africa, South Asia — properly built solar plus storage commonly repays its component cost in one to four years, then runs nearly free for decades. The calculator shows your personal payback from your own tariff.</p>
+        </div>
+        <div class="legal-card">
+          <h3>What does a system actually cost?</h3>
+          <p>Battery banks self-built from prismatic cells typically land around $80–125 per usable kWh shipped and duty-paid; budget retail packs run roughly $110–165. Panels add about $0.16–0.38 per watt. Every result states its price scope honestly.</p>
+        </div>
+      </div>
+      <div class="legal-grid" style="margin-top:1rem;">
+        <div class="legal-card">
+          <h3>Do I need a generator?</h3>
+          <p>Only if you want near-total independence through weeks of bad weather. The three off-grid options show exactly that trade-off: one never needs a generator, one needs it about a day a year, one only now and then. Grid-connected users skip this entirely.</p>
+        </div>
+        <div class="legal-card">
+          <h3>Does it work without internet?</h3>
+          <p>Yes. After your first visit the tool installs itself as an offline app: sizing math runs entirely in your browser, and if the network is down it falls back to bundled typical-year weather for the nearest of 66 reference cities.</p>
+        </div>
+        <div class="legal-card">
+          <h3>Is building my own battery safe?</h3>
+          <p>It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. The guides here insist on proper fusing, BMS use, and code compliance — and on having a licensed electrician check anything before you energize it.</p>
         </div>
       </div>
     </div>
