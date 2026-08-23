@@ -34,7 +34,8 @@ for (const m of ["$75,185", "netSavingsVal", "851.85", "\u00e2\u20ac"]) {
 // 3. Modules serve + contain repaired strings
 const mods = [
   ["assets/js/sizing/engine.js", "uprated from ~4500"],
-  ["assets/js/sizing/sizing-worker.js", "nameplateBands"],
+  ["assets/js/sizing/run.js", "nameplateBands"],
+  ["assets/js/sizing/sizing-worker.js", "runSizing"],
   ["assets/js/sizing/ui.js", "drawAutoChart"],
   ["assets/js/sizing/money.js", "lifetimeCostUsd"],
   ["assets/js/shared/i18n.js", "\u0627\u0644\u0639\u0631\u0628\u064a\u0629"],
