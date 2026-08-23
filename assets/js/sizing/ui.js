@@ -1,14 +1,14 @@
-// Size-My-System UI controller. Loaded as an ES module from index.html.
+﻿// Size-My-System UI controller. Loaded as an ES module from index.html.
 // All computation happens in sizing-worker.js; this file is DOM glue only.
 //
 // Load input is end-user-first: an appliance checklist with plain-language
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260823m";
-import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260823l";
-import { BOM_ITEMS } from "../shared/content.js?v=20260823l";
-import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260823l";
+import { CITY_PRESETS, } from "./nasa.js?v=20260824a";
+import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260824a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260824a";
+import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260824a";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -372,7 +372,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260823l", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260824a", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
@@ -411,8 +411,9 @@ function fmtPaybackRange(lo, hi) {
   return a === b ? a : `${a}–${b.replace("~", "")}`;
 }
 
-// User currency (optional): converts USD figures for display only. The
-// underlying scoped prices are USD; the arithmetic panel always says so.
+// User currency (optional): converts every displayed dollar AMOUNT at the
+// user's rate. Price scopes themselves are USD-denominated, so unit rates
+// ($/kWh stored) stay labeled $ — the arithmetic panel explains that.
 function fxActive() {
   const rate = parseFloat($("fxRate")?.value);
   const code = ($("fxCode")?.value || "").trim().toUpperCase();
@@ -425,7 +426,12 @@ function money(usd) {
   return "$" + Number(usd).toLocaleString();
 }
 
-function moneyRange(lo, hi) { return money(lo) + "–" + money(hi); }
+function moneyRange(lo, hi) { return money(lo) + "\u2013" + money(hi); }
+
+function fxNote() {
+  const fx = fxActive();
+  return fx ? `Amounts shown in ${fx.code} at ${fx.rate} per US$1; battery unit rates stay in $/kWh because the underlying price scopes are USD-denominated.` : null;
+}
 
 const TIER_COLORS = {
   tier100: "#00e699", tier99: "#60a5fa", tier95: "#f59e0b",
@@ -766,8 +772,18 @@ function drawAutoChart(p) {
   const canvas = $("socCanvas");
   const legend = $("socLegend");
   if (!wrap || !canvas) return;
-  const entries = (p.auto || []).filter((a) => a.solvable && a.socNameplatePct && a.socNameplatePct.min && a.socNameplatePct.min.length);
-  if (!entries.length) { wrap.style.display = "none"; return; }
+  const raw = p.auto || [];
+  if (!raw.length) { wrap.style.display = "none"; return; }
+  const entries = raw.filter((a) => a.solvable && a.socNameplatePct && a.socNameplatePct.min && a.socNameplatePct.min.length);
+  if (!entries.length) {
+    // Data arrived but lacks the expected shape — almost certainly a stale
+    // cached module from before this page version. Never fail silently.
+    wrap.style.display = "block";
+    if (legend) legend.style.display = "none";
+    const cap = $("socCaption");
+    if (cap) cap.textContent = "\u26A0\uFE0F Chart data didn't match this page version \u2014 please refresh (Ctrl+F5 / \u2318\u21E7R) and run the sizing again.";
+    return;
+  }
   wrap.style.display = "block";
 
   const dpr = window.devicePixelRatio || 1;
@@ -873,6 +889,7 @@ function renderResults(p) {
     `the low end is components before freight/duty/BMS, the high end is shipped retail with BMS and enclosure included. ` +
     (a.money ? a.money + " " : "") +
     (a.capacityNote ? a.capacityNote + " " : "") +
+    (fxNote() ? fxNote() + " " : "") +
     (a.offline ? "OFFLINE MODE: this run used the bundled typical-year profile for " + p.meta.offlineCity + " — a close approximation, not your exact site. Re-run online for five years of point-specific weather. " : "") +
     (inp.tariff ? `Grid spend assumes $${inp.tariff}/kWh at ${fmtKwh(inp.dailyKwh)} kWh/day.` : "No tariff entered, so payback is not shown.");
 
@@ -1134,6 +1151,13 @@ export function initSizingUI() {
   if (shareBtn) shareBtn.addEventListener("click", copyShareLink);
   const printBtn = $("btnPrintResult");
   if (printBtn) printBtn.addEventListener("click", () => window.print());
+
+  // Currency inputs re-render the existing result instantly — no re-run
+  // needed, since FX is a display-only transform on the same numbers.
+  for (const id of ["fxRate", "fxCode"]) {
+    const elNode = $(id);
+    if (elNode) elNode.addEventListener("input", () => { if (lastPayload) renderResults(lastPayload); });
+  }
 
   setLoadPanel();
 
