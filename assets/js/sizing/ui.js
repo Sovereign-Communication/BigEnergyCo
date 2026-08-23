@@ -5,10 +5,11 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260823g";
-import { estimateTariff } from "./pricing.js?v=20260823g";
+import { CITY_PRESETS } from "./nasa.js?v=20260823h";
+import { estimateTariff } from "./pricing.js?v=20260823h";
 
 let worker = null;
+let lastPayload = null;   // kept for share links + the printable summary
 
 // ── Appliance library ───────────────────────────────────────────────────────
 // w = watts WHILE RUNNING. duty:true items (fridges, ACs, pumps) only run a
@@ -58,6 +59,8 @@ const TARIFFS = [
   { n: "Hawaii / islands — about $0.42 per kWh", v: 0.42 },
   { n: "I'll type my own rate", v: "custom" },
 ];
+
+const CHEM_KEYS = new Set(["lfp", "naion", "agm"]);
 
 function $(id) { return document.getElementById(id); }
 
@@ -111,8 +114,8 @@ function applianceState() {
 
 function getTariff() {
   const sel = $("tariffSelect");
-  if (sel.value === "custom") return parseFloat($("customRateVal").value);
-  return parseFloat(sel.value);
+  const v = sel.value === "custom" ? parseFloat($("customRateVal").value) : parseFloat(sel.value);
+  return Number.isFinite(v) && v > 0 ? v : null;
 }
 
 function updateLoadReadout() {
@@ -323,6 +326,7 @@ function readInputs() {
     dailyKwh,
     chemistry: $("chemSelect").value,
     years: 5,
+    tariff: getTariff(),
     basis,
   };
 }
@@ -355,7 +359,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260823g", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260823h", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
@@ -380,6 +384,18 @@ function fmtLife(years) {
   if (years >= 2) return "~" + Math.round(years) + " yrs";
   const months = Math.max(1, Math.round(years * 12));
   return "~" + months + " mo";
+}
+
+function fmtPaybackOne(y) {
+  if (!Number.isFinite(y)) return null;
+  if (y < 1) return `~${Math.max(1, Math.round(y * 12))} mo`;
+  return `~${Math.round(y)} yr`;
+}
+
+function fmtPaybackRange(lo, hi) {
+  const a = fmtPaybackOne(lo), b = fmtPaybackOne(hi);
+  if (!a || !b) return "—";
+  return a === b ? a : `${a}–${b.replace("~", "")}`;
 }
 
 const TIER_COLORS = { tier100: "#00e699", tier99: "#60a5fa", tier95: "#f59e0b" };
@@ -518,9 +534,24 @@ function drawSocChart(history, chemLabel) {
 
 function renderResults(p) {
   const inp = readInputs();
+  lastPayload = p;
   setStatus(`✅ ${p.meta.years} yr of hourly data (${p.meta.dataYears}) · ${fmt(p.annualYieldPerKw)} kWh/yr per kW of panel.`);
   const grid = $("tierResults");
   grid.innerHTML = "";
+
+  // Money bar: what your current use costs on the grid, so every card's
+  // payback figure below has context.
+  const moneyBar = $("moneyBar");
+  if (moneyBar) {
+    if (p.annualGridSpendUsd) {
+      moneyBar.style.display = "block";
+      moneyBar.textContent =
+        `At $${p.tariff.toFixed(2)}/kWh, this use costs about $${fmt(p.annualGridSpendUsd)} per year in grid power.` +
+        ` Payback figures below compare system cost against that spend.`;
+    } else {
+      moneyBar.style.display = "none";
+    }
+  }
 
   for (const t of p.tiers) {
     const card = el("div", { class: "bom-card" });
@@ -547,11 +578,21 @@ function renderResults(p) {
         ["Battery life est.", fmtLife(t.batteryLifeYears)],
         [`Cycles on the bank`, `~${fmt(t.cyclesPerYear)}/yr`],
       ];
+      if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
+        rows.push(["Pays for itself in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi)]);
+      }
+      if (Number.isFinite(t.lcoeUsdPerKwh)) {
+        rows.push(["Your solar power costs", `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` +
+          (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}¢)` : "")]);
+      }
+      if (t.replacements25y > 0) {
+        rows.push(["Battery swaps over 25 yr", `~${t.replacements25y}× included in cost above`]);
+      }
       for (const [k, v] of rows) {
         const line = el("div", { style: "display:flex;justify-content:space-between;font-size:0.9rem;padding:0.2rem 0;border-bottom:1px solid var(--border-card);" });
         line.appendChild(el("span", { style: "color:var(--text-muted);" }, k));
         line.appendChild(el("span", {
-          style: "font-family:var(--font-mono);font-weight:700;color:" + (k.startsWith("Cost") ? "var(--primary-accent)" : "var(--text-main)"),
+          style: "font-family:var(--font-mono);font-weight:700;color:" + ((k.startsWith("Cost") || k.startsWith("Pays") || k.startsWith("Your solar")) ? "var(--primary-accent)" : "var(--text-main)"),
         }, v));
         card.appendChild(line);
       }
@@ -570,7 +611,9 @@ function renderResults(p) {
     `power temperature coefficient ${(a.gammaPerC * 100).toFixed(2)}%/°C. Inverter efficiency ${(a.etaInverter * 100).toFixed(0)}%. ` +
     `Charging blocked below chemistry's cold limit (LFP 0°C). Load basis: ${inp.basis}. ` +
     `Costs span ${pr.basisLabel || "ex-factory China to PowMr-class budget retail"} (${pr.source || "cell market indications through PowMr catalog, Aug 2026"}) — ` +
-    `the low end is components before freight/duty/BMS, the high end is shipped retail with BMS and enclosure included.`;
+    `the low end is components before freight/duty/BMS, the high end is shipped retail with BMS and enclosure included. ` +
+    (a.money ? a.money + " " : "") +
+    (inp.tariff ? `Grid spend assumes $${inp.tariff}/kWh at ${fmtKwh(inp.dailyKwh)} kWh/day.` : "No tariff entered, so payback is not shown.");
 
   const tierLines = p.tiers.filter((t) => t.solvable)
     .map((t) => `- ${t.label}: ${t.pvKw} kW PV + ${fmt(t.battKwh)} kWh usable (~$${fmt(t.costLo)}–${fmt(t.costHi)}, ex-factory to budget-retail range)`)
@@ -583,8 +626,126 @@ function renderResults(p) {
     `${p.meta.dataYears}. Do not recompute or invent different figures — explain, sanity-check and add caveats ` +
     `(seasonal variation, inverter/BOS costs, installation, degradation) around THESE results.]`;
   $("btnAskAdvisor").style.display = "inline-flex";
+  const shareBtn = $("btnShareResult");
+  if (shareBtn) shareBtn.style.display = "inline-flex";
+  const printBtn = $("btnPrintResult");
+  if (printBtn) printBtn.style.display = "inline-flex";
+
+  updateShareHash(p, inp);
+  populatePrintSheet(p, inp);
 
   if (p.history) drawSocChart(p.history, p.chemLabel || "battery");
+}
+
+// ── Shareable results ───────────────────────────────────────────────────────
+// Inputs + headline results are encoded into the URL hash. Opening such a
+// link restores the form and re-runs the simulation locally (weather data is
+// cached per site, and the engine is deterministic, so results reproduce).
+
+function b64urlEncode(obj) {
+  const json = JSON.stringify(obj);
+  const bytes = new TextEncoder().encode(json);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function b64urlDecode(str) {
+  const pad = str.length % 4 === 0 ? "" : "=".repeat(4 - (str.length % 4));
+  const bin = atob(str.replace(/-/g, "+").replace(/_/g, "/") + pad);
+  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+function updateShareHash(p, inp) {
+  try {
+    const o = {
+      v: 1,
+      la: Math.round(inp.latitude * 100) / 100,
+      lo: Math.round(inp.longitude * 100) / 100,
+      kw: Math.round(inp.dailyKwh * 100) / 100,
+      ch: inp.chemistry,
+    };
+    if (inp.tariff) o.tf = inp.tariff;
+    o.t = p.tiers.filter((t) => t.solvable).map((t) => [t.pvKw, t.battKwh]);
+    history.replaceState(null, "", "#s=" + b64urlEncode(o));
+  } catch { /* sharing is best-effort; never block a result on it */ }
+}
+
+function restoreFromShare() {
+  if (!location.hash.startsWith("#s=")) return false;
+  let o;
+  try { o = b64urlDecode(location.hash.slice(3)); } catch { return false; }
+  if (!o || o.v !== 1) return false;
+  const lat = parseFloat(o.la), lon = parseFloat(o.lo), kw = parseFloat(o.kw);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(kw)) return false;
+
+  $("coordDetails").open = true;
+  setCoords(lat, lon, "Shared result loaded — sunshine data for this location");
+  $("loadMode").value = "kwh";
+  setLoadPanel();
+  $("dailyKwhInput").value = String(kw);
+  if (o.ch && CHEM_KEYS.has(o.ch)) $("chemSelect").value = o.ch;
+  if (Number.isFinite(o.tf) && o.tf > 0) {
+    tariffTouched = true;
+    const sel = $("tariffSelect");
+    const match = [...sel.options].find((opt) => opt.value === String(o.tf));
+    if (match) { sel.value = String(o.tf); $("customRate").style.display = "none"; }
+    else { sel.value = "custom"; $("customRateVal").value = String(o.tf); $("customRate").style.display = "block"; }
+  }
+  setStatus("🔗 Loaded a shared result — running the simulation for this location…");
+  return true;
+}
+
+// ── Printable summary ───────────────────────────────────────────────────────
+// One light-themed sheet: inputs, the three systems, money figures, key
+// assumptions, and the disclaimer. Everything else is hidden at print time.
+
+function populatePrintSheet(p, inp) {
+  const sheet = $("printSheet");
+  if (!sheet) return;
+  const rows = p.tiers.filter((t) => t.solvable).map((t) => {
+    const cells = [
+      t.label.replace(/—/g, "·"),
+      `${t.pvKw} kW`,
+      `${fmt(t.battKwh)} kWh`,
+      `$${fmt(t.costLo)}–${fmt(t.costHi)}`,
+      t.paybackYearsLo !== null ? fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) : "n/a",
+      Number.isFinite(t.lcoeUsdPerKwh) ? `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` : "n/a",
+    ];
+    return "<tr><td>" + cells.join("</td><td>") + "</td></tr>";
+  }).join("");
+  sheet.innerHTML = `
+    <h1 style="font-size:20pt;margin-bottom:2pt;">BigEnergyCo — Off-Grid System Estimate</h1>
+    <p style="font-size:9pt;color:#444;margin-bottom:10pt;">
+      Generated ${new Date().toISOString().slice(0, 10)} · free educational estimate ·
+      ${location.origin + location.pathname}
+    </p>
+    <table style="border-collapse:collapse;width:100%;font-size:10pt;margin-bottom:10pt;">
+      <tr style="background:#eef2f7;">
+        <th style="border:1px solid #999;padding:4pt 6pt;text-align:left;">System</th>
+        <th style="border:1px solid #999;padding:4pt 6pt;text-align:left;">Solar</th>
+        <th style="border:1px solid #999;padding:4pt 6pt;text-align:left;">Battery (usable)</th>
+        <th style="border:1px solid #999;padding:4pt 6pt;text-align:left;">Component cost</th>
+        <th style="border:1px solid #999;padding:4pt 6pt;text-align:left;">Payback vs. grid</th>
+        <th style="border:1px solid #999;padding:4pt 6pt;text-align:left;">Energy cost</th>
+      </tr>
+      ${rows}
+    </table>
+    <p style="font-size:9.5pt;margin:0 0 4pt;"><strong>Basis:</strong> ${inp.basis} · ${fmtKwh(inp.dailyKwh)} kWh/day ·
+      ${p.chemistry.toUpperCase()} battery · location ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)} ·
+      ${p.tariff ? `grid price $${p.tariff}/kWh (≈$${fmt(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
+    <p style="font-size:9.5pt;margin:0 0 4pt;"><strong>Method:</strong> hourly simulation of ${p.meta.dataYears} of
+      NASA POWER satellite weather (${p.meta.source}). Derates: soiling ${(p.assumptions.derates.soiling * 100).toFixed(0)}%,
+      wiring ${(p.assumptions.derates.wiring * 100).toFixed(0)}%, mismatch ${(p.assumptions.derates.mismatch * 100).toFixed(0)}%,
+      MPPT ${(p.assumptions.derates.mppt * 100).toFixed(0)}%; cell-temp model NOCT ${p.assumptions.noctC}°C,
+      ${(p.assumptions.gammaPerC * 100).toFixed(2)}%/°C; inverter ${(p.assumptions.etaInverter * 100).toFixed(0)}%.
+      Costs are components only (ex-factory China through shipped budget retail) and exclude freight, duty, labor,
+      permits, and mounting.</p>
+    <p style="font-size:8.5pt;color:#333;border-top:1px solid #999;padding-top:5pt;margin-top:8pt;">
+      Educational estimate only — not engineering, not a quote, no warranty. Battery banks, high DC current and
+      mains wiring can cause fire, injury, and death. Verify every figure with a licensed electrician or engineer
+      in your jurisdiction before purchasing or energizing anything.</p>`;
 }
 
 function askAdvisor() {
@@ -593,6 +754,27 @@ function askAdvisor() {
   if (input) input.value = window.lastSizingBrief;
   if (window.openSizingModal) window.openSizingModal();
   if (window.sendChatMsg) window.sendChatMsg();
+}
+
+function copyShareLink() {
+  const done = () => setStatus("🔗 Link copied — anyone who opens it gets this same result, re-computed on their device.");
+  const url = location.href;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(done, () => fallbackCopy(url, done));
+  } else {
+    fallbackCopy(url, done);
+  }
+}
+
+function fallbackCopy(text, done) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); done(); } catch { setStatus("Copy failed — select the address bar and copy the link manually."); }
+  ta.remove();
 }
 
 export function initSizingUI() {
@@ -617,7 +799,16 @@ export function initSizingUI() {
   $("btnGeoLocate").addEventListener("click", locateMe);
   $("btnRunSizing").addEventListener("click", run);
   $("btnAskAdvisor").addEventListener("click", askAdvisor);
+
+  const shareBtn = $("btnShareResult");
+  if (shareBtn) shareBtn.addEventListener("click", copyShareLink);
+  const printBtn = $("btnPrintResult");
+  if (printBtn) printBtn.addEventListener("click", () => window.print());
+
   setLoadPanel();
+
+  // A shared link restores its inputs and re-runs the deterministic engine.
+  if (restoreFromShare()) setTimeout(run, 50);
 }
 
 if (document.readyState === "loading") {

@@ -580,6 +580,14 @@ footer {
   margin-top: 4rem;
 }
   .btn .spin{display:inline-block;animation:becospin 1s linear infinite}@keyframes becospin{to{transform:rotate(360deg)}}
+
+/* Printable summary: at print time, only the estimate sheet survives. */
+#printSheet { display: none; }
+@media print {
+  body > *:not(#printSheet) { display: none !important; }
+  #printSheet { display: block !important; }
+  body { background: #fff !important; color: #000 !important; overflow: visible !important; background-image: none !important; }
+}
   </style>
 </head>
 <body>
@@ -686,6 +694,15 @@ footer {
             </select>
           </div>
 
+          <div class="form-group">
+            <label for="tariffSelect">Electricity price where you live <span style="font-weight:400;color:var(--text-muted);">(drives your bill estimate and payback)</span>:</label>
+            <select id="tariffSelect" class="form-control"></select>
+            <div id="customRate" style="display:none;margin-top:0.6rem;">
+              <label for="customRateVal">Your price per kWh ($):</label>
+              <input type="number" id="customRateVal" class="form-control" placeholder="e.g. 0.31" step="0.01" min="0.01">
+            </div>
+          </div>
+
           <div id="panelAppliances">
             <div id="applianceList"></div>
             <div id="readoutAppliances" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
@@ -698,19 +715,9 @@ footer {
           </div>
 
           <div id="panelBill" style="display: none;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div class="form-group">
-                <label for="billAmount">Monthly electric bill (in your currency, rough number):</label>
-                <input type="number" id="billAmount" class="form-control" placeholder="e.g. 150" min="1">
-              </div>
-              <div class="form-group">
-                <label for="tariffSelect">Electricity price where you live:</label>
-                <select id="tariffSelect" class="form-control"></select>
-              </div>
-            </div>
-            <div id="customRate" style="display: none;" class="form-group">
-              <label for="customRateVal">Your price per kWh:</label>
-              <input type="number" id="customRateVal" class="form-control" placeholder="e.g. 0.31" step="0.01" min="0.01">
+            <div class="form-group">
+              <label for="billAmount">Monthly electric bill (in your currency, rough number):</label>
+              <input type="number" id="billAmount" class="form-control" placeholder="e.g. 150" min="1">
             </div>
             <div id="readoutBill" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
             <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem;">
@@ -739,6 +746,7 @@ footer {
         </div>
 
         <div class="results-box">
+          <div id="moneyBar" style="display:none; margin-bottom: 1rem; padding: 0.85rem 1rem; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.35); border-radius: 10px; font-size: 0.95rem; line-height: 1.5;"></div>
           <div id="tierResults" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
             <p style="color:var(--text-muted);font-size:0.9rem;grid-column:1/-1;">
               Results appear here: three side-by-side systems &mdash; one that never needs a generator,
@@ -761,7 +769,11 @@ footer {
             </p>
           </details>
 
-          <div id="btnAskAdvisor" class="btn btn-secondary" style="cursor:pointer;display:none;margin-top:1rem;">🤖 Ask the AI advisor about this result</div>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem;">
+            <div id="btnAskAdvisor" class="btn btn-secondary" style="cursor:pointer;display:none;">🤖 Ask the AI advisor about this result</div>
+            <div id="btnShareResult" class="btn btn-outline" style="cursor:pointer;display:none;">🔗 Copy share link</div>
+            <div id="btnPrintResult" class="btn btn-outline" style="cursor:pointer;display:none;">🖨️ Print / save PDF</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1158,8 +1170,11 @@ footer {
     </div>
   </div>
 
+  <!-- Printable one-pager (populated after a sizing run; only this prints) -->
+  <div id="printSheet"></div>
+
   <!-- Inlined JavaScript with JSONP Web-Bridge for Freenet CSP Passthrough -->
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260823g"></script>
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260823h"></script>
   <script>
     // ── Cloudflare API Bridge URL (updated automatically by patch_and_publish.py) ──
     var CF_API_URL = 'https://bigenergyco-api.bigenergyco.workers.dev';

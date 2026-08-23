@@ -5,15 +5,18 @@ import {
   buildE1kw, flatProfile, expandProfile, sizeAllTiers, simulate,
   dailyExtremes, CHEMISTRIES,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER,
-} from "./engine.js?v=20260823g";
-import { fetchHourlyCached } from "./nasa.js?v=20260823g";
-import { fullRange, getScope, POWMR_CATALOG } from "./pricing.js?v=20260823g";
+} from "./engine.js?v=20260823h";
+import { fetchHourlyCached } from "./nasa.js?v=20260823h";
+import { fullRange, getScope, POWMR_CATALOG } from "./pricing.js?v=20260823h";
+import {
+  annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
+} from "./money.js?v=20260823h";
 
 self.onmessage = async (ev) => {
   const msg = ev.data;
   if (msg?.type !== "run") return;
   try {
-    const { latitude, longitude, dailyKwh, chemistry = "lfp", years = 5 } = msg;
+    const { latitude, longitude, dailyKwh, chemistry = "lfp", years = 5, tariff = null } = msg;
 
     const series = await fetchHourlyCached({ latitude, longitude, years });
     const hours = series.hours;
@@ -34,16 +37,41 @@ self.onmessage = async (ev) => {
 
     const annualYield = [...e1kw].reduce((a, b) => a + b, 0) / 1000 / series.meta.years;
     const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
+    const gridSpend = annualGridSpendUsd(dailyKwh, tariff);
 
     const historyTiers = [];
     const tiers = results.map(({ tier, sizing }) => {
       let batteryLifeYears = null;
       let cost = null;
+      let tierMoney = null;
 
       if (sizing) {
         const cyclesPerYear = sizing.result.cyclesEquivalent / series.meta.years;
         batteryLifeYears = cyclesPerYear > 0 ? chem.cyclesTo80 / cyclesPerYear : null;
         cost = fullRange(sizing.pvKw, sizing.battKwh);
+
+        // Money story: payback against avoided grid bills, plus levelized
+        // cost of the AC energy this system actually serves (landed-mid
+        // capex, battery banks replaced as they wear out over 25 years).
+        const servedKwhPerYear = sizing.result.servedWh / 1000 / series.meta.years;
+        const replacements25y = batteryReplacements(cyclesPerYear, chem.cyclesTo80);
+        const battReplCost = Math.round(
+          sizing.battKwh * (landed.battPerKwhUsable[0] + landed.battPerKwhUsable[1]) / 2
+        );
+        const lcoeUsd = lcoeUsdPerKwh({
+          capexMidUsd: cost.objectiveMid,
+          battReplaceCostUsd: battReplCost,
+          replacements: replacements25y,
+          annualServedKwh: servedKwhPerYear,
+        });
+        const tierMoney = {
+          servedKwhPerYear: Math.round(servedKwhPerYear),
+          replacements25y,
+          lcoeUsdPerKwh: lcoeUsd === null ? null : +lcoeUsd.toFixed(4),
+          paybackYearsLo: gridSpend ? paybackYears(cost.lo, gridSpend) : null,
+          paybackYearsHi: gridSpend ? paybackYears(cost.hi, gridSpend) : null,
+        };
+
 
         // Full daily range: the band between each day's lowest and highest
         // charge. Top edge touches 100% on charging days for EVERY system —
@@ -91,6 +119,11 @@ self.onmessage = async (ev) => {
         cyclesPerYear: sizing ? Math.round(sizing.result.cyclesEquivalent / series.meta.years) : null,
         batteryLifeYears: batteryLifeYears === null ? null : +batteryLifeYears.toFixed(1),
         minSocPct: sizing ? +(sizing.result.minSoc * 100).toFixed(0) : null,
+        servedKwhPerYear: tierMoney?.servedKwhPerYear ?? null,
+        replacements25y: tierMoney?.replacements25y ?? null,
+        lcoeUsdPerKwh: tierMoney?.lcoeUsdPerKwh ?? null,
+        paybackYearsLo: tierMoney?.paybackYearsLo ?? null,
+        paybackYearsHi: tierMoney?.paybackYearsHi ?? null,
       };
     });
 
@@ -101,6 +134,8 @@ self.onmessage = async (ev) => {
         annualYieldPerKw: Math.round(annualYield),
         chemistry,
         chemLabel: chem.label,
+        tariff: tariff ?? null,
+        annualGridSpendUsd: gridSpend === null ? null : Math.round(gridSpend),
         pricing: {
           basisLabel: "ex-factory China through PowMr-class budget retail",
           source: "cell market indications → PowMr public catalog, Aug 2026",
@@ -121,6 +156,7 @@ self.onmessage = async (ev) => {
           dataYears: `${series.meta.startYear}–${series.meta.endYear} (${series.meta.years} yr)`,
           source: series.meta.source,
           cycleLifeTo80: { [chemistry]: chem.cyclesTo80 },
+          money: `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 25-year horizon, and assumes panels/inverter last the full 25 years. Generator fuel and grid fixed charges are not counted.`,
         },
       },
     });
