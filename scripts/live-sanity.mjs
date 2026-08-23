@@ -1,4 +1,4 @@
-// Live sanity sweep of the deployed site. Explicit UTF-8 everywhere.
+﻿// Live sanity sweep of the deployed site. Explicit UTF-8 everywhere.
 const BASE = "https://sovereign-communication.github.io/BigEnergyCo/";
 let failures = 0;
 function check(name, ok) { console.log((ok ? "LIVE OK    " : "LIVE FAIL  ") + name); if (!ok) failures++; }
@@ -19,7 +19,7 @@ for (const m of [
   'rel="canonical"', 'id="systemGoal"', "Cut my grid bill",
   'value="auto" selected', "compare all three by lifetime cost",
   'id="exportRate"', "Lead-Acid (AGM)", 'data-i18n="heroTag"', 'id="langSelect"',
-  "ui.js?v=20260823m",
+  "ui.js?v=20260824a",
   // PWA
   'rel="manifest"', "./sw.js", 'name="theme-color"',
   // SEO
