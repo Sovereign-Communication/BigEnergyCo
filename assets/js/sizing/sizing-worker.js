@@ -1,4 +1,4 @@
-﻿// Sizing web worker: keeps multi-second searches off the main thread.
+// Sizing web worker: keeps multi-second searches off the main thread.
 // Message in:  { type: "run", latitude, longitude, dailyKwh,
 //                chemistry: "auto" | "naion" | "lfp" | "agm",
 //                tariff, exportRate, mode: "offgrid" | "gridtie" }
@@ -16,7 +16,7 @@ import {
 } from "./money.js?v=20260823l";
 
 const AUTO_COMPARE_NOTE = {
-  offgrid: "compared at the middle reliability tier (99% â€” generator as rare backup)",
+  offgrid: "compared at the middle reliability tier (99% — generator as rare backup)",
   gridtie: "compared at the ~80% bill-cut target",
 };
 
@@ -24,7 +24,7 @@ const AUTO_COMPARE_NOTE = {
 const AUTO_CARD_NOTES = {
   naion: "Runs on standard LFP voltage settings (the common case): the ~40 V low cutoff protects it from deep discharge, so it gives up a little capacity but lasts longer than its deep-cycle rating.",
   lfp: "The benchmark: uses most of its nameplate every day and still outlives everything else.",
-  agm: "Half the bank is untouchable reserve (50% DoD rule), and without active balancing â€” typical for DIY series strings â€” the whole string wears at the weakest block's pace.",
+  agm: "Half the bank is untouchable reserve (50% DoD rule), and without active balancing — typical for DIY series strings — the whole string wears at the weakest block's pace.",
 };
 
 self.onmessage = async (ev) => {
@@ -117,7 +117,7 @@ self.onmessage = async (ev) => {
       annualGridSpendUsd: gridSpend === null ? null : Math.round(gridSpend),
       pricing: {
         basisLabel: "ex-factory China through PowMr-class budget retail",
-        source: "cell market indications â†’ PowMr public catalog, Aug 2026",
+        source: "cell market indications → PowMr public catalog, Aug 2026",
         catalog: POWMR_CATALOG,
       },
       assumptions: {
@@ -125,14 +125,14 @@ self.onmessage = async (ev) => {
         gammaPerC: GAMMA_PMAX,
         noctC: NOCT,
         etaInverter: ETA_INVERTER,
-        dataYears: `${series.meta.startYear}â€“${series.meta.endYear} (${series.meta.years} yr)`,
+        dataYears: `${series.meta.startYear}–${series.meta.endYear} (${series.meta.years} yr)`,
         source: series.meta.source,
         capacityScale: +capacityScaleFor(chemistry === "auto" ? "lfp" : chemistry, meanTempC).toFixed(3),
         meanTempC: Math.round(meanTempC),
       },
     });
 
-    // â”€â”€ GRID-TIE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── GRID-TIE ────────────────────────────────────────────────────────────
     if (mode === "gridtie") {
       const historyTiers = [];
 
@@ -206,7 +206,7 @@ self.onmessage = async (ev) => {
         payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
         payload.assumptions.money =
           `Auto mode sizes each chemistry to deliver the same ~80% bill cut within its depth-of-discharge window ` +
-          `(AGM banks are ~2Ã— nameplate; lithium/sodium ~1.1Ã—; sodium modeled on LFP voltage settings â€” slightly less capacity, gentler discharge). ` +
+          `(AGM banks are ~2× nameplate; lithium/sodium ~1.1×; sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). ` +
           `Lifetime cost adds every bank swap PLUS install labor each time over 25 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings). ` +
           `Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; fixed connection fees not counted.`;
         self.postMessage({ type: "ok", payload });
@@ -282,7 +282,7 @@ self.onmessage = async (ev) => {
       return;
     }
 
-    // â”€â”€ OFF-GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── OFF-GRID ────────────────────────────────────────────────────────────
     const historyTiers = [];
 
     // AUTO: one representative system per chemistry (middle tier).
@@ -346,7 +346,7 @@ self.onmessage = async (ev) => {
       };
       payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
       payload.assumptions.money =
-        `Auto mode sizes each chemistry for the same job â€” lights stay on with a generator as rare backup â€” inside its depth-of-discharge window (AGM keeps a 50% reserve; lithium/sodium use ~90%). Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 25 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) â€” that is why its sticker price misleads.`;
+        `Auto mode sizes each chemistry for the same job — lights stay on with a generator as rare backup — inside its depth-of-discharge window (AGM keeps a 50% reserve; lithium/sodium use ~90%). Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 25 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) — that is why its sticker price misleads.`;
       self.postMessage({ type: "ok", payload });
       return;
     }

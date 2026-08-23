@@ -1,4 +1,4 @@
-﻿// Size-My-System UI controller. Loaded as an ES module from index.html.
+// Size-My-System UI controller. Loaded as an ES module from index.html.
 // All computation happens in sizing-worker.js; this file is DOM glue only.
 //
 // Load input is end-user-first: an appliance checklist with plain-language
@@ -14,12 +14,12 @@ let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
 
 // The legacy storage-comparison script (classic inline JS) reads scoped
-// prices through this bridge â€” pricing.js stays the single source of truth.
+// prices through this bridge — pricing.js stays the single source of truth.
 window.BECO_BATT_COST = battOnlyCost;
 
-// â”€â”€ Appliance library â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Appliance library ───────────────────────────────────────────────────────
 // w = watts WHILE RUNNING. duty:true items (fridges, ACs, pumps) only run a
-// fraction of the day â€” their slider means "hours it actually runs," capped
+// fraction of the day — their slider means "hours it actually runs," capped
 // to realistic compressor time, and the row shows the resulting average draw.
 const APPLIANCES = [
   { g: "Keep food cold", items: [
@@ -59,10 +59,10 @@ const APPLIANCES = [
 ];
 
 const TARIFFS = [
-  { n: "Global average â€” about $0.28 per kWh", v: 0.28 },
-  { n: "US average â€” about $0.16 per kWh", v: 0.16 },
-  { n: "Europe / UK â€” about $0.38 per kWh", v: 0.38 },
-  { n: "Hawaii / islands â€” about $0.42 per kWh", v: 0.42 },
+  { n: "Global average — about $0.28 per kWh", v: 0.28 },
+  { n: "US average — about $0.16 per kWh", v: 0.16 },
+  { n: "Europe / UK — about $0.38 per kWh", v: 0.38 },
+  { n: "Hawaii / islands — about $0.42 per kWh", v: 0.42 },
   { n: "I'll type my own rate", v: "custom" },
 ];
 
@@ -94,7 +94,7 @@ function fmtH(h) {
 
 function fmtKwh(x) { return (Math.round(x * 100) / 100).toString(); }
 
-// â”€â”€ Load-mode plumbing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Load-mode plumbing ──────────────────────────────────────────────────────
 
 function setLoadPanel() {
   const mode = $("loadMode").value;
@@ -136,7 +136,7 @@ function updateLoadReadout() {
       out.innerHTML = "";
       out.appendChild(el("span", {}, `Estimated use: about ${fmtKwh(kwh)} kWh/day`));
       out.appendChild(el("span", { style: "color:var(--text-muted);font-weight:400;" },
-        `  Â·  everything running at once â‰ˆ ${peakW.toLocaleString()} W (your inverter should be bigger than this)`));
+        `  ·  everything running at once ≈ ${peakW.toLocaleString()} W (your inverter should be bigger than this)`));
     }
   } else if (mode === "bill") {
     const bill = parseFloat($("billAmount").value);
@@ -176,7 +176,7 @@ function renderAppliances() {
 
       // quantity stepper (hidden until checked)
       const qtyWrap = el("span", { style: "display:none;align-items:center;gap:0.35rem;" });
-      const minus = el("span", { class: "btn btn-outline", style: "padding:0.05rem 0.55rem;font-size:0.9rem;cursor:pointer;user-select:none;" }, "âˆ’");
+      const minus = el("span", { class: "btn btn-outline", style: "padding:0.05rem 0.55rem;font-size:0.9rem;cursor:pointer;user-select:none;" }, "−");
       const qtyVal = el("span", { style: "font-family:var(--font-mono);min-width:1.4rem;text-align:center;font-weight:700;" }, "1");
       const plus = el("span", { class: "btn btn-outline", style: "padding:0.05rem 0.55rem;font-size:0.9rem;cursor:pointer;user-select:none;" }, "+");
       qtyWrap.append(minus, qtyVal, plus);
@@ -203,7 +203,7 @@ function renderAppliances() {
         const kwh = (it.w * parseInt(row.dataset.qty, 10) * h) / 1000;
         if (on) {
           let txt = fmtKwh(kwh) + " kWh/day";
-          if (it.duty) txt += ` (â‰ˆ${Math.round((it.w * h) / 24)} W avg)`;
+          if (it.duty) txt += ` (≈${Math.round((it.w * h) / 24)} W avg)`;
           sub.textContent = txt;
           sub.style.color = "var(--primary-accent)";
         } else {
@@ -232,7 +232,7 @@ function renderAppliances() {
   }
 }
 
-// â”€â”€ Location plumbing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Location plumbing ───────────────────────────────────────────────────────
 
 function setCoords(lat, lon, label) {
   $("latInput").value = Math.round(lat * 100) / 100;
@@ -257,7 +257,7 @@ function applyEstimatedTariff(lat, lon) {
     $("customRate").style.display = "block";
   }
   const note = el("div", { style: "font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;" },
-    `Electricity price estimated for ${est.label} â€” change it above if you know your rate.`);
+    `Electricity price estimated for ${est.label} — change it above if you know your rate.`);
   const existing = document.getElementById("tariffNote");
   if (existing) existing.remove();
   sel.closest(".form-group").appendChild(note);
@@ -289,22 +289,22 @@ function renderCities() {
 
 function locateMe() {
   if (!navigator.geolocation) {
-    setStatus("âš ï¸ Your browser can't share a location â€” pick the nearest big city instead.");
+    setStatus("⚠️ Your browser can't share a location — pick the nearest big city instead.");
     return;
   }
-  setStatus("â³ Asking your browser for your locationâ€¦");
+  setStatus("⏳ Asking your browser for your location…");
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       setCoords(pos.coords.latitude, pos.coords.longitude, "Using your precise location");
       $("coordDetails").open = true;
-      setStatus("ðŸ“ Location set. Now tell us your power use below, then run the sizing.");
+      setStatus("📍 Location set. Now tell us your power use below, then run the sizing.");
     },
-    () => setStatus("âš ï¸ Couldn't get your location â€” pick the nearest big city instead."),
+    () => setStatus("⚠️ Couldn't get your location — pick the nearest big city instead."),
     { timeout: 8000 }
   );
 }
 
-// â”€â”€ Inputs â†’ engine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Inputs → engine ─────────────────────────────────────────────────────────
 
 function readInputs() {
   const lat = parseFloat($("latInput").value);
@@ -346,19 +346,19 @@ function run() {
   const inp = readInputs();
   if (!Number.isFinite(inp.latitude) || !Number.isFinite(inp.longitude) ||
       Math.abs(inp.latitude) > 90 || Math.abs(inp.longitude) > 180) {
-    setStatus("âš ï¸ Pick a city (or use ðŸ“ My location) so we know your sunshine.");
+    setStatus("⚠️ Pick a city (or use 📍 My location) so we know your sunshine.");
     return;
   }
   if (!Number.isFinite(inp.dailyKwh) || inp.dailyKwh <= 0 || inp.dailyKwh > 500) {
-    setStatus("âš ï¸ Tell us your power use â€” tick some appliances, or enter a bill or kWh figure.");
+    setStatus("⚠️ Tell us your power use — tick some appliances, or enter a bill or kWh figure.");
     return;
   }
   setStatus(inp.mode === "gridtie"
-    ? "â³ Fetching five years of satellite weather and searching bill-cutting system sizesâ€¦"
-    : "â³ Fetching 5 years of hourly satellite weather and searching system sizesâ€¦");
+    ? "⏳ Fetching five years of satellite weather and searching bill-cutting system sizes…"
+    : "⏳ Fetching 5 years of hourly satellite weather and searching system sizes…");
   const btn = $("btnRunSizing");
   btn.disabled = true;
-  btn.innerHTML = '<span class="spin">â—</span> Running 5-year simulationâ€¦';
+  btn.innerHTML = '<span class="spin">◐</span> Running 5-year simulation…';
   ensureWorker().postMessage({ type: "run", ...inp });
 }
 
@@ -366,7 +366,7 @@ function restoreRunButton() {
   const btn = $("btnRunSizing");
   if (btn) {
     btn.disabled = false;
-    btn.innerHTML = "â˜€ï¸ Size My System (5-yr simulation)";
+    btn.innerHTML = "☀️ Size My System (5-yr simulation)";
   }
 }
 
@@ -376,14 +376,14 @@ function ensureWorker() {
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
-        // bring the results into view â€” the run button can be far above them
+        // bring the results into view — the run button can be far above them
         const res = $("tierResults");
         if (res) { res.setAttribute("tabindex", "-1"); res.scrollIntoView({ behavior: "smooth", block: "start" }); }
-      } else if (ev.data?.type === "error") setStatus("âš ï¸ " + ev.data.message);
+      } else if (ev.data?.type === "error") setStatus("⚠️ " + ev.data.message);
       restoreRunButton();
     };
     worker.onerror = () => {
-      setStatus("âš ï¸ Sizing engine failed to load.");
+      setStatus("⚠️ Sizing engine failed to load.");
       restoreRunButton();
     };
   }
@@ -393,7 +393,7 @@ function ensureWorker() {
 function fmt(n) { return Number(n).toLocaleString(); }
 
 function fmtLife(years) {
-  if (!Number.isFinite(years) || years <= 0) return "â€”";
+  if (!Number.isFinite(years) || years <= 0) return "—";
   if (years >= 2) return "~" + Math.round(years) + " yrs";
   const months = Math.max(1, Math.round(years * 12));
   return "~" + months + " mo";
@@ -407,8 +407,8 @@ function fmtPaybackOne(y) {
 
 function fmtPaybackRange(lo, hi) {
   const a = fmtPaybackOne(lo), b = fmtPaybackOne(hi);
-  if (!a || !b) return "â€”";
-  return a === b ? a : `${a}â€“${b.replace("~", "")}`;
+  if (!a || !b) return "—";
+  return a === b ? a : `${a}–${b.replace("~", "")}`;
 }
 
 // User currency (optional): converts USD figures for display only. The
@@ -425,7 +425,7 @@ function money(usd) {
   return "$" + Number(usd).toLocaleString();
 }
 
-function moneyRange(lo, hi) { return money(lo) + "â€“" + money(hi); }
+function moneyRange(lo, hi) { return money(lo) + "–" + money(hi); }
 
 const TIER_COLORS = {
   tier100: "#00e699", tier99: "#60a5fa", tier95: "#f59e0b",
@@ -433,12 +433,12 @@ const TIER_COLORS = {
   "auto-naion": "#60a5fa", "auto-lfp": "#00e699", "auto-agm": "#f59e0b",
 };
 const TIER_NAMES = {
-  tier100: "100% Â· never needs a generator",
-  tier99: "99% Â· generator as rare backup",
-  tier95: "95% Â· generator now and then",
-  cut60: "~60% bill cut Â· grid covers the rest",
-  cut80: "~80% bill cut Â· small grid top-ups",
-  cut95: "~95% bill cut Â· near off-grid",
+  tier100: "100% · never needs a generator",
+  tier99: "99% · generator as rare backup",
+  tier95: "95% · generator now and then",
+  cut60: "~60% bill cut · grid covers the rest",
+  cut80: "~80% bill cut · small grid top-ups",
+  cut95: "~95% bill cut · near off-grid",
   "auto-naion": "Sodium-Ion bank over five real years",
   "auto-lfp": "LFP bank over five real years",
   "auto-agm": "Lead-Acid (AGM) bank over five real years",
@@ -446,7 +446,7 @@ const TIER_NAMES = {
 
 /**
  * Reliability chart, deliberately simple: one stacked panel per system, one
- * line per panel â€” the LOWEST the battery got each day over five years.
+ * line per panel — the LOWEST the battery got each day over five years.
  * Flat and high = dependable. Dives to the red line = generator territory.
  */
 function drawSocChart(history, chemLabel) {
@@ -456,16 +456,16 @@ function drawSocChart(history, chemLabel) {
 
   const solvable = history.tiers.filter((t) => t.dailyMin && t.dailyMax && t.dailyMin.length);
   if (!solvable.length) {
-    // Data arrived but in an unexpected shape â€” almost certainly a stale
+    // Data arrived but in an unexpected shape — almost certainly a stale
     // cached module. Never fail silently: say so.
     wrap.style.display = "block";
     const cap = $("socCaption");
-    if (cap) cap.textContent = "âš ï¸ Chart data didn't match this page version â€” please refresh (Ctrl+F5 / âŒ˜â‡§R) and run the sizing again.";
+    if (cap) cap.textContent = "⚠️ Chart data didn't match this page version — please refresh (Ctrl+F5 / ⌘⇧R) and run the sizing again.";
     return;
   }
   wrap.style.display = "block";
 
-  // hide the old legend row â€” labels live inside each band now
+  // hide the old legend row — labels live inside each band now
   const legend = $("socLegend");
   if (legend) legend.style.display = "none";
 
@@ -512,7 +512,7 @@ function drawSocChart(history, chemLabel) {
     ctx.fillText(gt ? "bank empty" : "empty", W - padR - (gt ? 74 : 38), Y(0) - 4);
 
     // FULL daily range: fill between each day's highest and lowest charge.
-    // The top edge is the battery charging back to full â€” every system's
+    // The top edge is the battery charging back to full — every system's
     // band touches 100%; the bottom edge shows how deep the nights dig.
     ctx.beginPath();
     ctx.moveTo(X(0), Y(t.dailyMax[0]));
@@ -549,10 +549,10 @@ function drawSocChart(history, chemLabel) {
     ctx.fillStyle = t.emptyDays > 0 ? "rgba(245,158,11,0.95)" : color;
     const charged = `charged to 100% on ${fmt(t.fullDays)} of ${fmt(t.totalDays)} days`;
     const verdict = t.emptyDays > 0
-      ? (gt ? `${charged} Â· but drained flat on ${t.emptyDays} day${t.emptyDays === 1 ? "" : "s"} â€” the grid covered those`
-            : `${charged} Â· but hit empty on ${t.emptyDays} day${t.emptyDays === 1 ? "" : "s"}`)
-      : `${charged} Â· never went empty`;
-    ctx.fillText(`lowest point ${Math.max(0, Math.round(t.minPct))}% â€” ${verdict}`, padL + 2, top + padT + 14);
+      ? (gt ? `${charged} · but drained flat on ${t.emptyDays} day${t.emptyDays === 1 ? "" : "s"} — the grid covered those`
+            : `${charged} · but hit empty on ${t.emptyDays} day${t.emptyDays === 1 ? "" : "s"}`)
+      : `${charged} · never went empty`;
+    ctx.fillText(`lowest point ${Math.max(0, Math.round(t.minPct))}% — ${verdict}`, padL + 2, top + padT + 14);
   }
 
   solvable.forEach((t, idx) => drawBand(t, idx * (BAND_H + GAP)));
@@ -568,11 +568,11 @@ function drawSocChart(history, chemLabel) {
 
   $("socCaption").textContent = gt
     ? `Each band spans one day: top edge = fullest the battery got, bottom edge = deepest discharge, ` +
-      `${history.startYear}â€“${history.endYear} of real satellite weather. In grid-tie mode the red line isn't a blackout â€” ` +
+      `${history.startYear}–${history.endYear} of real satellite weather. In grid-tie mode the red line isn't a blackout — ` +
       `when the band dives to it, the grid covered those hours instead (that's your remaining bill). Flat, high bands mean solar and battery are doing the work.`
     : `Each band spans one day: top edge = fullest the battery got, bottom edge = deepest discharge, ` +
-      `${history.startYear}â€“${history.endYear} of real satellite weather (${chemLabel}). Every healthy system ` +
-      `charges all the way back to 100% on sunny days â€” the difference between systems is how far the bottom ` +
+      `${history.startYear}–${history.endYear} of real satellite weather (${chemLabel}). Every healthy system ` +
+      `charges all the way back to 100% on sunny days — the difference between systems is how far the bottom ` +
       `edge dives toward empty during bad weather. Touch the red line and a generator is covering you.`;
 }
 
@@ -588,7 +588,7 @@ function renderAutoCards(p) {
   for (const a of p.auto) {
     const card = el("div", { class: "bom-card" });
     card.style.borderColor = a.chemistry === bestId ? "var(--border-glow)" : "var(--border-card)";
-    card.appendChild(el("div", { class: "bom-badge" }, isGT && a.cutPct ? `Bill âˆ’${a.cutPct}%` : "Same job done"));
+    card.appendChild(el("div", { class: "bom-badge" }, isGT && a.cutPct ? `Bill −${a.cutPct}%` : "Same job done"));
     card.appendChild(el("h3", {}, a.chemLabel));
 
     if (!a.solvable) {
@@ -599,17 +599,17 @@ function renderAutoCards(p) {
 
     const rows = [
       ["Solar array", `${a.pvKw} kW`],
-      ["Bank usable", `${fmt(a.battKwh)} kWh Â· â‰ˆ${fmt(a.battNameplateKwh)} kWh nameplate`],
+      ["Bank usable", `${fmt(a.battKwh)} kWh · ≈${fmt(a.battNameplateKwh)} kWh nameplate`],
       ["Depth-of-discharge window", `uses ${(a.usableDod * 100).toFixed(0)}% of nameplate`],
       ["First cost", `~${moneyRange(a.costLo, a.costHi)}`],
-      ["Bank swaps over 25 yr", a.replacements25y > 0 ? `~${a.replacements25y}Ã— (life â‰ˆ ${fmtLife(a.batteryLifeYears)})` : "none expected"],
+      ["Bank swaps over 25 yr", a.replacements25y > 0 ? `~${a.replacements25y}× (life ≈ ${fmtLife(a.batteryLifeYears)})` : "none expected"],
     ];
     if (a.swapsAndLaborUsd > 0) {
-      rows.push(["Swaps + labor add", `â‰ˆ${money(a.swapsAndLaborUsd)}`]);
+      rows.push(["Swaps + labor add", `≈${money(a.swapsAndLaborUsd)}`]);
     }
-    rows.push(["True 25-yr cost", `â‰ˆ${money(a.lifetimeCostMid)}` + (a.chemistry === bestId ? " â† cheapest bank" : "")]);
+    rows.push(["True 25-yr cost", `≈${money(a.lifetimeCostMid)}` + (a.chemistry === bestId ? " ← cheapest bank" : "")]);
     if (isGT) {
-      rows.push(["Bill after solar", a.billAfterMonthlyUsd !== null ? `â‰ˆ${money(a.billAfterMonthlyUsd)}/mo` : "needs your tariff"]);
+      rows.push(["Bill after solar", a.billAfterMonthlyUsd !== null ? `≈${money(a.billAfterMonthlyUsd)}/mo` : "needs your tariff"]);
       rows.push(["Sun clipped (no export)", `${fmt(a.clippedKwhPerYear)} kWh/yr`]);
       if (a.exportValueAnnualUsd > 0) {
         rows.push(["Feed-in credit on clipped sun", `+${money(a.exportValueAnnualUsd)}/yr`]);
@@ -621,8 +621,8 @@ function renderAutoCards(p) {
       rows.push(["Pays for itself in", fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi)]);
     }
     if (Number.isFinite(a.lcoeUsdPerKwh)) {
-      rows.push(["Your solar power costs", `â‰ˆ${(a.lcoeUsdPerKwh * 100).toFixed(1)}Â¢/kWh` +
-        (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}Â¢)` : "")]);
+      rows.push(["Your solar power costs", `≈${(a.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` +
+        (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}¢)` : "")]);
     }
     appendRows(card, rows);
     if (a.cardNote) {
@@ -657,21 +657,21 @@ function renderTierCards(p) {
     card.appendChild(el("div", { class: "bom-badge" },
       t.id === "tier100" ? "No generator" : t.id === "tier99" ? "Rare generator" : "Generator OK"));
 
-    card.appendChild(el("h3", {}, t.label.split("â€”")[1]?.trim() || t.label));
+    card.appendChild(el("h3", {}, t.label.split("—")[1]?.trim() || t.label));
 
     if (!t.solvable) {
-      card.appendChild(el("p", {}, "No system found within search limits for this load â€” the daily consumption may be too high for a practical off-grid build at this site."));
+      card.appendChild(el("p", {}, "No system found within search limits for this load — the daily consumption may be too high for a practical off-grid build at this site."));
       grid.appendChild(card);
       continue;
     }
 
     const rows = [
       ["Solar array", `${t.pvKw} kW`],
-      ["Battery (usable)", `${fmt(t.battKwh)} kWh Â· â‰ˆ${fmt(t.battNameplateKwh)} nameplate`],
+      ["Battery (usable)", `${fmt(t.battKwh)} kWh · ≈${fmt(t.battNameplateKwh)} nameplate`],
       ["Component cost", `~${moneyRange(t.costLo, t.costHi)}`],
-      ["  Â· panels + inverter", `~${moneyRange(t.pvCostLo, t.pvCostHi)}`],
-      ["  Â· battery bank", `~${moneyRange(t.battCostLo, t.battCostHi)}`],
-      ["  Â· battery unit price", `â‰ˆ$${t.battPerKwhLo}â€“${t.battPerKwhHi}/kWh stored`],
+      ["  · panels + inverter", `~${moneyRange(t.pvCostLo, t.pvCostHi)}`],
+      ["  · battery bank", `~${moneyRange(t.battCostLo, t.battCostHi)}`],
+      ["  · battery unit price", `≈$${t.battPerKwhLo}–${t.battPerKwhHi}/kWh stored`],
       ["Unmet hours", `${fmt(t.unmetHoursPerYear)} h/yr`],
       ["Longest gap", `${fmt(t.longestGapHours)} h`],
       ["Battery life est.", fmtLife(t.batteryLifeYears)],
@@ -681,13 +681,13 @@ function renderTierCards(p) {
       rows.push(["Pays for itself in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi)]);
     }
     if (Number.isFinite(t.lcoeUsdPerKwh)) {
-      rows.push(["Your solar power costs", `â‰ˆ${(t.lcoeUsdPerKwh * 100).toFixed(1)}Â¢/kWh` +
-        (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}Â¢)` : "")]);
+      rows.push(["Your solar power costs", `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` +
+        (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}¢)` : "")]);
     }
     if (t.replacements25y > 0) {
-      rows.push(["Battery swaps over 25 yr", `~${t.replacements25y}Ã— Â· adds â‰ˆ${money(t.swapsAndLaborUsd)} with labor`]);
+      rows.push(["Battery swaps over 25 yr", `~${t.replacements25y}× · adds ≈${money(t.swapsAndLaborUsd)} with labor`]);
     }
-    rows.push(["True 25-yr cost", `â‰ˆ${money(t.lifetimeCostMid)}`]);
+    rows.push(["True 25-yr cost", `≈${money(t.lifetimeCostMid)}`]);
     appendRows(card, rows);
     card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
       "Battery + panel component estimate only; excludes inverter, BOS, freight, labor."));
@@ -701,40 +701,40 @@ function renderTargetCards(p) {
   for (const t of p.targets) {
     const card = el("div", { class: "bom-card" });
     card.style.borderColor = t.id === "cut80" ? "var(--border-glow)" : "var(--border-card)";
-    card.appendChild(el("div", { class: "bom-badge" }, t.solvable ? `Bill âˆ’${t.cutPct}%` : "Not reachable"));
+    card.appendChild(el("div", { class: "bom-badge" }, t.solvable ? `Bill −${t.cutPct}%` : "Not reachable"));
     card.appendChild(el("h3", {}, t.label));
 
     if (!t.solvable) {
-      card.appendChild(el("p", {}, "Even a large array can't cut the bill this far at this location â€” check the off-grid sizer instead."));
+      card.appendChild(el("p", {}, "Even a large array can't cut the bill this far at this location — check the off-grid sizer instead."));
       grid.appendChild(card);
       continue;
     }
 
     const rows = [
       ["Solar array", `${t.pvKw} kW`],
-      ["Battery (usable)", t.battKwh > 0 ? `${fmt(t.battKwh)} kWh Â· â‰ˆ${fmt(t.battNameplateKwh)} nameplate` : "none needed"],
+      ["Battery (usable)", t.battKwh > 0 ? `${fmt(t.battKwh)} kWh · ≈${fmt(t.battNameplateKwh)} nameplate` : "none needed"],
       ["Component cost", `~${moneyRange(t.costLo, t.costHi)}`],
-      ["Bill after solar", t.billAfterMonthlyUsd !== null ? `â‰ˆ${money(t.billAfterMonthlyUsd)}/mo (was â‰ˆ${money(Math.round(p.annualGridSpendUsd / 12))})` : "needs your tariff"],
+      ["Bill after solar", t.billAfterMonthlyUsd !== null ? `≈${money(t.billAfterMonthlyUsd)}/mo (was ≈${money(Math.round(p.annualGridSpendUsd / 12))})` : "needs your tariff"],
       ["Imported from grid", `${fmt(t.importedKwhPerYear)} kWh/yr`],
     ];
     const exportActive = t.exportValueAnnualUsd > 0;
     if (exportActive) {
       rows.push(["Feed-in credit on clipped sun", `+${money(t.exportValueAnnualUsd)}/yr (${fmt(t.clippedKwhPerYear)} kWh clipped)`]);
     } else if (t.clippedKwhPerYear > 50) {
-      rows.push(["Sun clipped (no export)", `${fmt(t.clippedKwhPerYear)} kWh/yr â€” enter a feed-in credit to value it`]);
+      rows.push(["Sun clipped (no export)", `${fmt(t.clippedKwhPerYear)} kWh/yr — enter a feed-in credit to value it`]);
     }
     if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
       rows.push(["Pays for itself in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) + (exportActive ? " incl. feed-in" : "")]);
     }
     if (Number.isFinite(t.lcoeUsdPerKwh)) {
-      rows.push(["Your solar power costs", `â‰ˆ${(t.lcoeUsdPerKwh * 100).toFixed(1)}Â¢/kWh` +
-        (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}Â¢)` : "")]);
+      rows.push(["Your solar power costs", `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` +
+        (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}¢)` : "")]);
     }
     if (t.replacements25y > 0 && t.battKwh > 0) {
-      rows.push(["Battery swaps over 25 yr", `~${t.replacements25y}Ã— Â· adds â‰ˆ${money(t.swapsAndLaborUsd)} with labor`]);
+      rows.push(["Battery swaps over 25 yr", `~${t.replacements25y}× · adds ≈${money(t.swapsAndLaborUsd)} with labor`]);
     }
     if (t.battKwh > 0) {
-      rows.push(["True 25-yr cost", `â‰ˆ${money(t.lifetimeCostMid)}`]);
+      rows.push(["True 25-yr cost", `≈${money(t.lifetimeCostMid)}`]);
     }
     appendRows(card, rows);
     card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
@@ -836,24 +836,24 @@ function drawAutoChart(p) {
       const chip = el("span", { style: "display:inline-flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:var(--text-main);" });
       chip.appendChild(el("span", { style: `width:10px;height:10px;border-radius:50%;background:${TIER_COLORS[`auto-${a.chemistry}`]};display:inline-block;` }));
       chip.appendChild(el("span", {},
-        `${a.chemLabel.replace(/ \(.*\)/, "")} Â· ${fmt(a.battNameplateKwh)} kWh nameplate` +
-        (a.replacements25y > 0 ? ` Â· ~${a.replacements25y} swaps/25yr` : " Â· no swaps")));
+        `${a.chemLabel.replace(/ \(.*\)/, "")} · ${fmt(a.battNameplateKwh)} kWh nameplate` +
+        (a.replacements25y > 0 ? ` · ~${a.replacements25y} swaps/25yr` : " · no swaps")));
       legend.appendChild(chip);
     }
   }
 
   $("socCaption").textContent =
-    `Every bank does the SAME job here â€” so what differs is how much hardware each chemistry must carry and how deeply it may use it. ` +
-    `The axis is each bank's OWN nameplate: lead-acid's whole working range hugs the bottom half of its gauge (the 50% rule) while carrying roughly double the nameplate â€” ` +
+    `Every bank does the SAME job here — so what differs is how much hardware each chemistry must carry and how deeply it may use it. ` +
+    `The axis is each bank's OWN nameplate: lead-acid's whole working range hugs the bottom half of its gauge (the 50% rule) while carrying roughly double the nameplate — ` +
     `lithium and sodium use nearly all of theirs. Sodium rides on standard LFP voltage settings, trading a slice of capacity for gentler discharge and longer life. ` +
-    `Dips during ${p.history.startYear}â€“${p.history.endYear}'s worst weather are the moments a generator or the grid would cover you.`;
+    `Dips during ${p.history.startYear}–${p.history.endYear}'s worst weather are the moments a generator or the grid would cover you.`;
 }
 
 function renderResults(p) {
   const inp = readInputs();
   lastPayload = p;
   const isGT = p.mode === "gridtie";
-  setStatus(`âœ… ${p.meta.years} yr of hourly data (${p.meta.dataYears}) Â· ${fmt(p.annualYieldPerKw)} kWh/yr per kW of panel.`);
+  setStatus(`✅ ${p.meta.years} yr of hourly data (${p.meta.dataYears}) · ${fmt(p.annualYieldPerKw)} kWh/yr per kW of panel.`);
 
   renderMoneyBar(p);
   if (p.auto && p.auto.length) renderAutoCards(p);
@@ -865,10 +865,10 @@ function renderResults(p) {
   $("assumpText").textContent =
     `Data: ${a.source}, hourly ${a.dataYears}. Derates applied: soiling ${(a.derates.soiling * 100).toFixed(0)}%, ` +
     `wiring ${(a.derates.wiring * 100).toFixed(0)}%, mismatch ${(a.derates.mismatch * 100).toFixed(0)}%, ` +
-    `MPPT ${(a.derates.mppt * 100).toFixed(0)}%. Cell temperature model: NOCT ${a.noctC}Â°C, ` +
-    `power temperature coefficient ${(a.gammaPerC * 100).toFixed(2)}%/Â°C. Inverter efficiency ${(a.etaInverter * 100).toFixed(0)}%. ` +
-    `Charging blocked below chemistry's cold limit (LFP 0Â°C). Load basis: ${inp.basis}. ` +
-    `Costs span ${pr.basisLabel || "ex-factory China to PowMr-class budget retail"} (${pr.source || "cell market indications through PowMr catalog, Aug 2026"}) â€” ` +
+    `MPPT ${(a.derates.mppt * 100).toFixed(0)}%. Cell temperature model: NOCT ${a.noctC}°C, ` +
+    `power temperature coefficient ${(a.gammaPerC * 100).toFixed(2)}%/°C. Inverter efficiency ${(a.etaInverter * 100).toFixed(0)}%. ` +
+    `Charging blocked below chemistry's cold limit (LFP 0°C). Load basis: ${inp.basis}. ` +
+    `Costs span ${pr.basisLabel || "ex-factory China to PowMr-class budget retail"} (${pr.source || "cell market indications through PowMr catalog, Aug 2026"}) — ` +
     `the low end is components before freight/duty/BMS, the high end is shipped retail with BMS and enclosure included. ` +
     (a.money ? a.money + " " : "") +
     (a.capacityNote ? a.capacityNote + " " : "") +
@@ -877,12 +877,12 @@ function renderResults(p) {
   let briefLines;
   if (p.auto && p.auto.length) {
     briefLines = p.auto.filter((t) => t.solvable).map((t) =>
-      `- ${t.chemLabel}: ${t.pvKw} kW PV + ${fmt(t.battKwh)} kWh usable (â‰ˆ${fmt(t.battNameplateKwh)} kWh nameplate at ${(t.usableDod * 100).toFixed(0)}% DoD), first cost ~${moneyRange(t.costLo, t.costHi)}, ` +
-      `${t.replacements25y > 0 ? `${t.replacements25y} bank swaps (+${money(t.swapsAndLaborUsd)} with labor)` : "no swaps expected"} â†’ true 25-yr cost â‰ˆ${money(t.lifetimeCostMid)}`);
+      `- ${t.chemLabel}: ${t.pvKw} kW PV + ${fmt(t.battKwh)} kWh usable (≈${fmt(t.battNameplateKwh)} kWh nameplate at ${(t.usableDod * 100).toFixed(0)}% DoD), first cost ~${moneyRange(t.costLo, t.costHi)}, ` +
+      `${t.replacements25y > 0 ? `${t.replacements25y} bank swaps (+${money(t.swapsAndLaborUsd)} with labor)` : "no swaps expected"} → true 25-yr cost ≈${money(t.lifetimeCostMid)}`);
   } else if (isGT) {
     briefLines = p.targets.filter((t) => t.solvable)
-      .map((t) => `- ${t.label}: ${t.pvKw} kW PV + ${t.battKwh > 0 ? fmt(t.battKwh) + " kWh usable" : "no battery"} (~${moneyRange(t.costLo, t.costHi)}) â†’ bill âˆ’${t.cutPct}%` +
-        (t.billAfterMonthlyUsd !== null ? `, â‰ˆ${money(t.billAfterMonthlyUsd)}/mo after` : ""));
+      .map((t) => `- ${t.label}: ${t.pvKw} kW PV + ${t.battKwh > 0 ? fmt(t.battKwh) + " kWh usable" : "no battery"} (~${moneyRange(t.costLo, t.costHi)}) → bill −${t.cutPct}%` +
+        (t.billAfterMonthlyUsd !== null ? `, ≈${money(t.billAfterMonthlyUsd)}/mo after` : ""));
   } else {
     briefLines = p.tiers.filter((t) => t.solvable)
       .map((t) => `- ${t.label}: ${t.pvKw} kW PV + ${fmt(t.battKwh)} kWh usable (~${moneyRange(t.costLo, t.costHi)}, ex-factory to budget-retail range)`);
@@ -892,7 +892,7 @@ function renderResults(p) {
     `${inp.dailyKwh.toFixed(1)} kWh/day from ${inp.basis}, ${p.chemistry === "auto" ? "AUTO chemistry comparison (all three types)" : p.chemistry.toUpperCase()}, ` +
     `${isGT ? "staying connected to the grid (no export" + (inp.exportRate ? ", feed-in credit entered)" : ")") : "fully off-grid"}:\n${briefLines.join("\n")}\n` +
     `[ADVISOR INSTRUCTION: These numbers were computed deterministically from NASA POWER hourly weather ` +
-    `${p.meta.dataYears}. Do not recompute or invent different figures â€” explain, sanity-check and add caveats ` +
+    `${p.meta.dataYears}. Do not recompute or invent different figures — explain, sanity-check and add caveats ` +
     `(seasonal variation, inverter/BOS costs, installation, degradation) around THESE results. Keep it SHORT: a brief verdict, not an essay.]`;
   $("btnAskAdvisor").style.display = "inline-flex";
   const shareBtn = $("btnShareResult");
@@ -908,7 +908,7 @@ function renderResults(p) {
   else $("socChartWrap").style.display = "none";
 }
 
-// â”€â”€ Shareable results â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Shareable results ───────────────────────────────────────────────────────
 // Inputs + headline results are encoded into the URL hash. Opening such a
 // link restores the form and re-runs the simulation locally (weather data is
 // cached per site, and the engine is deterministic, so results reproduce).
@@ -960,7 +960,7 @@ function restoreFromShare() {
   if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(kw)) return false;
 
   $("coordDetails").open = true;
-  setCoords(lat, lon, "Shared result loaded â€” sunshine data for this location");
+  setCoords(lat, lon, "Shared result loaded — sunshine data for this location");
   $("loadMode").value = "kwh";
   setLoadPanel();
   if ($("systemGoal")) $("systemGoal").value = o.g === 1 ? "gridtie" : "offgrid";
@@ -975,11 +975,11 @@ function restoreFromShare() {
     if (match) { sel.value = String(o.tf); $("customRate").style.display = "none"; }
     else { sel.value = "custom"; $("customRateVal").value = String(o.tf); $("customRate").style.display = "block"; }
   }
-  setStatus("ðŸ”— Loaded a shared result â€” running the simulation for this locationâ€¦");
+  setStatus("🔗 Loaded a shared result — running the simulation for this location…");
   return true;
 }
 
-// â”€â”€ Printable summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Printable summary ───────────────────────────────────────────────────────
 // One light-themed sheet: inputs, the three systems, money figures, key
 // assumptions, and the disclaimer. Everything else is hidden at print time.
 
@@ -995,11 +995,11 @@ function populatePrintSheet(p, inp) {
       "<tr><td>" + [
         t.chemLabel + ` (${(t.usableDod * 100).toFixed(0)}% DoD)`,
         `${t.pvKw} kW`,
-        `${fmt(t.battKwh)} kWh (â‰ˆ${fmt(t.battNameplateKwh)})`,
+        `${fmt(t.battKwh)} kWh (≈${fmt(t.battNameplateKwh)})`,
         moneyRange(t.costLo, t.costHi),
-        t.replacements25y > 0 ? `~${t.replacements25y}Ã—` : "none",
-        t.swapsAndLaborUsd > 0 ? `â‰ˆ${money(t.swapsAndLaborUsd)}` : "â€”",
-        `â‰ˆ${money(t.lifetimeCostMid)}`,
+        t.replacements25y > 0 ? `~${t.replacements25y}×` : "none",
+        t.swapsAndLaborUsd > 0 ? `≈${money(t.swapsAndLaborUsd)}` : "—",
+        `≈${money(t.lifetimeCostMid)}`,
       ].join("</td><td>") + "</td></tr>"
     ).join("");
   } else if (isGT) {
@@ -1011,8 +1011,8 @@ function populatePrintSheet(p, inp) {
         `${t.pvKw} kW`,
         t.battKwh > 0 ? `${fmt(t.battKwh)} kWh` : "none",
         moneyRange(t.costLo, t.costHi),
-        `âˆ’${t.cutPct}% bill`,
-        t.billAfterMonthlyUsd !== null ? `â‰ˆ${money(t.billAfterMonthlyUsd)}/mo` : "n/a",
+        `−${t.cutPct}% bill`,
+        t.billAfterMonthlyUsd !== null ? `≈${money(t.billAfterMonthlyUsd)}/mo` : "n/a",
         t.paybackYearsLo !== null ? fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) : "n/a",
       ].join("</td><td>") + "</td></tr>"
     ).join("");
@@ -1021,38 +1021,38 @@ function populatePrintSheet(p, inp) {
     head = "<tr><th>System</th><th>Solar</th><th>Battery (usable)</th><th>Component cost</th><th>Payback vs. grid</th><th>Energy cost</th></tr>";
     rows = p.tiers.filter((t) => t.solvable).map((t) =>
       "<tr><td>" + [
-        t.label.replace(/â€”/g, "Â·"),
+        t.label.replace(/—/g, "·"),
         `${t.pvKw} kW`,
         `${fmt(t.battKwh)} kWh`,
         moneyRange(t.costLo, t.costHi),
         t.paybackYearsLo !== null ? fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) : "n/a",
-        Number.isFinite(t.lcoeUsdPerKwh) ? `â‰ˆ${(t.lcoeUsdPerKwh * 100).toFixed(1)}Â¢/kWh` : "n/a",
+        Number.isFinite(t.lcoeUsdPerKwh) ? `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` : "n/a",
       ].join("</td><td>") + "</td></tr>"
     ).join("");
   }
   sheet.innerHTML = `
-    <h1 style="font-size:20pt;margin-bottom:2pt;">BigEnergyCo â€” ${title}</h1>
+    <h1 style="font-size:20pt;margin-bottom:2pt;">BigEnergyCo — ${title}</h1>
     <p style="font-size:9pt;color:#444;margin-bottom:10pt;">
-      Generated ${new Date().toISOString().slice(0, 10)} Â· free educational estimate Â·
+      Generated ${new Date().toISOString().slice(0, 10)} · free educational estimate ·
       ${location.origin + location.pathname}
     </p>
     <table style="border-collapse:collapse;width:100%;font-size:10pt;margin-bottom:10pt;">
       <tr style="background:#eef2f7;">${head}</tr>
       ${rows}
     </table>
-    <p style="font-size:9.5pt;margin:0 0 4pt;"><strong>Basis:</strong> ${inp.basis} Â· ${fmtKwh(inp.dailyKwh)} kWh/day Â·
-      ${p.chemistry.toUpperCase()} battery Â· location ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)} Â·
-      ${p.tariff ? `grid price $${p.tariff}/kWh (â‰ˆ$${fmt(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
+    <p style="font-size:9.5pt;margin:0 0 4pt;"><strong>Basis:</strong> ${inp.basis} · ${fmtKwh(inp.dailyKwh)} kWh/day ·
+      ${p.chemistry.toUpperCase()} battery · location ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)} ·
+      ${p.tariff ? `grid price $${p.tariff}/kWh (≈$${fmt(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
     <p style="font-size:9.5pt;margin:0 0 4pt;"><strong>Method:</strong> hourly simulation of ${p.meta.dataYears} of
       NASA POWER satellite weather (${p.meta.source})${isGT ? "; the system never exports power to the grid" : ""}.
       Derates: soiling ${(p.assumptions.derates.soiling * 100).toFixed(0)}%,
       wiring ${(p.assumptions.derates.wiring * 100).toFixed(0)}%, mismatch ${(p.assumptions.derates.mismatch * 100).toFixed(0)}%,
-      MPPT ${(p.assumptions.derates.mppt * 100).toFixed(0)}%; cell-temp model NOCT ${p.assumptions.noctC}Â°C,
-      ${(p.assumptions.gammaPerC * 100).toFixed(2)}%/Â°C; inverter ${(p.assumptions.etaInverter * 100).toFixed(0)}%.
+      MPPT ${(p.assumptions.derates.mppt * 100).toFixed(0)}%; cell-temp model NOCT ${p.assumptions.noctC}°C,
+      ${(p.assumptions.gammaPerC * 100).toFixed(2)}%/°C; inverter ${(p.assumptions.etaInverter * 100).toFixed(0)}%.
       Costs are components only (ex-factory China through shipped budget retail) and exclude freight, duty, labor,
       permits, and mounting.</p>
     <p style="font-size:8.5pt;color:#333;border-top:1px solid #999;padding-top:5pt;margin-top:8pt;">
-      Educational estimate only â€” not engineering, not a quote, no warranty. Battery banks, high DC current and
+      Educational estimate only — not engineering, not a quote, no warranty. Battery banks, high DC current and
       mains wiring can cause fire, injury, and death. Verify every figure with a licensed electrician or engineer
       in your jurisdiction before purchasing or energizing anything.</p>`;
 }
@@ -1066,7 +1066,7 @@ function askAdvisor() {
 }
 
 function copyShareLink() {
-  const done = () => setStatus("ðŸ”— Link copied â€” anyone who opens it gets this same result, re-computed on their device.");
+  const done = () => setStatus("🔗 Link copied — anyone who opens it gets this same result, re-computed on their device.");
   const url = location.href;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(url).then(done, () => fallbackCopy(url, done));
@@ -1082,11 +1082,11 @@ function fallbackCopy(text, done) {
   ta.style.opacity = "0";
   document.body.appendChild(ta);
   ta.select();
-  try { document.execCommand("copy"); done(); } catch { setStatus("Copy failed â€” select the address bar and copy the link manually."); }
+  try { document.execCommand("copy"); done(); } catch { setStatus("Copy failed — select the address bar and copy the link manually."); }
   ta.remove();
 }
 
-// â”€â”€ Hardware reference (BOM) â€” rendered from the shared content module â”€â”€â”€â”€â”€
+// ── Hardware reference (BOM) — rendered from the shared content module ─────
 
 function renderBom() {
   const grid = document.querySelector("#bom .bom-grid");
