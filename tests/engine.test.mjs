@@ -6,6 +6,7 @@ import {
   cellTemp, tempFactor, arrayEfficiency, buildE1kw,
   flatProfile, shapedProfile, applianceProfile, expandProfile,
   simulate, sizeForTier, sizeAllTiers, RELIABILITY_TIERS,
+  downsampleEnvelope,
 } from "../assets/js/sizing/engine.js";
 
 const EPS = 1e-6;
@@ -241,6 +242,59 @@ test("sizeAllTiers aligns with RELIABILITY_TIERS and marks impossibility as null
   assert.equal(results.length, RELIABILITY_TIERS.length);
   assert.equal(results[0].tier.id, "tier100");
   assert.equal(results[0].sizing, null, "impossible constraint yields null");
+});
+
+// ── SOC capture & envelope downsampling ─────────────────────────────────────
+
+test("capture:true returns a bounded hourly SOC series", () => {
+  const w = makeWeather(24 * 30, 77, { seasonalAmp: 0.2, baseTemp: 18, tempAmp: 8 });
+  const e1 = buildE1kw(w);
+  const n = e1.length;
+  const load = expandProfile(flatProfile(6), n);
+  const r = simulate({ pvKw: 3, battKwhUsable: 10, e1kw: e1, loadWh: load, chemistry: "lfp", capture: true });
+  assert.ok(r.socSeries instanceof Float64Array);
+  assert.equal(r.socSeries.length, n);
+  for (const v of r.socSeries) {
+    assert.ok(v >= -EPS && v <= 1 + EPS, "SOC stays in [0,1]");
+  }
+  assert.equal(r.minSoc, Math.min(...r.socSeries));
+  const noCapture = simulate({ pvKw: 3, battKwhUsable: 10, e1kw: e1, loadWh: load, chemistry: "lfp" });
+  assert.equal(noCapture.socSeries, null, "capture off -> null series (no memory waste)");
+});
+
+test("downsampleEnvelope preserves the exact min/max envelope", () => {
+  const n = 2400;
+  const s = new Float64Array(n);
+  for (let i = 0; i < n; i++) s[i] = 0.5 + 0.5 * Math.sin(i / 7); // known peaks 0..1
+  const env = downsampleEnvelope(s, 100);
+  assert.equal(env.length, 100);
+  let globalLo = Infinity, globalHi = -Infinity;
+  for (const p of env) {
+    assert.ok(p.lo <= p.hi + EPS);
+    globalLo = Math.min(globalLo, p.lo);
+    globalHi = Math.max(globalHi, p.hi);
+  }
+  assert.ok(Math.abs(globalLo - Math.min(...s)) < EPS, "bucket minima cover series min");
+  assert.ok(Math.abs(globalHi - Math.max(...s)) < EPS, "bucket maxima cover series max");
+  // a sharp single-hour dip must not be averaged away
+  s[1234] = -0.2;
+  const env2 = downsampleEnvelope(s, 100);
+  const b = env2[Math.floor(1234 / 24)];
+  assert.ok(b.lo <= -0.2 + EPS, "dips survive downsampling");
+});
+
+test("battery-life math: smaller banks cycle more but LFP still lasts years", () => {
+  const w = makeWeather(24 * 120, 31, { seasonalAmp: 0.3, baseTemp: 20, tempAmp: 8 });
+  const e1 = buildE1kw(w);
+  const load = expandProfile(flatProfile(8), e1.length);
+  const small = simulate({ pvKw: 4, battKwhUsable: 8, e1kw: e1, loadWh: load, chemistry: "lfp" });
+  const big = simulate({ pvKw: 4, battKwhUsable: 40, e1kw: e1, loadWh: load, chemistry: "lfp" });
+  const years = 120 / 365;
+  const smallCyc = small.cyclesEquivalent / years;
+  const bigCyc = big.cyclesEquivalent / years;
+  assert.ok(smallCyc > bigCyc * 2, "quarter-size bank cycles at least ~2x more");
+  const lifeSmall = CHEMISTRIES.lfp.cyclesTo80 / smallCyc;
+  assert.ok(lifeSmall > 2, `LFP on a hard-cycled small bank should still exceed 2 yrs (got ${lifeSmall.toFixed(1)})`);
 });
 
 // ── Regression guard: the Hawaii sanity bound ───────────────────────────────

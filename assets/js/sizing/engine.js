@@ -155,7 +155,7 @@ export function expandProfile(profile24, totalHours) {
  *            longestGapHours:number, cyclesEquivalent:number,
  *            finalSoc:number, minSoc:number}}
  */
-export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp", startSoc = 0.5, tempsC = null }) {
+export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp", startSoc = 0.5, tempsC = null, capture = false }) {
   const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
   const eta = Math.sqrt(chem.roundTrip);
   const cap = battKwhUsable * 1000; // Wh
@@ -167,6 +167,7 @@ export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp",
   const n = e1kw.length;
   const loadN = loadWh.length;
   if (loadN !== n) throw new Error("load series must match e1kw length");
+  const socSeries = capture ? new Float64Array(n) : null;
 
   for (let i = 0; i < n; i++) {
     const pvAc = pvKw * e1kw[i] * ETA_INVERTER;
@@ -206,6 +207,7 @@ export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp",
       gap = 0;
     }
 
+    if (capture) socSeries[i] = soc;
     if (soc < minSoc) minSoc = soc;
   }
 
@@ -217,7 +219,34 @@ export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp",
     cyclesEquivalent: throughputDc / cap, // full-equivalent cycles over the period
     finalSoc: soc,
     minSoc,
+    socSeries,
   };
+}
+
+/**
+ * Reduce an hourly series to a min/max envelope of `buckets` buckets.
+ * Plotting the envelope (rather than sampled points) preserves every dip
+ * and spike — essential for honest reliability charts.
+ * @returns {Array<{lo:number, hi:number}>}
+ */
+export function downsampleEnvelope(series, buckets) {
+  const n = series.length;
+  const out = [];
+  const size = n / buckets;
+  for (let b = 0; b < buckets; b++) {
+    const s = Math.floor(b * size);
+    let e = Math.floor((b + 1) * size);
+    if (e <= s) e = s + 1;
+    if (e > n) e = n;
+    let lo = Infinity, hi = -Infinity;
+    for (let i = s; i < e; i++) {
+      const v = series[i];
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    }
+    out.push({ lo, hi });
+  }
+  return out;
 }
 
 /**

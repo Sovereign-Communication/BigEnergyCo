@@ -325,6 +325,107 @@ function ensureWorker() {
 
 function fmt(n) { return Number(n).toLocaleString(); }
 
+function fmtLife(years) {
+  if (!Number.isFinite(years) || years <= 0) return "—";
+  if (years >= 2) return "~" + Math.round(years) + " yrs";
+  const months = Math.max(1, Math.round(years * 12));
+  return "~" + months + " mo";
+}
+
+const TIER_COLORS = { tier100: "#00e699", tier99: "#60a5fa", tier95: "#f59e0b" };
+
+function drawSocChart(history, chemLabel) {
+  const wrap = $("socChartWrap");
+  const canvas = $("socCanvas");
+  const legend = $("socLegend");
+  if (!wrap || !canvas || !legend) return;
+
+  const solvable = history.tiers;
+  if (!solvable.length) { wrap.style.display = "none"; return; }
+  wrap.style.display = "block";
+
+  legend.innerHTML = "";
+  for (const t of solvable) {
+    const chip = el("span", { style: "display:inline-flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:var(--text-muted);margin-right:1rem;" });
+    const sw = el("span", { style: `display:inline-block;width:14px;height:4px;border-radius:2px;background:${TIER_COLORS[t.id] || "#888"};` });
+    chip.append(sw, el("span", {}, t.id === "tier100" ? "100% (no generator)" : t.id === "tier99" ? "99% (rare generator)" : "95% (generator OK)"));
+    legend.appendChild(chip);
+  }
+
+  const dpr = window.devicePixelRatio || 1;
+  const W = Math.max(320, wrap.clientWidth || 640);
+  const H = 240;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + "px";
+  canvas.style.height = H + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 34, padR = 8, padT = 8, padB = 22;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const buckets = history.buckets;
+  const X = (i) => padL + (i / (buckets - 1)) * plotW;
+  const Y = (soc) => padT + (1 - soc) * plotH; // soc 0..1
+
+  // gridlines + y labels
+  ctx.font = "10px ui-monospace, monospace";
+  ctx.fillStyle = "#6b7280";
+  ctx.strokeStyle = "rgba(255,255,255,0.08)";
+  for (let v = 0; v <= 100; v += 25) {
+    const y = Y(v / 100);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.textAlign = "right";
+    ctx.fillText(v + "%", padL - 5, y + 3);
+  }
+  // year ticks
+  const span = history.endYear - history.startYear + 1;
+  ctx.textAlign = "center";
+  for (let yy = 0; yy < span; yy++) {
+    const x = padL + ((yy + 0.5) / span) * plotW;
+    ctx.fillText(String(history.startYear + yy), x, H - 6);
+  }
+  // empty-battery line
+  ctx.strokeStyle = "rgba(239,68,68,0.55)";
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(padL, Y(0)); ctx.lineTo(W - padR, Y(0)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  for (const t of solvable) {
+    const color = TIER_COLORS[t.id] || "#888";
+    const env = t.env;
+    if (!env || !env.length) continue;
+
+    // envelope fill
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(env[0][1] / 100));
+    for (let i = 1; i < env.length; i++) ctx.lineTo(X(i), Y(env[i][1] / 100));
+    for (let i = env.length - 1; i >= 0; i--) ctx.lineTo(X(i), Y(env[i][0] / 100));
+    ctx.closePath();
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // mid line
+    ctx.globalAlpha = 0.95;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    for (let i = 0; i < env.length; i++) {
+      const y = Y(((env[i][0] + env[i][1]) / 2) / 100);
+      if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  $("socCaption").textContent =
+    `Hourly battery state of charge, ${history.startYear}–${history.endYear}, for the three systems above ` +
+    `(${chemLabel}). Where a line touches the red dashed line, that system would be dark without a generator. ` +
+    `The 100% system never gets there in five years of real weather — that is what the extra hardware buys.`;
+}
+
 function renderResults(p) {
   const inp = readInputs();
   setStatus(`✅ ${p.meta.years} yr of hourly data (${p.meta.dataYears}) · ${fmt(p.annualYieldPerKw)} kWh/yr per kW of panel.`);
@@ -349,7 +450,8 @@ function renderResults(p) {
         ["Component cost est.", `~$${fmt(t.cost)}`],
         ["Unmet hours", `${fmt(t.unmetHoursPerYear)} h/yr`],
         ["Longest gap", `${fmt(t.longestGapHours)} h`],
-        ["Battery cycles", `~${fmt(t.cyclesPerYear)}/yr`],
+        ["Battery life est.", fmtLife(t.batteryLifeYears)],
+        [`Cycles on the bank`, `~${fmt(t.cyclesPerYear)}/yr`],
       ];
       for (const [k, v] of rows) {
         const line = el("div", { style: "display:flex;justify-content:space-between;font-size:0.9rem;padding:0.2rem 0;border-bottom:1px solid var(--border-card);" });
@@ -385,6 +487,8 @@ function renderResults(p) {
     `${p.meta.dataYears}. Do not recompute or invent different figures — explain, sanity-check and add caveats ` +
     `(seasonal variation, inverter/BOS costs, installation, degradation) around THESE results.]`;
   $("btnAskAdvisor").style.display = "inline-flex";
+
+  if (p.history) drawSocChart(p.history, p.chemLabel || "battery");
 }
 
 function askAdvisor() {
