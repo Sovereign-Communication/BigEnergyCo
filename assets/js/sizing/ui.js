@@ -5,11 +5,16 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260823h";
-import { estimateTariff } from "./pricing.js?v=20260823h";
+import { CITY_PRESETS, } from "./nasa.js?v=20260823h";
+import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260823h";
+import { BOM_ITEMS } from "../shared/content.js?v=20260823h";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
+
+// The legacy storage-comparison script (classic inline JS) reads scoped
+// prices through this bridge — pricing.js stays the single source of truth.
+window.BECO_BATT_COST = battOnlyCost;
 
 // ── Appliance library ───────────────────────────────────────────────────────
 // w = watts WHILE RUNNING. duty:true items (fridges, ACs, pumps) only run a
@@ -777,9 +782,28 @@ function fallbackCopy(text, done) {
   ta.remove();
 }
 
+// ── Hardware reference (BOM) — rendered from the shared content module ─────
+
+function renderBom() {
+  const grid = document.querySelector("#bom .bom-grid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  for (const item of BOM_ITEMS) {
+    const card = el("div", { class: "bom-card" });
+    card.appendChild(el("div", { class: "bom-badge" }, item.badge));
+    card.appendChild(el("h3", {}, item.name));
+    card.appendChild(el("p", {}, item.desc));
+    const price = el("div", { class: "bom-price" }, item.price + " ");
+    price.appendChild(el("span", { style: "font-weight:400;font-size:0.8em;color:var(--text-muted);" }, `(${item.scope})`));
+    card.appendChild(price);
+    grid.appendChild(card);
+  }
+}
+
 export function initSizingUI() {
   renderCities();
   renderAppliances();
+  renderBom();
 
   // tariff select (auto-estimated from location until the user overrides)
   const tsel = $("tariffSelect");

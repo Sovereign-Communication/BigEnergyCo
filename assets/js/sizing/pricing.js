@@ -98,6 +98,19 @@ export function fullRange(pvKw, battKwhUsable) {
   };
 }
 
+/** Battery-only cost ranges per procurement scope (the storage-comparison view has no PV). */
+export function battOnlyCost(battKwhUsable) {
+  const out = {};
+  for (const s of PRICING_SCOPES) {
+    out[s.id] = {
+      label: s.label,
+      lo: Math.round(battKwhUsable * s.battPerKwhUsable[0]),
+      hi: Math.round(battKwhUsable * s.battPerKwhUsable[1]),
+    };
+  }
+  return out;
+}
+
 // ── Regional electricity price estimation ───────────────────────────────────
 // Coarse residential rates (USD/kWh, 2026) from coordinates. Deliberately
 // rough: enough to turn a monthly bill into kWh/day without asking people

@@ -18,6 +18,7 @@
   <meta name="twitter:title" content="BigEnergyCo — Free Worldwide Solar &amp; Battery Estimator">
   <meta name="twitter:description" content="A free AI-assisted solar and battery storage estimator for anywhere in the world. No signup, nothing for sale. Educational estimates only — verify with a licensed professional.">
   <meta name="twitter:image" content="https://sovereign-communication.github.io/BigEnergyCo/assets/og-card.png">
+  <link rel="canonical" href="https://sovereign-communication.github.io/BigEnergyCo/">
   <style>
 /* BigEnergyCo Design System - Premium Dark Glassmorphic Energy Aesthetic */
 :root {
@@ -805,21 +806,13 @@ footer {
               <option value="0.48">Hawaii Off-Grid Peak ($0.48 / kWh)</option>
             </select>
           </div>
-
-          <div class="form-group">
-            <label for="chemistryType">Battery Chemistry:</label>
-            <select id="chemistryType" class="form-control">
-              <option value="LFP" selected>LFP (EVE MB31 3.2V 314Ah Prismatic - manufacturer-rated 6,000+ cycles)</option>
-              <option value="NaIon">Sodium-Ion (HiNa 3.0V 210Ah - Non-Flammable, -40°C Cold)</option>
-            </select>
-          </div>
         </div>
 
         <div class="results-box">
           <div class="savings-highlight">
-            <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Indicative difference</div>
-            <div id="netSavingsVal" class="savings-num">$75,185</div>
-            <div id="savingsPctVal" class="savings-sub">Component cost only &mdash; excludes freight, duty, and labor</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Indicative component cost</div>
+            <div id="landedMidVal" class="savings-num">≈$10,500</div>
+            <div id="savingsPctVal" class="savings-sub">Landed DIY mid-point &mdash; component cost only, excludes freight beyond scope, tools, and labor</div>
           </div>
 
           <table class="comparison-table">
@@ -832,14 +825,19 @@ footer {
             </thead>
             <tbody>
               <tr>
-                <td>Packaged retail battery <span style="font-size:0.8em;color:var(--text-muted);">(list price, Aug 2026)</span></td>
-                <td id="teslaKwhVal">100 kWh</td>
-                <td>$85,185</td>
+                <td>Self-sourced cells + BMS <span style="font-size:0.8em;color:var(--text-muted);">(ex-factory China, you assemble)</span></td>
+                <td class="cmp-kwh">100 kWh</td>
+                <td id="cellsCostVal">$5,000</td>
               </tr>
               <tr style="color: var(--primary-accent);">
-                <td>Self-sourced cells + BMS <span style="font-size:0.8em;color:var(--text-muted);">(ex-factory basis, Aug 2026)</span></td>
-                <td id="tableKwhVal">100 kWh</td>
-                <td id="tableCostVal">$5,000</td>
+                <td>Landed DIY build <span style="font-size:0.8em;color:var(--text-muted);">(shipped cells + duty, community-build basis)</span></td>
+                <td class="cmp-kwh">100 kWh</td>
+                <td id="landedCostVal">$10,500</td>
+              </tr>
+              <tr>
+                <td>Budget-retail packaged <span style="font-size:0.8em;color:var(--text-muted);">(PowMr-class list price, BMS + enclosure included)</span></td>
+                <td class="cmp-kwh">100 kWh</td>
+                <td id="retailCostVal">$11,700</td>
               </tr>
             </tbody>
           </table>
@@ -1438,28 +1436,32 @@ footer {
       var targetKwh = parseFloat(targetKwhInput.value);
       var utilityRateSelect = document.getElementById('utilityRate');
       var utilityRate = utilityRateSelect ? parseFloat(utilityRateSelect.value) : 0.28;
-      var chemistryTypeSelect = document.getElementById('chemistryType');
-      var chemistryType = chemistryTypeSelect ? chemistryTypeSelect.value : 'LFP';
 
       var targetKwhVal = document.getElementById('targetKwhVal');
       if (targetKwhVal) targetKwhVal.innerText = targetKwh + ' kWh Usable Storage';
 
-      // Component cost only. No service fee — this tool is free and sells nothing.
-      var hwPerKwh = (chemistryType === 'NaIon') ? 38.00 : 49.80;
-      var totalBigEnergyCost = targetKwh * hwPerKwh;
+      // Scoped prices come from the same pricing module the sizing engine
+      // uses (window.BECO_BATT_COST is set by ui.js). No second source of truth.
+      var scopes = window.BECO_BATT_COST ? window.BECO_BATT_COST(targetKwh) : null;
+      if (!scopes) return;
 
-      var teslaPerKwh = 851.85;
-      var teslaTotalCost = targetKwh * teslaPerKwh;
-      var netSavings = teslaTotalCost - totalBigEnergyCost;
+      function money(v) { return '$' + Math.round(v).toLocaleString(); }
+      function range(s) { return money(s.lo) + '\u2013' + money(s.hi); }
 
-      var netSavingsVal = document.getElementById('netSavingsVal');
-      if (netSavingsVal) netSavingsVal.innerText = '~$' + Math.round(netSavings).toLocaleString();
+      var cellsCostVal = document.getElementById('cellsCostVal');
+      var landedCostVal = document.getElementById('landedCostVal');
+      var retailCostVal = document.getElementById('retailCostVal');
+      if (cellsCostVal) cellsCostVal.innerText = range(scopes.cells);
+      if (retailCostVal) retailCostVal.innerText = range(scopes.powmr);
+      if (landedCostVal) landedCostVal.innerText = range(scopes.landed);
 
-      var tableKwhVal = document.getElementById('tableKwhVal');
-      if (tableKwhVal) tableKwhVal.innerText = targetKwh + ' kWh';
+      document.querySelectorAll('.cmp-kwh').forEach(function (td) { td.innerText = targetKwh + ' kWh'; });
 
-      var tableCostVal = document.getElementById('tableCostVal');
-      if (tableCostVal) tableCostVal.innerText = '$' + Math.round(totalBigEnergyCost).toLocaleString();
+      var landedMidVal = document.getElementById('landedMidVal');
+      if (landedMidVal) {
+        var mid = (scopes.landed.lo + scopes.landed.hi) / 2;
+        landedMidVal.innerText = '\u2248' + money(mid);
+      }
 
       // Grid-energy equivalence: what the stored energy would cost bought from the grid.
       // Assumptions (stated in the UI): one full cycle per day, 90% round-trip efficiency,
@@ -1473,12 +1475,13 @@ footer {
         var ROUND_TRIP_EFF = 0.9;
         var annualKwh = targetKwh * 365 * ROUND_TRIP_EFF;
         var annualValue = annualKwh * utilityRate;
-        var paybackYears = totalBigEnergyCost / annualValue;
+        var landedMid = (scopes.landed.lo + scopes.landed.hi) / 2;
+        var paybackYears = landedMid / annualValue;
 
         var text = 'If this bank were cycled once daily at $' + utilityRate.toFixed(2) + '/kWh with 90% ' +
                    'round-trip efficiency, the energy it moves in a year would cost about $' +
                    (Math.round(annualValue / 10) * 10).toLocaleString() + ' bought from the grid.';
-        text += ' The component cost shown above equals roughly ' + (paybackYears >= 1 ?
+        text += ' The landed DIY estimate shown above equals roughly ' + (paybackYears >= 1 ?
                    '~' + Math.round(paybackYears) + ' years' : 'under one year') + ' of that grid energy';
         text += ' \u2014 before adding panels, inverter, wiring, install, and battery degradation, which are ' +
                 'the majority of a real off-grid budget. Off-grid is usually about where you live, not ' +
@@ -1488,6 +1491,11 @@ footer {
       } else {
         gridEqBox.style.display = 'none';
       }
+    }
+
+    function scrollToSection(id) {
+      var target = document.getElementById(id);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function setupEventListeners() {
@@ -1507,14 +1515,14 @@ footer {
 
       var targetKwhInput = document.getElementById('targetKwh');
       var utilityRateSelect = document.getElementById('utilityRate');
-      var chemistryTypeSelect = document.getElementById('chemistryType');
       var intakeModeSelect = document.getElementById('intakeMode');
       var chatInput = document.getElementById('chatInput');
 
-      if (navAdvisor) navAdvisor.addEventListener('click', window.openSizingModal);
-      if (navSizeArray) navSizeArray.addEventListener('click', window.openSizingModal);
-      if (heroSizing) heroSizing.addEventListener('click', window.openSizingModal);
+      // The deterministic sizer is the product; the AI advisor explains results.
+      if (navSizeArray) navSizeArray.addEventListener('click', function () { scrollToSection('sizing'); });
+      if (heroSizing) heroSizing.addEventListener('click', function () { scrollToSection('sizing'); });
 
+      if (navAdvisor) navAdvisor.addEventListener('click', window.openSizingModal);
       if (calcAdvisor) calcAdvisor.addEventListener('click', window.openSizingModal);
 
       if (heroCompare) heroCompare.addEventListener('click', window.scrollToCalc);
@@ -1537,7 +1545,6 @@ footer {
 
       if (targetKwhInput) targetKwhInput.addEventListener('input', updateCalc);
       if (utilityRateSelect) utilityRateSelect.addEventListener('change', updateCalc);
-      if (chemistryTypeSelect) chemistryTypeSelect.addEventListener('change', updateCalc);
       if (intakeModeSelect) intakeModeSelect.addEventListener('change', toggleIntakeMode);
 
       if (chatInput) chatInput.addEventListener('keypress', function(e) {
