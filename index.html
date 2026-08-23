@@ -600,11 +600,11 @@ footer {
         <span>BigEnergy<span class="highlight">Co</span></span>
       </div>
       <nav class="nav-links">
-        <a href="#sizing">Size Your System</a>
-        <a href="#calculator">Estimator</a>
-        <a href="#bom">Hardware Reference</a>
-        <a href="./blog/">Blog</a>
-        <a href="#legal">Terms &amp; Disclaimer</a>
+        <a href="#sizing" data-i18n="navSizing">Size Your System</a>
+        <a href="#calculator" data-i18n="navCosts">Estimator</a>
+        <a href="#bom" data-i18n="navBom">Hardware Reference</a>
+        <a href="./blog/" data-i18n="navBlog">Blog</a>
+        <a href="#legal" data-i18n="navLegal">Terms &amp; Disclaimer</a>
       </nav>
       <div class="header-cta">
         <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;">♡ Support</a>
@@ -616,8 +616,8 @@ footer {
   <!-- Hero Section -->
   <section class="hero">
     <div class="container">
-      <div class="hero-tag">🌍 Free for everyone, everywhere • No signup • Nothing for sale</div>
-      <h1>Free Off-Grid Energy Estimator <br><span>Size your solar &amp; battery system, anywhere in the world</span></h1>
+      <div class="hero-tag" data-i18n="heroTag">🌍 Free for everyone, everywhere • No signup • Nothing for sale</div>
+      <h1><span data-i18n="heroTitle1">Free Off-Grid Energy Estimator</span> <br><span data-i18n="heroTitle2">Size your solar &amp; battery system, anywhere in the world</span></h1>
       <p>
         A free AI-assisted tool for working out roughly what solar array and battery bank your situation needs.
         Educational estimates only &mdash; not engineering, not a quote, and nothing here is for sale.
@@ -625,10 +625,10 @@ footer {
       </p>
 
       <div class="hero-actions">
-        <div id="btnHeroSizing" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.9rem 2rem; cursor: pointer;">
+        <div id="btnHeroSizing" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.9rem 2rem; cursor: pointer;" data-i18n="ctaStart">
           🤖 Start a Free Estimate
         </div>
-        <div id="btnHeroCompare" class="btn btn-outline" style="font-size: 1.1rem; padding: 0.9rem 2rem; cursor: pointer;">
+        <div id="btnHeroCompare" class="btn btn-outline" style="font-size: 1.1rem; padding: 0.9rem 2rem; cursor: pointer;" data-i18n="ctaCompare">
           📊 Rough Cost Comparison
         </div>
       </div>
@@ -658,17 +658,17 @@ footer {
   <section id="sizing" class="calc-section">
     <div class="container">
       <div class="section-header">
-        <h2 class="section-title">Size Your System</h2>
+        <h2 class="section-title" data-i18n="sizingTitle">Size Your System</h2>
         <p class="section-desc">Enter your daily energy use and location. The calculator simulates your site hour-by-hour against five years of NASA satellite weather: go fully off-grid at three levels of generator independence, or stay connected and find the smallest system that cuts your bill. Educational estimates only.</p>
       </div>
 
       <div class="calc-card">
         <div class="calc-controls">
           <div class="form-group">
-            <label for="cityPreset">Where is this system going? <span style="font-weight:400;color:var(--text-muted);">(nearest big city is fine)</span></label>
+            <label for="cityPreset" data-i18n="cityLabel">Where is this system going? <span style="font-weight:400;color:var(--text-muted);">(nearest big city is fine)</span></label>
             <div style="display: flex; gap: 0.6rem;">
               <select id="cityPreset" class="form-control" style="flex: 1;"></select>
-              <div id="btnGeoLocate" class="btn btn-outline" style="white-space: nowrap; cursor: pointer; font-size: 0.9rem;">📍 My location</div>
+              <div id="btnGeoLocate" class="btn btn-outline" style="white-space: nowrap; cursor: pointer; font-size: 0.9rem;" data-i18n="locBtn">📍 My location</div>
             </div>
             <div id="locNote" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;"></div>
             <details id="coordDetails" style="margin-top: 0.5rem;">
@@ -687,16 +687,16 @@ footer {
           </div>
 
           <div class="form-group">
-            <label for="loadMode">How much power do you use?</label>
+            <label for="loadMode" data-i18n="loadLabel">How much power do you use?</label>
             <select id="loadMode" class="form-control">
-              <option value="appliances" selected>Let me pick my appliances</option>
-              <option value="bill">I know my monthly electric bill</option>
-              <option value="kwh">I know my kWh/day (advanced)</option>
+              <option value="appliances" selected data-i18n="loadAppliances">Let me pick my appliances</option>
+              <option value="bill" data-i18n="loadBill">I know my monthly electric bill</option>
+              <option value="kwh" data-i18n="loadKwh">I know my kWh/day (advanced)</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label for="tariffSelect">Electricity price where you live <span style="font-weight:400;color:var(--text-muted);">(drives your bill estimate and payback)</span>:</label>
+            <label for="tariffSelect" data-i18n="tariffLabel">Electricity price where you live <span style="font-weight:400;color:var(--text-muted);">(drives your bill estimate and payback)</span>:</label>
             <select id="tariffSelect" class="form-control"></select>
             <div id="customRate" style="display:none;margin-top:0.6rem;">
               <label for="customRateVal">Your price per kWh ($):</label>
@@ -735,22 +735,34 @@ footer {
           </div>
 
           <div class="form-group">
-            <label for="systemGoal">What do you want this system to do?</label>
+            <label for="systemGoal" data-i18n="goalLabel">What do you want this system to do?</label>
             <select id="systemGoal" class="form-control">
-              <option value="offgrid" selected>Power me fully off-grid</option>
-              <option value="gridtie">Cut my grid bill, stay connected</option>
+              <option value="offgrid" selected data-i18n="goalOffgrid">Power me fully off-grid</option>
+              <option value="gridtie" data-i18n="goalGridtie">Cut my grid bill, stay connected</option>
             </select>
           </div>
 
           <div class="form-group" style="margin-bottom: 0;">
-            <label for="chemSelect">Battery chemistry:</label>
+            <label for="chemSelect" data-i18n="chemLabel">Battery chemistry:</label>
             <select id="chemSelect" class="form-control">
-              <option value="lfp" selected>LFP (LiFePO4)</option>
-              <option value="naion">Sodium-Ion</option>
+              <option value="naion" selected>Sodium-Ion &mdash; cold-capable, no thermal runaway</option>
+              <option value="lfp">LFP (LiFePO4) &mdash; the proven standard</option>
+              <option value="agm">Lead-Acid (AGM) &mdash; cheapest upfront, shortest-lived</option>
             </select>
           </div>
 
-          <div id="btnRunSizing" class="btn btn-primary btn-full" style="cursor:pointer; margin-top: 0.5rem;" tabindex="-1">☀️ Size My System (5-yr simulation)</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="fxRate">Your currency <span style="font-weight:400;color:var(--text-muted);">(optional)</span>:</label>
+              <input type="number" id="fxRate" class="form-control" placeholder="units per $1 USD, e.g. 58" min="0.01" step="0.01">
+            </div>
+            <div class="form-group">
+              <label for="fxCode">Currency code:</label>
+              <input type="text" id="fxCode" class="form-control" placeholder="e.g. PHP" maxlength="4">
+            </div>
+          </div>
+
+          <div id="btnRunSizing" class="btn btn-primary btn-full" style="cursor:pointer; margin-top: 0.5rem;" tabindex="-1"><span data-i18n="runBtn">☀️ Size My System (5-yr simulation)</span></div>
           <div id="sizingStatus" style="font-size:0.85rem;color:var(--text-muted);margin-top:0.75rem;line-height:1.5;">First run downloads ~2 MB of satellite weather data, then caches it in your browser.</div>
         </div>
 
@@ -1020,6 +1032,10 @@ footer {
         &nbsp;·&nbsp; <a href="#support" style="color: var(--primary-accent);">Support</a>
         &nbsp;·&nbsp; <a href="mailto:lucasballek@gmail.com" style="color: var(--primary-accent);">lucasballek@gmail.com</a>
       </p>
+      <p style="margin-top: 1rem; font-size: 0.85rem;">
+        <label for="langSelect" style="color: var(--text-muted); margin-right: 0.5rem;" data-i18n="langLabel">Language</label>
+        <select id="langSelect" class="form-control" style="display: inline-block; width: auto; padding: 0.25rem 0.6rem;"></select>
+      </p>
     </div>
   </footer>
 
@@ -1180,7 +1196,7 @@ footer {
   <div id="printSheet"></div>
 
   <!-- Inlined JavaScript with JSONP Web-Bridge for Freenet CSP Passthrough -->
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260823i"></script>
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260823j"></script>
   <script>
     // ── Cloudflare API Bridge URL (updated automatically by patch_and_publish.py) ──
     var CF_API_URL = 'https://bigenergyco-api.bigenergyco.workers.dev';

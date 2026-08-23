@@ -35,6 +35,7 @@ export const CHEMISTRIES = {
     chargeMinC: 0,        // must not charge below 0 °C without heating
     dischargeMinC: -20,
     cyclesTo80: 6000,     // 314Ah-class manufacturer rating
+    usableScale: 1.00,    // capacity barely affected by discharge rate or chill
     note: "Cannot charge below 0°C without a heated/insulated enclosure.",
   },
   naion: {
@@ -44,6 +45,7 @@ export const CHEMISTRIES = {
     chargeMinC: -20,
     dischargeMinC: -40,
     cyclesTo80: 4500,     // conservative mid-range for current packs
+    usableScale: 1.00,    // holds capacity in cold better than any lithium
     note: "Cold-capable; check local availability and certification (UL 9540 rare as of Aug 2026).",
   },
   agm: {
@@ -53,9 +55,35 @@ export const CHEMISTRIES = {
     chargeMinC: -20,
     dischargeMinC: -20,
     cyclesTo80: 600,
-    note: "Cheapest upfront; short cycle life at deep discharge.",
+    // Reality adjustments the marketing gloss hides:
+    //  - datasheet Ah is a 20-hour (C/20) figure; home cycling at ~C/5-C/10
+    //    delivers roughly 85% of it,
+    //  - capacity drops ~0.8%/°C below 25 °C annual mean (floor 60%),
+    usableScale: 0.85,
+    coldPctPerC: 0.008,
+    note: "Cheapest upfront; short cycle life at deep discharge — expect several bank replacements over 25 years.",
   },
 };
+
+/** Capacity scale from annual-mean temperature (lead-acid chemistry only). */
+export function coldCapacityScale(chemistry, meanTempC) {
+  const chem = CHEMISTRIES[chemistry];
+  if (!chem || !chem.coldPctPerC) return 1;
+  const drop = Math.max(0, 25 - meanTempC) * chem.coldPctPerC;
+  return Math.max(0.6, Math.min(1, 1 - drop));
+}
+
+/**
+ * Total delivered-capacity factor for a chemistry at a site:
+ * rate-related loss (Peukert-style, from CHEMISTRIES.usableScale) times
+ * cold loss (annual-mean temperature). Explicitly passed into the sims so
+ * every result can show its arithmetic.
+ */
+export function capacityScaleFor(chemistry, meanTempC = null) {
+  const chem = CHEMISTRIES[chemistry];
+  if (!chem) return 1;
+  return (chem.usableScale ?? 1) * (meanTempC === null ? 1 : coldCapacityScale(chemistry, meanTempC));
+}
 
 export const RELIABILITY_TIERS = [
   { id: "tier100", label: "100% — no generator", maxUnmetHoursPerYear: 0 },
@@ -155,10 +183,12 @@ export function expandProfile(profile24, totalHours) {
  *            longestGapHours:number, cyclesEquivalent:number,
  *            finalSoc:number, minSoc:number}}
  */
-export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp", startSoc = 0.5, tempsC = null, capture = false }) {
+export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp", startSoc = 0.5, tempsC = null, capture = false, capacityScale = null }) {
   const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
   const eta = Math.sqrt(chem.roundTrip);
-  const cap = battKwhUsable * 1000; // Wh
+  // Delivered-capacity factor: rate loss (usableScale) by default, or the
+  // caller's rate×cold product when provided (the worker always provides it).
+  const cap = battKwhUsable * 1000 * (capacityScale ?? chem.usableScale ?? 1); // Wh
   if (cap <= 0) throw new Error("battery capacity must be > 0");
 
   let soc = startSoc;
@@ -300,9 +330,10 @@ export function sizeForTier({
   maxUnmetHoursPerYear, years = 1,
   costPerWpv = 0.35, costPerKwhBatt = 140,
   pvMax = 30, battMax = 200, pvStep = 0.5, battStep = 1,
+  capacityScale = null,
 }) {
   const evaluate = (pv, batt) => {
-    const r = simulate({ pvKw: pv, battKwhUsable: batt, e1kw, loadWh, chemistry, tempsC });
+    const r = simulate({ pvKw: pv, battKwhUsable: batt, e1kw, loadWh, chemistry, tempsC, capacityScale });
     return { avgUnmet: r.unmetHours / years, r };
   };
   const meets = (ev) => ev.avgUnmet <= maxUnmetHoursPerYear + 1e-9;
@@ -371,10 +402,10 @@ export const BILL_TARGETS = [
  *            curtailedWh:number, cyclesEquivalent:number, finalSoc:number,
  *            minSoc:number}}
  */
-export function simulateOffset({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp", startSoc = 0.5, tempsC = null }) {
+export function simulateOffset({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp", startSoc = 0.5, tempsC = null, capacityScale = null }) {
   const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
   const eta = Math.sqrt(chem.roundTrip);
-  const cap = Math.max(0, battKwhUsable) * 1000;
+  const cap = Math.max(0, battKwhUsable) * 1000 * (capacityScale ?? chem.usableScale ?? 1);
 
   let soc = startSoc;
   let direct = 0, fromBatt = 0, imported = 0, curtailed = 0;
@@ -441,10 +472,11 @@ export function sizeForBillCut({
   minFraction = 0.8, years = 1,
   costPerWpv = 0.35, costPerKwhBatt = 140,
   pvMax = 30, battMax = 100, battStep = 1,
+  capacityScale = null,
 }) {
   const loadTotal = [...loadWh].reduce((a, b) => a + b, 0);
   const importBudget = loadTotal * (1 - minFraction);
-  const evaluate = (pv, batt) => simulateOffset({ pvKw: pv, battKwhUsable: batt, e1kw, loadWh, chemistry, tempsC });
+  const evaluate = (pv, batt) => simulateOffset({ pvKw: pv, battKwhUsable: batt, e1kw, loadWh, chemistry, tempsC, capacityScale });
   const meets = (r) => r.importedWh <= importBudget + 1e-6;
 
   let best = null;

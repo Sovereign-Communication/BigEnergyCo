@@ -32,6 +32,7 @@ export const PRICING_SCOPES = [
     pvPerW: [0.28, 0.38],          // budget mono panels, retail
     battPerKwhUsable: [110, 165],  // big-unit $111-130/kWh nominal; small units higher
     invPerKw: [85, 200],           // $90-94/kW sale on 5-10 kW LF units
+    battPerKwhNaion: [110, 175],   // retail sodium packs still scarce → thin premium
     note: "Shipped retail prices with BMS/enclosure included.",
   },
   {
@@ -41,6 +42,7 @@ export const PRICING_SCOPES = [
     pvPerW: [0.16, 0.28],
     battPerKwhUsable: [80, 125],
     invPerKw: [90, 260],
+    battPerKwhNaion: [88, 138],    // ~10% premium over LFP landed, Aug 2026
     note: "You assemble: cells + BMS + enclosure + freight + duty.",
   },
   {
@@ -50,6 +52,7 @@ export const PRICING_SCOPES = [
     pvPerW: [0.11, 0.2],
     battPerKwhUsable: [45, 70],    // $43.5 per 314Ah cell ≈ $43/kWh nominal ≈ $48 usable
     invPerKw: [60, 180],
+    battPerKwhNaion: [52, 78],     // sodium cell lines still ramping → ~15% premium
     note: "Components only, before freight/duty/BMS/enclosure — rarely the final cost.",
   },
 ];
@@ -58,13 +61,20 @@ export function getScope(id) {
   return PRICING_SCOPES.find((s) => s.id === id) || PRICING_SCOPES[0];
 }
 
+/** Battery price range for one scope and chemistry. */
+function battRangeFor(scope, chemistry) {
+  if (chemistry === "naion" && Array.isArray(scope.battPerKwhNaion)) return scope.battPerKwhNaion;
+  return scope.battPerKwhUsable;
+}
+
 /** Cost range for a system under one scope. */
-export function costRange(pvKw, battKwhUsable, scopeId) {
+export function costRange(pvKw, battKwhUsable, scopeId, chemistry = "lfp") {
   const s = getScope(scopeId);
+  const bRange = battRangeFor(s, chemistry);
   const pvLo = pvKw * 1000 * s.pvPerW[0];
   const pvHi = pvKw * 1000 * s.pvPerW[1];
-  const bLo = battKwhUsable * s.battPerKwhUsable[0];
-  const bHi = battKwhUsable * s.battPerKwhUsable[1];
+  const bLo = battKwhUsable * bRange[0];
+  const bHi = battKwhUsable * bRange[1];
   const invLo = (pvKw * s.invPerKw[0]);
   const invHi = (pvKw * s.invPerKw[1]);
   return {
@@ -81,31 +91,34 @@ export function costRange(pvKw, battKwhUsable, scopeId) {
  * PowMr-class budget retail at the high end. No selector — every result
  * simply states its honest spread.
  */
-export function fullRange(pvKw, battKwhUsable) {
-  const lo = costRange(pvKw, battKwhUsable, "cells");
-  const hi = costRange(pvKw, battKwhUsable, "powmr");
-  const landed = costRange(pvKw, battKwhUsable, "landed");
+export function fullRange(pvKw, battKwhUsable, chemistry = "lfp") {
+  const lo = costRange(pvKw, battKwhUsable, "cells", chemistry);
+  const hi = costRange(pvKw, battKwhUsable, "powmr", chemistry);
+  const landed = costRange(pvKw, battKwhUsable, "landed", chemistry);
   // search objective sits near the middle of the honest spread (landed DIY)
+  const cellsBatt = battRangeFor(getScope("cells"), chemistry);
+  const powmrBatt = battRangeFor(getScope("powmr"), chemistry);
   return {
     lo: lo.lo,
     hi: hi.hi,
     pvCostLo: Math.round(lo.pvLo ?? pvKw * 1000 * getScope("cells").pvPerW[0]),
-    battCostLo: Math.round(battKwhUsable * getScope("cells").battPerKwhUsable[0]),
-    battCostHi: Math.round(battKwhUsable * getScope("powmr").battPerKwhUsable[1]),
-    battPerKwhLo: getScope("cells").battPerKwhUsable[0],
-    battPerKwhHi: getScope("powmr").battPerKwhUsable[1],
+    battCostLo: Math.round(battKwhUsable * cellsBatt[0]),
+    battCostHi: Math.round(battKwhUsable * powmrBatt[1]),
+    battPerKwhLo: cellsBatt[0],
+    battPerKwhHi: powmrBatt[1],
     objectiveMid: Math.round((landed.lo + landed.hi) / 2),
   };
 }
 
 /** Battery-only cost ranges per procurement scope (the storage-comparison view has no PV). */
-export function battOnlyCost(battKwhUsable) {
+export function battOnlyCost(battKwhUsable, chemistry = "lfp") {
   const out = {};
   for (const s of PRICING_SCOPES) {
+    const r = battRangeFor(s, chemistry);
     out[s.id] = {
       label: s.label,
-      lo: Math.round(battKwhUsable * s.battPerKwhUsable[0]),
-      hi: Math.round(battKwhUsable * s.battPerKwhUsable[1]),
+      lo: Math.round(battKwhUsable * r[0]),
+      hi: Math.round(battKwhUsable * r[1]),
     };
   }
   return out;

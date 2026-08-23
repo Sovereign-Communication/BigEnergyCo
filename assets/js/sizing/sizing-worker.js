@@ -5,13 +5,13 @@
 import {
   buildE1kw, flatProfile, expandProfile, sizeAllTiers, simulate,
   sizeAllBillTargets, dailyExtremes, CHEMISTRIES,
-  DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER,
-} from "./engine.js?v=20260823i";
-import { fetchHourlyCached } from "./nasa.js?v=20260823i";
-import { fullRange, getScope, POWMR_CATALOG } from "./pricing.js?v=20260823i";
+  DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER, capacityScaleFor,
+} from "./engine.js?v=20260823j";
+import { fetchHourlyCached } from "./nasa.js?v=20260823j";
+import { fullRange, getScope, POWMR_CATALOG } from "./pricing.js?v=20260823j";
 import {
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
-} from "./money.js?v=20260823i";
+} from "./money.js?v=20260823j";
 
 self.onmessage = async (ev) => {
   const msg = ev.data;
@@ -24,6 +24,11 @@ self.onmessage = async (ev) => {
     const e1kw = buildE1kw(hours);
     const loadWh = expandProfile(flatProfile(dailyKwh), hours.length);
     const tempsC = Float64Array.from(hours, (h) => h.tAmb);
+
+    // Delivered-capacity factor: rate loss × cold loss (matters for
+    // lead-acid; LFP/sodium are 1.0 except cold charging blocks).
+    const meanTempC = tempsC.reduce((a, b) => a + b, 0) / tempsC.length;
+    const capScale = capacityScaleFor(chemistry, meanTempC);
 
     const annualYield = [...e1kw].reduce((a, b) => a + b, 0) / 1000 / series.meta.years;
     const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
@@ -42,6 +47,7 @@ self.onmessage = async (ev) => {
         costPerWpv: (landedScope.pvPerW[0] + landedScope.pvPerW[1]) / 2,
         costPerKwhBatt: landedMidBattKwh,
         pvMax: 45, battMax: 120, battStep: 1,
+        capacityScale: capScale,
       });
 
       const loadTotalKwh = [...loadWh].reduce((a, b) => a + b, 0) / 1000;
@@ -51,7 +57,7 @@ self.onmessage = async (ev) => {
           return { id: target.id, label: target.label, solvable: false };
         }
         const cyclesPerYear = sizing.result.cyclesEquivalent / series.meta.years;
-        const cost = fullRange(sizing.pvKw, sizing.battKwh);
+        const cost = fullRange(sizing.pvKw, sizing.battKwh, chemistry);
         const servedKwhPerYear =
           (sizing.result.directWh + sizing.result.battWhAc) / 1000 / series.meta.years;
         const replacements25y = batteryReplacements(cyclesPerYear, chem.cyclesTo80);
@@ -113,6 +119,9 @@ self.onmessage = async (ev) => {
             dataYears: `${series.meta.startYear}–${series.meta.endYear} (${series.meta.years} yr)`,
             source: series.meta.source,
             cycleLifeTo80: { [chemistry]: chem.cyclesTo80 },
+          capacityScale: +capScale.toFixed(3),
+          meanTempC: Math.round(meanTempC),
+          capacityNote: capScale < 0.995 ? `${chemistry.toUpperCase()} delivers about ${(capScale * 100).toFixed(0)}% of nameplate usable capacity at this site (discharge-rate and cold losses; annual mean ${Math.round(meanTempC)}°C).` : null,
             money: `Bill reduction is computed hour-by-hour across ${series.meta.startYear}–${series.meta.endYear} of NASA POWER weather: solar serves the load first, surplus charges the battery, and the grid covers whatever remains. The system never exports (surplus beyond storage is clipped). Payback compares component cost against the bill savings at your tariff; fixed connection fees are not counted.`,
           },
         },
@@ -129,6 +138,7 @@ self.onmessage = async (ev) => {
       costPerWpv: (landed.pvPerW[0] + landed.pvPerW[1]) / 2,
       costPerKwhBatt: (landed.battPerKwhUsable[0] + landed.battPerKwhUsable[1]) / 2,
       battMax: 250,
+      capacityScale: capScale,
     });
 
     const historyTiers = [];
@@ -145,7 +155,7 @@ self.onmessage = async (ev) => {
 
       const cyclesPerYear = sizing.result.cyclesEquivalent / series.meta.years;
       const batteryLifeYears = cyclesPerYear > 0 ? chem.cyclesTo80 / cyclesPerYear : null;
-      const cost = fullRange(sizing.pvKw, sizing.battKwh);
+      const cost = fullRange(sizing.pvKw, sizing.battKwh, chemistry);
 
       // Money story: payback against avoided grid bills, plus levelized
       // cost of the AC energy this system actually serves (landed-mid
@@ -167,7 +177,7 @@ self.onmessage = async (ev) => {
       // that is the whole point of using percent.
       const traced = simulate({
         pvKw: sizing.pvKw, battKwhUsable: sizing.battKwh,
-        e1kw, loadWh, chemistry, tempsC, capture: true,
+        e1kw, loadWh, chemistry, tempsC, capture: true, capacityScale: capScale,
       });
       const ext = dailyExtremes(traced.socSeries);
       let minPct = 100, emptyDays = 0, fullDays = 0;
@@ -244,6 +254,9 @@ self.onmessage = async (ev) => {
           dataYears: `${series.meta.startYear}–${series.meta.endYear} (${series.meta.years} yr)`,
           source: series.meta.source,
           cycleLifeTo80: { [chemistry]: chem.cyclesTo80 },
+          capacityScale: +capScale.toFixed(3),
+          meanTempC: Math.round(meanTempC),
+          capacityNote: capScale < 0.995 ? `${chemistry.toUpperCase()} delivers about ${(capScale * 100).toFixed(0)}% of nameplate usable capacity at this site (discharge-rate and cold losses; annual mean ${Math.round(meanTempC)}°C).` : null,
           money: `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 25-year horizon, and assumes panels/inverter last the full 25 years. Generator fuel and grid fixed charges are not counted.`,
         },
       },

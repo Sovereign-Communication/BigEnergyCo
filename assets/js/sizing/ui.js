@@ -5,9 +5,10 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260823i";
-import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260823i";
-import { BOM_ITEMS } from "../shared/content.js?v=20260823i";
+import { CITY_PRESETS, } from "./nasa.js?v=20260823j";
+import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260823j";
+import { BOM_ITEMS } from "../shared/content.js?v=20260823j";
+import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260823j";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -406,6 +407,22 @@ function fmtPaybackRange(lo, hi) {
   return a === b ? a : `${a}–${b.replace("~", "")}`;
 }
 
+// User currency (optional): converts USD figures for display only. The
+// underlying scoped prices are USD; the arithmetic panel always says so.
+function fxActive() {
+  const rate = parseFloat($("fxRate")?.value);
+  const code = ($("fxCode")?.value || "").trim().toUpperCase();
+  return Number.isFinite(rate) && rate > 0 && /^[A-Z]{3,4}$/.test(code) ? { rate, code } : null;
+}
+
+function money(usd) {
+  const fx = fxActive();
+  if (fx) return Math.round(usd * fx.rate).toLocaleString() + " " + fx.code;
+  return "$" + Number(usd).toLocaleString();
+}
+
+function moneyRange(lo, hi) { return money(lo) + "–" + money(hi); }
+
 const TIER_COLORS = { tier100: "#00e699", tier99: "#60a5fa", tier95: "#f59e0b" };
 const TIER_NAMES = {
   tier100: "100% · never needs a generator",
@@ -549,8 +566,8 @@ function renderMoneyBar(p) {
   }
   moneyBar.style.display = "block";
   moneyBar.textContent = p.mode === "gridtie"
-    ? `At $${p.tariff.toFixed(2)}/kWh, your power costs about $${fmt(p.annualGridSpendUsd)} per year today. Each option below shows the bill after solar and how fast it repays itself out of the savings.`
-    : `At $${p.tariff.toFixed(2)}/kWh, this use costs about $${fmt(p.annualGridSpendUsd)} per year in grid power. Payback figures below compare system cost against that spend.`;
+    ? `At $${p.tariff.toFixed(2)}/kWh, your power costs about ${money(p.annualGridSpendUsd)} per year today. Each option below shows the bill after solar and how fast it repays itself out of the savings.`
+    : `At $${p.tariff.toFixed(2)}/kWh, this use costs about ${money(p.annualGridSpendUsd)} per year in grid power. Payback figures below compare system cost against that spend.`;
 }
 
 function renderTierCards(p) {
@@ -574,9 +591,9 @@ function renderTierCards(p) {
     const rows = [
       ["Solar array", `${t.pvKw} kW`],
       ["Battery (usable)", `${fmt(t.battKwh)} kWh`],
-      ["Component cost", `~$${fmt(t.costLo)}–${fmt(t.costHi)}`],
-      ["  · panels + inverter", `~$${fmt(t.pvCostLo)}–${fmt(t.pvCostHi)}`],
-      ["  · battery bank", `~$${fmt(t.battCostLo)}–${fmt(t.battCostHi)}`],
+      ["Component cost", `~${moneyRange(t.costLo, t.costHi)}`],
+      ["  · panels + inverter", `~${moneyRange(t.pvCostLo, t.pvCostHi)}`],
+      ["  · battery bank", `~${moneyRange(t.battCostLo, t.battCostHi)}`],
       ["  · battery unit price", `≈$${t.battPerKwhLo}–${t.battPerKwhHi}/kWh stored`],
       ["Unmet hours", `${fmt(t.unmetHoursPerYear)} h/yr`],
       ["Longest gap", `${fmt(t.longestGapHours)} h`],
@@ -618,8 +635,8 @@ function renderTargetCards(p) {
     const rows = [
       ["Solar array", `${t.pvKw} kW`],
       ["Battery (usable)", t.battKwh > 0 ? `${fmt(t.battKwh)} kWh` : "none needed"],
-      ["Component cost", `~$${fmt(t.costLo)}–${fmt(t.costHi)}`],
-      ["Bill after solar", t.billAfterMonthlyUsd !== null ? `≈$${fmt(t.billAfterMonthlyUsd)}/mo (was ≈$${fmt(Math.round(p.annualGridSpendUsd / 12))})` : "needs your tariff"],
+      ["Component cost", `~${moneyRange(t.costLo, t.costHi)}`],
+      ["Bill after solar", t.billAfterMonthlyUsd !== null ? `≈${money(t.billAfterMonthlyUsd)}/mo (was ≈${money(Math.round(p.annualGridSpendUsd / 12))})` : "needs your tariff"],
       ["Imported from grid", `${fmt(t.importedKwhPerYear)} kWh/yr`],
     ];
     if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
@@ -673,6 +690,7 @@ function renderResults(p) {
     `Costs span ${pr.basisLabel || "ex-factory China to PowMr-class budget retail"} (${pr.source || "cell market indications through PowMr catalog, Aug 2026"}) — ` +
     `the low end is components before freight/duty/BMS, the high end is shipped retail with BMS and enclosure included. ` +
     (a.money ? a.money + " " : "") +
+    (a.capacityNote ? a.capacityNote + " " : "") +
     (inp.tariff ? `Grid spend assumes $${inp.tariff}/kWh at ${fmtKwh(inp.dailyKwh)} kWh/day.` : "No tariff entered, so payback is not shown.");
 
   let briefLines;
@@ -783,9 +801,9 @@ function populatePrintSheet(p, inp) {
           t.label,
           `${t.pvKw} kW`,
           t.battKwh > 0 ? `${fmt(t.battKwh)} kWh` : "none",
-          `$${fmt(t.costLo)}–${fmt(t.costHi)}`,
+          moneyRange(t.costLo, t.costHi),
           `−${t.cutPct}% bill`,
-          t.billAfterMonthlyUsd !== null ? `≈$${fmt(t.billAfterMonthlyUsd)}/mo` : "n/a",
+          t.billAfterMonthlyUsd !== null ? `≈${money(t.billAfterMonthlyUsd)}/mo` : "n/a",
           t.paybackYearsLo !== null ? fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) : "n/a",
         ];
         return "<tr><td>" + cells.join("</td><td>") + "</td></tr>";
@@ -795,7 +813,7 @@ function populatePrintSheet(p, inp) {
           t.label.replace(/—/g, "·"),
           `${t.pvKw} kW`,
           `${fmt(t.battKwh)} kWh`,
-          `$${fmt(t.costLo)}–${fmt(t.costHi)}`,
+          moneyRange(t.costLo, t.costHi),
           t.paybackYearsLo !== null ? fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) : "n/a",
           Number.isFinite(t.lcoeUsdPerKwh) ? `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` : "n/a",
         ];
@@ -908,6 +926,10 @@ export function initSizingUI() {
   if (printBtn) printBtn.addEventListener("click", () => window.print());
 
   setLoadPanel();
+
+  // Interface language (auto-detected, user-overridable in the footer).
+  applyI18n();
+  initLangPicker($("langSelect"));
 
   // A shared link restores its inputs and re-runs the deterministic engine.
   if (restoreFromShare()) setTimeout(run, 50);
