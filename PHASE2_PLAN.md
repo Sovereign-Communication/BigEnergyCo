@@ -4,18 +4,26 @@
 **Goal:** Turn BigEnergyCo from "cost widget + AI chat" into a tool that actually answers *"what
 system do I need, and can I live off-grid here?"* — computed by testable code, explained by the LLM.
 
-## Status (2026-08-22) — Phase 2A/2B core SHIPPED on branch `phase2/sizing-engine`
+## Status (2026-08-23) — Phase 2A/2B shipped, then MONEY + COHESION + GRID-TIE + WORLDWIDE (all live)
 
 | Item | State |
 |---|---|
-| `assets/js/sizing/engine.js` — derate chain, e1kw series, load models, hourly SOC simulator, tier search | ✅ done, 18 unit tests green |
+| `assets/js/sizing/engine.js` — derate chain, e1kw series, load models, hourly SOC simulator, tier search | ✅ done, tested |
 | `assets/js/sizing/nasa.js` — POWER client, ≤2-yr chunking, localStorage cache, city presets | ✅ done |
 | `assets/js/sizing/sizing-worker.js` + `ui.js` + `#sizing` section in index.html | ✅ done |
-| Live-data integration check (`scripts/validate-live.mjs`) | ✅ Pahoa 19.5,-155 @10 kWh/day: yield 1818 kWh/kW·yr; tiers = 7kW+13kWh / 3.5+8 / 3+6 |
+| **`assets/js/sizing/money.js`** — payback vs grid spend, battery-replacement cadence, LCOE (25-yr horizon) | ✅ shipped 2026-08-23 |
+| **Money UI** — payback per tier/target, ¢/kWh vs grid, swap counts, share links (`#s=`), printable one-pager | ✅ shipped |
+| **Grid-tie mode** — no-export offset sim (`simulateOffset`), 60/80/95% bill-cut targets (`sizeForBillCut`, monotone binary search on PV), bill-after + payback-out-of-savings | ✅ shipped |
+| **Worldwide** — sodium default (+ pricing premium), lead-acid back with TRUE TCO (rate+cold capacity scale, swap counts), user currency field, i18n scaffold (es/pt/fr/ar, RTL) | ✅ shipped |
+| **Cohesion** — single-source content module + freenet sync markers, scoped storage comparison (no more hardcoded $ figures), sizer-first CTAs, canonical tag | ✅ shipped |
 | Sheet replication gate (`scripts/validate-against-sheet.mjs`, ±5%) | ⏳ awaiting owner's sheet CSV export |
-| Appliance builder UI | ⏳ engine support exists (`applianceProfile`), form UI next |
-| SOC chart, shareable links, printable summary | ⏳ Phase 2B |
-| i18n, aging model, offline bundled profiles | ⏳ Phase 2C |
+| Bundled offline climate profiles (PWA/Freenet engine) | ⏳ next |
+| Aging fade inside the search objective (currently replacement-count only) | ⏳ v3 |
+| Full dynamic-string i18n (results text beyond static chrome) | ⏳ incremental |
+
+**Live-data checks:** `scripts/validate-modes.mjs` runs BOTH modes against real NASA POWER data.
+Honolulu 10 kWh/day @ $0.42: tier100 = 8 kW+13 kWh (payback 1.3–4.4 yr); cut60 = 1.8 kW+2 kWh
+(payback ~5–18 mo). Oslo proves honest "no practical off-grid solution" at 60°N for 10 kWh/day.
 
 **Verified API contract** (probed 2026-08-22, POWER Hourly API v2.9.9): `ALLSKY_SFC_SW_DWN` returns
 **W/m² per hour** (not kWh/m²), timestamps `YYYYMMDDHH` in **Local Solar Time**, fill value −999,

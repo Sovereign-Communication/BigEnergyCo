@@ -24,19 +24,26 @@ Freenet (offline): index-freenet.html → static cost calc, no API calls.
 ```
 
 **Two versions, one goal:**
-- **Internet (`index.html`):** Full AI advisor + cost comparison. Requires internet + Groq API.
-- **Freenet (`index-freenet.html`):** Static cost comparison + DIY reference. Fully offline; launcher syncs it into `freenet_web_dist/`.
+- **Internet (`index.html`):** Deterministic sizer (off-grid tiers + grid-tie bill-cutting), payback/LCOE money story, share links, printable summary, AI advisor, EN/ES/PT/FR/AR chrome. Requires internet for weather + Groq.
+- **Freenet (`index-freenet.html`):** Static cost comparison + DIY reference. Fully offline; launcher syncs it into `freenet_web_dist/`. Shared content (prices/donations) is materialized into it by `node scripts/sync-freenet-content.mjs`.
 
 | File | Purpose |
 |---|---|
-| `index.html` | Public site with AI advisor (CSS and JS inlined) |
+| `index.html` | Public site with sizer + AI advisor (CSS and JS inlined) |
 | `index-freenet.html` | Static offline version (Freenet). Cost calc only, no AI |
+| `assets/js/sizing/engine.js` | Pure sizing math: derates, SOC sim, tier search, grid-tie offset sim + bill-cut search |
+| `assets/js/sizing/money.js` | Payback, battery-replacement cadence, LCOE |
+| `assets/js/sizing/pricing.js` | Scoped price ranges (ex-factory → landed → budget retail), sodium premium, tariff estimator |
+| `assets/js/shared/content.js` | Canonical BOM prices + donation links (synced into Freenet page) |
+| `assets/js/shared/i18n.js` + `locales.js` | UI-chrome translations (es/pt/fr/ar) + RTL |
+| `scripts/sync-freenet-content.mjs` | Materializes shared content into index-freenet.html SYNC markers |
+| `scripts/validate-modes.mjs` | Live end-to-end check of both sizing modes vs real NASA data |
 | `worker/index.js` | Cloudflare Worker: `/api/chat`, `/api/health`. CORS allowlist, rate limits, input caps |
 | `.github/workflows/deploy.yml` | Pages deploy from an explicit allowlist |
 | `launcher.py` | Local start/stop orchestration (dev only), driven by the `.bat` files |
 | `proxy_server.py` | Local web server + Freenet CSP bridge with its own rate limiter (dev only) |
 | `PLAN.md` | Roadmap |
-| `PHASE2_PLAN.md` | Deterministic sizing core + 5-year hourly solar simulation plan |
+| `PHASE2_PLAN.md` | Sizing engine plan + shipped-status ledger |
 | `LAUNCH_AUDIT.md` | Pre-launch checklist. Updated 2026-08-03 |
 | `LIABILITY.md` | Liability, tax, and privacy posture. Read before promoting the site |
 | `legacy_scripts/`, `.backup/` | Superseded material, kept locally only (not deployed, not tracked) |
