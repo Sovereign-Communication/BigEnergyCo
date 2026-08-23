@@ -5,16 +5,15 @@ import {
   buildE1kw, flatProfile, expandProfile, sizeAllTiers, simulate,
   dailyExtremes, CHEMISTRIES,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER,
-} from "./engine.js?v=20260823f";
-import { fetchHourlyCached } from "./nasa.js?v=20260823f";
-import { costRange, getScope, POWMR_CATALOG } from "./pricing.js?v=20260823f";
+} from "./engine.js?v=20260823g";
+import { fetchHourlyCached } from "./nasa.js?v=20260823g";
+import { fullRange, getScope, POWMR_CATALOG } from "./pricing.js?v=20260823g";
 
 self.onmessage = async (ev) => {
   const msg = ev.data;
   if (msg?.type !== "run") return;
   try {
-    const { latitude, longitude, dailyKwh, chemistry = "lfp", years = 5, pricingScope = "powmr" } = msg;
-    const scope = getScope(pricingScope);
+    const { latitude, longitude, dailyKwh, chemistry = "lfp", years = 5 } = msg;
 
     const series = await fetchHourlyCached({ latitude, longitude, years });
     const hours = series.hours;
@@ -22,11 +21,14 @@ self.onmessage = async (ev) => {
     const loadWh = expandProfile(flatProfile(dailyKwh), hours.length);
     const tempsC = Float64Array.from(hours, (h) => h.tAmb);
 
+    // Search objective sits mid-spread (landed DIY); the DISPLAYED range
+    // always spans ex-factory China through PowMr-class budget retail.
+    const landed = getScope("landed");
     const results = sizeAllTiers({
       e1kw, loadWh, tempsC, chemistry,
       years: series.meta.years,
-      costPerWpv: (scope.pvPerW[0] + scope.pvPerW[1]) / 2,
-      costPerKwhBatt: (scope.battPerKwhUsable[0] + scope.battPerKwhUsable[1]) / 2,
+      costPerWpv: (landed.pvPerW[0] + landed.pvPerW[1]) / 2,
+      costPerKwhBatt: (landed.battPerKwhUsable[0] + landed.battPerKwhUsable[1]) / 2,
       battMax: 250,
     });
 
@@ -41,8 +43,7 @@ self.onmessage = async (ev) => {
       if (sizing) {
         const cyclesPerYear = sizing.result.cyclesEquivalent / series.meta.years;
         batteryLifeYears = cyclesPerYear > 0 ? chem.cyclesTo80 / cyclesPerYear : null;
-        const cr = costRange(sizing.pvKw, sizing.battKwh, pricingScope);
-        cost = cr;
+        cost = fullRange(sizing.pvKw, sizing.battKwh);
 
         // Full daily range: the band between each day's lowest and highest
         // charge. Top edge touches 100% on charging days for EVERY system —
@@ -79,8 +80,12 @@ self.onmessage = async (ev) => {
         battKwh: sizing?.battKwh ?? null,
         costLo: cost ? cost.lo : null,
         costHi: cost ? cost.hi : null,
-        pvCostMid: cost ? cost.pvMid : null,
-        battCostMid: cost ? cost.battMid : null,
+        pvCostLo: cost ? Math.round(sizing.pvKw * 1000 * getScope("cells").pvPerW[0]) : null,
+        pvCostHi: cost ? Math.round(sizing.pvKw * 1000 * getScope("powmr").pvPerW[1]) : null,
+        battCostLo: cost ? cost.battCostLo : null,
+        battCostHi: cost ? cost.battCostHi : null,
+        battPerKwhLo: cost ? cost.battPerKwhLo : null,
+        battPerKwhHi: cost ? cost.battPerKwhHi : null,
         unmetHoursPerYear: sizing ? +(sizing.result.unmetHours / series.meta.years).toFixed(1) : null,
         longestGapHours: sizing?.result.longestGapHours ?? null,
         cyclesPerYear: sizing ? Math.round(sizing.result.cyclesEquivalent / series.meta.years) : null,
@@ -97,11 +102,9 @@ self.onmessage = async (ev) => {
         chemistry,
         chemLabel: chem.label,
         pricing: {
-          scopeId: scope.id,
-          scopeLabel: scope.label,
-          source: scope.source,
-          note: scope.note,
-          catalog: scope.id === "powmr" ? POWMR_CATALOG : null,
+          basisLabel: "ex-factory China through PowMr-class budget retail",
+          source: "cell market indications → PowMr public catalog, Aug 2026",
+          catalog: POWMR_CATALOG,
         },
         tiers,
         history: {

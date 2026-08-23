@@ -5,8 +5,8 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260823f";
-import { PRICING_SCOPES } from "./pricing.js?v=20260823f";
+import { CITY_PRESETS } from "./nasa.js?v=20260823g";
+import { estimateTariff } from "./pricing.js?v=20260823g";
 
 let worker = null;
 
@@ -229,6 +229,31 @@ function setCoords(lat, lon, label) {
   $("latInput").value = Math.round(lat * 100) / 100;
   $("lonInput").value = Math.round(lon * 100) / 100;
   $("locNote").textContent = label;
+  applyEstimatedTariff(lat, lon);
+}
+
+// Fill the bill-mode tariff from coordinates until the user overrides it.
+let tariffTouched = false;
+
+function applyEstimatedTariff(lat, lon) {
+  if (tariffTouched) return;
+  const est = estimateTariff(lat, lon);
+  const sel = $("tariffSelect");
+  const match = [...sel.options].find((o) => o.value === String(est.rate));
+  if (match) {
+    sel.value = est.rate.toFixed(2);
+  } else {
+    sel.value = "custom";
+    $("customRateVal").value = String(est.rate);
+    $("customRate").style.display = "block";
+  }
+  const note = el("div", { style: "font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;" },
+    `Electricity price estimated for ${est.label} — change it above if you know your rate.`);
+  const existing = document.getElementById("tariffNote");
+  if (existing) existing.remove();
+  sel.closest(".form-group").appendChild(note);
+  note.id = "tariffNote";
+  updateLoadReadout();
 }
 
 function renderCities() {
@@ -299,7 +324,6 @@ function readInputs() {
     chemistry: $("chemSelect").value,
     years: 5,
     basis,
-    pricingScope: $("pricingScope").value,
   };
 }
 
@@ -315,21 +339,35 @@ function run() {
     return;
   }
   setStatus("⏳ Fetching 5 years of hourly satellite weather and searching system sizes…");
-  $("btnRunSizing").disabled = true;
+  const btn = $("btnRunSizing");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin">◐</span> Running 5-year simulation…';
   ensureWorker().postMessage({ type: "run", ...inp });
+}
+
+function restoreRunButton() {
+  const btn = $("btnRunSizing");
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = "☀️ Size My System (5-yr simulation)";
+  }
 }
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260823f", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260823g", { type: "module" });
     worker.onmessage = (ev) => {
-      if (ev.data?.type === "ok") renderResults(ev.data.payload);
-      else if (ev.data?.type === "error") setStatus("⚠️ " + ev.data.message);
-      $("btnRunSizing").disabled = false;
+      if (ev.data?.type === "ok") {
+        renderResults(ev.data.payload);
+        // bring the results into view — the run button can be far above them
+        const res = $("tierResults");
+        if (res) { res.setAttribute("tabindex", "-1"); res.scrollIntoView({ behavior: "smooth", block: "start" }); }
+      } else if (ev.data?.type === "error") setStatus("⚠️ " + ev.data.message);
+      restoreRunButton();
     };
     worker.onerror = () => {
       setStatus("⚠️ Sizing engine failed to load.");
-      $("btnRunSizing").disabled = false;
+      restoreRunButton();
     };
   }
   return worker;
@@ -496,12 +534,14 @@ function renderResults(p) {
     if (!t.solvable) {
       card.appendChild(el("p", {}, "No system found within search limits for this load — the daily consumption may be too high for a practical off-grid build at this site."));
     } else {
+      const perKwh = `${t.battPerKwhLo}–${t.battPerKwhHi}`;
       const rows = [
         ["Solar array", `${t.pvKw} kW`],
         ["Battery (usable)", `${fmt(t.battKwh)} kWh`],
-        ["Component cost est.", `~$${fmt(t.costLo)}–${fmt(t.costHi)}`],
-        ["  · panels + inverter", `~$${fmt(t.pvCostMid)}`],
-        ["  · battery bank", `~$${fmt(t.battCostMid)} (≈$${Math.round(t.battCostMid / t.battKwh)}/kWh stored)`],
+        ["Component cost", `~$${fmt(t.costLo)}–${fmt(t.costHi)}`],
+        ["  · panels + inverter", `~$${fmt(t.pvCostLo)}–${fmt(t.pvCostHi)}`],
+        ["  · battery bank", `~$${fmt(t.battCostLo)}–${fmt(t.battCostHi)}`],
+        ["  · battery unit price", `≈$${t.battPerKwhLo}–${t.battPerKwhHi}/kWh stored`],
         ["Unmet hours", `${fmt(t.unmetHoursPerYear)} h/yr`],
         ["Longest gap", `${fmt(t.longestGapHours)} h`],
         ["Battery life est.", fmtLife(t.batteryLifeYears)],
@@ -529,12 +569,11 @@ function renderResults(p) {
     `MPPT ${(a.derates.mppt * 100).toFixed(0)}%. Cell temperature model: NOCT ${a.noctC}°C, ` +
     `power temperature coefficient ${(a.gammaPerC * 100).toFixed(2)}%/°C. Inverter efficiency ${(a.etaInverter * 100).toFixed(0)}%. ` +
     `Charging blocked below chemistry's cold limit (LFP 0°C). Load basis: ${inp.basis}. ` +
-    `Pricing basis: ${pr.scopeLabel || "budget retail"} (${pr.source || ""}) — ranges span realistic unit prices; ` +
-    `battery figures are per usable kWh. ${pr.note || ""}` +
-    (pr.catalog ? ` Catalog checked ${pr.catalog.checkedDate}.` : "");
+    `Costs span ${pr.basisLabel || "ex-factory China to PowMr-class budget retail"} (${pr.source || "cell market indications through PowMr catalog, Aug 2026"}) — ` +
+    `the low end is components before freight/duty/BMS, the high end is shipped retail with BMS and enclosure included.`;
 
   const tierLines = p.tiers.filter((t) => t.solvable)
-    .map((t) => `- ${t.label}: ${t.pvKw} kW PV + ${fmt(t.battKwh)} kWh usable (~$${fmt(t.costLo)}–${fmt(t.costHi)}, ${p.pricing?.scopeLabel || "budget retail"})`)
+    .map((t) => `- ${t.label}: ${t.pvKw} kW PV + ${fmt(t.battKwh)} kWh usable (~$${fmt(t.costLo)}–${fmt(t.costHi)}, ex-factory to budget-retail range)`)
     .join("\n");
   window.lastSizingBrief =
     `I sized a system with your calculator for ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)}, ` +
@@ -560,21 +599,17 @@ export function initSizingUI() {
   renderCities();
   renderAppliances();
 
-  // tariff select
+  // tariff select (auto-estimated from location until the user overrides)
   const tsel = $("tariffSelect");
   TARIFFS.forEach((t) => tsel.appendChild(el("option", { value: t.v === "custom" ? "custom" : String(t.v) }, t.n)));
   tsel.value = "0.28";
   tsel.addEventListener("change", () => {
+    tariffTouched = true;
     const custom = tsel.value === "custom";
     $("customRate").style.display = custom ? "block" : "none";
     updateLoadReadout();
   });
-  $("customRateVal").addEventListener("input", updateLoadReadout);
-
-  // pricing scope select
-  const psel = $("pricingScope");
-  PRICING_SCOPES.forEach((s) => psel.appendChild(el("option", { value: s.id }, s.label)));
-  psel.value = "powmr";
+  $("customRateVal").addEventListener("input", () => { tariffTouched = true; updateLoadReadout(); });
 
   $("loadMode").addEventListener("change", setLoadPanel);
   $("billAmount").addEventListener("input", updateLoadReadout);
