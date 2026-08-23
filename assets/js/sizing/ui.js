@@ -10,19 +10,19 @@ import { CITY_PRESETS } from "./nasa.js";
 let worker = null;
 
 // ── Appliance library ───────────────────────────────────────────────────────
-// w = typical running watts. h = DEFAULT hours per day the item actually runs.
-// For fridges/freezers/ACs this is compressor-on time, so the math matches
-// real bills (a modern fridge ≈ 100 W × 10 h ≈ 1 kWh/day).
+// w = watts WHILE RUNNING. duty:true items (fridges, ACs, pumps) only run a
+// fraction of the day — their slider means "hours it actually runs," capped
+// to realistic compressor time, and the row shows the resulting average draw.
 const APPLIANCES = [
   { g: "Keep food cold", items: [
-    { n: "Refrigerator (modern, mid-size)", w: 100, h: 10 },
-    { n: "Refrigerator (old or large)", w: 150, h: 12 },
-    { n: "Chest freezer", w: 100, h: 10 },
+    { n: "Refrigerator (modern, mid-size)", w: 100, h: 10, maxH: 16, duty: true },
+    { n: "Refrigerator (old or large)", w: 150, h: 12, maxH: 18, duty: true },
+    { n: "Chest freezer", w: 100, h: 10, maxH: 16, duty: true },
   ]},
   { g: "Cooling", items: [
     { n: "Ceiling or desk fan", w: 75, h: 8 },
-    { n: "Window air conditioner (one room)", w: 500, h: 6 },
-    { n: "Split air conditioner (whole floor)", w: 1200, h: 6 },
+    { n: "Window air conditioner (one room)", w: 500, h: 6, maxH: 20, duty: true },
+    { n: "Split air conditioner (whole floor)", w: 1200, h: 6, maxH: 20, duty: true },
   ]},
   { g: "Kitchen & cooking", items: [
     { n: "Microwave", w: 1200, h: 0.33 },
@@ -39,14 +39,14 @@ const APPLIANCES = [
   ]},
   { g: "Cleaning & water", items: [
     { n: "Washing machine", w: 500, h: 0.5 },
-    { n: "Water pump (well or pressure tank)", w: 750, h: 0.5 },
+    { n: "Water pump (well or pressure tank)", w: 750, h: 0.5, maxH: 12, duty: true },
     { n: "Vacuum cleaner", w: 800, h: 0.25 },
     { n: "Clothes iron", w: 1100, h: 0.25 },
   ]},
   { g: "Big power users", items: [
-    { n: "Space heater (small)", w: 1000, h: 4 },
-    { n: "Electric water heater", w: 3000, h: 1 },
-    { n: "Pool pump", w: 1000, h: 4 },
+    { n: "Space heater (small)", w: 1000, h: 4, maxH: 16, duty: true },
+    { n: "Electric water heater", w: 3000, h: 1, maxH: 8, duty: true },
+    { n: "Pool pump", w: 1000, h: 4, maxH: 12, duty: true },
   ]},
 ];
 
@@ -154,13 +154,15 @@ function renderAppliances() {
     list.appendChild(gEl);
 
     for (const it of grp.items) {
-      const row = el("div", { class: "ap-row", "data-w": it.w, "data-qty": "1", "data-h": it.h });
+      const maxH = it.maxH || 24;
+      const row = el("div", { class: "ap-row", "data-w": it.w, "data-qty": "1", "data-h": it.h, "data-duty": it.duty ? "1" : "" });
       row.style.cssText = "display:flex;align-items:center;gap:0.6rem;padding:0.4rem 0.5rem;border:1px solid transparent;border-radius:8px;flex-wrap:wrap;";
 
       const cb = el("input", { type: "checkbox", style: "width:auto;margin:0;transform:scale(1.2);cursor:pointer;" });
       const name = el("label", { style: "flex:1 1 200px;cursor:pointer;font-size:0.92rem;font-weight:500;margin:0;" }, it.n);
       name.prepend(cb);
-      const watts = el("span", { style: "font-size:0.75rem;color:var(--text-muted);font-family:var(--font-mono);background:rgba(255,255,255,0.05);padding:0.1rem 0.45rem;border-radius:10px;" }, `~${it.w} W`);
+      const watts = el("span", { style: "font-size:0.75rem;color:var(--text-muted);font-family:var(--font-mono);background:rgba(255,255,255,0.05);padding:0.1rem 0.45rem;border-radius:10px;" },
+        it.duty ? `~${it.w} W while running` : `~${it.w} W`);
 
       // quantity stepper (hidden until checked)
       const qtyWrap = el("span", { style: "display:none;align-items:center;gap:0.35rem;" });
@@ -171,12 +173,12 @@ function renderAppliances() {
 
       // hours slider (hidden until checked)
       const hrsWrap = el("span", { style: "display:none;align-items:center;gap:0.5rem;flex:1 1 170px;min-width:170px;" });
-      const hrs = el("input", { type: "range", min: "0.25", max: "24", step: "0.25", style: "flex:1;cursor:pointer;" });
+      const hrs = el("input", { type: "range", min: "0.25", max: String(maxH), step: "0.25", style: "flex:1;cursor:pointer;" });
       hrs.value = String(it.h);
-      const hrsLabel = el("span", { style: "font-size:0.8rem;color:var(--text-muted);font-family:var(--font-mono);min-width:6.5rem;text-align:right;" }, fmtH(it.h));
+      const hrsLabel = el("span", { style: "font-size:0.8rem;color:var(--text-muted);font-family:var(--font-mono);min-width:6.5rem;text-align:right;" }, (it.duty ? "runs " : "") + fmtH(it.h));
       hrsWrap.append(hrs, hrsLabel);
 
-      const sub = el("span", { style: "font-size:0.8rem;font-family:var(--font-mono);color:var(--text-muted);min-width:5.6rem;text-align:right;" }, "");
+      const sub = el("span", { style: "font-size:0.8rem;font-family:var(--font-mono);color:var(--text-muted);min-width:7.8rem;text-align:right;" }, "");
 
       row.append(name, watts, qtyWrap, hrsWrap, sub);
 
@@ -187,9 +189,17 @@ function renderAppliances() {
         row.style.borderColor = on ? "var(--border-glow)" : "transparent";
         qtyWrap.style.display = on ? "inline-flex" : "none";
         hrsWrap.style.display = on ? "inline-flex" : "none";
-        const kwh = (it.w * parseInt(row.dataset.qty, 10) * parseFloat(row.dataset.h)) / 1000;
-        sub.textContent = on ? fmtKwh(kwh) + " kWh/day" : "";
-        sub.style.color = on ? "var(--primary-accent)" : "var(--text-muted)";
+        const h = parseFloat(row.dataset.h);
+        const kwh = (it.w * parseInt(row.dataset.qty, 10) * h) / 1000;
+        if (on) {
+          let txt = fmtKwh(kwh) + " kWh/day";
+          if (it.duty) txt += ` (≈${Math.round((it.w * h) / 24)} W avg)`;
+          sub.textContent = txt;
+          sub.style.color = "var(--primary-accent)";
+        } else {
+          sub.textContent = "";
+          sub.style.color = "var(--text-muted)";
+        }
         updateLoadReadout();
       }
       cb.addEventListener("change", refresh);
@@ -203,7 +213,7 @@ function renderAppliances() {
       });
       hrs.addEventListener("input", () => {
         row.dataset.h = hrs.value;
-        hrsLabel.textContent = fmtH(parseFloat(hrs.value));
+        hrsLabel.textContent = (it.duty ? "runs " : "") + fmtH(parseFloat(hrs.value));
         refresh();
       });
 
@@ -348,7 +358,9 @@ function drawSocChart(history, chemLabel) {
   for (const t of solvable) {
     const chip = el("span", { style: "display:inline-flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:var(--text-muted);margin-right:1rem;" });
     const sw = el("span", { style: `display:inline-block;width:14px;height:4px;border-radius:2px;background:${TIER_COLORS[t.id] || "#888"};` });
-    chip.append(sw, el("span", {}, t.id === "tier100" ? "100% (no generator)" : t.id === "tier99" ? "99% (rare generator)" : "95% (generator OK)"));
+    const name = t.id === "tier100" ? "100% (no generator)" : t.id === "tier99" ? "99% (rare generator)" : "95% (generator OK)";
+    const full = Number.isFinite(t.fullPct) ? ` · full ${t.fullPct}% of hours` : "";
+    chip.append(sw, el("span", {}, name + full));
     legend.appendChild(chip);
   }
 
@@ -392,24 +404,43 @@ function drawSocChart(history, chemLabel) {
   ctx.beginPath(); ctx.moveTo(padL, Y(0)); ctx.lineTo(W - padR, Y(0)); ctx.stroke();
   ctx.setLineDash([]);
 
-  for (const t of solvable) {
+  // draw order: tier100 last so its ceiling line stays visible on top
+  const order = { tier95: 0, tier99: 1, tier100: 2 };
+  for (const t of [...solvable].sort((a, b) => (order[a.id] ?? 9) - (order[b.id] ?? 9))) {
     const color = TIER_COLORS[t.id] || "#888";
     const env = t.env;
     if (!env || !env.length) continue;
 
-    // envelope fill
+    // Envelope fill: shows TIME SPENT at each charge level. Peaks that only
+    // last an hour or two paint a thin sliver, so the hi/lo boundaries are
+    // also stroked explicitly — every tier's max is visibly 100%.
     ctx.beginPath();
     ctx.moveTo(X(0), Y(env[0][1] / 100));
     for (let i = 1; i < env.length; i++) ctx.lineTo(X(i), Y(env[i][1] / 100));
     for (let i = env.length - 1; i >= 0; i--) ctx.lineTo(X(i), Y(env[i][0] / 100));
     ctx.closePath();
-    ctx.globalAlpha = 0.16;
+    ctx.globalAlpha = 0.18;
     ctx.fillStyle = color;
     ctx.fill();
 
-    // mid line
-    ctx.globalAlpha = 0.95;
+    ctx.globalAlpha = 0.55;
     ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i < env.length; i++) {
+      const y = Y(env[i][1] / 100);
+      if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y);
+    }
+    ctx.stroke();
+    ctx.beginPath();
+    for (let i = 0; i < env.length; i++) {
+      const y = Y(env[i][0] / 100);
+      if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y);
+    }
+    ctx.stroke();
+
+    // Mid line on top, slightly thicker
+    ctx.globalAlpha = 0.95;
     ctx.lineWidth = 1.4;
     ctx.beginPath();
     for (let i = 0; i < env.length; i++) {
@@ -422,8 +453,11 @@ function drawSocChart(history, chemLabel) {
 
   $("socCaption").textContent =
     `Hourly battery state of charge, ${history.startYear}–${history.endYear}, for the three systems above ` +
-    `(${chemLabel}). Where a line touches the red dashed line, that system would be dark without a generator. ` +
-    `The 100% system never gets there in five years of real weather — that is what the extra hardware buys.`;
+    `(${chemLabel}). Every system reaches 100% when the sun delivers — smaller banks simply fill and empty ` +
+    `faster, so their bands sit lower on average even though their peaks touch the top; the legend shows how ` +
+    `much of the year each spends essentially full. Where a line touches the red dashed line, that system would ` +
+    `be dark without a generator. The 100% system never gets there in five years of real weather — that is what ` +
+    `the extra hardware buys.`;
 }
 
 function renderResults(p) {

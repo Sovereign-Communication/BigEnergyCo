@@ -228,25 +228,44 @@ async function handleChat(request, env, origin) {
   let usedModel = GROQ_PRIMARY_MODEL;
   let fullReply = "";
   let turns = 0;
+  let retriedUpstreamBusy = false;
   const maxContinuations = 2;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   while (turns <= maxContinuations) {
     let groqRes = await callGroq(apiKey, usedModel, currentMessages);
 
-    // Upstream rate limit (shared org TPM pool): do NOT hammer the fallback model —
-    // it draws from the same pool. Return a sanitized, retryable response.
-    if (groqRes.status === 429) {
-      let retryAfter = 30;
+    // Upstream rate limit (shared org TPM pool). Wait out the provider's own
+    // window once, invisibly, before giving up — the free tier's 8k TPM makes
+    // short busy spells routine, and one backoff turns most of them around.
+    if (groqRes.status === 429 && !retriedUpstreamBusy) {
+      let retryAfter = 15;
       try {
         const errBody = await groqRes.json();
         const m = /try again in ([\d.]+)s/i.exec(errBody?.error?.message || "");
-        if (m) retryAfter = Math.max(5, Math.ceil(parseFloat(m[1]) + 1));
+        if (m) retryAfter = Math.max(3, Math.ceil(parseFloat(m[1]) + 1));
       } catch { /* keep default */ }
+      retriedUpstreamBusy = true;
+      await sleep(Math.min(retryAfter * 1000, 25000));
+      groqRes = await callGroq(apiKey, usedModel, currentMessages);
+
+      if (groqRes.status === 429) {
+        return jsonResponse(
+          { error: "The AI provider is busy right now. Please try again shortly." },
+          503,
+          origin,
+          { "Retry-After": "60" }
+        );
+      }
+    } else if (groqRes.status === 429) {
+      // Already burned our one backoff: if we hold a complete-enough reply,
+      // ship it rather than discarding the user's time.
+      if (fullReply.length > 0) break;
       return jsonResponse(
         { error: "The AI provider is busy right now. Please try again shortly." },
         503,
         origin,
-        { "Retry-After": String(retryAfter) }
+        { "Retry-After": "30" }
       );
     }
 

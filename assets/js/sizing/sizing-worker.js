@@ -53,7 +53,15 @@ self.onmessage = async (ev) => {
             Math.round(p.lo * 1000) / 10, // % SOC, one decimal
             Math.round(p.hi * 1000) / 10,
           ]);
-        historyTiers.push({ id: tier.id, env: socEnv });
+        // Share of hours spent essentially full — the real difference between
+        // tiers is DURATION at 100%, never peak height (every tier tops out).
+        let fullHrs = 0;
+        for (const v of traced.socSeries) if (v >= 0.95) fullHrs++;
+        historyTiers.push({
+          id: tier.id,
+          env: socEnv,
+          fullPct: Math.round((fullHrs / traced.socSeries.length) * 100),
+        });
       }
 
       return {

@@ -689,8 +689,10 @@ footer {
             <div id="applianceList"></div>
             <div id="readoutAppliances" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
             <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.5;">
-              Wattages are typical values &mdash; yours may differ. Fridges, freezers and air conditioners don't run
-              flat-out all day, so the hours slider means "hours it actually runs," which is already built into the defaults.
+              Wattages are typical values &mdash; yours may differ. Cycling appliances (fridges, freezers, air
+              conditioners, pumps) only draw power while running: their slider is <em>hours actually running per day</em>,
+              capped to realistic compressor time, and each row shows the resulting 24-hour average. A modern fridge at
+              the default (100 W running, ~10 h/day) really does use about 1 kWh/day.
             </p>
           </div>
 
