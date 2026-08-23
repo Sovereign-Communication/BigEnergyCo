@@ -5,6 +5,7 @@ groq.env
 *.key
 *.pem
 secrets.json
+worker/.wrangler/
 
 # Python
 __pycache__/
@@ -47,6 +48,13 @@ legacy_scripts/
 .claude/
 .launcher_pids.json
 freenet_web_dist/
+
+# Retired procurement-era documents — never republish
+legal/
+
+# Stale site copies (superseded by index.html)
+pub.html
+loc.html
 
 # OS
 .DS_Store

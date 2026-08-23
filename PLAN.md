@@ -1,8 +1,8 @@
 # BigEnergyCo → Free Worldwide Solar & Storage Estimator
 
-**Roadmap.** Updated 2026-08-03. Complete rewrite from paid procurement agency to free donation-supported educational tool.
+**Roadmap.** Updated 2026-08-22. Complete rewrite from paid procurement agency to free donation-supported educational tool.
 
-**Status:** MVP is **feature-complete and regression-tested.** Ready for closed beta. Blocker for public launch: domain + named Cloudflare tunnel (fixes URL rotation).
+**Status:** Public site runs on GitHub Pages + Cloudflare Worker (permanent URLs — the old trycloudflare rotation blocker is resolved). P0 hardening complete 2026-08-22: Worker rate limiting + CORS allowlist + payload caps, `/api/lead` removed, Pages deploy allowlist, price-scope reconciliation. Next: deterministic sizing core and 5-year hourly simulation — see [`PHASE2_PLAN.md`](PHASE2_PLAN.md).
 
 **Key references:**
 - Liability, tax, privacy: [`LIABILITY.md`](LIABILITY.md)

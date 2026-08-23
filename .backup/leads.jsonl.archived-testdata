@@ -1,6 +1,0 @@
-{"timestamp": "2026-08-01T10:57:54.272378", "name": "Test Client", "email": "client@example.com", "phone": "+1-808-555-0199", "capacity": "32 kWh Sodium-Ion", "location": "Hawaii", "notes": "Off-grid installation inquiry"}
-{"timestamp": "2026-08-01T11:01:05.720655", "name": "Bob B", "email": "bbb@bbb.bb", "phone": "808-555-2222", "capacity": "99", "location": "Pahoa", "notes": "Heeeey!"}
-{"timestamp": "2026-08-01T11:02:01.695538", "name": "Bob B", "email": "bbb@bbb.bb", "phone": "808-555-2222", "capacity": "99 kWh", "location": "Pahoa", "notes": "Heeeey!"}
-{"timestamp": "2026-08-01T11:43:28.201399", "name": "Test User", "email": "test@bigenergyco.test", "phone": "+1-808-555-9999", "capacity": "100 kWh", "location": "Pahoa, HI", "notes": "Automated test submission"}
-{"timestamp": "2026-08-01T11:45:58.472565", "name": "Live Test User", "email": "livetest@bigenergyco.test", "phone": "+1-808-555-0001", "capacity": "200 kWh", "location": "Pahoa, Hawaii", "notes": "Live site verification test submission"}
-{"timestamp": "2026-08-01T14:46:36.040951", "name": "Live Test User", "email": "livetest@bigenergyco.test", "phone": "+1-808-555-0001", "capacity": "200 kWh", "location": "Pahoa, Hawaii", "notes": "Live site verification test submission"}

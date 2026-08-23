@@ -1,5 +1,9 @@
 name: Deploy to GitHub Pages
 
+# Publishes an explicit allowlist of public site files ONLY.
+# Nothing else in the repo — scripts, docs, backups, binaries — may leak
+# into the deployed site, even if accidentally committed.
+
 on:
   push:
     branches: [main]
@@ -24,13 +28,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Select deployable files
+        run: |
+          mkdir -p _pages/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage _pages/assets
+          cp index.html _pages/
+          cp robots.txt sitemap.xml _pages/
+          cp blog/index.html _pages/blog/
+          cp "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html" "_pages/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/"
+          cp assets/og-card.png _pages/assets/
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_pages'
 
       - name: Deploy to GitHub Pages
         id: deployment

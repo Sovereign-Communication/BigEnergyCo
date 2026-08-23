@@ -701,7 +701,7 @@ footer {
                 <td>$85,185</td>
               </tr>
               <tr style="color: var(--primary-accent);">
-                <td>Self-sourced components</td>
+                <td>Self-sourced cells + BMS <span style="font-size:0.8em;color:var(--text-muted);">(ex-factory basis, Aug 2026)</span></td>
                 <td id="tableKwhVal">100 kWh</td>
                 <td id="tableCostVal">$5,000</td>
               </tr>
@@ -711,10 +711,17 @@ footer {
           <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.75rem; line-height: 1.5;">
             Component cost only. It excludes international freight, customs duty, taxes, tools, enclosure,
             wiring, permits, and any labor &mdash; which together are often a large share of the real total.
-            The retail figure is a published list price used as a reference point, not a quote, and a
-            packaged product includes certification, warranty, and installer support that self-sourced parts
+            For orientation: landed DIY costs (cells + BMS + fusing + rack + freight + duty) typically land
+            around $95&ndash;125/kWh, and cells alone DDP around $60&ndash;70/kWh &mdash; destination drives most
+            of the spread. The retail figure is a published list price used as a reference point, not a quote,
+            and a packaged product includes certification, warranty, and installer support that self-sourced parts
             do not. Do not treat this as a savings promise.
           </p>
+
+          <div id="gridEqBox" style="display:none; margin-top: 1rem; padding: 0.9rem 1rem; border: 1px solid var(--border-card); border-radius: 10px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.55;">
+            <div style="color: var(--text-main); font-weight: 700; margin-bottom: 0.25rem;">Grid-energy equivalence</div>
+            <div id="gridEqText"></div>
+          </div>
 
           <div class="calc-footer">
             <div id="btnCalcAdvisor" class="btn btn-primary" style="cursor: pointer;">🤖 Ask the AI Advisor</div>
@@ -737,28 +744,28 @@ footer {
         <div class="bom-card">
           <div class="bom-badge">Cells</div>
           <h3>EVE MB31 3.2V 314Ah Cells</h3>
-          <p>Brand new Grade-A prismatic LFP cells. 16S configuration per pack (51.2V nominal). QR codes verified clean.</p>
-          <div class="bom-price">~$43.50 / cell <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative, Aug 2026)</span></div>
+          <p>Brand new Grade-A prismatic LFP cells. 16S configuration per pack (51.2V nominal).</p>
+          <div class="bom-price">~$43.50 / cell <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative ex-works China, Aug 2026)</span></div>
         </div>
 
         <div class="bom-card">
           <div class="bom-badge">BMS</div>
           <h3>JK 200A Active Balance BMS</h3>
           <p>Smart active balancing (2A balance current), dual temperature probes, RS485/CANbus comms with Sol-Ark & Victron.</p>
-          <div class="bom-price">~$92.00 / unit <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative, Aug 2026)</span></div>
+          <div class="bom-price">~$92.00 / unit <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative ex-works China, Aug 2026)</span></div>
         </div>
 
         <div class="bom-card">
           <div class="bom-badge">Fusing</div>
           <h3>Eaton Class-T 200A Fuses</h3>
-          <p>20kA AIC interrupt rating @ 160V DC. Trips short circuit overcurrent in &lt;2ms before BMS MOSFET stress.</p>
+          <p>20kA AIC interrupt rating @ 160V DC. Clears very high short-circuit DC currents in milliseconds &mdash; sized to protect the BMS and wiring.</p>
           <div class="bom-price">~$14.50 / unit <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative, Aug 2026)</span></div>
         </div>
 
         <div class="bom-card">
           <div class="bom-badge">Rack & Compression</div>
           <h3>300 kgf Compression Racks</h3>
-          <p>Uniform Belleville spring washer compression endplates. Maintains 3,000 N pressure to double cycle life.</p>
+          <p>Belleville spring washer endplates hold uniform compression (about 3,000 N). Manufacturers cite cycle-life benefits; treat specific gains as unverified.</p>
           <div class="bom-price">~$28.00 / rack <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative, Aug 2026)</span></div>
         </div>
       </div>
@@ -966,7 +973,7 @@ footer {
 
         <div class="chat-box" id="chatWindow">
           <div class="chat-msg bot">
-            ⚡ <strong>BigEnergyCo Senior Sourcing Advisor</strong>:<br>
+            ⚡ <strong>BigEnergyCo AI Advisor</strong>:<br>
             Aloha! I'm a free AI advisor for off-grid solar and battery storage &mdash; anywhere in the world.
             Fill in the fields above and hit <strong>Get My Free Estimate</strong>, or just ask me anything:
             battery chemistry, sizing for your climate, wiring and fusing, or what questions to bring to a
@@ -1229,9 +1236,15 @@ footer {
       lines.push('Climate: ' + climate + '.');
       lines.push('Available space for batteries: ' + space + '.');
       lines.push('Maintenance comfort level: ' + maintenance + '.');
-      lines.push('[ADVISOR INSTRUCTION: Use these climate/space/maintenance details to recommend the right battery chemistry. ' +
-                 'Cold climate + maintenance-averse = Lithium. Temperate + space OK = Sodium-Ion (default). ' +
-                 'Very limited space = Lithium despite cost. Default to Sodium-Ion unless these constraints contradict it.]');
+      lines.push('[ADVISOR INSTRUCTION: Use these climate/space/maintenance details to reason about chemistry, stated as ' +
+                 'trade-offs and ranges — never a hard sell. (a) Cold sites (frequently below -10°C): LFP cannot be charged ' +
+                 'below 0°C without heating — recommend sodium-ion IF genuinely purchasable in my country, or LFP WITH a ' +
+                 'heated/insulated enclosure, and say which you would pick and why. (b) Temperate/tropical sites: LFP is ' +
+                 'the mature default (lowest cost per kWh-cycle, widest availability); suggest sodium-ion only if locally ' +
+                 'available and certification is not required — note most sodium-ion packs still lack UL 9540/CE listing. ' +
+                 '(c) Tight space: prefer LFP (higher energy density than sodium-ion). (d) Tight budget: cover lead-acid ' +
+                 '(AGM/gel/flooded) honestly — cheapest upfront, ~50% usable DoD, far shorter cycle life. Always state ' +
+                 'certification, availability, and warranty caveats for anything you highlight.]');
 
       if (!wantsInverterHelp) {
         lines.push('Inverter: I do not need inverter assistance — battery bank sizing only.');
@@ -1287,6 +1300,34 @@ footer {
 
       var tableCostVal = document.getElementById('tableCostVal');
       if (tableCostVal) tableCostVal.innerText = '$' + Math.round(totalBigEnergyCost).toLocaleString();
+
+      // Grid-energy equivalence: what the stored energy would cost bought from the grid.
+      // Assumptions (stated in the UI): one full cycle per day, 90% round-trip efficiency,
+      // energy charge only — excludes connection fees, demand charges, degradation, and
+      // panels/inverter/BOS/labor. This is orientation, not a savings promise.
+      var gridEqBox = document.getElementById('gridEqBox');
+      var gridEqText = document.getElementById('gridEqText');
+      if (!gridEqBox || !gridEqText) return;
+
+      if (utilityRate > 0) {
+        var ROUND_TRIP_EFF = 0.9;
+        var annualKwh = targetKwh * 365 * ROUND_TRIP_EFF;
+        var annualValue = annualKwh * utilityRate;
+        var paybackYears = totalBigEnergyCost / annualValue;
+
+        var text = 'If this bank were cycled once daily at $' + utilityRate.toFixed(2) + '/kWh with 90% ' +
+                   'round-trip efficiency, the energy it moves in a year would cost about $' +
+                   (Math.round(annualValue / 10) * 10).toLocaleString() + ' bought from the grid.';
+        text += ' The component cost shown above equals roughly ' + (paybackYears >= 1 ?
+                   '~' + Math.round(paybackYears) + ' years' : 'under one year') + ' of that grid energy';
+        text += ' \u2014 before adding panels, inverter, wiring, install, and battery degradation, which are ' +
+                'the majority of a real off-grid budget. Off-grid is usually about where you live, not ' +
+                'about beating the grid on price.';
+        gridEqText.textContent = text;
+        gridEqBox.style.display = 'block';
+      } else {
+        gridEqBox.style.display = 'none';
+      }
     }
 
     function setupEventListeners() {
