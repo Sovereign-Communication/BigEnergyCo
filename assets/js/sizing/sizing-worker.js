@@ -5,14 +5,16 @@ import {
   buildE1kw, flatProfile, expandProfile, sizeAllTiers, simulate,
   dailyExtremes, CHEMISTRIES,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER,
-} from "./engine.js?v=20260823d";
-import { fetchHourlyCached } from "./nasa.js?v=20260823d";
+} from "./engine.js?v=20260823f";
+import { fetchHourlyCached } from "./nasa.js?v=20260823f";
+import { costRange, getScope, POWMR_CATALOG } from "./pricing.js?v=20260823f";
 
 self.onmessage = async (ev) => {
   const msg = ev.data;
   if (msg?.type !== "run") return;
   try {
-    const { latitude, longitude, dailyKwh, chemistry = "lfp", years = 5 } = msg;
+    const { latitude, longitude, dailyKwh, chemistry = "lfp", years = 5, pricingScope = "powmr" } = msg;
+    const scope = getScope(pricingScope);
 
     const series = await fetchHourlyCached({ latitude, longitude, years });
     const hours = series.hours;
@@ -23,8 +25,8 @@ self.onmessage = async (ev) => {
     const results = sizeAllTiers({
       e1kw, loadWh, tempsC, chemistry,
       years: series.meta.years,
-      costPerWpv: 0.35,
-      costPerKwhBatt: chemistry === "lfp" ? 140 : chemistry === "naion" ? 160 : 90,
+      costPerWpv: (scope.pvPerW[0] + scope.pvPerW[1]) / 2,
+      costPerKwhBatt: (scope.battPerKwhUsable[0] + scope.battPerKwhUsable[1]) / 2,
       battMax: 250,
     });
 
@@ -34,10 +36,13 @@ self.onmessage = async (ev) => {
     const historyTiers = [];
     const tiers = results.map(({ tier, sizing }) => {
       let batteryLifeYears = null;
+      let cost = null;
 
       if (sizing) {
         const cyclesPerYear = sizing.result.cyclesEquivalent / series.meta.years;
         batteryLifeYears = cyclesPerYear > 0 ? chem.cyclesTo80 / cyclesPerYear : null;
+        const cr = costRange(sizing.pvKw, sizing.battKwh, pricingScope);
+        cost = cr;
 
         // Full daily range: the band between each day's lowest and highest
         // charge. Top edge touches 100% on charging days for EVERY system —
@@ -72,7 +77,10 @@ self.onmessage = async (ev) => {
         solvable: !!sizing,
         pvKw: sizing?.pvKw ?? null,
         battKwh: sizing?.battKwh ?? null,
-        cost: sizing ? Math.round(sizing.cost) : null,
+        costLo: cost ? cost.lo : null,
+        costHi: cost ? cost.hi : null,
+        pvCostMid: cost ? cost.pvMid : null,
+        battCostMid: cost ? cost.battMid : null,
         unmetHoursPerYear: sizing ? +(sizing.result.unmetHours / series.meta.years).toFixed(1) : null,
         longestGapHours: sizing?.result.longestGapHours ?? null,
         cyclesPerYear: sizing ? Math.round(sizing.result.cyclesEquivalent / series.meta.years) : null,
@@ -88,6 +96,13 @@ self.onmessage = async (ev) => {
         annualYieldPerKw: Math.round(annualYield),
         chemistry,
         chemLabel: chem.label,
+        pricing: {
+          scopeId: scope.id,
+          scopeLabel: scope.label,
+          source: scope.source,
+          note: scope.note,
+          catalog: scope.id === "powmr" ? POWMR_CATALOG : null,
+        },
         tiers,
         history: {
           startYear: series.meta.startYear,

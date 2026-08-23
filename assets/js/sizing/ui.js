@@ -5,7 +5,8 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js";
+import { CITY_PRESETS } from "./nasa.js?v=20260823f";
+import { PRICING_SCOPES } from "./pricing.js?v=20260823f";
 
 let worker = null;
 
@@ -298,6 +299,7 @@ function readInputs() {
     chemistry: $("chemSelect").value,
     years: 5,
     basis,
+    pricingScope: $("pricingScope").value,
   };
 }
 
@@ -319,7 +321,7 @@ function run() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260823d", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260823f", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") renderResults(ev.data.payload);
       else if (ev.data?.type === "error") setStatus("⚠️ " + ev.data.message);
@@ -497,7 +499,9 @@ function renderResults(p) {
       const rows = [
         ["Solar array", `${t.pvKw} kW`],
         ["Battery (usable)", `${fmt(t.battKwh)} kWh`],
-        ["Component cost est.", `~$${fmt(t.cost)}`],
+        ["Component cost est.", `~$${fmt(t.costLo)}–${fmt(t.costHi)}`],
+        ["  · panels + inverter", `~$${fmt(t.pvCostMid)}`],
+        ["  · battery bank", `~$${fmt(t.battCostMid)} (≈$${Math.round(t.battCostMid / t.battKwh)}/kWh stored)`],
         ["Unmet hours", `${fmt(t.unmetHoursPerYear)} h/yr`],
         ["Longest gap", `${fmt(t.longestGapHours)} h`],
         ["Battery life est.", fmtLife(t.batteryLifeYears)],
@@ -518,16 +522,19 @@ function renderResults(p) {
   }
 
   const a = p.assumptions;
+  const pr = p.pricing || {};
   $("assumpText").textContent =
     `Data: ${a.source}, hourly ${a.dataYears}. Derates applied: soiling ${(a.derates.soiling * 100).toFixed(0)}%, ` +
     `wiring ${(a.derates.wiring * 100).toFixed(0)}%, mismatch ${(a.derates.mismatch * 100).toFixed(0)}%, ` +
     `MPPT ${(a.derates.mppt * 100).toFixed(0)}%. Cell temperature model: NOCT ${a.noctC}°C, ` +
     `power temperature coefficient ${(a.gammaPerC * 100).toFixed(2)}%/°C. Inverter efficiency ${(a.etaInverter * 100).toFixed(0)}%. ` +
     `Charging blocked below chemistry's cold limit (LFP 0°C). Load basis: ${inp.basis}. ` +
-    `Cost basis: $0.35/W panels + battery per-kWh by chemistry.`;
+    `Pricing basis: ${pr.scopeLabel || "budget retail"} (${pr.source || ""}) — ranges span realistic unit prices; ` +
+    `battery figures are per usable kWh. ${pr.note || ""}` +
+    (pr.catalog ? ` Catalog checked ${pr.catalog.checkedDate}.` : "");
 
   const tierLines = p.tiers.filter((t) => t.solvable)
-    .map((t) => `- ${t.label}: ${t.pvKw} kW PV + ${fmt(t.battKwh)} kWh usable (~$${fmt(t.cost)})`)
+    .map((t) => `- ${t.label}: ${t.pvKw} kW PV + ${fmt(t.battKwh)} kWh usable (~$${fmt(t.costLo)}–${fmt(t.costHi)}, ${p.pricing?.scopeLabel || "budget retail"})`)
     .join("\n");
   window.lastSizingBrief =
     `I sized a system with your calculator for ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)}, ` +
@@ -563,6 +570,11 @@ export function initSizingUI() {
     updateLoadReadout();
   });
   $("customRateVal").addEventListener("input", updateLoadReadout);
+
+  // pricing scope select
+  const psel = $("pricingScope");
+  PRICING_SCOPES.forEach((s) => psel.appendChild(el("option", { value: s.id }, s.label)));
+  psel.value = "powmr";
 
   $("loadMode").addEventListener("change", setLoadPanel);
   $("billAmount").addEventListener("input", updateLoadReadout);

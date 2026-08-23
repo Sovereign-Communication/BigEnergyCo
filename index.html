@@ -734,6 +734,10 @@ footer {
                 <option value="agm">Lead-Acid (AGM)</option>
               </select>
             </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="pricingScope">Pricing basis:</label>
+              <select id="pricingScope" class="form-control"></select>
+            </div>
           </div>
 
           <div id="btnRunSizing" class="btn btn-primary btn-full" style="cursor:pointer; margin-top: 0.5rem;">☀️ Size My System (5-yr simulation)</div>
@@ -1161,7 +1165,7 @@ footer {
   </div>
 
   <!-- Inlined JavaScript with JSONP Web-Bridge for Freenet CSP Passthrough -->
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260823d"></script>
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260823f"></script>
   <script>
     // ── Cloudflare API Bridge URL (updated automatically by patch_and_publish.py) ──
     var CF_API_URL = 'https://bigenergyco-api.bigenergyco.workers.dev';
