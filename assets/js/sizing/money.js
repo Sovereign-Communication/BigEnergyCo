@@ -43,3 +43,35 @@ export function lcoeUsdPerKwh({ capexMidUsd, battReplaceCostUsd = 0, replacement
   if (!(totalKwh > 0) || !Number.isFinite(capexMidUsd)) return null;
   return (capexMidUsd + replacements * battReplaceCostUsd) / totalKwh;
 }
+
+// Installation labor per usable kWh — paid on the first install and AGAIN
+// on every bank swap. This is what makes "cheap" lead-acid expensive: the
+// bank is replaced several times and each replacement is a work day.
+export const INSTALL_LABOR_PER_KWH_USABLE = [12, 30];
+
+export function laborMidPerKwh(laborPerKwh = INSTALL_LABOR_PER_KWH_USABLE) {
+  return (laborPerKwh[0] + laborPerKwh[1]) / 2;
+}
+
+/**
+ * True lifetime cost of a battery bank over the horizon, mid-scenario:
+ * initial capex + first-install labor, then each swap buys a new bank plus
+ * new labor. This is the number that shows lead-acid's real price.
+ */
+export function lifetimeCostUsd({ capexMidUsd, battKwhUsable = 0, battPriceMidPerKwh = 0, replacements = 0, laborPerKwh }) {
+  if (!Number.isFinite(capexMidUsd)) return null;
+  const laborKwh = laborMidPerKwh(laborPerKwh);
+  const firstLabor = battKwhUsable * laborKwh;
+  const swapCost = replacements * (battKwhUsable * (battPriceMidPerKwh + laborKwh));
+  return {
+    total: Math.round(capexMidUsd + firstLabor + swapCost),
+    firstLabor: Math.round(firstLabor),
+    swapsAndLabor: Math.round(swapCost),
+  };
+}
+
+/** Annual value of surplus you can sell back (feed-in / net billing). */
+export function exportValueUsd(clippedKwhPerYear, exportRatePerKwh) {
+  if (!(clippedKwhPerYear > 0) || !(exportRatePerKwh > 0)) return 0;
+  return clippedKwhPerYear * exportRatePerKwh;
+}

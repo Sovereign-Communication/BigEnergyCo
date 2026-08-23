@@ -702,6 +702,10 @@ footer {
               <label for="customRateVal">Your price per kWh ($):</label>
               <input type="number" id="customRateVal" class="form-control" placeholder="e.g. 0.31" step="0.01" min="0.01">
             </div>
+            <div style="margin-top:0.6rem;">
+              <label for="exportRate">Feed-in credit for surplus you can sell <span style="font-weight:400;color:var(--text-muted);">($/kWh, optional &mdash; grid-tie only)</span>:</label>
+              <input type="number" id="exportRate" class="form-control" placeholder="e.g. 0.12" step="0.01" min="0">
+            </div>
           </div>
 
           <div id="panelAppliances">
@@ -745,7 +749,8 @@ footer {
           <div class="form-group" style="margin-bottom: 0;">
             <label for="chemSelect" data-i18n="chemLabel">Battery chemistry:</label>
             <select id="chemSelect" class="form-control">
-              <option value="naion" selected>Sodium-Ion &mdash; cold-capable, no thermal runaway</option>
+              <option value="auto" selected>Auto &mdash; compare all three by lifetime cost</option>
+              <option value="naion">Sodium-Ion &mdash; cold-capable, no thermal runaway</option>
               <option value="lfp">LFP (LiFePO4) &mdash; the proven standard</option>
               <option value="agm">Lead-Acid (AGM) &mdash; cheapest upfront, shortest-lived</option>
             </select>
@@ -1196,7 +1201,7 @@ footer {
   <div id="printSheet"></div>
 
   <!-- Inlined JavaScript with JSONP Web-Bridge for Freenet CSP Passthrough -->
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260823j"></script>
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260823k"></script>
   <script>
     // ── Cloudflare API Bridge URL (updated automatically by patch_and_publish.py) ──
     var CF_API_URL = 'https://bigenergyco-api.bigenergyco.workers.dev';

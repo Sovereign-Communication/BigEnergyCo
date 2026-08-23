@@ -96,6 +96,16 @@ test("sizeForBillCut meets its target with cheaper hardware than a bigger target
   assert.ok(hw(c60) <= hw(c80) + 1e-9, "shallower cut needs no more hardware than deeper cut");
 });
 
+test("simulateOffset: capture:true returns a bounded hourly SOC series", () => {
+  const w = makeWeather(24 * 30, 91);
+  const e1 = buildE1kw(w);
+  const load = expandProfile(flatProfile(6), e1.length);
+  const r = simulateOffset({ pvKw: 3, battKwhUsable: 8, e1kw: e1, loadWh: load, capture: true });
+  assert.ok(r.socSeries instanceof Float64Array);
+  assert.equal(r.socSeries.length, e1.length);
+  for (const v of r.socSeries) assert.ok(v >= -1e-9 && v <= 1 + 1e-9, "SOC stays in [0,1]");
+});
+
 test("sizeAllBillTargets aligns with BILL_TARGETS order and marks impossibility", () => {
   const w = makeWeather(24 * 40, 8, {}); // short dark-ish window
   const e1 = buildE1kw(w);

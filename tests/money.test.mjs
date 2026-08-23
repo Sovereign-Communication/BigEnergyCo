@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   HORIZON_YEARS,
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
+  lifetimeCostUsd, exportValueUsd, INSTALL_LABOR_PER_KWH_USABLE, laborMidPerKwh,
 } from "../assets/js/sizing/money.js";
 
 test("annualGridSpendUsd: daily kWh × 365 × tariff", () => {
@@ -74,4 +75,33 @@ test("GATE: honest economics story — AGM swaps constantly, LFP rarely, gentle 
   assert.ok(batteryReplacements(365, 600, HORIZON) >= 6, "AGM cycled daily needs many banks");
   // Gentle cycling (~5 EFC/wk): LFP outlives the horizon entirely -> zero swaps.
   assert.equal(batteryReplacements(200, 6000, HORIZON), 0);
+});
+
+test("lifetimeCostUsd: swaps pay for a new bank PLUS new labor each time", () => {
+  const r = lifetimeCostUsd({
+    capexMidUsd: 10000,
+    battKwhUsable: 10,
+    battPriceMidPerKwh: 102,
+    replacements: 2,
+  });
+  // first labor = 10 × mid labor (21) = 210
+  assert.equal(r.firstLabor, Math.round(10 * laborMidPerKwh(INSTALL_LABOR_PER_KWH_USABLE)));
+  // each swap = bank (10×102=1020) + labor (210) = 1230 → ×2 = 2460
+  assert.equal(r.swapsAndLabor, Math.round(2 * (10 * 102 + 10 * laborMidPerKwh(INSTALL_LABOR_PER_KWH_USABLE))));
+  assert.equal(r.total, 10000 + r.firstLabor + r.swapsAndLabor);
+});
+
+test("GATE: lead-acid's true lifetime cost dwarfs its sticker price", () => {
+  // Same job, same usable kWh: AGM needs ~7 swaps over 25 yr, LFP maybe one.
+  const agm = lifetimeCostUsd({ capexMidUsd: 4000, battKwhUsable: 14, battPriceMidPerKwh: 60, replacements: 7 });
+  const lfp = lifetimeCostUsd({ capexMidUsd: 9000, battKwhUsable: 11, battPriceMidPerKwh: 102, replacements: 1 });
+  assert.ok(agm.total > lfp.total, `AGM true cost (${agm.total}) must exceed LFP (${lfp.total})`);
+  assert.ok(agm.swapsAndLabor > agm.total - agm.swapsAndLabor, "swaps+labor are the majority of AGM lifetime spend");
+});
+
+test("exportValueUsd: clipped surplus × feed-in rate, zero-safe", () => {
+  assert.equal(exportValueUsd(1000, 0.12), 120);
+  assert.equal(exportValueUsd(0, 0.12), 0);
+  assert.equal(exportValueUsd(1000, null), 0);
+  assert.equal(exportValueUsd(null, 0.12), 0);
 });

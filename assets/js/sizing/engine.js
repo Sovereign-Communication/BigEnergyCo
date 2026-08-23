@@ -402,7 +402,7 @@ export const BILL_TARGETS = [
  *            curtailedWh:number, cyclesEquivalent:number, finalSoc:number,
  *            minSoc:number}}
  */
-export function simulateOffset({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp", startSoc = 0.5, tempsC = null, capacityScale = null }) {
+export function simulateOffset({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp", startSoc = 0.5, tempsC = null, capacityScale = null, capture = false }) {
   const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
   const eta = Math.sqrt(chem.roundTrip);
   const cap = Math.max(0, battKwhUsable) * 1000 * (capacityScale ?? chem.usableScale ?? 1);
@@ -412,6 +412,7 @@ export function simulateOffset({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = 
   let throughputDc = 0, minSoc = cap > 0 ? soc : 0;
   const n = e1kw.length;
   if (loadWh.length !== n) throw new Error("load series must match e1kw length");
+  const socSeries = capture ? new Float64Array(n) : null;
 
   for (let i = 0; i < n; i++) {
     const pvAc = pvKw * e1kw[i] * ETA_INVERTER;
@@ -444,6 +445,7 @@ export function simulateOffset({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = 
       imported += deficit;
     }
 
+    if (capture && cap > 0) socSeries[i] = soc;
     if (cap > 0 && soc < minSoc) minSoc = soc;
   }
 
@@ -455,6 +457,7 @@ export function simulateOffset({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = 
     cyclesEquivalent: cap > 0 ? throughputDc / cap : 0,
     finalSoc: soc,
     minSoc: cap > 0 ? minSoc : 0,
+    socSeries,
   };
 }
 
