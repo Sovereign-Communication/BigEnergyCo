@@ -5,8 +5,8 @@ import {
   buildE1kw, flatProfile, expandProfile, sizeAllTiers, simulate,
   dailyMinimums, CHEMISTRIES,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER,
-} from "./engine.js";
-import { fetchHourlyCached } from "./nasa.js";
+} from "./engine.js?v=20260823c";
+import { fetchHourlyCached } from "./nasa.js?v=20260823c";
 
 self.onmessage = async (ev) => {
   const msg = ev.data;

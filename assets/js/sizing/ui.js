@@ -319,7 +319,7 @@ function run() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260823c", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") renderResults(ev.data.payload);
       else if (ev.data?.type === "error") setStatus("⚠️ " + ev.data.message);
@@ -360,7 +360,14 @@ function drawSocChart(history, chemLabel) {
   if (!wrap || !canvas) return;
 
   const solvable = history.tiers.filter((t) => t.dailyMin && t.dailyMin.length);
-  if (!solvable.length) { wrap.style.display = "none"; return; }
+  if (!solvable.length) {
+    // Data arrived but in an unexpected shape — almost certainly a stale
+    // cached module. Never fail silently: say so.
+    wrap.style.display = "block";
+    const cap = $("socCaption");
+    if (cap) cap.textContent = "⚠️ Chart data didn't match this page version — please refresh (Ctrl+F5 / ⌘⇧R) and run the sizing again.";
+    return;
+  }
   wrap.style.display = "block";
 
   // hide the old legend row — labels live inside each band now
