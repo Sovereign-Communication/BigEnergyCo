@@ -29,6 +29,6 @@ jobs:
           node --check assets/js/sizing/ui.js
 
       - name: Unit tests (offline)
-        run: node --test tests/
+        run: node --test
 
       # Live-API validation is manual (network): node scripts/validate-live.mjs
