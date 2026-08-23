@@ -7,8 +7,9 @@ Built and given away by Lucas Ballek. Nothing for sale.
 
 | Piece | Where | Notes |
 |---|---|---|
-| **Public site** | GitHub Pages (`treystu.github.io/BigEnergyCo/`) | Deploys automatically on push to `main`, from an explicit file allowlist in `.github/workflows/deploy.yml`. Nothing outside the allowlist is ever published. |
-| **AI API** | Cloudflare Worker (`bigenergyco-api.bigenergyco.workers.dev`) | Proxies Groq. CORS-locked to the Pages origin + localhost, rate-limited, payload-capped. Deploy with `deploy_worker.bat` (or `npx wrangler deploy` in `worker/`). |
+| **Public site (interim)** | `bigenergyco.pages.dev` (Cloudflare Pages) | Live home while GitHub Actions is billing-locked. Deploy: `node scripts/deploy-pages-local.mjs` then `npx wrangler pages deploy _pages_staging --project-name bigenergyco`. |
+| **Public site (github.io)** | `treystu.github.io/BigEnergyCo/` | Publishes via `gh-pages` branch once the GitHub billing lock is lifted (then either request a rebuild or restore workflow mode). The branch contains exactly the allowlisted files, pushed by the same script. |
+| **AI API** | Cloudflare Worker (`bigenergyco-api.bigenergyco.workers.dev`) | Proxies Groq. CORS-locked to the Pages origins + localhost, rate-limited, payload-capped. Deploy with `deploy_worker.bat` (or `npx wrangler deploy` in `worker/`). |
 | **Local/dev** | `START.bat` / `STOP.bat` / `LINK.bat` | Optional local server + tunnel stack for development and the Freenet variant. Not needed for the public site. |
 
 ## How it's put together
