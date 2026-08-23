@@ -7,7 +7,7 @@ Built and given away by Lucas Ballek. Nothing for sale.
 
 | Piece | Where | Notes |
 |---|---|---|
-| **Public site (interim)** | `bigenergyco.pages.dev` (Cloudflare Pages) | Live home while GitHub Actions is billing-locked. Deploy: `node scripts/deploy-pages-local.mjs` then `npx wrangler pages deploy _pages_staging --project-name bigenergyco`. |
+| **Public site (interim mirror)** | `bigenergyco.pages.dev` (Cloudflare Pages) | Same allowlisted build, deployed with `node scripts/deploy-pages-local.mjs` + `npx wrangler pages deploy _pages_staging --project-name bigenergyco`. Kept as a fallback mirror; the org github.io URL is primary. |
 | **Public site (github.io)** | `sovereign-communication.github.io/BigEnergyCo/` | Primary home. Deploys via the allowlist workflow (`.github/workflows/deploy.yml`). The old `treystu.github.io/BigEnergyCo/` URL 301-redirects here after the repo transfer; it remains on the API's CORS allowlist for cached clients. |
 | **AI API** | Cloudflare Worker (`bigenergyco-api.bigenergyco.workers.dev`) | Proxies Groq. CORS-locked to the Pages origins + localhost, rate-limited, payload-capped. Deploy with `deploy_worker.bat` (or `npx wrangler deploy` in `worker/`). |
 | **Local/dev** | `START.bat` / `STOP.bat` / `LINK.bat` | Optional local server + tunnel stack for development and the Freenet variant. Not needed for the public site. |
