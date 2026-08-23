@@ -18,6 +18,7 @@ const CHECK = process.argv.includes("--check");
 
 const ALLOWLIST = [
   "index.html",
+  "404.html",
   "robots.txt",
   "sitemap.xml",
   "blog/index.html",
@@ -43,7 +44,7 @@ for (const entry of ALLOWLIST) {
 }
 
 // Safety net: refuse to publish anything outside expectations
-const allowedTop = new Set(["index.html", "robots.txt", "sitemap.xml", "blog", "assets"]);
+const allowedTop = new Set(["index.html", "404.html", "robots.txt", "sitemap.xml", "blog", "assets"]);
 for (const name of readdirSync(STAGE)) {
   if (!allowedTop.has(name)) throw new Error(`Unexpected file in staging: ${name}`);
 }
