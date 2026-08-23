@@ -1,0 +1,34 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, "phase2/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Syntax-check worker and engine
+        run: |
+          node --check worker/index.js
+          node --check assets/js/sizing/engine.js
+          node --check assets/js/sizing/nasa.js
+          node --check assets/js/sizing/sizing-worker.js
+          node --check assets/js/sizing/ui.js
+
+      - name: Unit tests (offline)
+        run: node --test tests/
+
+      # Live-API validation is manual (network): node scripts/validate-live.mjs

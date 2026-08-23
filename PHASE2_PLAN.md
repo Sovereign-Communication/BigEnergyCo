@@ -4,6 +4,24 @@
 **Goal:** Turn BigEnergyCo from "cost widget + AI chat" into a tool that actually answers *"what
 system do I need, and can I live off-grid here?"* — computed by testable code, explained by the LLM.
 
+## Status (2026-08-22) — Phase 2A/2B core SHIPPED on branch `phase2/sizing-engine`
+
+| Item | State |
+|---|---|
+| `assets/js/sizing/engine.js` — derate chain, e1kw series, load models, hourly SOC simulator, tier search | ✅ done, 18 unit tests green |
+| `assets/js/sizing/nasa.js` — POWER client, ≤2-yr chunking, localStorage cache, city presets | ✅ done |
+| `assets/js/sizing/sizing-worker.js` + `ui.js` + `#sizing` section in index.html | ✅ done |
+| Live-data integration check (`scripts/validate-live.mjs`) | ✅ Pahoa 19.5,-155 @10 kWh/day: yield 1818 kWh/kW·yr; tiers = 7kW+13kWh / 3.5+8 / 3+6 |
+| Sheet replication gate (`scripts/validate-against-sheet.mjs`, ±5%) | ⏳ awaiting owner's sheet CSV export |
+| Appliance builder UI | ⏳ engine support exists (`applianceProfile`), form UI next |
+| SOC chart, shareable links, printable summary | ⏳ Phase 2B |
+| i18n, aging model, offline bundled profiles | ⏳ Phase 2C |
+
+**Verified API contract** (probed 2026-08-22, POWER Hourly API v2.9.9): `ALLSKY_SFC_SW_DWN` returns
+**W/m² per hour** (not kWh/m²), timestamps `YYYYMMDDHH` in **Local Solar Time**, fill value −999,
+GeoJSON envelope, ~0.31 MB/yr/site, full year fetch ≈1 s. One-year probe at 19.5,-155: 2,088 kWh/m²/yr
+GHI, zero gaps.
+
 ---
 
 ## 0. The product question, stated precisely
