@@ -6,7 +6,7 @@ import {
   cellTemp, tempFactor, arrayEfficiency, buildE1kw,
   flatProfile, shapedProfile, applianceProfile, expandProfile,
   simulate, sizeForTier, sizeAllTiers, RELIABILITY_TIERS,
-  downsampleEnvelope,
+  downsampleEnvelope, dailyMinimums,
 } from "../assets/js/sizing/engine.js";
 
 const EPS = 1e-6;
@@ -281,6 +281,25 @@ test("downsampleEnvelope preserves the exact min/max envelope", () => {
   const env2 = downsampleEnvelope(s, 100);
   const b = env2[Math.floor(1234 / 24)];
   assert.ok(b.lo <= -0.2 + EPS, "dips survive downsampling");
+});
+
+test("dailyMinimums: one honest number per day, dips land in the right day", () => {
+  // 3 days of hourly SOC. Day 1 flat 0.8, day 2 has a sharp dip to 0.1 at
+  // hour 30 (day index 1), day 3 recovers to 0.9.
+  const s = new Float64Array(72);
+  for (let i = 0; i < 24; i++) s[i] = 0.8;
+  for (let i = 24; i < 48; i++) s[i] = i === 30 ? 0.1 : 0.6;
+  for (let i = 48; i < 72; i++) s[i] = 0.9;
+  const d = dailyMinimums(s);
+  assert.equal(d.length, 3);
+  assert.ok(Math.abs(d[0] - 0.8) < EPS);
+  assert.ok(Math.abs(d[1] - 0.1) < EPS);
+  assert.ok(Math.abs(d[2] - 0.9) < EPS);
+
+  // partial trailing day still yields its own (lower-bound-safe) entry
+  const d2 = dailyMinimums(new Float64Array([0.5, 0.4]));
+  assert.equal(d2.length, 1);
+  assert.ok(Math.abs(d2[0] - 0.4) < EPS);
 });
 
 test("battery-life math: smaller banks cycle more but LFP still lasts years", () => {

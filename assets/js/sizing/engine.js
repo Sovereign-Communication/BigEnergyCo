@@ -224,6 +224,25 @@ export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp",
 }
 
 /**
+ * Lowest state of charge reached on each calendar day (data is Local Solar
+ * Time, so every 24 consecutive samples is exactly one day starting midnight).
+ * The daily minimum IS the reliability signal: it shows how deep each system
+ * digs into its reserve during bad weather, with no hourly noise.
+ * @returns {Float64Array} length ceil(n/24)
+ */
+export function dailyMinimums(series) {
+  const out = new Float64Array(Math.ceil(series.length / 24));
+  for (let d = 0; d < out.length; d++) {
+    const s = d * 24;
+    const e = Math.min(series.length, s + 24);
+    let lo = Infinity;
+    for (let i = s; i < e; i++) if (series[i] < lo) lo = series[i];
+    out[d] = lo;
+  }
+  return out;
+}
+
+/**
  * Reduce an hourly series to a min/max envelope of `buckets` buckets.
  * Plotting the envelope (rather than sampled points) preserves every dip
  * and spike — essential for honest reliability charts.

@@ -343,30 +343,34 @@ function fmtLife(years) {
 }
 
 const TIER_COLORS = { tier100: "#00e699", tier99: "#60a5fa", tier95: "#f59e0b" };
+const TIER_NAMES = {
+  tier100: "100% · never needs a generator",
+  tier99: "99% · generator as rare backup",
+  tier95: "95% · generator now and then",
+};
 
+/**
+ * Reliability chart, deliberately simple: one stacked panel per system, one
+ * line per panel — the LOWEST the battery got each day over five years.
+ * Flat and high = dependable. Dives to the red line = generator territory.
+ */
 function drawSocChart(history, chemLabel) {
   const wrap = $("socChartWrap");
   const canvas = $("socCanvas");
-  const legend = $("socLegend");
-  if (!wrap || !canvas || !legend) return;
+  if (!wrap || !canvas) return;
 
-  const solvable = history.tiers;
+  const solvable = history.tiers.filter((t) => t.dailyMin && t.dailyMin.length);
   if (!solvable.length) { wrap.style.display = "none"; return; }
   wrap.style.display = "block";
 
-  legend.innerHTML = "";
-  for (const t of solvable) {
-    const chip = el("span", { style: "display:inline-flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:var(--text-muted);margin-right:1rem;" });
-    const sw = el("span", { style: `display:inline-block;width:14px;height:4px;border-radius:2px;background:${TIER_COLORS[t.id] || "#888"};` });
-    const name = t.id === "tier100" ? "100% (no generator)" : t.id === "tier99" ? "99% (rare generator)" : "95% (generator OK)";
-    const full = Number.isFinite(t.fullPct) ? ` · full ${t.fullPct}% of hours` : "";
-    chip.append(sw, el("span", {}, name + full));
-    legend.appendChild(chip);
-  }
+  // hide the old legend row — labels live inside each band now
+  const legend = $("socLegend");
+  if (legend) legend.style.display = "none";
 
   const dpr = window.devicePixelRatio || 1;
   const W = Math.max(320, wrap.clientWidth || 640);
-  const H = 240;
+  const BAND_H = 118, GAP = 14;
+  const H = solvable.length * BAND_H + (solvable.length - 1) * GAP + 20;
   canvas.width = W * dpr;
   canvas.height = H * dpr;
   canvas.style.width = W + "px";
@@ -375,89 +379,83 @@ function drawSocChart(history, chemLabel) {
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, W, H);
 
-  const padL = 34, padR = 8, padT = 8, padB = 22;
-  const plotW = W - padL - padR, plotH = H - padT - padB;
-  const buckets = history.buckets;
-  const X = (i) => padL + (i / (buckets - 1)) * plotW;
-  const Y = (soc) => padT + (1 - soc) * plotH; // soc 0..1
+  const padL = 34, padR = 10, padT = 26, padB = 8;
+  const plotW = W - padL - padR;
 
-  // gridlines + y labels
-  ctx.font = "10px ui-monospace, monospace";
-  ctx.fillStyle = "#6b7280";
-  ctx.strokeStyle = "rgba(255,255,255,0.08)";
-  for (let v = 0; v <= 100; v += 25) {
-    const y = Y(v / 100);
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
-    ctx.textAlign = "right";
-    ctx.fillText(v + "%", padL - 5, y + 3);
-  }
-  // year ticks
-  const span = history.endYear - history.startYear + 1;
-  ctx.textAlign = "center";
-  for (let yy = 0; yy < span; yy++) {
-    const x = padL + ((yy + 0.5) / span) * plotW;
-    ctx.fillText(String(history.startYear + yy), x, H - 6);
-  }
-  // empty-battery line
-  ctx.strokeStyle = "rgba(239,68,68,0.55)";
-  ctx.setLineDash([4, 4]);
-  ctx.beginPath(); ctx.moveTo(padL, Y(0)); ctx.lineTo(W - padR, Y(0)); ctx.stroke();
-  ctx.setLineDash([]);
-
-  // draw order: tier100 last so its ceiling line stays visible on top
-  const order = { tier95: 0, tier99: 1, tier100: 2 };
-  for (const t of [...solvable].sort((a, b) => (order[a.id] ?? 9) - (order[b.id] ?? 9))) {
+  function drawBand(t, top) {
     const color = TIER_COLORS[t.id] || "#888";
-    const env = t.env;
-    if (!env || !env.length) continue;
+    const plotH = BAND_H - padT - padB;
+    const X = (i) => padL + (i / (t.dailyMin.length - 1)) * plotW;
+    const Y = (socPct) => top + padT + (1 - socPct / 100) * plotH;
 
-    // Envelope fill: shows TIME SPENT at each charge level. Peaks that only
-    // last an hour or two paint a thin sliver, so the hi/lo boundaries are
-    // also stroked explicitly — every tier's max is visibly 100%.
+    // frame
+    ctx.strokeStyle = "rgba(255,255,255,0.10)";
+    ctx.strokeRect(padL, top + padT, plotW, plotH);
+
+    // gridlines at 50% and 100%, red dashed at empty
+    ctx.font = "10px ui-monospace, monospace";
+    for (const v of [50, 100]) {
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.beginPath(); ctx.moveTo(padL, Y(v)); ctx.lineTo(W - padR, Y(v)); ctx.stroke();
+      ctx.fillStyle = "#6b7280"; ctx.textAlign = "right";
+      ctx.fillText(v + "%", padL - 5, Y(v) + 3);
+    }
+    ctx.strokeStyle = "rgba(239,68,68,0.7)";
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(padL, Y(0)); ctx.lineTo(W - padR, Y(0)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(239,68,68,0.85)"; ctx.textAlign = "left";
+    ctx.fillText("empty", W - padR - 38, Y(0) - 4);
+
+    // area under daily-minimum line
     ctx.beginPath();
-    ctx.moveTo(X(0), Y(env[0][1] / 100));
-    for (let i = 1; i < env.length; i++) ctx.lineTo(X(i), Y(env[i][1] / 100));
-    for (let i = env.length - 1; i >= 0; i--) ctx.lineTo(X(i), Y(env[i][0] / 100));
+    ctx.moveTo(X(0), Y(t.dailyMin[0]));
+    for (let i = 1; i < t.dailyMin.length; i++) ctx.lineTo(X(i), Y(t.dailyMin[i]));
+    ctx.lineTo(X(t.dailyMin.length - 1), Y(0));
+    ctx.lineTo(X(0), Y(0));
     ctx.closePath();
-    ctx.globalAlpha = 0.18;
+    ctx.globalAlpha = 0.15;
     ctx.fillStyle = color;
     ctx.fill();
-
-    ctx.globalAlpha = 0.55;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let i = 0; i < env.length; i++) {
-      const y = Y(env[i][1] / 100);
-      if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y);
-    }
-    ctx.stroke();
-    ctx.beginPath();
-    for (let i = 0; i < env.length; i++) {
-      const y = Y(env[i][0] / 100);
-      if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y);
-    }
-    ctx.stroke();
-
-    // Mid line on top, slightly thicker
-    ctx.globalAlpha = 0.95;
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    for (let i = 0; i < env.length; i++) {
-      const y = Y(((env[i][0] + env[i][1]) / 2) / 100);
-      if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y);
-    }
-    ctx.stroke();
     ctx.globalAlpha = 1;
+
+    // the line
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(t.dailyMin[0]));
+    for (let i = 1; i < t.dailyMin.length; i++) ctx.lineTo(X(i), Y(t.dailyMin[i]));
+    ctx.stroke();
+
+    // label: tier name + one-sentence verdict
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#f3f4f6";
+    ctx.font = "bold 12px system-ui, sans-serif";
+    ctx.fillText(TIER_NAMES[t.id] || t.id, padL + 2, top + 13);
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.fillStyle = t.emptyDays > 0 ? "rgba(245,158,11,0.95)" : color;
+    ctx.fillText(
+      t.emptyDays > 0
+        ? `lowest point: ${Math.max(0, Math.round(t.minPct))}% · hit empty on ${t.emptyDays} day${t.emptyDays === 1 ? "" : "s"} in five years`
+        : `never dropped below ${Math.max(0, Math.round(t.minPct))}% all five years`,
+      padL + 2, top + padT + 14
+    );
+  }
+
+  solvable.forEach((t, idx) => drawBand(t, idx * (BAND_H + GAP)));
+
+  // shared x labels: years
+  const span = history.endYear - history.startYear + 1;
+  ctx.fillStyle = "#6b7280"; ctx.font = "10px ui-monospace, monospace"; ctx.textAlign = "center";
+  const daysTotal = history.days || solvable[0].dailyMin.length;
+  for (let yy = 0; yy <= span; yy++) {
+    const x = padL + (yy * 365.25 / daysTotal) * plotW;
+    ctx.fillText(String(history.startYear + yy), Math.min(W - padR, Math.max(padL, x)), H - 2);
   }
 
   $("socCaption").textContent =
-    `Hourly battery state of charge, ${history.startYear}–${history.endYear}, for the three systems above ` +
-    `(${chemLabel}). Every system reaches 100% when the sun delivers — smaller banks simply fill and empty ` +
-    `faster, so their bands sit lower on average even though their peaks touch the top; the legend shows how ` +
-    `much of the year each spends essentially full. Where a line touches the red dashed line, that system would ` +
-    `be dark without a generator. The 100% system never gets there in five years of real weather — that is what ` +
-    `the extra hardware buys.`;
+    `Each line is the lowest the battery got on that day, ${history.startYear}–${history.endYear}, in real satellite weather (${chemLabel}). ` +
+    `High and calm means dependable; dives toward the red line are days a generator would have covered.`;
 }
 
 function renderResults(p) {

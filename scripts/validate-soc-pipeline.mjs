@@ -1,5 +1,6 @@
-// End-to-end validation of the SOC-history pipeline (mirrors sizing-worker.js).
-import { buildE1kw, flatProfile, expandProfile, sizeAllTiers, simulate, downsampleEnvelope } from "../assets/js/sizing/engine.js";
+// End-to-end validation of the daily-minimum reliability pipeline
+// (mirrors sizing-worker.js). Run: node scripts/validate-soc-pipeline.mjs
+import { buildE1kw, flatProfile, expandProfile, sizeAllTiers, simulate, dailyMinimums } from "../assets/js/sizing/engine.js";
 import { fetchHourlySeries } from "../assets/js/sizing/nasa.js";
 
 const { hours, meta } = await fetchHourlySeries({ latitude: 21.31, longitude: -157.86, years: 1 });
@@ -12,15 +13,13 @@ let fail = 0;
 for (const { tier, sizing } of results) {
   if (!sizing) { console.log(`${tier.id}: unsolvable`); continue; }
   const traced = simulate({ pvKw: sizing.pvKw, battKwhUsable: sizing.battKwh, e1kw, loadWh, chemistry: "lfp", tempsC, capture: true });
-  const env = downsampleEnvelope(traced.socSeries, 1500);
-  const loMin = Math.min(...env.map((p) => p.lo)) * 100;
-  const hiMax = Math.max(...env.map((p) => p.hi)) * 100;
-  const okLen = env.length === 1500 && traced.socSeries.length === hours.length;
-  const okBounds = env.every((p) => p.lo <= p.hi + 1e-9 && p.lo >= -0.001 && p.hi <= 1.001);
-  // envelope must agree with the simulator's own minSoc
-  const okMin = Math.abs(loMin - traced.minSoc * 100) < 0.35;
-  console.log(`${okLen && okBounds && okMin ? "OK " : "FAIL"} ${tier.id}: ${sizing.pvKw}kW/${sizing.battKwh}kWh | soc ${loMin.toFixed(1)}–${hiMax.toFixed(1)}% | minSoc match:${okMin}`);
-  if (!(okLen && okBounds && okMin)) fail++;
+  const mins = dailyMinimums(traced.socSeries);
+  let minPct = 100, emptyDays = 0;
+  for (const v of mins) { const p = v * 100; if (p < minPct) minPct = p; if (p < 5) emptyDays++; }
+  const okLen = mins.length === Math.ceil(hours.length / 24);
+  const okMin = Math.abs(minPct / 100 - traced.minSoc) < 0.01;
+  console.log(`${okLen && okMin ? "OK " : "FAIL"} ${tier.id}: ${sizing.pvKw}kW/${sizing.battKwh}kWh | lowest day ${Math.max(0, Math.round(minPct))}% | empty-ish days: ${emptyDays}`);
+  if (!(okLen && okMin)) fail++;
 }
 console.log(fail === 0 ? "PIPELINE OK" : `${fail} FAILURES`);
 process.exit(fail ? 1 : 0);

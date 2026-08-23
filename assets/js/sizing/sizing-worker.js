@@ -3,12 +3,10 @@
 // Message out: { type: "ok", payload } | { type: "error", message }
 import {
   buildE1kw, flatProfile, expandProfile, sizeAllTiers, simulate,
-  downsampleEnvelope, RELIABILITY_TIERS, CHEMISTRIES,
+  dailyMinimums, CHEMISTRIES,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER,
 } from "./engine.js";
 import { fetchHourlyCached } from "./nasa.js";
-
-const HISTORY_BUCKETS = 1500;
 
 self.onmessage = async (ev) => {
   const msg = ev.data;
@@ -36,31 +34,28 @@ self.onmessage = async (ev) => {
     const historyTiers = [];
     const tiers = results.map(({ tier, sizing }) => {
       let batteryLifeYears = null;
-      let socEnv = null;
 
       if (sizing) {
         const cyclesPerYear = sizing.result.cyclesEquivalent / series.meta.years;
         batteryLifeYears = cyclesPerYear > 0 ? chem.cyclesTo80 / cyclesPerYear : null;
 
-        // Re-run the chosen configuration once more to capture the full
-        // hourly SOC trajectory for the reliability chart.
+        // One clean number per day: the lowest the battery got that day.
         const traced = simulate({
           pvKw: sizing.pvKw, battKwhUsable: sizing.battKwh,
           e1kw, loadWh, chemistry, tempsC, capture: true,
         });
-        socEnv = downsampleEnvelope(traced.socSeries, HISTORY_BUCKETS)
-          .map((p) => [
-            Math.round(p.lo * 1000) / 10, // % SOC, one decimal
-            Math.round(p.hi * 1000) / 10,
-          ]);
-        // Share of hours spent essentially full — the real difference between
-        // tiers is DURATION at 100%, never peak height (every tier tops out).
-        let fullHrs = 0;
-        for (const v of traced.socSeries) if (v >= 0.95) fullHrs++;
+        const mins = dailyMinimums(traced.socSeries);
+        let minPct = 100, emptyDays = 0;
+        for (const v of mins) {
+          const p = v * 100;
+          if (p < minPct) minPct = p;
+          if (p < 5) emptyDays++;
+        }
         historyTiers.push({
           id: tier.id,
-          env: socEnv,
-          fullPct: Math.round((fullHrs / traced.socSeries.length) * 100),
+          dailyMin: Array.from(mins, (v) => Math.round(v * 1000) / 10),
+          minPct: Math.max(0, Math.round(minPct)),
+          emptyDays,
         });
       }
 
@@ -88,9 +83,9 @@ self.onmessage = async (ev) => {
         chemLabel: chem.label,
         tiers,
         history: {
-          buckets: HISTORY_BUCKETS,
           startYear: series.meta.startYear,
           endYear: series.meta.endYear,
+          days: Math.ceil(hours.length / 24),
           tiers: historyTiers,
         },
         assumptions: {
