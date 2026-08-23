@@ -118,6 +118,8 @@ export const CITY_PRESETS = [
   { name: "Santo Domingo, Dominican Rep.", r: "Caribbean & Central America", lat: 18.49, lon: -69.93 },
   { name: "Guatemala City, Guatemala", r: "Caribbean & Central America", lat: 14.63, lon: -90.51 },
   { name: "Panama City, Panama", r: "Caribbean & Central America", lat: 8.98, lon: -79.52 },
+  { name: "Havana, Cuba", r: "Caribbean & Central America", lat: 23.11, lon: -82.37 },
+  { name: "Port-au-Prince, Haiti", r: "Caribbean & Central America", lat: 18.59, lon: -72.31 },
   // South America
   { name: "Bogotá, Colombia", r: "South America", lat: 4.71, lon: -74.07 },
   { name: "Lima, Peru", r: "South America", lat: -12.05, lon: -77.04 },
@@ -125,6 +127,8 @@ export const CITY_PRESETS = [
   { name: "Santiago, Chile", r: "South America", lat: -33.45, lon: -70.67 },
   { name: "São Paulo, Brazil", r: "South America", lat: -23.55, lon: -46.63 },
   { name: "Buenos Aires, Argentina", r: "South America", lat: -34.60, lon: -58.38 },
+  { name: "Quito, Ecuador", r: "South America", lat: -0.18, lon: -78.47 },
+  { name: "La Paz, Bolivia", r: "South America", lat: -16.49, lon: -68.12 },
   // Europe
   { name: "London, UK", r: "Europe", lat: 51.51, lon: -0.13 },
   { name: "Paris, France", r: "Europe", lat: 48.86, lon: 2.35 },
@@ -141,6 +145,12 @@ export const CITY_PRESETS = [
   { name: "Lagos, Nigeria", r: "Africa", lat: 6.52, lon: 3.38 },
   { name: "Nairobi, Kenya", r: "Africa", lat: -1.29, lon: 36.82 },
   { name: "Johannesburg, South Africa", r: "Africa", lat: -26.20, lon: 28.05 },
+  { name: "Dakar, Senegal", r: "Africa", lat: 14.72, lon: -17.47 },
+  { name: "Bamako, Mali", r: "Africa", lat: 12.65, lon: -8.00 },
+  { name: "Ouagadougou, Burkina Faso", r: "Africa", lat: 12.37, lon: -1.52 },
+  { name: "Addis Ababa, Ethiopia", r: "Africa", lat: 9.02, lon: 38.75 },
+  { name: "Kinshasa, DR Congo", r: "Africa", lat: -4.44, lon: 15.27 },
+  { name: "Antananarivo, Madagascar", r: "Africa", lat: -18.88, lon: 47.51 },
   // Middle East & Central Asia
   { name: "Istanbul, Türkiye", r: "Middle East & Central Asia", lat: 41.01, lon: 28.98 },
   { name: "Dubai, UAE", r: "Middle East & Central Asia", lat: 25.20, lon: 55.27 },
@@ -151,10 +161,12 @@ export const CITY_PRESETS = [
   { name: "Mumbai, India", r: "South Asia", lat: 19.08, lon: 72.88 },
   { name: "Colombo, Sri Lanka", r: "South Asia", lat: 6.93, lon: 79.85 },
   { name: "Dhaka, Bangladesh", r: "South Asia", lat: 23.81, lon: 90.41 },
+  { name: "Kathmandu, Nepal", r: "South Asia", lat: 27.72, lon: 85.32 },
   // East & Southeast Asia
   { name: "Bangkok, Thailand", r: "East & Southeast Asia", lat: 13.76, lon: 100.50 },
   { name: "Ho Chi Minh City, Vietnam", r: "East & Southeast Asia", lat: 10.82, lon: 106.63 },
   { name: "Jakarta, Indonesia", r: "East & Southeast Asia", lat: -6.21, lon: 106.85 },
+  { name: "Phnom Penh, Cambodia", r: "East & Southeast Asia", lat: 11.56, lon: 104.92 },
   { name: "Manila, Philippines", r: "East & Southeast Asia", lat: 14.60, lon: 120.98 },
   { name: "Hong Kong", r: "East & Southeast Asia", lat: 22.32, lon: 114.17 },
   { name: "Taipei, Taiwan", r: "East & Southeast Asia", lat: 25.03, lon: 121.57 },

@@ -19,6 +19,9 @@
   <meta name="twitter:description" content="A free AI-assisted solar and battery storage estimator for anywhere in the world. No signup, nothing for sale. Educational estimates only — verify with a licensed professional.">
   <meta name="twitter:image" content="https://sovereign-communication.github.io/BigEnergyCo/assets/og-card.png">
   <link rel="canonical" href="https://sovereign-communication.github.io/BigEnergyCo/">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
+  <meta name="theme-color" content="#090d16">
   <style>
 /* BigEnergyCo Design System - Premium Dark Glassmorphic Energy Aesthetic */
 :root {
@@ -1587,6 +1590,15 @@ footer {
       document.addEventListener('DOMContentLoaded', setupEventListeners);
     } else {
       setupEventListeners();
+    }
+
+    // Installable / offline-capable: after the first visit, the tool shell
+    // loads with no network. Sizing math is client-side and satellite weather
+    // is cached per location, so a visited site keeps working fully offline.
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./sw.js').catch(function () { /* offline support unavailable — tool still works normally */ });
+      });
     }
   </script>
 </body>

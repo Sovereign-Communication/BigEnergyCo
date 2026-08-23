@@ -31,7 +31,7 @@ jobs:
       - name: Select deployable files
         run: |
           mkdir -p _pages/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage
-          cp index.html 404.html robots.txt sitemap.xml _pages/
+          cp index.html 404.html robots.txt sitemap.xml sw.js manifest.webmanifest _pages/
           cp blog/index.html _pages/blog/
           cp "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html" "_pages/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/"
           cp -r assets _pages/assets

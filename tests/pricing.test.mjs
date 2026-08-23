@@ -53,8 +53,8 @@ test("fullRange: one honest spread, ex-factory low to budget-retail high", () =>
 test("estimateTariff: region boxes resolve from coordinates", () => {
   assert.equal(estimateTariff(19.5, -155.0).rate, 0.42); // Hawaii beats US box
   assert.equal(estimateTariff(33.45, -112.07).label, "US mainland");
-  assert.equal(estimateTariff(51.51, -0.13).label, "UK / Ireland");
+  assert.equal(estimateTariff(51.51, -0.13).label, "United Kingdom / Ireland"); // country box beats regional
   assert.equal(estimateTariff(28.61, 77.21).rate, 0.08); // Delhi
-  assert.equal(estimateTariff(52.52, 13.41).rate, 0.29); // Berlin
+  assert.equal(estimateTariff(52.52, 13.41).rate, 0.40); // Berlin: Germany country box beats Europe fallback
   assert.equal(estimateTariff(-10, -140).rate, 0.28); // mid-Pacific -> global fallback
 });

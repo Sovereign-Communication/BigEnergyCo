@@ -125,17 +125,49 @@ export function battOnlyCost(battKwhUsable, chemistry = "lfp") {
 }
 
 // ── Regional electricity price estimation ───────────────────────────────────
-// Coarse residential rates (USD/kWh, 2026) from coordinates. Deliberately
-// rough: enough to turn a monthly bill into kWh/day without asking people
-// to know their tariff. Boxes are checked most-specific first.
+// Coarse residential rates (USD/kWh) from coordinates. Deliberately rough:
+// enough to turn a monthly bill into kWh/day without asking people to know
+// their tariff. Country boxes are checked first; regional boxes are the
+// fallback. Indicative 2026 residential averages aggregated from public
+// tariff trackers — users can always type their exact rate.
 const TARIFF_BOXES = [
+  // Country-level refinement (most-specific first)
+  { box: [47.0, 55.5, 5.0, 15.5], rate: 0.40, label: "Germany" },
+  { box: [49.5, 61.0, -8.5, 2.0], rate: 0.34, label: "United Kingdom / Ireland" },
+  { box: [36.0, 47.5, 6.0, 19.0], rate: 0.42, label: "Italy" },
+  { box: [35.5, 44.0, -10.0, 4.5], rate: 0.26, label: "Spain / Portugal" },
+  { box: [41.0, 51.5, -5.5, 10.0], rate: 0.25, label: "France / Belgium / Netherlands" },
+  { box: [48.5, 55.0, 13.5, 24.5], rate: 0.20, label: "Poland / Czechia / Slovakia" },
+  { box: [55.0, 60.0, 20.0, 28.5], rate: 0.21, label: "Finland / Baltics" },
+  { box: [-56.0, -17.0, -74.0, -34.0], rate: 0.17, label: "Brazil" },
+  { box: [-30.0, -17.0, -73.0, -53.0], rate: 0.16, label: "Chile / Uruguay" },
+  { box: [0.0, 12.5, -79.0, -71.0], rate: 0.20, label: "Colombia / Venezuela" },
+  { box: [-20.5, -0.5, -81.5, -75.0], rate: 0.14, label: "Peru / Ecuador" },
+  { box: [14.5, 33.0, -118.0, -86.0], rate: 0.16, label: "Mexico" },
+  { box: [4.0, 21.5, 116.0, 127.0], rate: 0.19, label: "Philippines" },
+  { box: [-11.5, 6.5, 94.5, 141.5], rate: 0.11, label: "Indonesia / Malaysia / Singapore" },
+  { box: [5.5, 20.5, 97.0, 106.0], rate: 0.13, label: "Thailand / Myanmar / Cambodia / Laos" },
+  { box: [8.0, 24.0, 102.0, 110.0], rate: 0.08, label: "Vietnam" },
+  { box: [6.0, 36.0, 68.0, 98.0], rate: 0.08, label: "India / Pakistan / Bangladesh / Nepal" },
+  { box: [30.5, 46.5, 128.5, 146.5], rate: 0.20, label: "Japan / South Korea" },
+  { box: [-50.0, -9.5, 111.0, 180.0], rate: 0.29, label: "Australia / New Zealand" },
+  { box: [20.0, 32.5, 34.0, 60.0], rate: 0.09, label: "Saudi Arabia / UAE / Qatar / Oman / Kuwait" },
+  { box: [35.5, 42.5, 25.5, 45.0], rate: 0.11, label: "Turkey" },
+  { box: [29.5, 32.0, 34.0, 36.0], rate: 0.16, label: "Israel / Jordan" },
+  { box: [20.5, 32.5, -18.0, -1.0], rate: 0.14, label: "Morocco / Algeria / Tunisia" },
+  { box: [21.5, 32.0, 24.0, 37.0], rate: 0.05, label: "Egypt / Libya / Sudan" },
+  { box: [4.5, 12.5, -4.5, 2.5], rate: 0.14, label: "Ghana / Côte d'Ivoire / Togo" },
+  { box: [3.0, 14.5, 2.5, 15.5], rate: 0.07, label: "Nigeria / Niger / Benin / Cameroon" },
+  { box: [-5.5, 5.5, 33.0, 42.0], rate: 0.19, label: "Kenya / Uganda / Tanzania / Rwanda" },
+  { box: [-35.5, -17.5, 15.5, 33.5], rate: 0.18, label: "South Africa / Namibia / Botswana" },
+  { box: [3.5, 12.0, 8.0, 24.0], rate: 0.12, label: "Chad / CAR / South Sudan / Ethiopia" },
+  // Regional fallbacks
   { box: [18.5, 28.5, -179, -154], rate: 0.42, label: "Hawaii / Pacific islands" },
   { box: [59, 72, 24, 46], rate: 0.18, label: "Nordics / Baltic" },
   { box: [49.5, 61, -9, 3], rate: 0.34, label: "UK / Ireland" },
   { box: [35.5, 72, -11, 41], rate: 0.29, label: "Europe" },
   { box: [24, 50, -125, -66], rate: 0.17, label: "US mainland" },
   { box: [42, 71, -141, -52], rate: 0.13, label: "Canada" },
-  { box: [14, 33, -118, -84], rate: 0.15, label: "Mexico" },
   { box: [7, 25, -93, -58], rate: 0.33, label: "Caribbean & Central America" },
   { box: [-56, 13, -82, -34], rate: 0.16, label: "South America" },
   { box: [22, 47, 123, 147], rate: 0.21, label: "Japan / Korea" },
