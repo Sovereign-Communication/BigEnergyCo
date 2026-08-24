@@ -62,5 +62,37 @@ check("AGM tier100 first-cost payback present", Number.isFinite(t100.paybackYear
 check("AGM tier100 true break-even later-or-never",
   t100.trueBreakEvenYear === null ? true : t100.trueBreakEvenYear >= Math.round(t100.paybackYearsLo));
 
+// ── Pass 2: full functional matrix ─────────────────────────────────────────
+check("contract version pinned (3) on every payload shape", [auto99, auto100, gtAuto60, spec].every((p) => p.contract === 3));
+
+// specific grid-tie with feed-in: export value + break-even coexist
+const gtSpec = await runSizing({ ...MSG, chemistry: "lfp", mode: "gridtie", exportRate: 0.10 }, { fetchWeather: fakeWeather });
+check("gridtie specific: every solvable target carries break-even",
+  gtSpec.targets.filter((t) => t.solvable).every((t) => typeof t.trueBreakEvenYear === "number" || t.trueBreakEvenYear === null));
+check("gridtie specific: export credited on clipped sun",
+  gtSpec.targets.some((t) => t.solvable && t.exportValueAnnualUsd > 0));
+
+// offline fallback through the PRODUCTION default path: kill global fetch,
+// run with no injected deps, confirm bundled-profile rescue + flags.
+const realFetch = globalThis.fetch;
+globalThis.fetch = async () => { throw new Error("network down"); };
+let offline;
+try {
+  offline = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid" });
+} finally {
+  globalThis.fetch = realFetch;
+}
+check("offline fallback engages + flags itself", offline.meta.offline === true && !!offline.meta.offlineCity);
+check("offline payload still meets contract", offline.contract === 3 && offline.auto.length >= 2);
+check("offline results carry honest labeling", offline.assumptions.offline === true);
+
+// sodium-specific off-grid: LFP-settings reality visible in numbers
+const naionSpec = await runSizing({ ...MSG, chemistry: "naion", mode: "offgrid" }, { fetchWeather: fakeWeather });
+const naion99 = naionSpec.tiers.find((t) => t.id === "tier99");
+const lfpSpec = await runSizing({ ...MSG, chemistry: "lfp", mode: "offgrid" }, { fetchWeather: fakeWeather });
+const lfp99b = lfpSpec.tiers.find((t) => t.id === "tier99");
+check("sodium needs ≥ nameplate of LFP for same job (0.85 capacity scale)",
+  naion99.battNameplateKwh >= lfp99b.battNameplateKwh - 0.05);
+
 console.log(fails ? `\n${fails} FAILURE(S)` : "\nALL DEEP LIVE CHECKS PASSED");
 process.exit(fails ? 1 : 0);

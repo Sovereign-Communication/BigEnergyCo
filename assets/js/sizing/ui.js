@@ -1055,7 +1055,7 @@ function populatePrintSheet(p, inp) {
   let rows, head, title;
   if (p.auto && p.auto.length) {
     title = `Battery Lifetime Comparison (${isGT ? "Grid-Connected" : "Off-Grid"})`;
-    head = "<tr><th>Battery</th><th>Solar</th><th>Bank usable (nameplate)</th><th>First cost</th><th>Swaps in 25 yr</th><th>Swaps + labor</th><th>True 25-yr cost</th></tr>";
+    head = "<tr><th>Battery</th><th>Solar</th><th>Bank usable (nameplate)</th><th>First cost</th><th>Swaps in 25 yr</th><th>Swaps + labor</th><th>True 25-yr cost</th><th>True break-even</th></tr>";
     rows = p.auto.filter((t) => t.solvable).map((t) =>
       "<tr><td>" + [
         t.chemLabel + ` (${(t.usableDod * 100).toFixed(0)}% DoD)`,
@@ -1065,6 +1065,9 @@ function populatePrintSheet(p, inp) {
         t.replacements25y > 0 ? `~${t.replacements25y}×` : "none",
         t.swapsAndLaborUsd > 0 ? `≈${money(t.swapsAndLaborUsd)}` : "—",
         `≈${money(t.lifetimeCostMid)}`,
+        typeof t.trueBreakEvenYear === "number" ? `≈ year ${t.trueBreakEvenYear}`
+          : t.trueBreakEvenYear === null ? "never"
+          : "n/a",
       ].join("</td><td>") + "</td></tr>"
     ).join("");
   } else if (isGT) {
