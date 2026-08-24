@@ -5,10 +5,10 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260824a";
-import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260824a";
-import { BOM_ITEMS } from "../shared/content.js?v=20260824a";
-import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260824a";
+import { CITY_PRESETS, } from "./nasa.js?v=20260824b";
+import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260824b";
+import { BOM_ITEMS } from "../shared/content.js?v=20260824b";
+import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260824b";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -95,6 +95,16 @@ function fmtH(h) {
 function fmtKwh(x) { return (Math.round(x * 100) / 100).toString(); }
 
 // ── Load-mode plumbing ──────────────────────────────────────────────────────
+
+// Auto-mode basis submenus: which reliability tier / bill-cut target the
+// three chemistry cards represent. Visible only when chemistry = Auto.
+function updateAutoRows() {
+  const isAuto = $("chemSelect").value === "auto";
+  const gt = $("systemGoal") ? $("systemGoal").value === "gridtie" : false;
+  const tierRow = $("autoTierRow"), targetRow = $("autoTargetRow");
+  if (tierRow) tierRow.style.display = isAuto && !gt ? "block" : "none";
+  if (targetRow) targetRow.style.display = isAuto && gt ? "block" : "none";
+}
 
 function setLoadPanel() {
   const mode = $("loadMode").value;
@@ -337,6 +347,8 @@ function readInputs() {
       const v = parseFloat($("exportRate")?.value);
       return Number.isFinite(v) && v > 0 ? v : null;
     })(),
+    autoTier: $("autoTier")?.value || "tier99",
+    autoTargetId: $("autoTarget")?.value || "cut80",
     mode: $("systemGoal") ? $("systemGoal").value : "offgrid",
     basis,
   };
@@ -372,7 +384,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260824a", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260824b", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
@@ -619,9 +631,18 @@ function renderAutoCards(p) {
       rows.push(["Sun clipped (no export)", `${fmt(a.clippedKwhPerYear)} kWh/yr`]);
       if (a.exportValueAnnualUsd > 0) {
         rows.push(["Feed-in credit on clipped sun", `+${money(a.exportValueAnnualUsd)}/yr`]);
-        rows.push(["Pays for itself in", fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi) + " incl. feed-in"]);
-      } else if (a.paybackYearsLo !== null) {
-        rows.push(["Pays for itself in", fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi)]);
+      }
+    }
+    // Headline economics: TRUE break-even counts every swap. When a bank
+    // wears out fast enough that it never catches up, say so outright.
+    if (p.tariff) {
+      if (a.trueBreakEvenYear) {
+        rows.push(["Breaks even on true cost in", `≈ year ${a.trueBreakEvenYear} of ownership`]);
+        if (a.replacements25y > 0 && a.paybackYearsLo !== null) {
+          rows.push(["  · first cost alone pays back in", fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi)]);
+        }
+      } else {
+        rows.push(["True 25-yr break-even", "never — replacements outpace savings"]);
       }
     } else if (a.paybackYearsLo !== null) {
       rows.push(["Pays for itself in", fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi)]);
@@ -684,7 +705,12 @@ function renderTierCards(p) {
       [`Cycles on the bank`, `~${fmt(t.cyclesPerYear)}/yr`],
     ];
     if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
-      rows.push(["Pays for itself in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi)]);
+      rows.push(["Pays back its first cost in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi)]);
+    }
+    if (t.replacements25y > 0 || t.trueBreakEvenYear !== null) {
+      rows.push(["Breaks even on true 25-yr cost", t.trueBreakEvenYear
+        ? `\u2248 year ${t.trueBreakEvenYear} (every swap counted)`
+        : "never \u2014 swaps outpace savings"]);
     }
     if (Number.isFinite(t.lcoeUsdPerKwh)) {
       rows.push(["Your solar power costs", `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` +
@@ -730,7 +756,12 @@ function renderTargetCards(p) {
       rows.push(["Sun clipped (no export)", `${fmt(t.clippedKwhPerYear)} kWh/yr — enter a feed-in credit to value it`]);
     }
     if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
-      rows.push(["Pays for itself in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) + (exportActive ? " incl. feed-in" : "")]);
+      rows.push(["Pays back its first cost in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) + (exportActive ? " incl. feed-in" : "")]);
+    }
+    if (t.battKwh > 0 && (t.replacements25y > 0 || t.trueBreakEvenYear !== null)) {
+      rows.push(["Breaks even on true 25-yr cost", t.trueBreakEvenYear
+        ? `\u2248 year ${t.trueBreakEvenYear} (every swap counted)`
+        : "never \u2014 swaps outpace savings"]);
     }
     if (Number.isFinite(t.lcoeUsdPerKwh)) {
       rows.push(["Your solar power costs", `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` +
@@ -751,10 +782,12 @@ function renderTargetCards(p) {
 
 function appendRows(card, rows) {
   for (const [k, v] of rows) {
+    const danger = typeof v === "string" && v.startsWith("never");
+    const accent = /^(Cost|Pays|Your solar|Bill|Breaks even|True )/.test(k) && !danger;
     const line = el("div", { style: "display:flex;justify-content:space-between;font-size:0.9rem;padding:0.2rem 0;border-bottom:1px solid var(--border-card);" });
     line.appendChild(el("span", { style: "color:var(--text-muted);" }, k));
     line.appendChild(el("span", {
-      style: "font-family:var(--font-mono);font-weight:700;color:" + ((k.startsWith("Cost") || k.startsWith("Pays") || k.startsWith("Your solar") || k.startsWith("Bill")) ? "var(--primary-accent)" : "var(--text-main)"),
+      style: "font-family:var(--font-mono);font-weight:700;color:" + (danger ? "var(--danger-red)" : accent ? "var(--primary-accent)" : "var(--text-main)"),
     }, v));
     card.appendChild(line);
   }
@@ -908,7 +941,8 @@ function renderResults(p) {
   }
   window.lastSizingBrief =
     `I sized a system with your calculator for ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)}, ` +
-    `${inp.dailyKwh.toFixed(1)} kWh/day from ${inp.basis}, ${p.chemistry === "auto" ? "AUTO chemistry comparison (all three types)" : p.chemistry.toUpperCase()}, ` +
+    `${inp.dailyKwh.toFixed(1)} kWh/day from ${inp.basis}, ${p.chemistry === "auto" ? "AUTO chemistry comparison" : p.chemistry.toUpperCase()}` +
+    `${p.auto && p.auto.length ? ` (${p.autoNote})` : ""}, ` +
     `${isGT ? "staying connected to the grid (no export" + (inp.exportRate ? ", feed-in credit entered)" : ")") : "fully off-grid"}:\n${briefLines.join("\n")}\n` +
     `[ADVISOR INSTRUCTION: These numbers were computed deterministically from NASA POWER hourly weather ` +
     `${p.meta.dataYears}. Do not recompute or invent different figures — explain, sanity-check and add caveats ` +
@@ -958,6 +992,8 @@ function updateShareHash(p, inp) {
     };
     if (inp.mode === "gridtie") o.g = 1;
     if (inp.chemistry === "auto") o.a = 1;
+    if (inp.chemistry === "auto" && inp.mode !== "gridtie" && $("autoTier")) o.at = $("autoTier").value;
+    if (inp.chemistry === "auto" && inp.mode === "gridtie" && $("autoTarget")) o.ac = $("autoTarget").value;
     if (inp.tariff) o.tf = inp.tariff;
     if (inp.exportRate) o.xr = inp.exportRate;
     const sized = p.auto && p.auto.length
@@ -986,6 +1022,8 @@ function restoreFromShare() {
   $("dailyKwhInput").value = String(kw);
   if (o.a === 1) $("chemSelect").value = "auto";
   else if (o.ch && CHEM_KEYS.has(o.ch)) $("chemSelect").value = o.ch;
+  if (o.at && ["tier100", "tier99", "tier95"].includes(o.at) && $("autoTier")) $("autoTier").value = o.at;
+  if (o.ac && ["cut60", "cut80", "cut95"].includes(o.ac) && $("autoTarget")) $("autoTarget").value = o.ac;
   if (Number.isFinite(o.xr) && o.xr > 0 && $("exportRate")) $("exportRate").value = String(o.xr);
   if (Number.isFinite(o.tf) && o.tf > 0) {
     tariffTouched = true;
@@ -1069,7 +1107,7 @@ function populatePrintSheet(p, inp) {
       MPPT ${(p.assumptions.derates.mppt * 100).toFixed(0)}%; cell-temp model NOCT ${p.assumptions.noctC}°C,
       ${(p.assumptions.gammaPerC * 100).toFixed(2)}%/°C; inverter ${(p.assumptions.etaInverter * 100).toFixed(0)}%.
       Costs are components only (ex-factory China through shipped budget retail) and exclude freight, duty, labor,
-      permits, and mounting.</p>
+      permits, and mounting.${p.auto && p.auto.length ? ` ${p.autoNote}.` : ""}</p>
     <p style="font-size:8.5pt;color:#333;border-top:1px solid #999;padding-top:5pt;margin-top:8pt;">
       Educational estimate only — not engineering, not a quote, no warranty. Battery banks, high DC current and
       mains wiring can cause fire, injury, and death. Verify every figure with a licensed electrician or engineer
@@ -1158,6 +1196,16 @@ export function initSizingUI() {
     const elNode = $(id);
     if (elNode) elNode.addEventListener("input", () => { if (lastPayload) renderResults(lastPayload); });
   }
+
+  // Auto-mode basis submenus: switching basis changes the result → re-run
+  // (weather is cached, so this is fast). Visibility follows mode+chemistry.
+  $("chemSelect").addEventListener("change", () => { updateAutoRows(); });
+  if ($("systemGoal")) $("systemGoal").addEventListener("change", () => { updateAutoRows(); });
+  for (const id of ["autoTier", "autoTarget"]) {
+    const elNode = $(id);
+    if (elNode) elNode.addEventListener("change", () => { if (lastPayload) run(); });
+  }
+  updateAutoRows();
 
   setLoadPanel();
 

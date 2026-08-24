@@ -14,13 +14,22 @@ import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js";
 import { fullRange, getScope, POWMR_CATALOG } from "./pricing.js";
 import {
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
-  lifetimeCostUsd, exportValueUsd,
+  lifetimeCostUsd, exportValueUsd, trueBreakEvenYear,
 } from "./money.js";
 
-const AUTO_COMPARE_NOTE = {
-  offgrid: "compared at the middle reliability tier (99% — generator as rare backup)",
-  gridtie: "compared at the ~80% bill-cut target",
+const TIER_BASIS = {
+  tier100: "100% independence — never needs a generator",
+  tier99: "99% reliability — generator only as a rare backup",
+  tier95: "95% reliability — generator runs now and then",
 };
+const TARGET_BASIS = {
+  cut60: "a ~60% grid-bill cut",
+  cut80: "an ~80% grid-bill cut",
+  cut95: "a ~95% grid-bill cut",
+};
+
+const VALID_AUTO_TIERS = new Set(["tier100", "tier99", "tier95"]);
+const VALID_AUTO_TARGETS = new Set(["cut60", "cut80", "cut95"]);
 
 const AUTO_CARD_NOTES = {
   naion: "Runs on standard LFP voltage settings (the common case): the ~40 V low cutoff protects it from deep discharge, so it gives up a little capacity but lasts longer than its deep-cycle rating.",
@@ -64,7 +73,10 @@ export async function runSizing(msg, deps = {}) {
   const {
     latitude, longitude, dailyKwh, chemistry = "auto", years = 5,
     tariff = null, exportRate = null, mode = "offgrid",
+    autoTier = "tier99", autoTargetId = "cut80",
   } = msg;
+  const repTierId = VALID_AUTO_TIERS.has(autoTier) ? autoTier : "tier99";
+  const repTargetId = VALID_AUTO_TARGETS.has(autoTargetId) ? autoTargetId : "cut80";
 
   const series = await (deps.fetchWeather || fetchWeatherWithFallback)({ latitude, longitude, years });
   const hours = series.hours;
@@ -128,6 +140,19 @@ export async function runSizing(msg, deps = {}) {
     return { min: Array.from(ext.min, toPct), max: Array.from(ext.max, toPct) };
   }
 
+  // Honest payback: the year cumulative avoided bills overtake cumulative
+  // TRUE cost (every swap counted). Null = never catches up inside horizon.
+  function breakEvenFor(m, annualSavingsUsd) {
+    if (!(annualSavingsUsd > 0)) return null;
+    return trueBreakEvenYear({
+      capexMidUsd: m.cost.objectiveMid,
+      annualSavingsUsd,
+      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
+      replacements: m.replacements25y,
+      batteryLifeYears: m.batteryLifeYears,
+    });
+  }
+
   const basePayload = () => ({
     meta: series.meta,
     annualYieldPerKw: Math.round(annualYield),
@@ -166,7 +191,7 @@ export async function runSizing(msg, deps = {}) {
           years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh,
           pvMax: 45, battMax: 120, battStep: 1, capacityScale: capScale,
         });
-        const hit = results.find((r) => r.target.id === "cut80");
+        const hit = results.find((r) => r.target.id === repTargetId);
         if (!hit || !hit.sizing) continue;
         const m = moneyFor(chemId, hit.sizing);
         const servedKwhPerYear = (hit.sizing.result.directWh + hit.sizing.result.battWhAc) / 1000 / series.meta.years;
@@ -189,6 +214,7 @@ export async function runSizing(msg, deps = {}) {
           billAfterMonthlyUsd: billAfterUsd === null ? null : Math.round(billAfterUsd / 12),
           paybackYearsLo: savingsUsd ? paybackYears(m.cost.lo, savingsUsd + exportVal) : null,
           paybackYearsHi: savingsUsd ? paybackYears(m.cost.hi, savingsUsd + exportVal) : null,
+          trueBreakEvenYear: breakEvenFor(m, savingsUsd),
           exportValueAnnualUsd: Math.round(exportVal),
           clippedKwhPerYear: Math.round(clippedKwhPerYear),
           replacements25y: m.replacements25y,
@@ -215,7 +241,7 @@ export async function runSizing(msg, deps = {}) {
       const payload = basePayload();
       payload.mode = "gridtie";
       payload.auto = auto;
-      payload.autoNote = AUTO_COMPARE_NOTE.gridtie;
+        payload.autoNote = `All three chemistries sized for ${TARGET_BASIS[repTargetId]}`;
       payload.targets = [];
       payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), tiers: [] };
       payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
@@ -267,6 +293,7 @@ export async function runSizing(msg, deps = {}) {
         billAfterMonthlyUsd: billAfterUsd === null ? null : Math.round(billAfterUsd / 12),
         paybackYearsLo: savingsUsd ? paybackYears(m.cost.lo, savingsUsd + exportVal) : null,
         paybackYearsHi: savingsUsd ? paybackYears(m.cost.hi, savingsUsd + exportVal) : null,
+        trueBreakEvenYear: breakEvenFor(m, savingsUsd),
         replacements25y: m.replacements25y,
         swapsAndLaborUsd: m.swapsAndLaborUsd,
         lifetimeCostMid: m.lifetimeCostMid,
@@ -300,7 +327,7 @@ export async function runSizing(msg, deps = {}) {
         years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh,
         battMax: 250, capacityScale: capScale,
       });
-      const midTier = allTiers.find((t) => t.tier.id === "tier99");
+      const midTier = allTiers.find((t) => t.tier.id === repTierId);
       if (!midTier || !midTier.sizing) continue;
       const sizing = midTier.sizing;
       const m = moneyFor(chemId, sizing);
@@ -332,6 +359,7 @@ export async function runSizing(msg, deps = {}) {
         lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
         paybackYearsLo: gridSpend ? paybackYears(m.cost.lo, gridSpend) : null,
         paybackYearsHi: gridSpend ? paybackYears(m.cost.hi, gridSpend) : null,
+        trueBreakEvenYear: breakEvenFor(m, gridSpend),
       };
       const sim = simulate({
         pvKw: sizing.pvKw, battKwhUsable: sizing.battKwh,
@@ -343,7 +371,7 @@ export async function runSizing(msg, deps = {}) {
     const payload = basePayload();
     payload.mode = "offgrid";
     payload.auto = auto;
-    payload.autoNote = AUTO_COMPARE_NOTE.offgrid;
+      payload.autoNote = `All three chemistries sized for ${TIER_BASIS[repTierId]}`;
     payload.tiers = [];
     payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), tiers: [] };
     payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
@@ -403,6 +431,7 @@ export async function runSizing(msg, deps = {}) {
       lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
       paybackYearsLo: gridSpend ? paybackYears(m.cost.lo, gridSpend) : null,
       paybackYearsHi: gridSpend ? paybackYears(m.cost.hi, gridSpend) : null,
+      trueBreakEvenYear: breakEvenFor(m, gridSpend),
     };
   });
 

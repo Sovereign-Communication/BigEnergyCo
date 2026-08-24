@@ -47,6 +47,25 @@ test("off-grid AUTO: every field the renderer reads exists and is sane", async (
   const lfp = p.auto.find((a) => a.chemistry === "lfp");
   assert.ok(agm.lifetimeCostMid > lfp.lifetimeCostMid, "lead-acid lifetime > LFP");
   assert.ok(agm.replacements25y > lfp.replacements25y, "lead-acid swaps more banks");
+  // True break-even: AGM either never breaks even or strictly later than LFP
+  assert.ok(agm.trueBreakEvenYear === null || lfp.trueBreakEvenYear === null || agm.trueBreakEvenYear > lfp.trueBreakEvenYear,
+    `AGM BE (${agm.trueBreakEvenYear}) vs LFP (${lfp.trueBreakEvenYear})`);
+  assert.ok(lfp.trueBreakEvenYear >= Math.round(lfp.paybackYearsLo), "no-swap break-even ≈ first-cost payback");
+});
+
+test("off-grid AUTO honors the independence submenu (tier100 → zero unmet)", async () => {
+  const p99 = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid", autoTier: "tier99" }, { fetchWeather: fakeWeather });
+  const p100 = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid", autoTier: "tier100" }, { fetchWeather: fakeWeather });
+  assert.ok(p100.auto.every((a) => a.unmetHoursPerYear === 0), "tier100 selection must size for zero unmet hours");
+  // tier100 needs no less hardware than tier99, per chemistry
+  for (const chem of ["naion", "lfp", "agm"]) {
+    const a99 = p99.auto.find((a) => a.chemistry === chem);
+    const a100 = p100.auto.find((a) => a.chemistry === chem);
+    if (!a99 || !a100) continue;
+    assert.ok(a100.pvKw >= a99.pvKw && a100.battKwh >= a99.battKwh, `${chem}: 100% hardware ≥ 99%`);
+  }
+  assert.ok(!p99.autoNote.includes("100% independence"), "basis note tracks selection");
+  assert.ok(p100.autoNote.includes("100% independence"));
 });
 
 test("off-grid SPECIFIC: tier cards + percent history chart bands", async () => {
@@ -94,6 +113,15 @@ test("grid-tie AUTO: nameplate bands present for every solvable chemistry", asyn
   for (const a of p.auto) {
     assert.ok(a.socNameplatePct && a.socNameplatePct.min.length === 365, `${a.chemistry} bands`);
     assert.ok(Number.isFinite(a.billAfterMonthlyUsd), "bill-after present");
+  }
+});
+
+test("grid-tie AUTO honors the bill-cut submenu (cut60 → ~60%)", async () => {
+  const p = await runSizing({ ...MSG, chemistry: "auto", mode: "gridtie", autoTargetId: "cut60" }, { fetchWeather: fakeWeather });
+  assert.ok(p.auto.length >= 2);
+  for (const a of p.auto) {
+    assert.ok(a.cutPct >= 59 && a.cutPct <= 63, `${a.chemistry} cut ${a.cutPct}% should sit at ~60`);
+    assert.ok(a.trueBreakEvenYear === null || a.trueBreakEvenYear > 0, "break-even sane");
   }
 });
 

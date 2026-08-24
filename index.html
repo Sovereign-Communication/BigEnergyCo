@@ -822,6 +822,23 @@ footer {
             </select>
           </div>
 
+          <div class="form-group" id="autoTierRow" style="display:none;margin-bottom:0;">
+            <label for="autoTier">Independence target <span style="font-weight:400;color:var(--text-muted);">(applied to all three batteries)</span>:</label>
+            <select id="autoTier" class="form-control">
+              <option value="tier100">100% &mdash; never see a generator</option>
+              <option value="tier99" selected>99% &mdash; generator about a day a year</option>
+              <option value="tier95">95% &mdash; generator now and then</option>
+            </select>
+          </div>
+          <div class="form-group" id="autoTargetRow" style="display:none;margin-bottom:0;">
+            <label for="autoTarget">Bill-cut target <span style="font-weight:400;color:var(--text-muted);">(applied to all three batteries)</span>:</label>
+            <select id="autoTarget" class="form-control">
+              <option value="cut60">Cut ~60% &mdash; cheapest entry</option>
+              <option value="cut80" selected>Cut ~80% &mdash; the sweet spot</option>
+              <option value="cut95">Cut ~95% &mdash; nearly off-grid</option>
+            </select>
+          </div>
+
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="form-group">
               <label for="fxRate">Your currency <span style="font-weight:400;color:var(--text-muted);">(optional)</span>:</label>
@@ -1305,7 +1322,7 @@ footer {
   <div id="printSheet"></div>
 
   <!-- Inlined JavaScript with JSONP Web-Bridge for Freenet CSP Passthrough -->
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260824a"></script>
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260824b"></script>
   <script>
     // ── Cloudflare API Bridge URL (updated automatically by patch_and_publish.py) ──
     var CF_API_URL = 'https://bigenergyco-api.bigenergyco.workers.dev';

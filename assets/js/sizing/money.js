@@ -75,3 +75,30 @@ export function exportValueUsd(clippedKwhPerYear, exportRatePerKwh) {
   if (!(clippedKwhPerYear > 0) || !(exportRatePerKwh > 0)) return 0;
   return clippedKwhPerYear * exportRatePerKwh;
 }
+
+/**
+ * The year cumulative avoided bills exceed cumulative TRUE cost — counting
+ * every bank swap as it falls due. This is the honest payback for chemistries
+ * that wear out: lead-acid may never catch up, and saying so is the point.
+ *
+ * Swap model: a bank rated `batteryLifeYears` is replaced at each multiple
+ * of that life (rounded), each swap costing an equal share of the supplied
+ * total. Returns null when the system never breaks even inside the horizon.
+ */
+export function trueBreakEvenYear({ capexMidUsd, annualSavingsUsd, swapsAndLaborTotalUsd = 0, replacements = 0, batteryLifeYears, horizonYears = HORIZON_YEARS }) {  if (!(annualSavingsUsd > 0) || !Number.isFinite(capexMidUsd)) return null;
+  const perSwap = replacements > 0 ? swapsAndLaborTotalUsd / replacements : 0;
+  const swapInterval = Number.isFinite(batteryLifeYears) && batteryLifeYears > 0
+    ? Math.max(1, Math.round(batteryLifeYears))
+    : Infinity;
+
+  let cumCost = capexMidUsd;
+  let cumSavings = 0;
+  for (let y = 1; y <= horizonYears; y++) {
+    if (y > 1 && swapInterval !== Infinity && (y - 1) % swapInterval === 0) {
+      cumCost += perSwap;
+    }
+    cumSavings += annualSavingsUsd;
+    if (cumSavings >= cumCost) return y;
+  }
+  return null;
+}
