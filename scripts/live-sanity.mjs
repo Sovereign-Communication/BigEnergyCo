@@ -19,7 +19,7 @@ for (const m of [
   'rel="canonical"', 'id="systemGoal"', "Cut my grid bill",
   'value="auto" selected', "compare all three by lifetime cost",
   'id="exportRate"', "Lead-Acid (AGM)", 'data-i18n="heroTag"', 'id="langSelect"',
-  "ui.js?v=20260824a",
+  "ui.js?v=20260824b",
   // PWA
   'rel="manifest"', "./sw.js", 'name="theme-color"',
   // SEO
