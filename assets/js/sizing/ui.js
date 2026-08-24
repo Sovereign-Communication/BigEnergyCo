@@ -5,10 +5,10 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260824b";
-import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260824b";
-import { BOM_ITEMS } from "../shared/content.js?v=20260824b";
-import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260824b";
+import { CITY_PRESETS, } from "./nasa.js?v=20260824c";
+import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260824c";
+import { BOM_ITEMS } from "../shared/content.js?v=20260824c";
+import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260824c";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -384,7 +384,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260824b", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260824c", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
@@ -635,8 +635,9 @@ function renderAutoCards(p) {
     }
     // Headline economics: TRUE break-even counts every swap. When a bank
     // wears out fast enough that it never catches up, say so outright.
-    if (p.tariff) {
-      if (a.trueBreakEvenYear) {
+    // undefined = stale payload (contract warning already shown) → omit row.
+    if (p.tariff && a.trueBreakEvenYear !== undefined) {
+      if (typeof a.trueBreakEvenYear === "number") {
         rows.push(["Breaks even on true cost in", `≈ year ${a.trueBreakEvenYear} of ownership`]);
         if (a.replacements25y > 0 && a.paybackYearsLo !== null) {
           rows.push(["  · first cost alone pays back in", fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi)]);
@@ -644,7 +645,7 @@ function renderAutoCards(p) {
       } else {
         rows.push(["True 25-yr break-even", "never — replacements outpace savings"]);
       }
-    } else if (a.paybackYearsLo !== null) {
+    } else if (!p.tariff && a.paybackYearsLo !== null) {
       rows.push(["Pays for itself in", fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi)]);
     }
     if (Number.isFinite(a.lcoeUsdPerKwh)) {
@@ -707,8 +708,8 @@ function renderTierCards(p) {
     if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
       rows.push(["Pays back its first cost in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi)]);
     }
-    if (t.replacements25y > 0 || t.trueBreakEvenYear !== null) {
-      rows.push(["Breaks even on true 25-yr cost", t.trueBreakEvenYear
+    if (typeof t.trueBreakEvenYear === "number" || (t.trueBreakEvenYear === null && t.replacements25y > 0)) {
+      rows.push(["Breaks even on true 25-yr cost", typeof t.trueBreakEvenYear === "number"
         ? `\u2248 year ${t.trueBreakEvenYear} (every swap counted)`
         : "never \u2014 swaps outpace savings"]);
     }
@@ -758,8 +759,8 @@ function renderTargetCards(p) {
     if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
       rows.push(["Pays back its first cost in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) + (exportActive ? " incl. feed-in" : "")]);
     }
-    if (t.battKwh > 0 && (t.replacements25y > 0 || t.trueBreakEvenYear !== null)) {
-      rows.push(["Breaks even on true 25-yr cost", t.trueBreakEvenYear
+    if (t.battKwh > 0 && (typeof t.trueBreakEvenYear === "number" || (t.trueBreakEvenYear === null && t.replacements25y > 0))) {
+      rows.push(["Breaks even on true 25-yr cost", typeof t.trueBreakEvenYear === "number"
         ? `\u2248 year ${t.trueBreakEvenYear} (every swap counted)`
         : "never \u2014 swaps outpace savings"]);
     }
@@ -898,12 +899,19 @@ function drawAutoChart(p) {
     `Dips during ${p.history.startYear}–${p.history.endYear}'s worst weather are the moments a generator or the grid would cover you.`;
 }
 
+// Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
+const PAYLOAD_CONTRACT = 3;
+
 function renderResults(p) {
   const inp = readInputs();
   lastPayload = p;
   const isGT = p.mode === "gridtie";
-  setStatus(`✅ ${p.meta.years} yr of hourly data (${p.meta.dataYears}) · ${fmt(p.annualYieldPerKw)} kWh/yr per kW of panel.` +
-    (p.meta.offline ? " · 📴 offline typical-year mode" : ""));
+  if (p.contract !== undefined && p.contract !== PAYLOAD_CONTRACT) {
+    setStatus("\u26A0\uFE0F This result came from an older engine version \u2014 refresh the page (Ctrl+F5 / \u2318\u21E7R) and run again for complete, current figures.");
+  } else {
+    setStatus(`\u2705 ${p.meta.years} yr of hourly data (${p.meta.dataYears}) \u00b7 ${fmt(p.annualYieldPerKw)} kWh/yr per kW of panel.` +
+      (p.meta.offline ? " \u00b7 \uD83D\uDDF4 offline typical-year mode" : ""));
+  }
 
   renderMoneyBar(p);
   if (p.auto && p.auto.length) renderAutoCards(p);

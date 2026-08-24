@@ -31,6 +31,11 @@ const TARGET_BASIS = {
 const VALID_AUTO_TIERS = new Set(["tier100", "tier99", "tier95"]);
 const VALID_AUTO_TARGETS = new Set(["cut60", "cut80", "cut95"]);
 
+// UI-contract version: bump whenever payload fields change shape. The
+// renderer compares this to its own constant and warns on mismatch instead
+// of rendering garbage from a stale cached module.
+export const PAYLOAD_CONTRACT = 3;
+
 const AUTO_CARD_NOTES = {
   naion: "Runs on standard LFP voltage settings (the common case): the ~40 V low cutoff protects it from deep discharge, so it gives up a little capacity but lasts longer than its deep-cycle rating.",
   lfp: "The benchmark: uses most of its nameplate every day and still outlives everything else.",
@@ -154,6 +159,7 @@ export async function runSizing(msg, deps = {}) {
   }
 
   const basePayload = () => ({
+    contract: PAYLOAD_CONTRACT,
     meta: series.meta,
     annualYieldPerKw: Math.round(annualYield),
     chemistry,

@@ -26,6 +26,7 @@ const MSG = {
 test("off-grid AUTO: every field the renderer reads exists and is sane", async () => {
   const p = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid" }, { fetchWeather: fakeWeather });
   assert.equal(p.mode, "offgrid");
+  assert.equal(p.contract, 3, "payload carries current contract version");
   assert.ok(Array.isArray(p.auto) && p.auto.length === 3, "three chemistry cards");
   assert.equal(p.history.kind, "auto");
   assert.equal(p.tiers.length, 0);
@@ -38,6 +39,9 @@ test("off-grid AUTO: every field the renderer reads exists and is sane", async (
     }
     // chart contract: nameplate bands exist with one entry per day
     assert.ok(a.socNameplatePct && a.socNameplatePct.min.length === 365, `${a.chemistry} chart bands cover 365 days`);
+    // break-even contract: a number or explicit null — NEVER undefined
+    assert.ok(typeof a.trueBreakEvenYear === "number" || a.trueBreakEvenYear === null,
+      `${a.chemistry}.trueBreakEvenYear must be number|null (got ${typeof a.trueBreakEvenYear})`);
     const top = Math.max(...a.socNameplatePct.max);
     if (a.chemistry === "agm") assert.ok(top <= 55, `AGM band tops ≤55% of nameplate (got ${top})`);
     if (a.chemistry === "lfp") assert.ok(top >= 85, `LFP band tops ≥85% (got ${top})`);
