@@ -181,6 +181,20 @@ export async function runSizing(msg, deps = {}) {
       offline: !!series.meta.offline,
       capacityScale: +capacityScaleFor(chemistry === "auto" ? "lfp" : chemistry, meanTempC).toFixed(3),
       meanTempC: Math.round(meanTempC),
+      capacityNote: (() => {
+        const capChem = chemistry === "auto" ? "lfp" : chemistry;
+        const scale = capacityScaleFor(capChem, meanTempC);
+        const pct = Math.round(scale * 100);
+        const tC = Math.round(meanTempC);
+        if (capChem === "agm" && tC <= 10) {
+          return `Cold site: at a mean ${tC}°C, lead-acid (AGM) is derated to about ${pct}% of nameplate capacity; lithium and sodium are unaffected by cold in this model (they charge more slowly instead).`;
+        }
+        if (scale < 1) {
+          const name = capChem === "naion" ? "sodium-ion" : capChem.toUpperCase();
+          return `At this site's mean ${tC}°C, ${name} delivers about ${pct}% of nameplate usable capacity (rate/cold scaling).`;
+        }
+        return `Capacity model assumes full nameplate usable capacity at this site's mean ${tC}°C.`;
+      })(),
     },
   });
 
@@ -292,6 +306,9 @@ export async function runSizing(msg, deps = {}) {
         battNameplateKwh: m.battNameplateKwh,
         usableDod: chem.usableDod,
         costLo: m.cost.lo, costHi: m.cost.hi,
+        pvCostLo: m.cost.pvCostLo, pvCostHi: m.cost.pvCostHi,
+        battCostLo: m.cost.battCostLo, battCostHi: m.cost.battCostHi,
+        battPerKwhLo: m.cost.battPerKwhLo, battPerKwhHi: m.cost.battPerKwhHi,
         cutPct: Math.round((1 - sizing.result.importedWh / loadTotalWh) * 100),
         importedKwhPerYear: Math.round(importedKwhPerYear),
         clippedKwhPerYear: Math.round(clippedKwhPerYear),
@@ -425,6 +442,9 @@ export async function runSizing(msg, deps = {}) {
       battNameplateKwh: m.battNameplateKwh,
       usableDod: chem.usableDod,
       costLo: m.cost.lo, costHi: m.cost.hi,
+      pvCostLo: m.cost.pvCostLo, pvCostHi: m.cost.pvCostHi,
+      battCostLo: m.cost.battCostLo, battCostHi: m.cost.battCostHi,
+      battPerKwhLo: m.cost.battPerKwhLo, battPerKwhHi: m.cost.battPerKwhHi,
       unmetHoursPerYear: +(sizing.result.unmetHours / series.meta.years).toFixed(1),
       longestGapHours: sizing.result.longestGapHours,
       cyclesPerYear: m.cyclesPerYear,

@@ -5,10 +5,10 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260824c";
-import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260824c";
-import { BOM_ITEMS } from "../shared/content.js?v=20260824c";
-import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260824c";
+import { CITY_PRESETS, } from "./nasa.js?v=20260825a";
+import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260825a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260825a";
+import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825a";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -384,7 +384,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260824c", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825a", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
@@ -909,7 +909,7 @@ function renderResults(p) {
   if (p.contract !== undefined && p.contract !== PAYLOAD_CONTRACT) {
     setStatus("\u26A0\uFE0F This result came from an older engine version \u2014 refresh the page (Ctrl+F5 / \u2318\u21E7R) and run again for complete, current figures.");
   } else {
-    setStatus(`\u2705 ${p.meta.years} yr of hourly data (${p.meta.dataYears}) \u00b7 ${fmt(p.annualYieldPerKw)} kWh/yr per kW of panel.` +
+    setStatus(`\u2705 ${p.meta.years} yr of hourly data (${p.assumptions.dataYears}) \u00b7 ${fmt(p.annualYieldPerKw)} kWh/yr per kW of panel.` +
       (p.meta.offline ? " \u00b7 \uD83D\uDDF4 offline typical-year mode" : ""));
   }
 
@@ -953,7 +953,7 @@ function renderResults(p) {
     `${p.auto && p.auto.length ? ` (${p.autoNote})` : ""}, ` +
     `${isGT ? "staying connected to the grid (no export" + (inp.exportRate ? ", feed-in credit entered)" : ")") : "fully off-grid"}:\n${briefLines.join("\n")}\n` +
     `[ADVISOR INSTRUCTION: These numbers were computed deterministically from NASA POWER hourly weather ` +
-    `${p.meta.dataYears}. Do not recompute or invent different figures — explain, sanity-check and add caveats ` +
+    `${p.assumptions.dataYears}. Do not recompute or invent different figures — explain, sanity-check and add caveats ` +
     `(seasonal variation, inverter/BOS costs, installation, degradation) around THESE results. Keep it SHORT: a brief verdict, not an essay.]`;
   $("btnAskAdvisor").style.display = "inline-flex";
   const shareBtn = $("btnShareResult");
@@ -1111,7 +1111,7 @@ function populatePrintSheet(p, inp) {
     <p style="font-size:9.5pt;margin:0 0 4pt;"><strong>Basis:</strong> ${inp.basis} · ${fmtKwh(inp.dailyKwh)} kWh/day ·
       ${p.chemistry.toUpperCase()} battery · location ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)} ·
       ${p.tariff ? `grid price $${p.tariff}/kWh (≈$${fmt(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
-    <p style="font-size:9.5pt;margin:0 0 4pt;"><strong>Method:</strong> hourly simulation of ${p.meta.dataYears} of
+    <p style="font-size:9.5pt;margin:0 0 4pt;"><strong>Method:</strong> hourly simulation of ${p.assumptions.dataYears} of
       NASA POWER satellite weather (${p.meta.source})${isGT ? "; the system never exports power to the grid" : ""}.
       Derates: soiling ${(p.assumptions.derates.soiling * 100).toFixed(0)}%,
       wiring ${(p.assumptions.derates.wiring * 100).toFixed(0)}%, mismatch ${(p.assumptions.derates.mismatch * 100).toFixed(0)}%,

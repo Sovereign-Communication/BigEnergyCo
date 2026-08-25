@@ -102,6 +102,7 @@ export function fullRange(pvKw, battKwhUsable, chemistry = "lfp") {
     lo: lo.lo,
     hi: hi.hi,
     pvCostLo: Math.round(lo.pvLo ?? pvKw * 1000 * getScope("cells").pvPerW[0]),
+    pvCostHi: Math.round(pvKw * 1000 * getScope("powmr").pvPerW[1]),
     battCostLo: Math.round(battKwhUsable * cellsBatt[0]),
     battCostHi: Math.round(battKwhUsable * powmrBatt[1]),
     battPerKwhLo: cellsBatt[0],
