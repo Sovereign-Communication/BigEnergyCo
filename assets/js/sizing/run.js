@@ -34,7 +34,7 @@ const VALID_AUTO_TARGETS = new Set(["cut60", "cut80", "cut95"]);
 // UI-contract version: bump whenever payload fields change shape. The
 // renderer compares this to its own constant and warns on mismatch instead
 // of rendering garbage from a stale cached module.
-export const PAYLOAD_CONTRACT = 3;
+export const PAYLOAD_CONTRACT = 4;
 
 const AUTO_CARD_NOTES = {
   naion: "Runs on standard LFP voltage settings (the common case): the ~40 V low cutoff protects it from deep discharge, so it gives up a little capacity but lasts longer than its deep-cycle rating.",
@@ -95,6 +95,16 @@ export async function runSizing(msg, deps = {}) {
   const costPerWpvMid = (landedScope.pvPerW[0] + landedScope.pvPerW[1]) / 2;
   const landedMidBattKwh = (landedScope.battPerKwhUsable[0] + landedScope.battPerKwhUsable[1]) / 2;
   const meanTempC = tempsC.reduce((a, b) => a + b, 0) / tempsC.length;
+
+  // Daily solar harvest per kW of array (kWh/day) — feeds the chart's sun
+  // strip so the visual shows what drives the battery's recharge rhythm.
+  const dayCount = Math.floor(hours.length / 24);
+  const pvDaily = new Array(dayCount);
+  for (let d = 0; d < dayCount; d++) {
+    let s = 0;
+    for (let h = d * 24; h < (d + 1) * 24; h++) s += e1kw[h];
+    pvDaily[d] = Math.round((s / 1000) * 100) / 100;
+  }
 
   function moneyFor(chemId, sizing) {
     const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
@@ -263,7 +273,7 @@ export async function runSizing(msg, deps = {}) {
       payload.auto = auto;
         payload.autoNote = `All three chemistries sized for ${TARGET_BASIS[repTargetId]}`;
       payload.targets = [];
-      payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), tiers: [] };
+      payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), pvDaily, tiers: [] };
       payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
       payload.assumptions.money =
         `Auto mode sizes each chemistry to deliver the same ~80% bill cut within its depth-of-discharge window (AGM banks are ~2× nameplate; lithium/sodium ~1.1×; sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings). Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; fixed connection fees not counted.`;
@@ -331,7 +341,7 @@ export async function runSizing(msg, deps = {}) {
     payload.chemLabel = chem.label;
     payload.targets = targets;
     payload.auto = null;
-    payload.history = { kind: "gridtie", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), tiers: historyTiers };
+    payload.history = { kind: "gridtie", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), pvDaily, tiers: historyTiers };
     payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
     payload.assumptions.money =
       `Bill reduction simulated hour-by-hour across five years of weather: solar serves the load first, surplus charges the battery, the grid covers the rest, nothing is exported unless you enter a feed-in credit (then clipped surplus is valued at that rate). Lifetime cost includes bank swaps plus install labor each time. Fixed connection fees not counted.`;
@@ -396,7 +406,7 @@ export async function runSizing(msg, deps = {}) {
     payload.auto = auto;
       payload.autoNote = `All three chemistries sized for ${TIER_BASIS[repTierId]}`;
     payload.tiers = [];
-    payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), tiers: [] };
+    payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), pvDaily, tiers: [] };
     payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
     payload.assumptions.money =
       `Auto mode sizes each chemistry for the same job — lights stay on with a generator as rare backup — inside its depth-of-discharge window (AGM keeps a 50% reserve; lithium/sodium use ~90%). Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) — that is why its sticker price misleads.`;
@@ -466,7 +476,7 @@ export async function runSizing(msg, deps = {}) {
   payload.chemLabel = chem.label;
   payload.tiers = tiers;
   payload.auto = null;
-  payload.history = { kind: "offgrid", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), tiers: historyTiers };
+  payload.history = { kind: "offgrid", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), pvDaily, tiers: historyTiers };
   payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
   payload.assumptions.money =
     `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 20-year horizon, and assumes panels/inverter last the full 25 years. Lifetime figures include install labor on the first bank and every swap. Generator fuel and grid fixed charges are not counted.`;

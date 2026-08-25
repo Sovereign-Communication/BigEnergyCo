@@ -5,10 +5,10 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260825d";
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825d";
-import { BOM_ITEMS } from "../shared/content.js?v=20260825d";
-import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825d";
+import { CITY_PRESETS, } from "./nasa.js?v=20260825e";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825e";
+import { BOM_ITEMS } from "../shared/content.js?v=20260825e";
+import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825e";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -415,7 +415,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825d", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825e", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
@@ -508,6 +508,27 @@ const TIER_NAMES = {
 };
 
 /**
+ * Sun strip: the site's daily solar harvest per kW of panel, drawn on the
+ * same time axis as the battery charts. This is the "solar panels" half of
+ * the story — its long winter valleys are why the battery floor dips.
+ */
+function drawSunStrip(ctx, pv, X, W, padL, padR, stripH) {
+  const pvMax = Math.max(...pv, 0.1);
+  const amp = stripH - 16;
+  ctx.beginPath();
+  ctx.moveTo(padL, stripH);
+  for (let i = 0; i < pv.length; i++) ctx.lineTo(X(i), stripH - (pv[i] / pvMax) * amp);
+  ctx.lineTo(W - padR, stripH);
+  ctx.closePath();
+  ctx.globalAlpha = 0.30; ctx.fillStyle = "#fbbf24"; ctx.fill();
+  ctx.globalAlpha = 0.65; ctx.strokeStyle = "#fbbf24"; ctx.lineWidth = 1; ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.font = "10px ui-monospace, monospace";
+  ctx.fillStyle = "#fcd34d"; ctx.textAlign = "left";
+  ctx.fillText(`daily sun — kWh per kW of panel · peak day ${pvMax.toFixed(1)}`, padL + 2, 11);
+}
+
+/**
  * Reliability chart, deliberately simple: one stacked panel per system, one
  * line per panel — the LOWEST the battery got each day over five years.
  * Flat and high = dependable. Dives to the red line = generator territory.
@@ -536,7 +557,10 @@ function drawSocChart(history, chemLabel) {
   const dpr = window.devicePixelRatio || 1;
   const W = Math.max(320, wrap.clientWidth || 640);
   const BAND_H = 118, GAP = 14;
-  const H = solvable.length * BAND_H + (solvable.length - 1) * GAP + 20;
+  const nDays = solvable.length ? solvable[0].dailyMin.length : 0;
+  const pv = (history.pvDaily && nDays && history.pvDaily.length === nDays) ? history.pvDaily : null;
+  const stripH = pv ? 64 : 0, stripGap = pv ? 10 : 0;
+  const H = stripH + stripGap + solvable.length * BAND_H + (solvable.length - 1) * GAP + 20;
   canvas.width = W * dpr;
   canvas.height = H * dpr;
   canvas.style.width = W + "px";
@@ -618,7 +642,9 @@ function drawSocChart(history, chemLabel) {
     ctx.fillText(`lowest point ${Math.max(0, Math.round(t.minPct))}% — ${verdict}`, padL + 2, top + padT + 14);
   }
 
-  solvable.forEach((t, idx) => drawBand(t, idx * (BAND_H + GAP)));
+  const topOffset = stripH + stripGap;
+  if (pv) drawSunStrip(ctx, pv, (i) => padL + (i / (nDays - 1)) * plotW, W, padL, padR, stripH);
+  solvable.forEach((t, idx) => drawBand(t, topOffset + idx * (BAND_H + GAP)));
 
   // shared x labels: years
   const span = history.endYear - history.startYear + 1;
@@ -637,6 +663,7 @@ function drawSocChart(history, chemLabel) {
       `${history.startYear}–${history.endYear} of real satellite weather (${chemLabel}). Every healthy system ` +
       `charges all the way back to 100% on sunny days — the difference between systems is how far the bottom ` +
       `edge dives toward empty during bad weather. Touch the red line and a generator is covering you.`;
+  if (pv) $("socCaption").textContent += " The amber strip on top is the daily solar harvest (kWh per kW of panel) — its long dips line up with the battery's lowest floors.";
 }
 
 function renderAutoCards(p) {
@@ -867,7 +894,10 @@ function drawAutoChart(p) {
 
   const dpr = window.devicePixelRatio || 1;
   const W = Math.max(320, wrap.clientWidth || 640);
-  const H = 300;
+  const n = entries[0].socNameplatePct.min.length;
+  const pv = (p.history && Array.isArray(p.history.pvDaily) && p.history.pvDaily.length === n) ? p.history.pvDaily : null;
+  const stripH = pv ? 64 : 0, stripGap = pv ? 8 : 0;
+  const H = 300 + stripH + stripGap;
   canvas.width = W * dpr;
   canvas.height = H * dpr;
   canvas.style.width = W + "px";
@@ -877,11 +907,11 @@ function drawAutoChart(p) {
   ctx.clearRect(0, 0, W, H);
 
   const padL = 46, padR = 12, padT = 16, padB = 22;
-  const plotW = W - padL - padR, plotH = H - padT - padB;
-  const n = entries[0].socNameplatePct.min.length;
+  const plotW = W - padL - padR, plotH = H - stripH - stripGap - padT - padB;
   const yMax = 100;
+  const panelTop = stripH + stripGap;
   const X = (i) => padL + (i / (n - 1)) * plotW;
-  const Y = (pct) => padT + (1 - pct / yMax) * plotH;
+  const Y = (pct) => panelTop + padT + (1 - pct / yMax) * plotH;
 
   // frame + gridlines
   ctx.font = "10px ui-monospace, monospace";
@@ -892,10 +922,12 @@ function drawAutoChart(p) {
     ctx.fillText(v + "%", padL - 6, Y(v) + 3);
   }
   ctx.save();
-  ctx.translate(11, padT + plotH / 2); ctx.rotate(-Math.PI / 2);
+  ctx.translate(11, panelTop + padT + plotH / 2); ctx.rotate(-Math.PI / 2);
   ctx.textAlign = "center"; ctx.fillStyle = "#9ca3af";
   ctx.fillText("charge as % of that bank's nameplate", 0, 0);
   ctx.restore();
+
+  if (pv) drawSunStrip(ctx, pv, X, W, padL, padR, stripH);
 
   for (const a of entries) {
     const color = TIER_COLORS[`auto-${a.chemistry}`] || "#888";
@@ -959,10 +991,11 @@ function drawAutoChart(p) {
     `Every chemistry carries similar nameplate for the same job; the real difference is the usable slice — lithium and sodium may use ~90% of theirs, lead-acid only its bottom half (the 50% rule, times its discharge-rate derate). ` +
     `Sodium rides standard LFP voltage settings: slightly less capacity, gentler discharge, longer life. ` +
     `Dips to the floor during ${p.history.startYear}–${p.history.endYear}'s worst weather are the moments a generator or the grid would cover you.`;
+  if (pv) $("socCaption").textContent += " The amber strip on top is the daily solar harvest (kWh per kW of panel) — its dips line up with every bank's recharge rhythm.";
 }
 
 // Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
-const PAYLOAD_CONTRACT = 3;
+const PAYLOAD_CONTRACT = 4;
 
 function renderResults(p) {
   const inp = readInputs();
