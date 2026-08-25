@@ -5,10 +5,10 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260825b";
-import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260825b";
-import { BOM_ITEMS } from "../shared/content.js?v=20260825b";
-import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825b";
+import { CITY_PRESETS, } from "./nasa.js?v=20260825c";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825c";
+import { BOM_ITEMS } from "../shared/content.js?v=20260825c";
+import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825c";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -253,21 +253,45 @@ function setCoords(lat, lon, label) {
 
 // Fill the bill-mode tariff from coordinates until the user overrides it.
 let tariffTouched = false;
+// Display currency auto-follows the matched country until the user types
+// their own rate or code.
+let currencyTouched = false;
+
+function setCurrency(code) {
+  const cur = CURRENCIES[code];
+  if (!cur) return;
+  if ($("fxCode")) $("fxCode").value = code;
+  if ($("fxRate") && Number.isFinite(cur.perUSD)) $("fxRate").value = cur.perUSD;
+  updateCurrencyUnitLabel();
+}
+
+function updateCurrencyUnitLabel() {
+  const fx = fxActive();
+  const label = document.querySelector('label[for="customRateVal"]');
+  if (label) label.textContent = fx
+    ? `Your price per kWh (${CURRENCIES[fx.code]?.symbol || fx.code}):`
+    : "Your price per kWh ($):";
+}
 
 function applyEstimatedTariff(lat, lon) {
   if (tariffTouched) return;
   const est = estimateTariff(lat, lon);
   const sel = $("tariffSelect");
-  const match = [...sel.options].find((o) => o.value === String(est.rate));
+  // Auto-select the country's currency first, then express the estimated
+  // tariff in it — the two share one FX rate, so they round-trip exactly.
+  if (est.currency && !currencyTouched && CURRENCIES[est.currency]) setCurrency(est.currency);
+  const fx = fxActive();
+  const shownRate = fx ? +(est.rate * fx.rate).toFixed(2) : est.rate;
+  const match = [...sel.options].find((o) => o.value === String(shownRate));
   if (match) {
-    sel.value = est.rate.toFixed(2);
+    sel.value = shownRate.toFixed(2);
   } else {
     sel.value = "custom";
-    $("customRateVal").value = String(est.rate);
+    $("customRateVal").value = String(shownRate);
     $("customRate").style.display = "block";
   }
   const note = el("div", { style: "font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;" },
-    `Electricity price estimated for ${est.label} — change it above if you know your rate.`);
+    `Electricity price estimated for ${est.label}${fx ? ` (≈ ${est.rate.toFixed(2)} US$/kWh)` : ""} — change it above if you know your rate.`);
   const existing = document.getElementById("tariffNote");
   if (existing) existing.remove();
   sel.closest(".form-group").appendChild(note);
@@ -342,7 +366,14 @@ function readInputs() {
     dailyKwh,
     chemistry: $("chemSelect").value,
     years: 5,
-    tariff: getTariff(),
+    tariff: (() => {
+      const t = getTariff();
+      const fx = fxActive();
+      // The tariff is entered in the DISPLAY currency; the engine prices
+      // everything internally in USD, so convert once here (local ÷ units
+      // per US$1). Outputs are converted back for display by money().
+      return fx && Number.isFinite(t) ? t / fx.rate : t;
+    })(),
     exportRate: (() => {
       const v = parseFloat($("exportRate")?.value);
       return Number.isFinite(v) && v > 0 ? v : null;
@@ -384,7 +415,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825b", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825c", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
@@ -429,20 +460,34 @@ function fmtPaybackRange(lo, hi) {
 function fxActive() {
   const rate = parseFloat($("fxRate")?.value);
   const code = ($("fxCode")?.value || "").trim().toUpperCase();
-  return Number.isFinite(rate) && rate > 0 && /^[A-Z]{3,4}$/.test(code) ? { rate, code } : null;
+  if (!/^[A-Z]{3,4}$/.test(code)) return null;
+  if (!Number.isFinite(rate) || rate <= 0) return null;
+  // Sanity bounds: a USD-based rate outside this range is a typo, not an FX rate.
+  if (rate < 1e-4 || rate > 1e6) return null;
+  return { rate, code };
 }
 
 function money(usd) {
   const fx = fxActive();
-  if (fx) return Math.round(usd * fx.rate).toLocaleString() + " " + fx.code;
-  return "$" + Number(usd).toLocaleString();
+  if (!fx) return "$" + Number(usd).toLocaleString();
+  const local = usd * fx.rate;
+  try {
+    return new Intl.NumberFormat(undefined, { style: "currency", currency: fx.code }).format(local);
+  } catch {
+    const sym = CURRENCIES[fx.code]?.symbol || "";
+    return sym + Math.round(local).toLocaleString() + " " + fx.code;
+  }
 }
 
 function moneyRange(lo, hi) { return money(lo) + "\u2013" + money(hi); }
 
 function fxNote() {
   const fx = fxActive();
-  return fx ? `Amounts shown in ${fx.code} at ${fx.rate} per US$1; battery unit rates stay in $/kWh because the underlying price scopes are USD-denominated.` : null;
+  if (!fx) return null;
+  const asOf = fxMeta.asOf
+    ? ` Live rates as of ${fxMeta.asOf}.`
+    : " Indicative built-in rates (live fetch unavailable).";
+  return `Amounts shown in ${fx.code} at ${fx.rate} per US$1.${asOf} Battery unit rates stay in $/kWh because the underlying price scopes are USD-denominated.`;
 }
 
 const TIER_COLORS = {
@@ -718,7 +763,7 @@ function renderTierCards(p) {
         (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}¢)` : "")]);
     }
     if (t.replacementsHorizon > 0) {
-      rows.push(["Battery swaps over 25 yr", `~${t.replacementsHorizon}× · adds ≈${money(t.swapsAndLaborUsd)} with labor`]);
+      rows.push(["Battery swaps over 20 yr", `~${t.replacementsHorizon}× · adds ≈${money(t.swapsAndLaborUsd)} with labor`]);
     }
     rows.push(["True 20-yr cost", `≈${money(t.lifetimeCostMid)}`]);
     appendRows(card, rows);
@@ -769,7 +814,7 @@ function renderTargetCards(p) {
         (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}¢)` : "")]);
     }
     if (t.replacementsHorizon > 0 && t.battKwh > 0) {
-      rows.push(["Battery swaps over 25 yr", `~${t.replacementsHorizon}× · adds ≈${money(t.swapsAndLaborUsd)} with labor`]);
+      rows.push(["Battery swaps over 20 yr", `~${t.replacementsHorizon}× · adds ≈${money(t.swapsAndLaborUsd)} with labor`]);
     }
     if (t.battKwh > 0) {
       rows.push(["True 20-yr cost", `≈${money(t.lifetimeCostMid)}`]);
@@ -1205,7 +1250,11 @@ export function initSizingUI() {
   // needed, since FX is a display-only transform on the same numbers.
   for (const id of ["fxRate", "fxCode"]) {
     const elNode = $(id);
-    if (elNode) elNode.addEventListener("input", () => { if (lastPayload) renderResults(lastPayload); });
+    if (elNode) elNode.addEventListener("input", () => {
+      currencyTouched = true;
+      updateCurrencyUnitLabel();
+      if (lastPayload) renderResults(lastPayload);
+    });
   }
 
   // Auto-mode basis submenus: switching basis changes the result → re-run
@@ -1226,6 +1275,29 @@ export function initSizingUI() {
 
   // A shared link restores its inputs and re-runs the deterministic engine.
   if (restoreFromShare()) setTimeout(run, 50);
+
+  // Background FX refresh: keeps auto-selected currencies accurate.
+  refreshFxRates();
+}
+
+// Refresh the built-in FX defaults in the background so an auto-selected
+// currency is accurate rather than indicative. Never blocks the page; on
+// failure (offline) the static table simply stays in use.
+async function refreshFxRates() {
+  try {
+    const res = await fetch("https://open.er-api.com/v6/latest/USD", { cache: "no-store" });
+    if (!res.ok) return;
+    const json = await res.json();
+    if (!json || json.result !== "success" || !json.rates) return;
+    for (const code of Object.keys(CURRENCIES)) {
+      const r = json.rates[code];
+      if (Number.isFinite(r) && r > 0) CURRENCIES[code].perUSD = r;
+    }
+    fxMeta.asOf = json.time_last_update_utc || new Date().toUTCString();
+    const elN = $("fxAsOf");
+    if (elN) elN.textContent = `Live rates as of ${fxMeta.asOf}.`;
+    if (lastPayload) renderResults(lastPayload);
+  } catch { /* offline — static defaults remain */ }
 }
 
 if (document.readyState === "loading") {
