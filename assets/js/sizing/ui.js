@@ -5,10 +5,10 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260825c";
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825c";
-import { BOM_ITEMS } from "../shared/content.js?v=20260825c";
-import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825c";
+import { CITY_PRESETS, } from "./nasa.js?v=20260825d";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825d";
+import { BOM_ITEMS } from "../shared/content.js?v=20260825d";
+import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825d";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -415,7 +415,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825c", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825d", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
@@ -900,17 +900,31 @@ function drawAutoChart(p) {
   for (const a of entries) {
     const color = TIER_COLORS[`auto-${a.chemistry}`] || "#888";
     const { min, max } = a.socNameplatePct;
+    // Envelope fill: the full daily range, deepest discharge to fullest.
     ctx.beginPath();
     ctx.moveTo(X(0), Y(max[0]));
     for (let i = 1; i < n; i++) ctx.lineTo(X(i), Y(max[i]));
     for (let i = n - 1; i >= 0; i--) ctx.lineTo(X(i), Y(min[i]));
     ctx.closePath();
-    ctx.globalAlpha = 0.15; ctx.fillStyle = color; ctx.fill(); ctx.globalAlpha = 1;
-    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.globalAlpha = 0.95;
+    ctx.globalAlpha = 0.2; ctx.fillStyle = color; ctx.fill(); ctx.globalAlpha = 1;
+    // Dashed FULL mark: this bank's own ceiling as % of its nameplate.
+    // Lead-acid's sits at ~42% (50% DoD rule × rate derate) — without this
+    // line the bank reads as "always nearly empty" when it is at ITS full.
+    const fullPct = Math.max(...max);
+    ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.globalAlpha = 0.5; ctx.setLineDash([2, 4]);
+    ctx.beginPath(); ctx.moveTo(padL, Y(fullPct)); ctx.lineTo(W - padR, Y(fullPct)); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+    // Top edge bold: "does it reach its full mark?" must be unmistakable.
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.95;
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) { const y = Y(max[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
+    ctx.stroke();
+    // Floor edge thin: how deep the nights and bad stretches dig.
+    ctx.lineWidth = 1; ctx.globalAlpha = 0.6;
     ctx.beginPath();
     for (let i = 0; i < n; i++) { const y = Y(min[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
     ctx.stroke();
-    ctx.lineWidth = 1; ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1;
   }
 
   // x labels: years
@@ -937,11 +951,14 @@ function drawAutoChart(p) {
     }
   }
 
+  const ceilings = entries
+    .map((a) => `${a.chemLabel.replace(/ \(.*\)/, "")} ${Math.round(Math.max(...a.socNameplatePct.max))}%`)
+    .join(" · ");
   $("socCaption").textContent =
-    `Every bank does the SAME job here — so what differs is how much hardware each chemistry must carry and how deeply it may use it. ` +
-    `The axis is each bank's OWN nameplate: lead-acid's whole working range hugs the bottom half of its gauge (the 50% rule) while carrying roughly double the nameplate — ` +
-    `lithium and sodium use nearly all of theirs. Sodium rides on standard LFP voltage settings, trading a slice of capacity for gentler discharge and longer life. ` +
-    `Dips during ${p.history.startYear}–${p.history.endYear}'s worst weather are the moments a generator or the grid would cover you.`;
+    `How to read it: the shaded area is each bank's daily range — the bold top edge is the fullest it got, the thin lower edge the deepest it sank, and the dashed line is that bank's FULL mark (${ceilings} of nameplate). ` +
+    `Every chemistry carries similar nameplate for the same job; the real difference is the usable slice — lithium and sodium may use ~90% of theirs, lead-acid only its bottom half (the 50% rule, times its discharge-rate derate). ` +
+    `Sodium rides standard LFP voltage settings: slightly less capacity, gentler discharge, longer life. ` +
+    `Dips to the floor during ${p.history.startYear}–${p.history.endYear}'s worst weather are the moments a generator or the grid would cover you.`;
 }
 
 // Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
