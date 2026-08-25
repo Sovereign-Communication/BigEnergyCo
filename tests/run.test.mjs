@@ -26,7 +26,7 @@ const MSG = {
 test("off-grid AUTO: every field the renderer reads exists and is sane", async () => {
   const p = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid" }, { fetchWeather: fakeWeather });
   assert.equal(p.mode, "offgrid");
-  assert.equal(p.contract, 4, "payload carries current contract version");
+  assert.equal(p.contract, 5, "payload carries current contract version");
   assert.ok(Array.isArray(p.auto) && p.auto.length === 3, "three chemistry cards");
   assert.equal(p.history.kind, "auto");
   assert.equal(p.tiers.length, 0);

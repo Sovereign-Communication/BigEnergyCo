@@ -11,10 +11,11 @@ import {
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER, capacityScaleFor,
 } from "./engine.js";
 import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js";
-import { fullRange, getScope, POWMR_CATALOG } from "./pricing.js";
+import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js";
 import {
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
   lifetimeCostUsd, exportValueUsd, trueBreakEvenYear,
+  INSTALL_LABOR_PER_KWH_USABLE,
 } from "./money.js";
 
 const TIER_BASIS = {
@@ -34,7 +35,7 @@ const VALID_AUTO_TARGETS = new Set(["cut60", "cut80", "cut95"]);
 // UI-contract version: bump whenever payload fields change shape. The
 // renderer compares this to its own constant and warns on mismatch instead
 // of rendering garbage from a stale cached module.
-export const PAYLOAD_CONTRACT = 4;
+export const PAYLOAD_CONTRACT = 5;
 
 const AUTO_CARD_NOTES = {
   naion: "Runs on standard LFP voltage settings (the common case): the ~40 V low cutoff protects it from deep discharge, so it gives up a little capacity but lasts longer than its deep-cycle rating.",
@@ -92,9 +93,16 @@ export async function runSizing(msg, deps = {}) {
   const annualYield = [...e1kw].reduce((a, b) => a + b, 0) / 1000 / series.meta.years;
   const gridSpend = annualGridSpendUsd(dailyKwh, tariff);
   const landedScope = getScope("landed");
-  const costPerWpvMid = (landedScope.pvPerW[0] + landedScope.pvPerW[1]) / 2;
-  const landedMidBattKwh = (landedScope.battPerKwhUsable[0] + landedScope.battPerKwhUsable[1]) / 2;
   const meanTempC = tempsC.reduce((a, b) => a + b, 0) / tempsC.length;
+
+  // Regional cost factors: install labor & landed freight/duty
+  const region = estimateTariff(latitude, longitude);
+  const laborF = region.laborF ?? 1;
+  const landedF = region.landedF ?? 1.1;
+  const laborPerKwh = INSTALL_LABOR_PER_KWH_USABLE.map((v) => v * laborF);
+  // Scale the landed-mid cost inputs for the sizer & money math
+  const costPerWpvMid = (landedScope.pvPerW[0] + landedScope.pvPerW[1]) / 2 * landedF;
+  const landedMidBattKwh = (landedScope.battPerKwhUsable[0] + landedScope.battPerKwhUsable[1]) / 2 * landedF;
 
   // Daily solar harvest per kW of array (kWh/day) — feeds the chart's sun
   // strip so the visual shows what drives the battery's recharge rhythm.
@@ -110,12 +118,13 @@ export async function runSizing(msg, deps = {}) {
     const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
     const cyclesPerYear = sizing.result.cyclesEquivalent / series.meta.years;
     const replacementsHorizon = batteryReplacements(cyclesPerYear, chemObj.cyclesTo80);
-    const cost = fullRange(sizing.pvKw, sizing.battKwh, chemId);
+    const cost = fullRange(sizing.pvKw, sizing.battKwh, chemId, landedF);
     const life = lifetimeCostUsd({
       capexMidUsd: cost.objectiveMid,
       battKwhUsable: sizing.battKwh,
       battPriceMidPerKwh: landedMidBattKwh,
       replacements: replacementsHorizon,
+      laborPerKwh,
     });
     return {
       chemObj, cost,
@@ -219,7 +228,7 @@ export async function runSizing(msg, deps = {}) {
         const results = sizeAllBillTargets({
           e1kw, loadWh, tempsC, chemistry: chemId,
           years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh,
-          pvMax: 45, battMax: 120, battStep: 1, capacityScale: capScale,
+          pvMax: 45, battMax: 120, battStep: 1, capacityScale: capScale, laborPerKwh,
         });
         const hit = results.find((r) => r.target.id === repTargetId);
         if (!hit || !hit.sizing) continue;

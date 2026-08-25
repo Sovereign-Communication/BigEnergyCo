@@ -337,7 +337,7 @@ export function sizeForTier({
   maxUnmetHoursPerYear, years = 1,
   costPerWpv = 0.35, costPerKwhBatt = 140,
   pvMax = 30, battMax = 200, pvStep = 0.5, battStep = 1,
-  capacityScale = null,
+  capacityScale = null, laborPerKwh,
 }) {
   const evaluate = (pv, batt) => {
     const r = simulate({ pvKw: pv, battKwhUsable: batt, e1kw, loadWh, chemistry, tempsC, capacityScale });
@@ -359,6 +359,7 @@ export function sizeForTier({
       battKwhUsable: b,
       battPriceMidPerKwh: costPerKwhBatt,
       replacements,
+      laborPerKwh,
     });
     return { total: life.total, replacements };
   };
@@ -498,7 +499,7 @@ export function sizeForBillCut({
   minFraction = 0.8, years = 1,
   costPerWpv = 0.35, costPerKwhBatt = 140,
   pvMax = 30, battMax = 100, battStep = 1,
-  capacityScale = null,
+  capacityScale = null, laborPerKwh,
 }) {
   const loadTotal = [...loadWh].reduce((a, b) => a + b, 0);
   const importBudget = loadTotal * (1 - minFraction);
@@ -516,6 +517,7 @@ export function sizeForBillCut({
       battKwhUsable: b,
       battPriceMidPerKwh: costPerKwhBatt,
       replacements,
+      laborPerKwh,
     });
     return { total: life.total, replacements };
   };

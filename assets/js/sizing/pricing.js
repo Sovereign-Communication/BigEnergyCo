@@ -89,9 +89,11 @@ export function costRange(pvKw, battKwhUsable, scopeId, chemistry = "lfp") {
 /**
  * The ONE range shown in the UI: ex-factory China at the low end through
  * PowMr-class budget retail at the high end. No selector — every result
- * simply states its honest spread.
+ * simply states its honest spread. `landedF` scales the landed-DIY midpoint
+ * (freight/duty premium) for the region — islands and landlocked countries
+ * pay more to get hardware ashore.
  */
-export function fullRange(pvKw, battKwhUsable, chemistry = "lfp") {
+export function fullRange(pvKw, battKwhUsable, chemistry = "lfp", landedF = 1) {
   const lo = costRange(pvKw, battKwhUsable, "cells", chemistry);
   const hi = costRange(pvKw, battKwhUsable, "powmr", chemistry);
   const landed = costRange(pvKw, battKwhUsable, "landed", chemistry);
@@ -107,7 +109,7 @@ export function fullRange(pvKw, battKwhUsable, chemistry = "lfp") {
     battCostHi: Math.round(battKwhUsable * powmrBatt[1]),
     battPerKwhLo: cellsBatt[0],
     battPerKwhHi: powmrBatt[1],
-    objectiveMid: Math.round((landed.lo + landed.hi) / 2),
+    objectiveMid: Math.round(((landed.lo + landed.hi) / 2) * landedF),
   };
 }
 
@@ -167,63 +169,65 @@ export const fxMeta = { asOf: null };
 const TARIFF_BOXES = [
   // Country-level refinement (most-specific first). `currency` is the ISO
   // code auto-selected when this box matches; null for multi-country boxes
-  // where a single currency would be wrong.
-  { box: [47.0, 55.5, 5.0, 15.5], rate: 0.40, label: "Germany", currency: "EUR" },
-  { box: [49.5, 61.0, -8.5, 2.0], rate: 0.34, label: "United Kingdom / Ireland", currency: "GBP" },
-  { box: [36.0, 47.5, 6.0, 19.0], rate: 0.42, label: "Italy", currency: "EUR" },
-  { box: [35.5, 44.0, -10.0, 4.5], rate: 0.26, label: "Spain / Portugal", currency: "EUR" },
-  { box: [41.0, 51.5, -5.5, 10.0], rate: 0.25, label: "France / Belgium / Netherlands", currency: "EUR" },
-  { box: [48.5, 55.0, 13.5, 24.5], rate: 0.20, label: "Poland / Czechia / Slovakia", currency: "PLN" },
-  { box: [55.0, 60.0, 20.0, 28.5], rate: 0.21, label: "Finland / Baltics", currency: "EUR" },
-  { box: [-56.0, -17.0, -74.0, -34.0], rate: 0.17, label: "Brazil", currency: "BRL" },
-  { box: [-30.0, -17.0, -73.0, -53.0], rate: 0.16, label: "Chile / Uruguay", currency: "CLP" },
-  { box: [0.0, 12.5, -79.0, -71.0], rate: 0.20, label: "Colombia / Venezuela", currency: "COP" },
-  { box: [-20.5, -0.5, -81.5, -75.0], rate: 0.14, label: "Peru / Ecuador", currency: "PEN" },
-  { box: [14.5, 33.0, -118.0, -86.0], rate: 0.16, label: "Mexico", currency: "MXN" },
-  { box: [4.0, 21.5, 116.0, 127.0], rate: 0.19, label: "Philippines", currency: "PHP" },
-  { box: [-11.5, 6.5, 94.5, 141.5], rate: 0.11, label: "Indonesia / Malaysia / Singapore", currency: null },
-  { box: [5.5, 20.5, 97.0, 106.0], rate: 0.13, label: "Thailand / Myanmar / Cambodia / Laos", currency: "THB" },
-  { box: [8.0, 24.0, 102.0, 110.0], rate: 0.08, label: "Vietnam", currency: "VND" },
-  { box: [6.0, 36.0, 68.0, 98.0], rate: 0.08, label: "India / Pakistan / Bangladesh / Nepal", currency: "INR" },
-  { box: [30.5, 46.5, 128.5, 146.5], rate: 0.20, label: "Japan / South Korea", currency: "JPY" },
-  { box: [-50.0, -9.5, 111.0, 180.0], rate: 0.29, label: "Australia / New Zealand", currency: "AUD" },
-  { box: [20.0, 32.5, 34.0, 60.0], rate: 0.09, label: "Saudi Arabia / UAE / Qatar / Oman / Kuwait", currency: null },
-  { box: [35.5, 42.5, 25.5, 45.0], rate: 0.11, label: "Turkey", currency: "TRY" },
-  { box: [29.5, 32.0, 34.0, 36.0], rate: 0.16, label: "Israel / Jordan", currency: "ILS" },
-  { box: [20.5, 32.5, -18.0, -1.0], rate: 0.14, label: "Morocco / Algeria / Tunisia", currency: "MAD" },
-  { box: [21.5, 32.0, 24.0, 37.0], rate: 0.05, label: "Egypt / Libya / Sudan", currency: "EGP" },
-  { box: [4.5, 12.5, -4.5, 2.5], rate: 0.14, label: "Ghana / Côte d'Ivoire / Togo", currency: "GHS" },
-  { box: [3.0, 14.5, 2.5, 15.5], rate: 0.07, label: "Nigeria / Niger / Benin / Cameroon", currency: "NGN" },
-  { box: [-5.5, 5.5, 33.0, 42.0], rate: 0.19, label: "Kenya / Uganda / Tanzania / Rwanda", currency: "KES" },
-  { box: [-35.5, -17.5, 15.5, 33.5], rate: 0.18, label: "South Africa / Namibia / Botswana", currency: "ZAR" },
-  { box: [3.5, 12.0, 8.0, 24.0], rate: 0.12, label: "Chad / CAR / South Sudan / Ethiopia", currency: null },
+  // where a single currency would be wrong. laborF scales install labor
+  // (baseline $12–30/usable kWh); landedF scales the landed-hardware
+  // freight/duty premium (islands and landlocked regions pay the most).
+  { box: [47.0, 55.5, 5.0, 15.5], rate: 0.40, label: "Germany", currency: "EUR", laborF: 2.2, landedF: 1.10 },
+  { box: [49.5, 61.0, -8.5, 2.0], rate: 0.34, label: "United Kingdom / Ireland", currency: "GBP", laborF: 1.9, landedF: 1.10 },
+  { box: [36.0, 47.5, 6.0, 19.0], rate: 0.42, label: "Italy", currency: "EUR", laborF: 1.8, landedF: 1.10 },
+  { box: [35.5, 44.0, -10.0, 4.5], rate: 0.26, label: "Spain / Portugal", currency: "EUR", laborF: 1.5, landedF: 1.10 },
+  { box: [41.0, 51.5, -5.5, 10.0], rate: 0.25, label: "France / Belgium / Netherlands", currency: "EUR", laborF: 2.0, landedF: 1.10 },
+  { box: [48.5, 55.0, 13.5, 24.5], rate: 0.20, label: "Poland / Czechia / Slovakia", currency: "PLN", laborF: 1.2, landedF: 1.10 },
+  { box: [55.0, 60.0, 20.0, 28.5], rate: 0.21, label: "Finland / Baltics", currency: "EUR", laborF: 1.6, landedF: 1.15 },
+  { box: [-56.0, -17.0, -74.0, -34.0], rate: 0.17, label: "Brazil", currency: "BRL", laborF: 0.9, landedF: 1.60 },
+  { box: [-30.0, -17.0, -73.0, -53.0], rate: 0.16, label: "Chile / Uruguay", currency: "CLP", laborF: 1.0, landedF: 1.35 },
+  { box: [0.0, 12.5, -79.0, -71.0], rate: 0.20, label: "Colombia / Venezuela", currency: "COP", laborF: 0.8, landedF: 1.40 },
+  { box: [-20.5, -0.5, -81.5, -75.0], rate: 0.14, label: "Peru / Ecuador", currency: "PEN", laborF: 0.7, landedF: 1.30 },
+  { box: [14.5, 33.0, -118.0, -86.0], rate: 0.16, label: "Mexico", currency: "MXN", laborF: 0.9, landedF: 1.20 },
+  { box: [4.0, 21.5, 116.0, 127.0], rate: 0.19, label: "Philippines", currency: "PHP", laborF: 0.6, landedF: 1.25 },
+  { box: [-11.5, 6.5, 94.5, 141.5], rate: 0.11, label: "Indonesia / Malaysia / Singapore", currency: null, laborF: 0.6, landedF: 1.20 },
+  { box: [5.5, 20.5, 97.0, 106.0], rate: 0.13, label: "Thailand / Myanmar / Cambodia / Laos", currency: "THB", laborF: 0.5, landedF: 1.20 },
+  { box: [8.0, 24.0, 102.0, 110.0], rate: 0.08, label: "Vietnam", currency: "VND", laborF: 0.5, landedF: 1.15 },
+  { box: [6.0, 36.0, 68.0, 98.0], rate: 0.08, label: "India / Pakistan / Bangladesh / Nepal", currency: "INR", laborF: 0.4, landedF: 1.25 },
+  { box: [30.5, 46.5, 128.5, 146.5], rate: 0.20, label: "Japan / South Korea", currency: "JPY", laborF: 1.7, landedF: 1.05 },
+  { box: [-50.0, -9.5, 111.0, 180.0], rate: 0.29, label: "Australia / New Zealand", currency: "AUD", laborF: 1.7, landedF: 1.20 },
+  { box: [20.0, 32.5, 34.0, 60.0], rate: 0.09, label: "Saudi Arabia / UAE / Qatar / Oman / Kuwait", currency: null, laborF: 1.0, landedF: 1.10 },
+  { box: [35.5, 42.5, 25.5, 45.0], rate: 0.11, label: "Turkey", currency: "TRY", laborF: 0.7, landedF: 1.30 },
+  { box: [29.5, 32.0, 34.0, 36.0], rate: 0.16, label: "Israel / Jordan", currency: "ILS", laborF: 1.2, landedF: 1.25 },
+  { box: [20.5, 32.5, -18.0, -1.0], rate: 0.14, label: "Morocco / Algeria / Tunisia", currency: "MAD", laborF: 0.6, landedF: 1.30 },
+  { box: [21.5, 32.0, 24.0, 37.0], rate: 0.05, label: "Egypt / Libya / Sudan", currency: "EGP", laborF: 0.4, landedF: 1.30 },
+  { box: [4.5, 12.5, -4.5, 2.5], rate: 0.14, label: "Ghana / Côte d'Ivoire / Togo", currency: "GHS", laborF: 0.5, landedF: 1.35 },
+  { box: [3.0, 14.5, 2.5, 15.5], rate: 0.07, label: "Nigeria / Niger / Benin / Cameroon", currency: "NGN", laborF: 0.4, landedF: 1.35 },
+  { box: [-5.5, 5.5, 33.0, 42.0], rate: 0.19, label: "Kenya / Uganda / Tanzania / Rwanda", currency: "KES", laborF: 0.5, landedF: 1.35 },
+  { box: [-35.5, -17.5, 15.5, 33.5], rate: 0.18, label: "South Africa / Namibia / Botswana", currency: "ZAR", laborF: 0.8, landedF: 1.30 },
+  { box: [3.5, 12.0, 8.0, 24.0], rate: 0.12, label: "Chad / CAR / South Sudan / Ethiopia", currency: null, laborF: 0.4, landedF: 1.50 },
   // Regional fallbacks (no single currency — do not auto-set)
-  { box: [18.5, 28.5, -179, -154], rate: 0.42, label: "Hawaii / Pacific islands", currency: null },
-  { box: [59, 72, 24, 46], rate: 0.18, label: "Nordics / Baltic", currency: null },
-  { box: [49.5, 61, -9, 3], rate: 0.34, label: "UK / Ireland", currency: null },
-  { box: [35.5, 72, -11, 41], rate: 0.29, label: "Europe", currency: null },
-  { box: [24, 50, -125, -66], rate: 0.17, label: "US mainland", currency: null },
-  { box: [42, 71, -141, -52], rate: 0.13, label: "Canada", currency: null },
-  { box: [7, 25, -93, -58], rate: 0.33, label: "Caribbean & Central America", currency: null },
-  { box: [-56, 13, -82, -34], rate: 0.16, label: "South America", currency: null },
-  { box: [22, 47, 123, 147], rate: 0.21, label: "Japan / Korea", currency: null },
-  { box: [-48, -9, 110, 180], rate: 0.26, label: "Australia / New Zealand", currency: null },
-  { box: [5, 37, 60, 98], rate: 0.08, label: "South Asia", currency: null },
-  { box: [18, 54, 73, 135], rate: 0.09, label: "China / Mongolia", currency: null },
-  { box: [-12, 26, 90, 142], rate: 0.12, label: "Southeast Asia", currency: null },
-  { box: [12, 43, 33, 64], rate: 0.09, label: "Middle East", currency: null },
-  { box: [-36, 38, -19, 53], rate: 0.16, label: "Africa", currency: null },
+  { box: [18.5, 28.5, -179, -154], rate: 0.42, label: "Hawaii / Pacific islands", currency: null, laborF: 1.8, landedF: 1.40 },
+  { box: [59, 72, 24, 46], rate: 0.18, label: "Nordics / Baltic", currency: null, laborF: 1.6, landedF: 1.10 },
+  { box: [49.5, 61, -9, 3], rate: 0.34, label: "UK / Ireland", currency: null, laborF: 1.9, landedF: 1.10 },
+  { box: [35.5, 72, -11, 41], rate: 0.29, label: "Europe", currency: null, laborF: 1.8, landedF: 1.10 },
+  { box: [24, 50, -125, -66], rate: 0.17, label: "US mainland", currency: null, laborF: 1.5, landedF: 1.05 },
+  { box: [42, 71, -141, -52], rate: 0.13, label: "Canada", currency: null, laborF: 1.5, landedF: 1.10 },
+  { box: [7, 25, -93, -58], rate: 0.33, label: "Caribbean & Central America", currency: null, laborF: 0.8, landedF: 1.35 },
+  { box: [-56, 13, -82, -34], rate: 0.16, label: "South America", currency: null, laborF: 0.9, landedF: 1.35 },
+  { box: [22, 47, 123, 147], rate: 0.21, label: "Japan / Korea", currency: null, laborF: 1.7, landedF: 1.05 },
+  { box: [-48, -9, 110, 180], rate: 0.26, label: "Australia / New Zealand", currency: null, laborF: 1.7, landedF: 1.20 },
+  { box: [5, 37, 60, 98], rate: 0.08, label: "South Asia", currency: null, laborF: 0.4, landedF: 1.25 },
+  { box: [18, 54, 73, 135], rate: 0.09, label: "China / Mongolia", currency: null, laborF: 0.7, landedF: 1.00 },
+  { box: [-12, 26, 90, 142], rate: 0.12, label: "Southeast Asia", currency: null, laborF: 0.55, landedF: 1.20 },
+  { box: [12, 43, 33, 64], rate: 0.09, label: "Middle East", currency: null, laborF: 1.0, landedF: 1.10 },
+  { box: [-36, 38, -19, 53], rate: 0.16, label: "Africa", currency: null, laborF: 0.5, landedF: 1.35 },
 ];
 
 export function estimateTariff(lat, lon) {
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-    return { rate: 0.28, label: "global average", currency: null };
+    return { rate: 0.28, label: "global average", currency: null, laborF: 1, landedF: 1.1 };
   }
   for (const t of TARIFF_BOXES) {
     const [latMin, latMax, lonMin, lonMax] = t.box;
     if (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax) {
-      return { rate: t.rate, label: t.label, currency: t.currency || null };
+      return { rate: t.rate, label: t.label, currency: t.currency || null, laborF: t.laborF, landedF: t.landedF };
     }
   }
-  return { rate: 0.28, label: "global average", currency: null };
+  return { rate: 0.28, label: "global average", currency: null, laborF: 1, landedF: 1.1 };
 }

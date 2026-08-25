@@ -5,10 +5,10 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260825e";
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825e";
-import { BOM_ITEMS } from "../shared/content.js?v=20260825e";
-import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825e";
+import { CITY_PRESETS, } from "./nasa.js?v=20260825f";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825f";
+import { BOM_ITEMS } from "../shared/content.js?v=20260825f";
+import { applyI18n, initLangPicker, LOCALES } from "../shared/i18n.js?v=20260825f";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -16,6 +16,24 @@ let lastPayload = null;   // kept for share links + the printable summary
 // The legacy storage-comparison script (classic inline JS) reads scoped
 // prices through this bridge — pricing.js stays the single source of truth.
 window.BECO_BATT_COST = battOnlyCost;
+
+// Translation helper with interpolation support
+function t(key, params = {}) {
+  const lang = resolveLang();
+  const dict = LOCALES[lang] || LOCALES.en;
+  let str = dict[key] || key;
+  for (const [k, v] of Object.entries(params)) {
+    str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+  }
+  return str;
+}
+
+function resolveLang() {
+  const saved = localStorage.getItem("beco-lang");
+  if (saved && (saved === "auto" || LOCALES[saved] || saved === "en")) return saved;
+  const nav = (navigator.language || "en").slice(0, 2).toLowerCase();
+  return LOCALES[nav] ? nav : "en";
+}
 
 // ── Appliance library ───────────────────────────────────────────────────────
 // w = watts WHILE RUNNING. duty:true items (fridges, ACs, pumps) only run a
@@ -141,27 +159,25 @@ function updateLoadReadout() {
   if (mode === "appliances") {
     const { kwh, peakW, count } = applianceState();
     if (!count) {
-      out.textContent = "Tick the things you want to power, and your daily energy shows up here.";
+      out.textContent = t("readoutAppliancesEmpty");
     } else {
       out.innerHTML = "";
-      out.appendChild(el("span", {}, `Estimated use: about ${fmtKwh(kwh)} kWh/day`));
-      out.appendChild(el("span", { style: "color:var(--text-muted);font-weight:400;" },
-        `  ·  everything running at once ≈ ${peakW.toLocaleString()} W (your inverter should be bigger than this)`));
+      out.appendChild(el("span", {}, t("readoutAppliancesSummary", { kwh: fmtKwh(kwh), peakW: peakW.toLocaleString() })));
     }
   } else if (mode === "bill") {
     const bill = parseFloat($("billAmount").value);
     const rate = getTariff();
     if (Number.isFinite(bill) && bill > 0 && Number.isFinite(rate) && rate > 0) {
       const kwhDay = bill / (rate * 30.44);
-      out.textContent = `That works out to about ${fmtKwh(kwhDay)} kWh/day of average use.`;
+      out.textContent = t("readoutBill", { kwhDay: fmtKwh(kwhDay) });
     } else {
-      out.textContent = "Enter your monthly bill amount to see the daily energy estimate.";
+      out.textContent = t("readoutBillIncomplete");
     }
   } else {
     const kwh = parseFloat($("dailyKwhInput").value);
     out.textContent = Number.isFinite(kwh) && kwh > 0
-      ? `Using ${kwh} kWh/day directly.`
-      : "Enter a daily kWh figure.";
+      ? t("readoutKwhReady", { kwh: fmtKwh(kwh) })
+      : t("readoutKwhEmpty");
   }
 }
 
@@ -389,19 +405,17 @@ function run() {
   const inp = readInputs();
   if (!Number.isFinite(inp.latitude) || !Number.isFinite(inp.longitude) ||
       Math.abs(inp.latitude) > 90 || Math.abs(inp.longitude) > 180) {
-    setStatus("⚠️ Pick a city (or use 📍 My location) so we know your sunshine.");
+    setStatus(t("pickCity"));
     return;
   }
   if (!Number.isFinite(inp.dailyKwh) || inp.dailyKwh <= 0 || inp.dailyKwh > 500) {
-    setStatus("⚠️ Tell us your power use — tick some appliances, or enter a bill or kWh figure.");
+    setStatus(t("tellPowerUse"));
     return;
   }
-  setStatus(inp.mode === "gridtie"
-    ? "⏳ Fetching five years of satellite weather and searching bill-cutting system sizes…"
-    : "⏳ Fetching 5 years of hourly satellite weather and searching system sizes…");
+  setStatus(inp.mode === "gridtie" ? t("statusGridtie") : t("statusOffgrid"));
   const btn = $("btnRunSizing");
   btn.disabled = true;
-  btn.innerHTML = '<span class="spin">◐</span> Running 5-year simulation…';
+  btn.innerHTML = `<span class="spin">◐</span> ${t("runningBtn")}`;
   ensureWorker().postMessage({ type: "run", ...inp });
 }
 
@@ -409,13 +423,13 @@ function restoreRunButton() {
   const btn = $("btnRunSizing");
   if (btn) {
     btn.disabled = false;
-    btn.innerHTML = "☀️ Size My System (5-yr simulation)";
+    btn.innerHTML = t("runBtnReady");
   }
 }
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825e", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825f", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
@@ -426,7 +440,7 @@ function ensureWorker() {
       restoreRunButton();
     };
     worker.onerror = () => {
-      setStatus("⚠️ Sizing engine failed to load.");
+      setStatus(t("errorSim") + "Sizing engine failed to load.");
       restoreRunButton();
     };
   }
@@ -743,8 +757,8 @@ function renderMoneyBar(p) {
   }
   moneyBar.style.display = "block";
   moneyBar.textContent = p.mode === "gridtie"
-    ? `At $${p.tariff.toFixed(2)}/kWh, your power costs about ${money(p.annualGridSpendUsd)} per year today. Each option below shows the bill after solar and how fast it repays itself out of the savings.`
-    : `At $${p.tariff.toFixed(2)}/kWh, this use costs about ${money(p.annualGridSpendUsd)} per year in grid power. Payback figures below compare system cost against that spend.`;
+    ? t("tariffSpendLine", { tariff: p.tariff.toFixed(2), annual: money(p.annualGridSpendUsd) })
+    : t("tariffSpendOffgrid", { tariff: p.tariff.toFixed(2), annual: money(p.annualGridSpendUsd) });
 }
 
 function renderTierCards(p) {
@@ -1004,8 +1018,7 @@ function renderResults(p) {
   if (p.contract !== undefined && p.contract !== PAYLOAD_CONTRACT) {
     setStatus("\u26A0\uFE0F This result came from an older engine version \u2014 refresh the page (Ctrl+F5 / \u2318\u21E7R) and run again for complete, current figures.");
   } else {
-    setStatus(`\u2705 ${p.meta.years} yr of hourly data (${p.assumptions.dataYears}) \u00b7 ${fmt(p.annualYieldPerKw)} kWh/yr per kW of panel.` +
-      (p.meta.offline ? " \u00b7 \uD83D\uDDF4 offline typical-year mode" : ""));
+    setStatus(t("statusSuccess", { years: p.meta.years, dataYears: p.assumptions.dataYears, yield: fmt(p.annualYieldPerKw), offline: p.meta.offline ? t("offlineNote") : "" }));
   }
 
   renderMoneyBar(p);
