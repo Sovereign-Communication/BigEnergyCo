@@ -5,10 +5,10 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260825f";
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825f";
-import { BOM_ITEMS } from "../shared/content.js?v=20260825f";
-import { applyI18n, initLangPicker, LOCALES } from "../shared/i18n.js?v=20260825f";
+import { CITY_PRESETS, } from "./nasa.js?v=20260825g";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825g";
+import { BOM_ITEMS } from "../shared/content.js?v=20260825g";
+import { applyI18n, initLangPicker, LOCALES } from "../shared/i18n.js?v=20260825g";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -429,7 +429,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825f", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825g", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
