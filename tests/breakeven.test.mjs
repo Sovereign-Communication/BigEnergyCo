@@ -11,15 +11,15 @@ test("no swaps: break-even matches simple payback (within a year)", () => {
 
 test("swaps push break-even later than first-cost payback", () => {
   // Base: $2,400 at $200/yr savings -> year 12. A bank dying at year 8
-  // ($1,200 swap, another at 16) pushes cumulative cost to $3,600 then
-  // $4,800 — break-even slides from year 12 to year 24.
+  // ($1,200 swap) pushes cumulative cost to $3,600 — break-even slides
+  // from year 12 to year 18 (within the 20-year horizon).
   const base = trueBreakEvenYear({ capexMidUsd: 2400, annualSavingsUsd: 200, batteryLifeYears: 30 });
   assert.equal(base, 12);
   const withSwaps = trueBreakEvenYear({
     capexMidUsd: 2400, annualSavingsUsd: 200,
-    swapsAndLaborTotalUsd: 2400, replacements: 2, batteryLifeYears: 8,
+    swapsAndLaborTotalUsd: 1200, replacements: 1, batteryLifeYears: 8,
   });
-  assert.equal(withSwaps, 24);
+  assert.equal(withSwaps, 18);
 });
 
 test("GATE: swap costs can outpace savings — honest 'never' answer", () => {

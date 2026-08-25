@@ -40,12 +40,12 @@ test("batteryReplacements: bank lasting the horizon needs none", () => {
 });
 
 test("batteryReplacements: floor(horizon/life) full swaps", () => {
-  // 10-year life -> replacements at yr10 and yr20 -> 2 by year 25
+  // 10-year life -> replacements at yr10 and yr20 -> 2 by year 20
   assert.equal(batteryReplacements(600, 6000), 2);
   // AGM-style: ~1.5-year life under heavy cycling -> many swaps, capped at 8
   assert.ok(batteryReplacements(4000, 600) === 8 || batteryReplacements(4000, 600) <= 8);
-  // 12.5-year life -> floor(25/12.5) = exactly two replacement boundaries
-  assert.equal(batteryReplacements(480, 6000), 2);
+  // 12.5-year life -> floor(20/12.5) = one replacement boundary within the horizon
+  assert.equal(batteryReplacements(480, 6000), 1);
 });
 
 test("batteryReplacements: zero or missing cycling means zero replacements", () => {
@@ -54,13 +54,13 @@ test("batteryReplacements: zero or missing cycling means zero replacements", () 
 });
 
 test("lcoeUsdPerKwh: capex plus replacements over served energy", () => {
-  // $5,000 capex serving 4,000 kWh/yr for 25 yrs, no replacements:
-  // 5000 / (4000*25) = $0.05/kWh
+  // $5,000 capex serving 4,000 kWh/yr over the horizon, no replacements:
+  const denom = 4000 * HORIZON_YEARS;
   const l = lcoeUsdPerKwh({ capexMidUsd: 5000, annualServedKwh: 4000 });
-  assert.ok(Math.abs(l - 0.05) < 1e-9);
-  // One $2,000 replacement: (5000+2000)/100000 = $0.07/kWh
+  assert.ok(Math.abs(l - 5000 / denom) < 1e-9);
+  // One $2,000 replacement: (5000+2000)/denom
   const l2 = lcoeUsdPerKwh({ capexMidUsd: 5000, battReplaceCostUsd: 2000, replacements: 1, annualServedKwh: 4000 });
-  assert.ok(Math.abs(l2 - 0.07) < 1e-9);
+  assert.ok(Math.abs(l2 - 7000 / denom) < 1e-9);
 });
 
 test("lcoeUsdPerKwh: null without served energy or capex", () => {

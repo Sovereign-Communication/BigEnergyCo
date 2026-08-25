@@ -3,7 +3,9 @@
 // No DOM, no network — fully unit-tested. The worker and UI both import this.
 
 // Design-life assumption for panels and electronics when levelizing.
-export const HORIZON_YEARS = 25;
+// 20 years is a realistic planning horizon: battery warranties typically
+// run 10–15 years, while panels/inverters outlast the horizon at 25–30.
+export const HORIZON_YEARS = 20;
 
 /** Annual grid spend for a given use and tariff. */
 export function annualGridSpendUsd(dailyKwh, tariffPerKwh) {

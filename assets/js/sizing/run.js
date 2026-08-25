@@ -99,19 +99,19 @@ export async function runSizing(msg, deps = {}) {
   function moneyFor(chemId, sizing) {
     const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
     const cyclesPerYear = sizing.result.cyclesEquivalent / series.meta.years;
-    const replacements25y = batteryReplacements(cyclesPerYear, chemObj.cyclesTo80);
+    const replacementsHorizon = batteryReplacements(cyclesPerYear, chemObj.cyclesTo80);
     const cost = fullRange(sizing.pvKw, sizing.battKwh, chemId);
     const life = lifetimeCostUsd({
       capexMidUsd: cost.objectiveMid,
       battKwhUsable: sizing.battKwh,
       battPriceMidPerKwh: landedMidBattKwh,
-      replacements: replacements25y,
+      replacements: replacementsHorizon,
     });
     return {
       chemObj, cost,
       cyclesPerYear: Math.round(cyclesPerYear),
       batteryLifeYears: cyclesPerYear > 0 ? +(chemObj.cyclesTo80 / cyclesPerYear).toFixed(1) : null,
-      replacements25y,
+      replacementsHorizon,
       swapsAndLaborUsd: life.swapsAndLabor,
       lifetimeCostMid: life.total,
       battNameplateKwh: +(sizing.battKwh / chemObj.usableDod).toFixed(1),
@@ -153,7 +153,7 @@ export async function runSizing(msg, deps = {}) {
       capexMidUsd: m.cost.objectiveMid,
       annualSavingsUsd,
       swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
-      replacements: m.replacements25y,
+      replacements: m.replacementsHorizon,
       batteryLifeYears: m.batteryLifeYears,
     });
   }
@@ -237,7 +237,7 @@ export async function runSizing(msg, deps = {}) {
           trueBreakEvenYear: breakEvenFor(m, savingsUsd),
           exportValueAnnualUsd: Math.round(exportVal),
           clippedKwhPerYear: Math.round(clippedKwhPerYear),
-          replacements25y: m.replacements25y,
+          replacementsHorizon: m.replacementsHorizon,
           swapsAndLaborUsd: m.swapsAndLaborUsd,
           lifetimeCostMid: m.lifetimeCostMid,
           servedKwhPerYear: Math.round(servedKwhPerYear),
@@ -245,7 +245,7 @@ export async function runSizing(msg, deps = {}) {
             const l = lcoeUsdPerKwh({
               capexMidUsd: m.cost.objectiveMid,
               battReplaceCostUsd: Math.round(hit.sizing.battKwh * landedMidBattKwh),
-              replacements: m.replacements25y,
+              replacements: m.replacementsHorizon,
               annualServedKwh: servedKwhPerYear,
             });
             return l === null ? null : +l.toFixed(4);
@@ -266,7 +266,7 @@ export async function runSizing(msg, deps = {}) {
       payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), tiers: [] };
       payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
       payload.assumptions.money =
-        `Auto mode sizes each chemistry to deliver the same ~80% bill cut within its depth-of-discharge window (AGM banks are ~2× nameplate; lithium/sodium ~1.1×; sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). Lifetime cost adds every bank swap PLUS install labor each time over 25 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings). Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; fixed connection fees not counted.`;
+        `Auto mode sizes each chemistry to deliver the same ~80% bill cut within its depth-of-discharge window (AGM banks are ~2× nameplate; lithium/sodium ~1.1×; sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings). Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; fixed connection fees not counted.`;
       return payload;
     }
 
@@ -290,7 +290,7 @@ export async function runSizing(msg, deps = {}) {
       const lcoe = lcoeUsdPerKwh({
         capexMidUsd: m.cost.objectiveMid,
         battReplaceCostUsd: Math.round(sizing.battKwh * landedMidBattKwh),
-        replacements: m.replacements25y,
+        replacements: m.replacementsHorizon,
         annualServedKwh: servedKwhPerYear,
       });
       const sim = simulateOffset({
@@ -317,7 +317,7 @@ export async function runSizing(msg, deps = {}) {
         paybackYearsLo: savingsUsd ? paybackYears(m.cost.lo, savingsUsd + exportVal) : null,
         paybackYearsHi: savingsUsd ? paybackYears(m.cost.hi, savingsUsd + exportVal) : null,
         trueBreakEvenYear: breakEvenFor(m, savingsUsd),
-        replacements25y: m.replacements25y,
+        replacementsHorizon: m.replacementsHorizon,
         swapsAndLaborUsd: m.swapsAndLaborUsd,
         lifetimeCostMid: m.lifetimeCostMid,
         servedKwhPerYear: Math.round(servedKwhPerYear),
@@ -358,7 +358,7 @@ export async function runSizing(msg, deps = {}) {
       const lcoe = lcoeUsdPerKwh({
         capexMidUsd: m.cost.objectiveMid,
         battReplaceCostUsd: Math.round(sizing.battKwh * landedMidBattKwh),
-        replacements: m.replacements25y,
+        replacements: m.replacementsHorizon,
         annualServedKwh: servedKwhPerYear,
       });
       const entry = {
@@ -373,7 +373,7 @@ export async function runSizing(msg, deps = {}) {
         costLo: m.cost.lo, costHi: m.cost.hi,
         unmetHoursPerYear: +(sizing.result.unmetHours / series.meta.years).toFixed(1),
         longestGapHours: sizing.result.longestGapHours,
-        replacements25y: m.replacements25y,
+        replacementsHorizon: m.replacementsHorizon,
         swapsAndLaborUsd: m.swapsAndLaborUsd,
         lifetimeCostMid: m.lifetimeCostMid,
         servedKwhPerYear: Math.round(servedKwhPerYear),
@@ -399,7 +399,7 @@ export async function runSizing(msg, deps = {}) {
     payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), tiers: [] };
     payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
     payload.assumptions.money =
-      `Auto mode sizes each chemistry for the same job — lights stay on with a generator as rare backup — inside its depth-of-discharge window (AGM keeps a 50% reserve; lithium/sodium use ~90%). Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 25 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) — that is why its sticker price misleads.`;
+      `Auto mode sizes each chemistry for the same job — lights stay on with a generator as rare backup — inside its depth-of-discharge window (AGM keeps a 50% reserve; lithium/sodium use ~90%). Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) — that is why its sticker price misleads.`;
     return payload;
   }
 
@@ -418,7 +418,7 @@ export async function runSizing(msg, deps = {}) {
         pvKw: null, battKwh: null, battNameplateKwh: null, usableDod: chem.usableDod,
         costLo: null, costHi: null, unmetHoursPerYear: null, longestGapHours: null,
         cyclesPerYear: null, batteryLifeYears: null, minSocPct: null,
-        servedKwhPerYear: null, replacements25y: null, swapsAndLaborUsd: null,
+        servedKwhPerYear: null, replacementsHorizon: null, swapsAndLaborUsd: null,
         lifetimeCostMid: null, lcoeUsdPerKwh: null, paybackYearsLo: null, paybackYearsHi: null,
       };
     }
@@ -427,7 +427,7 @@ export async function runSizing(msg, deps = {}) {
     const lcoe = lcoeUsdPerKwh({
       capexMidUsd: m.cost.objectiveMid,
       battReplaceCostUsd: Math.round(sizing.battKwh * landedMidBattKwh),
-      replacements: m.replacements25y,
+      replacements: m.replacementsHorizon,
       annualServedKwh: servedKwhPerYear,
     });
     const sim = simulate({
@@ -451,7 +451,7 @@ export async function runSizing(msg, deps = {}) {
       batteryLifeYears: m.batteryLifeYears,
       minSocPct: +(sizing.result.minSoc * 100).toFixed(0),
       servedKwhPerYear: Math.round(servedKwhPerYear),
-      replacements25y: m.replacements25y,
+      replacementsHorizon: m.replacementsHorizon,
       swapsAndLaborUsd: m.swapsAndLaborUsd,
       lifetimeCostMid: m.lifetimeCostMid,
       lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
@@ -469,6 +469,6 @@ export async function runSizing(msg, deps = {}) {
   payload.history = { kind: "offgrid", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), tiers: historyTiers };
   payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
   payload.assumptions.money =
-    `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 25-year horizon, and assumes panels/inverter last the full 25 years. Lifetime figures include install labor on the first bank and every swap. Generator fuel and grid fixed charges are not counted.`;
+    `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 20-year horizon, and assumes panels/inverter last the full 25 years. Lifetime figures include install labor on the first bank and every swap. Generator fuel and grid fixed charges are not counted.`;
   return payload;
 }

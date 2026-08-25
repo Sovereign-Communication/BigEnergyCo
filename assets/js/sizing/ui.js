@@ -5,10 +5,10 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260825a";
-import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260825a";
-import { BOM_ITEMS } from "../shared/content.js?v=20260825a";
-import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825a";
+import { CITY_PRESETS, } from "./nasa.js?v=20260825b";
+import { estimateTariff, battOnlyCost } from "./pricing.js?v=20260825b";
+import { BOM_ITEMS } from "../shared/content.js?v=20260825b";
+import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825b";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -384,7 +384,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825a", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825b", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
@@ -620,12 +620,12 @@ function renderAutoCards(p) {
       ["Bank usable", `${fmt(a.battKwh)} kWh · ≈${fmt(a.battNameplateKwh)} kWh nameplate`],
       ["Depth-of-discharge window", `uses ${(a.usableDod * 100).toFixed(0)}% of nameplate`],
       ["First cost", `~${moneyRange(a.costLo, a.costHi)}`],
-      ["Bank swaps over 25 yr", a.replacements25y > 0 ? `~${a.replacements25y}× (life ≈ ${fmtLife(a.batteryLifeYears)})` : "none expected"],
+      ["Bank swaps over 20 yr", a.replacementsHorizon > 0 ? `~${a.replacementsHorizon}× (life ≈ ${fmtLife(a.batteryLifeYears)})` : "none expected"],
     ];
     if (a.swapsAndLaborUsd > 0) {
       rows.push(["Swaps + labor add", `≈${money(a.swapsAndLaborUsd)}`]);
     }
-    rows.push(["True 25-yr cost", `≈${money(a.lifetimeCostMid)}` + (a.chemistry === bestId ? " ← cheapest bank" : "")]);
+    rows.push(["True 20-yr cost", `≈${money(a.lifetimeCostMid)}` + (a.chemistry === bestId ? " ← cheapest bank" : "")]);
     if (isGT) {
       rows.push(["Bill after solar", a.billAfterMonthlyUsd !== null ? `≈${money(a.billAfterMonthlyUsd)}/mo` : "needs your tariff"]);
       rows.push(["Sun clipped (no export)", `${fmt(a.clippedKwhPerYear)} kWh/yr`]);
@@ -639,11 +639,11 @@ function renderAutoCards(p) {
     if (p.tariff && a.trueBreakEvenYear !== undefined) {
       if (typeof a.trueBreakEvenYear === "number") {
         rows.push(["Breaks even on true cost in", `≈ year ${a.trueBreakEvenYear} of ownership`]);
-        if (a.replacements25y > 0 && a.paybackYearsLo !== null) {
+        if (a.replacementsHorizon > 0 && a.paybackYearsLo !== null) {
           rows.push(["  · first cost alone pays back in", fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi)]);
         }
       } else {
-        rows.push(["True 25-yr break-even", "never — replacements outpace savings"]);
+        rows.push(["True 20-yr break-even", "never — replacements outpace savings"]);
       }
     } else if (!p.tariff && a.paybackYearsLo !== null) {
       rows.push(["Pays for itself in", fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi)]);
@@ -708,8 +708,8 @@ function renderTierCards(p) {
     if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
       rows.push(["Pays back its first cost in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi)]);
     }
-    if (typeof t.trueBreakEvenYear === "number" || (t.trueBreakEvenYear === null && t.replacements25y > 0)) {
-      rows.push(["Breaks even on true 25-yr cost", typeof t.trueBreakEvenYear === "number"
+    if (typeof t.trueBreakEvenYear === "number" || (t.trueBreakEvenYear === null && t.replacementsHorizon > 0)) {
+      rows.push(["Breaks even on true 20-yr cost", typeof t.trueBreakEvenYear === "number"
         ? `\u2248 year ${t.trueBreakEvenYear} (every swap counted)`
         : "never \u2014 swaps outpace savings"]);
     }
@@ -717,10 +717,10 @@ function renderTierCards(p) {
       rows.push(["Your solar power costs", `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` +
         (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}¢)` : "")]);
     }
-    if (t.replacements25y > 0) {
-      rows.push(["Battery swaps over 25 yr", `~${t.replacements25y}× · adds ≈${money(t.swapsAndLaborUsd)} with labor`]);
+    if (t.replacementsHorizon > 0) {
+      rows.push(["Battery swaps over 25 yr", `~${t.replacementsHorizon}× · adds ≈${money(t.swapsAndLaborUsd)} with labor`]);
     }
-    rows.push(["True 25-yr cost", `≈${money(t.lifetimeCostMid)}`]);
+    rows.push(["True 20-yr cost", `≈${money(t.lifetimeCostMid)}`]);
     appendRows(card, rows);
     card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
       "Battery + panel component estimate only; excludes inverter, BOS, freight, labor."));
@@ -759,8 +759,8 @@ function renderTargetCards(p) {
     if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
       rows.push(["Pays back its first cost in", fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) + (exportActive ? " incl. feed-in" : "")]);
     }
-    if (t.battKwh > 0 && (typeof t.trueBreakEvenYear === "number" || (t.trueBreakEvenYear === null && t.replacements25y > 0))) {
-      rows.push(["Breaks even on true 25-yr cost", typeof t.trueBreakEvenYear === "number"
+    if (t.battKwh > 0 && (typeof t.trueBreakEvenYear === "number" || (t.trueBreakEvenYear === null && t.replacementsHorizon > 0))) {
+      rows.push(["Breaks even on true 20-yr cost", typeof t.trueBreakEvenYear === "number"
         ? `\u2248 year ${t.trueBreakEvenYear} (every swap counted)`
         : "never \u2014 swaps outpace savings"]);
     }
@@ -768,11 +768,11 @@ function renderTargetCards(p) {
       rows.push(["Your solar power costs", `≈${(t.lcoeUsdPerKwh * 100).toFixed(1)}¢/kWh` +
         (p.tariff ? ` (grid: ${(p.tariff * 100).toFixed(0)}¢)` : "")]);
     }
-    if (t.replacements25y > 0 && t.battKwh > 0) {
-      rows.push(["Battery swaps over 25 yr", `~${t.replacements25y}× · adds ≈${money(t.swapsAndLaborUsd)} with labor`]);
+    if (t.replacementsHorizon > 0 && t.battKwh > 0) {
+      rows.push(["Battery swaps over 25 yr", `~${t.replacementsHorizon}× · adds ≈${money(t.swapsAndLaborUsd)} with labor`]);
     }
     if (t.battKwh > 0) {
-      rows.push(["True 25-yr cost", `≈${money(t.lifetimeCostMid)}`]);
+      rows.push(["True 20-yr cost", `≈${money(t.lifetimeCostMid)}`]);
     }
     appendRows(card, rows);
     card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
@@ -887,7 +887,7 @@ function drawAutoChart(p) {
       chip.appendChild(el("span", { style: `width:10px;height:10px;border-radius:50%;background:${TIER_COLORS[`auto-${a.chemistry}`]};display:inline-block;` }));
       chip.appendChild(el("span", {},
         `${a.chemLabel.replace(/ \(.*\)/, "")} · ${fmt(a.battNameplateKwh)} kWh nameplate` +
-        (a.replacements25y > 0 ? ` · ~${a.replacements25y} swaps/25yr` : " · no swaps")));
+        (a.replacementsHorizon > 0 ? ` · ~${a.replacementsHorizon} swaps/20yr` : " · no swaps")));
       legend.appendChild(chip);
     }
   }
@@ -938,7 +938,7 @@ function renderResults(p) {
   if (p.auto && p.auto.length) {
     briefLines = p.auto.filter((t) => t.solvable).map((t) =>
       `- ${t.chemLabel}: ${t.pvKw} kW PV + ${fmt(t.battKwh)} kWh usable (≈${fmt(t.battNameplateKwh)} kWh nameplate at ${(t.usableDod * 100).toFixed(0)}% DoD), first cost ~${moneyRange(t.costLo, t.costHi)}, ` +
-      `${t.replacements25y > 0 ? `${t.replacements25y} bank swaps (+${money(t.swapsAndLaborUsd)} with labor)` : "no swaps expected"} → true 25-yr cost ≈${money(t.lifetimeCostMid)}`);
+      `${t.replacementsHorizon > 0 ? `${t.replacementsHorizon} bank swaps (+${money(t.swapsAndLaborUsd)} with labor)` : "no swaps expected"} → true 20-yr cost ≈${money(t.lifetimeCostMid)}`);
   } else if (isGT) {
     briefLines = p.targets.filter((t) => t.solvable)
       .map((t) => `- ${t.label}: ${t.pvKw} kW PV + ${t.battKwh > 0 ? fmt(t.battKwh) + " kWh usable" : "no battery"} (~${moneyRange(t.costLo, t.costHi)}) → bill −${t.cutPct}%` +
@@ -1055,14 +1055,14 @@ function populatePrintSheet(p, inp) {
   let rows, head, title;
   if (p.auto && p.auto.length) {
     title = `Battery Lifetime Comparison (${isGT ? "Grid-Connected" : "Off-Grid"})`;
-    head = "<tr><th>Battery</th><th>Solar</th><th>Bank usable (nameplate)</th><th>First cost</th><th>Swaps in 25 yr</th><th>Swaps + labor</th><th>True 25-yr cost</th><th>True break-even</th></tr>";
+    head = "<tr><th>Battery</th><th>Solar</th><th>Bank usable (nameplate)</th><th>First cost</th><th>Swaps in 20 yr</th><th>Swaps + labor</th><th>True 20-yr cost</th><th>True break-even</th></tr>";
     rows = p.auto.filter((t) => t.solvable).map((t) =>
       "<tr><td>" + [
         t.chemLabel + ` (${(t.usableDod * 100).toFixed(0)}% DoD)`,
         `${t.pvKw} kW`,
         `${fmt(t.battKwh)} kWh (≈${fmt(t.battNameplateKwh)})`,
         moneyRange(t.costLo, t.costHi),
-        t.replacements25y > 0 ? `~${t.replacements25y}×` : "none",
+        t.replacementsHorizon > 0 ? `~${t.replacementsHorizon}×` : "none",
         t.swapsAndLaborUsd > 0 ? `≈${money(t.swapsAndLaborUsd)}` : "—",
         `≈${money(t.lifetimeCostMid)}`,
         typeof t.trueBreakEvenYear === "number" ? `≈ year ${t.trueBreakEvenYear}`

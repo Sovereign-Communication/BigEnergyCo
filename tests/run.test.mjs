@@ -33,7 +33,7 @@ test("off-grid AUTO: every field the renderer reads exists and is sane", async (
   for (const a of p.auto) {
     assert.equal(a.solvable, true);
     for (const k of ["chemLabel", "pvKw", "battKwh", "battNameplateKwh", "usableDod",
-      "costLo", "costHi", "replacements25y", "swapsAndLaborUsd", "lifetimeCostMid",
+      "costLo", "costHi", "replacementsHorizon", "swapsAndLaborUsd", "lifetimeCostMid",
       "lcoeUsdPerKwh", "paybackYearsLo", "paybackYearsHi", "cardNote"]) {
       assert.ok(a[k] !== undefined && a[k] !== null, `auto.${k} present`);
     }
@@ -50,7 +50,7 @@ test("off-grid AUTO: every field the renderer reads exists and is sane", async (
   const agm = p.auto.find((a) => a.chemistry === "agm");
   const lfp = p.auto.find((a) => a.chemistry === "lfp");
   assert.ok(agm.lifetimeCostMid > lfp.lifetimeCostMid, "lead-acid lifetime > LFP");
-  assert.ok(agm.replacements25y > lfp.replacements25y, "lead-acid swaps more banks");
+  assert.ok(agm.replacementsHorizon > lfp.replacementsHorizon, "lead-acid swaps more banks");
   // True break-even: AGM either never breaks even or strictly later than LFP
   assert.ok(agm.trueBreakEvenYear === null || lfp.trueBreakEvenYear === null || agm.trueBreakEvenYear > lfp.trueBreakEvenYear,
     `AGM BE (${agm.trueBreakEvenYear}) vs LFP (${lfp.trueBreakEvenYear})`);
@@ -81,7 +81,7 @@ test("off-grid SPECIFIC: tier cards + percent history chart bands", async () => 
   for (const t of p.tiers.filter((x) => x.solvable)) {
     for (const k of ["pvKw", "battKwh", "battNameplateKwh", "costLo", "costHi",
       "unmetHoursPerYear", "longestGapHours", "cyclesPerYear", "minSocPct",
-      "servedKwhPerYear", "replacements25y", "lifetimeCostMid", "paybackYearsLo"]) {
+      "servedKwhPerYear", "replacementsHorizon", "lifetimeCostMid", "paybackYearsLo"]) {
       assert.ok(t[k] !== null && t[k] !== undefined, `tier.${k} non-null`);
     }
     assert.ok(Number.isFinite(t.paybackYearsLo) && t.paybackYearsLo > 0, "payback positive");
@@ -101,7 +101,7 @@ test("grid-tie SPECIFIC: target fields incl. export economics + chart", async ()
   for (const t of p.targets.filter((x) => x.solvable)) {
     for (const k of ["pvKw", "battKwh", "cutPct", "importedKwhPerYear", "clippedKwhPerYear",
       "billAfterMonthlyUsd", "paybackYearsLo", "exportValueAnnualUsd",
-      "replacements25y", "swapsAndLaborUsd", "lifetimeCostMid"]) {
+      "replacementsHorizon", "swapsAndLaborUsd", "lifetimeCostMid"]) {
       assert.ok(t[k] !== null && t[k] !== undefined, `target.${k} non-null`);
     }
     assert.ok(t.cutPct >= t.minFraction * 100 - 1, `cut honored (${t.cutPct}% vs ${(t.minFraction * 100).toFixed(0)}%)`);

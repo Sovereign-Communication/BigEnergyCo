@@ -1,6 +1,8 @@
 // BigEnergyCo deterministic sizing engine.
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
+
+import { batteryReplacements, lifetimeCostUsd } from "./money.js";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -66,7 +68,7 @@ export const CHEMISTRIES = {
     cyclesTo80: 500,
     usableScale: 0.85,
     coldPctPerC: 0.008,
-    note: "Cheapest upfront. Modeled WITHOUT active balancing (typical DIY series strings) — expect several bank replacements over 25 years. Proper balancing helps; physics still wins.",
+    note: "Cheapest upfront. Modeled WITHOUT active balancing (typical DIY series strings) — expect several bank replacements over 20 years. Proper balancing helps; physics still wins.",
   },
 };
 
@@ -343,20 +345,36 @@ export function sizeForTier({
   };
   const meets = (ev) => ev.avgUnmet <= maxUnmetHoursPerYear + 1e-9;
 
-  let best = null;
+  // Lifetime-cost objective: among banks meeting reliability, pick the one
+  // whose TRUE cost over the horizon is lowest — capex plus every bank swap
+  // and its install labor. This naturally sizes banks so they reach the
+  // horizon (a modestly larger LFP/Na-ion bank needing zero swaps beats a
+  // tiny one with replacements), while still honestly counting lead-acid's
+  // unavoidable swap cadence.
+  const lifetimeObjective = (p, b, r) => {
+    const cyclesPerYear = r.cyclesEquivalent / years;
+    const replacements = batteryReplacements(cyclesPerYear, CHEMISTRIES[chemistry].cyclesTo80);
+    const life = lifetimeCostUsd({
+      capexMidUsd: p * 1000 * costPerWpv + b * costPerKwhBatt,
+      battKwhUsable: b,
+      battPriceMidPerKwh: costPerKwhBatt,
+      replacements,
+    });
+    return { total: life.total, replacements };
+  };
+
+  let best = null, bestBatt = null, bestObj = Infinity;
   for (let b = battStep; b <= battMax; b += battStep) {
     for (let p = pvStep; p <= pvMax; p += pvStep) {
       const ev = evaluate(p, b);
       if (!meets(ev)) continue;
-      const cost = p * 1000 * costPerWpv + b * costPerKwhBatt;
-      if (!best || cost < best.cost) best = { pvKw: p, battKwh: b, result: ev.r, cost };
+      const obj = lifetimeObjective(p, b, ev.r).total;
+      if (obj < bestObj) { bestObj = obj; bestBatt = b; best = { pvKw: p, battKwh: b, result: ev.r, obj }; }
       break; // smallest PV that works for this battery; larger PV only costs more
     }
-    if (best && best.battKwh <= b - battStep) {
-      // best found with a smaller battery already; larger batteries can't be cheaper
-      // unless PV drops a step — allow one more row for refinement, then stop.
-      if (b >= best.battKwh + 4 * battStep) break;
-    }
+    // Lifetime cost rises again once swaps are exhausted and further
+    // oversizing only adds capex; stop a bounded window past the optimum.
+    if (bestBatt !== null && b >= bestBatt + 15 * battStep) break;
   }
 
   if (!best) return null;
@@ -371,8 +389,8 @@ export function sizeForTier({
         if (p <= 0 || b <= 0) continue;
         const ev = evaluate(p, b);
         if (!meets(ev)) continue;
-        const cost = p * 1000 * costPerWpv + b * costPerKwhBatt;
-        if (cost < best.cost) { best = { pvKw: p, battKwh: b, result: ev.r, cost }; improved = true; }
+        const obj = lifetimeObjective(p, b, ev.r).total;
+        if (obj < best.obj - 1e-9) { best = { pvKw: p, battKwh: b, result: ev.r, obj }; improved = true; }
       }
     }
   }
@@ -487,6 +505,21 @@ export function sizeForBillCut({
   const evaluate = (pv, batt) => simulateOffset({ pvKw: pv, battKwhUsable: batt, e1kw, loadWh, chemistry, tempsC, capacityScale });
   const meets = (r) => r.importedWh <= importBudget + 1e-6;
 
+  // Lifetime-cost objective: among systems meeting the bill-cut target, pick
+  // the one whose TRUE cost over the horizon is lowest (capex plus every bank
+  // swap and its install labor), so banks are sized to reach the horizon.
+  const lifetimeObjective = (p, b, r) => {
+    const cyclesPerYear = r.cyclesEquivalent / years;
+    const replacements = batteryReplacements(cyclesPerYear, CHEMISTRIES[chemistry].cyclesTo80);
+    const life = lifetimeCostUsd({
+      capexMidUsd: p * 1000 * costPerWpv + b * costPerKwhBatt,
+      battKwhUsable: b,
+      battPriceMidPerKwh: costPerKwhBatt,
+      replacements,
+    });
+    return { total: life.total, replacements };
+  };
+
   let best = null;
   for (let b = 0; b <= battMax; b += battStep) {
     // With a bigger bank, the required PV cannot be larger than before.
@@ -498,8 +531,8 @@ export function sizeForBillCut({
       if (meets(evaluate(mid, b))) hi = mid; else lo = mid;
     }
     const r = evaluate(hi, b);
-    const cost = hi * 1000 * costPerWpv + b * costPerKwhBatt;
-    if (!best || cost < best.cost) best = { pvKw: +hi.toFixed(2), battKwh: b, result: r, cost };
+    const obj = lifetimeObjective(hi, b, r).total;
+    if (!best || obj < best.obj) best = { pvKw: +hi.toFixed(2), battKwh: b, result: r, obj };
   }
 
   if (!best) return null;
@@ -518,8 +551,8 @@ export function sizeForBillCut({
         if (meets(evaluate(mid, b))) hi = mid; else lo = mid;
       }
       const r = evaluate(hi, b);
-      const cost = hi * 1000 * costPerWpv + b * costPerKwhBatt;
-      if (cost < best.cost - 1e-9) { best = { pvKw: +hi.toFixed(2), battKwh: b, result: r, cost }; improved = true; }
+      const obj = lifetimeObjective(hi, b, r).total;
+      if (obj < best.obj - 1e-9) { best = { pvKw: +hi.toFixed(2), battKwh: b, result: r, obj }; improved = true; }
     }
   }
   return best;
