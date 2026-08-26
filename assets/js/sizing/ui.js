@@ -5,10 +5,11 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260825k";
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825k";
-import { BOM_ITEMS } from "../shared/content.js?v=20260825k";
-import { applyI18n, initLangPicker, LOCALES } from "../shared/i18n.js?v=20260825k";
+import { CITY_PRESETS, } from "./nasa.js?v=20260825l";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825l";
+import { BOM_ITEMS } from "../shared/content.js?v=20260825l";
+import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825l";
+import { LOCALES } from "../shared/locales.js?v=20260825l";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -29,9 +30,11 @@ function t(key, params = {}) {
 }
 
 function resolveLang() {
-  const saved = localStorage.getItem("beco-lang");
+  let saved = null;
+  try { saved = localStorage.getItem("beco-lang"); } catch { /* private mode */ }
   if (saved && (saved === "auto" || LOCALES[saved] || saved === "en")) return saved;
-  const nav = (navigator.language || "en").slice(0, 2).toLowerCase();
+  let nav = "en";
+  try { nav = (navigator.language || "en").slice(0, 2).toLowerCase(); } catch { /* ignore */ }
   return LOCALES[nav] ? nav : "en";
 }
 
@@ -319,22 +322,15 @@ function applyEstimatedTariff(lat, lon) {
 }
 
 function renderCities() {
-  console.log(">>> renderCities called");
-  try {
-    const sel = $("cityPreset");
-    console.log("sel:", sel);
-    if (!sel) {
-      console.error("City select element not found");
-      return;
-    }
-    console.log("CITY_PRESETS:", CITY_PRESETS);
-    console.log("CITY_PRESETS type:", typeof CITY_PRESETS);
-    console.log("CITY_PRESETS.length:", CITY_PRESETS?.length);
-    if (!CITY_PRESETS || !CITY_PRESETS.length) {
-      console.error("CITY_PRESETS not loaded");
-      return;
-    }
-    console.log("CITY_PRESETS loaded, length:", CITY_PRESETS.length);
+  const sel = $("cityPreset");
+  if (!sel) {
+    console.error("City select element not found");
+    return;
+  }
+  if (!CITY_PRESETS || !CITY_PRESETS.length) {
+    console.error("CITY_PRESETS not loaded");
+    return;
+  }
   sel.innerHTML = "";
   const regions = [...new Set(CITY_PRESETS.map((c) => c.r))];
   for (const r of regions) {
@@ -348,17 +344,13 @@ function renderCities() {
   }
   sel.value = "0";
   sel.addEventListener("change", () => {
-    console.log("cityPreset change event, value:", sel.value);
     const idx = parseInt(sel.value, 10);
-    console.log("selected index:", idx);
     const c = CITY_PRESETS[idx];
-    console.log("selected city:", c);
     if (c) setCoords(c.lat, c.lon, `Sunshine data from ${c.name}`);
   });
   // initialize to first city
   const first = CITY_PRESETS[0];
   setCoords(first.lat, first.lon, `Sunshine data from ${first.name}`);
-  console.log("renderCities completed successfully");
 }
 
 function locateMe() {
@@ -1305,14 +1297,10 @@ function renderBom() {
 }
 
 export function initSizingUI() {
-  console.log(">>> initSizingUI started");
-  console.log("CITY_PRESETS loaded:", typeof CITY_PRESETS !== "undefined");
-  console.log("CITY_PRESETS.length:", CITY_PRESETS?.length);
-  console.log(">>> calling renderCities()");
-  renderCities();
-  console.log(">>> renderCities() returned");
-  renderAppliances();
-  renderBom();
+  try {
+    renderCities();
+    renderAppliances();
+    renderBom();
 
   // tariff select (auto-estimated from location until the user overrides)
   const tsel = $("tariffSelect");
@@ -1370,6 +1358,11 @@ export function initSizingUI() {
 
   // Background FX refresh: keeps auto-selected currencies accurate.
   refreshFxRates();
+  } catch (err) {
+    // A single init failure must never silently kill the whole UI.
+    console.error("Sizing UI failed to initialize:", err);
+    setStatus("⚠️ Interface failed to load — please refresh the page (Ctrl+F5).");
+  }
 }
 
 // Refresh the built-in FX defaults in the background so an auto-selected
