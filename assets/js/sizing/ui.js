@@ -66,7 +66,7 @@ let lastPayload = null;   // kept for share links + the printable summary
 
 
 
-// prices through this bridge — pricing.js stays the single source of truth.
+// prices through this bridge - pricing.js stays the single source of truth.
 
 
 
@@ -166,7 +166,7 @@ function resolveLang() {
 
 
 
-// fraction of the day — their slider means "hours it actually runs," capped
+// fraction of the day - their slider means "hours it actually runs," capped
 
 
 
@@ -1166,7 +1166,7 @@ function applyEstimatedTariff(lat, lon) {
 
 
 
-  // tariff in it — the two share one FX rate, so they round-trip exactly.
+  // tariff in it - the two share one FX rate, so they round-trip exactly.
 
 
 
@@ -1194,7 +1194,7 @@ function applyEstimatedTariff(lat, lon) {
 
 
 
-    `Electricity price estimated for ${est.label}${fx ? ` (˜ ${est.rate.toFixed(2)} US$/kWh)` : ""} — change it above if you know your rate.`);
+    `Electricity price estimated for ${est.label}${fx ? ` (˜ ${est.rate.toFixed(2)} US$/kWh)` : ""} - change it above if you know your rate.`);
 
 
 
@@ -1366,7 +1366,7 @@ function locateMe() {
 
 
 
-    setStatus("⚠️ Your browser can't share a location — pick the nearest big city instead.");
+    setStatus("Warning: Your browser can't share a location - pick the nearest big city instead.");
 
 
 
@@ -1378,7 +1378,7 @@ function locateMe() {
 
 
 
-  setStatus("⏳ Asking your browser for your location…");
+  setStatus(" Asking your browser for your location…");
 
 
 
@@ -1398,7 +1398,7 @@ function locateMe() {
 
 
 
-      setStatus("📍 Location set. Now tell us your power use below, then run the sizing.");
+      setStatus(" Location set. Now tell us your power use below, then run the sizing.");
 
 
 
@@ -1406,7 +1406,7 @@ function locateMe() {
 
 
 
-    () => setStatus("⚠️ Couldn't get your location — pick the nearest big city instead."),
+    () => setStatus("Warning: Couldn't get your location - pick the nearest big city instead."),
 
 
 
@@ -1670,7 +1670,7 @@ function run() {
 
 
 
-  btn.innerHTML = `<span class="spin">◐</span> ${t("runningBtn")}`;
+  btn.innerHTML = `<span class="spin">o</span> ${t("runningBtn")}`;
 
 
 
@@ -1742,7 +1742,7 @@ function ensureWorker() {
 
 
 
-        // bring the results into view — the run button can be far above them
+        // bring the results into view - the run button can be far above them
 
 
 
@@ -1754,7 +1754,7 @@ function ensureWorker() {
 
 
 
-      } else if (ev.data?.type === "error") setStatus("⚠️ " + ev.data.message);
+      } else if (ev.data?.type === "error") setStatus("Warning: " + ev.data.message);
 
 
 
@@ -1810,7 +1810,7 @@ function fmtLife(years) {
 
 
 
-  if (!Number.isFinite(years) || years <= 0) return "—";
+  if (!Number.isFinite(years) || years <= 0) return "-";
 
 
 
@@ -1866,11 +1866,11 @@ function fmtPaybackRange(lo, hi) {
 
 
 
-  if (!a || !b) return "—";
+  if (!a || !b) return "-";
 
 
 
-  return a === b ? a : `${a}–${b.replace("~", "")}`;
+  return a === b ? a : `${a}-${b.replace("~", "")}`;
 
 
 
@@ -1890,7 +1890,7 @@ function fmtPaybackRange(lo, hi) {
 
 
 
-// ($/kWh stored) stay labeled $ — the arithmetic panel explains that.
+// ($/kWh stored) stay labeled $ - the arithmetic panel explains that.
 
 
 
@@ -2106,7 +2106,7 @@ const TIER_NAMES = {
 
 
 
- * the story — its long winter valleys are why the battery floor dips.
+ * the story - its long winter valleys are why the battery floor dips.
 
 
 
@@ -2166,7 +2166,7 @@ function drawSunStrip(ctx, pv, X, W, padL, padR, stripH) {
 
 
 
-  ctx.fillText(`daily sun — kWh per kW of panel · peak day ${pvMax.toFixed(1)}`, padL + 2, 11);
+  ctx.fillText(`daily sun - kWh per kW of panel · peak day ${pvMax.toFixed(1)}`, padL + 2, 11);
 
 
 
@@ -2186,7 +2186,7 @@ function drawSunStrip(ctx, pv, X, W, padL, padR, stripH) {
 
 
 
- * line per panel — the LOWEST the battery got each day over five years.
+ * line per panel - the LOWEST the battery got each day over five years.
 
 
 
@@ -2226,7 +2226,7 @@ function drawSocChart(history, chemLabel) {
 
 
 
-    // Data arrived but in an unexpected shape — almost certainly a stale
+    // Data arrived but in an unexpected shape - almost certainly a stale
 
 
 
@@ -2242,7 +2242,7 @@ function drawSocChart(history, chemLabel) {
 
 
 
-    if (cap) cap.textContent = "⚠️ Chart data didn't match this page version — please refresh (Ctrl+F5 / ??R) and run the sizing again.";
+    if (cap) cap.textContent = "Warning: Chart data didn't match this page version - please refresh (Ctrl+F5 / ??R) and run the sizing again.";
 
 
 
@@ -2262,7 +2262,7 @@ function drawSocChart(history, chemLabel) {
 
 
 
-  // hide the old legend row — labels live inside each band now
+  // hide the old legend row - labels live inside each band now
 
 
 
@@ -2406,7 +2406,7 @@ function drawSocChart(history, chemLabel) {
 
 
 
-    for (const v of [50, 100]) {
+    for (const v of [20, 50, 100]) {
 
 
 
@@ -2462,7 +2462,7 @@ function drawSocChart(history, chemLabel) {
 
 
 
-    // The top edge is the battery charging back to full — every system's
+    // The top edge is the battery charging back to full - every system's
 
 
 
@@ -2610,7 +2610,7 @@ function drawSocChart(history, chemLabel) {
 
 
 
-      ? (gt ? `${charged} · but drained flat on ${t.emptyDays} day${t.emptyDays === 1 ? "" : "s"} — the grid covered those`
+      ? (gt ? `${charged} · but drained flat on ${t.emptyDays} day${t.emptyDays === 1 ? "" : "s"} - the grid covered those`
 
 
 
@@ -2622,7 +2622,7 @@ function drawSocChart(history, chemLabel) {
 
 
 
-    ctx.fillText(`lowest point ${Math.max(0, Math.round(t.minPct))}% — ${verdict}`, padL + 2, top + padT + 14);
+    ctx.fillText(`lowest point ${Math.max(0, Math.round(t.minPct))}% - ${verdict}`, padL + 2, top + padT + 14);
 
 
 
@@ -2694,7 +2694,7 @@ function drawSocChart(history, chemLabel) {
 
 
 
-      `${history.startYear}–${history.endYear} of real satellite weather. In grid-tie mode the red line isn't a blackout — ` +
+      `${history.startYear}-${history.endYear} of real satellite weather. In grid-tie mode the red line isn't a blackout - ` +
 
 
 
@@ -2706,11 +2706,11 @@ function drawSocChart(history, chemLabel) {
 
 
 
-      `${history.startYear}–${history.endYear} of real satellite weather (${chemLabel}). Every healthy system ` +
+      `${history.startYear}-${history.endYear} of real satellite weather (${chemLabel}). Every healthy system ` +
 
 
 
-      `charges all the way back to 100% on sunny days — the difference between systems is how far the bottom ` +
+      `charges all the way back to 100% on sunny days - the difference between systems is how far the bottom ` +
 
 
 
@@ -2718,7 +2718,7 @@ function drawSocChart(history, chemLabel) {
 
 
 
-  if (pv) $("socCaption").textContent += " The amber strip on top is the daily solar harvest (kWh per kW of panel) — its long dips line up with the battery's lowest floors.";
+  if (pv) $("socCaption").textContent += " The amber strip on top is the daily solar harvest (kWh per kW of panel) - its long dips line up with the battery's lowest floors.";
 
 
 
@@ -2926,7 +2926,7 @@ function renderAutoCards(p) {
 
 
 
-        rows.push(["True 20-yr break-even", "never — replacements outpace savings"]);
+        rows.push(["True 20-yr break-even", "never - replacements outpace savings"]);
 
 
 
@@ -3094,7 +3094,7 @@ function renderTierCards(p) {
 
 
 
-    card.appendChild(el("h3", {}, t.label.split("—")[1]?.trim() || t.label));
+    card.appendChild(el("h3", {}, t.label.split("-")[1]?.trim() || t.label));
 
 
 
@@ -3106,7 +3106,7 @@ function renderTierCards(p) {
 
 
 
-      card.appendChild(el("p", {}, "No system found within search limits for this load — the daily consumption may be too high for a practical off-grid build at this site."));
+      card.appendChild(el("p", {}, "No system found within search limits for this load - the daily consumption may be too high for a practical off-grid build at this site."));
 
 
 
@@ -3150,7 +3150,7 @@ function renderTierCards(p) {
 
 
 
-      ["  · battery unit price", `˜$${t.battPerKwhLo}–${t.battPerKwhHi}/kWh stored`],
+      ["  · battery unit price", `˜$${t.battPerKwhLo}-${t.battPerKwhHi}/kWh stored`],
 
 
 
@@ -3306,7 +3306,7 @@ function renderTargetCards(p) {
 
 
 
-      card.appendChild(el("p", {}, "Even a large array can't cut the bill this far at this location — check the off-grid sizer instead."));
+      card.appendChild(el("p", {}, "Even a large array can't cut the bill this far at this location - check the off-grid sizer instead."));
 
 
 
@@ -3370,7 +3370,7 @@ function renderTargetCards(p) {
 
 
 
-      rows.push(["Sun clipped (no export)", `${fmt(t.clippedKwhPerYear)} kWh/yr — enter a feed-in credit to value it`]);
+      rows.push(["Sun clipped (no export)", `${fmt(t.clippedKwhPerYear)} kWh/yr - enter a feed-in credit to value it`]);
 
 
 
@@ -3594,7 +3594,7 @@ function drawAutoChart(p) {
 
 
 
-    // Data arrived but lacks the expected shape — almost certainly a stale
+    // Data arrived but lacks the expected shape - almost certainly a stale
 
 
 
@@ -3726,7 +3726,7 @@ function drawAutoChart(p) {
 
 
 
-  for (const v of [0, 25, 50, 75, 100]) {
+  for (const v of [0, 20, 50, 75, 100]) {
 
 
 
@@ -3826,7 +3826,7 @@ function drawAutoChart(p) {
 
 
 
-    // Lead-acid's sits at ~42% (50% DoD rule × rate derate) — without this
+    // Lead-acid's sits at ~42% (50% DoD rule × rate derate) - without this
 
 
 
@@ -4014,11 +4014,11 @@ function drawAutoChart(p) {
 
 
 
-    `How to read it: the shaded area is each bank's daily range — the bold top edge is the fullest it got, the thin lower edge the deepest it sank, and the dashed line is that bank's FULL mark (${ceilings} of nameplate). ` +
+    `How to read it: the shaded area is each bank's daily range - the bold top edge is the fullest it got, the thin lower edge the deepest it sank, and the dashed line is that bank's FULL mark (${ceilings} of nameplate). ` +
 
 
 
-    `Every chemistry carries similar nameplate for the same job; the real difference is the usable slice — lithium and sodium may use ~90% of theirs, lead-acid only its bottom half (the 50% rule, times its discharge-rate derate). ` +
+    `Every chemistry carries similar nameplate for the same job; the real difference is usable energy - LFP and Sodium give you 80% usable (20-100%), Lead-Acid only 50% (50-100%), so LFP/Sodium deliver far more kWh per kWh of nameplate and need fewer swaps - lithium and sodium may use ~90% of theirs, lead-acid only its bottom half (the 50% rule, times its discharge-rate derate). ` +
 
 
 
@@ -4026,11 +4026,11 @@ function drawAutoChart(p) {
 
 
 
-    `Dips to the floor during ${p.history.startYear}–${p.history.endYear}'s worst weather are the moments a generator or the grid would cover you.`;
+    `Dips to the floor during ${p.history.startYear}-${p.history.endYear}'s worst weather are the moments a generator or the grid would cover you.`;
 
 
 
-  if (pv) $("socCaption").textContent += " The amber strip on top is the daily solar harvest (kWh per kW of panel) — its dips line up with every bank's recharge rhythm.";
+  if (pv) $("socCaption").textContent += " The amber strip on top is the daily solar harvest (kWh per kW of panel) - its dips line up with every bank's recharge rhythm.";
 
 
 
@@ -4146,7 +4146,7 @@ function renderResults(p) {
 
 
 
-    `Costs span ${pr.basisLabel || "ex-factory China to PowMr-class budget retail"} (${pr.source || "cell market indications through PowMr catalog, Aug 2026"}) — ` +
+    `Costs span ${pr.basisLabel || "ex-factory China to PowMr-class budget retail"} (${pr.source || "cell market indications through PowMr catalog, Aug 2026"}) - ` +
 
 
 
@@ -4166,7 +4166,7 @@ function renderResults(p) {
 
 
 
-    (a.offline ? "OFFLINE MODE: this run used the bundled typical-year profile for " + p.meta.offlineCity + " — a close approximation, not your exact site. Re-run online for five years of point-specific weather. " : "") +
+    (a.offline ? "OFFLINE MODE: this run used the bundled typical-year profile for " + p.meta.offlineCity + " - a close approximation, not your exact site. Re-run online for five years of point-specific weather. " : "") +
 
 
 
@@ -4254,7 +4254,7 @@ function renderResults(p) {
 
 
 
-    `${p.assumptions.dataYears}. Do not recompute or invent different figures — explain, sanity-check and add caveats ` +
+    `${p.assumptions.dataYears}. Do not recompute or invent different figures - explain, sanity-check and add caveats ` +
 
 
 
@@ -4534,7 +4534,7 @@ function restoreFromShare() {
 
 
 
-  setCoords(lat, lon, "Shared result loaded — sunshine data for this location");
+  setCoords(lat, lon, "Shared result loaded - sunshine data for this location");
 
 
 
@@ -4594,7 +4594,7 @@ function restoreFromShare() {
 
 
 
-  setStatus("🔗 Loaded a shared result — running the simulation for this location…");
+  setStatus(" Loaded a shared result - running the simulation for this location…");
 
 
 
@@ -4686,7 +4686,7 @@ function populatePrintSheet(p, inp) {
 
 
 
-        t.swapsAndLaborUsd > 0 ? `˜${money(t.swapsAndLaborUsd)}` : "—",
+        t.swapsAndLaborUsd > 0 ? `˜${money(t.swapsAndLaborUsd)}` : "-",
 
 
 
@@ -4790,7 +4790,7 @@ function populatePrintSheet(p, inp) {
 
 
 
-        t.label.replace(/—/g, "·"),
+        t.label.replace(/-/g, "·"),
 
 
 
@@ -4830,7 +4830,7 @@ function populatePrintSheet(p, inp) {
 
 
 
-    <h1 style="font-size:20pt;margin-bottom:2pt;">BigEnergyCo — ${title}</h1>
+    <h1 style="font-size:20pt;margin-bottom:2pt;">BigEnergyCo - ${title}</h1>
 
 
 
@@ -4914,7 +4914,7 @@ function populatePrintSheet(p, inp) {
 
 
 
-      Educational estimate only — not engineering, not a quote, no warranty. Battery banks, high DC current and
+      Educational estimate only - not engineering, not a quote, no warranty. Battery banks, high DC current and
 
 
 
@@ -4970,7 +4970,7 @@ function copyShareLink() {
 
 
 
-  const done = () => setStatus("🔗 Link copied — anyone who opens it gets this same result, re-computed on their device.");
+  const done = () => setStatus(" Link copied - anyone who opens it gets this same result, re-computed on their device.");
 
 
 
@@ -5034,7 +5034,7 @@ function fallbackCopy(text, done) {
 
 
 
-  try { document.execCommand("copy"); done(); } catch { setStatus("Copy failed — select the address bar and copy the link manually."); }
+  try { document.execCommand("copy"); done(); } catch { setStatus("Copy failed - select the address bar and copy the link manually."); }
 
 
 
@@ -5050,7 +5050,7 @@ function fallbackCopy(text, done) {
 
 
 
-// -- Hardware reference (BOM) — rendered from the shared content module -----
+// -- Hardware reference (BOM) - rendered from the shared content module -----
 
 
 
@@ -5210,7 +5210,7 @@ export function initSizingUI() {
 
 
 
-  // Currency inputs re-render the existing result instantly — no re-run
+  // Currency inputs re-render the existing result instantly - no re-run
 
 
 
@@ -5350,7 +5350,7 @@ export function initSizingUI() {
 
 
 
-    setStatus("⚠️ Interface failed to load — please refresh the page (Ctrl+F5).");
+    setStatus("Warning: Interface failed to load - please refresh the page (Ctrl+F5).");
 
 
 
@@ -5434,7 +5434,7 @@ async function refreshFxRates() {
 
 
 
-  } catch { /* offline — static defaults remain */ }
+  } catch { /* offline - static defaults remain */ }
 
 
 
