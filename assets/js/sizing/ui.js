@@ -1399,12 +1399,18 @@ function whenDOMReady(cb) {
   } else {
     // DOMContentLoaded already fired, but element might not be ready yet
     // Poll for the cityPreset element to ensure it exists
+    let attempts = 0;
+    const maxAttempts = 100; // ~5 seconds at 50ms intervals
     const checkReady = () => {
       const sel = document.getElementById("cityPreset");
       if (sel) {
         cb();
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        setTimeout(checkReady, 50);
       } else {
-        requestAnimationFrame(checkReady);
+        console.error("cityPreset element not found after", maxAttempts * 50, "ms");
+        cb(); // proceed anyway to avoid deadlock
       }
     };
     checkReady();
