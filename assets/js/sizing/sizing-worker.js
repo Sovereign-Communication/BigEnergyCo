@@ -3,7 +3,7 @@
 // directly under Node — this file must stay trivial).
 // Message in:  { type: "run", ...runSizing msg }
 // Message out: { type: "ok", payload } | { type: "error", message }
-import { runSizing } from "./run.js?v=20260825l";
+import { runSizing } from "./run.js?v=20260825m";
 
 self.onmessage = async (ev) => {
   const msg = ev.data;
@@ -15,3 +15,4 @@ self.onmessage = async (ev) => {
     self.postMessage({ type: "error", message: String(e && e.message || e) });
   }
 };
+
