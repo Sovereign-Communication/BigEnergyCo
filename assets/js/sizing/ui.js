@@ -319,17 +319,22 @@ function applyEstimatedTariff(lat, lon) {
 }
 
 function renderCities() {
-  console.log("renderCities called");
-  const sel = $("cityPreset");
-  if (!sel) {
-    console.error("City select element not found");
-    return;
-  }
-  if (!CITY_PRESETS || !CITY_PRESETS.length) {
-    console.error("CITY_PRESETS not loaded");
-    return;
-  }
-  console.log("CITY_PRESETS loaded, length:", CITY_PRESETS.length);
+  console.log(">>> renderCities called");
+  try {
+    const sel = $("cityPreset");
+    console.log("sel:", sel);
+    if (!sel) {
+      console.error("City select element not found");
+      return;
+    }
+    console.log("CITY_PRESETS:", CITY_PRESETS);
+    console.log("CITY_PRESETS type:", typeof CITY_PRESETS);
+    console.log("CITY_PRESETS.length:", CITY_PRESETS?.length);
+    if (!CITY_PRESETS || !CITY_PRESETS.length) {
+      console.error("CITY_PRESETS not loaded");
+      return;
+    }
+    console.log("CITY_PRESETS loaded, length:", CITY_PRESETS.length);
   sel.innerHTML = "";
   const regions = [...new Set(CITY_PRESETS.map((c) => c.r))];
   for (const r of regions) {
@@ -343,13 +348,17 @@ function renderCities() {
   }
   sel.value = "0";
   sel.addEventListener("change", () => {
+    console.log("cityPreset change event, value:", sel.value);
     const idx = parseInt(sel.value, 10);
+    console.log("selected index:", idx);
     const c = CITY_PRESETS[idx];
+    console.log("selected city:", c);
     if (c) setCoords(c.lat, c.lon, `Sunshine data from ${c.name}`);
   });
   // initialize to first city
   const first = CITY_PRESETS[0];
   setCoords(first.lat, first.lon, `Sunshine data from ${first.name}`);
+  console.log("renderCities completed successfully");
 }
 
 function locateMe() {
@@ -1296,10 +1305,12 @@ function renderBom() {
 }
 
 export function initSizingUI() {
-  console.log("initSizingUI started");
+  console.log(">>> initSizingUI started");
   console.log("CITY_PRESETS loaded:", typeof CITY_PRESETS !== "undefined");
   console.log("CITY_PRESETS.length:", CITY_PRESETS?.length);
+  console.log(">>> calling renderCities()");
   renderCities();
+  console.log(">>> renderCities() returned");
   renderAppliances();
   renderBom();
 
