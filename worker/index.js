@@ -162,7 +162,7 @@ async function callGroq(apiKey, model, messages) {
       model: model,
       messages: messages,
       max_tokens: 2048,
-      temperature: 0.7
+      temperature: 0.3
     }),
   });
   return res;

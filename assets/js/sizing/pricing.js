@@ -80,6 +80,10 @@ export function costRange(pvKw, battKwhUsable, scopeId, chemistry = "lfp") {
   return {
     lo: Math.round(pvLo + bLo + invLo),
     hi: Math.round(pvHi + bHi + invHi),
+    pvLo: Math.round(pvLo),
+    pvHi: Math.round(pvHi),
+    invLo: Math.round(invLo),
+    invHi: Math.round(invHi),
     pvMid: Math.round((pvLo + pvHi) / 2),
     battMid: Math.round((bLo + bHi) / 2),
     scope: s,
@@ -103,8 +107,8 @@ export function fullRange(pvKw, battKwhUsable, chemistry = "lfp", landedF = 1) {
   return {
     lo: lo.lo,
     hi: hi.hi,
-    pvCostLo: Math.round(lo.pvLo ?? pvKw * 1000 * getScope("cells").pvPerW[0]),
-    pvCostHi: Math.round(pvKw * 1000 * getScope("powmr").pvPerW[1]),
+    pvCostLo: Math.round((lo.pvLo + lo.invLo)),
+    pvCostHi: Math.round((hi.pvHi + hi.invHi)),
     battCostLo: Math.round(battKwhUsable * cellsBatt[0]),
     battCostHi: Math.round(battKwhUsable * powmrBatt[1]),
     battPerKwhLo: cellsBatt[0],
@@ -126,6 +130,8 @@ export function battOnlyCost(battKwhUsable, chemistry = "lfp") {
   }
   return out;
 }
+
+export const DAYS_PER_MONTH = 30.44; // 365/12, for bill→kWh/day conversion
 
 // ── Regional electricity price estimation ───────────────────────────────────
 // Coarse residential rates (USD/kWh) from coordinates. Deliberately rough:

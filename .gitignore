@@ -5,6 +5,8 @@ groq.env
 *.key
 *.pem
 secrets.json
+.wrangler/
+**/.wrangler/
 worker/.wrangler/
 
 # Python
@@ -19,6 +21,7 @@ admin.js.map
 
 # Dev/test scripts
 test_*.py
+test_*.js
 verify_*.py
 live_verify.py
 debug_*.py
@@ -29,6 +32,20 @@ set_worker_url.py
 patch_and_publish.py
 start_and_publish_tunnel.py
 start_tunnel.py
+check_*.py
+inspect_*.py
+get_*.py
+delegate_blog_post.py
+register_cf_subdomain.py
+set_worker_secret.py
+update_html_url.py
+wait_cf_ssl.py
+poll_pages.py
+dispatch_and_monitor.py
+enable_github_pages.py
+fix_permissions.py
+setup_pages_env.py
+switch_to_branch_pages.py
 
 # Local server files
 proxy_server.py
@@ -48,6 +65,17 @@ legacy_scripts/
 .claude/
 .launcher_pids.json
 freenet_web_dist/
+_debug3/
+_v/
+_v2/
+_v4/
+_v6/
+_v7/
+scripts/live-mods/
+blog-drafts/
+agy-*.md
+agy-*.txt
+LOCAL_HOSTING_PLAN.md
 
 # Retired procurement-era documents — never republish
 legal/

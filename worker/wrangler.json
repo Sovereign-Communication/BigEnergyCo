@@ -3,5 +3,15 @@
   "main": "index.js",
   "compatibility_date": "2024-01-01",
   "compatibility_flags": ["nodejs_compat"],
-  "workers_dev": true
+  "workers_dev": true,
+  "ratelimits": [
+    {
+      "name": "RL_CHAT_PER_MIN",
+      "namespace_id": "9001",
+      "simple": {
+        "limit": 8,
+        "period": 60
+      }
+    }
+  ]
 }

@@ -27,6 +27,17 @@ jobs:
           node --check assets/js/sizing/nasa.js
           node --check assets/js/sizing/sizing-worker.js
           node --check assets/js/sizing/ui.js
+          node --check assets/js/sizing/pricing.js
+          node --check assets/js/sizing/money.js
+          node --check assets/js/sizing/run.js
+
+      - name: Validate SEO & encoding
+        run: |
+          node scripts/validate-jsonld.mjs
+          node scripts/check-chars.mjs
+
+      - name: Check deploy allowlist
+        run: node scripts/deploy-pages-local.mjs --check
 
       - name: Unit tests (offline)
         run: node --test

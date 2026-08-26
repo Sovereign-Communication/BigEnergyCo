@@ -103,6 +103,7 @@ export async function runSizing(msg, deps = {}) {
   // Scale the landed-mid cost inputs for the sizer & money math
   const costPerWpvMid = (landedScope.pvPerW[0] + landedScope.pvPerW[1]) / 2 * landedF;
   const landedMidBattKwh = (landedScope.battPerKwhUsable[0] + landedScope.battPerKwhUsable[1]) / 2 * landedF;
+  const costPerKwInvMid = (landedScope.invPerKw[0] + landedScope.invPerKw[1]) / 2 * landedF;
 
   // Daily solar harvest per kW of array (kWh/day) — feeds the chart's sun
   // strip so the visual shows what drives the battery's recharge rhythm.
@@ -230,7 +231,7 @@ export async function runSizing(msg, deps = {}) {
         const capScale = capacityScaleFor(chemId, meanTempC);
         const results = sizeAllBillTargets({
           e1kw, loadWh, tempsC, chemistry: chemId,
-          years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh,
+          years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
           pvMax: 45, battMax: 120, battStep: 1, capacityScale: capScale, laborPerKwh,
         });
         const hit = results.find((r) => r.target.id === repTargetId);
@@ -296,8 +297,8 @@ export async function runSizing(msg, deps = {}) {
     const capScale = capacityScaleFor(chemistry, meanTempC);
     const results = sizeAllBillTargets({
       e1kw, loadWh, tempsC, chemistry,
-      years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh,
-      pvMax: 45, battMax: 120, battStep: 1, capacityScale: capScale,
+      years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
+      pvMax: 45, battMax: 120, battStep: 1, capacityScale: capScale, laborPerKwh,
     });
     const loadTotalWh = dailyKwh * 365 * 1000;
     const targets = results.map(({ target, sizing }) => {
@@ -369,8 +370,8 @@ export async function runSizing(msg, deps = {}) {
       const capScale = capacityScaleFor(chemId, meanTempC);
       const allTiers = sizeAllTiers({
         e1kw, loadWh, tempsC, chemistry: chemId,
-        years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh,
-        battMax: 250, capacityScale: capScale,
+        years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
+        battMax: 250, capacityScale: capScale, laborPerKwh,
       });
       const midTier = allTiers.find((t) => t.tier.id === repTierId);
       if (!midTier || !midTier.sizing) continue;
@@ -429,8 +430,8 @@ export async function runSizing(msg, deps = {}) {
   const capScale = capacityScaleFor(chemistry, meanTempC);
   const results = sizeAllTiers({
     e1kw, loadWh, tempsC, chemistry,
-    years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh,
-    battMax: 250, capacityScale: capScale,
+    years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
+    battMax: 250, capacityScale: capScale, laborPerKwh,
   });
 
   const tiers = results.map(({ tier, sizing }) => {
@@ -491,6 +492,6 @@ export async function runSizing(msg, deps = {}) {
   payload.history = { kind: "offgrid", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), pvDaily, tiers: historyTiers };
   payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
   payload.assumptions.money =
-    `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 20-year horizon, and assumes panels/inverter last the full 25 years. Lifetime figures include install labor on the first bank and every swap. Generator fuel and grid fixed charges are not counted.`;
+    `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 20-year horizon, and assumes panels/inverter last the full 20 years. Lifetime figures include install labor on the first bank and every swap. Generator fuel and grid fixed charges are not counted.`;
   return payload;
 }

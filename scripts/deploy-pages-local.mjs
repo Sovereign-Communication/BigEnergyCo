@@ -21,8 +21,12 @@ const ALLOWLIST = [
   "404.html",
   "robots.txt",
   "sitemap.xml",
+  "rss.xml",
+  "sw.js",
+  "manifest.webmanifest",
   "blog/index.html",
   "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html",
+  "blog/off-grid-vs-grid-tie-payback/index.html",
   "assets", // copied recursively (og-card.png + js/sizing/*)
 ];
 
@@ -33,6 +37,7 @@ function sh(cmd, opts = {}) {
 console.log(`Staging allowlisted files into _pages_staging/ ...`);
 rmSync(STAGE, { recursive: true, force: true });
 mkdirSync(join(STAGE, "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage"), { recursive: true });
+mkdirSync(join(STAGE, "blog/off-grid-vs-grid-tie-payback"), { recursive: true });
 
 for (const entry of ALLOWLIST) {
   const src = join(ROOT, entry);
@@ -44,7 +49,7 @@ for (const entry of ALLOWLIST) {
 }
 
 // Safety net: refuse to publish anything outside expectations
-const allowedTop = new Set(["index.html", "404.html", "robots.txt", "sitemap.xml", "blog", "assets"]);
+const allowedTop = new Set(["index.html", "404.html", "robots.txt", "sitemap.xml", "rss.xml", "sw.js", "manifest.webmanifest", "blog", "assets"]);
 for (const name of readdirSync(STAGE)) {
   if (!allowedTop.has(name)) throw new Error(`Unexpected file in staging: ${name}`);
 }

@@ -12,17 +12,18 @@
 
 import { CITY_PRESETS, } from "./nasa.js?v=20260825r";
 
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825r";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260825r";
 
 import { BOM_ITEMS } from "../shared/content.js?v=20260825r";
 
-import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825r";
+import { applyI18n, initLangPicker, resolveLang } from "../shared/i18n.js?v=20260825r";
 
 import { LOCALES } from "../shared/locales.js?v=20260825r";
 
 let worker = null;
 
 let lastPayload = null;   // kept for share links + the printable summary
+let prevFxSnapshot = null; // for tariff display conversion on currency switch
 
 // The legacy storage-comparison script (classic inline JS) reads scoped
 
@@ -30,8 +31,9 @@ let lastPayload = null;   // kept for share links + the printable summary
 
 window.BECO_BATT_COST = battOnlyCost;
 
-// Translation helper with interpolation support
-
+// Translation helper with interpolation support (uses shared resolveLang so
+// auto-detection matches the chrome i18n — no split-brain between panel and
+// t() strings).
 function t(key, params = {}) {
 
   const lang = resolveLang();
@@ -47,22 +49,6 @@ function t(key, params = {}) {
   }
 
   return str;
-
-}
-
-function resolveLang() {
-
-  let saved = null;
-
-  try { saved = localStorage.getItem("beco-lang"); } catch { /* private mode */ }
-
-  if (saved && (saved === "auto" || LOCALES[saved] || saved === "en")) return saved;
-
-  let nav = "en";
-
-  try { nav = (navigator.language || "en").slice(0, 2).toLowerCase(); } catch { /* ignore */ }
-
-  return LOCALES[nav] ? nav : "en";
 
 }
 
@@ -290,7 +276,7 @@ function updateLoadReadout() {
 
     if (Number.isFinite(bill) && bill > 0 && Number.isFinite(rate) && rate > 0) {
 
-      const kwhDay = bill / (rate * 30.44);
+      const kwhDay = bill / (rate * DAYS_PER_MONTH);
 
       out.textContent = t("readoutBill", { kwhDay: fmtKwh(kwhDay) });
 
@@ -660,7 +646,7 @@ function readInputs() {
 
     const rate = getTariff();
 
-    dailyKwh = bill / (rate * 30.44);
+    dailyKwh = bill / (rate * DAYS_PER_MONTH);
 
   } else {
 
@@ -1325,12 +1311,8 @@ function renderAutoCards(p) {
     }
 
     if (Number.isFinite(a.lcoeUsdPerKwh)) {
-
-          if (Number.isFinite(a.lcoeUsdPerKwh)) {
       rows.push(["Your power cost", `${(a.lcoeUsdPerKwh * 100).toFixed(1)}c/kWh` +
         (p.tariff ? ` (grid is ${(p.tariff * 100).toFixed(0)}c)` : "")]);
-    }
-
     }
 
     appendRows(card, rows);
@@ -1444,12 +1426,8 @@ function renderTierCards(p) {
     }
 
     if (Number.isFinite(t.lcoeUsdPerKwh)) {
-
-          if (Number.isFinite(a.lcoeUsdPerKwh)) {
-      rows.push(["Your power cost", `${(a.lcoeUsdPerKwh * 100).toFixed(1)}c/kWh` +
+      rows.push(["Your power cost", `${(t.lcoeUsdPerKwh * 100).toFixed(1)}c/kWh` +
         (p.tariff ? ` (grid is ${(p.tariff * 100).toFixed(0)}c)` : "")]);
-    }
-
     }
 
     if (t.replacementsHorizon > 0) {
@@ -1541,12 +1519,8 @@ function renderTargetCards(p) {
     }
 
     if (Number.isFinite(t.lcoeUsdPerKwh)) {
-
-          if (Number.isFinite(a.lcoeUsdPerKwh)) {
-      rows.push(["Your power cost", `${(a.lcoeUsdPerKwh * 100).toFixed(1)}c/kWh` +
+      rows.push(["Your power cost", `${(t.lcoeUsdPerKwh * 100).toFixed(1)}c/kWh` +
         (p.tariff ? ` (grid is ${(p.tariff * 100).toFixed(0)}c)` : "")]);
-    }
-
     }
 
     if (t.replacementsHorizon > 0 && t.battKwh > 0) {
@@ -2089,7 +2063,11 @@ function restoreFromShare() {
 
     const cv = $("customRateVal");
 
-    if (cv) cv.value = String(o.tf);
+    if (cv) {
+      const fx = fxActive();
+      const display = fx ? o.tf * fx.rate : o.tf;
+      cv.value = String(+display.toFixed(4));
+    }
 
   }
 
@@ -2381,15 +2359,29 @@ export function initSizingUI() {
 
   // needed, since FX is a display-only transform on the same numbers.
 
+  prevFxSnapshot = fxActive();
   for (const id of ["fxRate", "fxCode"]) {
 
     const elNode = $(id);
 
     if (elNode) elNode.addEventListener("input", () => {
+      // Preserve USD value of tariff when currency switches: convert display
+      // value from old rate to new so $0.42 doesn't become 0.46$ after toggle.
+      const curVal = parseFloat($("customRateVal")?.value);
+      if (Number.isFinite(curVal) && prevFxSnapshot && prevFxSnapshot.rate) {
+        const usd = curVal / prevFxSnapshot.rate;
+        const nextFx = fxActive();
+        if (nextFx && nextFx.rate) {
+          $("customRateVal").value = String(+(usd * nextFx.rate).toFixed(4));
+        } else if (!nextFx) {
+          $("customRateVal").value = String(+usd.toFixed(4));
+        }
+      }
 
       currencyTouched = true;
 
       updateCurrencyUnitLabel();
+      prevFxSnapshot = fxActive();
 
       if (lastPayload) renderResults(lastPayload);
 

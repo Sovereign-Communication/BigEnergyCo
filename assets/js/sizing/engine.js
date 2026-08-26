@@ -313,14 +313,10 @@ export function downsampleEnvelope(series, buckets) {
 
 /**
  * Size all tiers at once. Returns array aligned with RELIABILITY_TIERS order.
+ * @deprecated — use simulate() directly; kept for backwards compat.
  */
 export function simulateWithCycles(opts) {
-  const chem = CHEMISTRIES[opts.chemistry || "lfp"] || CHEMISTRIES.lfp;
-  const eta = Math.sqrt(chem.roundTrip);
-  const base = simulate(opts);
-  // Re-derive cycles cheaply: total energy through inverter ≈ served AC energy.
-  base.cyclesEquivalent = base.servedWh / (opts.battKwhUsable * 1000 * 2);
-  return base;
+  return simulate(opts);
 }
 
 // ── Tier sizing search ──────────────────────────────────────────────────────
@@ -335,7 +331,7 @@ export function simulateWithCycles(opts) {
 export function sizeForTier({
   e1kw, loadWh, tempsC = null, chemistry = "lfp",
   maxUnmetHoursPerYear, years = 1,
-  costPerWpv = 0.35, costPerKwhBatt = 140,
+  costPerWpv = 0.35, costPerKwhBatt = 140, costPerKwInv = 0,
   pvMax = 30, battMax = 200, pvStep = 0.5, battStep = 1,
   capacityScale = null, laborPerKwh,
 }) {
@@ -347,15 +343,13 @@ export function sizeForTier({
 
   // Lifetime-cost objective: among banks meeting reliability, pick the one
   // whose TRUE cost over the horizon is lowest — capex plus every bank swap
-  // and its install labor. This naturally sizes banks so they reach the
-  // horizon (a modestly larger LFP/Na-ion bank needing zero swaps beats a
-  // tiny one with replacements), while still honestly counting lead-acid's
-  // unavoidable swap cadence.
+  // and its install labor. Includes inverter cost (PV-driven) so search isn't
+  // biased low by ~$90/kW.
   const lifetimeObjective = (p, b, r) => {
     const cyclesPerYear = r.cyclesEquivalent / years;
     const replacements = batteryReplacements(cyclesPerYear, CHEMISTRIES[chemistry].cyclesTo80);
     const life = lifetimeCostUsd({
-      capexMidUsd: p * 1000 * costPerWpv + b * costPerKwhBatt,
+      capexMidUsd: p * 1000 * costPerWpv + p * costPerKwInv + b * costPerKwhBatt,
       battKwhUsable: b,
       battPriceMidPerKwh: costPerKwhBatt,
       replacements,
@@ -497,7 +491,7 @@ export function simulateOffset({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = 
 export function sizeForBillCut({
   e1kw, loadWh, tempsC = null, chemistry = "lfp",
   minFraction = 0.8, years = 1,
-  costPerWpv = 0.35, costPerKwhBatt = 140,
+  costPerWpv = 0.35, costPerKwhBatt = 140, costPerKwInv = 0,
   pvMax = 30, battMax = 100, battStep = 1,
   capacityScale = null, laborPerKwh,
 }) {
@@ -509,11 +503,12 @@ export function sizeForBillCut({
   // Lifetime-cost objective: among systems meeting the bill-cut target, pick
   // the one whose TRUE cost over the horizon is lowest (capex plus every bank
   // swap and its install labor), so banks are sized to reach the horizon.
+  // Includes inverter cost so PV-heavy solutions aren't underpriced.
   const lifetimeObjective = (p, b, r) => {
     const cyclesPerYear = r.cyclesEquivalent / years;
     const replacements = batteryReplacements(cyclesPerYear, CHEMISTRIES[chemistry].cyclesTo80);
     const life = lifetimeCostUsd({
-      capexMidUsd: p * 1000 * costPerWpv + b * costPerKwhBatt,
+      capexMidUsd: p * 1000 * costPerWpv + p * costPerKwInv + b * costPerKwhBatt,
       battKwhUsable: b,
       battPriceMidPerKwh: costPerKwhBatt,
       replacements,
