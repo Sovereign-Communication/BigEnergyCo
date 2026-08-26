@@ -456,6 +456,119 @@ header {
 
 }
 
+/* Real <button> elements styled as .btn need UA-style resets */
+button.btn {
+
+  font-family: inherit;
+
+}
+
+/* Result detail ladder (Best pick / Compare batteries / All options) */
+#resultLadder {
+
+  display: none;
+
+  gap: 0.5rem;
+
+  flex-wrap: wrap;
+
+}
+
+.ladder-tab {
+
+  appearance: none;
+
+  border: 1px solid var(--border-card);
+
+  background: rgba(9, 13, 22, 0.85);
+
+  color: var(--text-muted);
+
+  padding: 0.5rem 1.05rem;
+
+  border-radius: 999px;
+
+  cursor: pointer;
+
+  font-size: 0.85rem;
+
+  font-weight: 600;
+
+  font-family: inherit;
+
+  transition: all 0.2s ease;
+
+}
+
+.ladder-tab:hover {
+
+  color: var(--text-main);
+
+  border-color: var(--primary-accent);
+
+}
+
+.ladder-active {
+
+  background: rgba(0, 230, 153, 0.12);
+
+  color: var(--primary-accent);
+
+  border-color: var(--primary-accent);
+
+}
+
+/* All-options comparison matrix */
+.matrix-wrap {
+
+  overflow-x: auto;
+
+}
+
+.matrix-table {
+
+  width: 100%;
+
+  border-collapse: collapse;
+
+  font-size: 0.82rem;
+
+}
+
+.matrix-table th,
+
+.matrix-table td {
+
+  padding: 0.55rem 0.65rem;
+
+  border: 1px solid var(--border-card);
+
+  text-align: left;
+
+  vertical-align: top;
+
+  line-height: 1.45;
+
+}
+
+.matrix-table th {
+
+  color: var(--text-main);
+
+  background: rgba(9, 13, 22, 0.85);
+
+}
+
+.matrix-best {
+
+  outline: 2px solid rgba(0, 230, 153, 0.55);
+
+  outline-offset: -2px;
+
+  background: rgba(0, 230, 153, 0.05);
+
+}
+
 /* Hero Section */
 
 .hero {
@@ -1170,7 +1283,7 @@ footer {
 
       <div class="logo">
 
-        <span></span>
+        <span aria-hidden="true">&#9889;</span>
 
         <span>BigEnergy<span class="highlight">Co</span></span>
 
@@ -1360,6 +1473,50 @@ footer {
 
             <input type="number" id="customRateVal" class="form-control" placeholder="e.g. 0.31" step="0.01" min="0.01">
 
+            <details id="genHelper" style="margin-top:0.6rem;font-size:0.85rem;">
+
+              <summary style="cursor:pointer;color:var(--primary-accent);" data-i18n="genSummary">I run a generator &mdash; what does its power really cost?</summary>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:0.7rem;">
+
+                <div class="form-group" style="margin-bottom:0;">
+
+                  <label for="genFuelType">Fuel:</label>
+
+                  <select id="genFuelType" class="form-control">
+
+                    <option value="petrol" selected>Petrol / gasoline</option>
+
+                    <option value="diesel">Diesel</option>
+
+                  </select>
+
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+
+                  <label for="genFuelPrice">Price per liter ($):</label>
+
+                  <input type="number" id="genFuelPrice" class="form-control" placeholder="e.g. 1.20" step="0.05" min="0.05">
+
+                </div>
+
+              </div>
+
+              <div id="genReadout" style="margin-top:0.7rem;padding:0.7rem 0.9rem;background:rgba(0,230,153,0.06);border:1px solid var(--border-glow);border-radius:8px;font-size:0.88rem;line-height:1.55;display:none;"></div>
+
+              <button type="button" id="btnApplyGenRate" class="btn btn-secondary" style="cursor:pointer;margin-top:0.7rem;display:none;" data-i18n="genApply"> Use this as my electricity price</button>
+
+              <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.6rem;line-height:1.5;">
+
+                Assumes a small genset at typical partial load: petrol &asymp; 0.5 L/kWh, diesel &asymp; 0.35 L/kWh (fuel only &mdash;
+
+                oil, filters, and engine wear push the true number higher). If you know your real $/kWh, type it directly instead.
+
+              </p>
+
+            </details>
+
             <div style="margin-top:0.6rem;">
 
               <label for="exportRate">Feed-in credit for surplus you can sell <span style="font-weight:400;color:var(--text-muted);">($/kWh, optional &mdash; grid-tie only)</span>:</label>
@@ -1510,13 +1667,21 @@ footer {
 
           </div>
 
-          <div id="btnRunSizing" class="btn btn-primary btn-full" style="cursor:pointer; margin-top: 0.5rem;" tabindex="-1"><span data-i18n="runBtn">Size My System (5-yr simulation)</span></div>
+          <button id="btnRunSizing" class="btn btn-primary btn-full" type="button" style="cursor:pointer; margin-top: 0.5rem;"><span data-i18n="runBtn">Size My System (5-yr simulation)</span></button>
 
-          <div id="sizingStatus" style="font-size:0.85rem;color:var(--text-muted);margin-top:0.75rem;line-height:1.5;">First run downloads ~2 MB of satellite weather data, then caches it in your browser.</div>
+          <div id="sizingStatus" role="status" aria-live="polite" style="font-size:0.85rem;color:var(--text-muted);margin-top:0.75rem;line-height:1.5;">First run downloads ~2 MB of satellite weather data, then caches it in your browser.</div>
 
         </div>
 
         <div class="results-box">
+
+          <div id="resultLadder" style="display:none; margin-bottom:1rem;" role="tablist" aria-label="Result detail level">
+            <button type="button" id="lvlBest" class="ladder-tab ladder-active" role="tab" aria-selected="true" data-i18n="lvlBest">Best pick</button>
+            <button type="button" id="lvlCompare" class="ladder-tab" role="tab" aria-selected="false" data-i18n="lvlCompare">Compare batteries</button>
+            <button type="button" id="lvlMatrix" class="ladder-tab" role="tab" aria-selected="false" data-i18n="lvlMatrix">All options</button>
+          </div>
+
+          <div id="bestPickWrap"></div>
 
           <div id="moneyBar" style="display:none; margin-bottom: 1rem; padding: 0.85rem 1rem; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.35); border-radius: 10px; font-size: 0.95rem; line-height: 1.5;"></div>
 
@@ -1544,6 +1709,38 @@ footer {
 
           </div>
 
+          <details id="bomPanel" style="display:none; margin-top:1.25rem;">
+
+            <summary style="cursor:pointer;color:var(--primary-accent);font-size:0.95rem;font-weight:700;" data-i18n="bomPanelTitle">Your hardware list &mdash; what this system is made of</summary>
+
+            <div style="margin-top:0.8rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;">
+
+              <div class="form-group" style="margin-bottom:0;max-width:220px;">
+
+                <label for="panelWatts">Panel wattage you'd buy (W):</label>
+
+                <input type="number" id="panelWatts" class="form-control" value="550" min="100" max="800" step="10">
+
+              </div>
+
+              <button type="button" id="btnDownloadBom" class="btn btn-outline" style="cursor:pointer;" data-i18n="bomDownload"> Download parts list (CSV)</button>
+
+            </div>
+
+            <div id="bomBody" style="margin-top:1rem;"></div>
+
+            <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.8rem;line-height:1.55;">
+
+              Educational estimate from your sizing result &mdash; not an engineering design, not a shopping order.
+
+              Fuse and cable figures assume copper, conservative ampacity, and a short battery-to-inverter run;
+
+              verify everything against your local electrical code with a licensed professional before buying or energizing anything.
+
+            </p>
+
+          </details>
+
           <details style="margin-top:1.25rem;font-size:0.85rem;color:var(--text-muted);">
 
             <summary style="cursor:pointer;color:var(--primary-accent);">How this was calculated</summary>
@@ -1560,11 +1757,11 @@ footer {
 
           <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem;">
 
-            <div id="btnAskAdvisor" class="btn btn-secondary" style="cursor:pointer;display:none;"> Ask the AI advisor about this result</div>
+            <button id="btnAskAdvisor" class="btn btn-secondary" type="button" style="cursor:pointer;display:none;"> Ask the AI advisor about this result</button>
 
-            <div id="btnShareResult" class="btn btn-outline" style="cursor:pointer;display:none;"> Copy share link</div>
+            <button id="btnShareResult" class="btn btn-outline" type="button" style="cursor:pointer;display:none;"> Copy share link</button>
 
-            <div id="btnPrintResult" class="btn btn-outline" style="cursor:pointer;display:none;"> Print / save PDF</div>
+            <button id="btnPrintResult" class="btn btn-outline" type="button" style="cursor:pointer;display:none;"> Print / save PDF</button>
 
           </div>
 
@@ -2036,7 +2233,7 @@ footer {
 
       <div style="margin-bottom: 1rem; font-size: 1.25rem; font-weight: 800; color: #fff;">
 
-        ? BigEnergy<span style="color: var(--primary-accent);">Co</span>
+        &#9889; BigEnergy<span style="color: var(--primary-accent);">Co</span>
 
       </div>
 
@@ -2084,7 +2281,7 @@ footer {
 
   <!-- Sizing & AI Chatbot Modal -->
 
-  <div id="sizingModal" class="modal-overlay">
+  <div id="sizingModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="AI advisor">
 
     <div class="modal-card">
 
@@ -2248,7 +2445,7 @@ footer {
 
           <div class="chat-msg bot">
 
-            ? <strong>BigEnergyCo AI Advisor</strong>:<br>
+            &#9889; <strong>BigEnergyCo AI Advisor</strong>:<br>
 
             Aloha! I'm a free AI advisor for off-grid solar and battery storage &mdash; anywhere in the world.
 
@@ -2286,7 +2483,7 @@ footer {
 
   <!-- Terms & Disclaimer Modal -->
 
-  <div id="legalModal" class="modal-overlay">
+  <div id="legalModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Terms and disclaimer">
 
     <div class="modal-card" style="max-width: 700px;">
 
@@ -2354,7 +2551,7 @@ footer {
 
   <!-- Inlined JavaScript with JSONP Web-Bridge for Freenet CSP Passthrough -->
 
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260825r"></script>
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260826a"></script>
 
   <script>
 
@@ -2368,7 +2565,15 @@ footer {
 
       var modal = document.getElementById('sizingModal');
 
-      if (modal) modal.style.display = 'flex';
+      if (modal) {
+
+        modal.style.display = 'flex';
+
+        var closer = document.getElementById('btnCloseSizing');
+
+        if (closer) closer.focus();
+
+      }
 
     };
 
@@ -2384,7 +2589,15 @@ footer {
 
       var modal = document.getElementById('legalModal');
 
-      if (modal) modal.style.display = 'flex';
+      if (modal) {
+
+        modal.style.display = 'flex';
+
+        var closer = document.getElementById('btnCloseLegal');
+
+        if (closer) closer.focus();
+
+      }
 
     };
 
@@ -2395,6 +2608,15 @@ footer {
       if (modal) modal.style.display = 'none';
 
     };
+
+    // Esc closes whichever modal is open; focus stays out of hidden overlays.
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Escape') return;
+      var sizing = document.getElementById('sizingModal');
+      var legal = document.getElementById('legalModal');
+      if (sizing && sizing.style.display === 'flex') { window.closeSizingModal(); return; }
+      if (legal && legal.style.display === 'flex') window.closeLegalModal();
+    });
 
     window.scrollToCalc = function() {
 
@@ -2480,7 +2702,7 @@ footer {
 
       loadingDiv.className = 'chat-msg bot';
 
-      loadingDiv.innerText = ' Thinking...';
+      loadingDiv.innerText = '\u23F3 Thinking...';
 
       loadingDiv.id = 'loadingMsg';
 
@@ -2918,8 +3140,6 @@ footer {
 
     function setupEventListeners() {
 
-      var navAdvisor = document.getElementById('btnNavAdvisor');
-
       var navSizeArray = document.getElementById('btnNavSizeArray');
 
       var heroSizing = document.getElementById('btnHeroSizing');
@@ -2955,8 +3175,6 @@ footer {
       if (navSizeArray) navSizeArray.addEventListener('click', function () { scrollToSection('sizing'); });
 
       if (heroSizing) heroSizing.addEventListener('click', function () { scrollToSection('sizing'); });
-
-      if (navAdvisor) navAdvisor.addEventListener('click', window.openSizingModal);
 
       if (calcAdvisor) calcAdvisor.addEventListener('click', window.openSizingModal);
 

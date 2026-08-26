@@ -26,7 +26,7 @@ const MSG = {
 test("off-grid AUTO: every field the renderer reads exists and is sane", async () => {
   const p = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid" }, { fetchWeather: fakeWeather });
   assert.equal(p.mode, "offgrid");
-  assert.equal(p.contract, 5, "payload carries current contract version");
+  assert.equal(p.contract, 6, "payload carries current contract version");
   assert.ok(Array.isArray(p.auto) && p.auto.length === 3, "three chemistry cards");
   assert.equal(p.history.kind, "auto");
   assert.equal(p.tiers.length, 0);
@@ -140,4 +140,78 @@ test("impossible loads degrade gracefully (nulls, no crash)", async () => {
   }, { fetchWeather: fakeWeather });
   assert.equal(p.tiers[0].solvable, false, "tier100 unsolvable at absurd load");
   assert.equal(p.tiers[0].paybackYearsLo, null);
+});
+
+// ── Options matrix + best pick + BOM focus (contract v6) ────────────────────
+
+test("off-grid AUTO carries a full 3×3 options matrix with sane cells", async () => {
+  const p = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid" }, { fetchWeather: fakeWeather });
+  assert.ok(p.matrix && p.matrix.kind === "offgrid");
+  assert.equal(p.matrix.cols.length, 3);
+  assert.equal(p.matrix.rows.length, 3);
+  for (const row of p.matrix.rows) {
+    for (const col of p.matrix.cols) {
+      const cell = p.matrix.cells[`${row.id}:${col.id}`];
+      assert.ok(cell, `cell ${row.id}:${col.id} exists`);
+      if (!cell.solvable) continue;
+      assert.equal(cell.unmetHoursPerYear <= (col.id === "tier100" ? 0 : col.id === "tier99" ? 87.6 : 438) + 0.1,
+        true, `${row.id}@${col.id} honors tier budget (${cell.unmetHoursPerYear} h/yr)`);
+      // More reliability never costs less lifetime money within one chemistry
+    }
+  }
+  const t95 = p.matrix.cells["lfp:tier95"];
+  const t100 = p.matrix.cells["lfp:tier100"];
+  if (t95.solvable && t100.solvable) {
+    assert.ok(t100.lifetimeCostMid >= t95.lifetimeCostMid, "100% tier costs at least the 95% tier");
+  }
+});
+
+test("grid-tie AUTO carries a full 3×3 matrix honoring each cut target", async () => {
+  const p = await runSizing({ ...MSG, chemistry: "auto", mode: "gridtie" }, { fetchWeather: fakeWeather });
+  assert.ok(p.matrix && p.matrix.kind === "gridtie");
+  const minBy = { cut60: 59, cut80: 79, cut95: 94 };
+  for (const row of p.matrix.rows) {
+    for (const col of p.matrix.cols) {
+      const cell = p.matrix.cells[`${row.id}:${col.id}`];
+      assert.ok(cell, `cell ${row.id}:${col.id} exists`);
+      if (!cell.solvable) continue;
+      assert.ok(cell.cutPct >= minBy[col.id], `${row.id}@${col.id} cut ${cell.cutPct}% meets ${col.id}`);
+    }
+  }
+});
+
+test("best pick = lowest lifetime cost among solvable chemistries, with reason and focus", async () => {
+  for (const mode of ["offgrid", "gridtie"]) {
+    const p = await runSizing({ ...MSG, chemistry: "auto", mode }, { fetchWeather: fakeWeather });
+    if (!p.auto.some((a) => a.solvable)) continue;
+    const expected = p.auto.filter((a) => a.solvable)
+      .reduce((a, b) => (a.lifetimeCostMid <= b.lifetimeCostMid ? a : b));
+    assert.equal(p.best.chemistry, expected.chemistry, `${mode}: best is cheapest`);
+    assert.ok(typeof p.bestReason === "string" && p.bestReason.includes(expected.chemLabel),
+      `${mode}: reason names the winner`);
+    assert.ok(p.bestReason.length > 40, `${mode}: reason explains itself`);
+    // Focus drives the hardware list — must match the winning system
+    assert.equal(p.focus.chemistry, p.best.chemistry);
+    assert.equal(p.focus.pvKw, p.best.pvKw);
+    assert.equal(p.focus.battKwh, p.best.battKwh);
+    assert.ok(p.focus.peakLoadW > 0, "peak load captured for inverter sizing");
+    assert.ok(Number.isFinite(p.focus.battNameplateKwh) || p.focus.battKwh === 0);
+  }
+});
+
+test("single-chemistry runs expose focus (rep tier/target) but no best/matrix", async () => {
+  const og = await runSizing({ ...MSG, chemistry: "lfp", mode: "offgrid" }, { fetchWeather: fakeWeather });
+  assert.equal(og.best, null);
+  assert.equal(og.matrix, null);
+  assert.equal(og.focus.chemistry, "lfp");
+  assert.equal(og.focus.peakLoadW > 0, true);
+
+  const gt = await runSizing({ ...MSG, chemistry: "naion", mode: "gridtie" }, { fetchWeather: fakeWeather });
+  assert.equal(gt.best, null);
+  assert.equal(gt.matrix, null);
+  assert.equal(gt.focus.chemistry, "naion");
+
+  // Impossible load: focus degrades to null without crashing
+  const bad = await runSizing({ ...MSG, chemistry: "lfp", mode: "offgrid", dailyKwh: 400 }, { fetchWeather: fakeWeather });
+  assert.equal(bad.focus, null);
 });

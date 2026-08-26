@@ -10,20 +10,28 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260825r";
+import { CITY_PRESETS, } from "./nasa.js?v=20260826a";
 
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260825r";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260826a";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260825r";
+import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260826a";
 
-import { applyI18n, initLangPicker, resolveLang } from "../shared/i18n.js?v=20260825r";
+import { BOM_ITEMS } from "../shared/content.js?v=20260826a";
 
-import { LOCALES } from "../shared/locales.js?v=20260825r";
+import { applyI18n, initLangPicker, resolveLang } from "../shared/i18n.js?v=20260826a";
+
+import { LOCALES } from "../shared/locales.js?v=20260826a";
 
 let worker = null;
 
 let lastPayload = null;   // kept for share links + the printable summary
 let prevFxSnapshot = null; // for tariff display conversion on currency switch
+
+// Result detail level: "best" | "compare" | "matrix" (auto-chemistry runs only).
+let resultLevel = "best";
+
+// True once the user applied the generator-fuel helper to the price field.
+let generatorBasis = false;
 
 // The legacy storage-comparison script (classic inline JS) reads scoped
 
@@ -654,11 +662,11 @@ function readInputs() {
 
   }
 
-  let basis = "direct kWh entry";
+  let basis = generatorBasis ? "generator fuel cost" : "direct kWh entry";
 
-  if (mode === "appliances") basis = "appliance checklist";
+  if (mode === "appliances") basis = generatorBasis ? "appliance checklist + generator fuel" : "appliance checklist";
 
-  else if (mode === "bill") basis = "monthly electric bill";
+  else if (mode === "bill") basis = generatorBasis ? "monthly bill paid to a fuel station" : "monthly electric bill";
 
   return {
 
@@ -760,7 +768,7 @@ function ensureWorker() {
 
   if (!worker) {
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825r", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260826a", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -1258,6 +1266,10 @@ function renderAutoCards(p) {
       ["Battery swaps", a.replacementsHorizon > 0 ? (a.batteryLifeYears ? `~${a.replacementsHorizon}x (about every ${fmtLife(a.batteryLifeYears)})` : `~${a.replacementsHorizon}x`) : "None in 20 years"],
     ];
 
+    const footAuto = footprintText(a.pvKw);
+
+    if (footAuto) rows.splice(2, 0, ["Footprint", footAuto]);
+
     if (a.swapsAndLaborUsd > 0) {
 
       rows.push(["Swaps + labor add", `~${money(a.swapsAndLaborUsd)}`]);
@@ -1331,6 +1343,315 @@ function renderAutoCards(p) {
 
   }
 
+}
+
+// ── Result detail ladder / best pick / options matrix ───────────────────────
+
+function footprintText(pvKw, panelWatts = PANEL_WATTS_DEFAULT) {
+  const lay = panelLayout(pvKw, panelWatts);
+  if (!lay) return null;
+  return `~${lay.count} \u00D7 ${lay.panelWatts} W panels \u00B7 about ${lay.areaM2} m\u00B2 of roof or ground`;
+}
+
+function syncLadderTabs() {
+  const map = { best: "lvlBest", compare: "lvlCompare", matrix: "lvlMatrix" };
+  for (const [lvl, id] of Object.entries(map)) {
+    const btn = $(id);
+    if (!btn) continue;
+    const active = resultLevel === lvl;
+    btn.classList.toggle("ladder-active", active);
+    btn.setAttribute("aria-selected", active ? "true" : "false");
+  }
+}
+
+function setLevel(lvl) {
+  resultLevel = lvl;
+  syncLadderTabs();
+  if (lastPayload && lastPayload.auto && lastPayload.auto.length) renderResults(lastPayload);
+}
+
+/** The one system we'd build here, stated plainly, with the why. */
+function renderBestPick(p) {
+  const wrap = $("bestPickWrap");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  const grid = $("tierResults");
+  if (grid) { grid.style.display = "grid"; grid.innerHTML = ""; }
+  if (!p.best) {
+    wrap.appendChild(el("p", { style: "color:var(--text-muted);font-size:0.9rem;" },
+      "No chemistry produced a practical system at this site and load. Try lowering the reliability target or the daily kWh."));
+    return;
+  }
+  const b = p.best;
+  const isGT = p.mode === "gridtie";
+  const card = el("div", { class: "bom-card" });
+  card.style.borderColor = "var(--border-glow)";
+  card.appendChild(el("div", { class: "bom-badge" }, "Recommended \u2014 lowest true 20-year cost"));
+  card.appendChild(el("h3", {}, `${b.chemLabel}: ${b.pvKw} kW solar + ${b.battKwh > 0 ? fmt(b.battKwh) + " kWh battery" : "no battery needed"}`));
+
+  const rows = [
+    ["Solar array", `${b.pvKw} kW`],
+    ["Battery (usable)", b.battKwh > 0 ? `${fmt(b.battKwh)} kWh \u2014 ~${fmt(b.battNameplateKwh)} nameplate` : "none"],
+  ];
+  const foot = footprintText(b.pvKw);
+  if (foot) rows.push(["Footprint", foot]);
+  rows.push(["Cost to buy", `~${moneyRange(b.costLo, b.costHi)}`]);
+  rows.push(["Battery swaps", b.replacementsHorizon > 0
+    ? (b.batteryLifeYears ? `~${b.replacementsHorizon}x (about every ${fmtLife(b.batteryLifeYears)})` : `~${b.replacementsHorizon}x`)
+    : "None in 20 years"]);
+  if (b.swapsAndLaborUsd > 0) rows.push(["Swaps + labor add", `~${money(b.swapsAndLaborUsd)}`]);
+  rows.push(["Total 20-year cost", `~${money(b.lifetimeCostMid)} \u2014 cheapest of the three`]);
+  if (!isGT) {
+    rows.push(["Unmet hours", `${fmt(b.unmetHoursPerYear ?? 0)} h/yr \u00B7 longest gap ${fmt(b.longestGapHours ?? 0)} h`]);
+  } else if (b.billAfterMonthlyUsd !== null) {
+    rows.push(["Bill after solar", `~${money(b.billAfterMonthlyUsd)}/mo`]);
+  }
+  if (p.tariff && typeof b.trueBreakEvenYear === "number") {
+    rows.push(["Pays for itself", `Year ${b.trueBreakEvenYear}`]);
+    if (b.replacementsHorizon > 0 && b.paybackYearsLo !== null) {
+      rows.push(["  \u2014 first cost alone pays back in", fmtPaybackRange(b.paybackYearsLo, b.paybackYearsHi)]);
+    }
+  } else if (p.tariff && b.trueBreakEvenYear === null && b.replacementsHorizon > 0) {
+    rows.push(["True 20-yr break-even", "never \u2014 replacements outpace savings"]);
+  } else if (!p.tariff && b.paybackYearsLo !== null) {
+    rows.push(["Pays for itself in", fmtPaybackRange(b.paybackYearsLo, b.paybackYearsHi)]);
+  }
+  if (Number.isFinite(b.lcoeUsdPerKwh)) {
+    rows.push(["Your power cost", `${(b.lcoeUsdPerKwh * 100).toFixed(1)}c/kWh` +
+      (p.tariff ? ` (grid is ${(p.tariff * 100).toFixed(0)}c)` : "")]);
+  }
+  appendRows(card, rows);
+  if (p.bestReason) {
+    card.appendChild(el("p", { style: "font-size:0.85rem;color:var(--text-main);margin-top:0.7rem;line-height:1.55;" }, p.bestReason));
+  }
+  card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
+    `${p.autoNote}. Use the tabs above to compare every option side by side.`));
+  wrap.appendChild(card);
+}
+
+/** Compact column labels for the matrix header. */
+function matrixColShort(p, col) {
+  if (p.mode === "gridtie") return col.id === "cut60" ? "\u221260% bill" : col.id === "cut80" ? "\u221280% bill" : "\u221295% bill";
+  return col.label.split("\u2014")[0].trim();
+}
+
+/**
+ * The full comparison table: every chemistry against every reliability
+ * level. Green outline marks the cheapest true 20-year cost per column.
+ */
+function matrixHtml(p) {
+  const m = p.matrix;
+  if (!m) return "";
+  // Cheapest lifetime cost per column (among solvable cells)
+  const colBest = {};
+  for (const col of m.cols) {
+    let min = Infinity;
+    for (const row of m.rows) {
+      const c = m.cells[`${row.id}:${col.id}`];
+      if (c && c.solvable && Number.isFinite(c.lifetimeCostMid) && c.lifetimeCostMid < min) min = c.lifetimeCostMid;
+    }
+    colBest[col.id] = min;
+  }
+  const head = m.cols.map((c) => `<th>${matrixColShort(p, c)}</th>`).join("");
+  const body = m.rows.map((row) => {
+    const cells = m.cols.map((col) => {
+      const cell = m.cells[`${row.id}:${col.id}`];
+      const cls = cell && cell.solvable && Number.isFinite(cell.lifetimeCostMid) && cell.lifetimeCostMid === colBest[col.id] ? ' class="matrix-best"' : "";
+      if (!cell || !cell.solvable) {
+        return `<td${cls}><span style="color:var(--text-muted);">not practical here</span></td>`;
+      }
+      const rel = p.mode === "offgrid"
+        ? `${fmt(cell.unmetHoursPerYear)} h/yr unmet`
+        : `-${cell.cutPct}% bill`;
+      const lcoe = Number.isFinite(cell.lcoeUsdPerKwh)
+        ? `<span style="color:var(--text-muted);">\u00B7 ${(cell.lcoeUsdPerKwh * 100).toFixed(1)}c/kWh</span>` : "";
+      return `<td${cls}>${cell.pvKw} kW PV<br>${cell.battKwh > 0 ? fmt(cell.battKwh) + " kWh batt" : "no battery"}` +
+        `<br>~${moneyRange(cell.costLo, cell.costHi)}<br><strong>20-yr ~${money(cell.lifetimeCostMid)}</strong><br>${rel} ${lcoe}</td>`;
+    }).join("");
+    return `<tr><th>${row.label}</th>${cells}</tr>`;
+  }).join("");
+  return `<div class="matrix-wrap"><table class="matrix-table"><thead><tr><th>Battery \u2193 \u00B7 Goal \u2192</th>${head}</tr></thead><tbody>${body}</tbody></table></div>` +
+    `<p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;line-height:1.55;">Green outline = lowest true 20-year cost in that column (every bank swap counted). "Unmet" hours are covered by a generator or the grid.</p>`;
+}
+
+function renderMatrix(p) {
+  const grid = $("tierResults");
+  if (!grid) return;
+  grid.style.display = "block";
+  grid.innerHTML = p.matrix ? matrixHtml(p) : "";
+}
+
+// ── Hardware list panel (BOM) ────────────────────────────────────────────────
+
+function currentPanelWatts() {
+  const v = parseFloat($("panelWatts")?.value);
+  return Number.isFinite(v) && v >= 50 ? v : PANEL_WATTS_DEFAULT;
+}
+
+function buildFocusBom() {
+  const f = lastPayload && lastPayload.focus;
+  if (!f) return null;
+  const watts = currentPanelWatts();
+  return buildBom({
+    pvKw: f.pvKw,
+    battNameplateKwh: f.battNameplateKwh,
+    chemistry: f.chemistry,
+    peakLoadW: f.peakLoadW,
+    panelWatts: watts,
+  });
+}
+
+function renderBomPanel() {
+  const panel = $("bomPanel");
+  const body = $("bomBody");
+  if (!panel || !body) return;
+  const bom = buildFocusBom();
+  panel.style.display = bom ? "block" : "none";
+  if (!bom) { body.innerHTML = ""; return; }
+  body.innerHTML = "";
+
+  const section = (title, rows) => {
+    if (!rows || !rows.length) return;
+    const card = el("div", { class: "bom-card", style: "margin-bottom:0.8rem;" });
+    card.appendChild(el("h3", {}, title));
+    appendRows(card, rows);
+    body.appendChild(card);
+  };
+
+  const f = lastPayload.focus;
+  section("Panels", [
+    ["Array", `${f.pvKw} kW \u2192 ${bom.panels.count} \u00D7 ${bom.panels.panelWatts} W = ${bom.panels.kwActual} kW`],
+    ["Space needed", `about ${bom.panels.areaM2} m\u00B2 of roof or ground (mounting gaps included)`],
+  ]);
+  if (bom.voltage) {
+    section("Battery bank", [
+      ["System voltage", `${bom.voltage.volts} V \u2014 ${bom.voltage.rationale}`],
+      bom.battery.diy
+        ? ["DIY build", `${bom.battery.diy.unitLabel} \u00D7 ${bom.battery.diy.stringsParallel} parallel string(s) = ${bom.battery.diy.blocksTotal} cells`]
+        : null,
+      bom.battery.retail
+        ? ["Prebuilt alternative", `${bom.battery.retail.modules} \u00D7 ${bom.battery.retail.unitLabel}`]
+        : null,
+      ["Nameplate target", `~${fmt(f.battNameplateKwh)} kWh at ${(bom.battery.usableDod * 100).toFixed(0)}% usable depth of discharge`],
+    ].filter(Boolean));
+  }
+  section("Inverter", [
+    ["Your peak demand", `~${fmt(bom.inverter.peakLoadKw)} kW at once`],
+    ["Suggested class", `${bom.inverter.recommendedKw} kW continuous minimum`],
+    ["Reference unit (only an example)", bom.inverter.referenceUnit],
+    ["Surge rule", bom.inverter.surgeNote],
+  ]);
+  if (bom.controller) {
+    section("Charge controller & protection", [
+      ["Controller capacity", `${bom.controller.ampsRequired} A total \u2014 ${bom.controller.suggestion}`],
+      ["Controller note", bom.controller.note],
+      ["Main battery fuse/breaker", `${bom.protection.mainFuseAmps} A (bank can pull ~${bom.protection.batteryDischargeAmps} A at full load)`],
+      ["PV disconnect", `${bom.protection.pvBreakerAmps} A`],
+    ]);
+  }
+  if (bom.cable) {
+    section("Battery-to-inverter cable (copper)", bom.cable.map((c) =>
+      [`${c.meters} m run`, c.mm2 ? `${c.awg} (${c.mm2} mm\u00B2) or larger` : `larger than ${c.awg} \u2014 shorten the run`] ));
+  }
+  if (bom.notes.length) {
+    body.appendChild(el("p", { style: "font-size:0.75rem;color:var(--text-muted);margin-top:0.4rem;line-height:1.5;" }, bom.notes.join(" ")));
+  }
+}
+
+function csvField(v) {
+  return `"${String(v ?? "").replace(/"/g, '""')}"`;
+}
+
+function downloadBomCsv() {
+  const bom = buildFocusBom();
+  const f = lastPayload && lastPayload.focus;
+  if (!bom || !f) return;
+  const rows = [
+    ["BigEnergyCo hardware list - educational estimate, not a quote"],
+    ["Generated", new Date().toISOString().slice(0, 10)],
+    ["System", `${f.pvKw} kW PV + ${f.battNameplateKwh} kWh nameplate (${bom.chemLabel})`],
+    ["Location", `${lastPayload.meta.latitude.toFixed(2)}, ${lastPayload.meta.longitude.toFixed(2)}`],
+    [],
+    ["Section", "Item", "Quantity / size", "Notes"],
+    ["Panels", `${bom.panels.panelWatts} W mono panels`, bom.panels.count, `${bom.panels.kwActual} kW array, about ${bom.panels.areaM2} sq m`],
+  ];
+  if (bom.voltage && bom.battery) {
+    rows.push(
+      ["Bank", "System voltage", `${bom.voltage.volts} V`, bom.voltage.rationale],
+      ["Bank (DIY)", bom.battery.diy.unitLabel, `${bom.battery.diy.stringsParallel} string(s), ${bom.battery.diy.blocksTotal} cells`, `${bom.battery.diy.stringKwh} kWh per string`],
+      ["Bank (retail alt.)", bom.battery.retail.unitLabel, bom.battery.retail.modules, "BMS and enclosure included"],
+    );
+  }
+  rows.push(
+    ["Inverter", `${bom.inverter.recommendedKw} kW class continuous`, 1, bom.inverter.referenceUnit],
+  );
+  if (bom.controller) {
+    rows.push(
+      ["Charging", `MPPT controller capacity`, `${bom.controller.ampsRequired} A total`, bom.controller.suggestion],
+      ["Protection", "Main battery fuse/breaker", `${bom.protection.mainFuseAmps} A`, `bank draws ~${bom.protection.batteryDischargeAmps} A at full load`],
+      ["Protection", "PV disconnect/breaker", `${bom.protection.pvBreakerAmps} A`, ""],
+    );
+  }
+  if (bom.cable) {
+    for (const c of bom.cable) {
+      rows.push(["Cable", `Battery-to-inverter run ${c.meters} m`, c.mm2 ? `${c.awg} (${c.mm2} sq mm) copper` : `larger than ${c.awg}`, "2% max drop, conservative ampacity"]);
+    }
+  }
+  rows.push([], ["Disclaimer", "Educational estimate only. Verify everything with a licensed electrician or engineer before purchasing or energizing."]);
+  const csv = "\uFEFF" + rows.map((r) => r.map(csvField).join(",")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const aEl = document.createElement("a");
+  aEl.href = url;
+  aEl.download = "bigenergyco-parts-list.csv";
+  document.body.appendChild(aEl);
+  aEl.click();
+  aEl.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  setStatus(" Parts list downloaded \u2014 take it to your supplier or electrician as a starting point.");
+}
+
+// ── Generator fuel helper ────────────────────────────────────────────────────
+
+// Typical partial-load fuel burn for small gensets (fuel cost only).
+const GEN_L_PER_KWH = { petrol: 0.5, diesel: 0.35 };
+
+function genRateUsd() {
+  const type = $("genFuelType")?.value || "petrol";
+  const price = parseFloat($("genFuelPrice")?.value);
+  if (!(price > 0)) return null;
+  return price * (GEN_L_PER_KWH[type] || GEN_L_PER_KWH.petrol);
+}
+
+function updateGenHelper() {
+  const readout = $("genReadout");
+  const applyBtn = $("btnApplyGenRate");
+  if (!readout || !applyBtn) return;
+  const rate = genRateUsd();
+  if (rate === null) {
+    readout.style.display = "none";
+    applyBtn.style.display = "none";
+    return;
+  }
+  const typeSel = $("genFuelType").value === "diesel" ? "Diesel" : "Petrol";
+  const lpk = GEN_L_PER_KWH[$("genFuelType").value] || GEN_L_PER_KWH.petrol;
+  readout.textContent = `${typeSel} at this price works out to about $${rate.toFixed(2)} per kWh` +
+    ` (${$("genFuelPrice").value} \u00F7 ${lpk} L/kWh \u2014 fuel alone; oil, filters and engine wear push the real number higher).` +
+    ` Typical grid power runs $0.10\u20130.30.`;
+  readout.style.display = "block";
+  applyBtn.style.display = "inline-flex";
+}
+
+function applyGenRate() {
+  const rate = genRateUsd();
+  if (rate === null || !$("customRateVal")) return;
+  const fx = fxActive();
+  const display = fx && fx.rate ? +(rate * fx.rate).toFixed(4) : +rate.toFixed(4);
+  $("customRateVal").value = String(display);
+  generatorBasis = true;
+  tariffTouched = true;
+  updateLoadReadout();
+  setStatus(` Your generator fuel works out to about $${rate.toFixed(2)}/kWh \u2014 entered as your electricity price, so every payback figure below compares against what you burn today.`);
 }
 
 function renderMoneyBar(p) {
@@ -1408,6 +1729,10 @@ function renderTierCards(p) {
       [`Cycles on the bank`, `~${fmt(t.cyclesPerYear)}/yr`],
 
     ];
+
+    const footTier = footprintText(t.pvKw);
+
+    if (footTier) rows.splice(2, 0, ["Footprint", footTier]);
 
     if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
 
@@ -1489,6 +1814,10 @@ function renderTargetCards(p) {
       ["Imported from grid", `${fmt(t.importedKwhPerYear)} kWh/yr`],
 
     ];
+
+    const footTarget = t.pvKw > 0 ? footprintText(t.pvKw) : null;
+
+    if (footTarget) rows.splice(2, 0, ["Footprint", footTarget]);
 
     const exportActive = t.exportValueAnnualUsd > 0;
 
@@ -1839,7 +2168,31 @@ function renderResults(p) {
 
   renderMoneyBar(p);
 
-  if (p.auto && p.auto.length) renderAutoCards(p);
+  const hasAuto = !!(p.auto && p.auto.length);
+
+  const ladder = $("resultLadder");
+
+  if (ladder) ladder.style.display = hasAuto ? "flex" : "none";
+
+  const bpWrap = $("bestPickWrap");
+
+  if (bpWrap) bpWrap.innerHTML = "";
+
+  const tierGrid = $("tierResults");
+
+  if (tierGrid) tierGrid.style.display = "grid";
+
+  if (hasAuto) {
+
+    syncLadderTabs();
+
+    if (resultLevel === "matrix") renderMatrix(p);
+
+    else if (resultLevel === "compare") renderAutoCards(p);
+
+    else renderBestPick(p);
+
+  }
 
   else if (isGT) renderTargetCards(p);
 
@@ -1901,6 +2254,14 @@ function renderResults(p) {
 
   }
 
+  const recLine =
+
+    p.best && Number.isFinite(p.best.lifetimeCostMid)
+
+      ? `RECOMMENDED (lowest true 20-year cost): ${p.best.chemLabel} - ${p.best.pvKw} kW PV + ${fmt(p.best.battKwh)} kWh usable. Why: ${p.bestReason || "cheapest over the horizon."}\n`
+
+      : "";
+
   window.lastSizingBrief =
 
     `I sized a system with your calculator for ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)}, ` +
@@ -1909,7 +2270,7 @@ function renderResults(p) {
 
     `${p.auto && p.auto.length ? ` (${p.autoNote})` : ""}, ` +
 
-    `${isGT ? "staying connected to the grid (no export" + (inp.exportRate ? ", feed-in credit entered)" : ")") : "fully off-grid"}:\n${briefLines.join("\n")}\n` +
+    `${isGT ? "staying connected to the grid (no export" + (inp.exportRate ? ", feed-in credit entered)" : ")") : "fully off-grid"}:\n${recLine}${briefLines.join("\n")}\n` +
 
     `[ADVISOR INSTRUCTION: These numbers were computed deterministically from NASA POWER hourly weather ` +
 
@@ -1931,9 +2292,11 @@ function renderResults(p) {
 
   populatePrintSheet(p, inp);
 
-  if (p.auto && p.auto.length) drawAutoChart(p);
+  renderBomPanel();
 
-  else if (p.history && p.history.tiers && p.history.tiers.length) drawSocChart(p.history, p.chemLabel || "battery");
+  if (hasAuto && resultLevel !== "matrix") drawAutoChart(p);
+
+  else if (!hasAuto && p.history && p.history.tiers && p.history.tiers.length) drawSocChart(p.history, p.chemLabel || "battery");
 
   else $("socChartWrap").style.display = "none";
 
@@ -2183,6 +2546,44 @@ function populatePrintSheet(p, inp) {
 
   }
 
+  // Hardware summary (focus system) + full options matrix for the printout.
+  let hwHtml = "";
+  if (p.focus) {
+    const bom = buildBom({
+      pvKw: p.focus.pvKw,
+      battNameplateKwh: p.focus.battNameplateKwh,
+      chemistry: p.focus.chemistry,
+      peakLoadW: p.focus.peakLoadW,
+      panelWatts: PANEL_WATTS_DEFAULT,
+    });
+    const hwRows = [
+      ["Solar panels", `${PANEL_WATTS_DEFAULT} W mono`, `${bom.panels.count} pcs`, `${bom.panels.kwActual} kW · ~${bom.panels.areaM2} m²`],
+    ];
+    if (bom.voltage && bom.battery) {
+      hwRows.push(
+        ["Bank voltage", `${bom.voltage.volts} V`, "-", ""],
+        ["Battery (DIY)", bom.battery.diy.unitLabel, `${bom.battery.diy.stringsParallel} string(s)`, `${bom.battery.diy.blocksTotal} cells total`],
+        ["Battery (retail alt.)", bom.battery.retail.unitLabel, `${bom.battery.retail.modules} pcs`, "BMS included"],
+      );
+    }
+    hwRows.push(["Inverter", `${bom.inverter.recommendedKw} kW class`, "1", "sized to peak load incl. surge margin"]);
+    if (bom.controller) {
+      hwRows.push(
+        ["Charge controller", `${bom.controller.ampsRequired} A MPPT`, "see note", bom.controller.suggestion],
+        ["Main DC fuse/breaker", `${bom.protection.mainFuseAmps} A`, "1", "battery disconnect"],
+        ["PV disconnect", `${bom.protection.pvBreakerAmps} A`, "1", ""],
+        ["Battery cable (2 m run)", bom.cable[0].mm2 ? `${bom.cable[0].awg} copper` : `larger than ${bom.cable[0].awg}`, "pair", "2% drop + ampacity"],
+      );
+    }
+    hwHtml = `
+      <h2 style="font-size:12pt;margin:10pt 0 4pt;">Hardware list for the recommended system (${bom.chemLabel})</h2>
+      <table style="border-collapse:collapse;width:100%;font-size:9pt;margin-bottom:8pt;">
+        <tr style="background:#eef2f7;"><th>Item</th><th>Spec</th><th>Qty</th><th>Note</th></tr>
+        ${hwRows.map((r) => "<tr><td>" + r.join("</td><td>") + "</td></tr>").join("")}
+      </table>`;
+  }
+  const mx = p.matrix ? matrixHtml(p).replace(/class="matrix-wrap"/, 'style="overflow-x:hidden;"') : "";
+
   sheet.innerHTML = `
 
     <h1 style="font-size:20pt;margin-bottom:2pt;">BigEnergyCo - ${title}</h1>
@@ -2207,7 +2608,11 @@ function populatePrintSheet(p, inp) {
 
       ${p.chemistry.toUpperCase()} battery - location ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)} -
 
-      ${p.tariff ? `grid price $${p.tariff}/kWh (~$${fmt(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
+      ${p.focus ? footprintText(p.focus.pvKw) + " - " : ""}${p.tariff ? `grid price $${p.tariff}/kWh (~$${fmt(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
+
+    ${hwHtml}
+
+    ${mx ? `<h2 style="font-size:12pt;margin:10pt 0 4pt;">All options compared</h2>${mx}` : ""}
 
     <p style="font-size:9.5pt;margin:0 0 4pt;"><strong>Method:</strong> hourly simulation of ${p.assumptions.dataYears} of
 
@@ -2354,6 +2759,26 @@ export function initSizingUI() {
   const printBtn = $("btnPrintResult");
 
   if (printBtn) printBtn.addEventListener("click", () => window.print());
+
+  // Result detail ladder (Best pick / Compare batteries / All options)
+  for (const [id, lvl] of [["lvlBest", "best"], ["lvlCompare", "compare"], ["lvlMatrix", "matrix"]]) {
+    const tab = $(id);
+    if (tab) tab.addEventListener("click", () => setLevel(lvl));
+  }
+
+  // Hardware list panel: live panel-wattage tweaks + CSV download
+  const panelWattsInput = $("panelWatts");
+  if (panelWattsInput) panelWattsInput.addEventListener("input", renderBomPanel);
+  const bomDl = $("btnDownloadBom");
+  if (bomDl) bomDl.addEventListener("click", downloadBomCsv);
+
+  // Generator fuel helper: fuel price -> effective $/kWh
+  const genType = $("genFuelType");
+  if (genType) genType.addEventListener("change", updateGenHelper);
+  const genPrice = $("genFuelPrice");
+  if (genPrice) genPrice.addEventListener("input", updateGenHelper);
+  const genApply = $("btnApplyGenRate");
+  if (genApply) genApply.addEventListener("click", applyGenRate);
 
   // Currency inputs re-render the existing result instantly - no re-run
 

@@ -6,6 +6,15 @@ system do I need, and can I live off-grid here?"* — computed by testable code,
 
 ## Status (2026-08-23) — Phase 2A/2B shipped, then MONEY + COHESION + GRID-TIE + WORLDWIDE (all live)
 
+**2026-08-26 value-pass shipped:** options matrix + true "best pick" ladder
+(`payload.matrix` / `payload.best` / `payload.focus`, contract **6**), hardware
+BOM module (`assets/js/sizing/bom.js`: panel count/area, system voltage,
+series/parallel layouts DIY+retail, inverter class from load peak, controller
+amps, fuse/breaker sizes, cable gauge) with CSV export + print integration,
+generator-fuel price helper (fuel price → effective $/kWh), footprint lines on
+every card, and trust polish (mojibake glyphs fixed, dead advisor-nav code
+removed, modal Esc + focus, aria-live status/chat, real `<button>` elements).
+
 | Item | State |
 |---|---|
 | `assets/js/sizing/engine.js` — derate chain, e1kw series, load models, hourly SOC simulator, tier search | ✅ done, tested |
@@ -16,6 +25,9 @@ system do I need, and can I live off-grid here?"* — computed by testable code,
 | **Grid-tie mode** — no-export offset sim (`simulateOffset`), 60/80/95% bill-cut targets (`sizeForBillCut`, monotone binary search on PV), bill-after + payback-out-of-savings | ✅ shipped |
 | **Worldwide** — sodium default (+ pricing premium), lead-acid back with TRUE TCO (rate+cold capacity scale, swap counts), user currency field, i18n scaffold (es/pt/fr/ar, RTL) | ✅ shipped |
 | **Cohesion** — single-source content module + freenet sync markers, scoped storage comparison (no more hardcoded $ figures), sizer-first CTAs, canonical tag | ✅ shipped |
+| **All-options matrix + best pick** — 3 chemistries × 3 tiers/targets from already-computed searches; ladder UI (Best pick / Compare batteries / All options) | ✅ shipped 2026-08-26 |
+| **Hardware list (`bom.js`)** — panels+voltage+bank layout+inverter+controller+fuses+cable; CSV download; print-sheet table; live panel-wattage input | ✅ shipped 2026-08-26 |
+| **Generator fuel helper** — petrol/diesel price/L → $/kWh (documented L-per-kWh assumptions); feeds existing tariff math | ✅ shipped 2026-08-26 |
 | Sheet replication gate (`scripts/validate-against-sheet.mjs`, ±5%) | ⏳ awaiting owner's sheet CSV export |
 | Bundled offline climate profiles (PWA/Freenet engine) | ⏳ next |
 | Aging fade inside the search objective (currently replacement-count only) | ⏳ v3 |

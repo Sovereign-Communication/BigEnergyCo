@@ -24,7 +24,7 @@ Freenet (offline): index-freenet.html → static cost calc, no API calls.
 ```
 
 **Two versions, one goal:**
-- **Internet (`index.html`):** Deterministic sizer (off-grid tiers + grid-tie bill-cutting), payback/LCOE money story, share links, printable summary, AI advisor, EN/ES/PT/FR/AR chrome. Requires internet for weather + Groq.
+- **Internet (`index.html`):** Deterministic sizer (off-grid tiers + grid-tie bill-cutting), payback/LCOE money story, best-pick ladder + full 3×3 options matrix (chemistry × reliability), hardware parts list with CSV export, generator-fuel price helper, share links, printable summary, AI advisor, EN/ES/PT/FR/AR chrome. Requires internet for weather + Groq.
 - **Freenet (`index-freenet.html`):** Static cost comparison + DIY reference. Fully offline; launcher syncs it into `freenet_web_dist/`. Shared content (prices/donations) is materialized into it by `node scripts/sync-freenet-content.mjs`.
 
 | File | Purpose |
@@ -34,6 +34,7 @@ Freenet (offline): index-freenet.html → static cost calc, no API calls.
 | `assets/js/sizing/engine.js` | Pure sizing math: derates, SOC sim, tier search, grid-tie offset sim + bill-cut search |
 | `assets/js/sizing/money.js` | Payback, battery-replacement cadence, LCOE |
 | `assets/js/sizing/pricing.js` | Scoped price ranges (ex-factory → landed → budget retail), sodium premium, tariff estimator |
+| `assets/js/sizing/bom.js` | Pure parts-list math: panel count/area, system voltage, bank series/parallel (DIY cells + retail modules), inverter class from load peak, controller amps, fuse/breaker ratings, cable gauge |
 | `assets/js/shared/content.js` | Canonical BOM prices + donation links (synced into Freenet page) |
 | `assets/js/shared/i18n.js` + `locales.js` | UI-chrome translations (es/pt/fr/ar) + RTL |
 | `scripts/sync-freenet-content.mjs` | Materializes shared content into index-freenet.html SYNC markers |

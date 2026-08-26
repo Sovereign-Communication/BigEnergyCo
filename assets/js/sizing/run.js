@@ -8,6 +8,7 @@
 import {
   buildE1kw, flatProfile, expandProfile, sizeAllTiers, simulate,
   sizeAllBillTargets, simulateOffset, dailyExtremes, CHEMISTRIES,
+  RELIABILITY_TIERS, BILL_TARGETS,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER, capacityScaleFor,
 } from "./engine.js";
 import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js";
@@ -35,7 +36,7 @@ const VALID_AUTO_TARGETS = new Set(["cut60", "cut80", "cut95"]);
 // UI-contract version: bump whenever payload fields change shape. The
 // renderer compares this to its own constant and warns on mismatch instead
 // of rendering garbage from a stale cached module.
-export const PAYLOAD_CONTRACT = 5;
+export const PAYLOAD_CONTRACT = 6;
 
 const AUTO_CARD_NOTES = {
   naion: "Runs on standard LFP voltage settings (the common case): the ~40 V low cutoff protects it from deep discharge, so it gives up a little capacity but lasts longer than its deep-cycle rating.",
@@ -89,6 +90,11 @@ export async function runSizing(msg, deps = {}) {
   const e1kw = buildE1kw(hours);
   const loadWh = expandProfile(flatProfile(dailyKwh), hours.length);
   const tempsC = Float64Array.from(hours, (h) => h.tAmb);
+
+  // Highest AC demand hour of the load profile — the number the hardware
+  // list (inverter class, DC protection) is built around.
+  let peakLoadW = 0;
+  for (let i = 0; i < loadWh.length; i++) if (loadWh[i] > peakLoadW) peakLoadW = loadWh[i];
 
   const annualYield = [...e1kw].reduce((a, b) => a + b, 0) / 1000 / series.meta.years;
   const gridSpend = annualGridSpendUsd(dailyKwh, tariff);
@@ -181,6 +187,104 @@ export async function runSizing(msg, deps = {}) {
     });
   }
 
+  // The system the hardware list (BOM panel) is built around.
+  function focusFor(chemId, sizing) {
+    const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
+    return {
+      chemistry: chemId,
+      chemLabel: chemObj.label,
+      pvKw: sizing.pvKw,
+      battKwh: sizing.battKwh,
+      battNameplateKwh: +(sizing.battKwh / chemObj.usableDod).toFixed(1),
+      usableDod: chemObj.usableDod,
+      peakLoadW: Math.round(peakLoadW),
+      meanTempC: Math.round(meanTempC),
+    };
+  }
+
+  /**
+   * One cell of the all-options matrix (chemistry × tier or × bill-cut
+   * target). Same money math as the headline cards, minus SOC capture —
+   * the search already computed every one of these systems; recording them
+   * costs nothing extra.
+   */
+  function matrixCell(chemId, sizing, kind) {
+    if (!sizing) return { solvable: false };
+    const m = moneyFor(chemId, sizing);
+    const yrs = series.meta.years;
+    const servedKwhPerYear =
+      (kind === "offgrid" ? sizing.result.servedWh : sizing.result.directWh + sizing.result.battWhAc) / 1000 / yrs;
+    const lcoe = lcoeUsdPerKwh({
+      capexMidUsd: m.cost.objectiveMid,
+      battReplaceCostUsd: Math.round(sizing.battKwh * landedMidBattKwh),
+      replacements: m.replacementsHorizon,
+      annualServedKwh: servedKwhPerYear,
+    });
+    const cell = {
+      solvable: true,
+      pvKw: sizing.pvKw,
+      battKwh: sizing.battKwh,
+      costLo: m.cost.lo,
+      costHi: m.cost.hi,
+      replacementsHorizon: m.replacementsHorizon,
+      swapsAndLaborUsd: m.swapsAndLaborUsd,
+      lifetimeCostMid: m.lifetimeCostMid,
+      lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
+      paybackYearsLo: null,
+      paybackYearsHi: null,
+      trueBreakEvenYear: null,
+    };
+    let savings = null;
+    if (kind === "offgrid") {
+      savings = gridSpend;
+      cell.unmetHoursPerYear = +(sizing.result.unmetHours / yrs).toFixed(1);
+    } else {
+      const importedKwhPerYear = sizing.result.importedWh / 1000 / yrs;
+      const clippedKwhPerYear = sizing.result.curtailedWh / 1000 / yrs;
+      const billAfterUsd = tariff ? importedKwhPerYear * tariff : null;
+      savings = billAfterUsd !== null && gridSpend ? Math.max(0, gridSpend - billAfterUsd) : null;
+      if (savings) savings += exportValueUsd(clippedKwhPerYear, exportRate);
+      cell.cutPct = Math.round((1 - sizing.result.importedWh / (dailyKwh * 365 * 1000)) * 100);
+    }
+    if (savings) {
+      cell.paybackYearsLo = paybackYears(m.cost.lo, savings);
+      cell.paybackYearsHi = paybackYears(m.cost.hi, savings);
+      cell.trueBreakEvenYear = breakEvenFor(m, savings);
+    }
+    return cell;
+  }
+
+  /** Lowest true-20-year-cost solvable entry — the "Best pick". */
+  function bestOf(entries) {
+    const solvable = entries.filter((a) => a.solvable && Number.isFinite(a.lifetimeCostMid));
+    if (!solvable.length) return null;
+    return solvable.reduce((a, b) => (a.lifetimeCostMid <= b.lifetimeCostMid ? a : b));
+  }
+
+  /** Plain-language verdict for why the winning chemistry won. */
+  function bestPickReason(winner, allEntries, meanT) {
+    if (!winner) return null;
+    const others = allEntries.filter((a) => a.solvable && a !== winner && Number.isFinite(a.lifetimeCostMid));
+    const runnerUp = others.length ? others.reduce((a, b) => (a.lifetimeCostMid <= b.lifetimeCostMid ? a : b)) : null;
+    const gapPct =
+      runnerUp && runnerUp.lifetimeCostMid > 0
+        ? Math.round(((runnerUp.lifetimeCostMid - winner.lifetimeCostMid) / runnerUp.lifetimeCostMid) * 1000) / 10
+        : null;
+    const ahead = gapPct !== null ? ` — about ${gapPct}% ahead of ${runnerUp.chemLabel}` : "";
+    let why;
+    if (winner.chemistry === "lfp") {
+      why = `${winner.chemLabel} delivered the lowest true 20-year cost at your site and target${ahead}. It uses most of its nameplate every day and its cycle life means no bank swaps inside the horizon.`;
+    } else if (winner.chemistry === "naion") {
+      why =
+        meanT < 12
+          ? `${winner.chemLabel} won here${ahead}. At this site's ${meanT}°C mean it charges in cold weather where standard LFP must sit idle below freezing, and on common LFP voltage settings it wears slowly.`
+          : `${winner.chemLabel} came out ahead${ahead} — gentler discharge wear on LFP voltage settings outweighed its small capacity give-back.`;
+    } else {
+      why = `At this load and target, ${winner.chemLabel} wins on first cost${ahead} — but expect ~${winner.replacementsHorizon} bank swaps over 20 years, already counted in every figure above.`;
+    }
+    return `${why} The ranking shifts with climate, tariffs, and how much work you do yourself — check the other options before deciding.`;
+  }
+
   const basePayload = () => ({
     contract: PAYLOAD_CONTRACT,
     meta: series.meta,
@@ -227,6 +331,7 @@ export async function runSizing(msg, deps = {}) {
 
     if (chemistry === "auto") {
       const auto = [];
+      const matrixCells = {};
       for (const chemId of ["naion", "lfp", "agm"]) {
         const capScale = capacityScaleFor(chemId, meanTempC);
         const results = sizeAllBillTargets({
@@ -234,6 +339,9 @@ export async function runSizing(msg, deps = {}) {
           years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
           pvMax: 45, battMax: 120, battStep: 1, capacityScale: capScale, laborPerKwh,
         });
+        for (const { target, sizing } of results) {
+          matrixCells[chemId + ":" + target.id] = matrixCell(chemId, sizing, "gridtie");
+        }
         const hit = results.find((r) => r.target.id === repTargetId);
         if (!hit || !hit.sizing) continue;
         const m = moneyFor(chemId, hit.sizing);
@@ -286,6 +394,16 @@ export async function runSizing(msg, deps = {}) {
       payload.auto = auto;
         payload.autoNote = `All three chemistries sized for ${TARGET_BASIS[repTargetId]}`;
       payload.targets = [];
+      const gtWinner = bestOf(auto);
+      payload.best = gtWinner;
+      payload.bestReason = bestPickReason(gtWinner, auto, meanTempC);
+      payload.focus = gtWinner ? focusFor(gtWinner.chemistry, gtWinner) : null;
+      payload.matrix = {
+        kind: "gridtie",
+        cols: BILL_TARGETS.map((t) => ({ id: t.id, label: t.label })),
+        rows: ["naion", "lfp", "agm"].map((id) => ({ id, label: CHEMISTRIES[id].label })),
+        cells: matrixCells,
+      };
       payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), pvDaily, tiers: [] };
       payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
       payload.assumptions.money =
@@ -354,6 +472,11 @@ export async function runSizing(msg, deps = {}) {
     payload.chemLabel = chem.label;
     payload.targets = targets;
     payload.auto = null;
+    const gtFocus = targets.find((x) => x.id === repTargetId && x.solvable) || targets.find((x) => x.solvable) || null;
+    payload.focus = gtFocus ? focusFor(chemistry, gtFocus) : null;
+    payload.best = null;
+    payload.bestReason = null;
+    payload.matrix = null;
     payload.history = { kind: "gridtie", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), pvDaily, tiers: historyTiers };
     payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
     payload.assumptions.money =
@@ -366,6 +489,7 @@ export async function runSizing(msg, deps = {}) {
 
   if (chemistry === "auto") {
     const auto = [];
+    const matrixCells = {};
     for (const chemId of ["naion", "lfp", "agm"]) {
       const capScale = capacityScaleFor(chemId, meanTempC);
       const allTiers = sizeAllTiers({
@@ -373,6 +497,9 @@ export async function runSizing(msg, deps = {}) {
         years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
         battMax: 250, capacityScale: capScale, laborPerKwh,
       });
+      for (const { tier, sizing } of allTiers) {
+        matrixCells[chemId + ":" + tier.id] = matrixCell(chemId, sizing, "offgrid");
+      }
       const midTier = allTiers.find((t) => t.tier.id === repTierId);
       if (!midTier || !midTier.sizing) continue;
       const sizing = midTier.sizing;
@@ -415,11 +542,21 @@ export async function runSizing(msg, deps = {}) {
        auto.push(entry);
      }
      const payload = basePayload();
-     payload.mode = "offgrid";
-     payload.auto = auto;
-       payload.autoNote = `All three chemistries sized for ${TIER_BASIS[repTierId]}`;
-     payload.tiers = [];
-     payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), pvDaily, tiers: [] };
+      payload.mode = "offgrid";
+      payload.auto = auto;
+        payload.autoNote = `All three chemistries sized for ${TIER_BASIS[repTierId]}`;
+      payload.tiers = [];
+      const ogWinner = bestOf(auto);
+      payload.best = ogWinner;
+      payload.bestReason = bestPickReason(ogWinner, auto, meanTempC);
+      payload.focus = ogWinner ? focusFor(ogWinner.chemistry, ogWinner) : null;
+      payload.matrix = {
+        kind: "offgrid",
+        cols: RELIABILITY_TIERS.map((t) => ({ id: t.id, label: t.label })),
+        rows: ["naion", "lfp", "agm"].map((id) => ({ id, label: CHEMISTRIES[id].label })),
+        cells: matrixCells,
+      };
+      payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), pvDaily, tiers: [] };
     payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
     payload.assumptions.money =
       `Auto mode sizes each chemistry for the same job — lights stay on with a generator as rare backup — inside its depth-of-discharge window (AGM keeps a 50% reserve; lithium/sodium use ~90%). Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) — that is why its sticker price misleads.`;
@@ -489,6 +626,11 @@ export async function runSizing(msg, deps = {}) {
   payload.chemLabel = chem.label;
   payload.tiers = tiers;
   payload.auto = null;
+  const ogFocus = tiers.find((x) => x.id === repTierId && x.solvable) || tiers.find((x) => x.solvable) || null;
+  payload.focus = ogFocus ? focusFor(chemistry, ogFocus) : null;
+  payload.best = null;
+  payload.bestReason = null;
+  payload.matrix = null;
   payload.history = { kind: "offgrid", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), pvDaily, tiers: historyTiers };
   payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
   payload.assumptions.money =
