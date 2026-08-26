@@ -1,1721 +1,1721 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BigEnergyCo � Free Worldwide Solar &amp; Battery Estimator</title>
-  <meta name="google-site-verification" content="iXiF6PQy5IhjMtll2YzS3-amK6BtApSkpdlKM73dSEc" />
-  <meta name="description" content="A free AI-assisted solar and battery storage estimator for anywhere in the world. No signup, nothing for sale. Educational estimates only � verify with a licensed professional.">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="BigEnergyCo">
-  <meta property="og:title" content="BigEnergyCo � Free Worldwide Solar &amp; Battery Estimator">
-  <meta property="og:description" content="A free AI-assisted solar and battery storage estimator for anywhere in the world. No signup, nothing for sale. Educational estimates only � verify with a licensed professional.">
-  <meta property="og:url" content="https://sovereign-communication.github.io/BigEnergyCo/">
-  <meta property="og:image" content="https://sovereign-communication.github.io/BigEnergyCo/assets/og-card.png">
-  <meta property="og:image:width" content="2688">
-  <meta property="og:image:height" content="1536">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="BigEnergyCo � Free Worldwide Solar &amp; Battery Estimator">
-  <meta name="twitter:description" content="A free AI-assisted solar and battery storage estimator for anywhere in the world. No signup, nothing for sale. Educational estimates only � verify with a licensed professional.">
-  <meta name="twitter:image" content="https://sovereign-communication.github.io/BigEnergyCo/assets/og-card.png">
-  <link rel="canonical" href="https://sovereign-communication.github.io/BigEnergyCo/">
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
-  <meta name="theme-color" content="#090d16">
-
-  <!-- Structured data: what this tool is, and the questions people ask it -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "WebApplication",
-        "@id": "https://sovereign-communication.github.io/BigEnergyCo/#app",
-        "name": "BigEnergyCo � Free Off-Grid Energy Estimator",
-        "url": "https://sovereign-communication.github.io/BigEnergyCo/",
-        "applicationCategory": "UtilitiesApplication",
-        "operatingSystem": "Any (web browser)",
-        "browserRequirements": "Requires JavaScript",
-        "description": "Free solar and battery sizing for anywhere on Earth. Simulates your location against five years of NASA satellite weather: fully off-grid systems at three reliability levels, or grid-connected bill cutting. Nothing for sale.",
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-        "featureList": [
-          "Off-grid sizing with 5-year hourly weather simulation",
-          "Grid-tie bill-cutting targets",
-          "Battery lifetime cost comparison (LFP, sodium-ion, lead-acid)",
-          "Payback and levelized cost of energy",
-          "Works offline after first visit"
-        ]
-      },
-      {
-        "@type": "FAQPage",
-        "@id": "https://sovereign-communication.github.io/BigEnergyCo/#faq",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "How accurate are the estimates?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Every number comes from testable code simulating your exact location against five years of NASA satellite weather � not an AI guessing. Real-world results still vary with shading, installation quality, and hardware, so have a licensed professional verify anything you build." }
-          },
-          {
-            "@type": "Question",
-            "name": "Will a solar and battery system pay for itself?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Where grid power is expensive � Hawaii, islands, much of Europe, Africa, South Asia � properly built solar plus storage commonly repays its component cost in one to four years, then runs nearly free for decades. The calculator shows your personal payback from your own tariff." }
-          },
-          {
-            "@type": "Question",
-            "name": "What does an off-grid battery system actually cost?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Battery banks self-built from prismatic cells typically land around $80�125 per usable kWh shipped and duty-paid; budget retail packs run roughly $110�165. Panels add about $0.16�0.38 per watt. Every result states its price scope honestly." }
-          },
-          {
-            "@type": "Question",
-            "name": "Do I need a generator with an off-grid system?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Only if you want near-total independence through weeks of bad weather. The three off-grid options show exactly that trade-off: one never needs a generator, one needs it about a day a year, one only now and then. Grid-connected users skip this entirely." }
-          },
-          {
-            "@type": "Question",
-            "name": "Does the calculator work without internet?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Yes. After your first visit the tool installs itself as an offline app: sizing math runs entirely in your browser, and if the network is down it falls back to bundled typical-year weather for the nearest of 66 reference cities." }
-          },
-          {
-            "@type": "Question",
-            "name": "Is building my own battery safe?",
-            "acceptedAnswer": { "@type": "Answer", "text": "It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. Proper fusing, BMS use, and code compliance are essential � and a licensed electrician should check anything before you energize it." }
-          }
-        ]
-      }
-    ]
-  }
-  </script>
-  <style>
-/* BigEnergyCo Design System - Premium Dark Glassmorphic Energy Aesthetic */
-:root {
-  --bg-dark: #090d16;
-  --bg-card: rgba(18, 26, 44, 0.85);
-  --bg-card-hover: rgba(28, 40, 66, 0.95);
-  --border-glow: rgba(0, 230, 153, 0.35);
-  --border-card: rgba(255, 255, 255, 0.12);
-  
-  --primary-accent: #00e699; /* Energy Emerald */
-  --primary-glow: rgba(0, 230, 153, 0.5);
-  --secondary-accent: #3b82f6; /* Cyber Blue */
-  --warning-orange: #f59e0b; /* Amber Caution */
-  --danger-red: #ef4444;
-  
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
-  --text-bright: #ffffff;
-
-  --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  background-color: var(--bg-dark);
-  color: var(--text-main);
-  font-family: var(--font-main);
-  line-height: 1.6;
-  overflow-x: hidden;
-  background-image: 
-    radial-gradient(circle at 15% 20%, rgba(0, 230, 153, 0.12) 0%, transparent 45%),
-    radial-gradient(circle at 85% 70%, rgba(59, 130, 246, 0.12) 0%, transparent 45%);
-  background-attachment: fixed;
-}
-
-a {
-  color: var(--primary-accent);
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-a:hover {
-  text-shadow: 0 0 10px var(--primary-glow);
-}
-
-.container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-/* Header & Navigation */
-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  background: rgba(9, 13, 22, 0.9);
-  border-bottom: 1px solid var(--border-card);
-  padding: 1rem 0;
-}
-
-.nav-flex {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo {
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  background: linear-gradient(135deg, #ffffff 0%, var(--primary-accent) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.logo .highlight {
-  color: var(--primary-accent);
-  -webkit-text-fill-color: var(--primary-accent);
-}
-
-.nav-links {
-  display: flex;
-  gap: 2rem;
-  align-items: center;
-}
-
-.nav-links a {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-
-.nav-links a:hover {
-  color: var(--text-bright);
-}
-
-.header-cta {
-  display: flex;
-  gap: 0.75rem;
-}
-
-/* Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.4rem;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  border: none;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #00e699 0%, #00b377 100%);
-  color: #04120c;
-  font-weight: 700;
-  box-shadow: 0 0 15px rgba(0, 230, 153, 0.3);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 25px rgba(0, 230, 153, 0.5);
-}
-
-.btn-secondary {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.4);
-}
-
-.btn-secondary:hover {
-  background: rgba(59, 130, 246, 0.3);
-  color: #fff;
-  transform: translateY(-2px);
-}
-
-.btn-outline {
-  background: transparent;
-  color: var(--text-main);
-  border: 1px solid var(--border-card);
-}
-
-.btn-outline:hover {
-  border-color: var(--primary-accent);
-  color: var(--primary-accent);
-}
-
-.btn-full {
-  width: 100%;
-}
-
-/* Hero Section */
-.hero {
-  padding: 5rem 0 4rem;
-  text-align: center;
-  position: relative;
-}
-
-.hero-tag {
-  display: inline-block;
-  background: rgba(0, 230, 153, 0.12);
-  color: var(--primary-accent);
-  border: 1px solid var(--primary-glow);
-  padding: 0.35rem 1.1rem;
-  border-radius: 30px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-  letter-spacing: 0.5px;
-}
-
-.hero h1 {
-  font-size: 3.25rem;
-  font-weight: 900;
-  line-height: 1.15;
-  margin-bottom: 1.5rem;
-  letter-spacing: -1px;
-}
-
-.hero h1 span {
-  background: linear-gradient(135deg, #00e699 0%, #60a5fa 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.hero p {
-  font-size: 1.2rem;
-  color: var(--text-muted);
-  max-width: 800px;
-  margin: 0 auto 2.5rem;
-}
-
-.hero-actions {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 3.5rem;
-}
-
-.hero-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5rem;
-}
-
-.stat-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 1.5rem;
-  border-radius: 12px;
-  text-align: left;
-  transition: all 0.3s ease;
-}
-
-.stat-card:hover {
-  border-color: var(--border-glow);
-  transform: translateY(-4px);
-}
-
-.stat-val {
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: var(--primary-accent);
-  font-family: var(--font-mono);
-}
-
-.stat-label {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-}
-
-/* Calculator Section */
-.calc-section {
-  padding: 4rem 0;
-}
-
-.section-header {
-  text-align: center;
-  margin-bottom: 2.5rem;
-}
-
-.section-title {
-  font-size: 2.25rem;
-  font-weight: 800;
-}
-
-.section-desc {
-  color: var(--text-muted);
-  font-size: 1.05rem;
-  margin-top: 0.5rem;
-}
-
-.calc-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-glow);
-  border-radius: 16px;
-  padding: 2.5rem;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
-}
-
-@media (max-width: 900px) {
-  .calc-card {
-    grid-template-columns: 1fr;
-  }
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--text-main);
-}
-
-.form-control {
-  width: 100%;
-  padding: 0.8rem 1rem;
-  background: rgba(9, 13, 22, 0.85);
-  border: 1px solid var(--border-card);
-  border-radius: 8px;
-  color: var(--text-main);
-  font-size: 1rem;
-  font-family: var(--font-mono);
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: var(--primary-accent);
-  box-shadow: 0 0 10px var(--primary-glow);
-}
-
-.results-box {
-  background: rgba(9, 13, 22, 0.9);
-  border: 1px solid var(--border-card);
-  border-radius: 12px;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.savings-highlight {
-  text-align: center;
-  padding: 1.5rem;
-  background: rgba(0, 230, 153, 0.08);
-  border: 1px solid var(--primary-glow);
-  border-radius: 10px;
-  margin-bottom: 1.5rem;
-}
-
-.savings-num {
-  font-size: 2.75rem;
-  font-weight: 900;
-  color: var(--primary-accent);
-  font-family: var(--font-mono);
-}
-
-.savings-sub {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  margin-top: 0.25rem;
-}
-
-.comparison-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
-
-.comparison-table th, .comparison-table td {
-  padding: 0.75rem 0;
-  text-align: left;
-  border-bottom: 1px solid var(--border-card);
-  font-size: 0.95rem;
-}
-
-.comparison-table td:last-child {
-  text-align: right;
-  font-family: var(--font-mono);
-  font-weight: 700;
-}
-
-.calc-footer {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-top: 1.5rem;
-}
-
-/* BOM Section */
-.bom-section {
-  padding: 4rem 0;
-}
-
-.bom-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.5rem;
-}
-
-.bom-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-card);
-  padding: 1.75rem;
-  border-radius: 14px;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.bom-card:hover {
-  border-color: var(--border-glow);
-  transform: translateY(-4px);
-}
-
-.bom-badge {
-  display: inline-block;
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.2rem 0.6rem;
-  border-radius: 20px;
-  margin-bottom: 0.75rem;
-}
-
-.bom-card h3 {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-.bom-card p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-bottom: 1.25rem;
-}
-
-.bom-price {
-  font-family: var(--font-mono);
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--primary-accent);
-}
-
-/* Legal Cards Section */
-.legal-section {
-  padding: 4rem 0;
-}
-
-.legal-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
-
-.legal-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-card);
-  padding: 1.75rem;
-  border-radius: 14px;
-}
-
-.legal-card h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 0.75rem;
-}
-
-.legal-card p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-bottom: 1.25rem;
-}
-
-/* Modals */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-card {
-  background: #0d1322;
-  border: 1px solid var(--border-glow);
-  border-radius: 16px;
-  padding: 2rem;
-  max-width: 680px;
-  width: 92%;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.25rem;
-  border-bottom: 1px solid var(--border-card);
-  padding-bottom: 1rem;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 1.75rem;
-  cursor: pointer;
-}
-
-.close-btn:hover {
-  color: #fff;
-}
-
-/* Chatbox Inside Modal */
-.chat-box {
-  height: 300px;
-  overflow-y: auto;
-  background: rgba(9, 13, 22, 0.95);
-  border: 1px solid var(--border-card);
-  border-radius: 10px;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.chat-msg {
-  max-width: 85%;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
-
-.chat-msg.bot {
-  background: rgba(18, 26, 44, 0.95);
-  border: 1px solid var(--primary-glow);
-  color: var(--text-main);
-  align-self: flex-start;
-}
-
-.chat-msg.user {
-  background: rgba(0, 230, 153, 0.2);
-  border: 1px solid var(--primary-accent);
-  color: #fff;
-  align-self: flex-end;
-}
-
-.chat-input-row {
-  display: flex;
-  gap: 0.75rem;
-}
-
-/* Footer */
-footer {
-  border-top: 1px solid var(--border-card);
-  padding: 3rem 0;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-top: 4rem;
-}
-  .btn .spin{display:inline-block;animation:becospin 1s linear infinite}@keyframes becospin{to{transform:rotate(360deg)}}
-
-/* Printable summary: at print time, only the estimate sheet survives. */
-#printSheet { display: none; }
-@media print {
-  body > *:not(#printSheet) { display: none !important; }
-  #printSheet { display: block !important; }
-  body { background: #fff !important; color: #000 !important; overflow: visible !important; background-image: none !important; }
-}
-  </style>
-</head>
-<body>
-  <!-- Header / Navigation Bar -->
-  <header>
-    <div class="container nav-flex">
-      <div class="logo">
-        <span>?</span>
-        <span>BigEnergy<span class="highlight">Co</span></span>
-      </div>
-      <nav class="nav-links">
-        <a href="#sizing" data-i18n="navSizing">Size Your System</a>
-        <a href="#calculator" data-i18n="navCosts">Estimator</a>
-        <a href="#bom" data-i18n="navBom">Hardware Reference</a>
-        <a href="./blog/" data-i18n="navBlog">Blog</a>
-        <a href="#legal" data-i18n="navLegal">Terms &amp; Disclaimer</a>
-      </nav>
-      <div class="header-cta">
-        <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;">? Support</a>
-        <div id="btnNavSizeArray" class="btn btn-primary" style="cursor: pointer;">Size Your System</div>
-      </div>
-    </div>
-  </header>
-
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="container">
-      <div class="hero-tag" data-i18n="heroTag">?? Free for everyone, everywhere � No signup � Nothing for sale</div>
-      <h1><span data-i18n="heroTitle1">Free Off-Grid Energy Estimator</span> <br><span data-i18n="heroTitle2">Size your solar &amp; battery system, anywhere in the world</span></h1>
-      <p>
-        A free AI-assisted tool for working out roughly what solar array and battery bank your situation needs.
-        Educational estimates only &mdash; not engineering, not a quote, and nothing here is for sale.
-        Built and given away by <strong>Lucas Ballek</strong>.
-      </p>
-
-      <div class="hero-actions">
-        <div id="btnHeroSizing" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.9rem 2rem; cursor: pointer;" data-i18n="ctaStart">
-          ?? Start a Free Estimate
-        </div>
-        <div id="btnHeroCompare" class="btn btn-outline" style="font-size: 1.1rem; padding: 0.9rem 2rem; cursor: pointer;" data-i18n="ctaCompare">
-          ?? Rough Cost Comparison
-        </div>
-      </div>
-
-      <div class="hero-stats-grid">
-        <div class="stat-card">
-          <div class="stat-val">$0</div>
-          <div class="stat-label">Free, always &mdash; donations optional</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val">No signup</div>
-          <div class="stat-label">No account, no email required</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val">Worldwide</div>
-          <div class="stat-label">Any location, any grid standard</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val">Estimates only</div>
-          <div class="stat-label">Verify with a licensed pro before building</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Interactive Sizing Section (deterministic engine + NASA POWER) -->
-  <section id="sizing" class="calc-section">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title" data-i18n="sizingTitle">Size Your System</h2>
-        <p class="section-desc">Enter your daily energy use and location. The calculator simulates your site hour-by-hour against five years of NASA satellite weather: go fully off-grid at three levels of generator independence, or stay connected and find the smallest system that cuts your bill. Educational estimates only.</p>
-      </div>
-
-      <div class="calc-card">
-        <div class="calc-controls">
-          <div class="form-group">
-            <label for="cityPreset" data-i18n="cityLabel">Where is this system going? <span style="font-weight:400;color:var(--text-muted);">(nearest big city is fine)</span></label>
-            <div style="display: flex; gap: 0.6rem;">
-              <select id="cityPreset" class="form-control" style="flex: 1;"></select>
-              <div id="btnGeoLocate" class="btn btn-outline" style="white-space: nowrap; cursor: pointer; font-size: 0.9rem;" data-i18n="locBtn">?? My location</div>
-            </div>
-            <div id="locNote" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;"></div>
-            <details id="coordDetails" style="margin-top: 0.5rem;">
-              <summary style="cursor: pointer; font-size: 0.8rem; color: var(--text-muted);">Advanced: exact coordinates</summary>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.6rem;">
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label for="latInput">Latitude (&minus;90 to 90):</label>
-                  <input type="number" id="latInput" class="form-control" value="21.31" step="0.01">
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label for="lonInput">Longitude (&minus;180 to 180):</label>
-                  <input type="number" id="lonInput" class="form-control" value="-157.86" step="0.01">
-                </div>
-              </div>
-            </details>
-          </div>
-
-          <div class="form-group">
-            <label for="loadMode" data-i18n="loadLabel">How much power do you use?</label>
-            <select id="loadMode" class="form-control">
-              <option value="appliances" selected data-i18n="loadAppliances">Let me pick my appliances</option>
-              <option value="bill" data-i18n="loadBill">I know my monthly electric bill</option>
-              <option value="kwh" data-i18n="loadKwh">I know my kWh/day (advanced)</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="customRateVal">Electricity price where you live <span style="font-weight:400;color:var(--text-muted);">(drives your bill estimate and payback)</span> � your price per kWh ($):</label>
-            <input type="number" id="customRateVal" class="form-control" placeholder="e.g. 0.31" step="0.01" min="0.01">
-            <div style="margin-top:0.6rem;">
-              <label for="exportRate">Feed-in credit for surplus you can sell <span style="font-weight:400;color:var(--text-muted);">($/kWh, optional &mdash; grid-tie only)</span>:</label>
-              <input type="number" id="exportRate" class="form-control" placeholder="e.g. 0.12" step="0.01" min="0">
-            </div>
-          </div>
-
-          <div id="panelAppliances">
-            <div id="applianceList"></div>
-            <div id="readoutAppliances" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
-            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.5;">
-              Wattages are typical values &mdash; yours may differ. Cycling appliances (fridges, freezers, air
-              conditioners, pumps) only draw power while running: their slider is <em>hours actually running per day</em>,
-              capped to realistic compressor time, and each row shows the resulting 24-hour average. A modern fridge at
-              the default (100 W running, ~10 h/day) really does use about 1 kWh/day.
-            </p>
-          </div>
-
-          <div id="panelBill" style="display: none;">
-            <div class="form-group">
-              <label for="billAmount">Monthly electric bill (in your currency, rough number):</label>
-              <input type="number" id="billAmount" class="form-control" placeholder="e.g. 150" min="1">
-            </div>
-            <div id="readoutBill" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
-            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem;">
-              Bills include fixed charges and taxes, so this slightly overestimates real use &mdash; which is a safe direction to err.
-            </p>
-          </div>
-
-          <div id="panelKwh" style="display: none;">
-            <div class="form-group">
-              <label for="dailyKwhInput">Daily energy use (kWh/day):</label>
-              <input type="number" id="dailyKwhInput" class="form-control" value="10" min="0.5" max="500" step="1">
-            </div>
-            <div id="readoutKwh" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
-          </div>
-
-          <div class="form-group">
-            <label for="systemGoal" data-i18n="goalLabel">What do you want this system to do?</label>
-            <select id="systemGoal" class="form-control">
-              <option value="offgrid" selected data-i18n="goalOffgrid">Power me fully off-grid</option>
-              <option value="gridtie" data-i18n="goalGridtie">Cut my grid bill, stay connected</option>
-            </select>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 0;">
-            <label for="chemSelect" data-i18n="chemLabel">Battery chemistry:</label>
-            <select id="chemSelect" class="form-control">
-              <option value="auto" selected>Auto &mdash; compare all three by lifetime cost</option>
-              <option value="naion">Sodium-Ion &mdash; cold-capable, no thermal runaway</option>
-              <option value="lfp">LFP (LiFePO4) &mdash; the proven standard</option>
-              <option value="agm">Lead-Acid (AGM) &mdash; cheapest upfront, shortest-lived</option>
-            </select>
-          </div>
-
-          <div class="form-group" id="autoTierRow" style="display:none;margin-bottom:0;">
-            <label for="autoTier">Independence target <span style="font-weight:400;color:var(--text-muted);">(applied to all three batteries)</span>:</label>
-            <select id="autoTier" class="form-control">
-              <option value="tier100">100% &mdash; never see a generator</option>
-              <option value="tier99" selected>99% &mdash; generator about a day a year</option>
-              <option value="tier95">95% &mdash; generator now and then</option>
-            </select>
-          </div>
-          <div class="form-group" id="autoTargetRow" style="display:none;margin-bottom:0;">
-            <label for="autoTarget">Bill-cut target <span style="font-weight:400;color:var(--text-muted);">(applied to all three batteries)</span>:</label>
-            <select id="autoTarget" class="form-control">
-              <option value="cut60">Cut ~60% &mdash; cheapest entry</option>
-              <option value="cut80" selected>Cut ~80% &mdash; the sweet spot</option>
-              <option value="cut95">Cut ~95% &mdash; nearly off-grid</option>
-            </select>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div class="form-group">
-              <label for="fxRate">Your currency <span style="font-weight:400;color:var(--text-muted);">(optional)</span>:</label>
-              <input type="number" id="fxRate" class="form-control" placeholder="units per $1 USD, e.g. 58" min="0.01" step="0.01">
-            </div>
-            <div class="form-group">
-              <label for="fxCode">Currency code:</label>
-              <input type="text" id="fxCode" class="form-control" placeholder="e.g. PHP" maxlength="4">
-              <p id="fxAsOf" style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;"></p>
-            </div>
-          </div>
-
-          <div id="btnRunSizing" class="btn btn-primary btn-full" style="cursor:pointer; margin-top: 0.5rem;" tabindex="-1"><span data-i18n="runBtn">?? Size My System (5-yr simulation)</span></div>
-          <div id="sizingStatus" style="font-size:0.85rem;color:var(--text-muted);margin-top:0.75rem;line-height:1.5;">First run downloads ~2 MB of satellite weather data, then caches it in your browser.</div>
-        </div>
-
-        <div class="results-box">
-          <div id="moneyBar" style="display:none; margin-bottom: 1rem; padding: 0.85rem 1rem; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.35); border-radius: 10px; font-size: 0.95rem; line-height: 1.5;"></div>
-          <div id="tierResults" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
-            <p style="color:var(--text-muted);font-size:0.9rem;grid-column:1/-1;">
-              Results appear here: three side-by-side systems &mdash; one that never needs a generator,
-              one that needs it about one day a year, and one for people happy to run it now and then.
-            </p>
-          </div>
-
-          <div id="socChartWrap" style="display:none; margin-top: 1.25rem;">
-            <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">How low does each battery get? (five years of real weather)</div>
-            <div id="socLegend" style="display:none;"></div>
-            <canvas id="socCanvas" style="width: 100%; border: 1px solid var(--border-card); border-radius: 10px; background: rgba(9,13,22,0.85);"></canvas>
-            <p id="socCaption" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.55;"></p>
-          </div>
-
-          <details style="margin-top:1.25rem;font-size:0.85rem;color:var(--text-muted);">
-            <summary style="cursor:pointer;color:var(--primary-accent);">How this was calculated</summary>
-            <p id="assumpText" style="margin-top:0.5rem;line-height:1.6;">
-              Run a sizing first � every constant used (derates, temperature model, efficiencies,
-              weather data years and source) is listed here.
-            </p>
-          </details>
-
-          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem;">
-            <div id="btnAskAdvisor" class="btn btn-secondary" style="cursor:pointer;display:none;">?? Ask the AI advisor about this result</div>
-            <div id="btnShareResult" class="btn btn-outline" style="cursor:pointer;display:none;">?? Copy share link</div>
-            <div id="btnPrintResult" class="btn btn-outline" style="cursor:pointer;display:none;">??? Print / save PDF</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Interactive Comparison & Calculator Section -->
-  <section id="calculator" class="calc-section">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">Rough Cost Comparison</h2>
-        <p class="section-desc">A ballpark comparison between self-sourced components and a packaged retail battery, using published list prices. Indicative only &mdash; real costs vary enormously by country, freight, duty, and what you can actually buy locally.</p>
-      </div>
-
-      <div class="calc-card">
-        <div class="calc-controls">
-          <div class="form-group">
-            <label for="targetKwh">Storage Target (kWh Usable):</label>
-            <input type="range" id="targetKwh" min="20" max="300" value="100" step="10" style="width: 100%; margin-bottom: 0.5rem;">
-            <div id="targetKwhVal" style="font-family: var(--font-mono); font-weight: 700; color: var(--primary-accent);">100 kWh Usable Storage</div>
-          </div>
-
-          <div class="form-group">
-            <label for="utilityRate">Global Grid Rate ($ / kWh):</label>
-            <select id="utilityRate" class="form-control">
-              <option value="0.28" selected>Global Average ($0.28 / kWh)</option>
-              <option value="0.16">US Mainland Avg ($0.16 / kWh)</option>
-              <option value="0.32">Boston / Northeast ($0.32 / kWh)</option>
-              <option value="0.38">Europe / UK ($0.38 / kWh)</option>
-              <option value="0.48">Hawaii Off-Grid Peak ($0.48 / kWh)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="results-box">
-          <div class="savings-highlight">
-            <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Indicative component cost</div>
-            <div id="landedMidVal" class="savings-num">�$10,500</div>
-            <div id="savingsPctVal" class="savings-sub">Landed DIY mid-point &mdash; component cost only, excludes freight beyond scope, tools, and labor</div>
-          </div>
-
-          <table class="comparison-table">
-            <thead>
-              <tr>
-                <th>Option</th>
-                <th>Capacity</th>
-                <th>Component cost</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Self-sourced cells + BMS <span style="font-size:0.8em;color:var(--text-muted);">(ex-factory China, you assemble)</span></td>
-                <td class="cmp-kwh">100 kWh</td>
-                <td id="cellsCostVal">$5,000</td>
-              </tr>
-              <tr style="color: var(--primary-accent);">
-                <td>Landed DIY build <span style="font-size:0.8em;color:var(--text-muted);">(shipped cells + duty, community-build basis)</span></td>
-                <td class="cmp-kwh">100 kWh</td>
-                <td id="landedCostVal">$10,500</td>
-              </tr>
-              <tr>
-                <td>Budget-retail packaged <span style="font-size:0.8em;color:var(--text-muted);">(PowMr-class list price, BMS + enclosure included)</span></td>
-                <td class="cmp-kwh">100 kWh</td>
-                <td id="retailCostVal">$11,700</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.75rem; line-height: 1.5;">
-            Component cost only. It excludes international freight, customs duty, taxes, tools, enclosure,
-            wiring, permits, and any labor &mdash; which together are often a large share of the real total.
-            For orientation: landed DIY costs (cells + BMS + fusing + rack + freight + duty) typically land
-            around $95&ndash;125/kWh, and cells alone DDP around $60&ndash;70/kWh &mdash; destination drives most
-            of the spread. The retail figure is a published list price used as a reference point, not a quote,
-            and a packaged product includes certification, warranty, and installer support that self-sourced parts
-            do not. Do not treat this as a savings promise.
-          </p>
-
-          <div id="gridEqBox" style="display:none; margin-top: 1rem; padding: 0.9rem 1rem; border: 1px solid var(--border-card); border-radius: 10px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.55;">
-            <div style="color: var(--text-main); font-weight: 700; margin-bottom: 0.25rem;">Grid-energy equivalence</div>
-            <div id="gridEqText"></div>
-          </div>
-
-          <div class="calc-footer">
-            <div id="btnCalcAdvisor" class="btn btn-primary" style="cursor: pointer;">?? Ask the AI Advisor</div>
-            <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;">? Support this tool</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Factory BOM Breakdown Section -->
-  <section id="bom" class="bom-section">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">What a ~100 kWh Build Is Made Of</h2>
-        <p class="section-desc">A reference parts list so you know what the pieces are and roughly what they cost. Nothing here is sold by this site &mdash; prices are indicative figures seen on the open market and change constantly.</p>
-      </div>
-
-      <div class="bom-grid">
-        <div class="bom-card">
-          <div class="bom-badge">Cells</div>
-          <h3>EVE MB31 3.2V 314Ah Cells</h3>
-          <p>Brand new Grade-A prismatic LFP cells. 16S configuration per pack (51.2V nominal).</p>
-          <div class="bom-price">~$43.50 / cell <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative ex-works China, Aug 2026)</span></div>
-        </div>
-
-        <div class="bom-card">
-          <div class="bom-badge">BMS</div>
-          <h3>JK 200A Active Balance BMS</h3>
-          <p>Smart active balancing (2A balance current), dual temperature probes, RS485/CANbus comms with Sol-Ark & Victron.</p>
-          <div class="bom-price">~$92.00 / unit <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative ex-works China, Aug 2026)</span></div>
-        </div>
-
-        <div class="bom-card">
-          <div class="bom-badge">Fusing</div>
-          <h3>Eaton Class-T 200A Fuses</h3>
-          <p>20kA AIC interrupt rating @ 160V DC. Clears very high short-circuit DC currents in milliseconds &mdash; sized to protect the BMS and wiring.</p>
-          <div class="bom-price">~$14.50 / unit <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative, Aug 2026)</span></div>
-        </div>
-
-        <div class="bom-card">
-          <div class="bom-badge">Rack & Compression</div>
-          <h3>300 kgf Compression Racks</h3>
-          <p>Belleville spring washer endplates hold uniform compression (about 3,000 N). Manufacturers cite cycle-life benefits; treat specific gains as unverified.</p>
-          <div class="bom-price">~$28.00 / rack <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative, Aug 2026)</span></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ -->
-  <section id="faq" class="legal-section">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">Common Questions</h2>
-        <p class="section-desc">Short answers to what people ask most. The AI advisor can go deeper on any of these.</p>
-      </div>
-      <div class="legal-grid">
-        <div class="legal-card">
-          <h3>How accurate are the estimates?</h3>
-          <p>Every number comes from testable code simulating your exact location against five years of NASA satellite weather � not an AI guessing. Real-world results still vary with shading, installation quality, and hardware, so have a licensed professional verify anything you build.</p>
-        </div>
-        <div class="legal-card">
-          <h3>Will a system pay for itself?</h3>
-          <p>Where grid power is expensive � Hawaii, islands, much of Europe, Africa, South Asia � properly built solar plus storage commonly repays its component cost in one to four years, then runs nearly free for decades. The calculator shows your personal payback from your own tariff.</p>
-        </div>
-        <div class="legal-card">
-          <h3>What does a system actually cost?</h3>
-          <p>Battery banks self-built from prismatic cells typically land around $80�125 per usable kWh shipped and duty-paid; budget retail packs run roughly $110�165. Panels add about $0.16�0.38 per watt. Every result states its price scope honestly.</p>
-        </div>
-      </div>
-      <div class="legal-grid" style="margin-top:1rem;">
-        <div class="legal-card">
-          <h3>Do I need a generator?</h3>
-          <p>Only if you want near-total independence through weeks of bad weather. The three off-grid options show exactly that trade-off: one never needs a generator, one needs it about a day a year, one only now and then. Grid-connected users skip this entirely.</p>
-        </div>
-        <div class="legal-card">
-          <h3>Does it work without internet?</h3>
-          <p>Yes. After your first visit the tool installs itself as an offline app: sizing math runs entirely in your browser, and if the network is down it falls back to bundled typical-year weather for the nearest of 66 reference cities.</p>
-        </div>
-        <div class="legal-card">
-          <h3>Is building my own battery safe?</h3>
-          <p>It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. The guides here insist on proper fusing, BMS use, and code compliance � and on having a licensed electrician check anything before you energize it.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Support / Donation Section -->
-  <section id="support" class="legal-section">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">Support This Tool</h2>
-        <p class="section-desc">This is free and always will be. If it helped you and you want to chip in toward the AI and hosting costs, here's where.</p>
-      </div>
-
-      <div style="max-width: 640px; margin: 0 auto;">
-        <div class="legal-card" style="text-align: center;">
-          <p style="margin-bottom: 1.25rem;">
-            Contributions go directly to <strong>Lucas Ballek</strong> personally.
-          </p>
-
-          <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-bottom: 1.5rem;">
-            <a href="https://www.paypal.me/LBallek" target="_blank" rel="noopener noreferrer"
-               class="btn btn-outline" style="text-decoration: none;">PayPal</a>
-            <a href="https://venmo.com/u/lucas-ballek" target="_blank" rel="noopener noreferrer"
-               class="btn btn-outline" style="text-decoration: none;">Venmo &mdash; @lucas-ballek</a>
-            <a href="https://cash.app/$luball" target="_blank" rel="noopener noreferrer"
-               class="btn btn-outline" style="text-decoration: none;">Cash App &mdash; $luball</a>
-          </div>
-
-          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; text-align: left;">
-            <strong>Please read before sending anything.</strong> Contributions are voluntary gifts to an
-            individual, not payment for a service. They are <strong>not tax-deductible</strong> &mdash; this is
-            not a charity or a registered nonprofit. They buy nothing: no priority, no features, no personal
-            advice, no support obligation, and no continued availability of this site. Everyone gets exactly
-            the same free tool whether they contribute or not. Please don't send money you need. If you were
-            hoping to pay for professional engineering help, spend it on a licensed local engineer or
-            electrician instead &mdash; that is genuinely the better use of it.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Terms & Disclaimer Section -->
-  <section id="legal" class="legal-section">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">Terms &amp; Disclaimer</h2>
-        <p class="section-desc">Short version: this is a free educational toy that produces rough estimates, run by one person, with no warranty of any kind.</p>
-      </div>
-
-      <div class="legal-grid">
-        <div class="legal-card">
-          <h3>Estimates, not engineering</h3>
-          <p>Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.</p>
-          <div id="btnLegalTerms1" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; cursor: pointer; display: inline-block;">Read full terms &rarr;</div>
-        </div>
-
-        <div class="legal-card">
-          <h3>You are talking to an AI</h3>
-          <p>The advisor is a large language model. It generates plausible-sounding text and can state wrong numbers with total confidence. Treat every figure as a starting point to check, never as fact.</p>
-          <div id="btnLegalTerms2" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; cursor: pointer; display: inline-block;">Read AI disclaimer &rarr;</div>
-        </div>
-
-        <div class="legal-card">
-          <h3>No accounts, no tracking</h3>
-          <p>No signup, no cookies for advertising, no analytics profile. Your chat text is sent to the AI provider to generate a reply and is not stored here. Don't type anything sensitive into it.</p>
-          <div id="btnLegalTerms3" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; cursor: pointer; display: inline-block;">Read privacy note &rarr;</div>
-        </div>
-      </div>
-
-      <div style="max-width: 640px; margin: 2.5rem auto 0; text-align: center;">
-        <div class="legal-card">
-          <h3>Questions the AI couldn't answer?</h3>
-          <p style="margin-bottom: 1rem;">
-            You're welcome to email me:
-            <a href="mailto:lucasballek@gmail.com" style="color: var(--primary-accent);">lucasballek@gmail.com</a>
-          </p>
-          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
-            This is one person answering email in his own time, as a favor &mdash; not a support desk. I read
-            what I can and reply when I'm able, but I can't promise a response or a timeframe. Anything I
-            send back is a friendly opinion for your own further research, <strong>not professional
-            engineering, electrical, or financial advice</strong>, and it doesn't create any
-            professional relationship or obligation. For anything you're going to actually build, energize,
-            or spend real money on, please talk to a licensed electrician or engineer in your area.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer>
-    <div class="container">
-      <div style="margin-bottom: 1rem; font-size: 1.25rem; font-weight: 800; color: #fff;">
-        ? BigEnergy<span style="color: var(--primary-accent);">Co</span>
-      </div>
-      <p style="margin-bottom: 0.75rem;">
-        A free tool built and given away by <strong>Lucas Ballek</strong>. Not a company, not incorporated,
-        nothing for sale.
-      </p>
-      <p style="font-size: 0.85rem; max-width: 720px; margin: 0 auto; line-height: 1.6;">
-        Provided free and <strong>as-is, with no warranty of any kind</strong>, express or implied. Estimates are
-        educational only and may be inaccurate. Working with batteries, high DC current, and mains wiring can
-        cause fire, serious injury, and death &mdash; you are responsible for your own safety, your own
-        decisions, and compliance with your local electrical code. Verify everything with a licensed
-        professional before building.
-        &nbsp;�&nbsp; <a href="./blog/" style="color: var(--primary-accent);">Blog</a>
-        &nbsp;�&nbsp; <a href="#legal" style="color: var(--primary-accent);">Terms</a>
-        &nbsp;�&nbsp; <a href="#support" style="color: var(--primary-accent);">Support</a>
-        &nbsp;�&nbsp; <a href="mailto:lucasballek@gmail.com" style="color: var(--primary-accent);">lucasballek@gmail.com</a>
-      </p>
-      <p style="margin-top: 1rem; font-size: 0.85rem;">
-        <label for="langSelect" style="color: var(--text-muted); margin-right: 0.5rem;" data-i18n="langLabel">Language</label>
-        <select id="langSelect" class="form-control" style="display: inline-block; width: auto; padding: 0.25rem 0.6rem;"></select>
-      </p>
-    </div>
-  </footer>
-
-  <!-- Sizing & AI Chatbot Modal -->
-  <div id="sizingModal" class="modal-overlay">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div>
-          <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff;">? Free AI Energy Advisor</h3>
-          <span style="font-size: 0.8rem; color: var(--primary-accent);">You are talking to an AI (Groq AI Engine) &mdash; educational estimates only, not engineering advice</span>
-        </div>
-        <div id="btnCloseSizing" class="close-btn" style="cursor: pointer;">&times;</div>
-      </div>
-
-      <div class="modal-body">
-        <div style="margin-bottom: 1.5rem;">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="intakeMode">Calculation Basis:</label>
-              <select id="intakeMode" class="form-control">
-                <option value="bill" selected>Monthly Electric Bill ($ USD)</option>
-                <option value="kwh">Daily Consumption (kWh / day)</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label id="intakeValueLabel" for="intakeValue">Monthly Electric Bill ($ USD):</label>
-              <input type="number" id="intakeValue" class="form-control" placeholder="e.g. 400" value="400">
-            </div>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 1rem;">
-            <label>Do you need help choosing an inverter, or matching the system to an inverter you already own?</label>
-            <div style="display: flex; gap: 1.5rem; margin-top: 0.4rem;">
-              <label for="inverterHelpYes" style="display: flex; align-items: center; gap: 0.45rem; font-weight: 500; cursor: pointer; margin: 0;">
-                <input type="radio" id="inverterHelpYes" name="inverterHelp" value="yes" style="width: auto; margin: 0;">
-                Yes � I need inverter help
-              </label>
-              <label for="inverterHelpNo" style="display: flex; align-items: center; gap: 0.45rem; font-weight: 500; cursor: pointer; margin: 0;">
-                <input type="radio" id="inverterHelpNo" name="inverterHelp" value="no" checked style="width: auto; margin: 0;">
-                No � battery bank only
-              </label>
-            </div>
-          </div>
-
-          <div class="form-group" id="inverterDetailWrap" style="display: none; margin-bottom: 1rem;">
-            <label for="inverterDetail">Inverter details <span style="font-weight: 400; color: var(--text-muted);">(optional � leave blank and the advisor will ask you what it needs)</span></label>
-            <textarea id="inverterDetail" class="form-control" rows="3" placeholder="e.g. I already own a Victron Quattro 48/10000, or: I have no inverter yet, off-grid cabin, 240V split-phase, want ~8kW continuous"></textarea>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 1rem;">
-            <label for="destRegion">Destination Region:</label>
-            <select id="destRegion" class="form-control">
-              <option value="Global DDP Port" selected>Global DDP Port (DDP Ocean Freight)</option>
-              <option value="US West Coast">US West Coast / Mainland DDP</option>
-              <option value="Hawaii Island">Hawaii (Honolulu / Hilo / Kawaihae DDP)</option>
-              <option value="Europe / UK">Europe / UK Sea Freight</option>
-            </select>
-          </div>
-
-          <!-- NEW: Climate, Space, Maintenance Context -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="destClimate">Expected Minimum Winter Temperature:</label>
-              <select id="destClimate" class="form-control">
-                <option value="Tropical / rarely below 10�C" selected>Tropical / rarely below 10�C</option>
-                <option value="Temperate / -5 to 10�C">Temperate / -5 to 10�C</option>
-                <option value="Cold / frequently below -10�C">Cold / frequently below -10�C</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="destSpace">Space for Battery Enclosure:</label>
-              <select id="destSpace" class="form-control">
-                <option value="Very limited / room-sized" selected>Very limited / room-sized</option>
-                <option value="Normal / garage or shed">Normal / garage or shed</option>
-                <option value="Plenty / outdoor-rated enclosure possible">Plenty / outdoor-rated</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 1rem;">
-            <label for="maintenanceComfort">Maintenance Comfort Level:</label>
-            <select id="maintenanceComfort" class="form-control">
-              <option value="I prefer zero maintenance" selected>I prefer zero maintenance</option>
-              <option value="I can do basic checks">I can do basic checks</option>
-              <option value="I'm comfortable with hands-on work">I'm comfortable with hands-on work</option>
-            </select>
-          </div>
-
-          <div id="btnIntakeCalculate" class="btn btn-primary btn-full" style="cursor: pointer;">? Get My Free Estimate</div>
-        </div>
-
-        <hr style="border: none; border-top: 1px solid var(--border-card); margin: 1.5rem 0;">
-
-        <div class="chat-box" id="chatWindow">
-          <div class="chat-msg bot">
-            ? <strong>BigEnergyCo AI Advisor</strong>:<br>
-            Aloha! I'm a free AI advisor for off-grid solar and battery storage &mdash; anywhere in the world.
-            Fill in the fields above and hit <strong>Get My Free Estimate</strong>, or just ask me anything:
-            battery chemistry, sizing for your climate, wiring and fusing, or what questions to bring to a
-            local electrician.<br><br>
-            <em style="font-size: 0.85rem; color: var(--text-muted);">I'm an AI and I can be wrong &mdash; including
-            about prices and specifications. Everything here is a rough educational estimate, free of charge,
-            with nothing for sale. Please check anything important with a licensed professional before you
-            build it.</em>
-          </div>
-        </div>
-
-        <div class="chat-input-row">
-          <input type="text" id="chatInput" class="form-control" placeholder="Ask about cell specs, Sodium-Ion vs LFP, freight costs...">
-          <div id="btnSendChat" class="btn btn-primary" style="cursor: pointer;">Send</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Terms & Disclaimer Modal -->
-  <div id="legalModal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 700px;">
-      <div class="modal-header">
-        <div>
-          <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff;">?? Terms of Use &amp; Disclaimer</h3>
-          <span style="font-size: 0.8rem; color: var(--primary-accent);">Free tool � no warranty � last updated 1 August 2026</span>
-        </div>
-        <div id="btnCloseLegal" class="close-btn" style="cursor: pointer;">&times;</div>
-      </div>
-      <div class="modal-body" style="max-height: 440px; overflow-y: auto; color: var(--text-muted); font-size: 0.95rem;">
-        <h4 style="color: #fff; margin-bottom: 0.5rem;">1. What this is</h4>
-        <p style="margin-bottom: 1rem;">This is a free, personal, non-commercial educational tool operated by an individual, Lucas Ballek. It is not a company, not incorporated, and not a licensed engineering, electrical contracting, or financial advisory practice. Nothing on this site is for sale and no service is being offered or promised to you.</p>
-
-        <h4 style="color: #fff; margin-bottom: 0.5rem;">2. Estimates only &mdash; no reliance</h4>
-        <p style="margin-bottom: 1rem;">All output is an automated educational estimate produced from assumptions you supply. It is not a design, not a stamped drawing, not a quote, not a safety assessment, and not a code-compliance review. It may contain errors. <strong>Do not rely on it.</strong> Independently verify every figure &mdash; capacity, wire sizing, fuse ratings, and equipment compatibility &mdash; with a licensed electrician or professional engineer in your jurisdiction before purchasing, building, or energizing anything.</p>
-
-        <h4 style="color: #fff; margin-bottom: 0.5rem;">3. AI-generated content</h4>
-        <p style="margin-bottom: 1rem;">You are interacting with a large language model. It produces fluent, confident text that can be factually wrong, including specific numbers, prices, product specifications, and regulations. Treat every output as an unverified starting point.</p>
-
-        <h4 style="color: #fff; margin-bottom: 0.5rem;">4. Safety</h4>
-        <p style="margin-bottom: 1rem;">Battery banks, high DC currents, and mains wiring can cause arc flash, electric shock, fire, toxic gas release, serious injury, and death. Lithium cells can enter thermal runaway. You are solely responsible for your own safety and for the safety of anyone affected by what you build. You are solely responsible for permits, inspections, and compliance with your local electrical and fire codes.</p>
-
-        <h4 style="color: #fff; margin-bottom: 0.5rem;">5. No warranty</h4>
-        <p style="margin-bottom: 1rem;">THIS SITE AND ITS OUTPUT ARE PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, AND NON-INFRINGEMENT. There is no guarantee of availability, correctness, or continued operation, and the site may change or disappear at any time without notice.</p>
-
-        <h4 style="color: #fff; margin-bottom: 0.5rem;">6. Limitation of liability</h4>
-        <p style="margin-bottom: 1rem;">To the fullest extent permitted by applicable law, the operator shall not be liable for any direct, indirect, incidental, consequential, special, or punitive damages &mdash; including property damage, fire, personal injury, lost savings, or business interruption &mdash; arising from your use of or reliance on this free tool. Some jurisdictions do not allow certain exclusions, in which case they apply only to the extent permitted. Nothing here excludes liability that cannot lawfully be excluded, including liability for death or personal injury caused by negligence, or for fraud.</p>
-
-        <h4 style="color: #fff; margin-bottom: 0.5rem;">7. Contributions</h4>
-        <p style="margin-bottom: 1rem;">Any contribution you choose to send is a voluntary gift to an individual. It is <strong>not tax-deductible</strong>, is not payment for goods or services, creates no contract, entitles you to nothing, and is not refundable in exchange for any obligation. Contributing does not change the service you receive in any way.</p>
-
-        <h4 style="color: #fff; margin-bottom: 0.5rem;">8. Privacy</h4>
-        <p style="margin-bottom: 1rem;">No account is required and no personal details are requested. Text you type into the advisor is transmitted to a third-party AI provider (Groq) in order to generate a reply, subject to their terms. Conversations are not stored by this site. Please do not enter personal, financial, or otherwise sensitive information. Basic request counts may be recorded to keep the service running and prevent abuse.</p>
-
-        <h4 style="color: #fff; margin-bottom: 0.5rem;">9. Acceptable use</h4>
-        <p>Please don't automate, scrape, or hammer this tool &mdash; it is one person paying for the AI calls. Rate limits apply and abuse will be blocked.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Printable one-pager (populated after a sizing run; only this prints) -->
-  <div id="printSheet"></div>
-
-  <!-- Inlined JavaScript with JSONP Web-Bridge for Freenet CSP Passthrough -->
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260825m"></script>
-  <script>
-    // -- Cloudflare API Bridge URL (updated automatically by patch_and_publish.py) --
-    var CF_API_URL = 'https://bigenergyco-api.bigenergyco.workers.dev';
-    var chatHistory = [];
-
-    window.openSizingModal = function() {
-      var modal = document.getElementById('sizingModal');
-      if (modal) modal.style.display = 'flex';
-    };
-
-    window.closeSizingModal = function() {
-      var modal = document.getElementById('sizingModal');
-      if (modal) modal.style.display = 'none';
-    };
-
-    window.openLegalModal = function() {
-      var modal = document.getElementById('legalModal');
-      if (modal) modal.style.display = 'flex';
-    };
-
-    window.closeLegalModal = function() {
-      var modal = document.getElementById('legalModal');
-      if (modal) modal.style.display = 'none';
-    };
-
-    window.scrollToCalc = function() {
-      var calcElem = document.getElementById('calculator');
-      if (calcElem) calcElem.scrollIntoView({ behavior: 'smooth' });
-    };
-
-    // Render AI text as plain text, never as markup � the model's output is untrusted input.
-    function renderBotReply(replyText) {
-      var chatWindow = document.getElementById('chatWindow');
-      if (!chatWindow) return;
-
-      var botDiv = document.createElement('div');
-      botDiv.className = 'chat-msg bot';
-
-      var body = document.createElement('div');
-      body.style.whiteSpace = 'pre-wrap';
-      body.textContent = replyText;
-      botDiv.appendChild(body);
-
-      // The disclaimer travels with every answer, not buried in a modal nobody opens.
-      var note = document.createElement('div');
-      note.style.cssText = 'margin-top:0.6rem;padding-top:0.5rem;border-top:1px solid var(--border-card);' +
-                           'font-size:0.75rem;color:var(--text-muted);line-height:1.45;';
-      note.textContent = 'AI-generated estimate � may be inaccurate, including prices and specifications. ' +
-                         'Not engineering advice. Verify with a licensed electrician or engineer before ' +
-                         'buying or building anything.';
-      botDiv.appendChild(note);
-
-      chatWindow.appendChild(botDiv);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-      chatHistory.push({ role: 'bot', content: body.textContent });
-    }
-
-    function sendChatMsg() {
-      var chatInput = document.getElementById('chatInput');
-      var chatWindow = document.getElementById('chatWindow');
-      if (!chatInput || !chatWindow) return;
-      var userMsg = chatInput.value.trim();
-      if (!userMsg) return;
-
-      var userDiv = document.createElement('div');
-      userDiv.className = 'chat-msg user';
-      userDiv.innerText = userMsg;
-      chatWindow.appendChild(userDiv);
-      chatHistory.push({ role: 'user', content: userMsg });
-
-      chatInput.value = '';
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-
-      // Same-origin fetch via proxy_server.py (port 7510)
-      var loadingDiv = document.createElement('div');
-      loadingDiv.className = 'chat-msg bot';
-      loadingDiv.innerText = '? Thinking...';
-      loadingDiv.id = 'loadingMsg';
-      chatWindow.appendChild(loadingDiv);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-
-      var cleanHistory = chatHistory.slice(-6).map(function(m) {
-        return {
-          role: (m.role === 'bot' || m.role === 'assistant') ? 'assistant' : 'user',
-          content: m.content || ''
-        };
-      });
-
-      var payload = JSON.stringify({ message: userMsg, history: cleanHistory });
-
-      function setLoadingText(t) { var el = document.getElementById('loadingMsg'); if (el) el.innerText = t; }
-
-      function postTo(url) {
-        return fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: payload
-        }).then(function(res) {
-          if (!res.ok) {
-            var err = new Error('HTTP ' + res.status);
-            err.status = res.status;
-            err.retryAfter = parseInt(res.headers.get('Retry-After') || '0', 10) || 0;
-            throw err;
-          }
-          return res.json();
-        });
-      }
-
-      function attemptSend(retriesLeft) {
-        var apiBase2 = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
-          ? ''
-          : (CF_API_URL || '');
-        return postTo(apiBase2 + '/api/chat').catch(function(err) {
-          // Busy (free AI quota) � wait out the provider and retry once automatically.
-          if ((err.status === 503 || err.status === 429) && retriesLeft > 0) {
-            var waitSecs = Math.min(Math.max(err.retryAfter || 4, 3), 15);
-            setLoadingText('? The free AI engine is busy � retrying in ' + waitSecs + 's�');
-            return new Promise(function(resolve) { setTimeout(resolve, waitSecs * 1000); })
-              .then(function() { return attemptSend(retriesLeft - 1); });
-          }
-          throw err;
-        });
-      }
-
-      attemptSend(2)
-        .then(function(data) {
-          var loading = document.getElementById('loadingMsg');
-          if (loading && loading.parentNode) loading.parentNode.removeChild(loading);
-          if (data && data.reply) {
-            renderBotReply(data.reply);
-          } else {
-            renderBotReply('?? No reply received. Please try again.');
-          }
-        })
-        .catch(function(err) {
-          console.error("Chat API error:", err);
-          var loading = document.getElementById('loadingMsg');
-          if (loading && loading.parentNode) loading.parentNode.removeChild(loading);
-          if (err && (err.status === 503 || err.status === 429)) {
-            renderBotReply(
-              '?? The free AI engine is swamped right now (HTTP ' + err.status + ' � it runs on a shared free quota).\n\n' +
-              'Please wait about a minute and send that again.'
-            );
-          } else {
-            renderBotReply(
-              '?? The AI advisor is unreachable right now' +
-              (err && err.status ? ' (HTTP ' + err.status + ')' : '') + '.\n\n' +
-              'Check your connection and try again in a moment.'
-            );
-          }
-        });
-    }
-
-    function toggleIntakeMode() {
-      var modeEl = document.getElementById('intakeMode');
-      var label = document.getElementById('intakeValueLabel');
-      var input = document.getElementById('intakeValue');
-      if (!modeEl || !label || !input) return;
-      var mode = modeEl.value;
-      if (mode === 'bill') {
-        label.innerText = 'Monthly Electric Bill ($ USD):';
-        input.placeholder = 'e.g. 400';
-        if (!input.value || input.value === '35') input.value = '400';
-      } else {
-        label.innerText = 'Daily Energy Consumption (kWh / day):';
-        input.placeholder = 'e.g. 35';
-        if (!input.value || input.value === '400') input.value = '35';
-      }
-    }
-
-    function toggleInverterDetail() {
-      var wrap = document.getElementById('inverterDetailWrap');
-      var yes = document.getElementById('inverterHelpYes');
-      if (!wrap || !yes) return;
-      wrap.style.display = yes.checked ? 'block' : 'none';
-    }
-
-    // Heuristic: does the free-text inverter answer actually tell the advisor anything?
-    // Needs some substance AND at least one concrete signal (brand, model number,
-    // power/voltage figure, or an explicit "I don't have one yet").
-    function inverterDetailIsUseful(text) {
-      var t = (text || '').trim();
-      if (t.length < 12) return false;
-      return /\d\s*(k?w|kva|v|a)\b/i.test(t) ||
-             /\b(victron|sol-?ark|eg4|schneider|conext|growatt|deye|sma|fronius|outback|midnite|studer|must|srne|pip|voltronic|luxpower|solis|goodwe|huawei|enphase|tesla)\b/i.test(t) ||
-             /\b(no|none|don'?t|do not|haven'?t|not yet|nothing)\b.{0,30}\b(inverter|yet)\b/i.test(t) ||
-             /\b(split[- ]?phase|single[- ]?phase|three[- ]?phase|3[- ]?phase|off[- ]?grid|grid[- ]?tie|hybrid)\b/i.test(t);
-    }
-
-    function buildIntakeBrief() {
-      var modeEl = document.getElementById('intakeMode');
-      var valEl = document.getElementById('intakeValue');
-      var regionEl = document.getElementById('destRegion');
-      var yesEl = document.getElementById('inverterHelpYes');
-      var detailEl = document.getElementById('inverterDetail');
-
-      // NEW: Climate context fields
-      var climateEl = document.getElementById('destClimate');
-      var spaceEl = document.getElementById('destSpace');
-      var maintenanceEl = document.getElementById('maintenanceComfort');
-
-      var mode = modeEl ? modeEl.value : 'bill';
-      var val = valEl ? valEl.value.trim() : '';
-      var region = regionEl ? regionEl.value : 'Global DDP Port';
-      var wantsInverterHelp = !!(yesEl && yesEl.checked);
-      var detail = detailEl ? detailEl.value.trim() : '';
-
-      // NEW: Extract climate context
-      var climate = climateEl ? climateEl.value : 'unknown';
-      var space = spaceEl ? spaceEl.value : 'unknown';
-      var maintenance = maintenanceEl ? maintenanceEl.value : 'unknown';
-
-      var lines = ['Please size an off-grid battery system for me.'];
-      lines.push(mode === 'bill'
-        ? 'Basis: monthly electric bill of $' + (val || 'unspecified') + ' USD.'
-        : 'Basis: daily consumption of ' + (val || 'unspecified') + ' kWh/day.');
-      lines.push('Destination region: ' + region + '.');
-
-      // NEW: Add climate context for better battery chemistry recommendations
-      lines.push('Climate: ' + climate + '.');
-      lines.push('Available space for batteries: ' + space + '.');
-      lines.push('Maintenance comfort level: ' + maintenance + '.');
-      lines.push('[ADVISOR INSTRUCTION: Use these climate/space/maintenance details to reason about chemistry, stated as ' +
-                 'trade-offs and ranges � never a hard sell. (a) Cold sites (frequently below -10�C): LFP cannot be charged ' +
-                 'below 0�C without heating � recommend sodium-ion IF genuinely purchasable in my country, or LFP WITH a ' +
-                 'heated/insulated enclosure, and say which you would pick and why. (b) Temperate/tropical sites: LFP is ' +
-                 'the mature default (lowest cost per kWh-cycle, widest availability); suggest sodium-ion only if locally ' +
-                 'available and certification is not required � note most sodium-ion packs still lack UL 9540/CE listing. ' +
-                 '(c) Tight space: prefer LFP (higher energy density than sodium-ion). Always state ' +
-                 'certification, availability, and warranty caveats for anything you highlight.]');
-
-      if (!wantsInverterHelp) {
-        lines.push('Inverter: I do not need inverter assistance � battery bank sizing only.');
-      } else if (inverterDetailIsUseful(detail)) {
-        lines.push('Inverter: I need inverter assistance. Details: ' + detail);
-      } else {
-        if (detail) lines.push('Inverter: I need inverter assistance. What I said so far: "' + detail + '"');
-        else lines.push('Inverter: I need inverter assistance but have not given any details.');
-        lines.push('[ADVISOR INSTRUCTION: The inverter information above is missing or too vague to size ' +
-                   'against. Give the battery sizing you can from the load basis, then ask me the specific ' +
-                   'follow-up questions you need � whether I already own an inverter (make/model) or need a ' +
-                   'recommendation, my continuous and surge power needs, AC voltage/phase, and whether the ' +
-                   'system is off-grid, hybrid, or grid-tied. Do not invent an inverter for me.]');
-      }
-
-      return lines.join('\n');
-    }
-
-    function runIntakeCalculation() {
-      var chatInput = document.getElementById('chatInput');
-      if (!chatInput) return;
-      // If the visitor typed a question, honor that instead of overwriting it.
-      if (!chatInput.value.trim()) chatInput.value = buildIntakeBrief();
-      sendChatMsg();
-    }
-
-    function updateCalc() {
-      var targetKwhInput = document.getElementById('targetKwh');
-      if (!targetKwhInput) return;
-
-      var targetKwh = parseFloat(targetKwhInput.value);
-      var utilityRateSelect = document.getElementById('utilityRate');
-      var utilityRate = utilityRateSelect ? parseFloat(utilityRateSelect.value) : 0.28;
-
-      var targetKwhVal = document.getElementById('targetKwhVal');
-      if (targetKwhVal) targetKwhVal.innerText = targetKwh + ' kWh Usable Storage';
-
-      // Scoped prices come from the same pricing module the sizing engine
-      // uses (window.BECO_BATT_COST is set by ui.js). No second source of truth.
-      var scopes = window.BECO_BATT_COST ? window.BECO_BATT_COST(targetKwh) : null;
-      if (!scopes) return;
-
-      function money(v) { return '$' + Math.round(v).toLocaleString(); }
-      function range(s) { return money(s.lo) + '\u2013' + money(s.hi); }
-
-      var cellsCostVal = document.getElementById('cellsCostVal');
-      var landedCostVal = document.getElementById('landedCostVal');
-      var retailCostVal = document.getElementById('retailCostVal');
-      if (cellsCostVal) cellsCostVal.innerText = range(scopes.cells);
-      if (retailCostVal) retailCostVal.innerText = range(scopes.powmr);
-      if (landedCostVal) landedCostVal.innerText = range(scopes.landed);
-
-      document.querySelectorAll('.cmp-kwh').forEach(function (td) { td.innerText = targetKwh + ' kWh'; });
-
-      var landedMidVal = document.getElementById('landedMidVal');
-      if (landedMidVal) {
-        var mid = (scopes.landed.lo + scopes.landed.hi) / 2;
-        landedMidVal.innerText = '\u2248' + money(mid);
-      }
-
-      // Grid-energy equivalence: what the stored energy would cost bought from the grid.
-      // Assumptions (stated in the UI): one full cycle per day, 90% round-trip efficiency,
-      // energy charge only � excludes connection fees, demand charges, degradation, and
-      // panels/inverter/BOS/labor. This is orientation, not a savings promise.
-      var gridEqBox = document.getElementById('gridEqBox');
-      var gridEqText = document.getElementById('gridEqText');
-      if (!gridEqBox || !gridEqText) return;
-
-      if (utilityRate > 0) {
-        var ROUND_TRIP_EFF = 0.9;
-        var annualKwh = targetKwh * 365 * ROUND_TRIP_EFF;
-        var annualValue = annualKwh * utilityRate;
-        var landedMid = (scopes.landed.lo + scopes.landed.hi) / 2;
-        var paybackYears = landedMid / annualValue;
-
-        var text = 'If this bank were cycled once daily at $' + utilityRate.toFixed(2) + '/kWh with 90% ' +
-                   'round-trip efficiency, the energy it moves in a year would cost about $' +
-                   (Math.round(annualValue / 10) * 10).toLocaleString() + ' bought from the grid.';
-        text += ' The landed DIY estimate shown above equals roughly ' + (paybackYears >= 1 ?
-                   '~' + Math.round(paybackYears) + ' years' : 'under one year') + ' of that grid energy';
-        text += ' \u2014 before adding panels, inverter, wiring, install, and battery degradation, which are ' +
-                'the majority of a real off-grid budget. Off-grid is usually about where you live, not ' +
-                'about beating the grid on price.';
-        gridEqText.textContent = text;
-        gridEqBox.style.display = 'block';
-      } else {
-        gridEqBox.style.display = 'none';
-      }
-    }
-
-    function scrollToSection(id) {
-      var target = document.getElementById(id);
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    function setupEventListeners() {
-      var navAdvisor = document.getElementById('btnNavAdvisor');
-      var navSizeArray = document.getElementById('btnNavSizeArray');
-      var heroSizing = document.getElementById('btnHeroSizing');
-      var heroCompare = document.getElementById('btnHeroCompare');
-      var calcAdvisor = document.getElementById('btnCalcAdvisor');
-      var terms1 = document.getElementById('btnLegalTerms1');
-      var terms2 = document.getElementById('btnLegalTerms2');
-      var terms3 = document.getElementById('btnLegalTerms3');
-
-      var closeSizing = document.getElementById('btnCloseSizing');
-      var closeLegal = document.getElementById('btnCloseLegal');
-      var intakeCalc = document.getElementById('btnIntakeCalculate');
-      var sendChat = document.getElementById('btnSendChat');
-
-      var targetKwhInput = document.getElementById('targetKwh');
-      var utilityRateSelect = document.getElementById('utilityRate');
-      var intakeModeSelect = document.getElementById('intakeMode');
-      var chatInput = document.getElementById('chatInput');
-
-      // The deterministic sizer is the product; the AI advisor explains results.
-      if (navSizeArray) navSizeArray.addEventListener('click', function () { scrollToSection('sizing'); });
-      if (heroSizing) heroSizing.addEventListener('click', function () { scrollToSection('sizing'); });
-
-      if (navAdvisor) navAdvisor.addEventListener('click', window.openSizingModal);
-      if (calcAdvisor) calcAdvisor.addEventListener('click', window.openSizingModal);
-
-      if (heroCompare) heroCompare.addEventListener('click', window.scrollToCalc);
-
-      if (terms1) terms1.addEventListener('click', window.openLegalModal);
-      if (terms2) terms2.addEventListener('click', window.openLegalModal);
-      if (terms3) terms3.addEventListener('click', window.openLegalModal);
-
-      if (closeSizing) closeSizing.addEventListener('click', window.closeSizingModal);
-      if (closeLegal) closeLegal.addEventListener('click', window.closeLegalModal);
-
-      if (intakeCalc) intakeCalc.addEventListener('click', runIntakeCalculation);
-      if (sendChat) sendChat.addEventListener('click', sendChatMsg);
-
-      var invYes = document.getElementById('inverterHelpYes');
-      var invNo = document.getElementById('inverterHelpNo');
-      if (invYes) invYes.addEventListener('change', toggleInverterDetail);
-      if (invNo) invNo.addEventListener('change', toggleInverterDetail);
-      toggleInverterDetail();
-
-      if (targetKwhInput) targetKwhInput.addEventListener('input', updateCalc);
-      if (utilityRateSelect) utilityRateSelect.addEventListener('change', updateCalc);
-      if (intakeModeSelect) intakeModeSelect.addEventListener('change', toggleIntakeMode);
-
-      if (chatInput) chatInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendChatMsg();
-      });
-
-      updateCalc();
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', setupEventListeners);
-    } else {
-      setupEventListeners();
-    }
-
-    // Installable / offline-capable: after the first visit, the tool shell
-    // loads with no network. Sizing math is client-side and satellite weather
-    // is cached per location, so a visited site keeps working fully offline.
-    if ('serviceWorker' in navigator && location.protocol === 'https:') {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js').catch(function () { /* offline support unavailable � tool still works normally */ });
-      });
-    }
-  </script>
-</body>
-</html>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BigEnergyCo â€” Free Worldwide Solar &amp; Battery Estimator</title>
+  <meta name="google-site-verification" content="iXiF6PQy5IhjMtll2YzS3-amK6BtApSkpdlKM73dSEc" />
+  <meta name="description" content="A free AI-assisted solar and battery storage estimator for anywhere in the world. No signup, nothing for sale. Educational estimates only â€” verify with a licensed professional.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BigEnergyCo">
+  <meta property="og:title" content="BigEnergyCo â€” Free Worldwide Solar &amp; Battery Estimator">
+  <meta property="og:description" content="A free AI-assisted solar and battery storage estimator for anywhere in the world. No signup, nothing for sale. Educational estimates only â€” verify with a licensed professional.">
+  <meta property="og:url" content="https://sovereign-communication.github.io/BigEnergyCo/">
+  <meta property="og:image" content="https://sovereign-communication.github.io/BigEnergyCo/assets/og-card.png">
+  <meta property="og:image:width" content="2688">
+  <meta property="og:image:height" content="1536">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="BigEnergyCo â€” Free Worldwide Solar &amp; Battery Estimator">
+  <meta name="twitter:description" content="A free AI-assisted solar and battery storage estimator for anywhere in the world. No signup, nothing for sale. Educational estimates only â€” verify with a licensed professional.">
+  <meta name="twitter:image" content="https://sovereign-communication.github.io/BigEnergyCo/assets/og-card.png">
+  <link rel="canonical" href="https://sovereign-communication.github.io/BigEnergyCo/">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
+  <meta name="theme-color" content="#090d16">
+
+  <!-- Structured data: what this tool is, and the questions people ask it -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://sovereign-communication.github.io/BigEnergyCo/#app",
+        "name": "BigEnergyCo â€” Free Off-Grid Energy Estimator",
+        "url": "https://sovereign-communication.github.io/BigEnergyCo/",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any (web browser)",
+        "browserRequirements": "Requires JavaScript",
+        "description": "Free solar and battery sizing for anywhere on Earth. Simulates your location against five years of NASA satellite weather: fully off-grid systems at three reliability levels, or grid-connected bill cutting. Nothing for sale.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "featureList": [
+          "Off-grid sizing with 5-year hourly weather simulation",
+          "Grid-tie bill-cutting targets",
+          "Battery lifetime cost comparison (LFP, sodium-ion, lead-acid)",
+          "Payback and levelized cost of energy",
+          "Works offline after first visit"
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://sovereign-communication.github.io/BigEnergyCo/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How accurate are the estimates?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Every number comes from testable code simulating your exact location against five years of NASA satellite weather â€” not an AI guessing. Real-world results still vary with shading, installation quality, and hardware, so have a licensed professional verify anything you build." }
+          },
+          {
+            "@type": "Question",
+            "name": "Will a solar and battery system pay for itself?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Where grid power is expensive â€” Hawaii, islands, much of Europe, Africa, South Asia â€” properly built solar plus storage commonly repays its component cost in one to four years, then runs nearly free for decades. The calculator shows your personal payback from your own tariff." }
+          },
+          {
+            "@type": "Question",
+            "name": "What does an off-grid battery system actually cost?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Battery banks self-built from prismatic cells typically land around $80–125 per usable kWh shipped and duty-paid; budget retail packs run roughly $110–165. Panels add about $0.16–0.38 per watt. Every result states its price scope honestly." }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need a generator with an off-grid system?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Only if you want near-total independence through weeks of bad weather. The three off-grid options show exactly that trade-off: one never needs a generator, one needs it about a day a year, one only now and then. Grid-connected users skip this entirely." }
+          },
+          {
+            "@type": "Question",
+            "name": "Does the calculator work without internet?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes. After your first visit the tool installs itself as an offline app: sizing math runs entirely in your browser, and if the network is down it falls back to bundled typical-year weather for the nearest of 66 reference cities." }
+          },
+          {
+            "@type": "Question",
+            "name": "Is building my own battery safe?",
+            "acceptedAnswer": { "@type": "Answer", "text": "It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. Proper fusing, BMS use, and code compliance are essential â€” and a licensed electrician should check anything before you energize it." }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+/* BigEnergyCo Design System - Premium Dark Glassmorphic Energy Aesthetic */
+:root {
+  --bg-dark: #090d16;
+  --bg-card: rgba(18, 26, 44, 0.85);
+  --bg-card-hover: rgba(28, 40, 66, 0.95);
+  --border-glow: rgba(0, 230, 153, 0.35);
+  --border-card: rgba(255, 255, 255, 0.12);
+  
+  --primary-accent: #00e699; /* Energy Emerald */
+  --primary-glow: rgba(0, 230, 153, 0.5);
+  --secondary-accent: #3b82f6; /* Cyber Blue */
+  --warning-orange: #f59e0b; /* Amber Caution */
+  --danger-red: #ef4444;
+  
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --text-bright: #ffffff;
+
+  --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  line-height: 1.6;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 15% 20%, rgba(0, 230, 153, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 85% 70%, rgba(59, 130, 246, 0.12) 0%, transparent 45%);
+  background-attachment: fixed;
+}
+
+a {
+  color: var(--primary-accent);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  text-shadow: 0 0 10px var(--primary-glow);
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Header & Navigation */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(9, 13, 22, 0.9);
+  border-bottom: 1px solid var(--border-card);
+  padding: 1rem 0;
+}
+
+.nav-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ffffff 0%, var(--primary-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo .highlight {
+  color: var(--primary-accent);
+  -webkit-text-fill-color: var(--primary-accent);
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.nav-links a:hover {
+  color: var(--text-bright);
+}
+
+.header-cta {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.4rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #00e699 0%, #00b377 100%);
+  color: #04120c;
+  font-weight: 700;
+  box-shadow: 0 0 15px rgba(0, 230, 153, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(0, 230, 153, 0.5);
+}
+
+.btn-secondary {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.btn-secondary:hover {
+  background: rgba(59, 130, 246, 0.3);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-card);
+}
+
+.btn-outline:hover {
+  border-color: var(--primary-accent);
+  color: var(--primary-accent);
+}
+
+.btn-full {
+  width: 100%;
+}
+
+/* Hero Section */
+.hero {
+  padding: 5rem 0 4rem;
+  text-align: center;
+  position: relative;
+}
+
+.hero-tag {
+  display: inline-block;
+  background: rgba(0, 230, 153, 0.12);
+  color: var(--primary-accent);
+  border: 1px solid var(--primary-glow);
+  padding: 0.35rem 1.1rem;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.5px;
+}
+
+.hero h1 {
+  font-size: 3.25rem;
+  font-weight: 900;
+  line-height: 1.15;
+  margin-bottom: 1.5rem;
+  letter-spacing: -1px;
+}
+
+.hero h1 span {
+  background: linear-gradient(135deg, #00e699 0%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  max-width: 800px;
+  margin: 0 auto 2.5rem;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 3.5rem;
+}
+
+.hero-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  border-color: var(--border-glow);
+  transform: translateY(-4px);
+}
+
+.stat-val {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--primary-accent);
+  font-family: var(--font-mono);
+}
+
+.stat-label {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+/* Calculator Section */
+.calc-section {
+  padding: 4rem 0;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.section-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+}
+
+.section-desc {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  margin-top: 0.5rem;
+}
+
+.calc-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glow);
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+}
+
+@media (max-width: 900px) {
+  .calc-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: rgba(9, 13, 22, 0.85);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 1rem;
+  font-family: var(--font-mono);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-accent);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.results-box {
+  background: rgba(9, 13, 22, 0.9);
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.savings-highlight {
+  text-align: center;
+  padding: 1.5rem;
+  background: rgba(0, 230, 153, 0.08);
+  border: 1px solid var(--primary-glow);
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.savings-num {
+  font-size: 2.75rem;
+  font-weight: 900;
+  color: var(--primary-accent);
+  font-family: var(--font-mono);
+}
+
+.savings-sub {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.comparison-table th, .comparison-table td {
+  padding: 0.75rem 0;
+  text-align: left;
+  border-bottom: 1px solid var(--border-card);
+  font-size: 0.95rem;
+}
+
+.comparison-table td:last-child {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.calc-footer {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+/* BOM Section */
+.bom-section {
+  padding: 4rem 0;
+}
+
+.bom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.bom-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  padding: 1.75rem;
+  border-radius: 14px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.bom-card:hover {
+  border-color: var(--border-glow);
+  transform: translateY(-4px);
+}
+
+.bom-badge {
+  display: inline-block;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  margin-bottom: 0.75rem;
+}
+
+.bom-card h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.bom-card p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+.bom-price {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--primary-accent);
+}
+
+/* Legal Cards Section */
+.legal-section {
+  padding: 4rem 0;
+}
+
+.legal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.legal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  padding: 1.75rem;
+  border-radius: 14px;
+}
+
+.legal-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.legal-card p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: #0d1322;
+  border: 1px solid var(--border-glow);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 680px;
+  width: 92%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-card);
+  padding-bottom: 1rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.75rem;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: #fff;
+}
+
+/* Chatbox Inside Modal */
+.chat-box {
+  height: 300px;
+  overflow-y: auto;
+  background: rgba(9, 13, 22, 0.95);
+  border: 1px solid var(--border-card);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.chat-msg {
+  max-width: 85%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.chat-msg.bot {
+  background: rgba(18, 26, 44, 0.95);
+  border: 1px solid var(--primary-glow);
+  color: var(--text-main);
+  align-self: flex-start;
+}
+
+.chat-msg.user {
+  background: rgba(0, 230, 153, 0.2);
+  border: 1px solid var(--primary-accent);
+  color: #fff;
+  align-self: flex-end;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border-card);
+  padding: 3rem 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 4rem;
+}
+  .btn .spin{display:inline-block;animation:becospin 1s linear infinite}@keyframes becospin{to{transform:rotate(360deg)}}
+
+/* Printable summary: at print time, only the estimate sheet survives. */
+#printSheet { display: none; }
+@media print {
+  body > *:not(#printSheet) { display: none !important; }
+  #printSheet { display: block !important; }
+  body { background: #fff !important; color: #000 !important; overflow: visible !important; background-image: none !important; }
+}
+  </style>
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header>
+    <div class="container nav-flex">
+      <div class="logo">
+        <span>?</span>
+        <span>BigEnergy<span class="highlight">Co</span></span>
+      </div>
+      <nav class="nav-links">
+        <a href="#sizing" data-i18n="navSizing">Size Your System</a>
+        <a href="#calculator" data-i18n="navCosts">Estimator</a>
+        <a href="#bom" data-i18n="navBom">Hardware Reference</a>
+        <a href="./blog/" data-i18n="navBlog">Blog</a>
+        <a href="#legal" data-i18n="navLegal">Terms &amp; Disclaimer</a>
+      </nav>
+      <div class="header-cta">
+        <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;">? Support</a>
+        <div id="btnNavSizeArray" class="btn btn-primary" style="cursor: pointer;">Size Your System</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-tag" data-i18n="heroTag">ðŸŒ Free for everyone, everywhere â€¢ No signup â€¢ Nothing for sale</div>
+      <h1><span data-i18n="heroTitle1">Free Off-Grid Energy Estimator</span> <br><span data-i18n="heroTitle2">Size your solar &amp; battery system, anywhere in the world</span></h1>
+      <p>
+        A free AI-assisted tool for working out roughly what solar array and battery bank your situation needs.
+        Educational estimates only &mdash; not engineering, not a quote, and nothing here is for sale.
+        Built and given away by <strong>Lucas Ballek</strong>.
+      </p>
+
+      <div class="hero-actions">
+        <div id="btnHeroSizing" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.9rem 2rem; cursor: pointer;" data-i18n="ctaStart">
+          ?? Start a Free Estimate
+        </div>
+        <div id="btnHeroCompare" class="btn btn-outline" style="font-size: 1.1rem; padding: 0.9rem 2rem; cursor: pointer;" data-i18n="ctaCompare">
+          ?? Rough Cost Comparison
+        </div>
+      </div>
+
+      <div class="hero-stats-grid">
+        <div class="stat-card">
+          <div class="stat-val">$0</div>
+          <div class="stat-label">Free, always &mdash; donations optional</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">No signup</div>
+          <div class="stat-label">No account, no email required</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">Worldwide</div>
+          <div class="stat-label">Any location, any grid standard</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">Estimates only</div>
+          <div class="stat-label">Verify with a licensed pro before building</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Sizing Section (deterministic engine + NASA POWER) -->
+  <section id="sizing" class="calc-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title" data-i18n="sizingTitle">Size Your System</h2>
+        <p class="section-desc">Enter your daily energy use and location. The calculator simulates your site hour-by-hour against five years of NASA satellite weather: go fully off-grid at three levels of generator independence, or stay connected and find the smallest system that cuts your bill. Educational estimates only.</p>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-controls">
+          <div class="form-group">
+            <label for="cityPreset" data-i18n="cityLabel">Where is this system going? <span style="font-weight:400;color:var(--text-muted);">(nearest big city is fine)</span></label>
+            <div style="display: flex; gap: 0.6rem;">
+              <select id="cityPreset" class="form-control" style="flex: 1;"></select>
+              <div id="btnGeoLocate" class="btn btn-outline" style="white-space: nowrap; cursor: pointer; font-size: 0.9rem;" data-i18n="locBtn">?? My location</div>
+            </div>
+            <div id="locNote" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;"></div>
+            <details id="coordDetails" style="margin-top: 0.5rem;">
+              <summary style="cursor: pointer; font-size: 0.8rem; color: var(--text-muted);">Advanced: exact coordinates</summary>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.6rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="latInput">Latitude (&minus;90 to 90):</label>
+                  <input type="number" id="latInput" class="form-control" value="21.31" step="0.01">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="lonInput">Longitude (&minus;180 to 180):</label>
+                  <input type="number" id="lonInput" class="form-control" value="-157.86" step="0.01">
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <div class="form-group">
+            <label for="loadMode" data-i18n="loadLabel">How much power do you use?</label>
+            <select id="loadMode" class="form-control">
+              <option value="appliances" selected data-i18n="loadAppliances">Let me pick my appliances</option>
+              <option value="bill" data-i18n="loadBill">I know my monthly electric bill</option>
+              <option value="kwh" data-i18n="loadKwh">I know my kWh/day (advanced)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="customRateVal">Electricity price where you live <span style="font-weight:400;color:var(--text-muted);">(drives your bill estimate and payback)</span> â€” your price per kWh ($):</label>
+            <input type="number" id="customRateVal" class="form-control" placeholder="e.g. 0.31" step="0.01" min="0.01">
+            <div style="margin-top:0.6rem;">
+              <label for="exportRate">Feed-in credit for surplus you can sell <span style="font-weight:400;color:var(--text-muted);">($/kWh, optional &mdash; grid-tie only)</span>:</label>
+              <input type="number" id="exportRate" class="form-control" placeholder="e.g. 0.12" step="0.01" min="0">
+            </div>
+          </div>
+
+          <div id="panelAppliances">
+            <div id="applianceList"></div>
+            <div id="readoutAppliances" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.5;">
+              Wattages are typical values &mdash; yours may differ. Cycling appliances (fridges, freezers, air
+              conditioners, pumps) only draw power while running: their slider is <em>hours actually running per day</em>,
+              capped to realistic compressor time, and each row shows the resulting 24-hour average. A modern fridge at
+              the default (100 W running, ~10 h/day) really does use about 1 kWh/day.
+            </p>
+          </div>
+
+          <div id="panelBill" style="display: none;">
+            <div class="form-group">
+              <label for="billAmount">Monthly electric bill (in your currency, rough number):</label>
+              <input type="number" id="billAmount" class="form-control" placeholder="e.g. 150" min="1">
+            </div>
+            <div id="readoutBill" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem;">
+              Bills include fixed charges and taxes, so this slightly overestimates real use &mdash; which is a safe direction to err.
+            </p>
+          </div>
+
+          <div id="panelKwh" style="display: none;">
+            <div class="form-group">
+              <label for="dailyKwhInput">Daily energy use (kWh/day):</label>
+              <input type="number" id="dailyKwhInput" class="form-control" value="10" min="0.5" max="500" step="1">
+            </div>
+            <div id="readoutKwh" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="systemGoal" data-i18n="goalLabel">What do you want this system to do?</label>
+            <select id="systemGoal" class="form-control">
+              <option value="offgrid" selected data-i18n="goalOffgrid">Power me fully off-grid</option>
+              <option value="gridtie" data-i18n="goalGridtie">Cut my grid bill, stay connected</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="chemSelect" data-i18n="chemLabel">Battery chemistry:</label>
+            <select id="chemSelect" class="form-control">
+              <option value="auto" selected>Auto &mdash; compare all three by lifetime cost</option>
+              <option value="naion">Sodium-Ion &mdash; cold-capable, no thermal runaway</option>
+              <option value="lfp">LFP (LiFePO4) &mdash; the proven standard</option>
+              <option value="agm">Lead-Acid (AGM) &mdash; cheapest upfront, shortest-lived</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="autoTierRow" style="display:none;margin-bottom:0;">
+            <label for="autoTier">Independence target <span style="font-weight:400;color:var(--text-muted);">(applied to all three batteries)</span>:</label>
+            <select id="autoTier" class="form-control">
+              <option value="tier100">100% &mdash; never see a generator</option>
+              <option value="tier99" selected>99% &mdash; generator about a day a year</option>
+              <option value="tier95">95% &mdash; generator now and then</option>
+            </select>
+          </div>
+          <div class="form-group" id="autoTargetRow" style="display:none;margin-bottom:0;">
+            <label for="autoTarget">Bill-cut target <span style="font-weight:400;color:var(--text-muted);">(applied to all three batteries)</span>:</label>
+            <select id="autoTarget" class="form-control">
+              <option value="cut60">Cut ~60% &mdash; cheapest entry</option>
+              <option value="cut80" selected>Cut ~80% &mdash; the sweet spot</option>
+              <option value="cut95">Cut ~95% &mdash; nearly off-grid</option>
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="fxRate">Your currency <span style="font-weight:400;color:var(--text-muted);">(optional)</span>:</label>
+              <input type="number" id="fxRate" class="form-control" placeholder="units per $1 USD, e.g. 58" min="0.01" step="0.01">
+            </div>
+            <div class="form-group">
+              <label for="fxCode">Currency code:</label>
+              <input type="text" id="fxCode" class="form-control" placeholder="e.g. PHP" maxlength="4">
+              <p id="fxAsOf" style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;"></p>
+            </div>
+          </div>
+
+          <div id="btnRunSizing" class="btn btn-primary btn-full" style="cursor:pointer; margin-top: 0.5rem;" tabindex="-1"><span data-i18n="runBtn">?? Size My System (5-yr simulation)</span></div>
+          <div id="sizingStatus" style="font-size:0.85rem;color:var(--text-muted);margin-top:0.75rem;line-height:1.5;">First run downloads ~2 MB of satellite weather data, then caches it in your browser.</div>
+        </div>
+
+        <div class="results-box">
+          <div id="moneyBar" style="display:none; margin-bottom: 1rem; padding: 0.85rem 1rem; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.35); border-radius: 10px; font-size: 0.95rem; line-height: 1.5;"></div>
+          <div id="tierResults" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
+            <p style="color:var(--text-muted);font-size:0.9rem;grid-column:1/-1;">
+              Results appear here: three side-by-side systems &mdash; one that never needs a generator,
+              one that needs it about one day a year, and one for people happy to run it now and then.
+            </p>
+          </div>
+
+          <div id="socChartWrap" style="display:none; margin-top: 1.25rem;">
+            <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">How low does each battery get? (five years of real weather)</div>
+            <div id="socLegend" style="display:none;"></div>
+            <canvas id="socCanvas" style="width: 100%; border: 1px solid var(--border-card); border-radius: 10px; background: rgba(9,13,22,0.85);"></canvas>
+            <p id="socCaption" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.55;"></p>
+          </div>
+
+          <details style="margin-top:1.25rem;font-size:0.85rem;color:var(--text-muted);">
+            <summary style="cursor:pointer;color:var(--primary-accent);">How this was calculated</summary>
+            <p id="assumpText" style="margin-top:0.5rem;line-height:1.6;">
+              Run a sizing first â€” every constant used (derates, temperature model, efficiencies,
+              weather data years and source) is listed here.
+            </p>
+          </details>
+
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem;">
+            <div id="btnAskAdvisor" class="btn btn-secondary" style="cursor:pointer;display:none;">?? Ask the AI advisor about this result</div>
+            <div id="btnShareResult" class="btn btn-outline" style="cursor:pointer;display:none;">?? Copy share link</div>
+            <div id="btnPrintResult" class="btn btn-outline" style="cursor:pointer;display:none;">??? Print / save PDF</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Comparison & Calculator Section -->
+  <section id="calculator" class="calc-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Rough Cost Comparison</h2>
+        <p class="section-desc">A ballpark comparison between self-sourced components and a packaged retail battery, using published list prices. Indicative only &mdash; real costs vary enormously by country, freight, duty, and what you can actually buy locally.</p>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-controls">
+          <div class="form-group">
+            <label for="targetKwh">Storage Target (kWh Usable):</label>
+            <input type="range" id="targetKwh" min="20" max="300" value="100" step="10" style="width: 100%; margin-bottom: 0.5rem;">
+            <div id="targetKwhVal" style="font-family: var(--font-mono); font-weight: 700; color: var(--primary-accent);">100 kWh Usable Storage</div>
+          </div>
+
+          <div class="form-group">
+            <label for="utilityRate">Global Grid Rate ($ / kWh):</label>
+            <select id="utilityRate" class="form-control">
+              <option value="0.28" selected>Global Average ($0.28 / kWh)</option>
+              <option value="0.16">US Mainland Avg ($0.16 / kWh)</option>
+              <option value="0.32">Boston / Northeast ($0.32 / kWh)</option>
+              <option value="0.38">Europe / UK ($0.38 / kWh)</option>
+              <option value="0.48">Hawaii Off-Grid Peak ($0.48 / kWh)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="results-box">
+          <div class="savings-highlight">
+            <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Indicative component cost</div>
+            <div id="landedMidVal" class="savings-num">˜$10,500</div>
+            <div id="savingsPctVal" class="savings-sub">Landed DIY mid-point &mdash; component cost only, excludes freight beyond scope, tools, and labor</div>
+          </div>
+
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Option</th>
+                <th>Capacity</th>
+                <th>Component cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Self-sourced cells + BMS <span style="font-size:0.8em;color:var(--text-muted);">(ex-factory China, you assemble)</span></td>
+                <td class="cmp-kwh">100 kWh</td>
+                <td id="cellsCostVal">$5,000</td>
+              </tr>
+              <tr style="color: var(--primary-accent);">
+                <td>Landed DIY build <span style="font-size:0.8em;color:var(--text-muted);">(shipped cells + duty, community-build basis)</span></td>
+                <td class="cmp-kwh">100 kWh</td>
+                <td id="landedCostVal">$10,500</td>
+              </tr>
+              <tr>
+                <td>Budget-retail packaged <span style="font-size:0.8em;color:var(--text-muted);">(PowMr-class list price, BMS + enclosure included)</span></td>
+                <td class="cmp-kwh">100 kWh</td>
+                <td id="retailCostVal">$11,700</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.75rem; line-height: 1.5;">
+            Component cost only. It excludes international freight, customs duty, taxes, tools, enclosure,
+            wiring, permits, and any labor &mdash; which together are often a large share of the real total.
+            For orientation: landed DIY costs (cells + BMS + fusing + rack + freight + duty) typically land
+            around $95&ndash;125/kWh, and cells alone DDP around $60&ndash;70/kWh &mdash; destination drives most
+            of the spread. The retail figure is a published list price used as a reference point, not a quote,
+            and a packaged product includes certification, warranty, and installer support that self-sourced parts
+            do not. Do not treat this as a savings promise.
+          </p>
+
+          <div id="gridEqBox" style="display:none; margin-top: 1rem; padding: 0.9rem 1rem; border: 1px solid var(--border-card); border-radius: 10px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.55;">
+            <div style="color: var(--text-main); font-weight: 700; margin-bottom: 0.25rem;">Grid-energy equivalence</div>
+            <div id="gridEqText"></div>
+          </div>
+
+          <div class="calc-footer">
+            <div id="btnCalcAdvisor" class="btn btn-primary" style="cursor: pointer;">?? Ask the AI Advisor</div>
+            <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;">? Support this tool</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Factory BOM Breakdown Section -->
+  <section id="bom" class="bom-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">What a ~100 kWh Build Is Made Of</h2>
+        <p class="section-desc">A reference parts list so you know what the pieces are and roughly what they cost. Nothing here is sold by this site &mdash; prices are indicative figures seen on the open market and change constantly.</p>
+      </div>
+
+      <div class="bom-grid">
+        <div class="bom-card">
+          <div class="bom-badge">Cells</div>
+          <h3>EVE MB31 3.2V 314Ah Cells</h3>
+          <p>Brand new Grade-A prismatic LFP cells. 16S configuration per pack (51.2V nominal).</p>
+          <div class="bom-price">~$43.50 / cell <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative ex-works China, Aug 2026)</span></div>
+        </div>
+
+        <div class="bom-card">
+          <div class="bom-badge">BMS</div>
+          <h3>JK 200A Active Balance BMS</h3>
+          <p>Smart active balancing (2A balance current), dual temperature probes, RS485/CANbus comms with Sol-Ark & Victron.</p>
+          <div class="bom-price">~$92.00 / unit <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative ex-works China, Aug 2026)</span></div>
+        </div>
+
+        <div class="bom-card">
+          <div class="bom-badge">Fusing</div>
+          <h3>Eaton Class-T 200A Fuses</h3>
+          <p>20kA AIC interrupt rating @ 160V DC. Clears very high short-circuit DC currents in milliseconds &mdash; sized to protect the BMS and wiring.</p>
+          <div class="bom-price">~$14.50 / unit <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative, Aug 2026)</span></div>
+        </div>
+
+        <div class="bom-card">
+          <div class="bom-badge">Rack & Compression</div>
+          <h3>300 kgf Compression Racks</h3>
+          <p>Belleville spring washer endplates hold uniform compression (about 3,000 N). Manufacturers cite cycle-life benefits; treat specific gains as unverified.</p>
+          <div class="bom-price">~$28.00 / rack <span style="font-weight:400;font-size:0.8em;color:var(--text-muted);">(indicative, Aug 2026)</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="legal-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Common Questions</h2>
+        <p class="section-desc">Short answers to what people ask most. The AI advisor can go deeper on any of these.</p>
+      </div>
+      <div class="legal-grid">
+        <div class="legal-card">
+          <h3>How accurate are the estimates?</h3>
+          <p>Every number comes from testable code simulating your exact location against five years of NASA satellite weather â€” not an AI guessing. Real-world results still vary with shading, installation quality, and hardware, so have a licensed professional verify anything you build.</p>
+        </div>
+        <div class="legal-card">
+          <h3>Will a system pay for itself?</h3>
+          <p>Where grid power is expensive â€” Hawaii, islands, much of Europe, Africa, South Asia â€” properly built solar plus storage commonly repays its component cost in one to four years, then runs nearly free for decades. The calculator shows your personal payback from your own tariff.</p>
+        </div>
+        <div class="legal-card">
+          <h3>What does a system actually cost?</h3>
+          <p>Battery banks self-built from prismatic cells typically land around $80–125 per usable kWh shipped and duty-paid; budget retail packs run roughly $110–165. Panels add about $0.16–0.38 per watt. Every result states its price scope honestly.</p>
+        </div>
+      </div>
+      <div class="legal-grid" style="margin-top:1rem;">
+        <div class="legal-card">
+          <h3>Do I need a generator?</h3>
+          <p>Only if you want near-total independence through weeks of bad weather. The three off-grid options show exactly that trade-off: one never needs a generator, one needs it about a day a year, one only now and then. Grid-connected users skip this entirely.</p>
+        </div>
+        <div class="legal-card">
+          <h3>Does it work without internet?</h3>
+          <p>Yes. After your first visit the tool installs itself as an offline app: sizing math runs entirely in your browser, and if the network is down it falls back to bundled typical-year weather for the nearest of 66 reference cities.</p>
+        </div>
+        <div class="legal-card">
+          <h3>Is building my own battery safe?</h3>
+          <p>It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. The guides here insist on proper fusing, BMS use, and code compliance â€” and on having a licensed electrician check anything before you energize it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Support / Donation Section -->
+  <section id="support" class="legal-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Support This Tool</h2>
+        <p class="section-desc">This is free and always will be. If it helped you and you want to chip in toward the AI and hosting costs, here's where.</p>
+      </div>
+
+      <div style="max-width: 640px; margin: 0 auto;">
+        <div class="legal-card" style="text-align: center;">
+          <p style="margin-bottom: 1.25rem;">
+            Contributions go directly to <strong>Lucas Ballek</strong> personally.
+          </p>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-bottom: 1.5rem;">
+            <a href="https://www.paypal.me/LBallek" target="_blank" rel="noopener noreferrer"
+               class="btn btn-outline" style="text-decoration: none;">PayPal</a>
+            <a href="https://venmo.com/u/lucas-ballek" target="_blank" rel="noopener noreferrer"
+               class="btn btn-outline" style="text-decoration: none;">Venmo &mdash; @lucas-ballek</a>
+            <a href="https://cash.app/$luball" target="_blank" rel="noopener noreferrer"
+               class="btn btn-outline" style="text-decoration: none;">Cash App &mdash; $luball</a>
+          </div>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; text-align: left;">
+            <strong>Please read before sending anything.</strong> Contributions are voluntary gifts to an
+            individual, not payment for a service. They are <strong>not tax-deductible</strong> &mdash; this is
+            not a charity or a registered nonprofit. They buy nothing: no priority, no features, no personal
+            advice, no support obligation, and no continued availability of this site. Everyone gets exactly
+            the same free tool whether they contribute or not. Please don't send money you need. If you were
+            hoping to pay for professional engineering help, spend it on a licensed local engineer or
+            electrician instead &mdash; that is genuinely the better use of it.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Terms & Disclaimer Section -->
+  <section id="legal" class="legal-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Terms &amp; Disclaimer</h2>
+        <p class="section-desc">Short version: this is a free educational toy that produces rough estimates, run by one person, with no warranty of any kind.</p>
+      </div>
+
+      <div class="legal-grid">
+        <div class="legal-card">
+          <h3>Estimates, not engineering</h3>
+          <p>Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.</p>
+          <div id="btnLegalTerms1" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; cursor: pointer; display: inline-block;">Read full terms &rarr;</div>
+        </div>
+
+        <div class="legal-card">
+          <h3>You are talking to an AI</h3>
+          <p>The advisor is a large language model. It generates plausible-sounding text and can state wrong numbers with total confidence. Treat every figure as a starting point to check, never as fact.</p>
+          <div id="btnLegalTerms2" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; cursor: pointer; display: inline-block;">Read AI disclaimer &rarr;</div>
+        </div>
+
+        <div class="legal-card">
+          <h3>No accounts, no tracking</h3>
+          <p>No signup, no cookies for advertising, no analytics profile. Your chat text is sent to the AI provider to generate a reply and is not stored here. Don't type anything sensitive into it.</p>
+          <div id="btnLegalTerms3" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; cursor: pointer; display: inline-block;">Read privacy note &rarr;</div>
+        </div>
+      </div>
+
+      <div style="max-width: 640px; margin: 2.5rem auto 0; text-align: center;">
+        <div class="legal-card">
+          <h3>Questions the AI couldn't answer?</h3>
+          <p style="margin-bottom: 1rem;">
+            You're welcome to email me:
+            <a href="mailto:lucasballek@gmail.com" style="color: var(--primary-accent);">lucasballek@gmail.com</a>
+          </p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+            This is one person answering email in his own time, as a favor &mdash; not a support desk. I read
+            what I can and reply when I'm able, but I can't promise a response or a timeframe. Anything I
+            send back is a friendly opinion for your own further research, <strong>not professional
+            engineering, electrical, or financial advice</strong>, and it doesn't create any
+            professional relationship or obligation. For anything you're going to actually build, energize,
+            or spend real money on, please talk to a licensed electrician or engineer in your area.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div style="margin-bottom: 1rem; font-size: 1.25rem; font-weight: 800; color: #fff;">
+        ? BigEnergy<span style="color: var(--primary-accent);">Co</span>
+      </div>
+      <p style="margin-bottom: 0.75rem;">
+        A free tool built and given away by <strong>Lucas Ballek</strong>. Not a company, not incorporated,
+        nothing for sale.
+      </p>
+      <p style="font-size: 0.85rem; max-width: 720px; margin: 0 auto; line-height: 1.6;">
+        Provided free and <strong>as-is, with no warranty of any kind</strong>, express or implied. Estimates are
+        educational only and may be inaccurate. Working with batteries, high DC current, and mains wiring can
+        cause fire, serious injury, and death &mdash; you are responsible for your own safety, your own
+        decisions, and compliance with your local electrical code. Verify everything with a licensed
+        professional before building.
+        &nbsp;·&nbsp; <a href="./blog/" style="color: var(--primary-accent);">Blog</a>
+        &nbsp;·&nbsp; <a href="#legal" style="color: var(--primary-accent);">Terms</a>
+        &nbsp;·&nbsp; <a href="#support" style="color: var(--primary-accent);">Support</a>
+        &nbsp;·&nbsp; <a href="mailto:lucasballek@gmail.com" style="color: var(--primary-accent);">lucasballek@gmail.com</a>
+      </p>
+      <p style="margin-top: 1rem; font-size: 0.85rem;">
+        <label for="langSelect" style="color: var(--text-muted); margin-right: 0.5rem;" data-i18n="langLabel">Language</label>
+        <select id="langSelect" class="form-control" style="display: inline-block; width: auto; padding: 0.25rem 0.6rem;"></select>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Sizing & AI Chatbot Modal -->
+  <div id="sizingModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff;">? Free AI Energy Advisor</h3>
+          <span style="font-size: 0.8rem; color: var(--primary-accent);">You are talking to an AI (Groq AI Engine) &mdash; educational estimates only, not engineering advice</span>
+        </div>
+        <div id="btnCloseSizing" class="close-btn" style="cursor: pointer;">&times;</div>
+      </div>
+
+      <div class="modal-body">
+        <div style="margin-bottom: 1.5rem;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="intakeMode">Calculation Basis:</label>
+              <select id="intakeMode" class="form-control">
+                <option value="bill" selected>Monthly Electric Bill ($ USD)</option>
+                <option value="kwh">Daily Consumption (kWh / day)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label id="intakeValueLabel" for="intakeValue">Monthly Electric Bill ($ USD):</label>
+              <input type="number" id="intakeValue" class="form-control" placeholder="e.g. 400" value="400">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label>Do you need help choosing an inverter, or matching the system to an inverter you already own?</label>
+            <div style="display: flex; gap: 1.5rem; margin-top: 0.4rem;">
+              <label for="inverterHelpYes" style="display: flex; align-items: center; gap: 0.45rem; font-weight: 500; cursor: pointer; margin: 0;">
+                <input type="radio" id="inverterHelpYes" name="inverterHelp" value="yes" style="width: auto; margin: 0;">
+                Yes â€” I need inverter help
+              </label>
+              <label for="inverterHelpNo" style="display: flex; align-items: center; gap: 0.45rem; font-weight: 500; cursor: pointer; margin: 0;">
+                <input type="radio" id="inverterHelpNo" name="inverterHelp" value="no" checked style="width: auto; margin: 0;">
+                No â€” battery bank only
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group" id="inverterDetailWrap" style="display: none; margin-bottom: 1rem;">
+            <label for="inverterDetail">Inverter details <span style="font-weight: 400; color: var(--text-muted);">(optional â€” leave blank and the advisor will ask you what it needs)</span></label>
+            <textarea id="inverterDetail" class="form-control" rows="3" placeholder="e.g. I already own a Victron Quattro 48/10000, or: I have no inverter yet, off-grid cabin, 240V split-phase, want ~8kW continuous"></textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="destRegion">Destination Region:</label>
+            <select id="destRegion" class="form-control">
+              <option value="Global DDP Port" selected>Global DDP Port (DDP Ocean Freight)</option>
+              <option value="US West Coast">US West Coast / Mainland DDP</option>
+              <option value="Hawaii Island">Hawaii (Honolulu / Hilo / Kawaihae DDP)</option>
+              <option value="Europe / UK">Europe / UK Sea Freight</option>
+            </select>
+          </div>
+
+          <!-- NEW: Climate, Space, Maintenance Context -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="destClimate">Expected Minimum Winter Temperature:</label>
+              <select id="destClimate" class="form-control">
+                <option value="Tropical / rarely below 10°C" selected>Tropical / rarely below 10°C</option>
+                <option value="Temperate / -5 to 10°C">Temperate / -5 to 10°C</option>
+                <option value="Cold / frequently below -10°C">Cold / frequently below -10°C</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="destSpace">Space for Battery Enclosure:</label>
+              <select id="destSpace" class="form-control">
+                <option value="Very limited / room-sized" selected>Very limited / room-sized</option>
+                <option value="Normal / garage or shed">Normal / garage or shed</option>
+                <option value="Plenty / outdoor-rated enclosure possible">Plenty / outdoor-rated</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="maintenanceComfort">Maintenance Comfort Level:</label>
+            <select id="maintenanceComfort" class="form-control">
+              <option value="I prefer zero maintenance" selected>I prefer zero maintenance</option>
+              <option value="I can do basic checks">I can do basic checks</option>
+              <option value="I'm comfortable with hands-on work">I'm comfortable with hands-on work</option>
+            </select>
+          </div>
+
+          <div id="btnIntakeCalculate" class="btn btn-primary btn-full" style="cursor: pointer;">? Get My Free Estimate</div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border-card); margin: 1.5rem 0;">
+
+        <div class="chat-box" id="chatWindow">
+          <div class="chat-msg bot">
+            ? <strong>BigEnergyCo AI Advisor</strong>:<br>
+            Aloha! I'm a free AI advisor for off-grid solar and battery storage &mdash; anywhere in the world.
+            Fill in the fields above and hit <strong>Get My Free Estimate</strong>, or just ask me anything:
+            battery chemistry, sizing for your climate, wiring and fusing, or what questions to bring to a
+            local electrician.<br><br>
+            <em style="font-size: 0.85rem; color: var(--text-muted);">I'm an AI and I can be wrong &mdash; including
+            about prices and specifications. Everything here is a rough educational estimate, free of charge,
+            with nothing for sale. Please check anything important with a licensed professional before you
+            build it.</em>
+          </div>
+        </div>
+
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" class="form-control" placeholder="Ask about cell specs, Sodium-Ion vs LFP, freight costs...">
+          <div id="btnSendChat" class="btn btn-primary" style="cursor: pointer;">Send</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terms & Disclaimer Modal -->
+  <div id="legalModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 700px;">
+      <div class="modal-header">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff;">?? Terms of Use &amp; Disclaimer</h3>
+          <span style="font-size: 0.8rem; color: var(--primary-accent);">Free tool · no warranty · last updated 1 August 2026</span>
+        </div>
+        <div id="btnCloseLegal" class="close-btn" style="cursor: pointer;">&times;</div>
+      </div>
+      <div class="modal-body" style="max-height: 440px; overflow-y: auto; color: var(--text-muted); font-size: 0.95rem;">
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">1. What this is</h4>
+        <p style="margin-bottom: 1rem;">This is a free, personal, non-commercial educational tool operated by an individual, Lucas Ballek. It is not a company, not incorporated, and not a licensed engineering, electrical contracting, or financial advisory practice. Nothing on this site is for sale and no service is being offered or promised to you.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">2. Estimates only &mdash; no reliance</h4>
+        <p style="margin-bottom: 1rem;">All output is an automated educational estimate produced from assumptions you supply. It is not a design, not a stamped drawing, not a quote, not a safety assessment, and not a code-compliance review. It may contain errors. <strong>Do not rely on it.</strong> Independently verify every figure &mdash; capacity, wire sizing, fuse ratings, and equipment compatibility &mdash; with a licensed electrician or professional engineer in your jurisdiction before purchasing, building, or energizing anything.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">3. AI-generated content</h4>
+        <p style="margin-bottom: 1rem;">You are interacting with a large language model. It produces fluent, confident text that can be factually wrong, including specific numbers, prices, product specifications, and regulations. Treat every output as an unverified starting point.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">4. Safety</h4>
+        <p style="margin-bottom: 1rem;">Battery banks, high DC currents, and mains wiring can cause arc flash, electric shock, fire, toxic gas release, serious injury, and death. Lithium cells can enter thermal runaway. You are solely responsible for your own safety and for the safety of anyone affected by what you build. You are solely responsible for permits, inspections, and compliance with your local electrical and fire codes.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">5. No warranty</h4>
+        <p style="margin-bottom: 1rem;">THIS SITE AND ITS OUTPUT ARE PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, AND NON-INFRINGEMENT. There is no guarantee of availability, correctness, or continued operation, and the site may change or disappear at any time without notice.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">6. Limitation of liability</h4>
+        <p style="margin-bottom: 1rem;">To the fullest extent permitted by applicable law, the operator shall not be liable for any direct, indirect, incidental, consequential, special, or punitive damages &mdash; including property damage, fire, personal injury, lost savings, or business interruption &mdash; arising from your use of or reliance on this free tool. Some jurisdictions do not allow certain exclusions, in which case they apply only to the extent permitted. Nothing here excludes liability that cannot lawfully be excluded, including liability for death or personal injury caused by negligence, or for fraud.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">7. Contributions</h4>
+        <p style="margin-bottom: 1rem;">Any contribution you choose to send is a voluntary gift to an individual. It is <strong>not tax-deductible</strong>, is not payment for goods or services, creates no contract, entitles you to nothing, and is not refundable in exchange for any obligation. Contributing does not change the service you receive in any way.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">8. Privacy</h4>
+        <p style="margin-bottom: 1rem;">No account is required and no personal details are requested. Text you type into the advisor is transmitted to a third-party AI provider (Groq) in order to generate a reply, subject to their terms. Conversations are not stored by this site. Please do not enter personal, financial, or otherwise sensitive information. Basic request counts may be recorded to keep the service running and prevent abuse.</p>
+
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">9. Acceptable use</h4>
+        <p>Please don't automate, scrape, or hammer this tool &mdash; it is one person paying for the AI calls. Rate limits apply and abuse will be blocked.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Printable one-pager (populated after a sizing run; only this prints) -->
+  <div id="printSheet"></div>
+
+  <!-- Inlined JavaScript with JSONP Web-Bridge for Freenet CSP Passthrough -->
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260825m"></script>
+  <script>
+    // -- Cloudflare API Bridge URL (updated automatically by patch_and_publish.py) --
+    var CF_API_URL = 'https://bigenergyco-api.bigenergyco.workers.dev';
+    var chatHistory = [];
+
+    window.openSizingModal = function() {
+      var modal = document.getElementById('sizingModal');
+      if (modal) modal.style.display = 'flex';
+    };
+
+    window.closeSizingModal = function() {
+      var modal = document.getElementById('sizingModal');
+      if (modal) modal.style.display = 'none';
+    };
+
+    window.openLegalModal = function() {
+      var modal = document.getElementById('legalModal');
+      if (modal) modal.style.display = 'flex';
+    };
+
+    window.closeLegalModal = function() {
+      var modal = document.getElementById('legalModal');
+      if (modal) modal.style.display = 'none';
+    };
+
+    window.scrollToCalc = function() {
+      var calcElem = document.getElementById('calculator');
+      if (calcElem) calcElem.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    // Render AI text as plain text, never as markup â€” the model's output is untrusted input.
+    function renderBotReply(replyText) {
+      var chatWindow = document.getElementById('chatWindow');
+      if (!chatWindow) return;
+
+      var botDiv = document.createElement('div');
+      botDiv.className = 'chat-msg bot';
+
+      var body = document.createElement('div');
+      body.style.whiteSpace = 'pre-wrap';
+      body.textContent = replyText;
+      botDiv.appendChild(body);
+
+      // The disclaimer travels with every answer, not buried in a modal nobody opens.
+      var note = document.createElement('div');
+      note.style.cssText = 'margin-top:0.6rem;padding-top:0.5rem;border-top:1px solid var(--border-card);' +
+                           'font-size:0.75rem;color:var(--text-muted);line-height:1.45;';
+      note.textContent = 'AI-generated estimate â€” may be inaccurate, including prices and specifications. ' +
+                         'Not engineering advice. Verify with a licensed electrician or engineer before ' +
+                         'buying or building anything.';
+      botDiv.appendChild(note);
+
+      chatWindow.appendChild(botDiv);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+      chatHistory.push({ role: 'bot', content: body.textContent });
+    }
+
+    function sendChatMsg() {
+      var chatInput = document.getElementById('chatInput');
+      var chatWindow = document.getElementById('chatWindow');
+      if (!chatInput || !chatWindow) return;
+      var userMsg = chatInput.value.trim();
+      if (!userMsg) return;
+
+      var userDiv = document.createElement('div');
+      userDiv.className = 'chat-msg user';
+      userDiv.innerText = userMsg;
+      chatWindow.appendChild(userDiv);
+      chatHistory.push({ role: 'user', content: userMsg });
+
+      chatInput.value = '';
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+
+      // Same-origin fetch via proxy_server.py (port 7510)
+      var loadingDiv = document.createElement('div');
+      loadingDiv.className = 'chat-msg bot';
+      loadingDiv.innerText = '? Thinking...';
+      loadingDiv.id = 'loadingMsg';
+      chatWindow.appendChild(loadingDiv);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+
+      var cleanHistory = chatHistory.slice(-6).map(function(m) {
+        return {
+          role: (m.role === 'bot' || m.role === 'assistant') ? 'assistant' : 'user',
+          content: m.content || ''
+        };
+      });
+
+      var payload = JSON.stringify({ message: userMsg, history: cleanHistory });
+
+      function setLoadingText(t) { var el = document.getElementById('loadingMsg'); if (el) el.innerText = t; }
+
+      function postTo(url) {
+        return fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload
+        }).then(function(res) {
+          if (!res.ok) {
+            var err = new Error('HTTP ' + res.status);
+            err.status = res.status;
+            err.retryAfter = parseInt(res.headers.get('Retry-After') || '0', 10) || 0;
+            throw err;
+          }
+          return res.json();
+        });
+      }
+
+      function attemptSend(retriesLeft) {
+        var apiBase2 = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+          ? ''
+          : (CF_API_URL || '');
+        return postTo(apiBase2 + '/api/chat').catch(function(err) {
+          // Busy (free AI quota) â€” wait out the provider and retry once automatically.
+          if ((err.status === 503 || err.status === 429) && retriesLeft > 0) {
+            var waitSecs = Math.min(Math.max(err.retryAfter || 4, 3), 15);
+            setLoadingText('? The free AI engine is busy â€” retrying in ' + waitSecs + 's…');
+            return new Promise(function(resolve) { setTimeout(resolve, waitSecs * 1000); })
+              .then(function() { return attemptSend(retriesLeft - 1); });
+          }
+          throw err;
+        });
+      }
+
+      attemptSend(2)
+        .then(function(data) {
+          var loading = document.getElementById('loadingMsg');
+          if (loading && loading.parentNode) loading.parentNode.removeChild(loading);
+          if (data && data.reply) {
+            renderBotReply(data.reply);
+          } else {
+            renderBotReply('?? No reply received. Please try again.');
+          }
+        })
+        .catch(function(err) {
+          console.error("Chat API error:", err);
+          var loading = document.getElementById('loadingMsg');
+          if (loading && loading.parentNode) loading.parentNode.removeChild(loading);
+          if (err && (err.status === 503 || err.status === 429)) {
+            renderBotReply(
+              '?? The free AI engine is swamped right now (HTTP ' + err.status + ' â€” it runs on a shared free quota).\n\n' +
+              'Please wait about a minute and send that again.'
+            );
+          } else {
+            renderBotReply(
+              '?? The AI advisor is unreachable right now' +
+              (err && err.status ? ' (HTTP ' + err.status + ')' : '') + '.\n\n' +
+              'Check your connection and try again in a moment.'
+            );
+          }
+        });
+    }
+
+    function toggleIntakeMode() {
+      var modeEl = document.getElementById('intakeMode');
+      var label = document.getElementById('intakeValueLabel');
+      var input = document.getElementById('intakeValue');
+      if (!modeEl || !label || !input) return;
+      var mode = modeEl.value;
+      if (mode === 'bill') {
+        label.innerText = 'Monthly Electric Bill ($ USD):';
+        input.placeholder = 'e.g. 400';
+        if (!input.value || input.value === '35') input.value = '400';
+      } else {
+        label.innerText = 'Daily Energy Consumption (kWh / day):';
+        input.placeholder = 'e.g. 35';
+        if (!input.value || input.value === '400') input.value = '35';
+      }
+    }
+
+    function toggleInverterDetail() {
+      var wrap = document.getElementById('inverterDetailWrap');
+      var yes = document.getElementById('inverterHelpYes');
+      if (!wrap || !yes) return;
+      wrap.style.display = yes.checked ? 'block' : 'none';
+    }
+
+    // Heuristic: does the free-text inverter answer actually tell the advisor anything?
+    // Needs some substance AND at least one concrete signal (brand, model number,
+    // power/voltage figure, or an explicit "I don't have one yet").
+    function inverterDetailIsUseful(text) {
+      var t = (text || '').trim();
+      if (t.length < 12) return false;
+      return /\d\s*(k?w|kva|v|a)\b/i.test(t) ||
+             /\b(victron|sol-?ark|eg4|schneider|conext|growatt|deye|sma|fronius|outback|midnite|studer|must|srne|pip|voltronic|luxpower|solis|goodwe|huawei|enphase|tesla)\b/i.test(t) ||
+             /\b(no|none|don'?t|do not|haven'?t|not yet|nothing)\b.{0,30}\b(inverter|yet)\b/i.test(t) ||
+             /\b(split[- ]?phase|single[- ]?phase|three[- ]?phase|3[- ]?phase|off[- ]?grid|grid[- ]?tie|hybrid)\b/i.test(t);
+    }
+
+    function buildIntakeBrief() {
+      var modeEl = document.getElementById('intakeMode');
+      var valEl = document.getElementById('intakeValue');
+      var regionEl = document.getElementById('destRegion');
+      var yesEl = document.getElementById('inverterHelpYes');
+      var detailEl = document.getElementById('inverterDetail');
+
+      // NEW: Climate context fields
+      var climateEl = document.getElementById('destClimate');
+      var spaceEl = document.getElementById('destSpace');
+      var maintenanceEl = document.getElementById('maintenanceComfort');
+
+      var mode = modeEl ? modeEl.value : 'bill';
+      var val = valEl ? valEl.value.trim() : '';
+      var region = regionEl ? regionEl.value : 'Global DDP Port';
+      var wantsInverterHelp = !!(yesEl && yesEl.checked);
+      var detail = detailEl ? detailEl.value.trim() : '';
+
+      // NEW: Extract climate context
+      var climate = climateEl ? climateEl.value : 'unknown';
+      var space = spaceEl ? spaceEl.value : 'unknown';
+      var maintenance = maintenanceEl ? maintenanceEl.value : 'unknown';
+
+      var lines = ['Please size an off-grid battery system for me.'];
+      lines.push(mode === 'bill'
+        ? 'Basis: monthly electric bill of $' + (val || 'unspecified') + ' USD.'
+        : 'Basis: daily consumption of ' + (val || 'unspecified') + ' kWh/day.');
+      lines.push('Destination region: ' + region + '.');
+
+      // NEW: Add climate context for better battery chemistry recommendations
+      lines.push('Climate: ' + climate + '.');
+      lines.push('Available space for batteries: ' + space + '.');
+      lines.push('Maintenance comfort level: ' + maintenance + '.');
+      lines.push('[ADVISOR INSTRUCTION: Use these climate/space/maintenance details to reason about chemistry, stated as ' +
+                 'trade-offs and ranges â€” never a hard sell. (a) Cold sites (frequently below -10°C): LFP cannot be charged ' +
+                 'below 0°C without heating â€” recommend sodium-ion IF genuinely purchasable in my country, or LFP WITH a ' +
+                 'heated/insulated enclosure, and say which you would pick and why. (b) Temperate/tropical sites: LFP is ' +
+                 'the mature default (lowest cost per kWh-cycle, widest availability); suggest sodium-ion only if locally ' +
+                 'available and certification is not required â€” note most sodium-ion packs still lack UL 9540/CE listing. ' +
+                 '(c) Tight space: prefer LFP (higher energy density than sodium-ion). Always state ' +
+                 'certification, availability, and warranty caveats for anything you highlight.]');
+
+      if (!wantsInverterHelp) {
+        lines.push('Inverter: I do not need inverter assistance â€” battery bank sizing only.');
+      } else if (inverterDetailIsUseful(detail)) {
+        lines.push('Inverter: I need inverter assistance. Details: ' + detail);
+      } else {
+        if (detail) lines.push('Inverter: I need inverter assistance. What I said so far: "' + detail + '"');
+        else lines.push('Inverter: I need inverter assistance but have not given any details.');
+        lines.push('[ADVISOR INSTRUCTION: The inverter information above is missing or too vague to size ' +
+                   'against. Give the battery sizing you can from the load basis, then ask me the specific ' +
+                   'follow-up questions you need â€” whether I already own an inverter (make/model) or need a ' +
+                   'recommendation, my continuous and surge power needs, AC voltage/phase, and whether the ' +
+                   'system is off-grid, hybrid, or grid-tied. Do not invent an inverter for me.]');
+      }
+
+      return lines.join('\n');
+    }
+
+    function runIntakeCalculation() {
+      var chatInput = document.getElementById('chatInput');
+      if (!chatInput) return;
+      // If the visitor typed a question, honor that instead of overwriting it.
+      if (!chatInput.value.trim()) chatInput.value = buildIntakeBrief();
+      sendChatMsg();
+    }
+
+    function updateCalc() {
+      var targetKwhInput = document.getElementById('targetKwh');
+      if (!targetKwhInput) return;
+
+      var targetKwh = parseFloat(targetKwhInput.value);
+      var utilityRateSelect = document.getElementById('utilityRate');
+      var utilityRate = utilityRateSelect ? parseFloat(utilityRateSelect.value) : 0.28;
+
+      var targetKwhVal = document.getElementById('targetKwhVal');
+      if (targetKwhVal) targetKwhVal.innerText = targetKwh + ' kWh Usable Storage';
+
+      // Scoped prices come from the same pricing module the sizing engine
+      // uses (window.BECO_BATT_COST is set by ui.js). No second source of truth.
+      var scopes = window.BECO_BATT_COST ? window.BECO_BATT_COST(targetKwh) : null;
+      if (!scopes) return;
+
+      function money(v) { return '$' + Math.round(v).toLocaleString(); }
+      function range(s) { return money(s.lo) + '\u2013' + money(s.hi); }
+
+      var cellsCostVal = document.getElementById('cellsCostVal');
+      var landedCostVal = document.getElementById('landedCostVal');
+      var retailCostVal = document.getElementById('retailCostVal');
+      if (cellsCostVal) cellsCostVal.innerText = range(scopes.cells);
+      if (retailCostVal) retailCostVal.innerText = range(scopes.powmr);
+      if (landedCostVal) landedCostVal.innerText = range(scopes.landed);
+
+      document.querySelectorAll('.cmp-kwh').forEach(function (td) { td.innerText = targetKwh + ' kWh'; });
+
+      var landedMidVal = document.getElementById('landedMidVal');
+      if (landedMidVal) {
+        var mid = (scopes.landed.lo + scopes.landed.hi) / 2;
+        landedMidVal.innerText = '\u2248' + money(mid);
+      }
+
+      // Grid-energy equivalence: what the stored energy would cost bought from the grid.
+      // Assumptions (stated in the UI): one full cycle per day, 90% round-trip efficiency,
+      // energy charge only â€” excludes connection fees, demand charges, degradation, and
+      // panels/inverter/BOS/labor. This is orientation, not a savings promise.
+      var gridEqBox = document.getElementById('gridEqBox');
+      var gridEqText = document.getElementById('gridEqText');
+      if (!gridEqBox || !gridEqText) return;
+
+      if (utilityRate > 0) {
+        var ROUND_TRIP_EFF = 0.9;
+        var annualKwh = targetKwh * 365 * ROUND_TRIP_EFF;
+        var annualValue = annualKwh * utilityRate;
+        var landedMid = (scopes.landed.lo + scopes.landed.hi) / 2;
+        var paybackYears = landedMid / annualValue;
+
+        var text = 'If this bank were cycled once daily at $' + utilityRate.toFixed(2) + '/kWh with 90% ' +
+                   'round-trip efficiency, the energy it moves in a year would cost about $' +
+                   (Math.round(annualValue / 10) * 10).toLocaleString() + ' bought from the grid.';
+        text += ' The landed DIY estimate shown above equals roughly ' + (paybackYears >= 1 ?
+                   '~' + Math.round(paybackYears) + ' years' : 'under one year') + ' of that grid energy';
+        text += ' \u2014 before adding panels, inverter, wiring, install, and battery degradation, which are ' +
+                'the majority of a real off-grid budget. Off-grid is usually about where you live, not ' +
+                'about beating the grid on price.';
+        gridEqText.textContent = text;
+        gridEqBox.style.display = 'block';
+      } else {
+        gridEqBox.style.display = 'none';
+      }
+    }
+
+    function scrollToSection(id) {
+      var target = document.getElementById(id);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function setupEventListeners() {
+      var navAdvisor = document.getElementById('btnNavAdvisor');
+      var navSizeArray = document.getElementById('btnNavSizeArray');
+      var heroSizing = document.getElementById('btnHeroSizing');
+      var heroCompare = document.getElementById('btnHeroCompare');
+      var calcAdvisor = document.getElementById('btnCalcAdvisor');
+      var terms1 = document.getElementById('btnLegalTerms1');
+      var terms2 = document.getElementById('btnLegalTerms2');
+      var terms3 = document.getElementById('btnLegalTerms3');
+
+      var closeSizing = document.getElementById('btnCloseSizing');
+      var closeLegal = document.getElementById('btnCloseLegal');
+      var intakeCalc = document.getElementById('btnIntakeCalculate');
+      var sendChat = document.getElementById('btnSendChat');
+
+      var targetKwhInput = document.getElementById('targetKwh');
+      var utilityRateSelect = document.getElementById('utilityRate');
+      var intakeModeSelect = document.getElementById('intakeMode');
+      var chatInput = document.getElementById('chatInput');
+
+      // The deterministic sizer is the product; the AI advisor explains results.
+      if (navSizeArray) navSizeArray.addEventListener('click', function () { scrollToSection('sizing'); });
+      if (heroSizing) heroSizing.addEventListener('click', function () { scrollToSection('sizing'); });
+
+      if (navAdvisor) navAdvisor.addEventListener('click', window.openSizingModal);
+      if (calcAdvisor) calcAdvisor.addEventListener('click', window.openSizingModal);
+
+      if (heroCompare) heroCompare.addEventListener('click', window.scrollToCalc);
+
+      if (terms1) terms1.addEventListener('click', window.openLegalModal);
+      if (terms2) terms2.addEventListener('click', window.openLegalModal);
+      if (terms3) terms3.addEventListener('click', window.openLegalModal);
+
+      if (closeSizing) closeSizing.addEventListener('click', window.closeSizingModal);
+      if (closeLegal) closeLegal.addEventListener('click', window.closeLegalModal);
+
+      if (intakeCalc) intakeCalc.addEventListener('click', runIntakeCalculation);
+      if (sendChat) sendChat.addEventListener('click', sendChatMsg);
+
+      var invYes = document.getElementById('inverterHelpYes');
+      var invNo = document.getElementById('inverterHelpNo');
+      if (invYes) invYes.addEventListener('change', toggleInverterDetail);
+      if (invNo) invNo.addEventListener('change', toggleInverterDetail);
+      toggleInverterDetail();
+
+      if (targetKwhInput) targetKwhInput.addEventListener('input', updateCalc);
+      if (utilityRateSelect) utilityRateSelect.addEventListener('change', updateCalc);
+      if (intakeModeSelect) intakeModeSelect.addEventListener('change', toggleIntakeMode);
+
+      if (chatInput) chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendChatMsg();
+      });
+
+      updateCalc();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupEventListeners);
+    } else {
+      setupEventListeners();
+    }
+
+    // Installable / offline-capable: after the first visit, the tool shell
+    // loads with no network. Sizing math is client-side and satellite weather
+    // is cached per location, so a visited site keeps working fully offline.
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./sw.js').catch(function () { /* offline support unavailable â€” tool still works normally */ });
+      });
+    }
+  </script>
+</body>
+</html>
+
