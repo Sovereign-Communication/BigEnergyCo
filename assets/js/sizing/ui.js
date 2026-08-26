@@ -5,10 +5,10 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260825h";
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825h";
-import { BOM_ITEMS } from "../shared/content.js?v=20260825h";
-import { applyI18n, initLangPicker, LOCALES } from "../shared/i18n.js?v=20260825h";
+import { CITY_PRESETS, } from "./nasa.js?v=20260825i";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825i";
+import { BOM_ITEMS } from "../shared/content.js?v=20260825i";
+import { applyI18n, initLangPicker, LOCALES } from "../shared/i18n.js?v=20260825i";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -261,9 +261,12 @@ function renderAppliances() {
 // ── Location plumbing ───────────────────────────────────────────────────────
 
 function setCoords(lat, lon, label) {
-  $("latInput").value = Math.round(lat * 100) / 100;
-  $("lonInput").value = Math.round(lon * 100) / 100;
-  $("locNote").textContent = label;
+  const latEl = $("latInput");
+  const lonEl = $("lonInput");
+  const noteEl = $("locNote");
+  if (latEl) latEl.value = Math.round(lat * 100) / 100;
+  if (lonEl) lonEl.value = Math.round(lon * 100) / 100;
+  if (noteEl) noteEl.textContent = label;
   applyEstimatedTariff(lat, lon);
 }
 
@@ -317,19 +320,29 @@ function applyEstimatedTariff(lat, lon) {
 
 function renderCities() {
   const sel = $("cityPreset");
+  if (!sel) {
+    console.error("City select element not found");
+    return;
+  }
+  if (!CITY_PRESETS || !CITY_PRESETS.length) {
+    console.error("CITY_PRESETS not loaded");
+    return;
+  }
   sel.innerHTML = "";
   const regions = [...new Set(CITY_PRESETS.map((c) => c.r))];
   for (const r of regions) {
     const og = el("optgroup", { label: r });
-    CITY_PRESETS.filter((c) => c.r === r).forEach((c, i) => {
-      const o = el("option", { value: String(CITY_PRESETS.indexOf(c)) }, c.name);
+    CITY_PRESETS.filter((c) => c.r === r).forEach((c) => {
+      const idx = CITY_PRESETS.indexOf(c);
+      const o = el("option", { value: String(idx) }, c.name);
       og.appendChild(o);
     });
     sel.appendChild(og);
   }
   sel.value = "0";
   sel.addEventListener("change", () => {
-    const c = CITY_PRESETS[parseInt(sel.value, 10)];
+    const idx = parseInt(sel.value, 10);
+    const c = CITY_PRESETS[idx];
     if (c) setCoords(c.lat, c.lon, `Sunshine data from ${c.name}`);
   });
   // initialize to first city
@@ -429,7 +442,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825h", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825i", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
