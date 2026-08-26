@@ -5,10 +5,10 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260825j";
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825j";
-import { BOM_ITEMS } from "../shared/content.js?v=20260825j";
-import { applyI18n, initLangPicker, LOCALES } from "../shared/i18n.js?v=20260825j";
+import { CITY_PRESETS, } from "./nasa.js?v=20260825k";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825k";
+import { BOM_ITEMS } from "../shared/content.js?v=20260825k";
+import { applyI18n, initLangPicker, LOCALES } from "../shared/i18n.js?v=20260825k";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -453,7 +453,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825j", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825k", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
@@ -1392,8 +1392,15 @@ async function refreshFxRates() {
   } catch { /* offline — static defaults remain */ }
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initSizingUI);
-} else {
-  initSizingUI();
+// Ensure DOM is ready before initializing
+function whenDOMReady(cb) {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", cb, { once: true });
+  } else {
+    // DOMContentLoaded already fired, but elements might not be ready yet
+    // Use requestAnimationFrame to wait for next paint cycle
+    requestAnimationFrame(cb);
+  }
 }
+
+whenDOMReady(initSizingUI);
