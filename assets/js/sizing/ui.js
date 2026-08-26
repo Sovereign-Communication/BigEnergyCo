@@ -12,15 +12,15 @@
 
 
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260825n";
+import { CITY_PRESETS, } from "./nasa.js?v=20260825o";
 
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825n";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825o";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260825n";
+import { BOM_ITEMS } from "../shared/content.js?v=20260825o";
 
-import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825n";
+import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825o";
 
-import { LOCALES } from "../shared/locales.js?v=20260825n";
+import { LOCALES } from "../shared/locales.js?v=20260825o";
 
 
 
@@ -682,13 +682,13 @@ function locateMe() {
 
   if (!navigator.geolocation) {
 
-    setStatus("?? Your browser can't share a location — pick the nearest big city instead.");
+    setStatus("⚠️ Your browser can't share a location — pick the nearest big city instead.");
 
     return;
 
   }
 
-  setStatus("? Asking your browser for your location…");
+  setStatus("⏳ Asking your browser for your location…");
 
   navigator.geolocation.getCurrentPosition(
 
@@ -698,11 +698,11 @@ function locateMe() {
 
       $("coordDetails").open = true;
 
-      setStatus("?? Location set. Now tell us your power use below, then run the sizing.");
+      setStatus("📍 Location set. Now tell us your power use below, then run the sizing.");
 
     },
 
-    () => setStatus("?? Couldn't get your location — pick the nearest big city instead."),
+    () => setStatus("⚠️ Couldn't get your location — pick the nearest big city instead."),
 
     { timeout: 8000 }
 
@@ -862,7 +862,7 @@ function ensureWorker() {
 
   if (!worker) {
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825n", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825o", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -876,7 +876,7 @@ function ensureWorker() {
 
         if (res) { res.setAttribute("tabindex", "-1"); res.scrollIntoView({ behavior: "smooth", block: "start" }); }
 
-      } else if (ev.data?.type === "error") setStatus("?? " + ev.data.message);
+      } else if (ev.data?.type === "error") setStatus("⚠️ " + ev.data.message);
 
       restoreRunButton();
 
@@ -1120,7 +1120,7 @@ function drawSocChart(history, chemLabel) {
 
     const cap = $("socCaption");
 
-    if (cap) cap.textContent = "?? Chart data didn't match this page version — please refresh (Ctrl+F5 / ??R) and run the sizing again.";
+    if (cap) cap.textContent = "⚠️ Chart data didn't match this page version — please refresh (Ctrl+F5 / ??R) and run the sizing again.";
 
     return;
 
@@ -2296,7 +2296,7 @@ function restoreFromShare() {
 
   }
 
-  setStatus("?? Loaded a shared result — running the simulation for this location…");
+  setStatus("🔗 Loaded a shared result — running the simulation for this location…");
 
   return true;
 
@@ -2484,7 +2484,7 @@ function askAdvisor() {
 
 function copyShareLink() {
 
-  const done = () => setStatus("?? Link copied — anyone who opens it gets this same result, re-computed on their device.");
+  const done = () => setStatus("🔗 Link copied — anyone who opens it gets this same result, re-computed on their device.");
 
   const url = location.href;
 
@@ -2674,7 +2674,7 @@ export function initSizingUI() {
 
     console.error("Sizing UI failed to initialize:", err);
 
-    setStatus("?? Interface failed to load — please refresh the page (Ctrl+F5).");
+    setStatus("⚠️ Interface failed to load — please refresh the page (Ctrl+F5).");
 
   }
 
