@@ -26,23 +26,23 @@
 
 
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260825q";
+import { CITY_PRESETS, } from "./nasa.js?v=20260825r";
 
 
 
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825q";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825r";
 
 
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260825q";
+import { BOM_ITEMS } from "../shared/content.js?v=20260825r";
 
 
 
-import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825q";
+import { applyI18n, initLangPicker } from "../shared/i18n.js?v=20260825r";
 
 
 
-import { LOCALES } from "../shared/locales.js?v=20260825q";
+import { LOCALES } from "../shared/locales.js?v=20260825r";
 
 
 
@@ -1726,7 +1726,7 @@ function ensureWorker() {
 
 
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825q", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825r", { type: "module" });
 
 
 
@@ -2430,6 +2430,9 @@ function drawSocChart(history, chemLabel) {
 
 
 
+        const floorSOC = chemLabel.includes("AGM") ? 50 : 20;
+    ctx.fillStyle = "rgba(100,100,100,0.08)";
+    ctx.fillRect(padL, Y(floorSOC), plotW, Y(0) - Y(floorSOC));
     ctx.strokeStyle = "rgba(239,68,68,0.7)";
 
 
@@ -3750,6 +3753,11 @@ function drawAutoChart(p) {
 
 
 
+    // Reserve shading to make LFP/Na advantage obvious
+  ctx.fillStyle = "rgba(100,100,100,0.08)";
+  ctx.fillRect(padL, Y(20), plotW, Y(0) - Y(20));
+  ctx.fillStyle = "rgba(239,68,68,0.06)";
+  ctx.fillRect(padL, Y(50), plotW, Y(20) - Y(50));
   ctx.save();
 
 

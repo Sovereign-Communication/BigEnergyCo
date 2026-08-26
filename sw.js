@@ -8,7 +8,7 @@
 // The sizing engine runs entirely client-side and NASA weather is cached in
 // localStorage per site, so after one visit a location keeps working fully
 // offline. Bump CACHE_VERSION to force every client to refresh on next visit.
-const CACHE_VERSION = "beco-v6";
+const CACHE_VERSION = "beco-v7";
 const SHELL = [
   "./",
   "./index.html",
