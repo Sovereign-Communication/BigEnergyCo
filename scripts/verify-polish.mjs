@@ -40,8 +40,10 @@ check("AGM never beats LFP on true break-even",
   agm99.trueBreakEvenYear === null ? lfp99.trueBreakEvenYear !== null
     : lfp99.trueBreakEvenYear === null ? false : agm99.trueBreakEvenYear > lfp99.trueBreakEvenYear);
 check("autoNote reflects default 99% basis", auto99.autoNote.includes("99%"));
-check("chart bands vary by chemistry (AGM top ≤55%, LFP ≥85%)",
-  Math.max(...agm99.socNameplatePct.max) <= 55 && Math.max(...lfp99.socNameplatePct.max) >= 85);
+check("chart bands vary by chemistry (all tops ~100% of nameplate; AGM floor ~50%, LFP floor ~20%)",
+  Math.max(...agm99.socNameplatePct.max) >= 95 && Math.max(...lfp99.socNameplatePct.max) >= 95 &&
+  Math.min(...agm99.socNameplatePct.min) >= 45 && Math.min(...agm99.socNameplatePct.min) <= 55 &&
+  Math.min(...lfp99.socNameplatePct.min) >= 15 && Math.min(...lfp99.socNameplatePct.min) <= 25);
 
 const auto100 = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid", autoTier: "tier100" }, { fetchWeather: fakeWeather });
 check("tier100 → all banks zero unmet hours", auto100.auto.every((a) => a.unmetHoursPerYear === 0));
