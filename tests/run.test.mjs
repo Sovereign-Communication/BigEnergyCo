@@ -46,8 +46,10 @@ test("off-grid AUTO: every field the renderer reads exists and is sane", async (
     assert.ok(typeof a.trueBreakEvenYear === "number" || a.trueBreakEvenYear === null,
       `${a.chemistry}.trueBreakEvenYear must be number|null (got ${typeof a.trueBreakEvenYear})`);
     const top = Math.max(...a.socNameplatePct.max);
-    if (a.chemistry === "agm") assert.ok(top <= 55, `AGM band tops ≤55% of nameplate (got ${top})`);
-    if (a.chemistry === "lfp") assert.ok(top >= 85, `LFP band tops ≥85% (got ${top})`);
+    const bottom = Math.min(...a.socNameplatePct.min);
+    assert.ok(top >= 95, `${a.chemistry} charges to ~100% (got ${top})`);
+    if (a.chemistry === "agm") assert.ok(bottom >= 45 && bottom <= 55, `AGM floor ~50% (got ${bottom})`);
+    else assert.ok(bottom >= 15 && bottom <= 25, `${a.chemistry} floor ~20% (got ${bottom})`);
   }
   // AGM's true cost must exceed LFP's — the whole point of auto mode
   const agm = p.auto.find((a) => a.chemistry === "agm");

@@ -137,7 +137,7 @@ export async function runSizing(msg, deps = {}) {
     };
   }
 
-  function socBand(id, sim) {
+  function socBand(id, sim, chemId) {
     if (!sim.socSeries) return null;
     const ext = dailyExtremes(sim.socSeries);
     let minPct = 100, emptyDays = 0, fullDays = 0;
@@ -148,19 +148,22 @@ export async function runSizing(msg, deps = {}) {
       if (lo < 5) emptyDays++;
       if (ext.max[d] >= 0.995) fullDays++;
     }
+    const floor = chemId === "agm" ? 50 : 20;
+    const toPct = (v) => Math.round((floor + v * (100 - floor)) * 10) / 10;
     return {
       id,
-      dailyMin: Array.from(ext.min, (v) => Math.round(v * 1000) / 10),
-      dailyMax: Array.from(ext.max, (v) => Math.round(v * 1000) / 10),
+      dailyMin: Array.from(ext.min, toPct),
+      dailyMax: Array.from(ext.max, toPct),
       minPct: Math.max(0, Math.round(minPct)),
       emptyDays, fullDays, totalDays: nDays,
     };
   }
 
-  function nameplateBands(sim, effectiveCapWh, nameplateWh) {
+  function nameplateBands(sim, effectiveCapWh, nameplateWh, chemId) {
     if (!sim.socSeries || !(effectiveCapWh > 0) || !(nameplateWh > 0)) return null;
     const ext = dailyExtremes(sim.socSeries);
-    const toPct = (v) => Math.round((v * effectiveCapWh / nameplateWh) * 1000) / 10;
+    const floor = chemId === "agm" ? 50 : 20;
+    const toPct = (v) => Math.round((floor + v * (100 - floor)) * 10) / 10;
     return { min: Array.from(ext.min, toPct), max: Array.from(ext.max, toPct) };
   }
 
@@ -274,7 +277,7 @@ export async function runSizing(msg, deps = {}) {
           pvKw: hit.sizing.pvKw, battKwhUsable: hit.sizing.battKwh,
           e1kw, loadWh, chemistry: chemId, tempsC, capacityScale: capScale, capture: true,
         });
-        entry.socNameplatePct = nameplateBands(sim, hit.sizing.battKwh * 1000 * capScale, entry.battNameplateKwh * 1000);
+        entry.socNameplatePct = nameplateBands(sim, hit.sizing.battKwh * 1000 * capScale, entry.battNameplateKwh * 1000, chemId);
         auto.push(entry);
       }
       const payload = basePayload();
@@ -316,7 +319,7 @@ export async function runSizing(msg, deps = {}) {
         pvKw: sizing.pvKw, battKwhUsable: sizing.battKwh,
         e1kw, loadWh, chemistry, tempsC, capacityScale: capScale, capture: true,
       });
-      const band = socBand(target.id, sim);
+      const band = socBand(target.id, sim, chemistry);
       if (band) historyTiers.push(band);
       return {
         id: target.id, label: target.label, solvable: true,
@@ -407,15 +410,15 @@ export async function runSizing(msg, deps = {}) {
         pvKw: sizing.pvKw, battKwhUsable: sizing.battKwh,
         e1kw, loadWh, chemistry: chemId, tempsC, capture: true, capacityScale: capScale,
       });
-      entry.socNameplatePct = nameplateBands(sim, sizing.battKwh * 1000 * capScale, entry.battNameplateKwh * 1000);
-      auto.push(entry);
-    }
-    const payload = basePayload();
-    payload.mode = "offgrid";
-    payload.auto = auto;
-      payload.autoNote = `All three chemistries sized for ${TIER_BASIS[repTierId]}`;
-    payload.tiers = [];
-    payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), pvDaily, tiers: [] };
+      entry.socNameplatePct = nameplateBands(sim, sizing.battKwh * 1000 * capScale, entry.battNameplateKwh * 1000, chemId);
+       auto.push(entry);
+     }
+     const payload = basePayload();
+     payload.mode = "offgrid";
+     payload.auto = auto;
+       payload.autoNote = `All three chemistries sized for ${TIER_BASIS[repTierId]}`;
+     payload.tiers = [];
+     payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), pvDaily, tiers: [] };
     payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
     payload.assumptions.money =
       `Auto mode sizes each chemistry for the same job — lights stay on with a generator as rare backup — inside its depth-of-discharge window (AGM keeps a 50% reserve; lithium/sodium use ~90%). Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) — that is why its sticker price misleads.`;
@@ -453,13 +456,13 @@ export async function runSizing(msg, deps = {}) {
       pvKw: sizing.pvKw, battKwhUsable: sizing.battKwh,
       e1kw, loadWh, chemistry, tempsC, capture: true, capacityScale: capScale,
     });
-    const band = socBand(tier.id, sim);
-    if (band) historyTiers.push(band);
-    return {
-      id: tier.id, label: tier.label, solvable: true,
-      pvKw: sizing.pvKw, battKwh: sizing.battKwh,
-      battNameplateKwh: m.battNameplateKwh,
-      usableDod: chem.usableDod,
+    const band = socBand(tier.id, sim, chemistry);
+     if (band) historyTiers.push(band);
+     return {
+       id: tier.id, label: tier.label, solvable: true,
+       pvKw: sizing.pvKw, battKwh: sizing.battKwh,
+       battNameplateKwh: m.battNameplateKwh,
+       usableDod: chem.usableDod,
       costLo: m.cost.lo, costHi: m.cost.hi,
       pvCostLo: m.cost.pvCostLo, pvCostHi: m.cost.pvCostHi,
       battCostLo: m.cost.battCostLo, battCostHi: m.cost.battCostHi,
