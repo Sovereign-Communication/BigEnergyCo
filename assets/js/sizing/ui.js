@@ -5,10 +5,10 @@
 // quantity and usage sliders, a monthly-bill mode, and a tucked-away
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260825i";
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825i";
-import { BOM_ITEMS } from "../shared/content.js?v=20260825i";
-import { applyI18n, initLangPicker, LOCALES } from "../shared/i18n.js?v=20260825i";
+import { CITY_PRESETS, } from "./nasa.js?v=20260825j";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta } from "./pricing.js?v=20260825j";
+import { BOM_ITEMS } from "../shared/content.js?v=20260825j";
+import { applyI18n, initLangPicker, LOCALES } from "../shared/i18n.js?v=20260825j";
 
 let worker = null;
 let lastPayload = null;   // kept for share links + the printable summary
@@ -319,6 +319,7 @@ function applyEstimatedTariff(lat, lon) {
 }
 
 function renderCities() {
+  console.log("renderCities called");
   const sel = $("cityPreset");
   if (!sel) {
     console.error("City select element not found");
@@ -328,6 +329,7 @@ function renderCities() {
     console.error("CITY_PRESETS not loaded");
     return;
   }
+  console.log("CITY_PRESETS loaded, length:", CITY_PRESETS.length);
   sel.innerHTML = "";
   const regions = [...new Set(CITY_PRESETS.map((c) => c.r))];
   for (const r of regions) {
@@ -442,7 +444,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825i", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260825j", { type: "module" });
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         renderResults(ev.data.payload);
@@ -1294,6 +1296,9 @@ function renderBom() {
 }
 
 export function initSizingUI() {
+  console.log("initSizingUI started");
+  console.log("CITY_PRESETS loaded:", typeof CITY_PRESETS !== "undefined");
+  console.log("CITY_PRESETS.length:", CITY_PRESETS?.length);
   renderCities();
   renderAppliances();
   renderBom();
