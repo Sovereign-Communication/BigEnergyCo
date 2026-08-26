@@ -1397,9 +1397,17 @@ function whenDOMReady(cb) {
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", cb, { once: true });
   } else {
-    // DOMContentLoaded already fired, but elements might not be ready yet
-    // Use requestAnimationFrame to wait for next paint cycle
-    requestAnimationFrame(cb);
+    // DOMContentLoaded already fired, but element might not be ready yet
+    // Poll for the cityPreset element to ensure it exists
+    const checkReady = () => {
+      const sel = document.getElementById("cityPreset");
+      if (sel) {
+        cb();
+      } else {
+        requestAnimationFrame(checkReady);
+      }
+    };
+    checkReady();
   }
 }
 
