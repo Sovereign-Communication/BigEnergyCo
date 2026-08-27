@@ -1917,7 +1917,7 @@ footer {
 
           <div class="calc-footer">
 
-            <div id="btnCalcAdvisor" class="btn btn-primary" style="cursor: pointer;"> Ask the AI Advisor</div>
+            <div id="btnCalcAdvisor" class="btn btn-primary" style="cursor: pointer;">Size your system to ask AI</div>
 
             <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;">Support this tool</a>
 
@@ -3178,7 +3178,7 @@ footer {
 
       if (heroSizing) heroSizing.addEventListener('click', function () { scrollToSection('sizing'); });
 
-      if (calcAdvisor) calcAdvisor.addEventListener('click', window.openSizingModal);
+      if (calcAdvisor) calcAdvisor.addEventListener('click', function () { scrollToSection('sizing'); });
 
       if (heroCompare) heroCompare.addEventListener('click', window.scrollToCalc);
 
