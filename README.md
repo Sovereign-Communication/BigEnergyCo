@@ -7,8 +7,8 @@ Built and given away by Lucas Ballek. Nothing for sale.
 
 | Piece | Where | Notes |
 |---|---|---|
-| **Public site (interim mirror)** | `bigenergyco.pages.dev` (Cloudflare Pages) | Same allowlisted build, deployed with `node scripts/deploy-pages-local.mjs` + `npx wrangler pages deploy _pages_staging --project-name bigenergyco`. Kept as a fallback mirror; the org github.io URL is primary. |
-| **Public site (github.io)** | `sovereign-communication.github.io/BigEnergyCo/` | Primary home. Deploys via the allowlist workflow (`.github/workflows/deploy.yml`). The old `treystu.github.io/BigEnergyCo/` URL 301-redirects here after the repo transfer; it remains on the API's CORS allowlist for cached clients. |
+| **Public site (brand)** | `bigenergyco.pages.dev` (Cloudflare Pages) | Primary brand domain. Same allowlisted build, deployed with `node scripts/deploy-pages-local.mjs` + `npx wrangler pages deploy _pages_staging --project-name bigenergyco`. Served with `_headers`/`_redirects` for caching and legacy-domain consolidation. |
+| **Public site (legacy)** | `sovereign-communication.github.io/BigEnergyCo/` | Legacy GitHub Pages URL — 301 redirects to brand domain via `_redirects` (Cloudflare Pages). Deploys via the allowlist workflow (`.github/workflows/deploy.yml`). The old `treystu.github.io/BigEnergyCo/` URL also redirects here; both remain on the API's CORS allowlist for cached clients. |
 | **AI API** | Cloudflare Worker (`bigenergyco-api.bigenergyco.workers.dev`) | Proxies Groq. CORS-locked to the Pages origins + localhost, rate-limited, payload-capped. Deploy with `deploy_worker.bat` (or `npx wrangler deploy` in `worker/`). |
 | **Local/dev** | `START.bat` / `STOP.bat` / `LINK.bat` | Optional local server + tunnel stack for development and the Freenet variant. Not needed for the public site. |
 
@@ -53,7 +53,7 @@ Freenet (offline): index-freenet.html → static cost calc, no API calls.
 
 The site verifies via the `google-site-verification` meta tag in `index.html`. To keep indexing healthy:
 
-1. **Google Search Console** — open [search.google.com/search-console](https://search.google.com/search-console), select the verified property for `sovereign-communication.github.io/BigEnergyCo/`, then **Sitemaps → submit** `https://sovereign-communication.github.io/BigEnergyCo/sitemap.xml` (re-submit after any new page ships).
+1. **Google Search Console** — open [search.google.com/search-console](https://search.google.com/search-console), select the verified property for `bigenergyco.pages.dev`, then **Sitemaps → submit** `https://bigenergyco.pages.dev/sitemap.xml` (re-submit after any new page ships).
 2. **URL Inspection** → "Request indexing" after publishing a new blog post.
 3. **Bing Webmaster Tools** — import from Google Search Console (one click); same sitemap applies.
 4. Structured data is embedded on-page: `WebApplication` + `FAQPage` (home), `Article` + `FAQPage` (each post). Validate changes at [validator.schema.org](https://validator.schema.org) before deploying.

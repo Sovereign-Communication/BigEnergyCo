@@ -37,6 +37,8 @@ jobs:
           cp "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html" "_pages/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/"
           cp "blog/off-grid-vs-grid-tie-payback/index.html" "_pages/blog/off-grid-vs-grid-tie-payback/"
           cp -r assets _pages/assets
+          cp _headers _pages/ 2>/dev/null || true
+          cp _redirects _pages/ 2>/dev/null || true
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

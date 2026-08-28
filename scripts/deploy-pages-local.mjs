@@ -24,6 +24,8 @@ const ALLOWLIST = [
   "rss.xml",
   "sw.js",
   "manifest.webmanifest",
+  "_headers",
+  "_redirects",
   "blog/index.html",
   "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html",
   "blog/off-grid-vs-grid-tie-payback/index.html",
@@ -49,7 +51,7 @@ for (const entry of ALLOWLIST) {
 }
 
 // Safety net: refuse to publish anything outside expectations
-const allowedTop = new Set(["index.html", "404.html", "robots.txt", "sitemap.xml", "rss.xml", "sw.js", "manifest.webmanifest", "blog", "assets"]);
+const allowedTop = new Set(["index.html", "404.html", "robots.txt", "sitemap.xml", "rss.xml", "sw.js", "manifest.webmanifest", "_headers", "_redirects", "blog", "assets"]);
 for (const name of readdirSync(STAGE)) {
   if (!allowedTop.has(name)) throw new Error(`Unexpected file in staging: ${name}`);
 }
