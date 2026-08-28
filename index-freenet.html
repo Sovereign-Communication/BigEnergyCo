@@ -3,8 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BigEnergyCo — Free Offline Solar &amp; Battery Estimator</title>
-  <meta name="description" content="A free offline solar and battery storage cost estimator. No signup, nothing for sale. Works on Freenet. Educational estimates only — verify with a licensed professional.">
+  <title>BigEnergyCo — Free Offline Solar &amp; Battery Cost Estimator</title>
+  <meta name="description" content="A free offline solar and battery storage cost comparison for anywhere in the world. No signup, nothing for sale. Works on Freenet. Educational estimates only — verify with a licensed professional.">
+  <link rel="canonical" href="https://bigenergyco.pages.dev/index-freenet.html">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BigEnergyCo">
+  <meta property="og:title" content="BigEnergyCo - Free Offline Solar &amp; Battery Cost Comparison">
+  <meta property="og:description" content="A free offline comparison of self-sourced versus packaged battery storage costs for anywhere in the world. No signup, nothing for sale. Educational estimates only.">
+  <meta property="og:url" content="https://bigenergyco.pages.dev/index-freenet.html">
+  <meta property="og:image" content="https://bigenergyco.pages.dev/assets/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="BigEnergyCo - Free Offline Solar &amp; Battery Cost Comparison">
+  <meta name="twitter:description" content="A free offline comparison of self-sourced versus packaged battery storage costs. No signup, nothing for sale.">
+  <meta name="theme-color" content="#090d16">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How accurate are the estimates?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Every number is a dated, scope-labeled range built from published market prices — not an AI guessing. Real-world results still vary with freight, duty, and what you can actually buy locally, so have a licensed professional verify anything you build." }
+      },
+      {
+        "@type": "Question",
+        "name": "Will a solar and battery system pay for itself?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Where grid power is expensive — Hawaii, islands, much of Europe, Africa, South Asia — properly built solar plus storage commonly repays its component cost in one to four years, then runs nearly free for decades. The cost comparison on this page shows the hardware spread honestly." }
+      },
+      {
+        "@type": "Question",
+        "name": "What does an off-grid battery system actually cost?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Battery banks self-built from prismatic cells typically land around $80-125 per usable kWh shipped and duty-paid; budget retail packs run roughly $110-165. Panels add about $0.16-0.38 per watt. Every result states its price scope honestly." }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need a generator with an off-grid system?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Only if you want near-total independence through weeks of bad weather. Sizing tools show exactly that trade-off: one system never needs a generator, one needs it about a day a year, one only now and then. Grid-connected users skip this entirely." }
+      },
+      {
+        "@type": "Question",
+        "name": "Does the calculator work without internet?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. This page is fully offline by design — it works on Freenet and any connection-free environment. The cost math runs entirely in your browser and nothing is fetched from the network." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is building my own battery safe?",
+        "acceptedAnswer": { "@type": "Answer", "text": "It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. Proper fusing, BMS use, and code compliance are essential — and a licensed electrician should check anything before you energize it." }
+      }
+    ]
+  }
+  </script>
+
   <style>
 /* BigEnergyCo Design System - Premium Dark Glassmorphic Energy Aesthetic */
 :root {
@@ -131,6 +183,11 @@ header {
   cursor: pointer;
   transition: all 0.25s ease;
   border: none;
+}
+
+/* Real <button> elements styled as .btn need UA-style resets */
+button.btn {
+  font-family: inherit;
 }
 
 .btn-primary {
@@ -316,6 +373,20 @@ header {
   .nav-flex { flex-wrap: wrap; row-gap: 0.5rem; }
   .logo { font-size: 1.25rem; }
   .header-cta .btn { padding: 0.45rem 0.7rem; font-size: 0.8rem; }
+}
+
+/* Keyboard users need a visible focus ring on every button-style element. */
+.btn:focus-visible {
+  outline: 2px solid var(--primary-accent);
+  outline-offset: 2px;
+}
+
+/* Respect users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 .form-group {
@@ -562,10 +633,12 @@ footer {
       <nav class="nav-links">
         <a href="#calculator">Estimator</a>
         <a href="#bom">Hardware Reference</a>
+        <a href="#faq">FAQ</a>
         <a href="#legal">Terms &amp; Disclaimer</a>
       </nav>
       <div class="header-cta">
-        <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;">♡ Support</a>
+        <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;">Support</a>
+        <div id="btnNavCompare" class="btn btn-primary" style="cursor: pointer;">Cost Comparison</div>
       </div>
     </div>
   </header>
@@ -573,17 +646,20 @@ footer {
   <!-- Hero Section -->
   <section class="hero">
     <div class="container">
-      <div class="hero-tag">🌍 Free for everyone, everywhere • No signup • Nothing for sale</div>
-      <h1>Free Offline Battery Cost Reference <br><span>Compare DIY vs. packaged battery costs, anywhere</span></h1>
+      <div class="hero-tag">Free for everyone, everywhere - No signup - Nothing for sale</div>
+      <h1><span>Free Off-Grid Cost Estimator</span> <br><span>Compare solar &amp; battery storage options, anywhere in the world</span></h1>
       <p>
-        A free offline tool for comparing the cost of self-sourced battery components against packaged retail batteries.
-        Educational estimates only &mdash; not engineering, not a quote, and nothing here is for sale.
-        Built and given away by <strong>Lucas Ballek</strong>.
+        A free offline tool for working out roughly what solar panels and a battery bank cost to source yourself,
+        versus buying packaged hardware. Educational estimates only &mdash; not engineering, not a quote, and
+        nothing here is for sale. Built and given away by <strong>Lucas Ballek</strong>.
       </p>
 
       <div class="hero-actions">
         <div id="btnHeroCompare" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.9rem 2rem; cursor: pointer;">
-          📊 See Cost Comparison
+          Rough Cost Comparison
+        </div>
+        <div id="btnHeroBom" class="btn btn-outline" style="font-size: 1.1rem; padding: 0.9rem 2rem; cursor: pointer;">
+          Hardware Reference
         </div>
       </div>
 
@@ -612,8 +688,8 @@ footer {
   <section id="calculator" class="calc-section">
     <div class="container">
       <div class="section-header">
-        <h2 class="section-title">DIY Battery Cost Comparison</h2>
-        <p class="section-desc">A static offline comparison between self-sourced LFP cells and packaged retail batteries, using published list prices from August 2026. Indicative only &mdash; real costs vary enormously by country, freight, duty, and what you can actually source locally.</p>
+        <h2 class="section-title">Rough Cost Comparison</h2>
+        <p class="section-desc">A ballpark comparison between self-sourced components and a packaged retail battery, using published list prices. Indicative only &mdash; real costs vary enormously by country, freight, duty, and what you can actually buy locally.</p>
       </div>
 
       <div class="calc-card">
@@ -625,19 +701,22 @@ footer {
           </div>
 
           <div class="form-group">
-            <label for="chemistryType">Battery Chemistry:</label>
-            <select id="chemistryType" class="form-control">
-              <option value="LFP" selected>LFP (EVE MB31 3.2V 314Ah Prismatic)</option>
-              <option value="NaIon">Sodium-Ion (HiNa 3.0V 210Ah)</option>
+            <label for="utilityRate">Global Grid Rate ($ / kWh):</label>
+            <select id="utilityRate" class="form-control">
+              <option value="0.28" selected>Global Average ($0.28 / kWh)</option>
+              <option value="0.16">US Mainland Avg ($0.16 / kWh)</option>
+              <option value="0.32">Boston / Northeast ($0.32 / kWh)</option>
+              <option value="0.38">Europe / UK ($0.38 / kWh)</option>
+              <option value="0.48">Hawaii Off-Grid Peak ($0.48 / kWh)</option>
             </select>
           </div>
         </div>
 
         <div class="results-box">
           <div class="savings-highlight">
-            <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Indicative component cost difference</div>
-            <div id="netSavingsVal" class="savings-num">$75,185</div>
-            <div id="savingsPctVal" class="savings-sub">Component cost only &mdash; excludes freight, duty, tools, and labor</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Indicative component cost</div>
+            <div id="landedMidVal" class="savings-num">≈$10,250</div>
+            <div id="savingsPctVal" class="savings-sub">Landed DIY mid-point &mdash; component cost only, excludes freight beyond scope, tools, and labor</div>
           </div>
 
           <table class="comparison-table">
@@ -650,14 +729,19 @@ footer {
             </thead>
             <tbody>
               <tr>
-                <td>Packaged retail battery <span style="font-size:0.8em;color:var(--text-muted);">(list price, Aug 2026)</span></td>
-                <td id="teslaKwhVal">100 kWh</td>
-                <td>$85,185</td>
+                <td>Self-sourced cells + BMS <span style="font-size:0.8em;color:var(--text-muted);">(ex-factory China, you assemble)</span></td>
+                <td class="cmp-kwh">100 kWh</td>
+                <td id="cellsCostVal">$5,000</td>
               </tr>
               <tr style="color: var(--primary-accent);">
-                <td>Self-sourced LFP cells + BMS <span style="font-size:0.8em;color:var(--text-muted);">(ex-factory basis)</span></td>
-                <td id="tableKwhVal">100 kWh</td>
-                <td id="tableCostVal">$5,000</td>
+                <td>Landed DIY build <span style="font-size:0.8em;color:var(--text-muted);">(shipped cells + duty, community-build basis)</span></td>
+                <td class="cmp-kwh">100 kWh</td>
+                <td id="landedCostVal">$10,500</td>
+              </tr>
+              <tr>
+                <td>Budget-retail packaged <span style="font-size:0.8em;color:var(--text-muted);">(PowMr-class list price, BMS + enclosure included)</span></td>
+                <td class="cmp-kwh">100 kWh</td>
+                <td id="retailCostVal">$11,700</td>
               </tr>
             </tbody>
           </table>
@@ -672,8 +756,13 @@ footer {
             do not. Do not treat this as a savings promise.
           </p>
 
+          <div id="gridEqBox" style="display:none; margin-top: 1rem; padding: 0.9rem 1rem; border: 1px solid var(--border-card); border-radius: 10px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.55;">
+            <div style="color: var(--text-main); font-weight: 700; margin-bottom: 0.25rem;">Grid-energy equivalence</div>
+            <div id="gridEqText"></div>
+          </div>
+
           <div class="calc-footer">
-            <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;">♡ Support this tool</a>
+            <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;">Support this tool</a>
           </div>
         </div>
       </div>
@@ -684,8 +773,8 @@ footer {
   <section id="bom" class="bom-section">
     <div class="container">
       <div class="section-header">
-        <h2 class="section-title">What a ~100 kWh DIY Build Is Made Of</h2>
-        <p class="section-desc">A reference parts list so you know what the components are and roughly what they cost. Prices are indicative figures from the open market as of August 2026 and change constantly. Nothing here is sold by this site.</p>
+        <h2 class="section-title">What a ~100 kWh Build Is Made Of</h2>
+        <p class="section-desc">A reference parts list so you know what the pieces are and roughly what they cost. Nothing here is sold by this site &mdash; prices are indicative figures seen on the open market and change constantly.</p>
       </div>
 
       <div class="bom-grid">
@@ -722,6 +811,50 @@ footer {
     </div>
   </section>
 
+  <!-- FAQ -->
+  <section id="faq" class="legal-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Common Questions</h2>
+        <p class="section-desc">Short answers to what people ask most.</p>
+      </div>
+
+      <div class="legal-grid">
+        <div class="legal-card">
+          <h3>How accurate are the estimates?</h3>
+          <p>Every number is a dated, scope-labeled range built from published market prices &mdash; not an AI guessing. Real-world results still vary with freight, duty, and what you can actually buy locally, so have a licensed professional verify anything you build.</p>
+        </div>
+
+        <div class="legal-card">
+          <h3>Will a system pay for itself?</h3>
+          <p>Where grid power is expensive &mdash; Hawaii, islands, much of Europe, Africa, South Asia &mdash; properly built solar plus storage commonly repays its component cost in one to four years, then runs nearly free for decades. The comparison above shows the hardware spread honestly.</p>
+        </div>
+
+        <div class="legal-card">
+          <h3>What does a system actually cost?</h3>
+          <p>Battery banks self-built from prismatic cells typically land around $80-125 per usable kWh shipped and duty-paid; budget retail packs run roughly $110-165. Panels add about $0.16-0.38 per watt. Every result states its price scope honestly.</p>
+        </div>
+      </div>
+
+      <div class="legal-grid" style="margin-top:1rem;">
+        <div class="legal-card">
+          <h3>Do I need a generator?</h3>
+          <p>Only if you want near-total independence through weeks of bad weather. Sizing tools show exactly that trade-off: one system never needs a generator, one needs it about a day a year, one only now and then. Grid-connected users skip this entirely.</p>
+        </div>
+
+        <div class="legal-card">
+          <h3>Does it work without internet?</h3>
+          <p>Yes. This page is fully offline by design &mdash; it works on Freenet and any connection-free environment. The cost math runs entirely in your browser and nothing is fetched from the network.</p>
+        </div>
+
+        <div class="legal-card">
+          <h3>Is building my own battery safe?</h3>
+          <p>It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. The guides here insist on proper fusing, BMS use, and code compliance &mdash; and on having a licensed electrician check anything before you energize it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Support / Donation Section -->
   <section id="support" class="legal-section">
     <div class="container">
@@ -733,7 +866,7 @@ footer {
       <div style="max-width: 640px; margin: 0 auto;">
         <div class="legal-card" style="text-align: center;">
           <p style="margin-bottom: 1.25rem;">
-            Contributions go directly to <strong>Lucas Ballek</strong> personally as a gift.
+            Contributions go directly to <strong>Lucas Ballek</strong> personally.
           </p>
 
           <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-bottom: 1.5rem;">
@@ -749,12 +882,12 @@ footer {
 
           <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; text-align: left;">
             <strong>Please read before sending anything.</strong> Contributions are voluntary gifts to an
-            individual, not payment for a service. They are <strong>gifts, not tax-deductible</strong> — this is
+            individual, not payment for a service. They are <strong>not tax-deductible</strong> &mdash; this is
             not a charity or a registered nonprofit. They buy nothing: no priority, no features, no personal
             advice, no support obligation, and no continued availability of this site. Everyone gets exactly
             the same free tool whether they contribute or not. Please don't send money you need. If you were
             hoping to pay for professional engineering help, spend it on a licensed local engineer or
-            electrician instead.
+            electrician instead &mdash; that is genuinely the better use of it.
           </p>
         </div>
       </div>
@@ -773,13 +906,13 @@ footer {
         <div class="legal-card">
           <h3>Estimates, not engineering</h3>
           <p>Output is an automated reference estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.</p>
-          <div id="btnLegalTerms1" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; cursor: pointer; display: inline-block;">Read full terms →</div>
+          <div id="btnLegalTerms1" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; cursor: pointer; display: inline-block;">Read full terms &rarr;</div>
         </div>
 
         <div class="legal-card">
           <h3>No accounts, no tracking</h3>
-          <p>No signup, no cookies for advertising, no analytics profile, no internet connection required. This tool is fully offline and works on Freenet. Don't share personal data with anyone.</p>
-          <div id="btnLegalTerms3" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; cursor: pointer; display: inline-block;">Read privacy note →</div>
+          <p>No signup, no cookies for advertising, no analytics profile, and no internet connection required. This tool is fully offline and works on Freenet.</p>
+          <div id="btnLegalTerms3" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; cursor: pointer; display: inline-block;">Read privacy note &rarr;</div>
         </div>
 
         <div class="legal-card">
@@ -824,20 +957,20 @@ footer {
         cause fire, serious injury, and death &mdash; you are responsible for your own safety, your own
         decisions, and compliance with your local electrical code. Verify everything with a licensed
         professional before building.
-        &nbsp;·&nbsp; <a href="#legal" style="color: var(--primary-accent);">Terms</a>
-        &nbsp;·&nbsp; <a href="#support" style="color: var(--primary-accent);">Support</a>
-        &nbsp;·&nbsp; <a href="mailto:lucasballek@gmail.com" style="color: var(--primary-accent);">lucasballek@gmail.com</a>
+        &nbsp;-&nbsp; <a href="#legal" style="color: var(--primary-accent);">Terms</a>
+        &nbsp;-&nbsp; <a href="#support" style="color: var(--primary-accent);">Support</a>
+        &nbsp;-&nbsp; <a href="mailto:lucasballek@gmail.com" style="color: var(--primary-accent);">lucasballek@gmail.com</a>
       </p>
     </div>
   </footer>
 
   <!-- Terms & Disclaimer Modal -->
-  <div id="legalModal" class="modal-overlay">
+  <div id="legalModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Terms and disclaimer">
     <div class="modal-card" style="max-width: 700px;">
       <div class="modal-header">
         <div>
-          <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff;">⚖️ Terms of Use &amp; Disclaimer</h3>
-          <span style="font-size: 0.8rem; color: var(--primary-accent);">Free offline tool · no warranty · last updated 3 August 2026</span>
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff;"> Terms of Use &amp; Disclaimer</h3>
+          <span style="font-size: 0.8rem; color: var(--primary-accent);">Free offline tool - no warranty - last updated 3 August 2026</span>
         </div>
         <div id="btnCloseLegal" class="close-btn" style="cursor: pointer;">&times;</div>
       </div>
@@ -845,8 +978,8 @@ footer {
         <h4 style="color: #fff; margin-bottom: 0.5rem;">1. What this is</h4>
         <p style="margin-bottom: 1rem;">This is a free, personal, non-commercial educational tool operated by an individual, Lucas Ballek. It is not a company, not incorporated, and not a licensed engineering, electrical contracting, or financial advisory practice. Nothing on this site is for sale and no service is being offered or promised to you.</p>
 
-        <h4 style="color: #fff; margin-bottom: 0.5rem;">2. Estimates only — no reliance</h4>
-        <p style="margin-bottom: 1rem;">All output is an automated educational reference estimate produced from market data as of August 2026. It is not a design, not a stamped drawing, not a quote, not a safety assessment, and not a code-compliance review. It may contain errors. <strong>Do not rely on it.</strong> Independently verify every figure — capacity, wire sizing, fuse ratings, and equipment compatibility — with a licensed electrician or professional engineer in your jurisdiction before purchasing, building, or energizing anything.</p>
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">2. Estimates only &mdash; no reliance</h4>
+        <p style="margin-bottom: 1rem;">All output is an automated educational reference estimate produced from market data as of August 2026. It is not a design, not a stamped drawing, not a quote, not a safety assessment, and not a code-compliance review. It may contain errors. <strong>Do not rely on it.</strong> Independently verify every figure &mdash; capacity, wire sizing, fuse ratings, and equipment compatibility &mdash; with a licensed electrician or professional engineer in your jurisdiction before purchasing, building, or energizing anything.</p>
 
         <h4 style="color: #fff; margin-bottom: 0.5rem;">3. Safety</h4>
         <p style="margin-bottom: 1rem;">Battery banks, high DC currents, and mains wiring can cause arc flash, electric shock, fire, toxic gas release, serious injury, and death. Lithium cells can enter thermal runaway. You are solely responsible for your own safety and for the safety of anyone affected by what you build. You are solely responsible for permits, inspections, and compliance with your local electrical and fire codes.</p>
@@ -855,10 +988,10 @@ footer {
         <p style="margin-bottom: 1rem;">THIS SITE AND ITS OUTPUT ARE PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, AND NON-INFRINGEMENT. There is no guarantee of availability, correctness, or continued operation, and the site may change or disappear at any time without notice.</p>
 
         <h4 style="color: #fff; margin-bottom: 0.5rem;">5. Limitation of liability</h4>
-        <p style="margin-bottom: 1rem;">To the fullest extent permitted by applicable law, the operator shall not be liable for any direct, indirect, incidental, consequential, special, or punitive damages — including property damage, fire, personal injury, lost savings, or business interruption — arising from your use of or reliance on this free tool. Some jurisdictions do not allow certain exclusions, in which case they apply only to the extent permitted. Nothing here excludes liability that cannot lawfully be excluded, including liability for death or personal injury caused by negligence, or for fraud.</p>
+        <p style="margin-bottom: 1rem;">To the fullest extent permitted by applicable law, the operator shall not be liable for any direct, indirect, incidental, consequential, special, or punitive damages &mdash; including property damage, fire, personal injury, lost savings, or business interruption &mdash; arising from your use of or reliance on this free tool. Some jurisdictions do not allow certain exclusions, in which case they apply only to the extent permitted. Nothing here excludes liability that cannot lawfully be excluded, including liability for death or personal injury caused by negligence, or for fraud.</p>
 
         <h4 style="color: #fff; margin-bottom: 0.5rem;">6. Contributions</h4>
-        <p style="margin-bottom: 1rem;">Any contribution you choose to send is a voluntary gift to an individual. It is a <strong>gift, not tax-deductible</strong>, is not payment for goods or services, creates no contract, entitles you to nothing, and is not refundable in exchange for any obligation. Contributing does not change the service you receive in any way.</p>
+        <p style="margin-bottom: 1rem;">Any contribution you choose to send is a voluntary gift to an individual. It is <strong>not tax-deductible</strong>, is not payment for goods or services, creates no contract, entitles you to nothing, and is not refundable in exchange for any obligation. Contributing does not change the service you receive in any way.</p>
 
         <h4 style="color: #fff; margin-bottom: 0.5rem;">7. Privacy</h4>
         <p>This tool works offline on Freenet and requires no internet connection. No personal details are collected, stored, or transmitted. You are in full control of your data. Please do not enter personal, financial, or otherwise sensitive information into any web form on any site.</p>
@@ -868,9 +1001,22 @@ footer {
 
   <!-- Inlined JavaScript — static calculator only, no API calls -->
   <script>
+    // Battery cost ranges per procurement scope — mirrors assets/js/sizing/pricing.js
+    // (battOnlyCost), the single source of truth on the main site. Units: $ per
+    // usable kWh. Kept inline so this page stays a self-contained offline file.
+    var BATT_SCOPES = {
+      cells: [45, 70],   // ex-factory China, cells only
+      landed: [80, 125], // shipped + duty, community-build basis
+      powmr: [110, 165]  // budget retail, BMS + enclosure included
+    };
+
     window.openLegalModal = function() {
       var modal = document.getElementById('legalModal');
-      if (modal) modal.style.display = 'flex';
+      if (modal) {
+        modal.style.display = 'flex';
+        var closer = document.getElementById('btnCloseLegal');
+        if (closer) closer.focus();
+      }
     };
 
     window.closeLegalModal = function() {
@@ -878,63 +1024,147 @@ footer {
       if (modal) modal.style.display = 'none';
     };
 
-    window.scrollToCalc = function() {
-      var calcElem = document.getElementById('calculator');
-      if (calcElem) calcElem.scrollIntoView({ behavior: 'smooth' });
-    };
+    // Esc closes the modal; focus stays out of hidden overlays.
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Escape') return;
+      var legal = document.getElementById('legalModal');
+      if (legal && legal.style.display === 'flex') window.closeLegalModal();
+    });
 
+    // Reduced-motion users get instant scrolling instead of JS smooth scroll.
+    function scrollBehavior() {
+      return (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+        ? 'auto' : 'smooth';
+    }
+
+    function scrollToSection(id) {
+      var target = document.getElementById(id);
+      if (target) target.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
+    }
+
+    // Divs styled as buttons are clickable but not keyboard-operable by default.
+    // Give them a button role, make them focusable, fire their click on Enter/Space.
+    function makeClickableDivsKeyboardOperable() {
+      document.querySelectorAll('.btn, .close-btn').forEach(function(el) {
+        if (el.tagName === 'BUTTON' || el.tagName === 'A') return;
+        if (el.getAttribute('role') === 'button') return;
+        el.setAttribute('role', 'button');
+        el.setAttribute('tabindex', '0');
+      });
+    }
+
+    function isClickableDivButton(t) {
+      return !!(t && t.classList &&
+        (t.classList.contains('btn') || t.classList.contains('close-btn')) &&
+        t.getAttribute('role') === 'button');
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      if (isClickableDivButton(e.target)) {
+        e.preventDefault();
+        e.target.click();
+      }
+    });
+
+    // Same cost math as the main site's Rough Cost Comparison (index.html),
+    // with the pricing scopes inlined above. No network calls.
     function updateCalc() {
       var targetKwhInput = document.getElementById('targetKwh');
       if (!targetKwhInput) return;
 
       var targetKwh = parseFloat(targetKwhInput.value);
-      var chemistryTypeSelect = document.getElementById('chemistryType');
-      var chemistryType = chemistryTypeSelect ? chemistryTypeSelect.value : 'LFP';
+      var utilityRateSelect = document.getElementById('utilityRate');
+      var utilityRate = utilityRateSelect ? parseFloat(utilityRateSelect.value) : 0.28;
 
       var targetKwhVal = document.getElementById('targetKwhVal');
       if (targetKwhVal) targetKwhVal.innerText = targetKwh + ' kWh Usable Storage';
 
-      // Component cost only. No service fee — this tool is free and sells nothing.
-      var hwPerKwh = (chemistryType === 'NaIon') ? 38.00 : 49.80;
-      var totalBigEnergyCost = targetKwh * hwPerKwh;
+      function money(v) { return '$' + Math.round(v).toLocaleString(); }
+      function range(s) { return money(s.lo) + '\u2013' + money(s.hi); }
 
-      var teslaPerKwh = 851.85;
-      var teslaTotalCost = targetKwh * teslaPerKwh;
-      var netSavings = teslaTotalCost - totalBigEnergyCost;
+      var scopes = {
+        cells: { lo: targetKwh * BATT_SCOPES.cells[0], hi: targetKwh * BATT_SCOPES.cells[1] },
+        landed: { lo: targetKwh * BATT_SCOPES.landed[0], hi: targetKwh * BATT_SCOPES.landed[1] },
+        powmr: { lo: targetKwh * BATT_SCOPES.powmr[0], hi: targetKwh * BATT_SCOPES.powmr[1] }
+      };
 
-      var netSavingsVal = document.getElementById('netSavingsVal');
-      if (netSavingsVal) netSavingsVal.innerText = '~$' + Math.round(netSavings).toLocaleString();
+      var cellsCostVal = document.getElementById('cellsCostVal');
+      var landedCostVal = document.getElementById('landedCostVal');
+      var retailCostVal = document.getElementById('retailCostVal');
 
-      var tableKwhVal = document.getElementById('tableKwhVal');
-      if (tableKwhVal) tableKwhVal.innerText = targetKwh + ' kWh';
+      if (cellsCostVal) cellsCostVal.innerText = range(scopes.cells);
+      if (retailCostVal) retailCostVal.innerText = range(scopes.powmr);
+      if (landedCostVal) landedCostVal.innerText = range(scopes.landed);
 
-      var tableCostVal = document.getElementById('tableCostVal');
-      if (tableCostVal) tableCostVal.innerText = '$' + Math.round(totalBigEnergyCost).toLocaleString();
+      document.querySelectorAll('.cmp-kwh').forEach(function (td) { td.innerText = targetKwh + ' kWh'; });
+
+      var landedMidVal = document.getElementById('landedMidVal');
+      if (landedMidVal) {
+        var mid = (scopes.landed.lo + scopes.landed.hi) / 2;
+        landedMidVal.innerText = '\u2248' + money(mid);
+      }
+
+      // Grid-energy equivalence: what the stored energy would cost bought from
+      // the grid. Assumptions (stated in the UI): one full cycle per day, 90%
+      // round-trip efficiency, energy charge only — excludes connection fees,
+      // demand charges, degradation, panels/inverter/BOS/labor.
+      var gridEqBox = document.getElementById('gridEqBox');
+      var gridEqText = document.getElementById('gridEqText');
+      if (!gridEqBox || !gridEqText) return;
+
+      if (utilityRate > 0) {
+        var ROUND_TRIP_EFF = 0.9;
+        var annualKwh = targetKwh * 365 * ROUND_TRIP_EFF;
+        var annualValue = annualKwh * utilityRate;
+        var landedMid = (scopes.landed.lo + scopes.landed.hi) / 2;
+        var paybackYears = landedMid / annualValue;
+        var paybackRounded = Math.round(paybackYears);
+        var text = 'If this bank were cycled once daily at $' + utilityRate.toFixed(2) + '/kWh with 90% ' +
+                   'round-trip efficiency, the energy it moves in a year would cost about $' +
+                   (Math.round(annualValue / 10) * 10).toLocaleString() + ' bought from the grid.';
+        text += ' The landed DIY estimate shown above equals roughly ' + (paybackYears >= 1 ?
+                   (paybackRounded === 1 ? 'about one year' : '~' + paybackRounded + ' years') : 'under one year') + ' of that grid energy';
+        text += ' \u2014 before adding panels, inverter, wiring, install, and battery degradation, which are ' +
+                'the majority of a real off-grid budget. Off-grid is usually about where you live, not ' +
+                'about beating the grid on price.';
+        gridEqText.textContent = text;
+        gridEqBox.style.display = 'block';
+      } else {
+        gridEqBox.style.display = 'none';
+      }
     }
 
     function setupEventListeners() {
+      var navCompare = document.getElementById('btnNavCompare');
       var heroCompare = document.getElementById('btnHeroCompare');
+      var heroBom = document.getElementById('btnHeroBom');
       var terms1 = document.getElementById('btnLegalTerms1');
       var terms3 = document.getElementById('btnLegalTerms3');
-
       var closeLegal = document.getElementById('btnCloseLegal');
       var targetKwhInput = document.getElementById('targetKwh');
-      var chemistryTypeSelect = document.getElementById('chemistryType');
+      var utilityRateSelect = document.getElementById('utilityRate');
 
-      if (heroCompare) heroCompare.addEventListener('click', window.scrollToCalc);
+      if (navCompare) navCompare.addEventListener('click', function () { scrollToSection('calculator'); });
+      if (heroCompare) heroCompare.addEventListener('click', function () { scrollToSection('calculator'); });
+      if (heroBom) heroBom.addEventListener('click', function () { scrollToSection('bom'); });
       if (terms1) terms1.addEventListener('click', window.openLegalModal);
       if (terms3) terms3.addEventListener('click', window.openLegalModal);
       if (closeLegal) closeLegal.addEventListener('click', window.closeLegalModal);
 
       if (targetKwhInput) targetKwhInput.addEventListener('input', updateCalc);
-      if (chemistryTypeSelect) chemistryTypeSelect.addEventListener('change', updateCalc);
+      if (utilityRateSelect) utilityRateSelect.addEventListener('change', updateCalc);
 
       updateCalc();
     }
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', setupEventListeners);
+      document.addEventListener('DOMContentLoaded', function () {
+        makeClickableDivsKeyboardOperable();
+        setupEventListeners();
+      });
     } else {
+      makeClickableDivsKeyboardOperable();
       setupEventListeners();
     }
   </script>
