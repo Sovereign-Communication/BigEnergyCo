@@ -10,14 +10,14 @@ import {
   sizeAllBillTargets, simulateOffset, dailyExtremes, CHEMISTRIES,
   RELIABILITY_TIERS, BILL_TARGETS,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER, capacityScaleFor,
-} from "./engine.js";
-import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js";
-import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js";
+} from "./engine.js?v=20260828a";
+import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260828a";
+import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js?v=20260828a";
 import {
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
   lifetimeCostUsd, exportValueUsd, trueBreakEvenYear,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js";
+} from "./money.js?v=20260828a";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -303,7 +303,7 @@ export async function runSizing(msg, deps = {}) {
       gammaPerC: GAMMA_PMAX,
       noctC: NOCT,
       etaInverter: ETA_INVERTER,
-      dataYears: `${series.meta.startYear}–${series.meta.endYear} (${series.meta.years} yr)`,
+      dataYears: `${series.meta.startYear}–${series.meta.endYear}`,
       source: series.meta.source,
       offline: !!series.meta.offline,
       capacityScale: +capacityScaleFor(chemistry === "auto" ? "lfp" : chemistry, meanTempC).toFixed(3),

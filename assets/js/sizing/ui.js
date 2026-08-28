@@ -10,17 +10,17 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260826a";
+import { CITY_PRESETS, } from "./nasa.js?v=20260828a";
 
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260826a";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260828a";
 
-import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260826a";
+import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260828a";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260826a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260828a";
 
-import { applyI18n, initLangPicker, resolveLang } from "../shared/i18n.js?v=20260826a";
+import { applyI18n, initLangPicker, resolveLang } from "../shared/i18n.js?v=20260828a";
 
-import { LOCALES } from "../shared/locales.js?v=20260826a";
+import { LOCALES } from "../shared/locales.js?v=20260828a";
 
 let worker = null;
 
@@ -768,7 +768,7 @@ function ensureWorker() {
 
   if (!worker) {
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260826a", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260828a", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -778,9 +778,19 @@ function ensureWorker() {
 
         // bring the results into view - the run button can be far above them
 
+        // (instant scroll for reduced-motion users)
+
         const res = $("tierResults");
 
-        if (res) { res.setAttribute("tabindex", "-1"); res.scrollIntoView({ behavior: "smooth", block: "start" }); }
+        if (res) {
+
+          res.setAttribute("tabindex", "-1");
+
+          const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+          res.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+
+        }
 
       } else if (ev.data?.type === "error") setStatus("Warning: " + ev.data.message);
 
@@ -2146,7 +2156,7 @@ function drawAutoChart(p) {
 
 // Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
 
-const PAYLOAD_CONTRACT = 5;
+const PAYLOAD_CONTRACT = 6;
 
 function renderResults(p) {
 

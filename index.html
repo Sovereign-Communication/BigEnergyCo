@@ -779,6 +779,82 @@ button.btn {
 
 }
 
+/* Keep the logo + primary CTAs, tuck the nav links away (they stay reachable
+
+   from the footer). Prevents horizontal page overflow on phones and tablets:
+
+   the full nav row needs ~811px, so hiding it up to 830px covers the
+
+   overflow band between the old 768px breakpoint and where it fits. */
+
+@media (max-width: 830px) {
+
+  .nav-links { display: none; }
+
+  .header-cta { gap: 0.5rem; }
+
+  .header-cta .btn { padding: 0.5rem 0.9rem; font-size: 0.85rem; }
+
+}
+
+@media (max-width: 768px) {
+
+  .hero { padding: 3.5rem 0 3rem; }
+
+  .hero h1 { font-size: 2.15rem; }
+
+  .hero p { font-size: 1.05rem; }
+
+  .section-title { font-size: 1.8rem; }
+
+  .stat-val { font-size: 1.75rem; }
+
+  .calc-card { padding: 1.5rem; }
+
+  .results-box { padding: 1.25rem; }
+
+}
+
+/* Very small phones: shrink the brand + buttons, and let the header wrap to
+
+   a second row if even that does not fit, instead of overflowing sideways. */
+
+@media (max-width: 480px) {
+
+  .nav-flex { flex-wrap: wrap; row-gap: 0.5rem; }
+
+  .logo { font-size: 1.25rem; }
+
+  .header-cta .btn { padding: 0.45rem 0.7rem; font-size: 0.8rem; }
+
+}
+
+/* Keyboard users need a visible focus ring on every button-style element. */
+
+.btn:focus-visible,
+
+.ladder-tab:focus-visible {
+
+  outline: 2px solid var(--primary-accent);
+
+  outline-offset: 2px;
+
+}
+
+/* Respect users who ask for less motion. */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *, *::before, *::after {
+
+    animation: none !important;
+
+    transition: none !important;
+
+  }
+
+}
+
 .form-group {
 
   margin-bottom: 1.5rem;
@@ -2405,7 +2481,7 @@ footer {
 
   <!-- Inlined JavaScript with JSONP Web-Bridge for Freenet CSP Passthrough -->
 
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260826a"></script>
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260828a"></script>
 
   <script>
 
@@ -2476,7 +2552,7 @@ footer {
 
       var calcElem = document.getElementById('calculator');
 
-      if (calcElem) calcElem.scrollIntoView({ behavior: 'smooth' });
+      if (calcElem) calcElem.scrollIntoView({ behavior: scrollBehavior() });
 
     };
 
@@ -2962,9 +3038,11 @@ footer {
 
                    (Math.round(annualValue / 10) * 10).toLocaleString() + ' bought from the grid.';
 
+        var paybackRounded = Math.round(paybackYears);
+
         text += ' The landed DIY estimate shown above equals roughly ' + (paybackYears >= 1 ?
 
-                   '~' + Math.round(paybackYears) + ' years' : 'under one year') + ' of that grid energy';
+                   (paybackRounded === 1 ? 'about one year' : '~' + paybackRounded + ' years') : 'under one year') + ' of that grid energy';
 
         text += ' \u2014 before adding panels, inverter, wiring, install, and battery degradation, which are ' +
 
@@ -2988,7 +3066,7 @@ footer {
 
       var target = document.getElementById(id);
 
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (target) target.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
 
     }
 
@@ -3081,6 +3159,74 @@ footer {
     } else {
 
       setupEventListeners();
+
+    }
+
+    // Divs styled as buttons (hero CTAs, "My location", terms, chat, close)
+
+    // are clickable but not keyboard-operable by default. Give them a button
+
+    // role, make them focusable, and fire their click on Enter/Space. This
+
+    // also covers the modal .close-btn X buttons.
+
+    function makeClickableDivsKeyboardOperable() {
+
+      document.querySelectorAll('.btn, .close-btn').forEach(function(el) {
+
+        if (el.tagName === 'BUTTON' || el.tagName === 'A') return;
+
+        if (el.getAttribute('role') === 'button') return;
+
+        el.setAttribute('role', 'button');
+
+        el.setAttribute('tabindex', '0');
+
+      });
+
+    }
+
+    function isClickableDivButton(t) {
+
+      return !!(t && t.classList &&
+
+        (t.classList.contains('btn') || t.classList.contains('close-btn')) &&
+
+        t.getAttribute('role') === 'button');
+
+    }
+
+    document.addEventListener('keydown', function(e) {
+
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+
+      if (isClickableDivButton(e.target)) {
+
+        e.preventDefault();
+
+        e.target.click();
+
+      }
+
+    });
+
+    // Reduced-motion users get instant scrolling instead of JS smooth scroll.
+
+    function scrollBehavior() {
+
+      return (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+
+        ? 'auto' : 'smooth';
+
+    }
+
+    if (document.readyState === 'loading') {
+
+      document.addEventListener('DOMContentLoaded', makeClickableDivsKeyboardOperable);
+
+    } else {
+
+      makeClickableDivsKeyboardOperable();
 
     }
 

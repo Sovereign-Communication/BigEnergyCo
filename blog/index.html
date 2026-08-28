@@ -362,18 +362,48 @@
 
     .disclaimer-box strong {
       color: #fef08a;
+    }    /* Footer */
+
+    footer {
+
+      border-top: 1px solid var(--border-card);
+
+      padding: 3rem 0;
+
+      text-align: center;
+
+      color: var(--text-muted);
+
+      font-size: 0.9rem;
+
+      margin-top: 4rem;
+
+      background: rgba(9, 13, 22, 0.8);
+
     }
 
-    /* Footer */
-    footer {
-      border-top: 1px solid var(--border-card);
-      padding: 3rem 0;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      margin-top: 4rem;
-      background: rgba(9, 13, 22, 0.8);
+    /* Mobile: keep logo + CTA, hide nav links (reachable from footer). */
+
+    @media (max-width: 768px) {
+
+      .nav-links { display: none; }
+
+      .blog-hero h1 { font-size: 1.9rem; }
+
     }
+
+    /* Very small phones: shrink brand + button, let header wrap if needed. */
+
+    @media (max-width: 480px) {
+
+      .nav-flex { flex-wrap: wrap; row-gap: 0.5rem; }
+
+      .logo { font-size: 1.25rem; }
+
+      .header-cta .btn { padding: 0.45rem 0.7rem; font-size: 0.8rem; }
+
+    }
+
   </style>
 </head>
 <body>
