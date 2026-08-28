@@ -1399,15 +1399,15 @@ footer {
 
       <div class="hero-tag" data-i18n="heroTag">Free for everyone, everywhere - No signup - Nothing for sale</div>
 
-      <h1><span data-i18n="heroTitle1">Free Off-Grid Energy Estimator</span> <br><span data-i18n="heroTitle2">Size your solar &amp; battery system, anywhere in the world</span></h1>
+      <h1><span>Cut your electricity bill.</span> <br><span>See what 50%+ would take.</span></h1>
 
       <p>
 
-        A free AI-assisted tool for working out roughly what solar array and battery bank your situation needs.
+        Start with the number you already know: your monthly bill. We show the simplest path to lower bills,
 
-        Educational estimates only &mdash; not engineering, not a quote, and nothing here is for sale.
+        backup power, or full off-grid independence&mdash;with transparent assumptions and no sales pitch.
 
-        Built and given away by <strong>Lucas Ballek</strong>.
+        Educational estimates only; nothing here is for sale. Built and given away by <strong>Lucas Ballek</strong>.
 
       </p>
 
@@ -1447,9 +1447,9 @@ footer {
 
         <div class="stat-card">
 
-          <div class="stat-val">Worldwide</div>
+          <div class="stat-val">50%+</div>
 
-          <div class="stat-label">Any location, any grid standard</div>
+          <div class="stat-label">Explore realistic bill-cut scenarios, not promises</div>
 
         </div>
 
@@ -1475,9 +1475,9 @@ footer {
 
       <div class="section-header">
 
-        <h2 class="section-title" data-i18n="sizingTitle">Size Your System</h2>
+        <h2 class="section-title">Find your cheapest path to lower bills</h2>
 
-        <p class="section-desc">Enter your daily energy use and location. The calculator simulates your site hour-by-hour against five years of NASA satellite weather: go fully off-grid at three levels of generator independence, or stay connected and find the smallest system that cuts your bill. Educational estimates only.</p>
+        <p class="section-desc">Start with a bill, appliance list, or daily usage. Compare 60%, 80%, and 95% bill-cut scenarios—or switch to off-grid sizing. The math is deterministic, weather-aware, and educational.</p>
 
       </div>
 
@@ -1659,13 +1659,13 @@ footer {
 
           <div class="form-group">
 
-            <label for="systemGoal" data-i18n="goalLabel">What do you want this system to do?</label>
+            <label for="systemGoal">What outcome are you exploring?</label>
 
             <select id="systemGoal" class="form-control">
 
-              <option value="offgrid" selected data-i18n="goalOffgrid">Power me fully off-grid</option>
+              <option value="gridtie" selected>Cut my bill, stay connected</option>
 
-              <option value="gridtie" data-i18n="goalGridtie">Cut my grid bill, stay connected</option>
+              <option value="offgrid">Power me fully off-grid</option>
 
             </select>
 
@@ -1711,9 +1711,9 @@ footer {
 
             <select id="autoTarget" class="form-control">
 
-              <option value="cut60">Cut ~60% &mdash; cheapest entry</option>
+              <option value="cut60">Cut ~60% &mdash; a meaningful first target</option>
 
-              <option value="cut80" selected>Cut ~80% &mdash; the sweet spot</option>
+              <option value="cut80" selected>Cut ~80% &mdash; small grid top-ups</option>
 
               <option value="cut95">Cut ~95% &mdash; nearly off-grid</option>
 
@@ -1743,7 +1743,7 @@ footer {
 
           </div>
 
-          <button id="btnRunSizing" class="btn btn-primary btn-full" type="button" style="cursor:pointer; margin-top: 0.5rem;"><span data-i18n="runBtn">Size My System (5-yr simulation)</span></button>
+          <button id="btnRunSizing" class="btn btn-primary btn-full" type="button" style="cursor:pointer; margin-top: 0.5rem;"><span>Show my options</span></button>
 
           <div id="sizingStatus" role="status" aria-live="polite" style="font-size:0.85rem;color:var(--text-muted);margin-top:0.75rem;line-height:1.5;">First run downloads ~2 MB of satellite weather data, then caches it in your browser.</div>
 
