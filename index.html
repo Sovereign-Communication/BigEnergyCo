@@ -1775,6 +1775,32 @@ footer {
 
           </div>
 
+          <!-- Plausibility frontier: what every budget buys, cheapest first. -->
+
+          <div id="frontierWrap" style="display:none; margin-top: 1.5rem;">
+
+            <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.3rem;" data-i18n="frontierTitle">How far does your money get you?</div>
+
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 0.75rem; line-height: 1.55;" data-i18n="frontierIntro">Every system we could build at your location, cheapest first. The line is the best result any budget can buy &mdash; so you can see at a glance whether your goal here is easy, expensive, or out of reach.</p>
+
+            <p id="frontierVerdict" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.6; margin: 0 0 0.85rem; padding: 0.6rem 0.85rem; border-inline-start: 3px solid var(--primary-accent); background: rgba(0,230,153,0.06); border-radius: 0 8px 8px 0;"></p>
+
+            <div id="frontierChart"></div>
+
+            <p id="frontierNote" style="display:none; font-size: 0.78rem; color: var(--text-muted); margin: 0.65rem 0 0; line-height: 1.55;"></p>
+
+            <details style="margin-top: 0.9rem;">
+
+              <summary style="cursor:pointer; color: var(--primary-accent); font-size: 0.85rem;" data-i18n="frontierTableToggle">Show every point as a table</summary>
+
+              <div id="frontierTable" style="margin-top: 0.6rem; overflow-x: auto;"></div>
+
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.75rem 0 0; line-height: 1.55;" data-i18n="frontierMethod">The curve comes from simulating every panel-and-battery combination on a coarse grid against the same hourly weather as the cards above, then keeping only the systems nothing cheaper beats. Prices use the same landed do-it-yourself middle as every other figure on this page.</p>
+
+            </details>
+
+          </div>
+
           <div id="socChartWrap" style="display:none; margin-top: 1.25rem;">
 
             <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">How low does each battery get? (five years of real weather)</div>
@@ -2485,7 +2511,7 @@ footer {
 
   <!-- Inlined JavaScript with JSONP Web-Bridge for Freenet CSP Passthrough -->
 
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260828a"></script>
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260829a"></script>
 
   <script>
 

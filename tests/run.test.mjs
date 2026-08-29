@@ -26,7 +26,7 @@ const MSG = {
 test("off-grid AUTO: every field the renderer reads exists and is sane", async () => {
   const p = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid" }, { fetchWeather: fakeWeather });
   assert.equal(p.mode, "offgrid");
-  assert.equal(p.contract, 6, "payload carries current contract version");
+  assert.equal(p.contract, 7, "payload carries current contract version");
   assert.ok(Array.isArray(p.auto) && p.auto.length === 3, "three chemistry cards");
   assert.equal(p.history.kind, "auto");
   assert.equal(p.tiers.length, 0);
@@ -142,7 +142,7 @@ test("impossible loads degrade gracefully (nulls, no crash)", async () => {
   assert.equal(p.tiers[0].paybackYearsLo, null);
 });
 
-// ── Options matrix + best pick + BOM focus (contract v6) ────────────────────
+// ── Options matrix + best pick + BOM focus (contract v7) ────────────────────
 
 test("off-grid AUTO carries a full 3×3 options matrix with sane cells", async () => {
   const p = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid" }, { fetchWeather: fakeWeather });

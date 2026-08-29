@@ -10,14 +10,15 @@ import {
   sizeAllBillTargets, simulateOffset, dailyExtremes, CHEMISTRIES,
   RELIABILITY_TIERS, BILL_TARGETS,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER, capacityScaleFor,
-} from "./engine.js?v=20260828a";
-import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260828a";
-import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js?v=20260828a";
+} from "./engine.js?v=20260829a";
+import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260829a";
+import { buildFrontier } from "./frontier.js?v=20260829a";
+import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js?v=20260829a";
 import {
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
   lifetimeCostUsd, exportValueUsd, trueBreakEvenYear,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20260828a";
+} from "./money.js?v=20260829a";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -36,7 +37,7 @@ const VALID_AUTO_TARGETS = new Set(["cut60", "cut80", "cut95"]);
 // UI-contract version: bump whenever payload fields change shape. The
 // renderer compares this to its own constant and warns on mismatch instead
 // of rendering garbage from a stale cached module.
-export const PAYLOAD_CONTRACT = 6;
+export const PAYLOAD_CONTRACT = 7;
 
 const AUTO_CARD_NOTES = {
   naion: "Runs on standard LFP voltage settings (the common case): the ~40 V low cutoff protects it from deep discharge, so it gives up a little capacity but lasts longer than its deep-cycle rating.",
@@ -285,6 +286,81 @@ export async function runSizing(msg, deps = {}) {
     return `${why} The ranking shifts with climate, tariffs, and how much work you do yourself — check the other options before deciding.`;
   }
 
+  // ── Plausibility frontier ────────────────────────────────────────────────
+  // The headline cards answer "what does THIS target cost?". The frontier
+  // answers "what does every budget buy?" - the shape that tells someone
+  // whether their goal is easy, expensive, or impossible where they live.
+  //
+  // It prices systems through the SAME fullRange() the cards use, so a
+  // number on the chart can never contradict a number on a card.
+  let loadTotalWh = 0;
+  for (let i = 0; i < loadWh.length; i++) loadTotalWh += loadWh[i];
+
+  function attachFrontier(payload) {
+    const f = payload.focus;
+    const chemId = (f && f.chemistry) || (chemistry === "auto" ? "lfp" : chemistry);
+    const capScale = capacityScaleFor(chemId, meanTempC);
+    const costFn = (pv, b) => {
+      const r = fullRange(pv, b, chemId, landedF);
+      return { mid: r.objectiveMid, lo: r.lo, hi: r.hi };
+    };
+    // Sweep well past the headline answer so the user's option sits inside the
+    // picture. When nothing solved, fall back to the SAME envelope the card
+    // search already explored - a narrower sweep would let the chart imply a
+    // smaller world than the cards beside it had already looked at, and the
+    // top of the curve gets reported to the reader as a searched limit.
+    const searched = payload.mode === "gridtie"
+      ? { pv: 45, batt: 120 }     // matches sizeAllBillTargets above
+      : { pv: 30, batt: 250 };    // matches sizeAllTiers above
+    const pvMax = f ? Math.min(45, Math.max(3, f.pvKw * 2.2)) : searched.pv;
+    const battMax = f ? Math.min(120, Math.max(4, f.battKwh * 2.6)) : searched.batt;
+
+    let frontier;
+    try {
+      frontier = buildFrontier({
+        e1kw, loadWh, tempsC, chemistry: chemId, mode: payload.mode,
+        capacityScale: capScale, costFn, pvMax, battMax,
+      });
+    } catch {
+      payload.frontier = null;   // never let a chart take the whole result down
+      return payload;
+    }
+
+    // Where the option they are actually reading sits on that curve. Computed
+    // by simulating it, not by looking it up - so if their target is NOT on
+    // the frontier, the marker honestly lands below the line.
+    if (f && loadTotalWh > 0) {
+      const fScale = capacityScaleFor(f.chemistry, meanTempC);
+      const sim = payload.mode === "gridtie"
+        ? simulateOffset({ pvKw: f.pvKw, battKwhUsable: f.battKwh, e1kw, loadWh, chemistry: f.chemistry, tempsC, capacityScale: fScale })
+        : simulate({ pvKw: f.pvKw, battKwhUsable: f.battKwh, e1kw, loadWh, chemistry: f.chemistry, tempsC, capacityScale: fScale });
+      const outcome = payload.mode === "gridtie"
+        ? 1 - sim.importedWh / loadTotalWh
+        : sim.servedWh / loadTotalWh;
+      const cost = fullRange(f.pvKw, f.battKwh, f.chemistry, landedF);
+      let pointIndex = -1, bestGap = Infinity;
+      frontier.points.forEach((pt, i) => {
+        const gap = Math.abs(pt.capexUsd - cost.objectiveMid);
+        if (gap < bestGap) { bestGap = gap; pointIndex = i; }
+      });
+      frontier.marker = {
+        capexUsd: cost.objectiveMid,
+        outcomePct: +(outcome * 100).toFixed(1),
+        pvKw: f.pvKw,
+        battKwh: f.battKwh,
+        pointIndex,
+      };
+    } else {
+      frontier.marker = null;
+    }
+
+    // Strip the per-point simulation objects: the renderer never reads them
+    // and they would multiply the worker's postMessage payload many times over.
+    frontier.points = frontier.points.map(({ result, ...keep }) => keep);
+    payload.frontier = frontier;
+    return payload;
+  }
+
   const basePayload = () => ({
     contract: PAYLOAD_CONTRACT,
     meta: series.meta,
@@ -408,7 +484,7 @@ export async function runSizing(msg, deps = {}) {
       payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
       payload.assumptions.money =
         `Auto mode sizes each chemistry to deliver the same ~80% bill cut within its depth-of-discharge window (AGM banks are ~2× nameplate; lithium/sodium ~1.1×; sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings). Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; fixed connection fees not counted.`;
-      return payload;
+      return attachFrontier(payload);
     }
 
     const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
@@ -481,7 +557,7 @@ export async function runSizing(msg, deps = {}) {
     payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
     payload.assumptions.money =
       `Bill reduction simulated hour-by-hour across five years of weather: solar serves the load first, surplus charges the battery, the grid covers the rest, nothing is exported unless you enter a feed-in credit (then clipped surplus is valued at that rate). Lifetime cost includes bank swaps plus install labor each time. Fixed connection fees not counted.`;
-    return payload;
+    return attachFrontier(payload);
   }
 
   // ── OFF-GRID ──────────────────────────────────────────────────────────────
@@ -560,7 +636,7 @@ export async function runSizing(msg, deps = {}) {
     payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
     payload.assumptions.money =
       `Auto mode sizes each chemistry for the same job — lights stay on with a generator as rare backup — inside its depth-of-discharge window (AGM keeps a 50% reserve; lithium/sodium use ~90%). Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) — that is why its sticker price misleads.`;
-    return payload;
+    return attachFrontier(payload);
   }
 
   const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
@@ -635,5 +711,5 @@ export async function runSizing(msg, deps = {}) {
   payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
   payload.assumptions.money =
     `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 20-year horizon, and assumes panels/inverter last the full 20 years. Lifetime figures include install labor on the first bank and every swap. Generator fuel and grid fixed charges are not counted.`;
-  return payload;
+  return attachFrontier(payload);
 }

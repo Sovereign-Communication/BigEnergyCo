@@ -65,7 +65,7 @@ check("AGM tier100 true break-even later-or-never",
   t100.trueBreakEvenYear === null ? true : t100.trueBreakEvenYear >= Math.round(t100.paybackYearsLo));
 
 // ── Pass 2: full functional matrix ─────────────────────────────────────────
-check("contract version pinned (6) on every payload shape", [auto99, auto100, gtAuto60, spec].every((p) => p.contract === 6));
+check("contract version pinned (7) on every payload shape", [auto99, auto100, gtAuto60, spec].every((p) => p.contract === 7));
 
 // specific grid-tie with feed-in: export value + break-even coexist
 const gtSpec = await runSizing({ ...MSG, chemistry: "lfp", mode: "gridtie", exportRate: 0.10 }, { fetchWeather: fakeWeather });
@@ -85,7 +85,7 @@ try {
   globalThis.fetch = realFetch;
 }
 check("offline fallback engages + flags itself", offline.meta.offline === true && !!offline.meta.offlineCity);
-check("offline payload still meets contract", offline.contract === 6 && offline.auto.length >= 2);
+check("offline payload still meets contract", offline.contract === 7 && offline.auto.length >= 2);
 check("offline results carry honest labeling", offline.assumptions.offline === true);
 
 // sodium-specific off-grid: LFP-settings reality visible in numbers

@@ -10,17 +10,19 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260828a";
+import { CITY_PRESETS, } from "./nasa.js?v=20260829a";
 
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260828a";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260829a";
 
-import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260828a";
+import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260829a";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260828a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260829a";
 
-import { applyI18n, initLangPicker, resolveLang } from "../shared/i18n.js?v=20260828a";
+import { applyI18n, initLangPicker, resolveLang } from "../shared/i18n.js?v=20260829a";
 
-import { LOCALES } from "../shared/locales.js?v=20260828a";
+import { LOCALES } from "../shared/locales.js?v=20260829a";
+
+import { renderFrontier, frontierVerdict, markerOffCurveNote } from "./frontier-chart.js?v=20260829a";
 
 let worker = null;
 
@@ -768,7 +770,7 @@ function ensureWorker() {
 
   if (!worker) {
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260828a", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260829a", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -2155,7 +2157,119 @@ function drawAutoChart(p) {
 
 // Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
 
-const PAYLOAD_CONTRACT = 6;
+const PAYLOAD_CONTRACT = 7;
+
+// -- Plausibility frontier ---------------------------------------------------
+
+// The cards answer "what does this target cost?". This answers "what does any
+
+// budget buy?" - the shape that tells someone whether their goal is easy,
+
+// expensive, or impossible where they live.
+
+function renderFrontierPanel(p) {
+
+  const wrap = $("frontierWrap");
+
+  if (!wrap) return;
+
+  const f = p.frontier;
+
+  if (!f || !Array.isArray(f.points) || !f.points.length) {
+
+    wrap.style.display = "none";
+
+    return;
+
+  }
+
+  // On a small enough load the smallest buildable system already covers
+
+  // everything, so there is no curve - but "sizing is not your constraint"
+
+  // is the most useful thing this panel can tell that visitor. Say it,
+
+  // rather than silently disappearing.
+
+  const covered = f.reach && f.reach.id === "already-covered";
+
+  if (f.points.length < 2 && !covered) {
+
+    wrap.style.display = "none";
+
+    return;
+
+  }
+
+  // Show the panel BEFORE drawing: the chart is built at the width of its
+
+  // container, and a display:none container measures zero.
+
+  wrap.style.display = "block";
+
+  const opts = { t, money, tableHost: $("frontierTable") };
+
+  const drew = renderFrontier($("frontierChart"), f, opts);
+
+  if (!drew && !covered) {
+
+    wrap.style.display = "none";
+
+    return;
+
+  }
+
+  // No curve to show, so hide the chart furniture and let the sentence stand.
+
+  const details = wrap.querySelector("details");
+
+  if (details) details.style.display = drew ? "" : "none";
+
+  const verdict = $("frontierVerdict");
+
+  if (verdict) verdict.textContent = frontierVerdict(f, opts);
+
+  // Only shown when the recommended system really is off a curve that was
+
+  // actually drawn - the note talks about "the curve", so it makes no sense
+
+  // on a load small enough that there is no curve to be off.
+
+  const note = $("frontierNote");
+
+  if (note) {
+
+    const text = drew ? markerOffCurveNote(f, opts) : "";
+
+    note.textContent = text;
+
+    note.style.display = text ? "block" : "none";
+
+  }
+
+}
+
+
+
+// Redraw the frontier when the column width changes: the SVG is built at the
+
+// size of its container so labels stay readable, which means a resize needs a
+
+// fresh render rather than a rescale.
+
+let frontierResizeTimer = null;
+
+window.addEventListener("resize", () => {
+
+  if (!lastPayload || !lastPayload.frontier) return;
+
+  clearTimeout(frontierResizeTimer);
+
+  frontierResizeTimer = setTimeout(() => renderFrontierPanel(lastPayload), 180);
+
+});
+
+
 
 function renderResults(p) {
 
@@ -2271,6 +2385,22 @@ function renderResults(p) {
 
       : "";
 
+  const fr = p.frontier && p.frontier.reach;
+
+  const frontierLine = fr && Number.isFinite(fr.ceilingPct)
+
+    ? `SPEND-vs-COVERAGE CURVE (computed, do not recompute): ceiling ${fr.ceilingPct}% at ~${money(fr.ceilingCostUsd)}` +
+
+      (fr.kneePct !== null ? `; best value stops at ${fr.kneePct}% for ~${money(fr.kneeCostUsd)}` : "") +
+
+      (fr.headCostPerPoint !== null && fr.tailCostPerPoint !== null
+
+        ? `; marginal cost rises from ~${money(fr.headCostPerPoint)} to ~${money(fr.tailCostPerPoint)} per extra percentage point`
+
+        : "") + ".\n"
+
+    : "";
+
   window.lastSizingBrief =
 
     `I sized a system with your calculator for ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)}, ` +
@@ -2279,7 +2409,7 @@ function renderResults(p) {
 
     `${p.auto && p.auto.length ? ` (${p.autoNote})` : ""}, ` +
 
-    `${isGT ? "staying connected to the grid (no export" + (inp.exportRate ? ", feed-in credit entered)" : ")") : "fully off-grid"}:\n${recLine}${briefLines.join("\n")}\n` +
+    `${isGT ? "staying connected to the grid (no export" + (inp.exportRate ? ", feed-in credit entered)" : ")") : "fully off-grid"}:\n${recLine}${frontierLine}${briefLines.join("\n")}\n` +
 
     `[ADVISOR INSTRUCTION: These numbers were computed deterministically from NASA POWER hourly weather ` +
 
@@ -2302,6 +2432,8 @@ function renderResults(p) {
   populatePrintSheet(p, inp);
 
   renderBomPanel();
+
+  renderFrontierPanel(p);
 
   if (hasAuto && resultLevel !== "matrix") drawAutoChart(p);
 
@@ -2622,6 +2754,12 @@ function populatePrintSheet(p, inp) {
     ${hwHtml}
 
     ${mx ? `<h2 style="font-size:12pt;margin:10pt 0 4pt;">All options compared</h2>${mx}` : ""}
+
+    ${p.frontier && p.frontier.points && p.frontier.points.length > 1
+
+      ? `<p style="font-size:9.5pt;margin:0 0 4pt;"><strong>How far money gets you:</strong> ${frontierVerdict(p.frontier, { t, money })}</p>`
+
+      : ""}
 
     <p style="font-size:9.5pt;margin:0 0 4pt;"><strong>Method:</strong> hourly simulation of ${p.assumptions.dataYears} of
 
