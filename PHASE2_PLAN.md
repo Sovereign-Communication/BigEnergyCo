@@ -29,6 +29,8 @@ removed, modal Esc + focus, aria-live status/chat, real `<button>` elements).
 | **Hardware list (`bom.js`)** — panels+voltage+bank layout+inverter+controller+fuses+cable; CSV download; print-sheet table; live panel-wattage input | ✅ shipped 2026-08-26 |
 | **Generator fuel helper** — petrol/diesel price/L → $/kWh (documented L-per-kWh assumptions); feeds existing tariff math | ✅ shipped 2026-08-26 |
 | Sheet replication gate (`scripts/validate-against-sheet.mjs`, ±5%) | ⏳ awaiting owner's sheet CSV export |
+| **Plausibility frontier (`frontier.js` + `frontier-chart.js`)** — Pareto sweep of every (PV, battery) pair, knee detection, reach verdict, responsive SVG + data table, EN/ES/PT/FR/AR (contract **7**) | ✅ shipped 2026-08-29 — see `PHASE3_PLAN.md` |
+| Fixed connection charges separated from energy displaced (bill-cut % is currently energy, not bill) | ⏳ next — correctness, see PHASE3_PLAN §6 |
 | Bundled offline climate profiles (PWA/Freenet engine) | ⏳ next |
 | Aging fade inside the search objective (currently replacement-count only) | ⏳ v3 |
 | Full dynamic-string i18n (results text beyond static chrome) | ⏳ incremental |
