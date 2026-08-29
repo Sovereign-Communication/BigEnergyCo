@@ -1398,7 +1398,6 @@ function renderBestPick(p) {
   card.style.borderColor = "var(--border-glow)";
   card.appendChild(el("div", { class: "bom-badge" }, "Recommended \u2014 lowest true 20-year cost"));
   card.appendChild(el("h3", {}, `${b.chemLabel}: ${b.pvKw} kW solar + ${b.battKwh > 0 ? fmt(b.battKwh) + " kWh battery" : "no battery needed"}`));
-
   const rows = [
     ["Solar array", `${b.pvKw} kW`],
     ["Battery (usable)", b.battKwh > 0 ? `${fmt(b.battKwh)} kWh \u2014 ~${fmt(b.battNameplateKwh)} nameplate` : "none"],
