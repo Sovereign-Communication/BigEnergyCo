@@ -2143,14 +2143,31 @@ function drawCumCostChart(p) {
   const pool = (p.auto && p.auto.length) ? p.auto
     : (p.targets && p.targets.length) ? p.targets
     : (p.tiers || []);
-  const entry = (p.best && p.best.cumCostSeries) ? p.best
-    : (p.focus && pool.find((x) => x === p.focus && x.cumCostSeries))
-      ? p.focus
+  // Match recommendations back to the actual result entry by chemistry and
+  // sizing values. Focus objects intentionally contain a smaller BOM shape,
+  // so identity comparison is not reliable.
+  const candidate = p.best && p.best.cumCostSeries ? p.best
+    : p.focus && pool.find((x) => x && x.cumCostSeries &&
+        x.chemistry === p.focus.chemistry && x.pvKw === p.focus.pvKw && x.battKwh === p.focus.battKwh)
+      ? pool.find((x) => x && x.cumCostSeries &&
+        x.chemistry === p.focus.chemistry && x.pvKw === p.focus.pvKw && x.battKwh === p.focus.battKwh)
     : (pool || []).find((x) => x && x.solvable && x.cumCostSeries);
-
+  const entry = candidate || null;
   const series = entry && entry.cumCostSeries;
   if (!series || !series.grid || !series.solar || !series.grid.length) {
-    wrap.style.display = "none";
+    // This is normally the intentional no-tariff state. Make it explicit so
+    // a user never has to guess why the money story is absent.
+    wrap.style.display = p.tariff ? "none" : "block";
+    const box = $("cumSavingsBox");
+    const num = $("cumSavingsTotal");
+    const sub = $("cumSavingsSub");
+    if (box && num && sub && !p.tariff) {
+      box.style.display = "block";
+      num.textContent = "Enter your grid price to see estimated savings";
+      num.style.color = "var(--text-main)";
+      sub.textContent = "The calculator can size the system without a tariff, but needs your electricity price to compare 20-year grid cost with solar cost.";
+      sub.style.color = "var(--text-muted)";
+    }
     return;
   }
 
