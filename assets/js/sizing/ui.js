@@ -2126,10 +2126,12 @@ function appendRows(card, rows) {
  *   - amber line: cumulative grid spend if you had stayed on the grid
  *   - green line: cumulative TRUE solar cost (capex + every bank swap)
  * The crossing point IS the true break-even year. When the green line never
- * crosses above, the caption says so. A shaded wedge between the lines is
- * the savings; a lower strip plots the running difference (grid - solar)
- * from negative (unpaid capex) to the final 20-year total. Annual kWh
- * served by solar rides along as bars (secondary axis).
+ * crosses above, the headline says so. A green gradient wedge between the
+ * lines is the savings; a lower panel plots the running difference (grid -
+ * solar) as bars — red while the capex is not yet repaid, then growing
+ * green bars to the final 20-year total. Solar-served kWh rides along as
+ * a quiet mini-strip (it is constant per year, so it stays subtle), and a
+ * bold HTML callout above the chart carries the headline number.
  */
 function drawCumCostChart(p) {
   const wrap = $("cumCostChartWrap");
@@ -2155,7 +2157,7 @@ function drawCumCostChart(p) {
   wrap.style.display = "block";
   const dpr = window.devicePixelRatio || 1;
   const W = Math.max(320, wrap.clientWidth || 640);
-  const COST_H = 300, SAVE_H = 130, GAP = 16;
+  const COST_H = 280, SAVE_H = 150, GAP = 14;
   const H = COST_H + GAP + SAVE_H;
   canvas.width = W * dpr;
   canvas.height = H * dpr;
@@ -2165,73 +2167,97 @@ function drawCumCostChart(p) {
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, W, H);
 
-  const padL = 62, padR = 58, padT = 30, padB = 26;
+  const padL = 62, padR = 58, padT = 26, padB = 24;
   const plotW = W - padL - padR, plotH = COST_H - padT - padB;
   const nY = series.years || series.grid.length;
   const maxCost = Math.max(series.grid[nY - 1] || 0, series.solar[nY - 1] || 0, 1);
   const X = (i) => padL + (i / (nY - 1)) * plotW;
   const Y = (v) => padT + (1 - v / maxCost) * plotH;
 
-  // kWh bars (annual served by solar) as background bars, own scale
-  const servedKwh = entry.servedKwhPerYear || 0;
-  const kwhMax = Math.max(servedKwh, 1);
-  const barW = plotW / nY * 0.55;
-  if (servedKwh > 0) {
-    ctx.fillStyle = "rgba(59,130,246,0.22)";
-    ctx.strokeStyle = "rgba(59,130,246,0.45)"; ctx.lineWidth = 1;
-    for (let y = 0; y < nY; y++) {
-      const h = (servedKwh / kwhMax) * plotH;
-      ctx.fillRect(X(y) - barW / 2, padT + plotH - h, barW, h);
-      ctx.strokeRect(X(y) - barW / 2, padT + plotH - h, barW, h);
-    }
-  }
-
-  // frame + cost gridlines
-  ctx.font = "10px ui-monospace, monospace";
-  for (let k = 0; k <= 4; k++) {
-    const v = maxCost * k / 4;
-    const y = Y(v);
-    ctx.strokeStyle = "rgba(255,255,255,0.08)";
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
-    ctx.fillStyle = "#6b7280"; ctx.textAlign = "right";
-    ctx.fillText(money(v), padL - 6, y + 3);
-  }
-  // kWh axis (right, blue)
-  ctx.fillStyle = "rgba(96,165,250,0.95)"; ctx.textAlign = "left";
-  ctx.fillText(fmt(kwhMax) + " kWh/yr", W - padR + 4, padT + 3);
-  ctx.fillText("0", W - padR + 4, padT + plotH);
-
-  // break-even crossing marker (first year grid >= solar)
+  // ── headline callout (HTML, above the canvas) ────────────────────────
+  const diff = series.grid.map((g, i) => g - series.solar[i]);
   let beIdx = -1;
   for (let i = 0; i < nY; i++) {
     if (series.grid[i] >= series.solar[i]) { beIdx = i; break; }
   }
-  if (beIdx >= 0) {
-    const beVal = series.solar[beIdx];
-    // dashed vertical + label placed to the RIGHT of the line, mid-height,
-    // so it can never collide with the end-of-line totals at the top edge
-    ctx.setLineDash([4, 4]);
-    ctx.strokeStyle = "rgba(255,255,255,0.35)";
-    ctx.beginPath(); ctx.moveTo(X(beIdx), padT); ctx.lineTo(X(beIdx), padT + plotH); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = "#f3f4f6"; ctx.textAlign = "left"; ctx.font = "10px ui-monospace, monospace";
-    const beLblX = Math.min(X(beIdx) + 6, W - padR - 92);
-    ctx.fillText(`break-even yr ${beIdx + 1}`, beLblX, padT + plotH * 0.28);
-    ctx.beginPath(); ctx.arc(X(beIdx), Y(beVal), 4, 0, Math.PI * 2);
-    ctx.fillStyle = "#f3f4f6"; ctx.fill();
+  const totalSaved = diff[nY - 1] || 0;
+  const servedKwh = entry.servedKwhPerYear || 0;
+  const box = $("cumSavingsBox"), num = $("cumSavingsTotal"), sub = $("cumSavingsSub");
+  if (box && num && sub) {
+    box.style.display = "block";
+    if (totalSaved > 0) {
+      num.textContent = `+~${money(totalSaved)} saved over 20 years`;
+      num.style.color = "var(--primary-accent)";
+      const kwhBits = servedKwh > 0
+        ? ` · ~${fmt(servedKwh)} kWh/yr served by the sun instead of the grid`
+        : "";
+      sub.textContent = `Break-even in year ${beIdx + 1} \u2014 every year after puts money back in your pocket${kwhBits}`;
+      sub.style.color = "var(--text-muted)";
+    } else {
+      num.textContent = "Never breaks even within 20 years";
+      num.style.color = "var(--danger-red)";
+      sub.textContent = `Battery replacements outpace bill savings at this site — the honest shortfall is ~${money(Math.abs(totalSaved))}.`;
+      sub.style.color = "var(--text-muted)";
+    }
   }
 
-  // savings wedge: fill between the two running sums (the gap = your money)
-  ctx.globalAlpha = 0.16; ctx.fillStyle = "#10b981";
+  // ── top panel: the two running cost sums ─────────────────────────────
+  // gridlines (light)
+  ctx.font = "10px ui-monospace, monospace";
+  for (let k = 0; k <= 4; k++) {
+    const v = maxCost * k / 4;
+    const y = Y(v);
+    ctx.strokeStyle = "rgba(255,255,255,0.07)";
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillStyle = "#6b7280"; ctx.textAlign = "right";
+    ctx.fillText(money(Math.round(v)), padL - 6, y + 3);
+  }
+
+  // solar-served kWh: quiet mini-strip along the panel floor (per-year energy
+  // is constant, so full-height bars were pure noise). The number itself is
+  // carried by the headline callout above — the strip here is just texture,
+  // so it gets no canvas label and can never collide with the totals.
+  if (servedKwh > 0) {
+    const stripH = 10, stripY = padT + plotH - stripH - 8;
+    const bw = (plotW / nY) * 0.6;
+    ctx.fillStyle = "rgba(96,165,250,0.28)";
+    for (let y = 0; y < nY; y++) {
+      ctx.fillRect(X(y) - bw / 2, stripY, bw, stripH);
+    }
+  }
+
+  // savings wedge: horizontal gradient that deepens toward the future —
+  // the gap literally grows, so the fill should feel like it grows too
+  const wedge = ctx.createLinearGradient(padL, 0, W - padR, 0);
+  wedge.addColorStop(0, "rgba(16,185,129,0.06)");
+  wedge.addColorStop(0.55, "rgba(16,185,129,0.16)");
+  wedge.addColorStop(1, "rgba(16,185,129,0.34)");
+  ctx.fillStyle = wedge;
   ctx.beginPath();
   ctx.moveTo(X(0), Y(series.grid[0]));
   for (let i = 1; i < nY; i++) ctx.lineTo(X(i), Y(series.grid[i]));
   for (let i = nY - 1; i >= 0; i--) ctx.lineTo(X(i), Y(series.solar[i]));
-  ctx.closePath(); ctx.fill();
-  ctx.globalAlpha = 1;
+  ctx.closePath();
+  ctx.fill();
 
-  // grid line (amber) + solar line (green)
-  ctx.lineWidth = 2; ctx.strokeStyle = "#fbbf24"; ctx.globalAlpha = 0.95;
+  // break-even marker: dashed vertical + label to the RIGHT at mid-height,
+  // clear of both line-end totals
+  if (beIdx >= 0) {
+    const beVal = series.solar[beIdx];
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = "rgba(255,255,255,0.30)";
+    ctx.beginPath(); ctx.moveTo(X(beIdx), padT); ctx.lineTo(X(beIdx), padT + plotH); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#e5e7eb"; ctx.font = "10px ui-monospace, monospace"; ctx.textAlign = "left";
+    const beLblX = Math.min(X(beIdx) + 6, W - padR - 84);
+    ctx.fillText(`break-even yr ${beIdx + 1}`, beLblX, padT + plotH * 0.30);
+    ctx.beginPath(); ctx.arc(X(beIdx), Y(beVal), 4, 0, Math.PI * 2);
+    ctx.fillStyle = "#f9fafb"; ctx.fill();
+  }
+
+  // the two lines
+  ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = 2.5;
+  ctx.strokeStyle = "#fbbf24";
   ctx.beginPath();
   for (let i = 0; i < nY; i++) { const y = Y(series.grid[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
   ctx.stroke();
@@ -2239,74 +2265,72 @@ function drawCumCostChart(p) {
   ctx.beginPath();
   for (let i = 0; i < nY; i++) { const y = Y(series.solar[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
   ctx.stroke();
-  ctx.globalAlpha = 1;
 
-  // line-end totals, clamped INSIDE the plot so they never collide with
-  // each other or the panel edge (grid ends at top, solar near bottom)
+  // line-end totals, clamped INSIDE the plot
   ctx.font = "bold 11px ui-monospace, monospace"; ctx.textAlign = "right";
-  const gridLblY = Math.max(padT + 14, Y(series.grid[nY - 1]) + 16);
-  const solarLblY = Math.min(padT + plotH - 6, Y(series.solar[nY - 1]) - 8);
+  const gridLblY = Math.max(padT + 14, Y(series.grid[nY - 1]) + 18);
+  const solarLblY = Math.min(padT + plotH - 8, Y(series.solar[nY - 1]) - 10);
   ctx.fillStyle = "#fbbf24";
   ctx.fillText(`grid (no solar): ${money(series.grid[nY - 1])}`, W - padR - 4, gridLblY);
-  ctx.fillStyle = "#10b981";
+  ctx.fillStyle = "#34d399";
   ctx.fillText(`solar (true cost): ${money(series.solar[nY - 1])}`, W - padR - 4, solarLblY);
 
-  // ── savings strip: the running difference (grid − solar) ────────────────
-  const sTop = COST_H + GAP + 8, sPadT = 14, sPadB = 22;
-  const sH = SAVE_H - sPadT - sPadB;
-  const diff = series.grid.map((g, i) => g - series.solar[i]);
-  const dMin = Math.min(...diff, 0), dMax = Math.max(...diff, 0);
-  const D = (v) => sTop + sPadT + (1 - (v - dMin) / (dMax - dMin || 1)) * sH;
+  // ── bottom panel: your pocket, as growing bars ───────────────────────
+  const sTop = COST_H + GAP + 10, sPadT = 16, sPadB = 6;
+  const sH = SAVE_H - sPadT - sPadB - 16; // 16px reserved for the year labels
+  const dMin = Math.min(...diff, 0), dMax = Math.max(...diff, 1);
+  // headroom above the tallest bar: keeps the total label and the panel
+  // title on separate rows instead of colliding
+  const sTop2 = dMax + (dMax - dMin) * 0.12;
+  const D = (v) => sTop + sPadT + (1 - (v - dMin) / (sTop2 - dMin || 1)) * sH;
   const zeroY = D(0);
-  // panel frame + zero line
-  ctx.strokeStyle = "rgba(255,255,255,0.10)";
-  ctx.strokeRect(padL, sTop + sPadT, plotW, sH);
-  ctx.setLineDash([3, 3]); ctx.strokeStyle = "rgba(255,255,255,0.25)";
+
+  // zero baseline
+  ctx.setLineDash([3, 3]); ctx.strokeStyle = "rgba(255,255,255,0.30)";
   ctx.beginPath(); ctx.moveTo(padL, zeroY); ctx.lineTo(W - padR, zeroY); ctx.stroke();
   ctx.setLineDash([]);
   ctx.fillStyle = "#6b7280"; ctx.font = "10px ui-monospace, monospace"; ctx.textAlign = "right";
   ctx.fillText("$0", padL - 6, zeroY + 3);
-  ctx.textAlign = "right";
-  ctx.fillStyle = "#10b981";
-  ctx.fillText(`+${money(dMax)} by yr ${nY}`, W - 2, D(dMax) + 3);
-  // red fill while the difference is still negative (capex not repaid)
-  const negIdx = diff.findIndex((d) => d >= 0);
-  if (negIdx > 0) {
-    ctx.globalAlpha = 0.20; ctx.fillStyle = "#ef4444";
-    ctx.beginPath();
-    ctx.moveTo(X(0), zeroY);
-    for (let i = 0; i < negIdx; i++) ctx.lineTo(X(i), D(diff[i]));
-    ctx.lineTo(X(negIdx - 1), zeroY);
-    ctx.closePath(); ctx.fill();
-  }
-  // green fill from the crossing onward (net savings in your pocket)
-  const posIdx = negIdx === -1 ? -1 : negIdx;
-  if (posIdx >= 0) {
-    ctx.globalAlpha = 0.20; ctx.fillStyle = "#10b981";
-    ctx.beginPath();
-    ctx.moveTo(X(posIdx), zeroY);
-    for (let i = posIdx; i < nY; i++) ctx.lineTo(X(i), D(diff[i]));
-    ctx.lineTo(X(nY - 1), zeroY);
-    ctx.closePath(); ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-  // the difference line itself
-  ctx.strokeStyle = "#10b981"; ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let i = 0; i < nY; i++) { const y = D(diff[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
-  ctx.stroke();
-  // strip title
-  ctx.fillStyle = "#9ca3af"; ctx.font = "10px ui-monospace, monospace"; ctx.textAlign = "left";
-  ctx.fillText("running difference (grid − solar)", padL + 2, sTop + 9);
 
-  // x labels: years 1..20 (every 2nd to avoid clutter), under both panels
+  // bars: red while unpaid, green once the system is ahead
+  const bw2 = (plotW / nY) * 0.66;
+  for (let i = 0; i < nY; i++) {
+    const v = diff[i];
+    const bx = X(i) - bw2 / 2;
+    if (v < 0) {
+      ctx.fillStyle = "rgba(239,68,68,0.45)";
+      ctx.fillRect(bx, zeroY, bw2, D(v) - zeroY);
+    } else {
+      const grad = ctx.createLinearGradient(0, D(v), 0, zeroY);
+      grad.addColorStop(0, "rgba(52,211,153,0.95)");
+      grad.addColorStop(1, "rgba(16,185,129,0.35)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(bx, D(v), bw2, zeroY - D(v));
+    }
+  }
+
+  // panel title (left, short) + the total crowns the tallest bar (right)
+  ctx.fillStyle = "#9ca3af"; ctx.font = "10px ui-monospace, monospace"; ctx.textAlign = "left";
+  ctx.fillText("your pocket, year by year", padL + 2, sTop + 9);
+  ctx.textAlign = "right";
+  ctx.fillStyle = "#34d399"; ctx.font = "bold 11px ui-monospace, monospace";
+  ctx.fillText(`+${money(dMax)}`, W - padR - 4, D(dMax) - 8);
+
+  // break-even tick rides just ABOVE the zero line — the early years have
+  // empty space there (their bars sit below zero), so nothing collides
+  if (beIdx >= 0) {
+    ctx.fillStyle = "#e5e7eb"; ctx.font = "10px ui-monospace, monospace"; ctx.textAlign = "center";
+    ctx.fillText(`\u25B2 yr ${beIdx + 1}`, Math.max(padL + 16, X(beIdx)), zeroY - 8);
+  }
+
+  // x labels: years 1..20 (every 2nd to avoid clutter), shared bottom axis
   ctx.fillStyle = "#6b7280"; ctx.font = "10px ui-monospace, monospace"; ctx.textAlign = "center";
   for (let y = 0; y < nY; y += 2) {
-    ctx.fillText(String(y + 1), X(y), H - 6);
+    ctx.fillText(String(y + 1), X(y), H - 4);
   }
 
   // caption
-  const label = entry.chemLabel || "";
+  const label = entry.chemLabel || entry.label || "";
   const cap = $("cumCostCaption");
   if (cap) {
     let txt = `Running 20-year cost for the recommended system (${label}): ` +
@@ -2314,12 +2338,11 @@ function drawCumCostChart(p) {
       `(purchase + install labor + every battery swap). `;
     if (beIdx >= 0) {
       const saved = (series.grid[nY - 1] || 0) - (series.solar[nY - 1] || 0);
-      txt += `They cross at year ${beIdx + 1} — after that every year puts ~${money(Math.round(saved / (nY - beIdx)))} back in your pocket. ` +
-        `Total saving over 20 years: ~${money(saved)}.`;
+      txt += `They cross at year ${beIdx + 1} \u2014 after that every year puts ~${money(Math.round(saved / (nY - beIdx)))} back in your pocket. ` +
+        `Total saving over 20 years: ~${money(saved)}. The lower bars are your running net position: red until break-even, then climbing.`;
     } else {
-      txt += `Within 20 years they never cross — battery replacements outpace bill savings, so the honest answer is: it does not pay for itself here.`;
+      txt += `Within 20 years they never cross \u2014 battery replacements outpace bill savings, so the honest answer is: it does not pay for itself here.`;
     }
-    if (servedKwh > 0) txt += ` Blue bars: ~${fmt(servedKwh)} kWh/yr served by solar instead of the grid. The lower strip is the running difference: negative until break-even, then the gap keeps widening.`;
     cap.textContent = txt;
   }
 }
