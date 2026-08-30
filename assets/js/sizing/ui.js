@@ -2138,6 +2138,11 @@ function drawCumCostChart(p) {
   const canvas = $("cumCostCanvas");
   if (!wrap || !canvas) return;
 
+  // Always make the section visible after a completed run. This keeps a
+  // missing financial series explainable on every form path instead of
+  // silently leaving a desktop user with no chart at all.
+  wrap.style.display = "block";
+
   // Pick the system the chart talks about: the recommended one, else the
   // focus system, else the first solvable entry with a series.
   const pool = (p.auto && p.auto.length) ? p.auto
@@ -2147,25 +2152,27 @@ function drawCumCostChart(p) {
   // sizing values. Focus objects intentionally contain a smaller BOM shape,
   // so identity comparison is not reliable.
   const candidate = p.best && p.best.cumCostSeries ? p.best
-    : p.focus && pool.find((x) => x && x.cumCostSeries &&
-        x.chemistry === p.focus.chemistry && x.pvKw === p.focus.pvKw && x.battKwh === p.focus.battKwh)
-      ? pool.find((x) => x && x.cumCostSeries &&
-        x.chemistry === p.focus.chemistry && x.pvKw === p.focus.pvKw && x.battKwh === p.focus.battKwh)
-    : (pool || []).find((x) => x && x.solvable && x.cumCostSeries);
+    : p.focus && pool.find((x) => x && x.chemistry === p.focus.chemistry && x.pvKw === p.focus.pvKw && x.battKwh === p.focus.battKwh)
+      ? pool.find((x) => x && x.chemistry === p.focus.chemistry && x.pvKw === p.focus.pvKw && x.battKwh === p.focus.battKwh)
+    : (pool || []).find((x) => x && x.solvable);
   const entry = candidate || null;
   const series = entry && entry.cumCostSeries;
   if (!series || !series.grid || !series.solar || !series.grid.length) {
-    // This is normally the intentional no-tariff state. Make it explicit so
+    // This is either the intentional no-tariff state or a result that cannot
+    // produce a money comparison. Make it explicit so
     // a user never has to guess why the money story is absent.
-    wrap.style.display = p.tariff ? "none" : "block";
     const box = $("cumSavingsBox");
     const num = $("cumSavingsTotal");
     const sub = $("cumSavingsSub");
-    if (box && num && sub && !p.tariff) {
+    if (box && num && sub) {
       box.style.display = "block";
-      num.textContent = "Enter your grid price to see estimated savings";
+      num.textContent = p.tariff
+        ? "Savings data unavailable for this result"
+        : "Enter your grid price to see estimated savings";
       num.style.color = "var(--text-main)";
-      sub.textContent = "The calculator can size the system without a tariff, but needs your electricity price to compare 20-year grid cost with solar cost.";
+      sub.textContent = p.tariff
+        ? "The sizing completed, but this result did not include a comparable 20-year cost series."
+        : "The calculator can size the system without a tariff, but needs your electricity price to compare 20-year grid cost with solar cost.";
       sub.style.color = "var(--text-muted)";
     }
     return;
