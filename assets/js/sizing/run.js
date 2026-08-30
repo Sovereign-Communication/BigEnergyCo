@@ -269,7 +269,7 @@ export async function runSizing(msg, deps = {}) {
     } else {
       const importedKwhPerYear = sizing.result.importedWh / 1000 / yrs;
       const clippedKwhPerYear = sizing.result.curtailedWh / 1000 / yrs;
-      const billAfterUsd = tariff ? importedKwhPerYear * tariff : null;
+      const billAfterUsd = tariff !== null ? importedKwhPerYear * tariff : null;
       savings = billAfterUsd !== null && gridSpend ? Math.max(0, gridSpend - billAfterUsd) : null;
       if (savings !== null) savings += exportValueUsd(clippedKwhPerYear, exportRate);
       cell.cutPct = Math.round((1 - importedKwhPerYear / (dailyKwh * 365)) * 100);
@@ -467,7 +467,7 @@ export async function runSizing(msg, deps = {}) {
         const servedKwhPerYear = (hit.sizing.result.directWh + hit.sizing.result.battWhAc) / 1000 / series.meta.years;
         const importedKwhPerYear = hit.sizing.result.importedWh / 1000 / series.meta.years;
         const clippedKwhPerYear = hit.sizing.result.curtailedWh / 1000 / series.meta.years;
-        const billAfterUsd = tariff ? importedKwhPerYear * tariff : null;
+        const billAfterUsd = tariff !== null ? importedKwhPerYear * tariff : null;
         const savingsUsd = billAfterUsd !== null && gridSpend !== null ? Math.max(0, gridSpend - billAfterUsd) : null;
         const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
         const entry = {
@@ -561,7 +561,7 @@ export async function runSizing(msg, deps = {}) {
       const servedKwhPerYear = (sizing.result.directWh + sizing.result.battWhAc) / 1000 / series.meta.years;
       const importedKwhPerYear = sizing.result.importedWh / 1000 / series.meta.years;
       const clippedKwhPerYear = sizing.result.curtailedWh / 1000 / series.meta.years;
-      const billAfterUsd = tariff ? importedKwhPerYear * tariff : null;
+      const billAfterUsd = tariff !== null ? importedKwhPerYear * tariff : null;
       const savingsUsd = billAfterUsd !== null && gridSpend !== null ? Math.max(0, gridSpend - billAfterUsd) : null;
       const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
       const lcoe = lcoeUsdPerKwh({
