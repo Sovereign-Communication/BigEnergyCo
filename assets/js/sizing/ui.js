@@ -1424,7 +1424,7 @@ function renderAutoCards(p) {
 
     }
 
-    rows.push(["Total 20-year cost", `~${money(a.lifetimeCostMid)}` + (a.chemistry === bestId ? " - cheapest" : "")]);
+    rows.push(["Total 20-year cost", `~${money(a.lifetimeCostMid)}` + (a.chemistry === bestId && p.auto.filter((x) => x.solvable).length >= 2 ? " - cheapest" : "")]);
 
     if (isGT) {
 
@@ -1540,9 +1540,7 @@ function renderBestPick(p) {
   const b = p.best;
   const isGT = p.mode === "gridtie";
   const solvableCount = (p.auto || []).filter((a) => a.solvable && Number.isFinite(a.lifetimeCostMid)).length;
-  const bestSuffix = solvableCount >= 3 ? " \u2014 cheapest of the three"
-    : solvableCount === 2 ? " \u2014 cheaper of the two compared"
-    : "";
+  const bestSuffix = solvableCount >= 2 ? " — cheapest compared" : "";
   const card = el("div", { class: "bom-card" });
   card.style.borderColor = "var(--border-glow)";
   card.appendChild(el("div", { class: "bom-badge" }, "Recommended \u2014 lowest true 20-year cost"));

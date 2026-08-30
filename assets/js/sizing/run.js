@@ -485,7 +485,7 @@ export async function runSizing(msg, deps = {}) {
           paybackYearsLo: savingsUsd ? paybackYears(m.cost.lo, savingsUsd + exportVal) : null,
           paybackYearsHi: savingsUsd ? paybackYears(m.cost.hi, savingsUsd + exportVal) : null,
           trueBreakEvenYear: breakEvenFor(m, savingsUsd),
-          cumCostSeries: savingsUsd ? cumCostFor(m, savingsUsd) : null,
+          cumCostSeries: gridSpend !== null ? cumCostFor(m, gridSpend) : null,
           exportValueAnnualUsd: Math.round(exportVal),
           clippedKwhPerYear: Math.round(clippedKwhPerYear),
           replacementsHorizon: m.replacementsHorizon,
@@ -594,7 +594,7 @@ export async function runSizing(msg, deps = {}) {
         paybackYearsLo: savingsUsd ? paybackYears(m.cost.lo, savingsUsd + exportVal) : null,
         paybackYearsHi: savingsUsd ? paybackYears(m.cost.hi, savingsUsd + exportVal) : null,
         trueBreakEvenYear: breakEvenFor(m, savingsUsd),
-        cumCostSeries: savingsUsd ? cumCostFor(m, savingsUsd) : null,
+        cumCostSeries: gridSpend !== null ? cumCostFor(m, gridSpend) : null,
         replacementsHorizon: m.replacementsHorizon,
         swapsAndLaborUsd: m.swapsAndLaborUsd,
         lifetimeCostMid: m.lifetimeCostMid,
@@ -782,7 +782,7 @@ export async function runSizing(msg, deps = {}) {
       paybackYearsLo: gridSpend ? paybackYears(m.cost.lo, gridSpend) : null,
       paybackYearsHi: gridSpend ? paybackYears(m.cost.hi, gridSpend) : null,
       trueBreakEvenYear: breakEvenFor(m, gridSpend),
-      cumCostSeries: gridSpend ? cumCostFor(m, gridSpend) : null,
+      cumCostSeries: gridSpend !== null ? cumCostFor(m, gridSpend) : null,
     };
   });
 
