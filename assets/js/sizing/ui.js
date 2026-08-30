@@ -2154,7 +2154,12 @@ function drawCumCostChart(p) {
       ? pool.find((x) => x && x.chemistry === p.focus.chemistry && x.pvKw === p.focus.pvKw && x.battKwh === p.focus.battKwh)
     : (pool || []).find((x) => x && x.solvable);
   const entry = candidate || null;
-  const series = entry && entry.cumCostSeries;
+  // The focus object is intentionally compact and can be the only reliable
+  // recommendation identity. Prefer the matching rendered entry, but fall
+  // back to any valid series before declaring the chart unavailable.
+  const series = (entry && entry.cumCostSeries)
+    || (pool || []).find((x) => x && x.cumCostSeries)?.cumCostSeries
+    || null;
   if (!series || !series.grid || !series.solar || !series.grid.length) {
     // This is either the intentional no-tariff state or a result that cannot
     // produce a money comparison. Make it explicit so

@@ -271,7 +271,7 @@ export async function runSizing(msg, deps = {}) {
       const clippedKwhPerYear = sizing.result.curtailedWh / 1000 / yrs;
       const billAfterUsd = tariff ? importedKwhPerYear * tariff : null;
       savings = billAfterUsd !== null && gridSpend ? Math.max(0, gridSpend - billAfterUsd) : null;
-      if (savings) savings += exportValueUsd(clippedKwhPerYear, exportRate);
+      if (savings !== null) savings += exportValueUsd(clippedKwhPerYear, exportRate);
       cell.cutPct = Math.round((1 - importedKwhPerYear / (dailyKwh * 365)) * 100);
     }
     if (savings) {
@@ -468,7 +468,7 @@ export async function runSizing(msg, deps = {}) {
         const importedKwhPerYear = hit.sizing.result.importedWh / 1000 / series.meta.years;
         const clippedKwhPerYear = hit.sizing.result.curtailedWh / 1000 / series.meta.years;
         const billAfterUsd = tariff ? importedKwhPerYear * tariff : null;
-        const savingsUsd = billAfterUsd !== null && gridSpend ? Math.max(0, gridSpend - billAfterUsd) : null;
+        const savingsUsd = billAfterUsd !== null && gridSpend !== null ? Math.max(0, gridSpend - billAfterUsd) : null;
         const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
         const entry = {
           chemistry: chemId,
@@ -562,7 +562,7 @@ export async function runSizing(msg, deps = {}) {
       const importedKwhPerYear = sizing.result.importedWh / 1000 / series.meta.years;
       const clippedKwhPerYear = sizing.result.curtailedWh / 1000 / series.meta.years;
       const billAfterUsd = tariff ? importedKwhPerYear * tariff : null;
-      const savingsUsd = billAfterUsd !== null && gridSpend ? Math.max(0, gridSpend - billAfterUsd) : null;
+      const savingsUsd = billAfterUsd !== null && gridSpend !== null ? Math.max(0, gridSpend - billAfterUsd) : null;
       const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
       const lcoe = lcoeUsdPerKwh({
         capexMidUsd: m.cost.objectiveMid,
