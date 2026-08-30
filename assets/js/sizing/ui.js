@@ -10,19 +10,19 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260829a";
+import { CITY_PRESETS, } from "./nasa.js?v=20260830a";
 
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260829a";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830a";
 
-import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260829a";
+import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830a";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260829a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260830a";
 
-import { applyI18n, initLangPicker, resolveLang } from "../shared/i18n.js?v=20260829a";
+import { applyI18n, initLangPicker, resolveLang } from "../shared/i18n.js?v=20260830a";
 
-import { LOCALES } from "../shared/locales.js?v=20260829a";
+import { LOCALES } from "../shared/locales.js?v=20260830a";
 
-import { renderFrontier, frontierVerdict, markerOffCurveNote } from "./frontier-chart.js?v=20260829a";
+import { renderFrontier, frontierVerdict, markerOffCurveNote } from "./frontier-chart.js?v=20260830a";
 
 let worker = null;
 
@@ -770,7 +770,7 @@ function ensureWorker() {
 
   if (!worker) {
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260829a", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260830a", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -2207,7 +2207,17 @@ function renderFrontierPanel(p) {
 
   wrap.style.display = "block";
 
-  const opts = { t, money, tableHost: $("frontierTable") };
+  const opts = {
+
+    t, money, tableHost: $("frontierTable"),
+
+    selected: frontierSelected ?? undefined,
+
+    // Clicking a point re-renders the panel (chart + table) around that pick.
+
+    onSelect: (i) => { frontierSelected = i; renderFrontierPanel(lastPayload); },
+
+  };
 
   const drew = renderFrontier($("frontierChart"), f, opts);
 
@@ -2259,6 +2269,14 @@ function renderFrontierPanel(p) {
 
 let frontierResizeTimer = null;
 
+// Which dot on the frontier is picked. null = follow the recommended system
+
+// (frontier.marker); once the visitor clicks a point this holds the index and
+
+// the blue dot + its readout move to it. Reset on every new sizing run.
+
+let frontierSelected = null;
+
 window.addEventListener("resize", () => {
 
   if (!lastPayload || !lastPayload.frontier) return;
@@ -2276,6 +2294,8 @@ function renderResults(p) {
   const inp = readInputs();
 
   lastPayload = p;
+
+  frontierSelected = null;   // new result -> blue dot follows the new recommendation
 
   const isGT = p.mode === "gridtie";
 
@@ -2320,6 +2340,32 @@ function renderResults(p) {
   else if (isGT) renderTargetCards(p);
 
   else renderTierCards(p);
+
+  // A heavy load at a dark site can leave every card "not solvable", which
+
+  // would render as a blank grid. Say why instead of leaving empty space -
+
+  // the frontier below already shows exactly how far this location can get.
+
+  const anySolvable = hasAuto
+
+    ? p.auto.some((a) => a && a.solvable)
+
+    : ((isGT ? p.targets : p.tiers) || []).some((t) => t && t.solvable);
+
+  if (!anySolvable) {
+
+    const box = $("tierResults");
+
+    if (box) {
+
+      box.innerHTML = "";
+
+      box.appendChild(el("div", { class: "no-solvable", style: "grid-column:1/-1;padding:1.1rem;border:1px solid var(--border-card);border-radius:10px;color:var(--text-muted);" }, t("frontierNoSystem")));
+
+    }
+
+  }
 
   const a = p.assumptions;
 

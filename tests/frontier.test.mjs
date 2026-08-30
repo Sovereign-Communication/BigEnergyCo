@@ -346,3 +346,46 @@ test("a frontier failure never takes the whole result down", async () => {
   assert.equal(p.contract, 7);
   assert.ok("frontier" in p, "the field always exists, even when there is nothing to draw");
 });
+
+// The reported bug: a visitor shares "London, 50 kWh/day, grid-tie, 95% cut"
+// and gets NO battery/solar cards at all, because no chemistry can hit a 95%
+// bill cut inside the searched envelope at a dark or heavy site. The cards are
+// the product - so AUTO falls back to the nearest workable cut and says so.
+test("AUTO: an unreachable cut target falls back to the nearest workable cut, never a blank grid", async () => {
+  const oslo = OFFLINE_PROFILES.find((p) => p.name.includes("Oslo"));
+  const w = async () => ({
+    hours: synthesizeFromProfile(oslo),
+    meta: { latitude: 59.9, longitude: 10.75, startYear: 2025, endYear: 2025, years: 1, source: "fixture", offline: true },
+  });
+  const p = await runSizing({
+    latitude: 59.9, longitude: 10.75, dailyKwh: 30, chemistry: "auto", mode: "gridtie",
+    autoTargetId: "cut95", tariff: 0.42,
+  }, { fetchWeather: w });
+  assert.ok(p.auto && p.auto.length > 0, "the visitor still gets battery/solar cards to compare");
+  assert.equal(p.autoFallback, true, "the fallback is flagged so the UI can say so");
+  assert.equal(p.effectiveTargetId, "cut80", "the nearest reachable cut is used");
+  assert.ok(p.frontier && p.frontier.marker, "the recommended option is still marked on the curve");
+  for (const a of p.auto) assert.ok(a.cutPct >= 55 && a.cutPct <= 90, `honest cut ${a.cutPct}% (was 0 / -100 before the fix)`);
+});
+
+// Cut-% used to divide the multi-YEAR accumulated grid import by a single-year
+// load, so a 5-year run reported ~16% for a system actually cutting ~80%. It
+// must be per-year.
+test("REGRESSION: multi-year bill-cut % is per-year, not the accumulated total", async () => {
+  const hon = OFFLINE_PROFILES.find((p) => p.name.includes("Honolulu"));
+  const one = synthesizeFromProfile(hon);
+  const hours = [...one, ...one, ...one, ...one, ...one];
+  const w = async () => ({
+    hours,
+    meta: { latitude: 21.31, longitude: -157.86, startYear: 2025, endYear: 2029, years: 5, source: "fixture", offline: false },
+  });
+  const p = await runSizing({
+    latitude: 21.31, longitude: -157.86, dailyKwh: 10, chemistry: "auto", mode: "gridtie",
+    autoTargetId: "cut80", tariff: 0.42, years: 5,
+  }, { fetchWeather: w });
+  assert.ok(p.auto && p.auto.length > 0, "cards present on a multi-year run");
+  for (const a of p.auto) {
+    assert.ok(a.cutPct >= 55 && a.cutPct <= 95,
+      `a ${a.chemistry} card sized for an ~80% cut should read ~80%, not ${a.cutPct}%`);
+  }
+});

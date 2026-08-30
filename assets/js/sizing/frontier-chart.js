@@ -148,6 +148,15 @@ export function renderFrontier(host, frontier, opts = {}) {
   // edge is a sourcing scenario, not the answer, and letting it set the axis
   // pushes the whole curve into the left third.
   const marker = frontier.marker;
+  // The point that is highlighted = the visitor's pick when they click one of
+  // the dots, otherwise the point nearest the recommended system. It is the
+  // "selected option" — the readout beside the blue dot names it in full
+  // (panels + battery + cost + coverage) so there is no ambiguity about which
+  // solar/battery option is being shown.
+  const markerIdx = marker && Number.isFinite(marker.pointIndex) ? marker.pointIndex : -1;
+  const selExplicit = typeof opts.selected === "number" && opts.selected >= 0 && pts[opts.selected];
+  const selIdx = selExplicit ? opts.selected : (pts[markerIdx] ? markerIdx : -1);
+  const sel = selIdx >= 0 ? pts[selIdx] : null;
   const lastMid = pts[pts.length - 1].capexUsd;
   const needed = Math.max(lastMid, marker && Number.isFinite(marker.capexUsd) ? marker.capexUsd : 0);
   const xMax = niceMax(needed * 1.06);
@@ -191,10 +200,18 @@ export function renderFrontier(host, frontier, opts = {}) {
   // ── the frontier itself ───────────────────────────────────────────────
   const line = pts.map((p) => `${X(p.capexUsd).toFixed(1)},${Y(p.outcomePct).toFixed(1)}`).join(" ");
   push(`<polyline points="${line}" fill="none" stroke="${C.curve}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`);
-  for (const p of pts) {
-    push(`<circle cx="${X(p.capexUsd).toFixed(1)}" cy="${Y(p.outcomePct).toFixed(1)}" r="3.1" fill="${C.curve}"><title>${esc(t("frontierPointTip", {
-      cost: money(p.capexUsd), pct: p.outcomePct, pv: p.pvKw, batt: p.battKwh,
-    }))}</title></circle>`);
+  // Every point is a real option and is clickable: a transparent hit-area ring
+  // sits under the visible dot so small targets stay easy to grab, and each is
+  // keyboard-focusable (role=button) so a keyboard or screen-reader user can
+  // step through the systems too. Selecting a point moves the blue marker and
+  // its readout to that system.
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    const tip = t("frontierPointTip", { cost: money(p.capexUsd), pct: p.outcomePct, pv: p.pvKw, batt: p.battKwh });
+    push(`<g data-pt="${i}" role="button" tabindex="0" style="cursor:pointer;" aria-label="${esc(tip)}">` +
+      `<circle cx="${X(p.capexUsd).toFixed(1)}" cy="${Y(p.outcomePct).toFixed(1)}" r="10" fill="transparent"/>` +
+      `<circle cx="${X(p.capexUsd).toFixed(1)}" cy="${Y(p.outcomePct).toFixed(1)}" r="3.1" fill="${C.curve}"/>` +
+      `<title>${esc(tip)}</title></g>`);
   }
 
   // ── ceiling line when full coverage is out of reach at any price ───────
@@ -227,25 +244,31 @@ export function renderFrontier(host, frontier, opts = {}) {
     }
   }
 
-  // ── "the option you are looking at" marker ────────────────────────────
-  const m = marker;
-  if (m && Number.isFinite(m.capexUsd) && Number.isFinite(m.outcomePct)) {
-    const mx = X(m.capexUsd), my = Y(m.outcomePct);
-    push(`<circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="7.5" fill="${C.marker}" stroke="var(--bg-dark, #090d16)" stroke-width="2"/>`);
-    // Point the label away from the knee ring when they are close, and away
-    // from the right edge otherwise, so it never prints over either.
+  // ── the selected option (click a point to change it) ──────────────────
+  // The blue dot is the system currently being shown, i.e. the recommended one
+  // until the visitor picks another. Beside it is the concrete readout — panel
+  // kW, battery kWh, coverage and cost — not a vague "the option you're
+  // reading", so there is no ambiguity about which solar/battery option is on
+  // display. Clicking any dot (or Tab to it and pressing Enter) reselects.
+  if (sel) {
+    const sx = X(sel.capexUsd), sy = Y(sel.outcomePct);
+    push(`<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="7.5" fill="${C.marker}" stroke="var(--bg-dark, #090d16)" stroke-width="2"/>`);
     if (!box.narrow) {
-      const label = t("frontierYouTag");
+      const label = sel.battKwh > 0
+        ? t("frontierSelTag", { pv: sel.pvKw, batt: sel.battKwh, pct: sel.outcomePct, cost: money(sel.capexUsd) })
+        : t("frontierSelNoBatt", { pv: sel.pvKw, pct: sel.outcomePct, cost: money(sel.capexUsd) });
       const bounds = { left: PAD.l + 2, right: VB_W - PAD.r - 2 };
-      let at = placeLabel(mx, label, FS_TAG, bounds, 13);
+      let at = placeLabel(sx, label, FS_TAG, bounds, 13);
       // Prefer the side away from the knee ring when both sides would fit.
       const kneeX = knee ? X(knee.capexUsd) : null;
-      if (kneeX !== null && at.anchor === "start" && kneeX > mx && kneeX - mx < 70) {
-        const flipped = placeLabel(mx, label, FS_TAG, bounds, 13);
-        if (mx - 13 - textWidth(label, FS_TAG) >= bounds.left) at = { x: mx - 13, anchor: "end" };
-        else at = flipped;
+      if (kneeX !== null && at.anchor === "start" && kneeX > sx && kneeX - sx < 70) {
+        if (sx - 13 - textWidth(label, FS_TAG) >= bounds.left) at = { x: sx - 13, anchor: "end" };
       }
-      const ty = my < PAD.t + 26 ? my + 22 : my - 14;
+      const ty = sy < PAD.t + 26 ? sy + 24 : sy - 16;
+      const lw = textWidth(label, FS_TAG);
+      const bgX = at.anchor === "end" ? at.x - lw : at.anchor === "start" ? at.x : at.x - lw / 2;
+      // Dark plate under the readout keeps it readable over the curve.
+      push(`<rect x="${bgX.toFixed(1)}" y="${(ty - FS_TAG - 2).toFixed(1)}" width="${(lw + 8).toFixed(1)}" height="${(FS_TAG + 7).toFixed(1)}" rx="4" fill="rgba(9,13,22,0.9)" stroke="${C.marker}" stroke-width="1"/>`);
       push(`<text x="${at.x.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="${at.anchor}" font-size="${FS_TAG}" font-weight="700" fill="${C.marker}">${esc(label)}</text>`);
     }
   }
@@ -277,7 +300,7 @@ export function renderFrontier(host, frontier, opts = {}) {
     [swatch(`<span style="position:absolute;top:1px;left:0;width:22px;height:8px;background:${C.band};border-radius:2px;"></span>`), t("frontierLegendBand")],
     [swatch(`<span style="position:absolute;top:0;left:10px;width:0;height:11px;border-left:2px dashed ${C.knee};"></span>`), t("frontierLegendKnee")],
   ];
-  if (m) legendItems.push([swatch(`<span style="position:absolute;top:1px;left:6px;width:9px;height:9px;border-radius:50%;background:${C.marker};"></span>`), t("frontierLegendYou")]);
+  if (sel) legendItems.push([swatch(`<span style="position:absolute;top:1px;left:6px;width:9px;height:9px;border-radius:50%;background:${C.marker};"></span>`), t("frontierLegendSel")]);
   if (sweepLimited) legendItems.push([swatch(`<span style="position:absolute;top:4px;left:0;width:22px;height:0;border-top:2px dashed ${C.ceiling};"></span>`), t("frontierLegendCeiling")]);
 
   const legend =
@@ -298,6 +321,20 @@ export function renderFrontier(host, frontier, opts = {}) {
     `<desc id="${descId}">${esc(desc)}</desc>` +
     parts.join("") +
     `</svg>` + legend;
+
+  // Wire the clickable points. Each re-render creates fresh elements, so the
+  // listeners are attached here, after the SVG is in the DOM. Keyboard users
+  // Tab to a point and press Enter/Space to pick it — same as a button.
+  if (opts.onSelect) {
+    host.querySelectorAll("[data-pt]").forEach((g) => {
+      const i = Number(g.getAttribute("data-pt"));
+      const activate = () => opts.onSelect(i);
+      g.addEventListener("click", activate);
+      g.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activate(); g.focus(); }
+      });
+    });
+  }
 
   if (opts.tableHost) renderFrontierTable(opts.tableHost, frontier, opts);
   return true;
@@ -336,10 +373,16 @@ export function renderFrontierTable(host, frontier, opts = {}) {
   if (!pts.length) { host.innerHTML = ""; return; }
 
   const gridTie = frontier.mode === "gridtie";
+  // Tag the row that matches the same selection the chart highlights, so the
+  // numbers table and the blue dot always name the same system.
+  const selTable =
+    (typeof opts.selected === "number" && opts.selected >= 0 && pts[opts.selected])
+      ? opts.selected
+      : (frontier.marker && Number.isFinite(frontier.marker.pointIndex) && pts[frontier.marker.pointIndex] ? frontier.marker.pointIndex : -1);
   const rows = pts.map((p, i) => {
     const tags = [];
     if (i === frontier.kneeIndex) tags.push(esc(t("frontierKneeTag")));
-    if (frontier.marker && frontier.marker.pointIndex === i) tags.push(esc(t("frontierYouTag")));
+    if (i === selTable) tags.push(`<b>${esc(t("frontierTagSel"))}</b>`);
     return `<tr><th scope="row" style="text-align:left;font-weight:600;">${esc(money(p.capexUsd))}</th>` +
       `<td>${esc(money(p.capexLoUsd))} &ndash; ${esc(money(p.capexHiUsd))}</td>` +
       `<td>${p.outcomePct}%</td>` +

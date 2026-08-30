@@ -10,15 +10,15 @@ import {
   sizeAllBillTargets, simulateOffset, dailyExtremes, CHEMISTRIES,
   RELIABILITY_TIERS, BILL_TARGETS,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER, capacityScaleFor,
-} from "./engine.js?v=20260829a";
-import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260829a";
-import { buildFrontier } from "./frontier.js?v=20260829a";
-import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js?v=20260829a";
+} from "./engine.js?v=20260830a";
+import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260830a";
+import { buildFrontier } from "./frontier.js?v=20260830a";
+import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js?v=20260830a";
 import {
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
   lifetimeCostUsd, exportValueUsd, trueBreakEvenYear,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20260829a";
+} from "./money.js?v=20260830a";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -245,7 +245,7 @@ export async function runSizing(msg, deps = {}) {
       const billAfterUsd = tariff ? importedKwhPerYear * tariff : null;
       savings = billAfterUsd !== null && gridSpend ? Math.max(0, gridSpend - billAfterUsd) : null;
       if (savings) savings += exportValueUsd(clippedKwhPerYear, exportRate);
-      cell.cutPct = Math.round((1 - sizing.result.importedWh / (dailyKwh * 365 * 1000)) * 100);
+      cell.cutPct = Math.round((1 - importedKwhPerYear / (dailyKwh * 365)) * 100);
     }
     if (savings) {
       cell.paybackYearsLo = paybackYears(m.cost.lo, savings);
@@ -406,8 +406,8 @@ export async function runSizing(msg, deps = {}) {
     const historyTiers = [];
 
     if (chemistry === "auto") {
-      const auto = [];
       const matrixCells = {};
+      const resultsByChem = {};
       for (const chemId of ["naion", "lfp", "agm"]) {
         const capScale = capacityScaleFor(chemId, meanTempC);
         const results = sizeAllBillTargets({
@@ -415,11 +415,22 @@ export async function runSizing(msg, deps = {}) {
           years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
           pvMax: 45, battMax: 120, battStep: 1, capacityScale: capScale, laborPerKwh,
         });
+        resultsByChem[chemId] = results;
         for (const { target, sizing } of results) {
           matrixCells[chemId + ":" + target.id] = matrixCell(chemId, sizing, "gridtie");
         }
-        const hit = results.find((r) => r.target.id === repTargetId);
-        if (!hit || !hit.sizing) continue;
+      }
+      // All three chemistries, shown at ONE shared cut target. If the target the
+      // visitor asked for is unreachable inside the searched envelope (a very
+      // large load, or a poorly-sunlit site), fall back to the nearest achievable
+      // cut so they still get a comparison, and say so. BILL_TARGETS ascends
+      // 60 -> 80 -> 95.
+      const buildAuto = (targetId) => {
+        const out = [];
+        for (const chemId of ["naion", "lfp", "agm"]) {
+          const hit = resultsByChem[chemId] && resultsByChem[chemId].find((r) => r.target.id === targetId);
+          if (!hit || !hit.sizing) continue;
+        const capScale = capacityScaleFor(chemId, meanTempC);
         const m = moneyFor(chemId, hit.sizing);
         const servedKwhPerYear = (hit.sizing.result.directWh + hit.sizing.result.battWhAc) / 1000 / series.meta.years;
         const importedKwhPerYear = hit.sizing.result.importedWh / 1000 / series.meta.years;
@@ -437,7 +448,7 @@ export async function runSizing(msg, deps = {}) {
           battKwh: hit.sizing.battKwh,
           battNameplateKwh: m.battNameplateKwh,
           costLo: m.cost.lo, costHi: m.cost.hi,
-          cutPct: Math.round((1 - hit.sizing.result.importedWh / (dailyKwh * 365 * 1000)) * 100),
+          cutPct: Math.round((1 - importedKwhPerYear / (dailyKwh * 365)) * 100),
           billAfterMonthlyUsd: billAfterUsd === null ? null : Math.round(billAfterUsd / 12),
           paybackYearsLo: savingsUsd ? paybackYears(m.cost.lo, savingsUsd + exportVal) : null,
           paybackYearsHi: savingsUsd ? paybackYears(m.cost.hi, savingsUsd + exportVal) : null,
@@ -463,12 +474,29 @@ export async function runSizing(msg, deps = {}) {
           e1kw, loadWh, chemistry: chemId, tempsC, capacityScale: capScale, capture: true,
         });
         entry.socNameplatePct = nameplateBands(sim, hit.sizing.battKwh * 1000 * capScale, entry.battNameplateKwh * 1000, chemId);
-        auto.push(entry);
+        out.push(entry);
+      }
+      return out;
+    };
+      let effectiveTarget = repTargetId;
+      let auto = buildAuto(repTargetId);
+      let autoFallback = false;
+      if (!auto.length) {
+        const desiredIdx = BILL_TARGETS.findIndex((t) => t.id === repTargetId);
+        for (let i = Math.max(0, desiredIdx - 1); i >= 0; i--) {
+          const cand = BILL_TARGETS[i].id;
+          const built = buildAuto(cand);
+          if (built.length) { auto = built; effectiveTarget = cand; autoFallback = true; break; }
+        }
       }
       const payload = basePayload();
       payload.mode = "gridtie";
       payload.auto = auto;
-        payload.autoNote = `All three chemistries sized for ${TARGET_BASIS[repTargetId]}`;
+      payload.autoFallback = autoFallback;
+      payload.effectiveTargetId = effectiveTarget;
+      payload.autoNote = autoFallback
+        ? `${TARGET_BASIS[repTargetId]} isn't reachable within the sizes this tool searches at this site, so the cards below show ${TARGET_BASIS[effectiveTarget]} instead — the curve shows how far this location can actually get.`
+        : `All three chemistries sized for ${TARGET_BASIS[effectiveTarget]}`;
       payload.targets = [];
       const gtWinner = bestOf(auto);
       payload.best = gtWinner;
@@ -494,7 +522,6 @@ export async function runSizing(msg, deps = {}) {
       years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
       pvMax: 45, battMax: 120, battStep: 1, capacityScale: capScale, laborPerKwh,
     });
-    const loadTotalWh = dailyKwh * 365 * 1000;
     const targets = results.map(({ target, sizing }) => {
       if (!sizing) return { id: target.id, label: target.label, solvable: false };
       const m = moneyFor(chemistry, sizing);
@@ -526,7 +553,7 @@ export async function runSizing(msg, deps = {}) {
         pvCostLo: m.cost.pvCostLo, pvCostHi: m.cost.pvCostHi,
         battCostLo: m.cost.battCostLo, battCostHi: m.cost.battCostHi,
         battPerKwhLo: m.cost.battPerKwhLo, battPerKwhHi: m.cost.battPerKwhHi,
-        cutPct: Math.round((1 - sizing.result.importedWh / loadTotalWh) * 100),
+        cutPct: Math.round((1 - importedKwhPerYear / (dailyKwh * 365)) * 100),
         importedKwhPerYear: Math.round(importedKwhPerYear),
         clippedKwhPerYear: Math.round(clippedKwhPerYear),
         exportValueAnnualUsd: Math.round(exportVal),
@@ -564,8 +591,8 @@ export async function runSizing(msg, deps = {}) {
   const historyTiers = [];
 
   if (chemistry === "auto") {
-    const auto = [];
     const matrixCells = {};
+    const resultsByChem = {};
     for (const chemId of ["naion", "lfp", "agm"]) {
       const capScale = capacityScaleFor(chemId, meanTempC);
       const allTiers = sizeAllTiers({
@@ -573,11 +600,20 @@ export async function runSizing(msg, deps = {}) {
         years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
         battMax: 250, capacityScale: capScale, laborPerKwh,
       });
+      resultsByChem[chemId] = allTiers;
       for (const { tier, sizing } of allTiers) {
         matrixCells[chemId + ":" + tier.id] = matrixCell(chemId, sizing, "offgrid");
       }
-      const midTier = allTiers.find((t) => t.tier.id === repTierId);
-      if (!midTier || !midTier.sizing) continue;
+    }
+    // Tiers run hardest-first (100 -> 99 -> 95). If not even the lightest tier
+    // is buildable for this load and site, walk down the ladder to the nearest
+    // solvable reliability tier so a comparison still renders, and say so.
+    const buildAuto = (tierId) => {
+      const out = [];
+      for (const chemId of ["naion", "lfp", "agm"]) {
+        const midTier = resultsByChem[chemId] && resultsByChem[chemId].find((t) => t.tier.id === tierId);
+        if (!midTier || !midTier.sizing) continue;
+      const capScale = capacityScaleFor(chemId, meanTempC);
       const sizing = midTier.sizing;
       const m = moneyFor(chemId, sizing);
       const servedKwhPerYear = sizing.result.servedWh / 1000 / series.meta.years;
@@ -615,12 +651,30 @@ export async function runSizing(msg, deps = {}) {
         e1kw, loadWh, chemistry: chemId, tempsC, capture: true, capacityScale: capScale,
       });
       entry.socNameplatePct = nameplateBands(sim, sizing.battKwh * 1000 * capScale, entry.battNameplateKwh * 1000, chemId);
-       auto.push(entry);
-     }
+      out.push(entry);
+      }
+      return out;
+    };
+
+    let effectiveTier = repTierId;
+    let auto = buildAuto(repTierId);
+    let autoFallback = false;
+    if (!auto.length) {
+      const desiredIdx = RELIABILITY_TIERS.findIndex((t) => t.id === repTierId);
+      for (let i = desiredIdx + 1; i < RELIABILITY_TIERS.length; i++) {
+        const cand = RELIABILITY_TIERS[i].id;
+        const built = buildAuto(cand);
+        if (built.length) { auto = built; effectiveTier = cand; autoFallback = true; break; }
+      }
+    }
      const payload = basePayload();
       payload.mode = "offgrid";
       payload.auto = auto;
-        payload.autoNote = `All three chemistries sized for ${TIER_BASIS[repTierId]}`;
+      payload.autoFallback = autoFallback;
+      payload.effectiveTierId = effectiveTier;
+      payload.autoNote = autoFallback
+        ? `${TIER_BASIS[repTierId]} is out of reach within the sizes this tool searches at this site, so the cards below show ${TIER_BASIS[effectiveTier]} instead — the largest system this tool can size here still leaves some hours unserved.`
+        : `All three chemistries sized for ${TIER_BASIS[effectiveTier]}`;
       payload.tiers = [];
       const ogWinner = bestOf(auto);
       payload.best = ogWinner;
