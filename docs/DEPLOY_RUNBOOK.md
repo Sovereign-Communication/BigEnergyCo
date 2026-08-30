@@ -19,6 +19,7 @@ node --check assets/js/sizing/sizing-worker.js
 node --test
 git diff --check
 node scripts/deploy-pages-local.mjs --check
+node scripts/verify-cumulative-flow.mjs
 ```
 
 Do not deploy if any command fails.
@@ -50,13 +51,14 @@ Run the live sweep. It must use `https://bigenergyco.pages.dev/`, never a GitHub
 node scripts/live-sanity.mjs
 ```
 
-Then verify deployed source matches the checkout, bypassing immutable asset caching with a query string:
+Then verify deployed source matches the checkout, bypassing immutable asset caching with a query string. Also rerun the real payload-flow check after deployment:
 
 ```bash
 curl -sS 'https://bigenergyco.pages.dev/assets/js/sizing/run.js?verify=SHA' | sha256sum
 sha256sum assets/js/sizing/run.js
 curl -sS 'https://bigenergyco.pages.dev/assets/js/sizing/ui.js?verify=SHA' | sha256sum
 sha256sum assets/js/sizing/ui.js
+node scripts/verify-cumulative-flow.mjs
 ```
 
 The hashes must match. Also verify `sw.js` serves the new cache version.

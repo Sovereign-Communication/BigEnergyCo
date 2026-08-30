@@ -2136,30 +2136,18 @@ function drawCumCostChart(p) {
   const canvas = $("cumCostCanvas");
   if (!wrap || !canvas) return;
 
-  // Always make the section visible after a completed run. This keeps a
-  // missing financial series explainable on every form path instead of
-  // silently leaving a desktop user with no chart at all.
-  wrap.style.display = "block";
-
   // Pick the system the chart talks about: the recommended one, else the
   // focus system, else the first solvable entry with a series.
   const pool = (p.auto && p.auto.length) ? p.auto
     : (p.targets && p.targets.length) ? p.targets
     : (p.tiers || []);
-  // Match recommendations back to the actual result entry by chemistry and
-  // sizing values. Focus objects intentionally contain a smaller BOM shape,
-  // so identity comparison is not reliable.
-  const candidate = p.best && p.best.cumCostSeries ? p.best
-    : p.focus && pool.find((x) => x && x.chemistry === p.focus.chemistry && x.pvKw === p.focus.pvKw && x.battKwh === p.focus.battKwh)
-      ? pool.find((x) => x && x.chemistry === p.focus.chemistry && x.pvKw === p.focus.pvKw && x.battKwh === p.focus.battKwh)
-    : (pool || []).find((x) => x && x.solvable);
-  const entry = candidate || null;
-  // The focus object is intentionally compact and can be the only reliable
-  // recommendation identity. Prefer the matching rendered entry, but fall
-  // back to any valid series before declaring the chart unavailable.
-  const series = (entry && entry.cumCostSeries)
-    || (pool || []).find((x) => x && x.cumCostSeries)?.cumCostSeries
-    || null;
+  const entry = p.best || (p.focus && pool.find((x) => x &&
+    x.chemistry === p.focus.chemistry && x.pvKw === p.focus.pvKw && x.battKwh === p.focus.battKwh)) ||
+    (pool || []).find((x) => x && x.solvable) || null;
+  const seriesEntry = entry?.cumCostSeries?.grid?.length && entry?.cumCostSeries?.solar?.length
+    ? entry
+    : (pool || []).find((x) => x?.cumCostSeries?.grid?.length && x?.cumCostSeries?.solar?.length);
+  const series = seriesEntry?.cumCostSeries || null;
   if (!series || !series.grid || !series.solar || !series.grid.length) {
     // This is either the intentional no-tariff state or a result that cannot
     // produce a money comparison. Make it explicit so
@@ -2208,7 +2196,7 @@ function drawCumCostChart(p) {
     if (series.grid[i] >= series.solar[i]) { beIdx = i; break; }
   }
   const totalSaved = diff[nY - 1] || 0;
-  const servedKwh = entry.servedKwhPerYear || 0;
+  const servedKwh = seriesEntry.servedKwhPerYear || 0;
   const box = $("cumSavingsBox"), num = $("cumSavingsTotal"), sub = $("cumSavingsSub");
   if (box && num && sub) {
     box.style.display = "block";
@@ -2357,7 +2345,7 @@ function drawCumCostChart(p) {
   }
 
   // caption
-  const label = entry.chemLabel || entry.label || "";
+  const label = seriesEntry.chemLabel || seriesEntry.label || "";
   const cap = $("cumCostCaption");
   if (cap) {
     let txt = `Running 20-year cost for the recommended system (${label}): ` +
