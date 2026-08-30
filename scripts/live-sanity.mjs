@@ -1,5 +1,5 @@
 ﻿// Live sanity sweep of the deployed site. Explicit UTF-8 everywhere.
-const BASE = "https://sovereign-communication.github.io/BigEnergyCo/";
+const BASE = "https://bigenergyco.pages.dev/";
 let failures = 0;
 function check(name, ok) { console.log((ok ? "LIVE OK    " : "LIVE FAIL  ") + name); if (!ok) failures++; }
 

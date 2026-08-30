@@ -67,7 +67,7 @@ test("cumulative series: grid line rises linearly, solar line steps at swaps", (
   assert.equal(crossYr, be, "chart crossing must equal the break-even row");
 });
 
-test("cumulative series: null without savings (no tariff entered)", () => {
-  assert.equal(cumulativeCostSeries({ capexMidUsd: 2400, annualSavingsUsd: 0 }), null);
+test("cumulative series: null for missing or negative savings", () => {
+  assert.equal(cumulativeCostSeries({ capexMidUsd: 2400, annualSavingsUsd: -1 }), null);
   assert.equal(cumulativeCostSeries({ capexMidUsd: null, annualSavingsUsd: 200 }), null);
 });

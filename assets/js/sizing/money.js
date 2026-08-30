@@ -93,7 +93,7 @@ export function exportValueUsd(clippedKwhPerYear, exportRatePerKwh) {
  * the chart is then hidden rather than shown with a fake grid line.
  */
 export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, swapsAndLaborTotalUsd = 0, replacements = 0, batteryLifeYears, horizonYears = HORIZON_YEARS }) {
-  if (!Number.isFinite(capexMidUsd) || !(annualSavingsUsd > 0)) return null;
+  if (!Number.isFinite(capexMidUsd) || !Number.isFinite(annualSavingsUsd) || annualSavingsUsd < 0) return null;
   const perSwap = replacements > 0 ? swapsAndLaborTotalUsd / replacements : 0;
 
   const swapYears = new Set();
