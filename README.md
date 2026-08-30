@@ -7,10 +7,51 @@ Built and given away by Lucas Ballek. Nothing for sale.
 
 | Piece | Where | Notes |
 |---|---|---|
-| **Public site (brand)** | `bigenergyco.pages.dev` (Cloudflare Pages) | Primary brand domain. Same allowlisted build, deployed with `node scripts/deploy-pages-local.mjs` + `npx wrangler pages deploy _pages_staging --project-name bigenergyco`. Served with `_headers`/`_redirects` for caching and legacy-domain consolidation. |
+| **Public site (brand)** | `bigenergyco.pages.dev` (Cloudflare Pages) | Primary brand domain. Same allowlisted build, deployed to the `bigenergyco` Pages project per the runbook below (`node scripts/deploy-pages-local.mjs --check` + `npx wrangler pages deploy`). Served with `_headers`/`_redirects` for caching and legacy-domain consolidation. |
 | **Public site (legacy)** | `sovereign-communication.github.io/BigEnergyCo/` | Legacy GitHub Pages URL — 301 redirects to brand domain via `_redirects` (Cloudflare Pages). Deploys via the allowlist workflow (`.github/workflows/deploy.yml`). The old `treystu.github.io/BigEnergyCo/` URL also redirects here; both remain on the API's CORS allowlist for cached clients. |
 | **AI API** | Cloudflare Worker (`bigenergyco-api.bigenergyco.workers.dev`) | Proxies Groq. CORS-locked to the Pages origins + localhost, rate-limited, payload-capped. Deploy with `deploy_worker.bat` (or `npx wrangler deploy` in `worker/`). |
 | **Local/dev** | `START.bat` / `STOP.bat` / `LINK.bat` | Optional local server + tunnel stack for development and the Freenet variant. Not needed for the public site. |
+
+## Deploy runbook — GitHub first, then Cloudflare
+
+**Rule:** always publish to GitHub first, verify it lands green, *then* go to
+Cloudflare. GitHub is the source of truth and the gatekeeper; Cloudflare is the
+last-mile copy of the same build. Never skip the GitHub step to "save time" —
+the brand domain must never ship something GitHub hasn't already validated.
+
+1. **Run the checks locally** (what CI runs):
+   ```bash
+   node --test
+   node scripts/validate-jsonld.mjs
+   node scripts/check-chars.mjs
+   node scripts/deploy-pages-local.mjs --check
+   ```
+2. **Push to `main`** — this triggers the `Tests` workflow (matching the local
+   checks above) and the `Deploy to GitHub Pages` allowlist workflow
+   (`.github/workflows/deploy.yml`) which publishes the legacy URL
+   `sovereign-communication.github.io/BigEnergyCo/`.
+   ```bash
+   git push origin main
+   ```
+3. **Verify GitHub is green** before proceeding — watch both runs to completion:
+   ```bash
+   gh run list
+   gh run watch <test-run-id> --exit-status
+   gh run watch <deploy-run-id> --exit-status
+   ```
+4. **Only now publish the brand domain** to Cloudflare Pages. Build the exact
+   same allowlisted staging output (`--check` builds staging without touching
+   the `gh-pages` branch — GitHub Actions already handled that), then deploy it
+   to the `bigenergyco` Pages project:
+   ```bash
+   node scripts/deploy-pages-local.mjs --check   # builds _pages_staging/
+   npx wrangler pages deploy _pages_staging --project-name bigenergyco
+   ```
+   Verify at `https://bigenergyco.pages.dev`.
+
+   > The API Worker is a separate concern: only redeploy it
+   > (`cd worker && npx wrangler deploy`) when `worker/index.js` actually
+   > changed. Front-end site changes never require a Worker deploy.
 
 ## How it's put together
 
