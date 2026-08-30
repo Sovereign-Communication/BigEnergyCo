@@ -9,7 +9,9 @@ const DIR = new URL("./live-mods/", import.meta.url).pathname.replace(/^\/([A-Za
 rmSync(DIR, { recursive: true, force: true });
 mkdirSync(DIR, { recursive: true });
 
-const FILES = ["run.js", "engine.js", "nasa.js", "pricing.js", "money.js", "profiles.js"];
+// Every module run.js pulls in. Miss one and this script dies on an import
+// error instead of telling you what production is actually serving.
+const FILES = ["run.js", "engine.js", "nasa.js", "pricing.js", "money.js", "profiles.js", "frontier.js"];
 for (const f of FILES) {
   const res = await fetch(BASE + f + "?v=" + Date.now(), { cache: "no-store" });
   if (!res.ok) { console.error(`FAIL fetching ${f}: ${res.status}`); process.exit(1); }
@@ -95,6 +97,27 @@ const lfpSpec = await runSizing({ ...MSG, chemistry: "lfp", mode: "offgrid" }, {
 const lfp99b = lfpSpec.tiers.find((t) => t.id === "tier99");
 check("sodium needs ≥ nameplate of LFP for same job (0.85 capacity scale)",
   naion99.battNameplateKwh >= lfp99b.battNameplateKwh - 0.05);
+
+// ── Pass 3: the PAGE, not just the modules ─────────────────────────────────
+// The modules can all be correct while the HTML still points at a previous
+// build. That mismatch is exactly what the contract warning exists to catch,
+// so the deploy check should catch it first.
+const PAGE = BASE.replace(/assets\/js\/sizing\/$/, "");
+const html = await fetch(PAGE + "index.html?v=" + Date.now(), { cache: "no-store" }).then((r) => r.text());
+
+check("page ships the frontier panel", html.includes('id="frontierWrap"') && html.includes('id="frontierChart"'));
+
+const uiVer = html.match(/ui\.js\?v=(\w+)/)?.[1];
+check(`page pins a ui.js build (${uiVer || "NONE"})`, !!uiVer);
+
+if (uiVer) {
+  const ui = await fetch(`${BASE}ui.js?v=${uiVer}`, { cache: "no-store" }).then((r) => r.text());
+  const uiContract = ui.match(/const PAYLOAD_CONTRACT = (\d+);/)?.[1];
+  check(`the ui.js the page loads agrees with run.js on the contract (ui=${uiContract}, run=${auto99.contract})`,
+    Number(uiContract) === auto99.contract);
+  const workerVer = ui.match(/sizing-worker\.js\?v=(\w+)/)?.[1];
+  check(`the worker build matches the page build (${workerVer} vs ${uiVer})`, workerVer === uiVer);
+}
 
 console.log(fails ? `\n${fails} FAILURE(S)` : "\nALL DEEP LIVE CHECKS PASSED");
 process.exit(fails ? 1 : 0);

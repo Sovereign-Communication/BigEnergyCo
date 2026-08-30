@@ -288,7 +288,11 @@ export function renderFrontier(host, frontier, opts = {}) {
 
   host.innerHTML =
     `<svg viewBox="0 0 ${VB_W} ${VB_H}" role="img" dir="ltr" aria-labelledby="${titleId} ${descId}" ` +
-    `preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block;` +
+    // direction, not dir: the HTML dir attribute does not govern SVG text, and
+    // under an RTL document `text-anchor="end"` resolves to the LEFT - which
+    // sent the right-hand axis label off the edge of the plot in Arabic. The
+    // chart itself stays left-to-right in every locale, as charts do.
+    `preserveAspectRatio="xMidYMid meet" style="direction:ltr;unicode-bidi:isolate;width:100%;height:auto;display:block;` +
     `border:1px solid var(--border-card);border-radius:10px;background:rgba(9,13,22,0.85);">` +
     `<title id="${titleId}">${esc(t("frontierSvgTitle"))}</title>` +
     `<desc id="${descId}">${esc(desc)}</desc>` +
