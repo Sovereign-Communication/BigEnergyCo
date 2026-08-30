@@ -1821,6 +1821,16 @@ footer {
 
           </div>
 
+          <div id="cumCostChartWrap" style="display:none; margin-top: 1.25rem;">
+
+            <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">What does solar really save you? (cumulative 20-year cost)</div>
+
+            <canvas id="cumCostCanvas" style="width: 100%; border: 1px solid var(--border-card); border-radius: 10px; background: rgba(9,13,22,0.85);"></canvas>
+
+            <p id="cumCostCaption" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.55;"></p>
+
+          </div>
+
           <details id="bomPanel" style="display:none; margin-top:1.25rem;">
 
             <summary style="cursor:pointer;color:var(--primary-accent);font-size:0.95rem;font-weight:700;" data-i18n="bomPanelTitle">Your hardware list &mdash; what this system is made of</summary>

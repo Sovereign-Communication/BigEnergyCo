@@ -2,7 +2,7 @@
 // Run: node --test "tests/**/*.test.mjs"
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { trueBreakEvenYear } from "../assets/js/sizing/money.js";
+import { trueBreakEvenYear, cumulativeCostSeries } from "../assets/js/sizing/money.js";
 
 test("no swaps: break-even matches simple payback (within a year)", () => {
   const y = trueBreakEvenYear({ capexMidUsd: 2400, annualSavingsUsd: 1200, batteryLifeYears: 30 });
@@ -40,4 +40,34 @@ test("GATE: lead-acid profile vs LFP profile — the gap is the message", () => 
     swapsAndLaborTotalUsd: 1700, replacements: 2, batteryLifeYears: 12.8,
   });
   assert.ok(agm === null || agm > lfp, `AGM (${agm}) must never beat LFP (${lfp})`);
+});
+
+test("cumulative series: grid line rises linearly, solar line steps at swaps", () => {
+  const s = cumulativeCostSeries({
+    capexMidUsd: 2400, annualSavingsUsd: 200,
+    swapsAndLaborTotalUsd: 1200, replacements: 1, batteryLifeYears: 8,
+  });
+  assert.equal(s.years, 20);
+  assert.equal(s.grid.length, 20);
+  assert.equal(s.solar.length, 20);
+  // grid: pure accumulation, no cost at year 0
+  assert.equal(s.grid[0], 200);
+  assert.equal(s.grid[19], 4000);
+  // solar: full capex from day one, swap lands at year 8 (index 7)
+  assert.equal(s.solar[0], 2400);
+  assert.equal(s.solar[6], 2400);
+  assert.equal(s.solar[7], 3600);
+  assert.equal(s.solar[19], 3600);
+  // crossing point = trueBreakEvenYear
+  const be = trueBreakEvenYear({
+    capexMidUsd: 2400, annualSavingsUsd: 200,
+    swapsAndLaborTotalUsd: 1200, replacements: 1, batteryLifeYears: 8,
+  });
+  const crossYr = s.grid.findIndex((g, i) => g >= s.solar[i]) + 1;
+  assert.equal(crossYr, be, "chart crossing must equal the break-even row");
+});
+
+test("cumulative series: null without savings (no tariff entered)", () => {
+  assert.equal(cumulativeCostSeries({ capexMidUsd: 2400, annualSavingsUsd: 0 }), null);
+  assert.equal(cumulativeCostSeries({ capexMidUsd: null, annualSavingsUsd: 200 }), null);
 });

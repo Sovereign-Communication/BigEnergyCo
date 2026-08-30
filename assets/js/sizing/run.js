@@ -16,7 +16,7 @@ import { buildFrontier } from "./frontier.js?v=20260830b";
 import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js?v=20260830o";
 import {
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
-  lifetimeCostUsd, exportValueUsd, trueBreakEvenYear,
+  lifetimeCostUsd, exportValueUsd, trueBreakEvenYear, cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
 } from "./money.js?v=20260830b";
 
@@ -190,9 +190,23 @@ export async function runSizing(msg, deps = {}) {
 
   // Honest payback: the year cumulative avoided bills overtake cumulative
   // TRUE cost (every swap counted). Null = never catches up inside horizon.
+  // Also computes the per-year cumulative cost series (grid vs solar running
+  // sums) so the headline chart and the break-even row can never disagree.
   function breakEvenFor(m, annualSavingsUsd) {
     if (!(annualSavingsUsd > 0)) return null;
     return trueBreakEvenYear({
+      capexMidUsd: m.cost.objectiveMid,
+      annualSavingsUsd,
+      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
+      replacements: m.replacementsHorizon,
+      batteryLifeYears: m.batteryLifeYears,
+    });
+  }
+
+  // Cumulative 20-year cost series for the headline chart: grid running sum
+  // vs solar TRUE cost running sum (capex + every swap). Null when no tariff.
+  function cumCostFor(m, annualSavingsUsd) {
+    return cumulativeCostSeries({
       capexMidUsd: m.cost.objectiveMid,
       annualSavingsUsd,
       swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
@@ -471,6 +485,7 @@ export async function runSizing(msg, deps = {}) {
           paybackYearsLo: savingsUsd ? paybackYears(m.cost.lo, savingsUsd + exportVal) : null,
           paybackYearsHi: savingsUsd ? paybackYears(m.cost.hi, savingsUsd + exportVal) : null,
           trueBreakEvenYear: breakEvenFor(m, savingsUsd),
+          cumCostSeries: savingsUsd ? cumCostFor(m, savingsUsd) : null,
           exportValueAnnualUsd: Math.round(exportVal),
           clippedKwhPerYear: Math.round(clippedKwhPerYear),
           replacementsHorizon: m.replacementsHorizon,
@@ -579,6 +594,7 @@ export async function runSizing(msg, deps = {}) {
         paybackYearsLo: savingsUsd ? paybackYears(m.cost.lo, savingsUsd + exportVal) : null,
         paybackYearsHi: savingsUsd ? paybackYears(m.cost.hi, savingsUsd + exportVal) : null,
         trueBreakEvenYear: breakEvenFor(m, savingsUsd),
+        cumCostSeries: savingsUsd ? cumCostFor(m, savingsUsd) : null,
         replacementsHorizon: m.replacementsHorizon,
         swapsAndLaborUsd: m.swapsAndLaborUsd,
         lifetimeCostMid: m.lifetimeCostMid,
@@ -766,6 +782,7 @@ export async function runSizing(msg, deps = {}) {
       paybackYearsLo: gridSpend ? paybackYears(m.cost.lo, gridSpend) : null,
       paybackYearsHi: gridSpend ? paybackYears(m.cost.hi, gridSpend) : null,
       trueBreakEvenYear: breakEvenFor(m, gridSpend),
+      cumCostSeries: gridSpend ? cumCostFor(m, gridSpend) : null,
     };
   });
 

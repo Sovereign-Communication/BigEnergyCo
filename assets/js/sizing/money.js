@@ -77,6 +77,46 @@ export function exportValueUsd(clippedKwhPerYear, exportRatePerKwh) {
   if (!(clippedKwhPerYear > 0) || !(exportRatePerKwh > 0)) return 0;
   return clippedKwhPerYear * exportRatePerKwh;
 }
+
+/**
+ * Per-year cumulative cost series over the horizon — the data behind the
+ * "running cost" chart. Two lines:
+ *   grid[y]  = cumulative spend if you had stayed on the grid
+ *   solar[y] = cumulative TRUE solar cost (capex + first labor + every swap)
+ * The crossing point of the two lines IS the true break-even year, so the
+ * chart and the "pays for itself: year N" row can never disagree.
+ *
+ * Swap schedule matches trueBreakEvenYear exactly (round(k × batteryLifeYears),
+ * capped at `replacements`), so both numbers always tell the same story.
+ *
+ * Returns null when there is no bill to displace (no tariff entered) —
+ * the chart is then hidden rather than shown with a fake grid line.
+ */
+export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, swapsAndLaborTotalUsd = 0, replacements = 0, batteryLifeYears, horizonYears = HORIZON_YEARS }) {
+  if (!Number.isFinite(capexMidUsd) || !(annualSavingsUsd > 0)) return null;
+  const perSwap = replacements > 0 ? swapsAndLaborTotalUsd / replacements : 0;
+
+  const swapYears = new Set();
+  if (replacements > 0 && Number.isFinite(batteryLifeYears) && batteryLifeYears > 0) {
+    for (let k = 1; k <= replacements; k++) {
+      const yr = Math.round(k * batteryLifeYears);
+      if (yr > horizonYears) break;
+      swapYears.add(Math.max(1, yr));
+    }
+  }
+
+  const grid = new Array(horizonYears);
+  const solar = new Array(horizonYears);
+  let cumGrid = 0;
+  let cumSolar = capexMidUsd;   // solar starts with the full first cost
+  for (let y = 1; y <= horizonYears; y++) {
+    cumGrid += annualSavingsUsd;
+    if (swapYears.has(y)) cumSolar += perSwap;
+    grid[y - 1] = Math.round(cumGrid);
+    solar[y - 1] = Math.round(cumSolar);
+  }
+  return { years: horizonYears, grid, solar };
+}
 /**
  * The year cumulative avoided bills exceed cumulative TRUE cost — counting
  * every bank swap as it falls due. This is the honest payback for chemistries
