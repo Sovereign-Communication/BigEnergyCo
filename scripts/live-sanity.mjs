@@ -5,10 +5,12 @@ function check(name, ok) { console.log((ok ? "LIVE OK    " : "LIVE FAIL  ") + na
 
 const html = await (await fetch(BASE + "?sweep=" + Date.now(), { cache: "no-store" })).text();
 
-// 1. Emoji / characters render correctly
-check("🤖 Start a Free Estimate", html.includes("\u{1F916} Start a Free Estimate"));
-check("⚡ logo", html.includes("\u26A1 BigEnergy"));
-check("🌍 hero tag", html.includes("\u{1F30D} Free for everyone"));
+// 1. Characters render correctly.
+// NOTE: emoji were deliberately stripped from the static HTML in commit
+// 41933fc ("strip all emojis that cause mojibake"); the 🌍 hero tag lives in
+// locales.js now, so the HTML checks below assert plain-ASCII copy instead.
+check("hero CTA present", html.includes("Start a Free Estimate"));
+check("hero tag i18n hook", html.includes('data-i18n="heroTag"'));
 check("em-dashes present", html.includes("\u2014"));
 check("no mojibake residue", !/(\u00e2\u20ac|\u00c3[\u0080-\u00ff]|\u00f0\u0178)/.test(html));
 check("no replacement char U+FFFD", !html.includes("\uFFFD"));
@@ -16,10 +18,12 @@ check("no replacement char U+FFFD", !html.includes("\uFFFD"));
 // 2. Feature markers from every phase
 for (const m of [
   'id="moneyBar"', 'id="printSheet"', 'btnShareResult', "@media print",
-  'rel="canonical"', 'id="systemGoal"', "Cut my grid bill",
-  'value="auto" selected', "compare all three by lifetime cost",
-  'id="exportRate"', "Lead-Acid (AGM)", 'data-i18n="heroTag"', 'id="langSelect"',
-  "ui.js?v=20260824c",
+  'rel="canonical"', 'id="systemGoal"', "Cut my bill, stay connected",
+  'value="auto" selected', "compare all three chemistries by lifetime cost",
+  'id="exportRate"', "Lead-Acid (AGM)", 'id="langSelect"',
+  "ui.js?v=20260830o",
+  // Cumulative 20-year cost chart (Aug 2026)
+  'id="cumCostChartWrap"', "id=\"cumCostCanvas\"", "id=\"cumCostCaption\"",
   // PWA
   'rel="manifest"', "./sw.js", 'name="theme-color"',
   // SEO
@@ -37,7 +41,7 @@ const mods = [
   ["assets/js/sizing/run.js", "nameplateBands"],
   ["assets/js/sizing/sizing-worker.js", "runSizing"],
   ["assets/js/sizing/ui.js", "drawAutoChart"],
-  ["assets/js/sizing/money.js", "lifetimeCostUsd"],
+  ["assets/js/sizing/money.js", "cumulativeCostSeries"],
   ["assets/js/shared/i18n.js", "\u0627\u0644\u0639\u0631\u0628\u064a\u0629"],
   ["assets/js/shared/locales.js", "\u0627\u0644\u0644\u063a\u0629"],
 ];
