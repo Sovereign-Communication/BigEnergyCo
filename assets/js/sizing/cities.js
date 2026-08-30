@@ -14,6 +14,19 @@ export const CITY_CATALOG = [
 ].map(([name, country, region, lat, lon]) => ({ name, country, r: region, lat, lon }));
 
 const ALIASES = { nyc: "new york", sf: "san francisco", la: "los angeles", dc: "washington", sao: "sao paulo", bombay: "mumbai", calcutta: "kolkata" };
+
+// Auto-lookup guard: should a typed query still be auto-resolved after the
+// typing cadence stops? Pure so the debounce decision is unit-testable without
+// a DOM. Returns false when the query is empty (nothing to resolve) or when it
+// normalizes to the city already resolved (typing more of an already-resolved
+// name must not re-trigger the lookup). Everything else — a new query, a
+// partial that normalizes differently — is fair game for the debounce timer.
+export function shouldAutoResolve(query, lastResolved) {
+  const q = normalizeCityQuery(query);
+  if (!q) return false;
+  const last = normalizeCityQuery(lastResolved);
+  return q !== last;
+}
 export function normalizeCityQuery(value) { return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
 export function searchCities(query, cities = CITY_CATALOG, limit = 8) {
   const q = normalizeCityQuery(query); if (!q) return [];

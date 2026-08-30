@@ -1,8 +1,29 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { CITY_CATALOG, mergeCities, normalizeCityQuery, parseCityRows, searchCities, loadCityCatalog, lookupCityOnline, formatCityLabel, nearestCity } from "../assets/js/sizing/cities.js";
+import { CITY_CATALOG, mergeCities, normalizeCityQuery, parseCityRows, searchCities, loadCityCatalog, lookupCityOnline, formatCityLabel, nearestCity, shouldAutoResolve } from "../assets/js/sizing/cities.js";
 import { estimateTariff } from "../assets/js/sizing/pricing.js";
+
+test("auto-resolve debounce guard skips empty and already-resolved queries", () => {
+  // Nothing typed: never resolve.
+  assert.equal(shouldAutoResolve("", ""), false);
+  assert.equal(shouldAutoResolve("   ", "honolulu"), false);
+  // Fresh query: resolve.
+  assert.equal(shouldAutoResolve("honolulu", ""), true);
+  // Same city already resolved (case/accents aside): do not re-resolve.
+  assert.equal(shouldAutoResolve("Honolulu", "Honolulu"), false);
+  assert.equal(shouldAutoResolve("sao paulo", "São Paulo"), false);
+  // Changed query: resolve again.
+  assert.equal(shouldAutoResolve("lagos", "honolulu"), true);
+});
+
+test("the UI wires a 2s auto-resolve debounce that reuses resolveTypedCity", () => {
+  const ui = readFileSync(new URL("../assets/js/sizing/ui.js", import.meta.url), "utf8");
+  assert.match(ui, /shouldAutoResolve/);
+  assert.match(ui, /, 2000\)/);
+  assert.match(ui, /cancelAutoResolve/);
+  assert.match(ui, /resolveTypedCity\(\)/);
+});
 
 test("city queries ignore case, accents, and punctuation", () => {
   assert.equal(normalizeCityQuery("  São-Paulo! "), "sao paulo");

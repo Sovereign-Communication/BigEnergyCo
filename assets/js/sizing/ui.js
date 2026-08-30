@@ -11,7 +11,7 @@
 // direct-kWh mode for people who already know their numbers.
 
 import { CITY_PRESETS } from "./nasa.js?v=20260830b";
-import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCityLabel, nearestCity } from "./cities.js?v=20260830o";
+import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCityLabel, nearestCity, normalizeCityQuery, shouldAutoResolve } from "./cities.js?v=20260830o";
 
 import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
 
@@ -587,19 +587,46 @@ function renderCities() {
         const button = el("button", { type: "button", role: "option", class: "city-suggestion" }, `${formatCityLabel(c)}${population}`);
         button.dataset.index = String(i);
         button.addEventListener("mousedown", (event) => event.preventDefault());
-        button.addEventListener("click", () => { setCoords(c.lat, c.lon, `Sunshine data from ${formatCityLabel(c)}`, c.r, c.country); search.value = formatCityLabel(c); list.hidden = true; search.setAttribute("aria-expanded", "false"); });
+        button.addEventListener("click", () => { cancelAutoResolve(); setCoords(c.lat, c.lon, `Sunshine data from ${formatCityLabel(c)}`, c.r, c.country); lastResolvedQuery = normalizeCityQuery(search.value); search.value = formatCityLabel(c); list.hidden = true; search.setAttribute("aria-expanded", "false"); });
         list.appendChild(button);
       });
       active = -1;
       search.setAttribute("aria-expanded", list.hidden ? "false" : "true");
     };
     search.addEventListener("input", draw);
+    // Auto-lookup: 2s after the typing cadence stops, resolve the typed text
+    // to coordinates without requiring Enter/Tab. Fires the same code path
+    // Enter/Tab use, so behavior is identical — just hands-free.
+    let autoResolveTimer = null;
+    let lastResolvedQuery = "";
+    const cancelAutoResolve = () => {
+      if (autoResolveTimer !== null) { clearTimeout(autoResolveTimer); autoResolveTimer = null; }
+    };
+    search.addEventListener("input", (event) => {
+      cancelAutoResolve();
+      // IME composition (CJK input): keystrokes mid-composition are not the
+      // final text — let composition finish before scheduling the lookup.
+      if (event.isComposing) return;
+      const query = search.value.trim();
+      if (!shouldAutoResolve(query, lastResolvedQuery)) return;
+      autoResolveTimer = setTimeout(() => {
+        autoResolveTimer = null;
+        const query = search.value.trim();
+        if (!shouldAutoResolve(query, lastResolvedQuery)) return;
+        // The user arrow-navigating an open suggestion list is actively
+        // choosing — don't auto-resolve out from under them.
+        if (!list.hidden && active >= 0) return;
+        resolveTypedCity();
+      }, 2000);
+    });
     let lookupBusy = false;
     const resolveTypedCity = async () => {
+      cancelAutoResolve();
       const query = search.value.trim();
       if (!query || lookupBusy) return;
       const local = searchCities(query, CITY_CATALOG, 1)[0];
       if (local) {
+        lastResolvedQuery = query;
         setCoords(local.lat, local.lon, `Sunshine data from ${formatCityLabel(local)}`, local.r, local.country);
         search.value = formatCityLabel(local);
         list.hidden = true;
@@ -607,9 +634,11 @@ function renderCities() {
         return;
       }
       lookupBusy = true;
+      setStatus("Looking up your city…");
       const match = await lookupCityOnline(query);
       lookupBusy = false;
       if (match) {
+        lastResolvedQuery = query;
         setCoords(match.lat, match.lon, `Sunshine data from ${formatCityLabel(match)}`, match.r, match.country);
         search.value = formatCityLabel(match);
         list.hidden = true;
@@ -619,10 +648,14 @@ function renderCities() {
     search.addEventListener("keydown", (event) => {
       if (event.key === "Tab") {
         // Let focus move naturally, but resolve the typed city first.
+        // The explicit paths cancel the pending auto-lookup so it cannot
+        // double-fire after an immediate resolution.
+        cancelAutoResolve();
         resolveTypedCity();
         return;
       }
       if (event.key === "Enter") {
+        cancelAutoResolve();
         const options = list.querySelectorAll("[role=option]");
         // If the user arrowed to a specific suggestion, let that handler pick it.
         if (!(active >= 0 && options.length)) {
@@ -637,7 +670,7 @@ function renderCities() {
       else if (event.key === "Escape") { list.hidden = true; search.setAttribute("aria-expanded", "false"); }
       else if (event.key === "Enter" && active >= 0 && options[active]) { event.preventDefault(); options[active].click(); search.focus(); }
     });
-    search.addEventListener("blur", () => setTimeout(() => { list.hidden = true; search.setAttribute("aria-expanded", "false"); }, 150));
+    search.addEventListener("blur", () => { cancelAutoResolve(); setTimeout(() => { list.hidden = true; search.setAttribute("aria-expanded", "false"); }, 150); });
   }
   // Initialize with the first reference city, while keeping the visible
   // control exclusively type-ahead based.
