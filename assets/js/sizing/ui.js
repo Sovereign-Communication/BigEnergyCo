@@ -2146,7 +2146,7 @@ function drawCumCostChart(p) {
     (pool || []).find((x) => x && x.solvable) || null;
   const seriesEntry = entry?.cumCostSeries?.grid?.length && entry?.cumCostSeries?.solar?.length
     ? entry
-    : (pool || []).find((x) => x?.cumCostSeries?.grid?.length && x?.cumCostSeries?.solar?.length);
+    : null;
   const series = seriesEntry?.cumCostSeries || null;
   if (!series || !series.grid || !series.solar || !series.grid.length) {
     // This is either the intentional no-tariff state or a result that cannot
