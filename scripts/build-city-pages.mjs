@@ -192,6 +192,7 @@ function cityPage(c) {
     <div class="container">
       <a class="logo" href="../../">⚡ BigEnergy<span>Co</span></a>
       <nav>
+        <a href="../../#sizing">Size Your System</a>
         <a href="../../#calculator">Estimator</a>
         <a href="../../#bom">Hardware Reference</a>
         <a href="../../blog/">Blog</a>
@@ -349,6 +350,7 @@ function hubPage() {
     <div class="container">
       <a class="logo" href="../">⚡ BigEnergy<span>Co</span></a>
       <nav>
+        <a href="../#sizing">Size Your System</a>
         <a href="../#calculator">Estimator</a>
         <a href="../#bom">Hardware Reference</a>
         <a href="../blog/">Blog</a>
