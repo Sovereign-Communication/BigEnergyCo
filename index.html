@@ -1587,7 +1587,7 @@ footer {
 
               <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.6rem;line-height:1.5;">
 
-                Assumes a small genset at typical partial load: petrol &asymp; 0.5 L/kWh, diesel &asymp; 0.35 L/kWh (fuel only &mdash;
+                Assumes a small genset at typical partial load: petrol &asymp; <span id="genPetrolBurn">0.5</span> <span id="genBurnUnit">L</span>/kWh, diesel &asymp; <span id="genDieselBurn">0.35</span> <span id="genBurnUnit2">L</span>/kWh (fuel only &mdash;
 
                 oil, filters, and engine wear push the true number higher). If you know your real $/kWh, type it directly instead.
 
@@ -2511,7 +2511,7 @@ footer {
 
   <!-- Inlined JavaScript with JSONP Web-Bridge for Freenet CSP Passthrough -->
 
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260830a"></script>
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260830b"></script>
 
   <script>
 

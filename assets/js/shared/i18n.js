@@ -51,5 +51,7 @@ export function initLangPicker(selectEl) {
   selectEl.addEventListener("change", () => {
     try { localStorage.setItem("beco-lang", selectEl.value); } catch { /* ignore */ }
     applyI18n();
+    // Let JS-rendered labels (e.g. the fuel unit helper) re-localize too.
+    window.dispatchEvent(new Event("beco:lang"));
   });
 }

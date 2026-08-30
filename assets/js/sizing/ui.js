@@ -10,19 +10,19 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260830a";
+import { CITY_PRESETS, } from "./nasa.js?v=20260830b";
 
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830a";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830b";
 
-import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830a";
+import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830b";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260830a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260830b";
 
-import { applyI18n, initLangPicker, resolveLang } from "../shared/i18n.js?v=20260830a";
+import { applyI18n, initLangPicker, resolveLang } from "../shared/i18n.js?v=20260830b";
 
-import { LOCALES } from "../shared/locales.js?v=20260830a";
+import { LOCALES } from "../shared/locales.js?v=20260830b";
 
-import { renderFrontier, frontierVerdict, markerOffCurveNote } from "./frontier-chart.js?v=20260830a";
+import { renderFrontier, frontierVerdict, markerOffCurveNote } from "./frontier-chart.js?v=20260830b";
 
 let worker = null;
 
@@ -462,6 +462,8 @@ function setCoords(lat, lon, label) {
 
   applyEstimatedTariff(lat, lon);
 
+  updateFuelUnits();
+
 }
 
 // Fill the bill-mode tariff from coordinates until the user overrides it.
@@ -499,6 +501,8 @@ function updateCurrencyUnitLabel() {
     ? `Your price per kWh (${CURRENCIES[fx.code]?.symbol || fx.code}):`
 
     : "Your price per kWh ($):";
+
+  updateFuelUnits();
 
 }
 
@@ -770,7 +774,7 @@ function ensureWorker() {
 
   if (!worker) {
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260830a", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260830b", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -1624,17 +1628,75 @@ function downloadBomCsv() {
 
 // ── Generator fuel helper ────────────────────────────────────────────────────
 
-// Typical partial-load fuel burn for small gensets (fuel cost only).
+// Typical partial-load fuel burn for small gensets (fuel cost only), in the
+// site's native L/kWh and in US gallons/kWh. The input unit follows the
+// selected location: US / Hawaii / Alaska buy fuel by the gallon, everywhere
+// else by the litre, and the price is entered in the SAME currency the
+// results display, not hard-coded dollars.
 const GEN_L_PER_KWH = { petrol: 0.5, diesel: 0.35 };
+const LITRES_PER_GALLON = 3.785411784;
+const GEN_GAL_PER_KWH = {
+  petrol: GEN_L_PER_KWH.petrol / LITRES_PER_GALLON,
+  diesel: GEN_L_PER_KWH.diesel / LITRES_PER_GALLON,
+};
+// The parts of the world that sell fuel by the gallon (the US plus its
+// outlying states); everything else is metric.
+const IMPERIAL_BOXES = [
+  [24, 50, -125, -66],        // US mainland
+  [18.5, 28.5, -179, -154],   // Hawaii
+  [50.5, 72, -168, -129],     // Alaska
+];
+let fuelImperial = false;
 
+function usesImperialUnits() {
+  const lat = parseFloat($("latInput")?.value);
+  const lon = parseFloat($("lonInput")?.value);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
+  return IMPERIAL_BOXES.some(([latMin, latMax, lonMin, lonMax]) =>
+    lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax);
+}
+
+// Fuel price -> effective USD cost per kWh. The user types a local-currency
+// price (the same unit the results use); this converts to USD, and also
+// converts volume liters <-> gallons when the country buys by the gallon.
 function genRateUsd() {
   const type = $("genFuelType")?.value || "petrol";
-  const price = parseFloat($("genFuelPrice")?.value);
-  if (!(price > 0)) return null;
-  return price * (GEN_L_PER_KWH[type] || GEN_L_PER_KWH.petrol);
+  const local = parseFloat($("genFuelPrice")?.value);
+  if (!(local > 0)) return null;
+  const fx = fxActive();
+  const priceUsd = fx && fx.rate ? local / fx.rate : local;   // local -> USD
+  const perKwh = fuelImperial
+    ? GEN_GAL_PER_KWH[type] ?? GEN_GAL_PER_KWH.petrol
+    : GEN_L_PER_KWH[type] ?? GEN_L_PER_KWH.petrol;
+  return priceUsd * perKwh;
+}
+
+// Reflect the selected location + currency onto the helper's labels: the unit
+// word (liter/gallon), the money symbol, an example placeholder, and the
+// footnote's litres/gallons-per-kWh numbers.
+function updateFuelUnits() {
+  const newImp = usesImperialUnits();
+  const changed = newImp !== fuelImperial;
+  fuelImperial = newImp;
+  const fx = fxActive();
+  const sym = fx ? (CURRENCIES[fx.code]?.symbol || fx.code) : "$";
+  const label = document.querySelector('label[for="genFuelPrice"]');
+  if (label) label.textContent = `${t(fuelImperial ? "fuelGalLabel" : "fuelLitLabel")} (${sym}):`;
+  const input = $("genFuelPrice");
+  if (input) input.placeholder = fuelImperial ? "e.g. 3.90" : "e.g. 1.20";
+  for (const id of ["genBurnUnit", "genBurnUnit2"]) {
+    const ue = $(id);
+    if (ue) ue.textContent = fuelImperial ? "gal" : "L";
+  }
+  const petrolEl = $("genPetrolBurn");
+  if (petrolEl) petrolEl.textContent = fuelImperial ? "0.13" : "0.5";
+  const dieselEl = $("genDieselBurn");
+  if (dieselEl) dieselEl.textContent = fuelImperial ? "0.09" : "0.35";
+  if (changed) updateGenHelper();
 }
 
 function updateGenHelper() {
+  updateFuelUnits();
   const readout = $("genReadout");
   const applyBtn = $("btnApplyGenRate");
   if (!readout || !applyBtn) return;
@@ -1645,10 +1707,15 @@ function updateGenHelper() {
     return;
   }
   const typeSel = $("genFuelType").value === "diesel" ? "Diesel" : "Petrol";
-  const lpk = GEN_L_PER_KWH[$("genFuelType").value] || GEN_L_PER_KWH.petrol;
-  readout.textContent = `${typeSel} at this price works out to about $${rate.toFixed(2)} per kWh` +
-    ` (${$("genFuelPrice").value} \u00F7 ${lpk} L/kWh \u2014 fuel alone; oil, filters and engine wear push the real number higher).` +
-    ` Typical grid power runs $0.10\u20130.30.`;
+  const entry = $("genFuelPrice").value;
+  const burn = fuelImperial
+    ? GEN_GAL_PER_KWH[$("genFuelType").value] ?? GEN_GAL_PER_KWH.petrol
+    : GEN_L_PER_KWH[$("genFuelType").value] ?? GEN_L_PER_KWH.petrol;
+  const unit = fuelImperial ? "gal" : "L";
+  readout.textContent =
+    t("fuelReadoutRate", { type: typeSel, rate: money(rate) }) + " " +
+    t("fuelReadoutBurn", { entry, burn: burn.toFixed(2), unit }) + " " +
+    t("fuelReadoutGrid", { lo: money(0.1), hi: money(0.3) });
   readout.style.display = "block";
   applyBtn.style.display = "inline-flex";
 }
@@ -1662,7 +1729,7 @@ function applyGenRate() {
   generatorBasis = true;
   tariffTouched = true;
   updateLoadReadout();
-  setStatus(` Your generator fuel works out to about $${rate.toFixed(2)}/kWh \u2014 entered as your electricity price, so every payback figure below compares against what you burn today.`);
+  setStatus(t("fuelApplyOk", { rate: money(rate) }));
 }
 
 function renderMoneyBar(p) {
@@ -3032,6 +3099,14 @@ export function initSizingUI() {
   applyI18n();
 
   initLangPicker($("langSelect"));
+
+  // Re-render unit/currency labels (fuel helper, tariff) the moment the
+
+  // language changes, since those live outside the data-i18n scan.
+
+  window.addEventListener("beco:lang", () => { updateFuelUnits(); updateGenHelper(); });
+
+  updateFuelUnits();
 
   // A shared link restores its inputs and re-runs the deterministic engine.
 

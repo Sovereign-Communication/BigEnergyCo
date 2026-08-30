@@ -10,15 +10,15 @@ import {
   sizeAllBillTargets, simulateOffset, dailyExtremes, CHEMISTRIES,
   RELIABILITY_TIERS, BILL_TARGETS,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER, capacityScaleFor,
-} from "./engine.js?v=20260830a";
-import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260830a";
-import { buildFrontier } from "./frontier.js?v=20260830a";
-import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js?v=20260830a";
+} from "./engine.js?v=20260830b";
+import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260830b";
+import { buildFrontier } from "./frontier.js?v=20260830b";
+import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js?v=20260830b";
 import {
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
   lifetimeCostUsd, exportValueUsd, trueBreakEvenYear,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20260830a";
+} from "./money.js?v=20260830b";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
