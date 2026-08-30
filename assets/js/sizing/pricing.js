@@ -167,6 +167,7 @@ export const CURRENCIES = {
   NGN: { symbol: "₦", perUSD: 1500, name: "Nigerian naira" },
   KES: { symbol: "KSh", perUSD: 130, name: "Kenyan shilling" },
   ZAR: { symbol: "R", perUSD: 18.5, name: "South African rand" },
+  CAD: { symbol: "C$", perUSD: 1.35, name: "Canadian dollar" },
 };
 
 // Last-update timestamp for the FX rates in use (set by live fetch in ui.js).
@@ -185,6 +186,11 @@ const TARIFF_BOXES = [
   { box: [41.0, 51.5, -5.5, 10.0], rate: 0.25, label: "France / Belgium / Netherlands", currency: "EUR", laborF: 2.0, landedF: 1.10 },
   { box: [48.5, 55.0, 13.5, 24.5], rate: 0.20, label: "Poland / Czechia / Slovakia", currency: "PLN", laborF: 1.2, landedF: 1.10 },
   { box: [55.0, 60.0, 20.0, 28.5], rate: 0.21, label: "Finland / Baltics", currency: "EUR", laborF: 1.6, landedF: 1.15 },
+  // US first so its states never fall into the later Mexico / regional boxes.
+  // currency is USD (not null) so any US location actively resets the
+  // display currency back to USD when the user hasn't chosen one manually.
+  { box: [24, 50, -125, -66], rate: 0.17, label: "US mainland", currency: "USD", laborF: 1.5, landedF: 1.05 },
+  { box: [50.5, 72, -168, -129], rate: 0.24, label: "Alaska, United States", currency: "USD", laborF: 1.7, landedF: 1.35 },
   { box: [-56.0, -17.0, -74.0, -34.0], rate: 0.17, label: "Brazil", currency: "BRL", laborF: 0.9, landedF: 1.60 },
   { box: [-30.0, -17.0, -73.0, -53.0], rate: 0.16, label: "Chile / Uruguay", currency: "CLP", laborF: 1.0, landedF: 1.35 },
   { box: [0.0, 12.5, -79.0, -71.0], rate: 0.20, label: "Colombia / Venezuela", currency: "COP", laborF: 0.8, landedF: 1.40 },
@@ -212,8 +218,7 @@ const TARIFF_BOXES = [
   { box: [59, 72, 24, 46], rate: 0.18, label: "Nordics / Baltic", currency: null, laborF: 1.6, landedF: 1.10 },
   { box: [49.5, 61, -9, 3], rate: 0.34, label: "UK / Ireland", currency: null, laborF: 1.9, landedF: 1.10 },
   { box: [35.5, 72, -11, 41], rate: 0.29, label: "Europe", currency: null, laborF: 1.8, landedF: 1.10 },
-  { box: [24, 50, -125, -66], rate: 0.17, label: "US mainland", currency: null, laborF: 1.5, landedF: 1.05 },
-  { box: [42, 71, -141, -52], rate: 0.13, label: "Canada", currency: null, laborF: 1.5, landedF: 1.10 },
+  { box: [42, 71, -141, -52], rate: 0.13, label: "Canada", currency: "CAD", laborF: 1.5, landedF: 1.10 },
   { box: [7, 25, -93, -58], rate: 0.33, label: "Caribbean & Central America", currency: null, laborF: 0.8, landedF: 1.35 },
   { box: [-56, 13, -82, -34], rate: 0.16, label: "South America", currency: null, laborF: 0.9, landedF: 1.35 },
   { box: [22, 47, 123, 147], rate: 0.21, label: "Japan / Korea", currency: null, laborF: 1.7, landedF: 1.05 },
@@ -225,7 +230,52 @@ const TARIFF_BOXES = [
   { box: [-36, 38, -19, 53], rate: 0.16, label: "Africa", currency: null, laborF: 0.5, landedF: 1.35 },
 ];
 
-export function estimateTariff(lat, lon) {
+// US state-level average residential electricity prices (EIA-style 2023-24,
+// cents/kWh). Used when a catalog city carries its two-letter state code so
+// New York doesn't get the whole-mainland lump rate and Louisiana doesn't get
+// Hawaii's price. `currency` stays null: the US displays in USD by default.
+export const US_STATES = {
+  AL: { name: "Alabama", cents: 14.4 }, AK: { name: "Alaska", cents: 23.6 }, AZ: { name: "Arizona", cents: 13.6 },
+  AR: { name: "Arkansas", cents: 12.2 }, CA: { name: "California", cents: 30.2 }, CO: { name: "Colorado", cents: 14.4 },
+  CT: { name: "Connecticut", cents: 27.0 }, DE: { name: "Delaware", cents: 16.6 }, DC: { name: "District of Columbia", cents: 17.4 },
+  FL: { name: "Florida", cents: 15.1 }, GA: { name: "Georgia", cents: 14.1 }, HI: { name: "Hawaii", cents: 44.0 },
+  ID: { name: "Idaho", cents: 11.8 }, IL: { name: "Illinois", cents: 16.6 }, IN: { name: "Indiana", cents: 15.1 },
+  IA: { name: "Iowa", cents: 12.5 }, KS: { name: "Kansas", cents: 14.1 }, KY: { name: "Kentucky", cents: 12.6 },
+  LA: { name: "Louisiana", cents: 11.9 }, ME: { name: "Maine", cents: 21.7 }, MD: { name: "Maryland", cents: 16.7 },
+  MA: { name: "Massachusetts", cents: 28.5 }, MI: { name: "Michigan", cents: 18.3 }, MN: { name: "Minnesota", cents: 14.4 },
+  MS: { name: "Mississippi", cents: 13.7 }, MO: { name: "Missouri", cents: 13.3 }, MT: { name: "Montana", cents: 12.7 },
+  NE: { name: "Nebraska", cents: 12.4 }, NV: { name: "Nevada", cents: 16.4 }, NH: { name: "New Hampshire", cents: 24.0 },
+  NJ: { name: "New Jersey", cents: 17.9 }, NM: { name: "New Mexico", cents: 14.8 }, NY: { name: "New York", cents: 23.0 },
+  NC: { name: "North Carolina", cents: 13.7 }, ND: { name: "North Dakota", cents: 11.6 }, OH: { name: "Ohio", cents: 15.7 },
+  OK: { name: "Oklahoma", cents: 12.5 }, OR: { name: "Oregon", cents: 13.1 }, PA: { name: "Pennsylvania", cents: 17.3 },
+  RI: { name: "Rhode Island", cents: 27.7 }, SC: { name: "South Carolina", cents: 14.1 }, SD: { name: "South Dakota", cents: 12.0 },
+  TN: { name: "Tennessee", cents: 13.0 }, TX: { name: "Texas", cents: 14.2 }, UT: { name: "Utah", cents: 11.5 },
+  VT: { name: "Vermont", cents: 21.2 }, VA: { name: "Virginia", cents: 14.2 }, WA: { name: "Washington", cents: 11.8 },
+  WV: { name: "West Virginia", cents: 14.8 }, WI: { name: "Wisconsin", cents: 15.8 }, WY: { name: "Wyoming", cents: 12.0 },
+};
+
+// Accept either a two-letter state code ("LA") or a full state name
+// ("Louisiana") and return the canonical code, or null if not a US state.
+export function usStateCode(region) {
+  if (!region) return null;
+  const s = String(region).trim();
+  if (Object.prototype.hasOwnProperty.call(US_STATES, s.toUpperCase())) return s.toUpperCase();
+  const hit = Object.values(US_STATES).find((st) => st.name.toUpperCase() === s.toUpperCase());
+  return hit ? Object.keys(US_STATES).find((code) => US_STATES[code] === hit) : null;
+}
+
+export function estimateTariff(lat, lon, region, country) {
+  const st = usStateCode(region);
+  if (st) {
+    const state = US_STATES[st];
+    return { rate: +(state.cents / 100).toFixed(4), label: `${state.name}, United States`, currency: "USD", laborF: 1.5, landedF: 1.05, state: st };
+  }
+  // Canada: province codes ("02", "08", …) aren't US states, so resolve by
+  // country BEFORE the box loop — otherwise Toronto/Montreal/Vancouver fall
+  // inside the US mainland box and get USD rates.
+  if (String(country).toUpperCase() === "CA" || String(region).toUpperCase() === "CA") {
+    return { rate: 0.13, label: "Canada", currency: "CAD", laborF: 1.5, landedF: 1.10 };
+  }
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
     return { rate: 0.28, label: "global average", currency: null, laborF: 1, landedF: 1.1 };
   }

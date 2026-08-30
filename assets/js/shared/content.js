@@ -1,7 +1,5 @@
 // Canonical site content shared by the internet page and (via a build-time
-// sync) the offline Freenet page. Prices are DATED and SCOPE-LABELED —
-// update them here and run scripts/sync-freenet-content.mjs; never edit
-// the generated blocks inside index-freenet.html by hand.
+// the public calculator. Prices are DATED and SCOPE-LABELED.
 
 export const PRICES_CHECKED = "Aug 2026";
 

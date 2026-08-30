@@ -315,6 +315,10 @@ header {
   box-shadow: 0 0 10px var(--primary-glow);
 }
 
+.city-suggestion { display:block; width:100%; border:0; background:transparent; color:var(--text-main); text-align:left; padding:.55rem .65rem; border-radius:6px; cursor:pointer; font:inherit; }
+.city-suggestion:hover, .city-suggestion:focus, .city-suggestion[aria-selected="true"] { background:rgba(0,230,153,.12); color:var(--primary-accent); outline:none; }
+#citySuggestions[hidden] { display:none; }
+
 .results-box {
   background: rgba(9, 13, 22, 0.9);
   border: 1px solid var(--border-card);

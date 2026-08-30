@@ -10,9 +10,10 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS, } from "./nasa.js?v=20260830b";
+import { CITY_PRESETS } from "./nasa.js?v=20260830b";
+import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCityLabel, nearestCity } from "./cities.js?v=20260830o";
 
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830b";
+import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
 
 import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830b";
 
@@ -446,7 +447,7 @@ function renderAppliances() {
 
 // -- Location plumbing -------------------------------------------------------
 
-function setCoords(lat, lon, label) {
+function setCoords(lat, lon, label, region, country) {
 
   const latEl = $("latInput");
 
@@ -460,7 +461,7 @@ function setCoords(lat, lon, label) {
 
   if (noteEl) noteEl.textContent = label;
 
-  applyEstimatedTariff(lat, lon);
+  applyEstimatedTariff(lat, lon, region, country);
 
   updateFuelUnits();
 
@@ -486,6 +487,14 @@ function setCurrency(code) {
 
   if ($("fxRate") && Number.isFinite(cur.perUSD)) $("fxRate").value = cur.perUSD;
 
+  // Keep the manual-edit baseline in sync: when the user later types a rate
+
+  // or code by hand, the conversion below divides by THIS snapshot, so a
+
+  // stale pre-location rate would silently double-convert the tariff.
+
+  prevFxSnapshot = fxActive();
+
   updateCurrencyUnitLabel();
 
 }
@@ -502,15 +511,21 @@ function updateCurrencyUnitLabel() {
 
     : "Your price per kWh ($):";
 
+  // Feed-in credit is entered in the same display currency as the tariff.
+
+  const expSpan = document.querySelector('label[for="exportRate"] span');
+
+  if (expSpan) expSpan.textContent = `(${fx ? (CURRENCIES[fx.code]?.symbol || fx.code) : "$"}/kWh, optional \u2014 grid-tie only)`;
+
   updateFuelUnits();
 
 }
 
-function applyEstimatedTariff(lat, lon) {
+function applyEstimatedTariff(lat, lon, region, country) {
 
   if (tariffTouched) return;
 
-  const est = estimateTariff(lat, lon);
+  const est = estimateTariff(lat, lon, region, country);
 
   // Auto-select the country's currency first, then express the estimated
 
@@ -542,75 +557,107 @@ function applyEstimatedTariff(lat, lon) {
 
   updateLoadReadout();
 
+  // A location change auto-switches the display currency and tariff estimate;
+
+  // refresh any existing results so the money figures follow immediately
+
+  // instead of showing the previous location's currency.
+
+  if (lastPayload) renderResults(lastPayload);
+
 }
 
 function renderCities() {
+  const search = $("citySearch");
+  const list = $("citySuggestions");
 
-  const sel = $("cityPreset");
-
-  if (!sel) {
-
-    console.error("City select element not found");
-
+  if (!search || !list) {
+    console.error("City search elements not found");
     return;
-
   }
 
-  if (!CITY_PRESETS || !CITY_PRESETS.length) {
-
-    console.error("CITY_PRESETS not loaded");
-
-    return;
-
-  }
-
-  sel.innerHTML = "";
-
-  const regions = [...new Set(CITY_PRESETS.map((c) => c.r))];
-
-  for (const r of regions) {
-
-    const og = el("optgroup", { label: r });
-
-    CITY_PRESETS.filter((c) => c.r === r).forEach((c) => {
-
-      const idx = CITY_PRESETS.indexOf(c);
-
-      const o = el("option", { value: String(idx) }, c.name);
-
-      og.appendChild(o);
-
+  if (search && list) {
+    let active = -1;
+    const draw = () => {
+      const results = searchCities(search.value, CITY_CATALOG);
+      list.innerHTML = "";
+      list.hidden = !search.value.trim() || !results.length;
+      results.forEach((c, i) => {
+        const population = Number.isFinite(c.population) && c.population > 0 ? ` · population ${c.population.toLocaleString()}` : "";
+        const button = el("button", { type: "button", role: "option", class: "city-suggestion" }, `${formatCityLabel(c)}${population}`);
+        button.dataset.index = String(i);
+        button.addEventListener("mousedown", (event) => event.preventDefault());
+        button.addEventListener("click", () => { setCoords(c.lat, c.lon, `Sunshine data from ${formatCityLabel(c)}`, c.r, c.country); search.value = formatCityLabel(c); list.hidden = true; search.setAttribute("aria-expanded", "false"); });
+        list.appendChild(button);
+      });
+      active = -1;
+      search.setAttribute("aria-expanded", list.hidden ? "false" : "true");
+    };
+    search.addEventListener("input", draw);
+    let lookupBusy = false;
+    const resolveTypedCity = async () => {
+      const query = search.value.trim();
+      if (!query || lookupBusy) return;
+      const local = searchCities(query, CITY_CATALOG, 1)[0];
+      if (local) {
+        setCoords(local.lat, local.lon, `Sunshine data from ${formatCityLabel(local)}`, local.r, local.country);
+        search.value = formatCityLabel(local);
+        list.hidden = true;
+        search.setAttribute("aria-expanded", "false");
+        return;
+      }
+      lookupBusy = true;
+      const match = await lookupCityOnline(query);
+      lookupBusy = false;
+      if (match) {
+        setCoords(match.lat, match.lon, `Sunshine data from ${formatCityLabel(match)}`, match.r, match.country);
+        search.value = formatCityLabel(match);
+        list.hidden = true;
+        search.setAttribute("aria-expanded", "false");
+      }
+    };
+    search.addEventListener("keydown", (event) => {
+      if (event.key === "Tab") {
+        // Let focus move naturally, but resolve the typed city first.
+        resolveTypedCity();
+        return;
+      }
+      if (event.key === "Enter") {
+        const options = list.querySelectorAll("[role=option]");
+        // If the user arrowed to a specific suggestion, let that handler pick it.
+        if (!(active >= 0 && options.length)) {
+          event.preventDefault();
+          resolveTypedCity();
+        }
+      }
     });
-
-    sel.appendChild(og);
-
+    search.addEventListener("keydown", (event) => {
+      const options = [...list.querySelectorAll("[role=option]")];
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") { event.preventDefault(); if (options.length) { active = (active + (event.key === "ArrowDown" ? 1 : -1) + options.length) % options.length; options.forEach((o, i) => o.setAttribute("aria-selected", i === active ? "true" : "false")); options[active].focus(); } }
+      else if (event.key === "Escape") { list.hidden = true; search.setAttribute("aria-expanded", "false"); }
+      else if (event.key === "Enter" && active >= 0 && options[active]) { event.preventDefault(); options[active].click(); search.focus(); }
+    });
+    search.addEventListener("blur", () => setTimeout(() => { list.hidden = true; search.setAttribute("aria-expanded", "false"); }, 150));
   }
-
-  sel.value = "0";
-
-  sel.addEventListener("change", () => {
-
-    const idx = parseInt(sel.value, 10);
-
-    const c = CITY_PRESETS[idx];
-
-    if (c) setCoords(c.lat, c.lon, `Sunshine data from ${c.name}`);
-
-  });
-
-  // initialize to first city
-
+  // Initialize with the first reference city, while keeping the visible
+  // control exclusively type-ahead based.
   const first = CITY_PRESETS[0];
+  if (first) setCoords(first.lat, first.lon, `Sunshine data from ${first.name}`);
+}
 
-  setCoords(first.lat, first.lon, `Sunshine data from ${first.name}`);
-
+async function expandCitySearch() {
+  const expanded = await loadCityCatalog();
+  if (expanded.length <= CITY_CATALOG.length) return;
+  CITY_CATALOG.splice(0, CITY_CATALOG.length, ...expanded);
+  const search = $("citySearch");
+  if (search?.value.trim()) search.dispatchEvent(new Event("input"));
 }
 
 function locateMe() {
 
   if (!navigator.geolocation) {
 
-    setStatus("Warning: Your browser can't share a location - pick the nearest big city instead.");
+    setStatus("Warning: Your browser can't share a location. Search for a city instead.");
 
     return;
 
@@ -622,15 +669,35 @@ function locateMe() {
 
     (pos) => {
 
-      setCoords(pos.coords.latitude, pos.coords.longitude, "Using your precise location");
+      const lat = pos.coords.latitude, lon = pos.coords.longitude;
+
+      setCoords(lat, lon, "Using your precise location");
 
       $("coordDetails").open = true;
 
       setStatus(" Location set. Now tell us your power use below, then run the sizing.");
 
+      // Best-effort: if the nearest catalog city is close, reuse its region so
+
+      // state-level tariffs (e.g. Louisiana vs the whole-mainland lump) and the
+
+      // auto currency match what a typed city search would give.
+
+      expandCitySearch().then(() => {
+
+        const near = nearestCity(lat, lon, CITY_CATALOG, 80);
+
+        if (near && near.r) {
+
+          setCoords(lat, lon, `Using your precise location (near ${formatCityLabel(near)})`, near.r, near.country);
+
+        }
+
+      }).catch(() => {});
+
     },
 
-    () => setStatus("Warning: Couldn't get your location - pick the nearest big city instead."),
+    () => setStatus("Warning: Couldn't get your location. Search for a city instead."),
 
     { timeout: 8000 }
 
@@ -706,7 +773,15 @@ function readInputs() {
 
       const v = parseFloat($("exportRate")?.value);
 
-      return Number.isFinite(v) && v > 0 ? v : null;
+      if (!(Number.isFinite(v) && v > 0)) return null;
+
+      // Entered in the display currency (same as the tariff input); the engine
+
+      // prices in USD, so convert once here just like the tariff is.
+
+      const fx = fxActive();
+
+      return fx && Number.isFinite(v) ? v / fx.rate : v;
 
     })(),
 
@@ -898,6 +973,30 @@ function money(usd) {
 
 }
 
+// All energy-cost figures are stored by the engine in USD/kWh. Convert the
+// rate, not just the dollar totals, so the headline metric remains honest when
+// a user changes currency.
+function localRate(usdPerKwh) {
+  if (!Number.isFinite(usdPerKwh)) return "n/a";
+  const fx = fxActive();
+  const amount = usdPerKwh * (fx ? fx.rate : 1);
+  const code = fx?.code || "USD";
+  try {
+    return new Intl.NumberFormat(undefined, { style: "currency", currency: code, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${code}`;
+  }
+}
+
+function energyRate(usdPerKwh) {
+  const r = localRate(usdPerKwh);
+  return r === "n/a" ? r : r + "/kWh";
+}
+
+function gridRate(usdPerKwh) {
+  return Number.isFinite(usdPerKwh) ? ` (grid ${energyRate(usdPerKwh)})` : "";
+}
+
 function moneyRange(lo, hi) { return money(lo) + "\u2013" + money(hi); }
 
 function fxNote() {
@@ -912,7 +1011,7 @@ function fxNote() {
 
     : " Indicative built-in rates (live fetch unavailable).";
 
-  return `Amounts shown in ${fx.code} at ${fx.rate} per US$1.${asOf} Battery unit rates stay in $/kWh because the underlying price scopes are USD-denominated.`;
+  return `Amounts shown in ${fx.code} at ${fx.rate} per US$1. Energy cost rates and recommendations are converted to ${fx.code}; source price scopes remain USD-denominated.`;
 
 }
 
@@ -1339,8 +1438,7 @@ function renderAutoCards(p) {
     }
 
     if (Number.isFinite(a.lcoeUsdPerKwh)) {
-      rows.push(["Your power cost", `${(a.lcoeUsdPerKwh * 100).toFixed(1)}c/kWh` +
-        (p.tariff ? ` (grid is ${(p.tariff * 100).toFixed(0)}c)` : "")]);
+      rows.push(["Your power cost", energyRate(a.lcoeUsdPerKwh) + gridRate(p.tariff)]);
     }
 
     appendRows(card, rows);
@@ -1371,9 +1469,17 @@ function footprintText(pvKw, panelWatts = PANEL_WATTS_DEFAULT) {
 
 function syncLadderTabs() {
   const map = { best: "lvlBest", compare: "lvlCompare", matrix: "lvlMatrix" };
+  const solvable = lastPayload && lastPayload.auto
+    ? lastPayload.auto.filter((a) => a.solvable && Number.isFinite(a.lifetimeCostMid)).length
+    : 0;
+  const canCompare = solvable >= 2;
   for (const [lvl, id] of Object.entries(map)) {
     const btn = $(id);
     if (!btn) continue;
+    if (lvl === "compare") {
+      btn.style.display = canCompare ? "" : "none";
+      if (!canCompare && resultLevel === "compare") resultLevel = "best";
+    }
     const active = resultLevel === lvl;
     btn.classList.toggle("ladder-active", active);
     btn.setAttribute("aria-selected", active ? "true" : "false");
@@ -1400,6 +1506,10 @@ function renderBestPick(p) {
   }
   const b = p.best;
   const isGT = p.mode === "gridtie";
+  const solvableCount = (p.auto || []).filter((a) => a.solvable && Number.isFinite(a.lifetimeCostMid)).length;
+  const bestSuffix = solvableCount >= 3 ? " \u2014 cheapest of the three"
+    : solvableCount === 2 ? " \u2014 cheaper of the two compared"
+    : "";
   const card = el("div", { class: "bom-card" });
   card.style.borderColor = "var(--border-glow)";
   card.appendChild(el("div", { class: "bom-badge" }, "Recommended \u2014 lowest true 20-year cost"));
@@ -1415,7 +1525,7 @@ function renderBestPick(p) {
     ? (b.batteryLifeYears ? `~${b.replacementsHorizon}x (about every ${fmtLife(b.batteryLifeYears)})` : `~${b.replacementsHorizon}x`)
     : "None in 20 years"]);
   if (b.swapsAndLaborUsd > 0) rows.push(["Swaps + labor add", `~${money(b.swapsAndLaborUsd)}`]);
-  rows.push(["Total 20-year cost", `~${money(b.lifetimeCostMid)} \u2014 cheapest of the three`]);
+  rows.push(["Total 20-year cost", `~${money(b.lifetimeCostMid)}${bestSuffix}`]);
   if (!isGT) {
     rows.push(["Unmet hours", `${fmt(b.unmetHoursPerYear ?? 0)} h/yr \u00B7 longest gap ${fmt(b.longestGapHours ?? 0)} h`]);
   } else if (b.billAfterMonthlyUsd !== null) {
@@ -1432,15 +1542,17 @@ function renderBestPick(p) {
     rows.push(["Pays for itself in", fmtPaybackRange(b.paybackYearsLo, b.paybackYearsHi)]);
   }
   if (Number.isFinite(b.lcoeUsdPerKwh)) {
-    rows.push(["Your power cost", `${(b.lcoeUsdPerKwh * 100).toFixed(1)}c/kWh` +
-      (p.tariff ? ` (grid is ${(p.tariff * 100).toFixed(0)}c)` : "")]);
+    rows.push(["Your power cost", energyRate(b.lcoeUsdPerKwh) + gridRate(p.tariff)]);
   }
   appendRows(card, rows);
   if (p.bestReason) {
     card.appendChild(el("p", { style: "font-size:0.85rem;color:var(--text-main);margin-top:0.7rem;line-height:1.55;" }, p.bestReason));
   }
+  const compareHint = solvableCount >= 2
+    ? " Use the tabs above to compare every option side by side."
+    : " The matrix shows why the other chemistries weren't practical at this site.";
   card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
-    `${p.autoNote}. Use the tabs above to compare every option side by side.`));
+    `${p.autoNote}.${compareHint}`));
   wrap.appendChild(card);
 }
 
@@ -1479,7 +1591,7 @@ function matrixHtml(p) {
         ? `${fmt(cell.unmetHoursPerYear)} h/yr unmet`
         : `-${cell.cutPct}% bill`;
       const lcoe = Number.isFinite(cell.lcoeUsdPerKwh)
-        ? `<span style="color:var(--text-muted);">\u00B7 ${(cell.lcoeUsdPerKwh * 100).toFixed(1)}c/kWh</span>` : "";
+        ? `<span style="color:var(--text-muted);">\u00B7 ${energyRate(cell.lcoeUsdPerKwh)}</span>` : "";
       return `<td${cls}>${cell.pvKw} kW PV<br>${cell.battKwh > 0 ? fmt(cell.battKwh) + " kWh batt" : "no battery"}` +
         `<br>~${moneyRange(cell.costLo, cell.costHi)}<br><strong>20-yr ~${money(cell.lifetimeCostMid)}</strong><br>${rel} ${lcoe}</td>`;
     }).join("");
@@ -1750,9 +1862,9 @@ function renderMoneyBar(p) {
 
   moneyBar.textContent = p.mode === "gridtie"
 
-    ? t("tariffSpendLine", { tariff: p.tariff.toFixed(2), annual: money(p.annualGridSpendUsd) })
+    ? t("tariffSpendLine", { tariff: localRate(p.tariff), annual: money(p.annualGridSpendUsd) })
 
-    : t("tariffSpendOffgrid", { tariff: p.tariff.toFixed(2), annual: money(p.annualGridSpendUsd) });
+    : t("tariffSpendOffgrid", { tariff: localRate(p.tariff), annual: money(p.annualGridSpendUsd) });
 
 }
 
@@ -1829,8 +1941,7 @@ function renderTierCards(p) {
     }
 
     if (Number.isFinite(t.lcoeUsdPerKwh)) {
-      rows.push(["Your power cost", `${(t.lcoeUsdPerKwh * 100).toFixed(1)}c/kWh` +
-        (p.tariff ? ` (grid is ${(p.tariff * 100).toFixed(0)}c)` : "")]);
+      rows.push(["Your power cost", energyRate(t.lcoeUsdPerKwh) + gridRate(p.tariff)]);
     }
 
     if (t.replacementsHorizon > 0) {
@@ -1926,8 +2037,7 @@ function renderTargetCards(p) {
     }
 
     if (Number.isFinite(t.lcoeUsdPerKwh)) {
-      rows.push(["Your power cost", `${(t.lcoeUsdPerKwh * 100).toFixed(1)}c/kWh` +
-        (p.tariff ? ` (grid is ${(p.tariff * 100).toFixed(0)}c)` : "")]);
+      rows.push(["Your power cost", energyRate(t.lcoeUsdPerKwh) + gridRate(p.tariff)]);
     }
 
     if (t.replacementsHorizon > 0 && t.battKwh > 0) {
@@ -2462,7 +2572,7 @@ function renderResults(p) {
 
     (a.offline ? "OFFLINE MODE: this run used the bundled typical-year profile for " + p.meta.offlineCity + " - a close approximation, not your exact site. Re-run online for five years of point-specific weather. " : "") +
 
-    (inp.tariff ? `Grid spend assumes $${inp.tariff}/kWh at ${fmtKwh(inp.dailyKwh)} kWh/day.` : "No tariff entered, so payback is not shown.");
+    (inp.tariff ? `Grid spend assumes ${energyRate(inp.tariff)} at ${fmtKwh(inp.dailyKwh)} kWh/day.` : "No tariff entered, so payback is not shown.");
 
   let briefLines;
 
@@ -2672,7 +2782,13 @@ function restoreFromShare() {
 
   if (o.ac && ["cut60", "cut80", "cut95"].includes(o.ac) && $("autoTarget")) $("autoTarget").value = o.ac;
 
-  if (Number.isFinite(o.xr) && o.xr > 0 && $("exportRate")) $("exportRate").value = String(o.xr);
+  if (Number.isFinite(o.xr) && o.xr > 0 && $("exportRate")) {
+
+    const fx = fxActive();
+
+    $("exportRate").value = String(fx ? +(o.xr * fx.rate).toFixed(4) : o.xr);
+
+  }
 
   if (Number.isFinite(o.tf) && o.tf > 0) {
 
@@ -2792,7 +2908,7 @@ function populatePrintSheet(p, inp) {
 
         t.paybackYearsLo !== null ? fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi) : "n/a",
 
-        Number.isFinite(t.lcoeUsdPerKwh) ? `~${(t.lcoeUsdPerKwh * 100).toFixed(1)}c/kWh` : "n/a",
+        Number.isFinite(t.lcoeUsdPerKwh) ? `~${energyRate(t.lcoeUsdPerKwh)}` : "n/a",
 
       ].join("</td><td>") + "</td></tr>"
 
@@ -2862,7 +2978,7 @@ function populatePrintSheet(p, inp) {
 
       ${p.chemistry.toUpperCase()} battery - location ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)} -
 
-      ${p.focus ? footprintText(p.focus.pvKw) + " - " : ""}${p.tariff ? `grid price $${p.tariff}/kWh (~$${fmt(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
+      ${p.focus ? footprintText(p.focus.pvKw) + " - " : ""}${p.tariff ? `grid price ${energyRate(p.tariff)} (~${money(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
 
     ${hwHtml}
 
@@ -2989,6 +3105,7 @@ export function initSizingUI() {
   try {
 
     renderCities();
+    expandCitySearch();
 
     renderAppliances();
 
@@ -3068,7 +3185,12 @@ export function initSizingUI() {
       updateCurrencyUnitLabel();
       prevFxSnapshot = fxActive();
 
-      if (lastPayload) renderResults(lastPayload);
+      if (lastPayload) {
+        // Render from the same USD payload using the newly selected display FX.
+        // The engine's recommendation is currency-invariant; every displayed
+        // amount and energy rate is recalculated here.
+        renderResults(lastPayload);
+      }
 
     });
 
@@ -3178,7 +3300,7 @@ function whenDOMReady(cb) {
 
     // DOMContentLoaded already fired, but element might not be ready yet
 
-    // Poll for the cityPreset element to ensure it exists
+    // Poll for the city search element to ensure it exists
 
     let attempts = 0;
 
@@ -3186,9 +3308,9 @@ function whenDOMReady(cb) {
 
     const checkReady = () => {
 
-      const sel = document.getElementById("cityPreset");
+      const search = document.getElementById("citySearch");
 
-      if (sel) {
+      if (search) {
 
         cb();
 
@@ -3200,7 +3322,7 @@ function whenDOMReady(cb) {
 
       } else {
 
-        console.error("cityPreset element not found after", maxAttempts * 50, "ms");
+        console.error("citySearch element not found after", maxAttempts * 50, "ms");
 
         cb(); // proceed anyway to avoid deadlock
 

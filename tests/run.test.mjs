@@ -4,7 +4,7 @@
 // chart again. Run: node --test "tests/**/*.test.mjs"
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runSizing } from "../assets/js/sizing/run.js";
+import { runSizing, autoNoteFor } from "../assets/js/sizing/run.js";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
 import { OFFLINE_PROFILES, PROFILE_YEAR } from "../assets/js/sizing/profiles.js";
 
@@ -75,6 +75,26 @@ test("off-grid AUTO honors the independence submenu (tier100 → zero unmet)", a
   }
   assert.ok(!p99.autoNote.includes("100% independence"), "basis note tracks selection");
   assert.ok(p100.autoNote.includes("100% independence"));
+});
+
+test("autoNoteFor names exactly the chemistries that solved (count-aware copy)", () => {
+  const basis = "an ~80% grid-bill cut";
+  assert.equal(
+    autoNoteFor([{ chemLabel: "LFP (LiFePO4)" }, { chemLabel: "Sodium-Ion" }, { chemLabel: "Lead-Acid (AGM)" }], basis),
+    `All three chemistries sized for ${basis}`
+  );
+  assert.equal(autoNoteFor([{ chemLabel: "LFP (LiFePO4)" }, { chemLabel: "Sodium-Ion" }], basis),
+    `LFP (LiFePO4) and Sodium-Ion sized for ${basis}`);
+  assert.equal(autoNoteFor([{ chemLabel: "Sodium-Ion" }], basis), `Sodium-Ion sized for ${basis}`);
+  assert.ok(!autoNoteFor([{ chemLabel: "Sodium-Ion" }], basis).includes("three"));
+  assert.ok(autoNoteFor([], basis).includes("No chemistry"));
+});
+
+test("auto payload autoNote is count-aware when all three chemistries solve", async () => {
+  const p = await runSizing({ ...MSG, chemistry: "auto", mode: "gridtie", autoTarget: "cut80" }, { fetchWeather: fakeWeather });
+  assert.ok(p.auto.length === 3, "three chemistry cards");
+  assert.ok(p.autoNote.startsWith("All three chemistries sized for"), "full-run autoNote names the basis");
+  assert.ok(!p.autoNote.includes(" of the three"), "no stale 'of the three' phrasing");
 });
 
 test("off-grid SPECIFIC: tier cards + percent history chart bands", async () => {

@@ -13,7 +13,7 @@ import {
 } from "./engine.js?v=20260830b";
 import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260830b";
 import { buildFrontier } from "./frontier.js?v=20260830b";
-import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js?v=20260830b";
+import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js?v=20260830o";
 import {
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
   lifetimeCostUsd, exportValueUsd, trueBreakEvenYear,
@@ -33,6 +33,19 @@ const TARGET_BASIS = {
 
 const VALID_AUTO_TIERS = new Set(["tier100", "tier99", "tier95"]);
 const VALID_AUTO_TARGETS = new Set(["cut60", "cut80", "cut95"]);
+
+/**
+ * Count-aware sentence for the auto cards: names exactly the chemistries
+ * that actually produced a system, so copy never claims "all three" when
+ * only one or two solved.
+ */
+export function autoNoteFor(entries, basis) {
+  const names = entries.map((a) => a.chemLabel);
+  if (names.length >= 3) return `All three chemistries sized for ${basis}`;
+  if (names.length === 2) return `${names[0]} and ${names[1]} sized for ${basis}`;
+  if (names.length === 1) return `${names[0]} sized for ${basis}`;
+  return `No chemistry produced a practical system here for ${basis}.`;
+}
 
 // UI-contract version: bump whenever payload fields change shape. The
 // renderer compares this to its own constant and warns on mismatch instead
@@ -283,7 +296,12 @@ export async function runSizing(msg, deps = {}) {
     } else {
       why = `At this load and target, ${winner.chemLabel} wins on first cost${ahead} — but expect ~${winner.replacementsHorizon} bank swaps over 20 years, already counted in every figure above.`;
     }
-    return `${why} The ranking shifts with climate, tariffs, and how much work you do yourself — check the other options before deciding.`;
+    const tail = others.length >= 2
+      ? " The ranking shifts with climate, tariffs, and how much work you do yourself — check the other options before deciding."
+      : others.length === 1
+        ? " The ranking shifts with climate, tariffs, and how much work you do yourself — weigh the runner-up before deciding."
+        : " No other chemistry produced a practical system at this site and load.";
+    return `${why}${tail}`;
   }
 
   // ── Plausibility frontier ────────────────────────────────────────────────
@@ -496,7 +514,7 @@ export async function runSizing(msg, deps = {}) {
       payload.effectiveTargetId = effectiveTarget;
       payload.autoNote = autoFallback
         ? `${TARGET_BASIS[repTargetId]} isn't reachable within the sizes this tool searches at this site, so the cards below show ${TARGET_BASIS[effectiveTarget]} instead — the curve shows how far this location can actually get.`
-        : `All three chemistries sized for ${TARGET_BASIS[effectiveTarget]}`;
+        : autoNoteFor(auto, TARGET_BASIS[effectiveTarget]);
       payload.targets = [];
       const gtWinner = bestOf(auto);
       payload.best = gtWinner;
@@ -674,7 +692,7 @@ export async function runSizing(msg, deps = {}) {
       payload.effectiveTierId = effectiveTier;
       payload.autoNote = autoFallback
         ? `${TIER_BASIS[repTierId]} is out of reach within the sizes this tool searches at this site, so the cards below show ${TIER_BASIS[effectiveTier]} instead — the largest system this tool can size here still leaves some hours unserved.`
-        : `All three chemistries sized for ${TIER_BASIS[effectiveTier]}`;
+        : autoNoteFor(auto, TIER_BASIS[effectiveTier]);
       payload.tiers = [];
       const ogWinner = bestOf(auto);
       payload.best = ogWinner;

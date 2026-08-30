@@ -3,6 +3,10 @@
 A free, no-signup AI tool for roughly sizing off-grid solar and battery systems.
 Built and given away by Lucas Ballek. Nothing for sale.
 
+## Project status
+
+BigEnergyCo is permanently free and donation-supported. It sells no products or services, accepts no leads, and has no commercial files or procurement workflow.
+
 ## Where it runs
 
 | Piece | Where | Notes |
@@ -10,14 +14,20 @@ Built and given away by Lucas Ballek. Nothing for sale.
 | **Public site (brand)** | `bigenergyco.pages.dev` (Cloudflare Pages) | Primary brand domain. Same allowlisted build, deployed to the `bigenergyco` Pages project per the runbook below (`node scripts/deploy-pages-local.mjs --check` + `npx wrangler pages deploy`). Served with `_headers`/`_redirects` for caching and legacy-domain consolidation. |
 | **Public site (legacy)** | `sovereign-communication.github.io/BigEnergyCo/` | Legacy GitHub Pages URL — 301 redirects to brand domain via `_redirects` (Cloudflare Pages). Deploys via the allowlist workflow (`.github/workflows/deploy.yml`). The old `treystu.github.io/BigEnergyCo/` URL also redirects here; both remain on the API's CORS allowlist for cached clients. |
 | **AI API** | Cloudflare Worker (`bigenergyco-api.bigenergyco.workers.dev`) | Proxies Groq. CORS-locked to the Pages origins + localhost, rate-limited, payload-capped. Deploy with `deploy_worker.bat` (or `npx wrangler deploy` in `worker/`). |
-| **Local/dev** | `START.bat` / `STOP.bat` / `LINK.bat` | Optional local server + tunnel stack for development and the Freenet variant. Not needed for the public site. |
+| **Local/dev** | Any static HTTP server | The public site is a static Pages build; no local tunnel or alternate runtime is required.
 
 ## Deploy runbook — GitHub first, then Cloudflare
 
-**Rule:** always publish to GitHub first, verify it lands green, *then* go to
-Cloudflare. GitHub is the source of truth and the gatekeeper; Cloudflare is the
-last-mile copy of the same build. Never skip the GitHub step to "save time" —
-the brand domain must never ship something GitHub hasn't already validated.
+**Rule: `main` first — always, no exceptions.** Every change — even a one-word
+copy tweak — ships to `main` and passes the GitHub `Tests` workflow before the
+brand domain is touched. GitHub is the source of truth and the gatekeeper;
+Cloudflare (`bigenergyco.pages.dev`) is the last-mile copy of the *same* build.
+
+> ❗ Never deploy straight to Cloudflare from a working tree, and never skip the
+> GitHub step to "save time" or because "it's just copy". If a change hasn't
+> gone through `main` and come out green, the brand domain does not ship it.
+> Getting burned once (a fix deployed to the brand domain without the GitHub
+> gate) is exactly why this rule is absolute.
 
 1. **Run the checks locally** (what CI runs):
    ```bash
@@ -26,11 +36,13 @@ the brand domain must never ship something GitHub hasn't already validated.
    node scripts/check-chars.mjs
    node scripts/deploy-pages-local.mjs --check
    ```
-2. **Push to `main`** — this triggers the `Tests` workflow (matching the local
-   checks above) and the `Deploy to GitHub Pages` allowlist workflow
-   (`.github/workflows/deploy.yml`) which publishes the legacy URL
-   `sovereign-communication.github.io/BigEnergyCo/`.
+2. **Commit everything on `main`, then push** — this triggers the `Tests`
+   workflow (matching the local checks above) and the `Deploy to GitHub Pages`
+   allowlist workflow (`.github/workflows/deploy.yml`) which publishes the
+   legacy URL `sovereign-communication.github.io/BigEnergyCo/`.
    ```bash
+   git add -A
+   git commit -m "..."
    git push origin main
    ```
 3. **Verify GitHub is green** before proceeding — watch both runs to completion:
@@ -61,31 +73,26 @@ Browser ──► GitHub Pages (static: index.html, blog/, assets/)
                 └──► /api/chat ──► Cloudflare Worker ──► Groq API
                           (CORS allowlist · rate limits · payload caps)
 
-Freenet (offline): index-freenet.html → static cost calc, no API calls.
 ```
 
 **Two versions, one goal:**
 - **Internet (`index.html`):** Deterministic sizer (off-grid tiers + grid-tie bill-cutting), the plausibility frontier (spend-vs-coverage curve with the knee and the site's ceiling marked), payback/LCOE money story, best-pick ladder + full 3×3 options matrix (chemistry × reliability), hardware parts list with CSV export, generator-fuel price helper, share links, printable summary, AI advisor, EN/ES/PT/FR/AR chrome. Requires internet for weather + Groq.
-- **Freenet (`index-freenet.html`):** Static cost comparison + DIY reference. Fully offline; launcher syncs it into `freenet_web_dist/`. Shared content (prices/donations) is materialized into it by `node scripts/sync-freenet-content.mjs`.
 
 | File | Purpose |
 |---|---|
 | `index.html` | Public site with sizer + AI advisor (CSS and JS inlined) |
-| `index-freenet.html` | Static offline version (Freenet). Cost calc only, no AI |
 | `assets/js/sizing/engine.js` | Pure sizing math: derates, SOC sim, tier search, grid-tie offset sim + bill-cut search |
 | `assets/js/sizing/money.js` | Payback, battery-replacement cadence, LCOE |
 | `assets/js/sizing/pricing.js` | Scoped price ranges (ex-factory → landed → budget retail), sodium premium, tariff estimator |
 | `assets/js/sizing/frontier.js` | Pure Pareto sweep: every (PV, battery) pair on a coarse lattice, the cheapest system for each coverage level, knee detection, reach verdict |
 | `assets/js/sizing/frontier-chart.js` | Responsive SVG for that curve (sized to its container), legend, accessible data table, verdict sentence |
 | `assets/js/sizing/bom.js` | Pure parts-list math: panel count/area, system voltage, bank series/parallel (DIY cells + retail modules), inverter class from load peak, controller amps, fuse/breaker ratings, cable gauge |
-| `assets/js/shared/content.js` | Canonical BOM prices + donation links (synced into Freenet page) |
+| `assets/js/shared/content.js` | Canonical BOM prices + donation links |
 | `assets/js/shared/i18n.js` + `locales.js` | UI-chrome translations (es/pt/fr/ar) + RTL |
-| `scripts/sync-freenet-content.mjs` | Materializes shared content into index-freenet.html SYNC markers |
 | `scripts/validate-modes.mjs` | Live end-to-end check of both sizing modes vs real NASA data |
 | `worker/index.js` | Cloudflare Worker: `/api/chat`, `/api/health`. CORS allowlist, rate limits, input caps |
 | `.github/workflows/deploy.yml` | Pages deploy from an explicit allowlist |
 | `launcher.py` | Local start/stop orchestration (dev only), driven by the `.bat` files |
-| `proxy_server.py` | Local web server + Freenet CSP bridge with its own rate limiter (dev only) |
 | `PLAN.md` | Roadmap |
 | `PHASE2_PLAN.md` | Sizing engine plan + shipped-status ledger |
 | `PHASE3_PLAN.md` | Plausibility frontier: backlog ranking, what shipped, and the fixed-charge caveat it surfaced |
@@ -107,7 +114,6 @@ The site verifies via the `google-site-verification` meta tag in `index.html`. T
 `/api/chat` is public and unauthenticated, so the **Cloudflare Worker enforces**: 8/min and
 150/day per IP, 3000/day overall, 4 KB message cap, ~20 KB body cap. Counters are in-isolate
 (best-effort against bursts); pair with a Cloudflare WAF rate-limiting rule for hard guarantees.
-The local `proxy_server.py` applies the same limits for the dev/Freenet path.
 
 The Groq key lives only in the Worker secret `GROQ_API_KEY` (`wrangler secret put`). It is never
 sent to the browser.

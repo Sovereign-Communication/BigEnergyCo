@@ -32,7 +32,7 @@ jobs:
         run: |
           mkdir -p _pages/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage
           mkdir -p _pages/blog/off-grid-vs-grid-tie-payback
-          cp index.html index-freenet.html 404.html robots.txt sitemap.xml rss.xml sw.js manifest.webmanifest _pages/
+          cp index.html 404.html robots.txt sitemap.xml rss.xml sw.js manifest.webmanifest _pages/
           cp blog/index.html _pages/blog/
           cp "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html" "_pages/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/"
           cp "blog/off-grid-vs-grid-tie-payback/index.html" "_pages/blog/off-grid-vs-grid-tie-payback/"

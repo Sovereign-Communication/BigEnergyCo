@@ -1489,22 +1489,26 @@ footer {
 
           <div class="form-group">
 
-            <label for="cityPreset" data-i18n="cityLabel">Where is this system going? <span style="font-weight:400;color:var(--text-muted);">(nearest big city is fine)</span></label>
+            <label for="citySearch" data-i18n="cityLabel">Where is this system going? <span style="font-weight:400;color:var(--text-muted);">(type a city or choose a reference point)</span></label>
 
-            <div style="display: flex; gap: 0.6rem;">
+            <div style="display: flex; gap: 0.6rem; position:relative;">
+              <div style="flex:1;position:relative;">
+                <input id="citySearch" class="form-control" type="search" autocomplete="off" placeholder="Type any city, then press Enter or Tab" role="combobox" aria-autocomplete="list" aria-controls="citySuggestions" aria-expanded="false" aria-label="Search any city worldwide">
+                <div id="citySuggestions" role="listbox" hidden style="position:absolute;z-index:20;left:0;right:0;top:calc(100% + 0.25rem);background:#0d1322;border:1px solid var(--border-glow);border-radius:8px;box-shadow:0 12px 30px rgba(0,0,0,.55);max-height: 16rem;overflow:auto;padding:.25rem;"></div>
+              </div>
 
-              <select id="cityPreset" class="form-control" style="flex: 1;"></select>
-
-              <div id="btnGeoLocate" class="btn btn-outline" style="white-space: nowrap; cursor: pointer; font-size: 0.9rem;" data-i18n="locBtn">My location</div>
+              <div id="btnGeoLocate" class="btn btn-outline" style="white-space: nowrap; cursor: pointer; font-size: 0.9rem;" data-i18n="locBtn">Use my current location</div>
 
             </div>
 
+            <p style="font-size:0.8rem;color:var(--text-muted);margin:0.45rem 0 0;line-height:1.45;">Type any city, then press <strong>Enter</strong> or <strong>Tab</strong> to use its coordinates. Select a suggestion, or use the manual exact-location options below.</p>
             <div id="locNote" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;"></div>
 
             <details id="coordDetails" style="margin-top: 0.5rem;">
 
-              <summary style="cursor: pointer; font-size: 0.8rem; color: var(--text-muted);">Advanced: exact coordinates</summary>
+              <summary style="cursor: pointer; font-size: 0.8rem; color: var(--text-muted);">More precise option: use your exact/custom coordinates</summary>
 
+              <p style="font-size:0.8rem;color:var(--text-muted);margin:0.6rem 0;line-height:1.45;">A city lookup is convenient, but your exact location gives the most precise weather and solar estimate. Enter custom latitude and longitude manually, or use <strong>Use my current location</strong> for browser GPS.</p>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.6rem;">
 
                 <div class="form-group" style="margin-bottom: 0;">
@@ -1679,7 +1683,7 @@ footer {
 
             <select id="chemSelect" class="form-control">
 
-              <option value="auto" selected>Auto &mdash; compare all three by lifetime cost</option>
+              <option value="auto" selected>Auto &mdash; compare all three chemistries by lifetime cost</option>
 
               <option value="naion">Sodium-Ion &mdash; cold-capable, no thermal runaway</option>
 
@@ -1693,7 +1697,7 @@ footer {
 
           <div class="form-group" id="autoTierRow" style="display:none;margin-bottom:0;">
 
-            <label for="autoTier">Independence target <span style="font-weight:400;color:var(--text-muted);">(applied to all three batteries)</span>:</label>
+            <label for="autoTier">Independence target <span style="font-weight:400;color:var(--text-muted);">(applied to all three chemistries)</span>:</label>
 
             <select id="autoTier" class="form-control">
 
@@ -1709,7 +1713,7 @@ footer {
 
           <div class="form-group" id="autoTargetRow" style="display:none;margin-bottom:0;">
 
-            <label for="autoTarget">Bill-cut target <span style="font-weight:400;color:var(--text-muted);">(applied to all three batteries)</span>:</label>
+            <label for="autoTarget">Bill-cut target <span style="font-weight:400;color:var(--text-muted);">(applied to all three chemistries)</span>:</label>
 
             <select id="autoTarget" class="form-control">
 
@@ -2509,9 +2513,9 @@ footer {
 
   <div id="printSheet"></div>
 
-  <!-- Inlined JavaScript with JSONP Web-Bridge for Freenet CSP Passthrough -->
+  <!-- Inlined browser helpers -->
 
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260830b"></script>
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260830o"></script>
 
   <script>
 
