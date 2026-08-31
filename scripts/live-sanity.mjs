@@ -21,7 +21,6 @@ for (const m of [
   'rel="canonical"', 'id="systemGoal"', "Cut my bill, stay connected",
   'value="auto" selected', "compare all three chemistries by lifetime cost",
   'id="exportRate"', "Lead-Acid (AGM)", 'id="langSelect"',
-  "ui.js?v=20260830o",
   // Cumulative 20-year cost chart (Aug 2026)
   'id="cumCostChartWrap"', "id=\"cumCostCanvas\"", "id=\"cumCostCaption\"",
   // PWA
@@ -35,6 +34,12 @@ for (const m of ["$75,185", "netSavingsVal", "851.85", "\u00e2\u20ac"]) {
   check("absent: " + JSON.stringify(m), !html.includes(m));
 }
 
+// The entry module is cache-busted with a version token; assert the HTML
+// points at one (a frozen token is exactly how stale code ships twice).
+const uiUrlMatch = html.match(/assets\/js\/sizing\/ui\.js\?v=([0-9a-z]+)/);
+check("ui.js served with a version token", !!uiUrlMatch);
+const uiToken = uiUrlMatch ? uiUrlMatch[1] : "";
+
 // 3. Modules serve + contain repaired strings
 const mods = [
   ["assets/js/sizing/engine.js", "uprated from ~4500"],
@@ -46,9 +51,20 @@ const mods = [
   ["assets/js/shared/locales.js", "\u0627\u0644\u0644\u063a\u0629"],
 ];
 for (const [path, needle] of mods) {
-  const r = await fetch(BASE + path + "?v=" + Date.now(), { cache: "no-store" });
+  const r = await fetch(BASE + path + "?v=" + (uiToken || Date.now()), { cache: "no-store" });
   const txt = r.status === 200 ? await r.text() : "";
   check(`module ${path} (+content)`, r.status === 200 && txt.includes(needle));
+}
+// The worker/run/money chain must carry the same token so the immutable
+// HTTP cache and the service worker both miss on every changed asset.
+for (const [path, needle] of [
+  ["assets/js/sizing/ui.js", "sizing-worker.js?v=" + uiToken],
+  ["assets/js/sizing/sizing-worker.js", "run.js?v=" + uiToken],
+  ["assets/js/sizing/run.js", "money.js?v=" + uiToken],
+]) {
+  const r = await fetch(BASE + path + "?v=" + uiToken, { cache: "no-store" });
+  const txt = r.status === 200 ? await r.text() : "";
+  check(`cache chain ${path} (token ${uiToken})`, r.status === 200 && txt.includes(needle));
 }
 
 // 4. Freenet page is intentionally NOT on Pages (allowlist ships it nowhere;
