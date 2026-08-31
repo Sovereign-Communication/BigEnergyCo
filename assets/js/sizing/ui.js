@@ -14,6 +14,7 @@ import { CITY_PRESETS } from "./nasa.js?v=20260830b";
 import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCityLabel, nearestCity, normalizeCityQuery, shouldAutoResolve } from "./cities.js?v=20260830s";
 
 import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
+import { savingsPanelState } from "./money.js?v=20260830v";
 
 import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830b";
 
@@ -882,7 +883,7 @@ function ensureWorker() {
 
   if (!worker) {
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260830u", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260830v", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -2148,16 +2149,14 @@ function drawCumCostChart(p) {
     ? entry
     : null;
   const series = seriesEntry?.cumCostSeries || null;
-  if (!series || !series.grid || !series.solar || !series.grid.length) {
-    // This is either the intentional no-tariff state or a result that cannot
-    // produce a money comparison. Make it explicit so
-    // a user never has to guess why the money story is absent. Tear down any
-    // leftover chart and caption from a previous run so the message box is
-    // the only thing on screen instead of a stale canvas contradicting it.
+  const panel = savingsPanelState(series, p.tariff);
+  if (panel.kind === "unavailable") {
+    // Either the intentional no-tariff state or a result with no comparable
+    // series. Tear down any leftover chart and caption from a previous run
+    // so the message box is the only thing on screen, then say why.
     wrap.style.display = "block";
     canvas.style.display = "none";
-    const ctx0 = canvas.getContext("2d");
-    ctx0.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
     const box = $("cumSavingsBox");
     const num = $("cumSavingsTotal");
     const sub = $("cumSavingsSub");
@@ -2165,13 +2164,9 @@ function drawCumCostChart(p) {
     if (cap) cap.textContent = "";
     if (box && num && sub) {
       box.style.display = "block";
-      num.textContent = p.tariff
-        ? "Savings data unavailable for this result"
-        : "Enter your grid price to see estimated savings";
+      num.textContent = panel.title;
       num.style.color = "var(--text-main)";
-      sub.textContent = p.tariff
-        ? "The sizing completed, but this result did not include a comparable 20-year cost series."
-        : "The calculator can size the system without a tariff, but needs your electricity price to compare 20-year grid cost with solar cost.";
+      sub.textContent = panel.sub;
       sub.style.color = "var(--text-muted)";
     }
     return;

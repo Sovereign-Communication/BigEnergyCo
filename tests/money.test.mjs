@@ -5,6 +5,7 @@ import {
   HORIZON_YEARS,
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
   lifetimeCostUsd, exportValueUsd, INSTALL_LABOR_PER_KWH_USABLE, laborMidPerKwh,
+  savingsPanelState,
 } from "../assets/js/sizing/money.js";
 
 test("annualGridSpendUsd: daily kWh × 365 × tariff", () => {
@@ -31,6 +32,23 @@ test("paybackYears: null when there is no bill to displace", () => {
   assert.equal(paybackYears(2000, null), null);
   assert.equal(paybackYears(2000, 0), null);
   assert.equal(paybackYears(NaN, 1000), null);
+});
+
+test("savingsPanelState: usable series shows the chart; otherwise a tariff-aware message", () => {
+  const usable = { grid: new Array(20).fill(1000), solar: new Array(20).fill(500) };
+  const cases = [
+    // [series, tariff, expected kind, expected title]
+    [usable, 0.42, "chart", null],
+    [null, 0.42, "unavailable", "Savings data unavailable for this result"],
+    [null, null, "unavailable", "Enter your grid price to see estimated savings"],
+    [null, 0, "unavailable", "Enter your grid price to see estimated savings"],
+    [{ grid: [], solar: [] }, 0.42, "unavailable", "Savings data unavailable for this result"],
+  ];
+  for (const [series, tariff, kind, title] of cases) {
+    const state = savingsPanelState(series, tariff);
+    assert.equal(state.kind, kind);
+    if (title) assert.equal(state.title, title);
+  }
 });
 
 test("batteryReplacements: bank lasting the horizon needs none", () => {

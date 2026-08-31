@@ -149,3 +149,21 @@ export function trueBreakEvenYear({ capexMidUsd, annualSavingsUsd, swapsAndLabor
   }
   return null;
 }
+
+/**
+ * What the cumulative 20-year chart panel should show for a selected result.
+ * A complete grid + solar series means the chart; anything less means the
+ * panel must say why the money story is absent. The message depends on
+ * whether a tariff was entered: no tariff = nothing to compare; tariff
+ * present = this result carried no comparable series. Kept pure so the
+ * renderer and tests share one source of truth for the two states.
+ */
+export function savingsPanelState(series, tariffPerKwh) {
+  if (series && Array.isArray(series.grid) && Array.isArray(series.solar) &&
+      series.grid.length && series.solar.length) {
+    return { kind: "chart" };
+  }
+  return tariffPerKwh
+    ? { kind: "unavailable", title: "Savings data unavailable for this result", sub: "The sizing completed, but this result did not include a comparable 20-year cost series." }
+    : { kind: "unavailable", title: "Enter your grid price to see estimated savings", sub: "The calculator can size the system without a tariff, but needs your electricity price to compare 20-year grid cost with solar cost." };
+}
