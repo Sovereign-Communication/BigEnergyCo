@@ -1,0 +1,24 @@
+{
+  "name": "BigEnergyCo — Free Off-Grid Energy Estimator",
+  "short_name": "BigEnergyCo",
+  "description": "Free solar and battery sizing with five years of real satellite weather. Off-grid tiers and grid bill-cutting, anywhere on Earth. Nothing for sale.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
