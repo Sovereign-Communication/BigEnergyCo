@@ -156,11 +156,22 @@ test("online lookup converts a free geocoder result into coordinates", async () 
 
 test("remote catalog is parsed and cached without replacing the seed", async () => {
   const store = new Map();
+  // Real contract: index.json lists { file: "XX.json", count }, and each
+  // country file is fetched once (never "XX.json.json" — the double suffix
+  // was a real regression that silently disabled the full catalog).
+  const fetched = [];
   const expanded = await loadCityCatalog({
-    fetchImpl: async () => ({ ok: true, json: async () => [{ name: "Testville", country: "Testland", lat: "1.25", lng: "2.5" }] }),
+    fetchImpl: async (url) => {
+      fetched.push(url);
+      return url.endsWith("index.json")
+        ? { ok: true, json: async () => [{ file: "XX.json", count: 1 }] }
+        : { ok: true, json: async () => [{ name: "Testville", country: "Testland", lat: "1.25", lng: "2.5" }] };
+    },
     storage: { getItem: (key) => store.get(key), setItem: (key, value) => store.set(key, value) },
   });
   assert.ok(expanded.length > CITY_CATALOG.length);
   assert.equal(searchCities("testville", expanded)[0].lon, 2.5);
   assert.ok(store.size > 0);
+  assert.ok(fetched.some((u) => u.endsWith("XX.json")), "country file fetched with a single .json suffix");
+  assert.ok(!fetched.some((u) => u.endsWith(".json.json")), "no double .json.json suffix");
 });
