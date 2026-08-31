@@ -882,7 +882,7 @@ function ensureWorker() {
 
   if (!worker) {
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260830r", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260830u", { type: "module" });
 
     worker.onmessage = (ev) => {
 
