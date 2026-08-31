@@ -2151,10 +2151,18 @@ function drawCumCostChart(p) {
   if (!series || !series.grid || !series.solar || !series.grid.length) {
     // This is either the intentional no-tariff state or a result that cannot
     // produce a money comparison. Make it explicit so
-    // a user never has to guess why the money story is absent.
+    // a user never has to guess why the money story is absent. Tear down any
+    // leftover chart and caption from a previous run so the message box is
+    // the only thing on screen instead of a stale canvas contradicting it.
+    wrap.style.display = "block";
+    canvas.style.display = "none";
+    const ctx0 = canvas.getContext("2d");
+    ctx0.clearRect(0, 0, canvas.width, canvas.height);
     const box = $("cumSavingsBox");
     const num = $("cumSavingsTotal");
     const sub = $("cumSavingsSub");
+    const cap = $("cumCostCaption");
+    if (cap) cap.textContent = "";
     if (box && num && sub) {
       box.style.display = "block";
       num.textContent = p.tariff
@@ -2170,6 +2178,7 @@ function drawCumCostChart(p) {
   }
 
   wrap.style.display = "block";
+  canvas.style.display = "";
   const dpr = window.devicePixelRatio || 1;
   const W = Math.max(320, wrap.clientWidth || 640);
   const COST_H = 280, SAVE_H = 150, GAP = 14;
