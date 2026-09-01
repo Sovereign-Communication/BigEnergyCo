@@ -1435,7 +1435,7 @@ footer {
 
         <h2 class="section-title">Find your cheapest path to lower bills</h2>
 
-        <p class="section-desc">Auto-run sizes your location with a default monthly bill (switch to Manual to adjust everything). Every grid-tied result compares all three chemistries at 60/80/95% bill cuts, adds a 1–111% slider for your exact target, and lets you click any point on the price-cut curve for the full 20-year analysis. Deterministic, weather-aware, educational.</p>
+        <p class="section-desc">Auto-run grabs your location, instantly pulls the local electricity price, and asks the one question that matters — your average monthly bill (switch to Manual to adjust everything). Every grid-tied result then compares all three chemistries at 60/80/95% cuts off <em>your</em> bill, adds a 1–111% slider for your exact target, and lets you click any point on the price-cut curve for the full 20-year analysis. Deterministic, weather-aware, educational.</p>
 
       </div>
 
@@ -2395,13 +2395,67 @@ footer {
 
   </div>
 
+  <!-- One-question bill prompt for Auto-run mode: location first (rate resolved
+       instantly), then ask the visitor's average monthly bill so the percentage
+       cuts on every result are cuts off THEIR bill. Rough is fine. -->
+
+  <div id="billPromptModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="What does your electric bill average?">
+
+    <div class="modal-card" style="max-width: 460px;">
+
+      <div class="modal-header">
+
+        <div>
+
+          <h3 style="font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0;">One quick question</h3>
+
+          <span id="billPromptLoc" style="font-size: 0.8rem; color: var(--primary-accent);"></span>
+
+        </div>
+
+        <div id="billPromptClose" class="close-btn" style="cursor: pointer;">&times;</div>
+
+      </div>
+
+      <div class="modal-body" style="color: var(--text-main);">
+
+        <label for="billPromptInput" style="display:block; font-size: 1.02rem; font-weight: 700; margin-bottom: 0.6rem; color: var(--text-main);">How much is your electric bill on average?</label>
+
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 0.9rem; line-height: 1.5;">Rough is fine &mdash; every bill-cut % below is a cut off <em>this</em> amount, so it stays honest even if you round.</p>
+
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+
+          <span id="billPromptCur" style="font-family:var(--font-mono); font-size:1.5rem; font-weight:800; color: var(--primary-accent);">$</span>
+
+          <input type="number" id="billPromptInput" class="form-control" min="1" step="1" inputmode="decimal" style="font-size:1.35rem; font-weight:700; padding:0.7rem 0.9rem;">
+
+          <span style="color:var(--text-muted); font-size:0.85rem;">/ month</span>
+
+        </div>
+
+        <p id="billPromptHint" style="font-size: 0.78rem; color: var(--text-muted); margin: 0.75rem 0 0; line-height: 1.5;"></p>
+
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:0.6rem; margin-top:1.25rem;">
+
+        <button type="button" id="billPromptUse" class="btn btn-primary" style="cursor:pointer; width:100%;">✓ Size my system with this bill</button>
+
+        <button type="button" id="billPromptSkip" class="btn btn-outline" style="cursor:pointer; width:100%;">Keep the estimate instead</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
   <!-- Printable one-pager (populated after a sizing run; only this prints) -->
 
   <div id="printSheet"></div>
 
   <!-- Inlined browser helpers -->
 
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260831a"></script>
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260831c"></script>
 
   <script>
 

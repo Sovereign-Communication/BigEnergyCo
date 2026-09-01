@@ -47,6 +47,12 @@ let billAnchorKwh = 20;
 // Bill-cut slider (1–111%): the replacement for the old 60/80/95 dropdown.
 let customCutFraction = 0.8;
 
+// The visitor's real monthly bill, kept in USD so it can be re-expressed in
+// whatever display currency the next location resolves to (their bill is a
+// fact about them, not about the city). Used to prefill the quick-mode
+// bill prompt.
+let sessionBillUsd = null;
+
 // Which system the whole results pipeline (charts, BOM, export, share, print)
 // shows: "best" | "focus" (adopted curve point) | "matrix:chem:colId" | "custom".
 let selectedKey = "best";
@@ -315,7 +321,9 @@ function syncBillSlider() {
   if (out) out.textContent = "~" + fmtBill(value);
   const note = $("quickBillNote");
   if (note) {
-    note.textContent = "Quick estimate: ~" + fmtBill(value) + " (starts from ~20 kWh/day) — switch to Manual to change your bill, appliances, or rate.";
+    note.textContent = quickMode
+      ? "Next: your average monthly bill — we'll ask (rough is fine) once we have your location, so every cut % below is a cut off YOUR bill."
+      : "Quick estimate: ~" + fmtBill(value) + " (starts from ~20 kWh/day) — switch to Manual to change your bill, appliances, or rate.";
   }
 }
 
@@ -659,7 +667,7 @@ function renderCities() {
         const button = el("button", { type: "button", role: "option", class: "city-suggestion" }, `${formatCityLabel(c)}${population}`);
         button.dataset.index = String(i);
         button.addEventListener("mousedown", (event) => event.preventDefault());
-        button.addEventListener("click", () => { cancelAutoResolve(); setCoords(c.lat, c.lon, `Sunshine data from ${formatCityLabel(c)}`, c.r, c.country); lastResolvedQuery = normalizeCityQuery(search.value); search.value = formatCityLabel(c); list.hidden = true; search.setAttribute("aria-expanded", "false"); if (quickMode) run(); });
+        button.addEventListener("click", () => { cancelAutoResolve(); setCoords(c.lat, c.lon, `Sunshine data from ${formatCityLabel(c)}`, c.r, c.country); lastResolvedQuery = normalizeCityQuery(search.value); search.value = formatCityLabel(c); list.hidden = true; search.setAttribute("aria-expanded", "false"); if (quickMode) openBillPrompt(); });
         list.appendChild(button);
       });
       active = -1;
@@ -703,7 +711,7 @@ function renderCities() {
         search.value = formatCityLabel(local);
         list.hidden = true;
         search.setAttribute("aria-expanded", "false");
-        if (quickMode) run();
+        if (quickMode) openBillPrompt();
         return;
       }
       lookupBusy = true;
@@ -716,7 +724,7 @@ function renderCities() {
         search.value = formatCityLabel(match);
         list.hidden = true;
         search.setAttribute("aria-expanded", "false");
-        if (quickMode) run();
+        if (quickMode) openBillPrompt();
       }
     };
     search.addEventListener("keydown", (event) => {
@@ -816,11 +824,12 @@ function locateMe() {
 
       }
 
-      // Auto-run is the default: location alone is enough to size on.
+      // Quick mode: location + area rate are resolved — now ask the one
+      // question that makes cut % real (their monthly bill), then auto-run.
 
-      if (quickMode) run();
+      if (quickMode) openBillPrompt();
 
-      else setStatus(quickMode ? "" : " Location set. Now tell us your power use below, then run the sizing.");
+      else setStatus(" Location set. Now tell us your power use below, then run the sizing.");
 
     },
 
@@ -2042,6 +2051,56 @@ function showSystemModal(p, entry, adopt) {
 function closeSystemModal() {
   const overlay = $("systemModal");
   if (overlay) overlay.style.display = "none";
+}
+
+// ── Quick-mode bill prompt ───────────────────────────────────────────────────
+// Auto-run grabs the location + rate first, then asks the ONE question that
+// makes cut % meaningful: the visitor's average monthly bill. Rough is fine.
+// Dismissing falls back to the ~20 kWh/day estimate and still runs.
+
+function openBillPrompt() {
+  if (!quickMode) { run(); return; }
+  const overlay = $("billPromptModal");
+  if (!overlay) { run(); return; }
+  const fx = fxActive();
+  const cur = fx ? (CURRENCIES[fx.code]?.symbol || fx.code) : "$";
+  $("billPromptCur").textContent = cur;
+  $("billPromptLoc").textContent = `Prices found for ${$("locNote").textContent.trim() || "your area"}.`;
+  const estimate = parseFloat($("billSlider")?.value || "0");
+  // Their previously-entered bill (USD) re-expressed in this location's
+  // currency beats the generic 20 kWh/day estimate as a prefill.
+  const prefill = sessionBillUsd !== null && fx
+    ? Math.max(1, Math.round(sessionBillUsd * fx.rate))
+    : Math.max(1, Math.round(estimate || 0));
+  const input = $("billPromptInput");
+  input.value = String(prefill);
+  input.focus();
+  input.select();
+  $("billPromptHint").textContent =
+    `Typical for ~20 kWh/day here: ${fmtBill(estimate)} — but your real bill is better.`;
+  overlay.style.display = "flex";
+}
+
+function closeBillPrompt() {
+  const overlay = $("billPromptModal");
+  if (overlay) overlay.style.display = "none";
+}
+
+// Apply the entered bill: express it as the bill slider's anchor (in this
+// location's currency) and run. If the input is blank/garbage, keep the
+// estimate instead.
+function applyBillPrompt() {
+  closeBillPrompt();
+  const amount = parseInt($("billPromptInput")?.value || "", 10);
+  const rate = displayRate();
+  if (Number.isFinite(amount) && amount > 0 && Number.isFinite(rate) && rate > 0) {
+    const fx = fxActive();
+    sessionBillUsd = fx ? amount / fx.rate : amount;
+    billAnchorKwh = kwhFromBill(amount, rate);
+    billAnchorKwh = Math.min(BILL_MAX_KWH, Math.max(BILL_MIN_KWH, billAnchorKwh));
+    syncBillSlider();
+  }
+  run();
 }
 
 // ── Hardware list panel (BOM) ────────────────────────────────────────────────
@@ -4017,6 +4076,18 @@ export function initSizingUI() {
   if (closeSys) closeSys.addEventListener("click", closeSystemModal);
   const useSys = $("systemModalUse");
   if (useSys) useSys.addEventListener("click", () => { const b = $("systemModalUse"); if (b && b._adopt) b._adopt(); });
+
+  // Quick-mode bill prompt: location + rate first, then the one question.
+  const billUse = $("billPromptUse");
+  if (billUse) billUse.addEventListener("click", applyBillPrompt);
+  const billSkip = $("billPromptSkip");
+  if (billSkip) billSkip.addEventListener("click", () => { closeBillPrompt(); run(); });
+  const billClose = $("billPromptClose");
+  if (billClose) billClose.addEventListener("click", () => { closeBillPrompt(); run(); });
+  const billInput = $("billPromptInput");
+  if (billInput) billInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); applyBillPrompt(); }
+  });
 
   updateAutoRows();
 
