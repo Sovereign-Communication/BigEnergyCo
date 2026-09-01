@@ -11,7 +11,7 @@ mkdirSync(DIR, { recursive: true });
 
 // Every module run.js pulls in. Miss one and this script dies on an import
 // error instead of telling you what production is actually serving.
-const FILES = ["run.js", "engine.js", "nasa.js", "pricing.js", "money.js", "profiles.js", "frontier.js"];
+const FILES = ["run.js", "engine.js", "nasa.js", "pricing.js", "money.js", "profiles.js", "frontier.js", "rescale.js"];
 for (const f of FILES) {
   const res = await fetch(BASE + f + "?v=" + Date.now(), { cache: "no-store" });
   if (!res.ok) { console.error(`FAIL fetching ${f}: ${res.status}`); process.exit(1); }
@@ -79,7 +79,15 @@ check("AGM tier100 true break-even later-or-never",
   t100.trueBreakEvenYear === null ? true : t100.trueBreakEvenYear >= Math.round(t100.paybackYearsLo));
 
 // ── Pass 2: full functional matrix ─────────────────────────────────────────
-check("contract version pinned (9) on every payload shape", [auto99, auto100, gtAuto60, spec].every((p) => p.contract === 9));
+check("contract version pinned (10) on every payload shape", [auto99, auto100, gtAuto60, spec].every((p) => p.contract === 10));
+
+// The savings chart's emerald ``system`` line must end EXACTLY on the
+// recommendation card's ``Total 20-year cost`` — chart and card can never
+// disagree (this is the ``true cost`` doubling complaint).
+const gtsys = gtAuto60.best && gtAuto60.best.cumCostSeries;
+check(`savings chart system line ends on the card total (chart $${gtsys && gtsys.system && gtsys.system[19]}, card $${gtAuto60.best && gtAuto60.best.lifetimeCostMid})`,
+  gtsys && Array.isArray(gtsys.system) && Math.abs(gtsys.system[19] - gtAuto60.best.lifetimeCostMid) <= 1);
+
 
 // The headline savings math: a small cut can never out-save a big one. This
 // used to invert (a 25% cut "saved" more than 99% because the residual bill
@@ -109,6 +117,23 @@ check(`incremental cut patch matches the full engine (${Object.keys(slice.cells)
   const a = slice.cells[c + ":custom"], b = full55.matrix.cells[c + ":custom"];
   return a && b && a.pvKw === b.pvKw && a.battKwh === b.battKwh && a.lifetimeCostMid === b.lifetimeCostMid;
 }));
+// The bill-cut slider now drives the RECOMMENDATION, not just the matrix's
+// ``your target`` column: a slice must return the updated banner/focus.
+const sliceChk = slice.best;
+check("incremental slice returns the slider-driven recommendation",
+  sliceChk && Number.isFinite(sliceChk.pvKw) && sliceChk.chemistry === slice.customCut.best.chemistry &&
+  typeof slice.bestReason === "string" && slice.bestReason.length > 30);
+
+// Same-site bill changes now rescale the CACHED payload instantly (no engine
+// re-run, no weather re-fetch) — the rescale must track a fresh run at that
+// load. rescale.js ships in production for exactly this path.
+const { rescalePayload } = await import(pathToFileURL(DIR + "rescale.js").href);
+const gt2x = await runSizing({ ...MSG, dailyKwh: 20, chemistry: "auto", mode: "gridtie" }, { fetchWeather: fakeWeather });
+const resc = rescalePayload(gtAuto60, 2);
+const lfpA = resc && resc.matrix.cells["lfp:cut80"], lfpB = gt2x.matrix.cells["lfp:cut80"];
+check(`same-site bill change rescales the cache to match a fresh run (lfp:cut80 $${lfpA && lfpA.lifetimeCostMid} vs $${lfpB && lfpB.lifetimeCostMid})`,
+  lfpA && lfpB && lfpA.solvable && lfpB.solvable &&
+  Math.abs(lfpA.lifetimeCostMid - lfpB.lifetimeCostMid) / lfpB.lifetimeCostMid <= 0.06);
 
 // specific grid-tie with feed-in: export value + break-even coexist
 const gtSpec = await runSizing({ ...MSG, chemistry: "lfp", mode: "gridtie", exportRate: 0.10 }, { fetchWeather: fakeWeather });
@@ -128,7 +153,7 @@ try {
   globalThis.fetch = realFetch;
 }
 check("offline fallback engages + flags itself", offline.meta.offline === true && !!offline.meta.offlineCity);
-check("offline payload still meets contract", offline.contract === 9 && offline.auto.length >= 2);
+check("offline payload still meets contract", offline.contract === 10 && offline.auto.length >= 2);
 check("offline results carry honest labeling", offline.assumptions.offline === true);
 
 // sodium-specific off-grid: LFP-settings reality visible in numbers

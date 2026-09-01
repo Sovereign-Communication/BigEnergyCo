@@ -8,7 +8,7 @@
 // Message out:
 //   { type: "ok", seq, payload } | { type: "reSlice", seq, result } | error
 //
-import { runSizing } from "./run.js?v=20260831f";
+import { runSizing } from "./run.js?v=20260831h";
 
 self.onmessage = async (ev) => {
   const msg = ev.data;

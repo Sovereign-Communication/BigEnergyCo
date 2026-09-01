@@ -80,13 +80,17 @@ export function exportValueUsd(clippedKwhPerYear, exportRatePerKwh) {
 
 /**
  * Per-year cumulative cost series over the horizon — the data behind the
- * "running cost" chart. Two lines:
- *   grid[y]  = cumulative spend if you had stayed on the grid (the FULL bill,
- *              displaced plus whatever you would still have paid anyway)
- *   solar[y] = cumulative TRUE cost of the solar path: capex + first labor +
- *              every swap AND the residual bill you keep paying every year
- *              (net of any feed-in credit on clipped surplus).
- * The crossing point of the two lines IS the true break-even year, so the
+ * "running cost" chart. Three lines:
+ *   grid[y]   = cumulative spend if you had stayed on the grid (the FULL bill,
+ *               displaced plus whatever you would still have paid anyway)
+ *   solar[y]  = cumulative TRUE cost of the solar path: capex + first labor +
+ *               every swap AND the residual bill you keep paying every year
+ *               (net of any feed-in credit on clipped surplus)
+ *   system[y] = cumulative cost of the SYSTEM alone: capex + first labor +
+ *               every swap, NO residual bills — this is the same number the
+ *               recommendation card shows as "Total 20-year cost", so the
+ *               chart's green line and the card can never disagree.
+ * The crossing point of grid and solar IS the true break-even year, so the
  * chart and the "pays for itself: year N" row can never disagree.
  *
  * The wedge between the lines is therefore the HONEST answer to "what does
@@ -98,12 +102,14 @@ export function exportValueUsd(clippedKwhPerYear, exportRatePerKwh) {
  *
  * Swap schedule matches trueBreakEvenYear exactly (round(k × batteryLifeYears),
  * capped at `replacements`), so both numbers always tell the same story.
+ * Note every "customer" of the three arrays shares the same swap years, so the
+ * wedge between solar and system is exactly the residual bills paid.
  *
  * Returns null when there is no bill to displace (no tariff entered, or a
  * system that displaces nothing) — the chart is then hidden rather than
  * shown with a fake grid line.
  */
-export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, residualAnnualUsd = 0, swapsAndLaborTotalUsd = 0, replacements = 0, batteryLifeYears, horizonYears = HORIZON_YEARS }) {
+export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, residualAnnualUsd = 0, swapsAndLaborTotalUsd = 0, replacements = 0, batteryLifeYears, firstLaborUsd = 0, horizonYears = HORIZON_YEARS }) {
   if (!Number.isFinite(capexMidUsd) || !Number.isFinite(annualSavingsUsd) || annualSavingsUsd < 0 ||
       !Number.isFinite(residualAnnualUsd) || residualAnnualUsd < 0) return null;
   const perSwap = replacements > 0 ? swapsAndLaborTotalUsd / replacements : 0;
@@ -119,16 +125,19 @@ export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, residualAn
 
   const grid = new Array(horizonYears);
   const solar = new Array(horizonYears);
+  const system = new Array(horizonYears);
   let cumGrid = 0;
-  let cumSolar = capexMidUsd;   // solar starts with the full first cost
+  let cumSolar = capexMidUsd;    // solar starts with the full first cost
+  let cumSystem = capexMidUsd + firstLaborUsd;  // the card's total counts first install labor
   for (let y = 1; y <= horizonYears; y++) {
     cumGrid += annualSavingsUsd + residualAnnualUsd;   // what staying on the grid costs that year
     cumSolar += residualAnnualUsd;                     // the bill you still pay with solar
-    if (swapYears.has(y)) cumSolar += perSwap;
+    if (swapYears.has(y)) { cumSolar += perSwap; cumSystem += perSwap; }
     grid[y - 1] = Math.round(cumGrid);
     solar[y - 1] = Math.round(cumSolar);
+    system[y - 1] = Math.round(cumSystem);
   }
-  return { years: horizonYears, grid, solar };
+  return { years: horizonYears, grid, solar, system };
 }
 /**
  * The year cumulative avoided bills exceed cumulative TRUE cost — counting

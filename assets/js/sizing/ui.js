@@ -16,7 +16,7 @@ import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCi
 
 import { estimateTariff, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
 
-import { savingsPanelState } from "./money.js?v=20260831f";
+import { savingsPanelState } from "./money.js?v=20260831h";
 
 import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830b";
 
@@ -27,6 +27,8 @@ import { applyI18n, initLangPicker, resolveLang } from "../shared/i18n.js?v=2026
 import { LOCALES } from "../shared/locales.js?v=20260830b";
 
 import { renderFrontier, frontierVerdict, markerOffCurveNote } from "./frontier-chart.js?v=20260830b";
+
+import { rescalePayload, scaleRecord, sameSiteOptions } from "./rescale.js?v=20260831h";
 
 let worker = null;
 
@@ -67,6 +69,14 @@ let pendingFocus = null;
 let runToken = 0;
 let runTimer = null;
 let lastRunAdoptsFocus = false;
+
+// The last full-run inputs, kept so a bill-only change can compute the exact
+// load factor for an instant rescale against the retained payload.
+let lastRunInput = null;
+
+// A quiet run (bill-slider refine after a rescale) must not spin the button,
+// flash status, or scroll — the screen already shows the rescaled numbers.
+let lastRunQuiet = false;
 
 // Serial for incremental "reSlice" patches (independent of full runs, so a
 // slider slice can never collide with — or clobber — a full re-run).
@@ -997,60 +1007,45 @@ function readInputs() {
 
 }
 
-function run() {
+function run(quiet = false) {
 
   const inp = readInputs();
 
   if (!Number.isFinite(inp.latitude) || !Number.isFinite(inp.longitude) ||
-
       Math.abs(inp.latitude) > 90 || Math.abs(inp.longitude) > 180) {
-
     setStatus(t("pickCity"));
-
     return;
-
   }
 
   if (!Number.isFinite(inp.dailyKwh) || inp.dailyKwh <= 0 || inp.dailyKwh > 500) {
-
     setStatus(t("tellPowerUse"));
-
     return;
-
   }
 
-  setStatus(inp.mode === "gridtie" ? t("statusGridtie") : t("statusOffgrid"));
+  if (!quiet) setStatus(inp.mode === "gridtie" ? t("statusGridtie") : t("statusOffgrid"));
 
   const btn = $("btnRunSizing");
 
-  if (btn) {
-
+  if (btn && !quiet) {
     btn.disabled = true;
-
     btn.innerHTML = `<span class="spin">o</span> ${t("runningBtn")}`;
-
   }
 
-  const seq = ++runToken;
-
-  // If this run carries an adopted "Use this system" override, the response
-
-  // should select that system (its payload carries payload.focusSystem).
-
+  lastRunInput = inp;
   lastRunAdoptsFocus = pendingFocus !== null;
-
+  lastRunQuiet = quiet;
   pendingFocus = null;
-
+  const seq = ++runToken;
   ensureWorker().postMessage({ type: "run", seq, ...inp });
 
 }
 
 // Slider updates queue a debounced re-run so dragging never stacks runs.
-function scheduleRun() {
+function scheduleRun(quiet = false) {
 
   if (runTimer) clearTimeout(runTimer);
 
-  runTimer = setTimeout(() => { runTimer = null; run(); }, 350);
+  runTimer = setTimeout(() => { runTimer = null; run(quiet); }, 350);
 
 }
 
@@ -1133,6 +1128,18 @@ function mergeReSlice(result) {
       refreshSelectionOutputs(p);
     }
   }
+  // Auto grid-tie: the recommendation follows the bill-cut slider. The worker
+  // re-derives the banner and focus from the custom target column, so the
+  // headline savings and "recommended" system describe the visitor's CURRENT
+  // cut — not the fixed 80% one — unless they've explicitly picked a system.
+  if (result.best && p.auto && p.mode === "gridtie") {
+    p.best = result.best;
+    if (result.bestReason) p.bestReason = result.bestReason;
+    if (result.focus) p.focus = result.focus;
+    renderBestPick(p);
+    renderMoneyBar(p);
+    if (!selectedKey || selectedKey === "best" || selectedKey === "focus") refreshSelectionOutputs(p);
+  }
   // Keep the custom column header in lockstep with the slider.
   const label = result.customCut
     ? `Your ~${Math.round(result.customCut.fraction * 100)}% target`
@@ -1179,7 +1186,39 @@ function setupBillSlider() {
   });
 
   slider.addEventListener("change", () => {
-    if (lastPayload) scheduleRun();
+    if (!lastPayload) return;
+    const inp = readInputs();
+    // Same site and options already on screen? Re-express the cached payload
+    // for the new bill in pure arithmetic — the engine's answers scale with
+    // the load, so the numbers stay exact-in-shape and the page updates
+    // instantly (no engine search, no weather re-fetch). A quiet full run
+    // then refines the rescaled numbers to exact search results.
+    if (lastPayload.mode === "gridtie" &&
+        lastRunInput && lastRunInput.dailyKwh > 0 &&
+        sameSiteOptions(lastRunInput, inp) &&
+        lastPayload.annualGridSpendUsd !== null) {
+      const k = inp.dailyKwh / lastRunInput.dailyKwh;
+      if (Number.isFinite(k) && Math.abs(k - 1) > 0.001) {
+        // Keep a curve/cell adoption through the rescale, at its new scale,
+        // and re-adopt it on the background refine so the user's choice sticks.
+        const hadAdoption = adoptedEntry !== null;
+        pendingFocus = hadAdoption
+          ? { pvKw: Math.round(adoptedEntry.pvKw * k * 100) / 100, battKwh: Math.round(adoptedEntry.battKwh * k), chemistry: adoptedEntry.chemistry }
+          : null;
+        lastPayload = rescalePayload(lastPayload, k);
+        lastRunInput = inp;                 // base for the next rescale
+        renderResults(lastPayload);
+        if (hadAdoption) {
+          adoptedEntry = scaleRecord(adoptedEntry, k);
+          selectedKey = "adopted";
+          refreshSelectionOutputs(lastPayload);
+        }
+        updateShareHash(lastPayload, inp);
+        scheduleRun(true);                  // quiet refine to exact numbers
+        return;
+      }
+    }
+    scheduleRun();
   });
 
 }
@@ -1235,7 +1274,7 @@ function ensureWorker() {
 
 
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260831f", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260831h", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -1255,7 +1294,7 @@ function ensureWorker() {
 
         const res = $("tierResults");
 
-        if (res) {
+        if (res && !lastRunQuiet) {
 
           res.setAttribute("tabindex", "-1");
 
@@ -2635,17 +2674,22 @@ function appendRows(card, rows) {
     card.appendChild(line);
   }
 }/**
- * Cumulative 20-year cost chart — the headline money story, drawn as two
+ * Cumulative 20-year cost chart — the headline money story, drawn as three
  * running sums for the recommended system:
- *   - amber line: cumulative grid spend if you had stayed on the grid
- *   - green line: cumulative TRUE solar cost (capex + every bank swap)
- * The crossing point IS the true break-even year. When the green line never
- * crosses above, the headline says so. A green gradient wedge between the
- * lines is the savings; a lower panel plots the running difference (grid -
- * solar) as bars — red while the capex is not yet repaid, then growing
- * green bars to the final 20-year total. Solar-served kWh rides along as
- * a quiet mini-strip (it is constant per year, so it stays subtle), and a
- * bold HTML callout above the chart carries the headline number.
+ *   - amber line:  cumulative grid spend if you had stayed on the grid
+ *   - slate line:  cumulative money out of pocket with solar (system cost
+ *                  PLUS the residual bills you keep paying, net of feed-in)
+ *   - emerald line: cumulative cost of the SYSTEM alone (capex + every bank
+ *                  swap) — it ends exactly on the recommendation's
+ *                  "Total 20-year cost" figure, so chart and card agree.
+ * The crossing of amber and slate IS the true break-even year. The green
+ * wedge between them is the savings; the slate band between the out-of-pocket
+ * line and the system line is the residual bill, called out by the caption.
+ * A lower panel plots the running difference (grid - solar) as bars — red
+ * while the capex is not yet repaid, then growing green bars to the final
+ * 20-year total. Solar-served kWh rides along as a quiet mini-strip (it is
+ * constant per year, so it stays subtle), and a bold HTML callout above the
+ * chart carries the headline number.
  */
 function drawCumCostChart(p, chosenEntry = null) {
   const wrap = $("cumCostChartWrap");
@@ -2710,6 +2754,7 @@ function drawCumCostChart(p, chosenEntry = null) {
   const plotW = W - padL - padR, plotH = COST_H - padT - padB;
   const nY = series.years || series.grid.length;
   const maxCost = Math.max(series.grid[nY - 1] || 0, series.solar[nY - 1] || 0, 1);
+  const hasSystem = Array.isArray(series.system) && series.system.length === nY;
   const X = (i) => padL + (i / (nY - 1)) * plotW;
   const Y = (v) => padT + (1 - v / maxCost) * plotH;
 
@@ -2765,6 +2810,22 @@ function drawCumCostChart(p, chosenEntry = null) {
     }
   }
 
+  // residual-bills band: slate fill between the out-of-pocket line and the
+  // system's own cost line — the money you still hand to the grid, separated
+  // out so the emerald line can land EXACTLY on the recommendation's total.
+  if (hasSystem) {
+    const res = ctx.createLinearGradient(padL, 0, W - padR, 0);
+    res.addColorStop(0, "rgba(148,163,184,0.05)");
+    res.addColorStop(1, "rgba(148,163,184,0.18)");
+    ctx.fillStyle = res;
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(series.solar[0]));
+    for (let i = 1; i < nY; i++) ctx.lineTo(X(i), Y(series.solar[i]));
+    for (let i = nY - 1; i >= 0; i--) ctx.lineTo(X(i), Y(series.system[i]));
+    ctx.closePath();
+    ctx.fill();
+  }
+
   // savings wedge: horizontal gradient that deepens toward the future —
   // the gap literally grows, so the fill should feel like it grows too
   const wedge = ctx.createLinearGradient(padL, 0, W - padR, 0);
@@ -2794,25 +2855,39 @@ function drawCumCostChart(p, chosenEntry = null) {
     ctx.fillStyle = "#f9fafb"; ctx.fill();
   }
 
-  // the two lines
+  // the three lines: amber = grid, slate = out-of-pocket (system + residual
+  // bills), emerald = the system alone (ends on the recommendation's total)
   ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = 2.5;
   ctx.strokeStyle = "#fbbf24";
   ctx.beginPath();
   for (let i = 0; i < nY; i++) { const y = Y(series.grid[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
   ctx.stroke();
-  ctx.strokeStyle = "#10b981";
+  ctx.strokeStyle = "#94a3b8";
   ctx.beginPath();
   for (let i = 0; i < nY; i++) { const y = Y(series.solar[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
   ctx.stroke();
+  if (hasSystem) {
+    ctx.strokeStyle = "#34d399";
+    ctx.beginPath();
+    for (let i = 0; i < nY; i++) { const y = Y(series.system[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
+    ctx.stroke();
+  }
 
-  // line-end totals, clamped INSIDE the plot
+  // line-end totals, clamped INSIDE the plot, stacked without collisions
   ctx.font = "bold 11px ui-monospace, monospace"; ctx.textAlign = "right";
   const gridLblY = Math.max(padT + 14, Y(series.grid[nY - 1]) + 18);
   const solarLblY = Math.min(padT + plotH - 8, Y(series.solar[nY - 1]) - 10);
   ctx.fillStyle = "#fbbf24";
   ctx.fillText(`grid (no solar): ${money(series.grid[nY - 1])}`, W - padR - 4, gridLblY);
-  ctx.fillStyle = "#34d399";
-  ctx.fillText(`solar (true cost): ${money(series.solar[nY - 1])}`, W - padR - 4, solarLblY);
+  ctx.fillStyle = "#94a3b8";
+  ctx.fillText(`out-of-pocket: ${money(series.solar[nY - 1])}`, W - padR - 4, solarLblY);
+  if (hasSystem) {
+    let sysLblY = Math.max(padT + 10, Y(series.system[nY - 1]) - 10);
+    if (sysLblY >= solarLblY) sysLblY = solarLblY + 18;
+    if (sysLblY > padT + plotH - 8) sysLblY = solarLblY - 16;
+    ctx.fillStyle = "#34d399";
+    ctx.fillText(`system 20-yr: ${money(series.system[nY - 1])}`, W - padR - 4, sysLblY);
+  }
 
   // ── bottom panel: your pocket, as growing bars ───────────────────────
   const sTop = COST_H + GAP + 10, sPadT = 16, sPadB = 6;
@@ -2873,14 +2948,16 @@ function drawCumCostChart(p, chosenEntry = null) {
   const cap = $("cumCostCaption");
   if (cap) {
     let txt = `Running 20-year cost for the recommended system (${label}): ` +
-      `the amber line is what staying on the grid would cost, the green line is the true solar cost ` +
-      `(purchase + install labor + every battery swap). `;
+      `amber is what staying on the grid costs; the slate line is total money out of pocket with solar — the system ` +
+      `plus the smaller bills you keep paying — and where the two cross is your break-even year. ` +
+      `The emerald line is the system's own 20-year cost (purchase + install labor + every bank swap), ending exactly ` +
+      `on the \u201CTotal 20-year cost\u201D figure in the recommendation.`;
     if (beIdx >= 0) {
       const saved = (series.grid[nY - 1] || 0) - (series.solar[nY - 1] || 0);
-      txt += `They cross at year ${beIdx + 1} \u2014 after that every year puts ~${money(Math.round(saved / (nY - beIdx)))} back in your pocket. ` +
+      txt += ` They cross at year ${beIdx + 1} \u2014 after that every year puts ~${money(Math.round(saved / (nY - beIdx)))} back in your pocket. ` +
         `Total saving over 20 years: ~${money(saved)}. The lower bars are your running net position: red until break-even, then climbing.`;
     } else {
-      txt += `Within 20 years they never cross \u2014 battery replacements outpace bill savings, so the honest answer is: it does not pay for itself here.`;
+      txt += ` Within 20 years they never cross \u2014 battery replacements outpace bill savings, so the honest answer is: it does not pay for itself here.`;
     }
     cap.textContent = txt;
   }
@@ -3160,7 +3237,7 @@ function drawAutoChart(p) {
 
 // Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
 
-const PAYLOAD_CONTRACT = 9;
+const PAYLOAD_CONTRACT = 10;
 
 // -- Plausibility frontier ---------------------------------------------------
 

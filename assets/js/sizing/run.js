@@ -20,7 +20,7 @@ import {
   lifetimeCostUsd, exportValueUsd, trueBreakEvenYear, cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
 
-} from "./money.js?v=20260831f";
+} from "./money.js?v=20260831h";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -41,6 +41,39 @@ const VALID_AUTO_TARGETS = new Set(["cut60", "cut80", "cut95"]);
  * that actually produced a system, so copy never claims "all three" when
  * only one or two solved.
  */
+/**
+ * Plain-language verdict for why the winning chemistry won — pure, so the
+ * worker can reuse it for the slider-driven recommendation. Winner and the
+ * candidate entries carry chemLabel/chemistry/replacementsHorizon.
+ */
+export function bestPickReason(winner, allEntries, meanT) {
+  if (!winner) return null;
+  const others = allEntries.filter((a) => a && a.solvable && a !== winner && Number.isFinite(a.lifetimeCostMid));
+  const runnerUp = others.length ? others.reduce((a, b) => (a.lifetimeCostMid <= b.lifetimeCostMid ? a : b)) : null;
+  const gapPct =
+    runnerUp && runnerUp.lifetimeCostMid > 0
+      ? Math.round(((runnerUp.lifetimeCostMid - winner.lifetimeCostMid) / runnerUp.lifetimeCostMid) * 1000) / 10
+      : null;
+  const ahead = gapPct !== null ? ` — about ${gapPct}% ahead of ${runnerUp.chemLabel}` : "";
+  let why;
+  if (winner.chemistry === "lfp") {
+    why = `${winner.chemLabel} delivered the lowest true 20-year cost at your site and target${ahead}. It uses most of its nameplate every day and its cycle life means no bank swaps inside the horizon.`;
+  } else if (winner.chemistry === "naion") {
+    why =
+      meanT < 12
+        ? `${winner.chemLabel} won here${ahead}. At this site's ${meanT}°C mean it charges in cold weather where standard LFP must sit idle below freezing, and on common LFP voltage settings it wears slowly.`
+        : `${winner.chemLabel} came out ahead${ahead} — gentler discharge wear on LFP voltage settings outweighed its small capacity give-back.`;
+  } else {
+    why = `At this load and target, ${winner.chemLabel} wins on first cost${ahead} — but expect ~${winner.replacementsHorizon} bank swaps over 20 years, already counted in every figure above.`;
+  }
+  const tail = others.length >= 2
+    ? " The ranking shifts with climate, tariffs, and how much work you do yourself — check the other options before deciding."
+    : others.length === 1
+      ? " The ranking shifts with climate, tariffs, and how much work you do yourself — weigh the runner-up before deciding."
+      : " No other chemistry produced a practical system at this site and load.";
+  return `${why}${tail}`;
+}
+
 export function autoNoteFor(entries, basis) {
   const names = entries.map((a) => a.chemLabel);
   if (names.length >= 3) return `All three chemistries sized for ${basis}`;
@@ -52,7 +85,7 @@ export function autoNoteFor(entries, basis) {
 // UI-contract version: bump whenever payload fields change shape. The
 // renderer compares this to its own constant and warns on mismatch instead
 // of rendering garbage from a stale cached module.
-export const PAYLOAD_CONTRACT = 9;
+export const PAYLOAD_CONTRACT = 10;
 
 const AUTO_CARD_NOTES = {
   naion: "Runs on standard LFP voltage settings (the common case): the ~40 V low cutoff protects it from deep discharge, so it gives up a little capacity but lasts longer than its deep-cycle rating.",
@@ -160,6 +193,7 @@ export async function runSizing(msg, deps = {}) {
       batteryLifeYears: cyclesPerYear > 0 ? +(chemObj.cyclesTo80 / cyclesPerYear).toFixed(1) : null,
       replacementsHorizon,
       swapsAndLaborUsd: life.swapsAndLabor,
+      firstLaborUsd: life.firstLabor,
       lifetimeCostMid: life.total,
       battNameplateKwh: +(sizing.battKwh / chemObj.usableDod).toFixed(1),
     };
@@ -224,6 +258,7 @@ export async function runSizing(msg, deps = {}) {
       swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
       replacements: m.replacementsHorizon,
       batteryLifeYears: m.batteryLifeYears,
+      firstLaborUsd: m.firstLaborUsd,
     });
   }
 
@@ -301,34 +336,6 @@ export async function runSizing(msg, deps = {}) {
     return solvable.reduce((a, b) => (a.lifetimeCostMid <= b.lifetimeCostMid ? a : b));
   }
 
-  /** Plain-language verdict for why the winning chemistry won. */
-  function bestPickReason(winner, allEntries, meanT) {
-    if (!winner) return null;
-    const others = allEntries.filter((a) => a.solvable && a !== winner && Number.isFinite(a.lifetimeCostMid));
-    const runnerUp = others.length ? others.reduce((a, b) => (a.lifetimeCostMid <= b.lifetimeCostMid ? a : b)) : null;
-    const gapPct =
-      runnerUp && runnerUp.lifetimeCostMid > 0
-        ? Math.round(((runnerUp.lifetimeCostMid - winner.lifetimeCostMid) / runnerUp.lifetimeCostMid) * 1000) / 10
-        : null;
-    const ahead = gapPct !== null ? ` — about ${gapPct}% ahead of ${runnerUp.chemLabel}` : "";
-    let why;
-    if (winner.chemistry === "lfp") {
-      why = `${winner.chemLabel} delivered the lowest true 20-year cost at your site and target${ahead}. It uses most of its nameplate every day and its cycle life means no bank swaps inside the horizon.`;
-    } else if (winner.chemistry === "naion") {
-      why =
-        meanT < 12
-          ? `${winner.chemLabel} won here${ahead}. At this site's ${meanT}°C mean it charges in cold weather where standard LFP must sit idle below freezing, and on common LFP voltage settings it wears slowly.`
-          : `${winner.chemLabel} came out ahead${ahead} — gentler discharge wear on LFP voltage settings outweighed its small capacity give-back.`;
-    } else {
-      why = `At this load and target, ${winner.chemLabel} wins on first cost${ahead} — but expect ~${winner.replacementsHorizon} bank swaps over 20 years, already counted in every figure above.`;
-    }
-    const tail = others.length >= 2
-      ? " The ranking shifts with climate, tariffs, and how much work you do yourself — check the other options before deciding."
-      : others.length === 1
-        ? " The ranking shifts with climate, tariffs, and how much work you do yourself — weigh the runner-up before deciding."
-        : " No other chemistry produced a practical system at this site and load.";
-    return `${why}${tail}`;
-  }
 
   // ── Shared per-system closures ──────────────────────────────────────────
   // Every mode and the incremental-cut path build systems through these SAME
@@ -718,6 +725,14 @@ export async function runSizing(msg, deps = {}) {
           best: customBest,
           surplus: customFracGt > 1,
         };
+        // The recommendation follows the bill-cut slider: the banner, headline
+        // savings and focus system now describe the cheapest system that
+        // achieves the visitor's CURRENT target, not the fixed 80% one.
+        if (customBest) {
+          patch.best = customBest;
+          patch.bestReason = bestPickReason(customBest, customEntries, meanTempC);
+          patch.focus = focusFor(customBest.chemistry, customBest);
+        }
       } else {
         const custSizing = sizeForBillCut({ ...billCutOpts, minFraction: customFracGt });
         const customTarget = custSizing
