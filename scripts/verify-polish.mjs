@@ -126,11 +126,13 @@ check("incremental slice returns the slider-driven recommendation",
 
 // Same-site bill changes now rescale the CACHED payload instantly (no engine
 // re-run, no weather re-fetch) — the rescale must track a fresh run at that
-// load. rescale.js ships in production for exactly this path.
+// load. rescale.js ships in production for exactly this path. The UI gates
+// this fast path to loads ≥ 15 kWh/day (the search's stable scaling regime).
 const { rescalePayload } = await import(pathToFileURL(DIR + "rescale.js").href);
-const gt2x = await runSizing({ ...MSG, dailyKwh: 20, chemistry: "auto", mode: "gridtie" }, { fetchWeather: fakeWeather });
-const resc = rescalePayload(gtAuto60, 2);
-const lfpA = resc && resc.matrix.cells["lfp:cut80"], lfpB = gt2x.matrix.cells["lfp:cut80"];
+const gt20base = await runSizing({ ...MSG, dailyKwh: 20, chemistry: "auto", mode: "gridtie" }, { fetchWeather: fakeWeather });
+const gt40 = await runSizing({ ...MSG, dailyKwh: 40, chemistry: "auto", mode: "gridtie" }, { fetchWeather: fakeWeather });
+const resc = rescalePayload(gt20base, 2);
+const lfpA = resc && resc.matrix.cells["lfp:cut80"], lfpB = gt40.matrix.cells["lfp:cut80"];
 check(`same-site bill change rescales the cache to match a fresh run (lfp:cut80 $${lfpA && lfpA.lifetimeCostMid} vs $${lfpB && lfpB.lifetimeCostMid})`,
   lfpA && lfpB && lfpA.solvable && lfpB.solvable &&
   Math.abs(lfpA.lifetimeCostMid - lfpB.lifetimeCostMid) / lfpB.lifetimeCostMid <= 0.06);

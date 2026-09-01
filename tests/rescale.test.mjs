@@ -106,6 +106,21 @@ test("rescale round-trip: ×2 then ×0.5 restores the original payload", async (
   assert.deepEqual(back.best.cutPct, p.best.cutPct);
 });
 
+test("GATE: rescale stays honest at the regime floor (15 ⇄ 30 kWh/day)", async () => {
+  const p15 = await runSizing({ ...BASE, dailyKwh: 15 }, { fetchWeather: fakeWeather });
+  const p30 = await runSizing({ ...BASE, dailyKwh: 30 }, { fetchWeather: fakeWeather });
+  for (const cid of ["lfp:cut80", "naion:cut60", "agm:cut95", "lfp:custom"]) {
+    const up = rescalePayload(p15, 2).matrix.cells[cid];
+    const upF = p30.matrix.cells[cid];
+    const down = rescalePayload(p30, 0.5).matrix.cells[cid];
+    const downF = p15.matrix.cells[cid];
+    const rel = (a, b) => Math.abs(a.lifetimeCostMid - b.lifetimeCostMid) / b.lifetimeCostMid;
+    assert.ok(up.solvable && upF.solvable, `${cid} solved both ways`);
+    assert.ok(rel(up, upF) <= 0.06, `${cid} 15->30 money ${rel(up, upF).toFixed(3)}`);
+    assert.ok(rel(down, downF) <= 0.06, `${cid} 30->15 money ${rel(down, downF).toFixed(3)}`);
+  }
+});
+
 test("rescale never mutates the cached payload", async () => {
   const p = await runSizing({ ...BASE, dailyKwh: 20.18 }, { fetchWeather: fakeWeather });
   const before = JSON.stringify(p);

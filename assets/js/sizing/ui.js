@@ -86,6 +86,11 @@ let sliceToken = 0;
 const BILL_MIN_KWH = 2;
 const BILL_MAX_KWH = 200;
 
+// Loads below this stay out of the instant-rescale path: the search's
+// minimum-bank and lattice constraints shift the PV/battery optimum there,
+// so a cached payload is only rescaled when both loads are at/above it.
+const RESCALE_MIN_KWH = 15;
+
 // True once the user applied the generator-fuel helper to the price field.
 let generatorBasis = false;
 
@@ -1193,8 +1198,13 @@ function setupBillSlider() {
     // the load, so the numbers stay exact-in-shape and the page updates
     // instantly (no engine search, no weather re-fetch). A quiet full run
     // then refines the rescaled numbers to exact search results.
+    //
+    // Below ~15 kWh/day the search leaves the scaling regime (minimum-bank
+    // and lattice constraints bend the PV/battery mix), so only rescale when
+    // BOTH the existing and the new load are in the stable range.
     if (lastPayload.mode === "gridtie" &&
-        lastRunInput && lastRunInput.dailyKwh > 0 &&
+        lastRunInput && lastRunInput.dailyKwh >= RESCALE_MIN_KWH &&
+        inp.dailyKwh >= RESCALE_MIN_KWH &&
         sameSiteOptions(lastRunInput, inp) &&
         lastPayload.annualGridSpendUsd !== null) {
       const k = inp.dailyKwh / lastRunInput.dailyKwh;
