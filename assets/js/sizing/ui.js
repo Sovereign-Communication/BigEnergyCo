@@ -16,7 +16,7 @@ import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCi
 
 import { estimateTariff, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260831i";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260901a";
 
 import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830b";
 
@@ -1284,7 +1284,7 @@ function ensureWorker() {
 
 
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260831i", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260901a", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -2756,6 +2756,8 @@ function drawCumCostChart(p, chosenEntry = null) {
     const sub = $("cumSavingsSub");
     const cap = $("cumCostCaption");
     if (cap) cap.textContent = "";
+    const leg = $("cumCostLegend");
+    if (leg) { leg.style.display = "none"; leg.textContent = ""; }
     if (box && num && sub) {
       box.style.display = "block";
       num.textContent = panel.title;
@@ -2859,7 +2861,7 @@ function drawCumCostChart(p, chosenEntry = null) {
     series.grid[i] >= series.solar[i] ? "rgba(16,185,129,0.28)" : "rgba(239,68,68,0.22)");
 
   // break-even marker: dashed vertical + label to the RIGHT at mid-height,
-  // clear of both line-end totals
+  // clear of the curve and the axis labels
   if (beIdx >= 0) {
     const beVal = series.solar[beIdx];
     ctx.setLineDash([4, 4]);
@@ -2891,20 +2893,37 @@ function drawCumCostChart(p, chosenEntry = null) {
     ctx.stroke();
   }
 
-  // line-end totals, clamped INSIDE the plot, stacked without collisions
-  ctx.font = "bold 11px ui-monospace, monospace"; ctx.textAlign = "right";
-  const gridLblY = Math.max(padT + 14, Y(series.grid[nY - 1]) + 18);
-  const solarLblY = Math.min(padT + plotH - 8, Y(series.solar[nY - 1]) - 10);
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillText(`grid (no solar): ${money(series.grid[nY - 1])}`, W - padR - 4, gridLblY);
-  ctx.fillStyle = "#94a3b8";
-  ctx.fillText(`with solar: ${money(series.solar[nY - 1])}`, W - padR - 4, solarLblY);
-  if (hasSystem) {
-    let sysLblY = Math.max(padT + 10, Y(series.system[nY - 1]) - 10);
-    if (sysLblY >= solarLblY) sysLblY = solarLblY + 18;
-    if (sysLblY > padT + plotH - 8) sysLblY = solarLblY - 16;
-    ctx.fillStyle = "#34d399";
-    ctx.fillText(`solar system: ${money(series.system[nY - 1])}`, W - padR - 4, sysLblY);
+  // ── legend: the figures live under the chart, never on it ────────────
+  // The line-end totals used to sit at the plot's right edge, colored like
+  // their lines, and collided wherever the curves converged. They now live
+  // in a color-keyed legend beneath the canvas — same colors as the lines
+  // (amber grid, slate with-solar, emerald system) — so each figure is
+  // unambiguous and can never overlap a line or another label.
+  const legend = $("cumCostLegend");
+  if (legend) {
+    const swatch = (color) => {
+      const box = el("span", {
+        style: "display:inline-block;width:22px;height:10px;margin-inline-end:7px;vertical-align:middle;position:relative;",
+        "aria-hidden": "true",
+      });
+      box.appendChild(el("span", {
+        style: `position:absolute;top:4px;left:0;width:22px;height:2.5px;background:${color};border-radius:2px;`,
+      }));
+      return box;
+    };
+    const rows = [
+      ["#fbbf24", `Grid without solar: ${money(series.grid[nY - 1])}`],
+      ["#94a3b8", `Grid with solar: ${money(series.solar[nY - 1])}`],
+    ];
+    if (hasSystem) rows.push(["#34d399", `Solar system: ${money(series.system[nY - 1])}`]);
+    legend.textContent = "";
+    for (const [color, label] of rows) {
+      const row = el("span", { style: "display:flex;align-items:center;" });
+      row.appendChild(swatch(color));
+      row.appendChild(el("span", {}, label));
+      legend.appendChild(row);
+    }
+    legend.style.display = "flex";
   }
 
   // ── bottom panel: your pocket, as growing bars ───────────────────────
