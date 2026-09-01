@@ -59,6 +59,18 @@ check("tier100 hardware ≥ tier99 per chemistry", ["naion", "lfp", "agm"].every
 const gtAuto60 = await runSizing({ ...MSG, chemistry: "auto", mode: "gridtie", autoTargetId: "cut60" }, { fetchWeather: fakeWeather });
 check("cut60 basis applied to all chemistries", gtAuto60.auto.every((a) => a.cutPct >= 58 && a.cutPct <= 64));
 check("gridtie autoNote reflects cut60", gtAuto60.autoNote.includes("60%"));
+check("gridtie auto ships the 1–111% slider target as a clickable matrix column",
+  gtAuto60.customCut && gtAuto60.customCut.fraction === 0.8 &&
+  gtAuto60.matrix && gtAuto60.matrix.cols.some((c) => c.custom) &&
+  gtAuto60.matrix.cols.some((c) => c.custom && c.label.includes("80")));
+check("matrix cells carry the money story that drives the selection pipeline",
+  ["naion", "lfp", "agm"].every((r) => {
+    const cell = gtAuto60.matrix.cells[`${r}:cut80`];
+    return !cell || !cell.solvable ||
+      (Number.isFinite(cell.lifetimeCostMid) && Number.isFinite(cell.cutPct) &&
+       Array.isArray(cell.cumCostSeries && cell.cumCostSeries.solar) &&
+       cell.socNameplatePct && Array.isArray(cell.socNameplatePct.min));
+  }));
 
 const spec = await runSizing({ ...MSG, chemistry: "agm", mode: "offgrid" }, { fetchWeather: fakeWeather });
 const t100 = spec.tiers.find((t) => t.id === "tier100");
@@ -67,7 +79,7 @@ check("AGM tier100 true break-even later-or-never",
   t100.trueBreakEvenYear === null ? true : t100.trueBreakEvenYear >= Math.round(t100.paybackYearsLo));
 
 // ── Pass 2: full functional matrix ─────────────────────────────────────────
-check("contract version pinned (7) on every payload shape", [auto99, auto100, gtAuto60, spec].every((p) => p.contract === 7));
+check("contract version pinned (8) on every payload shape", [auto99, auto100, gtAuto60, spec].every((p) => p.contract === 8));
 
 // specific grid-tie with feed-in: export value + break-even coexist
 const gtSpec = await runSizing({ ...MSG, chemistry: "lfp", mode: "gridtie", exportRate: 0.10 }, { fetchWeather: fakeWeather });
@@ -87,7 +99,7 @@ try {
   globalThis.fetch = realFetch;
 }
 check("offline fallback engages + flags itself", offline.meta.offline === true && !!offline.meta.offlineCity);
-check("offline payload still meets contract", offline.contract === 7 && offline.auto.length >= 2);
+check("offline payload still meets contract", offline.contract === 8 && offline.auto.length >= 2);
 check("offline results carry honest labeling", offline.assumptions.offline === true);
 
 // sodium-specific off-grid: LFP-settings reality visible in numbers

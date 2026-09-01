@@ -495,10 +495,24 @@ export function sizeForBillCut({
   pvMax = 30, battMax = 100, battStep = 1,
   capacityScale = null, laborPerKwh,
 }) {
+  const f = Number(minFraction);
+  if (!Number.isFinite(f) || f < 0.01 || f > 1.11) {
+    throw new RangeError(`minFraction must be within [0.01, 1.11] (a 1% to 111% bill cut); got ${minFraction}`);
+  }
   const loadTotal = [...loadWh].reduce((a, b) => a + b, 0);
-  const importBudget = loadTotal * (1 - minFraction);
+  // Above 100% the visitor wants to PRODUCE more than the load consumes and
+  // sell/track the surplus, so the constraint becomes "the bill is fully
+  // covered AND at least (f-1) of annual load is produced as surplus". A mere
+  // sliver of clipped PV while still importing is not a >100% cut, so both
+  // conditions must hold. A battery only absorbs surplus and adds cost against
+  // that goal, but the search below stays fully general and lets the cost
+  // objective decide.
+  const surplusTarget = f > 1;
+  const importBudget = surplusTarget ? loadTotal * 0.005 : loadTotal * (1 - f);
   const evaluate = (pv, batt) => simulateOffset({ pvKw: pv, battKwhUsable: batt, e1kw, loadWh, chemistry, tempsC, capacityScale });
-  const meets = (r) => r.importedWh <= importBudget + 1e-6;
+  const meets = surplusTarget
+    ? (r) => r.importedWh <= importBudget + 1e-6 && r.curtailedWh >= loadTotal * (f - 1) - 1e-6
+    : (r) => r.importedWh <= importBudget + 1e-6;
 
   // Lifetime-cost objective: among systems meeting the bill-cut target, pick
   // the one whose TRUE cost over the horizon is lowest (capex plus every bank
@@ -519,8 +533,10 @@ export function sizeForBillCut({
 
   let best = null;
   for (let b = 0; b <= battMax; b += battStep) {
-    // With a bigger bank, the required PV cannot be larger than before.
-    const pvFloor = best ? Math.max(0.05, best.pvKw - 1) : 0.05;
+    // With a bigger bank, the required PV cannot be larger than before
+    // (bill-cut regime). For surplus targets the monotonicity runs the other
+    // way (storage eats curtailment), so skip the floor and search fresh.
+    const pvFloor = (!surplusTarget && best) ? Math.max(0.05, best.pvKw - 1) : 0.05;
     let lo = pvFloor, hi = pvMax;
     if (!meets(evaluate(hi, b))) continue;
     while (hi - lo > 0.25) {

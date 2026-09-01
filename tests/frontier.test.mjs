@@ -311,7 +311,7 @@ test("runSizing ships a frontier the renderer can draw, in every mode", async ()
   const base = { latitude: 21.31, longitude: -157.86, dailyKwh: 10, tariff: 0.42 };
   for (const [mode, chemistry] of [["offgrid", "auto"], ["gridtie", "auto"], ["offgrid", "lfp"], ["gridtie", "agm"]]) {
     const p = await runSizing({ ...base, mode, chemistry }, { fetchWeather: w });
-    assert.equal(p.contract, 7, `${mode}/${chemistry}: contract bumped for the new field`);
+    assert.equal(p.contract, 8, `${mode}/${chemistry}: contract bumped for the new field`);
     const f = p.frontier;
     assert.ok(f, `${mode}/${chemistry}: frontier present`);
     assert.equal(f.mode, mode);
@@ -343,7 +343,7 @@ test("a frontier failure never takes the whole result down", async () => {
         meta: { latitude: 0, longitude: 0, startYear: 2025, endYear: 2025, years: 1, source: "dark fixture" },
       }) },
   );
-  assert.equal(p.contract, 7);
+  assert.equal(p.contract, 8);
   assert.ok("frontier" in p, "the field always exists, even when there is nothing to draw");
 });
 

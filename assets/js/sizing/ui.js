@@ -13,7 +13,7 @@
 import { CITY_PRESETS } from "./nasa.js?v=20260830b";
 import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCityLabel, nearestCity, normalizeCityQuery, shouldAutoResolve } from "./cities.js?v=20260830s";
 
-import { estimateTariff, battOnlyCost, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
+import { estimateTariff, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
 import { savingsPanelState } from "./money.js?v=20260830v";
 
 import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830b";
@@ -34,14 +34,38 @@ let prevFxSnapshot = null; // for tariff display conversion on currency switch
 // Result detail level: "best" | "compare" | "matrix" (auto-chemistry runs only).
 let resultLevel = "best";
 
+// Quick (auto-run) mode shows only the location controls and sizes with
+// defaults; Manual reveals the full form. Default is quick.
+let quickMode = true;
+
+// The monthly-bill slider stores the user's real input as consumed ENERGY
+// (kWh/day, default 20) and re-expresses that as local currency whenever the
+// tariff, currency, or location changes — so switching cities never silently
+// changes what the user told us they use.
+let billAnchorKwh = 20;
+
+// Bill-cut slider (1–111%): the replacement for the old 60/80/95 dropdown.
+let customCutFraction = 0.8;
+
+// Which system the whole results pipeline (charts, BOM, export, share, print)
+// shows: "best" | "focus" (adopted curve point) | "matrix:chem:colId" | "custom".
+let selectedKey = "best";
+
+// A non-null value means the next worker run should adopt an EXACT (PV,
+// battery, chemistry) system ("Use this system" from the curve modal).
+let pendingFocus = null;
+
+// Guards stale responses when sliders queue runs faster than the worker.
+let runToken = 0;
+let runTimer = null;
+let lastRunAdoptsFocus = false;
+
+// Bill slider bounds, expressed in kWh/day and converted to local currency.
+const BILL_MIN_KWH = 2;
+const BILL_MAX_KWH = 200;
+
 // True once the user applied the generator-fuel helper to the price field.
 let generatorBasis = false;
-
-// The legacy storage-comparison script (classic inline JS) reads scoped
-
-// prices through this bridge - pricing.js stays the single source of truth.
-
-window.BECO_BATT_COST = battOnlyCost;
 
 // Translation helper with interpolation support (uses shared resolveLang so
 // auto-detection matches the chrome i18n — no split-brain between panel and
@@ -250,10 +274,53 @@ function applianceState() {
 
 function getTariff() {
 
-  const v = parseFloat($("customRateVal").value);
+  const v = parseFloat($("customRateVal")?.value);
 
   return Number.isFinite(v) && v > 0 ? v : null;
 
+}
+
+// ── Monthly-bill slider (local currency, anchored to kWh/day) ───────────────
+
+// The slider speaks the same language as a bill: the local-currency monthly
+// amount, derived from the user's kWh/day anchor and the active tariff.
+function kwhFromBill(bill, rate) { return bill / (rate * DAYS_PER_MONTH); }
+
+function billForKwh(kwh, rate) { return kwh * DAYS_PER_MONTH * rate; }
+
+function fmtBill(v) {
+  const fx = fxActive();
+  if (!fx) return "$" + Math.round(v).toLocaleString() + "/mo";
+  try {
+    return new Intl.NumberFormat(undefined, { style: "currency", currency: fx.code, maximumFractionDigits: 0 }).format(v) + "/mo";
+  } catch {
+    return (CURRENCIES[fx.code]?.symbol || "") + Math.round(v).toLocaleString() + "/mo";
+  }
+}
+
+// Re-express the slider around the current rate/currency, preserving the
+// user's kWh/day anchor. Runs whenever location/tariff/currency change.
+function syncBillSlider() {
+  const slider = $("billSlider");
+  if (!slider) return;
+  const rate = displayRate();
+  const minBill = Math.max(1, Math.round(billForKwh(BILL_MIN_KWH, rate)));
+  const maxBill = Math.max(minBill + 2, Math.round(billForKwh(BILL_MAX_KWH, rate)));
+  const value = Math.min(maxBill, Math.max(minBill, Math.round(billForKwh(billAnchorKwh, rate))));
+  slider.min = String(minBill);
+  slider.max = String(maxBill);
+  slider.step = String(Math.max(1, Math.round((maxBill - minBill) / 300)));
+  slider.value = String(value);
+  const out = $("billSliderVal");
+  if (out) out.textContent = "~" + fmtBill(value);
+  const note = $("quickBillNote");
+  if (note) {
+    note.textContent = "Quick estimate: ~" + fmtBill(value) + " (starts from ~20 kWh/day) — switch to Manual to change your bill, appliances, or rate.";
+  }
+}
+
+function displayRate() {
+  return getTariff() || 0.28;
 }
 
 function updateLoadReadout() {
@@ -282,13 +349,13 @@ function updateLoadReadout() {
 
   } else if (mode === "bill") {
 
-    const bill = parseFloat($("billAmount").value);
+    const bill = parseFloat($("billSlider")?.value);
 
     const rate = getTariff();
 
     if (Number.isFinite(bill) && bill > 0 && Number.isFinite(rate) && rate > 0) {
 
-      const kwhDay = bill / (rate * DAYS_PER_MONTH);
+      const kwhDay = kwhFromBill(bill, rate);
 
       out.textContent = t("readoutBill", { kwhDay: fmtKwh(kwhDay) });
 
@@ -498,6 +565,8 @@ function setCurrency(code) {
 
   updateCurrencyUnitLabel();
 
+  syncBillSlider();
+
 }
 
 function updateCurrencyUnitLabel() {
@@ -558,6 +627,8 @@ function applyEstimatedTariff(lat, lon, region, country) {
 
   updateLoadReadout();
 
+  syncBillSlider();
+
   // A location change auto-switches the display currency and tariff estimate;
 
   // refresh any existing results so the money figures follow immediately
@@ -588,7 +659,7 @@ function renderCities() {
         const button = el("button", { type: "button", role: "option", class: "city-suggestion" }, `${formatCityLabel(c)}${population}`);
         button.dataset.index = String(i);
         button.addEventListener("mousedown", (event) => event.preventDefault());
-        button.addEventListener("click", () => { cancelAutoResolve(); setCoords(c.lat, c.lon, `Sunshine data from ${formatCityLabel(c)}`, c.r, c.country); lastResolvedQuery = normalizeCityQuery(search.value); search.value = formatCityLabel(c); list.hidden = true; search.setAttribute("aria-expanded", "false"); });
+        button.addEventListener("click", () => { cancelAutoResolve(); setCoords(c.lat, c.lon, `Sunshine data from ${formatCityLabel(c)}`, c.r, c.country); lastResolvedQuery = normalizeCityQuery(search.value); search.value = formatCityLabel(c); list.hidden = true; search.setAttribute("aria-expanded", "false"); if (quickMode) run(); });
         list.appendChild(button);
       });
       active = -1;
@@ -632,6 +703,7 @@ function renderCities() {
         search.value = formatCityLabel(local);
         list.hidden = true;
         search.setAttribute("aria-expanded", "false");
+        if (quickMode) run();
         return;
       }
       lookupBusy = true;
@@ -644,6 +716,7 @@ function renderCities() {
         search.value = formatCityLabel(match);
         list.hidden = true;
         search.setAttribute("aria-expanded", "false");
+        if (quickMode) run();
       }
     };
     search.addEventListener("keydown", (event) => {
@@ -701,33 +774,53 @@ function locateMe() {
 
   navigator.geolocation.getCurrentPosition(
 
-    (pos) => {
+    async (pos) => {
 
       const lat = pos.coords.latitude, lon = pos.coords.longitude;
 
       setCoords(lat, lon, "Using your precise location");
 
-      $("coordDetails").open = true;
+      if ($("coordDetails")) $("coordDetails").open = true;
 
-      setStatus(" Location set. Now tell us your power use below, then run the sizing.");
+      setStatus(" Location set. Resolving the nearest city for area prices…");
 
-      // Best-effort: if the nearest catalog city is close, reuse its region so
+      // Proper area-price lookup: always resolve the nearest reference city
 
-      // state-level tariffs (e.g. Louisiana vs the whole-mainland lump) and the
+      // (no distance gate) so its state/region/country drives the tariff,
 
-      // auto currency match what a typed city search would give.
+      // currency, and install-labor factors — the coordinate-box estimate is
 
-      expandCitySearch().then(() => {
+      // only a fallback if the catalog never loads.
 
-        const near = nearestCity(lat, lon, CITY_CATALOG, 80);
+      try {
 
-        if (near && near.r) {
+        const expanded = await loadCityCatalog();
 
-          setCoords(lat, lon, `Using your precise location (near ${formatCityLabel(near)})`, near.r, near.country);
+        if (expanded.length > CITY_CATALOG.length) CITY_CATALOG.splice(0, CITY_CATALOG.length, ...expanded);
+
+        const near = nearestCity(lat, lon, CITY_CATALOG, Infinity);
+
+        if (near) {
+
+          setCoords(lat, lon, `Using your precise location — prices based on ${formatCityLabel(near)}`, near.r, near.country);
+
+        } else {
+
+          setCoords(lat, lon, "Using your precise location");
 
         }
 
-      }).catch(() => {});
+      } catch {
+
+        setCoords(lat, lon, "Using your precise location");
+
+      }
+
+      // Auto-run is the default: location alone is enough to size on.
+
+      if (quickMode) run();
+
+      else setStatus(quickMode ? "" : " Location set. Now tell us your power use below, then run the sizing.");
 
     },
 
@@ -736,6 +829,48 @@ function locateMe() {
     { timeout: 8000 }
 
   );
+
+}
+
+// Quick vs. Manual: quick hides everything except the location controls and
+
+// sizes with defaults; Manual reveals the full form.
+
+function setQuickMode(on) {
+
+  quickMode = on;
+
+  const extras = $("fullControls");
+
+  if (extras) extras.style.display = on ? "none" : "block";
+
+  const precise = $("coordDetails");
+
+  if (precise) precise.style.display = on ? "none" : "block";
+
+  const hint = $("locHint");
+
+  if (hint) hint.style.display = on ? "none" : "block";
+
+  const note = $("quickBillNote");
+
+  if (note) note.style.display = on ? "block" : "none";
+
+  const locBtn = $("btnGeoLocate");
+
+  if (locBtn) {
+
+    locBtn.classList.toggle("btn-geo-primary", on);
+
+    locBtn.style.width = on ? "100%" : "auto";
+
+    locBtn.style.justifyContent = "center";
+
+  }
+
+  const runBtn = $("btnRunSizing");
+
+  if (runBtn) runBtn.style.display = on ? "none" : "";
 
 }
 
@@ -757,11 +892,13 @@ function readInputs() {
 
   } else if (mode === "bill") {
 
-    const bill = parseFloat($("billAmount").value);
+    const bill = parseFloat($("billSlider")?.value ?? $("billAmount")?.value);
 
     const rate = getTariff();
 
-    dailyKwh = bill / (rate * DAYS_PER_MONTH);
+    dailyKwh = Number.isFinite(bill) && Number.isFinite(rate) && rate > 0 ? bill / (rate * DAYS_PER_MONTH) : billAnchorKwh;
+
+    billAnchorKwh = Number.isFinite(dailyKwh) && dailyKwh > 0 ? dailyKwh : billAnchorKwh;
 
   } else {
 
@@ -823,9 +960,17 @@ function readInputs() {
 
     autoTargetId: $("autoTarget")?.value || "cut80",
 
+    customCut: customCutFraction,
+
     mode: $("systemGoal") ? $("systemGoal").value : "offgrid",
 
     basis,
+
+    focusPvKw: pendingFocus ? pendingFocus.pvKw : null,
+
+    focusBattKwh: pendingFocus ? pendingFocus.battKwh : null,
+
+    focusChemistry: pendingFocus ? pendingFocus.chemistry : null,
 
   };
 
@@ -857,11 +1002,125 @@ function run() {
 
   const btn = $("btnRunSizing");
 
-  btn.disabled = true;
+  if (btn) {
 
-  btn.innerHTML = `<span class="spin">o</span> ${t("runningBtn")}`;
+    btn.disabled = true;
 
-  ensureWorker().postMessage({ type: "run", ...inp });
+    btn.innerHTML = `<span class="spin">o</span> ${t("runningBtn")}`;
+
+  }
+
+  const seq = ++runToken;
+
+  // If this run carries an adopted "Use this system" override, the response
+
+  // should select that system (its payload carries payload.focusSystem).
+
+  lastRunAdoptsFocus = pendingFocus !== null;
+
+  pendingFocus = null;
+
+  ensureWorker().postMessage({ type: "run", seq, ...inp });
+
+}
+
+// Slider updates queue a debounced re-run so dragging never stacks runs.
+function scheduleRun() {
+
+  if (runTimer) clearTimeout(runTimer);
+
+  runTimer = setTimeout(() => { runTimer = null; run(); }, 350);
+
+}
+
+// ── Bill-cut slider (1–111%) ────────────────────────────────────────────────
+
+function syncCutLabel() {
+
+  const slider = $("cutSlider");
+  const out = $("cutSliderVal");
+
+  if (!slider) return;
+  const v = parseInt(slider.value, 10) || 80;
+
+  if (out) out.textContent = v > 100
+    ? `Produce ~${v}% of your bill — bill gone, sellable surplus sizeable above`
+    : `Cut ~${v}% of your bill`;
+
+}
+
+function setupCutSlider() {
+
+  const slider = $("cutSlider");
+  if (!slider) return;
+  slider.value = String(Math.round(customCutFraction * 100));
+  syncCutLabel();
+
+  slider.addEventListener("input", () => {
+    customCutFraction = (parseInt(slider.value, 10) || 1) / 100;
+    syncCutLabel();
+  });
+
+  slider.addEventListener("change", () => {
+    customCutFraction = (parseInt(slider.value, 10) || 1) / 100;
+    if (lastPayload) scheduleRun();
+  });
+
+}
+
+// ── Monthly-bill slider (local currency, kWh/day anchor) ────────────────────
+
+function setupBillSlider() {
+
+  const slider = $("billSlider");
+  if (!slider) return;
+  syncBillSlider();
+
+  // While dragging, only the label tracks the thumb — the value must not be
+  // re-rounded against the anchor mid-drag.
+  slider.addEventListener("input", () => {
+    const bill = parseFloat(slider.value);
+    const rate = displayRate();
+    if (Number.isFinite(bill) && rate > 0) billAnchorKwh = kwhFromBill(bill, rate);
+    const out = $("billSliderVal");
+    if (out) out.textContent = "~" + fmtBill(bill);
+    updateLoadReadout();
+  });
+
+  slider.addEventListener("change", () => {
+    if (lastPayload) scheduleRun();
+  });
+
+}
+
+// ── Clickable matrix cells (grid-tie) ───────────────────────────────────────
+
+function setupMatrixSelection() {
+
+  const grid = $("tierResults");
+  if (!grid) return;
+  const pick = (key) => {
+    const p = lastPayload;
+    if (!p) return;
+    selectedKey = "matrix:" + key;
+    renderResults(p);
+    // Cells open the same full-analysis modal as curve points, with
+    // "Use this system" to adopt the exact system into every chart, the BOM,
+    // export data, share link, and print sheet.
+    const cell = p.matrix && p.matrix.cells[key];
+    if (cell && cell.solvable) {
+      showSystemModal(p, { ...cell, chemistry: p.matrix.rows.find((r) => r.id === key.split(":")[0])?.id || cell.chemistry }, true);
+    }
+  };
+  grid.addEventListener("click", (e) => {
+    const td = e.target && e.target.closest ? e.target.closest("td[data-sel]") : null;
+    if (td) pick(td.getAttribute("data-sel"));
+  });
+  grid.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const td = e.target && e.target.closest ? e.target.closest("td[data-sel]") : null;
+    if (td) { e.preventDefault(); pick(td.getAttribute("data-sel")); }
+  });
 
 }
 
@@ -883,11 +1142,18 @@ function ensureWorker() {
 
   if (!worker) {
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260830v", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260831a", { type: "module" });
 
     worker.onmessage = (ev) => {
 
       if (ev.data?.type === "ok") {
+
+        // A stale response from an older queued run must never clobber the
+        // latest slider position's results.
+
+        if (ev.data.seq !== undefined && ev.data.seq !== runToken) return;
+
+        if (lastRunAdoptsFocus) { selectedKey = "focus"; lastRunAdoptsFocus = false; }
 
         renderResults(ev.data.payload);
 
@@ -1201,7 +1467,7 @@ function drawSocChart(history, chemLabel) {
 
   function drawBand(t, top) {
 
-    const color = TIER_COLORS[t.id] || "#888";
+    const color = TIER_COLORS[t.id] || t.color || "#888";
 
     const plotH = BAND_H - padT - padB;
 
@@ -1308,7 +1574,7 @@ function drawSocChart(history, chemLabel) {
 
     ctx.font = "bold 12px system-ui, sans-serif";
 
-    ctx.fillText(TIER_NAMES[t.id] || t.id, padL + 2, top + 13);
+    ctx.fillText(TIER_NAMES[t.id] || t.chemLabel || t.id, padL + 2, top + 13);
 
     ctx.font = "11px system-ui, sans-serif";
 
@@ -1579,10 +1845,13 @@ function renderBestPick(p) {
   appendRows(card, rows);
   if (p.bestReason) {
     card.appendChild(el("p", { style: "font-size:0.85rem;color:var(--text-main);margin-top:0.7rem;line-height:1.55;" }, p.bestReason));
-  }
-  const compareHint = solvableCount >= 2
-    ? " Use the tabs above to compare every option side by side."
-    : " The matrix shows why the other chemistries weren't practical at this site.";
+  }    const compareHint = isGT
+    ? (solvableCount >= 2
+      ? " Click any cell in the matrix below to see that exact system in every chart and the hardware list."
+      : " The matrix shows why the other chemistries weren't practical at this site.")
+    : (solvableCount >= 2
+      ? " Use the tabs above to compare every option side by side."
+      : " The matrix shows why the other chemistries weren't practical at this site.");
   card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
     `${p.autoNote}.${compareHint}`));
   wrap.appendChild(card);
@@ -1590,17 +1859,26 @@ function renderBestPick(p) {
 
 /** Compact column labels for the matrix header. */
 function matrixColShort(p, col) {
-  if (p.mode === "gridtie") return col.id === "cut60" ? "\u221260% bill" : col.id === "cut80" ? "\u221280% bill" : "\u221295% bill";
+  if (p.mode === "gridtie") {
+    if (col.custom) return col.label || `Your ~${p.customCut ? Math.round(p.customCut.fraction * 100) : 80}% target`;
+    return col.id === "cut60" ? "\u221260% bill" : col.id === "cut80" ? "\u221280% bill" : "\u221295% bill";
+  }
   return col.label.split("\u2014")[0].trim();
 }
 
 /**
- * The full comparison table: every chemistry against every reliability
- * level. Green outline marks the cheapest true 20-year cost per column.
+ * The full comparison table: every chemistry against every cut level. Green
+ * outline marks the cheapest true 20-year cost per column. In grid-tie mode
+ * every cell is the SELECTION UI: click (or Tab to and Enter) a cell and the
+ * whole results pipeline — banner, curves, charts, hardware list, export
+ * figures, share link — switches to that system.
  */
 function matrixHtml(p) {
   const m = p.matrix;
   if (!m) return "";
+  const selectable = p.mode === "gridtie";
+  const selKey = selectedKey || "best";
+  const surplusCol = !!(p.customCut && p.customCut.surplus);
   // Cheapest lifetime cost per column (among solvable cells)
   const colBest = {};
   for (const col of m.cols) {
@@ -1614,23 +1892,33 @@ function matrixHtml(p) {
   const head = m.cols.map((c) => `<th>${matrixColShort(p, c)}</th>`).join("");
   const body = m.rows.map((row) => {
     const cells = m.cols.map((col) => {
-      const cell = m.cells[`${row.id}:${col.id}`];
-      const cls = cell && cell.solvable && Number.isFinite(cell.lifetimeCostMid) && cell.lifetimeCostMid === colBest[col.id] ? ' class="matrix-best"' : "";
+      const key = `${row.id}:${col.id}`;
+      const cell = m.cells[key];
+      const bestCls = cell && cell.solvable && Number.isFinite(cell.lifetimeCostMid) && cell.lifetimeCostMid === colBest[col.id] ? " matrix-best" : "";
+      const selCls = selectable && selKey === "matrix:" + key ? " matrix-sel" : "";
+      const cls = (bestCls || selCls) ? ` class="${(bestCls + selCls).trim()}"` : "";
+      const clickable = selectable
+        ? ` data-sel="${key}" role="button" tabindex="0" aria-label="Select ${row.label} at ${col.label}" style="cursor:pointer;"`
+        : "";
       if (!cell || !cell.solvable) {
         return `<td${cls}><span style="color:var(--text-muted);">not practical here</span></td>`;
       }
-      const rel = p.mode === "offgrid"
-        ? `${fmt(cell.unmetHoursPerYear)} h/yr unmet`
-        : `-${cell.cutPct}% bill`;
+      let rel;
+      if (p.mode === "offgrid") rel = `${fmt(cell.unmetHoursPerYear)} h/yr unmet`;
+      else if (col.id === "custom" && surplusCol) rel = "bill gone + surplus";
+      else rel = `-${cell.cutPct}% bill`;
       const lcoe = Number.isFinite(cell.lcoeUsdPerKwh)
         ? `<span style="color:var(--text-muted);">\u00B7 ${energyRate(cell.lcoeUsdPerKwh)}</span>` : "";
-      return `<td${cls}>${cell.pvKw} kW PV<br>${cell.battKwh > 0 ? fmt(cell.battKwh) + " kWh batt" : "no battery"}` +
+      return `<td${cls}${clickable}>${cell.pvKw} kW PV<br>${cell.battKwh > 0 ? fmt(cell.battKwh) + " kWh batt" : "no battery"}` +
         `<br>~${moneyRange(cell.costLo, cell.costHi)}<br><strong>20-yr ~${money(cell.lifetimeCostMid)}</strong><br>${rel} ${lcoe}</td>`;
     }).join("");
     return `<tr><th>${row.label}</th>${cells}</tr>`;
   }).join("");
+  const hint = p.mode === "gridtie"
+    ? "Green outline = lowest true 20-year cost in that column. Click any cell to make it the system shown in every chart, the hardware list, and the export figures below. The \u201Cyour target\u201D column follows the slider."
+    : "Green outline = lowest true 20-year cost in that column (every bank swap counted). \"Unmet\" hours are covered by a generator or the grid.";
   return `<div class="matrix-wrap"><table class="matrix-table"><thead><tr><th>Battery \u2193 \u00B7 Goal \u2192</th>${head}</tr></thead><tbody>${body}</tbody></table></div>` +
-    `<p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;line-height:1.55;">Green outline = lowest true 20-year cost in that column (every bank swap counted). "Unmet" hours are covered by a generator or the grid.</p>`;
+    `<p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;line-height:1.55;">${hint}</p>`;
 }
 
 function renderMatrix(p) {
@@ -1638,6 +1926,122 @@ function renderMatrix(p) {
   if (!grid) return;
   grid.style.display = "block";
   grid.innerHTML = p.matrix ? matrixHtml(p) : "";
+}
+
+// ── Selected system ─────────────────────────────────────────────────────────
+// One system drives everything below the run (charts, hardware list, export
+// figures, share link, print). This resolves whichever the visitor picked
+// last; it falls back to the recommendation.
+function resolveSelected(p) {
+  if (!p) return null;
+  const key = selectedKey || "best";
+  if (key === "focus" && p.focusSystem) return p.focusSystem;
+  if (key === "custom") {
+    const c = p.customCut;
+    return (c && c.best) || (c && c.entries && c.entries[0]) || null;
+  }
+  if (key.indexOf("matrix:") === 0 && p.matrix) {
+    const cell = p.matrix.cells[key.slice("matrix:".length)];
+    if (cell && cell.solvable) return cell;
+  }
+  return p.best || (p.customCut && p.customCut.best) || null;
+}
+
+// The tooltip/table rows for ANY selectable system — full money story, export
+// economics and 20-year picture. Shared by the curve-point modal and the
+// selected-system banner.
+function entryDetailRows(p, e) {
+  const rows = [];
+  const chemLabel = e.chemLabel
+    || (p.matrix && p.matrix.rows && p.matrix.rows.find((r) => r.id === e.chemistry)?.label)
+    || e.chemistry
+    || "—";
+  rows.push(["Chemistry", chemLabel]);
+  rows.push(["Solar array", `${e.pvKw} kW`]);
+  rows.push(["Battery (usable)", e.battKwh > 0 ? `${fmt(e.battKwh)} kWh${e.battNameplateKwh ? ` — ~${fmt(e.battNameplateKwh)} nameplate` : ""}` : "none needed"]);
+  const foot = footprintText(e.pvKw);
+  if (foot) rows.push(["Footprint", foot]);
+  if (e.cutPct !== undefined && e.cutPct !== null) {
+    rows.push([p.mode === "gridtie" ? "Bill cut" : "Coverage", p.mode === "gridtie" ? `-${e.cutPct}%` : `${e.cutPct}%`]);
+  }
+  rows.push(["Component cost", `~${moneyRange(e.costLo, e.costHi)}`]);
+  if (e.billAfterMonthlyUsd !== null && e.billAfterMonthlyUsd !== undefined) {
+    rows.push(["Bill after solar", `~${money(e.billAfterMonthlyUsd)}/mo`]);
+  }
+  if (e.importedKwhPerYear !== undefined && e.importedKwhPerYear !== null) {
+    rows.push(["Imported from grid", `${fmt(e.importedKwhPerYear)} kWh/yr`]);
+  }
+  if (e.clippedKwhPerYear !== undefined && e.clippedKwhPerYear !== null) {
+    const feed = e.exportValueAnnualUsd > 0 ? ` · feed-in +${money(e.exportValueAnnualUsd)}/yr` : " · enter a feed-in credit to value it";
+    rows.push([p.mode === "gridtie" ? "Surplus clipped" : "Sun clipped", `${fmt(e.clippedKwhPerYear)} kWh/yr${feed}`]);
+  }
+  if (e.paybackYearsLo !== null && e.paybackYearsLo !== undefined) {
+    rows.push(["Pays back its first cost in", fmtPaybackRange(e.paybackYearsLo, e.paybackYearsHi)]);
+  }
+  if (typeof e.trueBreakEvenYear === "number") {
+    rows.push(["True 20-yr break-even", `Year ${e.trueBreakEvenYear}`]);
+  } else if (e.trueBreakEvenYear === null && e.replacementsHorizon > 0) {
+    rows.push(["True 20-yr break-even", "never — swaps outpace savings"]);
+  }
+  if (e.replacementsHorizon > 0 && e.battKwh > 0) {
+    rows.push(["Battery swaps over 20 yr", `~${e.replacementsHorizon}x — adds ~${money(e.swapsAndLaborUsd)} with labor`]);
+  }
+  if (Number.isFinite(e.lifetimeCostMid)) {
+    rows.push(["Total 20-year cost", `~${money(e.lifetimeCostMid)}`]);
+  }
+  if (Number.isFinite(e.lcoeUsdPerKwh)) {
+    rows.push(["Your power cost", energyRate(e.lcoeUsdPerKwh) + gridRate(p.tariff)]);
+  }
+  if (e.unmetHoursPerYear !== undefined && e.unmetHoursPerYear !== null) {
+    rows.push(["Unmet hours", `${fmt(e.unmetHoursPerYear)} h/yr · longest gap ${fmt(e.longestGapHours ?? 0)} h`]);
+  }
+  return rows;
+}
+
+// Opening the full-analysis modal for a chosen system (curve point, matrix
+// cell, etc). ``adopt`` makes the primary button re-run the engine with this
+// EXACT system so the live charts and hardware list follow it.
+function showSystemModal(p, entry, adopt) {
+  const overlay = $("systemModal");
+  if (!overlay) return;
+  const body = $("systemModalBody");
+  const chemLabel = entry.chemLabel
+    || (p.matrix && p.matrix.rows && p.matrix.rows.find((r) => r.id === entry.chemistry)?.label)
+    || entry.chemistry
+    || "system";
+  const headPct = entry.cutPct !== undefined && entry.cutPct !== null ? ` — ${entry.cutPct}%` : "";
+  const title = $("systemModalTitle");
+  if (title) {
+    title.textContent = `${p.mode === "gridtie" ? "Full bill-cut analysis" : "Full system analysis"}${headPct}: ${chemLabel}`;
+  }
+  if (body) {
+    body.innerHTML = "";
+    const card = el("div", { class: "bom-card" });
+    card.style.borderColor = "var(--border-glow)";
+    appendRows(card, entryDetailRows(p, entry));
+    body.appendChild(card);
+    body.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.7rem;line-height:1.5;" },
+      "Every figure is computed from the same hourly weather simulation as the cards — nothing here is estimated by eye." +
+      (p.tariff ? "" : " Enter your grid price above to see payback vs. your bill.")));
+  }
+  const adoptBtn = $("systemModalUse");
+  if (adoptBtn) {
+    adoptBtn.style.display = adopt ? "inline-flex" : "none";
+    adoptBtn._adopt = () => {
+      if (!adopt) return;
+      pendingFocus = { pvKw: entry.pvKw, battKwh: entry.battKwh, chemistry: entry.chemistry };
+      closeSystemModal();
+      run();
+    };
+  }
+  overlay.style.display = "flex";
+  const closer = $("btnCloseSystem");
+  if (closer) closer.focus();
+}
+
+function closeSystemModal() {
+  const overlay = $("systemModal");
+  if (overlay) overlay.style.display = "none";
 }
 
 // ── Hardware list panel (BOM) ────────────────────────────────────────────────
@@ -1648,14 +2052,16 @@ function currentPanelWatts() {
 }
 
 function buildFocusBom() {
-  const f = lastPayload && lastPayload.focus;
+  const p = lastPayload;
+  // The hardware list follows the SELECTED system, not just the default pick.
+  const f = resolveSelected(p) || (p && p.focus);
   if (!f) return null;
   const watts = currentPanelWatts();
   return buildBom({
     pvKw: f.pvKw,
     battNameplateKwh: f.battNameplateKwh,
     chemistry: f.chemistry,
-    peakLoadW: f.peakLoadW,
+    peakLoadW: f.peakLoadW || (p.focus && p.focus.peakLoadW) || Math.round((p.dailyKwh || 0) * 1000 / 24),
     panelWatts: watts,
   });
 }
@@ -1677,7 +2083,7 @@ function renderBomPanel() {
     body.appendChild(card);
   };
 
-  const f = lastPayload.focus;
+  const f = resolveSelected(lastPayload) || lastPayload.focus;
   section("Panels", [
     ["Array", `${f.pvKw} kW \u2192 ${bom.panels.count} \u00D7 ${bom.panels.panelWatts} W = ${bom.panels.kwActual} kW`],
     ["Space needed", `about ${bom.panels.areaM2} m\u00B2 of roof or ground (mounting gaps included)`],
@@ -1996,21 +2402,27 @@ function renderTierCards(p) {
 
 }
 
-function renderTargetCards(p) {
+function renderTargetCards(p, extraTargets = []) {
 
   const grid = $("tierResults");
 
   grid.innerHTML = "";
 
-  for (const t of p.targets) {
+  for (const t of (p.targets || []).concat(extraTargets)) {
+
+    const isCustom = t.id === "custom";
 
     const card = el("div", { class: "bom-card" });
 
-    card.style.borderColor = t.id === "cut80" ? "var(--border-glow)" : "var(--border-card)";
+    card.style.borderColor = (isCustom || t.id === "cut80") ? "var(--border-glow)" : "var(--border-card)";
 
-    card.appendChild(el("div", { class: "bom-badge" }, t.solvable ? `Bill -${t.cutPct}%` : "Not reachable"));
+    card.appendChild(el("div", { class: "bom-badge" }, t.solvable
 
-    card.appendChild(el("h3", {}, t.label));
+      ? (isCustom ? `Your target \u2014 bill -${t.cutPct}%` : `Bill -${t.cutPct}%`)
+
+      : "Not reachable"));
+
+    card.appendChild(el("h3", {}, isCustom ? `Your ~${Math.round((t.minFraction || 1) * 100)}% target` : t.label));
 
     if (!t.solvable) {
 
@@ -2132,19 +2544,24 @@ function appendRows(card, rows) {
  * a quiet mini-strip (it is constant per year, so it stays subtle), and a
  * bold HTML callout above the chart carries the headline number.
  */
-function drawCumCostChart(p) {
+function drawCumCostChart(p, chosenEntry = null) {
   const wrap = $("cumCostChartWrap");
   const canvas = $("cumCostCanvas");
   if (!wrap || !canvas) return;
 
-  // Pick the system the chart talks about: the recommended one, else the
-  // focus system, else the first solvable entry with a series.
+  // Pick the system the chart talks about: the selected one, else the
+  // recommended one, else the focus system, else the first solvable entry.
   const pool = (p.auto && p.auto.length) ? p.auto
     : (p.targets && p.targets.length) ? p.targets
     : (p.tiers || []);
-  const entry = p.best || (p.focus && pool.find((x) => x &&
-    x.chemistry === p.focus.chemistry && x.pvKw === p.focus.pvKw && x.battKwh === p.focus.battKwh)) ||
-    (pool || []).find((x) => x && x.solvable) || null;
+  // The chart follows the selected system when one is chosen and it carries a
+  // comparable series (matrix cells, custom cuts and adopted curve points all
+  // do); otherwise fall back to the recommendation logic.
+  const entry = (chosenEntry && chosenEntry.cumCostSeries && chosenEntry.cumCostSeries.grid && chosenEntry.cumCostSeries.grid.length)
+    ? chosenEntry
+    : (p.best || (p.focus && pool.find((x) => x &&
+        x.chemistry === p.focus.chemistry && x.pvKw === p.focus.pvKw && x.battKwh === p.focus.battKwh)) ||
+      (pool || []).find((x) => x && x.solvable) || null);
   const seriesEntry = entry?.cumCostSeries?.grid?.length && entry?.cumCostSeries?.solar?.length
     ? entry
     : null;
@@ -2373,6 +2790,42 @@ function drawCumCostChart(p) {
  * working range lives in the bottom half of its hardware; lithium/sodium
  * use nearly all of theirs.
  */
+/**
+ * SOC reliability chart for ONE selected system: the same daily min/max band
+ * machinery as the multi-tier chart, from the entry's nameplate bands.
+ */
+function drawSocChartForEntry(p, entry) {
+  const wrap = $("socChartWrap");
+  if (!wrap) return;
+  const b = entry && entry.socNameplatePct;
+  if (!b || !b.min || !b.min.length) { wrap.style.display = "none"; return; }
+  const days = b.min.length;
+  let emptyDays = 0, fullDays = 0, minPct = 100;
+  for (let i = 0; i < days; i++) {
+    if (b.min[i] < 5) emptyDays++;
+    if (b.max[i] >= 99.5) fullDays++;
+    if (b.min[i] < minPct) minPct = b.min[i];
+  }
+  const tier = {
+    id: entry.chemistry + ":selected",
+    chemLabel: entry.chemLabel || entry.chemistry,
+    color: TIER_COLORS["auto-" + entry.chemistry] || "#00e699",
+    dailyMin: b.min,
+    dailyMax: b.max,
+    minPct: Math.round(minPct),
+    emptyDays, fullDays, totalDays: days,
+  };
+  const hist = {
+    kind: "gridtie",
+    startYear: p.history && p.history.startYear,
+    endYear: p.history && p.history.endYear,
+    days,
+    pvDaily: p.history && p.history.pvDaily,
+    tiers: [tier],
+  };
+  drawSocChart(hist, tier.chemLabel);
+}
+
 function drawAutoChart(p) {
 
   const wrap = $("socChartWrap");
@@ -2604,7 +3057,7 @@ function drawAutoChart(p) {
 
 // Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
 
-const PAYLOAD_CONTRACT = 7;
+const PAYLOAD_CONTRACT = 8;
 
 // -- Plausibility frontier ---------------------------------------------------
 
@@ -2662,7 +3115,17 @@ function renderFrontierPanel(p) {
 
     // Clicking a point re-renders the panel (chart + table) around that pick.
 
-    onSelect: (i) => { frontierSelected = i; renderFrontierPanel(lastPayload); },
+    onSelect: (i) => {
+      frontierSelected = i;
+      renderFrontierPanel(lastPayload);
+      // Clicking a curve point opens the FULL analysis for that exact price
+      // point, with "Use this system" to adopt it into every downstream chart.
+      const f = lastPayload && lastPayload.frontier;
+      const pt = f && f.points[i];
+      if (pt && pt.detail) {
+        showSystemModal(lastPayload, { ...pt.detail, chemistry: pt.detail.chemistry || f.chemistry }, true);
+      }
+    },
 
   };
 
@@ -2756,13 +3219,25 @@ function renderResults(p) {
 
   }
 
+  // The cut slider (grid-tie only) lives in the results panel.
+  const cutRow = $("cutSliderRow");
+  if (cutRow) cutRow.style.display = isGT ? "block" : "none";
+  syncCutLabel();
+
+  // Drop a stale selection that no longer exists in this payload.
+  const selKeyV = selectedKey || "best";
+  if (selKeyV !== "best" && selKeyV !== "focus" && selKeyV !== "custom" && selKeyV.indexOf("matrix:") !== 0) selectedKey = "best";
+  if (selectedKey === "focus" && !p.focusSystem) selectedKey = "best";
+  if (selectedKey === "custom" && !(p.customCut && p.customCut.entries && p.customCut.entries.length)) selectedKey = "best";
+  if (selectedKey.indexOf("matrix:") === 0 && !(p.matrix && p.matrix.cells[selectedKey.slice(7)])) selectedKey = "best";
+
   renderMoneyBar(p);
 
   const hasAuto = !!(p.auto && p.auto.length);
 
   const ladder = $("resultLadder");
 
-  if (ladder) ladder.style.display = hasAuto ? "flex" : "none";
+  if (ladder) ladder.style.display = (hasAuto && !isGT) ? "flex" : "none";
 
   const bpWrap = $("bestPickWrap");
 
@@ -2774,17 +3249,31 @@ function renderResults(p) {
 
   if (hasAuto) {
 
-    syncLadderTabs();
+    if (isGT) {
 
-    if (resultLevel === "matrix") renderMatrix(p);
+      // Grid-tie auto: banner + the full 3×3 matrix (plus the slider's
 
-    else if (resultLevel === "compare") renderAutoCards(p);
+      // "your target" column) as the main view — no ladder needed.
 
-    else renderBestPick(p);
+      renderBestPick(p);
+
+      renderMatrix(p);
+
+    } else {
+
+      syncLadderTabs();
+
+      if (resultLevel === "matrix") renderMatrix(p);
+
+      else if (resultLevel === "compare") renderAutoCards(p);
+
+      else renderBestPick(p);
+
+    }
 
   }
 
-  else if (isGT) renderTargetCards(p);
+  else if (isGT) renderTargetCards(p, p.customTarget ? [p.customTarget] : []);
 
   else renderTierCards(p);
 
@@ -2928,13 +3417,27 @@ function renderResults(p) {
 
   renderFrontierPanel(p);
 
-  if (hasAuto && resultLevel !== "matrix") drawAutoChart(p);
+  // Every chart below follows the SELECTED system.
+  const sel = resolveSelected(p);
+  if (isGT && sel && sel.socNameplatePct && sel.socNameplatePct.min && sel.socNameplatePct.min.length) {
 
-  else if (!hasAuto && p.history && p.history.tiers && p.history.tiers.length) drawSocChart(p.history, p.chemLabel || "battery");
+    drawSocChartForEntry(p, sel);
 
-  else $("socChartWrap").style.display = "none";
+  } else if (hasAuto && !isGT && resultLevel !== "matrix") {
 
-  drawCumCostChart(p);
+    drawAutoChart(p);
+
+  } else if (!hasAuto && p.history && p.history.tiers && p.history.tiers.length) {
+
+    drawSocChart(p.history, p.chemLabel || "battery");
+
+  } else {
+
+    $("socChartWrap").style.display = "none";
+
+  }
+
+  drawCumCostChart(p, sel);
 
 }
 
@@ -2996,7 +3499,10 @@ function updateShareHash(p, inp) {
 
     if (inp.chemistry === "auto" && inp.mode !== "gridtie" && $("autoTier")) o.at = $("autoTier").value;
 
-    if (inp.chemistry === "auto" && inp.mode === "gridtie" && $("autoTarget")) o.ac = $("autoTarget").value;
+    if (inp.mode === "gridtie") {
+      o.cc = inp.customCut;
+      o.sel = selectedKey;
+    }
 
     if (inp.tariff) o.tf = inp.tariff;
 
@@ -3052,7 +3558,16 @@ function restoreFromShare() {
 
   if (o.at && ["tier100", "tier99", "tier95"].includes(o.at) && $("autoTier")) $("autoTier").value = o.at;
 
-  if (o.ac && ["cut60", "cut80", "cut95"].includes(o.ac) && $("autoTarget")) $("autoTarget").value = o.ac;
+  if (Number.isFinite(o.cc) && o.cc >= 0.01 && o.cc <= 1.11) {
+    customCutFraction = o.cc;
+    const cutIn = $("cutSlider");
+    if (cutIn) cutIn.value = String(Math.round(o.cc * 100));
+    syncCutLabel();
+  }
+
+  if (typeof o.sel === "string" && /^(best|focus|custom|matrix:[a-z]+:(cut60|cut80|cut95|custom))$/.test(o.sel)) {
+    selectedKey = o.sel;
+  }
 
   if (Number.isFinite(o.xr) && o.xr > 0 && $("exportRate")) {
 
@@ -3188,14 +3703,15 @@ function populatePrintSheet(p, inp) {
 
   }
 
-  // Hardware summary (focus system) + full options matrix for the printout.
+  // Hardware summary (SELECTED system) + full options matrix for the printout.
   let hwHtml = "";
-  if (p.focus) {
+  const hwEntry = resolveSelected(p) || p.focus;
+  if (hwEntry) {
     const bom = buildBom({
-      pvKw: p.focus.pvKw,
-      battNameplateKwh: p.focus.battNameplateKwh,
-      chemistry: p.focus.chemistry,
-      peakLoadW: p.focus.peakLoadW,
+      pvKw: hwEntry.pvKw,
+      battNameplateKwh: hwEntry.battNameplateKwh,
+      chemistry: hwEntry.chemistry,
+      peakLoadW: hwEntry.peakLoadW || (p.focus && p.focus.peakLoadW) || 0,
       panelWatts: PANEL_WATTS_DEFAULT,
     });
     const hwRows = [
@@ -3217,8 +3733,11 @@ function populatePrintSheet(p, inp) {
         ["Battery cable (2 m run)", bom.cable[0].mm2 ? `${bom.cable[0].awg} copper` : `larger than ${bom.cable[0].awg}`, "pair", "2% drop + ampacity"],
       );
     }
+    const hwChemLabel = hwEntry.chemLabel
+      || (p.matrix && p.matrix.rows && p.matrix.rows.find((r) => r.id === hwEntry.chemistry)?.label)
+      || hwEntry.chemistry;
     hwHtml = `
-      <h2 style="font-size:12pt;margin:10pt 0 4pt;">Hardware list for the recommended system (${bom.chemLabel})</h2>
+      <h2 style="font-size:12pt;margin:10pt 0 4pt;">Hardware list for the selected system (${hwChemLabel})</h2>
       <table style="border-collapse:collapse;width:100%;font-size:9pt;margin-bottom:8pt;">
         <tr style="background:#eef2f7;"><th>Item</th><th>Spec</th><th>Qty</th><th>Note</th></tr>
         ${hwRows.map((r) => "<tr><td>" + r.join("</td><td>") + "</td></tr>").join("")}
@@ -3391,8 +3910,6 @@ export function initSizingUI() {
 
   $("loadMode").addEventListener("change", setLoadPanel);
 
-  $("billAmount").addEventListener("input", updateLoadReadout);
-
   $("dailyKwhInput").addEventListener("input", updateLoadReadout);
 
   $("btnGeoLocate").addEventListener("click", locateMe);
@@ -3476,17 +3993,38 @@ export function initSizingUI() {
 
   if ($("systemGoal")) $("systemGoal").addEventListener("change", () => { updateAutoRows(); });
 
-  for (const id of ["autoTier", "autoTarget"]) {
+  const autoTierNode = $("autoTier");
 
-    const elNode = $(id);
+  if (autoTierNode) autoTierNode.addEventListener("change", () => { if (lastPayload) run(); });
 
-    if (elNode) elNode.addEventListener("change", () => { if (lastPayload) run(); });
+  // Quick / Manual mode: quick hides everything except location and auto-runs.
 
-  }
+  const modeQuick = $("modeQuick");
+  const modeManual = $("modeManual");
+  const applyMode = () => setQuickMode(modeManual ? !modeManual.checked : true);
+  if (modeQuick) modeQuick.addEventListener("change", applyMode);
+  if (modeManual) modeManual.addEventListener("change", applyMode);
+
+  // Monthly-bill slider (local currency) + bill-cut slider (1–111%).
+  setupBillSlider();
+  setupCutSlider();
+
+  // Clickable grid-tie matrix cells.
+  setupMatrixSelection();
+
+  // Price-point analysis modal: "Use this system" adopts the exact system.
+  const closeSys = $("btnCloseSystem");
+  if (closeSys) closeSys.addEventListener("click", closeSystemModal);
+  const useSys = $("systemModalUse");
+  if (useSys) useSys.addEventListener("click", () => { const b = $("systemModalUse"); if (b && b._adopt) b._adopt(); });
 
   updateAutoRows();
 
   setLoadPanel();
+
+  setQuickMode(true);   // Auto-run is the default experience
+
+  syncBillSlider();
 
   // Interface language (auto-detected, user-overridable in the footer).
 

@@ -8,7 +8,7 @@
 
 // Message out: { type: "ok", payload } | { type: "error", message }
 
-import { runSizing } from "./run.js?v=20260830v";
+import { runSizing } from "./run.js?v=20260831a";
 
 
 
@@ -22,11 +22,11 @@ self.onmessage = async (ev) => {
 
     const payload = await runSizing(msg);
 
-    self.postMessage({ type: "ok", payload });
+    self.postMessage({ type: "ok", seq: msg.seq, payload });
 
   } catch (e) {
 
-    self.postMessage({ type: "error", message: String(e && e.message || e) });
+    self.postMessage({ type: "error", seq: msg.seq, message: String(e && e.message || e) });
 
   }
 

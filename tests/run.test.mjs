@@ -26,7 +26,7 @@ const MSG = {
 test("off-grid AUTO: every field the renderer reads exists and is sane", async () => {
   const p = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid" }, { fetchWeather: fakeWeather });
   assert.equal(p.mode, "offgrid");
-  assert.equal(p.contract, 7, "payload carries current contract version");
+  assert.equal(p.contract, 8, "payload carries current contract version");
   assert.ok(Array.isArray(p.auto) && p.auto.length === 3, "three chemistry cards");
   assert.equal(p.history.kind, "auto");
   assert.equal(p.tiers.length, 0);
@@ -189,13 +189,16 @@ test("off-grid AUTO carries a full 3×3 options matrix with sane cells", async (
 test("grid-tie AUTO carries a full 3×3 matrix honoring each cut target", async () => {
   const p = await runSizing({ ...MSG, chemistry: "auto", mode: "gridtie" }, { fetchWeather: fakeWeather });
   assert.ok(p.matrix && p.matrix.kind === "gridtie");
+  assert.ok(p.customCut && p.customCut.fraction === 0.8, "payload exposes the 1–111% slider target");
+  assert.ok(p.matrix.cols.some((c) => c.custom), "matrix includes the clickable 'your target' column");
   const minBy = { cut60: 59, cut80: 79, cut95: 94 };
   for (const row of p.matrix.rows) {
     for (const col of p.matrix.cols) {
       const cell = p.matrix.cells[`${row.id}:${col.id}`];
       assert.ok(cell, `cell ${row.id}:${col.id} exists`);
       if (!cell.solvable) continue;
-      assert.ok(cell.cutPct >= minBy[col.id], `${row.id}@${col.id} cut ${cell.cutPct}% meets ${col.id}`);
+      const need = col.custom ? Math.round(p.customCut.fraction * 100) - 2 : minBy[col.id];
+      assert.ok(cell.cutPct >= need, `${row.id}@${col.id} cut ${cell.cutPct}% meets ${col.id}`);
     }
   }
 });
