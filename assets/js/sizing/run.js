@@ -11,7 +11,8 @@ import {
   RELIABILITY_TIERS, BILL_TARGETS,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER, capacityScaleFor,
 } from "./engine.js?v=20260831a";
-import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260830b";
+
+import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260831f";
 import { buildFrontier } from "./frontier.js?v=20260830b";
 import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js?v=20260830o";
 import {

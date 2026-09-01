@@ -14,6 +14,11 @@
 
 export const POWER_HOURLY_URL = "https://power.larc.nasa.gov/api/temporal/hourly/point";
 
+// A satellite request that hangs must never hold the sizing hostage: after
+// this long with no answer, abort and let the caller fall back to bundled
+// typical-year weather for the nearest city (with an honest offline flag).
+export const FETCH_TIMEOUT_MS = 45000;
+
 /**
  * Fetch N years of hourly GHI + temperature ending at the last complete year.
  * @param {object} opts
@@ -23,7 +28,7 @@ export const POWER_HOURLY_URL = "https://power.larc.nasa.gov/api/temporal/hourly
  * @param {(url:string)=>Promise<Response>} [opts.fetchImpl]
  * @returns {{hours: Array<{ghi:number,tAmb:number}>, meta: object}}
  */
-export async function fetchHourlySeries({ latitude, longitude, years = 5, fetchImpl = fetch }) {
+export async function fetchHourlySeries({ latitude, longitude, years = 5, fetchImpl = fetch, timeoutMs = FETCH_TIMEOUT_MS }) {
   // NASA POWER hourly solar data begins 2001-01-01. End at Dec 31 of last
   // complete year so every request covers full years (fair tier statistics).
   const now = new Date();
@@ -35,7 +40,20 @@ export async function fetchHourlySeries({ latitude, longitude, years = 5, fetchI
   for (let y = startYear; y <= endYear; y += 2) {
     const yEnd = Math.min(y + 1, endYear);
     const url = buildUrl(latitude, longitude, `${y}0101`, `${yEnd}1231`);
-    const res = await fetchImpl(url);
+
+    const ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
+    let res;
+    try {
+      res = await fetchImpl(url, ctrl ? { signal: ctrl.signal } : undefined);
+    } catch (e) {
+      if (ctrl && ctrl.signal.aborted) {
+        throw new Error("NASA POWER request timed out — using nearest-city typical-year weather instead.");
+      }
+      throw e;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
     if (!res.ok) throw new Error(`NASA POWER request failed (${res.status})`);
     const json = await res.json();
     hours.push(...parseHourly(json));
