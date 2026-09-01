@@ -1068,6 +1068,12 @@ function setupCutSlider() {
   slider.addEventListener("input", () => {
     customCutFraction = (parseInt(slider.value, 10) || 1) / 100;
     syncCutLabel();
+    // Drag the blue dot along the curve live, so the slider and the
+    // highlighted point move together while the visitor is still dragging.
+    if (lastPayload && lastPayload.mode === "gridtie") {
+      frontierSelected = null;
+      renderFrontierPanel(lastPayload);
+    }
   });
 
   slider.addEventListener("change", () => {
@@ -3076,6 +3082,22 @@ const PAYLOAD_CONTRACT = 8;
 
 // expensive, or impossible where they live.
 
+// Which curve point the blue dot defaults to when the visitor hasn't clicked
+// one: for grid-tie it's the point nearest the bill-cut slider's %, so the
+// slider and the highlighted point move together; otherwise the chart falls
+// back to its marker (the recommended system).
+function frontierDefaultSelection(f) {
+  if (!f || !Array.isArray(f.points) || !f.points.length) return undefined;
+  if (!(lastPayload && lastPayload.mode === "gridtie")) return undefined;
+  const target = Math.min(111, Math.max(1, Math.round(customCutFraction * 100)));
+  let best = 0, gap = Infinity;
+  f.points.forEach((pt, i) => {
+    const g = Math.abs((pt.outcomePct || 0) - target);
+    if (g < gap) { gap = g; best = i; }
+  });
+  return best;
+}
+
 function renderFrontierPanel(p) {
 
   const wrap = $("frontierWrap");
@@ -3116,11 +3138,18 @@ function renderFrontierPanel(p) {
 
   wrap.style.display = "block";
 
+  // One source of truth for the blue dot: the visitor's click wins, but with
+  // no click the dot sits on the curve point nearest the bill-cut slider
+  // (grid-tie) — so the slider, the matrix "your target" column, and the
+  // highlighted curve point always agree.
+
+  const defaultSel = frontierDefaultSelection(f);
+
   const opts = {
 
     t, money, tableHost: $("frontierTable"),
 
-    selected: frontierSelected ?? undefined,
+    selected: frontierSelected ?? defaultSel,
 
     // Clicking a point re-renders the panel (chart + table) around that pick.
 
@@ -3133,6 +3162,19 @@ function renderFrontierPanel(p) {
       const pt = f && f.points[i];
       if (pt && pt.detail) {
         showSystemModal(lastPayload, { ...pt.detail, chemistry: pt.detail.chemistry || f.chemistry }, true);
+      }
+      // Unify with the bill-cut slider: choosing a point on the curve IS
+      // choosing your cut %. Snap the slider (and the engine's "your target"
+      // matrix column) to this point and re-run, so the matrix, charts and
+      // BOM all follow the same number.
+      const p = lastPayload;
+      if (p && p.mode === "gridtie" && pt && Number.isFinite(pt.outcomePct)) {
+        const pct = Math.min(111, Math.max(1, Math.round(pt.outcomePct)));
+        customCutFraction = pct / 100;
+        const slider = $("cutSlider");
+        if (slider) slider.value = String(pct);
+        syncCutLabel();
+        scheduleRun();
       }
     },
 
