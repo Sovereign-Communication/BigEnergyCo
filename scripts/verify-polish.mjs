@@ -79,7 +79,36 @@ check("AGM tier100 true break-even later-or-never",
   t100.trueBreakEvenYear === null ? true : t100.trueBreakEvenYear >= Math.round(t100.paybackYearsLo));
 
 // ── Pass 2: full functional matrix ─────────────────────────────────────────
-check("contract version pinned (8) on every payload shape", [auto99, auto100, gtAuto60, spec].every((p) => p.contract === 8));
+check("contract version pinned (9) on every payload shape", [auto99, auto100, gtAuto60, spec].every((p) => p.contract === 9));
+
+// The headline savings math: a small cut can never out-save a big one. This
+// used to invert (a 25% cut "saved" more than 99% because the residual bill
+// never appeared) — the residual bill must sit on the solar line.
+const runLfpGt = async (cc) => (await runSizing({ ...MSG, chemistry: "lfp", mode: "gridtie", customCut: cc }, { fetchWeather: fakeWeather })).customTarget.cumCostSeries;
+const saved = (cum) => (cum ? cum.grid[19] - cum.solar[19] : null);
+const s25 = saved(await runLfpGt(0.25));
+const s80 = saved(await runLfpGt(0.8));
+const s99 = saved(await runLfpGt(0.99));
+check(`honest savings ordering: 25% ($${s25}) < 80% ($${s80}) < 99% ($${s99}) — never inverted`,
+  s25 !== null && s80 !== null && s99 !== null && s25 < s80 && s80 < s99);
+
+// Every payload shape the renderers read must carry the cumulative series so
+// the "what does solar really save you" panel never dead-ends.
+check("offgrid AUTO entries carry the 20-yr cumulative series",
+  auto99.auto.every((a) => a.cumCostSeries && a.cumCostSeries.grid.length === 20 && a.cumCostSeries.solar.length === 20));
+check("curve-point details are selection-complete (series, hardware, label)",
+  gtAuto60.frontier.points.every((pt) => pt.detail &&
+    pt.detail.cumCostSeries && pt.detail.chemLabel &&
+    Number.isFinite(pt.detail.battNameplateKwh) && Number.isFinite(pt.detail.servedKwhPerYear)));
+
+// The incremental slider slice must EXACTLY reproduce the full-run custom
+// column (same inputs, same cut) — the background patch can never drift.
+const slice = await runSizing({ ...MSG, chemistry: "auto", mode: "gridtie", customCut: 0.55, incrementalCut: true }, { fetchWeather: fakeWeather });
+const full55 = await runSizing({ ...MSG, chemistry: "auto", mode: "gridtie", customCut: 0.55 }, { fetchWeather: fakeWeather });
+check(`incremental cut patch matches the full engine (${Object.keys(slice.cells).length} cells)`, ["naion", "lfp", "agm"].every((c) => {
+  const a = slice.cells[c + ":custom"], b = full55.matrix.cells[c + ":custom"];
+  return a && b && a.pvKw === b.pvKw && a.battKwh === b.battKwh && a.lifetimeCostMid === b.lifetimeCostMid;
+}));
 
 // specific grid-tie with feed-in: export value + break-even coexist
 const gtSpec = await runSizing({ ...MSG, chemistry: "lfp", mode: "gridtie", exportRate: 0.10 }, { fetchWeather: fakeWeather });
@@ -99,7 +128,7 @@ try {
   globalThis.fetch = realFetch;
 }
 check("offline fallback engages + flags itself", offline.meta.offline === true && !!offline.meta.offlineCity);
-check("offline payload still meets contract", offline.contract === 8 && offline.auto.length >= 2);
+check("offline payload still meets contract", offline.contract === 9 && offline.auto.length >= 2);
 check("offline results carry honest labeling", offline.assumptions.offline === true);
 
 // sodium-specific off-grid: LFP-settings reality visible in numbers

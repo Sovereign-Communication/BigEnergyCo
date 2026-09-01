@@ -71,3 +71,33 @@ test("cumulative series: null for missing or negative savings", () => {
   assert.equal(cumulativeCostSeries({ capexMidUsd: 2400, annualSavingsUsd: -1 }), null);
   assert.equal(cumulativeCostSeries({ capexMidUsd: null, annualSavingsUsd: 200 }), null);
 });
+
+test("cumulative series: the residual bill stays on the solar line (honest savings)", () => {
+  // A system that displaces only ~25% of a $10,000/yr bill must NOT show the
+  // full 20-year bill as savings. grid line = full spend (displaced + residual);
+  // solar line = capex + swaps + the residual the household keeps paying.
+  const s = cumulativeCostSeries({
+    capexMidUsd: 5000, annualSavingsUsd: 2500, residualAnnualUsd: 7500,
+    swapsAndLaborTotalUsd: 1000, replacements: 1, batteryLifeYears: 12,
+  });
+  // grid[y] = y × (annualSavingsUsd + residualAnnualUsd) = y × full bill
+  assert.equal(s.grid[0], 10000);
+  assert.equal(s.grid[19], 200000);
+  // solar[y] = capex + (y residuals accumulated) + swap at its due year
+  assert.equal(s.solar[0], 12500);
+  assert.equal(s.solar[19], 5000 + 20 * 7500 + 1000);
+  // The wedge IS the honest 20-year savings: 20×displaced − capex − swaps.
+  assert.equal(s.grid[19] - s.solar[19], 20 * 2500 - 5000 - 1000);
+  // Crossing still matches trueBreakEvenYear (which uses displaced-only).
+  const be = trueBreakEvenYear({
+    capexMidUsd: 5000, annualSavingsUsd: 2500,
+    swapsAndLaborTotalUsd: 1000, replacements: 1, batteryLifeYears: 12,
+  });
+  const crossYr = s.grid.findIndex((g, i) => g >= s.solar[i]) + 1;
+  assert.equal(crossYr, be, "chart crossing equals break-even row with residual counted");
+});
+
+test("cumulative series: null when residual is missing/negative", () => {
+  assert.equal(cumulativeCostSeries({ capexMidUsd: 2400, annualSavingsUsd: 200, residualAnnualUsd: -1 }), null);
+  assert.equal(cumulativeCostSeries({ capexMidUsd: 2400, annualSavingsUsd: 200, residualAnnualUsd: NaN }), null);
+});

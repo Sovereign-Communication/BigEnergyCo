@@ -26,7 +26,7 @@ const MSG = {
 test("off-grid AUTO: every field the renderer reads exists and is sane", async () => {
   const p = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid" }, { fetchWeather: fakeWeather });
   assert.equal(p.mode, "offgrid");
-  assert.equal(p.contract, 8, "payload carries current contract version");
+  assert.equal(p.contract, 9, "payload carries current contract version");
   assert.ok(Array.isArray(p.auto) && p.auto.length === 3, "three chemistry cards");
   assert.equal(p.history.kind, "auto");
   assert.equal(p.tiers.length, 0);
@@ -237,4 +237,71 @@ test("single-chemistry runs expose focus (rep tier/target) but no best/matrix", 
   // Impossible load: focus degrades to null without crashing
   const bad = await runSizing({ ...MSG, chemistry: "lfp", mode: "offgrid", dailyKwh: 400 }, { fetchWeather: fakeWeather });
   assert.equal(bad.focus, null);
+});
+
+test("GATE: a bigger bill cut can never show SMALLER 20-year savings (residual-bill sanity)", async () => {
+  // Regression: the cumulative chart used to credit a small system with the
+  // ENTIRE 20-year bill while its residual bill never appeared on the solar
+  // line — so a 25% cut \"saved\" more than a 99% cut. The residual bill must
+  // sit on the solar line, making honest ordering emerge.
+  const runAt = async (cc) => (await runSizing({ ...MSG, chemistry: "lfp", mode: "gridtie", customCut: cc }, { fetchWeather: fakeWeather })).customTarget.cumCostSeries;
+  const saved20 = (cum) => { assert.ok(cum && cum.grid.length === 20, "series present"); return cum.grid[19] - cum.solar[19]; };
+  const s25 = saved20(await runAt(0.25));
+  const s80 = saved20(await runAt(0.8));
+  const s99 = saved20(await runAt(0.99));
+  assert.ok(s25 < s80 && s80 < s99, `savings must rise with cut (25%: ${s25}, 80%: ${s80}, 99%: ${s99})`);
+  // The grid line is the full bill, once: 20 × annual spend (within rounding).
+  const p = await runSizing({ ...MSG, chemistry: "lfp", mode: "gridtie", customCut: 0.8 }, { fetchWeather: fakeWeather });
+  const g19 = p.customTarget.cumCostSeries.grid[19];
+  assert.ok(Math.abs(g19 - Math.round(p.annualGridSpendUsd * 20)) <= 1, `grid line = 20×annual spend (${g19} vs ${Math.round(p.annualGridSpendUsd * 20)})`);
+  // And the wedge equals the honest truth: years × displaced bill − true system cost (> 0 at 99% on this sunny fixture).
+  assert.ok(s99 > 0, "99% cut genuinely saves money at a sunny site with a tariff");
+});
+
+test("off-grid AUTO entries carry the cumulative series the savings panel needs", async () => {
+  const p = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid" }, { fetchWeather: fakeWeather });
+  for (const a of p.auto) {
+    assert.ok(a.cumCostSeries && a.cumCostSeries.grid.length === 20 && a.cumCostSeries.solar.length === 20,
+      `${a.chemistry}: cumCostSeries present over 20 years`);
+    const crossYr = a.cumCostSeries.grid.findIndex((g, i) => g >= a.cumCostSeries.solar[i]) + 1;
+    assert.equal(crossYr, a.trueBreakEvenYear, `${a.chemistry}: chart crossing == true break-even row`);
+  }
+});
+
+test("incremental cut patch = full engine, minus the parts a cut edit cannot touch", async () => {
+  const MSG60 = { ...MSG, chemistry: "auto", mode: "gridtie", customCut: 0.6 };
+  const full = await runSizing(MSG60, { fetchWeather: fakeWeather });
+  const slice = await runSizing({ ...MSG60, incrementalCut: true, focusPvKw: 5, focusBattKwh: 9, focusChemistry: "lfp" }, { fetchWeather: fakeWeather });
+  assert.equal(slice.customCut.fraction, 0.6);
+  assert.equal(slice.customCut.entries.length, 3);
+  // No full-run baggage in a patch: it exists to be merged, not rendered alone.
+  assert.equal(slice.frontier, undefined);
+  assert.equal(slice.auto, undefined);
+  for (const chemId of ["naion", "lfp", "agm"]) {
+    const a = slice.cells[chemId + ":custom"];
+    const b = full.matrix.cells[chemId + ":custom"];
+    assert.ok(a && b, `${chemId}: both cells present`);
+    assert.equal(a.pvKw, b.pvKw, `${chemId}: pv identical (${a.pvKw} vs ${b.pvKw})`);
+    assert.equal(a.battKwh, b.battKwh, `${chemId}: battery identical`);
+    assert.equal(a.lifetimeCostMid, b.lifetimeCostMid, `${chemId}: lifetime cost identical`);
+    assert.ok(Array.isArray(a.cumCostSeries && a.cumCostSeries.grid), `${chemId}: slice cell carries the series`);
+  }
+  // Adopted-system capture: SOC bands for the exact requested system.
+  assert.ok(slice.focusSoc && slice.focusSoc.chemistry === "lfp" && slice.focusSoc.socNameplatePct,
+    "focusSoc carries capture bands for the adopted system");
+  assert.ok(slice.focusSoc.socNameplatePct.min.length > 300, "bands cover the whole period");
+});
+
+test("frontier point details are selection-complete for instant adoption", async () => {
+  const p = await runSizing({ ...MSG, chemistry: "auto", mode: "gridtie", customCut: 0.8 }, { fetchWeather: fakeWeather });
+  assert.ok(p.frontier && p.frontier.points.length >= 2);
+  for (const pt of p.frontier.points) {
+    const d = pt.detail;
+    assert.ok(d, "detail present");
+    assert.ok(d.chemistry && d.chemLabel, "chemistry identity");
+    assert.ok(Number.isFinite(d.battNameplateKwh) && Number.isFinite(d.usableDod), "hardware fields");
+    assert.ok(Number.isFinite(d.servedKwhPerYear) && Number.isFinite(d.lifetimeCostMid), "outcome fields");
+    assert.ok(d.cumCostSeries && d.cumCostSeries.grid.length === 20, "cumulative series for the savings panel");
+    assert.ok(typeof d.trueBreakEvenYear === "number" || d.trueBreakEvenYear === null, "break-even present");
+  }
 });

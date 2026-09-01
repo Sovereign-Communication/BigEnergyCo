@@ -81,19 +81,31 @@ export function exportValueUsd(clippedKwhPerYear, exportRatePerKwh) {
 /**
  * Per-year cumulative cost series over the horizon — the data behind the
  * "running cost" chart. Two lines:
- *   grid[y]  = cumulative spend if you had stayed on the grid
- *   solar[y] = cumulative TRUE solar cost (capex + first labor + every swap)
+ *   grid[y]  = cumulative spend if you had stayed on the grid (the FULL bill,
+ *              displaced plus whatever you would still have paid anyway)
+ *   solar[y] = cumulative TRUE cost of the solar path: capex + first labor +
+ *              every swap AND the residual bill you keep paying every year
+ *              (net of any feed-in credit on clipped surplus).
  * The crossing point of the two lines IS the true break-even year, so the
  * chart and the "pays for itself: year N" row can never disagree.
+ *
+ * The wedge between the lines is therefore the HONEST answer to "what does
+ * solar really save": each year's displacement (gridSpend − residual bill,
+ * plus feed-in value) minus the system's true running cost. For a system
+ * that only cuts 25% of the bill, 75% of the bill still accumulates on the
+ * solar line — a small array can never look like it "saved" the whole
+ * 20-year bill.
  *
  * Swap schedule matches trueBreakEvenYear exactly (round(k × batteryLifeYears),
  * capped at `replacements`), so both numbers always tell the same story.
  *
- * Returns null when there is no bill to displace (no tariff entered) —
- * the chart is then hidden rather than shown with a fake grid line.
+ * Returns null when there is no bill to displace (no tariff entered, or a
+ * system that displaces nothing) — the chart is then hidden rather than
+ * shown with a fake grid line.
  */
-export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, swapsAndLaborTotalUsd = 0, replacements = 0, batteryLifeYears, horizonYears = HORIZON_YEARS }) {
-  if (!Number.isFinite(capexMidUsd) || !Number.isFinite(annualSavingsUsd) || annualSavingsUsd < 0) return null;
+export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, residualAnnualUsd = 0, swapsAndLaborTotalUsd = 0, replacements = 0, batteryLifeYears, horizonYears = HORIZON_YEARS }) {
+  if (!Number.isFinite(capexMidUsd) || !Number.isFinite(annualSavingsUsd) || annualSavingsUsd < 0 ||
+      !Number.isFinite(residualAnnualUsd) || residualAnnualUsd < 0) return null;
   const perSwap = replacements > 0 ? swapsAndLaborTotalUsd / replacements : 0;
 
   const swapYears = new Set();
@@ -110,7 +122,8 @@ export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, swapsAndLa
   let cumGrid = 0;
   let cumSolar = capexMidUsd;   // solar starts with the full first cost
   for (let y = 1; y <= horizonYears; y++) {
-    cumGrid += annualSavingsUsd;
+    cumGrid += annualSavingsUsd + residualAnnualUsd;   // what staying on the grid costs that year
+    cumSolar += residualAnnualUsd;                     // the bill you still pay with solar
     if (swapYears.has(y)) cumSolar += perSwap;
     grid[y - 1] = Math.round(cumGrid);
     solar[y - 1] = Math.round(cumSolar);

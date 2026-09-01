@@ -14,7 +14,8 @@ import { CITY_PRESETS } from "./nasa.js?v=20260830b";
 import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCityLabel, nearestCity, normalizeCityQuery, shouldAutoResolve } from "./cities.js?v=20260830s";
 
 import { estimateTariff, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
-import { savingsPanelState } from "./money.js?v=20260830v";
+
+import { savingsPanelState } from "./money.js?v=20260831f";
 
 import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830b";
 
@@ -48,8 +49,14 @@ let billAnchorKwh = 20;
 let customCutFraction = 0.8;
 
 // Which system the whole results pipeline (charts, BOM, export, share, print)
-// shows: "best" | "focus" (adopted curve point) | "matrix:chem:colId" | "custom".
+// shows: "best" | "focus" (adopted curve point) | "matrix:chem:colId" | "custom" |
+// "adopted" (a curve point adopted instantly, without a full re-run).
 let selectedKey = "best";
+
+// The exact system the visitor just clicked on the price curve. Adopting it
+// is instant (its full analysis rides along in the cached frontier point);
+// only the SOC capture bands arrive later from a tiny background slice.
+let adoptedEntry = null;
 
 // A non-null value means the next worker run should adopt an EXACT (PV,
 // battery, chemistry) system ("Use this system" from the curve modal).
@@ -59,6 +66,10 @@ let pendingFocus = null;
 let runToken = 0;
 let runTimer = null;
 let lastRunAdoptsFocus = false;
+
+// Serial for incremental "reSlice" patches (independent of full runs, so a
+// slider slice can never collide with — or clobber — a full re-run).
+let sliceToken = 0;
 
 // Bill slider bounds, expressed in kWh/day and converted to local currency.
 const BILL_MIN_KWH = 2;
@@ -1078,9 +1089,63 @@ function setupCutSlider() {
 
   slider.addEventListener("change", () => {
     customCutFraction = (parseInt(slider.value, 10) || 1) / 100;
-    if (lastPayload) scheduleRun();
+    if (!lastPayload) return;
+    if (lastPayload.mode === "gridtie") {
+      // A cut edit only touches the slider's own column — reconcile it in the
+      // background instead of re-running the fixed columns and frontier. In a
+      // fixed-chemistry session the custom target IS the selected system.
+      if (!lastPayload.auto) selectedKey = "custom";
+      requestIncrementalCut();
+    }
   });
 
+}
+
+// ── Incremental cut (slider / curve edits) ──────────────────────────────────
+
+// Ask the worker for just the matrix "your target" column (and, when a curve
+// point was just adopted, that system's SOC capture bands). Everything else in
+// the payload is untouched by a customCut edit, so this is a few simulations,
+// not a full engine run — and the response only re-renders the matrix table.
+function requestIncrementalCut(focusPvKw = null, focusBattKwh = null, focusChemistry = null) {
+  const p = lastPayload;
+  if (!p) return;
+  const inp = readInputs();
+  const seq = ++sliceToken;
+  ensureWorker().postMessage({ type: "reSlice", seq, incrementalCut: true, ...inp, focusPvKw, focusBattKwh, focusChemistry });
+}
+
+// Merge an incremental slice into the retained payload and refresh only what
+// it touched: the matrix table, the custom column label, and — for an adopted
+// curve point — its SOC chart once the capture bands arrive.
+function mergeReSlice(result) {
+  const p = lastPayload;
+  if (!p || !result) return;
+  if (result.customCut) p.customCut = result.customCut;
+  if (result.cells && p.matrix && p.matrix.cells) Object.assign(p.matrix.cells, result.cells);
+  if (result.customTarget) p.customTarget = result.customTarget;
+  // Keep the custom column header in lockstep with the slider.
+  const label = result.customCut
+    ? `Your ~${Math.round(result.customCut.fraction * 100)}% target`
+    : result.customTarget
+      ? `Your ~${Math.round(p.customCut ? p.customCut.fraction * 100 : 0)}% target`
+      : null;
+  if (label && p.matrix) {
+    const col = p.matrix.cols && p.matrix.cols.find((c) => c.id === "custom");
+    if (col) col.label = label;
+  }
+  // The adopted point's SOC bands: chart appears the moment they land.
+  if (result.focusSoc && selectedKey === "adopted" && adoptedEntry &&
+      adoptedEntry.chemistry === result.focusSoc.chemistry &&
+      Math.abs(adoptedEntry.pvKw - result.focusSoc.pvKw) < 0.01 &&
+      Math.abs(adoptedEntry.battKwh - result.focusSoc.battKwh) < 0.01) {
+    adoptedEntry.socNameplatePct = result.focusSoc.socNameplatePct;
+  }
+  if (p.matrix && (p.mode === "gridtie" || resultLevel === "matrix")) renderMatrix(p);
+  if (selectedKey === "adopted" && adoptedEntry && adoptedEntry.socNameplatePct && adoptedEntry.socNameplatePct.min && adoptedEntry.socNameplatePct.min.length) {
+    drawSocChartForEntry(p, adoptedEntry);
+  }
+  syncCutLabel();
 }
 
 // ── Monthly-bill slider (local currency, kWh/day anchor) ────────────────────
@@ -1157,7 +1222,9 @@ function ensureWorker() {
 
   if (!worker) {
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260831a", { type: "module" });
+
+
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260831f", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -1173,7 +1240,6 @@ function ensureWorker() {
         renderResults(ev.data.payload);
 
         // bring the results into view - the run button can be far above them
-
         // (instant scroll for reduced-motion users)
 
         const res = $("tierResults");
@@ -1187,6 +1253,16 @@ function ensureWorker() {
           res.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
 
         }
+
+      } else if (ev.data?.type === "reSlice") {
+
+        // Incremental cut patch: only the slider's "your target" column (and
+        // SOC bands for an adopted curve point) — no full re-render, no scroll,
+        // no status churn.
+
+        if (ev.data.seq !== sliceToken) return;
+
+        mergeReSlice(ev.data.result);
 
       } else if (ev.data?.type === "error") setStatus("Warning: " + ev.data.message);
 
@@ -1950,16 +2026,17 @@ function renderMatrix(p) {
 function resolveSelected(p) {
   if (!p) return null;
   const key = selectedKey || "best";
+  if (key === "adopted" && adoptedEntry) return adoptedEntry;
   if (key === "focus" && p.focusSystem) return p.focusSystem;
   if (key === "custom") {
     const c = p.customCut;
-    return (c && c.best) || (c && c.entries && c.entries[0]) || null;
+    return (c && c.best) || (c && c.entries && c.entries[0]) || p.customTarget || null;
   }
   if (key.indexOf("matrix:") === 0 && p.matrix) {
     const cell = p.matrix.cells[key.slice("matrix:".length)];
     if (cell && cell.solvable) return cell;
   }
-  return p.best || (p.customCut && p.customCut.best) || null;
+  return p.best || (p.customCut && p.customCut.best) || p.customTarget || null;
 }
 
 // The tooltip/table rows for ANY selectable system — full money story, export
@@ -3072,7 +3149,7 @@ function drawAutoChart(p) {
 
 // Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
 
-const PAYLOAD_CONTRACT = 8;
+const PAYLOAD_CONTRACT = 9;
 
 // -- Plausibility frontier ---------------------------------------------------
 
@@ -3156,26 +3233,33 @@ function renderFrontierPanel(p) {
     onSelect: (i) => {
       frontierSelected = i;
       renderFrontierPanel(lastPayload);
-      // Clicking a curve point opens the FULL analysis for that exact price
-      // point, with "Use this system" to adopt it into every downstream chart.
-      const f = lastPayload && lastPayload.frontier;
-      const pt = f && f.points[i];
-      if (pt && pt.detail) {
-        showSystemModal(lastPayload, { ...pt.detail, chemistry: pt.detail.chemistry || f.chemistry }, true);
-      }
-      // Unify with the bill-cut slider: choosing a point on the curve IS
-      // choosing your cut %. Snap the slider (and the engine's "your target"
-      // matrix column) to this point and re-run, so the matrix, charts and
-      // BOM all follow the same number.
       const p = lastPayload;
-      if (p && p.mode === "gridtie" && pt && Number.isFinite(pt.outcomePct)) {
+      const f = p && p.frontier;
+      const pt = f && f.points[i];
+      if (!p || !pt) return;
+      // INSTANT adoption: the clicked point already carries its full analysis
+      // (money story, export economics, 20-yr cumulative series) in the cached
+      // payload, so every downstream panel follows it immediately — no engine
+      // re-run, no re-render storm, no scroll jump. Only its SOC capture bands
+      // arrive a moment later from a tiny background slice.
+      adoptedEntry = { ...pt.detail, chemistry: pt.detail.chemistry || f.chemistry };
+      selectedKey = "adopted";
+      refreshSelectionOutputs(p);
+      showSystemModal(p, adoptedEntry, true);
+      // Unify with the bill-cut slider: choosing a point on the curve IS
+      // choosing your cut %. Snap the slider and the matrix "your target"
+      // column label to that exact number.
+      if (p.mode === "gridtie" && Number.isFinite(pt.outcomePct)) {
         const pct = Math.min(111, Math.max(1, Math.round(pt.outcomePct)));
         customCutFraction = pct / 100;
         const slider = $("cutSlider");
         if (slider) slider.value = String(pct);
         syncCutLabel();
-        scheduleRun();
       }
+      // Background reconciliation: re-size the matrix's "your target" column
+      // for ALL chemistries at the snapped cut (the curve itself only knows
+      // one chemistry), and capture the adopted system's SOC bands.
+      requestIncrementalCut(adoptedEntry.pvKw, adoptedEntry.battKwh, adoptedEntry.chemistry);
     },
 
   };
@@ -3256,6 +3340,8 @@ function renderResults(p) {
 
   lastPayload = p;
 
+  adoptedEntry = null;       // a new full run supersedes any instant adoption
+
   frontierSelected = null;   // new result -> blue dot follows the new recommendation
 
   const isGT = p.mode === "gridtie";
@@ -3277,9 +3363,10 @@ function renderResults(p) {
 
   // Drop a stale selection that no longer exists in this payload.
   const selKeyV = selectedKey || "best";
-  if (selKeyV !== "best" && selKeyV !== "focus" && selKeyV !== "custom" && selKeyV.indexOf("matrix:") !== 0) selectedKey = "best";
+  if (selKeyV !== "best" && selKeyV !== "focus" && selKeyV !== "custom" && selKeyV !== "adopted" && selKeyV.indexOf("matrix:") !== 0) selectedKey = "best";
+  if (selectedKey === "adopted" && !adoptedEntry) selectedKey = "best";
   if (selectedKey === "focus" && !p.focusSystem) selectedKey = "best";
-  if (selectedKey === "custom" && !(p.customCut && p.customCut.entries && p.customCut.entries.length)) selectedKey = "best";
+  if (selectedKey === "custom" && !(p.customCut && p.customCut.entries && p.customCut.entries.length) && !p.customTarget) selectedKey = "best";
   if (selectedKey.indexOf("matrix:") === 0 && !(p.matrix && p.matrix.cells[selectedKey.slice(7)])) selectedKey = "best";
 
   renderMoneyBar(p);
@@ -3462,14 +3549,27 @@ function renderResults(p) {
 
   updateShareHash(p, inp);
 
-  populatePrintSheet(p, inp);
-
-  renderBomPanel();
-
   renderFrontierPanel(p);
 
-  // Every chart below follows the SELECTED system.
+  refreshSelectionOutputs(p);
+
+}
+
+// Everything below the run that must follow the SELECTED system (charts,
+// hardware list, export figures, share link, print sheet, matrix highlight).
+// Called from renderResults on a full run and straight from curve-point/
+// matrix-cell clicks so a selection change is instant — all of this data is
+// already sitting in the cached payload.
+function refreshSelectionOutputs(p) {
+  if (!p) return;
+  const isGT = p.mode === "gridtie";
+  const hasAuto = !!(p.auto && p.auto.length);
   const sel = resolveSelected(p);
+  // The matrix highlight tracks the selection — but only where the matrix IS
+  // the main view (grid-tie auto, or an off-grid auto session on its matrix
+  // tab). Card and ladder views keep their own chrome, untouched.
+  if (p.matrix && (isGT || resultLevel === "matrix")) renderMatrix(p);
+  renderBomPanel();
   if (isGT && sel && sel.socNameplatePct && sel.socNameplatePct.min && sel.socNameplatePct.min.length) {
 
     drawSocChartForEntry(p, sel);
@@ -3484,11 +3584,19 @@ function renderResults(p) {
 
   } else {
 
-    $("socChartWrap").style.display = "none";
+    const w = $("socChartWrap");
+
+    if (w) w.style.display = "none";
 
   }
 
   drawCumCostChart(p, sel);
+
+  const inp = readInputs();
+
+  updateShareHash(p, inp);
+
+  populatePrintSheet(p, inp);
 
 }
 
