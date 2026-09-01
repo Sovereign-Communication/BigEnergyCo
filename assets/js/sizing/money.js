@@ -114,12 +114,18 @@ export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, residualAn
       !Number.isFinite(residualAnnualUsd) || residualAnnualUsd < 0) return null;
   const perSwap = replacements > 0 ? swapsAndLaborTotalUsd / replacements : 0;
 
-  const swapYears = new Set();
+  // Swap schedule: replacement k falls due at round(k × batteryLifeYears),
+  // aggregated as per-year multiplicities. When a battery wears out in under
+  // a year (heavy lead-acid cycling), several swaps CAN land in the same
+  // year — a Set can't express that and would silently drop them, making the
+  // series apply fewer swaps than the card counts (chart/card disagreement,
+  // flattering break-even). `replacements` is the single source of truth.
+  const swapCounts = new Array(horizonYears + 1).fill(0);
   if (replacements > 0 && Number.isFinite(batteryLifeYears) && batteryLifeYears > 0) {
     for (let k = 1; k <= replacements; k++) {
       const yr = Math.round(k * batteryLifeYears);
       if (yr > horizonYears) break;
-      swapYears.add(Math.max(1, yr));
+      swapCounts[Math.max(1, yr)]++;
     }
   }
 
@@ -132,13 +138,46 @@ export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, residualAn
   for (let y = 1; y <= horizonYears; y++) {
     cumGrid += annualSavingsUsd + residualAnnualUsd;   // what staying on the grid costs that year
     cumSolar += residualAnnualUsd;                     // the bill you still pay with solar
-    if (swapYears.has(y)) { cumSolar += perSwap; cumSystem += perSwap; }
+    const nSwaps = swapCounts[y];
+    if (nSwaps > 0) { cumSolar += nSwaps * perSwap; cumSystem += nSwaps * perSwap; }
     grid[y - 1] = Math.round(cumGrid);
     solar[y - 1] = Math.round(cumSolar);
     system[y - 1] = Math.round(cumSystem);
   }
   return { years: horizonYears, grid, solar, system };
 }
+/**
+ * The headline figures the chart and the cards derive from ONE series so
+ * they can never disagree:
+ *   gridTotal      = 20-year utility spend if you stayed on the grid (amber)
+ *   systemTotal    = cost of the SYSTEM alone — capex + install labor + every
+ *                    swap (emerald) — this is the card's "Total 20-year cost"
+ *   residualBills  = the smaller utility bills you keep paying with solar
+ *   withSolar      = systemTotal + residualBills (slate): it CONTAINS
+ *                    systemTotal — the system figure is a slice of it, the
+ *                    two are never added together
+ *   saved          = gridTotal − withSolar
+ * That identity (system + residual = with solar; saved + withSolar = grid)
+ * is what keeps the stack visually honest: 25K + 50K = 75K, never 25K + 75K.
+ * Returns null for a missing/incomparable series.
+ */
+export function seriesBreakdown(series) {
+  if (!series || !Array.isArray(series.grid) || !Array.isArray(series.solar) ||
+      !series.grid.length || series.solar.length !== series.grid.length) return null;
+  const n = series.grid.length - 1;
+  const gridTotal = series.grid[n];
+  const withSolar = series.solar[n];
+  const hasSystem = Array.isArray(series.system) && series.system.length === series.grid.length;
+  const systemTotal = hasSystem ? series.system[n] : null;
+  return {
+    gridTotal,
+    withSolar,
+    systemTotal,
+    residualBills: hasSystem ? withSolar - systemTotal : null,
+    saved: gridTotal - withSolar,
+  };
+}
+
 /**
  * The year cumulative avoided bills exceed cumulative TRUE cost — counting
  * every bank swap as it falls due. This is the honest payback for chemistries
@@ -153,19 +192,22 @@ export function trueBreakEvenYear({ capexMidUsd, annualSavingsUsd, swapsAndLabor
   if (!(annualSavingsUsd > 0) || !Number.isFinite(capexMidUsd)) return null;
   const perSwap = replacements > 0 ? swapsAndLaborTotalUsd / replacements : 0;
 
-  const swapYears = new Set();
+  // Same per-year multiplicity schedule as the series above — the two must
+  // count replacements identically or break-even and the chart will disagree.
+  const swapCounts = new Array(horizonYears + 1).fill(0);
   if (replacements > 0 && Number.isFinite(batteryLifeYears) && batteryLifeYears > 0) {
     for (let k = 1; k <= replacements; k++) {
       const yr = Math.round(k * batteryLifeYears);
       if (yr > horizonYears) break;
-      swapYears.add(Math.max(1, yr));
+      swapCounts[Math.max(1, yr)]++;
     }
   }
 
   let cumCost = capexMidUsd;
   let cumSavings = 0;
   for (let y = 1; y <= horizonYears; y++) {
-    if (swapYears.has(y)) cumCost += perSwap;
+    const nSwaps = swapCounts[y];
+    if (nSwaps > 0) cumCost += nSwaps * perSwap;
     cumSavings += annualSavingsUsd;
     if (cumSavings >= cumCost) return y;
   }

@@ -2,7 +2,7 @@
 // Run: node --test "tests/**/*.test.mjs"
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { trueBreakEvenYear, cumulativeCostSeries } from "../assets/js/sizing/money.js";
+import { trueBreakEvenYear, cumulativeCostSeries, seriesBreakdown } from "../assets/js/sizing/money.js";
 
 test("no swaps: break-even matches simple payback (within a year)", () => {
   const y = trueBreakEvenYear({ capexMidUsd: 2400, annualSavingsUsd: 1200, batteryLifeYears: 30 });
@@ -119,4 +119,22 @@ test("cumulative series: system line = capex + swaps only, ends on lifetime cost
   // It is exactly the "Total 20-year cost" = capex + first labor + swaps, so
   // chart and recommendation card agree.
   assert.equal(s.system[19], 5000 + firstLabor + 1000);
+});
+
+test("seriesBreakdown: the system is a slice INSIDE with-solar, never added", () => {
+  const s = cumulativeCostSeries({
+    capexMidUsd: 5000, firstLaborUsd: 500, annualSavingsUsd: 1200,
+    residualAnnualUsd: 800, swapsAndLaborTotalUsd: 1000, replacements: 1,
+    batteryLifeYears: 10,
+  });
+  const bd = seriesBreakdown(s);
+  assert.equal(bd.systemTotal + bd.residualBills, bd.withSolar, "system + remaining bills = with-solar (the 25K + 50K = 75K identity)");
+  assert.equal(bd.saved + bd.withSolar, bd.gridTotal, "saved + with-solar = grid total (nothing is added on top)");
+  assert.ok(bd.systemTotal < bd.withSolar && bd.withSolar < bd.gridTotal, "stack ordering at the horizon");
+  // The horizon ordering is the whole story; the opening segment may invert by
+  // the first-install labor (system starts slightly above slate, then slate
+  // overtakes as bills accumulate) — that hairline is handled by the renderer.
+  assert.ok(s.system[19] <= s.solar[19] && s.solar[19] <= s.grid[19], "emerald <= slate <= amber at year 20");
+  assert.equal(seriesBreakdown(null), null);
+  assert.equal(seriesBreakdown({ grid: [1], solar: [1, 2] }), null);
 });

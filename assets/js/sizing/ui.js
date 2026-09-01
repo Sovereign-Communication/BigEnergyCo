@@ -16,7 +16,7 @@ import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCi
 
 import { estimateTariff, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
 
-import { savingsPanelState } from "./money.js?v=20260831h";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260831i";
 
 import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830b";
 
@@ -1284,7 +1284,7 @@ function ensureWorker() {
 
 
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260831h", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260831i", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -1844,6 +1844,8 @@ function renderAutoCards(p) {
 
     rows.push(["Total 20-year cost", `~${money(a.lifetimeCostMid)}` + (a.chemistry === bestId && p.auto.filter((x) => x.solvable).length >= 2 ? " - cheapest" : "")]);
 
+    pushSeriesBreakdown(rows, a);
+
     if (isGT) {
 
       rows.push(["Bill after solar", a.billAfterMonthlyUsd !== null ? `~${money(a.billAfterMonthlyUsd)}/mo` : "needs your tariff"]);
@@ -1975,6 +1977,7 @@ function renderBestPick(p) {
     : "None in 20 years"]);
   if (b.swapsAndLaborUsd > 0) rows.push(["Swaps + labor add", `~${money(b.swapsAndLaborUsd)}`]);
   rows.push(["Total 20-year cost", `~${money(b.lifetimeCostMid)}${bestSuffix}`]);
+  pushSeriesBreakdown(rows, b);
   if (!isGT) {
     rows.push(["Unmet hours", `${fmt(b.unmetHoursPerYear ?? 0)} h/yr \u00B7 longest gap ${fmt(b.longestGapHours ?? 0)} h`]);
   } else if (b.billAfterMonthlyUsd !== null) {
@@ -2099,6 +2102,16 @@ function resolveSelected(p) {
   return p.best || (p.customCut && p.customCut.best) || p.customTarget || null;
 }
 
+// If the entry carries a full 20-year cost series, append the bills-split so
+// the card tells the same story as the chart: system + remaining bills =
+// all-in. Silent when there is no tariff/series.
+function pushSeriesBreakdown(rows, entry) {
+  const bd = entry && entry.cumCostSeries ? seriesBreakdown(entry.cumCostSeries) : null;
+  if (!bd || bd.systemTotal === null || bd.residualBills <= 0) return;
+  rows.push(["Remaining 20-yr bills", `~${money(bd.residualBills)}`]);
+  rows.push(["All-in over 20 yrs (system + bills)", `~${money(bd.withSolar)}`]);
+}
+
 // The tooltip/table rows for ANY selectable system — full money story, export
 // economics and 20-year picture. Shared by the curve-point modal and the
 // selected-system banner.
@@ -2141,6 +2154,7 @@ function entryDetailRows(p, e) {
   if (Number.isFinite(e.lifetimeCostMid)) {
     rows.push(["Total 20-year cost", `~${money(e.lifetimeCostMid)}`]);
   }
+  pushSeriesBreakdown(rows, e);
   if (Number.isFinite(e.lcoeUsdPerKwh)) {
     rows.push(["Your power cost", energyRate(e.lcoeUsdPerKwh) + gridRate(p.tariff)]);
   }
@@ -2542,6 +2556,8 @@ function renderTierCards(p) {
 
     rows.push(["Total 20-year cost", `~${money(t.lifetimeCostMid)}`]);
 
+    pushSeriesBreakdown(rows, t);
+
     appendRows(card, rows);
 
     card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
@@ -2648,6 +2664,8 @@ function renderTargetCards(p, extraTargets = []) {
 
     }
 
+    pushSeriesBreakdown(rows, t);
+
     appendRows(card, rows);
 
     card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
@@ -2686,20 +2704,22 @@ function appendRows(card, rows) {
 }/**
  * Cumulative 20-year cost chart — the headline money story, drawn as three
  * running sums for the recommended system:
- *   - amber line:  cumulative grid spend if you had stayed on the grid
- *   - slate line:  cumulative money out of pocket with solar (system cost
- *                  PLUS the residual bills you keep paying, net of feed-in)
- *   - emerald line: cumulative cost of the SYSTEM alone (capex + every bank
- *                  swap) — it ends exactly on the recommendation's
- *                  "Total 20-year cost" figure, so chart and card agree.
- * The crossing of amber and slate IS the true break-even year. The green
- * wedge between them is the savings; the slate band between the out-of-pocket
- * line and the system line is the residual bill, called out by the caption.
+ *   - amber line:   cumulative grid spend if you had stayed on the grid
+ *   - slate line:   total you pay WITH solar — system cost PLUS the residual
+ *                   bills you keep paying, net of feed-in
+ *   - emerald line: cumulative cost of the SYSTEM alone (capex + first labor
+ *                   + every swap) — it ends exactly on the recommendation's
+ *                   "Total 20-year cost" figure, so chart and card agree.
+ * The three lines are filled as a STACK (emerald band 0→system, slate band
+ * system→solar, savings band solar→grid) so the emerald figure is visibly a
+ * slice INSIDE the slate figure: 25K system + 50K bills = 75K total, never
+ * 25K + 75K. Red fills the region where the grid line sits BELOW the solar
+ * line (before break-even). The crossing of amber and slate IS the true
+ * break-even year.
  * A lower panel plots the running difference (grid - solar) as bars — red
  * while the capex is not yet repaid, then growing green bars to the final
- * 20-year total. Solar-served kWh rides along as a quiet mini-strip (it is
- * constant per year, so it stays subtle), and a bold HTML callout above the
- * chart carries the headline number.
+ * 20-year total, and a bold HTML callout above the chart carries the
+ * headline number (solar-served kWh lives there too).
  */
 function drawCumCostChart(p, chosenEntry = null) {
   const wrap = $("cumCostChartWrap");
@@ -2765,6 +2785,7 @@ function drawCumCostChart(p, chosenEntry = null) {
   const nY = series.years || series.grid.length;
   const maxCost = Math.max(series.grid[nY - 1] || 0, series.solar[nY - 1] || 0, 1);
   const hasSystem = Array.isArray(series.system) && series.system.length === nY;
+  const bd = seriesBreakdown(series) || {};
   const X = (i) => padL + (i / (nY - 1)) * plotW;
   const Y = (v) => padT + (1 - v / maxCost) * plotH;
 
@@ -2807,48 +2828,35 @@ function drawCumCostChart(p, chosenEntry = null) {
     ctx.fillText(money(Math.round(v)), padL - 6, y + 3);
   }
 
-  // solar-served kWh: quiet mini-strip along the panel floor (per-year energy
-  // is constant, so full-height bars were pure noise). The number itself is
-  // carried by the headline callout above — the strip here is just texture,
-  // so it gets no canvas label and can never collide with the totals.
-  if (servedKwh > 0) {
-    const stripH = 10, stripY = padT + plotH - stripH - 8;
-    const bw = (plotW / nY) * 0.6;
-    ctx.fillStyle = "rgba(96,165,250,0.28)";
-    for (let y = 0; y < nY; y++) {
-      ctx.fillRect(X(y) - bw / 2, stripY, bw, stripH);
+  // ── stacked bands, bottom → top: system cost → remaining bills → savings ──
+  // The chart is a literal stack so nobody can misread the lines as additive:
+  // the emerald band (0 → system line) is VISIBLY inside the slate band
+  // (system → solar line), which is inside the amber total. Red fills the
+  // pre-break-even region where the grid line dips BELOW the solar line
+  // (money still owed); green is the savings wedge after break-even.
+  const baseline = new Array(nY).fill(0);
+  const bandFill = (lo, hi, colorFor) => {
+    for (let i = 0; i < nY - 1; i++) {
+      // Skip hairline inversions (the emerald line leads the slate line by
+      // the first-install labor for the opening segment) rather than paint a
+      // twisted quad — the lines themselves still tell the truth.
+      if (lo[i] > hi[i] || lo[i + 1] > hi[i + 1]) continue;
+      ctx.fillStyle = colorFor(i);
+      ctx.beginPath();
+      ctx.moveTo(X(i), Y(lo[i]));
+      ctx.lineTo(X(i + 1), Y(lo[i + 1]));
+      ctx.lineTo(X(i + 1), Y(hi[i + 1]));
+      ctx.lineTo(X(i), Y(hi[i]));
+      ctx.closePath();
+      ctx.fill();
     }
-  }
-
-  // residual-bills band: slate fill between the out-of-pocket line and the
-  // system's own cost line — the money you still hand to the grid, separated
-  // out so the emerald line can land EXACTLY on the recommendation's total.
+  };
   if (hasSystem) {
-    const res = ctx.createLinearGradient(padL, 0, W - padR, 0);
-    res.addColorStop(0, "rgba(148,163,184,0.05)");
-    res.addColorStop(1, "rgba(148,163,184,0.18)");
-    ctx.fillStyle = res;
-    ctx.beginPath();
-    ctx.moveTo(X(0), Y(series.solar[0]));
-    for (let i = 1; i < nY; i++) ctx.lineTo(X(i), Y(series.solar[i]));
-    for (let i = nY - 1; i >= 0; i--) ctx.lineTo(X(i), Y(series.system[i]));
-    ctx.closePath();
-    ctx.fill();
+    bandFill(baseline, series.system, () => "rgba(52,211,153,0.16)");
+    bandFill(series.system, series.solar, () => "rgba(148,163,184,0.22)");
   }
-
-  // savings wedge: horizontal gradient that deepens toward the future —
-  // the gap literally grows, so the fill should feel like it grows too
-  const wedge = ctx.createLinearGradient(padL, 0, W - padR, 0);
-  wedge.addColorStop(0, "rgba(16,185,129,0.06)");
-  wedge.addColorStop(0.55, "rgba(16,185,129,0.16)");
-  wedge.addColorStop(1, "rgba(16,185,129,0.34)");
-  ctx.fillStyle = wedge;
-  ctx.beginPath();
-  ctx.moveTo(X(0), Y(series.grid[0]));
-  for (let i = 1; i < nY; i++) ctx.lineTo(X(i), Y(series.grid[i]));
-  for (let i = nY - 1; i >= 0; i--) ctx.lineTo(X(i), Y(series.solar[i]));
-  ctx.closePath();
-  ctx.fill();
+  bandFill(series.solar, series.grid, (i) =>
+    series.grid[i] >= series.solar[i] ? "rgba(16,185,129,0.28)" : "rgba(239,68,68,0.22)");
 
   // break-even marker: dashed vertical + label to the RIGHT at mid-height,
   // clear of both line-end totals
@@ -2865,7 +2873,7 @@ function drawCumCostChart(p, chosenEntry = null) {
     ctx.fillStyle = "#f9fafb"; ctx.fill();
   }
 
-  // the three lines: amber = grid, slate = out-of-pocket (system + residual
+  // the three lines: amber = grid, slate = with-solar total (system + residual
   // bills), emerald = the system alone (ends on the recommendation's total)
   ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = 2.5;
   ctx.strokeStyle = "#fbbf24";
@@ -2890,13 +2898,13 @@ function drawCumCostChart(p, chosenEntry = null) {
   ctx.fillStyle = "#fbbf24";
   ctx.fillText(`grid (no solar): ${money(series.grid[nY - 1])}`, W - padR - 4, gridLblY);
   ctx.fillStyle = "#94a3b8";
-  ctx.fillText(`out-of-pocket: ${money(series.solar[nY - 1])}`, W - padR - 4, solarLblY);
+  ctx.fillText(`with solar: ${money(series.solar[nY - 1])}`, W - padR - 4, solarLblY);
   if (hasSystem) {
     let sysLblY = Math.max(padT + 10, Y(series.system[nY - 1]) - 10);
     if (sysLblY >= solarLblY) sysLblY = solarLblY + 18;
     if (sysLblY > padT + plotH - 8) sysLblY = solarLblY - 16;
     ctx.fillStyle = "#34d399";
-    ctx.fillText(`system 20-yr: ${money(series.system[nY - 1])}`, W - padR - 4, sysLblY);
+    ctx.fillText(`solar system: ${money(series.system[nY - 1])}`, W - padR - 4, sysLblY);
   }
 
   // ── bottom panel: your pocket, as growing bars ───────────────────────
@@ -2957,11 +2965,13 @@ function drawCumCostChart(p, chosenEntry = null) {
   const label = seriesEntry.chemLabel || seriesEntry.label || "";
   const cap = $("cumCostCaption");
   if (cap) {
-    let txt = `Running 20-year cost for the recommended system (${label}): ` +
-      `amber is what staying on the grid costs; the slate line is total money out of pocket with solar — the system ` +
-      `plus the smaller bills you keep paying — and where the two cross is your break-even year. ` +
-      `The emerald line is the system's own 20-year cost (purchase + install labor + every bank swap), ending exactly ` +
-      `on the \u201CTotal 20-year cost\u201D figure in the recommendation.`;
+    let txt = `Running 20-year cost for the recommended system (${label}): the amber line is what you` +
+      ` pay the utility if you stay on the grid (${money(bd.gridTotal)}). The slate line is everything you pay` +
+      ` WITH solar — the system plus the smaller bills left over — and the emerald line is the system alone,` +
+      ` sitting INSIDE the slate total: ~${money(bd.systemTotal)} system + ~${money(bd.residualBills)} remaining` +
+      ` bills = ~${money(bd.withSolar)}. The emerald figure is a slice of the slate figure, never added on top —` +
+      ` it matches the \u201CTotal 20-year cost\u201D row in the recommendation. The gap between slate and amber` +
+      ` (${money(bd.saved)}) is your saving; where the two lines cross is your break-even year.`;
     if (beIdx >= 0) {
       const saved = (series.grid[nY - 1] || 0) - (series.solar[nY - 1] || 0);
       txt += ` They cross at year ${beIdx + 1} \u2014 after that every year puts ~${money(Math.round(saved / (nY - beIdx)))} back in your pocket. ` +

@@ -20,6 +20,7 @@ for (const f of FILES) {
 console.log("staged production modules → verifying...\n");
 
 const { runSizing } = await import(pathToFileURL(DIR + "run.js").href);
+const { seriesBreakdown } = await import(pathToFileURL(DIR + "money.js").href);
 const { synthesizeFromProfile } = await import(pathToFileURL(DIR + "nasa.js").href);
 const { OFFLINE_PROFILES } = await import(pathToFileURL(DIR + "profiles.js").href);
 const honolulu = OFFLINE_PROFILES.find((p) => p.name.includes("Honolulu"));
@@ -87,6 +88,20 @@ check("contract version pinned (10) on every payload shape", [auto99, auto100, g
 const gtsys = gtAuto60.best && gtAuto60.best.cumCostSeries;
 check(`savings chart system line ends on the card total (chart $${gtsys && gtsys.system && gtsys.system[19]}, card $${gtAuto60.best && gtAuto60.best.lifetimeCostMid})`,
   gtsys && Array.isArray(gtsys.system) && Math.abs(gtsys.system[19] - gtAuto60.best.lifetimeCostMid) <= 1);
+
+// The chart is a STACK: system band inside the with-solar band inside the
+// grid total, and the breakdown identities hold (±$1 float tolerance). AGM is
+// the pressure test — a bank that wears out in under a year used to drop
+// whole swaps on the Set-deduplicated schedule and disagree with the card.
+const stackEntries = [gtAuto60.best, ...(gtAuto60.auto || [])].filter((e) => e && e.cumCostSeries && e.cumCostSeries.grid);
+check(`chart is a proper stack on every entry (${stackEntries.length} sampled, system ⊂ with-solar ⊂ grid)`, stackEntries.every((e) => {
+  const c = e.cumCostSeries, n = c.years - 1;
+  if (!(c.system[n] <= c.solar[n] && c.solar[n] <= c.grid[n])) return false;
+  const bd = seriesBreakdown(c);
+  return bd && Math.abs((bd.systemTotal + bd.residualBills) - bd.withSolar) <= 1 &&
+    Math.abs((bd.saved + bd.withSolar) - bd.gridTotal) <= 1 &&
+    Math.abs(bd.systemTotal - e.lifetimeCostMid) <= 1 && bd.residualBills > 0;
+}));
 
 
 // The headline savings math: a small cut can never out-save a big one. This

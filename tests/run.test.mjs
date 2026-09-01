@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { runSizing, autoNoteFor } from "../assets/js/sizing/run.js";
+import { seriesBreakdown } from "../assets/js/sizing/money.js";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
 import { OFFLINE_PROFILES, PROFILE_YEAR } from "../assets/js/sizing/profiles.js";
 
@@ -303,5 +304,26 @@ test("frontier point details are selection-complete for instant adoption", async
     assert.ok(Number.isFinite(d.servedKwhPerYear) && Number.isFinite(d.lifetimeCostMid), "outcome fields");
     assert.ok(d.cumCostSeries && d.cumCostSeries.grid.length === 20, "cumulative series for the savings panel");
     assert.ok(typeof d.trueBreakEvenYear === "number" || d.trueBreakEvenYear === null, "break-even present");
+  }
+});
+
+test("GATE: every payload series is a proper stack (emerald ⊂ slate ⊂ amber)", async () => {
+  const p = await runSizing({ ...MSG, chemistry: "auto", mode: "gridtie" }, { fetchWeather: fakeWeather });
+  const entries = [p.best, ...(p.auto || []), ...Object.values((p.matrix && p.matrix.cells) || {})]
+    .filter((e) => e && e.cumCostSeries);
+  assert.ok(entries.length >= 5, "enough series-carrying entries sampled");
+  for (const e of entries) {
+    const bd = seriesBreakdown(e.cumCostSeries);
+    assert.ok(bd, `${e.chemistry}: breakdown available`);
+    // Dollar tolerance: per-year rounding of the same float series can drift
+    // the endpoints by <$1; the UI renders every figure as "~" anyway.
+    assert.ok(Math.abs((bd.systemTotal + bd.residualBills) - bd.withSolar) <= 1, `${e.chemistry}: system + bills = with-solar`);
+    assert.ok(Math.abs((bd.saved + bd.withSolar) - bd.gridTotal) <= 1, `${e.chemistry}: saved + with-solar = grid total`);
+    if (Number.isFinite(e.lifetimeCostMid)) {
+      assert.ok(Math.abs(bd.systemTotal - e.lifetimeCostMid) <= 1, `${e.chemistry}: emerald endpoint == card's total 20-year cost`);
+    }
+    const n = e.cumCostSeries.years - 1;
+    assert.ok(e.cumCostSeries.system[n] <= e.cumCostSeries.solar[n] && e.cumCostSeries.solar[n] <= e.cumCostSeries.grid[n],
+      `${e.chemistry}: stack ordering at the horizon`);
   }
 });
