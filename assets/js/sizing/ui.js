@@ -1124,7 +1124,15 @@ function mergeReSlice(result) {
   if (!p || !result) return;
   if (result.customCut) p.customCut = result.customCut;
   if (result.cells && p.matrix && p.matrix.cells) Object.assign(p.matrix.cells, result.cells);
-  if (result.customTarget) p.customTarget = result.customTarget;
+  if (result.customTarget) {
+    p.customTarget = result.customTarget;
+    // Fixed-chemistry grid-tie session: the slider's target IS the selected
+    // system, so the card, charts, BOM, export and share link all follow it.
+    if (!p.auto && p.mode === "gridtie") {
+      renderTargetCards(p, [p.customTarget]);
+      refreshSelectionOutputs(p);
+    }
+  }
   // Keep the custom column header in lockstep with the slider.
   const label = result.customCut
     ? `Your ~${Math.round(result.customCut.fraction * 100)}% target`
@@ -1147,6 +1155,8 @@ function mergeReSlice(result) {
     drawSocChartForEntry(p, adoptedEntry);
   }
   syncCutLabel();
+  // The cut changed, so any link copied right now must carry it.
+  updateShareHash(p, readInputs());
 }
 
 // ── Monthly-bill slider (local currency, kWh/day anchor) ────────────────────
@@ -3245,11 +3255,10 @@ function renderFrontierPanel(p) {
       // arrive a moment later from a tiny background slice.
       adoptedEntry = { ...pt.detail, chemistry: pt.detail.chemistry || f.chemistry };
       selectedKey = "adopted";
-      refreshSelectionOutputs(p);
-      showSystemModal(p, adoptedEntry, true);
-      // Unify with the bill-cut slider: choosing a point on the curve IS
-      // choosing your cut %. Snap the slider and the matrix "your target"
-      // column label to that exact number.
+      // Unify with the bill-cut slider FIRST (before the selection snapshot):
+      // choosing a point on the curve IS choosing your cut %, so the share
+      // link and the matrix "your target" label must record the snapped value,
+      // not the pre-click one.
       if (p.mode === "gridtie" && Number.isFinite(pt.outcomePct)) {
         const pct = Math.min(111, Math.max(1, Math.round(pt.outcomePct)));
         customCutFraction = pct / 100;
@@ -3257,6 +3266,8 @@ function renderFrontierPanel(p) {
         if (slider) slider.value = String(pct);
         syncCutLabel();
       }
+      refreshSelectionOutputs(p);
+      showSystemModal(p, adoptedEntry, true);
       // Background reconciliation: re-size the matrix's "your target" column
       // for ALL chemistries at the snapped cut (the curve itself only knows
       // one chemistry), and capture the adopted system's SOC bands.
