@@ -20,7 +20,7 @@ import {
   lifetimeCostUsd, exportValueUsd, trueBreakEvenYear, cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
 
-} from "./money.js?v=20260901a";
+} from "./money.js?v=20260901b";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",

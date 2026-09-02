@@ -16,7 +16,7 @@ import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCi
 
 import { estimateTariff, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260901a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260901b";
 
 import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830b";
 
@@ -1284,7 +1284,7 @@ function ensureWorker() {
 
 
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260901a", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260901b", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -2702,20 +2702,17 @@ function appendRows(card, rows) {
     card.appendChild(line);
   }
 }/**
- * Cumulative 20-year cost chart — the headline money story, drawn as three
+ * Cumulative 20-year cost chart — the headline money story, drawn as two
  * running sums for the recommended system:
  *   - amber line:   cumulative grid spend if you had stayed on the grid
- *   - slate line:   total you pay WITH solar — system cost PLUS the residual
- *                   bills you keep paying, net of feed-in
  *   - emerald line: cumulative cost of the SYSTEM alone (capex + first labor
  *                   + every swap) — it ends exactly on the recommendation's
  *                   "Total 20-year cost" figure, so chart and card agree.
- * The three lines are filled as a STACK (emerald band 0→system, slate band
- * system→solar, savings band solar→grid) so the emerald figure is visibly a
- * slice INSIDE the slate figure: 25K system + 50K bills = 75K total, never
- * 25K + 75K. Red fills the region where the grid line sits BELOW the solar
- * line (before break-even). The crossing of amber and slate IS the true
- * break-even year.
+ * The amber figure is a literal STACK — emerald system cost, then the residual
+ * bills that remain after solar (the slate wedge), then your saving — so the
+ * emerald figure is visibly a slice of the amber total: 25K system + 50K bills
+ * + 25K saving = 100K grid, never additive on top of it. Red fills the region
+ * where the amber total sits BELOW the with-solar stack (before break-even).
  * A lower panel plots the running difference (grid - solar) as bars — red
  * while the capex is not yet repaid, then growing green bars to the final
  * 20-year total, and a bold HTML callout above the chart carries the
@@ -2831,17 +2828,18 @@ function drawCumCostChart(p, chosenEntry = null) {
   }
 
   // ── stacked bands, bottom → top: system cost → remaining bills → savings ──
-  // The chart is a literal stack so nobody can misread the lines as additive:
-  // the emerald band (0 → system line) is VISIBLY inside the slate band
-  // (system → solar line), which is inside the amber total. Red fills the
-  // pre-break-even region where the grid line dips BELOW the solar line
-  // (money still owed); green is the savings wedge after break-even.
+  // The amber line is drawn as a literal stack so nobody can misread the
+  // figures as additive: the emerald band (0 → system) is VISIBLY inside the
+  // slate wedge (system → solar — the bills that remain after solar), which
+  // is inside the amber total. Red fills the pre-break-even region where the
+  // grid total dips BELOW the with-solar stack (money still owed); green is
+  // the savings wedge after break-even.
   const baseline = new Array(nY).fill(0);
   const bandFill = (lo, hi, colorFor) => {
     for (let i = 0; i < nY - 1; i++) {
-      // Skip hairline inversions (the emerald line leads the slate line by
+      // Skip hairline inversions (the emerald line leads the bills wedge by
       // the first-install labor for the opening segment) rather than paint a
-      // twisted quad — the lines themselves still tell the truth.
+      // twisted quad — the boundary lines still tell the truth.
       if (lo[i] > hi[i] || lo[i + 1] > hi[i + 1]) continue;
       ctx.fillStyle = colorFor(i);
       ctx.beginPath();
@@ -2875,16 +2873,12 @@ function drawCumCostChart(p, chosenEntry = null) {
     ctx.fillStyle = "#f9fafb"; ctx.fill();
   }
 
-  // the three lines: amber = grid, slate = with-solar total (system + residual
-  // bills), emerald = the system alone (ends on the recommendation's total)
+  // the two lines: amber = grid, emerald = the system alone (ends on the
+  // recommendation's total)
   ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = 2.5;
   ctx.strokeStyle = "#fbbf24";
   ctx.beginPath();
   for (let i = 0; i < nY; i++) { const y = Y(series.grid[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
-  ctx.stroke();
-  ctx.strokeStyle = "#94a3b8";
-  ctx.beginPath();
-  for (let i = 0; i < nY; i++) { const y = Y(series.solar[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
   ctx.stroke();
   if (hasSystem) {
     ctx.strokeStyle = "#34d399";
@@ -2897,8 +2891,8 @@ function drawCumCostChart(p, chosenEntry = null) {
   // The line-end totals used to sit at the plot's right edge, colored like
   // their lines, and collided wherever the curves converged. They now live
   // in a color-keyed legend beneath the canvas — same colors as the lines
-  // (amber grid, slate with-solar, emerald system) — so each figure is
-  // unambiguous and can never overlap a line or another label.
+  // (amber grid, emerald system) — so each figure is unambiguous and can
+  // never overlap a line or another label.
   const legend = $("cumCostLegend");
   if (legend) {
     const swatch = (color) => {
@@ -2913,7 +2907,6 @@ function drawCumCostChart(p, chosenEntry = null) {
     };
     const rows = [
       ["#fbbf24", `Grid without solar: ${money(series.grid[nY - 1])}`],
-      ["#94a3b8", `Grid with solar: ${money(series.solar[nY - 1])}`],
     ];
     if (hasSystem) rows.push(["#34d399", `Solar system: ${money(series.system[nY - 1])}`]);
     legend.textContent = "";
@@ -2985,18 +2978,17 @@ function drawCumCostChart(p, chosenEntry = null) {
   const cap = $("cumCostCaption");
   if (cap) {
     let txt = `Running 20-year cost for the recommended system (${label}): the amber line is what you` +
-      ` pay the utility if you stay on the grid (${money(bd.gridTotal)}). The slate line is everything you pay` +
-      ` WITH solar — the system plus the smaller bills left over — and the emerald line is the system alone,` +
-      ` sitting INSIDE the slate total: ~${money(bd.systemTotal)} system + ~${money(bd.residualBills)} remaining` +
-      ` bills = ~${money(bd.withSolar)}. The emerald figure is a slice of the slate figure, never added on top —` +
-      ` it matches the \u201CTotal 20-year cost\u201D row in the recommendation. The gap between slate and amber` +
-      ` (${money(bd.saved)}) is your saving; where the two lines cross is your break-even year.`;
+      ` pay the utility if you stay on the grid (${money(bd.gridTotal)}). The emerald line is the solar system's` +
+      ` own cost (~${money(bd.systemTotal)}), matching the \u201CTotal 20-year cost\u201D row in the recommendation.` +
+      ` The amber figure is a stack — the system, then the smaller bills that remain after solar (~${money(bd.residualBills)}),` +
+      ` then your saving — so the gap between amber and emerald at year 20 (${money(bd.saved)}) is what the` +
+      ` system puts back in your pocket.`;
     if (beIdx >= 0) {
       const saved = (series.grid[nY - 1] || 0) - (series.solar[nY - 1] || 0);
-      txt += ` They cross at year ${beIdx + 1} \u2014 after that every year puts ~${money(Math.round(saved / (nY - beIdx)))} back in your pocket. ` +
+      txt += ` The system has repaid its cost by year ${beIdx + 1} \u2014 every year after puts ~${money(Math.round(saved / (nY - beIdx)))} back in your pocket. ` +
         `Total saving over 20 years: ~${money(saved)}. The lower bars are your running net position: red until break-even, then climbing.`;
     } else {
-      txt += ` Within 20 years they never cross \u2014 battery replacements outpace bill savings, so the honest answer is: it does not pay for itself here.`;
+      txt += ` Within 20 years the system never repays its cost \u2014 battery replacements outpace bill savings, so the honest answer is: it does not pay for itself here.`;
     }
     cap.textContent = txt;
   }
