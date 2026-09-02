@@ -20,7 +20,7 @@ import {
   lifetimeCostUsd, exportValueUsd, trueBreakEvenYear, cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
 
-} from "./money.js?v=20260901b";
+} from "./money.js?v=20260902a";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -249,7 +249,9 @@ export async function runSizing(msg, deps = {}) {
   // bill that keeps being paid every year). annualSavingsUsd = the bill this
   // system displaces per year (grid spend − residual bill, plus feed-in value
   // on clipped surplus); residualAnnualUsd = what the household still pays the
-  // grid each year (net of feed-in credit). Null when no tariff was entered.
+  // grid each year, NET of the feed-in credit — allowed to go negative when
+  // the credit out-earns the bill (net metering). Null when no tariff was
+  // entered.
   function cumCostFor(m, annualSavingsUsd, residualAnnualUsd = 0) {
     return cumulativeCostSeries({
       capexMidUsd: m.cost.objectiveMid,
@@ -373,7 +375,7 @@ export async function runSizing(msg, deps = {}) {
       paybackYearsHi: savingsUsd !== null ? paybackYears(m.cost.hi, savingsUsd + exportVal) : null,
       trueBreakEvenYear: savingsUsd !== null ? breakEvenFor(m, savingsUsd + exportVal) : null,
       cumCostSeries: (gridSpend !== null && billAfterUsd !== null && savingsUsd !== null)
-        ? cumCostFor(m, savingsUsd + exportVal, Math.max(0, billAfterUsd - exportVal))
+        ? cumCostFor(m, savingsUsd + exportVal, billAfterUsd - exportVal)
         : null,
       exportValueAnnualUsd: Math.round(exportVal),
       clippedKwhPerYear: Math.round(clippedKwhPerYear),
@@ -429,7 +431,7 @@ export async function runSizing(msg, deps = {}) {
     cell.peakLoadW = Math.round(peakLoadW);
     cell.meanTempC = Math.round(meanTempC);
     cell.cumCostSeries = (gridSpend !== null && billAfterUsd !== null && savingsUsd !== null)
-      ? cumCostFor(m, savingsUsd, Math.max(0, billAfterUsd - exportVal))
+      ? cumCostFor(m, savingsUsd, billAfterUsd - exportVal)
       : null;
     const sim = simulateOffset({
       pvKw: sizing.pvKw, battKwhUsable: sizing.battKwh,
@@ -484,7 +486,7 @@ export async function runSizing(msg, deps = {}) {
       paybackYearsHi: savingsUsd !== null ? paybackYears(m.cost.hi, savingsUsd + exportVal) : null,
       trueBreakEvenYear: savingsUsd !== null ? breakEvenFor(m, savingsUsd + exportVal) : null,
       cumCostSeries: (gridSpend !== null && billAfterUsd !== null && savingsUsd !== null)
-        ? cumCostFor(m, savingsUsd + exportVal, Math.max(0, billAfterUsd - exportVal))
+        ? cumCostFor(m, savingsUsd + exportVal, billAfterUsd - exportVal)
         : null,
       replacementsHorizon: m.replacementsHorizon,
       swapsAndLaborUsd: m.swapsAndLaborUsd,
@@ -613,7 +615,9 @@ export async function runSizing(msg, deps = {}) {
         d.cutPct = Math.round((1 - impKwhYr / (dailyKwh * 365)) * 100);
         savingsBase = billAfter !== null && gridSpend ? Math.max(0, gridSpend - billAfter) : null;
         if (savingsBase !== null) savingsBase += exportV;
-        residualUsd = billAfter === null ? 0 : Math.max(0, billAfter - exportV);
+        // Net of the feed-in credit — deliberately NOT floored at $0, so a
+        // net-metering surplus (credit > remaining bill) shows as negative.
+        residualUsd = billAfter === null ? 0 : billAfter - exportV;
       } else {
         d.unmetHoursPerYear = +(pt.result.unmetHours / yrs).toFixed(1);
         d.longestGapHours = pt.result.longestGapHours;
@@ -623,7 +627,7 @@ export async function runSizing(msg, deps = {}) {
         d.paybackYearsLo = paybackYears(m.cost.lo, savingsBase);
         d.paybackYearsHi = paybackYears(m.cost.hi, savingsBase);
         d.trueBreakEvenYear = breakEvenFor(m, savingsBase);
-        d.cumCostSeries = (savingsBase > 0 || residualUsd > 0) ? cumCostFor(m, savingsBase, residualUsd) : null;
+        d.cumCostSeries = (savingsBase > 0 || residualUsd !== 0) ? cumCostFor(m, savingsBase, residualUsd) : null;
       }
       return d;
     };

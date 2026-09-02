@@ -16,7 +16,7 @@ import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCi
 
 import { estimateTariff, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260901b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260902a";
 
 import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830b";
 
@@ -1284,7 +1284,7 @@ function ensureWorker() {
 
 
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260901b", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260902a", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -2107,9 +2107,18 @@ function resolveSelected(p) {
 // all-in. Silent when there is no tariff/series.
 function pushSeriesBreakdown(rows, entry) {
   const bd = entry && entry.cumCostSeries ? seriesBreakdown(entry.cumCostSeries) : null;
-  if (!bd || bd.systemTotal === null || bd.residualBills <= 0) return;
-  rows.push(["Remaining 20-yr bills", `~${money(bd.residualBills)}`]);
-  rows.push(["All-in over 20 yrs (system + bills)", `~${money(bd.withSolar)}`]);
+  if (!bd || bd.systemTotal === null || bd.residualBills === 0) return;
+  if (bd.residualBills > 0) {
+    rows.push(["Remaining 20-yr bills", `~${money(bd.residualBills)}`]);
+    rows.push(["All-in over 20 yrs (system + bills)", `~${money(bd.withSolar)}`]);
+  } else {
+    // Net metering: the feed-in credit on surplus out-earns the remaining
+    // bill, so the residual is negative — present it as the credit it is.
+    rows.push(["Net feed-in credit over 20 yrs", `~${money(-bd.residualBills)}`]);
+    rows.push(["All-in over 20 yrs (system \u2212 credit)", bd.withSolar < 0
+      ? `~\u2212${money(-bd.withSolar)}`
+      : `~${money(bd.withSolar)}`]);
+  }
 }
 
 // The tooltip/table rows for ANY selectable system — full money story, export
@@ -2702,12 +2711,15 @@ function appendRows(card, rows) {
     card.appendChild(line);
   }
 }/**
- * Cumulative 20-year cost chart — the headline money story, drawn as two
+ * Cumulative 20-year cost chart — the headline money story, drawn as three
  * running sums for the recommended system:
  *   - amber line:   cumulative grid spend if you had stayed on the grid
  *   - emerald line: cumulative cost of the SYSTEM alone (capex + first labor
  *                   + every swap) — it ends exactly on the recommendation's
  *                   "Total 20-year cost" figure, so chart and card agree.
+ *   - slate line:   the residual grid cost (the bills you still pay, net of
+ *                   the feed-in credit on surplus) — it goes NEGATIVE under
+ *                   net metering, when the credit out-earns the bill.
  * The amber figure is a literal STACK — emerald system cost, then the residual
  * bills that remain after solar (the slate wedge), then your saving — so the
  * emerald figure is visibly a slice of the amber total: 25K system + 50K bills
@@ -2782,11 +2794,23 @@ function drawCumCostChart(p, chosenEntry = null) {
   const padL = 62, padR = 58, padT = 26, padB = 24;
   const plotW = W - padL - padR, plotH = COST_H - padT - padB;
   const nY = series.years || series.grid.length;
-  const maxCost = Math.max(series.grid[nY - 1] || 0, series.solar[nY - 1] || 0, 1);
   const hasSystem = Array.isArray(series.system) && series.system.length === nY;
+  // Residual grid cost (slate line): the running width of the bills wedge,
+  // solar − system. On grid-tie it is the money still handed to the utility
+  // each year net of the feed-in credit; when net metering makes the credit
+  // out-earn the bill, the line (and its 20-year total) goes negative, so
+  // the axis gains a little headroom below $0 to show it.
+  const residLine = hasSystem ? series.solar.map((s, i) => s - series.system[i]) : null;
+  const residEnd = residLine ? residLine[nY - 1] : null;
+  const residAnnual = residLine && nY > 1 ? residLine[nY - 1] - residLine[nY - 2] : 0;
+  const residShown = !!(residLine && seriesEntry &&
+    typeof seriesEntry.importedKwhPerYear === "number" && residAnnual !== 0);
+  const maxCost = Math.max(series.grid[nY - 1] || 0, series.solar[nY - 1] || 0,
+    residShown ? residEnd : 0, 1);
+  const minCost = residShown ? Math.min(0, ...residLine) : 0;
   const bd = seriesBreakdown(series) || {};
   const X = (i) => padL + (i / (nY - 1)) * plotW;
-  const Y = (v) => padT + (1 - v / maxCost) * plotH;
+  const Y = (v) => padT + (1 - (v - minCost) / (maxCost - minCost)) * plotH;
 
   // ── headline callout (HTML, above the canvas) ────────────────────────
   const diff = series.grid.map((g, i) => g - series.solar[i]);
@@ -2886,6 +2910,17 @@ function drawCumCostChart(p, chosenEntry = null) {
     for (let i = 0; i < nY; i++) { const y = Y(series.system[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
     ctx.stroke();
   }
+  // Residual grid cost: slate, thinner. Normally it rides low (the bills that
+  // remain accumulate toward their 20-year total); under net metering — when
+  // the feed-in credit out-earns the bill — it runs below the $0 line.
+  if (residShown && residLine) {
+    ctx.strokeStyle = "#94a3b8";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < nY; i++) { const y = Y(residLine[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
+    ctx.stroke();
+    ctx.lineWidth = 2.5;
+  }
 
   // ── legend: the figures live under the chart, never on it ────────────
   // The line-end totals used to sit at the plot's right edge, colored like
@@ -2909,6 +2944,11 @@ function drawCumCostChart(p, chosenEntry = null) {
       ["#fbbf24", `Grid without solar: ${money(series.grid[nY - 1])}`],
     ];
     if (hasSystem) rows.push(["#34d399", `Solar system: ${money(series.system[nY - 1])}`]);
+    if (residShown && residEnd !== null) {
+      rows.push(["#94a3b8", residEnd >= 0
+        ? `Residual grid cost after feed-in: ${money(residEnd)}`
+        : `Residual grid cost after feed-in: \u2212${money(-residEnd)} (net-metering credit)`]);
+    }
     legend.textContent = "";
     for (const [color, label] of rows) {
       const row = el("span", { style: "display:flex;align-items:center;" });
@@ -2980,15 +3020,28 @@ function drawCumCostChart(p, chosenEntry = null) {
     let txt = `Running 20-year cost for the recommended system (${label}): the amber line is what you` +
       ` pay the utility if you stay on the grid (${money(bd.gridTotal)}). The emerald line is the solar system's` +
       ` own cost (~${money(bd.systemTotal)}), matching the \u201CTotal 20-year cost\u201D row in the recommendation.` +
-      ` The amber figure is a stack — the system, then the smaller bills that remain after solar (~${money(bd.residualBills)}),` +
-      ` then your saving — so the gap between amber and emerald at year 20 (${money(bd.saved)}) is what the` +
-      ` system puts back in your pocket.`;
+      (bd.residualBills !== null && bd.residualBills < 0
+        ? ` The with-solar total (${bd.withSolar < 0 ? `~\u2212${money(-bd.withSolar)}` : `~${money(bd.withSolar)}`}) sits BELOW` +
+          ` the system's own cost: your feed-in credit on surplus out-earns the small bill that remains, so the` +
+          ` stack runs negative and the utility owes you ~${money(-bd.residualBills)} in the 20-year picture.`
+        : ` The amber figure is a stack — the system, then the smaller bills that remain after solar (~${money(bd.residualBills)}),` +
+          ` then your saving — so the gap between amber and emerald at year 20 (${money(bd.saved)}) is what the` +
+          ` system puts back in your pocket.`);
     if (beIdx >= 0) {
       const saved = (series.grid[nY - 1] || 0) - (series.solar[nY - 1] || 0);
       txt += ` The system has repaid its cost by year ${beIdx + 1} \u2014 every year after puts ~${money(Math.round(saved / (nY - beIdx)))} back in your pocket. ` +
         `Total saving over 20 years: ~${money(saved)}. The lower bars are your running net position: red until break-even, then climbing.`;
     } else {
       txt += ` Within 20 years the system never repays its cost \u2014 battery replacements outpace bill savings, so the honest answer is: it does not pay for itself here.`;
+    }
+    if (residShown) {
+      const kwh = seriesEntry.importedKwhPerYear || 0;
+      txt += residEnd >= 0
+        ? ` The slate line is the residual grid cost itself — about ${money(residAnnual)}/yr for the ${fmt(kwh)}` +
+          ` kWh/yr still drawn from the grid (net of your feed-in credit), ${money(residEnd)} over the full 20 years.`
+        : ` The slate line runs below $0 — net metering: the feed-in value of your surplus exceeds` +
+          (kwh > 0 ? ` even the small ${fmt(kwh)} kWh/yr you still draw` : ` the tiny bill you still pay`) +
+          `, so you earn ~${money(-residEnd)} over the full 20 years.`;
     }
     cap.textContent = txt;
   }

@@ -97,8 +97,13 @@ test("cumulative series: the residual bill stays on the solar line (honest savin
   assert.equal(crossYr, be, "chart crossing equals break-even row with residual counted");
 });
 
-test("cumulative series: null when residual is missing/negative", () => {
-  assert.equal(cumulativeCostSeries({ capexMidUsd: 2400, annualSavingsUsd: 200, residualAnnualUsd: -1 }), null);
+test("cumulative series: negative residual is legal (net-metering credit), NaN still null", () => {
+  // Feed-in credit out-earning the bill must still chart — the with-solar line
+  // then accumulates BELOW the capex start (a credit the utility owes).
+  const s = cumulativeCostSeries({ capexMidUsd: 2400, annualSavingsUsd: 300, residualAnnualUsd: -1 });
+  assert.ok(s, "a credit must not null the whole series");
+  assert.equal(s.grid[19], 20 * (300 - 1), "grid stays the full bill: savings + residual per year");
+  assert.ok(s.solar[19] < 2400, "credits pull the with-solar line below the capex start");
   assert.equal(cumulativeCostSeries({ capexMidUsd: 2400, annualSavingsUsd: 200, residualAnnualUsd: NaN }), null);
 });
 

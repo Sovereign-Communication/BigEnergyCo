@@ -105,13 +105,18 @@ export function exportValueUsd(clippedKwhPerYear, exportRatePerKwh) {
  * Note every "customer" of the three arrays shares the same swap years, so the
  * wedge between solar and system is exactly the residual bills paid.
  *
+ * residualAnnualUsd is allowed to go NEGATIVE: when a feed-in credit on
+ * clipped surplus out-earns the bill the household still pays (net metering /
+ * an oversized array), the with-solar line then accumulates less than the
+ * system's own cost and the wedge becomes a credit the utility owes.
+ *
  * Returns null when there is no bill to displace (no tariff entered, or a
  * system that displaces nothing) — the chart is then hidden rather than
  * shown with a fake grid line.
  */
 export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, residualAnnualUsd = 0, swapsAndLaborTotalUsd = 0, replacements = 0, batteryLifeYears, firstLaborUsd = 0, horizonYears = HORIZON_YEARS }) {
   if (!Number.isFinite(capexMidUsd) || !Number.isFinite(annualSavingsUsd) || annualSavingsUsd < 0 ||
-      !Number.isFinite(residualAnnualUsd) || residualAnnualUsd < 0) return null;
+      !Number.isFinite(residualAnnualUsd)) return null;
   const perSwap = replacements > 0 ? swapsAndLaborTotalUsd / replacements : 0;
 
   // Swap schedule: replacement k falls due at round(k × batteryLifeYears),
