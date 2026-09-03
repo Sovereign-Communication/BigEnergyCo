@@ -6,6 +6,10 @@
 export const LOCALES = {
   en: {
     navSizing: "Size Your System",
+    navSupport: "Support",
+    cutLabel: "Your bill-cut target",
+    fxCodeLabel: "Currency code:",
+    firstRunNote: "First run downloads ~2 MB of satellite weather data, then caches it in your browser.",
     navCosts: "Estimator",
     navBom: "Hardware Reference",
     navBlog: "Blog",
@@ -94,6 +98,10 @@ export const LOCALES = {
   },
   es: {
     navSizing: "Dimensiona tu sistema",
+    navSupport: "Soporte",
+    cutLabel: "Tu objetivo de reducción de factura",
+    fxCodeLabel: "Código de moneda:",
+    firstRunNote: "La primera ejecución descarga ~2 MB de datos satelitales del clima y luego los guarda en tu navegador.",
     navCosts: "Comparador",
     navBom: "Referencia de hardware",
     navBlog: "Blog",
@@ -210,6 +218,10 @@ export const LOCALES = {
   },
 pt: {
     navSizing: "Dimensione seu sistema",
+    navSupport: "Suporte",
+    cutLabel: "Sua meta de redução da conta",
+    fxCodeLabel: "Código da moeda:",
+    firstRunNote: "A primeira execução baixa ~2 MB de dados de clima por satélite e depois os guarda no seu navegador.",
     navCosts: "Comparador",
     navBom: "Referência de hardware",
     navBlog: "Blog",
@@ -326,6 +338,10 @@ pt: {
   },
   fr: {
     navSizing: "Dimensionner mon système",
+    navSupport: "Assistance",
+    cutLabel: "Votre objectif de réduction de facture",
+    fxCodeLabel: "Code de devise :",
+    firstRunNote: "Le premier lancement télécharge ~2 Mo de données météo satellite, puis les met en cache dans votre navigateur.",
     navCosts: "Comparateur",
     navBom: "Référence matériel",
     navBlog: "Blog",
@@ -443,6 +459,10 @@ pt: {
   ar: {
     rtl: true,
     navSizing: "صمّم نظامك",
+    navSupport: "الدعم",
+    cutLabel: "هدف خفض الفاتورة",
+    fxCodeLabel: "رمز العملة:",
+    firstRunNote: "أول تشغيل يُنزّل حوالي 2 ميغابايت من بيانات الطقس الساتلية ثم يخزّنها في متصفحك.",
     navCosts: "المقارنة",
     navBom: "مرجع المكونات",
     navBlog: "المدونة",
