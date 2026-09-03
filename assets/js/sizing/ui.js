@@ -4246,7 +4246,9 @@ export function initSizingUI() {
 
   $("btnGeoLocate").addEventListener("click", locateMe);
 
-  $("btnRunSizing").addEventListener("click", run);
+  // The click event must not leak into run()'s `quiet` parameter (a truthy
+  // Event object would silently suppress the status, spinner, and scroll).
+  $("btnRunSizing").addEventListener("click", () => run());
 
   $("btnAskAdvisor").addEventListener("click", askAdvisor);
 

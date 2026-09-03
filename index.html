@@ -1343,9 +1343,9 @@ footer {
 
       <div class="header-cta">
 
-        <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;">Support</a>
+        <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;" data-i18n="navSupport">Support</a>
 
-        <div id="btnNavSizeArray" class="btn btn-primary" style="cursor: pointer;">Size Your System</div>
+        <div id="btnNavSizeArray" class="btn btn-primary" style="cursor: pointer;" data-i18n="navSizing">Size Your System</div>
 
       </div>
 
@@ -1664,7 +1664,7 @@ footer {
 
           <div class="form-group">
 
-            <label for="systemGoal">What outcome are you exploring?</label>
+            <label for="systemGoal" data-i18n="goalLabel">What outcome are you exploring?</label>
 
             <select id="systemGoal" class="form-control">
 
@@ -1722,7 +1722,7 @@ footer {
 
             <div class="form-group">
 
-              <label for="fxCode">Currency code:</label>
+              <label for="fxCode" data-i18n="fxCodeLabel">Currency code:</label>
 
               <input type="text" id="fxCode" class="form-control" placeholder="e.g. PHP" maxlength="4">
 
@@ -1734,9 +1734,9 @@ footer {
 
           </div>
 
-          <button id="btnRunSizing" class="btn btn-primary btn-full" type="button" style="cursor:pointer; margin-top: 0.5rem;"><span>Show my options</span></button>
+          <button id="btnRunSizing" class="btn btn-primary btn-full" type="button" data-i18n="runBtn" style="cursor:pointer; margin-top: 0.5rem;"><span>Show my options</span></button>
 
-          <div id="sizingStatus" role="status" aria-live="polite" style="font-size:0.85rem;color:var(--text-muted);margin-top:0.75rem;line-height:1.5;">First run downloads ~2 MB of satellite weather data, then caches it in your browser.</div>
+          <div id="sizingStatus" role="status" aria-live="polite" data-i18n="firstRunNote" style="font-size:0.85rem;color:var(--text-muted);margin-top:0.75rem;line-height:1.5;">First run downloads ~2 MB of satellite weather data, then caches it in your browser.</div>
 
         </div>
 
@@ -1748,7 +1748,7 @@ footer {
 
             <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
 
-              <label for="cutSlider" style="font-weight:800;color:var(--text-main);font-size:0.98rem;margin:0;">Your bill-cut target</label>
+              <label for="cutSlider" data-i18n="cutLabel" style="font-weight:800;color:var(--text-main);font-size:0.98rem;margin:0;">Your bill-cut target</label>
 
               <div id="cutSliderVal" style="font-family:var(--font-mono);font-weight:800;color:var(--primary-accent);font-size:0.95rem;"></div>
 
