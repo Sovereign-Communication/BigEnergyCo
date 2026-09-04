@@ -1610,6 +1610,164 @@ footer {
 
 }
 
+/* PWA Offline & Install */
+.offline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fca5a5;
+  user-select: none;
+}
+.offline-badge.online-flash {
+  background: rgba(0, 230, 153, 0.15);
+  border-color: rgba(0, 230, 153, 0.4);
+  color: var(--primary-accent);
+}
+.offline-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  display: inline-block;
+  animation: becopulse 2s infinite;
+}
+.offline-badge.online-flash .offline-dot {
+  background: var(--primary-accent);
+}
+@keyframes becopulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.btn-xs {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+/* Sun-path Graphic */
+.sun-path-wrap {
+  background: rgba(13, 19, 34, 0.85);
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.sun-path-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.sun-path-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  font-size: 0.78rem;
+}
+.sun-path-metric {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 0.45rem 0.65rem;
+}
+.sun-path-metric-title {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  margin-bottom: 0.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.sun-path-metric-val {
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+}
+
+/* Battery Chemistry Temperature Visualizer */
+.chem-temp-wrap {
+  background: rgba(13, 19, 34, 0.85);
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+.chem-temp-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+.chem-temp-bar-wrap {
+  position: relative;
+  height: 18px;
+  background: linear-gradient(90deg, #1e3a8a 0%, #0284c7 35%, #059669 65%, #f59e0b 85%, #dc2626 100%);
+  border-radius: 9px;
+  margin: 1.4rem 0 0.5rem;
+}
+.chem-temp-pin {
+  position: absolute;
+  top: -19px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  transition: left 0.3s ease;
+}
+.chem-temp-pin-label {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  background: #0d1322;
+  border: 1px solid var(--primary-accent);
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+  color: var(--primary-accent);
+  white-space: nowrap;
+}
+.chem-temp-pin-arrow {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--primary-accent);
+}
+.chem-temp-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+.chem-temp-status-box {
+  margin-top: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+/* Preset Buttons */
+.preset-btn:hover {
+  border-color: var(--primary-accent) !important;
+  color: #fff !important;
+}
+
   </style>
 
 </head>
@@ -1648,6 +1806,14 @@ footer {
 
       <div class="header-cta">
 
+        <span id="offlineBadge" class="offline-badge" style="display:none;" title="Working offline using cached app data &amp; local weather simulation" aria-label="Offline status">
+          <span class="offline-dot"></span> Offline
+        </span>
+
+        <button id="btnInstallApp" class="btn btn-outline btn-xs" type="button" aria-label="Install BigEnergyCo Web App" style="display:none;cursor:pointer;">
+          &#128242; Install App
+        </button>
+
         <a href="#support" class="btn btn-secondary" style="cursor: pointer; text-decoration: none;" data-i18n="navSupport">Support</a>
 
         <div id="btnNavSizeArray" class="btn btn-primary" style="cursor: pointer;" data-i18n="navSizing">Size Your System</div>
@@ -1667,6 +1833,10 @@ footer {
     </div>
 
     <nav id="mobileNavDrawer" class="mobile-nav-drawer" aria-label="Mobile navigation">
+
+      <button id="btnInstallAppMobile" class="btn btn-outline" type="button" aria-label="Install BigEnergyCo Web App" style="display:none;width:100%;margin-bottom:0.75rem;cursor:pointer;justify-content:center;">
+        &#128242; Install BigEnergyCo App
+      </button>
 
       <a href="#sizing" class="mobile-nav-link" data-i18n="navSizing">Size Your System <span>&rarr;</span></a>
 
@@ -1850,6 +2020,8 @@ footer {
 
             </details>
 
+            <div id="sunPathWrap" class="sun-path-wrap" style="margin-top:0.75rem;display:none;"></div>
+
           </div>
 
           <!-- Bill slider: always visible so auto-run is pre-configured with
@@ -1951,6 +2123,14 @@ footer {
 
           <div id="panelAppliances">
 
+            <div class="appliance-presets" style="display:flex;gap:0.45rem;flex-wrap:wrap;margin-bottom:0.8rem;align-items:center;">
+              <span style="font-size:0.78rem;font-weight:700;color:var(--text-muted);margin-right:0.2rem;">Quick Presets:</span>
+              <button type="button" class="btn btn-outline btn-xs preset-btn" data-preset="cabin" style="padding:0.3rem 0.65rem;font-size:0.78rem;cursor:pointer;">&#127957;&#65039; Weekend Cabin</button>
+              <button type="button" class="btn btn-outline btn-xs preset-btn" data-preset="home" style="padding:0.3rem 0.65rem;font-size:0.78rem;cursor:pointer;">&#127969; Standard Home</button>
+              <button type="button" class="btn btn-outline btn-xs preset-btn" data-preset="homestead" style="padding:0.3rem 0.65rem;font-size:0.78rem;cursor:pointer;">&#128668; Homestead</button>
+              <button type="button" class="btn btn-outline btn-xs preset-btn" data-preset="clear" style="padding:0.3rem 0.65rem;font-size:0.78rem;cursor:pointer;color:var(--text-muted);">&#129529; Clear All</button>
+            </div>
+
             <div id="applianceList"></div>
 
             <div id="readoutAppliances" style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0,230,153,0.06); border: 1px solid var(--border-glow); border-radius: 8px; font-size: 0.95rem; font-weight: 700;"></div>
@@ -2024,6 +2204,8 @@ footer {
               <option value="agm">Lead-Acid (AGM) &mdash; cheapest upfront, shortest-lived</option>
 
             </select>
+
+            <div id="chemTempVisualizer" class="chem-temp-wrap" style="margin-top:0.75rem;"></div>
 
           </div>
 
@@ -2143,11 +2325,19 @@ footer {
 
           <div id="socChartWrap" style="display:none; margin-top: 1.25rem;">
 
-            <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">How low does each battery get? (five years of real weather)</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.4rem;">
+              <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">How low does each battery get? (five years of real weather)</div>
+              <div id="socZoomControls" class="chart-zoom-controls" style="display:flex;gap:0.35rem;align-items:center;">
+                <button type="button" id="btnSocZoomReset" class="btn btn-outline btn-xs" style="padding:0.22rem 0.55rem;font-size:0.75rem;cursor:pointer;" title="Full 5-year simulation">Full 5-Yr</button>
+                <button type="button" id="btnSocZoomWorst" class="btn btn-outline btn-xs" style="padding:0.22rem 0.55rem;font-size:0.75rem;cursor:pointer;" title="Zoom into the worst 30-day streak">Worst Month</button>
+                <button type="button" id="btnSocZoomIn" class="btn btn-outline btn-xs" style="padding:0.22rem 0.55rem;font-size:0.75rem;cursor:pointer;" title="Zoom In">+</button>
+                <button type="button" id="btnSocZoomOut" class="btn btn-outline btn-xs" style="padding:0.22rem 0.55rem;font-size:0.75rem;cursor:pointer;" title="Zoom Out">&minus;</button>
+              </div>
+            </div>
 
             <div id="socLegend" style="display:none;"></div>
 
-            <canvas id="socCanvas" style="width: 100%; border: 1px solid var(--border-card); border-radius: 10px; background: rgba(9,13,22,0.85);"></canvas>
+            <canvas id="socCanvas" style="width: 100%; border: 1px solid var(--border-card); border-radius: 10px; background: rgba(9,13,22,0.85); touch-action: none;"></canvas>
 
             <p id="socCaption" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.55;"></p>
 
@@ -2744,7 +2934,7 @@ footer {
   <!-- Inlined browser helpers -->
 
 
-  <script type="module" src="./assets/js/sizing/ui.js?v=20260903a"></script>
+  <script type="module" src="./assets/js/sizing/ui.js?v=20260904a"></script>
 
   <script>
 
@@ -3575,7 +3765,7 @@ footer {
 
     // is cached per location, so a visited site keeps working fully offline.
 
-    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
 
       window.addEventListener('load', function () {
 

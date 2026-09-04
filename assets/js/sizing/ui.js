@@ -82,6 +82,13 @@ let lastRunQuiet = false;
 // slider slice can never collide with — or clobber — a full re-run).
 let sliceToken = 0;
 
+// PWA install prompt holder
+let deferredInstallPrompt = null;
+
+// SOC chart zoom state: null = full view; { start: number, end: number } = sliced
+let socZoomRange = null;
+let cachedChartState = null;
+
 // Bill slider bounds, expressed in kWh/day and converted to local currency.
 const BILL_MIN_KWH = 2;
 const BILL_MAX_KWH = 200;
@@ -424,7 +431,7 @@ function renderAppliances() {
 
       const maxH = it.maxH || 24;
 
-      const row = el("div", { class: "ap-row", "data-w": it.w, "data-qty": "1", "data-h": it.h, "data-duty": it.duty ? "1" : "" });
+      const row = el("div", { class: "ap-row", "data-w": it.w, "data-qty": "1", "data-h": it.h, "data-duty": it.duty ? "1" : "", "data-item-name": it.n });
 
       row.style.cssText = "display:flex;align-items:center;gap:0.6rem;padding:0.4rem 0.5rem;border:1px solid transparent;border-radius:8px;flex-wrap:wrap;";
 
@@ -542,6 +549,272 @@ function renderAppliances() {
 
 }
 
+function applyAppliancePreset(presetKey) {
+
+  const rows = document.querySelectorAll("#applianceList .ap-row");
+
+  if (!rows || !rows.length) return;
+
+  const PRESETS = {
+    cabin: {
+      "Refrigerator (modern, mid-size)": { qty: 1, h: 10 },
+      "LED light bulb": { qty: 4, h: 5 },
+      "Phone charger": { qty: 2, h: 3 },
+      "Laptop or desktop computer": { qty: 1, h: 4 },
+      "Internet router (always on)": { qty: 1, h: 24 }
+    },
+    home: {
+      "Refrigerator (modern, mid-size)": { qty: 1, h: 10 },
+      "LED light bulb": { qty: 10, h: 5 },
+      "LED TV": { qty: 1, h: 4 },
+      "Microwave": { qty: 1, h: 0.33 },
+      "Electric kettle": { qty: 1, h: 0.25 },
+      "Laptop or desktop computer": { qty: 2, h: 6 },
+      "Phone charger": { qty: 4, h: 3 },
+      "Internet router (always on)": { qty: 1, h: 24 },
+      "Washing machine": { qty: 1, h: 0.5 }
+    },
+    homestead: {
+      "Refrigerator (modern, mid-size)": { qty: 1, h: 10 },
+      "Chest freezer": { qty: 1, h: 10 },
+      "Water pump (well or pressure tank)": { qty: 1, h: 1 },
+      "LED light bulb": { qty: 12, h: 5 },
+      "LED TV": { qty: 1, h: 4 },
+      "Microwave": { qty: 1, h: 0.5 },
+      "Laptop or desktop computer": { qty: 2, h: 8 },
+      "Phone charger": { qty: 4, h: 4 },
+      "Internet router (always on)": { qty: 1, h: 24 },
+      "Washing machine": { qty: 1, h: 1 },
+      "Space heater (small)": { qty: 1, h: 4 }
+    },
+    clear: {}
+  };
+
+  const target = PRESETS[presetKey] || {};
+
+  rows.forEach((row) => {
+    const name = row.dataset.itemName;
+    const cb = row.querySelector("input[type='checkbox']");
+    const qtyVal = row.querySelector("span[style*='font-family']");
+    const hrsInput = row.querySelector("input[type='range']");
+    if (!cb) return;
+
+    if (target[name]) {
+      const cfg = target[name];
+      cb.checked = true;
+      row.dataset.qty = String(cfg.qty);
+      row.dataset.h = String(cfg.h);
+      if (qtyVal) qtyVal.textContent = String(cfg.qty);
+      if (hrsInput) hrsInput.value = String(cfg.h);
+    } else {
+      cb.checked = false;
+    }
+    cb.dispatchEvent(new Event("change"));
+  });
+
+  const loadModeEl = $("loadMode");
+  if (loadModeEl && loadModeEl.value !== "appliances" && presetKey !== "clear") {
+    loadModeEl.value = "appliances";
+    setLoadPanel();
+  }
+
+}
+
+function renderSunPath(lat) {
+
+  const wrap = $("sunPathWrap");
+
+  if (!wrap) return;
+
+  const validLat = Number.isFinite(lat) ? Math.max(-90, Math.min(90, lat)) : 21.31;
+
+  const absLat = Math.abs(validLat);
+
+  const isNorth = validLat >= 0;
+
+  const deltaSummer = isNorth ? 23.44 : -23.44;
+
+  const deltaWinter = isNorth ? -23.44 : 23.44;
+
+  const elevSummer = Math.max(0, Math.min(90, 90 - Math.abs(validLat - deltaSummer)));
+
+  const elevEquinox = Math.max(0, Math.min(90, 90 - absLat));
+
+  const elevWinter = Math.max(0, Math.min(90, 90 - Math.abs(validLat - deltaWinter)));
+
+  function calcDayLength(latitude, declinationDeg) {
+    const phi = latitude * (Math.PI / 180);
+    const delta = declinationDeg * (Math.PI / 180);
+    const cosH = -Math.tan(phi) * Math.tan(delta);
+    if (cosH <= -1) return 24;
+    if (cosH >= 1) return 0;
+    return (2 * (Math.acos(cosH) * 180 / Math.PI)) / 15;
+  }
+
+  const hoursSummer = calcDayLength(validLat, deltaSummer);
+
+  const hoursEquinox = calcDayLength(validLat, 0);
+
+  const hoursWinter = calcDayLength(validLat, deltaWinter);
+
+  const tiltText = absLat < 5
+    ? "Near Equator: ~10\u00B0 self-cleaning tilt"
+    : `Face ${isNorth ? "South" : "North"} at ~${Math.round(absLat)}\u00B0 tilt (year-round optimal)`;
+
+  const svgW = 460, svgH = 150;
+
+  const groundY = 125;
+
+  const cx = svgW / 2;
+
+  const peakY = (deg) => groundY - (deg / 90) * (groundY - 20);
+
+  const ySummer = peakY(elevSummer);
+
+  const yEquinox = peakY(elevEquinox);
+
+  const yWinter = peakY(elevWinter);
+
+  const spreadX = (hrs) => Math.max(25, Math.min(210, (hrs / 12) * 160));
+
+  const sSpread = spreadX(hoursSummer);
+
+  const eSpread = spreadX(hoursEquinox);
+
+  const wSpread = spreadX(hoursWinter);
+
+  const arcPath = (yPeak, spread) => {
+    const xLeft = cx - spread;
+    const xRight = cx + spread;
+    return `M ${xLeft} ${groundY} Q ${cx} ${yPeak - (groundY - yPeak) * 0.15} ${xRight} ${groundY}`;
+  };
+
+  wrap.style.display = "block";
+
+  wrap.innerHTML = `
+    <div class="sun-path-header">
+      <span>&#9728;&#65039; Solar Sun-Path &amp; Seasonal Sky Arc (${validLat >= 0 ? validLat.toFixed(1) + "\u00B0N" : Math.abs(validLat).toFixed(1) + "\u00B0S"})</span>
+      <span style="font-size:0.75rem;font-weight:500;color:var(--text-muted);">${tiltText}</span>
+    </div>
+    <svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%;height:auto;display:block;overflow:visible;">
+      <line x1="20" y1="${groundY}" x2="${svgW - 20}" y2="${groundY}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" />
+      <text x="35" y="${groundY + 16}" fill="var(--text-muted)" font-size="10" font-family="sans-serif">East (Sunrise)</text>
+      <text x="${cx}" y="${groundY + 16}" fill="var(--text-muted)" font-size="10" font-family="sans-serif" text-anchor="middle">Solar Noon (${isNorth ? "South" : "North"})</text>
+      <text x="${svgW - 35}" y="${groundY + 16}" fill="var(--text-muted)" font-size="10" font-family="sans-serif" text-anchor="end">West (Sunset)</text>
+
+      <path d="${arcPath(ySummer, sSpread)}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" />
+      <circle cx="${cx}" cy="${ySummer}" r="5" fill="#f59e0b" />
+      <text x="${cx + 8}" y="${ySummer + 4}" fill="#fbbf24" font-size="10" font-weight="bold" font-family="monospace">${Math.round(elevSummer)}\u00B0</text>
+
+      <path d="${arcPath(yEquinox, eSpread)}" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="4 2" />
+      <circle cx="${cx}" cy="${yEquinox}" r="4" fill="#10b981" />
+      <text x="${cx + 8}" y="${yEquinox + 4}" fill="#34d399" font-size="10" font-weight="bold" font-family="monospace">${Math.round(elevEquinox)}\u00B0</text>
+
+      <path d="${arcPath(yWinter, wSpread)}" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round" />
+      <circle cx="${cx}" cy="${yWinter}" r="4" fill="#38bdf8" />
+      <text x="${cx + 8}" y="${yWinter + 4}" fill="#7dd3fc" font-size="10" font-weight="bold" font-family="monospace">${Math.round(elevWinter)}\u00B0</text>
+    </svg>
+    <div class="sun-path-grid">
+      <div class="sun-path-metric">
+        <div class="sun-path-metric-title"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;"></span> Summer Solstice</div>
+        <div class="sun-path-metric-val" style="color:#fbbf24;">${Math.round(elevSummer)}\u00B0 noon &bull; ${hoursSummer.toFixed(1)}h daylight</div>
+      </div>
+      <div class="sun-path-metric">
+        <div class="sun-path-metric-title"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;"></span> Equinox</div>
+        <div class="sun-path-metric-val" style="color:#34d399;">${Math.round(elevEquinox)}\u00B0 noon &bull; ~12.0h daylight</div>
+      </div>
+      <div class="sun-path-metric">
+        <div class="sun-path-metric-title"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#38bdf8;"></span> Winter Solstice</div>
+        <div class="sun-path-metric-val" style="color:#7dd3fc;">${Math.round(elevWinter)}\u00B0 noon &bull; ${hoursWinter.toFixed(1)}h daylight</div>
+      </div>
+    </div>
+  `;
+
+}
+
+function renderChemTempVisualizer(lat) {
+
+  const wrap = $("chemTempVisualizer");
+
+  if (!wrap) return;
+
+  const chemSelect = $("chemSelect");
+
+  const chem = chemSelect ? chemSelect.value : "auto";
+
+  const validLat = Number.isFinite(lat) ? lat : (parseFloat($("latInput")?.value) || 21.31);
+
+  const absLat = Math.abs(validLat);
+
+  let estWinterLowC = 20;
+
+  if (absLat >= 55) estWinterLowC = -22;
+  else if (absLat >= 48) estWinterLowC = -15;
+  else if (absLat >= 40) estWinterLowC = -8;
+  else if (absLat >= 32) estWinterLowC = 1;
+  else if (absLat >= 24) estWinterLowC = 10;
+  else estWinterLowC = 19;
+
+  const minT = -30, maxT = 45;
+
+  const pinPct = Math.max(2, Math.min(98, ((estWinterLowC - minT) / (maxT - minT)) * 100));
+
+  let statusHtml = "";
+
+  if (chem === "lfp") {
+    const isFreezingRisk = estWinterLowC <= 0;
+    statusHtml = `
+      <div class="chem-temp-status-box" style="background:${isFreezingRisk ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.1)'};border:1px solid ${isFreezingRisk ? 'rgba(239,68,68,0.35)' : 'rgba(16,185,129,0.35)'};">
+        <strong style="color:${isFreezingRisk ? '#fca5a5' : 'var(--primary-accent)'};">${isFreezingRisk ? 'Winter Freezing Notice:' : 'Safe Operating Climate:'}</strong>
+        ${isFreezingRisk
+          ? `Local winter temps reach ~${estWinterLowC}\u00B0C (below 0\u00B0C / 32\u00B0F). LiFePO4 BMS cuts off charging below freezing to prevent permanent lithium plating. Install batteries indoors, in an insulated battery enclosure, or choose models with internal heating pads.`
+          : `LiFePO4 charges safely above 0\u00B0C (32\u00B0F) and operates at 95%+ round-trip efficiency. Discharging is supported down to -20\u00B0C.`}
+      </div>`;
+  } else if (chem === "naion") {
+    statusHtml = `
+      <div class="chem-temp-status-box" style="background:rgba(14,165,233,0.12);border:1px solid rgba(14,165,233,0.35);">
+        <strong style="color:#7dd3fc;">Sub-Zero Resilient:</strong>
+        Sodium-ion charges and discharges reliably from -20\u00B0C to +45\u00B0C without dendrite risk or thermal runaway. Retains 85%+ usable capacity in freezing weather without requiring heating pads.
+      </div>`;
+  } else if (chem === "agm") {
+    statusHtml = `
+      <div class="chem-temp-status-box" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.35);">
+        <strong style="color:#fcd34d;">Cold Derating Warning:</strong>
+        Lead-Acid (AGM) usable capacity drops severely below freezing (~50% at -10\u00B0C). Discharged electrolyte can freeze and crack the battery casing.
+      </div>`;
+  } else {
+    const isFreezing = estWinterLowC <= 0;
+    statusHtml = `
+      <div class="chem-temp-status-box" style="background:rgba(255,255,255,0.04);border:1px solid var(--border-card);">
+        <strong style="color:var(--text-main);">Climate Comparison at ~${estWinterLowC}\u00B0C Winter Low:</strong>
+        ${isFreezing
+          ? `<br>&bull; <span style="color:#7dd3fc;font-weight:700;">Sodium-Ion</span> charges directly in freezing weather down to -20\u00B0C.<br>&bull; <span style="color:#fbbf24;font-weight:700;">LiFePO4</span> needs indoor placement or heating pads below 0\u00B0C.<br>&bull; <span style="color:#f87171;font-weight:700;">Lead-Acid</span> suffers ~50% capacity loss in winter.`
+          : `<br>&bull; <span style="color:var(--primary-accent);font-weight:700;">LiFePO4</span> provides the lowest 20-year lifetime cost in mild/warm climates.<br>&bull; <span style="color:#7dd3fc;font-weight:700;">Sodium-Ion</span> offers non-flammable chemistry and thermal headroom.<br>&bull; <span style="color:#f87171;font-weight:700;">Lead-Acid</span> has low upfront cost but shortest cycle life.`}
+      </div>`;
+  }
+
+  wrap.innerHTML = `
+    <div class="chem-temp-title">
+      <span>Ambient Temperature &amp; Battery Chemistry Limits</span>
+      <span style="font-size:0.75rem;font-weight:500;color:var(--text-muted);font-family:var(--font-mono);">-30\u00B0C to +45\u00B0C</span>
+    </div>
+    <div class="chem-temp-bar-wrap">
+      <div class="chem-temp-pin" style="left:${pinPct}%;">
+        <div class="chem-temp-pin-label">Site Low ~${estWinterLowC}\u00B0C</div>
+        <div class="chem-temp-pin-arrow"></div>
+      </div>
+    </div>
+    <div class="chem-temp-legend">
+      <span>-30\u00B0C (Deep Freeze)</span>
+      <span style="color:#38bdf8;">0\u00B0C (LFP Cutoff)</span>
+      <span style="color:var(--primary-accent);">20\u00B0C (Ideal)</span>
+      <span style="color:#ef4444;">45\u00B0C (Heat)</span>
+    </div>
+    ${statusHtml}
+  `;
+
+}
+
 // -- Location plumbing -------------------------------------------------------
 
 function setCoords(lat, lon, label, region, country) {
@@ -561,6 +834,10 @@ function setCoords(lat, lon, label, region, country) {
   applyEstimatedTariff(lat, lon, region, country);
 
   updateFuelUnits();
+
+  renderSunPath(lat);
+
+  renderChemTempVisualizer(lat);
 
 }
 
@@ -1514,6 +1791,16 @@ function drawSunStrip(ctx, pv, X, W, padL, padR, stripH) {
 
   const amp = stripH - 16;
 
+  const plotW = W - padL - padR;
+
+  ctx.save();
+
+  ctx.beginPath();
+
+  ctx.rect(padL, 0, plotW, stripH);
+
+  ctx.clip();
+
   ctx.beginPath();
 
   ctx.moveTo(padL, stripH);
@@ -1529,6 +1816,8 @@ function drawSunStrip(ctx, pv, X, W, padL, padR, stripH) {
   ctx.globalAlpha = 0.65; ctx.strokeStyle = "#fbbf24"; ctx.lineWidth = 1; ctx.stroke();
 
   ctx.globalAlpha = 1;
+
+  ctx.restore();
 
   ctx.font = "10px ui-monospace, monospace";
 
@@ -1560,10 +1849,6 @@ function drawSocChart(history, chemLabel) {
 
   if (!solvable.length) {
 
-    // Data arrived but in an unexpected shape - almost certainly a stale
-
-    // cached module. Never fail silently: say so.
-
     wrap.style.display = "block";
 
     const cap = $("socCaption");
@@ -1573,6 +1858,8 @@ function drawSocChart(history, chemLabel) {
     return;
 
   }
+
+  cachedChartState = { type: "soc", history, chemLabel };
 
   wrap.style.display = "block";
 
@@ -1591,6 +1878,12 @@ function drawSocChart(history, chemLabel) {
   const BAND_H = 118, GAP = 14;
 
   const nDays = solvable.length ? solvable[0].dailyMin.length : 0;
+
+  const zStart = (socZoomRange && Number.isFinite(socZoomRange.start)) ? Math.max(0, Math.min(nDays - 2, socZoomRange.start)) : 0;
+
+  const zEnd = (socZoomRange && Number.isFinite(socZoomRange.end)) ? Math.max(zStart + 1, Math.min(nDays - 1, socZoomRange.end)) : nDays - 1;
+
+  const visibleDays = Math.max(1, zEnd - zStart);
 
   const pv = (history.pvDaily && nDays && history.pvDaily.length === nDays) ? history.pvDaily : null;
 
@@ -1616,15 +1909,13 @@ function drawSocChart(history, chemLabel) {
 
   const plotW = W - padL - padR;
 
+  const X = (i) => padL + ((i - zStart) / visibleDays) * plotW;
+
   function drawBand(t, top) {
 
     const color = TIER_COLORS[t.id] || t.color || "#888";
 
     const plotH = BAND_H - padT - padB;
-
-    const n = t.dailyMin.length;
-
-    const X = (i) => padL + (i / (n - 1)) * plotW;
 
     const Y = (socPct) => top + padT + (1 - socPct / 100) * plotH;
 
@@ -1650,9 +1941,12 @@ function drawSocChart(history, chemLabel) {
 
     }
 
-        const floorSOC = chemLabel.includes("AGM") ? 50 : 20;
+    const floorSOC = chemLabel.includes("AGM") ? 50 : 20;
+
     ctx.fillStyle = "rgba(100,100,100,0.08)";
+
     ctx.fillRect(padL, Y(floorSOC), plotW, Y(0) - Y(floorSOC));
+
     ctx.strokeStyle = "rgba(239,68,68,0.7)";
 
     ctx.setLineDash([4, 4]);
@@ -1665,19 +1959,22 @@ function drawSocChart(history, chemLabel) {
 
     ctx.fillText(gt ? "bank empty" : "empty", W - padR - (gt ? 74 : 38), Y(0) - 4);
 
-    // FULL daily range: fill between each day's highest and lowest charge.
-
-    // The top edge is the battery charging back to full - every system's
-
-    // band touches 100%; the bottom edge shows how deep the nights dig.
+    // Clip plotting area for zoom and pan
+    ctx.save();
 
     ctx.beginPath();
 
-    ctx.moveTo(X(0), Y(t.dailyMax[0]));
+    ctx.rect(padL, top + padT, plotW, plotH);
 
-    for (let i = 1; i < n; i++) ctx.lineTo(X(i), Y(t.dailyMax[i]));
+    ctx.clip();
 
-    for (let i = n - 1; i >= 0; i--) ctx.lineTo(X(i), Y(t.dailyMin[i]));
+    ctx.beginPath();
+
+    ctx.moveTo(X(zStart), Y(t.dailyMax[zStart]));
+
+    for (let i = zStart + 1; i <= zEnd; i++) ctx.lineTo(X(i), Y(t.dailyMax[i]));
+
+    for (let i = zEnd; i >= zStart; i--) ctx.lineTo(X(i), Y(t.dailyMin[i]));
 
     ctx.closePath();
 
@@ -1699,7 +1996,7 @@ function drawSocChart(history, chemLabel) {
 
     ctx.beginPath();
 
-    for (let i = 0; i < n; i++) { const y = Y(t.dailyMin[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
+    for (let i = zStart; i <= zEnd; i++) { const y = Y(t.dailyMin[i]); if (i === zStart) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
 
     ctx.stroke();
 
@@ -1711,9 +2008,11 @@ function drawSocChart(history, chemLabel) {
 
     ctx.beginPath();
 
-    for (let i = 0; i < n; i++) { const y = Y(t.dailyMax[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
+    for (let i = zStart; i <= zEnd; i++) { const y = Y(t.dailyMax[i]); if (i === zStart) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
 
     ctx.stroke();
+
+    ctx.restore();
 
     ctx.globalAlpha = 1;
 
@@ -1747,23 +2046,45 @@ function drawSocChart(history, chemLabel) {
 
   const topOffset = stripH + stripGap;
 
-  if (pv) drawSunStrip(ctx, pv, (i) => padL + (i / (nDays - 1)) * plotW, W, padL, padR, stripH);
+  if (pv) drawSunStrip(ctx, pv, X, W, padL, padR, stripH);
 
   solvable.forEach((t, idx) => drawBand(t, topOffset + idx * (BAND_H + GAP)));
 
-  // shared x labels: years
-
-  const span = history.endYear - history.startYear + 1;
+  // shared x labels: years or day indices if zoomed in
 
   ctx.fillStyle = "#6b7280"; ctx.font = "10px ui-monospace, monospace"; ctx.textAlign = "center";
 
-  const daysTotal = history.days || solvable[0].dailyMin.length;
+  if (socZoomRange && visibleDays < 365) {
 
-  for (let yy = 0; yy <= span; yy++) {
+    const step = Math.max(1, Math.floor(visibleDays / 6));
 
-    const x = padL + (yy * 365.25 / daysTotal) * plotW;
+    for (let d = zStart; d <= zEnd; d += step) {
 
-    ctx.fillText(String(history.startYear + yy), Math.min(W - padR, Math.max(padL, x)), H - 2);
+      const x = X(d);
+
+      ctx.fillText(`Day ${d + 1}`, Math.min(W - padR - 16, Math.max(padL + 16, x)), H - 2);
+
+    }
+
+  } else {
+
+    const span = history.endYear - history.startYear + 1;
+
+    const daysTotal = history.days || solvable[0].dailyMin.length;
+
+    for (let yy = 0; yy <= span; yy++) {
+
+      const dayIdx = Math.round(yy * 365.25);
+
+      if (dayIdx >= zStart && dayIdx <= zEnd) {
+
+        const x = X(dayIdx);
+
+        ctx.fillText(String(history.startYear + yy), Math.min(W - padR, Math.max(padL, x)), H - 2);
+
+      }
+
+    }
 
   }
 
@@ -3124,6 +3445,8 @@ function drawAutoChart(p) {
 
   }
 
+  cachedChartState = { type: "auto", p };
+
   wrap.style.display = "block";
 
   const dpr = window.devicePixelRatio || 1;
@@ -3131,6 +3454,12 @@ function drawAutoChart(p) {
   const W = Math.max(200, Math.min(wrap.clientWidth || 320, (typeof window !== "undefined" && window.innerWidth ? window.innerWidth - 48 : 640)));
 
   const n = entries[0].socNameplatePct.min.length;
+
+  const zStart = (socZoomRange && Number.isFinite(socZoomRange.start)) ? Math.max(0, Math.min(n - 2, socZoomRange.start)) : 0;
+
+  const zEnd = (socZoomRange && Number.isFinite(socZoomRange.end)) ? Math.max(zStart + 1, Math.min(n - 1, socZoomRange.end)) : n - 1;
+
+  const visibleDays = Math.max(1, zEnd - zStart);
 
   const pv = (p.history && Array.isArray(p.history.pvDaily) && p.history.pvDaily.length === n) ? p.history.pvDaily : null;
 
@@ -3160,7 +3489,7 @@ function drawAutoChart(p) {
 
   const panelTop = stripH + stripGap;
 
-  const X = (i) => padL + (i / (n - 1)) * plotW;
+  const X = (i) => padL + ((i - zStart) / visibleDays) * plotW;
 
   const Y = (pct) => panelTop + padT + (1 - pct / yMax) * plotH;
 
@@ -3180,7 +3509,7 @@ function drawAutoChart(p) {
 
   }
 
-    // Reserve shading to make LFP/Na advantage obvious
+  // Reserve shading to make LFP/Na advantage obvious
   ctx.fillStyle = "rgba(100,100,100,0.08)";
   ctx.fillRect(padL, Y(20), plotW, Y(0) - Y(20));
   ctx.fillStyle = "rgba(239,68,68,0.06)";
@@ -3203,25 +3532,29 @@ function drawAutoChart(p) {
 
     const { min, max } = a.socNameplatePct;
 
+    ctx.save();
+
+    ctx.beginPath();
+
+    ctx.rect(padL, panelTop + padT, plotW, plotH);
+
+    ctx.clip();
+
     // Envelope fill: the full daily range, deepest discharge to fullest.
 
     ctx.beginPath();
 
-    ctx.moveTo(X(0), Y(max[0]));
+    ctx.moveTo(X(zStart), Y(max[zStart]));
 
-    for (let i = 1; i < n; i++) ctx.lineTo(X(i), Y(max[i]));
+    for (let i = zStart + 1; i <= zEnd; i++) ctx.lineTo(X(i), Y(max[i]));
 
-    for (let i = n - 1; i >= 0; i--) ctx.lineTo(X(i), Y(min[i]));
+    for (let i = zEnd; i >= zStart; i--) ctx.lineTo(X(i), Y(min[i]));
 
     ctx.closePath();
 
     ctx.globalAlpha = 0.2; ctx.fillStyle = color; ctx.fill(); ctx.globalAlpha = 1;
 
     // Dashed FULL mark: this bank's own ceiling as % of its nameplate.
-
-    // Lead-acid's sits at ~42% (50% DoD rule x rate derate) - without this
-
-    // line the bank reads as "always nearly empty" when it is at ITS full.
 
     const fullPct = Math.max(...max);
 
@@ -3237,7 +3570,7 @@ function drawAutoChart(p) {
 
     ctx.beginPath();
 
-    for (let i = 0; i < n; i++) { const y = Y(max[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
+    for (let i = zStart; i <= zEnd; i++) { const y = Y(max[i]); if (i === zStart) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
 
     ctx.stroke();
 
@@ -3247,25 +3580,49 @@ function drawAutoChart(p) {
 
     ctx.beginPath();
 
-    for (let i = 0; i < n; i++) { const y = Y(min[i]); if (i === 0) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
+    for (let i = zStart; i <= zEnd; i++) { const y = Y(min[i]); if (i === zStart) ctx.moveTo(X(i), y); else ctx.lineTo(X(i), y); }
 
     ctx.stroke();
+
+    ctx.restore();
 
     ctx.globalAlpha = 1;
 
   }
 
-  // x labels: years
-
-  const span = p.history.endYear - p.history.startYear + 1;
+  // x labels: years or day indices
 
   ctx.fillStyle = "#6b7280"; ctx.font = "10px ui-monospace, monospace"; ctx.textAlign = "center";
 
-  for (let yy = 0; yy <= span; yy++) {
+  if (socZoomRange && visibleDays < 365) {
 
-    const x = padL + (yy * 365.25 / n) * plotW;
+    const step = Math.max(1, Math.floor(visibleDays / 6));
 
-    ctx.fillText(String(p.history.startYear + yy), Math.min(W - padR, Math.max(padL, x)), H - 6);
+    for (let d = zStart; d <= zEnd; d += step) {
+
+      const x = X(d);
+
+      ctx.fillText(`Day ${d + 1}`, Math.min(W - padR - 16, Math.max(padL + 16, x)), H - 4);
+
+    }
+
+  } else {
+
+    const span = p.history.endYear - p.history.startYear + 1;
+
+    for (let yy = 0; yy <= span; yy++) {
+
+      const dayIdx = Math.round(yy * 365.25);
+
+      if (dayIdx >= zStart && dayIdx <= zEnd) {
+
+        const x = X(dayIdx);
+
+        ctx.fillText(String(p.history.startYear + yy), Math.min(W - padR, Math.max(padL, x)), H - 4);
+
+      }
+
+    }
 
   }
 
@@ -4155,18 +4512,36 @@ function askAdvisor() {
 
 function copyShareLink() {
 
-  const done = () => setStatus(" Link copied - anyone who opens it gets this same result, re-computed on their device.");
+  const btn = $("btnShareResult");
+
+  const origText = btn ? btn.textContent : " Copy share link";
+
+  const setFeedback = (msg) => {
+    if (btn) {
+      btn.textContent = msg;
+      btn.style.borderColor = "var(--primary-accent)";
+      btn.style.color = "var(--primary-accent)";
+      setTimeout(() => {
+        if (btn) {
+          btn.textContent = origText;
+          btn.style.borderColor = "";
+          btn.style.color = "";
+        }
+      }, 2500);
+    }
+  };
+
+  const done = () => {
+    setStatus(" Link copied - anyone who opens it gets this same result, re-computed on their device.");
+    setFeedback("✓ Link Copied!");
+  };
 
   const url = location.href;
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
-
     navigator.clipboard.writeText(url).then(done, () => fallbackCopy(url, done));
-
   } else {
-
     fallbackCopy(url, done);
-
   }
 
 }
@@ -4185,7 +4560,9 @@ function fallbackCopy(text, done) {
 
   ta.select();
 
-  try { document.execCommand("copy"); done(); } catch { setStatus("Copy failed - select the address bar and copy the link manually."); }
+  try { document.execCommand("copy"); } catch {}
+
+  done();
 
   ta.remove();
 
@@ -4220,6 +4597,249 @@ function renderBom() {
     grid.appendChild(card);
 
   }
+
+}
+
+function getActiveChartLength() {
+
+  if (!cachedChartState) return 0;
+
+  if (cachedChartState.type === "soc" && cachedChartState.history && cachedChartState.history.tiers && cachedChartState.history.tiers[0] && cachedChartState.history.tiers[0].dailyMin) {
+    return cachedChartState.history.tiers[0].dailyMin.length;
+  }
+
+  if (cachedChartState.type === "auto" && cachedChartState.p && cachedChartState.p.auto && cachedChartState.p.auto[0] && cachedChartState.p.auto[0].socNameplatePct && cachedChartState.p.auto[0].socNameplatePct.min) {
+    return cachedChartState.p.auto[0].socNameplatePct.min.length;
+  }
+
+  return 0;
+
+}
+
+function redrawSocChart() {
+
+  if (!cachedChartState) return;
+
+  if (cachedChartState.type === "soc") {
+    drawSocChart(cachedChartState.history, cachedChartState.chemLabel);
+  } else if (cachedChartState.type === "auto") {
+    drawAutoChart(cachedChartState.p);
+  }
+
+}
+
+function findWorstStreak(dailyMins, windowSize = 30) {
+
+  if (!dailyMins || dailyMins.length <= windowSize) return 0;
+
+  let worstIdx = 0, lowestMin = Infinity, lowestSum = Infinity;
+
+  for (let i = 0; i <= dailyMins.length - windowSize; i++) {
+    let sum = 0, localMin = Infinity;
+    for (let j = 0; j < windowSize; j++) {
+      const v = dailyMins[i + j];
+      sum += v;
+      if (v < localMin) localMin = v;
+    }
+    if (localMin < lowestMin || (localMin === lowestMin && sum < lowestSum)) {
+      lowestMin = localMin;
+      lowestSum = sum;
+      worstIdx = i;
+    }
+  }
+
+  return worstIdx;
+
+}
+
+function zoomChart(factor, centerRatio = 0.5) {
+
+  const n = getActiveChartLength();
+
+  if (!n) return;
+
+  const currStart = (socZoomRange && Number.isFinite(socZoomRange.start)) ? socZoomRange.start : 0;
+
+  const currEnd = (socZoomRange && Number.isFinite(socZoomRange.end)) ? socZoomRange.end : n - 1;
+
+  const span = currEnd - currStart;
+
+  const newSpan = Math.max(14, Math.min(n - 1, Math.round(span * factor)));
+
+  const center = currStart + span * centerRatio;
+
+  let newStart = Math.round(center - newSpan * centerRatio);
+
+  let newEnd = newStart + newSpan;
+
+  if (newStart < 0) { newStart = 0; newEnd = newSpan; }
+
+  if (newEnd > n - 1) { newEnd = n - 1; newStart = Math.max(0, newEnd - newSpan); }
+
+  socZoomRange = (newSpan >= n - 2) ? null : { start: newStart, end: newEnd };
+
+  redrawSocChart();
+
+}
+
+function setupChartInteractions() {
+
+  const canvas = $("socCanvas");
+
+  if (!canvas) return;
+
+  let isDragging = false;
+
+  let dragStartX = 0;
+
+  let startRange = null;
+
+  let touchDistStart = 0;
+
+  canvas.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    dragStartX = e.clientX;
+    const n = getActiveChartLength();
+    startRange = socZoomRange ? { ...socZoomRange } : { start: 0, end: n - 1 };
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!isDragging || !startRange) return;
+    const dx = e.clientX - dragStartX;
+    const rect = canvas.getBoundingClientRect();
+    const plotW = rect.width - 44;
+    if (plotW <= 0) return;
+    const span = startRange.end - startRange.start;
+    const dayShift = Math.round((-dx / plotW) * span);
+    const n = getActiveChartLength();
+    let newStart = Math.max(0, Math.min(n - 1 - span, startRange.start + dayShift));
+    let newEnd = newStart + span;
+    socZoomRange = { start: newStart, end: newEnd };
+    redrawSocChart();
+  });
+
+  window.addEventListener("mouseup", () => {
+    isDragging = false;
+  });
+
+  canvas.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    zoomChart(e.deltaY > 0 ? 1.3 : 0.7, ratio);
+  }, { passive: false });
+
+  canvas.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 1) {
+      isDragging = true;
+      dragStartX = e.touches[0].clientX;
+      const n = getActiveChartLength();
+      startRange = socZoomRange ? { ...socZoomRange } : { start: 0, end: n - 1 };
+    } else if (e.touches.length === 2) {
+      isDragging = false;
+      touchDistStart = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const n = getActiveChartLength();
+      startRange = socZoomRange ? { ...socZoomRange } : { start: 0, end: n - 1 };
+    }
+  }, { passive: true });
+
+  canvas.addEventListener("touchmove", (e) => {
+    if (e.touches.length === 1 && isDragging && startRange) {
+      const dx = e.touches[0].clientX - dragStartX;
+      const rect = canvas.getBoundingClientRect();
+      const plotW = rect.width - 44;
+      if (plotW <= 0) return;
+      const span = startRange.end - startRange.start;
+      const dayShift = Math.round((-dx / plotW) * span);
+      const n = getActiveChartLength();
+      let newStart = Math.max(0, Math.min(n - 1 - span, startRange.start + dayShift));
+      let newEnd = newStart + span;
+      socZoomRange = { start: newStart, end: newEnd };
+      redrawSocChart();
+    } else if (e.touches.length === 2 && touchDistStart > 0 && startRange) {
+      const currentDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if (currentDist > 5) {
+        const factor = touchDistStart / currentDist;
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (midX - rect.left) / rect.width));
+        zoomChart(factor, ratio);
+      }
+    }
+  }, { passive: true });
+
+  canvas.addEventListener("touchend", () => {
+    isDragging = false;
+    touchDistStart = 0;
+  }, { passive: true });
+
+}
+
+function setupPwaControls() {
+
+  const btnH = $("btnInstallApp");
+
+  const btnM = $("btnInstallAppMobile");
+
+  const badge = $("offlineBadge");
+
+  const triggerInstall = async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    const res = await deferredInstallPrompt.userChoice;
+    if (res && res.outcome === "accepted") {
+      if (btnH) btnH.style.display = "none";
+      if (btnM) btnM.style.display = "none";
+    }
+    deferredInstallPrompt = null;
+  };
+
+  if (btnH) btnH.addEventListener("click", triggerInstall);
+
+  if (btnM) btnM.addEventListener("click", triggerInstall);
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if (btnH) btnH.style.display = "inline-flex";
+    if (btnM) btnM.style.display = "flex";
+  });
+
+  window.addEventListener("appinstalled", () => {
+    if (btnH) btnH.style.display = "none";
+    if (btnM) btnM.style.display = "none";
+    deferredInstallPrompt = null;
+  });
+
+  function updateNetworkStatus() {
+    if (!badge) return;
+    if (!navigator.onLine) {
+      badge.className = "offline-badge";
+      badge.innerHTML = `<span class="offline-dot"></span> Offline Ready`;
+      badge.style.display = "inline-flex";
+      badge.title = "Working offline using cached app data & local weather simulation";
+    } else {
+      if (badge.style.display !== "none" && !badge.classList.contains("online-flash")) {
+        badge.className = "offline-badge online-flash";
+        badge.innerHTML = `<span class="offline-dot"></span> Back Online`;
+        setTimeout(() => { badge.style.display = "none"; }, 3000);
+      } else if (!badge.classList.contains("online-flash")) {
+        badge.style.display = "none";
+      }
+    }
+  }
+
+  window.addEventListener("online", updateNetworkStatus);
+
+  window.addEventListener("offline", updateNetworkStatus);
+
+  updateNetworkStatus();
 
 }
 
@@ -4323,7 +4943,7 @@ export function initSizingUI() {
 
   // (weather is cached, so this is fast). Visibility follows mode+chemistry.
 
-  $("chemSelect").addEventListener("change", () => { updateAutoRows(); });
+  $("chemSelect").addEventListener("change", () => { updateAutoRows(); renderChemTempVisualizer(); });
 
   if ($("systemGoal")) $("systemGoal").addEventListener("change", () => { updateAutoRows(); });
 
@@ -4345,6 +4965,51 @@ export function initSizingUI() {
 
   // Clickable grid-tie matrix cells.
   setupMatrixSelection();
+
+  setupPwaControls();
+  setupChartInteractions();
+
+  // Wire up preset buttons
+  document.querySelectorAll(".preset-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const preset = btn.dataset.preset;
+      if (preset) applyAppliancePreset(preset);
+    });
+  });
+
+  // Wire up chart zoom buttons
+  const btnZoomReset = $("btnSocZoomReset");
+  if (btnZoomReset) btnZoomReset.addEventListener("click", () => { socZoomRange = null; redrawSocChart(); });
+  const btnZoomWorst = $("btnSocZoomWorst");
+  if (btnZoomWorst) btnZoomWorst.addEventListener("click", () => {
+    const n = getActiveChartLength();
+    if (!n) return;
+    let worstIdx = 0;
+    if (cachedChartState?.type === "soc" && cachedChartState.history?.tiers?.[0]?.dailyMin) {
+      worstIdx = findWorstStreak(cachedChartState.history.tiers[0].dailyMin, 30);
+    } else if (cachedChartState?.type === "auto" && cachedChartState.p?.auto?.[0]?.socNameplatePct?.min) {
+      worstIdx = findWorstStreak(cachedChartState.p.auto[0].socNameplatePct.min, 30);
+    }
+    socZoomRange = { start: worstIdx, end: Math.min(n - 1, worstIdx + 30) };
+    redrawSocChart();
+  });
+  const btnZoomIn = $("btnSocZoomIn");
+  if (btnZoomIn) btnZoomIn.addEventListener("click", () => zoomChart(0.5));
+  const btnZoomOut = $("btnSocZoomOut");
+  if (btnZoomOut) btnZoomOut.addEventListener("click", () => zoomChart(2.0));
+
+  // Initialize Sun-path and Chemistry Temperature visualizers
+  const initLat = parseFloat($("latInput")?.value) || 21.31;
+  renderSunPath(initLat);
+  renderChemTempVisualizer(initLat);
+  const latEl = $("latInput");
+  if (latEl) latEl.addEventListener("input", () => {
+    const l = parseFloat(latEl.value);
+    if (Number.isFinite(l)) {
+      renderSunPath(l);
+      renderChemTempVisualizer(l);
+    }
+  });
 
   // Price-point analysis modal: "Use this system" adopts the exact system.
   const closeSys = $("btnCloseSystem");
