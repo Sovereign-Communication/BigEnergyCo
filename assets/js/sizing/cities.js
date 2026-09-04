@@ -3,7 +3,7 @@
 import { usStateCode, US_STATES } from "./pricing.js?v=20260830o";
 
 export const CITY_CATALOG = [
-  ["Honolulu", "United States", "North America", 21.31, -157.86], ["Los Angeles", "United States", "North America", 34.05, -118.24], ["Phoenix", "United States", "North America", 33.45, -112.07], ["Denver", "United States", "North America", 39.74, -104.99], ["Chicago", "United States", "North America", 41.88, -87.63], ["Miami", "United States", "North America", 25.76, -80.19], ["New York", "United States", "North America", 40.71, -74.01], ["Toronto", "Canada", "North America", 43.65, -79.38], ["Mexico City", "Mexico", "North America", 19.43, -99.13],
+  ["Honolulu", "United States", "Hawaii", 21.31, -157.86], ["Los Angeles", "United States", "California", 34.05, -118.24], ["Phoenix", "United States", "Arizona", 33.45, -112.07], ["Denver", "United States", "Colorado", 39.74, -104.99], ["Chicago", "United States", "Illinois", 41.88, -87.63], ["Miami", "United States", "Florida", 25.76, -80.19], ["New York", "United States", "New York", 40.71, -74.01], ["Toronto", "Canada", "Ontario", 43.65, -79.38], ["Mexico City", "Mexico", "North America", 19.43, -99.13],
   ["San Juan", "Puerto Rico", "Caribbean", 18.47, -66.11], ["Santo Domingo", "Dominican Republic", "Caribbean", 18.49, -69.93], ["Guatemala City", "Guatemala", "Central America", 14.63, -90.51], ["Panama City", "Panama", "Central America", 8.98, -79.52], ["Havana", "Cuba", "Caribbean", 23.11, -82.37], ["Port-au-Prince", "Haiti", "Caribbean", 18.59, -72.31],
   ["Bogota", "Colombia", "South America", 4.71, -74.07], ["Lima", "Peru", "South America", -12.05, -77.04], ["Cusco", "Peru", "South America", -13.53, -71.97], ["Santiago", "Chile", "South America", -33.45, -70.67], ["Sao Paulo", "Brazil", "South America", -23.55, -46.63], ["Buenos Aires", "Argentina", "South America", -34.60, -58.38], ["Quito", "Ecuador", "South America", -0.18, -78.47], ["La Paz", "Bolivia", "South America", -16.49, -68.12],
   ["London", "United Kingdom", "Europe", 51.51, -0.13], ["Paris", "France", "Europe", 48.86, 2.35], ["Madrid", "Spain", "Europe", 40.42, -3.70], ["Rome", "Italy", "Europe", 41.89, 12.48], ["Berlin", "Germany", "Europe", 52.52, 13.41], ["Warsaw", "Poland", "Europe", 52.23, 21.01], ["Athens", "Greece", "Europe", 37.98, 23.73], ["Oslo", "Norway", "Europe", 59.91, 10.75], ["Istanbul", "Turkiye", "Europe/Asia", 41.01, 28.98],
@@ -34,15 +34,16 @@ export function searchCities(query, cities = CITY_CATALOG, limit = 8) {
   return cities.map((city) => { const name = normalizeCityQuery(city.name), country = normalizeCityQuery(city.country), hay = `${name} ${country} ${normalizeCityQuery(city.r)}`; const score = name === target ? 0 : name.startsWith(target) ? 1 : country === target ? 2 : country.startsWith(target) ? 3 : hay.includes(target) ? 4 : terms.every((term) => hay.includes(term)) ? 5 : 99; const populationBonus = Number.isFinite(city.population) ? Math.max(0, Math.min(2, city.population / 1000000)) : 0; return { city, score, populationBonus }; }).filter((x) => x.score < 99).sort((a, b) => a.score - b.score || b.populationBonus - a.populationBonus || a.city.name.localeCompare(b.city.name)).slice(0, limit).map((x) => x.city);
 }
 export function mergeCities(base, extra) { const seen = new Set(base.map((city) => `${normalizeCityQuery(city.name)}|${normalizeCityQuery(city.country)}`)); return base.concat(extra.filter((city) => { const key = `${normalizeCityQuery(city.name)}|${normalizeCityQuery(city.country)}`; if (seen.has(key)) return false; seen.add(key); return true; })); }
-export function parseCityRows(rows) { return (Array.isArray(rows) ? rows : []).map((row) => ({ name: row.name || row.city, country: row.country || row.countryName, r: row.region || row.admin_name || row.country || row.countryName || "Worldwide", lat: Number(row.lat ?? row.latitude), lon: Number(row.lon ?? row.lng ?? row.longitude), population: Number(row.population || 0) })).filter((city) => city.name && city.country && Number.isFinite(city.lat) && Number.isFinite(city.lon) && city.lat >= -90 && city.lat <= 90 && city.lon >= -180 && city.lon <= 180); }
+export function parseCityRows(rows) { return (Array.isArray(rows) ? rows : []).map((row) => ({ name: row.name || row.city, country: row.country || row.countryName, r: row.r || row.region || row.admin_name || row.country || row.countryName || "Worldwide", lat: Number(row.lat ?? row.latitude), lon: Number(row.lon ?? row.lng ?? row.longitude), population: Number(row.population || 0) })).filter((city) => city.name && city.country && Number.isFinite(city.lat) && Number.isFinite(city.lon) && city.lat >= -90 && city.lat <= 90 && city.lon >= -180 && city.lon <= 180); }
 
 export function formatCityLabel(city) {
   if (!city) return "";
-  const st = city.country === "US" ? usStateCode(city.r) : null;
+  const isUS = city.country === "US" || city.country === "United States" || city.country === "USA";
+  const st = isUS ? usStateCode(city.r) : null;
   let region = null;
   if (st) region = US_STATES[st].name;
   else if (city.r && /[A-Za-z]/.test(city.r) && city.r !== city.country) region = city.r;
-  const country = city.country === "US" ? "USA" : city.country;
+  const country = isUS ? "USA" : city.country;
   return [city.name, region, country].filter(Boolean).join(", ");
 }
 

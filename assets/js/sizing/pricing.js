@@ -273,7 +273,9 @@ export function estimateTariff(lat, lon, region, country) {
   // Canada: province codes ("02", "08", …) aren't US states, so resolve by
   // country BEFORE the box loop — otherwise Toronto/Montreal/Vancouver fall
   // inside the US mainland box and get USD rates.
-  if (String(country).toUpperCase() === "CA" || String(region).toUpperCase() === "CA") {
+  const cUp = String(country || "").trim().toUpperCase();
+  const rUp = String(region || "").trim().toUpperCase();
+  if (cUp === "CA" || cUp === "CANADA" || rUp === "CA" || rUp === "CANADA") {
     return { rate: 0.13, label: "Canada", currency: "CAD", laborF: 1.5, landedF: 1.10 };
   }
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) {

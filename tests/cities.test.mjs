@@ -86,6 +86,7 @@ test("catalog merging deduplicates the existing seed", () => {
 
 test("city rows accept common dataset coordinate formats and reject invalid rows", () => {
   assert.deepEqual(parseCityRows([{ name: "Testville", country: "Testland", lat: "1.25", lng: "2.5" }, { city: "Bad", country: "Nowhere", latitude: "100", longitude: "2" }]), [{ name: "Testville", country: "Testland", r: "Testland", lat: 1.25, lon: 2.5, population: 0 }]);
+  assert.equal(parseCityRows([{ name: "Phoenix", country: "US", r: "AZ", lat: 33.45, lon: -112.07 }])[0].r, "AZ");
 });
 
 test("bundled worldwide catalog contains broad coverage and valid coordinates", () => {
@@ -107,8 +108,31 @@ test("partitioned worldwide catalog covers many countries", () => {
 test("city labels include expanded US state and country", () => {
   assert.equal(formatCityLabel({ name: "New Orleans", r: "LA", country: "US" }), "New Orleans, Louisiana, USA");
   assert.equal(formatCityLabel({ name: "New Orleans", r: "Louisiana", country: "US" }), "New Orleans, Louisiana, USA");
+  assert.equal(formatCityLabel({ name: "Phoenix", r: "Arizona", country: "United States" }), "Phoenix, Arizona, USA");
+  assert.equal(formatCityLabel({ name: "Toronto", r: "Ontario", country: "Canada" }), "Toronto, Ontario, Canada");
   // Numeric admin codes are hidden, not shown as junk.
   assert.equal(formatCityLabel({ name: "Berlin", r: "16", country: "DE" }), "Berlin, DE");
+});
+
+test("seed CITY_CATALOG US cities carry exact state electricity tariffs", () => {
+  const phx = CITY_CATALOG.find((c) => c.name === "Phoenix");
+  assert.ok(phx, "Phoenix present in seed catalog");
+  assert.equal(phx.r, "Arizona");
+  const estPhx = estimateTariff(phx.lat, phx.lon, phx.r, phx.country);
+  assert.equal(estPhx.rate, 0.136);
+
+  const ny = CITY_CATALOG.find((c) => c.name === "New York");
+  assert.ok(ny, "New York present in seed catalog");
+  assert.equal(ny.r, "New York");
+  const estNy = estimateTariff(ny.lat, ny.lon, ny.r, ny.country);
+  assert.equal(estNy.rate, 0.23);
+
+  const toronto = CITY_CATALOG.find((c) => c.name === "Toronto");
+  assert.ok(toronto, "Toronto present in seed catalog");
+  assert.equal(toronto.r, "Ontario");
+  const estTor = estimateTariff(toronto.lat, toronto.lon, toronto.r, toronto.country);
+  assert.equal(estTor.rate, 0.13);
+  assert.equal(estTor.currency, "CAD");
 });
 
 test("US state tariffs beat the coarse mainland lump", () => {
@@ -137,6 +161,8 @@ test("US locations actively carry the USD currency (GPS and state lookups)", () 
   // code is what prevents a US rate from winning.)
   assert.equal(estimateTariff(43.65, -79.38, undefined, "CA").currency, "CAD");
   assert.equal(estimateTariff(43.65, -79.38, undefined, "CA").rate, 0.13);
+  assert.equal(estimateTariff(43.65, -79.38, "Ontario", "Canada").currency, "CAD");
+  assert.equal(estimateTariff(43.65, -79.38, "Ontario", "Canada").rate, 0.13);
 });
 
 test("nearestCity resolves GPS coordinates to a nearby catalog city region", () => {

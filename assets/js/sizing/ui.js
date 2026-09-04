@@ -353,6 +353,7 @@ function syncBillSlider() {
       ? "Auto-run starts from ~" + fmtBill(value) + " (≈20 kWh/day). Slide the bill above to your real monthly cost — then one click on your location sizes everything against it. The bill-cut slider appears with results."
       : "Quick estimate: ~" + fmtBill(value) + " (starts from ~20 kWh/day) — switch to Manual to change your bill, appliances, or rate.";
   }
+  updateLoadReadout();
 }
 
 function displayRate() {
@@ -831,6 +832,10 @@ function setCoords(lat, lon, label, region, country) {
 
   if (noteEl) noteEl.textContent = label;
 
+  tariffTouched = false;
+
+  currencyTouched = false;
+
   applyEstimatedTariff(lat, lon, region, country);
 
   updateFuelUnits();
@@ -907,47 +912,42 @@ function applyEstimatedTariff(lat, lon, region, country) {
 
   if (tariffTouched) return;
 
+  if (!region && !country && Number.isFinite(lat) && Number.isFinite(lon)) {
+    const near = nearestCity(lat, lon, CITY_CATALOG, 80);
+    if (near) { region = near.r; country = near.country; }
+  }
+
   const est = estimateTariff(lat, lon, region, country);
 
   // Auto-select the country's currency first, then express the estimated
-
   // tariff in it - the two share one FX rate, so they round-trip exactly.
-
   if (est.currency && !currencyTouched && CURRENCIES[est.currency]) setCurrency(est.currency);
 
   const fx = fxActive();
-
   const shownRate = fx ? +(est.rate * fx.rate).toFixed(2) : est.rate;
 
   const input = $("customRateVal");
-
   if (input) input.value = String(shownRate);
 
   const note = el("div", { style: "font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;" },
-
     `Electricity price estimated for ${est.label}${fx ? ` (~ ${est.rate.toFixed(2)} US$/kWh)` : ""} - change it above if you know your rate.`);
 
   const existing = document.getElementById("tariffNote");
-
   if (existing) existing.remove();
 
   const host = input ? input.closest(".form-group") : null;
-
   if (host) host.appendChild(note);
-
   note.id = "tariffNote";
-
-  updateLoadReadout();
 
   syncBillSlider();
 
   // A location change auto-switches the display currency and tariff estimate;
-
   // refresh any existing results so the money figures follow immediately
-
   // instead of showing the previous location's currency.
-
-  if (lastPayload) renderResults(lastPayload);
+  if (lastPayload) {
+    renderResults(lastPayload);
+    scheduleRun(true);
+  }
 
 }
 
@@ -2774,7 +2774,8 @@ function applyGenRate() {
   $("customRateVal").value = String(display);
   generatorBasis = true;
   tariffTouched = true;
-  updateLoadReadout();
+  syncBillSlider();
+  if (lastPayload) scheduleRun(true);
   setStatus(t("fuelApplyOk", { rate: money(rate) }));
 }
 
@@ -4857,8 +4858,11 @@ export function initSizingUI() {
   // tariff input is a single $/kWh field (auto-estimated from location until the user overrides)
 
   const customVal = $("customRateVal");
-
-  if (customVal) customVal.addEventListener("input", () => { tariffTouched = true; updateLoadReadout(); });
+  if (customVal) customVal.addEventListener("input", () => {
+    tariffTouched = true;
+    syncBillSlider();
+    if (lastPayload) scheduleRun(true);
+  });
 
   $("loadMode").addEventListener("change", setLoadPanel);
 
@@ -4927,6 +4931,7 @@ export function initSizingUI() {
 
       updateCurrencyUnitLabel();
       prevFxSnapshot = fxActive();
+      syncBillSlider();
 
       if (lastPayload) {
         // Render from the same USD payload using the newly selected display FX.
@@ -5003,13 +5008,25 @@ export function initSizingUI() {
   renderSunPath(initLat);
   renderChemTempVisualizer(initLat);
   const latEl = $("latInput");
-  if (latEl) latEl.addEventListener("input", () => {
-    const l = parseFloat(latEl.value);
-    if (Number.isFinite(l)) {
-      renderSunPath(l);
-      renderChemTempVisualizer(l);
+  const lonEl = $("lonInput");
+  let coordDebounceTimer = null;
+  const onCoordChange = () => {
+    const lat = parseFloat(latEl?.value);
+    const lon = parseFloat(lonEl?.value);
+    if (Number.isFinite(lat)) {
+      renderSunPath(lat);
+      renderChemTempVisualizer(lat);
     }
-  });
+    if (Number.isFinite(lat) && Number.isFinite(lon)) {
+      if (coordDebounceTimer) clearTimeout(coordDebounceTimer);
+      coordDebounceTimer = setTimeout(() => {
+        applyEstimatedTariff(lat, lon);
+        if (lastPayload) scheduleRun(true);
+      }, 500);
+    }
+  };
+  if (latEl) latEl.addEventListener("input", onCoordChange);
+  if (lonEl) lonEl.addEventListener("input", onCoordChange);
 
   // Price-point analysis modal: "Use this system" adopts the exact system.
   const closeSys = $("btnCloseSystem");
