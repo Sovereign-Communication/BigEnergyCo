@@ -12,7 +12,7 @@ import {
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER, capacityScaleFor,
 } from "./engine.js?v=20260831a";
 
-import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260831f";
+import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260904b";
 import { buildFrontier } from "./frontier.js?v=20260830b";
 import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js?v=20260830o";
 import {
@@ -141,19 +141,27 @@ export async function runSizing(msg, deps = {}) {
 
   const series = await (deps.fetchWeather || fetchWeatherWithFallback)({ latitude, longitude, years });
   const hours = series.hours;
-  const e1kw = buildE1kw(hours);
+  if (!series._e1kw) series._e1kw = buildE1kw(hours);
+  const e1kw = series._e1kw;
   const loadWh = expandProfile(flatProfile(dailyKwh), hours.length);
-  const tempsC = Float64Array.from(hours, (h) => h.tAmb);
+  if (!series._tempsC) series._tempsC = Float64Array.from(hours, (h) => h.tAmb);
+  const tempsC = series._tempsC;
 
   // Highest AC demand hour of the load profile — the number the hardware
   // list (inverter class, DC protection) is built around.
   let peakLoadW = 0;
   for (let i = 0; i < loadWh.length; i++) if (loadWh[i] > peakLoadW) peakLoadW = loadWh[i];
 
-  const annualYield = [...e1kw].reduce((a, b) => a + b, 0) / 1000 / series.meta.years;
+  if (series._annualYield === undefined) {
+    series._annualYield = [...e1kw].reduce((a, b) => a + b, 0) / 1000 / series.meta.years;
+  }
+  const annualYield = series._annualYield;
   const gridSpend = annualGridSpendUsd(dailyKwh, tariff);
   const landedScope = getScope("landed");
-  const meanTempC = tempsC.reduce((a, b) => a + b, 0) / tempsC.length;
+  if (series._meanTempC === undefined) {
+    series._meanTempC = tempsC.reduce((a, b) => a + b, 0) / tempsC.length;
+  }
+  const meanTempC = series._meanTempC;
 
   // Regional cost factors: install labor & landed freight/duty
   const region = estimateTariff(latitude, longitude);
@@ -167,13 +175,17 @@ export async function runSizing(msg, deps = {}) {
 
   // Daily solar harvest per kW of array (kWh/day) — feeds the chart's sun
   // strip so the visual shows what drives the battery's recharge rhythm.
-  const dayCount = Math.floor(hours.length / 24);
-  const pvDaily = new Array(dayCount);
-  for (let d = 0; d < dayCount; d++) {
-    let s = 0;
-    for (let h = d * 24; h < (d + 1) * 24; h++) s += e1kw[h];
-    pvDaily[d] = Math.round((s / 1000) * 100) / 100;
+  if (!series._pvDaily) {
+    const dayCount = Math.floor(hours.length / 24);
+    const pvDaily = new Array(dayCount);
+    for (let d = 0; d < dayCount; d++) {
+      let s = 0;
+      for (let h = d * 24; h < (d + 1) * 24; h++) s += e1kw[h];
+      pvDaily[d] = Math.round((s / 1000) * 100) / 100;
+    }
+    series._pvDaily = pvDaily;
   }
+  const pvDaily = series._pvDaily;
 
   function moneyFor(chemId, sizing) {
     const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;

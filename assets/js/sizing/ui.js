@@ -11,8 +11,8 @@
 // direct-kWh mode for people who already know their numbers.
 
 
-import { CITY_PRESETS } from "./nasa.js?v=20260831f";
-import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCityLabel, nearestCity, normalizeCityQuery, shouldAutoResolve } from "./cities.js?v=20260830s";
+import { CITY_PRESETS } from "./nasa.js?v=20260904b";
+import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCityLabel, nearestCity, normalizeCityQuery, shouldAutoResolve } from "./cities.js?v=20260904b";
 
 import { estimateTariff, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
 
@@ -47,6 +47,8 @@ let quickMode = true;
 // tariff, currency, or location changes — so switching cities never silently
 // changes what the user told us they use.
 let billAnchorKwh = 20;
+let billTouched = false;
+let billUserNominal = null;
 
 // Bill-cut slider (1–111%): the replacement for the old 60/80/95 dropdown.
 let customCutFraction = 0.8;
@@ -340,7 +342,15 @@ function syncBillSlider() {
   const rate = displayRate();
   const minBill = Math.max(1, Math.round(billForKwh(BILL_MIN_KWH, rate)));
   const maxBill = Math.max(minBill + 2, Math.round(billForKwh(BILL_MAX_KWH, rate)));
-  const value = Math.min(maxBill, Math.max(minBill, Math.round(billForKwh(billAnchorKwh, rate))));
+
+  let value;
+  if (billTouched && Number.isFinite(billUserNominal) && billUserNominal > 0) {
+    value = Math.min(maxBill, Math.max(minBill, Math.round(billUserNominal)));
+    billAnchorKwh = kwhFromBill(value, rate);
+  } else {
+    value = Math.min(maxBill, Math.max(minBill, Math.round(billForKwh(billAnchorKwh, rate))));
+  }
+
   slider.min = String(minBill);
   slider.max = String(maxBill);
   slider.step = String(Math.max(1, Math.round((maxBill - minBill) / 300)));
@@ -350,8 +360,8 @@ function syncBillSlider() {
   const note = $("quickBillNote");
   if (note) {
     note.textContent = quickMode
-      ? "Auto-run starts from ~" + fmtBill(value) + " (≈20 kWh/day). Slide the bill above to your real monthly cost — then one click on your location sizes everything against it. The bill-cut slider appears with results."
-      : "Quick estimate: ~" + fmtBill(value) + " (starts from ~20 kWh/day) — switch to Manual to change your bill, appliances, or rate.";
+      ? "Auto-run starts from ~" + fmtBill(value) + ` (≈${Math.round(billAnchorKwh)} kWh/day). Slide the bill above to your real monthly cost — then one click on your location sizes everything against it. The bill-cut slider appears with results.`
+      : "Quick estimate: ~" + fmtBill(value) + ` (starts from ~${Math.round(billAnchorKwh)} kWh/day) — switch to Manual to change your bill, appliances, or rate.`;
   }
   updateLoadReadout();
 }
@@ -866,13 +876,15 @@ function setCurrency(code) {
 
   if ($("fxRate") && Number.isFinite(cur.perUSD)) $("fxRate").value = cur.perUSD;
 
-  // Keep the manual-edit baseline in sync: when the user later types a rate
-
-  // or code by hand, the conversion below divides by THIS snapshot, so a
-
-  // stale pre-location rate would silently double-convert the tariff.
-
+  const oldFx = prevFxSnapshot;
   prevFxSnapshot = fxActive();
+
+  // If the user explicitly set their monthly bill and currency
+  // auto-switched to a new currency (e.g. USD -> CAD), convert the nominal bill amount
+  if (billTouched && Number.isFinite(billUserNominal) && oldFx && prevFxSnapshot && oldFx.code !== prevFxSnapshot.code && oldFx.rate > 0) {
+    const usd = billUserNominal / oldFx.rate;
+    billUserNominal = Math.round(usd * prevFxSnapshot.rate);
+  }
 
   updateCurrencyUnitLabel();
 
@@ -946,7 +958,7 @@ function applyEstimatedTariff(lat, lon, region, country) {
   // instead of showing the previous location's currency.
   if (lastPayload) {
     renderResults(lastPayload);
-    scheduleRun(true);
+    if (!quickMode) scheduleRun(true);
   }
 
 }
@@ -1291,6 +1303,11 @@ function readInputs() {
 
 function run(quiet = false) {
 
+  if (runTimer) {
+    clearTimeout(runTimer);
+    runTimer = null;
+  }
+
   const inp = readInputs();
 
   if (!Number.isFinite(inp.latitude) || !Number.isFinite(inp.longitude) ||
@@ -1459,7 +1476,9 @@ function setupBillSlider() {
   // While dragging, only the label tracks the thumb — the value must not be
   // re-rounded against the anchor mid-drag.
   slider.addEventListener("input", () => {
-    const bill = parseFloat(slider.value);
+    billTouched = true;
+    billUserNominal = parseFloat(slider.value);
+    const bill = billUserNominal;
     const rate = displayRate();
     if (Number.isFinite(bill) && rate > 0) billAnchorKwh = kwhFromBill(bill, rate);
     const out = $("billSliderVal");
@@ -1561,7 +1580,7 @@ function ensureWorker() {
 
 
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260903a", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260904b", { type: "module" });
 
     worker.onmessage = (ev) => {
 

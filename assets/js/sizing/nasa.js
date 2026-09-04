@@ -94,29 +94,110 @@ export function parseHourly(json) {
   }));
 }
 
-// ── Browser cache (localStorage) ────────────────────────────────────────────
+// ── Unified multi-layer weather cache ───────────────────────────────────────
+// In-memory Map for 0ms access within the session / worker lifetime.
+// In-flight Promise Map to eliminate duplicate concurrent network pulls.
+// Cache Storage (and localStorage fallback) for persistence across reloads.
 
 const CACHE_PREFIX = "beco-power-v1:";
+const CACHE_STORAGE_NAME = "beco-weather-v1";
 
-function cacheKey(lat, lon, years) {
+export const IN_MEMORY_WEATHER_CACHE = new Map();
+export const IN_FLIGHT_WEATHER_PROMISES = new Map();
+
+export function cacheKey(lat, lon, years) {
   const rlat = lat.toFixed(2), rlon = lon.toFixed(2); // ~1.1 km grid
   return `${CACHE_PREFIX}${rlat},${rlon},${years}y`;
 }
 
+async function getFromCacheStorage(key) {
+  if (typeof caches === "undefined") return null;
+  try {
+    const cache = await caches.open(CACHE_STORAGE_NAME);
+    const req = new Request(`https://cache.bigenergyco.internal/${encodeURIComponent(key)}`);
+    const resp = await cache.match(req);
+    if (resp) {
+      return await resp.json();
+    }
+  } catch {
+    // Ignore cache errors in restricted environments
+  }
+  return null;
+}
+
+async function putToCacheStorage(key, data) {
+  if (typeof caches === "undefined") return;
+  try {
+    const cache = await caches.open(CACHE_STORAGE_NAME);
+    const req = new Request(`https://cache.bigenergyco.internal/${encodeURIComponent(key)}`);
+    const cleanPayload = { hours: data.hours, meta: data.meta };
+    const resp = new Response(JSON.stringify(cleanPayload), {
+      headers: { "Content-Type": "application/json" }
+    });
+    await cache.put(req, resp);
+  } catch {
+    // Ignore cache errors
+  }
+}
+
 export async function fetchHourlyCached(opts, store = typeof localStorage !== "undefined" ? localStorage : null) {
   const key = cacheKey(opts.latitude, opts.longitude, opts.years || 5);
-  if (store) {
-    const hit = store.getItem(key);
-    if (hit) {
-      try { return JSON.parse(hit); } catch { store.removeItem(key); }
+
+  // 1. In-memory cache hit: 0 ms instant return
+  if (IN_MEMORY_WEATHER_CACHE.has(key)) {
+    return IN_MEMORY_WEATHER_CACHE.get(key);
+  }
+
+  // 2. In-flight Promise de-duplication: wait for the active fetch
+  if (IN_FLIGHT_WEATHER_PROMISES.has(key)) {
+    return await IN_FLIGHT_WEATHER_PROMISES.get(key);
+  }
+
+  const fetchPromise = (async () => {
+    // 3. Cache Storage hit (disk cache, available in workers and window)
+    const diskHit = await getFromCacheStorage(key);
+    if (diskHit && Array.isArray(diskHit.hours) && diskHit.hours.length > 0) {
+      IN_MEMORY_WEATHER_CACHE.set(key, diskHit);
+      return diskHit;
     }
+
+    // 4. Custom / localStorage store fallback
+    if (store) {
+      try {
+        const hit = store.getItem(key);
+        if (hit) {
+          const parsed = JSON.parse(hit);
+          IN_MEMORY_WEATHER_CACHE.set(key, parsed);
+          return parsed;
+        }
+      } catch {
+        try { store.removeItem(key); } catch {}
+      }
+    }
+
+    // 5. Network fetch from NASA POWER
+    const data = await fetchHourlySeries(opts);
+    data.meta.gridKey = key;
+    IN_MEMORY_WEATHER_CACHE.set(key, data);
+
+    putToCacheStorage(key, data).catch(() => {});
+
+    if (store) {
+      try {
+        store.setItem(key, JSON.stringify({ hours: data.hours, meta: data.meta }));
+      } catch {
+        /* quota exceeded: run uncached */
+      }
+    }
+    return data;
+  })();
+
+  IN_FLIGHT_WEATHER_PROMISES.set(key, fetchPromise);
+  try {
+    return await fetchPromise;
+  } finally {
+    IN_FLIGHT_WEATHER_PROMISES.delete(key);
   }
-  const data = await fetchHourlySeries(opts);
-  data.meta.gridKey = key;
-  if (store) {
-    try { store.setItem(key, JSON.stringify(data)); } catch { /* quota exceeded: run uncached */ }
-  }
-  return data;
 }
 
 // ── Offline typical-year synthesis ──────────────────────────────────────────

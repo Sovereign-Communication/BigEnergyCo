@@ -76,8 +76,64 @@ export async function lookupCityOnline(query, fetchImpl = globalThis.fetch) {
   } catch { return null; }
 }
 
-export async function loadCityCatalog({ fetchImpl = globalThis.fetch, storage = globalThis.localStorage } = {}) {
-  const cacheKey = "beco-city-catalog-v6-pop10k-us";
-  try { const cached = storage?.getItem(cacheKey); if (cached) return mergeCities(CITY_CATALOG, parseCityRows(JSON.parse(cached))); } catch { /* optional cache */ }
-  try { const response = await fetchImpl("./assets/js/sizing/city-data/index.json", { cache: "force-cache" }); if (!response.ok) throw new Error(`city index HTTP ${response.status}`); const index = await response.json(); const all = []; for (const item of index) { const stem = item.file.replace(/\.json$/i, ""); const part = await fetchImpl(`./assets/js/sizing/city-data/${encodeURIComponent(stem)}.json`, { cache: "force-cache" }); if (part.ok) all.push(...parseCityRows(await part.json())); } try { storage?.setItem(cacheKey, JSON.stringify(all)); } catch { /* optional cache */ } return mergeCities(CITY_CATALOG, all); } catch { return CITY_CATALOG; }
+let cachedMergedCatalog = null;
+let inFlightCatalogPromise = null;
+
+export function clearCityCatalogCache() {
+  cachedMergedCatalog = null;
+  inFlightCatalogPromise = null;
 }
+
+export async function loadCityCatalog({ fetchImpl = globalThis.fetch, storage = globalThis.localStorage } = {}) {
+  const isDefaultCall = fetchImpl === globalThis.fetch && (!storage || storage === globalThis.localStorage);
+  if (isDefaultCall && cachedMergedCatalog) return cachedMergedCatalog;
+  if (isDefaultCall && inFlightCatalogPromise) return await inFlightCatalogPromise;
+
+  const promise = (async () => {
+    const cacheKey = "beco-city-catalog-v6-pop10k-us";
+    try {
+      const cached = storage?.getItem(cacheKey);
+      if (cached) {
+        const merged = mergeCities(CITY_CATALOG, parseCityRows(JSON.parse(cached)));
+        if (isDefaultCall) cachedMergedCatalog = merged;
+        return merged;
+      }
+    } catch { /* optional cache */ }
+
+    try {
+      const response = await fetchImpl("./assets/js/sizing/city-data/index.json", { cache: "force-cache" });
+      if (!response.ok) throw new Error(`city index HTTP ${response.status}`);
+      const index = await response.json();
+      const chunks = await Promise.all(index.map(async (item) => {
+        const stem = item.file.replace(/\.json$/i, "");
+        try {
+          const part = await fetchImpl(`./assets/js/sizing/city-data/${encodeURIComponent(stem)}.json`, { cache: "force-cache" });
+          if (part.ok) {
+            return parseCityRows(await part.json());
+          }
+        } catch {}
+        return [];
+      }));
+
+      const all = [];
+      for (const chunk of chunks) {
+        if (chunk.length) all.push(...chunk);
+      }
+
+      try { storage?.setItem(cacheKey, JSON.stringify(all)); } catch { /* optional cache */ }
+      const merged = mergeCities(CITY_CATALOG, all);
+      if (isDefaultCall) cachedMergedCatalog = merged;
+      return merged;
+    } catch {
+      return CITY_CATALOG;
+    }
+  })();
+
+  if (isDefaultCall) inFlightCatalogPromise = promise;
+  try {
+    return await promise;
+  } finally {
+    if (isDefaultCall) inFlightCatalogPromise = null;
+  }
+}
+
