@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#090d16">
   <title>BigEnergyCo Blog — Free Solar &amp; Battery Storage Knowledge</title>
   <meta name="description" content="Educational guides, chemistry comparisons, and engineering insights for DIY and off-grid solar and battery storage systems worldwide.">
   <meta name="keywords" content="solar energy blog, battery storage guide, DIY battery storage, LiFePO4, sodium-ion battery, off-grid power">
@@ -86,6 +88,12 @@
 
   <style>
     :root {
+      color-scheme: dark;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.28) rgba(9, 13, 22, 0.85);
+
       --bg-dark: #090d16;
       --bg-card: rgba(18, 26, 44, 0.85);
       --bg-card-hover: rgba(28, 40, 66, 0.95);
@@ -112,12 +120,19 @@
       padding: 0;
     }
 
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(9, 13, 22, 0.85); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.38); }
+
     body {
       background-color: var(--bg-dark);
       color: var(--text-main);
       font-family: var(--font-main);
       line-height: 1.6;
       overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       background-image: 
         radial-gradient(circle at 15% 20%, rgba(0, 230, 153, 0.12) 0%, transparent 45%),
         radial-gradient(circle at 85% 70%, rgba(59, 130, 246, 0.12) 0%, transparent 45%);
@@ -149,7 +164,9 @@
       -webkit-backdrop-filter: blur(16px);
       background: rgba(9, 13, 22, 0.92);
       border-bottom: 1px solid var(--border-card);
-      padding: 1rem 0;
+      padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
     }
 
     .nav-flex {
@@ -272,7 +289,7 @@
 
     .articles-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
       gap: 2rem;
       margin-top: 2rem;
     }
@@ -282,6 +299,8 @@
       border: 1px solid var(--border-card);
       border-radius: 14px;
       padding: 2rem;
+      min-width: 0;
+      max-width: 100%;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -376,46 +395,38 @@
 
     .disclaimer-box strong {
       color: #fef08a;
-    }    /* Footer */
+    }
 
+    /* Footer */
     footer {
-
       border-top: 1px solid var(--border-card);
-
-      padding: 3rem 0;
-
+      padding: 3rem 0 max(3rem, env(safe-area-inset-bottom));
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
       text-align: center;
-
       color: var(--text-muted);
-
       font-size: 0.9rem;
-
       margin-top: 4rem;
-
       background: rgba(9, 13, 22, 0.8);
-
     }
 
     /* Mobile: keep logo + CTA, hide nav links (reachable from footer). */
-
     @media (max-width: 768px) {
-
       .nav-links { display: none; }
-
       .blog-hero h1 { font-size: 1.9rem; }
-
+      .articles-grid { gap: 1.25rem; }
+      .article-card { padding: 1.35rem; }
     }
 
     /* Very small phones: shrink brand + button, let header wrap if needed. */
-
     @media (max-width: 480px) {
-
       .nav-flex { flex-wrap: wrap; row-gap: 0.5rem; }
-
       .logo { font-size: 1.25rem; }
-
       .header-cta .btn { padding: 0.45rem 0.7rem; font-size: 0.8rem; }
-
+      .container { padding: 0 1rem; }
+      .blog-hero { padding: 3rem 0 1.5rem; }
+      .blog-hero h1 { font-size: 1.6rem; }
+      .articles-grid { grid-template-columns: 1fr; }
     }
 
   </style>

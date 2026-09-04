@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
   <title>DIY Battery Storage: LFP vs Sodium-Ion Guide 2026</title>
   <meta name="description" content="Compare DIY battery storage options for LiFePO4 and sodium-ion. Learn cost, safety, and modularity benefits of building your own off-grid or backup system.">
   <meta name="keywords" content="DIY battery storage, DIY vs prebuilt battery, LiFePO4 DIY battery, sodium-ion battery, DIY home battery backup, off-grid battery storage cost">
@@ -149,6 +150,12 @@
 
   <style>
     :root {
+      color-scheme: dark;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.28) rgba(9, 13, 22, 0.85);
+
       --bg-dark: #090d16;
       --bg-card: rgba(18, 26, 44, 0.85);
       --bg-card-hover: rgba(28, 40, 66, 0.95);
@@ -175,12 +182,19 @@
       padding: 0;
     }
 
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(9, 13, 22, 0.85); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.38); }
+
     body {
       background-color: var(--bg-dark);
       color: var(--text-main);
       font-family: var(--font-main);
       line-height: 1.75;
       overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       background-image: 
         radial-gradient(circle at 15% 20%, rgba(0, 230, 153, 0.10) 0%, transparent 45%),
         radial-gradient(circle at 85% 70%, rgba(59, 130, 246, 0.10) 0%, transparent 45%);
@@ -219,7 +233,9 @@
       -webkit-backdrop-filter: blur(16px);
       background: rgba(9, 13, 22, 0.92);
       border-bottom: 1px solid var(--border-card);
-      padding: 1rem 0;
+      padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
     }
 
     .nav-flex {
@@ -583,7 +599,9 @@
     /* Footer */
     footer {
       border-top: 1px solid var(--border-card);
-      padding: 3rem 0;
+      padding: 3rem 0 max(3rem, env(safe-area-inset-bottom));
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
       text-align: center;
       color: var(--text-muted);
       font-size: 0.9rem;
@@ -602,6 +620,15 @@
       .nav-links {
         display: none;
       }
+    }
+
+    @media (max-width: 480px) {
+      .nav-flex { flex-wrap: wrap; row-gap: 0.5rem; }
+      .logo { font-size: 1.25rem; }
+      .header-cta .btn { padding: 0.45rem 0.7rem; font-size: 0.8rem; }
+      .article-container { padding: 2rem 1rem 3rem; }
+      .article-title { font-size: 1.55rem; }
+      .cta-card { padding: 1.5rem 1rem; }
     }
   </style>
 </head>

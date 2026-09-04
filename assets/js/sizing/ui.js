@@ -442,11 +442,11 @@ function renderAppliances() {
 
       const qtyWrap = el("span", { style: "display:none;align-items:center;gap:0.35rem;" });
 
-      const minus = el("span", { class: "btn btn-outline", style: "padding:0.05rem 0.55rem;font-size:0.9rem;cursor:pointer;user-select:none;" }, "-");
+      const minus = el("span", { class: "btn btn-outline", style: "padding:0.25rem 0.65rem;font-size:1rem;min-width:34px;min-height:34px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;touch-action:manipulation;" }, "-");
 
       const qtyVal = el("span", { style: "font-family:var(--font-mono);min-width:1.4rem;text-align:center;font-weight:700;" }, "1");
 
-      const plus = el("span", { class: "btn btn-outline", style: "padding:0.05rem 0.55rem;font-size:0.9rem;cursor:pointer;user-select:none;" }, "+");
+      const plus = el("span", { class: "btn btn-outline", style: "padding:0.25rem 0.65rem;font-size:1rem;min-width:34px;min-height:34px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;touch-action:manipulation;" }, "+");
 
       qtyWrap.append(minus, qtyVal, plus);
 
@@ -1586,7 +1586,7 @@ function drawSocChart(history, chemLabel) {
 
   const dpr = window.devicePixelRatio || 1;
 
-  const W = Math.max(320, wrap.clientWidth || 640);
+  const W = Math.max(200, Math.min(wrap.clientWidth || 320, (typeof window !== "undefined" && window.innerWidth ? window.innerWidth - 48 : 640)));
 
   const BAND_H = 118, GAP = 14;
 
@@ -1598,13 +1598,13 @@ function drawSocChart(history, chemLabel) {
 
   const H = stripH + stripGap + solvable.length * BAND_H + (solvable.length - 1) * GAP + 20;
 
-  canvas.width = W * dpr;
+  canvas.width = Math.round(W * dpr);
 
-  canvas.height = H * dpr;
+  canvas.height = Math.round(H * dpr);
 
-  canvas.style.width = W + "px";
+  canvas.style.width = "100%";
 
-  canvas.style.height = H + "px";
+  canvas.style.height = "auto";
 
   const ctx = canvas.getContext("2d");
 
@@ -2780,13 +2780,13 @@ function drawCumCostChart(p, chosenEntry = null) {
   wrap.style.display = "block";
   canvas.style.display = "";
   const dpr = window.devicePixelRatio || 1;
-  const W = Math.max(320, wrap.clientWidth || 640);
+  const W = Math.max(200, Math.min(wrap.clientWidth || 320, (typeof window !== "undefined" && window.innerWidth ? window.innerWidth - 48 : 640)));
   const COST_H = 280, SAVE_H = 150, GAP = 14;
   const H = COST_H + GAP + SAVE_H;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width = W + "px";
-  canvas.style.height = H + "px";
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  canvas.style.width = "100%";
+  canvas.style.height = "auto";
   const ctx = canvas.getContext("2d");
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, W, H);
@@ -3128,7 +3128,7 @@ function drawAutoChart(p) {
 
   const dpr = window.devicePixelRatio || 1;
 
-  const W = Math.max(320, wrap.clientWidth || 640);
+  const W = Math.max(200, Math.min(wrap.clientWidth || 320, (typeof window !== "undefined" && window.innerWidth ? window.innerWidth - 48 : 640)));
 
   const n = entries[0].socNameplatePct.min.length;
 
@@ -3138,13 +3138,13 @@ function drawAutoChart(p) {
 
   const H = 300 + stripH + stripGap;
 
-  canvas.width = W * dpr;
+  canvas.width = Math.round(W * dpr);
 
-  canvas.height = H * dpr;
+  canvas.height = Math.round(H * dpr);
 
-  canvas.style.width = W + "px";
+  canvas.style.width = "100%";
 
-  canvas.style.height = H + "px";
+  canvas.style.height = "auto";
 
   const ctx = canvas.getContext("2d");
 

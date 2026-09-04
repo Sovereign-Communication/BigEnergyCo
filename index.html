@@ -6,7 +6,15 @@
 
   <meta charset="UTF-8">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+  <meta name="color-scheme" content="dark">
+
+  <meta name="theme-color" content="#090d16">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <title>BigEnergyCo - Free Worldwide Solar and Battery Estimator</title>
 
@@ -49,8 +57,6 @@
   <link rel="manifest" href="./manifest.webmanifest">
 
   <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
-
-  <meta name="theme-color" content="#090d16">
 
   <!-- Structured data: what this tool is, and the questions people ask it -->
 
@@ -182,6 +188,12 @@
 
 :root {
 
+  color-scheme: dark;
+
+  -webkit-text-size-adjust: 100%;
+
+  text-size-adjust: 100%;
+
   --bg-dark: #090d16;
 
   --bg-card: rgba(18, 26, 44, 0.85);
@@ -222,6 +234,22 @@
 
   padding: 0;
 
+  scrollbar-width: thin;
+
+  scrollbar-color: rgba(0, 230, 153, 0.3) rgba(9, 13, 22, 0.85);
+
+  -webkit-tap-highlight-color: transparent;
+
+}
+
+html {
+
+  overflow-x: hidden;
+
+  width: 100%;
+
+  max-width: 100%;
+
 }
 
 body {
@@ -234,7 +262,15 @@ body {
 
   line-height: 1.6;
 
+  width: 100%;
+
+  max-width: 100%;
+
   overflow-x: hidden;
+
+  -webkit-font-smoothing: antialiased;
+
+  -moz-osx-font-smoothing: grayscale;
 
   background-image: 
 
@@ -243,6 +279,35 @@ body {
     radial-gradient(circle at 85% 70%, rgba(59, 130, 246, 0.12) 0%, transparent 45%);
 
   background-attachment: fixed;
+
+}
+
+/* Cross-browser scrollbars for WebKit & Blink */
+::-webkit-scrollbar {
+
+  width: 8px;
+
+  height: 8px;
+
+}
+
+::-webkit-scrollbar-track {
+
+  background: rgba(9, 13, 22, 0.95);
+
+}
+
+::-webkit-scrollbar-thumb {
+
+  background: rgba(0, 230, 153, 0.28);
+
+  border-radius: 4px;
+
+}
+
+::-webkit-scrollbar-thumb:hover {
+
+  background: rgba(0, 230, 153, 0.5);
 
 }
 
@@ -291,6 +356,8 @@ header {
   border-bottom: 1px solid var(--border-card);
 
   padding: 1rem 0;
+
+  padding-top: max(1rem, env(safe-area-inset-top));
 
 }
 
@@ -773,6 +840,180 @@ button.btn {
 
 }
 
+/* Container, Card and Layout Sizing - prevents horizontal overflow blowout */
+.calc-card,
+.calc-controls,
+.results-box,
+#bestPickWrap,
+#tierResults,
+#frontierWrap,
+#socChartWrap,
+#cumCostChartWrap,
+#bomPanel,
+#cutSliderRow,
+#billSliderWrap {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.results-box {
+  overflow-x: hidden;
+}
+
+.matrix-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+canvas {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* Range slider cross-browser track and thumb styling */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.12);
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--primary-accent);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--primary-glow);
+  transition: transform 0.15s ease;
+}
+
+input[type=range]::-webkit-slider-thumb:hover,
+input[type=range]::-webkit-slider-thumb:active {
+  transform: scale(1.15);
+}
+
+input[type=range]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: var(--primary-accent);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--primary-glow);
+  transition: transform 0.15s ease;
+}
+
+input[type=range]::-moz-range-track {
+  background: rgba(255, 255, 255, 0.12);
+  height: 6px;
+  border-radius: 3px;
+}
+
+/* Firefox number input spinner reset */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Mobile navigation toggle button & drawer */
+.nav-toggle {
+  display: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 8px;
+  cursor: pointer;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+
+.nav-toggle:hover {
+  border-color: var(--primary-accent);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-toggle:focus-visible {
+  outline: 2px solid var(--primary-accent);
+  outline-offset: 2px;
+}
+
+.nav-toggle-bar {
+  width: 20px;
+  height: 2px;
+  background-color: var(--text-main);
+  border-radius: 2px;
+  transition: all 0.25s ease;
+}
+
+.nav-toggle.open .nav-toggle-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.nav-toggle.open .nav-toggle-bar:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-toggle.open .nav-toggle-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.mobile-nav-drawer {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(9, 13, 22, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-card);
+  padding: 1.25rem 1.5rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+  z-index: 99;
+}
+
+.mobile-nav-drawer.open {
+  display: flex;
+}
+
+.mobile-nav-drawer a {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.mobile-nav-drawer a:hover,
+.mobile-nav-drawer a:active {
+  color: var(--primary-accent);
+}
+
 @media (max-width: 900px) {
 
   .calc-card {
@@ -783,53 +1024,79 @@ button.btn {
 
 }
 
-/* Keep the logo + primary CTAs, tuck the nav links away (they stay reachable
-
-   from the footer). Prevents horizontal page overflow on phones and tablets:
-
-   the full nav row needs ~811px, so hiding it up to 830px covers the
-
-   overflow band between the old 768px breakpoint and where it fits. */
-
 @media (max-width: 830px) {
 
   .nav-links { display: none; }
 
+  .nav-toggle { display: flex; }
+
   .header-cta { gap: 0.5rem; }
 
-  .header-cta .btn { padding: 0.5rem 0.9rem; font-size: 0.85rem; }
+  .header-cta .btn { padding: 0.5rem 0.85rem; font-size: 0.85rem; }
 
 }
 
 @media (max-width: 768px) {
 
-  .hero { padding: 3.5rem 0 3rem; }
+  .hero { padding: 3rem 0 2.5rem; }
 
-  .hero h1 { font-size: 2.15rem; }
+  .hero h1 { font-size: clamp(1.85rem, 6vw, 2.5rem); }
 
-  .hero p { font-size: 1.05rem; }
+  .hero p { font-size: 1rem; }
 
-  .section-title { font-size: 1.8rem; }
+  .section-title { font-size: 1.75rem; }
 
-  .stat-val { font-size: 1.75rem; }
+  .stat-val { font-size: 1.65rem; }
 
-  .calc-card { padding: 1.5rem; }
+  .calc-card { padding: 1.5rem 1.25rem; gap: 1.5rem; }
 
-  .results-box { padding: 1.25rem; }
+  .results-box { padding: 1.25rem 1rem; }
+
+  /* Prevent iOS Safari form input auto-zoom */
+  input.form-control,
+  select.form-control,
+  textarea.form-control,
+  #langSelect {
+    font-size: 16px !important;
+  }
 
 }
 
-/* Very small phones: shrink the brand + buttons, and let the header wrap to
-
-   a second row if even that does not fit, instead of overflowing sideways. */
-
 @media (max-width: 480px) {
+
+  .container { padding: 0 1rem; }
 
   .nav-flex { flex-wrap: wrap; row-gap: 0.5rem; }
 
-  .logo { font-size: 1.25rem; }
+  .logo { font-size: 1.2rem; }
 
-  .header-cta .btn { padding: 0.45rem 0.7rem; font-size: 0.8rem; }
+  .header-cta .btn { padding: 0.45rem 0.65rem; font-size: 0.8rem; }
+
+  .calc-card { padding: 1.25rem 0.85rem; border-radius: 12px; }
+
+  .results-box { padding: 1rem 0.75rem; border-radius: 10px; }
+
+  .hero-stats-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+  .stat-card { padding: 1rem; }
+
+  .stat-val { font-size: 1.45rem; }
+
+  .stat-label { font-size: 0.78rem; }
+
+  .savings-num { font-size: 2.1rem; }
+
+  .modal-card { padding: 1.25rem 1rem; width: 95%; border-radius: 12px; }
+
+}
+
+@media (max-width: 360px) {
+
+  .hero h1 { font-size: 1.65rem; }
+
+  .logo { font-size: 1.1rem; }
+
+  .header-cta #btnNavSizeArray { display: none; }
 
 }
 
@@ -1157,7 +1424,11 @@ button.btn {
 
   max-height: 90vh;
 
+  max-height: 90dvh;
+
   overflow-y: auto;
+
+  -webkit-overflow-scrolling: touch;
 
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
 
@@ -1181,21 +1452,55 @@ button.btn {
 
 .close-btn {
 
-  background: none;
+  background: rgba(255, 255, 255, 0.05);
 
-  border: none;
+  border: 1px solid var(--border-card);
+
+  border-radius: 8px;
 
   color: var(--text-muted);
 
-  font-size: 1.75rem;
+  font-size: 1.5rem;
+
+  line-height: 1;
+
+  width: 44px;
+
+  height: 44px;
+
+  min-width: 44px;
+
+  min-height: 44px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
 
   cursor: pointer;
+
+  transition: all 0.2s ease;
+
+  touch-action: manipulation;
 
 }
 
 .close-btn:hover {
 
   color: #fff;
+
+  border-color: var(--border-glow);
+
+  background: rgba(255, 255, 255, 0.1);
+
+}
+
+.close-btn:focus-visible {
+
+  outline: 2px solid var(--primary-accent);
+
+  outline-offset: 2px;
 
 }
 
@@ -1277,7 +1582,7 @@ footer {
 
   border-top: 1px solid var(--border-card);
 
-  padding: 3rem 0;
+  padding: 3rem 0 max(3rem, env(safe-area-inset-bottom));
 
   text-align: center;
 
@@ -1347,9 +1652,37 @@ footer {
 
         <div id="btnNavSizeArray" class="btn btn-primary" style="cursor: pointer;" data-i18n="navSizing">Size Your System</div>
 
+        <button type="button" id="btnNavToggle" class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+
+          <span class="nav-toggle-bar"></span>
+
+          <span class="nav-toggle-bar"></span>
+
+          <span class="nav-toggle-bar"></span>
+
+        </button>
+
       </div>
 
     </div>
+
+    <nav id="mobileNavDrawer" class="mobile-nav-drawer" aria-label="Mobile navigation">
+
+      <a href="#sizing" class="mobile-nav-link" data-i18n="navSizing">Size Your System <span>&rarr;</span></a>
+
+      <a href="#sizing" class="mobile-nav-link" data-i18n="navCosts">Estimator <span>&rarr;</span></a>
+
+      <a href="#bom" class="mobile-nav-link" data-i18n="navBom">Hardware Reference <span>&rarr;</span></a>
+
+      <a href="./blog/" class="mobile-nav-link" data-i18n="navBlog">Blog <span>&rarr;</span></a>
+
+      <a href="./solar-calculator/" class="mobile-nav-link">City Sizing Pages <span>&rarr;</span></a>
+
+      <a href="#legal" class="mobile-nav-link" data-i18n="navLegal">Terms &amp; Disclaimer <span>&rarr;</span></a>
+
+      <a href="#support" class="mobile-nav-link" data-i18n="navSupport" style="color:var(--primary-accent);border-bottom:none;">Support This Tool <span>&rarr;</span></a>
+
+    </nav>
 
   </header>
 
@@ -2469,13 +2802,67 @@ footer {
 
     };
 
-    // Esc closes whichever modal is open; focus stays out of hidden overlays.
+    window.toggleMobileNav = function() {
+
+      var btn = document.getElementById('btnNavToggle');
+
+      var drawer = document.getElementById('mobileNavDrawer');
+
+      if (!btn || !drawer) return;
+
+      var isOpen = drawer.classList.contains('open');
+
+      if (isOpen) {
+
+        drawer.classList.remove('open');
+
+        btn.classList.remove('open');
+
+        btn.setAttribute('aria-expanded', 'false');
+
+      } else {
+
+        drawer.classList.add('open');
+
+        btn.classList.add('open');
+
+        btn.setAttribute('aria-expanded', 'true');
+
+      }
+
+    };
+
+    window.closeMobileNav = function() {
+
+      var btn = document.getElementById('btnNavToggle');
+
+      var drawer = document.getElementById('mobileNavDrawer');
+
+      if (btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+
+      if (drawer) drawer.classList.remove('open');
+
+    };
+
+    // Esc closes whichever modal or drawer is open; focus stays out of hidden overlays.
     document.addEventListener('keydown', function(e) {
+
       if (e.key !== 'Escape') return;
+
+      window.closeMobileNav();
+
       var sizing = document.getElementById('sizingModal');
+
       var legal = document.getElementById('legalModal');
+
+      var system = document.getElementById('systemModal');
+
       if (sizing && sizing.style.display === 'flex') { window.closeSizingModal(); return; }
-      if (legal && legal.style.display === 'flex') window.closeLegalModal();
+
+      if (legal && legal.style.display === 'flex') { window.closeLegalModal(); return; }
+
+      if (system && system.style.display === 'flex') { system.style.display = 'none'; return; }
+
     });
 
     window.scrollToCalc = function() {
@@ -3055,6 +3442,28 @@ footer {
       if (intakeCalc) intakeCalc.addEventListener('click', runIntakeCalculation);
 
       if (sendChat) sendChat.addEventListener('click', sendChatMsg);
+
+      var navToggle = document.getElementById('btnNavToggle');
+
+      if (navToggle) navToggle.addEventListener('click', window.toggleMobileNav);
+
+      document.querySelectorAll('.mobile-nav-link').forEach(function(link) {
+
+        link.addEventListener('click', window.closeMobileNav);
+
+      });
+
+      document.addEventListener('click', function(e) {
+
+        var header = document.querySelector('header');
+
+        if (header && !header.contains(e.target)) {
+
+          window.closeMobileNav();
+
+        }
+
+      });
 
       var invYes = document.getElementById('inverterHelpYes');
 
