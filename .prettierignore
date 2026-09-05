@@ -3,5 +3,8 @@ assets/js/sizing/city-data/
 assets/data/
 # Generated pages: formatted by their generator, not by hand.
 solar-calculator/
+# Generated source (rewritten by scripts/build-offline-profiles.mjs):
+# formatting it would be undone on every regeneration.
+assets/js/sizing/profiles.js
 # Third-party bundles.
 *.min.js
