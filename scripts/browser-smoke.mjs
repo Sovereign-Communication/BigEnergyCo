@@ -7,7 +7,8 @@
 //   npm run smoke
 //
 // Coverage (every gate fails the run):
-//   main page: hero CTA, city search + select, tariff, full grid-tie run,
+//   main page: hero CTA, auto-location (emulated position), city search +
+//   select, tariff, full grid-tie run,
 //     result card, savings chart + caption, slider re-slice (the custom-cut
 //     path), off-grid mode run, explicit no-CSP-violations gate,
 //     external-integration probes (FX, NASA, geocoder, API health),
@@ -248,6 +249,47 @@ async function main() {
         `document.body.textContent.includes("Start a Free Estimate")`,
       ),
     );
+
+    // ── Auto-location (regression gate: Permissions-Policy must allow it;
+    // geolocation=() silently disables navigator.geolocation while the
+    // type-in autocomplete keeps working as backup) ────────────────────
+    console.log("SMOKE      ── auto-location ──");
+    let geoGranted = true;
+    try {
+      await send("Browser.grantPermissions", {
+        origin: new URL(BASE).origin,
+        permissions: ["geolocation"],
+      });
+      await send("Emulation.setGeolocationOverride", {
+        latitude: 21.31,
+        longitude: -157.86,
+        accuracy: 100,
+      });
+    } catch (e) {
+      geoGranted = false;
+      gate(
+        "geolocation emulation granted",
+        false,
+        String((e && e.message) || e).slice(0, 150),
+      );
+    }
+    if (geoGranted) {
+      await evaluate(`document.getElementById("btnGeoLocate").click()`);
+      const geoOk = await poll(
+        async () => {
+          const lat = await evaluate(
+            `document.getElementById("latInput")?.value`,
+          );
+          const note = await evaluate(
+            `document.getElementById("locNote")?.textContent || ""`,
+          );
+          return lat === "21.31" && /precise location/i.test(note);
+        },
+        60000,
+        1000,
+      );
+      gate("auto-location resolves emulated position", geoOk);
+    }
     gate(
       "chat bridge loaded (extracted classic script)",
       await evaluate(`typeof window.sendChatMsg === "function"`),
