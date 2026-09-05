@@ -43,10 +43,13 @@ for (const page of pages) {
   if (h1s === 1) ok(`${page}: single h1`);
   else fail(`${page}: expected exactly 1 <h1>, found ${h1s}`);
 
-  // canonical (home, blog index, posts — not utility pages)
+  // canonical (home, blog index, posts — not utility pages).
+  // Accepts self-closing tags and line-wrapped attributes: Prettier
+  // normalizes void elements to `/>` and may put each attribute on its
+  // own line — both are valid HTML.
   if (page === "index.html" || page.startsWith("blog/")) {
     if (
-      /<link rel="canonical" href="https:\/\/bigenergyco\.pages\.dev\/[^"]*">/.test(
+      /<link\s+rel="canonical"\s+href="https:\/\/bigenergyco\.pages\.dev\/[^"]*"\s*\/?>/.test(
         html,
       )
     )
