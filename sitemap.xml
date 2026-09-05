@@ -7,6 +7,12 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://bigenergyco.pages.dev/solar-heatmap/</loc>
+    <lastmod>2026-09-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://bigenergyco.pages.dev/blog/</loc>
     <lastmod>2026-08-30</lastmod>
     <changefreq>weekly</changefreq>
