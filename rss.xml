@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>BigEnergyCo - Free Solar &amp; Battery Storage Knowledge</title>
+    <link>https://bigenergyco.pages.dev/blog/</link>
+    <description>Educational guides, chemistry comparisons, and engineering insights for DIY and off-grid solar and battery storage systems worldwide. Nothing for sale.</description>
+    <language>en</language>
+    <atom:link href="https://bigenergyco.pages.dev/rss.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 30 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>How to Cut Your Electricity Bill With Solar: Honest Math (2026)</title>
+      <link>https://bigenergyco.pages.dev/blog/how-to-cut-electricity-bill-with-solar/</link>
+      <guid isPermaLink="true">https://bigenergyco.pages.dev/blog/how-to-cut-electricity-bill-with-solar/</guid>
+      <pubDate>Sun, 30 Aug 2026 00:00:00 GMT</pubDate>
+      <description>How much of your bill solar and battery can actually erase - worked step by step for Honolulu, Lagos, and Germany from five years of satellite weather. Free calculator included.</description>
+    </item>
+    <item>
+      <title>Off-Grid vs Grid-Tied Solar: Which Pays Back Faster in 2026?</title>
+      <link>https://bigenergyco.pages.dev/blog/off-grid-vs-grid-tie-payback/</link>
+      <guid isPermaLink="true">https://bigenergyco.pages.dev/blog/off-grid-vs-grid-tie-payback/</guid>
+      <pubDate>Sat, 23 Aug 2026 00:00:00 GMT</pubDate>
+      <description>Real payback numbers for Hawaii, Nigeria, and Germany - worked step by step from five years of satellite weather. When independence wins, when bill-cutting wins, and what the hardware truly costs.</description>
+    </item>
+    <item>
+      <title>DIY Battery Storage: The Complete Guide to LiFePO4 and Sodium-Ion Builds in 2026</title>
+      <link>https://bigenergyco.pages.dev/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/</link>
+      <guid isPermaLink="true">https://bigenergyco.pages.dev/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/</guid>
+      <pubDate>Wed, 20 Aug 2026 00:00:00 GMT</pubDate>
+      <description>Compare DIY battery storage options for LiFePO4 and sodium-ion. Learn cost, safety, and modularity benefits of building your own off-grid or backup system.</description>
+    </item>
+  </channel>
+</rss>

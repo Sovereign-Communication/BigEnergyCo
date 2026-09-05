@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Global Solar Payback Heatmap — Where Does Cutting the Grid Pay Off?</title>
+  <meta name="description" content="Interactive world map showing solar payback periods for 40,000+ cities. See where going solar pays for itself fastest — computed from real NASA weather data. Free, no signup.">
+  <link rel="canonical" href="https://bigenergyco.pages.dev/solar-heatmap/">
+  <link rel="alternate" hreflang="en" href="https://bigenergyco.pages.dev/solar-heatmap/">
+  <link rel="alternate" hreflang="x-default" href="https://bigenergyco.pages.dev/solar-heatmap/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BigEnergyCo">
+  <meta property="og:title" content="Global Solar Payback Heatmap — Where Does Cutting the Grid Pay Off?">
+  <meta property="og:description" content="Interactive world map showing solar payback periods for 40,000+ cities worldwide. Computed from NASA satellite weather data.">
+  <meta property="og:url" content="https://bigenergyco.pages.dev/solar-heatmap/">
+  <meta property="og:image" content="https://bigenergyco.pages.dev/assets/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Global Solar Payback Heatmap — Where Does Cutting the Grid Pay Off?">
+  <meta name="twitter:description" content="Interactive world map showing solar payback periods for 40,000+ cities worldwide.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": "https://bigenergyco.pages.dev/solar-heatmap/#page",
+        "name": "Global Solar Payback Heatmap",
+        "description": "Interactive world map showing solar payback periods for 40,000+ cities worldwide. Computed from real NASA satellite weather data.",
+        "url": "https://bigenergyco.pages.dev/solar-heatmap/",
+        "publisher": { "@type": "Organization", "name": "BigEnergyCo", "url": "https://bigenergyco.pages.dev" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://bigenergyco.pages.dev/solar-heatmap/#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://bigenergyco.pages.dev/" },
+          { "@type": "ListItem", "position": 2, "name": "Solar Calculator by City", "item": "https://bigenergyco.pages.dev/solar-calculator/" },
+          { "@type": "ListItem", "position": 3, "name": "Global Solar Payback Heatmap", "item": "https://bigenergyco.pages.dev/solar-heatmap/" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <style>
+    :root {
+      color-scheme: dark;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.28) rgba(11, 15, 23, 0.85);
+      --accent: #00e699;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --bg: #0b0f17;
+      --card: rgba(255, 255, 255, 0.04);
+      --border: rgba(255, 255, 255, 0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(11, 15, 23, 0.85); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.38); }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.25rem; }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      background: rgba(11, 15, 23, 0.92);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 1000;
+    }
+    header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; }
+    .logo { font-weight: 800; color: #fff; font-size: 1.05rem; text-decoration: none; }
+    .logo span { color: var(--accent); }
+    nav a { color: var(--muted); text-decoration: none; margin-left: 1.1rem; font-size: .9rem; }
+    nav a:hover { color: #fff; }
+    h1 { color: #fff; font-size: 2.1rem; line-height: 1.25; letter-spacing: -.5px; margin-bottom: .75rem; }
+    h2 { color: #fff; font-size: 1.35rem; margin: 2.2rem 0 .8rem; }
+    p { margin-bottom: 1rem; }
+    strong { color: #fff; }
+
+    /* Map container */
+    #map-wrapper {
+      position: relative;
+      width: 100%;
+      margin: 1.5rem 0;
+    }
+    #map {
+      width: 100%;
+      height: 70vh;
+      min-height: 400px;
+      max-height: 800px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #0d1117;
+    }
+    /* Override Leaflet styles for dark mode */
+    .leaflet-container { background: #0d1117; }
+    .leaflet-tile-pane { filter: brightness(0.7) contrast(1.1) saturate(0.3); }
+    .leaflet-popup-content-wrapper {
+      background: rgba(11, 15, 23, 0.95) !important;
+      color: var(--text) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 10px !important;
+      backdrop-filter: blur(10px);
+    }
+    .leaflet-popup-tip { background: rgba(11, 15, 23, 0.95) !important; }
+    .leaflet-popup-content { font-family: inherit !important; font-size: .9rem !important; line-height: 1.6 !important; }
+    .leaflet-popup-content a { color: var(--accent) !important; text-decoration: none !important; font-weight: 600; }
+    .leaflet-popup-close-button { color: var(--muted) !important; }
+    .leaflet-control-zoom a {
+      background: rgba(11, 15, 23, 0.85) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+    }
+    .leaflet-control-attribution { display: none; }
+
+    /* Controls panel */
+    .controls {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 800;
+      background: rgba(11, 15, 23, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .75rem 1rem;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      max-width: 280px;
+    }
+    .controls label {
+      display: block;
+      color: var(--muted);
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: .3rem;
+      font-weight: 600;
+    }
+    .btn-group {
+      display: flex;
+      gap: 0;
+      margin-bottom: .6rem;
+    }
+    .btn-group button {
+      flex: 1;
+      padding: .35rem .5rem;
+      font-size: .8rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .15s;
+      font-family: inherit;
+    }
+    .btn-group button:first-child { border-radius: 6px 0 0 6px; }
+    .btn-group button:last-child { border-radius: 0 6px 6px 0; }
+    .btn-group button + button { border-left: none; }
+    .btn-group button.active {
+      background: rgba(0, 230, 153, 0.15);
+      color: var(--accent);
+      border-color: rgba(0, 230, 153, 0.4);
+    }
+    .btn-group button.active + button { border-left-color: rgba(0, 230, 153, 0.4); }
+
+    /* Legend */
+    .legend {
+      margin-top: .5rem;
+      font-size: .75rem;
+      color: var(--muted);
+    }
+    .legend-bar {
+      display: flex;
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      margin: .3rem 0;
+    }
+    .legend-bar div { flex: 1; }
+    .legend-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: .7rem;
+    }
+
+    /* Loading state */
+    #loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 70vh;
+      min-height: 400px;
+      max-height: 800px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #0d1117;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+    #loading .spinner {
+      width: 24px; height: 24px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin-right: .75rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Rankings section */
+    .rankings { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    .rank-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      background: var(--card);
+    }
+    .rank-card h3 {
+      color: var(--accent);
+      font-size: 1rem;
+      margin-bottom: .6rem;
+    }
+    .rank-card.worst h3 { color: #ff6b6b; }
+    .rank-card ol {
+      list-style: decimal;
+      margin-left: 1.2rem;
+      font-size: .9rem;
+    }
+    .rank-card li { margin-bottom: .3rem; }
+    .rank-card .years {
+      font-family: ui-monospace, Menlo, monospace;
+      font-weight: 700;
+      color: #fff;
+    }
+    .rank-card .detail { color: var(--muted); font-size: .8rem; }
+
+    /* Disclaimer */
+    .disclaimer {
+      border: 1px solid rgba(255, 200, 50, .25);
+      background: rgba(255, 200, 50, .05);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin: 1.5rem 0;
+      font-size: .85rem;
+      color: var(--muted);
+    }
+    .disclaimer strong { color: #ffc832; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 0 max(3rem, env(safe-area-inset-bottom));
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      margin-top: 3rem;
+      color: var(--muted);
+      font-size: .85rem;
+      text-align: center;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    @media (max-width: 700px) {
+      h1 { font-size: 1.5rem; }
+      .container { padding: 0 1rem; }
+      nav a { margin-left: .65rem; font-size: .85rem; }
+      .controls { top: 8px; right: 8px; padding: .5rem .75rem; max-width: 220px; }
+      .rankings { grid-template-columns: 1fr; }
+      #map { height: 55vh; min-height: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a class="logo" href="../">⚡ BigEnergy<span>Co</span></a>
+      <nav>
+        <a href="../#sizing">Size Your System</a>
+        <a href="../#calculator">Estimator</a>
+        <a href="../solar-calculator/">All Cities</a>
+        <a href="../blog/">Blog</a>
+        <a href="../#legal">Terms &amp; Disclaimer</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <article style="padding: 2rem 0 1rem;">
+      <h1>🗺️ Global Solar Payback Heatmap</h1>
+      <p>Where does going solar pay for itself fastest? This map computes the payback period for <strong>40,000+ locations</strong> worldwide. Crucially, it accounts for <strong>unserved grid demand and backup generators</strong> — in places with frequent blackouts or no grid, solar displaces expensive petrol/diesel fuel ($0.40–$0.65/kWh), not paper grid tariffs.</p>
+
+      <div id="map-wrapper">
+        <div id="loading">
+          <div class="spinner"></div>
+          Loading 40,000 cities…
+        </div>
+        <div id="map" style="display:none;"></div>
+        <div class="controls" id="controls" style="display:none;">
+          <label>Energy Cost Basis</label>
+          <div class="btn-group" id="basis-btns">
+            <button data-basis="real" class="active" title="Accounts for generator fuel & unserved grid">Real-World</button>
+            <button data-basis="grid" title="Official utility paper tariff only">Grid Only</button>
+          </div>
+          <label>Daily usage</label>
+          <div class="btn-group" id="usage-btns">
+            <button data-idx="0">5</button>
+            <button data-idx="1" class="active">10</button>
+            <button data-idx="2">20</button>
+            <button data-idx="3">30</button>
+          </div>
+          <label>Metric</label>
+          <div class="btn-group" id="metric-btns">
+            <button data-metric="p" class="active">Payback</button>
+            <button data-metric="b">Break-even</button>
+          </div>
+          <div class="legend">
+            <div>Years to pay for itself</div>
+            <div class="legend-bar">
+              <div style="background:#00e699;"></div>
+              <div style="background:#7ec850;"></div>
+              <div style="background:#c8b400;"></div>
+              <div style="background:#e68a00;"></div>
+              <div style="background:#e64545;"></div>
+              <div style="background:#888;"></div>
+            </div>
+            <div class="legend-labels">
+              <span>&lt;2yr</span>
+              <span>3</span>
+              <span>5</span>
+              <span>7</span>
+              <span>12+</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Key Takeaways</h2>
+      <div class="rankings" id="rankings">
+        <div class="rank-card" id="best-card">
+          <h3>⚡ Fastest Payback</h3>
+          <ol id="best-list"></ol>
+        </div>
+        <div class="rank-card worst" id="worst-card">
+          <h3>🔴 Slowest Payback</h3>
+          <ol id="worst-list"></ol>
+        </div>
+      </div>
+
+      <h2>How this works & The Generator Paradox</h2>
+      <p>Why do fragile grids look slow on paper, but solar is actually exploding there? In countries like <strong>Nigeria (43% unelectrified, remaining 57% on rolling blackouts)</strong>, Lebanon, Haiti, and Pakistan, official utility rates look low ($0.05–$0.09/kWh) because power is heavily rationed or subsidized. When the power cuts out, families and businesses burn petrol and diesel generators at <strong>$0.40–$0.65/kWh</strong>.</p>
+      <ul style="margin: 0 0 1rem 1.25rem;">
+        <li><strong>Real-World Basis (Default):</strong> Blends official rates with generator fuel costs weighted by unserved population and average grid outage duration. Nigeria's true payback drops from 8+ years to <strong>under 1.5 years</strong>.</li>
+        <li><strong>Grid Only Basis:</strong> Assumes a 24/7 unlimited stable grid at brochure utility prices.</li>
+        <li><strong>Solar yield:</strong> Annual kWh per kW of panels simulated from NASA satellite weather stations.</li>
+        <li><strong>System cost:</strong> Panels + LFP battery + inverter at landed-DIY pricing including regional freight.</li>
+      </ul>
+      <p>Want exact numbers for your specific location? <a href="../#sizing" style="color:var(--accent);font-weight:600;">Run the full calculator →</a></p>
+
+      <div class="disclaimer">
+        <strong>⚠️ Educational estimates only.</strong> Tariff data is approximate regional averages. Solar yield uses the nearest of 66 reference stations, not your exact rooftop. Real payback depends on your actual bill, roof orientation, shading, local incentives, and installation costs. Run the full calculator or consult a professional for exact figures.
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building.</p>
+      <p style="margin-top:.75rem;">
+        <a href="../">Free Estimator</a> · <a href="../solar-calculator/">All Cities</a> · <a href="../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+  (function () {
+    "use strict";
+
+    // ── State ──────────────────────────────────────────────────────────────
+    let gridData = null;
+    let map = null;
+    let dotLayer = null;
+    let usageIdx = 1;   // 0=5kWh, 1=10kWh, 2=20kWh, 3=30kWh
+    let metric = "p";   // "p" = payback, "b" = break-even
+    let basis = "real"; // "real" = generator/unserved-aware, "grid" = nominal grid tariff only
+
+    // Get active metric key depending on basis
+    function getMetricKey() {
+      if (basis === "real") {
+        return metric === "p" ? "pr" : "br";
+      }
+      return metric; // "p" or "b"
+    }
+
+    // ── Color scale ────────────────────────────────────────────────────────
+    function yearColor(years) {
+      if (years === null || years === undefined || years <= 0) return "#555";
+      if (years <= 2) return "#00e699";
+      if (years <= 3) return "#7ec850";
+      if (years <= 5) return "#c8b400";
+      if (years <= 7) return "#e68a00";
+      if (years <= 12) return "#e64545";
+      return "#888";
+    }
+
+    function yearLabel(years) {
+      if (years === null || years === undefined) return "N/A";
+      if (years > 50) return ">50 yr";
+      return years.toFixed(1) + " yr";
+    }
+
+    function ratingText(years) {
+      if (years === null) return "No data";
+      if (years <= 2) return "Excellent";
+      if (years <= 3) return "Very Good";
+      if (years <= 5) return "Good";
+      if (years <= 7) return "Moderate";
+      if (years <= 12) return "Long";
+      return "Very Long";
+    }
+
+    // ── Country code → name (compact) ──────────────────────────────────────
+    const CC = {IT:"Italy",AT:"Austria",DE:"Germany",AU:"Australia",US:"United States",GB:"United Kingdom",FR:"France",ES:"Spain",PT:"Portugal",NL:"Netherlands",BE:"Belgium",PL:"Poland",CZ:"Czechia",GR:"Greece",HU:"Hungary",RO:"Romania",BG:"Bulgaria",HR:"Croatia",SE:"Sweden",NO:"Norway",DK:"Denmark",FI:"Finland",IE:"Ireland",CH:"Switzerland",IL:"Israel",TR:"Türkiye",JP:"Japan",KR:"South Korea",CN:"China",IN:"India",PK:"Pakistan",BD:"Bangladesh",ID:"Indonesia",PH:"Philippines",TH:"Thailand",VN:"Vietnam",MY:"Malaysia",SG:"Singapore",TW:"Taiwan",HK:"Hong Kong",BR:"Brazil",MX:"Mexico",AR:"Argentina",CL:"Chile",CO:"Colombia",PE:"Peru",EC:"Ecuador",BO:"Bolivia",VE:"Venezuela",CA:"Canada",ZA:"South Africa",NG:"Nigeria",KE:"Kenya",EG:"Egypt",MA:"Morocco",GH:"Ghana",ET:"Ethiopia",TZ:"Tanzania",UG:"Uganda",SA:"Saudi Arabia",AE:"UAE",QA:"Qatar",RU:"Russia",UA:"Ukraine",NZ:"New Zealand",FJ:"Fiji",CU:"Cuba",DO:"Dominican Republic",PR:"Puerto Rico",HT:"Haiti",JM:"Jamaica",GT:"Guatemala",PA:"Panama",CR:"Costa Rica",SV:"El Salvador",HN:"Honduras",NI:"Nicaragua",LB:"Lebanon",YE:"Yemen",CD:"DR Congo",SS:"South Sudan",TD:"Chad",NE:"Niger",CF:"Central African Rep",MW:"Malawi",BF:"Burkina Faso",SL:"Sierra Leone",LR:"Liberia",MG:"Madagascar"};
+
+    function countryName(code) {
+      return CC[code] || code;
+    }
+
+    // ── City slug for calculator link ──────────────────────────────────────
+    function citySlug(name) {
+      return name.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    }
+
+    // ── Render dots ────────────────────────────────────────────────────────
+    function renderDots() {
+      if (!map || !gridData) return;
+      if (dotLayer) map.removeLayer(dotLayer);
+
+      const points = gridData.points;
+      const markers = [];
+      const mKey = getMetricKey();
+
+      for (let i = 0; i < points.length; i++) {
+        const pt = points[i];
+        const series = pt[mKey] || pt[metric];
+        const years = series ? series[usageIdx] : null;
+        const color = yearColor(years);
+
+        const marker = L.circleMarker([pt.lat, pt.lon], {
+          radius: 3.5,
+          weight: 0,
+          fillColor: color,
+          fillOpacity: 0.75,
+          interactive: true,
+        });
+
+        marker._heatIdx = i;
+        markers.push(marker);
+      }
+
+      dotLayer = L.layerGroup(markers).addTo(map);
+
+      // Use event delegation on the layer group
+      dotLayer.eachLayer(function (layer) {
+        layer.on("click", function () {
+          const pt = points[layer._heatIdx];
+          const isReal = basis === "real";
+          const pSeries = isReal && pt.pr ? pt.pr : pt.p;
+          const bSeries = isReal && pt.br ? pt.br : pt.b;
+          const paybackYrs = pSeries ? pSeries[usageIdx] : null;
+          const breakevenYrs = bSeries ? bSeries[usageIdx] : null;
+          const usage = gridData.usageTiersKwhDay[usageIdx];
+
+          const hasDeficit = pt.tr && pt.tr !== pt.t;
+          const tariffLine = hasDeficit
+            ? (isReal
+                ? `<tr><td style="color:var(--muted);padding:.15rem 0;">Real-world cost</td><td style="text-align:right;color:#00e699;font-weight:700;">$${pt.tr}/kWh <span style="font-size:.72rem;color:var(--muted);font-weight:normal;">(fuel blend)</span></td></tr>
+                   <tr><td style="color:var(--muted);padding:.15rem 0;">Official grid</td><td style="text-align:right;color:var(--muted);font-size:.8rem;">$${pt.t}/kWh (when on)</td></tr>`
+                : `<tr><td style="color:var(--muted);padding:.15rem 0;">Grid tariff</td><td style="text-align:right;color:#fff;font-weight:600;">$${pt.t}/kWh</td></tr>
+                   <tr><td style="color:var(--muted);padding:.15rem 0;">Real-world cost</td><td style="text-align:right;color:#00e699;font-size:.8rem;">$${pt.tr}/kWh (fuel blend)</td></tr>`)
+            : `<tr><td style="color:var(--muted);padding:.15rem 0;">Grid tariff</td><td style="text-align:right;color:#fff;font-weight:600;">$${pt.t}/kWh</td></tr>`;
+
+          const unservedBadge = pt.unserved
+            ? `<div style="background:rgba(255,170,0,0.15);border:1px solid rgba(255,170,0,0.3);border-radius:4px;padding:3px 6px;font-size:.75rem;color:#ffaa00;margin-bottom:.5rem;">
+                ⚠️ ~${pt.unserved}% unserved by grid; generator fuel displaces grid
+              </div>`
+            : "";
+
+          const popup = `
+            <div style="min-width:215px;">
+              <div style="font-weight:700;font-size:1rem;color:#fff;margin-bottom:.2rem;">${pt.n}</div>
+              <div style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem;">${countryName(pt.c)} · ${pt.lat}°, ${pt.lon}°</div>
+              ${unservedBadge}
+              <table style="width:100%;font-size:.85rem;border-collapse:collapse;">
+                ${tariffLine}
+                <tr><td style="color:var(--muted);padding:.15rem 0;">Solar yield</td><td style="text-align:right;color:#fff;font-weight:600;">${pt.y} kWh/kWp/yr</td></tr>
+                <tr><td style="color:var(--muted);padding:.15rem 0;">Payback (${basis})</td><td style="text-align:right;color:${yearColor(paybackYrs)};font-weight:700;">${yearLabel(paybackYrs)}</td></tr>
+                <tr><td style="color:var(--muted);padding:.15rem 0;">True break-even</td><td style="text-align:right;color:${yearColor(breakevenYrs)};font-weight:700;">${yearLabel(breakevenYrs)}</td></tr>
+                <tr><td style="color:var(--muted);padding:.15rem 0;">Usage assumed</td><td style="text-align:right;color:#fff;">${usage} kWh/day</td></tr>
+              </table>
+              <div style="margin-top:.6rem;text-align:center;">
+                <a href="../#sizing" style="display:inline-block;background:linear-gradient(135deg,#00e699,#00b377);color:#04120c;font-weight:700;padding:.4rem .9rem;border-radius:6px;font-size:.85rem;">⚡ Run full simulation</a>
+              </div>
+            </div>
+          `;
+          layer.bindPopup(popup, { maxWidth: 290 }).openPopup();
+        });
+      });
+
+      updateRankings();
+    }
+
+    // ── Rankings ────────────────────────────────────────────────────────────
+    function updateRankings() {
+      if (!gridData) return;
+      const points = gridData.points;
+      const usage = gridData.usageTiersKwhDay[usageIdx];
+      const mKey = getMetricKey();
+
+      // Deduplicate by country for rankings (show different countries)
+      const countryBest = new Map();
+      const countryWorst = new Map();
+
+      for (const pt of points) {
+        const series = pt[mKey] || pt[metric];
+        const yrs = series ? series[usageIdx] : null;
+        if (yrs === null || yrs <= 0) continue;
+
+        const bestSeries = countryBest.has(pt.c) ? (countryBest.get(pt.c)[mKey] || countryBest.get(pt.c)[metric]) : null;
+        if (!countryBest.has(pt.c) || (bestSeries && yrs < bestSeries[usageIdx])) {
+          countryBest.set(pt.c, pt);
+        }
+
+        const worstSeries = countryWorst.has(pt.c) ? (countryWorst.get(pt.c)[mKey] || countryWorst.get(pt.c)[metric]) : null;
+        if (!countryWorst.has(pt.c) || (worstSeries && yrs > worstSeries[usageIdx])) {
+          countryWorst.set(pt.c, pt);
+        }
+      }
+
+      const bestByCountry = [...countryBest.values()]
+        .sort((a, b) => {
+          const sA = a[mKey] || a[metric], sB = b[mKey] || b[metric];
+          return sA[usageIdx] - sB[usageIdx];
+        })
+        .slice(0, 10);
+
+      const worstByCountry = [...countryWorst.values()]
+        .filter(pt => {
+          const s = pt[mKey] || pt[metric];
+          return s && s[usageIdx] !== null;
+        })
+        .sort((a, b) => {
+          const sA = a[mKey] || a[metric], sB = b[mKey] || b[metric];
+          return sB[usageIdx] - sA[usageIdx];
+        })
+        .slice(0, 10);
+
+      const metricLabel = metric === "p" ? "payback" : "break-even";
+      const basisLabel = basis === "real" ? "real-world" : "grid-only";
+
+      document.getElementById("best-list").innerHTML = bestByCountry.map(pt => {
+        const s = pt[mKey] || pt[metric];
+        const rateDisplay = basis === "real" && pt.tr ? `$${pt.tr}` : `$${pt.t}`;
+        return `<li><span class="years">${yearLabel(s[usageIdx])}</span> — ${pt.n}, ${countryName(pt.c)} <span class="detail">(${rateDisplay}/kWh, ${pt.y} kWh/kWp)</span></li>`;
+      }).join("");
+
+      document.getElementById("worst-list").innerHTML = worstByCountry.map(pt => {
+        const s = pt[mKey] || pt[metric];
+        const rateDisplay = basis === "real" && pt.tr ? `$${pt.tr}` : `$${pt.t}`;
+        return `<li><span class="years">${yearLabel(s[usageIdx])}</span> — ${pt.n}, ${countryName(pt.c)} <span class="detail">(${rateDisplay}/kWh, ${pt.y} kWh/kWp)</span></li>`;
+      }).join("");
+
+      document.querySelector("#best-card h3").textContent = `⚡ Fastest ${metricLabel} (${basisLabel}, ${usage} kWh/d)`;
+      document.querySelector("#worst-card h3").textContent = `🔴 Slowest ${metricLabel} (${basisLabel}, ${usage} kWh/d)`;
+    }
+
+    // ── Controls ───────────────────────────────────────────────────────────
+    document.getElementById("basis-btns").addEventListener("click", function (e) {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      document.querySelectorAll("#basis-btns button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      basis = btn.dataset.basis;
+      renderDots();
+    });
+
+    document.getElementById("usage-btns").addEventListener("click", function (e) {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      document.querySelectorAll("#usage-btns button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      usageIdx = parseInt(btn.dataset.idx, 10);
+      renderDots();
+    });
+
+    document.getElementById("metric-btns").addEventListener("click", function (e) {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      document.querySelectorAll("#metric-btns button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      metric = btn.dataset.metric;
+      renderDots();
+    });
+
+    // ── Init ───────────────────────────────────────────────────────────────
+    async function init() {
+      try {
+        const res = await fetch("../assets/data/heatmap-grid.json");
+        if (!res.ok) throw new Error("Failed to load heatmap data");
+        gridData = await res.json();
+      } catch (err) {
+        document.getElementById("loading").innerHTML =
+          `<div style="text-align:center;color:#e64545;">Failed to load heatmap data. <a href="" style="color:var(--accent);">Reload</a></div>`;
+        console.error(err);
+        return;
+      }
+
+      // Show map, hide loading
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("map").style.display = "block";
+      document.getElementById("controls").style.display = "block";
+
+      // Init Leaflet
+      map = L.map("map", {
+        center: [20, 0],
+        zoom: 2,
+        minZoom: 2,
+        maxZoom: 12,
+        zoomControl: true,
+        attributionControl: false,
+        worldCopyJump: true,
+      });
+
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        subdomains: "abcd",
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Use CartoDB Dark Matter for matching dark theme (no API key needed)
+      renderDots();
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>

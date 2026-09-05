@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Solar & Battery Calculator by City — Free Sizing for 66 Cities</title>
+  <meta name="description" content="Free solar and battery sizing pages for 66 cities worldwide. Simulated against five years of NASA satellite weather. Nothing for sale.">
+  <link rel="canonical" href="https://bigenergyco.pages.dev/solar-calculator/">
+  <link rel="alternate" hreflang="en" href="https://bigenergyco.pages.dev/solar-calculator/">
+  <link rel="alternate" hreflang="x-default" href="https://bigenergyco.pages.dev/solar-calculator/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BigEnergyCo">
+  <meta property="og:title" content="Solar & Battery Calculator by City — Free Sizing for 66 Cities">
+  <meta property="og:description" content="Free solar and battery sizing pages for 66 cities worldwide. Simulated against five years of NASA satellite weather. Nothing for sale.">
+  <meta property="og:url" content="https://bigenergyco.pages.dev/solar-calculator/">
+  <meta property="og:image" content="https://bigenergyco.pages.dev/assets/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Solar & Battery Calculator by City — Free Sizing for 66 Cities">
+  <meta name="twitter:description" content="Free solar and battery sizing pages for 66 cities worldwide. Simulated against five years of NASA satellite weather. Nothing for sale.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": "https://bigenergyco.pages.dev/solar-calculator/#hub",
+        "name": "Solar & Battery Calculator by City",
+        "description": "Free solar and battery sizing pages for 66 cities worldwide. Simulated against five years of NASA satellite weather. Nothing for sale.",
+        "url": "https://bigenergyco.pages.dev/solar-calculator/",
+        "publisher": { "@type": "Organization", "name": "BigEnergyCo", "url": "https://bigenergyco.pages.dev" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://bigenergyco.pages.dev/solar-calculator/#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://bigenergyco.pages.dev/" },
+          { "@type": "ListItem", "position": 2, "name": "Solar Calculator by City", "item": "https://bigenergyco.pages.dev/solar-calculator/" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    :root {
+      color-scheme: dark;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.28) rgba(11, 15, 23, 0.85);
+      --accent: #00e699;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --bg: #0b0f17;
+      --border: rgba(255, 255, 255, 0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(11, 15, 23, 0.85); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.38); }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .container { max-width: 980px; margin: 0 auto; padding: 0 1.25rem; }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      background: rgba(11, 15, 23, 0.92);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 5;
+    }
+    header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; }
+    .logo { font-weight: 800; color: #fff; font-size: 1.05rem; text-decoration: none; }
+    .logo span { color: var(--accent); }
+    nav a { color: var(--muted); text-decoration: none; margin-left: 1.1rem; font-size: .9rem; }
+    nav a:hover { color: #fff; }
+    article { padding: 2.5rem 0 1rem; }
+    h1 { color: #fff; font-size: 2.1rem; line-height: 1.25; letter-spacing: -.5px; margin-bottom:.75rem; }
+    h2 { color: #fff; font-size: 1.25rem; margin: 1.8rem 0 .8rem; }
+    p { margin-bottom: 1rem; }
+    .citylinks { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 1.5rem; }
+    .citylinks a { color: var(--accent); text-decoration: none; font-size: .85rem; border: 1px solid var(--border); border-radius: 20px; padding: .2rem .7rem; }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 0 max(3rem, env(safe-area-inset-bottom));
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      margin-top: 3rem;
+      color: var(--muted);
+      font-size: .85rem;
+      text-align: center;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    @media (max-width: 480px) {
+      h1 { font-size: 1.65rem; }
+      .container { padding: 0 1rem; }
+      nav a { margin-left: .65rem; font-size: .85rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a class="logo" href="../">⚡ BigEnergy<span>Co</span></a>
+      <nav>
+        <a href="../#sizing">Size Your System</a>
+        <a href="../#calculator">Estimator</a>
+        <a href="../#bom">Hardware Reference</a>
+        <a href="../blog/">Blog</a>
+        <a href="../#legal">Terms &amp; Disclaimer</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <article>
+      <h1>Solar &amp; Battery Calculator by City</h1>
+      <p>Pick your city for a free, honest sizing overview — then run the exact simulation with your coordinates and your own tariff. Every page is powered by the same deterministic engine simulating <strong>five years of hourly NASA satellite weather</strong>. No signup, nothing for sale.</p>
+      <h2>🗺️ Global Feasibility Map</h2>
+      <p>See where solar pays off fastest around the world — <a href="../solar-heatmap/" style="color:var(--accent);font-weight:600;">explore the interactive heatmap →</a></p>
+      <h2>North America</h2>
+      <div class="citylinks">
+        <a href="./honolulu/">Honolulu</a>
+        <a href="./los-angeles/">Los Angeles</a>
+        <a href="./phoenix/">Phoenix</a>
+        <a href="./denver/">Denver</a>
+        <a href="./chicago/">Chicago</a>
+        <a href="./miami/">Miami</a>
+        <a href="./new-york/">New York</a>
+        <a href="./toronto/">Toronto</a>
+        <a href="./mexico-city/">Mexico City</a>
+      </div>
+      <h2>Caribbean</h2>
+      <div class="citylinks">
+        <a href="./san-juan/">San Juan</a>
+        <a href="./santo-domingo/">Santo Domingo</a>
+        <a href="./havana/">Havana</a>
+        <a href="./port-au-prince/">Port-au-Prince</a>
+      </div>
+      <h2>Central America</h2>
+      <div class="citylinks">
+        <a href="./guatemala-city/">Guatemala City</a>
+        <a href="./panama-city/">Panama City</a>
+      </div>
+      <h2>South America</h2>
+      <div class="citylinks">
+        <a href="./bogota/">Bogota</a>
+        <a href="./lima/">Lima</a>
+        <a href="./cusco/">Cusco</a>
+        <a href="./santiago/">Santiago</a>
+        <a href="./sao-paulo/">Sao Paulo</a>
+        <a href="./buenos-aires/">Buenos Aires</a>
+        <a href="./quito/">Quito</a>
+        <a href="./la-paz/">La Paz</a>
+      </div>
+      <h2>Europe</h2>
+      <div class="citylinks">
+        <a href="./london/">London</a>
+        <a href="./paris/">Paris</a>
+        <a href="./madrid/">Madrid</a>
+        <a href="./rome/">Rome</a>
+        <a href="./berlin/">Berlin</a>
+        <a href="./warsaw/">Warsaw</a>
+        <a href="./athens/">Athens</a>
+        <a href="./oslo/">Oslo</a>
+      </div>
+      <h2>Europe/Asia</h2>
+      <div class="citylinks">
+        <a href="./istanbul/">Istanbul</a>
+      </div>
+      <h2>Africa</h2>
+      <div class="citylinks">
+        <a href="./casablanca/">Casablanca</a>
+        <a href="./cairo/">Cairo</a>
+        <a href="./accra/">Accra</a>
+        <a href="./lagos/">Lagos</a>
+        <a href="./nairobi/">Nairobi</a>
+        <a href="./johannesburg/">Johannesburg</a>
+        <a href="./dakar/">Dakar</a>
+        <a href="./addis-ababa/">Addis Ababa</a>
+        <a href="./kinshasa/">Kinshasa</a>
+        <a href="./antananarivo/">Antananarivo</a>
+      </div>
+      <h2>Middle East</h2>
+      <div class="citylinks">
+        <a href="./dubai/">Dubai</a>
+        <a href="./riyadh/">Riyadh</a>
+      </div>
+      <h2>South Asia</h2>
+      <div class="citylinks">
+        <a href="./karachi/">Karachi</a>
+        <a href="./delhi/">Delhi</a>
+        <a href="./mumbai/">Mumbai</a>
+        <a href="./colombo/">Colombo</a>
+        <a href="./dhaka/">Dhaka</a>
+        <a href="./kathmandu/">Kathmandu</a>
+      </div>
+      <h2>Southeast Asia</h2>
+      <div class="citylinks">
+        <a href="./bangkok/">Bangkok</a>
+        <a href="./ho-chi-minh-city/">Ho Chi Minh City</a>
+        <a href="./jakarta/">Jakarta</a>
+        <a href="./phnom-penh/">Phnom Penh</a>
+        <a href="./manila/">Manila</a>
+        <a href="./singapore/">Singapore</a>
+      </div>
+      <h2>East Asia</h2>
+      <div class="citylinks">
+        <a href="./hong-kong/">Hong Kong</a>
+        <a href="./taipei/">Taipei</a>
+        <a href="./seoul/">Seoul</a>
+        <a href="./tokyo/">Tokyo</a>
+        <a href="./beijing/">Beijing</a>
+      </div>
+      <h2>Oceania</h2>
+      <div class="citylinks">
+        <a href="./suva/">Suva</a>
+        <a href="./papeete/">Papeete</a>
+        <a href="./perth/">Perth</a>
+        <a href="./sydney/">Sydney</a>
+        <a href="./auckland/">Auckland</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building.</p>
+      <p style="margin-top:.75rem;">
+        <a href="../">Free Estimator</a> · <a href="../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
