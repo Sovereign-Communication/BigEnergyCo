@@ -1620,7 +1620,7 @@ function ensureWorker() {
 
 
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260905a", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260905b", { type: "module" });
 
     worker.onmessage = (ev) => {
 

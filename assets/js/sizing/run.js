@@ -14,14 +14,14 @@ import {
 } from "./engine.js?v=20260905a";
 
 import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260904b";
-import { buildFrontier } from "./frontier.js?v=20260905a";
+import { buildFrontier } from "./frontier.js?v=20260905b";
 import { fullRange, getScope, POWMR_CATALOG, estimateTariff, landedMidBattKwhFor } from "./pricing.js?v=20260905a";
 import {
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
   lifetimeCostUsd, exportValueUsd, trueBreakEvenYear, cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
 
-} from "./money.js?v=20260905a";
+} from "./money.js?v=20260905b";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
