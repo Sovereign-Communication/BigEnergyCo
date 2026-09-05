@@ -20,7 +20,9 @@ for (const url of locs) {
   }
   const path = url.slice(ORIGIN.length);
   if (!path.endsWith("/")) {
-    console.error(`FAIL sitemap.xml: non-page URL ${url} (validator covers directory pages)`);
+    console.error(
+      `FAIL sitemap.xml: non-page URL ${url} (validator covers directory pages)`,
+    );
     process.exit(1);
   }
   const file = path === "/" ? "index.html" : `${path.slice(1)}index.html`;
@@ -35,12 +37,21 @@ for (const { url, file } of pages) {
     continue;
   }
   const html = readFileSync(file, "utf8");
-  const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
-  if (!blocks.length) { console.log(`${file}: NO JSON-LD (ok only for utility pages)`); continue; }
+  const blocks = [
+    ...html.matchAll(
+      /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g,
+    ),
+  ];
+  if (!blocks.length) {
+    console.log(`${file}: NO JSON-LD (ok only for utility pages)`);
+    continue;
+  }
   for (const [i, m] of blocks.entries()) {
     try {
       const data = JSON.parse(m[1]);
-      const types = (data["@graph"] ? data["@graph"] : [data]).map((n) => n["@type"]).flat();
+      const types = (data["@graph"] ? data["@graph"] : [data])
+        .map((n) => n["@type"])
+        .flat();
       console.log(`OK   ${file} [block ${i + 1}]: ${types.join(", ")}`);
     } catch (e) {
       console.error(`FAIL ${file} [block ${i + 1}]: ${e.message}`);

@@ -9,8 +9,10 @@
 ## What Was Implemented
 
 ### Phase 1: System Instruction Upgrade ✅
+
 **File:** `proxy_server.py` (lines 111-206)  
 **Changes:**
+
 - Replaced outdated system instruction with optimized version
 - Added chemistry recommendation framework (PRIMARY/SECONDARY/TERTIARY)
 - Integrated verified 2026 cycle life data:
@@ -24,26 +26,32 @@
 **Verification:** ✅ Groq API successfully responds with new instruction
 
 ### Phase 2: Response Validation Guardrails ✅
+
 **File:** `proxy_server.py` (added `validate_groq_response()` function)  
 **Features:**
+
 - Catches Lead-Acid responses without cost-of-ownership analysis
 - Flags false-precision pricing (e.g., $2,347.89 instead of range)
 - Validates cycle life numbers against verified 2026 specs
 - Non-blocking validation (logs warnings, always returns reply)
 
 **Verification:** ✅ Validation function tested and working
+
 - Lead-Acid without TCO: ⚠️ Warning issued ✅
 - False-precision pricing: ⚠️ Warning issued ✅
 - Normal responses: Pass through ✅
 
 ### Phase 3: Enhanced Intake Form ✅
+
 **File:** `index.html` (lines 918-945)  
 **New Form Fields:**
+
 - "Expected Minimum Winter Temperature" (Tropical / Temperate / Cold)
 - "Space for Battery Enclosure" (Very limited / Normal / Plenty)
 - "Maintenance Comfort Level" (Zero / Basic / Hands-on)
 
 **Benefits:**
+
 - Captures user context for better battery chemistry recommendations
 - Layout: 2-column grid for climate/space, separate field for maintenance
 - Styling matches existing form groups
@@ -51,8 +59,10 @@
 **Verification:** ✅ HTML structure validated
 
 ### Phase 4: Intake Logic with Climate Context ✅
+
 **File:** `index.html` (updated `buildIntakeBrief()` function)  
 **Changes:**
+
 - Extracts new climate/space/maintenance form values
 - Injects them into Groq prompt with [ADVISOR INSTRUCTION] tag
 - Guides Groq on chemistry selection based on context:
@@ -63,8 +73,10 @@
 **Verification:** ✅ Function tested with various inputs
 
 ### Phase 5: Verification Tests ✅
+
 **File:** `test_groq_chatbot.py` (added 6 new test functions)  
 **Tests Added:**
+
 1. `test_chemistry_default_sodium()` — Default case recommends Sodium-Ion
 2. `test_chemistry_cold_lithium()` — Cold climate gets Lithium guidance
 3. `test_lead_acid_warning()` — Lead-Acid includes cost-of-ownership warning
@@ -73,6 +85,7 @@
 6. `test_no_false_precision()` — Efficiency numbers use ranges
 
 **Test Results:**
+
 ```
 TEST 1: Default case (California, has space)
 ✅ Sodium mentioned: True
@@ -98,12 +111,14 @@ TEST 4: Pricing question
 ### Groq Response Quality
 
 **Before Optimization:**
+
 - Generic chemistry advice without context awareness
 - No distinction between Sodium-Ion and LFP
 - Possible false-precision cycle life numbers
 - Inverter decisions sometimes invented rather than asked for
 
 **After Optimization:**
+
 - Chemistry recommendations based on climate, space, maintenance
 - Sodium-Ion recommended by default (cost-competitive, better cold performance)
 - LFP recommended for cold climates + UL 9540 requirement for US residential
@@ -114,10 +129,12 @@ TEST 4: Pricing question
 ### User Experience
 
 **Before:**
+
 - 3 form fields (bill/consumption, region, inverter)
 - Generic "sizing" advice
 
 **After:**
+
 - 6 form fields (+ climate/space/maintenance context)
 - Personalized recommendations based on local conditions
 - Clearer battery chemistry tradeoffs explained
@@ -135,12 +152,12 @@ TEST 4: Pricing question
 
 ## Files Changed
 
-| File | Changes | Lines |
-|------|---------|-------|
-| `proxy_server.py` | System instruction + response validation | +95 |
-| `index.html` | Form fields + intake logic | +85 |
-| `test_groq_chatbot.py` | 6 verification tests | +95 |
-| **Total** | **3 files** | **~275 lines** |
+| File                   | Changes                                  | Lines          |
+| ---------------------- | ---------------------------------------- | -------------- |
+| `proxy_server.py`      | System instruction + response validation | +95            |
+| `index.html`           | Form fields + intake logic               | +85            |
+| `test_groq_chatbot.py` | 6 verification tests                     | +95            |
+| **Total**              | **3 files**                              | **~275 lines** |
 
 ---
 
@@ -159,6 +176,7 @@ See `BATTERY_CYCLE_LIFE_REFERENCE_2026.md` for full sourced reference with 15+ c
 ## Remaining Documentation Tasks (Not Implemented)
 
 These can be done separately:
+
 - [ ] Update README.md with chemistry framework link
 - [ ] Link GROQ_AUDIT_AND_OPTIMIZATION.md in PLAN.md
 - [ ] Add "Battery Chemistry Guide" section to main site docs
@@ -179,17 +197,20 @@ These can be done separately:
 ## Deployment Notes
 
 ### To Deploy:
+
 1. Replace `proxy_server.py` (system instruction + validation function)
 2. Replace `index.html` (form fields + intake logic)
 3. Optional: Add updated `test_groq_chatbot.py` to test suite
 
 ### No Breaking Changes:
+
 - All changes are backward-compatible
 - Existing functionality preserved
 - New fields have sensible defaults
 - Validation is advisory (non-blocking)
 
 ### Rate Limits Still Enforced:
+
 - 8 requests/min per IP
 - 150 requests/day per IP
 - 3000 requests/day global
@@ -200,6 +221,7 @@ These can be done separately:
 ## What Users Will See
 
 ### Form:
+
 ```
 [Bill/kWh dropdown] [Amount input]
 
@@ -212,9 +234,10 @@ These can be done separately:
 ```
 
 ### Chat Response (Example):
+
 ```
 California is a great place for solar and battery storage.
-Given that you have space and prefer zero maintenance, 
+Given that you have space and prefer zero maintenance,
 Sodium-Ion batteries are the best choice:
 
 - Cost: ~$38-42/kWh (price-competitive with LFP)
@@ -230,6 +253,7 @@ Sodium-Ion batteries are the best choice:
 ## Success Metrics
 
 **Implemented & Verified:**
+
 - ✅ Sodium-Ion recommended by default (cost-competitive + environmental)
 - ✅ Cold climate → Lithium guidance with reasoning
 - ✅ Lead-Acid → cost-of-ownership warning (lasts 3-5 years, expensive over 10 years)

@@ -19,7 +19,9 @@ export const PANEL_AREA_W_PER_M2 = 200;
 
 export const INVERTER_STANDARD_KW = [1, 1.5, 2, 3, 4, 5, 6, 8, 10, 12, 15];
 
-export const FUSE_STANDARD_AMPS = [60, 80, 100, 125, 150, 175, 200, 250, 300, 400];
+export const FUSE_STANDARD_AMPS = [
+  60, 80, 100, 125, 150, 175, 200, 250, 300, 400,
+];
 
 // Copper resistivity at operating temperature, Ω·mm²/m (20 °C value is
 // 0.0172; warm DC wiring in an enclosure runs hotter — 0.0175 is the usual
@@ -49,11 +51,11 @@ export const HOT_DERATE_FACTOR = 0.88;
 
 // DIY cell formats (the common large-prismatic buys of 2025-2026):
 const DIY_CELLS = {
-  lfp: { cellV: 3.2, cellAh: 314 },          // 16S = 51.2 V, ~16.1 kWh/string
-  naion: { cellV: 3.1, cellAh: 314 },        // 16S = 49.6 V, ~15.6 kWh/string
+  lfp: { cellV: 3.2, cellAh: 314 }, // 16S = 51.2 V, ~16.1 kWh/string
+  naion: { cellV: 3.1, cellAh: 314 }, // 16S = 49.6 V, ~15.6 kWh/string
 };
 const AGM_BLOCK = { blockV: 12, blockAh: 200 }; // 12 V × 200 Ah = 2.4 kWh each
-export const RETAIL_MODULE_KWH = 5.12;          // PowMr-class 51.2 V rack unit
+export const RETAIL_MODULE_KWH = 5.12; // PowMr-class 51.2 V rack unit
 
 // ── Small helpers ────────────────────────────────────────────────────────────
 
@@ -108,7 +110,7 @@ export function panelLayout(pvKw, panelWatts = PANEL_WATTS_DEFAULT) {
   if (!(pvKw > 0) || !(panelWatts > 0)) return null;
   const count = Math.ceil((pvKw * 1000) / panelWatts);
   const kwActual = +((count * panelWatts) / 1000).toFixed(2);
-  const areaM2 = Math.round(((count * panelWatts) / PANEL_AREA_W_PER_M2) / 5) * 5;
+  const areaM2 = Math.round((count * panelWatts) / PANEL_AREA_W_PER_M2 / 5) * 5;
   return { panelWatts, count, kwActual, areaM2 };
 }
 
@@ -126,7 +128,8 @@ const SERIES_BY_VOLTS = {
 
 function diyConfig(chemistry, vBatt, nameplateKwh) {
   if (chemistry === "agm") {
-    const series = SERIES_BY_VOLTS[vBatt]?.agm ?? Math.round(vBatt / AGM_BLOCK.blockV);
+    const series =
+      SERIES_BY_VOLTS[vBatt]?.agm ?? Math.round(vBatt / AGM_BLOCK.blockV);
     const stringKwh = (series * AGM_BLOCK.blockV * AGM_BLOCK.blockAh) / 1000;
     const strings = Math.max(1, Math.ceil(nameplateKwh / stringKwh));
     return {
@@ -139,12 +142,14 @@ function diyConfig(chemistry, vBatt, nameplateKwh) {
     };
   }
   const cells = DIY_CELLS[chemistry] || DIY_CELLS.lfp;
-  const series = SERIES_BY_VOLTS[vBatt]?.[chemistry] ?? Math.round(vBatt / cells.cellV);
+  const series =
+    SERIES_BY_VOLTS[vBatt]?.[chemistry] ?? Math.round(vBatt / cells.cellV);
   const stringKwh = (series * cells.cellV * cells.cellAh) / 1000;
   // Sodium on standard LFP voltage settings only delivers ~85% of a string
   // (the engine's usableScale) — size string count on deliverable energy, or
   // the shopping list buys ~15% less storage than the simulation assumed.
-  const effectiveStringKwh = chemistry === "naion" ? stringKwh * 0.85 : stringKwh;
+  const effectiveStringKwh =
+    chemistry === "naion" ? stringKwh * 0.85 : stringKwh;
   const strings = Math.max(1, Math.ceil(nameplateKwh / effectiveStringKwh));
   return {
     unitLabel: `${series}S strings of ${cells.cellAh} Ah prismatic cells`,
@@ -193,9 +198,11 @@ export function controllerSpec(pvKw, vBatt) {
 
 export function protectionSpec(inverterKw, vBatt, pvKw) {
   const ctrl = controllerSpec(pvKw, vBatt);
-  const dischargeAmps = inverterKw > 0 && vBatt > 0 ? (inverterKw * 1000) / vBatt : null;
+  const dischargeAmps =
+    inverterKw > 0 && vBatt > 0 ? (inverterKw * 1000) / vBatt : null;
   return {
-    batteryDischargeAmps: dischargeAmps === null ? null : Math.ceil(dischargeAmps),
+    batteryDischargeAmps:
+      dischargeAmps === null ? null : Math.ceil(dischargeAmps),
     mainFuseAmps: dischargeAmps ? nextFuseSize(dischargeAmps * 1.25) : null,
     pvBreakerAmps: ctrl ? nextFuseSize(ctrl.ampsRequired) : null,
   };
@@ -208,10 +215,17 @@ export function protectionSpec(inverterKw, vBatt, pvKw) {
  * whichever demands more copper. Hot-enclosure derate applied above 40 °C.
  */
 export function cableGauge(amps, vBatt, meters, meanTempC = null) {
-  const requiredAmps = amps * 1.25 * (meanTempC !== null && meanTempC > HOT_DERATE_ABOVE_C ? 1 / HOT_DERATE_FACTOR : 1);
+  const requiredAmps =
+    amps *
+    1.25 *
+    (meanTempC !== null && meanTempC > HOT_DERATE_ABOVE_C
+      ? 1 / HOT_DERATE_FACTOR
+      : 1);
   // Voltage drop is computed on the SAME margined current as ampacity —
   // sizing copper for 100 A while dropping only 80 A understates the loss.
-  const minMm2Drop = (CU_RESISTIVITY * 2 * meters * requiredAmps) / (vBatt * CABLE_DROP_FRACTION);
+  const minMm2Drop =
+    (CU_RESISTIVITY * 2 * meters * requiredAmps) /
+    (vBatt * CABLE_DROP_FRACTION);
   for (const w of WIRE_TABLE) {
     if (w.mm2 >= minMm2Drop && w.ampacity >= requiredAmps) {
       return { meters, awg: w.awg, mm2: w.mm2 };
@@ -243,57 +257,99 @@ export function buildBom(p) {
   const peakKw = (p.peakLoadW || 0) / 1000;
   const invClassKw = nextInverterSize(Math.max(0.5, peakKw));
   if (p.peakIsAverage) {
-    notes.push("Inverter sized from AVERAGE load (no appliance peak entered) — real spikes (kettle, fridge start, pump surge) can be several times higher. Enter appliances for an exact peak.");
+    notes.push(
+      "Inverter sized from AVERAGE load (no appliance peak entered) — real spikes (kettle, fridge start, pump surge) can be several times higher. Enter appliances for an exact peak.",
+    );
   }
   if (inverterOverflows(peakKw)) {
-    notes.push(`Peak ${peakKw.toFixed(1)} kW exceeds the largest standard ${INVERTER_STANDARD_KW[INVERTER_STANDARD_KW.length - 1]} kW class — plan multiple stacked units, not one ${invClassKw} kW box.`);
+    notes.push(
+      `Peak ${peakKw.toFixed(1)} kW exceeds the largest standard ${INVERTER_STANDARD_KW[INVERTER_STANDARD_KW.length - 1]} kW class — plan multiple stacked units, not one ${invClassKw} kW box.`,
+    );
   }
 
   // Reference catalog unit (informational only — nothing is sold here).
   // Catalog units are 48 V split-phase: only referenced for 48 V systems.
   const catalogUnit =
-    [...POWMR_CATALOG.inverters].sort((a, b) => a.kw - b.kw).find((u) => u.kw >= invClassKw) || null;
+    [...POWMR_CATALOG.inverters]
+      .sort((a, b) => a.kw - b.kw)
+      .find((u) => u.kw >= invClassKw) || null;
 
   const hasBank = (p.battNameplateKwh || 0) > 0;
-  const volts = hasBank ? pickSystemVoltage(p.battNameplateKwh, invClassKw) : null;
+  const volts = hasBank
+    ? pickSystemVoltage(p.battNameplateKwh, invClassKw)
+    : null;
 
-  if (!hasBank) notes.push("No battery in this system, so voltage, bank layout, and DC protection are omitted.");
-  if (volts === 12) notes.push("12 V class: fine for RV-scale loads. Above ~1.5 kW continuous, 24 V or 48 V wastes far less copper.");
-  if (volts === 24) notes.push("24 V class: the middle road — workable up to about 3.5 kW continuous.");
-  if (volts === 48) notes.push("48 V class: what any house-scale system uses — lowest current for the same power.");
+  if (!hasBank)
+    notes.push(
+      "No battery in this system, so voltage, bank layout, and DC protection are omitted.",
+    );
+  if (volts === 12)
+    notes.push(
+      "12 V class: fine for RV-scale loads. Above ~1.5 kW continuous, 24 V or 48 V wastes far less copper.",
+    );
+  if (volts === 24)
+    notes.push(
+      "24 V class: the middle road — workable up to about 3.5 kW continuous.",
+    );
+  if (volts === 48)
+    notes.push(
+      "48 V class: what any house-scale system uses — lowest current for the same power.",
+    );
 
-  const battery = !hasBank ? null : {
-    usableDod: chem.usableDod,
-    diy: diyConfig(chemistry, volts, p.battNameplateKwh),
-    retail: retailConfig(chemistry, p.battNameplateKwh),
-  };
+  const battery = !hasBank
+    ? null
+    : {
+        usableDod: chem.usableDod,
+        diy: diyConfig(chemistry, volts, p.battNameplateKwh),
+        retail: retailConfig(chemistry, p.battNameplateKwh),
+      };
   if (battery && battery.diy.providedKwh > (p.battNameplateKwh || 0) * 1.25) {
-    notes.push(`Banks come in whole strings: the smallest ${battery.diy.unitLabel} build provides ~${battery.diy.providedKwh} kWh for a ${(p.battNameplateKwh || 0).toFixed(1)} kWh ask — the shopping list rounds UP, the simulation did not.`);
+    notes.push(
+      `Banks come in whole strings: the smallest ${battery.diy.unitLabel} build provides ~${battery.diy.providedKwh} kWh for a ${(p.battNameplateKwh || 0).toFixed(1)} kWh ask — the shopping list rounds UP, the simulation did not.`,
+    );
   }
 
   const dischargeAmps = volts ? (invClassKw * 1000) / volts : 0;
   if (volts && fuseOverflows(dischargeAmps * 1.25)) {
-    notes.push(`Full-load battery current (~${Math.ceil(dischargeAmps)} A) exceeds standard fuse ratings — this bank needs parallel strings with per-string protection, designed by an electrician.`);
+    notes.push(
+      `Full-load battery current (~${Math.ceil(dischargeAmps)} A) exceeds standard fuse ratings — this bank needs parallel strings with per-string protection, designed by an electrician.`,
+    );
   }
 
   return {
     chemistry,
     chemLabel: chem.label,
     panels: panelLayout(p.pvKw, p.panelWatts ?? PANEL_WATTS_DEFAULT),
-    voltage: volts ? { volts, rationale: `${volts} V fits a ${invClassKw} kW-class inverter and ${(p.battNameplateKwh || 0).toFixed(1)} kWh nameplate bank` } : null,
+    voltage: volts
+      ? {
+          volts,
+          rationale: `${volts} V fits a ${invClassKw} kW-class inverter and ${(p.battNameplateKwh || 0).toFixed(1)} kWh nameplate bank`,
+        }
+      : null,
     battery,
     inverter: {
       peakLoadKw: +peakKw.toFixed(2),
       recommendedKw: invClassKw,
-      surgeNote: "Pick a low-frequency unit with ~3× surge if the load includes fridges, pumps, or tools — motor start current hits hard for half a second. Size fuses slow-blow (Class-T) so that same surge does not nuisance-trip them.",
-      referenceUnit: volts === 48
-        ? (catalogUnit ? `${catalogUnit.model} (~$${catalogUnit.priceUsd}, ${catalogUnit.note}, ${POWMR_CATALOG.checkedDate})` : `above the ${POWMR_CATALOG.inverters[0].model.split(" ")[0]} kW reference class — expect multiple stacked units`)
-        : `no 48 V reference applies here — source a ${volts} V-class inverter/charger for this bank voltage`,
+      surgeNote:
+        "Pick a low-frequency unit with ~3× surge if the load includes fridges, pumps, or tools — motor start current hits hard for half a second. Size fuses slow-blow (Class-T) so that same surge does not nuisance-trip them.",
+      referenceUnit:
+        volts === 48
+          ? catalogUnit
+            ? `${catalogUnit.model} (~$${catalogUnit.priceUsd}, ${catalogUnit.note}, ${POWMR_CATALOG.checkedDate})`
+            : `above the ${POWMR_CATALOG.inverters[0].model.split(" ")[0]} kW reference class — expect multiple stacked units`
+          : `no 48 V reference applies here — source a ${volts} V-class inverter/charger for this bank voltage`,
     },
     controller: hasBank ? controllerSpec(p.pvKw, volts) : null,
     protection: hasBank ? protectionSpec(invClassKw, volts, p.pvKw) : null,
     cable: hasBank
-      ? CABLE_RUN_METERS.map((m) => cableGauge((invClassKw * 1000) / volts, volts, m, p.meanTempC ?? null))
+      ? CABLE_RUN_METERS.map((m) =>
+          cableGauge(
+            (invClassKw * 1000) / volts,
+            volts,
+            m,
+            p.meanTempC ?? null,
+          ),
+        )
       : null,
     feasibility: panelLayout(p.pvKw, p.panelWatts ?? PANEL_WATTS_DEFAULT),
     notes,

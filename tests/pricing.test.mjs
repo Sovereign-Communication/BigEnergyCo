@@ -1,26 +1,51 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PRICING_SCOPES, POWMR_CATALOG, costRange, getScope, fullRange, estimateTariff } from "../assets/js/sizing/pricing.js";
+import {
+  PRICING_SCOPES,
+  POWMR_CATALOG,
+  costRange,
+  getScope,
+  fullRange,
+  estimateTariff,
+} from "../assets/js/sizing/pricing.js";
 import { PRICES_CHECKED } from "../assets/js/shared/content.js";
 
 test("catalog prices are dated, scope-labeled, and re-verified within the last year", () => {
   // Tripwire for the "dated, scope-labeled, indicative" ground rule: parses
   // "Aug 2026"-style stamps and fails once they age past a year, with the
   // remediation spelled out (re-check the catalog, bump the stamps).
-  const stamps = { "POWMR_CATALOG.checkedDate": POWMR_CATALOG.checkedDate, "PRICES_CHECKED": PRICES_CHECKED };
+  const stamps = {
+    "POWMR_CATALOG.checkedDate": POWMR_CATALOG.checkedDate,
+    PRICES_CHECKED: PRICES_CHECKED,
+  };
   for (const [name, s] of Object.entries(stamps)) {
     const t = Date.parse(`01 ${s}`);
-    assert.ok(Number.isFinite(t), `${name} parses as a date: ${JSON.stringify(s)}`);
+    assert.ok(
+      Number.isFinite(t),
+      `${name} parses as a date: ${JSON.stringify(s)}`,
+    );
     const ageDays = (Date.now() - t) / 86400000;
-    assert.ok(ageDays < 366, `${name} (${s}) is stale: re-verify prices against the PowMr catalog, then bump checkedDate/PRICES_CHECKED and the scope labels`);
+    assert.ok(
+      ageDays < 366,
+      `${name} (${s}) is stale: re-verify prices against the PowMr catalog, then bump checkedDate/PRICES_CHECKED and the scope labels`,
+    );
   }
   for (const s of PRICING_SCOPES) {
-    assert.ok(s.source && /20\d\d/.test(s.source), `${s.id} scope carries a dated source`);
+    assert.ok(
+      s.source && /20\d\d/.test(s.source),
+      `${s.id} scope carries a dated source`,
+    );
   }
 });
 
 test("PowMr catalog derivation matches the checked prices", () => {
-  assert.equal(POWMR_CATALOG.batteries[0].perKwh, Math.round(POWMR_CATALOG.batteries[0].priceUsd / POWMR_CATALOG.batteries[0].kwhNominal));
+  assert.equal(
+    POWMR_CATALOG.batteries[0].perKwh,
+    Math.round(
+      POWMR_CATALOG.batteries[0].priceUsd /
+        POWMR_CATALOG.batteries[0].kwhNominal,
+    ),
+  );
   const inv = POWMR_CATALOG.inverters.find((i) => i.kw === 10);
   assert.equal(inv.priceUsd, 939);
 });
@@ -28,13 +53,19 @@ test("PowMr catalog derivation matches the checked prices", () => {
 test("scopes are ordered cheap-to-expensive and ranges are sane", () => {
   for (const s of PRICING_SCOPES) {
     assert.ok(s.pvPerW[0] < s.pvPerW[1], `${s.id} pv range`);
-    assert.ok(s.battPerKwhUsable[0] < s.battPerKwhUsable[1], `${s.id} batt range`);
+    assert.ok(
+      s.battPerKwhUsable[0] < s.battPerKwhUsable[1],
+      `${s.id} batt range`,
+    );
     assert.ok(s.invPerKw[0] < s.invPerKw[1], `${s.id} inv range`);
   }
   // ex-factory cells cheapest, budget retail most expensive
   const cells = getScope("cells").battPerKwhUsable[1];
   const powmr = getScope("powmr").battPerKwhUsable[0];
-  assert.ok(cells <= powmr, "ex-Factory top must overlap-or-below retail bottom");
+  assert.ok(
+    cells <= powmr,
+    "ex-Factory top must overlap-or-below retail bottom",
+  );
 });
 
 test("costRange: PowMr scope puts a realistic bank near catalog $/kWh", () => {
@@ -43,16 +74,25 @@ test("costRange: PowMr scope puts a realistic bank near catalog $/kWh", () => {
   const r = costRange(5, 30.72, "powmr");
   assert.ok(r.hi > r.lo && r.lo > 0);
   const battOnly = r.battMid;
-  assert.ok(battOnly > 3000 && battOnly < 5200, `battery mid ${battOnly} in plausible window`);
+  assert.ok(
+    battOnly > 3000 && battOnly < 5200,
+    `battery mid ${battOnly} in plausible window`,
+  );
   // per-kWh context line can never again read like total/pv-inflated nonsense
   const perKwh = Math.round(battOnly / 30.72);
-  assert.ok(perKwh >= 110 && perKwh <= 165, `stored-kWh price ${perKwh} within PowMr-derived band`);
+  assert.ok(
+    perKwh >= 110 && perKwh <= 165,
+    `stored-kWh price ${perKwh} within PowMr-derived band`,
+  );
 });
 
 test("costRange: cells scope lands near the ~$50/kWh expectation", () => {
   const r = costRange(0, 10, "cells");
   const perKwh = r.battMid / 10;
-  assert.ok(perKwh >= 45 && perKwh <= 70, `cells scope mid ${perKwh}/kWh usable`);
+  assert.ok(
+    perKwh >= 45 && perKwh <= 70,
+    `cells scope mid ${perKwh}/kWh usable`,
+  );
 });
 
 test("fullRange: one honest spread, ex-factory low to budget-retail high", () => {
@@ -72,6 +112,6 @@ test("estimateTariff: region boxes resolve from coordinates", () => {
   assert.equal(estimateTariff(33.45, -112.07).label, "US mainland");
   assert.equal(estimateTariff(51.51, -0.13).label, "United Kingdom / Ireland"); // country box beats regional
   assert.equal(estimateTariff(28.61, 77.21).rate, 0.08); // Delhi
-  assert.equal(estimateTariff(52.52, 13.41).rate, 0.40); // Berlin: Germany country box beats Europe fallback
+  assert.equal(estimateTariff(52.52, 13.41).rate, 0.4); // Berlin: Germany country box beats Europe fallback
   assert.equal(estimateTariff(-10, -140).rate, 0.28); // mid-Pacific -> global fallback
 });

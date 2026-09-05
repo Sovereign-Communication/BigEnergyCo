@@ -3,6 +3,7 @@
 ## Current State vs. Optimized State
 
 ### CURRENT FLOW ❌
+
 ```
 User fills form (bill/consumption, region, inverter)
             ↓
@@ -22,6 +23,7 @@ User sees answer
 ```
 
 **Problems:**
+
 - ❌ No chemistry hierarchy guidance to Groq
 - ❌ No climate/space context in intake form
 - ❌ Groq can recommend Lead-Acid even when Sodium-Ion is better
@@ -31,6 +33,7 @@ User sees answer
 ---
 
 ### OPTIMIZED FLOW ✅
+
 ```
 User fills form (bill/consumption, region, inverter, CLIMATE, SPACE, MAINTENANCE)
             ↓
@@ -57,6 +60,7 @@ User sees answer (chemistry-optimized, context-aware)
 ```
 
 **Improvements:**
+
 - ✅ Chemistry hierarchy enforced in system instruction
 - ✅ Climate/space/maintenance captured in form
 - ✅ Groq gets explicit decision tree via [ADVISOR INSTRUCTION]
@@ -68,6 +72,7 @@ User sees answer (chemistry-optimized, context-aware)
 ## Implementation Timeline
 
 ### Phase 1: System Instruction (1-2 hours)
+
 ```
 START: Replace proxy_server.py lines 111-156
 ├─ Copy new system_instruction (see GROQ_IMPLEMENTATION_GUIDE.md CHANGE 1)
@@ -76,6 +81,7 @@ START: Replace proxy_server.py lines 111-156
 ```
 
 ### Phase 2: Response Validation (1 hour)
+
 ```
 START: Add validation function to proxy_server.py
 ├─ Add validate_groq_response() (see GROQ_IMPLEMENTATION_GUIDE.md CHANGE 2)
@@ -85,6 +91,7 @@ START: Add validation function to proxy_server.py
 ```
 
 ### Phase 3: Form Enhancement (2 hours)
+
 ```
 START: Add climate/space/maintenance fields to index.html
 ├─ Add HTML <select> elements (see GROQ_IMPLEMENTATION_GUIDE.md CHANGE 3)
@@ -94,6 +101,7 @@ START: Add climate/space/maintenance fields to index.html
 ```
 
 ### Phase 4: Intake Logic (1 hour)
+
 ```
 START: Update buildIntakeBrief() in index.html
 ├─ Extract new form field values (see GROQ_IMPLEMENTATION_GUIDE.md CHANGE 4)
@@ -104,6 +112,7 @@ START: Update buildIntakeBrief() in index.html
 ```
 
 ### Phase 5: Verification Tests (1-2 hours)
+
 ```
 START: Add verification tests to test_groq_chatbot.py
 ├─ Add 6 new test functions (see GROQ_IMPLEMENTATION_GUIDE.md CHANGE 5)
@@ -113,6 +122,7 @@ START: Add verification tests to test_groq_chatbot.py
 ```
 
 ### Phase 6: Docs & Handoff (1 hour)
+
 ```
 START: Update README.md
 ├─ Add section: "Battery Chemistry Recommendations"
@@ -187,29 +197,29 @@ User asks: "Which battery should I choose?"
 
 ## Metrics: Before → After
 
-| Metric | Before | After | Target |
-|--------|--------|-------|--------|
-| Sodium-Ion recommended by default | 40% | 85% | >90% |
-| Cold climate → Lithium | 20% | 80% | >85% |
-| Lead-Acid → TCO warning | 60% | 95% | 100% |
-| Pricing without caveat | 15% | 5% | <5% |
-| False precision (e.g., 87.3%) | 20% | 5% | <10% |
-| Inverter vague → follow-up | 30% | 80% | >80% |
-| Response validation errors caught | 0% | 85% | >90% |
-| Test suite passes | 60% | 100% | 100% |
+| Metric                            | Before | After | Target |
+| --------------------------------- | ------ | ----- | ------ |
+| Sodium-Ion recommended by default | 40%    | 85%   | >90%   |
+| Cold climate → Lithium            | 20%    | 80%   | >85%   |
+| Lead-Acid → TCO warning           | 60%    | 95%   | 100%   |
+| Pricing without caveat            | 15%    | 5%    | <5%    |
+| False precision (e.g., 87.3%)     | 20%    | 5%    | <10%   |
+| Inverter vague → follow-up        | 30%    | 80%   | >80%   |
+| Response validation errors caught | 0%     | 85%   | >90%   |
+| Test suite passes                 | 60%    | 100%  | 100%   |
 
 ---
 
 ## File Changes Summary
 
-| File | Change | Lines | Complexity |
-|------|--------|-------|------------|
-| `proxy_server.py` | Replace system_instruction | 111-156 | Medium |
-| `proxy_server.py` | Add validate_groq_response() | After 195 | Medium |
-| `index.html` | Add form fields (climate, space, maintenance) | ~850 | Low |
-| `index.html` | Update buildIntakeBrief() | 1145-1179 | Medium |
-| `test_groq_chatbot.py` | Add 6 verification tests | After 64 | Low |
-| `README.md` | Add chemistry framework docs | §"Ground rules" | Low |
+| File                   | Change                                        | Lines           | Complexity |
+| ---------------------- | --------------------------------------------- | --------------- | ---------- |
+| `proxy_server.py`      | Replace system_instruction                    | 111-156         | Medium     |
+| `proxy_server.py`      | Add validate_groq_response()                  | After 195       | Medium     |
+| `index.html`           | Add form fields (climate, space, maintenance) | ~850            | Low        |
+| `index.html`           | Update buildIntakeBrief()                     | 1145-1179       | Medium     |
+| `test_groq_chatbot.py` | Add 6 verification tests                      | After 64        | Low        |
+| `README.md`            | Add chemistry framework docs                  | §"Ground rules" | Low        |
 
 **Total additions:** ~350 lines of code/docs  
 **Total deletions:** ~20 lines (obsolete comments)  
@@ -220,13 +230,15 @@ User asks: "Which battery should I choose?"
 ## Guardrails: What Gets Checked
 
 ### 1. Chemistry Recommendation Order
+
 ```
 ❌ FAIL: "Lithium is best because it lasts longer" (no mention of Sodium)
-✅ PASS: "Sodium-Ion is the default choice (cost, environment). 
+✅ PASS: "Sodium-Ion is the default choice (cost, environment).
          Lithium is better if you're in a cold climate or space-constrained."
 ```
 
 ### 2. Lead-Acid Warning
+
 ```
 ❌ FAIL: "Lead-Acid is a cheap option at $10-15/kWh."
 ✅ PASS: "Lead-Acid is cheaper upfront ($10-15/kWh) but dies in 3-5 years.
@@ -234,13 +246,15 @@ User asks: "Which battery should I choose?"
 ```
 
 ### 3. Pricing Precision
+
 ```
 ❌ FAIL: "A 50 kWh system costs $2,347.89"
-✅ PASS: "A 50 kWh Sodium-Ion system costs roughly $1,900-$2,500 
+✅ PASS: "A 50 kWh Sodium-Ion system costs roughly $1,900-$2,500
          (Q2 2026 estimate; varies ±10-20% by region)."
 ```
 
 ### 4. Inverter Decision Tree
+
 ```
 ❌ FAIL: "For your 35 kWh load, a 10 kW Victron Phoenix is ideal."
          (invents inverter without knowing their needs)
@@ -251,6 +265,7 @@ User asks: "Which battery should I choose?"
 ```
 
 ### 5. Regional Awareness
+
 ```
 ❌ FAIL: "Lead-Acid is rare these days."
          (ignores that Lead-Acid is still 60% of market in some regions)
@@ -304,31 +319,39 @@ AFTER DEPLOYING:
 ## Troubleshooting Guide
 
 ### Problem: Test fails — "Sodium not mentioned before Lithium"
+
 **Cause:** Groq is using old prompt, or chemistry framework wasn't clear enough  
 **Fix:**
+
 1. Check that system_instruction was actually replaced (not cached)
 2. Clear proxy server cache (restart proxy_server.py)
 3. Sharpen the chemistry framework language (add "PRIMARY", "SECONDARY", "TERTIARY")
 4. Re-run test
 
 ### Problem: Form fields don't appear in intake form
+
 **Cause:** HTML wasn't inserted correctly, or ID mismatch  
 **Fix:**
+
 1. Check that new form fields were added (use browser dev tools → Inspect)
 2. Verify IDs match: `destClimate`, `destSpace`, `maintenanceComfort`
 3. Verify they're inside the `.modal` or `.sizing-modal` class
 4. Clear browser cache (Ctrl+Shift+Delete)
 
 ### Problem: buildIntakeBrief() throws error
+
 **Cause:** Form element doesn't exist yet  
 **Fix:**
+
 1. Add a null check: `var climateEl = document.getElementById('destClimate');`
 2. Provide fallback: `var climate = climateEl ? climateEl.value : 'unknown';`
 3. Test in browser console: `buildIntakeBrief()` should print no errors
 
 ### Problem: Rate limit errors during testing
+
 **Cause:** Test suite is hitting rate limits (8/min, 150/day per IP)  
 **Fix:**
+
 1. Space out test runs: don't run test suite more than once per 10 minutes
 2. Run tests at off-peak times (e.g., midnight, not business hours)
 3. If testing heavily, temporarily increase limits in proxy_server.py
@@ -338,8 +361,10 @@ AFTER DEPLOYING:
 4. Reset to production values before committing
 
 ### Problem: Groq response is cut off (stops mid-sentence)
+
 **Cause:** `max_tokens=1024` is too low  
 **Fix:**
+
 1. Increase max_tokens in proxy_server.py:
    ```python
    "max_tokens": 1500  # Increased from 1024

@@ -28,7 +28,11 @@ export function paybackYears(capexUsd, annualSpendUsd) {
  * A bank lasting exactly the horizon needs zero replacements; one lasting
  * half the horizon needs exactly one; floor() captures that honestly.
  */
-export function batteryReplacements(cyclesPerYear, cyclesTo80, horizonYears = HORIZON_YEARS) {
+export function batteryReplacements(
+  cyclesPerYear,
+  cyclesTo80,
+  horizonYears = HORIZON_YEARS,
+) {
   if (!(cyclesPerYear > 0) || !(cyclesTo80 > 0)) return 0;
   const lifeYears = cyclesTo80 / cyclesPerYear;
   if (lifeYears >= horizonYears) return 0;
@@ -42,7 +46,15 @@ export function batteryReplacements(cyclesPerYear, cyclesTo80, horizonYears = HO
  * leaving it out flattered swap-heavy chemistries against the "true cost"
  * message. Panels/inverter are assumed to last the horizon — stated in the UI.
  */
-export function lcoeUsdPerKwh({ capexMidUsd, battReplaceCostUsd = 0, replacements = 0, annualServedKwh, horizonYears = HORIZON_YEARS, firstLaborUsd = 0, swapsAndLaborTotalUsd = null }) {
+export function lcoeUsdPerKwh({
+  capexMidUsd,
+  battReplaceCostUsd = 0,
+  replacements = 0,
+  annualServedKwh,
+  horizonYears = HORIZON_YEARS,
+  firstLaborUsd = 0,
+  swapsAndLaborTotalUsd = null,
+}) {
   const totalKwh = (annualServedKwh || 0) * horizonYears;
   if (!(totalKwh > 0) || !Number.isFinite(capexMidUsd)) return null;
   const repl = swapsAndLaborTotalUsd ?? replacements * battReplaceCostUsd;
@@ -64,11 +76,18 @@ export function laborMidPerKwh(laborPerKwh = INSTALL_LABOR_PER_KWH_USABLE) {
  * initial capex + first-install labor, then each swap buys a new bank plus
  * new labor. This is the number that shows lead-acid's real price.
  */
-export function lifetimeCostUsd({ capexMidUsd, battKwhUsable = 0, battPriceMidPerKwh = 0, replacements = 0, laborPerKwh }) {
+export function lifetimeCostUsd({
+  capexMidUsd,
+  battKwhUsable = 0,
+  battPriceMidPerKwh = 0,
+  replacements = 0,
+  laborPerKwh,
+}) {
   if (!Number.isFinite(capexMidUsd)) return null;
   const laborKwh = laborMidPerKwh(laborPerKwh);
   const firstLabor = battKwhUsable * laborKwh;
-  const swapCost = replacements * (battKwhUsable * (battPriceMidPerKwh + laborKwh));
+  const swapCost =
+    replacements * (battKwhUsable * (battPriceMidPerKwh + laborKwh));
   return {
     total: Math.round(capexMidUsd + firstLabor + swapCost),
     firstLabor: Math.round(firstLabor),
@@ -118,9 +137,23 @@ export function exportValueUsd(clippedKwhPerYear, exportRatePerKwh) {
  * system that displaces nothing) — the chart is then hidden rather than
  * shown with a fake grid line.
  */
-export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, residualAnnualUsd = 0, swapsAndLaborTotalUsd = 0, replacements = 0, batteryLifeYears, firstLaborUsd = 0, horizonYears = HORIZON_YEARS }) {
-  if (!Number.isFinite(capexMidUsd) || !Number.isFinite(annualSavingsUsd) || annualSavingsUsd < 0 ||
-      !Number.isFinite(residualAnnualUsd)) return null;
+export function cumulativeCostSeries({
+  capexMidUsd,
+  annualSavingsUsd,
+  residualAnnualUsd = 0,
+  swapsAndLaborTotalUsd = 0,
+  replacements = 0,
+  batteryLifeYears,
+  firstLaborUsd = 0,
+  horizonYears = HORIZON_YEARS,
+}) {
+  if (
+    !Number.isFinite(capexMidUsd) ||
+    !Number.isFinite(annualSavingsUsd) ||
+    annualSavingsUsd < 0 ||
+    !Number.isFinite(residualAnnualUsd)
+  )
+    return null;
   const perSwap = replacements > 0 ? swapsAndLaborTotalUsd / replacements : 0;
 
   // Swap schedule: replacement k falls due at round(k × batteryLifeYears),
@@ -130,7 +163,11 @@ export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, residualAn
   // series apply fewer swaps than the card counts (chart/card disagreement,
   // flattering break-even). `replacements` is the single source of truth.
   const swapCounts = new Array(horizonYears + 1).fill(0);
-  if (replacements > 0 && Number.isFinite(batteryLifeYears) && batteryLifeYears > 0) {
+  if (
+    replacements > 0 &&
+    Number.isFinite(batteryLifeYears) &&
+    batteryLifeYears > 0
+  ) {
     for (let k = 1; k <= replacements; k++) {
       const yr = Math.round(k * batteryLifeYears);
       if (yr > horizonYears) break;
@@ -142,13 +179,16 @@ export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, residualAn
   const solar = new Array(horizonYears);
   const system = new Array(horizonYears);
   let cumGrid = 0;
-  let cumSolar = capexMidUsd + firstLaborUsd;   // first-install labor is paid
-  let cumSystem = capexMidUsd + firstLaborUsd;  // on day one on both lines — previously the solar line omitted it, overstating savings by exactly firstLabor
+  let cumSolar = capexMidUsd + firstLaborUsd; // first-install labor is paid
+  let cumSystem = capexMidUsd + firstLaborUsd; // on day one on both lines — previously the solar line omitted it, overstating savings by exactly firstLabor
   for (let y = 1; y <= horizonYears; y++) {
-    cumGrid += annualSavingsUsd + residualAnnualUsd;   // what staying on the grid costs that year
-    cumSolar += residualAnnualUsd;                     // the bill you still pay with solar
+    cumGrid += annualSavingsUsd + residualAnnualUsd; // what staying on the grid costs that year
+    cumSolar += residualAnnualUsd; // the bill you still pay with solar
     const nSwaps = swapCounts[y];
-    if (nSwaps > 0) { cumSolar += nSwaps * perSwap; cumSystem += nSwaps * perSwap; }
+    if (nSwaps > 0) {
+      cumSolar += nSwaps * perSwap;
+      cumSystem += nSwaps * perSwap;
+    }
     grid[y - 1] = Math.round(cumGrid);
     solar[y - 1] = Math.round(cumSolar);
     system[y - 1] = Math.round(cumSystem);
@@ -171,12 +211,19 @@ export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, residualAn
  * Returns null for a missing/incomparable series.
  */
 export function seriesBreakdown(series) {
-  if (!series || !Array.isArray(series.grid) || !Array.isArray(series.solar) ||
-      !series.grid.length || series.solar.length !== series.grid.length) return null;
+  if (
+    !series ||
+    !Array.isArray(series.grid) ||
+    !Array.isArray(series.solar) ||
+    !series.grid.length ||
+    series.solar.length !== series.grid.length
+  )
+    return null;
   const n = series.grid.length - 1;
   const gridTotal = series.grid[n];
   const withSolar = series.solar[n];
-  const hasSystem = Array.isArray(series.system) && series.system.length === series.grid.length;
+  const hasSystem =
+    Array.isArray(series.system) && series.system.length === series.grid.length;
   const systemTotal = hasSystem ? series.system[n] : null;
   return {
     gridTotal,
@@ -197,14 +244,26 @@ export function seriesBreakdown(series) {
  * two numbers must always tell the same story). Returns null when the system
  * never breaks even inside the horizon.
  */
-export function trueBreakEvenYear({ capexMidUsd, annualSavingsUsd, swapsAndLaborTotalUsd = 0, replacements = 0, batteryLifeYears, horizonYears = HORIZON_YEARS, firstLaborUsd = 0 }) {
+export function trueBreakEvenYear({
+  capexMidUsd,
+  annualSavingsUsd,
+  swapsAndLaborTotalUsd = 0,
+  replacements = 0,
+  batteryLifeYears,
+  horizonYears = HORIZON_YEARS,
+  firstLaborUsd = 0,
+}) {
   if (!(annualSavingsUsd > 0) || !Number.isFinite(capexMidUsd)) return null;
   const perSwap = replacements > 0 ? swapsAndLaborTotalUsd / replacements : 0;
 
   // Same per-year multiplicity schedule as the series above — the two must
   // count replacements identically or break-even and the chart will disagree.
   const swapCounts = new Array(horizonYears + 1).fill(0);
-  if (replacements > 0 && Number.isFinite(batteryLifeYears) && batteryLifeYears > 0) {
+  if (
+    replacements > 0 &&
+    Number.isFinite(batteryLifeYears) &&
+    batteryLifeYears > 0
+  ) {
     for (let k = 1; k <= replacements; k++) {
       const yr = Math.round(k * batteryLifeYears);
       if (yr > horizonYears) break;
@@ -233,11 +292,24 @@ export function trueBreakEvenYear({ capexMidUsd, annualSavingsUsd, swapsAndLabor
  * renderer and tests share one source of truth for the two states.
  */
 export function savingsPanelState(series, tariffPerKwh) {
-  if (series && Array.isArray(series.grid) && Array.isArray(series.solar) &&
-      series.grid.length && series.solar.length) {
+  if (
+    series &&
+    Array.isArray(series.grid) &&
+    Array.isArray(series.solar) &&
+    series.grid.length &&
+    series.solar.length
+  ) {
     return { kind: "chart" };
   }
   return tariffPerKwh
-    ? { kind: "unavailable", title: "Savings data unavailable for this result", sub: "The sizing completed, but this result did not include a comparable 20-year cost series." }
-    : { kind: "unavailable", title: "Enter your grid price to see estimated savings", sub: "The calculator can size the system without a tariff, but needs your electricity price to compare 20-year grid cost with solar cost." };
+    ? {
+        kind: "unavailable",
+        title: "Savings data unavailable for this result",
+        sub: "The sizing completed, but this result did not include a comparable 20-year cost series.",
+      }
+    : {
+        kind: "unavailable",
+        title: "Enter your grid price to see estimated savings",
+        sub: "The calculator can size the system without a tariff, but needs your electricity price to compare 20-year grid cost with solar cost.",
+      };
 }

@@ -21,17 +21,23 @@ const SHELL = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_VERSION)
+    caches
+      .open(CACHE_VERSION)
       .then((cache) => cache.addAll(SHELL))
-      .then(() => self.skipWaiting())
+      .then(() => self.skipWaiting()),
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k)),
+        ),
+      )
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -50,12 +56,17 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_VERSION).then((c) => c.put(req, copy));
           return res;
         })
-        .catch(() => caches.match(req).then((hit) => hit || caches.match("./index.html")))
+        .catch(() =>
+          caches.match(req).then((hit) => hit || caches.match("./index.html")),
+        ),
     );
     return;
   }
 
-  if (url.pathname.includes("/assets/") || url.pathname.endsWith(".webmanifest")) {
+  if (
+    url.pathname.includes("/assets/") ||
+    url.pathname.endsWith(".webmanifest")
+  ) {
     // Stale-while-revalidate for assets.
     event.respondWith(
       caches.match(req).then((hit) => {
@@ -69,8 +80,7 @@ self.addEventListener("fetch", (event) => {
           })
           .catch(() => hit);
         return hit || refresh;
-      })
+      }),
     );
   }
 });
-

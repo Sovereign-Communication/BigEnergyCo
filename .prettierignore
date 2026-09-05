@@ -1,0 +1,7 @@
+# Generated data: never reformat (megabytes of churn, zero benefit).
+assets/js/sizing/city-data/
+assets/data/
+# Generated pages: formatted by their generator, not by hand.
+solar-calculator/
+# Third-party bundles.
+*.min.js

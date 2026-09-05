@@ -51,6 +51,7 @@ gh run list --branch main --limit 2 --json workflowName,status,conclusion,headSh
 ```
 
 5. Build the allowlisted artifact and deploy that artifact to the actual Cloudflare Pages project:
+
 ```bash
 node scripts/deploy-pages-local.mjs --check
 npx --yes wrangler pages deploy _pages_staging --project-name bigenergyco --branch main
@@ -88,14 +89,14 @@ must be listed there AND probed by `scripts/browser-smoke.mjs` — the smoke
 run is what catches a missing entry (currency/geocoder/map silently break
 otherwise). Current registry:
 
-| Use | Endpoint | CSP directive |
-|---|---|---|
-| Weather | `power.larc.nasa.gov` | connect-src |
-| AI advisor | `bigenergyco-api.bigenergyco.workers.dev` (+ `*.workers.dev` spare) | connect-src |
-| FX rates | `open.er-api.com` | connect-src |
-| Online city lookup | `nominatim.openstreetmap.org` | connect-src |
-| Heatmap library | `unpkg.com` (SRI-pinned) | script-src + style-src |
-| Heatmap tiles | `*.basemaps.cartocdn.com` | img-src |
+| Use                | Endpoint                                                            | CSP directive          |
+| ------------------ | ------------------------------------------------------------------- | ---------------------- |
+| Weather            | `power.larc.nasa.gov`                                               | connect-src            |
+| AI advisor         | `bigenergyco-api.bigenergyco.workers.dev` (+ `*.workers.dev` spare) | connect-src            |
+| FX rates           | `open.er-api.com`                                                   | connect-src            |
+| Online city lookup | `nominatim.openstreetmap.org`                                       | connect-src            |
+| Heatmap library    | `unpkg.com` (SRI-pinned)                                            | script-src + style-src |
+| Heatmap tiles      | `*.basemaps.cartocdn.com`                                           | img-src                |
 
 Adding a new external call = update `_headers` + the smoke probes + this table.
 

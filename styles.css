@@ -5,18 +5,20 @@
   --bg-card-hover: rgba(28, 40, 66, 0.95);
   --border-glow: rgba(0, 230, 153, 0.35);
   --border-card: rgba(255, 255, 255, 0.12);
-  
+
   --primary-accent: #00e699; /* Energy Emerald */
   --primary-glow: rgba(0, 230, 153, 0.5);
   --secondary-accent: #3b82f6; /* Cyber Blue */
   --warning-orange: #f59e0b; /* Amber Caution */
   --danger-red: #ef4444;
-  
+
   --text-main: #f3f4f6;
   --text-muted: #9ca3af;
   --text-bright: #ffffff;
 
-  --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-main:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
@@ -32,9 +34,17 @@ body {
   font-family: var(--font-main);
   line-height: 1.6;
   overflow-x: hidden;
-  background-image: 
-    radial-gradient(circle at 15% 20%, rgba(0, 230, 153, 0.12) 0%, transparent 45%),
-    radial-gradient(circle at 85% 70%, rgba(59, 130, 246, 0.12) 0%, transparent 45%);
+  background-image:
+    radial-gradient(
+      circle at 15% 20%,
+      rgba(0, 230, 153, 0.12) 0%,
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 85% 70%,
+      rgba(59, 130, 246, 0.12) 0%,
+      transparent 45%
+    );
   background-attachment: fixed;
 }
 
@@ -315,9 +325,28 @@ header {
   box-shadow: 0 0 10px var(--primary-glow);
 }
 
-.city-suggestion { display:block; width:100%; border:0; background:transparent; color:var(--text-main); text-align:left; padding:.55rem .65rem; border-radius:6px; cursor:pointer; font:inherit; }
-.city-suggestion:hover, .city-suggestion:focus, .city-suggestion[aria-selected="true"] { background:rgba(0,230,153,.12); color:var(--primary-accent); outline:none; }
-#citySuggestions[hidden] { display:none; }
+.city-suggestion {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text-main);
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+}
+.city-suggestion:hover,
+.city-suggestion:focus,
+.city-suggestion[aria-selected="true"] {
+  background: rgba(0, 230, 153, 0.12);
+  color: var(--primary-accent);
+  outline: none;
+}
+#citySuggestions[hidden] {
+  display: none;
+}
 
 .results-box {
   background: rgba(9, 13, 22, 0.9);
@@ -357,7 +386,8 @@ header {
   margin-top: 1rem;
 }
 
-.comparison-table th, .comparison-table td {
+.comparison-table th,
+.comparison-table td {
   padding: 0.75rem 0;
   text-align: left;
   border-bottom: 1px solid var(--border-card);

@@ -1,8 +1,8 @@
 # PHASE 2 PLAN — Deterministic Sizing Core + 5-Year Hourly Simulation
 
 **Created:** 2026-08-22, after the P0 hardening pass.
-**Goal:** Turn BigEnergyCo from "cost widget + AI chat" into a tool that actually answers *"what
-system do I need, and can I live off-grid here?"* — computed by testable code, explained by the LLM.
+**Goal:** Turn BigEnergyCo from "cost widget + AI chat" into a tool that actually answers _"what
+system do I need, and can I live off-grid here?"_ — computed by testable code, explained by the LLM.
 
 ## Status (2026-08-23) — Phase 2A/2B shipped, then MONEY + COHESION + GRID-TIE + WORLDWIDE (all live)
 
@@ -15,25 +15,25 @@ generator-fuel price helper (fuel price → effective $/kWh), footprint lines on
 every card, and trust polish (mojibake glyphs fixed, dead advisor-nav code
 removed, modal Esc + focus, aria-live status/chat, real `<button>` elements).
 
-| Item | State |
-|---|---|
-| `assets/js/sizing/engine.js` — derate chain, e1kw series, load models, hourly SOC simulator, tier search | ✅ done, tested |
-| `assets/js/sizing/nasa.js` — POWER client, ≤2-yr chunking, localStorage cache, city presets | ✅ done |
-| `assets/js/sizing/sizing-worker.js` + `ui.js` + `#sizing` section in index.html | ✅ done |
-| **`assets/js/sizing/money.js`** — payback vs grid spend, battery-replacement cadence, LCOE (25-yr horizon) | ✅ shipped 2026-08-23 |
-| **Money UI** — payback per tier/target, ¢/kWh vs grid, swap counts, share links (`#s=`), printable one-pager | ✅ shipped |
-| **Grid-tie mode** — no-export offset sim (`simulateOffset`), 60/80/95% bill-cut targets (`sizeForBillCut`, monotone binary search on PV), bill-after + payback-out-of-savings | ✅ shipped |
-| **Worldwide** — sodium default (+ pricing premium), lead-acid back with TRUE TCO (rate+cold capacity scale, swap counts), user currency field, i18n scaffold (es/pt/fr/ar, RTL) | ✅ shipped |
-| **Cohesion** — single-source content module + freenet sync markers, scoped storage comparison (no more hardcoded $ figures), sizer-first CTAs, canonical tag | ✅ shipped |
-| **All-options matrix + best pick** — 3 chemistries × 3 tiers/targets from already-computed searches; ladder UI (Best pick / Compare batteries / All options) | ✅ shipped 2026-08-26 |
-| **Hardware list (`bom.js`)** — panels+voltage+bank layout+inverter+controller+fuses+cable; CSV download; print-sheet table; live panel-wattage input | ✅ shipped 2026-08-26 |
-| **Generator fuel helper** — petrol/diesel price/L → $/kWh (documented L-per-kWh assumptions); feeds existing tariff math | ✅ shipped 2026-08-26 |
-| Sheet replication gate (`scripts/validate-against-sheet.mjs`, ±5%) | ⏳ awaiting owner's sheet CSV export |
+| Item                                                                                                                                                                                                    | State                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `assets/js/sizing/engine.js` — derate chain, e1kw series, load models, hourly SOC simulator, tier search                                                                                                | ✅ done, tested                              |
+| `assets/js/sizing/nasa.js` — POWER client, ≤2-yr chunking, localStorage cache, city presets                                                                                                             | ✅ done                                      |
+| `assets/js/sizing/sizing-worker.js` + `ui.js` + `#sizing` section in index.html                                                                                                                         | ✅ done                                      |
+| **`assets/js/sizing/money.js`** — payback vs grid spend, battery-replacement cadence, LCOE (25-yr horizon)                                                                                              | ✅ shipped 2026-08-23                        |
+| **Money UI** — payback per tier/target, ¢/kWh vs grid, swap counts, share links (`#s=`), printable one-pager                                                                                            | ✅ shipped                                   |
+| **Grid-tie mode** — no-export offset sim (`simulateOffset`), 60/80/95% bill-cut targets (`sizeForBillCut`, monotone binary search on PV), bill-after + payback-out-of-savings                           | ✅ shipped                                   |
+| **Worldwide** — sodium default (+ pricing premium), lead-acid back with TRUE TCO (rate+cold capacity scale, swap counts), user currency field, i18n scaffold (es/pt/fr/ar, RTL)                         | ✅ shipped                                   |
+| **Cohesion** — single-source content module + freenet sync markers, scoped storage comparison (no more hardcoded $ figures), sizer-first CTAs, canonical tag                                            | ✅ shipped                                   |
+| **All-options matrix + best pick** — 3 chemistries × 3 tiers/targets from already-computed searches; ladder UI (Best pick / Compare batteries / All options)                                            | ✅ shipped 2026-08-26                        |
+| **Hardware list (`bom.js`)** — panels+voltage+bank layout+inverter+controller+fuses+cable; CSV download; print-sheet table; live panel-wattage input                                                    | ✅ shipped 2026-08-26                        |
+| **Generator fuel helper** — petrol/diesel price/L → $/kWh (documented L-per-kWh assumptions); feeds existing tariff math                                                                                | ✅ shipped 2026-08-26                        |
+| Sheet replication gate (`scripts/validate-against-sheet.mjs`, ±5%)                                                                                                                                      | ⏳ awaiting owner's sheet CSV export         |
 | **Plausibility frontier (`frontier.js` + `frontier-chart.js`)** — Pareto sweep of every (PV, battery) pair, knee detection, reach verdict, responsive SVG + data table, EN/ES/PT/FR/AR (contract **7**) | ✅ shipped 2026-08-29 — see `PHASE3_PLAN.md` |
-| Fixed connection charges separated from energy displaced (bill-cut % is currently energy, not bill) | ⏳ next — correctness, see PHASE3_PLAN §6 |
-| Bundled offline climate profiles (PWA/Freenet engine) | ⏳ next |
-| Aging fade inside the search objective (currently replacement-count only) | ⏳ v3 |
-| Full dynamic-string i18n (results text beyond static chrome) | ⏳ incremental |
+| Fixed connection charges separated from energy displaced (bill-cut % is currently energy, not bill)                                                                                                     | ⏳ next — correctness, see PHASE3_PLAN §6    |
+| Bundled offline climate profiles (PWA/Freenet engine)                                                                                                                                                   | ⏳ next                                      |
+| Aging fade inside the search objective (currently replacement-count only)                                                                                                                               | ⏳ v3                                        |
+| Full dynamic-string i18n (results text beyond static chrome)                                                                                                                                            | ⏳ incremental                               |
 
 **Live-data checks:** `scripts/validate-modes.mjs` runs BOTH modes against real NASA POWER data.
 Honolulu 10 kWh/day @ $0.42: tier100 = 8 kW+13 kWh (payback 1.3–4.4 yr); cut60 = 1.8 kW+2 kWh
@@ -50,11 +50,11 @@ GHI, zero gaps.
 
 A visitor wants one of three systems, depending on their backup tolerance:
 
-| Tier | Audience | Definition | Sizing driver |
-|---|---|---|---|
-| **A — 100%** | No generator, no grid, ever | Zero unmet load hours across the entire 5-year simulation | Worst multi-day cloudy stretch in 5 years |
-| **B — 99%** | Has a generator, refuses to run it often | Loss-of-load ≤ 87.6 h/year averaged over 5 years (~1% of 8760) | Second-worst year behavior; still sized near worst-case |
-| **C — 95%** | Happy to run a generator now and then | Loss-of-load ≤ 438 h/year (~5%) | Typical bad stretches; generator covers the tail |
+| Tier         | Audience                                 | Definition                                                     | Sizing driver                                           |
+| ------------ | ---------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------- |
+| **A — 100%** | No generator, no grid, ever              | Zero unmet load hours across the entire 5-year simulation      | Worst multi-day cloudy stretch in 5 years               |
+| **B — 99%**  | Has a generator, refuses to run it often | Loss-of-load ≤ 87.6 h/year averaged over 5 years (~1% of 8760) | Second-worst year behavior; still sized near worst-case |
+| **C — 95%**  | Happy to run a generator now and then    | Loss-of-load ≤ 438 h/year (~5%)                                | Typical bad stretches; generator covers the tail        |
 
 The tool's headline output becomes: **"For X kWh/day at your location: Tier A needs ~P kW PV +
 ~B kWh battery; Tier B ~…; Tier C ~… — and here's what each costs."**
@@ -70,12 +70,12 @@ Endpoint: `https://power.larc.nasa.gov/api/temporal/hourly/point`
 
 Parameters per location:
 
-| Param | Meaning | Use |
-|---|---|---|
+| Param               | Meaning                                            | Use                                                                 |
+| ------------------- | -------------------------------------------------- | ------------------------------------------------------------------- |
 | `ALLSKY_SFC_SW_DWN` | All-sky shortwave down irradiance, kWh/m² per hour | The sun. `E(h) = irradiance(h)` for a 1 kW STC array before derates |
-| `CLRSKY_SFC_SW_DWN` | Same, clear-sky | Sanity check / future panel-tilt modeling |
-| `T2M` | Air temp at 2 m | Cell temperature derate |
-| `WS2M` | Wind speed at 2 m | Cell temperature model refinement |
+| `CLRSKY_SFC_SW_DWN` | Same, clear-sky                                    | Sanity check / future panel-tilt modeling                           |
+| `T2M`               | Air temp at 2 m                                    | Cell temperature derate                                             |
+| `WS2M`              | Wind speed at 2 m                                  | Cell temperature model refinement                                   |
 
 Request `years=5` (rolling window ending last complete year), format JSON/CSV.
 Cache aggressively: round lat/long to **2 decimals** (~1.1 km) → cache key. Irradiance doesn't
@@ -129,7 +129,7 @@ unmet(h)   = load(h) − served(h)      # counts toward LOLE; Tier A requires Σ
 - DoD handling: usable capacity already excludes reserve floor (default 90% usable for LFP,
   50% lead-acid, 100%-ish sodium-ion per manufacturer).
 - Low-temp charge block: if `T2M < 0°C` and chemistry = LFP without heating → charging disabled
-  that hour (this *shows* users why cold-climate LFP needs heating, instead of telling them).
+  that hour (this _shows_ users why cold-climate LFP needs heating, instead of telling them).
 - Aging (v2): count equivalent full cycles → linear fade to 80% at rated cycles; simulate at
   end-of-life capacity so sizing survives aging.
 
@@ -178,25 +178,25 @@ For a given location + daily kWh + chemistry + reliability tier:
   selected tier, cost table using the existing scoped-price framework, disclaimer attached.
 - AI advisor integration (**this fulfills "the LLM must never produce a number"**): after a run,
   the chat prompt auto-includes the computed result set; the model explains, caveats, and answers
-  follow-ups about *these* numbers instead of inventing its own.
+  follow-ups about _these_ numbers instead of inventing its own.
 - Freenet/offline build gets the same engine via bundled monthly profiles (§1 fallback).
 
 ---
 
 ## 7. Remaining P1/P2 backlog (folded into this phase)
 
-| Item | Notes |
-|---|---|
-| Streaming advisor responses | Workers support SSE streaming; perceived latency win |
-| Advisor temperature 0.7 → 0.3–0.4 | Numeric-advice quality |
-| A11y pass | `<button>` not `<div>`, focus trap + Esc on modals, `aria-live` chat, ≥16px inputs |
-| Monitoring | CF Cron hitting `/api/health` + Pages; Groq quota alert email |
-| LICENSE file (MIT) | PLAN.md §4 item; liability posture improves |
-| CI | `node --check worker/index.js`, pytest/vitest on calc core, link checker on blog |
-| Content single-sourcing | Prices/disclaimers/chemistry data into one JSON consumed by both pages |
-| i18n + currency + units | Top ~10 languages; user-entered tariff stays |
-| Blog: decision-stage posts | "Is off-grid worth it", winter sizing, hybrid-generator, code pointers by country |
-| Canonical tag on index.html | Blog already has one |
+| Item                              | Notes                                                                              |
+| --------------------------------- | ---------------------------------------------------------------------------------- |
+| Streaming advisor responses       | Workers support SSE streaming; perceived latency win                               |
+| Advisor temperature 0.7 → 0.3–0.4 | Numeric-advice quality                                                             |
+| A11y pass                         | `<button>` not `<div>`, focus trap + Esc on modals, `aria-live` chat, ≥16px inputs |
+| Monitoring                        | CF Cron hitting `/api/health` + Pages; Groq quota alert email                      |
+| LICENSE file (MIT)                | PLAN.md §4 item; liability posture improves                                        |
+| CI                                | `node --check worker/index.js`, pytest/vitest on calc core, link checker on blog   |
+| Content single-sourcing           | Prices/disclaimers/chemistry data into one JSON consumed by both pages             |
+| i18n + currency + units           | Top ~10 languages; user-entered tariff stays                                       |
+| Blog: decision-stage posts        | "Is off-grid worth it", winter sizing, hybrid-generator, code pointers by country  |
+| Canonical tag on index.html       | Blog already has one                                                               |
 
 ## 8. Sequence
 

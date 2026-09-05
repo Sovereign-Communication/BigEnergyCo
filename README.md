@@ -9,19 +9,19 @@ BigEnergyCo is permanently free and donation-supported. It sells no products or 
 
 ## Where it runs
 
-| Piece | Where | Notes |
-|---|---|---|
-| **Public site (brand)** | `bigenergyco.pages.dev` (Cloudflare Pages) | Primary brand domain. Same allowlisted build, deployed to the `bigenergyco` Pages project per the runbook below (`node scripts/deploy-pages-local.mjs --check` + `npx wrangler pages deploy`). Served with `_headers`/`_redirects` for caching and legacy-domain consolidation. |
-| **Public site (legacy)** | `sovereign-communication.github.io/BigEnergyCo/` | Legacy GitHub Pages URL — 301 redirects to brand domain via `_redirects` (Cloudflare Pages). Deploys via the allowlist workflow (`.github/workflows/deploy.yml`). The old `treystu.github.io/BigEnergyCo/` URL also redirects here; both remain on the API's CORS allowlist for cached clients. |
-| **AI API** | Cloudflare Worker (`bigenergyco-api.bigenergyco.workers.dev`) | Proxies Groq. CORS-locked to the Pages origins + localhost, rate-limited, payload-capped. Deploy with `deploy_worker.bat` (or `npx wrangler deploy` in `worker/`). |
-| **Local/dev** | Any static HTTP server | The public site is a static Pages build; no local tunnel or alternate runtime is required.
+| Piece                    | Where                                                         | Notes                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Public site (brand)**  | `bigenergyco.pages.dev` (Cloudflare Pages)                    | Primary brand domain. Same allowlisted build, deployed to the `bigenergyco` Pages project per the runbook below (`node scripts/deploy-pages-local.mjs --check` + `npx wrangler pages deploy`). Served with `_headers`/`_redirects` for caching and legacy-domain consolidation.                                                                                                                        |
+| **Public site (legacy)** | `sovereign-communication.github.io/BigEnergyCo/`              | Legacy GitHub Pages URL — serves a fresh canonicalized mirror of the brand build (GitHub Pages ignores `_redirects`, so this is a 200 mirror, not a 301; canonical tags point at the brand domain). Deploys via the allowlist workflow (`.github/workflows/deploy.yml`). The old `treystu.github.io/BigEnergyCo/` URL also redirects here; both remain on the API's CORS allowlist for cached clients. |
+| **AI API**               | Cloudflare Worker (`bigenergyco-api.bigenergyco.workers.dev`) | Proxies Groq. CORS-locked to the Pages origins + localhost, rate-limited, payload-capped. Deploy with `deploy_worker.bat` (or `npx wrangler deploy` in `worker/`).                                                                                                                                                                                                                                     |
+| **Local/dev**            | Any static HTTP server                                        | The public site is a static Pages build; no local tunnel or alternate runtime is required.                                                                                                                                                                                                                                                                                                             |
 
 ## Deploy runbook — GitHub first, then Cloudflare
 
 **Rule: `main` first — always, no exceptions.** Every change — even a one-word
 copy tweak — ships to `main` and passes the GitHub `Tests` workflow before the
 brand domain is touched. GitHub is the source of truth and the gatekeeper;
-Cloudflare (`bigenergyco.pages.dev`) is the last-mile copy of the *same* build.
+Cloudflare (`bigenergyco.pages.dev`) is the last-mile copy of the _same_ build.
 
 > ❗ Never deploy straight to Cloudflare from a working tree, and never skip the
 > GitHub step to "save time" or because "it's just copy". If a change hasn't
@@ -55,10 +55,12 @@ Cloudflare (`bigenergyco.pages.dev`) is the last-mile copy of the *same* build.
    same allowlisted staging output (`--check` builds staging without touching
    the `gh-pages` branch — GitHub Actions already handled that), then deploy it
    to the `bigenergyco` Pages project:
+
    ```bash
    node scripts/deploy-pages-local.mjs --check   # builds _pages_staging/
    npx wrangler pages deploy _pages_staging --project-name bigenergyco
    ```
+
    Verify at `https://bigenergyco.pages.dev`.
 
    > The API Worker is a separate concern: only redeploy it
@@ -76,29 +78,30 @@ Browser ──► GitHub Pages (static: index.html, blog/, assets/)
 ```
 
 **Two versions, one goal:**
+
 - **Internet (`index.html`):** Deterministic sizer (off-grid tiers + grid-tie bill-cutting), the plausibility frontier (spend-vs-coverage curve with the knee and the site's ceiling marked), payback/LCOE money story, best-pick ladder + full 3×3 options matrix (chemistry × reliability), hardware parts list with CSV export, generator-fuel price helper, share links, printable summary, AI advisor, EN/ES/PT/FR/AR chrome. Requires internet for weather + Groq.
 
-| File | Purpose |
-|---|---|
-| `index.html` | Public site with sizer + AI advisor (CSS and JS inlined) |
-| `assets/js/sizing/engine.js` | Pure sizing math: derates, SOC sim, tier search, grid-tie offset sim + bill-cut search |
-| `assets/js/sizing/money.js` | Payback, battery-replacement cadence, LCOE |
-| `assets/js/sizing/pricing.js` | Scoped price ranges (ex-factory → landed → budget retail), sodium premium, tariff estimator |
-| `assets/js/sizing/frontier.js` | Pure Pareto sweep: every (PV, battery) pair on a coarse lattice, the cheapest system for each coverage level, knee detection, reach verdict |
-| `assets/js/sizing/frontier-chart.js` | Responsive SVG for that curve (sized to its container), legend, accessible data table, verdict sentence |
-| `assets/js/sizing/bom.js` | Pure parts-list math: panel count/area, system voltage, bank series/parallel (DIY cells + retail modules), inverter class from load peak, controller amps, fuse/breaker ratings, cable gauge |
-| `assets/js/shared/content.js` | Canonical BOM prices + donation links |
-| `assets/js/shared/i18n.js` + `locales.js` | UI-chrome translations (es/pt/fr/ar) + RTL |
-| `scripts/validate-modes.mjs` | Live end-to-end check of both sizing modes vs real NASA data |
-| `worker/index.js` | Cloudflare Worker: `/api/chat`, `/api/health`. CORS allowlist, rate limits, input caps |
-| `.github/workflows/deploy.yml` | Pages deploy from an explicit allowlist |
-| `launcher.py` / `server.py` | Local-only dev servers (untracked, never deployed — see `.gitignore`), driven by the `.bat` files |
-| `PLAN.md` | Roadmap |
-| `PHASE2_PLAN.md` | Sizing engine plan + shipped-status ledger |
-| `PHASE3_PLAN.md` | Plausibility frontier: backlog ranking, what shipped, and the fixed-charge caveat it surfaced |
-| `LAUNCH_AUDIT.md` | Pre-launch checklist. Updated 2026-08-03 |
-| `LIABILITY.md` | Liability, tax, and privacy posture. Read before promoting the site |
-| `legacy_scripts/`, `.backup/` | Superseded material, kept locally only (not deployed, not tracked) |
+| File                                      | Purpose                                                                                                                                                                                      |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.html`                              | Public site with sizer + AI advisor (CSS and JS inlined)                                                                                                                                     |
+| `assets/js/sizing/engine.js`              | Pure sizing math: derates, SOC sim, tier search, grid-tie offset sim + bill-cut search                                                                                                       |
+| `assets/js/sizing/money.js`               | Payback, battery-replacement cadence, LCOE                                                                                                                                                   |
+| `assets/js/sizing/pricing.js`             | Scoped price ranges (ex-factory → landed → budget retail), sodium premium, tariff estimator                                                                                                  |
+| `assets/js/sizing/frontier.js`            | Pure Pareto sweep: every (PV, battery) pair on a coarse lattice, the cheapest system for each coverage level, knee detection, reach verdict                                                  |
+| `assets/js/sizing/frontier-chart.js`      | Responsive SVG for that curve (sized to its container), legend, accessible data table, verdict sentence                                                                                      |
+| `assets/js/sizing/bom.js`                 | Pure parts-list math: panel count/area, system voltage, bank series/parallel (DIY cells + retail modules), inverter class from load peak, controller amps, fuse/breaker ratings, cable gauge |
+| `assets/js/shared/content.js`             | Canonical BOM prices + donation links                                                                                                                                                        |
+| `assets/js/shared/i18n.js` + `locales.js` | UI-chrome translations (es/pt/fr/ar) + RTL                                                                                                                                                   |
+| `scripts/validate-modes.mjs`              | Live end-to-end check of both sizing modes vs real NASA data                                                                                                                                 |
+| `worker/index.js`                         | Cloudflare Worker: `/api/chat`, `/api/health`. CORS allowlist, rate limits, input caps                                                                                                       |
+| `.github/workflows/deploy.yml`            | Pages deploy from an explicit allowlist                                                                                                                                                      |
+| `launcher.py` / `server.py`               | Local-only dev servers (untracked, never deployed — see `.gitignore`), driven by the `.bat` files                                                                                            |
+| `PLAN.md`                                 | Roadmap                                                                                                                                                                                      |
+| `PHASE2_PLAN.md`                          | Sizing engine plan + shipped-status ledger                                                                                                                                                   |
+| `PHASE3_PLAN.md`                          | Plausibility frontier: backlog ranking, what shipped, and the fixed-charge caveat it surfaced                                                                                                |
+| `LAUNCH_AUDIT.md`                         | Pre-launch checklist. Updated 2026-08-03                                                                                                                                                     |
+| `LIABILITY.md`                            | Liability, tax, and privacy posture. Read before promoting the site                                                                                                                          |
+| `legacy_scripts/`, `.backup/`             | Superseded material, kept locally only (not deployed, not tracked)                                                                                                                           |
 
 ## Search Console & indexing
 

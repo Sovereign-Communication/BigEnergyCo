@@ -15,9 +15,9 @@ const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_PRIMARY_MODEL = "openai/gpt-oss-120b";
 const GROQ_FALLBACK_MODEL = "openai/gpt-oss-20b";
 
-const MAX_MESSAGE_CHARS = 4000;   // reject absurd prompts outright
-const MAX_BODY_BYTES = 20000;     // whole JSON body ceiling (~20 KB)
-const MAX_HISTORY_TURNS = 6;      // never trust the client's history length
+const MAX_MESSAGE_CHARS = 4000; // reject absurd prompts outright
+const MAX_BODY_BYTES = 20000; // whole JSON body ceiling (~20 KB)
+const MAX_HISTORY_TURNS = 6; // never trust the client's history length
 const MAX_HISTORY_MSG_CHARS = 4000;
 
 // Mirrors proxy_server.py so local and public limits tell the same story.
@@ -45,7 +45,7 @@ export function corsHeaders(origin) {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400",
-    "Vary": "Origin",
+    Vary: "Origin",
   };
   if (origin) headers["Access-Control-Allow-Origin"] = origin;
   return headers;
@@ -67,7 +67,11 @@ function jsonResponse(data, status = 200, origin = null, extraHeaders = {}) {
 // Counters live in Worker memory and reset on isolate eviction. That makes
 // them a strong brake on burst abuse and a soft daily cap — not a hard
 // guarantee. For hard guarantees add a Cloudflare WAF rate-limiting rule.
-const _rateLockState = { minute: new Map(), dayIp: new Map(), globalDay: [0, 0] };
+const _rateLockState = {
+  minute: new Map(),
+  dayIp: new Map(),
+  globalDay: [0, 0],
+};
 
 function _bump(bucket, limit, windowSecs, now) {
   if (now - bucket[0] >= windowSecs) {
@@ -129,7 +133,10 @@ export function sanitizeAndCloseReply(text) {
   let lines = cleaned.split("\n");
   while (lines.length > 0) {
     const lastLine = lines[lines.length - 1].trim();
-    if (lastLine.startsWith("|") && (!lastLine.endsWith("|") || lastLine === "| ~")) {
+    if (
+      lastLine.startsWith("|") &&
+      (!lastLine.endsWith("|") || lastLine === "| ~")
+    ) {
       lines.pop();
     } else {
       break;
@@ -138,13 +145,30 @@ export function sanitizeAndCloseReply(text) {
   cleaned = lines.join("\n").trimEnd();
 
   // 3. Ensure sentence closes cleanly if it was cut off mid-thought
-  const terminalChars = [".", "!", "?", ":", "🌞", "⚡", "🌺", "✅", "👉", ")", "`", '"', "'", "*", "_"];
+  const terminalChars = [
+    ".",
+    "!",
+    "?",
+    ":",
+    "🌞",
+    "⚡",
+    "🌺",
+    "✅",
+    "👉",
+    ")",
+    "`",
+    '"',
+    "'",
+    "*",
+    "_",
+  ];
   const lastChar = cleaned.slice(-1);
   if (lastChar && !terminalChars.includes(lastChar)) {
     const lastPunctMatch = cleaned.match(/([\.\!\?])\s+[^\.\!\?]*$/);
     if (lastPunctMatch && lastPunctMatch.index !== undefined) {
       cleaned = cleaned.slice(0, lastPunctMatch.index + 1).trimEnd();
-      cleaned += "\n\n*(Feel free to ask for Part 2 or let me know if you'd like to dive deeper into any of these specs! ⚡)*";
+      cleaned +=
+        "\n\n*(Feel free to ask for Part 2 or let me know if you'd like to dive deeper into any of these specs! ⚡)*";
     }
   }
 
@@ -155,11 +179,13 @@ export function sanitizeAndCloseReply(text) {
 // disclaimer at the point of output. The prompt instructs the model to
 // include one, but model compliance is not enforcement — if the reply lacks
 // any disclaimer marker, append the canonical footer verbatim.
-export const DISCLAIMER_FOOTER = "*Educational estimates only — verify with a licensed professional before buying or building anything.*";
+export const DISCLAIMER_FOOTER =
+  "*Educational estimates only — verify with a licensed professional before buying or building anything.*";
 
 export function ensureDisclaimer(reply) {
   if (!reply || typeof reply !== "string") return reply;
-  if (/educational estimates? only|licensed professional/i.test(reply)) return reply;
+  if (/educational estimates? only|licensed professional/i.test(reply))
+    return reply;
   return `${reply.trimEnd()}\n\n${DISCLAIMER_FOOTER}`;
 }
 
@@ -169,13 +195,13 @@ async function callGroq(apiKey, model, messages) {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "User-Agent": "BigEnergyCo-Worker/2.1"
+      "User-Agent": "BigEnergyCo-Worker/2.1",
     },
     body: JSON.stringify({
       model: model,
       messages: messages,
       max_tokens: 2048,
-      temperature: 0.3
+      temperature: 0.3,
     }),
   });
   return res;
@@ -187,15 +213,26 @@ async function handleChat(request, env, origin) {
     return jsonResponse({ error: "Request too large" }, 413, origin);
   }
   const body = (() => {
-    try { return JSON.parse(rawBody); } catch { return {}; }
+    try {
+      return JSON.parse(rawBody);
+    } catch {
+      return {};
+    }
   })();
 
   const userMsg = (typeof body.message === "string" ? body.message : "").trim();
-  const rawHistory = Array.isArray(body.history) ? body.history.slice(-MAX_HISTORY_TURNS) : [];
+  const rawHistory = Array.isArray(body.history)
+    ? body.history.slice(-MAX_HISTORY_TURNS)
+    : [];
 
-  if (!userMsg) return jsonResponse({ error: "No message provided" }, 400, origin);
+  if (!userMsg)
+    return jsonResponse({ error: "No message provided" }, 400, origin);
   if (userMsg.length > MAX_MESSAGE_CHARS) {
-    return jsonResponse({ error: `Message too long (max ${MAX_MESSAGE_CHARS} characters)` }, 413, origin);
+    return jsonResponse(
+      { error: `Message too long (max ${MAX_MESSAGE_CHARS} characters)` },
+      413,
+      origin,
+    );
   }
 
   // Rate limit BEFORE any paid call, including for requests that would fail later.
@@ -203,16 +240,23 @@ async function handleChat(request, env, origin) {
   // within a location. Layer 2 (soft): in-isolate daily/global counters.
   if (env.RL_CHAT_PER_MIN) {
     try {
-      const rl = await env.RL_CHAT_PER_MIN.limit({ key: "chat:" + getClientIp(request) });
+      const rl = await env.RL_CHAT_PER_MIN.limit({
+        key: "chat:" + getClientIp(request),
+      });
       if (!rl.success) {
         return jsonResponse(
-          { error: "Rate limit exceeded. Please wait a minute before trying again." },
+          {
+            error:
+              "Rate limit exceeded. Please wait a minute before trying again.",
+          },
           429,
           origin,
-          { "Retry-After": "60" }
+          { "Retry-After": "60" },
         );
       }
-    } catch { /* binding unavailable -> fall through to soft limits */ }
+    } catch {
+      /* binding unavailable -> fall through to soft limits */
+    }
   }
   const { allowed, retryAfter } = checkRateLimit(getClientIp(request));
   if (!allowed) {
@@ -220,17 +264,27 @@ async function handleChat(request, env, origin) {
       { error: "Rate limit exceeded. Please wait before trying again." },
       429,
       origin,
-      { "Retry-After": String(retryAfter) }
+      { "Retry-After": String(retryAfter) },
     );
   }
 
   const apiKey = env.GROQ_API_KEY;
-  if (!apiKey) return jsonResponse({ error: "GROQ_API_KEY secret not configured in Cloudflare Worker" }, 500, origin);
+  if (!apiKey)
+    return jsonResponse(
+      { error: "GROQ_API_KEY secret not configured in Cloudflare Worker" },
+      500,
+      origin,
+    );
 
-  const history = rawHistory.map(m => ({
-    role: (m.role === 'bot' || m.role === 'assistant') ? 'assistant' : 'user',
-    content: typeof m.content === 'string' ? m.content.slice(0, MAX_HISTORY_MSG_CHARS) : ''
-  })).filter(m => m.content.trim().length > 0);
+  const history = rawHistory
+    .map((m) => ({
+      role: m.role === "bot" || m.role === "assistant" ? "assistant" : "user",
+      content:
+        typeof m.content === "string"
+          ? m.content.slice(0, MAX_HISTORY_MSG_CHARS)
+          : "",
+    }))
+    .filter((m) => m.content.trim().length > 0);
 
   let currentMessages = [
     { role: "system", content: SYSTEM_PROMPT },
@@ -257,17 +311,22 @@ async function handleChat(request, env, origin) {
         const errBody = await groqRes.json();
         const m = /try again in ([\d.]+)s/i.exec(errBody?.error?.message || "");
         if (m) retryAfter = Math.max(3, Math.ceil(parseFloat(m[1]) + 1));
-      } catch { /* keep default */ }
+      } catch {
+        /* keep default */
+      }
       retriedUpstreamBusy = true;
       await sleep(Math.min(retryAfter * 1000, 25000));
       groqRes = await callGroq(apiKey, usedModel, currentMessages);
 
       if (groqRes.status === 429) {
         return jsonResponse(
-          { error: "The AI provider is busy right now. Please try again shortly." },
+          {
+            error:
+              "The AI provider is busy right now. Please try again shortly.",
+          },
           503,
           origin,
-          { "Retry-After": "60" }
+          { "Retry-After": "60" },
         );
       }
     } else if (groqRes.status === 429) {
@@ -275,17 +334,21 @@ async function handleChat(request, env, origin) {
       // ship it rather than discarding the user's time.
       if (fullReply.length > 0) break;
       return jsonResponse(
-        { error: "The AI provider is busy right now. Please try again shortly." },
+        {
+          error: "The AI provider is busy right now. Please try again shortly.",
+        },
         503,
         origin,
-        { "Retry-After": "30" }
+        { "Retry-After": "30" },
       );
     }
 
     // Fallback to the smaller model only for other upstream failures (outage, 5xx),
     // and only before any partial output exists.
     if (!groqRes.ok && turns === 0 && usedModel === GROQ_PRIMARY_MODEL) {
-      console.warn(`Primary model ${GROQ_PRIMARY_MODEL} failed (${groqRes.status}). Trying fallback ${GROQ_FALLBACK_MODEL}...`);
+      console.warn(
+        `Primary model ${GROQ_PRIMARY_MODEL} failed (${groqRes.status}). Trying fallback ${GROQ_FALLBACK_MODEL}...`,
+      );
       usedModel = GROQ_FALLBACK_MODEL;
       groqRes = await callGroq(apiKey, usedModel, currentMessages);
     }
@@ -294,7 +357,13 @@ async function handleChat(request, env, origin) {
       if (fullReply.length > 0) {
         break; // Return whatever complete text was accumulated
       }
-      return jsonResponse({ error: `AI provider error (${groqRes.status}). Please try again later.` }, 502, origin);
+      return jsonResponse(
+        {
+          error: `AI provider error (${groqRes.status}). Please try again later.`,
+        },
+        502,
+        origin,
+      );
     }
 
     const data = await groqRes.json();
@@ -306,7 +375,11 @@ async function handleChat(request, env, origin) {
     turns++;
 
     // If completed naturally, stop
-    if (finishReason !== "length" || !chunk.trim() || turns > maxContinuations) {
+    if (
+      finishReason !== "length" ||
+      !chunk.trim() ||
+      turns > maxContinuations
+    ) {
       break;
     }
 
@@ -314,13 +387,18 @@ async function handleChat(request, env, origin) {
     currentMessages.push({ role: "assistant", content: chunk });
     currentMessages.push({
       role: "user",
-      content: "Continue immediately from where you stopped without repeating prior text."
+      content:
+        "Continue immediately from where you stopped without repeating prior text.",
     });
   }
 
   const rawReply = fullReply || "No response received.";
   const reply = ensureDisclaimer(sanitizeAndCloseReply(rawReply));
-  return jsonResponse({ reply, model: usedModel, continuations: turns - 1 }, 200, origin);
+  return jsonResponse(
+    { reply, model: usedModel, continuations: turns - 1 },
+    200,
+    origin,
+  );
 }
 
 export default {
@@ -335,20 +413,24 @@ export default {
     const path = new URL(request.url).pathname;
 
     if (path === "/api/health" || path === "/") {
-      return jsonResponse({
-        status: "ok",
-        service: "BigEnergyCo Cloudflare Worker API",
-        version: "2.1",
-        model: GROQ_PRIMARY_MODEL,
-        promptVersion: SYSTEM_PROMPT_VERSION,
-        rateLimits: {
-          perIpPerMinute: RATE_PER_IP_PER_MIN,
-          perIpPerDay: RATE_PER_IP_PER_DAY,
-          globalPerDay: RATE_GLOBAL_PER_DAY,
-          maxMessageChars: MAX_MESSAGE_CHARS,
-          maxBodyBytes: MAX_BODY_BYTES,
+      return jsonResponse(
+        {
+          status: "ok",
+          service: "BigEnergyCo Cloudflare Worker API",
+          version: "2.1",
+          model: GROQ_PRIMARY_MODEL,
+          promptVersion: SYSTEM_PROMPT_VERSION,
+          rateLimits: {
+            perIpPerMinute: RATE_PER_IP_PER_MIN,
+            perIpPerDay: RATE_PER_IP_PER_DAY,
+            globalPerDay: RATE_GLOBAL_PER_DAY,
+            maxMessageChars: MAX_MESSAGE_CHARS,
+            maxBodyBytes: MAX_BODY_BYTES,
+          },
         },
-      }, 200, origin);
+        200,
+        origin,
+      );
     }
 
     if (path === "/api/chat" && request.method === "POST") {

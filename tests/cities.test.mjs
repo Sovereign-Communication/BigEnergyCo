@@ -1,7 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { CITY_CATALOG, mergeCities, normalizeCityQuery, parseCityRows, searchCities, loadCityCatalog, lookupCityOnline, formatCityLabel, nearestCity, shouldAutoResolve } from "../assets/js/sizing/cities.js";
+import {
+  CITY_CATALOG,
+  mergeCities,
+  normalizeCityQuery,
+  parseCityRows,
+  searchCities,
+  loadCityCatalog,
+  lookupCityOnline,
+  formatCityLabel,
+  nearestCity,
+  shouldAutoResolve,
+} from "../assets/js/sizing/cities.js";
 import { estimateTariff } from "../assets/js/sizing/pricing.js";
 
 test("auto-resolve debounce guard skips empty and already-resolved queries", () => {
@@ -18,7 +29,10 @@ test("auto-resolve debounce guard skips empty and already-resolved queries", () 
 });
 
 test("the UI wires a 2s auto-resolve debounce that reuses resolveTypedCity", () => {
-  const ui = readFileSync(new URL("../assets/js/sizing/ui.js", import.meta.url), "utf8");
+  const ui = readFileSync(
+    new URL("../assets/js/sizing/ui.js", import.meta.url),
+    "utf8",
+  );
   assert.match(ui, /shouldAutoResolve/);
   assert.match(ui, /, 2000\)/);
   assert.match(ui, /cancelAutoResolve/);
@@ -44,22 +58,46 @@ test("the public UI uses type-ahead only and keeps My location backup", () => {
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(html, /id="citySearch"/);
   assert.match(html, /id="btnGeoLocate"/);
-  assert.match(html, /press <strong>Enter<\/strong> or <strong>Tab<\/strong>/);
+  assert.match(
+    html,
+    /press\s*<strong>Enter<\/strong>\s*or\s*<strong>Tab<\/strong>/,
+  );
   assert.match(html, /exact\/custom coordinates/);
   assert.doesNotMatch(html, /id="cityPreset"/);
 });
 
 test("major US cities are present and rank ahead of lesser same-name places", () => {
-  const us = JSON.parse(readFileSync(new URL("../assets/js/sizing/city-data/US.json", import.meta.url)));
-  for (const [query, lat, lon] of [["New Orleans", 29.95, -90.08], ["Chicago", 41.88, -87.63], ["Seattle", 47.61, -122.33], ["Boston", 42.36, -71.06], ["San Diego", 32.72, -117.16]]) {
+  const us = JSON.parse(
+    readFileSync(
+      new URL("../assets/js/sizing/city-data/US.json", import.meta.url),
+    ),
+  );
+  for (const [query, lat, lon] of [
+    ["New Orleans", 29.95, -90.08],
+    ["Chicago", 41.88, -87.63],
+    ["Seattle", 47.61, -122.33],
+    ["Boston", 42.36, -71.06],
+    ["San Diego", 32.72, -117.16],
+  ]) {
     const result = searchCities(query, us, 1)[0];
     assert.ok(result, query);
-    assert.ok(Math.abs(result.lat - lat) < 0.2 && Math.abs(result.lon - lon) < 0.2, query);
+    assert.ok(
+      Math.abs(result.lat - lat) < 0.2 && Math.abs(result.lon - lon) < 0.2,
+      query,
+    );
   }
 });
 
 test("representative cities on every inhabited-region seed are searchable", () => {
-  for (const [query, expected] of [["Honolulu", "United States"], ["Sao Paulo", "Brazil"], ["London", "United Kingdom"], ["Nairobi", "Kenya"], ["Dubai", "United Arab Emirates"], ["Tokyo", "Japan"], ["Sydney", "Australia"]]) {
+  for (const [query, expected] of [
+    ["Honolulu", "United States"],
+    ["Sao Paulo", "Brazil"],
+    ["London", "United Kingdom"],
+    ["Nairobi", "Kenya"],
+    ["Dubai", "United Arab Emirates"],
+    ["Tokyo", "Japan"],
+    ["Sydney", "Australia"],
+  ]) {
     assert.equal(searchCities(query)[0].country, expected);
   }
 });
@@ -79,39 +117,122 @@ test("catalog coordinates are valid and results are bounded", () => {
 });
 
 test("catalog merging deduplicates the existing seed", () => {
-  const merged = mergeCities(CITY_CATALOG, [{ name: "Tokyo", country: "Japan", r: "Asia", lat: 35.68, lon: 139.69 }, { name: "Springfield", country: "United States", r: "North America", lat: 39.8, lon: -89.6 }]);
+  const merged = mergeCities(CITY_CATALOG, [
+    { name: "Tokyo", country: "Japan", r: "Asia", lat: 35.68, lon: 139.69 },
+    {
+      name: "Springfield",
+      country: "United States",
+      r: "North America",
+      lat: 39.8,
+      lon: -89.6,
+    },
+  ]);
   assert.equal(merged.length, CITY_CATALOG.length + 1);
   assert.equal(searchCities("springfield", merged)[0].lat, 39.8);
 });
 
 test("city rows accept common dataset coordinate formats and reject invalid rows", () => {
-  assert.deepEqual(parseCityRows([{ name: "Testville", country: "Testland", lat: "1.25", lng: "2.5" }, { city: "Bad", country: "Nowhere", latitude: "100", longitude: "2" }]), [{ name: "Testville", country: "Testland", r: "Testland", lat: 1.25, lon: 2.5, population: 0 }]);
-  assert.equal(parseCityRows([{ name: "Phoenix", country: "US", r: "AZ", lat: 33.45, lon: -112.07 }])[0].r, "AZ");
+  assert.deepEqual(
+    parseCityRows([
+      { name: "Testville", country: "Testland", lat: "1.25", lng: "2.5" },
+      { city: "Bad", country: "Nowhere", latitude: "100", longitude: "2" },
+    ]),
+    [
+      {
+        name: "Testville",
+        country: "Testland",
+        r: "Testland",
+        lat: 1.25,
+        lon: 2.5,
+        population: 0,
+      },
+    ],
+  );
+  assert.equal(
+    parseCityRows([
+      { name: "Phoenix", country: "US", r: "AZ", lat: 33.45, lon: -112.07 },
+    ])[0].r,
+    "AZ",
+  );
 });
 
 test("bundled worldwide catalog contains broad coverage and valid coordinates", () => {
-  const data = JSON.parse(readFileSync(new URL("../assets/js/sizing/city-data/US.json", import.meta.url)));
+  const data = JSON.parse(
+    readFileSync(
+      new URL("../assets/js/sizing/city-data/US.json", import.meta.url),
+    ),
+  );
   assert.ok(data.length >= 4000);
   assert.ok(data.every((city) => city.population >= 10000));
   assert.ok(data.every((city) => city.country === "US"));
-  for (const query of ["Anchorage", "Springfield", "Rochester", "Fresno", "Boise", "Boulder"]) assert.ok(searchCities(query, data, 1).length, query);
-  for (const city of data.slice(0, 10000)) assert.ok(city.lat >= -90 && city.lat <= 90 && city.lon >= -180 && city.lon <= 180);
+  for (const query of [
+    "Anchorage",
+    "Springfield",
+    "Rochester",
+    "Fresno",
+    "Boise",
+    "Boulder",
+  ])
+    assert.ok(searchCities(query, data, 1).length, query);
+  for (const city of data.slice(0, 10000))
+    assert.ok(
+      city.lat >= -90 && city.lat <= 90 && city.lon >= -180 && city.lon <= 180,
+    );
 });
 
 test("partitioned worldwide catalog covers many countries", () => {
-  const index = JSON.parse(readFileSync(new URL("../assets/js/sizing/city-data/index.json", import.meta.url)));
+  const index = JSON.parse(
+    readFileSync(
+      new URL("../assets/js/sizing/city-data/index.json", import.meta.url),
+    ),
+  );
   assert.ok(index.length >= 200);
   assert.ok(index.reduce((sum, item) => sum + item.count, 0) >= 40000);
-  for (const code of ["US.json", "CA.json", "BR.json", "IN.json", "NG.json", "AU.json", "JP.json"]) assert.ok(index.some((item) => item.file === code || item.file.startsWith(code.replace(".json", "-"))), code);
+  for (const code of [
+    "US.json",
+    "CA.json",
+    "BR.json",
+    "IN.json",
+    "NG.json",
+    "AU.json",
+    "JP.json",
+  ])
+    assert.ok(
+      index.some(
+        (item) =>
+          item.file === code ||
+          item.file.startsWith(code.replace(".json", "-")),
+      ),
+      code,
+    );
 });
 
 test("city labels include expanded US state and country", () => {
-  assert.equal(formatCityLabel({ name: "New Orleans", r: "LA", country: "US" }), "New Orleans, Louisiana, USA");
-  assert.equal(formatCityLabel({ name: "New Orleans", r: "Louisiana", country: "US" }), "New Orleans, Louisiana, USA");
-  assert.equal(formatCityLabel({ name: "Phoenix", r: "Arizona", country: "United States" }), "Phoenix, Arizona, USA");
-  assert.equal(formatCityLabel({ name: "Toronto", r: "Ontario", country: "Canada" }), "Toronto, Ontario, Canada");
+  assert.equal(
+    formatCityLabel({ name: "New Orleans", r: "LA", country: "US" }),
+    "New Orleans, Louisiana, USA",
+  );
+  assert.equal(
+    formatCityLabel({ name: "New Orleans", r: "Louisiana", country: "US" }),
+    "New Orleans, Louisiana, USA",
+  );
+  assert.equal(
+    formatCityLabel({
+      name: "Phoenix",
+      r: "Arizona",
+      country: "United States",
+    }),
+    "Phoenix, Arizona, USA",
+  );
+  assert.equal(
+    formatCityLabel({ name: "Toronto", r: "Ontario", country: "Canada" }),
+    "Toronto, Ontario, Canada",
+  );
   // Numeric admin codes are hidden, not shown as junk.
-  assert.equal(formatCityLabel({ name: "Berlin", r: "16", country: "DE" }), "Berlin, DE");
+  assert.equal(
+    formatCityLabel({ name: "Berlin", r: "16", country: "DE" }),
+    "Berlin, DE",
+  );
 });
 
 test("seed CITY_CATALOG US cities carry exact state electricity tariffs", () => {
@@ -130,7 +251,12 @@ test("seed CITY_CATALOG US cities carry exact state electricity tariffs", () => 
   const toronto = CITY_CATALOG.find((c) => c.name === "Toronto");
   assert.ok(toronto, "Toronto present in seed catalog");
   assert.equal(toronto.r, "Ontario");
-  const estTor = estimateTariff(toronto.lat, toronto.lon, toronto.r, toronto.country);
+  const estTor = estimateTariff(
+    toronto.lat,
+    toronto.lon,
+    toronto.r,
+    toronto.country,
+  );
   assert.equal(estTor.rate, 0.13);
   assert.equal(estTor.currency, "CAD");
 });
@@ -161,12 +287,19 @@ test("US locations actively carry the USD currency (GPS and state lookups)", () 
   // code is what prevents a US rate from winning.)
   assert.equal(estimateTariff(43.65, -79.38, undefined, "CA").currency, "CAD");
   assert.equal(estimateTariff(43.65, -79.38, undefined, "CA").rate, 0.13);
-  assert.equal(estimateTariff(43.65, -79.38, "Ontario", "Canada").currency, "CAD");
+  assert.equal(
+    estimateTariff(43.65, -79.38, "Ontario", "Canada").currency,
+    "CAD",
+  );
   assert.equal(estimateTariff(43.65, -79.38, "Ontario", "Canada").rate, 0.13);
 });
 
 test("nearestCity resolves GPS coordinates to a nearby catalog city region", () => {
-  const us = JSON.parse(readFileSync(new URL("../assets/js/sizing/city-data/US.json", import.meta.url)));
+  const us = JSON.parse(
+    readFileSync(
+      new URL("../assets/js/sizing/city-data/US.json", import.meta.url),
+    ),
+  );
   const near = nearestCity(29.95, -90.08, us, 80);
   assert.ok(near, "New Orleans GPS should snap to a catalog city");
   assert.equal(near.name, "New Orleans");
@@ -176,8 +309,24 @@ test("nearestCity resolves GPS coordinates to a nearby catalog city region", () 
 });
 
 test("online lookup converts a free geocoder result into coordinates", async () => {
-  const result = await lookupCityOnline("Testville", async () => ({ ok: true, json: async () => [{ name: "Testville", lat: "1.25", lon: "2.5", address: { country: "Testland", state: "Test State" } }] }));
-  assert.deepEqual(result, { name: "Testville", country: "Testland", r: "Test State", lat: 1.25, lon: 2.5 });
+  const result = await lookupCityOnline("Testville", async () => ({
+    ok: true,
+    json: async () => [
+      {
+        name: "Testville",
+        lat: "1.25",
+        lon: "2.5",
+        address: { country: "Testland", state: "Test State" },
+      },
+    ],
+  }));
+  assert.deepEqual(result, {
+    name: "Testville",
+    country: "Testland",
+    r: "Test State",
+    lat: 1.25,
+    lon: 2.5,
+  });
 });
 
 test("remote catalog is parsed and cached without replacing the seed", async () => {
@@ -192,14 +341,36 @@ test("remote catalog is parsed and cached without replacing the seed", async () 
       const path = String(url).split("?")[0];
       return path.endsWith("index.json")
         ? { ok: true, json: async () => [{ file: "XX.json", count: 1 }] }
-        : { ok: true, json: async () => [{ name: "Testville", country: "Testland", lat: "1.25", lng: "2.5" }] };
+        : {
+            ok: true,
+            json: async () => [
+              {
+                name: "Testville",
+                country: "Testland",
+                lat: "1.25",
+                lng: "2.5",
+              },
+            ],
+          };
     },
-    storage: { getItem: (key) => store.get(key), setItem: (key, value) => store.set(key, value) },
+    storage: {
+      getItem: (key) => store.get(key),
+      setItem: (key, value) => store.set(key, value),
+    },
   });
   assert.ok(expanded.length > CITY_CATALOG.length);
   assert.equal(searchCities("testville", expanded)[0].lon, 2.5);
   assert.ok(store.size > 0);
-  assert.ok(fetched.some((u) => String(u).split("?")[0].endsWith("XX.json")), "country file fetched with a single .json suffix");
-  assert.ok(!fetched.some((u) => u.endsWith(".json.json")), "no double .json.json suffix");
-  assert.ok(fetched.some((u) => /\?v=\w+$/.test(String(u))), "catalog fetches carry a cache-busting ?v= stamp");
+  assert.ok(
+    fetched.some((u) => String(u).split("?")[0].endsWith("XX.json")),
+    "country file fetched with a single .json suffix",
+  );
+  assert.ok(
+    !fetched.some((u) => u.endsWith(".json.json")),
+    "no double .json.json suffix",
+  );
+  assert.ok(
+    fetched.some((u) => /\?v=\w+$/.test(String(u))),
+    "catalog fetches carry a cache-busting ?v= stamp",
+  );
 });
