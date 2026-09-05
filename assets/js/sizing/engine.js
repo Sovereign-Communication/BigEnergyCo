@@ -540,7 +540,24 @@ export function sizeForTier({
       const obj = lifetimeObjective(adopPv, adopted.t, adopEv.r).total;
       if (obj < best.obj) {
         best = { pvKw: adopPv, battKwh: adopted.t, result: adopEv.r, obj };
+      } else {
+        // Verified on a fresh simulation, the oversized bank is NOT cheaper
+        // (throughput shifts with bank size, so the pre-verification estimate
+        // can be wrong): fall back to swaps_cheaper so the scenario note can
+        // never recommend a system the numbers don't show.
+        opt.useOversized = false;
+        opt.oversizeScenario = "swaps_cheaper";
+        opt.oversizeSavingsUsd = obj - best.obj;
+        opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is cheaper over 20 years than paying upfront to oversize.`;
       }
+    } else {
+      // Zero-swap is unreachable inside the searched envelope (the estimate
+      // points beyond battMax): the oversized bank can't be built, so the
+      // note must not advertise it.
+      opt.useOversized = false;
+      opt.oversizeScenario = "swaps_cheaper";
+      opt.oversizeSavingsUsd = 0;
+      opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is the practical pick — a zero-swap bank is beyond the sizes this tool searches.`;
     }
   }
   best.oversizeScenario = opt.oversizeScenario;
@@ -842,6 +859,12 @@ export function sizeForBillCut({
           opt.oversizeScenario = "swaps_cheaper";
           opt.bestPriceCallout = `Best 20-year price: standard sizing is cheaper over 20 years than paying upfront to oversize.`;
         }
+      } else {
+        // Verified bank misses the peak-cut target: fall back so the note
+        // matches the system actually recommended.
+        opt.useOversized = false;
+        opt.oversizeScenario = "swaps_cheaper";
+        opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is cheaper over 20 years than paying upfront to oversize.`;
       }
     } else {
       let lo = 0.05, hi = best.pvKw;
@@ -859,6 +882,13 @@ export function sizeForBillCut({
           opt.oversizeScenario = "swaps_cheaper";
           opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is cheaper over 20 years than paying upfront to oversize.`;
         }
+      } else {
+        // Defensive: the verification loop already proved meets() at
+        // (best.pvKw, b), so this branch is unreachable — but if it ever
+        // triggers, the note must not advertise an unbuilt system.
+        opt.useOversized = false;
+        opt.oversizeScenario = "swaps_cheaper";
+        opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is cheaper over 20 years than paying upfront to oversize.`;
       }
     }
   }
