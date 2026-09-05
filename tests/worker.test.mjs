@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import worker, {
   getAllowedOrigin, corsHeaders, getClientIp,
   checkRateLimit, resetRateLimitsForTest,
-  sanitizeAndCloseReply, SYSTEM_PROMPT_VERSION,
+  sanitizeAndCloseReply, ensureDisclaimer, DISCLAIMER_FOOTER,
+  SYSTEM_PROMPT_VERSION,
 } from "../worker/index.js";
 
 const ORIGIN = "https://bigenergyco.pages.dev";
@@ -63,6 +64,15 @@ test("checkRateLimit enforces the 3000/day global cap", () => {
     assert.equal(checkRateLimit(`192.168.1.${i % 250}`, 3000 + i).allowed, true);
   }
   assert.equal(checkRateLimit("192.168.9.9", 6001).allowed, false);
+});
+
+test("ensureDisclaimer appends the footer unless already present", () => {
+  assert.equal(ensureDisclaimer("Do this."), `Do this.\n\n${DISCLAIMER_FOOTER}`);
+  assert.equal(ensureDisclaimer(`Done.\n\n${DISCLAIMER_FOOTER}`), `Done.\n\n${DISCLAIMER_FOOTER}`);
+  assert.equal(ensureDisclaimer("Educational Estimates Only, roughly."), "Educational Estimates Only, roughly.");
+  assert.equal(ensureDisclaimer("Ask a licensed professional first."), "Ask a licensed professional first.");
+  assert.equal(ensureDisclaimer(""), "");
+  assert.equal(ensureDisclaimer(null), null);
 });
 
 test("sanitizeAndCloseReply closes fences, drops dangling rows, finishes sentences", () => {
@@ -139,7 +149,7 @@ test("/api/chat happy path returns the sanitized reply", async () => {
     const res = await worker.fetch(chatReq({ message: "size me" }), { GROQ_API_KEY: "test-key" });
     assert.equal(res.status, 200);
     const body = await res.json();
-    assert.equal(body.reply, "Sized for you.");
+    assert.equal(body.reply, `Sized for you.\n\n${DISCLAIMER_FOOTER}`);
     assert.equal(body.model, "openai/gpt-oss-120b");
   } finally {
     globalThis.fetch = realFetch;
@@ -157,6 +167,7 @@ test("/api/chat falls back to the small model on 5xx before partial output", asy
     assert.equal(res.status, 200);
     const body = await res.json();
     assert.equal(body.model, "openai/gpt-oss-20b");
+    assert.equal(body.reply, `fallback ok.\n\n${DISCLAIMER_FOOTER}`);
     assert.equal(calls, 2);
   } finally {
     globalThis.fetch = realFetch;
@@ -172,7 +183,7 @@ test("/api/chat backs off once on upstream 429 then serves the retry", async () 
   try {
     const res = await worker.fetch(chatReq({ message: "size me" }), { GROQ_API_KEY: "test-key" });
     assert.equal(res.status, 200);
-    assert.equal((await res.json()).reply, "recovered.");
+    assert.equal((await res.json()).reply, `recovered.\n\n${DISCLAIMER_FOOTER}`);
     assert.equal(calls, 2);
   } finally {
     globalThis.fetch = realFetch;

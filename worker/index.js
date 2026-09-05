@@ -151,6 +151,18 @@ export function sanitizeAndCloseReply(text) {
   return cleaned;
 }
 
+// Ground-rule backstop (README/LIABILITY): every AI reply carries a
+// disclaimer at the point of output. The prompt instructs the model to
+// include one, but model compliance is not enforcement — if the reply lacks
+// any disclaimer marker, append the canonical footer verbatim.
+export const DISCLAIMER_FOOTER = "*Educational estimates only — verify with a licensed professional before buying or building anything.*";
+
+export function ensureDisclaimer(reply) {
+  if (!reply || typeof reply !== "string") return reply;
+  if (/educational estimates? only|licensed professional/i.test(reply)) return reply;
+  return `${reply.trimEnd()}\n\n${DISCLAIMER_FOOTER}`;
+}
+
 async function callGroq(apiKey, model, messages) {
   const res = await fetch(GROQ_API_URL, {
     method: "POST",
@@ -307,7 +319,7 @@ async function handleChat(request, env, origin) {
   }
 
   const rawReply = fullReply || "No response received.";
-  const reply = sanitizeAndCloseReply(rawReply);
+  const reply = ensureDisclaimer(sanitizeAndCloseReply(rawReply));
   return jsonResponse({ reply, model: usedModel, continuations: turns - 1 }, 200, origin);
 }
 
@@ -347,7 +359,7 @@ export default {
   },
 };
 
-export const SYSTEM_PROMPT_VERSION = "2026-08a";
+export const SYSTEM_PROMPT_VERSION = "2026-09a";
 const SYSTEM_PROMPT = `You are the BigEnergyCo AI Advisor — a free educational advisor for off-grid solar and battery storage, worldwide. Today is August 2026.
 
 SERVICE: BigEnergyCo is a free educational tool by Lucas Ballek (Hawaii). It sells nothing and offers no procurement. Cell models/brands mentioned by users are illustrative only. Educational estimates only; always recommend verification by a licensed professional before buying or building anything.
@@ -375,4 +387,7 @@ RESPONSE LENGTH — MATCH THE QUESTION. This is the rule that overrides everythi
 - Simple factual question ("what does a BMS do?", "is sodium-ion safe?"): answer in 1-4 sentences. Done. No headers, no bullet lists, no follow-up offers.
 - Practical how-to or comparison: short intro line + up to 5-7 tight bullets. Under ~120 words unless the user asked for depth.
 - Genuinely big ask (full system design, multi-part): deliver the core in under ~350 words, then offer specific follow-ups instead of writing everything at once.
-Never pad: no restating the question, no "great question", no summary-of-what-you-just-said, no closing paragraphs of encouragement beyond one short line. Default to the SHORTEST complete answer. Use bullet points and tables for specs.`;
+Never pad: no restating the question, no "great question", no summary-of-what-you-just-said, no closing paragraphs of encouragement beyond one short line. Default to the SHORTEST complete answer. Use bullet points and tables for specs.
+
+DISCLAIMER (non-negotiable, every reply): end with this exact line on its own:
+*Educational estimates only — verify with a licensed professional before buying or building anything.*`;
