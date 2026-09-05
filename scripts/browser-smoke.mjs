@@ -101,7 +101,8 @@ async function main() {
       } else if (msg.method === "Runtime.consoleAPICalled" && msg.params?.type === "error") {
         errors.push(`console.error: ${(msg.params.args || []).map((a) => a.value ?? a.description ?? "").join(" ").slice(0, 300)}`);
       } else if (msg.method === "Log.entryAdded" && msg.params?.entry?.level === "error") {
-        errors.push(`log.error: ${(msg.params.entry.text || "").slice(0, 300)}`);
+        const url = msg.params.entry.url ? ` [${msg.params.entry.url.slice(0, 120)}]` : "";
+        errors.push(`log.error: ${(msg.params.entry.text || "").slice(0, 300)}${url}`);
       }
     };
     send = (method, params = {}) => new Promise((res, rej) => {
@@ -203,15 +204,18 @@ async function main() {
         catch (e) { out[key] = "THREW: " + String(e && e.message || e).slice(0, 120); }
       };
       await tryFetch("fx", "https://open.er-api.com/v6/latest/USD?smoke=1");
-      await tryFetch("nasa", "https://power.larc.nasa.gov/api/temporal/hourly/point?smoke=1");
       await tryFetch("geocoder", "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=Honolulu");
       await tryFetch("worker", "https://bigenergyco-api.bigenergyco.workers.dev/api/health");
       return out;
     })()`);
     gate("FX rates reachable", /^HTTP 200/.test(probes.fx || ""), probes.fx);
-    gate("NASA POWER reachable (any HTTP = not blocked)", /^HTTP \d+/.test(probes.nasa || ""), probes.nasa);
     gate("geocoder reachable (any HTTP = not blocked)", /^HTTP \d+/.test(probes.geocoder || ""), probes.geocoder);
     gate("API health reachable", /^HTTP 200/.test(probes.worker || ""), probes.worker);
+    // NASA is proven end-to-end instead of probed: a bare API ping returns
+    // 4xx (which Chrome logs as a console error), so assert the run used
+    // live point weather rather than the bundled offline fallback.
+    gate("live NASA weather used (no offline fallback)",
+      !(await evaluate(`document.body.textContent.includes("OFFLINE MODE")`)));
 
     // ── Heatmap page (Leaflet CDN + tile CSP) ─────────────────────────
     console.log("SMOKE      ── heatmap page ──");
