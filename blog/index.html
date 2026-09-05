@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#090d16">
+  <title>BigEnergyCo Blog — Free Solar &amp; Battery Storage Knowledge</title>
+  <meta name="description" content="Educational guides, chemistry comparisons, and engineering insights for DIY and off-grid solar and battery storage systems worldwide.">
+  <meta name="keywords" content="solar energy blog, battery storage guide, DIY battery storage, LiFePO4, sodium-ion battery, off-grid power">
+  <link rel="canonical" href="https://bigenergyco.pages.dev/blog/">
+  <link rel="icon" type="image/svg+xml" href="../assets/icon.svg">
+  <link rel="alternate" type="application/rss+xml" title="BigEnergyCo Blog" href="https://bigenergyco.pages.dev/rss.xml">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BigEnergyCo">
+  <meta property="og:title" content="BigEnergyCo Blog — Free Solar &amp; Battery Storage Knowledge">
+  <meta property="og:description" content="Educational guides, chemistry comparisons, and engineering insights for DIY and off-grid solar and battery storage systems worldwide.">
+  <meta property="og:url" content="https://bigenergyco.pages.dev/blog/">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="BigEnergyCo Blog — Free Solar &amp; Battery Storage Knowledge">
+  <meta name="twitter:description" content="Educational guides, chemistry comparisons, and engineering insights for DIY and off-grid solar and battery storage systems worldwide.">
+  <meta property="og:image" content="https://bigenergyco.pages.dev/assets/og-card.png">
+  <meta property="og:image:width" content="2688">
+  <meta property="og:image:height" content="1536">
+  <meta name="twitter:image" content="https://bigenergyco.pages.dev/assets/og-card.png">
+
+  <!-- Structured Data JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "@id": "https://bigenergyco.pages.dev/blog/#blog",
+    "name": "BigEnergyCo Blog",
+    "description": "Educational guides, chemistry comparisons, and engineering insights for DIY and off-grid solar and battery storage systems worldwide.",
+    "url": "https://bigenergyco.pages.dev/blog/",
+    "publisher": {
+      "@type": "Organization",
+      "name": "BigEnergyCo",
+      "url": "https://bigenergyco.pages.dev"
+    },
+    "blogPost": [
+      {
+        "@type": "BlogPosting",
+        "headline": "How to Cut Your Electricity Bill With Solar: Honest Math (2026)",
+        "name": "How to Cut Your Electricity Bill With Solar: Honest Math (2026)",
+        "description": "How much of your electricity bill solar and battery can actually erase, with worked numbers for Honolulu, Lagos, and Germany from five years of NASA satellite weather.",
+        "datePublished": "2026-08-30T00:00:00Z",
+        "dateModified": "2026-08-30T00:00:00Z",
+        "url": "https://bigenergyco.pages.dev/blog/how-to-cut-electricity-bill-with-solar/",
+        "author": {
+          "@type": "Person",
+          "name": "Lucas Ballek"
+        }
+      },
+      {
+        "@type": "BlogPosting",
+        "headline": "DIY Battery Storage: The Complete Guide to LiFePO4 and Sodium-Ion Builds in 2026",
+        "name": "DIY Battery Storage: LFP vs Sodium-Ion Guide 2026",
+        "description": "Compare DIY battery storage options for LiFePO4 and sodium-ion. Learn cost, safety, and modularity benefits of building your own off-grid or backup system.",
+        "datePublished": "2026-08-20T00:00:00Z",
+        "dateModified": "2026-08-20T00:00:00Z",
+        "url": "https://bigenergyco.pages.dev/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/",
+        "author": {
+          "@type": "Person",
+          "name": "Lucas Ballek"
+        }
+      },
+      {
+        "@type": "BlogPosting",
+        "headline": "Off-Grid vs Grid-Tied Solar: Which Pays Back Faster in 2026?",
+        "name": "Off-Grid vs Grid-Tied Solar: Which Pays Back Faster in 2026?",
+        "description": "Real payback numbers for Hawaii, Nigeria, and Germany — worked step by step from five years of satellite weather. When independence wins, when bill-cutting wins, and what the hardware truly costs.",
+        "datePublished": "2026-08-23T00:00:00Z",
+        "dateModified": "2026-08-23T00:00:00Z",
+        "url": "https://bigenergyco.pages.dev/blog/off-grid-vs-grid-tie-payback/",
+        "author": {
+          "@type": "Person",
+          "name": "Lucas Ballek"
+        }
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.28) rgba(9, 13, 22, 0.85);
+
+      --bg-dark: #090d16;
+      --bg-card: rgba(18, 26, 44, 0.85);
+      --bg-card-hover: rgba(28, 40, 66, 0.95);
+      --border-glow: rgba(0, 230, 153, 0.35);
+      --border-card: rgba(255, 255, 255, 0.12);
+      
+      --primary-accent: #00e699;
+      --primary-glow: rgba(0, 230, 153, 0.5);
+      --secondary-accent: #3b82f6;
+      --warning-orange: #f59e0b;
+      --danger-red: #ef4444;
+      
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-bright: #ffffff;
+
+      --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(9, 13, 22, 0.85); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.38); }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(0, 230, 153, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 70%, rgba(59, 130, 246, 0.12) 0%, transparent 45%);
+      background-attachment: fixed;
+    }
+
+    a {
+      color: var(--primary-accent);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    a:hover {
+      text-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Header & Navigation */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(9, 13, 22, 0.92);
+      border-bottom: 1px solid var(--border-card);
+      padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+
+    .nav-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 0%, var(--primary-accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo .highlight {
+      color: var(--primary-accent);
+      -webkit-text-fill-color: var(--primary-accent);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--text-bright);
+    }
+
+    .header-cta {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.4rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00e699 0%, #00b377 100%);
+      color: #04120c;
+      font-weight: 700;
+      box-shadow: 0 0 15px rgba(0, 230, 153, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 25px rgba(0, 230, 153, 0.5);
+      color: #04120c;
+    }
+
+    /* Blog Hero */
+    .blog-hero {
+      padding: 4.5rem 0 2.5rem;
+      text-align: center;
+    }
+
+    .blog-tag {
+      display: inline-block;
+      background: rgba(0, 230, 153, 0.12);
+      color: var(--primary-accent);
+      border: 1px solid var(--primary-glow);
+      padding: 0.35rem 1.1rem;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      letter-spacing: 0.5px;
+    }
+
+    .blog-hero h1 {
+      font-size: 3rem;
+      font-weight: 900;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      letter-spacing: -1px;
+    }
+
+    .blog-hero h1 span {
+      background: linear-gradient(135deg, #00e699 0%, #60a5fa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .blog-hero p {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* Articles Grid */
+    .articles-section {
+      padding: 2rem 0 5rem;
+    }
+
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .article-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 2rem;
+      min-width: 0;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: relative;
+    }
+
+    .article-card:hover {
+      border-color: var(--border-glow);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-tag {
+      background: rgba(0, 230, 153, 0.1);
+      color: var(--primary-accent);
+      border: 1px solid rgba(0, 230, 153, 0.25);
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .card-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      line-height: 1.35;
+      margin-bottom: 0.85rem;
+      color: #ffffff;
+    }
+
+    .card-title a {
+      color: #ffffff;
+    }
+
+    .card-title a:hover {
+      color: var(--primary-accent);
+      text-shadow: none;
+    }
+
+    .card-excerpt {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      flex-grow: 1;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 1.25rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .read-more {
+      color: var(--primary-accent);
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .read-more:hover {
+      text-decoration: underline;
+    }
+
+    /* Disclaimer Box */
+    .disclaimer-box {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-left: 4px solid var(--warning-orange);
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      margin: 2rem 0;
+      color: #fed7aa;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .disclaimer-box strong {
+      color: #fef08a;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-card);
+      padding: 3rem 0 max(3rem, env(safe-area-inset-bottom));
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 4rem;
+      background: rgba(9, 13, 22, 0.8);
+    }
+
+    /* Mobile: keep logo + CTA, hide nav links (reachable from footer). */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .blog-hero h1 { font-size: 1.9rem; }
+      .articles-grid { gap: 1.25rem; }
+      .article-card { padding: 1.35rem; }
+    }
+
+    /* Very small phones: shrink brand + button, let header wrap if needed. */
+    @media (max-width: 480px) {
+      .nav-flex { flex-wrap: wrap; row-gap: 0.5rem; }
+      .logo { font-size: 1.25rem; }
+      .header-cta .btn { padding: 0.45rem 0.7rem; font-size: 0.8rem; }
+      .container { padding: 0 1rem; }
+      .blog-hero { padding: 3rem 0 1.5rem; }
+      .blog-hero h1 { font-size: 1.6rem; }
+      .articles-grid { grid-template-columns: 1fr; }
+    }
+
+  </style>
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header>
+    <div class="container nav-flex">
+      <a href="../" class="logo" style="text-decoration: none;">
+        <span>⚡</span>
+        <span>BigEnergy<span class="highlight">Co</span></span>
+      </a>
+      <nav class="nav-links">
+        <a href="../#sizing">Size Your System</a>
+        <a href="../#calculator">Estimator</a>
+        <a href="../#bom">Hardware Reference</a>
+        <a href="./" class="active">Blog</a>
+        <a href="../#legal">Terms &amp; Disclaimer</a>
+      </nav>
+      <div class="header-cta">
+        <a href="../" class="btn btn-primary">Free Sizing Estimator</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="blog-hero">
+    <div class="container">
+      <div class="blog-tag">📚 Technical Articles &amp; Insights</div>
+      <h1>Solar &amp; Battery <span>Storage Guides</span></h1>
+      <p>
+        In-depth technical and economic breakdowns for DIY builders, off-grid enthusiasts, and homeowners exploring modern energy storage.
+      </p>
+    </div>
+  </section>
+
+  <!-- Articles Grid Section -->
+  <main class="container articles-section">
+    <div class="disclaimer-box">
+      <strong>⚠️ Educational Content:</strong> All articles are provided for educational purposes only. BigEnergyCo sells no products, collects no signups, and provides no professional engineering services. Always verify electrical and battery designs with a licensed professional.
+    </div>
+
+    <div class="articles-grid">
+      <!-- Article 3 -->
+      <article class="article-card">
+        <div>
+          <div class="card-tags">
+            <span class="card-tag">Bill Cutting</span>
+            <span class="card-tag">Payback</span>
+            <span class="card-tag">Grid-Tie</span>
+          </div>
+          <h2 class="card-title">
+            <a href="./how-to-cut-electricity-bill-with-solar/">How to Cut Your Electricity Bill With Solar: Honest Math (2026)</a>
+          </h2>
+          <p class="card-excerpt">
+            How much of your bill solar and battery can actually erase — worked step by step for Honolulu, Lagos, and Germany from five years of satellite weather. Free calculator included.
+          </p>
+        </div>
+        <div class="card-footer">
+          <span>📅 Aug 30, 2026 · 8 min read</span>
+          <a href="./how-to-cut-electricity-bill-with-solar/" class="read-more">Read Guide &rarr;</a>
+        </div>
+      </article>
+
+      <!-- Article 2 -->
+      <article class="article-card">
+        <div>
+          <div class="card-tags">
+            <span class="card-tag">Payback</span>
+            <span class="card-tag">Off-Grid</span>
+            <span class="card-tag">Grid-Tie</span>
+          </div>
+          <h2 class="card-title">
+            <a href="./off-grid-vs-grid-tie-payback/">Off-Grid vs Grid-Tied Solar: Which Pays Back Faster in 2026?</a>
+          </h2>
+          <p class="card-excerpt">
+            Real payback numbers for Hawaii, Nigeria, and Germany — worked step by step from five years of satellite weather. When independence wins, when bill-cutting wins, and what the hardware truly costs.
+          </p>
+        </div>
+        <div class="card-footer">
+          <span>📅 Aug 23, 2026 · 9 min read</span>
+          <a href="./off-grid-vs-grid-tie-payback/" class="read-more">Read Guide &rarr;</a>
+        </div>
+      </article>
+
+      <!-- Article 1 -->
+      <article class="article-card">
+        <div>
+          <div class="card-tags">
+            <span class="card-tag">LiFePO4</span>
+            <span class="card-tag">Sodium-Ion</span>
+            <span class="card-tag">DIY Builds</span>
+          </div>
+          <h2 class="card-title">
+            <a href="./diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/">DIY Battery Storage: The Complete Guide to LiFePO4 and Sodium-Ion Builds in 2026</a>
+          </h2>
+          <p class="card-excerpt">
+            Compare DIY battery storage options for LiFePO4 and sodium-ion. Learn cost, safety, and modularity benefits of building your own off-grid or backup system.
+          </p>
+        </div>
+        <div class="card-footer">
+          <span>📅 Aug 20, 2026 · 18 min read</span>
+          <a href="./diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/" class="read-more">Read Guide &rarr;</a>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p style="margin-bottom: 1rem; color: #fff; font-weight: 700;">
+        ⚡ BigEnergyCo &mdash; Free Worldwide Solar &amp; Battery Storage Estimator
+      </p>
+      <p style="max-width: 800px; margin: 0 auto 1.5rem; font-size: 0.85rem; line-height: 1.5;">
+        Provided free and <strong>as-is, with no warranty of any kind</strong>, express or implied. Estimates are educational only and may be inaccurate. Working with batteries, high DC current, and mains wiring can cause fire, serious injury, and death &mdash; you are responsible for your own safety, your own decisions, and compliance with your local electrical code. Verify everything with a licensed professional before building.
+      </p>
+      <p style="font-size: 0.85rem;">
+        <a href="../">Estimator</a>
+        &nbsp;·&nbsp; <a href="./">Blog</a>
+        &nbsp;·&nbsp; <a href="../#bom">Hardware Reference</a>
+        &nbsp;·&nbsp; <a href="../#legal">Terms</a>
+        &nbsp;·&nbsp; <a href="../#support">Support</a>
+        &nbsp;·&nbsp; <a href="mailto:lucasballek@gmail.com">lucasballek@gmail.com</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
