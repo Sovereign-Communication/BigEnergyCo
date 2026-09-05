@@ -80,6 +80,24 @@ Record the deployment URL printed by Wrangler.
 Verify limits live via `/api/health` (returns the enforced numbers and the
 `promptVersion` now pinned there) and `tests/worker.test.mjs` (runs in CI).
 
+## Content-Security-Policy endpoint registry
+
+`_headers` ships a CSP. Every third-party endpoint the app touches at runtime
+must be listed there AND probed by `scripts/browser-smoke.mjs` — the smoke
+run is what catches a missing entry (currency/geocoder/map silently break
+otherwise). Current registry:
+
+| Use | Endpoint | CSP directive |
+|---|---|---|
+| Weather | `power.larc.nasa.gov` | connect-src |
+| AI advisor | `bigenergyco-api.bigenergyco.workers.dev` (+ `*.workers.dev` spare) | connect-src |
+| FX rates | `open.er-api.com` | connect-src |
+| Online city lookup | `nominatim.openstreetmap.org` | connect-src |
+| Heatmap library | `unpkg.com` (SRI-pinned) | script-src |
+| Heatmap tiles | `*.basemaps.cartocdn.com` | img-src |
+
+Adding a new external call = update `_headers` + the smoke probes + this table.
+
 ## Production verification
 
 Run the live sweep. It must use `https://bigenergyco.pages.dev/`, never a GitHub Pages fallback URL:
@@ -101,6 +119,20 @@ The hashes must match. Also verify `sw.js` serves the new cache version.
 
 ## Required browser smoke test
 
+The approved tooling is `scripts/browser-smoke.mjs` (zero dependencies —
+drives the installed Chrome/Edge over CDP with Node built-ins only):
+
+```bash
+npm run smoke
+# or: node scripts/browser-smoke.mjs https://bigenergyco.pages.dev/
+```
+
+It performs the flow below verbatim (Honolulu, kWh/day mode, 10 kWh,
+grid-tie, positive tariff) plus the custom-cut slider re-slice, an off-grid
+run, external-integration probes (FX, NASA, geocoder, API health), the
+heatmap page (Leaflet/tiles), an explicit no-CSP-violations gate, and a
+general console/page-error gate. Exit 0 required.
+
 A release is not verified until a real browser run against `https://bigenergyco.pages.dev/` has completed:
 
 1. Open the public URL in a clean desktop context.
@@ -111,7 +143,7 @@ A release is not verified until a real browser run against `https://bigenergyco.
 6. Confirm `cumCostCanvas` has a non-zero width/height and `cumCostCaption` contains the running-cost explanation.
 7. Capture the browser console and network log; there must be no worker/module errors.
 
-If browser automation is unavailable, do not claim browser verification. Install/use the project's approved browser tooling or have an operator perform the exact smoke test and attach evidence.
+If browser automation is unavailable, do not claim browser verification. Run `npm run smoke` on any machine with Chrome/Edge installed, or have an operator perform the exact smoke test and attach evidence.
 
 ## Troubleshooting checklist
 
