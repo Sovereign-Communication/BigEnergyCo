@@ -303,11 +303,15 @@ async function main() {
       const imgs = [...document.images].filter((i) => !i.alt && i.getAttribute("aria-hidden") !== "true");
       const btns = [...document.querySelectorAll("button")].filter((b) =>
         !(b.textContent || "").trim() && !b.getAttribute("aria-label") && !(b.value || "").trim());
+      // Visible headings only: #printSheet carries its own h1 for the
+      // print stylesheet (display:none on screen, and vice versa in print),
+      // so exactly one h1 is exposed in each mode by design.
+      const visibleH1 = [...document.querySelectorAll("h1")].filter((h) => h.offsetParent !== null).length;
       return { lang: document.documentElement.lang || null, badImgs: imgs.length, badBtns: btns.length,
-        h1: document.querySelectorAll("h1").length };
+        h1: visibleH1 };
     })()`);
     gate("html lang set", !!a11y.lang, a11y.lang);
-    gate("single h1", a11y.h1 === 1, `${a11y.h1} found`);
+    gate("single visible h1", a11y.h1 === 1, `${a11y.h1} found`);
     gate("images have alt text", a11y.badImgs === 0, `${a11y.badImgs} missing`);
     gate(
       "buttons have accessible names",
