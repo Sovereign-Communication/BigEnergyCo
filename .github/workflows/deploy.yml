@@ -40,6 +40,7 @@ jobs:
           cp "blog/how-to-cut-electricity-bill-with-solar/index.html" "_pages/blog/how-to-cut-electricity-bill-with-solar/"
           cp -r assets _pages/assets
           cp -r solar-calculator _pages/solar-calculator
+          cp -r solar-heatmap _pages/solar-heatmap
           cp _headers _pages/ 2>/dev/null || true
           cp _redirects _pages/ 2>/dev/null || true
 
