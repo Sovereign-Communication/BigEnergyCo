@@ -189,7 +189,8 @@ test("remote catalog is parsed and cached without replacing the seed", async () 
   const expanded = await loadCityCatalog({
     fetchImpl: async (url) => {
       fetched.push(url);
-      return url.endsWith("index.json")
+      const path = String(url).split("?")[0];
+      return path.endsWith("index.json")
         ? { ok: true, json: async () => [{ file: "XX.json", count: 1 }] }
         : { ok: true, json: async () => [{ name: "Testville", country: "Testland", lat: "1.25", lng: "2.5" }] };
     },
@@ -198,6 +199,7 @@ test("remote catalog is parsed and cached without replacing the seed", async () 
   assert.ok(expanded.length > CITY_CATALOG.length);
   assert.equal(searchCities("testville", expanded)[0].lon, 2.5);
   assert.ok(store.size > 0);
-  assert.ok(fetched.some((u) => u.endsWith("XX.json")), "country file fetched with a single .json suffix");
+  assert.ok(fetched.some((u) => String(u).split("?")[0].endsWith("XX.json")), "country file fetched with a single .json suffix");
   assert.ok(!fetched.some((u) => u.endsWith(".json.json")), "no double .json.json suffix");
+  assert.ok(fetched.some((u) => /\?v=\w+$/.test(String(u))), "catalog fetches carry a cache-busting ?v= stamp");
 });

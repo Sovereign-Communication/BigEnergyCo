@@ -6,14 +6,18 @@
 // billing lock is lifted, switch back to build_type=workflow and delete this
 // branch.
 //
-// Usage: node scripts/deploy-pages-local.mjs [--check]
+// Usage: node scripts/deploy-pages-local.mjs [--check] [--stage <dir>]
 //   --check: build only, print contents, do not push
+//   --stage <dir>: staging directory (default _pages_staging). The GitHub
+//     workflow reuses this same script with --stage _pages, so the allowlist
+//     below is the SINGLE source of truth for both deploys.
 import { cpSync, mkdirSync, rmSync, readdirSync, statSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { join, resolve } from "node:path";
 
 const ROOT = resolve(new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
-const STAGE = join(ROOT, "_pages_staging");
+const stageIdx = process.argv.indexOf("--stage");
+const STAGE = join(ROOT, stageIdx >= 0 && process.argv[stageIdx + 1] ? process.argv[stageIdx + 1] : "_pages_staging");
 const CHECK = process.argv.includes("--check");
 
 const ALLOWLIST = [
@@ -39,7 +43,7 @@ function sh(cmd, opts = {}) {
   return execSync(cmd, { cwd: ROOT, stdio: opts.quiet ? "pipe" : "inherit", encoding: "utf8" });
 }
 
-console.log(`Staging allowlisted files into _pages_staging/ ...`);
+console.log(`Staging allowlisted files into ${STAGE.replace(ROOT + "/", "")}/ ...`);
 rmSync(STAGE, { recursive: true, force: true });
 mkdirSync(join(STAGE, "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage"), { recursive: true });
 mkdirSync(join(STAGE, "blog/off-grid-vs-grid-tie-payback"), { recursive: true });

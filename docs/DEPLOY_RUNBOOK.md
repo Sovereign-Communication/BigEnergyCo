@@ -9,7 +9,15 @@ The site has two delivery paths: GitHub Actions publishes the GitHub Pages artif
 The service worker also caches assets, and Cloudflare serves `assets/*` with `Cache-Control: public, max-age=31536000, immutable` (one year). Any change to JavaScript, HTML, or worker imports therefore requires BOTH:
 
 1. A `CACHE_VERSION` bump in `sw.js` (e.g. `beco-v17`), so installed desktop clients activate a fresh cache.
-2. A new `?v=` token on every changed asset URL, in every file that references it: `index.html` (the `ui.js` script tag), `ui.js` (the `sizing-worker.js` URL), `sizing-worker.js` (the `run.js` import), and `run.js` (the `money.js` import).
+2. A new `?v=` token on every asset URL in the browser module graph (static/dynamic imports, `new Worker()` URLs, `<script src>`, `/assets` data fetches).
+
+Do NOT hand-edit tokens — one stamp covers the whole graph atomically (mixed stamps let clients mix module versions):
+
+```bash
+node scripts/bump-asset-tokens.mjs   # unified stamp + CACHE_VERSION bump
+```
+
+CI (`node scripts/bump-asset-tokens.mjs --check`) fails on token-less references or mixed stamps.
 
 These are separate cache layers. A `CACHE_VERSION` bump alone is not enough: the worker's stale-while-revalidate refresh re-fetches through the same immutable HTTP cache, so an unchanged asset URL can never heal. Changing the URL is what makes both the HTTP cache and the service-worker cache miss.
 
@@ -85,7 +93,8 @@ If browser automation is unavailable, do not claim browser verification. Install
 
 - If the fallback message appears while **Total 20-year cost** is present, inspect the worker payload: every solvable result with a valid grid baseline must carry `cumCostSeries`.
 - If production source differs from local source, the wrong artifact was deployed or an immutable asset URL was reused. Rebuild the allowlist and redeploy.
-- If only one device type is stale, an asset URL was reused across deploys: bump `CACHE_VERSION`, change every `?v=` token on changed assets (index.html, ui.js worker URL, sizing-worker.js run.js import, run.js money.js import), deploy, close all site tabs, and repeat the clean browser test.
+- If only one device type is stale, an asset URL was reused across deploys: run `node scripts/bump-asset-tokens.mjs`, deploy, close all site tabs, and repeat the clean browser test.
+- Verify tokens are unified: `node scripts/bump-asset-tokens.mjs --check` must pass (it is also a CI gate).
 - Verify no changed asset still carries an old `?v=` token: `git diff db73ee4..HEAD --name-only -- 'assets/*' 'index.html'` must be covered by new tokens.
 - Do not report “live” based only on HTML markers, HTTP 200, GitHub Actions, or a local preview.
 
