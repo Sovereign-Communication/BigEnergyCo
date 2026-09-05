@@ -326,8 +326,21 @@ ${cities.filter((o) => o.name !== c.name).slice(0, 23).map((o) => `        <a hr
 
 function hubPage() {
   const url = "https://bigenergyco.pages.dev/solar-calculator/";
+  const MACRO_REGIONS = {
+    Hawaii: "North America",
+    California: "North America",
+    Arizona: "North America",
+    Colorado: "North America",
+    Illinois: "North America",
+    Florida: "North America",
+    "New York": "North America",
+    Ontario: "North America",
+  };
   const byRegion = {};
-  for (const c of cities) (byRegion[c.region] ||= []).push(c);
+  for (const c of cities) {
+    const reg = MACRO_REGIONS[c.region] || c.region;
+    (byRegion[reg] ||= []).push(c);
+  }
   const regionBlocks = Object.entries(byRegion).map(([region, list]) => {
     const items = list.map((c) => `        <a href="./${slugify(c.name)}/">${c.name}</a>`).join("\n");
     return `      <h2>${region}</h2>\n      <div class="citylinks">\n${items}\n      </div>`;
