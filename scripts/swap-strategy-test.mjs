@@ -14,32 +14,37 @@
 // banks with a fresh minimal-PV search (the same meets() constraint the engine
 // uses) and compares true 20-year cost. Fully offline and deterministic.
 //
-// Findings pinned here (Honolulu, 10 kWh/day, cut-80%, 20-yr horizon):
-//   * Premise holds mechanically: 2x LFP bank halves cycles/yr (~596 -> ~297)
-//     and mean daily swing (~82% -> ~41%) — the bank barely drains.
-//   * LFP: 2x -> 0 swaps at ~the same 20-yr cost ($2,836 -> $2,814, noise).
-//   * Sodium: oversize actually WINS — the engine's 2-swap pick ($3,859) is
-//     beaten by a 1.5x bank with 1 swap and by a 3x bank with 0 swaps
-//     (both ~$3,720, -$139). The engine's coarse scan misses this optimum
-//     (its pvFloor shortcut traps PV ~5.9 kW on later battery rows and the
-//     refinement pass only nudges battery ±1 kWh).
+// Findings pinned here (Honolulu, 10 kWh/day, cut-80%, 20-yr horizon,
+// re-pinned Sept 2026 after per-chemistry battery pricing (aaac300) and
+// verified-oversize adoption (#6); costs use each chemistry's OWN landed-mid
+// $/usable-kWh, mirroring run.js):
+//   * LFP: engine pick is the tight 1-swap bank; 2x halves cycles/yr
+//     (~582 -> ~297) and mean daily swing (~80% -> ~41%), reaching 0 swaps
+//     at ~the same 20-yr cost ($2,814 -> $2,814, noise).
+//   * Sodium: the engine now picks the 0-swap optimum ITSELF (13 kWh, 0 swaps,
+//     $3,549, scenario zero_swap_natural) — forced 1.5x/2x/3x banks stay
+//     0-swap but cost strictly more (+$1,274/+$2,548/+$5,096). Oversize wins
+//     nothing: the lifetime-cost search already internalized the tradeoff.
 //   * AGM: oversize NEVER pays — swaps stay capped at 8 until 3x (7) and the
-//     3x system costs ~$16k more.
-//   * London (cloudy) robustness: LFP already lands on 0 swaps (gentle ~299
-//     cycles/yr) so oversize only adds cost; sodium 2x reaches 0 swaps at
-//     ~neutral cost (-$74). The strategy's shape survives cloudiness.
+//     3x system costs ~$27.5k more.
+//   * London (cloudy) robustness: LFP already lands on 0 swaps (gentle ~298
+//     cycles/yr) so oversize only adds cost (+$687); sodium likewise picks
+//     0 swaps ($4,317) with 2x adding ~$1,935.
+//   * Net: deliberate oversizing is not a strategy the tool should recommend
+//     anywhere in this envelope — the engine adopts a verified-cheaper
+//     oversized bank on its own, and the scenario note always matches the
+//     recommended system (see tests/oversize-adopt.test.mjs).
 //
 // Run: node scripts/swap-strategy-test.mjs   (manual research script — NOT run
-// in CI; `npm test` scopes to tests/. Pinned Aug-2026 findings predate the
-// Sept-2026 engine unification (aaac300: per-chemistry pricing, first-labor
-// accounting) and need re-pinning before re-wiring to CI.)
+// in CI; `npm test` scopes to tests/. Re-pinned Sept 2026 to the unified
+// engine; re-pin again if sizing economics change.)
 
 import { buildE1kw, flatProfile, expandProfile, sizeForBillCut,
          simulateOffset, dailyExtremes, CHEMISTRIES, capacityScaleFor } from "../assets/js/sizing/engine.js";
 import { batteryReplacements, lifetimeCostUsd, INSTALL_LABOR_PER_KWH_USABLE, HORIZON_YEARS } from "../assets/js/sizing/money.js";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
 import { OFFLINE_PROFILES } from "../assets/js/sizing/profiles.js";
-import { getScope, estimateTariff } from "../assets/js/sizing/pricing.js";
+import { getScope, estimateTariff, landedMidBattKwhFor } from "../assets/js/sizing/pricing.js";
 
 const DAILY_KWH = 10;
 const CUT = 0.8;
@@ -65,7 +70,9 @@ function site(cityName) {
     loadTotal: [...loadWh].reduce((a, b) => a + b, 0),
     laborPerKwh: INSTALL_LABOR_PER_KWH_USABLE.map((v) => v * laborF),
     costPerWpvMid: (landedScope.pvPerW[0] + landedScope.pvPerW[1]) / 2 * landedF,
-    landedMidBattKwh: (landedScope.battPerKwhUsable[0] + landedScope.battPerKwhUsable[1]) / 2 * landedF,
+    // Per-chemistry landed-mid battery $/usable-kWh, mirroring run.js
+    // (aaac300: replacement banks are costed at their OWN chemistry's rate).
+    battMid: (chem) => landedMidBattKwhFor(chem, landedF),
     costPerKwInvMid: (landedScope.invPerKw[0] + landedScope.invPerKw[1]) / 2 * landedF,
   };
 }
@@ -73,10 +80,11 @@ function site(cityName) {
 /** True 20-yr cost of a (pv, batt) system, with swaps + labor (mirrors run.js). */
 function lifetimeFor(s, chem, pvKw, battKwh, cyclesPerYear) {
   const replacements = batteryReplacements(cyclesPerYear, CHEMISTRIES[chem].cyclesTo80);
+  const battMid = s.battMid(chem);
   const life = lifetimeCostUsd({
-    capexMidUsd: pvKw * 1000 * s.costPerWpvMid + pvKw * s.costPerKwInvMid + battKwh * s.landedMidBattKwh,
+    capexMidUsd: pvKw * 1000 * s.costPerWpvMid + pvKw * s.costPerKwInvMid + battKwh * battMid,
     battKwhUsable: battKwh,
-    battPriceMidPerKwh: s.landedMidBattKwh,
+    battPriceMidPerKwh: battMid,
     replacements,
     laborPerKwh: s.laborPerKwh,
   });
@@ -122,7 +130,7 @@ function scenario(cityName, chem) {
   const pick = sizeForBillCut({
     e1kw: s.e1kw, loadWh: s.loadWh, tempsC: s.tempsC, chemistry: chem,
     minFraction: CUT, years: 1,
-    costPerWpv: s.costPerWpvMid, costPerKwhBatt: s.landedMidBattKwh, costPerKwInv: s.costPerKwInvMid,
+    costPerWpv: s.costPerWpvMid, costPerKwhBatt: s.battMid(chem), costPerKwInv: s.costPerKwInvMid,
     pvMax: 45, battMax: 120, battStep: 1, capacityScale: capScale, laborPerKwh: s.laborPerKwh,
   });
   if (!pick) throw new Error(`${cityName} ${chem}: cut${CUT * 100} unsolvable`);
@@ -162,15 +170,16 @@ console.log("— Honolulu LFP: oversize is swap-free at ~neutral cost —");
     x2.cost.replacements === 0 && Math.abs(x2.cost.total - pickCost.total) < 100);
 }
 
-console.log("\n— Honolulu Sodium-Ion: oversize actually beats the engine's pick —");
+console.log("\n— Honolulu Sodium-Ion: engine already picks the 0-swap optimum —");
 {
   const { pick, pickCost, rows } = h.naion;
-  check(`engine pick carries ${pickCost.replacements} swaps ($${pickCost.total}) — the case the user wants to improve`, pickCost.replacements === 2);
-  const best = rows.reduce((a, r) => (r.cost.total < a.cost.total ? r : a), rows[0]);
-  check(`oversize saves real money: ${best.m}x bank (${best.battKwh} kWh, ${best.cost.replacements} swaps) costs $${best.cost.total} vs pick $${pickCost.total}`,
-    best.cost.replacements <= 1 && best.cost.total < pickCost.total - 100);
-  const x3 = rows.find((r) => r.m === 3);
-  check(`3x bank is solidly 0-swap`, x3.cost.replacements === 0 && x3.cost.total < pickCost.total - 100);
+  check(`engine pick carries ${pickCost.replacements} swaps ($${pickCost.total}) with a matching note (${pick.oversizeScenario})`,
+    pickCost.replacements === 0 && pick.oversizeScenario === "zero_swap_natural");
+  for (const m of [1.5, 2, 3]) {
+    const row = rows.find((r) => r.m === m);
+    check(`${m}x bank (${row.battKwh} kWh, ${row.cost.replacements} swaps) only adds cost ($${row.cost.total} vs pick $${pickCost.total})`,
+      row.cost.replacements === 0 && row.cost.total > pickCost.total + 500);
+  }
 }
 
 console.log("\n— Honolulu AGM: oversize never pays —");
@@ -194,13 +203,13 @@ console.log("\n— London LFP: cloudy → the pick is already 0-swap —");
   const x15 = rows.find((r) => r.m === 1.5);
   check(`oversizing only adds cost (+$${x15.cost.total - pickCost.total})`, x15.cost.total > pickCost.total + 500);
 }
-console.log("\n— London Sodium-Ion: 2x reaches 0 swaps at ~neutral cost —");
+console.log("\n— London Sodium-Ion: pick already 0-swap, oversize only adds cost —");
 {
   const { pick, pickCost, rows } = l.naion;
-  check(`pick carries ${pickCost.replacements} swap`, pickCost.replacements === 1);
+  check(`pick carries ${pickCost.replacements} swaps ($${pickCost.total})`, pickCost.replacements === 0);
   const x2 = rows.find((r) => r.m === 2);
-  check(`2x bank -> ${x2.cost.replacements} swaps at ~neutral cost ($${x2.cost.total} vs $${pickCost.total})`,
-    x2.cost.replacements === 0 && Math.abs(x2.cost.total - pickCost.total) < 150);
+  check(`2x bank (${x2.battKwh} kWh, ${x2.cost.replacements} swaps) only adds cost ($${x2.cost.total} vs $${pickCost.total})`,
+    x2.cost.replacements === 0 && x2.cost.total > pickCost.total + 500);
 }
 
 console.log(`\n${fails === 0 ? "ALL SWAP-STRATEGY CHECKS PASSED" : fails + " CHECK(S) FAILED"}`);
