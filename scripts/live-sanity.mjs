@@ -23,7 +23,10 @@ check(
 );
 check("no replacement char U+FFFD", !html.includes("\uFFFD"));
 
-// 2. Feature markers from every phase
+// 2. Feature markers from every phase. Copy is matched whitespace-insensibly:
+// Prettier wraps long text nodes across lines, so collapse runs of whitespace
+// before matching (an exact-includes would false-fail on wrapped copy).
+const flat = html.replace(/\s+/g, " ");
 for (const m of [
   'id="moneyBar"',
   'id="printSheet"',
@@ -41,16 +44,16 @@ for (const m of [
   'id="cumCostChartWrap"',
   'id="cumCostCanvas"',
   'id="cumCostCaption"',
-  // PWA
+  // PWA (SW registration moved to assets/js/chat.js with the chat-bridge
+  // extraction — the HTML only keeps the manifest hook)
   'rel="manifest"',
-  "./sw.js",
   'name="theme-color"',
   // SEO
   'id="faq"',
   "application/ld+json",
   '"WebApplication"',
 ])
-  check("marker: " + m.slice(0, 40), html.includes(m));
+  check("marker: " + m.slice(0, 40), flat.includes(m.replace(/\s+/g, " ")));
 
 // stale artifacts absent
 for (const m of ["$75,185", "netSavingsVal", "851.85", "\u00e2\u20ac"]) {
@@ -79,6 +82,21 @@ for (const [path, needle] of mods) {
   });
   const txt = r.status === 200 ? await r.text() : "";
   check(`module ${path} (+content)`, r.status === 200 && txt.includes(needle));
+}
+// Advisor chat bridge (extracted classic script) serves and registers the
+// service worker for the offline story.
+{
+  const r = await fetch(
+    BASE + "assets/js/chat.js?v=" + (uiToken || Date.now()),
+    { cache: "no-store" },
+  );
+  const txt = r.status === 200 ? await r.text() : "";
+  check(
+    "chat.js serves with SW registration",
+    r.status === 200 &&
+      txt.includes("serviceWorker") &&
+      txt.includes("sendChatMsg"),
+  );
 }
 // The worker/run/money chain must carry the same token so the immutable
 // HTTP cache and the service worker both miss on every changed asset.
