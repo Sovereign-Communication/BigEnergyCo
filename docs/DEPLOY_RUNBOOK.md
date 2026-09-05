@@ -56,6 +56,28 @@ npx --yes wrangler pages deploy _pages_staging --project-name bigenergyco --bran
 
 Record the deployment URL printed by Wrangler.
 
+## API abuse hardening (Worker + WAF)
+
+`/api/chat` is public and unauthenticated. Enforcement is layered:
+
+1. **Hard per-minute cap** — the `RL_CHAT_PER_MIN` rate-limiting binding in
+   `worker/wrangler.json` (8 req/min per IP), checked before any paid Groq call.
+2. **Soft in-isolate caps** — 150/day per IP + 3000/day global in
+   `worker/index.js` (`checkRateLimit`). These reset on isolate eviction, so
+   they brake bursts but are not hard guarantees.
+3. **Cloudflare WAF (recommended)** — for a hard guarantee that survives
+   isolate eviction, add a WAF rate-limiting rule on the API hostname
+   (Security → WAF → Rate limiting rules; skip if the zone plan lacks it —
+   layers 1–2 remain the enforcement):
+   - Rule: `bigenergyco-api chat per-IP burst` — if incoming requests match
+     `http.request.uri.path eq "/api/chat" and http.request.method eq "POST"`,
+     characteristics: IP, period 60 s, limit 8, mitigate: block 60 s.
+   - Rule: `bigenergyco-api chat per-IP day` — same match, characteristics:
+     IP, period 24 h, limit 150, mitigate: block 1 h.
+
+Verify limits live via `/api/health` (returns the enforced numbers and the
+`promptVersion` now pinned there) and `tests/worker.test.mjs` (runs in CI).
+
 ## Production verification
 
 Run the live sweep. It must use `https://bigenergyco.pages.dev/`, never a GitHub Pages fallback URL:

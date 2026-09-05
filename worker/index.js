@@ -36,11 +36,11 @@ const ALLOWED_ORIGINS = new Set([
   "http://localhost:7510",
 ]);
 
-function getAllowedOrigin(origin) {
+export function getAllowedOrigin(origin) {
   return origin && ALLOWED_ORIGINS.has(origin) ? origin : null;
 }
 
-function corsHeaders(origin) {
+export function corsHeaders(origin) {
   const headers = {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
@@ -57,6 +57,7 @@ function jsonResponse(data, status = 200, origin = null, extraHeaders = {}) {
     headers: {
       ...corsHeaders(origin),
       "Content-Type": "application/json",
+      "Cache-Control": "no-store",
       ...extraHeaders,
     },
   });
@@ -114,7 +115,7 @@ export function getClientIp(request) {
   );
 }
 
-function sanitizeAndCloseReply(text) {
+export function sanitizeAndCloseReply(text) {
   if (!text || typeof text !== "string") return text;
   let cleaned = text.trimEnd();
 
@@ -326,7 +327,15 @@ export default {
         status: "ok",
         service: "BigEnergyCo Cloudflare Worker API",
         version: "2.1",
-        model: GROQ_PRIMARY_MODEL
+        model: GROQ_PRIMARY_MODEL,
+        promptVersion: SYSTEM_PROMPT_VERSION,
+        rateLimits: {
+          perIpPerMinute: RATE_PER_IP_PER_MIN,
+          perIpPerDay: RATE_PER_IP_PER_DAY,
+          globalPerDay: RATE_GLOBAL_PER_DAY,
+          maxMessageChars: MAX_MESSAGE_CHARS,
+          maxBodyBytes: MAX_BODY_BYTES,
+        },
       }, 200, origin);
     }
 
@@ -338,6 +347,7 @@ export default {
   },
 };
 
+export const SYSTEM_PROMPT_VERSION = "2026-08a";
 const SYSTEM_PROMPT = `You are the BigEnergyCo AI Advisor — a free educational advisor for off-grid solar and battery storage, worldwide. Today is August 2026.
 
 SERVICE: BigEnergyCo is a free educational tool by Lucas Ballek (Hawaii). It sells nothing and offers no procurement. Cell models/brands mentioned by users are illustrative only. Educational estimates only; always recommend verification by a licensed professional before buying or building anything.
