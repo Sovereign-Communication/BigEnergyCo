@@ -41,6 +41,7 @@ let resultLevel = "best";
 // Quick (auto-run) mode shows only the location controls and sizes with
 // defaults; Manual reveals the full form. Default is quick.
 let quickMode = true;
+let locationResolved = false;
 
 // The monthly-bill slider stores the user's real input as consumed ENERGY
 // (kWh/day, default 20) and re-expresses that as local currency whenever the
@@ -637,6 +638,11 @@ function renderSunPath(lat) {
 
   if (!wrap) return;
 
+  if (!locationResolved && !lastPayload) {
+    wrap.style.display = "none";
+    return;
+  }
+
   const validLat = Number.isFinite(lat) ? Math.max(-90, Math.min(90, lat)) : 21.31;
 
   const absLat = Math.abs(validLat);
@@ -830,6 +836,14 @@ function renderChemTempVisualizer(lat) {
 
 function setCoords(lat, lon, label, region, country) {
 
+  locationResolved = true;
+
+  const billWrap = $("billSliderWrap");
+  if (billWrap) billWrap.style.display = "block";
+
+  const note = $("quickBillNote");
+  if (note && quickMode) note.style.display = "block";
+
   const latEl = $("latInput");
 
   const lonEl = $("lonInput");
@@ -846,6 +860,11 @@ function setCoords(lat, lon, label, region, country) {
 
   currencyTouched = false;
 
+  if (lastPayload && lastPayload.input &&
+      (Math.abs(lastPayload.input.latitude - lat) > 0.05 || Math.abs(lastPayload.input.longitude - lon) > 0.05)) {
+    lastPayload = null;
+  }
+
   applyEstimatedTariff(lat, lon, region, country);
 
   updateFuelUnits();
@@ -853,6 +872,8 @@ function setCoords(lat, lon, label, region, country) {
   renderSunPath(lat);
 
   renderChemTempVisualizer(lat);
+
+  updateShareHash(lastPayload, readInputs());
 
 }
 
@@ -983,7 +1004,7 @@ function renderCities() {
         const button = el("button", { type: "button", role: "option", class: "city-suggestion" }, `${formatCityLabel(c)}${population}`);
         button.dataset.index = String(i);
         button.addEventListener("mousedown", (event) => event.preventDefault());
-        button.addEventListener("click", () => { cancelAutoResolve(); setCoords(c.lat, c.lon, `Sunshine data from ${formatCityLabel(c)}`, c.r, c.country); lastResolvedQuery = normalizeCityQuery(search.value); search.value = formatCityLabel(c); list.hidden = true; search.setAttribute("aria-expanded", "false"); if (quickMode) run(); });
+        button.addEventListener("click", () => { cancelAutoResolve(); setCoords(c.lat, c.lon, `Sunshine data from ${formatCityLabel(c)}`, c.r, c.country); lastResolvedQuery = normalizeCityQuery(search.value); search.value = formatCityLabel(c); list.hidden = true; search.setAttribute("aria-expanded", "false"); run(); });
         list.appendChild(button);
       });
       active = -1;
@@ -1027,7 +1048,7 @@ function renderCities() {
         search.value = formatCityLabel(local);
         list.hidden = true;
         search.setAttribute("aria-expanded", "false");
-        if (quickMode) run();
+        run();
         return;
       }
       lookupBusy = true;
@@ -1040,7 +1061,7 @@ function renderCities() {
         search.value = formatCityLabel(match);
         list.hidden = true;
         search.setAttribute("aria-expanded", "false");
-        if (quickMode) run();
+        run();
       }
     };
     search.addEventListener("keydown", (event) => {
@@ -1070,10 +1091,6 @@ function renderCities() {
     });
     search.addEventListener("blur", () => { cancelAutoResolve(); setTimeout(() => { list.hidden = true; search.setAttribute("aria-expanded", "false"); }, 150); });
   }
-  // Initialize with the first reference city, while keeping the visible
-  // control exclusively type-ahead based.
-  const first = CITY_PRESETS[0];
-  if (first) setCoords(first.lat, first.lon, `Sunshine data from ${first.name}`);
 }
 
 async function expandCitySearch() {
@@ -1143,9 +1160,7 @@ function locateMe() {
       // Auto-run is the default: the bill + cut sliders above were already
       // pre-configured (and stay adjustable), so location alone is enough.
 
-      if (quickMode) run();
-
-      else setStatus(" Location set. Now tell us your power use below, then run the sizing.");
+      run();
 
     },
 
@@ -1179,7 +1194,11 @@ function setQuickMode(on) {
 
   const note = $("quickBillNote");
 
-  if (note) note.style.display = on ? "block" : "none";
+  if (note) note.style.display = on ? (locationResolved ? "block" : "none") : "none";
+
+  const billWrap = $("billSliderWrap");
+
+  if (billWrap) billWrap.style.display = on ? (locationResolved ? "block" : "none") : "block";
 
   const locBtn = $("btnGeoLocate");
 
@@ -1424,7 +1443,7 @@ function mergeReSlice(result) {
     // system, so the card, charts, BOM, export and share link all follow it.
     if (!p.auto && p.mode === "gridtie") {
       renderTargetCards(p, [p.customTarget]);
-      refreshSelectionOutputs(p);
+      if (selectedKey === "custom" || selectedKey === "best" || !selectedKey) refreshSelectionOutputs(p);
     }
   }
   // Auto grid-tie: the recommendation follows the bill-cut slider. The worker
@@ -2147,9 +2166,33 @@ function renderAutoCards(p) {
 
   for (const a of p.auto) {
 
-    const card = el("div", { class: "bom-card" });
+    const isSelected = selectedKey === "auto:" + a.chemistry;
 
-    card.style.borderColor = a.chemistry === bestId ? "var(--border-glow)" : "var(--border-card)";
+    const card = el("div", {
+      class: "bom-card" + (a.solvable ? " card-selectable" : "") + (isSelected ? " bom-card-selected" : "")
+    });
+
+    if (a.solvable) {
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.style.cursor = "pointer";
+      const selectCard = () => {
+        selectedKey = "auto:" + a.chemistry;
+        refreshSelectionOutputs(p);
+        renderAutoCards(p);
+      };
+      card.addEventListener("click", selectCard);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectCard();
+        }
+      });
+    }
+
+    card.style.borderColor = isSelected
+      ? "var(--primary-accent)"
+      : (a.chemistry === bestId ? "var(--border-glow)" : "var(--border-card)");
 
     card.appendChild(el("div", { class: "bom-badge" }, isGT && a.cutPct ? `Bill -${a.cutPct}%` : "Same job done"));
 
@@ -2439,7 +2482,26 @@ function resolveSelected(p) {
     const cell = p.matrix.cells[key.slice("matrix:".length)];
     if (cell && cell.solvable) return cell;
   }
-  return p.best || (p.customCut && p.customCut.best) || p.customTarget || null;
+  if (key.indexOf("auto:") === 0 && p.auto) {
+    const chem = key.slice("auto:".length);
+    const entry = p.auto.find((a) => a.chemistry === chem);
+    if (entry && entry.solvable) return entry;
+  }
+  if (key.indexOf("tier:") === 0 && p.tiers) {
+    const tid = key.slice("tier:".length);
+    const entry = p.tiers.find((t) => t.id === tid);
+    if (entry && entry.solvable) return entry;
+  }
+  if (key.indexOf("target:") === 0 && (p.targets || p.customTarget)) {
+    const tid = key.slice("target:".length);
+    const pool = (p.targets || []).concat(p.customTarget ? [p.customTarget] : []);
+    const entry = pool.find((t) => t.id === tid);
+    if (entry && entry.solvable) return entry;
+  }
+  return p.best || (p.customCut && p.customCut.best) || p.customTarget || p.focusSystem ||
+    (p.auto && p.auto.find((a) => a.solvable)) ||
+    (p.targets && p.targets.find((t) => t.solvable)) ||
+    (p.tiers && p.tiers.find((t) => t.solvable)) || null;
 }
 
 // If the entry carries a full 20-year cost series, append the bills-split so
@@ -2830,9 +2892,33 @@ function renderTierCards(p) {
 
   for (const t of p.tiers) {
 
-    const card = el("div", { class: "bom-card" });
+    const isSelected = selectedKey === "tier:" + t.id;
 
-    card.style.borderColor = t.id === "tier100" ? "var(--border-glow)" : "var(--border-card)";
+    const card = el("div", {
+      class: "bom-card" + (t.solvable ? " card-selectable" : "") + (isSelected ? " bom-card-selected" : "")
+    });
+
+    if (t.solvable) {
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.style.cursor = "pointer";
+      const selectCard = () => {
+        selectedKey = "tier:" + t.id;
+        refreshSelectionOutputs(p);
+        renderTierCards(p);
+      };
+      card.addEventListener("click", selectCard);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectCard();
+        }
+      });
+    }
+
+    card.style.borderColor = isSelected
+      ? "var(--primary-accent)"
+      : (t.id === "tier100" ? "var(--border-glow)" : "var(--border-card)");
 
     card.appendChild(el("div", { class: "bom-badge" },
 
@@ -2930,9 +3016,35 @@ function renderTargetCards(p, extraTargets = []) {
 
     const isCustom = t.id === "custom";
 
-    const card = el("div", { class: "bom-card" });
+    const targetKey = isCustom ? "custom" : "target:" + t.id;
 
-    card.style.borderColor = (isCustom || t.id === "cut80") ? "var(--border-glow)" : "var(--border-card)";
+    const isSelected = selectedKey === targetKey;
+
+    const card = el("div", {
+      class: "bom-card" + (t.solvable ? " card-selectable" : "") + (isSelected ? " bom-card-selected" : "")
+    });
+
+    if (t.solvable) {
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.style.cursor = "pointer";
+      const selectCard = () => {
+        selectedKey = targetKey;
+        refreshSelectionOutputs(p);
+        renderTargetCards(p, extraTargets);
+      };
+      card.addEventListener("click", selectCard);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectCard();
+        }
+      });
+    }
+
+    card.style.borderColor = isSelected
+      ? "var(--primary-accent)"
+      : ((isCustom || t.id === "cut80") ? "var(--border-glow)" : "var(--border-card)");
 
     card.appendChild(el("div", { class: "bom-badge" }, t.solvable
 
@@ -3890,7 +4002,9 @@ function renderResults(p) {
 
   lastPayload = p;
 
-  adoptedEntry = null;       // a new full run supersedes any instant adoption
+  if (selectedKey !== "adopted") {
+    adoptedEntry = null;
+  }
 
   frontierSelected = null;   // new result -> blue dot follows the new recommendation
 
@@ -3911,13 +4025,28 @@ function renderResults(p) {
   if (cutRow) cutRow.style.display = isGT ? "block" : "none";
   syncCutLabel();
 
-  // Drop a stale selection that no longer exists in this payload.
-  const selKeyV = selectedKey || "best";
-  if (selKeyV !== "best" && selKeyV !== "focus" && selKeyV !== "custom" && selKeyV !== "adopted" && selKeyV.indexOf("matrix:") !== 0) selectedKey = "best";
-  if (selectedKey === "adopted" && !adoptedEntry) selectedKey = "best";
-  if (selectedKey === "focus" && !p.focusSystem) selectedKey = "best";
-  if (selectedKey === "custom" && !(p.customCut && p.customCut.entries && p.customCut.entries.length) && !p.customTarget) selectedKey = "best";
-  if (selectedKey.indexOf("matrix:") === 0 && !(p.matrix && p.matrix.cells[selectedKey.slice(7)])) selectedKey = "best";
+  // Validate and preserve selection
+  let selValid = false;
+  if (selectedKey === "best" && p.best) selValid = true;
+  else if (selectedKey === "focus" && p.focusSystem) selValid = true;
+  else if (selectedKey === "custom" && ((p.customCut && p.customCut.entries && p.customCut.entries.length) || p.customTarget)) selValid = true;
+  else if (selectedKey === "adopted" && adoptedEntry) selValid = true;
+  else if (selectedKey.indexOf("matrix:") === 0 && p.matrix && p.matrix.cells && p.matrix.cells[selectedKey.slice(7)] && p.matrix.cells[selectedKey.slice(7)].solvable) selValid = true;
+  else if (selectedKey.indexOf("auto:") === 0 && p.auto && p.auto.some((a) => "auto:" + a.chemistry === selectedKey && a.solvable)) selValid = true;
+  else if (selectedKey.indexOf("tier:") === 0 && p.tiers && p.tiers.some((t) => "tier:" + t.id === selectedKey && t.solvable)) selValid = true;
+  else if (selectedKey.indexOf("target:") === 0 && (p.targets || p.customTarget) &&
+    (p.targets || []).concat(p.customTarget ? [p.customTarget] : []).some((t) => "target:" + t.id === selectedKey && t.solvable)) selValid = true;
+
+  if (!selValid) {
+    if (p.best) selectedKey = "best";
+    else if (p.customTarget && p.customTarget.solvable) selectedKey = "custom";
+    else if (p.auto && p.auto.some((a) => a.solvable)) selectedKey = "auto:" + p.auto.find((a) => a.solvable).chemistry;
+    else if (p.targets && p.targets.some((t) => t.solvable)) selectedKey = "target:" + p.targets.find((t) => t.solvable).id;
+    else if (p.tiers && p.tiers.some((t) => t.solvable)) selectedKey = "tier:" + p.tiers.find((t) => t.solvable).id;
+    else selectedKey = "best";
+  }
+
+  renderSunPath(p.input?.latitude ?? parseFloat($("latInput")?.value));
 
   renderMoneyBar(p);
 
@@ -4210,24 +4339,23 @@ function updateShareHash(p, inp) {
 
     if (inp.mode === "gridtie") {
       o.cc = inp.customCut;
-      o.sel = selectedKey;
     }
+
+    if (selectedKey) o.sel = selectedKey;
 
     if (inp.tariff) o.tf = inp.tariff;
 
     if (inp.exportRate) o.xr = inp.exportRate;
 
-    const sized = p.auto && p.auto.length
+    if (p) {
+      const sized = p.auto && p.auto.length
+        ? p.auto.filter((t) => t.solvable).map((t) => [t.pvKw, t.battKwh])
+        : p.mode === "gridtie"
+          ? (p.targets || []).filter((t) => t.solvable).map((t) => [t.pvKw, t.battKwh])
+          : (p.tiers || []).filter((t) => t.solvable).map((t) => [t.pvKw, t.battKwh]);
 
-      ? p.auto.filter((t) => t.solvable).map((t) => [t.pvKw, t.battKwh])
-
-      : p.mode === "gridtie"
-
-        ? p.targets.filter((t) => t.solvable).map((t) => [t.pvKw, t.battKwh])
-
-        : p.tiers.filter((t) => t.solvable).map((t) => [t.pvKw, t.battKwh]);
-
-    if (sized.length) o.t = sized;
+      if (sized && sized.length) o.t = sized;
+    }
 
     history.replaceState(null, "", "#s=" + b64urlEncode(o));
 
@@ -4248,6 +4376,8 @@ function restoreFromShare() {
   const lat = parseFloat(o.la), lon = parseFloat(o.lo), kw = parseFloat(o.kw);
 
   if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(kw)) return false;
+
+  locationResolved = true;
 
   $("coordDetails").open = true;
 
@@ -4274,7 +4404,7 @@ function restoreFromShare() {
     syncCutLabel();
   }
 
-  if (typeof o.sel === "string" && /^(best|focus|custom|matrix:[a-z]+:(cut60|cut80|cut95|custom))$/.test(o.sel)) {
+  if (typeof o.sel === "string" && /^(best|focus|custom|adopted|matrix:[a-z]+:(cut60|cut80|cut95|custom)|auto:[a-z]+|tier:[a-z0-9]+|target:[a-z0-9]+)$/.test(o.sel)) {
     selectedKey = o.sel;
   }
 
@@ -4967,7 +5097,12 @@ export function initSizingUI() {
 
   // (weather is cached, so this is fast). Visibility follows mode+chemistry.
 
-  $("chemSelect").addEventListener("change", () => { updateAutoRows(); renderChemTempVisualizer(); });
+  $("chemSelect").addEventListener("change", () => {
+    updateAutoRows();
+    renderChemTempVisualizer();
+    selectedKey = "best";
+    if (lastPayload) scheduleRun(true);
+  });
 
   if ($("systemGoal")) $("systemGoal").addEventListener("change", () => { updateAutoRows(); });
 
@@ -5039,7 +5174,9 @@ export function initSizingUI() {
     if (Number.isFinite(lat) && Number.isFinite(lon)) {
       if (coordDebounceTimer) clearTimeout(coordDebounceTimer);
       coordDebounceTimer = setTimeout(() => {
+        locationResolved = true;
         applyEstimatedTariff(lat, lon);
+        updateShareHash(lastPayload, readInputs());
         if (lastPayload) scheduleRun(true);
       }, 500);
     }

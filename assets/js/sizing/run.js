@@ -322,6 +322,11 @@ export async function runSizing(msg, deps = {}) {
       paybackYearsLo: null,
       paybackYearsHi: null,
       trueBreakEvenYear: null,
+      cumCostSeries: null,
+      chemistry: chemId,
+      chemLabel: m.chemObj.label,
+      battNameplateKwh: m.battNameplateKwh,
+      usableDod: m.chemObj.usableDod,
     };
     let savings = null;
     if (kind === "offgrid") {
@@ -339,6 +344,7 @@ export async function runSizing(msg, deps = {}) {
       cell.paybackYearsLo = paybackYears(m.cost.lo, savings);
       cell.paybackYearsHi = paybackYears(m.cost.hi, savings);
       cell.trueBreakEvenYear = breakEvenFor(m, savings);
+      cell.cumCostSeries = cumCostFor(m, savings);
     }
     return cell;
   }
@@ -453,11 +459,79 @@ export async function runSizing(msg, deps = {}) {
     return cell;
   };
 
+  const computeFocusSystem = (fPvKw, fBattKwh, fChemOverride, defaultChem) => {
+    if (fPvKw === null || fPvKw === undefined || fBattKwh === null || fBattKwh === undefined) return null;
+    const fPv = +Number(fPvKw).toFixed(2);
+    const fBatt = Math.max(0, Math.round(Number(fBattKwh)));
+    if (!Number.isFinite(fPv) || !Number.isFinite(fBatt) || fPv <= 0) return null;
+    if (mode === "offgrid" && fBatt <= 0) return null;
+    const fChem = (fChemOverride && CHEMISTRIES[fChemOverride]) ? fChemOverride : defaultChem;
+    const fScale = capacityScaleFor(fChem, meanTempC);
+    if (mode === "gridtie") {
+      const fSized = {
+        pvKw: fPv,
+        battKwh: fBatt,
+        result: simulateOffset({
+          pvKw: fPv, battKwhUsable: fBatt,
+          e1kw, loadWh, chemistry: fChem, tempsC,
+          capacityScale: fScale, capture: true,
+        }),
+      };
+      return entryFromSizing(fChem, fSized);
+    } else {
+      const sim = simulate({
+        pvKw: fPv, battKwhUsable: fBatt,
+        e1kw, loadWh, chemistry: fChem, tempsC,
+        capacityScale: fScale, capture: true,
+      });
+      const fSized = { pvKw: fPv, battKwh: fBatt, result: sim };
+      const m = moneyFor(fChem, fSized);
+      const yrs = series.meta.years;
+      const servYr = sim.servedWh / 1000 / yrs;
+      const lcoe = lcoeUsdPerKwh({
+        capexMidUsd: m.cost.objectiveMid,
+        battReplaceCostUsd: Math.round(fBatt * landedMidBattKwh),
+        replacements: m.replacementsHorizon,
+        annualServedKwh: servYr,
+      });
+      const chemObj = CHEMISTRIES[fChem] || CHEMISTRIES.lfp;
+      const entry = {
+        chemistry: fChem,
+        chemLabel: chemObj.label,
+        usableDod: chemObj.usableDod,
+        solvable: true,
+        pvKw: fPv,
+        battKwh: fBatt,
+        battNameplateKwh: m.battNameplateKwh,
+        costLo: m.cost.lo, costHi: m.cost.hi,
+        pvCostLo: m.cost.pvCostLo, pvCostHi: m.cost.pvCostHi,
+        battCostLo: m.cost.battCostLo, battCostHi: m.cost.battCostHi,
+        battPerKwhLo: m.cost.battPerKwhLo, battPerKwhHi: m.cost.battPerKwhHi,
+        unmetHoursPerYear: +(sim.unmetHours / yrs).toFixed(1),
+        longestGapHours: sim.longestGapHours,
+        replacementsHorizon: m.replacementsHorizon,
+        swapsAndLaborUsd: m.swapsAndLaborUsd,
+        lifetimeCostMid: m.lifetimeCostMid,
+        servedKwhPerYear: Math.round(servYr),
+        batteryLifeYears: m.batteryLifeYears,
+        cyclesPerYear: m.cyclesPerYear,
+        minSocPct: +(sim.minSoc * 100).toFixed(0),
+        lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
+        paybackYearsLo: gridSpend ? paybackYears(m.cost.lo, gridSpend) : null,
+        paybackYearsHi: gridSpend ? paybackYears(m.cost.hi, gridSpend) : null,
+        trueBreakEvenYear: breakEvenFor(m, gridSpend),
+        cumCostSeries: gridSpend !== null ? cumCostFor(m, gridSpend) : null,
+      };
+      entry.socNameplatePct = nameplateBands(sim, fBatt * 1000 * fScale, entry.battNameplateKwh * 1000, fChem);
+      return entry;
+    }
+  };
+
   // One bill-cut target for ONE fixed chemistry (manual grid-tie mode): same
   // money story / export economics / chart bands / cumulative series as a
   // card, so the focused target can drive the whole pipeline.
   const buildTarget = (chemId, id, label, minFraction, sizing, bandSink = null) => {
-    if (!sizing) return { id, label, solvable: false };
+    if (!sizing) return { id, label, solvable: false, chemistry: chemId, chemLabel: (CHEMISTRIES[chemId] || CHEMISTRIES.lfp).label };
     const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
     const capScale = capacityScaleFor(chemId, meanTempC);
     const m = moneyFor(chemId, sizing);
@@ -481,6 +555,8 @@ export async function runSizing(msg, deps = {}) {
     if (band && bandSink) bandSink.push(band);
     return {
       id, label, solvable: true,
+      chemistry: chemId,
+      chemLabel: chemObj.label,
       minFraction: minFraction ?? null,
       pvKw: sizing.pvKw, battKwh: sizing.battKwh,
       battNameplateKwh: m.battNameplateKwh,
@@ -879,25 +955,10 @@ export async function runSizing(msg, deps = {}) {
         best: customBest,
         surplus: customFracGt > 1,
       };
-      // "Use this system" from a curve point: don't size at all — simulate
-      // THAT exact (PV, battery) for the requested chemistry and adopt it as
-      // the focus system, honestly reporting its actual outcome and cost.
-      if (Number.isFinite(Number(focusPvKw)) && Number.isFinite(Number(focusBattKwh))) {
-        const fChem = (focusChemistry && CHEMISTRIES[focusChemistry]) ? focusChemistry : (payload.focus?.chemistry || "lfp");
-        const fSized = {
-          pvKw: +Number(focusPvKw).toFixed(2),
-          battKwh: Math.max(0, Math.round(Number(focusBattKwh))),
-          result: simulateOffset({
-            pvKw: Number(focusPvKw), battKwhUsable: Number(focusBattKwh),
-            e1kw, loadWh, chemistry: fChem, tempsC,
-            capacityScale: capacityScaleFor(fChem, meanTempC), capture: true,
-          }),
-        };
-        const focusEntry = entryFromSizing(fChem, fSized);
-        if (focusEntry) {
-          payload.focusSystem = focusEntry;
-          if (!payload.focus) payload.focus = focusFor(fChem, fSized);
-        }
+      const focusEntry = computeFocusSystem(focusPvKw, focusBattKwh, focusChemistry, payload.focus?.chemistry || "lfp");
+      if (focusEntry) {
+        payload.focusSystem = focusEntry;
+        if (!payload.focus) payload.focus = focusFor(focusEntry.chemistry, focusEntry);
       }
       payload.matrix = {
         kind: "gridtie",
@@ -930,6 +991,11 @@ export async function runSizing(msg, deps = {}) {
     payload.auto = null;
     const gtFocus = targets.find((x) => x.id === repTargetId && x.solvable) || targets.find((x) => x.solvable) || null;
     payload.focus = gtFocus ? focusFor(chemistry, gtFocus) : null;
+    const focusEntry = computeFocusSystem(focusPvKw, focusBattKwh, focusChemistry, chemistry);
+    if (focusEntry) {
+      payload.focusSystem = focusEntry;
+      payload.focus = focusFor(focusEntry.chemistry, focusEntry);
+    }
     payload.best = null;
     payload.bestReason = null;
     payload.matrix = null;
@@ -1039,6 +1105,11 @@ export async function runSizing(msg, deps = {}) {
         rows: ["naion", "lfp", "agm"].map((id) => ({ id, label: CHEMISTRIES[id].label })),
         cells: matrixCells,
       };
+      const focusEntry = computeFocusSystem(focusPvKw, focusBattKwh, focusChemistry, payload.focus?.chemistry || "lfp");
+      if (focusEntry) {
+        payload.focusSystem = focusEntry;
+        if (!payload.focus) payload.focus = focusFor(focusEntry.chemistry, focusEntry);
+      }
       payload.history = { kind: "auto", startYear: series.meta.startYear, endYear: series.meta.endYear, days: Math.ceil(hours.length / 24), pvDaily, tiers: [] };
     payload.assumptions.cycleLifeTo80 = Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]));
     payload.assumptions.money =
@@ -1058,6 +1129,7 @@ export async function runSizing(msg, deps = {}) {
     if (!sizing) {
       return {
         id: tier.id, label: tier.label, solvable: false,
+        chemistry, chemLabel: chem.label,
         pvKw: null, battKwh: null, battNameplateKwh: null, usableDod: chem.usableDod,
         costLo: null, costHi: null, unmetHoursPerYear: null, longestGapHours: null,
         cyclesPerYear: null, batteryLifeYears: null, minSocPct: null,
@@ -1081,6 +1153,7 @@ export async function runSizing(msg, deps = {}) {
      if (band) historyTiers.push(band);
      return {
        id: tier.id, label: tier.label, solvable: true,
+       chemistry, chemLabel: chem.label,
        pvKw: sizing.pvKw, battKwh: sizing.battKwh,
        battNameplateKwh: m.battNameplateKwh,
        usableDod: chem.usableDod,
@@ -1112,6 +1185,11 @@ export async function runSizing(msg, deps = {}) {
   payload.auto = null;
   const ogFocus = tiers.find((x) => x.id === repTierId && x.solvable) || tiers.find((x) => x.solvable) || null;
   payload.focus = ogFocus ? focusFor(chemistry, ogFocus) : null;
+  const focusEntry = computeFocusSystem(focusPvKw, focusBattKwh, focusChemistry, chemistry);
+  if (focusEntry) {
+    payload.focusSystem = focusEntry;
+    payload.focus = focusFor(focusEntry.chemistry, focusEntry);
+  }
   payload.best = null;
   payload.bestReason = null;
   payload.matrix = null;
