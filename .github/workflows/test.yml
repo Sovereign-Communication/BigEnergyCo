@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [main, "phase2/**"]
+    branches-ignore: [gh-pages]
   pull_request:
   workflow_dispatch:
 
@@ -39,6 +39,7 @@ jobs:
           node scripts/validate-jsonld.mjs
           node scripts/check-chars.mjs
           node scripts/check-seo.mjs
+          node scripts/bump-asset-tokens.mjs --check
 
       - name: Secret-scan tracked files
         run: |

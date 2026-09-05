@@ -10,7 +10,7 @@ echo.
 echo Press any key to start...
 pause >nul
 
-cd /d "c:\Users\SCM\Documents\GitHub\BigEnergyCo\BigEnergyCo\worker"
+cd /d "%~dp0worker"
 
 echo.
 echo [1/3] Logging into Cloudflare...
@@ -22,8 +22,10 @@ wrangler deploy
 
 echo.
 echo [3/3] Adding Groq API Key as a secret...
-echo When prompted, paste your Groq API key (from https://console.groq.com/keys)
-echo Your key is stored at C:\Users\SCM\.config\scmorc\groq.env
+echo Paste your Groq API key (from https://console.groq.com/keys) when prompted.
+echo Tip: set a GROQ_API_KEY env var (see .env.example) and pipe it instead:
+echo   echo %GROQ_API_KEY% | wrangler secret put GROQ_API_KEY
+echo The key is stored only as a Worker secret - never commit it.
 echo.
 wrangler secret put GROQ_API_KEY
 

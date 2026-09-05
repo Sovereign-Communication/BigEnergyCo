@@ -28,21 +28,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Select deployable files
-        run: |
-          mkdir -p _pages/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage
-          mkdir -p _pages/blog/off-grid-vs-grid-tie-payback
-          mkdir -p _pages/blog/how-to-cut-electricity-bill-with-solar
-          cp index.html 404.html robots.txt sitemap.xml rss.xml sw.js manifest.webmanifest _pages/
-          cp blog/index.html _pages/blog/
-          cp "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html" "_pages/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/"
-          cp "blog/off-grid-vs-grid-tie-payback/index.html" "_pages/blog/off-grid-vs-grid-tie-payback/"
-          cp "blog/how-to-cut-electricity-bill-with-solar/index.html" "_pages/blog/how-to-cut-electricity-bill-with-solar/"
-          cp -r assets _pages/assets
-          cp -r solar-calculator _pages/solar-calculator
-          cp -r solar-heatmap _pages/solar-heatmap
-          cp _headers _pages/ 2>/dev/null || true
-          cp _redirects _pages/ 2>/dev/null || true
+        # Single source of truth: scripts/deploy-pages-local.mjs --check builds
+        # the allowlisted staging dir without pushing. Do NOT hand-maintain a
+        # second file list here — extend the ALLOWLIST in that script instead.
+        run: node scripts/deploy-pages-local.mjs --check --stage _pages
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

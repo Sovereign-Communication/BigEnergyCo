@@ -1,6 +1,6 @@
 // Unified city records used by the location combobox. The seed is instant and
 // offline; country partitions provide millions of additional place/coordinate pairs.
-import { usStateCode, US_STATES } from "./pricing.js?v=20260905a";
+import { usStateCode, US_STATES } from "./pricing.js?v=20260905c";
 
 export const CITY_CATALOG = [
   ["Honolulu", "United States", "Hawaii", 21.31, -157.86], ["Los Angeles", "United States", "California", 34.05, -118.24], ["Phoenix", "United States", "Arizona", 33.45, -112.07], ["Denver", "United States", "Colorado", 39.74, -104.99], ["Chicago", "United States", "Illinois", 41.88, -87.63], ["Miami", "United States", "Florida", 25.76, -80.19], ["New York", "United States", "New York", 40.71, -74.01], ["Toronto", "Canada", "Ontario", 43.65, -79.38], ["Mexico City", "Mexico", "North America", 19.43, -99.13],
@@ -101,13 +101,13 @@ export async function loadCityCatalog({ fetchImpl = globalThis.fetch, storage = 
     } catch { /* optional cache */ }
 
     try {
-      const response = await fetchImpl("./assets/js/sizing/city-data/index.json", { cache: "force-cache" });
+      const response = await fetchImpl("./assets/js/sizing/city-data/index.json?v=20260905c", { cache: "force-cache" });
       if (!response.ok) throw new Error(`city index HTTP ${response.status}`);
       const index = await response.json();
       const chunks = await Promise.all(index.map(async (item) => {
         const stem = item.file.replace(/\.json$/i, "");
         try {
-          const part = await fetchImpl(`./assets/js/sizing/city-data/${encodeURIComponent(stem)}.json`, { cache: "force-cache" });
+          const part = await fetchImpl(`./assets/js/sizing/city-data/${encodeURIComponent(stem)}.json?v=20260905c`, { cache: "force-cache" });
           if (part.ok) {
             return parseCityRows(await part.json());
           }
