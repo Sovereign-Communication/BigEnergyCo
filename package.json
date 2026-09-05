@@ -1,0 +1,16 @@
+{
+  "name": "bigenergyco",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Free worldwide solar & battery estimator (static site, zero runtime deps)",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\"",
+    "seo": "node scripts/validate-jsonld.mjs && node scripts/check-chars.mjs && node scripts/check-seo.mjs",
+    "deploy:check": "node scripts/deploy-pages-local.mjs --check"
+  },
+  "license": "SEE LICENSE IN LICENSE"
+}

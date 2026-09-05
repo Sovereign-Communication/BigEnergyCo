@@ -31,7 +31,7 @@ Cloudflare (`bigenergyco.pages.dev`) is the last-mile copy of the *same* build.
 
 1. **Run the checks locally** (what CI runs):
    ```bash
-   node --test
+   npm test
    node scripts/validate-jsonld.mjs
    node scripts/check-chars.mjs
    node scripts/deploy-pages-local.mjs --check

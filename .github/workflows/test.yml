@@ -48,6 +48,6 @@ jobs:
         run: node scripts/deploy-pages-local.mjs --check
 
       - name: Unit tests (offline)
-        run: node --test
+        run: npm test
 
       # Live-API validation is manual (network): node scripts/validate-live.mjs
