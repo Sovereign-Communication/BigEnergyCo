@@ -1,0 +1,27 @@
+name: Prod smoke
+
+# Weekly live sweep of the deployed brand domain plus manual trigger.
+# Never blocks merges (runs on schedule, not on PRs); a red run means
+# production drifted from main — see docs/DEPLOY_RUNBOOK.md.
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Live sanity sweep
+        run: node scripts/live-sanity.mjs

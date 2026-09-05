@@ -40,15 +40,17 @@ Do not deploy if any command fails.
 ## Release
 
 1. Commit only the intended source and runbook changes.
-2. Push to `main`.
-3. Wait for both GitHub Actions workflows for the exact pushed SHA:
+2. If the catalog price stamps (`POWMR_CATALOG.checkedDate`, `PRICES_CHECKED`)
+   are near a year old, re-verify against the PowMr catalog and bump them —
+   `tests/pricing.test.mjs` fails past 366 days.
+3. Push to `main`.
+4. Wait for both GitHub Actions workflows for the exact pushed SHA:
 
 ```bash
 gh run list --branch main --limit 2 --json workflowName,status,conclusion,headSha,url
 ```
 
-4. Build the allowlisted artifact and deploy that artifact to the actual Cloudflare Pages project:
-
+5. Build the allowlisted artifact and deploy that artifact to the actual Cloudflare Pages project:
 ```bash
 node scripts/deploy-pages-local.mjs --check
 npx --yes wrangler pages deploy _pages_staging --project-name bigenergyco --branch main
