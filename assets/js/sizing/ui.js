@@ -1559,6 +1559,7 @@ function setupMatrixSelection() {
   const pick = (key) => {
     const p = lastPayload;
     if (!p) return;
+    frontierSelected = null;
     selectedKey = "matrix:" + key;
     renderResults(p);
     // Cells open the same full-analysis modal as curve points, with
@@ -1886,17 +1887,9 @@ function drawSocChart(history, chemLabel) {
   if (!wrap || !canvas) return;
 
   const solvable = history.tiers.filter((t) => t.dailyMin && t.dailyMax && t.dailyMin.length);
-
   if (!solvable.length) {
-
-    wrap.style.display = "block";
-
-    const cap = $("socCaption");
-
-    if (cap) cap.textContent = "Warning: Chart data didn't match this page version - please refresh (Ctrl+F5 / ??R) and run the sizing again.";
-
+    wrap.style.display = "none";
     return;
-
   }
 
   cachedChartState = { type: "soc", history, chemLabel };
@@ -2179,6 +2172,7 @@ function renderAutoCards(p) {
       card.setAttribute("tabindex", "0");
       card.style.cursor = "pointer";
       const selectCard = () => {
+        frontierSelected = null;
         selectedKey = "auto:" + a.chemistry;
         refreshSelectionOutputs(p);
         renderAutoCards(p);
@@ -2352,13 +2346,18 @@ function renderBestPick(p) {
   const bestSuffix = solvableCount >= 2 ? " — cheapest compared" : "";
   const card = el("div", { class: "bom-card" });
   card.style.borderColor = "var(--border-glow)";
+  const title = (b.pvKw === 0 && b.battKwh > 0)
+    ? `${b.chemLabel}: ${fmt(b.battKwh)} kWh battery (peak-hour offset)`
+    : (b.battKwh === 0)
+      ? `${b.chemLabel}: ${b.pvKw} kW solar (no battery needed)`
+      : `${b.chemLabel}: ${b.pvKw} kW solar + ${fmt(b.battKwh)} kWh battery`;
   card.appendChild(el("div", { class: "bom-badge" }, "Recommended \u2014 lowest true 20-year cost"));
-  card.appendChild(el("h3", {}, `${b.chemLabel}: ${b.pvKw} kW solar + ${b.battKwh > 0 ? fmt(b.battKwh) + " kWh battery" : "no battery needed"}`));
+  card.appendChild(el("h3", {}, title));
   const rows = [
-    ["Solar array", `${b.pvKw} kW`],
-    ["Battery (usable)", b.battKwh > 0 ? `${fmt(b.battKwh)} kWh \u2014 ~${fmt(b.battNameplateKwh)} nameplate` : "none"],
+    ["Solar array", b.pvKw > 0 ? `${b.pvKw} kW` : "None (Battery-only)"],
+    ["Battery (usable)", b.battKwh > 0 ? `${fmt(b.battKwh)} kWh \u2014 ~${fmt(b.battNameplateKwh)} nameplate` : "None (Solar-only)"],
   ];
-  const foot = footprintText(b.pvKw);
+  const foot = b.pvKw > 0 ? footprintText(b.pvKw) : null;
   if (foot) rows.push(["Footprint", foot]);
   rows.push(["Cost to buy", `~${moneyRange(b.costLo, b.costHi)}`]);
   rows.push(["Battery swaps", b.replacementsHorizon > 0
@@ -2404,7 +2403,7 @@ function renderBestPick(p) {
 function matrixColShort(p, col) {
   if (p.mode === "gridtie") {
     if (col.custom) return col.label || `Your ~${p.customCut ? Math.round(p.customCut.fraction * 100) : 80}% target`;
-    return col.id === "cut60" ? "\u221260% bill" : col.id === "cut80" ? "\u221280% bill" : "\u221295% bill";
+    return col.id === "cut60" ? "\u221260% bill" : col.id === "cut80" ? "\u221280% bill" : col.id === "cut95" ? "\u221295% bill" : (col.label ? col.label.split("\u2014")[0].trim() : `\u2212${col.id.replace("cut", "")}% bill`);
   }
   return col.label.split("\u2014")[0].trim();
 }
@@ -2504,10 +2503,11 @@ function resolveSelected(p) {
     const entry = pool.find((t) => t.id === tid);
     if (entry && entry.solvable) return entry;
   }
-  return p.best || (p.customCut && p.customCut.best) || p.customTarget || p.focusSystem ||
+  return p.best ||
     (p.auto && p.auto.find((a) => a.solvable)) ||
-    (p.targets && p.targets.find((t) => t.solvable)) ||
-    (p.tiers && p.tiers.find((t) => t.solvable)) || null;
+    (p.targets && (p.targets.find((t) => t.id === "cut80" && t.solvable) || p.targets.find((t) => t.solvable))) ||
+    (p.tiers && (p.tiers.find((t) => t.id === "tier99" && t.solvable) || p.tiers.find((t) => t.solvable))) ||
+    (p.customCut && p.customCut.best) || p.customTarget || p.focusSystem || null;
 }
 
 // If the entry carries a full 20-year cost series, append the bills-split so
@@ -2677,11 +2677,17 @@ function renderBomPanel() {
     }, `💡 ${f.bestPriceCallout}`);
     body.appendChild(callout);
   }
-  section("Panels", [
-    ["Array", `${f.pvKw} kW \u2192 ${bom.panels.count} \u00D7 ${bom.panels.panelWatts} W = ${bom.panels.kwActual} kW`],
-    ["Space needed", `about ${bom.panels.areaM2} m\u00B2 of roof or ground (mounting gaps included)`],
-  ]);
-  if (bom.voltage) {
+  if (bom.panels) {
+    section("Panels", [
+      ["Array", `${f.pvKw} kW \u2192 ${bom.panels.count} \u00D7 ${bom.panels.panelWatts} W = ${bom.panels.kwActual} kW`],
+      ["Space needed", `about ${bom.panels.areaM2} m\u00B2 of roof or ground (mounting gaps included)`],
+    ]);
+  } else {
+    section("Panels", [
+      ["Array", "None (Battery-only configuration \u2014 ToU grid arbitrage / peak-offset)"],
+    ]);
+  }
+  if (bom.voltage && bom.battery) {
     section("Battery bank", [
       ["System voltage", `${bom.voltage.volts} V \u2014 ${bom.voltage.rationale}`],
       bom.battery.diy
@@ -2692,6 +2698,10 @@ function renderBomPanel() {
         : null,
       ["Nameplate target", `~${fmt(f.battNameplateKwh)} kWh at ${(bom.battery.usableDod * 100).toFixed(0)}% usable depth of discharge`],
     ].filter(Boolean));
+  } else {
+    section("Battery bank", [
+      ["Storage", "None (Solar-only configuration \u2014 direct consumption + grid export)"],
+    ]);
   }
   section("Inverter", [
     ["Your peak demand", `~${fmt(bom.inverter.peakLoadKw)} kW at once`],
@@ -2727,18 +2737,24 @@ function downloadBomCsv() {
   const rows = [
     ["BigEnergyCo hardware list - educational estimate, not a quote"],
     ["Generated", new Date().toISOString().slice(0, 10)],
-    ["System", `${f.pvKw} kW PV + ${f.battNameplateKwh} kWh nameplate (${bom.chemLabel})`],
+    ["System", `${f.pvKw || 0} kW PV + ${f.battNameplateKwh || 0} kWh nameplate (${bom.chemLabel || "Solar"})`],
     ["Location", `${lastPayload.meta.latitude.toFixed(2)}, ${lastPayload.meta.longitude.toFixed(2)}`],
     [],
     ["Section", "Item", "Quantity / size", "Notes"],
-    ["Panels", `${bom.panels.panelWatts} W mono panels`, bom.panels.count, `${bom.panels.kwActual} kW array, about ${bom.panels.areaM2} sq m`],
   ];
+  if (bom.panels) {
+    rows.push(["Panels", `${bom.panels.panelWatts} W mono panels`, bom.panels.count, `${bom.panels.kwActual} kW array, about ${bom.panels.areaM2} sq m`]);
+  } else {
+    rows.push(["Panels", "None", 0, "Battery-only configuration"]);
+  }
   if (bom.voltage && bom.battery) {
     rows.push(
       ["Bank", "System voltage", `${bom.voltage.volts} V`, bom.voltage.rationale],
       ["Bank (DIY)", bom.battery.diy.unitLabel, `${bom.battery.diy.stringsParallel} string(s), ${bom.battery.diy.blocksTotal} cells`, `${bom.battery.diy.stringKwh} kWh per string`],
       ["Bank (retail alt.)", bom.battery.retail.unitLabel, bom.battery.retail.modules, "BMS and enclosure included"],
     );
+  } else {
+    rows.push(["Bank", "None", 0, "Solar-only configuration"]);
   }
   rows.push(
     ["Inverter", `${bom.inverter.recommendedKw} kW class continuous`, 1, bom.inverter.referenceUnit],
@@ -2919,6 +2935,7 @@ function renderTierCards(p) {
       card.setAttribute("tabindex", "0");
       card.style.cursor = "pointer";
       const selectCard = () => {
+        frontierSelected = null;
         selectedKey = "tier:" + t.id;
         refreshSelectionOutputs(p);
         renderTierCards(p);
@@ -3049,6 +3066,7 @@ function renderTargetCards(p, extraTargets = []) {
       card.setAttribute("tabindex", "0");
       card.style.cursor = "pointer";
       const selectCard = () => {
+        frontierSelected = null;
         selectedKey = targetKey;
         refreshSelectionOutputs(p);
         renderTargetCards(p, extraTargets);
@@ -3584,21 +3602,8 @@ function drawAutoChart(p) {
   const entries = raw.filter((a) => a.solvable && a.socNameplatePct && a.socNameplatePct.min && a.socNameplatePct.min.length);
 
   if (!entries.length) {
-
-    // Data arrived but lacks the expected shape - almost certainly a stale
-
-    // cached module from before this page version. Never fail silently.
-
-    wrap.style.display = "block";
-
-    if (legend) legend.style.display = "none";
-
-    const cap = $("socCaption");
-
-    if (cap) cap.textContent = "\u26A0\uFE0F Chart data didn't match this page version \u2014 please refresh (Ctrl+F5 / \u2318\u21E7R) and run the sizing again.";
-
+    wrap.style.display = "none";
     return;
-
   }
 
   cachedChartState = { type: "auto", p };
@@ -3850,14 +3855,32 @@ const PAYLOAD_CONTRACT = 10;
 // back to its marker (the recommended system).
 function frontierDefaultSelection(f) {
   if (!f || !Array.isArray(f.points) || !f.points.length) return undefined;
-  if (!(lastPayload && lastPayload.mode === "gridtie")) return undefined;
-  const target = Math.min(111, Math.max(1, Math.round(customCutFraction * 100)));
-  let best = 0, gap = Infinity;
-  f.points.forEach((pt, i) => {
-    const g = Math.abs((pt.outcomePct || 0) - target);
-    if (g < gap) { gap = g; best = i; }
-  });
-  return best;
+  const p = lastPayload;
+  if (!p) return undefined;
+  const sel = resolveSelected(p);
+  if (sel && (Number.isFinite(sel.pvKw) || Number.isFinite(sel.battKwh))) {
+    let best = 0, bestDist = Infinity;
+    f.points.forEach((pt, i) => {
+      const dPv = Math.abs((pt.pvKw || 0) - (sel.pvKw || 0));
+      const dBatt = Math.abs((pt.battKwh || 0) - (sel.battKwh || 0));
+      const dist = dPv * 10 + dBatt;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    });
+    return best;
+  }
+  if (p.mode === "gridtie") {
+    const target = Math.min(111, Math.max(1, Math.round(customCutFraction * 100)));
+    let best = 0, gap = Infinity;
+    f.points.forEach((pt, i) => {
+      const g = Math.abs((pt.outcomePct || 0) - target);
+      if (g < gap) { gap = g; best = i; }
+    });
+    return best;
+  }
+  return undefined;
 }
 
 function renderFrontierPanel(p) {
@@ -4063,10 +4086,10 @@ function renderResults(p) {
 
   if (!selValid) {
     if (p.best) selectedKey = "best";
-    else if (p.customTarget && p.customTarget.solvable) selectedKey = "custom";
     else if (p.auto && p.auto.some((a) => a.solvable)) selectedKey = "auto:" + p.auto.find((a) => a.solvable).chemistry;
-    else if (p.targets && p.targets.some((t) => t.solvable)) selectedKey = "target:" + p.targets.find((t) => t.solvable).id;
-    else if (p.tiers && p.tiers.some((t) => t.solvable)) selectedKey = "tier:" + p.tiers.find((t) => t.solvable).id;
+    else if (p.targets && p.targets.some((t) => t.solvable)) selectedKey = "target:" + (p.targets.find((t) => t.id === "cut80" && t.solvable) || p.targets.find((t) => t.solvable)).id;
+    else if (p.tiers && p.tiers.some((t) => t.solvable)) selectedKey = "tier:" + (p.tiers.find((t) => t.id === "tier99" && t.solvable) || p.tiers.find((t) => t.solvable)).id;
+    else if (p.customTarget && p.customTarget.solvable) selectedKey = "custom";
     else selectedKey = "best";
   }
 
@@ -4273,32 +4296,22 @@ function refreshSelectionOutputs(p) {
   // tab). Card and ladder views keep their own chrome, untouched.
   if (p.matrix && (isGT || resultLevel === "matrix")) renderMatrix(p);
   renderBomPanel();
-  if (isGT && sel && sel.socNameplatePct && sel.socNameplatePct.min && sel.socNameplatePct.min.length) {
-
+  if (sel && sel.socNameplatePct && sel.socNameplatePct.min && sel.socNameplatePct.min.length) {
     drawSocChartForEntry(p, sel);
-
   } else if (hasAuto && !isGT && resultLevel !== "matrix") {
-
     drawAutoChart(p);
-
   } else if (!hasAuto && p.history && p.history.tiers && p.history.tiers.length) {
-
     drawSocChart(p.history, p.chemLabel || "battery");
-
   } else {
-
     const w = $("socChartWrap");
-
     if (w) w.style.display = "none";
-
   }
 
   drawCumCostChart(p, sel);
+  renderFrontierPanel(p);
 
   const inp = readInputs();
-
   updateShareHash(p, inp);
-
   populatePrintSheet(p, inp);
 
 }
@@ -4356,6 +4369,8 @@ function updateShareHash(p, inp) {
     };
 
     if (inp.mode === "gridtie") o.g = 1;
+
+    if (inp.hardwareConfig && inp.hardwareConfig !== "both") o.hw = inp.hardwareConfig;
 
     if (inp.chemistry === "auto") o.a = 1;
 
@@ -4428,7 +4443,17 @@ function restoreFromShare() {
     syncCutLabel();
   }
 
-  if (typeof o.sel === "string" && /^(best|focus|custom|adopted|matrix:[a-z]+:(cut60|cut80|cut95|custom)|auto:[a-z]+|tier:[a-z0-9]+|target:[a-z0-9]+)$/.test(o.sel)) {
+  if (o.hw && ["both", "solar", "battery"].includes(o.hw)) {
+    const hwEl = $("hardwareConfig");
+    if (hwEl) {
+      hwEl.value = o.hw;
+      const chemRow = $("chemSelect")?.closest(".form-group");
+      if (o.hw === "solar" && chemRow) chemRow.style.opacity = "0.4";
+      else if (chemRow) chemRow.style.opacity = "1";
+    }
+  }
+
+  if (typeof o.sel === "string" && /^(best|focus|custom|adopted|matrix:[a-z]+:(cut60|cut80|cut95|cut[0-9]+|custom)|auto:[a-z]+|tier:[a-z0-9]+|target:[a-z0-9]+)$/.test(o.sel)) {
     selectedKey = o.sel;
   }
 
@@ -4577,15 +4602,20 @@ function populatePrintSheet(p, inp) {
       peakLoadW: hwEntry.peakLoadW || (p.focus && p.focus.peakLoadW) || 0,
       panelWatts: PANEL_WATTS_DEFAULT,
     });
-    const hwRows = [
-      ["Solar panels", `${PANEL_WATTS_DEFAULT} W mono`, `${bom.panels.count} pcs`, `${bom.panels.kwActual} kW · ~${bom.panels.areaM2} m²`],
-    ];
+    const hwRows = [];
+    if (bom.panels) {
+      hwRows.push(["Solar panels", `${PANEL_WATTS_DEFAULT} W mono`, `${bom.panels.count} pcs`, `${bom.panels.kwActual} kW \u00B7 ~${bom.panels.areaM2} m\u00B2`]);
+    } else {
+      hwRows.push(["Solar panels", "None", "-", "Battery-only configuration"]);
+    }
     if (bom.voltage && bom.battery) {
       hwRows.push(
         ["Bank voltage", `${bom.voltage.volts} V`, "-", ""],
         ["Battery (DIY)", bom.battery.diy.unitLabel, `${bom.battery.diy.stringsParallel} string(s)`, `${bom.battery.diy.blocksTotal} cells total`],
         ["Battery (retail alt.)", bom.battery.retail.unitLabel, `${bom.battery.retail.modules} pcs`, "BMS included"],
       );
+    } else {
+      hwRows.push(["Battery bank", "None", "-", "Solar-only configuration"]);
     }
     hwRows.push(["Inverter", `${bom.inverter.recommendedKw} kW class`, "1", "sized to peak load incl. surge margin"]);
     if (bom.controller) {
@@ -5124,8 +5154,10 @@ export function initSizingUI() {
   $("chemSelect").addEventListener("change", () => {
     updateAutoRows();
     renderChemTempVisualizer();
-    selectedKey = "best";
-    if (lastPayload) scheduleRun(true);
+    if (selectedKey && (selectedKey === "best" || selectedKey.startsWith("auto:"))) {
+      selectedKey = "best";
+    }
+    if (lastPayload) run(true);
   });
 
   const hwConfigNode = $("hardwareConfig");
@@ -5138,8 +5170,10 @@ export function initSizingUI() {
       } else {
         if (chemRow) chemRow.style.opacity = "1";
       }
-      selectedKey = "best";
-      if (lastPayload) scheduleRun(true);
+      if (selectedKey && (selectedKey === "best" || selectedKey.startsWith("auto:"))) {
+        selectedKey = "best";
+      }
+      if (lastPayload) run(true);
     });
   }
 

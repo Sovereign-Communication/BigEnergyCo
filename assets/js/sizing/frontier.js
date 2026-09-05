@@ -52,7 +52,10 @@ export function isBoundLimited(front, pvLadderUsed, battLadderUsed) {
   const maxPv = pvLadderUsed[pvLadderUsed.length - 1];
   const maxBatt = battLadderUsed[battLadderUsed.length - 1];
   // Either axis pinned to its edge means we cannot claim to have found a limit.
-  return last.pvKw >= maxPv - 1e-9 || last.battKwh >= maxBatt - 1e-9;
+  // Intentional 0-bound (e.g. battery-only or solar-only) is not a sweep bound limit.
+  const pvPinned = maxPv > 0 && last.pvKw >= maxPv - 1e-9;
+  const battPinned = maxBatt > 0 && last.battKwh >= maxBatt - 1e-9;
+  return pvPinned || battPinned;
 }
 
 /**
@@ -96,7 +99,7 @@ export function sweepSystems({
   e1kw, loadWh, tempsC = null, chemistry = "lfp", mode = "offgrid",
   capacityScale = null,
   costFn = null,
-  costPerWpv, costPerKwhBatt, costPerKwInv = 0,
+  costPerWpv = 0.35, costPerKwhBatt = 140, costPerKwInv = 60,
   pvMax = 30, battMax = 100, pvSteps = 18, battSteps = 16,
 }) {
   // Prices come from ONE place. When the caller injects the same pricing
@@ -112,8 +115,8 @@ export function sweepSystems({
   if (!(loadTotal > 0)) return [];
 
   const gridTie = mode === "gridtie";
-  const pvs = gridTie ? [0, ...pvLadder(pvMax, pvSteps)] : pvLadder(pvMax, pvSteps);
-  const bats = battLadder(battMax, battSteps, gridTie);
+  const pvs = pvMax <= 0 ? [0] : (gridTie ? [0, ...pvLadder(pvMax, pvSteps)] : pvLadder(pvMax, pvSteps));
+  const bats = battMax <= 0 ? [0] : battLadder(battMax, battSteps, gridTie);
   const out = [];
 
   for (const pvKw of pvs) {
@@ -320,13 +323,13 @@ export function buildFrontier(opts) {
   const mode = opts.mode === "gridtie" ? "gridtie" : "offgrid";
   const all = sweepSystems({ ...opts, chemistry, mode });
   const front = thinFront(paretoFront(all), {
-    minOutcome: opts.minOutcome ?? FRONTIER_MIN_OUTCOME,
+    minOutcome: opts.minOutcome !== undefined ? opts.minOutcome : ((opts.pvMax ?? 30) <= 0 ? 0.05 : FRONTIER_MIN_OUTCOME),
     minStepPp: opts.minStepPp ?? FRONTIER_MIN_STEP_PP,
     maxPoints: opts.maxPoints ?? FRONTIER_MAX_POINTS,
   });
   const kneeIndex = findKnee(front);
-  const pvUsed = pvLadder(opts.pvMax ?? 30, opts.pvSteps ?? 18);
-  const battUsed = battLadder(opts.battMax ?? 100, opts.battSteps ?? 16, mode === "gridtie");
+  const pvUsed = (opts.pvMax ?? 30) <= 0 ? [0] : pvLadder(opts.pvMax ?? 30, opts.pvSteps ?? 18);
+  const battUsed = (opts.battMax ?? 100) <= 0 ? [0] : battLadder(opts.battMax ?? 100, opts.battSteps ?? 16, mode === "gridtie");
   const boundLimited = isBoundLimited(front, pvUsed, battUsed);
   return {
     chemistry,

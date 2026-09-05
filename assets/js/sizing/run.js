@@ -513,8 +513,9 @@ export async function runSizing(msg, deps = {}) {
     if (fPvKw === null || fPvKw === undefined || fBattKwh === null || fBattKwh === undefined) return null;
     const fPv = +Number(fPvKw).toFixed(2);
     const fBatt = Math.max(0, Math.round(Number(fBattKwh)));
-    if (!Number.isFinite(fPv) || !Number.isFinite(fBatt) || fPv <= 0) return null;
-    if (mode === "offgrid" && fBatt <= 0) return null;
+    if (!Number.isFinite(fPv) || !Number.isFinite(fBatt)) return null;
+    if (fPv <= 0 && fBatt <= 0) return null;
+    if (mode === "offgrid" && (fPv <= 0 || fBatt <= 0)) return null;
     const fChem = (fChemOverride && CHEMISTRIES[fChemOverride]) ? fChemOverride : defaultChem;
     const fScale = capacityScaleFor(fChem, meanTempC);
     if (mode === "gridtie") {
@@ -604,8 +605,11 @@ export async function runSizing(msg, deps = {}) {
       pvKw: sizing.pvKw, battKwhUsable: sizing.battKwh,
       e1kw, loadWh, chemistry: chemId, tempsC, capacityScale: capScale, capture: true,
     });
-    const band = socBand(id, sim, chemId);
+    const band = (sizing.battKwh > 0) ? socBand(id, sim, chemId) : null;
     if (band && bandSink) bandSink.push(band);
+    const socNameplatePct = (sizing.battKwh > 0)
+      ? nameplateBands(sim, sizing.battKwh * 1000 * capScale, m.battNameplateKwh * 1000, chemId)
+      : null;
     return {
       id, label, solvable: true,
       chemistry: chemId,
@@ -614,6 +618,7 @@ export async function runSizing(msg, deps = {}) {
       pvKw: sizing.pvKw, battKwh: sizing.battKwh,
       battNameplateKwh: m.battNameplateKwh,
       usableDod: chemObj.usableDod,
+      socNameplatePct,
       costLo: m.cost.lo, costHi: m.cost.hi,
       pvCostLo: m.cost.pvCostLo, pvCostHi: m.cost.pvCostHi,
       battCostLo: m.cost.battCostLo, battCostHi: m.cost.battCostHi,
@@ -679,6 +684,7 @@ export async function runSizing(msg, deps = {}) {
       frontier = buildFrontier({
         e1kw, loadWh, tempsC, chemistry: chemId, mode: payload.mode,
         capacityScale: capScale, costFn, pvMax, battMax,
+        minOutcome: hardwareConfig === "battery" ? 0.05 : undefined,
       });
     } catch {
       payload.frontier = null;   // never let a chart take the whole result down
@@ -911,15 +917,17 @@ export async function runSizing(msg, deps = {}) {
       const fChem = (focusChemistry && CHEMISTRIES[focusChemistry]) ? focusChemistry : (chemistry === "auto" ? "lfp" : chemistry);
       const fScale = capacityScaleFor(fChem, meanTempC);
       const fBatt = Math.max(0, Number(focusBattKwh));
-      const fPv = Number(focusPvKw);
-      const sim = mode === "gridtie"
-        ? simulateOffset({ pvKw: fPv, battKwhUsable: fBatt, e1kw, loadWh, chemistry: fChem, tempsC, capacityScale: fScale, capture: true })
-        : simulate({ pvKw: fPv, battKwhUsable: fBatt, e1kw, loadWh, chemistry: fChem, tempsC, capacityScale: fScale, capture: true });
-      const nameplateKwh = fBatt / (CHEMISTRIES[fChem].usableDod);
-      patch.focusSoc = {
-        chemistry: fChem, pvKw: fPv, battKwh: fBatt,
-        socNameplatePct: nameplateBands(sim, fBatt * 1000 * fScale, nameplateKwh * 1000, fChem),
-      };
+      const fPv = Math.max(0, Number(focusPvKw));
+      if (!(fPv <= 0 && fBatt <= 0) && !(mode === "offgrid" && (fPv <= 0 || fBatt <= 0))) {
+        const sim = mode === "gridtie"
+          ? simulateOffset({ pvKw: fPv, battKwhUsable: fBatt, e1kw, loadWh, chemistry: fChem, tempsC, capacityScale: fScale, capture: true })
+          : simulate({ pvKw: fPv, battKwhUsable: fBatt, e1kw, loadWh, chemistry: fChem, tempsC, capacityScale: fScale, capture: true });
+        const nameplateKwh = fBatt > 0 ? fBatt / (CHEMISTRIES[fChem].usableDod) : 0;
+        patch.focusSoc = {
+          chemistry: fChem, pvKw: fPv, battKwh: fBatt,
+          socNameplatePct: (fBatt > 0) ? nameplateBands(sim, fBatt * 1000 * fScale, nameplateKwh * 1000, fChem) : null,
+        };
+      }
     }
     return patch;
   }
@@ -1215,13 +1223,17 @@ export async function runSizing(msg, deps = {}) {
       e1kw, loadWh, chemistry, tempsC, capture: true, capacityScale: capScale,
     });
     const band = socBand(tier.id, sim, chemistry);
-     if (band) historyTiers.push(band);
-     return {
-       id: tier.id, label: tier.label, solvable: true,
-       chemistry, chemLabel: chem.label,
-       pvKw: sizing.pvKw, battKwh: sizing.battKwh,
-       battNameplateKwh: m.battNameplateKwh,
-       usableDod: chem.usableDod,
+    if (band) historyTiers.push(band);
+    const socNameplatePct = (sizing.battKwh > 0)
+      ? nameplateBands(sim, sizing.battKwh * 1000 * capScale, m.battNameplateKwh * 1000, chemistry)
+      : null;
+    return {
+      id: tier.id, label: tier.label, solvable: true,
+      chemistry, chemLabel: chem.label,
+      pvKw: sizing.pvKw, battKwh: sizing.battKwh,
+      battNameplateKwh: m.battNameplateKwh,
+      usableDod: chem.usableDod,
+      socNameplatePct,
       costLo: m.cost.lo, costHi: m.cost.hi,
       pvCostLo: m.cost.pvCostLo, pvCostHi: m.cost.pvCostHi,
       battCostLo: m.cost.battCostLo, battCostHi: m.cost.battCostHi,
