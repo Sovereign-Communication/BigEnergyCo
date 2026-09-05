@@ -1,6 +1,23 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { PRICING_SCOPES, POWMR_CATALOG, costRange, getScope, fullRange, estimateTariff } from "../assets/js/sizing/pricing.js";
+import { PRICES_CHECKED } from "../assets/js/shared/content.js";
+
+test("catalog prices are dated, scope-labeled, and re-verified within the last year", () => {
+  // Tripwire for the "dated, scope-labeled, indicative" ground rule: parses
+  // "Aug 2026"-style stamps and fails once they age past a year, with the
+  // remediation spelled out (re-check the catalog, bump the stamps).
+  const stamps = { "POWMR_CATALOG.checkedDate": POWMR_CATALOG.checkedDate, "PRICES_CHECKED": PRICES_CHECKED };
+  for (const [name, s] of Object.entries(stamps)) {
+    const t = Date.parse(`01 ${s}`);
+    assert.ok(Number.isFinite(t), `${name} parses as a date: ${JSON.stringify(s)}`);
+    const ageDays = (Date.now() - t) / 86400000;
+    assert.ok(ageDays < 366, `${name} (${s}) is stale: re-verify prices against the PowMr catalog, then bump checkedDate/PRICES_CHECKED and the scope labels`);
+  }
+  for (const s of PRICING_SCOPES) {
+    assert.ok(s.source && /20\d\d/.test(s.source), `${s.id} scope carries a dated source`);
+  }
+});
 
 test("PowMr catalog derivation matches the checked prices", () => {
   assert.equal(POWMR_CATALOG.batteries[0].perKwh, Math.round(POWMR_CATALOG.batteries[0].priceUsd / POWMR_CATALOG.batteries[0].kwhNominal));

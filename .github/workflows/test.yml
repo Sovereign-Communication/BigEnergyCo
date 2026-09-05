@@ -20,19 +20,8 @@ jobs:
         with:
           node-version: 22
 
-      - name: Syntax-check worker and engine
-        run: |
-          node --check worker/index.js
-          node --check assets/js/sizing/engine.js
-          node --check assets/js/sizing/nasa.js
-          node --check assets/js/sizing/sizing-worker.js
-          node --check assets/js/sizing/ui.js
-          node --check assets/js/sizing/pricing.js
-          node --check assets/js/sizing/money.js
-          node --check assets/js/sizing/run.js
-          node --check assets/js/sizing/frontier.js
-          node --check assets/js/sizing/frontier-chart.js
-          node --check assets/js/shared/locales.js
+      - name: Syntax-check all JS
+        run: node scripts/check-syntax.mjs
 
       - name: Validate SEO & encoding
         run: |
