@@ -6,29 +6,39 @@
 //   { type: "run",     ...runSizing msg }                     -> full payload
 //   { type: "reSlice", ...runSizing msg }                     -> cut-only patch
 // Message out:
-//   { type: "ok", seq, payload } | { type: "reSlice", seq, result } | error
+//   { type: "ok", seq, epoch, payload } | { type: "reSlice", seq, epoch, result } | error
 //
-import { runSizing } from "./run.js?v=20260904b";
+// Dispatch is on msg.type (never on payload flags): a "run" that accidentally
+// carried incrementalCut must still return a full payload, and vice versa.
+// Every reply echoes seq AND epoch so the UI can drop stale responses; errors
+// carry a stream tag ("run"/"slice"/"unknown") for the same stale check.
+// Unknown types answer with an error instead of hanging the spinner.
+//
+import { runSizing } from "./run.js?v=20260905a";
 
 self.onmessage = async (ev) => {
   const msg = ev.data;
 
   if (msg?.type === "reSlice") {
     try {
-      const result = await runSizing(msg);
-      self.postMessage({ type: "reSlice", seq: msg.seq, result });
+      const result = await runSizing({ ...msg, incrementalCut: true });
+      self.postMessage({ type: "reSlice", seq: msg.seq, epoch: msg.epoch, result });
     } catch (e) {
-      self.postMessage({ type: "error", seq: msg.seq, message: String(e && e.message || e) });
+      self.postMessage({ type: "error", seq: msg.seq, epoch: msg.epoch, stream: "slice", message: String(e && e.message || e) });
     }
     return;
   }
 
-  if (msg?.type !== "run") return;
-
-  try {
-    const payload = await runSizing(msg);
-    self.postMessage({ type: "ok", seq: msg.seq, payload });
-  } catch (e) {
-    self.postMessage({ type: "error", seq: msg.seq, message: String(e && e.message || e) });
+  if (msg?.type === "run") {
+    try {
+      const { type: _t, ...rest } = msg;
+      const payload = await runSizing({ ...rest, incrementalCut: false });
+      self.postMessage({ type: "ok", seq: msg.seq, epoch: msg.epoch, payload });
+    } catch (e) {
+      self.postMessage({ type: "error", seq: msg.seq, epoch: msg.epoch, stream: "run", message: String(e && e.message || e) });
+    }
+    return;
   }
+
+  self.postMessage({ type: "error", seq: msg?.seq, stream: "unknown", message: `unknown worker message type: ${msg?.type}` });
 };

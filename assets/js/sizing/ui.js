@@ -14,21 +14,21 @@
 import { CITY_PRESETS } from "./nasa.js?v=20260904b";
 import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCityLabel, nearestCity, normalizeCityQuery, shouldAutoResolve } from "./cities.js?v=20260904b";
 
-import { estimateTariff, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
+import { estimateTariff, CURRENCIES, fxMeta, DAYS_PER_MONTH, battOnlyCost } from "./pricing.js?v=20260905a";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260904b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260905a";
 
-import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830b";
+import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260905a";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260830b";
+import { BOM_ITEMS } from "../shared/content.js?v=20260905a";
 
 import { applyI18n, initLangPicker, resolveLang } from "../shared/i18n.js?v=20260830b";
 
 import { LOCALES } from "../shared/locales.js?v=20260830b";
 
-import { renderFrontier, frontierVerdict, markerOffCurveNote } from "./frontier-chart.js?v=20260830b";
+import { renderFrontier, frontierVerdict, markerOffCurveNote } from "./frontier-chart.js?v=20260905a";
 
-import { rescalePayload, scaleRecord, sameSiteOptions } from "./rescale.js?v=20260831h";
+import { rescalePayload, scaleRecord, sameSiteOptions } from "./rescale.js?v=20260905a";
 
 let worker = null;
 
@@ -81,9 +81,12 @@ let lastRunInput = null;
 // flash status, or scroll — the screen already shows the rescaled numbers.
 let lastRunQuiet = false;
 
-// Serial for incremental "reSlice" patches (independent of full runs, so a
-// slider slice can never collide with — or clobber — a full re-run).
+// Serial for incremental "reSlice" patches within one payload epoch.
+// Epoch links every patch to the payload it was computed against: a full run
+// bumps payloadEpoch, so a slice from older inputs can never merge into a
+// newer payload (independent counters alone could not prevent that).
 let sliceToken = 0;
+let payloadEpoch = 0;
 
 // PWA install prompt holder
 let deferredInstallPrompt = null;
@@ -1227,12 +1230,19 @@ function readInputs() {
   const lon = parseFloat($("lonInput").value);
 
   let dailyKwh;
+  let peakLoadW = null;
 
   const mode = $("loadMode").value;
 
   if (mode === "appliances") {
 
-    dailyKwh = applianceState().kwh;
+    const ap = applianceState();
+    dailyKwh = ap.kwh;
+    // Real measured peak (running watts, incl. duty-cycle averages): the
+    // engine sizes the inverter and its cost basis from this instead of the
+    // daily average. Bill/kWh modes have no peak information (null = engine
+    // falls back to the average and the BOM says so).
+    peakLoadW = ap.peakW > 0 ? Math.round(ap.peakW) : null;
 
   } else if (mode === "bill") {
 
@@ -1318,6 +1328,8 @@ function readInputs() {
 
     focusChemistry: pendingFocus ? pendingFocus.chemistry : null,
 
+    peakLoadW,
+
   };
 
 }
@@ -1356,7 +1368,10 @@ function run(quiet = false) {
   lastRunQuiet = quiet;
   pendingFocus = null;
   const seq = ++runToken;
-  ensureWorker().postMessage({ type: "run", seq, ...inp });
+  // A new full run opens a new epoch: any in-flight slice from older inputs
+  // is stale on arrival and will be dropped by the epoch check.
+  const epoch = ++payloadEpoch;
+  ensureWorker().postMessage({ type: "run", seq, epoch, ...inp });
 
 }
 
@@ -1428,7 +1443,7 @@ function requestIncrementalCut(focusPvKw = null, focusBattKwh = null, focusChemi
   if (!p) return;
   const inp = readInputs();
   const seq = ++sliceToken;
-  ensureWorker().postMessage({ type: "reSlice", seq, incrementalCut: true, ...inp, focusPvKw, focusBattKwh, focusChemistry });
+  ensureWorker().postMessage({ type: "reSlice", seq, epoch: payloadEpoch, incrementalCut: true, ...inp, focusPvKw, focusBattKwh, focusChemistry });
 }
 
 // Merge an incremental slice into the retained payload and refresh only what
@@ -1471,10 +1486,13 @@ function mergeReSlice(result) {
     if (col) col.label = label;
   }
   // The adopted point's SOC bands: chart appears the moment they land.
+  // Tolerances match engine quantization (PV 2 decimals, whole-kWh banks)
+  // with headroom for rescale rounding, so a rescaled adopted point still
+  // matches its freshly simulated bands.
   if (result.focusSoc && selectedKey === "adopted" && adoptedEntry &&
       adoptedEntry.chemistry === result.focusSoc.chemistry &&
-      Math.abs(adoptedEntry.pvKw - result.focusSoc.pvKw) < 0.01 &&
-      Math.abs(adoptedEntry.battKwh - result.focusSoc.battKwh) < 0.01) {
+      Math.abs(adoptedEntry.pvKw - result.focusSoc.pvKw) < 0.06 &&
+      Math.abs(adoptedEntry.battKwh - result.focusSoc.battKwh) < 0.6) {
     adoptedEntry.socNameplatePct = result.focusSoc.socNameplatePct;
   }
   if (p.matrix && (p.mode === "gridtie" || resultLevel === "matrix")) renderMatrix(p);
@@ -1602,7 +1620,7 @@ function ensureWorker() {
 
 
 
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260904b", { type: "module" });
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260905a", { type: "module" });
 
     worker.onmessage = (ev) => {
 
@@ -1636,13 +1654,26 @@ function ensureWorker() {
 
         // Incremental cut patch: only the slider's "your target" column (and
         // SOC bands for an adopted curve point) — no full re-render, no scroll,
-        // no status churn.
+        // no status churn. A patch is only merged when it belongs to the
+        // CURRENT payload epoch: a slice computed from pre-edit inputs that
+        // lands after a full run for newer inputs is dropped, never merged.
 
         if (ev.data.seq !== sliceToken) return;
 
+        if (ev.data.epoch !== undefined && ev.data.epoch !== payloadEpoch) return;
+
         mergeReSlice(ev.data.result);
 
-      } else if (ev.data?.type === "error") setStatus("Warning: " + ev.data.message);
+      } else if (ev.data?.type === "error") {
+
+        // Stale errors must not overwrite a newer success: only the latest
+        // run or slice in each stream may report.
+        const s = ev.data.seq;
+        const fresh = ev.data.stream === "slice" ? s === sliceToken : s === runToken;
+        if (s !== undefined && !fresh) return;
+        setStatus("Warning: " + ev.data.message);
+
+      }
 
       restoreRunButton();
 
@@ -1696,11 +1727,8 @@ function fmtPaybackRange(lo, hi) {
 
 }
 
-// User currency (optional): converts every displayed dollar AMOUNT at the
-
-// user's rate. Price scopes themselves are USD-denominated, so unit rates
-
-// ($/kWh stored) stay labeled $ - the arithmetic panel explains that.
+// User currency (optional): converts every displayed dollar amount AND unit
+// rate at the user's rate, so a EUR user never sees a stray $ row.
 
 function fxActive() {
 
@@ -2643,11 +2671,16 @@ function buildFocusBom() {
   const f = resolveSelected(p) || (p && p.focus);
   if (!f) return null;
   const watts = currentPanelWatts();
+  // peakIsAverage propagates so the BOM can warn that the inverter class
+  // came from the daily average, not a measured peak.
+  const peakIsAverage = p.peakIsAverage !== false;
   return buildBom({
     pvKw: f.pvKw,
     battNameplateKwh: f.battNameplateKwh,
     chemistry: f.chemistry,
     peakLoadW: f.peakLoadW || (p.focus && p.focus.peakLoadW) || Math.round((p.dailyKwh || 0) * 1000 / 24),
+    peakIsAverage,
+    meanTempC: (p.assumptions && p.assumptions.meanTempC) ?? null,
     panelWatts: watts,
   });
 }
@@ -2732,7 +2765,9 @@ function csvField(v) {
 
 function downloadBomCsv() {
   const bom = buildFocusBom();
-  const f = lastPayload && lastPayload.focus;
+  // Label row describes the SELECTED system the BOM was built from — never
+  // the default focus when the visitor adopted or picked another system.
+  const f = (lastPayload && resolveSelected(lastPayload)) || (lastPayload && lastPayload.focus);
   if (!bom || !f) return;
   const rows = [
     ["BigEnergyCo hardware list - educational estimate, not a quote"],
@@ -2872,9 +2907,9 @@ function updateGenHelper() {
     : GEN_L_PER_KWH[$("genFuelType").value] ?? GEN_L_PER_KWH.petrol;
   const unit = fuelImperial ? "gal" : "L";
   readout.textContent =
-    t("fuelReadoutRate", { type: typeSel, rate: money(rate) }) + " " +
+    t("fuelReadoutRate", { type: typeSel, rate: localRate(rate) }) + " " +
     t("fuelReadoutBurn", { entry, burn: burn.toFixed(2), unit }) + " " +
-    t("fuelReadoutGrid", { lo: money(0.1), hi: money(0.3) });
+    t("fuelReadoutGrid", { lo: localRate(0.1), hi: localRate(0.3) });
   readout.style.display = "block";
   applyBtn.style.display = "inline-flex";
 }
@@ -2981,7 +3016,7 @@ function renderTierCards(p) {
 
       ["  - battery bank", `~${moneyRange(t.battCostLo, t.battCostHi)}`],
 
-      ["  - battery unit price", `~$${t.battPerKwhLo}-${t.battPerKwhHi}/kWh stored`],
+      ["  - battery unit price", `~${localRate(t.battPerKwhLo)}-${localRate(t.battPerKwhHi)}/kWh stored`],
 
       ["Unmet hours", `${fmt(t.unmetHoursPerYear)} h/yr`],
 
@@ -3512,9 +3547,11 @@ function drawCumCostChart(p, chosenEntry = null) {
   const label = seriesEntry.chemLabel || seriesEntry.label || "";
   const cap = $("cumCostCaption");
   if (cap) {
-    let txt = `Running 20-year cost for the recommended system (${label}): the amber line is what you` +
+    const isBest = !!p.best && seriesEntry.chemistry === p.best.chemistry &&
+      seriesEntry.pvKw === p.best.pvKw && seriesEntry.battKwh === p.best.battKwh;
+    let txt = `Running 20-year cost for the ${isBest ? "recommended" : "selected"} system (${label}): the amber line is what you` +
       ` pay the utility if you stay on the grid (${money(bd.gridTotal)}). The emerald line is the solar system's` +
-      ` own cost (~${money(bd.systemTotal)}), matching the \u201CTotal 20-year cost\u201D row in the recommendation.` +
+      ` own cost (~${money(bd.systemTotal)}), matching the \u201CTotal 20-year cost\u201D row for this system.` +
       (bd.residualBills !== null && bd.residualBills < 0
         ? ` The with-solar total (${bd.withSolar < 0 ? `~\u2212${money(-bd.withSolar)}` : `~${money(bd.withSolar)}`}) sits BELOW` +
           ` the system's own cost: your feed-in credit on surplus out-earns the small bill that remains, so the` +
@@ -3839,7 +3876,7 @@ function drawAutoChart(p) {
 
 // Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
 
-const PAYLOAD_CONTRACT = 10;
+const PAYLOAD_CONTRACT = 11;
 
 // -- Plausibility frontier ---------------------------------------------------
 
@@ -4195,7 +4232,7 @@ function renderResults(p) {
 
     (a.offline ? "OFFLINE MODE: this run used the bundled typical-year profile for " + p.meta.offlineCity + " - a close approximation, not your exact site. Re-run online for five years of point-specific weather. " : "") +
 
-    (inp.tariff ? `Grid spend assumes ${energyRate(inp.tariff)} at ${fmtKwh(inp.dailyKwh)} kWh/day.` : "No tariff entered, so payback is not shown.");
+    (p.tariff ? `Grid spend assumes ${energyRate(p.tariff)} at ${fmtKwh(p.dailyKwh ?? inp.dailyKwh)} kWh/day.` : "No tariff entered, so payback is not shown.");
 
   let briefLines;
 
@@ -4281,6 +4318,37 @@ function renderResults(p) {
 
 }
 
+function sameSystem(a, b) {
+  return !!a && !!b && a.chemistry === b.chemistry && a.pvKw === b.pvKw && a.battKwh === b.battKwh;
+}
+
+// The banner follows the selection too: when the visitor picks a system that
+// is NOT the recommendation (adopted curve point, matrix cell, ladder tab),
+// the banner names and prices the selected system instead of silently
+// describing a different one than the charts, BOM and blue dot below it.
+function renderSelectedBanner(p, sel) {
+  const wrap = $("bestPickWrap");
+  if (!wrap || !sel || sameSystem(sel, p.best)) return false;
+  wrap.innerHTML = "";
+  const card = el("div", { class: "bom-card" });
+  card.style.borderColor = "var(--secondary-accent, #3b82f6)";
+  const title = (sel.pvKw === 0 && sel.battKwh > 0)
+    ? `${sel.chemLabel || sel.chemistry}: ${fmt(sel.battKwh)} kWh battery (peak-hour offset)`
+    : (sel.battKwh === 0)
+      ? `${sel.chemLabel || sel.chemistry}: ${sel.pvKw} kW solar (no battery)`
+      : `${sel.chemLabel || sel.chemistry}: ${sel.pvKw} kW solar + ${fmt(sel.battKwh)} kWh battery`;
+  card.appendChild(el("div", { class: "bom-badge" }, "Selected system"));
+  card.appendChild(el("h3", {}, title));
+  appendRows(card, entryDetailRows(p, sel));
+  if (p.best) {
+    const b = p.best;
+    card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
+      `Recommendation stays ${b.chemLabel || b.chemistry} ${b.pvKw} kW + ${fmt(b.battKwh)} kWh (lowest true 20-year cost, ~${money(b.lifetimeCostMid)}).`));
+  }
+  wrap.appendChild(card);
+  return true;
+}
+
 // Everything below the run that must follow the SELECTED system (charts,
 // hardware list, export figures, share link, print sheet, matrix highlight).
 // Called from renderResults on a full run and straight from curve-point/
@@ -4291,6 +4359,9 @@ function refreshSelectionOutputs(p) {
   const isGT = p.mode === "gridtie";
   const hasAuto = !!(p.auto && p.auto.length);
   const sel = resolveSelected(p);
+  // Banner follows the selection (no-op when the selection IS the best —
+  // the recommendation banner from the full render already stands).
+  renderSelectedBanner(p, sel);
   // The matrix highlight tracks the selection — but only where the matrix IS
   // the main view (grid-tie auto, or an off-grid auto session on its matrix
   // tab). Card and ladder views keep their own chrome, untouched.
@@ -4376,11 +4447,24 @@ function updateShareHash(p, inp) {
 
     if (inp.chemistry === "auto" && inp.mode !== "gridtie" && $("autoTier")) o.at = $("autoTier").value;
 
+    if (inp.chemistry === "auto" && inp.mode === "gridtie" && $("autoTarget")) o.ag = $("autoTarget").value;
+
     if (inp.mode === "gridtie") {
       o.cc = inp.customCut;
     }
 
     if (selectedKey) o.sel = selectedKey;
+
+    // Focus/adopted systems live only in memory — encode the exact hardware
+    // so a shared link re-adopts it instead of silently reopening as "best".
+    // (Matrix/auto/tier/target/custom selections re-resolve from the payload.)
+    if (selectedKey === "adopted" && adoptedEntry) {
+      o.fp = adoptedEntry.pvKw; o.fb = adoptedEntry.battKwh; o.fc = adoptedEntry.chemistry;
+    } else if (selectedKey === "focus" && p && p.focusSystem) {
+      o.fp = p.focusSystem.pvKw; o.fb = p.focusSystem.battKwh; o.fc = p.focusSystem.chemistry;
+    }
+
+    if ($("loadMode") && $("loadMode").value === "bill") o.lm = "bill";
 
     if (inp.tariff) o.tf = inp.tariff;
 
@@ -4436,6 +4520,11 @@ function restoreFromShare() {
 
   if (o.at && ["tier100", "tier99", "tier95"].includes(o.at) && $("autoTier")) $("autoTier").value = o.at;
 
+  if (o.ag && typeof o.ag === "string" && $("autoTarget")) {
+    const valid = ["cut10", "cut15", "cut20", "cut25", "cut30", "cut60", "cut80", "cut95"];
+    if (valid.includes(o.ag)) $("autoTarget").value = o.ag;
+  }
+
   if (Number.isFinite(o.cc) && o.cc >= 0.01 && o.cc <= 1.11) {
     customCutFraction = o.cc;
     const cutIn = $("cutSlider");
@@ -4453,7 +4542,16 @@ function restoreFromShare() {
     }
   }
 
-  if (typeof o.sel === "string" && /^(best|focus|custom|adopted|matrix:[a-z]+:(cut60|cut80|cut95|cut[0-9]+|custom)|auto:[a-z]+|tier:[a-z0-9]+|target:[a-z0-9]+)$/.test(o.sel)) {
+  // An adopted/focus selection re-runs the engine with the EXACT shared
+  // hardware (pendingFocus), landing on "focus" — the same system, same
+  // charts. Anything else re-resolves from the fresh payload below.
+  if ((o.sel === "adopted" || o.sel === "focus") && Number.isFinite(o.fp) && Number.isFinite(o.fb)) {
+    pendingFocus = {
+      pvKw: o.fp, battKwh: o.fb,
+      chemistry: ["naion", "lfp", "agm"].includes(o.fc) ? o.fc : null,
+    };
+    selectedKey = "focus";
+  } else if (typeof o.sel === "string" && /^(best|focus|custom|adopted|matrix:[a-z]+:(cut60|cut80|cut95|cut[0-9]+|custom)|auto:[a-z]+|tier:[a-z0-9]+|target:[a-z0-9]+)$/.test(o.sel)) {
     selectedKey = o.sel;
   }
 
@@ -4477,6 +4575,21 @@ function restoreFromShare() {
       cv.value = String(+display.toFixed(4));
     }
 
+  }
+
+  // Bill mode round-trips through the kWh value (appliance checklists cannot
+  // be encoded): re-anchor the bill slider from the shared kWh and the rate
+  // now in the form, so the basis line still reads "monthly electric bill".
+  if (o.lm === "bill" && $("loadMode") && $("billSlider")) {
+    $("loadMode").value = "bill";
+    setLoadPanel();
+    const rate = displayRate();
+    if (rate > 0) {
+      billAnchorKwh = kw;
+      billTouched = false;
+      billUserNominal = null;
+      syncBillSlider();
+    }
   }
 
   setStatus(" Loaded a shared result - running the simulation for this location…");
@@ -4600,6 +4713,8 @@ function populatePrintSheet(p, inp) {
       battNameplateKwh: hwEntry.battNameplateKwh,
       chemistry: hwEntry.chemistry,
       peakLoadW: hwEntry.peakLoadW || (p.focus && p.focus.peakLoadW) || 0,
+      peakIsAverage: p.peakIsAverage !== false,
+      meanTempC: (p.assumptions && p.assumptions.meanTempC) ?? null,
       panelWatts: PANEL_WATTS_DEFAULT,
     });
     const hwRows = [];
@@ -4660,9 +4775,9 @@ function populatePrintSheet(p, inp) {
 
     <p style="font-size:9.5pt;margin:0 0 4pt;"><strong>Basis:</strong> ${inp.basis} - ${fmtKwh(inp.dailyKwh)} kWh/day -
 
-      ${p.chemistry.toUpperCase()} battery - location ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)} -
+      ${(hwEntry && hwEntry.chemLabel ? hwEntry.chemLabel : p.chemistry.toUpperCase())} battery - location ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)} -
 
-      ${p.focus ? footprintText(p.focus.pvKw) + " - " : ""}${p.tariff ? `grid price ${energyRate(p.tariff)} (~${money(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
+      ${(hwEntry || p.focus) ? footprintText((hwEntry || p.focus).pvKw) + " - " : ""}${p.tariff ? `grid price ${energyRate(p.tariff)} (~${money(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
 
     ${hwHtml}
 
@@ -5051,6 +5166,12 @@ export function initSizingUI() {
 
   try {
 
+    // Landing-page storage widget reads through this hook (same pricing
+    // module the engine uses — no second source of truth).
+    try {
+      window.BECO_BATT_COST = (kwh) => battOnlyCost(Math.max(0, Number(kwh) || 0), "lfp");
+    } catch { /* non-browser test env */ }
+
     renderCities();
     expandCitySearch();
 
@@ -5119,16 +5240,24 @@ export function initSizingUI() {
     if (elNode) elNode.addEventListener("input", () => {
       // Preserve USD value of tariff when currency switches: convert display
       // value from old rate to new so $0.42 doesn't become 0.46$ after toggle.
-      const curVal = parseFloat($("customRateVal")?.value);
-      if (Number.isFinite(curVal) && prevFxSnapshot && prevFxSnapshot.rate) {
+      // The export rate and generator fuel price are entered in the same
+      // display currency, so they convert identically — otherwise switching
+      // currency silently changes their effective USD value.
+      const convertField = (id) => {
+        const node = $(id);
+        const curVal = parseFloat(node?.value);
+        if (!node || !Number.isFinite(curVal) || !prevFxSnapshot || !prevFxSnapshot.rate) return;
         const usd = curVal / prevFxSnapshot.rate;
         const nextFx = fxActive();
         if (nextFx && nextFx.rate) {
-          $("customRateVal").value = String(+(usd * nextFx.rate).toFixed(4));
+          node.value = String(+(usd * nextFx.rate).toFixed(4));
         } else if (!nextFx) {
-          $("customRateVal").value = String(+usd.toFixed(4));
+          node.value = String(+usd.toFixed(4));
         }
-      }
+      };
+      convertField("customRateVal");
+      convertField("exportRate");
+      convertField("genFuelPrice");
 
       currencyTouched = true;
 
@@ -5338,6 +5467,25 @@ async function refreshFxRates() {
     const elN = $("fxAsOf");
 
     if (elN) elN.textContent = `Live rates as of ${fxMeta.asOf}.`;
+
+    // fxActive() reads the fxRate INPUT, not the CURRENCIES table — without
+    // syncing it, the live fetch changes nothing on screen. Display-currency
+    // fields convert with it so their USD meaning is preserved.
+    const fxInput = $("fxRate");
+    const code = ($("fxCode")?.value || "").trim().toUpperCase();
+    if (fxInput && code && Number.isFinite(CURRENCIES[code]?.perUSD)) {
+      const oldRate = parseFloat(fxInput.value);
+      const newRate = CURRENCIES[code].perUSD;
+      if (Number.isFinite(oldRate) && oldRate > 0 && oldRate !== newRate) {
+        for (const id of ["customRateVal", "exportRate", "genFuelPrice"]) {
+          const node = $(id);
+          const v = parseFloat(node?.value);
+          if (node && Number.isFinite(v)) node.value = String(+((v / oldRate) * newRate).toFixed(4));
+        }
+      }
+      fxInput.value = String(newRate);
+      prevFxSnapshot = fxActive();
+    }
 
     if (lastPayload) renderResults(lastPayload);
 

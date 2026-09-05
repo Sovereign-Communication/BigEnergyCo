@@ -50,10 +50,10 @@ test("controller amps are PV/voltage × 1.25", () => {
   const c = controllerSpec(8, 48);
   // 8000/48 × 1.25 = 208.3 → 209
   assert.equal(c.ampsRequired, 209);
-  assert.match(c.suggestion, /split across 3 × 80 A/);
+  assert.match(c.suggestion, /split across 3 × 100 A/);
   const small = controllerSpec(1.5, 48);
-  assert.ok(small.ampsRequired <= 80);
-  assert.match(small.suggestion, /one \d+ A-class MPPT/);
+  assert.ok(small.ampsRequired <= 100);
+  assert.match(small.suggestion, /one \d+ A MPPT controller/);
   assert.equal(controllerSpec(0, 48), null);
 });
 
@@ -118,5 +118,5 @@ test("buildBom handles battery-less grid-tie systems without crashing", () => {
   assert.equal(b.protection, null);
   assert.equal(b.cable, null);
   assert.equal(b.inverter.recommendedKw, 3);
-  assert.ok(b.notes.some((n) => /No meaningful battery/.test(n)));
+  assert.ok(b.notes.some((n) => /No battery in this system/.test(n)));
 });

@@ -27,7 +27,7 @@ const MSG = {
 test("off-grid AUTO: every field the renderer reads exists and is sane", async () => {
   const p = await runSizing({ ...MSG, chemistry: "auto", mode: "offgrid" }, { fetchWeather: fakeWeather });
   assert.equal(p.mode, "offgrid");
-  assert.equal(p.contract, 10, "payload carries current contract version");
+  assert.equal(p.contract, 11, "payload carries current contract version");
   assert.ok(Array.isArray(p.auto) && p.auto.length === 3, "three chemistry cards");
   assert.equal(p.history.kind, "auto");
   assert.equal(p.tiers.length, 0);
@@ -264,7 +264,9 @@ test("off-grid AUTO entries carry the cumulative series the savings panel needs"
   for (const a of p.auto) {
     assert.ok(a.cumCostSeries && a.cumCostSeries.grid.length === 20 && a.cumCostSeries.solar.length === 20,
       `${a.chemistry}: cumCostSeries present over 20 years`);
-    const crossYr = a.cumCostSeries.grid.findIndex((g, i) => g >= a.cumCostSeries.solar[i]) + 1;
+    const rawCross = a.cumCostSeries.grid.findIndex((g, i) => g >= a.cumCostSeries.solar[i]) + 1;
+    // findIndex misses as 0; the invariant is never == never.
+    const crossYr = rawCross === 0 ? null : rawCross;
     assert.equal(crossYr, a.trueBreakEvenYear, `${a.chemistry}: chart crossing == true break-even row`);
   }
 });

@@ -190,7 +190,7 @@ export function expandProfile(profile24, totalHours) {
  *            longestGapHours:number, cyclesEquivalent:number,
  *            finalSoc:number, minSoc:number}}
  */
-export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp", startSoc = 0.5, tempsC = null, capture = false, capacityScale = null }) {
+export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp", startSoc = 0.5, tempsC = null, capture = false, capacityScale = null, unmetThresholdWh = 1 }) {
   const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
   const eta = Math.sqrt(chem.roundTrip);
   // Delivered-capacity factor: rate loss (usableScale) by default, or the
@@ -205,6 +205,11 @@ export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp",
   const loadN = loadWh.length;
   if (loadN !== n) throw new Error("load series must match e1kw length");
   const socSeries = capture ? new Float64Array(n) : null;
+  // Per-calendar-year unmet hours: reliability budgets are per-year ("87.6
+  // h/yr"), so the constraint must bind the WORST year, not the average — one
+  // 400-hour year plus four clean ones must not pass a 99% tier.
+  const yearCount = Math.max(1, Math.ceil(n / 8760));
+  const unmetHoursByYear = new Array(yearCount).fill(0);
 
   for (let i = 0; i < n; i++) {
     const pvAc = pvKw * e1kw[i] * ETA_INVERTER;
@@ -232,9 +237,10 @@ export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp",
       throughputDc += covered / eta;
       served += covered;
       const short = deficit - covered;
-      if (short > 1) { // >1 Wh: count as an unserved hour
-        unmet += short;
+      unmet += short;
+      if (short > unmetThresholdWh) {
         unmetHours += 1;
+        unmetHoursByYear[Math.min(yearCount - 1, Math.floor(i / 8760))] += 1;
         gap += 1;
         if (gap > longestGap) longestGap = gap;
       } else {
@@ -252,6 +258,8 @@ export function simulate({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = "lfp",
     servedWh: served,
     unmetWh: unmet,
     unmetHours,
+    unmetHoursByYear,
+    worstYearUnmetHours: Math.max(...unmetHoursByYear),
     longestGapHours: longestGap,
     cyclesEquivalent: throughputDc / cap, // full-equivalent cycles over the period
     finalSoc: soc,
@@ -336,8 +344,10 @@ export function simulateWithCycles(opts) {
 export function evaluateOversizeOptimization({
   pvKw = 0, battKwh = 0, sizingResult = null, chemistry = "lfp", years = 1,
   costPerWpv = 0.35, costPerKwhBatt = 140, costPerKwInv = 0,
-  laborPerKwh = [12, 30],
+  laborPerKwh = [12, 30], invMinKw = 0,
 }) {
+  // Inverter is costed on the load peak (never below the array): battery-only
+  // and small-array/spiky-load systems still buy a real inverter.
   const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
   if (!battKwh || battKwh <= 0 || !sizingResult) {
     return {
@@ -351,7 +361,7 @@ export function evaluateOversizeOptimization({
 
   const cyclesPerYear = sizingResult.cyclesEquivalent / years;
   const replacements = batteryReplacements(cyclesPerYear, chem.cyclesTo80);
-  const capexStandard = pvKw * 1000 * costPerWpv + pvKw * costPerKwInv + battKwh * costPerKwhBatt;
+  const capexStandard = pvKw * 1000 * costPerWpv + Math.max(pvKw, invMinKw) * costPerKwInv + battKwh * costPerKwhBatt;
   const lifeStandard = lifetimeCostUsd({
     capexMidUsd: capexStandard,
     battKwhUsable: battKwh,
@@ -375,7 +385,7 @@ export function evaluateOversizeOptimization({
   const maxCyclesForZeroSwap = chem.cyclesTo80 / 20;
   const targetBattKwh = Math.max(battKwh + 1, Math.ceil(annualThroughputDc / maxCyclesForZeroSwap));
 
-  const capexOversized = pvKw * 1000 * costPerWpv + pvKw * costPerKwInv + targetBattKwh * costPerKwhBatt;
+  const capexOversized = pvKw * 1000 * costPerWpv + Math.max(pvKw, invMinKw) * costPerKwInv + targetBattKwh * costPerKwhBatt;
   const lifeOversized = lifetimeCostUsd({
     capexMidUsd: capexOversized,
     battKwhUsable: targetBattKwh,
@@ -419,13 +429,22 @@ export function sizeForTier({
   maxUnmetHoursPerYear, years = 1,
   costPerWpv = 0.35, costPerKwhBatt = 140, costPerKwInv = 0,
   pvMax = 30, battMax = 200, pvStep = 0.5, battStep = 1,
-  capacityScale = null, laborPerKwh,
+  capacityScale = null, laborPerKwh, invMinKw = 0,
 }) {
+  // The strictest tier ("100% — no generator") uses a fine shortfall
+  // threshold (0.1 Wh): at a zero-hour budget, sub-1-Wh shortfalls must not
+  // pass silently. The half-full start is retained — banks are commissioned
+  // charged, and the binding constraint is the worst dark stretch mid-series,
+  // which the per-year accounting below already judges strictly.
+  const strict = maxUnmetHoursPerYear <= 0;
   const evaluate = (pv, batt) => {
-    const r = simulate({ pvKw: pv, battKwhUsable: batt, e1kw, loadWh, chemistry, tempsC, capacityScale });
-    return { avgUnmet: r.unmetHours / years, r };
+    const r = simulate({
+      pvKw: pv, battKwhUsable: batt, e1kw, loadWh, chemistry, tempsC,
+      capacityScale, unmetThresholdWh: strict ? 0.1 : 1,
+    });
+    return { worstYear: r.worstYearUnmetHours, r };
   };
-  const meets = (ev) => ev.avgUnmet <= maxUnmetHoursPerYear + 1e-9;
+  const meets = (ev) => ev.worstYear <= maxUnmetHoursPerYear + 1e-9;
 
   // Lifetime-cost objective: among banks meeting reliability, pick the one
   // whose TRUE cost over the horizon is lowest — capex plus every bank swap
@@ -435,7 +454,7 @@ export function sizeForTier({
     const cyclesPerYear = r.cyclesEquivalent / years;
     const replacements = batteryReplacements(cyclesPerYear, CHEMISTRIES[chemistry].cyclesTo80);
     const life = lifetimeCostUsd({
-      capexMidUsd: p * 1000 * costPerWpv + p * costPerKwInv + b * costPerKwhBatt,
+      capexMidUsd: p * 1000 * costPerWpv + Math.max(p, invMinKw) * costPerKwInv + b * costPerKwhBatt,
       battKwhUsable: b,
       battPriceMidPerKwh: costPerKwhBatt,
       replacements,
@@ -446,12 +465,18 @@ export function sizeForTier({
 
   let best = null, bestBatt = null, bestObj = Infinity;
   for (let b = battStep; b <= battMax; b += battStep) {
+    let firstFeasible = null;
     for (let p = pvStep; p <= pvMax; p += pvStep) {
       const ev = evaluate(p, b);
       if (!meets(ev)) continue;
+      if (!firstFeasible) firstFeasible = { p, ev };
+      // The objective is lifetime cost (capex + swaps + labor), NOT capex:
+      // cycling is not monotonic in PV at fixed battery, so a slightly
+      // larger array can pay for itself in fewer swaps. Probe above the
+      // first feasible PV instead of stopping at it.
       const obj = lifetimeObjective(p, b, ev.r).total;
       if (obj < bestObj) { bestObj = obj; bestBatt = b; best = { pvKw: p, battKwh: b, result: ev.r, obj }; }
-      break; // smallest PV that works for this battery; larger PV only costs more
+      if (p >= firstFeasible.p + 4 * pvStep) break;
     }
     // Lifetime cost rises again once swaps are exhausted and further
     // oversizing only adds capex; stop a bounded window past the optimum.
@@ -486,16 +511,36 @@ export function sizeForTier({
     costPerKwhBatt,
     costPerKwInv,
     laborPerKwh,
+    invMinKw,
   });
-  if (opt.useOversized && opt.oversizedBattKwh > best.battKwh && opt.oversizedBattKwh <= battMax) {
-    const ev = evaluate(best.pvKw, opt.oversizedBattKwh);
-    if (meets(ev)) {
-      best = {
-        pvKw: best.pvKw,
-        battKwh: opt.oversizedBattKwh,
-        result: ev.r,
-        obj: lifetimeObjective(best.pvKw, opt.oversizedBattKwh, ev.r).total,
-      };
+  if (opt.useOversized && opt.oversizedBattKwh > best.battKwh) {
+    // Verify zero-swap on a fresh simulation instead of assuming it
+    // (throughput shifts with bank size), growing the bank within the
+    // envelope until replacements truly hit zero. Then re-optimize PV
+    // downward: a bigger bank usually needs a smaller array.
+    let t = opt.oversizedBattKwh;
+    let adopted = null;
+    for (let guard = 0; guard < 6 && t <= battMax; guard++) {
+      const ev = evaluate(best.pvKw, t);
+      if (!meets(ev)) break;
+      const cpy = ev.r.cyclesEquivalent / years;
+      if (batteryReplacements(cpy, CHEMISTRIES[chemistry].cyclesTo80) === 0) {
+        adopted = { t, ev };
+        break;
+      }
+      t = Math.min(battMax + battStep, Math.ceil(t * 1.25));
+    }
+    if (adopted) {
+      let adopPv = best.pvKw, adopEv = adopted.ev;
+      for (let p = best.pvKw - pvStep; p >= pvStep; p -= pvStep) {
+        const ev = evaluate(p, adopted.t);
+        if (!meets(ev)) break;
+        adopPv = p; adopEv = ev;
+      }
+      const obj = lifetimeObjective(adopPv, adopted.t, adopEv.r).total;
+      if (obj < best.obj) {
+        best = { pvKw: adopPv, battKwh: adopted.t, result: adopEv.r, obj };
+      }
     }
   }
   best.oversizeScenario = opt.oversizeScenario;
@@ -513,6 +558,15 @@ export function sizeAllTiers(opts) {
     const best = sizeForTier({ ...opts, maxUnmetHoursPerYear: t.maxUnmetHoursPerYear });
     return { tier: t, sizing: best };
   });
+}
+
+// Battery-only (no-PV) time-of-use window: evening peak the bank discharges
+// into. Shared by the simulator, the bill-cut search, and the frontier so the
+// peak-offset metric can never disagree between views.
+export const PEAK_HOUR_START = 16;
+export const PEAK_HOUR_END = 21; // exclusive
+export function isPeakHour(hourOfDay) {
+  return hourOfDay >= PEAK_HOUR_START && hourOfDay < PEAK_HOUR_END;
 }
 
 // ── Grid-connected mode: bill reduction without exporting ───────────────────
@@ -540,6 +594,7 @@ export function simulateOffset({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = 
 
   let soc = startSoc;
   let direct = 0, fromBatt = 0, imported = 0, curtailed = 0;
+  let peakImported = 0, peakLoad = 0;
   let throughputDc = 0, minSoc = cap > 0 ? soc : 0;
   const n = e1kw.length;
   if (loadWh.length !== n) throw new Error("load series must match e1kw length");
@@ -551,23 +606,30 @@ export function simulateOffset({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = 
     const load = loadWh[i];
     if (isBatteryOnly) {
       const hourOfDay = i % 24;
-      const isPeakHour = hourOfDay >= 16 && hourOfDay < 21;
-      if (!isPeakHour && soc < 1.0 && !(tempsC && tempsC[i] < chem.chargeMinC)) {
+      const peak = isPeakHour(hourOfDay);
+      if (peak) peakLoad += load;
+      if (!peak && soc < 1.0 && !(tempsC && tempsC[i] < chem.chargeMinC)) {
         const room = cap - soc * cap;
         const maxChargeWh = cap / 4;
         const charged = Math.min(maxChargeWh * eta, room);
         soc += charged / cap;
         throughputDc += charged;
-        imported += load;
-      } else if (isPeakHour && soc > 0) {
+        // Off-peak grid charging is metered: the AC drawn from the grid is
+        // the DC stored divided by charge efficiency (previously uncounted,
+        // which made peak-shaving look like free energy).
+        imported += load + charged / eta;
+      } else if (peak && soc > 0) {
         const availableAc = soc * cap * eta;
         const covered = Math.min(load, availableAc);
         soc -= covered / eta / cap;
         throughputDc += covered / eta;
         fromBatt += covered;
-        imported += Math.max(0, load - covered);
+        const imp = Math.max(0, load - covered);
+        imported += imp;
+        peakImported += imp;
       } else {
         imported += load;
+        if (peak) peakImported += load;
       }
       if (capture && cap > 0) socSeries[i] = soc;
       if (cap > 0 && soc < minSoc) minSoc = soc;
@@ -612,6 +674,12 @@ export function simulateOffset({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = 
     battWhAc: fromBatt,
     importedWh: imported,
     curtailedWh: curtailed,
+    // Evening-peak window accounting (battery-only ToU shifting): the peak
+    // load and how much of it still came from the grid. For PV+battery
+    // systems these are zero and the total-import metric applies instead.
+    peakLoadWh: peakLoad,
+    peakImportedWh: peakImported,
+    peakOffsetFraction: peakLoad > 0 ? Math.max(0, 1 - peakImported / peakLoad) : 0,
     cyclesEquivalent: cap > 0 ? throughputDc / cap : 0,
     finalSoc: soc,
     minSoc: cap > 0 ? minSoc : 0,
@@ -633,13 +701,19 @@ export function sizeForBillCut({
   minFraction = 0.8, years = 1,
   costPerWpv = 0.35, costPerKwhBatt = 140, costPerKwInv = 0,
   pvMax = 30, battMax = 100, battStep = 1,
-  capacityScale = null, laborPerKwh,
+  capacityScale = null, laborPerKwh, invMinKw = 0,
 }) {
   const f = Number(minFraction);
   if (!Number.isFinite(f) || f < 0.01 || f > 1.11) {
     throw new RangeError(`minFraction must be within [0.01, 1.11] (a 1% to 111% bill cut); got ${minFraction}`);
   }
   const loadTotal = [...loadWh].reduce((a, b) => a + b, 0);
+  // Battery-only (pvMax === 0): there is no PV, so total imports can never
+  // fall — charging losses always add. The honest target is the evening-peak
+  // window instead: offset at least minFraction of peak-window energy. The
+  // 10/15/20% battery targets are named as peak cuts, so the fraction applies
+  // directly to peak load (no share conversion needed).
+  const peakOnly = pvMax === 0;
   // Above 100% the visitor wants to PRODUCE more than the load consumes and
   // sell/track the surplus, so the constraint becomes "the bill is fully
   // covered AND at least (f-1) of annual load is produced as surplus". A mere
@@ -650,9 +724,11 @@ export function sizeForBillCut({
   const surplusTarget = f > 1;
   const importBudget = surplusTarget ? loadTotal * 0.005 : loadTotal * (1 - f);
   const evaluate = (pv, batt) => simulateOffset({ pvKw: pv, battKwhUsable: batt, e1kw, loadWh, chemistry, tempsC, capacityScale });
-  const meets = surplusTarget
-    ? (r) => r.importedWh <= importBudget + 1e-6 && r.curtailedWh >= loadTotal * (f - 1) - 1e-6
-    : (r) => r.importedWh <= importBudget + 1e-6;
+  const meets = peakOnly
+    ? (r) => r.peakOffsetFraction + 1e-9 >= f
+    : surplusTarget
+      ? (r) => r.importedWh <= importBudget + 1e-6 && r.curtailedWh >= loadTotal * (f - 1) - 1e-6
+      : (r) => r.importedWh <= importBudget + 1e-6;
 
   // Lifetime-cost objective: among systems meeting the bill-cut target, pick
   // the one whose TRUE cost over the horizon is lowest (capex plus every bank
@@ -662,7 +738,7 @@ export function sizeForBillCut({
     const cyclesPerYear = r.cyclesEquivalent / years;
     const replacements = batteryReplacements(cyclesPerYear, CHEMISTRIES[chemistry].cyclesTo80);
     const life = lifetimeCostUsd({
-      capexMidUsd: p * 1000 * costPerWpv + p * costPerKwInv + b * costPerKwhBatt,
+      capexMidUsd: p * 1000 * costPerWpv + Math.max(p, invMinKw) * costPerKwInv + b * costPerKwhBatt,
       battKwhUsable: b,
       battPriceMidPerKwh: costPerKwhBatt,
       replacements,
@@ -680,10 +756,11 @@ export function sizeForBillCut({
       if (!best || obj < best.obj) best = { pvKw: 0, battKwh: b, result: r, obj };
       continue;
     }
-    // With a bigger bank, the required PV cannot be larger than before
-    // (bill-cut regime). For surplus targets the monotonicity runs the other
-    // way (storage eats curtailment), so skip the floor and search fresh.
-    const pvFloor = (!surplusTarget && best) ? Math.max(0.05, best.pvKw - 1) : 0.05;
+    // No lower-bound shortcut: the required PV for a bigger bank is only
+    // bounded ABOVE by the previous row's answer, never below, so every row
+    // searches from 0.05 (a stale floor previously oversized PV by whole kWs
+    // whenever adjacent rows differed by more than the 1 kW slack).
+    const pvFloor = 0.05;
     let lo = pvFloor, hi = pvMax;
     if (!meets(evaluate(hi, b))) continue;
     while (hi - lo > 0.25) {
@@ -733,10 +810,28 @@ export function sizeForBillCut({
     costPerKwhBatt,
     costPerKwInv,
     laborPerKwh,
+    invMinKw,
   });
-  if (opt.useOversized && opt.oversizedBattKwh > best.battKwh && opt.oversizedBattKwh <= battMax) {
-    const b = opt.oversizedBattKwh;
-    if (pvMax === 0) {
+  if (opt.useOversized && opt.oversizedBattKwh > best.battKwh) {
+    // Verify zero-swap on a fresh simulation (throughput shifts with bank
+    // size), growing within the envelope until replacements truly hit zero.
+    let b = opt.oversizedBattKwh;
+    let verified = false;
+    for (let guard = 0; guard < 6 && b <= battMax; guard++) {
+      const r = evaluate(pvMax === 0 ? 0 : best.pvKw, b);
+      if (!meets(r)) break;
+      const cpy = r.cyclesEquivalent / years;
+      if (batteryReplacements(cpy, CHEMISTRIES[chemistry].cyclesTo80) === 0) {
+        verified = true;
+        break;
+      }
+      b = Math.min(battMax + battStep, Math.ceil(b * 1.25));
+    }
+    if (!verified) {
+      opt.useOversized = false;
+      opt.oversizeScenario = "swaps_cheaper";
+      opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is cheaper over 20 years than paying upfront to oversize.`;
+    } else if (pvMax === 0) {
       const r = evaluate(0, b);
       if (meets(r)) {
         const obj = lifetimeObjective(0, b, r).total;

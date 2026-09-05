@@ -149,14 +149,15 @@ export function renderFrontier(host, frontier, opts = {}) {
   // pushes the whole curve into the left third.
   const marker = frontier.marker;
   // The point that is highlighted = the visitor's pick when they click one of
-  // the dots, otherwise the point nearest the recommended system. It is the
-  // "selected option" — the readout beside the blue dot names it in full
-  // (panels + battery + cost + coverage) so there is no ambiguity about which
-  // solar/battery option is being shown.
-  const markerIdx = marker && Number.isFinite(marker.pointIndex) ? marker.pointIndex : -1;
+  // the dots, otherwise the RECOMMENDED system at its TRUE position — not the
+  // nearest curve point. A lifetime-optimal pick can sit off the capex-optimal
+  // curve (cheap bank, counted swaps); snapping the dot onto the line would
+  // quietly display a different system than the card being read.
   const selExplicit = typeof opts.selected === "number" && opts.selected >= 0 && pts[opts.selected];
-  const selIdx = selExplicit ? opts.selected : (pts[markerIdx] ? markerIdx : -1);
-  const sel = selIdx >= 0 ? pts[selIdx] : null;
+  const sel = selExplicit ? pts[opts.selected]
+    : marker && Number.isFinite(marker.capexUsd) && Number.isFinite(marker.outcomePct)
+      ? { pvKw: marker.pvKw, battKwh: marker.battKwh, outcomePct: marker.outcomePct, capexUsd: marker.capexUsd }
+      : null;
   const lastMid = pts[pts.length - 1].capexUsd;
   const needed = Math.max(lastMid, marker && Number.isFinite(marker.capexUsd) ? marker.capexUsd : 0);
   const xMax = niceMax(needed * 1.06);
@@ -354,12 +355,20 @@ export function markerOffCurveNote(frontier, opts = {}) {
   const t = opts.t || ((k) => k);
   const m = frontier && frontier.marker;
   const pts = (frontier && frontier.points) || [];
-  if (!m || !pts.length || !Number.isFinite(m.pointIndex) || m.pointIndex < 0) return "";
-  const onCurve = pts[m.pointIndex];
-  if (!onCurve || !(onCurve.capexUsd > 0)) return "";
+  if (!m || !pts.length || !Number.isFinite(m.capexUsd) || !Number.isFinite(m.outcomePct)) return "";
   // Same coverage for less money, by more than a rounding error?
   const cheaperSame = pts.find((q) => q.outcomePct >= m.outcomePct - 0.6 && q.capexUsd < m.capexUsd * 0.97);
-  return cheaperSame ? t("frontierMarkerOffCurve") : "";
+  if (cheaperSame) return t("frontierMarkerOffCurve");
+  // Or simply not ON the line in either direction: nearest-cost curve point
+  // more than ~2 points away in coverage means the recommendation is not a
+  // curve system at all (lifetime-optimal vs capex-optimal picks differ).
+  let nearest = null, bestGap = Infinity;
+  for (const q of pts) {
+    const gap = Math.abs(q.capexUsd - m.capexUsd);
+    if (gap < bestGap) { bestGap = gap; nearest = q; }
+  }
+  if (nearest && Math.abs(nearest.outcomePct - m.outcomePct) > 2) return t("frontierMarkerOffCurve");
+  return "";
 }
 
 /**

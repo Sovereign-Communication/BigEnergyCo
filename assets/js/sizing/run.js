@@ -11,17 +11,17 @@ import {
   RELIABILITY_TIERS, BILL_TARGETS,
   DERATES_DEFAULT, GAMMA_PMAX, NOCT, ETA_INVERTER, capacityScaleFor,
   evaluateOversizeOptimization,
-} from "./engine.js?v=20260831a";
+} from "./engine.js?v=20260905a";
 
 import { fetchHourlyCached, synthesizeFromProfile } from "./nasa.js?v=20260904b";
-import { buildFrontier } from "./frontier.js?v=20260830b";
-import { fullRange, getScope, POWMR_CATALOG, estimateTariff } from "./pricing.js?v=20260830o";
+import { buildFrontier } from "./frontier.js?v=20260905a";
+import { fullRange, getScope, POWMR_CATALOG, estimateTariff, landedMidBattKwhFor } from "./pricing.js?v=20260905a";
 import {
   annualGridSpendUsd, paybackYears, batteryReplacements, lcoeUsdPerKwh,
   lifetimeCostUsd, exportValueUsd, trueBreakEvenYear, cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
 
-} from "./money.js?v=20260904b";
+} from "./money.js?v=20260905a";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -91,7 +91,7 @@ export function autoNoteFor(entries, basis) {
 // UI-contract version: bump whenever payload fields change shape. The
 // renderer compares this to its own constant and warns on mismatch instead
 // of rendering garbage from a stale cached module.
-export const PAYLOAD_CONTRACT = 10;
+export const PAYLOAD_CONTRACT = 11;
 
 const AUTO_CARD_NOTES = {
   naion: "Runs on standard LFP voltage settings (the common case): the ~40 V low cutoff protects it from deep discharge, so it gives up a little capacity but lasts longer than its deep-cycle rating.",
@@ -137,7 +137,7 @@ export async function runSizing(msg, deps = {}) {
     tariff = null, exportRate = null, mode = "offgrid",
     autoTier = "tier99", autoTargetId = "cut80",
     customCut = 0.8, focusPvKw = null, focusBattKwh = null, focusChemistry = null,
-    hardwareConfig = "both",
+    hardwareConfig = "both", peakLoadW: msgPeakLoadW = null,
   } = msg;
   const effectivePvMax = hardwareConfig === "battery" ? 0 : 45;
   const effectiveBattMax = hardwareConfig === "solar" ? 0 : 120;
@@ -170,10 +170,20 @@ export async function runSizing(msg, deps = {}) {
   if (!series._tempsC) series._tempsC = Float64Array.from(hours, (h) => h.tAmb);
   const tempsC = series._tempsC;
 
-  // Highest AC demand hour of the load profile — the number the hardware
-  // list (inverter class, DC protection) is built around.
+  // Highest AC demand hour — the number the hardware list (inverter class,
+  // DC protection) and the inverter cost basis are built around. The caller
+  // may pass a measured peak (appliance checklist sums); otherwise it falls
+  // back to the flat-profile average, flagged as such so the BOM can say so.
   let peakLoadW = 0;
   for (let i = 0; i < loadWh.length; i++) if (loadWh[i] > peakLoadW) peakLoadW = loadWh[i];
+  let peakIsAverage = true;
+  if (Number.isFinite(msgPeakLoadW) && msgPeakLoadW > 0) {
+    peakLoadW = msgPeakLoadW;
+    peakIsAverage = false;
+  }
+  // Inverter cost basis: never below the load peak (a battery-only system
+  // still buys an inverter; a spiky load needs a big one on a small array).
+  const invMinKw = Math.max(0, peakLoadW / 1000);
 
   if (series._annualYield === undefined) {
     series._annualYield = [...e1kw].reduce((a, b) => a + b, 0) / 1000 / series.meta.years;
@@ -193,7 +203,11 @@ export async function runSizing(msg, deps = {}) {
   const laborPerKwh = INSTALL_LABOR_PER_KWH_USABLE.map((v) => v * laborF);
   // Scale the landed-mid cost inputs for the sizer & money math
   const costPerWpvMid = (landedScope.pvPerW[0] + landedScope.pvPerW[1]) / 2 * landedF;
-  const landedMidBattKwh = (landedScope.battPerKwhUsable[0] + landedScope.battPerKwhUsable[1]) / 2 * landedF;
+  // Per-chemistry landed-mid battery $/usable-kWh: replacement banks are
+  // costed at their OWN chemistry's rate (AGM/Na-ion at lithium prices
+  // previously understated their lifetime cost by multiples).
+  const battMidFor = (chemId) => landedMidBattKwhFor(chemId, landedF);
+  const replCostFor = (battKwh, chemId) => Math.round(battKwh * battMidFor(chemId));
   const costPerKwInvMid = (landedScope.invPerKw[0] + landedScope.invPerKw[1]) / 2 * landedF;
 
   // Daily solar harvest per kW of array (kWh/day) — feeds the chart's sun
@@ -214,11 +228,11 @@ export async function runSizing(msg, deps = {}) {
     const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
     const cyclesPerYear = sizing.result.cyclesEquivalent / series.meta.years;
     const replacementsHorizon = batteryReplacements(cyclesPerYear, chemObj.cyclesTo80);
-    const cost = fullRange(sizing.pvKw, sizing.battKwh, chemId, landedF);
+    const cost = fullRange(sizing.pvKw, sizing.battKwh, chemId, landedF, Math.max(sizing.pvKw, invMinKw));
     const life = lifetimeCostUsd({
       capexMidUsd: cost.objectiveMid,
       battKwhUsable: sizing.battKwh,
-      battPriceMidPerKwh: landedMidBattKwh,
+      battPriceMidPerKwh: battMidFor(chemId),
       replacements: replacementsHorizon,
       laborPerKwh,
     });
@@ -233,9 +247,9 @@ export async function runSizing(msg, deps = {}) {
       chemistry: chemId,
       years: series.meta.years,
       costPerWpv: costPerWpvMid,
-      costPerKwhBatt: landedMidBattKwh,
+      costPerKwhBatt: battMidFor(chemId),
       costPerKwInv: costPerKwInvMid,
-      laborPerKwh,
+      laborPerKwh, invMinKw,
     });
     return {
       chemObj, cost,
@@ -255,20 +269,24 @@ export async function runSizing(msg, deps = {}) {
   function socBand(id, sim, chemId) {
     if (!sim.socSeries) return null;
     const ext = dailyExtremes(sim.socSeries);
+    const floor = chemId === "agm" ? 50 : 20;
+    const toPct = (v) => Math.round((floor + v * (100 - floor)) * 10) / 10;
+    const dailyMin = Array.from(ext.min, toPct);
+    const dailyMax = Array.from(ext.max, toPct);
+    // minPct is computed from the MAPPED band (same numbers the chart plots),
+    // so the "lowest point X%" label can never disagree with the band bottom.
     let minPct = 100, emptyDays = 0, fullDays = 0;
     const nDays = ext.min.length;
     for (let d = 0; d < nDays; d++) {
       const lo = ext.min[d] * 100;
-      if (lo < minPct) minPct = lo;
+      if (dailyMin[d] < minPct) minPct = dailyMin[d];
       if (lo < 5) emptyDays++;
       if (ext.max[d] >= 0.995) fullDays++;
     }
-    const floor = chemId === "agm" ? 50 : 20;
-    const toPct = (v) => Math.round((floor + v * (100 - floor)) * 10) / 10;
     return {
       id,
-      dailyMin: Array.from(ext.min, toPct),
-      dailyMax: Array.from(ext.max, toPct),
+      dailyMin,
+      dailyMax,
       minPct: Math.max(0, Math.round(minPct)),
       emptyDays, fullDays, totalDays: nDays,
     };
@@ -294,6 +312,7 @@ export async function runSizing(msg, deps = {}) {
       swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
       replacements: m.replacementsHorizon,
       batteryLifeYears: m.batteryLifeYears,
+      firstLaborUsd: m.firstLaborUsd,
     });
   }
 
@@ -346,8 +365,10 @@ export async function runSizing(msg, deps = {}) {
       (kind === "offgrid" ? sizing.result.servedWh : sizing.result.directWh + sizing.result.battWhAc) / 1000 / yrs;
     const lcoe = lcoeUsdPerKwh({
       capexMidUsd: m.cost.objectiveMid,
-      battReplaceCostUsd: Math.round(sizing.battKwh * landedMidBattKwh),
+      battReplaceCostUsd: replCostFor(sizing.battKwh, chemId),
       replacements: m.replacementsHorizon,
+      firstLaborUsd: m.firstLaborUsd,
+      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
       annualServedKwh: servedKwhPerYear,
     });
     const cell = {
@@ -375,14 +396,27 @@ export async function runSizing(msg, deps = {}) {
     let savings = null;
     if (kind === "offgrid") {
       savings = gridSpend;
-      cell.unmetHoursPerYear = +(sizing.result.unmetHours / yrs).toFixed(1);
+      cell.unmetHoursPerYear = +(sizing.result.worstYearUnmetHours ?? sizing.result.unmetHours / yrs).toFixed(1);
     } else {
       const importedKwhPerYear = sizing.result.importedWh / 1000 / yrs;
       const clippedKwhPerYear = sizing.result.curtailedWh / 1000 / yrs;
       const billAfterUsd = tariff !== null ? importedKwhPerYear * tariff : null;
+      const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
       savings = billAfterUsd !== null && gridSpend ? Math.max(0, gridSpend - billAfterUsd) : null;
-      if (savings !== null) savings += exportValueUsd(clippedKwhPerYear, exportRate);
-      cell.cutPct = Math.round((1 - importedKwhPerYear / (dailyKwh * 365)) * 100);
+      if (savings !== null) savings += exportVal;
+      cell.cutPct = gridtieCutPct(sizing);
+      // Residual bill net of feed-in credit — the grid line is the FULL bill
+      // (displaced + residual), never just the displaced slice.
+      cell.cumCostSeries = null;
+      if (savings) {
+        cell.paybackYearsLo = paybackYears(m.cost.lo, savings);
+        cell.paybackYearsHi = paybackYears(m.cost.hi, savings);
+        cell.trueBreakEvenYear = breakEvenFor(m, savings);
+        cell.cumCostSeries = billAfterUsd === null
+          ? cumCostFor(m, savings)
+          : cumCostFor(m, savings, billAfterUsd - exportVal);
+      }
+      return cell;
     }
     if (savings) {
       cell.paybackYearsLo = paybackYears(m.cost.lo, savings);
@@ -391,6 +425,21 @@ export async function runSizing(msg, deps = {}) {
       cell.cumCostSeries = cumCostFor(m, savings);
     }
     return cell;
+  }
+
+  /**
+   * Bill-cut % for a grid-tie sizing result. Battery-only systems (no PV)
+   * can never reduce TOTAL imports (charging losses add), so their cut is
+   * the evening-peak-window offset fraction — the same metric the search
+   * constrained. Every card, cell, curve point and the search itself share
+   * this helper, so the % can never disagree between views.
+   */
+  function gridtieCutPct(sizing) {
+    if (!sizing || !sizing.result) return null;
+    if (sizing.pvKw <= 0) return Math.round((sizing.result.peakOffsetFraction || 0) * 100);
+    const yrs = series.meta.years;
+    const importedKwhPerYear = sizing.result.importedWh / 1000 / yrs;
+    return Math.round((1 - importedKwhPerYear / (dailyKwh * 365)) * 100);
   }
 
   /** Lowest true-20-year-cost solvable entry — the "Best pick". */
@@ -431,7 +480,7 @@ export async function runSizing(msg, deps = {}) {
       battKwh: sizing.battKwh,
       battNameplateKwh: m.battNameplateKwh,
       costLo: m.cost.lo, costHi: m.cost.hi,
-      cutPct: Math.round((1 - importedKwhPerYear / (dailyKwh * 365)) * 100),
+      cutPct: gridtieCutPct(sizing),
       billAfterMonthlyUsd: billAfterUsd === null ? null : Math.round(billAfterUsd / 12),
       paybackYearsLo: savingsUsd !== null ? paybackYears(m.cost.lo, savingsUsd + exportVal) : null,
       paybackYearsHi: savingsUsd !== null ? paybackYears(m.cost.hi, savingsUsd + exportVal) : null,
@@ -456,8 +505,10 @@ export async function runSizing(msg, deps = {}) {
       lcoeUsdPerKwh: (() => {
         const l = lcoeUsdPerKwh({
           capexMidUsd: m.cost.objectiveMid,
-          battReplaceCostUsd: Math.round(sizing.battKwh * landedMidBattKwh),
+          battReplaceCostUsd: replCostFor(sizing.battKwh, chemId),
           replacements: m.replacementsHorizon,
+          firstLaborUsd: m.firstLaborUsd,
+          swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
           annualServedKwh: servedKwhPerYear,
         });
         return l === null ? null : +l.toFixed(4);
@@ -541,8 +592,10 @@ export async function runSizing(msg, deps = {}) {
       const servYr = sim.servedWh / 1000 / yrs;
       const lcoe = lcoeUsdPerKwh({
         capexMidUsd: m.cost.objectiveMid,
-        battReplaceCostUsd: Math.round(fBatt * landedMidBattKwh),
+        battReplaceCostUsd: replCostFor(fBatt, fChem),
         replacements: m.replacementsHorizon,
+        firstLaborUsd: m.firstLaborUsd,
+        swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
         annualServedKwh: servYr,
       });
       const chemObj = CHEMISTRIES[fChem] || CHEMISTRIES.lfp;
@@ -558,7 +611,7 @@ export async function runSizing(msg, deps = {}) {
         pvCostLo: m.cost.pvCostLo, pvCostHi: m.cost.pvCostHi,
         battCostLo: m.cost.battCostLo, battCostHi: m.cost.battCostHi,
         battPerKwhLo: m.cost.battPerKwhLo, battPerKwhHi: m.cost.battPerKwhHi,
-        unmetHoursPerYear: +(sim.unmetHours / yrs).toFixed(1),
+        unmetHoursPerYear: +(sim.worstYearUnmetHours ?? sim.unmetHours / yrs).toFixed(1),
         longestGapHours: sim.longestGapHours,
         replacementsHorizon: m.replacementsHorizon,
         swapsAndLaborUsd: m.swapsAndLaborUsd,
@@ -597,8 +650,10 @@ export async function runSizing(msg, deps = {}) {
     const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
     const lcoe = lcoeUsdPerKwh({
       capexMidUsd: m.cost.objectiveMid,
-      battReplaceCostUsd: Math.round(sizing.battKwh * landedMidBattKwh),
+      battReplaceCostUsd: replCostFor(sizing.battKwh, chemId),
       replacements: m.replacementsHorizon,
+      firstLaborUsd: m.firstLaborUsd,
+      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
       annualServedKwh: servedKwhPerYear,
     });
     const sim = simulateOffset({
@@ -623,7 +678,7 @@ export async function runSizing(msg, deps = {}) {
       pvCostLo: m.cost.pvCostLo, pvCostHi: m.cost.pvCostHi,
       battCostLo: m.cost.battCostLo, battCostHi: m.cost.battCostHi,
       battPerKwhLo: m.cost.battPerKwhLo, battPerKwhHi: m.cost.battPerKwhHi,
-      cutPct: Math.round((1 - importedKwhPerYear / (dailyKwh * 365)) * 100),
+      cutPct: gridtieCutPct(sizing),
       importedKwhPerYear: Math.round(importedKwhPerYear),
       clippedKwhPerYear: Math.round(clippedKwhPerYear),
       exportValueAnnualUsd: Math.round(exportVal),
@@ -665,7 +720,7 @@ export async function runSizing(msg, deps = {}) {
     const chemId = (f && f.chemistry) || (chemistry === "auto" ? "lfp" : chemistry);
     const capScale = capacityScaleFor(chemId, meanTempC);
     const costFn = (pv, b) => {
-      const r = fullRange(pv, b, chemId, landedF);
+      const r = fullRange(pv, b, chemId, landedF, Math.max(pv, invMinKw));
       return { mid: r.objectiveMid, lo: r.lo, hi: r.hi };
     };
     // Sweep well past the headline answer so the user's option sits inside the
@@ -699,10 +754,13 @@ export async function runSizing(msg, deps = {}) {
       const sim = payload.mode === "gridtie"
         ? simulateOffset({ pvKw: f.pvKw, battKwhUsable: f.battKwh, e1kw, loadWh, chemistry: f.chemistry, tempsC, capacityScale: fScale })
         : simulate({ pvKw: f.pvKw, battKwhUsable: f.battKwh, e1kw, loadWh, chemistry: f.chemistry, tempsC, capacityScale: fScale });
+      // Peak metric only on a pure-battery sweep, matching the curve's own
+      // axis (see sweepSystems) — never mixed with bill-cut % on one chart.
+      const pureBatterySweep = payload.mode === "gridtie" && !(pvMax > 0);
       const outcome = payload.mode === "gridtie"
-        ? 1 - sim.importedWh / loadTotalWh
+        ? (pureBatterySweep && f.pvKw <= 0 && f.battKwh > 0 ? sim.peakOffsetFraction : 1 - sim.importedWh / loadTotalWh)
         : sim.servedWh / loadTotalWh;
-      const cost = fullRange(f.pvKw, f.battKwh, f.chemistry, landedF);
+      const cost = fullRange(f.pvKw, f.battKwh, f.chemistry, landedF, Math.max(f.pvKw, invMinKw));
       let pointIndex = -1, bestGap = Infinity;
       frontier.points.forEach((pt, i) => {
         const gap = Math.abs(pt.capexUsd - cost.objectiveMid);
@@ -728,8 +786,10 @@ export async function runSizing(msg, deps = {}) {
       const servYr = (payload.mode === "gridtie" ? pt.result.directWh + pt.result.battWhAc : pt.result.servedWh) / 1000 / yrs;
       const lcoe = lcoeUsdPerKwh({
         capexMidUsd: m.cost.objectiveMid,
-        battReplaceCostUsd: Math.round(pt.battKwh * landedMidBattKwh),
+        battReplaceCostUsd: replCostFor(pt.battKwh, chemId),
         replacements: m.replacementsHorizon,
+        firstLaborUsd: m.firstLaborUsd,
+        swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
         annualServedKwh: servYr,
       });
       const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
@@ -765,14 +825,14 @@ export async function runSizing(msg, deps = {}) {
         d.clippedKwhPerYear = Math.round(clipKwhYr);
         d.exportValueAnnualUsd = Math.round(exportV);
         d.billAfterMonthlyUsd = billAfter === null ? null : Math.round(billAfter / 12);
-        d.cutPct = Math.round((1 - impKwhYr / (dailyKwh * 365)) * 100);
+        d.cutPct = gridtieCutPct({ pvKw: pt.pvKw, result: pt.result });
         savingsBase = billAfter !== null && gridSpend ? Math.max(0, gridSpend - billAfter) : null;
         if (savingsBase !== null) savingsBase += exportV;
         // Net of the feed-in credit — deliberately NOT floored at $0, so a
         // net-metering surplus (credit > remaining bill) shows as negative.
         residualUsd = billAfter === null ? 0 : billAfter - exportV;
       } else {
-        d.unmetHoursPerYear = +(pt.result.unmetHours / yrs).toFixed(1);
+        d.unmetHoursPerYear = +(pt.result.worstYearUnmetHours ?? pt.result.unmetHours / yrs).toFixed(1);
         d.longestGapHours = pt.result.longestGapHours;
         savingsBase = gridSpend;
       }
@@ -797,6 +857,9 @@ export async function runSizing(msg, deps = {}) {
     contract: PAYLOAD_CONTRACT,
     meta: series.meta,
     annualYieldPerKw: Math.round(annualYield),
+    dailyKwh: +dailyKwh.toFixed(2),
+    peakLoadW: Math.round(peakLoadW),
+    peakIsAverage,
     chemistry,
     hardwareConfig: hardwareConfig || "both",
     tariff: tariff ?? null,
@@ -815,10 +878,17 @@ export async function runSizing(msg, deps = {}) {
       dataYears: `${series.meta.startYear}–${series.meta.endYear}`,
       source: series.meta.source,
       offline: !!series.meta.offline,
-      capacityScale: +capacityScaleFor(chemistry === "auto" ? "lfp" : chemistry, meanTempC).toFixed(3),
+      capacityScale: chemistry === "auto"
+        ? Object.fromEntries(["naion", "lfp", "agm"].map((c) => [c, +capacityScaleFor(c, meanTempC).toFixed(3)]))
+        : +capacityScaleFor(chemistry, meanTempC).toFixed(3),
       meanTempC: Math.round(meanTempC),
       capacityNote: (() => {
-        const capChem = chemistry === "auto" ? "lfp" : chemistry;
+        if (chemistry === "auto") {
+          const tC = Math.round(meanTempC);
+          const agm = Math.round(capacityScaleFor("agm", meanTempC) * 100);
+          return `Capacity model at this site's mean ${tC}°C: LFP 100%, sodium-ion 85% (LFP voltage settings), lead-acid (AGM) about ${agm}% (cold derating where applicable).`;
+        }
+        const capChem = chemistry;
         const scale = capacityScaleFor(capChem, meanTempC);
         const pct = Math.round(scale * 100);
         const tC = Math.round(meanTempC);
@@ -838,8 +908,8 @@ export async function runSizing(msg, deps = {}) {
   // the full run and by the incremental slider patch alike).
   const billCutOpts = {
     e1kw, loadWh, tempsC, chemistry,
-    years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
-    pvMax: effectivePvMax, battMax: effectiveBattMax, battStep: 1, capacityScale: capacityScaleFor(chemistry, meanTempC), laborPerKwh,
+    years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: battMidFor(chemistry), costPerKwInv: costPerKwInvMid,
+    pvMax: effectivePvMax, battMax: effectiveBattMax, battStep: 1, capacityScale: capacityScaleFor(chemistry, meanTempC), laborPerKwh, invMinKw,
     targets: effectiveTargets,
   };
 
@@ -861,8 +931,8 @@ export async function runSizing(msg, deps = {}) {
         for (const chemId of ["naion", "lfp", "agm"]) {
           const sized = sizeForBillCut({
             e1kw, loadWh, tempsC, chemistry: chemId, minFraction: customFracGt,
-            years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
-            pvMax: effectivePvMax, battMax: effectiveBattMax, battStep: 1, capacityScale: capacityScaleFor(chemId, meanTempC), laborPerKwh,
+            years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: battMidFor(chemId), costPerKwInv: costPerKwInvMid,
+            pvMax: effectivePvMax, battMax: effectiveBattMax, battStep: 1, capacityScale: capacityScaleFor(chemId, meanTempC), laborPerKwh, invMinKw,
           });
           const entry = sized ? entryFromSizing(chemId, sized) : null;
           if (entry) customEntries.push(entry);
@@ -958,8 +1028,8 @@ export async function runSizing(msg, deps = {}) {
         const capScale = capacityScaleFor(chemId, meanTempC);
         const results = sizeAllBillTargets({
           e1kw, loadWh, tempsC, chemistry: chemId,
-          years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
-          pvMax: effectivePvMax, battMax: effectiveBattMax, battStep: 1, capacityScale: capScale, laborPerKwh,
+          years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: battMidFor(chemId), costPerKwInv: costPerKwInvMid,
+          pvMax: effectivePvMax, battMax: effectiveBattMax, battStep: 1, capacityScale: capScale, laborPerKwh, invMinKw,
           targets: effectiveTargets,
         });
         resultsByChem[chemId] = results;
@@ -1000,8 +1070,8 @@ export async function runSizing(msg, deps = {}) {
       for (const chemId of ["naion", "lfp", "agm"]) {
         const sized = sizeForBillCut({
           e1kw, loadWh, tempsC, chemistry: chemId, minFraction: customFracGt,
-          years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
-          pvMax: effectivePvMax, battMax: effectiveBattMax, battStep: 1, capacityScale: capacityScaleFor(chemId, meanTempC), laborPerKwh,
+          years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: battMidFor(chemId), costPerKwInv: costPerKwInvMid,
+          pvMax: effectivePvMax, battMax: effectiveBattMax, battStep: 1, capacityScale: capacityScaleFor(chemId, meanTempC), laborPerKwh, invMinKw,
         });
         const entry = sized ? entryFromSizing(chemId, sized) : null;
         if (entry) customEntries.push(entry);
@@ -1085,8 +1155,8 @@ export async function runSizing(msg, deps = {}) {
       const capScale = capacityScaleFor(chemId, meanTempC);
       const allTiers = sizeAllTiers({
         e1kw, loadWh, tempsC, chemistry: chemId,
-        years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
-        battMax: offgridBattMax, capacityScale: capScale, laborPerKwh,
+        years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: battMidFor(chemId), costPerKwInv: costPerKwInvMid,
+        battMax: offgridBattMax, capacityScale: capScale, laborPerKwh, invMinKw,
       });
       resultsByChem[chemId] = allTiers;
       for (const { tier, sizing } of allTiers) {
@@ -1107,8 +1177,10 @@ export async function runSizing(msg, deps = {}) {
       const servedKwhPerYear = sizing.result.servedWh / 1000 / series.meta.years;
       const lcoe = lcoeUsdPerKwh({
         capexMidUsd: m.cost.objectiveMid,
-        battReplaceCostUsd: Math.round(sizing.battKwh * landedMidBattKwh),
+        battReplaceCostUsd: replCostFor(sizing.battKwh, chemId),
         replacements: m.replacementsHorizon,
+        firstLaborUsd: m.firstLaborUsd,
+        swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
         annualServedKwh: servedKwhPerYear,
       });
       const entry = {
@@ -1121,7 +1193,7 @@ export async function runSizing(msg, deps = {}) {
         battKwh: sizing.battKwh,
         battNameplateKwh: m.battNameplateKwh,
         costLo: m.cost.lo, costHi: m.cost.hi,
-        unmetHoursPerYear: +(sizing.result.unmetHours / series.meta.years).toFixed(1),
+        unmetHoursPerYear: +(sizing.result.worstYearUnmetHours ?? sizing.result.unmetHours / series.meta.years).toFixed(1),
         longestGapHours: sizing.result.longestGapHours,
         replacementsHorizon: m.replacementsHorizon,
         swapsAndLaborUsd: m.swapsAndLaborUsd,
@@ -1194,8 +1266,8 @@ export async function runSizing(msg, deps = {}) {
   const capScale = capacityScaleFor(chemistry, meanTempC);
   const results = sizeAllTiers({
     e1kw, loadWh, tempsC, chemistry,
-    years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: landedMidBattKwh, costPerKwInv: costPerKwInvMid,
-    battMax: offgridBattMax, capacityScale: capScale, laborPerKwh,
+    years: series.meta.years, costPerWpv: costPerWpvMid, costPerKwhBatt: battMidFor(chemistry), costPerKwInv: costPerKwInvMid,
+    battMax: offgridBattMax, capacityScale: capScale, laborPerKwh, invMinKw,
   });
 
   const tiers = results.map(({ tier, sizing }) => {
@@ -1214,8 +1286,10 @@ export async function runSizing(msg, deps = {}) {
     const servedKwhPerYear = sizing.result.servedWh / 1000 / series.meta.years;
     const lcoe = lcoeUsdPerKwh({
       capexMidUsd: m.cost.objectiveMid,
-      battReplaceCostUsd: Math.round(sizing.battKwh * landedMidBattKwh),
+      battReplaceCostUsd: replCostFor(sizing.battKwh, chemistry),
       replacements: m.replacementsHorizon,
+      firstLaborUsd: m.firstLaborUsd,
+      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
       annualServedKwh: servedKwhPerYear,
     });
     const sim = simulate({
@@ -1238,7 +1312,7 @@ export async function runSizing(msg, deps = {}) {
       pvCostLo: m.cost.pvCostLo, pvCostHi: m.cost.pvCostHi,
       battCostLo: m.cost.battCostLo, battCostHi: m.cost.battCostHi,
       battPerKwhLo: m.cost.battPerKwhLo, battPerKwhHi: m.cost.battPerKwhHi,
-      unmetHoursPerYear: +(sizing.result.unmetHours / series.meta.years).toFixed(1),
+      unmetHoursPerYear: +(sizing.result.worstYearUnmetHours ?? sizing.result.unmetHours / series.meta.years).toFixed(1),
       longestGapHours: sizing.result.longestGapHours,
       cyclesPerYear: m.cyclesPerYear,
       batteryLifeYears: m.batteryLifeYears,

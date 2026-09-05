@@ -25,12 +25,12 @@ export function scaleSeries(s, k) {
 
 // Money/flow fields that scale linearly with the load. Ratios (cutPct,
 // paybackYears, trueBreakEvenYear, lcoeUsdPerKwh, cyclesPerYear,
-// batteryLifeYears) and SOC bands (percentages, daily extremes) are
-// scale-invariant and must NOT be touched.
+// batteryLifeYears, battPerKwhLo/Hi unit RATES) and SOC bands (percentages,
+// daily extremes) are scale-invariant and must NOT be touched.
 const SCALE_FIELDS = [
   "pvKw", "battKwh", "battNameplateKwh",
   "costLo", "costHi",
-  "pvCostLo", "pvCostHi", "battCostLo", "battCostHi", "battPerKwhLo", "battPerKwhHi",
+  "pvCostLo", "pvCostHi", "battCostLo", "battCostHi",
   "billAfterMonthlyUsd", "exportValueAnnualUsd", "clippedKwhPerYear", "importedKwhPerYear",
   "swapsAndLaborUsd", "lifetimeCostMid", "servedKwhPerYear", "peakLoadW",
 ];
@@ -38,13 +38,21 @@ const SCALE_FIELDS = [
 /**
  * Rescale one money record (auto card, matrix cell, tier, target, curve-point
  * detail, focus system...) for a k× change in load. Returns a shallow-copied
- * record; the original payload is never mutated.
+ * record; the original payload is never mutated. Money rounds to whole
+ * dollars and batteries to whole kWh — the engine's own quantization — so a
+ * rescaled payload stays comparable with a fresh engine run.
  */
 export function scaleRecord(o, k) {
   if (!o || !Number.isFinite(k)) return o;
   const n = { ...o };
   for (const f of SCALE_FIELDS) {
-    if (typeof n[f] === "number") n[f] = round2(n[f] * k);
+    if (typeof n[f] !== "number") continue;
+    // Engine quantization: batteries whole kWh, PV/nameplate 2/1 decimals,
+    // money and annual energy whole units.
+    if (f === "battKwh") n[f] = Math.round(n[f] * k);
+    else if (f === "pvKw") n[f] = Math.round(n[f] * k * 100) / 100;
+    else if (f === "battNameplateKwh") n[f] = Math.round(n[f] * k * 10) / 10;
+    else n[f] = Math.round(n[f] * k);
   }
   if (n.cumCostSeries) n.cumCostSeries = scaleSeries(n.cumCostSeries, k);
   return n;
@@ -52,13 +60,18 @@ export function scaleRecord(o, k) {
 
 function scaleFocus(o, k) {
   if (!o) return o;
-  return {
+  const n = {
     ...o,
-    pvKw: round2(o.pvKw * k),
+    pvKw: Math.round(o.pvKw * k * 100) / 100,
     battKwh: Math.round(o.battKwh * k),
-    battNameplateKwh: round2(o.battNameplateKwh * k),
+    battNameplateKwh: Math.round(o.battNameplateKwh * k * 100) / 100,
     peakLoadW: Math.round((o.peakLoadW || 0) * k),
   };
+  // The frontier marker carries its own dollars — scale them with the curve
+  // (previously the marker kept stale costs while every point doubled,
+  // spuriously tripping the off-curve note and mis-anchoring the blue dot).
+  if (typeof o.capexUsd === "number") n.capexUsd = Math.round(o.capexUsd * k);
+  return n;
 }
 
 /**
@@ -100,6 +113,10 @@ export function rescalePayload(p, k) {
       for (const f of ["ceilingCostUsd", "entryCostUsd", "kneeCostUsd", "headCostPerPoint", "tailCostPerPoint"]) {
         if (typeof reach[f] === "number") reach[f] = Math.round(reach[f] * k);
       }
+      // The searched envelope is in kW/kWh — it describes the new load too.
+      for (const f of ["pvMaxKw", "battMaxKwh"]) {
+        if (typeof reach[f] === "number") reach[f] = Math.round(reach[f] * k * 100) / 100;
+      }
     }
     out.frontier = { ...out.frontier, points, reach, marker: out.frontier.marker ? scaleFocus(out.frontier.marker, k) : null };
   }
@@ -112,6 +129,11 @@ export function sameSiteOptions(a, b) {
   const lat = (v) => Math.abs(v - Math.round(v * 1000) / 1000) < 0.0006;
   if (!lat(a.latitude - b.latitude)) return false;
   if (!lat(a.longitude - b.longitude)) return false;
+  // Hardware envelope and search-affecting options must match too: rescaling
+  // a battery-only payload into a solar+battery one (or across derates)
+  // would show hardware the envelope never searched.
   return a.mode === b.mode && a.chemistry === b.chemistry &&
+    (a.hardwareConfig || "both") === (b.hardwareConfig || "both") &&
+    JSON.stringify(a.derates || null) === JSON.stringify(b.derates || null) &&
     Number(a.tariff) === Number(b.tariff) && Number(a.exportRate) === Number(b.exportRate);
 }

@@ -129,8 +129,15 @@ export function sweepSystems({
       const result = gridTie
         ? simulateOffset({ pvKw, battKwhUsable: battKwh, e1kw, loadWh, chemistry, tempsC, capacityScale })
         : simulate({ pvKw, battKwhUsable: battKwh, e1kw, loadWh, chemistry, tempsC, capacityScale });
+      // Battery-only systems never reduce TOTAL imports (charging losses add),
+      // so in a mixed sweep they honestly score ≤ 0 in energy terms and the
+      // outcome filter drops them off the curve. Only a pure-battery sweep
+      // (pvMax <= 0, where the whole curve is about peak shifting) ranks by
+      // the evening-peak offset fraction — mixing the two metrics on one axis
+      // would let a 44% peak offset masquerade as a 44% bill cut.
+      const pureBatterySweep = gridTie && !(pvMax > 0);
       const outcome = gridTie
-        ? 1 - result.importedWh / loadTotal
+        ? (pureBatterySweep && pvKw <= 0 && battKwh > 0 ? result.peakOffsetFraction : 1 - result.importedWh / loadTotal)
         : result.servedWh / loadTotal;
       const cost = price(pvKw, battKwh);
       out.push({
@@ -328,7 +335,10 @@ export function buildFrontier(opts) {
     maxPoints: opts.maxPoints ?? FRONTIER_MAX_POINTS,
   });
   const kneeIndex = findKnee(front);
-  const pvUsed = (opts.pvMax ?? 30) <= 0 ? [0] : pvLadder(opts.pvMax ?? 30, opts.pvSteps ?? 18);
+  // Identical ladders to the sweep itself (grid-tie prepends the 0 kW
+  // solar-only point) — the bound check must judge the lattice that ran.
+  const pvUsed = (opts.pvMax ?? 30) <= 0 ? [0]
+    : (mode === "gridtie" ? [0, ...pvLadder(opts.pvMax ?? 30, opts.pvSteps ?? 18)] : pvLadder(opts.pvMax ?? 30, opts.pvSteps ?? 18));
   const battUsed = (opts.battMax ?? 100) <= 0 ? [0] : battLadder(opts.battMax ?? 100, opts.battSteps ?? 16, mode === "gridtie");
   const boundLimited = isBoundLimited(front, pvUsed, battUsed);
   return {

@@ -37,13 +37,17 @@ export function batteryReplacements(cyclesPerYear, cyclesTo80, horizonYears = HO
 
 /**
  * Levelized cost of the AC energy the system serves, USD/kWh:
- * (initial mid-scenario capex + replacement banks) / (served kWh × horizon).
- * Panels/inverter are assumed to last the horizon — stated in the UI.
+ * (initial mid-scenario capex + first-install labor + every replacement bank
+ * with its install labor) / (served kWh × horizon). Labor is real money —
+ * leaving it out flattered swap-heavy chemistries against the "true cost"
+ * message. Panels/inverter are assumed to last the horizon — stated in the UI.
  */
-export function lcoeUsdPerKwh({ capexMidUsd, battReplaceCostUsd = 0, replacements = 0, annualServedKwh, horizonYears = HORIZON_YEARS }) {
+export function lcoeUsdPerKwh({ capexMidUsd, battReplaceCostUsd = 0, replacements = 0, annualServedKwh, horizonYears = HORIZON_YEARS, firstLaborUsd = 0, swapsAndLaborTotalUsd = null }) {
   const totalKwh = (annualServedKwh || 0) * horizonYears;
   if (!(totalKwh > 0) || !Number.isFinite(capexMidUsd)) return null;
-  return (capexMidUsd + replacements * battReplaceCostUsd) / totalKwh;
+  const repl = swapsAndLaborTotalUsd ?? replacements * battReplaceCostUsd;
+  const first = Number.isFinite(firstLaborUsd) ? firstLaborUsd : 0;
+  return (capexMidUsd + first + repl) / totalKwh;
 }
 
 // Installation labor per usable kWh — paid on the first install and AGAIN
@@ -138,8 +142,8 @@ export function cumulativeCostSeries({ capexMidUsd, annualSavingsUsd, residualAn
   const solar = new Array(horizonYears);
   const system = new Array(horizonYears);
   let cumGrid = 0;
-  let cumSolar = capexMidUsd;    // solar starts with the full first cost
-  let cumSystem = capexMidUsd + firstLaborUsd;  // the card's total counts first install labor
+  let cumSolar = capexMidUsd + firstLaborUsd;   // first-install labor is paid
+  let cumSystem = capexMidUsd + firstLaborUsd;  // on day one on both lines — previously the solar line omitted it, overstating savings by exactly firstLabor
   for (let y = 1; y <= horizonYears; y++) {
     cumGrid += annualSavingsUsd + residualAnnualUsd;   // what staying on the grid costs that year
     cumSolar += residualAnnualUsd;                     // the bill you still pay with solar
@@ -193,7 +197,7 @@ export function seriesBreakdown(series) {
  * two numbers must always tell the same story). Returns null when the system
  * never breaks even inside the horizon.
  */
-export function trueBreakEvenYear({ capexMidUsd, annualSavingsUsd, swapsAndLaborTotalUsd = 0, replacements = 0, batteryLifeYears, horizonYears = HORIZON_YEARS }) {
+export function trueBreakEvenYear({ capexMidUsd, annualSavingsUsd, swapsAndLaborTotalUsd = 0, replacements = 0, batteryLifeYears, horizonYears = HORIZON_YEARS, firstLaborUsd = 0 }) {
   if (!(annualSavingsUsd > 0) || !Number.isFinite(capexMidUsd)) return null;
   const perSwap = replacements > 0 ? swapsAndLaborTotalUsd / replacements : 0;
 
@@ -208,7 +212,8 @@ export function trueBreakEvenYear({ capexMidUsd, annualSavingsUsd, swapsAndLabor
     }
   }
 
-  let cumCost = capexMidUsd;
+  const first = Number.isFinite(firstLaborUsd) ? firstLaborUsd : 0;
+  let cumCost = capexMidUsd + first;
   let cumSavings = 0;
   for (let y = 1; y <= horizonYears; y++) {
     const nSwaps = swapCounts[y];

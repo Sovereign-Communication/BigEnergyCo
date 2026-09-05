@@ -1,6 +1,6 @@
 // Unified city records used by the location combobox. The seed is instant and
 // offline; country partitions provide millions of additional place/coordinate pairs.
-import { usStateCode, US_STATES } from "./pricing.js?v=20260830o";
+import { usStateCode, US_STATES } from "./pricing.js?v=20260905a";
 
 export const CITY_CATALOG = [
   ["Honolulu", "United States", "Hawaii", 21.31, -157.86], ["Los Angeles", "United States", "California", 34.05, -118.24], ["Phoenix", "United States", "Arizona", 33.45, -112.07], ["Denver", "United States", "Colorado", 39.74, -104.99], ["Chicago", "United States", "Illinois", 41.88, -87.63], ["Miami", "United States", "Florida", 25.76, -80.19], ["New York", "United States", "New York", 40.71, -74.01], ["Toronto", "Canada", "Ontario", 43.65, -79.38], ["Mexico City", "Mexico", "North America", 19.43, -99.13],

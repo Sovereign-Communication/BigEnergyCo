@@ -117,10 +117,10 @@ test("cumulative series: system line = capex + swaps only, ends on lifetime cost
   // system = capex + first install labor + the swap; NO residual bills ever enter it.
   assert.equal(s.system[0], 5000 + firstLabor);
   assert.equal(s.system[19], 5000 + firstLabor + 1000);
-  // solar = system + accumulated residual, minus the first labor that only the
-  // system line carries -- the small offset is why the emerald endpoint can
-  // land exactly on the recommendation's "Total 20-year cost".
-  assert.equal(s.solar[19] - s.system[19], 20 * 7500 - firstLabor);
+  // solar = system + accumulated residual, exactly — both lines carry first
+  // install labor from day one, so the residual slice is the true remaining
+  // bills with no hidden offset.
+  assert.equal(s.solar[19] - s.system[19], 20 * 7500);
   // It is exactly the "Total 20-year cost" = capex + first labor + swaps, so
   // chart and recommendation card agree.
   assert.equal(s.system[19], 5000 + firstLabor + 1000);

@@ -67,9 +67,26 @@ export function nextInverterSize(kw) {
   return ceilTo(kw, INVERTER_STANDARD_KW);
 }
 
+/** True when `kw` exceeds the largest standard inverter class (stacked units needed). */
+export function inverterOverflows(kw) {
+  return kw > INVERTER_STANDARD_KW[INVERTER_STANDARD_KW.length - 1];
+}
+
 /** Smallest standard fuse/breaker rating at or above `amps`. */
 export function nextFuseSize(amps) {
   return ceilTo(amps, FUSE_STANDARD_AMPS);
+}
+
+/** True when `amps` exceeds the largest standard fuse rating. */
+export function fuseOverflows(amps) {
+  return amps > FUSE_STANDARD_AMPS[FUSE_STANDARD_AMPS.length - 1];
+}
+
+// Standard MPPT controller classes (A) — fuse ratings are NOT controller
+// sizes; a "125 A-class controller" names a product that does not exist.
+export const CONTROLLER_STANDARD_AMPS = [30, 40, 60, 80, 100];
+export function nextControllerSize(amps) {
+  return ceilTo(amps, CONTROLLER_STANDARD_AMPS);
 }
 
 /**
@@ -118,22 +135,37 @@ function diyConfig(chemistry, vBatt, nameplateKwh) {
       stringsParallel: strings,
       blocksTotal: series * strings,
       stringKwh: +stringKwh.toFixed(1),
+      providedKwh: +(strings * stringKwh).toFixed(1),
     };
   }
   const cells = DIY_CELLS[chemistry] || DIY_CELLS.lfp;
   const series = SERIES_BY_VOLTS[vBatt]?.[chemistry] ?? Math.round(vBatt / cells.cellV);
   const stringKwh = (series * cells.cellV * cells.cellAh) / 1000;
-  const strings = Math.max(1, Math.ceil(nameplateKwh / stringKwh));
+  // Sodium on standard LFP voltage settings only delivers ~85% of a string
+  // (the engine's usableScale) — size string count on deliverable energy, or
+  // the shopping list buys ~15% less storage than the simulation assumed.
+  const effectiveStringKwh = chemistry === "naion" ? stringKwh * 0.85 : stringKwh;
+  const strings = Math.max(1, Math.ceil(nameplateKwh / effectiveStringKwh));
   return {
     unitLabel: `${series}S strings of ${cells.cellAh} Ah prismatic cells`,
     seriesPerString: series,
     stringsParallel: strings,
     blocksTotal: series * strings,
     stringKwh: +stringKwh.toFixed(1),
+    providedKwh: +(strings * effectiveStringKwh).toFixed(1),
   };
 }
 
-function retailConfig(nameplateKwh) {
+function retailConfig(chemistry, nameplateKwh) {
+  // AGM has no lithium-rack equivalent: quote 12 V blocks, not 51.2 V racks.
+  if (chemistry === "agm") {
+    const blockKwh = (AGM_BLOCK.blockV * AGM_BLOCK.blockAh) / 1000;
+    const blocks = Math.max(1, Math.ceil(nameplateKwh / blockKwh));
+    return {
+      unitLabel: `12 V ${AGM_BLOCK.blockAh} Ah AGM blocks (no BMS — wire with balancing)`,
+      modules: blocks,
+    };
+  }
   const modules = Math.max(1, Math.ceil(nameplateKwh / RETAIL_MODULE_KWH));
   return {
     unitLabel: `${RETAIL_MODULE_KWH} kWh rack modules (51.2 V, BMS included)`,
@@ -146,13 +178,13 @@ function retailConfig(nameplateKwh) {
 export function controllerSpec(pvKw, vBatt) {
   if (!(pvKw > 0) || !(vBatt > 0)) return null;
   const ampsRequired = Math.ceil(((pvKw * 1000) / vBatt) * 1.25);
-  const trackers80A = Math.ceil(ampsRequired / 80);
+  const trackers100A = Math.ceil(ampsRequired / 100);
   return {
     ampsRequired,
     suggestion:
-      ampsRequired <= 80
-        ? `one ${nextFuseSize(ampsRequired)} A-class MPPT controller`
-        : `split across ${trackers80A} × 80 A MPPT trackers`,
+      ampsRequired <= 100
+        ? `one ${nextControllerSize(ampsRequired)} A MPPT controller`
+        : `split across ${trackers100A} × 100 A MPPT trackers`,
     note: "Many low-frequency hybrid inverters have an MPPT charger built in — check its max PV input covers these amps before buying a separate controller.",
   };
 }
@@ -177,7 +209,9 @@ export function protectionSpec(inverterKw, vBatt, pvKw) {
  */
 export function cableGauge(amps, vBatt, meters, meanTempC = null) {
   const requiredAmps = amps * 1.25 * (meanTempC !== null && meanTempC > HOT_DERATE_ABOVE_C ? 1 / HOT_DERATE_FACTOR : 1);
-  const minMm2Drop = (CU_RESISTIVITY * 2 * meters * amps) / (vBatt * CABLE_DROP_FRACTION);
+  // Voltage drop is computed on the SAME margined current as ampacity —
+  // sizing copper for 100 A while dropping only 80 A understates the loss.
+  const minMm2Drop = (CU_RESISTIVITY * 2 * meters * requiredAmps) / (vBatt * CABLE_DROP_FRACTION);
   for (const w of WIRE_TABLE) {
     if (w.mm2 >= minMm2Drop && w.ampacity >= requiredAmps) {
       return { meters, awg: w.awg, mm2: w.mm2 };
@@ -208,15 +242,22 @@ export function buildBom(p) {
 
   const peakKw = (p.peakLoadW || 0) / 1000;
   const invClassKw = nextInverterSize(Math.max(0.5, peakKw));
+  if (p.peakIsAverage) {
+    notes.push("Inverter sized from AVERAGE load (no appliance peak entered) — real spikes (kettle, fridge start, pump surge) can be several times higher. Enter appliances for an exact peak.");
+  }
+  if (inverterOverflows(peakKw)) {
+    notes.push(`Peak ${peakKw.toFixed(1)} kW exceeds the largest standard ${INVERTER_STANDARD_KW[INVERTER_STANDARD_KW.length - 1]} kW class — plan multiple stacked units, not one ${invClassKw} kW box.`);
+  }
 
   // Reference catalog unit (informational only — nothing is sold here).
+  // Catalog units are 48 V split-phase: only referenced for 48 V systems.
   const catalogUnit =
     [...POWMR_CATALOG.inverters].sort((a, b) => a.kw - b.kw).find((u) => u.kw >= invClassKw) || null;
 
-  const hasBank = (p.battNameplateKwh || 0) >= 0.5;
+  const hasBank = (p.battNameplateKwh || 0) > 0;
   const volts = hasBank ? pickSystemVoltage(p.battNameplateKwh, invClassKw) : null;
 
-  if (!hasBank) notes.push("No meaningful battery in this system, so voltage, bank layout, and DC protection are omitted.");
+  if (!hasBank) notes.push("No battery in this system, so voltage, bank layout, and DC protection are omitted.");
   if (volts === 12) notes.push("12 V class: fine for RV-scale loads. Above ~1.5 kW continuous, 24 V or 48 V wastes far less copper.");
   if (volts === 24) notes.push("24 V class: the middle road — workable up to about 3.5 kW continuous.");
   if (volts === 48) notes.push("48 V class: what any house-scale system uses — lowest current for the same power.");
@@ -224,8 +265,16 @@ export function buildBom(p) {
   const battery = !hasBank ? null : {
     usableDod: chem.usableDod,
     diy: diyConfig(chemistry, volts, p.battNameplateKwh),
-    retail: retailConfig(p.battNameplateKwh),
+    retail: retailConfig(chemistry, p.battNameplateKwh),
   };
+  if (battery && battery.diy.providedKwh > (p.battNameplateKwh || 0) * 1.25) {
+    notes.push(`Banks come in whole strings: the smallest ${battery.diy.unitLabel} build provides ~${battery.diy.providedKwh} kWh for a ${(p.battNameplateKwh || 0).toFixed(1)} kWh ask — the shopping list rounds UP, the simulation did not.`);
+  }
+
+  const dischargeAmps = volts ? (invClassKw * 1000) / volts : 0;
+  if (volts && fuseOverflows(dischargeAmps * 1.25)) {
+    notes.push(`Full-load battery current (~${Math.ceil(dischargeAmps)} A) exceeds standard fuse ratings — this bank needs parallel strings with per-string protection, designed by an electrician.`);
+  }
 
   return {
     chemistry,
@@ -236,13 +285,15 @@ export function buildBom(p) {
     inverter: {
       peakLoadKw: +peakKw.toFixed(2),
       recommendedKw: invClassKw,
-      surgeNote: "Pick a low-frequency unit with ~3× surge if the load includes fridges, pumps, or tools — motor start current hits hard for half a second.",
-      referenceUnit: catalogUnit ? `${catalogUnit.model} (~$${catalogUnit.priceUsd}, ${catalogUnit.note}, ${POWMR_CATALOG.checkedDate})` : `above the ${POWMR_CATALOG.inverters[0].model.split(" ")[0]} kW reference class — expect multiple stacked units`,
+      surgeNote: "Pick a low-frequency unit with ~3× surge if the load includes fridges, pumps, or tools — motor start current hits hard for half a second. Size fuses slow-blow (Class-T) so that same surge does not nuisance-trip them.",
+      referenceUnit: volts === 48
+        ? (catalogUnit ? `${catalogUnit.model} (~$${catalogUnit.priceUsd}, ${catalogUnit.note}, ${POWMR_CATALOG.checkedDate})` : `above the ${POWMR_CATALOG.inverters[0].model.split(" ")[0]} kW reference class — expect multiple stacked units`)
+        : `no 48 V reference applies here — source a ${volts} V-class inverter/charger for this bank voltage`,
     },
     controller: hasBank ? controllerSpec(p.pvKw, volts) : null,
     protection: hasBank ? protectionSpec(invClassKw, volts, p.pvKw) : null,
     cable: hasBank
-      ? CABLE_RUN_METERS.map((m) => cableGauge((invClassKw * 1000) / volts, volts, m))
+      ? CABLE_RUN_METERS.map((m) => cableGauge((invClassKw * 1000) / volts, volts, m, p.meanTempC ?? null))
       : null,
     feasibility: panelLayout(p.pvKw, p.panelWatts ?? PANEL_WATTS_DEFAULT),
     notes,

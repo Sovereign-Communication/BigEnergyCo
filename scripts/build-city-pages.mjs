@@ -4,6 +4,10 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { join, resolve } from "node:path";
+// Shared pricing/tariff sources (plain ESM, no browser deps): the worked
+// example below is computed from the same costs and tariffs as the tool, so a
+// pricing update regenerates honest pages instead of silently dating them.
+import { estimateTariff, costRange } from "../assets/js/sizing/pricing.js";
 
 const ROOT = resolve(new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
 const CHECK = process.argv.includes("--check");
@@ -59,11 +63,44 @@ function yieldBand(lat) {
 
 function fmtKwh(v) { return v.toLocaleString("en-US"); }
 
+// Worked example for a 10 kWh/day household, derived from the latitude yield
+// band and the SHARED tariff + landed-DIY costs — an illustration, not a
+// sizing (no hourly simulation; the dark-week margin is a flat ×1.5 on PV).
+// Returns { rows: [[label, pvRange, battRange]], paybackLine }.
+function workedExample(c, lo, hi) {
+  const yieldMid = (lo + hi) / 2;
+  const est = estimateTariff(c.lat, c.lon, c.region, c.country);
+  const landedF = est.landedF ?? 1.1;
+  const fracs = [0.6, 0.8, 0.95];
+  const rows = fracs.map((f) => {
+    // PV to displace fraction f of 3650 kWh/yr at band-mid yield, ×1.5
+    // dark-week margin, as a ±30% range in 0.5 kW steps.
+    const pvMid = (3650 * f / yieldMid) * 1.5;
+    const pvLo = Math.max(0.5, Math.round((pvMid * 0.7) * 2) / 2);
+    const pvHi = Math.max(pvLo, Math.round((pvMid * 1.3) * 2) / 2);
+    // Overnight + cloudy-day buffer scales with the cut ambition.
+    const bMid = 10 * f * 0.7;
+    const bLo = Math.max(1, Math.round(bMid * 0.7));
+    const bHi = Math.max(bLo + 1, Math.round(bMid * 1.3));
+    return [`~${Math.round(f * 100)}%`, `${pvLo}–${pvHi} kW`, `${bLo}–${bHi} kWh`];
+  });
+  // Payback illustration on the 60% row at the shared local tariff.
+  const pv60 = (3650 * 0.6 / yieldMid) * 1.5;
+  const b60 = 10 * 0.6 * 0.7;
+  const cost = costRange(pv60, b60, "landed", "lfp");
+  const costMid = Math.round(((cost.lo + cost.hi) / 2) * landedF);
+  const savedYr = Math.round(3650 * 0.6 * est.rate);
+  const pb = savedYr > 0 ? (costMid / savedYr) : null;
+  const paybackLine = `Payback depends on your local tariff: at ~$${est.rate.toFixed(2)}/kWh a 60% cut on this load saves roughly $${fmtKwh(savedYr)}/year, which repays landed-DIY component costs (about $${fmtKwh(costMid)}) in ${pb === null ? "an uneconomic stretch — the tool will tell you plainly" : pb < 1 ? "under a year" : `about ${pb.toFixed(1)} years`}. Where power is cheap, payback stretches — the tool shows your personal number from your own rate.`;
+  return { rows, paybackLine };
+}
+
 function cityPage(c) {
   const slug = slugify(c.name);
   const url = `https://bigenergyco.pages.dev/solar-calculator/${slug}/`;
   const sc = sunContext(c.lat);
   const [lo, hi] = yieldBand(c.lat);
+  const wx = workedExample(c, lo, hi);
   const coord = `${Math.abs(c.lat).toFixed(2)}° ${c.lat >= 0 ? "N" : "S"}, ${Math.abs(c.lon).toFixed(2)}° ${c.lon >= 0 ? "E" : "W"}`;
   const title = `Solar & Battery Calculator for ${c.name}, ${c.country} — Free, Honest Sizing`;
   const desc = `Free solar and battery sizing for ${c.name}, ${c.country} (${coord}). Simulated against five years of NASA satellite weather. Nothing for sale.`;
@@ -270,16 +307,14 @@ function cityPage(c) {
       </ul>
 
       <h2>Worked example: a 10 kWh/day household</h2>
-      <p>Using the ${c.name} latitude band (${lo}–${hi} kWh/kWp/yr), a household using 10 kWh per day typically lands in this range — your exact figures come from the simulation:</p>
+      <p>Using the ${c.name} latitude band (${lo}–${hi} kWh/kWp/yr), a household using 10 kWh per day typically lands in this range — a rough illustration from the band (with a dark-week margin), not a simulation; your exact figures come from running it:</p>
       <div class="table-container">
       <table>
         <tr><th>Bill cut</th><th>Typical panels</th><th>Typical battery</th></tr>
-        <tr><td>~60%</td><td class="num">3–4 kW</td><td class="num">2–4 kWh</td></tr>
-        <tr><td>~80%</td><td class="num">4–5 kW</td><td class="num">4–6 kWh</td></tr>
-        <tr><td>~95%</td><td class="num">5–7 kW</td><td class="num">6–10 kWh</td></tr>
+        ${wx.rows.map((r) => `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td></tr>`).join("\n        ")}
       </table>
       </div>
-      <p>Payback depends on your local tariff: at $0.40/kWh a 60% cut on this load saves roughly $875/year, which repays component costs (about $400–1,400 landed-DIY) in well under two years. Where power is cheap, payback stretches — the tool shows your personal number from your own rate.</p>
+      <p>${wx.paybackLine}</p>
 
       <h2>Why simulate instead of estimate?</h2>
       <p>Sun-hours maps and "average" figures hide the week that decides your battery size. In ${sc.tier.toLowerCase()} conditions, ${sc.note} A five-year hourly simulation catches that dark week, the cloudy month, and the seasonal swing — which is the difference between a system that works and one that leaves you in the dark in February.</p>

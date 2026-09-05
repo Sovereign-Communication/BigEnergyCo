@@ -33,6 +33,7 @@ export const PRICING_SCOPES = [
     battPerKwhUsable: [110, 165],  // big-unit $111-130/kWh nominal; small units higher
     invPerKw: [85, 200],           // $90-94/kW sale on 5-10 kW LF units
     battPerKwhNaion: [110, 175],   // retail sodium packs still scarce → thin premium
+    battPerKwhAgm: [280, 380],     // retail AGM blocks per usable kWh (50% DoD)
     note: "Shipped retail prices with BMS/enclosure included.",
   },
   {
@@ -43,6 +44,10 @@ export const PRICING_SCOPES = [
     battPerKwhUsable: [80, 125],
     invPerKw: [90, 260],
     battPerKwhNaion: [88, 138],    // ~10% premium over LFP landed, Aug 2026
+    // AGM realities: 12 V 200 Ah blocks ≈ $350-450 per 2.4 kWh nominal, and
+    // only half is usable (50% DoD) → ~$290-375 per USABLE kWh. Blocks ship
+    // as finished goods, so ex-factory-to-landed spread is narrower.
+    battPerKwhAgm: [240, 330],
     note: "You assemble: cells + BMS + enclosure + freight + duty.",
   },
   {
@@ -53,6 +58,7 @@ export const PRICING_SCOPES = [
     battPerKwhUsable: [45, 70],    // $43.5 per 314Ah cell ≈ $43/kWh nominal ≈ $48 usable
     invPerKw: [60, 180],
     battPerKwhNaion: [52, 78],     // sodium cell lines still ramping → ~15% premium
+    battPerKwhAgm: [200, 280],     // AGM blocks ex-factory ≈ $120-140/kWh nominal ≈ 2× usable
     note: "Components only, before freight/duty/BMS/enclosure — rarely the final cost.",
   },
 ];
@@ -64,19 +70,26 @@ export function getScope(id) {
 /** Battery price range for one scope and chemistry. */
 function battRangeFor(scope, chemistry) {
   if (chemistry === "naion" && Array.isArray(scope.battPerKwhNaion)) return scope.battPerKwhNaion;
+  if (chemistry === "agm" && Array.isArray(scope.battPerKwhAgm)) return scope.battPerKwhAgm;
   return scope.battPerKwhUsable;
 }
 
-/** Cost range for a system under one scope. */
-export function costRange(pvKw, battKwhUsable, scopeId, chemistry = "lfp") {
+/**
+ * Cost range for a system under one scope. The inverter is sized to the
+ * load's peak (invKw), NOT the array: a battery-only system still needs an
+ * inverter, and a small array on a spiky load needs a big one. Defaults to
+ * pvKw when the peak is unknown (back-compat).
+ */
+export function costRange(pvKw, battKwhUsable, scopeId, chemistry = "lfp", invKw = null) {
   const s = getScope(scopeId);
   const bRange = battRangeFor(s, chemistry);
+  const inv = invKw === null || !(invKw >= 0) ? pvKw : invKw;
   const pvLo = pvKw * 1000 * s.pvPerW[0];
   const pvHi = pvKw * 1000 * s.pvPerW[1];
   const bLo = battKwhUsable * bRange[0];
   const bHi = battKwhUsable * bRange[1];
-  const invLo = (pvKw * s.invPerKw[0]);
-  const invHi = (pvKw * s.invPerKw[1]);
+  const invLo = (inv * s.invPerKw[0]);
+  const invHi = (inv * s.invPerKw[1]);
   return {
     lo: Math.round(pvLo + bLo + invLo),
     hi: Math.round(pvHi + bHi + invHi),
@@ -97,24 +110,40 @@ export function costRange(pvKw, battKwhUsable, scopeId, chemistry = "lfp") {
  * (freight/duty premium) for the region — islands and landlocked countries
  * pay more to get hardware ashore.
  */
-export function fullRange(pvKw, battKwhUsable, chemistry = "lfp", landedF = 1) {
-  const lo = costRange(pvKw, battKwhUsable, "cells", chemistry);
-  const hi = costRange(pvKw, battKwhUsable, "powmr", chemistry);
-  const landed = costRange(pvKw, battKwhUsable, "landed", chemistry);
+export function fullRange(pvKw, battKwhUsable, chemistry = "lfp", landedF = 1, invKw = null) {
+  const lo = costRange(pvKw, battKwhUsable, "cells", chemistry, invKw);
+  const hi = costRange(pvKw, battKwhUsable, "powmr", chemistry, invKw);
+  const landed = costRange(pvKw, battKwhUsable, "landed", chemistry, invKw);
+  // Regional freight/duty scales every leg equally, so the landed midpoint
+  // can never escape its own displayed range (previously only the mid was
+  // scaled, and high-landedF regions showed a mid above the hi end).
+  const f = Number.isFinite(landedF) && landedF > 0 ? landedF : 1;
   // search objective sits near the middle of the honest spread (landed DIY)
   const cellsBatt = battRangeFor(getScope("cells"), chemistry);
   const powmrBatt = battRangeFor(getScope("powmr"), chemistry);
   return {
-    lo: lo.lo,
-    hi: hi.hi,
-    pvCostLo: Math.round((lo.pvLo + lo.invLo)),
-    pvCostHi: Math.round((hi.pvHi + hi.invHi)),
-    battCostLo: Math.round(battKwhUsable * cellsBatt[0]),
-    battCostHi: Math.round(battKwhUsable * powmrBatt[1]),
+    lo: Math.round(lo.lo * f),
+    hi: Math.round(hi.hi * f),
+    pvCostLo: Math.round((lo.pvLo + lo.invLo) * f),
+    pvCostHi: Math.round((hi.pvHi + hi.invHi) * f),
+    battCostLo: Math.round(battKwhUsable * cellsBatt[0] * f),
+    battCostHi: Math.round(battKwhUsable * powmrBatt[1] * f),
     battPerKwhLo: cellsBatt[0],
     battPerKwhHi: powmrBatt[1],
-    objectiveMid: Math.round(((landed.lo + landed.hi) / 2) * landedF),
+    objectiveMid: Math.round(((landed.lo + landed.hi) / 2) * f),
   };
+}
+
+/**
+ * Landed-mid battery price per usable kWh for ONE chemistry (freight-scaled).
+ * Replacement banks must be costed at their own chemistry's rate — AGM banks
+ * at lithium $/kWh understated AGM lifetime cost by ~2-3×.
+ */
+export function landedMidBattKwhFor(chemistry = "lfp", landedF = 1) {
+  const scope = getScope("landed");
+  const r = battRangeFor(scope, chemistry);
+  const f = Number.isFinite(landedF) && landedF > 0 ? landedF : 1;
+  return ((r[0] + r[1]) / 2) * f;
 }
 
 /** Battery-only cost ranges per procurement scope (the storage-comparison view has no PV). */
