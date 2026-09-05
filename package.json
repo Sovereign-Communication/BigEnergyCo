@@ -11,6 +11,8 @@
     "test": "node --test \"tests/*.test.mjs\"",
     "seo": "node scripts/validate-jsonld.mjs && node scripts/check-chars.mjs && node scripts/check-seo.mjs && node scripts/bump-asset-tokens.mjs --check",
     "tokens": "node scripts/bump-asset-tokens.mjs",
+    "format": "npx --yes prettier@3.9.6 --write .",
+    "format:check": "npx --yes prettier@3.9.6 --check .",
     "smoke": "node scripts/browser-smoke.mjs",
     "deploy:check": "node scripts/deploy-pages-local.mjs --check"
   },

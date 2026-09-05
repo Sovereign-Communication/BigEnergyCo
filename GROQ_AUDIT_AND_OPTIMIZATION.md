@@ -1,4 +1,5 @@
 # Groq AI Advisor Audit & Optimization Plan
+
 **Date:** August 3, 2026  
 **Scope:** System instruction, Q&A efficiency, battery chemistry guidance, and response guardrails
 
@@ -13,6 +14,7 @@ The current Groq integration (proxy_server.py:111-156) is well-grounded in liabi
 3. **Inefficient instruction design** — redundant warnings, no decision trees, missing context for common questions
 
 This audit provides:
+
 - Current state analysis of system instruction
 - Chemistry recommendation framework with decision logic
 - Specific, testable improvements to Groq prompting
@@ -26,6 +28,7 @@ This audit provides:
 ### A. System Instruction Audit (proxy_server.py:111-156)
 
 **Strengths:**
+
 - ✅ Clear liability disclaimer on every reply
 - ✅ Explicitly forbids selling/procurement
 - ✅ Covers worldwide use (230V/50Hz, metric defaults)
@@ -34,6 +37,7 @@ This audit provides:
 - ✅ Inverter decision tree included
 
 **Weaknesses:**
+
 - ❌ **No battery chemistry hierarchy** — doesn't guide Groq to prefer Sodium > Lithium > Lead-Acid
 - ❌ **Vague accuracy guardrails** — "never invent specific numbers" but no enforcement for edge cases
 - ❌ **No pricing constraint** — instruction says don't invent pricing, but doesn't specify which prices are outdated
@@ -44,6 +48,7 @@ This audit provides:
 ### B. Current Q&A Flow
 
 **Intake Process (index.html:1145-1179):**
+
 1. User picks mode (bill-based or kWh/day)
 2. User enters value
 3. User picks destination region
@@ -51,6 +56,7 @@ This audit provides:
 5. Groq receives structured brief with [ADVISOR INSTRUCTION] tag
 
 **Issues:**
+
 - ❌ Region dropdown doesn't feed battery availability context to Groq
 - ❌ No way for user to specify chemistry preference upfront
 - ❌ No baseline storage assumptions (some regions need 3-day autonomy, others 1 day)
@@ -61,6 +67,7 @@ This audit provides:
 **Current state:** Nowhere in code or instruction.
 
 **What's missing:**
+
 - No decision tree for when to recommend each chemistry
 - No environmental cost awareness (Lithium mining, Sodium abundance)
 - No regional constraint awareness (Lead-Acid still dominant in some markets)
@@ -121,7 +128,7 @@ LEAD-ACID (Tertiary, niche use only)
 │
 KEY MESSAGING FOR LEAD-ACID:
 "Lead-Acid looks cheap upfront ($10-15/kWh) but only at shallow discharge (50% DoD).
-At typical home use (80% DoD), it dies in 3-5 years. Replacing it every 3-4 years 
+At typical home use (80% DoD), it dies in 3-5 years. Replacing it every 3-4 years
 costs $30-40/kWh total. Sodium-Ion costs $38-42/kWh, lasts 30+ years, and ends up
 the SAME or CHEAPER long-term. Strongly recommend Sodium-Ion instead."
 ```
@@ -131,31 +138,37 @@ the SAME or CHEAPER long-term. Strongly recommend Sodium-Ion instead."
 ## PART III: IDENTIFIED INEFFICIENCIES
 
 ### 1. **Instruction Bloat & Redundancy**
+
 - Lines 141-147 repeat "never guarantee X" four times
 - Safety warnings split across two sections
 - No prioritization of which warnings matter most
 
 ### 2. **Missing Chemistry Context**
+
 - Groq has zero guidance on the Sodium > Lithium > Lead-Acid hierarchy
 - Can't make site-optimized recommendations
 - User asks "which battery" and gets generic answer
 
 ### 3. **No Regional Constraint Awareness**
+
 - Instruction mentions "worldwide" but doesn't give Groq region-specific knowledge
 - Example: In India, Lead-Acid is still 60% of market; instruction should help user graduate to Sodium, not assume they have LiFePO4 access
 - Cold climate users (Canada, Scandinavia) need Lithium guidance, not Sodium
 
 ### 4. **Pricing Outdated & Unverifiable**
+
 - index.html:1203 hardcodes `hwPerKwh = 38.00 (NaIon) vs 49.80 (LFP)`
 - Instruction says "don't invent numbers" but doesn't say "these are Q2 2026 estimates, may be 10-20% off"
 - No path for Groq to flag pricing as old
 
 ### 5. **Inverter Instruction Buried**
+
 - lines 150-155 in proxy_server.py — should be its own section
 - Heuristic in index.html:1136-1143 is complex; Groq doesn't see it
 - User can submit vague inverter info and Groq still tries to help instead of asking
 
 ### 6. **No Intake Context Injection**
+
 - buildIntakeBrief() creates a text blob, but doesn't signal:
   - User's climate zone
   - Available space
@@ -280,23 +293,25 @@ Add to index.html `buildIntakeBrief()` (currently line 1145):
 ```javascript
 function buildIntakeBrief() {
   // ... existing code ...
-  var climateEl = document.getElementById('destClimate');
-  var spaceEl = document.getElementById('destSpace');
-  var maintenanceEl = document.getElementById('maintenanceComfort');
+  var climateEl = document.getElementById("destClimate");
+  var spaceEl = document.getElementById("destSpace");
+  var maintenanceEl = document.getElementById("maintenanceComfort");
 
-  var climate = climateEl ? climateEl.value : 'unknown';
-  var space = spaceEl ? spaceEl.value : 'unknown';
-  var maintenance = maintenanceEl ? maintenanceEl.value : 'unknown';
+  var climate = climateEl ? climateEl.value : "unknown";
+  var space = spaceEl ? spaceEl.value : "unknown";
+  var maintenance = maintenanceEl ? maintenanceEl.value : "unknown";
 
   // Add new context lines
-  lines.push('Climate: ' + climate + '.');
-  lines.push('Available space for batteries: ' + space + '.');
-  lines.push('Maintenance comfort level: ' + maintenance + '.');
-  lines.push('[ADVISOR INSTRUCTION: Use these details to recommend the right chemistry. '
-           + 'Cold climate + maintenance-averse = Lithium. Temperate + space OK = Sodium-Ion. '
-           + 'Very limited space = Lithium despite cost.]');
+  lines.push("Climate: " + climate + ".");
+  lines.push("Available space for batteries: " + space + ".");
+  lines.push("Maintenance comfort level: " + maintenance + ".");
+  lines.push(
+    "[ADVISOR INSTRUCTION: Use these details to recommend the right chemistry. " +
+      "Cold climate + maintenance-averse = Lithium. Temperate + space OK = Sodium-Ion. " +
+      "Very limited space = Lithium despite cost.]",
+  );
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 ```
 
@@ -306,9 +321,13 @@ Add HTML form fields (in the sizing modal, line ~850):
 <div class="form-group">
   <label for="destClimate">Expected minimum winter temperature:</label>
   <select id="destClimate" class="form-control">
-    <option value="Tropical / rarely below 10°C">Tropical / rarely below 10°C</option>
+    <option value="Tropical / rarely below 10°C">
+      Tropical / rarely below 10°C
+    </option>
     <option value="Temperate / -5 to 10°C">Temperate / -5 to 10°C</option>
-    <option value="Cold / frequently below -10°C">Cold / frequently below -10°C</option>
+    <option value="Cold / frequently below -10°C">
+      Cold / frequently below -10°C
+    </option>
   </select>
 </div>
 
@@ -317,7 +336,9 @@ Add HTML form fields (in the sizing modal, line ~850):
   <select id="destSpace" class="form-control">
     <option value="Very limited / room-sized">Very limited / room-sized</option>
     <option value="Normal / garage or shed">Normal / garage or shed</option>
-    <option value="Plenty / outdoor-rated enclosure possible">Plenty / outdoor-rated enclosure possible</option>
+    <option value="Plenty / outdoor-rated enclosure possible">
+      Plenty / outdoor-rated enclosure possible
+    </option>
   </select>
 </div>
 
@@ -326,7 +347,9 @@ Add HTML form fields (in the sizing modal, line ~850):
   <select id="maintenanceComfort" class="form-control">
     <option value="I prefer zero maintenance">I prefer zero maintenance</option>
     <option value="I can do basic checks">I can do basic checks</option>
-    <option value="I'm comfortable with hands-on work">I'm comfortable with hands-on work</option>
+    <option value="I'm comfortable with hands-on work">
+      I'm comfortable with hands-on work
+    </option>
   </select>
 </div>
 ```
@@ -338,6 +361,7 @@ Add HTML form fields (in the sizing modal, line ~850):
 Groq currently receives a flat text message. Add structured "branching prompts" based on intake:
 
 **Scenario 1: User asks about battery chemistry**
+
 ```
 [ADVISOR INSTRUCTION: The user is asking about battery types.
 Current user profile: Climate={climate}, Space={space}, Maintenance={maintenance}
@@ -350,6 +374,7 @@ Never recommend Lead-Acid without explaining the true cost of ownership (replace
 ```
 
 **Scenario 2: User asks "how long will my battery last?"**
+
 ```
 [ADVISOR INSTRUCTION: The user is asking about lifespan/cycle life.
 Give the RANGE for each chemistry relative to their climate and usage:
@@ -364,14 +389,17 @@ Never say "10 years" without the caveat that this assumes ~1 cycle per day.]
 ## PART VII: VERIFICATION TESTS
 
 ### Test 1: Chemistry Recommendation — Default Case
+
 **Input:** "I want to size a battery system. I live in California and have space."  
 **Expected:**
+
 - Groq recommends Sodium-Ion as primary choice
 - Mentions cost parity with LiFePO4
 - Explains bulkiness is not an issue
 - ✅ PASS if Sodium mentioned in first paragraph, not buried
 
 **Test Code** (add to test_groq_chatbot.py):
+
 ```python
 def test_chemistry_default_sodium():
     prompt = "I want to size a battery system. I live in California and have space."
@@ -383,14 +411,17 @@ def test_chemistry_default_sodium():
 ```
 
 ### Test 2: Chemistry Recommendation — Cold Climate
+
 **Input:** "I'm in Canada, winters get to -30°C. What battery should I use?"  
 **Expected:**
+
 - Groq recommends Lithium as primary choice
 - Explains Sodium degrades in cold
 - Acknowledges cost premium
 - ✅ PASS if Lithium recommended as primary, Sodium secondary
 
 **Test Code:**
+
 ```python
 def test_chemistry_cold_lithium():
     prompt = "I'm in Canada, winters get to -30°C. What battery should I use?"
@@ -405,14 +436,17 @@ def test_chemistry_cold_lithium():
 ```
 
 ### Test 3: Lead-Acid Cost-of-Ownership Warning
+
 **Input:** "Should I just go with cheap lead-acid batteries?"  
 **Expected:**
+
 - Groq explains true cost of ownership
 - Mentions replacement cycles (3-5 year lifespan)
 - Calculates cumulative cost vs. Sodium-Ion
 - ✅ PASS if "replacement" or "10 years" mentioned, showing long-term thinking
 
 **Test Code:**
+
 ```python
 def test_lead_acid_warning():
     prompt = "Should I just go with cheap lead-acid batteries?"
@@ -426,14 +460,17 @@ def test_lead_acid_warning():
 ```
 
 ### Test 4: Pricing Caveat
+
 **Input:** "How much does a 50 kWh battery system cost?"  
 **Expected:**
+
 - Groq gives a range (e.g., "$1,900-$2,500")
 - Mentions these are Q2 2026 estimates
 - Notes regional variation (±10-20%)
 - ✅ PASS if range given + caveat about recency/region
 
 **Test Code:**
+
 ```python
 def test_pricing_caveat():
     prompt = "How much does a 50 kWh battery system cost?"
@@ -446,14 +483,17 @@ def test_pricing_caveat():
 ```
 
 ### Test 5: Inverter Instruction Honored
+
 **Input:** [User intake brief with vague inverter info: "I have an old inverter but not sure what model"]  
 **Expected:**
+
 - Groq gives battery sizing
 - Asks follow-up questions (make/model, power ratings, phase)
 - Does NOT invent an inverter spec
 - ✅ PASS if Groq asks questions, doesn't assume
 
 **Test Code:**
+
 ```python
 def test_inverter_vague_follow_up():
     history = []
@@ -469,13 +509,16 @@ def test_inverter_vague_follow_up():
 ```
 
 ### Test 6: No Made-Up Numbers
+
 **Input:** "What's the efficiency of a typical battery system?"  
 **Expected:**
+
 - Groq does NOT say "87.3% efficiency"
 - Gives a range ("typically 85-95%") or asks for specifics
 - ✅ PASS if range or caveat given, not false precision
 
 **Test Code:**
+
 ```python
 def test_no_false_precision():
     prompt = "What's the efficiency of a typical battery system?"
@@ -491,37 +534,44 @@ def test_no_false_precision():
 ```
 
 ### Test 7: Educational Disclaimer Present
+
 **Input:** Any user query  
 **Expected:**
+
 - Every reply includes disclaimer footer
 - Clearly states "educational estimate", "not engineering", "verify with licensed electrician"
 - ✅ PASS if footer appears in rendered output
 
-*(Already verified by existing code at index.html:1031-1036 which always appends disclaimer)*
+_(Already verified by existing code at index.html:1031-1036 which always appends disclaimer)_
 
 ---
 
 ## PART VIII: IMPLEMENTATION ROADMAP
 
 ### Phase 1: System Instruction Upgrade (1-2 hours)
+
 **Owner:** Code change  
 **Files:** `proxy_server.py` lines 111-156  
 **Steps:**
+
 1. Replace system_instruction with optimized version (Part IV above)
 2. Re-run test_groq_chatbot.py to ensure no regression
 3. Manually test 3-4 common questions (greeting, chemistry, pricing)
 4. Commit with message: "refactor: enhance Groq system instruction with chemistry framework"
 
 **Verification:**
+
 ```bash
 python test_groq_chatbot.py
 # Should still pass TEST 1 (greeting) and TEST 2 (date question)
 ```
 
 ### Phase 2: Intake Form Enhancement (2-3 hours)
+
 **Owner:** Frontend change  
 **Files:** `index.html` (add new form fields + buildIntakeBrief logic)  
 **Steps:**
+
 1. Add climate, space, maintenance dropdowns to sizing modal
 2. Update buildIntakeBrief() to include these fields
 3. Update MAX_HISTORY_TURNS to 8 if form fields will make messages longer
@@ -529,13 +579,16 @@ python test_groq_chatbot.py
 5. Commit: "feat: add climate/space/maintenance context to intake form"
 
 **Verification:**
+
 - Open http://127.0.0.1:7510/ → click "Size with AI" → verify three new dropdowns appear
 - Fill form, submit → inspect browser network tab, confirm new context in POST payload
 
 ### Phase 3: Verification Tests (1-2 hours)
+
 **Owner:** Test code  
 **Files:** `test_groq_chatbot.py`  
 **Steps:**
+
 1. Add Test 1-7 code blocks from Part VII above
 2. Run: `python test_groq_chatbot.py` (include new tests)
 3. Each test should print ✅ PASS or ❌ FAIL
@@ -543,6 +596,7 @@ python test_groq_chatbot.py
 5. Commit: "test: add chemistry, pricing, and guardrail verification tests"
 
 **Baseline Metrics (before optimization):**
+
 ```
 Test 1 (Chemistry default): May FAIL if Lithium mentioned before Sodium
 Test 2 (Cold climate): May FAIL if Groq doesn't understand climate context
@@ -554,9 +608,11 @@ Test 7 (Disclaimer): PASS (always appended by renderBotReply)
 ```
 
 ### Phase 4: Guardrail Enforcement (2-3 hours)
+
 **Owner:** Proxy logic  
 **Files:** `proxy_server.py` (add response validation before returning to client)  
 **Steps:**
+
 1. Add a `validate_groq_response()` function that checks:
    - Disclaimer footer NOT removed by Groq
    - No pricing given without caveat ± 10-20%
@@ -567,36 +623,39 @@ Test 7 (Disclaimer): PASS (always appended by renderBotReply)
 4. Commit: "feat: add response validation guardrails for Groq advisor"
 
 **Sample Code:**
+
 ```python
 def validate_groq_response(reply_text):
     """Light validation of Groq response. Logs warnings, doesn't block."""
     warnings = []
-    
+
     # Check 1: Disclaimer present
     if 'educational estimate' not in reply_text.lower():
         warnings.append("[VALIDATION] Disclaimer footer missing from Groq response")
-    
+
     # Check 2: Lead-Acid without cost-of-ownership analysis
     if 'lead' in reply_text.lower() and 'acid' in reply_text.lower():
         if 'replacement' not in reply_text.lower() and 'years' not in reply_text.lower():
             warnings.append("[VALIDATION] Lead-Acid mentioned but no lifespan/cost-of-ownership analysis")
-    
+
     # Check 3: Pricing with false precision
     import re
     prices = re.findall(r'\$\d+\.\d{2}(?![0-9])', reply_text)
     if prices:
         warnings.append(f"[VALIDATION] High-precision prices found: {prices} (should be ranges)")
-    
+
     for w in warnings:
         print(w)
-    
+
     return reply_text  # Always return reply, validation is advisory
 ```
 
 ### Phase 5: Documentation & Handoff (1 hour)
+
 **Owner:** Documentation  
 **Files:** `README.md`, this audit document  
 **Steps:**
+
 1. Update README.md §"Ground rules baked into the site" to mention chemistry hierarchy
 2. Add "Chemistry recommendations" subsection with the decision tree
 3. Link to this audit document in PLAN.md as reference
@@ -608,31 +667,34 @@ def validate_groq_response(reply_text):
 
 After implementing all 5 phases:
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Sodium-Ion recommended by default | ~40% of the time | ~95% of the time |
-| Cold climate users get Lithium guidance | ~20% | ~90% |
-| Lead-Acid users warned about TCO | ~60% | ~100% |
-| Pricing given without caveat | ~15% | <5% |
-| False-precision numbers (e.g., "87.3%") | ~20% | <5% |
-| Inverter vague input → follow-up questions | ~30% | ~85% |
-| Disclaimer footer always present | ~99% | ~100% |
+| Metric                                     | Before           | After            |
+| ------------------------------------------ | ---------------- | ---------------- |
+| Sodium-Ion recommended by default          | ~40% of the time | ~95% of the time |
+| Cold climate users get Lithium guidance    | ~20%             | ~90%             |
+| Lead-Acid users warned about TCO           | ~60%             | ~100%            |
+| Pricing given without caveat               | ~15%             | <5%              |
+| False-precision numbers (e.g., "87.3%")    | ~20%             | <5%              |
+| Inverter vague input → follow-up questions | ~30%             | ~85%             |
+| Disclaimer footer always present           | ~99%             | ~100%            |
 
 ---
 
 ## PART X: ROLLBACK & RISK MITIGATION
 
 **If tests fail after Phase 1:**
+
 - Groq may interpret the chemistry framework differently than intended
 - **Mitigation:** Revert system_instruction to version control, check git diff for what changed
 - **Retry:** Adjust framework wording (e.g., add "PRIMARY:", "SECONDARY:", "TERTIARY:" labels for clarity)
 
 **If intake form changes break layout:**
+
 - New dropdowns may overflow on mobile
 - **Mitigation:** Test at 375px width (mobile preset) before committing
 - **Retry:** Move climate/space to a second "Advanced" section, collapsed by default
 
 **If rate limits are hit during testing:**
+
 - Test suite may blow through daily quota (3000/day global)
 - **Mitigation:** Run tests at off-peak hours; cache responses locally if needed
 - **Config:** Reduce test frequency, run once per day at midnight
@@ -644,21 +706,25 @@ After implementing all 5 phases:
 The system is "optimized" when:
 
 ✅ **Correctness:**
+
 - All 7 verification tests pass
 - Groq consistently recommends Sodium > Lithium > Lead-Acid in context-appropriate order
 - No pricing given without a ±10-20% caveat
 
 ✅ **Efficiency:**
+
 - User intake form captures climate, space, maintenance in <20 seconds
 - Groq responds to intake brief in <10 seconds (median)
 - No rate-limit errors in production (rate checks hold)
 
 ✅ **Safety:**
+
 - Every reply includes disclaimer footer
 - Inverter vague input → follow-up questions (not guessing)
 - No "guarantee" language used for cycle life, performance, or safety
 
 ✅ **Cohesion:**
+
 - User flow is seamless: intake → context injection → Groq response → disclaimer
 - New user doesn't need to read docs to understand battery chemistry tradeoffs
 - Existing features (cost comparison, donations) still work without regression
@@ -668,8 +734,9 @@ The system is "optimized" when:
 ## APPENDIX A: Current Hardcoded Pricing (to flag for updates)
 
 From index.html:1203-1204:
+
 ```javascript
-var hwPerKwh = (chemistryType === 'NaIon') ? 38.00 : 49.80;
+var hwPerKwh = chemistryType === "NaIon" ? 38.0 : 49.8;
 ```
 
 **Status:** Q2 2026 estimates  
@@ -682,6 +749,7 @@ var hwPerKwh = (chemistryType === 'NaIon') ? 38.00 : 49.80;
 ## APPENDIX B: Groq Model & Parameters (for future upgrades)
 
 From proxy_server.py:170:
+
 ```python
 "model": "llama-3.3-70b-versatile",
 "temperature": 0.4,
@@ -690,7 +758,7 @@ From proxy_server.py:170:
 
 **Temperature 0.4:** Good—lower temp = more consistent chemistry recommendations  
 **Max tokens 1024:** OK—battery sizing rarely needs >800 tokens  
-**Model:** Llama-3.3-70b is solid; Llama-4 would add reasoning depth if released  
+**Model:** Llama-3.3-70b is solid; Llama-4 would add reasoning depth if released
 
 **Future upgrade path:** Consider Groq's new reasoning model if lower latency + structured outputs are prioritized.
 

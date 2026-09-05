@@ -18,8 +18,13 @@ const round2 = (v) => Math.round(v * 100) / 100;
 /** Rescale a cumulative cost series {grid, solar, system} by load factor k. */
 export function scaleSeries(s, k) {
   if (!s || !Number.isFinite(k)) return s;
-  const out = { years: s.years, grid: s.grid.map((v) => Math.round(v * k)), solar: s.solar.map((v) => Math.round(v * k)) };
-  if (Array.isArray(s.system)) out.system = s.system.map((v) => Math.round(v * k));
+  const out = {
+    years: s.years,
+    grid: s.grid.map((v) => Math.round(v * k)),
+    solar: s.solar.map((v) => Math.round(v * k)),
+  };
+  if (Array.isArray(s.system))
+    out.system = s.system.map((v) => Math.round(v * k));
   return out;
 }
 
@@ -28,11 +33,23 @@ export function scaleSeries(s, k) {
 // batteryLifeYears, battPerKwhLo/Hi unit RATES) and SOC bands (percentages,
 // daily extremes) are scale-invariant and must NOT be touched.
 const SCALE_FIELDS = [
-  "pvKw", "battKwh", "battNameplateKwh",
-  "costLo", "costHi",
-  "pvCostLo", "pvCostHi", "battCostLo", "battCostHi",
-  "billAfterMonthlyUsd", "exportValueAnnualUsd", "clippedKwhPerYear", "importedKwhPerYear",
-  "swapsAndLaborUsd", "lifetimeCostMid", "servedKwhPerYear", "peakLoadW",
+  "pvKw",
+  "battKwh",
+  "battNameplateKwh",
+  "costLo",
+  "costHi",
+  "pvCostLo",
+  "pvCostHi",
+  "battCostLo",
+  "battCostHi",
+  "billAfterMonthlyUsd",
+  "exportValueAnnualUsd",
+  "clippedKwhPerYear",
+  "importedKwhPerYear",
+  "swapsAndLaborUsd",
+  "lifetimeCostMid",
+  "servedKwhPerYear",
+  "peakLoadW",
 ];
 
 /**
@@ -80,45 +97,72 @@ function scaleFocus(o, k) {
  * new payload; the input is untouched.
  */
 export function rescalePayload(p, k) {
-  if (!p || !Number.isFinite(k) || k <= 0 || !Number.isFinite(p.annualGridSpendUsd)) return p;
+  if (
+    !p ||
+    !Number.isFinite(k) ||
+    k <= 0 ||
+    !Number.isFinite(p.annualGridSpendUsd)
+  )
+    return p;
   const out = { ...p };
   out.annualGridSpendUsd = Math.round(out.annualGridSpendUsd * k);
-  if (Array.isArray(out.auto)) out.auto = out.auto.map((e) => scaleRecord(e, k));
+  if (Array.isArray(out.auto))
+    out.auto = out.auto.map((e) => scaleRecord(e, k));
   out.best = scaleRecord(out.best, k);
   out.focus = scaleFocus(out.focus, k);
   out.focusSystem = scaleRecord(out.focusSystem, k);
-  if (Array.isArray(out.tiers)) out.tiers = out.tiers.map((t) => scaleRecord(t, k));
-  if (Array.isArray(out.targets)) out.targets = out.targets.map((t) => scaleRecord(t, k));
+  if (Array.isArray(out.tiers))
+    out.tiers = out.tiers.map((t) => scaleRecord(t, k));
+  if (Array.isArray(out.targets))
+    out.targets = out.targets.map((t) => scaleRecord(t, k));
   out.customTarget = scaleRecord(out.customTarget, k);
   if (out.customCut) {
     out.customCut = {
-      ...out.customCut,                       // fraction / achievedPct / surplus stay as-is
+      ...out.customCut, // fraction / achievedPct / surplus stay as-is
       entries: (out.customCut.entries || []).map((e) => scaleRecord(e, k)),
       best: scaleRecord(out.customCut.best, k),
     };
   }
   if (out.matrix && out.matrix.cells) {
     const cells = {};
-    for (const [key, c] of Object.entries(out.matrix.cells)) cells[key] = scaleRecord(c, k);
+    for (const [key, c] of Object.entries(out.matrix.cells))
+      cells[key] = scaleRecord(c, k);
     out.matrix = { ...out.matrix, cells };
   }
   if (out.frontier) {
     const points = (out.frontier.points || []).map((pt) => {
-      const np = { ...pt, pvKw: round2(pt.pvKw * k), battKwh: Math.round(pt.battKwh * k), capexUsd: Math.round(pt.capexUsd * k) };
+      const np = {
+        ...pt,
+        pvKw: round2(pt.pvKw * k),
+        battKwh: Math.round(pt.battKwh * k),
+        capexUsd: Math.round(pt.capexUsd * k),
+      };
       if (pt.detail) np.detail = scaleRecord(pt.detail, k);
       return np;
     });
     const reach = out.frontier.reach ? { ...out.frontier.reach } : null;
     if (reach) {
-      for (const f of ["ceilingCostUsd", "entryCostUsd", "kneeCostUsd", "headCostPerPoint", "tailCostPerPoint"]) {
+      for (const f of [
+        "ceilingCostUsd",
+        "entryCostUsd",
+        "kneeCostUsd",
+        "headCostPerPoint",
+        "tailCostPerPoint",
+      ]) {
         if (typeof reach[f] === "number") reach[f] = Math.round(reach[f] * k);
       }
       // The searched envelope is in kW/kWh — it describes the new load too.
       for (const f of ["pvMaxKw", "battMaxKwh"]) {
-        if (typeof reach[f] === "number") reach[f] = Math.round(reach[f] * k * 100) / 100;
+        if (typeof reach[f] === "number")
+          reach[f] = Math.round(reach[f] * k * 100) / 100;
       }
     }
-    out.frontier = { ...out.frontier, points, reach, marker: out.frontier.marker ? scaleFocus(out.frontier.marker, k) : null };
+    out.frontier = {
+      ...out.frontier,
+      points,
+      reach,
+      marker: out.frontier.marker ? scaleFocus(out.frontier.marker, k) : null,
+    };
   }
   return out;
 }
@@ -132,8 +176,12 @@ export function sameSiteOptions(a, b) {
   // Hardware envelope and search-affecting options must match too: rescaling
   // a battery-only payload into a solar+battery one (or across derates)
   // would show hardware the envelope never searched.
-  return a.mode === b.mode && a.chemistry === b.chemistry &&
+  return (
+    a.mode === b.mode &&
+    a.chemistry === b.chemistry &&
     (a.hardwareConfig || "both") === (b.hardwareConfig || "both") &&
     JSON.stringify(a.derates || null) === JSON.stringify(b.derates || null) &&
-    Number(a.tariff) === Number(b.tariff) && Number(a.exportRate) === Number(b.exportRate);
+    Number(a.tariff) === Number(b.tariff) &&
+    Number(a.exportRate) === Number(b.exportRate)
+  );
 }

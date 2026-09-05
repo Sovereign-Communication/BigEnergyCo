@@ -30,6 +30,9 @@ jobs:
           node scripts/check-seo.mjs
           node scripts/bump-asset-tokens.mjs --check
 
+      - name: Prettier check
+        run: npx --yes prettier@3.9.6 --check .
+
       - name: Secret-scan tracked files
         run: |
           ! git grep -nE "oauth_toke[n]|BEGIN [A-Z ]*PRIVATE KEY|AIza[0-9A-Za-z_-]{20,}|sk-live-[0-9A-Za-z]{10,}" -- . ':!*.lock' || (echo "Possible secret in tracked files" && exit 1)

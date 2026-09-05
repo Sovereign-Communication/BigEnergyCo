@@ -2,10 +2,18 @@
 // Run: node --test "tests/**/*.test.mjs"
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { trueBreakEvenYear, cumulativeCostSeries, seriesBreakdown } from "../assets/js/sizing/money.js";
+import {
+  trueBreakEvenYear,
+  cumulativeCostSeries,
+  seriesBreakdown,
+} from "../assets/js/sizing/money.js";
 
 test("no swaps: break-even matches simple payback (within a year)", () => {
-  const y = trueBreakEvenYear({ capexMidUsd: 2400, annualSavingsUsd: 1200, batteryLifeYears: 30 });
+  const y = trueBreakEvenYear({
+    capexMidUsd: 2400,
+    annualSavingsUsd: 1200,
+    batteryLifeYears: 30,
+  });
   assert.ok(y >= 2 && y <= 3, `expected ~2, got ${y}`);
 });
 
@@ -13,39 +21,65 @@ test("swaps push break-even later than first-cost payback", () => {
   // Base: $2,400 at $200/yr savings -> year 12. A bank dying at year 8
   // ($1,200 swap) pushes cumulative cost to $3,600 — break-even slides
   // from year 12 to year 18 (within the 20-year horizon).
-  const base = trueBreakEvenYear({ capexMidUsd: 2400, annualSavingsUsd: 200, batteryLifeYears: 30 });
+  const base = trueBreakEvenYear({
+    capexMidUsd: 2400,
+    annualSavingsUsd: 200,
+    batteryLifeYears: 30,
+  });
   assert.equal(base, 12);
   const withSwaps = trueBreakEvenYear({
-    capexMidUsd: 2400, annualSavingsUsd: 200,
-    swapsAndLaborTotalUsd: 1200, replacements: 1, batteryLifeYears: 8,
+    capexMidUsd: 2400,
+    annualSavingsUsd: 200,
+    swapsAndLaborTotalUsd: 1200,
+    replacements: 1,
+    batteryLifeYears: 8,
   });
   assert.equal(withSwaps, 18);
 });
 
 test("GATE: swap costs can outpace savings — honest 'never' answer", () => {
   const y = trueBreakEvenYear({
-    capexMidUsd: 1000, annualSavingsUsd: 100,
-    swapsAndLaborTotalUsd: 16000, replacements: 8, batteryLifeYears: 2,
+    capexMidUsd: 1000,
+    annualSavingsUsd: 100,
+    swapsAndLaborTotalUsd: 16000,
+    replacements: 8,
+    batteryLifeYears: 2,
   });
-  assert.equal(y, null, "a bank dying every 2 years at $2k/swap must NEVER break even");
+  assert.equal(
+    y,
+    null,
+    "a bank dying every 2 years at $2k/swap must NEVER break even",
+  );
 });
 
 test("GATE: lead-acid profile vs LFP profile — the gap is the message", () => {
   const agm = trueBreakEvenYear({
-    capexMidUsd: 2500, annualSavingsUsd: 640,
-    swapsAndLaborTotalUsd: 8900, replacements: 8, batteryLifeYears: 1.6,
+    capexMidUsd: 2500,
+    annualSavingsUsd: 640,
+    swapsAndLaborTotalUsd: 8900,
+    replacements: 8,
+    batteryLifeYears: 1.6,
   });
   const lfp = trueBreakEvenYear({
-    capexMidUsd: 2300, annualSavingsUsd: 640,
-    swapsAndLaborTotalUsd: 1700, replacements: 2, batteryLifeYears: 12.8,
+    capexMidUsd: 2300,
+    annualSavingsUsd: 640,
+    swapsAndLaborTotalUsd: 1700,
+    replacements: 2,
+    batteryLifeYears: 12.8,
   });
-  assert.ok(agm === null || agm > lfp, `AGM (${agm}) must never beat LFP (${lfp})`);
+  assert.ok(
+    agm === null || agm > lfp,
+    `AGM (${agm}) must never beat LFP (${lfp})`,
+  );
 });
 
 test("cumulative series: grid line rises linearly, solar line steps at swaps", () => {
   const s = cumulativeCostSeries({
-    capexMidUsd: 2400, annualSavingsUsd: 200,
-    swapsAndLaborTotalUsd: 1200, replacements: 1, batteryLifeYears: 8,
+    capexMidUsd: 2400,
+    annualSavingsUsd: 200,
+    swapsAndLaborTotalUsd: 1200,
+    replacements: 1,
+    batteryLifeYears: 8,
   });
   assert.equal(s.years, 20);
   assert.equal(s.grid.length, 20);
@@ -60,16 +94,25 @@ test("cumulative series: grid line rises linearly, solar line steps at swaps", (
   assert.equal(s.solar[19], 3600);
   // crossing point = trueBreakEvenYear
   const be = trueBreakEvenYear({
-    capexMidUsd: 2400, annualSavingsUsd: 200,
-    swapsAndLaborTotalUsd: 1200, replacements: 1, batteryLifeYears: 8,
+    capexMidUsd: 2400,
+    annualSavingsUsd: 200,
+    swapsAndLaborTotalUsd: 1200,
+    replacements: 1,
+    batteryLifeYears: 8,
   });
   const crossYr = s.grid.findIndex((g, i) => g >= s.solar[i]) + 1;
   assert.equal(crossYr, be, "chart crossing must equal the break-even row");
 });
 
 test("cumulative series: null for missing or negative savings", () => {
-  assert.equal(cumulativeCostSeries({ capexMidUsd: 2400, annualSavingsUsd: -1 }), null);
-  assert.equal(cumulativeCostSeries({ capexMidUsd: null, annualSavingsUsd: 200 }), null);
+  assert.equal(
+    cumulativeCostSeries({ capexMidUsd: 2400, annualSavingsUsd: -1 }),
+    null,
+  );
+  assert.equal(
+    cumulativeCostSeries({ capexMidUsd: null, annualSavingsUsd: 200 }),
+    null,
+  );
 });
 
 test("cumulative series: the residual bill stays on the solar line (honest savings)", () => {
@@ -77,8 +120,12 @@ test("cumulative series: the residual bill stays on the solar line (honest savin
   // full 20-year bill as savings. grid line = full spend (displaced + residual);
   // solar line = capex + swaps + the residual the household keeps paying.
   const s = cumulativeCostSeries({
-    capexMidUsd: 5000, annualSavingsUsd: 2500, residualAnnualUsd: 7500,
-    swapsAndLaborTotalUsd: 1000, replacements: 1, batteryLifeYears: 12,
+    capexMidUsd: 5000,
+    annualSavingsUsd: 2500,
+    residualAnnualUsd: 7500,
+    swapsAndLaborTotalUsd: 1000,
+    replacements: 1,
+    batteryLifeYears: 12,
   });
   // grid[y] = y × (annualSavingsUsd + residualAnnualUsd) = y × full bill
   assert.equal(s.grid[0], 10000);
@@ -90,30 +137,63 @@ test("cumulative series: the residual bill stays on the solar line (honest savin
   assert.equal(s.grid[19] - s.solar[19], 20 * 2500 - 5000 - 1000);
   // Crossing still matches trueBreakEvenYear (which uses displaced-only).
   const be = trueBreakEvenYear({
-    capexMidUsd: 5000, annualSavingsUsd: 2500,
-    swapsAndLaborTotalUsd: 1000, replacements: 1, batteryLifeYears: 12,
+    capexMidUsd: 5000,
+    annualSavingsUsd: 2500,
+    swapsAndLaborTotalUsd: 1000,
+    replacements: 1,
+    batteryLifeYears: 12,
   });
   const crossYr = s.grid.findIndex((g, i) => g >= s.solar[i]) + 1;
-  assert.equal(crossYr, be, "chart crossing equals break-even row with residual counted");
+  assert.equal(
+    crossYr,
+    be,
+    "chart crossing equals break-even row with residual counted",
+  );
 });
 
 test("cumulative series: negative residual is legal (net-metering credit), NaN still null", () => {
   // Feed-in credit out-earning the bill must still chart — the with-solar line
   // then accumulates BELOW the capex start (a credit the utility owes).
-  const s = cumulativeCostSeries({ capexMidUsd: 2400, annualSavingsUsd: 300, residualAnnualUsd: -1 });
+  const s = cumulativeCostSeries({
+    capexMidUsd: 2400,
+    annualSavingsUsd: 300,
+    residualAnnualUsd: -1,
+  });
   assert.ok(s, "a credit must not null the whole series");
-  assert.equal(s.grid[19], 20 * (300 - 1), "grid stays the full bill: savings + residual per year");
-  assert.ok(s.solar[19] < 2400, "credits pull the with-solar line below the capex start");
-  assert.equal(cumulativeCostSeries({ capexMidUsd: 2400, annualSavingsUsd: 200, residualAnnualUsd: NaN }), null);
+  assert.equal(
+    s.grid[19],
+    20 * (300 - 1),
+    "grid stays the full bill: savings + residual per year",
+  );
+  assert.ok(
+    s.solar[19] < 2400,
+    "credits pull the with-solar line below the capex start",
+  );
+  assert.equal(
+    cumulativeCostSeries({
+      capexMidUsd: 2400,
+      annualSavingsUsd: 200,
+      residualAnnualUsd: NaN,
+    }),
+    null,
+  );
 });
 
 test("cumulative series: system line = capex + swaps only, ends on lifetime cost", () => {
   const firstLabor = 302;
   const s = cumulativeCostSeries({
-    capexMidUsd: 5000, annualSavingsUsd: 2500, residualAnnualUsd: 7500,
-    swapsAndLaborTotalUsd: 1000, replacements: 1, batteryLifeYears: 12, firstLaborUsd: firstLabor,
+    capexMidUsd: 5000,
+    annualSavingsUsd: 2500,
+    residualAnnualUsd: 7500,
+    swapsAndLaborTotalUsd: 1000,
+    replacements: 1,
+    batteryLifeYears: 12,
+    firstLaborUsd: firstLabor,
   });
-  assert.ok(Array.isArray(s.system) && s.system.length === 20, "system line present");
+  assert.ok(
+    Array.isArray(s.system) && s.system.length === 20,
+    "system line present",
+  );
   // system = capex + first install labor + the swap; NO residual bills ever enter it.
   assert.equal(s.system[0], 5000 + firstLabor);
   assert.equal(s.system[19], 5000 + firstLabor + 1000);
@@ -128,18 +208,36 @@ test("cumulative series: system line = capex + swaps only, ends on lifetime cost
 
 test("seriesBreakdown: the system is a slice INSIDE with-solar, never added", () => {
   const s = cumulativeCostSeries({
-    capexMidUsd: 5000, firstLaborUsd: 500, annualSavingsUsd: 1200,
-    residualAnnualUsd: 800, swapsAndLaborTotalUsd: 1000, replacements: 1,
+    capexMidUsd: 5000,
+    firstLaborUsd: 500,
+    annualSavingsUsd: 1200,
+    residualAnnualUsd: 800,
+    swapsAndLaborTotalUsd: 1000,
+    replacements: 1,
     batteryLifeYears: 10,
   });
   const bd = seriesBreakdown(s);
-  assert.equal(bd.systemTotal + bd.residualBills, bd.withSolar, "system + remaining bills = with-solar (the 25K + 50K = 75K identity)");
-  assert.equal(bd.saved + bd.withSolar, bd.gridTotal, "saved + with-solar = grid total (nothing is added on top)");
-  assert.ok(bd.systemTotal < bd.withSolar && bd.withSolar < bd.gridTotal, "stack ordering at the horizon");
+  assert.equal(
+    bd.systemTotal + bd.residualBills,
+    bd.withSolar,
+    "system + remaining bills = with-solar (the 25K + 50K = 75K identity)",
+  );
+  assert.equal(
+    bd.saved + bd.withSolar,
+    bd.gridTotal,
+    "saved + with-solar = grid total (nothing is added on top)",
+  );
+  assert.ok(
+    bd.systemTotal < bd.withSolar && bd.withSolar < bd.gridTotal,
+    "stack ordering at the horizon",
+  );
   // The horizon ordering is the whole story; the opening segment may invert by
   // the first-install labor (system starts slightly above slate, then slate
   // overtakes as bills accumulate) — that hairline is handled by the renderer.
-  assert.ok(s.system[19] <= s.solar[19] && s.solar[19] <= s.grid[19], "emerald <= slate <= amber at year 20");
+  assert.ok(
+    s.system[19] <= s.solar[19] && s.solar[19] <= s.grid[19],
+    "emerald <= slate <= amber at year 20",
+  );
   assert.equal(seriesBreakdown(null), null);
   assert.equal(seriesBreakdown({ grid: [1], solar: [1, 2] }), null);
 });

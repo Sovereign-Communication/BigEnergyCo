@@ -1,21 +1,44 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildBom } from "../assets/js/sizing/bom.js";
-import { sweepSystems, buildFrontier, isBoundLimited } from "../assets/js/sizing/frontier.js";
+import {
+  sweepSystems,
+  buildFrontier,
+  isBoundLimited,
+} from "../assets/js/sizing/frontier.js";
 import { runSizing } from "../assets/js/sizing/run.js";
-import { buildE1kw, flatProfile, expandProfile } from "../assets/js/sizing/engine.js";
+import {
+  buildE1kw,
+  flatProfile,
+  expandProfile,
+} from "../assets/js/sizing/engine.js";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
-import { OFFLINE_PROFILES, PROFILE_YEAR } from "../assets/js/sizing/profiles.js";
+import {
+  OFFLINE_PROFILES,
+  PROFILE_YEAR,
+} from "../assets/js/sizing/profiles.js";
 
 const honolulu = OFFLINE_PROFILES.find((p) => p.name.includes("Honolulu"));
 const fakeWeather = async () => ({
   hours: synthesizeFromProfile(honolulu),
-  meta: { latitude: 21.31, longitude: -157.86, startYear: PROFILE_YEAR, endYear: PROFILE_YEAR, years: 1, source: "test fixture", offline: false },
+  meta: {
+    latitude: 21.31,
+    longitude: -157.86,
+    startYear: PROFILE_YEAR,
+    endYear: PROFILE_YEAR,
+    years: 1,
+    source: "test fixture",
+    offline: false,
+  },
 });
 
 const BASE_MSG = {
-  latitude: 21.31, longitude: -157.86, dailyKwh: 20,
-  tariff: 0.42, exportRate: 0.10, years: 1,
+  latitude: 21.31,
+  longitude: -157.86,
+  dailyKwh: 20,
+  tariff: 0.42,
+  exportRate: 0.1,
+  years: 1,
 };
 
 // ── BOM Smoke Tests ─────────────────────────────────────────────────────────
@@ -35,7 +58,11 @@ test("SMOKE: buildBom handles Solar-Only configuration without errors", () => {
 
   assert.equal(bom.battery, null, "Battery must be null for solar-only");
   assert.equal(bom.voltage, null, "Voltage must be null for solar-only");
-  assert.equal(bom.controller, null, "Charge controller must be null for solar-only");
+  assert.equal(
+    bom.controller,
+    null,
+    "Charge controller must be null for solar-only",
+  );
   assert.ok(bom.inverter.recommendedKw > 0);
 });
 
@@ -63,18 +90,35 @@ test("SMOKE: buildFrontier strictly generates Solar-Only points when battMax = 0
   const loadWh = expandProfile(flatProfile(20), hours.length);
 
   const frontier = buildFrontier({
-    e1kw, loadWh, mode: "gridtie", chemistry: "lfp",
-    pvMax: 10, battMax: 0,
+    e1kw,
+    loadWh,
+    mode: "gridtie",
+    chemistry: "lfp",
+    pvMax: 10,
+    battMax: 0,
   });
 
-  assert.ok(frontier.points.length > 0, "Should generate solar-only frontier points");
+  assert.ok(
+    frontier.points.length > 0,
+    "Should generate solar-only frontier points",
+  );
   for (const pt of frontier.points) {
-    assert.equal(pt.battKwh, 0, `Point must have 0 battery kWh, got ${pt.battKwh}`);
+    assert.equal(
+      pt.battKwh,
+      0,
+      `Point must have 0 battery kWh, got ${pt.battKwh}`,
+    );
     assert.ok(pt.pvKw > 0, `Point must have > 0 solar kW, got ${pt.pvKw}`);
-    assert.ok(Number.isFinite(pt.capexUsd), `Capex must be finite, got ${pt.capexUsd}`);
+    assert.ok(
+      Number.isFinite(pt.capexUsd),
+      `Capex must be finite, got ${pt.capexUsd}`,
+    );
   }
   // batt=0 must not falsely trigger boundLimited
-  assert.equal(isBoundLimited([{ pvKw: 5, battKwh: 0 }], [0, 5, 10], [0]), false);
+  assert.equal(
+    isBoundLimited([{ pvKw: 5, battKwh: 0 }], [0, 5, 10], [0]),
+    false,
+  );
 });
 
 test("SMOKE: buildFrontier strictly generates Battery-Only points when pvMax = 0", () => {
@@ -83,30 +127,52 @@ test("SMOKE: buildFrontier strictly generates Battery-Only points when pvMax = 0
   const loadWh = expandProfile(flatProfile(20), hours.length);
 
   const frontier = buildFrontier({
-    e1kw, loadWh, mode: "gridtie", chemistry: "lfp",
-    pvMax: 0, battMax: 25,
+    e1kw,
+    loadWh,
+    mode: "gridtie",
+    chemistry: "lfp",
+    pvMax: 0,
+    battMax: 25,
   });
 
-  assert.ok(frontier.points.length > 0, "Should generate battery-only frontier points");
+  assert.ok(
+    frontier.points.length > 0,
+    "Should generate battery-only frontier points",
+  );
   for (const pt of frontier.points) {
     assert.equal(pt.pvKw, 0, `Point must have 0 solar kW, got ${pt.pvKw}`);
-    assert.ok(pt.battKwh > 0, `Point must have > 0 battery kWh, got ${pt.battKwh}`);
-    assert.ok(pt.outcomePct > 0, `Battery-only offset must be positive, got ${pt.outcomePct}%`);
-    assert.ok(Number.isFinite(pt.capexUsd), `Capex must be finite, got ${pt.capexUsd}`);
+    assert.ok(
+      pt.battKwh > 0,
+      `Point must have > 0 battery kWh, got ${pt.battKwh}`,
+    );
+    assert.ok(
+      pt.outcomePct > 0,
+      `Battery-only offset must be positive, got ${pt.outcomePct}%`,
+    );
+    assert.ok(
+      Number.isFinite(pt.capexUsd),
+      `Capex must be finite, got ${pt.capexUsd}`,
+    );
   }
   // pv=0 must not falsely trigger boundLimited
-  assert.equal(isBoundLimited([{ pvKw: 0, battKwh: 10 }], [0], [0, 10, 25]), false);
+  assert.equal(
+    isBoundLimited([{ pvKw: 0, battKwh: 10 }], [0], [0, 10, 25]),
+    false,
+  );
 });
 
 // ── runSizing Grid-Tie Auto Mode Smoke Tests ─────────────────────────────────
 
 test("SMOKE: runSizing in Auto Grid-Tie mode for hardwareConfig = 'solar'", async () => {
-  const payload = await runSizing({
-    ...BASE_MSG,
-    mode: "gridtie",
-    chemistry: "auto",
-    hardwareConfig: "solar",
-  }, fakeWeather);
+  const payload = await runSizing(
+    {
+      ...BASE_MSG,
+      mode: "gridtie",
+      chemistry: "auto",
+      hardwareConfig: "solar",
+    },
+    fakeWeather,
+  );
 
   assert.equal(payload.mode, "gridtie");
   assert.equal(payload.hardwareConfig, "solar");
@@ -119,7 +185,11 @@ test("SMOKE: runSizing in Auto Grid-Tie mode for hardwareConfig = 'solar'", asyn
     for (const row of payload.matrix.rows) {
       const cell = payload.matrix.cells[`${row.id}:${col.id}`];
       if (cell && cell.solvable) {
-        assert.equal(cell.battKwh, 0, `Matrix cell ${col.id} must have 0 battery`);
+        assert.equal(
+          cell.battKwh,
+          0,
+          `Matrix cell ${col.id} must have 0 battery`,
+        );
         assert.ok(cell.pvKw > 0, `Matrix cell ${col.id} must have solar`);
       }
     }
@@ -142,12 +212,15 @@ test("SMOKE: runSizing in Auto Grid-Tie mode for hardwareConfig = 'solar'", asyn
 });
 
 test("SMOKE: runSizing in Auto Grid-Tie mode for hardwareConfig = 'battery'", async () => {
-  const payload = await runSizing({
-    ...BASE_MSG,
-    mode: "gridtie",
-    chemistry: "auto",
-    hardwareConfig: "battery",
-  }, fakeWeather);
+  const payload = await runSizing(
+    {
+      ...BASE_MSG,
+      mode: "gridtie",
+      chemistry: "auto",
+      hardwareConfig: "battery",
+    },
+    fakeWeather,
+  );
 
   assert.equal(payload.mode, "gridtie");
   assert.equal(payload.hardwareConfig, "battery");
@@ -167,7 +240,10 @@ test("SMOKE: runSizing in Auto Grid-Tie mode for hardwareConfig = 'battery'", as
   }
 
   assert.ok(payload.frontier, "Frontier must exist");
-  assert.ok(payload.frontier.points.length > 0, "Battery-only frontier must have points");
+  assert.ok(
+    payload.frontier.points.length > 0,
+    "Battery-only frontier must have points",
+  );
   for (const pt of payload.frontier.points) {
     assert.equal(pt.pvKw, 0, "Frontier points must have 0 solar");
     assert.ok(pt.battKwh > 0, "Frontier points must have battery");
@@ -186,12 +262,15 @@ test("SMOKE: runSizing in Auto Grid-Tie mode for hardwareConfig = 'battery'", as
 // ── runSizing Grid-Tie Manual Chemistry Mode Smoke Tests ────────────────────
 
 test("SMOKE: runSizing in Manual LFP Grid-Tie mode for hardwareConfig = 'solar'", async () => {
-  const payload = await runSizing({
-    ...BASE_MSG,
-    mode: "gridtie",
-    chemistry: "lfp",
-    hardwareConfig: "solar",
-  }, fakeWeather);
+  const payload = await runSizing(
+    {
+      ...BASE_MSG,
+      mode: "gridtie",
+      chemistry: "lfp",
+      hardwareConfig: "solar",
+    },
+    fakeWeather,
+  );
 
   assert.equal(payload.mode, "gridtie");
   assert.equal(payload.hardwareConfig, "solar");
@@ -209,13 +288,16 @@ test("SMOKE: runSizing in Manual LFP Grid-Tie mode for hardwareConfig = 'solar'"
 });
 
 test("SMOKE: runSizing in Manual LFP Grid-Tie mode for hardwareConfig = 'battery'", async () => {
-  const payload = await runSizing({
-    ...BASE_MSG,
-    mode: "gridtie",
-    chemistry: "lfp",
-    hardwareConfig: "battery",
-    customCut: 0.15,
-  }, fakeWeather);
+  const payload = await runSizing(
+    {
+      ...BASE_MSG,
+      mode: "gridtie",
+      chemistry: "lfp",
+      hardwareConfig: "battery",
+      customCut: 0.15,
+    },
+    fakeWeather,
+  );
 
   assert.equal(payload.mode, "gridtie");
   assert.equal(payload.hardwareConfig, "battery");
@@ -236,17 +318,20 @@ test("SMOKE: runSizing in Manual LFP Grid-Tie mode for hardwareConfig = 'battery
 
 test("SMOKE: incrementalCut handles battery-only and solar-only slider edits", async () => {
   // Battery-only incremental cut
-  const patchBatt = await runSizing({
-    ...BASE_MSG,
-    mode: "gridtie",
-    chemistry: "auto",
-    hardwareConfig: "battery",
-    incrementalCut: true,
-    customCut: 0.18,
-    focusPvKw: 0,
-    focusBattKwh: 12,
-    focusChemistry: "lfp",
-  }, fakeWeather);
+  const patchBatt = await runSizing(
+    {
+      ...BASE_MSG,
+      mode: "gridtie",
+      chemistry: "auto",
+      hardwareConfig: "battery",
+      incrementalCut: true,
+      customCut: 0.18,
+      focusPvKw: 0,
+      focusBattKwh: 12,
+      focusChemistry: "lfp",
+    },
+    fakeWeather,
+  );
 
   assert.ok(patchBatt.customCut);
   assert.equal(patchBatt.customCut.fraction, 0.18);
@@ -257,17 +342,20 @@ test("SMOKE: incrementalCut handles battery-only and solar-only slider edits", a
   }
 
   // Solar-only incremental cut
-  const patchSolar = await runSizing({
-    ...BASE_MSG,
-    mode: "gridtie",
-    chemistry: "auto",
-    hardwareConfig: "solar",
-    incrementalCut: true,
-    customCut: 0.25,
-    focusPvKw: 5,
-    focusBattKwh: 0,
-    focusChemistry: "lfp",
-  }, fakeWeather);
+  const patchSolar = await runSizing(
+    {
+      ...BASE_MSG,
+      mode: "gridtie",
+      chemistry: "auto",
+      hardwareConfig: "solar",
+      incrementalCut: true,
+      customCut: 0.25,
+      focusPvKw: 5,
+      focusBattKwh: 0,
+      focusChemistry: "lfp",
+    },
+    fakeWeather,
+  );
 
   assert.ok(patchSolar.customCut);
   assert.equal(patchSolar.customCut.fraction, 0.25);
@@ -280,15 +368,20 @@ test("SMOKE: incrementalCut handles battery-only and solar-only slider edits", a
 
 test("SMOKE: target cards and offgrid tiers carry socNameplatePct for SOC chart cohesion", async () => {
   // Grid-tie manual LFP
-  const gtPayload = await runSizing({
-    ...BASE_MSG,
-    mode: "gridtie",
-    chemistry: "lfp",
-    hardwareConfig: "both",
-  }, fakeWeather);
+  const gtPayload = await runSizing(
+    {
+      ...BASE_MSG,
+      mode: "gridtie",
+      chemistry: "lfp",
+      hardwareConfig: "both",
+    },
+    fakeWeather,
+  );
 
   assert.ok(gtPayload.targets.length > 0);
-  const solvableTargetsWithBatt = gtPayload.targets.filter((t) => t.solvable && t.battKwh > 0);
+  const solvableTargetsWithBatt = gtPayload.targets.filter(
+    (t) => t.solvable && t.battKwh > 0,
+  );
   assert.ok(solvableTargetsWithBatt.length > 0);
   for (const t of solvableTargetsWithBatt) {
     assert.ok(t.socNameplatePct, `Target ${t.id} must have socNameplatePct`);
@@ -298,15 +391,20 @@ test("SMOKE: target cards and offgrid tiers carry socNameplatePct for SOC chart 
   }
 
   // Offgrid manual LFP
-  const ogPayload = await runSizing({
-    ...BASE_MSG,
-    mode: "offgrid",
-    chemistry: "lfp",
-    hardwareConfig: "both",
-  }, fakeWeather);
+  const ogPayload = await runSizing(
+    {
+      ...BASE_MSG,
+      mode: "offgrid",
+      chemistry: "lfp",
+      hardwareConfig: "both",
+    },
+    fakeWeather,
+  );
 
   assert.ok(ogPayload.tiers.length > 0);
-  const solvableTiers = ogPayload.tiers.filter((t) => t.solvable && t.battKwh > 0);
+  const solvableTiers = ogPayload.tiers.filter(
+    (t) => t.solvable && t.battKwh > 0,
+  );
   assert.ok(solvableTiers.length > 0);
   for (const t of solvableTiers) {
     assert.ok(t.socNameplatePct, `Tier ${t.id} must have socNameplatePct`);
@@ -314,4 +412,3 @@ test("SMOKE: target cards and offgrid tiers carry socNameplatePct for SOC chart 
     assert.ok(Array.isArray(t.socNameplatePct.max));
   }
 });
-

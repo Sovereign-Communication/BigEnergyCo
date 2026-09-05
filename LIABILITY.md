@@ -25,21 +25,21 @@ free informational tool, is quite close.
 
 Going free removed most of the real exposure, and it did so more effectively than an LLC would have:
 
-| Theory | Before (paid advisory, $5k fee, procurement agency) | Now (free tool) |
-|---|---|---|
-| Breach of contract | Live — you had a contract and deliverables | **Gone.** No contract, no consideration, no promise |
-| Express / implied warranty (UCC Art. 2) | Live — "Guarantee" in the hero, hardware sourcing | **Gone.** You sell no goods and make no guarantees |
-| Consumer-protection / UDAP / FTC §5 | Live — price claims in commerce | **Very weak.** Deception claims need commerce; the savings claims are now dated, hedged, and sell nothing |
-| Product liability | Live — you were in the supply chain as agent | **Gone.** You never touch, title, or ship hardware |
-| Professional negligence | Live — held out as engineering advisory | **Weak.** You disclaim it everywhere and hold no license out |
-| **Negligent misrepresentation** | Live | **The one that remains.** See below |
+| Theory                                  | Before (paid advisory, $5k fee, procurement agency) | Now (free tool)                                                                                           |
+| --------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Breach of contract                      | Live — you had a contract and deliverables          | **Gone.** No contract, no consideration, no promise                                                       |
+| Express / implied warranty (UCC Art. 2) | Live — "Guarantee" in the hero, hardware sourcing   | **Gone.** You sell no goods and make no guarantees                                                        |
+| Consumer-protection / UDAP / FTC §5     | Live — price claims in commerce                     | **Very weak.** Deception claims need commerce; the savings claims are now dated, hedged, and sell nothing |
+| Product liability                       | Live — you were in the supply chain as agent        | **Gone.** You never touch, title, or ship hardware                                                        |
+| Professional negligence                 | Live — held out as engineering advisory             | **Weak.** You disclaim it everywhere and hold no license out                                              |
+| **Negligent misrepresentation**         | Live                                                | **The one that remains.** See below                                                                       |
 
 ### The one that remains
 
 Negligent misrepresentation is the realistic theory against a free advice site: you supplied
 information, someone relied on it, they got hurt. Under Restatement (Second) of Torts § 552, the
-claim generally requires the information be supplied *"in the course of his business, profession or
-employment, or in any other transaction in which he has a pecuniary interest."*
+claim generally requires the information be supplied _"in the course of his business, profession or
+employment, or in any other transaction in which he has a pecuniary interest."_
 
 A genuinely free, non-commercial tool with no pecuniary interest sits largely **outside** that rule.
 Which leads to the single most important finding of this re-audit:
@@ -96,7 +96,7 @@ to be classified as one — even though you make no profit and charge nothing. A
 policy typically inherits the same exclusion.
 
 So the intuitive protection ("I'm just a guy, my home policy covers me") is probably the one thing
-that does *not* apply here.
+that does _not_ apply here.
 
 What actually works without an entity:
 
@@ -116,7 +116,7 @@ actually pays a lawyer if something happens; everything else just lowers the odd
 
 **Tax.** Money you receive because people found your tool useful is, in the IRS's view, very
 unlikely to be an excludable gift — a gift requires "detached and disinterested generosity"
-(*Duberstein*), and a thank-you for value received rarely qualifies. Expect it to be reportable
+(_Duberstein_), and a thank-you for value received rarely qualifies. Expect it to be reportable
 income. Whether it lands as hobby income or self-employment income on Schedule C (with SE tax)
 depends on regularity and profit motive, and at small volumes the difference is minor. Keep a simple
 running log of what comes in from day one; that alone solves most of the problem. Ask a tax preparer
@@ -133,6 +133,7 @@ for. The realistic failure mode is not a lawsuit — it is **an account freeze w
 which is a genuine, common outcome and a miserable one to unwind.
 
 Two ways to reduce that:
+
 - Read the current Venmo and Cash App terms for personal-account use, and decide knowingly.
 - Consider adding **Ko-fi, GitHub Sponsors, or a Stripe Payment Link**, which are purpose-built for
   exactly this and won't freeze you for doing what they're designed for. You can keep the personal
@@ -151,6 +152,7 @@ name, email, phone, and location from anyone in the world into a plaintext file 
 to collecting nothing.
 
 Current position:
+
 - **No accounts, no PII collected, no analytics profile, no advertising cookies.**
 - **IP addresses** are personal data under GDPR, and the rate limiter uses them — but only in
   memory, never written to disk, and cleared on restart. That is a defensible minimum necessary for
@@ -175,7 +177,7 @@ reliably retract it.** A version with a wrong number, a bad claim, or an old dis
 after you've fixed the live site.
 
 Practical consequence: treat every Freenet publish as permanent. Get the terms and disclaimers right
-*before* republishing, not after. The launcher deliberately does **not** publish to Freenet by
+_before_ republishing, not after. The launcher deliberately does **not** publish to Freenet by
 default — you have to pass `--publish` on purpose.
 
 ---

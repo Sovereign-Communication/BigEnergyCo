@@ -2,11 +2,23 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  DERATES_DEFAULT, GAMMA_PMAX, CHEMISTRIES,
-  cellTemp, tempFactor, arrayEfficiency, buildE1kw,
-  flatProfile, shapedProfile, applianceProfile, expandProfile,
-  simulate, sizeForTier, sizeAllTiers, RELIABILITY_TIERS,
-  downsampleEnvelope, dailyExtremes,
+  DERATES_DEFAULT,
+  GAMMA_PMAX,
+  CHEMISTRIES,
+  cellTemp,
+  tempFactor,
+  arrayEfficiency,
+  buildE1kw,
+  flatProfile,
+  shapedProfile,
+  applianceProfile,
+  expandProfile,
+  simulate,
+  sizeForTier,
+  sizeAllTiers,
+  RELIABILITY_TIERS,
+  downsampleEnvelope,
+  dailyExtremes,
 } from "../assets/js/sizing/engine.js";
 
 const EPS = 1e-6;
@@ -15,7 +27,8 @@ const EPS = 1e-6;
 
 function mulberry32(a) {
   return function () {
-    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
     let t = Math.imul(a ^ (a >>> 15), 1 | a);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
@@ -38,10 +51,11 @@ function makeWeather(hours = 8760, seed = 42, opts = {}) {
     const cloudBase = out.__cloud;
     const dayNoise = 0.75 + 0.25 * rand();
     const ghi = Math.max(0, 950 * seasonal * diurnal * cloudBase * dayNoise);
-    const tAmb = (opts.baseTemp ?? 22)
-      + (opts.tempAmp ?? 6) * Math.sin((doy / 365) * 2 * Math.PI)
-      + 3 * diurnal
-      + 4 * (rand() - 0.5);
+    const tAmb =
+      (opts.baseTemp ?? 22) +
+      (opts.tempAmp ?? 6) * Math.sin((doy / 365) * 2 * Math.PI) +
+      3 * diurnal +
+      4 * (rand() - 0.5);
     out[i] = { ghi, tAmb };
   }
   return out;
@@ -68,11 +82,17 @@ test("buildE1kw is linear in array size (the sheet multiplier property)", () => 
   for (let i = 0; i < e.length; i++) {
     assert.ok(e[i] <= w[i].ghi + EPS, "derates can only reduce output");
   }
-  assert.ok(e.some((x) => x > 500), "clear tropical mid-day should exceed 500 Wh/kW");
+  assert.ok(
+    e.some((x) => x > 500),
+    "clear tropical mid-day should exceed 500 Wh/kW",
+  );
 });
 
 test("buildE1kw handles fill values (-999) as zero", () => {
-  const w = [{ ghi: -999, tAmb: NaN }, { ghi: 800, tAmb: 25 }];
+  const w = [
+    { ghi: -999, tAmb: NaN },
+    { ghi: 800, tAmb: 25 },
+  ];
   const e = buildE1kw(w);
   assert.equal(e[0], 0);
   assert.ok(e[1] > 0);
@@ -100,21 +120,31 @@ test("shapedProfile rejects bad shapes and honors weights", () => {
   const p = shapedProfile(10, weights);
   const total = [...p].reduce((a, b) => a + b, 0);
   assert.ok(Math.abs(total - 10000) < EPS);
-  assert.ok(Math.abs(p[19] / total - weights[19]) < EPS, "evening peak carries its weight");
+  assert.ok(
+    Math.abs(p[19] / total - weights[19]) < EPS,
+    "evening peak carries its weight",
+  );
 });
 
 test("applianceProfile distributes energy across running hours", () => {
   const p = applianceProfile([{ watts: 120, hoursPerDay: 5, startHour: 18 }]);
-  let total = 0; for (const x of p) total += x;
+  let total = 0;
+  for (const x of p) total += x;
   assert.ok(Math.abs(total - 600) < EPS, "120W x 5h = 600 Wh");
   assert.ok(Math.abs(p[18] - 120) < EPS && Math.abs(p[22] - 120) < EPS);
 
-  const q = applianceProfile([{ watts: 100, hoursPerDay: 2.5, startHour: 10, count: 2 }]);
-  let tq = 0; for (const x of q) tq += x;
+  const q = applianceProfile([
+    { watts: 100, hoursPerDay: 2.5, startHour: 10, count: 2 },
+  ]);
+  let tq = 0;
+  for (const x of q) tq += x;
   assert.ok(Math.abs(tq - 500) < EPS, "count=2 doubles it: 200W x 2.5h");
 
   const r = applianceProfile([{ watts: 240, hoursPerDay: 2, startHour: 23 }]); // wraps midnight
-  assert.ok(r[23] > 0 && r[0] > 0 && r[1] === 0, "wraps past midnight correctly");
+  assert.ok(
+    r[23] > 0 && r[0] > 0 && r[1] === 0,
+    "wraps past midnight correctly",
+  );
 });
 
 test("expandProfile repeats daily shape across series", () => {
@@ -127,13 +157,27 @@ test("expandProfile repeats daily shape across series", () => {
 // ── Simulator physics ───────────────────────────────────────────────────────
 
 test("energy conservation: served + unmet == load, always", () => {
-  const w = makeWeather(24 * 60, 7, { seasonalAmp: 0.35, baseTemp: 12, tempAmp: 14 });
+  const w = makeWeather(24 * 60, 7, {
+    seasonalAmp: 0.35,
+    baseTemp: 12,
+    tempAmp: 14,
+  });
   const e1 = buildE1kw(w);
   const load = expandProfile(flatProfile(12), e1.length);
   const temps = Float64Array.from(w, (x) => x.tAmb);
   for (const chem of ["lfp", "naion", "agm"]) {
-    const r = simulate({ pvKw: 3, battKwhUsable: 15, e1kw: e1, loadWh: load, chemistry: chem, tempsC: temps });
-    assert.ok(Math.abs((r.servedWh + r.unmetWh) - 12 * 1000 * 60) < 1e-3, `conservation holds for ${chem}`);
+    const r = simulate({
+      pvKw: 3,
+      battKwhUsable: 15,
+      e1kw: e1,
+      loadWh: load,
+      chemistry: chem,
+      tempsC: temps,
+    });
+    assert.ok(
+      Math.abs(r.servedWh + r.unmetWh - 12 * 1000 * 60) < 1e-3,
+      `conservation holds for ${chem}`,
+    );
   }
 });
 
@@ -143,9 +187,26 @@ test("cold LFP blocks charging below 0°C but sodium-ion charges", () => {
   const load = expandProfile(flatProfile(4), e1.length);
   const temps = Float64Array.from(w, (x) => x.tAmb);
 
-  const rLfp = simulate({ pvKw: 6, battKwhUsable: 20, e1kw: e1, loadWh: load, chemistry: "lfp", tempsC: temps });
-  const rNa = simulate({ pvKw: 6, battKwhUsable: 20, e1kw: e1, loadWh: load, chemistry: "naion", tempsC: temps });
-  assert.ok(rLfp.unmetWh > rNa.unmetWh, "frozen LFP serves strictly worse than Na-ion in deep cold");
+  const rLfp = simulate({
+    pvKw: 6,
+    battKwhUsable: 20,
+    e1kw: e1,
+    loadWh: load,
+    chemistry: "lfp",
+    tempsC: temps,
+  });
+  const rNa = simulate({
+    pvKw: 6,
+    battKwhUsable: 20,
+    e1kw: e1,
+    loadWh: load,
+    chemistry: "naion",
+    tempsC: temps,
+  });
+  assert.ok(
+    rLfp.unmetWh > rNa.unmetWh,
+    "frozen LFP serves strictly worse than Na-ion in deep cold",
+  );
 });
 
 test("zero PV: unmet equals load minus what initial SOC can deliver", () => {
@@ -153,7 +214,14 @@ test("zero PV: unmet equals load minus what initial SOC can deliver", () => {
   const e1 = new Float64Array(n);
   const load = expandProfile(flatProfile(6), n);
   const cap = 10; // kWh usable
-  const r = simulate({ pvKw: 0, battKwhUsable: cap, e1kw: e1, loadWh: load, chemistry: "lfp", startSoc: 1 });
+  const r = simulate({
+    pvKw: 0,
+    battKwhUsable: cap,
+    e1kw: e1,
+    loadWh: load,
+    chemistry: "lfp",
+    startSoc: 1,
+  });
   const eta = Math.sqrt(CHEMISTRIES.lfp.roundTrip);
   const loadTotal = (n / 24) * 6 * 1000;
   const deliverable = cap * 1000 * eta;
@@ -165,7 +233,14 @@ test("zero PV: unmet equals load minus what initial SOC can deliver", () => {
 test("single-hour hand case: exact unmet arithmetic", () => {
   const e1 = new Float64Array([0]);
   const load = new Float64Array([500]);
-  const r = simulate({ pvKw: 0, battKwhUsable: 1, e1kw: e1, loadWh: load, chemistry: "lfp", startSoc: 0.4 });
+  const r = simulate({
+    pvKw: 0,
+    battKwhUsable: 1,
+    e1kw: e1,
+    loadWh: load,
+    chemistry: "lfp",
+    startSoc: 0.4,
+  });
   const eta = Math.sqrt(CHEMISTRIES.lfp.roundTrip);
   const expectedUnmet = 500 - 0.4 * 1000 * eta;
   assert.ok(Math.abs(r.unmetWh - expectedUnmet) < 1e-9);
@@ -182,20 +257,42 @@ test("unmet hours behave structurally in a dark-day scenario", () => {
   const shape = heavyEveningShape();
   const load = expandProfile(shapedProfile(6, shape), 48);
 
-  const big = simulate({ pvKw: 2, battKwhUsable: 5, e1kw: e1, loadWh: load, chemistry: "lfp" });
-  const small = simulate({ pvKw: 2, battKwhUsable: 1, e1kw: e1, loadWh: load, chemistry: "lfp" });
+  const big = simulate({
+    pvKw: 2,
+    battKwhUsable: 5,
+    e1kw: e1,
+    loadWh: load,
+    chemistry: "lfp",
+  });
+  const small = simulate({
+    pvKw: 2,
+    battKwhUsable: 1,
+    e1kw: e1,
+    loadWh: load,
+    chemistry: "lfp",
+  });
 
   for (const r of [big, small]) {
     assert.ok(r.minSoc >= -EPS);
     assert.ok(r.longestGapHours <= r.unmetHours + EPS);
   }
-  assert.ok(small.unmetHours > big.unmetHours, "smaller bank serves strictly worse");
-  assert.ok(big.unmetHours > 0, "day-2 blackout cannot be fully covered by a 5 kWh bank here");
+  assert.ok(
+    small.unmetHours > big.unmetHours,
+    "smaller bank serves strictly worse",
+  );
+  assert.ok(
+    big.unmetHours > 0,
+    "day-2 blackout cannot be fully covered by a 5 kWh bank here",
+  );
 });
 
 function heavyEveningShape() {
   const s = Array(24).fill(0.005);
-  s[17] = 0.15; s[18] = 0.25; s[19] = 0.25; s[20] = 0.20; s[21] = 0.08;
+  s[17] = 0.15;
+  s[18] = 0.25;
+  s[19] = 0.25;
+  s[20] = 0.2;
+  s[21] = 0.08;
   const sum = s.reduce((a, b) => a + b, 0);
   return s.map((x) => x / sum);
 }
@@ -203,25 +300,46 @@ function heavyEveningShape() {
 // ── Tier search ─────────────────────────────────────────────────────────────
 
 test("sizeForTier finds a configuration that meets the constraint", () => {
-  const w = makeWeather(24 * 180, 123, { seasonalAmp: 0.4, baseTemp: 16, tempAmp: 10 });
+  const w = makeWeather(24 * 180, 123, {
+    seasonalAmp: 0.4,
+    baseTemp: 16,
+    tempAmp: 10,
+  });
   const e1 = buildE1kw(w);
   const load = expandProfile(flatProfile(8), e1.length);
   const temps = Float64Array.from(w, (x) => x.tAmb);
   const best = sizeForTier({
-    e1kw: e1, loadWh: load, tempsC: temps, chemistry: "naion",
-    maxUnmetHoursPerYear: 87.6, years: 180 / 365,
-    pvMax: 12, battMax: 40,
+    e1kw: e1,
+    loadWh: load,
+    tempsC: temps,
+    chemistry: "naion",
+    maxUnmetHoursPerYear: 87.6,
+    years: 180 / 365,
+    pvMax: 12,
+    battMax: 40,
   });
   assert.ok(best, "should find a viable system");
   assert.ok(best.result.unmetHours / (180 / 365) <= 87.6 + 1e-6);
 });
 
 test("stricter tiers require no less hardware than looser tiers", () => {
-  const w = makeWeather(24 * 150, 555, { seasonalAmp: 0.5, baseTemp: 10, tempAmp: 16 });
+  const w = makeWeather(24 * 150, 555, {
+    seasonalAmp: 0.5,
+    baseTemp: 10,
+    tempAmp: 16,
+  });
   const e1 = buildE1kw(w);
   const load = expandProfile(flatProfile(7), e1.length);
   const temps = Float64Array.from(w, (x) => x.tAmb);
-  const common = { e1kw: e1, loadWh: load, tempsC: temps, chemistry: "naion", years: 150 / 365, pvMax: 15, battMax: 50 };
+  const common = {
+    e1kw: e1,
+    loadWh: load,
+    tempsC: temps,
+    chemistry: "naion",
+    years: 150 / 365,
+    pvMax: 15,
+    battMax: 50,
+  };
   const t95 = sizeForTier({ ...common, maxUnmetHoursPerYear: 438 });
   const t99 = sizeForTier({ ...common, maxUnmetHoursPerYear: 87.6 });
   const t100 = sizeForTier({ ...common, maxUnmetHoursPerYear: 0 });
@@ -236,8 +354,12 @@ test("sizeAllTiers aligns with RELIABILITY_TIERS and marks impossibility as null
   const e1 = buildE1kw(w);
   const load = expandProfile(flatProfile(50), e1.length); // absurd 50 kWh/day
   const results = sizeAllTiers({
-    e1kw: e1, loadWh: load, chemistry: "agm",
-    years: 40 / 365, pvMax: 2, battMax: 3,
+    e1kw: e1,
+    loadWh: load,
+    chemistry: "agm",
+    years: 40 / 365,
+    pvMax: 2,
+    battMax: 3,
   });
   assert.equal(results.length, RELIABILITY_TIERS.length);
   assert.equal(results[0].tier.id, "tier100");
@@ -247,19 +369,40 @@ test("sizeAllTiers aligns with RELIABILITY_TIERS and marks impossibility as null
 // ── SOC capture & envelope downsampling ─────────────────────────────────────
 
 test("capture:true returns a bounded hourly SOC series", () => {
-  const w = makeWeather(24 * 30, 77, { seasonalAmp: 0.2, baseTemp: 18, tempAmp: 8 });
+  const w = makeWeather(24 * 30, 77, {
+    seasonalAmp: 0.2,
+    baseTemp: 18,
+    tempAmp: 8,
+  });
   const e1 = buildE1kw(w);
   const n = e1.length;
   const load = expandProfile(flatProfile(6), n);
-  const r = simulate({ pvKw: 3, battKwhUsable: 10, e1kw: e1, loadWh: load, chemistry: "lfp", capture: true });
+  const r = simulate({
+    pvKw: 3,
+    battKwhUsable: 10,
+    e1kw: e1,
+    loadWh: load,
+    chemistry: "lfp",
+    capture: true,
+  });
   assert.ok(r.socSeries instanceof Float64Array);
   assert.equal(r.socSeries.length, n);
   for (const v of r.socSeries) {
     assert.ok(v >= -EPS && v <= 1 + EPS, "SOC stays in [0,1]");
   }
   assert.equal(r.minSoc, Math.min(...r.socSeries));
-  const noCapture = simulate({ pvKw: 3, battKwhUsable: 10, e1kw: e1, loadWh: load, chemistry: "lfp" });
-  assert.equal(noCapture.socSeries, null, "capture off -> null series (no memory waste)");
+  const noCapture = simulate({
+    pvKw: 3,
+    battKwhUsable: 10,
+    e1kw: e1,
+    loadWh: load,
+    chemistry: "lfp",
+  });
+  assert.equal(
+    noCapture.socSeries,
+    null,
+    "capture off -> null series (no memory waste)",
+  );
 });
 
 test("downsampleEnvelope preserves the exact min/max envelope", () => {
@@ -268,14 +411,21 @@ test("downsampleEnvelope preserves the exact min/max envelope", () => {
   for (let i = 0; i < n; i++) s[i] = 0.5 + 0.5 * Math.sin(i / 7); // known peaks 0..1
   const env = downsampleEnvelope(s, 100);
   assert.equal(env.length, 100);
-  let globalLo = Infinity, globalHi = -Infinity;
+  let globalLo = Infinity,
+    globalHi = -Infinity;
   for (const p of env) {
     assert.ok(p.lo <= p.hi + EPS);
     globalLo = Math.min(globalLo, p.lo);
     globalHi = Math.max(globalHi, p.hi);
   }
-  assert.ok(Math.abs(globalLo - Math.min(...s)) < EPS, "bucket minima cover series min");
-  assert.ok(Math.abs(globalHi - Math.max(...s)) < EPS, "bucket maxima cover series max");
+  assert.ok(
+    Math.abs(globalLo - Math.min(...s)) < EPS,
+    "bucket minima cover series min",
+  );
+  assert.ok(
+    Math.abs(globalHi - Math.max(...s)) < EPS,
+    "bucket maxima cover series max",
+  );
   // a sharp single-hour dip must not be averaged away
   s[1234] = -0.2;
   const env2 = downsampleEnvelope(s, 100);
@@ -288,7 +438,7 @@ test("dailyExtremes: captures the full daily range, dips and peaks", () => {
   // Day 3 recovers to 0.9.
   const s = new Float64Array(72);
   for (let i = 0; i < 24; i++) s[i] = 0.8;
-  for (let i = 24; i < 48; i++) s[i] = i === 30 ? 0.1 : (i === 40 ? 0.97 : 0.6);
+  for (let i = 24; i < 48; i++) s[i] = i === 30 ? 0.1 : i === 40 ? 0.97 : 0.6;
   for (let i = 48; i < 72; i++) s[i] = 0.9;
   const { min, max } = dailyExtremes(s);
   assert.equal(min.length, 3);
@@ -301,49 +451,100 @@ test("dailyExtremes: captures the full daily range, dips and peaks", () => {
 test("GATE: every tier's battery reaches ~100% on charging days", () => {
   // This is the user-facing promise of percent SOC: full is full, whatever
   // the system size. The chart's top edge must reflect it.
-  const w = makeWeather(24 * 200, 4242, { seasonalAmp: 0.35, baseTemp: 20, tempAmp: 10 });
+  const w = makeWeather(24 * 200, 4242, {
+    seasonalAmp: 0.35,
+    baseTemp: 20,
+    tempAmp: 10,
+  });
   const e1 = buildE1kw(w);
   const load = expandProfile(flatProfile(8), e1.length);
   const temps = Float64Array.from(w, (x) => x.tAmb);
   const results = sizeAllTiers({
-    e1kw: e1, loadWh: load, tempsC: temps, chemistry: "lfp",
-    years: 200 / 365, pvMax: 15, battMax: 60,
+    e1kw: e1,
+    loadWh: load,
+    tempsC: temps,
+    chemistry: "lfp",
+    years: 200 / 365,
+    pvMax: 15,
+    battMax: 60,
   });
   let checked = 0;
   for (const { tier, sizing } of results) {
     if (!sizing) continue;
-    const traced = simulate({ pvKw: sizing.pvKw, battKwhUsable: sizing.battKwh, e1kw: e1, loadWh: load, chemistry: "lfp", tempsC: temps, capture: true });
+    const traced = simulate({
+      pvKw: sizing.pvKw,
+      battKwhUsable: sizing.battKwh,
+      e1kw: e1,
+      loadWh: load,
+      chemistry: "lfp",
+      tempsC: temps,
+      capture: true,
+    });
     const ext = dailyExtremes(traced.socSeries);
     const maxOfMax = Math.max(...ext.max);
-    assert.ok(maxOfMax >= 0.999, `${tier.id} must reach full (got ${(maxOfMax * 100).toFixed(1)}%)`);
+    assert.ok(
+      maxOfMax >= 0.999,
+      `${tier.id} must reach full (got ${(maxOfMax * 100).toFixed(1)}%)`,
+    );
     const fullDays = [...ext.max].filter((v) => v >= 0.995).length;
-    assert.ok(fullDays > 30, `${tier.id} should reach full on many days (got ${fullDays})`);
+    assert.ok(
+      fullDays > 30,
+      `${tier.id} should reach full on many days (got ${fullDays})`,
+    );
     checked++;
   }
   assert.ok(checked >= 2, "at least two tiers solvable in this scenario");
 });
 
 test("battery-life math: smaller banks cycle more but LFP still lasts years", () => {
-  const w = makeWeather(24 * 120, 31, { seasonalAmp: 0.3, baseTemp: 20, tempAmp: 8 });
+  const w = makeWeather(24 * 120, 31, {
+    seasonalAmp: 0.3,
+    baseTemp: 20,
+    tempAmp: 8,
+  });
   const e1 = buildE1kw(w);
   const load = expandProfile(flatProfile(8), e1.length);
-  const small = simulate({ pvKw: 4, battKwhUsable: 8, e1kw: e1, loadWh: load, chemistry: "lfp" });
-  const big = simulate({ pvKw: 4, battKwhUsable: 40, e1kw: e1, loadWh: load, chemistry: "lfp" });
+  const small = simulate({
+    pvKw: 4,
+    battKwhUsable: 8,
+    e1kw: e1,
+    loadWh: load,
+    chemistry: "lfp",
+  });
+  const big = simulate({
+    pvKw: 4,
+    battKwhUsable: 40,
+    e1kw: e1,
+    loadWh: load,
+    chemistry: "lfp",
+  });
   const years = 120 / 365;
   const smallCyc = small.cyclesEquivalent / years;
   const bigCyc = big.cyclesEquivalent / years;
-  assert.ok(smallCyc > bigCyc * 2, "quarter-size bank cycles at least ~2x more");
+  assert.ok(
+    smallCyc > bigCyc * 2,
+    "quarter-size bank cycles at least ~2x more",
+  );
   const lifeSmall = CHEMISTRIES.lfp.cyclesTo80 / smallCyc;
-  assert.ok(lifeSmall > 2, `LFP on a hard-cycled small bank should still exceed 2 yrs (got ${lifeSmall.toFixed(1)})`);
+  assert.ok(
+    lifeSmall > 2,
+    `LFP on a hard-cycled small bank should still exceed 2 yrs (got ${lifeSmall.toFixed(1)})`,
+  );
 });
 
 // ── Regression guard: the Hawaii sanity bound ───────────────────────────────
 
 test("tropical site annual yield lands in plausible range", () => {
-  const w = makeWeather(8760, 2026, { seasonalAmp: 0.06, baseTemp: 24, tempAmp: 3 });
+  const w = makeWeather(8760, 2026, {
+    seasonalAmp: 0.06,
+    baseTemp: 24,
+    tempAmp: 3,
+  });
   const e1 = buildE1kw(w);
   const annualKwhPerKw = [...e1].reduce((a, b) => a + b, 0) / 1000;
   // Real-world Hawaii coastal GHI ~1900-2100 kWh/m²/yr; after derates expect ~1500-1850
-  assert.ok(annualKwhPerKw > 1450 && annualKwhPerKw < 1900,
-    `annual yield per kW was ${annualKwhPerKw.toFixed(0)} kWh`);
+  assert.ok(
+    annualKwhPerKw > 1450 && annualKwhPerKw < 1900,
+    `annual yield per kW was ${annualKwhPerKw.toFixed(0)} kWh`,
+  );
 });

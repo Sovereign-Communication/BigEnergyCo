@@ -9,7 +9,9 @@ import { join, resolve } from "node:path";
 // pricing update regenerates honest pages instead of silently dating them.
 import { estimateTariff, costRange } from "../assets/js/sizing/pricing.js";
 
-const ROOT = resolve(new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
+const ROOT = resolve(
+  new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
+);
 const CHECK = process.argv.includes("--check");
 const OUT = join(ROOT, "solar-calculator");
 
@@ -22,33 +24,71 @@ function extractCatalog() {
   if (start < 0) throw new Error("CITY_CATALOG not found in cities.js");
   const from = src.indexOf("[", start);
   // find matching closing bracket
-  let depth = 0, end = -1;
+  let depth = 0,
+    end = -1;
   for (let i = from; i < src.length; i++) {
     if (src[i] === "[") depth++;
-    else if (src[i] === "]") { depth--; if (depth === 0) { end = i; break; } }
+    else if (src[i] === "]") {
+      depth--;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
   }
   if (end < 0) throw new Error("CITY_CATALOG array not terminated");
   const literal = src.slice(from, end + 1);
   // rows are ["Name", "Country", "Region", lat, lon]
-  return eval(literal).map(([name, country, region, lat, lon]) => ({ name, country, region, lat, lon }));
+  return eval(literal).map(([name, country, region, lat, lon]) => ({
+    name,
+    country,
+    region,
+    lat,
+    lon,
+  }));
 }
 
 const cities = extractCatalog();
-if (cities.length < 50) throw new Error(`expected ~66 cities, got ${cities.length}`);
+if (cities.length < 50)
+  throw new Error(`expected ~66 cities, got ${cities.length}`);
 console.log(`Found ${cities.length} catalog cities.`);
 
 function slugify(s) {
-  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 // Rough latitude-based sun context (educational, honest — no fake precision).
 function sunContext(lat) {
   const a = Math.abs(lat);
-  if (a < 15) return { tier: "Tropical sun", note: "near-constant day length and strong year-round sun; the least seasonal solar resource on Earth." };
-  if (a < 30) return { tier: "Subtropical sun", note: "strong sun most of the year with a mild winter dip." };
-  if (a < 45) return { tier: "Temperate sun", note: "good summer sun, a real winter dip, and month-to-month variation worth simulating." };
-  if (a < 60) return { tier: "High-latitude sun", note: "long summer days, short winter ones — the seasonal spread is exactly what the simulator measures." };
-  return { tier: "Polar-margin sun", note: "extreme seasonal swing; winter sizing is decided by the darkest week, not the average." };
+  if (a < 15)
+    return {
+      tier: "Tropical sun",
+      note: "near-constant day length and strong year-round sun; the least seasonal solar resource on Earth.",
+    };
+  if (a < 30)
+    return {
+      tier: "Subtropical sun",
+      note: "strong sun most of the year with a mild winter dip.",
+    };
+  if (a < 45)
+    return {
+      tier: "Temperate sun",
+      note: "good summer sun, a real winter dip, and month-to-month variation worth simulating.",
+    };
+  if (a < 60)
+    return {
+      tier: "High-latitude sun",
+      note: "long summer days, short winter ones — the seasonal spread is exactly what the simulator measures.",
+    };
+  return {
+    tier: "Polar-margin sun",
+    note: "extreme seasonal swing; winter sizing is decided by the darkest week, not the average.",
+  };
 }
 
 // Simple worked example from latitude: rough specific yield kWh/kWp/yr band.
@@ -61,7 +101,9 @@ function yieldBand(lat) {
   return [600, 950];
 }
 
-function fmtKwh(v) { return v.toLocaleString("en-US"); }
+function fmtKwh(v) {
+  return v.toLocaleString("en-US");
+}
 
 // Worked example for a 10 kWh/day household, derived from the latitude yield
 // band and the SHARED tariff + landed-DIY costs — an illustration, not a
@@ -75,22 +117,26 @@ function workedExample(c, lo, hi) {
   const rows = fracs.map((f) => {
     // PV to displace fraction f of 3650 kWh/yr at band-mid yield, ×1.5
     // dark-week margin, as a ±30% range in 0.5 kW steps.
-    const pvMid = (3650 * f / yieldMid) * 1.5;
-    const pvLo = Math.max(0.5, Math.round((pvMid * 0.7) * 2) / 2);
-    const pvHi = Math.max(pvLo, Math.round((pvMid * 1.3) * 2) / 2);
+    const pvMid = ((3650 * f) / yieldMid) * 1.5;
+    const pvLo = Math.max(0.5, Math.round(pvMid * 0.7 * 2) / 2);
+    const pvHi = Math.max(pvLo, Math.round(pvMid * 1.3 * 2) / 2);
     // Overnight + cloudy-day buffer scales with the cut ambition.
     const bMid = 10 * f * 0.7;
     const bLo = Math.max(1, Math.round(bMid * 0.7));
     const bHi = Math.max(bLo + 1, Math.round(bMid * 1.3));
-    return [`~${Math.round(f * 100)}%`, `${pvLo}–${pvHi} kW`, `${bLo}–${bHi} kWh`];
+    return [
+      `~${Math.round(f * 100)}%`,
+      `${pvLo}–${pvHi} kW`,
+      `${bLo}–${bHi} kWh`,
+    ];
   });
   // Payback illustration on the 60% row at the shared local tariff.
-  const pv60 = (3650 * 0.6 / yieldMid) * 1.5;
+  const pv60 = ((3650 * 0.6) / yieldMid) * 1.5;
   const b60 = 10 * 0.6 * 0.7;
   const cost = costRange(pv60, b60, "landed", "lfp");
   const costMid = Math.round(((cost.lo + cost.hi) / 2) * landedF);
   const savedYr = Math.round(3650 * 0.6 * est.rate);
-  const pb = savedYr > 0 ? (costMid / savedYr) : null;
+  const pb = savedYr > 0 ? costMid / savedYr : null;
   const paybackLine = `Payback depends on your local tariff: at ~$${est.rate.toFixed(2)}/kWh a 60% cut on this load saves roughly $${fmtKwh(savedYr)}/year, which repays landed-DIY component costs (about $${fmtKwh(costMid)}) in ${pb === null ? "an uneconomic stretch — the tool will tell you plainly" : pb < 1 ? "under a year" : `about ${pb.toFixed(1)} years`}. Where power is cheap, payback stretches — the tool shows your personal number from your own rate.`;
   return { rows, paybackLine };
 }
@@ -326,7 +372,11 @@ function cityPage(c) {
 
       <h2>Other cities</h2>
       <div class="citylinks">
-${cities.filter((o) => o.name !== c.name).slice(0, 23).map((o) => `        <a href="../${slugify(o.name)}/">${o.name}</a>`).join("\n")}
+${cities
+  .filter((o) => o.name !== c.name)
+  .slice(0, 23)
+  .map((o) => `        <a href="../${slugify(o.name)}/">${o.name}</a>`)
+  .join("\n")}
       </div>
       <p><a href="../">Browse all ${cities.length} cities →</a></p>
 
@@ -376,12 +426,18 @@ function hubPage() {
     const reg = MACRO_REGIONS[c.region] || c.region;
     (byRegion[reg] ||= []).push(c);
   }
-  const regionBlocks = Object.entries(byRegion).map(([region, list]) => {
-    const items = list.map((c) => `        <a href="./${slugify(c.name)}/">${c.name}</a>`).join("\n");
-    return `      <h2>${region}</h2>\n      <div class="citylinks">\n${items}\n      </div>`;
-  }).join("\n");
-  const title = "Solar & Battery Calculator by City — Free Sizing for 66 Cities";
-  const desc = "Free solar and battery sizing pages for 66 cities worldwide. Simulated against five years of NASA satellite weather. Nothing for sale.";
+  const regionBlocks = Object.entries(byRegion)
+    .map(([region, list]) => {
+      const items = list
+        .map((c) => `        <a href="./${slugify(c.name)}/">${c.name}</a>`)
+        .join("\n");
+      return `      <h2>${region}</h2>\n      <div class="citylinks">\n${items}\n      </div>`;
+    })
+    .join("\n");
+  const title =
+    "Solar & Battery Calculator by City — Free Sizing for 66 Cities";
+  const desc =
+    "Free solar and battery sizing pages for 66 cities worldwide. Simulated against five years of NASA satellite weather. Nothing for sale.";
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -532,10 +588,14 @@ if (CHECK) {
   // validate: every city produces a page with required SEO elements
   for (const c of cities) {
     const html = cityPage(c);
-    if (!html.includes(`Solar & Battery Sizing for ${c.name}`)) throw new Error(`bad h1 for ${c.name}`);
-    if (!html.includes("application/ld+json")) throw new Error(`missing JSON-LD for ${c.name}`);
+    if (!html.includes(`Solar & Battery Sizing for ${c.name}`))
+      throw new Error(`bad h1 for ${c.name}`);
+    if (!html.includes("application/ld+json"))
+      throw new Error(`missing JSON-LD for ${c.name}`);
   }
-  console.log(`--check: ${cities.length} city pages + hub validate OK. Not writing files.`);
+  console.log(
+    `--check: ${cities.length} city pages + hub validate OK. Not writing files.`,
+  );
   process.exit(0);
 }
 

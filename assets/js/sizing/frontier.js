@@ -96,26 +96,43 @@ export function battLadder(battMax, steps = 16, includeZero = false) {
  * @returns {Array<{pvKw:number, battKwh:number, outcome:number, capexUsd:number, result:object}>}
  */
 export function sweepSystems({
-  e1kw, loadWh, tempsC = null, chemistry = "lfp", mode = "offgrid",
+  e1kw,
+  loadWh,
+  tempsC = null,
+  chemistry = "lfp",
+  mode = "offgrid",
   capacityScale = null,
   costFn = null,
-  costPerWpv = 0.35, costPerKwhBatt = 140, costPerKwInv = 60,
-  pvMax = 30, battMax = 100, pvSteps = 18, battSteps = 16,
+  costPerWpv = 0.35,
+  costPerKwhBatt = 140,
+  costPerKwInv = 60,
+  pvMax = 30,
+  battMax = 100,
+  pvSteps = 18,
+  battSteps = 16,
 }) {
   // Prices come from ONE place. When the caller injects the same pricing
   // function the result cards use, the curve's dollars and the cards'
   // dollars can never drift apart - which is the only way the chart is
   // allowed to earn trust. The linear fallback exists for unit tests.
-  const price = costFn || ((pv, b) => {
-    const mid = pv * 1000 * costPerWpv + pv * costPerKwInv + b * costPerKwhBatt;
-    return { mid, lo: mid, hi: mid };
-  });
+  const price =
+    costFn ||
+    ((pv, b) => {
+      const mid =
+        pv * 1000 * costPerWpv + pv * costPerKwInv + b * costPerKwhBatt;
+      return { mid, lo: mid, hi: mid };
+    });
   let loadTotal = 0;
   for (let i = 0; i < loadWh.length; i++) loadTotal += loadWh[i];
   if (!(loadTotal > 0)) return [];
 
   const gridTie = mode === "gridtie";
-  const pvs = pvMax <= 0 ? [0] : (gridTie ? [0, ...pvLadder(pvMax, pvSteps)] : pvLadder(pvMax, pvSteps));
+  const pvs =
+    pvMax <= 0
+      ? [0]
+      : gridTie
+        ? [0, ...pvLadder(pvMax, pvSteps)]
+        : pvLadder(pvMax, pvSteps);
   const bats = battMax <= 0 ? [0] : battLadder(battMax, battSteps, gridTie);
   const out = [];
 
@@ -127,8 +144,24 @@ export function sweepSystems({
       if (!gridTie && battKwh <= 0) continue;
       if (!gridTie && pvKw <= 0) continue;
       const result = gridTie
-        ? simulateOffset({ pvKw, battKwhUsable: battKwh, e1kw, loadWh, chemistry, tempsC, capacityScale })
-        : simulate({ pvKw, battKwhUsable: battKwh, e1kw, loadWh, chemistry, tempsC, capacityScale });
+        ? simulateOffset({
+            pvKw,
+            battKwhUsable: battKwh,
+            e1kw,
+            loadWh,
+            chemistry,
+            tempsC,
+            capacityScale,
+          })
+        : simulate({
+            pvKw,
+            battKwhUsable: battKwh,
+            e1kw,
+            loadWh,
+            chemistry,
+            tempsC,
+            capacityScale,
+          });
       // Battery-only systems never reduce TOTAL imports (charging losses add),
       // so in a mixed sweep they honestly score ≤ 0 in energy terms and the
       // outcome filter drops them off the curve. Only a pure-battery sweep
@@ -137,12 +170,18 @@ export function sweepSystems({
       // would let a 44% peak offset masquerade as a 44% bill cut.
       const pureBatterySweep = gridTie && !(pvMax > 0);
       const outcome = gridTie
-        ? (pureBatterySweep && pvKw <= 0 && battKwh > 0 ? result.peakOffsetFraction : 1 - result.importedWh / loadTotal)
+        ? pureBatterySweep && pvKw <= 0 && battKwh > 0
+          ? result.peakOffsetFraction
+          : 1 - result.importedWh / loadTotal
         : result.servedWh / loadTotal;
       const cost = price(pvKw, battKwh);
       out.push({
-        pvKw, battKwh, outcome, result,
-        pointType: pvKw === 0 ? "battery_only" : (battKwh === 0 ? "solar_only" : "both"),
+        pvKw,
+        battKwh,
+        outcome,
+        result,
+        pointType:
+          pvKw === 0 ? "battery_only" : battKwh === 0 ? "solar_only" : "both",
         capexUsd: cost.mid,
         capexLoUsd: cost.lo ?? cost.mid,
         capexHiUsd: cost.hi ?? cost.mid,
@@ -159,7 +198,9 @@ export function sweepSystems({
  * rides along on each surviving point for the cards to use.
  */
 export function paretoFront(points) {
-  const sorted = [...points].sort((a, b) => a.capexUsd - b.capexUsd || b.outcome - a.outcome);
+  const sorted = [...points].sort(
+    (a, b) => a.capexUsd - b.capexUsd || b.outcome - a.outcome,
+  );
   const front = [];
   let bestOutcome = -Infinity;
   for (const p of sorted) {
@@ -175,27 +216,35 @@ export function paretoFront(points) {
  * Drop points too close together to read, and points too far down the curve
  * to be a real option. Always keeps the first and last point.
  */
-export function thinFront(front, {
-  minOutcome = FRONTIER_MIN_OUTCOME,
-  minStepPp = FRONTIER_MIN_STEP_PP,
-  maxPoints = FRONTIER_MAX_POINTS,
-} = {}) {
+export function thinFront(
+  front,
+  {
+    minOutcome = FRONTIER_MIN_OUTCOME,
+    minStepPp = FRONTIER_MIN_STEP_PP,
+    maxPoints = FRONTIER_MAX_POINTS,
+  } = {},
+) {
   const usable = front.filter((p) => p.outcome >= minOutcome);
   if (usable.length <= 2) return usable;
 
   let kept = [usable[0]];
   for (let i = 1; i < usable.length - 1; i++) {
     const prev = kept[kept.length - 1];
-    if ((usable[i].outcome - prev.outcome) * 100 >= minStepPp) kept.push(usable[i]);
+    if ((usable[i].outcome - prev.outcome) * 100 >= minStepPp)
+      kept.push(usable[i]);
   }
   kept.push(usable[usable.length - 1]);
 
   // Still crowded: drop the points that add least, never the ends.
   while (kept.length > maxPoints) {
-    let dropIdx = 1, dropGain = Infinity;
+    let dropIdx = 1,
+      dropGain = Infinity;
     for (let i = 1; i < kept.length - 1; i++) {
       const gain = kept[i].outcome - kept[i - 1].outcome;
-      if (gain < dropGain) { dropGain = gain; dropIdx = i; }
+      if (gain < dropGain) {
+        dropGain = gain;
+        dropIdx = i;
+      }
     }
     kept.splice(dropIdx, 1);
   }
@@ -210,18 +259,25 @@ export function thinFront(front, {
  */
 export function findKnee(front) {
   if (front.length < 3) return -1;
-  const x0 = front[0].capexUsd, y0 = front[0].outcome;
-  const x1 = front[front.length - 1].capexUsd, y1 = front[front.length - 1].outcome;
-  const dx = x1 - x0, dy = y1 - y0;
+  const x0 = front[0].capexUsd,
+    y0 = front[0].outcome;
+  const x1 = front[front.length - 1].capexUsd,
+    y1 = front[front.length - 1].outcome;
+  const dx = x1 - x0,
+    dy = y1 - y0;
   if (!(dx > 0) || !(dy > 0)) return -1;
 
-  let bestIdx = -1, bestDist = 0;
+  let bestIdx = -1,
+    bestDist = 0;
   for (let i = 1; i < front.length - 1; i++) {
     // Normalised so dollars and percentage points are comparable.
     const nx = (front[i].capexUsd - x0) / dx;
     const ny = (front[i].outcome - y0) / dy;
     const dist = ny - nx; // vertical gap above the chord in normalised space
-    if (dist > bestDist) { bestDist = dist; bestIdx = i; }
+    if (dist > bestDist) {
+      bestDist = dist;
+      bestIdx = i;
+    }
   }
   return bestIdx;
 }
@@ -248,7 +304,18 @@ export function classifyReach(front, kneeIdx, envelope = {}) {
     battMaxKwh: envelope.battMaxKwh ?? null,
     boundLimited: !!envelope.boundLimited,
   };
-  if (!front.length) return { id: "beyond-sweep", ceilingPct: 0, kneePct: null, kneeCostUsd: null, ceilingCostUsd: null, headCostPerPoint: null, tailCostPerPoint: null, tailRatio: null, ...env };
+  if (!front.length)
+    return {
+      id: "beyond-sweep",
+      ceilingPct: 0,
+      kneePct: null,
+      kneeCostUsd: null,
+      ceilingCostUsd: null,
+      headCostPerPoint: null,
+      tailCostPerPoint: null,
+      tailRatio: null,
+      ...env,
+    };
 
   const last = front[front.length - 1];
   const first = front[0];
@@ -268,15 +335,21 @@ export function classifyReach(front, kneeIdx, envelope = {}) {
       entryPvKw: first.pvKw,
       entryBattKwh: first.battKwh,
       entryCostUsd: Math.round(first.capexUsd),
-      kneePct: null, kneeCostUsd: null,
-      headCostPerPoint: null, tailCostPerPoint: null, tailRatio: null,
+      kneePct: null,
+      kneeCostUsd: null,
+      headCostPerPoint: null,
+      tailCostPerPoint: null,
+      tailRatio: null,
     };
   }
   const base = {
     ceilingPct,
     ceilingCostUsd: Math.round(last.capexUsd),
-    kneePct: null, kneeCostUsd: null,
-    headCostPerPoint: null, tailCostPerPoint: null, tailRatio: null,
+    kneePct: null,
+    kneeCostUsd: null,
+    headCostPerPoint: null,
+    tailCostPerPoint: null,
+    tailRatio: null,
     ...env,
   };
 
@@ -303,8 +376,10 @@ export function classifyReach(front, kneeIdx, envelope = {}) {
   // verdict, even a high one: at 92% the "steep tail" wording talks about the
   // last stretch to full independence, and this sweep never got there. Naming
   // the envelope is the only phrasing that cannot mislead.
-  if (ceilingPct < CEILING_NEAR_PCT ||
-      (env.boundLimited && ceilingPct < CEILING_REACHED_PCT)) {
+  if (
+    ceilingPct < CEILING_NEAR_PCT ||
+    (env.boundLimited && ceilingPct < CEILING_REACHED_PCT)
+  ) {
     return { ...stats, id: "beyond-sweep" };
   }
 
@@ -330,16 +405,32 @@ export function buildFrontier(opts) {
   const mode = opts.mode === "gridtie" ? "gridtie" : "offgrid";
   const all = sweepSystems({ ...opts, chemistry, mode });
   const front = thinFront(paretoFront(all), {
-    minOutcome: opts.minOutcome !== undefined ? opts.minOutcome : ((opts.pvMax ?? 30) <= 0 ? 0.05 : FRONTIER_MIN_OUTCOME),
+    minOutcome:
+      opts.minOutcome !== undefined
+        ? opts.minOutcome
+        : (opts.pvMax ?? 30) <= 0
+          ? 0.05
+          : FRONTIER_MIN_OUTCOME,
     minStepPp: opts.minStepPp ?? FRONTIER_MIN_STEP_PP,
     maxPoints: opts.maxPoints ?? FRONTIER_MAX_POINTS,
   });
   const kneeIndex = findKnee(front);
   // Identical ladders to the sweep itself (grid-tie prepends the 0 kW
   // solar-only point) — the bound check must judge the lattice that ran.
-  const pvUsed = (opts.pvMax ?? 30) <= 0 ? [0]
-    : (mode === "gridtie" ? [0, ...pvLadder(opts.pvMax ?? 30, opts.pvSteps ?? 18)] : pvLadder(opts.pvMax ?? 30, opts.pvSteps ?? 18));
-  const battUsed = (opts.battMax ?? 100) <= 0 ? [0] : battLadder(opts.battMax ?? 100, opts.battSteps ?? 16, mode === "gridtie");
+  const pvUsed =
+    (opts.pvMax ?? 30) <= 0
+      ? [0]
+      : mode === "gridtie"
+        ? [0, ...pvLadder(opts.pvMax ?? 30, opts.pvSteps ?? 18)]
+        : pvLadder(opts.pvMax ?? 30, opts.pvSteps ?? 18);
+  const battUsed =
+    (opts.battMax ?? 100) <= 0
+      ? [0]
+      : battLadder(
+          opts.battMax ?? 100,
+          opts.battSteps ?? 16,
+          mode === "gridtie",
+        );
   const boundLimited = isBoundLimited(front, pvUsed, battUsed);
   return {
     chemistry,

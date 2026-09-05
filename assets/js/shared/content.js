@@ -5,7 +5,10 @@ export const PRICES_CHECKED = "Aug 2026";
 
 export const DONATIONS = [
   { label: "PayPal", href: "https://www.paypal.me/LBallek" },
-  { label: "Venmo \u2014 @lucas-ballek", href: "https://venmo.com/u/lucas-ballek" },
+  {
+    label: "Venmo \u2014 @lucas-ballek",
+    href: "https://venmo.com/u/lucas-ballek",
+  },
   { label: "Cash App \u2014 $luball", href: "https://cash.app/$luball" },
 ];
 

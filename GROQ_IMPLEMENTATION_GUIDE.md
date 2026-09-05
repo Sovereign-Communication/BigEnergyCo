@@ -11,6 +11,7 @@ This guide shows the exact code changes needed to implement the audit recommenda
 **Action:** Replace entire `system_instruction` string
 
 **From (current):**
+
 ```python
 system_instruction = (
     "You are a free, friendly AI advisor for off-grid solar and battery storage, serving people "
@@ -20,6 +21,7 @@ system_instruction = (
 ```
 
 **To (new):**
+
 ```python
 system_instruction = (
     "You are a free, friendly AI advisor for off-grid solar and battery storage, "
@@ -116,6 +118,7 @@ system_instruction = (
 ```
 
 **Testing:**
+
 ```bash
 python test_groq_chatbot.py
 # Should pass TEST 1 (greeting) and TEST 2 (date) with no change
@@ -132,36 +135,38 @@ python test_groq_chatbot.py
 def validate_groq_response(reply_text):
     """Light validation of Groq response. Logs warnings, doesn't block."""
     warnings = []
-    
-    # Check 1: Disclaimer should NOT be in AI's response 
+
+    # Check 1: Disclaimer should NOT be in AI's response
     # (it's added by the frontend renderBotReply, not Groq)
-    
+
     # Check 2: Lead-Acid without cost-of-ownership analysis
     if 'lead' in reply_text.lower() and 'acid' in reply_text.lower():
         if 'replacement' not in reply_text.lower() and 'years' not in reply_text.lower() and 'lifespan' not in reply_text.lower():
             warnings.append("[VALIDATION] Lead-Acid mentioned but no lifespan/cost-of-ownership analysis")
-    
+
     # Check 3: Pricing with false precision (e.g., $1234.56 without context)
     import re
     # Match $ amounts with 2+ decimal places that look unjustified
     prices = re.findall(r'\$[0-9,]+\.[0-9]{2,}(?!\s*-|\s*/)', reply_text)
     if prices:
         warnings.append(f"[VALIDATION] High-precision prices found: {prices} (should be ranges or rounded)")
-    
+
     for w in warnings:
         print(w)
-    
+
     return reply_text  # Always return, validation is advisory only
 ```
 
 Then, modify the return statement in `process_bot_query()` at line 186:
 
 **From:**
+
 ```python
 return {"status": "success", "reply": reply, "engine": "Groq Llama-3.3-70b"}
 ```
 
 **To:**
+
 ```python
 reply = validate_groq_response(reply)
 return {"status": "success", "reply": reply, "engine": "Groq Llama-3.3-70b"}
@@ -179,9 +184,13 @@ return {"status": "success", "reply": reply, "engine": "Groq Llama-3.3-70b"}
 <div class="form-group">
   <label for="destClimate">Expected minimum winter temperature:</label>
   <select id="destClimate" class="form-control">
-    <option value="Tropical / rarely below 10°C">Tropical / rarely below 10°C</option>
+    <option value="Tropical / rarely below 10°C">
+      Tropical / rarely below 10°C
+    </option>
     <option value="Temperate / -5 to 10°C">Temperate / -5 to 10°C</option>
-    <option value="Cold / frequently below -10°C">Cold / frequently below -10°C</option>
+    <option value="Cold / frequently below -10°C">
+      Cold / frequently below -10°C
+    </option>
   </select>
 </div>
 
@@ -190,7 +199,9 @@ return {"status": "success", "reply": reply, "engine": "Groq Llama-3.3-70b"}
   <select id="destSpace" class="form-control">
     <option value="Very limited / room-sized">Very limited / room-sized</option>
     <option value="Normal / garage or shed">Normal / garage or shed</option>
-    <option value="Plenty / outdoor-rated enclosure possible">Plenty / outdoor-rated enclosure possible</option>
+    <option value="Plenty / outdoor-rated enclosure possible">
+      Plenty / outdoor-rated enclosure possible
+    </option>
   </select>
 </div>
 
@@ -199,7 +210,9 @@ return {"status": "success", "reply": reply, "engine": "Groq Llama-3.3-70b"}
   <select id="maintenanceComfort" class="form-control">
     <option value="I prefer zero maintenance">I prefer zero maintenance</option>
     <option value="I can do basic checks">I can do basic checks</option>
-    <option value="I'm comfortable with hands-on work">I'm comfortable with hands-on work</option>
+    <option value="I'm comfortable with hands-on work">
+      I'm comfortable with hands-on work
+    </option>
   </select>
 </div>
 ```
@@ -212,96 +225,128 @@ return {"status": "success", "reply": reply, "engine": "Groq Llama-3.3-70b"}
 **Location:** Replace the `buildIntakeBrief()` function (lines 1145-1179)
 
 **From (current):**
+
 ```javascript
 function buildIntakeBrief() {
-  var modeEl = document.getElementById('intakeMode');
-  var valEl = document.getElementById('intakeValue');
-  var regionEl = document.getElementById('destRegion');
-  var yesEl = document.getElementById('inverterHelpYes');
-  var detailEl = document.getElementById('inverterDetail');
+  var modeEl = document.getElementById("intakeMode");
+  var valEl = document.getElementById("intakeValue");
+  var regionEl = document.getElementById("destRegion");
+  var yesEl = document.getElementById("inverterHelpYes");
+  var detailEl = document.getElementById("inverterDetail");
 
-  var mode = modeEl ? modeEl.value : 'bill';
-  var val = valEl ? valEl.value.trim() : '';
-  var region = regionEl ? regionEl.value : 'Global DDP Port';
+  var mode = modeEl ? modeEl.value : "bill";
+  var val = valEl ? valEl.value.trim() : "";
+  var region = regionEl ? regionEl.value : "Global DDP Port";
   var wantsInverterHelp = !!(yesEl && yesEl.checked);
-  var detail = detailEl ? detailEl.value.trim() : '';
+  var detail = detailEl ? detailEl.value.trim() : "";
 
-  var lines = ['Please size an off-grid battery system for me.'];
-  lines.push(mode === 'bill'
-    ? 'Basis: monthly electric bill of $' + (val || 'unspecified') + ' USD.'
-    : 'Basis: daily consumption of ' + (val || 'unspecified') + ' kWh/day.');
-  lines.push('Destination region: ' + region + '.');
+  var lines = ["Please size an off-grid battery system for me."];
+  lines.push(
+    mode === "bill"
+      ? "Basis: monthly electric bill of $" + (val || "unspecified") + " USD."
+      : "Basis: daily consumption of " + (val || "unspecified") + " kWh/day.",
+  );
+  lines.push("Destination region: " + region + ".");
 
   if (!wantsInverterHelp) {
-    lines.push('Inverter: I do not need inverter assistance — battery bank sizing only.');
+    lines.push(
+      "Inverter: I do not need inverter assistance — battery bank sizing only.",
+    );
   } else if (inverterDetailIsUseful(detail)) {
-    lines.push('Inverter: I need inverter assistance. Details: ' + detail);
+    lines.push("Inverter: I need inverter assistance. Details: " + detail);
   } else {
-    if (detail) lines.push('Inverter: I need inverter assistance. What I said so far: "' + detail + '"');
-    else lines.push('Inverter: I need inverter assistance but have not given any details.');
-    lines.push('[ADVISOR INSTRUCTION: The inverter information above is missing or too vague to size ' +
-               'against. Give the battery sizing you can from the load basis, then ask me the specific ' +
-               'follow-up questions you need — whether I already own an inverter (make/model) or need a ' +
-               'recommendation, my continuous and surge power needs, AC voltage/phase, and whether the ' +
-               'system is off-grid, hybrid, or grid-tied. Do not invent an inverter for me.]');
+    if (detail)
+      lines.push(
+        'Inverter: I need inverter assistance. What I said so far: "' +
+          detail +
+          '"',
+      );
+    else
+      lines.push(
+        "Inverter: I need inverter assistance but have not given any details.",
+      );
+    lines.push(
+      "[ADVISOR INSTRUCTION: The inverter information above is missing or too vague to size " +
+        "against. Give the battery sizing you can from the load basis, then ask me the specific " +
+        "follow-up questions you need — whether I already own an inverter (make/model) or need a " +
+        "recommendation, my continuous and surge power needs, AC voltage/phase, and whether the " +
+        "system is off-grid, hybrid, or grid-tied. Do not invent an inverter for me.]",
+    );
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 ```
 
 **To (new):**
+
 ```javascript
 function buildIntakeBrief() {
-  var modeEl = document.getElementById('intakeMode');
-  var valEl = document.getElementById('intakeValue');
-  var regionEl = document.getElementById('destRegion');
-  var yesEl = document.getElementById('inverterHelpYes');
-  var detailEl = document.getElementById('inverterDetail');
-  
+  var modeEl = document.getElementById("intakeMode");
+  var valEl = document.getElementById("intakeValue");
+  var regionEl = document.getElementById("destRegion");
+  var yesEl = document.getElementById("inverterHelpYes");
+  var detailEl = document.getElementById("inverterDetail");
+
   // NEW: Climate context fields
-  var climateEl = document.getElementById('destClimate');
-  var spaceEl = document.getElementById('destSpace');
-  var maintenanceEl = document.getElementById('maintenanceComfort');
+  var climateEl = document.getElementById("destClimate");
+  var spaceEl = document.getElementById("destSpace");
+  var maintenanceEl = document.getElementById("maintenanceComfort");
 
-  var mode = modeEl ? modeEl.value : 'bill';
-  var val = valEl ? valEl.value.trim() : '';
-  var region = regionEl ? regionEl.value : 'Global DDP Port';
+  var mode = modeEl ? modeEl.value : "bill";
+  var val = valEl ? valEl.value.trim() : "";
+  var region = regionEl ? regionEl.value : "Global DDP Port";
   var wantsInverterHelp = !!(yesEl && yesEl.checked);
-  var detail = detailEl ? detailEl.value.trim() : '';
-  
-  // NEW: Extract climate context
-  var climate = climateEl ? climateEl.value : 'unknown';
-  var space = spaceEl ? spaceEl.value : 'unknown';
-  var maintenance = maintenanceEl ? maintenanceEl.value : 'unknown';
+  var detail = detailEl ? detailEl.value.trim() : "";
 
-  var lines = ['Please size an off-grid battery system for me.'];
-  lines.push(mode === 'bill'
-    ? 'Basis: monthly electric bill of $' + (val || 'unspecified') + ' USD.'
-    : 'Basis: daily consumption of ' + (val || 'unspecified') + ' kWh/day.');
-  lines.push('Destination region: ' + region + '.');
-  
+  // NEW: Extract climate context
+  var climate = climateEl ? climateEl.value : "unknown";
+  var space = spaceEl ? spaceEl.value : "unknown";
+  var maintenance = maintenanceEl ? maintenanceEl.value : "unknown";
+
+  var lines = ["Please size an off-grid battery system for me."];
+  lines.push(
+    mode === "bill"
+      ? "Basis: monthly electric bill of $" + (val || "unspecified") + " USD."
+      : "Basis: daily consumption of " + (val || "unspecified") + " kWh/day.",
+  );
+  lines.push("Destination region: " + region + ".");
+
   // NEW: Add climate context
-  lines.push('Climate: ' + climate + '.');
-  lines.push('Available space for batteries: ' + space + '.');
-  lines.push('Maintenance comfort level: ' + maintenance + '.');
-  lines.push('[ADVISOR INSTRUCTION: Use these climate/space/maintenance details to recommend the right battery chemistry. Cold climate + maintenance-averse = Lithium. Temperate + space OK = Sodium-Ion (default). Very limited space = Lithium despite cost. Default to Sodium-Ion unless these constraints contradict it.]');
+  lines.push("Climate: " + climate + ".");
+  lines.push("Available space for batteries: " + space + ".");
+  lines.push("Maintenance comfort level: " + maintenance + ".");
+  lines.push(
+    "[ADVISOR INSTRUCTION: Use these climate/space/maintenance details to recommend the right battery chemistry. Cold climate + maintenance-averse = Lithium. Temperate + space OK = Sodium-Ion (default). Very limited space = Lithium despite cost. Default to Sodium-Ion unless these constraints contradict it.]",
+  );
 
   if (!wantsInverterHelp) {
-    lines.push('Inverter: I do not need inverter assistance — battery bank sizing only.');
+    lines.push(
+      "Inverter: I do not need inverter assistance — battery bank sizing only.",
+    );
   } else if (inverterDetailIsUseful(detail)) {
-    lines.push('Inverter: I need inverter assistance. Details: ' + detail);
+    lines.push("Inverter: I need inverter assistance. Details: " + detail);
   } else {
-    if (detail) lines.push('Inverter: I need inverter assistance. What I said so far: "' + detail + '"');
-    else lines.push('Inverter: I need inverter assistance but have not given any details.');
-    lines.push('[ADVISOR INSTRUCTION: The inverter information above is missing or too vague to size ' +
-               'against. Give the battery sizing you can from the load basis, then ask me the specific ' +
-               'follow-up questions you need — whether I already own an inverter (make/model) or need a ' +
-               'recommendation, my continuous and surge power needs, AC voltage/phase, and whether the ' +
-               'system is off-grid, hybrid, or grid-tied. Do not invent an inverter for me.]');
+    if (detail)
+      lines.push(
+        'Inverter: I need inverter assistance. What I said so far: "' +
+          detail +
+          '"',
+      );
+    else
+      lines.push(
+        "Inverter: I need inverter assistance but have not given any details.",
+      );
+    lines.push(
+      "[ADVISOR INSTRUCTION: The inverter information above is missing or too vague to size " +
+        "against. Give the battery sizing you can from the load basis, then ask me the specific " +
+        "follow-up questions you need — whether I already own an inverter (make/model) or need a " +
+        "recommendation, my continuous and surge power needs, AC voltage/phase, and whether the " +
+        "system is off-grid, hybrid, or grid-tied. Do not invent an inverter for me.]",
+    );
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 ```
 
@@ -319,7 +364,7 @@ def test_chemistry_default_sodium():
     prompt = "I want to size a battery system. I live in California and have space."
     response = process_bot_query(prompt, history=[])
     reply_lower = response['reply'].lower()
-    
+
     assert 'sodium' in reply_lower, "FAIL: Sodium-Ion not mentioned"
     # Sodium should come before Lithium in a default case
     sodium_pos = reply_lower.find('sodium')
@@ -333,7 +378,7 @@ def test_chemistry_cold_lithium():
     prompt = "I'm in Canada, winters get to -30°C. What battery should I use?"
     response = process_bot_query(prompt, history=[])
     reply_lower = response['reply'].lower()
-    
+
     assert 'lithium' in reply_lower, "FAIL: Lithium not mentioned for cold climate"
     assert 'sodium' in reply_lower, "FAIL: Sodium should be mentioned as alternative"
     # Lithium should be recommended first for cold climate
@@ -348,11 +393,11 @@ def test_lead_acid_warning():
     prompt = "Should I just go with cheap lead-acid batteries?"
     response = process_bot_query(prompt, history=[])
     reply_lower = response['reply'].lower()
-    
+
     # Should mention lifespan/replacement, showing long-term thinking
     has_lifespan = 'replacement' in reply_lower or 'years' in reply_lower or 'lifespan' in reply_lower
     assert has_lifespan, "FAIL: Should explain short lifespan of Lead-Acid"
-    
+
     assert 'sodium' in reply_lower or 'lithium' in reply_lower, \
         "FAIL: Should mention better alternatives"
     print("✅ PASS: Lead-Acid cost-of-ownership warning given")
@@ -363,10 +408,10 @@ def test_pricing_caveat():
     prompt = "How much does a 50 kWh battery system cost?"
     response = process_bot_query(prompt, history=[])
     reply_lower = response['reply'].lower()
-    
+
     # Should give a range or hedge, not a false-precision number like $2,347.89
-    has_caveat = ('-' in response['reply'] or 
-                  'roughly' in reply_lower or 
+    has_caveat = ('-' in response['reply'] or
+                  'roughly' in reply_lower or
                   'estimate' in reply_lower or
                   'range' in reply_lower or
                   'approximately' in reply_lower)
@@ -381,7 +426,7 @@ def test_inverter_vague_follow_up():
               "Destination region: North America. Inverter: I have an old inverter but not sure what model.")
     response = process_bot_query(prompt, history)
     reply_lower = response['reply'].lower()
-    
+
     # Should ask questions, not invent specs
     assert '?' in response['reply'], "FAIL: Groq should ask follow-up questions"
     assert 'make' in reply_lower or 'model' in reply_lower or 'power' in reply_lower, \
@@ -393,12 +438,12 @@ def test_no_false_precision():
     from proxy_server import process_bot_query
     prompt = "What's the efficiency of a typical battery system?"
     response = process_bot_query(prompt, history=[])
-    
+
     import re
     # Look for overly precise decimals that suggest false confidence
     # (percentages like 87.34% or 92.156% are sus)
     suspicious = re.findall(r'\d+\.\d{2,}%', response['reply'])
-    
+
     if suspicious:
         print(f"⚠️  WARNING: Found suspicious precise decimals: {suspicious}")
         # Not a hard fail, but flag it
@@ -406,17 +451,17 @@ def test_no_false_precision():
 
 if __name__ == "__main__":
     print("Running Groq chatbot tests...\n")
-    
+
     test_groq_chatbot()
     print()
-    
+
     test_chemistry_default_sodium()
     test_chemistry_cold_lithium()
     test_lead_acid_warning()
     test_pricing_caveat()
     test_inverter_vague_follow_up()
     test_no_false_precision()
-    
+
     print("\n✅ ALL TESTS COMPLETED")
 ```
 
@@ -450,6 +495,7 @@ Each change is independent and can be rolled back separately.
 ## EXPECTED RESULTS
 
 After all changes:
+
 - ✅ Sodium-Ion recommended 95%+ of the time (default case)
 - ✅ Cold climate users get Lithium guidance
 - ✅ Lead-Acid users warned about TCO

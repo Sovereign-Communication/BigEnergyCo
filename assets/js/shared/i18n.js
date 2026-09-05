@@ -14,8 +14,13 @@ const LANGS = [
 
 function chosen() {
   let saved = null;
-  try { saved = localStorage.getItem("beco-lang"); } catch { /* private mode */ }
-  if (saved && (saved === "auto" || LOCALES[saved] || saved === "en")) return saved;
+  try {
+    saved = localStorage.getItem("beco-lang");
+  } catch {
+    /* private mode */
+  }
+  if (saved && (saved === "auto" || LOCALES[saved] || saved === "en"))
+    return saved;
   return "auto";
 }
 
@@ -49,7 +54,11 @@ export function initLangPicker(selectEl) {
   }
   selectEl.value = chosen();
   selectEl.addEventListener("change", () => {
-    try { localStorage.setItem("beco-lang", selectEl.value); } catch { /* ignore */ }
+    try {
+      localStorage.setItem("beco-lang", selectEl.value);
+    } catch {
+      /* ignore */
+    }
     applyI18n();
     // Let JS-rendered labels (e.g. the fuel unit helper) re-localize too.
     window.dispatchEvent(new Event("beco:lang"));

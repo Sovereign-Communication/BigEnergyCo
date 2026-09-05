@@ -6,10 +6,14 @@ import { fetchHourlySeries } from "../assets/js/sizing/nasa.js";
 const lat = parseFloat(process.argv[2]);
 const lon = parseFloat(process.argv[3]);
 const years = parseInt(process.argv[4] ?? "5", 10);
-const out = process.argv[5] ?? `tests/fixtures/site_${lat.toFixed(2)}_${lon.toFixed(2)}_${years}y.json`;
+const out =
+  process.argv[5] ??
+  `tests/fixtures/site_${lat.toFixed(2)}_${lon.toFixed(2)}_${years}y.json`;
 
 if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-  console.error("usage: node scripts/fetch-power.mjs <lat> <lon> [years] [outfile]");
+  console.error(
+    "usage: node scripts/fetch-power.mjs <lat> <lon> [years] [outfile]",
+  );
   process.exit(1);
 }
 

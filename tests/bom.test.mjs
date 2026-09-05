@@ -2,10 +2,19 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  PANEL_WATTS_DEFAULT, INVERTER_STANDARD_KW, FUSE_STANDARD_AMPS,
-  WIRE_TABLE, RETAIL_MODULE_KWH,
-  nextInverterSize, nextFuseSize, pickSystemVoltage,
-  panelLayout, controllerSpec, protectionSpec, cableGauge, buildBom,
+  PANEL_WATTS_DEFAULT,
+  INVERTER_STANDARD_KW,
+  FUSE_STANDARD_AMPS,
+  WIRE_TABLE,
+  RETAIL_MODULE_KWH,
+  nextInverterSize,
+  nextFuseSize,
+  pickSystemVoltage,
+  panelLayout,
+  controllerSpec,
+  protectionSpec,
+  cableGauge,
+  buildBom,
 } from "../assets/js/sizing/bom.js";
 
 test("nextInverterSize rounds up to the smallest standard class", () => {
@@ -13,7 +22,10 @@ test("nextInverterSize rounds up to the smallest standard class", () => {
   assert.equal(nextInverterSize(1.0), 1);
   assert.equal(nextInverterSize(1.01), 1.5);
   assert.equal(nextInverterSize(4.2), 5);
-  assert.equal(nextInverterSize(30), INVERTER_STANDARD_KW[INVERTER_STANDARD_KW.length - 1]);
+  assert.equal(
+    nextInverterSize(30),
+    INVERTER_STANDARD_KW[INVERTER_STANDARD_KW.length - 1],
+  );
 });
 
 test("nextFuseSize never picks below the required amps", () => {
@@ -28,12 +40,12 @@ test("nextFuseSize never picks below the required amps", () => {
 });
 
 test("pickSystemVoltage follows the documented heuristic", () => {
-  assert.equal(pickSystemVoltage(1, 1), 12);      // RV-scale
-  assert.equal(pickSystemVoltage(3, 1.5), 12);    // boundary stays 12 V
-  assert.equal(pickSystemVoltage(3.1, 1.5), 24);  // bank pushes past 12 V
-  assert.equal(pickSystemVoltage(2, 1.6), 24);    // inverter pushes past 12 V
-  assert.equal(pickSystemVoltage(10, 3.5), 24);   // upper mid boundary
-  assert.equal(pickSystemVoltage(10, 3.6), 48);   // house scale
+  assert.equal(pickSystemVoltage(1, 1), 12); // RV-scale
+  assert.equal(pickSystemVoltage(3, 1.5), 12); // boundary stays 12 V
+  assert.equal(pickSystemVoltage(3.1, 1.5), 24); // bank pushes past 12 V
+  assert.equal(pickSystemVoltage(2, 1.6), 24); // inverter pushes past 12 V
+  assert.equal(pickSystemVoltage(10, 3.5), 24); // upper mid boundary
+  assert.equal(pickSystemVoltage(10, 3.6), 48); // house scale
   assert.equal(pickSystemVoltage(20, 8), 48);
 });
 
@@ -72,7 +84,9 @@ test("cable gauge grows with run length and satisfies ampacity + drop", () => {
   const shortRun = cableGauge(30, 12, 2);
   const longRun = cableGauge(30, 12, 8);
   const awgIdx = (awg) => WIRE_TABLE.findIndex((w) => w.awg === awg);
-  assert.ok(awgIdx(longRun.awg) > awgIdx(shortRun.awg) || longRun.awg.startsWith(">"));
+  assert.ok(
+    awgIdx(longRun.awg) > awgIdx(shortRun.awg) || longRun.awg.startsWith(">"),
+  );
   // Returned gauge always satisfies both constraints (drop + ampacity)
   for (const g of [shortRun, longRun]) {
     const minMm2 = (0.0175 * 2 * g.meters * 30) / (12 * 0.02);
@@ -87,13 +101,13 @@ test("cable gauge grows with run length and satisfies ampacity + drop", () => {
 test("buildBom produces a coherent house-scale LFP system", () => {
   const b = buildBom({
     pvKw: 8,
-    battNameplateKwh: 14.4,   // 13 kWh usable at 90% DoD
+    battNameplateKwh: 14.4, // 13 kWh usable at 90% DoD
     chemistry: "lfp",
-    peakLoadW: 3200,          // flat-ish profile peak
+    peakLoadW: 3200, // flat-ish profile peak
   });
   assert.equal(b.panels.count, 15);
   assert.equal(b.voltage.volts, 48);
-  assert.equal(b.inverter.recommendedKw, 4);   // smallest standard class ≥ 3.2 kW peak
+  assert.equal(b.inverter.recommendedKw, 4); // smallest standard class ≥ 3.2 kW peak
   assert.equal(b.battery.diy.seriesPerString, 16); // market-standard 51.2 V string
   // 16S×314Ah string ≈ 16.07 kWh → one string covers 14.4 nameplate
   assert.equal(b.battery.diy.stringsParallel, 1);
@@ -104,15 +118,30 @@ test("buildBom produces a coherent house-scale LFP system", () => {
 });
 
 test("buildBom switches chemistry layouts correctly", () => {
-  const sodium = buildBom({ pvKw: 8, battNameplateKwh: 16, chemistry: "naion", peakLoadW: 3000 });
+  const sodium = buildBom({
+    pvKw: 8,
+    battNameplateKwh: 16,
+    chemistry: "naion",
+    peakLoadW: 3000,
+  });
   assert.equal(sodium.battery.diy.seriesPerString, 16); // 16 × 3.1 = 49.6 V bus
-  const agm = buildBom({ pvKw: 8, battNameplateKwh: 28.8, chemistry: "agm", peakLoadW: 3000 });
-  assert.equal(agm.battery.diy.seriesPerString, 4);     // 4 × 12 V blocks per 48 V string
-  assert.equal(agm.battery.diy.stringKwh, 9.6);         // 4S × 200 Ah × 12 V
+  const agm = buildBom({
+    pvKw: 8,
+    battNameplateKwh: 28.8,
+    chemistry: "agm",
+    peakLoadW: 3000,
+  });
+  assert.equal(agm.battery.diy.seriesPerString, 4); // 4 × 12 V blocks per 48 V string
+  assert.equal(agm.battery.diy.stringKwh, 9.6); // 4S × 200 Ah × 12 V
 });
 
 test("buildBom handles battery-less grid-tie systems without crashing", () => {
-  const b = buildBom({ pvKw: 2, battNameplateKwh: 0, chemistry: "lfp", peakLoadW: 2500 });
+  const b = buildBom({
+    pvKw: 2,
+    battNameplateKwh: 0,
+    chemistry: "lfp",
+    peakLoadW: 2500,
+  });
   assert.equal(b.battery, null);
   assert.equal(b.controller, null);
   assert.equal(b.protection, null);

@@ -5,6 +5,7 @@
 **Status:** Public site runs on GitHub Pages + Cloudflare Worker (permanent URLs — the old trycloudflare rotation blocker is resolved). P0 hardening complete 2026-08-22: Worker rate limiting + CORS allowlist + payload caps, `/api/lead` removed, Pages deploy allowlist, price-scope reconciliation. Next: deterministic sizing core and 5-year hourly simulation — see [`PHASE2_PLAN.md`](PHASE2_PLAN.md).
 
 **Key references:**
+
 - Liability, tax, privacy: [`LIABILITY.md`](LIABILITY.md)
 - How to run it: [`README.md`](README.md)
 - Pre-launch audit & checklist: [`LAUNCH_AUDIT.md`](LAUNCH_AUDIT.md)
@@ -15,15 +16,15 @@
 
 These are decided, not open questions. Don't reopen them.
 
-| | Decision |
-|---|---|
-| **Entity** | **None, ever.** This is Lucas Ballek personally, as a sole proprietor. No LLC, no nonprofit, no incorporation. |
-| **Price** | **Free.** Totally, permanently, for everyone. Nothing is for sale. |
-| **Money** | **Optional donations to personal accounts** — PayPal, Venmo `@lucas-ballek`, Cash App `$luball`. Taxable personal income, never described as tax-deductible. |
-| **Donations buy** | **Nothing.** No tier, no feature, no priority, no better answers. Identical service for everyone. This is load-bearing — see LIABILITY.md §2. |
-| **Contact** | `lucasballek@gmail.com`, published, framed as a favor with no obligation. |
-| **Data collected** | **None.** No accounts, no lead forms, no analytics profile. |
-| **Procurement business** | **Retired.** The $5k advisory fee, sourcing agency, and MPECA/Schedule A/B contracts are gone. |
+|                          | Decision                                                                                                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Entity**               | **None, ever.** This is Lucas Ballek personally, as a sole proprietor. No LLC, no nonprofit, no incorporation.                                               |
+| **Price**                | **Free.** Totally, permanently, for everyone. Nothing is for sale.                                                                                           |
+| **Money**                | **Optional donations to personal accounts** — PayPal, Venmo `@lucas-ballek`, Cash App `$luball`. Taxable personal income, never described as tax-deductible. |
+| **Donations buy**        | **Nothing.** No tier, no feature, no priority, no better answers. Identical service for everyone. This is load-bearing — see LIABILITY.md §2.                |
+| **Contact**              | `lucasballek@gmail.com`, published, framed as a favor with no obligation.                                                                                    |
+| **Data collected**       | **None.** No accounts, no lead forms, no analytics profile.                                                                                                  |
+| **Procurement business** | **Retired.** The $5k advisory fee, sourcing agency, and MPECA/Schedule A/B contracts are gone.                                                               |
 
 The old entity-based analysis in earlier revisions of this file is superseded by `LIABILITY.md`.
 
@@ -32,6 +33,7 @@ The old entity-based analysis in earlier revisions of this file is superseded by
 ## 0.5. What's MVP (Ready to Test)
 
 **Feature-complete and tested:**
+
 - ✅ Cost comparison calculator (interactive slider, component breakdown)
 - ✅ AI advisor (Groq Llama-3.3-70b, refuses to sell/source, shows assumptions)
 - ✅ Intake form (bill/kWh/region, inverter Yes/No with optional details)
@@ -46,6 +48,7 @@ The old entity-based analysis in earlier revisions of this file is superseded by
 **Regression-tested (2026-08-03):** Groq quality verified. No hallucinations. All guardrails firing. Rate limiter working exactly at threshold.
 
 **NOT MVP (future):**
+
 - ❌ Deterministic calculator core (still LLM-based, works but not failsafe)
 - ❌ NASA POWER API (solar irradiance data integration)
 - ❌ Appliance builder (load via itemized appliances)
@@ -54,6 +57,7 @@ The old entity-based analysis in earlier revisions of this file is superseded by
 - ❌ Domain + named tunnel (URL rotation workaround is LINK.bat)
 
 **What this means for launch:**
+
 - **Closed beta (week 1):** Test with ~10 real users. Use rotating URL (they understand it's temp). Get feedback on AI accuracy, UX, donation flow.
 - **Public launch (week 2+):** Get domain + named tunnel first. Then open to all. Calculator is usable but not bulletproof yet (LLM can still hallucinate). That's OK; disclaimers cover it. Deterministic core is roadmap item, not blocker.
 
@@ -62,6 +66,7 @@ The old entity-based analysis in earlier revisions of this file is superseded by
 ## 0.6. Comprehensive Pre-Launch Audit
 
 **See [`LAUNCH_AUDIT.md`](LAUNCH_AUDIT.md)** (11 sections, ~800 lines) for exhaustive coverage of:
+
 - Infrastructure reliability (tunnel uptime, proxy health, Groq quota)
 - API robustness (rate limiting, error handling, input validation)
 - Security & abuse resistance (CORS, API key handling, rate-limit bypass detection)
@@ -80,6 +85,7 @@ The old entity-based analysis in earlier revisions of this file is superseded by
 ## 1. Done
 
 ### Positioning & Liability
+
 **Retired the procurement funnel end to end:** the $5,000 advisory fee, "0% hardware markup" framing, MPECA/Schedule A/B contracts, and "Zero-Liability Procurement Architecture" section. Hero, nav, footer rewritten as a free personal tool. All procurement language removed from AI system prompt and UI.
 
 **Liability claims deleted:** Removed express warranties ("6,000+ Cycles / 80% DoD **Guarantee**"), bare cost claims ("88.3% Cheaper"), and overconfident figures. Cost comparison now explicitly notes it's component cost only, excludes freight/duty/labor, and is marked "indicative, Aug 2026." Cycle life is "manufacturer-rated."
@@ -89,7 +95,9 @@ The old entity-based analysis in earlier revisions of this file is superseded by
 **Disclaimers visible at point of use:** Every AI reply carries a non-reliance notice below the message. Modal header states plainly "you're talking to an AI — educational estimates only." Real Terms of Use (9 sections) replaced procurement contracts. Privacy notice added.
 
 ### AI Quality & Guardrails
+
 **Stopped inventing numbers:** System prompt rewritten to forbid fabricated figures. Tested extensively (2026-08-03):
+
 - ✅ Refuses to sell/source (returns "I'm not a sourcing agent")
 - ✅ Refuses to invent prices (returns "I don't have real-time access...")
 - ✅ Shows assumptions inline (tariff ranges, derates, autonomy calculations)
@@ -103,7 +111,9 @@ The old entity-based analysis in earlier revisions of this file is superseded by
 **Calculate button fixed:** Was a no-op. Now assembles structured intake brief from form fields; user-typed questions take precedence.
 
 ### Infrastructure & Operations
+
 **Rate limiting verified working (2026-08-03):**
+
 - ✅ 8/min per IP: requests 1–8 succeed, #9 returns 429
 - ✅ 150/day per IP + 3000/day global counters in-memory
 - ✅ Retry-After header returned on 429
@@ -116,7 +126,9 @@ The old entity-based analysis in earlier revisions of this file is superseded by
 **Operationally transferred:** AntiGravity's two supervised processes torn down (one had duplicate port binds). Replaced with `START.bat` / `STOP.bat` / `LINK.bat` driving `launcher.py`. Freenet publishing opt-in via `--publish` (can't be reliably retracted).
 
 ### Two-Version Strategy (NEW)
+
 **Internet version (`index.html`):**
+
 - Full AI advisor (Groq Llama-3.3-70b)
 - Interactive cost comparison slider
 - Component reference
@@ -124,6 +136,7 @@ The old entity-based analysis in earlier revisions of this file is superseded by
 - Requires: internet + Groq API
 
 **Freenet version (`index-freenet.html`):**
+
 - Static offline cost comparison (no API calls)
 - DIY component reference + prices
 - All 3 donation accounts
@@ -133,7 +146,9 @@ The old entity-based analysis in earlier revisions of this file is superseded by
 Both versions have identical disclaimer/terms/privacy/donation framing. Users on Freenet get a working calculator even if API is down.
 
 ### Donations & Tax
+
 **Framing:** Donations are **gifts to Lucas Ballek personally** (not tax-deductible, not tied to features). Links verified live:
+
 - PayPal: `paypal.me/LBallek`
 - Venmo: `@lucas-ballek`
 - Cash App: `$luball`
@@ -145,13 +160,16 @@ Both versions have identical disclaimer/terms/privacy/donation framing. Users on
 ## 2. Blockers & High-Priority Infrastructure
 
 ### BLOCKER: URL Rotation (CRITICAL for public traffic)
+
 **Current state:** Free Cloudflare quick tunnels get a new random hostname on every restart.
+
 - Every shared link dies when launcher restarts
 - Cannot drive sustainable public traffic
 - Users cannot bookmark the URL
 - **Impact:** Makes public launch impossible; closed beta OK (testers understand LINK.bat)
 
 **Fix:** Domain + named Cloudflare tunnel (keeps one hostname forever).
+
 - **Cost:** ~$12/year for domain (any registrar) + free named tunnel (Cloudflare)
 - **Effort:** 1–2 hours setup
 - **Blocker status:** **MUST DO before public launch.** Safe to skip for closed beta.
@@ -160,11 +178,13 @@ Both versions have identical disclaimer/terms/privacy/donation framing. Users on
 **Workaround (closed beta only):** Run `LINK.bat` to get current URL from `tunnel_url.txt`. Print prominently in launcher output.
 
 ### High Priority (do before sustained public use)
+
 - **Groq spend/quota alert:** Query Groq API daily, alert at 80% of daily budget. You'll find out before quota dies instead of after.
 - **Move API key to env var:** Remove `groq.env` fallback. Require `GROQ_API_KEY` set before launch. (Security)
 - **Tunnel monitoring:** Check if tunnel PID is still alive; auto-restart on crash. (Reliability)
 
 ### Optional (not blocking launch)
+
 - **Run on non-desktop:** Until then, honest framing ("this runs on one person's machine, it's not up 24/7") is fine and is already on the site.
 - **Backup / DR:** Document Groq account recovery, tunnel account recovery. (Robustness)
 
@@ -173,7 +193,9 @@ Both versions have identical disclaimer/terms/privacy/donation framing. Users on
 ## 3. The Estimator: Current vs. Deterministic (Roadmap)
 
 ### Current State (MVP — works, tested, shipped)
-**Groq AI does the sizing:** Takes load basis (bill/kWh) and inverter details, returns kWh battery recommendation + explanation. 
+
+**Groq AI does the sizing:** Takes load basis (bill/kWh) and inverter details, returns kWh battery recommendation + explanation.
+
 - ✅ Works today. Tested end-to-end (0.8–2.6s response time).
 - ✅ Shows assumptions (tariff ranges, derates, autonomy calc).
 - ✅ Refuses to invent numbers (returns "I don't have access to real-time prices").
@@ -186,6 +208,7 @@ Both versions have identical disclaimer/terms/privacy/donation framing. Users on
 **The LLM must never produce a number.** This is the long-term architecture: compute everything in deterministic, testable code; hand the result to the model; let it explain and translate. The Hawaii error ($0.13/kWh vs actual $0.42) is exactly what happens when LLM generates numbers from scratch. Prompting reduced it; only real code eliminates it.
 
 **Benefits of deterministic core:**
+
 - Zero API cost for core calculation (only explanations use LLM)
 - Works offline, under rate limiting, inside Freenet
 - Fully testable (unit tests verify every derate)
@@ -220,7 +243,7 @@ Both versions have identical disclaimer/terms/privacy/donation framing. Users on
   change the inverter recommendation completely.
 - Multilingual: the model already answers in the user's language at no extra cost. Localize the
   static UI strings for the top ~10 languages.
-- Regional code *pointers*, never certifications: NEC 706 / NFPA 855 (US), BS 7671 (UK),
+- Regional code _pointers_, never certifications: NEC 706 / NFPA 855 (US), BS 7671 (UK),
   IEC 62109 / EN 50549 (EU), AS/NZS 5139 (AU), CSA C22.1 §64 (CA). Framed as "here's what applies
   where you are — talk to a local professional."
 - Mobile-first and low-bandwidth. Much of the audience is on a phone on a slow connection. A
@@ -239,6 +262,7 @@ Both versions have identical disclaimer/terms/privacy/donation framing. Users on
 ## 6. Status & Timeline
 
 ### Right Now (2026-08-03)
+
 - ✅ MVP feature-complete and regression-tested
 - ✅ Groq quality verified (zero hallucinations in test suite)
 - ✅ Rate limiting working at exact threshold
@@ -249,24 +273,28 @@ Both versions have identical disclaimer/terms/privacy/donation framing. Users on
 - ⚠️ Tunnel crashed once; no monitoring yet
 
 ### This Week (Closed Beta Phase)
+
 - Run closed beta with ~10 testers (they use LINK.bat to get current URL)
 - Add Groq quota alert + move API key to env var
 - Gather feedback on AI accuracy, UX, donation flow
 - Verify uptime (restart stability)
 
 ### Next 1–2 Weeks (Public Launch Prep)
+
 - Get domain + named Cloudflare tunnel (stop URL rotation)
 - Get insurance quote + answer from carrier
 - Set up tunnel/proxy monitoring
 - Deploy with new stable URL
 
 ### Month 1+ (Product Development)
+
 - Deterministic calculator core (eliminate LLM hallucination)
 - NASA POWER API (location-aware solar resource)
 - Appliance builder (load input for non-metered regions)
 - Monitoring + alerting dashboard
 
 ### Months 2–3+ (Scale & Contribution)
+
 - i18n + units + grid standards (true "worldwide")
 - Open-source repo (MIT/Apache-2.0)
 - Shareable results + export (email/print estimates)
@@ -295,35 +323,40 @@ From [`LIABILITY.md`](LIABILITY.md):
 ## 5. Suggested Roadmap (Priority Order)
 
 ### Phase 1: Closed Beta (This week, ~3–5 days)
-| Work | Why |
-|---|---|
+
+| Work                             | Why                                                                                                            |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | **Closed beta with ~10 testers** | Real user feedback. Test with rotating URL (testers use LINK.bat). Verify AI quality, accuracy, donation flow. |
-| **Groq spend/quota alert** | Know before quota dies. 1–2 hours, high value. |
-| **Move API key to env var** | Security hardening. 15 min. |
+| **Groq spend/quota alert**       | Know before quota dies. 1–2 hours, high value.                                                                 |
+| **Move API key to env var**      | Security hardening. 15 min.                                                                                    |
 
 ### Phase 2: Public Launch Prep (After beta feedback, ~1–2 weeks)
-| Work | Why |
-|---|---|
-| **Domain + named tunnel** | Fixes URL rotation forever. Prerequisite for public traffic. |
-| **Insurance answer in writing** | Cheapest real protection. Email homeowners carrier; get E&O quote. |
-| **Tunnel monitoring + Freenet health** | Reliability. Know if tunnel/proxy crashes. |
-| **Groq quota + logging setup** | Track daily spend, log errors to file for debugging. |
+
+| Work                                   | Why                                                                |
+| -------------------------------------- | ------------------------------------------------------------------ |
+| **Domain + named tunnel**              | Fixes URL rotation forever. Prerequisite for public traffic.       |
+| **Insurance answer in writing**        | Cheapest real protection. Email homeowners carrier; get E&O quote. |
+| **Tunnel monitoring + Freenet health** | Reliability. Know if tunnel/proxy crashes.                         |
+| **Groq quota + logging setup**         | Track daily spend, log errors to file for debugging.               |
 
 ### Phase 3: Deterministic Calculator (Month 1+, ongoing)
-| Work | Why |
-|---|---|
+
+| Work                                      | Why                                                                                                                  |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | **Calculator core (client-side, no API)** | Eliminates LLM hallucination for good. Enables offline use, rate-limit resilience, Freenet-only mode. Use pure math. |
-| **NASA POWER API integration** | Makes location-aware solar sizing real. Requires API key (free). |
-| **Appliance-based load builder** | Makes tool usable outside metered-billing countries. "What appliances do you have?" UI. |
+| **NASA POWER API integration**            | Makes location-aware solar sizing real. Requires API key (free).                                                     |
+| **Appliance-based load builder**          | Makes tool usable outside metered-billing countries. "What appliances do you have?" UI.                              |
 
 ### Phase 4: Global & Contribution (Months 2–3+)
-| Work | Why |
-|---|---|
+
+| Work                              | Why                                                                                                  |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | **i18n + units + grid standards** | Makes "worldwide" actually true. Top ~10 languages, metric/imperial, country-specific voltage/phase. |
-| **Open-source repo** | Liability posture + community contributions. MIT/Apache-2.0. |
-| **Shareable results + export** | Users can email/print estimates to show installers. |
+| **Open-source repo**              | Liability posture + community contributions. MIT/Apache-2.0.                                         |
+| **Shareable results + export**    | Users can email/print estimates to show installers.                                                  |
 
 ### Rationale
+
 - **Phase 1 (beta):** MVP is feature-complete. Get real feedback before investing in domain/tunnel.
 - **Phase 2 (public):** Fix URL rotation (blocker) and get insurance (protection). Then you can drive traffic.
 - **Phase 3 (product):** Move calculations to code. This is the real product. LLM is now just translator/advisor, not calculator.

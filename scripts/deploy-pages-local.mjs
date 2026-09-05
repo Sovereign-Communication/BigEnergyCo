@@ -15,9 +15,16 @@ import { cpSync, mkdirSync, rmSync, readdirSync, statSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { join, resolve } from "node:path";
 
-const ROOT = resolve(new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
+const ROOT = resolve(
+  new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
+);
 const stageIdx = process.argv.indexOf("--stage");
-const STAGE = join(ROOT, stageIdx >= 0 && process.argv[stageIdx + 1] ? process.argv[stageIdx + 1] : "_pages_staging");
+const STAGE = join(
+  ROOT,
+  stageIdx >= 0 && process.argv[stageIdx + 1]
+    ? process.argv[stageIdx + 1]
+    : "_pages_staging",
+);
 const CHECK = process.argv.includes("--check");
 
 const ALLOWLIST = [
@@ -40,14 +47,27 @@ const ALLOWLIST = [
 ];
 
 function sh(cmd, opts = {}) {
-  return execSync(cmd, { cwd: ROOT, stdio: opts.quiet ? "pipe" : "inherit", encoding: "utf8" });
+  return execSync(cmd, {
+    cwd: ROOT,
+    stdio: opts.quiet ? "pipe" : "inherit",
+    encoding: "utf8",
+  });
 }
 
-console.log(`Staging allowlisted files into ${STAGE.replace(ROOT + "/", "")}/ ...`);
+console.log(
+  `Staging allowlisted files into ${STAGE.replace(ROOT + "/", "")}/ ...`,
+);
 rmSync(STAGE, { recursive: true, force: true });
-mkdirSync(join(STAGE, "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage"), { recursive: true });
-mkdirSync(join(STAGE, "blog/off-grid-vs-grid-tie-payback"), { recursive: true });
-mkdirSync(join(STAGE, "blog/how-to-cut-electricity-bill-with-solar"), { recursive: true });
+mkdirSync(
+  join(STAGE, "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage"),
+  { recursive: true },
+);
+mkdirSync(join(STAGE, "blog/off-grid-vs-grid-tie-payback"), {
+  recursive: true,
+});
+mkdirSync(join(STAGE, "blog/how-to-cut-electricity-bill-with-solar"), {
+  recursive: true,
+});
 
 for (const entry of ALLOWLIST) {
   const src = join(ROOT, entry);
@@ -59,9 +79,24 @@ for (const entry of ALLOWLIST) {
 }
 
 // Safety net: refuse to publish anything outside expectations
-const allowedTop = new Set(["index.html", "404.html", "robots.txt", "sitemap.xml", "rss.xml", "sw.js", "manifest.webmanifest", "_headers", "_redirects", "blog", "solar-calculator", "solar-heatmap", "assets"]);
+const allowedTop = new Set([
+  "index.html",
+  "404.html",
+  "robots.txt",
+  "sitemap.xml",
+  "rss.xml",
+  "sw.js",
+  "manifest.webmanifest",
+  "_headers",
+  "_redirects",
+  "blog",
+  "solar-calculator",
+  "solar-heatmap",
+  "assets",
+]);
 for (const name of readdirSync(STAGE)) {
-  if (!allowedTop.has(name)) throw new Error(`Unexpected file in staging: ${name}`);
+  if (!allowedTop.has(name))
+    throw new Error(`Unexpected file in staging: ${name}`);
 }
 
 function listDir(dir, prefix = "") {
@@ -81,17 +116,32 @@ if (CHECK) {
 
 console.log("\nCreating orphan commit on gh-pages ...");
 const idxFile = join(ROOT, ".git", "pages-index-tmp");
-const idxEnv = { ...process.env, GIT_INDEX_FILE: idxFile, GIT_WORK_TREE: STAGE };
+const idxEnv = {
+  ...process.env,
+  GIT_INDEX_FILE: idxFile,
+  GIT_WORK_TREE: STAGE,
+};
 execSync("git add -A", { cwd: ROOT, env: idxEnv, stdio: "pipe" });
-const tree = execSync("git write-tree", { cwd: ROOT, env: idxEnv, encoding: "utf8" }).trim();
+const tree = execSync("git write-tree", {
+  cwd: ROOT,
+  env: idxEnv,
+  encoding: "utf8",
+}).trim();
 const commitEnv = { ...process.env };
 delete commitEnv.GIT_INDEX_FILE;
 delete commitEnv.GIT_WORK_TREE;
-const commit = execSync(`git commit-tree ${tree} -m "Publish site (local allowlist build, ${new Date().toISOString()})"`, {
-  cwd: ROOT, env: commitEnv, encoding: "utf8",
-}).trim();
+const commit = execSync(
+  `git commit-tree ${tree} -m "Publish site (local allowlist build, ${new Date().toISOString()})"`,
+  {
+    cwd: ROOT,
+    env: commitEnv,
+    encoding: "utf8",
+  },
+).trim();
 rmSync(idxFile, { force: true });
 
 console.log(`Commit ${commit.slice(0, 10)} -> refs/heads/gh-pages (force)`);
 sh(`git push origin ${commit}:refs/heads/gh-pages --force`);
-console.log("\nPushed. If Pages source = gh-pages /root, the site updates in ~30-60s.");
+console.log(
+  "\nPushed. If Pages source = gh-pages /root, the site updates in ~30-60s.",
+);

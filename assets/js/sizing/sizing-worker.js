@@ -22,9 +22,20 @@ self.onmessage = async (ev) => {
   if (msg?.type === "reSlice") {
     try {
       const result = await runSizing({ ...msg, incrementalCut: true });
-      self.postMessage({ type: "reSlice", seq: msg.seq, epoch: msg.epoch, result });
+      self.postMessage({
+        type: "reSlice",
+        seq: msg.seq,
+        epoch: msg.epoch,
+        result,
+      });
     } catch (e) {
-      self.postMessage({ type: "error", seq: msg.seq, epoch: msg.epoch, stream: "slice", message: String(e && e.message || e) });
+      self.postMessage({
+        type: "error",
+        seq: msg.seq,
+        epoch: msg.epoch,
+        stream: "slice",
+        message: String((e && e.message) || e),
+      });
     }
     return;
   }
@@ -35,10 +46,21 @@ self.onmessage = async (ev) => {
       const payload = await runSizing({ ...rest, incrementalCut: false });
       self.postMessage({ type: "ok", seq: msg.seq, epoch: msg.epoch, payload });
     } catch (e) {
-      self.postMessage({ type: "error", seq: msg.seq, epoch: msg.epoch, stream: "run", message: String(e && e.message || e) });
+      self.postMessage({
+        type: "error",
+        seq: msg.seq,
+        epoch: msg.epoch,
+        stream: "run",
+        message: String((e && e.message) || e),
+      });
     }
     return;
   }
 
-  self.postMessage({ type: "error", seq: msg?.seq, stream: "unknown", message: `unknown worker message type: ${msg?.type}` });
+  self.postMessage({
+    type: "error",
+    seq: msg?.seq,
+    stream: "unknown",
+    message: `unknown worker message type: ${msg?.type}`,
+  });
 };

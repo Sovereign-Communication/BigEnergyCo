@@ -18,7 +18,7 @@ Help an ordinary household understand the cheapest, safest, most practical path 
 
 1. **Bill-first front door** — quick estimate from bill, location, and goal; clear paths for bill cutting, backup, and off-grid.
 2. **Home energy map** — appliance builder, load categories, largest loads, flexible loads, and an “I don’t know” profile.
-3. **Bill-cut explorer** — compare 25%, 50%, 80%, and 95% scenarios with cost, payback, imports, exports, and backup capability. — *shipped 2026-08-29 as the plausibility frontier: the full spend-vs-coverage curve rather than fixed steps. See `PHASE3_PLAN.md`.*
+3. **Bill-cut explorer** — compare 25%, 50%, 80%, and 95% scenarios with cost, payback, imports, exports, and backup capability. — _shipped 2026-08-29 as the plausibility frontier: the full spend-vs-coverage curve rather than fixed steps. See `PHASE3_PLAN.md`._
 4. **Best first dollar** — rank efficiency, load shifting, solar, battery, generator, and other actions by cost, savings, resilience, and complexity.
 5. **Realistic grid economics** — fixed charges, time-of-use rates, export compensation, demand charges, rate changes, and solar-only versus storage cases.
 6. **Staged energy plan** — convert results into measure, reduce, generate, add resilience, and expand-independence steps.
