@@ -61,6 +61,9 @@ cloudflared.exe
 
 # Scratch / legacy
 scratch/
+appdriving.mp4
+drafts/
+shorts/
 legacy_scripts/
 .backup/
 .claude/
