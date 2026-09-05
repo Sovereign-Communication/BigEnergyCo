@@ -112,15 +112,17 @@ export function sweepSystems({
   if (!(loadTotal > 0)) return [];
 
   const gridTie = mode === "gridtie";
-  const pvs = pvLadder(pvMax, pvSteps);
+  const pvs = gridTie ? [0, ...pvLadder(pvMax, pvSteps)] : pvLadder(pvMax, pvSteps);
   const bats = battLadder(battMax, battSteps, gridTie);
   const out = [];
 
   for (const pvKw of pvs) {
     for (const battKwh of bats) {
-      // The off-grid simulator has no grid to fall back on, so a zero-kWh
-      // bank is not a system it can represent.
+      // Must have at least solar or battery
+      if (pvKw <= 0 && battKwh <= 0) continue;
+      // Off-grid simulator requires battery and PV
       if (!gridTie && battKwh <= 0) continue;
+      if (!gridTie && pvKw <= 0) continue;
       const result = gridTie
         ? simulateOffset({ pvKw, battKwhUsable: battKwh, e1kw, loadWh, chemistry, tempsC, capacityScale })
         : simulate({ pvKw, battKwhUsable: battKwh, e1kw, loadWh, chemistry, tempsC, capacityScale });
@@ -130,6 +132,7 @@ export function sweepSystems({
       const cost = price(pvKw, battKwh);
       out.push({
         pvKw, battKwh, outcome, result,
+        pointType: pvKw === 0 ? "battery_only" : (battKwh === 0 ? "solar_only" : "both"),
         capexUsd: cost.mid,
         capexLoUsd: cost.lo ?? cost.mid,
         capexHiUsd: cost.hi ?? cost.mid,

@@ -254,9 +254,11 @@ export function renderFrontier(host, frontier, opts = {}) {
     const sx = X(sel.capexUsd), sy = Y(sel.outcomePct);
     push(`<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="7.5" fill="${C.marker}" stroke="var(--bg-dark, #090d16)" stroke-width="2"/>`);
     if (!box.narrow) {
-      const label = sel.battKwh > 0
-        ? t("frontierSelTag", { pv: sel.pvKw, batt: sel.battKwh, pct: sel.outcomePct, cost: money(sel.capexUsd) })
-        : t("frontierSelNoBatt", { pv: sel.pvKw, pct: sel.outcomePct, cost: money(sel.capexUsd) });
+      const label = sel.pvKw <= 0
+        ? `Battery only: ${sel.battKwh} kWh (${sel.outcomePct}% peak offset, ${money(sel.capexUsd)})`
+        : sel.battKwh > 0
+          ? t("frontierSelTag", { pv: sel.pvKw, batt: sel.battKwh, pct: sel.outcomePct, cost: money(sel.capexUsd) })
+          : t("frontierSelNoBatt", { pv: sel.pvKw, pct: sel.outcomePct, cost: money(sel.capexUsd) });
       const bounds = { left: PAD.l + 2, right: VB_W - PAD.r - 2 };
       let at = placeLabel(sx, label, FS_TAG, bounds, 13);
       // Prefer the side away from the knee ring when both sides would fit.

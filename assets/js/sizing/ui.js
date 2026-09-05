@@ -1310,6 +1310,8 @@ function readInputs() {
 
     basis,
 
+    hardwareConfig: $("hardwareConfig")?.value || "both",
+
     focusPvKw: pendingFocus ? pendingFocus.pvKw : null,
 
     focusBattKwh: pendingFocus ? pendingFocus.battKwh : null,
@@ -2279,6 +2281,10 @@ function renderAutoCards(p) {
 
     appendRows(card, rows);
 
+    if (a.bestPriceCallout) {
+      card.appendChild(el("div", { class: "best-price-callout" }, `💡 ${a.bestPriceCallout}`));
+    }
+
     if (a.cardNote) {
 
       card.appendChild(el("p", { style: "font-size:0.8rem;color:var(--text-muted);margin-top:0.6rem;line-height:1.5;" }, a.cardNote));
@@ -2572,6 +2578,9 @@ function entryDetailRows(p, e) {
   if (e.unmetHoursPerYear !== undefined && e.unmetHoursPerYear !== null) {
     rows.push(["Unmet hours", `${fmt(e.unmetHoursPerYear)} h/yr · longest gap ${fmt(e.longestGapHours ?? 0)} h`]);
   }
+  if (e.bestPriceCallout) {
+    rows.push(["Scenario note", e.bestPriceCallout]);
+  }
   return rows;
 }
 
@@ -2661,6 +2670,13 @@ function renderBomPanel() {
   };
 
   const f = resolveSelected(lastPayload) || lastPayload.focus;
+  if (f && f.bestPriceCallout) {
+    const callout = el("div", {
+      class: "best-price-callout",
+      style: "margin-bottom:0.8rem;padding:0.75rem 1rem;border-radius:8px;background:rgba(0,230,153,0.08);border:1px solid rgba(0,230,153,0.3);font-size:0.85rem;line-height:1.45;color:var(--text-color);"
+    }, `💡 ${f.bestPriceCallout}`);
+    body.appendChild(callout);
+  }
   section("Panels", [
     ["Array", `${f.pvKw} kW \u2192 ${bom.panels.count} \u00D7 ${bom.panels.panelWatts} W = ${bom.panels.kwActual} kW`],
     ["Space needed", `about ${bom.panels.areaM2} m\u00B2 of roof or ground (mounting gaps included)`],
@@ -2996,6 +3012,10 @@ function renderTierCards(p) {
 
     appendRows(card, rows);
 
+    if (t.bestPriceCallout) {
+      card.appendChild(el("div", { class: "best-price-callout" }, `💡 ${t.bestPriceCallout}`));
+    }
+
     card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
 
       "Battery + panel component estimate only; excludes inverter, BOS, freight, labor."));
@@ -3129,6 +3149,10 @@ function renderTargetCards(p, extraTargets = []) {
     pushSeriesBreakdown(rows, t);
 
     appendRows(card, rows);
+
+    if (t.bestPriceCallout) {
+      card.appendChild(el("div", { class: "best-price-callout" }, `💡 ${t.bestPriceCallout}`));
+    }
 
     card.appendChild(el("p", { style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;" },
 
@@ -5103,6 +5127,21 @@ export function initSizingUI() {
     selectedKey = "best";
     if (lastPayload) scheduleRun(true);
   });
+
+  const hwConfigNode = $("hardwareConfig");
+  if (hwConfigNode) {
+    hwConfigNode.addEventListener("change", () => {
+      const val = hwConfigNode.value;
+      const chemRow = $("chemSelect")?.closest(".form-group");
+      if (val === "solar") {
+        if (chemRow) chemRow.style.opacity = "0.4";
+      } else {
+        if (chemRow) chemRow.style.opacity = "1";
+      }
+      selectedKey = "best";
+      if (lastPayload) scheduleRun(true);
+    });
+  }
 
   if ($("systemGoal")) $("systemGoal").addEventListener("change", () => { updateAutoRows(); });
 

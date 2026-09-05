@@ -319,6 +319,92 @@ export function simulateWithCycles(opts) {
   return simulate(opts);
 }
 
+// ── Oversizing vs. Swaps Optimization ───────────────────────────────────────
+
+/**
+ * Evaluates whether oversizing a battery to eliminate replacements over a 20-year
+ * horizon provides a lower total lifetime cost than a smaller bank that incurs swaps and labor.
+ *
+ * @returns {{
+ *   useOversized: boolean,
+ *   oversizeScenario: "oversized_cheaper" | "swaps_cheaper" | "zero_swap_natural",
+ *   oversizedBattKwh: number,
+ *   oversizeSavingsUsd: number,
+ *   bestPriceCallout: string
+ * }}
+ */
+export function evaluateOversizeOptimization({
+  pvKw = 0, battKwh = 0, sizingResult = null, chemistry = "lfp", years = 1,
+  costPerWpv = 0.35, costPerKwhBatt = 140, costPerKwInv = 0,
+  laborPerKwh = [12, 30],
+}) {
+  const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
+  if (!battKwh || battKwh <= 0 || !sizingResult) {
+    return {
+      useOversized: false,
+      oversizeScenario: "zero_swap_natural",
+      oversizedBattKwh: 0,
+      oversizeSavingsUsd: 0,
+      bestPriceCallout: "Best 20-year price: solar-only setup has zero battery swap or degradation costs.",
+    };
+  }
+
+  const cyclesPerYear = sizingResult.cyclesEquivalent / years;
+  const replacements = batteryReplacements(cyclesPerYear, chem.cyclesTo80);
+  const capexStandard = pvKw * 1000 * costPerWpv + pvKw * costPerKwInv + battKwh * costPerKwhBatt;
+  const lifeStandard = lifetimeCostUsd({
+    capexMidUsd: capexStandard,
+    battKwhUsable: battKwh,
+    battPriceMidPerKwh: costPerKwhBatt,
+    replacements,
+    laborPerKwh,
+  });
+
+  if (replacements === 0) {
+    return {
+      useOversized: false,
+      oversizeScenario: "zero_swap_natural",
+      oversizedBattKwh: battKwh,
+      oversizeSavingsUsd: 0,
+      bestPriceCallout: "Best 20-year price: battery bank naturally outlasts the 20-year horizon with zero replacements.",
+    };
+  }
+
+  // To achieve 0 replacements, batteryLifeYears >= 20 => cyclesPerYear <= cyclesTo80 / 20.
+  const annualThroughputDc = cyclesPerYear * battKwh;
+  const maxCyclesForZeroSwap = chem.cyclesTo80 / 20;
+  const targetBattKwh = Math.max(battKwh + 1, Math.ceil(annualThroughputDc / maxCyclesForZeroSwap));
+
+  const capexOversized = pvKw * 1000 * costPerWpv + pvKw * costPerKwInv + targetBattKwh * costPerKwhBatt;
+  const lifeOversized = lifetimeCostUsd({
+    capexMidUsd: capexOversized,
+    battKwhUsable: targetBattKwh,
+    battPriceMidPerKwh: costPerKwhBatt,
+    replacements: 0,
+    laborPerKwh,
+  });
+
+  if (lifeOversized.total < lifeStandard.total) {
+    const savings = lifeStandard.total - lifeOversized.total;
+    return {
+      useOversized: true,
+      oversizeScenario: "oversized_cheaper",
+      oversizedBattKwh: targetBattKwh,
+      oversizeSavingsUsd: savings,
+      bestPriceCallout: `Best 20-year price: oversizing battery to ${targetBattKwh} kWh avoids replacements, saving ~$${savings.toLocaleString()} over 20 years vs. smaller banks with swaps.`,
+    };
+  } else {
+    const savings = lifeOversized.total - lifeStandard.total;
+    return {
+      useOversized: false,
+      oversizeScenario: "swaps_cheaper",
+      oversizedBattKwh: targetBattKwh,
+      oversizeSavingsUsd: savings,
+      bestPriceCallout: `Best 20-year price: standard sizing with ${replacements} replacement(s) is ~$${savings.toLocaleString()} cheaper over 20 years than paying upfront to oversize.`,
+    };
+  }
+}
+
 // ── Tier sizing search ──────────────────────────────────────────────────────
 
 /**
@@ -389,6 +475,33 @@ export function sizeForTier({
       }
     }
   }
+
+  const opt = evaluateOversizeOptimization({
+    pvKw: best.pvKw,
+    battKwh: best.battKwh,
+    sizingResult: best.result,
+    chemistry,
+    years,
+    costPerWpv,
+    costPerKwhBatt,
+    costPerKwInv,
+    laborPerKwh,
+  });
+  if (opt.useOversized && opt.oversizedBattKwh > best.battKwh && opt.oversizedBattKwh <= battMax) {
+    const ev = evaluate(best.pvKw, opt.oversizedBattKwh);
+    if (meets(ev)) {
+      best = {
+        pvKw: best.pvKw,
+        battKwh: opt.oversizedBattKwh,
+        result: ev.r,
+        obj: lifetimeObjective(best.pvKw, opt.oversizedBattKwh, ev.r).total,
+      };
+    }
+  }
+  best.oversizeScenario = opt.oversizeScenario;
+  best.bestPriceCallout = opt.bestPriceCallout;
+  best.oversizeSavingsUsd = opt.oversizeSavingsUsd;
+
   return best;
 }
 
@@ -432,9 +545,36 @@ export function simulateOffset({ pvKw, battKwhUsable, e1kw, loadWh, chemistry = 
   if (loadWh.length !== n) throw new Error("load series must match e1kw length");
   const socSeries = capture ? new Float64Array(n) : null;
 
+  const isBatteryOnly = (pvKw <= 0 || !Number.isFinite(pvKw)) && cap > 0;
+
   for (let i = 0; i < n; i++) {
-    const pvAc = pvKw * e1kw[i] * ETA_INVERTER;
     const load = loadWh[i];
+    if (isBatteryOnly) {
+      const hourOfDay = i % 24;
+      const isPeakHour = hourOfDay >= 16 && hourOfDay < 21;
+      if (!isPeakHour && soc < 1.0 && !(tempsC && tempsC[i] < chem.chargeMinC)) {
+        const room = cap - soc * cap;
+        const maxChargeWh = cap / 4;
+        const charged = Math.min(maxChargeWh * eta, room);
+        soc += charged / cap;
+        throughputDc += charged;
+        imported += load;
+      } else if (isPeakHour && soc > 0) {
+        const availableAc = soc * cap * eta;
+        const covered = Math.min(load, availableAc);
+        soc -= covered / eta / cap;
+        throughputDc += covered / eta;
+        fromBatt += covered;
+        imported += Math.max(0, load - covered);
+      } else {
+        imported += load;
+      }
+      if (capture && cap > 0) socSeries[i] = soc;
+      if (cap > 0 && soc < minSoc) minSoc = soc;
+      continue;
+    }
+
+    const pvAc = pvKw * e1kw[i] * ETA_INVERTER;
     const d = Math.min(pvAc, load);
     direct += d;
     const surplus = pvAc - d;
@@ -533,6 +673,13 @@ export function sizeForBillCut({
 
   let best = null;
   for (let b = 0; b <= battMax; b += battStep) {
+    if (pvMax === 0) {
+      const r = evaluate(0, b);
+      if (!meets(r)) continue;
+      const obj = lifetimeObjective(0, b, r).total;
+      if (!best || obj < best.obj) best = { pvKw: 0, battKwh: b, result: r, obj };
+      continue;
+    }
     // With a bigger bank, the required PV cannot be larger than before
     // (bill-cut regime). For surplus targets the monotonicity runs the other
     // way (storage eats curtailment), so skip the floor and search fresh.
@@ -557,6 +704,13 @@ export function sizeForBillCut({
     for (const db of [-battStep, 0, battStep]) {
       const b = best.battKwh + db;
       if (b < 0) continue;
+      if (pvMax === 0) {
+        const r = evaluate(0, b);
+        if (!meets(r)) continue;
+        const obj = lifetimeObjective(0, b, r).total;
+        if (obj < best.obj - 1e-9) { best = { pvKw: 0, battKwh: b, result: r, obj }; improved = true; }
+        continue;
+      }
       let lo = 0.05, hi = Math.min(pvMax, best.pvKw + 2);
       if (!meets(evaluate(hi, b))) continue;
       while (hi - lo > 0.25) {
@@ -568,10 +722,60 @@ export function sizeForBillCut({
       if (obj < best.obj - 1e-9) { best = { pvKw: +hi.toFixed(2), battKwh: b, result: r, obj }; improved = true; }
     }
   }
+
+  const opt = evaluateOversizeOptimization({
+    pvKw: best.pvKw,
+    battKwh: best.battKwh,
+    sizingResult: best.result,
+    chemistry,
+    years,
+    costPerWpv,
+    costPerKwhBatt,
+    costPerKwInv,
+    laborPerKwh,
+  });
+  if (opt.useOversized && opt.oversizedBattKwh > best.battKwh && opt.oversizedBattKwh <= battMax) {
+    const b = opt.oversizedBattKwh;
+    if (pvMax === 0) {
+      const r = evaluate(0, b);
+      if (meets(r)) {
+        const obj = lifetimeObjective(0, b, r).total;
+        if (obj < best.obj - 1e-9) {
+          best = { pvKw: 0, battKwh: b, result: r, obj };
+        } else {
+          opt.useOversized = false;
+          opt.oversizeScenario = "swaps_cheaper";
+          opt.bestPriceCallout = `Best 20-year price: standard sizing is cheaper over 20 years than paying upfront to oversize.`;
+        }
+      }
+    } else {
+      let lo = 0.05, hi = best.pvKw;
+      if (meets(evaluate(hi, b))) {
+        while (hi - lo > 0.25) {
+          const mid = (lo + hi) / 2;
+          if (meets(evaluate(mid, b))) hi = mid; else lo = mid;
+        }
+        const r = evaluate(hi, b);
+        const obj = lifetimeObjective(hi, b, r).total;
+        if (obj < best.obj - 1e-9) {
+          best = { pvKw: +hi.toFixed(2), battKwh: b, result: r, obj };
+        } else {
+          opt.useOversized = false;
+          opt.oversizeScenario = "swaps_cheaper";
+          opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is cheaper over 20 years than paying upfront to oversize.`;
+        }
+      }
+    }
+  }
+  best.oversizeScenario = opt.oversizeScenario;
+  best.bestPriceCallout = opt.bestPriceCallout;
+  best.oversizeSavingsUsd = opt.oversizeSavingsUsd;
+
   return best;
 }
 
 /** Size all bill-cut targets at once, aligned with BILL_TARGETS order. */
 export function sizeAllBillTargets(opts) {
-  return BILL_TARGETS.map((t) => ({ target: t, sizing: sizeForBillCut({ ...opts, minFraction: t.minFraction }) }));
+  const targets = opts.targets || BILL_TARGETS;
+  return targets.map((t) => ({ target: t, sizing: sizeForBillCut({ ...opts, minFraction: t.minFraction }) }));
 }

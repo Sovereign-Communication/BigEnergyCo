@@ -1310,6 +1310,28 @@ input[type=number]::-webkit-inner-spin-button {
 
 }
 
+.best-price-callout {
+
+  display: block;
+
+  background: rgba(0, 230, 153, 0.08);
+
+  border: 1px solid rgba(0, 230, 153, 0.25);
+
+  color: var(--text-color);
+
+  font-size: 0.8rem;
+
+  line-height: 1.45;
+
+  padding: 0.5rem 0.75rem;
+
+  border-radius: 8px;
+
+  margin-top: 0.6rem;
+
+}
+
 .bom-card h3 {
 
   font-size: 1.2rem;
@@ -2194,6 +2216,22 @@ footer {
               <option value="gridtie" selected>Cut my bill, stay connected</option>
 
               <option value="offgrid">Power me fully off-grid</option>
+
+            </select>
+
+          </div>
+
+          <div class="form-group" id="hardwareConfigRow">
+
+            <label for="hardwareConfig">Hardware setup:</label>
+
+            <select id="hardwareConfig" class="form-control">
+
+              <option value="both" selected>Solar + Battery (Default)</option>
+
+              <option value="solar">Solar only (Grid-tie credits/metering)</option>
+
+              <option value="battery">Battery only (Peak-hour ToU offset)</option>
 
             </select>
 
