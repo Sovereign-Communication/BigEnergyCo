@@ -29,7 +29,10 @@
 //     cycles/yr) so oversize only adds cost; sodium 2x reaches 0 swaps at
 //     ~neutral cost (-$74). The strategy's shape survives cloudiness.
 //
-// Run: node scripts/swap-strategy-test.mjs   (also wired into CI)
+// Run: node scripts/swap-strategy-test.mjs   (manual research script — NOT run
+// in CI; `npm test` scopes to tests/. Pinned Aug-2026 findings predate the
+// Sept-2026 engine unification (aaac300: per-chemistry pricing, first-labor
+// accounting) and need re-pinning before re-wiring to CI.)
 
 import { buildE1kw, flatProfile, expandProfile, sizeForBillCut,
          simulateOffset, dailyExtremes, CHEMISTRIES, capacityScaleFor } from "../assets/js/sizing/engine.js";

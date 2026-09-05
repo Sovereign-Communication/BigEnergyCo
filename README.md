@@ -31,7 +31,7 @@ Cloudflare (`bigenergyco.pages.dev`) is the last-mile copy of the *same* build.
 
 1. **Run the checks locally** (what CI runs):
    ```bash
-   node --test
+   npm test
    node scripts/validate-jsonld.mjs
    node scripts/check-chars.mjs
    node scripts/deploy-pages-local.mjs --check
@@ -92,7 +92,7 @@ Browser ──► GitHub Pages (static: index.html, blog/, assets/)
 | `scripts/validate-modes.mjs` | Live end-to-end check of both sizing modes vs real NASA data |
 | `worker/index.js` | Cloudflare Worker: `/api/chat`, `/api/health`. CORS allowlist, rate limits, input caps |
 | `.github/workflows/deploy.yml` | Pages deploy from an explicit allowlist |
-| `launcher.py` | Local start/stop orchestration (dev only), driven by the `.bat` files |
+| `launcher.py` / `server.py` | Local-only dev servers (untracked, never deployed — see `.gitignore`), driven by the `.bat` files |
 | `PLAN.md` | Roadmap |
 | `PHASE2_PLAN.md` | Sizing engine plan + shipped-status ledger |
 | `PHASE3_PLAN.md` | Plausibility frontier: backlog ranking, what shipped, and the fixed-charge caveat it surfaced |
@@ -116,7 +116,11 @@ The site verifies via the `google-site-verification` meta tag in `index.html`. T
 (best-effort against bursts); pair with a Cloudflare WAF rate-limiting rule for hard guarantees.
 
 The Groq key lives only in the Worker secret `GROQ_API_KEY` (`wrangler secret put`). It is never
-sent to the browser.
+sent to the browser. Local dev reads it from `.env` (see `.env.example`) — never commit keys.
+
+Local dev servers (`server.py`/`launcher.py`) are untracked and never deployed. If revived,
+they must mirror the Worker: same-origin/CORS allowlist only (never `*`), no `/api/lead`,
+and no reflected JSONP callbacks.
 
 ## Ground rules baked into the site
 
