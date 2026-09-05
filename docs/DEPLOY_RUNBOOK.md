@@ -93,7 +93,7 @@ otherwise). Current registry:
 | AI advisor | `bigenergyco-api.bigenergyco.workers.dev` (+ `*.workers.dev` spare) | connect-src |
 | FX rates | `open.er-api.com` | connect-src |
 | Online city lookup | `nominatim.openstreetmap.org` | connect-src |
-| Heatmap library | `unpkg.com` (SRI-pinned) | script-src |
+| Heatmap library | `unpkg.com` (SRI-pinned) | script-src + style-src |
 | Heatmap tiles | `*.basemaps.cartocdn.com` | img-src |
 
 Adding a new external call = update `_headers` + the smoke probes + this table.
