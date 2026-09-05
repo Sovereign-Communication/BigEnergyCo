@@ -16,7 +16,7 @@ import { CITY_CATALOG, searchCities, loadCityCatalog, lookupCityOnline, formatCi
 
 import { estimateTariff, CURRENCIES, fxMeta, DAYS_PER_MONTH } from "./pricing.js?v=20260830o";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260903a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260904b";
 
 import { buildBom, panelLayout, PANEL_WATTS_DEFAULT } from "./bom.js?v=20260830b";
 
