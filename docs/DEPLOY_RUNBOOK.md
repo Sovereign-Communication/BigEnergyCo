@@ -62,20 +62,21 @@ Record the deployment URL printed by Wrangler.
 
 `/api/chat` is public and unauthenticated. Enforcement is layered:
 
-1. **Hard per-minute cap** — the `RL_CHAT_PER_MIN` rate-limiting binding in
+1. **Per-minute cap** — the `RL_CHAT_PER_MIN` rate-limiting binding in
    `worker/wrangler.json` (8 req/min per IP), checked before any paid Groq call.
+   This is Cloudflare's GA rate-limiting infrastructure (the recommended
+   enforcement), but counters are **per Cloudflare location and eventually
+   consistent** — a distributed flood slightly exceeds 8/min before converging.
 2. **Soft in-isolate caps** — 150/day per IP + 3000/day global in
    `worker/index.js` (`checkRateLimit`). These reset on isolate eviction, so
-   they brake bursts but are not hard guarantees.
-3. **Cloudflare WAF (recommended)** — for a hard guarantee that survives
-   isolate eviction, add a WAF rate-limiting rule on the API hostname
-   (Security → WAF → Rate limiting rules; skip if the zone plan lacks it —
-   layers 1–2 remain the enforcement):
-   - Rule: `bigenergyco-api chat per-IP burst` — if incoming requests match
-     `http.request.uri.path eq "/api/chat" and http.request.method eq "POST"`,
-     characteristics: IP, period 60 s, limit 8, mitigate: block 60 s.
-   - Rule: `bigenergyco-api chat per-IP day` — same match, characteristics:
-     IP, period 24 h, limit 150, mitigate: block 1 h.
+   they brake bursts but are not hard guarantees. (The binding API supports
+   only 10 s / 60 s periods, so daily caps cannot be bindings.)
+3. **No dashboard WAF rule** — WAF rate-limiting rulesets attach to zones in
+   this account, but the API hostname lives on Cloudflare's `workers.dev`
+   zone, so there is nothing to attach them to. If abuse ever outgrows layers
+   1–2, the fix is a custom domain for the Worker on an owned zone (then add
+   zone rate-limiting rules for `POST /api/chat`: 8/60 s per IP, 150/24 h per
+   IP) — not a dashboard tweak that exists today. Do not document one.
 
 Verify limits live via `/api/health` (returns the enforced numbers and the
 `promptVersion` now pinned there) and `tests/worker.test.mjs` (runs in CI).

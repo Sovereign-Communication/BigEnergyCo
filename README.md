@@ -114,8 +114,8 @@ The site verifies via the `google-site-verification` meta tag in `index.html`. T
 `/api/chat` is public and unauthenticated, so the **Cloudflare Worker enforces**: 8/min and
 150/day per IP, 3000/day overall, 4 KB message cap, ~20 KB body cap. The per-minute
 cap is a hard rate-limiting binding (`RL_CHAT_PER_MIN`); the daily/global counters are
-in-isolate (best-effort against bursts). For a hard daily guarantee add the WAF rules in
-`docs/DEPLOY_RUNBOOK.md` ("API abuse hardening"). Live limits are visible at `/api/health`.
+in-isolate (best-effort against bursts). See `docs/DEPLOY_RUNBOOK.md`
+("API abuse hardening") for the exact enforcement posture and its limits. Live limits are visible at `/api/health`.
 
 The Groq key lives only in the Worker secret `GROQ_API_KEY` (`wrangler secret put`). It is never
 sent to the browser. Local dev reads it from `.env` (see `.env.example`) — never commit keys.
