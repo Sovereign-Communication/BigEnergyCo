@@ -291,7 +291,11 @@ export function trueBreakEvenYear({
  * present = this result carried no comparable series. Kept pure so the
  * renderer and tests share one source of truth for the two states.
  */
-export function savingsPanelState(series, tariffPerKwh) {
+export function savingsPanelState(
+  series,
+  tariffPerKwh,
+  unreachableReason = null,
+) {
   if (
     series &&
     Array.isArray(series.grid) &&
@@ -301,6 +305,11 @@ export function savingsPanelState(series, tariffPerKwh) {
   ) {
     return { kind: "chart" };
   }
+  // Structural infeasibility: the search didn't even attempt a 20-year
+  // comparison because the (mode, hardware, target) combo can't solve at
+  // any site. Hide the savings panel entirely — the infeasible banner up
+  // top is the right answer, not a half-rendered chart.
+  if (unreachableReason) return { kind: "infeasible" };
   return tariffPerKwh
     ? {
         kind: "unavailable",

@@ -290,6 +290,45 @@ async function main() {
       );
       gate("auto-location resolves emulated position", geoOk);
     }
+
+    // ── Structural infeasibility (off-grid + solar-only) ───────────────
+    // Reports a reason up top and hides the broken savings-unavailable box.
+    console.log("SMOKE      ── infeasible off-grid + solar-only ──");
+    await evaluate(`(() => {
+      document.getElementById("systemGoal").value = "offgrid";
+      document.getElementById("systemGoal").dispatchEvent(new Event("change", { bubbles: true }));
+      const hw = document.getElementById("hardwareConfig");
+      hw.value = "solar";
+      hw.dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    })()`);
+    await evaluate(`document.getElementById("btnRunSizing").click()`);
+    const infeasible = await poll(
+      async () =>
+        evaluate(`document.getElementById("infeasibleBanner")?.style.display`),
+      120000,
+      2000,
+    );
+    gate(
+      "infeasible banner shown for offgrid+solar-only",
+      infeasible === "block",
+      infeasible,
+    );
+    gate(
+      "no savings-unavailable fallback on infeasible run",
+      !(await evaluate(
+        `document.body.textContent.includes("Savings data unavailable for this result")`,
+      )),
+    );
+    // Restore default hardware for downstream gates.
+    await evaluate(`(() => {
+      const hw = document.getElementById("hardwareConfig");
+      hw.value = "both";
+      hw.dispatchEvent(new Event("change", { bubbles: true }));
+      document.getElementById("systemGoal").value = "gridtie";
+      document.getElementById("systemGoal").dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    })()`);
     gate(
       "chat bridge loaded (extracted classic script)",
       await evaluate(`typeof window.sendChatMsg === "function"`),
