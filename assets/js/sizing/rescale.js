@@ -15,6 +15,35 @@
 
 const round2 = (v) => Math.round(v * 100) / 100;
 
+/**
+ * Single source of truth for the oversize scenario prose. The battery kWh
+ * and dollar figures inside these strings scale with the load, so they are
+ * built here — next to the rescaler that must regenerate them — instead of
+ * baked once at sizing time. engine.js and run.js share this (never
+ * hand-write these sentences elsewhere) so a note can never name a bank the
+ * card doesn't show.
+ */
+export function oversizeCallout(
+  scenario,
+  { battKwh = null, savingsUsd = null, replacements = null } = {},
+) {
+  if (
+    scenario === "oversized_cheaper" &&
+    Number.isFinite(battKwh) &&
+    Number.isFinite(savingsUsd)
+  ) {
+    return `This system uses an oversized battery (${battKwh} kWh) to avoid replacements, giving you the lowest 20-year cost — saving ~$${Math.round(savingsUsd).toLocaleString()} vs. smaller banks with swaps.`;
+  }
+  if (
+    scenario === "swaps_cheaper" &&
+    Number.isFinite(replacements) &&
+    Number.isFinite(savingsUsd)
+  ) {
+    return `Best 20-year price: standard sizing with ${replacements} replacement(s) is ~$${Math.round(savingsUsd).toLocaleString()} cheaper over 20 years than paying upfront to oversize.`;
+  }
+  return null;
+}
+
 /** Rescale a cumulative cost series {grid, solar, system} by load factor k. */
 export function scaleSeries(s, k) {
   if (!s || !Number.isFinite(k)) return s;
@@ -50,6 +79,11 @@ const SCALE_FIELDS = [
   "lifetimeCostMid",
   "servedKwhPerYear",
   "peakLoadW",
+  // Oversize economics scale with the load like every other money figure —
+  // and the scenario sentence is regenerated from them below, so the note's
+  // kWh and $ can never freeze at the pre-rescale values.
+  "oversizeSavingsUsd",
+  "oversizedBattKwh",
 ];
 
 /**
@@ -66,12 +100,41 @@ export function scaleRecord(o, k) {
     if (typeof n[f] !== "number") continue;
     // Engine quantization: batteries whole kWh, PV/nameplate 2/1 decimals,
     // money and annual energy whole units.
-    if (f === "battKwh") n[f] = Math.round(n[f] * k);
+    if (f === "battKwh" || f === "oversizedBattKwh")
+      n[f] = Math.round(n[f] * k);
     else if (f === "pvKw") n[f] = Math.round(n[f] * k * 100) / 100;
     else if (f === "battNameplateKwh") n[f] = Math.round(n[f] * k * 10) / 10;
     else n[f] = Math.round(n[f] * k);
   }
   if (n.cumCostSeries) n.cumCostSeries = scaleSeries(n.cumCostSeries, k);
+  // The scenario sentence embeds scaled numbers: regenerate it from the
+  // scaled parts instead of letting it quote the old system. Only $-claiming
+  // notes are touched — number-free variants ("beyond the sizes searched",
+  // "naturally outlasts", hardware-specific fallbacks) are scale-invariant
+  // by construction and stay byte-identical.
+  if (
+    n.oversizeScenario === "oversized_cheaper" &&
+    Number.isFinite(n.oversizedBattKwh) &&
+    Number.isFinite(n.oversizeSavingsUsd)
+  ) {
+    const regen = oversizeCallout("oversized_cheaper", {
+      battKwh: n.oversizedBattKwh,
+      savingsUsd: n.oversizeSavingsUsd,
+    });
+    if (regen) n.bestPriceCallout = regen;
+  } else if (
+    n.oversizeScenario === "swaps_cheaper" &&
+    typeof n.bestPriceCallout === "string" &&
+    n.bestPriceCallout.includes("~$") &&
+    Number.isFinite(n.oversizeSavingsUsd) &&
+    Number.isFinite(n.replacementsHorizon)
+  ) {
+    const regen = oversizeCallout("swaps_cheaper", {
+      replacements: n.replacementsHorizon,
+      savingsUsd: n.oversizeSavingsUsd,
+    });
+    if (regen) n.bestPriceCallout = regen;
+  }
   return n;
 }
 

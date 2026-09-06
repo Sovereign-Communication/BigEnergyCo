@@ -2,7 +2,8 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260906c";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260906e";
+import { oversizeCallout } from "./rescale.js?v=20260906e";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -449,7 +450,10 @@ export function evaluateOversizeOptimization({
       oversizeScenario: "oversized_cheaper",
       oversizedBattKwh: targetBattKwh,
       oversizeSavingsUsd: savings,
-      bestPriceCallout: `This system uses an oversized battery (${targetBattKwh} kWh) to avoid replacements, giving you the lowest 20-year cost — saving ~$${savings.toLocaleString()} vs. smaller banks with swaps.`,
+      bestPriceCallout: oversizeCallout("oversized_cheaper", {
+        battKwh: targetBattKwh,
+        savingsUsd: savings,
+      }),
     };
   } else {
     const savings = lifeOversized.total - lifeStandard.total;
@@ -458,7 +462,10 @@ export function evaluateOversizeOptimization({
       oversizeScenario: "swaps_cheaper",
       oversizedBattKwh: targetBattKwh,
       oversizeSavingsUsd: savings,
-      bestPriceCallout: `Best 20-year price: standard sizing with ${replacements} replacement(s) is ~$${savings.toLocaleString()} cheaper over 20 years than paying upfront to oversize.`,
+      bestPriceCallout: oversizeCallout("swaps_cheaper", {
+        replacements,
+        savingsUsd: savings,
+      }),
     };
   }
 }
@@ -629,7 +636,17 @@ export function sizeForTier({
       }
       const obj = lifetimeObjective(adopPv, adopted.t, adopEv.r).total;
       if (obj < best.obj) {
+        // The note must name the bank actually adopted (verified size after
+        // growth + PV re-optimization) and the saving on the same basis that
+        // chose it — never the pre-verification estimate.
+        const prevObj = best.obj;
         best = { pvKw: adopPv, battKwh: adopted.t, result: adopEv.r, obj };
+        opt.oversizedBattKwh = adopted.t;
+        opt.oversizeSavingsUsd = prevObj - obj;
+        opt.bestPriceCallout = oversizeCallout("oversized_cheaper", {
+          battKwh: adopted.t,
+          savingsUsd: prevObj - obj,
+        });
       } else {
         // Verified on a fresh simulation, the oversized bank is NOT cheaper
         // (throughput shifts with bank size, so the pre-verification estimate
@@ -653,6 +670,7 @@ export function sizeForTier({
   best.oversizeScenario = opt.oversizeScenario;
   best.bestPriceCallout = opt.bestPriceCallout;
   best.oversizeSavingsUsd = opt.oversizeSavingsUsd;
+  best.oversizedBattKwh = opt.oversizedBattKwh;
 
   return best;
 }
@@ -1034,7 +1052,15 @@ export function sizeForBillCut({
       if (meets(r)) {
         const obj = lifetimeObjective(0, b, r).total;
         if (obj < best.obj - 1e-9) {
+          // Name the verified bank and the saving on the deciding basis.
+          const prevObj = best.obj;
           best = { pvKw: 0, battKwh: b, result: r, obj };
+          opt.oversizedBattKwh = b;
+          opt.oversizeSavingsUsd = prevObj - obj;
+          opt.bestPriceCallout = oversizeCallout("oversized_cheaper", {
+            battKwh: b,
+            savingsUsd: prevObj - obj,
+          });
         } else {
           opt.useOversized = false;
           opt.oversizeScenario = "swaps_cheaper";
@@ -1059,7 +1085,15 @@ export function sizeForBillCut({
         const r = evaluate(hi, b);
         const obj = lifetimeObjective(hi, b, r).total;
         if (obj < best.obj - 1e-9) {
+          // Name the verified bank and the saving on the deciding basis.
+          const prevObj = best.obj;
           best = { pvKw: +hi.toFixed(2), battKwh: b, result: r, obj };
+          opt.oversizedBattKwh = b;
+          opt.oversizeSavingsUsd = prevObj - obj;
+          opt.bestPriceCallout = oversizeCallout("oversized_cheaper", {
+            battKwh: b,
+            savingsUsd: prevObj - obj,
+          });
         } else {
           opt.useOversized = false;
           opt.oversizeScenario = "swaps_cheaper";
@@ -1078,6 +1112,7 @@ export function sizeForBillCut({
   best.oversizeScenario = opt.oversizeScenario;
   best.bestPriceCallout = opt.bestPriceCallout;
   best.oversizeSavingsUsd = opt.oversizeSavingsUsd;
+  best.oversizedBattKwh = opt.oversizedBattKwh;
 
   return best;
 }

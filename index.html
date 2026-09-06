@@ -215,7 +215,7 @@
       }
     </script>
 
-    <link rel="stylesheet" href="./assets/site.css?v=20260906c" />
+    <link rel="stylesheet" href="./assets/site.css?v=20260906e" />
   </head>
 
   <body>
@@ -1317,6 +1317,72 @@
                 </p>
               </div>
 
+              <!-- Budget slider: walks the cached spectrum by up-front cost.
+               Drag previews from cache only; release selects that system. -->
+              <div
+                id="budgetSliderRow"
+                style="
+                  display: none;
+                  margin-bottom: 1rem;
+                  padding: 0.9rem 1rem;
+                  background: rgba(59, 130, 246, 0.07);
+                  border: 1px solid rgba(59, 130, 246, 0.35);
+                  border-radius: 10px;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 1rem;
+                    flex-wrap: wrap;
+                  "
+                >
+                  <label
+                    for="budgetSlider"
+                    data-i18n="budgetLabel"
+                    style="
+                      font-weight: 800;
+                      color: var(--text-main);
+                      font-size: 0.98rem;
+                      margin: 0;
+                    "
+                    >Your budget (up-front)</label
+                  >
+
+                  <div
+                    id="budgetSliderVal"
+                    style="
+                      font-family: var(--font-mono);
+                      font-weight: 800;
+                      color: var(--secondary-accent, #3b82f6);
+                      font-size: 0.95rem;
+                    "
+                  ></div>
+                </div>
+
+                <input
+                  type="range"
+                  id="budgetSlider"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value="50"
+                  style="width: 100%; margin-top: 0.4rem; cursor: pointer"
+                />
+
+                <p
+                  id="playReadout"
+                  style="
+                    font-size: 0.85rem;
+                    color: var(--text-main);
+                    margin: 0.4rem 0 0;
+                    line-height: 1.55;
+                  "
+                ></p>
+              </div>
+
               <div
                 id="resultLadder"
                 style="display: none; margin-bottom: 1rem"
@@ -1371,6 +1437,48 @@
                 "
               ></div>
 
+              <!-- Granular panel: the selected system as icons + big numbers.
+               Follows every chart's selection; renders from cached data. -->
+              <div
+                id="focusPanel"
+                style="
+                  display: none;
+                  margin-bottom: 1rem;
+                  padding: 0.9rem 1rem;
+                  background: rgba(0, 230, 153, 0.06);
+                  border: 1px solid var(--border-glow);
+                  border-radius: 10px;
+                "
+              >
+                <div
+                  id="focusTitle"
+                  style="
+                    font-size: 0.85rem;
+                    font-weight: 800;
+                    color: var(--primary-accent);
+                    margin-bottom: 0.5rem;
+                  "
+                ></div>
+                <div
+                  id="focusChips"
+                  style="
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 0.5rem 1.1rem;
+                    align-items: baseline;
+                  "
+                ></div>
+                <div
+                  id="focusNote"
+                  style="
+                    font-size: 0.78rem;
+                    color: var(--text-muted);
+                    margin-top: 0.5rem;
+                    line-height: 1.5;
+                  "
+                ></div>
+              </div>
+
               <div
                 id="tierResults"
                 style="
@@ -1391,6 +1499,58 @@
                   plans, the result also separates bill reduction from outage
                   backup.
                 </p>
+              </div>
+
+              <!-- Spectrum: the full system landscape, no fixed thresholds.
+               Budget × outcome for every cached system; click any point to
+               select it across every chart. -->
+              <div id="spectrumWrap" style="display: none; margin-top: 1.5rem">
+                <div
+                  style="
+                    font-size: 0.95rem;
+                    font-weight: 700;
+                    color: var(--text-main);
+                    margin-bottom: 0.3rem;
+                  "
+                  data-i18n="spectrumTitle"
+                >
+                  Every system at your location, by budget
+                </div>
+
+                <p
+                  style="
+                    font-size: 0.85rem;
+                    color: var(--text-muted);
+                    margin: 0 0 0.75rem;
+                    line-height: 1.55;
+                  "
+                  data-i18n="spectrumIntro"
+                >
+                  One dot per system we could build for you — from the cheapest
+                  that does anything to the closest to full coverage. Slide the
+                  budget or bill-cut above, or tap any dot: every chart below
+                  follows the same pick. ★ is the recommendation.
+                </p>
+
+                <div id="spectrumChart"></div>
+
+                <ul
+                  style="
+                    list-style: none;
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 0.35rem 1.15rem;
+                    margin: 0.6rem 0 0;
+                    padding: 0;
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                    line-height: 1.5;
+                  "
+                >
+                  <li>○ <span data-i18n="spectrumLegendCurve">curve system</span></li>
+                  <li>◆ <span data-i18n="spectrumLegendTarget">your-target system</span></li>
+                  <li>★ <span data-i18n="spectrumLegendBest">recommendation</span></li>
+                </ul>
               </div>
 
               <!-- Plausibility frontier: what every budget buys, cheapest first. -->
@@ -2547,9 +2707,9 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20260906c"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20260906e"></script>
 
-    <script src="./assets/js/chat.js?v=20260906c"></script>
+    <script src="./assets/js/chat.js?v=20260906e"></script>
   </body>
 </html>
 

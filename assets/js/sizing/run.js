@@ -25,20 +25,20 @@ import {
   ETA_INVERTER,
   capacityScaleFor,
   evaluateOversizeOptimization,
-} from "./engine.js?v=20260906c";
+} from "./engine.js?v=20260906e";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20260906c";
-import { buildFrontier } from "./frontier.js?v=20260906c";
+} from "./nasa.js?v=20260906e";
+import { buildFrontier } from "./frontier.js?v=20260906e";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20260906c";
+} from "./pricing.js?v=20260906e";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -49,7 +49,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20260906c";
+} from "./money.js?v=20260906e";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -140,7 +140,7 @@ export function autoNoteFor(entries, basis) {
 // UI-contract version: bump whenever payload fields change shape. The
 // renderer compares this to its own constant and warns on mismatch instead
 // of rendering garbage from a stale cached module.
-export const PAYLOAD_CONTRACT = 11;
+export const PAYLOAD_CONTRACT = 12;
 
 const AUTO_CARD_NOTES = {
   naion:
@@ -153,13 +153,49 @@ async function fetchWeatherDefault(opts) {
   return fetchHourlyCached(opts);
 }
 
+// ── Session weather memo: one site = one load ─────────────────────────────
+// Within a session (worker/module lifetime) every run at the same normalized
+// site reuses the exact same series object — bill edits, cut-slider moves,
+// chemistry switches and quiet refines never re-touch the network, the disk
+// cache, or the parser for a site that already loaded. The key is rounded to
+// the same ~1.1 km grid the persistent cache uses, so float dust between the
+// share-URL hash, the coordinate inputs and GPS can never cause a second
+// load. Injected test weather (deps.fetchWeather) bypasses the memo so
+// fixtures stay hermetic.
+const SITE_MEMO = { key: null, series: null };
+export const WEATHER_MEMO_STATS = { hits: 0, misses: 0 };
+export function clearSiteMemo() {
+  SITE_MEMO.key = null;
+  SITE_MEMO.series = null;
+  WEATHER_MEMO_STATS.hits = 0;
+  WEATHER_MEMO_STATS.misses = 0;
+}
+export function siteMemoKey(latitude, longitude, years = 5) {
+  const la = Math.round(Number(latitude) * 100) / 100;
+  const lo = Math.round(Number(longitude) * 100) / 100;
+  const y = Number(years) || 5;
+  return `${la.toFixed(2)},${lo.toFixed(2)},${y}y`;
+}
+async function fetchWeatherOnce(opts) {
+  const key = siteMemoKey(opts.latitude, opts.longitude, opts.years);
+  if (SITE_MEMO.key === key && SITE_MEMO.series) {
+    WEATHER_MEMO_STATS.hits++;
+    return SITE_MEMO.series;
+  }
+  WEATHER_MEMO_STATS.misses++;
+  const series = await fetchWeatherWithFallback(opts);
+  SITE_MEMO.key = key;
+  SITE_MEMO.series = series;
+  return series;
+}
+
 // Offline fallback: bundled typical-year profile nearest to the request.
 async function fetchWeatherWithFallback(opts) {
   try {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20260906c");
+      await import("./profiles.js?v=20260906e");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -275,7 +311,7 @@ export async function runSizing(msg, deps = {}) {
     );
   }
 
-  const series = await (deps.fetchWeather || fetchWeatherWithFallback)({
+  const series = await (deps.fetchWeather || fetchWeatherOnce)({
     latitude,
     longitude,
     years,
@@ -367,25 +403,48 @@ export async function runSizing(msg, deps = {}) {
       replacements: replacementsHorizon,
       laborPerKwh,
     });
-    const opt =
-      sizing.bestPriceCallout !== undefined
-        ? {
-            oversizeScenario: sizing.oversizeScenario,
-            bestPriceCallout: sizing.bestPriceCallout,
-            oversizeSavingsUsd: sizing.oversizeSavingsUsd,
-          }
-        : evaluateOversizeOptimization({
-            pvKw: sizing.pvKw,
-            battKwh: sizing.battKwh,
-            sizingResult: sizing.result,
-            chemistry: chemId,
-            years: series.meta.years,
-            costPerWpv: costPerWpvMid,
-            costPerKwhBatt: battMidFor(chemId),
-            costPerKwInv: costPerKwInvMid,
-            laborPerKwh,
-            invMinKw,
-          });
+    const attached = sizing.bestPriceCallout !== undefined;
+    const opt = attached
+      ? {
+          oversizeScenario: sizing.oversizeScenario,
+          bestPriceCallout: sizing.bestPriceCallout,
+          oversizeSavingsUsd: sizing.oversizeSavingsUsd,
+          oversizedBattKwh:
+            sizing.oversizedBattKwh !== undefined
+              ? sizing.oversizedBattKwh
+              : sizing.battKwh,
+        }
+      : evaluateOversizeOptimization({
+          pvKw: sizing.pvKw,
+          battKwh: sizing.battKwh,
+          sizingResult: sizing.result,
+          chemistry: chemId,
+          years: series.meta.years,
+          costPerWpv: costPerWpvMid,
+          costPerKwhBatt: battMidFor(chemId),
+          costPerKwInv: costPerKwInvMid,
+          laborPerKwh,
+          invMinKw,
+        });
+    // Global invariant: a swap-carrying display must never wear the
+    // oversized note. Search outputs carry verified adoptions (zero swaps),
+    // so this only ever fires for non-search systems — curve points and
+    // adopted exact hardware — where the estimate would advertise a bank the
+    // card doesn't show. Those describe their displayed hardware instead.
+    let {
+      oversizeScenario,
+      bestPriceCallout,
+      oversizeSavingsUsd,
+      oversizedBattKwh,
+    } = opt;
+    if (replacementsHorizon > 0 && oversizeScenario === "oversized_cheaper") {
+      oversizeScenario = "swaps_cheaper";
+      bestPriceCallout =
+        `Best 20-year price for this exact hardware: standard sizing with ` +
+        `${replacementsHorizon} replacement(s) over 20 years (counted above).`;
+      oversizeSavingsUsd = null;
+      oversizedBattKwh = sizing.battKwh;
+    }
     return {
       chemObj,
       cost,
@@ -399,9 +458,10 @@ export async function runSizing(msg, deps = {}) {
       firstLaborUsd: life.firstLabor,
       lifetimeCostMid: life.total,
       battNameplateKwh: +(sizing.battKwh / chemObj.usableDod).toFixed(1),
-      oversizeScenario: opt.oversizeScenario,
-      bestPriceCallout: opt.bestPriceCallout,
-      oversizeSavingsUsd: opt.oversizeSavingsUsd,
+      oversizeScenario,
+      bestPriceCallout,
+      oversizeSavingsUsd,
+      oversizedBattKwh,
     };
   }
 
@@ -540,6 +600,7 @@ export async function runSizing(msg, deps = {}) {
       bestPriceCallout: m.bestPriceCallout,
       oversizeScenario: m.oversizeScenario,
       oversizeSavingsUsd: m.oversizeSavingsUsd,
+      oversizedBattKwh: m.oversizedBattKwh,
     };
     let savings = null;
     if (kind === "offgrid") {
@@ -678,6 +739,7 @@ export async function runSizing(msg, deps = {}) {
       bestPriceCallout: m.bestPriceCallout,
       oversizeScenario: m.oversizeScenario,
       oversizeSavingsUsd: m.oversizeSavingsUsd,
+      oversizedBattKwh: m.oversizedBattKwh,
       lcoeUsdPerKwh: (() => {
         const l = lcoeUsdPerKwh({
           capexMidUsd: m.cost.objectiveMid,
@@ -740,6 +802,7 @@ export async function runSizing(msg, deps = {}) {
     cell.bestPriceCallout = m.bestPriceCallout;
     cell.oversizeScenario = m.oversizeScenario;
     cell.oversizeSavingsUsd = m.oversizeSavingsUsd;
+    cell.oversizedBattKwh = m.oversizedBattKwh;
     cell.cumCostSeries =
       gridSpend !== null && billAfterUsd !== null && savingsUsd !== null
         ? cumCostFor(m, savingsUsd, billAfterUsd - exportVal)
@@ -854,6 +917,8 @@ export async function runSizing(msg, deps = {}) {
         bestPriceCallout: m.bestPriceCallout,
         oversizeScenario: m.oversizeScenario,
         oversizeSavingsUsd: m.oversizeSavingsUsd,
+        oversizedBattKwh: m.oversizedBattKwh,
+      oversizedBattKwh: m.oversizedBattKwh,
       };
       entry.socNameplatePct = nameplateBands(
         sim,
@@ -980,6 +1045,7 @@ export async function runSizing(msg, deps = {}) {
       bestPriceCallout: m.bestPriceCallout,
       oversizeScenario: m.oversizeScenario,
       oversizeSavingsUsd: m.oversizeSavingsUsd,
+      oversizedBattKwh: m.oversizedBattKwh,
     };
   };
 
@@ -998,8 +1064,17 @@ export async function runSizing(msg, deps = {}) {
 
   function attachFrontier(payload) {
     const f = payload.focus;
+    // The curve is drawn in the RECOMMENDED chemistry (auto mode), never a
+    // fixed default: the blue dot names the recommendation's exact battery,
+    // so the curve must be that battery's curve or the two can never agree.
+    // A stale per-chemistry curve was the "card says sodium, dot says LFP"
+    // discrepancy. Falls back to the focus system, then LFP, when nothing
+    // solved.
+    const bestChem = payload.best && payload.best.chemistry;
     const chemId =
-      (f && f.chemistry) || (chemistry === "auto" ? "lfp" : chemistry);
+      chemistry === "auto" && bestChem && CHEMISTRIES[bestChem]
+        ? bestChem
+        : (f && f.chemistry) || (chemistry === "auto" ? "lfp" : chemistry);
     const capScale = capacityScaleFor(chemId, meanTempC);
     const costFn = (pv, b) => {
       const r = fullRange(pv, b, chemId, landedF, Math.max(pv, invMinKw));
@@ -1097,6 +1172,7 @@ export async function runSizing(msg, deps = {}) {
         }
       });
       frontier.marker = {
+        chemistry: f.chemistry,
         capexUsd: cost.objectiveMid,
         outcomePct: +(outcome * 100).toFixed(1),
         pvKw: f.pvKw,
@@ -1155,6 +1231,8 @@ export async function runSizing(msg, deps = {}) {
         bestPriceCallout: m.bestPriceCallout,
         oversizeScenario: m.oversizeScenario,
         oversizeSavingsUsd: m.oversizeSavingsUsd,
+        oversizedBattKwh: m.oversizedBattKwh,
+      oversizedBattKwh: m.oversizedBattKwh,
       };
       let savingsBase = null;
       let residualUsd = 0;
@@ -1555,10 +1633,15 @@ export async function runSizing(msg, deps = {}) {
         ? `${TARGET_BASIS[repTargetId]} isn't reachable within the sizes this tool searches at this site, so the cards below show ${TARGET_BASIS[effectiveTarget]} instead — the curve shows how far this location can actually get.`
         : autoNoteFor(auto, TARGET_BASIS[effectiveTarget]);
       payload.targets = [];
+      // The recommendation follows the visitor's CURRENT bill-cut slider, not
+      // the fixed 80% column: the slider's "your target" column is sized by an
+      // exact engine run per chemistry below, and its winner is what the
+      // banner, the money bar and the curve marker describe. The fixed-target
+      // winner is only the fallback when the slider target solves for no
+      // chemistry. This keeps full runs consistent with the incremental
+      // slider path (which already re-derives best from the custom column),
+      // so a bill edit can never snap the recommendation back to 80%.
       const gtWinner = bestOf(auto);
-      payload.best = gtWinner;
-      payload.bestReason = bestPickReason(gtWinner, auto, meanTempC);
-      payload.focus = gtWinner ? focusFor(gtWinner.chemistry, gtWinner) : null;
       // The visitor's own bill-cut target from the 1–111% slider: sized by an
       // exact engine run per chemistry, never interpolated from the fixed
       // columns, and added to the matrix as a clickable "your target" column.
@@ -1604,6 +1687,15 @@ export async function runSizing(msg, deps = {}) {
         }
       }
       const customBest = bestOf(customEntries);
+      const sliderBest = customBest || null;
+      const fallbackBest = gtWinner || null;
+      payload.best = sliderBest || fallbackBest;
+      payload.bestReason = sliderBest
+        ? bestPickReason(sliderBest, customEntries, meanTempC)
+        : bestPickReason(fallbackBest, auto, meanTempC);
+      payload.focus = payload.best
+        ? focusFor(payload.best.chemistry, payload.best)
+        : null;
       payload.customCut = {
         fraction: customFracGt,
         achievedPct: customBest
@@ -1837,6 +1929,9 @@ export async function runSizing(msg, deps = {}) {
           bestPriceCallout: m.bestPriceCallout,
           oversizeScenario: m.oversizeScenario,
           oversizeSavingsUsd: m.oversizeSavingsUsd,
+          oversizedBattKwh: m.oversizedBattKwh,
+        oversizedBattKwh: m.oversizedBattKwh,
+      oversizedBattKwh: m.oversizedBattKwh,
         };
         const sim = simulate({
           pvKw: sizing.pvKw,
@@ -2039,6 +2134,7 @@ export async function runSizing(msg, deps = {}) {
       bestPriceCallout: m.bestPriceCallout,
       oversizeScenario: m.oversizeScenario,
       oversizeSavingsUsd: m.oversizeSavingsUsd,
+      oversizedBattKwh: m.oversizedBattKwh,
     };
   });
 

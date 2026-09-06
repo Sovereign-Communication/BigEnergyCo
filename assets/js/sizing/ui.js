@@ -10,7 +10,7 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260906c";
+import { CITY_PRESETS } from "./nasa.js?v=20260906e";
 import {
   CITY_CATALOG,
   searchCities,
@@ -20,7 +20,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260906c";
+} from "./cities.js?v=20260906e";
 
 import {
   estimateTariff,
@@ -28,39 +28,47 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260906c";
+} from "./pricing.js?v=20260906e";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260906c";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260906e";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260906c";
+} from "./bom.js?v=20260906e";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260906c";
+import { BOM_ITEMS } from "../shared/content.js?v=20260906e";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260906c";
+} from "../shared/i18n.js?v=20260906e";
 
-import { LOCALES } from "../shared/locales.js?v=20260906c";
+import { LOCALES } from "../shared/locales.js?v=20260906e";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260906c";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260906e";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260906c";
+} from "./frontier-chart.js?v=20260906e";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260906c";
+} from "./rescale.js?v=20260906e";
+
+import {
+  spectrumDataset,
+  nearestByBudget,
+  nearestByOutcome,
+  renderSpectrum,
+  updateSpectrumSelection,
+} from "./spectrum.js?v=20260906e";
 
 let worker = null;
 
@@ -105,6 +113,13 @@ let runToken = 0;
 let runTimer = null;
 let lastRunAdoptsFocus = false;
 
+// The worker runs one full sizing at a time and cannot be preempted: when a
+// new run is requested while one is in flight, collapse it into a single
+// trailing run instead of queueing seconds of stale engine work behind the
+// slider. The screen already shows the rescaled numbers, so nothing is lost.
+let workerBusy = false;
+let pendingRun = null; // { quiet } — the latest superseding request
+
 // The last full-run inputs, kept so a bill-only change can compute the exact
 // load factor for an instant rescale against the retained payload.
 let lastRunInput = null;
@@ -126,6 +141,20 @@ let deferredInstallPrompt = null;
 // SOC chart zoom state: null = full view; { start: number, end: number } = sliced
 let socZoomRange = null;
 let cachedChartState = null;
+
+// ── Spectrum infographic state ────────────────────────────────────────────
+// spectrumData: cached plottable points for the current payload (rebuilt per
+// full run, rescaled with it). spectrumOn: the spectrum section is showing.
+// spectrumPreviewId: drag-preview point (sliders) — highlight only, the
+// committed selection is untouched until release. curvePreview: the same
+// preview expressed as curve coordinates for the frontier's amber ring.
+// spectrumFirst: grid-tie auto mode where the spectrum + focus panel REPLACE
+// the 3×3 matrix and the recommendation card (everywhere else they augment).
+let spectrumData = null;
+let spectrumOn = false;
+let spectrumFirst = false;
+let spectrumPreviewId = null;
+let curvePreview = null;
 
 // Bill slider bounds, expressed in kWh/day and converted to local currency.
 const BILL_MIN_KWH = 2;
@@ -1605,6 +1634,7 @@ function run(quiet = false) {
     Math.abs(inp.latitude) > 90 ||
     Math.abs(inp.longitude) > 180
   ) {
+    pendingRun = null;
     setStatus(t("pickCity"));
     return;
   }
@@ -1614,7 +1644,24 @@ function run(quiet = false) {
     inp.dailyKwh <= 0 ||
     inp.dailyKwh > 500
   ) {
+    pendingRun = null;
     setStatus(t("tellPowerUse"));
+    return;
+  }
+
+  // A site/option change invalidates an adopted curve point (its hardware was
+  // simulated for the old site and load); a bill-only change keeps it — the
+  // rescale path already re-based it and the quiet refine re-simulates it.
+  if (lastRunInput && !sameSiteOptions(lastRunInput, inp)) {
+    adoptedEntry = null;
+    if (selectedKey === "adopted") selectedKey = "best";
+    frontierSelected = null;
+  }
+
+  if (workerBusy) {
+    // Collapse: only the latest inputs matter, re-read fresh when flushed.
+    // A non-quiet request wins so an explicit run still scrolls + spins.
+    pendingRun = { quiet: (pendingRun ? pendingRun.quiet : true) && quiet };
     return;
   }
 
@@ -1636,7 +1683,16 @@ function run(quiet = false) {
   // A new full run opens a new epoch: any in-flight slice from older inputs
   // is stale on arrival and will be dropped by the epoch check.
   const epoch = ++payloadEpoch;
+  workerBusy = true;
   ensureWorker().postMessage({ type: "run", seq, epoch, ...inp });
+}
+
+// A finished worker run hands back to the latest superseding request, if any.
+function flushPendingRun() {
+  if (!pendingRun) return;
+  const q = pendingRun;
+  pendingRun = null;
+  run(q.quiet);
 }
 
 // Slider updates queue a debounced re-run so dragging never stacks runs.
@@ -1674,18 +1730,41 @@ function setupCutSlider() {
   slider.addEventListener("input", () => {
     customCutFraction = (parseInt(slider.value, 10) || 1) / 100;
     syncCutLabel();
-    // Drag the blue dot along the curve live, so the slider and the
-    // highlighted point move together while the visitor is still dragging.
     if (lastPayload && lastPayload.mode === "gridtie") {
       frontierSelected = null;
-      renderFrontierPanel(lastPayload);
+      // Cached-only drag preview: the nearest spectrum system at this %.
+      if (spectrumOn && spectrumData) {
+        previewSpectrum(
+          nearestByOutcome(spectrumData, parseInt(slider.value, 10) || 1),
+        );
+      } else {
+        renderFrontierPanel(lastPayload);
+      }
     }
   });
 
   slider.addEventListener("change", () => {
     customCutFraction = (parseInt(slider.value, 10) || 1) / 100;
-    if (!lastPayload) return;
+    // No results yet: fall back to a full run so the cut is honored instead
+    // of silently dropped.
+    if (!lastPayload) {
+      scheduleRun();
+      return;
+    }
     if (lastPayload.mode === "gridtie") {
+      // Releasing on a curve system adopts it instantly from cache (the
+      // adoption reconciles the exact column in the background). Anything
+      // else takes the exact path: size the slider's % precisely.
+      if (spectrumOn && spectrumData) {
+        const q = nearestByOutcome(
+          spectrumData,
+          Math.round(customCutFraction * 100),
+        );
+        if (q && q.kind === "curve") {
+          commitSpectrumPreview(q, { keepSlider: true });
+          return;
+        }
+      }
       // A cut edit only touches the slider's own column — reconcile it in the
       // background instead of re-running the fixed columns and frontier. In a
       // fixed-chemistry session the custom target IS the selected system.
@@ -1751,7 +1830,15 @@ function mergeReSlice(result) {
     if (result.focus) p.focus = result.focus;
     renderBestPick(p);
     renderMoneyBar(p);
-    if (!selectedKey || selectedKey === "best" || selectedKey === "focus")
+    // "adopted" included: after a curve click the banner must keep showing
+    // the adopted system (with a fresh "recommendation stays …" line), not
+    // get stuck on the custom-best card while the charts show the adoption.
+    if (
+      !selectedKey ||
+      selectedKey === "best" ||
+      selectedKey === "focus" ||
+      selectedKey === "adopted"
+    )
       refreshSelectionOutputs(p);
   }
   // Keep the custom column header in lockstep with the slider.
@@ -1792,6 +1879,9 @@ function mergeReSlice(result) {
   syncCutLabel();
   // The cut changed, so any link copied right now must carry it.
   updateShareHash(p, readInputs());
+  // The merged column/entries are new objects: rebuild the spectrum dataset
+  // so its points never reference pre-merge numbers.
+  if (spectrumOn) renderSpectrumPanel(p);
 }
 
 // ── Monthly-bill slider (local currency, kWh/day anchor) ────────────────────
@@ -1816,7 +1906,13 @@ function setupBillSlider() {
   });
 
   slider.addEventListener("change", () => {
-    if (!lastPayload) return;
+    // No results yet (e.g. the bill was moved while the first run was still
+    // in flight): the edit must still schedule a run — silently dropping it
+    // here is what left the recommendation showing the default bill.
+    if (!lastPayload) {
+      scheduleRun();
+      return;
+    }
     const inp = readInputs();
     // Same site and options already on screen? Re-express the cached payload
     // for the new bill in pure arithmetic — the engine's answers scale with
@@ -1866,32 +1962,39 @@ function setupBillSlider() {
 
 // ── Clickable matrix cells (grid-tie) ───────────────────────────────────────
 
+// Matrix-cell selection, shared by table clicks and spectrum target-diamond
+// clicks. Everything downstream re-renders from the cached payload — no
+// worker, no wait.
+function selectMatrixCell(key) {
+  const p = lastPayload;
+  if (!p) return;
+  frontierSelected = null;
+  spectrumPreviewId = null;
+  curvePreview = null;
+  selectedKey = "matrix:" + key;
+  renderResults(p);
+  // Cells open the same full-analysis modal as curve points, with
+  // "Use this system" to adopt the exact system into every chart, the BOM,
+  // export data, share link, and print sheet.
+  const cell = p.matrix && p.matrix.cells[key];
+  if (cell && cell.solvable) {
+    showSystemModal(
+      p,
+      {
+        ...cell,
+        chemistry:
+          p.matrix.rows.find((r) => r.id === key.split(":")[0])?.id ||
+          cell.chemistry,
+      },
+      true,
+    );
+  }
+}
+
 function setupMatrixSelection() {
   const grid = $("tierResults");
   if (!grid) return;
-  const pick = (key) => {
-    const p = lastPayload;
-    if (!p) return;
-    frontierSelected = null;
-    selectedKey = "matrix:" + key;
-    renderResults(p);
-    // Cells open the same full-analysis modal as curve points, with
-    // "Use this system" to adopt the exact system into every chart, the BOM,
-    // export data, share link, and print sheet.
-    const cell = p.matrix && p.matrix.cells[key];
-    if (cell && cell.solvable) {
-      showSystemModal(
-        p,
-        {
-          ...cell,
-          chemistry:
-            p.matrix.rows.find((r) => r.id === key.split(":")[0])?.id ||
-            cell.chemistry,
-        },
-        true,
-      );
-    }
-  };
+  const pick = (key) => selectMatrixCell(key);
   grid.addEventListener("click", (e) => {
     const td =
       e.target && e.target.closest ? e.target.closest("td[data-sel]") : null;
@@ -1908,6 +2011,290 @@ function setupMatrixSelection() {
   });
 }
 
+// ── Spectrum infographic hub ──────────────────────────────────────────────
+// One selection drives every chart: spectrum dots, the curve's blue dot, the
+// SOC + savings charts, the hardware list and the granular icon panel. Slider
+// drags only move a highlight through CACHED points (preview); release
+// commits the nearest cached system instantly. The single on-demand worker
+// lookup (SOC capture bands after a curve adoption, exact column after a cut
+// edit) reconciles in the background.
+
+function spectrumIdForEntry(data, entry) {
+  if (!data || !entry) return null;
+  if (!Number.isFinite(entry.pvKw) || !Number.isFinite(entry.battKwh))
+    return null;
+  const chem = entry.chemistry || null;
+  for (const q of data.points) {
+    if (chem && q.chemistry && q.chemistry !== chem) continue;
+    if (
+      Math.abs((q.pvKw || 0) - (entry.pvKw || 0)) < 0.06 &&
+      Math.abs((q.battKwh || 0) - (entry.battKwh || 0)) < 0.6
+    )
+      return q.id;
+  }
+  return null;
+}
+
+function chemShort(entry) {
+  if (!entry) return "";
+  const label = entry.chemLabel || entry.chemistry || "";
+  return label.replace(/ \(.*\)/, "");
+}
+
+function renderSpectrumPanel(p, seatBudget = false) {
+  spectrumData = spectrumDataset(p);
+  const wrap = $("spectrumWrap");
+  const host = $("spectrumChart");
+  spectrumOn = !!(spectrumData && host);
+  if (!spectrumOn) {
+    if (wrap) wrap.style.display = "none";
+    hideBudgetRow();
+    return;
+  }
+  wrap.style.display = "block";
+  spectrumPreviewId = null;
+  curvePreview = null;
+  renderSpectrum(host, spectrumData, {
+    t,
+    money,
+    selectedId: spectrumIdForEntry(spectrumData, resolveSelected(p)),
+    onSelect: (id) => selectSpectrum(id),
+  });
+  // Fresh payloads seat the budget slider on the recommendation; later
+  // reconciliations only rescale the range (setting min/max clamps the live
+  // value first, so "preserve when in range" alone would freeze the first
+  // clamp forever and never reach the marker).
+  syncBudgetRange(seatBudget);
+  showBudgetRow();
+}
+
+// Route a spectrum click to the existing selection primitive for that point
+// kind. All paths render from the retained payload — no worker, no wait.
+function selectSpectrum(id) {
+  const p = lastPayload;
+  if (!p || !spectrumData) return;
+  spectrumPreviewId = null;
+  curvePreview = null;
+  clearPlayReadout();
+  if (!id) return;
+  if (id === "best") {
+    adoptedEntry = null;
+    frontierSelected = null;
+    selectedKey = "best";
+    refreshSelectionOutputs(p);
+    return;
+  }
+  if (id === "custom") {
+    selectedKey = "custom";
+    refreshSelectionOutputs(p);
+    return;
+  }
+  if (id.startsWith("custom:")) {
+    selectMatrixCell(`${id.slice("custom:".length)}:custom`);
+    return;
+  }
+  if (id.startsWith("curve:")) {
+    adoptFrontierPoint(Number(id.slice("curve:".length)));
+  }
+}
+
+// Drag preview: highlight the nearest cached system on the spectrum + curve
+// and show its numbers — all synchronous, worker untouched.
+function previewSpectrum(q) {
+  const host = $("spectrumChart");
+  spectrumPreviewId = q ? q.id : null;
+  curvePreview = q ? { capexUsd: q.x, outcomePct: q.y } : null;
+  if (host && spectrumData) {
+    updateSpectrumSelection(
+      host,
+      spectrumIdForEntry(
+        spectrumData,
+        lastPayload ? resolveSelected(lastPayload) : null,
+      ),
+      spectrumPreviewId,
+    );
+  }
+  renderPlayReadout(q);
+  if (lastPayload && spectrumFirst && q) {
+    const entry =
+      q.kind === "best" ? lastPayload.best : q.detail ? q.detail : null;
+    if (entry) renderFocusPanel(lastPayload, entry, true);
+  }
+  if (lastPayload) renderFrontierPanel(lastPayload);
+}
+
+function commitSpectrumPreview(q, opts = {}) {
+  if (!q) return;
+  spectrumPreviewId = null;
+  curvePreview = null;
+  clearPlayReadout();
+  if (!opts.keepSlider) {
+    const slider = $("budgetSlider");
+    if (slider && Number.isFinite(q.x)) {
+      slider.value = String(Math.round(q.x));
+      syncBudgetLabel();
+    }
+  }
+  selectSpectrum(q.id);
+}
+
+function renderPlayReadout(q) {
+  const out = $("playReadout");
+  if (!out) return;
+  if (!q) {
+    out.textContent = "";
+    return;
+  }
+  out.textContent =
+    `🔎 ☀️ ${q.pvKw} kW + 🔋 ${fmt(q.battKwh)} kWh ${chemShort(q)} ≈ ${money(Math.round(q.x))} → ` +
+    (lastPayload && lastPayload.mode === "gridtie"
+      ? `⚡ −${Math.round(q.y)}% bill`
+      : `☁️ ${Math.round(q.y)}% covered`);
+}
+
+function clearPlayReadout() {
+  const out = $("playReadout");
+  if (out) out.textContent = "";
+}
+
+// Granular icon panel: the selected system as icons + big numbers. Renders
+// purely from the entry's cached analysis — the "singular granular record"
+// for the point, with no lookup.
+function renderFocusPanel(p, entry, isPreview) {
+  const wrap = $("focusPanel");
+  if (!wrap) return;
+  if (!entry) {
+    wrap.style.display = "none";
+    return;
+  }
+  wrap.style.display = "block";
+  const isGT = p.mode === "gridtie";
+  const sel = resolveSelected(p);
+  const isRec = !isPreview && (!sel || !p.best || sameSystem(sel, p.best));
+  $("focusTitle").textContent = isPreview
+    ? "🔎 Preview — release to select"
+    : isRec
+      ? "★ Recommended — lowest true 20-year cost"
+      : "👆 Selected system";
+  const chips = $("focusChips");
+  chips.innerHTML = "";
+  const chip = (icon, big, small) => {
+    const s = el("span", {
+      style:
+        "display:inline-flex;align-items:baseline;gap:0.3rem;white-space:nowrap;",
+    });
+    s.appendChild(el("span", { style: "font-size:1.15rem;" }, icon));
+    s.appendChild(
+      el(
+        "strong",
+        { style: "font-size:1.05rem;color:var(--text-main);" },
+        big,
+      ),
+    );
+    if (small)
+      s.appendChild(
+        el(
+          "span",
+          { style: "font-size:0.75rem;color:var(--text-muted);" },
+          small,
+        ),
+      );
+    chips.appendChild(s);
+  };
+  if (entry.pvKw > 0) chip("☀️", `${entry.pvKw} kW`, "solar");
+  if (entry.battKwh > 0)
+    chip("🔋", `${fmt(entry.battKwh)} kWh`, chemShort(entry) || "battery");
+  if (Number.isFinite(entry.costLo) && Number.isFinite(entry.costHi))
+    chip("💵", `~${moneyRange(entry.costLo, entry.costHi)}`, "up-front");
+  if (isGT && Number.isFinite(entry.cutPct))
+    chip("⚡", `−${entry.cutPct}%`, "bill cut");
+  if (entry.billAfterMonthlyUsd !== null && entry.billAfterMonthlyUsd !== undefined)
+    chip("🧾", `~${money(entry.billAfterMonthlyUsd)}/mo`, "bill after");
+  if (!isGT && Number.isFinite(entry.unmetHoursPerYear))
+    chip("🔌", `${fmt(entry.unmetHoursPerYear)} h/yr`, "generator cover");
+  if (entry.paybackYearsLo !== null && entry.paybackYearsHi !== null)
+    chip(
+      "⏳",
+      fmtPaybackRange(entry.paybackYearsLo, entry.paybackYearsHi),
+      "payback",
+    );
+  else if (typeof entry.trueBreakEvenYear === "number")
+    chip("⏳", `yr ${entry.trueBreakEvenYear}`, "breaks even");
+  if (entry.replacementsHorizon > 0)
+    chip("🔁", `~${entry.replacementsHorizon}×`, "bank swaps");
+  else if (entry.replacementsHorizon === 0) chip("🔁", "no swaps", "20 yrs");
+  if (Number.isFinite(entry.lifetimeCostMid))
+    chip("🏁", `~${money(entry.lifetimeCostMid)}`, "20-yr true cost");
+  const note = $("focusNote");
+  if (note) {
+    if (!isPreview && !isRec && p.best)
+      note.textContent =
+        `Recommendation stays ${chemShort(p.best) || p.best.chemistry} ` +
+        `${p.best.pvKw} kW + ${fmt(p.best.battKwh)} kWh ` +
+        `(~${money(p.best.lifetimeCostMid)} over 20 years).`;
+    else if (!isPreview && isRec && p.bestReason) note.textContent = p.bestReason;
+    else note.textContent = "";
+  }
+}
+
+// ── Budget slider (cached spectrum walk) ──────────────────────────────────
+
+function showBudgetRow() {
+  const row = $("budgetSliderRow");
+  if (row) row.style.display = "block";
+}
+
+function hideBudgetRow() {
+  const row = $("budgetSliderRow");
+  if (row) row.style.display = "none";
+}
+
+function syncBudgetRange(seat = false) {
+  const slider = $("budgetSlider");
+  if (!slider || !spectrumData) return;
+  const xs = spectrumData.points.map((q) => q.x).filter(Number.isFinite);
+  if (!xs.length) return;
+  const lo = Math.min(...xs),
+    hi = Math.max(...xs);
+  slider.min = String(Math.floor(lo));
+  slider.max = String(Math.ceil(hi));
+  slider.step = String(Math.max(1, Math.round((hi - lo) / 200)));
+  // Preserve the visitor's budget position across re-renders (cut edits,
+  // reconciliations); only re-seat it on fresh payloads or when it falls
+  // outside the new range.
+  const cur = parseFloat(slider.value);
+  if (seat || !Number.isFinite(cur) || cur < lo || cur > hi) {
+    const m = lastPayload && lastPayload.frontier && lastPayload.frontier.marker;
+    const at = m && Number.isFinite(m.capexUsd) ? m.capexUsd : (lo + hi) / 2;
+    slider.value = String(Math.min(hi, Math.max(lo, Math.round(at))));
+  }
+  syncBudgetLabel();
+}
+
+function syncBudgetLabel() {
+  const slider = $("budgetSlider");
+  const out = $("budgetSliderVal");
+  if (!slider || !out) return;
+  const v = parseFloat(slider.value);
+  out.textContent = Number.isFinite(v) ? `≈ ${money(Math.round(v))}` : "";
+}
+
+function setupBudgetSlider() {
+  const slider = $("budgetSlider");
+  if (!slider) return;
+  slider.addEventListener("input", () => {
+    if (!spectrumOn || !spectrumData) return;
+    syncBudgetLabel();
+    previewSpectrum(nearestByBudget(spectrumData, parseFloat(slider.value)));
+  });
+  slider.addEventListener("change", () => {
+    if (!spectrumOn || !spectrumData) return;
+    commitSpectrumPreview(
+      nearestByBudget(spectrumData, parseFloat(slider.value)),
+    );
+  });
+}
+
 function restoreRunButton() {
   const btn = $("btnRunSizing");
 
@@ -1920,16 +2307,21 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260906c", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260906e", {
       type: "module",
     });
 
     worker.onmessage = (ev) => {
       if (ev.data?.type === "ok") {
         // A stale response from an older queued run must never clobber the
-        // latest slider position's results.
-
-        if (ev.data.seq !== undefined && ev.data.seq !== runToken) return;
+        // latest slider position's results — but it still frees the worker
+        // for the trailing collapsed run.
+        if (ev.data.seq !== undefined && ev.data.seq !== runToken) {
+          workerBusy = false;
+          restoreRunButton();
+          flushPendingRun();
+          return;
+        }
 
         if (lastRunAdoptsFocus) {
           selectedKey = "focus";
@@ -1978,13 +2370,22 @@ function ensureWorker() {
         setStatus("Warning: " + ev.data.message);
       }
 
+      // A finished full run frees the worker (a reSlice never holds it).
+      if (ev.data?.type !== "reSlice") {
+        workerBusy = false;
+        restoreRunButton();
+        flushPendingRun();
+        return;
+      }
       restoreRunButton();
     };
 
     worker.onerror = () => {
       setStatus(t("errorSim") + "Sizing engine failed to load.");
 
+      workerBusy = false;
       restoreRunButton();
+      flushPendingRun();
     };
   }
 
@@ -4878,8 +5279,7 @@ function drawAutoChart(p) {
 }
 
 // Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
-
-const PAYLOAD_CONTRACT = 11;
+const PAYLOAD_CONTRACT = 12;
 
 // -- Plausibility frontier ---------------------------------------------------
 
@@ -4889,46 +5289,46 @@ const PAYLOAD_CONTRACT = 11;
 
 // expensive, or impossible where they live.
 
-// Which curve point the blue dot defaults to when the visitor hasn't clicked
-// one: for grid-tie it's the point nearest the bill-cut slider's %, so the
-// slider and the highlighted point move together; otherwise the chart falls
-// back to its marker (the recommended system).
-function frontierDefaultSelection(f) {
-  if (!f || !Array.isArray(f.points) || !f.points.length) return undefined;
+// Adopting a curve point is THE selection primitive for spectrum clicks,
+// curve clicks and slider commits alike: the clicked point already carries
+// its full analysis in the cached payload, so every downstream panel follows
+// it immediately — no engine re-run. Only its SOC capture bands arrive a
+// moment later from a tiny background slice (the 1 record lookup).
+function adoptFrontierPoint(i) {
   const p = lastPayload;
-  if (!p) return undefined;
-  const sel = resolveSelected(p);
-  if (sel && (Number.isFinite(sel.pvKw) || Number.isFinite(sel.battKwh))) {
-    let best = 0,
-      bestDist = Infinity;
-    f.points.forEach((pt, i) => {
-      const dPv = Math.abs((pt.pvKw || 0) - (sel.pvKw || 0));
-      const dBatt = Math.abs((pt.battKwh || 0) - (sel.battKwh || 0));
-      const dist = dPv * 10 + dBatt;
-      if (dist < bestDist) {
-        bestDist = dist;
-        best = i;
-      }
-    });
-    return best;
+  const f = p && p.frontier;
+  const pt = f && f.points[i];
+  if (!p || !pt) return;
+  frontierSelected = i;
+  spectrumPreviewId = null;
+  curvePreview = null;
+  adoptedEntry = {
+    ...pt.detail,
+    chemistry: pt.detail.chemistry || f.chemistry,
+  };
+  selectedKey = "adopted";
+  // Unify with the bill-cut slider FIRST (before the selection snapshot):
+  // choosing a point on the curve IS choosing your cut %, so the share
+  // link and the matrix "your target" label must record the snapped value,
+  // not the pre-click one.
+  if (p.mode === "gridtie" && Number.isFinite(pt.outcomePct)) {
+    const pct = Math.min(111, Math.max(1, Math.round(pt.outcomePct)));
+    customCutFraction = pct / 100;
+    const slider = $("cutSlider");
+    if (slider) slider.value = String(pct);
+    syncCutLabel();
   }
-  if (p.mode === "gridtie") {
-    const target = Math.min(
-      111,
-      Math.max(1, Math.round(customCutFraction * 100)),
-    );
-    let best = 0,
-      gap = Infinity;
-    f.points.forEach((pt, i) => {
-      const g = Math.abs((pt.outcomePct || 0) - target);
-      if (g < gap) {
-        gap = g;
-        best = i;
-      }
-    });
-    return best;
-  }
-  return undefined;
+  renderFrontierPanel(p);
+  refreshSelectionOutputs(p);
+  showSystemModal(p, adoptedEntry, true);
+  // Background reconciliation: re-size the matrix's "your target" column
+  // for ALL chemistries at the snapped cut (the curve itself only knows
+  // one chemistry), and capture the adopted system's SOC bands.
+  requestIncrementalCut(
+    adoptedEntry.pvKw,
+    adoptedEntry.battKwh,
+    adoptedEntry.chemistry,
+  );
 }
 
 function renderFrontierPanel(p) {
@@ -4967,59 +5367,25 @@ function renderFrontierPanel(p) {
   wrap.style.display = "block";
 
   // One source of truth for the blue dot: the visitor's click wins, but with
-  // no click the dot sits on the curve point nearest the bill-cut slider
-  // (grid-tie) — so the slider, the matrix "your target" column, and the
-  // highlighted curve point always agree.
-
-  const defaultSel = frontierDefaultSelection(f);
+  // no click the dot sits on the RECOMMENDATION at its true position (the
+  // marker) — never snapped onto the nearest curve point, which quietly
+  // displayed a different battery than the card being read. The slider, the
+  // matrix "your target" column and the recommendation already agree with
+  // each other because every run derives best from the slider target.
 
   const opts = {
     t,
     money,
     tableHost: $("frontierTable"),
 
-    selected: frontierSelected ?? defaultSel,
+    selected: frontierSelected ?? undefined,
+    // Drag preview from the spectrum/budget sliders (amber ring, no commit).
+    preview: curvePreview,
 
     // Clicking a point re-renders the panel (chart + table) around that pick.
 
     onSelect: (i) => {
-      frontierSelected = i;
-      renderFrontierPanel(lastPayload);
-      const p = lastPayload;
-      const f = p && p.frontier;
-      const pt = f && f.points[i];
-      if (!p || !pt) return;
-      // INSTANT adoption: the clicked point already carries its full analysis
-      // (money story, export economics, 20-yr cumulative series) in the cached
-      // payload, so every downstream panel follows it immediately — no engine
-      // re-run, no re-render storm, no scroll jump. Only its SOC capture bands
-      // arrive a moment later from a tiny background slice.
-      adoptedEntry = {
-        ...pt.detail,
-        chemistry: pt.detail.chemistry || f.chemistry,
-      };
-      selectedKey = "adopted";
-      // Unify with the bill-cut slider FIRST (before the selection snapshot):
-      // choosing a point on the curve IS choosing your cut %, so the share
-      // link and the matrix "your target" label must record the snapped value,
-      // not the pre-click one.
-      if (p.mode === "gridtie" && Number.isFinite(pt.outcomePct)) {
-        const pct = Math.min(111, Math.max(1, Math.round(pt.outcomePct)));
-        customCutFraction = pct / 100;
-        const slider = $("cutSlider");
-        if (slider) slider.value = String(pct);
-        syncCutLabel();
-      }
-      refreshSelectionOutputs(p);
-      showSystemModal(p, adoptedEntry, true);
-      // Background reconciliation: re-size the matrix's "your target" column
-      // for ALL chemistries at the snapped cut (the curve itself only knows
-      // one chemistry), and capture the adopted system's SOC bands.
-      requestIncrementalCut(
-        adoptedEntry.pvKw,
-        adoptedEntry.battKwh,
-        adoptedEntry.chemistry,
-      );
+      adoptFrontierPoint(i);
     },
   };
 
@@ -5183,6 +5549,11 @@ function renderResults(p) {
 
   const hasAuto = !!(p.auto && p.auto.length);
 
+  // Spectrum-first mode: grid-tie auto renders the spectrum infographic +
+  // granular icon panel INSTEAD of the 3×3 matrix and the text card. Every
+  // other mode keeps its views and gains the spectrum as an extra section.
+  spectrumFirst = isGT && hasAuto;
+
   const ladder = $("resultLadder");
 
   if (ladder) ladder.style.display = hasAuto && !isGT ? "flex" : "none";
@@ -5344,6 +5715,22 @@ function renderResults(p) {
   renderFrontierPanel(p);
 
   refreshSelectionOutputs(p);
+
+  // Spectrum visibility LAST: every renderer above writes its own section,
+  // and this mode swap must win over all of them. Fresh payload → seat the
+  // budget slider on the recommendation.
+  renderSpectrumPanel(p, true);
+  const focusWrap = $("focusPanel");
+  if (spectrumFirst && spectrumOn) {
+    if (ladder) ladder.style.display = "none";
+    if (tierGrid) tierGrid.style.display = "none";
+    if (bpWrap) bpWrap.style.display = "none";
+    renderFocusPanel(p, resolveSelected(p), false);
+  } else {
+    if (focusWrap) focusWrap.style.display = "none";
+    hideBudgetRow();
+    if (bpWrap) bpWrap.style.display = "";
+  }
 }
 
 function sameSystem(a, b) {
@@ -5432,6 +5819,18 @@ function refreshSelectionOutputs(p) {
 
   drawCumCostChart(p, sel);
   renderFrontierPanel(p);
+
+  // Spectrum + granular panel follow the same committed selection.
+  if (spectrumOn && spectrumData) {
+    const host = $("spectrumChart");
+    if (host)
+      updateSpectrumSelection(
+        host,
+        spectrumIdForEntry(spectrumData, sel),
+        spectrumPreviewId,
+      );
+    if (spectrumFirst) renderFocusPanel(p, sel, false);
+  }
 
   const inp = readInputs();
   updateShareHash(p, inp);
@@ -6532,6 +6931,7 @@ export function initSizingUI() {
     // Monthly-bill slider (local currency) + bill-cut slider (1–111%).
     setupBillSlider();
     setupCutSlider();
+    setupBudgetSlider();
 
     // Clickable grid-tie matrix cells.
     setupMatrixSelection();

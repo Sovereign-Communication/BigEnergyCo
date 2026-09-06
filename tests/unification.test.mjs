@@ -328,13 +328,13 @@ test("UNIFY: grid-tie matrix cells accumulate the FULL bill on the grid line", a
 });
 
 // Payload contract current.
-test("UNIFY: payload carries contract 11 with load + peak fields", async () => {
+test("UNIFY: payload carries contract 12 with load + peak fields", async () => {
   const p = await runSizing(
     { ...BASE, dailyKwh: 10 },
     { fetchWeather: fakeWeather },
   );
   assert.equal(p.contract, PAYLOAD_CONTRACT);
-  assert.equal(PAYLOAD_CONTRACT, 11);
+  assert.equal(PAYLOAD_CONTRACT, 12);
   assert.ok(Number.isFinite(p.dailyKwh) && Number.isFinite(p.peakLoadW));
   assert.equal(typeof p.peakIsAverage, "boolean");
 });

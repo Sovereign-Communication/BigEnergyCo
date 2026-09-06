@@ -530,7 +530,7 @@ test("runSizing ships a frontier the renderer can draw, in every mode", async ()
     );
     assert.equal(
       p.contract,
-      11,
+      12,
       `${mode}/${chemistry}: contract bumped for the new field`,
     );
     const f = p.frontier;
@@ -584,6 +584,14 @@ test("runSizing ships a frontier the renderer can draw, in every mode", async ()
           Number.isFinite(f.marker.outcomePct),
       );
       assert.ok(f.marker.outcomePct >= 0 && f.marker.outcomePct <= 100);
+      // The marker IS the recommendation: same chemistry, same hardware.
+      assert.equal(
+        f.marker.chemistry,
+        p.focus.chemistry,
+        `${mode}/${chemistry}: marker chemistry matches the focused system`,
+      );
+      assert.equal(f.marker.pvKw, p.focus.pvKw);
+      assert.equal(f.marker.battKwh, p.focus.battKwh);
     }
   }
 });
@@ -613,7 +621,7 @@ test("a frontier failure never takes the whole result down", async () => {
       }),
     },
   );
-  assert.equal(p.contract, 11);
+  assert.equal(p.contract, 12);
   assert.ok(
     "frontier" in p,
     "the field always exists, even when there is nothing to draw",

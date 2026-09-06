@@ -386,6 +386,23 @@ export function renderFrontier(host, frontier, opts = {}) {
     }
   }
 
+  // ── drag-preview ring (spectrum/budget sliders): a hollow amber marker at
+  // a cached system's true position. Distinct from the blue selection dot so
+  // a preview can never be mistaken for the system being read.
+  const pv = opts.preview;
+  if (
+    pv &&
+    Number.isFinite(pv.capexUsd) &&
+    Number.isFinite(pv.outcomePct)
+  ) {
+    const px = X(pv.capexUsd),
+      py = Y(pv.outcomePct);
+    push(
+      `<g style="pointer-events:none">` +
+        `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="12" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="4 3"/></g>`,
+    );
+  }
+
   // ── axis captions ─────────────────────────────────────────────────────
   // Axis captions are constrained by the run they sit along: the x caption by
   // the plot's width, the (rotated) y caption by its height. Shrink to fit,
@@ -541,6 +558,34 @@ export function markerOffCurveNote(frontier, opts = {}) {
 }
 
 /**
+ * Does the frontier marker name the same system as a curve point? The marker
+ * carries the recommendation's exact hardware; the pointIndex is only the
+ * nearest by up-front cost. Tagging the row on cost proximity alone is how
+ * the table ended up naming a different battery than the blue dot. Both the
+ * hardware (same tolerances as the adopted-point SOC match) AND the chemistry
+ * must agree before the "selected" tag is printed.
+ */
+export function markerMatchesPoint(marker, point, frontierChemistry) {
+  if (!marker || !point) return false;
+  if (
+    !Number.isFinite(marker.pvKw) ||
+    !Number.isFinite(marker.battKwh) ||
+    !Number.isFinite(point.pvKw) ||
+    !Number.isFinite(point.battKwh)
+  )
+    return false;
+  if (
+    marker.chemistry &&
+    frontierChemistry &&
+    marker.chemistry !== frontierChemistry
+  )
+    return false;
+  return (
+    Math.abs((point.pvKw || 0) - (marker.pvKw || 0)) < 0.06 &&
+    Math.abs((point.battKwh || 0) - (marker.battKwh || 0)) < 0.6
+  );
+}
+/**
  * The same numbers as a table. Not a fallback nobody sees - it is inside a
  * <details> on the page, so anyone who wants the figures can read them, and
  * it is what a screen reader or a printed page gets.
@@ -557,17 +602,27 @@ export function renderFrontierTable(host, frontier, opts = {}) {
 
   const gridTie = frontier.mode === "gridtie";
   // Tag the row that matches the same selection the chart highlights, so the
-  // numbers table and the blue dot always name the same system.
-  const selTable =
+  // numbers table and the blue dot always name the same system. An explicit
+  // click always tags. The marker fallback tags ONLY when the nearest-cost
+  // row really is the marker's system (same hardware, same chemistry) —
+  // otherwise the tag stays off and the off-curve note explains why the
+  // recommendation floats beside the line, instead of the table naming a
+  // different battery than the dot.
+  let selTable =
     typeof opts.selected === "number" &&
     opts.selected >= 0 &&
     pts[opts.selected]
       ? opts.selected
-      : frontier.marker &&
-          Number.isFinite(frontier.marker.pointIndex) &&
-          pts[frontier.marker.pointIndex]
-        ? frontier.marker.pointIndex
+      : -1;
+  if (selTable < 0) {
+    const m = frontier.marker;
+    const idx =
+      m && Number.isFinite(m.pointIndex) && pts[m.pointIndex]
+        ? m.pointIndex
         : -1;
+    if (idx >= 0 && markerMatchesPoint(m, pts[idx], frontier.chemistry))
+      selTable = idx;
+  }
   const rows = pts.map((p, i) => {
     const tags = [];
     if (i === frontier.kneeIndex) tags.push(esc(t("frontierKneeTag")));

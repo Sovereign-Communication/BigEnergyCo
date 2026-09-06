@@ -77,6 +77,14 @@ export const LOCALES = {
       "A curve of {n} systems, from {lowCost} covering {lowPct}% to {highCost} covering {highPct}%. The full figures are in the table below the chart.",
     frontierPointTip:
       "{cost}: {pct}% — {pv} kW of panels + {batt} kWh of battery",
+    // -- Spectrum infographic (full system landscape, no fixed thresholds) --
+    spectrumTitle: "Every system at your location, by budget",
+    spectrumIntro:
+      "One dot per system we could build for you — from the cheapest that does anything to the closest to full coverage. Slide the budget or bill-cut above, or tap any dot: every chart below follows the same pick. ★ is the recommendation.",
+    spectrumLegendCurve: "curve system",
+    spectrumLegendTarget: "your-target system",
+    spectrumLegendBest: "recommendation",
+    budgetLabel: "Your budget (up-front)",
     frontierTableCaption:
       "Every point on the curve. Typical cost is the landed do-it-yourself middle; the range spans bare cells to shipped retail.",
     frontierColCost: "Typical cost",
