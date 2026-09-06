@@ -294,6 +294,16 @@ async function main() {
     // ── Structural infeasibility (off-grid + solar-only) ───────────────
     // Reports a reason up top and hides the broken savings-unavailable box.
     console.log("SMOKE      ── infeasible off-grid + solar-only ──");
+    // Settle first: a click landing on a disabled Run button (previous run
+    // still in flight, e.g. from auto-location) is silently swallowed, and
+    // input changes made before the first payload never trigger their quiet
+    // run — either way no new run starts and the banner can never appear.
+    await poll(
+      async () =>
+        !(await evaluate(`document.getElementById("btnRunSizing")?.disabled`)),
+      180000,
+      2000,
+    );
     await evaluate(`(() => {
       document.getElementById("systemGoal").value = "offgrid";
       document.getElementById("systemGoal").dispatchEvent(new Event("change", { bubbles: true }));
@@ -303,16 +313,34 @@ async function main() {
       return true;
     })()`);
     await evaluate(`document.getElementById("btnRunSizing").click()`);
-    const infeasible = await poll(
-      async () =>
-        evaluate(`document.getElementById("infeasibleBanner")?.style.display`),
-      120000,
-      2000,
-    );
+    // Re-click while idle: guarantees a run actually started even if the
+    // first click hit a disabled button. Repeated clicks are harmless —
+    // same inputs, stale responses are dropped by seq.
+    let infeasibleShown = false;
+    for (let i = 0; i < 60; i++) {
+      await sleep(2000);
+      if (
+        await evaluate(
+          `document.getElementById("infeasibleBanner")?.style.display === "block"`,
+        )
+      ) {
+        infeasibleShown = true;
+        break;
+      }
+      if (
+        !(await evaluate(`document.getElementById("btnRunSizing")?.disabled`))
+      ) {
+        await evaluate(`document.getElementById("btnRunSizing").click()`);
+      }
+    }
     gate(
       "infeasible banner shown for offgrid+solar-only",
-      infeasible === "block",
-      infeasible,
+      infeasibleShown,
+      String(
+        await evaluate(
+          `document.getElementById("infeasibleBanner")?.style.display ?? "absent"`,
+        ),
+      ),
     );
     gate(
       "no savings-unavailable fallback on infeasible run",
