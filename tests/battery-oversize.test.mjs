@@ -79,7 +79,6 @@ test("evaluateOversizeOptimization compares oversized vs swaps when replacements
   assert.ok(
     Number.isFinite(opt.oversizeSavingsUsd) && opt.oversizeSavingsUsd > 0,
   );
-  assert.match(opt.bestPriceCallout, /20-year/);
   if (opt.useOversized) {
     assert.equal(opt.oversizeScenario, "oversized_cheaper");
     assert.ok(opt.oversizedBattKwh > 4);
@@ -87,8 +86,10 @@ test("evaluateOversizeOptimization compares oversized vs swaps when replacements
       opt.bestPriceCallout,
       /oversized battery \(\d+ kWh\) to avoid replacements/,
     );
+    assert.match(opt.bestPriceCallout, /lowest 20-year cost/);
   } else {
     assert.equal(opt.oversizeScenario, "swaps_cheaper");
+    assert.match(opt.bestPriceCallout, /Best 20-year price:/);
     assert.match(
       opt.bestPriceCallout,
       /standard sizing with \d+ replacement\(s\) is/,

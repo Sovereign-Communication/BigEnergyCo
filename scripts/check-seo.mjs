@@ -94,7 +94,26 @@ const urls = [
     /<loc>(https:\/\/bigenergyco\.pages\.dev\/[^<]*)<\/loc>/g,
   ),
 ].map((m) => m[1]);
+const lastmods = [
+  ...sitemap.matchAll(/<lastmod>(\d{4}-\d{2}-\d{2})<\/lastmod>/g),
+].map((m) => m[1]);
 if (!urls.length) fail("sitemap.xml: no URLs found");
+// Every URL needs a lastmod, and none may be older than a year — a sitemap
+// that rots silently tells search consoles the site is abandoned.
+if (lastmods.length !== urls.length)
+  fail(
+    `sitemap.xml: ${urls.length - lastmods.length} URL(s) missing <lastmod>`,
+  );
+else ok("sitemap.xml: every URL has <lastmod>");
+{
+  const oldestAllowed = Date.now() - 366 * 86400000;
+  const stale = lastmods.filter(
+    (d) => Date.parse(d + "T00:00:00Z") < oldestAllowed,
+  );
+  if (stale.length)
+    fail(`sitemap.xml: ${stale.length} lastmod(s) older than 366 days`);
+  else ok("sitemap.xml: all lastmod dates within 366 days");
+}
 for (const url of urls) {
   const path = url
     .replace("https://bigenergyco.pages.dev/", "")

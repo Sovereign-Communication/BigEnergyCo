@@ -1,0 +1,25 @@
+name: Daily static check
+
+# Cheap daily drift detection (no AI calls, no browser): homepage serves,
+# asset token chain intact, API healthy. The weekly live-sanity sweep stays
+# the deep check. Never blocks merges (schedule-only + manual).
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Homepage serves with versioned entry module
+        run: |
+          html="$(curl -fsS "https://bigenergyco.pages.dev/?static=$(date +%s)")"
+          echo "$html" | grep -q "assets/js/sizing/ui.js?v=[0-9a-z]*" || (echo "entry module token missing" && exit 1)
+
+      - name: API health exposes version and limits
+        run: |
+          curl -fsS "https://bigenergyco-api.bigenergyco.workers.dev/api/health" | grep -q '"status":"ok"' || (echo "API unhealthy" && exit 1)

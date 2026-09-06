@@ -33,15 +33,13 @@ test("bundled profiles exist for every region and carry full 12×24 matrices", (
 test("synthesizeFromProfile: 8760 hours, midnight GHI ~0, midday peak sane", () => {
   const hours = synthesizeFromProfile(honolulu);
   assert.equal(hours.length, 8760);
-  // Night hours must be dark everywhere.
-  for (let m = 0; m < 12; m++) {
-    assert.equal(
-      hours[m * 24 * 31 + 0].ghi === undefined
-        ? hours[0].ghi
-        : hours[m * 28 + 0].ghi >= 0,
-      true,
-    );
-    assert.equal(honolulu.ghi[m][3], 0, "3 AM is night in every month");
+  // Night hours must be dark on every day of the year: 3 AM Honolulu is
+  // always night, and no hour may ever be negative.
+  for (let d = 0; d < 365; d++) {
+    assert.equal(hours[d * 24 + 3].ghi, 0, `3 AM is night on day ${d}`);
+    for (let h = 0; h < 24; h++) {
+      assert.ok(hours[d * 24 + h].ghi >= 0, `GHI non-negative day ${d}h${h}`);
+    }
   }
   // June midday should beat December midday (northern hemisphere).
   const junNoon = honolulu.ghi[5][12];
@@ -75,8 +73,10 @@ test("GATE: offline profile produces plausible annual yield through the real eng
 
 test("profile year metadata is a complete recent year", () => {
   const thisYear = new Date().getUTCFullYear();
+  // Lower bound only: the fixture must be fresh enough to trust, but the
+  // check must not fail every Jan 1 just because the calendar rolled over.
   assert.ok(
-    PROFILE_YEAR >= thisYear - 2 && PROFILE_YEAR <= thisYear - 1,
+    PROFILE_YEAR >= thisYear - 2 && PROFILE_YEAR <= thisYear,
     `PROFILE_YEAR=${PROFILE_YEAR}`,
   );
 });

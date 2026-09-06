@@ -32,6 +32,10 @@ The old entity-based analysis in earlier revisions of this file is superseded by
 
 ## 0.5. What's MVP (Ready to Test)
 
+> Historical snapshot (Aug 2026, pre-deterministic-engine). The shipped
+> system is described in `README.md` and `docs/DEPLOY_RUNBOOK.md`; model
+> names and integration notes below are stale by design.
+
 **Feature-complete and tested:**
 
 - ✅ Cost comparison calculator (interactive slider, component breakdown)
@@ -344,7 +348,7 @@ From [`LIABILITY.md`](LIABILITY.md):
 | Work                                      | Why                                                                                                                  |
 | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | **Calculator core (client-side, no API)** | Eliminates LLM hallucination for good. Enables offline use, rate-limit resilience, Freenet-only mode. Use pure math. |
-| **NASA POWER API integration**            | Makes location-aware solar sizing real. Requires API key (free).                                                     |
+| **NASA POWER API integration**            | Makes location-aware solar sizing real. Keyless (no API key needed).                                                 |
 | **Appliance-based load builder**          | Makes tool usable outside metered-billing countries. "What appliances do you have?" UI.                              |
 
 ### Phase 4: Global & Contribution (Months 2–3+)

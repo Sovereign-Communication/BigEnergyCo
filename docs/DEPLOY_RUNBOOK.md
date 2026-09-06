@@ -156,6 +156,15 @@ If browser automation is unavailable, do not claim browser verification. Run `np
 - Verify no changed asset still carries an old `?v=` token: `git diff db73ee4..HEAD --name-only -- 'assets/*' 'index.html'` must be covered by new tokens.
 - Do not report “live” based only on HTML markers, HTTP 200, GitHub Actions, or a local preview.
 
+## Offline scope (what the service worker actually guarantees)
+
+The precache shell is `index.html`, manifest, icon, blog hub, and the
+calculator hub (`sw.js` SHELL). City partitions, bundled profiles, and
+heatmap tiles are fetched on demand and cached per visited site — deep
+offline works for visited locations, not the whole world. Do not precache
+the ~11 MB data set blindly; if offline scope ever changes, update this
+section, the SHELL list, and the smoke SW gate together.
+
 ## Release evidence
 
 Record the commit SHA, workflow URLs, Cloudflare deployment URL, test count, live-sanity result, source hashes, service-worker cache version, and browser smoke-test result in the release note or issue.
