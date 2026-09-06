@@ -592,3 +592,28 @@ footer {
   font-size: 0.9rem;
   margin-top: 4rem;
 }
+
+/* Structural infeasibility banner: shown above the results when the
+   (mode, hardware, target) combo can't solve at any site (off-grid +
+   solar-only, grid-tie battery-only with a surplus target, ...). The
+   banner names the reason and tells the visitor what to change. */
+.infeasible-banner {
+  display: none;
+  margin: 0.75rem 0 1.25rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--primary-accent);
+  border-left: 4px solid var(--primary-accent);
+  background: rgba(0, 230, 153, 0.08);
+  border-radius: 8px;
+  color: var(--text-main);
+}
+.infeasible-banner .infeasible-title {
+  font-weight: 800;
+  font-size: 0.98rem;
+  margin-bottom: 0.25rem;
+}
+.infeasible-banner .infeasible-body {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}

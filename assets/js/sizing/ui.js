@@ -288,6 +288,46 @@ function setStatus(text) {
   if (s) s.textContent = text;
 }
 
+// Infeasibility banner: surfaces a structural (mode × hardware × target)
+// reason above the cards so visitors know WHY nothing solved and what to
+// change. Hides itself the moment a payload without a reason arrives (i.e.
+// a normal run) so it never lingers across the page.
+const INFEASIBLE_HINTS = {
+  "needs-battery": {
+    title: "Solar-only can't reach 100% off-grid",
+    body: "An off-grid home needs storage for nights and cloudy days. Add a battery to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).",
+  },
+  "needs-panels": {
+    title: "Battery-only can't run off-grid",
+    body: "Nothing recharges the bank at this site. Add panels to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).",
+  },
+  "needs-pv-surplus": {
+    title: "A battery-only bank can't produce surplus",
+    body: "Surplus needs panels to generate more than your load. Drop the target below 100% on the bill-cut slider, or switch the hardware setup to 'Solar + Battery'.",
+  },
+};
+function renderInfeasibleBanner(reason) {
+  let banner = $("infeasibleBanner");
+  if (!banner) {
+    banner = el("div", { id: "infeasibleBanner", class: "infeasible-banner" });
+    const target = $("sizingStatus") || document.body;
+    if (target.parentNode) target.parentNode.insertBefore(banner, target);
+  }
+  if (!reason) {
+    banner.style.display = "none";
+    banner.innerHTML = "";
+    return;
+  }
+  const hint = INFEASIBLE_HINTS[reason] || {
+    title: "This hardware and goal combination can't solve",
+    body: "Change the goal or hardware, then re-run.",
+  };
+  banner.style.display = "block";
+  banner.innerHTML = "";
+  banner.appendChild(el("div", { class: "infeasible-title" }, hint.title));
+  banner.appendChild(el("div", { class: "infeasible-body" }, hint.body));
+}
+
 function fmtH(h) {
   if (h >= 24) return "all day (24 h)";
 
@@ -2916,7 +2956,11 @@ function matrixHtml(p) {
             ? ` data-sel="${key}" role="button" tabindex="0" aria-label="Select ${row.label} at ${col.label}" style="cursor:pointer;"`
             : "";
           if (!cell || !cell.solvable) {
-            return `<td${cls}><span style="color:var(--text-muted);">not practical here</span></td>`;
+            const reasonText =
+              cell && cell.reason
+                ? INFEASIBLE_HINTS[cell.reason]?.title || "not practical here"
+                : "not practical here";
+            return `<td${cls}><span style="color:var(--text-muted);font-size:0.78rem;line-height:1.35;">${reasonText}</span></td>`;
           }
           let rel;
           if (p.mode === "offgrid")
@@ -3667,13 +3711,11 @@ function renderTierCards(p) {
     card.appendChild(el("h3", {}, t.label.split("-")[1]?.trim() || t.label));
 
     if (!t.solvable) {
-      card.appendChild(
-        el(
-          "p",
-          {},
-          "No system found within search limits for this load - the daily consumption may be too high for a practical off-grid build at this site.",
-        ),
-      );
+      const reasonText = t.reason
+        ? INFEASIBLE_HINTS[t.reason]?.title ||
+          "No system found within search limits for this load - the daily consumption may be too high for a practical off-grid build at this site."
+        : "No system found within search limits for this load - the daily consumption may be too high for a practical off-grid build at this site.";
+      card.appendChild(el("p", {}, reasonText));
 
       grid.appendChild(card);
 
@@ -4053,7 +4095,27 @@ function drawCumCostChart(p, chosenEntry = null) {
       ? entry
       : null;
   const series = seriesEntry?.cumCostSeries || null;
-  const panel = savingsPanelState(series, p.tariff);
+  const panel = savingsPanelState(series, p.tariff, p.unreachableReason);
+  if (panel.kind === "infeasible") {
+    // Structural no-answer (off-grid + solar-only, etc.). The infeasible
+    // banner up top is the right answer; the savings panel is a distraction
+    // here, so collapse it and let the chart heading stay visible (the
+    // frontier below it still tells the site story).
+    if (wrap) wrap.style.display = "block";
+    if (canvas) canvas.style.display = "none";
+    if (canvas)
+      canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+    const box = $("cumSavingsBox");
+    const cap = $("cumCostCaption");
+    const leg = $("cumCostLegend");
+    if (cap) cap.textContent = "";
+    if (leg) {
+      leg.style.display = "none";
+      leg.textContent = "";
+    }
+    if (box) box.style.display = "none";
+    return;
+  }
   if (panel.kind === "unavailable") {
     // Either the intentional no-tariff state or a result with no comparable
     // series. Tear down any leftover chart and caption from a previous run
@@ -5179,6 +5241,8 @@ function renderResults(p) {
       );
     }
   }
+
+  if (p.unreachableReason) renderInfeasibleBanner(p.unreachableReason);
 
   const a = p.assumptions;
 

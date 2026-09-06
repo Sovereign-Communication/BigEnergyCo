@@ -16,6 +16,7 @@ import {
   simulateOffset,
   dailyExtremes,
   CHEMISTRIES,
+  infeasibleReason,
   RELIABILITY_TIERS,
   BILL_TARGETS,
   DERATES_DEFAULT,
@@ -215,6 +216,23 @@ export async function runSizing(msg, deps = {}) {
   const effectiveBattMax = hardwareConfig === "solar" ? 0 : 120;
   const offgridPvMax = hardwareConfig === "battery" ? 0 : 30;
   const offgridBattMax = hardwareConfig === "solar" ? 0 : 250;
+  // Structural feasibility for this (mode, hardware, target) combo.
+  // "null" when the search is allowed to decide; an explanatory code when
+  // the combo is impossible regardless of envelope (off-grid + solar-only,
+  // grid-tie + battery-only with a surplus target, ...). The UI uses this
+  // to render an inline notice and to hide the broken savings panel.
+  let unreachableReason = infeasibleReason({
+    mode,
+    hardwareConfig: hardwareConfig || "both",
+    minFraction: mode === "gridtie" ? customCut : null,
+  });
+  // The run.js envelope signals "no panels" by passing pvMax=0, but the
+  // sizeForTier / sizeForBillCut searches would still loop over a tiny PV
+  // range to satisfy invMinKw. Short-circuit here so the cell is
+  // structurally unsolvable (no false "we can power your home from
+  // 3.5 kW of zero-sun panels").
+  if (mode === "offgrid" && hardwareConfig === "battery")
+    unreachableReason = "needs-panels";
 
   const effectiveTargets =
     hardwareConfig === "battery"
@@ -484,7 +502,7 @@ export async function runSizing(msg, deps = {}) {
    * costs nothing extra.
    */
   function matrixCell(chemId, sizing, kind) {
-    if (!sizing) return { solvable: false };
+    if (!sizing) return { solvable: false, reason: unreachableReason };
     const m = moneyFor(chemId, sizing);
     const yrs = series.meta.years;
     const servedKwhPerYear =
@@ -1200,6 +1218,10 @@ export async function runSizing(msg, deps = {}) {
     tariff: tariff ?? null,
     exportRate: exportRate ?? null,
     annualGridSpendUsd: gridSpend === null ? null : Math.round(gridSpend),
+    // Mirrors the local `unreachableReason`; the UI reads it off the
+    // payload to render the infeasibility banner and to suppress the
+    // broken savings panel.
+    unreachableReason,
     pricing: {
       basisLabel: "ex-factory China through PowMr-class budget retail",
       source: "cell market indications → PowMr public catalog, Aug 2026",
@@ -1492,11 +1514,17 @@ export async function runSizing(msg, deps = {}) {
         });
         resultsByChem[chemId] = results;
         for (const { target, sizing } of results) {
-          matrixCells[chemId + ":" + target.id] = enrichGtMatrixCell(
-            chemId,
-            sizing,
-            matrixCell(chemId, sizing, "gridtie"),
-          );
+          // Solar-only at any target: the search returned null (battMax=0
+          // for the bill-cut search too). Show the structural reason instead
+          // of an unexplained empty cell. Same idea for battery-only on a
+          // surplus target.
+          matrixCells[chemId + ":" + target.id] = sizing
+            ? enrichGtMatrixCell(
+                chemId,
+                sizing,
+                matrixCell(chemId, sizing, "gridtie"),
+              )
+            : { solvable: false, reason: unreachableReason };
         }
       }
 
@@ -1586,6 +1614,8 @@ export async function runSizing(msg, deps = {}) {
         entries: customEntries,
         best: customBest,
         surplus: customFracGt > 1,
+        // Pre-exit the slider past surplus on battery-only hardware, etc.
+        unreachableReason,
       };
       const focusEntry = computeFocusSystem(
         focusPvKw,
@@ -1707,29 +1737,51 @@ export async function runSizing(msg, deps = {}) {
   if (chemistry === "auto") {
     const matrixCells = {};
     const resultsByChem = {};
-    for (const chemId of ["naion", "lfp", "agm"]) {
-      const capScale = capacityScaleFor(chemId, meanTempC);
-      const allTiers = sizeAllTiers({
-        e1kw,
-        loadWh,
-        tempsC,
-        chemistry: chemId,
-        years: series.meta.years,
-        costPerWpv: costPerWpvMid,
-        costPerKwhBatt: battMidFor(chemId),
-        costPerKwInv: costPerKwInvMid,
-        battMax: offgridBattMax,
-        capacityScale: capScale,
-        laborPerKwh,
-        invMinKw,
-      });
-      resultsByChem[chemId] = allTiers;
-      for (const { tier, sizing } of allTiers) {
-        matrixCells[chemId + ":" + tier.id] = matrixCell(
-          chemId,
-          sizing,
-          "offgrid",
-        );
+    if (
+      unreachableReason === "needs-panels" ||
+      unreachableReason === "needs-battery"
+    ) {
+      // The offgrid × single-hardware combos are physically impossible; the
+      // search would either return null (solar-only) or synthesize a
+      // disconnected system (battery-only). Render a reasoned grid of
+      // unsolvable cells and let the infeasible banner carry the message.
+      for (const chemId of ["naion", "lfp", "agm"]) {
+        for (const tier of RELIABILITY_TIERS) {
+          matrixCells[chemId + ":" + tier.id] = {
+            solvable: false,
+            reason: unreachableReason,
+          };
+        }
+      }
+    } else {
+      for (const chemId of ["naion", "lfp", "agm"]) {
+        const capScale = capacityScaleFor(chemId, meanTempC);
+        const allTiers = sizeAllTiers({
+          e1kw,
+          loadWh,
+          tempsC,
+          chemistry: chemId,
+          years: series.meta.years,
+          costPerWpv: costPerWpvMid,
+          costPerKwhBatt: battMidFor(chemId),
+          costPerKwInv: costPerKwInvMid,
+          pvMax: offgridPvMax,
+          battMax: offgridBattMax,
+          pvMax: offgridPvMax,
+          capacityScale: capScale,
+          laborPerKwh,
+          invMinKw,
+        });
+        resultsByChem[chemId] = allTiers;
+        for (const { tier, sizing } of allTiers) {
+          // Solar-only off-grid has nothing to charge the bank at night.
+          // Battery-only off-grid has nothing to charge it from the sun.
+          // Either way, the search returns null — surface the structural
+          // reason rather than an empty cell.
+          matrixCells[chemId + ":" + tier.id] = sizing
+            ? matrixCell(chemId, sizing, "offgrid")
+            : { solvable: false, reason: unreachableReason };
+        }
       }
     }
     // Tiers run hardest-first (100 -> 99 -> 95). If not even the lightest tier
@@ -1894,6 +1946,7 @@ export async function runSizing(msg, deps = {}) {
         id: tier.id,
         label: tier.label,
         solvable: false,
+        reason: unreachableReason,
         chemistry,
         chemLabel: chem.label,
         pvKw: null,

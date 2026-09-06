@@ -515,6 +515,13 @@ export function sizeForTier({
   // whose TRUE cost over the horizon is lowest — capex plus every bank swap
   // and its install labor. Includes inverter cost (PV-driven) so search isn't
   // biased low by ~$90/kW.
+  //
+  // Empty envelope guard: pvMax <= 0 is battery-only (the run.js envelope
+  // signals this for off-grid battery-only). Nothing recharges the bank;
+  // bail rather than run a degenerate inner loop that probes the inverter
+  // minimum. The caller (run.js) maps this to a structural "needs-panels"
+  // reason.
+  if (pvMax <= 0 || battMax <= 0) return null;
   const lifetimeObjective = (p, b, r) => {
     const cyclesPerYear = r.cyclesEquivalent / years;
     const replacements = batteryReplacements(
@@ -679,6 +686,33 @@ export const BILL_TARGETS = [
   { id: "cut80", label: "Cut ~80% of your bill", minFraction: 0.8 },
   { id: "cut95", label: "Cut ~95% of your bill", minFraction: 0.95 },
 ];
+
+// ── Structural feasibility ──────────────────────────────────────────────
+//
+// Some (mode, hardware, target) combinations cannot physically work at any
+// site or load, no matter the envelope. Name them so callers can explain
+// the dead end instead of showing a generic "beyond the searched envelope"
+// message. Returns a reason code, or null when the combination is arguably
+// solvable (the search decides).
+//
+//   offgrid + solar-only  → nights are always unmet (thousands of hours a
+//                           year vs a 438 h/yr allowance at the loosest tier)
+//   offgrid + battery-only → nothing ever recharges the bank (the tier search
+//                           has no PV-free path, so the envelope is empty)
+//   gridtie + battery-only, cut > 100% → a peak-offset fraction can never
+//                           exceed 1, and surplus needs panels
+export function infeasibleReason({ mode, hardwareConfig, minFraction = null }) {
+  if (mode === "offgrid" && hardwareConfig === "solar") return "needs-battery";
+  if (mode === "offgrid" && hardwareConfig === "battery") return "needs-panels";
+  if (
+    mode === "gridtie" &&
+    hardwareConfig === "battery" &&
+    Number.isFinite(minFraction) &&
+    minFraction > 1
+  )
+    return "needs-pv-surplus";
+  return null;
+}
 
 /**
  * Hourly simulation of a grid-connected home that does NOT export:

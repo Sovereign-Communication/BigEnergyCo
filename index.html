@@ -2701,10 +2701,24 @@
                       type="number"
                       id="fxRate"
                       class="form-control"
-                      placeholder="units per $1 USD, e.g. 58"
+                      placeholder="units per $1 USD, e.g. 58 (1 for USD)"
                       min="0.01"
                       step="0.01"
+                      aria-describedby="fxRateHint"
                     />
+                    <p
+                      id="fxRateHint"
+                      style="
+                        font-size: 0.72rem;
+                        color: var(--text-muted);
+                        margin: 0.3rem 0 0;
+                        line-height: 1.4;
+                      "
+                    >
+                      How many of your currency equal 1 US dollar. Auto-filled
+                      for your location; change only if you know a different
+                      rate.
+                    </p>
                   </div>
 
                   <div class="form-group">
