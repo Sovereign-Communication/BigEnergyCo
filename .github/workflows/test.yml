@@ -35,7 +35,7 @@ jobs:
 
       - name: Secret-scan tracked files
         run: |
-          ! git grep -nE "oauth_toke[n]|BEGIN [A-Z ]*PRIVATE KEY|AIza[0-9A-Za-z_-]{20,}|sk-live-[0-9A-Za-z]{10,}" -- . ':!*.lock' || (echo "Possible secret in tracked files" && exit 1)
+          ! git grep -nE "oauth_toke[n]|BEGIN [A-Z ]*PRIVATE KEY|AIza[0-9A-Za-z_-]{20,}|sk-live-[0-9A-Za-z]{10,}|ghp_[0-9A-Za-z]{20,}|github_pat_[0-9A-Za-z_-]{10,}|xox[bap]-[0-9A-Za-z-]+|GROQ_API_KEY\s*=\s*[\"']?gsk_[0-9A-Za-z]+" -- . ':!*.lock' || (echo "Possible secret in tracked files" && exit 1)
 
       - name: Check deploy allowlist
         run: node scripts/deploy-pages-local.mjs --check

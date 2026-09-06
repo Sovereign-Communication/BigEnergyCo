@@ -1,5 +1,9 @@
 # Groq Optimization: Quick Implementation Guide
 
+> **Superseded.** This guide targets deleted files (`proxy_server.py`) and a
+> retired model. The shipped advisor lives in `worker/index.js`
+> (`promptVersion 2026-09a`); see `README.md` and `docs/DEPLOY_RUNBOOK.md`.
+
 This guide shows the exact code changes needed to implement the audit recommendations. Copy-paste ready.
 
 ---

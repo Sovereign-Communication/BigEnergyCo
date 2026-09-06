@@ -45,12 +45,13 @@ const GRAPH_FILES = [
 ];
 
 // First-party module references: static/dynamic imports, Worker URLs,
-// classic script tags. Captures [full, url, token?].
+// classic script tags, stylesheet links. Captures [full, url, token?].
 const MODULE_RES = [
   /\bfrom\s*["'](\.[^"']*?\.js)(\?v=([\w]+))?["']/g,
   /\bimport\(\s*["'](\.[^"']*?\.js)(\?v=([\w]+))?["']\s*\)/g,
   /\bnew\s+Worker\(\s*["']([^"']*?\.js)(\?v=([\w]+))?["']/g,
   /<script[^>]+src=["']([^"']*?\.js)(\?v=([\w]+))?["']/g,
+  /<link[^>]+href=["']([^"']*?\.css)(\?v=([\w]+))?["']/g,
 ];
 // Runtime data fetches under /assets (city partitions, heatmap grid).
 const FETCH_RES = [
@@ -164,6 +165,7 @@ for (const f of GRAPH_FILES) {
     new RegExp(`(\\bimport\\(\\s*["']${FP}[^"']*?\\.js)(["']\\s*\\))`, "g"),
     new RegExp(`(\\bnew\\s+Worker\\(\\s*["']${FP}[^"']*?\\.js)(["'])`, "g"),
     new RegExp(`(<script[^>]+src=["']${FP}[^"']*?\\.js)(["'])`, "g"),
+    new RegExp(`(<link[^>]+href=["']${FP}[^"']*?\\.css)(["'])`, "g"),
   ];
   for (const re of modRes) text = text.replace(re, `$1?v=${stamp}$2`);
   // 3. token-less /assets data fetches (plain + ${template} URLs)
