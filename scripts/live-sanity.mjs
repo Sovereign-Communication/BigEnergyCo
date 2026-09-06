@@ -31,7 +31,8 @@ for (const m of [
   'id="moneyBar"',
   'id="printSheet"',
   "btnShareResult",
-  "@media print",
+  // (@media print lives in assets/site.css since the stylesheet extraction,
+  // checked separately below — not in the HTML anymore)
   'rel="canonical"',
   'id="systemGoal"',
   "Cut my bill, stay connected",
@@ -65,6 +66,23 @@ for (const m of ["$75,185", "netSavingsVal", "851.85", "\u00e2\u20ac"]) {
 const uiUrlMatch = html.match(/assets\/js\/sizing\/ui\.js\?v=([0-9a-z]+)/);
 check("ui.js served with a version token", !!uiUrlMatch);
 const uiToken = uiUrlMatch ? uiUrlMatch[1] : "";
+
+// Print stylesheet serves and still carries the print rules (extracted from
+// index.html into versioned assets/site.css; the immutable cache makes the
+// token part of the check — read from the actual link tag, not assumed).
+{
+  const cssMatch = html.match(/assets\/site\.css\?v=([0-9a-z]+)/);
+  check("index.html links versioned site.css", !!cssMatch);
+  const r = await fetch(
+    BASE + `assets/site.css?v=${cssMatch?.[1] || Date.now()}`,
+    { cache: "no-store" },
+  );
+  const txt = r.status === 200 ? await r.text() : "";
+  check(
+    "site.css serves with print rules",
+    r.status === 200 && txt.includes("@media print"),
+  );
+}
 
 // 3. Modules serve + contain repaired strings
 const mods = [
