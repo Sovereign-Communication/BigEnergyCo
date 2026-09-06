@@ -1,7 +1,7 @@
 // Tiny i18n applier: translates elements carrying data-i18n="key" and flips
 // direction for RTL locales. Falls back to English silently. No network,
 // no storage beyond the user's own language choice in localStorage.
-import { LOCALES } from "./locales.js?v=20260906e";
+import { LOCALES } from "./locales.js?v=20260906f";
 
 const LANGS = [
   { id: "auto", label: "Auto" },

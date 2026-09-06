@@ -423,3 +423,154 @@ test("CONSISTENCY: rescale regenerates the scenario note from scaled parts", () 
     "number-free notes untouched",
   );
 });
+
+// ── Solar-only edge audit ─────────────────────────────────────────────────
+// Same root cause family as the oversize note: physics the metric ignores.
+// The cut metric used to count imports only, so solar-only stalled at the
+// daytime fraction even with 1:1 net metering entered, and its monthly bill
+// ignored the credit it already credited in the cumulative chart.
+test("SOLAR-EDGE: 1:1 credits let solar-only zero the bill", async () => {
+  const p = await runSizing(
+    {
+      ...MSG,
+      mode: "gridtie",
+      chemistry: "auto",
+      hardwareConfig: "solar",
+      tariff: 0.42,
+      exportRate: 0.42,
+      customCut: 1.0,
+    },
+    { fetchWeather: fakeWeather },
+  );
+  // With a credit, solar-only runs the standard targets, not daytime caps.
+  assert.ok(
+    p.matrix.cols.some((c) => c.id === "cut80"),
+    "standard targets with export",
+  );
+  assert.ok(
+    !p.matrix.cols.some((c) => c.id === "cut30"),
+    "no daytime cap with export",
+  );
+  const best = p.customCut.best;
+  assert.ok(best, "solar-only reaches 100% at 1:1");
+  assert.equal(best.battKwh, 0, "still no battery");
+  assert.ok(best.cutPct >= 99, `net-metered cut ${best.cutPct}% zeroes it`);
+  assert.ok(
+    best.billAfterMonthlyUsd <= 0,
+    `net monthly bill ${best.billAfterMonthlyUsd} is ~zero, not gross imports`,
+  );
+  assertOversizeUnified(moneyEntries(p));
+});
+
+test("SOLAR-EDGE: no-export solar-only honestly caps below storage territory", async () => {
+  const p = await runSizing(
+    {
+      ...MSG,
+      mode: "gridtie",
+      chemistry: "auto",
+      hardwareConfig: "solar",
+      tariff: 0.42,
+      exportRate: null,
+      customCut: 0.8,
+    },
+    { fetchWeather: fakeWeather },
+  );
+  assert.ok(
+    p.matrix.cols.some((c) => c.id === "cut30"),
+    "daytime caps without export",
+  );
+  const best = p.customCut.best;
+  assert.ok(
+    !best || best.cutPct < 80,
+    "cannot honestly hit 80% solar-only without storage or credits",
+  );
+  assertOversizeUnified(moneyEntries(p));
+});
+
+test("SOLAR-EDGE: offgrid solar-only is impossible and says why", async () => {
+  const p = await runSizing(
+    {
+      ...MSG,
+      mode: "offgrid",
+      chemistry: "auto",
+      hardwareConfig: "solar",
+    },
+    { fetchWeather: fakeWeather },
+  );
+  assert.equal(p.unreachableReason, "needs-battery");
+  assert.equal(p.best, null);
+  assert.ok(
+    Object.values(p.matrix.cells).every(
+      (c) => !c.solvable && c.reason === "needs-battery",
+    ),
+    "every cell names the structural reason",
+  );
+  assert.ok(
+    p.frontier && p.frontier.points.length === 0,
+    "no curve where nothing can build",
+  );
+});
+
+test("SOLAR-EDGE: hardware×mode×credit edge matrix stays sane", async () => {
+  const cfgs = [
+    { mode: "offgrid", hardwareConfig: "both", chemistry: "auto" },
+    {
+      mode: "gridtie",
+      hardwareConfig: "battery",
+      chemistry: "auto",
+      customCut: 0.15,
+    },
+    {
+      mode: "gridtie",
+      hardwareConfig: "battery",
+      chemistry: "auto",
+      customCut: 1.05,
+      exportRate: null,
+    },
+    {
+      mode: "gridtie",
+      hardwareConfig: "solar",
+      chemistry: "lfp",
+      exportRate: 0.21,
+      customCut: 0.8,
+    },
+    {
+      mode: "offgrid",
+      hardwareConfig: "battery",
+      chemistry: "auto",
+    },
+  ];
+  for (const cfg of cfgs) {
+    const p = await runSizing(
+      { ...MSG, tariff: 0.42, ...cfg },
+      { fetchWeather: fakeWeather },
+    );
+    assert.equal(p.contract, 13, `${cfg.hardwareConfig}/${cfg.mode} contract`);
+    assert.ok(p.frontier, "frontier field always present");
+    const entries = moneyEntries(p);
+    if (!entries.length) {
+      // Structurally impossible combos surface nothing — but must say why.
+      assert.ok(
+        p.unreachableReason,
+        `${cfg.hardwareConfig}/${cfg.mode}: impossibility explained`,
+      );
+    } else {
+      assertOversizeUnified(entries);
+    }
+  }
+  // Battery-only surplus without panels is structurally impossible.
+  const p = await runSizing(
+    {
+      ...MSG,
+      tariff: 0.42,
+      mode: "gridtie",
+      hardwareConfig: "battery",
+      chemistry: "auto",
+      customCut: 1.05,
+      exportRate: null,
+    },
+    { fetchWeather: fakeWeather },
+  );
+  assert.equal(p.unreachableReason, "needs-pv-surplus");
+  assert.equal(p.customCut.best, null);
+});

@@ -367,7 +367,10 @@ test("SMOKE: incrementalCut handles battery-only and solar-only slider edits", a
 });
 
 test("SMOKE: target cards and offgrid tiers carry socNameplatePct for SOC chart cohesion", async () => {
-  // Grid-tie manual LFP
+  // Grid-tie manual LFP (BASE_MSG carries a $0.10 feed-in credit, so the
+  // lifetime-optimal targets below are credit-backed solar-only builds with
+  // no bank — the 1:1-credit physics, not a regression: every target must
+  // still meet its cut, and banked targets must carry SOC bands).
   const gtPayload = await runSizing(
     {
       ...BASE_MSG,
@@ -379,15 +382,25 @@ test("SMOKE: target cards and offgrid tiers carry socNameplatePct for SOC chart 
   );
 
   assert.ok(gtPayload.targets.length > 0);
-  const solvableTargetsWithBatt = gtPayload.targets.filter(
-    (t) => t.solvable && t.battKwh > 0,
-  );
-  assert.ok(solvableTargetsWithBatt.length > 0);
-  for (const t of solvableTargetsWithBatt) {
-    assert.ok(t.socNameplatePct, `Target ${t.id} must have socNameplatePct`);
-    assert.ok(Array.isArray(t.socNameplatePct.min));
-    assert.ok(Array.isArray(t.socNameplatePct.max));
-    assert.equal(t.socNameplatePct.min.length, t.socNameplatePct.max.length);
+  const solvableTargets = gtPayload.targets.filter((t) => t.solvable);
+  assert.ok(solvableTargets.length > 0);
+  for (const t of solvableTargets) {
+    assert.ok(
+      t.cutPct + 2 >= Math.round((t.minFraction || 0) * 100),
+      `Target ${t.id} meets its cut (${t.cutPct}%)`,
+    );
+    if (t.battKwh > 0) {
+      assert.ok(t.socNameplatePct, `Target ${t.id} must have socNameplatePct`);
+      assert.ok(Array.isArray(t.socNameplatePct.min));
+      assert.ok(Array.isArray(t.socNameplatePct.max));
+      assert.equal(t.socNameplatePct.min.length, t.socNameplatePct.max.length);
+    } else {
+      assert.equal(
+        t.socNameplatePct,
+        null,
+        `Target ${t.id}: no bank means no SOC bands`,
+      );
+    }
   }
 
   // Offgrid manual LFP

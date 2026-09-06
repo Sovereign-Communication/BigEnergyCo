@@ -9,7 +9,7 @@
 // localStorage per site, so after one visit a location keeps working fully
 // offline. Bump CACHE_VERSION to force every client to refresh on next visit.
 
-const CACHE_VERSION = "beco-v36";
+const CACHE_VERSION = "beco-v37";
 const SHELL = [
   "./",
   "./index.html",

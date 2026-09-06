@@ -191,7 +191,15 @@ export function renderFrontier(host, frontier, opts = {}) {
     marker && Number.isFinite(marker.capexUsd) ? marker.capexUsd : 0,
   );
   const xMax = niceMax(needed * 1.06);
-  const yMax = 100;
+  // Net-metered outcomes can exceed 100% (surplus sold back), so the axis
+  // grows instead of clamping dots onto the top frame.
+  const yTop = Math.max(
+    100,
+    ...pts.map((p) => (Number.isFinite(p.outcomePct) ? p.outcomePct : 0)),
+    marker && Number.isFinite(marker.outcomePct) ? marker.outcomePct : 0,
+  );
+  const yMax = yTop > 100 ? Math.ceil(yTop / 10) * 10 : 100;
+  const yTicks = yMax > 100 ? [0, 25, 50, 75, 100, yMax] : [0, 25, 50, 75, 100];
   const plotW = VB_W - PAD.l - PAD.r;
   const plotH = VB_H - PAD.t - PAD.b;
   const X = (usd) => PAD.l + Math.min(1, usd / xMax) * plotW;
@@ -201,7 +209,7 @@ export function renderFrontier(host, frontier, opts = {}) {
   const push = (s) => parts.push(s);
 
   // ── gridlines + axes ──────────────────────────────────────────────────
-  for (const pct of [0, 25, 50, 75, 100]) {
+  for (const pct of yTicks) {
     const y = Y(pct);
     push(
       `<line x1="${PAD.l}" y1="${y.toFixed(1)}" x2="${(VB_W - PAD.r).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${C.grid}" stroke-width="1"/>`,

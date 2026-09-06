@@ -10,7 +10,7 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260906e";
+import { CITY_PRESETS } from "./nasa.js?v=20260906f";
 import {
   CITY_CATALOG,
   searchCities,
@@ -20,7 +20,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260906e";
+} from "./cities.js?v=20260906f";
 
 import {
   estimateTariff,
@@ -28,39 +28,39 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260906e";
+} from "./pricing.js?v=20260906f";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260906e";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260906f";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260906e";
+} from "./bom.js?v=20260906f";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260906e";
+import { BOM_ITEMS } from "../shared/content.js?v=20260906f";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260906e";
+} from "../shared/i18n.js?v=20260906f";
 
-import { LOCALES } from "../shared/locales.js?v=20260906e";
+import { LOCALES } from "../shared/locales.js?v=20260906f";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260906e";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260906f";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260906e";
+} from "./frontier-chart.js?v=20260906f";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260906e";
+} from "./rescale.js?v=20260906f";
 
 import {
   spectrumDataset,
@@ -68,7 +68,7 @@ import {
   nearestByOutcome,
   renderSpectrum,
   updateSpectrumSelection,
-} from "./spectrum.js?v=20260906e";
+} from "./spectrum.js?v=20260906f";
 
 let worker = null;
 
@@ -2307,7 +2307,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260906e", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260906f", {
       type: "module",
     });
 
@@ -5279,7 +5279,7 @@ function drawAutoChart(p) {
 }
 
 // Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
-const PAYLOAD_CONTRACT = 12;
+const PAYLOAD_CONTRACT = 13;
 
 // -- Plausibility frontier ---------------------------------------------------
 

@@ -9,6 +9,7 @@ import {
   buildE1kw,
   flatProfile,
   expandProfile,
+  billCutFraction,
 } from "../assets/js/sizing/engine.js";
 
 function mulberry32(a) {
@@ -194,4 +195,95 @@ test("sizeAllBillTargets aligns with BILL_TARGETS order and marks impossibility"
     null,
     "95% cut impossible at this scale",
   );
+});
+
+test("billCutFraction: import-only without credit, net-metered with credit", () => {
+  assert.equal(
+    billCutFraction({ importedWh: 600, curtailedWh: 500, loadTotalWh: 1000 }),
+    0.4,
+  );
+  assert.equal(
+    billCutFraction({
+      importedWh: 500,
+      curtailedWh: 500,
+      loadTotalWh: 1000,
+      tariff: 0.4,
+      exportRate: 0.4,
+    }),
+    1.0,
+    "1:1 credits net imports against clipped surplus",
+  );
+  assert.equal(
+    billCutFraction({
+      importedWh: 500,
+      curtailedWh: 500,
+      loadTotalWh: 1000,
+      tariff: 0.4,
+      exportRate: 0.2,
+    }),
+    0.75,
+    "half credit offsets half the surplus",
+  );
+  assert.equal(
+    billCutFraction({
+      importedWh: 600,
+      curtailedWh: 500,
+      loadTotalWh: 1000,
+      tariff: 0.4,
+      exportRate: 0,
+    }),
+    0.4,
+    "zero credit degrades to the import fraction",
+  );
+  assert.equal(billCutFraction({ importedWh: 600, loadTotalWh: 0 }), 0);
+});
+
+test("sizeForBillCut: solar-only reaches 100% at 1:1, honestly caps without credit", () => {
+  const w = makeWeather(24 * 180, 7);
+  const e1 = buildE1kw(w);
+  const load = expandProfile(flatProfile(9), e1.length);
+  const loadTotal = load.reduce((a, b) => a + b, 0);
+  const base = {
+    e1kw: e1,
+    loadWh: load,
+    chemistry: "lfp",
+    years: 1,
+    costPerWpv: 0.35,
+    costPerKwhBatt: 140,
+    costPerKwInv: 60,
+    pvMax: 45,
+    battMax: 0,
+    laborPerKwh: [12, 30],
+    invMinKw: 9 / 24,
+  };
+  const noCredit = sizeForBillCut({ ...base, minFraction: 1.0 });
+  assert.equal(
+    noCredit,
+    null,
+    "no-export solar-only cannot promise a 100% bill cut",
+  );
+  const one2one = sizeForBillCut({
+    ...base,
+    minFraction: 1.0,
+    tariff: 0.4,
+    exportRate: 0.4,
+  });
+  assert.ok(one2one, "1:1 solar-only reaches 100%");
+  assert.equal(one2one.battKwh, 0, "still no battery");
+  const cut = billCutFraction({
+    importedWh: one2one.result.importedWh,
+    curtailedWh: one2one.result.curtailedWh,
+    loadTotalWh: loadTotal,
+    tariff: 0.4,
+    exportRate: 0.4,
+  });
+  assert.ok(cut + 1e-9 >= 1.0, `net-metered cut ${cut} meets 100%`);
+  // Partial credit lands between the two physics.
+  const half = sizeForBillCut({
+    ...base,
+    minFraction: 0.8,
+    tariff: 0.4,
+    exportRate: 0.2,
+  });
+  assert.ok(half, "half credit still reaches 80% solar-only");
 });

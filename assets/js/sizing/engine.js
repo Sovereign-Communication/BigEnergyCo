@@ -2,8 +2,8 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260906e";
-import { oversizeCallout } from "./rescale.js?v=20260906e";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260906f";
+import { oversizeCallout } from "./rescale.js?v=20260906f";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -705,6 +705,39 @@ export const BILL_TARGETS = [
   { id: "cut95", label: "Cut ~95% of your bill", minFraction: 0.95 },
 ];
 
+/**
+ * One definition of "bill cut" shared by the search constraint, the curve
+ * outcome, the cards and the table — so a % can never disagree between
+ * views. Without a feed-in credit it is pure self-sufficiency
+ * (1 − imports/load). With a credit it is net-metered: imports billed at
+ * the tariff, clipped surplus credited at the feed-in rate. At 1:1
+ * (exportRate == tariff) a big solar-only array can therefore zero any bill
+ * given enough roof — capping it at the daytime fraction would be the
+ * import-only fallacy this helper exists to prevent.
+ */
+export function billCutFraction({
+  importedWh,
+  curtailedWh = 0,
+  loadTotalWh,
+  tariff = null,
+  exportRate = null,
+}) {
+  if (!(loadTotalWh > 0)) return 0;
+  if (
+    tariff !== null &&
+    tariff > 0 &&
+    exportRate !== null &&
+    exportRate > 0
+  ) {
+    return (
+      1 -
+      (importedWh * tariff - curtailedWh * exportRate) /
+        (loadTotalWh * tariff)
+    );
+  }
+  return 1 - importedWh / loadTotalWh;
+}
+
 // ── Structural feasibility ──────────────────────────────────────────────
 //
 // Some (mode, hardware, target) combinations cannot physically work at any
@@ -864,10 +897,14 @@ export function simulateOffset({
 
 /**
  * Find minimum-cost (pvKw, battKwh >= 0) whose average imported energy stays
- * under (1 - minFraction) of total load. Imports are monotonically
- * non-increasing in PV for a fixed battery (extra PV can only serve load,
- * fill the bank, or clip), so each battery row binary-searches its smallest
- * sufficient PV — far fewer simulations than a full lattice scan.
+ * under (1 - minFraction) of total load — net-metered when a feed-in credit
+ * is entered (see billCutFraction), so a 1:1 credit lets solar-only reach
+ * 100%. Imports are monotonically non-increasing in PV for a fixed battery
+ * (extra PV can only serve load, fill the bank, or clip), so each battery
+ * row binary-searches its smallest sufficient PV — far fewer simulations
+ * than a full lattice scan. Net bill value is likewise monotonic in PV
+ * (more array can only displace imports or add credited surplus), so the
+ * same search shape holds with credits.
  *
  * @returns {{pvKw:number, battKwh:number, result:object, cost:number} | null}
  */
@@ -877,6 +914,8 @@ export function sizeForBillCut({
   tempsC = null,
   chemistry = "lfp",
   minFraction = 0.8,
+  tariff = null,
+  exportRate = null,
   years = 1,
   costPerWpv = 0.35,
   costPerKwhBatt = 140,
@@ -902,12 +941,24 @@ export function sizeForBillCut({
   // directly to peak load (no share conversion needed).
   const peakOnly = pvMax === 0;
   // Above 100% the visitor wants to PRODUCE more than the load consumes and
-  // sell/track the surplus, so the constraint becomes "the bill is fully
-  // covered AND at least (f-1) of annual load is produced as surplus". A mere
-  // sliver of clipped PV while still importing is not a >100% cut, so both
-  // conditions must hold. A battery only absorbs surplus and adds cost against
-  // that goal, but the search below stays fully general and lets the cost
-  // objective decide.
+  // sell/track the surplus. With a feed-in credit the constraint is simply
+  // the net-metered cut (bill gone AND surplus value cover the rest) — a
+  // solar-only array qualifies on credits alone. Without a credit the
+  // constraint stays physical: the bill must be ~fully covered AND at least
+  // (f-1) of annual load produced as surplus, since clipped waste has no
+  // cash value. A mere sliver of clipped PV while still importing is not a
+  // >100% cut under either rule, so both conditions must hold there. A
+  // battery only absorbs surplus and adds cost against that goal, but the
+  // search below stays fully general and lets the cost objective decide.
+  const hasCredit = tariff !== null && tariff > 0 && exportRate !== null && exportRate > 0;
+  const cutOf = (r) =>
+    billCutFraction({
+      importedWh: r.importedWh,
+      curtailedWh: r.curtailedWh,
+      loadTotalWh: loadTotal,
+      tariff,
+      exportRate,
+    });
   const surplusTarget = f > 1;
   const importBudget = surplusTarget ? loadTotal * 0.005 : loadTotal * (1 - f);
   const evaluate = (pv, batt) =>
@@ -922,11 +973,11 @@ export function sizeForBillCut({
     });
   const meets = peakOnly
     ? (r) => r.peakOffsetFraction + 1e-9 >= f
-    : surplusTarget
+    : surplusTarget && !hasCredit
       ? (r) =>
           r.importedWh <= importBudget + 1e-6 &&
           r.curtailedWh >= loadTotal * (f - 1) - 1e-6
-      : (r) => r.importedWh <= importBudget + 1e-6;
+      : (r) => cutOf(r) + 1e-9 >= f;
 
   // Lifetime-cost objective: among systems meeting the bill-cut target, pick
   // the one whose TRUE cost over the horizon is lowest (capex plus every bank

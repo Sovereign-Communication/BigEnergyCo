@@ -14,7 +14,14 @@
 // Pareto-optimal set - a system survives if nothing cheaper covers more.
 // Pure functions: no DOM, no network, no globals.
 
-import { simulate, simulateOffset, CHEMISTRIES } from "./engine.js?v=20260906e";
+import {
+  simulate,
+  simulateOffset,
+  CHEMISTRIES,
+  evaluateOversizeOptimization,
+  billCutFraction,
+} from "./engine.js?v=20260906f";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260906f";
 
 // Points below this coverage are real but not decision-useful; plotting them
 // squashes the interesting part of the curve into the top corner.
@@ -110,6 +117,8 @@ export function sweepSystems({
   battMax = 100,
   pvSteps = 18,
   battSteps = 16,
+  tariff = null,
+  exportRate = null,
 }) {
   // Prices come from ONE place. When the caller injects the same pricing
   // function the result cards use, the curve's dollars and the cards'
@@ -168,11 +177,21 @@ export function sweepSystems({
       // (pvMax <= 0, where the whole curve is about peak shifting) ranks by
       // the evening-peak offset fraction — mixing the two metrics on one axis
       // would let a 44% peak offset masquerade as a 44% bill cut.
+      // With a feed-in credit the outcome is net-metered (billCutFraction):
+      // clipped surplus credited at the feed-in rate, so 1:1 net metering
+      // lets solar-only reach 100%. Without a credit this degrades exactly
+      // to the import-only fraction.
       const pureBatterySweep = gridTie && !(pvMax > 0);
       const outcome = gridTie
         ? pureBatterySweep && pvKw <= 0 && battKwh > 0
           ? result.peakOffsetFraction
-          : 1 - result.importedWh / loadTotal
+          : billCutFraction({
+              importedWh: result.importedWh,
+              curtailedWh: result.curtailedWh,
+              loadTotalWh: loadTotal,
+              tariff,
+              exportRate,
+            })
         : result.servedWh / loadTotal;
       const cost = price(pvKw, battKwh);
       out.push({
@@ -392,19 +411,162 @@ export function classifyReach(front, kneeIdx, envelope = {}) {
 }
 
 /**
+ * Fully-optimized dots (opt-in via buildFrontier's oversize bundle): for each
+ * surviving curve point, check the oversize estimate; when a bigger bank is
+ * lifetime-cheaper, verify zero-swap on a FRESH simulation (throughput shifts
+ * with bank size) and adopt the verified bank INTO the point — the same
+ * hardware, cost and outcome the detail, note and charts then describe. A
+ * point that fails verification keeps its lattice hardware (its downstream
+ * note describes swaps truthfully instead of advertising an unbuilt bank).
+ *
+ * Deliberately bank-only, no PV shrink: curve points carry no fixed target
+ * to shrink against, and extra storage can only hold or improve the outcome.
+ * Re-pareto afterwards keeps every dot on the line it draws.
+ *
+ * @returns {{front: Array, adopted: number}}
+ */
+export function adoptOversizedBanks(front, ctx) {
+  const {
+    e1kw,
+    loadWh,
+    tempsC = null,
+    chemistry = "lfp",
+    mode = "offgrid",
+    years = 1,
+    costPerWpv = 0.35,
+    costPerKwhBatt = 140,
+    costPerKwInv = 60,
+    laborPerKwh = [12, 30],
+    invMinKw = 0,
+    battMax = 100,
+    pvMax = 30,
+    capacityScale = null,
+    costFn = null,
+  } = ctx;
+  const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
+  const linearCapex = (pv, b) =>
+    pv * 1000 * costPerWpv +
+    Math.max(pv, invMinKw) * costPerKwInv +
+    b * costPerKwhBatt;
+  const lifetimeOf = (pv, b, r) => {
+    const cpy = r.cyclesEquivalent / years;
+    const replacements = batteryReplacements(cpy, chem.cyclesTo80);
+    return {
+      replacements,
+      total: lifetimeCostUsd({
+        capexMidUsd: linearCapex(pv, b),
+        battKwhUsable: b,
+        battPriceMidPerKwh: costPerKwhBatt,
+        replacements,
+        laborPerKwh,
+      }).total,
+    };
+  };
+  const simulateAt = (pv, b) => {
+    const args = {
+      pvKw: pv,
+      battKwhUsable: b,
+      e1kw,
+      loadWh,
+      chemistry,
+      tempsC,
+      capacityScale,
+    };
+    return mode === "gridtie" ? simulateOffset(args) : simulate(args);
+  };
+  let loadTotal = 0;
+  for (let i = 0; i < loadWh.length; i++) loadTotal += loadWh[i];
+  const pureBatterySweep = mode === "gridtie" && !(pvMax > 0);
+  const outcomeOf = (pv, b, r) => {
+    if (mode !== "gridtie") return r.servedWh / loadTotal;
+    if (pureBatterySweep && pv <= 0 && b > 0) return r.peakOffsetFraction;
+    return billCutFraction({
+      importedWh: r.importedWh,
+      curtailedWh: r.curtailedWh,
+      loadTotalWh: loadTotal,
+      tariff: ctx.tariff ?? null,
+      exportRate: ctx.exportRate ?? null,
+    });
+  };
+  const priceOf = (pv, b) => {
+    if (costFn) {
+      const c = costFn(pv, b);
+      return {
+        capexUsd: c.mid,
+        capexLoUsd: c.lo ?? c.mid,
+        capexHiUsd: c.hi ?? c.mid,
+      };
+    }
+    const mid = linearCapex(pv, b);
+    return { capexUsd: mid, capexLoUsd: mid, capexHiUsd: mid };
+  };
+  let adopted = 0;
+  for (const p of front) {
+    if (!(p.battKwh > 0) || !p.result) continue;
+    const opt = evaluateOversizeOptimization({
+      pvKw: p.pvKw,
+      battKwh: p.battKwh,
+      sizingResult: p.result,
+      chemistry,
+      years,
+      costPerWpv,
+      costPerKwhBatt,
+      costPerKwInv,
+      laborPerKwh,
+      invMinKw,
+    });
+    if (!opt.useOversized || !(opt.oversizedBattKwh > p.battKwh)) continue;
+    const fromBattKwh = p.battKwh;
+    const before = lifetimeOf(p.pvKw, p.battKwh, p.result);
+    let b = opt.oversizedBattKwh;
+    let winner = null;
+    for (let guard = 0; guard < 6 && b <= battMax; guard++) {
+      const r = simulateAt(p.pvKw, b);
+      const cpy = r.cyclesEquivalent / years;
+      if (batteryReplacements(cpy, chem.cyclesTo80) === 0) {
+        const after = lifetimeOf(p.pvKw, b, r);
+        if (after.total < before.total - 1e-9)
+          winner = { b, r, savings: before.total - after.total };
+        break;
+      }
+      b = Math.min(battMax + 1, Math.ceil(b * 1.25));
+    }
+    if (!winner) continue;
+    const price = priceOf(p.pvKw, winner.b);
+    p.battKwh = winner.b;
+    p.result = winner.r;
+    p.outcome = outcomeOf(p.pvKw, winner.b, winner.r);
+    p.capexUsd = price.capexUsd;
+    p.capexLoUsd = price.capexLoUsd;
+    p.capexHiUsd = price.capexHiUsd;
+    p.adopted = {
+      fromBattKwh,
+      savingsUsd: Math.round(winner.savings),
+    };
+    adopted++;
+  }
+  return { front, adopted };
+}
+
+/**
  * Full frontier for one chemistry at one site.
  *
+ * @param {object} [opts.oversize] opt-in fully-optimized dots: when truthy,
+ *   surviving points adopt verified zero-swap banks (see
+ *   adoptOversizedBanks). Reads years/costPerWpv/costPerKwhBatt/costPerKwInv/
+ *   laborPerKwh/invMinKw from opts (sweep defaults apply).
+ *
  * @returns {{
- *   points: Array<{pvKw:number, battKwh:number, outcomePct:number, capexUsd:number, result:object}>,
+ *   points: Array<{pvKw:number, battKwh:number, outcomePct:number, capexUsd:number, result:object, adopted?:{fromBattKwh:number, savingsUsd:number}}>,
  *   kneeIndex: number, reach: object, chemistry: string, mode: string,
- *   simCount: number, lattice: {pv:number[], batt:number[]}
+ *   simCount: number, adoptedCount: number, lattice: {pv:number[], batt:number[]}
  * }}
  */
 export function buildFrontier(opts) {
   const chemistry = opts.chemistry || "lfp";
   const mode = opts.mode === "gridtie" ? "gridtie" : "offgrid";
   const all = sweepSystems({ ...opts, chemistry, mode });
-  const front = thinFront(paretoFront(all), {
+  const thinOpts = {
     minOutcome:
       opts.minOutcome !== undefined
         ? opts.minOutcome
@@ -413,7 +575,34 @@ export function buildFrontier(opts) {
           : FRONTIER_MIN_OUTCOME,
     minStepPp: opts.minStepPp ?? FRONTIER_MIN_STEP_PP,
     maxPoints: opts.maxPoints ?? FRONTIER_MAX_POINTS,
-  });
+  };
+  let front = thinFront(paretoFront(all), thinOpts);
+  // Fully-optimized dots: adopt verified zero-swap banks into the survivors,
+  // then re-pareto/re-thin so every dot is still on the line it draws.
+  let adoptedCount = 0;
+  if (opts.oversize) {
+    const res = adoptOversizedBanks(front, {
+      e1kw: opts.e1kw,
+      loadWh: opts.loadWh,
+      tempsC: opts.tempsC,
+      chemistry,
+      mode,
+      years: opts.years ?? 1,
+      costPerWpv: opts.costPerWpv ?? 0.35,
+      costPerKwhBatt: opts.costPerKwhBatt ?? 140,
+      costPerKwInv: opts.costPerKwInv ?? 60,
+      laborPerKwh: opts.laborPerKwh ?? [12, 30],
+      invMinKw: opts.invMinKw ?? 0,
+      battMax: opts.battMax ?? 100,
+      pvMax: opts.pvMax ?? 30,
+      capacityScale: opts.capacityScale ?? null,
+      costFn: opts.costFn ?? null,
+      tariff: opts.tariff ?? null,
+      exportRate: opts.exportRate ?? null,
+    });
+    front = thinFront(paretoFront(res.front), thinOpts);
+    adoptedCount = res.adopted;
+  }
   const kneeIndex = findKnee(front);
   // Identical ladders to the sweep itself (grid-tie prepends the 0 kW
   // solar-only point) — the bound check must judge the lattice that ran.
@@ -444,6 +633,7 @@ export function buildFrontier(opts) {
       capexLoUsd: Math.round(p.capexLoUsd),
       capexHiUsd: Math.round(p.capexHiUsd),
       result: p.result,
+      ...(p.adopted ? { adopted: p.adopted } : null),
     })),
     kneeIndex,
     reach: classifyReach(front, kneeIndex, {
@@ -453,6 +643,7 @@ export function buildFrontier(opts) {
     }),
     boundLimited,
     simCount: all.length,
+    adoptedCount,
     lattice: { pv: pvUsed, batt: battUsed },
   };
 }

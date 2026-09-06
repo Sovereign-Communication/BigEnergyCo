@@ -18,6 +18,7 @@ import {
   buildFrontier,
   sweepSystems,
   isBoundLimited,
+  adoptOversizedBanks,
 } from "../assets/js/sizing/frontier.js";
 import { niceMax, axisTicks } from "../assets/js/sizing/frontier-chart.js";
 import { runSizing } from "../assets/js/sizing/run.js";
@@ -26,8 +27,10 @@ import {
   flatProfile,
   expandProfile,
   sizeForBillCut,
+  simulateOffset,
   CHEMISTRIES,
 } from "../assets/js/sizing/engine.js";
+import { batteryReplacements } from "../assets/js/sizing/money.js";
 import { fullRange } from "../assets/js/sizing/pricing.js";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
 import {
@@ -530,7 +533,7 @@ test("runSizing ships a frontier the renderer can draw, in every mode", async ()
     );
     assert.equal(
       p.contract,
-      12,
+      13,
       `${mode}/${chemistry}: contract bumped for the new field`,
     );
     const f = p.frontier;
@@ -621,7 +624,7 @@ test("a frontier failure never takes the whole result down", async () => {
       }),
     },
   );
-  assert.equal(p.contract, 12);
+  assert.equal(p.contract, 13);
   assert.ok(
     "frontier" in p,
     "the field always exists, even when there is nothing to draw",
@@ -722,4 +725,101 @@ test("REGRESSION: multi-year bill-cut % is per-year, not the accumulated total",
       `a ${a.chemistry} card sized for an ~80% cut should read ~80%, not ${a.cutPct}%`,
     );
   }
+});
+
+// ── fully-optimized dots ──────────────────────────────────────────────────
+
+function adoptFixture() {
+  const profile = OFFLINE_PROFILES.find((p) => p.name.includes("Honolulu"));
+  const hours = synthesizeFromProfile(profile);
+  return {
+    hours,
+    e1kw: buildE1kw(hours),
+    loadWh: expandProfile(flatProfile(40), hours.length),
+    tempsC: Float64Array.from(hours, (h) => h.tAmb),
+  };
+}
+
+const ADOPT_COSTS = {
+  costPerWpv: 0.35,
+  costPerKwhBatt: 140,
+  costPerKwInv: 60,
+  laborPerKwh: [12, 30],
+  invMinKw: 40 / 24,
+};
+
+function adoptBase(f) {
+  return {
+    e1kw: f.e1kw,
+    loadWh: f.loadWh,
+    tempsC: f.tempsC,
+    chemistry: "lfp",
+    mode: "gridtie",
+    pvMax: 30,
+    battMax: 120,
+    pvSteps: 8,
+    battSteps: 8,
+    years: 1,
+    ...ADOPT_COSTS,
+  };
+}
+
+test("ADOPT: without the flag the curve is untouched lattice", () => {
+  const f = adoptFixture();
+  const fr = buildFrontier(adoptBase(f));
+  assert.equal(fr.adoptedCount, 0);
+  assert.ok(fr.points.every((pt) => !("adopted" in pt) || pt.adopted == null));
+});
+
+test("ADOPT: with the flag every dot is lifetime-verified", async () => {
+  const f = adoptFixture();
+  const base = adoptBase(f);
+  const raw = buildFrontier(base);
+  const opt = buildFrontier({ ...base, oversize: true });
+  assert.ok(
+    opt.adoptedCount >= 1,
+    "heavy-cycling LFP must adopt at least one bank",
+  );
+  // Still a valid pareto curve: strictly more coverage per dollar.
+  const sorted = [...opt.points].sort((a, b) => a.capexUsd - b.capexUsd);
+  for (let i = 1; i < sorted.length; i++) {
+    assert.ok(
+      sorted[i].outcomePct > sorted[i - 1].outcomePct,
+      "adopted curve stays pareto-optimal",
+    );
+  }
+  for (const pt of opt.points) {
+    assert.ok(
+      Number.isFinite(pt.outcomePct) && pt.outcomePct >= 0,
+      "adopted outcome sane",
+    );
+    if (!pt.adopted) continue;
+    // The adopted bank truly swaps zero times on a fresh simulation.
+    const sim = simulateOffset({
+      pvKw: pt.pvKw,
+      battKwhUsable: pt.battKwh,
+      e1kw: f.e1kw,
+      loadWh: f.loadWh,
+      chemistry: "lfp",
+      tempsC: f.tempsC,
+    });
+    assert.equal(
+      batteryReplacements(
+        sim.cyclesEquivalent / 1,
+        CHEMISTRIES.lfp.cyclesTo80,
+      ),
+      0,
+      `${pt.pvKw}kW+${pt.battKwh}kWh must be genuinely zero-swap`,
+    );
+    assert.ok(
+      pt.adopted.fromBattKwh < pt.battKwh,
+      "adoption grows the bank it names",
+    );
+    assert.ok(pt.adopted.savingsUsd > 0, "adoption saves lifetime money");
+  }
+  // Adoption never makes the curve worse: same budget reaches at least the
+  // same outcome (banks only grow, arrays never shrink).
+  const rawTop = Math.max(...raw.points.map((p) => p.outcomePct));
+  const optTop = Math.max(...opt.points.map((p) => p.outcomePct));
+  assert.ok(optTop >= rawTop - 1e-9, "optimized ceiling >= lattice ceiling");
 });

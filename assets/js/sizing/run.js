@@ -25,20 +25,22 @@ import {
   ETA_INVERTER,
   capacityScaleFor,
   evaluateOversizeOptimization,
-} from "./engine.js?v=20260906e";
+  billCutFraction,
+} from "./engine.js?v=20260906f";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20260906e";
-import { buildFrontier } from "./frontier.js?v=20260906e";
+} from "./nasa.js?v=20260906f";
+import { buildFrontier } from "./frontier.js?v=20260906f";
+import { oversizeCallout } from "./rescale.js?v=20260906f";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20260906e";
+} from "./pricing.js?v=20260906f";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -49,7 +51,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20260906e";
+} from "./money.js?v=20260906f";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -140,7 +142,7 @@ export function autoNoteFor(entries, basis) {
 // UI-contract version: bump whenever payload fields change shape. The
 // renderer compares this to its own constant and warns on mismatch instead
 // of rendering garbage from a stale cached module.
-export const PAYLOAD_CONTRACT = 12;
+export const PAYLOAD_CONTRACT = 13;
 
 const AUTO_CARD_NOTES = {
   naion:
@@ -195,7 +197,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20260906e");
+      await import("./profiles.js?v=20260906f");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -270,6 +272,14 @@ export async function runSizing(msg, deps = {}) {
   if (mode === "offgrid" && hardwareConfig === "battery")
     unreachableReason = "needs-panels";
 
+  // A feed-in credit changes solar-only physics: clipped surplus earns at
+  // the credit rate, so net metering (not the daytime-direct share) sets the
+  // ceiling — at 1:1 a big array zeroes any bill. With a credit, solar-only
+  // therefore runs the standard 60/80/95 targets; without one it keeps the
+  // honest daytime caps. Battery-only targets are peak-window based either
+  // way (no PV, no export).
+  const hasExport =
+    exportRate !== null && exportRate > 0 && tariff !== null && tariff > 0;
   const effectiveTargets =
     hardwareConfig === "battery"
       ? [
@@ -277,7 +287,7 @@ export async function runSizing(msg, deps = {}) {
           { id: "cut15", label: "a ~15% peak bill cut", minFraction: 0.15 },
           { id: "cut20", label: "a ~20% full peak offset", minFraction: 0.2 },
         ]
-      : hardwareConfig === "solar"
+      : hardwareConfig === "solar" && !hasExport
         ? [
             {
               id: "cut15",
@@ -296,7 +306,7 @@ export async function runSizing(msg, deps = {}) {
   const defaultTargetId =
     hardwareConfig === "battery"
       ? "cut15"
-      : hardwareConfig === "solar"
+      : hardwareConfig === "solar" && !hasExport
         ? "cut25"
         : "cut80";
   const repTierId = VALID_AUTO_TIERS.has(autoTier) ? autoTier : "tier99";
@@ -646,16 +656,25 @@ export async function runSizing(msg, deps = {}) {
    * Bill-cut % for a grid-tie sizing result. Battery-only systems (no PV)
    * can never reduce TOTAL imports (charging losses add), so their cut is
    * the evening-peak-window offset fraction — the same metric the search
-   * constrained. Every card, cell, curve point and the search itself share
-   * this helper, so the % can never disagree between views.
+   * constrained. Everything else shares billCutFraction with the search
+   * constraint and the curve outcome — net-metered when a feed-in credit is
+   * entered (1:1 credits let solar-only reach 100%), import-only otherwise —
+   * so the % can never disagree between views.
    */
   function gridtieCutPct(sizing) {
     if (!sizing || !sizing.result) return null;
     if (sizing.pvKw <= 0)
       return Math.round((sizing.result.peakOffsetFraction || 0) * 100);
     const yrs = series.meta.years;
-    const importedKwhPerYear = sizing.result.importedWh / 1000 / yrs;
-    return Math.round((1 - importedKwhPerYear / (dailyKwh * 365)) * 100);
+    return Math.round(
+      billCutFraction({
+        importedWh: sizing.result.importedWh,
+        curtailedWh: sizing.result.curtailedWh,
+        loadTotalWh: dailyKwh * 1000 * 365 * yrs,
+        tariff,
+        exportRate,
+      }) * 100,
+    );
   }
 
   /** Lowest true-20-year-cost solvable entry — the "Best pick". */
@@ -709,8 +728,11 @@ export async function runSizing(msg, deps = {}) {
       costLo: m.cost.lo,
       costHi: m.cost.hi,
       cutPct: gridtieCutPct(sizing),
+      // Net of the feed-in credit (may go negative = net producer paid).
       billAfterMonthlyUsd:
-        billAfterUsd === null ? null : Math.round(billAfterUsd / 12),
+        billAfterUsd === null
+          ? null
+          : Math.round((billAfterUsd - exportVal) / 12),
       paybackYearsLo:
         savingsUsd !== null
           ? paybackYears(m.cost.lo, savingsUsd + exportVal)
@@ -794,7 +816,9 @@ export async function runSizing(msg, deps = {}) {
     cell.clippedKwhPerYear = Math.round(clippedKwhPerYear);
     cell.exportValueAnnualUsd = Math.round(exportVal);
     cell.billAfterMonthlyUsd =
-      billAfterUsd === null ? null : Math.round(billAfterUsd / 12);
+      billAfterUsd === null
+        ? null
+        : Math.round((billAfterUsd - exportVal) / 12);
     cell.cyclesPerYear = m.cyclesPerYear;
     cell.batteryLifeYears = m.batteryLifeYears;
     cell.peakLoadW = Math.round(peakLoadW);
@@ -918,7 +942,6 @@ export async function runSizing(msg, deps = {}) {
         oversizeScenario: m.oversizeScenario,
         oversizeSavingsUsd: m.oversizeSavingsUsd,
         oversizedBattKwh: m.oversizedBattKwh,
-      oversizedBattKwh: m.oversizedBattKwh,
       };
       entry.socNameplatePct = nameplateBands(
         sim,
@@ -1019,8 +1042,11 @@ export async function runSizing(msg, deps = {}) {
       importedKwhPerYear: Math.round(importedKwhPerYear),
       clippedKwhPerYear: Math.round(clippedKwhPerYear),
       exportValueAnnualUsd: Math.round(exportVal),
+      // Net of the feed-in credit (may go negative = net producer paid).
       billAfterMonthlyUsd:
-        billAfterUsd === null ? null : Math.round(billAfterUsd / 12),
+        billAfterUsd === null
+          ? null
+          : Math.round((billAfterUsd - exportVal) / 12),
       paybackYearsLo:
         savingsUsd !== null
           ? paybackYears(m.cost.lo, savingsUsd + exportVal)
@@ -1115,6 +1141,20 @@ export async function runSizing(msg, deps = {}) {
         pvMax,
         battMax,
         minOutcome: hardwareConfig === "battery" ? 0.05 : undefined,
+        // Fully-optimized dots: surviving points adopt verified zero-swap
+        // banks, so every dot is a system with no cheaper lifetime twin.
+        // The curve outcome is net-metered like the search (tariff +
+        // exportRate), so solar-only reaches 100% at 1:1 instead of
+        // stalling at the daytime fraction.
+        years: series.meta.years,
+        oversize: true,
+        tariff,
+        exportRate,
+        costPerWpv: costPerWpvMid,
+        costPerKwhBatt: battMidFor(chemId),
+        costPerKwInv: costPerKwInvMid,
+        laborPerKwh,
+        invMinKw,
       });
     } catch {
       payload.frontier = null; // never let a chart take the whole result down
@@ -1187,11 +1227,28 @@ export async function runSizing(msg, deps = {}) {
     // from the very simulation the point was built with (same money math as
     // the cards), then the heavy result objects are stripped before shipping.
     const pointDetail = (pt) => {
-      const m = moneyFor(chemId, {
-        pvKw: pt.pvKw,
-        battKwh: pt.battKwh,
-        result: pt.result,
-      });
+      // Adopted dots carry their verified story so the modal names the bank
+      // it shows (its zero-swap hardware, not the lattice parent). All other
+      // dots classify from displayed hardware only (see moneyFor).
+      const sizingForMoney = pt.adopted
+        ? {
+            pvKw: pt.pvKw,
+            battKwh: pt.battKwh,
+            result: pt.result,
+            oversizeScenario: "oversized_cheaper",
+            bestPriceCallout: oversizeCallout("oversized_cheaper", {
+              battKwh: pt.battKwh,
+              savingsUsd: pt.adopted.savingsUsd,
+            }),
+            oversizeSavingsUsd: pt.adopted.savingsUsd,
+            oversizedBattKwh: pt.battKwh,
+          }
+        : {
+            pvKw: pt.pvKw,
+            battKwh: pt.battKwh,
+            result: pt.result,
+          };
+      const m = moneyFor(chemId, sizingForMoney);
       const yrs = series.meta.years;
       const servYr =
         (payload.mode === "gridtie"
@@ -1232,7 +1289,6 @@ export async function runSizing(msg, deps = {}) {
         oversizeScenario: m.oversizeScenario,
         oversizeSavingsUsd: m.oversizeSavingsUsd,
         oversizedBattKwh: m.oversizedBattKwh,
-      oversizedBattKwh: m.oversizedBattKwh,
       };
       let savingsBase = null;
       let residualUsd = 0;
@@ -1245,7 +1301,7 @@ export async function runSizing(msg, deps = {}) {
         d.clippedKwhPerYear = Math.round(clipKwhYr);
         d.exportValueAnnualUsd = Math.round(exportV);
         d.billAfterMonthlyUsd =
-          billAfter === null ? null : Math.round(billAfter / 12);
+          billAfter === null ? null : Math.round((billAfter - exportV) / 12);
         d.cutPct = gridtieCutPct({ pvKw: pt.pvKw, result: pt.result });
         savingsBase =
           billAfter !== null && gridSpend
@@ -1363,6 +1419,8 @@ export async function runSizing(msg, deps = {}) {
     capacityScale: capacityScaleFor(chemistry, meanTempC),
     laborPerKwh,
     invMinKw,
+    tariff,
+    exportRate,
     targets: effectiveTargets,
   };
 
@@ -1403,6 +1461,8 @@ export async function runSizing(msg, deps = {}) {
             capacityScale: capacityScaleFor(chemId, meanTempC),
             laborPerKwh,
             invMinKw,
+            tariff,
+            exportRate,
           });
           const entry = sized ? entryFromSizing(chemId, sized) : null;
           if (entry) customEntries.push(entry);
@@ -1588,6 +1648,8 @@ export async function runSizing(msg, deps = {}) {
           capacityScale: capScale,
           laborPerKwh,
           invMinKw,
+          tariff,
+          exportRate,
           targets: effectiveTargets,
         });
         resultsByChem[chemId] = results;
@@ -1664,6 +1726,8 @@ export async function runSizing(msg, deps = {}) {
           capacityScale: capacityScaleFor(chemId, meanTempC),
           laborPerKwh,
           invMinKw,
+          tariff,
+          exportRate,
         });
         const entry = sized ? entryFromSizing(chemId, sized) : null;
         if (entry) customEntries.push(entry);
@@ -1930,8 +1994,6 @@ export async function runSizing(msg, deps = {}) {
           oversizeScenario: m.oversizeScenario,
           oversizeSavingsUsd: m.oversizeSavingsUsd,
           oversizedBattKwh: m.oversizedBattKwh,
-        oversizedBattKwh: m.oversizedBattKwh,
-      oversizedBattKwh: m.oversizedBattKwh,
         };
         const sim = simulate({
           pvKw: sizing.pvKw,

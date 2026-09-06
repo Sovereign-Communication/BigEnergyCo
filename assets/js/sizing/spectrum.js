@@ -9,7 +9,7 @@
 //
 // Pure data + SVG: no DOM globals, no network. ui.js owns the selection hub;
 // this module only shapes payload data and draws it.
-import { niceMax, axisTicks } from "./frontier-chart.js?v=20260906e";
+import { niceMax, axisTicks } from "./frontier-chart.js?v=20260906f";
 
 export const SPECTRUM_CHEM_COLORS = {
   naion: "#60a5fa",

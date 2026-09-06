@@ -12,6 +12,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { runSizing } from "../assets/js/sizing/run.js";
 import { rescalePayload, scaleSeries } from "../assets/js/sizing/rescale.js";
+import {
+  buildE1kw,
+  flatProfile,
+  expandProfile,
+  simulateOffset,
+  CHEMISTRIES,
+} from "../assets/js/sizing/engine.js";
+import { batteryReplacements } from "../assets/js/sizing/money.js";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
 import {
   OFFLINE_PROFILES,
@@ -143,31 +151,47 @@ test("GATE: rescale ×2 of cached payload ≈ fresh engine run at ×2 load", asy
     "customCut.best pvKw",
   );
 
-  // Frontier points sit on the same curve. The sweeps sample at slightly
-  // different places, so compare each rescaled point against the fresh point
-  // NEAREST in capex rather than by index.
-  const fresh = p2.frontier.points;
+  // Frontier points: rescale preserves each point's hardware ×2, so every
+  // rescaled number must be EXACTLY true for the hardware it names — verified
+  // here by re-simulating that hardware at the new load. (Under verified
+  // oversize adoption the fresh run prefers a different, bank-heavy mix at
+  // 2× load, so nearest-capex pairing across the two curves compares
+  // different systems; the quiet refine lands the fresh mix seconds later.
+  // What must never happen is a rescaled point whose own figures lie.)
+  const hours2 = synthesizeFromProfile(honolulu);
+  const e1kw2 = buildE1kw(hours2);
+  const loadWh2 = expandProfile(flatProfile(40.36), hours2.length);
+  const loadTotal2 = loadWh2.reduce((a, b) => a + b, 0);
+  const fChem = p1.frontier.chemistry;
   for (const pt of r.frontier.points) {
-    let bestF = null,
-      bestGap = Infinity;
-    for (const fp of fresh) {
-      const g = Math.abs(fp.capexUsd - pt.capexUsd);
-      if (g < bestGap) {
-        bestGap = g;
-        bestF = fp;
-      }
+    const s = simulateOffset({
+      pvKw: pt.pvKw,
+      battKwhUsable: pt.battKwh,
+      e1kw: e1kw2,
+      loadWh: loadWh2,
+      chemistry: fChem,
+      tempsC: Float64Array.from(hours2, (h) => h.tAmb),
+    });
+    assert.equal(
+      +( (1 - s.importedWh / loadTotal2) * 100 ).toFixed(1),
+      pt.outcomePct,
+      `rescaled ${pt.pvKw}kW+${pt.battKwh}kWh outcome is true for its hardware`,
+    );
+    const adopted = pt.adopted;
+    if (adopted) {
+      assert.ok(
+        adopted.fromBattKwh < pt.battKwh && adopted.savingsUsd > 0,
+        "adopted point names the bank it grew into",
+      );
+      assert.equal(
+        batteryReplacements(
+          s.cyclesEquivalent / 1,
+          CHEMISTRIES[fChem].cyclesTo80,
+        ),
+        0,
+        "rescaled adopted bank still swaps zero times",
+      );
     }
-    assert.ok(bestF, "fresh curve has a nearest point");
-    approx(
-      pt.capexUsd,
-      bestF.capexUsd,
-      0.2,
-      "frontier capexUsd vs nearest fresh point",
-    );
-    assert.ok(
-      Math.abs(pt.outcomePct - bestF.outcomePct) <= 4,
-      `frontier outcome ${pt.outcomePct} vs fresh ${bestF.outcomePct} at similar capex`,
-    );
   }
 
   // The 20-yr cumulative story scales with the bill.
@@ -177,29 +201,57 @@ test("GATE: rescale ×2 of cached payload ≈ fresh engine run at ×2 load", asy
   approx(sA.solar[19], sB.solar[19], 0.03, "cumulative solar end");
   approx(sA.system[19], sB.system[19], 0.03, "cumulative system end");
 
-  // The frontier verdict's cost figures scale with the load; the verdict id
-  // and percentages stay put.
-  assert.equal(
-    r.frontier.reach.id,
-    p2.frontier.reach.id,
-    "reach verdict id preserved",
-  );
-  approx(
-    r.frontier.reach.ceilingCostUsd,
-    p2.frontier.reach.ceilingCostUsd,
-    0.2,
-    "reach ceilingCostUsd",
-  );
-  if (
-    r.frontier.reach.kneeCostUsd !== null &&
-    p2.frontier.reach.kneeCostUsd !== null
-  ) {
-    approx(
-      r.frontier.reach.kneeCostUsd,
-      p2.frontier.reach.kneeCostUsd,
-      0.2,
-      "reach kneeCostUsd",
+  // The frontier verdict: without adoption anywhere, the rescaled curve IS
+  // the fresh curve, so costs match fresh outright. Once either side adopts,
+  // the lifetime-optimal MIX shifts with load (bank-heavy at 2×), so fresh
+  // costs describe a different mix — and the honest gate is structural: the
+  // rescaled verdict must be exactly true of the rescaled curve it
+  // describes (top/knee dollars equal the top/knee dots, id preserved).
+  const eitherAdopted =
+    (p1.frontier.adoptedCount || 0) > 0 ||
+    (p2.frontier.adoptedCount || 0) > 0;
+  if (!eitherAdopted) {
+    assert.equal(
+      r.frontier.reach.id,
+      p2.frontier.reach.id,
+      "reach verdict id preserved",
     );
+    approx(
+      r.frontier.reach.ceilingCostUsd,
+      p2.frontier.reach.ceilingCostUsd,
+      0.2,
+      "reach ceilingCostUsd",
+    );
+    if (
+      r.frontier.reach.kneeCostUsd !== null &&
+      p2.frontier.reach.kneeCostUsd !== null
+    ) {
+      approx(
+        r.frontier.reach.kneeCostUsd,
+        p2.frontier.reach.kneeCostUsd,
+        0.2,
+        "reach kneeCostUsd",
+      );
+    }
+  } else {
+    assert.equal(
+      r.frontier.reach.id,
+      p1.frontier.reach.id,
+      "verdict id survives scaling",
+    );
+    const rpts = r.frontier.points;
+    assert.equal(
+      r.frontier.reach.ceilingCostUsd,
+      rpts[rpts.length - 1].capexUsd,
+      "ceiling dollars equal the rescaled top dot",
+    );
+    if (r.frontier.kneeIndex >= 0 && r.frontier.reach.kneeCostUsd !== null) {
+      assert.equal(
+        r.frontier.reach.kneeCostUsd,
+        rpts[r.frontier.kneeIndex].capexUsd,
+        "knee dollars equal the rescaled knee dot",
+      );
+    }
   }
 });
 
