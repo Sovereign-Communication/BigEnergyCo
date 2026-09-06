@@ -923,13 +923,24 @@
 
           const metricLabel = metric === "p" ? "payback" : "break-even";
           const basisLabel = basis === "real" ? "real-world" : "grid-only";
+          // Place/country names come from the fetched data grid: escape
+          // before interpolating into markup (canonical escaper lives in
+          // assets/js/shared/escape.js; inlined here because this page's
+          // script is classic, not a module).
+          const esc = (v) =>
+            String(v ?? "")
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#39;");
 
           document.getElementById("best-list").innerHTML = bestByCountry
             .map((pt) => {
               const s = pt[mKey] || pt[metric];
               const rateDisplay =
                 basis === "real" && pt.tr ? `$${pt.tr}` : `$${pt.t}`;
-              return `<li><span class="years">${yearLabel(s[usageIdx])}</span> — ${pt.n}, ${countryName(pt.c)} <span class="detail">(${rateDisplay}/kWh, ${pt.y} kWh/kWp)</span></li>`;
+              return `<li><span class="years">${yearLabel(s[usageIdx])}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${rateDisplay}/kWh, ${pt.y} kWh/kWp)</span></li>`;
             })
             .join("");
 
@@ -938,7 +949,7 @@
               const s = pt[mKey] || pt[metric];
               const rateDisplay =
                 basis === "real" && pt.tr ? `$${pt.tr}` : `$${pt.t}`;
-              return `<li><span class="years">${yearLabel(s[usageIdx])}</span> — ${pt.n}, ${countryName(pt.c)} <span class="detail">(${rateDisplay}/kWh, ${pt.y} kWh/kWp)</span></li>`;
+              return `<li><span class="years">${yearLabel(s[usageIdx])}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${rateDisplay}/kWh, ${pt.y} kWh/kWp)</span></li>`;
             })
             .join("");
 

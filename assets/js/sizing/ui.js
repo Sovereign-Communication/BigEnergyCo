@@ -48,6 +48,8 @@ import {
 
 import { LOCALES } from "../shared/locales.js?v=20260906c";
 
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260906c";
+
 import {
   renderFrontier,
   frontierVerdict,
@@ -2953,14 +2955,14 @@ function matrixHtml(p) {
           const cls =
             bestCls || selCls ? ` class="${(bestCls + selCls).trim()}"` : "";
           const clickable = selectable
-            ? ` data-sel="${key}" role="button" tabindex="0" aria-label="Select ${row.label} at ${col.label}" style="cursor:pointer;"`
+            ? ` data-sel="${key}" role="button" tabindex="0" aria-label="Select ${escapeAttr(row.label)} at ${escapeAttr(col.label)}" style="cursor:pointer;"`
             : "";
           if (!cell || !cell.solvable) {
             const reasonText =
               cell && cell.reason
                 ? INFEASIBLE_HINTS[cell.reason]?.title || "not practical here"
                 : "not practical here";
-            return `<td${cls}><span style="color:var(--text-muted);font-size:0.78rem;line-height:1.35;">${reasonText}</span></td>`;
+            return `<td${cls}><span style="color:var(--text-muted);font-size:0.78rem;line-height:1.35;">${escapeHtml(reasonText)}</span></td>`;
           }
           let rel;
           if (p.mode === "offgrid")
@@ -2977,7 +2979,7 @@ function matrixHtml(p) {
           );
         })
         .join("");
-      return `<tr><th>${row.label}</th>${cells}</tr>`;
+      return `<tr><th>${escapeHtml(row.label)}</th>${cells}</tr>`;
     })
     .join("");
   const hint =
