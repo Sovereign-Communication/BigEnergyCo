@@ -14,7 +14,7 @@
 // Pareto-optimal set - a system survives if nothing cheaper covers more.
 // Pure functions: no DOM, no network, no globals.
 
-import { simulate, simulateOffset, CHEMISTRIES } from "./engine.js?v=20260905c";
+import { simulate, simulateOffset, CHEMISTRIES } from "./engine.js?v=20260906c";
 
 // Points below this coverage are real but not decision-useful; plotting them
 // squashes the interesting part of the curve into the top corner.

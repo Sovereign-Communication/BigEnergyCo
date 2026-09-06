@@ -2,7 +2,7 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260905c";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260906c";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -449,7 +449,7 @@ export function evaluateOversizeOptimization({
       oversizeScenario: "oversized_cheaper",
       oversizedBattKwh: targetBattKwh,
       oversizeSavingsUsd: savings,
-      bestPriceCallout: `Best 20-year price: oversizing battery to ${targetBattKwh} kWh avoids replacements, saving ~$${savings.toLocaleString()} over 20 years vs. smaller banks with swaps.`,
+      bestPriceCallout: `This system uses an oversized battery (${targetBattKwh} kWh) to avoid replacements, giving you the lowest 20-year cost — saving ~$${savings.toLocaleString()} vs. smaller banks with swaps.`,
     };
   } else {
     const savings = lifeOversized.total - lifeStandard.total;
