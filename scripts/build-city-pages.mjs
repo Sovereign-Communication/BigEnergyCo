@@ -149,7 +149,7 @@ function cityPage(c) {
   const wx = workedExample(c, lo, hi);
   const coord = `${Math.abs(c.lat).toFixed(2)}° ${c.lat >= 0 ? "N" : "S"}, ${Math.abs(c.lon).toFixed(2)}° ${c.lon >= 0 ? "E" : "W"}`;
   const title = `Solar & Battery Calculator for ${c.name}, ${c.country} — Free, Honest Sizing`;
-  const desc = `Free solar and battery sizing for ${c.name}, ${c.country} (${coord}). Simulated against five years of NASA satellite weather. Nothing for sale.`;
+  const desc = `Free solar and battery sizing for ${c.name}, ${c.country} (${coord}). Five years of NASA weather. Nothing for sale.`;
   const h1 = `Solar & Battery Sizing for ${c.name}, ${c.country}`;
 
   return `<!DOCTYPE html>
@@ -175,10 +175,10 @@ function cityPage(c) {
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${title}">
   <meta name="twitter:description" content="${desc}">
-  <meta property="og:image" content="https://bigenergyco.pages.dev/assets/og-card.png">
-  <meta property="og:image:width" content="2688">
-  <meta property="og:image:height" content="1536">
-  <meta name="twitter:image" content="https://bigenergyco.pages.dev/assets/og-card.png">
+  <meta property="og:image" content="https://bigenergyco.pages.dev/assets/og-card.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:image" content="https://bigenergyco.pages.dev/assets/og-card.jpg">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -380,6 +380,15 @@ ${cities
       </div>
       <p><a href="../">Browse all ${cities.length} cities →</a></p>
 
+      <h2>Related guides</h2>
+      <ul>
+        <li><a href="../../blog/how-to-cut-electricity-bill-with-solar/">How to cut your electricity bill with solar (honest math)</a></li>
+        <li><a href="../../blog/is-a-home-battery-worth-it/">Is a home battery worth it?</a></li>
+        <li><a href="../../blog/off-grid-vs-grid-tie-payback/">Off-grid vs grid-tied: which pays back faster?</a></li>
+        <li><a href="../../blog/what-size-solar-system-for-off-grid/">What size solar system for off-grid?</a></li>
+        <li><a href="../../about/">About the method (NASA weather, derates, update cadence)</a></li>
+      </ul>
+
       <h2>Frequently asked</h2>
       <details>
         <summary>How much solar do I need in ${c.name}?</summary>
@@ -451,13 +460,17 @@ function hubPage() {
   <link rel="alternate" hreflang="x-default" href="${url}">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="BigEnergyCo">
+  <meta property="og:locale" content="en_US">
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${desc}">
   <meta property="og:url" content="${url}">
-  <meta property="og:image" content="https://bigenergyco.pages.dev/assets/og-card.png">
+  <meta property="og:image" content="https://bigenergyco.pages.dev/assets/og-card.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${title}">
   <meta name="twitter:description" content="${desc}">
+  <meta name="twitter:image" content="https://bigenergyco.pages.dev/assets/og-card.jpg">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -567,7 +580,14 @@ function hubPage() {
     <article>
       <h1>Solar &amp; Battery Calculator by City</h1>
       <p>Pick your city for a free, honest sizing overview — then run the exact simulation with your coordinates and your own tariff. Every page is powered by the same deterministic engine simulating <strong>five years of hourly NASA satellite weather</strong>. No signup, nothing for sale.</p>
+      <p>New here? <a href="../about/">How the method works</a> · <a href="../solar-heatmap/">Where payback is fastest (world map)</a> · <a href="../blog/">Guides: cut your bill, size off-grid, batteries</a></p>
 ${regionBlocks}
+      <h2>Start with the guides</h2>
+      <ul>
+        <li><a href="../blog/how-to-cut-electricity-bill-with-solar/">How to cut your electricity bill with solar</a></li>
+        <li><a href="../blog/is-a-home-battery-worth-it/">Is a home battery worth it?</a></li>
+        <li><a href="../blog/what-size-solar-system-for-off-grid/">What size solar system for off-grid?</a></li>
+      </ul>
     </article>
   </main>
 

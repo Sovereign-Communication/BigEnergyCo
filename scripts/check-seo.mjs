@@ -43,11 +43,17 @@ for (const page of pages) {
   if (h1s === 1) ok(`${page}: single h1`);
   else fail(`${page}: expected exactly 1 <h1>, found ${h1s}`);
 
-  // canonical (home, blog index, posts — not utility pages).
+  // canonical (home, blog index, posts, city pages, heatmap, about — not utility pages).
   // Accepts self-closing tags and line-wrapped attributes: Prettier
   // normalizes void elements to `/>` and may put each attribute on its
   // own line — both are valid HTML.
-  if (page === "index.html" || page.startsWith("blog/")) {
+  if (
+    page === "index.html" ||
+    page.startsWith("blog/") ||
+    page.startsWith("solar-calculator/") ||
+    page.startsWith("solar-heatmap/") ||
+    page.startsWith("about/")
+  ) {
     if (
       /<link\s+rel="canonical"\s+href="https:\/\/bigenergyco\.pages\.dev\/[^"]*"\s*\/?>/.test(
         html,
@@ -57,8 +63,15 @@ for (const page of pages) {
     else fail(`${page}: missing or wrong canonical`);
   }
 
-  // OG tags on index and posts
-  if (page === "index.html" || /^blog\/[^/]+\/index\.html$/.test(page)) {
+  // OG tags on index, posts, city pages, heatmap, about, blog hub
+  if (
+    page === "index.html" ||
+    page === "blog/index.html" ||
+    /^blog\/[^/]+\/index\.html$/.test(page) ||
+    page.startsWith("solar-calculator/") ||
+    page.startsWith("solar-heatmap/") ||
+    page.startsWith("about/")
+  ) {
     const ogTitle = /property="og:title"/.test(html);
     const ogDesc = /property="og:description"/.test(html);
     const ogImage = /property="og:image"/.test(html);

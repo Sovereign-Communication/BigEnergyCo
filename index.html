@@ -29,12 +29,14 @@
 
     <meta
       name="description"
-      content="A free AI-assisted solar and battery storage estimator for anywhere in the world. No signup, nothing for sale. Educational estimates only  -  verify with a licensed professional."
+      content="Free solar and battery estimator for anywhere on Earth. Real NASA weather, honest payback math. No signup, nothing for sale."
     />
 
     <meta property="og:type" content="website" />
 
     <meta property="og:site_name" content="BigEnergyCo" />
+
+    <meta property="og:locale" content="en_US" />
 
     <meta
       property="og:title"
@@ -43,19 +45,19 @@
 
     <meta
       property="og:description"
-      content="A free AI-assisted solar and battery storage estimator for anywhere in the world. No signup, nothing for sale. Educational estimates only  -  verify with a licensed professional."
+      content="Free solar and battery estimator for anywhere on Earth. Real NASA weather, honest payback math. No signup, nothing for sale."
     />
 
     <meta property="og:url" content="https://bigenergyco.pages.dev/" />
 
     <meta
       property="og:image"
-      content="https://bigenergyco.pages.dev/assets/og-card.png"
+      content="https://bigenergyco.pages.dev/assets/og-card.jpg"
     />
 
-    <meta property="og:image:width" content="2688" />
+    <meta property="og:image:width" content="1200" />
 
-    <meta property="og:image:height" content="1536" />
+    <meta property="og:image:height" content="630" />
 
     <meta name="twitter:card" content="summary_large_image" />
 
@@ -66,12 +68,12 @@
 
     <meta
       name="twitter:description"
-      content="A free AI-assisted solar and battery storage estimator for anywhere in the world. No signup, nothing for sale. Educational estimates only  -  verify with a licensed professional."
+      content="Free solar and battery estimator for anywhere on Earth. Real NASA weather, honest payback math. No signup, nothing for sale."
     />
 
     <meta
       name="twitter:image"
-      content="https://bigenergyco.pages.dev/assets/og-card.png"
+      content="https://bigenergyco.pages.dev/assets/og-card.jpg"
     />
 
     <link rel="alternate" hreflang="en" href="https://bigenergyco.pages.dev/" />
@@ -235,9 +237,15 @@
 
             <a href="#sizing" data-i18n="navCosts">Estimator</a>
 
+            <a href="./solar-calculator/">Cities</a>
+
+            <a href="./solar-heatmap/">Heatmap</a>
+
             <a href="#bom" data-i18n="navBom">Hardware Reference</a>
 
             <a href="./blog/" data-i18n="navBlog">Blog</a>
+
+            <a href="./about/">About</a>
 
             <a href="#legal" data-i18n="navLegal">Terms &amp; Disclaimer</a>
           </nav>
@@ -335,6 +343,14 @@
 
           <a href="./solar-calculator/" class="mobile-nav-link"
             >City Sizing Pages <span>&rarr;</span></a
+          >
+
+          <a href="./solar-heatmap/" class="mobile-nav-link"
+            >Payback Heatmap <span>&rarr;</span></a
+          >
+
+          <a href="./about/" class="mobile-nav-link"
+            >About <span>&rarr;</span></a
           >
 
           <a href="#legal" class="mobile-nav-link" data-i18n="navLegal"
@@ -2350,6 +2366,19 @@
           <a href="./blog/" style="color: var(--primary-accent)">Blog</a>
 
           &nbsp;-&nbsp;
+          <a href="./solar-calculator/" style="color: var(--primary-accent)"
+            >Cities</a
+          >
+
+          &nbsp;-&nbsp;
+          <a href="./solar-heatmap/" style="color: var(--primary-accent)"
+            >Heatmap</a
+          >
+
+          &nbsp;-&nbsp;
+          <a href="./about/" style="color: var(--primary-accent)">About</a>
+
+          &nbsp;-&nbsp;
           <a href="#legal" style="color: var(--primary-accent)">Terms</a>
 
           &nbsp;-&nbsp;
@@ -2657,7 +2686,7 @@
 
     <script type="module" src="./assets/js/sizing/ui.js?v=20260906k"></script>
 
-    <script src="./assets/js/chat.js?v=20260906k"></script>
+    <script defer src="./assets/js/chat.js?v=20260906k"></script>
   </body>
 </html>
 

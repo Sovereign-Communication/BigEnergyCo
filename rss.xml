@@ -6,7 +6,49 @@
     <description>Educational guides, chemistry comparisons, and engineering insights for DIY and off-grid solar and battery storage systems worldwide. Nothing for sale.</description>
     <language>en</language>
     <atom:link href="https://bigenergyco.pages.dev/rss.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Sun, 30 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 07 Sep 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Escape Load Shedding With Solar: Backup Sizes (2026)</title>
+      <link>https://bigenergyco.pages.dev/blog/escape-load-shedding/</link>
+      <guid isPermaLink="true">https://bigenergyco.pages.dev/blog/escape-load-shedding/</guid>
+      <pubDate>Sun, 07 Sep 2026 00:00:00 GMT</pubDate>
+      <description>Essential-load sizing, backup size table, and staged path from small backup to bill-cut to off-grid. Free estimate.</description>
+    </item>
+    <item>
+      <title>Solar vs Generator Running Cost: Honest Fuel Math (2026)</title>
+      <link>https://bigenergyco.pages.dev/blog/solar-vs-generator-cost/</link>
+      <guid isPermaLink="true">https://bigenergyco.pages.dev/blog/solar-vs-generator-cost/</guid>
+      <pubDate>Sun, 07 Sep 2026 00:00:00 GMT</pubDate>
+      <description>Generator vs solar running cost at $1-2/L fuel versus solar+battery LCOE, with Lagos and Beirut examples. Free tool.</description>
+    </item>
+    <item>
+      <title>Battery Bank Sizing Calculator: Off-Grid Guide (2026)</title>
+      <link>https://bigenergyco.pages.dev/blog/off-grid-battery-bank-sizing/</link>
+      <guid isPermaLink="true">https://bigenergyco.pages.dev/blog/off-grid-battery-bank-sizing/</guid>
+      <pubDate>Sun, 07 Sep 2026 00:00:00 GMT</pubDate>
+      <description>Usable vs nominal, series vs parallel, voltage choice, and 48V bank ranges for 10 kWh per day. Free simulation.</description>
+    </item>
+    <item>
+      <title>What Size Solar System for Off-Grid? Honest Guide (2026)</title>
+      <link>https://bigenergyco.pages.dev/blog/what-size-solar-system-for-off-grid/</link>
+      <guid isPermaLink="true">https://bigenergyco.pages.dev/blog/what-size-solar-system-for-off-grid/</guid>
+      <pubDate>Sun, 07 Sep 2026 00:00:00 GMT</pubDate>
+      <description>Reliability tiers, latitude yield bands, and PV plus battery ranges for 10 kWh per day. Free simulation.</description>
+    </item>
+    <item>
+      <title>Time-of-Use Battery Savings: Dodge Peak Prices (2026)</title>
+      <link>https://bigenergyco.pages.dev/blog/time-of-use-tariffs-battery/</link>
+      <guid isPermaLink="true">https://bigenergyco.pages.dev/blog/time-of-use-tariffs-battery/</guid>
+      <pubDate>Sun, 07 Sep 2026 00:00:00 GMT</pubDate>
+      <description>Peak vs off-peak arbitrage math, 2 kWh shifting example, and battery sizing table. Free tool.</description>
+    </item>
+    <item>
+      <title>Is a Home Battery Worth It? Honest Payback Math (2026)</title>
+      <link>https://bigenergyco.pages.dev/blog/is-a-home-battery-worth-it/</link>
+      <guid isPermaLink="true">https://bigenergyco.pages.dev/blog/is-a-home-battery-worth-it/</guid>
+      <pubDate>Sun, 07 Sep 2026 00:00:00 GMT</pubDate>
+      <description>Honest 2026 math on LFP, sodium-ion and lead-acid lifetime cost, with Honolulu vs Germany examples. Free simulation.</description>
+    </item>
     <item>
       <title>How to Cut Your Electricity Bill With Solar: Honest Math (2026)</title>
       <link>https://bigenergyco.pages.dev/blog/how-to-cut-electricity-bill-with-solar/</link>

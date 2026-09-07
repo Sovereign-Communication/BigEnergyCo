@@ -63,6 +63,20 @@ Cloudflare (`bigenergyco.pages.dev`) is the last-mile copy of the _same_ build.
 
    Verify at `https://bigenergyco.pages.dev`.
 
+5. **Manual drift check (no automation by design).** `main` is staging;
+   Cloudflare is manual-gated. After each brand deploy, confirm both origins
+   serve the same sitemap and that security headers are present on the brand:
+
+   ```bash
+   node scripts/deploy-pages-local.mjs --check
+   curl -s https://bigenergyco.pages.dev/sitemap.xml | head -5
+   curl -s https://sovereign-communication.github.io/BigEnergyCo/sitemap.xml | head -5
+   curl -sI https://bigenergyco.pages.dev/blog/ | findstr /i "content-security-policy strict-transport"
+   ```
+
+   If the sitemaps differ, re-run step 4. Never link to the legacy
+   `github.io` URL publicly — canonicals stay on `bigenergyco.pages.dev`.
+
    > The API Worker is a separate concern: only redeploy it
    > (`cd worker && npx wrangler deploy`) when `worker/index.js` actually
    > changed. Front-end site changes never require a Worker deploy.
