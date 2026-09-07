@@ -124,8 +124,12 @@ let lastRunQuiet = false;
 // Epoch links every patch to the payload it was computed against: a full run
 // bumps payloadEpoch, so a slice from older inputs can never merge into a
 // newer payload (independent counters alone could not prevent that).
+// sliceBusy/pendingSlice collapse rapid slider edits the same way workerBusy
+// does for full runs (see run()).
 let sliceToken = 0;
 let payloadEpoch = 0;
+let sliceBusy = false;
+let pendingSlice = null; // { focusPvKw, focusBattKwh, focusChemistry }
 
 // PWA install prompt holder
 let deferredInstallPrompt = null;
@@ -1767,8 +1771,23 @@ function requestIncrementalCut(
   focusBattKwh = null,
   focusChemistry = null,
 ) {
+  const focus = { focusPvKw, focusBattKwh, focusChemistry };
+  // Slices queue behind each other in the worker like full runs do: collapse
+  // rapid slider edits into one trailing slice instead of burning seconds of
+  // superseded engine work. The latest focus coordinates always win.
+  if (sliceBusy) {
+    pendingSlice = focus;
+    return;
+  }
+  postSlice(focus);
+}
+
+function postSlice(focus) {
   const p = lastPayload;
-  if (!p) return;
+  if (!p) {
+    pendingSlice = null;
+    return;
+  }
   const inp = readInputs();
   const seq = ++sliceToken;
   ensureWorker().postMessage({
@@ -1777,10 +1796,18 @@ function requestIncrementalCut(
     epoch: payloadEpoch,
     incrementalCut: true,
     ...inp,
-    focusPvKw,
-    focusBattKwh,
-    focusChemistry,
+    focusPvKw: focus.focusPvKw,
+    focusBattKwh: focus.focusBattKwh,
+    focusChemistry: focus.focusChemistry,
   });
+  sliceBusy = true;
+}
+
+function flushPendingSlice() {
+  if (!pendingSlice) return;
+  const f = pendingSlice;
+  pendingSlice = null;
+  postSlice(f);
 }
 
 // Merge an incremental slice into the retained payload and refresh only what
@@ -1799,8 +1826,10 @@ function mergeReSlice(result) {
     // system, so the card, charts, BOM, export and share link all follow it.
     if (!p.auto && p.mode === "gridtie") {
       renderTargetCards(p, [p.customTarget]);
-      if (selectedKey === "custom" || selectedKey === "best" || !selectedKey)
+      if (selectedKey === "custom" || selectedKey === "best" || !selectedKey) {
+        renderFrontierPanel(p);
         refreshSelectionOutputs(p);
+      }
     }
   }
   // Auto grid-tie: the recommendation follows the bill-cut slider. The worker
@@ -1821,8 +1850,10 @@ function mergeReSlice(result) {
       selectedKey === "best" ||
       selectedKey === "focus" ||
       selectedKey === "adopted"
-    )
+    ) {
+      renderFrontierPanel(p);
       refreshSelectionOutputs(p);
+    }
   }
   // Keep the custom column header in lockstep with the slider.
   const label = result.customCut
@@ -2080,6 +2111,7 @@ function commitCurvePreview(q, opts = {}) {
     adoptedEntry = null;
     frontierSelected = null;
     selectedKey = "best";
+    renderFrontierPanel(p);
     refreshSelectionOutputs(p);
   } else {
     adoptFrontierPoint(q.index);
@@ -2347,6 +2379,14 @@ function ensureWorker() {
         // no status churn. A patch is only merged when it belongs to the
         // CURRENT payload epoch: a slice computed from pre-edit inputs that
         // lands after a full run for newer inputs is dropped, never merged.
+        // A superseded patch (a newer slider edit already collapsed behind
+        // it) is likewise dropped in favor of the trailing slice.
+
+        sliceBusy = false;
+        if (pendingSlice) {
+          flushPendingSlice();
+          return;
+        }
 
         if (ev.data.seq !== sliceToken) return;
 
@@ -2355,6 +2395,15 @@ function ensureWorker() {
 
         mergeReSlice(ev.data.result);
       } else if (ev.data?.type === "error") {
+        // A failed slice frees the channel like a finished one; a trailing
+        // collapsed edit still goes out (once — the retry consumes it).
+        if (ev.data.stream === "slice") {
+          sliceBusy = false;
+          if (pendingSlice) {
+            flushPendingSlice();
+            return;
+          }
+        }
         // Stale errors must not overwrite a newer success: only the latest
         // run or slice in each stream may report.
         const s = ev.data.seq;
@@ -2378,8 +2427,10 @@ function ensureWorker() {
       setStatus(t("errorSim") + "Sizing engine failed to load.");
 
       workerBusy = false;
+      sliceBusy = false;
       restoreRunButton();
       flushPendingRun();
+      flushPendingSlice();
     };
   }
 
@@ -2947,6 +2998,7 @@ function renderAutoCards(p) {
       const selectCard = () => {
         frontierSelected = null;
         selectedKey = "auto:" + a.chemistry;
+        renderFrontierPanel(p);
         refreshSelectionOutputs(p);
         renderAutoCards(p);
       };
@@ -4116,6 +4168,7 @@ function renderTierCards(p) {
       const selectCard = () => {
         frontierSelected = null;
         selectedKey = "tier:" + t.id;
+        renderFrontierPanel(p);
         refreshSelectionOutputs(p);
         renderTierCards(p);
       };
@@ -4279,6 +4332,7 @@ function renderTargetCards(p, extraTargets = []) {
       const selectCard = () => {
         frontierSelected = null;
         selectedKey = targetKey;
+        renderFrontierPanel(p);
         refreshSelectionOutputs(p);
         renderTargetCards(p, extraTargets);
       };
@@ -5874,7 +5928,10 @@ function refreshSelectionOutputs(p) {
   }
 
   drawCumCostChart(p, sel);
-  renderFrontierPanel(p);
+
+  // NOTE: no renderFrontierPanel here — every caller renders the curve
+  // itself first (renderResults, adoptFrontierPoint, mergeReSlice), so one
+  // update builds the SVG + table exactly once instead of twice.
 
   // Granular panel follows the same committed selection.
   if (focusFirst) renderFocusPanel(p, sel, false);

@@ -43,17 +43,25 @@ export async function fetchHourlySeries({
   const startYear = endYear - years + 1;
 
   // Request in <=2-year chunks to keep responses small and retryable.
-  const hours = [];
+  // Chunks fetch in PARALLEL: same total load on the API, roughly a third
+  // of the wait on a typical 5-year pull. Order is restored by concatenation
+  // (Promise.all preserves chunk order), so parsing downstream is untouched.
+  const chunks = [];
   for (let y = startYear; y <= endYear; y += 2) {
-    const yEnd = Math.min(y + 1, endYear);
+    chunks.push([y, Math.min(y + 1, endYear)]);
+  }
+  const fetchChunk = async ([y, yEnd]) => {
     const url = buildUrl(latitude, longitude, `${y}0101`, `${yEnd}1231`);
-
     const ctrl =
       typeof AbortController !== "undefined" ? new AbortController() : null;
     const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
-    let res;
     try {
-      res = await fetchImpl(url, ctrl ? { signal: ctrl.signal } : undefined);
+      const res = await fetchImpl(
+        url,
+        ctrl ? { signal: ctrl.signal } : undefined,
+      );
+      if (!res.ok) throw new Error(`NASA POWER request failed (${res.status})`);
+      return parseHourly(await res.json());
     } catch (e) {
       if (ctrl && ctrl.signal.aborted) {
         throw new Error(
@@ -64,10 +72,10 @@ export async function fetchHourlySeries({
     } finally {
       if (timer) clearTimeout(timer);
     }
-    if (!res.ok) throw new Error(`NASA POWER request failed (${res.status})`);
-    const json = await res.json();
-    hours.push(...parseHourly(json));
-  }
+  };
+  const parts = await Promise.all(chunks.map(fetchChunk));
+  const hours = [];
+  for (const part of parts) hours.push(...part);
 
   return {
     hours,
