@@ -93,9 +93,10 @@ test("UNIFY: AGM/Na-ion replacement rates exceed LFP; runSizing honors them", as
     { ...BASE, dailyKwh: 12 },
     { fetchWeather: fakeWeather },
   );
-  const agm = p.auto.find((a) => a.chemistry === "agm");
+  const agm = p.agmReference;
   const lfp = p.auto.find((a) => a.chemistry === "lfp");
   assert.ok(agm && lfp && agm.solvable && lfp.solvable);
+  assert.equal(agm.referenceOnly, true, "lead-acid is reference-only");
   // AGM lifetime must reflect AGM-priced swaps, not lithium prices.
   const agmBankRate = landedMidBattKwhFor("agm", 1.1);
   const impliedMin = agm.replacementsHorizon * agm.battKwh * agmBankRate * 0.9;
@@ -328,13 +329,13 @@ test("UNIFY: grid-tie matrix cells accumulate the FULL bill on the grid line", a
 });
 
 // Payload contract current.
-test("UNIFY: payload carries contract 13 with load + peak fields", async () => {
+test("UNIFY: payload carries contract 14 with load + peak fields", async () => {
   const p = await runSizing(
     { ...BASE, dailyKwh: 10 },
     { fetchWeather: fakeWeather },
   );
   assert.equal(p.contract, PAYLOAD_CONTRACT);
-  assert.equal(PAYLOAD_CONTRACT, 13);
+  assert.equal(PAYLOAD_CONTRACT, 14);
   assert.ok(Number.isFinite(p.dailyKwh) && Number.isFinite(p.peakLoadW));
   assert.equal(typeof p.peakIsAverage, "boolean");
 });

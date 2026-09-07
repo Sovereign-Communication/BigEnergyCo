@@ -26,21 +26,21 @@ import {
   capacityScaleFor,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20260906f";
+} from "./engine.js?v=20260906g";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20260906f";
-import { buildFrontier } from "./frontier.js?v=20260906f";
-import { oversizeCallout } from "./rescale.js?v=20260906f";
+} from "./nasa.js?v=20260906g";
+import { buildFrontier } from "./frontier.js?v=20260906g";
+import { oversizeCallout } from "./rescale.js?v=20260906g";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20260906f";
+} from "./pricing.js?v=20260906g";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -51,7 +51,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20260906f";
+} from "./money.js?v=20260906g";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -89,9 +89,10 @@ const VALID_AUTO_TARGETS = new Set([
 /**
  * Plain-language verdict for why the winning chemistry won — pure, so the
  * worker can reuse it for the slider-driven recommendation. Winner and the
- * candidate entries carry chemLabel/chemistry/replacementsHorizon.
+ * candidate entries carry chemLabel/chemistry/replacementsHorizon. agmRef is
+ * the lead-acid reference entry (savings indicator only, never a candidate).
  */
-export function bestPickReason(winner, allEntries, meanT) {
+export function bestPickReason(winner, allEntries, meanT, agmRef = null) {
   if (!winner) return null;
   const others = allEntries.filter(
     (a) =>
@@ -110,14 +111,28 @@ export function bestPickReason(winner, allEntries, meanT) {
       : null;
   const ahead =
     gapPct !== null ? ` — about ${gapPct}% ahead of ${runnerUp.chemLabel}` : "";
+  const cold = isColdSite(meanT);
   let why;
-  if (winner.chemistry === "lfp") {
-    why = `${winner.chemLabel} delivered the lowest true 20-year cost at your site and target${ahead}. It uses most of its nameplate every day and its cycle life means no bank swaps inside the horizon.`;
-  } else if (winner.chemistry === "naion") {
+  if (winner.chemistry === "naion") {
+    const lfp = others.find((a) => a.chemistry === "lfp");
+    const lfpCheaper =
+      lfp &&
+      Number.isFinite(lfp.lifetimeCostMid) &&
+      lfp.lifetimeCostMid < winner.lifetimeCostMid;
     why =
-      meanT < 12
-        ? `${winner.chemLabel} won here${ahead}. At this site's ${meanT}°C mean it charges in cold weather where standard LFP must sit idle below freezing, and on common LFP voltage settings it wears slowly.`
-        : `${winner.chemLabel} came out ahead${ahead} — gentler discharge wear on LFP voltage settings outweighed its small capacity give-back.`;
+      `${winner.chemLabel} is the recommendation${ahead}: no thermal runaway, and it charges down to −20 °C where standard LFP must sit idle below freezing.` +
+      (lfpCheaper
+        ? ` LFP is cheaper on paper here, but inside the margin where safety decides it.`
+        : ` It also won on true 20-year cost.`) +
+      (cold
+        ? ` Your winters freeze — LFP would need a heated enclosure here.`
+        : ``);
+  } else if (winner.chemistry === "lfp") {
+    why =
+      `${winner.chemLabel} wins on money here${ahead} — genuinely cheaper by enough to choose it on cost.` +
+      (cold
+        ? ` Cold-site warning: it must live indoors or heated, and never charge below 0 °C (32 °F) or the bank is permanently damaged.`
+        : ` It uses most of its nameplate every day with a long cycle life.`);
   } else {
     why = `At this load and target, ${winner.chemLabel} wins on first cost${ahead} — but expect ~${winner.replacementsHorizon} bank swaps over 20 years, already counted in every figure above.`;
   }
@@ -127,13 +142,54 @@ export function bestPickReason(winner, allEntries, meanT) {
       : others.length === 1
         ? " The ranking shifts with climate, tariffs, and how much work you do yourself — weigh the runner-up before deciding."
         : " No other chemistry produced a practical system at this site and load.";
-  return `${why}${tail}`;
+  const agmLine =
+    agmRef &&
+    agmRef.solvable &&
+    Number.isFinite(agmRef.lifetimeCostMid) &&
+    Number.isFinite(agmRef.replacementsHorizon)
+      ? ` For reference, a lead-acid bank for the same job needs ~${agmRef.replacementsHorizon} swaps over 20 years — shown only so you can see what you are saving; it is never recommended.`
+      : "";
+  return `${why}${tail}${agmLine}`;
+}
+
+// Auto-compare chemistries: sodium-ion and LFP only. Lead-acid (AGM) is
+// searched alongside as a savings reference but never recommended — its
+// entry ships as payload.agmReference, never in auto/cards/matrix/best.
+export const AUTO_CHEMS = ["naion", "lfp"];
+export const REF_CHEM = "agm";
+
+// Sodium-first preference: LFP takes the recommendation only when its true
+// 20-year cost beats sodium by more than this margin — otherwise sodium's
+// safety (no thermal runaway, charges to −20 °C) decides it.
+export const COST_MARGIN = 0.1;
+// Mean-temp proxy for freezing-winter danger to LFP (must not charge below
+// 0 °C; this cold a mean says sub-zero nights are routine).
+export const COLD_MEAN_C = 10;
+
+export function isColdSite(meanTempC) {
+  return Number.isFinite(meanTempC) && meanTempC < COLD_MEAN_C;
+}
+
+export function pickBest(entries, meanTempC) {
+  const solvable = (entries || []).filter(
+    (a) => a && a.solvable && Number.isFinite(a.lifetimeCostMid),
+  );
+  if (!solvable.length) return null;
+  const na = solvable.find((a) => a.chemistry === "naion");
+  const lfp = solvable.find((a) => a.chemistry === "lfp");
+  if (na && lfp && na.lifetimeCostMid > 0) {
+    const lfpEdge =
+      (na.lifetimeCostMid - lfp.lifetimeCostMid) / na.lifetimeCostMid;
+    return lfpEdge > COST_MARGIN ? lfp : na;
+  }
+  return solvable.reduce((a, b) =>
+    a.lifetimeCostMid <= b.lifetimeCostMid ? a : b,
+  );
 }
 
 export function autoNoteFor(entries, basis) {
   const names = entries.map((a) => a.chemLabel);
-  if (names.length >= 3) return `All three chemistries sized for ${basis}`;
-  if (names.length === 2)
+  if (names.length >= 2)
     return `${names[0]} and ${names[1]} sized for ${basis}`;
   if (names.length === 1) return `${names[0]} sized for ${basis}`;
   return `No chemistry produced a practical system here for ${basis}.`;
@@ -142,13 +198,12 @@ export function autoNoteFor(entries, basis) {
 // UI-contract version: bump whenever payload fields change shape. The
 // renderer compares this to its own constant and warns on mismatch instead
 // of rendering garbage from a stale cached module.
-export const PAYLOAD_CONTRACT = 13;
+export const PAYLOAD_CONTRACT = 14;
 
 const AUTO_CARD_NOTES = {
   naion:
     "Runs on standard LFP voltage settings (the common case): the ~40 V low cutoff protects it from deep discharge, so it gives up a little capacity but lasts longer than its deep-cycle rating.",
   lfp: "The benchmark: uses most of its nameplate every day and still outlives everything else.",
-  agm: "Half the bank is untouchable reserve (50% DoD rule), and without active balancing — typical for DIY series strings — the whole string wears at the weakest block's pace.",
 };
 
 async function fetchWeatherDefault(opts) {
@@ -197,7 +252,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20260906f");
+      await import("./profiles.js?v=20260906g");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -674,17 +729,6 @@ export async function runSizing(msg, deps = {}) {
         tariff,
         exportRate,
       }) * 100,
-    );
-  }
-
-  /** Lowest true-20-year-cost solvable entry — the "Best pick". */
-  function bestOf(entries) {
-    const solvable = entries.filter(
-      (a) => a.solvable && Number.isFinite(a.lifetimeCostMid),
-    );
-    if (!solvable.length) return null;
-    return solvable.reduce((a, b) =>
-      a.lifetimeCostMid <= b.lifetimeCostMid ? a : b,
     );
   }
 
@@ -1424,6 +1468,15 @@ export async function runSizing(msg, deps = {}) {
     targets: effectiveTargets,
   };
 
+  // A lead-acid reference entry, stripped of its heavy chart series: the
+  // savings indicator the UI shows next to the recommendation ("lead-acid
+  // would cost ~$X with N swaps — reference only, never recommended").
+  const toReference = (entry) => {
+    if (!entry || !entry.solvable) return null;
+    const { socNameplatePct, cumCostSeries, ...rest } = entry;
+    return { ...rest, referenceOnly: true };
+  };
+
   // ── INCREMENTAL CUT (slider / curve edits) ──────────────────────────────
   // The custom-cut control ONLY changes the matrix's "your target" column
   // (and, for a fixed-chemistry run, the single custom target card). Nothing
@@ -1444,7 +1497,7 @@ export async function runSizing(msg, deps = {}) {
       if (chemistry === "auto") {
         const cells = {};
         const customEntries = [];
-        for (const chemId of ["naion", "lfp", "agm"]) {
+        for (const chemId of AUTO_CHEMS) {
           const sized = sizeForBillCut({
             e1kw,
             loadWh,
@@ -1476,13 +1529,36 @@ export async function runSizing(msg, deps = {}) {
         if (customFracGt > 1) {
           for (const e of customEntries)
             if (e.cutPct < 99) e.cutPct = Math.round(customFracGt * 100);
-          for (const chemId of ["naion", "lfp", "agm"]) {
+          for (const chemId of AUTO_CHEMS) {
             const c = cells[chemId + ":custom"];
             if (c && c.solvable && c.cutPct < 99)
               c.cutPct = Math.round(customFracGt * 100);
           }
         }
-        const customBest = bestOf(customEntries);
+        // Lead-acid reference at the same slider target (savings indicator).
+        const agmSized = sizeForBillCut({
+          e1kw,
+          loadWh,
+          tempsC,
+          chemistry: REF_CHEM,
+          minFraction: customFracGt,
+          years: series.meta.years,
+          costPerWpv: costPerWpvMid,
+          costPerKwhBatt: battMidFor(REF_CHEM),
+          costPerKwInv: costPerKwInvMid,
+          pvMax: effectivePvMax,
+          battMax: effectiveBattMax,
+          battStep: 1,
+          capacityScale: capacityScaleFor(REF_CHEM, meanTempC),
+          laborPerKwh,
+          invMinKw,
+          tariff,
+          exportRate,
+        });
+        patch.agmReference = toReference(
+          agmSized ? entryFromSizing(REF_CHEM, agmSized) : null,
+        );
+        const customBest = pickBest(customEntries, meanTempC);
         patch.cells = cells;
         patch.customCut = {
           fraction: customFracGt,
@@ -1496,7 +1572,7 @@ export async function runSizing(msg, deps = {}) {
           surplus: customFracGt > 1,
         };
         // The recommendation follows the bill-cut slider: the banner, headline
-        // savings and focus system now describe the cheapest system that
+        // savings and focus system now describe the preferred system that
         // achieves the visitor's CURRENT target, not the fixed 80% one.
         if (customBest) {
           patch.best = customBest;
@@ -1504,6 +1580,7 @@ export async function runSizing(msg, deps = {}) {
             customBest,
             customEntries,
             meanTempC,
+            patch.agmReference,
           );
           patch.focus = focusFor(customBest.chemistry, customBest);
         }
@@ -1613,14 +1690,14 @@ export async function runSizing(msg, deps = {}) {
     if (chemistry === "auto") {
       const matrixCells = {};
       const resultsByChem = {};
-      // All three chemistries, shown at ONE shared cut target. If the target the
+      // Sodium-ion and LFP, shown at ONE shared cut target. If the target the
       // visitor asked for is unreachable inside the searched envelope (a very
       // large load, or a poorly-sunlit site), fall back to the nearest achievable
       // cut so they still get a comparison, and say so. BILL_TARGETS ascends
       // 60 -> 80 -> 95.
       const buildAuto = (targetId) => {
         const out = [];
-        for (const chemId of ["naion", "lfp", "agm"]) {
+        for (const chemId of AUTO_CHEMS) {
           const hit =
             resultsByChem[chemId] &&
             resultsByChem[chemId].find((r) => r.target.id === targetId);
@@ -1631,7 +1708,7 @@ export async function runSizing(msg, deps = {}) {
         return out;
       };
 
-      for (const chemId of ["naion", "lfp", "agm"]) {
+      for (const chemId of AUTO_CHEMS) {
         const capScale = capacityScaleFor(chemId, meanTempC);
         const results = sizeAllBillTargets({
           e1kw,
@@ -1703,13 +1780,13 @@ export async function runSizing(msg, deps = {}) {
       // chemistry. This keeps full runs consistent with the incremental
       // slider path (which already re-derives best from the custom column),
       // so a bill edit can never snap the recommendation back to 80%.
-      const gtWinner = bestOf(auto);
+      const gtWinner = pickBest(auto, meanTempC);
       // The visitor's own bill-cut target from the 1–111% slider: sized by an
       // exact engine run per chemistry, never interpolated from the fixed
       // columns, and added to the matrix as a clickable "your target" column.
       const customFracGt = +cc.toFixed(3);
       const customEntries = [];
-      for (const chemId of ["naion", "lfp", "agm"]) {
+      for (const chemId of AUTO_CHEMS) {
         const sized = sizeForBillCut({
           e1kw,
           loadWh,
@@ -1744,19 +1821,42 @@ export async function runSizing(msg, deps = {}) {
       if (customFracGt > 1) {
         for (const e of customEntries)
           if (e.cutPct < 99) e.cutPct = Math.round(customFracGt * 100);
-        for (const chemId of ["naion", "lfp", "agm"]) {
+        for (const chemId of AUTO_CHEMS) {
           const c = matrixCells[chemId + ":custom"];
           if (c && c.solvable && c.cutPct < 99)
             c.cutPct = Math.round(customFracGt * 100);
         }
       }
-      const customBest = bestOf(customEntries);
+      // Lead-acid reference at the same slider target (savings indicator).
+      const agmSized = sizeForBillCut({
+        e1kw,
+        loadWh,
+        tempsC,
+        chemistry: REF_CHEM,
+        minFraction: customFracGt,
+        years: series.meta.years,
+        costPerWpv: costPerWpvMid,
+        costPerKwhBatt: battMidFor(REF_CHEM),
+        costPerKwInv: costPerKwInvMid,
+        pvMax: effectivePvMax,
+        battMax: effectiveBattMax,
+        battStep: 1,
+        capacityScale: capacityScaleFor(REF_CHEM, meanTempC),
+        laborPerKwh,
+        invMinKw,
+        tariff,
+        exportRate,
+      });
+      payload.agmReference = toReference(
+        agmSized ? entryFromSizing(REF_CHEM, agmSized) : null,
+      );
+      const customBest = pickBest(customEntries, meanTempC);
       const sliderBest = customBest || null;
       const fallbackBest = gtWinner || null;
       payload.best = sliderBest || fallbackBest;
       payload.bestReason = sliderBest
-        ? bestPickReason(sliderBest, customEntries, meanTempC)
-        : bestPickReason(fallbackBest, auto, meanTempC);
+        ? bestPickReason(sliderBest, customEntries, meanTempC, payload.agmReference)
+        : bestPickReason(fallbackBest, auto, meanTempC, payload.agmReference);
       payload.focus = payload.best
         ? focusFor(payload.best.chemistry, payload.best)
         : null;
@@ -1795,7 +1895,7 @@ export async function runSizing(msg, deps = {}) {
               custom: true,
             },
           ]),
-        rows: ["naion", "lfp", "agm"].map((id) => ({
+        rows: AUTO_CHEMS.map((id) => ({
           id,
           label: CHEMISTRIES[id].label,
         })),
@@ -1812,7 +1912,7 @@ export async function runSizing(msg, deps = {}) {
       payload.assumptions.cycleLifeTo80 = Object.fromEntries(
         ["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]),
       );
-      payload.assumptions.money = `Auto mode sizes each chemistry to deliver the same bill cut within its depth-of-discharge window (AGM banks are ~2× nameplate; lithium/sodium ~1.1×; sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). The 60/80/95% matrix columns are fixed reference points; the "your target" column follows the 1–111% slider and is sized by an exact engine run.${customFracGt > 1 ? " Above 100% the system is sized to produce sellable surplus; without a feed-in credit that surplus has no cash value and is flagged as clipped waste." : ""} Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings). Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; fixed connection fees not counted.`;
+      payload.assumptions.money = `Auto mode sizes sodium-ion and LFP to deliver the same bill cut within its depth-of-discharge window (sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). The 60/80/95% matrix columns are fixed reference points; the "your target" column follows the 1–111% slider and is sized by an exact engine run.${customFracGt > 1 ? " Above 100% the system is sized to produce sellable surplus; without a feed-in credit that surplus has no cash value and is flagged as clipped waste." : ""} Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended. Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; fixed connection fees not counted.`;
       return attachFrontier(payload);
     }
 
@@ -1901,7 +2001,7 @@ export async function runSizing(msg, deps = {}) {
       // search would either return null (solar-only) or synthesize a
       // disconnected system (battery-only). Render a reasoned grid of
       // unsolvable cells and let the infeasible banner carry the message.
-      for (const chemId of ["naion", "lfp", "agm"]) {
+      for (const chemId of AUTO_CHEMS) {
         for (const tier of RELIABILITY_TIERS) {
           matrixCells[chemId + ":" + tier.id] = {
             solvable: false,
@@ -1910,7 +2010,7 @@ export async function runSizing(msg, deps = {}) {
         }
       }
     } else {
-      for (const chemId of ["naion", "lfp", "agm"]) {
+      for (const chemId of AUTO_CHEMS) {
         const capScale = capacityScaleFor(chemId, meanTempC);
         const allTiers = sizeAllTiers({
           e1kw,
@@ -1945,7 +2045,7 @@ export async function runSizing(msg, deps = {}) {
     // solvable reliability tier so a comparison still renders, and say so.
     const buildAuto = (tierId) => {
       const out = [];
-      for (const chemId of ["naion", "lfp", "agm"]) {
+      for (const chemId of AUTO_CHEMS) {
         const midTier =
           resultsByChem[chemId] &&
           resultsByChem[chemId].find((t) => t.tier.id === tierId);
@@ -2041,14 +2141,69 @@ export async function runSizing(msg, deps = {}) {
       ? `${TIER_BASIS[repTierId]} is out of reach within the sizes this tool searches at this site, so the cards below show ${TIER_BASIS[effectiveTier]} instead — the largest system this tool can size here still leaves some hours unserved.`
       : autoNoteFor(auto, TIER_BASIS[effectiveTier]);
     payload.tiers = [];
-    const ogWinner = bestOf(auto);
+    const ogWinner = pickBest(auto, meanTempC);
+    // Lead-acid reference at the same reliability tier (savings indicator).
+    // Skipped when the combo is structurally impossible (no search to quote).
+    let agmReference = null;
+    if (!unreachableReason) {
+      const agmTiers = sizeAllTiers({
+        e1kw,
+        loadWh,
+        tempsC,
+        chemistry: REF_CHEM,
+        years: series.meta.years,
+        costPerWpv: costPerWpvMid,
+        costPerKwhBatt: battMidFor(REF_CHEM),
+        costPerKwInv: costPerKwInvMid,
+        pvMax: offgridPvMax,
+        battMax: offgridBattMax,
+        pvMax: offgridPvMax,
+        capacityScale: capacityScaleFor(REF_CHEM, meanTempC),
+        laborPerKwh,
+        invMinKw,
+      });
+      const agmHit =
+        agmTiers && agmTiers.find((t) => t.tier.id === effectiveTier);
+      if (agmHit && agmHit.sizing) {
+        const mAgm = moneyFor(REF_CHEM, agmHit.sizing);
+        agmReference = {
+          chemistry: REF_CHEM,
+          chemLabel: mAgm.chemObj.label,
+          usableDod: mAgm.chemObj.usableDod,
+          solvable: true,
+          referenceOnly: true,
+          pvKw: agmHit.sizing.pvKw,
+          battKwh: agmHit.sizing.battKwh,
+          battNameplateKwh: mAgm.battNameplateKwh,
+          costLo: mAgm.cost.lo,
+          costHi: mAgm.cost.hi,
+          lifetimeCostMid: mAgm.lifetimeCostMid,
+          replacementsHorizon: mAgm.replacementsHorizon,
+          swapsAndLaborUsd: mAgm.swapsAndLaborUsd,
+          oversizeScenario: mAgm.oversizeScenario,
+          bestPriceCallout: mAgm.bestPriceCallout,
+          oversizeSavingsUsd: mAgm.oversizeSavingsUsd,
+          oversizedBattKwh: mAgm.oversizedBattKwh,
+          unmetHoursPerYear: +(
+            agmHit.sizing.result.worstYearUnmetHours ??
+            agmHit.sizing.result.unmetHours / series.meta.years
+          ).toFixed(1),
+        };
+      }
+    }
+    payload.agmReference = agmReference;
     payload.best = ogWinner;
-    payload.bestReason = bestPickReason(ogWinner, auto, meanTempC);
+    payload.bestReason = bestPickReason(
+      ogWinner,
+      auto,
+      meanTempC,
+      agmReference,
+    );
     payload.focus = ogWinner ? focusFor(ogWinner.chemistry, ogWinner) : null;
     payload.matrix = {
       kind: "offgrid",
       cols: RELIABILITY_TIERS.map((t) => ({ id: t.id, label: t.label })),
-      rows: ["naion", "lfp", "agm"].map((id) => ({
+      rows: AUTO_CHEMS.map((id) => ({
         id,
         label: CHEMISTRIES[id].label,
       })),
@@ -2076,7 +2231,7 @@ export async function runSizing(msg, deps = {}) {
     payload.assumptions.cycleLifeTo80 = Object.fromEntries(
       ["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]),
     );
-    payload.assumptions.money = `Auto mode sizes each chemistry for the same job — lights stay on with a generator as rare backup — inside its depth-of-discharge window (AGM keeps a 50% reserve; lithium/sodium use ~90%). Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) — that is why its sticker price misleads.`;
+    payload.assumptions.money = `Auto mode sizes sodium-ion and LFP for the same job — lights stay on with a generator as rare backup — inside its depth-of-discharge window. Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended.`;
     return attachFrontier(payload);
   }
 

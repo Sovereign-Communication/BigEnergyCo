@@ -186,6 +186,8 @@ export function rescalePayload(p, k) {
       best: scaleRecord(out.customCut.best, k),
     };
   }
+  // The lead-acid savings reference scales like every other money record.
+  out.agmReference = scaleRecord(out.agmReference, k);
   if (out.matrix && out.matrix.cells) {
     const cells = {};
     for (const [key, c] of Object.entries(out.matrix.cells))

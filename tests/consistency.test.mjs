@@ -17,6 +17,9 @@ import {
   clearSiteMemo,
   siteMemoKey,
   WEATHER_MEMO_STATS,
+  pickBest,
+  isColdSite,
+  bestPickReason,
 } from "../assets/js/sizing/run.js";
 import { markerMatchesPoint, renderFrontierTable } from "../assets/js/sizing/frontier-chart.js";
 import { rescalePayload, oversizeCallout } from "../assets/js/sizing/rescale.js";
@@ -291,6 +294,7 @@ function moneyEntries(p) {
   for (const pt of (p.frontier && p.frontier.points) || [])
     take(`point:${pt.pvKw}+${pt.battKwh}`, pt.detail);
   take("focusSystem", p.focusSystem);
+  take("agmReference", p.agmReference);
   return out;
 }
 
@@ -424,7 +428,90 @@ test("CONSISTENCY: rescale regenerates the scenario note from scaled parts", () 
   );
 });
 
-// ── Solar-only edge audit ─────────────────────────────────────────────────
+// ── Chemistry preference ────────────────────────────────────────────────
+// Sodium-first on safety: LFP wins only past the cost margin; lead-acid is
+// a savings reference, never the pick; cold sites say why freezing matters.
+test("CHEM: sodium-first preference with cost-margin override", () => {
+  const na = {
+    solvable: true,
+    chemistry: "naion",
+    chemLabel: "Sodium-Ion",
+    lifetimeCostMid: 10000,
+  };
+  const lfpClose = {
+    solvable: true,
+    chemistry: "lfp",
+    chemLabel: "LFP (LiFePO4)",
+    lifetimeCostMid: 9500,
+  };
+  const lfpCheap = { ...lfpClose, lifetimeCostMid: 8500 };
+  assert.equal(
+    pickBest([na, lfpClose], 20).chemistry,
+    "naion",
+    "5% LFP edge stays inside the margin — safety decides",
+  );
+  assert.equal(
+    pickBest([lfpCheap, na], 20).chemistry,
+    "lfp",
+    "15% LFP edge wins on money",
+  );
+  assert.equal(pickBest([lfpClose], 20).chemistry, "lfp", "single pool");
+  assert.equal(pickBest([], 20), null);
+  assert.equal(isColdSite(5), true);
+  assert.equal(isColdSite(20), false);
+  const reason = bestPickReason(na, [na, lfpClose], 20, {
+    solvable: true,
+    lifetimeCostMid: 15000,
+    replacementsHorizon: 4,
+  });
+  assert.ok(
+    reason.includes("Sodium-Ion") && reason.includes("lead-acid"),
+    "reason names the winner and the reference",
+  );
+  const coldReason = bestPickReason(na, [na, lfpClose], 2, null);
+  assert.ok(
+    coldReason.includes("freeze") || coldReason.includes("heated"),
+    "cold sites say why freezing matters",
+  );
+});
+
+test("CHEM: cold-site full run recommends sodium with a freezing note", async () => {
+  const oslo = OFFLINE_PROFILES.find((p) => p.name.includes("Oslo"));
+  const osloWeather = async () => ({
+    hours: synthesizeFromProfile(oslo),
+    meta: {
+      latitude: 59.9,
+      longitude: 10.75,
+      startYear: PROFILE_YEAR,
+      endYear: PROFILE_YEAR,
+      years: 1,
+      source: "test fixture",
+      offline: true,
+    },
+  });
+  const p = await runSizing(
+    {
+      latitude: 59.9,
+      longitude: 10.75,
+      dailyKwh: 10,
+      tariff: 0.3,
+      exportRate: null,
+      years: 1,
+      mode: "gridtie",
+      chemistry: "auto",
+      customCut: 0.8,
+    },
+    { fetchWeather: osloWeather },
+  );
+  assert.notEqual(p.best && p.best.chemistry, "agm", "never lead-acid");
+  if (isColdSite(p.assumptions.meanTempC)) {
+    assert.ok(
+      /freeze|heated|freezing|cold/i.test(p.bestReason || ""),
+      "cold recommendation explains the freezing danger",
+    );
+  }
+  assertOversizeUnified(moneyEntries(p));
+});
 // Same root cause family as the oversize note: physics the metric ignores.
 // The cut metric used to count imports only, so solar-only stalled at the
 // daytime fraction even with 1:1 net metering entered, and its monthly bill
@@ -545,7 +632,7 @@ test("SOLAR-EDGE: hardware×mode×credit edge matrix stays sane", async () => {
       { ...MSG, tariff: 0.42, ...cfg },
       { fetchWeather: fakeWeather },
     );
-    assert.equal(p.contract, 13, `${cfg.hardwareConfig}/${cfg.mode} contract`);
+    assert.equal(p.contract, 14, `${cfg.hardwareConfig}/${cfg.mode} contract`);
     assert.ok(p.frontier, "frontier field always present");
     const entries = moneyEntries(p);
     if (!entries.length) {

@@ -40,10 +40,14 @@ test("off-grid AUTO: every field the renderer reads exists and is sane", async (
     { fetchWeather: fakeWeather },
   );
   assert.equal(p.mode, "offgrid");
-  assert.equal(p.contract, 13, "payload carries current contract version");
+  assert.equal(p.contract, 14, "payload carries current contract version");
   assert.ok(
-    Array.isArray(p.auto) && p.auto.length === 3,
-    "three chemistry cards",
+    Array.isArray(p.auto) && p.auto.length === 2,
+    "two chemistry cards (sodium-ion + LFP; lead-acid ships as reference)",
+  );
+  assert.ok(
+    p.agmReference && p.agmReference.referenceOnly === true,
+    "lead-acid travels as a savings reference, never a card",
   );
   assert.equal(p.history.kind, "auto");
   assert.equal(p.tiers.length, 0);
@@ -88,17 +92,15 @@ test("off-grid AUTO: every field the renderer reads exists and is sane", async (
     const top = Math.max(...a.socNameplatePct.max);
     const bottom = Math.min(...a.socNameplatePct.min);
     assert.ok(top >= 95, `${a.chemistry} charges to ~100% (got ${top})`);
-    if (a.chemistry === "agm")
-      assert.ok(bottom >= 45 && bottom <= 55, `AGM floor ~50% (got ${bottom})`);
-    else
-      assert.ok(
-        bottom >= 15 && bottom <= 25,
-        `${a.chemistry} floor ~20% (got ${bottom})`,
-      );
+    assert.ok(
+      bottom >= 15 && bottom <= 25,
+      `${a.chemistry} floor ~20% (got ${bottom})`,
+    );
   }
-  // AGM's true cost must exceed LFP's — the whole point of auto mode
-  const agm = p.auto.find((a) => a.chemistry === "agm");
+  // Lead-acid's true cost must exceed LFP's — the whole point of the reference
+  const agm = p.agmReference;
   const lfp = p.auto.find((a) => a.chemistry === "lfp");
+  assert.ok(agm && agm.solvable, "reference entry present");
   assert.ok(
     agm.lifetimeCostMid > lfp.lifetimeCostMid,
     "lead-acid lifetime > LFP",
@@ -107,13 +109,7 @@ test("off-grid AUTO: every field the renderer reads exists and is sane", async (
     agm.replacementsHorizon > lfp.replacementsHorizon,
     "lead-acid swaps more banks",
   );
-  // True break-even: AGM either never breaks even or strictly later than LFP
-  assert.ok(
-    agm.trueBreakEvenYear === null ||
-      lfp.trueBreakEvenYear === null ||
-      agm.trueBreakEvenYear > lfp.trueBreakEvenYear,
-    `AGM BE (${agm.trueBreakEvenYear}) vs LFP (${lfp.trueBreakEvenYear})`,
-  );
+  // True break-even: LFP with no swaps breaks even around first-cost payback
   assert.ok(
     lfp.trueBreakEvenYear >= Math.round(lfp.paybackYearsLo),
     "no-swap break-even ≈ first-cost payback",
@@ -134,7 +130,7 @@ test("off-grid AUTO honors the independence submenu (tier100 → zero unmet)", a
     "tier100 selection must size for zero unmet hours",
   );
   // tier100 needs no less hardware than tier99, per chemistry
-  for (const chem of ["naion", "lfp", "agm"]) {
+  for (const chem of ["naion", "lfp"]) {
     const a99 = p99.auto.find((a) => a.chemistry === chem);
     const a100 = p100.auto.find((a) => a.chemistry === chem);
     if (!a99 || !a100) continue;
@@ -154,17 +150,6 @@ test("autoNoteFor names exactly the chemistries that solved (count-aware copy)",
   const basis = "an ~80% grid-bill cut";
   assert.equal(
     autoNoteFor(
-      [
-        { chemLabel: "LFP (LiFePO4)" },
-        { chemLabel: "Sodium-Ion" },
-        { chemLabel: "Lead-Acid (AGM)" },
-      ],
-      basis,
-    ),
-    `All three chemistries sized for ${basis}`,
-  );
-  assert.equal(
-    autoNoteFor(
       [{ chemLabel: "LFP (LiFePO4)" }, { chemLabel: "Sodium-Ion" }],
       basis,
     ),
@@ -180,14 +165,14 @@ test("autoNoteFor names exactly the chemistries that solved (count-aware copy)",
   assert.ok(autoNoteFor([], basis).includes("No chemistry"));
 });
 
-test("auto payload autoNote is count-aware when all three chemistries solve", async () => {
+test("auto payload autoNote is count-aware when both chemistries solve", async () => {
   const p = await runSizing(
     { ...MSG, chemistry: "auto", mode: "gridtie", autoTarget: "cut80" },
     { fetchWeather: fakeWeather },
   );
-  assert.ok(p.auto.length === 3, "three chemistry cards");
+  assert.ok(p.auto.length === 2, "two chemistry cards");
   assert.ok(
-    p.autoNote.startsWith("All three chemistries sized for"),
+    p.autoNote.includes("sized for"),
     "full-run autoNote names the basis",
   );
   assert.ok(
@@ -324,14 +309,19 @@ test("impossible loads degrade gracefully (nulls, no crash)", async () => {
 
 // ── Options matrix + best pick + BOM focus (contract v7) ────────────────────
 
-test("off-grid AUTO carries a full 3×3 options matrix with sane cells", async () => {
+test("off-grid AUTO carries a full 3×2 options matrix with sane cells", async () => {
   const p = await runSizing(
     { ...MSG, chemistry: "auto", mode: "offgrid" },
     { fetchWeather: fakeWeather },
   );
   assert.ok(p.matrix && p.matrix.kind === "offgrid");
   assert.equal(p.matrix.cols.length, 3);
-  assert.equal(p.matrix.rows.length, 3);
+  assert.equal(p.matrix.rows.length, 2);
+  assert.deepEqual(
+    p.matrix.rows.map((r) => r.id),
+    ["naion", "lfp"],
+    "sodium-ion + LFP rows; lead-acid ships as reference",
+  );
   for (const row of p.matrix.rows) {
     for (const col of p.matrix.cols) {
       const cell = p.matrix.cells[`${row.id}:${col.id}`];
@@ -356,7 +346,7 @@ test("off-grid AUTO carries a full 3×3 options matrix with sane cells", async (
   }
 });
 
-test("grid-tie AUTO carries a full 3×3 matrix honoring each cut target", async () => {
+test("grid-tie AUTO carries a full 3×2 matrix honoring each cut target", async () => {
   const p = await runSizing(
     { ...MSG, chemistry: "auto", mode: "gridtie" },
     { fetchWeather: fakeWeather },
@@ -387,20 +377,30 @@ test("grid-tie AUTO carries a full 3×3 matrix honoring each cut target", async 
   }
 });
 
-test("best pick = lowest lifetime cost among solvable chemistries, with reason and focus", async () => {
+test("best pick = sodium-first preference over solvable chemistries, with reason and focus", async () => {
   for (const mode of ["offgrid", "gridtie"]) {
     const p = await runSizing(
       { ...MSG, chemistry: "auto", mode },
       { fetchWeather: fakeWeather },
     );
     if (!p.auto.some((a) => a.solvable)) continue;
-    const expected = p.auto
-      .filter((a) => a.solvable)
-      .reduce((a, b) => (a.lifetimeCostMid <= b.lifetimeCostMid ? a : b));
+    // Sodium wins unless LFP beats it by more than the cost margin.
+    const na = p.auto.find((a) => a.chemistry === "naion");
+    const lfp = p.auto.find((a) => a.chemistry === "lfp");
+    let expected = null;
+    if (na && lfp) {
+      const edge =
+        (na.lifetimeCostMid - lfp.lifetimeCostMid) / na.lifetimeCostMid;
+      expected = edge > 0.1 ? lfp : na;
+    } else {
+      expected = p.auto
+        .filter((a) => a.solvable)
+        .reduce((a, b) => (a.lifetimeCostMid <= b.lifetimeCostMid ? a : b));
+    }
     assert.equal(
       p.best.chemistry,
       expected.chemistry,
-      `${mode}: best is cheapest`,
+      `${mode}: best follows the sodium-first rule`,
     );
     assert.ok(
       typeof p.bestReason === "string" &&
@@ -408,6 +408,12 @@ test("best pick = lowest lifetime cost among solvable chemistries, with reason a
       `${mode}: reason names the winner`,
     );
     assert.ok(p.bestReason.length > 40, `${mode}: reason explains itself`);
+    // Lead-acid is a reference, never the pick.
+    assert.notEqual(p.best.chemistry, "agm", `${mode}: never lead-acid`);
+    assert.ok(
+      p.agmReference && p.agmReference.referenceOnly === true,
+      `${mode}: lead-acid travels as reference`,
+    );
     // Focus drives the hardware list — must match the winning system
     assert.equal(p.focus.chemistry, p.best.chemistry);
     assert.equal(p.focus.pvKw, p.best.pvKw);
@@ -524,11 +530,15 @@ test("incremental cut patch = full engine, minus the parts a cut edit cannot tou
     { fetchWeather: fakeWeather },
   );
   assert.equal(slice.customCut.fraction, 0.6);
-  assert.equal(slice.customCut.entries.length, 3);
+  assert.equal(slice.customCut.entries.length, 2);
+  assert.ok(
+    slice.agmReference && slice.agmReference.referenceOnly === true,
+    "patch refreshes the lead-acid reference too",
+  );
   // No full-run baggage in a patch: it exists to be merged, not rendered alone.
   assert.equal(slice.frontier, undefined);
   assert.equal(slice.auto, undefined);
-  for (const chemId of ["naion", "lfp", "agm"]) {
+  for (const chemId of ["naion", "lfp"]) {
     const a = slice.cells[chemId + ":custom"];
     const b = full.matrix.cells[chemId + ":custom"];
     assert.ok(a && b, `${chemId}: both cells present`);

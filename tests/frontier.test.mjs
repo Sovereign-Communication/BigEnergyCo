@@ -533,7 +533,7 @@ test("runSizing ships a frontier the renderer can draw, in every mode", async ()
     );
     assert.equal(
       p.contract,
-      13,
+      14,
       `${mode}/${chemistry}: contract bumped for the new field`,
     );
     const f = p.frontier;
@@ -624,7 +624,7 @@ test("a frontier failure never takes the whole result down", async () => {
       }),
     },
   );
-  assert.equal(p.contract, 13);
+  assert.equal(p.contract, 14);
   assert.ok(
     "frontier" in p,
     "the field always exists, even when there is nothing to draw",
