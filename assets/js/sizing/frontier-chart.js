@@ -396,11 +396,7 @@ export function renderFrontier(host, frontier, opts = {}) {
   // a cached system's true position. Distinct from the blue selection dot so
   // a preview can never be mistaken for the system being read.
   const pv = opts.preview;
-  if (
-    pv &&
-    Number.isFinite(pv.capexUsd) &&
-    Number.isFinite(pv.outcomePct)
-  ) {
+  if (pv && Number.isFinite(pv.capexUsd) && Number.isFinite(pv.outcomePct)) {
     const px = X(pv.capexUsd),
       py = Y(pv.outcomePct);
     push(

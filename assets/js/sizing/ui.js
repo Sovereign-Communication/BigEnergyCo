@@ -10,7 +10,7 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260906j";
+import { CITY_PRESETS } from "./nasa.js?v=20260906k";
 import {
   CITY_CATALOG,
   searchCities,
@@ -20,7 +20,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260906j";
+} from "./cities.js?v=20260906k";
 
 import {
   estimateTariff,
@@ -28,39 +28,39 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260906j";
+} from "./pricing.js?v=20260906k";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260906j";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260906k";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260906j";
+} from "./bom.js?v=20260906k";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260906j";
+import { BOM_ITEMS } from "../shared/content.js?v=20260906k";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260906j";
+} from "../shared/i18n.js?v=20260906k";
 
-import { LOCALES } from "../shared/locales.js?v=20260906j";
+import { LOCALES } from "../shared/locales.js?v=20260906k";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260906j";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260906k";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260906j";
+} from "./frontier-chart.js?v=20260906k";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260906j";
+} from "./rescale.js?v=20260906k";
 
 let worker = null;
 
@@ -2139,11 +2139,7 @@ function renderFocusPanel(p, entry, isPreview) {
     });
     s.appendChild(el("span", { style: "font-size:1.15rem;" }, icon));
     s.appendChild(
-      el(
-        "strong",
-        { style: "font-size:1.05rem;color:var(--text-main);" },
-        big,
-      ),
+      el("strong", { style: "font-size:1.05rem;color:var(--text-main);" }, big),
     );
     if (small)
       s.appendChild(
@@ -2162,7 +2158,10 @@ function renderFocusPanel(p, entry, isPreview) {
     chip("💵", `~${moneyRange(entry.costLo, entry.costHi)}`, "up-front");
   if (isGT && Number.isFinite(entry.cutPct))
     chip("⚡", `−${entry.cutPct}%`, "bill cut");
-  if (entry.billAfterMonthlyUsd !== null && entry.billAfterMonthlyUsd !== undefined)
+  if (
+    entry.billAfterMonthlyUsd !== null &&
+    entry.billAfterMonthlyUsd !== undefined
+  )
     chip("🧾", `~${money(entry.billAfterMonthlyUsd)}/mo`, "bill after");
   if (!isGT && Number.isFinite(entry.unmetHoursPerYear))
     chip("🔌", `${fmt(entry.unmetHoursPerYear)} h/yr`, "generator cover");
@@ -2213,7 +2212,8 @@ function renderFocusPanel(p, entry, isPreview) {
         `Recommendation stays ${chemShort(p.best) || p.best.chemistry} ` +
         `${p.best.pvKw} kW + ${fmt(p.best.battKwh)} kWh ` +
         `(~${money(p.best.lifetimeCostMid)} over 20 years).`;
-    else if (!isPreview && isRec && p.bestReason) note.textContent = p.bestReason;
+    else if (!isPreview && isRec && p.bestReason)
+      note.textContent = p.bestReason;
     else note.textContent = "";
   }
 }
@@ -2301,7 +2301,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260906j", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260906k", {
       type: "module",
     });
 
@@ -3118,8 +3118,7 @@ function renderAutoCards(p) {
     agm.solvable &&
     agm.replacementsHorizon === 0 &&
     (p.auto || []).some(
-      (a) =>
-        a.solvable && a.lifetimeCostMid === agm.lifetimeCostMid,
+      (a) => a.solvable && a.lifetimeCostMid === agm.lifetimeCostMid,
     );
   if (
     agm &&

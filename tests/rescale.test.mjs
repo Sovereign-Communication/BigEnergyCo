@@ -171,7 +171,7 @@ test("GATE: rescale ×2 of cached payload ≈ fresh engine run at ×2 load", asy
       tempsC: Float64Array.from(hours2, (h) => h.tAmb),
     });
     assert.equal(
-      +( (1 - s.importedWh / loadTotal2) * 100 ).toFixed(1),
+      +((1 - s.importedWh / loadTotal2) * 100).toFixed(1),
       pt.outcomePct,
       `rescaled ${pt.pvKw}kW+${pt.battKwh}kWh outcome is true for its hardware`,
     );
@@ -209,8 +209,7 @@ test("GATE: rescale ×2 of cached payload ≈ fresh engine run at ×2 load", asy
   // rescaled verdict must be exactly true of the rescaled curve it
   // describes (top/knee dollars equal the top/knee dots, id preserved).
   const eitherAdopted =
-    (p1.frontier.adoptedCount || 0) > 0 ||
-    (p2.frontier.adoptedCount || 0) > 0;
+    (p1.frontier.adoptedCount || 0) > 0 || (p2.frontier.adoptedCount || 0) > 0;
   if (!eitherAdopted) {
     assert.equal(
       r.frontier.reach.id,
@@ -284,10 +283,7 @@ test("rescale round-trip: ×2 then ×0.5 restores the original payload", async (
     back.frontier.points[3].outcomePct,
     p.frontier.points[3].outcomePct,
   );
-  assert.deepEqual(
-    back.frontier.reach.kneeRange,
-    p.frontier.reach.kneeRange,
-  );
+  assert.deepEqual(back.frontier.reach.kneeRange, p.frontier.reach.kneeRange);
 });
 
 test("GATE: rescale stays honest at the regime floor (15 ⇄ 30 kWh/day)", async () => {

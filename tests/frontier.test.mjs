@@ -767,7 +767,15 @@ test("RANGE: tapering curve yields a bounded sweet span, linear yields all", () 
   // Degenerate inputs: no range.
   assert.equal(findValueRange([]), null);
   assert.equal(findValueRange(rangeFront([[500, 0.3]])), null);
-  assert.equal(findValueRange(rangeFront([[500, 0.3], [500, 0.3]])), null);
+  assert.equal(
+    findValueRange(
+      rangeFront([
+        [500, 0.3],
+        [500, 0.3],
+      ]),
+    ),
+    null,
+  );
 });
 
 test("RANGE: buildFrontier payload carries kneeRange the table can tag", () => {
@@ -864,10 +872,7 @@ test("ADOPT: with the flag every dot is lifetime-verified", async () => {
       tempsC: f.tempsC,
     });
     assert.equal(
-      batteryReplacements(
-        sim.cyclesEquivalent / 1,
-        CHEMISTRIES.lfp.cyclesTo80,
-      ),
+      batteryReplacements(sim.cyclesEquivalent / 1, CHEMISTRIES.lfp.cyclesTo80),
       0,
       `${pt.pvKw}kW+${pt.battKwh}kWh must be genuinely zero-swap`,
     );

@@ -2,8 +2,8 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260906j";
-import { oversizeCallout } from "./rescale.js?v=20260906j";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260906k";
+import { oversizeCallout } from "./rescale.js?v=20260906k";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -723,16 +723,10 @@ export function billCutFraction({
   exportRate = null,
 }) {
   if (!(loadTotalWh > 0)) return 0;
-  if (
-    tariff !== null &&
-    tariff > 0 &&
-    exportRate !== null &&
-    exportRate > 0
-  ) {
+  if (tariff !== null && tariff > 0 && exportRate !== null && exportRate > 0) {
     return (
       1 -
-      (importedWh * tariff - curtailedWh * exportRate) /
-        (loadTotalWh * tariff)
+      (importedWh * tariff - curtailedWh * exportRate) / (loadTotalWh * tariff)
     );
   }
   return 1 - importedWh / loadTotalWh;
@@ -950,7 +944,8 @@ export function sizeForBillCut({
   // >100% cut under either rule, so both conditions must hold there. A
   // battery only absorbs surplus and adds cost against that goal, but the
   // search below stays fully general and lets the cost objective decide.
-  const hasCredit = tariff !== null && tariff > 0 && exportRate !== null && exportRate > 0;
+  const hasCredit =
+    tariff !== null && tariff > 0 && exportRate !== null && exportRate > 0;
   const cutOf = (r) =>
     billCutFraction({
       importedWh: r.importedWh,

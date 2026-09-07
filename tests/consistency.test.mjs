@@ -21,8 +21,14 @@ import {
   isColdSite,
   bestPickReason,
 } from "../assets/js/sizing/run.js";
-import { markerMatchesPoint, renderFrontierTable } from "../assets/js/sizing/frontier-chart.js";
-import { rescalePayload, oversizeCallout } from "../assets/js/sizing/rescale.js";
+import {
+  markerMatchesPoint,
+  renderFrontierTable,
+} from "../assets/js/sizing/frontier-chart.js";
+import {
+  rescalePayload,
+  oversizeCallout,
+} from "../assets/js/sizing/rescale.js";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
 import {
   OFFLINE_PROFILES,
@@ -160,8 +166,14 @@ test("CONSISTENCY: rescale preserves marker identity for the refine", async () =
   assert.ok(p.frontier?.marker, "marker present before rescale");
   const r = rescalePayload(p, 1.5);
   assert.equal(r.frontier.marker.chemistry, p.frontier.marker.chemistry);
-  assert.equal(r.frontier.marker.pvKw, Math.round(p.frontier.marker.pvKw * 1.5 * 100) / 100);
-  assert.equal(r.frontier.marker.battKwh, Math.round(p.frontier.marker.battKwh * 1.5));
+  assert.equal(
+    r.frontier.marker.pvKw,
+    Math.round(p.frontier.marker.pvKw * 1.5 * 100) / 100,
+  );
+  assert.equal(
+    r.frontier.marker.battKwh,
+    Math.round(p.frontier.marker.battKwh * 1.5),
+  );
   assert.equal(r.best.chemistry, p.best.chemistry);
 });
 
@@ -253,7 +265,11 @@ test("CONSISTENCY: markerMatchesPoint gates the selected table tag", async () =>
     "battery outside tolerance",
   );
   assert.equal(
-    markerMatchesPoint({ pvKw: 4.2, battKwh: 9, chemistry: "naion" }, pt, "lfp"),
+    markerMatchesPoint(
+      { pvKw: 4.2, battKwh: 9, chemistry: "naion" },
+      pt,
+      "lfp",
+    ),
     false,
     "chemistry mismatch never tags",
   );
@@ -356,7 +372,13 @@ test("CONSISTENCY: no money entry pairs swaps with an oversized note", async () 
       customCut: 0.82,
     },
     { ...MSG, mode: "gridtie", chemistry: "auto", customCut: 0.8 },
-    { ...MSG, mode: "gridtie", chemistry: "lfp", dailyKwh: 30, customCut: 0.95 },
+    {
+      ...MSG,
+      mode: "gridtie",
+      chemistry: "lfp",
+      dailyKwh: 30,
+      customCut: 0.95,
+    },
     {
       latitude: 59.9,
       longitude: 10.75,
@@ -369,10 +391,9 @@ test("CONSISTENCY: no money entry pairs swaps with an oversized note", async () 
     },
   ];
   for (const [i, cfg] of cfgs.entries()) {
-    const p = await runSizing(
-      cfg,
-      { fetchWeather: cfg.latitude === 59.9 ? londonWeather : fakeWeather },
-    );
+    const p = await runSizing(cfg, {
+      fetchWeather: cfg.latitude === 59.9 ? londonWeather : fakeWeather,
+    });
     assertOversizeUnified(moneyEntries(p));
   }
 });
@@ -436,7 +457,12 @@ test("CONSISTENCY: rescale regenerates the scenario note from scaled parts", () 
   const r2 = rescalePayload({ annualGridSpendUsd: 1000, best: swaps }, 2);
   assert.ok(r2.best.bestPriceCallout.includes("$1,088"));
   assert.ok(r2.best.bestPriceCallout.includes("2 replacement(s)"));
-  const plain = { ...swaps, oversizeSavingsUsd: 0, bestPriceCallout: "Best 20-year price: standard sizing with battery replacements is the practical pick." };
+  const plain = {
+    ...swaps,
+    oversizeSavingsUsd: 0,
+    bestPriceCallout:
+      "Best 20-year price: standard sizing with battery replacements is the practical pick.",
+  };
   const r3 = rescalePayload({ annualGridSpendUsd: 1000, best: plain }, 2);
   assert.equal(
     r3.best.bestPriceCallout,
