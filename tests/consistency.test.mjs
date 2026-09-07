@@ -135,6 +135,23 @@ test("CONSISTENCY: curve chemistry and marker match the recommendation", async (
   }
 });
 
+test("CONSISTENCY: rescale scales the value-range dollars, keeps indices", async () => {
+  const p = await runSizing(
+    { ...MSG, chemistry: "auto", mode: "gridtie", customCut: 0.8 },
+    { fetchWeather: fakeWeather },
+  );
+  const range = p.frontier.reach.kneeRange;
+  assert.ok(range, "range present on a full run");
+  const r = rescalePayload(p, 2);
+  const rr = r.frontier.reach.kneeRange;
+  assert.equal(rr.loIndex, range.loIndex);
+  assert.equal(rr.hiIndex, range.hiIndex);
+  assert.equal(rr.loPct, range.loPct);
+  assert.equal(rr.hiPct, range.hiPct);
+  assert.equal(rr.loCostUsd, Math.round(range.loCostUsd * 2));
+  assert.equal(rr.hiCostUsd, Math.round(range.hiCostUsd * 2));
+});
+
 test("CONSISTENCY: rescale preserves marker identity for the refine", async () => {
   const p = await runSizing(
     { ...MSG, chemistry: "auto", mode: "gridtie", customCut: 0.8 },

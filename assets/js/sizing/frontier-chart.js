@@ -235,14 +235,40 @@ export function renderFrontier(host, frontier, opts = {}) {
     `<line x1="${PAD.l}" y1="${(VB_H - PAD.b).toFixed(1)}" x2="${(VB_W - PAD.r).toFixed(1)}" y2="${(VB_H - PAD.b).toFixed(1)}" stroke="${C.axis}" stroke-width="1"/>`,
   );
 
-  // ── diminishing-returns wash, drawn behind the curve ──────────────────
+  // ── best-value range band, drawn behind the curve ─────────────────────
+  // The sweet span where each extra percent still costs within 2x the
+  // opening rate — both bounds from the data, never an assumed top.
   const kneeIdx = frontier.kneeIndex;
   const knee = kneeIdx >= 0 ? pts[kneeIdx] : null;
-  if (knee) {
-    const kx = X(knee.capexUsd);
+  const range =
+    frontier.reach && frontier.reach.kneeRange
+      ? frontier.reach.kneeRange
+      : null;
+  if (range && pts[range.loIndex] && pts[range.hiIndex]) {
+    const loX = X(range.loCostUsd),
+      hiX = X(range.hiCostUsd);
+    const rx = Math.min(loX, hiX),
+      rw = Math.max(4, Math.abs(hiX - loX));
     push(
-      `<rect x="${kx.toFixed(1)}" y="${PAD.t}" width="${(VB_W - PAD.r - kx).toFixed(1)}" height="${plotH.toFixed(1)}" fill="${C.tailWash}"/>`,
+      `<rect x="${rx.toFixed(1)}" y="${PAD.t}" width="${rw.toFixed(1)}" height="${plotH.toFixed(1)}" fill="rgba(0, 230, 153, 0.09)"/>`,
     );
+    push(
+      `<line x1="${loX.toFixed(1)}" y1="${PAD.t}" x2="${loX.toFixed(1)}" y2="${(VB_H - PAD.b).toFixed(1)}" stroke="${C.curve}" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.7"/>`,
+    );
+    push(
+      `<line x1="${hiX.toFixed(1)}" y1="${PAD.t}" x2="${hiX.toFixed(1)}" y2="${(VB_H - PAD.b).toFixed(1)}" stroke="${C.curve}" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.7"/>`,
+    );
+    // Numbers only — universally readable, no translation needed.
+    if (!box.narrow && rw > 70) {
+      const label = `${money(range.loCostUsd)}–${money(range.hiCostUsd)}`;
+      const cx = Math.min(
+        VB_W - PAD.r - 2 - textWidth(label, FS_TAG) / 2,
+        Math.max(PAD.l + 2 + textWidth(label, FS_TAG) / 2, rx + rw / 2),
+      );
+      push(
+        `<text x="${cx.toFixed(1)}" y="${(PAD.t + 14).toFixed(1)}" text-anchor="middle" font-size="${FS_TAG}" font-weight="700" fill="${C.curve}">${esc(label)}</text>`,
+      );
+    }
   }
 
   // ── price-uncertainty band (cheap DIY sourcing .. shipped retail) ──────
@@ -305,34 +331,6 @@ export function renderFrontier(host, frontier, opts = {}) {
     push(
       `<text x="${(VB_W - PAD.r - 6).toFixed(1)}" y="${tagY.toFixed(1)}" text-anchor="end" font-size="${FS}" font-weight="700" fill="${C.ceiling}">${esc(t("frontierCeilingTag", { pct: reach.ceilingPct }))}</text>`,
     );
-  }
-
-  // ── knee marker ───────────────────────────────────────────────────────
-  if (knee) {
-    const kx = X(knee.capexUsd),
-      ky = Y(knee.outcomePct);
-    push(
-      `<line x1="${kx.toFixed(1)}" y1="${ky.toFixed(1)}" x2="${kx.toFixed(1)}" y2="${(VB_H - PAD.b).toFixed(1)}" stroke="${C.knee}" stroke-width="1.2" stroke-dasharray="4 4"/>`,
-    );
-    push(
-      `<circle cx="${kx.toFixed(1)}" cy="${ky.toFixed(1)}" r="6" fill="none" stroke="${C.knee}" stroke-width="2.4"/>`,
-    );
-    // Label at the foot of the dashed line, not beside the dot: down here it
-    // can never overlap the curve or the other callout, however flat the
-    // curve is or wherever the chosen option lands.
-    if (!box.narrow) {
-      const label = t("frontierKneeTag");
-      const at = placeLabel(
-        kx,
-        label,
-        FS_TAG,
-        { left: PAD.l + 2, right: VB_W - PAD.r - 2 },
-        8,
-      );
-      push(
-        `<text x="${at.x.toFixed(1)}" y="${(VB_H - PAD.b - 9).toFixed(1)}" text-anchor="${at.anchor}" font-size="${FS_TAG}" font-weight="700" fill="${C.knee}">${esc(label)}</text>`,
-      );
-    }
   }
 
   // ── the selected option (click a point to change it) ──────────────────
@@ -455,13 +453,14 @@ export function renderFrontier(host, frontier, opts = {}) {
       ),
       t("frontierLegendBand"),
     ],
-    [
-      swatch(
-        `<span style="position:absolute;top:0;left:10px;width:0;height:11px;border-left:2px dashed ${C.knee};"></span>`,
-      ),
-      t("frontierLegendKnee"),
-    ],
   ];
+  if (range)
+    legendItems.push([
+      swatch(
+        `<span style="position:absolute;top:1px;left:0;width:22px;height:8px;background:rgba(0, 230, 153, 0.09);border-left:1px dashed ${C.curve};border-right:1px dashed ${C.curve};border-radius:2px;"></span>`,
+      ),
+      t("frontierLegendRange"),
+    ]);
   if (sel)
     legendItems.push([
       swatch(
@@ -633,7 +632,9 @@ export function renderFrontierTable(host, frontier, opts = {}) {
   }
   const rows = pts.map((p, i) => {
     const tags = [];
-    if (i === frontier.kneeIndex) tags.push(esc(t("frontierKneeTag")));
+    const range = frontier.reach && frontier.reach.kneeRange;
+    if (range && (i === range.loIndex || i === range.hiIndex))
+      tags.push(esc(t("frontierRangeTag")));
     if (i === selTable) tags.push(`<b>${esc(t("frontierTagSel"))}</b>`);
     return (
       `<tr><th scope="row" style="text-align:left;font-weight:600;">${esc(money(p.capexUsd))}</th>` +

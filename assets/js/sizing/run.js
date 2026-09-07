@@ -26,21 +26,21 @@ import {
   capacityScaleFor,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20260906g";
+} from "./engine.js?v=20260906h";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20260906g";
-import { buildFrontier } from "./frontier.js?v=20260906g";
-import { oversizeCallout } from "./rescale.js?v=20260906g";
+} from "./nasa.js?v=20260906h";
+import { buildFrontier } from "./frontier.js?v=20260906h";
+import { oversizeCallout } from "./rescale.js?v=20260906h";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20260906g";
+} from "./pricing.js?v=20260906h";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -51,7 +51,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20260906g";
+} from "./money.js?v=20260906h";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -252,7 +252,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20260906g");
+      await import("./profiles.js?v=20260906h");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -305,10 +305,16 @@ export async function runSizing(msg, deps = {}) {
     hardwareConfig = "both",
     peakLoadW: msgPeakLoadW = null,
   } = msg;
-  const effectivePvMax = hardwareConfig === "battery" ? 0 : 45;
-  const effectiveBattMax = hardwareConfig === "solar" ? 0 : 120;
-  const offgridPvMax = hardwareConfig === "battery" ? 0 : 30;
-  const offgridBattMax = hardwareConfig === "solar" ? 0 : 250;
+  // Search envelopes: wide enough to fantasize (big roof, big bank) while
+  // staying honest — anything beyond reports as bound-limited with the
+  // envelope named, never as impossible. The curve sweeps the same envelope
+  // on a fixed-size lattice, so widening costs resolution per rung, not
+  // simulations; the per-kWh battery loops grow ~25%, which the worker
+  // absorbs inside its normal multi-second budget.
+  const effectivePvMax = hardwareConfig === "battery" ? 0 : 60;
+  const effectiveBattMax = hardwareConfig === "solar" ? 0 : 150;
+  const offgridPvMax = hardwareConfig === "battery" ? 0 : 40;
+  const offgridBattMax = hardwareConfig === "solar" ? 0 : 300;
   // Structural feasibility for this (mode, hardware, target) combo.
   // "null" when the search is allowed to decide; an explanatory code when
   // the combo is impossible regardless of envelope (off-grid + solar-only,
@@ -370,9 +376,9 @@ export async function runSizing(msg, deps = {}) {
       ? autoTargetId
       : defaultTargetId;
   const cc = Number(customCut);
-  if (!Number.isFinite(cc) || cc < 0.01 || cc > 1.11) {
+  if (!Number.isFinite(cc) || cc < 0.01 || cc > 1.5) {
     throw new RangeError(
-      `customCut must be within [0.01, 1.11] (1%–111% bill cut); got ${customCut}`,
+      `customCut must be within [0.01, 1.5] (1%–150% bill cut); got ${customCut}`,
     );
   }
 
@@ -1150,27 +1156,17 @@ export async function runSizing(msg, deps = {}) {
       const r = fullRange(pv, b, chemId, landedF, Math.max(pv, invMinKw));
       return { mid: r.objectiveMid, lo: r.lo, hi: r.hi };
     };
-    // Sweep well past the headline answer so the user's option sits inside the
-    // picture. When nothing solved, fall back to the SAME envelope the card
-    // search already explored - a narrower sweep would let the chart imply a
-    // smaller world than the cards beside it had already looked at, and the
-    // top of the curve gets reported to the reader as a searched limit.
-    const searched =
-      payload.mode === "gridtie"
-        ? { pv: effectivePvMax, batt: effectiveBattMax }
-        : { pv: offgridPvMax, batt: offgridBattMax };
-    const pvMax = f
-      ? Math.min(
-          effectivePvMax,
-          Math.max(hardwareConfig === "battery" ? 0 : 3, f.pvKw * 2.2),
-        )
-      : searched.pv;
-    const battMax = f
-      ? Math.min(
-          effectiveBattMax,
-          Math.max(hardwareConfig === "solar" ? 0 : 4, f.battKwh * 2.6),
-        )
-      : searched.batt;
+    // The curve ALWAYS sweeps the full searched envelope — never narrowed
+    // around the current pick. Sliders, clicks and the budget walk move the
+    // DOT on a stable landscape; only site, load, goal, hardware, chemistry
+    // or tariff rebuild the world itself. A narrowed sweep would let the
+    // chart imply a smaller world than the cards beside it had already
+    // looked at, and the top of the curve gets reported to the reader as a
+    // searched limit.
+    const pvMax =
+      payload.mode === "gridtie" ? effectivePvMax : offgridPvMax;
+    const battMax =
+      payload.mode === "gridtie" ? effectiveBattMax : offgridBattMax;
 
     let frontier;
     try {
@@ -1781,7 +1777,7 @@ export async function runSizing(msg, deps = {}) {
       // slider path (which already re-derives best from the custom column),
       // so a bill edit can never snap the recommendation back to 80%.
       const gtWinner = pickBest(auto, meanTempC);
-      // The visitor's own bill-cut target from the 1–111% slider: sized by an
+      // The visitor's own bill-cut target from the 1–150% slider: sized by an
       // exact engine run per chemistry, never interpolated from the fixed
       // columns, and added to the matrix as a clickable "your target" column.
       const customFracGt = +cc.toFixed(3);
@@ -1912,7 +1908,7 @@ export async function runSizing(msg, deps = {}) {
       payload.assumptions.cycleLifeTo80 = Object.fromEntries(
         ["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]),
       );
-      payload.assumptions.money = `Auto mode sizes sodium-ion and LFP to deliver the same bill cut within its depth-of-discharge window (sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). The 60/80/95% matrix columns are fixed reference points; the "your target" column follows the 1–111% slider and is sized by an exact engine run.${customFracGt > 1 ? " Above 100% the system is sized to produce sellable surplus; without a feed-in credit that surplus has no cash value and is flagged as clipped waste." : ""} Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended. Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; fixed connection fees not counted.`;
+      payload.assumptions.money = `Auto mode sizes sodium-ion and LFP to deliver the same bill cut within its depth-of-discharge window (sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). The 60/80/95% matrix columns are fixed reference points; the "your target" column follows the 1–150% slider and is sized by an exact engine run.${customFracGt > 1 ? " Above 100% the system is sized to produce sellable surplus; without a feed-in credit that surplus has no cash value and is flagged as clipped waste." : ""} Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended. Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; fixed connection fees not counted.`;
       return attachFrontier(payload);
     }
 

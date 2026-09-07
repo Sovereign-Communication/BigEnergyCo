@@ -354,7 +354,7 @@ test("grid-tie AUTO carries a full 3×2 matrix honoring each cut target", async 
   assert.ok(p.matrix && p.matrix.kind === "gridtie");
   assert.ok(
     p.customCut && p.customCut.fraction === 0.8,
-    "payload exposes the 1–111% slider target",
+    "payload exposes the 1–150% slider target",
   );
   assert.ok(
     p.matrix.cols.some((c) => c.custom),

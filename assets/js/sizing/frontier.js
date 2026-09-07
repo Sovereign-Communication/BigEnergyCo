@@ -20,8 +20,8 @@ import {
   CHEMISTRIES,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20260906g";
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260906g";
+} from "./engine.js?v=20260906h";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260906h";
 
 // Points below this coverage are real but not decision-useful; plotting them
 // squashes the interesting part of the curve into the top corner.
@@ -309,6 +309,40 @@ export function costPerPoint(a, b) {
 }
 
 /**
+ * Best-value RANGE: the span of the curve where coverage still comes at a
+ * sane price — both bounds from the data, never an assumed top. The anchor
+ * is the whole-curve average rate; the upper bound walks back from the top
+ * past every segment costing more than TAIL_RATIO_TAPERING × that anchor
+ * (the same 2× line the tapering verdict already speaks). Isolated mid-curve
+ * spikes from lumpy battery steps do NOT end the range — only a sustained
+ * expensive tail does. Linear curves range over everything (no bad zone).
+ * @returns {{loIndex:number, hiIndex:number, loPct:number, loCostUsd:number, hiPct:number, hiCostUsd:number}|null}
+ */
+export function findValueRange(front) {
+  if (!Array.isArray(front) || front.length < 2) return null;
+  const first = front[0],
+    last = front[front.length - 1];
+  const anchor = costPerPoint(first, last);
+  if (anchor === null || !(anchor > 0)) return null;
+  const cap = TAIL_RATIO_TAPERING * anchor;
+  let hi = front.length - 1;
+  while (hi > 1) {
+    const m = costPerPoint(front[hi - 1], front[hi]);
+    if (m === null || m <= cap) break;
+    hi--;
+  }
+  const hiPt = front[hi];
+  return {
+    loIndex: 0,
+    hiIndex: hi,
+    loPct: +(first.outcome * 100).toFixed(1),
+    loCostUsd: Math.round(first.capexUsd),
+    hiPct: +(hiPt.outcome * 100).toFixed(1),
+    hiCostUsd: Math.round(hiPt.capexUsd),
+  };
+}
+
+/**
  * Turn the curve's shape into a verdict id the UI can translate. Returns ids
  * and raw numbers only - never prose - so every locale can phrase it itself.
  *
@@ -333,6 +367,7 @@ export function classifyReach(front, kneeIdx, envelope = {}) {
       headCostPerPoint: null,
       tailCostPerPoint: null,
       tailRatio: null,
+      kneeRange: null,
       ...env,
     };
 
@@ -359,6 +394,7 @@ export function classifyReach(front, kneeIdx, envelope = {}) {
       headCostPerPoint: null,
       tailCostPerPoint: null,
       tailRatio: null,
+      kneeRange: null,
     };
   }
   const base = {
@@ -375,6 +411,9 @@ export function classifyReach(front, kneeIdx, envelope = {}) {
   // Knee economics are reported whenever a knee exists - they are the most
   // useful thing on the chart even when the ceiling is out of reach, because
   // "value flattens here" is exactly what a Nordic visitor needs to see.
+  // Alongside them rides the best-value RANGE (both bounds, never an assumed
+  // top): the span where each extra percent still costs within 2x the
+  // opening rate.
   const knee = kneeIdx >= 1 ? front[kneeIdx] : null;
   const head = knee ? costPerPoint(front[0], knee) : null;
   const tail = knee ? costPerPoint(knee, last) : null;
@@ -386,6 +425,7 @@ export function classifyReach(front, kneeIdx, envelope = {}) {
     headCostPerPoint: head === null ? null : Math.round(head),
     tailCostPerPoint: tail === null ? null : Math.round(tail),
     tailRatio: ratio === null ? null : +ratio.toFixed(1),
+    kneeRange: findValueRange(front),
   };
 
   // Falling short of full coverage is the headline - but it is a statement

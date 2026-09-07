@@ -2,8 +2,8 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260906g";
-import { oversizeCallout } from "./rescale.js?v=20260906g";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260906h";
+import { oversizeCallout } from "./rescale.js?v=20260906h";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -928,9 +928,9 @@ export function sizeForBillCut({
   invMinKw = 0,
 }) {
   const f = Number(minFraction);
-  if (!Number.isFinite(f) || f < 0.01 || f > 1.11) {
+  if (!Number.isFinite(f) || f < 0.01 || f > 1.5) {
     throw new RangeError(
-      `minFraction must be within [0.01, 1.11] (a 1% to 111% bill cut); got ${minFraction}`,
+      `minFraction must be within [0.01, 1.5] (a 1% to 150% bill cut); got ${minFraction}`,
     );
   }
   const loadTotal = [...loadWh].reduce((a, b) => a + b, 0);

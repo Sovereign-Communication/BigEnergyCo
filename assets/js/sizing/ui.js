@@ -10,7 +10,7 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260906g";
+import { CITY_PRESETS } from "./nasa.js?v=20260906h";
 import {
   CITY_CATALOG,
   searchCities,
@@ -20,7 +20,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260906g";
+} from "./cities.js?v=20260906h";
 
 import {
   estimateTariff,
@@ -28,39 +28,39 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260906g";
+} from "./pricing.js?v=20260906h";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260906g";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260906h";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260906g";
+} from "./bom.js?v=20260906h";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260906g";
+import { BOM_ITEMS } from "../shared/content.js?v=20260906h";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260906g";
+} from "../shared/i18n.js?v=20260906h";
 
-import { LOCALES } from "../shared/locales.js?v=20260906g";
+import { LOCALES } from "../shared/locales.js?v=20260906h";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260906g";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260906h";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260906g";
+} from "./frontier-chart.js?v=20260906h";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260906g";
+} from "./rescale.js?v=20260906h";
 
 let worker = null;
 
@@ -83,7 +83,7 @@ let billAnchorKwh = 20;
 let billTouched = false;
 let billUserNominal = null;
 
-// Bill-cut slider (1–111%): the replacement for the old 60/80/95 dropdown.
+// Bill-cut slider (1–150%): the replacement for the old 60/80/95 dropdown.
 let customCutFraction = 0.8;
 
 // Which system the whole results pipeline (charts, BOM, export, share, print)
@@ -144,8 +144,10 @@ let focusFirst = false;
 let curvePreview = null;
 
 // Bill slider bounds, expressed in kWh/day and converted to local currency.
+// Wide enough to fantasize (estate-scale loads); the engine, not the slider,
+// is the honesty bound (envelope-limited verdicts say so out loud).
 const BILL_MIN_KWH = 2;
-const BILL_MAX_KWH = 200;
+const BILL_MAX_KWH = 400;
 
 // Loads below this stay out of the instant-rescale path: the search's
 // minimum-bank and lattice constraints shift the PV/battery optimum there,
@@ -1692,7 +1694,7 @@ function scheduleRun(quiet = false) {
   }, 350);
 }
 
-// ── Bill-cut slider (1–111%) ────────────────────────────────────────────────
+// ── Bill-cut slider (1–150%) ────────────────────────────────────────────────
 
 function syncCutLabel() {
   const slider = $("cutSlider");
@@ -2293,7 +2295,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260906g", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260906h", {
       type: "module",
     });
 
@@ -5341,7 +5343,7 @@ function adoptFrontierPoint(i) {
   // link and the matrix "your target" label must record the snapped value,
   // not the pre-click one.
   if (p.mode === "gridtie" && Number.isFinite(pt.outcomePct)) {
-    const pct = Math.min(111, Math.max(1, Math.round(pt.outcomePct)));
+    const pct = Math.min(150, Math.max(1, Math.round(pt.outcomePct)));
     customCutFraction = pct / 100;
     const slider = $("cutSlider");
     if (slider) slider.value = String(pct);
@@ -5434,7 +5436,23 @@ function renderFrontierPanel(p) {
 
   const verdict = $("frontierVerdict");
 
-  if (verdict) verdict.textContent = frontierVerdict(f, opts);
+  if (verdict) {
+    verdict.textContent = frontierVerdict(f, opts);
+    // Best-value range, both bounds, in the visitor's currency — the band on
+    // the chart, spelled out for screen readers and skimmers.
+    const range = f.reach && f.reach.kneeRange;
+    if (
+      range &&
+      Number.isFinite(range.loCostUsd) &&
+      Number.isFinite(range.hiCostUsd) &&
+      Number.isFinite(range.loPct) &&
+      Number.isFinite(range.hiPct)
+    ) {
+      verdict.textContent +=
+        ` Best-value range: ~${money(range.loCostUsd)}–${money(range.hiCostUsd)}` +
+        ` (${range.loPct}–${range.hiPct}%).`;
+    }
+  }
 
   // Only shown when the recommended system really is off a curve that was
 
@@ -6952,7 +6970,7 @@ export function initSizingUI() {
     if (modeQuick) modeQuick.addEventListener("change", applyMode);
     if (modeManual) modeManual.addEventListener("change", applyMode);
 
-    // Monthly-bill slider (local currency) + bill-cut slider (1–111%).
+    // Monthly-bill slider (local currency) + bill-cut slider (1–150%).
     setupBillSlider();
     setupCutSlider();
     setupBudgetSlider();

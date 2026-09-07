@@ -287,3 +287,31 @@ test("sizeForBillCut: solar-only reaches 100% at 1:1, honestly caps without cred
   });
   assert.ok(half, "half credit still reaches 80% solar-only");
 });
+
+test("sizeForBillCut accepts surplus targets to 150%, rejects beyond", () => {
+  const w = makeWeather(24 * 180, 11);
+  const e1 = buildE1kw(w);
+  const load = expandProfile(flatProfile(5), e1.length);
+  const base = {
+    e1kw: e1,
+    loadWh: load,
+    chemistry: "lfp",
+    years: 1,
+    costPerWpv: 0.35,
+    costPerKwhBatt: 140,
+    costPerKwInv: 60,
+    pvMax: 45,
+    battMax: 120,
+    laborPerKwh: [12, 30],
+    invMinKw: 5 / 24,
+    tariff: 0.4,
+    exportRate: 0.4,
+  };
+  const big = sizeForBillCut({ ...base, minFraction: 1.5 });
+  assert.ok(big, "150% sizes with 1:1 credits");
+  assert.throws(
+    () => sizeForBillCut({ ...base, minFraction: 1.51 }),
+    RangeError,
+    "past 150% is rejected",
+  );
+});

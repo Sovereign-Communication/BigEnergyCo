@@ -211,10 +211,21 @@ export function rescalePayload(p, k) {
         "ceilingCostUsd",
         "entryCostUsd",
         "kneeCostUsd",
+        "loCostUsd",
+        "hiCostUsd",
         "headCostPerPoint",
         "tailCostPerPoint",
       ]) {
         if (typeof reach[f] === "number") reach[f] = Math.round(reach[f] * k);
+      }
+      // Best-value range bounds ride with the curve; indices and percents
+      // are scale-invariant and stay put.
+      if (reach.kneeRange) {
+        reach.kneeRange = { ...reach.kneeRange };
+        for (const f of ["loCostUsd", "hiCostUsd"]) {
+          if (typeof reach.kneeRange[f] === "number")
+            reach.kneeRange[f] = Math.round(reach.kneeRange[f] * k);
+        }
       }
       // The searched envelope is in kW/kWh — it describes the new load too.
       for (const f of ["pvMaxKw", "battMaxKwh"]) {

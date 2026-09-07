@@ -77,7 +77,7 @@ test("sizeForTier never pairs swaps with an oversized_cheaper note", () => {
   }
 });
 
-// User-visible invariant: the custom bill-cut column (the 1–111% slider the
+// User-visible invariant: the custom bill-cut column (the 1–150% slider the
 // visitor actually drags) must never show a swap-carrying system under a
 // scenario note that claims oversizing is cheaper.
 test("runSizing custom-cut entries never pair swaps with an oversized_cheaper note", async () => {

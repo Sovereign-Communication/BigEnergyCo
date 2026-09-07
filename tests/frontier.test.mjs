@@ -13,6 +13,7 @@ import {
   paretoFront,
   thinFront,
   findKnee,
+  findValueRange,
   costPerPoint,
   classifyReach,
   buildFrontier,
@@ -725,6 +726,65 @@ test("REGRESSION: multi-year bill-cut % is per-year, not the accumulated total",
       `a ${a.chemistry} card sized for an ~80% cut should read ~80%, not ${a.cutPct}%`,
     );
   }
+});
+
+// ── best-value range ──────────────────────────────────────────────────────
+
+function rangeFront(pts) {
+  return pts.map(([capexUsd, outcome]) => ({ capexUsd, outcome }));
+}
+
+test("RANGE: tapering curve yields a bounded sweet span, linear yields all", () => {
+  // Steep climb, cheap middle, cliff tail: the range must swallow the noisy
+  // middle and stop at the cliff — never assume the top, never end on noise.
+  const taper = rangeFront([
+    [500, 0.3],
+    [1000, 0.55],
+    [1500, 0.7],
+    [3000, 0.78],
+    [6000, 0.82],
+  ]);
+  const r = findValueRange(taper);
+  assert.ok(r, "range found");
+  assert.equal(r.loIndex, 0, "lower bound is the cheapest useful system");
+  assert.equal(
+    r.hiIndex,
+    3,
+    "upper bound stops at the cliff (78%), past the noisy middle",
+  );
+  assert.ok(r.loCostUsd < r.hiCostUsd && r.loPct < r.hiPct);
+  // Linear value: no bad zone, the range is the whole curve.
+  const linear = rangeFront([
+    [1000, 0.2],
+    [2000, 0.4],
+    [3000, 0.6],
+    [4000, 0.8],
+  ]);
+  const rl = findValueRange(linear);
+  assert.ok(rl, "linear still ranges");
+  assert.equal(rl.loIndex, 0);
+  assert.equal(rl.hiIndex, linear.length - 1);
+  // Degenerate inputs: no range.
+  assert.equal(findValueRange([]), null);
+  assert.equal(findValueRange(rangeFront([[500, 0.3]])), null);
+  assert.equal(findValueRange(rangeFront([[500, 0.3], [500, 0.3]])), null);
+});
+
+test("RANGE: buildFrontier payload carries kneeRange the table can tag", () => {
+  const f = adoptFixture();
+  const fr = buildFrontier({ ...adoptBase(f), oversize: true });
+  const range = fr.reach && fr.reach.kneeRange;
+  assert.ok(range, "reach carries the range");
+  assert.ok(
+    range.loIndex === 0 && range.hiIndex > range.loIndex,
+    `band ${range.loIndex}..${range.hiIndex} of ${fr.points.length} points`,
+  );
+  assert.ok(range.loCostUsd < range.hiCostUsd);
+  assert.ok(range.loPct < range.hiPct);
+  assert.ok(
+    fr.points[range.loIndex] && fr.points[range.hiIndex],
+    "indices address real dots",
+  );
 });
 
 // ── fully-optimized dots ──────────────────────────────────────────────────
