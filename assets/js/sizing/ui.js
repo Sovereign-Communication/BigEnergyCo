@@ -10,7 +10,7 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260906i";
+import { CITY_PRESETS } from "./nasa.js?v=20260906j";
 import {
   CITY_CATALOG,
   searchCities,
@@ -20,7 +20,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260906i";
+} from "./cities.js?v=20260906j";
 
 import {
   estimateTariff,
@@ -28,39 +28,39 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260906i";
+} from "./pricing.js?v=20260906j";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260906i";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260906j";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260906i";
+} from "./bom.js?v=20260906j";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260906i";
+import { BOM_ITEMS } from "../shared/content.js?v=20260906j";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260906i";
+} from "../shared/i18n.js?v=20260906j";
 
-import { LOCALES } from "../shared/locales.js?v=20260906i";
+import { LOCALES } from "../shared/locales.js?v=20260906j";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260906i";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260906j";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260906i";
+} from "./frontier-chart.js?v=20260906j";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260906i";
+} from "./rescale.js?v=20260906j";
 
 let worker = null;
 
@@ -2301,7 +2301,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260906i", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260906j", {
       type: "module",
     });
 
@@ -2414,7 +2414,9 @@ function fmtPaybackRange(lo, hi) {
 
   if (!a || !b) return "-";
 
-  return a === b ? a : `${a}-${b.replace("~", "")}`;
+  if (a === b) return a;
+  // One leading ~ and an en dash: "~3–11 yr", never "~3 yr-11 yr".
+  return `~${a.replace("~", "")}–${b.replace("~", "")}`;
 }
 
 // User currency (optional): converts every displayed dollar amount AND unit
@@ -2530,8 +2532,6 @@ const TIER_NAMES = {
   "auto-naion": "Sodium-Ion bank over five real years",
 
   "auto-lfp": "LFP bank over five real years",
-
-  "auto-agm": "Lead-Acid (AGM) bank over five real years",
 };
 
 /**
