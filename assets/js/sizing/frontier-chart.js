@@ -48,14 +48,12 @@ export function chartBox(hostWidth) {
 const C = {
   curve: "var(--primary-accent, #00e699)",
   band: "rgba(0, 230, 153, 0.13)",
-  knee: "var(--warning-orange, #f59e0b)",
   marker: "var(--secondary-accent, #3b82f6)",
   ceiling: "var(--danger-red, #ef4444)",
   grid: "rgba(255, 255, 255, 0.10)",
   axis: "rgba(255, 255, 255, 0.28)",
   text: "var(--text-muted, #9ca3af)",
   textBright: "var(--text-main, #f3f4f6)",
-  tailWash: "rgba(245, 158, 11, 0.08)",
 };
 
 // Rough advance width for the system UI stack at a given size. Good enough to
@@ -258,7 +256,9 @@ export function renderFrontier(host, frontier, opts = {}) {
     push(
       `<line x1="${hiX.toFixed(1)}" y1="${PAD.t}" x2="${hiX.toFixed(1)}" y2="${(VB_H - PAD.b).toFixed(1)}" stroke="${C.curve}" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.7"/>`,
     );
-    // Numbers only — universally readable, no translation needed.
+    // Numbers only — universally readable, no translation needed. At the
+    // foot of the plot, where it can never collide with the curve, the
+    // selected-system readout, or the ceiling tag.
     if (!box.narrow && rw > 70) {
       const label = `${money(range.loCostUsd)}–${money(range.hiCostUsd)}`;
       const cx = Math.min(
@@ -266,7 +266,7 @@ export function renderFrontier(host, frontier, opts = {}) {
         Math.max(PAD.l + 2 + textWidth(label, FS_TAG) / 2, rx + rw / 2),
       );
       push(
-        `<text x="${cx.toFixed(1)}" y="${(PAD.t + 14).toFixed(1)}" text-anchor="middle" font-size="${FS_TAG}" font-weight="700" fill="${C.curve}">${esc(label)}</text>`,
+        `<text x="${cx.toFixed(1)}" y="${(VB_H - PAD.b - 9).toFixed(1)}" text-anchor="middle" font-size="${FS_TAG}" font-weight="700" fill="${C.curve}">${esc(label)}</text>`,
       );
     }
   }
