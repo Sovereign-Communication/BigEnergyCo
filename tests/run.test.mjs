@@ -40,7 +40,7 @@ test("off-grid AUTO: every field the renderer reads exists and is sane", async (
     { fetchWeather: fakeWeather },
   );
   assert.equal(p.mode, "offgrid");
-  assert.equal(p.contract, 14, "payload carries current contract version");
+  assert.equal(p.contract, 15, "payload carries current contract version");
   assert.ok(
     Array.isArray(p.auto) && p.auto.length === 2,
     "two chemistry cards (sodium-ion + LFP; lead-acid ships as reference)",

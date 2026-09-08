@@ -260,6 +260,17 @@ test("UNIFY: sameSiteOptions rejects cross-envelope rescales", () => {
     "battery-only envelope differs",
   );
   assert.ok(!sameSiteOptions(a, { ...a, tariff: 0.43 }), "tariff differs");
+  assert.ok(
+    !sameSiteOptions(a, { ...a, fixedMonthlyUsd: 25 }),
+    "fixed charge differs",
+  );
+  assert.ok(
+    sameSiteOptions(
+      { ...a, fixedMonthlyUsd: 25 },
+      { ...a, fixedMonthlyUsd: 25 },
+    ),
+    "matching fixed charges rescale",
+  );
 });
 
 // Battery-only end-to-end: search, cards, curve all speak peak-offset.
@@ -329,13 +340,13 @@ test("UNIFY: grid-tie matrix cells accumulate the FULL bill on the grid line", a
 });
 
 // Payload contract current.
-test("UNIFY: payload carries contract 14 with load + peak fields", async () => {
+test("UNIFY: payload carries contract 15 with load + peak fields", async () => {
   const p = await runSizing(
     { ...BASE, dailyKwh: 10 },
     { fetchWeather: fakeWeather },
   );
   assert.equal(p.contract, PAYLOAD_CONTRACT);
-  assert.equal(PAYLOAD_CONTRACT, 14);
+  assert.equal(PAYLOAD_CONTRACT, 15);
   assert.ok(Number.isFinite(p.dailyKwh) && Number.isFinite(p.peakLoadW));
   assert.equal(typeof p.peakIsAverage, "boolean");
 });

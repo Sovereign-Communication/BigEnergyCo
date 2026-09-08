@@ -39,6 +39,8 @@ export const LOCALES = {
       "At {tariff}/kWh, your power costs about {annual} per year today. Each option below shows the bill after solar and how fast it repays itself out of the savings.",
     tariffSpendOffgrid:
       "At {tariff}/kWh, this use costs about {annual} per year in grid power. Payback figures below compare system cost against that spend.",
+    tariffSpendFixed:
+      " That includes {fixed}/mo in fixed charges solar can't cut.",
     readoutAppliancesEmpty:
       "Tick the things you want to power, and your daily energy shows up here.",
     readoutAppliancesSummary:

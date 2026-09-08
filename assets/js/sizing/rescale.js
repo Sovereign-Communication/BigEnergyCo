@@ -44,13 +44,23 @@ export function oversizeCallout(
   return null;
 }
 
-/** Rescale a cumulative cost series {grid, solar, system} by load factor k. */
-export function scaleSeries(s, k) {
+/** Rescale a cumulative cost series {grid, solar, system} by load factor k.
+ * fixedMonthly is the non-scaling utility connection fee (USD/mo): the grid
+ * and solar lines both keep paying it every year, so only the amount above
+ * it scales — the system line (hardware alone) scales in full. */
+export function scaleSeries(s, k, fixedMonthly = 0) {
   if (!s || !Number.isFinite(k)) return s;
+  const feeYear = (Number.isFinite(fixedMonthly) ? fixedMonthly : 0) * 12;
+  const scaleBillLine = (arr) =>
+    arr.map((v, i) =>
+      feeYear > 0
+        ? Math.round((v - feeYear * (i + 1)) * k + feeYear * (i + 1))
+        : Math.round(v * k),
+    );
   const out = {
     years: s.years,
-    grid: s.grid.map((v) => Math.round(v * k)),
-    solar: s.solar.map((v) => Math.round(v * k)),
+    grid: scaleBillLine(s.grid),
+    solar: scaleBillLine(s.solar),
   };
   if (Array.isArray(s.system))
     out.system = s.system.map((v) => Math.round(v * k));
@@ -91,10 +101,14 @@ const SCALE_FIELDS = [
  * detail, focus system...) for a k× change in load. Returns a shallow-copied
  * record; the original payload is never mutated. Money rounds to whole
  * dollars and batteries to whole kWh — the engine's own quantization — so a
- * rescaled payload stays comparable with a fresh engine run.
+ * rescaled payload stays comparable with a fresh engine run. fixedMonthly is
+ * the non-scaling connection fee (USD/mo): the monthly bill-after keeps
+ * paying it, so only the amount above it scales.
  */
-export function scaleRecord(o, k) {
+export function scaleRecord(o, k, fixedMonthly = 0) {
   if (!o || !Number.isFinite(k)) return o;
+  const fee =
+    Number.isFinite(fixedMonthly) && fixedMonthly > 0 ? fixedMonthly : 0;
   const n = { ...o };
   for (const f of SCALE_FIELDS) {
     if (typeof n[f] !== "number") continue;
@@ -104,9 +118,11 @@ export function scaleRecord(o, k) {
       n[f] = Math.round(n[f] * k);
     else if (f === "pvKw") n[f] = Math.round(n[f] * k * 100) / 100;
     else if (f === "battNameplateKwh") n[f] = Math.round(n[f] * k * 10) / 10;
+    else if (f === "billAfterMonthlyUsd" && fee > 0)
+      n[f] = Math.round((n[f] - fee) * k + fee);
     else n[f] = Math.round(n[f] * k);
   }
-  if (n.cumCostSeries) n.cumCostSeries = scaleSeries(n.cumCostSeries, k);
+  if (n.cumCostSeries) n.cumCostSeries = scaleSeries(n.cumCostSeries, k, fee);
   // The scenario sentence embeds scaled numbers: regenerate it from the
   // scaled parts instead of letting it quote the old system. Only $-claiming
   // notes are touched — number-free variants ("beyond the sizes searched",
@@ -168,30 +184,36 @@ export function rescalePayload(p, k) {
   )
     return p;
   const out = { ...p };
-  out.annualGridSpendUsd = Math.round(out.annualGridSpendUsd * k);
-  if (Array.isArray(out.auto))
-    out.auto = out.auto.map((e) => scaleRecord(e, k));
-  out.best = scaleRecord(out.best, k);
+  // The fixed connection fee does not scale with load: rebase the annual
+  // grid spend around it instead of multiplying the whole bill.
+  const feeM =
+    Number.isFinite(p.fixedMonthlyUsd) && p.fixedMonthlyUsd > 0
+      ? p.fixedMonthlyUsd
+      : 0;
+  const feeA = feeM * 12;
+  const rs = (o) => scaleRecord(o, k, feeM);
+  out.annualGridSpendUsd = Math.round(
+    (out.annualGridSpendUsd - feeA) * k + feeA,
+  );
+  if (Array.isArray(out.auto)) out.auto = out.auto.map((e) => rs(e));
+  out.best = rs(out.best);
   out.focus = scaleFocus(out.focus, k);
-  out.focusSystem = scaleRecord(out.focusSystem, k);
-  if (Array.isArray(out.tiers))
-    out.tiers = out.tiers.map((t) => scaleRecord(t, k));
-  if (Array.isArray(out.targets))
-    out.targets = out.targets.map((t) => scaleRecord(t, k));
-  out.customTarget = scaleRecord(out.customTarget, k);
+  out.focusSystem = rs(out.focusSystem);
+  if (Array.isArray(out.tiers)) out.tiers = out.tiers.map((t) => rs(t));
+  if (Array.isArray(out.targets)) out.targets = out.targets.map((t) => rs(t));
+  out.customTarget = rs(out.customTarget);
   if (out.customCut) {
     out.customCut = {
       ...out.customCut, // fraction / achievedPct / surplus stay as-is
-      entries: (out.customCut.entries || []).map((e) => scaleRecord(e, k)),
-      best: scaleRecord(out.customCut.best, k),
+      entries: (out.customCut.entries || []).map((e) => rs(e)),
+      best: rs(out.customCut.best),
     };
   }
   // The lead-acid savings reference scales like every other money record.
-  out.agmReference = scaleRecord(out.agmReference, k);
+  out.agmReference = rs(out.agmReference);
   if (out.matrix && out.matrix.cells) {
     const cells = {};
-    for (const [key, c] of Object.entries(out.matrix.cells))
-      cells[key] = scaleRecord(c, k);
+    for (const [key, c] of Object.entries(out.matrix.cells)) cells[key] = rs(c);
     out.matrix = { ...out.matrix, cells };
   }
   if (out.frontier) {
@@ -202,7 +224,7 @@ export function rescalePayload(p, k) {
         battKwh: Math.round(pt.battKwh * k),
         capexUsd: Math.round(pt.capexUsd * k),
       };
-      if (pt.detail) np.detail = scaleRecord(pt.detail, k);
+      if (pt.detail) np.detail = rs(pt.detail);
       return np;
     });
     const reach = out.frontier.reach ? { ...out.frontier.reach } : null;
@@ -258,6 +280,7 @@ export function sameSiteOptions(a, b) {
     (a.hardwareConfig || "both") === (b.hardwareConfig || "both") &&
     JSON.stringify(a.derates || null) === JSON.stringify(b.derates || null) &&
     Number(a.tariff) === Number(b.tariff) &&
-    Number(a.exportRate) === Number(b.exportRate)
+    Number(a.exportRate) === Number(b.exportRate) &&
+    (a.fixedMonthlyUsd || 0) === (b.fixedMonthlyUsd || 0)
   );
 }

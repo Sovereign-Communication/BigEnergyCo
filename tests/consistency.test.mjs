@@ -675,7 +675,7 @@ test("SOLAR-EDGE: hardware×mode×credit edge matrix stays sane", async () => {
       { ...MSG, tariff: 0.42, ...cfg },
       { fetchWeather: fakeWeather },
     );
-    assert.equal(p.contract, 14, `${cfg.hardwareConfig}/${cfg.mode} contract`);
+    assert.equal(p.contract, 15, `${cfg.hardwareConfig}/${cfg.mode} contract`);
     assert.ok(p.frontier, "frontier field always present");
     const entries = moneyEntries(p);
     if (!entries.length) {

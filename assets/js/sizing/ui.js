@@ -426,16 +426,28 @@ function getTariff() {
   return Number.isFinite(v) && v > 0 ? v : null;
 }
 
+// Fixed monthly connection fee, display currency like the tariff (a number
+// only the visitor knows — never auto-estimated, so no touched-flag needed).
+function getFixedCharge() {
+  const v = parseFloat($("fixedChargeVal")?.value);
+
+  return Number.isFinite(v) && v >= 0 ? v : null;
+}
+
+function fixedDisplay() {
+  return getFixedCharge() || 0;
+}
+
 // ── Monthly-bill slider (local currency, anchored to kWh/day) ───────────────
 
 // The slider speaks the same language as a bill: the local-currency monthly
 // amount, derived from the user's kWh/day anchor and the active tariff.
 function kwhFromBill(bill, rate) {
-  return bill / (rate * DAYS_PER_MONTH);
+  return (bill - fixedDisplay()) / (rate * DAYS_PER_MONTH);
 }
 
 function billForKwh(kwh, rate) {
-  return kwh * DAYS_PER_MONTH * rate;
+  return kwh * DAYS_PER_MONTH * rate + fixedDisplay();
 }
 
 function fmtBill(v) {
@@ -547,7 +559,7 @@ function updateLoadReadout() {
       Number.isFinite(rate) &&
       rate > 0
     ) {
-      const kwhDay = kwhFromBill(bill, rate);
+      const kwhDay = Math.max(0, kwhFromBill(bill, rate));
 
       out.textContent = t("readoutBill", { kwhDay: fmtKwh(kwhDay) });
     } else {
@@ -1158,6 +1170,12 @@ function updateCurrencyUnitLabel() {
   if (expSpan)
     expSpan.textContent = `(${fx ? CURRENCIES[fx.code]?.symbol || fx.code : "$"}/kWh, optional \u2014 grid-tie only)`;
 
+  // The fixed charge is entered in the same display currency.
+  const fixedCur = document.querySelector('label[for="fixedChargeVal"] span');
+
+  if (fixedCur)
+    fixedCur.textContent = `(${fx ? CURRENCIES[fx.code]?.symbol || fx.code : "$"}/mo, optional)`;
+
   // The always-visible bill slider shows the resolved location's currency.
 
   const billCur = $("billSliderCur");
@@ -1534,7 +1552,7 @@ function readInputs() {
 
     dailyKwh =
       Number.isFinite(bill) && Number.isFinite(rate) && rate > 0
-        ? bill / (rate * DAYS_PER_MONTH)
+        ? kwhFromBill(bill, rate)
         : billAnchorKwh;
 
     billAnchorKwh =
@@ -1591,6 +1609,19 @@ function readInputs() {
       const fx = fxActive();
 
       return fx && Number.isFinite(v) ? v / fx.rate : v;
+    })(),
+
+    fixedMonthlyUsd: (() => {
+      const v = getFixedCharge();
+
+      const fx = fxActive();
+
+      // Same display-currency treatment as the tariff: local ÷ units per
+      // US$1, always a number (0 = none) so option comparison never trips
+      // on undefined.
+      if (!Number.isFinite(v)) return 0;
+
+      return fx ? v / fx.rate : v;
     })(),
 
     autoTier: $("autoTier")?.value || "tier99",
@@ -4146,8 +4177,12 @@ function renderMoneyBar(p) {
 
   moneyBar.style.display = "block";
 
+  const feeNote =
+    p.fixedMonthlyUsd > 0
+      ? t("tariffSpendFixed", { fixed: money(p.fixedMonthlyUsd) })
+      : "";
   moneyBar.textContent =
-    p.mode === "gridtie"
+    (p.mode === "gridtie"
       ? t("tariffSpendLine", {
           tariff: localRate(p.tariff),
           annual: money(p.annualGridSpendUsd),
@@ -4155,7 +4190,7 @@ function renderMoneyBar(p) {
       : t("tariffSpendOffgrid", {
           tariff: localRate(p.tariff),
           annual: money(p.annualGridSpendUsd),
-        });
+        })) + feeNote;
 }
 
 function renderTierCards(p) {
@@ -5382,7 +5417,7 @@ function drawAutoChart(p) {
 }
 
 // Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
-const PAYLOAD_CONTRACT = 14;
+const PAYLOAD_CONTRACT = 15;
 
 // -- Plausibility frontier ---------------------------------------------------
 
@@ -6036,6 +6071,8 @@ function updateShareHash(p, inp) {
 
     if (inp.exportRate) o.xr = inp.exportRate;
 
+    if (inp.fixedMonthlyUsd) o.fee = inp.fixedMonthlyUsd;
+
     if (p) {
       const sized =
         p.auto && p.auto.length
@@ -6156,6 +6193,14 @@ function restoreFromShare() {
     const fx = fxActive();
 
     $("exportRate").value = String(fx ? +(o.xr * fx.rate).toFixed(4) : o.xr);
+  }
+
+  if (Number.isFinite(o.fee) && o.fee >= 0 && $("fixedChargeVal")) {
+    const fx = fxActive();
+
+    $("fixedChargeVal").value = String(
+      fx ? +(o.fee * fx.rate).toFixed(2) : o.fee,
+    );
   }
 
   if (Number.isFinite(o.tf) && o.tf > 0) {
@@ -6889,6 +6934,13 @@ export function initSizingUI() {
         if (lastPayload) scheduleRun(true);
       });
 
+    const fixedVal = $("fixedChargeVal");
+    if (fixedVal)
+      fixedVal.addEventListener("input", () => {
+        syncBillSlider();
+        if (lastPayload) scheduleRun(true);
+      });
+
     $("loadMode").addEventListener("change", setLoadPanel);
 
     $("dailyKwhInput").addEventListener("input", updateLoadReadout);
@@ -6969,6 +7021,7 @@ export function initSizingUI() {
           };
           convertField("customRateVal");
           convertField("exportRate");
+          convertField("fixedChargeVal");
           convertField("genFuelPrice");
 
           currencyTouched = true;
@@ -7221,7 +7274,12 @@ async function refreshFxRates() {
       const oldRate = parseFloat(fxInput.value);
       const newRate = CURRENCIES[code].perUSD;
       if (Number.isFinite(oldRate) && oldRate > 0 && oldRate !== newRate) {
-        for (const id of ["customRateVal", "exportRate", "genFuelPrice"]) {
+        for (const id of [
+          "customRateVal",
+          "exportRate",
+          "fixedChargeVal",
+          "genFuelPrice",
+        ]) {
           const node = $(id);
           const v = parseFloat(node?.value);
           if (node && Number.isFinite(v))

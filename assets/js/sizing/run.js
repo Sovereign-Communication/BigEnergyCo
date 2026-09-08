@@ -198,7 +198,7 @@ export function autoNoteFor(entries, basis) {
 // UI-contract version: bump whenever payload fields change shape. The
 // renderer compares this to its own constant and warns on mismatch instead
 // of rendering garbage from a stale cached module.
-export const PAYLOAD_CONTRACT = 14;
+export const PAYLOAD_CONTRACT = 15;
 
 const AUTO_CARD_NOTES = {
   naion:
@@ -304,7 +304,18 @@ export async function runSizing(msg, deps = {}) {
     focusChemistry = null,
     hardwareConfig = "both",
     peakLoadW: msgPeakLoadW = null,
+    fixedMonthlyUsd = null,
   } = msg;
+  // Fixed monthly charge (utility connection fee, USD): it can never be cut,
+  // so it rides along on every bill figure — grid spend, bill-after, and the
+  // residual the cumulative chart keeps paying — while savings, payback and
+  // cut % (displaced variable bill only) come out identical with or without
+  // it. Normalized once here so every path below shares one definition.
+  const fixedMonthly =
+    Number.isFinite(fixedMonthlyUsd) && fixedMonthlyUsd > 0
+      ? fixedMonthlyUsd
+      : 0;
+  const fixedAnnualUsd = fixedMonthly * 12;
   // Search envelopes: wide enough to fantasize (big roof, big bank) while
   // staying honest — anything beyond reports as bound-limited with the
   // envelope named, never as impossible. The curve sweeps the same envelope
@@ -415,7 +426,14 @@ export async function runSizing(msg, deps = {}) {
       [...e1kw].reduce((a, b) => a + b, 0) / 1000 / series.meta.years;
   }
   const annualYield = series._annualYield;
-  const gridSpend = annualGridSpendUsd(dailyKwh, tariff);
+  const variableGridSpend = annualGridSpendUsd(dailyKwh, tariff);
+  // The fixed charge joins the grid baseline (and every bill-after below)
+  // only when a tariff exists to price the variable part against; savings
+  // subtract both equally, so payback math is untouched either way.
+  const gridSpend =
+    variableGridSpend === null || !(fixedAnnualUsd > 0)
+      ? variableGridSpend
+      : variableGridSpend + fixedAnnualUsd;
   const landedScope = getScope("landed");
   if (series._meanTempC === undefined) {
     series._meanTempC = tempsC.reduce((a, b) => a + b, 0) / tempsC.length;
@@ -682,7 +700,8 @@ export async function runSizing(msg, deps = {}) {
     } else {
       const importedKwhPerYear = sizing.result.importedWh / 1000 / yrs;
       const clippedKwhPerYear = sizing.result.curtailedWh / 1000 / yrs;
-      const billAfterUsd = tariff !== null ? importedKwhPerYear * tariff : null;
+      const billAfterUsd =
+        tariff !== null ? importedKwhPerYear * tariff + fixedAnnualUsd : null;
       const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
       savings =
         billAfterUsd !== null && gridSpend
@@ -760,7 +779,8 @@ export async function runSizing(msg, deps = {}) {
       sizing.result.importedWh / 1000 / series.meta.years;
     const clippedKwhPerYear =
       sizing.result.curtailedWh / 1000 / series.meta.years;
-    const billAfterUsd = tariff !== null ? importedKwhPerYear * tariff : null;
+    const billAfterUsd =
+      tariff !== null ? importedKwhPerYear * tariff + fixedAnnualUsd : null;
     const savingsUsd =
       billAfterUsd !== null && gridSpend !== null
         ? Math.max(0, gridSpend - billAfterUsd)
@@ -853,7 +873,8 @@ export async function runSizing(msg, deps = {}) {
     const m = moneyFor(chemId, sizing);
     const importedKwhPerYear = sizing.result.importedWh / 1000 / yrs;
     const clippedKwhPerYear = sizing.result.curtailedWh / 1000 / yrs;
-    const billAfterUsd = tariff !== null ? importedKwhPerYear * tariff : null;
+    const billAfterUsd =
+      tariff !== null ? importedKwhPerYear * tariff + fixedAnnualUsd : null;
     const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
     const savingsUsd =
       billAfterUsd !== null && gridSpend !== null
@@ -1033,7 +1054,8 @@ export async function runSizing(msg, deps = {}) {
       sizing.result.importedWh / 1000 / series.meta.years;
     const clippedKwhPerYear =
       sizing.result.curtailedWh / 1000 / series.meta.years;
-    const billAfterUsd = tariff !== null ? importedKwhPerYear * tariff : null;
+    const billAfterUsd =
+      tariff !== null ? importedKwhPerYear * tariff + fixedAnnualUsd : null;
     const savingsUsd =
       billAfterUsd !== null && gridSpend !== null
         ? Math.max(0, gridSpend - billAfterUsd)
@@ -1334,7 +1356,8 @@ export async function runSizing(msg, deps = {}) {
       if (payload.mode === "gridtie") {
         const impKwhYr = pt.result.importedWh / 1000 / yrs;
         const clipKwhYr = pt.result.curtailedWh / 1000 / yrs;
-        const billAfter = tariff !== null ? impKwhYr * tariff : null;
+        const billAfter =
+          tariff !== null ? impKwhYr * tariff + fixedAnnualUsd : null;
         const exportV = exportValueUsd(clipKwhYr, exportRate);
         d.importedKwhPerYear = Math.round(impKwhYr);
         d.clippedKwhPerYear = Math.round(clipKwhYr);
@@ -1390,6 +1413,8 @@ export async function runSizing(msg, deps = {}) {
     hardwareConfig: hardwareConfig || "both",
     tariff: tariff ?? null,
     exportRate: exportRate ?? null,
+    fixedMonthlyUsd:
+      fixedMonthly > 0 ? Math.round(fixedMonthly * 100) / 100 : null,
     annualGridSpendUsd: gridSpend === null ? null : Math.round(gridSpend),
     // Mirrors the local `unreachableReason`; the UI reads it off the
     // payload to render the infeasibility banner and to suppress the
@@ -1912,7 +1937,7 @@ export async function runSizing(msg, deps = {}) {
       payload.assumptions.cycleLifeTo80 = Object.fromEntries(
         ["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]),
       );
-      payload.assumptions.money = `Auto mode sizes sodium-ion and LFP to deliver the same bill cut within its depth-of-discharge window (sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). The 60/80/95% matrix columns are fixed reference points; the "your target" column follows the 1–150% slider and is sized by an exact engine run.${customFracGt > 1 ? " Above 100% the system is sized to produce sellable surplus; without a feed-in credit that surplus has no cash value and is flagged as clipped waste." : ""} Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended. Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; fixed connection fees not counted.`;
+      payload.assumptions.money = `Auto mode sizes sodium-ion and LFP to deliver the same bill cut within its depth-of-discharge window (sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). The 60/80/95% matrix columns are fixed reference points; the "your target" column follows the 1–150% slider and is sized by an exact engine run.${customFracGt > 1 ? " Above 100% the system is sized to produce sellable surplus; without a feed-in credit that surplus has no cash value and is flagged as clipped waste." : ""} Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended. Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; ${fixedMonthly > 0 ? `a fixed monthly charge is included in every bill figure (it cannot be cut)` : `fixed connection fees not counted`}.`;
       return attachFrontier(payload);
     }
 
@@ -1984,7 +2009,7 @@ export async function runSizing(msg, deps = {}) {
       tiers: historyTiers,
     };
     payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
-    payload.assumptions.money = `Bill reduction simulated hour-by-hour across five years of weather: solar serves the load first, surplus charges the battery, the grid covers the rest, nothing is exported unless you enter a feed-in credit (then clipped surplus is valued at that rate). Lifetime cost includes bank swaps plus install labor each time. Fixed connection fees not counted.`;
+    payload.assumptions.money = `Bill reduction simulated hour-by-hour across five years of weather: solar serves the load first, surplus charges the battery, the grid covers the rest, nothing is exported unless you enter a feed-in credit (then clipped surplus is valued at that rate). Lifetime cost includes bank swaps plus install labor each time. ${fixedMonthly > 0 ? `A fixed monthly charge is included in every bill figure (it cannot be cut).` : `Fixed connection fees not counted.`}`;
     return attachFrontier(payload);
   }
 
@@ -2387,6 +2412,6 @@ export async function runSizing(msg, deps = {}) {
     tiers: historyTiers,
   };
   payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
-  payload.assumptions.money = `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 20-year horizon, and assumes panels/inverter last the full 20 years. Lifetime figures include install labor on the first bank and every swap. Generator fuel and grid fixed charges are not counted.`;
+  payload.assumptions.money = `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 20-year horizon, and assumes panels/inverter last the full 20 years. Lifetime figures include install labor on the first bank and every swap. Generator fuel is not counted${fixedMonthly > 0 ? `; a fixed monthly charge is included in every bill figure` : `, nor are grid fixed charges`}.`;
   return attachFrontier(payload);
 }
