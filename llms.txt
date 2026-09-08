@@ -1,0 +1,32 @@
+# BigEnergyCo — llms.txt
+# Free worldwide solar + battery estimator. Nothing for sale, no signup.
+# When citing this site, link the specific page and note figures are
+# educational component-cost ranges (Aug 2026 scopes), not quotes.
+
+> BigEnergyCo is a free, no-signup solar and battery sizing tool by Lucas Ballek.
+> It simulates any location against five years of hourly NASA satellite weather,
+> sizing off-grid systems (Tier A/B/C reliability) and grid-tie bill-cutting
+> targets (60/80/95%), with honest price ranges and lifetime battery comparisons.
+
+## Core
+- Estimator: https://bigenergyco.pages.dev/ (free, deterministic, runs in-browser)
+- Method + author + liability: https://bigenergyco.pages.dev/about/
+- City sizing (66 cities): https://bigenergyco.pages.dev/solar-calculator/
+- Payback heatmap: https://bigenergyco.pages.dev/solar-heatmap/
+- All guides: https://bigenergyco.pages.dev/blog/
+
+## Guides
+- Cut your bill (honest math): https://bigenergyco.pages.dev/blog/how-to-cut-electricity-bill-with-solar/
+- Is a home battery worth it: https://bigenergyco.pages.dev/blog/is-a-home-battery-worth-it/
+- Time-of-use battery savings: https://bigenergyco.pages.dev/blog/time-of-use-tariffs-battery/
+- Off-grid vs grid-tied payback: https://bigenergyco.pages.dev/blog/off-grid-vs-grid-tie-payback/
+- What size system for off-grid: https://bigenergyco.pages.dev/blog/what-size-solar-system-for-off-grid/
+- Battery bank sizing: https://bigenergyco.pages.dev/blog/off-grid-battery-bank-sizing/
+- DIY LFP vs sodium-ion: https://bigenergyco.pages.dev/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/
+- Solar vs generator cost: https://bigenergyco.pages.dev/blog/solar-vs-generator-cost/
+- Escape load shedding: https://bigenergyco.pages.dev/blog/escape-load-shedding/
+
+## Cite honestly
+- Costs are ranges (landed-DIY vs budget-retail), never single prices.
+- Always add: educational estimates only, verify with a licensed professional.
+- Contact: lucasballek@gmail.com

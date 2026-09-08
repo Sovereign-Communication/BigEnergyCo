@@ -160,6 +160,9 @@ function cityPage(c) {
   <meta name="color-scheme" content="dark">
   <title>${title}</title>
   <meta name="description" content="${desc}">
+  <link rel="icon" type="image/svg+xml" href="../../assets/icon.svg">
+  <link rel="icon" type="image/png" sizes="48x48" href="../../assets/favicon-48.png">
+  <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
   <link rel="canonical" href="${url}">
   <link rel="alternate" hreflang="en" href="${url}">
   <link rel="alternate" hreflang="x-default" href="${url}">
@@ -187,6 +190,7 @@ function cityPage(c) {
         "@type": "Article",
         "@id": "${url}#article",
         "headline": "${h1}",
+        "image": ["https://bigenergyco.pages.dev/assets/og-card.jpg"],
         "datePublished": "2026-08-30T00:00:00Z",
         "dateModified": "2026-08-30T00:00:00Z",
         "author": { "@type": "Person", "name": "Lucas Ballek", "url": "https://bigenergyco.pages.dev" },
@@ -455,6 +459,9 @@ function hubPage() {
   <meta name="color-scheme" content="dark">
   <title>${title}</title>
   <meta name="description" content="${desc}">
+  <link rel="icon" type="image/svg+xml" href="../assets/icon.svg">
+  <link rel="icon" type="image/png" sizes="48x48" href="../assets/favicon-48.png">
+  <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
   <link rel="canonical" href="${url}">
   <link rel="alternate" hreflang="en" href="${url}">
   <link rel="alternate" hreflang="x-default" href="${url}">
