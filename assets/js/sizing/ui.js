@@ -10,7 +10,7 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260906m";
+import { CITY_PRESETS } from "./nasa.js?v=20260906n";
 import {
   CITY_CATALOG,
   searchCities,
@@ -20,7 +20,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260906m";
+} from "./cities.js?v=20260906n";
 
 import {
   estimateTariff,
@@ -28,39 +28,39 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260906m";
+} from "./pricing.js?v=20260906n";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260906m";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260906n";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260906m";
+} from "./bom.js?v=20260906n";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260906m";
+import { BOM_ITEMS } from "../shared/content.js?v=20260906n";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260906m";
+} from "../shared/i18n.js?v=20260906n";
 
-import { LOCALES } from "../shared/locales.js?v=20260906m";
+import { LOCALES } from "../shared/locales.js?v=20260906n";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260906m";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260906n";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260906m";
+} from "./frontier-chart.js?v=20260906n";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260906m";
+} from "./rescale.js?v=20260906n";
 
 let worker = null;
 
@@ -2345,7 +2345,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260906m", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260906n", {
       type: "module",
     });
 
