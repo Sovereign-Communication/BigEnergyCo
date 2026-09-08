@@ -11,7 +11,6 @@ export const LOCALES = {
     fxCodeLabel: "Currency code:",
     firstRunNote:
       "First run downloads ~2 MB of satellite weather data, then caches it in your browser.",
-    navCosts: "Estimator",
     navBom: "Hardware Reference",
     navBlog: "Blog",
     navLegal: "Terms & Disclaimer",
@@ -137,7 +136,6 @@ export const LOCALES = {
     fxCodeLabel: "Código de moneda:",
     firstRunNote:
       "La primera ejecución descarga ~2 MB de datos satelitales del clima y luego los guarda en tu navegador.",
-    navCosts: "Comparador",
     navBom: "Referencia de hardware",
     navBlog: "Blog",
     navLegal: "Términos y aviso legal",
@@ -297,7 +295,6 @@ export const LOCALES = {
     fxCodeLabel: "Código da moeda:",
     firstRunNote:
       "A primeira execução baixa ~2 MB de dados de clima por satélite e depois os guarda no seu navegador.",
-    navCosts: "Comparador",
     navBom: "Referência de hardware",
     navBlog: "Blog",
     navLegal: "Termos e aviso legal",
@@ -456,7 +453,6 @@ export const LOCALES = {
     fxCodeLabel: "Code de devise :",
     firstRunNote:
       "Le premier lancement télécharge ~2 Mo de données météo satellite, puis les met en cache dans votre navigateur.",
-    navCosts: "Comparateur",
     navBom: "Référence matériel",
     navBlog: "Blog",
     navLegal: "Conditions et avertissement",
@@ -619,7 +615,6 @@ export const LOCALES = {
     fxCodeLabel: "رمز العملة:",
     firstRunNote:
       "أول تشغيل يُنزّل حوالي 2 ميغابايت من بيانات الطقس الساتلية ثم يخزّنها في متصفحك.",
-    navCosts: "المقارنة",
     navBom: "مرجع المكونات",
     navBlog: "المدونة",
     navLegal: "الشروط وإخلاء المسؤولية",

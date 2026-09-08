@@ -325,16 +325,15 @@ function cityPage(c) {
   </style>
 </head>
 <body>
-  <header>
+<header>
     <div class="container">
       <a class="logo" href="../../">⚡ BigEnergy<span>Co</span></a>
       <nav>
         <a href="../../#sizing">Size Your System</a>
-        <a href="../../#calculator">Estimator</a>
         <a href="../../#bom">Hardware Reference</a>
         <a href="../../blog/">Blog</a>
         <a href="../">All Cities</a>
-        <a href="../../#legal">Terms &amp; Disclaimer</a>
+        <a href="../../#legal">Terms & Disclaimer</a>
       </nav>
     </div>
   </header>
@@ -413,7 +412,7 @@ ${cities
     <div class="container">
       <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building. Working with batteries and mains wiring can cause fire, injury, and death.</p>
       <p style="margin-top:.75rem;">
-        <a href="../../">Free Estimator</a> · <a href="../">All Cities</a> · <a href="../../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
+        <a href="../../">Size Your System</a> · <a href="../">All Cities</a> · <a href="../../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
       </p>
     </div>
   </footer>
@@ -570,15 +569,14 @@ function hubPage() {
   </style>
 </head>
 <body>
-  <header>
+<header>
     <div class="container">
       <a class="logo" href="../">⚡ BigEnergy<span>Co</span></a>
       <nav>
         <a href="../#sizing">Size Your System</a>
-        <a href="../#calculator">Estimator</a>
         <a href="../#bom">Hardware Reference</a>
         <a href="../blog/">Blog</a>
-        <a href="../#legal">Terms &amp; Disclaimer</a>
+        <a href="../#legal">Terms & Disclaimer</a>
       </nav>
     </div>
   </header>
@@ -602,7 +600,7 @@ ${regionBlocks}
     <div class="container">
       <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building.</p>
       <p style="margin-top:.75rem;">
-        <a href="../">Free Estimator</a> · <a href="../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
+        <a href="../">Size Your System</a> · <a href="../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
       </p>
     </div>
   </footer>
