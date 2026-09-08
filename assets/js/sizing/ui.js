@@ -169,7 +169,9 @@ function t(key, params = {}) {
 
   const dict = LOCALES[lang] || LOCALES.en;
 
-  let str = dict[key] || key;
+  // English fallback before the raw key: a string added in one locale must
+  // read as English everywhere else, never as key-ese.
+  let str = dict[key] ?? LOCALES.en[key] ?? key;
 
   for (const [k, v] of Object.entries(params)) {
     str = str.replace(new RegExp(`\\{${k}\\}`, "g"), v);
