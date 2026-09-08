@@ -2148,6 +2148,14 @@ function clearPlayReadout() {
 // Granular icon panel: the selected system as icons + big numbers. Renders
 // purely from the entry's cached analysis — the "singular granular record"
 // for the point, with no lookup.
+// Net-metered monthly residual, one definition for every view: a negative
+// residual means the utility pays the household, framed as the credit it
+// is — never "~-$X/mo". Null-safe (missing tariff stays missing).
+function fmtBillAfter(usd) {
+  if (usd === null || usd === undefined) return null;
+  return usd < 0 ? `−${money(-usd)}/mo credit` : `~${money(usd)}/mo`;
+}
+
 function renderFocusPanel(p, entry, isPreview) {
   const wrap = $("focusPanel");
   if (!wrap) return;
@@ -2196,11 +2204,8 @@ function renderFocusPanel(p, entry, isPreview) {
     entry.billAfterMonthlyUsd !== null &&
     entry.billAfterMonthlyUsd !== undefined
   ) {
-    // Net producers get paid: frame the negative bill as the credit it is,
-    // not "~-$X/mo".
-    if (entry.billAfterMonthlyUsd < 0)
-      chip("🧾", `−${money(-entry.billAfterMonthlyUsd)}/mo`, "net credit");
-    else chip("🧾", `~${money(entry.billAfterMonthlyUsd)}/mo`, "bill after");
+    const baText = fmtBillAfter(entry.billAfterMonthlyUsd);
+    chip("🧾", baText, entry.billAfterMonthlyUsd < 0 ? "" : "bill after");
   }
   if (!isGT && Number.isFinite(entry.unmetHoursPerYear))
     chip("🔌", `${fmt(entry.unmetHoursPerYear)} h/yr`, "generator cover");
@@ -3079,9 +3084,7 @@ function renderAutoCards(p) {
     if (isGT) {
       rows.push([
         "Bill after solar",
-        a.billAfterMonthlyUsd !== null
-          ? `~${money(a.billAfterMonthlyUsd)}/mo`
-          : "needs your tariff",
+        fmtBillAfter(a.billAfterMonthlyUsd) ?? "needs your tariff",
       ]);
 
       rows.push([
@@ -3320,8 +3323,9 @@ function renderBestPick(p) {
       "Unmet hours",
       `${fmt(b.unmetHoursPerYear ?? 0)} h/yr \u00B7 longest gap ${fmt(b.longestGapHours ?? 0)} h`,
     ]);
-  } else if (b.billAfterMonthlyUsd !== null) {
-    rows.push(["Bill after solar", `~${money(b.billAfterMonthlyUsd)}/mo`]);
+  } else {
+    const baBest = fmtBillAfter(b.billAfterMonthlyUsd);
+    if (baBest !== null) rows.push(["Bill after solar", baBest]);
   }
   if (p.tariff && typeof b.trueBreakEvenYear === "number") {
     rows.push(["Pays for itself", `Year ${b.trueBreakEvenYear}`]);
@@ -3609,8 +3613,9 @@ function entryDetailRows(p, e) {
     ]);
   }
   rows.push(["Component cost", `~${moneyRange(e.costLo, e.costHi)}`]);
-  if (e.billAfterMonthlyUsd !== null && e.billAfterMonthlyUsd !== undefined) {
-    rows.push(["Bill after solar", `~${money(e.billAfterMonthlyUsd)}/mo`]);
+  const baEntry = fmtBillAfter(e.billAfterMonthlyUsd);
+  if (baEntry !== null) {
+    rows.push(["Bill after solar", baEntry]);
   }
   if (e.importedKwhPerYear !== undefined && e.importedKwhPerYear !== null) {
     rows.push(["Imported from grid", `${fmt(e.importedKwhPerYear)} kWh/yr`]);
@@ -4408,9 +4413,10 @@ function renderTargetCards(p, extraTargets = []) {
 
       [
         "Bill after solar",
-        t.billAfterMonthlyUsd !== null
-          ? `~${money(t.billAfterMonthlyUsd)}/mo (was ~${money(Math.round(p.annualGridSpendUsd / 12))})`
-          : "needs your tariff",
+        (fmtBillAfter(t.billAfterMonthlyUsd) ?? "needs your tariff") +
+          (t.billAfterMonthlyUsd !== null && t.billAfterMonthlyUsd !== undefined
+            ? ` (was ~${money(Math.round(p.annualGridSpendUsd / 12))})`
+            : ""),
       ],
 
       ["Imported from grid", `${fmt(t.importedKwhPerYear)} kWh/yr`],
@@ -5771,8 +5777,8 @@ function renderResults(p) {
       .map(
         (t) =>
           `- ${t.label}: ${t.pvKw} kW PV + ${t.battKwh > 0 ? fmt(t.battKwh) + " kWh usable" : "no battery"} (~${moneyRange(t.costLo, t.costHi)}) ? bill -${t.cutPct}%` +
-          (t.billAfterMonthlyUsd !== null
-            ? `, ~${money(t.billAfterMonthlyUsd)}/mo after`
+          (fmtBillAfter(t.billAfterMonthlyUsd) !== null
+            ? `, ${fmtBillAfter(t.billAfterMonthlyUsd)} after`
             : ""),
       );
   } else {
@@ -6258,9 +6264,7 @@ function populatePrintSheet(p, inp) {
 
             `-${t.cutPct}% bill`,
 
-            t.billAfterMonthlyUsd !== null
-              ? `~${money(t.billAfterMonthlyUsd)}/mo`
-              : "n/a",
+            fmtBillAfter(t.billAfterMonthlyUsd) ?? "n/a",
 
             t.paybackYearsLo !== null
               ? fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi)
@@ -6281,7 +6285,7 @@ function populatePrintSheet(p, inp) {
         (t) =>
           "<tr><td>" +
           [
-            t.label.replace(/-/g, "-"),
+            t.label,
 
             `${t.pvKw} kW`,
 
