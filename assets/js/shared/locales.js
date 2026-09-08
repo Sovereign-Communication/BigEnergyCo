@@ -129,12 +129,6 @@ export const LOCALES = {
       "Sizing is not your constraint here. The smallest practical system — {pv} kW of panels and {batt} kWh of battery, about {cost} — already covers this entire load, year-round. Anything larger buys spare capacity, not more independence.",
     frontierVerdictCoveredGrid:
       "Sizing is not your constraint here. The smallest practical system — {pv} kW of panels and {batt} kWh of battery, about {cost} — already covers essentially all of this load. Anything larger buys spare capacity, not a bigger saving.",
-
-    // -- Best First Dollar --
-    bestFirstTitle: "Best First Dollar",
-    bestFirstSubtitle: "What to do first for the biggest impact",
-    bestFirstNote: "{count} actions ranked by cost-effectiveness",
-    noActionsAvailable: "No actions available for this configuration.",
   },
   es: {
     navSizing: "Dimensiona tu sistema",

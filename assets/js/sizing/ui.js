@@ -62,8 +62,6 @@ import {
   sameSiteOptions,
 } from "./rescale.js?v=20260906o";
 
-import { renderBestFirstDollar } from "./best-first.js?v=20260906o";
-
 let worker = null;
 
 let lastPayload = null; // kept for share links + the printable summary
@@ -5870,13 +5868,6 @@ function renderResults(p) {
 
   renderFrontierPanel(p);
 
-  // Best First Dollar panel (grid-tie auto only, when curve is ready)
-  if (isGT && p.frontier && p.frontier.points?.length && focusFirst) {
-    const bfContainer = $("bestFirstDollar");
-    if (bfContainer)
-      renderBestFirstDollar(bfContainer, p, { dailyKwh: inp.dailyKwh });
-  }
-
   refreshSelectionOutputs(p);
 
   // Mode swap LAST: every renderer above writes its own section, and this
@@ -6922,15 +6913,6 @@ export function initSizingUI() {
     try {
       window.BECO_BATT_COST = (kwh) =>
         battOnlyCost(Math.max(0, Number(kwh) || 0), "lfp");
-    } catch {
-      /* non-browser test env */
-    }
-
-    // Best First Dollar panel reads the same translator and currency
-    // formatter as the rest of the UI — never a second source of truth.
-    try {
-      window.t = t;
-      window.money = money;
     } catch {
       /* non-browser test env */
     }

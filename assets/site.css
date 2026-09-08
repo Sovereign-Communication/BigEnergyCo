@@ -570,8 +570,7 @@ button.btn {
 #cumCostChartWrap,
 #bomPanel,
 #cutSliderRow,
-#billSliderWrap,
-#bestFirstDollar {
+#billSliderWrap {
   min-width: 0;
   max-width: 100%;
 }
@@ -1523,109 +1522,4 @@ footer {
 .preset-btn:hover {
   border-color: var(--primary-accent) !important;
   color: #fff !important;
-}
-
-/* Best First Dollar — action ranking panel */
-.best-first-header {
-  margin-bottom: 0.75rem;
-}
-.best-first-title {
-  margin: 0 0 0.15rem;
-  font-size: 1.05rem;
-  line-height: 1.3;
-}
-.best-first-subtitle {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-.action-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 0.75rem;
-}
-.action-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.75rem 0.85rem;
-  border: 1px solid var(--border, rgba(128, 128, 128, 0.35));
-  border-radius: 10px;
-  background: var(--card-bg, transparent);
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    transform 0.15s ease;
-}
-.action-card:hover {
-  border-color: var(--primary-accent);
-  transform: translateY(-1px);
-}
-.action-card.selected {
-  border-color: var(--primary-accent);
-  box-shadow: 0 0 0 1px var(--primary-accent);
-}
-.action-card.best-first {
-  border-color: var(--primary-accent);
-}
-.rank-badge {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.6rem;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  opacity: 0.75;
-}
-.action-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.action-icon {
-  font-size: 1.15rem;
-  line-height: 1;
-  flex: 0 0 auto;
-}
-.action-title {
-  margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.25;
-}
-.action-desc {
-  margin: 0;
-  font-size: 0.78rem;
-  line-height: 1.4;
-  color: var(--text-muted);
-}
-.action-estimate {
-  margin-top: 0.15rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-.estimate-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-}
-.estimate-row.resilience {
-  color: var(--text-muted);
-}
-.estimate-label {
-  color: var(--text-muted);
-}
-.estimate-value {
-  font-weight: 600;
-  font-family: var(--font-mono);
-  text-align: right;
-}
-.best-first-note {
-  margin-top: 0.75rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
 }
