@@ -2193,8 +2193,13 @@ function renderFocusPanel(p, entry, isPreview) {
   if (
     entry.billAfterMonthlyUsd !== null &&
     entry.billAfterMonthlyUsd !== undefined
-  )
-    chip("🧾", `~${money(entry.billAfterMonthlyUsd)}/mo`, "bill after");
+  ) {
+    // Net producers get paid: frame the negative bill as the credit it is,
+    // not "~-$X/mo".
+    if (entry.billAfterMonthlyUsd < 0)
+      chip("🧾", `−${money(-entry.billAfterMonthlyUsd)}/mo`, "net credit");
+    else chip("🧾", `~${money(entry.billAfterMonthlyUsd)}/mo`, "bill after");
+  }
   if (!isGT && Number.isFinite(entry.unmetHoursPerYear))
     chip("🔌", `${fmt(entry.unmetHoursPerYear)} h/yr`, "generator cover");
   if (entry.paybackYearsLo !== null && entry.paybackYearsHi !== null)
