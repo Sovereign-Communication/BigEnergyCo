@@ -4,7 +4,7 @@
 // never hand-maintain a page list here.
 import { readFileSync, existsSync } from "node:fs";
 
-const ORIGIN = "https://bigenergyco.pages.dev";
+const ORIGIN = "https://freeoffgridcalculator.com";
 const sitemap = readFileSync("sitemap.xml", "utf8");
 const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
 if (!locs.length) {

@@ -143,7 +143,7 @@ function workedExample(c, lo, hi) {
 
 function cityPage(c) {
   const slug = slugify(c.name);
-  const url = `https://bigenergyco.pages.dev/solar-calculator/${slug}/`;
+  const url = `https://freeoffgridcalculator.com/solar-calculator/${slug}/`;
   const sc = sunContext(c.lat);
   const [lo, hi] = yieldBand(c.lat);
   const wx = workedExample(c, lo, hi);
@@ -166,7 +166,7 @@ function cityPage(c) {
   <link rel="canonical" href="${url}">
   <link rel="alternate" hreflang="en" href="${url}">
   <link rel="alternate" hreflang="x-default" href="${url}">
-  <link rel="alternate" type="application/rss+xml" title="BigEnergyCo Blog" href="https://bigenergyco.pages.dev/rss.xml">
+  <link rel="alternate" type="application/rss+xml" title="BigEnergyCo Blog" href="https://freeoffgridcalculator.com/rss.xml">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="BigEnergyCo">
   <meta property="og:locale" content="en_US">
@@ -178,10 +178,10 @@ function cityPage(c) {
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${title}">
   <meta name="twitter:description" content="${desc}">
-  <meta property="og:image" content="https://bigenergyco.pages.dev/assets/og-card.jpg">
+  <meta property="og:image" content="https://freeoffgridcalculator.com/assets/og-card.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta name="twitter:image" content="https://bigenergyco.pages.dev/assets/og-card.jpg">
+  <meta name="twitter:image" content="https://freeoffgridcalculator.com/assets/og-card.jpg">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -190,19 +190,19 @@ function cityPage(c) {
         "@type": "Article",
         "@id": "${url}#article",
         "headline": "${h1}",
-        "image": ["https://bigenergyco.pages.dev/assets/og-card.jpg"],
+        "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"],
         "datePublished": "2026-08-30T00:00:00Z",
         "dateModified": "2026-08-30T00:00:00Z",
-        "author": { "@type": "Person", "name": "Lucas Ballek", "url": "https://bigenergyco.pages.dev" },
-        "publisher": { "@type": "Organization", "name": "BigEnergyCo", "url": "https://bigenergyco.pages.dev" },
+        "author": { "@type": "Person", "name": "Lucas Ballek", "url": "https://freeoffgridcalculator.com" },
+        "publisher": { "@type": "Organization", "name": "BigEnergyCo", "url": "https://freeoffgridcalculator.com" },
         "description": "${desc}"
       },
       {
         "@type": "BreadcrumbList",
         "@id": "${url}#breadcrumb",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://bigenergyco.pages.dev/" },
-          { "@type": "ListItem", "position": 2, "name": "Solar Calculator by City", "item": "https://bigenergyco.pages.dev/solar-calculator/" },
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://freeoffgridcalculator.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Solar Calculator by City", "item": "https://freeoffgridcalculator.com/solar-calculator/" },
           { "@type": "ListItem", "position": 3, "name": "${c.name}, ${c.country}", "item": "${url}" }
         ]
       },
@@ -422,7 +422,7 @@ ${cities
 }
 
 function hubPage() {
-  const url = "https://bigenergyco.pages.dev/solar-calculator/";
+  const url = "https://freeoffgridcalculator.com/solar-calculator/";
   const MACRO_REGIONS = {
     Hawaii: "North America",
     California: "North America",
@@ -470,13 +470,13 @@ function hubPage() {
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${desc}">
   <meta property="og:url" content="${url}">
-  <meta property="og:image" content="https://bigenergyco.pages.dev/assets/og-card.jpg">
+  <meta property="og:image" content="https://freeoffgridcalculator.com/assets/og-card.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${title}">
   <meta name="twitter:description" content="${desc}">
-  <meta name="twitter:image" content="https://bigenergyco.pages.dev/assets/og-card.jpg">
+  <meta name="twitter:image" content="https://freeoffgridcalculator.com/assets/og-card.jpg">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -487,13 +487,13 @@ function hubPage() {
         "name": "Solar & Battery Calculator by City",
         "description": "${desc}",
         "url": "${url}",
-        "publisher": { "@type": "Organization", "name": "BigEnergyCo", "url": "https://bigenergyco.pages.dev" }
+        "publisher": { "@type": "Organization", "name": "BigEnergyCo", "url": "https://freeoffgridcalculator.com" }
       },
       {
         "@type": "BreadcrumbList",
         "@id": "${url}#breadcrumb",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://bigenergyco.pages.dev/" },
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://freeoffgridcalculator.com/" },
           { "@type": "ListItem", "position": 2, "name": "Solar Calculator by City", "item": "${url}" }
         ]
       }

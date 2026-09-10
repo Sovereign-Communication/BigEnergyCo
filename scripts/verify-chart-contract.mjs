@@ -78,7 +78,7 @@ for (const t of solvable) {
 // === SERVED-BYTES CHECK: does the live worker file still match this contract? ===
 for (const base of [
   "https://sovereign-communication.github.io/BigEnergyCo",
-  "https://bigenergyco.pages.dev",
+  "https://freeoffgridcalculator.com",
 ]) {
   const w = Buffer.from(
     await (

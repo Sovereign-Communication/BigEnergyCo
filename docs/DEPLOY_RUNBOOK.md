@@ -102,7 +102,7 @@ Adding a new external call = update `_headers` + the smoke probes + this table.
 
 ## Production verification
 
-Run the live sweep. It must use `https://bigenergyco.pages.dev/`, never a GitHub Pages fallback URL:
+Run the live sweep. It must use `https://freeoffgridcalculator.com/`, never a GitHub Pages fallback URL:
 
 ```bash
 node scripts/live-sanity.mjs
@@ -111,9 +111,9 @@ node scripts/live-sanity.mjs
 Then verify deployed source matches the checkout, bypassing immutable asset caching with a query string:
 
 ```bash
-curl -sS 'https://bigenergyco.pages.dev/assets/js/sizing/run.js?verify=SHA' | sha256sum
+curl -sS 'https://freeoffgridcalculator.com/assets/js/sizing/run.js?verify=SHA' | sha256sum
 sha256sum assets/js/sizing/run.js
-curl -sS 'https://bigenergyco.pages.dev/assets/js/sizing/ui.js?verify=SHA' | sha256sum
+curl -sS 'https://freeoffgridcalculator.com/assets/js/sizing/ui.js?verify=SHA' | sha256sum
 sha256sum assets/js/sizing/ui.js
 ```
 
@@ -126,7 +126,7 @@ drives the installed Chrome/Edge over CDP with Node built-ins only):
 
 ```bash
 npm run smoke
-# or: node scripts/browser-smoke.mjs https://bigenergyco.pages.dev/
+# or: node scripts/browser-smoke.mjs https://freeoffgridcalculator.com/
 ```
 
 It performs the flow below verbatim (Honolulu, kWh/day mode, 10 kWh,
@@ -135,7 +135,7 @@ run, external-integration probes (FX, NASA, geocoder, API health), the
 heatmap page (Leaflet/tiles), an explicit no-CSP-violations gate, and a
 general console/page-error gate. Exit 0 required.
 
-A release is not verified until a real browser run against `https://bigenergyco.pages.dev/` has completed:
+A release is not verified until a real browser run against `https://freeoffgridcalculator.com/` has completed:
 
 1. Open the public URL in a clean desktop context.
 2. Choose a city, use **I know my kWh/day**, enter `10`, keep **Cut my bill, stay connected**, and leave the estimated/entered grid price positive.

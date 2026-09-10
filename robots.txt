@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin.html
 
-Sitemap: https://bigenergyco.pages.dev/sitemap.xml
+Sitemap: https://freeoffgridcalculator.com/sitemap.xml

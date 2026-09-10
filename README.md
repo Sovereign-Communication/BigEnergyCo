@@ -11,7 +11,7 @@ BigEnergyCo is permanently free and donation-supported. It sells no products or 
 
 | Piece                    | Where                                                         | Notes                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ------------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Public site (brand)**  | `bigenergyco.pages.dev` (Cloudflare Pages)                    | Primary brand domain. Same allowlisted build, deployed to the `bigenergyco` Pages project per the runbook below (`node scripts/deploy-pages-local.mjs --check` + `npx wrangler pages deploy`). Served with `_headers`/`_redirects` for caching and legacy-domain consolidation.                                                                                                                        |
+| **Public site (brand)**  | `freeoffgridcalculator.com` (Cloudflare Pages)                | Primary public domain (apex). Same allowlisted build, deployed to the `bigenergyco` Pages project per the runbook below (`node scripts/deploy-pages-local.mjs --check` + `npx wrangler pages deploy`). Served with `_headers`/`_redirects` for caching and legacy-domain consolidation. `bigenergyco.pages.dev` remains as dual-serve/rollback until Phase 4 301. |
 | **Public site (legacy)** | `sovereign-communication.github.io/BigEnergyCo/`              | Legacy GitHub Pages URL — serves a fresh canonicalized mirror of the brand build (GitHub Pages ignores `_redirects`, so this is a 200 mirror, not a 301; canonical tags point at the brand domain). Deploys via the allowlist workflow (`.github/workflows/deploy.yml`). The old `treystu.github.io/BigEnergyCo/` URL also redirects here; both remain on the API's CORS allowlist for cached clients. |
 | **AI API**               | Cloudflare Worker (`bigenergyco-api.bigenergyco.workers.dev`) | Proxies Groq. CORS-locked to the Pages origins + localhost, rate-limited, payload-capped. Deploy with `deploy_worker.bat` (or `npx wrangler deploy` in `worker/`).                                                                                                                                                                                                                                     |
 | **Local/dev**            | Any static HTTP server                                        | The public site is a static Pages build; no local tunnel or alternate runtime is required.                                                                                                                                                                                                                                                                                                             |
@@ -21,7 +21,7 @@ BigEnergyCo is permanently free and donation-supported. It sells no products or 
 **Rule: `main` first — always, no exceptions.** Every change — even a one-word
 copy tweak — ships to `main` and passes the GitHub `Tests` workflow before the
 brand domain is touched. GitHub is the source of truth and the gatekeeper;
-Cloudflare (`bigenergyco.pages.dev`) is the last-mile copy of the _same_ build.
+Cloudflare (`freeoffgridcalculator.com`, with `bigenergyco.pages.dev` dual-serving) is the last-mile copy of the _same_ build.
 
 > ❗ Never deploy straight to Cloudflare from a working tree, and never skip the
 > GitHub step to "save time" or because "it's just copy". If a change hasn't
@@ -61,7 +61,7 @@ Cloudflare (`bigenergyco.pages.dev`) is the last-mile copy of the _same_ build.
    npx wrangler pages deploy _pages_staging --project-name bigenergyco
    ```
 
-   Verify at `https://bigenergyco.pages.dev`.
+   Verify at `https://freeoffgridcalculator.com`.
 
 5. **Manual drift check (no automation by design).** `main` is staging;
    Cloudflare is manual-gated. After each brand deploy, confirm both origins
@@ -69,13 +69,13 @@ Cloudflare (`bigenergyco.pages.dev`) is the last-mile copy of the _same_ build.
 
    ```bash
    node scripts/deploy-pages-local.mjs --check
-   curl -s https://bigenergyco.pages.dev/sitemap.xml | head -5
+   curl -s https://freeoffgridcalculator.com/sitemap.xml | head -5
    curl -s https://sovereign-communication.github.io/BigEnergyCo/sitemap.xml | head -5
-   curl -sI https://bigenergyco.pages.dev/blog/ | findstr /i "content-security-policy strict-transport"
+   curl -sI https://freeoffgridcalculator.com/blog/ | findstr /i "content-security-policy strict-transport"
    ```
 
    If the sitemaps differ, re-run step 4. Never link to the legacy
-   `github.io` URL publicly — canonicals stay on `bigenergyco.pages.dev`.
+   `github.io` URL publicly — canonicals stay on `freeoffgridcalculator.com`.
 
    > The API Worker is a separate concern: only redeploy it
    > (`cd worker && npx wrangler deploy`) when `worker/index.js` actually
@@ -121,7 +121,7 @@ Browser ──► GitHub Pages (static: index.html, blog/, assets/)
 
 The site verifies via the `google-site-verification` meta tag in `index.html`. To keep indexing healthy:
 
-1. **Google Search Console** — open [search.google.com/search-console](https://search.google.com/search-console), select the verified property for `bigenergyco.pages.dev`, then **Sitemaps → submit** `https://bigenergyco.pages.dev/sitemap.xml` (re-submit after any new page ships).
+1. **Google Search Console** — open [search.google.com/search-console](https://search.google.com/search-console), select the verified property for `bigenergyco.pages.dev`, then **Sitemaps → submit** `https://freeoffgridcalculator.com/sitemap.xml` (re-submit after any new page ships).
 2. **URL Inspection** → "Request indexing" after publishing a new blog post.
 3. **Bing Webmaster Tools** — import from Google Search Console (one click); same sitemap applies.
 4. Structured data is embedded on-page: `WebApplication` + `FAQPage` (home), `Article` + `FAQPage` (each post). Validate changes at [validator.schema.org](https://validator.schema.org) before deploying.

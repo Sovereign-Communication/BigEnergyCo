@@ -55,7 +55,7 @@ for (const page of pages) {
     page.startsWith("about/")
   ) {
     if (
-      /<link\s+rel="canonical"\s+href="https:\/\/bigenergyco\.pages\.dev\/[^"]*"\s*\/?>/.test(
+      /<link\s+rel="canonical"\s+href="https:\/\/freeoffgridcalculator\.com\/[^"]*"\s*\/?>/.test(
         html,
       )
     )
@@ -104,7 +104,7 @@ for (const page of pages) {
 const sitemap = readFileSync("sitemap.xml", "utf8");
 const urls = [
   ...sitemap.matchAll(
-    /<loc>(https:\/\/bigenergyco\.pages\.dev\/[^<]*)<\/loc>/g,
+    /<loc>(https:\/\/freeoffgridcalculator\.com\/[^<]*)<\/loc>/g,
   ),
 ].map((m) => m[1]);
 const lastmods = [
@@ -129,7 +129,7 @@ else ok("sitemap.xml: every URL has <lastmod>");
 }
 for (const url of urls) {
   const path = url
-    .replace("https://bigenergyco.pages.dev/", "")
+    .replace("https://freeoffgridcalculator.com/", "")
     .replace(/\/$/, "");
   const file =
     path === ""
@@ -154,7 +154,7 @@ for (const page of pages) {
 
 // robots.txt basics
 const robots = readFileSync("robots.txt", "utf8");
-if (!/Sitemap: https:\/\/bigenergyco\.pages\.dev\/sitemap\.xml/.test(robots))
+if (!/Sitemap: https:\/\/freeoffgridcalculator\.com\/sitemap\.xml/.test(robots))
   fail("robots.txt: missing sitemap directive");
 else ok("robots.txt: sitemap directive present");
 

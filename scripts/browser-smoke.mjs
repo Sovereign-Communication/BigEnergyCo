@@ -3,7 +3,7 @@
 // using only Node built-ins (child_process, fetch, WebSocket, os, fs).
 //
 // Run: node scripts/browser-smoke.mjs [baseUrl]
-//   default base: https://bigenergyco.pages.dev/
+//   default base: https://freeoffgridcalculator.com/
 //   npm run smoke
 //
 // Coverage (every gate fails the run):
@@ -21,7 +21,7 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const BASE = (process.argv[2] || "https://bigenergyco.pages.dev/").replace(
+const BASE = (process.argv[2] || "https://freeoffgridcalculator.com/").replace(
   /\/$/,
   "/",
 );

@@ -31,9 +31,13 @@ const RATE_MAP_CLEAR_SIZE = 10000;
 const ALLOWED_ORIGINS = new Set([
   "https://treystu.github.io",
   "https://bigenergyco.pages.dev",
+  "https://freeoffgridcalculator.com",
+  "https://www.freeoffgridcalculator.com",
   "https://sovereign-communication.github.io",
   "http://127.0.0.1:7510",
   "http://localhost:7510",
+  "http://127.0.0.1:3000",
+  "http://localhost:3000",
 ]);
 
 export function getAllowedOrigin(origin) {

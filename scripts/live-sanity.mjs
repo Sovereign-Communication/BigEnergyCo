@@ -1,5 +1,5 @@
-Ôªø// Live sanity sweep of the deployed site. Explicit UTF-8 everywhere.
-const BASE = "https://bigenergyco.pages.dev/";
+// Live sanity sweep of the deployed site. Explicit UTF-8 everywhere.
+const BASE = "https://freeoffgridcalculator.com/";
 let failures = 0;
 function check(name, ok) {
   console.log((ok ? "LIVE OK    " : "LIVE FAIL  ") + name);
@@ -12,7 +12,7 @@ const html = await (
 
 // 1. Characters render correctly.
 // NOTE: emoji were deliberately stripped from the static HTML in commit
-// 41933fc ("strip all emojis that cause mojibake"); the üåç hero tag lives in
+// 41933fc ("strip all emojis that cause mojibake"); the ?? hero tag lives in
 // locales.js now, so the HTML checks below assert plain-ASCII copy instead.
 check("hero CTA present", html.includes("Start a Free Estimate"));
 check("hero tag i18n hook", html.includes('data-i18n="heroTag"'));
@@ -32,7 +32,7 @@ for (const m of [
   'id="printSheet"',
   "btnShareResult",
   // (@media print lives in assets/site.css since the stylesheet extraction,
-  // checked separately below ‚Äî not in the HTML anymore)
+  // checked separately below ó not in the HTML anymore)
   'rel="canonical"',
   'id="systemGoal"',
   "Cut my bill, stay connected",
@@ -46,7 +46,7 @@ for (const m of [
   'id="cumCostCanvas"',
   'id="cumCostCaption"',
   // PWA (SW registration moved to assets/js/chat.js with the chat-bridge
-  // extraction ‚Äî the HTML only keeps the manifest hook)
+  // extraction ó the HTML only keeps the manifest hook)
   'rel="manifest"',
   'name="theme-color"',
   // SEO
@@ -69,7 +69,7 @@ const uiToken = uiUrlMatch ? uiUrlMatch[1] : "";
 
 // Print stylesheet serves and still carries the print rules (extracted from
 // index.html into versioned assets/site.css; the immutable cache makes the
-// token part of the check ‚Äî read from the actual link tag, not assumed).
+// token part of the check ó read from the actual link tag, not assumed).
 {
   const cssMatch = html.match(/assets\/site\.css\?v=([0-9a-z]+)/);
   check("index.html links versioned site.css", !!cssMatch);

@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Homepage serves with versioned entry module
         run: |
-          html="$(curl -fsS "https://bigenergyco.pages.dev/?static=$(date +%s)")"
+          html="$(curl -fsS "https://freeoffgridcalculator.com/?static=$(date +%s)")"
           echo "$html" | grep -q "assets/js/sizing/ui.js?v=[0-9a-z]*" || (echo "entry module token missing" && exit 1)
 
       - name: API health exposes version and limits

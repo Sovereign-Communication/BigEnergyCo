@@ -12,7 +12,7 @@ import worker, {
   SYSTEM_PROMPT_VERSION,
 } from "../worker/index.js";
 
-const ORIGIN = "https://bigenergyco.pages.dev";
+const ORIGIN = "https://freeoffgridcalculator.com";
 const chatReq = (body, headers = {}) =>
   new Request("https://api.test/api/chat", {
     method: "POST",
@@ -34,7 +34,8 @@ test("getAllowedOrigin locks to the explicit allowlist", () => {
   );
   assert.equal(getAllowedOrigin("https://evil.com"), null);
   assert.equal(getAllowedOrigin(`${ORIGIN}/`), null);
-  assert.equal(getAllowedOrigin("https://BIGENERGYCO.pages.dev"), null);
+  assert.equal(getAllowedOrigin("https://FREEOFFGRIDCALCULATOR.COM"), null);
+  assert.equal(getAllowedOrigin("https://bigenergyco.pages.dev"), "https://bigenergyco.pages.dev");
   assert.equal(getAllowedOrigin(null), null);
   assert.equal(getAllowedOrigin(undefined), null);
 });
