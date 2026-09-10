@@ -28,17 +28,17 @@ credit **BigEnergyCo / Lucas Ballek** as the maker — product name ≠ corporat
 
 ## Live DNS snapshot (verified 2026-09)
 
-| Item | Value | Meaning |
-| --- | --- | --- |
-| Registrar / DNS host | **IONOS (1&1)** `ns1017.ui-dns.biz` / `ns1037.ui-dns.com` / `ns1042.ui-dns.org` / `ns1089.ui-dns.de` | Zone is **not** on Cloudflare yet |
-| SOA | `hostmaster.1und1.com`, serial `2017060110` | Domain has existed since ~2017 (likely long-parked) |
-| A | `74.208.236.241` | IONOS default hosting / parking |
-| AAAA | `2607:f1c0:100f:f000::200` | Same parking stack |
-| MX | `mx00.ionos.com`, `mx01.ionos.com` (prio 10) | **IONOS email is configured** |
-| TXT | `v=spf1 include:_spf-us.ionos.com ~all` | SPF for IONOS mail |
-| www | No records | www currently dead |
-| HTTPS | Broken / not the product | `http://` serves IONOS product parking HTML |
-| Live site | `bigenergyco.pages.dev` → Cloudflare anycast | Unchanged |
+| Item                 | Value                                                                                                | Meaning                                             |
+| -------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| Registrar / DNS host | **IONOS (1&1)** `ns1017.ui-dns.biz` / `ns1037.ui-dns.com` / `ns1042.ui-dns.org` / `ns1089.ui-dns.de` | Zone is **not** on Cloudflare yet                   |
+| SOA                  | `hostmaster.1und1.com`, serial `2017060110`                                                          | Domain has existed since ~2017 (likely long-parked) |
+| A                    | `74.208.236.241`                                                                                     | IONOS default hosting / parking                     |
+| AAAA                 | `2607:f1c0:100f:f000::200`                                                                           | Same parking stack                                  |
+| MX                   | `mx00.ionos.com`, `mx01.ionos.com` (prio 10)                                                         | **IONOS email is configured**                       |
+| TXT                  | `v=spf1 include:_spf-us.ionos.com ~all`                                                              | SPF for IONOS mail                                  |
+| www                  | No records                                                                                           | www currently dead                                  |
+| HTTPS                | Broken / not the product                                                                             | `http://` serves IONOS product parking HTML         |
+| Live site            | `bigenergyco.pages.dev` → Cloudflare anycast                                                         | Unchanged                                           |
 
 **Implication:** this is a clean slate for web, but **not** a clean DNS slate —
 mail records must be preserved or deliberately dropped when nameservers move.
@@ -71,11 +71,11 @@ blocks Phase 3 and makes apex-primary fragile.
 
 **Fallback if NS change fails or is delayed:**
 
-| Option | Works for apex? | Blocks |
-| --- | --- | --- |
-| Stay on IONOS + CNAME `www` → `bigenergyco.pages.dev` | No (apex CNAME unsafe) | Apex-primary decision |
-| Stay on IONOS + their ALIAS/ANAME if offered | Maybe | Worker routes / WAF still unavailable |
-| Point A/AAAA at parking and wait | No | Nothing productive |
+| Option                                                | Works for apex?        | Blocks                                |
+| ----------------------------------------------------- | ---------------------- | ------------------------------------- |
+| Stay on IONOS + CNAME `www` → `bigenergyco.pages.dev` | No (apex CNAME unsafe) | Apex-primary decision                 |
+| Stay on IONOS + their ALIAS/ANAME if offered          | Maybe                  | Worker routes / WAF still unavailable |
+| Point A/AAAA at parking and wait                      | No                     | Nothing productive                    |
 
 **Decision:** pursue Cloudflare NS. Do not attach Pages custom domains until
 `Resolve-DnsName freeoffgridcalculator.com -Type NS` returns `*.ns.cloudflare.com`.
@@ -121,26 +121,26 @@ User
 
 ### Recommended decisions (defaults)
 
-| Decision | Recommendation | Why |
-| --- | --- | --- |
-| Apex vs www | **Apex primary** `https://freeoffgridcalculator.com` + `www` 301 → apex | Locked by you |
-| API host | **Phase 3 after soak:** Worker route `freeoffgridcalculator.com/api/*` | See same-origin tradeoffs below |
-| API interim | Keep `bigenergyco-api.bigenergyco.workers.dev` through Phase 2 | Zero-risk dual serve |
-| pages.dev | Keep forever as 301 redirect | Preserve any existing links/bookmarks |
-| GitHub mirror | Keep as 200 mirror, canonical → new domain | Existing runbook + offline fallback |
-| Title / H1 | **Free Off-Grid Calculator** (+ short differentiator) | Locked by you — SEO identity follows domain |
+| Decision      | Recommendation                                                          | Why                                         |
+| ------------- | ----------------------------------------------------------------------- | ------------------------------------------- |
+| Apex vs www   | **Apex primary** `https://freeoffgridcalculator.com` + `www` 301 → apex | Locked by you                               |
+| API host      | **Phase 3 after soak:** Worker route `freeoffgridcalculator.com/api/*`  | See same-origin tradeoffs below             |
+| API interim   | Keep `bigenergyco-api.bigenergyco.workers.dev` through Phase 2          | Zero-risk dual serve                        |
+| pages.dev     | Keep forever as 301 redirect                                            | Preserve any existing links/bookmarks       |
+| GitHub mirror | Keep as 200 mirror, canonical → new domain                              | Existing runbook + offline fallback         |
+| Title / H1    | **Free Off-Grid Calculator** (+ short differentiator)                   | Locked by you — SEO identity follows domain |
 
 ### Same-origin `/api/*` — pros and cons
 
-| | Same-origin (`freeoffgridcalculator.com/api/chat`) | Stay on `workers.dev` |
-| --- | --- | --- |
-| CORS | Not needed for the main site | Must maintain allowlist forever |
-| CSP | `connect-src 'self'` for the advisor | Keep explicit workers.dev host |
-| WAF / zone rate limits | Available (closes runbook gap) | Impossible on workers.dev zone |
-| Cookie / credentialed fetch | Cleaner if ever needed | Still cross-origin |
-| Deploy coupling | Worker route must not shadow Pages assets | Fully independent deploy |
-| Rollback | Remove route or point `CF_API_URL` back | Already the status quo |
-| Risk now | Extra Phase-3 change surface | None |
+|                             | Same-origin (`freeoffgridcalculator.com/api/chat`) | Stay on `workers.dev`           |
+| --------------------------- | -------------------------------------------------- | ------------------------------- |
+| CORS                        | Not needed for the main site                       | Must maintain allowlist forever |
+| CSP                         | `connect-src 'self'` for the advisor               | Keep explicit workers.dev host  |
+| WAF / zone rate limits      | Available (closes runbook gap)                     | Impossible on workers.dev zone  |
+| Cookie / credentialed fetch | Cleaner if ever needed                             | Still cross-origin              |
+| Deploy coupling             | Worker route must not shadow Pages assets          | Fully independent deploy        |
+| Rollback                    | Remove route or point `CF_API_URL` back            | Already the status quo          |
+| Risk now                    | Extra Phase-3 change surface                       | None                            |
 
 **Recommendation:** stay on `workers.dev` through Phase 2 + indexing soak;
 switch to same-origin in Phase 3 once the custom domain is boringly stable.
@@ -152,17 +152,17 @@ The calculator math never depends on the Worker — only the AI advisor does.
 
 Public-facing SEO strings move to the domain. Maker credit stays in legal/about.
 
-| Field | From | To |
-| --- | --- | --- |
-| `<title>` | `BigEnergyCo - Free Worldwide Solar and Battery Estimator` | `Free Off-Grid Calculator — Solar & Battery Sizer` |
-| `og:title` / `twitter:title` | same as title | same as new title |
-| `og:site_name` | `BigEnergyCo` | `Free Off-Grid Calculator` |
-| JSON-LD `WebApplication.name` | `BigEnergyCo - Free Off-Grid Energy Estimator` | `Free Off-Grid Calculator` |
-| JSON-LD `Organization.name` | `BigEnergyCo` | Keep **or** dual: product name + org credit |
-| H1 | (see live page) | Keyword-aligned H1, not the corporate name |
-| Install prompt / AI modal chrome | `BigEnergyCo …` | `Free Off-Grid Calculator …` where it is user-visible product name |
-| Blog RSS title | `BigEnergyCo Blog` | `Free Off-Grid Calculator Blog` |
-| About / LIABILITY / footer | BigEnergyCo / Lucas Ballek | **Keep** — maker identity |
+| Field                            | From                                                       | To                                                                 |
+| -------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------ |
+| `<title>`                        | `BigEnergyCo - Free Worldwide Solar and Battery Estimator` | `Free Off-Grid Calculator — Solar & Battery Sizer`                 |
+| `og:title` / `twitter:title`     | same as title                                              | same as new title                                                  |
+| `og:site_name`                   | `BigEnergyCo`                                              | `Free Off-Grid Calculator`                                         |
+| JSON-LD `WebApplication.name`    | `BigEnergyCo - Free Off-Grid Energy Estimator`             | `Free Off-Grid Calculator`                                         |
+| JSON-LD `Organization.name`      | `BigEnergyCo`                                              | Keep **or** dual: product name + org credit                        |
+| H1                               | (see live page)                                            | Keyword-aligned H1, not the corporate name                         |
+| Install prompt / AI modal chrome | `BigEnergyCo …`                                            | `Free Off-Grid Calculator …` where it is user-visible product name |
+| Blog RSS title                   | `BigEnergyCo Blog`                                         | `Free Off-Grid Calculator Blog`                                    |
+| About / LIABILITY / footer       | BigEnergyCo / Lucas Ballek                                 | **Keep** — maker identity                                          |
 
 Do this in the **same Phase 2 commit family** as the URL rewrite so title and
 canonical never disagree for crawlers. Update `scripts/check-seo.mjs` expectations
@@ -174,21 +174,21 @@ if they assert the old title/brand string.
 
 Count is approximate; treat as the change surface, not a punch list.
 
-| Area | Path(s) | Role |
-| --- | --- | --- |
-| Home SEO | `index.html` | canonical, OG, hreflang, JSON-LD, `google-site-verification` |
-| Blog posts | `blog/**/index.html` | canonical, OG, JSON-LD |
-| Heatmap | `solar-heatmap/index.html` | canonical, OG, JSON-LD |
-| About | `about/index.html` | canonical/OG if present |
-| City pages source | `scripts/build-city-pages.mjs` | **regenerates** absolute URLs — fix the generator, not only outputs |
-| Sitemap / robots | `sitemap.xml`, `robots.txt` | discovery |
-| Headers | `_headers` | CSP `connect-src` (API host) |
-| Redirects | `_redirects` | old → new consolidation |
-| API CORS | `worker/index.js` `ALLOWED_ORIGINS` | must **add** new origin before cutover |
-| Frontend API URL | `assets/js/chat.js` `CF_API_URL` | point at new API path in Phase 3 |
-| SEO gates | `scripts/check-seo.mjs`, `validate-jsonld.mjs` | hard-fail if canonical ≠ expected origin |
-| Live gates | `scripts/live-sanity.mjs`, `browser-smoke.mjs` | default BASE must become the new host |
-| Docs | `README.md`, `docs/DEPLOY_RUNBOOK.md`, `worker/README.md` | operator truth |
+| Area              | Path(s)                                                   | Role                                                                |
+| ----------------- | --------------------------------------------------------- | ------------------------------------------------------------------- |
+| Home SEO          | `index.html`                                              | canonical, OG, hreflang, JSON-LD, `google-site-verification`        |
+| Blog posts        | `blog/**/index.html`                                      | canonical, OG, JSON-LD                                              |
+| Heatmap           | `solar-heatmap/index.html`                                | canonical, OG, JSON-LD                                              |
+| About             | `about/index.html`                                        | canonical/OG if present                                             |
+| City pages source | `scripts/build-city-pages.mjs`                            | **regenerates** absolute URLs — fix the generator, not only outputs |
+| Sitemap / robots  | `sitemap.xml`, `robots.txt`                               | discovery                                                           |
+| Headers           | `_headers`                                                | CSP `connect-src` (API host)                                        |
+| Redirects         | `_redirects`                                              | old → new consolidation                                             |
+| API CORS          | `worker/index.js` `ALLOWED_ORIGINS`                       | must **add** new origin before cutover                              |
+| Frontend API URL  | `assets/js/chat.js` `CF_API_URL`                          | point at new API path in Phase 3                                    |
+| SEO gates         | `scripts/check-seo.mjs`, `validate-jsonld.mjs`            | hard-fail if canonical ≠ expected origin                            |
+| Live gates        | `scripts/live-sanity.mjs`, `browser-smoke.mjs`            | default BASE must become the new host                               |
+| Docs              | `README.md`, `docs/DEPLOY_RUNBOOK.md`, `worker/README.md` | operator truth                                                      |
 
 Do **not** hand-edit generated city pages until the generator is updated and rebuilt.
 
@@ -255,7 +255,7 @@ cd worker && npx wrangler deploy
 
 ```bash
 # both hosts must serve the same shell + same sitemap paths
-curl -sI https://freeoffgridcalculator.com/ 
+curl -sI https://freeoffgridcalculator.com/
 curl -sI https://bigenergyco.pages.dev/
 curl -s https://freeoffgridcalculator.com/sitemap.xml | head -5
 curl -s https://bigenergyco.pages.dev/sitemap.xml | head -5
@@ -359,6 +359,7 @@ Confirm Pages still owns `/` (static) and Worker owns only `/api/*`.
 ### 3C. Zone WAF (now possible)
 
 Create rate-limit rule on the zone for `POST /api/chat`:
+
 - 8 requests / 60 s / IP
 - 150 requests / 24 h / IP (if supported by your plan; otherwise keep Worker soft daily cap)
 
@@ -436,15 +437,15 @@ Keep localhost entries forever.
 
 ## Fallback & rollback matrix
 
-| Failure | Symptom | Action | Blast radius |
-| --- | --- | --- | --- |
-| DNS / nameservers wrong | New host unreachable | Fix NS at registrar; do not remove pages.dev | None — old host untouched |
-| Pages cert not ready | HTTPS error on new host | Wait or re-issue custom domain in Pages | Old host works |
-| Phase 2 URL rewrite mistake | Wrong canonical / missing pages | `git revert` URL commit → redeploy GH+CF | Temporary SEO inconsistency |
-| Phase 3 API route breaks chat | AI advisor 404/CORS | Point `CF_API_URL` back to workers.dev absolute; redeploy | AI only; sizer still works |
-| Phase 4 301 loop / wrong target | Infinite redirect | Remove redirect rule immediately; pages.dev serves again | Minutes of confusion |
-| Indexing regression | New domain not crawled | Keep dual-serve; do not 301 pages.dev yet; re-submit sitemap | None if Phase 4 delayed |
-| Emergency total revert | New domain toxic / mis-sold | Remove custom domains from Pages; revert URL commit; keep worker CORS | Site returns to pages.dev as primary |
+| Failure                         | Symptom                         | Action                                                                | Blast radius                         |
+| ------------------------------- | ------------------------------- | --------------------------------------------------------------------- | ------------------------------------ |
+| DNS / nameservers wrong         | New host unreachable            | Fix NS at registrar; do not remove pages.dev                          | None — old host untouched            |
+| Pages cert not ready            | HTTPS error on new host         | Wait or re-issue custom domain in Pages                               | Old host works                       |
+| Phase 2 URL rewrite mistake     | Wrong canonical / missing pages | `git revert` URL commit → redeploy GH+CF                              | Temporary SEO inconsistency          |
+| Phase 3 API route breaks chat   | AI advisor 404/CORS             | Point `CF_API_URL` back to workers.dev absolute; redeploy             | AI only; sizer still works           |
+| Phase 4 301 loop / wrong target | Infinite redirect               | Remove redirect rule immediately; pages.dev serves again              | Minutes of confusion                 |
+| Indexing regression             | New domain not crawled          | Keep dual-serve; do not 301 pages.dev yet; re-submit sitemap          | None if Phase 4 delayed              |
+| Emergency total revert          | New domain toxic / mis-sold     | Remove custom domains from Pages; revert URL commit; keep worker CORS | Site returns to pages.dev as primary |
 
 ### Hard safety rules
 
@@ -464,15 +465,15 @@ Keep localhost entries forever.
 
 ## Suggested timeline
 
-| Day | Work |
-| --- | --- |
-| 0 | Phase 0 (zone, GSC, baseline) |
-| 1 | Phase 1 dual-serve + smoke on new host |
-| 2–3 | Phase 2 URL rewrite on a branch; full test matrix; merge; deploy |
-| 4–7 | SEO submit; watch crawl; **no 301 yet** |
-| 8–14 | Phase 3 same-origin API + WAF; smoke |
-| 15–45 | Soak on new domain; monitor GSC |
-| 46+ | Phase 4 301 pages.dev; CORS retire after extra 30 days |
+| Day   | Work                                                             |
+| ----- | ---------------------------------------------------------------- |
+| 0     | Phase 0 (zone, GSC, baseline)                                    |
+| 1     | Phase 1 dual-serve + smoke on new host                           |
+| 2–3   | Phase 2 URL rewrite on a branch; full test matrix; merge; deploy |
+| 4–7   | SEO submit; watch crawl; **no 301 yet**                          |
+| 8–14  | Phase 3 same-origin API + WAF; smoke                             |
+| 15–45 | Soak on new domain; monitor GSC                                  |
+| 46+   | Phase 4 301 pages.dev; CORS retire after extra 30 days           |
 
 Skipping the soak is how SEO migrations go wrong. Delay Phase 4 freely —
 dual-serve is a valid long-term state.
@@ -503,11 +504,11 @@ smoke result, and whether pages.dev still 200s or 301s.
 
 ## Locked decisions
 
-| Item | Decision |
-| --- | --- |
-| www | Apex primary; www 301 → apex |
-| Brand/title | Public SEO = Free Off-Grid Calculator; maker credit stays in about/legal |
-| Same-origin API | After Phase 2 soak (Phase 3) — not day one |
-| DNS hosting | Move NS IONOS → Cloudflare (Phase 0A) |
+| Item            | Decision                                                                 |
+| --------------- | ------------------------------------------------------------------------ |
+| www             | Apex primary; www 301 → apex                                             |
+| Brand/title     | Public SEO = Free Off-Grid Calculator; maker credit stays in about/legal |
+| Same-origin API | After Phase 2 soak (Phase 3) — not day one                               |
+| DNS hosting     | Move NS IONOS → Cloudflare (Phase 0A)                                    |
 
 Execution starts at Phase 0A and never skips the dual-serve gate.

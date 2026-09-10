@@ -35,7 +35,10 @@ test("getAllowedOrigin locks to the explicit allowlist", () => {
   assert.equal(getAllowedOrigin("https://evil.com"), null);
   assert.equal(getAllowedOrigin(`${ORIGIN}/`), null);
   assert.equal(getAllowedOrigin("https://FREEOFFGRIDCALCULATOR.COM"), null);
-  assert.equal(getAllowedOrigin("https://bigenergyco.pages.dev"), "https://bigenergyco.pages.dev");
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco.pages.dev"),
+    "https://bigenergyco.pages.dev",
+  );
   assert.equal(getAllowedOrigin(null), null);
   assert.equal(getAllowedOrigin(undefined), null);
 });
