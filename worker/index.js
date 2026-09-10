@@ -27,14 +27,16 @@ const RATE_GLOBAL_PER_DAY = 3000;
 const RATE_MAP_CLEAR_SIZE = 10000;
 
 // Only these origins may call this API. Anything else gets no CORS headers,
-// which makes browsers refuse to read the response.
-const ALLOWED_ORIGINS = new Set([
-  "https://treystu.github.io",
-  "https://bigenergyco.pages.dev",
-  "https://sovereign-communication.github.io",
-  "http://127.0.0.1:7510",
-  "http://localhost:7510",
-]);
+  // which makes browsers refuse to read the response.
+  const ALLOWED_ORIGINS = new Set([
+    "https://treystu.github.io",
+    "https://bigenergyco.pages.dev",
+    "https://sovereign-communication.github.io",
+    "http://127.0.0.1:7510",
+    "http://localhost:7510",
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
+  ]);
 
 export function getAllowedOrigin(origin) {
   return origin && ALLOWED_ORIGINS.has(origin) ? origin : null;

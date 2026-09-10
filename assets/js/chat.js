@@ -236,11 +236,7 @@ function sendChatMsg() {
   }
 
   function attemptSend(retriesLeft) {
-    var apiBase2 =
-      window.location.hostname === "127.0.0.1" ||
-      window.location.hostname === "localhost"
-        ? ""
-        : CF_API_URL || "";
+    var apiBase2 = CF_API_URL || "";
 
     return postTo(apiBase2 + "/api/chat").catch(function (err) {
       // Busy (free AI quota)  -  wait out the provider and retry once automatically.
