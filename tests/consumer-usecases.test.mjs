@@ -3,7 +3,9 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { pickSystemVoltage } from "../assets/js/sizing/bom.js";
+import { LOCALES } from "../assets/js/shared/locales.js";
 
 test("pickSystemVoltage: van/RV scale loads (<=1.5kW, <=3kWh) select 12V", () => {
   assert.equal(pickSystemVoltage(2.5, 1.2), 12);
@@ -172,4 +174,47 @@ test("Budget slider synchronization logic updates slider on curve click unless k
   // Budget slider change with keepSlider preserves current slider position
   syncSliderToPoint(15000, { keepSlider: true });
   assert.equal(sliderVal, "12400");
+});
+
+test("Battery SOC chart heading is renamed and localized across all supported languages", () => {
+  const supported = ["en", "es", "pt", "fr", "ar"];
+  for (const lang of supported) {
+    const dict = LOCALES[lang];
+    assert.ok(dict, `Locale dict for ${lang} must exist`);
+    assert.ok(
+      typeof dict.socChartTitle === "string" && dict.socChartTitle.length > 10,
+      `socChartTitle in ${lang} must be defined and non-trivial`,
+    );
+    assert.ok(
+      !dict.socChartTitle.toLowerCase().includes("how low"),
+      `socChartTitle in ${lang} must not use colloquial 'how low'`,
+    );
+  }
+  assert.equal(
+    LOCALES.en.socChartTitle,
+    "Battery Charge Levels & Year-Round Reliability (5-Year Real Weather)",
+  );
+});
+
+test("Battery SOC canvas does not trap mouse wheel and allows touch pan-y in index.html", () => {
+  const html = fs.readFileSync(
+    new URL("../index.html", import.meta.url),
+    "utf8",
+  );
+  assert.ok(
+    html.includes('id="socCanvas"'),
+    "index.html must include socCanvas",
+  );
+  assert.ok(
+    html.includes("touch-action: pan-y;"),
+    "socCanvas style must include touch-action: pan-y to avoid mobile scroll-trapping",
+  );
+  assert.ok(
+    !html.includes("How low does each battery get?"),
+    "index.html must not contain old colloquial heading 'How low does each battery get?'",
+  );
+  assert.ok(
+    html.includes('data-i18n="socChartTitle"'),
+    "index.html must include data-i18n attribute for socChartTitle",
+  );
 });
