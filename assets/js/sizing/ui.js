@@ -543,6 +543,22 @@ function syncBillSlider() {
   slider.value = String(value);
   const out = $("billSliderVal");
   if (out) out.textContent = "~" + fmtBill(value);
+
+  // Keep offgridKwhSlider tied in parity with the bill's kWh anchor
+  const offSlider = $("offgridKwhSlider");
+  const offOut = $("offgridKwhVal");
+  const kwhInput = $("dailyKwhInput");
+  if (offSlider && Number.isFinite(billAnchorKwh) && billAnchorKwh > 0) {
+    const roundedKwh = Math.round(billAnchorKwh * 10) / 10;
+    const clampedKwh = Math.min(
+      parseFloat(offSlider.max) || 60,
+      Math.max(parseFloat(offSlider.min) || 1, roundedKwh),
+    );
+    offSlider.value = String(clampedKwh);
+    if (offOut) offOut.textContent = "~" + clampedKwh + " kWh/day";
+    if (kwhInput) kwhInput.value = String(clampedKwh);
+  }
+
   const note = $("quickBillNote");
   if (note) {
     note.textContent = quickMode
@@ -1294,7 +1310,7 @@ function applyEstimatedTariff(lat, lon, region, country) {
   // instead of showing the previous location's currency.
   if (lastPayload) {
     renderResults(lastPayload);
-    if (!quickMode) scheduleRun(true);
+    if (quickMode) scheduleRun(true);
   }
 }
 
@@ -1338,7 +1354,7 @@ function renderCities() {
           search.value = formatCityLabel(c);
           list.hidden = true;
           search.setAttribute("aria-expanded", "false");
-          run();
+          if (quickMode) run();
         });
         list.appendChild(button);
       });
@@ -1392,7 +1408,7 @@ function renderCities() {
         search.value = formatCityLabel(local);
         list.hidden = true;
         search.setAttribute("aria-expanded", "false");
-        run();
+        if (quickMode) run();
         return;
       }
       lookupBusy = true;
@@ -1411,7 +1427,7 @@ function renderCities() {
         search.value = formatCityLabel(match);
         list.hidden = true;
         search.setAttribute("aria-expanded", "false");
-        run();
+        if (quickMode) run();
       }
     };
     search.addEventListener("keydown", (event) => {
@@ -1529,7 +1545,7 @@ function locateMe() {
       // Auto-run is the default: the bill + cut sliders above were already
       // pre-configured (and stay adjustable), so location alone is enough.
 
-      run();
+      if (quickMode) run();
     },
 
     () =>
@@ -1641,10 +1657,11 @@ function readInputs() {
         ? kwhFromBill(bill, rate)
         : billAnchorKwh;
 
-    billAnchorKwh =
-      Number.isFinite(dailyKwh) && dailyKwh > 0 ? dailyKwh : billAnchorKwh;
-  } else {
     dailyKwh = parseFloat($("dailyKwhInput").value) || 10;
+  }
+
+  if (Number.isFinite(dailyKwh) && dailyKwh > 0) {
+    billAnchorKwh = dailyKwh;
   }
 
   let basis = generatorBasis ? "generator fuel cost" : "direct kWh entry";
@@ -2042,15 +2059,28 @@ function setupBillSlider() {
       billAnchorKwh = kwhFromBill(bill, rate);
     const out = $("billSliderVal");
     if (out) out.textContent = "~" + fmtBill(bill);
+
+    // Keep offgridKwhSlider tied in parity with the bill's kWh anchor
+    const offSlider = $("offgridKwhSlider");
+    const offOut = $("offgridKwhVal");
+    const kwhInput = $("dailyKwhInput");
+    if (offSlider && Number.isFinite(billAnchorKwh) && billAnchorKwh > 0) {
+      const roundedKwh = Math.round(billAnchorKwh * 10) / 10;
+      const clampedKwh = Math.min(
+        parseFloat(offSlider.max) || 60,
+        Math.max(parseFloat(offSlider.min) || 1, roundedKwh),
+      );
+      offSlider.value = String(clampedKwh);
+      if (offOut) offOut.textContent = "~" + clampedKwh + " kWh/day";
+      if (kwhInput) kwhInput.value = String(clampedKwh);
+    }
     updateLoadReadout();
   });
 
   slider.addEventListener("change", () => {
-    // No results yet (e.g. the bill was moved while the first run was still
-    // in flight): the edit must still schedule a run — silently dropping it
-    // here is what left the recommendation showing the default bill.
+    // In manual mode, do not calculate until "Size My System" is clicked.
     if (!lastPayload) {
-      scheduleRun();
+      if (quickMode) scheduleRun();
       return;
     }
     const inp = readInputs();
@@ -2164,7 +2194,8 @@ function setupGoalControls() {
     }
     updateAutoRows();
     setQuickMode(quickMode);
-    if (lastPayload) run(true);
+    syncBillSlider();
+    if (quickMode && lastPayload) run(true);
   };
 
   btnGt.addEventListener("click", () => setGoal("gridtie"));
@@ -2183,21 +2214,62 @@ function setupOffgridControls() {
   const kwhInput = $("dailyKwhInput");
   if (!slider) return;
 
+  const syncToBill = (kwh) => {
+    billAnchorKwh = kwh;
+    const rate = displayRate();
+    const minBill = parseFloat($("billSlider")?.min) || 1;
+    const maxBill = parseFloat($("billSlider")?.max) || 2000;
+    const bill = Math.min(
+      maxBill,
+      Math.max(minBill, Math.round(billForKwh(kwh, rate))),
+    );
+    billUserNominal = bill;
+    billTouched = true;
+    const billSlider = $("billSlider");
+    if (billSlider) billSlider.value = String(bill);
+    const billOut = $("billSliderVal");
+    if (billOut) billOut.textContent = "~" + fmtBill(bill);
+    updateLoadReadout();
+  };
+
   const syncToVal = (val) => {
     slider.value = String(val);
     if (out) out.textContent = "~" + val + " kWh/day";
     if (kwhInput) kwhInput.value = String(val);
+    syncToBill(val);
   };
 
   slider.addEventListener("input", () => {
     const val = parseFloat(slider.value);
     if (out) out.textContent = "~" + val + " kWh/day";
     if (kwhInput) kwhInput.value = String(val);
+    syncToBill(val);
   });
 
   slider.addEventListener("change", () => {
-    if (lastPayload) run();
-    else scheduleRun();
+    if (!lastPayload) {
+      if (quickMode) scheduleRun();
+      return;
+    }
+    const inp = readInputs();
+    if (
+      lastPayload.mode === "offgrid" &&
+      lastRunInput &&
+      lastRunInput.dailyKwh >= RESCALE_MIN_KWH &&
+      inp.dailyKwh >= RESCALE_MIN_KWH &&
+      sameSiteOptions(lastRunInput, inp)
+    ) {
+      const k = inp.dailyKwh / lastRunInput.dailyKwh;
+      if (Number.isFinite(k) && Math.abs(k - 1) > 0.001) {
+        lastPayload = rescalePayload(lastPayload, k);
+        lastRunInput = inp;
+        renderResults(lastPayload);
+        updateShareHash(lastPayload, inp);
+        scheduleRun(true);
+        return;
+      }
+    }
+    scheduleRun();
   });
 
   if (kwhInput) {
@@ -2206,7 +2278,15 @@ function setupOffgridControls() {
       if (Number.isFinite(val) && val >= 1 && val <= 60) {
         slider.value = String(val);
         if (out) out.textContent = "~" + val + " kWh/day";
+        syncToBill(val);
       }
+    });
+    kwhInput.addEventListener("change", () => {
+      if (!lastPayload) {
+        if (quickMode) scheduleRun();
+        return;
+      }
+      scheduleRun();
     });
   }
 
@@ -2215,8 +2295,8 @@ function setupOffgridControls() {
       const kwh = parseFloat(btn.dataset.kwh);
       if (Number.isFinite(kwh) && kwh > 0) {
         syncToVal(kwh);
-        if (lastPayload) run();
-        else scheduleRun();
+        if (lastPayload) scheduleRun();
+        else if (quickMode) scheduleRun();
       }
     });
   });
@@ -4575,7 +4655,7 @@ function applyGenRate() {
   generatorBasis = true;
   tariffTouched = true;
   syncBillSlider();
-  if (lastPayload) scheduleRun(true);
+  if (quickMode && lastPayload) scheduleRun(true);
   setStatus(t("fuelApplyOk", { rate: money(rate) }));
 }
 
@@ -7355,14 +7435,14 @@ export function initSizingUI() {
       customVal.addEventListener("input", () => {
         tariffTouched = true;
         syncBillSlider();
-        if (lastPayload) scheduleRun(true);
+        if (quickMode && lastPayload) scheduleRun(true);
       });
 
     const fixedVal = $("fixedChargeVal");
     if (fixedVal)
       fixedVal.addEventListener("input", () => {
         syncBillSlider();
-        if (lastPayload) scheduleRun(true);
+        if (quickMode && lastPayload) scheduleRun(true);
       });
 
     $("loadMode").addEventListener("change", setLoadPanel);
@@ -7476,7 +7556,7 @@ export function initSizingUI() {
       ) {
         selectedKey = "best";
       }
-      if (lastPayload) run(true);
+      if (quickMode && lastPayload) run(true);
     });
 
     const hwConfigNode = $("hardwareConfig");
@@ -7495,7 +7575,7 @@ export function initSizingUI() {
         ) {
           selectedKey = "best";
         }
-        if (lastPayload) run(true);
+        if (quickMode && lastPayload) run(true);
       });
     }
 
@@ -7505,10 +7585,15 @@ export function initSizingUI() {
       });
 
     const autoTierNode = $("autoTier");
-
     if (autoTierNode)
       autoTierNode.addEventListener("change", () => {
-        if (lastPayload) run();
+        if (quickMode && lastPayload) run();
+      });
+
+    const autoTargetNode = $("autoTarget");
+    if (autoTargetNode)
+      autoTargetNode.addEventListener("change", () => {
+        if (quickMode && lastPayload) run();
       });
 
     // Quick / Manual mode: quick hides everything except location and auto-runs.
@@ -7599,7 +7684,7 @@ export function initSizingUI() {
           locationResolved = true;
           applyEstimatedTariff(lat, lon);
           updateShareHash(lastPayload, readInputs());
-          if (lastPayload) scheduleRun(true);
+          if (quickMode && lastPayload) scheduleRun(true);
         }, 500);
       }
     };
