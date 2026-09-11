@@ -10,7 +10,7 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260908a";
+import { CITY_PRESETS } from "./nasa.js?v=20260911a";
 import {
   CITY_CATALOG,
   searchCities,
@@ -20,7 +20,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260908a";
+} from "./cities.js?v=20260911a";
 
 import {
   estimateTariff,
@@ -28,45 +28,45 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260908a";
+} from "./pricing.js?v=20260911a";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260908a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260911a";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260908a";
+} from "./bom.js?v=20260911a";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260908a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260911a";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260908a";
+} from "../shared/i18n.js?v=20260911a";
 
-import { LOCALES } from "../shared/locales.js?v=20260908a";
+import { LOCALES } from "../shared/locales.js?v=20260911a";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260908a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260911a";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260908a";
+} from "./frontier-chart.js?v=20260911a";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260908a";
+} from "./rescale.js?v=20260911a";
 
-import { coldCapacityScale } from "./engine.js?v=20260908a";
+import { coldCapacityScale } from "./engine.js?v=20260911a";
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260908a";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260911a";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260908a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260911a";
 
 let worker = null;
 
@@ -2663,7 +2663,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260908a", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260911a", {
       type: "module",
     });
 
