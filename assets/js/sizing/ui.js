@@ -2308,6 +2308,13 @@ function nearestCurvePoint(value, axis) {
 function previewCurvePoint(q) {
   curvePreview = q ? { capexUsd: q.x, outcomePct: q.y } : null;
   renderPlayReadout(q);
+  if (
+    lastPayload &&
+    q &&
+    (q.entry || (q.kind === "best" && lastPayload.best))
+  ) {
+    renderSelectedBanner(lastPayload, q.entry || lastPayload.best);
+  }
   if (lastPayload && focusFirst && q && q.entry)
     renderFocusPanel(lastPayload, q.entry, true);
   if (lastPayload) renderFrontierPanel(lastPayload);
@@ -2333,7 +2340,7 @@ function commitCurvePreview(q, opts = {}) {
     renderFrontierPanel(p);
     refreshSelectionOutputs(p);
   } else {
-    adoptFrontierPoint(q.index);
+    adoptFrontierPoint(q.index, { showModal: false, keepSlider: true });
   }
 }
 
@@ -5840,7 +5847,7 @@ const PAYLOAD_CONTRACT = 15;
 // its full analysis in the cached payload, so every downstream panel follows
 // it immediately — no engine re-run. Only its SOC capture bands arrive a
 // moment later from a tiny background slice (the 1 record lookup).
-function adoptFrontierPoint(i) {
+function adoptFrontierPoint(i, opts = {}) {
   const p = lastPayload;
   const f = p && p.frontier;
   const pt = f && f.points[i];
@@ -5853,6 +5860,13 @@ function adoptFrontierPoint(i) {
     chemistry: pt.detail.chemistry || f.chemistry,
   };
   selectedKey = "adopted";
+  if (!opts.keepSlider) {
+    const slider = $("budgetSlider");
+    if (slider && Number.isFinite(pt.capexUsd)) {
+      slider.value = String(Math.round(pt.capexUsd));
+      syncBudgetLabel();
+    }
+  }
   // Unify with the bill-cut slider FIRST (before the selection snapshot):
   // choosing a point on the curve IS choosing your cut %, so the share
   // link and the matrix "your target" label must record the snapped value,
@@ -5866,7 +5880,9 @@ function adoptFrontierPoint(i) {
   }
   renderFrontierPanel(p);
   refreshSelectionOutputs(p);
-  showSystemModal(p, adoptedEntry, true);
+  if (opts.showModal) {
+    showSystemModal(p, adoptedEntry, true);
+  }
   // Background reconciliation: re-size the matrix's "your target" column
   // for ALL chemistries at the snapped cut (the curve itself only knows
   // one chemistry), and capture the adopted system's SOC bands.
@@ -5931,7 +5947,7 @@ function renderFrontierPanel(p) {
     // Clicking a point re-renders the panel (chart + table) around that pick.
 
     onSelect: (i) => {
-      adoptFrontierPoint(i);
+      adoptFrontierPoint(i, { showModal: true });
     },
   };
 
@@ -6315,7 +6331,11 @@ function sameSystem(a, b) {
 // describing a different one than the charts, BOM and blue dot below it.
 function renderSelectedBanner(p, sel) {
   const wrap = $("bestPickWrap");
-  if (!wrap || !sel || sameSystem(sel, p.best)) return false;
+  if (!wrap || !sel) return false;
+  if (sameSystem(sel, p.best)) {
+    renderBestPick(p);
+    return false;
+  }
   wrap.innerHTML = "";
   const card = el("div", { class: "bom-card" });
   card.style.borderColor = "var(--secondary-accent, #3b82f6)";
