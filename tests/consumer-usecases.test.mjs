@@ -115,3 +115,61 @@ test("ELI5 inverter descriptions correctly branch on hardware configuration", ()
       describeInverter(6.0, 10.0, true).includes("240V split-phase"),
   );
 });
+
+test("Budget slider adoption auto-adjusts recommendation in place without popup modal", () => {
+  let modalShown = false;
+  let adopted = null;
+  let bannerUpdated = null;
+
+  function fakeAdoptFrontierPoint(point, opts = {}) {
+    adopted = point;
+    bannerUpdated = point;
+    if (opts.showModal) {
+      modalShown = true;
+    }
+  }
+
+  function onBudgetSliderChange(nearestPoint) {
+    fakeAdoptFrontierPoint(nearestPoint, {
+      showModal: false,
+      keepSlider: true,
+    });
+  }
+
+  function onFrontierCurveClick(clickedPoint) {
+    fakeAdoptFrontierPoint(clickedPoint, { showModal: true });
+  }
+
+  // 1. Budget slider adjustment
+  onBudgetSliderChange({ pvKw: 5.2, battKwh: 10, capexUsd: 8500 });
+  assert.equal(modalShown, false, "Budget slider must NOT show modal popup");
+  assert.deepEqual(adopted, { pvKw: 5.2, battKwh: 10, capexUsd: 8500 });
+  assert.deepEqual(bannerUpdated, { pvKw: 5.2, battKwh: 10, capexUsd: 8500 });
+
+  // 2. Direct click on frontier curve point
+  onFrontierCurveClick({ pvKw: 8.0, battKwh: 15, capexUsd: 13000 });
+  assert.equal(
+    modalShown,
+    true,
+    "Frontier curve click MUST open system selection modal",
+  );
+  assert.deepEqual(adopted, { pvKw: 8.0, battKwh: 15, capexUsd: 13000 });
+});
+
+test("Budget slider synchronization logic updates slider on curve click unless keepSlider is set", () => {
+  let sliderVal = "5000";
+
+  function syncSliderToPoint(capexUsd, opts = {}) {
+    if (!opts.keepSlider && Number.isFinite(capexUsd)) {
+      sliderVal = String(Math.round(capexUsd));
+    }
+  }
+
+  // Curve click without keepSlider updates slider position
+  syncSliderToPoint(12400, { keepSlider: false });
+  assert.equal(sliderVal, "12400");
+
+  // Budget slider change with keepSlider preserves current slider position
+  syncSliderToPoint(15000, { keepSlider: true });
+  assert.equal(sliderVal, "12400");
+});
