@@ -2,8 +2,8 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260911b";
-import { oversizeCallout } from "./rescale.js?v=20260911b";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260911c";
+import { oversizeCallout } from "./rescale.js?v=20260911c";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -93,6 +93,35 @@ export function capacityScaleFor(chemistry, meanTempC = null) {
     (chem.usableScale ?? 1) *
     (meanTempC === null ? 1 : coldCapacityScale(chemistry, meanTempC))
   );
+}
+
+/**
+ * Empirical cycle life to 80% State of Health (SOH) as a function of operating Depth of Discharge (DoD).
+ * Grounded in Wöhler power-law degradation models and manufacturer cell datasheets
+ * (CATL, EVE LF280K/LF314K, HiNa Na-ion, BCI AGM standards).
+ *
+ * @param {"lfp" | "naion" | "agm"} chemistry
+ * @param {number} dod - Operating depth of discharge between 0.1 and 1.0 (e.g., 0.8 for 80% DoD)
+ * @returns {number} Estimated cycles to 80% capacity retention
+ */
+export function cycleLifeForDoD(chemistry, dod) {
+  const d = Math.max(0.1, Math.min(1.0, dod));
+  if (chemistry === "lfp") {
+    // Standard testing benchmark: 6,000 cycles at 80% DoD (0.80).
+    // Degradation exponent β ≈ 1.65 (Preger et al., J. Electrochem. Soc. 2020)
+    return Math.min(15000, Math.round(6000 * Math.pow(0.8 / d, 1.65)));
+  }
+  if (chemistry === "naion") {
+    // Inherent cell window is 95%+; standard inverter window is ~85% (~5,500 cycles).
+    // Sodium-ion's aluminum current collectors prevent copper dissolution even at full discharge.
+    return Math.min(12000, Math.round(5500 * Math.pow(0.85 / d, 1.55)));
+  }
+  if (chemistry === "agm") {
+    // AGM baseline: 500 cycles at 50% DoD (0.50).
+    // Note: Calendar life imposes a hard ~6-8 year ceiling regardless of shallow cycling.
+    return Math.min(2000, Math.round(500 * Math.pow(0.5 / d, 1.45)));
+  }
+  return 4000;
 }
 
 export const RELIABILITY_TIERS = [

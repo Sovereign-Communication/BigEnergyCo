@@ -10,7 +10,7 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260911b";
+import { CITY_PRESETS } from "./nasa.js?v=20260911c";
 import {
   CITY_CATALOG,
   searchCities,
@@ -20,7 +20,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260911b";
+} from "./cities.js?v=20260911c";
 
 import {
   estimateTariff,
@@ -28,45 +28,45 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260911b";
+} from "./pricing.js?v=20260911c";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260911b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260911c";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260911b";
+} from "./bom.js?v=20260911c";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260911b";
+import { BOM_ITEMS } from "../shared/content.js?v=20260911c";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260911b";
+} from "../shared/i18n.js?v=20260911c";
 
-import { LOCALES } from "../shared/locales.js?v=20260911b";
+import { LOCALES } from "../shared/locales.js?v=20260911c";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260911b";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260911c";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260911b";
+} from "./frontier-chart.js?v=20260911c";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260911b";
+} from "./rescale.js?v=20260911c";
 
-import { coldCapacityScale } from "./engine.js?v=20260911b";
+import { coldCapacityScale } from "./engine.js?v=20260911c";
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260911b";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260911c";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260911b";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260911c";
 
 let worker = null;
 
@@ -2663,7 +2663,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260911b", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260911c", {
       type: "module",
     });
 
@@ -3746,6 +3746,20 @@ function renderBatteryComparison(p, selectedSystem) {
     card.appendChild(btn);
     grid.appendChild(card);
   }
+
+  const refFooter = el("div", {
+    style:
+      "grid-column: 1 / -1; margin-top: 0.5rem; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; font-size: 0.85rem;",
+  });
+  refFooter.innerHTML = `
+    <span style="color: var(--text-muted);">
+      🔬 <strong>DoD &amp; Zero-Swap Degradation Physics:</strong> Want to explore the empirical W&ouml;hler power-law curves and zero-swap oversizing math?
+    </span>
+    <a href="/blog/battery-longevity-and-dod-reference/" style="color: var(--secondary-accent, #3b82f6); text-decoration: underline; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+      Read Technical Reference &amp; Citations &rarr;
+    </a>
+  `;
+  grid.appendChild(refFooter);
 }
 
 // ── Relative Capacity Spectrum (All Options tab) ─────────────────────────────
