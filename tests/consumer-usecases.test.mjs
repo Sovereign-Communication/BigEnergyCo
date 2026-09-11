@@ -537,11 +537,14 @@ test("All Options: strictly excludes AGM, compares capacity tiers relative to ba
   assert.match(uiJs, /function renderRelativeOptions\(p, selectedSystem\)/);
 
   // Verify modern cost-efficient chemistry selection (NOT AGM)
-  assert.match(uiJs, /const rawChem = sel\.chemistry \|\| "lfp";/);
+  assert.match(uiJs, /const rawChem = (base|sel)\.chemistry \|\| "lfp";/);
   assert.match(
     uiJs,
     /const chem = rawChem === "sodium" \|\| rawChem === "naion" \? "naion" : "lfp";/,
   );
+  // Verify stable anchor baseline retention prevents infinite compounding
+  assert.match(uiJs, /_relativeAnchor/);
+  assert.match(uiJs, /_relativeTierId/);
 
   // Verify tiers definition
   assert.match(uiJs, /label:\s*"Compact \/ Essential"/);
