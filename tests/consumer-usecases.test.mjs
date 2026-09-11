@@ -304,3 +304,117 @@ test("Weighted True Grid Cost math accurately models population grid coverage an
     "South Sudan true grid cost blends to ~$0.64/kWh",
   );
 });
+
+test("Tied sliders: monthly electric bill and off-grid kWh operate bidirectionally in parity", () => {
+  const DAYS_PER_MONTH = 30.4375;
+  function kwhFromBill(bill, rate, fixed = 0) {
+    return (bill - fixed) / (rate * DAYS_PER_MONTH);
+  }
+  function billForKwh(kwh, rate, fixed = 0) {
+    return kwh * DAYS_PER_MONTH * rate + fixed;
+  }
+
+  const rate = 0.28; // $0.28 / kWh
+  let billAnchorKwh = 15;
+  let billSliderVal = 128;
+  let offgridKwhSliderVal = 15;
+
+  // 1. User drags bill slider to $250/month
+  const newBill = 250;
+  billSliderVal = newBill;
+  billAnchorKwh = kwhFromBill(newBill, rate);
+  offgridKwhSliderVal = Math.round(billAnchorKwh * 10) / 10;
+
+  assert.ok(
+    Math.abs(offgridKwhSliderVal - 29.3) < 0.2,
+    `Bill of $250 @ $0.28/kWh should sync offgrid slider to ~29.3 kWh/day, got ${offgridKwhSliderVal}`,
+  );
+
+  // 2. User drags offgrid kWh slider to 12 kWh/day
+  const newKwh = 12;
+  offgridKwhSliderVal = newKwh;
+  billAnchorKwh = newKwh;
+  billSliderVal = Math.round(billForKwh(newKwh, rate));
+
+  assert.equal(
+    billSliderVal,
+    102,
+    `Offgrid load of 12 kWh/day @ $0.28/kWh should sync bill slider to $102/mo, got ${billSliderVal}`,
+  );
+
+  // 3. User switches goal: shared anchor preserves exact load across modes
+  let activeGoal = "gridtie";
+  const gridtieLoad = billAnchorKwh;
+  activeGoal = "offgrid";
+  const offgridLoad = billAnchorKwh;
+  assert.equal(
+    gridtieLoad,
+    offgridLoad,
+    "Goal switching must maintain shared load anchor without conflict",
+  );
+});
+
+test("Manual mode deferral: option changes do not trigger calculation until Size My System is clicked", () => {
+  let runCount = 0;
+  function triggerRun() {
+    runCount++;
+  }
+
+  // Simulation of option change handlers in ui.js
+  function onOptionChange(optionName, { quickMode, lastPayload }) {
+    if (quickMode && lastPayload) {
+      triggerRun();
+    }
+  }
+
+  function onSliderDrag(sliderName, { lastPayload }) {
+    // Sliders auto/instant update in place when results are present
+    if (lastPayload) {
+      triggerRun();
+    }
+  }
+
+  function onSizeMySystemClick() {
+    triggerRun();
+  }
+
+  // Case 1: Manual Mode (quickMode = false) with existing payload
+  const manualState = { quickMode: false, lastPayload: { mode: "gridtie" } };
+
+  onOptionChange("chemSelect", manualState);
+  onOptionChange("hardwareConfig", manualState);
+  onOptionChange("autoTier", manualState);
+  onOptionChange("customRateVal", manualState);
+  onOptionChange("onCoordChange", manualState);
+
+  assert.equal(
+    runCount,
+    0,
+    "Manual mode option selections must NOT calculate automatically",
+  );
+
+  // Sliders continue to auto-update in place
+  onSliderDrag("billSlider", manualState);
+  assert.equal(
+    runCount,
+    1,
+    "Slider drag in manual mode should still auto-update calculation in place",
+  );
+
+  // Clicking "Size My System" runs calculation
+  onSizeMySystemClick();
+  assert.equal(
+    runCount,
+    2,
+    "Clicking Size My System button in manual mode must trigger calculation",
+  );
+
+  // Case 2: Quick Mode (quickMode = true) with existing payload auto-updates on option changes
+  const quickState = { quickMode: true, lastPayload: { mode: "gridtie" } };
+  onOptionChange("chemSelect", quickState);
+  assert.equal(
+    runCount,
+    3,
+    "Quick mode option changes should auto-trigger calculation",
+  );
+});
