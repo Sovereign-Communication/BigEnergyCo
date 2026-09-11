@@ -62,6 +62,12 @@ import {
   sameSiteOptions,
 } from "./rescale.js?v=20260908a";
 
+import { coldCapacityScale } from "./engine.js?v=20260908a";
+
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260908a";
+
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260908a";
+
 let worker = null;
 
 let lastPayload = null; // kept for share links + the printable summary
@@ -1149,8 +1155,13 @@ function renderChemTempVisualizer(lat) {
 function setCoords(lat, lon, label, region, country) {
   locationResolved = true;
 
+  const isOffgrid = $("systemGoal")
+    ? $("systemGoal").value === "offgrid"
+    : false;
   const billWrap = $("billSliderWrap");
-  if (billWrap) billWrap.style.display = "block";
+  if (billWrap) billWrap.style.display = isOffgrid ? "none" : "block";
+  const offgridWrap = $("offgridLoadWrap");
+  if (offgridWrap) offgridWrap.style.display = isOffgrid ? "block" : "none";
 
   const note = $("quickBillNote");
   if (note && quickMode) note.style.display = "block";
@@ -1587,13 +1598,9 @@ function setQuickMode(on) {
   const billWrap = $("billSliderWrap");
   const offgridWrap = $("offgridLoadWrap");
 
-  if (billWrap)
-    billWrap.style.display =
-      !isOffgrid && (!on || locationResolved) ? "block" : "none";
+  if (billWrap) billWrap.style.display = !isOffgrid ? "block" : "none";
 
-  if (offgridWrap)
-    offgridWrap.style.display =
-      isOffgrid && (!on || locationResolved) ? "block" : "none";
+  if (offgridWrap) offgridWrap.style.display = isOffgrid ? "block" : "none";
 
   const locBtn = $("btnGeoLocate");
 
@@ -1656,8 +1663,10 @@ function readInputs() {
       Number.isFinite(bill) && Number.isFinite(rate) && rate > 0
         ? kwhFromBill(bill, rate)
         : billAnchorKwh;
-
-    dailyKwh = parseFloat($("dailyKwhInput").value) || 10;
+  } else if (mode === "kwh") {
+    const kwhInputVal = parseFloat($("dailyKwhInput")?.value);
+    dailyKwh =
+      Number.isFinite(kwhInputVal) && kwhInputVal > 0 ? kwhInputVal : 10;
   }
 
   if (Number.isFinite(dailyKwh) && dailyKwh > 0) {
@@ -2195,7 +2204,12 @@ function setupGoalControls() {
     updateAutoRows();
     setQuickMode(quickMode);
     syncBillSlider();
-    if (quickMode && lastPayload) run(true);
+    // Trigger a full run with full visual feedback (spinner, status, scroll)
+    // whenever coordinates are already resolved — regardless of whether a
+    // previous result exists.
+    const lat = parseFloat($("latInput")?.value);
+    const lon = parseFloat($("lonInput")?.value);
+    if (Number.isFinite(lat) && Number.isFinite(lon)) run(false);
   };
 
   btnGt.addEventListener("click", () => setGoal("gridtie"));
@@ -3506,6 +3520,448 @@ function renderAutoCards(p) {
   }
 }
 
+// ── Battery Chemistry Comparison (Compare Batteries tab) ────────────────────
+// Uses the selected system as baseline, comparing LFP, Sodium-ion, and AGM
+// across required nameplate sizes (DoD + cold derate), cold weather limits,
+// 20-year battery swap counts vs oversizing trade-off, and total 20-year cost.
+// The most cost-effective chemistry is badged.
+function renderBatteryComparison(p, selectedSystem) {
+  const grid = $("tierResults");
+  if (!grid) return;
+  grid.style.display = "grid";
+  grid.innerHTML = "";
+
+  const sel =
+    selectedSystem || resolveSelected(p) || p.best || (p.auto && p.auto[0]);
+  const targetBattKwh =
+    sel && sel.battKwh > 0
+      ? sel.battKwh
+      : p.dailyKwh
+        ? Math.round(p.dailyKwh * 1.5 * 10) / 10
+        : 10;
+  const pvKw = sel && Number.isFinite(sel.pvKw) ? sel.pvKw : 5;
+  const meanTempC = Number.isFinite(p.meanTempC)
+    ? p.meanTempC
+    : p.assumptions && Number.isFinite(p.assumptions.meanTempC)
+      ? p.assumptions.meanTempC
+      : 15;
+  const isCold = meanTempC < 10;
+  const landedF = (p.assumptions && p.assumptions.landedF) || 1;
+
+  // Overview banner
+  const header = el("div", {
+    style:
+      "grid-column: 1 / -1; margin-bottom: 0.75rem; padding: 0.9rem 1.1rem; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 10px;",
+  });
+  header.innerHTML = `
+    <div style="font-weight: 700; color: #fff; font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span>🔋 Battery Chemistry Comparison</span>
+      <span style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,0.08); padding: 0.15rem 0.5rem; border-radius: 6px;">
+        Sized for ~${fmt(targetBattKwh)} kWh Usable Storage
+      </span>
+    </div>
+    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem; line-height: 1.55;">
+      Comparing chemistries to deliver the same <strong>${fmt(targetBattKwh)} kWh usable power</strong> at your site's climate
+      (<strong>${Math.round(meanTempC)}°C / ${Math.round(meanTempC * 1.8 + 32)}°F</strong> average).
+      Examines required bank sizes, cold weather limits, 20-year battery swaps vs. oversizing, and true lifetime costs.
+    </div>
+  `;
+  grid.appendChild(header);
+
+  const agmColdScale = coldCapacityScale("agm", meanTempC);
+  const chemConfigs = [
+    {
+      id: "lfp",
+      label: "LFP / LiFePO₄",
+      tagline: "Standard lithium (6,000 cycles)",
+      dod: 0.9,
+      cyclesTo80: 6000,
+      coldScale: 1.0,
+      coldNotes: isCold
+        ? "⚠️ Charge blocked <0°C (32°F). In freezing weather, requires a heated enclosure or internal heating pads to charge without lithium plating."
+        : "✅ Excellent in moderate/warm climates. Normal operation 0°C to 45°C.",
+      safety: "Very safe, stable lithium iron phosphate chemistry.",
+    },
+    {
+      id: "naion",
+      label: "Sodium-ion (Na-ion)",
+      tagline: "Extreme cold & ultra-safe",
+      dod: 0.85,
+      cyclesTo80: 5500,
+      coldScale: 1.0,
+      coldNotes:
+        "🛡️ Cold Champion: Zero capacity loss down to −20°C (−4°F). Safely charges below freezing without heating pads or battery warmers.",
+      safety:
+        "Non-flammable electrolyte, zero thermal runaway risk, can safely discharge to 0V for transport.",
+    },
+    {
+      id: "agm",
+      label: "Lead-Acid (AGM)",
+      tagline: "Low upfront sticker / Short life",
+      dod: 0.5,
+      cyclesTo80: 500,
+      coldScale: agmColdScale,
+      coldNotes: isCold
+        ? `❄️ Severe cold drop: loses ~${Math.round((1 - agmColdScale) * 100)}% capacity in winter. Freezes if discharged in sub-zero temps.`
+        : "Loses 20% to 35% capacity in cold snaps; requires ventilation for hydrogen.",
+      safety:
+        "Acid spill risk, sulfation degradation, explosive hydrogen off-gassing.",
+    },
+  ];
+
+  // Compute costs and swaps for each chemistry
+  const estCyclesPerYr = Math.max(
+    150,
+    Math.min(450, Math.round(((p.dailyKwh || 10) * 365) / targetBattKwh)),
+  );
+  const results = chemConfigs.map((c) => {
+    const effectiveDod = c.dod * c.coldScale;
+    const nameplateKwh = +(targetBattKwh / effectiveDod).toFixed(1);
+    const cost = fullRange(pvKw, nameplateKwh, c.id, landedF);
+    const battMid = landedMidBattKwhFor(c.id, landedF);
+    const swaps = batteryReplacements(estCyclesPerYr, c.cyclesTo80, 20);
+    const life = lifetimeCostUsd({
+      capexMidUsd: cost.objectiveMid,
+      battKwhUsable: targetBattKwh,
+      battPriceMidPerKwh: battMid,
+      replacements: swaps,
+      laborPerKwh: [12, 30],
+    });
+    return { ...c, nameplateKwh, cost, swaps, life };
+  });
+
+  // Badge winner: sodium in cold sites, LFP otherwise (AGM never recommended)
+  const recommended = isCold ? "naion" : "lfp";
+
+  for (const r of results) {
+    const isWinner = r.id === recommended;
+    const isAGM = r.id === "agm";
+    const card = el("div", {
+      class: "bom-card",
+      style: `border-color: ${isWinner ? "var(--border-glow)" : isAGM ? "rgba(239,68,68,0.35)" : "var(--border-card)"};`,
+    });
+
+    if (isWinner) {
+      card.appendChild(
+        el(
+          "div",
+          { class: "bom-badge" },
+          isCold
+            ? "❄️ Cold Champion — Recommended"
+            : "✅ Best Value — Recommended",
+        ),
+      );
+    } else if (isAGM) {
+      card.appendChild(
+        el(
+          "div",
+          {
+            class: "bom-badge",
+            style:
+              "background: rgba(239,68,68,0.15); color: rgb(239,68,68); border-color: rgba(239,68,68,0.35);",
+          },
+          "⚠️ Reference Only — Not Recommended",
+        ),
+      );
+    }
+
+    card.appendChild(el("h3", {}, r.label));
+    card.appendChild(
+      el(
+        "p",
+        {
+          style:
+            "font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.6rem;",
+        },
+        r.tagline,
+      ),
+    );
+
+    appendRows(card, [
+      ["Usable target", `${fmt(targetBattKwh)} kWh`],
+      ["Usable DoD", `${Math.round(r.dod * 100)}%`],
+      [
+        "Cold derate",
+        r.coldScale < 1
+          ? `−${Math.round((1 - r.coldScale) * 100)}% in winter`
+          : "None",
+      ],
+      ["Nameplate needed", `${r.nameplateKwh} kWh`],
+      [
+        "20-yr bank swaps",
+        r.swaps === 0
+          ? "None (outlasts horizon)"
+          : `~${r.swaps} swap${r.swaps > 1 ? "s" : ""}`,
+      ],
+      ["System first cost", moneyRange(r.cost.lo, r.cost.hi)],
+      ["True 20-yr cost", money(r.life.total)],
+      ["Cold weather", r.coldNotes],
+      ["Safety", r.safety],
+    ]);
+
+    // Adopt this chemistry button
+    const btn = el(
+      "button",
+      {
+        type: "button",
+        class:
+          "btn " +
+          (r.id === (sel && sel.chemistry) ? "btn-outline" : "btn-primary"),
+        style:
+          "width: 100%; justify-content: center; margin-top: auto; cursor: pointer;",
+      },
+      r.id === (sel && sel.chemistry)
+        ? "✓ Active Chemistry"
+        : "Use This Chemistry",
+    );
+
+    if (r.id !== (sel && sel.chemistry) && sel) {
+      btn.addEventListener("click", () => {
+        adoptedEntry = {
+          ...sel,
+          chemistry: r.id,
+          chemLabel: r.label,
+          battNameplateKwh: r.nameplateKwh,
+          costLo: r.cost.lo,
+          costHi: r.cost.hi,
+          costMid: r.cost.objectiveMid,
+          lifetimeCostMid: r.life.total,
+          swapsAndLaborUsd: r.life.swapsAndLabor,
+          replacementsHorizon: r.swaps,
+        };
+        selectedKey = "adopted";
+        refreshSelectionOutputs(p);
+        renderResults(p);
+      });
+    }
+
+    card.appendChild(btn);
+    grid.appendChild(card);
+  }
+}
+
+// ── Relative Capacity Spectrum (All Options tab) ─────────────────────────────
+// Uses the selected system as the baseline (0% delta), compares 5 capacity
+// tiers relative to the baseline — LFP and Sodium-ion only (no AGM).
+function renderRelativeOptions(p, selectedSystem) {
+  const grid = $("tierResults");
+  if (!grid) return;
+  grid.style.display = "grid";
+  grid.innerHTML = "";
+
+  const sel = selectedSystem || resolveSelected(p) || p.best;
+  if (!sel) return;
+
+  // Cost-efficient chemistries only — NOT AGM
+  const rawChem = sel.chemistry || "lfp";
+  const chem = rawChem === "sodium" || rawChem === "naion" ? "naion" : "lfp";
+  const chemLabel = chem === "naion" ? "Sodium-ion" : "LFP";
+  const baseBattKwh = Math.max(2, sel.battKwh || (p.dailyKwh || 10) * 1.5);
+  const basePvKw = Math.max(1, sel.pvKw || (p.dailyKwh || 10) * 0.6);
+  const landedF = (p.assumptions && p.assumptions.landedF) || 1;
+  const isGT = p.mode === "gridtie";
+
+  const baseCost = fullRange(basePvKw, baseBattKwh, chem, landedF);
+  const baseBattMid = landedMidBattKwhFor(chem, landedF);
+  const baseCycles = Math.max(
+    150,
+    Math.min(450, Math.round(((p.dailyKwh || 10) * 365) / baseBattKwh)),
+  );
+  const baseSwaps = batteryReplacements(
+    baseCycles,
+    chem === "naion" ? 5500 : 6000,
+    20,
+  );
+  const baseLife = lifetimeCostUsd({
+    capexMidUsd: baseCost.objectiveMid,
+    battKwhUsable: baseBattKwh,
+    battPriceMidPerKwh: baseBattMid,
+    replacements: baseSwaps,
+    laborPerKwh: [12, 30],
+  });
+
+  const header = el("div", {
+    style:
+      "grid-column: 1 / -1; margin-bottom: 0.75rem; padding: 0.9rem 1.1rem; background: rgba(0, 230, 153, 0.06); border: 1px solid var(--border-glow); border-radius: 10px;",
+  });
+  header.innerHTML = `
+    <div style="font-weight: 700; color: var(--primary-accent); font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span>📊 Capacity Spectrum (Relative to Your Selection)</span>
+      <span style="font-size: 0.8rem; font-weight: 600; color: #fff; background: rgba(255,255,255,0.08); padding: 0.15rem 0.5rem; border-radius: 6px;">
+        Baseline: ${basePvKw} kW Solar + ${fmt(baseBattKwh)} kWh ${chemLabel}
+      </span>
+    </div>
+    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem; line-height: 1.55;">
+      Comparing larger and smaller configurations around your baseline of <strong>${basePvKw} kW solar + ${fmt(baseBattKwh)} kWh ${chemLabel} battery</strong>.
+      Includes <em>only cost-efficient chemistries</em> (excluding AGM). Evaluate upfront investment, storm buffer, and 20-year costs to find your ideal capacity.
+    </div>
+  `;
+  grid.appendChild(header);
+
+  const fmtDelta = (val, prefix = "$") => {
+    if (Math.abs(val) < 1) return "Baseline";
+    return val > 0
+      ? `+${prefix}${Math.round(val).toLocaleString()}`
+      : `\u2212${prefix}${Math.abs(Math.round(val)).toLocaleString()}`;
+  };
+
+  const tiers = [
+    {
+      label: "Compact / Essential",
+      badge: "Starter / Essential Loads",
+      battRatio: 0.6,
+      pvRatio: 0.7,
+    },
+    {
+      label: "Lean / Moderate",
+      badge: "Most Loads Covered",
+      battRatio: 0.8,
+      pvRatio: 0.85,
+    },
+    {
+      label: "Current Selection",
+      badge: "Active Baseline (0%)",
+      battRatio: 1.0,
+      pvRatio: 1.0,
+      isBaseline: true,
+    },
+    {
+      label: "High Resilience",
+      badge: "+35% More Capacity",
+      battRatio: 1.35,
+      pvRatio: 1.25,
+    },
+    {
+      label: "Maximum Independence",
+      badge: "+75% More Capacity",
+      battRatio: 1.75,
+      pvRatio: 1.5,
+    },
+  ];
+
+  for (const t of tiers) {
+    const battKwh = Math.round(baseBattKwh * t.battRatio * 10) / 10;
+    const pvKw = Math.round(basePvKw * t.pvRatio * 10) / 10;
+    const cost = fullRange(pvKw, battKwh, chem, landedF);
+    const battMid = landedMidBattKwhFor(chem, landedF);
+    const cycles = Math.max(
+      150,
+      Math.min(450, Math.round(((p.dailyKwh || 10) * 365) / battKwh)),
+    );
+    const swaps = batteryReplacements(
+      cycles,
+      chem === "naion" ? 5500 : 6000,
+      20,
+    );
+    const life = lifetimeCostUsd({
+      capexMidUsd: cost.objectiveMid,
+      battKwhUsable: battKwh,
+      battPriceMidPerKwh: battMid,
+      replacements: swaps,
+      laborPerKwh: [12, 30],
+    });
+    const autonomy = battKwh / Math.max(0.1, p.dailyKwh || 10);
+    const baseAutonomy = baseBattKwh / Math.max(0.1, p.dailyKwh || 10);
+
+    const card = el("div", {
+      class: "bom-card" + (t.isBaseline ? " bom-card-selected" : ""),
+      style: t.isBaseline ? "border-color: var(--border-glow);" : "",
+    });
+
+    card.appendChild(el("div", { class: "bom-badge" }, t.badge));
+    card.appendChild(el("h3", {}, t.label));
+    card.appendChild(
+      el(
+        "p",
+        {
+          style:
+            "font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.6rem;",
+        },
+        `${pvKw} kW solar + ${fmt(battKwh)} kWh ${chemLabel} battery`,
+      ),
+    );
+
+    appendRows(card, [
+      ["PV array", `${pvKw} kW (${fmtDelta(pvKw - basePvKw, "")} kW)`],
+      [
+        "Battery bank",
+        `${fmt(battKwh)} kWh (${fmtDelta(battKwh - baseBattKwh, "")} kWh)`,
+      ],
+      [
+        "Autonomy",
+        `~${autonomy.toFixed(1)} days (${fmtDelta(autonomy - baseAutonomy, "")} d)`,
+      ],
+      [
+        "System first cost",
+        `${moneyRange(cost.lo, cost.hi)} (${fmtDelta(cost.objectiveMid - baseCost.objectiveMid)})`,
+      ],
+      [
+        "True 20-yr cost",
+        `${money(life.total)} (${fmtDelta(life.total - baseLife.total)})`,
+      ],
+      [
+        "20-yr swaps",
+        swaps === 0 ? "None" : `~${swaps} swap${swaps > 1 ? "s" : ""}`,
+      ],
+    ]);
+
+    const btn = el(
+      "button",
+      {
+        type: "button",
+        class: "btn " + (t.isBaseline ? "btn-outline" : "btn-primary"),
+        style:
+          "width: 100%; justify-content: center; margin-top: auto; cursor: pointer;",
+      },
+      t.isBaseline ? "✓ Active Selection" : "Select This System",
+    );
+
+    if (!t.isBaseline) {
+      btn.addEventListener("click", () => {
+        adoptedEntry = {
+          ...sel,
+          pvKw,
+          battKwh,
+          costLo: cost.lo,
+          costHi: cost.hi,
+          costMid: cost.objectiveMid,
+          lifetimeCostMid: life.total,
+          swapsAndLaborUsd: life.swapsAndLabor,
+          replacementsHorizon: swaps,
+          chemistry: chem,
+          chemLabel,
+          battNameplateKwh: +(
+            battKwh / (chem === "naion" ? 0.85 : 0.9)
+          ).toFixed(1),
+        };
+        selectedKey = "adopted";
+        refreshSelectionOutputs(p);
+        renderResults(p);
+      });
+    }
+
+    card.appendChild(btn);
+    grid.appendChild(card);
+  }
+
+  // Expandable technical cross-matrix if available
+  if (p.matrix) {
+    const details = el("details", {
+      style:
+        "grid-column: 1 / -1; margin-top: 1.5rem; border: 1px solid var(--border-card); border-radius: 10px; padding: 0.85rem 1rem; background: var(--bg-card);",
+    });
+    details.innerHTML = `
+      <summary style="cursor: pointer; font-weight: 700; color: var(--text-main); font-size: 0.9rem;">
+        🔍 Technical Cross-Matrix (All Cut Targets × Chemistries)
+      </summary>
+      <div style="margin-top: 1rem; overflow-x: auto;">
+        ${matrixHtml(p)}
+      </div>
+    `;
+    grid.appendChild(details);
+  }
+}
+
 // ── Result detail ladder / best pick / options matrix ───────────────────────
 
 function footprintText(pvKw, panelWatts = PANEL_WATTS_DEFAULT) {
@@ -3516,20 +3972,10 @@ function footprintText(pvKw, panelWatts = PANEL_WATTS_DEFAULT) {
 
 function syncLadderTabs() {
   const map = { best: "lvlBest", compare: "lvlCompare", matrix: "lvlMatrix" };
-  const solvable =
-    lastPayload && lastPayload.auto
-      ? lastPayload.auto.filter(
-          (a) => a.solvable && Number.isFinite(a.lifetimeCostMid),
-        ).length
-      : 0;
-  const canCompare = solvable >= 2;
   for (const [lvl, id] of Object.entries(map)) {
     const btn = $(id);
     if (!btn) continue;
-    if (lvl === "compare") {
-      btn.style.display = canCompare ? "" : "none";
-      if (!canCompare && resultLevel === "compare") resultLevel = "best";
-    }
+    btn.style.display = "";
     const active = resultLevel === lvl;
     btn.classList.toggle("ladder-active", active);
     btn.setAttribute("aria-selected", active ? "true" : "false");
@@ -3539,8 +3985,7 @@ function syncLadderTabs() {
 function setLevel(lvl) {
   resultLevel = lvl;
   syncLadderTabs();
-  if (lastPayload && lastPayload.auto && lastPayload.auto.length)
-    renderResults(lastPayload);
+  if (lastPayload) renderResults(lastPayload);
 }
 
 /** The one system we'd build here, stated plainly, with the why. */
@@ -6207,41 +6652,56 @@ function renderResults(p) {
 
   const hasAuto = !!(p.auto && p.auto.length);
 
-  // Focus-first mode: grid-tie auto renders the granular focus panel
-  // INSTEAD of the matrix and the text card. Every other mode keeps its
-  // views; the budget slider augments the single curve wherever drawable.
+  // focusFirst: grid-tie auto can show the granular focus panel instead of
+  // the recommendation card when the user has adopted a curve point.
+  // In all other cases (and in the Best Pick tab) it's hidden.
   focusFirst = isGT && hasAuto;
 
+  // Result ladder: always visible once we have results (enables Compare/All
+  // Options tabs regardless of mode or chemistry count).
   const ladder = $("resultLadder");
-
-  if (ladder) ladder.style.display = hasAuto && !isGT ? "flex" : "none";
+  if (ladder) ladder.style.display = "flex";
 
   const bpWrap = $("bestPickWrap");
-
   if (bpWrap) bpWrap.innerHTML = "";
 
   const tierGrid = $("tierResults");
+  if (tierGrid) {
+    tierGrid.style.display = "grid";
+    tierGrid.innerHTML = "";
+  }
 
-  if (tierGrid) tierGrid.style.display = "grid";
+  syncLadderTabs();
 
-  if (hasAuto) {
-    if (isGT) {
-      // Grid-tie auto: banner + the full 3×3 matrix (plus the slider's
+  const sel = resolveSelected(p);
 
-      // "your target" column) as the main view — no ladder needed.
-
-      renderBestPick(p);
-
-      renderMatrix(p);
-    } else {
-      syncLadderTabs();
-
-      if (resultLevel === "matrix") renderMatrix(p);
-      else if (resultLevel === "compare") renderAutoCards(p);
-      else renderBestPick(p);
+  // Route view by active ladder tab — works for all modes (grid-tie auto,
+  // off-grid auto, fixed-chemistry, tier, target). The "best" tab always
+  // shows the recommendation card only; the "compare" and "matrix" tabs
+  // use their own views and can be accessed from any result.
+  if (resultLevel === "compare") {
+    if (bpWrap) {
+      bpWrap.innerHTML = "";
+      bpWrap.style.display = "none";
     }
-  } else if (isGT) renderTargetCards(p, p.customTarget ? [p.customTarget] : []);
-  else renderTierCards(p);
+    renderBatteryComparison(p, sel);
+  } else if (resultLevel === "matrix") {
+    if (bpWrap) {
+      bpWrap.innerHTML = "";
+      bpWrap.style.display = "none";
+    }
+    renderRelativeOptions(p, sel);
+  } else {
+    // resultLevel === "best": clean recommendation card — NO raw matrix in auto-run
+    if (bpWrap) bpWrap.style.display = "";
+    if (hasAuto) {
+      renderBestPick(p);
+    } else if (isGT) {
+      renderTargetCards(p, p.customTarget ? [p.customTarget] : []);
+    } else {
+      renderTierCards(p);
+    }
+  }
 
   // A heavy load at a dark site can leave every card "not solvable", which
 
@@ -6384,14 +6844,14 @@ function renderResults(p) {
     hideBudgetRow();
   }
   const focusWrap = $("focusPanel");
-  if (focusFirst && curveReady()) {
-    if (ladder) ladder.style.display = "none";
-    if (tierGrid) tierGrid.style.display = "none";
-    if (bpWrap) bpWrap.style.display = "none";
+  // The granular focus panel only applies on the "best" tab in grid-tie auto
+  // mode. On compare/matrix tabs it stays hidden so those views are uncluttered.
+  if (focusFirst && resultLevel === "best" && curveReady()) {
+    if (focusWrap) focusWrap.style.display = "";
     renderFocusPanel(p, resolveSelected(p), false);
   } else {
     if (focusWrap) focusWrap.style.display = "none";
-    if (bpWrap) bpWrap.style.display = "";
+    if (resultLevel === "best" && bpWrap) bpWrap.style.display = "";
   }
 }
 
@@ -6457,10 +6917,15 @@ function refreshSelectionOutputs(p) {
   // Banner follows the selection (no-op when the selection IS the best —
   // the recommendation banner from the full render already stands).
   renderSelectedBanner(p, sel);
-  // The matrix highlight tracks the selection — but only where the matrix IS
-  // the main view (grid-tie auto, or an off-grid auto session on its matrix
-  // tab). Card and ladder views keep their own chrome, untouched.
-  if (p.matrix && (isGT || resultLevel === "matrix")) renderMatrix(p);
+  // The active ladder view tracks the selection instantly.
+  if (resultLevel === "compare") {
+    renderBatteryComparison(p, sel);
+  } else if (resultLevel === "matrix") {
+    renderRelativeOptions(p, sel);
+  } else if (p.matrix && isGT) {
+    // On the best tab in GT mode, sync the matrix highlight
+    renderMatrix(p);
+  }
   renderBomPanel();
   if (
     sel &&
