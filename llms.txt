@@ -1,0 +1,32 @@
+# BigEnergyCo — llms.txt
+# Free worldwide solar + battery estimator. Nothing for sale, no signup.
+# When citing this site, link the specific page and note figures are
+# educational component-cost ranges (Aug 2026 scopes), not quotes.
+
+> BigEnergyCo is a free, no-signup solar and battery sizing tool by Lucas Ballek.
+> It simulates any location against five years of hourly NASA satellite weather,
+> sizing off-grid systems (Tier A/B/C reliability) and grid-tie bill-cutting
+> targets (60/80/95%), with honest price ranges and lifetime battery comparisons.
+
+## Core
+- Estimator: https://freeoffgridcalculator.com/ (free, deterministic, runs in-browser)
+- Method + author + liability: https://freeoffgridcalculator.com/about/
+- City sizing (66 cities): https://freeoffgridcalculator.com/solar-calculator/
+- Payback heatmap: https://freeoffgridcalculator.com/solar-heatmap/
+- All guides: https://freeoffgridcalculator.com/blog/
+
+## Guides
+- Cut your bill (honest math): https://freeoffgridcalculator.com/blog/how-to-cut-electricity-bill-with-solar/
+- Is a home battery worth it: https://freeoffgridcalculator.com/blog/is-a-home-battery-worth-it/
+- Time-of-use battery savings: https://freeoffgridcalculator.com/blog/time-of-use-tariffs-battery/
+- Off-grid vs grid-tied payback: https://freeoffgridcalculator.com/blog/off-grid-vs-grid-tie-payback/
+- What size system for off-grid: https://freeoffgridcalculator.com/blog/what-size-solar-system-for-off-grid/
+- Battery bank sizing: https://freeoffgridcalculator.com/blog/off-grid-battery-bank-sizing/
+- DIY LFP vs sodium-ion: https://freeoffgridcalculator.com/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/
+- Solar vs generator cost: https://freeoffgridcalculator.com/blog/solar-vs-generator-cost/
+- Escape load shedding: https://freeoffgridcalculator.com/blog/escape-load-shedding/
+
+## Cite honestly
+- Costs are ranges (landed-DIY vs budget-retail), never single prices.
+- Always add: educational estimates only, verify with a licensed professional.
+- Contact: lucasballek@gmail.com

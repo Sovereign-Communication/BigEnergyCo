@@ -1,0 +1,2417 @@
+// The single source of truth for sizing runs. Both the web worker wrapper
+// and the Node test suite call runSizing() directly, so the UI contract —
+// every field the renderers read — is defined here and only here.
+//
+// msg: { latitude, longitude, dailyKwh, chemistry: "auto"|"naion"|"lfp"|"agm",
+//        years, tariff, exportRate, mode: "offgrid"|"gridtie" }
+// deps: { fetchWeather } injectable for offline tests.
+import {
+  buildE1kw,
+  flatProfile,
+  expandProfile,
+  sizeAllTiers,
+  simulate,
+  sizeAllBillTargets,
+  sizeForBillCut,
+  simulateOffset,
+  dailyExtremes,
+  CHEMISTRIES,
+  infeasibleReason,
+  RELIABILITY_TIERS,
+  BILL_TARGETS,
+  DERATES_DEFAULT,
+  GAMMA_PMAX,
+  NOCT,
+  ETA_INVERTER,
+  capacityScaleFor,
+  evaluateOversizeOptimization,
+  billCutFraction,
+} from "./engine.js?v=20260911d";
+
+import {
+  fetchHourlyCached,
+  synthesizeFromProfile,
+} from "./nasa.js?v=20260911d";
+import { buildFrontier } from "./frontier.js?v=20260911d";
+import { oversizeCallout } from "./rescale.js?v=20260911d";
+import {
+  fullRange,
+  getScope,
+  POWMR_CATALOG,
+  estimateTariff,
+  landedMidBattKwhFor,
+} from "./pricing.js?v=20260911d";
+import {
+  annualGridSpendUsd,
+  paybackYears,
+  batteryReplacements,
+  lcoeUsdPerKwh,
+  lifetimeCostUsd,
+  exportValueUsd,
+  trueBreakEvenYear,
+  cumulativeCostSeries,
+  INSTALL_LABOR_PER_KWH_USABLE,
+} from "./money.js?v=20260911d";
+
+const TIER_BASIS = {
+  tier100: "100% independence — never needs a generator",
+  tier99: "99% reliability — generator only as a rare backup",
+  tier95: "95% reliability — generator runs now and then",
+};
+const TARGET_BASIS = {
+  cut10: "a ~10% peak-hour bill cut",
+  cut15: "a ~15% bill cut",
+  cut20: "a ~20% full peak-hour offset",
+  cut25: "a ~25% daytime solar cut",
+  cut30: "a ~30% max daytime solar cut",
+  cut60: "a ~60% grid-bill cut",
+  cut80: "an ~80% grid-bill cut",
+  cut95: "a ~95% grid-bill cut",
+};
+
+const VALID_AUTO_TIERS = new Set(["tier100", "tier99", "tier95"]);
+const VALID_AUTO_TARGETS = new Set([
+  "cut10",
+  "cut15",
+  "cut20",
+  "cut25",
+  "cut30",
+  "cut60",
+  "cut80",
+  "cut95",
+]);
+
+/**
+ * Count-aware sentence for the auto cards: names exactly the chemistries
+ * that actually produced a system, so copy never claims "all three" when
+ * only one or two solved.
+ */
+/**
+ * Plain-language verdict for why the winning chemistry won — pure, so the
+ * worker can reuse it for the slider-driven recommendation. Winner and the
+ * candidate entries carry chemLabel/chemistry/replacementsHorizon. agmRef is
+ * the lead-acid reference entry (savings indicator only, never a candidate).
+ */
+export function bestPickReason(winner, allEntries, meanT, agmRef = null) {
+  if (!winner) return null;
+  const others = allEntries.filter(
+    (a) =>
+      a && a.solvable && a !== winner && Number.isFinite(a.lifetimeCostMid),
+  );
+  const runnerUp = others.length
+    ? others.reduce((a, b) => (a.lifetimeCostMid <= b.lifetimeCostMid ? a : b))
+    : null;
+  const gapPct =
+    runnerUp && runnerUp.lifetimeCostMid > 0
+      ? Math.round(
+          ((runnerUp.lifetimeCostMid - winner.lifetimeCostMid) /
+            runnerUp.lifetimeCostMid) *
+            1000,
+        ) / 10
+      : null;
+  const ahead =
+    gapPct !== null ? ` — about ${gapPct}% ahead of ${runnerUp.chemLabel}` : "";
+  const cold = isColdSite(meanT);
+  let why;
+  if (winner.chemistry === "naion") {
+    const lfp = others.find((a) => a.chemistry === "lfp");
+    const lfpCheaper =
+      lfp &&
+      Number.isFinite(lfp.lifetimeCostMid) &&
+      lfp.lifetimeCostMid < winner.lifetimeCostMid;
+    why =
+      `${winner.chemLabel} is the recommendation${ahead}: no thermal runaway, and it charges down to −20 °C where standard LFP must sit idle below freezing.` +
+      (lfpCheaper
+        ? ` LFP is cheaper on paper here, but inside the margin where safety decides it.`
+        : ` It also won on true 20-year cost.`) +
+      (cold
+        ? ` Your winters freeze — LFP would need a heated enclosure here.`
+        : ``);
+  } else if (winner.chemistry === "lfp") {
+    why =
+      `${winner.chemLabel} wins on money here${ahead} — genuinely cheaper by enough to choose it on cost.` +
+      (cold
+        ? ` Cold-site warning: it must live indoors or heated, and never charge below 0 °C (32 °F) or the bank is permanently damaged.`
+        : ` It uses most of its nameplate every day with a long cycle life.`);
+  } else {
+    why = `At this load and target, ${winner.chemLabel} wins on first cost${ahead} — but expect ~${winner.replacementsHorizon} bank swaps over 20 years, already counted in every figure above.`;
+  }
+  const tail =
+    others.length >= 2
+      ? " The ranking shifts with climate, tariffs, and how much work you do yourself — check the other options before deciding."
+      : others.length === 1
+        ? " The ranking shifts with climate, tariffs, and how much work you do yourself — weigh the runner-up before deciding."
+        : " No other chemistry produced a practical system at this site and load.";
+  const agmLine =
+    agmRef &&
+    agmRef.solvable &&
+    Number.isFinite(agmRef.lifetimeCostMid) &&
+    Number.isFinite(agmRef.replacementsHorizon)
+      ? ` For reference, a lead-acid bank for the same job needs ~${agmRef.replacementsHorizon} swaps over 20 years — shown only so you can see what you are saving; it is never recommended.`
+      : "";
+  return `${why}${tail}${agmLine}`;
+}
+
+// Auto-compare chemistries: sodium-ion and LFP only. Lead-acid (AGM) is
+// searched alongside as a savings reference but never recommended — its
+// entry ships as payload.agmReference, never in auto/cards/matrix/best.
+export const AUTO_CHEMS = ["naion", "lfp"];
+export const REF_CHEM = "agm";
+
+// Sodium-first preference: LFP takes the recommendation only when its true
+// 20-year cost beats sodium by more than this margin — otherwise sodium's
+// safety (no thermal runaway, charges to −20 °C) decides it.
+export const COST_MARGIN = 0.1;
+// Mean-temp proxy for freezing-winter danger to LFP (must not charge below
+// 0 °C; this cold a mean says sub-zero nights are routine).
+export const COLD_MEAN_C = 10;
+
+export function isColdSite(meanTempC) {
+  return Number.isFinite(meanTempC) && meanTempC < COLD_MEAN_C;
+}
+
+export function pickBest(entries, meanTempC) {
+  const solvable = (entries || []).filter(
+    (a) => a && a.solvable && Number.isFinite(a.lifetimeCostMid),
+  );
+  if (!solvable.length) return null;
+  const na = solvable.find((a) => a.chemistry === "naion");
+  const lfp = solvable.find((a) => a.chemistry === "lfp");
+  if (na && lfp && na.lifetimeCostMid > 0) {
+    const lfpEdge =
+      (na.lifetimeCostMid - lfp.lifetimeCostMid) / na.lifetimeCostMid;
+    return lfpEdge > COST_MARGIN ? lfp : na;
+  }
+  return solvable.reduce((a, b) =>
+    a.lifetimeCostMid <= b.lifetimeCostMid ? a : b,
+  );
+}
+
+export function autoNoteFor(entries, basis) {
+  const names = entries.map((a) => a.chemLabel);
+  if (names.length >= 2)
+    return `${names[0]} and ${names[1]} sized for ${basis}`;
+  if (names.length === 1) return `${names[0]} sized for ${basis}`;
+  return `No chemistry produced a practical system here for ${basis}.`;
+}
+
+// UI-contract version: bump whenever payload fields change shape. The
+// renderer compares this to its own constant and warns on mismatch instead
+// of rendering garbage from a stale cached module.
+export const PAYLOAD_CONTRACT = 15;
+
+const AUTO_CARD_NOTES = {
+  naion:
+    "Runs on standard LFP voltage settings (the common case): the ~40 V low cutoff protects it from deep discharge, so it gives up a little capacity but lasts longer than its deep-cycle rating.",
+  lfp: "The benchmark: uses most of its nameplate every day and still outlives everything else.",
+};
+
+async function fetchWeatherDefault(opts) {
+  return fetchHourlyCached(opts);
+}
+
+// ── Session weather memo: one site = one load ─────────────────────────────
+// Within a session (worker/module lifetime) every run at the same normalized
+// site reuses the exact same series object — bill edits, cut-slider moves,
+// chemistry switches and quiet refines never re-touch the network, the disk
+// cache, or the parser for a site that already loaded. The key is rounded to
+// the same ~1.1 km grid the persistent cache uses, so float dust between the
+// share-URL hash, the coordinate inputs and GPS can never cause a second
+// load. Injected test weather (deps.fetchWeather) bypasses the memo so
+// fixtures stay hermetic.
+const SITE_MEMO = { key: null, series: null };
+export const WEATHER_MEMO_STATS = { hits: 0, misses: 0 };
+export function clearSiteMemo() {
+  SITE_MEMO.key = null;
+  SITE_MEMO.series = null;
+  WEATHER_MEMO_STATS.hits = 0;
+  WEATHER_MEMO_STATS.misses = 0;
+}
+export function siteMemoKey(latitude, longitude, years = 5) {
+  const la = Math.round(Number(latitude) * 100) / 100;
+  const lo = Math.round(Number(longitude) * 100) / 100;
+  const y = Number(years) || 5;
+  return `${la.toFixed(2)},${lo.toFixed(2)},${y}y`;
+}
+async function fetchWeatherOnce(opts) {
+  const key = siteMemoKey(opts.latitude, opts.longitude, opts.years);
+  if (SITE_MEMO.key === key && SITE_MEMO.series) {
+    WEATHER_MEMO_STATS.hits++;
+    return SITE_MEMO.series;
+  }
+  WEATHER_MEMO_STATS.misses++;
+  const series = await fetchWeatherWithFallback(opts);
+  SITE_MEMO.key = key;
+  SITE_MEMO.series = series;
+  return series;
+}
+
+// Offline fallback: bundled typical-year profile nearest to the request.
+async function fetchWeatherWithFallback(opts) {
+  try {
+    return await fetchWeatherDefault(opts);
+  } catch (netErr) {
+    const { OFFLINE_PROFILES, PROFILE_YEAR } =
+      await import("./profiles.js?v=20260911d");
+    let best = null,
+      bestD = Infinity;
+    for (const p of OFFLINE_PROFILES) {
+      const d =
+        (p.lat - opts.latitude) ** 2 +
+        ((p.lon - opts.longitude) *
+          Math.cos((opts.latitude * Math.PI) / 180)) **
+          2;
+      if (d < bestD) {
+        bestD = d;
+        best = p;
+      }
+    }
+    if (!best) throw netErr;
+    return {
+      hours: synthesizeFromProfile(best),
+      meta: {
+        latitude: opts.latitude,
+        longitude: opts.longitude,
+        startYear: PROFILE_YEAR,
+        endYear: PROFILE_YEAR,
+        years: 1,
+        source: `bundled typical-year weather for ${best.name} (OFFLINE MODE)`,
+        offline: true,
+        offlineCity: best.name,
+        retrievedAt: new Date().toISOString(),
+        timeStandard: "LST",
+        parameters: ["ALLSKY_SFC_SW_DWN", "T2M"],
+      },
+    };
+  }
+}
+
+export async function runSizing(msg, deps = {}) {
+  const {
+    latitude,
+    longitude,
+    dailyKwh,
+    chemistry = "auto",
+    years = 5,
+    tariff = null,
+    exportRate = null,
+    mode = "offgrid",
+    autoTier = "tier99",
+    autoTargetId = "cut80",
+    customCut = 0.8,
+    focusPvKw = null,
+    focusBattKwh = null,
+    focusChemistry = null,
+    hardwareConfig = "both",
+    peakLoadW: msgPeakLoadW = null,
+    fixedMonthlyUsd = null,
+  } = msg;
+  // Fixed monthly charge (utility connection fee, USD): it can never be cut,
+  // so it rides along on every bill figure — grid spend, bill-after, and the
+  // residual the cumulative chart keeps paying — while savings, payback and
+  // cut % (displaced variable bill only) come out identical with or without
+  // it. Normalized once here so every path below shares one definition.
+  const fixedMonthly =
+    Number.isFinite(fixedMonthlyUsd) && fixedMonthlyUsd > 0
+      ? fixedMonthlyUsd
+      : 0;
+  const fixedAnnualUsd = fixedMonthly * 12;
+  // Search envelopes: wide enough to fantasize (big roof, big bank) while
+  // staying honest — anything beyond reports as bound-limited with the
+  // envelope named, never as impossible. The curve sweeps the same envelope
+  // on a fixed-size lattice, so widening costs resolution per rung, not
+  // simulations; the per-kWh battery loops grow ~25%, which the worker
+  // absorbs inside its normal multi-second budget.
+  const effectivePvMax = hardwareConfig === "battery" ? 0 : 60;
+  const effectiveBattMax = hardwareConfig === "solar" ? 0 : 150;
+  const offgridPvMax = hardwareConfig === "battery" ? 0 : 40;
+  const offgridBattMax = hardwareConfig === "solar" ? 0 : 300;
+  // Structural feasibility for this (mode, hardware, target) combo.
+  // "null" when the search is allowed to decide; an explanatory code when
+  // the combo is impossible regardless of envelope (off-grid + solar-only,
+  // grid-tie + battery-only with a surplus target, ...). The UI uses this
+  // to render an inline notice and to hide the broken savings panel.
+  let unreachableReason = infeasibleReason({
+    mode,
+    hardwareConfig: hardwareConfig || "both",
+    minFraction: mode === "gridtie" ? customCut : null,
+  });
+  // The run.js envelope signals "no panels" by passing pvMax=0, but the
+  // sizeForTier / sizeForBillCut searches would still loop over a tiny PV
+  // range to satisfy invMinKw. Short-circuit here so the cell is
+  // structurally unsolvable (no false "we can power your home from
+  // 3.5 kW of zero-sun panels").
+  if (mode === "offgrid" && hardwareConfig === "battery")
+    unreachableReason = "needs-panels";
+
+  // A feed-in credit changes solar-only physics: clipped surplus earns at
+  // the credit rate, so net metering (not the daytime-direct share) sets the
+  // ceiling — at 1:1 a big array zeroes any bill. With a credit, solar-only
+  // therefore runs the standard 60/80/95 targets; without one it keeps the
+  // honest daytime caps. Battery-only targets are peak-window based either
+  // way (no PV, no export).
+  const hasExport =
+    exportRate !== null && exportRate > 0 && tariff !== null && tariff > 0;
+  const effectiveTargets =
+    hardwareConfig === "battery"
+      ? [
+          { id: "cut10", label: "a ~10% peak bill cut", minFraction: 0.1 },
+          { id: "cut15", label: "a ~15% peak bill cut", minFraction: 0.15 },
+          { id: "cut20", label: "a ~20% full peak offset", minFraction: 0.2 },
+        ]
+      : hardwareConfig === "solar" && !hasExport
+        ? [
+            {
+              id: "cut15",
+              label: "a ~15% daytime bill cut",
+              minFraction: 0.15,
+            },
+            {
+              id: "cut25",
+              label: "a ~25% daytime bill cut",
+              minFraction: 0.25,
+            },
+            { id: "cut30", label: "a ~30% max daytime cut", minFraction: 0.3 },
+          ]
+        : BILL_TARGETS;
+
+  const defaultTargetId =
+    hardwareConfig === "battery"
+      ? "cut15"
+      : hardwareConfig === "solar" && !hasExport
+        ? "cut25"
+        : "cut80";
+  const repTierId = VALID_AUTO_TIERS.has(autoTier) ? autoTier : "tier99";
+  const repTargetId =
+    autoTargetId && effectiveTargets.some((t) => t.id === autoTargetId)
+      ? autoTargetId
+      : defaultTargetId;
+  const cc = Number(customCut);
+  if (!Number.isFinite(cc) || cc < 0.01 || cc > 1.5) {
+    throw new RangeError(
+      `customCut must be within [0.01, 1.5] (1%–150% bill cut); got ${customCut}`,
+    );
+  }
+
+  const series = await (deps.fetchWeather || fetchWeatherOnce)({
+    latitude,
+    longitude,
+    years,
+  });
+  const hours = series.hours;
+  if (!series._e1kw) series._e1kw = buildE1kw(hours);
+  const e1kw = series._e1kw;
+  const loadWh = expandProfile(flatProfile(dailyKwh), hours.length);
+  if (!series._tempsC) series._tempsC = Float64Array.from(hours, (h) => h.tAmb);
+  const tempsC = series._tempsC;
+
+  // Highest AC demand hour — the number the hardware list (inverter class,
+  // DC protection) and the inverter cost basis are built around. The caller
+  // may pass a measured peak (appliance checklist sums); otherwise it falls
+  // back to the flat-profile average, flagged as such so the BOM can say so.
+  let peakLoadW = 0;
+  for (let i = 0; i < loadWh.length; i++)
+    if (loadWh[i] > peakLoadW) peakLoadW = loadWh[i];
+  let peakIsAverage = true;
+  if (Number.isFinite(msgPeakLoadW) && msgPeakLoadW > 0) {
+    peakLoadW = msgPeakLoadW;
+    peakIsAverage = false;
+  }
+  // Inverter cost basis: never below the load peak (a battery-only system
+  // still buys an inverter; a spiky load needs a big one on a small array).
+  const invMinKw = Math.max(0, peakLoadW / 1000);
+
+  if (series._annualYield === undefined) {
+    series._annualYield =
+      [...e1kw].reduce((a, b) => a + b, 0) / 1000 / series.meta.years;
+  }
+  const annualYield = series._annualYield;
+  const variableGridSpend = annualGridSpendUsd(dailyKwh, tariff);
+  // The fixed charge joins the grid baseline (and every bill-after below)
+  // only when a tariff exists to price the variable part against; savings
+  // subtract both equally, so payback math is untouched either way.
+  const gridSpend =
+    variableGridSpend === null || !(fixedAnnualUsd > 0)
+      ? variableGridSpend
+      : variableGridSpend + fixedAnnualUsd;
+  const landedScope = getScope("landed");
+  if (series._meanTempC === undefined) {
+    series._meanTempC = tempsC.reduce((a, b) => a + b, 0) / tempsC.length;
+  }
+  const meanTempC = series._meanTempC;
+
+  // Regional cost factors: install labor & landed freight/duty
+  const region = estimateTariff(latitude, longitude);
+  const laborF = region.laborF ?? 1;
+  const landedF = region.landedF ?? 1.1;
+  const laborPerKwh = INSTALL_LABOR_PER_KWH_USABLE.map((v) => v * laborF);
+  // Scale the landed-mid cost inputs for the sizer & money math
+  const costPerWpvMid =
+    ((landedScope.pvPerW[0] + landedScope.pvPerW[1]) / 2) * landedF;
+  // Per-chemistry landed-mid battery $/usable-kWh: replacement banks are
+  // costed at their OWN chemistry's rate (AGM/Na-ion at lithium prices
+  // previously understated their lifetime cost by multiples).
+  const battMidFor = (chemId) => landedMidBattKwhFor(chemId, landedF);
+  const replCostFor = (battKwh, chemId) =>
+    Math.round(battKwh * battMidFor(chemId));
+  const costPerKwInvMid =
+    ((landedScope.invPerKw[0] + landedScope.invPerKw[1]) / 2) * landedF;
+
+  // Daily solar harvest per kW of array (kWh/day) — feeds the chart's sun
+  // strip so the visual shows what drives the battery's recharge rhythm.
+  if (!series._pvDaily) {
+    const dayCount = Math.floor(hours.length / 24);
+    const pvDaily = new Array(dayCount);
+    for (let d = 0; d < dayCount; d++) {
+      let s = 0;
+      for (let h = d * 24; h < (d + 1) * 24; h++) s += e1kw[h];
+      pvDaily[d] = Math.round((s / 1000) * 100) / 100;
+    }
+    series._pvDaily = pvDaily;
+  }
+  const pvDaily = series._pvDaily;
+
+  function moneyFor(chemId, sizing) {
+    const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
+    const cyclesPerYear = sizing.result.cyclesEquivalent / series.meta.years;
+    const replacementsHorizon = batteryReplacements(
+      cyclesPerYear,
+      chemObj.cyclesTo80,
+    );
+    const cost = fullRange(
+      sizing.pvKw,
+      sizing.battKwh,
+      chemId,
+      landedF,
+      Math.max(sizing.pvKw, invMinKw),
+    );
+    const life = lifetimeCostUsd({
+      capexMidUsd: cost.objectiveMid,
+      battKwhUsable: sizing.battKwh,
+      battPriceMidPerKwh: battMidFor(chemId),
+      replacements: replacementsHorizon,
+      laborPerKwh,
+    });
+    const attached = sizing.bestPriceCallout !== undefined;
+    const opt = attached
+      ? {
+          oversizeScenario: sizing.oversizeScenario,
+          bestPriceCallout: sizing.bestPriceCallout,
+          oversizeSavingsUsd: sizing.oversizeSavingsUsd,
+          oversizedBattKwh:
+            sizing.oversizedBattKwh !== undefined
+              ? sizing.oversizedBattKwh
+              : sizing.battKwh,
+        }
+      : evaluateOversizeOptimization({
+          pvKw: sizing.pvKw,
+          battKwh: sizing.battKwh,
+          sizingResult: sizing.result,
+          chemistry: chemId,
+          years: series.meta.years,
+          costPerWpv: costPerWpvMid,
+          costPerKwhBatt: battMidFor(chemId),
+          costPerKwInv: costPerKwInvMid,
+          laborPerKwh,
+          invMinKw,
+        });
+    // Global invariant: a swap-carrying display must never wear the
+    // oversized note. Search outputs carry verified adoptions (zero swaps),
+    // so this only ever fires for non-search systems — curve points and
+    // adopted exact hardware — where the estimate would advertise a bank the
+    // card doesn't show. Those describe their displayed hardware instead.
+    let {
+      oversizeScenario,
+      bestPriceCallout,
+      oversizeSavingsUsd,
+      oversizedBattKwh,
+    } = opt;
+    if (replacementsHorizon > 0 && oversizeScenario === "oversized_cheaper") {
+      oversizeScenario = "swaps_cheaper";
+      bestPriceCallout =
+        `Best 20-year price for this exact hardware: standard sizing with ` +
+        `${replacementsHorizon} replacement(s) over 20 years (counted above).`;
+      oversizeSavingsUsd = null;
+      oversizedBattKwh = sizing.battKwh;
+    }
+    return {
+      chemObj,
+      cost,
+      cyclesPerYear: Math.round(cyclesPerYear),
+      batteryLifeYears:
+        cyclesPerYear > 0
+          ? +(chemObj.cyclesTo80 / cyclesPerYear).toFixed(1)
+          : null,
+      replacementsHorizon,
+      swapsAndLaborUsd: life.swapsAndLabor,
+      firstLaborUsd: life.firstLabor,
+      lifetimeCostMid: life.total,
+      battNameplateKwh: +(sizing.battKwh / chemObj.usableDod).toFixed(1),
+      oversizeScenario,
+      bestPriceCallout,
+      oversizeSavingsUsd,
+      oversizedBattKwh,
+    };
+  }
+
+  function socBand(id, sim, chemId) {
+    if (!sim.socSeries) return null;
+    const ext = dailyExtremes(sim.socSeries);
+    const floor = chemId === "agm" ? 50 : 20;
+    const toPct = (v) => Math.round((floor + v * (100 - floor)) * 10) / 10;
+    const dailyMin = Array.from(ext.min, toPct);
+    const dailyMax = Array.from(ext.max, toPct);
+    // minPct is computed from the MAPPED band (same numbers the chart plots),
+    // so the "lowest point X%" label can never disagree with the band bottom.
+    let minPct = 100,
+      emptyDays = 0,
+      fullDays = 0;
+    const nDays = ext.min.length;
+    for (let d = 0; d < nDays; d++) {
+      const lo = ext.min[d] * 100;
+      if (dailyMin[d] < minPct) minPct = dailyMin[d];
+      if (lo < 5) emptyDays++;
+      if (ext.max[d] >= 0.995) fullDays++;
+    }
+    return {
+      id,
+      dailyMin,
+      dailyMax,
+      minPct: Math.max(0, Math.round(minPct)),
+      emptyDays,
+      fullDays,
+      totalDays: nDays,
+    };
+  }
+
+  function nameplateBands(sim, effectiveCapWh, nameplateWh, chemId) {
+    if (!sim.socSeries || !(effectiveCapWh > 0) || !(nameplateWh > 0))
+      return null;
+    const ext = dailyExtremes(sim.socSeries);
+    const floor = chemId === "agm" ? 50 : 20;
+    const toPct = (v) => Math.round((floor + v * (100 - floor)) * 10) / 10;
+    return { min: Array.from(ext.min, toPct), max: Array.from(ext.max, toPct) };
+  }
+
+  // Honest payback: the year cumulative avoided bills overtake cumulative
+  // TRUE cost (every swap counted). Null = never catches up inside horizon.
+  // Also computes the per-year cumulative cost series (grid vs solar running
+  // sums) so the headline chart and the break-even row can never disagree.
+  function breakEvenFor(m, annualSavingsUsd) {
+    if (!(annualSavingsUsd > 0)) return null;
+    return trueBreakEvenYear({
+      capexMidUsd: m.cost.objectiveMid,
+      annualSavingsUsd,
+      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
+      replacements: m.replacementsHorizon,
+      batteryLifeYears: m.batteryLifeYears,
+      firstLaborUsd: m.firstLaborUsd,
+    });
+  }
+
+  // Cumulative 20-year cost series for the headline chart: grid running sum
+  // vs solar TRUE cost running sum (capex + every bank swap + the RESIDUAL
+  // bill that keeps being paid every year). annualSavingsUsd = the bill this
+  // system displaces per year (grid spend − residual bill, plus feed-in value
+  // on clipped surplus); residualAnnualUsd = what the household still pays the
+  // grid each year, NET of the feed-in credit — allowed to go negative when
+  // the credit out-earns the bill (net metering). Null when no tariff was
+  // entered.
+  function cumCostFor(m, annualSavingsUsd, residualAnnualUsd = 0) {
+    return cumulativeCostSeries({
+      capexMidUsd: m.cost.objectiveMid,
+      annualSavingsUsd,
+      residualAnnualUsd,
+      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
+      replacements: m.replacementsHorizon,
+      batteryLifeYears: m.batteryLifeYears,
+      firstLaborUsd: m.firstLaborUsd,
+    });
+  }
+
+  // The system the hardware list (BOM panel) is built around.
+  function focusFor(chemId, sizing) {
+    const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
+    return {
+      chemistry: chemId,
+      chemLabel: chemObj.label,
+      pvKw: sizing.pvKw,
+      battKwh: sizing.battKwh,
+      battNameplateKwh: +(sizing.battKwh / chemObj.usableDod).toFixed(1),
+      usableDod: chemObj.usableDod,
+      peakLoadW: Math.round(peakLoadW),
+      meanTempC: Math.round(meanTempC),
+    };
+  }
+
+  /**
+   * One cell of the all-options matrix (chemistry × tier or × bill-cut
+   * target). Same money math as the headline cards, minus SOC capture —
+   * the search already computed every one of these systems; recording them
+   * costs nothing extra.
+   */
+  function matrixCell(chemId, sizing, kind) {
+    if (!sizing) return { solvable: false, reason: unreachableReason };
+    const m = moneyFor(chemId, sizing);
+    const yrs = series.meta.years;
+    const servedKwhPerYear =
+      (kind === "offgrid"
+        ? sizing.result.servedWh
+        : sizing.result.directWh + sizing.result.battWhAc) /
+      1000 /
+      yrs;
+    const lcoe = lcoeUsdPerKwh({
+      capexMidUsd: m.cost.objectiveMid,
+      battReplaceCostUsd: replCostFor(sizing.battKwh, chemId),
+      replacements: m.replacementsHorizon,
+      firstLaborUsd: m.firstLaborUsd,
+      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
+      annualServedKwh: servedKwhPerYear,
+    });
+    const cell = {
+      solvable: true,
+      pvKw: sizing.pvKw,
+      battKwh: sizing.battKwh,
+      costLo: m.cost.lo,
+      costHi: m.cost.hi,
+      replacementsHorizon: m.replacementsHorizon,
+      swapsAndLaborUsd: m.swapsAndLaborUsd,
+      lifetimeCostMid: m.lifetimeCostMid,
+      lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
+      paybackYearsLo: null,
+      paybackYearsHi: null,
+      trueBreakEvenYear: null,
+      cumCostSeries: null,
+      chemistry: chemId,
+      chemLabel: m.chemObj.label,
+      battNameplateKwh: m.battNameplateKwh,
+      usableDod: m.chemObj.usableDod,
+      bestPriceCallout: m.bestPriceCallout,
+      oversizeScenario: m.oversizeScenario,
+      oversizeSavingsUsd: m.oversizeSavingsUsd,
+      oversizedBattKwh: m.oversizedBattKwh,
+    };
+    let savings = null;
+    if (kind === "offgrid") {
+      savings = gridSpend;
+      cell.unmetHoursPerYear = +(
+        sizing.result.worstYearUnmetHours ?? sizing.result.unmetHours / yrs
+      ).toFixed(1);
+    } else {
+      const importedKwhPerYear = sizing.result.importedWh / 1000 / yrs;
+      const clippedKwhPerYear = sizing.result.curtailedWh / 1000 / yrs;
+      const billAfterUsd =
+        tariff !== null ? importedKwhPerYear * tariff + fixedAnnualUsd : null;
+      const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
+      savings =
+        billAfterUsd !== null && gridSpend
+          ? Math.max(0, gridSpend - billAfterUsd)
+          : null;
+      if (savings !== null) savings += exportVal;
+      cell.cutPct = gridtieCutPct(sizing);
+      // Residual bill net of feed-in credit — the grid line is the FULL bill
+      // (displaced + residual), never just the displaced slice.
+      cell.cumCostSeries = null;
+      if (savings) {
+        cell.paybackYearsLo = paybackYears(m.cost.lo, savings);
+        cell.paybackYearsHi = paybackYears(m.cost.hi, savings);
+        cell.trueBreakEvenYear = breakEvenFor(m, savings);
+        cell.cumCostSeries =
+          billAfterUsd === null
+            ? cumCostFor(m, savings)
+            : cumCostFor(m, savings, billAfterUsd - exportVal);
+      }
+      return cell;
+    }
+    if (savings) {
+      cell.paybackYearsLo = paybackYears(m.cost.lo, savings);
+      cell.paybackYearsHi = paybackYears(m.cost.hi, savings);
+      cell.trueBreakEvenYear = breakEvenFor(m, savings);
+      cell.cumCostSeries = cumCostFor(m, savings);
+    }
+    return cell;
+  }
+
+  /**
+   * Bill-cut % for a grid-tie sizing result. Battery-only systems (no PV)
+   * can never reduce TOTAL imports (charging losses add), so their cut is
+   * the evening-peak-window offset fraction — the same metric the search
+   * constrained. Everything else shares billCutFraction with the search
+   * constraint and the curve outcome — net-metered when a feed-in credit is
+   * entered (1:1 credits let solar-only reach 100%), import-only otherwise —
+   * so the % can never disagree between views.
+   */
+  function gridtieCutPct(sizing) {
+    if (!sizing || !sizing.result) return null;
+    if (sizing.pvKw <= 0)
+      return Math.round((sizing.result.peakOffsetFraction || 0) * 100);
+    const yrs = series.meta.years;
+    return Math.round(
+      billCutFraction({
+        importedWh: sizing.result.importedWh,
+        curtailedWh: sizing.result.curtailedWh,
+        loadTotalWh: dailyKwh * 1000 * 365 * yrs,
+        tariff,
+        exportRate,
+      }) * 100,
+    );
+  }
+
+  // ── Shared per-system closures ──────────────────────────────────────────
+  // Every mode and the incremental-cut path build systems through these SAME
+  // builders (same money math, same chart bands, same cumulative series), so a
+  // number on a card can never disagree with a number in the matrix, on the
+  // curve modal, or after a slider edit.
+  // One chemistry at one (arbitrary) bill-cut target: the full money story,
+  // export economics, chart bands and cumulative-cost series — the same record
+  // the headline cards carry, so ANY entry can drive the whole results
+  // pipeline when selected. `sizing` comes from sizeForBillCut; its search
+  // result carries no SOC series, so capture is re-run here.
+  const entryFromSizing = (chemId, sizing) => {
+    if (!sizing) return null;
+    const capScale = capacityScaleFor(chemId, meanTempC);
+    const m = moneyFor(chemId, sizing);
+    const servedKwhPerYear =
+      (sizing.result.directWh + sizing.result.battWhAc) /
+      1000 /
+      series.meta.years;
+    const importedKwhPerYear =
+      sizing.result.importedWh / 1000 / series.meta.years;
+    const clippedKwhPerYear =
+      sizing.result.curtailedWh / 1000 / series.meta.years;
+    const billAfterUsd =
+      tariff !== null ? importedKwhPerYear * tariff + fixedAnnualUsd : null;
+    const savingsUsd =
+      billAfterUsd !== null && gridSpend !== null
+        ? Math.max(0, gridSpend - billAfterUsd)
+        : null;
+    const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
+    const entry = {
+      chemistry: chemId,
+      cardNote: AUTO_CARD_NOTES[chemId] ?? null,
+      chemLabel: m.chemObj.label,
+      usableDod: m.chemObj.usableDod,
+      solvable: true,
+      pvKw: sizing.pvKw,
+      battKwh: sizing.battKwh,
+      battNameplateKwh: m.battNameplateKwh,
+      costLo: m.cost.lo,
+      costHi: m.cost.hi,
+      cutPct: gridtieCutPct(sizing),
+      // Net of the feed-in credit (may go negative = net producer paid).
+      billAfterMonthlyUsd:
+        billAfterUsd === null
+          ? null
+          : Math.round((billAfterUsd - exportVal) / 12),
+      paybackYearsLo:
+        savingsUsd !== null
+          ? paybackYears(m.cost.lo, savingsUsd + exportVal)
+          : null,
+      paybackYearsHi:
+        savingsUsd !== null
+          ? paybackYears(m.cost.hi, savingsUsd + exportVal)
+          : null,
+      trueBreakEvenYear:
+        savingsUsd !== null ? breakEvenFor(m, savingsUsd + exportVal) : null,
+      cumCostSeries:
+        gridSpend !== null && billAfterUsd !== null && savingsUsd !== null
+          ? cumCostFor(m, savingsUsd + exportVal, billAfterUsd - exportVal)
+          : null,
+      exportValueAnnualUsd: Math.round(exportVal),
+      clippedKwhPerYear: Math.round(clippedKwhPerYear),
+      importedKwhPerYear: Math.round(importedKwhPerYear),
+      replacementsHorizon: m.replacementsHorizon,
+      swapsAndLaborUsd: m.swapsAndLaborUsd,
+      lifetimeCostMid: m.lifetimeCostMid,
+      servedKwhPerYear: Math.round(servedKwhPerYear),
+      cyclesPerYear: m.cyclesPerYear,
+      batteryLifeYears: m.batteryLifeYears,
+      peakLoadW: Math.round(peakLoadW),
+      meanTempC: Math.round(meanTempC),
+      bestPriceCallout: m.bestPriceCallout,
+      oversizeScenario: m.oversizeScenario,
+      oversizeSavingsUsd: m.oversizeSavingsUsd,
+      oversizedBattKwh: m.oversizedBattKwh,
+      lcoeUsdPerKwh: (() => {
+        const l = lcoeUsdPerKwh({
+          capexMidUsd: m.cost.objectiveMid,
+          battReplaceCostUsd: replCostFor(sizing.battKwh, chemId),
+          replacements: m.replacementsHorizon,
+          firstLaborUsd: m.firstLaborUsd,
+          swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
+          annualServedKwh: servedKwhPerYear,
+        });
+        return l === null ? null : +l.toFixed(4);
+      })(),
+    };
+    const sim = simulateOffset({
+      pvKw: sizing.pvKw,
+      battKwhUsable: sizing.battKwh,
+      e1kw,
+      loadWh,
+      chemistry: chemId,
+      tempsC,
+      capacityScale: capScale,
+      capture: true,
+    });
+    entry.socNameplatePct = nameplateBands(
+      sim,
+      sizing.battKwh * 1000 * capScale,
+      entry.battNameplateKwh * 1000,
+      chemId,
+    );
+    return entry;
+  };
+
+  // Grid-tie matrix cells must be clickable-selection-complete: the same
+  // money story, export economics, chart bands and 20-yr cumulative series
+  // as a full card, so selecting a cell re-renders every downstream panel.
+  const enrichGtMatrixCell = (chemId, sizing, cell) => {
+    if (!cell || !cell.solvable) return cell;
+    const yrs = series.meta.years;
+    const capScale = capacityScaleFor(chemId, meanTempC);
+    const m = moneyFor(chemId, sizing);
+    const importedKwhPerYear = sizing.result.importedWh / 1000 / yrs;
+    const clippedKwhPerYear = sizing.result.curtailedWh / 1000 / yrs;
+    const billAfterUsd =
+      tariff !== null ? importedKwhPerYear * tariff + fixedAnnualUsd : null;
+    const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
+    const savingsUsd =
+      billAfterUsd !== null && gridSpend !== null
+        ? Math.max(0, gridSpend - billAfterUsd) + exportVal
+        : null;
+    cell.chemistry = chemId;
+    cell.battNameplateKwh = m.battNameplateKwh;
+    cell.usableDod = m.chemObj.usableDod;
+    cell.importedKwhPerYear = Math.round(importedKwhPerYear);
+    cell.clippedKwhPerYear = Math.round(clippedKwhPerYear);
+    cell.exportValueAnnualUsd = Math.round(exportVal);
+    cell.billAfterMonthlyUsd =
+      billAfterUsd === null
+        ? null
+        : Math.round((billAfterUsd - exportVal) / 12);
+    cell.cyclesPerYear = m.cyclesPerYear;
+    cell.batteryLifeYears = m.batteryLifeYears;
+    cell.peakLoadW = Math.round(peakLoadW);
+    cell.meanTempC = Math.round(meanTempC);
+    cell.bestPriceCallout = m.bestPriceCallout;
+    cell.oversizeScenario = m.oversizeScenario;
+    cell.oversizeSavingsUsd = m.oversizeSavingsUsd;
+    cell.oversizedBattKwh = m.oversizedBattKwh;
+    cell.cumCostSeries =
+      gridSpend !== null && billAfterUsd !== null && savingsUsd !== null
+        ? cumCostFor(m, savingsUsd, billAfterUsd - exportVal)
+        : null;
+    const sim = simulateOffset({
+      pvKw: sizing.pvKw,
+      battKwhUsable: sizing.battKwh,
+      e1kw,
+      loadWh,
+      chemistry: chemId,
+      tempsC,
+      capacityScale: capScale,
+      capture: true,
+    });
+    cell.socNameplatePct = nameplateBands(
+      sim,
+      sizing.battKwh * 1000 * capScale,
+      cell.battNameplateKwh * 1000,
+      chemId,
+    );
+    return cell;
+  };
+
+  const computeFocusSystem = (fPvKw, fBattKwh, fChemOverride, defaultChem) => {
+    if (
+      fPvKw === null ||
+      fPvKw === undefined ||
+      fBattKwh === null ||
+      fBattKwh === undefined
+    )
+      return null;
+    const fPv = +Number(fPvKw).toFixed(2);
+    const fBatt = Math.max(0, Math.round(Number(fBattKwh)));
+    if (!Number.isFinite(fPv) || !Number.isFinite(fBatt)) return null;
+    if (fPv <= 0 && fBatt <= 0) return null;
+    if (mode === "offgrid" && (fPv <= 0 || fBatt <= 0)) return null;
+    const fChem =
+      fChemOverride && CHEMISTRIES[fChemOverride] ? fChemOverride : defaultChem;
+    const fScale = capacityScaleFor(fChem, meanTempC);
+    if (mode === "gridtie") {
+      const fSized = {
+        pvKw: fPv,
+        battKwh: fBatt,
+        result: simulateOffset({
+          pvKw: fPv,
+          battKwhUsable: fBatt,
+          e1kw,
+          loadWh,
+          chemistry: fChem,
+          tempsC,
+          capacityScale: fScale,
+          capture: true,
+        }),
+      };
+      return entryFromSizing(fChem, fSized);
+    } else {
+      const sim = simulate({
+        pvKw: fPv,
+        battKwhUsable: fBatt,
+        e1kw,
+        loadWh,
+        chemistry: fChem,
+        tempsC,
+        capacityScale: fScale,
+        capture: true,
+      });
+      const fSized = { pvKw: fPv, battKwh: fBatt, result: sim };
+      const m = moneyFor(fChem, fSized);
+      const yrs = series.meta.years;
+      const servYr = sim.servedWh / 1000 / yrs;
+      const lcoe = lcoeUsdPerKwh({
+        capexMidUsd: m.cost.objectiveMid,
+        battReplaceCostUsd: replCostFor(fBatt, fChem),
+        replacements: m.replacementsHorizon,
+        firstLaborUsd: m.firstLaborUsd,
+        swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
+        annualServedKwh: servYr,
+      });
+      const chemObj = CHEMISTRIES[fChem] || CHEMISTRIES.lfp;
+      const entry = {
+        chemistry: fChem,
+        chemLabel: chemObj.label,
+        usableDod: chemObj.usableDod,
+        solvable: true,
+        pvKw: fPv,
+        battKwh: fBatt,
+        battNameplateKwh: m.battNameplateKwh,
+        costLo: m.cost.lo,
+        costHi: m.cost.hi,
+        pvCostLo: m.cost.pvCostLo,
+        pvCostHi: m.cost.pvCostHi,
+        battCostLo: m.cost.battCostLo,
+        battCostHi: m.cost.battCostHi,
+        battPerKwhLo: m.cost.battPerKwhLo,
+        battPerKwhHi: m.cost.battPerKwhHi,
+        unmetHoursPerYear: +(
+          sim.worstYearUnmetHours ?? sim.unmetHours / yrs
+        ).toFixed(1),
+        longestGapHours: sim.longestGapHours,
+        replacementsHorizon: m.replacementsHorizon,
+        swapsAndLaborUsd: m.swapsAndLaborUsd,
+        lifetimeCostMid: m.lifetimeCostMid,
+        servedKwhPerYear: Math.round(servYr),
+        batteryLifeYears: m.batteryLifeYears,
+        cyclesPerYear: m.cyclesPerYear,
+        minSocPct: +(sim.minSoc * 100).toFixed(0),
+        lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
+        paybackYearsLo: gridSpend ? paybackYears(m.cost.lo, gridSpend) : null,
+        paybackYearsHi: gridSpend ? paybackYears(m.cost.hi, gridSpend) : null,
+        trueBreakEvenYear: breakEvenFor(m, gridSpend),
+        cumCostSeries: gridSpend !== null ? cumCostFor(m, gridSpend) : null,
+        bestPriceCallout: m.bestPriceCallout,
+        oversizeScenario: m.oversizeScenario,
+        oversizeSavingsUsd: m.oversizeSavingsUsd,
+        oversizedBattKwh: m.oversizedBattKwh,
+      };
+      entry.socNameplatePct = nameplateBands(
+        sim,
+        fBatt * 1000 * fScale,
+        entry.battNameplateKwh * 1000,
+        fChem,
+      );
+      return entry;
+    }
+  };
+
+  // One bill-cut target for ONE fixed chemistry (manual grid-tie mode): same
+  // money story / export economics / chart bands / cumulative series as a
+  // card, so the focused target can drive the whole pipeline.
+  const buildTarget = (
+    chemId,
+    id,
+    label,
+    minFraction,
+    sizing,
+    bandSink = null,
+  ) => {
+    if (!sizing)
+      return {
+        id,
+        label,
+        solvable: false,
+        chemistry: chemId,
+        chemLabel: (CHEMISTRIES[chemId] || CHEMISTRIES.lfp).label,
+      };
+    const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
+    const capScale = capacityScaleFor(chemId, meanTempC);
+    const m = moneyFor(chemId, sizing);
+    const servedKwhPerYear =
+      (sizing.result.directWh + sizing.result.battWhAc) /
+      1000 /
+      series.meta.years;
+    const importedKwhPerYear =
+      sizing.result.importedWh / 1000 / series.meta.years;
+    const clippedKwhPerYear =
+      sizing.result.curtailedWh / 1000 / series.meta.years;
+    const billAfterUsd =
+      tariff !== null ? importedKwhPerYear * tariff + fixedAnnualUsd : null;
+    const savingsUsd =
+      billAfterUsd !== null && gridSpend !== null
+        ? Math.max(0, gridSpend - billAfterUsd)
+        : null;
+    const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
+    const lcoe = lcoeUsdPerKwh({
+      capexMidUsd: m.cost.objectiveMid,
+      battReplaceCostUsd: replCostFor(sizing.battKwh, chemId),
+      replacements: m.replacementsHorizon,
+      firstLaborUsd: m.firstLaborUsd,
+      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
+      annualServedKwh: servedKwhPerYear,
+    });
+    const sim = simulateOffset({
+      pvKw: sizing.pvKw,
+      battKwhUsable: sizing.battKwh,
+      e1kw,
+      loadWh,
+      chemistry: chemId,
+      tempsC,
+      capacityScale: capScale,
+      capture: true,
+    });
+    const band = sizing.battKwh > 0 ? socBand(id, sim, chemId) : null;
+    if (band && bandSink) bandSink.push(band);
+    const socNameplatePct =
+      sizing.battKwh > 0
+        ? nameplateBands(
+            sim,
+            sizing.battKwh * 1000 * capScale,
+            m.battNameplateKwh * 1000,
+            chemId,
+          )
+        : null;
+    return {
+      id,
+      label,
+      solvable: true,
+      chemistry: chemId,
+      chemLabel: chemObj.label,
+      minFraction: minFraction ?? null,
+      pvKw: sizing.pvKw,
+      battKwh: sizing.battKwh,
+      battNameplateKwh: m.battNameplateKwh,
+      usableDod: chemObj.usableDod,
+      socNameplatePct,
+      costLo: m.cost.lo,
+      costHi: m.cost.hi,
+      pvCostLo: m.cost.pvCostLo,
+      pvCostHi: m.cost.pvCostHi,
+      battCostLo: m.cost.battCostLo,
+      battCostHi: m.cost.battCostHi,
+      battPerKwhLo: m.cost.battPerKwhLo,
+      battPerKwhHi: m.cost.battPerKwhHi,
+      cutPct: gridtieCutPct(sizing),
+      importedKwhPerYear: Math.round(importedKwhPerYear),
+      clippedKwhPerYear: Math.round(clippedKwhPerYear),
+      exportValueAnnualUsd: Math.round(exportVal),
+      // Net of the feed-in credit (may go negative = net producer paid).
+      billAfterMonthlyUsd:
+        billAfterUsd === null
+          ? null
+          : Math.round((billAfterUsd - exportVal) / 12),
+      paybackYearsLo:
+        savingsUsd !== null
+          ? paybackYears(m.cost.lo, savingsUsd + exportVal)
+          : null,
+      paybackYearsHi:
+        savingsUsd !== null
+          ? paybackYears(m.cost.hi, savingsUsd + exportVal)
+          : null,
+      trueBreakEvenYear:
+        savingsUsd !== null ? breakEvenFor(m, savingsUsd + exportVal) : null,
+      cumCostSeries:
+        gridSpend !== null && billAfterUsd !== null && savingsUsd !== null
+          ? cumCostFor(m, savingsUsd + exportVal, billAfterUsd - exportVal)
+          : null,
+      replacementsHorizon: m.replacementsHorizon,
+      swapsAndLaborUsd: m.swapsAndLaborUsd,
+      lifetimeCostMid: m.lifetimeCostMid,
+      servedKwhPerYear: Math.round(servedKwhPerYear),
+      cyclesPerYear: m.cyclesPerYear,
+      batteryLifeYears: m.batteryLifeYears,
+      lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
+      bestPriceCallout: m.bestPriceCallout,
+      oversizeScenario: m.oversizeScenario,
+      oversizeSavingsUsd: m.oversizeSavingsUsd,
+      oversizedBattKwh: m.oversizedBattKwh,
+    };
+  };
+
+  // SOC history bands for the fixed-chemistry ladder (shared across modes).
+  const historyTiers = [];
+
+  // ── Plausibility frontier ────────────────────────────────────────────────
+  // The headline cards answer "what does THIS target cost?". The frontier
+  // answers "what does every budget buy?" - the shape that tells someone
+  // whether their goal is easy, expensive, or impossible where they live.
+  //
+  // It prices systems through the SAME fullRange() the cards use, so a
+  // number on the chart can never contradict a number on a card.
+  let loadTotalWh = 0;
+  for (let i = 0; i < loadWh.length; i++) loadTotalWh += loadWh[i];
+
+  function attachFrontier(payload) {
+    const f = payload.focus;
+    // The curve is drawn in the RECOMMENDED chemistry (auto mode), never a
+    // fixed default: the blue dot names the recommendation's exact battery,
+    // so the curve must be that battery's curve or the two can never agree.
+    // A stale per-chemistry curve was the "card says sodium, dot says LFP"
+    // discrepancy. Falls back to the focus system, then LFP, when nothing
+    // solved.
+    const bestChem = payload.best && payload.best.chemistry;
+    const chemId =
+      chemistry === "auto" && bestChem && CHEMISTRIES[bestChem]
+        ? bestChem
+        : (f && f.chemistry) || (chemistry === "auto" ? "lfp" : chemistry);
+    const capScale = capacityScaleFor(chemId, meanTempC);
+    const costFn = (pv, b) => {
+      const r = fullRange(pv, b, chemId, landedF, Math.max(pv, invMinKw));
+      return { mid: r.objectiveMid, lo: r.lo, hi: r.hi };
+    };
+    // The curve ALWAYS sweeps the full searched envelope — never narrowed
+    // around the current pick. Sliders, clicks and the budget walk move the
+    // DOT on a stable landscape; only site, load, goal, hardware, chemistry
+    // or tariff rebuild the world itself. A narrowed sweep would let the
+    // chart imply a smaller world than the cards beside it had already
+    // looked at, and the top of the curve gets reported to the reader as a
+    // searched limit.
+    const pvMax = payload.mode === "gridtie" ? effectivePvMax : offgridPvMax;
+    const battMax =
+      payload.mode === "gridtie" ? effectiveBattMax : offgridBattMax;
+
+    let frontier;
+    try {
+      frontier = buildFrontier({
+        e1kw,
+        loadWh,
+        tempsC,
+        chemistry: chemId,
+        mode: payload.mode,
+        capacityScale: capScale,
+        costFn,
+        pvMax,
+        battMax,
+        minOutcome: hardwareConfig === "battery" ? 0.05 : undefined,
+        // Fully-optimized dots: surviving points adopt verified zero-swap
+        // banks, so every dot is a system with no cheaper lifetime twin.
+        // The curve outcome is net-metered like the search (tariff +
+        // exportRate), so solar-only reaches 100% at 1:1 instead of
+        // stalling at the daytime fraction.
+        years: series.meta.years,
+        oversize: true,
+        tariff,
+        exportRate,
+        costPerWpv: costPerWpvMid,
+        costPerKwhBatt: battMidFor(chemId),
+        costPerKwInv: costPerKwInvMid,
+        laborPerKwh,
+        invMinKw,
+      });
+    } catch {
+      payload.frontier = null; // never let a chart take the whole result down
+      return payload;
+    }
+
+    // Where the option they are actually reading sits on that curve. Computed
+    // by simulating it, not by looking it up - so if their target is NOT on
+    // the frontier, the marker honestly lands below the line.
+    if (f && loadTotalWh > 0) {
+      const fScale = capacityScaleFor(f.chemistry, meanTempC);
+      const sim =
+        payload.mode === "gridtie"
+          ? simulateOffset({
+              pvKw: f.pvKw,
+              battKwhUsable: f.battKwh,
+              e1kw,
+              loadWh,
+              chemistry: f.chemistry,
+              tempsC,
+              capacityScale: fScale,
+            })
+          : simulate({
+              pvKw: f.pvKw,
+              battKwhUsable: f.battKwh,
+              e1kw,
+              loadWh,
+              chemistry: f.chemistry,
+              tempsC,
+              capacityScale: fScale,
+            });
+      // Peak metric only on a pure-battery sweep, matching the curve's own
+      // axis (see sweepSystems) — never mixed with bill-cut % on one chart.
+      const pureBatterySweep = payload.mode === "gridtie" && !(pvMax > 0);
+      const outcome =
+        payload.mode === "gridtie"
+          ? pureBatterySweep && f.pvKw <= 0 && f.battKwh > 0
+            ? sim.peakOffsetFraction
+            : 1 - sim.importedWh / loadTotalWh
+          : sim.servedWh / loadTotalWh;
+      const cost = fullRange(
+        f.pvKw,
+        f.battKwh,
+        f.chemistry,
+        landedF,
+        Math.max(f.pvKw, invMinKw),
+      );
+      let pointIndex = -1,
+        bestGap = Infinity;
+      frontier.points.forEach((pt, i) => {
+        const gap = Math.abs(pt.capexUsd - cost.objectiveMid);
+        if (gap < bestGap) {
+          bestGap = gap;
+          pointIndex = i;
+        }
+      });
+      frontier.marker = {
+        chemistry: f.chemistry,
+        capexUsd: cost.objectiveMid,
+        outcomePct: +(outcome * 100).toFixed(1),
+        pvKw: f.pvKw,
+        battKwh: f.battKwh,
+        pointIndex,
+      };
+    } else {
+      frontier.marker = null;
+    }
+
+    // Per-point full analysis for the click-to-detail modal: computed here
+    // from the very simulation the point was built with (same money math as
+    // the cards), then the heavy result objects are stripped before shipping.
+    const pointDetail = (pt) => {
+      // Adopted dots carry their verified story so the modal names the bank
+      // it shows (its zero-swap hardware, not the lattice parent). All other
+      // dots classify from displayed hardware only (see moneyFor).
+      const sizingForMoney = pt.adopted
+        ? {
+            pvKw: pt.pvKw,
+            battKwh: pt.battKwh,
+            result: pt.result,
+            oversizeScenario: "oversized_cheaper",
+            bestPriceCallout: oversizeCallout("oversized_cheaper", {
+              battKwh: pt.battKwh,
+              savingsUsd: pt.adopted.savingsUsd,
+            }),
+            oversizeSavingsUsd: pt.adopted.savingsUsd,
+            oversizedBattKwh: pt.battKwh,
+          }
+        : {
+            pvKw: pt.pvKw,
+            battKwh: pt.battKwh,
+            result: pt.result,
+          };
+      const m = moneyFor(chemId, sizingForMoney);
+      const yrs = series.meta.years;
+      const servYr =
+        (payload.mode === "gridtie"
+          ? pt.result.directWh + pt.result.battWhAc
+          : pt.result.servedWh) /
+        1000 /
+        yrs;
+      const lcoe = lcoeUsdPerKwh({
+        capexMidUsd: m.cost.objectiveMid,
+        battReplaceCostUsd: replCostFor(pt.battKwh, chemId),
+        replacements: m.replacementsHorizon,
+        firstLaborUsd: m.firstLaborUsd,
+        swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
+        annualServedKwh: servYr,
+      });
+      const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
+      const d = {
+        chemistry: chemId,
+        chemLabel: chemObj.label,
+        usableDod: chemObj.usableDod,
+        battNameplateKwh: m.battNameplateKwh,
+        pvKw: pt.pvKw,
+        battKwh: pt.battKwh,
+        costLo: m.cost.lo,
+        costHi: m.cost.hi,
+        replacementsHorizon: m.replacementsHorizon,
+        swapsAndLaborUsd: m.swapsAndLaborUsd,
+        lifetimeCostMid: m.lifetimeCostMid,
+        batteryLifeYears: m.batteryLifeYears,
+        cyclesPerYear: m.cyclesPerYear,
+        servedKwhPerYear: Math.round(servYr),
+        lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
+        paybackYearsLo: null,
+        paybackYearsHi: null,
+        trueBreakEvenYear: null,
+        cumCostSeries: null,
+        bestPriceCallout: m.bestPriceCallout,
+        oversizeScenario: m.oversizeScenario,
+        oversizeSavingsUsd: m.oversizeSavingsUsd,
+        oversizedBattKwh: m.oversizedBattKwh,
+      };
+      let savingsBase = null;
+      let residualUsd = 0;
+      if (payload.mode === "gridtie") {
+        const impKwhYr = pt.result.importedWh / 1000 / yrs;
+        const clipKwhYr = pt.result.curtailedWh / 1000 / yrs;
+        const billAfter =
+          tariff !== null ? impKwhYr * tariff + fixedAnnualUsd : null;
+        const exportV = exportValueUsd(clipKwhYr, exportRate);
+        d.importedKwhPerYear = Math.round(impKwhYr);
+        d.clippedKwhPerYear = Math.round(clipKwhYr);
+        d.exportValueAnnualUsd = Math.round(exportV);
+        d.billAfterMonthlyUsd =
+          billAfter === null ? null : Math.round((billAfter - exportV) / 12);
+        d.cutPct = gridtieCutPct({ pvKw: pt.pvKw, result: pt.result });
+        savingsBase =
+          billAfter !== null && gridSpend
+            ? Math.max(0, gridSpend - billAfter)
+            : null;
+        if (savingsBase !== null) savingsBase += exportV;
+        // Net of the feed-in credit — deliberately NOT floored at $0, so a
+        // net-metering surplus (credit > remaining bill) shows as negative.
+        residualUsd = billAfter === null ? 0 : billAfter - exportV;
+      } else {
+        d.unmetHoursPerYear = +(
+          pt.result.worstYearUnmetHours ?? pt.result.unmetHours / yrs
+        ).toFixed(1);
+        d.longestGapHours = pt.result.longestGapHours;
+        savingsBase = gridSpend;
+      }
+      if (savingsBase !== null) {
+        d.paybackYearsLo = paybackYears(m.cost.lo, savingsBase);
+        d.paybackYearsHi = paybackYears(m.cost.hi, savingsBase);
+        d.trueBreakEvenYear = breakEvenFor(m, savingsBase);
+        d.cumCostSeries =
+          savingsBase > 0 || residualUsd !== 0
+            ? cumCostFor(m, savingsBase, residualUsd)
+            : null;
+      }
+      return d;
+    };
+
+    // Strip the per-point simulation objects: the renderer never reads them
+    // and they would multiply the worker's postMessage payload many times over.
+    frontier.points = frontier.points.map(({ result, ...keep }) => ({
+      ...keep,
+      detail: pointDetail({ ...keep, result }),
+    }));
+    payload.frontier = frontier;
+    return payload;
+  }
+
+  const basePayload = () => ({
+    contract: PAYLOAD_CONTRACT,
+    meta: series.meta,
+    annualYieldPerKw: Math.round(annualYield),
+    dailyKwh: +dailyKwh.toFixed(2),
+    peakLoadW: Math.round(peakLoadW),
+    peakIsAverage,
+    chemistry,
+    hardwareConfig: hardwareConfig || "both",
+    tariff: tariff ?? null,
+    exportRate: exportRate ?? null,
+    fixedMonthlyUsd:
+      fixedMonthly > 0 ? Math.round(fixedMonthly * 100) / 100 : null,
+    annualGridSpendUsd: gridSpend === null ? null : Math.round(gridSpend),
+    // Mirrors the local `unreachableReason`; the UI reads it off the
+    // payload to render the infeasibility banner and to suppress the
+    // broken savings panel.
+    unreachableReason,
+    pricing: {
+      basisLabel: "ex-factory China through PowMr-class budget retail",
+      source: "cell market indications → PowMr public catalog, Aug 2026",
+      catalog: POWMR_CATALOG,
+    },
+    assumptions: {
+      derates: DERATES_DEFAULT,
+      gammaPerC: GAMMA_PMAX,
+      noctC: NOCT,
+      etaInverter: ETA_INVERTER,
+      dataYears: `${series.meta.startYear}–${series.meta.endYear}`,
+      source: series.meta.source,
+      offline: !!series.meta.offline,
+      capacityScale:
+        chemistry === "auto"
+          ? Object.fromEntries(
+              ["naion", "lfp", "agm"].map((c) => [
+                c,
+                +capacityScaleFor(c, meanTempC).toFixed(3),
+              ]),
+            )
+          : +capacityScaleFor(chemistry, meanTempC).toFixed(3),
+      meanTempC: Math.round(meanTempC),
+      capacityNote: (() => {
+        if (chemistry === "auto") {
+          const tC = Math.round(meanTempC);
+          const agm = Math.round(capacityScaleFor("agm", meanTempC) * 100);
+          return `Capacity model at this site's mean ${tC}°C: LFP 100%, sodium-ion 85% (LFP voltage settings), lead-acid (AGM) about ${agm}% (cold derating where applicable).`;
+        }
+        const capChem = chemistry;
+        const scale = capacityScaleFor(capChem, meanTempC);
+        const pct = Math.round(scale * 100);
+        const tC = Math.round(meanTempC);
+        if (capChem === "agm" && tC <= 10) {
+          return `Cold site: at a mean ${tC}°C, lead-acid (AGM) is derated to about ${pct}% of nameplate capacity; lithium and sodium are unaffected by cold in this model (they charge more slowly instead).`;
+        }
+        if (scale < 1) {
+          const name =
+            capChem === "naion" ? "sodium-ion" : capChem.toUpperCase();
+          return `At this site's mean ${tC}°C, ${name} delivers about ${pct}% of nameplate usable capacity (rate/cold scaling).`;
+        }
+        return `Capacity model assumes full nameplate usable capacity at this site's mean ${tC}°C.`;
+      })(),
+    },
+  });
+
+  // Shared sizing options for the fixed-chemistry bill-cut targets (used by
+  // the full run and by the incremental slider patch alike).
+  const billCutOpts = {
+    e1kw,
+    loadWh,
+    tempsC,
+    chemistry,
+    years: series.meta.years,
+    costPerWpv: costPerWpvMid,
+    costPerKwhBatt: battMidFor(chemistry),
+    costPerKwInv: costPerKwInvMid,
+    pvMax: effectivePvMax,
+    battMax: effectiveBattMax,
+    battStep: 1,
+    capacityScale: capacityScaleFor(chemistry, meanTempC),
+    laborPerKwh,
+    invMinKw,
+    tariff,
+    exportRate,
+    targets: effectiveTargets,
+  };
+
+  // A lead-acid reference entry, stripped of its heavy chart series: the
+  // savings indicator the UI shows next to the recommendation ("lead-acid
+  // would cost ~$X with N swaps — reference only, never recommended").
+  const toReference = (entry) => {
+    if (!entry || !entry.solvable) return null;
+    const { socNameplatePct, cumCostSeries, ...rest } = entry;
+    return { ...rest, referenceOnly: true };
+  };
+
+  // ── INCREMENTAL CUT (slider / curve edits) ──────────────────────────────
+  // The custom-cut control ONLY changes the matrix's "your target" column
+  // (and, for a fixed-chemistry run, the single custom target card). Nothing
+  // else in the payload — the fixed 60/80/95 columns, the chemistry cards,
+  // the frontier — is affected by a customCut edit, so a slider move or a
+  // curve-point snap re-simulates just those systems instead of re-running
+  // the whole engine. Returns a PATCH the UI merges into the retained payload
+  // (plus SOC capture bands for an adopted exact system, when given).
+  if (msg.incrementalCut) {
+    const customFracGt = +cc.toFixed(3);
+    const patch = {
+      customCut: null,
+      cells: null,
+      customTarget: null,
+      focusSoc: null,
+    };
+    if (mode === "gridtie") {
+      if (chemistry === "auto") {
+        const cells = {};
+        const customEntries = [];
+        for (const chemId of AUTO_CHEMS) {
+          const sized = sizeForBillCut({
+            e1kw,
+            loadWh,
+            tempsC,
+            chemistry: chemId,
+            minFraction: customFracGt,
+            years: series.meta.years,
+            costPerWpv: costPerWpvMid,
+            costPerKwhBatt: battMidFor(chemId),
+            costPerKwInv: costPerKwInvMid,
+            pvMax: effectivePvMax,
+            battMax: effectiveBattMax,
+            battStep: 1,
+            capacityScale: capacityScaleFor(chemId, meanTempC),
+            laborPerKwh,
+            invMinKw,
+            tariff,
+            exportRate,
+          });
+          const entry = sized ? entryFromSizing(chemId, sized) : null;
+          if (entry) customEntries.push(entry);
+          if (sized)
+            cells[chemId + ":custom"] = enrichGtMatrixCell(
+              chemId,
+              sized,
+              matrixCell(chemId, sized, "gridtie"),
+            );
+        }
+        if (customFracGt > 1) {
+          for (const e of customEntries)
+            if (e.cutPct < 99) e.cutPct = Math.round(customFracGt * 100);
+          for (const chemId of AUTO_CHEMS) {
+            const c = cells[chemId + ":custom"];
+            if (c && c.solvable && c.cutPct < 99)
+              c.cutPct = Math.round(customFracGt * 100);
+          }
+        }
+        // Lead-acid reference at the same slider target (savings indicator).
+        const agmSized = sizeForBillCut({
+          e1kw,
+          loadWh,
+          tempsC,
+          chemistry: REF_CHEM,
+          minFraction: customFracGt,
+          years: series.meta.years,
+          costPerWpv: costPerWpvMid,
+          costPerKwhBatt: battMidFor(REF_CHEM),
+          costPerKwInv: costPerKwInvMid,
+          pvMax: effectivePvMax,
+          battMax: effectiveBattMax,
+          battStep: 1,
+          capacityScale: capacityScaleFor(REF_CHEM, meanTempC),
+          laborPerKwh,
+          invMinKw,
+          tariff,
+          exportRate,
+        });
+        patch.agmReference = toReference(
+          agmSized ? entryFromSizing(REF_CHEM, agmSized) : null,
+        );
+        const customBest = pickBest(customEntries, meanTempC);
+        patch.cells = cells;
+        patch.customCut = {
+          fraction: customFracGt,
+          achievedPct: customBest
+            ? customFracGt > 1
+              ? Math.round(customFracGt * 100)
+              : customBest.cutPct
+            : null,
+          entries: customEntries,
+          best: customBest,
+          surplus: customFracGt > 1,
+        };
+        // The recommendation follows the bill-cut slider: the banner, headline
+        // savings and focus system now describe the preferred system that
+        // achieves the visitor's CURRENT target, not the fixed 80% one.
+        if (customBest) {
+          patch.best = customBest;
+          patch.bestReason = bestPickReason(
+            customBest,
+            customEntries,
+            meanTempC,
+            patch.agmReference,
+          );
+          patch.focus = focusFor(customBest.chemistry, customBest);
+        }
+      } else {
+        const custSizing = sizeForBillCut({
+          ...billCutOpts,
+          minFraction: customFracGt,
+        });
+        const customTarget = custSizing
+          ? buildTarget(
+              chemistry,
+              "custom",
+              `Your ~${Math.round(customFracGt * 100)}% target`,
+              customFracGt,
+              custSizing,
+              null,
+            )
+          : null;
+        if (
+          customFracGt > 1 &&
+          customTarget &&
+          customTarget.solvable &&
+          customTarget.cutPct < 99
+        ) {
+          customTarget.cutPct = Math.round(customFracGt * 100);
+        }
+        patch.customTarget = customTarget;
+        patch.customCut = {
+          fraction: customFracGt,
+          achievedPct:
+            customTarget && customTarget.solvable
+              ? customFracGt > 1
+                ? Math.round(customFracGt * 100)
+                : customTarget.cutPct
+              : null,
+          entries: [],
+          best: null,
+          surplus: customFracGt > 1,
+        };
+      }
+    }
+    // Adopted "exact system" capture: SOC nameplate bands for the curve point
+    // (or matrix cell) the visitor picked, so its chart renders immediately
+    // instead of waiting for — or forcing — a full engine re-run.
+    if (
+      Number.isFinite(Number(focusPvKw)) &&
+      Number.isFinite(Number(focusBattKwh))
+    ) {
+      const fChem =
+        focusChemistry && CHEMISTRIES[focusChemistry]
+          ? focusChemistry
+          : chemistry === "auto"
+            ? "lfp"
+            : chemistry;
+      const fScale = capacityScaleFor(fChem, meanTempC);
+      const fBatt = Math.max(0, Number(focusBattKwh));
+      const fPv = Math.max(0, Number(focusPvKw));
+      if (
+        !(fPv <= 0 && fBatt <= 0) &&
+        !(mode === "offgrid" && (fPv <= 0 || fBatt <= 0))
+      ) {
+        const sim =
+          mode === "gridtie"
+            ? simulateOffset({
+                pvKw: fPv,
+                battKwhUsable: fBatt,
+                e1kw,
+                loadWh,
+                chemistry: fChem,
+                tempsC,
+                capacityScale: fScale,
+                capture: true,
+              })
+            : simulate({
+                pvKw: fPv,
+                battKwhUsable: fBatt,
+                e1kw,
+                loadWh,
+                chemistry: fChem,
+                tempsC,
+                capacityScale: fScale,
+                capture: true,
+              });
+        const nameplateKwh =
+          fBatt > 0 ? fBatt / CHEMISTRIES[fChem].usableDod : 0;
+        patch.focusSoc = {
+          chemistry: fChem,
+          pvKw: fPv,
+          battKwh: fBatt,
+          socNameplatePct:
+            fBatt > 0
+              ? nameplateBands(
+                  sim,
+                  fBatt * 1000 * fScale,
+                  nameplateKwh * 1000,
+                  fChem,
+                )
+              : null,
+        };
+      }
+    }
+    return patch;
+  }
+
+  // ── GRID-TIE ──────────────────────────────────────────────────────────────
+  if (mode === "gridtie") {
+    if (chemistry === "auto") {
+      const matrixCells = {};
+      const resultsByChem = {};
+      // Sodium-ion and LFP, shown at ONE shared cut target. If the target the
+      // visitor asked for is unreachable inside the searched envelope (a very
+      // large load, or a poorly-sunlit site), fall back to the nearest achievable
+      // cut so they still get a comparison, and say so. BILL_TARGETS ascends
+      // 60 -> 80 -> 95.
+      const buildAuto = (targetId) => {
+        const out = [];
+        for (const chemId of AUTO_CHEMS) {
+          const hit =
+            resultsByChem[chemId] &&
+            resultsByChem[chemId].find((r) => r.target.id === targetId);
+          if (!hit || !hit.sizing) continue;
+          const entry = entryFromSizing(chemId, hit.sizing);
+          if (entry) out.push(entry);
+        }
+        return out;
+      };
+
+      for (const chemId of AUTO_CHEMS) {
+        const capScale = capacityScaleFor(chemId, meanTempC);
+        const results = sizeAllBillTargets({
+          e1kw,
+          loadWh,
+          tempsC,
+          chemistry: chemId,
+          years: series.meta.years,
+          costPerWpv: costPerWpvMid,
+          costPerKwhBatt: battMidFor(chemId),
+          costPerKwInv: costPerKwInvMid,
+          pvMax: effectivePvMax,
+          battMax: effectiveBattMax,
+          battStep: 1,
+          capacityScale: capScale,
+          laborPerKwh,
+          invMinKw,
+          tariff,
+          exportRate,
+          targets: effectiveTargets,
+        });
+        resultsByChem[chemId] = results;
+        for (const { target, sizing } of results) {
+          // Solar-only at any target: the search returned null (battMax=0
+          // for the bill-cut search too). Show the structural reason instead
+          // of an unexplained empty cell. Same idea for battery-only on a
+          // surplus target.
+          matrixCells[chemId + ":" + target.id] = sizing
+            ? enrichGtMatrixCell(
+                chemId,
+                sizing,
+                matrixCell(chemId, sizing, "gridtie"),
+              )
+            : { solvable: false, reason: unreachableReason };
+        }
+      }
+
+      let effectiveTarget = repTargetId;
+      let auto = buildAuto(repTargetId);
+      let autoFallback = false;
+      if (!auto.length) {
+        const desiredIdx = effectiveTargets.findIndex(
+          (t) => t.id === repTargetId,
+        );
+        for (let i = Math.max(0, desiredIdx - 1); i >= 0; i--) {
+          const cand = effectiveTargets[i].id;
+          const built = buildAuto(cand);
+          if (built.length) {
+            auto = built;
+            effectiveTarget = cand;
+            autoFallback = true;
+            break;
+          }
+        }
+      }
+      const payload = basePayload();
+      payload.mode = "gridtie";
+      payload.auto = auto;
+      payload.autoFallback = autoFallback;
+      payload.effectiveTargetId = effectiveTarget;
+      payload.autoNote = autoFallback
+        ? `${TARGET_BASIS[repTargetId]} isn't reachable within the sizes this tool searches at this site, so the cards below show ${TARGET_BASIS[effectiveTarget]} instead — the curve shows how far this location can actually get.`
+        : autoNoteFor(auto, TARGET_BASIS[effectiveTarget]);
+      payload.targets = [];
+      // The recommendation follows the visitor's CURRENT bill-cut slider, not
+      // the fixed 80% column: the slider's "your target" column is sized by an
+      // exact engine run per chemistry below, and its winner is what the
+      // banner, the money bar and the curve marker describe. The fixed-target
+      // winner is only the fallback when the slider target solves for no
+      // chemistry. This keeps full runs consistent with the incremental
+      // slider path (which already re-derives best from the custom column),
+      // so a bill edit can never snap the recommendation back to 80%.
+      const gtWinner = pickBest(auto, meanTempC);
+      // The visitor's own bill-cut target from the 1–150% slider: sized by an
+      // exact engine run per chemistry, never interpolated from the fixed
+      // columns, and added to the matrix as a clickable "your target" column.
+      const customFracGt = +cc.toFixed(3);
+      const customEntries = [];
+      for (const chemId of AUTO_CHEMS) {
+        const sized = sizeForBillCut({
+          e1kw,
+          loadWh,
+          tempsC,
+          chemistry: chemId,
+          minFraction: customFracGt,
+          years: series.meta.years,
+          costPerWpv: costPerWpvMid,
+          costPerKwhBatt: battMidFor(chemId),
+          costPerKwInv: costPerKwInvMid,
+          pvMax: effectivePvMax,
+          battMax: effectiveBattMax,
+          battStep: 1,
+          capacityScale: capacityScaleFor(chemId, meanTempC),
+          laborPerKwh,
+          invMinKw,
+          tariff,
+          exportRate,
+        });
+        const entry = sized ? entryFromSizing(chemId, sized) : null;
+        if (entry) customEntries.push(entry);
+        if (sized)
+          matrixCells[chemId + ":custom"] = enrichGtMatrixCell(
+            chemId,
+            sized,
+            matrixCell(chemId, sized, "gridtie"),
+          );
+      }
+      // Above 100% the honest headline is "bill eliminated + surplus": the
+      // simulated import fraction caps at ~100% of the bill, so report the
+      // actual target cut when the system was sized to produce surplus.
+      if (customFracGt > 1) {
+        for (const e of customEntries)
+          if (e.cutPct < 99) e.cutPct = Math.round(customFracGt * 100);
+        for (const chemId of AUTO_CHEMS) {
+          const c = matrixCells[chemId + ":custom"];
+          if (c && c.solvable && c.cutPct < 99)
+            c.cutPct = Math.round(customFracGt * 100);
+        }
+      }
+      // Lead-acid reference at the same slider target (savings indicator).
+      const agmSized = sizeForBillCut({
+        e1kw,
+        loadWh,
+        tempsC,
+        chemistry: REF_CHEM,
+        minFraction: customFracGt,
+        years: series.meta.years,
+        costPerWpv: costPerWpvMid,
+        costPerKwhBatt: battMidFor(REF_CHEM),
+        costPerKwInv: costPerKwInvMid,
+        pvMax: effectivePvMax,
+        battMax: effectiveBattMax,
+        battStep: 1,
+        capacityScale: capacityScaleFor(REF_CHEM, meanTempC),
+        laborPerKwh,
+        invMinKw,
+        tariff,
+        exportRate,
+      });
+      payload.agmReference = toReference(
+        agmSized ? entryFromSizing(REF_CHEM, agmSized) : null,
+      );
+      const customBest = pickBest(customEntries, meanTempC);
+      const sliderBest = customBest || null;
+      const fallbackBest = gtWinner || null;
+      payload.best = sliderBest || fallbackBest;
+      payload.bestReason = sliderBest
+        ? bestPickReason(
+            sliderBest,
+            customEntries,
+            meanTempC,
+            payload.agmReference,
+          )
+        : bestPickReason(fallbackBest, auto, meanTempC, payload.agmReference);
+      payload.focus = payload.best
+        ? focusFor(payload.best.chemistry, payload.best)
+        : null;
+      payload.customCut = {
+        fraction: customFracGt,
+        achievedPct: customBest
+          ? customFracGt > 1
+            ? Math.round(customFracGt * 100)
+            : customBest.cutPct
+          : null,
+        entries: customEntries,
+        best: customBest,
+        surplus: customFracGt > 1,
+        // Pre-exit the slider past surplus on battery-only hardware, etc.
+        unreachableReason,
+      };
+      const focusEntry = computeFocusSystem(
+        focusPvKw,
+        focusBattKwh,
+        focusChemistry,
+        payload.focus?.chemistry || "lfp",
+      );
+      if (focusEntry) {
+        payload.focusSystem = focusEntry;
+        if (!payload.focus)
+          payload.focus = focusFor(focusEntry.chemistry, focusEntry);
+      }
+      payload.matrix = {
+        kind: "gridtie",
+        cols: effectiveTargets
+          .map((t) => ({ id: t.id, label: t.label }))
+          .concat([
+            {
+              id: "custom",
+              label: `Your ~${Math.round(customFracGt * 100)}% target`,
+              custom: true,
+            },
+          ]),
+        rows: AUTO_CHEMS.map((id) => ({
+          id,
+          label: CHEMISTRIES[id].label,
+        })),
+        cells: matrixCells,
+      };
+      payload.history = {
+        kind: "auto",
+        startYear: series.meta.startYear,
+        endYear: series.meta.endYear,
+        days: Math.ceil(hours.length / 24),
+        pvDaily,
+        tiers: [],
+      };
+      payload.assumptions.cycleLifeTo80 = Object.fromEntries(
+        ["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]),
+      );
+      payload.assumptions.money = `Auto mode sizes sodium-ion and LFP to deliver the same bill cut within its depth-of-discharge window (sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). The 60/80/95% matrix columns are fixed reference points; the "your target" column follows the 1–150% slider and is sized by an exact engine run.${customFracGt > 1 ? " Above 100% the system is sized to produce sellable surplus; without a feed-in credit that surplus has no cash value and is flagged as clipped waste." : ""} Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended. Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; ${fixedMonthly > 0 ? `a fixed monthly charge is included in every bill figure (it cannot be cut)` : `fixed connection fees not counted`}.`;
+      return attachFrontier(payload);
+    }
+
+    const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
+    const results = sizeAllBillTargets(billCutOpts);
+    const targets = results.map(({ target, sizing }) =>
+      buildTarget(
+        chemistry,
+        target.id,
+        target.label,
+        target.minFraction,
+        sizing,
+        historyTiers,
+      ),
+    );
+    const customFracSp = +cc.toFixed(3);
+    const custSizing = sizeForBillCut({
+      ...billCutOpts,
+      minFraction: customFracSp,
+    });
+    const customTarget = custSizing
+      ? buildTarget(
+          chemistry,
+          "custom",
+          `Your ~${Math.round(customFracSp * 100)}% target`,
+          customFracSp,
+          custSizing,
+          null,
+        )
+      : null;
+    if (
+      customFracSp > 1 &&
+      customTarget &&
+      customTarget.solvable &&
+      customTarget.cutPct < 99
+    ) {
+      customTarget.cutPct = Math.round(customFracSp * 100);
+    }
+    const payload = basePayload();
+    payload.mode = "gridtie";
+    payload.chemLabel = chem.label;
+    payload.targets = targets;
+    payload.customTarget = customTarget;
+    payload.auto = null;
+    const gtFocus =
+      targets.find((x) => x.id === repTargetId && x.solvable) ||
+      targets.find((x) => x.solvable) ||
+      null;
+    payload.focus = gtFocus ? focusFor(chemistry, gtFocus) : null;
+    const focusEntry = computeFocusSystem(
+      focusPvKw,
+      focusBattKwh,
+      focusChemistry,
+      chemistry,
+    );
+    if (focusEntry) {
+      payload.focusSystem = focusEntry;
+      payload.focus = focusFor(focusEntry.chemistry, focusEntry);
+    }
+    payload.best = null;
+    payload.bestReason = null;
+    payload.matrix = null;
+    payload.history = {
+      kind: "gridtie",
+      startYear: series.meta.startYear,
+      endYear: series.meta.endYear,
+      days: Math.ceil(hours.length / 24),
+      pvDaily,
+      tiers: historyTiers,
+    };
+    payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
+    payload.assumptions.money = `Bill reduction simulated hour-by-hour across five years of weather: solar serves the load first, surplus charges the battery, the grid covers the rest, nothing is exported unless you enter a feed-in credit (then clipped surplus is valued at that rate). Lifetime cost includes bank swaps plus install labor each time. ${fixedMonthly > 0 ? `A fixed monthly charge is included in every bill figure (it cannot be cut).` : `Fixed connection fees not counted.`}`;
+    return attachFrontier(payload);
+  }
+
+  // ── OFF-GRID ──────────────────────────────────────────────────────────────
+
+  if (chemistry === "auto") {
+    const matrixCells = {};
+    const resultsByChem = {};
+    if (
+      unreachableReason === "needs-panels" ||
+      unreachableReason === "needs-battery"
+    ) {
+      // The offgrid × single-hardware combos are physically impossible; the
+      // search would either return null (solar-only) or synthesize a
+      // disconnected system (battery-only). Render a reasoned grid of
+      // unsolvable cells and let the infeasible banner carry the message.
+      for (const chemId of AUTO_CHEMS) {
+        for (const tier of RELIABILITY_TIERS) {
+          matrixCells[chemId + ":" + tier.id] = {
+            solvable: false,
+            reason: unreachableReason,
+          };
+        }
+      }
+    } else {
+      for (const chemId of AUTO_CHEMS) {
+        const capScale = capacityScaleFor(chemId, meanTempC);
+        const allTiers = sizeAllTiers({
+          e1kw,
+          loadWh,
+          tempsC,
+          chemistry: chemId,
+          years: series.meta.years,
+          costPerWpv: costPerWpvMid,
+          costPerKwhBatt: battMidFor(chemId),
+          costPerKwInv: costPerKwInvMid,
+          pvMax: offgridPvMax,
+          battMax: offgridBattMax,
+          pvMax: offgridPvMax,
+          capacityScale: capScale,
+          laborPerKwh,
+          invMinKw,
+        });
+        resultsByChem[chemId] = allTiers;
+        for (const { tier, sizing } of allTiers) {
+          // Solar-only off-grid has nothing to charge the bank at night.
+          // Battery-only off-grid has nothing to charge it from the sun.
+          // Either way, the search returns null — surface the structural
+          // reason rather than an empty cell.
+          matrixCells[chemId + ":" + tier.id] = sizing
+            ? matrixCell(chemId, sizing, "offgrid")
+            : { solvable: false, reason: unreachableReason };
+        }
+      }
+    }
+    // Tiers run hardest-first (100 -> 99 -> 95). If not even the lightest tier
+    // is buildable for this load and site, walk down the ladder to the nearest
+    // solvable reliability tier so a comparison still renders, and say so.
+    const buildAuto = (tierId) => {
+      const out = [];
+      for (const chemId of AUTO_CHEMS) {
+        const midTier =
+          resultsByChem[chemId] &&
+          resultsByChem[chemId].find((t) => t.tier.id === tierId);
+        if (!midTier || !midTier.sizing) continue;
+        const capScale = capacityScaleFor(chemId, meanTempC);
+        const sizing = midTier.sizing;
+        const m = moneyFor(chemId, sizing);
+        const servedKwhPerYear =
+          sizing.result.servedWh / 1000 / series.meta.years;
+        const lcoe = lcoeUsdPerKwh({
+          capexMidUsd: m.cost.objectiveMid,
+          battReplaceCostUsd: replCostFor(sizing.battKwh, chemId),
+          replacements: m.replacementsHorizon,
+          firstLaborUsd: m.firstLaborUsd,
+          swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
+          annualServedKwh: servedKwhPerYear,
+        });
+        const entry = {
+          chemistry: chemId,
+          cardNote: AUTO_CARD_NOTES[chemId] ?? null,
+          chemLabel: m.chemObj.label,
+          usableDod: m.chemObj.usableDod,
+          solvable: true,
+          pvKw: sizing.pvKw,
+          battKwh: sizing.battKwh,
+          battNameplateKwh: m.battNameplateKwh,
+          costLo: m.cost.lo,
+          costHi: m.cost.hi,
+          unmetHoursPerYear: +(
+            sizing.result.worstYearUnmetHours ??
+            sizing.result.unmetHours / series.meta.years
+          ).toFixed(1),
+          longestGapHours: sizing.result.longestGapHours,
+          replacementsHorizon: m.replacementsHorizon,
+          swapsAndLaborUsd: m.swapsAndLaborUsd,
+          lifetimeCostMid: m.lifetimeCostMid,
+          servedKwhPerYear: Math.round(servedKwhPerYear),
+          batteryLifeYears: m.batteryLifeYears,
+          cyclesPerYear: m.cyclesPerYear,
+          lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
+          paybackYearsLo: gridSpend ? paybackYears(m.cost.lo, gridSpend) : null,
+          paybackYearsHi: gridSpend ? paybackYears(m.cost.hi, gridSpend) : null,
+          trueBreakEvenYear: breakEvenFor(m, gridSpend),
+          cumCostSeries: gridSpend !== null ? cumCostFor(m, gridSpend) : null,
+          bestPriceCallout: m.bestPriceCallout,
+          oversizeScenario: m.oversizeScenario,
+          oversizeSavingsUsd: m.oversizeSavingsUsd,
+          oversizedBattKwh: m.oversizedBattKwh,
+        };
+        const sim = simulate({
+          pvKw: sizing.pvKw,
+          battKwhUsable: sizing.battKwh,
+          e1kw,
+          loadWh,
+          chemistry: chemId,
+          tempsC,
+          capture: true,
+          capacityScale: capScale,
+        });
+        entry.socNameplatePct = nameplateBands(
+          sim,
+          sizing.battKwh * 1000 * capScale,
+          entry.battNameplateKwh * 1000,
+          chemId,
+        );
+        out.push(entry);
+      }
+      return out;
+    };
+
+    let effectiveTier = repTierId;
+    let auto = buildAuto(repTierId);
+    let autoFallback = false;
+    if (!auto.length) {
+      const desiredIdx = RELIABILITY_TIERS.findIndex((t) => t.id === repTierId);
+      for (let i = desiredIdx + 1; i < RELIABILITY_TIERS.length; i++) {
+        const cand = RELIABILITY_TIERS[i].id;
+        const built = buildAuto(cand);
+        if (built.length) {
+          auto = built;
+          effectiveTier = cand;
+          autoFallback = true;
+          break;
+        }
+      }
+    }
+    const payload = basePayload();
+    payload.mode = "offgrid";
+    payload.auto = auto;
+    payload.autoFallback = autoFallback;
+    payload.effectiveTierId = effectiveTier;
+    payload.autoNote = autoFallback
+      ? `${TIER_BASIS[repTierId]} is out of reach within the sizes this tool searches at this site, so the cards below show ${TIER_BASIS[effectiveTier]} instead — the largest system this tool can size here still leaves some hours unserved.`
+      : autoNoteFor(auto, TIER_BASIS[effectiveTier]);
+    payload.tiers = [];
+    const ogWinner = pickBest(auto, meanTempC);
+    // Lead-acid reference at the same reliability tier (savings indicator).
+    // Skipped when the combo is structurally impossible (no search to quote).
+    let agmReference = null;
+    if (!unreachableReason) {
+      const agmTiers = sizeAllTiers({
+        e1kw,
+        loadWh,
+        tempsC,
+        chemistry: REF_CHEM,
+        years: series.meta.years,
+        costPerWpv: costPerWpvMid,
+        costPerKwhBatt: battMidFor(REF_CHEM),
+        costPerKwInv: costPerKwInvMid,
+        pvMax: offgridPvMax,
+        battMax: offgridBattMax,
+        pvMax: offgridPvMax,
+        capacityScale: capacityScaleFor(REF_CHEM, meanTempC),
+        laborPerKwh,
+        invMinKw,
+      });
+      const agmHit =
+        agmTiers && agmTiers.find((t) => t.tier.id === effectiveTier);
+      if (agmHit && agmHit.sizing) {
+        const mAgm = moneyFor(REF_CHEM, agmHit.sizing);
+        agmReference = {
+          chemistry: REF_CHEM,
+          chemLabel: mAgm.chemObj.label,
+          usableDod: mAgm.chemObj.usableDod,
+          solvable: true,
+          referenceOnly: true,
+          pvKw: agmHit.sizing.pvKw,
+          battKwh: agmHit.sizing.battKwh,
+          battNameplateKwh: mAgm.battNameplateKwh,
+          costLo: mAgm.cost.lo,
+          costHi: mAgm.cost.hi,
+          lifetimeCostMid: mAgm.lifetimeCostMid,
+          replacementsHorizon: mAgm.replacementsHorizon,
+          swapsAndLaborUsd: mAgm.swapsAndLaborUsd,
+          oversizeScenario: mAgm.oversizeScenario,
+          bestPriceCallout: mAgm.bestPriceCallout,
+          oversizeSavingsUsd: mAgm.oversizeSavingsUsd,
+          oversizedBattKwh: mAgm.oversizedBattKwh,
+          unmetHoursPerYear: +(
+            agmHit.sizing.result.worstYearUnmetHours ??
+            agmHit.sizing.result.unmetHours / series.meta.years
+          ).toFixed(1),
+        };
+      }
+    }
+    payload.agmReference = agmReference;
+    payload.best = ogWinner;
+    payload.bestReason = bestPickReason(
+      ogWinner,
+      auto,
+      meanTempC,
+      agmReference,
+    );
+    payload.focus = ogWinner ? focusFor(ogWinner.chemistry, ogWinner) : null;
+    payload.matrix = {
+      kind: "offgrid",
+      cols: RELIABILITY_TIERS.map((t) => ({ id: t.id, label: t.label })),
+      rows: AUTO_CHEMS.map((id) => ({
+        id,
+        label: CHEMISTRIES[id].label,
+      })),
+      cells: matrixCells,
+    };
+    const focusEntry = computeFocusSystem(
+      focusPvKw,
+      focusBattKwh,
+      focusChemistry,
+      payload.focus?.chemistry || "lfp",
+    );
+    if (focusEntry) {
+      payload.focusSystem = focusEntry;
+      if (!payload.focus)
+        payload.focus = focusFor(focusEntry.chemistry, focusEntry);
+    }
+    payload.history = {
+      kind: "auto",
+      startYear: series.meta.startYear,
+      endYear: series.meta.endYear,
+      days: Math.ceil(hours.length / 24),
+      pvDaily,
+      tiers: [],
+    };
+    payload.assumptions.cycleLifeTo80 = Object.fromEntries(
+      ["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]),
+    );
+    payload.assumptions.money = `Auto mode sizes sodium-ion and LFP for the same job — lights stay on with a generator as rare backup — inside its depth-of-discharge window. Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended.`;
+    return attachFrontier(payload);
+  }
+
+  const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
+  const capScale = capacityScaleFor(chemistry, meanTempC);
+  const results = sizeAllTiers({
+    e1kw,
+    loadWh,
+    tempsC,
+    chemistry,
+    years: series.meta.years,
+    costPerWpv: costPerWpvMid,
+    costPerKwhBatt: battMidFor(chemistry),
+    costPerKwInv: costPerKwInvMid,
+    battMax: offgridBattMax,
+    capacityScale: capScale,
+    laborPerKwh,
+    invMinKw,
+  });
+
+  const tiers = results.map(({ tier, sizing }) => {
+    if (!sizing) {
+      return {
+        id: tier.id,
+        label: tier.label,
+        solvable: false,
+        reason: unreachableReason,
+        chemistry,
+        chemLabel: chem.label,
+        pvKw: null,
+        battKwh: null,
+        battNameplateKwh: null,
+        usableDod: chem.usableDod,
+        costLo: null,
+        costHi: null,
+        unmetHoursPerYear: null,
+        longestGapHours: null,
+        cyclesPerYear: null,
+        batteryLifeYears: null,
+        minSocPct: null,
+        servedKwhPerYear: null,
+        replacementsHorizon: null,
+        swapsAndLaborUsd: null,
+        lifetimeCostMid: null,
+        lcoeUsdPerKwh: null,
+        paybackYearsLo: null,
+        paybackYearsHi: null,
+      };
+    }
+    const m = moneyFor(chemistry, sizing);
+    const servedKwhPerYear = sizing.result.servedWh / 1000 / series.meta.years;
+    const lcoe = lcoeUsdPerKwh({
+      capexMidUsd: m.cost.objectiveMid,
+      battReplaceCostUsd: replCostFor(sizing.battKwh, chemistry),
+      replacements: m.replacementsHorizon,
+      firstLaborUsd: m.firstLaborUsd,
+      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
+      annualServedKwh: servedKwhPerYear,
+    });
+    const sim = simulate({
+      pvKw: sizing.pvKw,
+      battKwhUsable: sizing.battKwh,
+      e1kw,
+      loadWh,
+      chemistry,
+      tempsC,
+      capture: true,
+      capacityScale: capScale,
+    });
+    const band = socBand(tier.id, sim, chemistry);
+    if (band) historyTiers.push(band);
+    const socNameplatePct =
+      sizing.battKwh > 0
+        ? nameplateBands(
+            sim,
+            sizing.battKwh * 1000 * capScale,
+            m.battNameplateKwh * 1000,
+            chemistry,
+          )
+        : null;
+    return {
+      id: tier.id,
+      label: tier.label,
+      solvable: true,
+      chemistry,
+      chemLabel: chem.label,
+      pvKw: sizing.pvKw,
+      battKwh: sizing.battKwh,
+      battNameplateKwh: m.battNameplateKwh,
+      usableDod: chem.usableDod,
+      socNameplatePct,
+      costLo: m.cost.lo,
+      costHi: m.cost.hi,
+      pvCostLo: m.cost.pvCostLo,
+      pvCostHi: m.cost.pvCostHi,
+      battCostLo: m.cost.battCostLo,
+      battCostHi: m.cost.battCostHi,
+      battPerKwhLo: m.cost.battPerKwhLo,
+      battPerKwhHi: m.cost.battPerKwhHi,
+      unmetHoursPerYear: +(
+        sizing.result.worstYearUnmetHours ??
+        sizing.result.unmetHours / series.meta.years
+      ).toFixed(1),
+      longestGapHours: sizing.result.longestGapHours,
+      cyclesPerYear: m.cyclesPerYear,
+      batteryLifeYears: m.batteryLifeYears,
+      minSocPct: +(sizing.result.minSoc * 100).toFixed(0),
+      servedKwhPerYear: Math.round(servedKwhPerYear),
+      replacementsHorizon: m.replacementsHorizon,
+      swapsAndLaborUsd: m.swapsAndLaborUsd,
+      lifetimeCostMid: m.lifetimeCostMid,
+      lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
+      paybackYearsLo: gridSpend ? paybackYears(m.cost.lo, gridSpend) : null,
+      paybackYearsHi: gridSpend ? paybackYears(m.cost.hi, gridSpend) : null,
+      trueBreakEvenYear: breakEvenFor(m, gridSpend),
+      cumCostSeries: gridSpend !== null ? cumCostFor(m, gridSpend) : null,
+      bestPriceCallout: m.bestPriceCallout,
+      oversizeScenario: m.oversizeScenario,
+      oversizeSavingsUsd: m.oversizeSavingsUsd,
+      oversizedBattKwh: m.oversizedBattKwh,
+    };
+  });
+
+  const payload = basePayload();
+  payload.mode = "offgrid";
+  payload.chemLabel = chem.label;
+  payload.tiers = tiers;
+  payload.auto = null;
+  const ogFocus =
+    tiers.find((x) => x.id === repTierId && x.solvable) ||
+    tiers.find((x) => x.solvable) ||
+    null;
+  payload.focus = ogFocus ? focusFor(chemistry, ogFocus) : null;
+  const focusEntry = computeFocusSystem(
+    focusPvKw,
+    focusBattKwh,
+    focusChemistry,
+    chemistry,
+  );
+  if (focusEntry) {
+    payload.focusSystem = focusEntry;
+    payload.focus = focusFor(focusEntry.chemistry, focusEntry);
+  }
+  payload.best = null;
+  payload.bestReason = null;
+  payload.matrix = null;
+  payload.history = {
+    kind: "offgrid",
+    startYear: series.meta.startYear,
+    endYear: series.meta.endYear,
+    days: Math.ceil(hours.length / 24),
+    pvDaily,
+    tiers: historyTiers,
+  };
+  payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
+  payload.assumptions.money = `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 20-year horizon, and assumes panels/inverter last the full 20 years. Lifetime figures include install labor on the first bank and every swap. Generator fuel is not counted${fixedMonthly > 0 ? `; a fixed monthly charge is included in every bill figure` : `, nor are grid fixed charges`}.`;
+  return attachFrontier(payload);
+}

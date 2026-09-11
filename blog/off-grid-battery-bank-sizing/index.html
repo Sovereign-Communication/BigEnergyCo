@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark" />
+    <title>Battery Bank Sizing Calculator: Off-Grid Guide (2026)</title>
+    <meta
+      name="description"
+      content="Battery bank sizing guide: voltage, usable vs nominal capacity, series parallel math, and 48V bank ranges for 10 kWh per day. Run free simulation."
+    />
+    <meta
+      name="keywords"
+      content="battery bank sizing calculator, off grid battery bank sizing, battery Ah calculation 48V, usable vs nominal battery capacity, series parallel battery wiring"
+    />
+    <link
+      rel="canonical"
+      href="https://freeoffgridcalculator.com/blog/off-grid-battery-bank-sizing/"
+    />
+    <link rel="icon" type="image/svg+xml" href="../../assets/icon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="48x48"
+      href="../../assets/favicon-48.png"
+    />
+    <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png" />
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://freeoffgridcalculator.com/blog/off-grid-battery-bank-sizing/"
+    />
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href="https://freeoffgridcalculator.com/blog/off-grid-battery-bank-sizing/"
+    />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="BigEnergyCo Blog"
+      href="https://freeoffgridcalculator.com/rss.xml"
+    />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="BigEnergyCo" />
+    <meta property="og:locale" content="en_US" />
+    <meta
+      property="og:title"
+      content="Battery Bank Sizing Calculator: Off-Grid Guide (2026)"
+    />
+    <meta
+      property="og:description"
+      content="Usable vs nominal, series vs parallel, 12V vs 24V vs 48V, and worked 10 kWh/day Ah math at 48V."
+    />
+    <meta
+      property="og:url"
+      content="https://freeoffgridcalculator.com/blog/off-grid-battery-bank-sizing/"
+    />
+    <meta property="article:published_time" content="2026-09-07" />
+    <meta property="article:modified_time" content="2026-09-07" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Battery Bank Sizing Calculator: Off-Grid Guide (2026)"
+    />
+    <meta
+      name="twitter:description"
+      content="Usable vs nominal, series vs parallel, voltage choice, and worked Ah math at 48V."
+    />
+    <meta
+      property="og:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      name="twitter:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Article",
+            "@id": "https://freeoffgridcalculator.com/blog/off-grid-battery-bank-sizing/#article",
+            "isPartOf": {
+              "@type": "WebPage",
+              "@id": "https://freeoffgridcalculator.com/blog/off-grid-battery-bank-sizing/"
+            },
+            "headline": "Battery Bank Sizing Calculator: Off-Grid Guide (2026)",
+            "name": "Battery Bank Sizing Calculator: Off-Grid Guide (2026)",
+            "description": "Battery bank sizing: usable vs nominal, series parallel math, voltage choice, 48V worked example.",
+            "datePublished": "2026-09-07T00:00:00Z",
+            "dateModified": "2026-09-07T00:00:00Z",
+            "mainEntityOfPage": "https://freeoffgridcalculator.com/blog/off-grid-battery-bank-sizing/",
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"],
+            "author": {
+              "@type": "Person",
+              "name": "Lucas Ballek",
+              "url": "https://freeoffgridcalculator.com"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "BigEnergyCo",
+              "url": "https://freeoffgridcalculator.com"
+            },
+            "keywords": [
+              "battery bank sizing calculator",
+              "off grid battery bank sizing",
+              "battery Ah calculation 48V",
+              "usable vs nominal battery capacity"
+            ]
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://freeoffgridcalculator.com/blog/off-grid-battery-bank-sizing/#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://freeoffgridcalculator.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Blog",
+                "item": "https://freeoffgridcalculator.com/blog/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Battery Bank Sizing Calculator: Off-Grid Guide (2026)",
+                "item": "https://freeoffgridcalculator.com/blog/off-grid-battery-bank-sizing/"
+              }
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://freeoffgridcalculator.com/blog/off-grid-battery-bank-sizing/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "How do I calculate battery bank size in Ah?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Usable kWh times 1000 divided by system volts. Example: 15 kWh usable at 48V is about 310 Ah usable. Then divide by depth for nominal: LFP about 0.9, lead about 0.5."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How many batteries for a 10 kWh per day off-grid home?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Typically 12-20 kWh usable (250-420 Ah at 48V) for Tier B, 25-40 kWh for Tier A never-generator. Usually 1-2 matched 48V 300 Ah-class LFP strings for Tier B."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is 12V, 24V, or 48V better off grid?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "For full-time homes above 3-4 kWh/day or peaks above 2 kW, 48V is the practical choice. Reserve 12V for small cabins and 24V for the middle."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Do series or parallel connections increase capacity?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Series increases voltage, parallel increases amp-hours. Energy in kWh equals volts times amp-hours divided by 1000 either way."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+    <style>
+      :root {
+        color-scheme: dark;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.28) rgba(11, 15, 23, 0.85);
+        --accent: #00e699;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --bg: #0b0f17;
+        --card: rgba(255, 255, 255, 0.04);
+        --border: rgba(255, 255, 255, 0.12);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .container {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 0 1.25rem;
+      }
+      header {
+        border-bottom: 1px solid var(--border);
+        padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        background: rgba(11, 15, 23, 0.92);
+        position: sticky;
+        top: 0;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 5;
+      }
+      header .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .logo {
+        font-weight: 800;
+        color: #fff;
+        font-size: 1.05rem;
+        text-decoration: none;
+      }
+      .logo span {
+        color: var(--accent);
+      }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        margin-left: 1.1rem;
+        font-size: 0.9rem;
+      }
+      nav a:hover {
+        color: #fff;
+      }
+      article {
+        padding: 2.5rem 0 1rem;
+      }
+      h1 {
+        color: #fff;
+        font-size: 2.1rem;
+        line-height: 1.25;
+        letter-spacing: -0.5px;
+        margin-bottom: 0.75rem;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-bottom: 2rem;
+      }
+      h2 {
+        color: #fff;
+        font-size: 1.35rem;
+        margin: 2.2rem 0 0.8rem;
+      }
+      p {
+        margin-bottom: 1rem;
+      }
+      ul {
+        margin: 0 0 1rem 1.25rem;
+      }
+      li {
+        margin-bottom: 0.45rem;
+      }
+      .table-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 1.2rem 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.93rem;
+      }
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 0.55rem 0.7rem;
+        text-align: left;
+      }
+      th {
+        background: rgba(0, 230, 153, 0.08);
+        color: #fff;
+      }
+      td.num,
+      th.num {
+        text-align: right;
+        font-family: ui-monospace, Menlo, monospace;
+      }
+      strong {
+        color: #fff;
+      }
+      em.kicker {
+        color: var(--accent);
+        font-style: normal;
+        font-weight: 700;
+      }
+      .cta-box {
+        border: 1px solid rgba(0, 230, 153, 0.4);
+        background: rgba(0, 230, 153, 0.06);
+        border-radius: 12px;
+        padding: 1.2rem 1.4rem;
+        margin: 2rem 0;
+      }
+      .cta-box p:last-child {
+        margin: 0;
+      }
+      .btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #00e699, #00b377);
+        color: #04120c;
+        font-weight: 700;
+        text-decoration: none;
+        padding: 0.65rem 1.3rem;
+        border-radius: 8px;
+        margin-top: 0.6rem;
+      }
+      details {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.9rem 1.1rem;
+        margin-bottom: 0.8rem;
+        background: var(--card);
+      }
+      summary {
+        cursor: pointer;
+        color: var(--accent);
+        font-weight: 600;
+      }
+      details p {
+        margin: 0.6rem 0 0;
+      }
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 2.5rem 0 max(3rem, env(safe-area-inset-bottom));
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        margin-top: 3rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        text-align: center;
+      }
+      footer a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1.65rem;
+        }
+        .container {
+          padding: 0 1rem;
+        }
+        nav a {
+          margin-left: 0.65rem;
+          font-size: 0.85rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <a class="logo" href="../../">⚡ BigEnergy<span>Co</span></a>
+        <nav>
+          <a href="../../#sizing">Size Your System</a>
+          <a href="../../#bom">Hardware Reference</a>
+          <a href="../">Blog</a>
+          <a href="../../#legal">Terms &amp; Disclaimer</a>
+        </nav>
+      </div>
+    </header>
+    <main class="container">
+      <article>
+        <h1>Battery Bank Sizing Calculator: Off-Grid Guide (2026)</h1>
+        <p class="meta">
+          📅 Sep 7, 2026 · Lucas Ballek · 10 min read · every number below comes
+          from this site's deterministic simulator, not guesswork
+        </p>
+        <p>
+          <em class="kicker">The short answer:</em> size usable kilowatt-hours
+          first, then convert to amp-hours at your voltage, then derate for
+          chemistry. A 10 kWh/day home often tests
+          <strong>12–20 kWh usable (250–420 Ah at 48 V)</strong> for Tier B
+          coverage. Educational estimates only — verify with a licensed
+          professional.
+        </p>
+        <h2>Usable vs nominal: DoD decides what you get</h2>
+        <ul>
+          <li><strong>LFP lithium:</strong> plan ~90% usable.</li>
+          <li><strong>Sodium-ion:</strong> similar usable window.</li>
+          <li><strong>Lead-acid / AGM:</strong> plan ~50% usable.</li>
+        </ul>
+        <p>
+          Nominal needed = usable ÷ DoD. Example: 15 kWh usable needs 16–18 kWh
+          nominal LFP, but 28–32 kWh nominal lead-acid.
+        </p>
+        <h2>Series vs parallel math</h2>
+        <ul>
+          <li><strong>Series adds voltage</strong>, Ah unchanged.</li>
+          <li><strong>Parallel adds amp-hours</strong>, voltage unchanged.</li>
+          <li><strong>Energy:</strong> kWh = Volts × Ah ÷ 1000.</li>
+        </ul>
+        <p>
+          Example: four 12 V 280–320 Ah LFP in series = 48 V at 280–320 Ah
+          (13–15 kWh nominal, 12–14 kWh usable). Two such strings in parallel =
+          48 V at 560–640 Ah (26–30 kWh nominal).
+        </p>
+        <h2>12 V vs 24 V vs 48 V</h2>
+        <ul>
+          <li>
+            <strong>12 V:</strong> cabins 0.5–1.5 kWh/day, peaks under 1 kW.
+          </li>
+          <li><strong>24 V:</strong> 1–4 kWh/day, peaks 1–2 kW.</li>
+          <li>
+            <strong>48 V:</strong> homes above 3–4 kWh/day or peaks above 2 kW.
+            Lower current, easier expansion.
+          </li>
+        </ul>
+        <p>
+          Current check: 3,000 W ÷ 12 V = ~250 A. 3,000 W ÷ 48 V = ~60–65 A.
+          That division is why nearly every 5–10 kWh/day home ends up 48 V.
+        </p>
+        <h2>Inverter class comes from peak kW</h2>
+        <ul>
+          <li>Peak 0–2 kW: test 2–3 kW inverter class.</li>
+          <li>Peak 2–4 kW: test 4–6 kW class.</li>
+          <li>Peak 4–8 kW: test 8–10 kW class.</li>
+          <li>Motors: allow 2–3x surge for seconds.</li>
+        </ul>
+        <h2>Worked 10 kWh/day example at 48 V</h2>
+        <ul>
+          <li>Daily load: ~10 kWh/day.</li>
+          <li>Autonomy 1.0–1.5 days → 10–15 kWh baseline.</li>
+          <li>Dark-week margin x1.5 → test 15–22 kWh usable Tier B.</li>
+          <li>
+            Ah usable = kWh × 1000 ÷ 48: 12 kWh ≈ 250 Ah; 20 kWh ≈ 415 Ah.
+          </li>
+          <li>Nominal: LFP ÷ 0.9, lead ÷ 0.5 (double).</li>
+        </ul>
+        <h2>Bank config table</h2>
+        <div class="table-container">
+          <table>
+            <tr>
+              <th>Home</th>
+              <th>Usable range</th>
+              <th>Ah at 48 V</th>
+              <th>Example layout</th>
+            </tr>
+            <tr>
+              <td>Cabin 2–3 kWh/day</td>
+              <td class="num">4–7 kWh</td>
+              <td class="num">85–150 Ah</td>
+              <td>4x 12 V 150–170 Ah series</td>
+            </tr>
+            <tr>
+              <td>Flat 4–6 kWh/day</td>
+              <td class="num">7–12 kWh</td>
+              <td class="num">145–250 Ah</td>
+              <td>48 V 280–320 Ah single string</td>
+            </tr>
+            <tr>
+              <td>Family 8–12 kWh/day B</td>
+              <td class="num">12–20 kWh</td>
+              <td class="num">250–420 Ah</td>
+              <td>1–2x 48 V 300 Ah strings</td>
+            </tr>
+            <tr>
+              <td>Same home Tier A</td>
+              <td class="num">25–40 kWh</td>
+              <td class="num">520–835 Ah</td>
+              <td>2–3x 48 V strings parallel</td>
+            </tr>
+          </table>
+        </div>
+        <h2>Safety: fuse, breaker, wire, licensed pro</h2>
+        <ul>
+          <li>Fuse every parallel string plus main DC disconnect.</li>
+          <li>Class-T high-interrupt fusing on large LFP banks.</li>
+          <li>Torque, gauge, and lug quality matter as much as the diagram.</li>
+          <li>No article substitutes for licensed review before energizing.</li>
+        </ul>
+        <h2>What banks cost (Aug 2026 ranges)</h2>
+        <div class="table-container">
+          <table>
+            <tr>
+              <th>Scope</th>
+              <th>LFP per usable kWh</th>
+              <th>Includes</th>
+            </tr>
+            <tr>
+              <td>Ex-factory cells</td>
+              <td class="num">$45–70</td>
+              <td>Cells before freight/BMS</td>
+            </tr>
+            <tr>
+              <td>Landed DIY</td>
+              <td class="num">$80–125</td>
+              <td>Cells + BMS + enclosure</td>
+            </tr>
+            <tr>
+              <td>Budget retail</td>
+              <td class="num">$110–165</td>
+              <td>Finished pack</td>
+            </tr>
+          </table>
+        </div>
+        <div class="cta-box">
+          <p>
+            <strong>Know your Ah before you wire anything.</strong> Run a free
+            simulation for your load and compare bank sizes side by side.
+          </p>
+          <a class="btn" href="../../#sizing">⚡ Run free simulation</a>
+        </div>
+        <h2>Related guides</h2>
+        <ul>
+          <li>
+            <a href="../what-size-solar-system-for-off-grid/"
+              >What size solar system for off-grid?</a
+            >
+          </li>
+          <li>
+            <a href="../diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/"
+              >DIY battery: LFP vs sodium-ion</a
+            >
+          </li>
+          <li>
+            <a href="../../solar-calculator/phoenix/">Phoenix sizing</a> ·
+            <a href="../../solar-calculator/manila/">Manila sizing</a> ·
+            <a href="../../solar-calculator/">all 66 cities</a>
+          </li>
+        </ul>
+        <h2>Frequently asked</h2>
+        <details>
+          <summary>How do I calculate battery bank size in Ah?</summary>
+          <p>
+            Usable kWh × 1000 ÷ volts. 15 kWh at 48 V ≈ 310 Ah usable. Then ÷
+            0.9 LFP (≈345 Ah nominal) or ÷ 0.5 lead (≈620 Ah).
+          </p>
+        </details>
+        <details>
+          <summary>How many batteries for 10 kWh/day off-grid?</summary>
+          <p>
+            12–20 kWh usable Tier B (250–420 Ah at 48 V); 25–40 kWh Tier A.
+            Typically 1–2 matched 48 V 300 Ah strings Tier B.
+          </p>
+        </details>
+        <details>
+          <summary>Is 12 V, 24 V, or 48 V better?</summary>
+          <p>
+            48 V for full-time homes above 3–4 kWh/day. 12 V only for small
+            cabins.
+          </p>
+        </details>
+        <details>
+          <summary>Do series or parallel increase capacity?</summary>
+          <p>
+            Series raises voltage; parallel raises Ah. kWh = V × Ah ÷ 1000
+            either way.
+          </p>
+        </details>
+      </article>
+    </main>
+    <footer>
+      <div class="container">
+        <p>
+          Provided free, as-is, with no warranty. Educational estimates only —
+          verify everything with a licensed professional before building.
+          Working with batteries and mains wiring can cause fire, injury, and
+          death.
+        </p>
+        <p style="margin-top: 0.75rem">
+          <a href="../../">Size Your System</a> · <a href="../">All Guides</a> ·
+          <a href="mailto:lucasballek@gmail.com">Contact</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark" />
+    <title>About BigEnergyCo — Free Solar Method (2026)</title>
+    <meta
+      name="description"
+      content="About BigEnergyCo: free solar sizing by Lucas Ballek — NASA weather, worst-week math, open engine, ranges only. No signup, nothing for sale."
+    />
+    <link rel="canonical" href="https://freeoffgridcalculator.com/about/" />
+    <link rel="icon" type="image/svg+xml" href="../assets/icon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="48x48"
+      href="../assets/favicon-48.png"
+    />
+    <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png" />
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://freeoffgridcalculator.com/about/"
+    />
+    <link
+      rel="alternate"
+      hreflang="es"
+      href="https://freeoffgridcalculator.com/about/?lang=es"
+    />
+    <link
+      rel="alternate"
+      hreflang="pt"
+      href="https://freeoffgridcalculator.com/about/?lang=pt"
+    />
+    <link
+      rel="alternate"
+      hreflang="fr"
+      href="https://freeoffgridcalculator.com/about/?lang=fr"
+    />
+    <link
+      rel="alternate"
+      hreflang="de"
+      href="https://freeoffgridcalculator.com/about/?lang=de"
+    />
+    <link
+      rel="alternate"
+      hreflang="ar"
+      href="https://freeoffgridcalculator.com/about/?lang=ar"
+    />
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href="https://freeoffgridcalculator.com/about/"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Free Off-Grid Calculator" />
+    <meta property="og:locale" content="en_US" />
+    <meta
+      property="og:title"
+      content="About BigEnergyCo — Free Solar Method (2026)"
+    />
+    <meta
+      property="og:description"
+      content="One person, one free tool, open arithmetic. NASA weather, worst-week sizing, honest ranges. Nothing for sale."
+    />
+    <meta
+      property="og:url"
+      content="https://freeoffgridcalculator.com/about/"
+    />
+    <meta
+      property="og:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="About BigEnergyCo — Free Solar Method (2026)"
+    />
+    <meta
+      name="twitter:description"
+      content="One person, one free tool, open arithmetic. Nothing for sale."
+    />
+    <meta
+      name="twitter:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "AboutPage",
+            "@id": "https://freeoffgridcalculator.com/about/#page",
+            "name": "About BigEnergyCo — Free Solar Method",
+            "description": "Free solar sizing method by Lucas Ballek: NASA weather, worst-week math, open deterministic engine, honest ranges.",
+            "url": "https://freeoffgridcalculator.com/about/",
+            "author": {
+              "@type": "Person",
+              "name": "Lucas Ballek",
+              "url": "https://freeoffgridcalculator.com"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "BigEnergyCo",
+              "url": "https://freeoffgridcalculator.com",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://freeoffgridcalculator.com/assets/icon-512.png",
+                "width": 512,
+                "height": 512
+              }
+            }
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://freeoffgridcalculator.com/about/#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://freeoffgridcalculator.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "About",
+                "item": "https://freeoffgridcalculator.com/about/"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+    <style>
+      :root {
+        color-scheme: dark;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.28) rgba(11, 15, 23, 0.85);
+        --accent: #00e699;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --bg: #0b0f17;
+        --card: rgba(255, 255, 255, 0.04);
+        --border: rgba(255, 255, 255, 0.12);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .container {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 0 1.25rem;
+      }
+      header {
+        border-bottom: 1px solid var(--border);
+        padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        background: rgba(11, 15, 23, 0.92);
+        position: sticky;
+        top: 0;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 5;
+      }
+      header .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .logo {
+        font-weight: 800;
+        color: #fff;
+        font-size: 1.05rem;
+        text-decoration: none;
+      }
+      .logo span {
+        color: var(--accent);
+      }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        margin-left: 1.1rem;
+        font-size: 0.9rem;
+      }
+      nav a:hover {
+        color: #fff;
+      }
+      article {
+        padding: 2.5rem 0 1rem;
+      }
+      h1 {
+        color: #fff;
+        font-size: 2.1rem;
+        line-height: 1.25;
+        letter-spacing: -0.5px;
+        margin-bottom: 0.75rem;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-bottom: 2rem;
+      }
+      h2 {
+        color: #fff;
+        font-size: 1.35rem;
+        margin: 2.2rem 0 0.8rem;
+      }
+      p {
+        margin-bottom: 1rem;
+      }
+      ul {
+        margin: 0 0 1rem 1.25rem;
+      }
+      li {
+        margin-bottom: 0.45rem;
+      }
+      strong {
+        color: #fff;
+      }
+      em.kicker {
+        color: var(--accent);
+        font-style: normal;
+        font-weight: 700;
+      }
+      a {
+        color: var(--accent);
+      }
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 2.5rem 0 max(3rem, env(safe-area-inset-bottom));
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        margin-top: 3rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        text-align: center;
+      }
+      footer a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1.65rem;
+        }
+        .container {
+          padding: 0 1rem;
+        }
+        nav a {
+          margin-left: 0.65rem;
+          font-size: 0.85rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <a class="logo" href="../">⚡ BigEnergy<span>Co</span></a>
+        <nav>
+          <a href="../#sizing">Size Your System</a>
+          <a href="../solar-calculator/">Cities</a>
+          <a href="../blog/">Blog</a>
+          <a href="./">About</a>
+          <a href="../#legal">Terms &amp; Disclaimer</a>
+        </nav>
+      </div>
+    </header>
+    <main class="container">
+      <article>
+        <h1>About BigEnergyCo — Free Solar Method</h1>
+        <p class="meta">
+          📅 Updated Sep 7, 2026 · Lucas Ballek · free, no signup, nothing for
+          sale
+        </p>
+        <p>
+          <em class="kicker">One person, one free tool, open arithmetic.</em>
+          BigEnergyCo is a free solar sizing estimator built and given away by
+          <strong>Lucas Ballek</strong>. Not a company, not incorporated,
+          nothing for sale, no signup, no tracking profile. It answers one
+          question honestly —
+          <strong
+            >what size solar and battery does my load need at my address, and
+            what does that cost in honest ranges?</strong
+          >
+        </p>
+        <h2>Who runs this</h2>
+        <p>
+          My name is <strong>Lucas Ballek</strong>, running this site as one
+          person in my own time. No company, no sales team, no installer
+          network, no commission — because there is nothing to buy. Contact:
+          <a href="mailto:lucasballek@gmail.com">lucasballek@gmail.com</a>,
+          answered as a favour when time allows, not as a support desk. Any
+          reply is friendly opinion for further research, not professional
+          engineering or financial advice. For anything you build or spend money
+          on, talk to a licensed electrician or engineer in your area.
+        </p>
+        <h2>What this site does — and does not do</h2>
+        <p>
+          <strong>It does:</strong> estimate off-grid sizes (kW PV, usable kWh
+          storage, kW inverter), grid-tie bill-cut targets (60/80/95%),
+          battery-chemistry lifetime comparisons, and component-cost ranges with
+          dated scopes — deterministically, free, no account.
+        </p>
+        <p>
+          <strong>It does not:</strong> sell hardware, take a cut, issue stamped
+          designs or quotes, certify safety, or promise savings. Output is
+          automated educational estimates and may be wrong. Chat text is sent to
+          the AI provider to generate a reply and is not stored here; do not
+          type anything sensitive into it.
+        </p>
+        <h2>Method: how numbers are produced</h2>
+        <ul>
+          <li>
+            <strong>Five years of hourly NASA POWER weather</strong> at your
+            exact coordinates — not one average sun-hours figure.
+          </li>
+          <li>
+            <strong>Worst-week sizing:</strong> arrays and banks are driven by
+            the darkest week of five years, not the annual mean.
+          </li>
+          <li>
+            <strong>Explicit derates:</strong> temperature, soiling, wiring, and
+            inverter losses as stated factors.
+          </li>
+          <li>
+            <strong>Tier A / B / C autonomy:</strong> from common cloudy spells
+            through worst-week cover, each with explicit kW and kWh.
+          </li>
+          <li>
+            <strong>Grid-tie targets:</strong> 60%, 80%, 95% bill reductions
+            against your load timing.
+          </li>
+          <li>
+            <strong>Deterministic engine:</strong> same inputs always produce
+            the same sizes. The AI explains; it does not compute.
+          </li>
+        </ul>
+        <h2>Pricing honesty: scopes, ranges, dates</h2>
+        <ul>
+          <li>
+            <strong>Ex-factory (Aug 2026):</strong> $45–70/kWh batteries,
+            $0.11–0.20/W panels — before freight, duty, BMS, labor.
+          </li>
+          <li>
+            <strong>Landed DIY:</strong> $80–125/kWh LFP ($88–138 sodium-ion),
+            $0.16–0.28/W panels — shipped and duty-paid, you assemble.
+          </li>
+          <li>
+            <strong>Budget retail (Aug 2026):</strong> $110–165/kWh LFP
+            ($110–175 sodium-ion), $0.28–0.38/W panels — shipped retail.
+          </li>
+        </ul>
+        <p>
+          Results run ex-factory low through retail high with regional freight
+          multipliers applied openly. All figures exclude mounting, wiring,
+          permits, and labor — check current local prices.
+        </p>
+        <h2>Update cadence</h2>
+        <p>
+          Catalog scopes checked Aug 2026; tariff boxes reflect 2025–2026
+          averages and are overwritten by typed user rates. Guides carry
+          publication dates in the header. If a claim looks stale, assume it is
+          and verify locally — corrections welcome at
+          <a href="mailto:lucasballek@gmail.com">lucasballek@gmail.com</a>.
+        </p>
+        <h2>Why trust a free tool from one person</h2>
+        <ul>
+          <li>
+            <strong>Shows arithmetic:</strong> inputs, derates, worst week, and
+            ranges are all stated and checkable.
+          </li>
+          <li>
+            <strong>Open deterministic engine:</strong> no account, no paywall,
+            no incentive to inflate — nothing for sale.
+          </li>
+          <li>
+            <strong>Argues against itself:</strong> pages state where solar
+            loses and when a retained generator wins.
+          </li>
+          <li>
+            <strong>No signup means no leverage:</strong> the only thing the
+            site can earn is being right enough to be linked.
+          </li>
+        </ul>
+        <h2>Liability: read before building</h2>
+        <p>
+          Provided free and <strong>as-is, with no warranty</strong>. Estimates
+          are educational only and may be inaccurate. Batteries, high DC
+          current, and mains wiring can cause fire, serious injury, and death —
+          you are responsible for your safety, decisions, and local code. Verify
+          everything with a licensed professional. Nothing here is legal, tax,
+          engineering, or financial advice.
+        </p>
+        <h2>Contact</h2>
+        <p>
+          <a href="mailto:lucasballek@gmail.com">lucasballek@gmail.com</a> — one
+          person, own time, friendly opinion only. For anything you build,
+          consult a licensed electrician or engineer first.
+        </p>
+        <p>
+          <a href="../">Free Estimator</a> · <a href="../blog/">All Guides</a> ·
+          <a href="../solar-calculator/">Cities</a> ·
+          <a href="../solar-heatmap/">Heatmap</a>
+        </p>
+      </article>
+    </main>
+    <footer>
+      <div class="container">
+        <p>
+          Provided free, as-is, with no warranty. Educational estimates only —
+          verify everything with a licensed professional before building.
+        </p>
+        <p style="margin-top: 0.75rem">
+          <a href="../">Free Estimator</a> · <a href="../blog/">All Guides</a> ·
+          <a href="mailto:lucasballek@gmail.com">Contact</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
