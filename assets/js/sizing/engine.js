@@ -2,8 +2,8 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260911a";
-import { oversizeCallout } from "./rescale.js?v=20260911a";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260911b";
+import { oversizeCallout } from "./rescale.js?v=20260911b";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -33,28 +33,27 @@ export const ROUND_TRIP_DEFAULT = 0.92;
 export const CHEMISTRIES = {
   lfp: {
     label: "LFP (LiFePO4)",
-    usableDod: 0.9,
+    usableDod: 0.8, // 80% DoD delivers the full 6,000 cycle rating (90% DoD shortens cycle life)
     roundTrip: 0.92,
     chargeMinC: 0, // must not charge below 0 °C without heating
     dischargeMinC: -20,
-    cyclesTo80: 6000, // 314Ah-class manufacturer rating
+    cyclesTo80: 6000, // 314Ah-class manufacturer rating at 80% DoD
     usableScale: 1.0, // capacity barely affected by discharge rate or chill
-    note: "Cannot charge below 0°C without a heated/insulated enclosure.",
+    note: "Cannot charge below 0°C without heating. Sized at 80% DoD to guarantee full 6,000+ cycle lifespan.",
   },
   naion: {
     label: "Sodium-Ion",
-    usableDod: 0.9,
+    usableDod: 0.85, // Inherent cell window is 95%+; standard 48V inverter cutoffs (~40-42V) utilize ~85%
     roundTrip: 0.9,
     chargeMinC: -20,
     dischargeMinC: -40,
     // Field reality (2026): most hybrid inverters only offer LFP voltage
     // profiles. On a 16S LFP window the ~40-42 V low cutoff sits ABOVE true
     // sodium empty, and the LFP absorb voltage ends charge early — so you
-    // lose ~15% effective capacity but the pack never sees deep discharge,
-    // which EXTENDS life versus the deep-cycle rating.
+    // use ~85% of nameplate, but avoiding deep discharge EXTENDS life to 5,500+ cycles.
     usableScale: 0.85,
     cyclesTo80: 5500, // uprated from ~4500 deep-cycle figure for shallow effective DoD
-    note: "Cold-capable. Modeled on standard LFP voltage settings (the common case): slightly less usable capacity, gentler discharge, longer life. A native sodium inverter profile restores full capacity.",
+    note: "Cold-capable. Inherent 95%+ cell DoD window; standard 48V inverter voltage cutoffs utilize ~85% in practice, which extends life to 5,500+ cycles.",
   },
   agm: {
     label: "Lead-Acid (AGM)",

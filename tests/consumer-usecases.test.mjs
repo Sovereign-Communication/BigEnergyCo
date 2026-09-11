@@ -453,7 +453,7 @@ test("Compare Batteries: uses baseline system, applies DoD + cold derates, compa
   // Test chemistry configurations and DoD
   const targetUsableKwh = 10;
   const chems = {
-    lfp: { dod: 0.9, cycles: 6000 },
+    lfp: { dod: 0.8, cycles: 6000 },
     naion: { dod: 0.85, cycles: 5500 },
     agm: { dod: 0.5, cycles: 500 },
   };
@@ -465,8 +465,8 @@ test("Compare Batteries: uses baseline system, applies DoD + cold derates, compa
 
   assert.equal(
     lfpNameplate,
-    11.1,
-    "LFP needs ~11.1 kWh nameplate for 10 kWh usable (90% DoD)",
+    12.5,
+    "LFP needs 12.5 kWh nameplate for 10 kWh usable (80% DoD to guarantee 6,000 cycles)",
   );
   assert.equal(
     naionNameplate,
