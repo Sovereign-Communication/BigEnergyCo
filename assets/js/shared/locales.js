@@ -58,6 +58,8 @@ export const LOCALES = {
     genApply: "Use this as my electricity price",
 
     // -- Plausibility frontier (spend -> coverage curve) --
+    socChartTitle:
+      "Battery Charge Levels & Year-Round Reliability (5-Year Real Weather)",
     frontierTitle: "How far does your money get you?",
     frontierIntro:
       "Every system we could build at your location, cheapest first. The line is the best result any budget can buy — so you can see at a glance whether your goal here is easy, expensive, or out of reach.",
@@ -215,6 +217,8 @@ export const LOCALES = {
     genApply: "Usar esto como mi precio de electricidad",
 
     // -- Plausibility frontier (spend -> coverage curve) --
+    socChartTitle:
+      "Niveles de carga de batería y confiabilidad anual (5 años de clima real)",
     frontierTitle: "¿Hasta dónde llega tu dinero?",
     frontierIntro:
       "Todos los sistemas posibles en tu ubicación, del más barato al más caro. La línea es el mejor resultado que puede comprar cada presupuesto, para que veas de un vistazo si tu objetivo aquí es fácil, caro o inalcanzable.",
@@ -377,6 +381,8 @@ export const LOCALES = {
     genApply: "Usar isto como meu preço de eletricidade",
 
     // -- Plausibility frontier (spend -> coverage curve) --
+    socChartTitle:
+      "Níveis de carga da bateria e confiabilidade anual (5 anos de clima real)",
     frontierTitle: "Até onde vai o seu dinheiro?",
     frontierIntro:
       "Todos os sistemas possíveis na sua localização, do mais barato ao mais caro. A linha é o melhor resultado que cada orçamento consegue comprar — para você ver de relance se o seu objetivo aqui é fácil, caro ou inalcançável.",
@@ -538,6 +544,8 @@ export const LOCALES = {
     genApply: "Utiliser ceci comme mon prix de l'électricité",
 
     // -- Plausibility frontier (spend -> coverage curve) --
+    socChartTitle:
+      "Niveaux de charge de la batterie et fiabilité annuelle (5 ans de météo réelle)",
     frontierTitle: "Jusqu'où va votre argent ?",
     frontierIntro:
       "Tous les systèmes possibles chez vous, du moins cher au plus cher. La courbe montre le meilleur résultat que chaque budget peut acheter — pour voir d'un coup d'œil si votre objectif est ici facile, coûteux ou hors d'atteinte.",
@@ -694,6 +702,8 @@ export const LOCALES = {
     genApply: "استخدم هذا كسعر الكهرباء لدي",
 
     // -- Plausibility frontier (spend -> coverage curve) --
+    socChartTitle:
+      "مستويات شحن البطارية والموثوقية السنوية (محاكاة 5 سنوات من الطقس الحقيقي)",
     frontierTitle: "إلى أين يصل مالك؟",
     frontierIntro:
       "كل نظام يمكن بناؤه في موقعك، من الأرخص إلى الأغلى. يمثل الخط أفضل نتيجة يمكن لأي ميزانية شراؤها، لترى بلمحة واحدة هل هدفك هنا سهل أم مكلف أم بعيد المنال.",

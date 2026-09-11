@@ -7183,30 +7183,22 @@ function setupChartInteractions() {
     isDragging = false;
   });
 
-  canvas.addEventListener(
-    "wheel",
-    (e) => {
-      e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      const ratio = Math.max(
-        0,
-        Math.min(1, (e.clientX - rect.left) / rect.width),
-      );
-      zoomChart(e.deltaY > 0 ? 1.3 : 0.7, ratio);
-    },
-    { passive: false },
-  );
+  // NOTE: Wheel event listener intentionally omitted. Intercepting wheel events
+  // with e.preventDefault() trapped users trying to scroll down the page on desktop.
+  // Zooming is handled via the dedicated +, −, Worst Month, and Full 5-Yr buttons,
+  // with click-drag panning when zoomed in.
+
+  let dragStartY = 0;
 
   canvas.addEventListener(
     "touchstart",
     (e) => {
       if (e.touches.length === 1) {
+        if (!socZoomRange) return;
         isDragging = true;
         dragStartX = e.touches[0].clientX;
-        const n = getActiveChartLength();
-        startRange = socZoomRange
-          ? { ...socZoomRange }
-          : { start: 0, end: n - 1 };
+        dragStartY = e.touches[0].clientY;
+        startRange = { ...socZoomRange };
       } else if (e.touches.length === 2) {
         isDragging = false;
         touchDistStart = Math.hypot(
@@ -7227,6 +7219,8 @@ function setupChartInteractions() {
     (e) => {
       if (e.touches.length === 1 && isDragging && startRange) {
         const dx = e.touches[0].clientX - dragStartX;
+        const dy = e.touches[0].clientY - dragStartY;
+        if (Math.abs(dy) > Math.abs(dx)) return;
         const rect = canvas.getBoundingClientRect();
         const plotW = rect.width - 44;
         if (plotW <= 0) return;
