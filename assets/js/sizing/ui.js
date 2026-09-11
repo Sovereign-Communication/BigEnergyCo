@@ -198,92 +198,135 @@ const APPLIANCES = [
         h: 10,
         maxH: 16,
         duty: true,
+        surgeW: 500,
       },
-
-      { n: "Refrigerator (old or large)", w: 150, h: 12, maxH: 18, duty: true },
-
-      { n: "Chest freezer", w: 100, h: 10, maxH: 16, duty: true },
+      {
+        n: "Refrigerator (old or large)",
+        w: 150,
+        h: 12,
+        maxH: 18,
+        duty: true,
+        surgeW: 800,
+      },
+      {
+        n: "Chest freezer",
+        w: 100,
+        h: 10,
+        maxH: 16,
+        duty: true,
+        surgeW: 500,
+      },
     ],
   },
-
   {
-    g: "Cooling",
+    g: "Cooling & Climate",
     items: [
       { n: "Ceiling or desk fan", w: 75, h: 8 },
-
       {
         n: "Window air conditioner (one room)",
         w: 500,
         h: 6,
         maxH: 20,
         duty: true,
+        surgeW: 1500,
       },
-
       {
         n: "Split air conditioner (whole floor)",
         w: 1200,
         h: 6,
         maxH: 20,
         duty: true,
+        surgeW: 3000,
+      },
+      {
+        n: "Mini-split heat pump (heating mode)",
+        w: 1200,
+        h: 8,
+        maxH: 20,
+        duty: true,
+        surgeW: 2400,
       },
     ],
   },
-
   {
     g: "Kitchen & cooking",
     items: [
       { n: "Microwave", w: 1200, h: 0.33 },
-
       { n: "Electric kettle", w: 1500, h: 0.25 },
-
       { n: "Coffee maker", w: 900, h: 0.25 },
-
       { n: "Rice cooker", w: 700, h: 0.5 },
+      { n: "Induction cooktop (1 burner)", w: 1800, h: 0.5 },
+      { n: "Air fryer", w: 1500, h: 0.33 },
     ],
   },
-
   {
     g: "Lights & electronics",
     items: [
       { n: "LED light bulb", w: 10, h: 5 },
-
       { n: "LED TV", w: 100, h: 4 },
-
       { n: "Laptop or desktop computer", w: 65, h: 6 },
-
       { n: "Phone charger", w: 15, h: 3 },
-
       { n: "Internet router (always on)", w: 10, h: 24 },
+      { n: "Starlink / Satellite Internet", w: 55, h: 24 },
     ],
   },
-
   {
     g: "Cleaning & water",
     items: [
-      { n: "Washing machine", w: 500, h: 0.5 },
-
+      { n: "Washing machine", w: 500, h: 0.5, surgeW: 1200 },
       {
-        n: "Water pump (well or pressure tank)",
+        n: "Water pump (shallow/pressure tank 120V)",
         w: 750,
         h: 0.5,
         maxH: 12,
         duty: true,
+        surgeW: 2200,
       },
-
+      {
+        n: "Deep well pump (submersible, 240V)",
+        w: 1100,
+        h: 0.75,
+        maxH: 8,
+        duty: true,
+        surgeW: 3800,
+        splitPhase: true,
+      },
       { n: "Vacuum cleaner", w: 800, h: 0.25 },
-
       { n: "Clothes iron", w: 1100, h: 0.25 },
     ],
   },
-
   {
     g: "Big power users",
     items: [
       { n: "Space heater (small)", w: 1000, h: 4, maxH: 16, duty: true },
-
-      { n: "Electric water heater", w: 3000, h: 1, maxH: 8, duty: true },
-
-      { n: "Pool pump", w: 1000, h: 4, maxH: 12, duty: true },
+      {
+        n: "Electric water heater (240V)",
+        w: 3000,
+        h: 1,
+        maxH: 8,
+        duty: true,
+        splitPhase: true,
+      },
+      {
+        n: "Pool pump",
+        w: 1000,
+        h: 4,
+        maxH: 12,
+        duty: true,
+        surgeW: 2500,
+      },
+      {
+        n: "EV charger (Level 1 trickle, 120V 12A)",
+        w: 1400,
+        h: 6,
+        maxH: 14,
+      },
+      {
+        n: "Workshop tools (table saw / compressor)",
+        w: 1800,
+        h: 0.5,
+        surgeW: 4200,
+      },
     ],
   },
 ];
@@ -399,25 +442,26 @@ function setLoadPanel() {
 
 function applianceState() {
   // state lives in DOM: rows carry data attrs; read them.
-
   const rows = $("applianceList").querySelectorAll(".ap-row.on");
 
   let kwh = 0,
-    peakW = 0;
+    peakW = 0,
+    peakSurgeW = 0,
+    requiresSplitPhase = false;
 
   rows.forEach((row) => {
     const w = parseFloat(row.dataset.w);
-
     const qty = parseInt(row.dataset.qty, 10);
-
     const h = parseFloat(row.dataset.h);
+    const surge = parseFloat(row.dataset.surgeW) || w;
+    if (row.dataset.splitPhase === "true") requiresSplitPhase = true;
 
     kwh += (w * qty * h) / 1000;
-
     peakW += w * qty;
+    peakSurgeW += surge * qty;
   });
 
-  return { kwh, peakW, count: rows.length };
+  return { kwh, peakW, peakSurgeW, requiresSplitPhase, count: rows.length };
 }
 
 function getTariff() {
@@ -602,6 +646,8 @@ function renderAppliances() {
         "data-h": it.h,
         "data-duty": it.duty ? "1" : "",
         "data-item-name": it.n,
+        "data-surge-w": it.surgeW || it.w,
+        "data-split-phase": it.splitPhase ? "true" : "false",
       });
 
       row.style.cssText =
@@ -612,13 +658,14 @@ function renderAppliances() {
         style: "width:auto;margin:0;transform:scale(1.2);cursor:pointer;",
       });
 
+      const labelText = it.splitPhase ? `${it.n} ⚡240V` : it.n;
       const name = el(
         "label",
         {
           style:
             "flex:1 1 200px;cursor:pointer;font-size:0.92rem;font-weight:500;margin:0;",
         },
-        it.n,
+        labelText,
       );
 
       name.prepend(cb);
@@ -788,6 +835,14 @@ function applyAppliancePreset(presetKey) {
       "Laptop or desktop computer": { qty: 1, h: 4 },
       "Internet router (always on)": { qty: 1, h: 24 },
     },
+    van: {
+      "Refrigerator (modern, mid-size)": { qty: 1, h: 8 },
+      "Ceiling or desk fan": { qty: 1, h: 8 },
+      "LED light bulb": { qty: 4, h: 4 },
+      "Phone charger": { qty: 2, h: 3 },
+      "Laptop or desktop computer": { qty: 1, h: 4 },
+      "Internet router (always on)": { qty: 1, h: 16 },
+    },
     home: {
       "Refrigerator (modern, mid-size)": { qty: 1, h: 10 },
       "LED light bulb": { qty: 10, h: 5 },
@@ -802,7 +857,7 @@ function applyAppliancePreset(presetKey) {
     homestead: {
       "Refrigerator (modern, mid-size)": { qty: 1, h: 10 },
       "Chest freezer": { qty: 1, h: 10 },
-      "Water pump (well or pressure tank)": { qty: 1, h: 1 },
+      "Deep well pump (submersible, 240V)": { qty: 1, h: 0.75 },
       "LED light bulb": { qty: 12, h: 5 },
       "LED TV": { qty: 1, h: 4 },
       Microwave: { qty: 1, h: 0.5 },
@@ -811,6 +866,15 @@ function applyAppliancePreset(presetKey) {
       "Internet router (always on)": { qty: 1, h: 24 },
       "Washing machine": { qty: 1, h: 1 },
       "Space heater (small)": { qty: 1, h: 4 },
+    },
+    backup: {
+      "Refrigerator (modern, mid-size)": { qty: 1, h: 10 },
+      "Chest freezer": { qty: 1, h: 8 },
+      "Water pump (shallow/pressure tank 120V)": { qty: 1, h: 0.5 },
+      "LED light bulb": { qty: 6, h: 4 },
+      "Phone charger": { qty: 4, h: 3 },
+      "Internet router (always on)": { qty: 1, h: 24 },
+      "Laptop or desktop computer": { qty: 1, h: 4 },
     },
     clear: {},
   };
@@ -1501,14 +1565,22 @@ function setQuickMode(on) {
   if (note)
     note.style.display = on ? (locationResolved ? "block" : "none") : "none";
 
+  const isOffgrid = $("systemGoal")
+    ? $("systemGoal").value === "offgrid"
+    : false;
   const billWrap = $("billSliderWrap");
+  const offgridWrap = $("offgridLoadWrap");
 
   if (billWrap)
-    billWrap.style.display = on
-      ? locationResolved
-        ? "block"
-        : "none"
-      : "block";
+    billWrap.style.display = isOffgrid
+      ? "none"
+      : on
+        ? locationResolved
+          ? "block"
+          : "none"
+        : "block";
+
+  if (offgridWrap) offgridWrap.style.display = isOffgrid ? "block" : "none";
 
   const locBtn = $("btnGeoLocate");
 
@@ -1534,8 +1606,13 @@ function readInputs() {
 
   let dailyKwh;
   let peakLoadW = null;
+  let peakSurgeW = null;
+  let requiresSplitPhase = false;
 
   const mode = $("loadMode").value;
+  const isOffgrid = $("systemGoal")
+    ? $("systemGoal").value === "offgrid"
+    : false;
 
   if (mode === "appliances") {
     const ap = applianceState();
@@ -1545,18 +1622,28 @@ function readInputs() {
     // daily average. Bill/kWh modes have no peak information (null = engine
     // falls back to the average and the BOM says so).
     peakLoadW = ap.peakW > 0 ? Math.round(ap.peakW) : null;
+    peakSurgeW = ap.peakSurgeW > 0 ? Math.round(ap.peakSurgeW) : null;
+    requiresSplitPhase = ap.requiresSplitPhase;
   } else if (mode === "bill") {
-    const bill = parseFloat($("billSlider")?.value ?? $("billAmount")?.value);
+    if (
+      isOffgrid &&
+      $("offgridKwhSlider") &&
+      (quickMode || !$("customRateVal")?.value)
+    ) {
+      dailyKwh = parseFloat($("offgridKwhSlider").value) || 10;
+    } else {
+      const bill = parseFloat($("billSlider")?.value ?? $("billAmount")?.value);
 
-    const rate = getTariff();
+      const rate = getTariff();
 
-    dailyKwh =
-      Number.isFinite(bill) && Number.isFinite(rate) && rate > 0
-        ? kwhFromBill(bill, rate)
-        : billAnchorKwh;
+      dailyKwh =
+        Number.isFinite(bill) && Number.isFinite(rate) && rate > 0
+          ? kwhFromBill(bill, rate)
+          : billAnchorKwh;
 
-    billAnchorKwh =
-      Number.isFinite(dailyKwh) && dailyKwh > 0 ? dailyKwh : billAnchorKwh;
+      billAnchorKwh =
+        Number.isFinite(dailyKwh) && dailyKwh > 0 ? dailyKwh : billAnchorKwh;
+    }
   } else {
     dailyKwh = parseFloat($("dailyKwhInput").value);
   }
@@ -1568,11 +1655,13 @@ function readInputs() {
       ? "appliance checklist + generator fuel"
       : "appliance checklist";
   else if (mode === "bill")
-    basis = generatorBasis
-      ? "monthly bill paid to a fuel station"
-      : "monthly electric bill";
+    basis = isOffgrid
+      ? "daily off-grid load slider"
+      : generatorBasis
+        ? "monthly bill paid to a fuel station"
+        : "monthly electric bill";
 
-  return {
+  const result = {
     latitude: lat,
 
     longitude: lon,
@@ -1643,7 +1732,12 @@ function readInputs() {
     focusChemistry: pendingFocus ? pendingFocus.chemistry : null,
 
     peakLoadW,
+    peakSurgeW,
+    requiresSplitPhase,
   };
+
+  window.lastInputs = result;
+  return result;
 }
 
 function run(quiet = false) {
@@ -2034,6 +2128,76 @@ function selectMatrixCell(key) {
       true,
     );
   }
+}
+
+function setupGoalControls() {
+  const btnGt = $("btnGoalGridtie");
+  const btnOff = $("btnGoalOffgrid");
+  const sysGoal = $("systemGoal");
+  if (!btnGt || !btnOff) return;
+
+  const setGoal = (goal) => {
+    if (goal === "gridtie") {
+      btnGt.classList.add("active");
+      btnOff.classList.remove("active");
+      if (sysGoal) sysGoal.value = "gridtie";
+      const title = document.querySelector(".section-title");
+      if (title) title.textContent = "Find your cheapest path to lower bills";
+    } else {
+      btnOff.classList.add("active");
+      btnGt.classList.remove("active");
+      if (sysGoal) sysGoal.value = "offgrid";
+      const title = document.querySelector(".section-title");
+      if (title) title.textContent = "Size your off-grid solar & battery bank";
+    }
+    updateAutoRows();
+    setQuickMode(quickMode);
+    if (lastPayload) run(true);
+  };
+
+  btnGt.addEventListener("click", () => setGoal("gridtie"));
+  btnOff.addEventListener("click", () => setGoal("offgrid"));
+
+  if (sysGoal) {
+    sysGoal.addEventListener("change", () => {
+      if (sysGoal.value === "gridtie") {
+        btnGt.classList.add("active");
+        btnOff.classList.remove("active");
+      } else {
+        btnOff.classList.add("active");
+        btnGt.classList.remove("active");
+      }
+      setQuickMode(quickMode);
+    });
+  }
+}
+
+function setupOffgridControls() {
+  const slider = $("offgridKwhSlider");
+  const out = $("offgridKwhVal");
+  if (!slider) return;
+
+  slider.addEventListener("input", () => {
+    const val = parseFloat(slider.value);
+    if (out) out.textContent = "~" + val + " kWh/day";
+  });
+
+  slider.addEventListener("change", () => {
+    if (lastPayload) run();
+    else scheduleRun();
+  });
+
+  document.querySelectorAll(".offgrid-preset-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const kwh = parseFloat(btn.dataset.kwh);
+      if (Number.isFinite(kwh) && kwh > 0) {
+        slider.value = String(kwh);
+        if (out) out.textContent = "~" + kwh + " kWh/day";
+        if (lastPayload) run();
+        else scheduleRun();
+      }
+    });
+  });
 }
 
 function setupMatrixSelection() {
@@ -3350,6 +3514,13 @@ function renderBestPick(p) {
   ]);
   pushSeriesBreakdown(rows, b);
   if (!isGT) {
+    if (b.battKwh > 0 && p.dailyKwh > 0) {
+      const autonomyDays = (b.battKwh / p.dailyKwh).toFixed(1);
+      rows.push([
+        "Battery autonomy",
+        `~${autonomyDays} days of storage with zero sun`,
+      ]);
+    }
     rows.push([
       "Unmet hours",
       `${fmt(b.unmetHoursPerYear ?? 0)} h/yr \u00B7 longest gap ${fmt(b.longestGapHours ?? 0)} h`,
@@ -3415,6 +3586,90 @@ function renderBestPick(p) {
     ),
   );
   wrap.appendChild(card);
+  const eli5Card = renderEli5Card(p, b);
+  if (eli5Card) wrap.appendChild(eli5Card);
+}
+
+/** Plain-English ELI5 breakdown for beginners and non-engineers. */
+function renderEli5Card(p, sys) {
+  if (!sys) return null;
+  const eli5 = el("div", { class: "eli5-card" });
+  eli5.appendChild(
+    el(
+      "div",
+      { class: "eli5-title" },
+      "📖 What This System Actually Looks Like in Real Life (Plain English)",
+    ),
+  );
+
+  const eli5Grid = el("div", { class: "eli5-grid" });
+
+  // 1. Solar Panels
+  const watts = currentPanelWatts();
+  const lay = sys.pvKw > 0 ? panelLayout(sys.pvKw, watts) : null;
+  const panelDesc = lay
+    ? `~${lay.count} standard rooftop or ground panels (${lay.panelWatts} W each). Needs about ${lay.areaM2} m\u00B2 (~${Math.round(lay.areaM2 * 10.764)} sq ft) of unshaded space. On a clear sunny day, this harvests around ${fmt(sys.pvKw * 4.5)} kWh of free electricity.`
+    : "No solar panels are included in this battery-only configuration (charges during cheap off-peak hours to avoid expensive peak electricity).";
+
+  const itemPanels = el("div", { class: "eli5-item" });
+  itemPanels.appendChild(
+    el("div", { class: "eli5-item-label" }, "🌞 The Solar Array"),
+  );
+  itemPanels.appendChild(el("div", { class: "eli5-item-desc" }, panelDesc));
+  eli5Grid.appendChild(itemPanels);
+
+  // 2. Battery Storage
+  let battDesc =
+    "No battery bank selected. Power generated during the day is consumed immediately or sent to the grid.";
+  if (sys.battKwh > 0) {
+    const rackUnits = Math.max(
+      1,
+      Math.round((sys.battNameplateKwh || sys.battKwh) / 5.12),
+    );
+    const autonomy =
+      p.dailyKwh > 0 ? (sys.battKwh / p.dailyKwh).toFixed(1) : "2-3";
+    battDesc = `${fmt(sys.battKwh)} kWh usable (~${fmt(sys.battNameplateKwh || sys.battKwh)} kWh total). That provides ~${autonomy} full days of normal power with zero sunlight. In physical size, this is about ${rackUnits} standard server-rack battery module(s) (about the size of small desktop PC cases).`;
+  }
+  const itemBatt = el("div", { class: "eli5-item" });
+  itemBatt.appendChild(
+    el("div", { class: "eli5-item-label" }, "🔋 The Battery Bank"),
+  );
+  itemBatt.appendChild(el("div", { class: "eli5-item-desc" }, battDesc));
+  eli5Grid.appendChild(itemBatt);
+
+  // 3. Inverter / Brain
+  const splitWarning = window.lastInputs?.requiresSplitPhase
+    ? " Native 240V split-phase is required for your selected 240V appliances (e.g. well pump, EV, or heat pump)."
+    : " Supplies standard 120V household power.";
+  const invContinuous = Math.max(
+    3,
+    Math.round(p.dailyKwh ? (p.dailyKwh * 1000) / 24 / 500 : 3),
+  );
+  const invDesc = `A wall-mounted hybrid inverter / charger (~${invContinuous} to 6 kW continuous). It quietly converts DC power from solar and batteries into clean AC power for your outlets.${splitWarning}`;
+  const itemInv = el("div", { class: "eli5-item" });
+  itemInv.appendChild(
+    el("div", { class: "eli5-item-label" }, "⚡ The Inverter (System Brain)"),
+  );
+  itemInv.appendChild(el("div", { class: "eli5-item-desc" }, invDesc));
+  eli5Grid.appendChild(itemInv);
+
+  // 4. Sourcing & Cost Reality
+  const directCost =
+    Number.isFinite(sys.costLo) && Number.isFinite(sys.costHi)
+      ? moneyRange(sys.costLo, sys.costHi)
+      : Number.isFinite(sys.costMid)
+        ? money(sys.costMid)
+        : "wholesale";
+  const costDesc = `DIY or direct hardware cost is ~${directCost}. Full-service solar sales companies often quote $20,000 to $40,000+ for this same system size due to sales commissions, permits, and massive markups. By ordering direct and hiring a licensed electrician for just the final hookup (~$1,500\u2013$3,000), you keep tens of thousands of dollars in your pocket.`;
+  const itemCost = el("div", { class: "eli5-item" });
+  itemCost.appendChild(
+    el("div", { class: "eli5-item-label" }, "💰 Wholesale vs Turnkey Quotes"),
+  );
+  itemCost.appendChild(el("div", { class: "eli5-item-desc" }, costDesc));
+  eli5Grid.appendChild(itemCost);
+
+  eli5.appendChild(eli5Grid);
+  return eli5;
 }
 
 /** Compact column labels for the matrix header. */
@@ -3916,6 +4171,70 @@ function renderBomPanel() {
       ]),
     );
   }
+  if (bom.panels && lastPayload?.meta?.latitude != null) {
+    const lat = lastPayload.meta.latitude;
+    const absLat = Math.abs(lat);
+    const facing = lat >= 0 ? "True South (180\u00B0)" : "True North (0\u00B0)";
+    const yrTilt = Math.round(absLat * 0.9);
+    const wtrTilt = Math.min(70, Math.round(absLat + 15));
+    const smrTilt = Math.max(10, Math.round(absLat - 15));
+    section("Array Mounting & Optimal Tilt", [
+      ["Array orientation", `Face ${facing} for maximum annual solar harvest`],
+      ["Year-round fixed tilt", `~${yrTilt}\u00B0 from horizontal`],
+      [
+        "Winter steep tilt (critical for off-grid)",
+        `~${wtrTilt}\u00B0 \u2014 sheds snow & captures low winter sun`,
+      ],
+      ["Summer tilt (optional)", `~${smrTilt}\u00B0`],
+      [
+        "Mounting recommendation",
+        absLat > 40
+          ? "Ground mount strongly recommended for easy snow clearing & seasonal tilt adjustment"
+          : "Roof mount (flush/racked) or ground mount",
+      ],
+    ]);
+  }
+  const bosCard = el("div", {
+    class: "bom-card bos-checklist-card",
+    style: "margin-bottom:0.8rem;",
+  });
+  bosCard.appendChild(
+    el(
+      "h3",
+      {},
+      "\uD83D\uDEE1\uFE0F Essential Balance-of-System (BOS) & Safety Checklist",
+    ),
+  );
+  const bosRows = [
+    [
+      "DC Battery Disconnect",
+      `Heavy-duty rotary disconnect switch + Class-T fuse (or DC-rated breaker) sized to ${bom.protection?.mainFuseAmps || 200} A near battery positive terminal.`,
+    ],
+    [
+      "PV Array Isolator + SPD",
+      "DC-rated 2-pole breaker and DC Surge Protective Device (lightning arrestor) before the charge controller.",
+    ],
+    [
+      "Battery Shunt / Monitor",
+      "Precision 500 A shunt on main battery negative for exact State-of-Charge (SoC) tracking (voltage alone is inaccurate on lithium).",
+    ],
+    [
+      "Copper Busbars & Cables",
+      "Solid copper busbars for multi-battery paralleling; hydraulic hex crimps with dual-wall adhesive heatshrink on all battery cable lugs.",
+    ],
+    [
+      "Equipment Grounding",
+      "Common earth ground bonding for panel mounting rails, lightning arrestors, and inverter chassis to ground rod.",
+    ],
+  ];
+  if (window.lastInputs?.requiresSplitPhase) {
+    bosRows.push([
+      "\u26A1 240V Split-Phase Alert",
+      "Your selected appliances (e.g. deep well pump, heat pump, or EV charger) require 240V split-phase (L1 + L2 + N). Ensure your inverter is a native 120/240V split-phase unit or two identical 120V inverters stacked with a communication cable.",
+    ]);
+  }
+  appendRows(bosCard, bosRows);
+  body.appendChild(bosCard);
   if (bom.notes.length) {
     body.appendChild(
       el(
@@ -4027,6 +4346,51 @@ function downloadBomCsv() {
         "2% max drop, conservative ampacity",
       ]);
     }
+  }
+  if (bom.panels && lastPayload?.meta?.latitude != null) {
+    const lat = lastPayload.meta.latitude;
+    const absLat = Math.abs(lat);
+    const facing = lat >= 0 ? "True South (180 deg)" : "True North (0 deg)";
+    rows.push([
+      "Mounting",
+      "Array Tilt & Orientation",
+      `Facing: ${facing}`,
+      `Year-round fixed: ~${Math.round(absLat * 0.9)} deg | Winter steep: ~${Math.min(70, Math.round(absLat + 15))} deg`,
+    ]);
+  }
+  rows.push(
+    [
+      "BOS Safety",
+      "DC Battery Disconnect & Fuse",
+      `Class-T fuse / DC breaker ${bom.protection?.mainFuseAmps || 200} A`,
+      "Mandatory overcurrent protection near positive terminal",
+    ],
+    [
+      "BOS Safety",
+      "PV DC Isolator & Surge Device",
+      "DC-rated breaker + SPD",
+      "Protects charge controller / inverter from PV lightning surges",
+    ],
+    [
+      "BOS Safety",
+      "Battery Shunt / Monitor",
+      "500 A precision current shunt",
+      "Tracks true SoC via Coulomb counting",
+    ],
+    [
+      "BOS Safety",
+      "Equipment Grounding & Bonding",
+      "Copper ground rod + bonding bus",
+      "Single common earth bond for frame rails, SPDs, and inverter chassis",
+    ],
+  );
+  if (window.lastInputs?.requiresSplitPhase) {
+    rows.push([
+      "BOS Notice",
+      "240V Split-Phase Required",
+      "L1 + L2 + Neutral (120/240V)",
+      "Required for 240V well pump, mini-split, or EV charger",
+    ]);
   }
   rows.push(
     [],
@@ -5933,6 +6297,8 @@ function renderSelectedBanner(p, sel) {
     );
   }
   wrap.appendChild(card);
+  const eli5Card = renderEli5Card(p, sel);
+  if (eli5Card) wrap.appendChild(eli5Card);
   return true;
 }
 
@@ -7096,7 +7462,9 @@ export function initSizingUI() {
     if (modeQuick) modeQuick.addEventListener("change", applyMode);
     if (modeManual) modeManual.addEventListener("change", applyMode);
 
-    // Monthly-bill slider (local currency) + bill-cut slider (1–150%).
+    // Goal control + Offgrid slider + Monthly-bill slider + bill-cut slider.
+    setupGoalControls();
+    setupOffgridControls();
     setupBillSlider();
     setupCutSlider();
     setupBudgetSlider();

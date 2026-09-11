@@ -1519,7 +1519,74 @@ footer {
 }
 
 /* Preset Buttons */
-.preset-btn:hover {
+.preset-btn:hover,
+.offgrid-preset-btn:hover {
   border-color: var(--primary-accent) !important;
   color: #fff !important;
+}
+
+/* Goal Segmented Control */
+.btn-segmented {
+  background: rgba(18, 26, 44, 0.7);
+  border: 1px solid var(--border-card);
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+.btn-segmented:hover {
+  border-color: rgba(0, 230, 153, 0.4);
+  color: var(--text-main);
+}
+.btn-segmented.active {
+  background: rgba(0, 230, 153, 0.12);
+  border: 1px solid var(--primary-accent);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(0, 230, 153, 0.2);
+}
+
+/* Plain-English ELI5 Translation Card */
+.eli5-card {
+  background: rgba(18, 26, 44, 0.95);
+  border: 1px solid var(--border-glow);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.eli5-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+.eli5-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+.eli5-item {
+  background: rgba(9, 13, 22, 0.75);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+}
+.eli5-item-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+.eli5-item-desc {
+  font-size: 0.88rem;
+  color: var(--text-main);
+  line-height: 1.45;
+}
+
+/* Balance-of-System Checklist */
+.bos-checklist-card {
+  border-left: 3px solid var(--warning-orange) !important;
 }

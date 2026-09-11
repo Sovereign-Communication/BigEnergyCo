@@ -505,6 +505,68 @@
 
           <div class="calc-card">
             <div class="calc-controls">
+              <!-- Primary Goal Selection: Grid-Tie Bill Cutting vs Full Off-Grid / Backup -->
+              <div
+                class="form-group goal-segmented-wrap"
+                style="margin-bottom: 0.9rem"
+              >
+                <span
+                  style="
+                    font-size: 0.85rem;
+                    color: var(--text-muted);
+                    font-weight: 700;
+                    display: block;
+                    margin-bottom: 0.4rem;
+                  "
+                  >What are you sizing for?</span
+                >
+                <div
+                  class="goal-segmented-buttons"
+                  style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 0.6rem;
+                  "
+                >
+                  <button
+                    type="button"
+                    id="btnGoalGridtie"
+                    class="btn btn-segmented active"
+                    style="
+                      padding: 0.65rem 0.5rem;
+                      font-weight: 800;
+                      font-size: 0.92rem;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 0.4rem;
+                      border-radius: 8px;
+                      cursor: pointer;
+                    "
+                  >
+                    <span>🏠</span> Cut My Electric Bill
+                  </button>
+                  <button
+                    type="button"
+                    id="btnGoalOffgrid"
+                    class="btn btn-segmented"
+                    style="
+                      padding: 0.65rem 0.5rem;
+                      font-weight: 800;
+                      font-size: 0.92rem;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 0.4rem;
+                      border-radius: 8px;
+                      cursor: pointer;
+                    "
+                  >
+                    <span>🌲</span> Off-Grid / Backup
+                  </button>
+                </div>
+              </div>
+
               <!-- Quick (auto-run) vs Manual mode. Quick shows nothing but location;
                Manual reveals the full form. -->
               <div class="form-group" style="margin-bottom: 0.7rem">
@@ -818,6 +880,121 @@
                 />
               </div>
 
+              <!-- Off-grid quick load wrap: revealed in off-grid goal mode -->
+              <div
+                id="offgridLoadWrap"
+                style="
+                  display: none;
+                  margin-top: 0.9rem;
+                  padding: 0.9rem 1rem;
+                  background: rgba(0, 230, 153, 0.06);
+                  border: 1px solid rgba(0, 230, 153, 0.35);
+                  border-radius: 10px;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 1rem;
+                    flex-wrap: wrap;
+                  "
+                >
+                  <label
+                    for="offgridKwhSlider"
+                    style="
+                      font-weight: 800;
+                      color: var(--text-main);
+                      font-size: 0.95rem;
+                      margin: 0;
+                    "
+                    >Off-grid power need (kWh/day):</label
+                  >
+                  <div
+                    id="offgridKwhVal"
+                    style="
+                      font-family: var(--font-mono);
+                      font-weight: 800;
+                      color: var(--primary-accent);
+                      font-size: 1rem;
+                    "
+                  >
+                    ~10 kWh/day
+                  </div>
+                </div>
+
+                <div
+                  class="offgrid-presets"
+                  style="
+                    display: flex;
+                    gap: 0.4rem;
+                    flex-wrap: wrap;
+                    margin-top: 0.6rem;
+                    margin-bottom: 0.6rem;
+                  "
+                >
+                  <button
+                    type="button"
+                    class="btn btn-outline btn-xs offgrid-preset-btn"
+                    data-kwh="2.5"
+                    style="
+                      padding: 0.25rem 0.55rem;
+                      font-size: 0.75rem;
+                      cursor: pointer;
+                    "
+                  >
+                    🚐 Camper Van (2.5k)
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline btn-xs offgrid-preset-btn"
+                    data-kwh="5"
+                    style="
+                      padding: 0.25rem 0.55rem;
+                      font-size: 0.75rem;
+                      cursor: pointer;
+                    "
+                  >
+                    🏕️ Cabin (5k)
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline btn-xs offgrid-preset-btn"
+                    data-kwh="8"
+                    style="
+                      padding: 0.25rem 0.55rem;
+                      font-size: 0.75rem;
+                      cursor: pointer;
+                    "
+                  >
+                    🔌 Critical Backup (8k)
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline btn-xs offgrid-preset-btn"
+                    data-kwh="15"
+                    style="
+                      padding: 0.25rem 0.55rem;
+                      font-size: 0.75rem;
+                      cursor: pointer;
+                    "
+                  >
+                    🏡 Homestead (15k)
+                  </button>
+                </div>
+
+                <input
+                  type="range"
+                  id="offgridKwhSlider"
+                  min="1"
+                  max="60"
+                  step="1"
+                  value="10"
+                  style="width: 100%; cursor: pointer"
+                />
+              </div>
+
               <!-- Everything below the location row is the "full form": hidden in
                Auto-run mode, revealed when the visitor switches to Manual. -->
               <div id="fullControls">
@@ -1019,6 +1196,18 @@
                     <button
                       type="button"
                       class="btn btn-outline btn-xs preset-btn"
+                      data-preset="van"
+                      style="
+                        padding: 0.3rem 0.65rem;
+                        font-size: 0.78rem;
+                        cursor: pointer;
+                      "
+                    >
+                      &#128656; Camper Van
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline btn-xs preset-btn"
                       data-preset="home"
                       style="
                         padding: 0.3rem 0.65rem;
@@ -1039,6 +1228,18 @@
                       "
                     >
                       &#128668; Homestead
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline btn-xs preset-btn"
+                      data-preset="backup"
+                      style="
+                        padding: 0.3rem 0.65rem;
+                        font-size: 0.78rem;
+                        cursor: pointer;
+                      "
+                    >
+                      &#128268; Critical Backup
                     </button>
                     <button
                       type="button"
