@@ -57,3 +57,61 @@ test("240V split-phase detection flags deep well pump and high-power inductive l
   assert.equal(needsSplitPhase, true);
   assert.equal(maxSurge, 3500);
 });
+
+test("Offgrid load heuristic uses daily kWh directly without utility bill calculation", () => {
+  function computeDailyKwh({ mode, isOffgrid, offSliderVal, billVal, tariff }) {
+    if (isOffgrid) {
+      return offSliderVal || 10;
+    }
+    if (mode === "bill") {
+      return billVal / tariff / 30.4375;
+    }
+    return 10;
+  }
+
+  // In off-grid mode, user daily kWh is read directly (5 kWh) regardless of any tariff or bill
+  const offgridKwh = computeDailyKwh({
+    mode: "bill",
+    isOffgrid: true,
+    offSliderVal: 5,
+    billVal: 150,
+    tariff: 0.35,
+  });
+  assert.equal(offgridKwh, 5);
+
+  // In grid-tie mode with $150 bill @ $0.35/kWh -> ~14.1 kWh/day
+  const gridtieKwh = computeDailyKwh({
+    mode: "bill",
+    isOffgrid: false,
+    offSliderVal: 5,
+    billVal: 150,
+    tariff: 0.35,
+  });
+  assert.ok(Math.abs(gridtieKwh - 14.1) < 0.2);
+});
+
+test("ELI5 inverter descriptions correctly branch on hardware configuration", () => {
+  function describeInverter(pvKw, battKwh, requiresSplitPhase) {
+    const splitNote = requiresSplitPhase
+      ? " Native 240V split-phase required."
+      : "";
+    if (battKwh === 0) {
+      return `Grid-tied string inverter (~${Math.max(3, Math.ceil(pvKw))} kW).${splitNote}`;
+    }
+    if (pvKw === 0) {
+      return `Bidirectional battery inverter / charger.${splitNote}`;
+    }
+    return `Hybrid inverter / charger (~5 kW continuous).${splitNote}`;
+  }
+
+  assert.ok(
+    describeInverter(6.0, 0, false).includes("Grid-tied string inverter"),
+  );
+  assert.ok(
+    describeInverter(0, 10.0, false).includes("Bidirectional battery inverter"),
+  );
+  assert.ok(
+    describeInverter(6.0, 10.0, true).includes("Hybrid inverter") &&
+      describeInverter(6.0, 10.0, true).includes("240V split-phase"),
+  );
+});

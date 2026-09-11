@@ -1572,15 +1572,12 @@ function setQuickMode(on) {
   const offgridWrap = $("offgridLoadWrap");
 
   if (billWrap)
-    billWrap.style.display = isOffgrid
-      ? "none"
-      : on
-        ? locationResolved
-          ? "block"
-          : "none"
-        : "block";
+    billWrap.style.display =
+      !isOffgrid && (!on || locationResolved) ? "block" : "none";
 
-  if (offgridWrap) offgridWrap.style.display = isOffgrid ? "block" : "none";
+  if (offgridWrap)
+    offgridWrap.style.display =
+      isOffgrid && (!on || locationResolved) ? "block" : "none";
 
   const locBtn = $("btnGeoLocate");
 
@@ -1624,28 +1621,30 @@ function readInputs() {
     peakLoadW = ap.peakW > 0 ? Math.round(ap.peakW) : null;
     peakSurgeW = ap.peakSurgeW > 0 ? Math.round(ap.peakSurgeW) : null;
     requiresSplitPhase = ap.requiresSplitPhase;
+  } else if (isOffgrid) {
+    // For off-grid, energy basis is always daily kWh (from off-grid slider or numeric dailyKwhInput)
+    const offSliderVal = parseFloat($("offgridKwhSlider")?.value);
+    const kwhInputVal = parseFloat($("dailyKwhInput")?.value);
+    dailyKwh =
+      Number.isFinite(offSliderVal) && offSliderVal > 0
+        ? offSliderVal
+        : Number.isFinite(kwhInputVal) && kwhInputVal > 0
+          ? kwhInputVal
+          : 10;
   } else if (mode === "bill") {
-    if (
-      isOffgrid &&
-      $("offgridKwhSlider") &&
-      (quickMode || !$("customRateVal")?.value)
-    ) {
-      dailyKwh = parseFloat($("offgridKwhSlider").value) || 10;
-    } else {
-      const bill = parseFloat($("billSlider")?.value ?? $("billAmount")?.value);
+    const bill = parseFloat($("billSlider")?.value ?? $("billAmount")?.value);
 
-      const rate = getTariff();
+    const rate = getTariff();
 
-      dailyKwh =
-        Number.isFinite(bill) && Number.isFinite(rate) && rate > 0
-          ? kwhFromBill(bill, rate)
-          : billAnchorKwh;
+    dailyKwh =
+      Number.isFinite(bill) && Number.isFinite(rate) && rate > 0
+        ? kwhFromBill(bill, rate)
+        : billAnchorKwh;
 
-      billAnchorKwh =
-        Number.isFinite(dailyKwh) && dailyKwh > 0 ? dailyKwh : billAnchorKwh;
-    }
+    billAnchorKwh =
+      Number.isFinite(dailyKwh) && dailyKwh > 0 ? dailyKwh : billAnchorKwh;
   } else {
-    dailyKwh = parseFloat($("dailyKwhInput").value);
+    dailyKwh = parseFloat($("dailyKwhInput").value) || 10;
   }
 
   let basis = generatorBasis ? "generator fuel cost" : "direct kWh entry";
@@ -2137,18 +2136,31 @@ function setupGoalControls() {
   if (!btnGt || !btnOff) return;
 
   const setGoal = (goal) => {
-    if (goal === "gridtie") {
+    const isGt = goal === "gridtie";
+    if (isGt) {
       btnGt.classList.add("active");
       btnOff.classList.remove("active");
       if (sysGoal) sysGoal.value = "gridtie";
       const title = document.querySelector(".section-title");
       if (title) title.textContent = "Find your cheapest path to lower bills";
+      const desc = document.querySelector(".section-desc");
+      if (desc)
+        desc.textContent =
+          "Set your monthly electric bill — then one click on your location sizes the optimal solar and battery system to cut your utility bills. Compares chemistries, models 20-year true costs, and reveals wholesale hardware savings.";
+      const optBill = $("optLoadBill");
+      if (optBill) optBill.textContent = "I know my monthly electric bill";
     } else {
       btnOff.classList.add("active");
       btnGt.classList.remove("active");
       if (sysGoal) sysGoal.value = "offgrid";
       const title = document.querySelector(".section-title");
       if (title) title.textContent = "Size your off-grid solar & battery bank";
+      const desc = document.querySelector(".section-desc");
+      if (desc)
+        desc.textContent =
+          "Size a self-reliant solar and battery storage system for your cabin, camper van, backup, or homestead. Enter your daily kWh or pick your appliances — hourly weather simulations ensure you never run out of power.";
+      const optBill = $("optLoadBill");
+      if (optBill) optBill.textContent = "Daily energy need (kWh/day slider)";
     }
     updateAutoRows();
     setQuickMode(quickMode);
@@ -2160,14 +2172,7 @@ function setupGoalControls() {
 
   if (sysGoal) {
     sysGoal.addEventListener("change", () => {
-      if (sysGoal.value === "gridtie") {
-        btnGt.classList.add("active");
-        btnOff.classList.remove("active");
-      } else {
-        btnOff.classList.add("active");
-        btnGt.classList.remove("active");
-      }
-      setQuickMode(quickMode);
+      setGoal(sysGoal.value);
     });
   }
 }
@@ -2175,11 +2180,19 @@ function setupGoalControls() {
 function setupOffgridControls() {
   const slider = $("offgridKwhSlider");
   const out = $("offgridKwhVal");
+  const kwhInput = $("dailyKwhInput");
   if (!slider) return;
+
+  const syncToVal = (val) => {
+    slider.value = String(val);
+    if (out) out.textContent = "~" + val + " kWh/day";
+    if (kwhInput) kwhInput.value = String(val);
+  };
 
   slider.addEventListener("input", () => {
     const val = parseFloat(slider.value);
     if (out) out.textContent = "~" + val + " kWh/day";
+    if (kwhInput) kwhInput.value = String(val);
   });
 
   slider.addEventListener("change", () => {
@@ -2187,12 +2200,21 @@ function setupOffgridControls() {
     else scheduleRun();
   });
 
+  if (kwhInput) {
+    kwhInput.addEventListener("input", () => {
+      const val = parseFloat(kwhInput.value);
+      if (Number.isFinite(val) && val >= 1 && val <= 60) {
+        slider.value = String(val);
+        if (out) out.textContent = "~" + val + " kWh/day";
+      }
+    });
+  }
+
   document.querySelectorAll(".offgrid-preset-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const kwh = parseFloat(btn.dataset.kwh);
       if (Number.isFinite(kwh) && kwh > 0) {
-        slider.value = String(kwh);
-        if (out) out.textContent = "~" + kwh + " kWh/day";
+        syncToVal(kwh);
         if (lastPayload) run();
         else scheduleRun();
       }
@@ -3586,8 +3608,25 @@ function renderBestPick(p) {
     ),
   );
   wrap.appendChild(card);
-  const eli5Card = renderEli5Card(p, b);
-  if (eli5Card) wrap.appendChild(eli5Card);
+}
+
+/** Renders the Plain-English ELI5 breakdown into its dedicated container. */
+function renderEli5Section(p, sys) {
+  const wrap = $("eli5CardWrap");
+  if (!wrap) return;
+  if (!sys || !p || sys.solvable === false) {
+    wrap.innerHTML = "";
+    wrap.style.display = "none";
+    return;
+  }
+  wrap.innerHTML = "";
+  const card = renderEli5Card(p, sys);
+  if (card) {
+    wrap.appendChild(card);
+    wrap.style.display = "block";
+  } else {
+    wrap.style.display = "none";
+  }
 }
 
 /** Plain-English ELI5 breakdown for beginners and non-engineers. */
@@ -3641,11 +3680,16 @@ function renderEli5Card(p, sys) {
   const splitWarning = window.lastInputs?.requiresSplitPhase
     ? " Native 240V split-phase is required for your selected 240V appliances (e.g. well pump, EV, or heat pump)."
     : " Supplies standard 120V household power.";
-  const invContinuous = Math.max(
-    3,
-    Math.round(p.dailyKwh ? (p.dailyKwh * 1000) / 24 / 500 : 3),
-  );
-  const invDesc = `A wall-mounted hybrid inverter / charger (~${invContinuous} to 6 kW continuous). It quietly converts DC power from solar and batteries into clean AC power for your outlets.${splitWarning}`;
+  const peakW =
+    window.lastInputs?.peakLoadW || Math.round(((p.dailyKwh || 0) * 1000) / 24);
+  const invContinuous = Math.max(3, Math.ceil((peakW * 1.25) / 1000));
+  const invDesc =
+    sys.battKwh === 0
+      ? `A grid-tied string inverter (~${Math.max(3, Math.ceil(sys.pvKw))} kW). It converts daytime solar DC electricity directly into 120V/240V AC power for your home appliances and sends excess to the grid.`
+      : sys.pvKw === 0
+        ? `A bidirectional battery inverter / charger (~${invContinuous} kW). It quietly charges your batteries during cheap off-peak hours and discharges during peak-rate periods to eliminate expensive utility power.`
+        : `A wall-mounted hybrid inverter / charger (~${invContinuous} to ${Math.max(invContinuous, 6)} kW continuous). It quietly converts DC power from solar and batteries into clean AC power for your outlets.${splitWarning}`;
+
   const itemInv = el("div", { class: "eli5-item" });
   itemInv.appendChild(
     el("div", { class: "eli5-item-label" }, "⚡ The Inverter (System Brain)"),
@@ -6297,8 +6341,6 @@ function renderSelectedBanner(p, sel) {
     );
   }
   wrap.appendChild(card);
-  const eli5Card = renderEli5Card(p, sel);
-  if (eli5Card) wrap.appendChild(eli5Card);
   return true;
 }
 
@@ -6349,6 +6391,8 @@ function refreshSelectionOutputs(p) {
 
   // Granular panel follows the same committed selection.
   if (focusFirst) renderFocusPanel(p, sel, false);
+
+  renderEli5Section(p, sel || p.best);
 
   const inp = readInputs();
   updateShareHash(p, inp);
