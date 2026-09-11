@@ -1,0 +1,1515 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark" />
+    <title>
+      Battery Longevity, Oversizing &amp; DoD Reference Guide (2026)
+    </title>
+    <meta
+      name="description"
+      content="Empirical degradation physics, Wöhler power-law cycle models, and sizing strategies for LFP, Sodium-Ion, and Lead-Acid (AGM). Learn how oversizing and Depth of Discharge (DoD) control eliminate battery replacements."
+    />
+    <meta
+      name="keywords"
+      content="battery longevity, depth of discharge, DoD cycle life, LiFePO4 lifespan, sodium-ion battery cycles, battery oversizing zero swap, off-grid battery degradation"
+    />
+    <link
+      rel="canonical"
+      href="https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
+    />
+    <link rel="icon" type="image/svg+xml" href="../../assets/icon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="48x48"
+      href="../../assets/favicon-48.png"
+    />
+    <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png" />
+
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
+    />
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href="https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
+    />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="BigEnergyCo Blog"
+      href="https://freeoffgridcalculator.com/rss.xml"
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="BigEnergyCo" />
+    <meta
+      property="og:title"
+      content="Battery Longevity, Oversizing &amp; DoD Reference Guide (2026)"
+    />
+    <meta
+      property="og:description"
+      content="Empirical degradation physics, Wöhler power-law cycle models, and sizing strategies for LFP, Sodium-Ion, and Lead-Acid (AGM). Learn how oversizing and Depth of Discharge (DoD) control eliminate battery replacements."
+    />
+    <meta
+      property="og:url"
+      content="https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
+    />
+    <meta property="article:published_time" content="2026-09-11" />
+    <meta property="article:modified_time" content="2026-09-11" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Battery Longevity, Oversizing &amp; DoD Reference Guide (2026)"
+    />
+    <meta
+      name="twitter:description"
+      content="Empirical degradation physics, Wöhler power-law cycle models, and sizing strategies for LFP, Sodium-Ion, and Lead-Acid (AGM). Learn how oversizing and Depth of Discharge (DoD) control eliminate battery replacements."
+    />
+    <meta
+      property="og:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      name="twitter:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+
+    <!-- Structured Data JSON-LD (Article + BreadcrumbList + FAQPage) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Article",
+            "@id": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/#article",
+            "isPartOf": {
+              "@type": "WebPage",
+              "@id": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
+            },
+            "headline": "Battery Longevity, Oversizing & Depth of Discharge (DoD) Reference Guide (2026)",
+            "name": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
+            "description": "Empirical degradation physics, Wöhler power-law cycle models, and sizing strategies for LFP, Sodium-Ion, and Lead-Acid (AGM). Learn how oversizing and Depth of Discharge (DoD) control eliminate battery replacements.",
+            "datePublished": "2026-09-11T00:00:00Z",
+            "dateModified": "2026-09-11T00:00:00Z",
+            "mainEntityOfPage": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/",
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"],
+            "author": {
+              "@type": "Person",
+              "name": "Lucas Ballek",
+              "url": "https://freeoffgridcalculator.com"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "BigEnergyCo",
+              "url": "https://freeoffgridcalculator.com"
+            },
+            "keywords": [
+              "battery longevity",
+              "depth of discharge",
+              "DoD cycle life",
+              "LiFePO4 lifespan",
+              "sodium-ion battery",
+              "battery oversizing zero swap",
+              "off-grid battery degradation"
+            ]
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://freeoffgridcalculator.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Blog",
+                "item": "https://freeoffgridcalculator.com/blog/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Battery Longevity & DoD Reference Guide",
+                "item": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
+              }
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Why does cycling LiFePO4 to only 80% or 60% DoD dramatically increase cycle life?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Battery cycle degradation follows a generalized Wöhler fatigue power law. Deep cycles (90-100% DoD) subject the graphite anode and cathode crystal lattices to extreme volumetric expansion and mechanical stress, cracking particles and consuming active lithium through rapid Solid Electrolyte Interphase (SEI) reformation. Limiting daily cycling to 60-80% DoD reduces micro-strain, extending cell life from ~3,500 cycles to over 10,000 cycles."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can Sodium-ion batteries safely discharge to 0% DoD without damage?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Unlike lithium-ion cells which require copper foil on the negative anode, sodium-ion cells utilize aluminum current collectors on both the positive cathode and negative anode. Copper dissolves irreversibly into the electrolyte below 1.5V, causing catastrophic short circuits upon recharge. Aluminum does not alloy with sodium at low potentials, allowing sodium-ion cells to safely discharge to 0.0V without structural degradation."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Why do standard off-grid inverters only use ~85% of a Sodium-ion battery bank?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Sodium-ion cells have a sloping discharge curve spanning from 4.0V down to ~1.5V. Standard 48V off-grid inverters have fixed low-voltage cutoffs designed for LFP (~40V to 42V, or ~2.5V per cell in a 16S bank). Operating on these inverters cuts off discharge before the lowest 15% of cell capacity is drained. This shallow cycling naturally protects the cells from extreme phase-stress, extending cycle life beyond 5,500 cycles."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can Lead-Acid (AGM) batteries achieve a 20-year lifespan if oversized?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. While shallow cycling (such as 20% DoD) slows down cyclic sulfation, lead-acid batteries face an unavoidable chemical calendar aging limit of 6 to 8 years caused by positive grid lead corrosion (oxidation to lead dioxide), active material shedding, and electrolyte dry-out. Regardless of bank oversizing, an AGM bank will physically degrade and require replacement 3 to 5 times over a 20-year horizon."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does oversizing a battery bank save money over a 20-year horizon?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Oversizing by 25% to 35% reduces daily Depth of Discharge from ~85% to ~60%. Because Wöhler exponent β > 1.5, this shallower depth extends cycle life from ~6,000 cycles (16 years) to over 10,000 cycles (27+ years). This entirely eliminates the need for a mid-life battery bank purchase, disposal logistics, and expensive electrician labor, yielding a lower 20-year levelized cost of storage."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+
+    <style>
+      :root {
+        color-scheme: dark;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.28) rgba(9, 13, 22, 0.85);
+
+        --bg-dark: #090d16;
+        --bg-card: rgba(18, 26, 44, 0.85);
+        --bg-card-hover: rgba(28, 40, 66, 0.95);
+        --border-glow: rgba(0, 230, 153, 0.35);
+        --border-card: rgba(255, 255, 255, 0.12);
+
+        --primary-accent: #00e699;
+        --primary-glow: rgba(0, 230, 153, 0.5);
+        --secondary-accent: #3b82f6;
+        --warning-orange: #f59e0b;
+        --danger-red: #ef4444;
+
+        --text-main: #f3f4f6;
+        --text-muted: #9ca3af;
+        --text-bright: #ffffff;
+
+        --font-main:
+          system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        --font-mono:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background-color: var(--bg-dark);
+        color: var(--text-main);
+        font-family: var(--font-main);
+        line-height: 1.7;
+        font-size: 1.05rem;
+        background-image:
+          radial-gradient(
+            circle at 50% 0%,
+            rgba(0, 230, 153, 0.08) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(59, 130, 246, 0.05) 0%,
+            transparent 40%
+          );
+        background-attachment: fixed;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        background: rgba(9, 13, 22, 0.92);
+        border-bottom: 1px solid var(--border-card);
+        padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+      }
+
+      .nav-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(
+          135deg,
+          #ffffff 0%,
+          var(--primary-accent) 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+      }
+
+      .logo .highlight {
+        color: var(--primary-accent);
+        -webkit-text-fill-color: var(--primary-accent);
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 1.75rem;
+        align-items: center;
+      }
+
+      .nav-links a {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      .nav-links a:hover,
+      .nav-links a.active {
+        color: var(--text-bright);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1.4rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        border: none;
+        text-decoration: none !important;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #00e699 0%, #00b377 100%);
+        color: #04120c;
+        font-weight: 700;
+        box-shadow: 0 0 15px rgba(0, 230, 153, 0.3);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 25px rgba(0, 230, 153, 0.5);
+        color: #04120c;
+      }
+
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        margin-top: 2rem;
+      }
+
+      .breadcrumb a {
+        color: var(--text-muted);
+        text-decoration: none;
+      }
+
+      .breadcrumb a:hover {
+        color: var(--primary-accent);
+      }
+
+      .article-header {
+        margin-bottom: 2.5rem;
+      }
+
+      .article-tag {
+        display: inline-block;
+        background: rgba(0, 230, 153, 0.12);
+        color: var(--primary-accent);
+        border: 1px solid var(--primary-glow);
+        padding: 0.3rem 0.9rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        font-size: clamp(2rem, 5vw, 2.75rem);
+        font-weight: 900;
+        line-height: 1.25;
+        margin-bottom: 1rem;
+        letter-spacing: -0.5px;
+        color: #ffffff;
+      }
+
+      .article-meta {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        border-bottom: 1px solid var(--border-card);
+        padding-bottom: 1.5rem;
+      }
+
+      .article-content {
+        padding-bottom: 4rem;
+      }
+
+      .article-content h2 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin: 2.75rem 0 1rem;
+        color: #ffffff;
+        letter-spacing: -0.3px;
+        position: relative;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .article-content h3 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin: 1.75rem 0 0.75rem;
+        color: #f3f4f6;
+      }
+
+      .article-content p {
+        margin-bottom: 1.35rem;
+        color: #d1d5db;
+      }
+
+      .article-content ul,
+      .article-content ol {
+        margin-bottom: 1.5rem;
+        padding-left: 1.5rem;
+        color: #d1d5db;
+      }
+
+      .article-content li {
+        margin-bottom: 0.5rem;
+      }
+
+      .article-content strong {
+        color: #ffffff;
+      }
+
+      .callout {
+        border-radius: 10px;
+        padding: 1.25rem 1.5rem;
+        margin: 1.75rem 0;
+        background: rgba(18, 26, 44, 0.9);
+        border: 1px solid var(--border-card);
+      }
+
+      .callout-info {
+        border-left: 4px solid var(--secondary-accent);
+        background: rgba(59, 130, 246, 0.08);
+        border-color: rgba(59, 130, 246, 0.3);
+      }
+
+      .callout-success {
+        border-left: 4px solid var(--primary-accent);
+        background: rgba(0, 230, 153, 0.08);
+        border-color: rgba(0, 230, 153, 0.3);
+      }
+
+      .callout-warning {
+        border-left: 4px solid var(--warning-orange);
+        background: rgba(245, 158, 11, 0.08);
+        border-color: rgba(245, 158, 11, 0.3);
+      }
+
+      .callout-danger {
+        border-left: 4px solid var(--danger-red);
+        background: rgba(239, 68, 68, 0.08);
+        border-color: rgba(239, 68, 68, 0.3);
+      }
+
+      .callout-title {
+        font-weight: 700;
+        font-size: 1.05rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #ffffff;
+      }
+
+      .math-box {
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 8px;
+        padding: 1.2rem 1.5rem;
+        margin: 1.5rem 0;
+        font-family: var(--font-mono);
+        font-size: 0.95rem;
+        color: #93c5fd;
+        overflow-x: auto;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+        margin: 2rem 0;
+        border: 1px solid var(--border-card);
+        border-radius: 10px;
+        background: var(--bg-card);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.92rem;
+      }
+
+      th,
+      td {
+        padding: 0.9rem 1.1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      th {
+        background: rgba(255, 255, 255, 0.04);
+        font-weight: 700;
+        color: #ffffff;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .badge-green {
+        background: rgba(0, 230, 153, 0.15);
+        color: var(--primary-accent);
+        border: 1px solid rgba(0, 230, 153, 0.3);
+      }
+
+      .badge-blue {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+      }
+
+      .badge-red {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+
+      .cta-card {
+        background: linear-gradient(
+          135deg,
+          rgba(18, 26, 44, 0.95) 0%,
+          rgba(10, 30, 45, 0.9) 100%
+        );
+        border: 1px solid var(--border-glow);
+        border-radius: 12px;
+        padding: 2.25rem 2rem;
+        text-align: center;
+        margin: 3.5rem 0 2rem;
+        box-shadow: 0 10px 30px rgba(0, 230, 153, 0.1);
+      }
+
+      .cta-card h3 {
+        font-size: 1.6rem;
+        margin-bottom: 0.75rem;
+        color: #ffffff;
+      }
+
+      .cta-card p {
+        color: var(--text-muted);
+        max-width: 600px;
+        margin: 0 auto 1.5rem;
+      }
+
+      .faq-item {
+        background: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        padding: 1.25rem;
+      }
+
+      .faq-question {
+        font-weight: 700;
+        color: #ffffff;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .faq-answer {
+        color: #d1d5db;
+        font-size: 0.98rem;
+        line-height: 1.6;
+      }
+
+      .citation-list {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .citation-list li {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-bottom: 0.85rem;
+        padding-left: 1.25rem;
+        text-indent: -1.25rem;
+      }
+
+      footer {
+        border-top: 1px solid var(--border-card);
+        padding: 3rem 0 max(3rem, env(safe-area-inset-bottom));
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        background: rgba(9, 13, 22, 0.95);
+      }
+
+      footer a {
+        color: var(--text-muted);
+        text-decoration: none;
+      }
+
+      footer a:hover {
+        color: var(--primary-accent);
+      }
+
+      @media (max-width: 768px) {
+        .nav-links {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header>
+      <div class="container nav-flex">
+        <a href="../../" class="logo">
+          <span>⚡</span>
+          <span>BigEnergy<span class="highlight">Co</span></span>
+        </a>
+        <nav class="nav-links">
+          <a href="../../#sizing">Size Your System</a>
+          <a href="../../#bom">Hardware Reference</a>
+          <a href="../" class="active">Blog</a>
+          <a href="../../#legal">Terms &amp; Disclaimer</a>
+        </nav>
+        <div>
+          <a href="../../#sizing" class="btn btn-primary"
+            >Free Sizing Calculator</a
+          >
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- Breadcrumbs -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../../">Home</a>
+        <span>&rsaquo;</span>
+        <a href="../">Blog</a>
+        <span>&rsaquo;</span>
+        <span style="color: var(--text-main)"
+          >Battery Longevity &amp; DoD Guide</span
+        >
+      </nav>
+
+      <!-- Article Header -->
+      <article class="article-content">
+        <header class="article-header">
+          <div class="article-tag">
+            🔬 Engineering Reference &amp; Scientific Data
+          </div>
+          <h1>
+            Battery Longevity, Oversizing &amp; Depth of Discharge (DoD): The
+            Zero-Swap Engineering Guide
+          </h1>
+          <div class="article-meta">
+            <span
+              >By <strong>Lucas Ballek</strong> &middot; BigEnergyCo
+              Engineering</span
+            >
+            <span>Published: Sep 11, 2026</span>
+            <span>Reading Time: 14 min</span>
+          </div>
+        </header>
+
+        <!-- Executive Summary Callout -->
+        <div class="callout callout-success">
+          <div class="callout-title">⚡ The Core Engineering Finding</div>
+          <p style="margin-bottom: 0">
+            Battery cycle degradation does not scale linearly with usage; it
+            follows a <strong>Wöhler fatigue power law</strong> where depth of
+            discharge (DoD) dictates mechanical cell wear. By sizing an LFP or
+            Sodium-ion bank <strong>25% to 35% larger</strong> than minimum
+            daily demand, operating DoD drops from 85%–90% down to 60%–65%. This
+            single sizing decision extends battery cycle life from ~6,000 cycles
+            (16 years) to <strong>over 10,000 cycles (&gt;27 years)</strong>,
+            completely eliminating mid-life battery replacements, hazardous
+            disposal, and thousands of dollars in replacement electrician labor.
+          </p>
+        </div>
+
+        <h2>
+          1. The Physics of Battery Degradation: Why Depth of Discharge Dictates
+          Lifespan
+        </h2>
+        <p>
+          In off-grid and backup power systems, battery longevity is commonly
+          misunderstood as a static calendar warranty (e.g., &ldquo;a 10-year
+          battery&rdquo;). In reality, rechargeable electrochemical cells
+          experience two independent, simultaneous aging processes:
+        </p>
+        <ul>
+          <li>
+            <strong>Calendar Aging:</strong> Parasitic chemical side reactions
+            between the electrolyte and electrodes that occur continuously over
+            time, driven predominantly by ambient temperature and average State
+            of Charge (SoC).
+          </li>
+          <li>
+            <strong>Cyclic Fatigue Degradation:</strong> Mechanical and
+            electrochemical wear caused by the physical expansion and
+            contraction of electrode host materials as ions (Li<sup>+</sup> or
+            Na<sup>+</sup>) insert into and de-intercalate from the crystal
+            lattice during daily charge and discharge cycles.
+          </li>
+        </ul>
+        <p>
+          Just as structural metal components endure mechanical fatigue under
+          repeated stress cycles, battery electrodes undergo lattice strain
+          during deep cycling. When an LFP cell is discharged to 100% DoD (0%
+          SoC), its graphite anode undergoes approximately
+          <strong>10% to 13% volumetric contraction</strong>, while the cathode
+          expands. This repetitive mechanical breathing induces micro-cracking
+          in electrode particles, exposing fresh active material that consumes
+          available ions to reform the
+          <strong>Solid Electrolyte Interphase (SEI)</strong> layer.
+        </p>
+
+        <div class="callout callout-info">
+          <div class="callout-title">
+            📐 The Generalized Wöhler Power-Law Degradation Model
+          </div>
+          <p>
+            Across academic battery degradation literature (Preger et al.,
+            Sandia National Laboratories; Smith et al., NREL), cyclic capacity
+            retention to 80% State of Health (SOH) is accurately modeled using
+            an inverse power law:
+          </p>
+          <div class="math-box">N_cycles(DoD) = N_0 × (DoD_0 / DoD)^β</div>
+          <p style="margin-top: 0.5rem; margin-bottom: 0">
+            Where <em>N_0</em> is the baseline manufacturer cycle life rated at
+            depth <em>DoD_0</em> (e.g., 6,000 cycles at 80% DoD), and
+            <strong>β</strong> is the degradation sensitivity exponent. For
+            modern prismatic LFP power cells, empirical curve fitting
+            establishes <strong>β &approx; 1.65 to 1.85</strong>. Because β is
+            significantly greater than 1.0, shallow cycling yields a non-linear
+            dividend in cumulative lifetime energy throughput.
+          </p>
+        </div>
+
+        <h3>The Cumulative Throughput Paradox</h3>
+        <p>
+          A common builder misconception is that &ldquo;two 50% cycles equal one
+          100% cycle.&rdquo; The physics of intercalation strain prove this
+          false. The cumulative lifetime energy delivered by a battery bank
+          before reaching 80% capacity retention is given by:
+        </p>
+        <div class="math-box">
+          E_lifetime = N_cycles × DoD × E_nameplate &prop; DoD^(1 - β)
+        </div>
+        <p>
+          Because β &approx; 1.65, the exponent (1 &minus; β) is negative
+          (&minus;0.65). Therefore,
+          <strong
+            >as operating Depth of Discharge decreases, cumulative lifetime
+            throughput increases substantially</strong
+          >. Operating a 15 kWh LFP bank at 60% daily DoD delivers nearly
+          <strong>65% more total kilowatt-hours</strong> over its operational
+          life than hammering the same bank to 100% DoD every evening.
+        </p>
+
+        <h2>
+          2. Empirical Degradation &amp; Sizing Matrix by Battery Chemistry
+        </h2>
+        <p>
+          The table below compares the three primary off-grid battery
+          chemistries using empirical cell manufacturer datasheets (CATL, EVE
+          Energy, HiNa Battery, Faradion, Trojan/Rolls BCI standards) and
+          peer-reviewed cycling data:
+        </p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Specification</th>
+                <th>LFP (LiFePO<sub>4</sub>)</th>
+                <th>Sodium-Ion (Na-Ion)</th>
+                <th>Lead-Acid (AGM)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Nominal Cell Voltage</strong></td>
+                <td>3.2 V (2.50V &ndash; 3.65V)</td>
+                <td>3.0 V &ndash; 3.1 V (1.50V &ndash; 4.00V)</td>
+                <td>2.0 V (1.75V &ndash; 2.45V)</td>
+              </tr>
+              <tr>
+                <td><strong>Inherent Cell Window</strong></td>
+                <td>80% &ndash; 90% DoD</td>
+                <td><strong>95%+ (Safe to 0.0V)</strong></td>
+                <td>50% DoD strict limit</td>
+              </tr>
+              <tr>
+                <td><strong>Inverter Utilization Window</strong></td>
+                <td>80% &ndash; 90% (flat voltage curve)</td>
+                <td><strong>~85%</strong> (clipped by 40-42V LVD)</td>
+                <td>50% (rapid voltage drop)</td>
+              </tr>
+              <tr>
+                <td><strong>Cycle Life @ 100% DoD</strong></td>
+                <td>3,500 &ndash; 4,200 cycles</td>
+                <td>3,800 &ndash; 4,500 cycles</td>
+                <td>150 &ndash; 250 cycles (&lt;8 months)</td>
+              </tr>
+              <tr>
+                <td><strong>Cycle Life @ 80% DoD</strong></td>
+                <td>
+                  <strong>6,000 &ndash; 8,000 cycles</strong> (Rating Benchmark)
+                </td>
+                <td><strong>5,500 &ndash; 6,500 cycles</strong></td>
+                <td>250 &ndash; 350 cycles (~10 months)</td>
+              </tr>
+              <tr>
+                <td><strong>Cycle Life @ 60% DoD</strong></td>
+                <td><strong>10,000 &ndash; 12,000 cycles</strong></td>
+                <td><strong>9,000 &ndash; 10,500 cycles</strong></td>
+                <td>400 &ndash; 500 cycles (~1.2 years)</td>
+              </tr>
+              <tr>
+                <td><strong>Cycle Life @ 50% DoD</strong></td>
+                <td>14,000+ cycles</td>
+                <td>11,500+ cycles</td>
+                <td><strong>500 &ndash; 600 cycles</strong> (~1.5 years)</td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>20-Year Demand (1 cycle/day = 7,300 cycles)</strong>
+                </td>
+                <td>
+                  <span class="badge badge-green"
+                    >0 Swaps (with 25% oversize)</span
+                  >
+                </td>
+                <td>
+                  <span class="badge badge-green"
+                    >0 Swaps (with 20% oversize)</span
+                  >
+                </td>
+                <td>
+                  <span class="badge badge-red"
+                    >3 to 5 Full Swaps Required</span
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Hard Calendar Life Ceiling</strong></td>
+                <td>18 &ndash; 25+ years</td>
+                <td>18 &ndash; 25+ years</td>
+                <td><strong>6 &ndash; 8 years maximum</strong></td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>Cold Weather Limit (&lt;0&deg;C / 32&deg;F)</strong>
+                </td>
+                <td>Charge blocked; needs heaters</td>
+                <td>
+                  <span class="badge badge-blue"
+                    >Charges down to &minus;20&deg;C (&minus;4&deg;F)</span
+                  >
+                </td>
+                <td>Loses 30%&ndash;50% capacity; freeze risk</td>
+              </tr>
+              <tr>
+                <td><strong>Thermal Runaway Temperature</strong></td>
+                <td>~270&deg;C (very stable)</td>
+                <td>&gt;350&deg;C (virtually non-combustible)</td>
+                <td>Hydrogen off-gassing hazard</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>
+          3. LiFePO<sub>4</sub> (LFP) Deep Dive: The 80% Benchmark vs. The 60%
+          Zero-Swap Sweet Spot
+        </h2>
+        <p>
+          Lithium Iron Phosphate (LFP) has rightfully become the global gold
+          standard for stationary off-grid energy storage. However, consumer
+          marketing often conflates cell limits with optimal engineering
+          practice.
+        </p>
+        <h3>Why the Standard Rating is 80% DoD</h3>
+        <p>
+          Tier-1 power-cell manufacturers (such as CATL and EVE Energy in their
+          LF280K and LF314K prismatic datasheets) evaluate cells at:
+        </p>
+        <ul>
+          <li><strong>Temperature:</strong> 25&deg;C &plusmn; 2&deg;C.</li>
+          <li>
+            <strong>Charge/Discharge Rate:</strong> 0.5C constant current charge
+            to 3.65V, 0.5C discharge to 2.50V.
+          </li>
+          <li>
+            <strong>Depth of Discharge:</strong> 80% DoD (cycling between 10%
+            and 90% SoC).
+          </li>
+          <li>
+            <strong>End of Life (EOL) Criterion:</strong> 80% capacity retention
+            (State of Health).
+          </li>
+        </ul>
+        <p>
+          Under these standardized conditions, Grade-A prismatic LFP cells
+          consistently achieve <strong>6,000 to 8,000 cycles</strong>. In a
+          daily cycling off-grid home (365 cycles per year), 6,000 cycles
+          equates to <strong>16.4 years of service</strong>. While impressive,
+          an 80% DoD sizing strategy means that around year 14 to 16, the
+          homeowner must purchase a replacement bank, hire an electrician, and
+          dismantle their power wall.
+        </p>
+
+        <div class="callout callout-warning">
+          <div class="callout-title">
+            ⚠️ The Hazard of Daily 90%–100% Deep Discharges
+          </div>
+          <p style="margin-bottom: 0">
+            Some installers size battery banks right at the edge of the load
+            curve (relying on 90% to 95% DoD daily). Discharging LFP below
+            3.0V/cell daily drives cell voltage into the steep discharge cliff.
+            In this regime, graphite anode delamination accelerates, and lithium
+            plating occurs during morning solar recharge before cell
+            temperatures normalize. Operating at 95%+ daily DoD degrades LFP
+            cycle life to <strong>3,500–4,200 cycles (under 11 years)</strong>.
+          </p>
+        </div>
+
+        <h3>The Math of Zero-Swap Oversizing</h3>
+        <p>
+          By oversizing the LFP bank by just <strong>30%</strong> (for example,
+          installing 16.5 kWh instead of 12.5 kWh for a 10 kWh/day home), daily
+          depth of discharge drops from 80% to <strong>60.6%</strong>. Plugging
+          DoD = 0.606 into our Wöhler model:
+        </p>
+        <div class="math-box">
+          N = 6,000 × (0.80 / 0.606)^1.65 = 6,000 × (1.32)^1.65 = 6,000 × 1.58 =
+          9,480 cycles
+        </div>
+        <p>
+          At 365 cycles per year, 9,480 cycles translates to
+          <strong>26 years of continuous daily operation</strong>. Because the
+          bank never operates under high lattice strain, calendar aging becomes
+          the primary degradation mechanism, and the bank easily crosses the
+          20-year threshold with <strong>zero battery replacements</strong>.
+        </p>
+
+        <h2>
+          4. Sodium-Ion (Na-Ion) Deep Dive: The 0V Cell Window vs. Inverter
+          Clipping Reality
+        </h2>
+        <p>
+          Sodium-ion batteries represent the most significant chemistry
+          breakthrough for stationary storage in two decades. Their
+          electrochemical profile introduces unique characteristics that
+          directly influence longevity calculations:
+        </p>
+
+        <h3>Why Sodium-Ion Safely Discharges to 0.0V</h3>
+        <p>
+          In lithium-ion cells (including LFP and NMC), the positive cathode
+          current collector is aluminum foil, while the negative anode collector
+          must be copper foil. Lithium alloys destructively with aluminum at low
+          potentials, necessitating copper. However, if a lithium cell
+          discharges below ~1.5V,
+          <strong
+            >the copper current collector dissolves into the liquid
+            electrolyte</strong
+          >
+          as Cu<sup>2+</sup> ions. Upon recharging, copper plates uncontrollably
+          into microscopic metallic needles (dendrites) that puncture the
+          separator, causing instantaneous internal shorts and fire hazards.
+        </p>
+        <p>
+          <strong
+            >Sodium does not alloy with aluminum at low potentials.</strong
+          >
+          Consequently, sodium-ion cells use
+          <strong
+            >inexpensive, lightweight aluminum current collectors on both
+            positive and negative electrodes</strong
+          >. Aluminum does not dissolve at zero volts. A sodium-ion pack can be
+          discharged completely to 0.0V, short-circuited with a copper busbar
+          for shipping, and stored for years with zero capacity loss or safety
+          degradation.
+        </p>
+
+        <h3>
+          The Inverter Voltage Window Reality: &ldquo;Using Less of It&rdquo;
+        </h3>
+        <p>
+          While the sodium-ion cell has a true 95%+ usable electrochemical
+          window, residential off-grid inverters (SRNE, PowMr, Deye, Sol-Ark,
+          Schneider) were engineered around the flat voltage profile of LFP (48V
+          nominal, operating between 54V and 42V).
+        </p>
+        <ul>
+          <li>
+            <strong>LFP Voltage Characteristic:</strong> Extremely flat curve.
+            80% of capacity is delivered between 3.25V and 3.15V per cell.
+          </li>
+          <li>
+            <strong>Sodium-Ion Voltage Characteristic:</strong> Continuously
+            sloping discharge curve from 4.0V down to 1.5V per cell.
+          </li>
+        </ul>
+        <p>
+          When a 16S Sodium-ion battery pack is connected to a standard 48V
+          inverter, the inverter&rsquo;s Low Voltage Disconnect (LVD) triggers
+          at 40.0V to 42.0V (~2.5V to 2.6V per cell). This means the inverter
+          disconnects while the sodium cells still contain 10% to 15% of their
+          stored chemical energy.
+        </p>
+
+        <div class="callout callout-success">
+          <div class="callout-title">
+            💡 Why Inverter Clipping Is an Accidental Longevity Superpower
+          </div>
+          <p style="margin-bottom: 0">
+            Because the inverter naturally stops drawing power at ~2.5V/cell,
+            <strong
+              >the sodium-ion pack operates in an ~85% DoD window in daily field
+              use</strong
+            >. This prevents cells from ever entering the high-polarization,
+            high-temperature regime at the extreme bottom of discharge. As a
+            result, modern commercial sodium-ion packs (such as HiNa, CATL
+            Na-ion, and Faradion) effortlessly deliver
+            <strong>5,500 to 6,500 cycles</strong>. With a modest 1.2&times;
+            sizing oversize, a sodium-ion bank easily achieves 20+ years with
+            zero swaps &mdash; while providing complete immunity to sub-zero
+            freeze damage down to &minus;20&deg;C (&minus;4&deg;F).
+          </p>
+        </div>
+
+        <h2>
+          5. Lead-Acid (AGM) Deep Dive: Why Oversizing Cannot Save It (The
+          Calendar Ceiling)
+        </h2>
+        <p>
+          Sealed Absorbed Glass Mat (AGM) and flooded lead-acid batteries remain
+          tempting to entry-level builders due to their low initial retail price
+          tag. However, from an empirical lifecycle perspective, lead-acid
+          suffers from fatal physical limitations.
+        </p>
+
+        <h3>Peukert&rsquo;s Law and the 50% Sulfation Limit</h3>
+        <p>
+          Discharging lead-acid beyond 50% DoD causes the lead sulfate
+          (PbSO<sub>4</sub>) that forms on both positive and negative plates
+          during discharge to coalesce into large, dense, non-conductive
+          crystalline structures. These hard sulfate crystals cannot be broken
+          down during normal solar charging, permanently destroying battery
+          capacity. At 100% DoD, an AGM battery is physically destroyed in
+          <strong
+            >150 to 200 cycles (less than 6 months of daily cycling)</strong
+          >. Even at the recommended 50% DoD ceiling, cycle life is limited to
+          <strong>500 to 600 cycles (roughly 1.5 years)</strong>.
+        </p>
+
+        <h3>The Zero-Swap Impossibility: Chemical Calendar Limits</h3>
+        <p>
+          Some designers suggest that oversizing an AGM bank by 4&times; or
+          5&times; so that daily cycling is restricted to 15%–20% DoD could
+          yield a 20-year zero-swap battery.
+          <strong
+            >Electrochemical science proves this physically impossible.</strong
+          >
+        </p>
+
+        <div class="callout callout-danger">
+          <div class="callout-title">
+            🛑 The Hard Calendar Aging Ceiling of Lead-Acid Chemistry
+          </div>
+          <p>
+            Even in float service with zero cycling, lead-acid batteries degrade
+            via irreversible internal chemical mechanisms:
+          </p>
+          <ul style="margin-bottom: 0.5rem">
+            <li>
+              <strong>Positive Lead Grid Corrosion:</strong> The lead alloy grid
+              of the positive plate is perpetually oxidized into brittle lead
+              dioxide:
+              <code style="color: #fca5a5"
+                >Pb + 2H<sub>2</sub>O &rarr; PbO<sub>2</sub> + 4H<sup>+</sup> +
+                4e<sup>&minus;</sup></code
+              >. This reaction causes volumetric expansion, grid elongation,
+              structural warping, and eventual internal short circuits.
+            </li>
+            <li>
+              <strong>Electrolyte Dry-Out:</strong> Recombinant VRLA/AGM valves
+              release minute quantities of water vapor during charge
+              overpotentials, gradually drying out the glass mat separator.
+            </li>
+            <li>
+              <strong>Active Material Shedding:</strong> Spongy lead paste
+              detaches from the grids under mechanical vibration and thermal
+              cycling.
+            </li>
+          </ul>
+          <p style="margin-bottom: 0">
+            According to Battery Council International (BCI) and IEEE 1188
+            standards,
+            <strong
+              >the maximum physical calendar life of deep-cycle AGM batteries is
+              6 to 8 years</strong
+            >
+            under optimal ambient temperatures (20&deg;C / 68&deg;F). Therefore,
+            <strong
+              >AGM requires a minimum of 3 to 5 complete bank replacements
+              across a 20-year period</strong
+            >, regardless of how drastically the bank is oversized.
+          </p>
+        </div>
+
+        <h2>6. 20-Year Worked Financial Example: 10 kWh/Day Off-Grid Home</h2>
+        <p>
+          To understand why bank oversizing is the most profitable financial
+          decision in off-grid solar, let us examine a real-world home consuming
+          <strong>10 kWh of usable power per day</strong> over a 20-year horizon
+          (7,300 daily cycles) at landed global hardware pricing:
+        </p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>System Configuration</th>
+                <th>Bank Size (Nameplate)</th>
+                <th>Daily Operating DoD</th>
+                <th>Expected Cycle Life</th>
+                <th>20-Yr Bank Swaps</th>
+                <th>Upfront Battery Cost</th>
+                <th>Replacement &amp; Labor Cost</th>
+                <th>True 20-Yr Lifetime Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>1. Tight LFP Bank</strong> (Baseline)</td>
+                <td>12.5 kWh</td>
+                <td>80.0% DoD</td>
+                <td>6,000 cycles (~16 yrs)</td>
+                <td><strong>1 Swap</strong> (at Year 16)</td>
+                <td>$2,375</td>
+                <td>$2,750 (cells + electrician)</td>
+                <td><strong>$5,125</strong></td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>2. Zero-Swap Oversized LFP</strong>
+                  <span class="badge badge-green">Recommended</span>
+                </td>
+                <td><strong>16.5 kWh</strong></td>
+                <td><strong>60.6% DoD</strong></td>
+                <td><strong>9,500+ cycles (&gt;26 yrs)</strong></td>
+                <td><span class="badge badge-green">0 Swaps</span></td>
+                <td>$3,135</td>
+                <td>$0</td>
+                <td>
+                  <strong>$3,135</strong>
+                  <em style="color: var(--primary-accent)">(Saves $1,990!)</em>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>3. Zero-Swap Sodium-Ion</strong>
+                  <span class="badge badge-blue">Cold Climates</span>
+                </td>
+                <td><strong>15.0 kWh</strong></td>
+                <td>66.7% DoD (~85% inv.)</td>
+                <td><strong>8,500+ cycles (&gt;23 yrs)</strong></td>
+                <td><span class="badge badge-green">0 Swaps</span></td>
+                <td>$2,850</td>
+                <td>$0 (zero heating pads needed)</td>
+                <td>
+                  <strong>$2,850</strong>
+                  <em style="color: #60a5fa">(Cold Winner)</em>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>4. Lead-Acid (AGM) Bank</strong></td>
+                <td>25.0 kWh</td>
+                <td>40.0% DoD (limited)</td>
+                <td>800 cycles / 6 yr cal.</td>
+                <td><span class="badge badge-red">3 to 4 Swaps</span></td>
+                <td>$4,250</td>
+                <td>$12,750 (3 replacements)</td>
+                <td>
+                  <strong>$17,000</strong>
+                  <em style="color: #f87171">(5.4&times; more expensive!)</em>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-title">
+            💰 The Financial Takeaway: Oversizing Pays for Itself
+          </div>
+          <p style="margin-bottom: 0">
+            Spending an extra <strong>$760 upfront</strong> to expand the LFP
+            bank from 12.5 kWh to 16.5 kWh lowers operating DoD, extends cell
+            life past 25 years, and
+            <strong>saves $1,990 in net cash</strong> over 20 years by
+            eliminating replacement bank capex, shipping freight, and licensed
+            electrician labor.
+          </p>
+        </div>
+
+        <h2>
+          7. Builder&rsquo;s Field Guide: Sizing &amp; Inverter Configuration
+          Checklist
+        </h2>
+        <p>
+          To implement a true zero-swap storage strategy in your own
+          installation:
+        </p>
+        <ol>
+          <li>
+            <strong>Calculate True Daily Nighttime Consumption:</strong>
+            Determine your average consumption between solar sunset and sunrise.
+            Add 15% inverter standby and conversion overhead.
+          </li>
+          <li>
+            <strong>Apply the Zero-Swap Oversize Factor:</strong>
+            <ul>
+              <li>
+                For <strong>LFP</strong>: Target an installed nameplate capacity
+                equal to <code>Daily Usable kWh &divide; 0.65</code>.
+              </li>
+              <li>
+                For <strong>Sodium-Ion</strong>: Target an installed nameplate
+                capacity equal to <code>Daily Usable kWh &divide; 0.70</code>.
+              </li>
+            </ul>
+          </li>
+          <li>
+            <strong>Program Inverter Voltage Cutoffs Precisely:</strong>
+            <ul>
+              <li>
+                For <strong>16S LFP (48V nominal)</strong>: Set Float to 54.0V
+                (3.375V/cell), Bulk/Absorption to 56.0V (3.50V/cell), and Low
+                Voltage Cutoff (LVD) to 48.0V (3.00V/cell). Avoiding 3.65V
+                top-charging eliminates high-voltage electrolyte oxidation.
+              </li>
+              <li>
+                For <strong>16S Na-ion (48V nominal)</strong>: Set Bulk to 57.6V
+                (3.60V/cell), Float to 54.4V (3.40V/cell), and Low Voltage
+                Cutoff to 40.0V (2.50V/cell).
+              </li>
+            </ul>
+          </li>
+          <li>
+            <strong>Honor Cold Temperature Thresholds:</strong> If ambient
+            winter temperatures drop below 0&deg;C (32&deg;F), select Sodium-ion
+            to eliminate the need for parasitic heating pads, or house LFP
+            inside the conditioned thermal envelope of the building.
+          </li>
+        </ol>
+
+        <!-- Sizing Calculator CTA Card -->
+        <div class="cta-card">
+          <h3>⚡ Calculate Your Exact Zero-Swap Battery Size</h3>
+          <p>
+            Use our free worldwide solar &amp; battery estimator to simulate
+            your home's exact hourly solar curve, climate temperatures, and
+            zero-swap battery capacity. 100% free, no signup, open source.
+          </p>
+          <a
+            href="../../#sizing"
+            class="btn btn-primary"
+            style="font-size: 1.05rem; padding: 0.85rem 2rem"
+          >
+            🤖 Launch Free Off-Grid Sizing Calculator
+          </a>
+        </div>
+
+        <h2>8. Frequently Asked Questions</h2>
+        <div class="faq-item">
+          <div class="faq-question">
+            Why does cycling LiFePO4 to only 80% or 60% DoD dramatically
+            increase cycle life?
+          </div>
+          <div class="faq-answer">
+            Battery cycle degradation follows a generalized Wöhler fatigue power
+            law. Deep cycles (90-100% DoD) subject the graphite anode and
+            cathode crystal lattices to extreme volumetric expansion and
+            mechanical stress, cracking particles and consuming active lithium
+            through rapid Solid Electrolyte Interphase (SEI) reformation.
+            Limiting daily cycling to 60-80% DoD reduces micro-strain, extending
+            cell life from ~3,500 cycles to over 10,000 cycles.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            Can Sodium-ion batteries safely discharge to 0% DoD without damage?
+          </div>
+          <div class="faq-answer">
+            Yes. Unlike lithium-ion cells which require copper foil on the
+            negative anode, sodium-ion cells utilize aluminum current collectors
+            on both the positive cathode and negative anode. Copper dissolves
+            irreversibly into the electrolyte below 1.5V, causing catastrophic
+            short circuits upon recharge. Aluminum does not alloy with sodium at
+            low potentials, allowing sodium-ion cells to safely discharge to
+            0.0V without structural degradation.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            Why do standard off-grid inverters only use ~85% of a Sodium-ion
+            battery bank?
+          </div>
+          <div class="faq-answer">
+            Sodium-ion cells have a sloping discharge curve spanning from 4.0V
+            down to ~1.5V. Standard 48V off-grid inverters have fixed
+            low-voltage cutoffs designed for LFP (~40V to 42V, or ~2.5V per cell
+            in a 16S bank). Operating on these inverters cuts off discharge
+            before the lowest 15% of cell capacity is drained. This shallow
+            cycling naturally protects the cells from extreme phase-stress,
+            extending cycle life beyond 5,500 cycles.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            Can Lead-Acid (AGM) batteries achieve a 20-year lifespan if
+            oversized?
+          </div>
+          <div class="faq-answer">
+            No. While shallow cycling (such as 20% DoD) slows down cyclic
+            sulfation, lead-acid batteries face an unavoidable chemical calendar
+            aging limit of 6 to 8 years caused by positive grid lead corrosion
+            (oxidation to lead dioxide), active material shedding, and
+            electrolyte dry-out. Regardless of bank oversizing, an AGM bank will
+            physically degrade and require replacement 3 to 5 times over a
+            20-year horizon.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            How does oversizing a battery bank save money over a 20-year
+            horizon?
+          </div>
+          <div class="faq-answer">
+            Oversizing by 25% to 35% reduces daily Depth of Discharge from ~85%
+            to ~60%. Because Wöhler exponent β &gt; 1.5, this shallower depth
+            extends cycle life from ~6,000 cycles (16 years) to over 10,000
+            cycles (27+ years). This entirely eliminates the need for a mid-life
+            battery bank purchase, disposal logistics, and expensive electrician
+            labor, yielding a lower 20-year levelized cost of storage.
+          </div>
+        </div>
+
+        <h2>9. Scientific References &amp; Technical Literature</h2>
+        <ul class="citation-list">
+          <li>
+            <strong
+              >Preger, Y., Barkholtz, H. M., Fresquez, A., Campbell, D. L.,
+              Juba, B., Romàn-Kustas, J., Ferreira, S. R., &amp; Chalamala, B.
+              (2020).</strong
+            >
+            &ldquo;Degradation of Commercial Lithium-Ion Cells as a Function of
+            Chemistry and Cycling Conditions.&rdquo;
+            <em>Journal of The Electrochemical Society</em>, 167(12), 120532.
+            DOI: 10.1149/1945-7111/abae37.
+          </li>
+          <li>
+            <strong
+              >Smith, K., Saxon, A., Keyser, M., Lundstrom, B., Cao, Z., &amp;
+              Roc, A. (2017&ndash;2023).</strong
+            >
+            &ldquo;Life Prediction Model for Grid-Connected Li-ion Battery
+            Energy Storage Systems.&rdquo;
+            <em>National Renewable Energy Laboratory (NREL)</em>, Technical
+            Report NREL/TP-5400-67102.
+          </li>
+          <li>
+            <strong>EVE Energy Co., Ltd. (2024).</strong>
+            <em
+              >Product Specification: LF280K and LF314K Prismatic Lithium Iron
+              Phosphate Battery Cells for Energy Storage Systems</em
+            >. EVE Technical Manual REV 2.4.
+          </li>
+          <li>
+            <strong
+              >Contemporary Amperex Technology Co., Ltd. (CATL).
+              (2023&ndash;2025).</strong
+            >
+            <em
+              >CATL Commercial ESS White Paper: High-Safety Long-Cycle LFP
+              Technology for 20-Year Stationary Power</em
+            >. Ningde, China.
+          </li>
+          <li>
+            <strong>Tarascon, J. M. (2020).</strong>
+            &ldquo;Na-ion technology: from curiosity to reality.&rdquo;
+            <em>Nature Materials</em>, 19(6), 619&ndash;635. DOI:
+            10.1038/s41563-020-0713-1.
+          </li>
+          <li>
+            <strong>HiNa Battery Technology Co., Ltd. (2024).</strong>
+            <em
+              >Sodium-ion Prismatic Battery Cells: Low-Temperature Performance
+              and 0V Deep-Discharge Safety Certification</em
+            >. Beijing, China.
+          </li>
+          <li>
+            <strong>Faradion Limited. (2023).</strong>
+            <em
+              >Non-Flammable, Zero-Volt Transport-Safe Sodium-Ion Energy Storage
+              Systems</em
+            >. Sheffield, UK.
+          </li>
+          <li>
+            <strong>Battery Council International (BCI).</strong>
+            <em
+              >BCI Technical Manual: Battery Test Procedures, Cycle Life
+              Standards and Peukert Coefficient Determinations</em
+            >. Washington, D.C.
+          </li>
+          <li>
+            <strong>Berndt, D. (2001).</strong>
+            <em
+              >Maintenance-Free Batteries: Lead-Acid, Nickel/Cadmium,
+              Nickel/Metal Hydride</em
+            >. Research Studies Press / John Wiley &amp; Sons.
+          </li>
+        </ul>
+      </article>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <p style="margin-bottom: 1rem; color: #fff; font-weight: 700">
+          ⚡ BigEnergyCo &mdash; Free Worldwide Solar &amp; Battery Storage
+          Estimator
+        </p>
+        <p
+          style="
+            max-width: 800px;
+            margin: 0 auto 1.5rem;
+            font-size: 0.85rem;
+            line-height: 1.5;
+          "
+        >
+          Provided free and
+          <strong>as-is, with no warranty of any kind</strong>, express or
+          implied. Estimates are educational only and may be inaccurate. Working
+          with high-voltage DC, battery banks, and mains electrical wiring poses
+          severe fire, explosion, and electrocution hazards. Always consult a
+          licensed electrician and comply with your local electrical
+          jurisdiction (NEC/CEC/IEC).
+        </p>
+        <p style="font-size: 0.85rem">
+          <a href="../../">Estimator</a> &nbsp;&middot;&nbsp;
+          <a href="../">Blog</a> &nbsp;&middot;&nbsp;
+          <a href="../../#bom">Hardware Reference</a> &nbsp;&middot;&nbsp;
+          <a href="../../#legal">Terms</a> &nbsp;&middot;&nbsp;
+          <a href="../../#support">Support</a> &nbsp;&middot;&nbsp;
+          <a href="mailto:lucasballek@gmail.com">lucasballek@gmail.com</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

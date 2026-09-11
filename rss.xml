@@ -6,7 +6,14 @@
     <description>Educational guides, chemistry comparisons, and engineering insights for DIY and off-grid solar and battery storage systems worldwide. Nothing for sale.</description>
     <language>en</language>
     <atom:link href="https://freeoffgridcalculator.com/rss.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Sun, 07 Sep 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 11 Sep 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Battery Longevity, Oversizing &amp; DoD Reference Guide (2026)</title>
+      <link>https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/</link>
+      <guid isPermaLink="true">https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/</guid>
+      <pubDate>Fri, 11 Sep 2026 00:00:00 GMT</pubDate>
+      <description>Empirical degradation physics, Wöhler power-law cycle models, and sizing strategies for LFP, Sodium-Ion, and Lead-Acid (AGM). Learn how oversizing and Depth of Discharge (DoD) control eliminate battery replacements.</description>
+    </item>
     <item>
       <title>Escape Load Shedding With Solar: Backup Sizes (2026)</title>
       <link>https://freeoffgridcalculator.com/blog/escape-load-shedding/</link>
