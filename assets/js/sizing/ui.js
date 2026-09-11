@@ -10,7 +10,7 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260911c";
+import { CITY_PRESETS } from "./nasa.js?v=20260911d";
 import {
   CITY_CATALOG,
   searchCities,
@@ -20,7 +20,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260911c";
+} from "./cities.js?v=20260911d";
 
 import {
   estimateTariff,
@@ -28,45 +28,49 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260911c";
+} from "./pricing.js?v=20260911d";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260911c";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260911d";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260911c";
+} from "./bom.js?v=20260911d";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260911c";
+import { BOM_ITEMS } from "../shared/content.js?v=20260911d";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260911c";
+} from "../shared/i18n.js?v=20260911d";
 
-import { LOCALES } from "../shared/locales.js?v=20260911c";
+import { LOCALES } from "../shared/locales.js?v=20260911d";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260911c";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260911d";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260911c";
+} from "./frontier-chart.js?v=20260911d";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260911c";
+} from "./rescale.js?v=20260911d";
 
-import { coldCapacityScale } from "./engine.js?v=20260911c";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260911d";
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260911c";
+import {
+  batteryReplacements,
+  lifetimeCostUsd,
+  cumulativeCostSeries,
+} from "./money.js?v=20260911d";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260911c";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260911d";
 
 let worker = null;
 
@@ -2663,7 +2667,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260911c", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260911d", {
       type: "module",
     });
 
@@ -3725,6 +3729,30 @@ function renderBatteryComparison(p, selectedSystem) {
 
     if (r.id !== (sel && sel.chemistry) && sel) {
       btn.addEventListener("click", () => {
+        const baseGridSpend = p.annualGridSpendUsd || 0;
+        const annualSavingsUsd =
+          p.mode === "offgrid"
+            ? baseGridSpend
+            : sel.displacedBillAnnualUsd !== undefined
+              ? sel.displacedBillAnnualUsd
+              : baseGridSpend;
+        const residualAnnualUsd =
+          p.mode === "offgrid"
+            ? 0
+            : sel.residualBillAnnualUsd !== undefined
+              ? sel.residualBillAnnualUsd
+              : 0;
+
+        const cumCost = cumulativeCostSeries({
+          capexMidUsd: r.cost.objectiveMid,
+          annualSavingsUsd,
+          residualAnnualUsd,
+          swapsAndLaborTotalUsd: r.life.swapsAndLabor,
+          replacements: r.swaps,
+          batteryLifeYears: r.swaps > 0 ? 20 / (r.swaps + 1) : 20,
+          firstLaborUsd: r.life.firstLabor,
+        });
+
         adoptedEntry = {
           ...sel,
           chemistry: r.id,
@@ -3736,10 +3764,28 @@ function renderBatteryComparison(p, selectedSystem) {
           lifetimeCostMid: r.life.total,
           swapsAndLaborUsd: r.life.swapsAndLabor,
           replacementsHorizon: r.swaps,
+          cumCostSeries: cumCost,
         };
         selectedKey = "adopted";
+        if (p.frontier) {
+          p.frontier.marker = {
+            chemistry: r.id,
+            capexUsd: r.cost.objectiveMid,
+            outcomePct:
+              sel.cutPct !== undefined
+                ? sel.cutPct
+                : p.frontier.marker
+                  ? p.frontier.marker.outcomePct
+                  : 100,
+            pvKw,
+            battKwh: targetBattKwh,
+            pointIndex: null,
+          };
+          frontierSelected = null;
+        }
         refreshSelectionOutputs(p);
         renderResults(p);
+        requestIncrementalCut(pvKw, targetBattKwh, r.id);
       });
     }
 
@@ -3774,26 +3820,38 @@ function renderRelativeOptions(p, selectedSystem) {
   const sel = selectedSystem || resolveSelected(p) || p.best;
   if (!sel) return;
 
+  // Preserve the baseline anchor across relative adoptions so capacity ratios
+  // don't compound exponentially (e.g. 1.75 × 1.75 = 3.06×).
+  const base =
+    (adoptedEntry && adoptedEntry._relativeAnchor) ||
+    (sel && sel._relativeAnchor ? sel._relativeAnchor : sel);
+  const activeTierId =
+    (adoptedEntry && adoptedEntry._relativeTierId) || "baseline";
+
   // Cost-efficient chemistries only — NOT AGM
-  const rawChem = sel.chemistry || "lfp";
+  const rawChem = base.chemistry || "lfp";
   const chem = rawChem === "sodium" || rawChem === "naion" ? "naion" : "lfp";
   const chemLabel = chem === "naion" ? "Sodium-ion" : "LFP";
-  const baseBattKwh = Math.max(2, sel.battKwh || (p.dailyKwh || 10) * 1.5);
-  const basePvKw = Math.max(1, sel.pvKw || (p.dailyKwh || 10) * 0.6);
+  const baseBattKwh = Math.max(2, base.battKwh || (p.dailyKwh || 10) * 1.5);
+  const basePvKw = Math.max(1, base.pvKw || (p.dailyKwh || 10) * 0.6);
   const landedF = (p.assumptions && p.assumptions.landedF) || 1;
   const isGT = p.mode === "gridtie";
+
+  const ratedDoD = chem === "naion" ? 0.85 : 0.8;
+  const baseDailyKwh = p.dailyKwh || 10;
+  const baseEffectiveDod = Math.min(
+    ratedDoD,
+    Math.max(0.1, (baseDailyKwh / baseBattKwh) * ratedDoD),
+  );
+  const baseRatedCycles = cycleLifeForDoD(chem, baseEffectiveDod);
 
   const baseCost = fullRange(basePvKw, baseBattKwh, chem, landedF);
   const baseBattMid = landedMidBattKwhFor(chem, landedF);
   const baseCycles = Math.max(
     150,
-    Math.min(450, Math.round(((p.dailyKwh || 10) * 365) / baseBattKwh)),
+    Math.min(450, Math.round((baseDailyKwh * 365) / baseBattKwh)),
   );
-  const baseSwaps = batteryReplacements(
-    baseCycles,
-    chem === "naion" ? 5500 : 6000,
-    20,
-  );
+  const baseSwaps = batteryReplacements(baseCycles, baseRatedCycles, 20);
   const baseLife = lifetimeCostUsd({
     capexMidUsd: baseCost.objectiveMid,
     battKwhUsable: baseBattKwh,
@@ -3801,6 +3859,41 @@ function renderRelativeOptions(p, selectedSystem) {
     replacements: baseSwaps,
     laborPerKwh: [12, 30],
   });
+
+  const baseGridSpend = p.annualGridSpendUsd || 0;
+  const totalAnnualSpend =
+    (base.cumCostSeries &&
+      base.cumCostSeries.grid &&
+      base.cumCostSeries.grid[0]) ||
+    baseGridSpend;
+
+  const baseAnnualSavings = !isGT
+    ? totalAnnualSpend
+    : base.displacedBillAnnualUsd !== undefined
+      ? base.displacedBillAnnualUsd
+      : base.billAfterMonthlyUsd !== undefined
+        ? Math.max(0, totalAnnualSpend - base.billAfterMonthlyUsd * 12)
+        : Math.round(totalAnnualSpend * 0.8);
+
+  const baseResidualAnnual = !isGT
+    ? 0
+    : base.residualBillAnnualUsd !== undefined
+      ? base.residualBillAnnualUsd
+      : base.billAfterMonthlyUsd !== undefined
+        ? Math.max(0, base.billAfterMonthlyUsd * 12)
+        : Math.max(0, totalAnnualSpend - baseAnnualSavings);
+
+  const baseCumCost =
+    base.cumCostSeries ||
+    cumulativeCostSeries({
+      capexMidUsd: baseCost.objectiveMid,
+      annualSavingsUsd: baseAnnualSavings,
+      residualAnnualUsd: baseResidualAnnual,
+      swapsAndLaborTotalUsd: baseLife.swapsAndLabor,
+      replacements: baseSwaps,
+      batteryLifeYears: baseSwaps > 0 ? 20 / (baseSwaps + 1) : 20,
+      firstLaborUsd: baseLife.firstLabor,
+    });
 
   const header = el("div", {
     style:
@@ -3829,18 +3922,21 @@ function renderRelativeOptions(p, selectedSystem) {
 
   const tiers = [
     {
+      id: "compact",
       label: "Compact / Essential",
       badge: "Starter / Essential Loads",
       battRatio: 0.6,
       pvRatio: 0.7,
     },
     {
+      id: "lean",
       label: "Lean / Moderate",
       badge: "Most Loads Covered",
       battRatio: 0.8,
       pvRatio: 0.85,
     },
     {
+      id: "baseline",
       label: "Current Selection",
       badge: "Active Baseline (0%)",
       battRatio: 1.0,
@@ -3848,12 +3944,14 @@ function renderRelativeOptions(p, selectedSystem) {
       isBaseline: true,
     },
     {
+      id: "high",
       label: "High Resilience",
       badge: "+35% More Capacity",
       battRatio: 1.35,
       pvRatio: 1.25,
     },
     {
+      id: "max",
       label: "Maximum Independence",
       badge: "+75% More Capacity",
       battRatio: 1.75,
@@ -3864,30 +3962,77 @@ function renderRelativeOptions(p, selectedSystem) {
   for (const t of tiers) {
     const battKwh = Math.round(baseBattKwh * t.battRatio * 10) / 10;
     const pvKw = Math.round(basePvKw * t.pvRatio * 10) / 10;
-    const cost = fullRange(pvKw, battKwh, chem, landedF);
+    const cost = t.isBaseline
+      ? baseCost
+      : fullRange(pvKw, battKwh, chem, landedF);
     const battMid = landedMidBattKwhFor(chem, landedF);
     const cycles = Math.max(
       150,
-      Math.min(450, Math.round(((p.dailyKwh || 10) * 365) / battKwh)),
+      Math.min(450, Math.round((baseDailyKwh * 365) / battKwh)),
     );
-    const swaps = batteryReplacements(
-      cycles,
-      chem === "naion" ? 5500 : 6000,
-      20,
+    const effectiveDod = Math.min(
+      ratedDoD,
+      Math.max(0.1, (baseDailyKwh / battKwh) * ratedDoD),
     );
-    const life = lifetimeCostUsd({
-      capexMidUsd: cost.objectiveMid,
-      battKwhUsable: battKwh,
-      battPriceMidPerKwh: battMid,
-      replacements: swaps,
-      laborPerKwh: [12, 30],
-    });
-    const autonomy = battKwh / Math.max(0.1, p.dailyKwh || 10);
-    const baseAutonomy = baseBattKwh / Math.max(0.1, p.dailyKwh || 10);
+    const ratedCycles = cycleLifeForDoD(chem, effectiveDod);
+    const swaps = batteryReplacements(cycles, ratedCycles, 20);
+    const life = t.isBaseline
+      ? baseLife
+      : lifetimeCostUsd({
+          capexMidUsd: cost.objectiveMid,
+          battKwhUsable: battKwh,
+          battPriceMidPerKwh: battMid,
+          replacements: swaps,
+          laborPerKwh: [12, 30],
+        });
+    const autonomy = battKwh / Math.max(0.1, baseDailyKwh);
+    const baseAutonomy = baseBattKwh / Math.max(0.1, baseDailyKwh);
+
+    const isSelected = activeTierId === t.id;
+
+    let tierAnnualSavings = baseAnnualSavings;
+    let tierResidualAnnual = baseResidualAnnual;
+    if (isGT && !t.isBaseline) {
+      const scaledFraction = Math.min(
+        1.0,
+        Math.max(
+          0.2,
+          (baseAnnualSavings / Math.max(1, totalAnnualSpend)) *
+            Math.min(t.pvRatio, t.battRatio),
+        ),
+      );
+      tierAnnualSavings = Math.round(totalAnnualSpend * scaledFraction);
+      tierResidualAnnual = Math.max(0, totalAnnualSpend - tierAnnualSavings);
+    }
+    const cumCost =
+      t.isBaseline && base.cumCostSeries
+        ? base.cumCostSeries
+        : cumulativeCostSeries({
+            capexMidUsd: cost.objectiveMid,
+            annualSavingsUsd: tierAnnualSavings,
+            residualAnnualUsd: tierResidualAnnual,
+            swapsAndLaborTotalUsd: life.swapsAndLabor,
+            replacements: swaps,
+            batteryLifeYears: swaps > 0 ? 20 / (swaps + 1) : 20,
+            firstLaborUsd: life.firstLabor,
+          });
+
+    const approxSoc =
+      base.socNameplatePct && base.socNameplatePct.min
+        ? {
+            min: base.socNameplatePct.min.map((v) =>
+              Math.max(
+                0,
+                Math.min(100, Math.round(100 - (100 - v) / t.battRatio)),
+              ),
+            ),
+            max: base.socNameplatePct.max.slice(),
+          }
+        : null;
 
     const card = el("div", {
-      class: "bom-card" + (t.isBaseline ? " bom-card-selected" : ""),
-      style: t.isBaseline ? "border-color: var(--border-glow);" : "",
+      class: "bom-card" + (isSelected ? " bom-card-selected" : ""),
+      style: isSelected ? "border-color: var(--border-glow);" : "",
     });
 
     card.appendChild(el("div", { class: "bom-badge" }, t.badge));
@@ -3927,38 +4072,104 @@ function renderRelativeOptions(p, selectedSystem) {
       ],
     ]);
 
+    let btnText = "Select This System";
+    let btnClass = "btn btn-primary";
+    if (isSelected) {
+      btnText = t.isBaseline ? "✓ Active Baseline" : "✓ Active Selection";
+      btnClass = "btn btn-outline";
+    } else if (t.isBaseline) {
+      btnText = "Reset to Baseline";
+      btnClass = "btn btn-outline";
+    }
+
     const btn = el(
       "button",
       {
         type: "button",
-        class: "btn " + (t.isBaseline ? "btn-outline" : "btn-primary"),
+        class: btnClass,
         style:
           "width: 100%; justify-content: center; margin-top: auto; cursor: pointer;",
       },
-      t.isBaseline ? "✓ Active Selection" : "Select This System",
+      btnText,
     );
 
-    if (!t.isBaseline) {
+    if (!isSelected) {
       btn.addEventListener("click", () => {
-        adoptedEntry = {
-          ...sel,
-          pvKw,
-          battKwh,
-          costLo: cost.lo,
-          costHi: cost.hi,
-          costMid: cost.objectiveMid,
-          lifetimeCostMid: life.total,
-          swapsAndLaborUsd: life.swapsAndLabor,
-          replacementsHorizon: swaps,
-          chemistry: chem,
-          chemLabel,
-          battNameplateKwh: +(
-            battKwh / (chem === "naion" ? 0.85 : 0.8)
-          ).toFixed(1),
-        };
-        selectedKey = "adopted";
-        refreshSelectionOutputs(p);
-        renderResults(p);
+        if (t.isBaseline) {
+          adoptedEntry = {
+            ...base,
+            _relativeAnchor: base,
+            _relativeTierId: "baseline",
+            cumCostSeries: baseCumCost,
+            socNameplatePct: base.socNameplatePct || null,
+          };
+          selectedKey = "adopted";
+          if (p.frontier) {
+            p.frontier.marker = {
+              chemistry: base.chemistry || chem,
+              capexUsd: baseCost.objectiveMid,
+              outcomePct:
+                base.cutPct !== undefined
+                  ? base.cutPct
+                  : p.frontier.marker
+                    ? p.frontier.marker.outcomePct
+                    : 100,
+              pvKw: basePvKw,
+              battKwh: baseBattKwh,
+              pointIndex: null,
+            };
+            frontierSelected = null;
+          }
+          refreshSelectionOutputs(p);
+          renderResults(p);
+          requestIncrementalCut(basePvKw, baseBattKwh, chem);
+        } else {
+          adoptedEntry = {
+            ...base,
+            _relativeAnchor: base,
+            _relativeTierId: t.id,
+            pvKw,
+            battKwh,
+            costLo: cost.lo,
+            costHi: cost.hi,
+            costMid: cost.objectiveMid,
+            lifetimeCostMid: life.total,
+            swapsAndLaborUsd: life.swapsAndLabor,
+            replacementsHorizon: swaps,
+            chemistry: chem,
+            chemLabel,
+            battNameplateKwh: +(
+              battKwh / (chem === "naion" ? 0.85 : 0.8)
+            ).toFixed(1),
+            cumCostSeries: cumCost,
+            socNameplatePct: approxSoc,
+          };
+          selectedKey = "adopted";
+          if (p.frontier) {
+            p.frontier.marker = {
+              chemistry: chem,
+              capexUsd: cost.objectiveMid,
+              outcomePct:
+                base.cutPct !== undefined
+                  ? Math.min(
+                      100,
+                      Math.round(
+                        base.cutPct * Math.min(t.pvRatio, t.battRatio),
+                      ),
+                    )
+                  : p.frontier.marker
+                    ? p.frontier.marker.outcomePct
+                    : 100,
+              pvKw,
+              battKwh,
+              pointIndex: null,
+            };
+            frontierSelected = null;
+          }
+          refreshSelectionOutputs(p);
+          renderResults(p);
+          requestIncrementalCut(pvKw, battKwh, chem);
+        }
       });
     }
 
@@ -6912,15 +7123,52 @@ function renderSelectedBanner(p, sel) {
   appendRows(card, entryDetailRows(p, sel));
   if (p.best) {
     const b = p.best;
-    card.appendChild(
+    const resetRow = el("div", {
+      style:
+        "margin-top:0.75rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;",
+    });
+    resetRow.appendChild(
       el(
         "p",
         {
-          style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;",
+          style: "font-size:0.78rem;color:var(--text-muted);margin:0;",
         },
         `Recommendation stays ${b.chemLabel || b.chemistry} ${b.pvKw} kW + ${fmt(b.battKwh)} kWh (~${money(b.lifetimeCostMid)} over 20 years).`,
       ),
     );
+    const resetBtn = el(
+      "button",
+      {
+        type: "button",
+        class: "btn btn-outline",
+        style: "font-size:0.75rem; padding:0.25rem 0.6rem; cursor:pointer;",
+      },
+      "Reset to Recommendation",
+    );
+    resetBtn.addEventListener("click", () => {
+      adoptedEntry = null;
+      selectedKey = "best";
+      frontierSelected = null;
+      if (p.frontier && p.best) {
+        p.frontier.marker = {
+          chemistry: p.best.chemistry,
+          capexUsd: p.best.costMid,
+          outcomePct:
+            p.best.cutPct !== undefined
+              ? p.best.cutPct
+              : p.frontier.marker
+                ? p.frontier.marker.outcomePct
+                : 100,
+          pvKw: p.best.pvKw,
+          battKwh: p.best.battKwh,
+          pointIndex: null,
+        };
+      }
+      refreshSelectionOutputs(p);
+      renderResults(p);
+    });
+    resetRow.appendChild(resetBtn);
+    card.appendChild(resetRow);
   }
   wrap.appendChild(card);
   return true;
@@ -6956,7 +7204,7 @@ function refreshSelectionOutputs(p) {
     sel.socNameplatePct.min.length
   ) {
     drawSocChartForEntry(p, sel);
-  } else if (hasAuto && !isGT && resultLevel !== "matrix") {
+  } else if (hasAuto && !isGT) {
     drawAutoChart(p);
   } else if (
     !hasAuto &&
