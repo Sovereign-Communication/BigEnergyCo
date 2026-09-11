@@ -10,7 +10,7 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260911a";
+import { CITY_PRESETS } from "./nasa.js?v=20260911b";
 import {
   CITY_CATALOG,
   searchCities,
@@ -20,7 +20,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260911a";
+} from "./cities.js?v=20260911b";
 
 import {
   estimateTariff,
@@ -28,45 +28,45 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260911a";
+} from "./pricing.js?v=20260911b";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260911a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260911b";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260911a";
+} from "./bom.js?v=20260911b";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260911a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260911b";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260911a";
+} from "../shared/i18n.js?v=20260911b";
 
-import { LOCALES } from "../shared/locales.js?v=20260911a";
+import { LOCALES } from "../shared/locales.js?v=20260911b";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260911a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260911b";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260911a";
+} from "./frontier-chart.js?v=20260911b";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260911a";
+} from "./rescale.js?v=20260911b";
 
-import { coldCapacityScale } from "./engine.js?v=20260911a";
+import { coldCapacityScale } from "./engine.js?v=20260911b";
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260911a";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260911b";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260911a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260911b";
 
 let worker = null;
 
@@ -2663,7 +2663,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260911a", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260911b", {
       type: "module",
     });
 
@@ -3573,19 +3573,22 @@ function renderBatteryComparison(p, selectedSystem) {
     {
       id: "lfp",
       label: "LFP / LiFePO₄",
-      tagline: "Standard lithium (6,000 cycles)",
-      dod: 0.9,
+      tagline: "Standard lithium (6,000 cycles at 80% DoD)",
+      dod: 0.8,
       cyclesTo80: 6000,
       coldScale: 1.0,
       coldNotes: isCold
         ? "⚠️ Charge blocked <0°C (32°F). In freezing weather, requires a heated enclosure or internal heating pads to charge without lithium plating."
         : "✅ Excellent in moderate/warm climates. Normal operation 0°C to 45°C.",
       safety: "Very safe, stable lithium iron phosphate chemistry.",
+      dodNote:
+        "80% DoD preserves the full 6,000+ cycle rating (cycling daily to 90%+ accelerates degradation to ~3,500–4,500 cycles).",
     },
     {
       id: "naion",
       label: "Sodium-ion (Na-ion)",
-      tagline: "Extreme cold & ultra-safe",
+      tagline:
+        "Extreme cold & ultra-safe (95% cell window, ~85% inverter utilized)",
       dod: 0.85,
       cyclesTo80: 5500,
       coldScale: 1.0,
@@ -3593,11 +3596,13 @@ function renderBatteryComparison(p, selectedSystem) {
         "🛡️ Cold Champion: Zero capacity loss down to −20°C (−4°F). Safely charges below freezing without heating pads or battery warmers.",
       safety:
         "Non-flammable electrolyte, zero thermal runaway risk, can safely discharge to 0V for transport.",
+      dodNote:
+        "Inherent 95%+ cell window (safely discharges to 0V). Standard 48V inverters cut off at ~40–42V, using ~85% in practice; this shallow cycling protects the cells and delivers 5,500+ cycles.",
     },
     {
       id: "agm",
       label: "Lead-Acid (AGM)",
-      tagline: "Low upfront sticker / Short life",
+      tagline: "Low upfront sticker / Short life (50% DoD limit)",
       dod: 0.5,
       cyclesTo80: 500,
       coldScale: agmColdScale,
@@ -3606,6 +3611,8 @@ function renderBatteryComparison(p, selectedSystem) {
         : "Loses 20% to 35% capacity in cold snaps; requires ventilation for hydrogen.",
       safety:
         "Acid spill risk, sulfation degradation, explosive hydrogen off-gassing.",
+      dodNote:
+        "Strict 50% DoD ceiling; discharging deeper causes rapid, irreversible plate sulfation.",
     },
   ];
 
@@ -3680,6 +3687,7 @@ function renderBatteryComparison(p, selectedSystem) {
     appendRows(card, [
       ["Usable target", `${fmt(targetBattKwh)} kWh`],
       ["Usable DoD", `${Math.round(r.dod * 100)}%`],
+      ["DoD details", r.dodNote],
       [
         "Cold derate",
         r.coldScale < 1
@@ -3931,7 +3939,7 @@ function renderRelativeOptions(p, selectedSystem) {
           chemistry: chem,
           chemLabel,
           battNameplateKwh: +(
-            battKwh / (chem === "naion" ? 0.85 : 0.9)
+            battKwh / (chem === "naion" ? 0.85 : 0.8)
           ).toFixed(1),
         };
         selectedKey = "adopted";
