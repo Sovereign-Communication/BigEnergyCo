@@ -218,3 +218,89 @@ test("Battery SOC canvas does not trap mouse wheel and allows touch pan-y in ind
     "index.html must include data-i18n attribute for socChartTitle",
   );
 });
+
+test("Solar Heatmap defaults to True Grid Cost view and preserves Payback and Break-even views", () => {
+  const html = fs.readFileSync(
+    new URL("../solar-heatmap/index.html", import.meta.url),
+    "utf8",
+  );
+
+  // Default metric in script state must be "cost"
+  assert.ok(
+    html.includes('let metric = "cost";'),
+    'solar-heatmap/index.html must initialize state with let metric = "cost"',
+  );
+  assert.ok(
+    html.includes('let basis = "real";'),
+    'solar-heatmap/index.html must initialize state with let basis = "real"',
+  );
+
+  // Default active button markup
+  assert.ok(
+    /data-metric="cost"\s+class="active"/.test(html),
+    "True Grid Cost button must be marked active by default",
+  );
+  assert.ok(
+    html.includes("True Grid Cost"),
+    "Metric control must contain True Grid Cost",
+  );
+  assert.ok(
+    html.includes('data-metric="p"'),
+    "Payback view must be retained for reference",
+  );
+  assert.ok(
+    html.includes('data-metric="b"'),
+    "Break-even view must be retained for reference",
+  );
+  assert.ok(
+    html.includes('data-basis="real"'),
+    "True Cost (Weighted) basis must exist",
+  );
+  assert.ok(html.includes('data-basis="grid"'), "Grid Only basis must exist");
+});
+
+test("Weighted True Grid Cost math accurately models population grid coverage and generator displacement", () => {
+  function computeWeightedTrueRate({
+    unservedPct,
+    outagePctOnGrid,
+    onGridRate,
+    genCostPerKwh,
+  }) {
+    const onGridEffective =
+      (1 - outagePctOnGrid) * onGridRate + outagePctOnGrid * genCostPerKwh;
+    const realEffectiveRate =
+      unservedPct * genCostPerKwh + (1 - unservedPct) * onGridEffective;
+    return Math.round(realEffectiveRate * 100) / 100;
+  }
+
+  // 100% grid-connected country with 0% outages (e.g. Germany/France)
+  const fullyConnected = computeWeightedTrueRate({
+    unservedPct: 0,
+    outagePctOnGrid: 0,
+    onGridRate: 0.4,
+    genCostPerKwh: 0.55,
+  });
+  assert.equal(fullyConnected, 0.4);
+
+  // Nigeria: 43% unserved, 50% outages on grid, $0.07 nominal tariff, $0.55 generator cost
+  const nigeria = computeWeightedTrueRate({
+    unservedPct: 0.43,
+    outagePctOnGrid: 0.5,
+    onGridRate: 0.07,
+    genCostPerKwh: 0.55,
+  });
+  assert.equal(nigeria, 0.41, "Nigeria true grid cost blends to ~$0.41/kWh");
+
+  // South Sudan: 93% unserved, 60% outages on remaining grid, $0.16 nominal tariff, $0.65 generator cost
+  const southSudan = computeWeightedTrueRate({
+    unservedPct: 0.93,
+    outagePctOnGrid: 0.6,
+    onGridRate: 0.16,
+    genCostPerKwh: 0.65,
+  });
+  assert.equal(
+    southSudan,
+    0.64,
+    "South Sudan true grid cost blends to ~$0.64/kWh",
+  );
+});

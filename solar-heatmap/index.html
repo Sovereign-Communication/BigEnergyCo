@@ -317,7 +317,7 @@
         padding: 0.75rem 1rem;
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        max-width: 280px;
+        max-width: 320px;
       }
       .controls label {
         display: block;
@@ -496,8 +496,12 @@
         .controls {
           top: 8px;
           right: 8px;
-          padding: 0.5rem 0.75rem;
-          max-width: 220px;
+          padding: 0.5rem 0.65rem;
+          max-width: 250px;
+        }
+        .btn-group button {
+          padding: 0.3rem 0.35rem;
+          font-size: 0.72rem;
         }
         .rankings {
           grid-template-columns: 1fr;
@@ -524,14 +528,19 @@
 
     <main class="container">
       <article style="padding: 2rem 0 1rem">
-        <h1>🗺️ Global Solar Payback Heatmap</h1>
+        <h1>🗺️ Global Solar Payback &amp; True Grid Cost Heatmap</h1>
         <p>
-          Where does going solar pay for itself fastest? This map computes the
-          payback period for <strong>40,000+ locations</strong> worldwide.
-          Crucially, it accounts for
-          <strong>unserved grid demand and backup generators</strong> — in
-          places with frequent blackouts or no grid, solar displaces expensive
-          petrol/diesel fuel ($0.40–$0.65/kWh), not paper grid tariffs.
+          What does electricity really cost around the world, and where does
+          going solar pay off fastest? This map models
+          <strong>40,000+ locations</strong> worldwide. Crucially, it accounts
+          for
+          <strong
+            >the percentage of the population serviced by the grid versus backup
+            generators</strong
+          >
+          — weighting paper utility tariffs with real fuel costs
+          ($0.40–$0.65/kWh) for an accurate picture of electricity costs across
+          the whole population.
         </p>
 
         <div id="map-wrapper">
@@ -541,14 +550,36 @@
           </div>
           <div id="map" style="display: none"></div>
           <div class="controls" id="controls" style="display: none">
-            <label>Energy Cost Basis</label>
+            <label>View / Metric</label>
+            <div class="btn-group" id="metric-btns">
+              <button
+                data-metric="cost"
+                class="active"
+                title="Population-weighted electricity cost ($/kWh) across grid &amp; generators"
+              >
+                True Grid Cost
+              </button>
+              <button
+                data-metric="p"
+                title="Years until solar installation pays for itself"
+              >
+                Payback
+              </button>
+              <button
+                data-metric="b"
+                title="Years until solar lifecycle net savings break even"
+              >
+                Break-even
+              </button>
+            </div>
+            <label>Cost Basis</label>
             <div class="btn-group" id="basis-btns">
               <button
                 data-basis="real"
                 class="active"
-                title="Accounts for generator fuel & unserved grid"
+                title="Weighted average: accounts for grid coverage, outage rates &amp; generator fuel"
               >
-                Real-World
+                True Cost (Weighted)
               </button>
               <button
                 data-basis="grid"
@@ -557,34 +588,32 @@
                 Grid Only
               </button>
             </div>
-            <label>Daily usage</label>
-            <div class="btn-group" id="usage-btns">
-              <button data-idx="0">5</button>
-              <button data-idx="1" class="active">10</button>
-              <button data-idx="2">20</button>
-              <button data-idx="3">30</button>
-            </div>
-            <label>Metric</label>
-            <div class="btn-group" id="metric-btns">
-              <button data-metric="p" class="active">Payback</button>
-              <button data-metric="b">Break-even</button>
+            <div id="usage-control-wrap" style="display: none">
+              <label>Daily usage (kWh/day)</label>
+              <div class="btn-group" id="usage-btns">
+                <button data-idx="0">5</button>
+                <button data-idx="1" class="active">10</button>
+                <button data-idx="2">20</button>
+                <button data-idx="3">30</button>
+              </div>
             </div>
             <div class="legend">
-              <div>Years to pay for itself</div>
-              <div class="legend-bar">
+              <div id="legend-title">True Grid Cost ($/kWh, weighted)</div>
+              <div class="legend-bar" id="legend-bar">
                 <div style="background: #00e699"></div>
                 <div style="background: #7ec850"></div>
                 <div style="background: #c8b400"></div>
                 <div style="background: #e68a00"></div>
                 <div style="background: #e64545"></div>
-                <div style="background: #888"></div>
+                <div id="legend-bar-last" style="background: #991b1b"></div>
               </div>
-              <div class="legend-labels">
-                <span>&lt;2yr</span>
-                <span>3</span>
-                <span>5</span>
-                <span>7</span>
-                <span>12+</span>
+              <div class="legend-labels" id="legend-labels">
+                <span>&le;$0.10</span>
+                <span>$0.18</span>
+                <span>$0.28</span>
+                <span>$0.40</span>
+                <span>$0.55</span>
+                <span>&gt;$0.55</span>
               </div>
             </div>
           </div>
@@ -602,12 +631,12 @@
           </div>
         </div>
 
-        <h2>How this works & The Generator Paradox</h2>
+        <h2>How this works &amp; The Generator Paradox</h2>
         <p>
-          Why do fragile grids look slow on paper, but solar is actually
+          Why do fragile grids look cheap on paper, but solar is actually
           exploding there? In countries like
           <strong
-            >Nigeria (43% unelectrified, remaining 57% on rolling
+            >Nigeria (43% un-electrified, remaining 57% on rolling
             blackouts)</strong
           >, Lebanon, Haiti, and Pakistan, official utility rates look low
           ($0.05–$0.09/kWh) because power is heavily rationed or subsidized.
@@ -616,10 +645,17 @@
         </p>
         <ul style="margin: 0 0 1rem 1.25rem">
           <li>
-            <strong>Real-World Basis (Default):</strong> Blends official rates
+            <strong>True Grid Cost View (Default):</strong> Calculates the
+            weighted average cost of electricity across the entire population,
+            factoring in the percentage serviced by the grid versus backup
+            generators.
+          </li>
+          <li>
+            <strong>True Cost (Weighted) Basis:</strong> Blends official rates
             with generator fuel costs weighted by unserved population and
-            average grid outage duration. Nigeria's true payback drops from 8+
-            years to <strong>under 1.5 years</strong>.
+            average grid outage duration. Nigeria's true electricity cost is
+            ~$0.41/kWh (payback under 1.5 years) despite a nominal tariff of
+            $0.07/kWh.
           </li>
           <li>
             <strong>Grid Only Basis:</strong> Assumes a 24/7 unlimited stable
@@ -697,10 +733,10 @@
         let map = null;
         let dotLayer = null;
         let usageIdx = 1; // 0=5kWh, 1=10kWh, 2=20kWh, 3=30kWh
-        let metric = "p"; // "p" = payback, "b" = break-even
+        let metric = "cost"; // "cost" = True Grid Cost, "p" = payback, "b" = break-even
         let basis = "real"; // "real" = generator/unserved-aware, "grid" = nominal grid tariff only
 
-        // Get active metric key depending on basis
+        // Get active metric key depending on basis for payback/break-even
         function getMetricKey() {
           if (basis === "real") {
             return metric === "p" ? "pr" : "br";
@@ -708,7 +744,41 @@
           return metric; // "p" or "b"
         }
 
-        // ── Color scale ────────────────────────────────────────────────────────
+        // ── Color scales & helpers ─────────────────────────────────────────────
+        function costColor(cost) {
+          if (cost === null || cost === undefined || cost <= 0) return "#555";
+          if (cost <= 0.1) return "#00e699";
+          if (cost <= 0.18) return "#7ec850";
+          if (cost <= 0.28) return "#c8b400";
+          if (cost <= 0.4) return "#e68a00";
+          if (cost <= 0.55) return "#e64545";
+          return "#991b1b";
+        }
+
+        function costLabel(cost) {
+          if (cost === null || cost === undefined) return "N/A";
+          return "$" + Number(cost).toFixed(2) + "/kWh";
+        }
+
+        function getPointCost(pt) {
+          if (basis === "real") {
+            return pt.tr !== undefined ? pt.tr : pt.t;
+          }
+          return pt.t;
+        }
+
+        function getPointYears(pt, m) {
+          const isReal = basis === "real";
+          if (m === "p") {
+            const series = isReal && pt.pr ? pt.pr : pt.p;
+            return series ? series[usageIdx] : null;
+          } else if (m === "b") {
+            const series = isReal && pt.br ? pt.br : pt.b;
+            return series ? series[usageIdx] : null;
+          }
+          return null;
+        }
+
         function yearColor(years) {
           if (years === null || years === undefined || years <= 0)
             return "#555";
@@ -723,7 +793,7 @@
         function yearLabel(years) {
           if (years === null || years === undefined) return "N/A";
           if (years > 50) return ">50 yr";
-          return years.toFixed(1) + " yr";
+          return Number(years).toFixed(1) + " yr";
         }
 
         function ratingText(years) {
@@ -843,6 +913,61 @@
             .replace(/^-|-$/g, "");
         }
 
+        const esc = (v) =>
+          String(v ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+
+        // ── Legend ─────────────────────────────────────────────────────────────
+        function updateLegend() {
+          const titleEl = document.getElementById("legend-title");
+          const labelsEl = document.getElementById("legend-labels");
+          const lastBarEl = document.getElementById("legend-bar-last");
+          const usageWrap = document.getElementById("usage-control-wrap");
+
+          if (metric === "cost") {
+            if (usageWrap) usageWrap.style.display = "none";
+            if (titleEl) {
+              titleEl.textContent =
+                basis === "real"
+                  ? "True Grid Cost ($/kWh, weighted)"
+                  : "Official Grid Tariff ($/kWh)";
+            }
+            if (lastBarEl) lastBarEl.style.background = "#991b1b";
+            if (labelsEl) {
+              labelsEl.innerHTML = `
+                <span>&le;$0.10</span>
+                <span>$0.18</span>
+                <span>$0.28</span>
+                <span>$0.40</span>
+                <span>$0.55</span>
+                <span>&gt;$0.55</span>
+              `;
+            }
+          } else {
+            if (usageWrap) usageWrap.style.display = "block";
+            if (titleEl) {
+              titleEl.textContent =
+                metric === "p"
+                  ? "Years to pay for itself"
+                  : "Years to true break-even";
+            }
+            if (lastBarEl) lastBarEl.style.background = "#888";
+            if (labelsEl) {
+              labelsEl.innerHTML = `
+                <span>&lt;2yr</span>
+                <span>3</span>
+                <span>5</span>
+                <span>7</span>
+                <span>12+</span>
+              `;
+            }
+          }
+        }
+
         // ── Render dots ────────────────────────────────────────────────────────
         function renderDots() {
           if (!map || !gridData) return;
@@ -850,13 +975,17 @@
 
           const points = gridData.points;
           const markers = [];
-          const mKey = getMetricKey();
 
           for (let i = 0; i < points.length; i++) {
             const pt = points[i];
-            const series = pt[mKey] || pt[metric];
-            const years = series ? series[usageIdx] : null;
-            const color = yearColor(years);
+            let color;
+            if (metric === "cost") {
+              const cost = getPointCost(pt);
+              color = costColor(cost);
+            } else {
+              const yrs = getPointYears(pt, metric);
+              color = yearColor(yrs);
+            }
 
             const marker = L.circleMarker([pt.lat, pt.lon], {
               radius: 3.5,
@@ -882,43 +1011,73 @@
               const paybackYrs = pSeries ? pSeries[usageIdx] : null;
               const breakevenYrs = bSeries ? bSeries[usageIdx] : null;
               const usage = gridData.usageTiersKwhDay[usageIdx];
-
               const hasDeficit = pt.tr && pt.tr !== pt.t;
-              const tariffLine = hasDeficit
-                ? isReal
-                  ? `<tr><td style="color:var(--muted);padding:.15rem 0;">Real-world cost</td><td style="text-align:right;color:#00e699;font-weight:700;">$${pt.tr}/kWh <span style="font-size:.72rem;color:var(--muted);font-weight:normal;">(fuel blend)</span></td></tr>
-                   <tr><td style="color:var(--muted);padding:.15rem 0;">Official grid</td><td style="text-align:right;color:var(--muted);font-size:.8rem;">$${pt.t}/kWh (when on)</td></tr>`
-                  : `<tr><td style="color:var(--muted);padding:.15rem 0;">Grid tariff</td><td style="text-align:right;color:#fff;font-weight:600;">$${pt.t}/kWh</td></tr>
-                   <tr><td style="color:var(--muted);padding:.15rem 0;">Real-world cost</td><td style="text-align:right;color:#00e699;font-size:.8rem;">$${pt.tr}/kWh (fuel blend)</td></tr>`
-                : `<tr><td style="color:var(--muted);padding:.15rem 0;">Grid tariff</td><td style="text-align:right;color:#fff;font-weight:600;">$${pt.t}/kWh</td></tr>`;
 
-              const unservedBadge = pt.unserved
-                ? `<div style="background:rgba(255,170,0,0.15);border:1px solid rgba(255,170,0,0.3);border-radius:4px;padding:3px 6px;font-size:.75rem;color:#ffaa00;margin-bottom:.5rem;">
-                ⚠️ ~${pt.unserved}% unserved by grid; generator fuel displaces grid
-              </div>`
-                : "";
+              const unservedPct = pt.unserved || 0;
+              const coverageBadge = pt.unserved
+                ? `<div style="background:rgba(255,170,0,0.15);border:1px solid rgba(255,170,0,0.3);border-radius:4px;padding:4px 7px;font-size:.75rem;color:#ffaa00;margin-bottom:.5rem;line-height:1.4;">
+                    ⚠️ <strong>Area Grid Split:</strong> ~${100 - unservedPct}% grid / ~${unservedPct}% unserved (generators)
+                  </div>`
+                : `<div style="background:rgba(0,230,153,0.08);border:1px solid rgba(0,230,153,0.2);border-radius:4px;padding:3px 6px;font-size:.75rem;color:var(--accent);margin-bottom:.5rem;">
+                    ✓ ~100% grid-connected population
+                  </div>`;
+
+              let tariffRows = "";
+              if (hasDeficit) {
+                tariffRows = isReal
+                  ? `<tr style="${metric === "cost" ? "background:rgba(0,230,153,0.12);" : ""}">
+                      <td style="color:var(--muted);padding:.15rem 0;">True Grid Cost</td>
+                      <td style="text-align:right;color:#00e699;font-weight:700;">$${pt.tr}/kWh <span style="font-size:.7rem;color:var(--muted);font-weight:normal;">(weighted)</span></td>
+                     </tr>
+                     <tr>
+                      <td style="color:var(--muted);padding:.15rem 0;">Paper grid tariff</td>
+                      <td style="text-align:right;color:var(--muted);font-size:.8rem;">$${pt.t}/kWh (when on)</td>
+                     </tr>`
+                  : `<tr style="${metric === "cost" ? "background:rgba(0,230,153,0.12);" : ""}">
+                      <td style="color:var(--muted);padding:.15rem 0;">Paper grid tariff</td>
+                      <td style="text-align:right;color:#fff;font-weight:600;">$${pt.t}/kWh</td>
+                     </tr>
+                     <tr>
+                      <td style="color:var(--muted);padding:.15rem 0;">True Grid Cost</td>
+                      <td style="text-align:right;color:#00e699;font-size:.8rem;">$${pt.tr}/kWh (weighted)</td>
+                     </tr>`;
+              } else {
+                tariffRows = `
+                  <tr style="${metric === "cost" ? "background:rgba(0,230,153,0.12);" : ""}">
+                    <td style="color:var(--muted);padding:.15rem 0;">Grid tariff</td>
+                    <td style="text-align:right;color:#fff;font-weight:600;">$${pt.t}/kWh</td>
+                  </tr>
+                `;
+              }
 
               const popup = `
-            <div style="min-width:215px;">
-              <div style="font-weight:700;font-size:1rem;color:#fff;margin-bottom:.2rem;">${pt.n}</div>
-              <div style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem;">${countryName(pt.c)} · ${pt.lat}°, ${pt.lon}°</div>
-              ${unservedBadge}
-              <table style="width:100%;font-size:.85rem;border-collapse:collapse;">
-                ${tariffLine}
-                <tr><td style="color:var(--muted);padding:.15rem 0;">Solar yield</td><td style="text-align:right;color:#fff;font-weight:600;">${pt.y} kWh/kWp/yr</td></tr>
-                <tr><td style="color:var(--muted);padding:.15rem 0;">Payback (${basis})</td><td style="text-align:right;color:${yearColor(paybackYrs)};font-weight:700;">${yearLabel(paybackYrs)}</td></tr>
-                <tr><td style="color:var(--muted);padding:.15rem 0;">True break-even</td><td style="text-align:right;color:${yearColor(breakevenYrs)};font-weight:700;">${yearLabel(breakevenYrs)}</td></tr>
-                <tr><td style="color:var(--muted);padding:.15rem 0;">Usage assumed</td><td style="text-align:right;color:#fff;">${usage} kWh/day</td></tr>
-              </table>
-              <div style="margin-top:.6rem;text-align:center;">
-                <a href="../#sizing" style="display:inline-block;background:linear-gradient(135deg,#00e699,#00b377);color:#04120c;font-weight:700;padding:.4rem .9rem;border-radius:6px;font-size:.85rem;">⚡ Run full simulation</a>
-              </div>
-            </div>
-          `;
-              layer.bindPopup(popup, { maxWidth: 290 }).openPopup();
+                <div style="min-width:220px;">
+                  <div style="font-weight:700;font-size:1rem;color:#fff;margin-bottom:.2rem;">${esc(pt.n)}</div>
+                  <div style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem;">${esc(countryName(pt.c))} · ${pt.lat}°, ${pt.lon}°</div>
+                  ${coverageBadge}
+                  <table style="width:100%;font-size:.85rem;border-collapse:collapse;">
+                    ${tariffRows}
+                    <tr><td style="color:var(--muted);padding:.15rem 0;">Solar yield</td><td style="text-align:right;color:#fff;font-weight:600;">${pt.y} kWh/kWp/yr</td></tr>
+                    <tr style="${metric === "p" ? "background:rgba(0,230,153,0.12);" : ""}">
+                      <td style="color:var(--muted);padding:.15rem 0;">Payback (${basis === "real" ? "weighted" : "grid"})</td>
+                      <td style="text-align:right;color:${yearColor(paybackYrs)};font-weight:700;">${yearLabel(paybackYrs)}</td>
+                    </tr>
+                    <tr style="${metric === "b" ? "background:rgba(0,230,153,0.12);" : ""}">
+                      <td style="color:var(--muted);padding:.15rem 0;">True break-even</td>
+                      <td style="text-align:right;color:${yearColor(breakevenYrs)};font-weight:700;">${yearLabel(breakevenYrs)}</td>
+                    </tr>
+                    <tr><td style="color:var(--muted);padding:.15rem 0;">Usage assumed</td><td style="text-align:right;color:#fff;">${usage} kWh/day</td></tr>
+                  </table>
+                  <div style="margin-top:.6rem;text-align:center;">
+                    <a href="../#sizing" style="display:inline-block;background:linear-gradient(135deg,#00e699,#00b377);color:#04120c;font-weight:700;padding:.4rem .9rem;border-radius:6px;font-size:.85rem;">⚡ Run full simulation</a>
+                  </div>
+                </div>
+              `;
+              layer.bindPopup(popup, { maxWidth: 300 }).openPopup();
             });
           });
 
+          updateLegend();
           updateRankings();
         }
 
@@ -927,9 +1086,73 @@
           if (!gridData) return;
           const points = gridData.points;
           const usage = gridData.usageTiersKwhDay[usageIdx];
-          const mKey = getMetricKey();
+          const basisLabel = basis === "real" ? "weighted" : "grid-only";
 
-          // Deduplicate by country for rankings (show different countries)
+          const bestCard = document.getElementById("best-card");
+          const worstCard = document.getElementById("worst-card");
+
+          if (metric === "cost") {
+            const countryHighest = new Map();
+            const countryLowest = new Map();
+
+            for (const pt of points) {
+              const cost = getPointCost(pt);
+              if (cost === null || cost === undefined || cost <= 0) continue;
+
+              const curHigh = countryHighest.has(pt.c)
+                ? getPointCost(countryHighest.get(pt.c))
+                : -Infinity;
+              if (!countryHighest.has(pt.c) || cost > curHigh) {
+                countryHighest.set(pt.c, pt);
+              }
+
+              const curLow = countryLowest.has(pt.c)
+                ? getPointCost(countryLowest.get(pt.c))
+                : Infinity;
+              if (!countryLowest.has(pt.c) || cost < curLow) {
+                countryLowest.set(pt.c, pt);
+              }
+            }
+
+            const highestByCountry = [...countryHighest.values()]
+              .sort((a, b) => getPointCost(b) - getPointCost(a))
+              .slice(0, 10);
+
+            const lowestByCountry = [...countryLowest.values()]
+              .sort((a, b) => getPointCost(a) - getPointCost(b))
+              .slice(0, 10);
+
+            document.getElementById("best-list").innerHTML = highestByCountry
+              .map((pt) => {
+                const cost = getPointCost(pt);
+                const splitText = pt.unserved
+                  ? `~${pt.unserved}% unserved`
+                  : "100% grid";
+                return `<li><span class="years" style="color:${costColor(cost)}">${costLabel(cost)}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${splitText}, paper $${pt.t}/kWh)</span></li>`;
+              })
+              .join("");
+
+            document.getElementById("worst-list").innerHTML = lowestByCountry
+              .map((pt) => {
+                const cost = getPointCost(pt);
+                return `<li><span class="years" style="color:${costColor(cost)}">${costLabel(cost)}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${pt.y} kWh/kWp/yr)</span></li>`;
+              })
+              .join("");
+
+            if (bestCard) bestCard.className = "rank-card worst";
+            if (worstCard) worstCard.className = "rank-card";
+
+            document.querySelector("#best-card h3").textContent =
+              `🔴 Highest Electricity Cost (${basisLabel})`;
+            document.querySelector("#worst-card h3").textContent =
+              `⚡ Lowest Electricity Cost (${basisLabel})`;
+            return;
+          }
+
+          if (bestCard) bestCard.className = "rank-card";
+          if (worstCard) worstCard.className = "rank-card worst";
+
+          const mKey = getMetricKey();
           const countryBest = new Map();
           const countryWorst = new Map();
 
@@ -980,18 +1203,6 @@
             .slice(0, 10);
 
           const metricLabel = metric === "p" ? "payback" : "break-even";
-          const basisLabel = basis === "real" ? "real-world" : "grid-only";
-          // Place/country names come from the fetched data grid: escape
-          // before interpolating into markup (canonical escaper lives in
-          // assets/js/shared/escape.js; inlined here because this page's
-          // script is classic, not a module).
-          const esc = (v) =>
-            String(v ?? "")
-              .replace(/&/g, "&amp;")
-              .replace(/</g, "&lt;")
-              .replace(/>/g, "&gt;")
-              .replace(/"/g, "&quot;")
-              .replace(/'/g, "&#39;");
 
           document.getElementById("best-list").innerHTML = bestByCountry
             .map((pt) => {
