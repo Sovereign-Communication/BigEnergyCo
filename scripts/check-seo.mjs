@@ -82,6 +82,31 @@ for (const page of pages) {
       fail(
         `${page}: OG incomplete (title:${ogTitle} desc:${ogDesc} image:${ogImage} card:${twCard})`,
       );
+    // hreflang present
+    if (
+      /<link\s+rel="alternate"\s+hreflang="en"\s+href="https:\/\/freeoffgridcalculator\.com\/[^"]*"\s*\/?>/.test(
+        html,
+      ) &&
+      /<link\s+rel="alternate"\s+hreflang="x-default"\s+href="https:\/\/freeoffgridcalculator\.com\/[^"]*"\s*\/?>/.test(
+        html,
+      )
+    ) {
+      ok(`${page}: hreflang present`);
+    } else {
+      fail(`${page}: missing hreflang tags`);
+    }
+
+    // BreadcrumbList JSON-LD schema present on city and blog post pages
+    if (
+      page.startsWith("solar-calculator/") ||
+      (/^blog\/[^/]+\/index\.html$/.test(page) && page !== "blog/index.html")
+    ) {
+      if (/ BreadcrumbList /.test(html) || /"BreadcrumbList"/.test(html)) {
+        ok(`${page}: BreadcrumbList JSON-LD present`);
+      } else {
+        fail(`${page}: missing BreadcrumbList JSON-LD schema`);
+      }
+    }
   }
 
   // JSON-LD parses

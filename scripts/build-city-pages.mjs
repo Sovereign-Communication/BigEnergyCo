@@ -165,6 +165,11 @@ function cityPage(c) {
   <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
   <link rel="canonical" href="${url}">
   <link rel="alternate" hreflang="en" href="${url}">
+  <link rel="alternate" hreflang="es" href="${url}?lang=es">
+  <link rel="alternate" hreflang="pt" href="${url}?lang=pt">
+  <link rel="alternate" hreflang="fr" href="${url}?lang=fr">
+  <link rel="alternate" hreflang="de" href="${url}?lang=de">
+  <link rel="alternate" hreflang="ar" href="${url}?lang=ar">
   <link rel="alternate" hreflang="x-default" href="${url}">
   <link rel="alternate" type="application/rss+xml" title="BigEnergyCo Blog" href="https://freeoffgridcalculator.com/rss.xml">
   <meta property="og:type" content="article">
