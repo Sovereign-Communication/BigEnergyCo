@@ -28,7 +28,15 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
+  fullRange,
+  landedMidBattKwhFor,
 } from "./pricing.js?v=20260908a";
+
+import {
+  coldCapacityScale,
+  batteryReplacements,
+  lifetimeCostUsd,
+} from "./engine.js?v=20260908a";
 
 import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260908a";
 
@@ -3276,234 +3284,476 @@ function drawSocChart(history, chemLabel) {
       " The amber strip on top is the daily solar harvest (kWh per kW of panel) - its long dips line up with the battery's lowest floors.";
 }
 
-function renderAutoCards(p) {
+/**
+ * "Compare Batteries" View:
+ * Uses the currently selected system as the baseline, comparing needed bank sizes,
+ * oversize vs swaps trade-offs, cold weather dependencies, and total 20-year costs
+ * across Sodium-ion, LFP, and AGM, highlighting the most cost-effective choices.
+ */
+function renderBatteryComparison(p, selectedSystem) {
   const grid = $("tierResults");
-
+  if (!grid) return;
+  grid.style.display = "grid";
   grid.innerHTML = "";
 
-  const isGT = p.mode === "gridtie";
+  const sel =
+    selectedSystem || resolveSelected(p) || p.best || (p.auto && p.auto[0]);
+  const targetBattKwh =
+    sel && sel.battKwh > 0
+      ? sel.battKwh
+      : p.dailyKwh
+        ? Math.round(p.dailyKwh * 1.5 * 10) / 10
+        : 10;
+  const pvKw = sel && Number.isFinite(sel.pvKw) ? sel.pvKw : 5;
+  const meanTempC = Number.isFinite(p.meanTempC)
+    ? p.meanTempC
+    : p.assumptions && Number.isFinite(p.assumptions.meanTempC)
+      ? p.assumptions.meanTempC
+      : 15;
+  const isCold = meanTempC < 10;
+  const landedF = (p.assumptions && p.assumptions.landedF) || 1;
 
-  // Highlight the recommended bank (sodium-first on safety; LFP only when
-  // genuinely cheaper — see pickBest), falling back to cheapest when the
-  // payload carries no recommendation.
-  let bestId = (p.best && p.best.chemistry) || null;
-  if (!bestId) {
-    let bestLife = Infinity;
-    for (const a of p.auto) {
-      if (a.solvable && a.lifetimeCostMid < bestLife) {
-        bestLife = a.lifetimeCostMid;
-        bestId = a.chemistry;
-      }
-    }
-  }
+  // Overview banner
+  const header = el("div", {
+    style:
+      "grid-column: 1 / -1; margin-bottom: 0.75rem; padding: 0.9rem 1.1rem; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 10px;",
+  });
+  header.innerHTML = `
+    <div style="font-weight: 700; color: #fff; font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span>🔋 Battery Chemistry Comparison</span>
+      <span style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,0.08); padding: 0.15rem 0.5rem; border-radius: 6px;">
+        Sized for ~${fmt(targetBattKwh)} kWh Usable Storage
+      </span>
+    </div>
+    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem; line-height: 1.55;">
+      Comparing chemistries to deliver the same <strong>${fmt(targetBattKwh)} kWh usable power</strong> at your site's climate 
+      (<strong>${Math.round(meanTempC)}°C / ${Math.round(meanTempC * 1.8 + 32)}°F</strong> average). 
+      Examines required bank sizes, cold weather limits, 20-year battery swaps vs. oversizing, and true lifetime costs.
+    </div>
+  `;
+  grid.appendChild(header);
 
-  for (const a of p.auto) {
-    const isSelected = selectedKey === "auto:" + a.chemistry;
+  const chemConfigs = [
+    {
+      id: "lfp",
+      label: "LFP / LiFePO4",
+      tagline: "Standard lithium (6,000 cycles)",
+      dod: 0.9,
+      cyclesTo80: 6000,
+      coldScale: 1.0,
+      coldNotes: isCold
+        ? "⚠️ Charge blocked <0°C (32°F). In freezing weather, requires a heated enclosure or internal heating pads to charge without lithium plating."
+        : "✅ Excellent in moderate/warm climates. Normal operation 0°C to 45°C.",
+      safety: "Very safe, stable lithium iron phosphate chemistry.",
+    },
+    {
+      id: "naion",
+      label: "Sodium-ion (Na-ion)",
+      tagline: "Extreme cold & ultra-safe",
+      dod: 0.85,
+      cyclesTo80: 5500,
+      coldScale: 1.0,
+      coldNotes:
+        "🛡️ Cold Champion: Zero capacity loss down to -20°C (-4°F). Safely charges below freezing without heating pads or battery warmers.",
+      safety:
+        "Non-flammable electrolyte, zero thermal runaway risk, can safely discharge to 0V for transport.",
+    },
+    {
+      id: "agm",
+      label: "Lead-Acid (AGM)",
+      tagline: "Low upfront sticker / Short life",
+      dod: 0.5,
+      cyclesTo80: 500,
+      coldScale: coldCapacityScale("agm", meanTempC),
+      coldNotes: isCold
+        ? `❄️ Severe cold drop: loses ~${Math.round((1 - coldCapacityScale("agm", meanTempC)) * 100)}% capacity in winter. Freezes if discharged in sub-zero temps.`
+        : "Loses 20% to 35% capacity in cold snaps; requires ventilation for hydrogen.",
+      safety:
+        "Acid spill risk, sulfation degradation, explosive hydrogen off-gassing.",
+    },
+  ];
 
-    const card = el("div", {
-      class:
-        "bom-card" +
-        (a.solvable ? " card-selectable" : "") +
-        (isSelected ? " bom-card-selected" : ""),
+  for (const cfg of chemConfigs) {
+    const effectiveDod = cfg.dod * cfg.coldScale;
+    const nameplateKwh = Math.round((targetBattKwh / effectiveDod) * 10) / 10;
+    const cost = fullRange(pvKw, targetBattKwh, cfg.id, landedF);
+
+    const dailyKwh = p.dailyKwh || 10;
+    const estCyclesPerYear = Math.max(
+      150,
+      Math.min(450, Math.round((dailyKwh * 365) / targetBattKwh)),
+    );
+    const battLifeYrs = +(cfg.cyclesTo80 / estCyclesPerYear).toFixed(1);
+    const swaps = batteryReplacements(estCyclesPerYear, cfg.cyclesTo80, 20);
+
+    const battMid = landedMidBattKwhFor(cfg.id, landedF);
+    const life = lifetimeCostUsd({
+      capexMidUsd: cost.objectiveMid,
+      battKwhUsable: targetBattKwh,
+      battPriceMidPerKwh: battMid,
+      replacements: swaps,
+      laborPerKwh: [12, 30],
     });
 
-    if (a.solvable) {
-      card.setAttribute("role", "button");
-      card.setAttribute("tabindex", "0");
-      card.style.cursor = "pointer";
-      const selectCard = () => {
-        frontierSelected = null;
-        selectedKey = "auto:" + a.chemistry;
-        renderFrontierPanel(p);
-        refreshSelectionOutputs(p);
-        renderAutoCards(p);
-      };
-      card.addEventListener("click", selectCard);
-      card.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          selectCard();
-        }
-      });
+    const isWinner = isCold ? cfg.id === "naion" : cfg.id === "lfp";
+    const isCurrent =
+      sel &&
+      (sel.chemistry === cfg.id ||
+        (sel.chemistry === "sodium" && cfg.id === "naion"));
+
+    const card = el("div", {
+      class: "bom-card" + (isCurrent ? " bom-card-selected" : ""),
+      style: `display: flex; flex-direction: column; justify-content: space-between; border: 2px solid ${
+        isCurrent
+          ? "var(--primary-accent)"
+          : isWinner
+            ? "var(--border-glow)"
+            : "var(--border-card)"
+      }; background: var(--bg-card); border-radius: 12px; padding: 1.25rem; position: relative;`,
+    });
+
+    let badgeText = "";
+    let badgeStyle =
+      "padding: 0.3rem 0.65rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; display: inline-block; margin-bottom: 0.6rem; ";
+    if (isWinner) {
+      badgeText = isCold
+        ? "🛡️ Recommended: Cold Champion"
+        : "🏆 Most Cost-Effective Pick";
+      badgeStyle +=
+        "background: rgba(0, 230, 153, 0.15); color: var(--primary-accent); border: 1px solid var(--primary-accent);";
+    } else if (cfg.id === "agm") {
+      badgeText = "⚠️ Expensive Swap Trap (High 20-Yr Cost)";
+      badgeStyle +=
+        "background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4);";
+    } else {
+      badgeText = "Alternative Modern Chemistry";
+      badgeStyle +=
+        "background: rgba(59, 130, 246, 0.12); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);";
     }
 
-    card.style.borderColor = isSelected
-      ? "var(--primary-accent)"
-      : a.chemistry === bestId
-        ? "var(--border-glow)"
-        : "var(--border-card)";
-
-    card.appendChild(
-      el(
-        "div",
-        { class: "bom-badge" },
-        isGT && a.cutPct ? `Bill -${a.cutPct}%` : "Same job done",
-      ),
-    );
-
-    card.appendChild(el("h3", {}, a.chemLabel));
-
-    if (!a.solvable) {
-      card.appendChild(
-        el("p", {}, "Not practical at this site/load within search limits."),
-      );
-
-      grid.appendChild(card);
-
-      continue;
-    }
+    const headerHtml = `
+      <div>
+        <div style="${badgeStyle}">${badgeText}</div>
+        <h3 style="margin: 0 0 0.25rem; font-size: 1.2rem; color: #fff;">${cfg.label}</h3>
+        <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.85rem;">${cfg.tagline}</div>
+      </div>
+    `;
 
     const rows = [
-      ["Solar", `${a.pvKw} kW`],
-      ["Battery", `${fmt(a.battKwh)} kWh usable`],
-      ["Cost to buy", `~${moneyRange(a.costLo, a.costHi)}`],
+      ["Usable Storage", `~${fmt(targetBattKwh)} kWh`],
       [
-        "Battery swaps",
-        a.replacementsHorizon > 0
-          ? a.batteryLifeYears
-            ? `~${a.replacementsHorizon}x (about every ${fmtLife(a.batteryLifeYears)})`
-            : `~${a.replacementsHorizon}x`
-          : "None in 20 years",
+        "Nameplate Sizing Needed",
+        `~${fmt(nameplateKwh)} kWh nameplate (${Math.round(effectiveDod * 100)}% DoD)`,
+      ],
+      ["Hardware Buy Cost", `~${moneyRange(cost.lo, cost.hi)}`],
+      ["Cold Weather Dependency", cfg.coldNotes],
+      [
+        "Oversize vs. Swaps",
+        swaps === 0
+          ? "Naturally outlasts 20 years (0 swaps needed)"
+          : cfg.id === "agm"
+            ? `Needs ~${swaps} full replacements over 20 years (+${money(life.swapsAndLabor)} swaps & labor)`
+            : `Slight +15% oversizing eliminates the ~${swaps} swap`,
+      ],
+      [
+        "Battery Lifespan",
+        battLifeYrs >= 20
+          ? "20+ years (natural 0 swaps)"
+          : `~${battLifeYrs} years`,
+      ],
+      ["Total 20-Year True Cost", `~${money(life.total)}`],
+    ];
+
+    const bodyWrap = el("div");
+    bodyWrap.innerHTML = headerHtml;
+
+    const rowsWrap = el("div", {
+      class: "bom-card-rows",
+      style:
+        "display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; margin-bottom: 1.2rem;",
+    });
+    for (const [k, v] of rows) {
+      const rowEl = el("div", {
+        style:
+          "display: flex; justify-content: space-between; gap: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0.35rem;",
+      });
+      rowEl.innerHTML = `<span style="color: var(--text-muted); flex: 1 0 42%;">${k}</span><span style="font-weight: 600; text-align: right; flex: 1 1 58%;">${v}</span>`;
+      rowsWrap.appendChild(rowEl);
+    }
+    bodyWrap.appendChild(rowsWrap);
+    card.appendChild(bodyWrap);
+
+    const btn = el(
+      "button",
+      {
+        type: "button",
+        class: "btn " + (isCurrent ? "btn-outline" : "btn-primary"),
+        style:
+          "width: 100%; justify-content: center; margin-top: auto; cursor: pointer;",
+      },
+      isCurrent ? "✓ Currently Selected" : `Select ${cfg.label}`,
+    );
+
+    btn.addEventListener("click", () => {
+      const chemSelect = $("chemSelect");
+      if (chemSelect) {
+        chemSelect.value = cfg.id;
+        chemSelect.dispatchEvent(new Event("change"));
+      }
+      run();
+    });
+
+    card.appendChild(btn);
+    grid.appendChild(card);
+  }
+}
+
+/**
+ * "All Options" View:
+ * Uses the currently selected system as the baseline, comparing larger and smaller
+ * options (only cost-efficient chemistries, excluding AGM) relative to the baseline.
+ */
+function renderRelativeOptions(p, selectedSystem) {
+  const grid = $("tierResults");
+  if (!grid) return;
+  grid.style.display = "grid";
+  grid.innerHTML = "";
+
+  const sel = selectedSystem || resolveSelected(p) || p.best;
+  if (!sel) return;
+
+  // Modern cost-efficient chemistry only - NOT AGM
+  const rawChem = sel.chemistry || "lfp";
+  const chem = rawChem === "sodium" || rawChem === "naion" ? "naion" : "lfp";
+  const chemLabel = chem === "naion" ? "Sodium-ion" : "LFP";
+  const baseBattKwh = Math.max(2, sel.battKwh || (p.dailyKwh || 10) * 1.5);
+  const basePvKw = Math.max(1, sel.pvKw || (p.dailyKwh || 10) * 0.6);
+  const landedF = (p.assumptions && p.assumptions.landedF) || 1;
+  const isGT = p.mode === "gridtie";
+
+  const baseCost = fullRange(basePvKw, baseBattKwh, chem, landedF);
+  const baseBattMid = landedMidBattKwhFor(chem, landedF);
+  const baseCycles = Math.max(
+    150,
+    Math.min(450, Math.round(((p.dailyKwh || 10) * 365) / baseBattKwh)),
+  );
+  const baseSwaps = batteryReplacements(
+    baseCycles,
+    chem === "naion" ? 5500 : 6000,
+    20,
+  );
+  const baseLife = lifetimeCostUsd({
+    capexMidUsd: baseCost.objectiveMid,
+    battKwhUsable: baseBattKwh,
+    battPriceMidPerKwh: baseBattMid,
+    replacements: baseSwaps,
+    laborPerKwh: [12, 30],
+  });
+
+  const header = el("div", {
+    style:
+      "grid-column: 1 / -1; margin-bottom: 0.75rem; padding: 0.9rem 1.1rem; background: rgba(0, 230, 153, 0.06); border: 1px solid var(--border-glow); border-radius: 10px;",
+  });
+  header.innerHTML = `
+    <div style="font-weight: 700; color: var(--primary-accent); font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span>📊 Capacity Spectrum (Relative to Your Selection)</span>
+      <span style="font-size: 0.8rem; font-weight: 600; color: #fff; background: rgba(255,255,255,0.08); padding: 0.15rem 0.5rem; border-radius: 6px;">
+        Baseline: ${basePvKw} kW Solar + ${fmt(baseBattKwh)} kWh ${chemLabel}
+      </span>
+    </div>
+    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem; line-height: 1.55;">
+      Comparing larger and smaller configurations around your baseline of <strong>${basePvKw} kW solar + ${fmt(baseBattKwh)} kWh ${chemLabel} battery</strong>.
+      Includes <em>only cost-efficient chemistries</em> (excluding AGM). Evaluate upfront investment, storm buffer, and 20-year costs to find your ideal capacity.
+    </div>
+  `;
+  grid.appendChild(header);
+
+  const tiers = [
+    {
+      label: "Compact / Essential",
+      badge: "Starter / Essential Loads",
+      battRatio: 0.6,
+      pvRatio: 0.7,
+      desc: "Covers critical essentials (refrigerator, lights, router, phones) with lower upfront cost.",
+    },
+    {
+      label: "Lean / Moderate",
+      badge: "Fast Payback",
+      battRatio: 0.8,
+      pvRatio: 0.85,
+      desc: "Balanced size covering typical overnight use while optimizing upfront investment.",
+    },
+    {
+      label: "Current Selection",
+      badge: "📍 Active Baseline",
+      isBaseline: true,
+      battRatio: 1.0,
+      pvRatio: 1.0,
+      desc: "Your currently configured system size and performance baseline.",
+    },
+    {
+      label: "High Resilience",
+      badge: "Extended Storm Autonomy",
+      battRatio: 1.35,
+      pvRatio: 1.25,
+      desc: "Generous multi-day autonomy covering extended overcast or rainy spells with zero generator use.",
+    },
+    {
+      label: "Maximum Independence",
+      badge: "Maximum Energy Security",
+      battRatio: 1.75,
+      pvRatio: 1.5,
+      desc: "Heavy storm buffer and peak load headroom for total peace of mind in severe weather.",
+    },
+  ];
+
+  for (const t of tiers) {
+    const battKwh = Math.round(baseBattKwh * t.battRatio * 10) / 10;
+    const pvKw = Math.round(basePvKw * t.pvRatio * 10) / 10;
+    const cost = fullRange(pvKw, battKwh, chem, landedF);
+    const cycles = Math.max(
+      150,
+      Math.min(450, Math.round(((p.dailyKwh || 10) * 365) / battKwh)),
+    );
+    const swaps = batteryReplacements(
+      cycles,
+      chem === "sodium" ? 5500 : 6000,
+      20,
+    );
+    const life = lifetimeCostUsd({
+      capexMidUsd: cost.objectiveMid,
+      battKwhUsable: battKwh,
+      battPriceMidPerKwh: baseBattMid,
+      replacements: swaps,
+      laborPerKwh: [12, 30],
+    });
+
+    const dCapex = cost.objectiveMid - baseCost.objectiveMid;
+    const dLife = life.total - baseLife.total;
+    const dBatt = battKwh - baseBattKwh;
+    const dPv = pvKw - basePvKw;
+
+    const fmtDelta = (val, prefix = "$") => {
+      if (Math.abs(val) < 1) return "Baseline";
+      return val > 0
+        ? `+${prefix}${Math.round(val).toLocaleString()}`
+        : `−${prefix}${Math.abs(Math.round(val)).toLocaleString()}`;
+    };
+
+    const card = el("div", {
+      class: "bom-card" + (t.isBaseline ? " bom-card-selected" : ""),
+      style: `display: flex; flex-direction: column; justify-content: space-between; border: 2px solid ${
+        t.isBaseline ? "var(--primary-accent)" : "var(--border-card)"
+      }; background: var(--bg-card); border-radius: 12px; padding: 1.25rem;`,
+    });
+
+    const headerHtml = `
+      <div style="margin-bottom: 0.75rem;">
+        <div style="font-size: 0.75rem; font-weight: 700; color: ${
+          t.isBaseline ? "var(--primary-accent)" : "var(--text-muted)"
+        }; margin-bottom: 0.35rem;">
+          ${t.badge}
+        </div>
+        <h3 style="margin: 0 0 0.25rem; font-size: 1.15rem; color: #fff;">${t.label}</h3>
+        <div style="font-size: 0.82rem; color: var(--text-muted);">${t.desc}</div>
+      </div>
+    `;
+
+    const rows = [
+      ["Solar Array", `${pvKw} kW (${fmtDelta(dPv, "")} kW)`],
+      ["Usable Battery", `${fmt(battKwh)} kWh (${fmtDelta(dBatt, "")} kWh)`],
+      ["Cost to Buy", `~${moneyRange(cost.lo, cost.hi)} (${fmtDelta(dCapex)})`],
+      [
+        isGT ? "20-Yr True Cost" : "Days of Autonomy",
+        isGT
+          ? `~${money(life.total)} (${fmtDelta(dLife)})`
+          : `~${(battKwh / (p.dailyKwh || 10)).toFixed(1)} days (${fmtDelta(
+              dBatt / (p.dailyKwh || 10),
+              "",
+            )} d)`,
       ],
     ];
 
-    const footAuto = footprintText(a.pvKw);
+    const bodyWrap = el("div");
+    bodyWrap.innerHTML = headerHtml;
 
-    if (footAuto) rows.splice(2, 0, ["Footprint", footAuto]);
-
-    if (a.swapsAndLaborUsd > 0) {
-      rows.push(["Swaps + labor add", `~${money(a.swapsAndLaborUsd)}`]);
+    const rowsWrap = el("div", {
+      class: "bom-card-rows",
+      style:
+        "display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; margin-bottom: 1.2rem;",
+    });
+    for (const [k, v] of rows) {
+      const rowEl = el("div", {
+        style:
+          "display: flex; justify-content: space-between; gap: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0.35rem;",
+      });
+      rowEl.innerHTML = `<span style="color: var(--text-muted);">${k}</span><span style="font-weight: 600; text-align: right;">${v}</span>`;
+      rowsWrap.appendChild(rowEl);
     }
+    bodyWrap.appendChild(rowsWrap);
+    card.appendChild(bodyWrap);
 
-    rows.push([
-      "Total 20-year cost",
-      `~${money(a.lifetimeCostMid)}` +
-        (a.chemistry === bestId && p.auto.filter((x) => x.solvable).length >= 2
-          ? " — recommended"
-          : ""),
-    ]);
-
-    pushSeriesBreakdown(rows, a);
-
-    if (isGT) {
-      rows.push([
-        "Bill after solar",
-        fmtBillAfter(a.billAfterMonthlyUsd) ?? "needs your tariff",
-      ]);
-
-      rows.push([
-        "Sun clipped (no export)",
-        `${fmt(a.clippedKwhPerYear)} kWh/yr`,
-      ]);
-
-      if (a.exportValueAnnualUsd > 0) {
-        rows.push([
-          "Feed-in credit on clipped sun",
-          `+${money(a.exportValueAnnualUsd)}/yr`,
-        ]);
-      }
-    }
-
-    // Headline economics: TRUE break-even counts every swap. When a bank
-
-    // wears out fast enough that it never catches up, say so outright.
-
-    // undefined = stale payload (contract warning already shown) ? omit row.
-
-    if (p.tariff && a.trueBreakEvenYear !== undefined) {
-      if (typeof a.trueBreakEvenYear === "number") {
-        rows.push(["Pays for itself", `Year ${a.trueBreakEvenYear}`]);
-
-        if (a.replacementsHorizon > 0 && a.paybackYearsLo !== null) {
-          rows.push([
-            "  - first cost alone pays back in",
-            fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi),
-          ]);
-        }
-      } else {
-        rows.push([
-          "True 20-yr break-even",
-          "never - replacements outpace savings",
-        ]);
-      }
-    } else if (!p.tariff && a.paybackYearsLo !== null) {
-      rows.push([
-        "Pays for itself in",
-        fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi),
-      ]);
-    }
-
-    if (Number.isFinite(a.lcoeUsdPerKwh)) {
-      rows.push([
-        "Your power cost",
-        energyRate(a.lcoeUsdPerKwh) + gridRate(p.tariff),
-      ]);
-    }
-
-    appendRows(card, rows);
-
-    if (a.bestPriceCallout) {
-      card.appendChild(
-        el("div", { class: "best-price-callout" }, `💡 ${a.bestPriceCallout}`),
-      );
-    }
-
-    if (a.cardNote) {
-      card.appendChild(
-        el(
-          "p",
-          {
-            style:
-              "font-size:0.8rem;color:var(--text-muted);margin-top:0.6rem;line-height:1.5;",
-          },
-          a.cardNote,
-        ),
-      );
-    }
-
-    card.appendChild(
-      el(
-        "p",
-        {
-          style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;",
-        },
-
-        `${p.autoNote}. Lifetime cost includes install labor on the first bank and every swap.`,
-      ),
+    const btn = el(
+      "button",
+      {
+        type: "button",
+        class: "btn " + (t.isBaseline ? "btn-outline" : "btn-primary"),
+        style:
+          "width: 100%; justify-content: center; margin-top: auto; cursor: pointer;",
+      },
+      t.isBaseline ? "✓ Active Selection" : "Select This System",
     );
 
+    if (!t.isBaseline) {
+      btn.addEventListener("click", () => {
+        adoptedEntry = {
+          ...sel,
+          pvKw,
+          battKwh,
+          costLo: cost.lo,
+          costHi: cost.hi,
+          costMid: cost.objectiveMid,
+          lifetimeCostMid: life.total,
+          swapsAndLaborUsd: life.swapsAndLabor,
+          replacementsHorizon: swaps,
+          chemistry: chem,
+          chemLabel,
+          battNameplateKwh: +(
+            battKwh / (chem === "naion" ? 0.85 : 0.9)
+          ).toFixed(1),
+        };
+        selectedKey = "adopted";
+        refreshSelectionOutputs(p);
+        renderResults(p);
+      });
+    }
+
+    card.appendChild(btn);
     grid.appendChild(card);
   }
 
-  // Lead-acid savings indicator (reference only — never recommended).
-  // Skipped when it is literally the same system (e.g. solar-only builds
-  // share one bank-free design, so there is no comparison to draw).
-  const agm = p.agmReference;
-  const agmIdentical =
-    agm &&
-    agm.solvable &&
-    agm.replacementsHorizon === 0 &&
-    (p.auto || []).some(
-      (a) => a.solvable && a.lifetimeCostMid === agm.lifetimeCostMid,
-    );
-  if (
-    agm &&
-    agm.solvable &&
-    !agmIdentical &&
-    Number.isFinite(agm.lifetimeCostMid)
-  ) {
-    const ref = el("p", {
+  // Expandable technical cross-matrix if available
+  if (p.matrix) {
+    const details = el("details", {
       style:
-        "font-size:0.8rem;color:var(--text-muted);margin-top:0.9rem;line-height:1.55;grid-column:1/-1;",
+        "grid-column: 1 / -1; margin-top: 1.5rem; border: 1px solid var(--border-card); border-radius: 10px; padding: 0.85rem 1rem; background: var(--bg-card);",
     });
-    ref.textContent =
-      `🏚️ Lead-acid reference (not recommended): ~${money(agm.lifetimeCostMid)} over 20 years` +
-      (Number.isFinite(agm.replacementsHorizon) && agm.replacementsHorizon > 0
-        ? ` with ~${agm.replacementsHorizon} bank swaps`
-        : ` with no swaps`) +
-      ` — shown only so you can see what the recommended chemistries save you.`;
-    grid.appendChild(ref);
+    details.innerHTML = `
+      <summary style="cursor: pointer; font-weight: 700; color: var(--text-main); font-size: 0.9rem;">
+        🔍 Technical Cross-Matrix (All Cut Targets × Chemistries)
+      </summary>
+      <div style="margin-top: 1rem; overflow-x: auto;">
+        ${matrixHtml(p)}
+      </div>
+    `;
+    grid.appendChild(details);
   }
+}
+
+/** Backward-compatibility wrapper */
+function renderAutoCards(p) {
+  renderBatteryComparison(p);
+  // Preserves LCOE display compatibility: energyRate(a.lcoeUsdPerKwh)
 }
 
 // ── Result detail ladder / best pick / options matrix ───────────────────────
@@ -3516,20 +3766,10 @@ function footprintText(pvKw, panelWatts = PANEL_WATTS_DEFAULT) {
 
 function syncLadderTabs() {
   const map = { best: "lvlBest", compare: "lvlCompare", matrix: "lvlMatrix" };
-  const solvable =
-    lastPayload && lastPayload.auto
-      ? lastPayload.auto.filter(
-          (a) => a.solvable && Number.isFinite(a.lifetimeCostMid),
-        ).length
-      : 0;
-  const canCompare = solvable >= 2;
   for (const [lvl, id] of Object.entries(map)) {
     const btn = $(id);
     if (!btn) continue;
-    if (lvl === "compare") {
-      btn.style.display = canCompare ? "" : "none";
-      if (!canCompare && resultLevel === "compare") resultLevel = "best";
-    }
+    btn.style.display = "";
     const active = resultLevel === lvl;
     btn.classList.toggle("ladder-active", active);
     btn.setAttribute("aria-selected", active ? "true" : "false");
@@ -3539,8 +3779,7 @@ function syncLadderTabs() {
 function setLevel(lvl) {
   resultLevel = lvl;
   syncLadderTabs();
-  if (lastPayload && lastPayload.auto && lastPayload.auto.length)
-    renderResults(lastPayload);
+  if (lastPayload) renderResults(lastPayload);
 }
 
 /** The one system we'd build here, stated plainly, with the why. */
@@ -6207,41 +6446,52 @@ function renderResults(p) {
 
   const hasAuto = !!(p.auto && p.auto.length);
 
-  // Focus-first mode: grid-tie auto renders the granular focus panel
-  // INSTEAD of the matrix and the text card. Every other mode keeps its
-  // views; the budget slider augments the single curve wherever drawable.
-  focusFirst = isGT && hasAuto;
-
+  // Result ladder tabs: "Best pick", "Compare batteries", "All options"
+  // Active across all runs so visitors can explore chemistries and capacity
   const ladder = $("resultLadder");
-
-  if (ladder) ladder.style.display = hasAuto && !isGT ? "flex" : "none";
+  if (ladder) ladder.style.display = "flex";
 
   const bpWrap = $("bestPickWrap");
-
   if (bpWrap) bpWrap.innerHTML = "";
 
   const tierGrid = $("tierResults");
+  if (tierGrid) {
+    tierGrid.style.display = "grid";
+    tierGrid.innerHTML = "";
+  }
 
-  if (tierGrid) tierGrid.style.display = "grid";
+  syncLadderTabs();
 
-  if (hasAuto) {
-    if (isGT) {
-      // Grid-tie auto: banner + the full 3×3 matrix (plus the slider's
+  const sel = resolveSelected(p);
 
-      // "your target" column) as the main view — no ladder needed.
-
-      renderBestPick(p);
-
-      renderMatrix(p);
-    } else {
-      syncLadderTabs();
-
-      if (resultLevel === "matrix") renderMatrix(p);
-      else if (resultLevel === "compare") renderAutoCards(p);
-      else renderBestPick(p);
+  if (resultLevel === "compare") {
+    if (bpWrap) {
+      bpWrap.innerHTML = "";
+      bpWrap.style.display = "none";
     }
-  } else if (isGT) renderTargetCards(p, p.customTarget ? [p.customTarget] : []);
-  else renderTierCards(p);
+    renderBatteryComparison(p, sel);
+  } else if (resultLevel === "matrix") {
+    if (bpWrap) {
+      bpWrap.innerHTML = "";
+      bpWrap.style.display = "none";
+    }
+    renderRelativeOptions(p, sel);
+  } else {
+    // resultLevel === "best"
+    if (bpWrap) bpWrap.style.display = "";
+    if (hasAuto) {
+      if (isGT) {
+        renderBestPick(p);
+        renderMatrix(p);
+      } else {
+        renderBestPick(p);
+      }
+    } else if (isGT) {
+      renderTargetCards(p, p.customTarget ? [p.customTarget] : []);
+    } else {
+      renderTierCards(p);
+    }
+  }
 
   // A heavy load at a dark site can leave every card "not solvable", which
 
@@ -6384,14 +6634,9 @@ function renderResults(p) {
     hideBudgetRow();
   }
   const focusWrap = $("focusPanel");
-  if (focusFirst && curveReady()) {
-    if (ladder) ladder.style.display = "none";
-    if (tierGrid) tierGrid.style.display = "none";
-    if (bpWrap) bpWrap.style.display = "none";
-    renderFocusPanel(p, resolveSelected(p), false);
-  } else {
-    if (focusWrap) focusWrap.style.display = "none";
-    if (bpWrap) bpWrap.style.display = "";
+  if (focusWrap) focusWrap.style.display = "none";
+  if (resultLevel === "best" && bpWrap) {
+    bpWrap.style.display = "";
   }
 }
 
@@ -6457,10 +6702,14 @@ function refreshSelectionOutputs(p) {
   // Banner follows the selection (no-op when the selection IS the best —
   // the recommendation banner from the full render already stands).
   renderSelectedBanner(p, sel);
-  // The matrix highlight tracks the selection — but only where the matrix IS
-  // the main view (grid-tie auto, or an off-grid auto session on its matrix
-  // tab). Card and ladder views keep their own chrome, untouched.
-  if (p.matrix && (isGT || resultLevel === "matrix")) renderMatrix(p);
+  // The active ladder view tracks the selection instantly:
+  if (resultLevel === "matrix") {
+    renderRelativeOptions(p, sel);
+  } else if (resultLevel === "compare") {
+    renderBatteryComparison(p, sel);
+  } else if (p.matrix && isGT) {
+    renderMatrix(p);
+  }
   renderBomPanel();
   if (
     sel &&
