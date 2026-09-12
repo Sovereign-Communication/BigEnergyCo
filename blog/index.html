@@ -649,18 +649,24 @@
     <!-- Header / Navigation Bar -->
     <header>
       <div class="container nav-flex">
-        <a href="../" class="logo" style="text-decoration: none">
+        <a
+          href="../"
+          class="logo"
+          style="text-decoration: none"
+          aria-label="BigEnergyCo Home"
+        >
           <span>⚡</span>
           <span>BigEnergy<span class="highlight">Co</span></span>
         </a>
         <nav class="nav-links">
-          <a href="../#sizing">Size Your System</a>
+          <a href="../solar-heatmap/">Heatmap</a>
           <a href="../#bom">Hardware Reference</a>
-          <a href="./" class="active">Blog</a>
-          <a href="../#legal">Terms & Disclaimer</a>
+          <a href="./" class="active">Guides &amp; Blog</a>
+          <a href="../about/">About</a>
+          <a href="../#legal">Terms &amp; Disclaimer</a>
         </nav>
         <div class="header-cta">
-          <a href="../" class="btn btn-primary">Size Your System</a>
+          <a href="../#sizing" class="btn btn-primary">Size Your System</a>
         </div>
       </div>
     </header>
@@ -686,11 +692,89 @@
         verify electrical and battery designs with a licensed professional.
       </div>
 
-      <p style="margin: 1.5rem 0">
-        New here?
-        <a href="../solar-calculator/">Solar sizing for 66 cities</a> ·
-        <a href="../solar-heatmap/">Where payback is fastest (map)</a> ·
-        <a href="../about/">About the method</a>
+      <!-- Worldwide Benchmark Cities Feature Card -->
+      <div
+        class="city-benchmark-card"
+        style="
+          margin: 1.5rem 0;
+          background: rgba(59, 130, 246, 0.08);
+          border: 1px solid rgba(59, 130, 246, 0.3);
+          border-radius: 12px;
+          padding: 1.5rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 1rem;
+        "
+      >
+        <div>
+          <div
+            style="
+              font-size: 0.78rem;
+              font-weight: 700;
+              color: #60a5fa;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              margin-bottom: 0.35rem;
+            "
+          >
+            🌐 Worldwide Reference Guides
+          </div>
+          <h3
+            style="
+              font-size: 1.25rem;
+              font-weight: 800;
+              color: #fff;
+              margin-bottom: 0.35rem;
+            "
+          >
+            Solar &amp; Battery Benchmarks for 66 Cities
+          </h3>
+          <p
+            style="
+              color: var(--text-muted);
+              font-size: 0.92rem;
+              margin: 0;
+              max-width: 620px;
+              line-height: 1.55;
+            "
+          >
+            Explore regional solar yield bands, seasonal irradiance, and worked
+            sizing examples for 66 benchmark cities worldwide. (Note: our
+            <a
+              href="../#sizing"
+              style="color: var(--primary-accent); font-weight: 600"
+              >interactive estimator</a
+            >
+            calculates for <em>any</em> coordinates worldwide.)
+          </p>
+        </div>
+        <a
+          href="../solar-calculator/"
+          class="btn"
+          style="
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            color: #93c5fd;
+            white-space: nowrap;
+            font-weight: 700;
+            padding: 0.65rem 1.2rem;
+            border-radius: 8px;
+          "
+          >Browse 66 City Profiles &rarr;</a
+        >
+      </div>
+
+      <p style="margin: 1.2rem 0; font-size: 0.9rem; color: var(--text-muted)">
+        Explore more tools:
+        <a href="../solar-heatmap/" style="color: var(--primary-accent)"
+          >Global Payback Heatmap</a
+        >
+        ·
+        <a href="../about/" style="color: var(--primary-accent)"
+          >About the Sizing Method</a
+        >
       </p>
 
       <div class="articles-grid">
@@ -992,12 +1076,13 @@
           code. Verify everything with a licensed professional before building.
         </p>
         <p style="font-size: 0.85rem">
-          <a href="../">Estimator</a>
-          &nbsp;·&nbsp; <a href="./">Blog</a> &nbsp;·&nbsp;
-          <a href="../#bom">Hardware Reference</a> &nbsp;·&nbsp;
+          <a href="../">Free Estimator</a>
+          &nbsp;·&nbsp; <a href="../solar-heatmap/">Heatmap</a> &nbsp;·&nbsp;
+          <a href="./">Guides &amp; Blog</a> &nbsp;·&nbsp;
+          <a href="../solar-calculator/">Worldwide Benchmarks</a> &nbsp;·&nbsp;
+          <a href="../about/">About</a> &nbsp;·&nbsp;
           <a href="../#legal">Terms</a> &nbsp;·&nbsp;
-          <a href="../#support">Support</a> &nbsp;·&nbsp;
-          <a href="mailto:lucasballek@gmail.com">lucasballek@gmail.com</a>
+          <a href="mailto:lucasballek@gmail.com">Contact</a>
         </p>
       </div>
     </footer>

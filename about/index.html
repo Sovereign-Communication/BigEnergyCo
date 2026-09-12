@@ -192,25 +192,65 @@
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 0.75rem;
       }
       .logo {
         font-weight: 800;
-        color: #fff;
-        font-size: 1.05rem;
+        font-size: 1.25rem;
+        letter-spacing: -0.5px;
         text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: #fff;
       }
-      .logo span {
+      .logo .highlight {
         color: var(--accent);
+      }
+      nav {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        flex-wrap: wrap;
       }
       nav a {
         color: var(--muted);
         text-decoration: none;
-        margin-left: 1.1rem;
         font-size: 0.9rem;
+        font-weight: 500;
+        transition: color 0.2s;
       }
-      nav a:hover {
+      nav a:hover,
+      nav a.active {
         color: #fff;
+      }
+      .header-cta {
+        display: flex;
+        align-items: center;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.88rem;
+        cursor: pointer;
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+        border: none;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #00e699 0%, #00b377 100%);
+        color: #04120c;
+        box-shadow: 0 0 12px rgba(0, 230, 153, 0.25);
+      }
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 18px rgba(0, 230, 153, 0.4);
+        color: #04120c;
       }
       article {
         padding: 2.5rem 0 1rem;
@@ -283,14 +323,20 @@
   <body>
     <header>
       <div class="container">
-        <a class="logo" href="../">⚡ BigEnergy<span>Co</span></a>
+        <a class="logo" href="../" aria-label="BigEnergyCo Home">
+          <span>⚡</span>
+          <span>BigEnergy<span class="highlight">Co</span></span>
+        </a>
         <nav>
-          <a href="../#sizing">Size Your System</a>
-          <a href="../solar-calculator/">Cities</a>
-          <a href="../blog/">Blog</a>
-          <a href="./">About</a>
+          <a href="../solar-heatmap/">Heatmap</a>
+          <a href="../#bom">Hardware Reference</a>
+          <a href="../blog/">Guides &amp; Blog</a>
+          <a href="./" class="active">About</a>
           <a href="../#legal">Terms &amp; Disclaimer</a>
         </nav>
+        <div class="header-cta">
+          <a href="../#sizing" class="btn btn-primary">Size Your System</a>
+        </div>
       </div>
     </header>
     <main class="container">
@@ -427,7 +473,7 @@
         </p>
         <p>
           <a href="../">Free Estimator</a> · <a href="../blog/">All Guides</a> ·
-          <a href="../solar-calculator/">Cities</a> ·
+          <a href="../solar-calculator/">Worldwide Benchmarks</a> ·
           <a href="../solar-heatmap/">Heatmap</a>
         </p>
       </article>

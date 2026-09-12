@@ -1444,6 +1444,25 @@ footer {
   font-family: var(--font-mono);
   color: var(--text-main);
 }
+.sun-path-metric-sub {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  margin-top: 0.2rem;
+  line-height: 1.35;
+}
+.sun-path-takeaway {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(0, 230, 153, 0.06);
+  border: 1px solid rgba(0, 230, 153, 0.25);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-main);
+}
+.sun-path-takeaway strong {
+  color: var(--primary-accent);
+}
 
 /* Battery Chemistry Temperature Visualizer */
 .chem-temp-wrap {

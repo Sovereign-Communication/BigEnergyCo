@@ -270,7 +270,7 @@
       }
     </script>
 
-    <link rel="stylesheet" href="./assets/site.css?v=20260911d" />
+    <link rel="stylesheet" href="./assets/site.css?v=20260912a" />
   </head>
 
   <body>
@@ -279,26 +279,27 @@
 
       <header>
         <div class="container nav-flex">
-          <div class="logo">
+          <a
+            href="./"
+            class="logo"
+            style="text-decoration: none"
+            aria-label="BigEnergyCo Home"
+          >
             <span aria-hidden="true">&#9889;</span>
 
             <span>BigEnergy<span class="highlight">Co</span></span>
-          </div>
+          </a>
 
           <nav class="nav-links">
-            <a href="#sizing" data-i18n="navSizing">Size Your System</a>
-
-            <a href="./solar-calculator/">Cities</a>
-
             <a href="./solar-heatmap/">Heatmap</a>
 
             <a href="#bom" data-i18n="navBom">Hardware Reference</a>
 
-            <a href="./blog/" data-i18n="navBlog">Blog</a>
+            <a href="./blog/" data-i18n="navBlog">Guides &amp; Blog</a>
 
             <a href="./about/">About</a>
 
-            <a href="#legal" data-i18n="navLegal">Terms & Disclaimer</a>
+            <a href="#legal" data-i18n="navLegal">Terms &amp; Disclaimer</a>
           </nav>
 
           <div class="header-cta">
@@ -381,20 +382,16 @@
             >Size Your System <span>&rarr;</span></a
           >
 
+          <a href="./solar-heatmap/" class="mobile-nav-link"
+            >Payback Heatmap <span>&rarr;</span></a
+          >
+
           <a href="#bom" class="mobile-nav-link" data-i18n="navBom"
             >Hardware Reference <span>&rarr;</span></a
           >
 
           <a href="./blog/" class="mobile-nav-link" data-i18n="navBlog"
-            >Blog <span>&rarr;</span></a
-          >
-
-          <a href="./solar-calculator/" class="mobile-nav-link"
-            >City Sizing Pages <span>&rarr;</span></a
-          >
-
-          <a href="./solar-heatmap/" class="mobile-nav-link"
-            >Payback Heatmap <span>&rarr;</span></a
+            >Guides &amp; Blog <span>&rarr;</span></a
           >
 
           <a href="./about/" class="mobile-nav-link"
@@ -493,14 +490,11 @@
             </h2>
 
             <p class="section-desc">
-              Set your monthly bill and your bill-cut target on two sliders —
-              then one click on your location sizes everything against
-              <em>your</em> numbers. Location instantly pulls the local
-              electricity price and re-expresses your bill in that currency;
-              results compare all three chemistries at 60/80/95% cuts, add a
-              1–150% cut slider for your exact target, and let you click any
-              point on the price-cut curve for the full 20-year analysis.
-              Deterministic, weather-aware, educational.
+              Enter your location and average electric bill. We simulate 5 years
+              of hourly NASA satellite weather to size the exact solar panel
+              array and battery storage you need — with honest 20-year payback,
+              battery replacement cadence, and equipment costs in your local
+              currency.
             </p>
           </div>
 
@@ -667,9 +661,35 @@
               </div>
 
               <div class="form-group" style="margin-bottom: 0">
-                <label for="citySearch" data-i18n="cityLabel"
-                  >Where is this system going?</label
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 0.4rem;
+                    flex-wrap: wrap;
+                    gap: 0.4rem;
+                  "
                 >
+                  <label
+                    for="citySearch"
+                    data-i18n="cityLabel"
+                    style="margin-bottom: 0"
+                    >Where is this system going?</label
+                  >
+                  <span
+                    style="
+                      font-size: 0.75rem;
+                      font-weight: 600;
+                      color: var(--primary-accent);
+                      background: rgba(0, 230, 153, 0.1);
+                      padding: 0.15rem 0.55rem;
+                      border-radius: 4px;
+                      border: 1px solid rgba(0, 230, 153, 0.25);
+                    "
+                    >Works worldwide &bull; any city, town, or coordinates</span
+                  >
+                </div>
 
                 <div
                   style="
@@ -700,12 +720,12 @@
                       class="form-control"
                       type="search"
                       autocomplete="off"
-                      placeholder="…or check anywhere: type any city, then press Enter"
+                      placeholder="Type any city, town, or coordinates (e.g. Austin, Manila, Zurich)..."
                       role="combobox"
                       aria-autocomplete="list"
                       aria-controls="citySuggestions"
                       aria-expanded="false"
-                      aria-label="Search any city worldwide"
+                      aria-label="Search any city or coordinates worldwide"
                     />
 
                     <div
@@ -741,8 +761,8 @@
                   "
                 >
                   The precise-location button sizes for your exact coordinates
-                  and pulls area prices from the nearest reference city. To
-                  check anywhere else, type any city and press
+                  and pulls area prices from the nearest reference region. To
+                  check anywhere else worldwide, type any city or town and press
                   <strong>Enter</strong> or <strong>Tab</strong> — the location
                   auto-resolves and runs.
                 </p>
@@ -2690,7 +2710,7 @@
 
           &nbsp;-&nbsp;
           <a href="./solar-calculator/" style="color: var(--primary-accent)"
-            >Cities</a
+            >Worldwide Benchmarks</a
           >
 
           &nbsp;-&nbsp;
@@ -3018,9 +3038,9 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20260911d"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20260912a"></script>
 
-    <script defer src="./assets/js/chat.js?v=20260911d"></script>
+    <script defer src="./assets/js/chat.js?v=20260912a"></script>
   </body>
 </html>
 

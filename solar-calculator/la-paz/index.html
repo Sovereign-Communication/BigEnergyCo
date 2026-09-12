@@ -130,11 +130,14 @@
       -webkit-backdrop-filter: blur(10px);
       z-index: 5;
     }
-    header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; }
-    .logo { font-weight: 800; color: #fff; font-size: 1.05rem; text-decoration: none; }
-    .logo span { color: var(--accent); }
-    nav a { color: var(--muted); text-decoration: none; margin-left: 1.1rem; font-size: .9rem; }
-    nav a:hover { color: #fff; }
+    header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; }
+    .logo { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; color: #fff; }
+    .logo .highlight { color: var(--accent); }
+    nav { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+    nav a { color: var(--muted); text-decoration: none; font-size: .9rem; font-weight: 500; transition: color 0.2s; }
+    nav a:hover, nav a.active { color: #fff; }
+    .header-cta { display: flex; align-items: center; }
+    .header-cta .btn { margin-top: 0; padding: .5rem 1rem; font-size: .88rem; }
     article { padding: 2.5rem 0 1rem; }
     h1 { color: #fff; font-size: 2.1rem; line-height: 1.25; letter-spacing: -.5px; margin-bottom: .75rem; }
     .meta { color: var(--muted); font-size: .85rem; margin-bottom: 2rem; }
@@ -178,14 +181,20 @@
 <body>
 <header>
     <div class="container">
-      <a class="logo" href="../../">⚡ BigEnergy<span>Co</span></a>
+      <a class="logo" href="../../" aria-label="BigEnergyCo Home">
+        <span>⚡</span>
+        <span>BigEnergy<span class="highlight">Co</span></span>
+      </a>
       <nav>
-        <a href="../../#sizing">Size Your System</a>
+        <a href="../../solar-heatmap/">Heatmap</a>
         <a href="../../#bom">Hardware Reference</a>
-        <a href="../../blog/">Blog</a>
-        <a href="../">All Cities</a>
-        <a href="../../#legal">Terms & Disclaimer</a>
+        <a href="../../blog/">Guides &amp; Blog</a>
+        <a href="../../about/">About</a>
+        <a href="../../#legal">Terms &amp; Disclaimer</a>
       </nav>
+      <div class="header-cta">
+        <a href="../../#sizing" class="btn">Size Your System</a>
+      </div>
     </div>
   </header>
 
@@ -193,6 +202,13 @@
     <article>
       <h1>Solar & Battery Sizing for La Paz, Bolivia</h1>
       <p class="meta">📍 16.49° S, 68.12° W · Subtropical sun · updated Aug 30, 2026 · free, no signup, nothing for sale</p>
+
+      <!-- Worldwide Sizing Reassurance Callout -->
+      <div class="cta-box" style="margin: 1.5rem 0 2rem; border-color: rgba(0, 230, 153, 0.4); background: rgba(0, 230, 153, 0.08);">
+        <p style="font-weight:700;color:#fff;margin-bottom:0.4rem;">⚡ Sizing for a different location?</p>
+        <p style="color:var(--muted);font-size:0.92rem;margin-bottom:0.75rem;">This page is a benchmark reference for La Paz. The BigEnergyCo calculator works for <strong>any location worldwide</strong> using your exact coordinates.</p>
+        <a class="btn" href="../../#sizing">⚡ Size Any Location Worldwide &rarr;</a>
+      </div>
 
       <p><em class="kicker">The short answer:</em> La Paz sits at 16.49° S, 68.12° W — subtropical sun. Strong sun most of the year with a mild winter dip. Roughly <strong>1400–1800 kWh per kW of panels per year</strong> is a fair expectation band, and the exact number for your roof is what the simulator computes.</p>
 
@@ -252,7 +268,7 @@
         <a href="../quito/">Quito</a>
         <a href="../london/">London</a>
       </div>
-      <p><a href="../">Browse all 66 cities →</a></p>
+      <p><a href="../">Browse all 66 benchmark cities →</a></p>
 
       <h2>Related guides</h2>
       <ul>
@@ -283,7 +299,7 @@
     <div class="container">
       <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building. Working with batteries and mains wiring can cause fire, injury, and death.</p>
       <p style="margin-top:.75rem;">
-        <a href="../../">Size Your System</a> · <a href="../">All Cities</a> · <a href="../../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
+        <a href="../../#sizing">Size Your System</a> · <a href="../">66 City Benchmarks</a> · <a href="../../solar-heatmap/">Heatmap</a> · <a href="../../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
       </p>
     </div>
   </footer>

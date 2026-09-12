@@ -284,11 +284,14 @@ function cityPage(c) {
       -webkit-backdrop-filter: blur(10px);
       z-index: 5;
     }
-    header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; }
-    .logo { font-weight: 800; color: #fff; font-size: 1.05rem; text-decoration: none; }
-    .logo span { color: var(--accent); }
-    nav a { color: var(--muted); text-decoration: none; margin-left: 1.1rem; font-size: .9rem; }
-    nav a:hover { color: #fff; }
+    header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; }
+    .logo { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; color: #fff; }
+    .logo .highlight { color: var(--accent); }
+    nav { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+    nav a { color: var(--muted); text-decoration: none; font-size: .9rem; font-weight: 500; transition: color 0.2s; }
+    nav a:hover, nav a.active { color: #fff; }
+    .header-cta { display: flex; align-items: center; }
+    .header-cta .btn { margin-top: 0; padding: .5rem 1rem; font-size: .88rem; }
     article { padding: 2.5rem 0 1rem; }
     h1 { color: #fff; font-size: 2.1rem; line-height: 1.25; letter-spacing: -.5px; margin-bottom: .75rem; }
     .meta { color: var(--muted); font-size: .85rem; margin-bottom: 2rem; }
@@ -332,14 +335,20 @@ function cityPage(c) {
 <body>
 <header>
     <div class="container">
-      <a class="logo" href="../../">⚡ BigEnergy<span>Co</span></a>
+      <a class="logo" href="../../" aria-label="BigEnergyCo Home">
+        <span>⚡</span>
+        <span>BigEnergy<span class="highlight">Co</span></span>
+      </a>
       <nav>
-        <a href="../../#sizing">Size Your System</a>
+        <a href="../../solar-heatmap/">Heatmap</a>
         <a href="../../#bom">Hardware Reference</a>
-        <a href="../../blog/">Blog</a>
-        <a href="../">All Cities</a>
-        <a href="../../#legal">Terms & Disclaimer</a>
+        <a href="../../blog/">Guides &amp; Blog</a>
+        <a href="../../about/">About</a>
+        <a href="../../#legal">Terms &amp; Disclaimer</a>
       </nav>
+      <div class="header-cta">
+        <a href="../../#sizing" class="btn">Size Your System</a>
+      </div>
     </div>
   </header>
 
@@ -347,6 +356,13 @@ function cityPage(c) {
     <article>
       <h1>${h1}</h1>
       <p class="meta">📍 ${coord} · ${sc.tier} · updated Aug 30, 2026 · free, no signup, nothing for sale</p>
+
+      <!-- Worldwide Sizing Reassurance Callout -->
+      <div class="cta-box" style="margin: 1.5rem 0 2rem; border-color: rgba(0, 230, 153, 0.4); background: rgba(0, 230, 153, 0.08);">
+        <p style="font-weight:700;color:#fff;margin-bottom:0.4rem;">⚡ Sizing for a different location?</p>
+        <p style="color:var(--muted);font-size:0.92rem;margin-bottom:0.75rem;">This page is a benchmark reference for ${c.name}. The BigEnergyCo calculator works for <strong>any location worldwide</strong> using your exact coordinates.</p>
+        <a class="btn" href="../../#sizing">⚡ Size Any Location Worldwide &rarr;</a>
+      </div>
 
       <p><em class="kicker">The short answer:</em> ${c.name} sits at ${coord} — ${sc.tier.toLowerCase()}. ${sc.note.charAt(0).toUpperCase() + sc.note.slice(1)} Roughly <strong>${lo}–${hi} kWh per kW of panels per year</strong> is a fair expectation band, and the exact number for your roof is what the simulator computes.</p>
 
@@ -386,7 +402,7 @@ ${cities
   .map((o) => `        <a href="../${slugify(o.name)}/">${o.name}</a>`)
   .join("\n")}
       </div>
-      <p><a href="../">Browse all ${cities.length} cities →</a></p>
+      <p><a href="../">Browse all ${cities.length} benchmark cities →</a></p>
 
       <h2>Related guides</h2>
       <ul>
@@ -417,7 +433,7 @@ ${cities
     <div class="container">
       <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building. Working with batteries and mains wiring can cause fire, injury, and death.</p>
       <p style="margin-top:.75rem;">
-        <a href="../../">Size Your System</a> · <a href="../">All Cities</a> · <a href="../../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
+        <a href="../../#sizing">Size Your System</a> · <a href="../">66 City Benchmarks</a> · <a href="../../solar-heatmap/">Heatmap</a> · <a href="../../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
       </p>
     </div>
   </footer>
@@ -544,11 +560,15 @@ function hubPage() {
       -webkit-backdrop-filter: blur(10px);
       z-index: 5;
     }
-    header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; }
-    .logo { font-weight: 800; color: #fff; font-size: 1.05rem; text-decoration: none; }
-    .logo span { color: var(--accent); }
-    nav a { color: var(--muted); text-decoration: none; margin-left: 1.1rem; font-size: .9rem; }
-    nav a:hover { color: #fff; }
+    header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; }
+    .logo { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; color: #fff; }
+    .logo .highlight { color: var(--accent); }
+    nav { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+    nav a { color: var(--muted); text-decoration: none; font-size: .9rem; font-weight: 500; transition: color 0.2s; }
+    nav a:hover, nav a.active { color: #fff; }
+    .header-cta { display: flex; align-items: center; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; text-decoration: none !important; transition: all 0.2s ease; border: none; background: linear-gradient(135deg, #00e699 0%, #00b377 100%); color: #04120c; box-shadow: 0 0 12px rgba(0, 230, 153, 0.25); }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 0 18px rgba(0, 230, 153, 0.4); color: #04120c; }
     article { padding: 2.5rem 0 1rem; }
     h1 { color: #fff; font-size: 2.1rem; line-height: 1.25; letter-spacing: -.5px; margin-bottom:.75rem; }
     h2 { color: #fff; font-size: 1.25rem; margin: 1.8rem 0 .8rem; }
@@ -576,19 +596,37 @@ function hubPage() {
 <body>
 <header>
     <div class="container">
-      <a class="logo" href="../">⚡ BigEnergy<span>Co</span></a>
+      <a class="logo" href="../" aria-label="BigEnergyCo Home">
+        <span>⚡</span>
+        <span>BigEnergy<span class="highlight">Co</span></span>
+      </a>
       <nav>
-        <a href="../#sizing">Size Your System</a>
+        <a href="../solar-heatmap/">Heatmap</a>
         <a href="../#bom">Hardware Reference</a>
-        <a href="../blog/">Blog</a>
-        <a href="../#legal">Terms & Disclaimer</a>
+        <a href="../blog/">Guides &amp; Blog</a>
+        <a href="../about/">About</a>
+        <a href="../#legal">Terms &amp; Disclaimer</a>
       </nav>
+      <div class="header-cta">
+        <a href="../#sizing" class="btn">Size Your System</a>
+      </div>
     </div>
   </header>
 
   <main class="container">
     <article>
       <h1>Solar &amp; Battery Calculator by City</h1>
+      <!-- Worldwide Sizing Reassurance Callout -->
+      <div class="worldwide-notice" style="margin: 1.25rem 0 2rem; background: rgba(0, 230, 153, 0.08); border: 1px solid rgba(0, 230, 153, 0.35); border-radius: 12px; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <div style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 0.3rem;">⚡ Don't see your city? We size systems anywhere on Earth!</div>
+          <p style="margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.5; max-width: 620px;">
+            The BigEnergyCo calculator works for <strong>any city, town, or GPS coordinates worldwide</strong> using 5 years of hourly NASA satellite weather. The 66 benchmark cities below provide reference solar profiles and worked sizing examples.
+          </p>
+        </div>
+        <a href="../#sizing" class="btn" style="white-space: nowrap;">⚡ Size Any Location Worldwide &rarr;</a>
+      </div>
+
       <p>Pick your city for a free, honest sizing overview — then run the exact simulation with your coordinates and your own tariff. Every page is powered by the same deterministic engine simulating <strong>five years of hourly NASA satellite weather</strong>. No signup, nothing for sale.</p>
       <p>New here? <a href="../about/">How the method works</a> · <a href="../solar-heatmap/">Where payback is fastest (world map)</a> · <a href="../blog/">Guides: cut your bill, size off-grid, batteries</a></p>
 ${regionBlocks}
@@ -605,7 +643,7 @@ ${regionBlocks}
     <div class="container">
       <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building.</p>
       <p style="margin-top:.75rem;">
-        <a href="../">Size Your System</a> · <a href="../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
+        <a href="../#sizing">Size Your System</a> · <a href="../solar-heatmap/">Heatmap</a> · <a href="../blog/">All Guides</a> · <a href="../about/">About</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
       </p>
     </div>
   </footer>

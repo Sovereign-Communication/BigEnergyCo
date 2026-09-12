@@ -10,7 +10,7 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260911d";
+import { CITY_PRESETS } from "./nasa.js?v=20260912a";
 import {
   CITY_CATALOG,
   searchCities,
@@ -20,7 +20,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260911d";
+} from "./cities.js?v=20260912a";
 
 import {
   estimateTariff,
@@ -28,49 +28,49 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260911d";
+} from "./pricing.js?v=20260912a";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260911d";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260912a";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260911d";
+} from "./bom.js?v=20260912a";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260911d";
+import { BOM_ITEMS } from "../shared/content.js?v=20260912a";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260911d";
+} from "../shared/i18n.js?v=20260912a";
 
-import { LOCALES } from "../shared/locales.js?v=20260911d";
+import { LOCALES } from "../shared/locales.js?v=20260912a";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260911d";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260912a";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260911d";
+} from "./frontier-chart.js?v=20260912a";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260911d";
+} from "./rescale.js?v=20260912a";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260911d";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260912a";
 
 import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260911d";
+} from "./money.js?v=20260912a";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260911d";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260912a";
 
 let worker = null;
 
@@ -953,20 +953,17 @@ function renderSunPath(lat) {
     : 21.31;
 
   const absLat = Math.abs(validLat);
-
   const isNorth = validLat >= 0;
+  const isEquator = absLat < 5;
 
   const deltaSummer = isNorth ? 23.44 : -23.44;
-
   const deltaWinter = isNorth ? -23.44 : 23.44;
 
   const elevSummer = Math.max(
     0,
     Math.min(90, 90 - Math.abs(validLat - deltaSummer)),
   );
-
   const elevEquinox = Math.max(0, Math.min(90, 90 - absLat));
-
   const elevWinter = Math.max(
     0,
     Math.min(90, 90 - Math.abs(validLat - deltaWinter)),
@@ -981,84 +978,134 @@ function renderSunPath(lat) {
     return (2 * ((Math.acos(cosH) * 180) / Math.PI)) / 15;
   }
 
-  const hoursSummer = calcDayLength(validLat, deltaSummer);
+  const hoursSummer = Math.max(
+    0,
+    Math.min(24, calcDayLength(validLat, deltaSummer)),
+  );
+  const hoursWinter = Math.max(
+    0,
+    Math.min(24, calcDayLength(validLat, deltaWinter)),
+  );
 
-  const hoursEquinox = calcDayLength(validLat, 0);
+  const yrTilt = isEquator
+    ? 10
+    : Math.min(70, Math.max(10, Math.round(absLat * 0.9)));
+  const wtrTilt = isEquator
+    ? 10
+    : Math.min(75, Math.max(15, Math.round(absLat + 15)));
+  const smrTilt = isEquator ? 10 : Math.max(10, Math.round(absLat - 15));
 
-  const hoursWinter = calcDayLength(validLat, deltaWinter);
-
-  const tiltText =
-    absLat < 5
-      ? "Near Equator: ~10\u00B0 self-cleaning tilt"
-      : `Face ${isNorth ? "South" : "North"} at ~${Math.round(absLat)}\u00B0 tilt (year-round optimal)`;
+  let compassHeading = "True South (180\u00B0)";
+  let compassShort = "South";
+  let headingDetail = "Face Due South (180\u00B0) toward the Equator";
+  if (isEquator) {
+    compassHeading = "South or North (~10\u00B0 self-cleaning tilt)";
+    compassShort = "Flat / 10\u00B0";
+    headingDetail =
+      "Slight ~10\u00B0 tilt in either direction for rain self-cleaning";
+  } else if (!isNorth) {
+    compassHeading = "True North (0\u00B0)";
+    compassShort = "North";
+    headingDetail = "Face Due North (0\u00B0) toward the Equator";
+  }
 
   const svgW = 460,
     svgH = 150;
+  const groundY = 120;
+  const x0 = 105,
+    y0 = groundY;
 
-  const groundY = 125;
+  const tiltRad = (yrTilt * Math.PI) / 180;
+  const L = 55;
+  const x1 = x0 - L * Math.cos(tiltRad);
+  const y1 = y0 - L * Math.sin(tiltRad);
 
-  const cx = svgW / 2;
+  const R_s = 100;
+  const radS = (elevSummer * Math.PI) / 180;
+  const sx_s = x0 + R_s * Math.cos(radS);
+  const sy_s = y0 - R_s * Math.sin(radS);
 
-  const peakY = (deg) => groundY - (deg / 90) * (groundY - 20);
+  const R_w = 88;
+  const radW = (elevWinter * Math.PI) / 180;
+  const sx_w = x0 + R_w * Math.cos(radW);
+  const sy_w = y0 - R_w * Math.sin(radW);
 
-  const ySummer = peakY(elevSummer);
-
-  const yEquinox = peakY(elevEquinox);
-
-  const yWinter = peakY(elevWinter);
-
-  const spreadX = (hrs) => Math.max(25, Math.min(210, (hrs / 12) * 160));
-
-  const sSpread = spreadX(hoursSummer);
-
-  const eSpread = spreadX(hoursEquinox);
-
-  const wSpread = spreadX(hoursWinter);
-
-  const arcPath = (yPeak, spread) => {
-    const xLeft = cx - spread;
-    const xRight = cx + spread;
-    return `M ${xLeft} ${groundY} Q ${cx} ${yPeak - (groundY - yPeak) * 0.15} ${xRight} ${groundY}`;
-  };
+  const rArc = 28;
+  const arcX = x0 - rArc * Math.cos(tiltRad);
+  const arcY = y0 - rArc * Math.sin(tiltRad);
 
   wrap.style.display = "block";
 
   wrap.innerHTML = `
     <div class="sun-path-header">
-      <span>&#9728;&#65039; Solar Sun-Path &amp; Seasonal Sky Arc (${validLat >= 0 ? validLat.toFixed(1) + "\u00B0N" : Math.abs(validLat).toFixed(1) + "\u00B0S"})</span>
-      <span style="font-size:0.75rem;font-weight:500;color:var(--text-muted);">${tiltText}</span>
+      <span>\uD83D\uDCD0 Solar Orientation &amp; Array Tilt Guide (${validLat >= 0 ? validLat.toFixed(1) + "\u00B0N" : Math.abs(validLat).toFixed(1) + "\u00B0S"})</span>
+      <span style="font-size:0.75rem;font-weight:600;color:var(--primary-accent);background:rgba(0,230,153,0.1);padding:0.15rem 0.55rem;border-radius:4px;border:1px solid rgba(0,230,153,0.25);">Optimal Year-Round Tilt: ~${yrTilt}\u00B0</span>
     </div>
+
     <svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%;height:auto;display:block;overflow:visible;">
-      <line x1="20" y1="${groundY}" x2="${svgW - 20}" y2="${groundY}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" />
-      <text x="35" y="${groundY + 16}" fill="var(--text-muted)" font-size="10" font-family="sans-serif">East (Sunrise)</text>
-      <text x="${cx}" y="${groundY + 16}" fill="var(--text-muted)" font-size="10" font-family="sans-serif" text-anchor="middle">Solar Noon (${isNorth ? "South" : "North"})</text>
-      <text x="${svgW - 35}" y="${groundY + 16}" fill="var(--text-muted)" font-size="10" font-family="sans-serif" text-anchor="end">West (Sunset)</text>
+      <!-- Ground line -->
+      <line x1="15" y1="${groundY}" x2="${svgW - 15}" y2="${groundY}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" />
+      <text x="20" y="${groundY + 16}" fill="var(--text-muted)" font-size="10" font-family="sans-serif">Ground / Horizon</text>
+      <text x="${svgW - 20}" y="${groundY + 16}" fill="var(--primary-accent)" font-size="10.5" font-weight="bold" font-family="sans-serif" text-anchor="end">\uD83E\uDDED Facing ${compassShort}</text>
 
-      <path d="${arcPath(ySummer, sSpread)}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" />
-      <circle cx="${cx}" cy="${ySummer}" r="5" fill="#f59e0b" />
-      <text x="${cx + 8}" y="${ySummer + 4}" fill="#fbbf24" font-size="10" font-weight="bold" font-family="monospace">${Math.round(elevSummer)}\u00B0</text>
+      <!-- Mount bracket -->
+      <path d="M 68 ${groundY} L ${(x1 + (x0 - x1) * 0.45).toFixed(1)} ${(y1 + (y0 - y1) * 0.45).toFixed(1)} L 95 ${groundY}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linejoin="round" />
 
-      <path d="${arcPath(yEquinox, eSpread)}" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="4 2" />
-      <circle cx="${cx}" cy="${yEquinox}" r="4" fill="#10b981" />
-      <text x="${cx + 8}" y="${yEquinox + 4}" fill="#34d399" font-size="10" font-weight="bold" font-family="monospace">${Math.round(elevEquinox)}\u00B0</text>
+      <!-- Solar panel array silhouette -->
+      <line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x0}" y2="${y0}" stroke="#00e699" stroke-width="5" stroke-linecap="round" />
+      <circle cx="${x0}" cy="${y0}" r="3" fill="#04120c" stroke="#00e699" stroke-width="1.5" />
 
-      <path d="${arcPath(yWinter, wSpread)}" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round" />
-      <circle cx="${cx}" cy="${yWinter}" r="4" fill="#38bdf8" />
-      <text x="${cx + 8}" y="${yWinter + 4}" fill="#7dd3fc" font-size="10" font-weight="bold" font-family="monospace">${Math.round(elevWinter)}\u00B0</text>
+      <!-- Tilt angle arc & text -->
+      <path d="M ${x0 - rArc} ${groundY} A ${rArc} ${rArc} 0 0 1 ${arcX.toFixed(1)} ${arcY.toFixed(1)}" fill="none" stroke="#34d399" stroke-width="1.5" stroke-dasharray="3 2" />
+      <text x="${x0 - rArc - 4}" y="${groundY - 8}" fill="#34d399" font-size="10" font-weight="bold" font-family="monospace" text-anchor="end">~${yrTilt}\u00B0 Tilt</text>
+
+      <!-- Seasonal sky swing arc -->
+      <path d="M ${sx_s.toFixed(1)} ${sy_s.toFixed(1)} A ${R_s} ${R_s} 0 0 1 ${sx_w.toFixed(1)} ${sy_w.toFixed(1)}" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" stroke-dasharray="3 3" />
+
+      <!-- Winter normal ray directly into tilted array -->
+      <line x1="${sx_w.toFixed(1)}" y1="${sy_w.toFixed(1)}" x2="${((x0 + x1) / 2).toFixed(1)}" y2="${((y0 + y1) / 2).toFixed(1)}" stroke="rgba(56,189,248,0.45)" stroke-width="1.5" stroke-dasharray="4 2" />
+
+      <!-- Summer Midday Sun -->
+      <circle cx="${sx_s.toFixed(1)}" cy="${sy_s.toFixed(1)}" r="7" fill="#f59e0b" stroke="#fbbf24" stroke-width="1.5" />
+      <text x="${Math.min(svgW - 10, sx_s + 11).toFixed(1)}" y="${(sy_s + 4).toFixed(1)}" fill="#fbbf24" font-size="10.5" font-weight="bold" font-family="sans-serif">\u2600\uFE0F Summer Noon: ${Math.round(elevSummer)}\u00B0 (${hoursSummer.toFixed(1)}h)</text>
+
+      <!-- Winter Midday Sun -->
+      <circle cx="${sx_w.toFixed(1)}" cy="${sy_w.toFixed(1)}" r="6" fill="#38bdf8" stroke="#7dd3fc" stroke-width="1.5" />
+      <text x="${Math.min(svgW - 10, sx_w + 11).toFixed(1)}" y="${(sy_w + 4).toFixed(1)}" fill="#7dd3fc" font-size="10.5" font-weight="bold" font-family="sans-serif">\u2744\uFE0F Winter Noon: ${Math.round(elevWinter)}\u00B0 (${hoursWinter.toFixed(1)}h)</text>
     </svg>
+
     <div class="sun-path-grid">
       <div class="sun-path-metric">
-        <div class="sun-path-metric-title"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;"></span> Summer Solstice</div>
-        <div class="sun-path-metric-val" style="color:#fbbf24;">${Math.round(elevSummer)}\u00B0 noon &bull; ${hoursSummer.toFixed(1)}h daylight</div>
+        <div class="sun-path-metric-title">\uD83E\uDDED Compass Heading</div>
+        <div class="sun-path-metric-val" style="color:var(--primary-accent);">${compassShort}</div>
+        <div class="sun-path-metric-sub">${headingDetail}</div>
       </div>
       <div class="sun-path-metric">
-        <div class="sun-path-metric-title"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;"></span> Equinox</div>
-        <div class="sun-path-metric-val" style="color:#34d399;">${Math.round(elevEquinox)}\u00B0 noon &bull; ~12.0h daylight</div>
+        <div class="sun-path-metric-title">\uD83D\uDCD0 Year-Round Fixed Tilt</div>
+        <div class="sun-path-metric-val" style="color:#34d399;">~${yrTilt}\u00B0</div>
+        <div class="sun-path-metric-sub">Optimal set-and-forget angle for fixed roofs</div>
       </div>
       <div class="sun-path-metric">
-        <div class="sun-path-metric-title"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#38bdf8;"></span> Winter Solstice</div>
-        <div class="sun-path-metric-val" style="color:#7dd3fc;">${Math.round(elevWinter)}\u00B0 noon &bull; ${hoursWinter.toFixed(1)}h daylight</div>
+        <div class="sun-path-metric-title">\u2744\uFE0F Winter Boost Tilt</div>
+        <div class="sun-path-metric-val" style="color:#7dd3fc;">~${wtrTilt}\u00B0</div>
+        <div class="sun-path-metric-sub">Sheds snow &amp; captures low winter midday sun</div>
       </div>
+      <div class="sun-path-metric">
+        <div class="sun-path-metric-title">\u2600\uFE0F Daylight &amp; Seasonal Swing</div>
+        <div class="sun-path-metric-val" style="color:#fbbf24;">${hoursSummer.toFixed(1)}h \u2794 ${hoursWinter.toFixed(1)}h</div>
+        <div class="sun-path-metric-sub">Sun drops ${Math.round(elevSummer - elevWinter)}\u00B0 between summer and winter noon</div>
+      </div>
+    </div>
+
+    <div class="sun-path-takeaway">
+      <strong>\uD83D\uDCA1 Why solar angle matters:</strong>
+      ${
+        isEquator
+          ? "Near the equator, daylight is steady (~12h year-round) with the sun directly overhead. A modest ~10\u00B0 tilt allows tropical rain to wash off dust and pollen so panels stay clean naturally."
+          : absLat >= 66.5 && elevWinter <= 0
+            ? `At high latitude (${absLat.toFixed(1)}\u00B0), winter brings polar night (0h direct sun). Steep array tilt (~${wtrTilt}\u00B0) sheds heavy snow and catches low shoulder rays, backed by adequate battery reserve.`
+            : `In winter, the midday sun sits ${Math.round(elevSummer - elevWinter)}\u00B0 lower in the sky with ${(hoursSummer - hoursWinter).toFixed(1)} fewer daylight hours. Flat panels lose substantial harvest. Our simulation sizes your array and battery bank specifically to survive this winter bottleneck without blackouts.`
+      }
     </div>
   `;
 }
@@ -2667,7 +2714,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260911d", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260912a", {
       type: "module",
     });
 

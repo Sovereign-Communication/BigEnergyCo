@@ -664,3 +664,82 @@ test("readInputs dailyKwh: bill mode uses kWh derived from bill/rate, not the ra
   // The correct bill-to-kWh conversion must be present
   assert.match(uiJs, /kwhFromBill\(bill, rate\)/);
 });
+
+test("Header uniformity & nav clarity: primary nav bars exclude 'Cities' across main hub pages", () => {
+  const pages = [
+    "index.html",
+    "about/index.html",
+    "solar-heatmap/index.html",
+    "solar-calculator/index.html",
+    "blog/index.html",
+  ];
+
+  for (const page of pages) {
+    const html = fs.readFileSync(page, "utf8");
+    const navMatch = html.match(/<header[\s\S]*?<nav[^>]*>([\s\S]*?)<\/nav>/i);
+    assert.ok(navMatch, `${page} must contain a <nav> navbar inside <header>`);
+    const navHtml = navMatch[1];
+    assert.doesNotMatch(
+      navHtml,
+      />\s*(?:All\s+)?Cities\s*<\/a>/i,
+      `${page} navigation should not list 'Cities' as a primary nav item (calculator works for all locations)`,
+    );
+  }
+});
+
+test("Location input: index.html emphasizes global support with worldwide badge and placeholder", () => {
+  const html = fs.readFileSync("index.html", "utf8");
+  assert.match(
+    html,
+    /Works worldwide\s*(?:&bull;|•)\s*any city, town, or coordinates/i,
+    "Search input must display worldwide indicator badge",
+  );
+  assert.match(
+    html,
+    /placeholder="[^"]*coordinates[^"]*"/i,
+    "Search placeholder must emphasize worldwide search support",
+  );
+});
+
+test("Benchmark city hub: reassurance callout clarifies worldwide capability", () => {
+  const hubHtml = fs.readFileSync("solar-calculator/index.html", "utf8");
+  assert.match(
+    hubHtml,
+    /Don't see your city\? We size systems anywhere on Earth/i,
+    "Hub page must reassure users that the calculator works globally, not just in listed cities",
+  );
+  assert.match(
+    hubHtml,
+    /66 benchmark cities/i,
+    "Hub page should clarify that listed cities are benchmark reference profiles",
+  );
+});
+
+test("Solar Orientation & Tilt Guide: renderSunPath produces intuitive array tilt and seasonal sun rays", () => {
+  const uiJs = fs.readFileSync("assets/js/sizing/ui.js", "utf8");
+  assert.match(
+    uiJs,
+    /Solar Orientation &amp; Array Tilt Guide/i,
+    "Sun path renderer must provide plain-language Solar Orientation & Array Tilt Guide",
+  );
+  assert.match(
+    uiJs,
+    /Compass Heading/i,
+    "Sun path metrics must include compass heading indicator",
+  );
+  assert.match(
+    uiJs,
+    /Year-Round Fixed/i,
+    "Sun path metrics must include year-round fixed tilt indicator",
+  );
+  assert.match(
+    uiJs,
+    /Winter Boost/i,
+    "Sun path metrics must include winter boost tilt indicator",
+  );
+  assert.match(
+    uiJs,
+    /sun-path-takeaway/i,
+    "Sun path renderer must include end-user takeaway explanation",
+  );
+});
