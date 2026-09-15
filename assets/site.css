@@ -868,10 +868,100 @@ input[type="number"]::-webkit-inner-spin-button {
   }
 }
 
+.guided-progress {
+  margin: 0.75rem 0;
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid var(--primary-accent);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.roof-map-open {
+  margin-top: 0.65rem;
+  min-height: 48px;
+}
+
+.roof-map-panel {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-glow);
+  border-radius: 8px;
+  background: rgba(0, 230, 153, 0.04);
+}
+
+.roof-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.roof-map-close {
+  min-height: 44px;
+  padding: 0.35rem 0.7rem;
+}
+
+.roof-map-disclosure,
+.roof-map-status {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.roof-map {
+  min-height: 280px;
+  margin-top: 0.65rem;
+  border-radius: 6px;
+  background: #dfe8e3;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0.5rem;
+  z-index: 2000;
+  padding: 0.7rem 1rem;
+  background: var(--primary-accent);
+  color: #04120c;
+  font-weight: 800;
+}
+
+.skip-link:focus {
+  left: 0.75rem;
+}
+
+[data-eli5] {
+  text-decoration: underline dotted var(--primary-accent);
+  text-underline-offset: 0.2em;
+  cursor: help;
+}
+
+[data-eli5].eli5-open::after {
+  content: attr(data-eli5);
+  display: block;
+  margin-top: 0.35rem;
+  padding: 0.55rem 0.7rem;
+  border-left: 2px solid var(--primary-accent);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+[data-display-mode="simple"] .technical-only {
+  display: none !important;
+}
+
 /* Keyboard users need a visible focus ring on every button-style element. */
 
 .btn:focus-visible,
-.ladder-tab:focus-visible {
+.ladder-tab:focus-visible,
+[data-eli5]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
   outline: 2px solid var(--primary-accent);
 
   outline-offset: 2px;

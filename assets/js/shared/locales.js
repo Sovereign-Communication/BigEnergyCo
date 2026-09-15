@@ -615,6 +615,54 @@ export const LOCALES = {
     frontierVerdictCoveredGrid:
       "Ici, la taille n'est pas votre contrainte. Le plus petit système réaliste — {pv} kW de panneaux et {batt} kWh de batterie, environ {cost} — couvre déjà l'essentiel de cette consommation. Plus grand n'achète que de la réserve, pas plus d'économies.",
   },
+  de: {
+    navSizing: "System dimensionieren",
+    navSupport: "Hilfe",
+    cutLabel: "Ziel für die Rechnungssenkung",
+    fxCodeLabel: "Währungscode:",
+    firstRunNote:
+      "Beim ersten Start werden Satelliten-Wetterdaten geladen und im Browser gespeichert.",
+    navBom: "Hardware-Referenz",
+    navBlog: "Blog",
+    navLegal: "Bedingungen & Haftungsausschluss",
+    heroTag:
+      "🌍 Kostenlos für alle, überall · Keine Anmeldung · Nichts zu verkaufen",
+    heroTitle1: "Kostenloser Off-Grid-Energierechner",
+    heroTitle2:
+      "Solar- und Batteriesysteme überall auf der Welt dimensionieren",
+    ctaStart: "Kostenlose Schätzung starten",
+    ctaCompare: "Grobe Kosten vergleichen",
+    sizingTitle: "System dimensionieren",
+    pickCity:
+      "Wähle eine Stadt oder nutze 📍 deinen Standort für die Sonnendaten.",
+    tellPowerUse: "Gib deinen Verbrauch an — Geräte, Rechnung oder kWh.",
+    statusSuccess:
+      "✅ {years} Jahre stündliche Daten ({dataYears}) · {yield} kWh/Jahr pro kW Panel.{offline}",
+    offlineNote: " · 🌐 typisches Offline-Jahr",
+    goalLabel: "Welches Ergebnis möchtest du untersuchen?",
+    goalOffgrid: "Vollständig unabhängig vom Netz",
+    goalGridtie: "Rechnung senken, am Netz bleiben",
+    chemLabel: "Batteriechemie:",
+    loadLabel: "Wie viel Strom verbrauchst du?",
+    loadAppliances: "Geräte auswählen",
+    loadBill: "Monatliche Rechnung",
+    loadKwh: "Ich kenne kWh/Tag (fortgeschritten)",
+    locBtn: "📍 Präzisen Standort verwenden",
+    runBtn: "☀️ System dimensionieren",
+    langLabel: "Sprache",
+    lvlBest: "Beste Wahl",
+    lvlCompare: "Batterien vergleichen",
+    lvlMatrix: "Alle Optionen",
+    frontierTitle: "Wie weit reicht dein Budget?",
+    frontierIntro:
+      "Wir zeigen die günstigsten Systeme für deinen Standort, damit du Kosten und erreichbare Versorgung vergleichen kannst.",
+    frontierX: "Systemkosten zu Beginn",
+    frontierYGrid: "Anteil der Rechnung gesenkt",
+    frontierYOffgrid: "Anteil der Energie ohne Generator",
+    frontierTableToggle: "Alle Punkte als Tabelle anzeigen",
+    frontierMethod:
+      "Die Kurve nutzt dieselbe stündliche Wetter-Simulation und dieselben Preisannahmen wie die Ergebnisse oben.",
+  },
   ar: {
     rtl: true,
     navSizing: "صمّم نظامك",

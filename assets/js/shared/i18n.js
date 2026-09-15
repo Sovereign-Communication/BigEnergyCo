@@ -9,6 +9,7 @@ const LANGS = [
   { id: "es", label: "Español" },
   { id: "pt", label: "Português" },
   { id: "fr", label: "Français" },
+  { id: "de", label: "Deutsch" },
   { id: "ar", label: "العربية" },
 ];
 

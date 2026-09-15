@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -274,6 +273,7 @@
   </head>
 
   <body>
+    <a class="skip-link" href="#sizing">Skip to calculator</a>
     <main id="main-content">
       <!-- Header / Navigation Bar -->
 
@@ -649,6 +649,26 @@
                 </div>
 
                 <div
+                  class="simple-mode-control"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 0.55rem;
+                    margin-top: 0.65rem;
+                  "
+                >
+                  <input type="checkbox" id="simpleModeToggle" checked />
+                  <label
+                    for="simpleModeToggle"
+                    style="margin: 0; font-weight: 700; cursor: pointer"
+                    >Simple mode</label
+                  >
+                  <span style="font-size: 0.78rem; color: var(--text-muted)"
+                    >plain-language explanations on tap</span
+                  >
+                </div>
+
+                <div
                   id="quickBillNote"
                   style="
                     display: none;
@@ -774,6 +794,51 @@
                     margin-top: 0.4rem;
                   "
                 ></div>
+                <div
+                  id="guidedProgress"
+                  class="guided-progress"
+                  data-step="location"
+                  aria-live="polite"
+                >
+                  1. Location
+                </div>
+                <button
+                  id="btnOpenRoofMap"
+                  type="button"
+                  class="btn btn-outline roof-map-open"
+                >
+                  Draw this area on an optional map
+                </button>
+                <div id="roofMapPanel" class="roof-map-panel" hidden>
+                  <div class="roof-map-header">
+                    <strong>Confirm your roof or yard</strong>
+                    <button
+                      id="btnCloseRoofMap"
+                      type="button"
+                      class="btn btn-outline roof-map-close"
+                      aria-label="Close optional roof map"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <p class="roof-map-disclosure">
+                    The optional map loads only after you ask for it.
+                    Coordinates go to the map tiles and NASA weather; nothing is
+                    saved.
+                  </p>
+                  <div
+                    id="roofMap"
+                    class="roof-map"
+                    role="application"
+                    aria-label="Optional map for selecting roof or yard area"
+                  ></div>
+                  <p
+                    id="roofMapStatus"
+                    class="roof-map-status"
+                    role="status"
+                    aria-live="polite"
+                  ></p>
+                </div>
 
                 <details
                   id="coordDetails"
@@ -1045,7 +1110,7 @@
                 </div>
 
                 <div class="form-group">
-                  <label for="customRateVal"
+                  <label for="customRateVal" data-jargon="tariff"
                     >Electricity price where you live
                     <span style="font-weight: 400; color: var(--text-muted)"
                       >(drives your bill estimate and payback)</span
@@ -1344,7 +1409,7 @@
 
                 <div id="panelKwh" style="display: none">
                   <div class="form-group">
-                    <label for="dailyKwhInput"
+                    <label for="dailyKwhInput" data-jargon="kWh"
                       >Daily energy use (kWh/day):</label
                     >
 
@@ -1392,7 +1457,9 @@
                 </div>
 
                 <div class="form-group" id="hardwareConfigRow">
-                  <label for="hardwareConfig">Hardware setup:</label>
+                  <label for="hardwareConfig" data-jargon="inverter"
+                    >Hardware setup:</label
+                  >
 
                   <select id="hardwareConfig" class="form-control">
                     <option value="both" selected>
@@ -1409,8 +1476,151 @@
                   </select>
                 </div>
 
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 0.55rem;
+                    margin: 0.5rem 0 0.8rem;
+                  "
+                >
+                  <input type="checkbox" id="climateAwareToggle" />
+                  <label
+                    for="climateAwareToggle"
+                    style="margin: 0; font-weight: 700; cursor: pointer"
+                    >Use climate-aware losses</label
+                  >
+                  <span style="font-size: 0.78rem; color: var(--text-muted)"
+                    >dust and cold are estimated from local weather</span
+                  >
+                </div>
+
+                <div
+                  id="worstMonthCaveat"
+                  role="note"
+                  style="
+                    display: none;
+                    margin: 0.5rem 0 0.8rem;
+                    padding: 0.6rem 0.75rem;
+                    border: 1px solid var(--border-card);
+                    border-radius: 8px;
+                    font-size: 0.82rem;
+                    line-height: 1.45;
+                    color: var(--text-muted);
+                  "
+                ></div>
+
+                <div
+                  style="
+                    margin: 0.5rem 0 0.8rem;
+                    padding: 0.75rem;
+                    border: 1px solid var(--border-card);
+                    border-radius: 8px;
+                  "
+                >
+                  <label for="roofAreaM2" style="margin-bottom: 0.35rem"
+                    >Optional roof or yard area (m²)</label
+                  >
+                  <input
+                    type="number"
+                    id="roofAreaM2"
+                    class="form-control"
+                    min="6"
+                    step="1"
+                    placeholder="e.g. 30"
+                    aria-describedby="roofAreaHint"
+                  />
+                  <p
+                    id="roofAreaHint"
+                    style="
+                      font-size: 0.75rem;
+                      color: var(--text-muted);
+                      margin: 0.35rem 0 0;
+                      line-height: 1.45;
+                    "
+                  >
+                    A rough manual estimate is enough: about 6 m² per 400 W
+                    panel. This only caps the searched solar size; leave it
+                    blank for the normal estimate. Your coordinates are never
+                    stored.
+                  </p>
+                </div>
+
+                <div
+                  style="
+                    margin: 0.5rem 0 0.8rem;
+                    padding: 0.75rem;
+                    border: 1px solid var(--border-card);
+                    border-radius: 8px;
+                  "
+                >
+                  <div
+                    style="font-weight: 700; margin-bottom: 0.35rem"
+                    id="deratesHeading"
+                  >
+                    Advanced: fine-tune system losses
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 1fr 1fr;
+                      gap: 0.5rem 0.75rem;
+                    "
+                  >
+                    <div>
+                      <label for="wiringOverride">Wiring efficiency %</label>
+                      <input
+                        type="number"
+                        id="wiringOverride"
+                        class="form-control"
+                        min="85"
+                        max="100"
+                        step="1"
+                        value="98"
+                        aria-describedby="wiringOverrideHint"
+                      />
+                      <p
+                        id="wiringOverrideHint"
+                        style="
+                          font-size: 0.72rem;
+                          color: var(--text-muted);
+                          margin: 0.25rem 0 0;
+                        "
+                      >
+                        85–100; 98 is typical
+                      </p>
+                    </div>
+                    <div>
+                      <label for="mpptOverride">MPPT efficiency %</label>
+                      <input
+                        type="number"
+                        id="mpptOverride"
+                        class="form-control"
+                        min="90"
+                        max="100"
+                        step="1"
+                        value="98"
+                        aria-describedby="mpptOverrideHint"
+                      />
+                      <p
+                        id="mpptOverrideHint"
+                        style="
+                          font-size: 0.72rem;
+                          color: var(--text-muted);
+                          margin: 0.25rem 0 0;
+                        "
+                      >
+                        90–100; 98 is typical
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="form-group" style="margin-bottom: 0">
-                  <label for="chemSelect" data-i18n="chemLabel"
+                  <label
+                    for="chemSelect"
+                    data-i18n="chemLabel"
+                    data-jargon="usableCapacity"
                     >Battery chemistry:</label
                   >
 
@@ -1761,6 +1971,13 @@
                   All options
                 </button>
               </div>
+
+              <div
+                id="eli5Summary"
+                class="eli5-card"
+                style="display: none"
+                aria-live="polite"
+              ></div>
 
               <div id="bestPickWrap"></div>
 
@@ -2777,6 +2994,9 @@
           <div
             id="btnCloseSizing"
             class="close-btn"
+            role="button"
+            tabindex="0"
+            aria-label="Close AI advisor"
             style="cursor: pointer"
             onclick="window.closeSizingModal && window.closeSizingModal()"
           >
@@ -2849,6 +3069,9 @@
           <div
             id="btnCloseLegal"
             class="close-btn"
+            role="button"
+            tabindex="0"
+            aria-label="Close terms and disclaimer"
             style="cursor: pointer"
             onclick="window.closeLegalModal && window.closeLegalModal()"
           >
@@ -2993,7 +3216,14 @@
             Full system analysis
           </h3>
 
-          <div id="btnCloseSystem" class="close-btn" style="cursor: pointer">
+          <div
+            id="btnCloseSystem"
+            class="close-btn"
+            role="button"
+            tabindex="0"
+            aria-label="Close system analysis"
+            style="cursor: pointer"
+          >
             &times;
           </div>
         </div>

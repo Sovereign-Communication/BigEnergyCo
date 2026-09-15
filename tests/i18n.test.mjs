@@ -76,6 +76,21 @@ test("every t() and data-i18n key exists in English", () => {
   );
 });
 
+test("German is exposed and has a translated core result vocabulary", () => {
+  const src = fs.readFileSync(
+    path.join(ROOT, "assets/js/shared/i18n.js"),
+    "utf8",
+  );
+  assert.match(src, /id: "de", label: "Deutsch"/);
+  const locale = fs.readFileSync(
+    path.join(ROOT, "assets/js/shared/locales.js"),
+    "utf8",
+  );
+  assert.match(locale, /de: \{/);
+  assert.match(locale, /sizingTitle: "System dimensionieren"/);
+  assert.match(locale, /frontierTitle:/);
+});
+
 test("ui t() falls back to English before the raw key", () => {
   const src = fs.readFileSync(
     path.join(ROOT, "assets/js/sizing/ui.js"),
