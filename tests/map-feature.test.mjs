@@ -117,18 +117,32 @@ test("keyless Esri satellite basemap is the primary layer (God's Eye View approa
   // Esri requires visible attribution — assert it is registered.
   assert.match(ESRI_ATTRIBUTION, /Esri/);
   assert.match(ESRI_ATTRIBUTION, /Maxar/);
-  // Both tile hosts are declared in the lazy-map policy and the deployed CSP.
-  assert.ok(
-    optionalMapPolicy.allowedTileHosts.includes("server.arcgisonline.com"),
-  );
-  assert.ok(
-    optionalMapPolicy.allowedTileHosts.includes("basemaps.cartocdn.com"),
-  );
+  // Both tile hosts are exactly the hosts declared in the lazy-map policy
+  // and the deployed CSP (URL-parsed host comparison, no substring checks).
+  const policyHosts = optionalMapPolicy.allowedTileHosts;
+  assert.deepEqual([...policyHosts].sort(), [
+    "basemaps.cartocdn.com",
+    "server.arcgisonline.com",
+  ]);
   const headers = fs.readFileSync(
     new URL("../_headers", import.meta.url),
     "utf8",
   );
-  assert.match(headers, /img-src[^\n]*server\.arcgisonline\.com/);
-  // The CARTO street layer stays available as a fallback layer.
-  assert.match(CARTO_TILE_URL, /basemaps\.cartocdn\.com/);
+  const imgSrc = headers.match(/img-src ([^;\n]+);/)?.[1] ?? "";
+  // Normalize each CSP token to a bare hostname (strip scheme and wildcard
+  // label) so the comparison is exact rather than substring-based.
+  const normalize = (token) =>
+    token
+      .replace(/^https:\/\//, "")
+      .replace(/^\*\./, "")
+      .replace(/\/$/, "");
+  const cspImgHosts = imgSrc.split(/\s+/).filter(Boolean).map(normalize);
+  assert.ok(
+    cspImgHosts.includes("server.arcgisonline.com"),
+    `CSP img-src must allow the Esri tile host, got: ${imgSrc}`,
+  );
+  assert.ok(
+    cspImgHosts.includes("basemaps.cartocdn.com"),
+    `CSP img-src must allow the CARTO fallback host, got: ${imgSrc}`,
+  );
 });
