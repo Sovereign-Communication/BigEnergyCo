@@ -14,8 +14,8 @@ import {
 } from "../assets/js/sizing/tilt-harvest.js";
 
 test("turnkey quote multipliers scale quotes with system size, not fixed", () => {
-  assert.equal(TURNKEY_MULTIPLIER_LOW, 5);
-  assert.equal(TURNKEY_MULTIPLIER_HIGH, 10);
+  assert.equal(TURNKEY_MULTIPLIER_LOW, 10);
+  assert.equal(TURNKEY_MULTIPLIER_HIGH, 5);
   const small = estimateTurnkeyQuotes(917, 3241);
   const big = estimateTurnkeyQuotes(2600, 9100);
   // Bigger system → strictly higher quote band.
@@ -24,8 +24,8 @@ test("turnkey quote multipliers scale quotes with system size, not fixed", () =>
   assert.ok(small.quoteLo <= small.quoteHi);
   // Cheapest hardware × 10 → cheapest-market quote; premium hardware × 5 →
   // boutique end. (Rounded to $100.)
-  assert.equal(small.quoteLo, 4600);
-  assert.equal(small.quoteHi, 32400);
+  assert.equal(small.quoteLo, 9200);
+  assert.equal(small.quoteHi, 16200);
   // Quotes never fall below the honest hardware floor.
   assert.ok(small.quoteLo >= 917);
   assert.ok(big.quoteHi >= 9100);
@@ -44,7 +44,7 @@ test("turnkey quote text mentions the computed band and savings, not a fixed num
     moneyRange,
   );
   assert.doesNotMatch(text, /\$20,000 to \$40,000/);
-  assert.match(text, /\$4,600–\$32,400/);
+  assert.match(text, /\$9,200–\$16,200/);
   assert.match(text, /final hookup/);
   assert.match(text, /below a typical quote/);
   // Invalid inputs fall back to qualitative copy rather than crashing.

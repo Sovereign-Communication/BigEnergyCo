@@ -10,8 +10,8 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260915b";
-import { APPLIANCES } from "./appliances.js?v=20260915b";
+import { CITY_PRESETS } from "./nasa.js?v=20260915c";
+import { APPLIANCES } from "./appliances.js?v=20260915c";
 import {
   CITY_CATALOG,
   searchCities,
@@ -21,7 +21,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260915b";
+} from "./cities.js?v=20260915c";
 
 import {
   estimateTariff,
@@ -29,63 +29,63 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260915b";
+} from "./pricing.js?v=20260915c";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260915b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260915c";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260915b";
+} from "./bom.js?v=20260915c";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260915b";
+import { BOM_ITEMS } from "../shared/content.js?v=20260915c";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260915b";
+} from "../shared/i18n.js?v=20260915c";
 
-import { LOCALES } from "../shared/locales.js?v=20260915b";
+import { LOCALES } from "../shared/locales.js?v=20260915c";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260915b";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260915b";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260915c";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260915c";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260915b";
+} from "../shared/simple-mode.js?v=20260915c";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260915b";
+} from "./frontier-chart.js?v=20260915c";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260915b";
+} from "./rescale.js?v=20260915c";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260915b";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260915c";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260915b";
-import { persistWizard, restoreWizard } from "./wizard.js?v=20260915b";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260915b";
+} from "./map-provider.js?v=20260915c";
+import { persistWizard, restoreWizard } from "./wizard.js?v=20260915c";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260915c";
 
 import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260915b";
+} from "./money.js?v=20260915c";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260915b";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260915c";
 
 let worker = null;
 
@@ -2785,7 +2785,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260915b", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260915c", {
       type: "module",
     });
 
@@ -4526,8 +4526,8 @@ function renderEli5Section(p, sys) {
  * size, plus a hardware-relative savings statement that stays honest at every
  * scale. Exported for regression tests.
  */
-export const TURNKEY_MULTIPLIER_LOW = 5;
-export const TURNKEY_MULTIPLIER_HIGH = 10;
+export const TURNKEY_MULTIPLIER_LOW = 10;
+export const TURNKEY_MULTIPLIER_HIGH = 5;
 
 export function estimateTurnkeyQuotes(costLo, costHi) {
   const lo = Number(costLo);

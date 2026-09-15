@@ -77,7 +77,9 @@ export function worstMonth(hours = []) {
       startDay,
       endDay: Math.ceil(end / 24),
       ghi,
-      averageDailyGhi: ghi / Math.max(1, (end - start) / 24),
+      // Wh/m²/day summed from hourly GHI, converted to kWh/m²/day so the
+      // field's unit matches its name (and the UI copy that prints it).
+      averageDailyGhi: ghi / 1000 / Math.max(1, (end - start) / 24),
     });
   }
   return windows.reduce((worst, window) =>
