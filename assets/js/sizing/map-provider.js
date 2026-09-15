@@ -7,6 +7,14 @@ export const LEAFLET_STYLE_URL =
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
 export const CARTO_TILE_URL =
   "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+// Keyless satellite basemap — same public ArcGIS Online World Imagery service
+// God's Eye View uses as its default keyless "Esri Satellite" stack. No API
+// key, no billing; Esri requires visible attribution, which Leaflet renders
+// from the `attribution` option below.
+export const ESRI_SATELLITE_TILE_URL =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+export const ESRI_ATTRIBUTION =
+  "Powered by Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community";
 
 export function panelCapFromArea(areaM2, panelAreaM2 = PANEL_AREA_M2) {
   const area = Number(areaM2);
@@ -119,8 +127,16 @@ export function createLeafletProvider({
       }
       if (!windowRef.L) throw new Error("Leaflet did not initialize");
       map = windowRef.L.map(element).setView([latitude, longitude], zoom);
+      // Satellite imagery first (keyless Esri World Imagery, like God's Eye
+      // View), with the CARTO street map as the named fallback so the picker
+      // still works if Esri tiles are unreachable.
+      windowRef.L.tileLayer(ESRI_SATELLITE_TILE_URL, {
+        maxZoom: 19,
+        attribution: ESRI_ATTRIBUTION,
+      }).addTo(map);
       windowRef.L.tileLayer(CARTO_TILE_URL, {
         maxZoom: 20,
+        opacity: 0,
         attribution: "© OpenStreetMap © CARTO",
       }).addTo(map);
       return map;
@@ -158,5 +174,8 @@ export const optionalMapPolicy = Object.freeze({
   lazy: true,
   stored: false,
   allowedScriptHost: "unpkg.com",
-  allowedTileHost: "basemaps.cartocdn.com",
+  allowedTileHosts: Object.freeze([
+    "server.arcgisonline.com",
+    "basemaps.cartocdn.com",
+  ]),
 });

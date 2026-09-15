@@ -10,8 +10,8 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260915a";
-import { APPLIANCES } from "./appliances.js?v=20260915a";
+import { CITY_PRESETS } from "./nasa.js?v=20260915b";
+import { APPLIANCES } from "./appliances.js?v=20260915b";
 import {
   CITY_CATALOG,
   searchCities,
@@ -21,7 +21,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260915a";
+} from "./cities.js?v=20260915b";
 
 import {
   estimateTariff,
@@ -29,62 +29,63 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260915a";
+} from "./pricing.js?v=20260915b";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260915a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260915b";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260915a";
+} from "./bom.js?v=20260915b";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260915a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260915b";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260915a";
+} from "../shared/i18n.js?v=20260915b";
 
-import { LOCALES } from "../shared/locales.js?v=20260915a";
+import { LOCALES } from "../shared/locales.js?v=20260915b";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260915a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260915a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260915b";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260915b";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260915a";
+} from "../shared/simple-mode.js?v=20260915b";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260915a";
+} from "./frontier-chart.js?v=20260915b";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260915a";
+} from "./rescale.js?v=20260915b";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260915a";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260915b";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260915a";
-import { persistWizard, restoreWizard } from "./wizard.js?v=20260915a";
+} from "./map-provider.js?v=20260915b";
+import { persistWizard, restoreWizard } from "./wizard.js?v=20260915b";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260915b";
 
 import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260915a";
+} from "./money.js?v=20260915b";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260915a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260915b";
 
 let worker = null;
 
@@ -964,6 +965,21 @@ function renderSunPath(lat) {
   const arcX = x0 - rArc * Math.cos(tiltRad);
   const arcY = y0 - rArc * Math.sin(tiltRad);
 
+  // Quantify WHY the tilt matters: what a flat mount forfeits here, and how
+  // many extra panels a flat roof needs to match the tilted harvest.
+  const tiltValue = tiltValueSummary(validLat, yrTilt);
+  const extraPanels = tiltValue.panelsFlatPerTenTilted - 10;
+  const tiltValueCard = `
+      <div class="sun-path-metric">
+        <div class="sun-path-metric-title">\uD83D\uDCB0 Value of the Right Angle</div>
+        <div class="sun-path-metric-val" style="color:#f59e0b;">${tiltValue.flatLossPct > 0 ? "\u2212" + tiltValue.flatLossPct + "%" : "~0%"}</div>
+        <div class="sun-path-metric-sub">${
+          tiltValue.flatLossPct > 0
+            ? `What a flat roof forfeits here — it takes ~${tiltValue.panelsFlatPerTenTilted} flat panels to match 10 at ~${yrTilt}°`
+            : "Flat mounting captures essentially the full harvest at your latitude"
+        }</div>
+      </div>`;
+
   wrap.style.display = "block";
 
   wrap.innerHTML = `
@@ -1025,16 +1041,17 @@ function renderSunPath(lat) {
         <div class="sun-path-metric-val" style="color:#fbbf24;">${hoursSummer.toFixed(1)}h \u2794 ${hoursWinter.toFixed(1)}h</div>
         <div class="sun-path-metric-sub">Sun drops ${Math.round(elevSummer - elevWinter)}\u00B0 between summer and winter noon</div>
       </div>
+      ${tiltValueCard}
     </div>
 
     <div class="sun-path-takeaway">
-      <strong>\uD83D\uDCA1 Why solar angle matters:</strong>
+      <strong>\uD83D\uDCA1 How much does the angle really matter?</strong>
       ${
         isEquator
-          ? "Near the equator, daylight is steady (~12h year-round) with the sun directly overhead. A modest ~10\u00B0 tilt allows tropical rain to wash off dust and pollen so panels stay clean naturally."
+          ? `Near the equator the sun sits almost overhead year-round, so angle barely changes the harvest — a modest ~10\u00B0 tilt exists mainly so tropical rain washes off dust. Spend your effort on keeping panels clean, not on precision aiming. (Flat loses only ~${Math.max(0, tiltValue.flatLossPct)}% here.)`
           : absLat >= 66.5 && elevWinter <= 0
-            ? `At high latitude (${absLat.toFixed(1)}\u00B0), winter brings polar night (0h direct sun). Steep array tilt (~${wtrTilt}\u00B0) sheds heavy snow and catches low shoulder rays, backed by adequate battery reserve.`
-            : `In winter, the midday sun sits ${Math.round(elevSummer - elevWinter)}\u00B0 lower in the sky with ${(hoursSummer - hoursWinter).toFixed(1)} fewer daylight hours. Flat panels lose substantial harvest. Our simulation sizes your array and battery bank specifically to survive this winter bottleneck without blackouts.`
+            ? `At high latitude (${absLat.toFixed(1)}\u00B0), winter brings polar night (0h direct sun). A steep array (~${wtrTilt}\u00B0) sheds snow and catches low shoulder rays — flat panels would forfeit ~${tiltValue.flatLossPct}% of the year's harvest, so precise mounting genuinely pays off here, backed by adequate battery reserve.`
+            : `Here a flat roof forfeits about ${tiltValue.flatLossPct}% of the annual harvest versus the optimal ~${yrTilt}\u00B0 tilt — roughly ${extraPanels > 0 ? extraPanels + " extra panel" + (extraPanels > 1 ? "s" : "") + " per 10" : "the same panels tilted properly"} to make up the difference. Precision is forgiving, though: within \u00B110\u00B0 of optimal you keep nearly all of it, so "close" is genuinely good enough on most roofs. Our simulation already assumes the recommended tilt when sizing your array and battery.`
       }
     </div>
   `;
@@ -2768,7 +2785,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260915a", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260915b", {
       type: "module",
     });
 
@@ -4495,6 +4512,58 @@ function renderEli5Section(p, sys) {
   }
 }
 
+/**
+ * Real-world turnkey quotes vary VASTLY with market, competition, and sales
+ * model — so instead of quoting a fixed "$20k–$40k" for every size, we scale
+ * from the user's own hardware estimate:
+ *
+ *   - the CHEAPEST hardware build corresponds to the cheapest fair-ish
+ *     turnkey market (highly competitive, thin margin): ~10× hardware cost;
+ *   - the EXPENSIVE hardware build corresponds to boutique retail pricing:
+ *     ~5× hardware cost (premium hardware still dilutes the sales markup).
+ *
+ * The result: a proportional "market spread" band that grows with system
+ * size, plus a hardware-relative savings statement that stays honest at every
+ * scale. Exported for regression tests.
+ */
+export const TURNKEY_MULTIPLIER_LOW = 5;
+export const TURNKEY_MULTIPLIER_HIGH = 10;
+
+export function estimateTurnkeyQuotes(costLo, costHi) {
+  const lo = Number(costLo);
+  const hi = Number(costHi);
+  if (
+    !Number.isFinite(lo) ||
+    lo <= 0 ||
+    !Number.isFinite(hi) ||
+    hi <= 0 ||
+    lo > hi
+  )
+    return null;
+  const quoteLo = Math.round((lo * TURNKEY_MULTIPLIER_LOW) / 100) * 100;
+  const quoteHi = Math.round((hi * TURNKEY_MULTIPLIER_HIGH) / 100) * 100;
+  return { quoteLo, quoteHi };
+}
+
+export function turnkeyQuoteText(sys, moneyFn = money, rangeFn = moneyRange) {
+  const directCost =
+    Number.isFinite(sys?.costLo) && Number.isFinite(sys?.costHi)
+      ? rangeFn(sys.costLo, sys.costHi)
+      : Number.isFinite(sys?.costMid)
+        ? moneyFn(sys.costMid)
+        : "wholesale";
+  const q = estimateTurnkeyQuotes(sys?.costLo, sys?.costHi);
+  if (!q)
+    return `DIY or direct hardware cost is ~${directCost}. Full-service installers quote this size at several times the hardware price once commissions, permits, and markups are added. Ordering direct and hiring a licensed electrician for the final hookup (~$1,500\u2013$3,000) keeps most of that spread in your pocket.`;
+  const quotes = rangeFn(q.quoteLo, q.quoteHi);
+  const allInLo = Math.round(((Number(sys.costLo) + 1500) / 100) * 100);
+  const allInHi = Math.round(((Number(sys.costHi) + 3000) / 100) * 100);
+  const saved =
+    Math.round(((q.quoteLo + q.quoteHi) / 2 - (allInLo + allInHi) / 2) / 100) *
+    100;
+  return `DIY or direct hardware cost is ~${directCost}. For this system size, full-service quotes typically run ${quotes} \u2014 the cheapest competitive markets land near the low end, high-commission sales outfits near the top \u2014 driven by commissions, permits, and markups. Ordering direct and hiring a licensed electrician for the final hookup (~$1,500\u2013$3,000) puts your all-in cost near ${rangeFn(allInLo, allInHi)} \u2014 roughly ${moneyFn(saved)} below a typical quote.`;
+}
+
 /** Plain-English ELI5 breakdown for beginners and non-engineers. */
 function renderEli5Card(p, sys) {
   if (!sys) return null;
@@ -4570,7 +4639,7 @@ function renderEli5Card(p, sys) {
       : Number.isFinite(sys.costMid)
         ? money(sys.costMid)
         : "wholesale";
-  const costDesc = `DIY or direct hardware cost is ~${directCost}. Full-service solar sales companies often quote $20,000 to $40,000+ for this same system size due to sales commissions, permits, and massive markups. By ordering direct and hiring a licensed electrician for just the final hookup (~$1,500\u2013$3,000), you keep tens of thousands of dollars in your pocket.`;
+  const costDesc = turnkeyQuoteText(sys);
   const itemCost = el("div", { class: "eli5-item" });
   itemCost.appendChild(
     el("div", { class: "eli5-item-label" }, "💰 Wholesale vs Turnkey Quotes"),
