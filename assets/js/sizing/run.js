@@ -309,6 +309,8 @@ export async function runSizing(msg, deps = {}) {
     climateAware = false,
     soilingOverride = null,
     pvMaxOverride = null,
+    wiringOverride = null,
+    mpptOverride = null,
   } = msg;
   // Fixed monthly charge (utility connection fee, USD): it can never be cut,
   // so it rides along on every bill figure — grid spend, bill-after, and the
@@ -416,18 +418,27 @@ export async function runSizing(msg, deps = {}) {
   const effectiveCapacityScale = (chemistryId, meanTempC) =>
     capacityScaleFor(chemistryId, meanTempC) *
     (climateAware ? climate.thermal[chemistryId]?.capacityFactor || 1 : 1);
-  const e1Key = climateAware ? `climate:${climate.soiling}` : "default";
+  // User-adjustable wiring/MPPT derates (advanced mode): clamped to honest
+  // bounds — a visitor cannot claim a lossless system. At the defaults this
+  // reduces exactly to DERATES_DEFAULT, so existing payloads never shift.
+  const wiringFactor =
+    Number.isFinite(wiringOverride) && wiringOverride > 0
+      ? Math.min(1, Math.max(0.85, wiringOverride))
+      : DERATES_DEFAULT.wiring;
+  const mpptFactor =
+    Number.isFinite(mpptOverride) && mpptOverride > 0
+      ? Math.min(1, Math.max(0.9, mpptOverride))
+      : DERATES_DEFAULT.mppt;
+  const effectiveDerates = {
+    ...DERATES_DEFAULT,
+    wiring: wiringFactor,
+    mppt: mpptFactor,
+    ...(climateAware ? { soiling: climate.soiling } : {}),
+  };
+  const e1Key = `${effectiveDerates.soiling}|${wiringFactor}|${mpptFactor}`;
   if (!series._e1kwByDerate) series._e1kwByDerate = new Map();
   if (!series._e1kwByDerate.has(e1Key)) {
-    series._e1kwByDerate.set(
-      e1Key,
-      buildE1kw(
-        hours,
-        climateAware
-          ? { ...DERATES_DEFAULT, soiling: climate.soiling }
-          : DERATES_DEFAULT,
-      ),
-    );
+    series._e1kwByDerate.set(e1Key, buildE1kw(hours, effectiveDerates));
   }
   const e1kw = series._e1kwByDerate.get(e1Key);
   const loadWh = expandProfile(flatProfile(dailyKwh), hours.length);
@@ -1455,9 +1466,7 @@ export async function runSizing(msg, deps = {}) {
       catalog: POWMR_CATALOG,
     },
     assumptions: {
-      derates: climateAware
-        ? { ...DERATES_DEFAULT, soiling: climate.soiling }
-        : DERATES_DEFAULT,
+      derates: effectiveDerates,
       climateAware,
       climate: climate.climate,
       soilingFactor: climate.soiling,

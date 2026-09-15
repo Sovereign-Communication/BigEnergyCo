@@ -1841,6 +1841,8 @@ function readInputs() {
     requiresSplitPhase,
     climateAware: $("climateAwareToggle")?.checked === true,
     soilingOverride: null,
+    wiringOverride: readPercentInput("wiringOverride"),
+    mpptOverride: readPercentInput("mpptOverride"),
     pvMaxOverride: (() => {
       const area = parseFloat($("roofAreaM2")?.value);
       if (!Number.isFinite(area) || area <= 0) return null;
@@ -1850,6 +1852,12 @@ function readInputs() {
 
   window.lastInputs = result;
   return result;
+}
+
+function readPercentInput(id) {
+  const raw = parseFloat($(id)?.value);
+  if (!Number.isFinite(raw) || raw <= 0) return null;
+  return raw / 100;
 }
 
 function run(quiet = false) {
@@ -6935,6 +6943,32 @@ function renderEli5Summary(p) {
   wrap.append(grid, note);
 }
 
+// Surface the climate analysis's darkest 30-day window as a plain-language
+// caveat: solar users should sanity-check against it, and cold sites see
+// bigger battery-temperature effects. Hidden unless the toggle is on.
+function renderWorstMonthCaveat(p) {
+  const box = $("worstMonthCaveat");
+  if (!box) return;
+  const wm = p.assumptions?.worstMonth;
+  if (!p.assumptions?.climateAware || !wm || !Number.isFinite(wm.startDay)) {
+    box.style.display = "none";
+    box.innerHTML = "";
+    return;
+  }
+  const avg = Number(wm.averageDailyGhi) || 0;
+  const startDay = Math.max(0, Math.round(wm.startDay));
+  const monthName = (d) =>
+    new Date(Date.UTC(2001, 0, 1 + d)).toLocaleDateString("en-US", {
+      month: "long",
+      timeZone: "UTC",
+    });
+  box.textContent =
+    `Darkest month: ${monthName(startDay)} — about ${avg.toFixed(1)} kWh/m²/day ` +
+    `of average sun. Size for this month, not the yearly average, or the ` +
+    `system will fall short on gray weeks.`;
+  box.style.display = "block";
+}
+
 function renderResults(p) {
   const inp = readInputs();
 
@@ -6967,6 +7001,8 @@ function renderResults(p) {
   const cutRow = $("cutSliderRow");
   if (cutRow) cutRow.style.display = isGT ? "block" : "none";
   syncCutLabel();
+
+  renderWorstMonthCaveat(p);
 
   // Validate and preserve selection
   let selValid = false;
@@ -8326,6 +8362,16 @@ export function initSizingUI() {
       roofArea.addEventListener("input", () => {
         if (quickMode && lastPayload) run(true);
       });
+
+    // Advanced derate inputs re-run when they differ from the honest defaults.
+    for (const derateId of ["wiringOverride", "mpptOverride"]) {
+      const input = $(derateId);
+      if (input)
+        input.addEventListener("change", () => {
+          const defaultPct = 98;
+          if (Number(input.value) !== defaultPct && lastPayload) run(true);
+        });
+    }
 
     renderBom();
 
