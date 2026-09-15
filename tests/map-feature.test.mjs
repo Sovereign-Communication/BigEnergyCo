@@ -1,0 +1,69 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import {
+  CARTO_TILE_URL,
+  LEAFLET_SCRIPT_URL,
+  createMapProviderRegistry,
+  manualRoofHint,
+  panelCapFromArea,
+  pvCapKwFromArea,
+  rectangleAreaM2,
+} from "../assets/js/sizing/map-provider.js";
+
+test("roof area converts to a conservative panel and PV cap", () => {
+  assert.equal(panelCapFromArea(30), 5);
+  assert.equal(pvCapKwFromArea(30, 400), 2);
+  assert.ok(rectangleAreaM2([0, 0], [0.001, 0.001]) > 0);
+  assert.equal(rectangleAreaM2([0, 0], [0, 0]), 0);
+  assert.match(manualRoofHint(30), /5 panels/);
+});
+
+test("optional provider registry delegates and cleans up", async () => {
+  let cleanupCount = 0;
+  let clickHandler = null;
+  const provider = {
+    available: () => true,
+    init: async () => "map-ready",
+    onClick: (handler) => {
+      clickHandler = handler;
+      return () => {
+        clickHandler = null;
+      };
+    },
+    drawRectangle: (bounds) => ({ bounds }),
+    cleanup: () => {
+      cleanupCount += 1;
+    },
+  };
+  const registry = createMapProviderRegistry([provider]);
+  assert.equal(await registry.init(), "map-ready");
+  const unsubscribe = registry.onClick(() => {});
+  assert.equal(typeof clickHandler, "function");
+  assert.deepEqual(
+    registry.drawRectangle([
+      [0, 0],
+      [1, 1],
+    ]),
+    {
+      bounds: [
+        [0, 0],
+        [1, 1],
+      ],
+    },
+  );
+  unsubscribe();
+  registry.cleanup();
+  assert.equal(cleanupCount, 1);
+  assert.equal(registry.drawRectangle(null), null);
+});
+
+test("map provider remains lazy and uses only approved hosts", () => {
+  assert.match(LEAFLET_SCRIPT_URL, /^https:\/\/unpkg\.com\//);
+  assert.match(CARTO_TILE_URL, /basemaps\.cartocdn\.com/);
+  const html = fs.readFileSync(
+    new URL("../index.html", import.meta.url),
+    "utf8",
+  );
+  assert.match(html, /optional map/i);
+});

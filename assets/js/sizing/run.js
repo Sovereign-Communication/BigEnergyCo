@@ -34,6 +34,7 @@ import {
 } from "./nasa.js?v=20260912a";
 import { buildFrontier } from "./frontier.js?v=20260912a";
 import { oversizeCallout } from "./rescale.js?v=20260912a";
+import { climateSummary } from "./climate.js?v=20260912a";
 import {
   fullRange,
   getScope,
@@ -305,6 +306,9 @@ export async function runSizing(msg, deps = {}) {
     hardwareConfig = "both",
     peakLoadW: msgPeakLoadW = null,
     fixedMonthlyUsd = null,
+    climateAware = false,
+    soilingOverride = null,
+    pvMaxOverride = null,
   } = msg;
   // Fixed monthly charge (utility connection fee, USD): it can never be cut,
   // so it rides along on every bill figure — grid spend, bill-after, and the
@@ -322,9 +326,15 @@ export async function runSizing(msg, deps = {}) {
   // on a fixed-size lattice, so widening costs resolution per rung, not
   // simulations; the per-kWh battery loops grow ~25%, which the worker
   // absorbs inside its normal multi-second budget.
-  const effectivePvMax = hardwareConfig === "battery" ? 0 : 60;
+  const requestedPvMax =
+    Number.isFinite(pvMaxOverride) && pvMaxOverride > 0
+      ? pvMaxOverride
+      : Infinity;
+  const effectivePvMax =
+    hardwareConfig === "battery" ? 0 : Math.min(60, requestedPvMax);
   const effectiveBattMax = hardwareConfig === "solar" ? 0 : 150;
-  const offgridPvMax = hardwareConfig === "battery" ? 0 : 40;
+  const offgridPvMax =
+    hardwareConfig === "battery" ? 0 : Math.min(40, requestedPvMax);
   const offgridBattMax = hardwareConfig === "solar" ? 0 : 300;
   // Structural feasibility for this (mode, hardware, target) combo.
   // "null" when the search is allowed to decide; an explanatory code when
@@ -399,8 +409,27 @@ export async function runSizing(msg, deps = {}) {
     years,
   });
   const hours = series.hours;
-  if (!series._e1kw) series._e1kw = buildE1kw(hours);
-  const e1kw = series._e1kw;
+  const climate = climateSummary(
+    hours,
+    climateAware ? soilingOverride : DERATES_DEFAULT.soiling,
+  );
+  const effectiveCapacityScale = (chemistryId, meanTempC) =>
+    capacityScaleFor(chemistryId, meanTempC) *
+    (climateAware ? climate.thermal[chemistryId]?.capacityFactor || 1 : 1);
+  const e1Key = climateAware ? `climate:${climate.soiling}` : "default";
+  if (!series._e1kwByDerate) series._e1kwByDerate = new Map();
+  if (!series._e1kwByDerate.has(e1Key)) {
+    series._e1kwByDerate.set(
+      e1Key,
+      buildE1kw(
+        hours,
+        climateAware
+          ? { ...DERATES_DEFAULT, soiling: climate.soiling }
+          : DERATES_DEFAULT,
+      ),
+    );
+  }
+  const e1kw = series._e1kwByDerate.get(e1Key);
   const loadWh = expandProfile(flatProfile(dailyKwh), hours.length);
   if (!series._tempsC) series._tempsC = Float64Array.from(hours, (h) => h.tAmb);
   const tempsC = series._tempsC;
@@ -769,7 +798,7 @@ export async function runSizing(msg, deps = {}) {
   // result carries no SOC series, so capture is re-run here.
   const entryFromSizing = (chemId, sizing) => {
     if (!sizing) return null;
-    const capScale = capacityScaleFor(chemId, meanTempC);
+    const capScale = effectiveCapacityScale(chemId, meanTempC);
     const m = moneyFor(chemId, sizing);
     const servedKwhPerYear =
       (sizing.result.directWh + sizing.result.battWhAc) /
@@ -869,7 +898,7 @@ export async function runSizing(msg, deps = {}) {
   const enrichGtMatrixCell = (chemId, sizing, cell) => {
     if (!cell || !cell.solvable) return cell;
     const yrs = series.meta.years;
-    const capScale = capacityScaleFor(chemId, meanTempC);
+    const capScale = effectiveCapacityScale(chemId, meanTempC);
     const m = moneyFor(chemId, sizing);
     const importedKwhPerYear = sizing.result.importedWh / 1000 / yrs;
     const clippedKwhPerYear = sizing.result.curtailedWh / 1000 / yrs;
@@ -936,7 +965,7 @@ export async function runSizing(msg, deps = {}) {
     if (mode === "offgrid" && (fPv <= 0 || fBatt <= 0)) return null;
     const fChem =
       fChemOverride && CHEMISTRIES[fChemOverride] ? fChemOverride : defaultChem;
-    const fScale = capacityScaleFor(fChem, meanTempC);
+    const fScale = effectiveCapacityScale(fChem, meanTempC);
     if (mode === "gridtie") {
       const fSized = {
         pvKw: fPv,
@@ -1044,7 +1073,7 @@ export async function runSizing(msg, deps = {}) {
         chemLabel: (CHEMISTRIES[chemId] || CHEMISTRIES.lfp).label,
       };
     const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
-    const capScale = capacityScaleFor(chemId, meanTempC);
+    const capScale = effectiveCapacityScale(chemId, meanTempC);
     const m = moneyFor(chemId, sizing);
     const servedKwhPerYear =
       (sizing.result.directWh + sizing.result.battWhAc) /
@@ -1173,7 +1202,7 @@ export async function runSizing(msg, deps = {}) {
       chemistry === "auto" && bestChem && CHEMISTRIES[bestChem]
         ? bestChem
         : (f && f.chemistry) || (chemistry === "auto" ? "lfp" : chemistry);
-    const capScale = capacityScaleFor(chemId, meanTempC);
+    const capScale = effectiveCapacityScale(chemId, meanTempC);
     const costFn = (pv, b) => {
       const r = fullRange(pv, b, chemId, landedF, Math.max(pv, invMinKw));
       return { mid: r.objectiveMid, lo: r.lo, hi: r.hi };
@@ -1226,7 +1255,7 @@ export async function runSizing(msg, deps = {}) {
     // by simulating it, not by looking it up - so if their target is NOT on
     // the frontier, the marker honestly lands below the line.
     if (f && loadTotalWh > 0) {
-      const fScale = capacityScaleFor(f.chemistry, meanTempC);
+      const fScale = effectiveCapacityScale(f.chemistry, meanTempC);
       const sim =
         payload.mode === "gridtie"
           ? simulateOffset({
@@ -1426,7 +1455,14 @@ export async function runSizing(msg, deps = {}) {
       catalog: POWMR_CATALOG,
     },
     assumptions: {
-      derates: DERATES_DEFAULT,
+      derates: climateAware
+        ? { ...DERATES_DEFAULT, soiling: climate.soiling }
+        : DERATES_DEFAULT,
+      climateAware,
+      climate: climate.climate,
+      soilingFactor: climate.soiling,
+      worstMonth: climate.worstMonth,
+      thermal: climate.thermal,
       gammaPerC: GAMMA_PMAX,
       noctC: NOCT,
       etaInverter: ETA_INVERTER,
@@ -1438,19 +1474,21 @@ export async function runSizing(msg, deps = {}) {
           ? Object.fromEntries(
               ["naion", "lfp", "agm"].map((c) => [
                 c,
-                +capacityScaleFor(c, meanTempC).toFixed(3),
+                +effectiveCapacityScale(c, meanTempC).toFixed(3),
               ]),
             )
-          : +capacityScaleFor(chemistry, meanTempC).toFixed(3),
+          : +effectiveCapacityScale(chemistry, meanTempC).toFixed(3),
       meanTempC: Math.round(meanTempC),
       capacityNote: (() => {
         if (chemistry === "auto") {
           const tC = Math.round(meanTempC);
-          const agm = Math.round(capacityScaleFor("agm", meanTempC) * 100);
+          const agm = Math.round(
+            effectiveCapacityScale("agm", meanTempC) * 100,
+          );
           return `Capacity model at this site's mean ${tC}°C: LFP 100%, sodium-ion 85% (LFP voltage settings), lead-acid (AGM) about ${agm}% (cold derating where applicable).`;
         }
         const capChem = chemistry;
-        const scale = capacityScaleFor(capChem, meanTempC);
+        const scale = effectiveCapacityScale(capChem, meanTempC);
         const pct = Math.round(scale * 100);
         const tC = Math.round(meanTempC);
         if (capChem === "agm" && tC <= 10) {
@@ -1480,7 +1518,7 @@ export async function runSizing(msg, deps = {}) {
     pvMax: effectivePvMax,
     battMax: effectiveBattMax,
     battStep: 1,
-    capacityScale: capacityScaleFor(chemistry, meanTempC),
+    capacityScale: effectiveCapacityScale(chemistry, meanTempC),
     laborPerKwh,
     invMinKw,
     tariff,
@@ -1531,7 +1569,7 @@ export async function runSizing(msg, deps = {}) {
             pvMax: effectivePvMax,
             battMax: effectiveBattMax,
             battStep: 1,
-            capacityScale: capacityScaleFor(chemId, meanTempC),
+            capacityScale: effectiveCapacityScale(chemId, meanTempC),
             laborPerKwh,
             invMinKw,
             tariff,
@@ -1569,7 +1607,7 @@ export async function runSizing(msg, deps = {}) {
           pvMax: effectivePvMax,
           battMax: effectiveBattMax,
           battStep: 1,
-          capacityScale: capacityScaleFor(REF_CHEM, meanTempC),
+          capacityScale: effectiveCapacityScale(REF_CHEM, meanTempC),
           laborPerKwh,
           invMinKw,
           tariff,
@@ -1655,7 +1693,7 @@ export async function runSizing(msg, deps = {}) {
           : chemistry === "auto"
             ? "lfp"
             : chemistry;
-      const fScale = capacityScaleFor(fChem, meanTempC);
+      const fScale = effectiveCapacityScale(fChem, meanTempC);
       const fBatt = Math.max(0, Number(focusBattKwh));
       const fPv = Math.max(0, Number(focusPvKw));
       if (
@@ -1729,7 +1767,7 @@ export async function runSizing(msg, deps = {}) {
       };
 
       for (const chemId of AUTO_CHEMS) {
-        const capScale = capacityScaleFor(chemId, meanTempC);
+        const capScale = effectiveCapacityScale(chemId, meanTempC);
         const results = sizeAllBillTargets({
           e1kw,
           loadWh,
@@ -1820,7 +1858,7 @@ export async function runSizing(msg, deps = {}) {
           pvMax: effectivePvMax,
           battMax: effectiveBattMax,
           battStep: 1,
-          capacityScale: capacityScaleFor(chemId, meanTempC),
+          capacityScale: effectiveCapacityScale(chemId, meanTempC),
           laborPerKwh,
           invMinKw,
           tariff,
@@ -1861,7 +1899,7 @@ export async function runSizing(msg, deps = {}) {
         pvMax: effectivePvMax,
         battMax: effectiveBattMax,
         battStep: 1,
-        capacityScale: capacityScaleFor(REF_CHEM, meanTempC),
+        capacityScale: effectiveCapacityScale(REF_CHEM, meanTempC),
         laborPerKwh,
         invMinKw,
         tariff,
@@ -2036,7 +2074,7 @@ export async function runSizing(msg, deps = {}) {
       }
     } else {
       for (const chemId of AUTO_CHEMS) {
-        const capScale = capacityScaleFor(chemId, meanTempC);
+        const capScale = effectiveCapacityScale(chemId, meanTempC);
         const allTiers = sizeAllTiers({
           e1kw,
           loadWh,
@@ -2075,7 +2113,7 @@ export async function runSizing(msg, deps = {}) {
           resultsByChem[chemId] &&
           resultsByChem[chemId].find((t) => t.tier.id === tierId);
         if (!midTier || !midTier.sizing) continue;
-        const capScale = capacityScaleFor(chemId, meanTempC);
+        const capScale = effectiveCapacityScale(chemId, meanTempC);
         const sizing = midTier.sizing;
         const m = moneyFor(chemId, sizing);
         const servedKwhPerYear =
@@ -2183,7 +2221,7 @@ export async function runSizing(msg, deps = {}) {
         pvMax: offgridPvMax,
         battMax: offgridBattMax,
         pvMax: offgridPvMax,
-        capacityScale: capacityScaleFor(REF_CHEM, meanTempC),
+        capacityScale: effectiveCapacityScale(REF_CHEM, meanTempC),
         laborPerKwh,
         invMinKw,
       });
@@ -2261,7 +2299,7 @@ export async function runSizing(msg, deps = {}) {
   }
 
   const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
-  const capScale = capacityScaleFor(chemistry, meanTempC);
+  const capScale = effectiveCapacityScale(chemistry, meanTempC);
   const results = sizeAllTiers({
     e1kw,
     loadWh,

@@ -11,6 +11,7 @@
 // direct-kWh mode for people who already know their numbers.
 
 import { CITY_PRESETS } from "./nasa.js?v=20260912a";
+import { APPLIANCES } from "./appliances.js?v=20260912a";
 import {
   CITY_CATALOG,
   searchCities,
@@ -49,6 +50,12 @@ import {
 import { LOCALES } from "../shared/locales.js?v=20260912a";
 
 import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260912a";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260912a";
+import {
+  readSimpleMode,
+  writeSimpleMode,
+  modeLabel,
+} from "../shared/simple-mode.js?v=20260912a";
 
 import {
   renderFrontier,
@@ -63,6 +70,13 @@ import {
 } from "./rescale.js?v=20260912a";
 
 import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260912a";
+import {
+  createLeafletProvider,
+  createMapProviderRegistry,
+  rectangleAreaM2,
+  manualRoofHint,
+} from "./map-provider.js?v=20260912a";
+import { persistWizard, restoreWizard } from "./wizard.js?v=20260912a";
 
 import {
   batteryReplacements,
@@ -83,7 +97,13 @@ let resultLevel = "best";
 // Quick (auto-run) mode shows only the location controls and sizes with
 // defaults; Manual reveals the full form. Default is quick.
 let quickMode = true;
+let simpleMode = true;
 let locationResolved = false;
+let wizard = restoreWizard();
+let roofMapRegistry = null;
+let roofMapUnsubscribe = null;
+let roofMapRectangle = null;
+let roofMapFirstCorner = null;
 
 // The monthly-bill slider stores the user's real input as consumed ENERGY
 // (kWh/day, default 20) and re-expresses that as local currency whenever the
@@ -198,149 +218,6 @@ function t(key, params = {}) {
 
 // to realistic compressor time, and the row shows the resulting average draw.
 
-const APPLIANCES = [
-  {
-    g: "Keep food cold",
-    items: [
-      {
-        n: "Refrigerator (modern, mid-size)",
-        w: 100,
-        h: 10,
-        maxH: 16,
-        duty: true,
-        surgeW: 500,
-      },
-      {
-        n: "Refrigerator (old or large)",
-        w: 150,
-        h: 12,
-        maxH: 18,
-        duty: true,
-        surgeW: 800,
-      },
-      {
-        n: "Chest freezer",
-        w: 100,
-        h: 10,
-        maxH: 16,
-        duty: true,
-        surgeW: 500,
-      },
-    ],
-  },
-  {
-    g: "Cooling & Climate",
-    items: [
-      { n: "Ceiling or desk fan", w: 75, h: 8 },
-      {
-        n: "Window air conditioner (one room)",
-        w: 500,
-        h: 6,
-        maxH: 20,
-        duty: true,
-        surgeW: 1500,
-      },
-      {
-        n: "Split air conditioner (whole floor)",
-        w: 1200,
-        h: 6,
-        maxH: 20,
-        duty: true,
-        surgeW: 3000,
-      },
-      {
-        n: "Mini-split heat pump (heating mode)",
-        w: 1200,
-        h: 8,
-        maxH: 20,
-        duty: true,
-        surgeW: 2400,
-      },
-    ],
-  },
-  {
-    g: "Kitchen & cooking",
-    items: [
-      { n: "Microwave", w: 1200, h: 0.33 },
-      { n: "Electric kettle", w: 1500, h: 0.25 },
-      { n: "Coffee maker", w: 900, h: 0.25 },
-      { n: "Rice cooker", w: 700, h: 0.5 },
-      { n: "Induction cooktop (1 burner)", w: 1800, h: 0.5 },
-      { n: "Air fryer", w: 1500, h: 0.33 },
-    ],
-  },
-  {
-    g: "Lights & electronics",
-    items: [
-      { n: "LED light bulb", w: 10, h: 5 },
-      { n: "LED TV", w: 100, h: 4 },
-      { n: "Laptop or desktop computer", w: 65, h: 6 },
-      { n: "Phone charger", w: 15, h: 3 },
-      { n: "Internet router (always on)", w: 10, h: 24 },
-      { n: "Starlink / Satellite Internet", w: 55, h: 24 },
-    ],
-  },
-  {
-    g: "Cleaning & water",
-    items: [
-      { n: "Washing machine", w: 500, h: 0.5, surgeW: 1200 },
-      {
-        n: "Water pump (shallow/pressure tank 120V)",
-        w: 750,
-        h: 0.5,
-        maxH: 12,
-        duty: true,
-        surgeW: 2200,
-      },
-      {
-        n: "Deep well pump (submersible, 240V)",
-        w: 1100,
-        h: 0.75,
-        maxH: 8,
-        duty: true,
-        surgeW: 3800,
-        splitPhase: true,
-      },
-      { n: "Vacuum cleaner", w: 800, h: 0.25 },
-      { n: "Clothes iron", w: 1100, h: 0.25 },
-    ],
-  },
-  {
-    g: "Big power users",
-    items: [
-      { n: "Space heater (small)", w: 1000, h: 4, maxH: 16, duty: true },
-      {
-        n: "Electric water heater (240V)",
-        w: 3000,
-        h: 1,
-        maxH: 8,
-        duty: true,
-        splitPhase: true,
-      },
-      {
-        n: "Pool pump",
-        w: 1000,
-        h: 4,
-        maxH: 12,
-        duty: true,
-        surgeW: 2500,
-      },
-      {
-        n: "EV charger (Level 1 trickle, 120V 12A)",
-        w: 1400,
-        h: 6,
-        maxH: 14,
-      },
-      {
-        n: "Workshop tools (table saw / compressor)",
-        w: 1800,
-        h: 0.5,
-        surgeW: 4200,
-      },
-    ],
-  },
-];
-
 const CHEM_KEYS = new Set(["auto", "naion", "lfp", "agm"]);
 
 function $(id) {
@@ -365,6 +242,59 @@ function setStatus(text) {
   const s = $("sizingStatus");
 
   if (s) s.textContent = text;
+}
+
+function applySimpleMode() {
+  document.documentElement.dataset.displayMode = simpleMode
+    ? "simple"
+    : "technical";
+  const toggle = $("simpleModeToggle");
+  if (toggle) {
+    toggle.checked = simpleMode;
+    toggle.setAttribute("aria-label", `${modeLabel(simpleMode)} enabled`);
+  }
+  document.querySelectorAll("[data-jargon]").forEach((node) => {
+    if (simpleMode) {
+      explainElement(node, node.dataset.jargon);
+      node.setAttribute("role", "button");
+      node.setAttribute("aria-expanded", "false");
+      if (!node.dataset.eli5Wired) {
+        node.dataset.eli5Wired = "true";
+        const toggleExplanation = () => {
+          const open = node.getAttribute("aria-expanded") === "true";
+          node.setAttribute("aria-expanded", String(!open));
+          node.classList.toggle("eli5-open", !open);
+        };
+        node.addEventListener("click", toggleExplanation);
+        node.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            toggleExplanation();
+          }
+        });
+      }
+    } else {
+      node.removeAttribute("data-eli5");
+      node.removeAttribute("title");
+      node.removeAttribute("tabindex");
+      node.removeAttribute("role");
+      node.removeAttribute("aria-expanded");
+      node.classList.remove("eli5-open");
+    }
+  });
+}
+
+function setupSimpleMode() {
+  simpleMode = readSimpleMode();
+  const toggle = $("simpleModeToggle");
+  if (!toggle) return;
+  toggle.checked = simpleMode;
+  toggle.addEventListener("change", () => {
+    simpleMode = toggle.checked;
+    writeSimpleMode(simpleMode);
+    applySimpleMode();
+  });
+  applySimpleMode();
 }
 
 // Infeasibility banner: surfaces a structural (mode × hardware × target)
@@ -1205,6 +1135,11 @@ function renderChemTempVisualizer(lat) {
 
 function setCoords(lat, lon, label, region, country) {
   locationResolved = true;
+  wizard.setValue("latitude", lat);
+  wizard.setValue("longitude", lon);
+  if (wizard.state.step === "location") wizard.next();
+  persistWizard(wizard);
+  updateGuidedProgress();
 
   const isOffgrid = $("systemGoal")
     ? $("systemGoal").value === "offgrid"
@@ -1623,6 +1558,100 @@ function locateMe() {
 
 // sizes with defaults; Manual reveals the full form.
 
+function updateGuidedProgress(step = wizard.state.step) {
+  const progress = $("guidedProgress");
+  if (!progress) return;
+  const labels = {
+    location: "1. Location",
+    load: "2. What you power",
+    tariff: "3. Electricity price",
+    result: "4. Your result",
+  };
+  progress.textContent = labels[step] || labels.location;
+  progress.dataset.step = step;
+}
+
+function setupRoofMap() {
+  const open = $("btnOpenRoofMap");
+  const close = $("btnCloseRoofMap");
+  const panel = $("roofMapPanel");
+  const mapElement = $("roofMap");
+  const status = $("roofMapStatus");
+  const areaInput = $("roofAreaM2");
+  const areaHint = $("roofAreaHint");
+  if (!open || !panel || !mapElement) return;
+
+  const closeMap = () => {
+    roofMapUnsubscribe?.();
+    roofMapUnsubscribe = null;
+    roofMapRegistry?.cleanup();
+    roofMapRegistry = null;
+    roofMapRectangle?.remove?.();
+    roofMapRectangle = null;
+    roofMapFirstCorner = null;
+    panel.hidden = true;
+    status.textContent = "";
+  };
+  close?.addEventListener("click", closeMap);
+  open.addEventListener("click", async () => {
+    const latitude = parseFloat($("latInput")?.value);
+    const longitude = parseFloat($("lonInput")?.value);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      status.textContent = "Choose a city or use your location first.";
+      return;
+    }
+    panel.hidden = false;
+    status.textContent = "Loading the optional map…";
+    if (!roofMapRegistry) {
+      roofMapRegistry = createMapProviderRegistry([createLeafletProvider()]);
+      try {
+        const map = await roofMapRegistry.init({
+          element: mapElement,
+          latitude,
+          longitude,
+          zoom: 19,
+        });
+        if (!map) throw new Error("No optional map provider is available");
+        status.textContent =
+          "Tap one corner, then the opposite corner of your roof or yard.";
+        roofMapUnsubscribe = roofMapRegistry.onClick((lat, lon) => {
+          if (!roofMapFirstCorner) {
+            roofMapFirstCorner = [lat, lon];
+            status.textContent = "Now tap the opposite corner.";
+            return;
+          }
+          const second = [lat, lon];
+          const area = rectangleAreaM2(roofMapFirstCorner, second);
+          roofMapRectangle?.remove?.();
+          roofMapRectangle = roofMapRegistry.drawRectangle([
+            [
+              Math.min(roofMapFirstCorner[0], second[0]),
+              Math.min(roofMapFirstCorner[1], second[1]),
+            ],
+            [
+              Math.max(roofMapFirstCorner[0], second[0]),
+              Math.max(roofMapFirstCorner[1], second[1]),
+            ],
+          ]);
+          roofMapFirstCorner = null;
+          if (areaInput) {
+            areaInput.value = String(Math.round(area * 10) / 10);
+            areaInput.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+          if (areaHint)
+            areaHint.textContent = `${manualRoofHint(area)} This caps the searched PV size; it does not certify structural or shading suitability.`;
+          status.textContent = `${Math.round(area * 10) / 10} m² selected. You can close the map or tap two new corners.`;
+        });
+      } catch (error) {
+        status.textContent = `${error?.message || "The optional map could not load."} Use the manual area box below instead.`;
+        roofMapRegistry?.cleanup();
+        roofMapRegistry = null;
+      }
+    }
+  });
+  window.addEventListener("beforeunload", closeMap, { once: true });
+}
+
 function setQuickMode(on) {
   quickMode = on;
 
@@ -1810,6 +1839,13 @@ function readInputs() {
     peakLoadW,
     peakSurgeW,
     requiresSplitPhase,
+    climateAware: $("climateAwareToggle")?.checked === true,
+    soilingOverride: null,
+    pvMaxOverride: (() => {
+      const area = parseFloat($("roofAreaM2")?.value);
+      if (!Number.isFinite(area) || area <= 0) return null;
+      return Math.floor(area / 6) * (PANEL_WATTS_DEFAULT / 1000);
+    })(),
   };
 
   window.lastInputs = result;
@@ -1823,6 +1859,9 @@ function run(quiet = false) {
   }
 
   const inp = readInputs();
+  wizard.setValue("dailyKwh", inp.dailyKwh);
+  wizard.setValue("tariff", inp.tariff);
+  persistWizard(wizard);
 
   if (
     !Number.isFinite(inp.latitude) ||
@@ -1878,6 +1917,13 @@ function run(quiet = false) {
   }
 
   lastRunInput = inp;
+  wizard.setValue("dailyKwh", inp.dailyKwh);
+  wizard.setValue("tariff", inp.tariff);
+  wizard.setValue("mode", inp.mode);
+  while (wizard.state.step !== "result")
+    wizard.next({ allowNoTariff: wizard.state.step === "tariff" });
+  persistWizard(wizard);
+  updateGuidedProgress("result");
   lastRunAdoptsFocus = pendingFocus !== null;
   lastRunQuiet = quiet;
   pendingFocus = null;
@@ -6831,6 +6877,64 @@ window.addEventListener("resize", () => {
   frontierResizeTimer = setTimeout(() => renderFrontierPanel(lastPayload), 180);
 });
 
+function renderEli5Summary(p) {
+  const wrap = $("eli5Summary");
+  if (!wrap) return;
+  if (!simpleMode) {
+    wrap.style.display = "none";
+    wrap.innerHTML = "";
+    return;
+  }
+  const entry = resolveSelected(p) || p.best || p.focus;
+  if (!entry) {
+    wrap.style.display = "none";
+    return;
+  }
+  const climate = p.assumptions?.climateAware
+    ? ` Weather suggests ${p.assumptions.climate} conditions, so dust losses are included.`
+    : "";
+  const rows = [
+    [
+      "Solar",
+      entry.pvKw > 0
+        ? `${entry.pvKw} kW of panels`
+        : "No panels in this option",
+      "kW",
+    ],
+    [
+      "Storage",
+      entry.battKwh > 0
+        ? `${fmt(entry.battKwh)} kWh usable battery`
+        : "No battery in this option",
+      "usableCapacity",
+    ],
+    [
+      "Target",
+      p.mode === "gridtie"
+        ? `${entry.cutPct ?? 0}% less grid energy`
+        : `${Math.round(100 - (entry.unmetHoursPerYear || 0) / 87.6)}% reliability target`,
+      p.mode === "gridtie" ? "gridTie" : "reliabilityTier",
+    ],
+  ];
+  wrap.style.display = "block";
+  wrap.innerHTML = "";
+  wrap.appendChild(el("div", { class: "eli5-title" }, "💡 In plain language"));
+  const grid = el("div", { class: "eli5-grid" });
+  for (const [label, value, term] of rows) {
+    const item = el("div", { class: "eli5-item" });
+    const labelEl = el("div", { class: "eli5-item-label" }, label);
+    if (JARGON[term]) explainElement(labelEl, term);
+    item.append(labelEl, el("div", { class: "eli5-item-desc" }, value));
+    grid.appendChild(item);
+  }
+  const note = el(
+    "p",
+    { style: "margin-top:0.8rem;font-size:0.82rem;color:var(--text-muted);" },
+    `The result is an estimate, not a promise. Battery storage is the bucket that carries energy from sunny hours into dark hours.${climate}`,
+  );
+  wrap.append(grid, note);
+}
+
 function renderResults(p) {
   const inp = readInputs();
 
@@ -7014,6 +7118,8 @@ function renderResults(p) {
   }
 
   if (p.unreachableReason) renderInfeasibleBanner(p.unreachableReason);
+
+  renderEli5Summary(p);
 
   const a = p.assumptions;
 
@@ -8207,6 +8313,19 @@ export function initSizingUI() {
     expandCitySearch();
 
     renderAppliances();
+    setupSimpleMode();
+    setupRoofMap();
+    updateGuidedProgress();
+    const climateToggle = $("climateAwareToggle");
+    if (climateToggle)
+      climateToggle.addEventListener("change", () => {
+        if (quickMode && lastPayload) run(true);
+      });
+    const roofArea = $("roofAreaM2");
+    if (roofArea)
+      roofArea.addEventListener("input", () => {
+        if (quickMode && lastPayload) run(true);
+      });
 
     renderBom();
 
@@ -8496,6 +8615,7 @@ export function initSizingUI() {
     // Interface language (auto-detected, user-overridable in the footer).
 
     applyI18n();
+    applySimpleMode();
 
     initLangPicker($("langSelect"));
 
