@@ -136,13 +136,16 @@ test("keyless Esri satellite basemap is the primary layer (God's Eye View approa
       .replace(/^https:\/\//, "")
       .replace(/^\*\./, "")
       .replace(/\/$/, "");
-  const cspImgHosts = imgSrc.split(/\s+/).filter(Boolean).map(normalize);
+  const cspImgHosts = new Set(
+    imgSrc.split(/\s+/).filter(Boolean).map(normalize),
+  );
+  // Set.has is exact host equality (no substring semantics).
   assert.ok(
-    cspImgHosts.includes("server.arcgisonline.com"),
+    cspImgHosts.has("server.arcgisonline.com"),
     `CSP img-src must allow the Esri tile host, got: ${imgSrc}`,
   );
   assert.ok(
-    cspImgHosts.includes("basemaps.cartocdn.com"),
+    cspImgHosts.has("basemaps.cartocdn.com"),
     `CSP img-src must allow the CARTO fallback host, got: ${imgSrc}`,
   );
 });
