@@ -21,10 +21,23 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const BASE = (process.argv[2] || "https://freeoffgridcalculator.com/").replace(
-  /\/$/,
-  "/",
+// BASE must always end in "/": sub-pages are built as `${BASE}solar-heatmap/`,
+// so a slash-less argument like `https://example.com` would otherwise produce
+// the invalid host `example.comsolar-heatmap` (Chrome error page → false
+// heatmap gate failures). The .replace canonicalizes any argv form to a
+// trailing slash (or the root path for an origin with a pathname).
+const BASE = normalizeBase(
+  process.argv[2] || "https://freeoffgridcalculator.com/",
 );
+function normalizeBase(raw) {
+  try {
+    const url = new URL(raw);
+    const path = url.pathname === "/" ? "/" : url.pathname.replace(/\/$/, "/");
+    return url.origin + path;
+  } catch {
+    return raw.endsWith("/") ? raw : raw + "/";
+  }
+}
 const DEBUG_PORT = 19222;
 const RUN_TIMEOUT_MS = 180000;
 
