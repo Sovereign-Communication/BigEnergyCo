@@ -3,9 +3,13 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {
   CARTO_TILE_URL,
+  ESRI_ATTRIBUTION,
+  ESRI_SATELLITE_TILE_URL,
   LEAFLET_SCRIPT_URL,
   createMapProviderRegistry,
+  createLeafletProvider,
   manualRoofHint,
+  optionalMapPolicy,
   panelCapFromArea,
   pvCapKwFromArea,
   rectangleAreaM2,
@@ -66,4 +70,65 @@ test("map provider remains lazy and uses only approved hosts", () => {
     "utf8",
   );
   assert.match(html, /optional map/i);
+});
+
+test("satellite layer loads before the street fallback with Esri attribution", async () => {
+  const added = [];
+  const fakeMap = {
+    on() {},
+    off() {},
+    remove() {},
+    setView() {
+      return fakeMap;
+    },
+  };
+  const tileLayer = (url, opts) => {
+    added.push({ url, opts });
+    return { addTo: () => {} };
+  };
+  const provider = createLeafletProvider({
+    windowRef: { L: { map: () => fakeMap, tileLayer } },
+    documentRef: {
+      querySelector: () => null,
+      createElement: () => ({}),
+      head: { appendChild() {} },
+    },
+  });
+  const el = {};
+  const map = await provider.init({
+    element: el,
+    latitude: 40.7,
+    longitude: -74,
+    zoom: 18,
+  });
+  assert.ok(map, "map object returned");
+  assert.equal(added.length, 2, "two tile layers registered");
+  assert.match(added[0].url, /arcgisonline\.com.*World_Imagery/);
+  assert.match(added[0].opts.attribution, /Esri/);
+  assert.match(added[1].url, /basemaps\.cartocdn\.com/);
+});
+
+test("keyless Esri satellite basemap is the primary layer (God's Eye View approach)", () => {
+  // Same public, keyless service God's Eye View uses: ArcGIS World Imagery.
+  assert.match(
+    ESRI_SATELLITE_TILE_URL,
+    /^https:\/\/server\.arcgisonline\.com\/ArcGIS\/rest\/services\/World_Imagery/,
+  );
+  // Esri requires visible attribution — assert it is registered.
+  assert.match(ESRI_ATTRIBUTION, /Esri/);
+  assert.match(ESRI_ATTRIBUTION, /Maxar/);
+  // Both tile hosts are declared in the lazy-map policy and the deployed CSP.
+  assert.ok(
+    optionalMapPolicy.allowedTileHosts.includes("server.arcgisonline.com"),
+  );
+  assert.ok(
+    optionalMapPolicy.allowedTileHosts.includes("basemaps.cartocdn.com"),
+  );
+  const headers = fs.readFileSync(
+    new URL("../_headers", import.meta.url),
+    "utf8",
+  );
+  assert.match(headers, /img-src[^\n]*server\.arcgisonline\.com/);
+  // The CARTO street layer stays available as a fallback layer.
+  assert.match(CARTO_TILE_URL, /basemaps\.cartocdn\.com/);
 });
