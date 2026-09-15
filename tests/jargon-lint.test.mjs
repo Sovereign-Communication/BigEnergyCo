@@ -108,7 +108,9 @@ test("worst-month identifies the lowest 30-day solar window", () => {
   const worst = worstMonth(hours);
   assert.ok(worst);
   assert.ok(worst.startDay >= 120 && worst.startDay <= 180);
-  assert.ok(worst.averageDailyGhi <= 1200);
+  // Unit contract: averageDailyGhi is kWh/m²/day. The synthetic worst window
+  // is 50 (Wh per hour) × 24 h = 1.2 kWh/m²/day exactly.
+  assert.equal(worst.averageDailyGhi, 1.2);
 });
 
 test("optional map math is deterministic and cleanup-safe", async () => {
