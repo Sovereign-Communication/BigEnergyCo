@@ -10,8 +10,8 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260912a";
-import { APPLIANCES } from "./appliances.js?v=20260912a";
+import { CITY_PRESETS } from "./nasa.js?v=20260915a";
+import { APPLIANCES } from "./appliances.js?v=20260915a";
 import {
   CITY_CATALOG,
   searchCities,
@@ -21,7 +21,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260912a";
+} from "./cities.js?v=20260915a";
 
 import {
   estimateTariff,
@@ -29,62 +29,62 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260912a";
+} from "./pricing.js?v=20260915a";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260912a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260915a";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260912a";
+} from "./bom.js?v=20260915a";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260912a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260915a";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260912a";
+} from "../shared/i18n.js?v=20260915a";
 
-import { LOCALES } from "../shared/locales.js?v=20260912a";
+import { LOCALES } from "../shared/locales.js?v=20260915a";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260912a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260912a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260915a";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260915a";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260912a";
+} from "../shared/simple-mode.js?v=20260915a";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260912a";
+} from "./frontier-chart.js?v=20260915a";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260912a";
+} from "./rescale.js?v=20260915a";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260912a";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260915a";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260912a";
-import { persistWizard, restoreWizard } from "./wizard.js?v=20260912a";
+} from "./map-provider.js?v=20260915a";
+import { persistWizard, restoreWizard } from "./wizard.js?v=20260915a";
 
 import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260912a";
+} from "./money.js?v=20260915a";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260912a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260915a";
 
 let worker = null;
 
@@ -2768,7 +2768,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260912a", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260915a", {
       type: "module",
     });
 
