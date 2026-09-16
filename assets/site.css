@@ -1699,3 +1699,145 @@ footer {
 .bos-checklist-card {
   border-left: 3px solid var(--warning-orange) !important;
 }
+
+/* ── Staged loading pipeline (data-loading legibility) ─────────────────── */
+#loadingPipeline {
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  background: rgba(9, 13, 22, 0.6);
+  border: 1px solid var(--border-card);
+  border-radius: 10px;
+}
+
+.pipe-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.pipe-steps li {
+  display: grid;
+  grid-template-columns: 14px auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.pipe-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-card);
+  background: transparent;
+  justify-self: center;
+}
+
+.pipe-steps li[data-state="active"] .pipe-dot {
+  border-color: var(--primary-accent);
+  background: var(--primary-accent);
+  box-shadow: 0 0 8px rgba(0, 230, 153, 0.6);
+}
+
+.pipe-steps li[data-state="active"] {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.pipe-steps li[data-state="done"] .pipe-dot {
+  border-color: var(--primary-accent);
+  background: var(--primary-accent);
+}
+
+.pipe-steps li[data-state="done"] {
+  color: var(--text-muted);
+}
+
+.pipe-steps li[data-state="failed"] .pipe-dot {
+  border-color: var(--warning-orange);
+  background: var(--warning-orange);
+}
+
+.pipe-steps li[data-state="failed"] {
+  color: var(--warning-orange);
+}
+
+.pipe-bar {
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  position: relative;
+  max-width: 220px;
+}
+
+.pipe-bar[data-mode="determinate"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: var(--pipe-pct, 0%);
+  background: var(--primary-accent);
+  border-radius: inherit;
+  transition: width 0.35s ease;
+}
+
+.pipe-bar[data-mode="indeterminate"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--primary-accent),
+    transparent
+  );
+  animation: pipe-shimmer 1.2s linear infinite;
+}
+
+@keyframes pipe-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.pipe-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  justify-self: end;
+}
+
+.pipe-elapsed {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+#speedNote {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-accent);
+}
+
+/* Honor the visitor's motion preference: no shimmer, no transitions */
+@media (prefers-reduced-motion: reduce) {
+  .pipe-bar[data-mode="indeterminate"]::after {
+    animation: none;
+    width: 100%;
+    opacity: 0.35;
+  }
+
+  .pipe-bar[data-mode="determinate"]::after {
+    transition: none;
+  }
+}

@@ -27,6 +27,9 @@ export const FETCH_TIMEOUT_MS = 45000;
  * @param {number} opts.longitude
  * @param {number} [opts.years=5]
  * @param {(url:string)=>Promise<Response>} [opts.fetchImpl]
+ * @param {(done:number,total:number)=>void} [opts.onProgress] Optional. Called
+ *   after each year-chunk lands so the UI can show a determinate progress bar
+ *   (chunk counts are known before any byte arrives). Never throws.
  * @returns {{hours: Array<{ghi:number,tAmb:number}>, meta: object}}
  */
 export async function fetchHourlySeries({
@@ -35,6 +38,7 @@ export async function fetchHourlySeries({
   years = 5,
   fetchImpl = fetch,
   timeoutMs = FETCH_TIMEOUT_MS,
+  onProgress = null,
 }) {
   // NASA POWER hourly solar data begins 2001-01-01. End at Dec 31 of last
   // complete year so every request covers full years (fair tier statistics).
@@ -50,6 +54,8 @@ export async function fetchHourlySeries({
   for (let y = startYear; y <= endYear; y += 2) {
     chunks.push([y, Math.min(y + 1, endYear)]);
   }
+  const totalChunks = chunks.length;
+  let doneChunks = 0;
   const fetchChunk = async ([y, yEnd]) => {
     const url = buildUrl(latitude, longitude, `${y}0101`, `${yEnd}1231`);
     const ctrl =
@@ -61,7 +67,17 @@ export async function fetchHourlySeries({
         ctrl ? { signal: ctrl.signal } : undefined,
       );
       if (!res.ok) throw new Error(`NASA POWER request failed (${res.status})`);
-      return parseHourly(await res.json());
+      const parsed = parseHourly(await res.json());
+      // Progress is per-chunk (chunk count is known up front): one call per
+      // landed year-pair. Report-only — a throwing callback must never kill
+      // a good fetch.
+      doneChunks++;
+      if (typeof onProgress === "function") {
+        try {
+          onProgress(doneChunks, totalChunks);
+        } catch {}
+      }
+      return parsed;
     } catch (e) {
       if (ctrl && ctrl.signal.aborted) {
         throw new Error(
@@ -123,8 +139,127 @@ export function parseHourly(json) {
 const CACHE_PREFIX = "beco-power-v1:";
 const CACHE_STORAGE_NAME = "beco-weather-v1";
 
+// Compact persistent layer (v2): stores the PARSED series as flat typed
+// arrays instead of the raw ~2 MB NASA JSON. A Cache-Storage JSON blob costs
+// a full JSON.parse of ~44k objects on every cold load; the typed-array
+// record restores via structured-clone-like reads with no per-object parsing.
+// Key grid, layering order and fallbacks are unchanged from v1.
+const CACHE_PREFIX_V2 = "beco-power-v2:";
+const IDB_NAME = "beco-weather-v2";
+const IDB_STORE = "series";
+
 export const IN_MEMORY_WEATHER_CACHE = new Map();
 export const IN_FLIGHT_WEATHER_PROMISES = new Map();
+
+function idbOpen() {
+  if (typeof indexedDB === "undefined") return null;
+  try {
+    return indexedDB.open(IDB_NAME, 1);
+  } catch {
+    return null;
+  }
+}
+
+/** Promise wrapper over the tiny IDB subset we need. Null when unavailable. */
+function idbReq(request) {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function idbGet(key) {
+  const openReq = idbOpen();
+  if (!openReq) return null;
+  const db = await new Promise((resolve, reject) => {
+    openReq.onsuccess = () => resolve(openReq.result);
+    openReq.onerror = () => reject(openReq.error);
+  });
+  try {
+    if (!db.objectStoreNames.contains(IDB_STORE)) return null;
+    const tx = db.transaction(IDB_STORE, "readonly");
+    const rec = await idbReq(tx.objectStore(IDB_STORE).get(key));
+    db.close();
+    if (
+      !rec ||
+      !(rec.ghi instanceof Float32Array) ||
+      !(rec.tAmb instanceof Float32Array) ||
+      rec.ghi.length !== rec.tAmb.length ||
+      rec.ghi.length === 0
+    )
+      return null;
+    const hours = new Array(rec.ghi.length);
+    for (let i = 0; i < rec.ghi.length; i++) {
+      hours[i] = { ghi: rec.ghi[i], tAmb: rec.tAmb[i] };
+    }
+    return { hours, meta: rec.meta };
+  } catch {
+    try {
+      db.close();
+    } catch {}
+    return null;
+  }
+}
+
+async function idbPut(key, data) {
+  const openReq = idbOpen();
+  if (!openReq) return;
+  const db = await new Promise((resolve, reject) => {
+    openReq.onsuccess = () => resolve(openReq.result);
+    openReq.onerror = () => reject(openReq.error);
+  });
+  try {
+    if (!db.objectStoreNames.contains(IDB_STORE)) return;
+    const n = data.hours.length;
+    const ghi = new Float32Array(n);
+    const tAmb = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      ghi[i] = data.hours[i].ghi;
+      tAmb[i] = data.hours[i].tAmb;
+    }
+    // NaN (NASA fill −999 → NaN) survives Float32Array storage and the
+    // structured clone, so gaps in the satellite record restore exactly.
+    const meta = { ...data.meta, fromCache: true };
+    const tx = db.transaction(IDB_STORE, "readwrite");
+    tx.objectStore(IDB_STORE).put({ ghi, tAmb, meta }, key);
+    await idbReq(tx.complete !== undefined ? tx.complete : tx);
+    db.close();
+  } catch {
+    try {
+      db.close();
+    } catch {}
+  }
+}
+
+async function idbDelete(key) {
+  const openReq = idbOpen();
+  if (!openReq) return;
+  try {
+    const db = await new Promise((resolve, reject) => {
+      openReq.onsuccess = () => resolve(openReq.result);
+      openReq.onerror = () => reject(openReq.error);
+    });
+    if (!db.objectStoreNames.contains(IDB_STORE)) return;
+    const tx = db.transaction(IDB_STORE, "readwrite");
+    tx.objectStore(IDB_STORE).delete(key);
+    await idbReq(tx.complete !== undefined ? tx.complete : tx);
+    db.close();
+  } catch {
+    try {
+      db.close();
+    } catch {}
+  }
+}
+
+function v2Key(lat, lon, years) {
+  return cacheKey(lat, lon, years).replace(CACHE_PREFIX, CACHE_PREFIX_V2);
+}
+
+/** Test/ops hook: drop the compact persistent layer for one site. */
+export async function clearCompactCache(latitude, longitude, years = 5) {
+  IN_MEMORY_WEATHER_CACHE.delete(cacheKey(latitude, longitude, years));
+  await idbDelete(v2Key(latitude, longitude, years));
+}
 
 export function cacheKey(lat, lon, years) {
   const rlat = lat.toFixed(2),
@@ -172,7 +307,8 @@ export async function fetchHourlyCached(
 ) {
   const key = cacheKey(opts.latitude, opts.longitude, opts.years || 5);
 
-  // 1. In-memory cache hit: 0 ms instant return
+  // 1. In-memory cache hit: 0 ms instant return. Every writer stores a
+  // `{hours, meta}` record, so the hit always carries meta.
   if (IN_MEMORY_WEATHER_CACHE.has(key)) {
     return IN_MEMORY_WEATHER_CACHE.get(key);
   }
@@ -183,20 +319,45 @@ export async function fetchHourlyCached(
   }
 
   const fetchPromise = (async () => {
-    // 3. Cache Storage hit (disk cache, available in workers and window)
+    // 3. Compact persistent cache (IndexedDB, v2): parsed Float32 pairs —
+    // restores with no JSON parsing of a ~2 MB blob.
+    try {
+      const fast = await idbGet(
+        v2Key(opts.latitude, opts.longitude, opts.years || 5),
+      );
+      if (fast) {
+        fast.meta.gridKey = key;
+        IN_MEMORY_WEATHER_CACHE.set(key, fast);
+        return fast;
+      }
+    } catch {
+      /* fall through to older layers */
+    }
+
+    // 4. Cache Storage hit (v1 JSON layer; available in workers and window)
     const diskHit = await getFromCacheStorage(key);
     if (diskHit && Array.isArray(diskHit.hours) && diskHit.hours.length > 0) {
       IN_MEMORY_WEATHER_CACHE.set(key, diskHit);
+      // Async side-grade into the compact layer so the NEXT cold start is
+      // fast too; this request already has its data.
+      idbPut(
+        v2Key(opts.latitude, opts.longitude, opts.years || 5),
+        diskHit,
+      ).catch(() => {});
       return diskHit;
     }
 
-    // 4. Custom / localStorage store fallback
+    // 5. Custom / localStorage store fallback
     if (store) {
       try {
         const hit = store.getItem(key);
         if (hit) {
           const parsed = JSON.parse(hit);
           IN_MEMORY_WEATHER_CACHE.set(key, parsed);
+          idbPut(
+            v2Key(opts.latitude, opts.longitude, opts.years || 5),
+            parsed,
+          ).catch(() => {});
           return parsed;
         }
       } catch {
@@ -206,11 +367,16 @@ export async function fetchHourlyCached(
       }
     }
 
-    // 5. Network fetch from NASA POWER
+    // 6. Network fetch from NASA POWER (chunk progress reported to the UI)
     const data = await fetchHourlySeries(opts);
     data.meta.gridKey = key;
     IN_MEMORY_WEATHER_CACHE.set(key, data);
 
+    // Compact persistent write (primary): typed-array record, ~0.35 MB.
+    idbPut(v2Key(opts.latitude, opts.longitude, opts.years || 5), data).catch(
+      () => {},
+    );
+    // Legacy v1 layers kept for downgrade-safety; the v2 read wins.
     putToCacheStorage(key, data).catch(() => {});
 
     if (store) {

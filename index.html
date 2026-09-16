@@ -270,6 +270,20 @@
     </script>
 
     <link rel="stylesheet" href="./assets/site.css?v=20260915c" />
+
+    <!--
+      Preconnect: every external origin the calculator talks to. Warming
+      DNS+TCP+TLS while the page parses removes hundreds of milliseconds of
+      handshake from the first weather/tariff/geocoder request on cold
+      visits. Pure hints — no requests, no dependencies.
+    -->
+    <link rel="preconnect" href="https://power.larc.nasa.gov" crossorigin />
+    <link rel="preconnect" href="https://open.er-api.com" />
+    <link
+      rel="preconnect"
+      href="https://nominatim.openstreetmap.org"
+      crossorigin
+    />
   </head>
 
   <body>
@@ -1795,6 +1809,49 @@
                 First run downloads ~2 MB of satellite weather data, then caches
                 it in your browser.
               </div>
+
+              <!-- Staged loading pipeline: makes every data-loading phase
+                   legible (determinate where counts are known). Populated by
+                   ui.js pipelineStart/pipelineStage/pipelineStop. -->
+              <div id="loadingPipeline" aria-busy="false" style="display: none">
+                <ol class="pipe-steps">
+                  <li id="pipeCity" data-state="todo">
+                    <span class="pipe-dot" aria-hidden="true"></span
+                    ><span class="pipe-label">Location</span>
+                  </li>
+                  <li id="pipeWeather" data-state="todo">
+                    <span class="pipe-dot" aria-hidden="true"></span
+                    ><span class="pipe-label">Weather</span>
+                    <span
+                      class="pipe-bar"
+                      id="pipeWeatherBar"
+                      data-mode="indeterminate"
+                      style="--pipe-pct: 0%"
+                      aria-hidden="true"
+                    ></span>
+                    <span class="pipe-sub" id="pipeWeatherTxt"></span>
+                  </li>
+                  <li id="pipeSim" data-state="todo">
+                    <span class="pipe-dot" aria-hidden="true"></span
+                    ><span class="pipe-label">Simulating</span>
+                    <span
+                      class="pipe-bar"
+                      data-mode="indeterminate"
+                      style="--pipe-pct: 0%"
+                      aria-hidden="true"
+                    ></span>
+                  </li>
+                  <li id="pipeRender" data-state="todo">
+                    <span class="pipe-dot" aria-hidden="true"></span
+                    ><span class="pipe-label">Rendering</span>
+                  </li>
+                </ol>
+                <span id="pipeElapsed" class="pipe-elapsed"></span>
+              </div>
+
+              <!-- Speed note: honest explanation when a run resolves instantly
+                   (repeat configuration or cached weather). -->
+              <p id="speedNote" style="display: none" role="status"></p>
             </div>
 
             <div class="results-box">
