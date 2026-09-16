@@ -425,6 +425,15 @@ async function runSizingUncached(msg, deps = {}) {
   const offgridPvMax =
     hardwareConfig === "battery" ? 0 : Math.min(40, requestedPvMax);
   const offgridBattMax = hardwareConfig === "solar" ? 0 : 300;
+  // When a constrained envelope (e.g. the optional roof-area cap) makes a
+  // target unsolvable, the honest explanation is the constraint itself, with
+  // the arithmetic the visitor can check against their own input. Declared
+  // here so every matrix path (fixed targets AND the custom column) can
+  // attach it to unsolvable cells.
+  const envelopeNote =
+    Number.isFinite(pvMaxOverride) && pvMaxOverride > 0
+      ? `the searched PV size was capped by your roof/yard area input (~${Math.round(pvMaxOverride * 10) / 10} kW of panels)`
+      : null;
   // Structural feasibility for this (mode, hardware, target) combo.
   // "null" when the search is allowed to decide; an explanatory code when
   // the combo is impossible regardless of envelope (off-grid + solar-only,
@@ -1737,19 +1746,21 @@ async function runSizingUncached(msg, deps = {}) {
           best: customBest,
           surplus: customFracGt > 1,
         };
-        // The recommendation follows the bill-cut slider: the banner, headline
-        // savings and focus system now describe the preferred system that
-        // achieves the visitor's CURRENT target, not the fixed 80% one.
-        if (customBest) {
-          patch.best = customBest;
-          patch.bestReason = bestPickReason(
-            customBest,
-            customEntries,
-            meanTempC,
-            patch.agmReference,
-          );
-          patch.focus = focusFor(customBest.chemistry, customBest);
-        }
+        // Always present — including null when nothing solves at this
+        // target — so the UI can retire a stale recommendation instead of
+        // silently keeping the previous target's system on screen.
+        patch.best = customBest;
+        patch.bestReason = customBest
+          ? bestPickReason(
+              customBest,
+              customEntries,
+              meanTempC,
+              patch.agmReference,
+            )
+          : null;
+        patch.focus = customBest
+          ? focusFor(customBest.chemistry, customBest)
+          : null;
       } else {
         const custSizing = sizeForBillCut({
           ...billCutOpts,
@@ -1907,7 +1918,11 @@ async function runSizingUncached(msg, deps = {}) {
                 sizing,
                 matrixCell(chemId, sizing, "gridtie"),
               )
-            : { solvable: false, reason: unreachableReason };
+            : {
+                solvable: false,
+                reason: unreachableReason || "envelope-limited",
+                envelopeNote,
+              };
         }
       }
 

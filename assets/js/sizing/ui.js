@@ -78,6 +78,43 @@ import {
 } from "./map-provider.js?v=20260916a";
 import { persistWizard, restoreWizard } from "./wizard.js?v=20260916a";
 import { tiltValueSummary } from "./tilt-harvest.js?v=20260916a";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260916a";
+// Live, quiet feedback for the optional roof/yard area box: what it actually
+// caps, and one-click disregard. Kept deliberately subtle — small muted text
+// under the input — until the visitor has verified it behaves perfectly.
+function updateRoofAreaCapNote() {
+  const input = $("roofAreaM2");
+  const note = $("roofAreaCapNote");
+  if (!input || !note) return;
+  const area = parseFloat(input.value);
+  if (!Number.isFinite(area) || area <= 0) {
+    note.style.display = "none";
+    note.textContent = "";
+    return;
+  }
+  const count = Math.floor(area / 6);
+  const capKw = Math.floor(area / 6) * (PANEL_WATTS_DEFAULT / 1000);
+  note.style.display = "block";
+  note.textContent =
+    `Caps the search at ${count} × ${PANEL_WATTS_DEFAULT} W panels ≈ ${capKw.toFixed(1)} kW of solar. ` +
+    `Clear the box to remove the cap.`;
+}
+
+// Roof/yard area (m²): an optional input that silently caps the searched PV
+// size. Live note + re-run, exactly like the other quiet-refresh inputs.
+function setupRoofAreaInput() {
+  const input = $("roofAreaM2");
+  if (!input) return;
+  input.addEventListener("input", () => {
+    updateRoofAreaCapNote();
+    if (quickMode && lastPayload) run(true);
+  });
+  input.addEventListener("change", () => {
+    updateRoofAreaCapNote();
+    if (quickMode && lastPayload) run(true);
+  });
+  updateRoofAreaCapNote();
+}
 
 import {
   batteryReplacements,
@@ -453,6 +490,10 @@ function setupSimpleMode() {
 // change. Hides itself the moment a payload without a reason arrives (i.e.
 // a normal run) so it never lingers across the page.
 const INFEASIBLE_HINTS = {
+  "envelope-limited": {
+    title: "Too little roof/yard area for this target",
+    body: "The searched solar size was capped by the optional area input (see “Hardware setup”). Clear that box — or draw a bigger area on the map — and re-run: the site itself can reach this target.",
+  },
   "needs-battery": {
     title: "Solar-only can't reach 100% off-grid",
     body: "An off-grid home needs storage for nights and cloudy days. Add a battery to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).",
@@ -2185,6 +2226,16 @@ function setupCutSlider() {
 
   slider.addEventListener("change", () => {
     customCutFraction = (parseInt(slider.value, 10) || 1) / 100;
+    // The form's "Bill-cut target" select and this slider are ONE control in
+    // two places: when the slider lands exactly on a select option, the
+    // select follows so a fresh run can't disagree with what's on screen.
+    const agSelect = $("autoTarget");
+    if (agSelect) {
+      const map = { cut100: 100, cut80: 80, cut60: 60, cut40: 40 };
+      for (const [id, pct] of Object.entries(map)) {
+        if (Math.round(customCutFraction * 100) === pct) agSelect.value = id;
+      }
+    }
     // No results yet: fall back to a full run so the cut is honored instead
     // of silently dropped.
     if (!lastPayload) {
@@ -2276,15 +2327,64 @@ function mergeReSlice(result) {
         refreshSelectionOutputs(p);
       }
     }
+  } else if (
+    "customTarget" in result &&
+    result.customTarget === null &&
+    p.customTarget &&
+    !p.auto &&
+    p.mode === "gridtie"
+  ) {
+    // Fixed-chemistry: nothing solves at the new cut — retire the stale
+    // custom card instead of leaving the previous target's system up.
+    p.customTarget = null;
+    if (selectedKey === "custom") {
+      const fallback = (p.targets || []).find((t) => t && t.solvable) || null;
+      selectedKey = fallback ? "target:" + fallback.id : "custom";
+    }
+    renderTargetCards(p, []);
+    renderFrontierPanel(p);
+    refreshSelectionOutputs(p);
   }
   // Auto grid-tie: the recommendation follows the bill-cut slider. The worker
   // re-derives the banner and focus from the custom target column, so the
   // headline savings and "recommended" system describe the visitor's CURRENT
   // cut — not the fixed 80% one — unless they've explicitly picked a system.
-  if (result.best && p.auto && p.mode === "gridtie") {
-    p.best = result.best;
-    if (result.bestReason) p.bestReason = result.bestReason;
-    if (result.focus) p.focus = result.focus;
+  // An explicitly null best means nothing solves at this cut: retire the stale
+  // recommendation NOW ("best" key falls through to the honest empty state)
+  // rather than leaving the previous target's system on screen.
+  if (p.auto && p.mode === "gridtie" && "best" in result) {
+    p.best = result.best || null;
+    p.bestReason = result.bestReason || null;
+    p.focus = result.focus || null;
+    if (selectedKey === "best" || selectedKey === "focus") {
+      selectedKey = p.best ? "best" : "custom";
+    }
+    // The blue dot must move with the recommendation BEFORE the chart
+    // re-renders below — and vanish (marker cleared) when nothing solves.
+    if (p.frontier) {
+      if (result.best) {
+        p.frontier.marker = {
+          chemistry: result.best.chemistry,
+          capexUsd: Number.isFinite(result.best.costMid)
+            ? result.best.costMid
+            : (Number(result.best.costLo) + Number(result.best.costHi)) / 2,
+          outcomePct:
+            result.customCut && result.customCut.fraction > 1
+              ? Math.round(result.customCut.fraction * 100)
+              : Number.isFinite(result.best.cutPct)
+                ? result.best.cutPct
+                : p.frontier.marker
+                  ? p.frontier.marker.outcomePct
+                  : 100,
+          pvKw: result.best.pvKw,
+          battKwh: result.best.battKwh,
+          pointIndex: null,
+        };
+      } else {
+        p.frontier.marker = null;
+      }
+      frontierSelected = null;
+    }
     renderBestPick(p);
     renderMoneyBar(p);
     // "adopted" included: after a curve click the banner must keep showing
@@ -2338,8 +2438,9 @@ function mergeReSlice(result) {
   syncCutLabel();
   // The cut changed, so any link copied right now must carry it.
   updateShareHash(p, readInputs());
-  // The merged column can shift the curve's span: resync the budget range
-  // (visitor position preserved).
+  // The merged column can shift the curve's span (a surplus target extends it
+  // above the curve's 100% top): resync the budget range (visitor position
+  // preserved).
   if (curveReady()) syncBudgetRange();
 }
 
@@ -2674,6 +2775,29 @@ function curvePool() {
       entry: p.best,
     });
   }
+  // The surplus system (>100% cut) is walkable even though it is not a curve
+  // point: dragging the budget slider past the 100% system lands on it.
+  const anchor = surplusAnchor(p);
+  if (anchor && Number.isFinite(anchor.capexUsd)) {
+    pool.push({
+      kind: "custom",
+      index: -1,
+      x: anchor.capexUsd,
+      y: anchor.outcomePct,
+      pvKw: anchor.pvKw,
+      battKwh: anchor.battKwh,
+      chem: anchor.chemistry,
+      chemLabel: anchor.chemLabel,
+      entry:
+        resolveSelected(p) &&
+        resolveSelected(p).pvKw === anchor.pvKw &&
+        resolveSelected(p).battKwh === anchor.battKwh
+          ? resolveSelected(p)
+          : p.customCut && p.customCut.best
+            ? p.customCut.best
+            : p.customTarget,
+    });
+  }
   return pool;
 }
 
@@ -2726,6 +2850,18 @@ function commitCurvePreview(q, opts = {}) {
     selectedKey = "best";
     renderFrontierPanel(p);
     refreshSelectionOutputs(p);
+  } else if (q.kind === "custom") {
+    // The >100% surplus system: not a curve point (index −1), so selection
+    // goes through the payload's own custom-target state, which renderers
+    // already resolve (resolveSelected's "custom" branch).
+    adoptedEntry = null;
+    frontierSelected = null;
+    selectedKey = "custom";
+    const p = lastPayload;
+    if (p) {
+      renderFrontierPanel(p);
+      refreshSelectionOutputs(p);
+    }
   } else {
     adoptFrontierPoint(q.index, { showModal: false, keepSlider: true });
   }
@@ -2902,12 +3038,17 @@ function syncBudgetRange(seat = false) {
   const p = lastPayload;
   const pts = (p && p.frontier && p.frontier.points) || [];
   if (!slider || pts.length < 2) return;
-  const xs = pts.map((q) => q.capexUsd).filter(Number.isFinite);
   const m = p.frontier.marker;
+  // A surplus target (>100% cut) sizes a system beyond the curve's 100% top;
+  // budgetSpanMax extends the slider's ceiling with its cost so the budget
+  // slider can actually reach what the cut slider just asked for. The floor
+  // stays the curve's own cheapest system.
+  const anchor = surplusAnchor(p);
+  const xs = pts.map((q) => q.capexUsd).filter(Number.isFinite);
   if (m && Number.isFinite(m.capexUsd)) xs.push(m.capexUsd);
   if (!xs.length) return;
   const lo = Math.min(...xs),
-    hi = Math.max(...xs);
+    hi = budgetSpanMax(pts, m ? m.capexUsd : null, anchor);
   slider.min = String(Math.floor(lo));
   slider.max = String(Math.ceil(hi));
   slider.step = String(Math.max(1, Math.round((hi - lo) / 200)));
@@ -4557,11 +4698,19 @@ function renderBestPick(p) {
     grid.innerHTML = "";
   }
   if (!p.best) {
+    // Name the binding constraint when the matrix recorded one (e.g. the
+    // optional roof-area cap) — otherwise this reads as a site problem when
+    // the visitor's own input caused it.
+    const envNote = p.matrix
+      ? Object.values(p.matrix.cells || {}).find((c) => c && c.envelopeNote)
+      : null;
     wrap.appendChild(
       el(
         "p",
         { style: "color:var(--text-muted);font-size:0.9rem;" },
-        "No chemistry produced a practical system at this site and load. Try lowering the reliability target or the daily kWh.",
+        envNote && envNote.envelopeNote
+          ? `No chemistry can reach this target here: ${envNote.envelopeNote}. Clear the roof/yard area box to search the full envelope, or lower the target.`
+          : "No chemistry produced a practical system at this site and load. Try lowering the reliability target or the daily kWh.",
       ),
     );
     return;
@@ -4930,11 +5079,20 @@ function matrixHtml(p) {
             ? ` data-sel="${key}" role="button" tabindex="0" aria-label="Select ${escapeAttr(row.label)} at ${escapeAttr(col.label)}" style="cursor:pointer;"`
             : "";
           if (!cell || !cell.solvable) {
-            const reasonText =
-              cell && cell.reason
-                ? INFEASIBLE_HINTS[cell.reason]?.title || "not practical here"
+            const hint =
+              cell && cell.reason ? INFEASIBLE_HINTS[cell.reason] : null;
+            const reasonText = hint
+              ? hint.title
+              : cell && cell.reason
+                ? cell.reason
                 : "not practical here";
-            return `<td${cls}><span style="color:var(--text-muted);font-size:0.78rem;line-height:1.35;">${escapeHtml(reasonText)}</span></td>`;
+            const detail =
+              cell && cell.envelopeNote
+                ? ` — ${escapeHtml(cell.envelopeNote)}`
+                : hint && hint.body
+                  ? `<br><span style="font-size:0.7rem;opacity:0.85;">${escapeHtml(hint.body)}</span>`
+                  : "";
+            return `<td${cls}><span style="color:var(--text-muted);font-size:0.78rem;line-height:1.35;">${escapeHtml(reasonText)}${detail}</span></td>`;
           }
           let rel;
           if (p.mode === "offgrid")
@@ -7277,6 +7435,9 @@ function renderResults(p) {
   const cutRow = $("cutSliderRow");
   if (cutRow) cutRow.style.display = isGT ? "block" : "none";
   syncCutLabel();
+  // Keep the roof-area cap note truthful after every render (share-link
+  // restores and map fills can change the input without an input event).
+  updateRoofAreaCapNote();
 
   renderWorstMonthCaveat(p);
 
@@ -8627,15 +8788,11 @@ export function initSizingUI() {
     renderAppliances();
     setupSimpleMode();
     setupRoofMap();
+    setupRoofAreaInput();
     updateGuidedProgress();
     const climateToggle = $("climateAwareToggle");
     if (climateToggle)
       climateToggle.addEventListener("change", () => {
-        if (quickMode && lastPayload) run(true);
-      });
-    const roofArea = $("roofAreaM2");
-    if (roofArea)
-      roofArea.addEventListener("input", () => {
         if (quickMode && lastPayload) run(true);
       });
 
@@ -8816,6 +8973,18 @@ export function initSizingUI() {
     const autoTargetNode = $("autoTarget");
     if (autoTargetNode)
       autoTargetNode.addEventListener("change", () => {
+        // One cut target, two controls: choosing a target in the form must
+        // move the results slider to the same cut (and vice versa), so the
+        // "your target" column, the recommendation and the select can never
+        // disagree after a fresh run.
+        const map = { cut100: 100, cut80: 80, cut60: 60, cut40: 40 };
+        const pct = map[autoTargetNode.value];
+        if (pct) {
+          customCutFraction = pct / 100;
+          const cutIn = $("cutSlider");
+          if (cutIn) cutIn.value = String(pct);
+          syncCutLabel();
+        }
         if (quickMode && lastPayload) run();
       });
 
