@@ -191,7 +191,11 @@ test("PERF-CONTRACT: identical repeat run replays the cached payload", async () 
     // fresh compute is never stamped.
     const repeat = await runSizing({ ...msg, type: "run", seq: 77, epoch: 9 });
     const { repeat: marker, ...repeatBody } = repeat;
-    assert.deepEqual(repeatBody, first, "repeat replays the same payload values");
+    assert.deepEqual(
+      repeatBody,
+      first,
+      "repeat replays the same payload values",
+    );
     assert.equal(marker, true, "hit is stamped as a repeat");
     assert.equal(first.repeat, undefined, "fresh compute is not a repeat");
     assert.equal(RUN_PAYLOAD_CACHE.hits, 1);
