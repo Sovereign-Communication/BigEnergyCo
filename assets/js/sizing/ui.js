@@ -147,6 +147,11 @@ let pendingRun = null; // { quiet } — the latest superseding request
 // load factor for an instant rescale against the retained payload.
 let lastRunInput = null;
 
+// JSON fingerprint of the inputs behind the last successful run: an identical
+// next run is answered from the engine's payload cache in milliseconds, so
+// the UI skips the loading choreography entirely (isInstantRepeat in run()).
+let lastOkKey = null;
+
 // A quiet run (bill-slider refine after a rescale) must not spin the button,
 // flash status, or scroll — the screen already shows the rescaled numbers.
 let lastRunQuiet = false;
@@ -243,6 +248,151 @@ function setStatus(text) {
   const s = $("sizingStatus");
 
   if (s) s.textContent = text;
+}
+
+// ── Staged loading pipeline ───────────────────────────────────────────────
+// Data loading must be legible: a determinate stepper (City → Weather →
+// Simulating → Rendering) with a live per-chunk weather bar and elapsed
+// seconds. Weather chunk progress comes through the worker; simulation
+// length is unknowable up front, so its bar is indeterminate by design.
+const PIPELINE_STEP_IDS = ["pipeCity", "pipeWeather", "pipeSim", "pipeRender"];
+const PIPELINE_LABELS = {
+  pipeCity: "Location",
+  pipeWeather: "Weather",
+  pipeSim: "Simulating",
+  pipeRender: "Rendering",
+};
+let pipelineTimer = null;
+
+function pipelineEl() {
+  return $("loadingPipeline");
+}
+
+function pipelineStart(stage = "city") {
+  const wrap = pipelineEl();
+  if (!wrap) return;
+  const started = Date.now();
+  const note = $("pipeElapsed");
+  wrap.style.display = "block";
+  wrap.setAttribute("aria-busy", "true");
+  if (note) note.textContent = "";
+  if (pipelineTimer) clearInterval(pipelineTimer);
+  pipelineTimer = setInterval(() => {
+    if (note) {
+      const s = ((Date.now() - started) / 1000).toFixed(1);
+      note.textContent = `${s}s elapsed`;
+    }
+  }, 250);
+  pipelineStage(stage);
+}
+
+function pipelineStage(stage, weatherDone = 0, weatherTotal = 0) {
+  const wrap = pipelineEl();
+  if (!wrap) return;
+  const order = PIPELINE_STEP_IDS.indexOf("pipe" + stage);
+  if (order < 0) return;
+  PIPELINE_STEP_IDS.forEach((id, i) => {
+    const node = $(id);
+    if (!node) return;
+    const state = i < order ? "done" : i === order ? "active" : "todo";
+    node.dataset.state = state;
+    if (id === "pipeWeather") {
+      const bar = $("pipeWeatherBar");
+      const txt = $("pipeWeatherTxt");
+      if (bar && txt) {
+        if (i === order && weatherTotal > 0) {
+          bar.dataset.mode = "determinate";
+          const pct = Math.round((weatherDone / weatherTotal) * 100);
+          bar.style.setProperty("--pipe-pct", pct + "%");
+          txt.textContent = `${weatherDone}/${weatherTotal} satellite chunks`;
+        } else {
+          bar.dataset.mode = "indeterminate";
+          bar.style.setProperty("--pipe-pct", "0%");
+          txt.textContent =
+            i < order ? "cached" : i === order ? "reaching satellite…" : "";
+        }
+      }
+    }
+  });
+}
+
+function pipelineStop(success) {
+  if (pipelineTimer) {
+    clearInterval(pipelineTimer);
+    pipelineTimer = null;
+  }
+  const wrap = pipelineEl();
+  if (!wrap) return;
+  wrap.setAttribute("aria-busy", "false");
+  if (success) {
+    wrap.style.display = "none";
+  } else {
+    // Keep the stepper visible on failure with a failure accent so the
+    // visitor can see HOW FAR the pipeline got before the honest error.
+    const active =
+      $("pipeSim")?.dataset.state === "active" ? "pipeSim" : "pipeWeather";
+    const node = $(active);
+    if (node) node.dataset.state = "failed";
+  }
+}
+
+// Speed note: a small honest badge explaining WHY a run was instant.
+// Three flavors: repeat of this exact configuration (payload cache), cached
+// weather for this site, or nothing (cold compute — no badge, no spin).
+function showSpeedNote(kind, meta) {
+  const note = $("speedNote");
+  if (!note) return;
+  const where =
+    meta &&
+    (meta.offlineCity ||
+      (meta.latitude !== undefined
+        ? `${Math.round(meta.latitude * 100) / 100}, ${Math.round(meta.longitude * 100) / 100}`
+        : ""));
+  if (kind === "repeat") {
+    note.textContent =
+      "⚡ Instant — repeat of this exact setup (computed moments ago)";
+  } else if (kind === "cache") {
+    note.textContent = `⚡ Instant — ${meta && meta.offline ? "offline typical-year" : "cached satellite weather"}${where ? ` for ${where}` : ""}`;
+  } else {
+    note.textContent = "";
+    return;
+  }
+  note.style.display = "block";
+}
+
+function hideSpeedNote() {
+  const note = $("speedNote");
+  if (note) note.style.display = "none";
+}
+
+// Background weather prefetch: called the moment a location resolves, so
+// the ~2 MB satellite pull overlaps the visitor's form-filling instead of
+// starting at the click. The prefetch runs INSIDE the sizing worker (same
+// module instance as the runs): its own in-flight dedupe guarantees a
+// single network pull even when a run starts mid-prefetch, and the warmed
+// memo lands exactly where runSizing will look. Deduped per site on this
+// side too (WARMED_SITES). Errors are silent here by design — the run path
+// owns the honest fallback story.
+const WARMED_SITES = new Set();
+let prefetchSeq = 0;
+function warmSiteWeather(lat, lon) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+  const key = `${lat.toFixed(2)},${lon.toFixed(2)}`;
+  if (WARMED_SITES.has(key)) return;
+  WARMED_SITES.add(key);
+  try {
+    // Booting the worker here also pre-warms the engine module graph, so
+    // the first run skips worker startup too.
+    ensureWorker().postMessage({
+      type: "prefetch",
+      seq: ++prefetchSeq,
+      latitude: lat,
+      longitude: lon,
+      years: 5,
+    });
+  } catch {
+    /* worker unavailable: the run path fetches as before */
+  }
 }
 
 function applySimpleMode() {
@@ -1185,6 +1335,12 @@ function setCoords(lat, lon, label, region, country) {
 
   currencyTouched = false;
 
+  // Location just resolved: start pulling this site's satellite weather in
+  // the background NOW, so by the time the visitor reaches "Show my
+  // options" the ~2 MB pull has already landed (or come from cache). All
+  // location paths (city suggestion, typed resolution, GPS, shared links)
+  // funnel through here; warmSiteWeather dedupes per site.
+  warmSiteWeather(lat, lon);
   if (
     lastPayload &&
     lastPayload.input &&
@@ -1931,8 +2087,23 @@ function run(quiet = false) {
     return;
   }
 
-  if (!quiet)
+  // Coordinates are valid from here: make sure the satellite weather for
+  // this site is already warming (deduped; no-op when warm or cached).
+  warmSiteWeather(inp.latitude, inp.longitude);
+
+  // A repeat of the exact previous configuration is answered from the
+  // engine's payload cache in milliseconds — skip the loading choreography
+  // (status line, stepper, elapsed timer) so the refresh is genuinely
+  // instant instead of flashing "Loading…" for 40 ms.
+  const isInstantRepeat =
+    !!lastPayload && lastOkKey !== null && JSON.stringify(inp) === lastOkKey;
+
+  if (!quiet && !isInstantRepeat) {
     setStatus(inp.mode === "gridtie" ? t("statusGridtie") : t("statusOffgrid"));
+    hideSpeedNote();
+    pipelineStart("city");
+    pipelineStage("Weather");
+  }
 
   const btn = $("btnRunSizing");
 
@@ -2790,6 +2961,23 @@ function ensureWorker() {
     });
 
     worker.onmessage = (ev) => {
+      // Prefetch completion is informational only: it must NEVER fall
+      // through to the run-completion bookkeeping below (that would clear
+      // workerBusy while a real run is still computing).
+      if (ev.data?.type === "prefetchDone") return;
+      // Weather progress from the worker: chunk-level counts drive the
+      // determinate bar; the resolved signal moves the stepper onto the
+      // simulation stage. Gated on the same seq/epoch staleness checks as
+      // payloads, so superseded runs can never paint the current pipeline.
+      // Progress never holds or frees the worker.
+      if (ev.data?.type === "progress") {
+        if (ev.data.seq === runToken && ev.data.epoch === payloadEpoch) {
+          if (ev.data.stage === "weatherChunk")
+            pipelineStage("Weather", ev.data.done, ev.data.total);
+          else if (ev.data.stage === "weather") pipelineStage("Sim");
+        }
+        return;
+      }
       if (ev.data?.type === "ok") {
         // A stale response from an older queued run must never clobber the
         // latest slider position's results — but it still frees the worker
@@ -2805,6 +2993,21 @@ function ensureWorker() {
           selectedKey = "focus";
           lastRunAdoptsFocus = false;
         }
+
+        // Done loading: fold the stepper away and explain the speed honestly
+        // (repeat configuration → payload replay; cached weather → instant
+        // site; fresh fetch → no badge, the run simply took its time).
+        pipelineStop(true);
+        if (ev.data.payload?.repeat) showSpeedNote("repeat");
+        else if (
+          ev.data.payload?.meta?.fromCache ||
+          ev.data.payload?.meta?.offline
+        )
+          showSpeedNote("cache", ev.data.payload.meta);
+        else hideSpeedNote();
+        // Remember this run's input fingerprint so an identical next run
+        // (there-and-back slider moves, re-clicks) skips the loading UI.
+        lastOkKey = lastRunInput ? JSON.stringify(lastRunInput) : null;
 
         renderResults(ev.data.payload);
 
@@ -2863,6 +3066,9 @@ function ensureWorker() {
           ev.data.stream === "slice" ? s === sliceToken : s === runToken;
         if (s !== undefined && !fresh) return;
         setStatus("Warning: " + ev.data.message);
+        // A failed run stops the stepper with a failure accent so the
+        // visitor sees how far the pipeline got.
+        if (ev.data.stream !== "slice") pipelineStop(false);
       }
 
       // A finished full run frees the worker (a reSlice never holds it).
@@ -2878,6 +3084,7 @@ function ensureWorker() {
     worker.onerror = () => {
       setStatus(t("errorSim") + "Sizing engine failed to load.");
 
+      pipelineStop(false);
       workerBusy = false;
       sliceBusy = false;
       restoreRunButton();

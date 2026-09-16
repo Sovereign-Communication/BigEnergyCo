@@ -234,6 +234,44 @@ export function siteMemoKey(latitude, longitude, years = 5) {
   const y = Number(years) || 5;
   return `${la.toFixed(2)},${lo.toFixed(2)},${y}y`;
 }
+
+// Prefetch hook: warms the weather layers (memory → compact persistent →
+// Cache Storage → localStorage → network) for a site BEFORE the visitor
+// clicks Run. Same memo key shape as fetchWeatherOnce, so a completed
+// prefetch is always recognized as a memo hit at run time. Returns
+// `{ hit, offline, meta }`: hit=false means layers were already warm, so
+// callers must not duplicate progress UI. Errors are swallowed here by
+// design — runSizing's own fallback path reports them honestly.
+export async function prefetchSiteWeather(
+  latitude,
+  longitude,
+  years = 5,
+  onProgress = null,
+) {
+  const key = siteMemoKey(latitude, longitude, years);
+  if (SITE_MEMO.key === key && SITE_MEMO.series)
+    return {
+      hit: true,
+      offline: !!SITE_MEMO.series.meta.offline,
+      meta: SITE_MEMO.series.meta,
+    };
+  WEATHER_MEMO_STATS.misses++;
+  try {
+    const series = await fetchWeatherDefault({
+      latitude,
+      longitude,
+      years,
+      ...(typeof onProgress === "function" ? { onProgress } : {}),
+    });
+    SITE_MEMO.key = key;
+    SITE_MEMO.series = series;
+    return { hit: false, offline: !!series.meta.offline, meta: series.meta };
+  } catch {
+    // Leave the memo empty: runSizing's fetchWeatherWithFallback (offline
+    // typical-year synthesis) still owns the honest failure story.
+    return { hit: false, offline: false, meta: null };
+  }
+}
 async function fetchWeatherOnce(opts) {
   const key = siteMemoKey(opts.latitude, opts.longitude, opts.years);
   if (SITE_MEMO.key === key && SITE_MEMO.series) {
@@ -287,7 +325,56 @@ async function fetchWeatherWithFallback(opts) {
   }
 }
 
+// ── Repeated-configuration payload cache ──────────────────────────────────
+// The sizing searches are deterministic: identical inputs must always
+// produce the identical payload. Sliders round-trip their exact values, so
+// a bill edit there-and-back (or any repeat of the same configuration)
+// replays the already-computed result instantly instead of re-running the
+// multi-second lattice searches. The engine memoizes weather; this memoizes
+// the ENGINE OUTPUT above it. Bypassed by injected weather
+// (deps.fetchWeather) so test fixtures stay hermetic.
+// Single-slot: one prior (inputs → payload) pair. Weather is already
+// memoized per site; the dominant repeat is the CURRENT site and
+// configuration, so one slot captures it with zero eviction policy.
+export const RUN_PAYLOAD_CACHE = { key: null, payload: null, hits: 0 };
+export function clearRunPayloadCache() {
+  RUN_PAYLOAD_CACHE.key = null;
+  RUN_PAYLOAD_CACHE.payload = null;
+  RUN_PAYLOAD_CACHE.hits = 0;
+}
+
+// Canonical cache key: the real sizing inputs, sorted by name, with the
+// transport envelope (type/seq/epoch) stripped — a "run" message and a
+// direct call with the same physics must share one cache entry.
+function payloadCacheKey(msg) {
+  const skip = new Set(["type", "seq", "epoch"]);
+  const keys = Object.keys(msg)
+    .filter((k) => !skip.has(k))
+    .sort();
+  const canon = {};
+  for (const k of keys) canon[k] = msg[k];
+  return JSON.stringify(canon);
+}
+
 export async function runSizing(msg, deps = {}) {
+  if (!deps.fetchWeather) {
+    const cacheKey = payloadCacheKey(msg);
+    if (RUN_PAYLOAD_CACHE.key === cacheKey) {
+      RUN_PAYLOAD_CACHE.hits++;
+      // repeat:true tells the UI to show the "instant — repeat" note. A
+      // shallow copy: callers treat the payload as read-only, and one
+      // extra top-level field costs nothing next to the seconds saved.
+      return { ...RUN_PAYLOAD_CACHE.payload, repeat: true };
+    }
+    const payload = await runSizingUncached(msg, deps);
+    RUN_PAYLOAD_CACHE.key = cacheKey;
+    RUN_PAYLOAD_CACHE.payload = payload;
+    return payload;
+  }
+  return runSizingUncached(msg, deps);
+}
+
+async function runSizingUncached(msg, deps = {}) {
   const {
     latitude,
     longitude,
@@ -409,7 +496,19 @@ export async function runSizing(msg, deps = {}) {
     latitude,
     longitude,
     years,
+    // Optional UI progress hooks (injected by the worker shell; absent in
+    // direct Node/test calls). onProgress streams per-chunk weather counts
+    // for the determinate bar; onWeatherResolved moves the pipeline onto
+    // simulation. Memo hits skip the hooks entirely — no chunks to count.
+    ...(typeof msg.onProgress === "function"
+      ? { onProgress: msg.onProgress }
+      : {}),
   });
+  if (typeof msg.onWeatherResolved === "function") {
+    try {
+      msg.onWeatherResolved();
+    } catch {}
+  }
   const hours = series.hours;
   const climate = climateSummary(
     hours,

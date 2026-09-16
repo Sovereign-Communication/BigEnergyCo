@@ -14,10 +14,35 @@
 // carry a stream tag ("run"/"slice"/"unknown") for the same stale check.
 // Unknown types answer with an error instead of hanging the spinner.
 //
-import { runSizing } from "./run.js?v=20260915c";
+import { runSizing, prefetchSiteWeather } from "./run.js?v=20260915c";
 
 self.onmessage = async (ev) => {
   const msg = ev.data;
+
+  // Weather prefetch: warm the memoized weather layers for a site BEFORE
+  // the visitor clicks Run. Same module instance as the runs, so the
+  // warmed SITE_MEMO/in-flight dedupe land exactly where runSizing looks
+  // (a run starting mid-prefetch awaits the same in-flight promise —
+  // never a second network pull). Progress chunks stream back so the UI
+  // can make background loading legible. The reply is informational.
+  if (msg?.type === "prefetch") {
+    prefetchSiteWeather(
+      msg.latitude,
+      msg.longitude,
+      msg.years || 5,
+      (done, total) =>
+        self.postMessage({
+          type: "progress",
+          stage: "prefetchChunk",
+          done,
+          total,
+          seq: msg.seq,
+        }),
+    )
+      .catch(() => {})
+      .finally(() => self.postMessage({ type: "prefetchDone", seq: msg.seq }));
+    return;
+  }
 
   if (msg?.type === "reSlice") {
     try {
@@ -43,6 +68,25 @@ self.onmessage = async (ev) => {
   if (msg?.type === "run") {
     try {
       const { type: _t, ...rest } = msg;
+      // Inject live progress hooks (functions cannot cross postMessage):
+      // per-chunk weather counts for the determinate bar, and the
+      // weather-resolved signal that moves the stepper onto simulation.
+      rest.onProgress = (done, total) =>
+        self.postMessage({
+          type: "progress",
+          stage: "weatherChunk",
+          done,
+          total,
+          seq: msg.seq,
+          epoch: msg.epoch,
+        });
+      rest.onWeatherResolved = () =>
+        self.postMessage({
+          type: "progress",
+          stage: "weather",
+          seq: msg.seq,
+          epoch: msg.epoch,
+        });
       const payload = await runSizing({ ...rest, incrementalCut: false });
       self.postMessage({ type: "ok", seq: msg.seq, epoch: msg.epoch, payload });
     } catch (e) {
