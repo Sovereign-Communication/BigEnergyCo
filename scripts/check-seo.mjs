@@ -177,10 +177,34 @@ for (const page of pages) {
   }
 }
 
+// Search Console verification tags must survive refactors: a missing tag can
+// silently un-verify a property and stall indexing. The first token verifies
+// the `freeoffgridcalculator.com` Domain property; the second is the legacy
+// pages.dev URL-prefix token (kept until that property is retired).
+const GSC_REQUIRED_TOKEN = "zVFiMH4WnfvhMHtnivIgDm_-5XtelVgcL709oHh3pWk";
+
 // robots.txt basics
 const robots = readFileSync("robots.txt", "utf8");
 if (!/Sitemap: https:\/\/freeoffgridcalculator\.com\/sitemap\.xml/.test(robots))
   fail("robots.txt: missing sitemap directive");
 else ok("robots.txt: sitemap directive present");
+
+// Search Console verification gate: index.html must keep both GSC tags.
+const homeHtml = readFileSync("index.html", "utf8");
+const gscTags = [
+  ...homeHtml.matchAll(
+    /<meta\s+name="google-site-verification"\s+content="([^"]+)"/g,
+  ),
+].map((m) => m[1]);
+if (gscTags.includes(GSC_REQUIRED_TOKEN))
+  ok("index.html: Google Search Console (Domain property) tag present");
+else fail("index.html: missing Google Search Console Domain-property tag");
+const LEGACY_PAGESDEV_TOKEN = "iXiF6PQy5IhjMtll2YzS3-amK6BtApSkpdlKM73dSEc";
+if (gscTags.includes(LEGACY_PAGESDEV_TOKEN))
+  ok("index.html: legacy pages.dev GSC tag retained");
+else
+  fail(
+    "index.html: legacy pages.dev GSC tag missing (keep until that property is retired)",
+  );
 
 process.exit(failures ? 1 : 0);

@@ -119,9 +119,9 @@ Browser ──► GitHub Pages (static: index.html, blog/, assets/)
 
 ## Search Console & indexing
 
-The site verifies via the `google-site-verification` meta tag in `index.html`. To keep indexing healthy:
+Google Search Console verification uses two `google-site-verification` meta tags in `index.html`: the active one for the **Domain property** `freeoffgridcalculator.com` (also verified via a DNS TXT record in Cloudflare), plus the legacy tag of the old `pages.dev` URL-prefix property. To keep indexing healthy:
 
-1. **Google Search Console** — open [search.google.com/search-console](https://search.google.com/search-console), select the verified property for `bigenergyco.pages.dev`, then **Sitemaps → submit** `https://freeoffgridcalculator.com/sitemap.xml` (re-submit after any new page ships).
+1. **Google Search Console** — open [search.google.com/search-console](https://search.google.com/search-console), select the **`freeoffgridcalculator.com` Domain property**, then **Sitemaps → submit** `https://freeoffgridcalculator.com/sitemap.xml` (re-submit after any new page ships).
 2. **URL Inspection** → "Request indexing" after publishing a new blog post.
 3. **Bing Webmaster Tools** — import from Google Search Console (one click); same sitemap applies.
 4. Structured data is embedded on-page: `WebApplication` + `FAQPage` (home), `Article` + `FAQPage` (each post). Validate changes at [validator.schema.org](https://validator.schema.org) before deploying.
