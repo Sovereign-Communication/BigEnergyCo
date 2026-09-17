@@ -21,23 +21,16 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { normalizeBase } from "./lib/base-url.mjs";
+
 // BASE must always end in "/": sub-pages are built as `${BASE}solar-heatmap/`,
 // so a slash-less argument like `https://example.com` would otherwise produce
 // the invalid host `example.comsolar-heatmap` (Chrome error page → false
-// heatmap gate failures). The .replace canonicalizes any argv form to a
-// trailing slash (or the root path for an origin with a pathname).
+// heatmap gate failures). normalizeBase (scripts/lib/base-url.mjs, unit-tested)
+// canonicalizes any argv form to a trailing slash.
 const BASE = normalizeBase(
   process.argv[2] || "https://freeoffgridcalculator.com/",
 );
-function normalizeBase(raw) {
-  try {
-    const url = new URL(raw);
-    const path = url.pathname === "/" ? "/" : url.pathname.replace(/\/$/, "/");
-    return url.origin + path;
-  } catch {
-    return raw.endsWith("/") ? raw : raw + "/";
-  }
-}
 const DEBUG_PORT = 19222;
 const RUN_TIMEOUT_MS = 180000;
 // Localhost/base-URL runs are harness-only: a few gates are origin-bound

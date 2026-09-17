@@ -4,6 +4,8 @@
 import { readFileSync, existsSync } from "node:fs";
 import { execSync } from "node:child_process";
 
+import { sitemapGaps } from "./lib/gates.mjs";
+
 let failures = 0;
 const fail = (msg) => {
   console.error(`FAIL ${msg}`);
@@ -12,10 +14,12 @@ const fail = (msg) => {
 const ok = (msg) => console.log(`OK   ${msg}`);
 
 // Discover public HTML pages from the deploy allowlist (single source of truth:
-// the deploy script). Falls back to a static list if git is unavailable.
+// the deploy script). --list is the pure query: --check builds the staging dir,
+// which concurrent gates would race on. Falls back to a static list if git is
+// unavailable.
 function publicPages() {
   try {
-    const out = execSync("node scripts/deploy-pages-local.mjs --check", {
+    const out = execSync("node scripts/deploy-pages-local.mjs --list", {
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
     });
@@ -175,14 +179,24 @@ for (const url of urls) {
   else fail(`sitemap: ${url} has no matching file`);
 }
 
-// Every public content page should be in the sitemap
-for (const page of pages) {
-  if (page === "index.html") continue;
-  const urlPath = page.replace(/\/index\.html$/, "/");
-  if (!urls.some((u) => u.includes(urlPath.replace("blog/", "blog/")))) {
-    fail(`sitemap: page ${page} missing from sitemap.xml`);
-  }
-}
+// Every public content page needs its OWN sitemap entry, and every entry needs
+// a page. Both directions are compared as exact URLs: the old test was a
+// substring search for the page path, which a neighbouring path
+// (`/blog/escape-load-shedding-2/`) or a lookalike host satisfied — and a
+// no-op path replacement inside it made the result meaningless.
+const { missing: sitemapMissing, extra: sitemapExtra } = sitemapGaps(
+  pages,
+  urls,
+  "https://freeoffgridcalculator.com/",
+);
+for (const url of sitemapMissing.slice(0, 8))
+  fail(`sitemap: page ${url} missing from sitemap.xml`);
+if (sitemapMissing.length > 8)
+  fail(`sitemap: ${sitemapMissing.length - 8} more page(s) missing`);
+for (const url of sitemapExtra.slice(0, 8))
+  fail(`sitemap: ${url} is listed but no page deploys there`);
+if (!sitemapMissing.length && !sitemapExtra.length)
+  ok(`sitemap: all ${pages.length} public pages listed, no stale entries`);
 
 // Search Console verification tags must survive refactors: a missing tag can
 // silently un-verify a property and stall indexing. The first token verifies

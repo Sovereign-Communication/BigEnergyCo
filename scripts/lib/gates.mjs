@@ -18,14 +18,20 @@ import { posix } from "node:path";
  */
 export function deployedFiles() {
   try {
-    const out = execSync("node scripts/deploy-pages-local.mjs --check", {
+    // --list, not --check: a pure query. --check BUILDS the staging directory
+    // (deploy.yml depends on that), so calling it from several gates at once
+    // raced on the shared dir and could fail with ENOTEMPTY.
+    const out = execSync("node scripts/deploy-pages-local.mjs --list", {
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
     });
+    // Every stamped line is a deployed path; the only other output is the
+    // header and the closing note. (`_headers` and `_redirects` have no dot, so
+    // a "contains a dot" heuristic used to drop two real files.)
     return out
       .split("\n")
       .map((l) => l.trim())
-      .filter((l) => l && l.includes(".") && !l.startsWith("--"));
+      .filter((l) => l && l !== "Deployable files:" && !l.startsWith("--"));
   } catch {
     return [];
   }
@@ -330,4 +336,47 @@ export function familyGaps(locales, suffixes = ["Grid", "Offgrid"]) {
     }
   }
   return gaps;
+}
+
+// ── URL identity ────────────────────────────────────────────────────────────
+// `url.startsWith(ORIGIN)` and `sitemap.some((u) => u.includes(path))` both
+// answer "does this string mention that host?" rather than "is this OUR page?".
+// A lookalike host (`https://freeoffgridcalculator.com.evil.example/…`) or a
+// neighbouring path (`/blog/escape-load-shedding-2/`) satisfied those tests, so
+// a sitemap entry pointing at another site would have passed validation. Both
+// checks now compare real URLs. Pure, so both can be unit-tested.
+
+/** @returns {null} when the URL is unparseable or not on `origin`. */
+export function sameOriginPath(url, origin) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (parsed.origin !== origin) return null;
+  return parsed.pathname;
+}
+
+/**
+ * Sitemap completeness: every public page needs its OWN entry, compared as an
+ * exact URL — never as a substring.
+ *
+ * @param {string[]} pages deploy-allowlist page paths (`blog/x/index.html`)
+ * @param {string[]} urls sitemap `<loc>` values
+ * @param {string} site absolute origin with a trailing slash
+ * @returns {{missing:string[], extra:string[]}}
+ */
+export function sitemapGaps(pages, urls, site) {
+  const listed = new Set(urls);
+  const expected = pages
+    .filter((p) => p.endsWith(".html"))
+    .map((p) =>
+      p === "index.html" ? site : site + p.replace(/\/index\.html$/, "/"),
+    );
+  const expectedSet = new Set(expected);
+  return {
+    missing: [...expectedSet].filter((u) => !listed.has(u)),
+    extra: urls.filter((u) => !expectedSet.has(u)),
+  };
 }
