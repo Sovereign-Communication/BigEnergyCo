@@ -6,8 +6,12 @@
 // billing lock is lifted, switch back to build_type=workflow and delete this
 // branch.
 //
-// Usage: node scripts/deploy-pages-local.mjs [--check] [--stage <dir>]
-//   --check: build only, print contents, do not push
+// Usage: node scripts/deploy-pages-local.mjs [--check] [--list] [--stage <dir>]
+//   --check: build only, print contents, do not push (deploy.yml and the
+//     smoke harness rely on this BUILDING the staging dir)
+//   --list: print the same file list without building anything — a pure query
+//     for the gates, so several of them can ask concurrently without racing on
+//     a shared staging directory
 //   --stage <dir>: staging directory (default _pages_staging). The GitHub
 //     workflow reuses this same script with --stage _pages, so the allowlist
 //     below is the SINGLE source of truth for both deploys.
@@ -26,6 +30,7 @@ const STAGE = join(
     : "_pages_staging",
 );
 const CHECK = process.argv.includes("--check");
+const LIST = process.argv.includes("--list");
 
 const ALLOWLIST = [
   "index.html",
@@ -62,6 +67,54 @@ function sh(cmd, opts = {}) {
     stdio: opts.quiet ? "pipe" : "inherit",
     encoding: "utf8",
   });
+}
+
+// Top-level guard: nothing may be published outside the expected site dirs.
+const allowedTop = new Set([
+  "index.html",
+  "404.html",
+  "robots.txt",
+  "sitemap.xml",
+  "rss.xml",
+  "llms.txt",
+  "sw.js",
+  "manifest.webmanifest",
+  "_headers",
+  "_redirects",
+  "styles.css",
+  "blog",
+  "about",
+  "solar-calculator",
+  "solar-heatmap",
+  "assets",
+]);
+for (const entry of ALLOWLIST)
+  if (!allowedTop.has(entry.split("/")[0]))
+    throw new Error(`Allowlist entry outside the expected dirs: ${entry}`);
+
+function listFiles(dir, prefix = "") {
+  for (const name of readdirSync(dir).sort()) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) listFiles(p, prefix + name + "/");
+    else console.log("  " + prefix + name);
+  }
+}
+
+// ── pure query: what would ship? ────────────────────────────────────────────
+// No staging directory is touched, so any number of gates can ask at once.
+// The set is identical to a real build's — a staged copy is `cpSync` of these
+// same sources — but the ORDER follows ALLOWLIST; consumers build sets.
+if (LIST) {
+  console.log("Deployable files:");
+  for (const entry of ALLOWLIST) {
+    const src = join(ROOT, entry);
+    // Directory entries keep their own prefix, so the paths are identical to a
+    // staged listing (which walks the staging root).
+    if (statSync(src).isDirectory()) listFiles(src, entry + "/");
+    else console.log("  " + entry);
+  }
+  console.log("\n--list: allowlist only, nothing staged, not pushing.");
+  process.exit(0);
 }
 
 console.log(
@@ -110,39 +163,14 @@ for (const entry of ALLOWLIST) {
   }
 }
 
-// Safety net: refuse to publish anything outside expectations
-const allowedTop = new Set([
-  "index.html",
-  "404.html",
-  "robots.txt",
-  "sitemap.xml",
-  "rss.xml",
-  "llms.txt",
-  "sw.js",
-  "manifest.webmanifest",
-  "_headers",
-  "_redirects",
-  "styles.css",
-  "blog",
-  "about",
-  "solar-calculator",
-  "solar-heatmap",
-  "assets",
-]);
+// Safety net: the staged tree must contain only what the allowlist put there.
 for (const name of readdirSync(STAGE)) {
   if (!allowedTop.has(name))
     throw new Error(`Unexpected file in staging: ${name}`);
 }
 
-function listDir(dir, prefix = "") {
-  for (const name of readdirSync(dir)) {
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) listDir(p, prefix + name + "/");
-    else console.log("  " + prefix + name);
-  }
-}
 console.log("Deployable files:");
-listDir(STAGE);
+listFiles(STAGE);
 
 if (CHECK) {
   console.log("\n--check: built staging only, not pushing.");

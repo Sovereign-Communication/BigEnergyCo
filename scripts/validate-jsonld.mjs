@@ -4,6 +4,8 @@
 // never hand-maintain a page list here.
 import { readFileSync, existsSync } from "node:fs";
 
+import { sameOriginPath } from "./lib/gates.mjs";
+
 const ORIGIN = "https://freeoffgridcalculator.com";
 const sitemap = readFileSync("sitemap.xml", "utf8");
 const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
@@ -14,11 +16,14 @@ if (!locs.length) {
 
 const pages = [];
 for (const url of locs) {
-  if (!url.startsWith(ORIGIN)) {
+  // Compare the parsed ORIGIN, not a string prefix: `startsWith` accepts
+  // `https://freeoffgridcalculator.com.evil.example/…` as our own page, which
+  // would make this validator read another site's HTML path as ours.
+  const path = sameOriginPath(url, ORIGIN);
+  if (path === null) {
     console.error(`FAIL sitemap.xml: unexpected origin ${url}`);
     process.exit(1);
   }
-  const path = url.slice(ORIGIN.length);
   if (!path.endsWith("/")) {
     console.error(
       `FAIL sitemap.xml: non-page URL ${url} (validator covers directory pages)`,
