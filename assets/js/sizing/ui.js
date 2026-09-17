@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260917e";
+import { APPLIANCES } from "./appliances.js?v=20260917h";
 import {
   CITY_CATALOG,
   searchCities,
@@ -23,7 +23,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260917e";
+} from "./cities.js?v=20260917h";
 
 import {
   estimateTariff,
@@ -31,57 +31,62 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260917e";
+} from "./pricing.js?v=20260917h";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260917e";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260917h";
+import {
+  leadAcidChipCopy,
+  leadAcidComparison,
+  leadAcidReferenceCopy,
+} from "./lead-acid.js?v=20260917h";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260917e";
+} from "./bom.js?v=20260917h";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260917e";
+import { BOM_ITEMS } from "../shared/content.js?v=20260917h";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260917e";
+} from "../shared/i18n.js?v=20260917h";
 
-import { LOCALES } from "../shared/locales.js?v=20260917e";
+import { LOCALES } from "../shared/locales.js?v=20260917h";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260917e";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260917e";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260917h";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260917h";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260917e";
+} from "../shared/simple-mode.js?v=20260917h";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260917e";
+} from "./frontier-chart.js?v=20260917h";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260917e";
+} from "./rescale.js?v=20260917h";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260917e";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260917h";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260917e";
-import { persistWizard, restoreWizard } from "./wizard.js?v=20260917e";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260917e";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260917e";
+} from "./map-provider.js?v=20260917h";
+import { persistWizard, restoreWizard } from "./wizard.js?v=20260917h";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260917h";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260917h";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -126,9 +131,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260917e";
+} from "./money.js?v=20260917h";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260917e";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260917h";
 
 let worker = null;
 
@@ -225,6 +230,23 @@ let cachedChartState = null;
 // the recommendation card (everywhere else the curve stands with them).
 let focusFirst = false;
 let curvePreview = null;
+
+// ── Slider cooperation ──────────────────────────────────────────────────────
+// The bill-cut slider and the up-front budget slider are two views of ONE
+// choice, and a live report described them "over-writing each other": the
+// budget slider was re-seated onto the recommendation by every re-render, so a
+// cut edit silently threw away the budget the visitor had just dialed in, and
+// picking a budget point left the cut control (slider + form select) stale.
+//
+// Rule: whichever control the visitor just touched owns the truth, the other
+// follows it, and only a genuinely new scenario resets both.
+//   * budgetPinnedUsd — set while (and after) the visitor uses the budget
+//     slider: re-renders keep that position instead of re-seating on the
+//     marker. Cleared by a fresh run (new inputs/location/mode).
+let budgetPinnedUsd = null;
+// Set when the bill-cut slider is the control the visitor just moved: the
+// recommendation is about to move, so the budget thumb follows it once.
+let followMarkerOnce = false;
 
 // Bill slider bounds, expressed in kWh/day and converted to local currency.
 // Wide enough to fantasize (estate-scale loads); the engine, not the slider,
@@ -2243,6 +2265,24 @@ function syncCutLabel() {
         : `Cut ~${v}% of your bill`;
 }
 
+// ONE place that writes the bill-cut target, so the slider, the form's
+// "Bill-cut target" select and the sizing input can never disagree. Picking a
+// point on the budget curve IS choosing a cut %, so that path calls this too.
+function syncCutControls(pct) {
+  const v = Math.min(150, Math.max(1, Math.round(pct)));
+  customCutFraction = v / 100;
+  const slider = $("cutSlider");
+  if (slider) slider.value = String(v);
+  syncCutLabel();
+  const agSelect = $("autoTarget");
+  if (agSelect) {
+    const map = { cut100: 100, cut80: 80, cut60: 60, cut40: 40 };
+    for (const [id, pct] of Object.entries(map)) {
+      if (v === pct) agSelect.value = id;
+    }
+  }
+}
+
 function setupCutSlider() {
   const slider = $("cutSlider");
   if (!slider) return;
@@ -2262,17 +2302,14 @@ function setupCutSlider() {
   });
 
   slider.addEventListener("change", () => {
-    customCutFraction = (parseInt(slider.value, 10) || 1) / 100;
-    // The form's "Bill-cut target" select and this slider are ONE control in
-    // two places: when the slider lands exactly on a select option, the
-    // select follows so a fresh run can't disagree with what's on screen.
-    const agSelect = $("autoTarget");
-    if (agSelect) {
-      const map = { cut100: 100, cut80: 80, cut60: 60, cut40: 40 };
-      for (const [id, pct] of Object.entries(map)) {
-        if (Math.round(customCutFraction * 100) === pct) agSelect.value = id;
-      }
-    }
+    // The slider, the form select and the sizing input are ONE control in
+    // three places: syncCutControls writes all of them so a fresh run can't
+    // disagree with what is on screen.
+    syncCutControls(parseInt(slider.value, 10) || 1);
+    // A cut edit is the visitor choosing the target, so the budget slider is
+    // released from any pin and follows the resulting recommendation once.
+    budgetPinnedUsd = null;
+    followMarkerOnce = true;
     // No results yet: fall back to a full run so the cut is honored instead
     // of silently dropped.
     if (!lastPayload) {
@@ -2872,6 +2909,8 @@ function commitCurvePreview(q, opts = {}) {
   if (!q) return;
   curvePreview = null;
   clearPlayReadout();
+  // The visitor just chose by budget: that choice now owns the position.
+  if (Number.isFinite(q.x)) budgetPinnedUsd = q.x;
   if (!opts.keepSlider) {
     const slider = $("budgetSlider");
     if (slider && Number.isFinite(q.x)) {
@@ -3007,32 +3046,15 @@ function renderFocusPanel(p, entry, isPreview) {
   if (Number.isFinite(entry.lifetimeCostMid))
     chip("🏁", `~${money(entry.lifetimeCostMid)}`, "20-yr true cost");
   // Lead-acid savings indicator (reference only — never recommended).
-  // Hidden when it is literally the same system (e.g. solar-only, where
-  // there is no bank to compare and nothing to save).
-  const agm = p.agmReference;
-  if (
-    agm &&
-    agm.solvable &&
-    Number.isFinite(agm.lifetimeCostMid) &&
-    Number.isFinite(entry.lifetimeCostMid) &&
-    Number.isFinite(agm.replacementsHorizon)
-  ) {
-    const save = Math.round(agm.lifetimeCostMid - entry.lifetimeCostMid);
-    if (save === 0 && agm.replacementsHorizon === 0) {
-      // Identical economics — no comparison to draw.
-    } else if (save > 0)
-      chip(
-        "🏚️",
-        `save ~${money(save)}`,
-        `vs lead-acid · skips ~${agm.replacementsHorizon} swaps`,
-      );
-    else
-      chip(
-        "🏚️",
-        `lead-acid ~${money(-save)} less`,
-        `but needs ~${agm.replacementsHorizon} swaps · not recommended`,
-      );
-  }
+  // leadAcidComparison owns WHEN this is a real comparison (both designs need
+  // a battery, and the selection must not itself be lead-acid) and what the
+  // copy may claim, so the chip can never contradict the footnote or the
+  // comparison tab.
+  const leadAcid = leadAcidChipCopy(
+    leadAcidComparison(entry, p.agmReference),
+    money,
+  );
+  if (leadAcid) chip("🏚️", leadAcid.big, leadAcid.small);
   const note = $("focusNote");
   if (note) {
     if (!isPreview && !isRec && p.best)
@@ -3089,14 +3111,27 @@ function syncBudgetRange(seat = false) {
   slider.min = String(Math.floor(lo));
   slider.max = String(Math.ceil(hi));
   slider.step = String(Math.max(1, Math.round((hi - lo) / 200)));
-  // Preserve the visitor's budget position across re-renders (cut edits,
-  // reconciliations); only re-seat it on fresh payloads or when it falls
-  // outside the new range.
+  // Who owns the truth right now?
+  //   * a fresh scenario (seat) → the recommendation, and the pin is released;
+  //   * the visitor's own budget choice → THEIR position, clamped into the new
+  //     span if a cut edit moved it (never silently re-seated on the marker);
+  //   * otherwise → keep the current value while it still fits.
+  const pinned = budgetPinnedUsd;
   const cur = parseFloat(slider.value);
-  if (seat || !Number.isFinite(cur) || cur < lo || cur > hi) {
-    const at = m && Number.isFinite(m.capexUsd) ? m.capexUsd : (lo + hi) / 2;
-    slider.value = String(Math.min(hi, Math.max(lo, Math.round(at))));
+  let next = null;
+  if (seat) {
+    budgetPinnedUsd = null;
+    next = m && Number.isFinite(m.capexUsd) ? m.capexUsd : (lo + hi) / 2;
+  } else if (followMarkerOnce) {
+    followMarkerOnce = false;
+    next = m && Number.isFinite(m.capexUsd) ? m.capexUsd : (lo + hi) / 2;
+  } else if (Number.isFinite(pinned)) {
+    next = pinned;
+  } else if (!Number.isFinite(cur) || cur < lo || cur > hi) {
+    next = m && Number.isFinite(m.capexUsd) ? m.capexUsd : (lo + hi) / 2;
   }
+  if (next !== null)
+    slider.value = String(Math.min(hi, Math.max(lo, Math.round(next))));
   syncBudgetLabel();
 }
 
@@ -3113,11 +3148,15 @@ function setupBudgetSlider() {
   if (!slider) return;
   slider.addEventListener("input", () => {
     if (!curveReady()) return;
+    // Pinned even mid-drag: a background reconciliation must not yank the
+    // thumb out from under the pointer.
+    budgetPinnedUsd = parseFloat(slider.value);
     syncBudgetLabel();
     previewCurvePoint(nearestCurvePoint(parseFloat(slider.value), "x"));
   });
   slider.addEventListener("change", () => {
     if (!curveReady()) return;
+    budgetPinnedUsd = parseFloat(slider.value);
     commitCurvePreview(nearestCurvePoint(parseFloat(slider.value), "x"));
   });
 }
@@ -3134,7 +3173,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260917e", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260917h", {
       type: "module",
     });
 
@@ -4015,31 +4054,29 @@ function renderAutoCards(p) {
   }
 
   // Lead-acid savings indicator (reference only — never recommended).
-  // Skipped when it is literally the same system (e.g. solar-only builds
-  // share one bank-free design, so there is no comparison to draw).
+  // Skipped when it is literally the same system (bank-free designs share one
+  // PV-only system, so there is no comparison to draw) and whenever the shared
+  // helper says no honest comparison exists.
   const agm = p.agmReference;
   const agmIdentical =
     agm &&
+    agm.battKwh > 0 &&
     agm.solvable &&
     agm.replacementsHorizon === 0 &&
     (p.auto || []).some(
       (a) => a.solvable && a.lifetimeCostMid === agm.lifetimeCostMid,
     );
-  if (
-    agm &&
-    agm.solvable &&
-    !agmIdentical &&
-    Number.isFinite(agm.lifetimeCostMid)
-  ) {
+  const agmRef = agmIdentical ? null : leadAcidReferenceCopy(agm);
+  if (agmRef) {
     const ref = el("p", {
       style:
         "font-size:0.8rem;color:var(--text-muted);margin-top:0.9rem;line-height:1.55;grid-column:1/-1;",
     });
     ref.textContent =
-      `🏚️ Lead-acid reference (not recommended): ~${money(agm.lifetimeCostMid)} over 20 years` +
-      (Number.isFinite(agm.replacementsHorizon) && agm.replacementsHorizon > 0
-        ? ` with ~${agm.replacementsHorizon} bank swaps`
-        : ` with no swaps`) +
+      `🏚️ Lead-acid reference (not recommended): ~${money(agmRef.lifetimeCostUsd)} over 20 years` +
+      (agmRef.swaps > 0
+        ? ` with ~${agmRef.swaps} bank swaps`
+        : ` with a ${fmt(agmRef.battKwh)} kWh bank oversized to avoid swaps`) +
       ` — shown only so you can see what the recommended chemistries save you.`;
     grid.appendChild(ref);
   }
@@ -4089,6 +4126,12 @@ function renderBatteryComparison(p, selectedSystem) {
       Comparing chemistries to deliver the same <strong>${fmt(targetBattKwh)} kWh usable power</strong> at your site's climate
       (<strong>${Math.round(meanTempC)}°C / ${Math.round(meanTempC * 1.8 + 32)}°F</strong> average).
       Examines required bank sizes, cold weather limits, 20-year battery swaps vs. oversizing, and true lifetime costs.
+    </div>
+    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.4rem; line-height: 1.55;">
+      These figures are a same-usable-kWh <strong>nameplate model</strong> (minimum
+      bank for the DoD ceiling, swapped on cycle life). A live run's lead-acid
+      reference is sized by the site simulation instead and can differ, usually
+      in your favour because it may oversize the bank to skip swaps.
     </div>
   `;
   grid.appendChild(header);
@@ -4286,6 +4329,12 @@ function renderBatteryComparison(p, selectedSystem) {
           swapsAndLaborUsd: r.life.swapsAndLabor,
           replacementsHorizon: r.swaps,
           cumCostSeries: cumCost,
+          // These figures come from this tab's own nameplate/DoD model, not
+          // from the site simulation. The flag keeps the lead-acid comparison
+          // from subtracting a modelled figure from a simulated one — that
+          // cross-model delta is what produced "lead-acid ~€X less" next to a
+          // comparison card showing lead-acid an order of magnitude dearer.
+          estimatedFromTab: true,
         };
         selectedKey = "adopted";
         if (p.frontier) {
@@ -7233,6 +7282,9 @@ function adoptFrontierPoint(i, opts = {}) {
     chemistry: pt.detail.chemistry || f.chemistry,
   };
   selectedKey = "adopted";
+  // Choosing a point on the curve IS choosing a budget: pin it so later
+  // re-renders keep the visitor's system instead of re-seating on the marker.
+  if (Number.isFinite(pt.capexUsd)) budgetPinnedUsd = pt.capexUsd;
   if (!opts.keepSlider) {
     const slider = $("budgetSlider");
     if (slider && Number.isFinite(pt.capexUsd)) {
@@ -7243,14 +7295,10 @@ function adoptFrontierPoint(i, opts = {}) {
   // Unify with the bill-cut slider FIRST (before the selection snapshot):
   // choosing a point on the curve IS choosing your cut %, so the share
   // link and the matrix "your target" label must record the snapped value,
-  // not the pre-click one.
-  if (p.mode === "gridtie" && Number.isFinite(pt.outcomePct)) {
-    const pct = Math.min(150, Math.max(1, Math.round(pt.outcomePct)));
-    customCutFraction = pct / 100;
-    const slider = $("cutSlider");
-    if (slider) slider.value = String(pct);
-    syncCutLabel();
-  }
+  // not the pre-click one. syncCutControls also moves the form's select, so
+  // the next run cannot disagree with the slider on screen.
+  if (p.mode === "gridtie" && Number.isFinite(pt.outcomePct))
+    syncCutControls(pt.outcomePct);
   renderFrontierPanel(p);
   refreshSelectionOutputs(p);
   if (opts.showModal) {
