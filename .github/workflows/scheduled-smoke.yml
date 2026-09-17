@@ -23,5 +23,10 @@ jobs:
         with:
           node-version: 22
 
+      - name: Staging-drift check (Pages vs main)
+        # Fails when the queued Pages deploy lags main — the signal that a
+        # staging smoke would silently verify a STALE build.
+        run: node scripts/check-staging-drift.mjs
+
       - name: Live sanity sweep
         run: node scripts/live-sanity.mjs
