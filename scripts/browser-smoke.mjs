@@ -507,6 +507,97 @@ async function main() {
       `${a11y.badBtns} missing`,
     );
 
+    // ── Controls that CSP no longer lets the markup wire ──────────────
+    // script-src dropped 'unsafe-inline', so every control that used to
+    // carry an on* attribute must now be bound from an external module. Two
+    // gates: the debugger confirms a real click listener is attached, and the
+    // click has the user-visible effect the removed attribute used to cause.
+    console.log("SMOKE      ── controls without inline handlers ──");
+    const DELEGATED_IDS = [
+      "btnNavToggle",
+      "btnLegalTerms1",
+      "btnLegalTerms2",
+      "btnLegalTerms3",
+      "btnCloseSizing",
+      "btnSendChat",
+      "btnCloseLegal",
+      "btnCloseSystemSheet",
+    ];
+    const unbound = [];
+    for (const id of DELEGATED_IDS) {
+      const ref = await send("Runtime.evaluate", {
+        expression: `document.getElementById(${JSON.stringify(id)})`,
+        returnByValue: false,
+      });
+      const objectId = ref?.result?.objectId;
+      if (!objectId) {
+        unbound.push(`${id} (not in the DOM)`);
+        continue;
+      }
+      const found = await send("DOMDebugger.getEventListeners", {
+        objectId,
+        depth: 1,
+      });
+      if (!(found?.listeners || []).some((l) => l.type === "click"))
+        unbound.push(id);
+      await send("Runtime.releaseObject", { objectId });
+    }
+    gate(
+      "every control has a real click listener",
+      unbound.length === 0,
+      unbound.join(", "),
+    );
+
+    const navToggle = await evaluate(`(() => {
+      const btn = document.getElementById("btnNavToggle");
+      const drawer = document.getElementById("mobileNavDrawer");
+      btn.click();
+      const opened = drawer.classList.contains("open") && btn.getAttribute("aria-expanded") === "true";
+      btn.click();
+      const closed = !drawer.classList.contains("open") && btn.getAttribute("aria-expanded") === "false";
+      return opened && closed ? "ok" : "opened=" + opened + " closed=" + closed;
+    })()`);
+    gate(
+      "nav toggle opens and closes the drawer",
+      navToggle === "ok",
+      navToggle,
+    );
+
+    const modals = await evaluate(`(() => {
+      const visible = (id) => document.getElementById(id).style.display === "flex";
+      const links = ["btnLegalTerms1", "btnLegalTerms2", "btnLegalTerms3"];
+      const opens = links.filter((id) => {
+        document.getElementById("btnCloseLegal").click();
+        document.getElementById(id).click();
+        return visible("legalModal");
+      });
+      document.getElementById("btnCloseLegal").click();
+      const legalClosed = !visible("legalModal");
+      document.getElementById("sizingModal").style.display = "flex";
+      document.getElementById("btnCloseSizing").click();
+      const sizingClosed = !visible("sizingModal");
+      document.getElementById("systemModal").style.display = "flex";
+      document.getElementById("btnCloseSystemSheet").click();
+      const systemClosed = !visible("systemModal");
+      return { opens: opens.length, legalClosed, sizingClosed, systemClosed };
+    })()`);
+    gate(
+      "all three terms links open the legal modal",
+      modals.opens === 3,
+      `${modals.opens}/3`,
+    );
+    gate(
+      "close controls hide every modal",
+      modals.legalClosed && modals.sizingClosed && modals.systemClosed,
+      JSON.stringify(modals),
+    );
+    gate(
+      "chat send stays bound after its on* attribute was removed",
+      await evaluate(
+        `!document.getElementById("btnSendChat").hasAttribute("onclick") && typeof window.sendChatMsg === "function"`,
+      ),
+    );
+
     // ── Service worker (offline story) ────────────────────────────────
     const swReady = await evaluate(`(async () => {
       if (!("serviceWorker" in navigator)) return "unsupported";

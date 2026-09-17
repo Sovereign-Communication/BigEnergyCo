@@ -388,11 +388,19 @@ test("homepage preset buttons name their units", () => {
 });
 
 test("system modal Close routes through the focus-returning closer", () => {
+  // The markup used to carry the call inline; CSP no longer allows inline
+  // script, so the same route (click the wired closer, which returns focus to
+  // the opener) is bound in chat.js instead.
   const html = read("index.html");
-  assert.match(
+  assert.match(html, /id="btnCloseSystemSheet"/);
+  assert.doesNotMatch(
     html,
-    /onclick="document\.getElementById\('btnCloseSystem'\)\.click\(\)"/,
+    /\son[a-z]+\s*=/,
+    "no inline event handler attribute may return",
   );
+  const src = read("assets/js/chat.js");
+  assert.match(src, /getElementById\("btnCloseSystemSheet"\)/);
+  assert.match(src, /getElementById\("btnCloseSystem"\)/);
 });
 
 // ── site.css static gates ───────────────────────────────────────────────────

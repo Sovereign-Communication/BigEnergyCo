@@ -224,15 +224,34 @@ test("Solar Heatmap defaults to True Grid Cost view and preserves Payback and Br
     new URL("../solar-heatmap/index.html", import.meta.url),
     "utf8",
   );
+  // The app itself lives in a versioned module (CSP forbids inline script),
+  // so the state assertions read the module and the markup assertions the page.
+  const app = fs.readFileSync(
+    new URL("../assets/js/heatmap.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    html,
+    /<script[^>]*src="\.\.\/assets\/js\/heatmap\.js\?v=\d{8}[a-z]"/,
+    "solar-heatmap/index.html must load the versioned heatmap module",
+  );
+  assert.doesNotMatch(
+    html.replace(
+      /<script type="application\/ld\+json">[\s\S]*?<\/script>/g,
+      "",
+    ),
+    /<script(?![^>]*\bsrc=)/,
+    "no executable inline script may remain in the heatmap page",
+  );
 
   // Default metric in script state must be "cost"
   assert.ok(
-    html.includes('let metric = "cost";'),
-    'solar-heatmap/index.html must initialize state with let metric = "cost"',
+    app.includes('let metric = "cost";'),
+    'assets/js/heatmap.js must initialize state with let metric = "cost"',
   );
   assert.ok(
-    html.includes('let basis = "real";'),
-    'solar-heatmap/index.html must initialize state with let basis = "real"',
+    app.includes('let basis = "real";'),
+    'assets/js/heatmap.js must initialize state with let basis = "real"',
   );
 
   // Default active button markup
@@ -568,7 +587,7 @@ test("All Options: strictly excludes AGM, compares capacity tiers relative to ba
   assert.equal(fmtDelta(-3.2, ""), "\u22123");
 });
 
-test("DOM Parity: autoTargetRow exists in HTML and interactive modal/nav buttons have explicit onclick", () => {
+test("DOM Parity: autoTargetRow exists and interactive controls are wired in JS", () => {
   const html = fs.readFileSync("index.html", "utf8");
 
   // Verify autoTargetRow and autoTarget
@@ -577,35 +596,37 @@ test("DOM Parity: autoTargetRow exists in HTML and interactive modal/nav buttons
   assert.match(html, /value="cut100"/);
   assert.match(html, /value="cut80"/);
 
-  // Verify explicit onclick handlers and ARIA accessibility on previously broken buttons
-  assert.match(
+  // The buttons used to carry inline onclick attributes. CSP no longer allows
+  // inline script, so each one must be bound by id in chat.js instead; the
+  // smoke gate proves the listeners exist at runtime, this keeps the static
+  // contract from rotting.
+  const chat = fs.readFileSync("assets/js/chat.js", "utf8");
+  for (const id of [
+    "btnLegalTerms1",
+    "btnLegalTerms2",
+    "btnLegalTerms3",
+    "btnCloseLegal",
+    "btnCloseSizing",
+    "btnSendChat",
+    "btnNavToggle",
+  ]) {
+    assert.match(
+      chat,
+      new RegExp(`getElementById\\("${id}"\\)`),
+      `${id} must be bound in chat.js`,
+    );
+  }
+  assert.doesNotMatch(
     html,
-    /id="btnLegalTerms1"[^>]*onclick="window\.openLegalModal && window\.openLegalModal\(\)"/,
+    /\son[a-z]+\s*=/,
+    "no inline event handler attribute may return",
   );
-  assert.match(
-    html,
-    /id="btnLegalTerms2"[^>]*onclick="window\.openLegalModal && window\.openLegalModal\(\)"/,
-  );
-  assert.match(
-    html,
-    /id="btnLegalTerms3"[^>]*onclick="window\.openLegalModal && window\.openLegalModal\(\)"/,
-  );
-  assert.match(
-    html,
-    /id="btnCloseLegal"[^>]*onclick="window\.closeLegalModal && window\.closeLegalModal\(\)"/,
-  );
-  assert.match(
-    html,
-    /id="btnCloseSizing"[^>]*onclick="window\.closeSizingModal && window\.closeSizingModal\(\)"/,
-  );
-  assert.match(
-    html,
-    /id="btnSendChat"[^>]*onclick="window\.sendChatMsg && window\.sendChatMsg\(\)"/,
-  );
-  assert.match(
-    html,
-    /class="nav-toggle"[^>]*onclick="window\.toggleMobileNav && window\.toggleMobileNav\(\)"/,
-  );
+
+  // ARIA accessibility on the previously broken controls.
+  for (const id of ["btnLegalTerms1", "btnLegalTerms2", "btnLegalTerms3"]) {
+    assert.match(html, new RegExp(`id="${id}"[^>]*role="button"`));
+    assert.match(html, new RegExp(`id="${id}"[^>]*tabindex="0"`));
+  }
 });
 
 test("Off-Grid goal: setCoords shows offgridLoadWrap and hides billSliderWrap when goal is offgrid", () => {
