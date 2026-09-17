@@ -211,8 +211,13 @@ that is fine and is not a regression.
   curl -s https://bigenergyco.pages.dev/sitemap.xml | head -20
   curl -s https://bigenergyco-api.bigenergyco.workers.dev/api/health
   ```
-- [ ] Create a new **Google Search Console** URL-prefix property
-      `https://freeoffgridcalculator.com/` (do not touch the pages.dev property yet).
+- [x] Create the **Google Search Console Domain property** for
+      `freeoffgridcalculator.com` (recommended over a URL-prefix property: one
+      property covers http/https, apex, `www.`, and all subdomains, and it
+      verifies via a DNS TXT record in Cloudflare — no deploy dependency). The
+      HTML-tag fallback token is live in `index.html`; the legacy `pages.dev`
+      URL-prefix property's tag is retained alongside it until that property is
+      retired.
 - [ ] Create the matching **Bing Webmaster Tools** property (import later or add sitemap manually).
 
 **Exit criteria:** zone active in Cloudflare dashboard; Search Console property created; baseline curl results saved.
