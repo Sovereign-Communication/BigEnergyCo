@@ -119,7 +119,7 @@ Browser ──► GitHub Pages (static: index.html, blog/, assets/)
 
 ## Search Console & indexing
 
-Google Search Console verification uses two `google-site-verification` meta tags in `index.html`: the active one for the **Domain property** `freeoffgridcalculator.com` (also verified via a DNS TXT record in Cloudflare), plus the legacy tag of the old `pages.dev` URL-prefix property. To keep indexing healthy:
+Google Search Console verification uses two `google-site-verification` meta tags in `index.html`: one for the active `freeoffgridcalculator.com` property (a **Domain** property verifies via a DNS TXT record in Cloudflare; a URL-prefix property verifies via this HTML tag), plus the legacy tag of the old `pages.dev` property. To keep indexing healthy:
 
 1. **Google Search Console** — open [search.google.com/search-console](https://search.google.com/search-console), select the **`freeoffgridcalculator.com` Domain property**, then **Sitemaps → submit** `https://freeoffgridcalculator.com/sitemap.xml` (re-submit after any new page ships).
 2. **URL Inspection** → "Request indexing" after publishing a new blog post.

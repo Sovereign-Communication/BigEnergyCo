@@ -179,8 +179,8 @@ for (const page of pages) {
 
 // Search Console verification tags must survive refactors: a missing tag can
 // silently un-verify a property and stall indexing. The first token verifies
-// the `freeoffgridcalculator.com` Domain property; the second is the legacy
-// pages.dev URL-prefix token (kept until that property is retired).
+// the active `freeoffgridcalculator.com` property (Domain or URL-prefix); the
+// second is the legacy pages.dev token (kept until that property is retired).
 const GSC_REQUIRED_TOKEN = "zVFiMH4WnfvhMHtnivIgDm_-5XtelVgcL709oHh3pWk";
 
 // robots.txt basics
@@ -197,8 +197,13 @@ const gscTags = [
   ),
 ].map((m) => m[1]);
 if (gscTags.includes(GSC_REQUIRED_TOKEN))
-  ok("index.html: Google Search Console (Domain property) tag present");
-else fail("index.html: missing Google Search Console Domain-property tag");
+  ok(
+    "index.html: Google Search Console (freeoffgridcalculator.com) tag present",
+  );
+else
+  fail(
+    "index.html: missing Google Search Console verification tag for freeoffgridcalculator.com",
+  );
 const LEGACY_PAGESDEV_TOKEN = "iXiF6PQy5IhjMtll2YzS3-amK6BtApSkpdlKM73dSEc";
 if (gscTags.includes(LEGACY_PAGESDEV_TOKEN))
   ok("index.html: legacy pages.dev GSC tag retained");
