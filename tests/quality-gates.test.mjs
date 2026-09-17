@@ -27,7 +27,8 @@ import {
   patternMatches,
   resolveRequestPath,
   placeholders,
-  translatedVocabulary,
+  hookCoverage,
+  familyGaps,
 } from "../scripts/lib/gates.mjs";
 import { serveStatic } from "../scripts/serve-static.mjs";
 
@@ -199,18 +200,38 @@ test("GATE: placeholders compares sets, not order", () => {
   assert.equal(placeholders("no placeholders"), "");
 });
 
-test("GATE: translatedVocabulary ignores non-string layout flags", () => {
-  const vocab = translatedVocabulary({
-    es: { greet: "hola", rtl: false },
-    pt: { greet: "olá" },
-    fr: { greet: "bonjour" },
-    ar: { greet: "مرحبا", rtl: true },
+test("GATE: hookCoverage separates untranslated hooks from markup typos", () => {
+  const { gaps, unresolved } = hookCoverage(
+    { en: {}, es: { a: "uno" }, de: { a: "eins" } },
+    ["a", "typo"],
+  );
+  assert.deepEqual(gaps.es, ["typo"], "the translated hook is not a gap");
+  assert.deepEqual(gaps.de, ["typo"]);
+  assert.deepEqual(
+    unresolved,
+    ["typo"],
+    "a hook no locale defines is a typo in the markup, not a translation gap",
+  );
+
+  // Non-vacuity: one missing translation must surface for that locale only.
+  const partial = hookCoverage({ en: {}, es: { a: "uno" }, de: {} }, ["a"]);
+  assert.deepEqual(partial.gaps.de, ["a"]);
+  assert.deepEqual(partial.gaps.es, []);
+  assert.deepEqual(partial.unresolved, []);
+});
+
+test("GATE: familyGaps catches a runtime mode missing in one locale", () => {
+  const gaps = familyGaps({
+    en: { baseGrid: "g", baseOffgrid: "o" },
+    es: { baseGrid: "g", baseOffgrid: "o" },
+    de: { baseGrid: "g" }, // the Offgrid verdict was never translated
   });
-  assert.equal(vocab.has("greet"), true);
+  assert.deepEqual(gaps.de, ["baseOffgrid"]);
+  assert.deepEqual(gaps.es, []);
   assert.equal(
-    vocab.has("rtl"),
-    false,
-    "a boolean direction flag is not translatable text",
+    gaps.en,
+    undefined,
+    "en is the source markup for hooks, so it is exempt",
   );
 });
 

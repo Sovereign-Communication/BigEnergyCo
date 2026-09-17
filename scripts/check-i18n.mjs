@@ -6,36 +6,31 @@
 //
 //   1. PARITY      every `en` key exists in every locale (no half-migrations).
 //   2. HOOKS       every `data-i18n="key"` a shipped page declares resolves in
-//                  every locale. English legitimately has no entry — the
-//                  English string IS the markup — so `en` is exempt by design.
+//                  every non-English locale. English is exempt because the
+//                  English string IS the markup. A hook that resolves in NO
+//                  locale is a markup typo, and fails too.
 //   3. PLACEHOLDERS translated strings carry exactly the English placeholders;
 //                  a typo'd {count} renders literally to the user.
 //   4. NO LEAKS    no value equals its own key name (the tell-tale of a
 //                  half-finished translation shipped by accident).
 //   5. RTL FLAGS   only `ar` flips direction.
+//   6. FAMILIES    strings composed at runtime (base + "Grid"/"Offgrid") must
+//                  exist in every locale, not only in the one that got them.
 //
-// Coverage debt (German is behind the other locales) is frozen as a ratchet:
-// the number may only go down, and the PR that translates the remaining
-// strings must lower it in the same commit.
+// An earlier version of this gate compared the *union* of the locale
+// dictionaries as a proxy for "what must be translated". That premise was
+// false: locale key names collide with payload field names and DOM ids, so the
+// proxy demanded translations for strings nothing renders. The rules below are
+// checked against what shipped markup and code actually reference.
 import { readFileSync } from "node:fs";
 import { LOCALES } from "../assets/js/shared/locales.js";
 import { LANGS } from "../assets/js/shared/i18n.js";
 import {
   deployedFiles,
+  familyGaps,
+  hookCoverage,
   placeholders,
-  translatedVocabulary,
 } from "./lib/gates.mjs";
-
-/**
- * Frozen debt, not a target. German is the lagging locale: one HTML hook and
- * eighteen JS-rendered strings still fall back to English. The PR that
- * translates them lowers these numbers in the same commit; every other locale
- * must stay at zero, so a newly added string with no translation fails outright.
- */
-const RATCHET = {
-  germanMissingHooks: 1,
-  germanMissingKeys: 18,
-};
 
 let failures = 0;
 const fail = (msg) => {
@@ -75,34 +70,21 @@ for (const page of shippedPages()) {
 }
 if (!hooks.size) fail("no data-i18n hooks found in shipped pages");
 
-const hookGaps = {};
-for (const lang of langs) {
-  if (lang === "en") continue;
-  hookGaps[lang] = [...hooks].filter((h) => LOCALES[lang][h] === undefined);
-}
-for (const [lang, gaps] of Object.entries(hookGaps)) {
-  if (gaps.length === 0) ok(`${lang}: all ${hooks.size} HTML hooks translated`);
-}
+const { gaps: hookGaps, unresolved } = hookCoverage(LOCALES, hooks);
 
-// The ratchet specifically tracks the German backlog (the largest one), so a
-// new un-translated hook in ANY locale still fails outright.
+if (unresolved.length)
+  fail(
+    `${unresolved.length} data-i18n hook(s) resolve in no locale (markup typo): ${unresolved.slice(0, 6).join(", ")}`,
+  );
+else ok(`all ${hooks.size} markup hooks resolve in at least one locale`);
+
 for (const [lang, gaps] of Object.entries(hookGaps)) {
-  if (lang === "de") continue;
   if (gaps.length)
     fail(
-      `${lang}: ${gaps.length} HTML hook(s) untranslated: ${gaps.slice(0, 6).join(", ")}`,
+      `${lang}: ${gaps.length}/${hooks.size} HTML hook(s) untranslated: ${gaps.slice(0, 6).join(", ")}`,
     );
+  else ok(`${lang}: all ${hooks.size} HTML hooks translated`);
 }
-
-const germanGaps = hookGaps.de || [];
-if (germanGaps.length <= RATCHET.germanMissingHooks)
-  ok(
-    `de: ${hooks.size - germanGaps.length}/${hooks.size} hooks translated (${germanGaps.length} frozen)`,
-  );
-else
-  fail(
-    `de: ${germanGaps.length} untranslated hooks exceeds the frozen budget ${RATCHET.germanMissingHooks} — translate the new string rather than raising the budget (${germanGaps.slice(0, 6).join(", ")})`,
-  );
 
 // ── 3. placeholder parity ───────────────────────────────────────────────────
 const badPlaceholders = [];
@@ -153,35 +135,19 @@ else
     `language picker exposes ${pickerIds.length} locales, all with dictionaries`,
   );
 
-// ── 6. translated-vocabulary gaps ───────────────────────────────────────────
-// The translated locales between them define the vocabulary the app is able to
-// render in a non-English language. A key in that set which a locale lacks is
-// not a crash — it is a German (or Spanish…) user being shown English, which is
-// the silent failure this gate exists to make visible.
-const translatedVocab = translatedVocabulary(LOCALES);
-const vocabGaps = {};
-for (const lang of langs) {
-  if (lang === "en") continue;
-  vocabGaps[lang] = [...translatedVocab].filter(
-    (k) => LOCALES[lang][k] === undefined,
-  );
-}
-for (const [lang, gaps] of Object.entries(vocabGaps)) {
-  if (lang === "de") continue; // ratcheted below
+// ── 6. runtime-composed families ────────────────────────────────────────────
+// `frontierVerdict()` composes `base + ("Grid" | "Offgrid")` at runtime, so a
+// variant translated in one locale but not another renders English — or the raw
+// key — for that whole mode. Comparing suffix families catches it; counting
+// dictionary sizes cannot.
+const families = familyGaps(LOCALES);
+for (const [lang, gaps] of Object.entries(families)) {
   if (gaps.length)
     fail(
-      `${lang}: ${gaps.length} string(s) the other locales translate are missing: ${gaps.slice(0, 6).join(", ")}`,
+      `${lang}: ${gaps.length} composed string(s) missing for a runtime mode: ${gaps.slice(0, 6).join(", ")}`,
     );
-  else ok(`${lang}: full translated vocabulary`);
+  else ok(`${lang}: every runtime-composed verdict string present`);
 }
-if (vocabGaps.de.length <= RATCHET.germanMissingKeys)
-  ok(
-    `de: ${translatedVocab.size - vocabGaps.de.length}/${translatedVocab.size} translated strings (${vocabGaps.de.length} frozen)`,
-  );
-else
-  fail(
-    `de: ${vocabGaps.de.length} untranslated strings exceeds the frozen budget ${RATCHET.germanMissingKeys} — translate the new string rather than raising the budget (${vocabGaps.de.slice(0, 6).join(", ")})`,
-  );
 
 // ── coverage summary (informational, keeps the trend visible) ───────────────
 const rows = langs
