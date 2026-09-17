@@ -30,12 +30,11 @@ jobs:
       - name: Syntax-check all JS
         run: node scripts/check-syntax.mjs
 
-      - name: Validate SEO & encoding
-        run: |
-          node scripts/validate-jsonld.mjs
-          node scripts/check-chars.mjs
-          node scripts/check-seo.mjs
-          node scripts/bump-asset-tokens.mjs --check
+      # One command, so CI and contributors cannot drift: JSON-LD, character
+      # encoding, SEO shape, static quality (a11y/links/titles), i18n
+      # completeness, security headers + CSP endpoint registry, asset tokens.
+      - name: Site integrity gates (SEO, quality, i18n, headers, tokens)
+        run: npm run seo
 
       - name: Prettier check
         run: npx --yes prettier@3.9.6 --check .
@@ -51,3 +50,46 @@ jobs:
         run: npm test
 
       # Live-API validation is manual (network): node scripts/validate-live.mjs
+
+  # The gate that stops UI/worker/asset regressions from reaching main: builds
+  # the allowlisted artifact, serves it under the real `_headers` policy and
+  # drives the approved browser smoke over a full sizing flow (plus the heatmap,
+  # service worker and a no-CSP-violations gate). Chrome ships on the runner.
+  web-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Real-browser smoke on the staged build
+        run: npm run smoke:local
+      - name: Upload smoke artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: smoke-screenshots
+          path: |
+            _pages_smoke/
+            *.png
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # Coverage floor on the deterministic core. Scope is deliberate: the sizer's
+  # math modules are the ones a wrong edit silently misprices, and the full
+  # suite under instrumentation outruns a reasonable job timeout. Thresholds
+  # were measured (68.8% lines / 78.4% branches / 62.2% funcs) and frozen ~2
+  # points below, so new code must be exercised to land.
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Coverage floor (engine, money, rescale, nasa, climate)
+        run: npm run coverage

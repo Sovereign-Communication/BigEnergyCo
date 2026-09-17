@@ -94,6 +94,8 @@ Thumbs.db
 
 # Local Pages staging
 _pages_staging/
+_pages_smoke/
+_pages_drift_stage/
 
 # Freebuff tool state (never commit)
 .freebuff/
