@@ -681,6 +681,7 @@ export const LOCALES = {
     goalOffgrid: "Vollständig unabhängig vom Netz",
     goalGridtie: "Rechnung senken, am Netz bleiben",
     chemLabel: "Batteriechemie:",
+    cityLabel: "Wo wird das System installiert?",
     loadLabel: "Wie viel Strom verbrauchst du?",
     loadAppliances: "Geräte auswählen",
     loadBill: "Monatliche Rechnung",

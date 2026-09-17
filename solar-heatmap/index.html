@@ -17,9 +17,7 @@
     />
     <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png" />
     <link rel="manifest" href="../manifest.webmanifest" />
-    <title>
-      Global Solar Payback Heatmap — Where Does Cutting the Grid Pay Off?
-    </title>
+    <title>Global Solar Payback Heatmap — Where Does It Pay Off?</title>
     <meta
       name="description"
       content="World map of solar payback for 40,000+ cities from NASA weather. See where solar pays fastest. Free, no signup."
@@ -46,7 +44,7 @@
     <meta property="og:locale" content="en_US" />
     <meta
       property="og:title"
-      content="Global Solar Payback Heatmap — Where Does Cutting the Grid Pay Off?"
+      content="Global Solar Payback Heatmap — Where Does It Pay Off?"
     />
     <meta
       property="og:description"
@@ -65,7 +63,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
-      content="Global Solar Payback Heatmap — Where Does Cutting the Grid Pay Off?"
+      content="Global Solar Payback Heatmap — Where Does It Pay Off?"
     />
     <meta
       name="twitter:description"
@@ -1362,7 +1360,7 @@
         async function init() {
           try {
             const res = await fetch(
-              "../assets/data/heatmap-grid.json?v=20260917c",
+              "../assets/data/heatmap-grid.json?v=20260917d",
             );
             if (!res.ok) throw new Error("Failed to load heatmap data");
             gridData = await res.json();

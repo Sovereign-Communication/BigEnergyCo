@@ -22,6 +22,7 @@ import {
   aimsOutsideSite,
   bodyText,
   deployedFiles,
+  documentTitle,
   metaContent,
   resolvesToDeployed,
   tags,
@@ -31,9 +32,12 @@ import {
 /**
  * Frozen debt. Every number here is debt, not a target — PRs that pay it down
  * must lower the number in the same commit.
- *   titlesOverBudget           69 (67 city pages + 2 posts) — long SERP titles
- *                              truncate; fixed by the title rewrite.
- *   descriptionsOutOfBounds     1 (215 chars) — trimmed by the same rewrite.
+ *
+ * Title length, description bounds, canonical/sitemap agreement, link targets
+ * and the a11y set used to live here too; that debt was paid, so those rules
+ * are now hard invariants further down. A ratchet that reaches zero should
+ * become an invariant in the same commit, or the number stops meaning anything.
+ *
  *   inlineScriptBlocks          1 — solar-heatmap/index.html carries its whole
  *                              app (~590 lines) inline. This is what forces
  *                              CSP script-src 'unsafe-inline'; extracting it to
@@ -45,8 +49,6 @@ import {
  *                              utility-class migration is deferred.
  */
 const RATCHET = {
-  titlesOverBudget: 69,
-  descriptionsOutOfBounds: 1,
   inlineScriptBlocks: 1,
   inlineHandlers: 8,
   inlineStyleAttributes: 610,
@@ -205,7 +207,9 @@ for (const page of pages) {
     stats.emptyMain.push(page);
 
   // SERP shape: title length + uniqueness, description presence and bounds.
-  const title = (/<title>([\s\S]*?)<\/title>/i.exec(html) || [])[1] || "";
+  // Measured as rendered text (entities decoded, whitespace collapsed), the
+  // same way a search result displays it.
+  const title = documentTitle(html);
   if (title.length > TITLE_MAX)
     stats.titleTooLong.push(`${page} (${title.length})`);
   titleSeen.set(title, (titleSeen.get(title) || 0) + 1);
@@ -260,6 +264,11 @@ report(stats.emptyMain, "skip-link target #main exists");
 report(stats.titleDuplicates, "page titles are unique");
 report(stats.badOgImage, "og:image points at a deployed asset");
 report(stats.sitemapCanonicalMismatch, "canonical pages appear in the sitemap");
+report(stats.titleTooLong, `titles are at most ${TITLE_MAX} characters`);
+report(
+  stats.descProblems,
+  `descriptions are ${DESC_MIN}-${DESC_MAX} characters`,
+);
 
 // Ratchets: count-only, may never grow. Lowering a budget is the whole point;
 // raising one is a deliberate, reviewable act — stale numbers are how gates
@@ -272,20 +281,6 @@ const ratchet = (measured, budget, label, hint, detail = "") => {
         (detail ? `\n     ${detail}` : ""),
     );
 };
-ratchet(
-  stats.titleTooLong.length,
-  RATCHET.titlesOverBudget,
-  "titles longer than 62 characters",
-  "shorten the title template instead of adding another long one",
-  stats.titleTooLong.slice(0, 5).join("; "),
-);
-ratchet(
-  stats.descProblems.length,
-  RATCHET.descriptionsOutOfBounds,
-  `descriptions outside ${DESC_MIN}-${DESC_MAX} characters`,
-  "trim or extend the description",
-  stats.descProblems.slice(0, 5).join("; "),
-);
 ratchet(
   stats.inlineScriptBlocks.length,
   RATCHET.inlineScriptBlocks,
