@@ -1,6 +1,6 @@
 // Unified city records used by the location combobox. The seed is instant and
 // offline; country partitions provide millions of additional place/coordinate pairs.
-import { usStateCode, US_STATES } from "./pricing.js?v=20260917d";
+import { usStateCode, US_STATES } from "./pricing.js?v=20260917e";
 
 export const CITY_CATALOG = [
   ["Honolulu", "United States", "Hawaii", 21.31, -157.86],
@@ -319,7 +319,7 @@ export async function loadCityCatalog({
     const signalOpts = ctrl ? { signal: ctrl.signal } : {};
     try {
       const response = await fetchImpl(
-        "./assets/js/sizing/city-data/index.json?v=20260917d",
+        "./assets/js/sizing/city-data/index.json?v=20260917e",
         { cache: "force-cache", ...signalOpts },
       );
       if (!response.ok) throw new Error(`city index HTTP ${response.status}`);
@@ -329,7 +329,7 @@ export async function loadCityCatalog({
           const stem = item.file.replace(/\.json$/i, "");
           try {
             const part = await fetchImpl(
-              `./assets/js/sizing/city-data/${encodeURIComponent(stem)}.json?v=20260917d`,
+              `./assets/js/sizing/city-data/${encodeURIComponent(stem)}.json?v=20260917e`,
               { cache: "force-cache", ...signalOpts },
             );
             if (part.ok) {

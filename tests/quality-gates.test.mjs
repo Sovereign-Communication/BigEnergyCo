@@ -7,13 +7,20 @@
 // browser smoke run under the production `_headers` policy.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
   attr,
   tags,
+  deployedFiles,
   metaContent,
   bodyText,
   wrappedByLabel,
@@ -233,6 +240,91 @@ test("GATE: familyGaps catches a runtime mode missing in one locale", () => {
     undefined,
     "en is the source markup for hooks, so it is exempt",
   );
+});
+
+// ── CSP hardening invariants (the shipped tree, not a fixture) ──────────────
+// These read the real deploy allowlist and the real _headers, because the
+// thing being protected is "no page may ever need 'unsafe-inline' again".
+
+/** Every executable inline script block in a document (JSON-LD is data). */
+const inlineScripts = (html) =>
+  tags(html, "script").filter((tag) => {
+    if (attr(tag, "src")) return false;
+    return (attr(tag, "type") || "").toLowerCase() !== "application/ld+json";
+  });
+
+/** Every on* event-handler attribute in a document. */
+const inlineHandlers = (html) => html.match(/\son[a-z]+\s*=/gi) || [];
+
+test("GATE: no deployed page ships an inline script or an on* handler", () => {
+  const pages = deployedFiles().filter((f) => f.endsWith(".html"));
+  assert.ok(pages.length > 50, "page discovery must not silently go empty");
+  const offenders = [];
+  for (const page of pages) {
+    const html = readFileSync(page, "utf8");
+    for (const tag of inlineScripts(html))
+      offenders.push(`${page}: ${tag.replace(/\s+/g, " ").slice(0, 60)}`);
+    for (const attrText of inlineHandlers(html))
+      offenders.push(`${page}: ${attrText.trim()}`);
+  }
+  assert.deepEqual(offenders, []);
+
+  // Non-vacuity: the detectors must actually fire on markup that has them.
+  assert.equal(inlineScripts("<script>run()</script>").length, 1);
+  assert.equal(
+    inlineScripts('<script type="application/ld+json">{}</script>').length,
+    0,
+    "JSON-LD is data, not an executable block",
+  );
+  assert.equal(inlineScripts('<script src="./a.js?v=1"></script>').length, 0);
+  assert.equal(inlineHandlers('<button onclick="go()">x</button>').length, 1);
+  assert.equal(
+    inlineHandlers('<button aria-expanded="false">x</button>').length,
+    0,
+  );
+});
+
+test("GATE: the shipped CSP closes script-src and sets cross-origin isolation", () => {
+  const rules = parseHeadersFile(readFileSync("_headers", "utf8"));
+  const csp = parseCsp(headersFor("/", rules).get("content-security-policy"));
+  assert.ok(csp["script-src"]?.length, "script-src must be declared");
+  assert.equal(
+    csp["script-src"].includes("'unsafe-inline'"),
+    false,
+    "'unsafe-inline' must not come back into script-src",
+  );
+  assert.equal(csp["script-src"].includes("'unsafe-eval'"), false);
+  const headers = headersFor("/", rules);
+  assert.match(
+    headers.get("cross-origin-opener-policy") || "",
+    /^same-origin$/i,
+  );
+  assert.match(
+    headers.get("cross-origin-resource-policy") || "",
+    /^same-origin$/i,
+  );
+
+  // Style attributes still need the style-src exception, and that must not be
+  // confused with script-src being open again.
+  assert.equal(csp["style-src"].includes("'unsafe-inline'"), true);
+});
+
+test("GATE: the heatmap app runs from a versioned module, not the markup", () => {
+  const page = readFileSync("solar-heatmap/index.html", "utf8");
+  assert.deepEqual(inlineScripts(page), []);
+  const ref = tags(page, "script")
+    .map((tag) => attr(tag, "src"))
+    .find((src) => src && src.includes("heatmap.js"));
+  assert.ok(ref, "the page must load the extracted app");
+  assert.match(ref, /^\.[^?]*\/assets\/js\/heatmap\.js\?v=\d{8}[a-z]$/);
+  // If the module is not the app, the extraction was vacuous.
+  const app = readFileSync("assets/js/heatmap.js", "utf8");
+  assert.match(
+    app,
+    /L\.map\(/,
+    "the extracted module must still build the map",
+  );
+  assert.match(app, /heatmap-grid\.json\?v=/);
 });
 
 // ── static server: the policy the smoke test runs under ─────────────────────

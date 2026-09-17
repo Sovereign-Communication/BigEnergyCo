@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260917d";
+import { APPLIANCES } from "./appliances.js?v=20260917e";
 import {
   CITY_CATALOG,
   searchCities,
@@ -23,7 +23,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260917d";
+} from "./cities.js?v=20260917e";
 
 import {
   estimateTariff,
@@ -31,57 +31,57 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260917d";
+} from "./pricing.js?v=20260917e";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260917d";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260917e";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260917d";
+} from "./bom.js?v=20260917e";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260917d";
+import { BOM_ITEMS } from "../shared/content.js?v=20260917e";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260917d";
+} from "../shared/i18n.js?v=20260917e";
 
-import { LOCALES } from "../shared/locales.js?v=20260917d";
+import { LOCALES } from "../shared/locales.js?v=20260917e";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260917d";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260917d";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260917e";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260917e";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260917d";
+} from "../shared/simple-mode.js?v=20260917e";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260917d";
+} from "./frontier-chart.js?v=20260917e";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260917d";
+} from "./rescale.js?v=20260917e";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260917d";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260917e";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260917d";
-import { persistWizard, restoreWizard } from "./wizard.js?v=20260917d";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260917d";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260917d";
+} from "./map-provider.js?v=20260917e";
+import { persistWizard, restoreWizard } from "./wizard.js?v=20260917e";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260917e";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260917e";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -126,9 +126,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260917d";
+} from "./money.js?v=20260917e";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260917d";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260917e";
 
 let worker = null;
 
@@ -3134,7 +3134,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260917d", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260917e", {
       type: "module",
     });
 

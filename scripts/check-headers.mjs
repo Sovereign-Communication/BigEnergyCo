@@ -32,16 +32,11 @@ const LIVE_BASES = (
   .split(",")
   .filter(Boolean);
 
-/**
- * Frozen debt. COOP/CORP are the two headers browsers honor for cross-origin
- * isolation that the site does not send yet, and `script-src 'unsafe-inline'`
- * is what lets an injected inline handler execute at all. Both are removed by
- * the hardening PR; the numbers may only go down.
- */
-const RATCHET = {
-  missingHardeningHeaders: 2, // Cross-Origin-Opener-Policy, Cross-Origin-Resource-Policy
-  scriptSrcUnsafeInline: 1,
-};
+// This gate has no frozen debt left. Both items it used to ratchet are now
+// invariants: `script-src 'unsafe-inline'` is gone (the last inline script and
+// the last on* attribute were extracted to versioned modules), and the two
+// cross-origin isolation headers ship in _headers. Either coming back is a
+// security regression, not a budget question, so both fail outright below.
 
 let failures = 0;
 const fail = (msg) => {
@@ -70,18 +65,14 @@ const REQUIRED = {
   "permissions-policy": /geolocation=/i,
   "strict-transport-security": /max-age=(\d+)/i,
   "content-security-policy": /default-src/i,
-};
-const HARDENING = {
-  "cross-origin-opener-policy": /same-origin/i,
-  "cross-origin-resource-policy": /same-origin|same-site/i,
+  "cross-origin-opener-policy": /^same-origin$/i,
+  "cross-origin-resource-policy": /^(same-origin|same-site)$/i,
 };
 
+// Every deployed page, not a sample: a page-scoped rule added above `/*` is
+// exactly how one page would silently lose its policy.
 const headerMisses = [];
-for (const page of [
-  "index.html",
-  "blog/index.html",
-  "solar-heatmap/index.html",
-]) {
+for (const page of deployedFiles().filter((f) => f.endsWith(".html"))) {
   const h = headersFor("/" + page.replace(/index\.html$/, ""));
   for (const [name, pattern] of Object.entries(REQUIRED)) {
     if (!h.has(name)) {
@@ -141,25 +132,44 @@ if (csp["base-uri"]?.join(" ") !== "'self'")
 if (csp["frame-ancestors"]?.join(" ") !== "'none'")
   fail("CSP frame-ancestors must be 'none'");
 
-// ── 4. frozen strictness debt ───────────────────────────────────────────────
-const inline = csp["script-src"]?.includes("'unsafe-inline'") ? 1 : 0;
-if (inline <= RATCHET.scriptSrcUnsafeInline)
-  ok(
-    `script-src 'unsafe-inline' still present: ${inline} (budget ${RATCHET.scriptSrcUnsafeInline})`,
+// ── 4. strictness invariants ────────────────────────────────────────────────
+// Every executable script the site ships is an external, version-stamped file
+// and every event handler is bound with addEventListener, so the escape hatch
+// that makes an injected inline handler run is gone. Re-adding it would
+// silently undo that hardening, hence: fail, never warn.
+if (csp["script-src"]?.includes("'unsafe-inline'"))
+  fail(
+    "script-src allows 'unsafe-inline' — inline script must never be re-enabled",
+  );
+else if (csp["script-src"]?.some((s) => /^'unsafe-/.test(s)))
+  fail(
+    `script-src carries an unsafe keyword: ${csp["script-src"].filter((s) => /^'unsafe-/.test(s)).join(", ")}`,
   );
 else
-  fail(
-    "script-src gained 'unsafe-inline' — inline script must never be re-enabled",
+  ok(
+    "script-src is closed — every shipped script is an external, versioned file",
   );
 
-const missingHardening = Object.keys(HARDENING).filter(
-  (n) => !headersFor("/").has(n),
-);
-if (missingHardening.length <= RATCHET.missingHardeningHeaders)
-  ok(
-    `cross-origin isolation headers pending: ${missingHardening.join(", ") || "none"} (budget ${RATCHET.missingHardeningHeaders})`,
+// The origin-wide rule is what every page gets today, but a future page-scoped
+// rule must not be able to hand one page back the escape hatch. Check the
+// EFFECTIVE policy per deployed page, not just the one on "/".
+const inlinePages = deployedFiles()
+  .filter((f) => f.endsWith(".html"))
+  .filter((f) =>
+    parseCsp(
+      headersFor("/" + f.replace(/index\.html$/, "")).get(
+        "content-security-policy",
+      ) || "",
+    )["script-src"]?.includes("'unsafe-inline'"),
   );
-else fail(`unexpected header regression: ${missingHardening.join(", ")}`);
+if (inlinePages.length)
+  fail(
+    `script-src 'unsafe-inline' is served to: ${inlinePages.slice(0, 5).join(", ")}`,
+  );
+else
+  ok(
+    `no deployed page is served script-src 'unsafe-inline' (${deployedFiles().filter((f) => f.endsWith(".html")).length} pages checked)`,
+  );
 
 // ── 5. endpoint registry: every host the app uses must be allowed ───────────
 function shippedSources() {

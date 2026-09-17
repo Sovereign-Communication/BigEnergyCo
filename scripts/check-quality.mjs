@@ -31,27 +31,26 @@ import {
 
 /**
  * Frozen debt. Every number here is debt, not a target — PRs that pay it down
- * must lower the number in the same commit.
+ * must lower the number in the same commit, and a ratchet that reaches zero
+ * becomes an invariant in that same commit or the number stops meaning
+ * anything.
  *
- * Title length, description bounds, canonical/sitemap agreement, link targets
- * and the a11y set used to live here too; that debt was paid, so those rules
- * are now hard invariants further down. A ratchet that reaches zero should
- * become an invariant in the same commit, or the number stops meaning anything.
+ * Title length, description bounds, canonical/sitemap agreement, link targets,
+ * the a11y set AND the two CSP blockers used to live here. The blockers are
+ * paid: solar-heatmap/index.html's ~590-line app moved to the versioned module
+ * assets/js/heatmap.js, and index.html's eight on* attributes became listeners
+ * wired in chat.js. That is what let CSP drop script-src 'unsafe-inline', so
+ * both counts are now zero-tolerance invariants below — a new inline script or
+ * on* attribute re-opens the exact hole 'unsafe-inline' filled.
  *
- *   inlineScriptBlocks          1 — solar-heatmap/index.html carries its whole
- *                              app (~590 lines) inline. This is what forces
- *                              CSP script-src 'unsafe-inline'; extracting it to
- *                              a versioned module removes the debt AND the CSP
- *                              exception in one move.
- *   inlineHandlers              8 (index.html) — same CSP blocker; removed by
- *                              delegating the listeners.
- *   inlineStyleAttributes     610 — tracked so the count cannot grow while the
- *                              utility-class migration is deferred.
+ *   inlineStyleAttributes     574 — tracked so the count cannot grow while the
+ *                              utility-class migration is deferred. (Was 610;
+ *                              moving the heatmap app out of the markup also
+ *                              moved the style attributes its JS templates
+ *                              carry, and the ratchet follows the measurement.)
  */
 const RATCHET = {
-  inlineScriptBlocks: 1,
-  inlineHandlers: 8,
-  inlineStyleAttributes: 610,
+  inlineStyleAttributes: 574,
 };
 
 export const TITLE_MAX = 62; // ~580 px in the SERP; Google truncates past this
@@ -281,19 +280,18 @@ const ratchet = (measured, budget, label, hint, detail = "") => {
         (detail ? `\n     ${detail}` : ""),
     );
 };
-ratchet(
-  stats.inlineScriptBlocks.length,
-  RATCHET.inlineScriptBlocks,
-  "executable inline script blocks",
-  "extract the block to a versioned module — inline script is what forces CSP 'unsafe-inline'",
-  stats.inlineScriptBlocks.slice(0, 5).join("; "),
+// Zero-tolerance invariants (a ratchet that reached zero): inline script is
+// what forces CSP 'unsafe-inline', and every shipped script is now an external
+// versioned module, so the budget is gone for good.
+report(
+  stats.inlineScriptBlocks,
+  "no executable inline script block (CSP script-src stays closed)",
 );
-ratchet(
-  stats.inlineHandlers,
-  RATCHET.inlineHandlers,
-  "inline event handlers",
-  "delegate to addEventListener; this blocks removing CSP 'unsafe-inline'",
-);
+if (stats.inlineHandlers)
+  fail(
+    `inline event handler attributes: ${stats.inlineHandlers} — delegate to addEventListener; an on* attribute only runs because CSP allows 'unsafe-inline'`,
+  );
+else ok("no inline event handler attribute (CSP script-src stays closed)");
 ratchet(
   stats.inlineStyles,
   RATCHET.inlineStyleAttributes,
@@ -304,6 +302,6 @@ ratchet(
 console.log(
   failures
     ? `\n${failures} QUALITY FAILURE(S)`
-    : `\nQUALITY OK (${pages.length} pages, ${Object.keys(RATCHET).length} frozen ratchets)`,
+    : `\nQUALITY OK (${pages.length} pages, ${Object.keys(RATCHET).length} frozen ratchet(s))`,
 );
 process.exit(failures ? 1 : 0);

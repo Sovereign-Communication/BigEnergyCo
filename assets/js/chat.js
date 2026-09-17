@@ -781,6 +781,25 @@ function setupEventListeners() {
 
   if (navToggle) navToggle.addEventListener("click", window.toggleMobileNav);
 
+  // The system modal's footer "Close" button used to inline-call
+  // btnCloseSystem.click(). Binding it here keeps the handler out of the
+  // markup, which is what lets CSP drop script-src 'unsafe-inline'. Same route
+  // as the Escape handler: go through the wired closer so focus returns to the
+  // opener, and only hide directly if the app module never loaded.
+
+  var closeSystemSheet = document.getElementById("btnCloseSystemSheet");
+
+  if (closeSystemSheet)
+    closeSystemSheet.addEventListener("click", function () {
+      var wired = document.getElementById("btnCloseSystem");
+
+      if (wired) wired.click();
+
+      var modal = document.getElementById("systemModal");
+
+      if (modal && modal.style.display === "flex") modal.style.display = "none";
+    });
+
   document.querySelectorAll(".mobile-nav-link").forEach(function (link) {
     link.addEventListener("click", window.closeMobileNav);
   });
