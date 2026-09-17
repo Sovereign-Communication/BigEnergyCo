@@ -6,6 +6,13 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Same commit, two events (push + pull_request) used to double the runner
+# load — and every new commit queued BEHIND the stale runs of the old one.
+# One group per branch, newest run wins.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
