@@ -148,7 +148,12 @@ function cityPage(c) {
   const [lo, hi] = yieldBand(c.lat);
   const wx = workedExample(c, lo, hi);
   const coord = `${Math.abs(c.lat).toFixed(2)}° ${c.lat >= 0 ? "N" : "S"}, ${Math.abs(c.lon).toFixed(2)}° ${c.lon >= 0 ? "E" : "W"}`;
-  const title = `Solar & Battery Calculator for ${c.name}, ${c.country} — Free, Honest Sizing`;
+  // SERP title, city first for local intent and hard-capped at 62 rendered
+  // characters (Google truncates around 580 px; a 76-character title is just a
+  // wasted opportunity). The country lives in the description, h1, breadcrumb
+  // and JSON-LD instead of eating the title budget. Written as `&amp;` because
+  // this is markup: the length gate measures the rendered text.
+  const title = `${c.name} Solar &amp; Battery Calculator — Free Sizing`;
   const desc = `Free solar and battery sizing for ${c.name}, ${c.country} (${coord}). Five years of NASA weather. Nothing for sale.`;
   const h1 = `Solar & Battery Sizing for ${c.name}, ${c.country}`;
 

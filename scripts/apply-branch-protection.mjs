@@ -13,8 +13,11 @@
 // .github/workflows/main-audit.yml (fails loudly if one lands anyway). Anything
 // that is not documentation must reach main through a PR.
 //
-// Required checks are the job names as GitHub reports them:
-//   Tests / test · Tests / web-smoke · Tests / coverage · CodeQL / analyze
+// Required check contexts are the CHECK-RUN names, which for GitHub Actions are
+// the bare job names — the "Tests / web-smoke" form is UI grouping, not the
+// context, and requiring it would leave a PR waiting forever on a status that
+// can never be reported. Verified against
+// `GET /repos/{owner}/{repo}/commits/{sha}/check-runs` on an open PR.
 // Do not enable this until those checks have reported at least once on a real
 // PR, or every PR waits forever on a status that will never arrive.
 import { execFileSync } from "node:child_process";
@@ -22,12 +25,7 @@ import { execFileSync } from "node:child_process";
 const RULESET_NAME = "main-protection";
 const CHECK = process.argv.includes("--check");
 
-export const REQUIRED_CHECKS = [
-  "Tests / test",
-  "Tests / web-smoke",
-  "Tests / coverage",
-  "CodeQL / analyze",
-];
+export const REQUIRED_CHECKS = ["test", "web-smoke", "coverage", "analyze"];
 
 export const desiredRuleset = () => ({
   name: RULESET_NAME,

@@ -55,14 +55,15 @@ export function tags(html, name) {
 export function metaContent(html, key, value) {
   for (const tag of tags(html, "meta")) {
     if ((attr(tag, key) || "").toLowerCase() === value.toLowerCase())
-      return attr(tag, "content");
+      return decodeEntities(attr(tag, "content"));
   }
   return null;
 }
 
 /**
- * Decode the entities that change what a human reads. `&amp;` is decoded last so
- * `&amp;lt;` cannot become a tag.
+ * Decode the entities that change what a reader actually sees: both the text
+ * measured for length (title/description) and the text checked for an
+ * accessible name. `&amp;` is decoded last so `&amp;lt;` cannot become a tag.
  */
 export function decodeEntities(text) {
   return String(text ?? "")
@@ -72,6 +73,17 @@ export function decodeEntities(text) {
     .replace(/&quot;/g, '"')
     .replace(/&#0?39;|&apos;/g, "'")
     .replace(/&amp;/g, "&");
+}
+
+/**
+ * The title as a search result renders it: entities decoded, whitespace
+ * collapsed, trimmed. Measuring the raw markup instead would count Prettier's
+ * line wrapping and `&amp;` as characters a human never sees — which is how a
+ * 59-character title reads as 76 and a healthy page gets flagged.
+ */
+export function documentTitle(html) {
+  const raw = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] || "";
+  return decodeEntities(raw).replace(/\s+/g, " ").trim();
 }
 
 /**
@@ -266,21 +278,56 @@ export const placeholders = (s) =>
   [...String(s).matchAll(/\{(\w+)\}/g)]
     .map((m) => m[1])
     .sort()
-    .join(",");
+    .join(","); /**
+ * Every `data-i18n` hook a shipped page declares must resolve in every
+ * non-English locale. English is exempt on purpose: the English string IS the
+ * markup, so an `en` entry would be a second source of truth that can drift.
+ *
+ * A hook that resolves in NO locale is a typo in the markup (the element would
+ * silently keep its English default and the typo would never be noticed), so
+ * that case is returned separately.
+ */
+export function hookCoverage(locales, hooks) {
+  const langs = Object.keys(locales);
+  const gaps = {};
+  for (const l of langs) {
+    if (l === "en") continue;
+    gaps[l] = [...hooks].filter((h) => locales[l][h] === undefined);
+  }
+  const unresolved = [...hooks].filter((h) =>
+    langs.every((l) => locales[l][h] === undefined),
+  );
+  return { gaps, unresolved };
+}
 
 /**
- * Strings only — `rtl` is a boolean layout flag, not translatable text. The
- * union of the translated locales is the vocabulary the app is able to render
- * in a non-English language, so it is the yardstick each locale is held to.
+ * The frontier verdict strings are composed at runtime as
+ * `base + ("Grid" | "Offgrid")`, so a variant that exists in one locale but not
+ * another silently renders English (or the raw key) for that mode — exactly the
+ * class of gap a vocabulary-size comparison cannot see. Compare the families.
  */
-export function translatedVocabulary(locales) {
-  return new Set(
-    ["es", "pt", "fr", "ar"]
-      .filter((l) => locales[l])
-      .flatMap((l) =>
-        Object.entries(locales[l])
-          .filter(([, value]) => typeof value === "string")
-          .map(([key]) => key),
-      ),
-  );
+export function familyGaps(locales, suffixes = ["Grid", "Offgrid"]) {
+  const langs = Object.keys(locales).filter((l) => l !== "en");
+  const families = new Set();
+  for (const l of Object.keys(locales)) {
+    for (const key of Object.keys(locales[l] || {})) {
+      for (const s of suffixes)
+        if (key.endsWith(s)) families.add(key.slice(0, -s.length));
+    }
+  }
+  const gaps = {};
+  for (const l of langs) {
+    gaps[l] = [];
+    for (const base of families) {
+      for (const s of suffixes) {
+        const key = base + s;
+        const present = locales[l][key] !== undefined;
+        const elsewhere = Object.keys(locales).some(
+          (x) => locales[x]?.[key] !== undefined,
+        );
+        if (!present && elsewhere) gaps[l].push(key);
+      }
+    }
+  }
+  return gaps;
 }
