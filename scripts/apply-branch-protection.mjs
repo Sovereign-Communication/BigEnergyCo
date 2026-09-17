@@ -45,6 +45,11 @@ export const desiredRuleset = () => ({
         require_code_owner_review: false,
         require_last_push_approval: false,
         required_review_thread_resolution: false,
+        // GitHub defaults this to true; left implicit it demands an extra
+        // approval for commits it cannot attribute to an account, which a
+        // single-maintainer repo can never satisfy. The gate here is CI, not a
+        // second human, so state it explicitly.
+        require_extra_approval_for_unattributed_changes: false,
       },
     },
     {

@@ -1,14 +1,19 @@
 name: CodeQL
 
 on:
+  # main only on push, plus every PR (and the weekly sweep). A push trigger on
+  # feature branches produced a second run for the same commit, and cancelling
+  # the older one leaves a CANCELLED check run named `analyze` on the head SHA —
+  # which blocks the merge even though the surviving run succeeded, because
+  # `analyze` is a required status check.
   push:
-    branches-ignore: [gh-pages]
+    branches: [main]
   pull_request:
   schedule:
     - cron: "0 9 * * 4"
 
-# One group per branch, newest run wins — same-commit push+PR duplicates
-# and superseded-branch runs no longer pile onto saturated hosted runners.
+# One group per branch, newest run wins — superseded runs stop piling onto
+# saturated hosted runners.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
