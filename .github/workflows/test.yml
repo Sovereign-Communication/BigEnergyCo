@@ -1,14 +1,19 @@
 name: Tests
 
 on:
+  # main only on push, plus every PR. Running on feature-branch pushes as well
+  # produced two runs for the same commit (push + pull_request); with
+  # cancel-in-progress the older one ends CANCELLED, and a cancelled check run
+  # on the head SHA shadows the passing one for required-status purposes — the
+  # PR then sits BLOCKED with every check green. Branch pushes are covered by
+  # their PR, so the duplicate event bought nothing but blocked merges.
   push:
-    branches-ignore: [gh-pages]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
-# Same commit, two events (push + pull_request) used to double the runner
-# load — and every new commit queued BEHIND the stale runs of the old one.
-# One group per branch, newest run wins.
+# One group per branch, newest run wins — superseded runs stop eating runners.
+# With the triggers above there is no same-commit duplicate to cancel.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
