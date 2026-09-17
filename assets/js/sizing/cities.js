@@ -1,6 +1,6 @@
 // Unified city records used by the location combobox. The seed is instant and
 // offline; country partitions provide millions of additional place/coordinate pairs.
-import { usStateCode, US_STATES } from "./pricing.js?v=20260917a";
+import { usStateCode, US_STATES } from "./pricing.js?v=20260917c";
 
 export const CITY_CATALOG = [
   ["Honolulu", "United States", "Hawaii", 21.31, -157.86],
@@ -230,13 +230,24 @@ export function nearestCity(lat, lon, cities = CITY_CATALOG, maxKm = 60) {
   }
   return bestKm <= maxKm ? best : null;
 }
+
+export const CITY_LOOKUP_TIMEOUT_MS = 12000;
+
 export async function lookupCityOnline(query, fetchImpl = globalThis.fetch) {
   const q = String(query || "").trim();
   if (q.length < 2) return null;
+  // A hung geocoder must never leave "Looking up your city…" on screen
+  // forever: bound the whole lookup, then fall through to the offline path.
+  const ctrl =
+    typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = ctrl
+    ? setTimeout(() => ctrl.abort(), CITY_LOOKUP_TIMEOUT_MS)
+    : null;
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q=${encodeURIComponent(q)}`;
     const response = await fetchImpl(url, {
       headers: { Accept: "application/json" },
+      ...(ctrl ? { signal: ctrl.signal } : {}),
     });
     if (!response.ok) return null;
     const row = (await response.json())?.[0];
@@ -255,11 +266,15 @@ export async function lookupCityOnline(query, fetchImpl = globalThis.fetch) {
     };
   } catch {
     return null;
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 
 let cachedMergedCatalog = null;
 let inFlightCatalogPromise = null;
+
+export const CITY_CATALOG_TIMEOUT_MS = 30000;
 
 export function clearCityCatalogCache() {
   cachedMergedCatalog = null;
@@ -293,10 +308,19 @@ export async function loadCityCatalog({
       /* optional cache */
     }
 
+    // Bound the whole partition load: a hung connection must fall back to
+    // the bundled catalog, not stall location search. Slow-but-working loads
+    // finish far inside the deadline (small JSON partitions).
+    const ctrl =
+      typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timer = ctrl
+      ? setTimeout(() => ctrl.abort(), CITY_CATALOG_TIMEOUT_MS)
+      : null;
+    const signalOpts = ctrl ? { signal: ctrl.signal } : {};
     try {
       const response = await fetchImpl(
-        "./assets/js/sizing/city-data/index.json?v=20260917a",
-        { cache: "force-cache" },
+        "./assets/js/sizing/city-data/index.json?v=20260917c",
+        { cache: "force-cache", ...signalOpts },
       );
       if (!response.ok) throw new Error(`city index HTTP ${response.status}`);
       const index = await response.json();
@@ -305,8 +329,8 @@ export async function loadCityCatalog({
           const stem = item.file.replace(/\.json$/i, "");
           try {
             const part = await fetchImpl(
-              `./assets/js/sizing/city-data/${encodeURIComponent(stem)}.json?v=20260917a`,
-              { cache: "force-cache" },
+              `./assets/js/sizing/city-data/${encodeURIComponent(stem)}.json?v=20260917c`,
+              { cache: "force-cache", ...signalOpts },
             );
             if (part.ok) {
               return parseCityRows(await part.json());
@@ -331,6 +355,8 @@ export async function loadCityCatalog({
       return merged;
     } catch {
       return CITY_CATALOG;
+    } finally {
+      if (timer) clearTimeout(timer);
     }
   })();
 

@@ -301,6 +301,22 @@ async function putToCacheStorage(key, data) {
   }
 }
 
+/**
+ * Shape gate for persisted weather (Cache Storage v1 JSON, localStorage).
+ * A corrupt or version-stale entry (wrong fields, stringified numbers,
+ * missing meta) must fall through to a refetch — never poison the memo.
+ * Fresh-network NaN gaps (-999 fills) still count as numbers, so they pass.
+ */
+export function isUsableWeather(entry) {
+  if (!entry || typeof entry !== "object" || Array.isArray(entry)) return false;
+  if (!Array.isArray(entry.hours) || entry.hours.length === 0) return false;
+  const h0 = entry.hours[0];
+  if (!h0 || typeof h0.ghi !== "number" || typeof h0.tAmb !== "number")
+    return false;
+  if (!entry.meta || !(Number(entry.meta.years) > 0)) return false;
+  return true;
+}
+
 export async function fetchHourlyCached(
   opts,
   store = typeof localStorage !== "undefined" ? localStorage : null,
@@ -336,7 +352,7 @@ export async function fetchHourlyCached(
 
     // 4. Cache Storage hit (v1 JSON layer; available in workers and window)
     const diskHit = await getFromCacheStorage(key);
-    if (diskHit && Array.isArray(diskHit.hours) && diskHit.hours.length > 0) {
+    if (isUsableWeather(diskHit)) {
       IN_MEMORY_WEATHER_CACHE.set(key, diskHit);
       // Async side-grade into the compact layer so the NEXT cold start is
       // fast too; this request already has its data.
@@ -353,6 +369,7 @@ export async function fetchHourlyCached(
         const hit = store.getItem(key);
         if (hit) {
           const parsed = JSON.parse(hit);
+          if (!isUsableWeather(parsed)) throw new Error("stale weather shape");
           IN_MEMORY_WEATHER_CACHE.set(key, parsed);
           idbPut(
             v2Key(opts.latitude, opts.longitude, opts.years || 5),

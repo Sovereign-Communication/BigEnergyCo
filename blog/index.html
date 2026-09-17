@@ -18,35 +18,13 @@
       content="solar energy blog, battery storage guide, DIY battery storage, LiFePO4, sodium-ion battery, off-grid power"
     />
     <link rel="canonical" href="https://freeoffgridcalculator.com/blog/" />
+    <!-- hreflang is intentionally en + x-default only: the ?lang= variants
+         are client-side translations that canonical here, so Google would
+         discard them as non-indexable targets. -->
     <link
       rel="alternate"
       hreflang="en"
       href="https://freeoffgridcalculator.com/blog/"
-    />
-    <link
-      rel="alternate"
-      hreflang="es"
-      href="https://freeoffgridcalculator.com/blog/?lang=es"
-    />
-    <link
-      rel="alternate"
-      hreflang="pt"
-      href="https://freeoffgridcalculator.com/blog/?lang=pt"
-    />
-    <link
-      rel="alternate"
-      hreflang="fr"
-      href="https://freeoffgridcalculator.com/blog/?lang=fr"
-    />
-    <link
-      rel="alternate"
-      hreflang="de"
-      href="https://freeoffgridcalculator.com/blog/?lang=de"
-    />
-    <link
-      rel="alternate"
-      hreflang="ar"
-      href="https://freeoffgridcalculator.com/blog/?lang=ar"
     />
     <link
       rel="alternate"
@@ -61,6 +39,7 @@
       href="../assets/favicon-48.png"
     />
     <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png" />
+    <link rel="manifest" href="../manifest.webmanifest" />
     <link
       rel="alternate"
       type="application/rss+xml"
@@ -129,7 +108,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -142,7 +122,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -155,7 +136,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -168,7 +150,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -181,7 +164,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -194,7 +178,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -207,7 +192,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -220,7 +206,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -233,7 +220,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -246,7 +234,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           }
         ]
       }
@@ -643,9 +632,38 @@
           grid-template-columns: 1fr;
         }
       }
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.5rem;
+        z-index: 20;
+        padding: 0.7rem 1rem;
+        background: #00e699;
+        color: #04120c;
+        font-weight: 800;
+        border-radius: 8px;
+      }
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid #00e699;
+        outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
     </style>
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <!-- Header / Navigation Bar -->
     <header>
       <div class="container nav-flex">
@@ -684,7 +702,7 @@
     </section>
 
     <!-- Articles Grid Section -->
-    <main class="container articles-section">
+    <main id="main" class="container articles-section">
       <div class="disclaimer-box">
         <strong>⚠️ Educational Content:</strong> All articles are provided for
         educational purposes only. BigEnergyCo sells no products, collects no
@@ -721,7 +739,7 @@
           >
             🌐 Worldwide Reference Guides
           </div>
-          <h3
+          <h2
             style="
               font-size: 1.25rem;
               font-weight: 800;
@@ -730,7 +748,7 @@
             "
           >
             Solar &amp; Battery Benchmarks for 66 Cities
-          </h3>
+          </h2>
           <p
             style="
               color: var(--text-muted);
@@ -757,7 +775,6 @@
             background: rgba(59, 130, 246, 0.15);
             border: 1px solid rgba(59, 130, 246, 0.4);
             color: #93c5fd;
-            white-space: nowrap;
             font-weight: 700;
             padding: 0.65rem 1.2rem;
             border-radius: 8px;

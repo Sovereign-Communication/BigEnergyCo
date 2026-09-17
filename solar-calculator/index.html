@@ -4,11 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#090d16">
   <title>Solar & Battery Calculator by City — Free Sizing for 66 Cities</title>
   <meta name="description" content="Free solar and battery sizing pages for 66 cities worldwide. Simulated against five years of NASA satellite weather. Nothing for sale.">
   <link rel="icon" type="image/svg+xml" href="../assets/icon.svg">
   <link rel="icon" type="image/png" sizes="48x48" href="../assets/favicon-48.png">
   <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+  <link rel="manifest" href="../manifest.webmanifest">
   <link rel="canonical" href="https://freeoffgridcalculator.com/solar-calculator/">
   <link rel="alternate" hreflang="en" href="https://freeoffgridcalculator.com/solar-calculator/">
   <link rel="alternate" hreflang="x-default" href="https://freeoffgridcalculator.com/solar-calculator/">
@@ -101,7 +103,12 @@
     h2 { color: #fff; font-size: 1.25rem; margin: 1.8rem 0 .8rem; }
     p { margin-bottom: 1rem; }
     .citylinks { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 1.5rem; }
-    .citylinks a { color: var(--accent); text-decoration: none; font-size: .85rem; border: 1px solid var(--border); border-radius: 20px; padding: .2rem .7rem; }
+    .citylinks a { color: var(--accent); text-decoration: none; font-size: .85rem; border: 1px solid var(--border); border-radius: 20px; padding: .2rem .7rem; display: inline-flex; align-items: center; min-height: 44px; }
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .skip-link { position: absolute; left: -9999px; top: .5rem; z-index: 20; padding: .7rem 1rem; background: var(--accent); color: #04120c; font-weight: 800; border-radius: 8px; }
+    .skip-link:focus { left: .75rem; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+    @media (max-width: 480px) { .worldwide-notice .btn { white-space: normal !important; width: 100%; text-align: center; } }
     footer {
       border-top: 1px solid var(--border);
       padding: 2.5rem 0 max(3rem, env(safe-area-inset-bottom));
@@ -121,13 +128,14 @@
   </style>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header>
     <div class="container">
       <a class="logo" href="../" aria-label="BigEnergyCo Home">
         <span>⚡</span>
         <span>BigEnergy<span class="highlight">Co</span></span>
       </a>
-      <nav>
+      <nav aria-label="Site">
         <a href="../solar-heatmap/">Heatmap</a>
         <a href="../#bom">Hardware Reference</a>
         <a href="../blog/">Guides &amp; Blog</a>
@@ -140,7 +148,7 @@
     </div>
   </header>
 
-  <main class="container">
+  <main id="main" class="container">
     <article>
       <h1>Solar &amp; Battery Calculator by City</h1>
       <!-- Worldwide Sizing Reassurance Callout -->
@@ -151,7 +159,7 @@
             The BigEnergyCo calculator works for <strong>any city, town, or GPS coordinates worldwide</strong> using 5 years of hourly NASA satellite weather. The 66 benchmark cities below provide reference solar profiles and worked sizing examples.
           </p>
         </div>
-        <a href="../#sizing" class="btn" style="white-space: nowrap;">⚡ Size Any Location Worldwide &rarr;</a>
+        <a href="../#sizing" class="btn">⚡ Size Any Location Worldwide &rarr;</a>
       </div>
 
       <p>Pick your city for a free, honest sizing overview — then run the exact simulation with your coordinates and your own tariff. Every page is powered by the same deterministic engine simulating <strong>five years of hourly NASA satellite weather</strong>. No signup, nothing for sale.</p>

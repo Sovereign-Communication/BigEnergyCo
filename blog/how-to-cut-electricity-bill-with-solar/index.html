@@ -30,6 +30,8 @@
       href="../../assets/favicon-48.png"
     />
     <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png" />
+    <link rel="manifest" href="../../manifest.webmanifest" />
+    <meta name="theme-color" content="#090d16" />
     <link
       rel="alternate"
       hreflang="en"
@@ -447,9 +449,38 @@
           font-size: 0.85rem;
         }
       }
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.5rem;
+        z-index: 20;
+        padding: 0.7rem 1rem;
+        background: #00e699;
+        color: #04120c;
+        font-weight: 800;
+        border-radius: 8px;
+      }
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid #00e699;
+        outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
     </style>
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header>
       <div class="container">
         <a class="logo" href="../../" aria-label="BigEnergyCo Home">
@@ -469,7 +500,7 @@
       </div>
     </header>
 
-    <main class="container">
+    <main id="main" class="container">
       <article>
         <h1>How to Cut Your Electricity Bill With Solar: Honest Math (2026)</h1>
         <p class="meta">
@@ -520,31 +551,40 @@
         </p>
         <div class="table-container">
           <table>
-            <tr>
-              <th>Component</th>
-              <th>Indicative cost</th>
-              <th>Scope</th>
-            </tr>
-            <tr>
-              <td>Battery bank, usable</td>
-              <td class="num">$80–125/kWh</td>
-              <td>Landed DIY: prismatic cells + BMS shipped &amp; duty-paid</td>
-            </tr>
-            <tr>
-              <td>Battery bank, usable</td>
-              <td class="num">$110–165/kWh</td>
-              <td>Budget retail pack, BMS &amp; enclosure included</td>
-            </tr>
-            <tr>
-              <td>Solar panels</td>
-              <td class="num">$0.16–0.38/W</td>
-              <td>Ex-factory China → shipped retail mono-PERC</td>
-            </tr>
-            <tr>
-              <td>Hybrid inverter</td>
-              <td class="num">$85–260/kW</td>
-              <td>Budget-retail low-frequency units</td>
-            </tr>
+            <caption>
+              What the hardware actually costs (Aug 2026)
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Component</th>
+                <th scope="col">Indicative cost</th>
+                <th scope="col">Scope</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Battery bank, usable</td>
+                <td class="num">$80–125/kWh</td>
+                <td>
+                  Landed DIY: prismatic cells + BMS shipped &amp; duty-paid
+                </td>
+              </tr>
+              <tr>
+                <td>Battery bank, usable</td>
+                <td class="num">$110–165/kWh</td>
+                <td>Budget retail pack, BMS &amp; enclosure included</td>
+              </tr>
+              <tr>
+                <td>Solar panels</td>
+                <td class="num">$0.16–0.38/W</td>
+                <td>Ex-factory China → shipped retail mono-PERC</td>
+              </tr>
+              <tr>
+                <td>Hybrid inverter</td>
+                <td class="num">$85–260/kW</td>
+                <td>Budget-retail low-frequency units</td>
+              </tr>
+            </tbody>
           </table>
         </div>
         <p>
@@ -562,30 +602,37 @@
         </p>
         <div class="table-container">
           <table>
-            <tr>
-              <th>Bill cut</th>
-              <th>Hardware</th>
-              <th>Component cost</th>
-              <th>Payback</th>
-            </tr>
-            <tr>
-              <td>~60%</td>
-              <td class="num">1.8 kW + 2 kWh</td>
-              <td class="num">$391–1,357</td>
-              <td class="num"><strong>~5–18 months</strong></td>
-            </tr>
-            <tr>
-              <td>~80%</td>
-              <td class="num">2.3 kW + 4 kWh</td>
-              <td class="num">$545–1,900</td>
-              <td class="num">~6–20 months</td>
-            </tr>
-            <tr>
-              <td>~95%</td>
-              <td class="num">2.6 kW + 6 kWh</td>
-              <td class="num">$714–2,504</td>
-              <td class="num">~6–21 months</td>
-            </tr>
+            <caption>
+              Scenario 1 — Honolulu, USA: $0.42/kWh
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Bill cut</th>
+                <th scope="col">Hardware</th>
+                <th scope="col">Component cost</th>
+                <th scope="col">Payback</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>~60%</td>
+                <td class="num">1.8 kW + 2 kWh</td>
+                <td class="num">$391–1,357</td>
+                <td class="num"><strong>~5–18 months</strong></td>
+              </tr>
+              <tr>
+                <td>~80%</td>
+                <td class="num">2.3 kW + 4 kWh</td>
+                <td class="num">$545–1,900</td>
+                <td class="num">~6–20 months</td>
+              </tr>
+              <tr>
+                <td>~95%</td>
+                <td class="num">2.6 kW + 6 kWh</td>
+                <td class="num">$714–2,504</td>
+                <td class="num">~6–21 months</td>
+              </tr>
+            </tbody>
           </table>
         </div>
         <p>

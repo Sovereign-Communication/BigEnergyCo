@@ -158,18 +158,18 @@ function cityPage(c) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#090d16">
   <title>${title}</title>
   <meta name="description" content="${desc}">
   <link rel="icon" type="image/svg+xml" href="../../assets/icon.svg">
   <link rel="icon" type="image/png" sizes="48x48" href="../../assets/favicon-48.png">
   <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
+  <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="canonical" href="${url}">
+  <!-- hreflang is intentionally en + x-default only: the ?lang= variants are
+       client-side translations that canonical here, so Google would discard
+       them as non-indexable targets. -->
   <link rel="alternate" hreflang="en" href="${url}">
-  <link rel="alternate" hreflang="es" href="${url}?lang=es">
-  <link rel="alternate" hreflang="pt" href="${url}?lang=pt">
-  <link rel="alternate" hreflang="fr" href="${url}?lang=fr">
-  <link rel="alternate" hreflang="de" href="${url}?lang=de">
-  <link rel="alternate" hreflang="ar" href="${url}?lang=ar">
   <link rel="alternate" hreflang="x-default" href="${url}">
   <link rel="alternate" type="application/rss+xml" title="BigEnergyCo Blog" href="https://freeoffgridcalculator.com/rss.xml">
   <meta property="og:type" content="article">
@@ -200,6 +200,7 @@ function cityPage(c) {
         "dateModified": "2026-08-30T00:00:00Z",
         "author": { "@type": "Person", "name": "Lucas Ballek", "url": "https://freeoffgridcalculator.com" },
         "publisher": { "@type": "Organization", "name": "BigEnergyCo", "url": "https://freeoffgridcalculator.com" },
+        "mainEntityOfPage": "${url}",
         "description": "${desc}"
       },
       {
@@ -313,7 +314,11 @@ function cityPage(c) {
     summary { cursor: pointer; color: var(--accent); font-weight: 600; }
     details p { margin: .6rem 0 0; }
     .citylinks { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1.5rem 0; }
-    .citylinks a { color: var(--accent); text-decoration: none; font-size: .85rem; border: 1px solid var(--border); border-radius: 20px; padding: .2rem .7rem; }
+    .citylinks a { color: var(--accent); text-decoration: none; font-size: .85rem; border: 1px solid var(--border); border-radius: 20px; padding: .2rem .7rem; display: inline-flex; align-items: center; min-height: 44px; }
+    a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .skip-link { position: absolute; left: -9999px; top: .5rem; z-index: 20; padding: .7rem 1rem; background: var(--accent); color: #04120c; font-weight: 800; border-radius: 8px; }
+    .skip-link:focus { left: .75rem; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
     footer {
       border-top: 1px solid var(--border);
       padding: 2.5rem 0 max(3rem, env(safe-area-inset-bottom));
@@ -333,13 +338,14 @@ function cityPage(c) {
   </style>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header>
     <div class="container">
       <a class="logo" href="../../" aria-label="BigEnergyCo Home">
         <span>⚡</span>
         <span>BigEnergy<span class="highlight">Co</span></span>
       </a>
-      <nav>
+      <nav aria-label="Site">
         <a href="../../solar-heatmap/">Heatmap</a>
         <a href="../../#bom">Hardware Reference</a>
         <a href="../../blog/">Guides &amp; Blog</a>
@@ -352,7 +358,7 @@ function cityPage(c) {
     </div>
   </header>
 
-  <main class="container">
+  <main id="main" class="container">
     <article>
       <h1>${h1}</h1>
       <p class="meta">📍 ${coord} · ${sc.tier} · updated Aug 30, 2026 · free, no signup, nothing for sale</p>
@@ -380,8 +386,13 @@ function cityPage(c) {
       <p>Using the ${c.name} latitude band (${lo}–${hi} kWh/kWp/yr), a household using 10 kWh per day typically lands in this range — a rough illustration from the band (with a dark-week margin), not a simulation; your exact figures come from running it:</p>
       <div class="table-container">
       <table>
-        <tr><th>Bill cut</th><th>Typical panels</th><th>Typical battery</th></tr>
+        <caption>Worked sizing bands for a 10 kWh/day household in ${c.name}</caption>
+        <thead>
+          <tr><th scope="col">Bill cut</th><th scope="col">Typical panels</th><th scope="col">Typical battery</th></tr>
+        </thead>
+        <tbody>
         ${wx.rows.map((r) => `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td></tr>`).join("\n        ")}
+        </tbody>
       </table>
       </div>
       <p>${wx.paybackLine}</p>
@@ -477,11 +488,13 @@ function hubPage() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#090d16">
   <title>${title}</title>
   <meta name="description" content="${desc}">
   <link rel="icon" type="image/svg+xml" href="../assets/icon.svg">
   <link rel="icon" type="image/png" sizes="48x48" href="../assets/favicon-48.png">
   <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+  <link rel="manifest" href="../manifest.webmanifest">
   <link rel="canonical" href="${url}">
   <link rel="alternate" hreflang="en" href="${url}">
   <link rel="alternate" hreflang="x-default" href="${url}">
@@ -574,7 +587,12 @@ function hubPage() {
     h2 { color: #fff; font-size: 1.25rem; margin: 1.8rem 0 .8rem; }
     p { margin-bottom: 1rem; }
     .citylinks { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 1.5rem; }
-    .citylinks a { color: var(--accent); text-decoration: none; font-size: .85rem; border: 1px solid var(--border); border-radius: 20px; padding: .2rem .7rem; }
+    .citylinks a { color: var(--accent); text-decoration: none; font-size: .85rem; border: 1px solid var(--border); border-radius: 20px; padding: .2rem .7rem; display: inline-flex; align-items: center; min-height: 44px; }
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .skip-link { position: absolute; left: -9999px; top: .5rem; z-index: 20; padding: .7rem 1rem; background: var(--accent); color: #04120c; font-weight: 800; border-radius: 8px; }
+    .skip-link:focus { left: .75rem; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+    @media (max-width: 480px) { .worldwide-notice .btn { white-space: normal !important; width: 100%; text-align: center; } }
     footer {
       border-top: 1px solid var(--border);
       padding: 2.5rem 0 max(3rem, env(safe-area-inset-bottom));
@@ -594,13 +612,14 @@ function hubPage() {
   </style>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header>
     <div class="container">
       <a class="logo" href="../" aria-label="BigEnergyCo Home">
         <span>⚡</span>
         <span>BigEnergy<span class="highlight">Co</span></span>
       </a>
-      <nav>
+      <nav aria-label="Site">
         <a href="../solar-heatmap/">Heatmap</a>
         <a href="../#bom">Hardware Reference</a>
         <a href="../blog/">Guides &amp; Blog</a>
@@ -613,7 +632,7 @@ function hubPage() {
     </div>
   </header>
 
-  <main class="container">
+  <main id="main" class="container">
     <article>
       <h1>Solar &amp; Battery Calculator by City</h1>
       <!-- Worldwide Sizing Reassurance Callout -->
@@ -624,7 +643,7 @@ function hubPage() {
             The BigEnergyCo calculator works for <strong>any city, town, or GPS coordinates worldwide</strong> using 5 years of hourly NASA satellite weather. The 66 benchmark cities below provide reference solar profiles and worked sizing examples.
           </p>
         </div>
-        <a href="../#sizing" class="btn" style="white-space: nowrap;">⚡ Size Any Location Worldwide &rarr;</a>
+        <a href="../#sizing" class="btn">⚡ Size Any Location Worldwide &rarr;</a>
       </div>
 
       <p>Pick your city for a free, honest sizing overview — then run the exact simulation with your coordinates and your own tariff. Every page is powered by the same deterministic engine simulating <strong>five years of hourly NASA satellite weather</strong>. No signup, nothing for sale.</p>

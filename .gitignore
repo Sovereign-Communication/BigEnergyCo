@@ -97,3 +97,6 @@ _pages_staging/
 
 # Freebuff tool state (never commit)
 .freebuff/
+
+# Agent/tool state (permissions, local caches — never commit)
+.abacusai/

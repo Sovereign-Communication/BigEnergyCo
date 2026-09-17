@@ -8,3 +8,5 @@ solar-calculator/
 assets/js/sizing/profiles.js
 # Third-party bundles.
 *.min.js
+# Local tooling state (untracked): never part of the shipped site.
+.abacusai/

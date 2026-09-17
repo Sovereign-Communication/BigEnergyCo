@@ -123,8 +123,13 @@ export function axisTicks(max, count = 5) {
     }
   }
   if (!step) step = max / count;
+  // Integer iteration: accumulating `v += step` in floats can duplicate a
+  // rounded label or overshoot one tick past max on some magnitudes.
   const out = [];
-  for (let v = 0; v <= max + 1e-9; v += step) out.push(Math.round(v));
+  const ticks = Math.floor(max / step + 1e-9);
+  for (let i = 0; i <= ticks; i++) out.push(Math.round(i * step));
+  if (out[out.length - 1] !== Math.round(max) && max / step - ticks > 1e-9)
+    out.push(Math.round(max));
   return out;
 }
 
@@ -568,6 +573,16 @@ export function markerOffCurveNote(frontier, opts = {}) {
  * hardware (same tolerances as the adopted-point SOC match) AND the chemistry
  * must agree before the "selected" tag is printed.
  */
+/**
+ * Tolerances that decide whether a curve point counts as "the selected
+ * system" for the highlight dot and the table tag. They sit just inside the
+ * engine's search quantization (PV steps of 0.25 kW, battery steps of
+ * 1 kWh), so a recommendation always matches its own curve point but two
+ * distinct neighboring points never merge into one tag.
+ */
+export const FRONTIER_MARKER_PV_TOL_KW = 0.06;
+export const FRONTIER_MARKER_BATT_TOL_KWH = 0.6;
+
 export function markerMatchesPoint(marker, point, frontierChemistry) {
   if (!marker || !point) return false;
   if (
@@ -584,8 +599,10 @@ export function markerMatchesPoint(marker, point, frontierChemistry) {
   )
     return false;
   return (
-    Math.abs((point.pvKw || 0) - (marker.pvKw || 0)) < 0.06 &&
-    Math.abs((point.battKwh || 0) - (marker.battKwh || 0)) < 0.6
+    Math.abs((point.pvKw || 0) - (marker.pvKw || 0)) <
+      FRONTIER_MARKER_PV_TOL_KW &&
+    Math.abs((point.battKwh || 0) - (marker.battKwh || 0)) <
+      FRONTIER_MARKER_BATT_TOL_KWH
   );
 }
 /**

@@ -10,8 +10,10 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260917a";
-import { APPLIANCES } from "./appliances.js?v=20260917a";
+// NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
+// CITY_CATALOG in cities.js — importing the preset list would only bloat the
+// bundle, so it is deliberately not imported.
+import { APPLIANCES } from "./appliances.js?v=20260917c";
 import {
   CITY_CATALOG,
   searchCities,
@@ -21,7 +23,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260917a";
+} from "./cities.js?v=20260917c";
 
 import {
   estimateTariff,
@@ -29,56 +31,57 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260917a";
+} from "./pricing.js?v=20260917c";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260917a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260917c";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260917a";
+} from "./bom.js?v=20260917c";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260917a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260917c";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260917a";
+} from "../shared/i18n.js?v=20260917c";
 
-import { LOCALES } from "../shared/locales.js?v=20260917a";
+import { LOCALES } from "../shared/locales.js?v=20260917c";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260917a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260917a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260917c";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260917c";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260917a";
+} from "../shared/simple-mode.js?v=20260917c";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260917a";
+} from "./frontier-chart.js?v=20260917c";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260917a";
+  relocalizeOversizeCallout,
+} from "./rescale.js?v=20260917c";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260917a";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260917c";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260917a";
-import { persistWizard, restoreWizard } from "./wizard.js?v=20260917a";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260917a";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260917a";
+} from "./map-provider.js?v=20260917c";
+import { persistWizard, restoreWizard } from "./wizard.js?v=20260917c";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260917c";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260917c";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -95,8 +98,11 @@ function updateRoofAreaCapNote() {
   const count = Math.floor(area / 6);
   const capKw = Math.floor(area / 6) * (PANEL_WATTS_DEFAULT / 1000);
   note.style.display = "block";
+  // The cap assumes ~6 m² per panel (tilt rows plus walkways on a real
+  // roof); the parts list quotes the tighter bare-panel footprint. Both are
+  // honest — installed space vs hardware space — so the note says which.
   note.textContent =
-    `Caps the search at ${count} × ${PANEL_WATTS_DEFAULT} W panels ≈ ${capKw.toFixed(1)} kW of solar. ` +
+    `Caps the search at ${count} × ${PANEL_WATTS_DEFAULT} W panels ≈ ${capKw.toFixed(1)} kW of solar (≈6 m² per panel with access space). ` +
     `Clear the box to remove the cap.`;
 }
 
@@ -120,9 +126,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260917a";
+} from "./money.js?v=20260917c";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260917a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260917c";
 
 let worker = null;
 
@@ -305,7 +311,7 @@ function pipelineEl() {
   return $("loadingPipeline");
 }
 
-function pipelineStart(stage = "city") {
+function pipelineStart(stage = "City") {
   const wrap = pipelineEl();
   if (!wrap) return;
   const started = Date.now();
@@ -323,11 +329,22 @@ function pipelineStart(stage = "city") {
   pipelineStage(stage);
 }
 
+function pipelineKey(stage) {
+  // Callers pass mixed case ("city", "City", "Weather", "Sim"); the step ids
+  // are PascalCase ("pipeCity", "pipeWeather", ...), so normalize here instead
+  // of trusting every call site. Returns null for unknown stages.
+  const s = String(stage || "").trim();
+  if (!s) return null;
+  const key = "pipe" + s.charAt(0).toUpperCase() + s.slice(1);
+  return PIPELINE_STEP_IDS.includes(key) ? key : null;
+}
+
 function pipelineStage(stage, weatherDone = 0, weatherTotal = 0) {
   const wrap = pipelineEl();
   if (!wrap) return;
-  const order = PIPELINE_STEP_IDS.indexOf("pipe" + stage);
-  if (order < 0) return;
+  const key = pipelineKey(stage);
+  if (!key) return;
+  const order = PIPELINE_STEP_IDS.indexOf(key);
   PIPELINE_STEP_IDS.forEach((id, i) => {
     const node = $(id);
     if (!node) return;
@@ -379,11 +396,15 @@ function pipelineStop(success) {
 function showSpeedNote(kind, meta) {
   const note = $("speedNote");
   if (!note) return;
+  // Fixed two decimals so "-157.9" and "-157.90" never disagree between the
+  // badge, the inputs, and the share link.
+  const lat = Number(meta?.latitude);
+  const lon = Number(meta?.longitude);
   const where =
     meta &&
     (meta.offlineCity ||
-      (meta.latitude !== undefined
-        ? `${Math.round(meta.latitude * 100) / 100}, ${Math.round(meta.longitude * 100) / 100}`
+      (Number.isFinite(lat) && Number.isFinite(lon)
+        ? `${lat.toFixed(2)}, ${lon.toFixed(2)}`
         : ""));
   if (kind === "repeat") {
     note.textContent =
@@ -443,7 +464,10 @@ function applySimpleMode() {
   }
   document.querySelectorAll("[data-jargon]").forEach((node) => {
     if (simpleMode) {
-      explainElement(node, node.dataset.jargon);
+      // Unknown/typo'd terms stay plain text: explainElement returns false
+      // and no button semantics or handlers are attached to a dead tooltip.
+      const lang = document.documentElement.lang || "en";
+      if (!explainElement(node, node.dataset.jargon, lang)) return;
       node.setAttribute("role", "button");
       node.setAttribute("aria-expanded", "false");
       if (!node.dataset.eli5Wired) {
@@ -538,6 +562,7 @@ function fmtH(h) {
 }
 
 function fmtKwh(x) {
+  if (!Number.isFinite(Number(x))) return "–";
   return (Math.round(x * 100) / 100).toString();
 }
 
@@ -619,7 +644,10 @@ function fixedDisplay() {
 // The slider speaks the same language as a bill: the local-currency monthly
 // amount, derived from the user's kWh/day anchor and the active tariff.
 function kwhFromBill(bill, rate) {
-  return (bill - fixedDisplay()) / (rate * DAYS_PER_MONTH);
+  // A bill below the fixed connection charge would invert to a negative
+  // anchor; clamp at zero so downstream notes never read "-3 kWh/day".
+  if (!Number.isFinite(bill) || !Number.isFinite(rate) || rate <= 0) return 0;
+  return Math.max(0, (bill - fixedDisplay()) / (rate * DAYS_PER_MONTH));
 }
 
 function billForKwh(kwh, rate) {
@@ -671,7 +699,13 @@ function syncBillSlider() {
 
   slider.min = String(minBill);
   slider.max = String(maxBill);
-  slider.step = String(Math.max(1, Math.round((maxBill - minBill) / 300)));
+  // 1-2-5 ladder step ≈ range/300 stops: coarse currencies step in thousands,
+  // USD in whole dollars, and tiny ranges keep cents (the old Math.max(1, …)
+  // floor forced $1 jumps on cent-scale ranges).
+  const rawStep = Math.max((maxBill - minBill) / 300, 0.01);
+  const mag = 10 ** Math.floor(Math.log10(rawStep));
+  const norm = rawStep / mag;
+  slider.step = String((norm >= 5 ? 5 : norm >= 2 ? 2 : 1) * mag);
   slider.value = String(value);
   const out = $("billSliderVal");
   if (out) out.textContent = "~" + fmtBill(value);
@@ -1179,7 +1213,8 @@ function renderSunPath(lat) {
       <span style="font-size:0.75rem;font-weight:600;color:var(--primary-accent);background:rgba(0,230,153,0.1);padding:0.15rem 0.55rem;border-radius:4px;border:1px solid rgba(0,230,153,0.25);">Optimal Year-Round Tilt: ~${yrTilt}\u00B0</span>
     </div>
 
-    <svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%;height:auto;display:block;overflow:visible;">
+    <svg viewBox="0 0 ${svgW} ${svgH}" role="img" aria-label="Sun-path diagram: face ${compassShort} at about ${yrTilt} degrees tilt" style="width:100%;height:auto;display:block;overflow:visible;">
+      <title>Sun path for ${compassShort}-facing panels at ${yrTilt}° tilt</title>
       <!-- Ground line -->
       <line x1="15" y1="${groundY}" x2="${svgW - 15}" y2="${groundY}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" />
       <text x="20" y="${groundY + 16}" fill="var(--text-muted)" font-size="10" font-family="sans-serif">Ground / Horizon</text>
@@ -1496,7 +1531,9 @@ function applyEstimatedTariff(lat, lon, region, country) {
     setCurrency(est.currency);
 
   const fx = fxActive();
-  const shownRate = fx ? +(est.rate * fx.rate).toFixed(2) : est.rate;
+  // Four decimals: sub-cent tariffs (e.g. $0.0725/kWh) must survive the
+  // display-input round-trip instead of collapsing to the cent.
+  const shownRate = fx ? +(est.rate * fx.rate).toFixed(4) : est.rate;
 
   const input = $("customRateVal");
   if (input) input.value = String(shownRate);
@@ -3097,7 +3134,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260917a", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260917c", {
       type: "module",
     });
 
@@ -3238,6 +3275,9 @@ function ensureWorker() {
 }
 
 function fmt(n) {
+  // Any unsolved cell (undefined/null tariff, empty option) renders as an
+  // em dash, never the literal strings "NaN"/"undefined" in the results.
+  if (!Number.isFinite(Number(n))) return "–";
   return Number(n).toLocaleString();
 }
 
@@ -3290,6 +3330,7 @@ function fxActive() {
 }
 
 function money(usd) {
+  if (!Number.isFinite(Number(usd))) return "–";
   const fx = fxActive();
 
   if (!fx) return "$" + Number(usd).toLocaleString();
@@ -3338,7 +3379,17 @@ function gridRate(usdPerKwh) {
 }
 
 function moneyRange(lo, hi) {
-  return money(lo) + "\u2013" + money(hi);
+  if (!Number.isFinite(Number(lo)) || !Number.isFinite(Number(hi))) return "–";
+  return money(lo) + "–" + money(hi);
+}
+
+// Oversize notes are generated in USD by the engine; re-render the savings
+// figure through money() so non-USD readers see their own currency. USD
+// readers (or no-FX) get the original prose byte-identical.
+function bestPriceNote(text) {
+  const fx = fxActive();
+  if (!fx || fx.code === "USD") return text;
+  return relocalizeOversizeCallout(text, money);
 }
 
 function fxNote() {
@@ -3928,7 +3979,11 @@ function renderAutoCards(p) {
 
     if (a.bestPriceCallout) {
       card.appendChild(
-        el("div", { class: "best-price-callout" }, `💡 ${a.bestPriceCallout}`),
+        el(
+          "div",
+          { class: "best-price-callout" },
+          `💡 ${bestPriceNote(a.bestPriceCallout)}`,
+        ),
       );
     }
 
@@ -5294,7 +5349,7 @@ function entryDetailRows(p, e) {
     ]);
   }
   if (e.bestPriceCallout) {
-    rows.push(["Scenario note", e.bestPriceCallout]);
+    rows.push(["Scenario note", bestPriceNote(e.bestPriceCallout)]);
   }
   return rows;
 }
@@ -5302,9 +5357,17 @@ function entryDetailRows(p, e) {
 // Opening the full-analysis modal for a chosen system (curve point, matrix
 // cell, etc). ``adopt`` makes the primary button re-run the engine with this
 // EXACT system so the live charts and hardware list follow it.
+let systemModalOpener = null;
 function showSystemModal(p, entry, adopt) {
   const overlay = $("systemModal");
   if (!overlay) return;
+  if (
+    overlay.style.display !== "flex" &&
+    document.activeElement &&
+    document.activeElement !== document.body
+  ) {
+    systemModalOpener = document.activeElement;
+  }
   const body = $("systemModalBody");
   const chemLabel =
     entry.chemLabel ||
@@ -5363,6 +5426,15 @@ function showSystemModal(p, entry, adopt) {
 function closeSystemModal() {
   const overlay = $("systemModal");
   if (overlay) overlay.style.display = "none";
+  // Hand focus back to whatever opened the modal (curve point, matrix cell).
+  if (systemModalOpener && document.contains(systemModalOpener)) {
+    try {
+      systemModalOpener.focus();
+    } catch {
+      /* focus is best-effort */
+    }
+  }
+  systemModalOpener = null;
 }
 
 // ── Hardware list panel (BOM) ────────────────────────────────────────────────
@@ -5427,7 +5499,7 @@ function renderBomPanel() {
         style:
           "margin-bottom:0.8rem;padding:0.75rem 1rem;border-radius:8px;background:rgba(0,230,153,0.08);border:1px solid rgba(0,230,153,0.3);font-size:0.85rem;line-height:1.45;color:var(--text-color);",
       },
-      `💡 ${f.bestPriceCallout}`,
+      `💡 ${bestPriceNote(f.bestPriceCallout)}`,
     );
     body.appendChild(callout);
   }
@@ -6042,7 +6114,11 @@ function renderTierCards(p) {
 
     if (t.bestPriceCallout) {
       card.appendChild(
-        el("div", { class: "best-price-callout" }, `💡 ${t.bestPriceCallout}`),
+        el(
+          "div",
+          { class: "best-price-callout" },
+          `💡 ${bestPriceNote(t.bestPriceCallout)}`,
+        ),
       );
     }
 
@@ -6228,7 +6304,11 @@ function renderTargetCards(p, extraTargets = []) {
 
     if (t.bestPriceCallout) {
       card.appendChild(
-        el("div", { class: "best-price-callout" }, `💡 ${t.bestPriceCallout}`),
+        el(
+          "div",
+          { class: "best-price-callout" },
+          `💡 ${bestPriceNote(t.bestPriceCallout)}`,
+        ),
       );
     }
 
@@ -8027,7 +8107,7 @@ function restoreFromShare() {
     if (valid.includes(o.ag)) $("autoTarget").value = o.ag;
   }
 
-  if (Number.isFinite(o.cc) && o.cc >= 0.01 && o.cc <= 1.11) {
+  if (Number.isFinite(o.cc) && o.cc >= 0.01 && o.cc <= 1.5) {
     customCutFraction = o.cc;
     const cutIn = $("cutSlider");
     if (cutIn) cutIn.value = String(Math.round(o.cc * 100));
@@ -9092,7 +9172,17 @@ export function initSizingUI() {
 
     // Price-point analysis modal: "Use this system" adopts the exact system.
     const closeSys = $("btnCloseSystem");
-    if (closeSys) closeSys.addEventListener("click", closeSystemModal);
+    if (closeSys) {
+      closeSys.addEventListener("click", closeSystemModal);
+      // The closer is a styled div (role=button in markup): mirror the click
+      // on Enter/Space so keyboard users can dismiss the modal too.
+      closeSys.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          closeSys.click();
+        }
+      });
+    }
     const useSys = $("systemModalUse");
     if (useSys)
       useSys.addEventListener("click", () => {
@@ -9154,8 +9244,15 @@ export function initSizingUI() {
 
 async function refreshFxRates() {
   try {
+    // Bound the FX refresh: on captive portals that hang instead of failing,
+    // an unbounded fetch would stall init and leave stale currency defaults.
+    const timeoutSignal =
+      typeof AbortSignal !== "undefined" && AbortSignal.timeout
+        ? AbortSignal.timeout(10000)
+        : undefined;
     const res = await fetch("https://open.er-api.com/v6/latest/USD", {
       cache: "no-store",
+      ...(timeoutSignal ? { signal: timeoutSignal } : {}),
     });
 
     if (!res.ok) return;

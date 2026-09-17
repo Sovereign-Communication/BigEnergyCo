@@ -7,6 +7,7 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#090d16" />
     <title>Off-Grid vs Grid-Tied Solar: Which Pays Back Faster in 2026?</title>
     <meta
       name="description"
@@ -28,6 +29,7 @@
       href="../../assets/favicon-48.png"
     />
     <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png" />
+    <link rel="manifest" href="../../manifest.webmanifest" />
 
     <link
       rel="alternate"
@@ -55,7 +57,7 @@
     />
     <meta
       property="og:description"
-      content="Real payback numbers for off-grid versus grid-connected solar plus storage, worked step by step for Hawaii, Nigeria, and Germany."
+      content="Real payback numbers for off-grid versus grid-connected solar plus storage, worked step by step for Hawaii, Nigeria, and Germany. Free calculator included."
     />
     <meta
       property="og:url"
@@ -73,7 +75,7 @@
     />
     <meta
       name="twitter:description"
-      content="Real payback numbers for off-grid versus grid-connected solar plus storage, worked step by step for three very different grids."
+      content="Real payback numbers for off-grid versus grid-connected solar plus storage, worked step by step for Hawaii, Nigeria, and Germany. Free calculator included."
     />
     <meta
       property="og:image"
@@ -94,9 +96,19 @@
             "@type": "Article",
             "@id": "https://freeoffgridcalculator.com/blog/off-grid-vs-grid-tie-payback/#article",
             "headline": "Off-Grid vs Grid-Tied Solar: Which Pays Back Faster in 2026?",
-            "datePublished": "2026-08-23",
-            "author": { "@type": "Person", "name": "Lucas Ballek" },
-            "publisher": { "@type": "Organization", "name": "BigEnergyCo" },
+            "datePublished": "2026-08-23T00:00:00Z",
+            "dateModified": "2026-08-23T00:00:00Z",
+            "mainEntityOfPage": "https://freeoffgridcalculator.com/blog/off-grid-vs-grid-tie-payback/",
+            "author": {
+              "@type": "Person",
+              "name": "Lucas Ballek",
+              "url": "https://freeoffgridcalculator.com"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "BigEnergyCo",
+              "url": "https://freeoffgridcalculator.com"
+            },
             "description": "Worked payback examples for off-grid and grid-connected solar-plus-storage in three very different markets, using a deterministic five-year weather simulation.",
             "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
@@ -427,9 +439,38 @@
           font-size: 0.85rem;
         }
       }
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.5rem;
+        z-index: 20;
+        padding: 0.7rem 1rem;
+        background: #00e699;
+        color: #04120c;
+        font-weight: 800;
+        border-radius: 8px;
+      }
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid #00e699;
+        outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
     </style>
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header>
       <div class="container">
         <a class="logo" href="../../" aria-label="BigEnergyCo Home">
@@ -449,7 +490,7 @@
       </div>
     </header>
 
-    <main class="container">
+    <main id="main" class="container">
       <article>
         <h1>Off-Grid vs Grid-Tied Solar: Which Pays Back Faster in 2026?</h1>
         <p class="meta">
@@ -492,31 +533,40 @@
         </p>
         <div class="table-container">
           <table>
-            <tr>
-              <th>Component</th>
-              <th>Indicative cost</th>
-              <th>Scope</th>
-            </tr>
-            <tr>
-              <td>Battery bank, usable</td>
-              <td class="num">$80–125/kWh</td>
-              <td>Landed DIY: prismatic cells + BMS shipped &amp; duty-paid</td>
-            </tr>
-            <tr>
-              <td>Battery bank, usable</td>
-              <td class="num">$110–165/kWh</td>
-              <td>Budget retail pack, BMS &amp; enclosure included</td>
-            </tr>
-            <tr>
-              <td>Solar panels</td>
-              <td class="num">$0.16–0.38/W</td>
-              <td>Ex-factory China → shipped retail mono-PERC</td>
-            </tr>
-            <tr>
-              <td>Hybrid inverter</td>
-              <td class="num">$85–260/kW</td>
-              <td>Budget-retail low-frequency units</td>
-            </tr>
+            <caption>
+              Indicative component costs, August 2026 scopes
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Component</th>
+                <th scope="col">Indicative cost</th>
+                <th scope="col">Scope</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Battery bank, usable</td>
+                <td class="num">$80–125/kWh</td>
+                <td>
+                  Landed DIY: prismatic cells + BMS shipped &amp; duty-paid
+                </td>
+              </tr>
+              <tr>
+                <td>Battery bank, usable</td>
+                <td class="num">$110–165/kWh</td>
+                <td>Budget retail pack, BMS &amp; enclosure included</td>
+              </tr>
+              <tr>
+                <td>Solar panels</td>
+                <td class="num">$0.16–0.38/W</td>
+                <td>Ex-factory China → shipped retail mono-PERC</td>
+              </tr>
+              <tr>
+                <td>Hybrid inverter</td>
+                <td class="num">$85–260/kW</td>
+                <td>Budget-retail low-frequency units</td>
+              </tr>
+            </tbody>
           </table>
         </div>
         <p>
@@ -535,36 +585,43 @@
         </p>
         <div class="table-container">
           <table>
-            <tr>
-              <th>Option</th>
-              <th>Hardware</th>
-              <th>Component cost</th>
-              <th>Payback</th>
-            </tr>
-            <tr>
-              <td>Cut bill ~60%</td>
-              <td class="num">1.8 kW + 2 kWh</td>
-              <td class="num">$391–1,357</td>
-              <td class="num"><strong>~5–18 months</strong></td>
-            </tr>
-            <tr>
-              <td>Cut bill ~95%</td>
-              <td class="num">2.6 kW + 6 kWh</td>
-              <td class="num">$714–2,504</td>
-              <td class="num">~6–21 months</td>
-            </tr>
-            <tr>
-              <td>Fully off-grid (99%)</td>
-              <td class="num">4 kW + 7 kWh</td>
-              <td class="num">$995–3,475</td>
-              <td class="num">~8–27 months</td>
-            </tr>
-            <tr>
-              <td>Fully off-grid (100%)</td>
-              <td class="num">8 kW + 13 kWh</td>
-              <td class="num">$1,945–6,785</td>
-              <td class="num">~1.3–4.4 yr</td>
-            </tr>
+            <caption>
+              Honolulu 10 kWh/day worked options and payback
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Option</th>
+                <th scope="col">Hardware</th>
+                <th scope="col">Component cost</th>
+                <th scope="col">Payback</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Cut bill ~60%</td>
+                <td class="num">1.8 kW + 2 kWh</td>
+                <td class="num">$391–1,357</td>
+                <td class="num"><strong>~5–18 months</strong></td>
+              </tr>
+              <tr>
+                <td>Cut bill ~95%</td>
+                <td class="num">2.6 kW + 6 kWh</td>
+                <td class="num">$714–2,504</td>
+                <td class="num">~6–21 months</td>
+              </tr>
+              <tr>
+                <td>Fully off-grid (99%)</td>
+                <td class="num">4 kW + 7 kWh</td>
+                <td class="num">$995–3,475</td>
+                <td class="num">~8–27 months</td>
+              </tr>
+              <tr>
+                <td>Fully off-grid (100%)</td>
+                <td class="num">8 kW + 13 kWh</td>
+                <td class="num">$1,945–6,785</td>
+                <td class="num">~1.3–4.4 yr</td>
+              </tr>
+            </tbody>
           </table>
         </div>
         <p>

@@ -29,7 +29,9 @@
       content="zVFiMH4WnfvhMHtnivIgDm_-5XtelVgcL709oHh3pWk"
     />
     <!-- Legacy: verification token of the old pages.dev URL-prefix property.
-         Keep until that property is retired, then remove. -->
+         Keep until that property is retired, then remove.
+         Revisit: if the pages.dev property is still verified after
+         2027-01-01, either retire it there or extend this note. -->
     <meta
       name="google-site-verification"
       content="iXiF6PQy5IhjMtll2YzS3-amK6BtApSkpdlKM73dSEc"
@@ -84,40 +86,14 @@
       content="https://freeoffgridcalculator.com/assets/og-card.jpg"
     />
 
+    <!-- hreflang is intentionally en + x-default only. The ?lang= variants
+         are client-side translations that canonical to this URL, so Google
+         would discard them as non-indexable hreflang targets. Add a locale
+         hreflang only together with a real indexable, self-canonical URL. -->
     <link
       rel="alternate"
       hreflang="en"
       href="https://freeoffgridcalculator.com/"
-    />
-
-    <link
-      rel="alternate"
-      hreflang="es"
-      href="https://freeoffgridcalculator.com/?lang=es"
-    />
-
-    <link
-      rel="alternate"
-      hreflang="pt"
-      href="https://freeoffgridcalculator.com/?lang=pt"
-    />
-
-    <link
-      rel="alternate"
-      hreflang="fr"
-      href="https://freeoffgridcalculator.com/?lang=fr"
-    />
-
-    <link
-      rel="alternate"
-      hreflang="de"
-      href="https://freeoffgridcalculator.com/?lang=de"
-    />
-
-    <link
-      rel="alternate"
-      hreflang="ar"
-      href="https://freeoffgridcalculator.com/?lang=ar"
     />
 
     <link
@@ -236,7 +212,7 @@
 
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Battery banks self-built from prismatic cells typically land around $80-125 per usable kWh shipped and duty-paid; budget retail packs run roughly $110-165. Panels add about $0.16-0.38 per watt. Every result states its price scope honestly."
+                  "text": "Battery banks self-built from prismatic cells typically land around $80–125 per usable kWh shipped and duty-paid; budget retail packs run roughly $110–165. Panels add about $0.16–0.38 per watt. Every result states its price scope honestly."
                 }
               },
 
@@ -278,7 +254,7 @@
       }
     </script>
 
-    <link rel="stylesheet" href="./assets/site.css?v=20260917a" />
+    <link rel="stylesheet" href="./assets/site.css?v=20260917c" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -359,6 +335,8 @@
               class="btn btn-primary"
               style="cursor: pointer"
               data-i18n="navSizing"
+              role="button"
+              tabindex="0"
             >
               Size Your System
             </div>
@@ -440,7 +418,7 @@
       <section class="hero">
         <div class="container">
           <div class="hero-tag" data-i18n="heroTag">
-            Free for everyone, everywhere - No signup - Nothing for sale
+            🌍 Free for everyone, everywhere • No signup • Nothing for sale
           </div>
 
           <h1>
@@ -464,6 +442,8 @@
               class="btn btn-primary"
               style="font-size: 1.1rem; padding: 0.9rem 2rem; cursor: pointer"
               data-i18n="ctaStart"
+              role="button"
+              tabindex="0"
             >
               Start a Free Estimate
             </div>
@@ -523,7 +503,7 @@
 
           <div class="calc-card">
             <div class="calc-controls">
-              <!-- Primary Goal Selection: Grid-Tie Bill Cutting vs Full Off-Grid / Backup -->
+              <!-- Primary Goal Selection: Grid-Tie Bill Cutting vs Full Off-grid / Backup -->
               <div
                 class="form-group goal-segmented-wrap"
                 style="margin-bottom: 0.9rem"
@@ -580,7 +560,7 @@
                       cursor: pointer;
                     "
                   >
-                    <span>🌲</span> Off-Grid / Backup
+                    <span>🌲</span> Off-grid / Backup
                   </button>
                 </div>
               </div>
@@ -753,11 +733,19 @@
                       padding: 0.85rem 1.3rem;
                     "
                     data-i18n="locBtn"
+                    role="button"
+                    tabindex="0"
                   >
                     📍 Use my precise location
                   </div>
 
-                  <div style="flex: 1; min-width: 220px; position: relative">
+                  <div
+                    style="
+                      flex: 1;
+                      min-width: min(100%, 220px);
+                      position: relative;
+                    "
+                  >
                     <input
                       id="citySearch"
                       class="form-control"
@@ -891,6 +879,7 @@
                     <strong>Use my current location</strong> for browser GPS.
                   </p>
                   <div
+                    class="form-grid-2col"
                     style="
                       display: grid;
                       grid-template-columns: 1fr 1fr;
@@ -1053,7 +1042,7 @@
                       cursor: pointer;
                     "
                   >
-                    🚐 Camper Van (2.5k)
+                    🚐 Camper Van (2.5 kWh/day)
                   </button>
                   <button
                     type="button"
@@ -1065,7 +1054,7 @@
                       cursor: pointer;
                     "
                   >
-                    🏕️ Cabin (5k)
+                    🏕️ Cabin (5 kWh/day)
                   </button>
                   <button
                     type="button"
@@ -1077,7 +1066,7 @@
                       cursor: pointer;
                     "
                   >
-                    🔌 Critical Backup (8k)
+                    🔌 Critical Backup (8 kWh/day)
                   </button>
                   <button
                     type="button"
@@ -1089,7 +1078,7 @@
                       cursor: pointer;
                     "
                   >
-                    🏡 Homestead (15k)
+                    🏡 Homestead (15 kWh/day)
                   </button>
                 </div>
 
@@ -1594,6 +1583,7 @@
                     Advanced: fine-tune system losses
                   </div>
                   <div
+                    class="form-grid-2col"
                     style="
                       display: grid;
                       grid-template-columns: 1fr 1fr;
@@ -1740,6 +1730,7 @@
                 </div>
 
                 <div
+                  class="form-grid-2col"
                   style="
                     display: grid;
                     grid-template-columns: 1fr 1fr;
@@ -2303,6 +2294,7 @@
                         cursor: pointer;
                       "
                       title="Zoom In"
+                      aria-label="Zoom chart in"
                     >
                       +
                     </button>
@@ -2316,6 +2308,7 @@
                         cursor: pointer;
                       "
                       title="Zoom Out"
+                      aria-label="Zoom chart out"
                     >
                       &minus;
                     </button>
@@ -2326,6 +2319,8 @@
 
                 <canvas
                   id="socCanvas"
+                  role="img"
+                  aria-label="Battery charge chart. Run a sizing to render it."
                   style="
                     width: 100%;
                     border: 1px solid var(--border-card);
@@ -2333,7 +2328,10 @@
                     background: rgba(9, 13, 22, 0.85);
                     touch-action: pan-y;
                   "
-                ></canvas>
+                >
+                  Battery charge over the year renders here after you run a
+                  sizing.
+                </canvas>
 
                 <p
                   id="socCaption"
@@ -2381,13 +2379,18 @@
 
                 <canvas
                   id="cumCostCanvas"
+                  role="img"
+                  aria-label="Cumulative 20-year cost chart. Run a sizing to render it."
                   style="
                     width: 100%;
                     border: 1px solid var(--border-card);
                     border-radius: 10px;
                     background: rgba(9, 13, 22, 0.85);
                   "
-                ></canvas>
+                >
+                  Cumulative 20-year cost comparison renders here after you run
+                  a sizing.
+                </canvas>
 
                 <div
                   id="cumCostLegend"
@@ -2699,8 +2702,8 @@
 
               <p>
                 Battery banks self-built from prismatic cells typically land
-                around $80-125 per usable kWh shipped and duty-paid; budget
-                retail packs run roughly $110-165. Panels add about $0.16-0.38
+                around $80–125 per usable kWh shipped and duty-paid; budget
+                retail packs run roughly $110–165. Panels add about $0.16–0.38
                 per watt. Every result states its price scope honestly.
               </p>
             </div>
@@ -3101,11 +3104,14 @@
           </div>
 
           <div class="chat-input-row">
+            <label class="sr-only" for="chatInput"
+              >Ask the AI advisor about your system</label
+            >
             <input
               type="text"
               id="chatInput"
               class="form-control"
-              placeholder="Ask about cell specs, Sodium-Ion vs LFP, freight costs..."
+              placeholder="Ask about cell specs, Sodium-ion vs LFP, freight costs..."
             />
 
             <div
@@ -3113,6 +3119,8 @@
               class="btn btn-primary"
               style="cursor: pointer"
               onclick="window.sendChatMsg && window.sendChatMsg()"
+              role="button"
+              tabindex="0"
             >
               Send
             </div>
@@ -3328,9 +3336,7 @@
             type="button"
             class="btn btn-outline"
             style="cursor: pointer"
-            onclick="
-              document.getElementById('systemModal').style.display = 'none'
-            "
+            onclick="document.getElementById('btnCloseSystem').click()"
           >
             Close
           </button>
@@ -3344,9 +3350,9 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20260917a"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20260917c"></script>
 
-    <script defer src="./assets/js/chat.js?v=20260917a"></script>
+    <script defer src="./assets/js/chat.js?v=20260917c"></script>
   </body>
 </html>
 

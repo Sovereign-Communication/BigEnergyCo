@@ -239,6 +239,7 @@ export const LOCALES = {
       "Una curva de {n} sistemas, desde {lowCost} que cubre {lowPct}% hasta {highCost} que cubre {highPct}%. Las cifras completas están en la tabla bajo el gráfico.",
     frontierPointTip:
       "{cost}: {pct}% — {pv} kW de paneles + {batt} kWh de batería",
+    budgetLabel: "Tu presupuesto (inicial)",
     frontierTableCaption:
       "Cada punto de la curva. El coste típico es el punto medio DIY con flete incluido; el rango va de celdas sueltas a retail enviado.",
     frontierColCost: "Coste típico",
@@ -251,6 +252,8 @@ export const LOCALES = {
     frontierTableToggle: "Ver todos los puntos en una tabla",
     frontierLegendCurve: "El sistema más barato que alcanza cada nivel",
     frontierLegendBand: "Los mismos sistemas, de compra DIY a retail enviado",
+    frontierLegendRange: "Rango óptimo — cada punto extra sigue barato",
+    frontierRangeTag: "mejor valor",
     frontierLegendYou: "La opción que estás viendo",
     fuelLitLabel: "Precio por litro",
     fuelGalLabel: "Precio por galón",
@@ -263,6 +266,8 @@ export const LOCALES = {
       "Tu combustible de generador sale a unos {rate}/kWh — se ha introducido como tu precio de la electricidad, así que cada cifra de amortización abajo compara con lo que quemas hoy.",
     tariffSpendOffgrid:
       "A {tariff}/kWh, este consumo cuesta unos {annual} al año en electricidad de red. Las cifras de amortización abajo comparan el coste del sistema contra ese gasto.",
+    tariffSpendFixed:
+      " Eso incluye {fixed}/mes en cargos fijos que el solar no reduce.",
     readoutKwhEmpty:
       "Introduce tu consumo diario en kWh para ver la estimación.",
     frontierLegendCeiling:
@@ -372,6 +377,8 @@ export const LOCALES = {
     noTariffLine: "Sem tarifa informada, não há amortização mostrada.",
     tariffSpendOffgrid:
       "A {tariff}/kWh, este uso custa cerca de {annual} por ano em energia da rede. Os valores de retorno abaixo comparam o custo do sistema com esse gasto.",
+    tariffSpendFixed:
+      " Isso inclui {fixed}/mês em encargos fixos que o solar não reduz.",
     lvlBest: "Melhor escolha",
     lvlCompare: "Comparar baterias",
     lvlMatrix: "Todas as opções",
@@ -403,6 +410,7 @@ export const LOCALES = {
       "Uma curva de {n} sistemas, de {lowCost} cobrindo {lowPct}% até {highCost} cobrindo {highPct}%. Os números completos estão na tabela abaixo do gráfico.",
     frontierPointTip:
       "{cost}: {pct}% — {pv} kW de painéis + {batt} kWh de bateria",
+    budgetLabel: "Seu orçamento (inicial)",
     frontierTableCaption:
       "Cada ponto da curva. O custo típico é o meio-termo DIY já desembaraçado; a faixa vai de células avulsas a varejo entregue.",
     frontierColCost: "Custo típico",
@@ -415,6 +423,8 @@ export const LOCALES = {
     frontierTableToggle: "Ver todos os pontos em tabela",
     frontierLegendCurve: "O sistema mais barato que atinge cada nível",
     frontierLegendBand: "Os mesmos sistemas, de compra DIY a varejo entregue",
+    frontierLegendRange: "Faixa ideal — cada ponto extra continua barato",
+    frontierRangeTag: "melhor valor",
     frontierLegendYou: "A opção que você está vendo",
     fuelLitLabel: "Preço por litro",
     fuelGalLabel: "Preço por galão",
@@ -534,6 +544,8 @@ export const LOCALES = {
     noTariffLine: "Aucun tarif saisi, pas d'amortissement affiché.",
     tariffSpendOffgrid:
       "À {tariff}/kWh, cet usage coûte environ {annual} par an en électricité du réseau. Les délais de retour ci-dessous comparent le coût du système à cette dépense.",
+    tariffSpendFixed:
+      " Dont {fixed}/mois de charges fixes que le solaire ne réduit pas.",
     lvlBest: "Meilleur choix",
     lvlCompare: "Comparer les batteries",
     lvlMatrix: "Toutes les options",
@@ -566,6 +578,7 @@ export const LOCALES = {
       "Une courbe de {n} systèmes, de {lowCost} couvrant {lowPct}% à {highCost} couvrant {highPct}%. Les chiffres complets sont dans le tableau sous le graphique.",
     frontierPointTip:
       "{cost} : {pct}% — {pv} kW de panneaux + {batt} kWh de batterie",
+    budgetLabel: "Votre budget (initial)",
     frontierTableCaption:
       "Chaque point de la courbe. Le coût typique est le milieu DIY rendu droits acquittés ; la fourchette va des cellules nues au détail livré.",
     frontierColCost: "Coût typique",
@@ -578,6 +591,9 @@ export const LOCALES = {
     frontierTableToggle: "Voir tous les points en tableau",
     frontierLegendCurve: "Le système le moins cher atteignant chaque niveau",
     frontierLegendBand: "Les mêmes systèmes, de l'achat DIY au détail livré",
+    frontierLegendRange:
+      "Plage optimale — chaque point en plus reste bon marché",
+    frontierRangeTag: "meilleur rapport",
     frontierLegendYou: "L'option que vous consultez",
     fuelLitLabel: "Prix au litre",
     fuelGalLabel: "Prix au gallon",
@@ -636,6 +652,28 @@ export const LOCALES = {
     pickCity:
       "Wähle eine Stadt oder nutze 📍 deinen Standort für die Sonnendaten.",
     tellPowerUse: "Gib deinen Verbrauch an — Geräte, Rechnung oder kWh.",
+    statusGridtie:
+      "⏳ Fünf Jahre Satellitenwetter werden geladen, Systeme zur Rechnungssenkung gesucht…",
+    statusOffgrid:
+      "⏳ 5 Jahre stündliches Satellitenwetter werden geladen, Systemgrößen gesucht…",
+    runningBtn: "⏳ 5-Jahres-Simulation läuft…",
+    runBtnReady: "☀️ System dimensionieren (5-Jahres-Simulation)",
+    errorSim: "⚠️ ",
+    tariffSpendLine:
+      "Bei {tariff}/kWh kostet dein Strom heute etwa {annual} pro Jahr. Jede Option unten zeigt die Rechnung nach Solar und wie schnell sie sich aus den Ersparnissen bezahlt.",
+    tariffSpendOffgrid:
+      "Bei {tariff}/kWh kostet dieser Verbrauch etwa {annual} pro Jahr an Netzstrom. Die Amortisationswerte unten vergleichen die Systemkosten mit diesen Ausgaben.",
+    tariffSpendFixed:
+      " Darin sind {fixed}/Monat an Fixkosten enthalten, die Solar nicht senken kann.",
+    readoutAppliancesEmpty:
+      "Wähle die Geräte, die du versorgen willst — dein Tagesverbrauch erscheint hier.",
+    readoutAppliancesSummary:
+      "Geschätzter Verbrauch: etwa {kwh} kWh/Tag · alles gleichzeitig ≈ {peakW} W (dein Wechselrichter sollte größer sein)",
+    readoutBill: "Das sind etwa {kwhDay} kWh/Tag im Schnitt.",
+    readoutBillIncomplete:
+      "Gib deine Monatsrechnung ein, um die Tages-Schätzung zu sehen.",
+    readoutKwhEmpty: "Gib einen Tagesverbrauch in kWh ein.",
+    readoutKwhReady: "{kwh} kWh/Tag werden direkt verwendet.",
     statusSuccess:
       "✅ {years} Jahre stündliche Daten ({dataYears}) · {yield} kWh/Jahr pro kW Panel.{offline}",
     offlineNote: " · 🌐 typisches Offline-Jahr",
@@ -653,13 +691,81 @@ export const LOCALES = {
     lvlBest: "Beste Wahl",
     lvlCompare: "Batterien vergleichen",
     lvlMatrix: "Alle Optionen",
+    bomPanelTitle: "Deine Hardware-Liste — woraus dieses System besteht",
+    bomDownload: "Teileliste herunterladen (CSV)",
+    genSummary: "Ich habe einen Generator — was kostet sein Strom wirklich?",
+    genApply: "Als meinen Strompreis übernehmen",
+    socChartTitle:
+      "Batterieladung & Zuverlässigkeit übers Jahr (5 Jahre echtes Wetter)",
     frontierTitle: "Wie weit reicht dein Budget?",
     frontierIntro:
       "Wir zeigen die günstigsten Systeme für deinen Standort, damit du Kosten und erreichbare Versorgung vergleichen kannst.",
     frontierX: "Systemkosten zu Beginn",
     frontierYGrid: "Anteil der Rechnung gesenkt",
     frontierYOffgrid: "Anteil der Energie ohne Generator",
+    frontierYouTag: "Die Option, die du gerade liest",
+    frontierTagSel: "ausgewählt",
+    frontierSelTag: "{pv} kW + {batt} kWh · {pct} % · {cost}",
+    frontierSelNoBatt: "{pv} kW, ohne Batterie · {pct} % · {cost}",
+    frontierLegendSel:
+      "Ausgewählte Option — klicke einen Punkt, um ihn zu wählen",
+    frontierNoSystem:
+      "Kein System in den hier durchsuchten Größen erreicht dieses Ziel an diesem Standort. Die Kurve unten zeigt, wie weit dieser Standort praktisch kommt — versuch ein niedrigeres Ziel oder plane einen Generator oder Netzanschluss für den Rest.",
+    frontierCeilingTag: "Bestes in den durchsuchten Größen: {pct} %",
+    frontierSvgTitle: "Wie weit dein Geld reicht",
+    frontierSvgDesc:
+      "Eine Kurve aus {n} Systemen, von {lowCost} mit {lowPct} % bis {highCost} mit {highPct} %. Alle Zahlen stehen in der Tabelle unter dem Diagramm.",
+    frontierPointTip: "{cost}: {pct} % — {pv} kW Panels + {batt} kWh Batterie",
+    budgetLabel: "Dein Budget (zu Beginn)",
+    frontierTableCaption:
+      "Jeder Punkt der Kurve. Typische Kosten sind die Mitte für Selbstbau mit Versand; die Spanne reicht von nackten Zellen bis Versandhandel.",
+    frontierColCost: "Typische Kosten",
+    frontierColRange: "Selbstbau bis Handel",
+    frontierColCut: "Rechnung gesenkt",
+    frontierColCover: "Abgedeckt",
+    frontierColPv: "Panels",
+    frontierColBatt: "Batterie",
+    frontierNoBattery: "keine",
     frontierTableToggle: "Alle Punkte als Tabelle anzeigen",
+    frontierLegendCurve: "Günstigstes System für jede Stufe",
+    frontierLegendBand: "Dieselben Systeme, von Selbstbau bis Versandhandel",
+    frontierLegendRange:
+      "Bestwert-Spanne — jedes weitere Prozent bleibt günstig",
+    frontierRangeTag: "Bestwert",
+    frontierLegendYou: "Die Option, die du gerade liest",
+    fuelLitLabel: "Preis pro Liter",
+    fuelGalLabel: "Preis pro Gallone",
+    fuelReadoutRate: "{type} kostet bei diesem Preis etwa {rate} pro kWh",
+    fuelReadoutBurn:
+      "({entry} ÷ {burn} {unit}/kWh — nur Kraftstoff; Öl, Filter und Motorverschleiß treiben den echten Wert höher)",
+    fuelReadoutGrid:
+      "Typischer Netzstrom kostet zwischen {lo} und {hi} pro kWh.",
+    fuelApplyOk:
+      "Dein Generator-Kraftstoff kostet etwa {rate}/kWh — als dein Strompreis übernommen, sodass jede Amortisation unten mit dem vergleicht, was du heute verfeuerst.",
+    frontierLegendCeiling:
+      "Bestes in den durchsuchten Größen — keine physikalische Grenze",
+    frontierMarkerOffCurve:
+      "Deine Option liegt rechts der Kurve, weil die Empfehlung nach echten 20-Jahres-Kosten gewählt wird, nicht nach dem Preis heute: Eine billigere Bank mit Austausch kostet jetzt weniger und später mehr.",
+    frontierVerdictSteepGrid:
+      "Etwa {kneePct} % deiner Rechnung zu senken kostet rund {kneeCost}. Danach wird es schnell teuer: etwa {tailCost} pro weiterem Prozent, gegenüber {headCost} davor.",
+    frontierVerdictTaperingGrid:
+      "Etwa {kneePct} % deiner Rechnung zu senken kostet rund {kneeCost}. Danach kostet jedes weitere Prozent etwa {tailCost} — rund {ratio}-mal so viel wie zuvor.",
+    frontierVerdictLinearGrid:
+      "Ersparnis folgt den Ausgaben hier ziemlich gleichmäßig — etwa {headCost} pro Prozent deiner Rechnung, bis {ceilingPct} %.",
+    frontierVerdictBeyondSweepGrid:
+      "In den hier durchsuchten Größen — bis {pvMax} kW Panels und {battMax} kWh Batterie — lassen sich hier höchstens etwa {ceilingPct} % senken, für rund {ceilingCost}. Das gute Preis-Leistungs-Verhältnis endet deutlich früher, bei {kneePct} % für etwa {kneeCost}. Mehr zu senken ist nicht unmöglich, braucht aber ein größeres System als alles hier Dimensionierte.",
+    frontierVerdictSteepOffgrid:
+      "Etwa {kneePct} % deiner Energie abzudecken kostet rund {kneeCost}. Die letzte Strecke zur vollen Unabhängigkeit kostet das Geld: etwa {tailCost} pro weiterem Prozent, gegenüber {headCost} davor.",
+    frontierVerdictTaperingOffgrid:
+      "Etwa {kneePct} % deiner Energie abzudecken kostet rund {kneeCost}. Danach kostet jedes weitere Prozent etwa {tailCost} — rund {ratio}-mal so viel wie zuvor.",
+    frontierVerdictLinearOffgrid:
+      "Abdeckung folgt den Ausgaben hier ziemlich gleichmäßig — etwa {headCost} pro Prozent, bis {ceilingPct} %.",
+    frontierVerdictBeyondSweepOffgrid:
+      "In den hier durchsuchten Größen — bis {pvMax} kW Panels und {battMax} kWh Batterie — lassen sich hier höchstens etwa {ceilingPct} % abdecken, für rund {ceilingCost}. Das gute Preis-Leistungs-Verhältnis endet bei {kneePct} % für etwa {kneeCost}. Volle Unabhängigkeit ist hier nicht unmöglich, braucht aber ein weit größeres System — und ein Generator oder Netzanschluss ist fast sicher der billigere Weg für den Rest.",
+    frontierVerdictCoveredOffgrid:
+      "Dimensionierung ist hier nicht deine Grenze. Das kleinste praktische System — {pv} kW Panels und {batt} kWh Batterie, etwa {cost} — deckt diesen Verbrauch bereits ganzjährig ab. Alles Größere kauft Reserve, nicht mehr Unabhängigkeit.",
+    frontierVerdictCoveredGrid:
+      "Dimensionierung ist hier nicht deine Grenze. Das kleinste praktische System — {pv} kW Panels und {batt} kWh Batterie, etwa {cost} — deckt diesen Verbrauch bereits praktisch vollständig ab. Alles Größere kauft Reserve, keine größere Ersparnis.",
     frontierMethod:
       "Die Kurve nutzt dieselbe stündliche Wetter-Simulation und dieselben Preisannahmen wie die Ergebnisse oben.",
   },
@@ -741,6 +847,8 @@ export const LOCALES = {
     noTariffLine: "لم يتم إدخال تعريفة، لا يتم عرض فترة الاسترداد.",
     tariffSpendOffgrid:
       "بسعر {tariff}/كيلوواط/ساعة، يكلفك هذا الاستخدام حوالي {annual} سنويًا من كهرباء الشبكة. أرقام الاسترداد أدناه تقارن تكلفة النظام بهذا الإنفاق.",
+    tariffSpendFixed:
+      " ويشمل ذلك {fixed}/شهريًا في رسوم ثابتة لا تخفضها الطاقة الشمسية.",
     lvlBest: "الاختيار الأفضل",
     lvlCompare: "مقارنة البطاريات",
     lvlMatrix: "كل الخيارات",
@@ -771,6 +879,7 @@ export const LOCALES = {
       "منحنى من {n} نظامًا، من {lowCost} يغطي {lowPct}% إلى {highCost} يغطي {highPct}%. الأرقام الكاملة في الجدول أسفل الرسم.",
     frontierPointTip:
       "{cost}: {pct}% — {pv} كيلوواط ألواح + {batt} كيلوواط ساعة بطارية",
+    budgetLabel: "ميزانيتك (مقدّمًا)",
     frontierTableCaption:
       "كل نقطة على المنحنى. التكلفة النموذجية هي الوسط للتنفيذ الذاتي بعد الشحن؛ والمدى يمتد من الخلايا المجردة إلى التجزئة المشحونة.",
     frontierColCost: "التكلفة النموذجية",
@@ -783,6 +892,8 @@ export const LOCALES = {
     frontierTableToggle: "عرض كل النقاط في جدول",
     frontierLegendCurve: "أرخص نظام يبلغ كل مستوى",
     frontierLegendBand: "الأنظمة نفسها، من الشراء الذاتي إلى التجزئة المشحونة",
+    frontierLegendRange: "النطاق الأفضل قيمة — كل نقطة إضافية ما زالت رخيصة",
+    frontierRangeTag: "أفضل قيمة",
     frontierLegendYou: "الخيار الذي تطالعه",
     fuelLitLabel: "السعر لكل لتر",
     fuelGalLabel: "السعر لكل غالون",

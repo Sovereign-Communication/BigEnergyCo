@@ -28,6 +28,8 @@
       href="../../assets/favicon-48.png"
     />
     <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png" />
+    <link rel="manifest" href="../../manifest.webmanifest" />
+    <meta name="theme-color" content="#090d16" />
     <link
       rel="alternate"
       hreflang="en"
@@ -418,9 +420,38 @@
           font-size: 0.85rem;
         }
       }
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.5rem;
+        z-index: 20;
+        padding: 0.7rem 1rem;
+        background: #00e699;
+        color: #04120c;
+        font-weight: 800;
+        border-radius: 8px;
+      }
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid #00e699;
+        outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
     </style>
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header>
       <div class="container">
         <a class="logo" href="../../" aria-label="BigEnergyCo Home">
@@ -439,7 +470,7 @@
         </div>
       </div>
     </header>
-    <main class="container">
+    <main id="main" class="container">
       <article>
         <h1>What Size Solar System for Off-Grid? Honest Guide (2026)</h1>
         <p class="meta">
@@ -508,30 +539,37 @@
         <h2>Worked example: 10 kWh/day at 60, 80, 95% coverage</h2>
         <div class="table-container">
           <table>
-            <tr>
-              <th>Coverage target</th>
-              <th>PV range</th>
-              <th>Usable battery</th>
-              <th>What it feels like</th>
-            </tr>
-            <tr>
-              <td>~60%</td>
-              <td class="num">2–4 kW</td>
-              <td class="num">5–9 kWh</td>
-              <td>Frequent backup in winter weeks</td>
-            </tr>
-            <tr>
-              <td>~80%</td>
-              <td class="num">3–5 kW</td>
-              <td class="num">8–14 kWh</td>
-              <td>Comfortable most of year</td>
-            </tr>
-            <tr>
-              <td>~95%</td>
-              <td class="num">5–8 kW</td>
-              <td class="num">15–25 kWh</td>
-              <td>Tier B full-time, ~1 day/yr shortfall</td>
-            </tr>
+            <caption>
+              Worked example: 10 kWh/day at 60, 80, 95% coverage
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Coverage target</th>
+                <th scope="col">PV range</th>
+                <th scope="col">Usable battery</th>
+                <th scope="col">What it feels like</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>~60%</td>
+                <td class="num">2–4 kW</td>
+                <td class="num">5–9 kWh</td>
+                <td>Frequent backup in winter weeks</td>
+              </tr>
+              <tr>
+                <td>~80%</td>
+                <td class="num">3–5 kW</td>
+                <td class="num">8–14 kWh</td>
+                <td>Comfortable most of year</td>
+              </tr>
+              <tr>
+                <td>~95%</td>
+                <td class="num">5–8 kW</td>
+                <td class="num">15–25 kWh</td>
+                <td>Tier B full-time, ~1 day/yr shortfall</td>
+              </tr>
+            </tbody>
           </table>
         </div>
         <p>
@@ -572,31 +610,38 @@
         <h2>What the hardware ranges mean</h2>
         <div class="table-container">
           <table>
-            <tr>
-              <th>Component</th>
-              <th>Indicative range</th>
-              <th>Scope</th>
-            </tr>
-            <tr>
-              <td>Battery, usable</td>
-              <td class="num">$80–125/kWh</td>
-              <td>Landed DIY</td>
-            </tr>
-            <tr>
-              <td>Battery, usable</td>
-              <td class="num">$110–165/kWh</td>
-              <td>Budget retail pack</td>
-            </tr>
-            <tr>
-              <td>Panels</td>
-              <td class="num">$0.16–0.38/W</td>
-              <td>Landed DIY through retail</td>
-            </tr>
-            <tr>
-              <td>Hybrid inverter</td>
-              <td class="num">$85–260/kW</td>
-              <td>Budget-retail, peak-sized</td>
-            </tr>
+            <caption>
+              What the hardware ranges mean
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Component</th>
+                <th scope="col">Indicative range</th>
+                <th scope="col">Scope</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Battery, usable</td>
+                <td class="num">$80–125/kWh</td>
+                <td>Landed DIY</td>
+              </tr>
+              <tr>
+                <td>Battery, usable</td>
+                <td class="num">$110–165/kWh</td>
+                <td>Budget retail pack</td>
+              </tr>
+              <tr>
+                <td>Panels</td>
+                <td class="num">$0.16–0.38/W</td>
+                <td>Landed DIY through retail</td>
+              </tr>
+              <tr>
+                <td>Hybrid inverter</td>
+                <td class="num">$85–260/kW</td>
+                <td>Budget-retail, peak-sized</td>
+              </tr>
+            </tbody>
           </table>
         </div>
         <p>

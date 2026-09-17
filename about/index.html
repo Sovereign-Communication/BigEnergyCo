@@ -7,6 +7,7 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#090d16" />
     <title>About BigEnergyCo — Free Solar Method (2026)</title>
     <meta
       name="description"
@@ -21,35 +22,14 @@
       href="../assets/favicon-48.png"
     />
     <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png" />
+    <link rel="manifest" href="../manifest.webmanifest" />
+    <!-- hreflang is intentionally en + x-default only: the ?lang= variants
+         are client-side translations that canonical here, so Google would
+         discard them as non-indexable targets. -->
     <link
       rel="alternate"
       hreflang="en"
       href="https://freeoffgridcalculator.com/about/"
-    />
-    <link
-      rel="alternate"
-      hreflang="es"
-      href="https://freeoffgridcalculator.com/about/?lang=es"
-    />
-    <link
-      rel="alternate"
-      hreflang="pt"
-      href="https://freeoffgridcalculator.com/about/?lang=pt"
-    />
-    <link
-      rel="alternate"
-      hreflang="fr"
-      href="https://freeoffgridcalculator.com/about/?lang=fr"
-    />
-    <link
-      rel="alternate"
-      hreflang="de"
-      href="https://freeoffgridcalculator.com/about/?lang=de"
-    />
-    <link
-      rel="alternate"
-      hreflang="ar"
-      href="https://freeoffgridcalculator.com/about/?lang=ar"
     />
     <link
       rel="alternate"
@@ -65,7 +45,7 @@
     />
     <meta
       property="og:description"
-      content="One person, one free tool, open arithmetic. NASA weather, worst-week sizing, honest ranges. Nothing for sale."
+      content="About BigEnergyCo: free solar sizing by Lucas Ballek — NASA weather, worst-week math, open engine, ranges only. No signup, nothing for sale."
     />
     <meta
       property="og:url"
@@ -84,7 +64,7 @@
     />
     <meta
       name="twitter:description"
-      content="One person, one free tool, open arithmetic. Nothing for sale."
+      content="About BigEnergyCo: free solar sizing by Lucas Ballek — NASA weather, worst-week math, open engine, ranges only. No signup, nothing for sale."
     />
     <meta
       name="twitter:image"
@@ -318,9 +298,38 @@
           font-size: 0.85rem;
         }
       }
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.5rem;
+        z-index: 20;
+        padding: 0.7rem 1rem;
+        background: #00e699;
+        color: #04120c;
+        font-weight: 800;
+        border-radius: 8px;
+      }
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid #00e699;
+        outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
     </style>
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header>
       <div class="container">
         <a class="logo" href="../" aria-label="BigEnergyCo Home">
@@ -339,7 +348,7 @@
         </div>
       </div>
     </header>
-    <main class="container">
+    <main id="main" class="container">
       <article>
         <h1>About BigEnergyCo — Free Solar Method</h1>
         <p class="meta">

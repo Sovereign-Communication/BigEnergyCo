@@ -28,6 +28,8 @@
       href="../../assets/favicon-48.png"
     />
     <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png" />
+    <link rel="manifest" href="../../manifest.webmanifest" />
+    <meta name="theme-color" content="#090d16" />
     <link
       rel="alternate"
       hreflang="en"
@@ -418,9 +420,38 @@
           font-size: 0.85rem;
         }
       }
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.5rem;
+        z-index: 20;
+        padding: 0.7rem 1rem;
+        background: #00e699;
+        color: #04120c;
+        font-weight: 800;
+        border-radius: 8px;
+      }
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid #00e699;
+        outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
     </style>
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header>
       <div class="container">
         <a class="logo" href="../../" aria-label="BigEnergyCo Home">
@@ -439,7 +470,7 @@
         </div>
       </div>
     </header>
-    <main class="container">
+    <main id="main" class="container">
       <article>
         <h1>Escape Load Shedding With Solar: Backup Sizes (2026)</h1>
         <p class="meta">
@@ -485,36 +516,43 @@
         <h2>Backup size table</h2>
         <div class="table-container">
           <table>
-            <tr>
-              <th>Backup target</th>
-              <th class="num">Daily energy</th>
-              <th>Hardware</th>
-              <th class="num">Components</th>
-            </tr>
-            <tr>
-              <td>Phones + lights + wifi</td>
-              <td class="num">0.5–1 kWh/day</td>
-              <td>0.4–0.8 kW + 1–2 kWh + 0.5–1 kW inv</td>
-              <td class="num">$250–900</td>
-            </tr>
-            <tr>
-              <td>Essentials + fridge</td>
-              <td class="num">2–3 kWh/day</td>
-              <td>0.8–1.5 kW + 2–4 kWh + 1–2 kW inv</td>
-              <td class="num">$550–1,800</td>
-            </tr>
-            <tr>
-              <td>Essentials + TV/micro</td>
-              <td class="num">4–6 kWh/day</td>
-              <td>1.5–2.5 kW + 5–8 kWh + 2–3 kW inv</td>
-              <td class="num">$1,100–3,200</td>
-            </tr>
-            <tr>
-              <td>Full small home</td>
-              <td class="num">8–12 kWh/day</td>
-              <td>3–5 kW + 10–16 kWh + 3–5 kW inv</td>
-              <td class="num">$2,200–6,500</td>
-            </tr>
+            <caption>
+              Backup size table
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Backup target</th>
+                <th class="num" scope="col">Daily energy</th>
+                <th scope="col">Hardware</th>
+                <th class="num" scope="col">Components</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Phones + lights + wifi</td>
+                <td class="num">0.5–1 kWh/day</td>
+                <td>0.4–0.8 kW + 1–2 kWh + 0.5–1 kW inv</td>
+                <td class="num">$250–900</td>
+              </tr>
+              <tr>
+                <td>Essentials + fridge</td>
+                <td class="num">2–3 kWh/day</td>
+                <td>0.8–1.5 kW + 2–4 kWh + 1–2 kW inv</td>
+                <td class="num">$550–1,800</td>
+              </tr>
+              <tr>
+                <td>Essentials + TV/micro</td>
+                <td class="num">4–6 kWh/day</td>
+                <td>1.5–2.5 kW + 5–8 kWh + 2–3 kW inv</td>
+                <td class="num">$1,100–3,200</td>
+              </tr>
+              <tr>
+                <td>Full small home</td>
+                <td class="num">8–12 kWh/day</td>
+                <td>3–5 kW + 10–16 kWh + 3–5 kW inv</td>
+                <td class="num">$2,200–6,500</td>
+              </tr>
+            </tbody>
           </table>
         </div>
         <h2>Staged build path</h2>

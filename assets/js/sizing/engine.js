@@ -2,8 +2,8 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260917a";
-import { oversizeCallout } from "./rescale.js?v=20260917a";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260917c";
+import { oversizeCallout } from "./rescale.js?v=20260917c";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -197,6 +197,9 @@ export function shapedProfile(kwhPerDay, shape) {
 export function applianceProfile(items) {
   const day = new Float64Array(24);
   for (const it of items) {
+    // A zero/non-positive daily-hours entry carries no energy; skipping avoids
+    // a 0/0 NaN that would poison all 24 hours of the profile.
+    if (!(it.hoursPerDay > 0)) continue;
     const count = it.count ?? 1;
     const wh = it.watts * count * it.hoursPerDay;
     const whole = Math.floor(it.hoursPerDay);

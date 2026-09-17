@@ -82,18 +82,25 @@ for (const page of pages) {
       fail(
         `${page}: OG incomplete (title:${ogTitle} desc:${ogDesc} image:${ogImage} card:${twCard})`,
       );
-    // hreflang present
-    if (
-      /<link\s+rel="alternate"\s+hreflang="en"\s+href="https:\/\/freeoffgridcalculator\.com\/[^"]*"\s*\/?>/.test(
-        html,
-      ) &&
-      /<link\s+rel="alternate"\s+hreflang="x-default"\s+href="https:\/\/freeoffgridcalculator\.com\/[^"]*"\s*\/?>/.test(
-        html,
-      )
+    // hreflang: exactly en + x-default, both self-referential. ?lang=
+    // variants are client-side translations that canonical here, so listing
+    // them as hreflang targets would ship a known-ignored signal to Google.
+    const hreflangs = [...html.matchAll(/hreflang="([^"]+)"/g)].map(
+      (x) => x[1],
+    );
+    const hasQueryLang = /hreflang="[^"]+"\s+href="[^"]*\?lang=/.test(html);
+    if (hasQueryLang) {
+      fail(`${page}: hreflang points at a ?lang= URL (non-indexable target)`);
+    } else if (
+      hreflangs.includes("en") &&
+      hreflangs.includes("x-default") &&
+      hreflangs.length === 2
     ) {
-      ok(`${page}: hreflang present`);
+      ok(`${page}: hreflang present (en + x-default)`);
     } else {
-      fail(`${page}: missing hreflang tags`);
+      fail(
+        `${page}: hreflang must be exactly en + x-default, found [${hreflangs.join(", ")}]`,
+      );
     }
 
     // BreadcrumbList JSON-LD schema present on city and blog post pages
