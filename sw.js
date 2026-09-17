@@ -9,7 +9,7 @@
 // localStorage per site, so after one visit a location keeps working fully
 // offline. Bump CACHE_VERSION to force every client to refresh on next visit.
 
-const CACHE_VERSION = "beco-v61";
+const CACHE_VERSION = "beco-v64";
 // Explicit file URLs only: cache.addAll rejects the whole batch if ANY entry
 // 404s or redirects, and directory URLs ("./blog/") depend on server
 // directory-index behavior. Every entry below must exist on disk — the
