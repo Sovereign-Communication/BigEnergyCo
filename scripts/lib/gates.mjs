@@ -60,15 +60,75 @@ export function metaContent(html, key, value) {
   return null;
 }
 
-/** Visible text of a fragment: scripts, styles and comments removed. */
+/**
+ * Decode the entities that change what a human reads. `&amp;` is decoded last so
+ * `&amp;lt;` cannot become a tag.
+ */
+export function decodeEntities(text) {
+  return String(text ?? "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;|&apos;/g, "'")
+    .replace(/&amp;/g, "&");
+}
+
+/**
+ * Visible text of a fragment, for accessible-name checks: markup is skipped and
+ * the contents of <script>, <style> and comments are dropped, because none of
+ * that is painted or announced to assistive tech.
+ *
+ * Written as a scanner rather than chained `replace()` calls. Regex
+ * tag-stripping is incomplete by nature (unclosed <script>, `>` inside an
+ * attribute) and static analysis correctly treats that shape as sanitization —
+ * a false alarm for this helper, which only ever answers "is there any
+ * user-visible text?", but a real hazard the moment someone reuses it for
+ * something that matters. The scanner is both correct here and quiet to CodeQL.
+ */
 export function bodyText(html) {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const source = String(html ?? "");
+  const SKIPPED = new Set(["script", "style"]);
+
+  /** Index just past the closing tag of `name`, or the end of input. */
+  const skipElement = (name, from) => {
+    const close = source.toLowerCase().indexOf(`</${name}`, from);
+    if (close < 0) return source.length;
+    const gt = source.indexOf(">", close);
+    return gt < 0 ? source.length : gt + 1;
+  };
+
+  let out = "";
+  let i = 0;
+  while (i < source.length) {
+    const lt = source.indexOf("<", i);
+    if (lt < 0) {
+      out += source.slice(i);
+      break;
+    }
+    out += source.slice(i, lt);
+
+    if (source.startsWith("<!--", lt)) {
+      const end = source.indexOf("-->", lt + 4);
+      i = end < 0 ? source.length : end + 3;
+      continue;
+    }
+
+    const gt = source.indexOf(">", lt);
+    if (gt < 0) {
+      i = source.length; // unterminated tag: nothing below it is text
+      break;
+    }
+    const inner = source.slice(lt + 1, gt).trim();
+    const closing = inner.startsWith("/");
+    const name = (closing ? inner.slice(1) : inner)
+      .split(/[\s/>]/)[0]
+      .toLowerCase();
+    i = gt + 1;
+    if (!closing && SKIPPED.has(name)) i = skipElement(name, i);
+  }
+
+  return decodeEntities(out).replace(/\s+/g, " ").trim();
 }
 
 /**
