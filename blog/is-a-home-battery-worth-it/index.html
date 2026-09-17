@@ -447,9 +447,38 @@
           font-size: 0.85rem;
         }
       }
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.5rem;
+        z-index: 20;
+        padding: 0.7rem 1rem;
+        background: #00e699;
+        color: #04120c;
+        font-weight: 800;
+        border-radius: 8px;
+      }
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid #00e699;
+        outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
     </style>
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header>
       <div class="container">
         <a class="logo" href="../../" aria-label="BigEnergyCo Home">
@@ -469,7 +498,7 @@
       </div>
     </header>
 
-    <main class="container">
+    <main id="main" class="container">
       <article>
         <h1>Is a Home Battery Worth It? Honest Payback Math (2026)</h1>
         <p class="meta">
@@ -529,38 +558,45 @@
         </p>
         <div class="table-container">
           <table>
-            <tr>
-              <th>Chemistry</th>
-              <th>Upfront per usable kWh (DIY)</th>
-              <th>Retail per usable kWh</th>
-              <th>Cycles to 80%</th>
-              <th>Swaps over 20 yrs</th>
-              <th class="num">20-yr lifetime per kWh</th>
-            </tr>
-            <tr>
-              <td>LFP (LiFePO4)</td>
-              <td class="num">$80–125</td>
-              <td class="num">$110–165</td>
-              <td class="num">~6,000</td>
-              <td class="num">~0–1</td>
-              <td class="num"><strong>~$92–310</strong></td>
-            </tr>
-            <tr>
-              <td>Sodium-ion</td>
-              <td class="num">$88–138</td>
-              <td class="num">$110–175</td>
-              <td class="num">~5,500</td>
-              <td class="num">~1</td>
-              <td class="num"><strong>~$100–336</strong></td>
-            </tr>
-            <tr>
-              <td>Lead-acid AGM</td>
-              <td class="num">$240–330</td>
-              <td class="num">$280–380</td>
-              <td class="num">~500</td>
-              <td class="num">~8 counted</td>
-              <td class="num"><strong>~$2,270–3,240</strong></td>
-            </tr>
+            <caption>
+              Lifetime cost per usable kWh: the table that decides everything
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Chemistry</th>
+                <th scope="col">Upfront per usable kWh (DIY)</th>
+                <th scope="col">Retail per usable kWh</th>
+                <th scope="col">Cycles to 80%</th>
+                <th scope="col">Swaps over 20 yrs</th>
+                <th class="num" scope="col">20-yr lifetime per kWh</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>LFP (LiFePO4)</td>
+                <td class="num">$80–125</td>
+                <td class="num">$110–165</td>
+                <td class="num">~6,000</td>
+                <td class="num">~0–1</td>
+                <td class="num"><strong>~$92–310</strong></td>
+              </tr>
+              <tr>
+                <td>Sodium-ion</td>
+                <td class="num">$88–138</td>
+                <td class="num">$110–175</td>
+                <td class="num">~5,500</td>
+                <td class="num">~1</td>
+                <td class="num"><strong>~$100–336</strong></td>
+              </tr>
+              <tr>
+                <td>Lead-acid AGM</td>
+                <td class="num">$240–330</td>
+                <td class="num">$280–380</td>
+                <td class="num">~500</td>
+                <td class="num">~8 counted</td>
+                <td class="num"><strong>~$2,270–3,240</strong></td>
+              </tr>
+            </tbody>
           </table>
         </div>
         <p>
@@ -577,30 +613,37 @@
         </p>
         <div class="table-container">
           <table>
-            <tr>
-              <th>Bill cut</th>
-              <th>Hardware</th>
-              <th>Component cost</th>
-              <th class="num">Simple payback</th>
-            </tr>
-            <tr>
-              <td>~60%</td>
-              <td class="num">~1.8 kW + 2 kWh</td>
-              <td class="num">$391–1,357</td>
-              <td class="num"><strong>~5–18 months</strong></td>
-            </tr>
-            <tr>
-              <td>~80%</td>
-              <td class="num">~2.3 kW + 4 kWh</td>
-              <td class="num">$545–1,900</td>
-              <td class="num">~6–20 months</td>
-            </tr>
-            <tr>
-              <td>~95%</td>
-              <td class="num">~2.6 kW + 6 kWh</td>
-              <td class="num">$714–2,504</td>
-              <td class="num">~6–21 months</td>
-            </tr>
+            <caption>
+              Worked example: 10 kWh/day in Honolulu ($0.40–0.44/kWh)
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Bill cut</th>
+                <th scope="col">Hardware</th>
+                <th scope="col">Component cost</th>
+                <th class="num" scope="col">Simple payback</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>~60%</td>
+                <td class="num">~1.8 kW + 2 kWh</td>
+                <td class="num">$391–1,357</td>
+                <td class="num"><strong>~5–18 months</strong></td>
+              </tr>
+              <tr>
+                <td>~80%</td>
+                <td class="num">~2.3 kW + 4 kWh</td>
+                <td class="num">$545–1,900</td>
+                <td class="num">~6–20 months</td>
+              </tr>
+              <tr>
+                <td>~95%</td>
+                <td class="num">~2.6 kW + 6 kWh</td>
+                <td class="num">$714–2,504</td>
+                <td class="num">~6–21 months</td>
+              </tr>
+            </tbody>
           </table>
         </div>
         <p>

@@ -44,6 +44,30 @@ export function oversizeCallout(
   return null;
 }
 
+/**
+ * Reads the USD savings figure back out of oversizeCallout prose so the UI
+ * can re-render it in the visitor's display currency. Paired with the
+ * generator above (same `~$1,234` shape); returns null for prose without a
+ * figure — hand-written fallback notes stay byte-identical.
+ */
+export function oversizeSavingsUsd(text) {
+  const m = String(text || "").match(/~\$([\d,]+)/);
+  if (!m) return null;
+  const v = Number(m[1].replace(/,/g, ""));
+  return Number.isFinite(v) ? v : null;
+}
+
+/**
+ * Re-renders an oversize note's savings figure through the caller's
+ * money(usd) formatter. Pass-through unless a figure parses AND a formatter
+ * is given, so USD readers and formatter-less callers see the original.
+ */
+export function relocalizeOversizeCallout(text, moneyFn) {
+  const usd = oversizeSavingsUsd(text);
+  if (usd === null || typeof moneyFn !== "function") return text;
+  return String(text).replace(/~\$[\d,]+/, () => `~${moneyFn(usd)}`);
+}
+
 /** Rescale a cumulative cost series {grid, solar, system} by load factor k.
  * fixedMonthly is the non-scaling utility connection fee (USD/mo): the grid
  * and solar lines both keep paying it every year, so only the amount above

@@ -573,6 +573,16 @@ export function markerOffCurveNote(frontier, opts = {}) {
  * hardware (same tolerances as the adopted-point SOC match) AND the chemistry
  * must agree before the "selected" tag is printed.
  */
+/**
+ * Tolerances that decide whether a curve point counts as "the selected
+ * system" for the highlight dot and the table tag. They sit just inside the
+ * engine's search quantization (PV steps of 0.25 kW, battery steps of
+ * 1 kWh), so a recommendation always matches its own curve point but two
+ * distinct neighboring points never merge into one tag.
+ */
+export const FRONTIER_MARKER_PV_TOL_KW = 0.06;
+export const FRONTIER_MARKER_BATT_TOL_KWH = 0.6;
+
 export function markerMatchesPoint(marker, point, frontierChemistry) {
   if (!marker || !point) return false;
   if (
@@ -589,8 +599,10 @@ export function markerMatchesPoint(marker, point, frontierChemistry) {
   )
     return false;
   return (
-    Math.abs((point.pvKw || 0) - (marker.pvKw || 0)) < 0.06 &&
-    Math.abs((point.battKwh || 0) - (marker.battKwh || 0)) < 0.6
+    Math.abs((point.pvKw || 0) - (marker.pvKw || 0)) <
+      FRONTIER_MARKER_PV_TOL_KW &&
+    Math.abs((point.battKwh || 0) - (marker.battKwh || 0)) <
+      FRONTIER_MARKER_BATT_TOL_KWH
   );
 }
 /**

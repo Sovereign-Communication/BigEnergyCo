@@ -10,8 +10,10 @@
 
 // direct-kWh mode for people who already know their numbers.
 
-import { CITY_PRESETS } from "./nasa.js?v=20260917b";
-import { APPLIANCES } from "./appliances.js?v=20260917b";
+// NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
+// CITY_CATALOG in cities.js — importing the preset list would only bloat the
+// bundle, so it is deliberately not imported.
+import { APPLIANCES } from "./appliances.js?v=20260917c";
 import {
   CITY_CATALOG,
   searchCities,
@@ -21,7 +23,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260917b";
+} from "./cities.js?v=20260917c";
 
 import {
   estimateTariff,
@@ -29,56 +31,57 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260917b";
+} from "./pricing.js?v=20260917c";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260917b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260917c";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260917b";
+} from "./bom.js?v=20260917c";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260917b";
+import { BOM_ITEMS } from "../shared/content.js?v=20260917c";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260917b";
+} from "../shared/i18n.js?v=20260917c";
 
-import { LOCALES } from "../shared/locales.js?v=20260917b";
+import { LOCALES } from "../shared/locales.js?v=20260917c";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260917b";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260917b";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260917c";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260917c";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260917b";
+} from "../shared/simple-mode.js?v=20260917c";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260917b";
+} from "./frontier-chart.js?v=20260917c";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
-} from "./rescale.js?v=20260917b";
+  relocalizeOversizeCallout,
+} from "./rescale.js?v=20260917c";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260917b";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260917c";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260917b";
-import { persistWizard, restoreWizard } from "./wizard.js?v=20260917b";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260917b";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260917b";
+} from "./map-provider.js?v=20260917c";
+import { persistWizard, restoreWizard } from "./wizard.js?v=20260917c";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260917c";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260917c";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -95,8 +98,11 @@ function updateRoofAreaCapNote() {
   const count = Math.floor(area / 6);
   const capKw = Math.floor(area / 6) * (PANEL_WATTS_DEFAULT / 1000);
   note.style.display = "block";
+  // The cap assumes ~6 m² per panel (tilt rows plus walkways on a real
+  // roof); the parts list quotes the tighter bare-panel footprint. Both are
+  // honest — installed space vs hardware space — so the note says which.
   note.textContent =
-    `Caps the search at ${count} × ${PANEL_WATTS_DEFAULT} W panels ≈ ${capKw.toFixed(1)} kW of solar. ` +
+    `Caps the search at ${count} × ${PANEL_WATTS_DEFAULT} W panels ≈ ${capKw.toFixed(1)} kW of solar (≈6 m² per panel with access space). ` +
     `Clear the box to remove the cap.`;
 }
 
@@ -120,9 +126,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260917b";
+} from "./money.js?v=20260917c";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260917b";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260917c";
 
 let worker = null;
 
@@ -390,11 +396,15 @@ function pipelineStop(success) {
 function showSpeedNote(kind, meta) {
   const note = $("speedNote");
   if (!note) return;
+  // Fixed two decimals so "-157.9" and "-157.90" never disagree between the
+  // badge, the inputs, and the share link.
+  const lat = Number(meta?.latitude);
+  const lon = Number(meta?.longitude);
   const where =
     meta &&
     (meta.offlineCity ||
-      (meta.latitude !== undefined
-        ? `${Math.round(meta.latitude * 100) / 100}, ${Math.round(meta.longitude * 100) / 100}`
+      (Number.isFinite(lat) && Number.isFinite(lon)
+        ? `${lat.toFixed(2)}, ${lon.toFixed(2)}`
         : ""));
   if (kind === "repeat") {
     note.textContent =
@@ -689,7 +699,13 @@ function syncBillSlider() {
 
   slider.min = String(minBill);
   slider.max = String(maxBill);
-  slider.step = String(Math.max(1, Math.round((maxBill - minBill) / 300)));
+  // 1-2-5 ladder step ≈ range/300 stops: coarse currencies step in thousands,
+  // USD in whole dollars, and tiny ranges keep cents (the old Math.max(1, …)
+  // floor forced $1 jumps on cent-scale ranges).
+  const rawStep = Math.max((maxBill - minBill) / 300, 0.01);
+  const mag = 10 ** Math.floor(Math.log10(rawStep));
+  const norm = rawStep / mag;
+  slider.step = String((norm >= 5 ? 5 : norm >= 2 ? 2 : 1) * mag);
   slider.value = String(value);
   const out = $("billSliderVal");
   if (out) out.textContent = "~" + fmtBill(value);
@@ -3118,7 +3134,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260917b", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260917c", {
       type: "module",
     });
 
@@ -3365,6 +3381,15 @@ function gridRate(usdPerKwh) {
 function moneyRange(lo, hi) {
   if (!Number.isFinite(Number(lo)) || !Number.isFinite(Number(hi))) return "–";
   return money(lo) + "–" + money(hi);
+}
+
+// Oversize notes are generated in USD by the engine; re-render the savings
+// figure through money() so non-USD readers see their own currency. USD
+// readers (or no-FX) get the original prose byte-identical.
+function bestPriceNote(text) {
+  const fx = fxActive();
+  if (!fx || fx.code === "USD") return text;
+  return relocalizeOversizeCallout(text, money);
 }
 
 function fxNote() {
@@ -3954,7 +3979,11 @@ function renderAutoCards(p) {
 
     if (a.bestPriceCallout) {
       card.appendChild(
-        el("div", { class: "best-price-callout" }, `💡 ${a.bestPriceCallout}`),
+        el(
+          "div",
+          { class: "best-price-callout" },
+          `💡 ${bestPriceNote(a.bestPriceCallout)}`,
+        ),
       );
     }
 
@@ -5320,7 +5349,7 @@ function entryDetailRows(p, e) {
     ]);
   }
   if (e.bestPriceCallout) {
-    rows.push(["Scenario note", e.bestPriceCallout]);
+    rows.push(["Scenario note", bestPriceNote(e.bestPriceCallout)]);
   }
   return rows;
 }
@@ -5470,7 +5499,7 @@ function renderBomPanel() {
         style:
           "margin-bottom:0.8rem;padding:0.75rem 1rem;border-radius:8px;background:rgba(0,230,153,0.08);border:1px solid rgba(0,230,153,0.3);font-size:0.85rem;line-height:1.45;color:var(--text-color);",
       },
-      `💡 ${f.bestPriceCallout}`,
+      `💡 ${bestPriceNote(f.bestPriceCallout)}`,
     );
     body.appendChild(callout);
   }
@@ -6085,7 +6114,11 @@ function renderTierCards(p) {
 
     if (t.bestPriceCallout) {
       card.appendChild(
-        el("div", { class: "best-price-callout" }, `💡 ${t.bestPriceCallout}`),
+        el(
+          "div",
+          { class: "best-price-callout" },
+          `💡 ${bestPriceNote(t.bestPriceCallout)}`,
+        ),
       );
     }
 
@@ -6271,7 +6304,11 @@ function renderTargetCards(p, extraTargets = []) {
 
     if (t.bestPriceCallout) {
       card.appendChild(
-        el("div", { class: "best-price-callout" }, `💡 ${t.bestPriceCallout}`),
+        el(
+          "div",
+          { class: "best-price-callout" },
+          `💡 ${bestPriceNote(t.bestPriceCallout)}`,
+        ),
       );
     }
 

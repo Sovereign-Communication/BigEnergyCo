@@ -749,9 +749,38 @@
           padding: 1.5rem 1rem;
         }
       }
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.5rem;
+        z-index: 20;
+        padding: 0.7rem 1rem;
+        background: #00e699;
+        color: #04120c;
+        font-weight: 800;
+        border-radius: 8px;
+      }
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid #00e699;
+        outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
     </style>
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <!-- Header / Navigation Bar -->
     <header>
       <div class="container nav-flex">
@@ -773,7 +802,7 @@
     </header>
 
     <!-- Article Container -->
-    <main class="article-container">
+    <main id="main" class="article-container">
       <!-- Breadcrumb Navigation -->
       <nav class="breadcrumb" aria-label="Breadcrumb">
         <a href="../../">Home</a>
@@ -1162,11 +1191,14 @@
         <!-- Table 1: LFP vs Sodium-Ion Comparison -->
         <div class="table-container">
           <table>
+            <caption>
+              LFP vs Sodium-Ion: Head-to-Head Comparison
+            </caption>
             <thead>
               <tr>
-                <th>Characteristic</th>
-                <th>LiFePO4 (Lithium Iron Phosphate)</th>
-                <th>Sodium-Ion (Na-ion)</th>
+                <th scope="col">Characteristic</th>
+                <th scope="col">LiFePO4 (Lithium Iron Phosphate)</th>
+                <th scope="col">Sodium-Ion (Na-ion)</th>
               </tr>
             </thead>
             <tbody>
@@ -1342,11 +1374,14 @@
         <!-- Table 2: DIY vs Pre-Built Comparison -->
         <div class="table-container">
           <table>
+            <caption>
+              When Pre-Bought Is the Better Choice
+            </caption>
             <thead>
               <tr>
-                <th>Factor</th>
-                <th>DIY Battery Storage</th>
-                <th>Pre-Built System</th>
+                <th scope="col">Factor</th>
+                <th scope="col">DIY Battery Storage</th>
+                <th scope="col">Pre-Built System</th>
               </tr>
             </thead>
             <tbody>

@@ -70,6 +70,9 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // The eager graph is ~700 KB of source (the browser mostly serves it from
   // the immutable cache, so this is a parse-cost guard, not a download
   // guard). The point: growth must be a decision, never an accident.
+  // History: 720,000 until Sep 2026, then 745,000 — the German locale parity
+  // (~+10 KB of user-facing strings, no code) and modal focus isolation
+  // (~+3 KB) were reviewed as worth it. Next raise needs the same note.
   assert.ok(
     htmlBytes <= 125_000,
     `index.html ${htmlBytes} bytes exceeds 125,000 budget`,
@@ -79,8 +82,8 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     `site.css ${cssBytes} bytes exceeds 40,000 budget`,
   );
   assert.ok(
-    jsBytes <= 720_000,
-    `eager JS ${jsBytes} bytes exceeds 720,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
+    jsBytes <= 745_000,
+    `eager JS ${jsBytes} bytes exceeds 745,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
   );
 });
 

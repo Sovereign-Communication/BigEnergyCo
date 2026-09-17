@@ -653,9 +653,38 @@
           display: none;
         }
       }
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0.5rem;
+        z-index: 20;
+        padding: 0.7rem 1rem;
+        background: #00e699;
+        color: #04120c;
+        font-weight: 800;
+        border-radius: 8px;
+      }
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid #00e699;
+        outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
     </style>
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <!-- Header -->
     <header>
       <div class="container nav-flex">
@@ -676,7 +705,7 @@
       </div>
     </header>
 
-    <main class="container">
+    <main id="main" class="container">
       <!-- Breadcrumbs -->
       <nav class="breadcrumb" aria-label="Breadcrumb">
         <a href="../../">Home</a>
@@ -816,12 +845,15 @@
 
         <div class="table-wrapper">
           <table>
+            <caption>
+              2. Empirical Degradation & Sizing Matrix by Battery Chemistry
+            </caption>
             <thead>
               <tr>
-                <th>Specification</th>
-                <th>LFP (LiFePO<sub>4</sub>)</th>
-                <th>Sodium-Ion (Na-Ion)</th>
-                <th>Lead-Acid (AGM)</th>
+                <th scope="col">Specification</th>
+                <th scope="col">LFP (LiFePO<sub>4</sub>)</th>
+                <th scope="col">Sodium-Ion (Na-Ion)</th>
+                <th scope="col">Lead-Acid (AGM)</th>
               </tr>
             </thead>
             <tbody>
@@ -1168,16 +1200,19 @@
 
         <div class="table-wrapper">
           <table>
+            <caption>
+              6. 20-Year Worked Financial Example: 10 kWh/Day Off-Grid Home
+            </caption>
             <thead>
               <tr>
-                <th>System Configuration</th>
-                <th>Bank Size (Nameplate)</th>
-                <th>Daily Operating DoD</th>
-                <th>Expected Cycle Life</th>
-                <th>20-Yr Bank Swaps</th>
-                <th>Upfront Battery Cost</th>
-                <th>Replacement &amp; Labor Cost</th>
-                <th>True 20-Yr Lifetime Cost</th>
+                <th scope="col">System Configuration</th>
+                <th scope="col">Bank Size (Nameplate)</th>
+                <th scope="col">Daily Operating DoD</th>
+                <th scope="col">Expected Cycle Life</th>
+                <th scope="col">20-Yr Bank Swaps</th>
+                <th scope="col">Upfront Battery Cost</th>
+                <th scope="col">Replacement &amp; Labor Cost</th>
+                <th scope="col">True 20-Yr Lifetime Cost</th>
               </tr>
             </thead>
             <tbody>

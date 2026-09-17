@@ -132,10 +132,80 @@ document.addEventListener("keydown", function (e) {
   }
 
   if (system && system.style.display === "flex") {
-    system.style.display = "none";
+    // Route through the wired closer so focus returns to the opener; if the
+    // app module hasn't loaded yet, hide directly as a fallback.
+    var sysCloser = document.getElementById("btnCloseSystem");
+    if (sysCloser) sysCloser.click();
+    if (system.style.display === "flex") system.style.display = "none";
     return;
   }
 });
+
+// Focus trap + background isolation, centralized for all three modals
+// (sizing, legal, system). Tab cycles inside the open dialog; everything
+// else in <body> goes inert and the page stops scrolling underneath.
+
+function becoVisibleModal() {
+  var ids = ["sizingModal", "legalModal", "systemModal"];
+  for (var i = 0; i < ids.length; i++) {
+    var m = document.getElementById(ids[i]);
+    if (m && m.style.display === "flex") return m;
+  }
+  return null;
+}
+
+function becoFocusables(root) {
+  if (!root || !root.querySelectorAll) return [];
+  return Array.prototype.filter.call(
+    root.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])',
+    ),
+    function (el) {
+      return el.getClientRects().length > 0;
+    },
+  );
+}
+
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Tab") return;
+  var modal = becoVisibleModal();
+  if (!modal) return;
+  var items = becoFocusables(modal);
+  if (!items.length) {
+    e.preventDefault();
+    return;
+  }
+  var first = items[0];
+  var last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+});
+
+function becoRefreshModalState() {
+  var modal = becoVisibleModal();
+  Array.prototype.forEach.call(document.body.children, function (child) {
+    if (!child.setAttribute) return;
+    if (child.tagName === "SCRIPT" || child.tagName === "STYLE") return;
+    if (modal && child !== modal) child.setAttribute("inert", "");
+    else child.removeAttribute("inert");
+  });
+  document.documentElement.style.overflow = modal ? "hidden" : "";
+}
+
+if (typeof MutationObserver !== "undefined" && document.body) {
+  new MutationObserver(becoRefreshModalState).observe(document.body, {
+    attributes: true,
+    attributeFilter: ["style"],
+    childList: true,
+    subtree: true,
+  });
+  becoRefreshModalState();
+}
 
 window.scrollToCalc = function () {
   var calcElem = document.getElementById("calculator");
@@ -312,7 +382,8 @@ function sendChatMsg() {
     })
 
     .catch(function (err) {
-      console.error("Chat API error:", err);
+      // Log the status only: the error object can carry user message text.
+      console.error("Chat API error:", err && err.status);
 
       var loading = document.getElementById("loadingMsg");
 
@@ -337,6 +408,11 @@ function sendChatMsg() {
     });
 }
 
+// Per-mode memory for the intake value: toggling bill <-> kWh restores what
+// was typed last instead of clobbering it with the placeholder default.
+var intakeMemory = {};
+var intakeLastMode = null;
+
 function toggleIntakeMode() {
   var modeEl = document.getElementById("intakeMode");
 
@@ -348,18 +424,23 @@ function toggleIntakeMode() {
 
   var mode = modeEl.value;
 
+  if (intakeLastMode && intakeLastMode !== mode) {
+    intakeMemory[intakeLastMode] = input.value;
+  }
+  intakeLastMode = mode;
+
   if (mode === "bill") {
     label.innerText = "Monthly Electric Bill ($ USD):";
 
     input.placeholder = "e.g. 400";
 
-    if (!input.value || input.value === "35") input.value = "400";
+    if (!input.value) input.value = intakeMemory.bill || "400";
   } else {
     label.innerText = "Daily Energy Consumption (kWh / day):";
 
     input.placeholder = "e.g. 35";
 
-    if (!input.value || input.value === "400") input.value = "35";
+    if (!input.value) input.value = intakeMemory.kwh || "35";
   }
 }
 
@@ -382,8 +463,8 @@ function toggleInverterDetail() {
 function inverterDetailIsUseful(text) {
   var t = (text || "").trim();
 
-  if (t.length < 12) return false;
-
+  // No minimum length: short answers like "SMA 5kW" or "EG4 6000" name real
+  // hardware and are useful. The patterns below decide, not string length.
   return (
     /\d\s*(k?w|kva|v|a)\b/i.test(t) ||
     /\b(victron|sol-?ark|eg4|schneider|conext|growatt|deye|sma|fronius|outback|midnite|studer|must|srne|pip|voltronic|luxpower|solis|goodwe|huawei|enphase|tesla)\b/i.test(

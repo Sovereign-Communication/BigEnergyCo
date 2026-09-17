@@ -38,7 +38,10 @@ export function panelCapFromArea(areaM2, panelAreaM2 = PANEL_AREA_M2) {
 
 export function pvCapKwFromArea(
   areaM2,
-  panelWatts = 400,
+  // Same 550 W class the sizer caps with (bom.js PANEL_WATTS_DEFAULT): one
+  // square meter means the same panels everywhere, not 400 W here and
+  // 550 W there. Callers sizing odd hardware pass panelWatts explicitly.
+  panelWatts = 550,
   panelAreaM2 = PANEL_AREA_M2,
 ) {
   const count = panelCapFromArea(areaM2, panelAreaM2);
@@ -96,6 +99,37 @@ export function manualRoofHint(areaM2) {
   return `${Math.round(Number(areaM2) || 0)} m² is about ${panels} panels at ~${PANEL_AREA_M2} m² each.`;
 }
 
+// Policy enforcement: the constants above are the ONLY network destinations
+// the optional map may touch. If a future edit points them elsewhere, init
+// refuses loudly instead of leaking coordinates to an unreviewed host.
+function templateHost(template) {
+  try {
+    return new URL(String(template).replace("{s}.", "a.")).hostname;
+  } catch {
+    return "";
+  }
+}
+
+export function mapUrlsAllowed(
+  scriptUrl = LEAFLET_SCRIPT_URL,
+  tileUrls = [ESRI_SATELLITE_TILE_URL, CARTO_TILE_URL],
+) {
+  let scriptHost = "";
+  try {
+    scriptHost = new URL(scriptUrl).hostname;
+  } catch {
+    return false;
+  }
+  if (scriptHost !== optionalMapPolicy.allowedScriptHost) return false;
+  const tiles = optionalMapPolicy.allowedTileHosts || [];
+  return tileUrls.every((u) => {
+    const host = templateHost(u);
+    return (
+      host !== "" && tiles.some((t) => host === t || host.endsWith(`.${t}`))
+    );
+  });
+}
+
 function loadStylesheet(documentRef, href, integrity) {
   if (!documentRef || documentRef.querySelector(`link[href="${href}"]`))
     return null;
@@ -121,6 +155,8 @@ export function createLeafletProvider({
     available: () => !!windowRef && !!documentRef,
     async init({ element, latitude, longitude, zoom = 19 } = {}) {
       if (!element || !this.available()) return null;
+      if (!mapUrlsAllowed())
+        throw new Error("Optional map provider blocked by host policy");
       style = loadStylesheet(documentRef, LEAFLET_STYLE_URL, LEAFLET_STYLE_SRI);
       if (!windowRef.L) {
         script = documentRef.createElement("script");

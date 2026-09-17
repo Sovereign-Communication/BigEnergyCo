@@ -19,6 +19,13 @@ export function climateClass(hours = []) {
   const meanGhi = ghi.length
     ? ghi.reduce((sum, value) => sum + value, 0) / ghi.length
     : 0;
+  // Order is intentional, not accidental: warm sites (≥18 °C mean) with dim
+  // sun read as tropical, never maritime — humidity, pollen, and mold soil
+  // tropical panels at least as fast as sea air does (0.95 vs 0.96). Maritime
+  // therefore means cool-and-dim (coastal temperate winters, high latitudes),
+  // where rain washes panels more often than dust settles. Do not reorder the
+  // tropical branch below maritime without re-freezing the persona bounds:
+  // every warm-wet site on Earth would gain a point of harvest.
   const wetSignal = meanGhi > 0 && meanTemp >= 18 && meanGhi < 210;
   if (meanTemp >= 30 && meanGhi >= 250) return "desert";
   if (meanTemp >= 20 && meanGhi >= 320) return "arid";
