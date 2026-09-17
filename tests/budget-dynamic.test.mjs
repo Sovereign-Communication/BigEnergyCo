@@ -417,6 +417,40 @@ test("ui.js keeps the roof-cap note truthful and the input wired", () => {
   assert.match(html, /id="roofAreaCapNote"/, "the note element exists");
 });
 
+test("auto-chemistry payloads always carry an auto ARRAY (empty when nothing solves)", async () => {
+  // The UI router distinguishes auto mode from fixed-chemistry mode by
+  // payload SHAPE: fixed-chem runs set p.auto = null, auto runs always set
+  // an array. If the engine ever shipped an empty-auto run as null, the
+  // router would misroute the "nothing solves" case again (found live in a
+  // browser: the banner went blank instead of naming the roof-cap cause).
+  const p = await runSizing(
+    { ...MSG, dailyKwh: 71.9, pvMaxOverride: 1.6 },
+    { fetchWeather: fakeWeather },
+  );
+  assert.ok(
+    Array.isArray(p.auto),
+    "p.auto must be an array in auto mode, never null",
+  );
+  assert.equal(p.auto.length, 0, "nothing solves under the cap");
+});
+
+test("ui.js routes empty-auto payloads to renderBestPick's honest empty state", () => {
+  const src = readFileSync(
+    new URL("../assets/js/sizing/ui.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    src,
+    /const isAutoMode = Array\.isArray\(p\.auto\);/,
+    "routing must use the payload shape, not whether anything solved",
+  );
+  assert.match(
+    src,
+    /if \(isAutoMode\) \{\s*\n\s*renderBestPick\(p\);/,
+    "auto mode reaches renderBestPick even when p.auto is empty",
+  );
+});
+
 test("payload cache cannot conflate an incremental patch with a full run", () => {
   const src = readFileSync(
     new URL("../assets/js/sizing/run.js", import.meta.url),

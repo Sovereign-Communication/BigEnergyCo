@@ -7508,6 +7508,13 @@ function renderResults(p) {
   renderMoneyBar(p);
 
   const hasAuto = !!(p.auto && p.auto.length);
+  // Router mode: auto vs fixed-chemistry is a payload SHAPE distinction
+  // (fixed-chem runs set p.auto = null; auto runs always set an array, which
+  // may be EMPTY when nothing solved). Routing on content sent empty-auto
+  // payloads down the fixed-chem branch, where renderBestPick's honest
+  // empty state — the one naming the binding roof-cap constraint — was
+  // never reached and the banner just went blank.
+  const isAutoMode = Array.isArray(p.auto);
 
   // focusFirst: grid-tie auto can show the granular focus panel instead of
   // the recommendation card when the user has adopted a curve point.
@@ -7551,7 +7558,7 @@ function renderResults(p) {
   } else {
     // resultLevel === "best": clean recommendation card — NO raw matrix in auto-run
     if (bpWrap) bpWrap.style.display = "";
-    if (hasAuto) {
+    if (isAutoMode) {
       renderBestPick(p);
     } else if (isGT) {
       renderTargetCards(p, p.customTarget ? [p.customTarget] : []);
