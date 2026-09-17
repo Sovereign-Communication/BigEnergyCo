@@ -1,0 +1,58 @@
+name: Main audit
+
+# Server-side tripwire for the one rule GitHub cannot express as a bypass
+# condition: "docs-only changes may skip the PR, code may not".
+#
+# Branch protection grants the admin role a bypass so documentation fixes stay
+# a one-command operation; this workflow re-scans every push to main and fails
+# (with the offending paths) when a commit that did NOT come from a PR touched
+# anything outside the documentation set. The local pre-push hook blocks the
+# common case before it leaves a machine; this catches the rest.
+#
+# It runs on push, so a violation is visible within a minute — a red run on
+# main is the alarm, and the fix is a revert plus a proper PR.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Direct pushes to main must be documentation-only
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.event.after }}
+        run: |
+          ZERO=0000000000000000000000000000000000000000
+          if [ -z "$AFTER" ] || [ "$AFTER" = "$ZERO" ]; then
+            echo "no push payload (manual run) — auditing the tip commit"
+            node scripts/direct-push-audit.mjs
+          else
+            node scripts/direct-push-audit.mjs --before "$BEFORE" --after "$AFTER"
+          fi
+
+      - name: Reminder that main is staging
+        if: always()
+        run: |
+          echo "main publishes the staging mirror; the brand domain is promoted"
+          echo "separately and only after the staging verification job is green."
+          echo "See docs/DEPLOY_RUNBOOK.md."
