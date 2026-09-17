@@ -49,10 +49,56 @@ for (const { url, file } of pages) {
   for (const [i, m] of blocks.entries()) {
     try {
       const data = JSON.parse(m[1]);
-      const types = (data["@graph"] ? data["@graph"] : [data])
-        .map((n) => n["@type"])
-        .flat();
+      const nodes = data["@graph"] ? data["@graph"] : [data];
+      const types = nodes.map((n) => n["@type"]).flat();
       console.log(`OK   ${file} [block ${i + 1}]: ${types.join(", ")}`);
+      // Required-field gate: a parsable but thin Article/BlogPosting (no
+      // dateModified, no image, no author) is a silent rich-result failure.
+      const all = [];
+      const walk = (n) => {
+        if (Array.isArray(n)) return n.forEach(walk);
+        if (n && typeof n === "object") {
+          all.push(n);
+          Object.values(n).forEach(walk);
+        }
+      };
+      walk(nodes);
+      for (const n of all) {
+        if (n["@type"] === "Article") {
+          for (const f of [
+            "headline",
+            "datePublished",
+            "dateModified",
+            "author",
+            "image",
+            "mainEntityOfPage",
+          ]) {
+            if (n[f] === undefined) {
+              console.error(
+                `FAIL ${file} [block ${i + 1}]: Article missing "${f}"`,
+              );
+              failures++;
+            }
+          }
+        }
+        if (n["@type"] === "BlogPosting") {
+          for (const f of [
+            "headline",
+            "datePublished",
+            "dateModified",
+            "url",
+            "author",
+            "image",
+          ]) {
+            if (n[f] === undefined) {
+              console.error(
+                `FAIL ${file} [block ${i + 1}]: BlogPosting missing "${f}"`,
+              );
+              failures++;
+            }
+          }
+        }
+      }
     } catch (e) {
       console.error(`FAIL ${file} [block ${i + 1}]: ${e.message}`);
       failures++;

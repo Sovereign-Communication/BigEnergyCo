@@ -123,8 +123,13 @@ export function axisTicks(max, count = 5) {
     }
   }
   if (!step) step = max / count;
+  // Integer iteration: accumulating `v += step` in floats can duplicate a
+  // rounded label or overshoot one tick past max on some magnitudes.
   const out = [];
-  for (let v = 0; v <= max + 1e-9; v += step) out.push(Math.round(v));
+  const ticks = Math.floor(max / step + 1e-9);
+  for (let i = 0; i <= ticks; i++) out.push(Math.round(i * step));
+  if (out[out.length - 1] !== Math.round(max) && max / step - ticks > 1e-9)
+    out.push(Math.round(max));
   return out;
 }
 

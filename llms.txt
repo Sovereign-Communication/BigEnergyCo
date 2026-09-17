@@ -25,6 +25,7 @@
 - DIY LFP vs sodium-ion: https://freeoffgridcalculator.com/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/
 - Solar vs generator cost: https://freeoffgridcalculator.com/blog/solar-vs-generator-cost/
 - Escape load shedding: https://freeoffgridcalculator.com/blog/escape-load-shedding/
+- Battery longevity & DoD: https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/
 
 ## Cite honestly
 - Costs are ranges (landed-DIY vs budget-retail), never single prices.

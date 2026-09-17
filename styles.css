@@ -1,3 +1,7 @@
+/* DEPRECATED — do not edit. No shipped page loads this file; the live
+   stylesheet is assets/site.css (see index.html <link>). This file is kept
+   for history only and will be removed once confirmed nothing external
+   references it. */
 /* BigEnergyCo Design System - Premium Dark Glassmorphic Energy Aesthetic */
 :root {
   --bg-dark: #090d16;

@@ -36,11 +36,34 @@ function jsFiles(dir, out = []) {
   return out;
 }
 
+// Content pages carry no versioned refs today, but they are first-party HTML:
+// the moment one gains a ?v= asset link, the single-stamp discipline must
+// cover it, or the immutable /assets/* layer serves it stale for a year.
+function htmlFiles(dirs) {
+  const out = [];
+  for (const dir of dirs) {
+    if (!existsSync(dir)) continue;
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) {
+        if (name === "city-data") continue;
+        out.push(...htmlFiles([p]));
+      } else if (name.endsWith(".html")) out.push(p);
+    }
+  }
+  return out;
+}
+
 // Browser module graph: every file whose relative-asset references must
 // carry ?v=. HTML entry points plus the whole assets/js module tree.
 const GRAPH_FILES = [
   join(ROOT, "index.html"),
   join(ROOT, "solar-heatmap", "index.html"),
+  ...htmlFiles([
+    join(ROOT, "about"),
+    join(ROOT, "blog"),
+    join(ROOT, "solar-calculator"),
+  ]),
   ...jsFiles(join(ROOT, "assets", "js")),
 ];
 

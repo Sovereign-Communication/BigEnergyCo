@@ -9,14 +9,23 @@
 // localStorage per site, so after one visit a location keeps working fully
 // offline. Bump CACHE_VERSION to force every client to refresh on next visit.
 
-const CACHE_VERSION = "beco-v57";
+const CACHE_VERSION = "beco-v58";
+// Explicit file URLs only: cache.addAll rejects the whole batch if ANY entry
+// 404s or redirects, and directory URLs ("./blog/") depend on server
+// directory-index behavior. Every entry below must exist on disk — the
+// asset-token --check enforces it.
 const SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./assets/icon.svg",
-  "./blog/",
-  "./solar-calculator/",
+  "./assets/icon-192.png",
+  "./assets/icon-512.png",
+  "./assets/site.css",
+  "./blog/index.html",
+  "./solar-calculator/index.html",
+  "./about/index.html",
+  "./solar-heatmap/index.html",
 ];
 
 self.addEventListener("install", (event) => {

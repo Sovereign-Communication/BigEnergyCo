@@ -3,8 +3,15 @@
 export const PANEL_AREA_M2 = 6;
 export const LEAFLET_SCRIPT_URL =
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+// Subresource-integrity pins, identical to the static pins on
+// solar-heatmap/index.html: a compromised CDN response refuses to execute
+// instead of running inside the page. Keep all three files on one version.
+export const LEAFLET_SCRIPT_SRI =
+  "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
 export const LEAFLET_STYLE_URL =
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+export const LEAFLET_STYLE_SRI =
+  "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
 export const CARTO_TILE_URL =
   "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
 // Keyless satellite basemap — same public ArcGIS Online World Imagery service
@@ -89,12 +96,16 @@ export function manualRoofHint(areaM2) {
   return `${Math.round(Number(areaM2) || 0)} m² is about ${panels} panels at ~${PANEL_AREA_M2} m² each.`;
 }
 
-function loadStylesheet(documentRef, href) {
+function loadStylesheet(documentRef, href, integrity) {
   if (!documentRef || documentRef.querySelector(`link[href="${href}"]`))
     return null;
   const link = documentRef.createElement("link");
   link.rel = "stylesheet";
   link.href = href;
+  if (integrity) {
+    link.integrity = integrity;
+    link.crossOrigin = "anonymous";
+  }
   documentRef.head.appendChild(link);
   return link;
 }
@@ -110,10 +121,12 @@ export function createLeafletProvider({
     available: () => !!windowRef && !!documentRef,
     async init({ element, latitude, longitude, zoom = 19 } = {}) {
       if (!element || !this.available()) return null;
-      style = loadStylesheet(documentRef, LEAFLET_STYLE_URL);
+      style = loadStylesheet(documentRef, LEAFLET_STYLE_URL, LEAFLET_STYLE_SRI);
       if (!windowRef.L) {
         script = documentRef.createElement("script");
         script.src = LEAFLET_SCRIPT_URL;
+        script.integrity = LEAFLET_SCRIPT_SRI;
+        script.crossOrigin = "anonymous";
         script.async = true;
         documentRef.head.appendChild(script);
         await new Promise((resolve, reject) => {

@@ -10,10 +10,33 @@ var CF_API_URL = "https://bigenergyco-api.bigenergyco.workers.dev";
 
 var chatHistory = [];
 
+// Focus return for modals: opening stores the element that had focus so
+// closing can hand it back instead of dropping keyboard users at <body>.
+var lastModalOpener = null;
+
+function rememberOpener() {
+  lastModalOpener =
+    document.activeElement && document.activeElement !== document.body
+      ? document.activeElement
+      : null;
+}
+
+function restoreOpener() {
+  if (lastModalOpener && document.contains(lastModalOpener)) {
+    try {
+      lastModalOpener.focus();
+    } catch (e) {
+      /* focus is best-effort */
+    }
+  }
+  lastModalOpener = null;
+}
+
 window.openSizingModal = function () {
   var modal = document.getElementById("sizingModal");
 
   if (modal) {
+    if (modal.style.display !== "flex") rememberOpener();
     modal.style.display = "flex";
 
     var closer = document.getElementById("btnCloseSizing");
@@ -26,12 +49,14 @@ window.closeSizingModal = function () {
   var modal = document.getElementById("sizingModal");
 
   if (modal) modal.style.display = "none";
+  restoreOpener();
 };
 
 window.openLegalModal = function () {
   var modal = document.getElementById("legalModal");
 
   if (modal) {
+    if (modal.style.display !== "flex") rememberOpener();
     modal.style.display = "flex";
 
     var closer = document.getElementById("btnCloseLegal");
@@ -44,6 +69,7 @@ window.closeLegalModal = function () {
   var modal = document.getElementById("legalModal");
 
   if (modal) modal.style.display = "none";
+  restoreOpener();
 };
 
 window.toggleMobileNav = function () {
@@ -213,13 +239,21 @@ function sendChatMsg() {
   }
 
   function postTo(url) {
-    return fetch(url, {
+    // Bound the advisor request: a hung POST must surface the "unreachable"
+    // path instead of leaving "Thinking…" on screen forever.
+    var timeoutSignal =
+      typeof AbortSignal !== "undefined" && AbortSignal.timeout
+        ? AbortSignal.timeout(30000)
+        : undefined;
+    var opts = {
       method: "POST",
 
       headers: { "Content-Type": "application/json" },
 
       body: payload,
-    }).then(function (res) {
+    };
+    if (timeoutSignal) opts.signal = timeoutSignal;
+    return fetch(url, opts).then(function (res) {
       if (!res.ok) {
         var err = new Error("HTTP " + res.status);
 
@@ -478,6 +512,10 @@ function updateCalc() {
   if (!targetKwhInput) return;
 
   var targetKwh = parseFloat(targetKwhInput.value);
+
+  // Empty/invalid storage input must leave the previous figures alone, never
+  // render "NaN kWh" or "~Infinity years" into the comparison panel.
+  if (!isFinite(targetKwh) || targetKwh <= 0) return;
 
   var utilityRateSelect = document.getElementById("utilityRate");
 

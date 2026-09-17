@@ -180,12 +180,16 @@ export const JARGON_LOCALES = Object.freeze({
   },
 });
 
-export function jargonEntry(term) {
+export function jargonEntry(term, lang) {
+  // Translation overlays are intentionally partial: any term missing from the
+  // requested locale falls back to the English explanation, exactly like the
+  // UI locale layer. Unknown terms return null so callers can skip wiring.
+  if (lang && JARGON_LOCALES[lang]?.[term]) return JARGON_LOCALES[lang][term];
   return JARGON[term] || null;
 }
 
-export function explainElement(element, term) {
-  const entry = jargonEntry(term);
+export function explainElement(element, term, lang) {
+  const entry = jargonEntry(term, lang);
   if (!element || !entry) return false;
   element.setAttribute("data-eli5", entry.long);
   element.setAttribute("title", `${entry.short}: ${entry.long}`);

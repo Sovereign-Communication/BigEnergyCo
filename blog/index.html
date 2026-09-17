@@ -18,35 +18,13 @@
       content="solar energy blog, battery storage guide, DIY battery storage, LiFePO4, sodium-ion battery, off-grid power"
     />
     <link rel="canonical" href="https://freeoffgridcalculator.com/blog/" />
+    <!-- hreflang is intentionally en + x-default only: the ?lang= variants
+         are client-side translations that canonical here, so Google would
+         discard them as non-indexable targets. -->
     <link
       rel="alternate"
       hreflang="en"
       href="https://freeoffgridcalculator.com/blog/"
-    />
-    <link
-      rel="alternate"
-      hreflang="es"
-      href="https://freeoffgridcalculator.com/blog/?lang=es"
-    />
-    <link
-      rel="alternate"
-      hreflang="pt"
-      href="https://freeoffgridcalculator.com/blog/?lang=pt"
-    />
-    <link
-      rel="alternate"
-      hreflang="fr"
-      href="https://freeoffgridcalculator.com/blog/?lang=fr"
-    />
-    <link
-      rel="alternate"
-      hreflang="de"
-      href="https://freeoffgridcalculator.com/blog/?lang=de"
-    />
-    <link
-      rel="alternate"
-      hreflang="ar"
-      href="https://freeoffgridcalculator.com/blog/?lang=ar"
     />
     <link
       rel="alternate"
@@ -61,6 +39,7 @@
       href="../assets/favicon-48.png"
     />
     <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png" />
+    <link rel="manifest" href="../manifest.webmanifest" />
     <link
       rel="alternate"
       type="application/rss+xml"
@@ -129,7 +108,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -142,7 +122,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -155,7 +136,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -168,7 +150,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -181,7 +164,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -194,7 +178,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -207,7 +192,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -220,7 +206,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -233,7 +220,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           },
           {
             "@type": "BlogPosting",
@@ -246,7 +234,8 @@
             "author": {
               "@type": "Person",
               "name": "Lucas Ballek"
-            }
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
           }
         ]
       }
@@ -721,7 +710,7 @@
           >
             🌐 Worldwide Reference Guides
           </div>
-          <h3
+          <h2
             style="
               font-size: 1.25rem;
               font-weight: 800;
@@ -730,7 +719,7 @@
             "
           >
             Solar &amp; Battery Benchmarks for 66 Cities
-          </h3>
+          </h2>
           <p
             style="
               color: var(--text-muted);
@@ -757,7 +746,6 @@
             background: rgba(59, 130, 246, 0.15);
             border: 1px solid rgba(59, 130, 246, 0.4);
             color: #93c5fd;
-            white-space: nowrap;
             font-weight: 700;
             padding: 0.65rem 1.2rem;
             border-radius: 8px;
