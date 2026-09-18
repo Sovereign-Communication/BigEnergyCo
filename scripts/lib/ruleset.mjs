@@ -69,7 +69,3 @@ export const desiredRuleset = () => ({
     { type: "deletion" }, // never delete main
   ],
 });
-
-// "tool/threshold/security-threshold" — a comparable identity for a live rule.
-export const analyzerIdentity = (t) =>
-  [t.tool, t.alerts_threshold, t.security_alerts_threshold].join("/");

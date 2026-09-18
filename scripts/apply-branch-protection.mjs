@@ -22,7 +22,6 @@ import {
   CODE_SCANNING_TOOLS,
   REQUIRED_CHECKS,
   RULESET_NAME,
-  analyzerIdentity,
   desiredRuleset,
 } from "./lib/ruleset.mjs";
 
@@ -90,8 +89,12 @@ if (CHECK) {
   const liveTools = (
     (detail.rules || []).find((r) => r.type === "code_scanning")?.parameters
       ?.code_scanning_tools || []
-  ).map(analyzerIdentity);
-  const wantedTools = CODE_SCANNING_TOOLS.map(analyzerIdentity);
+  ).map((t) =>
+    [t.tool, t.alerts_threshold, t.security_alerts_threshold].join("/"),
+  );
+  const wantedTools = CODE_SCANNING_TOOLS.map((t) =>
+    [t.tool, t.alerts_threshold, t.security_alerts_threshold].join("/"),
+  );
   const analyzersMissing = wantedTools.filter((t) => !liveTools.includes(t));
   if (missing.length || !hasPrRule || !hasNoForce || analyzersMissing.length) {
     console.error(
