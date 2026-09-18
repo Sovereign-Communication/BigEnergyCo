@@ -56,6 +56,7 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     "jargon-dict.js",
     "i18n.js",
     "simple-mode.js",
+    "simple-view.js",
   ];
   let jsBytes = 0;
   for (const name of [...eagerSizing, ...eagerShared]) {
@@ -74,6 +75,9 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // (~+10 KB of user-facing strings, no code) and modal focus isolation
   // (~+3 KB) were reviewed as worth it. 746,000 (+1 KB, same day): honest
   // split of area-limited vs envelope-limited infeasibility reasons.
+  // 758,000 (+12 KB): real Simple mode — the pure view model (simple-view.js),
+  // its render path in ui.js, simple-mode strings in all six locales, and the
+  // hide-scoping CSS. User-facing feature, reviewed deliberately.
   assert.ok(
     htmlBytes <= 125_000,
     `index.html ${htmlBytes} bytes exceeds 125,000 budget`,
@@ -83,8 +87,8 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     `site.css ${cssBytes} bytes exceeds 40,000 budget`,
   );
   assert.ok(
-    jsBytes <= 746_000,
-    `eager JS ${jsBytes} bytes exceeds 745,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
+    jsBytes <= 758_000,
+    `eager JS ${jsBytes} bytes exceeds 758,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
   );
 });
 

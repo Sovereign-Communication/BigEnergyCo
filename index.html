@@ -257,10 +257,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20260918g" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20260918g" />
+    <link rel="preload" href="./assets/site.css?v=20260918h" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20260918h" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20260918g" />
+    <link rel="stylesheet" href="./assets/site.css?v=20260918h" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -574,6 +574,7 @@
                Manual reveals the full form. -->
               <div class="form-group" style="margin-bottom: 0.7rem">
                 <div
+                  id="modeToggleRow"
                   style="
                     display: flex;
                     gap: 1.25rem;
@@ -665,14 +666,14 @@
                     margin-top: 0.65rem;
                   "
                 >
-                  <input type="checkbox" id="simpleModeToggle" checked />
+                  <input type="checkbox" id="simpleModeToggle" />
                   <label
                     for="simpleModeToggle"
                     style="margin: 0; font-weight: 700; cursor: pointer"
                     >Simple mode</label
                   >
                   <span style="font-size: 0.78rem; color: var(--text-muted)"
-                    >plain-language explanations on tap</span
+                    >just the key numbers</span
                   >
                 </div>
 
@@ -2001,8 +2002,9 @@
                   "
                 ></p>
               </div>
-
               <div id="resultsRegion" hidden>
+                <div id="simpleResultsWrap" aria-live="polite"></div>
+
                 <div
                   id="resultLadder"
                   style="display: none; margin-bottom: 1rem"
@@ -2525,6 +2527,7 @@
                 </details>
 
                 <div
+                  class="result-actions-row"
                   style="
                     display: flex;
                     gap: 0.75rem;
@@ -3363,9 +3366,9 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20260918g"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20260918h"></script>
 
-    <script defer src="./assets/js/chat.js?v=20260918g"></script>
+    <script defer src="./assets/js/chat.js?v=20260918h"></script>
   </body>
 </html>
 

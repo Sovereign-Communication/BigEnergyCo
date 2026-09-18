@@ -713,6 +713,51 @@ async function main() {
       );
     }
 
+    // ── Simple mode: hide-and-card contract on the real surface ─────
+    console.log("SMOKE      ── main page: simple mode ──");
+    await evaluate(
+      `(() => { const t = document.getElementById("simpleModeToggle");
+        t.checked = true; t.dispatchEvent(new Event("change", { bubbles: true }));
+        return document.documentElement.dataset.displayMode; })()`,
+    );
+    gate(
+      "simple mode: root attribute set",
+      (await evaluate(`document.documentElement.dataset.displayMode`)) ===
+        "simple",
+    );
+    gate(
+      "simple mode: plain-language card renders",
+      await evaluate(
+        `!!document.querySelector("#simpleResultsWrap .simple-results-card")`,
+      ),
+    );
+    gate(
+      "simple mode: technical surfaces hidden (computed)",
+      await evaluate(
+        `["resultLadder","frontierWrap","cumCostChartWrap","bomPanel"]
+          .every((id) => getComputedStyle(document.getElementById(id)).display === "none")`,
+      ),
+    );
+    gate(
+      "simple mode: card has no NaN/undefined figures",
+      await evaluate(
+        `!/[Nn]aNa|undefined/.test(document.getElementById("simpleResultsWrap").textContent)`,
+      ),
+    );
+    await evaluate(
+      `(() => { const t = document.getElementById("simpleModeToggle");
+        t.checked = false; t.dispatchEvent(new Event("change", { bubbles: true }));
+        return true; })()`,
+    );
+    gate(
+      "simple mode: toggle off restores regular view",
+      (await evaluate(`document.documentElement.dataset.displayMode`)) ===
+        "technical" &&
+        (await evaluate(
+          `getComputedStyle(document.getElementById("resultLadder")).display !== "none"`,
+        )),
+    );
+
     // ── Off-grid mode (the other render pipeline) ─────────────────────
     console.log("SMOKE      ── main page: off-grid ──");
     await setInputs("offgrid");

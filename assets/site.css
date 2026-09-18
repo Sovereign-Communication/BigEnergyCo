@@ -1009,6 +1009,108 @@ input[type="number"]::-webkit-inner-spin-button {
   display: none !important;
 }
 
+/* ── Simple mode: the site's full detail is one flip away, but the default
+   view is a handful of honest numbers. Scoped to the root attribute so the
+   regular experience is untouched — this rule cannot even match without it. */
+[data-display-mode="simple"] #resultLadder,
+[data-display-mode="simple"] #moneyBar,
+[data-display-mode="simple"] #focusPanel,
+[data-display-mode="simple"] #tierResults,
+[data-display-mode="simple"] #frontierWrap,
+[data-display-mode="simple"] #sunPathWrap,
+[data-display-mode="simple"] #socChartWrap,
+[data-display-mode="simple"] #cumCostChartWrap,
+[data-display-mode="simple"] #bomPanel,
+[data-display-mode="simple"] #eli5CardWrap,
+[data-display-mode="simple"] #eli5Summary,
+[data-display-mode="simple"] .result-actions-row,
+[data-display-mode="simple"] #modeToggleRow {
+  display: none !important;
+}
+
+/* Simple form: goal + location + the one load slider + Run. The hidden
+   machinery keeps its values — switching back restores everything. */
+[data-display-mode="simple"] #fullControls,
+[data-display-mode="simple"] #coordDetails {
+  display: none !important;
+}
+
+/* The Simple results card. */
+.simple-results-card {
+  margin: 0 0 1.25rem;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--border-glow);
+  border-radius: 12px;
+  background: rgba(0, 230, 153, 0.05);
+}
+
+.simple-headline {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.5;
+  margin: 0 0 0.9rem;
+}
+
+.simple-heroes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0;
+}
+
+.simple-heroes > div {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border-card);
+  border-radius: 10px;
+  background: rgba(9, 13, 22, 0.5);
+}
+
+.simple-heroes dt {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 0 0 0.25rem;
+}
+
+.simple-heroes dd {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.25;
+}
+
+.simple-heroes dd .simple-sub {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.simple-note {
+  margin: 0.9rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.simple-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.95rem;
+}
+
+.simple-actions .btn:focus-visible {
+  outline: 2px solid var(--primary-accent);
+  outline-offset: 2px;
+}
+
 /* Keyboard users need a visible focus ring on every button-style element. */
 
 .btn:focus-visible,
