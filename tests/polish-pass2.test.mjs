@@ -24,7 +24,7 @@ import {
   FRONTIER_MARKER_PV_TOL_KW,
   FRONTIER_MARKER_BATT_TOL_KWH,
 } from "../assets/js/sizing/frontier-chart.js";
-import { CITY_CATALOG_TIMEOUT_MS } from "../assets/js/sizing/cities.js";
+import { COUNTRY_FETCH_TIMEOUT_MS } from "../assets/js/sizing/cities.js";
 import { LOCALES } from "../assets/js/shared/locales.js";
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -136,10 +136,10 @@ test("bundled map URLs pass the policy, strangers fail", () => {
   assert.equal(mapUrlsAllowed("not a url", []), false);
 });
 
-test("catalog load deadline stays bounded", () => {
+test("country partition load deadline stays bounded", () => {
   assert.ok(
-    Number.isFinite(CITY_CATALOG_TIMEOUT_MS) &&
-      CITY_CATALOG_TIMEOUT_MS <= 60000,
+    Number.isFinite(COUNTRY_FETCH_TIMEOUT_MS) &&
+      COUNTRY_FETCH_TIMEOUT_MS <= 60000,
   );
 });
 

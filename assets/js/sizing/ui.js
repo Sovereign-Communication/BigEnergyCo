@@ -13,17 +13,20 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260917h";
+import { APPLIANCES } from "./appliances.js?v=20260918a";
 import {
   CITY_CATALOG,
   searchCities,
-  loadCityCatalog,
+  typedCityCandidates,
+  loadCountryCities,
+  mergeCities,
   lookupCityOnline,
+  lookupCountryOnline,
   formatCityLabel,
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260917h";
+} from "./cities.js?v=20260918a";
 
 import {
   estimateTariff,
@@ -31,62 +34,62 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260917h";
+} from "./pricing.js?v=20260918a";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260917h";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260918a";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260917h";
+} from "./lead-acid.js?v=20260918a";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260917h";
+} from "./bom.js?v=20260918a";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260917h";
+import { BOM_ITEMS } from "../shared/content.js?v=20260918a";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260917h";
+} from "../shared/i18n.js?v=20260918a";
 
-import { LOCALES } from "../shared/locales.js?v=20260917h";
+import { LOCALES } from "../shared/locales.js?v=20260918a";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260917h";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260917h";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260918a";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260918a";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260917h";
+} from "../shared/simple-mode.js?v=20260918a";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260917h";
+} from "./frontier-chart.js?v=20260918a";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260917h";
+} from "./rescale.js?v=20260918a";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260917h";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260918a";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260917h";
-import { persistWizard, restoreWizard } from "./wizard.js?v=20260917h";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260917h";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260917h";
+} from "./map-provider.js?v=20260918a";
+import { persistWizard, restoreWizard } from "./wizard.js?v=20260918a";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260918a";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260918a";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -131,9 +134,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260917h";
+} from "./money.js?v=20260918a";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260917h";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260918a";
 
 let worker = null;
 
@@ -1595,8 +1598,10 @@ function renderCities() {
 
   if (search && list) {
     let active = -1;
-    const draw = () => {
-      const results = searchCities(search.value, CITY_CATALOG);
+    let expandSeq = 0; // superseded country-load expansions must not re-draw
+    // Fresh input → seed results instantly; any country partitions the query
+    // names arrive in the background and re-open the list with the union.
+    const draw = (results = searchCities(search.value, CITY_CATALOG)) => {
       list.innerHTML = "";
       list.hidden = !search.value.trim() || !results.length;
       results.forEach((c, i) => {
@@ -1631,7 +1636,21 @@ function renderCities() {
       active = -1;
       search.setAttribute("aria-expanded", list.hidden ? "false" : "true");
     };
-    search.addEventListener("input", draw);
+    search.addEventListener("input", () => draw());
+    search.addEventListener("input", () => {
+      // Lazy country loading: a typed query tags its own countries ("Aust"
+      // → Austin/US + Australia/AU). Never fires for a query the seed
+      // already answers exactly, so the common path costs zero requests.
+      const query = search.value.trim();
+      if (!query || searchCities(query, CITY_CATALOG, 1).length) return;
+      cancelAutoResolve();
+      let seq = ++expandSeq;
+      typedCityCandidates(query).then((rows) => {
+        if (seq !== expandSeq || rows.length <= CITY_CATALOG.length) return;
+        CITY_CATALOG.splice(0, CITY_CATALOG.length, ...rows);
+        if (search.value.trim() === query) draw();
+      });
+    });
     // Auto-lookup: 2s after the typing cadence stops, resolve the typed text
     // to coordinates without requiring Enter/Tab. Fires the same code path
     // Enter/Tab use, so behavior is identical — just hands-free.
@@ -1665,6 +1684,8 @@ function renderCities() {
       cancelAutoResolve();
       const query = search.value.trim();
       if (!query || lookupBusy) return;
+      // Seed-catalog hit first (instant, offline): resolve immediately —
+      // country partitions only extend the search, they never gate it.
       const local = searchCities(query, CITY_CATALOG, 1)[0];
       if (local) {
         lastResolvedQuery = query;
@@ -1681,11 +1702,45 @@ function renderCities() {
         if (quickMode) run();
         return;
       }
+      // No seed hit: try the query's own country partitions (Berlin→DE) —
+      // an offline hit here beats sending the query to the geocoder.
       lookupBusy = true;
+      setStatus("Searching city data…");
+      const offline = (await typedCityCandidates(query)).find(
+        (c) => normalizeCityQuery(c.name) === normalizeCityQuery(query),
+      );
+      lookupBusy = false;
+      if (offline) {
+        lastResolvedQuery = query;
+        setCoords(
+          offline.lat,
+          offline.lon,
+          `Sunshine data from ${formatCityLabel(offline)}`,
+          offline.r,
+          offline.country,
+        );
+        search.value = formatCityLabel(offline);
+        list.hidden = true;
+        search.setAttribute("aria-expanded", "false");
+        if (quickMode) run();
+        return;
+      }
+      // Still nothing: the online geocoder resolves any place on Earth.
       setStatus("Looking up your city…");
       const match = await lookupCityOnline(query);
-      lookupBusy = false;
       if (match) {
+        // Warm the partition the geocoder named so later queries in that
+        // country search locally and offline.
+        const cc = String(match.country || "").toUpperCase();
+        if (cc.length === 2)
+          loadCountryCities(cc).then((rows) => {
+            if (!rows.length) return;
+            CITY_CATALOG.splice(
+              0,
+              CITY_CATALOG.length,
+              ...mergeCities(CITY_CATALOG, rows),
+            );
+          });
         lastResolvedQuery = query;
         setCoords(
           match.lat,
@@ -1751,12 +1806,15 @@ function renderCities() {
   }
 }
 
-async function expandCitySearch() {
-  const expanded = await loadCityCatalog();
-  if (expanded.length <= CITY_CATALOG.length) return;
-  CITY_CATALOG.splice(0, CITY_CATALOG.length, ...expanded);
-  const search = $("citySearch");
-  if (search?.value.trim()) search.dispatchEvent(new Event("input"));
+// The old whole-world loader cached every partition under one localStorage
+// key (~4.6 MB). Country data now loads on demand under per-country keys, so
+// drop the legacy blob once per browser to keep quotas clean.
+function purgeLegacyCityCache() {
+  try {
+    localStorage.removeItem("beco-city-catalog-v6-pop10k-us");
+  } catch {
+    /* optional cache */
+  }
 }
 
 function locateMe() {
@@ -1789,26 +1847,17 @@ function locateMe() {
 
       // only a fallback if the catalog never loads.
 
-      try {
-        const expanded = await loadCityCatalog();
+      const near = nearestCity(lat, lon, CITY_CATALOG, Infinity);
 
-        if (expanded.length > CITY_CATALOG.length)
-          CITY_CATALOG.splice(0, CITY_CATALOG.length, ...expanded);
-
-        const near = nearestCity(lat, lon, CITY_CATALOG, Infinity);
-
-        if (near) {
-          setCoords(
-            lat,
-            lon,
-            `Using your precise location — prices based on ${formatCityLabel(near)}`,
-            near.r,
-            near.country,
-          );
-        } else {
-          setCoords(lat, lon, "Using your precise location");
-        }
-      } catch {
+      if (near) {
+        setCoords(
+          lat,
+          lon,
+          `Using your precise location — prices based on ${formatCityLabel(near)}`,
+          near.r,
+          near.country,
+        );
+      } else {
         setCoords(lat, lon, "Using your precise location");
       }
 
@@ -1816,6 +1865,23 @@ function locateMe() {
       // pre-configured (and stay adjustable), so location alone is enough.
 
       if (quickMode) run();
+
+      // Refine in the background: reverse-geocode the fix to a country so the
+      // nearest reference city (and its tariff/currency) is not limited to
+      // the 67 seed cities. Sizing already started from the seed context;
+      // a different country context re-pins prices and re-runs once.
+      const geo = await lookupCountryOnline(lat, lon);
+      if (geo?.country && geo.country !== near?.country) {
+        const refined = nearestCity(lat, lon, CITY_CATALOG, Infinity);
+        setCoords(
+          lat,
+          lon,
+          `Using your precise location — prices based on ${geo.r && geo.r !== "Worldwide" ? geo.r : geo.country}`,
+          geo.r === "Worldwide" ? refined?.r : geo.r,
+          geo.country,
+        );
+        if (quickMode) run();
+      }
     },
 
     () =>
@@ -3173,7 +3239,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260917h", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260918a", {
       type: "module",
     });
 
@@ -8918,7 +8984,7 @@ export function initSizingUI() {
     }
 
     renderCities();
-    expandCitySearch();
+    purgeLegacyCityCache();
 
     renderAppliances();
     setupSimpleMode();
