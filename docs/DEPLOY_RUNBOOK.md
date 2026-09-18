@@ -150,6 +150,29 @@ prints the exact command to run; it never reports a release it did not make.
 Verify limits live via `/api/health` (returns the enforced numbers and the
 `promptVersion` now pinned there) and `tests/worker.test.mjs` (runs in CI).
 
+## Zone settings (dashboard-only; no API credentials in this repo)
+
+The wrangler OAuth used for Pages deploys carries `zone:read` only and the
+Cloudflare API rejects even settings reads for the brand zone, so these four
+toggles are deliberate dashboard actions (freeoffgridcalculator.com → the
+listed screen). Each was verified live on 2026-09-18:
+
+| Setting                       | Where                         | Status     | Why                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------------------- | ----------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `always_use_https`            | SSL/TLS → Edge Certificates   | confirm ON | http:// already 301s; the toggle makes it authoritative for every edge PoP                                                                                                                                                                                                                                                                                                                                                              |
+| **Cache Rule: cache `.json`** | Rules → Cache Rules           | **create** | `.json` is not in Cloudflare's default cacheable-extension list, so `/assets/**.json` served `DYNAMIC` even with the immutable `_headers` rule. Rule: `http.request.uri.path matches "^/assets/.*\\.json$"` → Eligible for cache, Edge TTL: respect origin (the immutable `_headers` value). Then verify `curl -sI https://freeoffgridcalculator.com/assets/js/sizing/city-data/DE.json` twice → second response `cf-cache-status: HIT` |
+| Early Hints                   | Speed → Optimization          | confirm ON | `index.html` now preloads site.css and module-preloads ui.js; Early Hints turns them into a 103                                                                                                                                                                                                                                                                                                                                         |
+| WAF block `/wp-admin`         | Security → WAF → Custom rules | create     | Bot scanners; expression `(http.request.uri.path contains "/wp-admin")` → Block, so the junk never reaches Pages origin                                                                                                                                                                                                                                                                                                                 |
+
+Auto Minify was retired by Cloudflare (dashboard sunsetting 2024–2025) and is
+not pursued; content is already hand-minified where it matters, and zone
+minification would break the byte-parity release gate in
+`scripts/verify-staging.mjs`.
+
+Do not mistake first-`MISS` on `.js` assets after a deploy for the old
+"everything is dynamic" state: repeat requests are `HIT` (immutable 1-year
+`_headers` rule). The analytics regression to fix is the `.json` Cache Rule.
+
 ## Content-Security-Policy endpoint registry
 
 `_headers` ships a CSP. Every third-party endpoint the app touches at runtime

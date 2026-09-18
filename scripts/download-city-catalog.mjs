@@ -79,16 +79,16 @@ for (const line of rows) {
 const out = join(ROOT, "assets/js/sizing/city-data");
 mkdirSync(out, { recursive: true });
 for (const file of readdirSync(out)) rmSync(join(out, file), { force: true });
-const index = [];
+let written = 0;
 for (const [code, records] of byCountry) {
   writeFileSync(join(out, `${code}.json`), JSON.stringify(records));
-  index.push({ code, count: records.length });
+  written += records.length;
 }
-writeFileSync(
-  join(out, "index.json"),
-  JSON.stringify(index.sort((a, b) => a.code.localeCompare(b.code))),
-);
+// No index.json: partitions are lazy-loaded per country, and the source of
+// truth for what exists is the directory itself — mirrored into cities.js by
+// the sync step below.
 rmSync(temp, { recursive: true, force: true });
+console.log(`Wrote ${written} records across ${byCountry.size} country files.`);
 console.log(
-  `Wrote ${index.reduce((sum, item) => sum + item.count, 0)} records across ${index.length} country files.`,
+  `Now run: node scripts/sync-country-files.mjs  (updates COUNTRY_FILES in cities.js)`,
 );

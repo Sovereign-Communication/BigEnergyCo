@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "node --test \"tests/*.test.mjs\"",
-    "seo": "node scripts/validate-jsonld.mjs && node scripts/check-chars.mjs && node scripts/check-seo.mjs && node scripts/check-quality.mjs && node scripts/check-i18n.mjs && node scripts/check-headers.mjs && node scripts/bump-asset-tokens.mjs --check",
+    "seo": "node scripts/validate-jsonld.mjs && node scripts/check-chars.mjs && node scripts/check-seo.mjs && node scripts/check-quality.mjs && node scripts/check-i18n.mjs && node scripts/check-headers.mjs && node scripts/sync-country-files.mjs --check && node scripts/bump-asset-tokens.mjs --check",
     "quality": "node scripts/check-quality.mjs && node scripts/check-i18n.mjs && node scripts/check-headers.mjs",
     "coverage": "node --test --experimental-test-coverage --test-coverage-include=\"assets/js/sizing/engine.js\" --test-coverage-include=\"assets/js/sizing/money.js\" --test-coverage-include=\"assets/js/sizing/rescale.js\" --test-coverage-include=\"assets/js/sizing/nasa.js\" --test-coverage-include=\"assets/js/sizing/climate.js\" --test-coverage-lines=66 --test-coverage-branches=76 --test-coverage-functions=60 tests/engine.test.mjs tests/money.test.mjs tests/rescale.test.mjs tests/breakeven.test.mjs tests/derates-worstmonth.test.mjs tests/contract.test.mjs",
     "smoke:local": "node scripts/smoke-local.mjs",

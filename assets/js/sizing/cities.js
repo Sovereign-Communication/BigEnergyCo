@@ -1,6 +1,8 @@
 // Unified city records used by the location combobox. The seed is instant and
-// offline; country partitions provide millions of additional place/coordinate pairs.
-import { usStateCode, US_STATES } from "./pricing.js?v=20260917h";
+// offline; country partitions provide millions of additional place/coordinate
+// pairs and are lazy-loaded on demand — only the countries a query or a GPS
+// fix names are ever fetched, never the whole world at once.
+import { usStateCode, US_STATES } from "./pricing.js?v=20260918a";
 
 export const CITY_CATALOG = [
   ["Honolulu", "United States", "Hawaii", 21.31, -157.86],
@@ -76,6 +78,14 @@ export const CITY_CATALOG = [
   lat,
   lon,
 }));
+
+// ── GENERATED: country partition index (scripts/sync-country-files.mjs) ──
+// Space-separated ISO-2 codes; membership via COUNTRY_SET below.
+export const COUNTRY_FILES =
+  "AD AE AF AG AL AM AO AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BM BN BO BQ BR BS BT BW BY BZ CA CD CF CG CH CI CK CL CM CN CO CR CU CV CW CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FM FO FR GA GB GE GF GG GH GI GL GM GN GP GQ GR GT GU GW GY HK HN HR HT HU ID IE IL IM IN IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LK LR LS LT LU LV LY MA MC MD ME MG MH MK ML MM MN MO MP MQ MR MT MU MV MW MX MY MZ NA NC NE NG NI NL NO NP NZ OM PA PE PF PG PH PK PL PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SI SK SL SN SO SR SS ST SV SY SZ TC TD TG TH TJ TL TM TN TO TR TT TW TZ UA UG US UY UZ VC VE VI VN VU WS XK YE YT ZA ZM ZW";
+// ── END GENERATED ──
+
+export const COUNTRY_SET = new Set(COUNTRY_FILES.split(" "));
 
 const ALIASES = {
   nyc: "new york",
@@ -231,6 +241,12 @@ export function nearestCity(lat, lon, cities = CITY_CATALOG, maxKm = 60) {
   return bestKm <= maxKm ? best : null;
 }
 
+// ── On-demand country partitions ─────────────────────────────────────────
+// The old loader fetched every partition up front (~221 requests in one
+// Promise.all, all cache-DYNAMIC at the edge). Now a query or GPS fix names
+// its countries and ONLY those partitions are fetched, memoized per page
+// load; failures fall back to the seed + online geocoder and never throw.
+
 export const CITY_LOOKUP_TIMEOUT_MS = 12000;
 
 export async function lookupCityOnline(query, fetchImpl = globalThis.fetch) {
@@ -271,99 +287,211 @@ export async function lookupCityOnline(query, fetchImpl = globalThis.fetch) {
   }
 }
 
-let cachedMergedCatalog = null;
-let inFlightCatalogPromise = null;
-
-export const CITY_CATALOG_TIMEOUT_MS = 30000;
-
-export function clearCityCatalogCache() {
-  cachedMergedCatalog = null;
-  inFlightCatalogPromise = null;
+// Reverse-geocode a GPS fix to country context. Same endpoint as
+// lookupCityOnline; null on any failure so GPS falls back to seed context.
+export async function lookupCountryOnline(
+  lat,
+  lon,
+  fetchImpl = globalThis.fetch,
+) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  const ctrl =
+    typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = ctrl
+    ? setTimeout(() => ctrl.abort(), CITY_LOOKUP_TIMEOUT_MS)
+    : null;
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`;
+    const response = await fetchImpl(url, {
+      headers: { Accept: "application/json" },
+      ...(ctrl ? { signal: ctrl.signal } : {}),
+    });
+    if (!response.ok) return null;
+    const row = await response.json();
+    if (!row) return null;
+    return {
+      country:
+        row.address?.country_code?.toUpperCase() || row.address?.country || "",
+      r: row.address?.state || row.address?.region || "Worldwide",
+      name: row.name || row.address?.city || row.address?.town || "",
+    };
+  } catch {
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
-export async function loadCityCatalog({
+// Which country partitions can contain the query? A query that normalizes to
+// (or starts with, or contains) a seed city's name tags that city's country —
+// "Aust" loads AT + AU (Austin, Australia); "Berlin" loads DE. Pure and
+// unit-testable: the table is generated data, this is deterministic logic.
+export function countryCodesFor(query, catalog = CITY_CATALOG) {
+  const q = normalizeCityQuery(query);
+  if (!q || q.length < 2) return [];
+  const target = ALIASES[q] || q;
+  const terms = target.split(" ");
+  const codes = new Set();
+  for (const city of catalog) {
+    const name = normalizeCityQuery(city.name),
+      country = normalizeCityQuery(city.country);
+    if (
+      name === target ||
+      name.startsWith(target) ||
+      target.startsWith(name) ||
+      terms.some((term) => name.startsWith(term)) ||
+      country === target ||
+      country.startsWith(target)
+    ) {
+      const cc = iso2ForCountry(city.country);
+      if (cc) codes.add(cc);
+    }
+  }
+  return [...codes].filter((c) => COUNTRY_SET.has(c));
+}
+
+// ISO-2 for every seed-catalog country (typed "Japan" must reach JP.json).
+const ISO2 = {
+  "united states": "US",
+  canada: "CA",
+  mexico: "MX",
+  "puerto rico": "PR",
+  "dominican republic": "DO",
+  guatemala: "GT",
+  panama: "PA",
+  cuba: "CU",
+  haiti: "HT",
+  colombia: "CO",
+  peru: "PE",
+  chile: "CL",
+  brazil: "BR",
+  argentina: "AR",
+  ecuador: "EC",
+  bolivia: "BO",
+  "united kingdom": "GB",
+  france: "FR",
+  spain: "ES",
+  italy: "IT",
+  germany: "DE",
+  poland: "PL",
+  greece: "GR",
+  norway: "NO",
+  turkiye: "TR",
+  morocco: "MA",
+  egypt: "EG",
+  ghana: "GH",
+  nigeria: "NG",
+  kenya: "KE",
+  "south africa": "ZA",
+  senegal: "SN",
+  ethiopia: "ET",
+  "democratic republic of the congo": "CD",
+  madagascar: "MG",
+  "united arab emirates": "AE",
+  "saudi arabia": "SA",
+  pakistan: "PK",
+  india: "IN",
+  "sri lanka": "LK",
+  bangladesh: "BD",
+  nepal: "NP",
+  thailand: "TH",
+  vietnam: "VN",
+  indonesia: "ID",
+  cambodia: "KH",
+  philippines: "PH",
+  "hong kong": "HK",
+  taiwan: "TW",
+  "south korea": "KR",
+  japan: "JP",
+  china: "CN",
+  singapore: "SG",
+  fiji: "FJ",
+  "french polynesia": "PF",
+  australia: "AU",
+  "new zealand": "NZ",
+};
+
+function iso2ForCountry(country) {
+  return ISO2[normalizeCityQuery(country)] || null;
+}
+
+const partitionCache = new Map();
+const partitionInFlight = new Map();
+export const COUNTRY_FETCH_TIMEOUT_MS = 8000;
+
+// The one place that fetches country data: memoized per country per page
+// load; failures are negative-cached so a dead partition never retries.
+export async function loadCountryCities(
+  code,
   fetchImpl = globalThis.fetch,
   storage = globalThis.localStorage,
-} = {}) {
-  const isDefaultCall =
-    fetchImpl === globalThis.fetch &&
-    (!storage || storage === globalThis.localStorage);
-  if (isDefaultCall && cachedMergedCatalog) return cachedMergedCatalog;
-  if (isDefaultCall && inFlightCatalogPromise)
-    return await inFlightCatalogPromise;
+) {
+  const cc = String(code || "").toUpperCase();
+  if (!COUNTRY_SET.has(cc)) return [];
+  const memoKey = `${cc}:${fetchImpl === globalThis.fetch}`;
+  if (partitionCache.has(memoKey)) return partitionCache.get(memoKey);
+  if (partitionInFlight.has(memoKey)) return partitionInFlight.get(memoKey);
 
   const promise = (async () => {
-    const cacheKey = "beco-city-catalog-v6-pop10k-us";
-    try {
-      const cached = storage?.getItem(cacheKey);
-      if (cached) {
-        const merged = mergeCities(
-          CITY_CATALOG,
-          parseCityRows(JSON.parse(cached)),
-        );
-        if (isDefaultCall) cachedMergedCatalog = merged;
-        return merged;
-      }
-    } catch {
-      /* optional cache */
-    }
-
-    // Bound the whole partition load: a hung connection must fall back to
-    // the bundled catalog, not stall location search. Slow-but-working loads
-    // finish far inside the deadline (small JSON partitions).
     const ctrl =
       typeof AbortController !== "undefined" ? new AbortController() : null;
     const timer = ctrl
-      ? setTimeout(() => ctrl.abort(), CITY_CATALOG_TIMEOUT_MS)
+      ? setTimeout(() => ctrl.abort(), COUNTRY_FETCH_TIMEOUT_MS)
       : null;
-    const signalOpts = ctrl ? { signal: ctrl.signal } : {};
     try {
       const response = await fetchImpl(
-        "./assets/js/sizing/city-data/index.json?v=20260917h",
-        { cache: "force-cache", ...signalOpts },
+        `./assets/js/sizing/city-data/${cc}.json?v=20260918a`,
+        { cache: "force-cache", ...(ctrl ? { signal: ctrl.signal } : {}) },
       );
-      if (!response.ok) throw new Error(`city index HTTP ${response.status}`);
-      const index = await response.json();
-      const chunks = await Promise.all(
-        index.map(async (item) => {
-          const stem = item.file.replace(/\.json$/i, "");
-          try {
-            const part = await fetchImpl(
-              `./assets/js/sizing/city-data/${encodeURIComponent(stem)}.json?v=20260917h`,
-              { cache: "force-cache", ...signalOpts },
-            );
-            if (part.ok) {
-              return parseCityRows(await part.json());
-            }
-          } catch {}
-          return [];
-        }),
-      );
-
-      const all = [];
-      for (const chunk of chunks) {
-        if (chunk.length) all.push(...chunk);
+      if (!response.ok) return [];
+      const rows = parseCityRows(await response.json());
+      if (rows.length) {
+        try {
+          storage?.setItem(`beco-city-${cc}-v1`, JSON.stringify(rows));
+        } catch {
+          /* optional cache */
+        }
       }
-
-      try {
-        storage?.setItem(cacheKey, JSON.stringify(all));
-      } catch {
-        /* optional cache */
-      }
-      const merged = mergeCities(CITY_CATALOG, all);
-      if (isDefaultCall) cachedMergedCatalog = merged;
-      return merged;
+      return rows;
     } catch {
-      return CITY_CATALOG;
+      return [];
     } finally {
       if (timer) clearTimeout(timer);
     }
   })();
 
-  if (isDefaultCall) inFlightCatalogPromise = promise;
+  partitionInFlight.set(memoKey, promise);
   try {
-    return await promise;
+    const rows = await promise;
+    partitionCache.set(memoKey, rows);
+    return rows;
   } finally {
-    if (isDefaultCall) inFlightCatalogPromise = null;
+    partitionInFlight.delete(memoKey);
   }
+}
+
+// LocalStorage rows for one country (no network); v1 keys keep old caches out.
+export function cachedCountryCities(code, storage = globalThis.localStorage) {
+  const cc = String(code || "").toUpperCase();
+  if (!COUNTRY_SET.has(cc)) return [];
+  try {
+    return parseCityRows(
+      JSON.parse(storage?.getItem(`beco-city-${cc}-v1`) || "[]"),
+    );
+  } catch {
+    return [];
+  }
+}
+
+// The async search face: always includes the full seed (callers may replace
+// their working set with the result), plus cached partitions, then the
+// query's countries from the network.
+export async function typedCityCandidates(query) {
+  const codes = countryCodesFor(query);
+  const local = searchCities(query);
+  const cached = codes.flatMap((cc) => cachedCountryCities(cc));
+  const extras = mergeCities(local, cached);
+  if (!codes.length) return mergeCities(CITY_CATALOG, extras);
+  const rows = await Promise.all(codes.map((cc) => loadCountryCities(cc)));
+  return mergeCities(mergeCities(CITY_CATALOG, extras), rows.flat());
 }
