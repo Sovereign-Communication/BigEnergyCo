@@ -1,11 +1,13 @@
 export const SIMPLE_MODE_KEY = "beco-simple-mode";
 
+// Simple mode is opt-in: unset storage means technical/regular view. Only an
+// explicit stored "simple" selects it, so default visitors keep every detail.
 export function readSimpleMode(storage = globalThis.localStorage) {
   try {
     const value = storage?.getItem(SIMPLE_MODE_KEY);
-    return value === null || value === undefined ? true : value !== "technical";
+    return value === "simple";
   } catch {
-    return true;
+    return false;
   }
 }
 

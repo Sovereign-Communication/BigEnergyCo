@@ -73,6 +73,14 @@ export const LOCALES = {
     frontierLegendSel: "Selected option — click any point to choose it",
     frontierNoSystem:
       "No system inside the sizes this tool searches can reach this target at this location. The curve below shows the furthest this site can practically get — try a lower target, or plan a generator or grid connection to cover what solar can't.",
+    simpleInfeasible:
+      "At this location, no system we can build reaches that goal. Try a lower bill-cut target — or read the full details for how close solar can actually get.",
+    simpleWhatItMeans:
+      "Panels make power when the sun is out; the battery carries it into the evening and cloudy days. The system is sized from five years of hourly satellite weather at your exact location.",
+    simpleCaveat:
+      "This is an estimate, not a promise — the full figures behind every number are one click away.",
+    simpleSeeDetails: "See all the details",
+    simpleDownloadBom: "Download parts list (CSV)",
     frontierCeilingTag: "Best within the sizes searched: {pct}%",
     frontierSvgTitle: "How far your money gets you",
     frontierSvgDesc:
@@ -233,6 +241,14 @@ export const LOCALES = {
       "Opción seleccionada — haz clic en cualquier punto para elegirla",
     frontierNoSystem:
       "Ningún sistema dentro de los tamaños que busca esta herramienta puede alcanzar este objetivo en esta ubicación. La curva de abajo muestra hasta dónde llega este sitio en la práctica: prueba con un objetivo menor, o prevé un generador o conexión a la red para cubrir lo que el sol no puede.",
+    simpleInfeasible:
+      "En esta ubicación, ningún sistema que podamos construir alcanza ese objetivo. Prueba con un porcentaje de ahorro menor, o consulta los detalles completos para ver hasta dónde puede llegar la energía solar.",
+    simpleWhatItMeans:
+      "Los paneles generan electricidad cuando hay sol; la batería la guarda para la noche y los días nublados. El sistema se dimensiona con cinco años de datos meteorológicos horarios por satélite de tu ubicación exacta.",
+    simpleCaveat:
+      "Es una estimación, no una promesa; todas las cifras completas están a un clic.",
+    simpleSeeDetails: "Ver todos los detalles",
+    simpleDownloadBom: "Descargar lista de piezas (CSV)",
     frontierCeilingTag: "Lo máximo dentro de lo buscado: {pct}%",
     frontierSvgTitle: "Hasta dónde llega tu dinero",
     frontierSvgDesc:
@@ -404,6 +420,14 @@ export const LOCALES = {
       "Opção selecionada — clique em qualquer ponto para escolher",
     frontierNoSystem:
       "Nenhum sistema dentro dos tamanhos que esta ferramenta procura consegue atingir esse objetivo neste local. A curva abaixo mostra até onde este local consegue chegar na prática — tente uma meta menor, ou planeje um gerador ou conexão à rede para cobrir o que o sol não cobre.",
+    simpleInfeasible:
+      "Neste local, nenhum sistema que possamos construir atinge essa meta. Tente uma meta de economia menor, ou veja os detalhes completos para saber até onde a energia solar consegue chegar.",
+    simpleWhatItMeans:
+      "Os painéis geram energia enquanto há sol; a bateria a guarda para a noite e os dias nublados. O sistema é dimensionado com cinco anos de dados meteorológicos horários por satélite do seu local exato.",
+    simpleCaveat:
+      "É uma estimativa, não uma promessa — todos os números completos estão a um clique.",
+    simpleSeeDetails: "Ver todos os detalhes",
+    simpleDownloadBom: "Baixar lista de peças (CSV)",
     frontierCeilingTag: "O máximo dentro do que foi buscado: {pct}%",
     frontierSvgTitle: "Até onde vai o seu dinheiro",
     frontierSvgDesc:
@@ -572,6 +596,14 @@ export const LOCALES = {
       "Option sélectionnée — cliquez sur un point pour choisir",
     frontierNoSystem:
       "Aucun système, dans les tailles que cet outil explore, ne peut atteindre cet objectif à cet endroit. La courbe ci-dessous montre jusqu'où ce site peut réellement aller — visez plus bas, ou prévoyez un générateur ou une connexion au réseau pour couvrir ce que le solaire ne peut pas.",
+    simpleInfeasible:
+      "À cet endroit, aucun système constructible n'atteint cet objectif. Essayez un objectif d'économie plus bas, ou consultez les détails complets pour voir jusqu'où le solaire peut réellement aller.",
+    simpleWhatItMeans:
+      "Les panneaux produisent quand le soleil brille ; la batterie porte cette énergie jusqu'au soir et aux jours gris. Le système est dimensionné à partir de cinq ans de données météo horaires par satellite à votre position exacte.",
+    simpleCaveat:
+      "C'est une estimation, pas une promesse — tous les chiffres détaillés sont à un clic.",
+    simpleSeeDetails: "Voir tous les détails",
+    simpleDownloadBom: "Télécharger la liste des pièces (CSV)",
     frontierCeilingTag: "Maximum dans les tailles explorées : {pct}%",
     frontierSvgTitle: "Jusqu'où va votre argent",
     frontierSvgDesc:
@@ -712,6 +744,14 @@ export const LOCALES = {
       "Ausgewählte Option — klicke einen Punkt, um ihn zu wählen",
     frontierNoSystem:
       "Kein System in den hier durchsuchten Größen erreicht dieses Ziel an diesem Standort. Die Kurve unten zeigt, wie weit dieser Standort praktisch kommt — versuch ein niedrigeres Ziel oder plane einen Generator oder Netzanschluss für den Rest.",
+    simpleInfeasible:
+      "An diesem Standort erreicht kein baubares System dieses Ziel. Versuch ein niedrigeres Einspar-Ziel — oder lies die vollständigen Details, um zu sehen, wie weit Solar hier tatsächlich kommt.",
+    simpleWhatItMeans:
+      "Paneele liefern Strom, wenn die Sonne scheint; der Akku trägt ihn in den Abend und die Grautage. Bemessen wird das System aus fünf Jahren stündlicher Satelliten-Wetterdaten an deinem genauen Standort.",
+    simpleCaveat:
+      "Das ist eine Schätzung, kein Versprechen — alle vollständigen Zahlen sind einen Klick entfernt.",
+    simpleSeeDetails: "Alle Details anzeigen",
+    simpleDownloadBom: "Teileliste herunterladen (CSV)",
     frontierCeilingTag: "Bestes in den durchsuchten Größen: {pct} %",
     frontierSvgTitle: "Wie weit dein Geld reicht",
     frontierSvgDesc:
@@ -874,6 +914,14 @@ export const LOCALES = {
     frontierLegendSel: "الخيار المحدد — انقر أي نقطة للاختيار",
     frontierNoSystem:
       "لا يمكن لأي نظام ضمن الأحجام التي تبحث عنها هذه الأداة الوصول إلى هذا الهدف في هذا الموقع. يُظهر المنحنى أدناه أبعد ما يصل إليه هذا الموقع عمليًا — جرّب هدفًا أدنى، أو خطّط لمولد أو اتصال بالشبكة لتغطية ما لا يصل إليه الشمس.",
+    simpleInfeasible:
+      "في هذا الموقع، لا يوجد نظام يمكن بناؤه يصل إلى هذا الهدف. جرّب نسبة توفير أدنى، أو اطّلع على التفاصيل الكاملة لترى مدى ما يمكن للطاقة الشمسية الوصول إليه فعليًا.",
+    simpleWhatItMeans:
+      "تُنتج الألواح الكهرباء وقت وجود الشمس؛ وتحملها البطارية إلى المساء والأيام الغائمة. يُحجَّم النظام اعتمادًا على خمس سنوات من بيانات الطقس الساعية بالأقمار الصناعية لموقعك الدقيق.",
+    simpleCaveat:
+      "هذا تقدير وليس وعدًا — جميع الأرقام الكاملة على بُعد نقرة واحدة.",
+    simpleSeeDetails: "عرض كل التفاصيل",
+    simpleDownloadBom: "تنزيل قائمة القطع (CSV)",
     frontierCeilingTag: "الأقصى ضمن الأحجام المبحوثة: {pct}%",
     frontierSvgTitle: "إلى أين يصل مالك",
     frontierSvgDesc:

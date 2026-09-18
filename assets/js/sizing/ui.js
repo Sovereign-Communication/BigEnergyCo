@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260918g";
+import { APPLIANCES } from "./appliances.js?v=20260918h";
 import {
   CITY_CATALOG,
   searchCities,
@@ -26,7 +26,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260918g";
+} from "./cities.js?v=20260918h";
 
 import {
   estimateTariff,
@@ -34,66 +34,67 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260918g";
+} from "./pricing.js?v=20260918h";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260918g";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260918h";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260918g";
+} from "./lead-acid.js?v=20260918h";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260918g";
+} from "./bom.js?v=20260918h";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260918g";
+import { BOM_ITEMS } from "../shared/content.js?v=20260918h";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260918g";
+} from "../shared/i18n.js?v=20260918h";
 
-import { LOCALES } from "../shared/locales.js?v=20260918g";
+import { LOCALES } from "../shared/locales.js?v=20260918h";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260918g";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260918g";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260918h";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260918h";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260918g";
+} from "../shared/simple-mode.js?v=20260918h";
+import { buildSimpleView } from "../shared/simple-view.js?v=20260918h";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260918g";
+} from "./frontier-chart.js?v=20260918h";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260918g";
+} from "./rescale.js?v=20260918h";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260918g";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260918h";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260918g";
+} from "./map-provider.js?v=20260918h";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260918g";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260918g";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260918g";
+} from "./wizard.js?v=20260918h";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260918h";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260918h";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -138,9 +139,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260918g";
+} from "./money.js?v=20260918h";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260918g";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260918h";
 
 let worker = null;
 
@@ -153,7 +154,7 @@ let resultLevel = "best";
 // Quick (auto-run) mode shows only the location controls and sizes with
 // defaults; Manual reveals the full form. Default is quick.
 let quickMode = true;
-let simpleMode = true;
+let simpleMode = false;
 let locationResolved = false;
 let wizard = restoreWizard();
 let roofMapRegistry = null;
@@ -492,6 +493,17 @@ function applySimpleMode() {
     toggle.checked = simpleMode;
     toggle.setAttribute("aria-label", `${modeLabel(simpleMode)} enabled`);
   }
+  // Simple mode swaps the detail panels for one plain-language card: the
+  // wrapper is only ever revealed with fresh content inside, so a stale card
+  // can never masquerade as a fresh result.
+  const simpleWrap = $("simpleResultsWrap");
+  if (simpleWrap) {
+    simpleWrap.innerHTML = "";
+    simpleWrap.style.display = "none";
+    if (simpleMode && lastPayload) {
+      renderSimpleResults(lastPayload);
+    }
+  }
   document.querySelectorAll("[data-jargon]").forEach((node) => {
     if (simpleMode) {
       // Unknown/typo'd terms stay plain text: explainElement returns false
@@ -535,8 +547,108 @@ function setupSimpleMode() {
     simpleMode = toggle.checked;
     writeSimpleMode(simpleMode);
     applySimpleMode();
+    if (simpleMode && lastPayload) {
+      document.getElementById("sizing").scrollIntoView({ behavior: "smooth" });
+    }
   });
   applySimpleMode();
+}
+
+// Simple mode's single results surface. Reads the same payload and the same
+// selected entry the technical cards render — the numbers cannot diverge.
+function renderSimpleResults(p) {
+  const wrap = $("simpleResultsWrap");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+
+  if (p.unreachableReason) {
+    wrap.style.display = "block";
+    wrap.appendChild(
+      el("p", { class: "simple-note", role: "status" }, t("simpleInfeasible")),
+    );
+    return;
+  }
+
+  const sel = resolveSelected(p);
+  const entry = sel && sel.solvable ? sel : p.best;
+  const series = (sel && sel.cumCostSeries) || p.best?.cumCostSeries;
+  const bd = series ? seriesBreakdown(series) : null;
+  const saved = bd ? bd.saved : NaN;
+  const view = buildSimpleView({
+    p,
+    entry,
+    saved,
+    // Injected formatters keep number/currency policy in money.js.
+    fmt: { fmt, money, moneyRange, fmtPaybackRange },
+  });
+
+  if (!view.feasible) return;
+
+  const card = el("div", { class: "simple-results-card" });
+  const goalText =
+    p.mode === "gridtie"
+      ? "to cut about " + (entry.cutPct ?? 0) + "% off your bill"
+      : "to cover your home through the year";
+  card.appendChild(
+    el(
+      "div",
+      { class: "simple-headline" },
+      `At your location, this system gets you ` + goalText + `:`,
+    ),
+  );
+
+  const dl = el("dl", { class: "simple-heroes" });
+  for (const h of view.heroes) {
+    const item = el("div");
+    const dt = el("dt");
+    dt.textContent = h.label;
+    if (h.term && JARGON[h.term]) {
+      explainElement(dt, h.term);
+    }
+    const dd = el("dd");
+    dd.textContent = h.value;
+    if (h.sub) {
+      const sub = el("span", { class: "simple-sub" });
+      sub.textContent = h.sub;
+      dd.appendChild(sub);
+    }
+    item.append(dt, dd);
+    dl.appendChild(item);
+  }
+  card.appendChild(dl);
+
+  card.appendChild(
+    el(
+      "p",
+      { class: "simple-note" },
+      t("simpleWhatItMeans") + " " + t("simpleCaveat"),
+    ),
+  );
+
+  const actions = el("div", { class: "simple-actions" });
+  const details = el(
+    "button",
+    { type: "button", class: "btn btn-outline", id: "btnSimpleDetails" },
+    t("simpleSeeDetails"),
+  );
+  details.addEventListener("click", () => {
+    simpleMode = false;
+    writeSimpleMode(false);
+    applySimpleMode();
+    $("resultsRegion").scrollIntoView({ behavior: "smooth" });
+  });
+  actions.appendChild(details);
+  const bomBtn = el(
+    "button",
+    { type: "button", class: "btn btn-outline" },
+    t("simpleDownloadBom"),
+  );
+  bomBtn.addEventListener("click", downloadBomCsv);
+  actions.appendChild(bomBtn);
+  card.appendChild(actions);
+
+  wrap.style.display = "block";
+  wrap.appendChild(card);
 }
 
 // Infeasibility banner: surfaces a structural (mode × hardware × target)
@@ -3278,7 +3390,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260918g", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260918h", {
       type: "module",
     });
 
@@ -7835,6 +7947,10 @@ function renderResults(p) {
   if (p.unreachableReason) renderInfeasibleBanner(p.unreachableReason);
 
   renderEli5Summary(p);
+
+  // Simple mode's card refreshes with every fresh payload, same as the
+  // technical surfaces.
+  if (simpleMode) renderSimpleResults(p);
 
   const a = p.assumptions;
 

@@ -77,14 +77,14 @@ test("GATE: every glossary entry has a short and long plain-language explanation
   }
 });
 
-test("Simple mode defaults on and survives storage changes", () => {
+test("Simple mode defaults OFF and survives storage changes", () => {
   const storage = new MemoryStorage();
-  assert.equal(readSimpleMode(storage), true);
-  writeSimpleMode(false, storage);
-  assert.equal(storage.getItem(SIMPLE_MODE_KEY), "technical");
   assert.equal(readSimpleMode(storage), false);
   writeSimpleMode(true, storage);
+  assert.equal(storage.getItem(SIMPLE_MODE_KEY), "simple");
   assert.equal(readSimpleMode(storage), true);
+  writeSimpleMode(false, storage);
+  assert.equal(readSimpleMode(storage), false);
 });
 
 test("climate helpers classify deterministically and expose honest derates", () => {
