@@ -29,6 +29,11 @@
 //        --assume-auth (only when wrangler is already authenticated outside env)
 // Environment: CLOUDFLARE_API_TOKEN (+ CLOUDFLARE_ACCOUNT_ID) authorise the deploy.
 //
+// The deploy itself goes through lib/npx.mjs, which runs npm's npx CLI with this
+// node binary: `execFileSync("npx", ...)` cannot work on Windows, where the
+// shim is a .cmd, and a deploy that dies at the last step is worse than one
+// that refuses early.
+//
 // Exit: 0 = dry run OK (or promote succeeded), 1 = verification failed (REFUSED),
 //       2 = precondition failed, 3 = missing credentials.
 import { execFileSync } from "node:child_process";
@@ -42,6 +47,7 @@ import {
 import { dirname, join } from "node:path";
 
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
+import { runNpx } from "./lib/npx.mjs";
 import { artifactStamp, lastRelease, releaseRecord } from "./lib/stamps.mjs";
 import { attachWorktree } from "./lib/worktree.mjs";
 
@@ -70,6 +76,23 @@ const PAGES_BASE = (arg("--pages") || "https://bigenergyco.pages.dev/").replace(
 const PROJECT = arg("--project", "bigenergyco");
 const STAGE = arg("--stage", "_pages_promote");
 const LEDGER = arg("--ledger", "docs/release-ledger.jsonl");
+
+/**
+ * The wrangler invocation. Built in one place so the command printed by the
+ * dry run is the command that runs, and so the npx resolution lives in
+ * lib/npx.mjs (which explains why it cannot be a bare execFileSync).
+ */
+const deployArgs = (dir) => [
+  "--yes",
+  "wrangler",
+  "pages",
+  "deploy",
+  dir,
+  "--project-name",
+  PROJECT,
+  "--branch",
+  "main",
+];
 const WAIT_SECONDS = Number(arg("--wait", "300")) || 300;
 const TO_SHA = arg("--to", null);
 
@@ -336,7 +359,7 @@ async function main() {
     productionBases: [BRAND_BASE, PAGES_BASE],
     preStamps: pre,
     previousSha: TO_SHA ? (previous?.sha ?? null) : (previous?.sha ?? null),
-    command: `npx --yes wrangler pages deploy ${artifactDir || STAGE} --project-name ${PROJECT} --branch main`,
+    command: `npx ${deployArgs(artifactDir || STAGE).join(" ")}`,
   };
 
   if (!APPLY) {
@@ -402,25 +425,9 @@ async function main() {
   }
   let deployOut = "";
   try {
-    deployOut = execFileSync(
-      "npx",
-      [
-        "--yes",
-        "wrangler",
-        "pages",
-        "deploy",
-        artifactDir,
-        "--project-name",
-        PROJECT,
-        "--branch",
-        "main",
-      ],
-      {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "pipe"],
-        timeout: 15 * 60 * 1000,
-      },
-    );
+    deployOut = runNpx(deployArgs(artifactDir), {
+      spawn: { timeout: 15 * 60 * 1000 },
+    });
   } catch (e) {
     fatal(
       2,
