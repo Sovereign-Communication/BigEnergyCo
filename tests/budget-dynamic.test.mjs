@@ -388,6 +388,58 @@ test("hints: the area message exists only under area-limited", () => {
   );
 });
 
+// ── 4. The same honesty applies to the off-grid paths ─────────────────────
+
+test("off-grid auto matrix: search-limit failures say envelope-limited, not area-limited", async () => {
+  // 300 kWh/day off-grid exceeds what even the full 40 kW off-grid PV
+  // envelope can serve at this site, so tiers fail with NO visitor cap in
+  // play. The matrix cells must blame the search limits — never an area
+  // input the visitor never set (the reported false banner).
+  const p = await runSizing(
+    { ...MSG, mode: "offgrid", dailyKwh: 300 },
+    { fetchWeather: fakeWeather },
+  );
+  const cells = p.matrix ? Object.values(p.matrix.cells || {}) : [];
+  assert.ok(cells.length, "the off-grid matrix is present");
+  const unsolvable = cells.filter((c) => c && !c.solvable);
+  assert.ok(unsolvable.length, "at least one tier is beyond the envelope");
+  for (const c of unsolvable) {
+    assert.equal(
+      c.reason,
+      "envelope-limited",
+      "search-limit failures carry the search-limit reason",
+    );
+    assert.equal(
+      c.envelopeNote ?? null,
+      null,
+      "no cap note may exist without a cap",
+    );
+  }
+  assert.equal(
+    cells.filter((c) => c && c.reason === "area-limited").length,
+    0,
+    "area-limited is reserved for a visitor-provided cap",
+  );
+});
+
+test("off-grid single chemistry: a binding cap says area-limited", async () => {
+  const p = await runSizing(
+    {
+      ...MSG,
+      mode: "offgrid",
+      chemistry: "lfp",
+      dailyKwh: 71.9,
+      pvMaxOverride: 1.6,
+    },
+    { fetchWeather: fakeWeather },
+  );
+  const unsolvable = (p.tiers || []).filter((t) => !t.solvable);
+  assert.ok(unsolvable.length, "a 1.6 kW cap binds at this load");
+  for (const t of unsolvable) {
+    assert.equal(t.reason, "area-limited", "the cap is named as the cap");
+  }
+});
+
 // ── 4. UI wiring contracts (DOM code node cannot execute) ───────────────────
 
 test("ui.js feeds the anchor into the budget slider's span and pool", () => {
