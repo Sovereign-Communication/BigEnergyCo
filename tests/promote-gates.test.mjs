@@ -23,6 +23,7 @@ const execFileAsync = promisify(execFile);
 
 import { serveStatic } from "../scripts/serve-static.mjs";
 import * as stamps from "../scripts/lib/stamps.mjs";
+import { attachWorktree, detachWorktree } from "../scripts/lib/worktree.mjs";
 
 const STAGE = "_pages_verify_test";
 const LEDGER = join(STAGE, "ledger.jsonl"); // inside the throwaway stage dir
@@ -329,6 +330,51 @@ test("PROMOTE: a verify-skipping flag is refused, not quietly ignored", async ()
   } finally {
     writeFileSync(asset, original);
   }
+});
+
+test("ROLLBACK WORKTREE: rolling back twice must work, not fail on a stale registration", () => {
+  // The rollback rebuilds an old commit in a detached worktree. If a previous
+  // attempt was interrupted (or its directory cleaned up), git still has the
+  // path REGISTERED and `worktree add` refuses it — on the one command that has
+  // to work when production is already broken. The raw command is asserted to
+  // fail first, so this cannot pass by accident.
+  const dir = "_pages_promote_wt_test";
+  const head = execFileSync("git", ["rev-parse", "HEAD"], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim();
+  try {
+    attachWorktree(dir, head);
+    assert.ok(
+      existsSync(join(dir, "index.html")),
+      "the worktree must contain the commit's tree",
+    );
+
+    rmSync(dir, { recursive: true, force: true });
+    assert.throws(
+      () =>
+        execFileSync("git", ["worktree", "add", "--detach", dir, head], {
+          stdio: "pipe",
+        }),
+      "the raw command is what fails, so the helper is doing real work",
+    );
+
+    attachWorktree(dir, head);
+    assert.ok(
+      existsSync(join(dir, "index.html")),
+      "the second attempt must succeed",
+    );
+  } finally {
+    detachWorktree(dir);
+  }
+  const registered = execFileSync("git", ["worktree", "list"], {
+    encoding: "utf8",
+  });
+  assert.doesNotMatch(
+    registered,
+    /_pages_promote_wt_test/,
+    "no registration may be left behind",
+  );
 });
 
 test("ROLLBACK: a rollback to HEAD is refused in both modes, and an unknown sha is refused", async () => {
