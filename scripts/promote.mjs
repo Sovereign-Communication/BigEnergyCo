@@ -26,6 +26,7 @@
 //   node scripts/promote.mjs --to <sha> --apply    # roll back to a release
 // Flags: --base <stagingUrl> --brand <url> --pages <url> --project <name>
 //        --stage <dir> --no-browser --json --ledger <path> --wait <seconds>
+//        --no-cloudflare-history (do not ask Cloudflare for the live SHA)
 //        --assume-auth (only when wrangler is already authenticated outside env)
 // Environment: CLOUDFLARE_API_TOKEN (+ CLOUDFLARE_ACCOUNT_ID) authorise the deploy.
 //
@@ -48,7 +49,12 @@ import { dirname, join } from "node:path";
 
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 import { runNpx } from "./lib/npx.mjs";
-import { artifactStamp, lastRelease, releaseRecord } from "./lib/stamps.mjs";
+import {
+  artifactStamp,
+  parseDeployments,
+  releaseRecord,
+  rollbackBaseline,
+} from "./lib/stamps.mjs";
 import { attachWorktree } from "./lib/worktree.mjs";
 
 const arg = (name, fallback = null) => {
@@ -60,6 +66,7 @@ const JSON_MODE = flag("--json");
 const APPLY = flag("--apply");
 const SKIP_BROWSER = flag("--no-browser");
 const ASSUME_AUTH = flag("--assume-auth");
+const SKIP_HISTORY = flag("--no-cloudflare-history");
 
 const STAGING_BASE = (
   arg("--base") ||
@@ -77,22 +84,39 @@ const PROJECT = arg("--project", "bigenergyco");
 const STAGE = arg("--stage", "_pages_promote");
 const LEDGER = arg("--ledger", "docs/release-ledger.jsonl");
 
+// Asking Cloudflare anything needs credentials. Without them the tool must stay
+// usable as a credential-free dry run, so history is simply not consulted.
+const CAN_QUERY_CF = Boolean(
+  process.env.CLOUDFLARE_API_TOKEN || process.env.CF_API_TOKEN || ASSUME_AUTH,
+);
+
 /**
- * The wrangler invocation. Built in one place so the command printed by the
- * dry run is the command that runs, and so the npx resolution lives in
+ * Wrangler invocations, built in one place so the command printed by the dry
+ * run is the command that runs, and so the npx resolution lives in
  * lib/npx.mjs (which explains why it cannot be a bare execFileSync).
  */
-const deployArgs = (dir) => [
-  "--yes",
-  "wrangler",
-  "pages",
-  "deploy",
-  dir,
-  "--project-name",
-  PROJECT,
-  "--branch",
-  "main",
-];
+const wrangler = (args) => ["--yes", "wrangler", ...args];
+const deployArgs = (dir) =>
+  wrangler([
+    "pages",
+    "deploy",
+    dir,
+    "--project-name",
+    PROJECT,
+    "--branch",
+    "main",
+  ]);
+const historyArgs = () =>
+  wrangler([
+    "pages",
+    "deployment",
+    "list",
+    "--project-name",
+    PROJECT,
+    "--environment",
+    "production",
+    "--json",
+  ]);
 const WAIT_SECONDS = Number(arg("--wait", "300")) || 300;
 const TO_SHA = arg("--to", null);
 
@@ -342,14 +366,45 @@ async function main() {
     `PROMOTE      live now — brand ${pre.brand}, pages ${pre.pages}; promoting ${stamp}`,
   );
 
-  const previous = (() => {
-    if (!existsSync(LEDGER)) return null;
+  const ledgerText =
+    existsSync(LEDGER) && !process.env.BECO_IGNORE_LEDGER
+      ? readFileSync(LEDGER, "utf8")
+      : "";
+
+  // The way back. A recorded release is authoritative; with no earlier release
+  // — the first gated promote, exactly when this matters most — ask Cloudflare
+  // what production is serving right now, because a release with no rollback
+  // target is a release nobody can undo.
+  let deployments = null;
+  if (CAN_QUERY_CF && !SKIP_HISTORY) {
     try {
-      return lastRelease(readFileSync(LEDGER, "utf8"));
-    } catch {
-      return null;
+      deployments = parseDeployments(
+        runNpx(historyArgs(), { spawn: { timeout: 2 * 60 * 1000 } }),
+      );
+    } catch (e) {
+      say(
+        `PROMOTE WARN  could not read Cloudflare deployment history: ${String(e.stdout || e.message).slice(0, 200)}`,
+      );
     }
-  })();
+  }
+  const baseline = rollbackBaseline({
+    ledgerText,
+    deployments,
+    promotingSha: TO_SHA ? sourceSha : head,
+  });
+  let baselineFetchNeeded = false;
+  if (baseline.sha) {
+    try {
+      git(["rev-parse", `${baseline.sha}^{commit}`]);
+    } catch {
+      baselineFetchNeeded = true;
+    }
+  }
+  say(
+    baseline.sha
+      ? `PROMOTE      rollback baseline ${baseline.sha.slice(0, 7)} (${baseline.source})${baselineFetchNeeded ? " — not in this clone yet; fetch before rolling back" : ""}`
+      : `PROMOTE      rollback baseline: NONE — ${baseline.reason}`,
+  );
 
   const plan = {
     action,
@@ -358,42 +413,50 @@ async function main() {
     stagingBase: STAGING_BASE,
     productionBases: [BRAND_BASE, PAGES_BASE],
     preStamps: pre,
-    previousSha: TO_SHA ? (previous?.sha ?? null) : (previous?.sha ?? null),
+    previousSha: baseline.sha,
+    baselineSource: baseline.source,
+    rollbackReason: baseline.reason,
     command: `npx ${deployArgs(artifactDir || STAGE).join(" ")}`,
   };
 
+  const recordFields = (postStamps, deploymentUrl) => ({
+    action: plan.action,
+    sha: plan.sha,
+    stamp,
+    stagingBase: STAGING_BASE,
+    productionBases: plan.productionBases,
+    preStamps: pre,
+    postStamps,
+    previousSha: plan.previousSha,
+    baselineSource: plan.baselineSource,
+    rollbackReason: plan.rollbackReason,
+    deploymentUrl,
+    verifiedAt: new Date().toISOString(),
+    verification: {
+      surface: verification.surface,
+      filesChecked: verification.filesChecked,
+      matched: verification.matched,
+      browser: !SKIP_BROWSER && !TO_SHA,
+    },
+  });
+
   if (!APPLY) {
+    const plannedRecord = releaseRecord(recordFields({}, null));
     say("\nPROMOTE      DRY RUN — nothing deployed. The promote would run:");
     say(`  node scripts/deploy-pages-local.mjs --check --stage ${STAGE}`);
     say(`  ${plan.command}`);
     say("\nPROMOTE      what would be recorded:");
-    say(
-      JSON.stringify(
-        releaseRecord({
-          action: plan.action,
-          sha: plan.sha,
-          stamp,
-          stagingBase: STAGING_BASE,
-          productionBases: plan.productionBases,
-          preStamps: pre,
-          postStamps: {},
-          previousSha: plan.previousSha,
-          verifiedAt: new Date().toISOString(),
-          verification: {
-            surface: verification.surface,
-            filesChecked: verification.filesChecked,
-            matched: verification.matched,
-            browser: !SKIP_BROWSER && !TO_SHA,
-          },
-        }),
-        null,
-        2,
-      ),
-    );
+    say(JSON.stringify(plannedRecord, null, 2));
     if (JSON_MODE)
       console.log(
         JSON.stringify(
-          { ok: true, mode: "dry-run", plan, verification },
+          {
+            ok: true,
+            mode: "dry-run",
+            plan,
+            verification,
+            record: plannedRecord,
+          },
           null,
           2,
         ),
@@ -455,24 +518,7 @@ async function main() {
     }
     post[label] = last;
   }
-  const record = releaseRecord({
-    action,
-    sha: plan.sha,
-    stamp,
-    stagingBase: STAGING_BASE,
-    productionBases: plan.productionBases,
-    preStamps: pre,
-    postStamps: post,
-    previousSha: plan.previousSha,
-    deploymentUrl,
-    verifiedAt: new Date().toISOString(),
-    verification: {
-      surface: verification.surface,
-      filesChecked: verification.filesChecked,
-      matched: verification.matched,
-      browser: !SKIP_BROWSER && !TO_SHA,
-    },
-  });
+  const record = releaseRecord(recordFields(post, deploymentUrl));
   mkdirSync(dirname(LEDGER), { recursive: true });
   appendFileSync(LEDGER, JSON.stringify(record) + "\n");
 
@@ -485,6 +531,8 @@ async function main() {
     say(
       `PROMOTE      rollback: node scripts/promote.mjs --to ${plan.previousSha} --apply`,
     );
+  else
+    say(`PROMOTE WARN  no rollback target recorded — ${plan.rollbackReason}`);
   if (post.brand !== stamp)
     say(
       `PROMOTE WARN  the brand domain still serves ${post.brand} — verify before announcing the release`,

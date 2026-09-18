@@ -92,13 +92,10 @@ loc.html
 .DS_Store
 Thumbs.db
 
-# Local Pages staging
-_pages_staging/
-_pages_smoke/
-_pages_drift_stage/
-_pages_allowlist_check/
-_pages_verify_test/
-_pages_promote*/
+# Local Pages staging. The stage directory name is a parameter (`--stage`), so
+# this is a glob rather than a list: a new name used to become silently
+# committable (and to break a local `prettier --check`) just by being invented.
+_pages_*/
 
 # Freebuff tool state (never commit)
 .freebuff/

@@ -11,7 +11,11 @@
 //   2. PARITY — every file in the deploy allowlist is fetched from staging and
 //               byte-compared (line-ending normalized) with the local build.
 //               A 404 (missing asset) or any difference fails, so a partial or
-//               stale deploy cannot look green.
+//               stale deploy cannot look green. HTML on a surface that is known
+//               to rewrite it at the edge (Cloudflare's email obfuscation) is
+//               compared in a canonical form that undoes exactly that rewrite
+//               — reported as a tolerated rewrite, never hidden — so any other
+//               byte still has to match.
 //   3. SURFACE— platform expectations: `_headers`/`_redirects` are inert files
 //               on GitHub Pages (200) and are CONSUMED by Cloudflare (404). On
 //               Cloudflare the security headers are required for real
@@ -23,15 +27,22 @@
 //
 // Usage:
 //   node scripts/verify-staging.mjs [--base <url>] [--no-browser] [--json]
-//                                   [--wait <seconds>]
+//                                   [--wait <seconds>] [--surface <name>]
 // Environment: STAGING_BASE overrides the default base.
+//
+// `--surface` overrides what the URL is assumed to be, for checking a local
+// stand-in against the production policy. It only ever ADDS assertions (a
+// stricter surface against a lax URL fails), so it cannot be used to fake a
+// pass; the default is inferred from the URL.
+//
 // Exit: 0 = verified, 1 = verification failed, 2 = could not verify.
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { deployedFiles } from "./lib/gates.mjs";
+import { deployedFiles, securityPolicyVerdict } from "./lib/gates.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
+import { canonicalizeHtml } from "./lib/platform-rewrites.mjs";
 import {
   artifactStamp,
   normalizeText,
@@ -51,7 +62,17 @@ const BASE = (arg("--base") || process.env.STAGING_BASE || "").trim();
 const BASE_URL =
   BASE || "https://sovereign-communication.github.io/BigEnergyCo/";
 const base = BASE_URL.endsWith("/") ? BASE_URL : BASE_URL + "/";
-const SURFACE = surfaceFor(base);
+
+const SURFACES = ["gh-pages", "cloudflare", "local"];
+const SURFACE_ARG = arg("--surface", null);
+if (SURFACE_ARG && !SURFACES.includes(SURFACE_ARG)) {
+  // Nothing has touched the network yet, so failing hard is safe and honest.
+  console.error(
+    `FAIL unknown --surface ${SURFACE_ARG} — expected one of ${SURFACES.join(", ")}`,
+  );
+  process.exit(2);
+}
+const SURFACE = SURFACE_ARG || surfaceFor(base);
 const CONCURRENCY = 8;
 const FETCH_TIMEOUT_MS = 30000;
 
@@ -182,6 +203,8 @@ const TEXT_FILE =
 const isText = (f) =>
   TEXT_FILE.test(f) || f === "_headers" || f === "_redirects";
 
+const HTML_FILE = /\.html$/i;
+
 const parity = await mapPool(parityTargets, CONCURRENCY, async (file) => {
   const localBuf = readFileSync(file);
   let res;
@@ -194,6 +217,26 @@ const parity = await mapPool(parityTargets, CONCURRENCY, async (file) => {
     return { file, state: "network", detail: e.message };
   }
   if (!res.ok) return { file, state: "missing", detail: `HTTP ${res.status}` };
+
+  // HTML on a rewriting surface: bring both sides into one canonical form that
+  // undoes exactly the edge rewrite we have observed, and nothing else. The
+  // rewrites tolerated for this file travel with the result so the report can
+  // state them rather than implying the bytes matched.
+  if (HTML_FILE.test(file) && SURFACE === "cloudflare") {
+    const local = canonicalizeHtml(localBuf.toString("utf8"), SURFACE);
+    const served = canonicalizeHtml(await res.text(), SURFACE);
+    const localHash = sha256(local.text);
+    const servedHash = sha256(served.text);
+    if (localHash !== servedHash)
+      return {
+        file,
+        state: "differs",
+        detail: `local ${localHash.slice(0, 8)} vs served ${servedHash.slice(0, 8)}`,
+        rewrites: served.tolerated,
+      };
+    return { file, state: "match", rewrites: served.tolerated };
+  }
+
   const text = isText(file);
   const localHash = text
     ? sha256(normalizeText(localBuf.toString("utf8")))
@@ -217,6 +260,17 @@ if (bad.length)
 else record(`parity: all ${parity.length} deployed files match`, true);
 if (bad.length > 12)
   record(`parity: ${bad.length - 12} more file(s) differ`, false, "");
+
+// What the comparison had to forgive, stated out loud. If a later platform
+// change rewrites something we do not know about, it shows up here as a
+// failure instead of being quietly absorbed.
+const rewritten = parity.filter((p) => p.rewrites?.length);
+const rewriteKinds = [...new Set(rewritten.flatMap((p) => p.rewrites))].sort();
+if (rewritten.length) {
+  const note = `surface ${SURFACE}: tolerated the edge rewrite of ${rewritten.length} HTML file(s) — ${rewriteKinds.join(", ")} — every other byte still had to match`;
+  notes.push(note);
+  if (!JSON_MODE) console.log(`VERIFY NOTE  ${note}`);
+}
 
 // Platform-owned files: assert the surface behaves the way it must, so a
 // platform change (Pages starting to consume _headers, say) is noticed here.
@@ -260,42 +314,15 @@ try {
   record("security headers readable", false, `network: ${e.message}`);
   homeRes = { headers: new Headers() };
 }
-const csp = homeRes.headers.get("content-security-policy") || "";
-if (SURFACE === "cloudflare") {
-  const required = [
-    "content-security-policy",
-    "x-content-type-options",
-    "x-frame-options",
-    "referrer-policy",
-    "permissions-policy",
-    "strict-transport-security",
-    "cross-origin-opener-policy",
-    "cross-origin-resource-policy",
-  ];
-  const missing = required.filter((h) => !homeRes.headers.get(h));
-  record(
-    "cloudflare serves the full security header set",
-    missing.length === 0,
-    missing.length ? `missing ${missing.join(", ")}` : "",
-  );
-  const scriptSrc = (
-    csp.split(";").find((d) => d.trim().startsWith("script-src")) || ""
-  ).trim();
-  record(
-    "cloudflare serves script-src without 'unsafe-inline'",
-    !!scriptSrc && !scriptSrc.includes("'unsafe-inline'"),
-    scriptSrc ? scriptSrc.slice(0, 80) : "no script-src directive",
-  );
-} else {
-  const anyPolicy = [
-    "content-security-policy",
-    "x-frame-options",
-    "x-content-type-options",
-  ].filter((h) => homeRes.headers.get(h));
-  notes.push(
-    `surface ${SURFACE}: ${anyPolicy.length ? "some" : "no"} security headers served — ${SURFACE === "gh-pages" ? "GitHub Pages serves the artifact verbatim and ignores `_headers`, so CSP/X-Frame-Options/nosniff are only provable on the Cloudflare surface" : "this surface does not apply `_headers`"}`,
-  );
-  if (!JSON_MODE) console.log(`VERIFY NOTE  ${notes[notes.length - 1]}`);
+// The policy the surface owes us, from the pure helper the tests drive
+// directly — so "a dropped directive fails" is provable without a network.
+const policy = securityPolicyVerdict(SURFACE, (name) =>
+  homeRes.headers.get(name),
+);
+for (const c of policy.checks) record(c.name, c.ok, c.detail);
+for (const n of policy.notes) {
+  notes.push(n);
+  if (!JSON_MODE) console.log(`VERIFY NOTE  ${n}`);
 }
 
 // ── 5. the real browser, against this exact URL ─────────────────────────────
@@ -345,6 +372,9 @@ const payload = {
   servedStamp: served && served.ok ? (served.stamp.stamp ?? null) : null,
   filesChecked: parity.length,
   matched: parity.filter((p) => p.state === "match").length,
+  // Not a footnote: the canonical comparison and what it forgave, so "parity
+  // passed" can never be read as "every byte is identical" when it is not.
+  platformRewrites: { files: rewritten.length, kinds: rewriteKinds },
   failures,
   notes,
   verified: failures.length === 0,
@@ -355,7 +385,10 @@ else {
   console.log(
     failures.length
       ? `\nSTAGING VERIFICATION FAILED (${failures.length}): ${failures.slice(0, 5).join(" ; ")}`
-      : `\nSTAGING VERIFIED — ${base} serves stamp ${payload.servedStamp}, ${payload.matched}/${payload.filesChecked} files byte-identical to the checkout`,
+      : `\nSTAGING VERIFIED — ${base} serves stamp ${payload.servedStamp}, ${payload.matched}/${payload.filesChecked} files match` +
+          (rewritten.length
+            ? ` (${rewritten.length} HTML file(s) compared with the edge's email obfuscation canonicalised; everything else byte-identical)`
+            : " byte-identical to the checkout"),
   );
 }
 // Drain before exiting: this process has just fetched hundreds of files, and

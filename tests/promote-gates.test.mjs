@@ -22,6 +22,7 @@ import { join } from "node:path";
 const execFileAsync = promisify(execFile);
 
 import { serveStatic } from "../scripts/serve-static.mjs";
+import { securityPolicyVerdict } from "../scripts/lib/gates.mjs";
 import * as stamps from "../scripts/lib/stamps.mjs";
 import { attachWorktree, detachWorktree } from "../scripts/lib/worktree.mjs";
 
@@ -455,6 +456,427 @@ test("EXIT: a verdict survives the network, on every platform", async () => {
       assert.equal(got, code, `exit ${code} must survive: ${out}`);
       assert.doesNotMatch(out, /Assertion failed|UV_HANDLE_CLOSING/, out);
     }
+  });
+});
+
+// ── the served policy: what production owes us, provable offline ───────────
+
+// Captured from freeoffgridcalculator.com after the promote that landed stamp
+// 20260917h. Mutation of a copy of this map is what proves each rule bites.
+const PRODUCTION_HEADERS = new Map(
+  Object.entries({
+    "content-security-policy":
+      "default-src 'self'; script-src 'self' https://unpkg.com https://static.cloudflareinsights.com; " +
+      "style-src 'self' 'unsafe-inline' https://unpkg.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(), microphone=()",
+    "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+    "cross-origin-opener-policy": "same-origin",
+    "cross-origin-resource-policy": "same-origin",
+  }),
+);
+const headerReader = (map) => (name) =>
+  map.get(String(name).toLowerCase()) ?? null;
+
+const withCsp = (csp) => {
+  const m = new Map(PRODUCTION_HEADERS);
+  m.set("content-security-policy", csp);
+  return m;
+};
+
+const failingChecks = (map) =>
+  securityPolicyVerdict("cloudflare", headerReader(map)).checks.filter(
+    (c) => !c.ok,
+  );
+
+const assertFails = (map, pattern, label) => {
+  const bad = failingChecks(map);
+  assert.ok(bad.length, `expected ${label} to fail the policy`);
+  assert.ok(
+    bad.some((c) => pattern.test(`${c.name} ${c.detail}`)),
+    `${label} must be named in the report: ${JSON.stringify(bad)}`,
+  );
+};
+
+test("POLICY: the live header set passes, and every loosening of it fails", () => {
+  const ok = securityPolicyVerdict(
+    "cloudflare",
+    headerReader(PRODUCTION_HEADERS),
+  );
+  assert.ok(ok.checks.length >= 3);
+  assert.deepEqual(
+    ok.checks.filter((c) => !c.ok),
+    [],
+    JSON.stringify(ok.checks, null, 1),
+  );
+  assert.deepEqual(ok.notes, []);
+
+  for (const name of [
+    "content-security-policy",
+    "x-content-type-options",
+    "x-frame-options",
+    "referrer-policy",
+    "permissions-policy",
+    "strict-transport-security",
+    "cross-origin-opener-policy",
+    "cross-origin-resource-policy",
+  ]) {
+    const dropped = new Map(PRODUCTION_HEADERS);
+    dropped.delete(name);
+    assertFails(dropped, new RegExp(name, "i"), `a dropped ${name}`);
+  }
+
+  const csp = PRODUCTION_HEADERS.get("content-security-policy");
+  assertFails(
+    withCsp(
+      csp.replace("script-src 'self'", "script-src 'self' 'unsafe-inline'"),
+    ),
+    /unsafe-inline/,
+    "'unsafe-inline' back in script-src",
+  );
+  assertFails(
+    withCsp(
+      csp.replace("script-src 'self'", "script-src 'self' 'unsafe-eval'"),
+    ),
+    /unsafe-eval/,
+    "'unsafe-eval' in script-src",
+  );
+  assertFails(
+    withCsp(csp.replace("script-src 'self'", "script-src 'self' *")),
+    /any host/,
+    "a wildcard script-src",
+  );
+  assertFails(
+    withCsp(csp.replace("frame-ancestors 'none'", "frame-ancestors *")),
+    /frame-ancestors/,
+    "a reopened frame-ancestors",
+  );
+  assertFails(
+    withCsp(csp.replace("object-src 'none'", "object-src *")),
+    /object-src/,
+    "a reopened object-src",
+  );
+  assertFails(
+    withCsp(csp.replace("base-uri 'self'", "base-uri *")),
+    /base-uri/,
+    "a reopened base-uri",
+  );
+  assertFails(
+    withCsp("default-src 'self'"),
+    /script-src/,
+    "no script-src at all",
+  );
+
+  // Surfaces that do not apply `_headers` must SAY so rather than pass silently.
+  const gh = securityPolicyVerdict(
+    "gh-pages",
+    headerReader(PRODUCTION_HEADERS),
+  );
+  assert.deepEqual(gh.checks, []);
+  assert.match(gh.notes[0], /ignores `_headers`/);
+  assert.deepEqual(
+    securityPolicyVerdict("local", headerReader(new Map())).checks,
+    [],
+  );
+});
+
+/**
+ * The same rules, end to end, through the real verifier against the local
+ * stand-in declaring itself the production surface. This is the check that
+ * would otherwise only be exercisable against a live Cloudflare account.
+ */
+const withStagePolicy = async (fn) => {
+  const srv = await serveStatic({
+    dir: STAGE,
+    headersFile: join(STAGE, "_headers"),
+  });
+  try {
+    return await fn(srv.url);
+  } finally {
+    await srv.close();
+  }
+};
+
+test("VERIFY: policy regressions fail through the real verifier, not just the helper", async () => {
+  const headersPath = join(STAGE, "_headers");
+  assert.ok(
+    existsSync(headersPath),
+    "the build must ship _headers for this stand-in to mean anything",
+  );
+  const original = readFileSync(headersPath, "utf8");
+
+  try {
+    await withStagePolicy(async (base) => {
+      const r = await verify(base, ["--surface", "cloudflare"]);
+      assert.equal(r.code, 0, `the control run must pass: ${r.out}`);
+      const report = parse(r.out);
+      assert.equal(report.surface, "cloudflare");
+      assert.equal(report.verified, true);
+      assert.equal(
+        report.platformRewrites.files,
+        0,
+        "a local stand-in applies no edge rewrite, so nothing may be tolerated",
+      );
+    });
+
+    // Self-verifying on purpose. The first version of this compared a
+    // lower-cased line against a mixed-case needle, so it matched nothing and
+    // the "mutation" only rewrote the line endings — which passed a
+    // `notEqual` check and made the verifier look like it had no teeth.
+    const withoutHeader = (name) => {
+      const lines = original.split(/\r?\n/);
+      const needle = `${name.toLowerCase()}:`;
+      const kept = lines.filter(
+        (l) => !l.trim().toLowerCase().startsWith(needle),
+      );
+      assert.equal(
+        lines.length - kept.length,
+        1,
+        `the ${name} mutation must drop exactly one line`,
+      );
+      return kept.join("\n");
+    };
+
+    // Each case carries its own proof that the mutation reached the wire. A
+    // verifier that passed on a file edit that never took effect would be
+    // vacuous, so the wire is checked before the verdict is read.
+    const mutations = [
+      [
+        "a dropped COOP header",
+        withoutHeader("Cross-Origin-Opener-Policy"),
+        /cross-origin-opener-policy/i,
+        (h) => assert.equal(h.get("cross-origin-opener-policy"), null),
+      ],
+      [
+        "a dropped HSTS header",
+        withoutHeader("Strict-Transport-Security"),
+        /strict-transport-security/i,
+        (h) => assert.equal(h.get("strict-transport-security"), null),
+      ],
+      [
+        "'unsafe-inline' back in script-src",
+        original.replace(
+          "script-src 'self'",
+          "script-src 'self' 'unsafe-inline'",
+        ),
+        /unsafe-inline/,
+        (h) =>
+          assert.match(
+            h.get("content-security-policy") || "",
+            /script-src 'self' 'unsafe-inline'/,
+          ),
+      ],
+      [
+        "a reopened frame-ancestors",
+        original.replace("frame-ancestors 'none'", "frame-ancestors *"),
+        /frame-ancestors/,
+        (h) =>
+          assert.match(
+            h.get("content-security-policy") || "",
+            /frame-ancestors \*/,
+          ),
+      ],
+    ];
+
+    for (const [label, mutated, pattern, onWire] of mutations) {
+      assert.notEqual(
+        mutated,
+        original,
+        `${label} must actually change _headers`,
+      );
+      writeFileSync(headersPath, mutated);
+      assert.equal(
+        readFileSync(headersPath, "utf8"),
+        mutated,
+        `${label} must be on disk before the stand-in is started`,
+      );
+      await withStagePolicy(async (base) => {
+        const probe = await fetch(base, { cache: "no-store" });
+        onWire(probe.headers);
+        const r = await verify(base, ["--surface", "cloudflare"]);
+        assert.equal(r.code, 1, `${label} must fail verification: ${r.out}`);
+        assert.match(r.out, pattern, label);
+      });
+    }
+  } finally {
+    writeFileSync(headersPath, original);
+  }
+
+  // The mutations were the only variable: restored policy passes again.
+  await withStagePolicy(async (base) => {
+    const r = await verify(base, ["--surface", "cloudflare"]);
+    assert.equal(r.code, 0, `the restored policy must pass: ${r.out}`);
+  });
+});
+
+// ── the way back: how a first release gets a rollback target ───────────────
+
+// Trimmed from real `wrangler pages deployment list --json` output, with the
+// banner wrangler/npx prints kept in front of it.
+const WRANGLER_JSON = `
+ ⛅️ wrangler 4.124.0 (update available 4.134.0)
+─────────────────────────────────────
+[
+  { "Id": "preview", "Environment": "Preview", "Branch": "feat/x", "Source": "7fb1051", "Deployment": "https://preview.bigenergyco.pages.dev", "Status": "1 day ago" },
+  { "Id": "0d4ea9a1", "Environment": "Production", "Branch": "main", "Source": "503540c", "Deployment": "https://0d4ea9a1.bigenergyco.pages.dev", "Status": "6 minutes ago" },
+  { "Id": "36b2946b", "Environment": "Production", "Branch": "main", "Source": "3f4bc5d", "Deployment": "https://36b2946b.bigenergyco.pages.dev", "Status": "1 day ago" }
+]
+`;
+
+test("LEDGER: deployment history parses, and garbage parses to nothing", () => {
+  const list = stamps.parseDeployments(WRANGLER_JSON);
+  assert.ok(
+    Array.isArray(list),
+    "a banner before the JSON must not break parsing",
+  );
+  assert.equal(list.length, 3);
+  assert.equal(list[1].environment, "Production");
+  assert.equal(list[1].source, "503540c");
+  for (const junk of [null, "", "no json here", "[not json", '{"a":1}'])
+    assert.equal(stamps.parseDeployments(junk), null, `${junk} must not parse`);
+});
+
+test("LEDGER: the first release derives its way back from what production serves", () => {
+  const deployments = stamps.parseDeployments(WRANGLER_JSON);
+
+  const first = stamps.rollbackBaseline({
+    ledgerText: "",
+    deployments,
+    promotingSha: "deadbeefcafe",
+  });
+  assert.equal(
+    first.sha,
+    "503540c",
+    "the newest PRODUCTION deployment, not a preview",
+  );
+  assert.equal(first.source, "cloudflare-deployment-history");
+
+  // Re-promoting what is already live still names the release before it.
+  const rePromote = stamps.rollbackBaseline({
+    ledgerText: "",
+    deployments,
+    promotingSha: "503540c",
+  });
+  assert.equal(rePromote.sha, "3f4bc5d");
+
+  // A full SHA on one side, an abbreviated one on the other: same commit.
+  assert.equal(
+    stamps.rollbackBaseline({
+      ledgerText: "",
+      deployments,
+      promotingSha: "503540c0000000000000000000000000000000000",
+    }).sha,
+    "3f4bc5d",
+  );
+
+  // A recorded release wins over history.
+  const ledger = `${JSON.stringify(
+    stamps.releaseRecord({
+      sha: "abc1234",
+      stamp: "20260917h",
+      previousSha: "def5678",
+    }),
+  )}\n`;
+  // The ledger's most recent release IS what production is running, so that is
+  // what a rollback must return to — not that release's own predecessor.
+  const recorded = stamps.rollbackBaseline({
+    ledgerText: ledger,
+    deployments,
+    promotingSha: "newsha",
+  });
+  assert.equal(recorded.sha, "abc1234");
+  assert.equal(recorded.source, "ledger");
+
+  // No history and no ledger: say why, never invent a target.
+  const none = stamps.rollbackBaseline({
+    ledgerText: "",
+    deployments: null,
+    promotingSha: "deadbeefcafe",
+  });
+  assert.equal(none.sha, null);
+  assert.match(none.reason, /deployment history was not available/);
+
+  const onlyPreview = stamps.rollbackBaseline({
+    ledgerText: "",
+    deployments: [deployments[0]],
+    promotingSha: "deadbeefcafe",
+  });
+  assert.equal(
+    onlyPreview.sha,
+    null,
+    "a preview is not a place to roll back to",
+  );
+});
+
+test("LEDGER: amending a record recomputes the way back and is never silent", () => {
+  const before = stamps.releaseRecord({
+    sha: "503540c",
+    stamp: "20260917h",
+    previousSha: null,
+    rollbackReason: "empty ledger",
+  });
+  assert.equal(before.rollbackCommand, null);
+  assert.equal(before.rollbackUnavailable, "empty ledger");
+
+  const after = stamps.amendRelease(
+    before,
+    {
+      previousSha: "3f4bc5d",
+      baselineSource: "cloudflare-deployment-history",
+    },
+    { reason: "the first release recorded no baseline" },
+  );
+  assert.equal(
+    after.rollbackCommand,
+    "node scripts/promote.mjs --to 3f4bc5d --apply",
+  );
+  assert.equal(after.rollbackUnavailable, null);
+  assert.equal(after.baselineSource, "cloudflare-deployment-history");
+  assert.equal(after.amended.length, 1);
+  assert.match(after.amended[0].reason, /first release/);
+  assert.deepEqual(after.amended[0].fields, ["previousSha", "baselineSource"]);
+  assert.equal(
+    before.rollbackCommand,
+    null,
+    "amending must not mutate the original record in place",
+  );
+
+  // A record amended twice keeps the whole trail.
+  const twice = stamps.amendRelease(
+    after,
+    { stamp: "20260917i" },
+    { reason: "second" },
+  );
+  assert.equal(twice.amended.length, 2);
+  assert.equal(twice.rollbackCommand, after.rollbackCommand);
+});
+
+test("PROMOTE: a credential-free dry run claims no way back it has not read", async () => {
+  rmSync(LEDGER, { force: true });
+  const env = { ...process.env };
+  delete env.CLOUDFLARE_API_TOKEN;
+  delete env.CF_API_TOKEN;
+  await withServer(async (base) => {
+    const r = await promote(base, ["--json"], { env });
+    assert.equal(r.code, 0, r.out);
+    const payload = parse(r.out);
+    assert.equal(payload.plan.previousSha, null);
+    assert.match(
+      payload.plan.rollbackReason,
+      /deployment history was not available/,
+      "the reason must be stated, not left blank",
+    );
+    assert.equal(
+      payload.record.rollbackCommand,
+      null,
+      "no credential-free run may claim a way back it has not read",
+    );
+    assert.match(
+      payload.record.rollbackUnavailable,
+      /deployment history was not available/,
+    );
   });
 });
 
