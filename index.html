@@ -257,10 +257,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20260918f" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20260918f" />
+    <link rel="preload" href="./assets/site.css?v=20260918g" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20260918g" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20260918f" />
+    <link rel="stylesheet" href="./assets/site.css?v=20260918g" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -1705,15 +1705,11 @@
                   </select>
                 </div>
 
-                <div
-                  class="form-group"
-                  id="autoTargetRow"
-                  style="display: none; margin-bottom: 0"
-                >
+                <div class="form-group" id="autoTargetRow">
                   <label for="autoTarget"
-                    >Bill-cut target
-                    <span style="font-weight: 400; color: var(--text-muted)"
-                      >(applied to all three chemistries)</span
+                    >Bill-cut target<span
+                      style="font-weight: 400; color: var(--text-muted)"
+                      >&nbsp;&mdash; sets the results slider too</span
                     >:</label
                   >
 
@@ -3367,9 +3363,9 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20260918f"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20260918g"></script>
 
-    <script defer src="./assets/js/chat.js?v=20260918f"></script>
+    <script defer src="./assets/js/chat.js?v=20260918g"></script>
   </body>
 </html>
 

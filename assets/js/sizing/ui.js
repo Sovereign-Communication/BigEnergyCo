@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260918f";
+import { APPLIANCES } from "./appliances.js?v=20260918g";
 import {
   CITY_CATALOG,
   searchCities,
@@ -26,7 +26,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260918f";
+} from "./cities.js?v=20260918g";
 
 import {
   estimateTariff,
@@ -34,66 +34,66 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260918f";
+} from "./pricing.js?v=20260918g";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260918f";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260918g";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260918f";
+} from "./lead-acid.js?v=20260918g";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260918f";
+} from "./bom.js?v=20260918g";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260918f";
+import { BOM_ITEMS } from "../shared/content.js?v=20260918g";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260918f";
+} from "../shared/i18n.js?v=20260918g";
 
-import { LOCALES } from "../shared/locales.js?v=20260918f";
+import { LOCALES } from "../shared/locales.js?v=20260918g";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260918f";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260918f";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260918g";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260918g";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260918f";
+} from "../shared/simple-mode.js?v=20260918g";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260918f";
+} from "./frontier-chart.js?v=20260918g";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260918f";
+} from "./rescale.js?v=20260918g";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260918f";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260918g";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260918f";
+} from "./map-provider.js?v=20260918g";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260918f";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260918f";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260918f";
+} from "./wizard.js?v=20260918g";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260918g";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260918g";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -138,9 +138,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260918f";
+} from "./money.js?v=20260918g";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260918f";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260918g";
 
 let worker = null;
 
@@ -618,7 +618,11 @@ function updateAutoRows() {
 
   if (tierRow) tierRow.style.display = isAuto && !gt ? "block" : "none";
 
-  if (targetRow) targetRow.style.display = isAuto && gt ? "block" : "none";
+  // The bill-cut target select drives customCutFraction for ANY chemistry
+  // (its change handler syncs the results slider), so it belongs to the
+  // grid-tie mode — not to Auto. Only the reliability-tier submenu is
+  // auto-specific.
+  if (targetRow) targetRow.style.display = gt ? "block" : "none";
 }
 
 function setLoadPanel() {
@@ -3274,7 +3278,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260918f", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260918g", {
       type: "module",
     });
 
