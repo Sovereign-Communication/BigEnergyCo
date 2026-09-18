@@ -51,10 +51,24 @@ jobs:
       - name: Check deploy allowlist
         run: node scripts/deploy-pages-local.mjs --check
 
+      - name: Cumulative-series engine flow gate
+        # Offline and deterministic: drives runSizing() through its real entry
+        # point and asserts every solvable target carries a complete 20-year
+        # cumulative series (and that a missing tariff invents none).
+        run: npm run verify:flow
+
+      - name: Swap-strategy economics gate
+        # Offline and deterministic: proves deliberately oversizing a bank to
+        # dodge swap labour never beats the engine's own pick on true 20-year
+        # cost, on pinned Honolulu/London fixtures. Was an orphan script.
+        run: npm run verify:economics
+
       - name: Unit tests (offline)
         run: npm test
 
       # Live-API validation is manual (network): node scripts/validate-live.mjs
+      # The live NASA-data model checks (validate-modes, validate-soc-pipeline)
+      # run in the weekly scheduled sweep — `npm run verify:live`.
 
   # The gate that stops UI/worker/asset regressions from reaching main: builds
   # the allowlisted artifact, serves it under the real `_headers` policy and

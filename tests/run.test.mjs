@@ -219,6 +219,24 @@ test("off-grid SPECIFIC: tier cards + percent history chart bands", async () => 
   for (const b of p.history.tiers) {
     assert.equal(b.dailyMin.length, b.dailyMax.length);
     assert.equal(b.totalDays, 365);
+    // The chart's own gate drops any tier whose bands are missing or empty
+    // (ui.js: `t.dailyMin && t.dailyMax && t.dailyMin.length`), which would
+    // silently hide a bank the engine really sized. Every tier must pass that
+    // gate with real plotted percentages, not placeholders.
+    assert.ok(b.dailyMin.length > 0, `${b.id} must pass the chart gate`);
+    assert.ok(
+      b.dailyMin.every((v) => Number.isFinite(v) && v >= 0 && v <= 100) &&
+        b.dailyMax.every((v) => Number.isFinite(v) && v >= 0 && v <= 100),
+      `${b.id} bands carry plotted percentages`,
+    );
+    assert.ok(
+      b.dailyMin.every((v, i) => v <= b.dailyMax[i]),
+      `${b.id} band floor never crosses its ceiling`,
+    );
+    assert.ok(
+      b.dailyMax.some((v, i) => v > b.dailyMin[i]),
+      `${b.id} band spans the real daily range`,
+    );
   }
 });
 

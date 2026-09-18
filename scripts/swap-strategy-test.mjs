@@ -35,9 +35,11 @@
 //     oversized bank on its own, and the scenario note always matches the
 //     recommended system (see tests/oversize-adopt.test.mjs).
 //
-// Run: node scripts/swap-strategy-test.mjs   (manual research script — NOT run
-// in CI; `npm test` scopes to tests/. Re-pinned Sept 2026 to the unified
-// engine; re-pin again if sizing economics change.)
+// Run: node scripts/swap-strategy-test.mjs — also a CI gate, as
+// `npm run verify:economics` in the `Tests` workflow, so the "oversizing never
+// wins" conclusion cannot rot silently. `npm test` scopes to tests/ and will
+// NOT pick this up. Re-pinned Sept 2026 to the unified engine; re-pin
+// deliberately if sizing economics change, and say so in the commit message.
 
 import {
   buildE1kw,
