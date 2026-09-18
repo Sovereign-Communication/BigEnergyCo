@@ -25,6 +25,7 @@
     "verify:staging": "node scripts/verify-staging.mjs",
     "promote": "node scripts/promote.mjs",
     "promote:apply": "node scripts/promote.mjs --apply",
+    "promote:apply:oauth": "node scripts/promote.mjs --apply --assume-auth",
     "rollback": "node scripts/promote.mjs --to"
   },
   "license": "SEE LICENSE IN LICENSE"

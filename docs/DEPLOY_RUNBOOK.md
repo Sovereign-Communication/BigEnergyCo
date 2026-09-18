@@ -64,9 +64,16 @@ npm run verify:staging
    or if HEAD is not `origin/main`:
 
 ```bash
-npm run promote            # dry run (default): prints the plan, the stamps and the record
-npm run promote:apply      # deploy (needs CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID)
+npm run promote                 # dry run (default): prints the plan, the stamps and the record
+npm run promote:apply           # deploy (needs CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID)
+npm run promote:apply:oauth     # deploy using an existing `npx wrangler login` session
 ```
+
+The deploy runs wrangler through `scripts/lib/npx.mjs`, which executes npm's
+npx CLI with the current node binary. Do not replace that with a bare
+`execFileSync("npx", ...)`: on Windows the shim is `npx.cmd`, the bare name
+raises `ENOENT`, and the tool would refuse after building the artifact but
+before deploying it.
 
 Record the deployment URL printed by Wrangler. Every apply appends a record to
 `docs/release-ledger.jsonl`: the promoted SHA and stamp, the pre-promote and
