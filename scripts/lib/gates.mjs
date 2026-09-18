@@ -253,6 +253,102 @@ export function headersFor(urlPath, ruleset = []) {
   return out;
 }
 
+/**
+ * The headers Cloudflare must serve on every response. `_headers` is applied
+ * by the platform and ignored by GitHub Pages, so these can only ever be
+ * asserted on the Cloudflare surface.
+ */
+export const SECURITY_HEADER_SET = [
+  "content-security-policy",
+  "x-content-type-options",
+  "x-frame-options",
+  "referrer-policy",
+  "permissions-policy",
+  "strict-transport-security",
+  "cross-origin-opener-policy",
+  "cross-origin-resource-policy",
+];
+
+/** The source list of one CSP directive, lower-cased directive name. */
+export function cspDirective(csp, name) {
+  const sources = parseCsp(csp)[String(name).toLowerCase()];
+  return sources || [];
+}
+
+/**
+ * What the served response owes us on a given surface.
+ *
+ * Pure and injected on purpose: the policy is the part of verification that
+ * cannot be re-derived from the artifact, so it has to be provable offline —
+ * drop a directive from `_headers` and this must fail, with no network and no
+ * Cloudflare account in the loop.
+ *
+ * @param {{"gh-pages"|"cloudflare"|"local"}} surface
+ * @param {(name:string) => (string|null)} getHeader
+ * @returns {{checks:{name:string,ok:boolean,detail:string}[], notes:string[]}}
+ */
+export function securityPolicyVerdict(surface, getHeader) {
+  const checks = [];
+  const notes = [];
+
+  if (surface !== "cloudflare") {
+    const served = [
+      "content-security-policy",
+      "x-frame-options",
+      "x-content-type-options",
+    ].filter((h) => getHeader(h));
+    notes.push(
+      `surface ${surface}: ${served.length ? "some" : "no"} security headers served — ${
+        surface === "gh-pages"
+          ? "GitHub Pages serves the artifact verbatim and ignores `_headers`, so CSP/X-Frame-Options/nosniff are only provable on the Cloudflare surface"
+          : "this surface does not apply `_headers`"
+      }`,
+    );
+    return { checks, notes };
+  }
+
+  const missing = SECURITY_HEADER_SET.filter((h) => !getHeader(h));
+  checks.push({
+    name: "cloudflare serves the full security header set",
+    ok: missing.length === 0,
+    detail: missing.length ? `missing ${missing.join(", ")}` : "",
+  });
+
+  const csp = getHeader("content-security-policy") || "";
+  const scriptSrc = cspDirective(csp, "script-src").join(" ");
+  checks.push({
+    name: "cloudflare serves script-src without 'unsafe-inline'",
+    ok: !!scriptSrc && !scriptSrc.includes("'unsafe-inline'"),
+    detail: scriptSrc
+      ? `script-src ${scriptSrc}`.slice(0, 80)
+      : "no script-src directive",
+  });
+
+  // Strictly stronger than the two checks above, and cheap: a policy that
+  // reopens eval, allows a wildcard script source or drops the containment
+  // directives is a regression even though the two checks above would pass.
+  const loosened = [];
+  if (scriptSrc.includes("'unsafe-eval'"))
+    loosened.push("script-src allows 'unsafe-eval'");
+  if (scriptSrc.split(/\s+/).includes("*"))
+    loosened.push("script-src allows any host");
+  for (const [directive, want] of [
+    ["object-src", "'none'"],
+    ["base-uri", "'self'"],
+    ["frame-ancestors", "'none'"],
+  ]) {
+    if (!cspDirective(csp, directive).includes(want))
+      loosened.push(`${directive} is not ${want}`);
+  }
+  checks.push({
+    name: "cloudflare keeps object-src/base-uri/frame-ancestors closed",
+    ok: loosened.length === 0,
+    detail: loosened.join("; "),
+  });
+
+  return { checks, notes };
+}
+
 /** `*` matches any characters (including `/`), as on Cloudflare Pages. */
 export function patternMatches(pattern, urlPath) {
   const rx = new RegExp(

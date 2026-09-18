@@ -28,6 +28,9 @@ export const ROOT = resolve(
   new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
 );
 
+/** Files the platform applies rather than serves. */
+const PLATFORM_FILES = new Set(["/_headers", "/_redirects"]);
+
 const MIME = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -75,6 +78,17 @@ export async function serveStatic({
       for (const [name, value] of headersFor(urlPath, rules))
         res.setHeader(name, value);
     };
+
+    // Cloudflare CONSUMES `_headers`/`_redirects`: it applies them and does not
+    // serve them. Mirroring that is what lets this server stand in for the
+    // production surface, where "the platform file is absent" is itself an
+    // assertion the verifier makes.
+    if (applyHeaders && rules.length && PLATFORM_FILES.has(urlPath)) {
+      applyPolicy();
+      res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end("404");
+      return;
+    }
 
     const file = resolveRequestPath(root, urlPath);
     if (!file) {
