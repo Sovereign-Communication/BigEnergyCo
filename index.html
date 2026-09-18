@@ -257,10 +257,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20260918b" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20260918b" />
+    <link rel="preload" href="./assets/site.css?v=20260918c" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20260918c" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20260918b" />
+    <link rel="stylesheet" href="./assets/site.css?v=20260918c" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -2006,545 +2006,563 @@
                 ></p>
               </div>
 
-              <div
-                id="resultLadder"
-                style="display: none; margin-bottom: 1rem"
-                role="tablist"
-                aria-label="Result detail level"
-              >
-                <button
-                  type="button"
-                  id="lvlBest"
-                  class="ladder-tab ladder-active"
-                  role="tab"
-                  aria-selected="true"
-                  data-i18n="lvlBest"
-                >
-                  Best pick
-                </button>
-                <button
-                  type="button"
-                  id="lvlCompare"
-                  class="ladder-tab"
-                  role="tab"
-                  aria-selected="false"
-                  data-i18n="lvlCompare"
-                >
-                  Compare batteries
-                </button>
-                <button
-                  type="button"
-                  id="lvlMatrix"
-                  class="ladder-tab"
-                  role="tab"
-                  aria-selected="false"
-                  data-i18n="lvlMatrix"
-                >
-                  All options
-                </button>
-              </div>
-
-              <div
-                id="eli5Summary"
-                class="eli5-card"
-                style="display: none"
-                aria-live="polite"
-              ></div>
-
-              <div id="bestPickWrap"></div>
-
-              <div
-                id="moneyBar"
-                style="
-                  display: none;
-                  margin-bottom: 1rem;
-                  padding: 0.85rem 1rem;
-                  background: rgba(59, 130, 246, 0.08);
-                  border: 1px solid rgba(59, 130, 246, 0.35);
-                  border-radius: 10px;
-                  font-size: 0.95rem;
-                  line-height: 1.5;
-                "
-              ></div>
-
-              <!-- Granular panel: the selected system as icons + big numbers.
-               Follows every chart's selection; renders from cached data. -->
-              <div
-                id="focusPanel"
-                style="
-                  display: none;
-                  margin-bottom: 1rem;
-                  padding: 0.9rem 1rem;
-                  background: rgba(0, 230, 153, 0.06);
-                  border: 1px solid var(--border-glow);
-                  border-radius: 10px;
-                "
-              >
+              <div id="resultsRegion" hidden>
                 <div
-                  id="focusTitle"
-                  style="
-                    font-size: 0.85rem;
-                    font-weight: 800;
-                    color: var(--primary-accent);
-                    margin-bottom: 0.5rem;
-                  "
+                  id="resultLadder"
+                  style="display: none; margin-bottom: 1rem"
+                  role="tablist"
+                  aria-label="Result detail level"
+                >
+                  <button
+                    type="button"
+                    id="lvlBest"
+                    class="ladder-tab ladder-active"
+                    role="tab"
+                    aria-selected="true"
+                    data-i18n="lvlBest"
+                  >
+                    Best pick
+                  </button>
+                  <button
+                    type="button"
+                    id="lvlCompare"
+                    class="ladder-tab"
+                    role="tab"
+                    aria-selected="false"
+                    data-i18n="lvlCompare"
+                  >
+                    Compare batteries
+                  </button>
+                  <button
+                    type="button"
+                    id="lvlMatrix"
+                    class="ladder-tab"
+                    role="tab"
+                    aria-selected="false"
+                    data-i18n="lvlMatrix"
+                  >
+                    All options
+                  </button>
+                </div>
+
+                <div
+                  id="eli5Summary"
+                  class="eli5-card"
+                  style="display: none"
+                  aria-live="polite"
                 ></div>
+
+                <div id="bestPickWrap"></div>
+
                 <div
-                  id="focusChips"
+                  id="moneyBar"
                   style="
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 0.5rem 1.1rem;
-                    align-items: baseline;
-                  "
-                ></div>
-                <div
-                  id="focusNote"
-                  style="
-                    font-size: 0.78rem;
-                    color: var(--text-muted);
-                    margin-top: 0.5rem;
+                    display: none;
+                    margin-bottom: 1rem;
+                    padding: 0.85rem 1rem;
+                    background: rgba(59, 130, 246, 0.08);
+                    border: 1px solid rgba(59, 130, 246, 0.35);
+                    border-radius: 10px;
+                    font-size: 0.95rem;
                     line-height: 1.5;
                   "
                 ></div>
-              </div>
 
-              <div
-                id="tierResults"
-                style="
-                  display: grid;
-                  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-                  gap: 1rem;
-                "
-              >
-                <p
-                  style="
-                    color: var(--text-muted);
-                    font-size: 0.9rem;
-                    grid-column: 1/-1;
-                  "
-                >
-                  Results appear here: a recommended path first, with battery
-                  comparisons and all options available below. For grid-tied
-                  plans, the result also separates bill reduction from outage
-                  backup.
-                </p>
-              </div>
-
-              <!-- Dedicated Plain-English Translation (ELI5) Container -->
-              <div
-                id="eli5CardWrap"
-                style="display: none; margin-top: 1.25rem"
-              ></div>
-
-              <!-- Plausibility frontier: what every budget buys, cheapest first. -->
-
-              <div id="frontierWrap" style="display: none; margin-top: 1.5rem">
+                <!-- Granular panel: the selected system as icons + big numbers.
+               Follows every chart's selection; renders from cached data. -->
                 <div
-                  style="
-                    font-size: 0.95rem;
-                    font-weight: 700;
-                    color: var(--text-main);
-                    margin-bottom: 0.3rem;
-                  "
-                  data-i18n="frontierTitle"
-                >
-                  How far does your money get you?
-                </div>
-
-                <p
-                  style="
-                    font-size: 0.85rem;
-                    color: var(--text-muted);
-                    margin: 0 0 0.75rem;
-                    line-height: 1.55;
-                  "
-                  data-i18n="frontierIntro"
-                >
-                  Every system we could build at your location, cheapest first.
-                  The line is the best result any budget can buy &mdash; so you
-                  can see at a glance whether your goal here is easy, expensive,
-                  or out of reach.
-                </p>
-
-                <p
-                  id="frontierVerdict"
-                  style="
-                    font-size: 0.95rem;
-                    color: var(--text-main);
-                    line-height: 1.6;
-                    margin: 0 0 0.85rem;
-                    padding: 0.6rem 0.85rem;
-                    border-inline-start: 3px solid var(--primary-accent);
-                    background: rgba(0, 230, 153, 0.06);
-                    border-radius: 0 8px 8px 0;
-                  "
-                ></p>
-
-                <div id="frontierChart"></div>
-
-                <p
-                  id="frontierNote"
+                  id="focusPanel"
                   style="
                     display: none;
-                    font-size: 0.78rem;
-                    color: var(--text-muted);
-                    margin: 0.65rem 0 0;
-                    line-height: 1.55;
+                    margin-bottom: 1rem;
+                    padding: 0.9rem 1rem;
+                    background: rgba(0, 230, 153, 0.06);
+                    border: 1px solid var(--border-glow);
+                    border-radius: 10px;
                   "
-                ></p>
-
-                <details style="margin-top: 0.9rem">
-                  <summary
-                    style="
-                      cursor: pointer;
-                      color: var(--primary-accent);
-                      font-size: 0.85rem;
-                    "
-                    data-i18n="frontierTableToggle"
-                  >
-                    Show every point as a table
-                  </summary>
-
+                >
                   <div
-                    id="frontierTable"
-                    style="margin-top: 0.6rem; overflow-x: auto"
+                    id="focusTitle"
+                    style="
+                      font-size: 0.85rem;
+                      font-weight: 800;
+                      color: var(--primary-accent);
+                      margin-bottom: 0.5rem;
+                    "
                   ></div>
-
-                  <p
+                  <div
+                    id="focusChips"
+                    style="
+                      display: flex;
+                      flex-wrap: wrap;
+                      gap: 0.5rem 1.1rem;
+                      align-items: baseline;
+                    "
+                  ></div>
+                  <div
+                    id="focusNote"
                     style="
                       font-size: 0.78rem;
                       color: var(--text-muted);
-                      margin: 0.75rem 0 0;
-                      line-height: 1.55;
+                      margin-top: 0.5rem;
+                      line-height: 1.5;
                     "
-                    data-i18n="frontierMethod"
-                  >
-                    The curve comes from simulating every panel-and-battery
-                    combination on a coarse grid against the same hourly weather
-                    as the cards above, then keeping only the systems nothing
-                    cheaper beats. Prices use the same landed do-it-yourself
-                    middle as every other figure on this page.
-                  </p>
-                </details>
-              </div>
+                  ></div>
+                </div>
 
-              <div
-                id="sunPathWrap"
-                class="sun-path-wrap"
-                style="display: none; margin-top: 1.25rem"
-              ></div>
-
-              <div id="socChartWrap" style="display: none; margin-top: 1.25rem">
                 <div
+                  id="tierResults"
                   style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    flex-wrap: wrap;
-                    gap: 0.5rem;
-                    margin-bottom: 0.4rem;
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                    gap: 1rem;
                   "
                 >
+                  <p
+                    style="
+                      color: var(--text-muted);
+                      font-size: 0.9rem;
+                      grid-column: 1/-1;
+                    "
+                  >
+                    Results appear here: a recommended path first, with battery
+                    comparisons and all options available below. For grid-tied
+                    plans, the result also separates bill reduction from outage
+                    backup.
+                  </p>
+                </div>
+
+                <!-- Dedicated Plain-English Translation (ELI5) Container -->
+                <div
+                  id="eli5CardWrap"
+                  style="display: none; margin-top: 1.25rem"
+                ></div>
+
+                <!-- Plausibility frontier: what every budget buys, cheapest first. -->
+
+                <div
+                  id="frontierWrap"
+                  style="display: none; margin-top: 1.5rem"
+                >
                   <div
-                    id="socChartTitle"
-                    data-i18n="socChartTitle"
                     style="
                       font-size: 0.95rem;
                       font-weight: 700;
                       color: var(--text-main);
+                      margin-bottom: 0.3rem;
                     "
+                    data-i18n="frontierTitle"
                   >
-                    Battery Charge Levels & Year-Round Reliability (5-Year Real
-                    Weather)
+                    How far does your money get you?
                   </div>
-                  <div
-                    id="socZoomControls"
-                    class="chart-zoom-controls"
-                    style="display: flex; gap: 0.35rem; align-items: center"
+
+                  <p
+                    style="
+                      font-size: 0.85rem;
+                      color: var(--text-muted);
+                      margin: 0 0 0.75rem;
+                      line-height: 1.55;
+                    "
+                    data-i18n="frontierIntro"
                   >
-                    <button
-                      type="button"
-                      id="btnSocZoomReset"
-                      class="btn btn-outline btn-xs"
-                      style="
-                        padding: 0.22rem 0.55rem;
-                        font-size: 0.75rem;
-                        cursor: pointer;
-                      "
-                      title="Full 5-year simulation"
-                    >
-                      Full 5-Yr
-                    </button>
-                    <button
-                      type="button"
-                      id="btnSocZoomWorst"
-                      class="btn btn-outline btn-xs"
-                      style="
-                        padding: 0.22rem 0.55rem;
-                        font-size: 0.75rem;
-                        cursor: pointer;
-                      "
-                      title="Zoom into the worst 30-day streak"
-                    >
-                      Worst Month
-                    </button>
-                    <button
-                      type="button"
-                      id="btnSocZoomIn"
-                      class="btn btn-outline btn-xs"
-                      style="
-                        padding: 0.22rem 0.55rem;
-                        font-size: 0.75rem;
-                        cursor: pointer;
-                      "
-                      title="Zoom In"
-                      aria-label="Zoom chart in"
-                    >
-                      +
-                    </button>
-                    <button
-                      type="button"
-                      id="btnSocZoomOut"
-                      class="btn btn-outline btn-xs"
-                      style="
-                        padding: 0.22rem 0.55rem;
-                        font-size: 0.75rem;
-                        cursor: pointer;
-                      "
-                      title="Zoom Out"
-                      aria-label="Zoom chart out"
-                    >
-                      &minus;
-                    </button>
-                  </div>
-                </div>
+                    Every system we could build at your location, cheapest
+                    first. The line is the best result any budget can buy
+                    &mdash; so you can see at a glance whether your goal here is
+                    easy, expensive, or out of reach.
+                  </p>
 
-                <div id="socLegend" style="display: none"></div>
+                  <p
+                    id="frontierVerdict"
+                    style="
+                      font-size: 0.95rem;
+                      color: var(--text-main);
+                      line-height: 1.6;
+                      margin: 0 0 0.85rem;
+                      padding: 0.6rem 0.85rem;
+                      border-inline-start: 3px solid var(--primary-accent);
+                      background: rgba(0, 230, 153, 0.06);
+                      border-radius: 0 8px 8px 0;
+                    "
+                  ></p>
 
-                <canvas
-                  id="socCanvas"
-                  role="img"
-                  aria-label="Battery charge chart. Run a sizing to render it."
-                  style="
-                    width: 100%;
-                    border: 1px solid var(--border-card);
-                    border-radius: 10px;
-                    background: rgba(9, 13, 22, 0.85);
-                    touch-action: pan-y;
-                  "
-                >
-                  Battery charge over the year renders here after you run a
-                  sizing.
-                </canvas>
+                  <div id="frontierChart"></div>
 
-                <p
-                  id="socCaption"
-                  style="
-                    font-size: 0.8rem;
-                    color: var(--text-muted);
-                    margin-top: 0.5rem;
-                    line-height: 1.55;
-                  "
-                ></p>
-              </div>
+                  <p
+                    id="frontierNote"
+                    style="
+                      display: none;
+                      font-size: 0.78rem;
+                      color: var(--text-muted);
+                      margin: 0.65rem 0 0;
+                      line-height: 1.55;
+                    "
+                  ></p>
 
-              <div
-                id="cumCostChartWrap"
-                style="display: none; margin-top: 1.25rem"
-              >
-                <div
-                  style="
-                    font-size: 0.95rem;
-                    font-weight: 700;
-                    color: var(--text-main);
-                    margin-bottom: 0.4rem;
-                  "
-                >
-                  What does solar really save you? (cumulative 20-year cost)
+                  <details style="margin-top: 0.9rem">
+                    <summary
+                      style="
+                        cursor: pointer;
+                        color: var(--primary-accent);
+                        font-size: 0.85rem;
+                      "
+                      data-i18n="frontierTableToggle"
+                    >
+                      Show every point as a table
+                    </summary>
+
+                    <div
+                      id="frontierTable"
+                      style="margin-top: 0.6rem; overflow-x: auto"
+                    ></div>
+
+                    <p
+                      style="
+                        font-size: 0.78rem;
+                        color: var(--text-muted);
+                        margin: 0.75rem 0 0;
+                        line-height: 1.55;
+                      "
+                      data-i18n="frontierMethod"
+                    >
+                      The curve comes from simulating every panel-and-battery
+                      combination on a coarse grid against the same hourly
+                      weather as the cards above, then keeping only the systems
+                      nothing cheaper beats. Prices use the same landed
+                      do-it-yourself middle as every other figure on this page.
+                    </p>
+                  </details>
                 </div>
 
                 <div
-                  id="cumSavingsBox"
-                  class="savings-highlight"
-                  style="
-                    display: none;
-                    margin-bottom: 0.75rem;
-                    padding: 0.9rem 1rem;
-                  "
-                >
-                  <div
-                    id="cumSavingsTotal"
-                    class="savings-num"
-                    style="font-size: 1.6rem"
-                  ></div>
-
-                  <div id="cumSavingsSub" class="savings-sub"></div>
-                </div>
-
-                <canvas
-                  id="cumCostCanvas"
-                  role="img"
-                  aria-label="Cumulative 20-year cost chart. Run a sizing to render it."
-                  style="
-                    width: 100%;
-                    border: 1px solid var(--border-card);
-                    border-radius: 10px;
-                    background: rgba(9, 13, 22, 0.85);
-                  "
-                >
-                  Cumulative 20-year cost comparison renders here after you run
-                  a sizing.
-                </canvas>
-
-                <div
-                  id="cumCostLegend"
-                  role="list"
-                  aria-label="Chart legend"
-                  style="
-                    display: none;
-                    flex-wrap: wrap;
-                    gap: 0.35rem 1.15rem;
-                    margin: 0.6rem 0 0;
-                    font-size: 0.8rem;
-                    color: var(--text-muted);
-                    line-height: 1.5;
-                    align-items: center;
-                  "
+                  id="sunPathWrap"
+                  class="sun-path-wrap"
+                  style="display: none; margin-top: 1.25rem"
                 ></div>
 
-                <p
-                  id="cumCostCaption"
-                  style="
-                    font-size: 0.8rem;
-                    color: var(--text-muted);
-                    margin-top: 0.5rem;
-                    line-height: 1.55;
-                  "
-                ></p>
-              </div>
-
-              <details id="bomPanel" style="display: none; margin-top: 1.25rem">
-                <summary
-                  style="
-                    cursor: pointer;
-                    color: var(--primary-accent);
-                    font-size: 0.95rem;
-                    font-weight: 700;
-                  "
-                  data-i18n="bomPanelTitle"
+                <div
+                  id="socChartWrap"
+                  style="display: none; margin-top: 1.25rem"
                 >
-                  Your hardware list &mdash; what this system is made of
-                </summary>
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      flex-wrap: wrap;
+                      gap: 0.5rem;
+                      margin-bottom: 0.4rem;
+                    "
+                  >
+                    <div
+                      id="socChartTitle"
+                      data-i18n="socChartTitle"
+                      style="
+                        font-size: 0.95rem;
+                        font-weight: 700;
+                        color: var(--text-main);
+                      "
+                    >
+                      Battery Charge Levels & Year-Round Reliability (5-Year
+                      Real Weather)
+                    </div>
+                    <div
+                      id="socZoomControls"
+                      class="chart-zoom-controls"
+                      style="display: flex; gap: 0.35rem; align-items: center"
+                    >
+                      <button
+                        type="button"
+                        id="btnSocZoomReset"
+                        class="btn btn-outline btn-xs"
+                        style="
+                          padding: 0.22rem 0.55rem;
+                          font-size: 0.75rem;
+                          cursor: pointer;
+                        "
+                        title="Full 5-year simulation"
+                      >
+                        Full 5-Yr
+                      </button>
+                      <button
+                        type="button"
+                        id="btnSocZoomWorst"
+                        class="btn btn-outline btn-xs"
+                        style="
+                          padding: 0.22rem 0.55rem;
+                          font-size: 0.75rem;
+                          cursor: pointer;
+                        "
+                        title="Zoom into the worst 30-day streak"
+                      >
+                        Worst Month
+                      </button>
+                      <button
+                        type="button"
+                        id="btnSocZoomIn"
+                        class="btn btn-outline btn-xs"
+                        style="
+                          padding: 0.22rem 0.55rem;
+                          font-size: 0.75rem;
+                          cursor: pointer;
+                        "
+                        title="Zoom In"
+                        aria-label="Zoom chart in"
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        id="btnSocZoomOut"
+                        class="btn btn-outline btn-xs"
+                        style="
+                          padding: 0.22rem 0.55rem;
+                          font-size: 0.75rem;
+                          cursor: pointer;
+                        "
+                        title="Zoom Out"
+                        aria-label="Zoom chart out"
+                      >
+                        &minus;
+                      </button>
+                    </div>
+                  </div>
+
+                  <div id="socLegend" style="display: none"></div>
+
+                  <canvas
+                    id="socCanvas"
+                    role="img"
+                    aria-label="Battery charge chart. Run a sizing to render it."
+                    style="
+                      width: 100%;
+                      border: 1px solid var(--border-card);
+                      border-radius: 10px;
+                      background: rgba(9, 13, 22, 0.85);
+                      touch-action: pan-y;
+                    "
+                  >
+                    Battery charge over the year renders here after you run a
+                    sizing.
+                  </canvas>
+
+                  <p
+                    id="socCaption"
+                    style="
+                      font-size: 0.8rem;
+                      color: var(--text-muted);
+                      margin-top: 0.5rem;
+                      line-height: 1.55;
+                    "
+                  ></p>
+                </div>
+
+                <div
+                  id="cumCostChartWrap"
+                  style="display: none; margin-top: 1.25rem"
+                >
+                  <div
+                    style="
+                      font-size: 0.95rem;
+                      font-weight: 700;
+                      color: var(--text-main);
+                      margin-bottom: 0.4rem;
+                    "
+                  >
+                    What does solar really save you? (cumulative 20-year cost)
+                  </div>
+
+                  <div
+                    id="cumSavingsBox"
+                    class="savings-highlight"
+                    style="
+                      display: none;
+                      margin-bottom: 0.75rem;
+                      padding: 0.9rem 1rem;
+                    "
+                  >
+                    <div
+                      id="cumSavingsTotal"
+                      class="savings-num"
+                      style="font-size: 1.6rem"
+                    ></div>
+
+                    <div id="cumSavingsSub" class="savings-sub"></div>
+                  </div>
+
+                  <canvas
+                    id="cumCostCanvas"
+                    role="img"
+                    aria-label="Cumulative 20-year cost chart. Run a sizing to render it."
+                    style="
+                      width: 100%;
+                      border: 1px solid var(--border-card);
+                      border-radius: 10px;
+                      background: rgba(9, 13, 22, 0.85);
+                    "
+                  >
+                    Cumulative 20-year cost comparison renders here after you
+                    run a sizing.
+                  </canvas>
+
+                  <div
+                    id="cumCostLegend"
+                    role="list"
+                    aria-label="Chart legend"
+                    style="
+                      display: none;
+                      flex-wrap: wrap;
+                      gap: 0.35rem 1.15rem;
+                      margin: 0.6rem 0 0;
+                      font-size: 0.8rem;
+                      color: var(--text-muted);
+                      line-height: 1.5;
+                      align-items: center;
+                    "
+                  ></div>
+
+                  <p
+                    id="cumCostCaption"
+                    style="
+                      font-size: 0.8rem;
+                      color: var(--text-muted);
+                      margin-top: 0.5rem;
+                      line-height: 1.55;
+                    "
+                  ></p>
+                </div>
+
+                <details
+                  id="bomPanel"
+                  style="display: none; margin-top: 1.25rem"
+                >
+                  <summary
+                    style="
+                      cursor: pointer;
+                      color: var(--primary-accent);
+                      font-size: 0.95rem;
+                      font-weight: 700;
+                    "
+                    data-i18n="bomPanelTitle"
+                  >
+                    Your hardware list &mdash; what this system is made of
+                  </summary>
+
+                  <div
+                    style="
+                      margin-top: 0.8rem;
+                      display: flex;
+                      gap: 1rem;
+                      flex-wrap: wrap;
+                      align-items: flex-end;
+                    "
+                  >
+                    <div
+                      class="form-group"
+                      style="margin-bottom: 0; max-width: 220px"
+                    >
+                      <label for="panelWatts"
+                        >Panel wattage you'd buy (W):</label
+                      >
+
+                      <input
+                        type="number"
+                        id="panelWatts"
+                        class="form-control"
+                        value="550"
+                        min="100"
+                        max="800"
+                        step="10"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      id="btnDownloadBom"
+                      class="btn btn-outline"
+                      style="cursor: pointer"
+                      data-i18n="bomDownload"
+                    >
+                      Download parts list (CSV)
+                    </button>
+                  </div>
+
+                  <div id="bomBody" style="margin-top: 1rem"></div>
+
+                  <p
+                    style="
+                      font-size: 0.75rem;
+                      color: var(--text-muted);
+                      margin-top: 0.8rem;
+                      line-height: 1.55;
+                    "
+                  >
+                    Educational estimate from your sizing result &mdash; not an
+                    engineering design, not a shopping order. Fuse and cable
+                    figures assume copper, conservative ampacity, and a short
+                    battery-to-inverter run; verify everything against your
+                    local electrical code with a licensed professional before
+                    buying or energizing anything.
+                  </p>
+                </details>
+
+                <details
+                  style="
+                    margin-top: 1.25rem;
+                    font-size: 0.85rem;
+                    color: var(--text-muted);
+                  "
+                >
+                  <summary
+                    style="cursor: pointer; color: var(--primary-accent)"
+                  >
+                    How this was calculated
+                  </summary>
+
+                  <p
+                    id="assumpText"
+                    style="margin-top: 0.5rem; line-height: 1.6"
+                  >
+                    Run a sizing first - every constant used (derates,
+                    temperature model, efficiencies, weather data years and
+                    source) is listed here.
+                  </p>
+                </details>
 
                 <div
                   style="
-                    margin-top: 0.8rem;
                     display: flex;
-                    gap: 1rem;
+                    gap: 0.75rem;
                     flex-wrap: wrap;
-                    align-items: flex-end;
+                    margin-top: 1rem;
                   "
                 >
-                  <div
-                    class="form-group"
-                    style="margin-bottom: 0; max-width: 220px"
+                  <button
+                    id="btnAskAdvisor"
+                    class="btn btn-secondary"
+                    type="button"
+                    style="cursor: pointer; display: none"
                   >
-                    <label for="panelWatts">Panel wattage you'd buy (W):</label>
-
-                    <input
-                      type="number"
-                      id="panelWatts"
-                      class="form-control"
-                      value="550"
-                      min="100"
-                      max="800"
-                      step="10"
-                    />
-                  </div>
+                    Ask the AI advisor about this result
+                  </button>
 
                   <button
-                    type="button"
-                    id="btnDownloadBom"
+                    id="btnShareResult"
                     class="btn btn-outline"
-                    style="cursor: pointer"
-                    data-i18n="bomDownload"
+                    type="button"
+                    style="cursor: pointer; display: none"
                   >
-                    Download parts list (CSV)
+                    Copy share link
+                  </button>
+
+                  <button
+                    id="btnPrintResult"
+                    class="btn btn-outline"
+                    type="button"
+                    style="cursor: pointer; display: none"
+                  >
+                    Print / save PDF
                   </button>
                 </div>
-
-                <div id="bomBody" style="margin-top: 1rem"></div>
-
-                <p
-                  style="
-                    font-size: 0.75rem;
-                    color: var(--text-muted);
-                    margin-top: 0.8rem;
-                    line-height: 1.55;
-                  "
-                >
-                  Educational estimate from your sizing result &mdash; not an
-                  engineering design, not a shopping order. Fuse and cable
-                  figures assume copper, conservative ampacity, and a short
-                  battery-to-inverter run; verify everything against your local
-                  electrical code with a licensed professional before buying or
-                  energizing anything.
-                </p>
-              </details>
-
-              <details
-                style="
-                  margin-top: 1.25rem;
-                  font-size: 0.85rem;
-                  color: var(--text-muted);
-                "
-              >
-                <summary style="cursor: pointer; color: var(--primary-accent)">
-                  How this was calculated
-                </summary>
-
-                <p id="assumpText" style="margin-top: 0.5rem; line-height: 1.6">
-                  Run a sizing first - every constant used (derates, temperature
-                  model, efficiencies, weather data years and source) is listed
-                  here.
-                </p>
-              </details>
-
-              <div
-                style="
-                  display: flex;
-                  gap: 0.75rem;
-                  flex-wrap: wrap;
-                  margin-top: 1rem;
-                "
-              >
-                <button
-                  id="btnAskAdvisor"
-                  class="btn btn-secondary"
-                  type="button"
-                  style="cursor: pointer; display: none"
-                >
-                  Ask the AI advisor about this result
-                </button>
-
-                <button
-                  id="btnShareResult"
-                  class="btn btn-outline"
-                  type="button"
-                  style="cursor: pointer; display: none"
-                >
-                  Copy share link
-                </button>
-
-                <button
-                  id="btnPrintResult"
-                  class="btn btn-outline"
-                  type="button"
-                  style="cursor: pointer; display: none"
-                >
-                  Print / save PDF
-                </button>
               </div>
             </div>
           </div>
@@ -3349,9 +3367,9 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20260918b"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20260918c"></script>
 
-    <script defer src="./assets/js/chat.js?v=20260918b"></script>
+    <script defer src="./assets/js/chat.js?v=20260918c"></script>
   </body>
 </html>
 

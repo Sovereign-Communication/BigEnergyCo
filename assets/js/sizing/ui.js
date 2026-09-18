@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260918b";
+import { APPLIANCES } from "./appliances.js?v=20260918c";
 import {
   CITY_CATALOG,
   searchCities,
@@ -26,7 +26,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260918b";
+} from "./cities.js?v=20260918c";
 
 import {
   estimateTariff,
@@ -34,62 +34,66 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260918b";
+} from "./pricing.js?v=20260918c";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260918b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260918c";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260918b";
+} from "./lead-acid.js?v=20260918c";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260918b";
+} from "./bom.js?v=20260918c";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260918b";
+import { BOM_ITEMS } from "../shared/content.js?v=20260918c";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260918b";
+} from "../shared/i18n.js?v=20260918c";
 
-import { LOCALES } from "../shared/locales.js?v=20260918b";
+import { LOCALES } from "../shared/locales.js?v=20260918c";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260918b";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260918b";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260918c";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260918c";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260918b";
+} from "../shared/simple-mode.js?v=20260918c";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260918b";
+} from "./frontier-chart.js?v=20260918c";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260918b";
+} from "./rescale.js?v=20260918c";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260918b";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260918c";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260918b";
-import { persistWizard, restoreWizard } from "./wizard.js?v=20260918b";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260918b";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260918b";
+} from "./map-provider.js?v=20260918c";
+import {
+  createWizard,
+  persistWizard,
+  restoreWizard,
+} from "./wizard.js?v=20260918c";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260918c";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260918c";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -134,9 +138,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260918b";
+} from "./money.js?v=20260918c";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260918b";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260918c";
 
 let worker = null;
 
@@ -1928,6 +1932,13 @@ function updateGuidedProgress(step = wizard.state.step) {
   progress.dataset.step = step;
 }
 
+// One owner for the results region: hidden until a successful render, so
+// old numbers can never masquerade as fresh after a failed or invalid run.
+function setResultsHidden(hidden) {
+  const region = $("resultsRegion");
+  if (region) region.hidden = hidden;
+}
+
 function setupRoofMap() {
   const open = $("btnOpenRoofMap");
   const close = $("btnCloseRoofMap");
@@ -2090,7 +2101,7 @@ function readInputs() {
         ? offSliderVal
         : Number.isFinite(kwhInputVal) && kwhInputVal > 0
           ? kwhInputVal
-          : 10;
+          : NaN;
   } else if (mode === "bill") {
     const bill = parseFloat($("billSlider")?.value ?? $("billAmount")?.value);
 
@@ -2103,7 +2114,7 @@ function readInputs() {
   } else if (mode === "kwh") {
     const kwhInputVal = parseFloat($("dailyKwhInput")?.value);
     dailyKwh =
-      Number.isFinite(kwhInputVal) && kwhInputVal > 0 ? kwhInputVal : 10;
+      Number.isFinite(kwhInputVal) && kwhInputVal > 0 ? kwhInputVal : NaN;
   }
 
   if (Number.isFinite(dailyKwh) && dailyKwh > 0) {
@@ -2224,9 +2235,6 @@ function run(quiet = false) {
   }
 
   const inp = readInputs();
-  wizard.setValue("dailyKwh", inp.dailyKwh);
-  wizard.setValue("tariff", inp.tariff);
-  persistWizard(wizard);
 
   if (
     !Number.isFinite(inp.latitude) ||
@@ -2235,6 +2243,7 @@ function run(quiet = false) {
     Math.abs(inp.longitude) > 180
   ) {
     pendingRun = null;
+    setResultsHidden(true);
     setStatus(t("pickCity"));
     return;
   }
@@ -2245,6 +2254,7 @@ function run(quiet = false) {
     inp.dailyKwh > 500
   ) {
     pendingRun = null;
+    setResultsHidden(true);
     setStatus(t("tellPowerUse"));
     return;
   }
@@ -3257,7 +3267,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260918b", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260918c", {
       type: "module",
     });
 
@@ -3385,6 +3395,7 @@ function ensureWorker() {
     worker.onerror = () => {
       setStatus(t("errorSim") + "Sizing engine failed to load.");
 
+      setResultsHidden(true);
       pipelineStop(false);
       workerBusy = false;
       sliceBusy = false;
@@ -7616,6 +7627,7 @@ function renderWorstMonthCaveat(p) {
 }
 
 function renderResults(p) {
+  setResultsHidden(false);
   const inp = readInputs();
 
   lastPayload = p;
@@ -9008,6 +9020,11 @@ export function initSizingUI() {
     setupSimpleMode();
     setupRoofMap();
     setupRoofAreaInput();
+    // Demote a stored "result" step: a fresh load has no results to show.
+    if (wizard.state.step === "result") {
+      wizard = createWizard({ step: "location" });
+      persistWizard(wizard);
+    }
     updateGuidedProgress();
     const climateToggle = $("climateAwareToggle");
     if (climateToggle)
