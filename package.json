@@ -23,6 +23,8 @@
     "smoke": "node scripts/browser-smoke.mjs",
     "deploy:check": "node scripts/deploy-pages-local.mjs --check",
     "verify:staging": "node scripts/verify-staging.mjs",
+    "verify:flow": "node scripts/verify-cumulative-flow.mjs",
+    "verify:live": "node scripts/validate-modes.mjs && node scripts/validate-soc-pipeline.mjs",
     "promote": "node scripts/promote.mjs",
     "promote:apply": "node scripts/promote.mjs --apply",
     "promote:apply:oauth": "node scripts/promote.mjs --apply --assume-auth",

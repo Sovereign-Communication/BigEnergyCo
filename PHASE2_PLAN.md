@@ -35,7 +35,8 @@ removed, modal Esc + focus, aria-live status/chat, real `<button>` elements).
 | Aging fade inside the search objective (currently replacement-count only)                                                                                                                               | ⏳ v3                                        |
 | Full dynamic-string i18n (results text beyond static chrome)                                                                                                                                            | ⏳ incremental                               |
 
-**Live-data checks:** `scripts/validate-modes.mjs` runs BOTH modes against real NASA POWER data.
+**Live-data checks:** `scripts/validate-modes.mjs` runs BOTH modes against real NASA POWER data
+(weekly in CI: `npm run verify:live` — the `live-models` job of the Prod smoke workflow).
 Honolulu 10 kWh/day @ $0.42: tier100 = 8 kW+13 kWh (payback 1.3–4.4 yr); cut60 = 1.8 kW+2 kWh
 (payback ~5–18 mo). Oslo proves honest "no practical off-grid solution" at 60°N for 10 kWh/day.
 

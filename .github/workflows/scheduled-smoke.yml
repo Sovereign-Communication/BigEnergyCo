@@ -30,3 +30,21 @@ jobs:
 
       - name: Live sanity sweep
         run: node scripts/live-sanity.mjs
+
+  # Live NASA POWER data through both sizing modes AND the full tier pipeline.
+  # Deliberately scheduled rather than per-PR: it needs the network, so it can
+  # never be part of the offline deterministic PR suite. A red run here means
+  # the engine and the live API disagree — see docs/DEPLOY_RUNBOOK.md.
+  live-models:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Both sizing modes against live NASA data
+        run: npm run verify:live

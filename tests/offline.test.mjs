@@ -71,6 +71,45 @@ test("GATE: offline profile produces plausible annual yield through the real eng
   assert.ok(Math.abs(r.servedWh + r.unmetWh - loadTotalWh) < 1e-6);
 });
 
+// The rescue path a visitor with no connection (or a NASA outage) actually
+// takes: run.js catches the transport failure, sizes against the bundled
+// typical-year profile nearest the request, and must SAY SO — an unlabelled
+// offline result would present synthesized weather as measured weather.
+test("GATE: transport failure falls back to the bundled profile and flags itself", async () => {
+  const { runSizing } = await import("../assets/js/sizing/run.js");
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw new Error("network down");
+  };
+  let p;
+  try {
+    p = await runSizing({
+      latitude: honolulu.lat,
+      longitude: honolulu.lon,
+      dailyKwh: 10,
+      tariff: 0.42,
+      chemistry: "auto",
+      mode: "offgrid",
+    });
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+  assert.equal(p.meta.offline, true, "offline fallback must engage");
+  assert.ok(
+    p.meta.offlineCity,
+    "the payload must name the bundled city that rescued the run",
+  );
+  assert.equal(
+    p.assumptions.offline,
+    true,
+    "assumptions must label the run offline, not pass it off as live data",
+  );
+  assert.ok(
+    p.auto.length >= 2 && p.auto.every((a) => Number.isFinite(a.pvKw)),
+    "the offline payload still meets the sizing contract",
+  );
+});
+
 test("profile year metadata is a complete recent year", () => {
   const thisYear = new Date().getUTCFullYear();
   // Lower bound only: the fixture must be fresh enough to trust, but the

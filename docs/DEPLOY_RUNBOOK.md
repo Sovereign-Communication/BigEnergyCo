@@ -26,16 +26,57 @@ These are separate cache layers. A `CACHE_VERSION` bump alone is not enough: the
 From the repository root:
 
 ```bash
-node --check assets/js/sizing/ui.js
-node --check assets/js/sizing/run.js
-node --check assets/js/sizing/sizing-worker.js
-node --test
-git diff --check
-node scripts/deploy-pages-local.mjs --check
-node scripts/verify-cumulative-flow.mjs
+node scripts/check-syntax.mjs   # every shipped JS file parses
+npm test                        # offline unit + contract suite
+npm run seo                     # JSON-LD, chars, SEO, quality, i18n, headers/CSP, asset tokens
+npm run deploy:check            # deploy allowlist is complete and staged exactly
+npm run verify:flow             # cumulative-series engine flow through the real entry point
+git diff --check                # local hygiene: no whitespace-damaged patch (not a CI gate)
 ```
 
-Do not deploy if any command fails.
+Do not deploy if any command fails. Every one of these except `git diff --check`
+also runs on every PR in `.github/workflows/test.yml`, so a green PR already
+means they pass; run them locally when you have touched a file they cover.
+
+## Which gate runs where
+
+The rule this section exists to protect: **a check the docs call mandatory must
+actually run, and must be able to fail.** Nothing belongs here that no automation
+and no human runs — and nothing that runs may be missing from here.
+
+| Gate                                                                                            | Runs where                                | Can it block a merge?                                                    |
+| ----------------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
+| `check-syntax`, `npm run seo`, prettier, secret scan, `deploy:check`, `verify:flow`, `npm test` | PR + `main` (`Tests` workflow)            | Yes — required checks `test`, `coverage`                                 |
+| Real-browser smoke on the staged artifact (`smoke:local`)                                       | PR + `main` (`Tests` workflow)            | Yes — required check `web-smoke`                                         |
+| Offline coverage floor                                                                          | PR + `main` (`Tests` workflow)            | Yes — required check `coverage`                                          |
+| CodeQL analysis (`analyze`)                                                                     | PR + `main` + weekly (`CodeQL`)           | Yes — required check `analyze` (a failing run blocks)                    |
+| **CodeQL findings** (the `code_scanning` rule)                                                  | The ruleset itself                        | Yes — new alerts at `errors` / security `high_or_higher` block the PR    |
+| Deployed-staging verification (`npm run verify:staging`)                                        | `main` (`Verify staging` workflow)        | No — it is a post-merge alarm, and the promote refuses to run without it |
+| Source-drift audit / docs-only push policy (`npm run audit:main`)                               | `main` (`Main audit`)                     | No — post-merge alarm                                                    |
+| `live-sanity` + `check-staging-drift`                                                           | Weekly (`Prod smoke`)                     | No — non-blocking drift alarm                                            |
+| `npm run verify:live` — `validate-modes.mjs`, `validate-soc-pipeline.mjs`                       | Weekly (`Prod smoke` → job `live-models`) | No — needs the live NASA API, so it can never join the offline PR suite  |
+| Homepage + API health curl probes                                                               | Daily (`Daily static check`)              | No — non-blocking                                                        |
+
+**Manual by design** (nothing can run these for you, so they are not gates):
+
+| Check                                | Why it cannot run in CI                                                                                                                                               |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/validate-live.mjs`          | Live sweep of the deployed API + NASA endpoints; needs the network and tolerates upstream slowness.                                                                   |
+| `scripts/validate-against-sheet.mjs` | Blocked on the owner's spreadsheet export (`PHASE2_PLAN.md` tracks it as ⏳). Run it by hand against a CSV; it exits non-zero with a usage error when given no input. |
+| `npm run protect:check`              | Reads the live GitHub ruleset, which needs admin read on the repository. Run it after any ruleset change.                                                             |
+| `npm run smoke`                      | Real-browser smoke against the **brand domain** — the promote runs this for you; run it by hand to check production without releasing.                                |
+
+**Retired (do not resurrect without re-wiring):**
+
+| Removed                     | Why                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `verify-polish.mjs`         | Mirrored production modules into a temp dir and deep-checked them. It had crashed (its file list missed `climate.js`) and its own assertion was stale (pinned payload contract 10, now 15); its assertions are covered by `tests/run.test.mjs`, `tests/contract.test.mjs`, `tests/rescale.test.mjs`, `tests/breakeven.test.mjs` and `tests/consistency.test.mjs`, and its unique "production serves what we think" role is now `npm run verify:staging` (byte parity) plus the real-browser smoke. |
+| `verify-chart-contract.mjs` | Replicated a worker payload the worker no longer builds (`sizing-worker.js` is a thin shell around `runSizing`), and its "served bytes" tail printed a boolean and exited 0 either way — a check that could not fail. The invariant it was reaching for (every tier's chart band passes the UI gate) is now asserted in `tests/run.test.mjs`.                                                                                                                                                      |
+
+`tests/gate-net.test.mjs` enforces this section: it fails if any validator is
+neither wired into a workflow/hook nor listed as manual, if the docs name a
+script that does not exist, if a doc'd `npm run` script is missing, or if the
+rule-set stops requiring the analyzer gate.
 
 ## Release
 
@@ -145,7 +186,11 @@ Run the live sweep. It must use `https://freeoffgridcalculator.com/`, never a Gi
 node scripts/live-sanity.mjs
 ```
 
-Then verify deployed source matches the checkout, bypassing immutable asset caching with a query string:
+Then verify what the brand domain actually serves. The automated form is
+`node scripts/verify-staging.mjs --base https://freeoffgridcalculator.com/`
+(byte parity over the whole deploy allowlist, the served asset stamp, platform
+surface rules, and a real-browser smoke). The by-hand spot check, which bypasses
+immutable asset caching with a query string, is:
 
 ```bash
 curl -sS 'https://freeoffgridcalculator.com/assets/js/sizing/run.js?verify=SHA' | sha256sum
