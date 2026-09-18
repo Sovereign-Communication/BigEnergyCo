@@ -43,6 +43,7 @@ import { dirname, join } from "node:path";
 
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 import { artifactStamp, lastRelease, releaseRecord } from "./lib/stamps.mjs";
+import { attachWorktree } from "./lib/worktree.mjs";
 
 const arg = (name, fallback = null) => {
   const i = process.argv.indexOf(name);
@@ -184,7 +185,7 @@ async function main() {
     rmSync(artifactDir, { recursive: true, force: true });
     mkdirSync(artifactDir, { recursive: true });
     const worktree = `${artifactDir}/src`;
-    git(["worktree", "add", "--detach", worktree, sourceSha]);
+    attachWorktree(worktree, sourceSha);
     try {
       // Minimal gates on the OLD commit's tree: if its token graph or syntax is
       // broken, its artifact must not go live either.
