@@ -26,22 +26,22 @@ import {
   capacityScaleFor,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20260918e";
+} from "./engine.js?v=20260918f";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20260918e";
-import { buildFrontier } from "./frontier.js?v=20260918e";
-import { oversizeCallout } from "./rescale.js?v=20260918e";
-import { climateSummary } from "./climate.js?v=20260918e";
+} from "./nasa.js?v=20260918f";
+import { buildFrontier } from "./frontier.js?v=20260918f";
+import { oversizeCallout } from "./rescale.js?v=20260918f";
+import { climateSummary } from "./climate.js?v=20260918f";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20260918e";
+} from "./pricing.js?v=20260918f";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -52,7 +52,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20260918e";
+} from "./money.js?v=20260918f";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -291,7 +291,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20260918e");
+      await import("./profiles.js?v=20260918f");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -2206,7 +2206,6 @@ async function runSizingUncached(msg, deps = {}) {
           costPerKwInv: costPerKwInvMid,
           pvMax: offgridPvMax,
           battMax: offgridBattMax,
-          pvMax: offgridPvMax,
           capacityScale: capScale,
           laborPerKwh,
           invMinKw,
@@ -2219,7 +2218,13 @@ async function runSizingUncached(msg, deps = {}) {
           // reason rather than an empty cell.
           matrixCells[chemId + ":" + tier.id] = sizing
             ? matrixCell(chemId, sizing, "offgrid")
-            : { solvable: false, reason: unreachableReason };
+            : {
+                solvable: false,
+                reason:
+                  unreachableReason ||
+                  (areaCapped ? "area-limited" : "envelope-limited"),
+                envelopeNote,
+              };
         }
       }
     }
@@ -2340,7 +2345,6 @@ async function runSizingUncached(msg, deps = {}) {
         costPerKwInv: costPerKwInvMid,
         pvMax: offgridPvMax,
         battMax: offgridBattMax,
-        pvMax: offgridPvMax,
         capacityScale: effectiveCapacityScale(REF_CHEM, meanTempC),
         laborPerKwh,
         invMinKw,
@@ -2429,6 +2433,7 @@ async function runSizingUncached(msg, deps = {}) {
     costPerWpv: costPerWpvMid,
     costPerKwhBatt: battMidFor(chemistry),
     costPerKwInv: costPerKwInvMid,
+    pvMax: offgridPvMax,
     battMax: offgridBattMax,
     capacityScale: capScale,
     laborPerKwh,
@@ -2441,7 +2446,9 @@ async function runSizingUncached(msg, deps = {}) {
         id: tier.id,
         label: tier.label,
         solvable: false,
-        reason: unreachableReason,
+        reason:
+          unreachableReason ||
+          (areaCapped ? "area-limited" : "envelope-limited"),
         chemistry,
         chemLabel: chem.label,
         pvKw: null,
