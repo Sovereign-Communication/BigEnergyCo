@@ -22,6 +22,7 @@ import {
   REQUIRED_CHECKS,
   desiredRuleset,
 } from "../scripts/lib/ruleset.mjs";
+import { MANUAL_VALIDATORS, RETIRED } from "../scripts/lib/gate-registry.mjs";
 
 const url = (rel) => new URL(`../${rel}`, import.meta.url);
 const read = (rel) => readFileSync(url(rel), "utf8");
@@ -47,34 +48,6 @@ const DOCS = [
 ];
 const docText = Object.fromEntries(DOCS.map((f) => [f, read(f)]));
 const allDocs = Object.values(docText).join("\n");
-
-// Validators that genuinely cannot run in CI — one owner alongside the runbook.
-const MANUAL_VALIDATORS = new Map([
-  [
-    "scripts/validate-live.mjs",
-    "live sweep of the deployed API and NASA endpoints; needs the network",
-  ],
-  [
-    "scripts/validate-against-sheet.mjs",
-    "blocked on the owner's spreadsheet export (PHASE2_PLAN.md tracks it)",
-  ],
-]);
-
-// The two scripts this repo deliberately removed, with where their coverage
-// lives now. If someone resurrects one, this test asks why.
-const RETIRED = new Map([
-  [
-    "scripts/verify-polish.mjs",
-    "crashed (its mirror list missed climate.js) with a stale contract pin; " +
-      "covered by tests/run.test.mjs, tests/contract.test.mjs, tests/rescale.test.mjs, " +
-      "tests/breakeven.test.mjs, tests/consistency.test.mjs and npm run verify:staging",
-  ],
-  [
-    "scripts/verify-chart-contract.mjs",
-    "replicated a worker payload the worker no longer builds, and its served-bytes " +
-      "tail could not fail; the chart-gate invariant lives in tests/run.test.mjs",
-  ],
-]);
 
 const npmRunNames = (text) =>
   [...text.matchAll(/npm run [\w:-]+/g)].map((m) =>
