@@ -352,7 +352,8 @@ test("homepage canvases have names and no-JS fallback text", () => {
   const html = read("index.html");
   assert.match(html, /id="socCanvas"[^>]*role="img"/s);
   assert.match(html, /id="cumCostCanvas"[^>]*role="img"/s);
-  assert.match(html, /renders here after you run\s*\n?\s*a sizing\./);
+  // Wrap-agnostic: Prettier may reflow the phrase across lines.
+  assert.match(html, /renders\s+here\s+after\s+you\s+run\s+a\s+sizing\./);
 });
 
 test("homepage two-column grids collapse on narrow phones", () => {
