@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260918c";
+import { APPLIANCES } from "./appliances.js?v=20260918e";
 import {
   CITY_CATALOG,
   searchCities,
@@ -26,7 +26,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260918c";
+} from "./cities.js?v=20260918e";
 
 import {
   estimateTariff,
@@ -34,66 +34,66 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260918c";
+} from "./pricing.js?v=20260918e";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260918c";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260918e";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260918c";
+} from "./lead-acid.js?v=20260918e";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260918c";
+} from "./bom.js?v=20260918e";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260918c";
+import { BOM_ITEMS } from "../shared/content.js?v=20260918e";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260918c";
+} from "../shared/i18n.js?v=20260918e";
 
-import { LOCALES } from "../shared/locales.js?v=20260918c";
+import { LOCALES } from "../shared/locales.js?v=20260918e";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260918c";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260918c";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260918e";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260918e";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260918c";
+} from "../shared/simple-mode.js?v=20260918e";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260918c";
+} from "./frontier-chart.js?v=20260918e";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260918c";
+} from "./rescale.js?v=20260918e";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260918c";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260918e";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260918c";
+} from "./map-provider.js?v=20260918e";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260918c";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260918c";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260918c";
+} from "./wizard.js?v=20260918e";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260918e";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260918e";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -138,9 +138,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260918c";
+} from "./money.js?v=20260918e";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260918c";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260918e";
 
 let worker = null;
 
@@ -257,7 +257,8 @@ let followMarkerOnce = false;
 
 // Bill slider bounds, expressed in kWh/day and converted to local currency.
 // Wide enough to fantasize (estate-scale loads); the engine, not the slider,
-// is the honesty bound (envelope-limited verdicts say so out loud).
+// is the honesty bound (envelope-limited / area-limited verdicts say so out
+// loud).
 const BILL_MIN_KWH = 2;
 const BILL_MAX_KWH = 400;
 
@@ -543,9 +544,15 @@ function setupSimpleMode() {
 // change. Hides itself the moment a payload without a reason arrives (i.e.
 // a normal run) so it never lingers across the page.
 const INFEASIBLE_HINTS = {
-  "envelope-limited": {
+  // run.js emits this code only when an area cap was actually provided.
+  "area-limited": {
     title: "Too little roof/yard area for this target",
     body: "The searched solar size was capped by the optional area input (see “Hardware setup”). Clear that box — or draw a bigger area on the map — and re-run: the site itself can reach this target.",
+  },
+  // The search envelope, not any visitor input, is the limit here.
+  "envelope-limited": {
+    title: "Beyond this tool's search range for this target",
+    body: "At this load, reaching that target needs a solar array or battery bank larger than this calculator searches (see Hardware setup for the limits). Try a lower bill-cut target, or check whether part of the load can be reduced.",
   },
   "needs-battery": {
     title: "Solar-only can't reach 100% off-grid",
@@ -3267,7 +3274,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260918c", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260918e", {
       type: "module",
     });
 
