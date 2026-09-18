@@ -16,6 +16,20 @@ import { posix } from "node:path";
  * source of truth (scripts/deploy-pages-local.mjs). Checking the working tree
  * instead would happily validate files users never receive.
  */
+/**
+ * Parse `deploy-pages-local.mjs --list` output. Pure, so the parsing can be
+ * tested without spawning anything: every indented line is a deployed path,
+ * and the only other output is the header and the closing note. (`_headers`
+ * and `_redirects` have no dot, so a "contains a dot" heuristic used to drop
+ * two real files.)
+ */
+export function deployedFilesFrom(stdout) {
+  return String(stdout)
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && l !== "Deployable files:" && !l.startsWith("--"));
+}
+
 export function deployedFiles() {
   try {
     // --list, not --check: a pure query. --check BUILDS the staging directory
@@ -25,13 +39,7 @@ export function deployedFiles() {
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
     });
-    // Every stamped line is a deployed path; the only other output is the
-    // header and the closing note. (`_headers` and `_redirects` have no dot, so
-    // a "contains a dot" heuristic used to drop two real files.)
-    return out
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l && l !== "Deployable files:" && !l.startsWith("--"));
+    return deployedFilesFrom(out);
   } catch {
     return [];
   }

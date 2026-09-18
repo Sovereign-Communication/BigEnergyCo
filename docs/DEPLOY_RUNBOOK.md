@@ -50,14 +50,44 @@ Do not deploy if any command fails.
 gh run list --branch main --limit 2 --json workflowName,status,conclusion,headSha,url
 ```
 
-5. Build the allowlisted artifact and deploy that artifact to the actual Cloudflare Pages project:
+5. Verify what staging actually SERVES (not a localhost copy): one asset stamp
+   matching the checkout, byte parity for every file in the deploy allowlist,
+   platform surface rules, and a real-browser smoke against that URL. CI runs
+   the same verifier automatically after `Deploy to GitHub Pages`.
 
 ```bash
-node scripts/deploy-pages-local.mjs --check
-npx --yes wrangler pages deploy _pages_staging --project-name bigenergyco --branch main
+npm run verify:staging
 ```
 
-Record the deployment URL printed by Wrangler.
+6. Promote with the gated tool. It re-runs the verification above against the
+   staging URL and refuses to deploy if any of it fails, if the tree is dirty,
+   or if HEAD is not `origin/main`:
+
+```bash
+npm run promote            # dry run (default): prints the plan, the stamps and the record
+npm run promote:apply      # deploy (needs CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID)
+```
+
+Record the deployment URL printed by Wrangler. Every apply appends a record to
+`docs/release-ledger.jsonl`: the promoted SHA and stamp, the pre-promote and
+post-promote stamps of both production surfaces, and the rollback command.
+To undo a release:
+
+```bash
+npm run rollback -- <sha> --apply
+```
+
+7. Prove the security policy landed on the **Cloudflare** surface. `_headers` is
+   Cloudflare-only — GitHub Pages serves the artifact verbatim — so CSP,
+   X-Frame-Options, nosniff and COOP/CORP can only be asserted there:
+
+```bash
+node scripts/verify-staging.mjs --base https://freeoffgridcalculator.com/
+node scripts/verify-staging.mjs --base https://bigenergyco.pages.dev/
+```
+
+Without Cloudflare credentials the promote stops before the deploy step and
+prints the exact command to run; it never reports a release it did not make.
 
 ## API abuse hardening (Worker + WAF)
 

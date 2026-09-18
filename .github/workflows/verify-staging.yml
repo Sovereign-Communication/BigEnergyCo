@@ -1,0 +1,60 @@
+name: Verify staging
+
+# The gate between main and production: it verifies the artifact that is
+# actually DEPLOYED on staging — stamp, byte parity for every deployed file,
+# platform surface rules and a real-browser smoke against that URL — instead of
+# a localhost copy. `scripts/promote.mjs` runs this same verifier and refuses to
+# deploy unless it passes, so a green run here is the evidence a release rests
+# on.
+on:
+  # Fires for the Pages deploy of a push to main. Pages propagates in ~30-60s,
+  # so the verifier waits for the expected stamp (--wait) rather than racing it.
+  workflow_run:
+    workflows: ["Deploy to GitHub Pages"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Staging base URL to verify
+        required: false
+        default: https://sovereign-communication.github.io/BigEnergyCo/
+
+concurrency:
+  group: verify-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  verify:
+    # workflow_run fires for failed deploys too — there is nothing to verify then.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # Chrome ships on the runner (same assumption as the web-smoke job), so the
+      # functional half of the verification runs here too.
+      - name: Verify the deployed staging artifact
+        run: |
+          node scripts/verify-staging.mjs \
+            --base "${{ github.event.inputs.base || 'https://sovereign-communication.github.io/BigEnergyCo/' }}" \
+            --wait 240
+
+      - name: Upload artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: staging-verification
+          path: |
+            _pages_smoke/
+            *.png
+          if-no-files-found: ignore
+          retention-days: 7

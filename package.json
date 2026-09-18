@@ -21,7 +21,11 @@
     "format": "npx --yes prettier@3.9.6 --write .",
     "format:check": "npx --yes prettier@3.9.6 --check .",
     "smoke": "node scripts/browser-smoke.mjs",
-    "deploy:check": "node scripts/deploy-pages-local.mjs --check"
+    "deploy:check": "node scripts/deploy-pages-local.mjs --check",
+    "verify:staging": "node scripts/verify-staging.mjs",
+    "promote": "node scripts/promote.mjs",
+    "promote:apply": "node scripts/promote.mjs --apply",
+    "rollback": "node scripts/promote.mjs --to"
   },
   "license": "SEE LICENSE IN LICENSE"
 }

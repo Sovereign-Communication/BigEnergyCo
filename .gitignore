@@ -97,6 +97,8 @@ _pages_staging/
 _pages_smoke/
 _pages_drift_stage/
 _pages_allowlist_check/
+_pages_verify_test/
+_pages_promote*/
 
 # Freebuff tool state (never commit)
 .freebuff/

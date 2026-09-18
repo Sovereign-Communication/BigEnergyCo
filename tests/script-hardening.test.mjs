@@ -8,6 +8,7 @@ import { readFileSync, rmSync } from "node:fs";
 
 import {
   deployedFiles,
+  deployedFilesFrom,
   sameOriginPath,
   sitemapGaps,
 } from "../scripts/lib/gates.mjs";
@@ -115,6 +116,29 @@ test("SITEMAP GAPS: the real tree is complete and has no stale entries", () => {
     { missing: [], extra: [] },
     "every deployed page is listed, and every listing has a page behind it",
   );
+});
+
+test("ALLOWLIST PARSE: dotless platform files and nested paths survive the parser", () => {
+  // `_headers` and `_redirects` have no dot and the platform files sit beside
+  // nested assets, so a naive "looks like a filename" rule silently drops real
+  // deployed files — and every gate that reads this list would then validate a
+  // smaller site than the one that ships.
+  const stdout = [
+    "Deployable files:",
+    "  index.html",
+    "  _headers",
+    "  _redirects",
+    "  assets/site.css",
+    "",
+    "--list: 4 file(s), nothing built.",
+  ].join("\n");
+  assert.deepEqual(deployedFilesFrom(stdout), [
+    "index.html",
+    "_headers",
+    "_redirects",
+    "assets/site.css",
+  ]);
+  assert.deepEqual(deployedFilesFrom(""), []);
 });
 
 test("ALLOWLIST QUERY: --list reports exactly what a staged build contains", () => {
