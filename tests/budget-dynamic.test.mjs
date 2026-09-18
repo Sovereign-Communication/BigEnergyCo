@@ -312,7 +312,7 @@ test("capped cells explain the cap with checkable arithmetic", async () => {
     { fetchWeather: fakeWeather },
   );
   const cells = Object.values((p.matrix && p.matrix.cells) || {});
-  const limited = cells.filter((c) => c.reason === "envelope-limited");
+  const limited = cells.filter((c) => c.reason === "area-limited");
   assert.ok(limited.length, "at least one cell explains the cap");
   for (const c of limited)
     assert.match(
@@ -333,6 +333,58 @@ test("a non-binding cap never flags cells as envelope-limited", async () => {
     cells.filter((c) => c.reason === "envelope-limited").length,
     0,
     "the honest diagnosis must not fire when the cap never bound",
+  );
+});
+
+test("an unsolvable target with NO area input is envelope-limited, never area-limited", async () => {
+  // 300 kWh/day needs more than the 60 kW search envelope for a 95% cut, so
+  // the target is unsolvable with no visitor cap in play. This is the
+  // reported false banner: the UI must not blame an area input the visitor
+  // never set.
+  const p = await runSizing(
+    { ...MSG, dailyKwh: 300 },
+    { fetchWeather: fakeWeather },
+  );
+  const cells = p.matrix ? Object.values(p.matrix.cells || {}) : [];
+  const limited = cells.filter((c) => c && !c.solvable);
+  assert.ok(limited.length, "at least one target is beyond the envelope");
+  for (const c of limited) {
+    assert.equal(
+      c.reason,
+      "envelope-limited",
+      "search-limit failures carry the search-limit reason",
+    );
+    assert.equal(
+      c.envelopeNote ?? null,
+      null,
+      "no cap note may exist without a cap",
+    );
+  }
+  assert.equal(
+    cells.filter((c) => c.reason === "area-limited").length,
+    0,
+    "area-limited is reserved for a visitor-provided cap",
+  );
+});
+
+test("hints: the area message exists only under area-limited", () => {
+  const src = readFileSync(
+    new URL("../assets/js/sizing/ui.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    src,
+    /"area-limited":\s*\{[\s\S]*?Too little roof\/yard area for this target/,
+    "the area-cap story is keyed to the evidence that proves it",
+  );
+  const envBody = src.match(
+    /"envelope-limited":\s*\{[\s\S]*?body:\s*"([^"]+)"/,
+  );
+  assert.ok(envBody, "envelope-limited has its own body text");
+  assert.doesNotMatch(
+    envBody[1],
+    /area input/i,
+    "the search-limit message must not blame the optional area input",
   );
 });
 

@@ -26,22 +26,22 @@ import {
   capacityScaleFor,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20260918c";
+} from "./engine.js?v=20260918e";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20260918c";
-import { buildFrontier } from "./frontier.js?v=20260918c";
-import { oversizeCallout } from "./rescale.js?v=20260918c";
-import { climateSummary } from "./climate.js?v=20260918c";
+} from "./nasa.js?v=20260918e";
+import { buildFrontier } from "./frontier.js?v=20260918e";
+import { oversizeCallout } from "./rescale.js?v=20260918e";
+import { climateSummary } from "./climate.js?v=20260918e";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20260918c";
+} from "./pricing.js?v=20260918e";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -52,7 +52,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20260918c";
+} from "./money.js?v=20260918e";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -291,7 +291,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20260918c");
+      await import("./profiles.js?v=20260918e");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -425,15 +425,10 @@ async function runSizingUncached(msg, deps = {}) {
   const offgridPvMax =
     hardwareConfig === "battery" ? 0 : Math.min(40, requestedPvMax);
   const offgridBattMax = hardwareConfig === "solar" ? 0 : 300;
-  // When a constrained envelope (e.g. the optional roof-area cap) makes a
-  // target unsolvable, the honest explanation is the constraint itself, with
-  // the arithmetic the visitor can check against their own input. Declared
-  // here so every matrix path (fixed targets AND the custom column) can
-  // attach it to unsolvable cells.
-  const envelopeNote =
-    Number.isFinite(pvMaxOverride) && pvMaxOverride > 0
-      ? `the searched PV size was capped by your roof/yard area input (~${Math.round(pvMaxOverride * 10) / 10} kW of panels)`
-      : null;
+  const areaCapped = Number.isFinite(pvMaxOverride) && pvMaxOverride > 0;
+  const envelopeNote = areaCapped
+    ? `the search was capped by your roof/yard area input (~${Math.round(pvMaxOverride * 10) / 10} kW of panels)`
+    : null;
   // Structural feasibility for this (mode, hardware, target) combo.
   // "null" when the search is allowed to decide; an explanatory code when
   // the combo is impossible regardless of envelope (off-grid + solar-only,
@@ -1920,7 +1915,9 @@ async function runSizingUncached(msg, deps = {}) {
               )
             : {
                 solvable: false,
-                reason: unreachableReason || "envelope-limited",
+                reason:
+                  unreachableReason ||
+                  (areaCapped ? "area-limited" : "envelope-limited"),
                 envelopeNote,
               };
         }
