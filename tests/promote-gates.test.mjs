@@ -298,13 +298,16 @@ test("PROMOTE: apply without Cloudflare credentials refuses instead of pretendin
   delete env.CF_API_TOKEN;
   await withServer(async (base) => {
     const { code, out } = await promote(base, ["--apply"], { env });
-    assert.notEqual(code, 0, "an apply without credentials must not succeed");
-    // Either boundary is acceptable and both are honest: the preconditions
-    // (a dirty working tree locally, which a CI checkout would not have) or the
-    // credential check. What must never happen is a deploy or a ledger write.
+    // The boundary reached depends on the checkout (a local dirty tree, or CI's
+    // clean detached one), so assert the SHAPE of the refusal: a precondition
+    // (2) or the credential check (3), never a success and never a crash (1).
+    assert.ok(
+      code === 2 || code === 3,
+      `an apply without credentials must stop at a boundary, got ${code}: ${out}`,
+    );
     assert.match(
       out,
-      /no Cloudflare credentials|working tree is not clean|is not origin\/main/,
+      /no Cloudflare credentials|working tree is not clean|is not origin\/main|cannot resolve origin\/main/,
       out,
     );
     assert.equal(existsSync(LEDGER), false, "nothing may be recorded");
