@@ -757,6 +757,42 @@ async function main() {
           `getComputedStyle(document.getElementById("resultLadder")).display !== "none"`,
         )),
     );
+    // Re-run while simple mode is ON: the fresh payload must flow into the
+    // simple card too (renderResults -> renderSimpleResults), not just the
+    // stale card from the earlier toggle.
+    await evaluate(
+      `(() => { const t = document.getElementById("simpleModeToggle");
+        t.checked = true; t.dispatchEvent(new Event("change", { bubbles: true }));
+        return true; })()`,
+    );
+    const simpleRerun = await evaluate(
+      `(async () => {
+        document.getElementById("btnRunSizing").click();
+        await new Promise((resolve) => {
+          const t0 = Date.now();
+          const tick = () => {
+            const note = document.getElementById("speedNote");
+            if ((note && note.style.display === "block") ||
+                !document.getElementById("btnRunSizing")?.disabled) return resolve();
+            if (Date.now() - t0 > 60000) return resolve();
+            setTimeout(tick, 50);
+          };
+          tick();
+        });
+        const card = document.querySelector("#simpleResultsWrap .simple-results-card");
+        return { visible: !!card, heroes: card ? card.querySelectorAll("dl > div").length : 0 };
+      })()`,
+    );
+    gate(
+      "simple mode: fresh run refreshes the card",
+      simpleRerun.visible && simpleRerun.heroes > 0,
+      JSON.stringify(simpleRerun),
+    );
+    await evaluate(
+      `(() => { const t = document.getElementById("simpleModeToggle");
+        t.checked = false; t.dispatchEvent(new Event("change", { bubbles: true }));
+        return true; })()`,
+    );
 
     // ── Off-grid mode (the other render pipeline) ─────────────────────
     console.log("SMOKE      ── main page: off-grid ──");
