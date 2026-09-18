@@ -789,6 +789,16 @@ test("LEDGER: the first release derives its way back from what production serves
   assert.equal(recorded.sha, "abc1234");
   assert.equal(recorded.source, "ledger");
 
+  // Re-promoting the release the ledger already calls live has nothing to undo,
+  // so it must say so instead of recording a command that would be refused.
+  const redeploy = stamps.rollbackBaseline({
+    ledgerText: ledger,
+    deployments,
+    promotingSha: "abc1234",
+  });
+  assert.equal(redeploy.sha, null);
+  assert.match(redeploy.reason, /already the one recorded as live/);
+
   // No history and no ledger: say why, never invent a target.
   const none = stamps.rollbackBaseline({
     ledgerText: "",

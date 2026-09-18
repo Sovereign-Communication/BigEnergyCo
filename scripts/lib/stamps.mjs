@@ -237,7 +237,20 @@ export function rollbackBaseline({
   promotingSha = null,
 } = {}) {
   const last = lastRelease(ledgerText);
-  if (last?.sha) return { sha: last.sha, source: "ledger", reason: null };
+  if (last?.sha) {
+    // A recorded release IS what production is running, so it is the thing to
+    // return to — unless it is the very commit being promoted, in which case a
+    // re-deploy has nothing to undo and naming it would record a command the
+    // rollback path refuses as a no-op.
+    if (!sameSha(last.sha, promotingSha))
+      return { sha: last.sha, source: "ledger", reason: null };
+    return {
+      sha: null,
+      source: null,
+      reason:
+        "the release being promoted is already the one recorded as live — a re-deploy has nothing to roll back to",
+    };
+  }
 
   if (!Array.isArray(deployments))
     return {

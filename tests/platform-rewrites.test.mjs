@@ -95,6 +95,32 @@ test("REWRITE: an undecodable payload is left alone so it fails", () => {
   assert.notEqual(canon(garbled).text, canon(LOCAL_FRAGMENT).text);
 });
 
+test("REWRITE: the application's own markup is never touched", () => {
+  // Over-removal is the other way this could go wrong: stripping the app's
+  // module or an unrelated anchor would make two different builds compare equal.
+  const html =
+    `<script type="module" src="./assets/js/sizing/ui.js?v=20260917h"></script>` +
+    `<script src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>` +
+    `<a href="./blog/">Blog</a><a href="mailto:lucasballek@gmail.com">mail</a>`;
+  const out = canonicalizeHtml(html, "cloudflare");
+  assert.equal((out.text.match(/<script/g) || []).length, 1);
+  assert.match(out.text, /ui\.js\?v=20260917h/);
+  assert.match(out.text, /<a href="\.\/blog\/">Blog<\/a>/);
+  assert.deepEqual(
+    out.tolerated,
+    ["injected email-decode script"],
+    "only the platform's own injection may be reported",
+  );
+  // An unclosed element is left alone rather than guessed at.
+  const truncated = `${html}<script src="/cdn-cgi/scripts/x/email-decode.min.js">`;
+  assert.equal(
+    canonicalizeHtml(truncated, "cloudflare").text.includes(
+      'email-decode.min.js">',
+    ),
+    true,
+  );
+});
+
 test("REWRITE: only HTML is canonicalised — assets keep byte semantics", () => {
   const js = "const a = 1;\r\nconst b = 2;\r\n";
   assert.equal(canon(js).text, "const a = 1;\nconst b = 2;\n");
