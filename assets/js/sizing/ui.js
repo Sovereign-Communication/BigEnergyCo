@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260918a";
+import { APPLIANCES } from "./appliances.js?v=20260918b";
 import {
   CITY_CATALOG,
   searchCities,
@@ -26,7 +26,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260918a";
+} from "./cities.js?v=20260918b";
 
 import {
   estimateTariff,
@@ -34,62 +34,62 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260918a";
+} from "./pricing.js?v=20260918b";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260918a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260918b";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260918a";
+} from "./lead-acid.js?v=20260918b";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260918a";
+} from "./bom.js?v=20260918b";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260918a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260918b";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260918a";
+} from "../shared/i18n.js?v=20260918b";
 
-import { LOCALES } from "../shared/locales.js?v=20260918a";
+import { LOCALES } from "../shared/locales.js?v=20260918b";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260918a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260918a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260918b";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260918b";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260918a";
+} from "../shared/simple-mode.js?v=20260918b";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260918a";
+} from "./frontier-chart.js?v=20260918b";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260918a";
+} from "./rescale.js?v=20260918b";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260918a";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260918b";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260918a";
-import { persistWizard, restoreWizard } from "./wizard.js?v=20260918a";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260918a";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260918a";
+} from "./map-provider.js?v=20260918b";
+import { persistWizard, restoreWizard } from "./wizard.js?v=20260918b";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260918b";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260918b";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -134,9 +134,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260918a";
+} from "./money.js?v=20260918b";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260918a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260918b";
 
 let worker = null;
 
@@ -1598,7 +1598,6 @@ function renderCities() {
 
   if (search && list) {
     let active = -1;
-    let expandSeq = 0; // superseded country-load expansions must not re-draw
     // Fresh input → seed results instantly; any country partitions the query
     // names arrive in the background and re-open the list with the union.
     const draw = (results = searchCities(search.value, CITY_CATALOG)) => {
@@ -1643,11 +1642,10 @@ function renderCities() {
       // already answers exactly, so the common path costs zero requests.
       const query = search.value.trim();
       if (!query || searchCities(query, CITY_CATALOG, 1).length) return;
-      cancelAutoResolve();
-      let seq = ++expandSeq;
       typedCityCandidates(query).then((rows) => {
-        if (seq !== expandSeq || rows.length <= CITY_CATALOG.length) return;
+        if (rows.length <= CITY_CATALOG.length) return;
         CITY_CATALOG.splice(0, CITY_CATALOG.length, ...rows);
+        // Superseded input: the user moved on; never redraw over their text.
         if (search.value.trim() === query) draw();
       });
     });
@@ -1710,6 +1708,9 @@ function renderCities() {
         (c) => normalizeCityQuery(c.name) === normalizeCityQuery(query),
       );
       lookupBusy = false;
+      // The box changed while partitions loaded: this resolution is stale —
+      // never overwrite what the user is typing; the new input re-resolves.
+      if (search.value.trim() !== query) return;
       if (offline) {
         lastResolvedQuery = query;
         setCoords(
@@ -1728,32 +1729,36 @@ function renderCities() {
       // Still nothing: the online geocoder resolves any place on Earth.
       setStatus("Looking up your city…");
       const match = await lookupCityOnline(query);
-      if (match) {
-        // Warm the partition the geocoder named so later queries in that
-        // country search locally and offline.
-        const cc = String(match.country || "").toUpperCase();
-        if (cc.length === 2)
-          loadCountryCities(cc).then((rows) => {
-            if (!rows.length) return;
-            CITY_CATALOG.splice(
-              0,
-              CITY_CATALOG.length,
-              ...mergeCities(CITY_CATALOG, rows),
-            );
-          });
-        lastResolvedQuery = query;
-        setCoords(
-          match.lat,
-          match.lon,
-          `Sunshine data from ${formatCityLabel(match)}`,
-          match.r,
-          match.country,
-        );
-        search.value = formatCityLabel(match);
-        list.hidden = true;
-        search.setAttribute("aria-expanded", "false");
-        if (quickMode) run();
+      // Superseded input: the new text owns the status line; stay silent.
+      if (search.value.trim() !== query) return;
+      if (!match) {
+        setStatus("No match found — check the spelling or pick a suggestion.");
+        return;
       }
+      // Warm the partition the geocoder named so later queries in that
+      // country search locally and offline.
+      const cc = String(match.country || "").toUpperCase();
+      if (cc.length === 2)
+        loadCountryCities(cc).then((rows) => {
+          if (!rows.length) return;
+          CITY_CATALOG.splice(
+            0,
+            CITY_CATALOG.length,
+            ...mergeCities(CITY_CATALOG, rows),
+          );
+        });
+      lastResolvedQuery = query;
+      setCoords(
+        match.lat,
+        match.lon,
+        `Sunshine data from ${formatCityLabel(match)}`,
+        match.r,
+        match.country,
+      );
+      search.value = formatCityLabel(match);
+      list.hidden = true;
+      search.setAttribute("aria-expanded", "false");
+      if (quickMode) run();
     };
     search.addEventListener("keydown", (event) => {
       if (event.key === "Tab") {
@@ -1871,6 +1876,19 @@ function locateMe() {
       // the 67 seed cities. Sizing already started from the seed context;
       // a different country context re-pins prices and re-runs once.
       const geo = await lookupCountryOnline(lat, lon);
+      // Anything that resolved or was typed since the GPS fix landed wins:
+      // the refine re-pins label, price context, and the coordinate boxes
+      // themselves, so it must not fire over a newer location choice.
+      // (Boxes are rounded to 2dp by setCoords, hence the tolerance.)
+      const boxLat = parseFloat($("latInput")?.value);
+      const boxLon = parseFloat($("lonInput")?.value);
+      if (
+        !Number.isFinite(boxLat) ||
+        !Number.isFinite(boxLon) ||
+        Math.abs(boxLat - lat) > 0.005 ||
+        Math.abs(boxLon - lon) > 0.005
+      )
+        return;
       if (geo?.country && geo.country !== near?.country) {
         const refined = nearestCity(lat, lon, CITY_CATALOG, Infinity);
         setCoords(
@@ -3239,7 +3257,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260918a", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260918b", {
       type: "module",
     });
 
