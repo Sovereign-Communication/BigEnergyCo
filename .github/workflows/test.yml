@@ -57,6 +57,12 @@ jobs:
         # cumulative series (and that a missing tariff invents none).
         run: npm run verify:flow
 
+      - name: Swap-strategy economics gate
+        # Offline and deterministic: proves deliberately oversizing a bank to
+        # dodge swap labour never beats the engine's own pick on true 20-year
+        # cost, on pinned Honolulu/London fixtures. Was an orphan script.
+        run: npm run verify:economics
+
       - name: Unit tests (offline)
         run: npm test
 

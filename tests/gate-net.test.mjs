@@ -135,8 +135,11 @@ test("no validator is an orphan: each is wired into CI, a hook, or declared manu
   };
   for (const name of npmRunNames(allWorkflows)) expand(name);
 
+  // Anything that is a CHECK: the validator prefixes plus the `*-test.mjs`
+  // scripts, which assert and exit non-zero just like the others. Batch
+  // generators and `probe-*` diagnostics are not checks and are out of scope.
   const validators = list("scripts").filter((f) =>
-    /^(check|verify|validate)-[\w-]+\.mjs$/.test(f),
+    /^((check|verify|validate)-[\w-]+|[\w-]+-test)\.mjs$/.test(f),
   );
   assert.ok(
     validators.length >= 10,
@@ -194,6 +197,16 @@ test("the wired gates are actually wired", () => {
   assert.ok(
     /npm run verify:flow/.test(workflows["test.yml"]),
     "PR CI must run the offline flow gate, not just document it",
+  );
+  assert.equal(
+    pkg.scripts["verify:economics"],
+    "node scripts/swap-strategy-test.mjs",
+    "the oversize-vs-engine economics gate is one command",
+  );
+  assert.ok(
+    /npm run verify:economics/.test(workflows["test.yml"]),
+    "PR CI must run the economics gate too — it asserted real savings maths in " +
+      "a script nothing executed",
   );
   assert.match(
     pkg.scripts["verify:live"] || "",

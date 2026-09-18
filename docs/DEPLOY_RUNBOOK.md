@@ -31,6 +31,7 @@ npm test                        # offline unit + contract suite
 npm run seo                     # JSON-LD, chars, SEO, quality, i18n, headers/CSP, asset tokens
 npm run deploy:check            # deploy allowlist is complete and staged exactly
 npm run verify:flow             # cumulative-series engine flow through the real entry point
+npm run verify:economics        # oversizing never beats the engine's pick on 20-year cost
 git diff --check                # local hygiene: no whitespace-damaged patch (not a CI gate)
 ```
 
@@ -44,18 +45,18 @@ The rule this section exists to protect: **a check the docs call mandatory must
 actually run, and must be able to fail.** Nothing belongs here that no automation
 and no human runs — and nothing that runs may be missing from here.
 
-| Gate                                                                                            | Runs where                                | Can it block a merge?                                                    |
-| ----------------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
-| `check-syntax`, `npm run seo`, prettier, secret scan, `deploy:check`, `verify:flow`, `npm test` | PR + `main` (`Tests` workflow)            | Yes — required checks `test`, `coverage`                                 |
-| Real-browser smoke on the staged artifact (`smoke:local`)                                       | PR + `main` (`Tests` workflow)            | Yes — required check `web-smoke`                                         |
-| Offline coverage floor                                                                          | PR + `main` (`Tests` workflow)            | Yes — required check `coverage`                                          |
-| CodeQL analysis (`analyze`)                                                                     | PR + `main` + weekly (`CodeQL`)           | Yes — required check `analyze` (a failing run blocks)                    |
-| **CodeQL findings** (the `code_scanning` rule)                                                  | The ruleset itself                        | Yes — new alerts at `errors` / security `high_or_higher` block the PR    |
-| Deployed-staging verification (`npm run verify:staging`)                                        | `main` (`Verify staging` workflow)        | No — it is a post-merge alarm, and the promote refuses to run without it |
-| Source-drift audit / docs-only push policy (`npm run audit:main`)                               | `main` (`Main audit`)                     | No — post-merge alarm                                                    |
-| `live-sanity` + `check-staging-drift`                                                           | Weekly (`Prod smoke`)                     | No — non-blocking drift alarm                                            |
-| `npm run verify:live` — `validate-modes.mjs`, `validate-soc-pipeline.mjs`                       | Weekly (`Prod smoke` → job `live-models`) | No — needs the live NASA API, so it can never join the offline PR suite  |
-| Homepage + API health curl probes                                                               | Daily (`Daily static check`)              | No — non-blocking                                                        |
+| Gate                                                                                                                | Runs where                                | Can it block a merge?                                                    |
+| ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
+| `check-syntax`, `npm run seo`, prettier, secret scan, `deploy:check`, `verify:flow`, `verify:economics`, `npm test` | PR + `main` (`Tests` workflow)            | Yes — required checks `test`, `coverage`                                 |
+| Real-browser smoke on the staged artifact (`smoke:local`)                                                           | PR + `main` (`Tests` workflow)            | Yes — required check `web-smoke`                                         |
+| Offline coverage floor                                                                                              | PR + `main` (`Tests` workflow)            | Yes — required check `coverage`                                          |
+| CodeQL analysis (`analyze`)                                                                                         | PR + `main` + weekly (`CodeQL`)           | Yes — required check `analyze` (a failing run blocks)                    |
+| **CodeQL findings** (the `code_scanning` rule)                                                                      | The ruleset itself                        | Yes — new alerts at `errors` / security `high_or_higher` block the PR    |
+| Deployed-staging verification (`npm run verify:staging`)                                                            | `main` (`Verify staging` workflow)        | No — it is a post-merge alarm, and the promote refuses to run without it |
+| Source-drift audit / docs-only push policy (`npm run audit:main`)                                                   | `main` (`Main audit`)                     | No — post-merge alarm                                                    |
+| `live-sanity` + `check-staging-drift`                                                                               | Weekly (`Prod smoke`)                     | No — non-blocking drift alarm                                            |
+| `npm run verify:live` — `validate-modes.mjs`, `validate-soc-pipeline.mjs`                                           | Weekly (`Prod smoke` → job `live-models`) | No — needs the live NASA API, so it can never join the offline PR suite  |
+| Homepage + API health curl probes                                                                                   | Daily (`Daily static check`)              | No — non-blocking                                                        |
 
 **Manual by design** (nothing can run these for you, so they are not gates):
 
