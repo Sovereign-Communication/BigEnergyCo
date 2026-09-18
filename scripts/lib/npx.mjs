@@ -16,7 +16,7 @@
 // and it quotes explicitly rather than trusting `shell: true`.
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { posix, win32 } from "node:path";
 
 // cmd.exe expands `%VAR%` even inside double quotes, so an argument containing
 // it cannot be passed through the fallback faithfully; newlines and NUL cannot
@@ -49,28 +49,34 @@ export function quoteWinArg(arg) {
     backslashes = 0;
   }
   return out + "\\".repeat(backslashes * 2) + '"';
-}
-
-/**
+} /**
  * Where npm may keep its npx CLI, most likely first. Ordered so that a normal
  * install resolves on the first candidate: alongside node (official Windows
  * installer, nvm-windows), then the posix prefix layout (/usr, Homebrew, nvm),
  * then Debian/Ubuntu's split layout.
+ *
+ * Paths are built with the path module of the TARGET platform, not the host's.
+ * Otherwise asking for "what would this do on Windows" from a posix host
+ * resolves `dirname("C:\\...\\node.exe")` to `.` and examines a fiction — which
+ * is exactly how a green-looking Windows test passed while the real Windows
+ * path went untested.
  */
 export function npxCliCandidates({
+  platform = process.platform,
   execPath = process.execPath,
   env = process.env,
 } = {}) {
-  const dir = dirname(execPath);
+  const p = platform === "win32" ? win32 : posix;
+  const dir = p.dirname(execPath);
   const list = [];
   if (env.BECO_NPX_CLI) list.push(env.BECO_NPX_CLI);
   // When we are running under npm, npm tells us where its own CLI lives.
   if (env.npm_execpath)
-    list.push(join(dirname(env.npm_execpath), "npx-cli.js"));
+    list.push(p.join(p.dirname(env.npm_execpath), "npx-cli.js"));
   list.push(
-    join(dir, "node_modules", "npm", "bin", "npx-cli.js"),
-    join(dir, "..", "lib", "node_modules", "npm", "bin", "npx-cli.js"),
-    join(dir, "..", "share", "nodejs", "npm", "bin", "npx-cli.js"),
+    p.join(dir, "node_modules", "npm", "bin", "npx-cli.js"),
+    p.join(dir, "..", "lib", "node_modules", "npm", "bin", "npx-cli.js"),
+    p.join(dir, "..", "share", "nodejs", "npm", "bin", "npx-cli.js"),
   );
   return [...new Set(list)];
 }
@@ -89,7 +95,7 @@ export function npxPlan(
     exists = existsSync,
   } = {},
 ) {
-  for (const cli of npxCliCandidates({ execPath, env })) {
+  for (const cli of npxCliCandidates({ platform, execPath, env })) {
     if (exists(cli))
       return {
         command: execPath,

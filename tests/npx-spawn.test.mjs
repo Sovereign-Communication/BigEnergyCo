@@ -9,7 +9,12 @@ import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { test } from "node:test";
 
-import { npxPlan, quoteWinArg, runNpx } from "../scripts/lib/npx.mjs";
+import {
+  npxCliCandidates,
+  npxPlan,
+  quoteWinArg,
+  runNpx,
+} from "../scripts/lib/npx.mjs";
 
 test("npx actually runs through the resolved plan", () => {
   // Offline and instant: npx --version needs no registry and no cache.
@@ -71,6 +76,35 @@ test("every plan is shell-free, and spawning one warns nothing", () => {
   }
   assert.equal(status, 0, `spawn failed: ${stderr}`);
   assert.deepEqual(emitted, [], `a deprecated spawn warning was emitted`);
+});
+
+test("candidates follow the TARGET platform's path rules, not the host's", () => {
+  // This is the regression CI caught: the win32 branch was simulated with the
+  // host's path module, so on Linux `dirname("C:\\...\\node.exe")` collapsed to
+  // "." and the whole Windows candidate list was fictional.
+  const win = npxCliCandidates({
+    platform: "win32",
+    execPath: "C:\\Program Files\\nodejs\\node.exe",
+    env: {},
+  });
+  assert.ok(
+    win.every((p) => p.includes("\\") && !p.includes("/")),
+    `win32 candidates must use win32 separators: ${win.join(" | ")}`,
+  );
+  assert.ok(
+    win.some((p) => p.startsWith("C:\\Program Files\\nodejs\\")),
+    `the execPath directory must survive dirname(): ${win.join(" | ")}`,
+  );
+
+  const linux = npxCliCandidates({
+    platform: "linux",
+    execPath: "/usr/bin/node",
+    env: {},
+  });
+  assert.ok(
+    linux.includes("/usr/lib/node_modules/npm/bin/npx-cli.js"),
+    linux.join(" | "),
+  );
 });
 
 test("a resolved npx CLI is preferred, and its path survives spaces", () => {
