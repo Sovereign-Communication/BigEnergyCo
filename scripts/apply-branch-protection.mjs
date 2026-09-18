@@ -22,11 +22,8 @@ import {
   CODE_SCANNING_TOOLS,
   REQUIRED_CHECKS,
   RULESET_NAME,
-  analyzerIdentity,
   desiredRuleset,
 } from "./lib/ruleset.mjs";
-
-const CHECK = process.argv.includes("--check");
 
 function gh(args, { input } = {}) {
   return execFileSync("gh", args, {
@@ -63,86 +60,114 @@ function listRulesets(repo) {
   }
 }
 
-const repo = slug();
-const existing = listRulesets(repo).find((r) => r.name === RULESET_NAME);
+function main() {
+  const isCheck = process.argv.includes("--check");
+  const repo = slug();
+  const existing = listRulesets(repo).find((r) => r.name === RULESET_NAME);
 
-if (CHECK) {
-  if (!existing) {
-    console.error(
-      `FAIL ${RULESET_NAME} ruleset is not configured on ${repo} — main is unprotected`,
+  if (isCheck) {
+    if (!existing) {
+      console.error(
+        `FAIL ${RULESET_NAME} ruleset is not configured on ${repo} — main is unprotected`,
+      );
+      process.exit(1);
+    }
+    const detail = JSON.parse(
+      gh(["api", `repos/${repo}/rulesets/${existing.id}`]),
     );
-    process.exit(1);
-  }
-  const detail = JSON.parse(
-    gh(["api", `repos/${repo}/rulesets/${existing.id}`]),
-  );
-  const actual = new Set(
-    (
-      detail.rules?.find((r) => r.type === "required_status_checks")?.parameters
-        ?.required_status_checks || []
-    ).map((c) => c.context),
-  );
-  const missing = REQUIRED_CHECKS.filter((c) => !actual.has(c));
-  const hasPrRule = (detail.rules || []).some((r) => r.type === "pull_request");
-  const hasNoForce = (detail.rules || []).some(
-    (r) => r.type === "non_fast_forward",
-  );
-  const liveTools = (
-    (detail.rules || []).find((r) => r.type === "code_scanning")?.parameters
-      ?.code_scanning_tools || []
-  ).map(analyzerIdentity);
-  const wantedTools = CODE_SCANNING_TOOLS.map(analyzerIdentity);
-  const analyzersMissing = wantedTools.filter((t) => !liveTools.includes(t));
-  if (missing.length || !hasPrRule || !hasNoForce || analyzersMissing.length) {
-    console.error(
-      `FAIL ${RULESET_NAME} drift — missing checks: ${missing.join(", ") || "none"}; pull_request rule: ${hasPrRule}; non_fast_forward: ${hasNoForce}; analyzer rule missing: ${analyzersMissing.join(", ") || "none"}`,
+    const actual = new Set(
+      (
+        detail.rules?.find((r) => r.type === "required_status_checks")
+          ?.parameters?.required_status_checks || []
+      ).map((c) => c.context),
     );
-    process.exit(1);
+    const missing = REQUIRED_CHECKS.filter((c) => !actual.has(c));
+    const hasPrRule = (detail.rules || []).some(
+      (r) => r.type === "pull_request",
+    );
+    const hasNoForce = (detail.rules || []).some(
+      (r) => r.type === "non_fast_forward",
+    );
+    const liveTools = (
+      detail.rules?.find((r) => r.type === "code_scanning")?.parameters
+        ?.code_scanning_tools || []
+    ).map((t) =>
+      [t.tool, t.alerts_threshold, t.security_alerts_threshold].join("/"),
+    );
+    const wantedTools = CODE_SCANNING_TOOLS.map((t) =>
+      [t.tool, t.alerts_threshold, t.security_alerts_threshold].join("/"),
+    );
+    const analyzersMissing = wantedTools.filter((t) => !liveTools.includes(t));
+    if (
+      missing.length ||
+      !hasPrRule ||
+      !hasNoForce ||
+      analyzersMissing.length
+    ) {
+      console.error(
+        `FAIL ${RULESET_NAME} drift — missing checks: ${missing.join(", ") || "none"}; pull_request rule: ${hasPrRule}; non_fast_forward: ${hasNoForce}; analyzer rule missing: ${analyzersMissing.join(", ") || "none"}`,
+      );
+      process.exit(1);
+    }
+    console.log(
+      `OK   ${RULESET_NAME} active on ${repo} (${detail.enforcement}), requiring ${REQUIRED_CHECKS.join(", ")}`,
+    );
+    console.log(
+      `OK   analyzer gate active — new alerts block a merge: ${liveTools.join(", ")}`,
+    );
+    process.exit(0);
   }
+
+  const body = JSON.stringify(desiredRuleset());
+  if (existing) {
+    gh(
+      [
+        "api",
+        "-X",
+        "PUT",
+        `repos/${repo}/rulesets/${existing.id}`,
+        "--input",
+        "-",
+      ],
+      { input: body },
+    );
+    console.log(
+      `updated ruleset ${RULESET_NAME} (id ${existing.id}) on ${repo}`,
+    );
+  } else {
+    const created = gh(
+      ["api", "-X", "POST", `repos/${repo}/rulesets`, "--input", "-"],
+      { input: body },
+    );
+    console.log(
+      `created ruleset ${RULESET_NAME} on ${repo}: ${created.trim().slice(0, 120)}`,
+    );
+  }
+
   console.log(
-    `OK   ${RULESET_NAME} active on ${repo} (${detail.enforcement}), requiring ${REQUIRED_CHECKS.join(", ")}`,
+    `\nmain now requires a PR with these checks: ${REQUIRED_CHECKS.join(", ")}`,
   );
   console.log(
-    `OK   analyzer gate active — new alerts block a merge: ${liveTools.join(", ")}`,
+    `and blocks on new analyzer findings: ${CODE_SCANNING_TOOLS.map((t) => `${t.tool} (${t.alerts_threshold} alerts, security ${t.security_alerts_threshold})`).join(", ")}`,
   );
-  process.exit(0);
+  console.log(
+    "Bypass: organization admins only. Docs-only direct pushes are checked by\n" +
+      ".githooks/pre-push locally and .github/workflows/main-audit.yml server-side.",
+  );
 }
 
-const body = JSON.stringify(desiredRuleset());
-if (existing) {
-  gh(
-    [
-      "api",
-      "-X",
-      "PUT",
-      `repos/${repo}/rulesets/${existing.id}`,
-      "--input",
-      "-",
-    ],
-    {
-      input: body,
-    },
-  );
-  console.log(`updated ruleset ${RULESET_NAME} (id ${existing.id}) on ${repo}`);
-} else {
-  const created = gh(
-    ["api", "-X", "POST", `repos/${repo}/rulesets`, "--input", "-"],
-    {
-      input: body,
-    },
-  );
-  console.log(
-    `created ruleset ${RULESET_NAME} on ${repo}: ${created.trim().slice(0, 120)}`,
-  );
-}
+const isDirect = (() => {
+  try {
+    const u = new URL(import.meta.url);
+    const argvFile = process.argv[1];
+    if (!argvFile) return false;
+    const url = new URL(`file://${argvFile.replace(/\\/g, "/")}`);
+    return (
+      u.pathname.endsWith(url.pathname) || url.pathname.endsWith(u.pathname)
+    );
+  } catch {
+    return false;
+  }
+})();
 
-console.log(
-  `\nmain now requires a PR with these checks: ${REQUIRED_CHECKS.join(", ")}`,
-);
-console.log(
-  `and blocks on new analyzer findings: ${CODE_SCANNING_TOOLS.map((t) => `${t.tool} (${t.alerts_threshold} alerts, security ${t.security_alerts_threshold})`).join(", ")}`,
-);
-console.log(
-  "Bypass: organization admins only. Docs-only direct pushes are checked by\n" +
-    ".githooks/pre-push locally and .github/workflows/main-audit.yml server-side.",
-);
+if (isDirect) main();

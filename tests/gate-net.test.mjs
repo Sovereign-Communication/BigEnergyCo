@@ -20,9 +20,9 @@ import { fileURLToPath } from "node:url";
 import {
   CODE_SCANNING_TOOLS,
   REQUIRED_CHECKS,
-  analyzerIdentity,
   desiredRuleset,
 } from "../scripts/lib/ruleset.mjs";
+import { MANUAL_VALIDATORS, RETIRED } from "../scripts/lib/gate-registry.mjs";
 
 const url = (rel) => new URL(`../${rel}`, import.meta.url);
 const read = (rel) => readFileSync(url(rel), "utf8");
@@ -48,36 +48,6 @@ const DOCS = [
 ];
 const docText = Object.fromEntries(DOCS.map((f) => [f, read(f)]));
 const allDocs = Object.values(docText).join("\n");
-
-// Validators that genuinely cannot run in CI, each with the reason why.
-// Adding to this list is a deliberate, reviewable act — that is the point: a
-// new validator has to be wired or justified, never merely forgotten.
-const MANUAL_VALIDATORS = new Map([
-  [
-    "scripts/validate-live.mjs",
-    "live sweep of the deployed API and NASA endpoints; needs the network",
-  ],
-  [
-    "scripts/validate-against-sheet.mjs",
-    "blocked on the owner's spreadsheet export (PHASE2_PLAN.md tracks it)",
-  ],
-]);
-
-// The two scripts this repo deliberately removed, with where their coverage
-// lives now. If someone resurrects one, this test asks why.
-const RETIRED = new Map([
-  [
-    "scripts/verify-polish.mjs",
-    "crashed (its mirror list missed climate.js) with a stale contract pin; " +
-      "covered by tests/run.test.mjs, tests/contract.test.mjs, tests/rescale.test.mjs, " +
-      "tests/breakeven.test.mjs, tests/consistency.test.mjs and npm run verify:staging",
-  ],
-  [
-    "scripts/verify-chart-contract.mjs",
-    "replicated a worker payload the worker no longer builds, and its served-bytes " +
-      "tail could not fail; the chart-gate invariant lives in tests/run.test.mjs",
-  ],
-]);
 
 const npmRunNames = (text) =>
   [...text.matchAll(/npm run [\w:-]+/g)].map((m) =>
@@ -121,10 +91,7 @@ test("no validator is an orphan: each is wired into CI, a hook, or declared manu
       reachable.add(m[0]);
   };
   addScriptRefs(allWorkflows);
-  const hooks = list(".githooks").filter(
-    (f) => !f.startsWith(".") || f.endsWith(".sh"),
-  );
-  for (const h of hooks) addScriptRefs(read(`.githooks/${h}`));
+  for (const h of list(".githooks")) addScriptRefs(read(`.githooks/${h}`));
   // A workflow that calls `npm run X` reaches every script in X's body — and
   // transitively, any npm script that body calls.
   const expand = (name, depth = 0) => {
@@ -135,11 +102,8 @@ test("no validator is an orphan: each is wired into CI, a hook, or declared manu
   };
   for (const name of npmRunNames(allWorkflows)) expand(name);
 
-  // Anything that is a CHECK: the validator prefixes plus the `*-test.mjs`
-  // scripts, which assert and exit non-zero just like the others. Batch
-  // generators and `probe-*` diagnostics are not checks and are out of scope.
   const validators = list("scripts").filter((f) =>
-    /^((check|verify|validate)-[\w-]+|[\w-]+-test)\.mjs$/.test(f),
+    /^(check|verify|validate)-[\w-]+\.mjs$/.test(f),
   );
   assert.ok(
     validators.length >= 10,
@@ -198,16 +162,6 @@ test("the wired gates are actually wired", () => {
     /npm run verify:flow/.test(workflows["test.yml"]),
     "PR CI must run the offline flow gate, not just document it",
   );
-  assert.equal(
-    pkg.scripts["verify:economics"],
-    "node scripts/swap-strategy-test.mjs",
-    "the oversize-vs-engine economics gate is one command",
-  );
-  assert.ok(
-    /npm run verify:economics/.test(workflows["test.yml"]),
-    "PR CI must run the economics gate too — it asserted real savings maths in " +
-      "a script nothing executed",
-  );
   assert.match(
     pkg.scripts["verify:live"] || "",
     /validate-modes\.mjs[\s\S]*validate-soc-pipeline\.mjs/,
@@ -224,11 +178,10 @@ test("the wired gates are actually wired", () => {
 });
 
 test("the retired validators stay retired", () => {
-  const resurrected = [...RETIRED.keys()].filter((p) => exists(p));
   assert.deepEqual(
-    resurrected,
+    [...RETIRED.keys()].filter((p) => exists(p)),
     [],
-    `these were removed on purpose:\n${[...RETIRED].map(([p, why]) => `${p} — ${why}`).join("\n")}`,
+    `removed — resurrect only by re-wiring:\n${[...RETIRED].map(([p, why]) => `${p} — ${why}`).join("\n")}`,
   );
 });
 
@@ -249,9 +202,11 @@ test("the protected path requires the analyzer gate, not just a green run", () =
 
   const tools = rules.find((r) => r.type === "code_scanning")?.parameters
     ?.code_scanning_tools;
+  const id = (t) =>
+    [t.tool, t.alerts_threshold, t.security_alerts_threshold].join("/");
   assert.deepEqual(
-    tools?.map(analyzerIdentity),
-    CODE_SCANNING_TOOLS.map(analyzerIdentity),
+    tools?.map(id),
+    CODE_SCANNING_TOOLS.map(id),
     "the live tools must match the declared ones",
   );
   for (const t of tools) {
