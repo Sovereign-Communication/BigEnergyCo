@@ -4,3 +4,16 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # CI runs on a free account, so each dependency PR costs a full matrix
+    # (Tests + CodeQL on the PR, then Tests, CodeQL, Main audit, Deploy and
+    # Verify staging again on the merge). Five separate action bumps used to
+    # mean five PRs and five merge fan-outs; one group means one of each.
+    #
+    # Kept deliberate rather than aggressive: one grouped PR at a time, so a
+    # red bump is attributable and the merge train never queues behind a stack
+    # of overlapping dependency PRs.
+    open-pull-requests-limit: 1
+    groups:
+      github-actions:
+        patterns:
+          - "*"

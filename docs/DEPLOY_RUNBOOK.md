@@ -44,18 +44,18 @@ The rule this section exists to protect: **a check the docs call mandatory must
 actually run, and must be able to fail.** Nothing belongs here that no automation
 and no human runs — and nothing that runs may be missing from here.
 
-| Gate                                                                                            | Runs where                                | Can it block a merge?                                                    |
-| ----------------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
-| `check-syntax`, `npm run seo`, prettier, secret scan, `deploy:check`, `verify:flow`, `npm test` | PR + `main` (`Tests` workflow)            | Yes — required checks `test`, `coverage`                                 |
-| Real-browser smoke on the staged artifact (`smoke:local`)                                       | PR + `main` (`Tests` workflow)            | Yes — required check `web-smoke`                                         |
-| Offline coverage floor                                                                          | PR + `main` (`Tests` workflow)            | Yes — required check `coverage`                                          |
-| CodeQL analysis (`analyze`)                                                                     | PR + `main` + weekly (`CodeQL`)           | Yes — required check `analyze` (a failing run blocks)                    |
-| **CodeQL findings** (the `code_scanning` rule)                                                  | The ruleset itself                        | Yes — new alerts at `errors` / security `high_or_higher` block the PR    |
-| Deployed-staging verification (`npm run verify:staging`)                                        | `main` (`Verify staging` workflow)        | No — it is a post-merge alarm, and the promote refuses to run without it |
-| Source-drift audit / docs-only push policy (`npm run audit:main`)                               | `main` (`Main audit`)                     | No — post-merge alarm                                                    |
-| `live-sanity` + `check-staging-drift`                                                           | Weekly (`Prod smoke`)                     | No — non-blocking drift alarm                                            |
-| `npm run verify:live` — `validate-modes.mjs`, `validate-soc-pipeline.mjs`                       | Weekly (`Prod smoke` → job `live-models`) | No — needs the live NASA API, so it can never join the offline PR suite  |
-| Homepage + API health curl probes                                                               | Daily (`Daily static check`)              | No — non-blocking                                                        |
+| Gate                                                                                            | Runs where                                | Can it block a merge?                                                                                                                     |
+| ----------------------------------------------------------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `check-syntax`, `npm run seo`, prettier, secret scan, `deploy:check`, `verify:flow`, `npm test` | PR + `main` (`Tests` workflow)            | Yes — required checks `test`, `coverage`                                                                                                  |
+| Real-browser smoke on the staged artifact (`smoke:local`)                                       | PR + `main` (`Tests` workflow)            | Yes — required check `web-smoke`                                                                                                          |
+| Offline coverage floor                                                                          | PR + `main` (`Tests` workflow)            | Yes — required check `coverage`                                                                                                           |
+| CodeQL analysis (`analyze`)                                                                     | PR + `main` + weekly (`CodeQL`)           | Yes — required check `analyze` (a failing run blocks)                                                                                     |
+| **CodeQL findings** (the `code_scanning` rule)                                                  | The ruleset itself                        | Yes — new alerts at `errors` / security `high_or_higher` block the PR                                                                     |
+| Deployed-staging verification (`npm run verify:staging`)                                        | `main` (`Verify staging` workflow)        | No — it is a post-merge alarm, and the promote refuses to run without it. Skipped when a merge changed no deployable file (see CI budget) |
+| Source-drift audit / docs-only push policy (`npm run audit:main`)                               | `main` (`Main audit`)                     | No — post-merge alarm                                                                                                                     |
+| `live-sanity` + `check-staging-drift`                                                           | Weekly (`Prod smoke`)                     | No — non-blocking drift alarm                                                                                                             |
+| `npm run verify:live` — `validate-modes.mjs`, `validate-soc-pipeline.mjs`                       | Weekly (`Prod smoke` → job `live-models`) | No — needs the live NASA API, so it can never join the offline PR suite                                                                   |
+| Homepage + API health curl probes                                                               | Daily (`Daily static check`)              | No — non-blocking                                                                                                                         |
 
 **Manual by design** (nothing can run these for you, so they are not gates):
 
@@ -67,6 +67,56 @@ and no human runs — and nothing that runs may be missing from here.
 | `npm run smoke`                      | Real-browser smoke against the **brand domain** — the promote runs this for you; run it by hand to check production without releasing.                                |
 
 **Retired:** `verify-polish.mjs` (crashed, stale contract) → `tests/run`, `contract`, `rescale`, `breakeven`, `consistency` + `npm run verify:staging`; `verify-chart-contract.mjs` (checked a payload the worker no longer builds) → `tests/run`. `tests/gate-net.test.mjs` enforces this section.
+
+## CI budget (free-tier runners)
+
+CI runs on a free GitHub account, so runs are an exhaustible shared budget, not
+infinite machinery. Three consequences are policy here.
+
+**A merge costs a fan-out, not a run.** Every push to `main` starts `Tests`
+(test + web-smoke + coverage), `CodeQL`, `Main audit`, `Deploy to GitHub
+Pages`, and then `Verify staging` behind the deploy. So the economy is: batch
+several related changes into one PR rather than opening one per edit, and keep
+one PR in flight at a time. A stack of simultaneous PRs multiplies both the
+fan-out and the chance of a collision — and it buys no extra safety.
+
+**A merge that cannot change the site does not deploy or verify one.**
+`Deploy to GitHub Pages` carries a `paths-ignore` list for the paths that churn
+without ever being published — `docs/`, `scripts/`, `tests/`, `.github/`,
+`.githooks/`, `worker/`, markdown, `package.json`. Because `Verify staging`
+fires on that workflow completing, both are skipped together, and a docs-only
+ledger commit stops costing a build, a publish and a full browser smoke for
+byte-identical output. The list is a denylist, so anything not named still
+deploys, and `tests/ci-resilience.test.mjs` checks every entry against the real
+deploy allowlist — an entry that would cover a deployable file fails the suite
+rather than quietly skipping a release. Nothing is left unverified by this:
+when a release actually happens, `scripts/promote.mjs` runs the same verifier
+itself, and the weekly `Prod smoke` still checks staging drift.
+
+**Supersede, do not stack.** `Tests`, `CodeQL`, `Main audit` and `Deploy` all
+carry concurrency groups that cancel a superseded run for the same ref, so a
+fast merge train keeps only the newest. `Verify staging` deliberately does _not_
+cancel in progress: each of its runs is evidence about one deployed stamp, and
+cancelling it would throw away evidence the promote path reads.
+
+**Never cancel a `pull_request` run to free capacity.** A cancelled check run
+shadows a passing one for required-status purposes — that is how a PR ends up
+BLOCKED with every check green, the trap documented in
+`.github/workflows/test.yml`. Queued `main` runs _are_ safe to cancel, and
+doing that automatically is the watchdog's job below, which is why it is
+main-scoped.
+
+### Automatic resilience
+
+Two failure modes have actually cost time here; both now have a mechanism.
+
+| Failure mode                                                          | Observed                                                                                                                               | Mechanism                                                                                                                                                                                                                                                                                                                                                                        |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A run sits `queued` for tens of minutes with no runner ever allocated | 2026-09-19 — ~45 min, unstuck by hand with cancel + rerun                                                                              | `.github/workflows/workflow-watchdog.yml` (every 15 min) runs `scripts/unstick-queued-runs.mjs`, applying that same remedy automatically. It skips runs waiting behind a sibling of the same workflow, never touches PR runs, and stands down entirely when a mass of runs is stuck (a platform incident, where cancelling would amplify the problem).                           |
+| A step fails on a transient transport error                           | `ERR_CERT_VERIFIER_CHANGED` loading `chat.js` from Pages in the post-merge `Verify staging` run; it passed on rerun and passes locally | `scripts/verify-staging.mjs` retries **only** transport-class failures (`scripts/lib/transient-retry.mjs`): three attempts, linear backoff, and every retry is recorded in the console and under `transientRetries` in the JSON verdict. A missing asset, changed byte, stale stamp or dropped header is never retried, so a deterministic regression still fails every attempt. |
+
+Neither mechanism can turn a red gate green: the watchdog only re-queues work
+that was already going to run, and a retry re-runs the same assertions.
 
 ## Release
 

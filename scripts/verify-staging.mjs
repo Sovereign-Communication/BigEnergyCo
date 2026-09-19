@@ -50,6 +50,7 @@ import {
   sha256,
   surfaceFor,
 } from "./lib/stamps.mjs";
+import { retryTransient } from "./lib/transient-retry.mjs";
 
 const arg = (name, fallback = null) => {
   const i = process.argv.indexOf(name);
@@ -75,10 +76,34 @@ if (SURFACE_ARG && !SURFACES.includes(SURFACE_ARG)) {
 const SURFACE = SURFACE_ARG || surfaceFor(base);
 const CONCURRENCY = 8;
 const FETCH_TIMEOUT_MS = 30000;
+// How many times a transport-class failure is retried before it counts. A
+// deterministic regression fails every attempt, so this cannot turn a red gate
+// green — it only absorbs a runner's TLS/socket flake.
+const TRANSIENT_ATTEMPTS = 3;
 
 const failures = [];
 const notes = [];
 const results = [];
+// A transport flake must never be invisible: every retry is collected here and
+// reported in both the console and the JSON payload, and a run that only went
+// green on a retry says so.
+const retries = [];
+const MAX_RETRY_NOTES = 6;
+const recordRetry = (step, { attempt, text }) => {
+  const detail = String(text).replace(/\s+/g, " ").trim().slice(0, 140);
+  retries.push({ step, attempt, detail });
+  if (retries.length > MAX_RETRY_NOTES) {
+    if (retries.length === MAX_RETRY_NOTES + 1) {
+      const more = `more transient retries are counted under "transientRetries" in the JSON report`;
+      notes.push(more);
+      if (!JSON_MODE) console.log(`VERIFY NOTE  ${more}`);
+    }
+    return;
+  }
+  const note = `retried ${step} (attempt ${attempt}) after a transient transport error: ${detail}`;
+  notes.push(note);
+  if (!JSON_MODE) console.log(`VERIFY NOTE  ${note}`);
+};
 const record = (name, ok, detail = "") => {
   results.push({ name, ok, detail });
   if (!ok) failures.push(`${name}${detail ? ` — ${detail}` : ""}`);
@@ -209,10 +234,23 @@ const parity = await mapPool(parityTargets, CONCURRENCY, async (file) => {
   const localBuf = readFileSync(file);
   let res;
   try {
-    res = await fetch(probeUrl(file), {
-      cache: "no-store",
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    });
+    res = await retryTransient(
+      async () => {
+        const r = await fetch(probeUrl(file), {
+          cache: "no-store",
+          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        });
+        // 5xx is the edge failing (same class as the 504s in the analytics);
+        // every other non-OK status — 404 above all — is a real verdict and is
+        // returned unretried so a missing asset still fails this gate.
+        if (r.status >= 500) throw new Error(`HTTP ${r.status}`);
+        return r;
+      },
+      {
+        attempts: TRANSIENT_ATTEMPTS,
+        onRetry: (info) => recordRetry(`parity ${file}`, info),
+      },
+    );
   } catch (e) {
     return { file, state: "network", detail: e.message };
   }
@@ -305,11 +343,21 @@ for (const [file, want] of Object.entries(special)) {
 // ── 4. security headers, surface-aware ──────────────────────────────────────
 let homeRes;
 try {
-  homeRes = await fetch(base, {
-    cache: "no-store",
-    redirect: "follow",
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-  });
+  homeRes = await retryTransient(
+    async () => {
+      const r = await fetch(base, {
+        cache: "no-store",
+        redirect: "follow",
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      if (r.status >= 500) throw new Error(`HTTP ${r.status}`);
+      return r;
+    },
+    {
+      attempts: TRANSIENT_ATTEMPTS,
+      onRetry: (info) => recordRetry("security headers", info),
+    },
+  );
 } catch (e) {
   record("security headers readable", false, `network: ${e.message}`);
   homeRes = { headers: new Headers() };
@@ -335,13 +383,19 @@ if (SKIP_BROWSER) {
   if (!JSON_MODE)
     console.log(`VERIFY       real-browser smoke against ${base} ...`);
   try {
-    const out = execFileSync(
-      process.execPath,
-      ["scripts/browser-smoke.mjs", base],
+    // Retried ONLY when the smoke's own output names a transport error. Every
+    // gate inside the smoke re-runs on the retry, so a real regression fails
+    // again and still fails this step.
+    const out = await retryTransient(
+      () =>
+        execFileSync(process.execPath, ["scripts/browser-smoke.mjs", base], {
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "pipe"],
+          timeout: 15 * 60 * 1000,
+        }),
       {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "pipe"],
-        timeout: 15 * 60 * 1000,
+        attempts: TRANSIENT_ATTEMPTS,
+        onRetry: (info) => recordRetry("browser smoke", info),
       },
     );
     record("real-browser smoke passes on staging", true, tail(out));
@@ -354,7 +408,12 @@ if (SKIP_BROWSER) {
     record(
       "real-browser smoke passes on staging",
       false,
-      failed.length ? failed.slice(0, 6).join(" | ") : tail(out) || e.message,
+      (failed.length
+        ? failed.slice(0, 6).join(" | ")
+        : tail(out) || e.message) +
+        (e.transient === true
+          ? ` [transport error persisted across all ${TRANSIENT_ATTEMPTS} attempts]`
+          : ""),
     );
   }
 }
@@ -375,6 +434,9 @@ const payload = {
   // Not a footnote: the canonical comparison and what it forgave, so "parity
   // passed" can never be read as "every byte is identical" when it is not.
   platformRewrites: { files: rewritten.length, kinds: rewriteKinds },
+  // Non-empty means the run only succeeded because a transient error cleared;
+  // it is part of the verdict, never buried.
+  transientRetries: retries,
   failures,
   notes,
   verified: failures.length === 0,
@@ -386,6 +448,9 @@ else {
     failures.length
       ? `\nSTAGING VERIFICATION FAILED (${failures.length}): ${failures.slice(0, 5).join(" ; ")}`
       : `\nSTAGING VERIFIED — ${base} serves stamp ${payload.servedStamp}, ${payload.matched}/${payload.filesChecked} files match` +
+          (retries.length
+            ? ` (after ${retries.length} transient retry(ies))`
+            : "") +
           (rewritten.length
             ? ` (${rewritten.length} HTML file(s) compared with the edge's email obfuscation canonicalised; everything else byte-identical)`
             : " byte-identical to the checkout"),

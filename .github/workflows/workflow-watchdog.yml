@@ -1,0 +1,55 @@
+name: Queue watchdog
+
+# GitHub sometimes never allocates a runner: runs sit `queued` for tens of
+# minutes while other runs on the same repo complete. On 2026-09-19 that cost
+# ~45 minutes and was only fixed by hand — cancel the run, then rerun it, which
+# produced fresh job ids that were picked up immediately. This workflow applies
+# that same remedy automatically.
+#
+# SCOPE, deliberately narrow: main-branch runs only. Cancelling a pull_request
+# run leaves a CANCELLED check on its head SHA, which shadows a passing one for
+# required-status purposes — the "BLOCKED with every check green" trap described
+# in test.yml. The selection logic (scripts/lib/stuck-runs.mjs) also skips runs
+# that are legitimately waiting behind a sibling of the same workflow, and
+# stands down entirely when a mass of runs is stuck, because that is a platform
+# backlog and cancel-then-rerun would amplify it rather than clear it.
+#
+# This never blocks a merge and never weakens a gate: it only re-queues work
+# that was already going to run, and a rerun must still pass to be green.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Report what would be unstuck, without cancelling anything
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: queue-watchdog
+  cancel-in-progress: false
+
+jobs:
+  unstick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Cancel and requeue any run stuck in the queue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/unstick-queued-runs.mjs \
+            ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '--dry-run' || '' }}

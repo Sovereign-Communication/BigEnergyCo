@@ -27,6 +27,9 @@ concurrency:
 jobs:
   audit:
     runs-on: ubuntu-latest
+    # The scan itself takes seconds; this bounds a hang so it cannot hold a
+    # runner for the 6-hour default.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
         with:
