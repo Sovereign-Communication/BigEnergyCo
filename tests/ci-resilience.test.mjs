@@ -14,7 +14,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import {
   isTransientFailure,
   retryTransient,
@@ -28,6 +29,8 @@ import { deployedFiles } from "../scripts/lib/gates.mjs";
 
 const url = (rel) => new URL(`../${rel}`, import.meta.url);
 const read = (rel) => readFileSync(url(rel), "utf8");
+const exists = (rel) => existsSync(url(rel));
+const list = (rel) => readdirSync(fileURLToPath(url(rel)));
 
 const MINUTE = 60 * 1000;
 const iso = (agoMs) => new Date(Date.now() - agoMs).toISOString();
@@ -252,20 +255,41 @@ test("the verifier retries transient failures and reports them", () => {
   );
 });
 
-test("the queue watchdog is scheduled and allowed to act", () => {
-  const wf = read(".github/workflows/workflow-watchdog.yml");
-  // The cadence is pinned because it IS the budget decision: each tick takes a
-  // runner slot, and a finer cron buys low-value latency on a rare event.
-  assert.match(
-    wf,
-    /cron: "0 \* \* \* \*"/,
-    "the watchdog runs hourly — a finer cadence spends runner slots for latency nothing waits on",
+// ── the stalled-run remedy is ON DEMAND, deliberately not scheduled ────────
+
+test("the stalled-run remedy is not scheduled, and that stays deliberate", () => {
+  // It ran hourly, produced ZERO runs, and every scheduled run this repo can
+  // observe fires 4.4-6.5 hours late (measured; see the runbook). A cron here
+  // cannot deliver timely unattended remediation, so the component was
+  // retired rather than left unprovable. Re-adding a schedule means
+  // re-arguing that evidence, which is the point of pinning it.
+  assert.equal(
+    exists(".github/workflows/workflow-watchdog.yml"),
+    false,
+    "the watchdog schedule was retired — restore it only with new evidence",
   );
-  assert.match(wf, /actions: write/, "cancelling a run needs actions: write");
+  for (const f of list(".github/workflows"))
+    assert.ok(
+      !read(`.github/workflows/${f}`).includes("unstick-queued-runs.mjs"),
+      `${f} must not quietly reschedule a remedy that cannot run on time`,
+    );
+});
+
+test("the remedy stays runnable and documented for the human who needs it", () => {
+  assert.ok(
+    exists("scripts/unstick-queued-runs.mjs"),
+    "the tool itself is kept — it IS the remedy, run when a stall is noticed",
+  );
+  const runbook = read("docs/DEPLOY_RUNBOOK.md");
   assert.match(
-    wf,
-    /node scripts\/unstick-queued-runs\.mjs/,
-    "and it must call the tool",
+    runbook,
+    /scripts\/unstick-queued-runs\.mjs/,
+    "an undocumented remedy is one nobody runs",
+  );
+  assert.match(
+    runbook,
+    /hours late/,
+    "the measured reason it is not scheduled must stay on the record",
   );
 });
 
@@ -357,19 +381,19 @@ test("the cancel-permission probe reads authorization, not existence", () => {
   assert.equal(classifyCancelProbeStatus(undefined), "inconclusive");
 });
 
-test("every scheduled watchdog run proves it can act", () => {
-  const wf = read(".github/workflows/workflow-watchdog.yml");
+test("the remedy can prove its own permission to act", () => {
+  // The probe is what makes running this safe to hand to a human: it answers
+  // "may this token cancel?" without cancelling anything.
+  const src = read("scripts/unstick-queued-runs.mjs");
   assert.match(
-    wf,
-    /unstick-queued-runs\.mjs --check-permissions/,
-    "the act path must be proven by the run itself, not assumed from the dry path",
+    src,
+    /--check-permissions/,
+    "the act path must be checkable before anything is cancelled",
   );
-  // The probe has to precede the unstick step, or a run could act before
-  // anything established that acting is permitted.
-  assert.ok(
-    wf.indexOf("--check-permissions") <
-      wf.indexOf("node scripts/unstick-queued-runs.mjs \\\n"),
-    "the permission probe must run before the unstick step",
+  assert.match(
+    read("docs/DEPLOY_RUNBOOK.md"),
+    /--check-permissions/,
+    "and the operator must be told it exists",
   );
 });
 
