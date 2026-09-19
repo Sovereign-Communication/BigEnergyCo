@@ -8,7 +8,7 @@ import {
 } from "../assets/js/shared/jargon-dict.js";
 import {
   readSimpleMode,
-  writeSimpleMode,
+  setSimpleMode,
   SIMPLE_MODE_KEY,
 } from "../assets/js/shared/simple-mode.js";
 import {
@@ -80,10 +80,10 @@ test("GATE: every glossary entry has a short and long plain-language explanation
 test("Simple mode defaults OFF and survives storage changes", () => {
   const storage = new MemoryStorage();
   assert.equal(readSimpleMode(storage), false);
-  writeSimpleMode(true, storage);
+  setSimpleMode(true, storage);
   assert.equal(storage.getItem(SIMPLE_MODE_KEY), "simple");
   assert.equal(readSimpleMode(storage), true);
-  writeSimpleMode(false, storage);
+  setSimpleMode(false, storage);
   assert.equal(readSimpleMode(storage), false);
 });
 

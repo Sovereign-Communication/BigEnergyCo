@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260919a";
+import { APPLIANCES } from "./appliances.js?v=20260919b";
 import {
   CITY_CATALOG,
   searchCities,
@@ -26,7 +26,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260919a";
+} from "./cities.js?v=20260919b";
 
 import {
   estimateTariff,
@@ -34,67 +34,73 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260919a";
+} from "./pricing.js?v=20260919b";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260919a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260919b";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260919a";
+} from "./lead-acid.js?v=20260919b";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260919a";
+} from "./bom.js?v=20260919b";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260919a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260919b";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260919a";
+} from "../shared/i18n.js?v=20260919b";
 
-import { LOCALES } from "../shared/locales.js?v=20260919a";
+import { LOCALES } from "../shared/locales.js?v=20260919b";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260919a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260919a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260919b";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260919b";
 import {
-  readSimpleMode,
-  writeSimpleMode,
+  isSimpleMode,
+  initSimpleMode,
+  setSimpleMode,
+  onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260919a";
-import { buildSimpleView } from "../shared/simple-view.js?v=20260919a";
+} from "../shared/simple-mode.js?v=20260919b";
+import { buildSimpleView } from "../shared/simple-view.js?v=20260919b";
+import {
+  CUT_TARGET_PCT,
+  targetForPct,
+} from "../shared/cut-targets.js?v=20260919b";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260919a";
+} from "./frontier-chart.js?v=20260919b";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260919a";
+} from "./rescale.js?v=20260919b";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260919a";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260919b";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260919a";
+} from "./map-provider.js?v=20260919b";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260919a";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260919a";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260919a";
+} from "./wizard.js?v=20260919b";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260919b";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260919b";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -139,9 +145,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260919a";
+} from "./money.js?v=20260919b";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260919a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260919b";
 
 let worker = null;
 
@@ -154,7 +160,6 @@ let resultLevel = "best";
 // Quick (auto-run) mode shows only the location controls and sizes with
 // defaults; Manual reveals the full form. Default is quick.
 let quickMode = true;
-let simpleMode = false;
 let locationResolved = false;
 let wizard = restoreWizard();
 let roofMapRegistry = null;
@@ -485,6 +490,7 @@ function warmSiteWeather(lat, lon) {
 }
 
 function applySimpleMode() {
+  const simpleMode = isSimpleMode();
   document.documentElement.dataset.displayMode = simpleMode
     ? "simple"
     : "technical";
@@ -539,15 +545,19 @@ function applySimpleMode() {
 }
 
 function setupSimpleMode() {
-  simpleMode = readSimpleMode();
+  initSimpleMode();
   const toggle = $("simpleModeToggle");
   if (!toggle) return;
-  toggle.checked = simpleMode;
+  toggle.checked = isSimpleMode();
+  // The module owns the state; this listener only translates DOM events
+  // into setSimpleMode() and re-renders through the subscription below.
   toggle.addEventListener("change", () => {
-    simpleMode = toggle.checked;
-    writeSimpleMode(simpleMode);
+    setSimpleMode(toggle.checked);
+  });
+  onSimpleModeChange((simple) => {
+    if (toggle.checked !== simple) toggle.checked = simple;
     applySimpleMode();
-    if (simpleMode && lastPayload) {
+    if (simple && lastPayload) {
       document.getElementById("sizing").scrollIntoView({ behavior: "smooth" });
     }
   });
@@ -632,9 +642,8 @@ function renderSimpleResults(p) {
     t("simpleSeeDetails"),
   );
   details.addEventListener("click", () => {
-    simpleMode = false;
-    writeSimpleMode(false);
-    applySimpleMode();
+    // One state setter; the mode subscription re-renders the whole surface.
+    setSimpleMode(false);
     $("resultsRegion").scrollIntoView({ behavior: "smooth" });
   });
   actions.appendChild(details);
@@ -2469,10 +2478,9 @@ function scheduleRun(quiet = false) {
 // ── Bill-cut slider (1–150%) ────────────────────────────────────────────────
 
 // The form's "Bill-cut target" select offers exactly the grid-tie columns the
-// engine sizes (BILL_TARGETS in engine.js) — so the recommendation can always
-// honor the choice — plus a disabled "custom" option that mirrors whatever
-// arbitrary cut the results slider holds. One decision, two controls.
-const CUT_TARGET_PCT = { cut95: 95, cut80: 80, cut60: 60 };
+// engine sizes, plus a disabled "custom" option that mirrors whatever
+// arbitrary cut the results slider holds. One decision, two controls; the
+// target policy itself is single-owner in shared/cut-targets.js.
 
 function syncCutLabel() {
   const slider = $("cutSlider");
@@ -2499,10 +2507,9 @@ function syncCutControls(pct) {
   syncCutLabel();
   const agSelect = $("autoTarget");
   if (agSelect) {
-    const match = Object.entries(CUT_TARGET_PCT).find(([, p]) => p === v);
     // The select mirrors the slider exactly — a real target when it is one,
     // the honest "custom" state otherwise. Never a stale preset.
-    agSelect.value = match ? match[0] : "custom";
+    agSelect.value = targetForPct(v);
   }
 }
 
@@ -3399,7 +3406,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260919a", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260919b", {
       type: "module",
     });
 
@@ -7677,7 +7684,7 @@ window.addEventListener("resize", () => {
 function renderEli5Summary(p) {
   const wrap = $("eli5Summary");
   if (!wrap) return;
-  if (!simpleMode) {
+  if (!isSimpleMode()) {
     wrap.style.display = "none";
     wrap.innerHTML = "";
     return;
@@ -7959,7 +7966,7 @@ function renderResults(p) {
 
   // Simple mode's card refreshes with every fresh payload, same as the
   // technical surfaces.
-  if (simpleMode) renderSimpleResults(p);
+  if (isSimpleMode()) renderSimpleResults(p);
 
   const a = p.assumptions;
 
@@ -8378,7 +8385,8 @@ function restoreFromShare() {
     $("autoTier").value = o.at;
 
   if (o.ag && typeof o.ag === "string" && $("autoTarget")) {
-    const valid = ["cut95", "cut80", "cut60"];
+    // Same single source as the markup drift guard: only real engine targets.
+    const valid = Object.keys(CUT_TARGET_PCT);
     if (valid.includes(o.ag)) $("autoTarget").value = o.ag;
   }
 
