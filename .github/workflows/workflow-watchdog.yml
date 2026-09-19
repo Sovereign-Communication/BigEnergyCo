@@ -59,6 +59,18 @@ jobs:
         with:
           node-version: 22
 
+      # Answer the question the dry path cannot, on every single run: may THIS
+      # run's token cancel at all? A scheduled run's token is a different
+      # credential from an operator's `gh` login, so a passing dry run says
+      # nothing about the act path. The probe is side-effect free (it aims a
+      # cancel at a run id that cannot exist) and fails the job if the answer is
+      # "no", so the watchdog can never sit there looking healthy while being
+      # unable to act.
+      - name: Prove this run's token can actually cancel a run
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/unstick-queued-runs.mjs --check-permissions
+
       - name: Cancel and requeue any run stuck in the queue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

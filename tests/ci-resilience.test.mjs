@@ -21,6 +21,7 @@ import {
 } from "../scripts/lib/transient-retry.mjs";
 import {
   DEFAULT_BAILOUT_ABOVE,
+  classifyCancelProbeStatus,
   selectStuckRuns,
 } from "../scripts/lib/stuck-runs.mjs";
 import { deployedFiles } from "../scripts/lib/gates.mjs";
@@ -336,6 +337,72 @@ test("a deployable change is never skipped", () => {
       !patterns.some((p) => matchesPattern(p, file)),
       `${file} must always be deployed`,
     );
+});
+
+// ── proving the act path is permitted ───────────────────────────────────────
+
+// GitHub checks authorisation before existence, so a cancel aimed at a run id
+// that cannot exist is a side-effect-free permission probe.
+test("the cancel-permission probe reads authorization, not existence", () => {
+  assert.equal(
+    classifyCancelProbeStatus(404),
+    "authorized",
+    "an absent run answered by an authorised token proves the token may cancel",
+  );
+  assert.equal(classifyCancelProbeStatus(403), "denied");
+  assert.equal(classifyCancelProbeStatus(401), "denied");
+  // Never let a transient answer masquerade as either verdict.
+  assert.equal(classifyCancelProbeStatus(500), "inconclusive");
+  assert.equal(classifyCancelProbeStatus(200), "inconclusive");
+  assert.equal(classifyCancelProbeStatus(undefined), "inconclusive");
+});
+
+test("every scheduled watchdog run proves it can act", () => {
+  const wf = read(".github/workflows/workflow-watchdog.yml");
+  assert.match(
+    wf,
+    /unstick-queued-runs\.mjs --check-permissions/,
+    "the act path must be proven by the run itself, not assumed from the dry path",
+  );
+  // The probe has to precede the unstick step, or a run could act before
+  // anything established that acting is permitted.
+  assert.ok(
+    wf.indexOf("--check-permissions") <
+      wf.indexOf("node scripts/unstick-queued-runs.mjs \\\n"),
+    "the permission probe must run before the unstick step",
+  );
+});
+
+test("the permission probe is itself harmless", () => {
+  const src = read("scripts/unstick-queued-runs.mjs");
+  assert.match(
+    src,
+    /const PROBE_RUN_ID = "999999999999"/,
+    "the probe must aim at a run id that cannot exist",
+  );
+  assert.match(
+    src,
+    /if \(CHECK_PERMISSIONS\) return checkPermissions\(\)/,
+    "the probe must short-circuit before any real cancel can be reached",
+  );
+});
+
+test("the probe refuses to run without credentials instead of reporting success", () => {
+  const r = spawnSync(
+    process.execPath,
+    ["scripts/unstick-queued-runs.mjs", "--check-permissions"],
+    {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        GITHUB_TOKEN: "",
+        GH_TOKEN: "",
+        GITHUB_REPOSITORY: "",
+      },
+    },
+  );
+  assert.notEqual(r.status, 0);
+  assert.match(`${r.stdout}${r.stderr}`, /GITHUB_REPOSITORY and GITHUB_TOKEN/);
 });
 
 test("the watchdog refuses to run without credentials instead of no-opping", () => {

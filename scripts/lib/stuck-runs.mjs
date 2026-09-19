@@ -22,6 +22,21 @@
 //      AMPLIFY it, so above `bailoutAbove` the watchdog stands down and only
 //      reports.
 
+/**
+ * Interpret the response to a cancel request aimed at a run id that does not
+ * exist. This is how the cancel permission is proven without cancelling
+ * anything: GitHub checks authorisation BEFORE existence, so an unauthorised
+ * token is refused with 403 while an authorised one is told the run is absent
+ * (404). A 2xx on a non-existent id is impossible, and 5xx tells us nothing.
+ * @param {number} status
+ * @returns {"authorized"|"denied"|"inconclusive"}
+ */
+export function classifyCancelProbeStatus(status) {
+  if (status === 404) return "authorized";
+  if (status === 403 || status === 401) return "denied";
+  return "inconclusive";
+}
+
 export const DEFAULT_MIN_QUEUED_MS = 20 * 60 * 1000;
 export const DEFAULT_CAP = 3;
 export const DEFAULT_BAILOUT_ABOVE = 8;
