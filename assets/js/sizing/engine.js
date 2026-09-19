@@ -2,8 +2,8 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260918h";
-import { oversizeCallout } from "./rescale.js?v=20260918h";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20260919a";
+import { oversizeCallout } from "./rescale.js?v=20260919a";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)

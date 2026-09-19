@@ -257,10 +257,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20260918h" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20260918h" />
+    <link rel="preload" href="./assets/site.css?v=20260919a" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20260919a" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20260918h" />
+    <link rel="stylesheet" href="./assets/site.css?v=20260919a" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -1715,9 +1715,10 @@
                   >
 
                   <select id="autoTarget" class="form-control">
-                    <option value="cut100">
-                      100% &mdash; net-zero electric bill
-                    </option>
+                    <!-- These three are exactly the grid-tie columns the engine
+                         sizes (BILL_TARGETS): the recommendation can always
+                         honor the choice. -->
+                    <option value="cut95">95% &mdash; near-zero bill</option>
 
                     <option value="cut80" selected>
                       80% &mdash; heavy bill cut (cheapest path)
@@ -1727,7 +1728,11 @@
                       60% &mdash; daytime solar priority
                     </option>
 
-                    <option value="cut40">40% &mdash; starter setup</option>
+                    <!-- Filled in whenever the results slider holds an
+                         arbitrary cut: the two controls are one decision. -->
+                    <option value="custom" hidden disabled>
+                      Custom (from the results slider)
+                    </option>
                   </select>
                 </div>
 
@@ -3366,9 +3371,9 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20260918h"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20260919a"></script>
 
-    <script defer src="./assets/js/chat.js?v=20260918h"></script>
+    <script defer src="./assets/js/chat.js?v=20260919a"></script>
   </body>
 </html>
 

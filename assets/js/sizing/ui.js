@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260918h";
+import { APPLIANCES } from "./appliances.js?v=20260919a";
 import {
   CITY_CATALOG,
   searchCities,
@@ -26,7 +26,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260918h";
+} from "./cities.js?v=20260919a";
 
 import {
   estimateTariff,
@@ -34,67 +34,67 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260918h";
+} from "./pricing.js?v=20260919a";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260918h";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260919a";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260918h";
+} from "./lead-acid.js?v=20260919a";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260918h";
+} from "./bom.js?v=20260919a";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260918h";
+import { BOM_ITEMS } from "../shared/content.js?v=20260919a";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260918h";
+} from "../shared/i18n.js?v=20260919a";
 
-import { LOCALES } from "../shared/locales.js?v=20260918h";
+import { LOCALES } from "../shared/locales.js?v=20260919a";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260918h";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260918h";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260919a";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260919a";
 import {
   readSimpleMode,
   writeSimpleMode,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260918h";
-import { buildSimpleView } from "../shared/simple-view.js?v=20260918h";
+} from "../shared/simple-mode.js?v=20260919a";
+import { buildSimpleView } from "../shared/simple-view.js?v=20260919a";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260918h";
+} from "./frontier-chart.js?v=20260919a";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260918h";
+} from "./rescale.js?v=20260919a";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260918h";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260919a";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260918h";
+} from "./map-provider.js?v=20260919a";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260918h";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260918h";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260918h";
+} from "./wizard.js?v=20260919a";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260919a";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260919a";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -139,9 +139,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260918h";
+} from "./money.js?v=20260919a";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260918h";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260919a";
 
 let worker = null;
 
@@ -2468,6 +2468,12 @@ function scheduleRun(quiet = false) {
 
 // ── Bill-cut slider (1–150%) ────────────────────────────────────────────────
 
+// The form's "Bill-cut target" select offers exactly the grid-tie columns the
+// engine sizes (BILL_TARGETS in engine.js) — so the recommendation can always
+// honor the choice — plus a disabled "custom" option that mirrors whatever
+// arbitrary cut the results slider holds. One decision, two controls.
+const CUT_TARGET_PCT = { cut95: 95, cut80: 80, cut60: 60 };
+
 function syncCutLabel() {
   const slider = $("cutSlider");
   const out = $("cutSliderVal");
@@ -2493,10 +2499,10 @@ function syncCutControls(pct) {
   syncCutLabel();
   const agSelect = $("autoTarget");
   if (agSelect) {
-    const map = { cut100: 100, cut80: 80, cut60: 60, cut40: 40 };
-    for (const [id, pct] of Object.entries(map)) {
-      if (v === pct) agSelect.value = id;
-    }
+    const match = Object.entries(CUT_TARGET_PCT).find(([, p]) => p === v);
+    // The select mirrors the slider exactly — a real target when it is one,
+    // the honest "custom" state otherwise. Never a stale preset.
+    agSelect.value = match ? match[0] : "custom";
   }
 }
 
@@ -2504,6 +2510,9 @@ function setupCutSlider() {
   const slider = $("cutSlider");
   if (!slider) return;
   slider.value = String(Math.round(customCutFraction * 100));
+  // The select starts in sync too ("custom" until a preset is actually chosen,
+  // since the restored fraction may be arbitrary).
+  syncCutControls(Math.round(customCutFraction * 100));
   syncCutLabel();
 
   slider.addEventListener("input", () => {
@@ -3390,7 +3399,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260918h", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260919a", {
       type: "module",
     });
 
@@ -8365,16 +8374,7 @@ function restoreFromShare() {
     $("autoTier").value = o.at;
 
   if (o.ag && typeof o.ag === "string" && $("autoTarget")) {
-    const valid = [
-      "cut10",
-      "cut15",
-      "cut20",
-      "cut25",
-      "cut30",
-      "cut60",
-      "cut80",
-      "cut95",
-    ];
+    const valid = ["cut95", "cut80", "cut60"];
     if (valid.includes(o.ag)) $("autoTarget").value = o.ag;
   }
 
@@ -8382,6 +8382,9 @@ function restoreFromShare() {
     customCutFraction = o.cc;
     const cutIn = $("cutSlider");
     if (cutIn) cutIn.value = String(Math.round(o.cc * 100));
+    // One writer: the select mirrors whatever fraction came back (preset or
+    // custom) instead of a stale value that disagrees with the slider.
+    syncCutControls(Math.round(o.cc * 100));
     syncCutLabel();
   }
 
@@ -9339,9 +9342,9 @@ export function initSizingUI() {
         // One cut target, two controls: choosing a target in the form must
         // move the results slider to the same cut (and vice versa), so the
         // "your target" column, the recommendation and the select can never
-        // disagree after a fresh run.
-        const map = { cut100: 100, cut80: 80, cut60: 60, cut40: 40 };
-        const pct = map[autoTargetNode.value];
+        // disagree after a fresh run. "custom" is read-only state (it only
+        // ever mirrors the slider), so it never drives a run.
+        const pct = CUT_TARGET_PCT[autoTargetNode.value];
         if (pct) {
           customCutFraction = pct / 100;
           const cutIn = $("cutSlider");
