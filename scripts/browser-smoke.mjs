@@ -418,6 +418,38 @@ async function main() {
       `${caption} chars`,
     );
 
+    // ── Share link round trip ("send this to someone") ────────────────
+    // The serialized state must survive: a fresh page opened at the shared
+    // URL restores the inputs and re-runs to visible results.
+    console.log("SMOKE      ── share link ──");
+    const shareHash = await evaluate(`(() => {
+      document.getElementById("btnShareResult").click();
+      return location.hash.startsWith("#s=") ? location.hash : null;
+    })()`);
+    gate(
+      "share click leaves a #s= link in the URL",
+      !!shareHash,
+      String(shareHash || "").slice(0, 24),
+    );
+    if (shareHash) {
+      await navigate(`${BASE}${shareHash}`);
+      const restored = await poll(
+        async () =>
+          evaluate(
+            `!document.getElementById("resultsRegion")?.hidden && !!document.getElementById("dailyKwhInput")?.value`,
+          ),
+        RUN_TIMEOUT_MS,
+      );
+      const restoredState = await evaluate(
+        `(() => ({ kwh: document.getElementById("dailyKwhInput")?.value, results: !document.getElementById("resultsRegion")?.hidden }))()`,
+      );
+      gate(
+        "share link restores inputs + results in a fresh page",
+        !!restored,
+        JSON.stringify(restoredState),
+      );
+    }
+
     // ── Responsiveness gates (performance plan Phase 0) ───────────────
     // The warm-path behaviors that make the tool feel instant must hold on
     // every future change. Timing budgets are generous (CI/staging variance)
