@@ -44,6 +44,11 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Measured on 2026-09-19: ~13s (build + upload + publish). Bounded like
+    # every other job so a hung step cannot hold a runner for the 6-hour
+    # default; `Verify staging` waits on this workflow, so a hang here would
+    # stall the gate behind it too.
+    timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

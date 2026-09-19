@@ -14,6 +14,9 @@ permissions:
 jobs:
   static:
     runs-on: ubuntu-latest
+    # Measured on 2026-09-19: ~5s. Bounded so a hung curl cannot hold a runner
+    # for the 6-hour default.
+    timeout-minutes: 15
     steps:
       - name: Homepage serves with versioned entry module
         run: |

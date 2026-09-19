@@ -24,6 +24,10 @@ permissions:
 jobs:
   analyze:
     runs-on: ubuntu-latest
+    # Measured on 2026-09-19: ~1m07s on this repo. Bounded so a hung init or
+    # analysis cannot hold a runner for GitHub's 6-hour default — runner
+    # occupancy is what makes a queue backlog worse.
+    timeout-minutes: 15
     permissions:
       actions: read
       contents: read
