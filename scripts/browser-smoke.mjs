@@ -763,11 +763,39 @@ async function main() {
         `!!document.querySelector("#simpleResultsWrap .simple-results-card")`,
       ),
     );
+    // Behavioral, not existential: the click must open the chat modal AND
+    // compose the advisor POST. fetch is intercepted so no network call ever
+    // leaves the page (a real request would 404 on bare static servers and
+    // hit the production advisor endpoint on deployed surfaces). An earlier
+    // version asserted `typeof b.onclick === "function"` — always false for
+    // addEventListener wiring, and shadowed by a trailing `|| !!b` anyway —
+    // so the gate passed on mere existence. See the #82 precedent.
     gate(
-      "simple mode: AI advisor reachable from the card",
+      "simple mode: AI advisor button opens the chat modal and sends the brief",
       await evaluate(
-        `(() => { const b = document.getElementById("btnSimpleAdvisor");
-          return !!b && b.textContent.length > 0 && typeof b.onclick === "function" || !!b; })()`,
+        `(() => {
+          const b = document.getElementById("btnSimpleAdvisor");
+          const m = document.getElementById("sizingModal");
+          if (!b || b.textContent.length === 0 || !m) return false;
+          const of = window.fetch;
+          let sent = false;
+          window.fetch = function (u, o) {
+            if (String(u).indexOf("/api/chat") !== -1) {
+              sent = true;
+              return Promise.resolve({ ok: true, json: function () { return Promise.resolve({ reply: "smoke-stub" }); } });
+            }
+            return of.apply(this, arguments);
+          };
+          let opened = false;
+          try {
+            b.click();
+            opened = m.style.display === "flex";
+          } finally {
+            window.fetch = of;
+            m.style.display = "none";
+          }
+          return opened && sent;
+        })()`,
       ),
     );
     gate(

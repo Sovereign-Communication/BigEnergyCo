@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260919c";
+import { APPLIANCES } from "./appliances.js?v=20260919d";
 import {
   CITY_CATALOG,
   searchCities,
@@ -26,7 +26,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260919c";
+} from "./cities.js?v=20260919d";
 
 import {
   estimateTariff,
@@ -34,73 +34,73 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260919c";
+} from "./pricing.js?v=20260919d";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260919c";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260919d";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260919c";
+} from "./lead-acid.js?v=20260919d";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260919c";
+} from "./bom.js?v=20260919d";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260919c";
+import { BOM_ITEMS } from "../shared/content.js?v=20260919d";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260919c";
+} from "../shared/i18n.js?v=20260919d";
 
-import { LOCALES } from "../shared/locales.js?v=20260919c";
+import { LOCALES } from "../shared/locales.js?v=20260919d";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260919c";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260919c";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260919d";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260919d";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260919c";
-import { buildSimpleView } from "../shared/simple-view.js?v=20260919c";
+} from "../shared/simple-mode.js?v=20260919d";
+import { buildSimpleView } from "../shared/simple-view.js?v=20260919d";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20260919c";
+} from "../shared/cut-targets.js?v=20260919d";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260919c";
+} from "./frontier-chart.js?v=20260919d";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260919c";
+} from "./rescale.js?v=20260919d";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260919c";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260919d";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260919c";
+} from "./map-provider.js?v=20260919d";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260919c";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260919c";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260919c";
+} from "./wizard.js?v=20260919d";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260919d";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260919d";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -145,9 +145,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260919c";
+} from "./money.js?v=20260919d";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260919c";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260919d";
 
 let worker = null;
 
@@ -3417,7 +3417,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260919c", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260919d", {
       type: "module",
     });
 
@@ -8759,13 +8759,9 @@ function populatePrintSheet(p, inp) {
 }
 
 // The advisor explains whatever mode the visitor is in. The technical brief
-// is the single source of real numbers; Simple mode only adds a style
-// instruction so the answer matches the mode's plain language.
-const ELI5_STYLE_INSTRUCTION =
-  "[ADVISOR INSTRUCTION: The visitor is in Simple mode. Answer like an expert " +
-  "talking to a smart 12-year-old: plain everyday words, no jargon (explain " +
-  "any technical term in a short parenthesis), 4 short sentences maximum, and " +
-  "end with the ONE number that matters most.]";
+// is the single source of real numbers; Simple mode only appends a style
+// instruction (locale-owned: "simpleAdvisorStyle" in locales.js) so the
+// answer matches the mode's plain language in every supported language.
 
 function askAdvisor() {
   if (!window.lastSizingBrief) return;
@@ -8774,7 +8770,7 @@ function askAdvisor() {
 
   if (input)
     input.value = isSimpleMode()
-      ? window.lastSizingBrief + "\n" + ELI5_STYLE_INSTRUCTION
+      ? window.lastSizingBrief + "\n" + t("simpleAdvisorStyle")
       : window.lastSizingBrief;
 
   if (window.openSizingModal) window.openSizingModal();
