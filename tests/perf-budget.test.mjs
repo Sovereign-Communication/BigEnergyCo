@@ -57,6 +57,7 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     "i18n.js",
     "simple-mode.js",
     "simple-view.js",
+    "cut-targets.js",
   ];
   let jsBytes = 0;
   for (const name of [...eagerSizing, ...eagerShared]) {
@@ -78,6 +79,8 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // 758,000 (+12 KB): real Simple mode — the pure view model (simple-view.js),
   // its render path in ui.js, simple-mode strings in all six locales, and the
   // hide-scoping CSS. User-facing feature, reviewed deliberately.
+  // 761,000 (+3 KB): cut-targets.js single-owner extraction (dedup of three
+  // inline maps); net new bytes ≈ one module shell.
   assert.ok(
     htmlBytes <= 125_000,
     `index.html ${htmlBytes} bytes exceeds 125,000 budget`,
@@ -87,8 +90,8 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     `site.css ${cssBytes} bytes exceeds 40,000 budget`,
   );
   assert.ok(
-    jsBytes <= 758_000,
-    `eager JS ${jsBytes} bytes exceeds 758,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
+    jsBytes <= 761_000,
+    `eager JS ${jsBytes} bytes exceeds 761,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
   );
 });
 

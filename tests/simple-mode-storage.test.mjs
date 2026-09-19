@@ -2,7 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   readSimpleMode,
-  writeSimpleMode,
+  initSimpleMode,
+  setSimpleMode,
+  isSimpleMode,
 } from "../assets/js/shared/simple-mode.js";
 
 // The v1 key carried "simple" written by default-on builds. The rotation
@@ -20,14 +22,15 @@ test("storage contract: rotation makes every legacy profile boot OFF", () => {
 
   // The rotated key is unset on every existing profile -> OFF, regardless
   // of what the old key holds.
-  assert.equal(readSimpleMode(store), false);
+  initSimpleMode(store);
+  assert.equal(isSimpleMode(), false);
 
-  // An explicit toggle still persists and round-trips.
-  writeSimpleMode(true, store);
+  // An explicit toggle still persists and round-trips through the setter.
+  setSimpleMode(true, store);
   assert.equal(legacy.get("beco-simple-mode-v2"), "simple");
-  assert.equal(readSimpleMode(store), true);
-  writeSimpleMode(false, store);
-  assert.equal(readSimpleMode(store), false);
+  assert.equal(isSimpleMode(), true);
+  setSimpleMode(false, store);
+  assert.equal(isSimpleMode(), false);
 
   // The old key is never read or rewritten by the new code.
   assert.equal(legacy.get("beco-simple-mode"), "simple");
@@ -46,4 +49,8 @@ test("storage contract: unset, corrupt and throwing storage all read OFF", () =>
   );
   // Default storage absent (SSR/worker contexts) must not throw either.
   assert.equal(readSimpleMode(undefined), false);
+
+  // The state owner degrades the same way: init from hostile storage -> OFF.
+  initSimpleMode(undefined);
+  assert.equal(isSimpleMode(), false);
 });
