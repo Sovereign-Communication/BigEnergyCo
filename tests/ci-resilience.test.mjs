@@ -88,6 +88,62 @@ test("a real regression is never retryable", () => {
     assert.equal(isTransientFailure(text), false, `must not retry: ${text}`);
 });
 
+// The fixtures below are COPIES of strings headless Chrome actually emitted,
+// captured against local proxies that failed on purpose (2026-09-19): a 503 on
+// a navigation, a 503 on a subresource, a 404 on a subresource, an uncaught
+// page exception, a refused connection, a reset connection, an unresolvable
+// host. They are the evidence that the classification covers what the browser
+// really says, rather than what we imagine it says.
+test("Chrome's transient wording is classified", () => {
+  for (const text of [
+    // A navigation whose response was 5xx. This is the one that turned a flake
+    // into a red `Verify staging` while parity absorbed it and passed.
+    "log.error: Failed to load resource: the server responded with a status of 503 (Service Unavailable) [http://127.0.0.1:18442/nav-503]",
+    // The same status on a subresource.
+    "log.error: Failed to load resource: the server responded with a status of 503 (Service Unavailable) [http://127.0.0.1:18442/boom.js]",
+    // Navigation-level transport failures. Chrome logs nothing for these, so
+    // the smoke records the navigate error itself; without that they never
+    // reach any classifier.
+    "navigation: net::ERR_CONNECTION_REFUSED [http://127.0.0.1:18449/]",
+    "navigation: net::ERR_CONNECTION_RESET [http://127.0.0.1:18461/]",
+    "navigation: net::ERR_NAME_NOT_RESOLVED [http://no-such-host.invalid/]",
+    // Observed for real: the edge accepted the request and then killed the
+    // connection, so the navigation reported no response at all.
+    "SMOKE FAIL  no other console/page errors — navigation: net::ERR_EMPTY_RESPONSE [http://127.0.0.1:8154/solar-heatmap/?smoke=1789846701076]",
+    // Also observed for real, under load: the harness's own CDP call timed out
+    // while the renderer was starved — no assertion was involved.
+    "SMOKE FAIL  smoke run completed — CDP timeout: Runtime.evaluate",
+  ])
+    assert.equal(isTransientFailure(text), true, `should retry: ${text}`);
+});
+
+test("Chrome's non-transient wording stays non-transient", () => {
+  for (const text of [
+    // Byte-identical to the 503 line apart from the number: a missing asset is
+    // the regression this gate exists to catch, so 4xx must never match.
+    "log.error: Failed to load resource: the server responded with a status of 404 (Not Found) [http://127.0.0.1:18442/missing.js]",
+    // Chrome's own text for an uncaught page error.
+    "page exception: Uncaught",
+    // The request was cancelled by the page, not by the network: an assertion
+    // about what the artifact did, not a flake to absorb.
+    "log.error: Failed to load resource: net::ERR_ABORTED [http://127.0.0.1:8154/assets/js/sizing/ui.js]",
+    "log.error: net::ERR_BLOCKED_BY_CLIENT [http://127.0.0.1:8154/assets/site.css]",
+  ])
+    assert.equal(isTransientFailure(text), false, `must not retry: ${text}`);
+});
+
+test("the smoke surfaces a navigation-level transport error", () => {
+  // The channel, not just the classifier: a failed navigation is invisible to
+  // every other collector, so removing this line makes a transport flake fail
+  // the smoke as an unexplained gate failure.
+  const src = read("scripts/browser-smoke.mjs");
+  assert.match(
+    src,
+    /if \(nav\?\.errorText\)[\s\S]{0,120}errors\.push\(`navigation: /,
+    "a navigation that never loaded must be recorded, with its Chrome error",
+  );
+});
+
 test("empty and non-string input is not transient", () => {
   assert.equal(isTransientFailure(""), false);
   assert.equal(isTransientFailure(undefined), false);

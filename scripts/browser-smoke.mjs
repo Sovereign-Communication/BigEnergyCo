@@ -202,7 +202,14 @@ async function main() {
           }
         };
       });
-      await send("Page.navigate", { url });
+      const nav = await send("Page.navigate", { url });
+      // A navigation that never loaded — refused, DNS failure, reset, a
+      // transport abort — is reported ONLY here: Chrome logs nothing for it, so
+      // without this the gates fail with no transport evidence at all and a
+      // retry cannot tell a flake from a regression. Recorded as an error line,
+      // so it fails the same gate it always did, with a reason.
+      if (nav?.errorText)
+        errors.push(`navigation: ${nav.errorText} [${url.slice(0, 120)}]`);
       await Promise.race([loaded, sleep(60000)]);
       await sleep(4000); // app boot + auto-run
     };

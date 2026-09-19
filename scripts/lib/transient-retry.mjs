@@ -10,7 +10,13 @@
 // The rule here is deliberately narrow:
 //   • only TRANSPORT signatures are retryable (TLS/cert, DNS, socket, timeout,
 //     and 5xx from the edge). A 404 is NOT transient — a missing asset is the
-//     exact regression this gate exists to catch.
+//     exact regression this gate exists to catch. The same rule has to hold for
+//     the wording CHROME emits, not just the wording `fetch` emits: on
+//     2026-09-19 a 503-once-per-path edge handshake left parity green (it
+//     retried) while the browser smoke failed, because Chrome words a 5xx as
+//     `Failed to load resource: the server responded with a status of 503
+//     (Service Unavailable)` and no pattern matched it. Chrome's 4xx line has
+//     exactly the same shape, which is why the pattern is anchored on 5.
 //   • a retried step re-runs the SAME assertion. A deterministic regression
 //     therefore fails every attempt and still fails the gate; retrying can only
 //     ever absorb non-determinism that comes from the network.
@@ -23,11 +29,18 @@
 //     scripts/lib/budgets.mjs owns that arithmetic.
 
 const TRANSIENT_PATTERNS = [
-  // TLS/certificate family — ERR_CERT_VERIFIER_CHANGED is the one observed.
-  /\bERR_(?:CERT|SSL)_[A-Z_]+\b/,
-  // Connectivity, DNS, sockets.
-  /\bERR_(?:CONNECTION_[A-Z_]+|TIMED_OUT|SOCKET_NOT_CONNECTED|NETWORK_CHANGED|INTERNET_DISCONNECTED|NAME_NOT_RESOLVED|ADDRESS_UNREACHABLE)\b/,
-  /\bnet::ERR_(?:CERT|SSL|CONNECTION|TIMED_OUT|SOCKET|NETWORK|NAME|ADDRESS)_?[A-Z_]*\b/,
+  // Chrome's network-error family, which is what the browser smoke reports:
+  // the cert flake that started this work (ERR_CERT_VERIFIER_CHANGED), the
+  // connection/DNS/socket codes, and the ones a dropped edge produces —
+  // ERR_EMPTY_RESPONSE was observed on a navigation whose connection was
+  // killed after the request. Excluded on purpose: the codes that mean the
+  // PAGE cancelled the request rather than the network failing (ERR_ABORTED,
+  // ERR_BLOCKED_BY_*), which are assertions about the artifact, not flakes.
+  /\bnet::ERR_(?!ABORTED\b|BLOCKED_BY_)/,
+  // The same codes where a tool spells them WITHOUT the `net::` prefix (a
+  // curl line, a runner log). Chrome always includes the prefix, so those codes
+  // are covered once, above.
+  /\bERR_(?:CERT|SSL|CONNECTION|TIMED_OUT|SOCKET|NETWORK|NAME|ADDRESS)[A-Z_]*\b/,
   // Node/undici transport errors.
   /\b(?:ECONNRESET|ECONNREFUSED|ETIMEDOUT|EPIPE|EAI_AGAIN|ENETUNREACH|UND_ERR_[A-Z_]+)\b/,
   /\bsocket hang ?up\b/i,
@@ -35,9 +48,22 @@ const TRANSIENT_PATTERNS = [
   // An aborted request or a stalled connection (undici/DOMException wording).
   /\bTimeoutError\b/,
   /aborted due to timeout/i,
+  // The smoke's own transport to the browser. Observed on a loaded machine:
+  // two verifications ran at once, the renderer stalled, and `Runtime.evaluate`
+  // hit the harness's 30s cap — a false red, with no assertion involved. It is
+  // the same class as a request timeout, and retrying cannot hide a regression:
+  // a page that is genuinely hung times out on every attempt and still fails.
+  /\bCDP timeout\b/,
   // 5xx is the platform failing, not the artifact (the same class as the 504s
   // in the Cloudflare analytics). 404 is deliberately absent.
   /\bHTTP 5\d\d\b/,
+  // The same rule in Chrome's own wording, for a navigation or a subresource.
+  // Captured verbatim from headless Chrome against a 503-once proxy:
+  //   "Failed to load resource: the server responded with a status of 503
+  //    (Service Unavailable) [http://127.0.0.1:18442/nav-503]"
+  // Chrome's `status of 404 (Not Found)` line is byte-identical apart from the
+  // number, so 4xx must never match here — a missing asset is a regression.
+  /\bstatus of 5\d\d\b/,
   // verify-staging's own network-failure detail prefix.
   /^network: /m,
 ];
