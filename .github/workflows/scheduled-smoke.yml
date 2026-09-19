@@ -15,6 +15,10 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
+    # Measured on 2026-09-18: ~16s. Bounded so a hung fetch cannot hold a
+    # runner for the 6-hour default; live-sanity's fetches are unbounded, so
+    # this cap is the only outer bound the job has.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
 

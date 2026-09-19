@@ -93,6 +93,15 @@ rather than quietly skipping a release. Nothing is left unverified by this:
 when a release actually happens, `scripts/promote.mjs` runs the same verifier
 itself, and the weekly `Prod smoke` still checks staging drift.
 
+**Every job declares its own cap.** A job without `timeout-minutes` inherits
+GitHub's 6-hour default, and one hung step occupying a runner that long is how
+a queue backlog compounds. Measured durations on 2026-09-19: Tests ~5m, web-smoke
+~1m, coverage ~1.5m, CodeQL ~1m, Deploy ~13s, Main audit ~6s, daily static ~5s,
+weekly smoke ~16s, live-models ~10s, Verify staging ~1m — each cap sits well
+above its measured duration with room for a runner-cold start, and
+`tests/ci-resilience.test.mjs` fails the suite if any workflow job ever drops
+its cap again.
+
 **Supersede, do not stack.** `Tests`, `CodeQL`, `Main audit` and `Deploy` all
 carry concurrency groups that cancel a superseded run for the same ref, so a
 fast merge train keeps only the newest. `Verify staging` deliberately does _not_

@@ -549,6 +549,29 @@ test("the CI job's timeout is the number the budget module declares", () => {
   );
 });
 
+// A job without an explicit cap inherits GitHub's 6-hour default, which is how
+// one hung step occupies a runner all afternoon on a free-tier account. Every
+// job must declare its own bound, measured against its real duration.
+test("every workflow job declares a timeout-minutes", () => {
+  const bare = [];
+  for (const f of list(".github/workflows")) {
+    const yml = read(`.github/workflows/${f}`);
+    if (!yml.includes("\njobs:")) continue;
+    const jobs = yml
+      .slice(yml.indexOf("\njobs:") + 6)
+      .split(/^  [\w-]+:/m)
+      .slice(1);
+    for (const job of jobs)
+      if (!/timeout-minutes:\s*\d+/.test(job))
+        bare.push(`${f}: ${job.match(/^[\w-]+/)[0].trim()}`);
+  }
+  assert.deepEqual(
+    bare,
+    [],
+    `these jobs run under GitHub's 6-hour default:\n${bare.join("\n")}`,
+  );
+});
+
 test("promote wraps the verifier in the shared cap, not a hardcoded one", () => {
   const src = read("scripts/promote.mjs");
   // Scoped to the block that launches the verifier: other subprocesses in this
