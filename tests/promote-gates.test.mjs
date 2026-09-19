@@ -230,7 +230,28 @@ test("VERIFY: changed bytes fail even when the file is present and the stamp mat
   const original = readFileSync(asset);
   try {
     appendFileSync(asset, "\n/* drifted */\n");
+    // The mutation must be visible on BOTH sides of the comparison, or this
+    // test fails with a confusing "expected 1, got 0" instead of naming the
+    // side that lied. (A CI-only run once reported the drift invisible; these
+    // two assertions turn any recurrence into a self-identifying failure.)
+    assert.ok(
+      readFileSync(asset, "utf8").includes("/* drifted */"),
+      "fixture mutation did not land on disk",
+    );
+    assert.ok(
+      !readFileSync("assets/site.css", "utf8").includes("/* drifted */"),
+      "parity baseline (repo assets/site.css) already carries the drift — " +
+        "the mutation leaked outside the fixture",
+    );
     await withServer(async (base) => {
+      const served = await fetch(`${base}assets/site.css?probe=drift`, {
+        cache: "no-store",
+      });
+      assert.ok(
+        (await served.text()).includes("/* drifted */"),
+        "the stand-in server served pristine bytes — the mutation never " +
+          "reached the surface verify compares against",
+      );
       const r = await verify(base);
       assert.equal(r.code, 1, `byte drift must fail verification: ${r.out}`);
       assert.match(r.out, /parity assets\/site\.css/);
