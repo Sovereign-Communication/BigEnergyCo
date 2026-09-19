@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260919b";
+import { APPLIANCES } from "./appliances.js?v=20260919c";
 import {
   CITY_CATALOG,
   searchCities,
@@ -26,7 +26,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260919b";
+} from "./cities.js?v=20260919c";
 
 import {
   estimateTariff,
@@ -34,73 +34,73 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260919b";
+} from "./pricing.js?v=20260919c";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260919b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260919c";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260919b";
+} from "./lead-acid.js?v=20260919c";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260919b";
+} from "./bom.js?v=20260919c";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260919b";
+import { BOM_ITEMS } from "../shared/content.js?v=20260919c";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260919b";
+} from "../shared/i18n.js?v=20260919c";
 
-import { LOCALES } from "../shared/locales.js?v=20260919b";
+import { LOCALES } from "../shared/locales.js?v=20260919c";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260919b";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260919b";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260919c";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260919c";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260919b";
-import { buildSimpleView } from "../shared/simple-view.js?v=20260919b";
+} from "../shared/simple-mode.js?v=20260919c";
+import { buildSimpleView } from "../shared/simple-view.js?v=20260919c";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20260919b";
+} from "../shared/cut-targets.js?v=20260919c";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260919b";
+} from "./frontier-chart.js?v=20260919c";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260919b";
+} from "./rescale.js?v=20260919c";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260919b";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260919c";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260919b";
+} from "./map-provider.js?v=20260919c";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260919b";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260919b";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260919b";
+} from "./wizard.js?v=20260919c";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260919c";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260919c";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -145,9 +145,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260919b";
+} from "./money.js?v=20260919c";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260919b";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260919c";
 
 let worker = null;
 
@@ -647,6 +647,17 @@ function renderSimpleResults(p) {
     $("resultsRegion").scrollIntoView({ behavior: "smooth" });
   });
   actions.appendChild(details);
+  // The advisor is arguably MOST valuable in Simple mode — the visitor chose
+  // fewer numbers, so plain-language questions deserve a path in. The result
+  // row's advisor button is hidden by the mode's CSS, so the card carries its
+  // own, wired to the same mode-aware askAdvisor() (ELI5 style when here).
+  const advisor = el(
+    "button",
+    { type: "button", class: "btn btn-secondary", id: "btnSimpleAdvisor" },
+    t("simpleAskAdvisor"),
+  );
+  advisor.addEventListener("click", askAdvisor);
+  actions.appendChild(advisor);
   const bomBtn = el(
     "button",
     { type: "button", class: "btn btn-outline" },
@@ -3406,7 +3417,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260919b", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260919c", {
       type: "module",
     });
 
@@ -8747,12 +8758,24 @@ function populatePrintSheet(p, inp) {
       in your jurisdiction before purchasing or energizing anything.</p>`;
 }
 
+// The advisor explains whatever mode the visitor is in. The technical brief
+// is the single source of real numbers; Simple mode only adds a style
+// instruction so the answer matches the mode's plain language.
+const ELI5_STYLE_INSTRUCTION =
+  "[ADVISOR INSTRUCTION: The visitor is in Simple mode. Answer like an expert " +
+  "talking to a smart 12-year-old: plain everyday words, no jargon (explain " +
+  "any technical term in a short parenthesis), 4 short sentences maximum, and " +
+  "end with the ONE number that matters most.]";
+
 function askAdvisor() {
   if (!window.lastSizingBrief) return;
 
   const input = document.getElementById("chatInput");
 
-  if (input) input.value = window.lastSizingBrief;
+  if (input)
+    input.value = isSimpleMode()
+      ? window.lastSizingBrief + "\n" + ELI5_STYLE_INSTRUCTION
+      : window.lastSizingBrief;
 
   if (window.openSizingModal) window.openSizingModal();
 
