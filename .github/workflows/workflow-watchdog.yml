@@ -19,7 +19,19 @@ name: Queue watchdog
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    # HOURLY, deliberately not every 15 minutes. The remedy's urgency is low:
+    # nothing user-facing waits on a stalled run (the promote runs the staging
+    # verifier itself, so a stuck `Verify staging` blocks evidence, not a
+    # release), and the only observed stall lasted ~45 minutes. What the
+    # cadence costs is real though — each tick takes a runner slot for ~30-40s,
+    # and on a free account runner slots are the scarce resource, so */15 would
+    # spend 96 runs a day to shave detection latency on a rare event. Hourly
+    # costs 24 and still lands inside the same order of magnitude.
+    #
+    # It is also worth being precise about what a fine cadence could NOT buy:
+    # during a total runner outage this job is queued too, so it only ever helps
+    # a PARTIAL stall — which is the case that was actually observed.
+    - cron: "0 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:
