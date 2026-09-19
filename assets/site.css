@@ -1005,21 +1005,14 @@ input[type="number"]::-webkit-inner-spin-button {
   text-decoration: none;
 }
 
-[data-display-mode="simple"] .technical-only {
-  display: none !important;
-}
-
-/* ── Simple mode: the site's full detail is one flip away, but the default
-   view is a handful of honest numbers. Scoped to the root attribute so the
-   regular experience is untouched — this rule cannot even match without it. */
+/* ── Simple mode: charts and the comparison matrix STAY — visual understanding
+   is the easy part, and the user asked for full functionality with easier
+   descriptions, not fewer answers. Dense text/tables and duplicated figures
+   hide; the plain-language card leads, everything visual follows. Scoped to
+   the root attribute so the regular experience is untouched. */
 [data-display-mode="simple"] #resultLadder,
 [data-display-mode="simple"] #moneyBar,
 [data-display-mode="simple"] #focusPanel,
-[data-display-mode="simple"] #tierResults,
-[data-display-mode="simple"] #frontierWrap,
-[data-display-mode="simple"] #sunPathWrap,
-[data-display-mode="simple"] #socChartWrap,
-[data-display-mode="simple"] #cumCostChartWrap,
 [data-display-mode="simple"] #bomPanel,
 [data-display-mode="simple"] #eli5CardWrap,
 [data-display-mode="simple"] #eli5Summary,

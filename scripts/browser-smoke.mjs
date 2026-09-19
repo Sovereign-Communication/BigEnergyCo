@@ -732,10 +732,17 @@ async function main() {
       ),
     );
     gate(
-      "simple mode: technical surfaces hidden (computed)",
+      "simple mode: dense panels hidden (computed)",
       await evaluate(
-        `["resultLadder","frontierWrap","cumCostChartWrap","bomPanel"]
+        `["resultLadder","moneyBar","bomPanel"]
           .every((id) => getComputedStyle(document.getElementById(id)).display === "none")`,
+      ),
+    );
+    gate(
+      "simple mode: charts + matrix stay visible (full functionality)",
+      await evaluate(
+        `["frontierWrap","cumCostChartWrap","tierResults"]
+          .every((id) => getComputedStyle(document.getElementById(id)).display !== "none")`,
       ),
     );
     gate(

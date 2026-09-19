@@ -587,14 +587,36 @@ test("All Options: strictly excludes AGM, compares capacity tiers relative to ba
   assert.equal(fmtDelta(-3.2, ""), "\u22123");
 });
 
-test("DOM Parity: autoTargetRow exists and interactive controls are wired in JS", () => {
+test("DOM Parity: autoTargetRow exists and interactive controls are wired in JS", async () => {
   const html = fs.readFileSync("index.html", "utf8");
 
-  // Verify autoTargetRow and autoTarget
+  // Verify autoTargetRow and autoTarget. The select mirrors the engine's real
+  // grid-tie targets (BILL_TARGETS: 60/80/95) — not fictional ones the
+  // recommendation cannot honor — plus a hidden "custom" mirror option.
   assert.match(html, /id="autoTargetRow"/);
   assert.match(html, /id="autoTarget"/);
-  assert.match(html, /value="cut100"/);
+  assert.match(html, /value="cut95"/);
   assert.match(html, /value="cut80"/);
+  assert.match(html, /value="cut60"/);
+  assert.match(html, /value="custom"/);
+  assert.ok(
+    !/value="cut100"|value="cut40"/.test(html),
+    "autoTarget must not offer targets the grid-tie engine does not size",
+  );
+
+  // Drift guard: the select's targets must be exactly the engine's grid-tie
+  // columns (BILL_TARGETS) plus the hidden "custom" mirror — set equality,
+  // so reordering options never breaks this but adding a fictional one does.
+  const { BILL_TARGETS } = await import("../assets/js/sizing/engine.js");
+  const selectHtml = html.match(/<select id="autoTarget"[\s\S]*?<\/select>/);
+  assert.ok(selectHtml, "autoTarget select missing from index.html");
+  const offered = [...selectHtml[0].matchAll(/value="([^"]+)"/g)].map(
+    (m) => m[1],
+  );
+  assert.deepEqual(
+    [...offered].sort(),
+    [...BILL_TARGETS.map((tgt) => tgt.id), "custom"].sort(),
+  );
 
   // The buttons used to carry inline onclick attributes. CSP no longer allows
   // inline script, so each one must be bound by id in chat.js instead; the

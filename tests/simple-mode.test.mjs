@@ -102,15 +102,14 @@ test("simple view: never renders NaN or missing figures", () => {
 // (b) be covered by the scoped CSS rule. A selector that matches nothing is
 // dead weight; a hidden block missing from the rule leaks technical detail.
 
+// Charts (#frontierWrap, #socChartWrap, #cumCostChartWrap, #sunPathWrap) and
+// the comparison matrix (#tierResults) deliberately stay VISIBLE in simple
+// mode — visual understanding is the easy part, and the mode must not strip
+// functionality. Only dense text/tables and duplicated figures hide.
 const SIMPLE_HIDE_SELECTORS = [
   "#resultLadder",
   "#moneyBar",
   "#focusPanel",
-  "#tierResults",
-  "#frontierWrap",
-  "#sunPathWrap",
-  "#socChartWrap",
-  "#cumCostChartWrap",
   "#bomPanel",
   "#eli5CardWrap",
   "#eli5Summary",
@@ -148,9 +147,10 @@ test("GATE: simple mode hides only real surfaces, and hides all of them", () => 
   }
   // The gate itself must have teeth: every selector in the CSS rule is one
   // we declared. A rule hiding something NOT in this list would silently
-  // grow the hide surface without review.
+  // grow the hide surface without review (e.g. a chart, which must stay).
   const ruleSelectors = [...css.matchAll(/(?:^|,)\s*([^,{]+)\s*(?=,|{)/g)]
     .map((m) => m[1].trim())
+    .map((s) => s.replace(/^\[data-display-mode="simple"\]\s*/, ""))
     .filter((s) => s.startsWith("#") || s.startsWith("."));
   for (const rs of ruleSelectors) {
     assert.ok(
