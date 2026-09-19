@@ -7,6 +7,29 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+    # A push that cannot change the published artifact should not spend a
+    # deploy — and because `Verify staging` fires on this workflow completing,
+    # skipping here also skips verifying an artifact that is provably
+    # unchanged. One docs-only ledger commit used to cost a build, a publish
+    # and a full browser smoke for byte-identical output.
+    #
+    # This is a DENYLIST on purpose: anything not named here still deploys, so
+    # a new deployable directory can never be skipped by omission. It is
+    # deliberately NOT a list of deployable paths, because the allowlist in
+    # scripts/deploy-pages-local.mjs is the single source of truth for what
+    # ships; tests/ci-resilience.test.mjs checks every entry below against that
+    # allowlist, so an entry that ever covers a deployable file fails the suite
+    # instead of quietly skipping a release.
+    paths-ignore:
+      - "docs/**"
+      - ".github/**"
+      - "scripts/**"
+      - "tests/**"
+      - ".githooks/**"
+      - "worker/**"
+      - "**/*.md"
+      - "package.json"
+      - "package-lock.json"
   workflow_dispatch:
 
 permissions:

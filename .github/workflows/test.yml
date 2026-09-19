@@ -24,6 +24,10 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # Bounded so a hung step cannot hold a runner for GitHub's 6-hour default —
+    # runner occupancy is what makes a queue backlog worse. Measured on 2026-09-19:
+    # this job completes in ~5m30s, so 30 is headroom, not a deadline to race.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
