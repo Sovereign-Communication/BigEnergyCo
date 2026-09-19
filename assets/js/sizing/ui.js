@@ -8281,8 +8281,12 @@ function updateShareHash(p, inp) {
     if (inp.chemistry === "auto" && inp.mode !== "gridtie" && $("autoTier"))
       o.at = $("autoTier").value;
 
-    if (inp.chemistry === "auto" && inp.mode === "gridtie" && $("autoTarget"))
-      o.ag = $("autoTarget").value;
+    if (inp.chemistry === "auto" && inp.mode === "gridtie" && $("autoTarget")) {
+      // Only a real target is worth serializing: "custom" is mirror state of
+      // the slider, and the fraction itself already travels as o.cc.
+      const ag = $("autoTarget").value;
+      if (CUT_TARGET_PCT[ag]) o.ag = ag;
+    }
 
     if (inp.mode === "gridtie") {
       o.cc = inp.customCut;
