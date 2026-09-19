@@ -253,7 +253,13 @@ test("the verifier retries transient failures and reports them", () => {
 
 test("the queue watchdog is scheduled and allowed to act", () => {
   const wf = read(".github/workflows/workflow-watchdog.yml");
-  assert.match(wf, /cron: "\*\/15 \* \* \* \*"/, "it must run on a schedule");
+  // The cadence is pinned because it IS the budget decision: each tick takes a
+  // runner slot, and a finer cron buys low-value latency on a rare event.
+  assert.match(
+    wf,
+    /cron: "0 \* \* \* \*"/,
+    "the watchdog runs hourly — a finer cadence spends runner slots for latency nothing waits on",
+  );
   assert.match(wf, /actions: write/, "cancelling a run needs actions: write");
   assert.match(
     wf,
