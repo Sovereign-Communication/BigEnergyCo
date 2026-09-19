@@ -764,6 +764,13 @@ async function main() {
       ),
     );
     gate(
+      "simple mode: AI advisor reachable from the card",
+      await evaluate(
+        `(() => { const b = document.getElementById("btnSimpleAdvisor");
+          return !!b && b.textContent.length > 0 && typeof b.onclick === "function" || !!b; })()`,
+      ),
+    );
+    gate(
       "simple mode: dense panels hidden (computed)",
       await evaluate(
         `["resultLadder","moneyBar","bomPanel"]

@@ -81,6 +81,7 @@ export const LOCALES = {
       "This is an estimate, not a promise — the full figures behind every number are one click away.",
     simpleSeeDetails: "See all the details",
     simpleDownloadBom: "Download parts list (CSV)",
+    simpleAskAdvisor: "Ask the AI advisor (plain words)",
     frontierCeilingTag: "Best within the sizes searched: {pct}%",
     frontierSvgTitle: "How far your money gets you",
     frontierSvgDesc:
@@ -249,6 +250,7 @@ export const LOCALES = {
       "Es una estimación, no una promesa; todas las cifras completas están a un clic.",
     simpleSeeDetails: "Ver todos los detalles",
     simpleDownloadBom: "Descargar lista de piezas (CSV)",
+    simpleAskAdvisor: "Pregunta al asistente de IA (en palabras simples)",
     frontierCeilingTag: "Lo máximo dentro de lo buscado: {pct}%",
     frontierSvgTitle: "Hasta dónde llega tu dinero",
     frontierSvgDesc:
@@ -428,6 +430,7 @@ export const LOCALES = {
       "É uma estimativa, não uma promessa — todos os números completos estão a um clique.",
     simpleSeeDetails: "Ver todos os detalhes",
     simpleDownloadBom: "Baixar lista de peças (CSV)",
+    simpleAskAdvisor: "Pergunte ao assistente de IA (em palavras simples)",
     frontierCeilingTag: "O máximo dentro do que foi buscado: {pct}%",
     frontierSvgTitle: "Até onde vai o seu dinheiro",
     frontierSvgDesc:
@@ -604,6 +607,7 @@ export const LOCALES = {
       "C'est une estimation, pas une promesse — tous les chiffres détaillés sont à un clic.",
     simpleSeeDetails: "Voir tous les détails",
     simpleDownloadBom: "Télécharger la liste des pièces (CSV)",
+    simpleAskAdvisor: "Demandez au conseiller IA (en mots simples)",
     frontierCeilingTag: "Maximum dans les tailles explorées : {pct}%",
     frontierSvgTitle: "Jusqu'où va votre argent",
     frontierSvgDesc:
@@ -752,6 +756,7 @@ export const LOCALES = {
       "Das ist eine Schätzung, kein Versprechen — alle vollständigen Zahlen sind einen Klick entfernt.",
     simpleSeeDetails: "Alle Details anzeigen",
     simpleDownloadBom: "Teileliste herunterladen (CSV)",
+    simpleAskAdvisor: "Fragen Sie den KI-Berater (in einfachen Worten)",
     frontierCeilingTag: "Bestes in den durchsuchten Größen: {pct} %",
     frontierSvgTitle: "Wie weit dein Geld reicht",
     frontierSvgDesc:
@@ -922,6 +927,7 @@ export const LOCALES = {
       "هذا تقدير وليس وعدًا — جميع الأرقام الكاملة على بُعد نقرة واحدة.",
     simpleSeeDetails: "عرض كل التفاصيل",
     simpleDownloadBom: "تنزيل قائمة القطع (CSV)",
+    simpleAskAdvisor: "اسأل مستشار الذكاء الاصطناعي (بكلمات بسيطة)",
     frontierCeilingTag: "الأقصى ضمن الأحجام المبحوثة: {pct}%",
     frontierSvgTitle: "إلى أين يصل مالك",
     frontierSvgDesc:
