@@ -32,6 +32,9 @@ jobs:
     # workflow_run fires for failed deploys too — there is nothing to verify then.
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    # Must stay above the verifier's own total budget plus startup slack, or a
+    # slow failure would be killed here instead of returning a verdict.
+    # scripts/lib/budgets.mjs owns both numbers; a test pins them together.
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7

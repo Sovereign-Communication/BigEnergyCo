@@ -16,6 +16,11 @@
 //     ever absorb non-determinism that comes from the network.
 //   • every retry is reported by the caller, so a flake is visible in the log
 //     rather than silently absorbed into a green run.
+//   • the loop is bounded by a TOTAL WALL-CLOCK DEADLINE, not by attempts. Three
+//     attempts of thirty seconds each is already more than a CI job allows, so
+//     an attempt that cannot fit is never started — and a run that runs out of
+//     budget throws a `BudgetExhausted` verdict instead of being killed.
+//     scripts/lib/budgets.mjs owns that arithmetic.
 
 const TRANSIENT_PATTERNS = [
   // TLS/certificate family — ERR_CERT_VERIFIER_CHANGED is the one observed.
@@ -38,6 +43,24 @@ const TRANSIENT_PATTERNS = [
 ];
 
 /**
+ * The retry loop's own verdict: it ran out of its wall-clock allowance. This is
+ * a FAILED gate with a clear reason, not a crash, and it is never retried —
+ * retrying is what would have exceeded the allowance in the first place.
+ */
+export class BudgetExhausted extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "BudgetExhausted";
+    // Callers key off this to report "not checked — budget" rather than
+    // mislabelling it as a transport failure.
+    this.budgetExhausted = true;
+  }
+}
+
+/** Absolute deadline `ms` from now, for passing into `retryTransient`. */
+export const deadlineFrom = (ms) => Date.now() + ms;
+
+/**
  * Does this failure text describe a transport flake rather than a failed
  * assertion?
  * @param {unknown} text
@@ -56,11 +79,16 @@ export function isTransientFailure(text) {
  * last failure was transport-class, so callers can report "still failing after
  * N attempts on a transport error" without guessing.
  *
+ * `fn` receives the attempt number and the milliseconds remaining before the
+ * deadline, so it can clamp its own per-attempt timeout to what actually fits.
+ *
  * @template T
- * @param {(attempt: number) => Promise<T>} fn
+ * @param {(attempt: number, remainingMs: number) => Promise<T>} fn
  * @param {object} [opts]
  * @param {number} [opts.attempts] total attempts, including the first
  * @param {number} [opts.delayMs] base backoff; growth is linear per attempt
+ * @param {number} [opts.deadline] absolute ms epoch (see `deadlineFrom`); the
+ *   loop never starts an attempt or a backoff that would pass it
  * @param {(info: {attempt: number, text: string}) => void} [opts.onRetry]
  * @param {(ms: number) => Promise<void>} [opts.sleep] injectable for tests
  * @param {(text: string) => boolean} [opts.classify] injectable for tests
@@ -70,15 +98,23 @@ export async function retryTransient(fn, opts = {}) {
   const {
     attempts = 3,
     delayMs = 5000,
+    deadline = Infinity,
     onRetry,
     sleep = (ms) => new Promise((r) => setTimeout(r, ms)),
     classify = isTransientFailure,
   } = opts;
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0)
+      throw new BudgetExhausted(
+        `the verification budget ran out before attempt ${attempt} of ${attempts} — the step was not retried again`,
+      );
     try {
-      return await fn(attempt);
+      return await fn(attempt, remaining);
     } catch (e) {
+      // A budget verdict is final: retrying is what would exceed the budget.
+      if (e instanceof BudgetExhausted) throw e;
       const text = `${e?.stdout ?? ""}${e?.stderr ?? ""}${e?.message ?? e ?? ""}`;
       const transient = classify(text);
       const last = attempt === attempts;
@@ -88,8 +124,14 @@ export async function retryTransient(fn, opts = {}) {
         if (typeof e === "object" && e !== null) e.transient = transient;
         throw e;
       }
+      const backoff = delayMs * attempt;
+      // Never sleep past the deadline: that would be the killed-job path again.
+      if (deadline - Date.now() - backoff <= 0)
+        throw new BudgetExhausted(
+          `the verification budget ran out after ${attempt} attempt(s) of ${attempts} — retrying would outlast it. Last failure (transient): ${text.replace(/\s+/g, " ").trim().slice(0, 200)}`,
+        );
       onRetry?.({ attempt, text });
-      await sleep(delayMs * attempt);
+      await sleep(backoff);
     }
   }
   // Unreachable: the loop either returns or throws.

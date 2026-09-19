@@ -29,6 +29,9 @@
 //   node scripts/verify-staging.mjs [--base <url>] [--no-browser] [--json]
 //                                   [--wait <seconds>] [--surface <name>]
 // Environment: STAGING_BASE overrides the default base.
+//              VERIFY_BUDGET_MS compresses the total wall-clock budget (see
+//              lib/budgets.mjs). Compression only: it makes the gate fail
+//              sooner, never run longer.
 //
 // `--surface` overrides what the URL is assumed to be, for checking a local
 // stand-in against the production policy. It only ever ADDS assertions (a
@@ -40,6 +43,11 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import {
+  FETCH_TIMEOUT_MS,
+  SMOKE_ATTEMPT_TIMEOUT_MS,
+  budgetFromEnv,
+} from "./lib/budgets.mjs";
 import { deployedFiles, securityPolicyVerdict } from "./lib/gates.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 import { canonicalizeHtml } from "./lib/platform-rewrites.mjs";
@@ -50,7 +58,7 @@ import {
   sha256,
   surfaceFor,
 } from "./lib/stamps.mjs";
-import { retryTransient } from "./lib/transient-retry.mjs";
+import { deadlineFrom, retryTransient } from "./lib/transient-retry.mjs";
 
 const arg = (name, fallback = null) => {
   const i = process.argv.indexOf(name);
@@ -75,7 +83,15 @@ if (SURFACE_ARG && !SURFACES.includes(SURFACE_ARG)) {
 }
 const SURFACE = SURFACE_ARG || surfaceFor(base);
 const CONCURRENCY = 8;
-const FETCH_TIMEOUT_MS = 30000;
+// The TOTAL wall clock this verification may take, retries included, and the
+// absolute deadline derived from it. Every network step below either uses the
+// remaining budget as its per-attempt timeout or checks the deadline, so the
+// run ends with a verdict instead of being killed by the CI job (25 min) or by
+// promote's subprocess cap (20 min). lib/budgets.mjs owns the arithmetic and a
+// test pins it against both of those outer limits.
+const BUDGET_MS = budgetFromEnv();
+const DEADLINE = deadlineFrom(BUDGET_MS);
+const remaining = () => DEADLINE - Date.now();
 // How many times a transport-class failure is retried before it counts. A
 // deterministic regression fails every attempt, so this cannot turn a red gate
 // green — it only absorbs a runner's TLS/socket flake.
@@ -115,11 +131,29 @@ const record = (name, ok, detail = "") => {
     );
 };
 
+// Running out of budget is a VERDICT, not a kill: the step is reported as not
+// checked, with its reason, so a slow failure can never masquerade as a crash.
+let budgetReported = false;
+const budgetFailure = (what) => {
+  if (budgetReported) return;
+  budgetReported = true;
+  record(
+    `verification budget (${Math.round(BUDGET_MS / 1000)}s) exhausted`,
+    false,
+    `no time left for ${what} — a slow failure is a failed gate, not a killed job`,
+  );
+};
+
+// A request is never allowed to outlast the budget: the per-request ceiling is
+// clamped to whatever is left of it.
+const budgetSignal = () =>
+  AbortSignal.timeout(Math.max(1, Math.min(FETCH_TIMEOUT_MS, remaining())));
+
 const fetchText = async (url) => {
   const res = await fetch(url, {
     cache: "no-store",
     redirect: "follow",
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    signal: budgetSignal(),
   });
   return {
     status: res.status,
@@ -186,7 +220,8 @@ const fetchHome = async () => {
 };
 
 if (expected.ok) {
-  const deadline = Date.now() + WAIT_SECONDS * 1000;
+  // Never wait for the stamp longer than the budget allows.
+  const deadline = Math.min(Date.now() + WAIT_SECONDS * 1000, DEADLINE);
   do {
     served = await fetchHome();
     if (served.ok && served.stamp.stamp === expected.stamp) break;
@@ -235,10 +270,14 @@ const parity = await mapPool(parityTargets, CONCURRENCY, async (file) => {
   let res;
   try {
     res = await retryTransient(
-      async () => {
+      async (_attempt, left) => {
         const r = await fetch(probeUrl(file), {
           cache: "no-store",
-          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+          // The per-request ceiling is whatever the budget has left, so 351
+          // files times three attempts can never outrun the deadline.
+          signal: AbortSignal.timeout(
+            Math.max(1, Math.min(FETCH_TIMEOUT_MS, left)),
+          ),
         });
         // 5xx is the edge failing (same class as the 504s in the analytics);
         // every other non-OK status — 404 above all — is a real verdict and is
@@ -248,11 +287,16 @@ const parity = await mapPool(parityTargets, CONCURRENCY, async (file) => {
       },
       {
         attempts: TRANSIENT_ATTEMPTS,
+        deadline: DEADLINE,
         onRetry: (info) => recordRetry(`parity ${file}`, info),
       },
     );
   } catch (e) {
-    return { file, state: "network", detail: e.message };
+    return {
+      file,
+      state: e.budgetExhausted ? "budget" : "network",
+      detail: e.message,
+    };
   }
   if (!res.ok) return { file, state: "missing", detail: `HTTP ${res.status}` };
 
@@ -291,13 +335,27 @@ const parity = await mapPool(parityTargets, CONCURRENCY, async (file) => {
   return { file, state: "match" };
 });
 
-const bad = parity.filter((p) => p.state !== "match");
-if (bad.length)
+// Files the budget ran out on are NOT "matching" and NOT "differing": they were
+// never checked, so this run cannot claim either. They are reported as what
+// they are, and they fail the gate.
+const unchecked = parity.filter((p) => p.state === "budget");
+const bad = parity.filter((p) => p.state !== "match" && p.state !== "budget");
+if (bad.length) {
   for (const b of bad.slice(0, 12))
     record(`parity ${b.file}`, false, `${b.state}: ${b.detail}`);
-else record(`parity: all ${parity.length} deployed files match`, true);
-if (bad.length > 12)
-  record(`parity: ${bad.length - 12} more file(s) differ`, false, "");
+  if (bad.length > 12)
+    record(`parity: ${bad.length - 12} more file(s) differ`, false, "");
+} else if (!unchecked.length) {
+  record(`parity: all ${parity.length} deployed files match`, true);
+} else {
+  // Never a green line here: "all files match" must be reserved for a run that
+  // actually compared them all.
+  record(
+    `parity: ${parity.length - unchecked.length} of ${parity.length} file(s) were checked; ${unchecked.length} were NOT`,
+    false,
+    unchecked[0].detail,
+  );
+}
 
 // What the comparison had to forgive, stated out loud. If a later platform
 // change rewrites something we do not know about, it shows up here as a
@@ -324,7 +382,7 @@ for (const [file, want] of Object.entries(special)) {
   let status = 0;
   try {
     const res = await fetch(probeUrl(file), {
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      signal: budgetSignal(),
     });
     status = res.status;
   } catch (e) {
@@ -344,22 +402,29 @@ for (const [file, want] of Object.entries(special)) {
 let homeRes;
 try {
   homeRes = await retryTransient(
-    async () => {
+    async (_attempt, left) => {
       const r = await fetch(base, {
         cache: "no-store",
         redirect: "follow",
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        signal: AbortSignal.timeout(
+          Math.max(1, Math.min(FETCH_TIMEOUT_MS, left)),
+        ),
       });
       if (r.status >= 500) throw new Error(`HTTP ${r.status}`);
       return r;
     },
     {
       attempts: TRANSIENT_ATTEMPTS,
+      deadline: DEADLINE,
       onRetry: (info) => recordRetry("security headers", info),
     },
   );
 } catch (e) {
-  record("security headers readable", false, `network: ${e.message}`);
+  record(
+    "security headers readable",
+    false,
+    `${e.budgetExhausted ? "budget" : "network"}: ${e.message}`,
+  );
   homeRes = { headers: new Headers() };
 }
 // The policy the surface owes us, from the pure helper the tests drive
@@ -379,6 +444,10 @@ if (SKIP_BROWSER) {
     "browser smoke skipped (--no-browser): functional proof is missing",
   );
   if (!JSON_MODE) console.log(`VERIFY NOTE  ${notes[notes.length - 1]}`);
+} else if (remaining() < 60_000) {
+  // Launching Chrome and killing it seconds later would report a "failed smoke"
+  // that never ran. Say exactly that instead.
+  budgetFailure("the real-browser smoke");
 } else {
   if (!JSON_MODE)
     console.log(`VERIFY       real-browser smoke against ${base} ...`);
@@ -391,10 +460,13 @@ if (SKIP_BROWSER) {
         execFileSync(process.execPath, ["scripts/browser-smoke.mjs", base], {
           encoding: "utf8",
           stdio: ["ignore", "pipe", "pipe"],
-          timeout: 15 * 60 * 1000,
+          // Bounded by the budget, not by a per-attempt timeout: the smoke
+          // cannot outlive the enclosing job, and cannot be killed mid-flight.
+          timeout: Math.max(1, Math.min(SMOKE_ATTEMPT_TIMEOUT_MS, remaining())),
         }),
       {
         attempts: TRANSIENT_ATTEMPTS,
+        deadline: DEADLINE,
         onRetry: (info) => recordRetry("browser smoke", info),
       },
     );
@@ -427,6 +499,7 @@ function tail(s, lines = 3) {
 const payload = {
   base,
   surface: SURFACE,
+  budgetMs: BUDGET_MS,
   expectedStamp: expected.ok ? expected.stamp : null,
   servedStamp: served && served.ok ? (served.stamp.stamp ?? null) : null,
   filesChecked: parity.length,
@@ -446,7 +519,10 @@ if (JSON_MODE) console.log(JSON.stringify(payload, null, 2));
 else {
   console.log(
     failures.length
-      ? `\nSTAGING VERIFICATION FAILED (${failures.length}): ${failures.slice(0, 5).join(" ; ")}`
+      ? `\nSTAGING VERIFICATION FAILED (${failures.length}): ${failures.slice(0, 5).join(" ; ")}` +
+          (retries.length
+            ? ` (after ${retries.length} transient retry(ies))`
+            : "")
       : `\nSTAGING VERIFIED — ${base} serves stamp ${payload.servedStamp}, ${payload.matched}/${payload.filesChecked} files match` +
           (retries.length
             ? ` (after ${retries.length} transient retry(ies))`

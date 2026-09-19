@@ -47,6 +47,12 @@ import {
 } from "node:fs";
 import { dirname, join } from "node:path";
 
+import {
+  BUDGET_SLACK_MS,
+  PROMOTE_TIMEOUT_MS,
+  VERIFY_BUDGET_MS,
+  budgetFitsInside,
+} from "./lib/budgets.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 import { runNpx } from "./lib/npx.mjs";
 import {
@@ -165,6 +171,17 @@ const stampOf = async (base) => {
   }
 };
 async function main() {
+  // The verifier must be able to finish INSIDE this process's own subprocess
+  // cap, retries and all — otherwise a slow failure gets killed at the cap and
+  // reported as a timeout instead of as a refused promote. lib/budgets.mjs owns
+  // the numbers; tests/ci-resilience.test.mjs pins the relation.
+  if (!budgetFitsInside(VERIFY_BUDGET_MS, PROMOTE_TIMEOUT_MS))
+    fatal(
+      2,
+      "the staging-verification budget does not fit inside promote's subprocess cap",
+      `budget ${VERIFY_BUDGET_MS / 60000}min + slack ${BUDGET_SLACK_MS / 60000}min > cap ${PROMOTE_TIMEOUT_MS / 60000}min`,
+    );
+
   // ── rollback mode works from a recorded commit, promote mode from HEAD ────
   const head = git(["rev-parse", "HEAD"]);
   let sourceSha = head;
@@ -315,11 +332,19 @@ async function main() {
         const out = execFileSync(process.execPath, verifyArgs, {
           encoding: "utf8",
           stdio: ["ignore", "pipe", "pipe"],
-          timeout: 20 * 60 * 1000,
+          // The verifier enforces its OWN total budget, so it returns a verdict
+          // before this cap. Reaching the cap means something outside its
+          // control hung, and that is reported as such rather than as a
+          // verification failure it never made.
+          timeout: PROMOTE_TIMEOUT_MS,
         });
         return { ok: true, out };
       } catch (e) {
-        return { ok: false, out: `${e.stdout || ""}${e.stderr || ""}` };
+        return {
+          ok: false,
+          out: `${e.stdout || ""}${e.stderr || ""}`,
+          killed: e.killed === true || e.code === "ETIMEDOUT",
+        };
       }
     })();
     try {
@@ -333,7 +358,9 @@ async function main() {
     if (!verify.ok || !verification.verified)
       fatal(
         1,
-        `staging did not verify — refusing to promote ${head.slice(0, 7)}`,
+        verify.killed
+          ? `the staging verifier was killed at its ${PROMOTE_TIMEOUT_MS / 60000}min cap without returning a verdict — refusing to promote ${head.slice(0, 7)}`
+          : `staging did not verify — refusing to promote ${head.slice(0, 7)}`,
         `staging ${verification.servedStamp || "?"} vs checkout ${verification.expectedStamp || "?"}; failures: ${(verification.failures || []).slice(0, 4).join(" ; ")}`,
       );
     say(
