@@ -13,13 +13,24 @@
 // Run: node --test tests/ci-resilience.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
 import {
+  BudgetExhausted,
+  deadlineFrom,
   isTransientFailure,
   retryTransient,
 } from "../scripts/lib/transient-retry.mjs";
+import {
+  JOB_TIMEOUT_MINUTES,
+  PROMOTE_TIMEOUT_MS,
+  SMOKE_ATTEMPT_TIMEOUT_MS,
+  VERIFY_BUDGET_MS,
+  budgetFitsInside,
+  budgetFromEnv,
+} from "../scripts/lib/budgets.mjs";
 import {
   DEFAULT_BAILOUT_ABOVE,
   classifyCancelProbeStatus,
@@ -427,6 +438,243 @@ test("the probe refuses to run without credentials instead of reporting success"
   );
   assert.notEqual(r.status, 0);
   assert.match(`${r.stdout}${r.stderr}`, /GITHUB_REPOSITORY and GITHUB_TOKEN/);
+});
+
+// ── the time budget: a slow failure must produce a verdict, not a kill ──────
+//
+// Without this, the retry loop multiplied per-attempt timeouts (3 x 15min for
+// the smoke) and outlived both the CI job (25min) and promote's subprocess cap
+// (20min), so a slow transport failure was killed mid-run and reported as a
+// timeout/cancel — indistinguishable from "the gate passed". The budget is now
+// a single deadline, and these tests pin the algebra that makes it fit.
+test("the verifier's budget provably fits inside every limit that wraps it", () => {
+  assert.ok(
+    budgetFitsInside(VERIFY_BUDGET_MS, PROMOTE_TIMEOUT_MS),
+    "the verifier must finish inside promote's subprocess cap, or a slow run is killed instead of judged",
+  );
+  assert.ok(
+    budgetFitsInside(VERIFY_BUDGET_MS, JOB_TIMEOUT_MINUTES * MINUTE),
+    "and inside the CI job that runs it",
+  );
+  assert.ok(
+    PROMOTE_TIMEOUT_MS < JOB_TIMEOUT_MINUTES * MINUTE,
+    "the wrapper's cap cannot exceed the job that runs it",
+  );
+  assert.ok(
+    SMOKE_ATTEMPT_TIMEOUT_MS * 3 > VERIFY_BUDGET_MS,
+    "three smoke attempts really do outlast the whole budget — which is exactly why a total deadline, not more attempts, is the cap",
+  );
+});
+
+test("the budget knob can only make the gate stricter", () => {
+  assert.equal(
+    budgetFromEnv({ VERIFY_BUDGET_MS: String(60 * MINUTE) }),
+    VERIFY_BUDGET_MS,
+    "a larger budget must be clamped: the knob can never buy a longer run",
+  );
+  assert.equal(budgetFromEnv({ VERIFY_BUDGET_MS: "5000" }), 5000);
+  assert.equal(
+    budgetFromEnv({}),
+    VERIFY_BUDGET_MS,
+    "absent means the real budget",
+  );
+  assert.equal(budgetFromEnv({ VERIFY_BUDGET_MS: "-1" }), VERIFY_BUDGET_MS);
+  assert.equal(budgetFromEnv({ VERIFY_BUDGET_MS: "abc" }), VERIFY_BUDGET_MS);
+});
+
+test("the CI job's timeout is the number the budget module declares", () => {
+  const yml = read(".github/workflows/verify-staging.yml");
+  const declared = yml.match(/timeout-minutes:\s*(\d+)/);
+  assert.ok(declared, "the verify job must declare a timeout");
+  assert.equal(
+    Number(declared[1]),
+    JOB_TIMEOUT_MINUTES,
+    "editing the workflow's timeout alone would break the budget algebra",
+  );
+});
+
+test("promote wraps the verifier in the shared cap, not a hardcoded one", () => {
+  const src = read("scripts/promote.mjs");
+  // Scoped to the block that launches the verifier: other subprocesses in this
+  // file legitimately carry their own, unrelated timeouts.
+  const block = src
+    .slice(src.indexOf('"scripts/verify-staging.mjs"'))
+    .slice(0, 800);
+  assert.ok(block.length > 100, "expected to find the verifier invocation");
+  assert.match(
+    block,
+    /timeout: PROMOTE_TIMEOUT_MS/,
+    "the verifier's cap must be the number the budget module owns",
+  );
+  assert.ok(
+    !/timeout:\s*\d/.test(block),
+    "a literal here could silently drop below the verifier's own budget",
+  );
+  assert.match(
+    src,
+    /budgetFitsInside\(VERIFY_BUDGET_MS, PROMOTE_TIMEOUT_MS\)/,
+    "and it must refuse at startup if the two ever drift apart",
+  );
+});
+
+test("the retry loop never sleeps or starts an attempt past its deadline", async () => {
+  let calls = 0;
+  const slept = [];
+  const err = await retryTransient(
+    async () => {
+      calls++;
+      throw new Error("net::ERR_CERT_VERIFIER_CHANGED");
+    },
+    {
+      attempts: 5,
+      delayMs: 5000,
+      deadline: deadlineFrom(100),
+      sleep: async (ms) => slept.push(ms),
+    },
+  ).catch((e) => e);
+  assert.ok(
+    err instanceof BudgetExhausted,
+    `expected a budget verdict, got ${err}`,
+  );
+  assert.ok(
+    calls < 5,
+    "it must stop spending attempts once the budget is gone",
+  );
+  assert.deepEqual(slept, [], "and never sleep into the deadline");
+});
+
+test("the last failure before a budget verdict is reported, not swallowed", async () => {
+  const err = await retryTransient(
+    async () => {
+      throw new Error("net::ERR_CERT_VERIFIER_CHANGED");
+    },
+    { attempts: 3, delayMs: 5000, deadline: deadlineFrom(100), sleep: noSleep },
+  ).catch((e) => e);
+  assert.match(
+    err.message,
+    /ERR_CERT_VERIFIER_CHANGED/,
+    "a budget verdict must still say what was failing",
+  );
+});
+
+test("a budget verdict is final: it is never retried, never called transient", async () => {
+  let calls = 0;
+  const err = await retryTransient(
+    async () => {
+      calls++;
+      throw new BudgetExhausted("budget gone");
+    },
+    { attempts: 3, sleep: noSleep },
+  ).catch((e) => e);
+  assert.equal(calls, 1, "retrying is what would have exceeded the budget");
+  assert.equal(err.budgetExhausted, true);
+  assert.notEqual(
+    err.transient,
+    true,
+    "it must not be reported as a network flake",
+  );
+});
+
+test("each attempt is told how much budget is left, so it can clamp itself", async () => {
+  const seen = [];
+  await retryTransient(
+    async (_attempt, left) => {
+      seen.push(left);
+      return "ok";
+    },
+    { deadline: deadlineFrom(1234) },
+  );
+  assert.ok(seen[0] > 0 && seen[0] <= 1234, `remaining was ${seen[0]}`);
+});
+
+test("every retried step in the verifier carries the deadline", () => {
+  const src = read("scripts/verify-staging.mjs");
+  const retried = (src.match(/retryTransient\(/g) || []).length;
+  const bounded = (src.match(/deadline: DEADLINE,/g) || []).length;
+  assert.ok(retried >= 3, `expected the retried steps, saw ${retried}`);
+  assert.equal(
+    bounded,
+    retried,
+    "a retried step without the shared deadline can outlive the gate",
+  );
+  assert.match(src, /budgetFromEnv\(\)/, "the budget comes from one module");
+  assert.ok(
+    !/AbortSignal\.timeout\(FETCH_TIMEOUT_MS\)/.test(src),
+    "an unclamped request could outlive the deadline by its whole 30s ceiling",
+  );
+  assert.match(
+    src,
+    /budgetExhausted \? "budget" : "network"/,
+    "a file the budget ran out on must not be reported as a network failure",
+  );
+});
+
+// The end-to-end direction: a source that fails SLOWLY (every request 5xx) under
+// a compressed budget must return a verdict that names the budget and reports
+// its retries — exiting 1 on its own terms, well inside any outer cap.
+test("a slow failure under a compressed budget returns a verdict, not a kill", async () => {
+  const server = createServer((_req, res) => {
+    res.writeHead(500, { "content-type": "text/plain" });
+    res.end("upstream is down");
+  });
+  await new Promise((r) => server.listen(0, "127.0.0.1", r));
+  const port = server.address().port;
+  // Big enough for a real retry to happen (first failure + one 5s backoff), and
+  // far too small for the loop to finish — so the run must cut itself short and
+  // still report both the retries and the reason.
+  const budgetMs = 8000;
+  const started = Date.now();
+  const child = spawn(
+    process.execPath,
+    [
+      "scripts/verify-staging.mjs",
+      "--base",
+      `http://127.0.0.1:${port}/`,
+      "--json",
+    ],
+    {
+      env: { ...process.env, VERIFY_BUDGET_MS: String(budgetMs) },
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+  let out = "";
+  child.stdout.on("data", (d) => (out += d));
+  child.stderr.on("data", (d) => (out += d));
+  const code = await new Promise((r) => child.on("close", r));
+  const elapsed = Date.now() - started;
+  await new Promise((r) => server.close(r));
+
+  const payload = JSON.parse(out.slice(out.indexOf("{")));
+  assert.equal(code, 1, "an exhausted budget is a FAILED gate, not a crash");
+  assert.equal(payload.verified, false);
+  assert.equal(
+    payload.budgetMs,
+    budgetMs,
+    "the compressed budget is visible in the verdict",
+  );
+  assert.ok(
+    payload.transientRetries.length > 0,
+    "the retries it did make must be reported",
+  );
+  assert.ok(
+    payload.failures.some((f) => /budget/i.test(f)),
+    `the verdict must name the budget: ${payload.failures.join(" | ")}`,
+  );
+  assert.ok(
+    payload.failures.some((f) => /were NOT/.test(f)),
+    "and say the unchecked work was not checked rather than claiming it differs",
+  );
+  assert.ok(
+    !payload.failures.some((f) => /all \d+ deployed files match/.test(f)),
+    "it must never claim every file matched when some were never fetched",
+  );
+  assert.ok(
+    elapsed < budgetMs + 30_000,
+    `it must end on its own budget (${elapsed}ms), not be killed`,
+  );
+  // The checkout itself is intact: the failure came from the source, so a red
+  // verdict here is about the source and not about missing build inputs.
+  assert.match(read("index.html"), /\?v=/);
 });
 
 test("the watchdog refuses to run without credentials instead of no-opping", () => {
