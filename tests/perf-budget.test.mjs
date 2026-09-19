@@ -62,7 +62,11 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   let jsBytes = 0;
   for (const name of [...eagerSizing, ...eagerShared]) {
     const base = eagerSizing.includes(name) ? sizingDir : sharedDir;
-    jsBytes += readFileSync(join(base, name)).length;
+    // LF-normalized: the browser never sees git's checkout line endings, so
+    // a CRLF checkout (Windows, core.autocrlf=true) must not measure ~20 KB
+    // larger than the identical source on CI. Threshold unchanged.
+    const src = readFileSync(join(base, name), "utf8").replace(/\r\n/g, "\n");
+    jsBytes += Buffer.byteLength(src);
   }
 
   const htmlBytes = Buffer.byteLength(html);
