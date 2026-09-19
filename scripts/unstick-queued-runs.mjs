@@ -22,7 +22,10 @@
 // Exit: 0 = nothing to do or the remedy was applied, 1 = the remedy failed.
 
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
-import { selectStuckRuns } from "./lib/stuck-runs.mjs";
+import {
+  classifyCancelProbeStatus,
+  selectStuckRuns,
+} from "./lib/stuck-runs.mjs";
 
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
@@ -30,6 +33,9 @@ const arg = (name, fallback) => {
 };
 
 const DRY = process.argv.includes("--dry-run");
+// Proves the token may actually act, without acting on anything. See
+// checkPermissions() for why the probe is side-effect free.
+const CHECK_PERMISSIONS = process.argv.includes("--check-permissions");
 const MIN_MINUTES = arg("--min-minutes", NaN);
 const CAP = arg("--cap", NaN);
 
@@ -46,6 +52,8 @@ const note = (line) => {
   log(line);
   summary.push(line);
 };
+// No such run exists, so the probe's cancel request cannot affect anything.
+const PROBE_RUN_ID = "999999999999";
 
 if (!REPO || !TOKEN) {
   console.error(
@@ -65,10 +73,15 @@ const api = async (path, init = {}) => {
     },
   });
   const text = res.ok ? "" : await res.text().catch(() => "");
-  if (!res.ok)
-    throw new Error(
+  if (!res.ok) {
+    const err = new Error(
       `${init.method || "GET"} ${path} → HTTP ${res.status} ${text.slice(0, 200)}`,
     );
+    // The probe classifies on the status code, so carry it rather than making
+    // callers parse the message.
+    err.status = res.status;
+    throw err;
+  }
   return res.status === 204 ? null : res.json().catch(() => null);
 };
 
@@ -84,7 +97,50 @@ const snapshot = (r) => ({
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * Answer, from inside a real CI run, the question the dry path cannot: may this
+ * token actually CANCEL a run? Both checks are side-effect free — the cancel is
+ * aimed at a run id that does not exist, so at worst GitHub answers 404. A 403
+ * is the actionable verdict (the workflow is missing `actions: write`); an
+ * unexpected status is reported as inconclusive rather than failing an hourly
+ * job on a transient blip.
+ * @returns {Promise<number>} 0 = can read and cancel, 1 = it cannot
+ */
+async function checkPermissions() {
+  let verdict = 0;
+  try {
+    await api("/actions/runs?per_page=1");
+    note("permission probe: actions: read OK (runs are listable)");
+  } catch (e) {
+    verdict = 1;
+    note(`permission probe: CANNOT list runs — ${e.message}`);
+  }
+  try {
+    await api(`/actions/runs/${PROBE_RUN_ID}/cancel`, { method: "POST" });
+    note(
+      "permission probe: unexpected 2xx on a non-existent run — inconclusive",
+    );
+  } catch (e) {
+    const how = classifyCancelProbeStatus(e.status);
+    if (how === "authorized")
+      note(
+        `permission probe: actions: write OK (cancel of non-existent run ${PROBE_RUN_ID} answered 404, so the request was authorised and touched nothing)`,
+      );
+    else if (how === "denied") {
+      verdict = 1;
+      note(
+        `permission probe: CANNOT cancel runs — HTTP ${e.status}. Fix the workflow's permissions: block (needs actions: write).`,
+      );
+    } else
+      note(
+        `permission probe: inconclusive (HTTP ${e.status ?? "none"}) — a transient API answer, not a verdict`,
+      );
+  }
+  return verdict;
+}
+
 async function main() {
+  if (CHECK_PERMISSIONS) return checkPermissions();
   // One page of 100 is deliberate: beyond that this is a platform backlog, and
   // the selection's bailout guard stands the tool down anyway.
   const [queuedRes, busyRes] = await Promise.all([
