@@ -10,3 +10,5 @@ assets/js/sizing/profiles.js
 *.min.js
 # Local tooling state (untracked): never part of the shipped site.
 .abacusai/
+# Env templates: no parser (no extension), nothing to format.
+.env.example

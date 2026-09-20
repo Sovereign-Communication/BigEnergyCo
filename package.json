@@ -28,7 +28,16 @@
     "promote": "node scripts/promote.mjs",
     "promote:apply": "node scripts/promote.mjs --apply",
     "promote:apply:oauth": "node scripts/promote.mjs --apply --assume-auth",
-    "rollback": "node scripts/promote.mjs --to"
+    "rollback": "node scripts/promote.mjs --to",
+    "trigger:dev": "trigger dev"
   },
-  "license": "SEE LICENSE IN LICENSE"
+  "license": "SEE LICENSE IN LICENSE",
+  "devDependencies": {
+    "@trigger.dev/build": "4.6.3",
+    "@types/node": "^26.6.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@trigger.dev/sdk": "4.6.3"
+  }
 }
