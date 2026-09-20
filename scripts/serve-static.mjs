@@ -90,6 +90,41 @@ export async function serveStatic({
       return;
     }
 
+    // The static server stands in for the API boundary too: it mirrors the
+    // worker's no-key reality — /api/health says the Jev route is off (so the
+    // client never even asks), and a direct /api/jev POST gets the same 503
+    // the deployed worker without a key returns. Quiet degradation, no
+    // console-404 noise in smoke sessions.
+    if (urlPath === "/api/health" && req.method === "GET") {
+      res.writeHead(200, {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      });
+      res.end(
+        JSON.stringify({
+          status: "ok",
+          service: "local static mirror (no API worker here)",
+          jevSanity: false,
+        }),
+      );
+      return;
+    }
+    if (urlPath === "/api/jev" && req.method === "POST") {
+      let raw = "";
+      req.on("data", (c) => {
+        raw += c;
+        if (raw.length > 20000) req.destroy();
+      });
+      req.on("end", () => {
+        res.writeHead(503, {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+        });
+        res.end(JSON.stringify({ available: false, reason: "key_missing" }));
+      });
+      return;
+    }
+
     const file = resolveRequestPath(root, urlPath);
     if (!file) {
       const notFound = join(root, "404.html");

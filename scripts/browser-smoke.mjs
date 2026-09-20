@@ -486,6 +486,38 @@ async function main() {
       Number.isFinite(rerunMs) && rerunMs < 2000,
       `${rerunMs} ms (payload-cache fast path)`,
     );
+
+    // ── Weather-cache regression ────────────────────────────────────────
+    // A re-run at an UNCHANGED location must pull zero weather data: nasa.js's
+    // layered cache + run.js's session memo make that true today. Counted at
+    // the network layer (not the fixture layer), because node-injected weather
+    // bypasses the memo by design and would measure the wrong thing.
+    const nasaRepulls = await evaluate(
+      `(async () => {
+        let n = 0;
+        const of = window.fetch;
+        window.fetch = function (u, o) {
+          if (String(u).indexOf("power.larc.nasa.gov") !== -1) n += 1;
+          return of.apply(this, arguments);
+        };
+        try {
+          document.getElementById("btnRunSizing").click();
+          const t0 = Date.now();
+          while (document.getElementById("btnRunSizing")?.disabled && Date.now() - t0 < 30000) {
+            await new Promise((r) => setTimeout(r, 50));
+          }
+          await new Promise((r) => setTimeout(r, 500));
+          return n;
+        } finally {
+          window.fetch = of;
+        }
+      })()`,
+    );
+    gate(
+      "same-location re-run pulls zero weather data",
+      nasaRepulls === 0,
+      `${nasaRepulls} NASA fetches (expect 0)`,
+    );
     gate(
       "instant-run badge shown on repeat",
       await evaluate(
@@ -516,6 +548,78 @@ async function main() {
       "loading pipeline or instant path observed",
       pipelineWorks === "visible" || pipelineWorks === "instant",
       String(pipelineWorks),
+    );
+
+    // ── Jev sanity badge (wiring gate) ─────────────────────────────────
+    // The badge is fire-and-forget and must NEVER block or alter results,
+    // so the only honest smoke assertion is wiring: with a stubbed /api/jev
+    // answering available:true, a NEW result state renders the badge; with
+    // the stub refusing, nothing appears and the run is unaffected. The
+    // interpretation thresholds themselves are pinned in node tests against
+    // live-measured calibration — here we only prove the pipeline connects.
+    const badgeGate = await evaluate(
+      `(async () => {
+        const of = window.fetch;
+        const k = document.getElementById("dailyKwhInput");
+        const btn = document.getElementById("btnRunSizing");
+        const before = k.value;
+        window.fetch = function (u, o) {
+          if (String(u).indexOf("/api/health") !== -1) {
+            return Promise.resolve({ ok: true, json: () => Promise.resolve({ status: "ok", jevSanity: true }) });
+          }
+          if (String(u).indexOf("/api/jev") !== -1) {
+            window.__jevCalls = (window.__jevCalls || 0) + 1;
+            window.__jevLastBody = o && o.body ? String(o.body).slice(0, 200) : null;
+            return Promise.resolve({ ok: true, json: () => Promise.resolve({
+              available: true, model: "jev-smoke", plausible: 0.9,
+              verdict: "reasonable", verdictConfidence: 0.9,
+              redFlag: 0.2, redFlagConfidence: 0.8,
+            }) });
+          }
+          return of.apply(this, arguments);
+        };
+        try {
+          k.value = String(Number(before || "10") + 1);
+          // Wait for any in-flight run to release the button before clicking,
+          // so the changed input actually produces a fresh payload.
+          const t0w = Date.now();
+          while (btn?.disabled && Date.now() - t0w < 30000) {
+            await new Promise((r) => setTimeout(r, 100));
+          }
+          btn.click();
+          const t0 = Date.now();
+          while (Date.now() - t0 < 20000) {
+            const b = document.querySelector(".sanity-badge.sanity-pass");
+            if (b && b.textContent.length > 0) return "badge";
+            await new Promise((r) => setTimeout(r, 100));
+          }
+          return JSON.stringify({
+            badgeAny: !!document.querySelector(".sanity-badge"),
+            jevCalls: window.__jevCalls || 0,
+            body: window.__jevLastBody,
+            btnDisabled: !!btn.disabled,
+            regionHidden: document.getElementById("resultsRegion")?.hidden,
+          });
+        } finally {
+          // Restore the pre-gate scenario so later gates see the same state.
+          try {
+            k.value = before;
+            if (!btn.disabled) btn.click();
+            // Quiescence: the budget-cooperation gate that follows must not
+            // start while this restore-run is still in flight.
+            const t1 = Date.now();
+            while (btn.disabled && Date.now() - t1 < 30000) {
+              await new Promise((r) => setTimeout(r, 100));
+            }
+          } catch {}
+          window.fetch = of;
+        }
+      })()`,
+    );
+    gate(
+      "Jev sanity badge renders on a fresh result (wired, pass-shaped stub)",
+      badgeGate === "badge",
+      String(badgeGate),
     );
 
     // ── Accessibility basics (main page, post-render) ─────────────────
