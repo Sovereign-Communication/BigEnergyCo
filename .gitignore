@@ -106,3 +106,6 @@ _pages_*/
 
 # Agent/tool state (permissions, local caches — never commit)
 .abacusai/
+
+# Dependencies (first dev deps landed with Trigger.dev)
+node_modules/
