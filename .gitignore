@@ -100,5 +100,12 @@ _pages_*/
 # Freebuff tool state (never commit)
 .freebuff/
 
+# Trigger.dev local state (never commit)
+.trigger/
+.env
+
 # Agent/tool state (permissions, local caches — never commit)
 .abacusai/
+
+# Dependencies (first dev deps landed with Trigger.dev)
+node_modules/
