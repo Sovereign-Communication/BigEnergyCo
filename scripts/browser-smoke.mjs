@@ -608,15 +608,6 @@ async function main() {
             regionHidden: document.getElementById("resultsRegion")?.hidden,
             errs: errs.slice(0, 5),
             healthSeen: window.__jevHealthSeen || null,
-            dbg: window.__sanityDebug || null,
-            uiSrc: (performance.getEntriesByType("resource") || [])
-              .filter((r) => r.name.indexOf("ui.js") !== -1)
-              .map((r) => r.name)
-              .slice(0, 2),
-            banner: (document.getElementById("infeasibleBanner") || {}).style
-              ? document.getElementById("infeasibleBanner").style.display
-              : "absent",
-            status: (document.getElementById("sizingStatus")?.textContent || "").slice(0, 100),
           });
         } finally {
           // Restore the pre-gate scenario so later gates see the same state.
@@ -638,6 +629,67 @@ async function main() {
       "Jev sanity badge renders on a fresh result (wired, pass-shaped stub)",
       badgeGate === "badge",
       String(badgeGate),
+    );
+
+    // The uncertain band must render NOTHING — silence is the honest render
+    // when the model is inconclusive. Not vacuous: the gate proves the
+    // /api/jev request fired (calls ≥ 1) and an uncertain-shaped reply
+    // produced no uncertain/flag badge. Teeth: re-adding an uncertain
+    // badge render fails this gate.
+    const uncertainGate = await evaluate(
+      `(async () => {
+        const of = window.fetch;
+        const k = document.getElementById("dailyKwhInput");
+        const btn = document.getElementById("btnRunSizing");
+        const before = k.value;
+        window.fetch = function (u, o) {
+          if (String(u).indexOf("/api/health") !== -1) {
+            return Promise.resolve({ ok: true, json: () => Promise.resolve({ status: "ok", jevSanity: true }) });
+          }
+          if (String(u).indexOf("/api/jev") !== -1) {
+            window.__jevCalls2 = (window.__jevCalls2 || 0) + 1;
+            return Promise.resolve({ ok: true, json: () => Promise.resolve({
+              available: true, model: "jev-smoke", plausible: 0.45,
+              verdict: "reasonable", verdictConfidence: 0.5,
+              redFlag: 1.2, redFlagConfidence: 0.2,
+            }) });
+          }
+          return of.apply(this, arguments);
+        };
+        try {
+          // +2, not +1: the badge gate above already ran before+1, and the
+          // sanity cache would satisfy a repeated key without any fetch.
+          k.value = String(Number(before || "10") + 2);
+          const t0w = Date.now();
+          while (btn?.disabled && Date.now() - t0w < 30000) {
+            await new Promise((r) => setTimeout(r, 100));
+          }
+          btn.click();
+          const t0 = Date.now();
+          while (Date.now() - t0 < 10000) {
+            if (document.querySelector(".sanity-uncertain, .sanity-flag"))
+              return JSON.stringify({ leaked: true, calls: window.__jevCalls2 || 0 });
+            await new Promise((r) => setTimeout(r, 100));
+          }
+          return JSON.stringify({ leaked: false, calls: window.__jevCalls2 || 0 });
+        } finally {
+          try {
+            k.value = before;
+            if (!btn.disabled) btn.click();
+            const t1 = Date.now();
+            while (btn.disabled && Date.now() - t1 < 30000) {
+              await new Promise((r) => setTimeout(r, 100));
+            }
+          } catch {}
+          window.fetch = of;
+        }
+      })()`,
+    );
+    const unc = JSON.parse(uncertainGate);
+    gate(
+      "Jev uncertain verdict renders nothing (request fires, no badge)",
+      unc.leaked === false && unc.calls >= 1,
+      uncertainGate,
     );
 
     // ── Accessibility basics (main page, post-render) ─────────────────
