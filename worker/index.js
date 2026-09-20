@@ -26,6 +26,253 @@ const RATE_PER_IP_PER_DAY = 150;
 const RATE_GLOBAL_PER_DAY = 3000;
 const RATE_MAP_CLEAR_SIZE = 10000;
 
+// ── Jev sanity-check (/api/jev) ─────────────────────────────────────────────
+// TypeSafe's System One model returns typed probabilities, never prose. The
+// CLIENT sends only engine-output numbers (no user text, no free-form fields
+// — nothing to inject into); the question set is built HERE so its wording
+// has exactly one owner and can never be influenced by a request body.
+// Every answer ships with the model's own confidence; interpretation and
+// presentation thresholds live client-side in sizing/validate.js.
+const JEV_API_URL = "https://api.typesafe.ai/v1/systemone";
+const JEV_MODEL = "jev-latest";
+const JEV_TIMEOUT_MS = 8000; // quoted 70-500ms; generous ceiling
+
+// Strict numeric bounds: a result outside these is not a judgment call, it is
+// a malformed/hostile body (400) before any paid call happens.
+const JEV_STATE_FIELDS = {
+  mode: null, // handled separately: enum, not a number
+  dailyKwh: [0.1, 5000],
+  pvKw: [0, 10000],
+  battKwh: [0, 50000], // 0 is legitimate in grid-tie mode
+  costLo: [0, 100000000],
+  costHi: [0, 100000000],
+  cutPct: [0, 100],
+  paybackYears: [0, 200],
+  // Specific yield: average daily kWh produced per kWp of array AFTER
+  // real-world losses (derates, soiling, thermal). Typical installed range
+  // is roughly 2.5-7; the engine computes it from NASA POWER per site.
+  specificYieldKwhPerKwDay: [0.1, 9],
+  // Worst-month average insolation at the same site (kWh/m²/day). Seasonality
+  // is the signal that judges a battery: a bank generous at a 5.8 annual
+  // average can be undersized for a German January. Optional (omitted when
+  // climate data is unavailable); bounds: Atacama 12.1 down to polar winter 0.
+  worstMonthGhi: [0, 12.1],
+  // Site mean temperature (°C) — drives battery thermal derating. Optional.
+  meanTempC: [-60, 50],
+};
+const JEV_OPTIONAL_FIELDS = new Set(["worstMonthGhi", "meanTempC"]);
+
+function jevQuestions(mode, worstMonthGhi) {
+  const batteryRule =
+    mode === "offgrid"
+      ? "This is an OFF-GRID system, so a battery (battKwh) is required: battKwh of 0 or a battery too small to carry the load overnight is a red flag."
+      : "This is a GRID-TIE system, so a battery is optional: battKwh of 0 can be legitimate.";
+  const seasonRule =
+    worstMonthGhi == null
+      ? "No worst-month insolation was provided, so judge seasonality only from the annual average."
+      : `Seasonality matters: the WORST month at this site averages ${worstMonthGhi.toFixed(1)} kWh/m2/day of insolation. The battery must carry the load through that darkest month, not just the annual average.`;
+  return {
+    physically_plausible: {
+      type: "noul",
+      instructions:
+        "Physics check for an off-grid/grid-tie solar system: pvKw is peak solar array kW. specificYieldKwhPerKwDay is the measured average daily energy per kWp AFTER real-world losses (typical installed range 2.5-7 kWh/day). The array plus battery (battKwh, usable roughly 80-90%) must serve dailyKwh per day, with autonomy for sunless periods. " +
+        batteryRule +
+        " " +
+        seasonRule +
+        " Judge whether these numbers can physically work together.",
+    },
+    verdict: {
+      type: "choice",
+      instructions:
+        "Overall engineering judgment of this solar sizing result. " +
+        batteryRule +
+        " " +
+        seasonRule,
+      criteria: {
+        impossible:
+          "Physically impossible or self-contradictory for these inputs",
+        suspicious: "Possible but one or more values look wrong for the inputs",
+        reasonable:
+          "Consistent with the inputs and typical off-grid engineering practice",
+        textbook: "Very close to standard rule-of-thumb sizing",
+      },
+    },
+    red_flag: {
+      type: "score",
+      instructions: "How many values are physically implausible?",
+      criteria: [
+        "No red flags - all values consistent with the inputs",
+        "One value looks off for the given inputs",
+        "Multiple values physically implausible",
+      ],
+    },
+  };
+}
+
+/**
+ * Strict state validation. Returns { ok, state } or { ok: false, reason }.
+ * Numbers must be finite, within bounds, and the body may contain nothing
+ * beyond the known fields — extra keys are rejected, not ignored.
+ */
+export function validateJevState(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { ok: false, reason: "body must be an object" };
+  }
+  const state = body.state;
+  if (!state || typeof state !== "object" || Array.isArray(state)) {
+    return { ok: false, reason: "state must be an object" };
+  }
+  const allowed = new Set(Object.keys(JEV_STATE_FIELDS));
+  for (const key of Object.keys(state)) {
+    if (!allowed.has(key))
+      return { ok: false, reason: `unknown field: ${key}` };
+  }
+  if (state.mode !== "gridtie" && state.mode !== "offgrid") {
+    return { ok: false, reason: "mode must be gridtie or offgrid" };
+  }
+  for (const [key, bounds] of Object.entries(JEV_STATE_FIELDS)) {
+    if (key === "mode" || bounds === null) continue;
+    const [min, max] = bounds;
+    const v = state[key];
+    if (v === undefined && JEV_OPTIONAL_FIELDS.has(key)) continue;
+    if (typeof v !== "number" || !Number.isFinite(v) || v < min || v > max) {
+      return {
+        ok: false,
+        reason: `${key} must be a finite number in [${min}, ${max}]`,
+      };
+    }
+  }
+  return { ok: true, state };
+}
+
+export async function handleJevSanity(request, env, origin) {
+  // Same first layers as /api/chat: origin is already resolved, payload caps
+  // before any paid call, same fixed-window limiter (shared buckets).
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(ip);
+  if (!rl.allowed) {
+    return jsonResponse(
+      { available: false, reason: "rate_limited" },
+      429,
+      origin,
+      { "Retry-After": String(rl.retryAfter) },
+    );
+  }
+
+  const raw = await request.text();
+  if (raw.length > MAX_BODY_BYTES) {
+    return jsonResponse(
+      { available: false, reason: "payload_too_large" },
+      413,
+      origin,
+    );
+  }
+  let body;
+  try {
+    body = JSON.parse(raw);
+  } catch {
+    return jsonResponse(
+      { available: false, reason: "invalid_json" },
+      400,
+      origin,
+    );
+  }
+  const checked = validateJevState(body);
+  if (!checked.ok) {
+    return jsonResponse(
+      { available: false, reason: checked.reason },
+      400,
+      origin,
+    );
+  }
+
+  const key = env && env.TYPESAFE_API_KEY;
+  if (!key) {
+    // Activation is a deployment concern, not a user-facing error: the
+    // client treats any non-available reply as "hide the badge, silently".
+    return jsonResponse(
+      { available: false, reason: "key_missing" },
+      503,
+      origin,
+    );
+  }
+
+  // env.fetch is a test seam: undefined in production, so the global Worker
+  // fetch is used there; tests inject a stub to cover the upstream mapping
+  // without network access.
+  const doFetch = (env && env.fetch) || fetch;
+  let upstream;
+  try {
+    upstream = await doFetch(JEV_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      signal: AbortSignal.timeout(JEV_TIMEOUT_MS),
+      body: JSON.stringify({
+        model: JEV_MODEL,
+        state: checked.state,
+        questions: jevQuestions(
+          checked.state.mode,
+          checked.state.worstMonthGhi,
+        ),
+      }),
+    });
+  } catch {
+    return jsonResponse(
+      { available: false, reason: "upstream_unreachable" },
+      502,
+      origin,
+    );
+  }
+  if (!upstream.ok) {
+    return jsonResponse(
+      { available: false, reason: "upstream_error" },
+      502,
+      origin,
+    );
+  }
+  let answers;
+  try {
+    const payload = await upstream.json();
+    answers = payload.answers;
+  } catch {
+    return jsonResponse(
+      { available: false, reason: "upstream_invalid" },
+      502,
+      origin,
+    );
+  }
+  if (
+    !answers ||
+    !answers.physically_plausible ||
+    !answers.verdict ||
+    !answers.red_flag
+  ) {
+    return jsonResponse(
+      { available: false, reason: "upstream_shape" },
+      502,
+      origin,
+    );
+  }
+
+  return jsonResponse(
+    {
+      available: true,
+      model: upstream.headers.get("x-model") || JEV_MODEL,
+      plausible: answers.physically_plausible.noul,
+      verdict: answers.verdict.choice,
+      verdictProbabilities: answers.verdict.probabilities || null,
+      verdictConfidence: answers.verdict.confidence,
+      redFlag: answers.red_flag.score,
+      redFlagConfidence: answers.red_flag.confidence,
+    },
+    200,
+    origin,
+  );
+}
+
 // Only these origins may call this API. Anything else gets no CORS headers,
 // which makes browsers refuse to read the response.
 const ALLOWED_ORIGINS = new Set([
@@ -424,6 +671,7 @@ export default {
           version: "2.1",
           model: GROQ_PRIMARY_MODEL,
           promptVersion: SYSTEM_PROMPT_VERSION,
+          jevSanity: !!(env && env.TYPESAFE_API_KEY),
           rateLimits: {
             perIpPerMinute: RATE_PER_IP_PER_MIN,
             perIpPerDay: RATE_PER_IP_PER_DAY,
@@ -439,6 +687,10 @@ export default {
 
     if (path === "/api/chat" && request.method === "POST") {
       return handleChat(request, env, origin);
+    }
+
+    if (path === "/api/jev" && request.method === "POST") {
+      return handleJevSanity(request, env, origin);
     }
 
     return jsonResponse({ error: "Not found" }, 404, origin);

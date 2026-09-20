@@ -82,6 +82,14 @@ export const LOCALES = {
     simpleSeeDetails: "See all the details",
     simpleDownloadBom: "Download parts list (CSV)",
     simpleAskAdvisor: "Ask the AI advisor (plain words)",
+    sanityOk: "Independently sanity-checked ✓ — physics plausible",
+    sanityFlag:
+      "⚠ An independent AI check flags this result as physically implausible —",
+    sanityAskAdvisor: "ask the advisor why",
+    sanityUncertain:
+      "Sanity check inconclusive — these inputs are outside the common range; treat the estimate accordingly",
+    sanityTooltip:
+      "An independent AI classifier (Jev) reviewed the sizing numbers only — no location, text, or personal data leaves your browser beyond these figures. It never changes the computed result.",
     simpleAdvisorStyle:
       "[ADVISOR INSTRUCTION: The visitor is in Simple mode. Answer like an expert talking to a smart 12-year-old: plain everyday words, no jargon (explain any technical term in a short parenthesis), 4 short sentences maximum, and end with the ONE number that matters most.]",
     frontierCeilingTag: "Best within the sizes searched: {pct}%",
@@ -253,6 +261,14 @@ export const LOCALES = {
     simpleSeeDetails: "Ver todos los detalles",
     simpleDownloadBom: "Descargar lista de piezas (CSV)",
     simpleAskAdvisor: "Pregunta al asistente de IA (en palabras simples)",
+    sanityOk: "Verificado de forma independiente ✓ — físicamente plausible",
+    sanityFlag:
+      "⚠ Una verificación de IA independiente marca este resultado como físicamente implausible —",
+    sanityAskAdvisor: "pregunta al asistente por qué",
+    sanityUncertain:
+      "Verificación no concluyente — estas entradas están fuera del rango habitual; trata la estimación en consecuencia",
+    sanityTooltip:
+      "Un clasificador de IA independiente (Jev) revisó solo las cifras del dimensionamiento — ninguna ubicación, texto o dato personal sale de tu navegador más allá de estas cifras. Nunca cambia el resultado calculado.",
     simpleAdvisorStyle:
       "[INSTRUCCIÓN PARA EL ASISTENTE: el visitante está en modo Simple. Responde como un experto hablando con un niño de 12 años inteligente: palabras cotidianas sencillas, sin tecnicismos (explica cualquier término técnico entre paréntesis), máximo 4 frases cortas, y termina con el UNO número que más importa.]",
     frontierCeilingTag: "Lo máximo dentro de lo buscado: {pct}%",
@@ -435,6 +451,14 @@ export const LOCALES = {
     simpleSeeDetails: "Ver todos os detalhes",
     simpleDownloadBom: "Baixar lista de peças (CSV)",
     simpleAskAdvisor: "Pergunte ao assistente de IA (em palavras simples)",
+    sanityOk: "Verificado de forma independente ✓ — fisicamente plausível",
+    sanityFlag:
+      "⚠ Uma verificação de IA independente marca este resultado como fisicamente implausível —",
+    sanityAskAdvisor: "pergunte ao assistente por quê",
+    sanityUncertain:
+      "Verificação inconclusiva — estas entradas estão fora do intervalo comum; trate a estimativa de acordo",
+    sanityTooltip:
+      "Um classificador de IA independente (Jev) analisou apenas os números do dimensionamento — nenhum local, texto ou dado pessoal sai do seu navegador além desses números. Ele nunca altera o resultado calculado.",
     simpleAdvisorStyle:
       "[INSTRUÇÃO PARA O ASSISTENTE: o visitante está no modo Simples. Responda como um especialista a falar com uma criança de 12 anos inteligente: palavras do dia a dia, sem jargão (explica qualquer termo técnico num parêntese curto), no máximo 4 frases curtas, e termine com O número que mais importa.]",
     frontierCeilingTag: "O máximo dentro do que foi buscado: {pct}%",
@@ -614,6 +638,14 @@ export const LOCALES = {
     simpleSeeDetails: "Voir tous les détails",
     simpleDownloadBom: "Télécharger la liste des pièces (CSV)",
     simpleAskAdvisor: "Demandez au conseiller IA (en mots simples)",
+    sanityOk: "Vérifié de façon indépendante ✓ — physiquement plausible",
+    sanityFlag:
+      "⚠ Une vérification IA indépendante signale ce résultat comme physiquement implausible —",
+    sanityAskAdvisor: "demandez au conseiller pourquoi",
+    sanityUncertain:
+      "Vérification non concluante — ces entrées sont hors de la plage courante ; considérez l'estimation en conséquence",
+    sanityTooltip:
+      "Un classificateur IA indépendant (Jev) n'a examiné que les chiffres du dimensionnement — aucun lieu, texte ou donnée personnelle ne quitte votre navigateur en dehors de ces chiffres. Il ne modifie jamais le résultat calculé.",
     simpleAdvisorStyle:
       "[INSTRUCTION AU CONSEILLER : le visiteur est en mode Simple. Répondez comme un expert parlant à un enfant de 12 ans intelligent : mots simples du quotidien, pas de jargon (expliquez tout terme technique entre parenthèses), 4 phrases courtes maximum, et terminez par LE chiffre qui compte le plus.]",
     frontierCeilingTag: "Maximum dans les tailles explorées : {pct}%",
@@ -765,6 +797,14 @@ export const LOCALES = {
     simpleSeeDetails: "Alle Details anzeigen",
     simpleDownloadBom: "Teileliste herunterladen (CSV)",
     simpleAskAdvisor: "Fragen Sie den KI-Berater (in einfachen Worten)",
+    sanityOk: "Unabhängig geprüft ✓ — physikalisch plausibel",
+    sanityFlag:
+      "⚠ Eine unabhängige KI-Prüfung markiert dieses Ergebnis als physikalisch unplausibel —",
+    sanityAskAdvisor: "fragen Sie den Berater warum",
+    sanityUncertain:
+      "Prüfung unentschieden — diese Eingaben liegen außerhalb des üblichen Bereichs; behandeln Sie die Schätzung entsprechend",
+    sanityTooltip:
+      "Ein unabhängiger KI-Klassifikator (Jev) hat nur die Dimensionierungszahlen geprüft — kein Standort, Text oder personenbezogener Daten verlässt Ihren Browser über diese Zahlen hinaus. Er ändert niemals das berechnete Ergebnis.",
     simpleAdvisorStyle:
       "[ANWEISUNG FÜR DEN BERATER: Der Besucher ist im einfachen Modus. Antworten Sie wie ein Experte, der mit einem klugen 12-Jährigen spricht: einfache Alltagsworte, kein Fachjargon (erklären Sie jeden Fachbegriff in einer kurzen Klammer), höchstens 4 kurze Sätze, und enden Sie mit DER Zahl, die am meisten zählt.]",
     frontierCeilingTag: "Bestes in den durchsuchten Größen: {pct} %",
@@ -938,6 +978,14 @@ export const LOCALES = {
     simpleSeeDetails: "عرض كل التفاصيل",
     simpleDownloadBom: "تنزيل قائمة القطع (CSV)",
     simpleAskAdvisor: "اسأل مستشار الذكاء الاصطناعي (بكلمات بسيطة)",
+    sanityOk: "تم التحقق بشكل مستقل ✓ — plausible من الناحية الفيزيائية",
+    sanityFlag:
+      "⚠ تشير مراجعة ذكاء اصطناعي مستقلة إلى أن هذه النتيجة غير معقولة فيزيائيًا —",
+    sanityAskAdvisor: "اسأل المستشار لماذا",
+    sanityUncertain:
+      "التحقق غير حاسم — هذه المدخلات خارج النطاق المعتاد؛ تعامل مع التقدير وفقًا لذلك",
+    sanityTooltip:
+      "راجع مصنف ذكاء اصطناعي مستقل (Jev) أرقام التحجيم فقط — لا يخرج من متصفحك أي موقع أو نص أو بيانات شخصية غير هذه الأرقام. لا يغير أبدًا النتيجة المحسوبة.",
     simpleAdvisorStyle:
       "[تعليمات للمستشار: الزائر في الوضع المبسّط. أجب كخبير يتحدث إلى طفل ذكي في الثانية عشرة: كلمات يومية بسيطة، بلا مصطلحات تقنية (اشرح أي مصطلح تقني بين قوسين قصيرين)، أربع جمل قصيرة كحد أقصى، واختم بالرقم الأهم.]",
     frontierCeilingTag: "الأقصى ضمن الأحجام المبحوثة: {pct}%",
