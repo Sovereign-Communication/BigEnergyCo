@@ -565,6 +565,7 @@ async function main() {
         const before = k.value;
         window.fetch = function (u, o) {
           if (String(u).indexOf("/api/health") !== -1) {
+            window.__jevHealthSeen = Date.now();
             return Promise.resolve({ ok: true, json: () => Promise.resolve({ status: "ok", jevSanity: true }) });
           }
           if (String(u).indexOf("/api/jev") !== -1) {
@@ -578,6 +579,12 @@ async function main() {
           }
           return of.apply(this, arguments);
         };
+        const errs = [];
+        const onErr = (e) => errs.push(String((e && (e.message || e.type)) || e));
+        window.addEventListener("error", onErr);
+        window.addEventListener("unhandledrejection", (e) =>
+          errs.push("rejection: " + String(e.reason)),
+        );
         try {
           k.value = String(Number(before || "10") + 1);
           // Wait for any in-flight run to release the button before clicking,
@@ -599,6 +606,17 @@ async function main() {
             body: window.__jevLastBody,
             btnDisabled: !!btn.disabled,
             regionHidden: document.getElementById("resultsRegion")?.hidden,
+            errs: errs.slice(0, 5),
+            healthSeen: window.__jevHealthSeen || null,
+            dbg: window.__sanityDebug || null,
+            uiSrc: (performance.getEntriesByType("resource") || [])
+              .filter((r) => r.name.indexOf("ui.js") !== -1)
+              .map((r) => r.name)
+              .slice(0, 2),
+            banner: (document.getElementById("infeasibleBanner") || {}).style
+              ? document.getElementById("infeasibleBanner").style.display
+              : "absent",
+            status: (document.getElementById("sizingStatus")?.textContent || "").slice(0, 100),
           });
         } finally {
           // Restore the pre-gate scenario so later gates see the same state.

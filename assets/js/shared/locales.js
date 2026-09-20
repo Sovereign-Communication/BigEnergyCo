@@ -87,7 +87,7 @@ export const LOCALES = {
       "⚠ An independent AI check flags this result as physically implausible —",
     sanityAskAdvisor: "ask the advisor why",
     sanityUncertain:
-      "Sanity check inconclusive — these inputs are outside the common range; treat the estimate accordingly",
+      "Sanity check inconclusive — the independent AI check could not reach a confident verdict on these inputs",
     sanityTooltip:
       "An independent AI classifier (Jev) reviewed the sizing numbers only — no location, text, or personal data leaves your browser beyond these figures. It never changes the computed result.",
     simpleAdvisorStyle:
@@ -266,7 +266,7 @@ export const LOCALES = {
       "⚠ Una verificación de IA independiente marca este resultado como físicamente implausible —",
     sanityAskAdvisor: "pregunta al asistente por qué",
     sanityUncertain:
-      "Verificación no concluyente — estas entradas están fuera del rango habitual; trata la estimación en consecuencia",
+      "Verificación no concluyente — la comprobación independiente de IA no alcanzó un veredicto seguro sobre estas entradas",
     sanityTooltip:
       "Un clasificador de IA independiente (Jev) revisó solo las cifras del dimensionamiento — ninguna ubicación, texto o dato personal sale de tu navegador más allá de estas cifras. Nunca cambia el resultado calculado.",
     simpleAdvisorStyle:
@@ -456,7 +456,7 @@ export const LOCALES = {
       "⚠ Uma verificação de IA independente marca este resultado como fisicamente implausível —",
     sanityAskAdvisor: "pergunte ao assistente por quê",
     sanityUncertain:
-      "Verificação inconclusiva — estas entradas estão fora do intervalo comum; trate a estimativa de acordo",
+      "Verificação inconclusiva — a verificação independente de IA não alcançou um veredito confiável sobre estas entradas",
     sanityTooltip:
       "Um classificador de IA independente (Jev) analisou apenas os números do dimensionamento — nenhum local, texto ou dado pessoal sai do seu navegador além desses números. Ele nunca altera o resultado calculado.",
     simpleAdvisorStyle:
@@ -643,7 +643,7 @@ export const LOCALES = {
       "⚠ Une vérification IA indépendante signale ce résultat comme physiquement implausible —",
     sanityAskAdvisor: "demandez au conseiller pourquoi",
     sanityUncertain:
-      "Vérification non concluante — ces entrées sont hors de la plage courante ; considérez l'estimation en conséquence",
+      "Vérification non concluante — le contrôle indépendant par IA n'a pas atteint de verdict fiable sur ces entrées",
     sanityTooltip:
       "Un classificateur IA indépendant (Jev) n'a examiné que les chiffres du dimensionnement — aucun lieu, texte ou donnée personnelle ne quitte votre navigateur en dehors de ces chiffres. Il ne modifie jamais le résultat calculé.",
     simpleAdvisorStyle:
@@ -802,7 +802,7 @@ export const LOCALES = {
       "⚠ Eine unabhängige KI-Prüfung markiert dieses Ergebnis als physikalisch unplausibel —",
     sanityAskAdvisor: "fragen Sie den Berater warum",
     sanityUncertain:
-      "Prüfung unentschieden — diese Eingaben liegen außerhalb des üblichen Bereichs; behandeln Sie die Schätzung entsprechend",
+      "Prüfung unentschieden — die unabhängige KI-Prüfung erreichte für diese Eingaben kein eindeutiges Urteil",
     sanityTooltip:
       "Ein unabhängiger KI-Klassifikator (Jev) hat nur die Dimensionierungszahlen geprüft — kein Standort, Text oder personenbezogener Daten verlässt Ihren Browser über diese Zahlen hinaus. Er ändert niemals das berechnete Ergebnis.",
     simpleAdvisorStyle:
@@ -983,7 +983,7 @@ export const LOCALES = {
       "⚠ تشير مراجعة ذكاء اصطناعي مستقلة إلى أن هذه النتيجة غير معقولة فيزيائيًا —",
     sanityAskAdvisor: "اسأل المستشار لماذا",
     sanityUncertain:
-      "التحقق غير حاسم — هذه المدخلات خارج النطاق المعتاد؛ تعامل مع التقدير وفقًا لذلك",
+      "التحقق غير حاسم — لم يتمكن الفحص المستقل بالذكاء الاصطناعي من الوصول إلى حكم واثق بشأن هذه المدخلات",
     sanityTooltip:
       "راجع مصنف ذكاء اصطناعي مستقل (Jev) أرقام التحجيم فقط — لا يخرج من متصفحك أي موقع أو نص أو بيانات شخصية غير هذه الأرقام. لا يغير أبدًا النتيجة المحسوبة.",
     simpleAdvisorStyle:
