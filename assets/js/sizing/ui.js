@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260919d";
+import { APPLIANCES } from "./appliances.js?v=20260920a";
 import {
   CITY_CATALOG,
   searchCities,
@@ -26,7 +26,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260919d";
+} from "./cities.js?v=20260920a";
 
 import {
   estimateTariff,
@@ -34,73 +34,79 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260919d";
+} from "./pricing.js?v=20260920a";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260919d";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260920a";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260919d";
+} from "./lead-acid.js?v=20260920a";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260919d";
+} from "./bom.js?v=20260920a";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260919d";
+import { BOM_ITEMS } from "../shared/content.js?v=20260920a";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260919d";
+} from "../shared/i18n.js?v=20260920a";
 
-import { LOCALES } from "../shared/locales.js?v=20260919d";
+import { LOCALES } from "../shared/locales.js?v=20260920a";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260919d";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260919d";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260920a";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260920a";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260919d";
-import { buildSimpleView } from "../shared/simple-view.js?v=20260919d";
+} from "../shared/simple-mode.js?v=20260920a";
+import { buildSimpleView } from "../shared/simple-view.js?v=20260920a";
+import {
+  interpretSanity,
+  renderSanityBadge,
+  requestSanity,
+  sanityState,
+} from "./validate.js?v=20260920a";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20260919d";
+} from "../shared/cut-targets.js?v=20260920a";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260919d";
+} from "./frontier-chart.js?v=20260920a";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260919d";
+} from "./rescale.js?v=20260920a";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260919d";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260920a";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260919d";
+} from "./map-provider.js?v=20260920a";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260919d";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260919d";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260919d";
+} from "./wizard.js?v=20260920a";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260920a";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260920a";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -145,9 +151,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260919d";
+} from "./money.js?v=20260920a";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260919d";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260920a";
 
 let worker = null;
 
@@ -3417,7 +3423,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260919d", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260920a", {
       type: "module",
     });
 
@@ -5482,6 +5488,53 @@ function renderMatrix(p) {
 // One system drives everything below the run (charts, hardware list, export
 // figures, share link, print). This resolves whichever the visitor picked
 // last; it falls back to the recommendation.
+// ── Jev sanity check ───────────────────────────────────────────────────────────
+// One probe per distinct result state: the interpretation is cached by the
+// state fingerprint, so mode toggles and re-renders re-mount the badge from
+// cache instead of re-asking the model. A confident "impossible" verdict on
+// our deterministic engine's output would mean a rescale/merge bug — so the
+// on-the-spot response is one full engine re-run (deterministic self-heal);
+// a flag on the re-run renders as-is (refinedPayloads guards the loop).
+let sanityCache = { key: null, interp: null };
+const sanityRefined = new WeakSet();
+
+function runSanityCheck(p) {
+  if (!p || p.unreachableReason) return;
+  const sel = resolveSelected(p);
+  const entry = sel && sel.solvable ? sel : p.best;
+  const state = sanityState(p, entry);
+  if (!state) return;
+  const key = JSON.stringify(state);
+
+  const mount = () => {
+    if (!sanityCache.interp) return;
+    const container = isSimpleMode()
+      ? $("simpleResultsWrap")
+      : $("resultsRegion");
+    if (container)
+      renderSanityBadge(container, sanityCache.interp, t, askAdvisor);
+  };
+
+  if (sanityCache.key === key && sanityCache.interp) {
+    mount();
+    return;
+  }
+  requestSanity(state).then((data) => {
+    const interp = interpretSanity(data);
+    sanityCache = { key, interp };
+    mount();
+    if (
+      interp &&
+      interp.level === "flag" &&
+      interp.verdict === "impossible" &&
+      !sanityRefined.has(p)
+    ) {
+      sanityRefined.add(p);
+      run(); // on-the-spot full deterministic re-run — never an AI number
+    }
+  });
+}
+
 function resolveSelected(p) {
   if (!p) return null;
   const key = selectedKey || "best";
@@ -7978,6 +8031,10 @@ function renderResults(p) {
   // Simple mode's card refreshes with every fresh payload, same as the
   // technical surfaces.
   if (isSimpleMode()) renderSimpleResults(p);
+
+  // Independent sanity check — reads the finished result, never changes it.
+  // See runSanityCheck below; every failure mode is silent by design.
+  runSanityCheck(p);
 
   const a = p.assumptions;
 

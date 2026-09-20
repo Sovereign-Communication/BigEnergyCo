@@ -1092,6 +1092,25 @@ input[type="number"]::-webkit-inner-spin-button {
   line-height: 1.55;
 }
 
+/* Jev sanity badge — reads the result, never changes it. Quiet by design:
+   a muted status line that only raises its voice on a confident flag. */
+.sanity-badge {
+  margin: 0.9rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.sanity-badge .sanity-ask {
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.sanity-badge.sanity-flag {
+  color: var(--text);
+}
+
 .simple-actions {
   display: flex;
   flex-wrap: wrap;
