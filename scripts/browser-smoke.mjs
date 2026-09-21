@@ -163,11 +163,15 @@ async function main() {
         );
       }
     };
-    send = (method, params = {}) =>
+    send = (method, params = {}, sessionId = null) =>
       new Promise((res, rej) => {
         const id = nextId++;
         pending.set(id, { res, rej });
-        ws.send(JSON.stringify({ id, method, params }));
+        // flatten-mode sessions (worker targets) carry a sessionId on every
+        // frame; null keeps plain page-session behavior.
+        const frame = { id, method, params };
+        if (sessionId) frame.sessionId = sessionId;
+        ws.send(JSON.stringify(frame));
         setTimeout(() => {
           if (pending.has(id)) {
             pending.delete(id);
@@ -266,6 +270,95 @@ async function main() {
       await evaluate(
         `document.body.textContent.includes("Start a Free Estimate")`,
       ),
+    );
+
+    // ── Weather persistence across reload ─────────────────────────────
+    // The 17s defect this gate pins: SW activate used to wipe the app-owned
+    // weather cache on every update, and nasa.js's IndexedDB layer never
+    // persisted (no object store). After one location load, a same-location
+    // reload must perform ZERO network weather pulls. Counted at the CDP
+    // network layer across page AND worker sessions (sizing runs fetch from
+    // the dedicated worker, invisible to the page's Network domain alone),
+    // excluding disk-cache hits so "pulls" means real network fetches.
+    console.log("SMOKE      ── weather persistence ──");
+    await send("Network.enable");
+    await send("Target.setAutoAttach", {
+      autoAttach: true,
+      waitForDebuggerOnStart: false,
+      flatten: true,
+    });
+    let nasaPulls = 0;
+    const baseOnmessage = ws.onmessage;
+    ws.onmessage = (ev) => {
+      baseOnmessage(ev);
+      try {
+        const m = JSON.parse(ev.data);
+        if (m.method === "Target.attachedToTarget" && m.params?.sessionId) {
+          // Every attached worker needs its own Network domain to be seen.
+          send("Network.enable", {}, m.params.sessionId).catch(() => {});
+        }
+        if (
+          m.method === "Network.responseReceived" &&
+          /power\.larc\.nasa\.gov/.test(m.params?.response?.url || "") &&
+          !m.params.response.fromDiskCache
+        )
+          nasaPulls += 1;
+      } catch {}
+    };
+    // First load for real: pick the city, land the first run.
+    await chooseHonolulu();
+    const firstRun = await poll(
+      async () =>
+        evaluate(`document.body.textContent.includes("Total 20-year cost")`),
+      RUN_TIMEOUT_MS,
+    );
+    gate("first-load run completes", firstRun);
+    const runAfterReload = async () => {
+      // Some boots auto-run a restored location; if the results card has not
+      // appeared after settling, click Run explicitly. Both paths are honest.
+      // cardUp swallows "Execution context was destroyed": reloading tears
+      // down the JS context the evaluate was aimed at — expected here.
+      const cardUp = async () => {
+        try {
+          return await evaluate(
+            `document.body.textContent.includes("Total 20-year cost")`,
+          );
+        } catch {
+          return false;
+        }
+      };
+      if (!(await poll(async () => cardUp(), 15000, 500))) {
+        try {
+          await evaluate(`document.getElementById("btnRunSizing")?.click()`);
+        } catch {
+          /* context not live yet — the poll below will still see the card */
+        }
+      }
+      return poll(async () => cardUp(), RUN_TIMEOUT_MS);
+    };
+    // Cold reload: wipe every persistence layer first, so the run MUST fetch.
+    await evaluate(`localStorage.clear()`);
+    await evaluate(`indexedDB.deleteDatabase("beco-weather-v2")`);
+    await evaluate(`caches.delete("beco-weather-v1")`);
+    nasaPulls = 0;
+    await send("Page.reload", { ignoreCache: false }).catch(() => {});
+    await sleep(5000);
+    gate("cold reload run completes", await runAfterReload());
+    await sleep(2000); // let straggler chunk responses land
+    const coldPulls = nasaPulls;
+    gate(
+      "cold load pulls weather (counter has teeth)",
+      coldPulls > 0,
+      `${coldPulls} NASA network pulls on the cold load`,
+    );
+    // Warm reload: persistence layers intact, same location — zero pulls.
+    nasaPulls = 0;
+    await send("Page.reload", { ignoreCache: false }).catch(() => {});
+    await sleep(5000);
+    gate(
+      "same-location reload pulls zero weather data",
+      (await runAfterReload()) && (await sleep(2000), nasaPulls === 0),
+      `${nasaPulls} NASA network pulls after reload (expect 0)`,
     );
 
     // ── Auto-location (regression gate: Permissions-Policy must allow it;

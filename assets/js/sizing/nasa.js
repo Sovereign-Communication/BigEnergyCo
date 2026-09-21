@@ -146,6 +146,10 @@ const CACHE_STORAGE_NAME = "beco-weather-v1";
 // Key grid, layering order and fallbacks are unchanged from v1.
 const CACHE_PREFIX_V2 = "beco-power-v2:";
 const IDB_NAME = "beco-weather-v2";
+// Version 2: the v1 opener never created the object store (no upgrade
+// handler), so every browser that already opened the DB carries a storeless
+// database. Bumping the version forces the upgrade path to run on those.
+const IDB_VERSION = 2;
 const IDB_STORE = "series";
 
 export const IN_MEMORY_WEATHER_CACHE = new Map();
@@ -154,7 +158,17 @@ export const IN_FLIGHT_WEATHER_PROMISES = new Map();
 function idbOpen() {
   if (typeof indexedDB === "undefined") return null;
   try {
-    return indexedDB.open(IDB_NAME, 1);
+    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+    // The store is created HERE, in the upgrade handler — never lazily at
+    // read/write time. Without this hook the DB opened with NO object
+    // store: every read missed and every write silently no-oped, so the
+    // compact layer never persisted anything.
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(IDB_STORE))
+        db.createObjectStore(IDB_STORE);
+    };
+    return req;
   } catch {
     return null;
   }
@@ -267,6 +281,21 @@ export function cacheKey(lat, lon, years) {
   return `${CACHE_PREFIX}${rlat},${rlon},${years}y`;
 }
 
+/** The exact year window fetchHourlySeries would request right now. */
+function currentYearWindow(years) {
+  const endYear = new Date().getUTCFullYear() - 1;
+  return { startYear: endYear - years + 1, endYear };
+}
+
+/** A persisted hit is only usable if it covers NASA's current year window. */
+function coversCurrentWindow(meta, years) {
+  const { startYear, endYear } = currentYearWindow(years);
+  return (
+    Number(meta && meta.startYear) === startYear &&
+    Number(meta && meta.endYear) === endYear
+  );
+}
+
 async function getFromCacheStorage(key) {
   if (typeof caches === "undefined") return null;
   try {
@@ -282,6 +311,20 @@ async function getFromCacheStorage(key) {
     // Ignore cache errors in restricted environments
   }
   return null;
+}
+
+async function deleteFromCacheStorage(key) {
+  if (typeof caches === "undefined") return;
+  try {
+    const cache = await caches.open(CACHE_STORAGE_NAME);
+    await cache.delete(
+      new Request(
+        `https://cache.bigenergyco.internal/${encodeURIComponent(key)}`,
+      ),
+    );
+  } catch {
+    // Ignore cache errors
+  }
 }
 
 async function putToCacheStorage(key, data) {
@@ -342,9 +385,17 @@ export async function fetchHourlyCached(
         v2Key(opts.latitude, opts.longitude, opts.years || 5),
       );
       if (fast) {
-        fast.meta.gridKey = key;
-        IN_MEMORY_WEATHER_CACHE.set(key, fast);
-        return fast;
+        if (coversCurrentWindow(fast.meta, opts.years || 5)) {
+          fast.meta.gridKey = key;
+          IN_MEMORY_WEATHER_CACHE.set(key, fast);
+          return fast;
+        }
+        // The series covers an older year window than NASA would return
+        // today: drop it and fall through (the fresh fetch re-persists all
+        // layers with the new window). One refetch per New Year, ever.
+        idbDelete(v2Key(opts.latitude, opts.longitude, opts.years || 5)).catch(
+          () => {},
+        );
       }
     } catch {
       /* fall through to older layers */
@@ -352,7 +403,10 @@ export async function fetchHourlyCached(
 
     // 4. Cache Storage hit (v1 JSON layer; available in workers and window)
     const diskHit = await getFromCacheStorage(key);
-    if (isUsableWeather(diskHit)) {
+    if (
+      isUsableWeather(diskHit) &&
+      coversCurrentWindow(diskHit.meta, opts.years || 5)
+    ) {
       IN_MEMORY_WEATHER_CACHE.set(key, diskHit);
       // Async side-grade into the compact layer so the NEXT cold start is
       // fast too; this request already has its data.
@@ -362,6 +416,11 @@ export async function fetchHourlyCached(
       ).catch(() => {});
       return diskHit;
     }
+    if (diskHit) {
+      // Unusable or stale window: drop the blob so it cannot shadow future
+      // lookups (the fresh network path below re-persists it).
+      deleteFromCacheStorage(key).catch(() => {});
+    }
 
     // 5. Custom / localStorage store fallback
     if (store) {
@@ -370,12 +429,16 @@ export async function fetchHourlyCached(
         if (hit) {
           const parsed = JSON.parse(hit);
           if (!isUsableWeather(parsed)) throw new Error("stale weather shape");
-          IN_MEMORY_WEATHER_CACHE.set(key, parsed);
-          idbPut(
-            v2Key(opts.latitude, opts.longitude, opts.years || 5),
-            parsed,
-          ).catch(() => {});
-          return parsed;
+          if (!coversCurrentWindow(parsed.meta, opts.years || 5)) {
+            store.removeItem(key); // stale year window: refetch fresh below
+          } else {
+            IN_MEMORY_WEATHER_CACHE.set(key, parsed);
+            idbPut(
+              v2Key(opts.latitude, opts.longitude, opts.years || 5),
+              parsed,
+            ).catch(() => {});
+            return parsed;
+          }
         }
       } catch {
         try {

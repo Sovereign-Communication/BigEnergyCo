@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260921a";
+import { APPLIANCES } from "./appliances.js?v=20260921b";
 import {
   CITY_CATALOG,
   searchCities,
@@ -26,7 +26,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260921a";
+} from "./cities.js?v=20260921b";
 
 import {
   estimateTariff,
@@ -34,79 +34,79 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260921a";
+} from "./pricing.js?v=20260921b";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260921a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260921b";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260921a";
+} from "./lead-acid.js?v=20260921b";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260921a";
+} from "./bom.js?v=20260921b";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260921a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260921b";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260921a";
+} from "../shared/i18n.js?v=20260921b";
 
-import { LOCALES } from "../shared/locales.js?v=20260921a";
+import { LOCALES } from "../shared/locales.js?v=20260921b";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260921a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260921a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260921b";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260921b";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260921a";
-import { buildSimpleView } from "../shared/simple-view.js?v=20260921a";
+} from "../shared/simple-mode.js?v=20260921b";
+import { buildSimpleView } from "../shared/simple-view.js?v=20260921b";
 import {
   interpretSanity,
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20260921a";
+} from "./validate.js?v=20260921b";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20260921a";
+} from "../shared/cut-targets.js?v=20260921b";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260921a";
+} from "./frontier-chart.js?v=20260921b";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260921a";
+} from "./rescale.js?v=20260921b";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260921a";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260921b";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260921a";
+} from "./map-provider.js?v=20260921b";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260921a";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260921a";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260921a";
+} from "./wizard.js?v=20260921b";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260921b";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260921b";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -151,9 +151,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260921a";
+} from "./money.js?v=20260921b";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260921a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260921b";
 
 let worker = null;
 
@@ -3424,7 +3424,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260921a", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260921b", {
       type: "module",
     });
 
