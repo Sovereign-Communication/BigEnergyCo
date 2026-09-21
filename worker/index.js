@@ -222,14 +222,14 @@ export async function handleJevSanity(request, env, origin) {
   } catch {
     return jsonResponse(
       { available: false, reason: "upstream_unreachable" },
-      502,
+      200,
       origin,
     );
   }
   if (!upstream.ok) {
     return jsonResponse(
       { available: false, reason: "upstream_error" },
-      502,
+      200,
       origin,
     );
   }
@@ -240,7 +240,7 @@ export async function handleJevSanity(request, env, origin) {
   } catch {
     return jsonResponse(
       { available: false, reason: "upstream_invalid" },
-      502,
+      200,
       origin,
     );
   }
@@ -252,7 +252,7 @@ export async function handleJevSanity(request, env, origin) {
   ) {
     return jsonResponse(
       { available: false, reason: "upstream_shape" },
-      502,
+      200,
       origin,
     );
   }

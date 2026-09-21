@@ -215,12 +215,12 @@ test("/api/jev: full happy path maps the upstream answers into the client contra
   );
 });
 
-test("/api/jev: upstream 500 and unreachable map to available:false 502", async () => {
+test("/api/jev: upstream failures are silent available:false responses", async () => {
   const resA = await worker.fetch(jevReq({ state: GOOD_STATE }), {
     TYPESAFE_API_KEY: "k",
     fetch: async () => new Response("boom", { status: 500 }),
   });
-  assert.equal(resA.status, 502);
+  assert.equal(resA.status, 200);
   assert.equal((await resA.json()).available, false);
   const resB = await worker.fetch(jevReq({ state: GOOD_STATE }), {
     TYPESAFE_API_KEY: "k",
@@ -228,7 +228,7 @@ test("/api/jev: upstream 500 and unreachable map to available:false 502", async 
       throw new Error("net down");
     },
   });
-  assert.equal(resB.status, 502);
+  assert.equal(resB.status, 200);
   assert.equal((await resB.json()).available, false);
 });
 
@@ -238,7 +238,7 @@ test("/api/jev: upstream shape drift is caught, not passed through", async () =>
     fetch: async () =>
       new Response(JSON.stringify({ answers: {} }), { status: 200 }),
   });
-  assert.equal(res.status, 502);
+  assert.equal(res.status, 200);
   assert.equal((await res.json()).reason, "upstream_shape");
 });
 
