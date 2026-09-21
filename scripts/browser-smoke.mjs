@@ -727,8 +727,8 @@ async function main() {
     // The uncertain band must render NOTHING — silence is the honest render
     // when the model is inconclusive. Not vacuous: the gate proves the
     // /api/jev request fired (calls ≥ 1) and an uncertain-shaped reply
-    // produced no uncertain/flag badge. Teeth: re-adding an uncertain
-    // badge render fails this gate.
+    // produced the neutral inconclusive badge, never a pass or warning.
+    // Teeth: removing the uncertain render fails this gate.
     const uncertainGate = await evaluate(
       `(async () => {
         const of = window.fetch;
@@ -760,11 +760,12 @@ async function main() {
           btn.click();
           const t0 = Date.now();
           while (Date.now() - t0 < 10000) {
-            if (document.querySelector(".sanity-uncertain, .sanity-flag"))
-              return JSON.stringify({ leaked: true, calls: window.__jevCalls2 || 0 });
+            const badge = document.querySelector(".sanity-badge.sanity-uncertain");
+            if (badge && badge.textContent.length > 0)
+              return JSON.stringify({ badge: true, calls: window.__jevCalls2 || 0 });
             await new Promise((r) => setTimeout(r, 100));
           }
-          return JSON.stringify({ leaked: false, calls: window.__jevCalls2 || 0 });
+          return JSON.stringify({ badge: false, calls: window.__jevCalls2 || 0 });
         } finally {
           try {
             k.value = before;
@@ -780,8 +781,8 @@ async function main() {
     );
     const unc = JSON.parse(uncertainGate);
     gate(
-      "Jev uncertain verdict renders nothing (request fires, no badge)",
-      unc.leaked === false && unc.calls >= 1,
+      "Jev inconclusive verdict renders a neutral badge (request fires)",
+      unc.badge === true && unc.calls >= 1,
       uncertainGate,
     );
 

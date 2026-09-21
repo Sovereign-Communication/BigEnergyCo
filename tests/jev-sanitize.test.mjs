@@ -25,6 +25,7 @@ import {
   interpretSanity,
   jevEnabled,
   requestSanity,
+  renderSanityBadge,
   sanityState,
   SANITY_THRESHOLDS,
 } from "../assets/js/sizing/validate.js";
@@ -343,15 +344,65 @@ test("interpretSanity: the measured calibration cases classify as designed", () 
   });
   assert.equal(imp.level, "flag");
   //   Mid-band is uncertain — never a pass, never a visitor alarm.
+  // Observed staging response: available, suspicious, but not confident
+  // enough to claim either a pass or a warning.
   const mid = interpretSanity({
     available: true,
-    plausible: 0.45,
-    verdict: "reasonable",
-    verdictConfidence: 0.5,
-    redFlag: 1.2,
-    redFlagConfidence: 0.2,
+    model: "jev-latest",
+    plausible: 0.42,
+    verdict: "suspicious",
+    verdictProbabilities: {
+      reasonable: 0.08,
+      textbook: 0.03,
+      impossible: 0.22,
+      suspicious: 0.67,
+    },
+    verdictConfidence: 0.57,
+    redFlag: 1.12,
+    redFlagConfidence: 0.16,
   });
   assert.equal(mid.level, "uncertain");
+});
+
+test("renderSanityBadge: pass, flag, and inconclusive stay distinct", () => {
+  const realDocument = globalThis.document;
+  const makeElement = () => ({
+    children: [],
+    className: "",
+    textContent: "",
+    title: "",
+    appendChild(child) {
+      this.children.push(child);
+      return child;
+    },
+    setAttribute() {},
+    addEventListener() {},
+  });
+  globalThis.document = { createElement: makeElement };
+  const t = (key) =>
+    ({
+      sanityOk: "PASS",
+      sanityFlag: "FLAG",
+      sanityUncertain: "INCONCLUSIVE",
+      sanityTooltip: "tooltip",
+      sanityAskAdvisor: "ASK",
+    })[key];
+  try {
+    const cases = [
+      ["pass", "PASS"],
+      ["flag", "FLAG"],
+      ["uncertain", "INCONCLUSIVE"],
+    ];
+    for (const [level, text] of cases) {
+      const container = makeElement();
+      const badge = renderSanityBadge(container, { level }, t);
+      assert.equal(badge.className, `sanity-badge sanity-${level}`);
+      assert.equal(badge.textContent, text);
+      assert.equal(container.children.length, 1);
+    }
+  } finally {
+    globalThis.document = realDocument;
+  }
 });
 
 test("interpretSanity: unavailable/shapeless upstreams render nothing", () => {
