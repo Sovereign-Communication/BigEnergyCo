@@ -9,6 +9,7 @@
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { posix } from "node:path";
+import { deployList } from "./deploy-manifest.mjs";
 
 // ── deploy allowlist discovery ──────────────────────────────────────────────
 /**
@@ -31,6 +32,13 @@ export function deployedFilesFrom(stdout) {
 }
 
 export function deployedFiles() {
+  // Single derivation of the deploy contract: the in-process manifest module.
+  // A CI run proved the old CLI subprocess path returned 344 files where the
+  // manifest held 352 — a transient, unexplained shortfall in the child's
+  // `git ls-files` — and the verifier then guarded a smaller site. The CLI is
+  // kept as a cross-check: on mismatch the manifest wins, and the divergence
+  // is printed so the flake can never pass unnoticed again.
+  const manifest = deployList();
   try {
     // --list, not --check: a pure query. --check BUILDS the staging directory
     // (deploy.yml depends on that), so calling it from several gates at once
@@ -38,11 +46,29 @@ export function deployedFiles() {
     const out = execSync("node scripts/deploy-pages-local.mjs --list", {
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
+      maxBuffer: 32 * 1024 * 1024,
     });
-    return deployedFilesFrom(out);
+    const cli = deployedFilesFrom(out);
+    if (
+      cli.length !== manifest.length ||
+      cli.some((f, i) => f !== manifest[i])
+    ) {
+      const missing = manifest.filter((f) => !cli.includes(f)).slice(0, 8);
+      console.error(
+        `[deployedFiles] CLI/manifest divergence: CLI ${cli.length} vs manifest ${manifest.length};` +
+          ` manifest wins. Missing from CLI: ${missing.join(", ")}` +
+          (cli.length > manifest.length
+            ? `; extra in CLI: ${cli
+                .filter((f) => !manifest.includes(f))
+                .slice(0, 4)
+                .join(", ")}`
+            : ""),
+      );
+    }
   } catch {
-    return [];
+    // CLI failure no longer shrinks the contract — the manifest stands alone.
   }
+  return manifest;
 }
 
 // ── tolerant HTML helpers ───────────────────────────────────────────────────

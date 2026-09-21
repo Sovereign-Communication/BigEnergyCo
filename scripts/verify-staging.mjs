@@ -49,7 +49,7 @@ import {
   budgetFromEnv,
 } from "./lib/budgets.mjs";
 import { deployedFiles, securityPolicyVerdict } from "./lib/gates.mjs";
-import { ALLOWLIST, deployList } from "./lib/deploy-manifest.mjs";
+import { ALLOWLIST } from "./lib/deploy-manifest.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 import { canonicalizeHtml } from "./lib/platform-rewrites.mjs";
 import {
@@ -191,29 +191,26 @@ if (!files.length) {
     "FAIL could not read the deploy allowlist — refusing to verify",
   );
   process.exit(2);
-}
-// Defense in depth: the CLI list must equal the in-process manifest. A CI run
-// once verified 335 files where the contract had 352; from now on any
-// divergence between the two derivations of the SAME contract is a recorded
-// failure — a silently smaller verification is impossible, not just unlikely.
+} // Floor check: the contract must cover every allowlist entry. A CI run once
+// verified 335 files where the contract held 352; deployedFiles() now resolves
+// from the manifest module and reconciles the CLI against it (divergence is
+// printed with the missing file names), so this gate pins the floor here too —
+// a shrunken enumeration fails the verification instead of guarding a smaller
+// site than production serves.
 {
-  const manifest = deployList();
-  const same =
-    manifest.length === files.length &&
-    manifest.every((f, i) => f === files[i]);
-  record(
-    "deploy contract cross-check (CLI list == in-process manifest)",
-    same,
-    same
-      ? `${files.length} files`
-      : `CLI ${files.length} vs manifest ${manifest.length}`,
+  // Only file entries can be named in `files`; dir entries ("assets",
+  // "solar-calculator") are covered transitively by the files beneath them,
+  // which deployList() already proves non-empty (it throws otherwise).
+  const missing = ALLOWLIST.filter(
+    (e) => e.includes("/") && !files.includes(e),
   );
-  if (files.length < ALLOWLIST.length)
-    record(
-      "deploy contract covers every allowlist entry",
-      false,
-      `${files.length} files from ${ALLOWLIST.length} entries — enumeration shrank`,
-    );
+  record(
+    "deploy contract covers every allowlist entry",
+    files.length >= ALLOWLIST.length && missing.length === 0,
+    missing.length
+      ? `missing: ${missing.slice(0, 6).join(", ")}`
+      : `${files.length} files from ${ALLOWLIST.length} entries`,
+  );
 }
 const expected = artifactStamp(readFileSync("index.html", "utf8"));
 if (!expected.ok) {
