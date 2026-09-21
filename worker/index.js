@@ -35,6 +35,8 @@ const RATE_MAP_CLEAR_SIZE = 10000;
 // presentation thresholds live client-side in sizing/validate.js.
 const JEV_API_URL = "https://api.typesafe.ai/v1/systemone";
 const JEV_MODEL = "jev-latest";
+const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+const OPENROUTER_MODEL = "~typesafe/jev-latest";
 const JEV_TIMEOUT_MS = 8000; // quoted 70-500ms; generous ceiling
 
 // Strict numeric bounds: a result outside these is not a judgment call, it is
@@ -186,8 +188,9 @@ export async function handleJevSanity(request, env, origin) {
     );
   }
 
-  const key = env && env.TYPESAFE_API_KEY;
-  if (!key) {
+  const typesafeKey = env && env.TYPESAFE_API_KEY;
+  const openRouterKey = env && env.OPENROUTER_API_KEY;
+  if (!typesafeKey && !openRouterKey) {
     // Activation is a deployment concern, not a user-facing error: the
     // client treats any non-available reply as "hide the badge, silently".
     return jsonResponse(
@@ -198,52 +201,69 @@ export async function handleJevSanity(request, env, origin) {
   }
 
   // env.fetch is a test seam: undefined in production, so the global Worker
-  // fetch is used there; tests inject a stub to cover the upstream mapping
-  // without network access.
+  // fetch is used there; tests inject a stub to cover both providers without
+  // network access.
   const doFetch = (env && env.fetch) || fetch;
-  let upstream;
-  try {
-    upstream = await doFetch(JEV_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
-      signal: AbortSignal.timeout(JEV_TIMEOUT_MS),
-      body: JSON.stringify({
-        model: JEV_MODEL,
-        state: checked.state,
-        questions: jevQuestions(
-          checked.state.mode,
-          checked.state.worstMonthGhi,
-        ),
-      }),
-    });
-  } catch {
-    return jsonResponse(
-      { available: false, reason: "upstream_unreachable" },
-      200,
-      origin,
-    );
+  const state = checked.state;
+  const questions = jevQuestions(state.mode, state.worstMonthGhi);
+  let answers = null;
+  let model = JEV_MODEL;
+
+  if (typesafeKey) {
+    try {
+      const upstream = await doFetch(JEV_API_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${typesafeKey}`,
+          "Content-Type": "application/json",
+        },
+        signal: AbortSignal.timeout(JEV_TIMEOUT_MS),
+        body: JSON.stringify({ model: JEV_MODEL, state, questions }),
+      });
+      if (upstream.ok) answers = await upstream.json();
+    } catch {
+      // OpenRouter below is the bounded backup for provider-side failures.
+    }
   }
-  if (!upstream.ok) {
-    return jsonResponse(
-      { available: false, reason: "upstream_error" },
-      200,
-      origin,
-    );
+
+  if (!answers && openRouterKey) {
+    try {
+      const upstream = await doFetch(OPENROUTER_API_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${openRouterKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://freeoffgridcalculator.com",
+          "X-Title": "BigEnergyCo sanity check",
+        },
+        signal: AbortSignal.timeout(JEV_TIMEOUT_MS),
+        body: JSON.stringify({
+          model: OPENROUTER_MODEL,
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content:
+                "Return only the typed JSON answer object with answers.physically_plausible, answers.verdict, and answers.red_flag. No prose.",
+            },
+            { role: "user", content: JSON.stringify({ state, questions }) },
+          ],
+        }),
+      });
+      if (upstream.ok) {
+        const payload = await upstream.json();
+        const content = payload?.choices?.[0]?.message?.content;
+        answers =
+          payload?.answers ||
+          (typeof content === "string" ? JSON.parse(content) : content);
+        model = OPENROUTER_MODEL;
+      }
+    } catch {
+      // Optional sanity only: a failed backup remains an invisible no-badge.
+    }
   }
-  let answers;
-  try {
-    const payload = await upstream.json();
-    answers = payload.answers;
-  } catch {
-    return jsonResponse(
-      { available: false, reason: "upstream_invalid" },
-      200,
-      origin,
-    );
-  }
+
+  answers = answers?.answers || answers;
   if (
     !answers ||
     !answers.physically_plausible ||
@@ -251,7 +271,7 @@ export async function handleJevSanity(request, env, origin) {
     !answers.red_flag
   ) {
     return jsonResponse(
-      { available: false, reason: "upstream_shape" },
+      { available: false, reason: "upstream_unavailable" },
       200,
       origin,
     );
@@ -260,7 +280,7 @@ export async function handleJevSanity(request, env, origin) {
   return jsonResponse(
     {
       available: true,
-      model: upstream.headers.get("x-model") || JEV_MODEL,
+      model,
       plausible: answers.physically_plausible.noul,
       verdict: answers.verdict.choice,
       verdictProbabilities: answers.verdict.probabilities || null,
@@ -675,7 +695,10 @@ export default {
           version: "2.1",
           model: GROQ_PRIMARY_MODEL,
           promptVersion: SYSTEM_PROMPT_VERSION,
-          jevSanity: !!(env && env.TYPESAFE_API_KEY),
+          jevSanity: !!(
+            env &&
+            (env.TYPESAFE_API_KEY || env.OPENROUTER_API_KEY)
+          ),
           rateLimits: {
             perIpPerMinute: RATE_PER_IP_PER_MIN,
             perIpPerDay: RATE_PER_IP_PER_DAY,
