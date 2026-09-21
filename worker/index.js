@@ -50,6 +50,8 @@ const JEV_STATE_FIELDS = {
   costHi: [0, 100000000],
   cutPct: [0, 100],
   paybackYears: [0, 200],
+  // Payback is unavailable when the visitor has not supplied a tariff;
+  // Jev can still judge the physical sizing without that field.
   // Specific yield: average daily kWh produced per kWp of array AFTER
   // real-world losses (derates, soiling, thermal). Typical installed range
   // is roughly 2.5-7; the engine computes it from NASA POWER per site.
@@ -62,7 +64,11 @@ const JEV_STATE_FIELDS = {
   // Site mean temperature (°C) — drives battery thermal derating. Optional.
   meanTempC: [-60, 50],
 };
-const JEV_OPTIONAL_FIELDS = new Set(["worstMonthGhi", "meanTempC"]);
+const JEV_OPTIONAL_FIELDS = new Set([
+  "paybackYears",
+  "worstMonthGhi",
+  "meanTempC",
+]);
 
 function jevQuestions(mode, worstMonthGhi) {
   const batteryRule =

@@ -44,7 +44,7 @@ export function sanityState(p, entry) {
     costLo: +entry.costLo,
     costHi: +entry.costHi,
     cutPct: +(entry.cutPct ?? 0),
-    paybackYears: +payback,
+    ...(Number.isFinite(+payback) ? { paybackYears: +payback } : {}),
     specificYieldKwhPerKwDay: p.annualYieldPerKw
       ? +(p.annualYieldPerKw / 365).toFixed(3)
       : undefined,
