@@ -30,14 +30,13 @@ export function deployedFilesFrom(stdout) {
     .map((l) => l.trim())
     .filter((l) => l && l !== "Deployable files:" && !l.startsWith("--"));
 }
-
 export function deployedFiles() {
   // Single derivation of the deploy contract: the in-process manifest module.
-  // A CI run proved the old CLI subprocess path returned 344 files where the
-  // manifest held 352 — a transient, unexplained shortfall in the child's
-  // `git ls-files` — and the verifier then guarded a smaller site. The CLI is
-  // kept as a cross-check: on mismatch the manifest wins, and the divergence
-  // is printed so the flake can never pass unnoticed again.
+  // CI runs proved the old CLI subprocess path could transiently return fewer
+  // files than the contract (335, then 344, vs 352) — the verifier then
+  // guarded a smaller site. The manifest wins; the CLI is kept only as a
+  // cross-check whose divergence is captured (never printed to stderr, which
+  // corrupts combined-output JSON consumers) and surfaced in verifier reports.
   const manifest = deployList();
   try {
     // --list, not --check: a pure query. --check BUILDS the staging directory
@@ -53,23 +52,29 @@ export function deployedFiles() {
       cli.length !== manifest.length ||
       cli.some((f, i) => f !== manifest[i])
     ) {
-      const missing = manifest.filter((f) => !cli.includes(f)).slice(0, 8);
-      console.error(
-        `[deployedFiles] CLI/manifest divergence: CLI ${cli.length} vs manifest ${manifest.length};` +
-          ` manifest wins. Missing from CLI: ${missing.join(", ")}` +
-          (cli.length > manifest.length
-            ? `; extra in CLI: ${cli
-                .filter((f) => !manifest.includes(f))
-                .slice(0, 4)
-                .join(", ")}`
-            : ""),
-      );
+      const missing = manifest.filter((f) => !cli.includes(f));
+      deploymentDivergences.push({
+        cli: cli.length,
+        manifest: manifest.length,
+        missingFromCli: missing.slice(0, 8),
+        extraInCli:
+          cli.length > manifest.length
+            ? cli.filter((f) => !manifest.includes(f)).slice(0, 4)
+            : undefined,
+      });
     }
   } catch {
-    // CLI failure no longer shrinks the contract — the manifest stands alone.
+    deploymentDivergences.push({
+      cli: null,
+      manifest: manifest.length,
+      error: true,
+    });
   }
   return manifest;
 }
+
+/** Observed CLI/manifest divergences since module load (verifier JSON reports these). */
+export const deploymentDivergences = [];
 
 // ── tolerant HTML helpers ───────────────────────────────────────────────────
 // Prettier puts attributes on their own lines, so everything here works across

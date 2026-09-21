@@ -48,7 +48,11 @@ import {
   SMOKE_ATTEMPT_TIMEOUT_MS,
   budgetFromEnv,
 } from "./lib/budgets.mjs";
-import { deployedFiles, securityPolicyVerdict } from "./lib/gates.mjs";
+import {
+  deployedFiles,
+  deploymentDivergences,
+  securityPolicyVerdict,
+} from "./lib/gates.mjs";
 import { ALLOWLIST } from "./lib/deploy-manifest.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 import { canonicalizeHtml } from "./lib/platform-rewrites.mjs";
@@ -211,6 +215,14 @@ if (!files.length) {
       ? `missing: ${missing.slice(0, 6).join(", ")}`
       : `${files.length} files from ${ALLOWLIST.length} entries`,
   );
+  for (const d of deploymentDivergences)
+    record(
+      "CLI/manifest enumeration reconciliation",
+      false,
+      d.error
+        ? `CLI failed; manifest (${d.manifest}) used`
+        : `CLI ${d.cli} vs manifest ${d.manifest}; missing from CLI: ${(d.missingFromCli || []).join(", ")}`,
+    );
 }
 const expected = artifactStamp(readFileSync("index.html", "utf8"));
 if (!expected.ok) {
