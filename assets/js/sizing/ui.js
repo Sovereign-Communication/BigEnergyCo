@@ -514,6 +514,7 @@ function applySimpleMode() {
     simpleWrap.style.display = "none";
     if (simpleMode && lastPayload) {
       renderSimpleResults(lastPayload);
+      runSanityCheck(lastPayload); // badge must survive mode toggles: cache re-mount, no refetch
     }
   }
   document.querySelectorAll("[data-jargon]").forEach((node) => {

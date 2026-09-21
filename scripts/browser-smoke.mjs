@@ -692,6 +692,96 @@ async function main() {
       uncertainGate,
     );
 
+    // The badge must survive a Simple-mode toggle: applySimpleMode re-renders
+    // the simple card through the SAME sanity owner (runSanityCheck), which
+    // re-mounts from the state cache — no second /api/jev request. Self
+    // contained: earlier gates leave an uncertain-shaped cache for the
+    // restored state, so this gate establishes its own pass-shaped badge on a
+    // fresh state before toggling. Teeth: reverting the toggle-path call to
+    // runSanityCheck re-renders without the badge and fails this gate.
+    const toggleGate = await evaluate(
+      `(async () => {
+        const of = window.fetch;
+        const k = document.getElementById("dailyKwhInput");
+        const btn = document.getElementById("btnRunSizing");
+        const toggle = document.getElementById("simpleModeToggle");
+        if (!toggle) return JSON.stringify({ err: "no toggle" });
+        const before = k.value;
+        window.fetch = function (u, o) {
+          if (String(u).indexOf("/api/health") !== -1) {
+            return Promise.resolve({ ok: true, json: () => Promise.resolve({ status: "ok", jevSanity: true }) });
+          }
+          if (String(u).indexOf("/api/jev") !== -1) {
+            window.__jevCalls3 = (window.__jevCalls3 || 0) + 1;
+            return Promise.resolve({ ok: true, json: () => Promise.resolve({
+              available: true, model: "jev-smoke", plausible: 0.9,
+              verdict: "reasonable", verdictConfidence: 0.9,
+              redFlag: 0.2, redFlagConfidence: 0.8,
+            }) });
+          }
+          return of.apply(this, arguments);
+        };
+        const flip = (on) => {
+          toggle.checked = on;
+          toggle.dispatchEvent(new Event("change"));
+        };
+        try {
+          // Earlier gates leave appended badges and cache entries behind; a
+          // fresh, unambiguous scenario keeps this gate self-contained.
+          document.querySelectorAll(".sanity-badge").forEach((b) => b.remove());
+          k.value = String(Number(before || "10") + 40);
+          const t0w = Date.now();
+          while (btn?.disabled && Date.now() - t0w < 30000) {
+            await new Promise((r) => setTimeout(r, 100));
+          }
+          btn.click();
+          const t0 = Date.now();
+          let regularBadge = false;
+          while (Date.now() - t0 < 15000) {
+            if (document.querySelector("#resultsRegion .sanity-badge.sanity-pass")) {
+              regularBadge = true;
+              break;
+            }
+            await new Promise((r) => setTimeout(r, 100));
+          }
+          const callsAtMount = window.__jevCalls3 || 0;
+          flip(true);
+          await new Promise((r) => setTimeout(r, 400));
+          const simpleBadge = !!document.querySelector("#simpleResultsWrap .sanity-badge.sanity-pass");
+          flip(false);
+          await new Promise((r) => setTimeout(r, 400));
+          const regularBadgeBack = !!document.querySelector("#resultsRegion .sanity-badge.sanity-pass");
+          return JSON.stringify({
+            regularBadge,
+            simpleBadge,
+            regularBadgeBack,
+            callsAtMount,
+            callsAfterToggles: window.__jevCalls3 || 0,
+          });
+        } finally {
+          try {
+            flip(false);
+            k.value = before;
+            if (!btn.disabled) btn.click();
+            const t1 = Date.now();
+            while (btn.disabled && Date.now() - t1 < 30000) {
+              await new Promise((r) => setTimeout(r, 100));
+            }
+          } catch {}
+          window.fetch = of;
+        }
+      })()`,
+    );
+    const tg = JSON.parse(toggleGate);
+    gate(
+      "Jev badge survives Simple-mode toggle (cache re-mount, no refetch)",
+      tg.regularBadge === true &&
+        tg.simpleBadge === true &&
+        tg.regularBadgeBack === true &&
+        tg.callsAfterToggles === tg.callsAtMount,
+      toggleGate,
+    );
+
     // ── Accessibility basics (main page, post-render) ─────────────────
     const a11y = await evaluate(`(() => {
       const imgs = [...document.images].filter((i) => !i.alt && i.getAttribute("aria-hidden") !== "true");
