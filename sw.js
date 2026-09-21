@@ -5,11 +5,12 @@
 //   - Assets (js/css/icons/manifest): stale-while-revalidate — instant loads,
 //     quietly refreshed in the background.
 //   - Never intercept cross-origin requests (NASA POWER, Groq worker).
-// The sizing engine runs entirely client-side and NASA weather is cached in
-// localStorage per site, so after one visit a location keeps working fully
-// offline. Bump CACHE_VERSION to force every client to refresh on next visit.
+// The sizing engine runs entirely client-side and NASA weather is persisted
+// per site (Cache Storage + IndexedDB, owned by nasa.js — never deleted
+// here), so after one visit a location keeps working fully offline. Bump
+// CACHE_VERSION to force every client to refresh on next visit.
 
-const CACHE_VERSION = "beco-v80";
+const CACHE_VERSION = "beco-v81";
 // Explicit file URLs only: cache.addAll rejects the whole batch if ANY entry
 // 404s or redirects, and directory URLs ("./blog/") depend on server
 // directory-index behavior. Every entry below must exist on disk — the
@@ -44,7 +45,14 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k)),
+          // Only caches matching our versioned prefix are ours. Unversioned
+          // names like "beco-weather-v1" (the app's own NASA weather layer,
+          // owned by nasa.js) and anything foreign must NEVER be deleted —
+          // wiping the weather cache on every SW update forced a full
+          // ~2 MB NASA re-fetch after each deploy (the reload 17s stall).
+          keys
+            .filter((k) => /^beco-v\d+$/.test(k) && k !== CACHE_VERSION)
+            .map((k) => caches.delete(k)),
         ),
       )
       .then(() => self.clients.claim()),
