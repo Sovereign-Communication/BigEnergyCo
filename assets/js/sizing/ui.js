@@ -13,8 +13,8 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260921e";
-import { staleRunAction } from "./run-coordinator.js?v=20260921e";
+import { APPLIANCES } from "./appliances.js?v=20260921f";
+import { staleRunAction } from "./run-coordinator.js?v=20260921f";
 import {
   CITY_CATALOG,
   searchCities,
@@ -27,7 +27,7 @@ import {
   nearestCity,
   normalizeCityQuery,
   shouldAutoResolve,
-} from "./cities.js?v=20260921e";
+} from "./cities.js?v=20260921f";
 
 import {
   estimateTariff,
@@ -35,79 +35,79 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260921e";
+} from "./pricing.js?v=20260921f";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260921e";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260921f";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260921e";
+} from "./lead-acid.js?v=20260921f";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260921e";
+} from "./bom.js?v=20260921f";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260921e";
+import { BOM_ITEMS } from "../shared/content.js?v=20260921f";
 
 import {
   applyI18n,
   initLangPicker,
   resolveLang,
-} from "../shared/i18n.js?v=20260921e";
+} from "../shared/i18n.js?v=20260921f";
 
-import { LOCALES } from "../shared/locales.js?v=20260921e";
+import { LOCALES } from "../shared/locales.js?v=20260921f";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260921e";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260921e";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260921f";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260921f";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260921e";
-import { buildSimpleView } from "../shared/simple-view.js?v=20260921e";
+} from "../shared/simple-mode.js?v=20260921f";
+import { buildSimpleView } from "../shared/simple-view.js?v=20260921f";
 import {
   interpretSanity,
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20260921e";
+} from "./validate.js?v=20260921f";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20260921e";
+} from "../shared/cut-targets.js?v=20260921f";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260921e";
+} from "./frontier-chart.js?v=20260921f";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260921e";
+} from "./rescale.js?v=20260921f";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260921e";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260921f";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260921e";
+} from "./map-provider.js?v=20260921f";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260921e";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260921e";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260921e";
+} from "./wizard.js?v=20260921f";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260921f";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260921f";
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -139,11 +139,11 @@ function setupRoofAreaInput() {
   if (!input) return;
   input.addEventListener("input", () => {
     updateRoofAreaCapNote();
-    if (quickMode && lastPayload) run(true);
+    markPrecalcDirty();
   });
   input.addEventListener("change", () => {
     updateRoofAreaCapNote();
-    if (quickMode && lastPayload) run(true);
+    markPrecalcDirty();
   });
   updateRoofAreaCapNote();
 }
@@ -152,9 +152,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260921e";
+} from "./money.js?v=20260921f";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260921e";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260921f";
 
 let worker = null;
 
@@ -164,9 +164,16 @@ let prevFxSnapshot = null; // for tariff display conversion on currency switch
 // Result detail level: "best" | "compare" | "matrix" (auto-chemistry runs only).
 let resultLevel = "best";
 
-// Quick (auto-run) mode shows only the location controls and sizes with
-// defaults; Manual reveals the full form. Default is quick.
+// Quick mode shows only the essential inputs; Manual reveals the full form.
+// Both modes require the explicit sizing button before any calculation.
 let quickMode = true;
+// No sizing work is allowed until the visitor explicitly clicks the run button.
+// After the first successful result, pre-calc changes may refresh it quietly.
+let runAuthorized = false;
+// Pre-calculation inputs are a deliberate checkpoint: changing one invalidates
+// the result and waits for the visitor to click Size My System again. Result
+// controls (the continuous cut/budget spectrum) use cached data instead.
+let precalcDirty = true;
 let locationResolved = false;
 let wizard = restoreWizard();
 let roofMapRegistry = null;
@@ -758,11 +765,10 @@ function updateAutoRows() {
 
   if (tierRow) tierRow.style.display = isAuto && !gt ? "block" : "none";
 
-  // The bill-cut target select drives customCutFraction for ANY chemistry
-  // (its change handler syncs the results slider), so it belongs to the
-  // grid-tie mode — not to Auto. Only the reliability-tier submenu is
-  // auto-specific.
-  if (targetRow) targetRow.style.display = gt ? "block" : "none";
+  // Bill-cut is a continuous post-result control, not an upfront preset.
+  // Keep the hidden select as the internal compatibility state for share links
+  // and engine inputs; the visible results slider owns the spectrum.
+  if (targetRow) targetRow.style.display = "none";
 }
 
 function setLoadPanel() {
@@ -908,9 +914,9 @@ function syncBillSlider() {
   const note = $("quickBillNote");
   if (note) {
     note.textContent = quickMode
-      ? "Auto-run starts from ~" +
+      ? "Starts from ~" +
         fmtBill(value) +
-        ` (≈${Math.round(billAnchorKwh)} kWh/day). Slide the bill above to your real monthly cost — then one click on your location sizes everything against it. The bill-cut slider appears with results.`
+        ` (≈${Math.round(billAnchorKwh)} kWh/day). Set your real bill here, choose a location, then click Size My System. The bill-cut slider appears with results.`
       : "Quick estimate: ~" +
         fmtBill(value) +
         ` (starts from ~${Math.round(billAnchorKwh)} kWh/day) — switch to Manual to change your bill, appliances, or rate.`;
@@ -1150,6 +1156,7 @@ function renderAppliances() {
         }
 
         updateLoadReadout();
+        if (lastPayload) markPrecalcDirty();
       }
 
       cb.addEventListener("change", refresh);
@@ -1556,7 +1563,36 @@ function renderChemTempVisualizer(lat) {
 
 // -- Location plumbing -------------------------------------------------------
 
+function markPrecalcDirty() {
+  precalcDirty = true;
+  if (runTimer) {
+    clearTimeout(runTimer);
+    runTimer = null;
+  }
+  // Invalidate any in-flight calculation immediately; changing a pre-calc
+  // input must never let the old response repaint the new form.
+  runToken++;
+  payloadEpoch++;
+  pendingRun = null;
+  lastRunInput = null;
+  lastOkKey = null;
+  if (lastPayload) {
+    lastPayload = null;
+    adoptedEntry = null;
+    pendingFocus = null;
+    selectedKey = "best";
+    setResultsHidden(true);
+  }
+  const btn = $("btnRunSizing");
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = `<span>${t("runBtn")}</span>`;
+  }
+  setStatus("Inputs changed — click Size My System to update the estimate.");
+}
+
 function setCoords(lat, lon, label, region, country) {
+  markPrecalcDirty();
   locationResolved = true;
   wizard.setValue("latitude", lat);
   wizard.setValue("longitude", lon);
@@ -1591,12 +1627,8 @@ function setCoords(lat, lon, label, region, country) {
 
   currencyTouched = false;
 
-  // Location just resolved: start pulling this site's satellite weather in
-  // the background NOW, so by the time the visitor reaches "Show my
-  // options" the ~2 MB pull has already landed (or come from cache). All
-  // location paths (city suggestion, typed resolution, GPS, shared links)
-  // funnel through here; warmSiteWeather dedupes per site.
-  warmSiteWeather(lat, lon);
+  // Location selection only fills the pre-calc inputs. Weather is fetched
+  // after the visitor explicitly clicks the sizing button.
   if (
     lastPayload &&
     lastPayload.input &&
@@ -1733,13 +1765,8 @@ function applyEstimatedTariff(lat, lon, region, country) {
 
   syncBillSlider();
 
-  // A location change auto-switches the display currency and tariff estimate;
-  // refresh any existing results so the money figures follow immediately
-  // instead of showing the previous location's currency.
-  if (lastPayload) {
-    renderResults(lastPayload);
-    if (quickMode) scheduleRun(true);
-  }
+  // Location changes are pre-calculation inputs. They update the form and
+  // pricing context now, but never start weather or sizing work by themselves.
 }
 
 function renderCities() {
@@ -1783,7 +1810,6 @@ function renderCities() {
           search.value = formatCityLabel(c);
           list.hidden = true;
           search.setAttribute("aria-expanded", "false");
-          if (quickMode) run();
         });
         list.appendChild(button);
       });
@@ -1852,7 +1878,6 @@ function renderCities() {
         search.value = formatCityLabel(local);
         list.hidden = true;
         search.setAttribute("aria-expanded", "false");
-        if (quickMode) run();
         return;
       }
       // No seed hit: try the query's own country partitions (Berlin→DE) —
@@ -1878,7 +1903,6 @@ function renderCities() {
         search.value = formatCityLabel(offline);
         list.hidden = true;
         search.setAttribute("aria-expanded", "false");
-        if (quickMode) run();
         return;
       }
       // Still nothing: the online geocoder resolves any place on Earth.
@@ -1913,7 +1937,6 @@ function renderCities() {
       search.value = formatCityLabel(match);
       list.hidden = true;
       search.setAttribute("aria-expanded", "false");
-      if (quickMode) run();
     };
     search.addEventListener("keydown", (event) => {
       if (event.key === "Tab") {
@@ -2021,10 +2044,9 @@ function locateMe() {
         setCoords(lat, lon, "Using your precise location");
       }
 
-      // Auto-run is the default: the bill + cut sliders above were already
-      // pre-configured (and stay adjustable), so location alone is enough.
-
-      if (quickMode) run();
+      // Location is consent to use coordinates, not consent to calculate.
+      // A prior result may refresh quietly; the first run always needs the
+      // explicit sizing button.
 
       // Refine in the background: reverse-geocode the fix to a country so the
       // nearest reference city (and its tariff/currency) is not limited to
@@ -2053,7 +2075,6 @@ function locateMe() {
           geo.r === "Worldwide" ? refined?.r : geo.r,
           geo.country,
         );
-        if (quickMode) run();
       }
     },
 
@@ -2213,7 +2234,7 @@ function setQuickMode(on) {
 
   const runBtn = $("btnRunSizing");
 
-  if (runBtn) runBtn.style.display = on ? "none" : "";
+  if (runBtn) runBtn.style.display = "";
 }
 
 // -- Inputs ? engine ---------------------------------------------------------
@@ -2379,7 +2400,9 @@ function readPercentInput(id) {
   return raw / 100;
 }
 
-function run(quiet = false) {
+function run(quiet = false, explicit = false) {
+  if (!runAuthorized && !explicit) return;
+  if (precalcDirty && !explicit) return;
   if (runTimer) {
     clearTimeout(runTimer);
     runTimer = null;
@@ -2410,6 +2433,8 @@ function run(quiet = false) {
     return;
   }
 
+  precalcDirty = false;
+
   // A site/option change invalidates an adopted curve point (its hardware was
   // simulated for the old site and load); a bill-only change keeps it — the
   // rescale path already re-based it and the quiet refine re-simulates it.
@@ -2432,8 +2457,7 @@ function run(quiet = false) {
     return;
   }
 
-  // Coordinates are valid from here: make sure the satellite weather for
-  // this site is already warming (deduped; no-op when warm or cached).
+  // Weather warming begins only after explicit sizing consent.
   warmSiteWeather(inp.latitude, inp.longitude);
 
   // A repeat of the exact previous configuration is answered from the
@@ -2486,6 +2510,7 @@ function flushPendingRun() {
 
 // Slider updates queue a debounced re-run so dragging never stacks runs.
 function scheduleRun(quiet = false) {
+  if (!runAuthorized || precalcDirty) return;
   if (runTimer) clearTimeout(runTimer);
 
   runTimer = setTimeout(() => {
@@ -2807,55 +2832,10 @@ function setupBillSlider() {
   });
 
   slider.addEventListener("change", () => {
-    // In manual mode, do not calculate until "Size My System" is clicked.
-    if (!lastPayload) {
-      if (quickMode) scheduleRun();
-      return;
-    }
-    const inp = readInputs();
-    // Same site and options already on screen? Re-express the cached payload
-    // for the new bill in pure arithmetic — the engine's answers scale with
-    // the load, so the numbers stay exact-in-shape and the page updates
-    // instantly (no engine search, no weather re-fetch). A quiet full run
-    // then refines the rescaled numbers to exact search results.
-    //
-    // Below ~15 kWh/day the search leaves the scaling regime (minimum-bank
-    // and lattice constraints bend the PV/battery mix), so only rescale when
-    // BOTH the existing and the new load are in the stable range.
-    if (
-      lastPayload.mode === "gridtie" &&
-      lastRunInput &&
-      lastRunInput.dailyKwh >= RESCALE_MIN_KWH &&
-      inp.dailyKwh >= RESCALE_MIN_KWH &&
-      sameSiteOptions(lastRunInput, inp) &&
-      lastPayload.annualGridSpendUsd !== null
-    ) {
-      const k = inp.dailyKwh / lastRunInput.dailyKwh;
-      if (Number.isFinite(k) && Math.abs(k - 1) > 0.001) {
-        // Keep a curve/cell adoption through the rescale, at its new scale,
-        // and re-adopt it on the background refine so the user's choice sticks.
-        const hadAdoption = adoptedEntry !== null;
-        pendingFocus = hadAdoption
-          ? {
-              pvKw: Math.round(adoptedEntry.pvKw * k * 100) / 100,
-              battKwh: Math.round(adoptedEntry.battKwh * k),
-              chemistry: adoptedEntry.chemistry,
-            }
-          : null;
-        lastPayload = rescalePayload(lastPayload, k);
-        lastRunInput = inp; // base for the next rescale
-        renderResults(lastPayload);
-        if (hadAdoption) {
-          adoptedEntry = scaleRecord(adoptedEntry, k);
-          selectedKey = "adopted";
-          refreshSelectionOutputs(lastPayload);
-        }
-        updateShareHash(lastPayload, inp);
-        scheduleRun(true); // quiet refine to exact numbers
-        return;
-      }
-    }
-    scheduleRun();
+    // Monthly bill is an upfront load assumption. Show the changed input now,
+    // but do not replace the result or fetch weather until the explicit size
+    // button is clicked.
+    markPrecalcDirty();
   });
 }
 
@@ -2905,7 +2885,7 @@ function setupGoalControls() {
       const desc = document.querySelector(".section-desc");
       if (desc)
         desc.textContent =
-          "Set your monthly electric bill — then one click on your location sizes the optimal solar and battery system to cut your utility bills. Compares chemistries, models 20-year true costs, and reveals wholesale hardware savings.";
+          "Set your monthly electric bill and location, then click Size My System to compare the optimal solar and battery paths. The results cover chemistries, 20-year true costs, and wholesale hardware savings.";
       const optBill = $("optLoadBill");
       if (optBill) optBill.textContent = "I know my monthly electric bill";
     } else {
@@ -2924,12 +2904,9 @@ function setupGoalControls() {
     updateAutoRows();
     setQuickMode(quickMode);
     syncBillSlider();
-    // Trigger a full run with full visual feedback (spinner, status, scroll)
-    // whenever coordinates are already resolved — regardless of whether a
-    // previous result exists.
-    const lat = parseFloat($("latInput")?.value);
-    const lon = parseFloat($("lonInput")?.value);
-    if (Number.isFinite(lat) && Number.isFinite(lon)) run(false);
+    // A goal change is a pre-calc change only after a successful result; the
+    // first calculation still belongs to the explicit sizing button.
+    markPrecalcDirty();
   };
 
   btnGt.addEventListener("click", () => setGoal("gridtie"));
@@ -2981,29 +2958,7 @@ function setupOffgridControls() {
   });
 
   slider.addEventListener("change", () => {
-    if (!lastPayload) {
-      if (quickMode) scheduleRun();
-      return;
-    }
-    const inp = readInputs();
-    if (
-      lastPayload.mode === "offgrid" &&
-      lastRunInput &&
-      lastRunInput.dailyKwh >= RESCALE_MIN_KWH &&
-      inp.dailyKwh >= RESCALE_MIN_KWH &&
-      sameSiteOptions(lastRunInput, inp)
-    ) {
-      const k = inp.dailyKwh / lastRunInput.dailyKwh;
-      if (Number.isFinite(k) && Math.abs(k - 1) > 0.001) {
-        lastPayload = rescalePayload(lastPayload, k);
-        lastRunInput = inp;
-        renderResults(lastPayload);
-        updateShareHash(lastPayload, inp);
-        scheduleRun(true);
-        return;
-      }
-    }
-    scheduleRun();
+    markPrecalcDirty();
   });
 
   if (kwhInput) {
@@ -3016,11 +2971,7 @@ function setupOffgridControls() {
       }
     });
     kwhInput.addEventListener("change", () => {
-      if (!lastPayload) {
-        if (quickMode) scheduleRun();
-        return;
-      }
-      scheduleRun();
+      markPrecalcDirty();
     });
   }
 
@@ -3029,8 +2980,7 @@ function setupOffgridControls() {
       const kwh = parseFloat(btn.dataset.kwh);
       if (Number.isFinite(kwh) && kwh > 0) {
         syncToVal(kwh);
-        if (lastPayload) scheduleRun();
-        else if (quickMode) scheduleRun();
+        markPrecalcDirty();
       }
     });
   });
@@ -3425,7 +3375,7 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260921e", {
+    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260921f", {
       type: "module",
     });
 
@@ -3454,11 +3404,12 @@ function ensureWorker() {
           Boolean(pendingRun),
         );
         if (staleAction !== "current") {
-          if (staleAction === "flush") {
-            workerBusy = false;
-            restoreRunButton();
-            flushPendingRun();
-          }
+          // A pre-calculation edit can invalidate the only in-flight reply.
+          // Release the worker on both stale paths; otherwise the next
+          // explicit Size click queues behind a run that already finished.
+          workerBusy = false;
+          restoreRunButton();
+          if (staleAction === "flush") flushPendingRun();
           return;
         }
 
@@ -6293,7 +6244,7 @@ function applyGenRate() {
   generatorBasis = true;
   tariffTouched = true;
   syncBillSlider();
-  if (quickMode && lastPayload) scheduleRun(true);
+  markPrecalcDirty();
   setStatus(t("fuelApplyOk", { rate: money(rate) }));
 }
 
@@ -9253,7 +9204,7 @@ export function initSizingUI() {
     const climateToggle = $("climateAwareToggle");
     if (climateToggle)
       climateToggle.addEventListener("change", () => {
-        if (quickMode && lastPayload) run(true);
+        markPrecalcDirty();
       });
 
     // Advanced derate inputs re-run when they differ from the honest defaults.
@@ -9261,8 +9212,7 @@ export function initSizingUI() {
       const input = $(derateId);
       if (input)
         input.addEventListener("change", () => {
-          const defaultPct = 98;
-          if (Number(input.value) !== defaultPct && lastPayload) run(true);
+          markPrecalcDirty();
         });
     }
 
@@ -9275,25 +9225,34 @@ export function initSizingUI() {
       customVal.addEventListener("input", () => {
         tariffTouched = true;
         syncBillSlider();
-        if (quickMode && lastPayload) scheduleRun(true);
+        markPrecalcDirty();
       });
 
     const fixedVal = $("fixedChargeVal");
     if (fixedVal)
       fixedVal.addEventListener("input", () => {
         syncBillSlider();
-        if (quickMode && lastPayload) scheduleRun(true);
+        markPrecalcDirty();
       });
 
-    $("loadMode").addEventListener("change", setLoadPanel);
+    $("loadMode").addEventListener("change", () => {
+      setLoadPanel();
+      markPrecalcDirty();
+    });
 
-    $("dailyKwhInput").addEventListener("input", updateLoadReadout);
+    $("dailyKwhInput").addEventListener("input", () => {
+      updateLoadReadout();
+      markPrecalcDirty();
+    });
 
     $("btnGeoLocate").addEventListener("click", locateMe);
 
     // The click event must not leak into run()'s `quiet` parameter (a truthy
     // Event object would silently suppress the status, spinner, and scroll).
-    $("btnRunSizing").addEventListener("click", () => run());
+    $("btnRunSizing").addEventListener("click", () => {
+      runAuthorized = true;
+      run(false, true);
+    });
 
     $("btnAskAdvisor").addEventListener("click", askAdvisor);
 
@@ -9318,7 +9277,10 @@ export function initSizingUI() {
     // Hardware list panel: live panel-wattage tweaks + CSV download
     const panelWattsInput = $("panelWatts");
     if (panelWattsInput)
-      panelWattsInput.addEventListener("input", renderBomPanel);
+      panelWattsInput.addEventListener("input", () => {
+        renderBomPanel();
+        if (lastPayload) markPrecalcDirty();
+      });
     const bomDl = $("btnDownloadBom");
     if (bomDl) bomDl.addEventListener("click", downloadBomCsv);
 
@@ -9396,7 +9358,7 @@ export function initSizingUI() {
       ) {
         selectedKey = "best";
       }
-      if (quickMode && lastPayload) run(true);
+      markPrecalcDirty();
     });
 
     const hwConfigNode = $("hardwareConfig");
@@ -9415,19 +9377,20 @@ export function initSizingUI() {
         ) {
           selectedKey = "best";
         }
-        if (quickMode && lastPayload) run(true);
+        markPrecalcDirty();
       });
     }
 
     if ($("systemGoal"))
       $("systemGoal").addEventListener("change", () => {
         updateAutoRows();
+        markPrecalcDirty();
       });
 
     const autoTierNode = $("autoTier");
     if (autoTierNode)
       autoTierNode.addEventListener("change", () => {
-        if (quickMode && lastPayload) run();
+        markPrecalcDirty();
       });
 
     const autoTargetNode = $("autoTarget");
@@ -9445,10 +9408,11 @@ export function initSizingUI() {
           if (cutIn) cutIn.value = String(pct);
           syncCutLabel();
         }
-        if (quickMode && lastPayload) run();
+        markPrecalcDirty();
       });
 
-    // Quick / Manual mode: quick hides everything except location and auto-runs.
+    // Quick / Manual mode: quick hides advanced inputs but always leaves the
+    // explicit sizing button available; it never runs from location alone.
 
     const modeQuick = $("modeQuick");
     const modeManual = $("modeManual");
@@ -9536,7 +9500,7 @@ export function initSizingUI() {
           locationResolved = true;
           applyEstimatedTariff(lat, lon);
           updateShareHash(lastPayload, readInputs());
-          if (quickMode && lastPayload) scheduleRun(true);
+          markPrecalcDirty();
         }, 500);
       }
     };
@@ -9567,7 +9531,7 @@ export function initSizingUI() {
 
     setLoadPanel();
 
-    setQuickMode(true); // Auto-run is the default experience
+    setQuickMode(true); // Quick mode is the default form, not an auto-run
 
     syncBillSlider();
 
@@ -9591,9 +9555,9 @@ export function initSizingUI() {
 
     updateFuelUnits();
 
-    // A shared link restores its inputs and re-runs the deterministic engine.
-
-    if (restoreFromShare()) setTimeout(run, 50);
+    // A shared link restores its inputs; sizing still requires an explicit
+    // click so opening a link never starts weather or engine work silently.
+    restoreFromShare();
 
     // Background FX refresh: keeps auto-selected currencies accurate.
 

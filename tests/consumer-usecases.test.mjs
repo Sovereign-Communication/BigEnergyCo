@@ -373,69 +373,53 @@ test("Tied sliders: monthly electric bill and off-grid kWh operate bidirectional
   );
 });
 
-test("Manual mode deferral: option changes do not trigger calculation until Size My System is clicked", () => {
+test("Sizing consent: no path calculates before the explicit button click", () => {
   let runCount = 0;
-  function triggerRun() {
-    runCount++;
-  }
-
-  // Simulation of option change handlers in ui.js
-  function onOptionChange(optionName, { quickMode, lastPayload }) {
-    if (quickMode && lastPayload) {
+  const triggerRun = () => runCount++;
+  const onOptionChange = ({
+    quickMode,
+    lastPayload,
+    runAuthorized,
+    precalcDirty,
+  }) => {
+    if (quickMode && lastPayload && runAuthorized && !precalcDirty)
       triggerRun();
-    }
-  }
-
-  function onSliderDrag(sliderName, { lastPayload }) {
-    // Sliders auto/instant update in place when results are present
-    if (lastPayload) {
-      triggerRun();
-    }
-  }
-
-  function onSizeMySystemClick() {
+  };
+  const onSizeMySystemClick = (state) => {
+    state.runAuthorized = true;
     triggerRun();
-  }
+  };
 
-  // Case 1: Manual Mode (quickMode = false) with existing payload
-  const manualState = { quickMode: false, lastPayload: { mode: "gridtie" } };
+  const freshQuickState = {
+    quickMode: true,
+    lastPayload: null,
+    runAuthorized: false,
+    precalcDirty: true,
+  };
+  onOptionChange(freshQuickState);
+  assert.equal(runCount, 0, "fresh quick mode stays idle");
+  onSizeMySystemClick(freshQuickState);
+  assert.equal(runCount, 1, "the explicit button starts the first calculation");
 
-  onOptionChange("chemSelect", manualState);
-  onOptionChange("hardwareConfig", manualState);
-  onOptionChange("autoTier", manualState);
-  onOptionChange("customRateVal", manualState);
-  onOptionChange("onCoordChange", manualState);
-
-  assert.equal(
-    runCount,
-    0,
-    "Manual mode option selections must NOT calculate automatically",
-  );
-
-  // Sliders continue to auto-update in place
-  onSliderDrag("billSlider", manualState);
-  assert.equal(
-    runCount,
-    1,
-    "Slider drag in manual mode should still auto-update calculation in place",
-  );
-
-  // Clicking "Size My System" runs calculation
-  onSizeMySystemClick();
+  onOptionChange({
+    quickMode: true,
+    lastPayload: { mode: "gridtie" },
+    runAuthorized: true,
+    precalcDirty: false,
+  });
   assert.equal(
     runCount,
     2,
-    "Clicking Size My System button in manual mode must trigger calculation",
+    "a clean post-result state may refresh through result controls",
   );
 
-  // Case 2: Quick Mode (quickMode = true) with existing payload auto-updates on option changes
-  const quickState = { quickMode: true, lastPayload: { mode: "gridtie" } };
-  onOptionChange("chemSelect", quickState);
-  assert.equal(
-    runCount,
-    3,
-    "Quick mode option changes should auto-trigger calculation",
-  );
+  onOptionChange({
+    quickMode: true,
+    lastPayload: { mode: "gridtie" },
+    runAuthorized: true,
+    precalcDirty: true,
+  });
+  assert.equal(runCount, 2, "pre-calculation changes wait for Size My System");
 });
 
 test("Result ladder tabs: Best pick, Compare batteries, and All options are present and active", () => {
@@ -676,22 +660,6 @@ test("Off-Grid goal: setCoords shows offgridLoadWrap and hides billSliderWrap wh
   assert.match(
     uiJs,
     /offgridWrap\.style\.display = isOffgrid \? "block" : "none"/,
-  );
-});
-
-test("Off-Grid goal: setupGoalControls triggers run(false) when coordinates are valid, not just when lastPayload exists", () => {
-  const uiJs = fs.readFileSync("assets/js/sizing/ui.js", "utf8");
-
-  // The goal toggle must trigger a run with full feedback whenever coords are valid
-  assert.match(
-    uiJs,
-    /if \(Number\.isFinite\(lat\) && Number\.isFinite\(lon\)\) run\(false\)/,
-  );
-
-  // The old broken pattern (only run when lastPayload) must NOT be present in setupGoalControls
-  assert.doesNotMatch(
-    uiJs,
-    /if \(quickMode && lastPayload\) run\(true\);\s*\};/,
   );
 });
 

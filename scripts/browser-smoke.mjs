@@ -191,6 +191,29 @@ async function main() {
         );
       return r?.result?.value;
     };
+    const installSmokeJevStub = () =>
+      evaluate(`(() => {
+        const original = window.fetch;
+        window.fetch = function (url, options) {
+          if (String(url).includes("/api/jev")) {
+            return Promise.resolve({
+              ok: true,
+              status: 200,
+              json: () => Promise.resolve({
+                available: true,
+                model: "jev-smoke",
+                plausible: 0.9,
+                verdict: "reasonable",
+                verdictConfidence: 0.9,
+                redFlag: 0.2,
+                redFlagConfidence: 0.8,
+              }),
+            });
+          }
+          return original.apply(this, arguments);
+        };
+      })()`);
+
     const navigate = async (url) => {
       const loaded = new Promise((res) => {
         const prev = ws.onmessage;
@@ -215,7 +238,8 @@ async function main() {
       if (nav?.errorText)
         errors.push(`navigation: ${nav.errorText} [${url.slice(0, 120)}]`);
       await Promise.race([loaded, sleep(60000)]);
-      await sleep(4000); // app boot + auto-run
+      await sleep(4000); // app boot + explicit sizing run
+      await installSmokeJevStub().catch(() => {});
     };
     const chooseHonolulu = async () => {
       await evaluate(
@@ -271,6 +295,10 @@ async function main() {
         `document.body.textContent.includes("Start a Free Estimate")`,
       ),
     );
+    // Jev is optional and rate-limited by design. The dedicated Jev gates below
+    // stub its response, so repeated smoke runs test the UI contract rather
+    // than consuming the shared provider quota; the real endpoint is checked
+    // separately by the staging API probe.
 
     // ── Weather persistence across reload ─────────────────────────────
     // The 17s defect this gate pins: SW activate used to wipe the app-owned
@@ -305,8 +333,10 @@ async function main() {
           nasaPulls += 1;
       } catch {}
     };
-    // First load for real: pick the city, land the first run.
+    // First load for real: pick the city, then honor the explicit sizing
+    // consent gate before waiting for the first result.
     await chooseHonolulu();
+    await evaluate(`document.getElementById("btnRunSizing")?.click()`);
     const firstRun = await poll(
       async () =>
         evaluate(`document.body.textContent.includes("Total 20-year cost")`),
@@ -314,8 +344,8 @@ async function main() {
     );
     gate("first-load run completes", firstRun);
     const runAfterReload = async () => {
-      // Some boots auto-run a restored location; if the results card has not
-      // appeared after settling, click Run explicitly. Both paths are honest.
+      // Restored inputs never run automatically; click Run explicitly after
+      // each reload because sizing consent is per page session.
       // cardUp swallows "Execution context was destroyed": reloading tears
       // down the JS context the evaluate was aimed at — expected here.
       const cardUp = async () => {
@@ -329,6 +359,7 @@ async function main() {
       };
       if (!(await poll(async () => cardUp(), 15000, 500))) {
         try {
+          await installSmokeJevStub();
           await evaluate(`document.getElementById("btnRunSizing")?.click()`);
         } catch {
           /* context not live yet — the poll below will still see the card */
@@ -361,9 +392,8 @@ async function main() {
       `${nasaPulls} NASA network pulls after reload (expect 0)`,
     );
 
-    // ── Auto-location (regression gate: Permissions-Policy must allow it;
-    // geolocation=() silently disables navigator.geolocation while the
-    // type-in autocomplete keeps working as backup) ────────────────────
+    // ── Explicit location consent (location selection never sizes by itself)
+    // ────────────────────────────────────────────────────────────────────
     console.log("SMOKE      ── auto-location ──");
     let geoGranted = true;
     try {
@@ -399,7 +429,13 @@ async function main() {
         60000,
         1000,
       );
-      gate("auto-location resolves emulated position", geoOk);
+      gate(
+        "location resolves without starting sizing",
+        geoOk &&
+          !(await evaluate(
+            `!document.getElementById("resultsRegion")?.hidden`,
+          )),
+      );
     }
 
     // ── Structural infeasibility (off-grid + solar-only) ───────────────
@@ -518,9 +554,101 @@ async function main() {
       `${caption} chars`,
     );
 
+    // Every pre-calculation control must invalidate the result without
+    // starting another worker run. The single explicit click below proves the
+    // boundary in the same browser session, rather than from source text.
+    const preCalcGate = await evaluate(`(() => {
+      const workerProto = Worker.prototype;
+      const originalPost = workerProto.postMessage;
+      window.__originalPostMessage = originalPost;
+      window.__explicitRunPosts = 0;
+      workerProto.postMessage = function (message) {
+        if (message?.type === "run") window.__explicitRunPosts += 1;
+        return originalPost.apply(this, arguments);
+      };
+      const fire = (id, type, value) => {
+        const node = document.getElementById(id);
+        if (!node) return false;
+        if (type === "checkbox") node.checked = !node.checked;
+        else if (value !== undefined) node.value = value;
+        node.dispatchEvent(new Event(type === "input" ? "input" : "change", { bubbles: true }));
+        return true;
+      };
+      // These are assumptions about the system, not result-stage spectrum
+      // controls. Each must leave the results hidden and the worker idle.
+      const originalValues = {};
+      for (const id of [
+        "loadMode",
+        "dailyKwhInput",
+        "systemGoal",
+        "chemSelect",
+        "hardwareConfig",
+        "autoTier",
+        "customRateVal",
+        "fixedChargeVal",
+        "roofAreaM2",
+        "wiringOverride",
+        "mpptOverride",
+        "panelWatts",
+        "cutSlider",
+        "budgetSlider",
+      ]) {
+        originalValues[id] = document.getElementById(id)?.value;
+      }
+      const originalClimate = document.getElementById("climateAwareToggle")?.checked;
+      const cases = [
+        ["loadMode", "change", "appliances"],
+        ["dailyKwhInput", "input", "11"],
+        ["systemGoal", "change", "offgrid"],
+        ["chemSelect", "change", "lfp"],
+        ["hardwareConfig", "change", "solar"],
+        ["autoTier", "change", "tier95"],
+        ["customRateVal", "input", "0.43"],
+        ["fixedChargeVal", "input", "12"],
+        ["roofAreaM2", "input", "120"],
+        ["climateAwareToggle", "change", undefined],
+        ["wiringOverride", "change", "97"],
+        ["mpptOverride", "change", "97"],
+        ["panelWatts", "input", "450"],
+      ];
+      for (const [id, type, value] of cases) fire(id, type, value);
+      // Restore the exact pre-gate scenario before the one permitted run, so
+      // subsequent spectrum and Jev gates exercise their normal path.
+      for (const id of Object.keys(originalValues)) {
+        const type = id === "customRateVal" || id === "fixedChargeVal" || id === "roofAreaM2" ? "input" : "change";
+        fire(id, type, originalValues[id]);
+      }
+      const climate = document.getElementById("climateAwareToggle");
+      if (climate && climate.checked !== originalClimate) fire("climateAwareToggle", "change");
+      fire("cutSlider", "change", originalValues.cutSlider);
+      fire("budgetSlider", "change", originalValues.budgetSlider);
+      return JSON.stringify({
+        ran: window.__explicitRunPosts,
+        hidden: document.getElementById("resultsRegion")?.hidden === true,
+      });
+    })()`);
+    const preCalcState = JSON.parse(preCalcGate);
+    gate(
+      "pre-calculation inputs wait for explicit sizing",
+      preCalcState.ran === 0 && preCalcState.hidden === true,
+      preCalcGate,
+    );
+    await evaluate(`document.getElementById("btnRunSizing").click()`);
+    const preCalcRecovered = await poll(
+      async () => evaluate(`!document.getElementById("resultsRegion")?.hidden`),
+      RUN_TIMEOUT_MS,
+    );
+    gate(
+      "explicit sizing resumes after pre-calculation edits",
+      preCalcRecovered,
+    );
+    await evaluate(
+      `(() => { Worker.prototype.postMessage = window.__originalPostMessage || Worker.prototype.postMessage; delete window.__originalPostMessage; })()`,
+    );
+
     // ── Share link round trip ("send this to someone") ────────────────
     // The serialized state must survive: a fresh page opened at the shared
-    // URL restores the inputs and re-runs to visible results.
+    // URL restores inputs only; sizing still requires the explicit button.
     console.log("SMOKE      ── share link ──");
     const shareHash = await evaluate(`(() => {
       document.getElementById("btnShareResult").click();
@@ -533,21 +661,28 @@ async function main() {
     );
     if (shareHash) {
       await navigate(`${BASE}${shareHash}`);
-      const restored = await poll(
+      const restoredInputs = await poll(
         async () =>
           evaluate(
-            `!document.getElementById("resultsRegion")?.hidden && !!document.getElementById("dailyKwhInput")?.value`,
+            `!!document.getElementById("dailyKwhInput")?.value && document.getElementById("resultsRegion")?.hidden === true`,
           ),
-        RUN_TIMEOUT_MS,
+        10000,
       );
-      const restoredState = await evaluate(
+      const beforeRun = await evaluate(
         `(() => ({ kwh: document.getElementById("dailyKwhInput")?.value, results: !document.getElementById("resultsRegion")?.hidden }))()`,
       );
       gate(
-        "share link restores inputs + results in a fresh page",
-        !!restored,
-        JSON.stringify(restoredState),
+        "share link restores inputs without auto-sizing",
+        !!restoredInputs && beforeRun.results === false,
+        JSON.stringify(beforeRun),
       );
+      await evaluate(`document.getElementById("btnRunSizing").click()`);
+      const restored = await poll(
+        async () =>
+          evaluate(`!document.getElementById("resultsRegion")?.hidden`),
+        RUN_TIMEOUT_MS,
+      );
+      gate("share link sizes after the explicit click", !!restored);
     }
 
     // ── Responsiveness gates (performance plan Phase 0) ───────────────
@@ -917,12 +1052,18 @@ async function main() {
         return { skip: "no budget slider in this mode" };
       out.range = { min: +budget.min, max: +budget.max };
 
+      // Establish a non-edge result-stage target so the directionality test
+      // cannot accidentally choose the already-selected recommendation.
+      cut.value = "60";
+      cut.dispatchEvent(new Event("input", { bubbles: true }));
+      cut.dispatchEvent(new Event("change", { bubbles: true }));
+      await wait(800);
+
       // Budget → cut: pick a point a step above the current thumb.
       const startCut = +cut.value;
       const lo = +budget.min;
       const hi = +budget.max;
-      const step = Math.max(1, Math.round((hi - lo) / 200));
-      const target = Math.min(hi, Math.max(lo, +budget.value + step * 12));
+      const target = hi;
       budget.value = String(target);
       budget.dispatchEvent(new Event("input", { bubbles: true }));
       budget.dispatchEvent(new Event("change", { bubbles: true }));
@@ -931,9 +1072,11 @@ async function main() {
       out.cutAfterPick = +cut.value;
       out.cutMovedFromStart = +cut.value !== startCut;
       // The form select must agree with the slider, or the next run disagrees.
-      const sel = document.getElementById("autoTarget");
+      const sel = document.getElementById("autoTarget");      const cutValue = +cut.value;
       out.selectMatches =
-        !sel || ![100, 80, 60, 40].includes(+cut.value) || sel.value === "cut" + cut.value;
+        !sel ||
+        (sel.value === "cut" + cutValue && [95, 80, 60].includes(cutValue)) ||
+        (! [95, 80, 60].includes(cutValue) && sel.value === "custom");
 
       // Cut → budget: move the cut target and the budget thumb should land on
       // the new recommendation instead of staying on the old system. The

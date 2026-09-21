@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { staleRunAction } from "../assets/js/sizing/run-coordinator.js";
 
 const CASES = [
@@ -24,4 +25,12 @@ test("stale worker replies follow the run lifecycle contract", () => {
       label,
     );
   }
+});
+
+test("a stale reply always releases the full-run channel", () => {
+  const ui = fs.readFileSync("assets/js/sizing/ui.js", "utf8");
+  assert.match(
+    ui,
+    /if \(staleAction !== "current"\) \{[\s\S]*?workerBusy = false;[\s\S]*?if \(staleAction === "flush"\) flushPendingRun\(\);/,
+  );
 });
