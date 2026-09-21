@@ -117,10 +117,10 @@ test("/api/health exposes the jevSanity gate flag from the key's presence", asyn
   assert.equal(off.jevSanity, false, "no key -> route reported off");
   const on = await (
     await worker.fetch(new Request("https://api.test/api/health"), {
-      TYPESAFE_API_KEY: "k",
+      OPENROUTER_API_KEY: "k",
     })
   ).json();
-  assert.equal(on.jevSanity, true, "key present -> route reported on");
+  assert.equal(on.jevSanity, true, "backup key present -> route reported on");
 });
 
 test("requestSanity: never asks when health says the route is off (silent, zero noise)", async () => {
@@ -215,31 +215,54 @@ test("/api/jev: full happy path maps the upstream answers into the client contra
   );
 });
 
-test("/api/jev: upstream failures are silent available:false responses", async () => {
-  const resA = await worker.fetch(jevReq({ state: GOOD_STATE }), {
-    TYPESAFE_API_KEY: "k",
-    fetch: async () => new Response("boom", { status: 500 }),
-  });
-  assert.equal(resA.status, 200);
-  assert.equal((await resA.json()).available, false);
-  const resB = await worker.fetch(jevReq({ state: GOOD_STATE }), {
-    TYPESAFE_API_KEY: "k",
-    fetch: async () => {
-      throw new Error("net down");
+test("/api/jev: OpenRouter backs up a failed TypeSafe provider", async () => {
+  const calls = [];
+  const res = await worker.fetch(jevReq({ state: GOOD_STATE }), {
+    TYPESAFE_API_KEY: "typesafe",
+    OPENROUTER_API_KEY: "openrouter",
+    fetch: async (url, options) => {
+      calls.push({ url: String(url), body: JSON.parse(options.body) });
+      if (String(url).includes("typesafe"))
+        return new Response("provider down", { status: 503 });
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({ answers: UPSTREAM_OK.answers }),
+              },
+            },
+          ],
+        }),
+        { status: 200 },
+      );
     },
   });
-  assert.equal(resB.status, 200);
-  assert.equal((await resB.json()).available, false);
+  const body = await res.json();
+  assert.equal(res.status, 200);
+  assert.equal(body.available, true);
+  assert.equal(body.model, "~typesafe/jev-latest");
+  assert.deepEqual(
+    calls.map((call) => call.url),
+    [
+      "https://api.typesafe.ai/v1/systemone",
+      "https://openrouter.ai/api/v1/chat/completions",
+    ],
+  );
+  assert.equal(calls[1].body.model, "~typesafe/jev-latest");
 });
 
-test("/api/jev: upstream shape drift is caught, not passed through", async () => {
+test("/api/jev: provider failures remain a silent unavailable result", async () => {
   const res = await worker.fetch(jevReq({ state: GOOD_STATE }), {
-    TYPESAFE_API_KEY: "k",
-    fetch: async () =>
-      new Response(JSON.stringify({ answers: {} }), { status: 200 }),
+    TYPESAFE_API_KEY: "typesafe",
+    OPENROUTER_API_KEY: "openrouter",
+    fetch: async () => new Response("provider down", { status: 503 }),
   });
   assert.equal(res.status, 200);
-  assert.equal((await res.json()).reason, "upstream_shape");
+  assert.deepEqual(await res.json(), {
+    available: false,
+    reason: "upstream_unavailable",
+  });
 });
 
 test("/api/jev: invalid bodies are 400 before any paid call", async () => {
