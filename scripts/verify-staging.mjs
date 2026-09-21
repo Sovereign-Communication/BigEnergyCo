@@ -49,6 +49,7 @@ import {
   budgetFromEnv,
 } from "./lib/budgets.mjs";
 import { deployedFiles, securityPolicyVerdict } from "./lib/gates.mjs";
+import { ALLOWLIST, deployList } from "./lib/deploy-manifest.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 import { canonicalizeHtml } from "./lib/platform-rewrites.mjs";
 import {
@@ -190,6 +191,29 @@ if (!files.length) {
     "FAIL could not read the deploy allowlist — refusing to verify",
   );
   process.exit(2);
+}
+// Defense in depth: the CLI list must equal the in-process manifest. A CI run
+// once verified 335 files where the contract had 352; from now on any
+// divergence between the two derivations of the SAME contract is a recorded
+// failure — a silently smaller verification is impossible, not just unlikely.
+{
+  const manifest = deployList();
+  const same =
+    manifest.length === files.length &&
+    manifest.every((f, i) => f === files[i]);
+  record(
+    "deploy contract cross-check (CLI list == in-process manifest)",
+    same,
+    same
+      ? `${files.length} files`
+      : `CLI ${files.length} vs manifest ${manifest.length}`,
+  );
+  if (files.length < ALLOWLIST.length)
+    record(
+      "deploy contract covers every allowlist entry",
+      false,
+      `${files.length} files from ${ALLOWLIST.length} entries — enumeration shrank`,
+    );
 }
 const expected = artifactStamp(readFileSync("index.html", "utf8"));
 if (!expected.ok) {
