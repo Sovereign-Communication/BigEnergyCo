@@ -257,10 +257,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20260921e" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20260921e" />
+    <link rel="preload" href="./assets/site.css?v=20260921f" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20260921f" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20260921e" />
+    <link rel="stylesheet" href="./assets/site.css?v=20260921f" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -570,8 +570,8 @@
                 </div>
               </div>
 
-              <!-- Quick (auto-run) vs Manual mode. Quick shows nothing but location;
-               Manual reveals the full form. -->
+              <!-- Quick vs Manual mode. Quick shows the essential inputs;
+               Manual reveals the full form. Both require an explicit run. -->
               <div class="form-group" style="margin-bottom: 0.7rem">
                 <div
                   id="modeToggleRow"
@@ -620,7 +620,7 @@
                         color: var(--text-muted);
                         font-size: 0.82rem;
                       "
-                      >— location in, results out</span
+                      >— choose a location, then run once</span
                     >
                   </label>
 
@@ -1706,7 +1706,11 @@
                   </select>
                 </div>
 
-                <div class="form-group" id="autoTargetRow">
+                <div
+                  class="form-group"
+                  id="autoTargetRow"
+                  style="display: none"
+                >
                   <label for="autoTarget"
                     >Bill-cut target<span
                       style="font-weight: 400; color: var(--text-muted)"
@@ -3371,9 +3375,9 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20260921e"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20260921f"></script>
 
-    <script defer src="./assets/js/chat.js?v=20260921e"></script>
+    <script defer src="./assets/js/chat.js?v=20260921f"></script>
   </body>
 </html>
 
