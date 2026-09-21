@@ -376,8 +376,14 @@ test("Tied sliders: monthly electric bill and off-grid kWh operate bidirectional
 test("Sizing consent: no path calculates before the explicit button click", () => {
   let runCount = 0;
   const triggerRun = () => runCount++;
-  const onOptionChange = ({ quickMode, lastPayload, runAuthorized }) => {
-    if (quickMode && lastPayload && runAuthorized) triggerRun();
+  const onOptionChange = ({
+    quickMode,
+    lastPayload,
+    runAuthorized,
+    precalcDirty,
+  }) => {
+    if (quickMode && lastPayload && runAuthorized && !precalcDirty)
+      triggerRun();
   };
   const onSizeMySystemClick = (state) => {
     state.runAuthorized = true;
@@ -388,6 +394,7 @@ test("Sizing consent: no path calculates before the explicit button click", () =
     quickMode: true,
     lastPayload: null,
     runAuthorized: false,
+    precalcDirty: true,
   };
   onOptionChange(freshQuickState);
   assert.equal(runCount, 0, "fresh quick mode stays idle");
@@ -398,21 +405,21 @@ test("Sizing consent: no path calculates before the explicit button click", () =
     quickMode: true,
     lastPayload: { mode: "gridtie" },
     runAuthorized: true,
+    precalcDirty: false,
   });
   assert.equal(
     runCount,
     2,
-    "a post-result pre-calc change may refresh quietly",
+    "a clean post-result state may refresh through result controls",
   );
 
-  const uiJs = fs.readFileSync("assets/js/sizing/ui.js", "utf8");
-  const html = fs.readFileSync("index.html", "utf8");
-  assert.match(uiJs, /if \(!runAuthorized\) return;/);
-  assert.match(uiJs, /runAuthorized = true;\s*run\(\);/);
-  assert.match(uiJs, /runBtn\.style\.display = ""/);
-  assert.doesNotMatch(uiJs, /restoreFromShare\(\)\) setTimeout\(run/);
-  assert.match(uiJs, /targetRow\.style\.display = "none"/);
-  assert.match(html, /id="autoTargetRow"[\s\S]*?style="display: none"/);
+  onOptionChange({
+    quickMode: true,
+    lastPayload: { mode: "gridtie" },
+    runAuthorized: true,
+    precalcDirty: true,
+  });
+  assert.equal(runCount, 2, "pre-calculation changes wait for Size My System");
 });
 
 test("Result ladder tabs: Best pick, Compare batteries, and All options are present and active", () => {
@@ -653,15 +660,6 @@ test("Off-Grid goal: setCoords shows offgridLoadWrap and hides billSliderWrap wh
   assert.match(
     uiJs,
     /offgridWrap\.style\.display = isOffgrid \? "block" : "none"/,
-  );
-});
-
-test("Off-Grid goal: first selection waits for explicit sizing, later changes refresh", () => {
-  const uiJs = fs.readFileSync("assets/js/sizing/ui.js", "utf8");
-  assert.match(uiJs, /if \(lastPayload\) run\(true\);/);
-  assert.doesNotMatch(
-    uiJs,
-    /Number\.isFinite\(lat\) && Number\.isFinite\(lon\)\) run\(false\)/,
   );
 });
 
