@@ -750,6 +750,9 @@ async function main() {
           return of.apply(this, arguments);
         };
         try {
+          // Clear the prior real/stubbed badge so this gate proves the new
+          // inconclusive request, rather than passing on stale DOM.
+          document.querySelectorAll(".sanity-badge").forEach((b) => b.remove());
           // +2, not +1: the badge gate above already ran before+1, and the
           // sanity cache would satisfy a repeated key without any fetch.
           k.value = String(Number(before || "10") + 2);
