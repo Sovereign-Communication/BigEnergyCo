@@ -29,6 +29,15 @@ test("getAllowedOrigin locks to the explicit allowlist", () => {
     "https://sovereign-communication.github.io",
   );
   assert.equal(
+    getAllowedOrigin("https://staging-bca832d.bigenergyco.pages.dev"),
+    "https://staging-bca832d.bigenergyco.pages.dev",
+  );
+  assert.equal(
+    getAllowedOrigin("https://another-preview.bigenergyco.pages.dev"),
+    null,
+    "unlisted Pages previews must remain blocked",
+  );
+  assert.equal(
     getAllowedOrigin("http://localhost:7510"),
     "http://localhost:7510",
   );

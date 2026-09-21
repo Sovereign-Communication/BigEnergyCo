@@ -278,6 +278,10 @@ export async function handleJevSanity(request, env, origin) {
 const ALLOWED_ORIGINS = new Set([
   "https://treystu.github.io",
   "https://bigenergyco.pages.dev",
+  // Isolated Cloudflare staging preview for the current release candidate.
+  // Keep this exact, not a wildcard: preview origins must be explicitly
+  // trusted rather than granting CORS to arbitrary Pages deployments.
+  "https://staging-bca832d.bigenergyco.pages.dev",
   "https://freeoffgridcalculator.com",
   "https://www.freeoffgridcalculator.com",
   "https://sovereign-communication.github.io",
