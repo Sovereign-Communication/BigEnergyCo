@@ -2,9 +2,8 @@
 // Fails (exit 1) on: missing/dupe h1, missing canonical, missing OG tags,
 // unparseable JSON-LD, sitemap URLs that don't match real files, robots issues.
 import { readFileSync, existsSync } from "node:fs";
-import { execSync } from "node:child_process";
 
-import { sitemapGaps } from "./lib/gates.mjs";
+import { deployedFiles, sitemapGaps } from "./lib/gates.mjs";
 
 let failures = 0;
 const fail = (msg) => {
@@ -13,23 +12,12 @@ const fail = (msg) => {
 };
 const ok = (msg) => console.log(`OK   ${msg}`);
 
-// Discover public HTML pages from the deploy allowlist (single source of truth:
-// the deploy script). --list is the pure query: --check builds the staging dir,
-// which concurrent gates would race on. Falls back to a static list if git is
-// unavailable.
+// Discover public HTML pages from the deploy manifest (single source of truth,
+// shared with the verifier and every other gate). The old per-script CLI spawn
+// is gone: it was the flake vector — a child process intermittently lost a
+// contiguous slice of its output under CI parallelism.
 function publicPages() {
-  try {
-    const out = execSync("node scripts/deploy-pages-local.mjs --list", {
-      encoding: "utf8",
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    return out
-      .split("\n")
-      .filter((l) => l.trim().endsWith(".html"))
-      .map((l) => l.trim());
-  } catch {
-    return ["index.html", "404.html", "blog/index.html"];
-  }
+  return deployedFiles().filter((f) => f.endsWith(".html"));
 }
 
 const pages = publicPages().filter((p) => p !== "404.html"); // 404 is a utility page
