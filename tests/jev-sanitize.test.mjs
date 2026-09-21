@@ -100,6 +100,20 @@ test("validateJevState: rejects unknown fields, bad mode, out-of-bounds numbers"
     true,
     "climate fields are optional",
   );
+  assert.equal(
+    validateJevState({ state: { ...GOOD_STATE, paybackYears: undefined } }).ok,
+    true,
+    "payback is optional when tariff data is unavailable",
+  );
+});
+
+test("sanityState omits unavailable payback instead of serializing NaN", () => {
+  const state = sanityState(
+    { mode: "gridtie", dailyKwh: 10, annualYieldPerKw: 1800 },
+    { pvKw: 4, battKwh: 10, costLo: 1000, costHi: 2000, cutPct: 80 },
+  );
+  assert.equal("paybackYears" in state, false);
+  assert.equal(validateJevState({ state }).ok, true);
 });
 
 test("/api/jev: key-missing degrades to available:false, never a 5xx crash", async () => {
