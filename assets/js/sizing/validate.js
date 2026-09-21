@@ -145,10 +145,9 @@ export function renderSanityBadge(container, interp, t, onAsk) {
     }
   } else if (interp.level === "pass") {
     badge.textContent = t("sanityOk");
+  } else if (interp.level === "uncertain") {
+    badge.textContent = t("sanityUncertain");
   } else {
-    // uncertain: the model was inconclusive. Live calibration puts even
-    // textbook systems here, so silence is the honest render — absence is
-    // invisible and the site's trust is never spent on a non-verdict.
     return null;
   }
   badge.title = t("sanityTooltip");

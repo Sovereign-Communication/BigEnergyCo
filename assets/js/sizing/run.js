@@ -26,22 +26,22 @@ import {
   capacityScaleFor,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20260921d";
+} from "./engine.js?v=20260921e";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20260921d";
-import { buildFrontier } from "./frontier.js?v=20260921d";
-import { oversizeCallout } from "./rescale.js?v=20260921d";
-import { climateSummary } from "./climate.js?v=20260921d";
+} from "./nasa.js?v=20260921e";
+import { buildFrontier } from "./frontier.js?v=20260921e";
+import { oversizeCallout } from "./rescale.js?v=20260921e";
+import { climateSummary } from "./climate.js?v=20260921e";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20260921d";
+} from "./pricing.js?v=20260921e";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -52,7 +52,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20260921d";
+} from "./money.js?v=20260921e";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -291,7 +291,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20260921d");
+      await import("./profiles.js?v=20260921e");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
