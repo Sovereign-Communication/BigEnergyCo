@@ -72,14 +72,35 @@ for (const entry of ALLOWLIST)
   if (!allowedTop.has(entry.split("/")[0]))
     throw new Error(`Allowlist entry outside the expected dirs: ${entry}`);
 
-/** Files git tracks, as an absolute-path-keyed set of repo-relative paths. */
+/**
+ * Files git tracks, as a set of repo-relative paths.
+ *
+ * Read twice and require agreement: CI reproduced three times in one day
+ * (335, 344, then 338 of 352 files) a child process losing a contiguous
+ * alphabetical slice of `git ls-files` output under runner parallelism. A
+ * single lost slice can never agree with a fresh read, so two consecutive
+ * identical reads are accepted; persistent disagreement is a loud error,
+ * never a shrunken contract.
+ */
 export function trackedFiles() {
-  const out = execSync("git ls-files -z", {
-    cwd: ROOT,
-    maxBuffer: 32 * 1024 * 1024,
-    encoding: "utf8",
-  });
-  return new Set(out.split("\0").filter(Boolean));
+  const read = () => {
+    const out = execSync("git ls-files -z", {
+      cwd: ROOT,
+      maxBuffer: 32 * 1024 * 1024,
+      encoding: "utf8",
+    });
+    return out.split("\0").filter(Boolean);
+  };
+  let prev = read();
+  for (let attempt = 1; attempt < 3; attempt++) {
+    const next = read();
+    if (next.length === prev.length && next.every((f, i) => f === prev[i]))
+      return new Set(next);
+    prev = next;
+  }
+  throw new Error(
+    `git ls-files returned different results across reads (${prev.length} files) — refusing to derive the deploy contract from unstable enumeration`,
+  );
 } /**
  * The deploy contract: every file that ships, in ALLOWLIST order. Derived
  * entirely from the git index — NOT from the working tree or a directory
