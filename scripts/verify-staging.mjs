@@ -48,7 +48,12 @@ import {
   SMOKE_ATTEMPT_TIMEOUT_MS,
   budgetFromEnv,
 } from "./lib/budgets.mjs";
-import { deployedFiles, securityPolicyVerdict } from "./lib/gates.mjs";
+import {
+  deployedFiles,
+  deploymentDivergences,
+  securityPolicyVerdict,
+} from "./lib/gates.mjs";
+import { ALLOWLIST } from "./lib/deploy-manifest.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 import { canonicalizeHtml } from "./lib/platform-rewrites.mjs";
 import {
@@ -190,6 +195,34 @@ if (!files.length) {
     "FAIL could not read the deploy allowlist — refusing to verify",
   );
   process.exit(2);
+} // Floor check: the contract must cover every allowlist entry. A CI run once
+// verified 335 files where the contract held 352; deployedFiles() now resolves
+// from the manifest module and reconciles the CLI against it (divergence is
+// printed with the missing file names), so this gate pins the floor here too —
+// a shrunken enumeration fails the verification instead of guarding a smaller
+// site than production serves.
+{
+  // Only file entries can be named in `files`; dir entries ("assets",
+  // "solar-calculator") are covered transitively by the files beneath them,
+  // which deployList() already proves non-empty (it throws otherwise).
+  const missing = ALLOWLIST.filter(
+    (e) => e.includes("/") && !files.includes(e),
+  );
+  record(
+    "deploy contract covers every allowlist entry",
+    files.length >= ALLOWLIST.length && missing.length === 0,
+    missing.length
+      ? `missing: ${missing.slice(0, 6).join(", ")}`
+      : `${files.length} files from ${ALLOWLIST.length} entries`,
+  );
+  for (const d of deploymentDivergences)
+    record(
+      "CLI/manifest enumeration reconciliation",
+      false,
+      d.error
+        ? `CLI failed; manifest (${d.manifest}) used`
+        : `CLI ${d.cli} vs manifest ${d.manifest}; missing from CLI: ${(d.missingFromCli || []).join(", ")}`,
+    );
 }
 const expected = artifactStamp(readFileSync("index.html", "utf8"));
 if (!expected.ok) {

@@ -9,6 +9,7 @@
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { posix } from "node:path";
+import { deployList } from "./deploy-manifest.mjs";
 
 // ── deploy allowlist discovery ──────────────────────────────────────────────
 /**
@@ -29,8 +30,14 @@ export function deployedFilesFrom(stdout) {
     .map((l) => l.trim())
     .filter((l) => l && l !== "Deployable files:" && !l.startsWith("--"));
 }
-
 export function deployedFiles() {
+  // Single derivation of the deploy contract: the in-process manifest module.
+  // CI runs proved the old CLI subprocess path could transiently return fewer
+  // files than the contract (335, then 344, vs 352) — the verifier then
+  // guarded a smaller site. The manifest wins; the CLI is kept only as a
+  // cross-check whose divergence is captured (never printed to stderr, which
+  // corrupts combined-output JSON consumers) and surfaced in verifier reports.
+  const manifest = deployList();
   try {
     // --list, not --check: a pure query. --check BUILDS the staging directory
     // (deploy.yml depends on that), so calling it from several gates at once
@@ -38,12 +45,36 @@ export function deployedFiles() {
     const out = execSync("node scripts/deploy-pages-local.mjs --list", {
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
+      maxBuffer: 32 * 1024 * 1024,
     });
-    return deployedFilesFrom(out);
+    const cli = deployedFilesFrom(out);
+    if (
+      cli.length !== manifest.length ||
+      cli.some((f, i) => f !== manifest[i])
+    ) {
+      const missing = manifest.filter((f) => !cli.includes(f));
+      deploymentDivergences.push({
+        cli: cli.length,
+        manifest: manifest.length,
+        missingFromCli: missing.slice(0, 8),
+        extraInCli:
+          cli.length > manifest.length
+            ? cli.filter((f) => !manifest.includes(f)).slice(0, 4)
+            : undefined,
+      });
+    }
   } catch {
-    return [];
+    deploymentDivergences.push({
+      cli: null,
+      manifest: manifest.length,
+      error: true,
+    });
   }
+  return manifest;
 }
+
+/** Observed CLI/manifest divergences since module load (verifier JSON reports these). */
+export const deploymentDivergences = [];
 
 // ── tolerant HTML helpers ───────────────────────────────────────────────────
 // Prettier puts attributes on their own lines, so everything here works across
