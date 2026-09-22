@@ -14,7 +14,10 @@
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
 import { APPLIANCES } from "./appliances.js?v=20260921f";
-import { staleRunAction } from "./run-coordinator.js?v=20260921f";
+import {
+  staleRunAction,
+  errorReleasesRunChannel,
+} from "./run-coordinator.js?v=20260921f";
 import {
   CITY_CATALOG,
   searchCities,
@@ -3483,26 +3486,35 @@ function ensureWorker() {
             return;
           }
         }
-        // Stale errors must not overwrite a newer success: only the latest
-        // run or slice in each stream may report.
+        // Only the latest run/slice error in each stream may report — a
+        // stale one must not overwrite a newer reply's status.
         const s = ev.data.seq;
         const fresh =
           ev.data.stream === "slice" ? s === sliceToken : s === runToken;
-        if (s !== undefined && !fresh) return;
-        setStatus("Warning: " + ev.data.message);
-        // A failed run stops the stepper with a failure accent so the
-        // visitor sees how far the pipeline got.
-        if (ev.data.stream !== "slice") pipelineStop(false);
+        if (!(s !== undefined && !fresh)) {
+          setStatus("Warning: " + ev.data.message);
+          // A failed run stops the stepper with a failure accent so the
+          // visitor sees how far the pipeline got.
+          if (ev.data.stream !== "slice") pipelineStop(false);
+        }
+        // errorReleasesRunChannel owns which streams free the run channel:
+        // a slice error is fully handled above (a full run may still be
+        // computing behind the slice), while a run error — stale or fresh —
+        // falls through to the shared release below. Swallowing a stale
+        // run error's release would deadlock the next explicit run behind
+        // a finished worker (the leak the "ok" path guards against).
+        if (!errorReleasesRunChannel(ev.data.stream)) return;
       }
 
-      // A finished full run frees the worker (a reSlice never holds it).
-      if (ev.data?.type !== "reSlice") {
-        workerBusy = false;
+      // ReSlice replies never hold the run channel; every other non-prefetch
+      // reply (ok, error, unknown) frees it exactly once.
+      if (ev.data?.type === "reSlice") {
         restoreRunButton();
-        flushPendingRun();
         return;
       }
+      workerBusy = false;
       restoreRunButton();
+      flushPendingRun();
     };
 
     worker.onerror = () => {
