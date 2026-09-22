@@ -15,6 +15,7 @@
 // bundle, so it is deliberately not imported.
 import { APPLIANCES } from "./appliances.js?v=20260921f";
 import {
+  createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
 } from "./run-coordinator.js?v=20260921f";
@@ -209,8 +210,6 @@ let adoptedEntry = null;
 // battery, chemistry) system ("Use this system" from the curve modal).
 let pendingFocus = null;
 
-// Guards stale responses when sliders queue runs faster than the worker.
-let runToken = 0;
 let runTimer = null;
 let lastRunAdoptsFocus = false;
 
@@ -218,8 +217,10 @@ let lastRunAdoptsFocus = false;
 // new run is requested while one is in flight, collapse it into a single
 // trailing run instead of queueing seconds of stale engine work behind the
 // slider. The screen already shows the rescaled numbers, so nothing is lost.
-let workerBusy = false;
-let pendingRun = null; // { quiet } — the latest superseding request
+// The run channel (run-coordinator.js) is the single owner of that state:
+// busy, the sequence that retires superseded replies, and the collapsed
+// request. Every full-run reply is released through flushPendingRun().
+const runChannel = createRunChannel();
 
 // The last full-run inputs, kept so a bill-only change can compute the exact
 // load factor for an instant rescale against the retained payload.
@@ -238,7 +239,8 @@ let lastRunQuiet = false;
 // Epoch links every patch to the payload it was computed against: a full run
 // bumps payloadEpoch, so a slice from older inputs can never merge into a
 // newer payload (independent counters alone could not prevent that).
-// sliceBusy/pendingSlice collapse rapid slider edits the same way workerBusy
+// sliceBusy/pendingSlice collapse rapid slider edits the same way the run
+// channel collapses full runs
 // does for full runs (see run()).
 let sliceToken = 0;
 let payloadEpoch = 0;
@@ -1573,10 +1575,11 @@ function markPrecalcDirty() {
     runTimer = null;
   }
   // Invalidate any in-flight calculation immediately; changing a pre-calc
-  // input must never let the old response repaint the new form.
-  runToken++;
+  // input must never let the old response repaint the new form. invalidate()
+  // retires the in-flight run WITHOUT queueing a replacement: the very
+  // inputs it carries are now stale.
+  runChannel.invalidate();
   payloadEpoch++;
-  pendingRun = null;
   lastRunInput = null;
   lastOkKey = null;
   if (lastPayload) {
@@ -2419,7 +2422,7 @@ function run(quiet = false, explicit = false) {
     Math.abs(inp.latitude) > 90 ||
     Math.abs(inp.longitude) > 180
   ) {
-    pendingRun = null;
+    runChannel.dropPending();
     setResultsHidden(true);
     setStatus(t("pickCity"));
     return;
@@ -2430,7 +2433,7 @@ function run(quiet = false, explicit = false) {
     inp.dailyKwh <= 0 ||
     inp.dailyKwh > 500
   ) {
-    pendingRun = null;
+    runChannel.dropPending();
     setResultsHidden(true);
     setStatus(t("tellPowerUse"));
     return;
@@ -2447,15 +2450,16 @@ function run(quiet = false, explicit = false) {
     frontierSelected = null;
   }
 
-  if (workerBusy) {
+  if (runChannel.isBusy) {
     // Collapse: only the latest inputs matter, re-read fresh when flushed.
     // A non-quiet request wins so an explicit run still scrolls + spins.
-    // Retire the in-flight run FIRST (both counters): without this its
+    // Retire the in-flight run FIRST (the sequence bump) — without this its
     // stale response would still pass the seq check on arrival and clobber
     // the screen — e.g. an off-grid response landing mid grid-tie run and
     // hiding the cut slider under it.
-    pendingRun = { quiet: (pendingRun ? pendingRun.quiet : true) && quiet };
-    runToken++;
+    runChannel.collapse(quiet);
+    // The epoch bump retires any in-flight slice from the superseded
+    // payload, exactly as the old collapse path did.
     payloadEpoch++;
     return;
   }
@@ -2495,20 +2499,20 @@ function run(quiet = false, explicit = false) {
   lastRunAdoptsFocus = pendingFocus !== null;
   lastRunQuiet = quiet;
   pendingFocus = null;
-  const seq = ++runToken;
   // A new full run opens a new epoch: any in-flight slice from older inputs
   // is stale on arrival and will be dropped by the epoch check.
   const epoch = ++payloadEpoch;
-  workerBusy = true;
+  const seq = runChannel.begin();
   ensureWorker().postMessage({ type: "run", seq, epoch, ...inp });
 }
 
 // A finished worker run hands back to the latest superseding request, if any.
+// THE one release path for the run channel: every full-run reply funnels
+// through here, so the channel can never leak behind a finished worker.
 function flushPendingRun() {
-  if (!pendingRun) return;
-  const q = pendingRun;
-  pendingRun = null;
-  run(q.quiet);
+  const next = runChannel.settle();
+  restoreRunButton();
+  if (next) run(next.quiet);
 }
 
 // Slider updates queue a debounced re-run so dragging never stacks runs.
@@ -3384,8 +3388,8 @@ function ensureWorker() {
 
     worker.onmessage = (ev) => {
       // Prefetch completion is informational only: it must NEVER fall
-      // through to the run-completion bookkeeping below (that would clear
-      // workerBusy while a real run is still computing).
+      // through to the run-completion bookkeeping below (that would free the
+      // run channel while a real run is still computing).
       if (ev.data?.type === "prefetchDone") return;
       // Weather progress from the worker: chunk-level counts drive the
       // determinate bar; the resolved signal moves the stepper onto the
@@ -3393,7 +3397,10 @@ function ensureWorker() {
       // payloads, so superseded runs can never paint the current pipeline.
       // Progress never holds or frees the worker.
       if (ev.data?.type === "progress") {
-        if (ev.data.seq === runToken && ev.data.epoch === payloadEpoch) {
+        if (
+          ev.data.seq === runChannel.latestSeq &&
+          ev.data.epoch === payloadEpoch
+        ) {
           if (ev.data.stage === "weatherChunk")
             pipelineStage("Weather", ev.data.done, ev.data.total);
           else if (ev.data.stage === "weather") pipelineStage("Sim");
@@ -3403,16 +3410,16 @@ function ensureWorker() {
       if (ev.data?.type === "ok") {
         const staleAction = staleRunAction(
           ev.data.seq,
-          runToken,
-          Boolean(pendingRun),
+          runChannel.latestSeq,
+          runChannel.pending,
         );
         if (staleAction !== "current") {
-          // A pre-calculation edit can invalidate the only in-flight reply.
-          // Release the worker on both stale paths; otherwise the next
-          // explicit Size click queues behind a run that already finished.
-          workerBusy = false;
-          restoreRunButton();
-          if (staleAction === "flush") flushPendingRun();
+          // The pre-calc edit (or a collapsed re-click) already retired this
+          // reply: it must never paint the new form. flushPendingRun() is the
+          // single release path — it frees the channel and runs any queued
+          // replacement, so the next explicit Size click can never queue
+          // behind a run that already finished.
+          flushPendingRun();
           return;
         }
 
@@ -3490,7 +3497,9 @@ function ensureWorker() {
         // stale one must not overwrite a newer reply's status.
         const s = ev.data.seq;
         const fresh =
-          ev.data.stream === "slice" ? s === sliceToken : s === runToken;
+          ev.data.stream === "slice"
+            ? s === sliceToken
+            : s === runChannel.latestSeq;
         if (!(s !== undefined && !fresh)) {
           setStatus("Warning: " + ev.data.message);
           // A failed run stops the stepper with a failure accent so the
@@ -3507,13 +3516,12 @@ function ensureWorker() {
       }
 
       // ReSlice replies never hold the run channel; every other non-prefetch
-      // reply (ok, error, unknown) frees it exactly once.
+      // reply (ok, error, unknown) releases it exactly once through the
+      // single funnel.
       if (ev.data?.type === "reSlice") {
         restoreRunButton();
         return;
       }
-      workerBusy = false;
-      restoreRunButton();
       flushPendingRun();
     };
 
@@ -3522,7 +3530,6 @@ function ensureWorker() {
 
       setResultsHidden(true);
       pipelineStop(false);
-      workerBusy = false;
       sliceBusy = false;
       restoreRunButton();
       flushPendingRun();
