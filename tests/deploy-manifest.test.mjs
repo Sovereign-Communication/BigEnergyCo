@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execSync } from "node:child_process";
-import { writeFileSync, rmSync, mkdirSync } from "node:fs";
+import { writeFileSync, rmSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   ALLOWLIST,
@@ -125,5 +125,29 @@ test("MUTATION TOOTH: a deleted-but-tracked file fails loudly, not silently", ()
 });
 
 test("CLI PARITY: --list output equals deployList() exactly", () => {
-  assert.deepEqual(cliList(), deployList());
+  const cli = cliList();
+  const manifest = deployList();
+  if (cli.length !== manifest.length || cli.some((f, i) => f !== manifest[i])) {
+    // Name the first divergence — a full 350-line deepEqual dump hid the
+    // shape (a lost middle window of piped stdout) for two CI runs.
+    const first = manifest.findIndex((f, i) => f !== cli[i]);
+    assert.fail(
+      `--list diverges from deployList() at index ${first}: cli=${JSON.stringify(cli[first])} manifest=${JSON.stringify(manifest[first])} (cli ${cli.length} vs manifest ${manifest.length})`,
+    );
+  }
+  assert.deepEqual(cli, manifest);
+});
+
+// process.exit() does not wait for a piped stdout to flush — under runner
+// load it drops arbitrary middle chunks of the write queue, and gates.mjs
+// parses exactly that pipe. The enumeration itself is double-read-guarded;
+// this pin closes the OUTPUT side of the same corruption class (the
+// FR..KP slice CLI PARITY caught twice in one day).
+test("PIN: the deploy CLI never exits before its piped stdout drains", () => {
+  const src = readFileSync("scripts/deploy-pages-local.mjs", "utf8");
+  assert.doesNotMatch(
+    src,
+    /process\.exit/,
+    "deploy-pages-local.mjs must end every branch naturally so stdout drains",
+  );
 });

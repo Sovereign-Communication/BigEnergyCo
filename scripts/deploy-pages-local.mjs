@@ -59,65 +59,70 @@ function listFiles(dir, prefix = "") {
 // The set comes from the git-index-derived manifest — identical to a real
 // build's by construction (both copy exactly these sources) — and the
 // ORDER follows ALLOWLIST; consumers build sets.
+//
+// Every branch below ends NATURALLY — the process must never be torn down
+// mid-stream. The gates parse this script's piped stdout (gates.mjs, the
+// CLI-parity test), and a hard process exit does not wait for a pipe to
+// flush: under runner load it drops arbitrary middle chunks of the write
+// queue (the FR..KP slice the CLI-parity test caught twice in one day).
+// Natural exit drains stdout.
 if (LIST) {
   console.log("Deployable files:");
   for (const f of deployList()) console.log("  " + f);
   console.log("\n--list: allowlist only, nothing staged, not pushing.");
-  process.exit(0);
+} else {
+  console.log(
+    `Staging ${deployList().length} manifest files into ${STAGE.replace(ROOT + "/", "")}/ ...`,
+  );
+  rmSync(STAGE, { recursive: true, force: true });
+  for (const f of deployList()) {
+    const dest = join(STAGE, f);
+    mkdirSync(dirname(dest), { recursive: true });
+    cpSync(join(ROOT, f), dest);
+  }
+
+  // Safety net: the staged tree must contain only what the allowlist put there.
+  for (const name of readdirSync(STAGE)) {
+    if (!allowedTop.has(name))
+      throw new Error(`Unexpected file in staging: ${name}`);
+  }
+
+  console.log("Deployable files:");
+  listFiles(STAGE);
+
+  if (CHECK) {
+    console.log("\n--check: built staging only, not pushing.");
+  } else {
+    console.log("\nCreating orphan commit on gh-pages ...");
+    const idxFile = join(ROOT, ".git", "pages-index-tmp");
+    const idxEnv = {
+      ...process.env,
+      GIT_INDEX_FILE: idxFile,
+      GIT_WORK_TREE: STAGE,
+    };
+    execSync("git add -A", { cwd: ROOT, env: idxEnv, stdio: "pipe" });
+    const tree = execSync("git write-tree", {
+      cwd: ROOT,
+      env: idxEnv,
+      encoding: "utf8",
+    }).trim();
+    const commitEnv = { ...process.env };
+    delete commitEnv.GIT_INDEX_FILE;
+    delete commitEnv.GIT_WORK_TREE;
+    const commit = execSync(
+      `git commit-tree ${tree} -m "Publish site (local allowlist build, ${new Date().toISOString()})"`,
+      {
+        cwd: ROOT,
+        env: commitEnv,
+        encoding: "utf8",
+      },
+    ).trim();
+    rmSync(idxFile, { force: true });
+
+    console.log(`Commit ${commit.slice(0, 10)} -> refs/heads/gh-pages (force)`);
+    sh(`git push origin ${commit}:refs/heads/gh-pages --force`);
+    console.log(
+      "\nPushed. If Pages source = gh-pages /root, the site updates in ~30-60s.",
+    );
+  }
 }
-
-console.log(
-  `Staging ${deployList().length} manifest files into ${STAGE.replace(ROOT + "/", "")}/ ...`,
-);
-rmSync(STAGE, { recursive: true, force: true });
-for (const f of deployList()) {
-  const dest = join(STAGE, f);
-  mkdirSync(dirname(dest), { recursive: true });
-  cpSync(join(ROOT, f), dest);
-}
-
-// Safety net: the staged tree must contain only what the allowlist put there.
-for (const name of readdirSync(STAGE)) {
-  if (!allowedTop.has(name))
-    throw new Error(`Unexpected file in staging: ${name}`);
-}
-
-console.log("Deployable files:");
-listFiles(STAGE);
-
-if (CHECK) {
-  console.log("\n--check: built staging only, not pushing.");
-  process.exit(0);
-}
-
-console.log("\nCreating orphan commit on gh-pages ...");
-const idxFile = join(ROOT, ".git", "pages-index-tmp");
-const idxEnv = {
-  ...process.env,
-  GIT_INDEX_FILE: idxFile,
-  GIT_WORK_TREE: STAGE,
-};
-execSync("git add -A", { cwd: ROOT, env: idxEnv, stdio: "pipe" });
-const tree = execSync("git write-tree", {
-  cwd: ROOT,
-  env: idxEnv,
-  encoding: "utf8",
-}).trim();
-const commitEnv = { ...process.env };
-delete commitEnv.GIT_INDEX_FILE;
-delete commitEnv.GIT_WORK_TREE;
-const commit = execSync(
-  `git commit-tree ${tree} -m "Publish site (local allowlist build, ${new Date().toISOString()})"`,
-  {
-    cwd: ROOT,
-    env: commitEnv,
-    encoding: "utf8",
-  },
-).trim();
-rmSync(idxFile, { force: true });
-
-console.log(`Commit ${commit.slice(0, 10)} -> refs/heads/gh-pages (force)`);
-sh(`git push origin ${commit}:refs/heads/gh-pages --force`);
-console.log(
-  "\nPushed. If Pages source = gh-pages /root, the site updates in ~30-60s.",
-);
