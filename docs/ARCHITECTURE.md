@@ -43,11 +43,32 @@ orders them.
   a genuine engine reply held, made stale, released, and the next explicit
   click recovering.
 
+## Location picking (extracted from ui.js)
+
+- `assets/js/sizing/location-picker.js` — owns the **widgets only**: the city
+  combobox (suggestions, keyboard nav, the 2s hands-free auto-resolve) and the
+  geolocation "locate me" flow. Every location decision funnels through the
+  injected `onPick(lat, lon, label, region?, country?)`; status feedback goes
+  through the injected `setStatus`. No location state lives here.
+- `assets/js/sizing/cities.js` — owns the **domain layer**: search, catalogs,
+  partitions, online lookups. Its geocoder HTTP runs through one seam
+  (`setGeocodeFetchImpl`) so tests stay offline-deterministic.
+- `ui.js` keeps only `setCoords` (run-state consent: a pick is location
+  consent, never calculation consent) and the single wiring line
+  `setupCitySearch({ onPick: setCoords, setStatus })`.
+- `tests/location-picker.test.mjs` — behavioral contract of the real module
+  (combobox full-arg funnel, Enter path, no-match ladder, legacy-cache purge,
+  geolocation errors and the two-stage GPS pick). It imports the SAME stamped
+  cities instance the picker imports — a bare import would patch the wrong
+  module (Node treats the `?v=` specifier as a distinct instance).
+- `tests/cities.test.mjs` — the hands-free auto-resolve cadence, proven
+  behaviorally (nothing before 2s, full-contract pick after).
+
 ## Known remaining debt (deliberate, not forgotten)
 
-- `ui.js` is still ~9.7k lines: form state, location plumbing, rendering,
-  charts, Jev, sliders, sharing, modals. The run channel was the highest-risk
-  extraction; each further one should follow the same pattern (policy in a
-  pure module, mechanics stay with the DOM, tests first).
+- `ui.js` is still ~9.3k lines: form state, rendering, charts, Jev, sliders,
+  sharing, modals. Two extractions are done (run channel, location picking);
+  each further one should follow the same pattern (policy in a pure module,
+  mechanics stay with the DOM, tests first).
 - The live Jev provider success path is proven only via the deterministic
   stub (provider rate limits); the endpoint itself is probed separately.
