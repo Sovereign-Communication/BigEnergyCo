@@ -33,17 +33,6 @@ test("auto-resolve debounce guard skips empty and already-resolved queries", () 
   assert.equal(shouldAutoResolve("lagos", "honolulu"), true);
 });
 
-test("the UI wires a 2s auto-resolve debounce that reuses resolveTypedCity", () => {
-  const ui = readFileSync(
-    new URL("../assets/js/sizing/ui.js", import.meta.url),
-    "utf8",
-  );
-  assert.match(ui, /shouldAutoResolve/);
-  assert.match(ui, /, 2000\)/);
-  assert.match(ui, /cancelAutoResolve/);
-  assert.match(ui, /resolveTypedCity\(\)/);
-});
-
 test("city queries ignore case, accents, and punctuation", () => {
   assert.equal(normalizeCityQuery("  São-Paulo! "), "sao paulo");
   assert.equal(searchCities("sao paulo")[0].name, "Sao Paulo");
@@ -455,3 +444,88 @@ function typedCityCandidatesWith(query, codes, fetchImpl, store) {
     codes.map((cc) => loadCountryCities(cc, fetchImpl, storageFrom(store))),
   ).then((rows) => mergeCities(mergeCities(CITY_CATALOG, extras), rows.flat()));
 }
+
+// Hands-free auto-resolve: typing alone must resolve the typed text after the
+// 2s cadence stops — no Enter, no suggestion click. Behavioral replacement
+// for the old ui.js source-regex assertions (shouldAutoResolve / 2000ms /
+// cancelAutoResolve / resolveTypedCity): a moved, removed, or re-cadenced
+// timer fails here, and the real contract is exercised instead of the text.
+test("typing a city resolves hands-free after the 2s auto-resolve cadence", async () => {
+  const pickerSrc = readFileSync(
+    new URL("../assets/js/sizing/location-picker.js", import.meta.url),
+    "utf8",
+  );
+  const stamped = pickerSrc.match(/from "\.\/(cities\.js\?v=[^"]+)"/)?.[1];
+  assert.ok(stamped, "location-picker must import the stamped cities module");
+  const { setGeocodeFetchImpl } = await import(
+    new URL(`../assets/js/sizing/${stamped}`, import.meta.url).href
+  );
+  const { setupCitySearch } = await import(
+    new URL("../assets/js/sizing/location-picker.js", import.meta.url).href
+  );
+
+  setGeocodeFetchImpl(async () => {
+    throw new Error("network disabled in tests");
+  });
+  const realDocument = globalThis.document;
+  globalThis.document = {
+    getElementById: (id) =>
+      id === "citySearch" ? search : id === "citySuggestions" ? list : null,
+    createElement: () => ({
+      attrs: {},
+      children: [],
+      listeners: {},
+      dataset: {},
+      hidden: false,
+      value: "",
+      textContent: "",
+      style: {},
+      appendChild(c) {
+        this.children.push(c);
+        return c;
+      },
+      setAttribute(k, v) {
+        this.attrs[k] = String(v);
+      },
+      addEventListener(t, f) {
+        (this.listeners[t] ??= []).push(f);
+      },
+      dispatch(t, ev = {}) {
+        for (const f of this.listeners[t] ?? []) f(ev);
+      },
+      focus() {},
+      querySelectorAll() {
+        return [];
+      },
+    }),
+  };
+  const search = globalThis.document.createElement("input");
+  const list = globalThis.document.createElement("div");
+
+  try {
+    const picks = [];
+    setupCitySearch({ onPick: (...a) => picks.push(a), setStatus: () => {} });
+
+    search.value = "Nairobi";
+    search.dispatch("input");
+
+    // Nothing may resolve while the cadence is still running.
+    await new Promise((r) => setTimeout(r, 1500));
+    assert.deepEqual(picks, [], "no hands-free resolution before the cadence");
+
+    // After the cadence, the typed query resolves with the full contract.
+    await new Promise((r) => setTimeout(r, 1200));
+    const want = searchCities("Nairobi", CITY_CATALOG, 1)[0];
+    assert.equal(picks.length, 1, "hands-free resolution fired exactly once");
+    assert.deepEqual(picks[0], [
+      want.lat,
+      want.lon,
+      `Sunshine data from ${formatCityLabel(want)}`,
+      want.r,
+      want.country,
+    ]);
+  } finally {
+    globalThis.document = realDocument;
+    setGeocodeFetchImpl(null);
+  }
+});

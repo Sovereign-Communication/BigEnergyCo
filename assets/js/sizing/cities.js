@@ -249,7 +249,16 @@ export function nearestCity(lat, lon, cities = CITY_CATALOG, maxKm = 60) {
 
 export const CITY_LOOKUP_TIMEOUT_MS = 12000;
 
-export async function lookupCityOnline(query, fetchImpl = globalThis.fetch) {
+// Single indirection point for the geocoder HTTP layer: defaults to the
+// platform fetch; tests inject a stub here rather than patching globals.
+let geocodeFetchImpl = null;
+export function setGeocodeFetchImpl(fn) {
+  geocodeFetchImpl = fn;
+}
+
+export async function lookupCityOnline(query, fetchImpl) {
+  const doFetch =
+    fetchImpl ?? geocodeFetchImpl ?? ((...a) => globalThis.fetch(...a));
   const q = String(query || "").trim();
   if (q.length < 2) return null;
   // A hung geocoder must never leave "Looking up your city…" on screen
@@ -261,7 +270,7 @@ export async function lookupCityOnline(query, fetchImpl = globalThis.fetch) {
     : null;
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q=${encodeURIComponent(q)}`;
-    const response = await fetchImpl(url, {
+    const response = await doFetch(url, {
       headers: { Accept: "application/json" },
       ...(ctrl ? { signal: ctrl.signal } : {}),
     });
@@ -289,11 +298,9 @@ export async function lookupCityOnline(query, fetchImpl = globalThis.fetch) {
 
 // Reverse-geocode a GPS fix to country context. Same endpoint as
 // lookupCityOnline; null on any failure so GPS falls back to seed context.
-export async function lookupCountryOnline(
-  lat,
-  lon,
-  fetchImpl = globalThis.fetch,
-) {
+export async function lookupCountryOnline(lat, lon, fetchImpl) {
+  const doFetch =
+    fetchImpl ?? geocodeFetchImpl ?? ((...a) => globalThis.fetch(...a));
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
   const ctrl =
     typeof AbortController !== "undefined" ? new AbortController() : null;
@@ -302,7 +309,7 @@ export async function lookupCountryOnline(
     : null;
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`;
-    const response = await fetchImpl(url, {
+    const response = await doFetch(url, {
       headers: { Accept: "application/json" },
       ...(ctrl ? { signal: ctrl.signal } : {}),
     });
