@@ -646,6 +646,127 @@ async function main() {
       `(() => { Worker.prototype.postMessage = window.__originalPostMessage || Worker.prototype.postMessage; delete window.__originalPostMessage; })()`,
     );
 
+    // ── Held-response race (real worker reply, not a fixture) ─────────
+    // The defect class the run lifecycle exists for: a sizing reply that
+    // lands while a pre-calculation edit has made it stale must be dropped
+    // WITHOUT deadlocking the next explicit run. This gate holds the REAL
+    // worker's reply (one-shot onmessage capture — the engine genuinely
+    // computed it), edits a pre-calc input so the reply goes stale, releases
+    // it, and proves the next explicit click completes. Teeth: reverting
+    // the stale-release path (workerBusy never freed) leaves the button
+    // disabled and fails this gate.
+    console.log("SMOKE      ── held-response race ──");
+    const heldRace = await evaluate(`(async () => {
+      const proto = Worker.prototype;
+      const postDesc = Object.getOwnPropertyDescriptor(proto, "postMessage");
+      const origPost = proto.postMessage;
+      window.__held = null;
+      window.__holdNext = true;
+      window.__runPosts2 = 0;
+      // Instance-level capture: the app assigns worker.onmessage when the
+      // worker is created, so the hook must wrap the LIVE handler at the
+      // moment the run is posted. The real engine computes the reply; this
+      // only defers its delivery by one shot.
+      let workerRef = null;
+      let appHandler = null;
+      proto.postMessage = function (msg) {
+        if (msg?.type === "run") {
+          window.__runPosts2 += 1;
+          // Wrap the LIVE handler synchronously before the run is sent: the
+          // worker cannot reply before the message goes out, so the very
+          // next "ok" is capturable. The real engine computes the reply;
+          // this only defers its delivery by one shot.
+          if (window.__holdNext && window.__held === null && !workerRef) {
+            const current = this.onmessage;
+            if (typeof current === "function") {
+              workerRef = this;
+              appHandler = current;
+              this.onmessage = function (ev) {
+                if (
+                  ev.data?.type === "ok" &&
+                  window.__holdNext &&
+                  window.__held === null
+                ) {
+                  window.__holdNext = false;
+                  const w = this;
+                  window.__held = {
+                    seq: ev.data.seq,
+                    deliver: () => appHandler.call(w, ev),
+                  };
+                  return;
+                }
+                return appHandler.call(this, ev);
+              };
+            }
+          }
+        }
+        return origPost.apply(this, arguments);
+      };
+      const k = document.getElementById("dailyKwhInput");
+      const btn = document.getElementById("btnRunSizing");
+      const t = (ms) => new Promise((r) => setTimeout(r, ms));
+      try {
+        // 1. Explicit run; its real reply is captured mid-flight.
+        btn.click();
+        const t0 = Date.now();
+        while (!window.__held && Date.now() - t0 < 15000) await t(100);
+        const held = !!window.__held;
+        const heldSeq = window.__held?.seq ?? null;
+        // 2. Pre-calc edit while the reply is held: runToken++ makes it stale.
+        k.value = String(Number(k.value || "10") + 5);
+        k.dispatchEvent(new Event("input", { bubbles: true }));
+        await t(100);
+        // 3. Release the stale reply: must be dropped, button re-enabled,
+        //    NO render and NO new run post.
+        window.__held?.deliver();
+        const t1 = Date.now();
+        let staleDropped = false;
+        while (Date.now() - t1 < 10000) {
+          if (!btn.disabled) {
+            staleDropped = true;
+            break;
+          }
+          await t(100);
+        }
+        const resultsStillHidden = document.getElementById("resultsRegion")?.hidden === true;
+        const postsAfterDrop = window.__runPosts2;
+        // 4. The next explicit click must complete end-to-end.
+        btn.click();
+        const t2 = Date.now();
+        let recovered = false;
+        while (Date.now() - t2 < 60000) {
+          if (!btn.disabled && document.getElementById("resultsRegion")?.hidden === false) {
+            recovered = true;
+            break;
+          }
+          await t(100);
+        }
+        return JSON.stringify({ held, heldSeq, staleDropped, resultsStillHidden, postsAfterDrop, totalPosts: window.__runPosts2, recovered });
+      } finally {
+        if (postDesc) Object.defineProperty(proto, "postMessage", postDesc);
+        else proto.postMessage = origPost;
+        if (workerRef && appHandler) workerRef.onmessage = appHandler;
+        delete window.__held;
+        delete window.__holdNext;
+        delete window.__runPosts2;
+      }
+    })()`);
+    let race = {};
+    try {
+      race = JSON.parse(heldRace);
+    } catch (_) {
+      race = { err: String(heldRace).slice(0, 120) };
+    }
+    gate(
+      "stale held reply is dropped without deadlocking the next run",
+      race.held === true &&
+        race.staleDropped === true &&
+        race.resultsStillHidden === true &&
+        race.postsAfterDrop === 1 &&
+        race.recovered === true,
+      heldRace,
+    );
+
     // ── Share link round trip ("send this to someone") ────────────────
     // The serialized state must survive: a fresh page opened at the shared
     // URL restores inputs only; sizing still requires the explicit button.
