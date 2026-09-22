@@ -136,7 +136,7 @@ test("the smoke surfaces a navigation-level transport error", () => {
   // The channel, not just the classifier: a failed navigation is invisible to
   // every other collector, so removing this line makes a transport flake fail
   // the smoke as an unexplained gate failure.
-  const src = read("scripts/browser-smoke.mjs");
+  const src = read("scripts/smoke/actions.mjs");
   assert.match(
     src,
     /if \(nav\?\.errorText\)[\s\S]{0,120}errors\.push\(`navigation: /,

@@ -183,10 +183,24 @@ test("SCRIPTS: the hardened helpers are the ones actually used", () => {
   assert.match(jsonld, /sameOriginPath\(url, ORIGIN\)/);
   assert.doesNotMatch(jsonld, /url\.startsWith\(ORIGIN\)/);
 
-  const smoke = readFileSync("scripts/browser-smoke.mjs", "utf8");
+  // normalizeBase stays the single owner of argv canonicalization: the
+  // orchestrator imports it; the runtime it drives must not re-derive paths.
+  const orchestrator = readFileSync("scripts/browser-smoke.mjs", "utf8");
   assert.match(
-    smoke,
+    orchestrator,
     /import \{ normalizeBase \} from "\.\/lib\/base-url\.mjs"/,
   );
-  assert.doesNotMatch(smoke, /pathname\.replace\(/);
+  const smoke = readFileSync("scripts/smoke/runtime.mjs", "utf8");
+  // The browser runtime, not the thin orchestrator, owns process launch and
+  // every page evaluation entry point — so the hardening contract lives here.
+  assert.match(
+    smoke,
+    /Runtime\.evaluate/,
+    "the runtime drives the page through Runtime.evaluate",
+  );
+  assert.doesNotMatch(
+    smoke,
+    /pathname\.replace\(/,
+    "base-URL handling stays in normalizeBase",
+  );
 });
