@@ -1,4 +1,4 @@
-// The Jev complete gate contract: pack drift, fail-closed evidence, the
+// The Jev complete gate contract: pack single-sourcing, fail-closed evidence, the
 // 0-hallucination live parse, and the score arithmetic the 95/100 target
 // rests on. Every rule here is one a later edit could silently break.
 import test from "node:test";
@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import {
   COMPLETE_MIN_SCORE,
+  COMPLETE_PACK_PATH,
   WORK_TYPES,
   HARD_GATE_POINTS,
   HARD_GATE_BUCKETS,
@@ -84,21 +85,40 @@ function mutatedPack(mutate) {
 
 // ── pack ─────────────────────────────────────────────────────────────────────
 
-test("PACK: JSON file and in-code default are byte-for-byte the same pack", () => {
+// Single source of truth: the pack exists exactly once — the JSON file beside
+// the lib module. The old contract pinned a hand-maintained in-code copy
+// against that file (drift test); the copy is gone, so what remains to prove
+// is that BOTH load paths — the module-sibling URL the export uses and the
+// CLI's repo-relative COMPLETE_PACK_PATH — resolve to one pack, and that no
+// second in-code literal is ever reintroduced.
+test("PACK: single source — both load paths resolve to one pack, no in-code copy", () => {
   const raw = JSON.parse(
     readFileSync(
       new URL("../scripts/lib/jev-complete.pack.json", import.meta.url),
       "utf8",
     ),
   );
+  assert.deepEqual(raw, DEFAULT_COMPLETE_PACK, "module-sibling load diverged");
+  // Read COMPLETE_PACK_PATH itself (cwd = repo root in the suite): a wrong or
+  // moved path throws here instead of silently falling back to the export.
+  const viaPath = JSON.parse(readFileSync(COMPLETE_PACK_PATH, "utf8"));
   assert.deepEqual(
-    raw,
+    viaPath,
     DEFAULT_COMPLETE_PACK,
-    "pack JSON drifted from DEFAULT_COMPLETE_PACK",
+    "COMPLETE_PACK_PATH no longer names the same pack",
   );
   assert.deepEqual(
     loadCompletePack("."),
     validateCompletePack(DEFAULT_COMPLETE_PACK),
+    "loadCompletePack diverged from the validated export",
+  );
+  const libSrc = readFileSync(
+    new URL("../scripts/lib/jev-complete.mjs", import.meta.url),
+    "utf8",
+  );
+  assert.ok(
+    !libSrc.includes("export const DEFAULT_COMPLETE_PACK = {"),
+    "in-code pack copy reintroduced — edit jev-complete.pack.json instead",
   );
 });
 
