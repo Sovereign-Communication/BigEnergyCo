@@ -189,6 +189,50 @@ test("city combobox: Enter on an exact seed query resolves offline with zero net
   );
 });
 
+test("city combobox: the last pick's own label never re-resolves", async () => {
+  await withDom(
+    { citySearch: makeEl("input"), citySuggestions: makeEl("div") },
+    async () => {
+      const picks = [];
+      const { seen, setStatus } = status();
+      setupCitySearch({ onPick: (...a) => picks.push(a), setStatus });
+      const search = globalThis.document.getElementById("citySearch");
+      const list = globalThis.document.getElementById("citySuggestions");
+
+      // Pick via suggestion: the box now holds formatCityLabel's own
+      // output, which the seed catalog provably cannot resolve — the
+      // precondition that forced every re-resolve onto the online
+      // geocoder.
+      search.value = "Honolulu";
+      search.dispatch("input");
+      list.children[0].dispatch("click");
+      const label = formatCityLabel(
+        searchCities("Honolulu", CITY_CATALOG, 1)[0],
+      );
+      assert.equal(picks.length, 1, "one pick from the suggestion click");
+      assert.equal(search.value, label);
+      assert.equal(
+        searchCities(label, CITY_CATALOG, 1).length,
+        0,
+        "precondition: the seed cannot resolve the label it just wrote",
+      );
+
+      // All three real entry points that used to push that label back
+      // through the full resolve chain: Tab (a keyboard walk crossing the
+      // box — observed live destroying a fresh result four times in one
+      // walk), Enter (commit), and a repeat input that re-arms the
+      // hands-free cadence. shouldAutoResolve does NOT reject the label,
+      // so only the resolve-time guard covers all three.
+      search.dispatch("keydown", { key: "Tab" });
+      search.dispatch("keydown", { key: "Enter", preventDefault() {} });
+      search.dispatch("input");
+      await new Promise((r) => setTimeout(r, 2200)); // one full 2s cadence
+      assert.equal(picks.length, 1, "never re-picks its own label");
+      assert.deepEqual(seen, [], "no status churn for an unchanged place");
+    },
+  );
+});
+
 test("city combobox: an unmatchable query reports the no-match status after the real fallback chain", async () => {
   await withDom(
     { citySearch: makeEl("input"), citySuggestions: makeEl("div") },
