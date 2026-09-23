@@ -64,11 +64,26 @@ orders them.
 - `tests/cities.test.mjs` — the hands-free auto-resolve cadence, proven
   behaviorally (nothing before 2s, full-contract pick after).
 
+## Chart rendering (extracted from ui.js)
+
+- `assets/js/sizing/charts.js` — **single owner** of canvas chart rendering
+  (reliability/SOC, cumulative cost, auto comparison, the sun-harvest strip)
+  and of chart state (`socZoomRange`, `cachedChartState`). Rendering only;
+  every decision arrives as arguments. Injected boundary:
+  `initCharts({ $, el, t, fmt, money })` — nothing the module calls may live
+  only in ui.js (pinned in `tests/charts.test.mjs`).
+- `TIER_COLORS`/`TIER_NAMES` live here as the palette's one home (chart
+  legends are their only consumers; ui.js's former import was dead and went).
+- Pure seams `computeZoomSpan` (zoom math) and `findWorstStreak` (worst
+  30-day window) are exported for `tests/charts.test.mjs`, which also pins
+  the module graph: every name ui.js imports exists, the export surface is
+  exactly its consumers, and the palette stays out of ui.js.
+
 ## Known remaining debt (deliberate, not forgotten)
 
-- `ui.js` is still ~9.3k lines: form state, rendering, charts, Jev, sliders,
-  sharing, modals. Two extractions are done (run channel, location picking);
-  each further one should follow the same pattern (policy in a pure module,
-  mechanics stay with the DOM, tests first).
+- `ui.js` is still ~7.9k lines: form state, rendering, Jev, sliders,
+  sharing, modals. Three extractions are done (run channel, location picking,
+  chart rendering); each further one should follow the same pattern (policy in
+  a pure module, mechanics stay with the DOM, tests first).
 - The live Jev provider success path is proven only via the deterministic
   stub (provider rate limits); the endpoint itself is probed separately.
