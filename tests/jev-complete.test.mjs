@@ -21,6 +21,7 @@ import {
   matchCompleteKeywords,
   parseLiveAnswers,
   mergeEvidence,
+  buildStateText,
   scoreCompleteGate,
 } from "../scripts/lib/jev-complete.mjs";
 
@@ -413,6 +414,47 @@ test("EVIDENCE: absent means red, and evidence cannot override code-owned facts"
   assert.equal(honest.tests_green, true);
   assert.equal(honest.tree_clean, true);
   assert.equal(honest.env_ignored, true);
+});
+
+// ── evidence transport ───────────────────────────────────────────────────────
+
+test("TRANSPORT: every recorded evidence channel reaches the live judge", () => {
+  // The old 1200-char cap silently cut per-facet evidence — nine facets were
+  // answered "partial or unverified" despite green recorded runs — and
+  // seo_summary was collected but never transported at all. Pins: the seo
+  // line exists, and all 12 per-facet notes survive into the state text.
+  const notes = Array.from(
+    { length: 12 },
+    (_, i) =>
+      `facet-evidence-${i}: recorded artifact at affdc22 — deterministic ` +
+      "derivation pinned by engine.test.mjs, verified green in the full suite",
+  );
+  const ev = {
+    tests_green: true,
+    prettier_clean: true,
+    seo_green: true,
+    smoke_green: true,
+    ci_green: true,
+    tests_summary: "T".repeat(120),
+    seo_summary: "sitemap/JSON-LD green",
+    smoke_note: "S".repeat(120),
+    ci_summary: "C".repeat(120),
+    notes,
+  };
+  const auto = {
+    target: "main @ affdc22",
+    sha: "affdc22",
+    treeClean: true,
+    secretsClean: true,
+    dirtyPaths: [],
+    testCount: 66,
+  };
+  const text = buildStateText(mergeEvidence(ev, auto), auto);
+  assert.match(text, /seo: sitemap\/JSON-LD green/);
+  for (const n of notes) {
+    assert.ok(text.includes(n), `note missing from transport: ${n}`);
+  }
+  assert.ok(text.length <= 3000, "transport budget holds the full record");
 });
 
 // ── score arithmetic ─────────────────────────────────────────────────────────

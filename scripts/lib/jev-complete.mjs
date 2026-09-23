@@ -765,11 +765,17 @@ export function buildStateText(evidence, auto = {}) {
     `tests: ${ev.tests_summary || "unrecorded"}`,
     `ci: ${ev.ci_summary || "unrecorded"}`,
     `smoke: ${ev.smoke_note || "unrecorded"}`,
+    `seo: ${ev.seo_summary || "unrecorded"}`,
     `dirty: ${(auto.dirtyPaths || []).slice(0, 8).join(" ")}`,
     `tests_present=${auto.testCount || 0} files`,
-    `notes: ${Array.isArray(ev.notes) ? ev.notes.slice(0, 6).join(" | ") : ""}`,
+    `notes: ${Array.isArray(ev.notes) ? ev.notes.slice(0, 12).join(" | ") : ""}`,
   ];
-  return parts.filter(Boolean).join("\n").slice(0, 1200);
+  // Evidence-transport budget: how much of the recorded evidence the live
+  // judge can see. This is NOT a scoring threshold — target, fail-closed
+  // merge, code-authority ceiling, and the hard gates are all untouched.
+  // The old 1200-char cap silently cut per-facet evidence, so nine facets
+  // were answered "partial or unverified" despite green recorded runs.
+  return parts.filter(Boolean).join("\n").slice(0, 3000);
 }
 
 /**
