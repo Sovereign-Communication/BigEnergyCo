@@ -11,7 +11,8 @@
 //   main page: hero CTA, weather persistence (cold pulls / warm zero), auto-
 //   location consent, grid-tie run, result card, charts, pre-calc consent,
 //   held-response race, responsiveness, Jev badges, sliders, CSP-wired
-//   controls, a11y basics, service worker, re-slice, Simple mode,
+//   controls, a11y (keyboard reach + operability, names, AA contrast,
+//   reduced motion), service worker, re-slice, Simple mode,
 //   off-grid run, external integrations, no console/CSP errors.
 //   heatmap page: Leaflet loads, map initializes, no console/page errors.
 // Exit 0 = pass, 1 = fail (prints every failed gate).
@@ -22,6 +23,7 @@ import { runWeatherFlow } from "./smoke/weather.js";
 import { runGridTieFlow } from "./smoke/gridtie.js";
 import { runLifecycleFlow } from "./smoke/lifecycle.js";
 import { runResultsFlow } from "./smoke/results.js";
+import { runA11yFlow } from "./smoke/a11y.js";
 import { runJevFlow } from "./smoke/jev.js";
 import { runShareFlow } from "./smoke/share.js";
 import { runClosingFlow } from "./smoke/closing.js";
@@ -69,6 +71,10 @@ async function main() {
     await runJevFlow(ctx);
     await runShareFlow(ctx, actions);
     await runResultsFlow(ctx);
+    // A11y needs a completed run (contrast, result-stage keyboard, the two
+    // scroll sites) and ends with the card invalidated by its own loadMode
+    // change — closing below runs a fresh off-grid run regardless.
+    await runA11yFlow(ctx);
     await runClosingFlow(ctx, actions);
   } catch (e) {
     gate(

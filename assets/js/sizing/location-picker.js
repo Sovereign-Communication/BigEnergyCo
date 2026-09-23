@@ -74,7 +74,7 @@ export function setupCitySearch({ onPick, setStatus }) {
             c.country,
           );
           lastResolvedQuery = normalizeCityQuery(search.value);
-          search.value = formatCityLabel(c);
+          lastResolvedLabel = search.value = formatCityLabel(c);
           list.hidden = true;
           search.setAttribute("aria-expanded", "false");
         });
@@ -102,6 +102,11 @@ export function setupCitySearch({ onPick, setStatus }) {
     // Enter/Tab use, so behavior is identical — just hands-free.
     let autoResolveTimer = null;
     let lastResolvedQuery = "";
+    // The exact box text the last pick wrote (formatCityLabel's own output).
+    // Re-resolving that same text cannot change the coordinates, so it must
+    // never reach onPick — the controller would markPrecalcDirty and destroy
+    // a result the visitor never changed.
+    let lastResolvedLabel = "";
     const cancelAutoResolve = () => {
       if (autoResolveTimer !== null) {
         clearTimeout(autoResolveTimer);
@@ -130,6 +135,12 @@ export function setupCitySearch({ onPick, setStatus }) {
       cancelAutoResolve();
       const query = search.value.trim();
       if (!query || lookupBusy) return;
+      // The seed catalog cannot resolve formatCityLabel's own output, and
+      // Tab/Enter call here WITHOUT the timer's shouldAutoResolve gate — so
+      // the module's own label used to go online, re-pick identical
+      // coordinates, and invalidate a fresh result (observed: four phantom
+      // invalidations in one keyboard walk). Same label → same place → stop.
+      if (query === lastResolvedLabel) return;
       // Seed-catalog hit first (instant, offline): resolve immediately —
       // country partitions only extend the search, they never gate it.
       const local = searchCities(query, CITY_CATALOG, 1)[0];
@@ -142,7 +153,7 @@ export function setupCitySearch({ onPick, setStatus }) {
           local.r,
           local.country,
         );
-        search.value = formatCityLabel(local);
+        lastResolvedLabel = search.value = formatCityLabel(local);
         list.hidden = true;
         search.setAttribute("aria-expanded", "false");
         return;
@@ -167,7 +178,7 @@ export function setupCitySearch({ onPick, setStatus }) {
           offline.r,
           offline.country,
         );
-        search.value = formatCityLabel(offline);
+        lastResolvedLabel = search.value = formatCityLabel(offline);
         list.hidden = true;
         search.setAttribute("aria-expanded", "false");
         return;
@@ -201,7 +212,7 @@ export function setupCitySearch({ onPick, setStatus }) {
         match.r,
         match.country,
       );
-      search.value = formatCityLabel(match);
+      lastResolvedLabel = search.value = formatCityLabel(match);
       list.hidden = true;
       search.setAttribute("aria-expanded", "false");
     };
