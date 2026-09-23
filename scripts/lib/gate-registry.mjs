@@ -10,6 +10,12 @@ export const MANUAL_VALIDATORS = new Map([
     "scripts/validate-against-sheet.mjs",
     "blocked on the owner's spreadsheet export (PHASE2_PLAN.md tracks it)",
   ],
+  [
+    "scripts/validate-jev-complete.mjs",
+    "the Jev complete gate: needs the direct provider key + network for live " +
+      "judgment (deterministic heuristic fallback offline); run it by hand " +
+      "before a promote",
+  ],
 ]);
 
 export const RETIRED = new Map([
