@@ -1,6 +1,7 @@
 # Architecture map
 
-What owns what, as of the run-channel consolidation (#116). Read this before
+What owns what, as of #116–#123 (run channel → location picker → charts →
+a11y flow). Read this before
 changing sizing behavior or the smoke harness; update it when the structure
 changes.
 
@@ -27,12 +28,12 @@ replacement); invalid direct requests call `runChannel.dropPending()`.
 
 ## Smoke harness
 
-`scripts/browser-smoke.mjs` is an 85-line sequencer; behavior lives in
+`scripts/browser-smoke.mjs` is a 91-line sequencer; behavior lives in
 `scripts/smoke/`: `runtime.mjs` (launch, CDP wire, error collectors, gate
 reporter), `actions.mjs` (navigate, Jev stub, form input), and one module per
 product flow (`weather`, `gridtie`, `lifecycle`, `jev`, `share`, `results`,
-`closing`). Gates are defined where the behavior lives; the orchestrator only
-orders them.
+`a11y`, `closing`). Gates are defined where the behavior lives; the
+orchestrator only orders them.
 
 ## Tests that guard ownership
 
@@ -42,14 +43,21 @@ orders them.
 - `scripts/smoke/lifecycle.js` — the held-response race in a real browser:
   a genuine engine reply held, made stale, released, and the next explicit
   click recovering.
+- `scripts/smoke/a11y.js` + `tests/reduced-motion.test.mjs` — keyboard reach
+  and role=button operability, the accessible-name union across states, WCAG
+  AA contrast, and the reduced-motion scroll contract (instant under
+  `prefers-reduced-motion`, animated without it) at all three scroll sites.
 
-## Location picking (extracted from ui.js)
+## Location picking (extracted from ui.js)- `assets/js/sizing/location-picker.js` — owns the **widgets only**: the city
 
-- `assets/js/sizing/location-picker.js` — owns the **widgets only**: the city
-  combobox (suggestions, keyboard nav, the 2s hands-free auto-resolve) and the
-  geolocation "locate me" flow. Every location decision funnels through the
-  injected `onPick(lat, lon, label, region?, country?)`; status feedback goes
-  through the injected `setStatus`. No location state lives here.
+combobox (suggestions, keyboard nav, the 2s hands-free auto-resolve, and
+the resolve-time guard that stops the picker re-resolving the very label it
+just wrote — otherwise a keyboard Tab re-picked identical coordinates and
+invalidated a fresh result), and the geolocation "locate me" flow. Every
+location decision funnels through the injected
+`onPick(lat, lon, label, region?, country?)`; status feedback goes
+through the injected `setStatus`. No location state lives here.
+
 - `assets/js/sizing/cities.js` — owns the **domain layer**: search, catalogs,
   partitions, online lookups. Its geocoder HTTP runs through one seam
   (`setGeocodeFetchImpl`) so tests stay offline-deterministic.
@@ -57,8 +65,8 @@ orders them.
   consent, never calculation consent) and the single wiring line
   `setupCitySearch({ onPick: setCoords, setStatus })`.
 - `tests/location-picker.test.mjs` — behavioral contract of the real module
-  (combobox full-arg funnel, Enter path, no-match ladder, legacy-cache purge,
-  geolocation errors and the two-stage GPS pick). It imports the SAME stamped
+  (combobox full-arg funnel, Enter path, the label no-op, no-match ladder,
+  legacy-cache purge, geolocation errors and the two-stage GPS pick). It imports the SAME stamped
   cities instance the picker imports — a bare import would patch the wrong
   module (Node treats the `?v=` specifier as a distinct instance).
 - `tests/cities.test.mjs` — the hands-free auto-resolve cadence, proven
@@ -85,5 +93,7 @@ orders them.
   sharing, modals. Three extractions are done (run channel, location picking,
   chart rendering); each further one should follow the same pattern (policy in
   a pure module, mechanics stay with the DOM, tests first).
-- The live Jev provider success path is proven only via the deterministic
-  stub (provider rate limits); the endpoint itself is probed separately.
+- The live Jev path now runs directly against TypeSafe
+  (`provider=typesafe fallback=false`, recorded across the complete-gate
+  runs); OpenRouter stays configured as the rate-limit backup, and the
+  deterministic stub still serves the dedicated smoke gates.
