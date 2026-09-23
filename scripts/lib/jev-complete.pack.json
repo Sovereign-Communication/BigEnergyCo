@@ -168,8 +168,17 @@
       "label": "Delivery resilience gap",
       "path_id": "complete/resilience",
       "work_type": "adversarial-fix",
-      "keywords": ["timeout", "budget", "retry", "503", "stall", "watchdog"],
-      "suggested_next_action": "Run the adversarial pass over the delivery path: prove inner retry/timeout budgets fit every outer cap, classification covers transport failures end to end, and stuck runs recover."
+      "keywords": [
+        "timeout",
+        "budget",
+        "retry",
+        "503",
+        "stall",
+        "watchdog",
+        "deadline",
+        "share-restore"
+      ],
+      "suggested_next_action": "Run the adversarial pass over the delivery path: prove inner retry/timeout budgets fit every outer cap, classification covers transport failures end to end, and stuck runs recover — including the page-side run deadline: a share-restore auto-run that never gets a worker reply must surface an honest retryable error instead of hanging forever (reproduced on production 2026-09-23; no run deadline/watchdog/error state exists anywhere in assets/js)."
     },
     "experience_gap": {
       "label": "User experience gap",
