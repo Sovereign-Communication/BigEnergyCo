@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { LOCALES } from "../assets/js/shared/locales.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
@@ -100,4 +101,21 @@ test("ui t() falls back to English before the raw key", () => {
     /LOCALES\.en\[key\]\s*\?\?\s*key/.test(src),
     "t() must chain locale -> English -> raw key",
   );
+});
+
+// Locale parity follows the product's English-source contract: every
+// translated locale must carry each key defined by the English dictionary.
+// Additional locale-specific keys are allowed, and unused missing strings
+// continue to fall back to their English/source-markup equivalents.
+test("locale parity: every English key exists in each translated locale", () => {
+  const englishKeys = Object.keys(LOCALES.en);
+  for (const [code, dict] of Object.entries(LOCALES)) {
+    if (code === "en") continue;
+    const missing = englishKeys.filter((key) => !(key in dict));
+    assert.deepEqual(
+      missing,
+      [],
+      `${code} missing English keys: ${missing.join(", ")}`,
+    );
+  }
 });

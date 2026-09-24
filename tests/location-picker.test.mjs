@@ -96,6 +96,33 @@ const status = () => {
   return { seen, setStatus: (t) => seen.push(t) };
 };
 
+async function withDomAsync(registry, fetchImpl, fn) {
+  const realDocument = globalThis.document;
+  setGeocodeFetchImpl(fetchImpl);
+  globalThis.document = {
+    getElementById: (id) => registry[id] ?? null,
+    createElement: makeEl,
+  };
+  try {
+    return await fn();
+  } finally {
+    globalThis.document = realDocument ?? FALLBACK_DOC;
+    setGeocodeFetchImpl(null);
+  }
+}
+
+function deferred() {
+  let resolve;
+  const promise = new Promise((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
+function geocoderResponse(row) {
+  return { ok: true, json: async () => [row] };
+}
+
 // The geocoder fallback chain spans several event-loop turns, including a
 // setTimeout-based last-resort partition, which setImmediate cannot advance.
 // Drain with real clock advancement on the module's own debounce cadence so
@@ -259,6 +286,66 @@ test("city combobox: an unmatchable query reports the no-match status after the 
   );
 });
 
+test("city combobox: a newer query resolves while an older lookup is pending", async () => {
+  const first = deferred();
+  const second = deferred();
+  let calls = 0;
+  await withDomAsync(
+    { citySearch: makeEl("input"), citySuggestions: makeEl("div") },
+    () => {
+      calls += 1;
+      return calls === 1 ? first.promise : second.promise;
+    },
+    async () => {
+      const picks = [];
+      setupCitySearch({
+        onPick: (...args) => picks.push(args),
+        setStatus: () => {},
+      });
+      const search = globalThis.document.getElementById("citySearch");
+      const enter = () =>
+        search.dispatch("keydown", { key: "Enter", preventDefault() {} });
+
+      search.value = "Pending-place-one";
+      enter();
+      await new Promise((resolve) => setImmediate(resolve));
+      assert.equal(calls, 1, "the first query owns the pending geocoder call");
+
+      search.value = "Pending-place-two";
+      enter();
+      await new Promise((resolve) => setImmediate(resolve));
+      assert.equal(calls, 2, "the newer query is not blocked by lookupBusy");
+
+      second.resolve(
+        geocoderResponse({
+          name: "Newer Place",
+          address: { country_code: "ZZ" },
+          lat: "2",
+          lon: "3",
+        }),
+      );
+      await new Promise((resolve) => setImmediate(resolve));
+      assert.equal(picks.length, 1);
+      assert.match(picks[0][2], /Sunshine data from Newer Place/);
+
+      first.resolve(
+        geocoderResponse({
+          name: "Older Place",
+          address: { country_code: "ZZ" },
+          lat: "1",
+          lon: "1",
+        }),
+      );
+      await new Promise((resolve) => setImmediate(resolve));
+      assert.equal(
+        picks.length,
+        1,
+        "the older response cannot overwrite the newer pick",
+      );
+    },
+  );
+});
+
 // ── Legacy cache purge ─────────────────────────────────────────────────────
 
 test("purgeLegacyCityCache removes the legacy blob key and tolerates absent storage", () => {
@@ -367,5 +454,40 @@ test("locateMe: a GPS fix funnels through onPick twice — raw, then seed-refine
         ],
       ]);
     },
+  );
+});
+
+test("locateMe: a stale GPS refinement cannot overwrite a newer location choice", async () => {
+  const reverse = deferred();
+  let current = true;
+  await withNavigator(
+    {
+      geolocation: {
+        getCurrentPosition(ok) {
+          ok({ coords: { latitude: 40.71, longitude: -74.01 } });
+        },
+      },
+    },
+    () =>
+      withDomAsync(
+        { coordDetails: makeEl("details") },
+        () => reverse.promise,
+        async () => {
+          const picks = [];
+          locateMe({
+            onPick: (...args) => picks.push(args),
+            setStatus: () => {},
+            isCurrent: () => current,
+          });
+          assert.equal(picks.length, 2, "the initial GPS pin is synchronous");
+          current = false;
+          reverse.resolve({
+            ok: true,
+            json: async () => ({ address: { country_code: "ZZ" } }),
+          });
+          await new Promise((resolve) => setImmediate(resolve));
+          assert.equal(picks.length, 2, "the stale refinement is dropped");
+        },
+      ),
   );
 });

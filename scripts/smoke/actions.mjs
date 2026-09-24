@@ -79,7 +79,6 @@ export function createActions(ctx) {
     await evaluate(
       `document.querySelector('#citySuggestions [role="option"]').click()`,
     );
-    await sleep(3000); // suggestion click triggers a full run
     return true;
   };
 

@@ -17,7 +17,12 @@ changes.
   genuinely its own: the consent gate (`runAuthorized`, `precalcDirty`), the
   350 ms debounce (`runTimer`), payload identity (`payloadEpoch`, shared with
   slices), the slice channel (`sliceToken`/`sliceBusy`/`pendingSlice` — a
-  simpler machine on purpose), and all DOM feedback.
+  simpler machine on purpose), the three-minute worker-reply timer, and all
+  DOM feedback. The deadline constant and generation token live with the run
+  channel; on expiry the UI terminates the silent worker, reports a retryable
+  error only for the still-current request, and releases any collapsed run
+  through the same settle funnel. An explicit retry therefore creates a fresh
+  worker without weakening the production timeout.
 
 ## Data flow
 
@@ -28,12 +33,14 @@ replacement); invalid direct requests call `runChannel.dropPending()`.
 
 ## Smoke harness
 
-`scripts/browser-smoke.mjs` is a 91-line sequencer; behavior lives in
+`scripts/browser-smoke.mjs` is a small sequencer; behavior lives in
 `scripts/smoke/`: `runtime.mjs` (launch, CDP wire, error collectors, gate
 reporter), `actions.mjs` (navigate, Jev stub, form input), and one module per
 product flow (`weather`, `gridtie`, `lifecycle`, `jev`, `share`, `results`,
-`a11y`, `closing`). Gates are defined where the behavior lives; the
-orchestrator only orders them.
+`a11y`, `closing`, `deadline`). The deadline flow holds one worker reply,
+shortens only the exact production timeout in its isolated browser context,
+then proves an explicit fresh-worker retry succeeds. Gates are defined where
+the behavior lives; the orchestrator only orders them.
 
 ## Tests that guard ownership
 
@@ -43,6 +50,9 @@ orchestrator only orders them.
 - `scripts/smoke/lifecycle.js` — the held-response race in a real browser:
   a genuine engine reply held, made stale, released, and the next explicit
   click recovering.
+- `scripts/smoke/deadline.js` + `tests/run-deadline.test.mjs` — a silent worker
+  times out, releases the run channel, preserves newer status, and recovers on
+  an explicit fresh-worker retry.
 - `scripts/smoke/a11y.js` + `tests/reduced-motion.test.mjs` — keyboard reach
   and role=button operability, the accessible-name union across states, WCAG
   AA contrast, and the reduced-motion scroll contract (instant under

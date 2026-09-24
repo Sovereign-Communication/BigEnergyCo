@@ -100,7 +100,7 @@
         "not asked",
         "missing feature"
       ],
-      "suggested_next_action": "Run the four-dimension audit pass against the request as written: list every unrequested addition to remove and every requested outcome that is not yet present and working."
+      "suggested_next_action": "Run the all-facet audit against the request as written: inspect every declared quality dimension with its evidence, list requested outcomes that are missing or unproven, and flag unrequested additions without treating unrun checks as passes."
     },
     "design_gap": {
       "label": "Design / ownership gap",
@@ -178,7 +178,7 @@
         "deadline",
         "share-restore"
       ],
-      "suggested_next_action": "Run the adversarial pass over the delivery path: prove inner retry/timeout budgets fit every outer cap, classification covers transport failures end to end, and stuck runs recover — including the page-side run deadline: a share-restore auto-run that never gets a worker reply must surface an honest retryable error instead of hanging forever (reproduced on production 2026-09-23; no run deadline/watchdog/error state exists anywhere in assets/js)."
+      "suggested_next_action": "Run the adversarial pass over the delivery path: prove inner retry/timeout budgets fit every outer cap, classification covers transport failures end to end, and stuck runs recover. Exercise the page-side deadline with a silent worker, including share-restore, stale inputs, and an explicit retry; keep the error actionable and the worker/channel cleanup tested."
     },
     "experience_gap": {
       "label": "User experience gap",

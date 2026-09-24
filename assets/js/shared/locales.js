@@ -21,6 +21,20 @@ export const LOCALES = {
     ctaCompare: "Rough Cost Comparison",
     sizingTitle: "Size Your System",
     pickCity: "Pick a city (or use 📍 My location) so we know your sunshine.",
+    shareLoaded:
+      "Shared setup loaded. Review the inputs, then click Size My System to calculate.",
+    customCoordsLocation: "Using custom coordinates ({lat}, {lon}).",
+    resolvingCity: "Resolving your city — choose a match or wait for lookup.",
+    chooseCityMatch: "Choose a city suggestion or wait for lookup to finish.",
+    resolvingCoords: "Checking those coordinates…",
+    invalidCoordinates:
+      "Latitude must be between −90 and 90 and longitude between −180 and 180.",
+    invalidDailyKwh:
+      "Daily energy use must be between 0.5 and 500 kWh per day.",
+    inputsChanged:
+      "Inputs changed — click Size My System to update the estimate.",
+    errorTimeout:
+      "The sizing engine did not reply in time — check your connection and click Size My System to try again.",
     tellPowerUse:
       "Tell us your power use — tick some appliances, or enter a bill or kWh figure.",
     statusGridtie:
@@ -92,6 +106,27 @@ export const LOCALES = {
       "An independent AI classifier (Jev) reviewed the sizing numbers only — no location, text, or personal data leaves your browser beyond these figures. It never changes the computed result.",
     simpleAdvisorStyle:
       "[ADVISOR INSTRUCTION: The visitor is in Simple mode. Answer like an expert talking to a smart 12-year-old: plain everyday words, no jargon (explain any technical term in a short parenthesis), 4 short sentences maximum, and end with the ONE number that matters most.]",
+    advisorTitle: "Free AI Energy Advisor",
+    advisorSubtitle:
+      "You are talking to an AI (Groq AI Engine) — educational estimates only, not engineering advice",
+    advisorIntro:
+      "I explain the results from the main sizing tool — battery chemistry, wiring and fusing, or questions to bring to a local electrician. Run your sizing first, then ask about this result, or ask me anything.",
+    advisorBotNote:
+      "AI-generated estimate — may be inaccurate, including prices and specifications. Not engineering advice. Verify with a licensed electrician or engineer before buying or building anything.",
+    advisorThinking: "⏳ Thinking...",
+    advisorLabel: "Ask the AI advisor about your system",
+    advisorPlaceholder:
+      "Ask about cell specs, Sodium-ion vs LFP, freight costs...",
+    advisorSend: "Send",
+    advisorClose: "Close AI advisor",
+    advisorBusyRetry: " The free AI engine is busy — retrying in ",
+    advisorNoReply: " No reply received. Please try again.",
+    advisorBusy: " The free AI engine is swamped right now (HTTP ",
+    advisorBusyQuota: " — it runs on a shared free quota).\n\n",
+    advisorBusyWait: "Please wait about a minute and send that again.",
+    advisorUnreachable: " The AI advisor is unreachable right now",
+    advisorUnreachableRetry:
+      ".\n\nCheck your connection and try again in a moment.",
     frontierCeilingTag: "Best within the sizes searched: {pct}%",
     frontierSvgTitle: "How far your money gets you",
     frontierSvgDesc:
@@ -170,6 +205,21 @@ export const LOCALES = {
     sizingTitle: "Dimensiona tu sistema",
     pickCity:
       "Elige una ciudad (o usa 📍 Mi ubicación) para que sepamos tu insolación.",
+    shareLoaded:
+      "Configuración compartida cargada. Revisa los datos y pulsa Dimensionar mi sistema para calcular.",
+    customCoordsLocation: "Usando coordenadas personalizadas ({lat}, {lon}).",
+    resolvingCity:
+      "Buscando tu ciudad: elige una opción o espera el resultado.",
+    chooseCityMatch:
+      "Elige una ciudad sugerida o espera a que termine la búsqueda.",
+    resolvingCoords: "Comprobando esas coordenadas…",
+    invalidCoordinates:
+      "La latitud debe estar entre −90 y 90 y la longitud entre −180 y 180.",
+    invalidDailyKwh: "El consumo diario debe estar entre 0,5 y 500 kWh al día.",
+    inputsChanged:
+      "Los datos cambiaron: pulsa Dimensionar mi sistema para actualizar.",
+    errorTimeout:
+      "El motor de cálculo no respondió a tiempo — revisa tu conexión y vuelve a intentarlo.",
     tellPowerUse:
       "Indica tu consumo de energía: marca algunos electrodomésticos, o introduce una factura o una cifra en kWh.",
     statusGridtie:
@@ -271,6 +321,27 @@ export const LOCALES = {
       "Un clasificador de IA independiente (Jev) revisó solo las cifras del dimensionamiento — ninguna ubicación, texto o dato personal sale de tu navegador más allá de estas cifras. Nunca cambia el resultado calculado.",
     simpleAdvisorStyle:
       "[INSTRUCCIÓN PARA EL ASISTENTE: el visitante está en modo Simple. Responde como un experto hablando con un niño de 12 años inteligente: palabras cotidianas sencillas, sin tecnicismos (explica cualquier término técnico entre paréntesis), máximo 4 frases cortas, y termina con el UNO número que más importa.]",
+    advisorTitle: "Asesor gratuito de energía con IA",
+    advisorSubtitle:
+      "Hablas con una IA (motor Groq) — solo estimaciones educativas, no asesoramiento de ingeniería",
+    advisorIntro:
+      "Explico los resultados de la calculadora: química de baterías, cableado y protecciones, o preguntas para un electricista local. Ejecuta primero el dimensionamiento y luego pregúntame sobre este resultado, o hazme cualquier pregunta.",
+    advisorBotNote:
+      "Estimación generada por IA: puede ser inexacta, incluidos precios y especificaciones. No es asesoramiento de ingeniería. Verifícala con un electricista o ingeniero autorizado antes de comprar o construir.",
+    advisorThinking: "⏳ Pensando...",
+    advisorLabel: "Pregunta al asesor de IA sobre tu sistema",
+    advisorPlaceholder:
+      "Pregunta sobre celdas, sodio-ion frente a LFP, costes de transporte...",
+    advisorSend: "Enviar",
+    advisorClose: "Cerrar asesor de IA",
+    advisorBusyRetry: " El motor gratuito de IA está ocupado; reintentando en ",
+    advisorNoReply: " No se recibió respuesta. Inténtalo de nuevo.",
+    advisorBusy: " El motor gratuito de IA está satur ahora (HTTP ",
+    advisorBusyQuota: " — usa una cuota compartida).\n\n",
+    advisorBusyWait: "Espera aproximadamente un minuto y vuelve a enviarlo.",
+    advisorUnreachable: " El asesor de IA no está disponible ahora",
+    advisorUnreachableRetry:
+      ".\n\nComprueba tu conexión y vuelve a intentarlo en un momento.",
     frontierCeilingTag: "Lo máximo dentro de lo buscado: {pct}%",
     frontierSvgTitle: "Hasta dónde llega tu dinero",
     frontierSvgDesc:
@@ -383,6 +454,20 @@ export const LOCALES = {
     sizingTitle: "Dimensione seu sistema",
     pickCity:
       "Escolha uma cidade (ou use 📍 Minha localização) para sabermos sua insolação.",
+    shareLoaded:
+      "Configuração compartilhada carregada. Confira os dados e clique em Dimensionar meu sistema para calcular.",
+    customCoordsLocation: "Usando coordenadas personalizadas ({lat}, {lon}).",
+    resolvingCity:
+      "Buscando sua cidade: escolha uma opção ou aguarde o resultado.",
+    chooseCityMatch: "Escolha uma cidade sugerida ou aguarde a busca terminar.",
+    resolvingCoords: "Verificando essas coordenadas…",
+    invalidCoordinates:
+      "A latitude deve estar entre −90 e 90 e a longitude entre −180 e 180.",
+    invalidDailyKwh: "O consumo diário deve ficar entre 0,5 e 500 kWh por dia.",
+    inputsChanged:
+      "Os dados mudaram — clique em Dimensionar meu sistema para atualizar.",
+    errorTimeout:
+      "O motor de dimensionamento não respondeu a tempo — verifique sua conexão e tente novamente.",
     tellPowerUse:
       "Informe seu consumo de energia: marque alguns eletrodomésticos, ou informe uma conta ou um valor em kWh.",
     statusGridtie:
@@ -461,6 +546,28 @@ export const LOCALES = {
       "Um classificador de IA independente (Jev) analisou apenas os números do dimensionamento — nenhum local, texto ou dado pessoal sai do seu navegador além desses números. Ele nunca altera o resultado calculado.",
     simpleAdvisorStyle:
       "[INSTRUÇÃO PARA O ASSISTENTE: o visitante está no modo Simples. Responda como um especialista a falar com uma criança de 12 anos inteligente: palavras do dia a dia, sem jargão (explica qualquer termo técnico num parêntese curto), no máximo 4 frases curtas, e termine com O número que mais importa.]",
+    advisorTitle: "Consultor gratuito de energia com IA",
+    advisorSubtitle:
+      "Está a falar com uma IA (motor Groq) — apenas estimativas educativas, não aconselhamento de engenharia",
+    advisorIntro:
+      "Explico os resultados da calculadora: química das baterias, cablagem e proteção, ou perguntas para um eletricista local. Faça primeiro o dimensionamento e depois pergunte sobre este resultado, ou faça-me qualquer pergunta.",
+    advisorBotNote:
+      "Estimativa gerada por IA — pode ser imprecisa, incluindo preços e especificações. Não é aconselhamento de engenharia. Verifique com um eletricista ou engenheiro licenciado antes de comprar ou construir.",
+    advisorThinking: "⏳ A pensar...",
+    advisorLabel: "Pergunte ao consultor de IA sobre o seu sistema",
+    advisorPlaceholder:
+      "Pergunte sobre células, sódio-ion versus LFP, custos de frete...",
+    advisorSend: "Enviar",
+    advisorClose: "Fechar consultor de IA",
+    advisorBusyRetry:
+      " O motor gratuito de IA está ocupado — a tentar novamente em ",
+    advisorNoReply: " Não foi recebida resposta. Tente novamente.",
+    advisorBusy: " O motor gratuito de IA está sobrecarregado agora (HTTP ",
+    advisorBusyQuota: " — usa uma quota partilhada).\n\n",
+    advisorBusyWait: "Espere cerca de um minuto e envie novamente.",
+    advisorUnreachable: " O consultor de IA está indisponível neste momento",
+    advisorUnreachableRetry:
+      ".\n\nVerifique a ligação e tente novamente dentro de instantes.",
     frontierCeilingTag: "O máximo dentro do que foi buscado: {pct}%",
     frontierSvgTitle: "Até onde vai o seu dinheiro",
     frontierSvgDesc:
@@ -568,6 +675,23 @@ export const LOCALES = {
     sizingTitle: "Dimensionnez votre système",
     pickCity:
       "Choisissez une ville (ou utilisez 📍 Ma position) pour connaître votre ensoleillement.",
+    shareLoaded:
+      "Configuration partagée chargée. Vérifiez les entrées, puis cliquez sur Dimensionner pour calculer.",
+    customCoordsLocation:
+      "Coordonnées personnalisées utilisées ({lat}, {lon}).",
+    resolvingCity:
+      "Recherche de votre ville : choisissez une suggestion ou attendez le résultat.",
+    chooseCityMatch:
+      "Choisissez une suggestion ou attendez la fin de la recherche.",
+    resolvingCoords: "Vérification de ces coordonnées…",
+    invalidCoordinates:
+      "La latitude doit être comprise entre −90 et 90 et la longitude entre −180 et 180.",
+    invalidDailyKwh:
+      "La consommation quotidienne doit être comprise entre 0,5 et 500 kWh par jour.",
+    inputsChanged:
+      "Les entrées ont changé — cliquez sur Dimensionner pour actualiser l’estimation.",
+    errorTimeout:
+      "Le moteur de dimensionnement n'a pas répondu à temps — vérifiez votre connexion et réessayez.",
     tellPowerUse:
       "Indiquez votre consommation d'énergie : cochez quelques appareils, ou entrez une facture ou une valeur en kWh.",
     statusGridtie:
@@ -648,6 +772,29 @@ export const LOCALES = {
       "Un classificateur IA indépendant (Jev) n'a examiné que les chiffres du dimensionnement — aucun lieu, texte ou donnée personnelle ne quitte votre navigateur en dehors de ces chiffres. Il ne modifie jamais le résultat calculé.",
     simpleAdvisorStyle:
       "[INSTRUCTION AU CONSEILLER : le visiteur est en mode Simple. Répondez comme un expert parlant à un enfant de 12 ans intelligent : mots simples du quotidien, pas de jargon (expliquez tout terme technique entre parenthèses), 4 phrases courtes maximum, et terminez par LE chiffre qui compte le plus.]",
+    advisorTitle: "Conseiller énergie IA gratuit",
+    advisorSubtitle:
+      "Vous parlez à une IA (moteur Groq) — estimations éducatives uniquement, pas un conseil d'ingénierie",
+    advisorIntro:
+      "J'explique les résultats du calculateur : chimie des batteries, câblage et protection, ou questions à poser à un électricien local. Lancez d'abord le dimensionnement, puis posez votre question sur ce résultat, ou demandez-moi quoi que ce soit.",
+    advisorBotNote:
+      "Estimation générée par IA — elle peut être inexacte, y compris les prix et les spécifications. Ce n'est pas un conseil d'ingénierie. Faites vérifier par un électricien ou ingénieur agréé avant d'acheter ou de construire.",
+    advisorThinking: "⏳ Réflexion...",
+    advisorLabel: "Posez une question au conseiller IA sur votre système",
+    advisorPlaceholder:
+      "Questions sur les cellules, sodium-ion vs LFP, fret...",
+    advisorSend: "Envoyer",
+    advisorClose: "Fermer le conseiller IA",
+    advisorBusyRetry:
+      " Le moteur IA gratuit est occupé — nouvelle tentative dans ",
+    advisorNoReply: " Aucune réponse reçue. Veuillez réessayer.",
+    advisorBusy: " Le moteur IA gratuit est saturé (HTTP ",
+    advisorBusyQuota: " — quota partagé).\n\n",
+    advisorBusyWait:
+      "Attendez environ une minute, puis renvoyez votre question.",
+    advisorUnreachable: " Le conseiller IA est momentanément inaccessible",
+    advisorUnreachableRetry:
+      ".\n\nVérifiez votre connexion et réessayez dans un instant.",
     frontierCeilingTag: "Maximum dans les tailles explorées : {pct}%",
     frontierSvgTitle: "Jusqu'où va votre argent",
     frontierSvgDesc:
@@ -727,6 +874,22 @@ export const LOCALES = {
     sizingTitle: "System dimensionieren",
     pickCity:
       "Wähle eine Stadt oder nutze 📍 deinen Standort für die Sonnendaten.",
+    shareLoaded:
+      "Geteilte Einstellungen geladen. Prüfe die Eingaben und klicke dann auf System dimensionieren.",
+    customCoordsLocation: "Eigene Koordinaten verwendet ({lat}, {lon}).",
+    resolvingCity:
+      "Ort wird gesucht — wählen Sie einen Treffer oder warten Sie kurz.",
+    chooseCityMatch:
+      "Wählen Sie einen Stadtvorschlag oder warten Sie das Suchergebnis ab.",
+    resolvingCoords: "Koordinaten werden geprüft…",
+    invalidCoordinates:
+      "Der Breitengrad muss zwischen −90 und 90 und der Längengrad zwischen −180 und 180 liegen.",
+    invalidDailyKwh:
+      "Der tägliche Energieverbrauch muss zwischen 0,5 und 500 kWh liegen.",
+    inputsChanged:
+      "Eingaben geändert — klicken Sie auf System dimensionieren, um die Schätzung zu aktualisieren.",
+    errorTimeout:
+      "Die Auslegungssoftware hat nicht rechtzeitig geantwortet — prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
     tellPowerUse: "Gib deinen Verbrauch an — Geräte, Rechnung oder kWh.",
     statusGridtie:
       "⏳ Fünf Jahre Satellitenwetter werden geladen, Systeme zur Rechnungssenkung gesucht…",
@@ -807,6 +970,29 @@ export const LOCALES = {
       "Ein unabhängiger KI-Klassifikator (Jev) hat nur die Dimensionierungszahlen geprüft — kein Standort, Text oder personenbezogener Daten verlässt Ihren Browser über diese Zahlen hinaus. Er ändert niemals das berechnete Ergebnis.",
     simpleAdvisorStyle:
       "[ANWEISUNG FÜR DEN BERATER: Der Besucher ist im einfachen Modus. Antworten Sie wie ein Experte, der mit einem klugen 12-Jährigen spricht: einfache Alltagsworte, kein Fachjargon (erklären Sie jeden Fachbegriff in einer kurzen Klammer), höchstens 4 kurze Sätze, und enden Sie mit DER Zahl, die am meisten zählt.]",
+    advisorTitle: "Kostenloser KI-Energieberater",
+    advisorSubtitle:
+      "Sie sprechen mit einer KI (Groq-Motor) — nur Bildungswerte, keine Ingenieursberatung",
+    advisorIntro:
+      "Ich erkläre die Ergebnisse des Rechners: Batteriechemie, Verkabelung und Schutz oder Fragen für einen lokalen Elektriker. Führen Sie zuerst die Dimensionierung aus und fragen Sie dann zu diesem Ergebnis — oder stellen Sie mir eine beliebige Frage.",
+    advisorBotNote:
+      "Von KI erzeugte Schätzung — möglicherweise ungenau, einschließlich Preisen und Spezifikationen. Keine Ingenieursberatung. Lassen Sie sie vor dem Kauf oder Bau von einem zugelassenen Elektriker oder Ingenieur prüfen.",
+    advisorThinking: "⏳ Denkt nach...",
+    advisorLabel: "Fragen Sie den KI-Berater zu Ihrem System",
+    advisorPlaceholder:
+      "Fragen zu Zellen, Natrium-Ion vs. LFP, Frachtkosten...",
+    advisorSend: "Senden",
+    advisorClose: "KI-Berater schließen",
+    advisorBusyRetry:
+      " Die kostenlose KI ist ausgelastet — erneuter Versuch in ",
+    advisorNoReply: " Keine Antwort erhalten. Bitte versuchen Sie es erneut.",
+    advisorBusy: " Die kostenlose KI ist gerade überlastet (HTTP ",
+    advisorBusyQuota: " — gemeinsames Kontingent).\n\n",
+    advisorBusyWait:
+      "Warten Sie etwa eine Minute und senden Sie die Frage erneut.",
+    advisorUnreachable: " Der KI-Berater ist gerade nicht erreichbar",
+    advisorUnreachableRetry:
+      ".\n\nPrüfen Sie Ihre Verbindung und versuchen Sie es gleich noch einmal.",
     frontierCeilingTag: "Bestes in den durchsuchten Größen: {pct} %",
     frontierSvgTitle: "Wie weit dein Geld reicht",
     frontierSvgDesc:
@@ -910,6 +1096,19 @@ export const LOCALES = {
       "المبالغ معروضة بـ {code} بسعر {rate} مقابل 1 دولار أمريكي؛ أسعار وحدات البطارية تبقى بالدولار للكيلوواط ساعة لأن الأسعار الأساسية بالدولار.",
     sizingTitle: "صمّم نظامك",
     pickCity: "اختر مدينة (أو استخدم 📍 موقعي) لمعرفة إشعاعك الشمسي.",
+    shareLoaded:
+      "تم تحميل الإعدادات المشتركة. راجع المدخلات ثم اضغط احسب نظامي لبدء الحساب.",
+    customCoordsLocation: "يجري استخدام الإحداثيات المخصصة ({lat}, {lon}).",
+    resolvingCity: "جارٍ البحث عن مدينتك — اختر نتيجة أو انتظر قليلاً.",
+    chooseCityMatch: "اختر مدينة من الاقتراحات أو انتظر انتهاء البحث.",
+    resolvingCoords: "جارٍ التحقق من الإحداثيات…",
+    invalidCoordinates:
+      "يجب أن يتراوح خط العرض بين −90 و90 وخط الطول بين −180 و180.",
+    invalidDailyKwh:
+      "يجب أن يتراوح استهلاك الطاقة اليومي بين 0.5 و500 كيلوواط ساعة.",
+    inputsChanged: "تغيرت المدخلات — اضغط احسب نظامي لتحديث التقدير.",
+    errorTimeout:
+      "لم يرد محرك الحساب في الوقت المحدد — تحقق من اتصالك وحاول مرة أخرى.",
     tellPowerUse:
       "أدخل استهلاكك للطاقة: حدد بعض الأجهزة، أو أدخل فاتورة أو قيمة بالكيلوواط ساعة.",
     statusGridtie:
@@ -988,6 +1187,27 @@ export const LOCALES = {
       "راجع مصنف ذكاء اصطناعي مستقل (Jev) أرقام التحجيم فقط — لا يخرج من متصفحك أي موقع أو نص أو بيانات شخصية غير هذه الأرقام. لا يغير أبدًا النتيجة المحسوبة.",
     simpleAdvisorStyle:
       "[تعليمات للمستشار: الزائر في الوضع المبسّط. أجب كخبير يتحدث إلى طفل ذكي في الثانية عشرة: كلمات يومية بسيطة، بلا مصطلحات تقنية (اشرح أي مصطلح تقني بين قوسين قصيرين)، أربع جمل قصيرة كحد أقصى، واختم بالرقم الأهم.]",
+    advisorTitle: "مستشار الطاقة المجاني بالذكاء الاص��ناعي",
+    advisorSubtitle:
+      "أنت تتحدث إلى ذكاء اصطناعي (محرك Groq) — تقديرات تعليمية فقط وليست استشارة هندسية",
+    advisorIntro:
+      "أشرح نتائج الحاسبة: نوع بطارية المصدر، الأسلاك والحماية، أو أسئلة تطرحها على فني كهرباء محلي. شغّل التحجيم أولاً ثم اسألني عن هذه النتيجة، أو اسألني أي شيء.",
+    advisorBotNote:
+      "تقدير من الذكاء الاصطناعي — قد يكون غير دقيق، بما في ذلك الأسعار والمواصفات. ليست هذه نصيحة هندسية. تحقق مع كهربائي أو مهندس مرخص قبل الشراء أو البناء.",
+    advisorThinking: "⏳ أفكر...",
+    advisorLabel: "اسأل مستشار الذكاء الاصطناعي عن نظامك",
+    advisorPlaceholder:
+      "اسأل عن الخلايا، أيوني الصوديوم مقابل LFP، تكلفة الشحن...",
+    advisorSend: "إرسال",
+    advisorClose: "إغلاق مستشار الذكاء الاصطناعي",
+    advisorBusyRetry:
+      " محرك الذكاء الاصطناعي المجاني مشغول — إعادة المحاولة خلال ",
+    advisorNoReply: " لم يصل رد. حاول مرة أخرى.",
+    advisorBusy: " محرك الذكاء الاصطناعي المجاني مزدحم الآن (HTTP ",
+    advisorBusyQuota: " — حصة مشتركة).\n\n",
+    advisorBusyWait: "انتظر نحو دقيقة ثم أرسل الطلب مجدداً.",
+    advisorUnreachable: " مستشار الذكاء الاصطناعي غير متاح حالياً",
+    advisorUnreachableRetry: ".\n\nتحقق من اتصالك وحاول مرة أخرى بعد قليل.",
     frontierCeilingTag: "الأقصى ضمن الأحجام المبحوثة: {pct}%",
     frontierSvgTitle: "إلى أين يصل مالك",
     frontierSvgDesc:

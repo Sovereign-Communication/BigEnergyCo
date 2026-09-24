@@ -14,6 +14,10 @@ export function errorReleasesRunChannel(stream) {
   return stream !== "slice";
 }
 
+// A worker run gets three minutes before the UI retires a hung worker and
+// permits an explicit retry. Application inputs cannot alter this bound.
+export const RUN_REPLY_DEADLINE_MS = 180000;
+
 // ── Run channel state machine ───────────────────────────────────────────────
 //
 // One owner for the full-run channel: whether the worker is busy, the
@@ -35,6 +39,8 @@ export function createRunChannel() {
   let busy = false;
   let seq = 0;
   let pending = null; // { quiet } — the latest superseding request
+  let watchGen = 0; // deadline-watch generation (see armDeadline below)
+  let deadlineSeq = null; // run whose reply the active deadline still owns
 
   return {
     get isBusy() {
@@ -58,10 +64,8 @@ export function createRunChannel() {
       pending = null;
       return ++seq;
     },
-    // Drop any collapsed replacement without touching the in-flight run —
-    // the exact semantics of the old `pendingRun = null` in run()'s
-    // validation-failure blocks: an invalid request discards the queue but
-    // leaves the channel's busy/sequence state alone.
+    // The run() validation-failure path discards queued work while leaving
+    // the busy state and sequence unchanged.
     dropPending() {
       pending = null;
     },
@@ -71,6 +75,23 @@ export function createRunChannel() {
       busy = true;
       return ++seq;
     },
+    // Worker reply deadline (ui.js arms the timer): the watch lives exactly
+    // as long as the channel is busy. armDeadline() issues a token the fire
+    // callback must validate — a stale timer (answered or superseded run)
+    // reports nothing — and settle() retires it, so every settle path
+    // disarms structurally instead of remembering to. invalidate() and
+    // collapse() do NOT touch the watch: the in-flight reply they retire is
+    // precisely the one the deadline is still waiting on.
+    armDeadline(runSeq) {
+      deadlineSeq = runSeq;
+      return ++watchGen;
+    },
+    deadlineCurrent(token) {
+      return token === watchGen;
+    },
+    deadlineOwns(runSeq) {
+      return deadlineSeq !== null && runSeq === deadlineSeq;
+    },
     // The one release path for a full-run reply (ok, error, unknown):
     // frees the channel and hands back any collapsed replacement. A stale
     // reply releases too — the worker has already moved on, and swallowing
@@ -79,6 +100,8 @@ export function createRunChannel() {
     // returns null.
     settle() {
       busy = false;
+      watchGen++; // the channel is free: the deadline watch retires with it
+      deadlineSeq = null;
       const next = pending;
       pending = null;
       return next;

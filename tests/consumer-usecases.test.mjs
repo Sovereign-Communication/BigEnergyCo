@@ -641,7 +641,7 @@ test("Off-Grid goal: setCoords shows offgridLoadWrap and hides billSliderWrap wh
   // setCoords must check isOffgrid and show the correct slider
   assert.match(
     uiJs,
-    /function setCoords\(lat, lon, label, region, country\) \{[\s\S]*?const isOffgrid/,
+    /function setCoords\(lat, lon, label, region, country(?:, skipShareUpdate = false)?\) \{[\s\S]*?const isOffgrid/,
   );
   assert.match(
     uiJs,

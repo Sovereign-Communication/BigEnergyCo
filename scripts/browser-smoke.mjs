@@ -15,10 +15,13 @@
 //   reduced motion), service worker, re-slice, Simple mode,
 //   off-grid run, external integrations, no console/CSP errors.
 //   heatmap page: Leaflet loads, map initializes, no console/page errors.
+//   silent sizing worker: deadline surfaces an actionable error and an explicit
+//   retry completes on a fresh worker.
 // Exit 0 = pass, 1 = fail (prints every failed gate).
 import { normalizeBase } from "./lib/base-url.mjs";
 import { start, gate, gateSummary } from "./smoke/runtime.mjs";
 import { createActions } from "./smoke/actions.mjs";
+import { runLocationFlow } from "./smoke/location.js";
 import { runWeatherFlow } from "./smoke/weather.js";
 import { runGridTieFlow } from "./smoke/gridtie.js";
 import { runLifecycleFlow } from "./smoke/lifecycle.js";
@@ -27,6 +30,7 @@ import { runA11yFlow } from "./smoke/a11y.js";
 import { runJevFlow } from "./smoke/jev.js";
 import { runShareFlow } from "./smoke/share.js";
 import { runClosingFlow } from "./smoke/closing.js";
+import { runDeadlineFlow } from "./smoke/deadline.js";
 
 // BASE must always end in "/": sub-pages are built as `${BASE}solar-heatmap/`,
 // so a slash-less argument like `https://example.com` would otherwise produce
@@ -65,6 +69,7 @@ async function main() {
     // than consuming the shared provider quota; the real endpoint is checked
     // separately by the staging API probe.
 
+    await runLocationFlow(ctx, actions);
     await runWeatherFlow(ctx, actions);
     await runGridTieFlow(ctx, actions);
     await runLifecycleFlow(ctx, actions);
@@ -76,6 +81,9 @@ async function main() {
     // change — closing below runs a fresh off-grid run regardless.
     await runA11yFlow(ctx);
     await runClosingFlow(ctx, actions);
+    // Last: the silent-worker deadline on a fresh page. Appended after closing
+    // so every existing gate keeps its exact order.
+    await runDeadlineFlow(ctx, actions);
   } catch (e) {
     gate(
       "smoke run completed",
