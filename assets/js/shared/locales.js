@@ -21,6 +21,20 @@ export const LOCALES = {
     ctaCompare: "Rough Cost Comparison",
     sizingTitle: "Size Your System",
     pickCity: "Pick a city (or use 📍 My location) so we know your sunshine.",
+    shareLoaded:
+      "Shared setup loaded. Review the inputs, then click Size My System to calculate.",
+    customCoordsLocation: "Using custom coordinates ({lat}, {lon}).",
+    resolvingCity: "Resolving your city — choose a match or wait for lookup.",
+    chooseCityMatch: "Choose a city suggestion or wait for lookup to finish.",
+    resolvingCoords: "Checking those coordinates…",
+    invalidCoordinates:
+      "Latitude must be between −90 and 90 and longitude between −180 and 180.",
+    invalidDailyKwh:
+      "Daily energy use must be between 0.5 and 500 kWh per day.",
+    inputsChanged:
+      "Inputs changed — click Size My System to update the estimate.",
+    errorTimeout:
+      "The sizing engine did not reply in time — check your connection and click Size My System to try again.",
     tellPowerUse:
       "Tell us your power use — tick some appliances, or enter a bill or kWh figure.",
     statusGridtie:
@@ -170,6 +184,19 @@ export const LOCALES = {
     sizingTitle: "Dimensiona tu sistema",
     pickCity:
       "Elige una ciudad (o usa 📍 Mi ubicación) para que sepamos tu insolación.",
+    shareLoaded:
+      "Configuración compartida cargada. Revisa los datos y pulsa Dimensionar mi sistema para calcular.",
+    customCoordsLocation: "Usando coordenadas personalizadas ({lat}, {lon}).",
+    resolvingCity: "Buscando tu ciudad: elige una opción o espera el resultado.",
+    chooseCityMatch: "Elige una ciudad sugerida o espera a que termine la búsqueda.",
+    resolvingCoords: "Comprobando esas coordenadas…",
+    invalidCoordinates:
+      "La latitud debe estar entre −90 y 90 y la longitud entre −180 y 180.",
+    invalidDailyKwh:
+      "El consumo diario debe estar entre 0,5 y 500 kWh al día.",
+    inputsChanged: "Los datos cambiaron: pulsa Dimensionar mi sistema para actualizar.",
+    errorTimeout:
+      "El motor de cálculo no respondió a tiempo — revisa tu conexión y vuelve a intentarlo.",
     tellPowerUse:
       "Indica tu consumo de energía: marca algunos electrodomésticos, o introduce una factura o una cifra en kWh.",
     statusGridtie:
@@ -383,6 +410,19 @@ export const LOCALES = {
     sizingTitle: "Dimensione seu sistema",
     pickCity:
       "Escolha uma cidade (ou use 📍 Minha localização) para sabermos sua insolação.",
+    shareLoaded:
+      "Configuração compartilhada carregada. Confira os dados e clique em Dimensionar meu sistema para calcular.",
+    customCoordsLocation: "Usando coordenadas personalizadas ({lat}, {lon}).",
+    resolvingCity: "Buscando sua cidade: escolha uma opção ou aguarde o resultado.",
+    chooseCityMatch: "Escolha uma cidade sugerida ou aguarde a busca terminar.",
+    resolvingCoords: "Verificando essas coordenadas…",
+    invalidCoordinates:
+      "A latitude deve estar entre −90 e 90 e a longitude entre −180 e 180.",
+    invalidDailyKwh:
+      "O consumo diário deve ficar entre 0,5 e 500 kWh por dia.",
+    inputsChanged: "Os dados mudaram — clique em Dimensionar meu sistema para atualizar.",
+    errorTimeout:
+      "O motor de dimensionamento não respondeu a tempo — verifique sua conexão e tente novamente.",
     tellPowerUse:
       "Informe seu consumo de energia: marque alguns eletrodomésticos, ou informe uma conta ou um valor em kWh.",
     statusGridtie:
@@ -568,6 +608,19 @@ export const LOCALES = {
     sizingTitle: "Dimensionnez votre système",
     pickCity:
       "Choisissez une ville (ou utilisez 📍 Ma position) pour connaître votre ensoleillement.",
+    shareLoaded:
+      "Configuration partagée chargée. Vérifiez les entrées, puis cliquez sur Dimensionner pour calculer.",
+    customCoordsLocation: "Coordonnées personnalisées utilisées ({lat}, {lon}).",
+    resolvingCity: "Recherche de votre ville : choisissez une suggestion ou attendez le résultat.",
+    chooseCityMatch: "Choisissez une suggestion ou attendez la fin de la recherche.",
+    resolvingCoords: "Vérification de ces coordonnées…",
+    invalidCoordinates:
+      "La latitude doit être comprise entre −90 et 90 et la longitude entre −180 et 180.",
+    invalidDailyKwh:
+      "La consommation quotidienne doit être comprise entre 0,5 et 500 kWh par jour.",
+    inputsChanged: "Les entrées ont changé — cliquez sur Dimensionner pour actualiser l’estimation.",
+    errorTimeout:
+      "Le moteur de dimensionnement n'a pas répondu à temps — vérifiez votre connexion et réessayez.",
     tellPowerUse:
       "Indiquez votre consommation d'énergie : cochez quelques appareils, ou entrez une facture ou une valeur en kWh.",
     statusGridtie:
@@ -727,6 +780,19 @@ export const LOCALES = {
     sizingTitle: "System dimensionieren",
     pickCity:
       "Wähle eine Stadt oder nutze 📍 deinen Standort für die Sonnendaten.",
+    shareLoaded:
+      "Geteilte Einstellungen geladen. Prüfe die Eingaben und klicke dann auf System dimensionieren.",
+    customCoordsLocation: "Eigene Koordinaten verwendet ({lat}, {lon}).",
+    resolvingCity: "Ort wird gesucht — wählen Sie einen Treffer oder warten Sie kurz.",
+    chooseCityMatch: "Wählen Sie einen Stadtvorschlag oder warten Sie das Suchergebnis ab.",
+    resolvingCoords: "Koordinaten werden geprüft…",
+    invalidCoordinates:
+      "Der Breitengrad muss zwischen −90 und 90 und der Längengrad zwischen −180 und 180 liegen.",
+    invalidDailyKwh:
+      "Der tägliche Energieverbrauch muss zwischen 0,5 und 500 kWh liegen.",
+    inputsChanged: "Eingaben geändert — klicken Sie auf System dimensionieren, um die Schätzung zu aktualisieren.",
+    errorTimeout:
+      "Die Auslegungssoftware hat nicht rechtzeitig geantwortet — prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
     tellPowerUse: "Gib deinen Verbrauch an — Geräte, Rechnung oder kWh.",
     statusGridtie:
       "⏳ Fünf Jahre Satellitenwetter werden geladen, Systeme zur Rechnungssenkung gesucht…",
@@ -910,6 +976,19 @@ export const LOCALES = {
       "المبالغ معروضة بـ {code} بسعر {rate} مقابل 1 دولار أمريكي؛ أسعار وحدات البطارية تبقى بالدولار للكيلوواط ساعة لأن الأسعار الأساسية بالدولار.",
     sizingTitle: "صمّم نظامك",
     pickCity: "اختر مدينة (أو استخدم 📍 موقعي) لمعرفة إشعاعك الشمسي.",
+    shareLoaded:
+      "تم تحميل الإعدادات المشتركة. راجع المدخلات ثم اضغط احسب نظامي لبدء الحساب.",
+    customCoordsLocation: "يجري استخدام الإحداثيات المخصصة ({lat}, {lon}).",
+    resolvingCity: "جارٍ البحث عن مدينتك — اختر نتيجة أو انتظر قليلاً.",
+    chooseCityMatch: "اختر مدينة من الاقتراحات أو انتظر انتهاء البحث.",
+    resolvingCoords: "جارٍ التحقق من الإحداثيات…",
+    invalidCoordinates:
+      "يجب أن يتراوح خط العرض بين −90 و90 وخط الطول بين −180 و180.",
+    invalidDailyKwh:
+      "يجب أن يتراوح استهلاك الطاقة اليومي بين 0.5 و500 كيلوواط ساعة.",
+    inputsChanged: "تغيرت المدخلات — اضغط احسب نظامي لتحديث التقدير.",
+    errorTimeout:
+      "لم يرد محرك الحساب في الوقت المحدد — تحقق من اتصالك وحاول مرة أخرى.",
     tellPowerUse:
       "أدخل استهلاكك للطاقة: حدد بعض الأجهزة، أو أدخل فاتورة أو قيمة بالكيلوواط ساعة.",
     statusGridtie:

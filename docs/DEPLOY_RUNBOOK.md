@@ -44,18 +44,18 @@ The rule this section exists to protect: **a check the docs call mandatory must
 actually run, and must be able to fail.** Nothing belongs here that no automation
 and no human runs — and nothing that runs may be missing from here.
 
-| Gate                                                                                            | Runs where                                | Can it block a merge?                                                                                                                     |
-| ----------------------------------------------------------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `check-syntax`, `npm run seo`, prettier, secret scan, `deploy:check`, `verify:flow`, `npm test` | PR + `main` (`Tests` workflow)            | Yes — required checks `test`, `coverage`                                                                                                  |
-| Real-browser smoke on the staged artifact (`smoke:local`)                                       | PR + `main` (`Tests` workflow)            | Yes — required check `web-smoke`                                                                                                          |
-| Offline coverage floor                                                                          | PR + `main` (`Tests` workflow)            | Yes — required check `coverage`                                                                                                           |
-| CodeQL analysis (`analyze`)                                                                     | PR + `main` + weekly (`CodeQL`)           | Yes — required check `analyze` (a failing run blocks)                                                                                     |
-| **CodeQL findings** (the `code_scanning` rule)                                                  | The ruleset itself                        | Yes — new alerts at `errors` / security `high_or_higher` block the PR                                                                     |
-| Deployed-staging verification (`npm run verify:staging`)                                        | `main` (`Verify staging` workflow)        | No — it is a post-merge alarm, and the promote refuses to run without it. Skipped when a merge changed no deployable file (see CI budget) |
-| Source-drift audit / docs-only push policy (`npm run audit:main`)                               | `main` (`Main audit`)                     | No — post-merge alarm                                                                                                                     |
-| `live-sanity` + `check-staging-drift`                                                           | Weekly (`Prod smoke`)                     | No — non-blocking drift alarm                                                                                                             |
-| `npm run verify:live` — `validate-modes.mjs`, `validate-soc-pipeline.mjs`                       | Weekly (`Prod smoke` → job `live-models`) | No — needs the live NASA API, so it can never join the offline PR suite                                                                   |
-| Homepage + API health curl probes                                                               | Daily (`Daily static check`)              | No — non-blocking                                                                                                                         |
+| Gate                                                                                                           | Runs where                                | Can it block a merge?                                                                                                                     |
+| -------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `check-syntax`, `npm run seo`, prettier, secret scan, `deploy:check`, `verify:flow`, `npm test`                | PR + `main` (`Tests` workflow)            | Yes — required checks `test`, `coverage`                                                                                                  |
+| Real-browser smoke on the staged artifact (`smoke:local`), including silent-worker deadline and retry recovery | PR + `main` (`Tests` workflow)            | Yes — required check `web-smoke`                                                                                                          |
+| Offline coverage floor                                                                                         | PR + `main` (`Tests` workflow)            | Yes — required check `coverage`                                                                                                           |
+| CodeQL analysis (`analyze`)                                                                                    | PR + `main` + weekly (`CodeQL`)           | Yes — required check `analyze` (a failing run blocks)                                                                                     |
+| **CodeQL findings** (the `code_scanning` rule)                                                                 | The ruleset itself                        | Yes — new alerts at `errors` / security `high_or_higher` block the PR                                                                     |
+| Deployed-staging verification (`npm run verify:staging`)                                                       | `main` (`Verify staging` workflow)        | No — it is a post-merge alarm, and the promote refuses to run without it. Skipped when a merge changed no deployable file (see CI budget) |
+| Source-drift audit / docs-only push policy (`npm run audit:main`)                                              | `main` (`Main audit`)                     | No — post-merge alarm                                                                                                                     |
+| `live-sanity` + `check-staging-drift`                                                                          | Weekly (`Prod smoke`)                     | No — non-blocking drift alarm                                                                                                             |
+| `npm run verify:live` — `validate-modes.mjs`, `validate-soc-pipeline.mjs`                                      | Weekly (`Prod smoke` → job `live-models`) | No — needs the live NASA API, so it can never join the offline PR suite                                                                   |
+| Homepage + API health curl probes                                                                              | Daily (`Daily static check`)              | No — non-blocking                                                                                                                         |
 
 **Manual by design** (nothing can run these for you, so they are not gates):
 
@@ -169,7 +169,9 @@ only make a run fail sooner, never last longer.
 2. If the catalog price stamps (`POWMR_CATALOG.checkedDate`, `PRICES_CHECKED`)
    are near a year old, re-verify against the PowMr catalog and bump them —
    `tests/pricing.test.mjs` fails past 366 days.
-3. Push to `main`.
+3. Ship the source changes through the protected PR path: create a dedicated
+   branch, open a PR against `main`, and merge only after required CI checks
+   pass. Never push a commit directly to `main`.
 4. Wait for both GitHub Actions workflows for the exact pushed SHA:
 
 ```bash
@@ -322,8 +324,9 @@ npm run smoke
 It performs the flow below verbatim (Honolulu, kWh/day mode, 10 kWh,
 grid-tie, positive tariff) plus the custom-cut slider re-slice, an off-grid
 run, external-integration probes (FX, NASA, geocoder, API health), the
-heatmap page (Leaflet/tiles), an explicit no-CSP-violations gate, and a
-general console/page-error gate. Exit 0 required.
+heatmap page (Leaflet/tiles), a silent sizing-worker deadline followed by a
+successful explicit retry, an explicit no-CSP-violations gate, and a general
+console/page-error gate. Exit 0 required.
 
 A release is not verified until a real browser run against `https://freeoffgridcalculator.com/` has completed:
 

@@ -50,8 +50,8 @@ export async function runWeatherFlow(ctx, actions) {
   await nasa.enable();
 
   console.log("SMOKE      ── weather persistence ──");
-  // First load for real: pick the city, then honor the explicit sizing
-  // consent gate before waiting for the first result.
+  // Pick a site before the first real worker request; the separate location
+  // regression flow exercises a first click with no location selected.
   await actions.chooseHonolulu();
   await evaluate(`document.getElementById("btnRunSizing")?.click()`);
   const firstRun = await ctx.poll(

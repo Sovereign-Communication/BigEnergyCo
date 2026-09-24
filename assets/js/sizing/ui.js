@@ -18,6 +18,7 @@ import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
+  RUN_REPLY_DEADLINE_MS,
 } from "./run-coordinator.js?v=20260921f";
 import { CITY_CATALOG, nearestCity } from "./cities.js?v=20260921f";
 import {
@@ -185,6 +186,11 @@ let runAuthorized = false;
 // controls (the continuous cut/budget spectrum) use cached data instead.
 let precalcDirty = true;
 let locationResolved = false;
+let coordinatesPending = false;
+let coordDebounceTimer = null;
+// Every user location choice gets a generation. Background GPS refinements
+// carry their original generation and may only pin while it remains current.
+let locationChoiceGeneration = 0;
 let wizard = restoreWizard();
 let roofMapRegistry = null;
 let roofMapUnsubscribe = null;
@@ -227,6 +233,51 @@ let lastRunAdoptsFocus = false;
 // busy, the sequence that retires superseded replies, and the collapsed
 // request. Every full-run reply is released through flushPendingRun().
 const runChannel = createRunChannel();
+
+// ── Worker reply deadline ────────────────────────────────────────────────
+// A worker that never replies (challenge-tainted load, dead worker, lost
+// reply) must surface an honest, retryable error instead of hanging forever
+// on "running…" — reproduced live on production through the share-restore
+// auto-run. The watch itself lives in run-coordinator.js: armed with
+// begin(), retired by settle() inside the single flushPendingRun() funnel,
+// so a fired callback whose token is no longer current belongs to a run
+// already answered and reports nothing. Every run uses the fixed three-minute
+// bound so visitors and public URLs cannot weaken the recovery timer.
+let runDeadlineTimer = null;
+let runDeadlineToken = 0;
+
+function armRunDeadline(runSeq) {
+  if (runDeadlineTimer !== null) clearTimeout(runDeadlineTimer);
+  runDeadlineToken = runChannel.armDeadline(runSeq);
+  runDeadlineTimer = setTimeout(handleRunDeadline, RUN_REPLY_DEADLINE_MS);
+}
+
+function handleRunDeadline() {
+  runDeadlineTimer = null;
+  if (!runChannel.deadlineCurrent(runDeadlineToken)) return;
+  const current = runChannel.deadlineOwns(runChannel.latestSeq);
+  const hasPendingRun = runChannel.pending;
+  // A timed-out worker may still be blocked inside its current task; merely
+  // posting a retry would queue behind that task forever. Terminate it and
+  // clear the reference so the next explicit run creates a fresh worker.
+  const stuckWorker = worker;
+  worker = null;
+  stuckWorker?.terminate();
+  sliceBusy = false;
+  pendingSlice = null;
+  sliceToken++;
+
+  // If inputs changed, preserve their newer status. A queued replacement is
+  // retried against a fresh worker; otherwise retire the timed-out sequence
+  // and leave recovery to the visitor. Every branch releases through the
+  // same funnel.
+  if (current) {
+    setStatus(t("errorTimeout"));
+    pipelineStop(false);
+    if (!hasPendingRun) runChannel.invalidate();
+  }
+  flushPendingRun();
+}
 
 // The last full-run inputs, kept so a bill-only change can compute the exact
 // load factor for an instant rescale against the retained payload.
@@ -1581,6 +1632,16 @@ function renderChemTempVisualizer(lat) {
 
 // -- Location plumbing -------------------------------------------------------
 
+function cancelCoordinateResolution() {
+  if (coordDebounceTimer !== null) {
+    clearTimeout(coordDebounceTimer);
+    coordDebounceTimer = null;
+  }
+  coordinatesPending = false;
+}
+
+let resetCitySearch = null;
+
 function markPrecalcDirty() {
   precalcDirty = true;
   if (runTimer) {
@@ -1607,10 +1668,11 @@ function markPrecalcDirty() {
     btn.disabled = false;
     btn.innerHTML = `<span>${t("runBtn")}</span>`;
   }
-  setStatus("Inputs changed — click Size My System to update the estimate.");
+  setStatus(t("inputsChanged"));
 }
 
-function setCoords(lat, lon, label, region, country) {
+function setCoords(lat, lon, label, region, country, skipShareUpdate = false) {
+  cancelCoordinateResolution();
   markPrecalcDirty();
   locationResolved = true;
   wizard.setValue("latitude", lat);
@@ -1665,7 +1727,7 @@ function setCoords(lat, lon, label, region, country) {
 
   renderChemTempVisualizer(lat);
 
-  updateShareHash(lastPayload, readInputs());
+  if (!skipShareUpdate) updateShareHash(lastPayload, readInputs());
 }
 
 // Fill the bill-mode tariff from coordinates until the user overrides it.
@@ -2112,6 +2174,7 @@ function run(quiet = false, explicit = false) {
   const inp = readInputs();
 
   if (
+    !locationResolved ||
     !Number.isFinite(inp.latitude) ||
     !Number.isFinite(inp.longitude) ||
     Math.abs(inp.latitude) > 90 ||
@@ -2119,18 +2182,36 @@ function run(quiet = false, explicit = false) {
   ) {
     runChannel.dropPending();
     setResultsHidden(true);
-    setStatus(t("pickCity"));
+    const invalidCoords =
+      Number.isFinite(inp.latitude) &&
+      Number.isFinite(inp.longitude) &&
+      (Math.abs(inp.latitude) > 90 || Math.abs(inp.longitude) > 180);
+    setStatus(
+      coordinatesPending
+        ? t("resolvingCoords")
+        : invalidCoords
+          ? t("invalidCoordinates")
+          : $("citySearch")?.value.trim()
+            ? t("chooseCityMatch")
+            : t("pickCity"),
+    );
     return;
   }
 
+  const directKwh = $("loadMode")?.value === "kwh";
   if (
     !Number.isFinite(inp.dailyKwh) ||
     inp.dailyKwh <= 0 ||
+    (directKwh && inp.dailyKwh < 0.5) ||
     inp.dailyKwh > 500
   ) {
     runChannel.dropPending();
     setResultsHidden(true);
-    setStatus(t("tellPowerUse"));
+    setStatus(
+      directKwh || inp.dailyKwh > 500
+        ? t("invalidDailyKwh")
+        : t("tellPowerUse"),
+    );
     return;
   }
 
@@ -2198,6 +2279,7 @@ function run(quiet = false, explicit = false) {
   // is stale on arrival and will be dropped by the epoch check.
   const epoch = ++payloadEpoch;
   const seq = runChannel.begin();
+  armRunDeadline(seq);
   ensureWorker().postMessage({ type: "run", seq, epoch, ...inp });
 }
 
@@ -2205,6 +2287,10 @@ function run(quiet = false, explicit = false) {
 // THE one release path for the run channel: every full-run reply funnels
 // through here, so the channel can never leak behind a finished worker.
 function flushPendingRun() {
+  if (runDeadlineTimer !== null) {
+    clearTimeout(runDeadlineTimer);
+    runDeadlineTimer = null;
+  }
   const next = runChannel.settle();
   restoreRunButton();
   if (next) run(next.quiet);
@@ -3077,11 +3163,18 @@ function restoreRunButton() {
 
 function ensureWorker() {
   if (!worker) {
-    worker = new Worker("./assets/js/sizing/sizing-worker.js?v=20260921f", {
-      type: "module",
-    });
+    const runWorker = new Worker(
+      "./assets/js/sizing/sizing-worker.js?v=20260921f",
+      {
+        type: "module",
+      },
+    );
+    worker = runWorker;
 
-    worker.onmessage = (ev) => {
+    runWorker.onmessage = (ev) => {
+      // A timed-out/failed worker may have a message already queued while a
+      // replacement worker is starting. Old instances no longer own UI state.
+      if (worker !== runWorker) return;
       // Prefetch completion is informational only: it must NEVER fall
       // through to the run-completion bookkeeping below (that would free the
       // run channel while a real run is still computing).
@@ -3109,11 +3202,9 @@ function ensureWorker() {
           runChannel.pending,
         );
         if (staleAction !== "current") {
-          // The pre-calc edit (or a collapsed re-click) already retired this
-          // reply: it must never paint the new form. flushPendingRun() is the
-          // single release path — it frees the channel and runs any queued
-          // replacement, so the next explicit Size click can never queue
-          // behind a run that already finished.
+          // The inputs or request were superseded, so never paint this payload.
+          // The worker has replied; settle through the shared funnel so the
+          // channel cannot remain busy behind completed stale work.
           flushPendingRun();
           return;
         }
@@ -3197,12 +3288,10 @@ function ensureWorker() {
           // visitor sees how far the pipeline got.
           if (ev.data.stream !== "slice") pipelineStop(false);
         }
-        // errorReleasesRunChannel owns which streams free the run channel:
-        // a slice error is fully handled above (a full run may still be
-        // computing behind the slice), while a run error — stale or fresh —
-        // falls through to the shared release below. Swallowing a stale
-        // run error's release would deadlock the next explicit run behind
-        // a finished worker (the leak the "ok" path guards against).
+        // Slice errors never release the full-run channel: the full run can
+        // still be computing behind them. Every run error reaches the shared
+        // release funnel, including stale replies, so a completed worker
+        // cannot leave the next explicit click queued behind a ghost.
         if (!errorReleasesRunChannel(ev.data.stream)) return;
       }
 
@@ -3216,15 +3305,19 @@ function ensureWorker() {
       flushPendingRun();
     };
 
-    worker.onerror = () => {
+    runWorker.onerror = () => {
+      if (worker !== runWorker) return;
+      worker = null;
+      runWorker.terminate();
       setStatus(t("errorSim") + "Sizing engine failed to load.");
 
       setResultsHidden(true);
       pipelineStop(false);
       sliceBusy = false;
+      pendingSlice = null;
+      sliceToken++;
       restoreRunButton();
       flushPendingRun();
-      flushPendingSlice();
     };
   }
 
@@ -6883,14 +6976,29 @@ function restoreFromShare() {
     lon = parseFloat(o.lo),
     kw = parseFloat(o.kw);
 
-  if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(kw))
+  if (
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lon) ||
+    !Number.isFinite(kw) ||
+    Math.abs(lat) > 90 ||
+    Math.abs(lon) > 180 ||
+    kw < 0.5 ||
+    kw > 500
+  )
     return false;
 
   locationResolved = true;
 
   $("coordDetails").open = true;
 
-  setCoords(lat, lon, "Shared result loaded - sunshine data for this location");
+  setCoords(
+    lat,
+    lon,
+    "Shared result loaded - sunshine data for this location",
+    undefined,
+    undefined,
+    true,
+  );
 
   $("loadMode").value = "kwh";
 
@@ -6997,9 +7105,7 @@ function restoreFromShare() {
     }
   }
 
-  setStatus(
-    " Loaded a shared result - running the simulation for this location…",
-  );
+  setStatus(t("shareLoaded"));
 
   return true;
 }
@@ -7461,7 +7567,19 @@ export function initSizingUI() {
       /* non-browser test env */
     }
 
-    setupCitySearch({ onPick: setCoords, setStatus });
+    resetCitySearch = setupCitySearch({
+      onPick: setCoords,
+      onQueryChange: (query) => {
+        locationChoiceGeneration += 1;
+        cancelCoordinateResolution();
+        locationResolved = false;
+        markPrecalcDirty();
+        const note = $("locNote");
+        if (note) note.textContent = "";
+        setStatus(query ? t("resolvingCity") : t("pickCity"));
+      },
+      setStatus,
+    });
     purgeLegacyCityCache();
 
     renderAppliances();
@@ -7518,9 +7636,14 @@ export function initSizingUI() {
       markPrecalcDirty();
     });
 
-    $("btnGeoLocate").addEventListener("click", () =>
-      locateMe({ onPick: setCoords, setStatus }),
-    );
+    $("btnGeoLocate").addEventListener("click", () => {
+      const choice = ++locationChoiceGeneration;
+      locateMe({
+        onPick: setCoords,
+        setStatus,
+        isCurrent: () => locationChoiceGeneration === choice,
+      });
+    });
 
     // The click event must not leak into run()'s `quiet` parameter (a truthy
     // Event object would silently suppress the status, spinner, and scroll).
@@ -7726,22 +7849,49 @@ export function initSizingUI() {
     renderChemTempVisualizer(initLat);
     const latEl = $("latInput");
     const lonEl = $("lonInput");
-    let coordDebounceTimer = null;
     const onCoordChange = () => {
+      locationChoiceGeneration += 1;
       const lat = parseFloat(latEl?.value);
       const lon = parseFloat(lonEl?.value);
       if (Number.isFinite(lat)) {
         renderSunPath(lat);
         renderChemTempVisualizer(lat);
       }
-      if (Number.isFinite(lat) && Number.isFinite(lon)) {
-        if (coordDebounceTimer) clearTimeout(coordDebounceTimer);
+      cancelCoordinateResolution();
+      locationResolved = false;
+      coordinatesPending =
+        Number.isFinite(lat) &&
+        Number.isFinite(lon) &&
+        Math.abs(lat) <= 90 &&
+        Math.abs(lon) <= 180;
+      markPrecalcDirty();
+      const locNote = $("locNote");
+      resetCitySearch?.();
+      locationResolved = false;
+      if (locNote) locNote.textContent = "";
+      if (coordinatesPending) {
+        setStatus(t("resolvingCoords"));
         coordDebounceTimer = setTimeout(() => {
+          coordDebounceTimer = null;
+          if (
+            lat !== parseFloat(latEl.value) ||
+            lon !== parseFloat(lonEl.value)
+          )
+            return;
           locationResolved = true;
+          coordinatesPending = false;
           applyEstimatedTariff(lat, lon);
-          updateShareHash(lastPayload, readInputs());
-          markPrecalcDirty();
+          setStatus(t("inputsChanged"));
+          if (locNote)
+            locNote.textContent = t("customCoordsLocation", {
+              lat: lat.toFixed(2),
+              lon: lon.toFixed(2),
+            });
+          updateShareHash(null, readInputs());
         }, 500);
+      } else {
+        coordinatesPending = false;
+        setStatus(t("pickCity"));
       }
     };
     if (latEl) latEl.addEventListener("input", onCoordChange);
