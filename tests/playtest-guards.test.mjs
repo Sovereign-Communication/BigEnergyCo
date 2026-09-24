@@ -14,18 +14,33 @@ test("direct kWh sizing enforces the range the form advertises", () => {
   assert.match(html, /id="dailyKwhInput"[\s\S]*?min="0\.5"[\s\S]*?max="500"/);
   assert.match(ui, /directKwh && inp\.dailyKwh < 0\.5/);
   assert.match(ui, /inp\.dailyKwh > 500/);
-  assert.match(ui, /directKwh \|\| inp\.dailyKwh > 500[\s\S]*t\("invalidDailyKwh"\)/);
+  assert.match(
+    ui,
+    /directKwh \|\| inp\.dailyKwh > 500[\s\S]*t\("invalidDailyKwh"\)/,
+  );
   assert.match(locationSmoke, /empty kWh entry stays on the form/);
-  assert.match(locationSmoke, /out-of-range coordinates explain the valid bounds/);
+  assert.match(
+    locationSmoke,
+    /out-of-range coordinates explain the valid bounds/,
+  );
   assert.match(locationSmoke, /"0\.1", "501"/);
 });
 
 test("share restoration keeps its source hash until all inputs are restored", () => {
   const setCoordsStart = ui.indexOf("function setCoords(");
-  const setCoordsEnd = ui.indexOf("// Fill the bill-mode tariff", setCoordsStart);
+  const setCoordsEnd = ui.indexOf(
+    "// Fill the bill-mode tariff",
+    setCoordsStart,
+  );
   const setCoords = ui.slice(setCoordsStart, setCoordsEnd);
-  assert.match(ui, /function setCoords\(lat, lon, label, region, country, skipShareUpdate = false\)/);
-  assert.match(setCoords, /if \(!skipShareUpdate\) updateShareHash\(lastPayload, readInputs\(\)\)/);
+  assert.match(
+    ui,
+    /function setCoords\(lat, lon, label, region, country, skipShareUpdate = false\)/,
+  );
+  assert.match(
+    setCoords,
+    /if \(!skipShareUpdate\) updateShareHash\(lastPayload, readInputs\(\)\)/,
+  );
   const restoreStart = ui.indexOf("function restoreFromShare() {");
   const restoreEnd = ui.indexOf("// -- Printable summary", restoreStart);
   const restore = ui.slice(restoreStart, restoreEnd);

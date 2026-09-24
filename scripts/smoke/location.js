@@ -21,12 +21,18 @@ export async function runLocationFlow(ctx, actions) {
   await evaluate(`document.getElementById("btnRunSizing").click()`);
   let completed = await ctx.poll(
     async () =>
-      evaluate(`!document.getElementById("resultsRegion")?.hidden && !document.getElementById("btnRunSizing")?.disabled`),
+      evaluate(
+        `!document.getElementById("resultsRegion")?.hidden && !document.getElementById("btnRunSizing")?.disabled`,
+      ),
     RUN_TIMEOUT_MS,
     500,
   );
   let posts = await evaluate(`window.__locationPosts.length`);
-  gate("explicit Honolulu run completes", completed && posts === 1, `posts=${posts}`);
+  gate(
+    "explicit Honolulu run completes",
+    completed && posts === 1,
+    `posts=${posts}`,
+  );
 
   await evaluate(`(() => {
     const search = document.getElementById("citySearch");
@@ -50,12 +56,16 @@ export async function runLocationFlow(ctx, actions) {
   );
   const suggested = await ctx.poll(
     async () =>
-      evaluate(`document.querySelectorAll('#citySuggestions [role="option"]').length > 0`),
+      evaluate(
+        `document.querySelectorAll('#citySuggestions [role="option"]').length > 0`,
+      ),
     15000,
     250,
   );
   if (!suggested) throw new Error("New York suggestion missing");
-  await evaluate(`document.querySelector('#citySuggestions [role="option"]').click()`);
+  await evaluate(
+    `document.querySelector('#citySuggestions [role="option"]').click()`,
+  );
   const newYork = await evaluate(`({
     city: document.getElementById("citySearch")?.value || "",
     latitude: Number(document.getElementById("latInput")?.value),
@@ -73,7 +83,9 @@ export async function runLocationFlow(ctx, actions) {
   await evaluate(`document.getElementById("btnRunSizing").click()`);
   completed = await ctx.poll(
     async () =>
-      evaluate(`!document.getElementById("resultsRegion")?.hidden && !document.getElementById("btnRunSizing")?.disabled`),
+      evaluate(
+        `!document.getElementById("resultsRegion")?.hidden && !document.getElementById("btnRunSizing")?.disabled`,
+      ),
     RUN_TIMEOUT_MS,
     500,
   );
@@ -110,7 +122,9 @@ export async function runLocationFlow(ctx, actions) {
   );
   const coordsReady = await ctx.poll(
     async () =>
-      evaluate(`/Using custom coordinates \\(34\\.05, -118\\.24\\)/.test(document.getElementById("locNote")?.textContent || "")`),
+      evaluate(
+        `/Using custom coordinates \\(34\\.05, -118\\.24\\)/.test(document.getElementById("locNote")?.textContent || "")`,
+      ),
     10000,
     100,
   );
@@ -122,7 +136,9 @@ export async function runLocationFlow(ctx, actions) {
   })()`);
   completed = await ctx.poll(
     async () =>
-      evaluate(`!document.getElementById("resultsRegion")?.hidden && !document.getElementById("btnRunSizing")?.disabled`),
+      evaluate(
+        `!document.getElementById("resultsRegion")?.hidden && !document.getElementById("btnRunSizing")?.disabled`,
+      ),
     RUN_TIMEOUT_MS,
     500,
   );
@@ -149,7 +165,9 @@ export async function runLocationFlow(ctx, actions) {
   })`);
   gate(
     "clearing a coordinate immediately hides stale results",
-    cleared.hidden && cleared.posts === 3 && /pick a city/i.test(cleared.status),
+    cleared.hidden &&
+      cleared.posts === 3 &&
+      /pick a city/i.test(cleared.status),
     JSON.stringify(cleared),
   );
 
@@ -168,7 +186,9 @@ export async function runLocationFlow(ctx, actions) {
     "out-of-range coordinates explain the valid bounds and never run",
     invalidCoordinates.hidden &&
       invalidCoordinates.posts === 3 &&
-      /latitude.*-?90.*90.*longitude.*-?180.*180/i.test(invalidCoordinates.status),
+      /latitude.*-?90.*90.*longitude.*-?180.*180/i.test(
+        invalidCoordinates.status,
+      ),
     JSON.stringify(invalidCoordinates),
   );
 
@@ -198,7 +218,9 @@ export async function runLocationFlow(ctx, actions) {
   })`);
   gate(
     "empty kWh entry stays on the form with an actionable range hint",
-    emptyKwh.hidden && emptyKwh.posts === 3 && /0\.5.*500 kWh/i.test(emptyKwh.status),
+    emptyKwh.hidden &&
+      emptyKwh.posts === 3 &&
+      /0\.5.*500 kWh/i.test(emptyKwh.status),
     JSON.stringify(emptyKwh),
   );
   for (const invalidKwh of ["0.1", "501"]) {
