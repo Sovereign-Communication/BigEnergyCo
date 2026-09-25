@@ -1,6 +1,6 @@
 {
   "version": 1,
   "plan": "docs/plan/MASTER_PLAN.md",
-  "genesis_sha256": "61a3f3711967ed5318ede133e7a71b221f640dfde1f9cd79ee72b197acfc5c80",
-  "current_sha256": "61a3f3711967ed5318ede133e7a71b221f640dfde1f9cd79ee72b197acfc5c80"
+  "genesis_sha256": "ee27dbd42166352f4dcda832e611c9dc5c7fa4759f332a0d3a91319f18003ec6",
+  "current_sha256": "ee27dbd42166352f4dcda832e611c9dc5c7fa4759f332a0d3a91319f18003ec6"
 }
