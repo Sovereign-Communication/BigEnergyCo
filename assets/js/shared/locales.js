@@ -47,6 +47,8 @@ export const LOCALES = {
     offlineNote: " · 🌐 offline typical-year mode",
     tariffSpendLine:
       "At {tariff}/kWh, your power costs about {annual} per year today. Each option below shows the bill after solar and how fast it repays itself out of the savings.",
+    tariffSpendBattery:
+      "At {tariff}/kWh, your power costs about {annual} per year today. A battery with no panels moves when you draw power; it does not cut what you pay.",
     tariffSpendOffgrid:
       "At {tariff}/kWh, this use costs about {annual} per year in grid power. Payback figures below compare system cost against that spend.",
     tariffSpendFixed:
@@ -207,6 +209,8 @@ export const LOCALES = {
     billPerMonth: "/mo",
     simpleHeadline: "At your location, this system gets you {goal}:",
     simpleGoalGrid: "to cut about {pct}% off your bill",
+    simpleGoalBattery:
+      "to shift about {pct}% of your peak hours onto the battery",
     simpleGoalOffgrid: "to cover your home through the year",
     sharedLocationLoaded:
       "Shared result loaded - sunshine data for this location",
@@ -288,6 +292,8 @@ export const LOCALES = {
       "MODO OFFLINE: esta ejecución usó el perfil típico anual para {offlineCity} — una aproximación cercana, no tu sitio exacto. Vuelve a ejecutar online para cinco años de clima puntual. ",
     tariffSpendLine:
       "A {tariff}/kWh, tu electricidad te cuesta unos {annual} al año hoy. Cada opción de abajo muestra la factura tras la solar y cuánto tarda en pagarse con los ahorros.",
+    tariffSpendBattery:
+      "A {tariff}/kWh, tu electricidad te cuesta unos {annual} al año hoy. Una batería sin paneles cambia cuándo consumes; no reduce lo que pagas.",
     noTariffLine: "Sin tarifa introducida, no se muestra amortización.",
     goalLabel: "¿Qué quieres que haga este sistema?",
     goalOffgrid: "Abastecerme totalmente sin red",
@@ -475,6 +481,8 @@ export const LOCALES = {
     billPerMonth: "/mes",
     simpleHeadline: "En tu ubicación, este sistema consigue {goal}:",
     simpleGoalGrid: "recortar cerca de un {pct}% de tu factura",
+    simpleGoalBattery:
+      "desplazar cerca del {pct}% de tus horas punta a la batería",
     simpleGoalOffgrid: "cubrir tu hogar durante todo el año",
     sharedLocationLoaded:
       "Resultado compartido cargado — datos de sol para esta ubicación",
@@ -592,6 +600,8 @@ export const LOCALES = {
       "MODO OFFLINE: esta execução usou o perfil típico anual para {offlineCity} — uma aproximação próxima, não seu local exato. Rode novamente online para cinco anos de clima pontual. ",
     tariffSpendLine:
       "A {tariff}/kWh, a sua eletricidade custa cerca de {annual} por ano hoje. Cada opção abaixo mostra a conta após a solar e em quanto tempo ela se paga com as economias.",
+    tariffSpendBattery:
+      "A {tariff}/kWh, a sua eletricidade custa cerca de {annual} por ano hoje. Uma bateria sem painéis muda quando consome; não reduz o que paga.",
     noTariffLine: "Sem tarifa informada, não há amortização mostrada.",
     tariffSpendOffgrid:
       "A {tariff}/kWh, este uso custa cerca de {annual} por ano em energia da rede. Os valores de retorno abaixo comparam o custo do sistema com esse gasto.",
@@ -747,6 +757,8 @@ export const LOCALES = {
     billPerMonth: "/mês",
     simpleHeadline: "Na sua localização, este sistema consegue {goal}:",
     simpleGoalGrid: "cortar cerca de {pct}% da sua conta",
+    simpleGoalBattery:
+      "deslocar cerca de {pct}% das suas horas de pico para a bateria",
     simpleGoalOffgrid: "cobrir sua casa ao longo do ano",
     sharedLocationLoaded:
       "Resultado compartilhado carregado — dados de sol para esta localização",
@@ -866,6 +878,8 @@ export const LOCALES = {
       "MODE HORS LIGNE : cette exécution a utilisé le profil annuel typique pour {offlineCity} — une approximation proche, pas votre site exact. Relancez en ligne pour cinq ans de météo précise. ",
     tariffSpendLine:
       "À {tariff}/kWh, votre électricité coûte environ {annual} par an aujourd'hui. Chaque option ci-dessous montre la facture après le solaire et combien de temps elle se rembourse grâce aux économies.",
+    tariffSpendBattery:
+      "À {tariff}/kWh, votre électricité coûte environ {annual} par an aujourd'hui. Une batterie sans panneaux décale le moment où vous consommez ; elle ne réduit pas ce que vous payez.",
     noTariffLine: "Aucun tarif saisi, pas d'amortissement affiché.",
     tariffSpendOffgrid:
       "À {tariff}/kWh, cet usage coûte environ {annual} par an en électricité du réseau. Les délais de retour ci-dessous comparent le coût du système à cette dépense.",
@@ -1023,6 +1037,8 @@ export const LOCALES = {
     billPerMonth: "/mois",
     simpleHeadline: "À votre lieu, ce système vous permet de {goal} :",
     simpleGoalGrid: "réduire d'environ {pct}% votre facture",
+    simpleGoalBattery:
+      "décaler environ {pct}% de vos heures de pointe vers la batterie",
     simpleGoalOffgrid: "couvrir votre maison toute l'année",
     sharedLocationLoaded:
       "Résultat partagé chargé — données d'ensoleillement pour ce lieu",
@@ -1094,6 +1110,8 @@ export const LOCALES = {
       "⚠️ Die Dimensionierungs-Engine konnte nicht geladen werden. Aktualisieren Sie die Seite (Ctrl+F5) und versuchen Sie es erneut.",
     tariffSpendLine:
       "Bei {tariff}/kWh kostet dein Strom heute etwa {annual} pro Jahr. Jede Option unten zeigt die Rechnung nach Solar und wie schnell sie sich aus den Ersparnissen bezahlt.",
+    tariffSpendBattery:
+      "Bei {tariff}/kWh kostet dein Strom heute etwa {annual} pro Jahr. Eine Batterie ohne Module verschiebt, wann du Strom ziehst; sie senkt nicht, was du zahlst.",
     tariffSpendOffgrid:
       "Bei {tariff}/kWh kostet dieser Verbrauch etwa {annual} pro Jahr an Netzstrom. Die Amortisationswerte unten vergleichen die Systemkosten mit diesen Ausgaben.",
     tariffSpendFixed:
@@ -1270,6 +1288,8 @@ export const LOCALES = {
     billPerMonth: "/Mon.",
     simpleHeadline: "An Ihrem Standort bringt Ihnen dieses System {goal}:",
     simpleGoalGrid: "etwa {pct}% Ihrer Rechnung einsparen",
+    simpleGoalBattery:
+      "etwa {pct}% deiner Spitzenlaststunden in die Batterie zu verlagern",
     simpleGoalOffgrid: "Ihr Haus übers Jahr versorgen",
     sharedLocationLoaded:
       "Geteiltes Ergebnis geladen — Sonnendaten für diesen Standort",
@@ -1382,6 +1402,8 @@ export const LOCALES = {
       "وضع عدم الاتصال: هذه العملية استخدم الملف السنوي النموذجي لـ {offlineCity} — تقريب قريب، ليس موقعك الدقيق. أعد التشغيل على الإنترنت لخمس سنوات من الطقس الدقيق. ",
     tariffSpendLine:
       "بسعر {tariff}/كيلوواط/ساعة، تكلفك كهرباؤك حوالي {annual} سنويًا اليوم. كل خيار أدناه يوضح الفاتورة بعد الشمسي ومدى سرعة استرداد التكلفة من الادخار.",
+    tariffSpendBattery:
+      "بسعر {tariff}/كيلوواط/ساعة، تكلفك كهرباؤك حوالي {annual} سنويًا اليوم. البطارية بدون ألواح تغيّر وقت الاستهلاك؛ ولا تخفّض ما تدفعه.",
     noTariffLine: "لم يتم إدخال تعريفة، لا يتم عرض فترة الاسترداد.",
     tariffSpendOffgrid:
       "بسعر {tariff}/كيلوواط/ساعة، يكلفك هذا الاستخدام حوالي {annual} سنويًا من كهرباء الشبكة. أرقام الاسترداد أدناه تقارن تكلفة النظام بهذا الإنفاق.",
@@ -1534,6 +1556,7 @@ export const LOCALES = {
     billPerMonth: "/شهريًا",
     simpleHeadline: "في موقعك، يمنحك هذا النظام {goal}:",
     simpleGoalGrid: "خفض نحو {pct}% من فاتورتك",
+    simpleGoalBattery: "نقل نحو {pct}% من ساعات الذروة إلى البطارية",
     simpleGoalOffgrid: "تغطية منزلك على مدار السنة",
     sharedLocationLoaded:
       "تم تحميل النتيجة المشتركة — بيانات أشعة الشمس لهذا الموقع",

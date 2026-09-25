@@ -693,10 +693,15 @@ function renderSimpleResults(p) {
   if (!view.feasible) return;
 
   const card = el("div", { class: "simple-results-card" });
+  // Simple mode must state the same outcome the technical panel states. A
+  // battery-only system cuts no bill at all, so it gets the offset goal rather
+  // than a bill-cut percentage it will never deliver.
   const goalText =
-    p.mode === "gridtie"
-      ? t("simpleGoalGrid", { pct: entry.cutPct ?? 0 })
-      : t("simpleGoalOffgrid");
+    p.mode !== "gridtie"
+      ? t("simpleGoalOffgrid")
+      : entry.pvKw > 0
+        ? t("simpleGoalGrid", { pct: entry.cutPct ?? 0 })
+        : t("simpleGoalBattery", { pct: entry.cutPct ?? 0 });
   card.appendChild(
     el(
       "div",
@@ -3030,8 +3035,14 @@ function renderFocusPanel(p, entry, isPreview) {
     chip("🔋", `${fmt(entry.battKwh)} kWh`, chemShort(entry) || "battery");
   if (Number.isFinite(entry.costLo) && Number.isFinite(entry.costHi))
     chip("💵", `~${moneyRange(entry.costLo, entry.costHi)}`, "up-front");
-  if (isGT && Number.isFinite(entry.cutPct))
-    chip("⚡", `−${entry.cutPct}%`, "bill cut");
+  // A system with no panels has no generation to displace imported energy, so
+  // its number is a peak-hour offset, not a bill cut — and a positive offset
+  // takes no minus sign. Labelling it a bill cut put a savings claim directly
+  // above the panel's own "never" break-even line.
+  if (isGT && Number.isFinite(entry.cutPct)) {
+    if (entry.pvKw > 0) chip("⚡", `−${entry.cutPct}%`, "bill cut");
+    else chip("⚡", `${entry.cutPct}%`, "peak offset");
+  }
   if (
     entry.billAfterMonthlyUsd !== null &&
     entry.billAfterMonthlyUsd !== undefined
@@ -3537,7 +3548,11 @@ function renderAutoCards(p) {
       el(
         "div",
         { class: "bom-badge" },
-        isGT && a.cutPct ? `Bill -${a.cutPct}%` : "Same job done",
+        isGT && a.cutPct
+          ? a.pvKw > 0
+            ? `Bill -${a.cutPct}%`
+            : `${a.cutPct}% peak offset`
+          : "Same job done",
       ),
     );
 
@@ -3587,7 +3602,7 @@ function renderAutoCards(p) {
 
     if (isGT) {
       rows.push([
-        "Bill after solar",
+        a.pvKw > 0 ? "Bill after solar" : "Bill after",
         fmtBillAfter(a.billAfterMonthlyUsd) ?? "needs your tariff",
       ]);
 
@@ -4518,7 +4533,8 @@ function renderBestPick(p) {
     ]);
   } else {
     const baBest = fmtBillAfter(b.billAfterMonthlyUsd);
-    if (baBest !== null) rows.push(["Bill after solar", baBest]);
+    if (baBest !== null)
+      rows.push([b.pvKw > 0 ? "Bill after solar" : "Bill after", baBest]);
   }
   if (p.tariff && typeof b.trueBreakEvenYear === "number") {
     rows.push(["Pays for itself", `Year ${b.trueBreakEvenYear}`]);
@@ -4835,7 +4851,11 @@ function matrixHtml(p) {
             rel = `${fmt(cell.unmetHoursPerYear)} h/yr unmet`;
           else if (col.id === "custom" && surplusCol)
             rel = "bill gone + surplus";
-          else rel = `-${cell.cutPct}% bill`;
+          else
+            rel =
+              cell.pvKw > 0
+                ? `-${cell.cutPct}% bill`
+                : `${cell.cutPct}% peak offset`;
           const lcoe = Number.isFinite(cell.lcoeUsdPerKwh)
             ? `<span style="color:var(--text-muted);">\u00B7 ${energyRate(cell.lcoeUsdPerKwh)}</span>`
             : "";
@@ -5086,13 +5106,17 @@ function entryDetailRows(p, e) {
   if (e.cutPct !== undefined && e.cutPct !== null) {
     rows.push([
       p.mode === "gridtie" ? "Bill cut" : "Coverage",
-      p.mode === "gridtie" ? `-${e.cutPct}%` : `${e.cutPct}%`,
+      p.mode === "gridtie"
+        ? e.pvKw > 0
+          ? `-${e.cutPct}%`
+          : `${e.cutPct}% peak offset`
+        : `${e.cutPct}%`,
     ]);
   }
   rows.push(["Component cost", `~${moneyRange(e.costLo, e.costHi)}`]);
   const baEntry = fmtBillAfter(e.billAfterMonthlyUsd);
   if (baEntry !== null) {
-    rows.push(["Bill after solar", baEntry]);
+    rows.push([e.pvKw > 0 ? "Bill after solar" : "Bill after", baEntry]);
   }
   if (e.importedKwhPerYear !== undefined && e.importedKwhPerYear !== null) {
     rows.push(["Imported from grid", `${fmt(e.importedKwhPerYear)} kWh/yr`]);
@@ -5599,9 +5623,14 @@ function renderMoneyBar(p) {
     p.fixedMonthlyUsd > 0
       ? t("tariffSpendFixed", { fixed: money(p.fixedMonthlyUsd) })
       : "";
+  // That line promises "the bill after solar" and "how fast it repays itself".
+  // Neither is true of a battery-only system, whose own panel says it never
+  // repays — so that case gets the line that says what it actually does.
+  const selNow = resolveSelected(p);
+  const noPanels = p.mode === "gridtie" && !!selNow && !(selNow.pvKw > 0);
   moneyBar.textContent =
     (p.mode === "gridtie"
-      ? t("tariffSpendLine", {
+      ? t(noPanels ? "tariffSpendBattery" : "tariffSpendLine", {
           tariff: localRate(p.tariff),
           annual: money(p.annualGridSpendUsd),
         })
@@ -5869,7 +5898,7 @@ function renderTargetCards(p, extraTargets = []) {
       ["Component cost", `~${moneyRange(t.costLo, t.costHi)}`],
 
       [
-        "Bill after solar",
+        t.pvKw > 0 ? "Bill after solar" : "Bill after",
         (fmtBillAfter(t.billAfterMonthlyUsd) ?? "needs your tariff") +
           (t.billAfterMonthlyUsd !== null && t.billAfterMonthlyUsd !== undefined
             ? ` (was ~${money(Math.round(p.annualGridSpendUsd / 12))})`

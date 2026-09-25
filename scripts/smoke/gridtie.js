@@ -152,4 +152,83 @@ export async function runGridTieFlow(ctx, actions) {
     (caption || 0) > 20,
     `${caption} chars`,
   );
+
+  // ── Battery-only (no panels): peak offset must not be sold as a bill cut ──
+  // run.js stores the peak-offset fraction in cutPct when pvKw is 0. The chip,
+  // the money bar and the matrix all labelled that a "bill cut" and promised a
+  // payback, while the panel beside them reported "never" break-even and 20-year
+  // bills identical to staying on the grid. This gate is what fails on that.
+  console.log("SMOKE      ── battery-only: peak offset, not a bill cut ──");
+  await evaluate(`(() => {
+      const hw = document.getElementById("hardwareConfig");
+      hw.value = "battery";
+      hw.dispatchEvent(new Event("change", { bubbles: true }));
+      document.getElementById("systemGoal").value = "gridtie";
+      document.getElementById("systemGoal").dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    })()`);
+  await evaluate(`document.getElementById("btnRunSizing").click()`);
+  // Wait for the BATTERY-ONLY payload specifically, not merely for some result
+  // card. The previous grid-tie card is still on screen, so a generic card
+  // check returns instantly and reads the solar system's surfaces — which is
+  // how a time-based version of this gate would pass while proving nothing.
+  const battRan = await ctx.poll(
+    async () =>
+      evaluate(`(() => {
+          const p = document.getElementById("resultsRegion");
+          // textContent, not innerText: innerText is "" for a hidden
+          // subtree, so an innerText-based poll can never observe the state
+          // it is waiting for and just burns its whole timeout.
+          return !!p && p.textContent.includes("None (Battery-only)");
+        })()`),
+    RUN_TIMEOUT_MS,
+    2000,
+  );
+  gate("battery-only run renders a no-panel result", battRan);
+  await sleep(1200);
+  const battSurfaces = await evaluate(`(() => {
+      const clean = (id) => {
+        const e = document.getElementById(id);
+        return e ? e.innerText.replace(/\\s+/g, " ").trim() : "";
+      };
+      return {
+        chips: clean("focusChips"),
+        money: clean("moneyBar"),
+        simple: clean("simpleResultsWrap"),
+        panel: clean("resultsRegion"),
+      };
+    })()`);
+  gate(
+    "battery-only chip says peak offset, not bill cut",
+    /peak offset/.test(battSurfaces.chips) &&
+      !/bill cut/.test(battSurfaces.chips),
+    battSurfaces.chips.replace(/\s+/g, " ").slice(0, 160),
+  );
+  gate(
+    "battery-only money bar promises no payback",
+    /no panels/.test(battSurfaces.money) &&
+      !/repays itself|bill after solar/i.test(battSurfaces.money),
+    battSurfaces.money.slice(0, 160),
+  );
+  gate(
+    "battery-only panel still reports no break-even",
+    /break-even/.test(battSurfaces.panel) && /never/.test(battSurfaces.panel),
+  );
+  gate(
+    "battery-only build has no solar array",
+    /Solar array None/.test(battSurfaces.panel),
+  );
+  gate(
+    "no surface claims a bill cut for a battery-only build",
+    !/bill cut|off your bill/.test(
+      battSurfaces.chips + " " + battSurfaces.money,
+    ),
+  );
+  // Leave the default hardware behind for every downstream flow.
+  await evaluate(`(() => {
+      const hw = document.getElementById("hardwareConfig");
+      hw.value = "both";
+      hw.dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    })()`);
 }
