@@ -420,6 +420,36 @@ test("screen-reader-only utility exists for form labels", () => {
   assert.match(read("assets/site.css"), /\.sr-only \{/);
 });
 
+// The infeasible banner is built on demand and hidden with display:none, so
+// nothing in it is ever announced. The reason is mirrored into a region that
+// is declared once, stays rendered, and is emptied when the reason stops
+// applying — one element, one writer, and never a writer-less declaration
+// (dead markup reads as working accessibility without being any).
+test("infeasible reason has a live region that something actually writes", () => {
+  const tag = read("index.html").match(
+    /<div[^>]*id="infeasibleLive"[^>]*>/,
+  )?.[0];
+  assert.ok(tag, "#infeasibleLive is declared");
+  assert.match(tag, /class="sr-only"/, "invisible to sighted visitors");
+  assert.match(
+    tag,
+    /role="status"/,
+    "announced without stealing focus, like #sizingStatus",
+  );
+  assert.match(tag, /aria-live="polite"/, "waits for a pause before speaking");
+  const ui = read("assets/js/sizing/ui.js");
+  assert.match(
+    ui,
+    /const live = \$\("infeasibleLive"\);\s*\n\s*if \(!reason\) \{/,
+    "the region is read by the same function that clears it",
+  );
+  assert.match(
+    ui,
+    /live\.textContent = `\$\{title\}\. \$\{body\}`;/,
+    "the announcement is the whole reason, not a fragment of it",
+  );
+});
+
 test("roof map placeholder stays dark while tiles load", () => {
   const css = read("assets/site.css");
   assert.match(css, /\.roof-map \{[^}]*background: #0d1117;/s);

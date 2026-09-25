@@ -1,5 +1,5 @@
 // Pure core of the Jev complete gate — scores a BigEnergyCo tree/staging state
-// 0-100 (95 = the 9.5/10 target) across ALL quality facets, emits required-work
+// 0-100 (95 = the 9.5/10 target) across ALL 16 quality facets, emits required-work
 // buckets per category, and groups recommended actions by work type.
 //
 // Ownership model (the contract this file enforces, no exceptions):
@@ -465,6 +465,14 @@ export function parseLiveAnswers(answers, pack) {
  * Bounded state text for the live call (mirrors the upstream 1200-char
  * evidence view): the merge of auto facts + recorded gate runs + notes.
  */
+// Per-part transport bounds: every line reaches the judge intact (a line cut
+// mid-way reads as "partial or unverified evidence", which is exactly how
+// green recorded runs once scored). The whole-text budget below is only a
+// safety net; these bounds are what actually guarantee per-facet visibility.
+function clip(text, max) {
+  return typeof text === "string" ? text.slice(0, max) : "";
+}
+
 export function buildStateText(evidence, auto = {}) {
   const ev = typeof evidence === "object" && evidence !== null ? evidence : {};
   const parts = [
@@ -472,20 +480,42 @@ export function buildStateText(evidence, auto = {}) {
     `gates: tests=${ev.tests_green} prettier=${ev.prettier_clean} seo=${ev.seo_green} ` +
       `smoke=${ev.smoke_green} ci=${ev.ci_green}`,
     `tree_clean=${auto.treeClean === true} secrets_clean=${auto.secretsClean === true}`,
-    `tests: ${ev.tests_summary || "unrecorded"}`,
-    `ci: ${ev.ci_summary || "unrecorded"}`,
-    `smoke: ${ev.smoke_note || "unrecorded"}`,
-    `seo: ${ev.seo_summary || "unrecorded"}`,
+    `tests: ${clip(ev.tests_summary, 300) || "unrecorded"}`,
+    `ci: ${clip(ev.ci_summary, 320) || "unrecorded"}`,
+    `smoke: ${clip(ev.smoke_note, 460) || "unrecorded"}`,
+    `seo: ${clip(ev.seo_summary, 260) || "unrecorded"}`,
     `dirty: ${(auto.dirtyPaths || []).slice(0, 8).join(" ")}`,
     `tests_present=${auto.testCount || 0} files`,
-    `notes: ${Array.isArray(ev.notes) ? ev.notes.slice(0, 12).join(" | ") : ""}`,
+    `advisor_audit: ${clip(ev.advisor_audit, 480) || "not recorded"}`,
   ];
+  // Per-facet evidence (axis: proof line) is first-class transport: the
+  // judge must see each dimension's own evidence, not a truncated tail.
+  const facetEvidence =
+    typeof ev.facet_evidence === "object" && ev.facet_evidence !== null
+      ? ev.facet_evidence
+      : {};
+  for (const axis of Object.keys(facetEvidence).sort()) {
+    const line = clip(facetEvidence[axis], 280).trim();
+    if (line) parts.push(`${axis}: ${line}`);
+  }
+  // Recorded notes ride last and whole (the TRANSPORT contract): facet
+  // lines own the per-axis budget, so an oversized note tail is the only
+  // thing a full record can lose — never a facet's own proof.
+  parts.push(
+    `notes: ${(Array.isArray(ev.notes) ? ev.notes : [])
+      .slice(0, 12)
+      .join(" | ")}`,
+  );
   // Evidence-transport budget: how much of the recorded evidence the live
   // judge can see. This is NOT a scoring threshold — target, fail-closed
   // merge, code-authority ceiling, and the hard gates are all untouched.
-  // The old 1200-char cap silently cut per-facet evidence, so nine facets
-  // were answered "partial or unverified" despite green recorded runs.
-  return parts.filter(Boolean).join("\n").slice(0, 3000);
+  // Raised from 1200 to 3000 when the cap started cutting per-facet
+  // evidence mid-line, and to 6000 when a 16-axis record still overflowed
+  // it (observed: the tail axes were cut whole and then rated "partial or
+  // unverified" despite green recorded runs). The per-part bounds above
+  // keep truncation deliberate (a bounded line, never a bisection); this
+  // slice is only the safety net. Pinned by the TRANSPORT contract test.
+  return parts.filter(Boolean).join("\n").slice(0, 6000);
 }
 
 /**
@@ -509,6 +539,18 @@ export function mergeEvidence(evidence, auto) {
   merged.seo_summary = typeof ev.seo_summary === "string" ? ev.seo_summary : "";
   merged.smoke_note = typeof ev.smoke_note === "string" ? ev.smoke_note : "";
   merged.ci_summary = typeof ev.ci_summary === "string" ? ev.ci_summary : "";
+  merged.advisor_audit =
+    typeof ev.advisor_audit === "string" ? ev.advisor_audit : "";
+  // Per-facet proof lines: strings only, bounded at transport time; an
+  // absent or non-string entry contributes nothing (never invented).
+  merged.facet_evidence = {};
+  if (typeof ev.facet_evidence === "object" && ev.facet_evidence !== null) {
+    for (const [axis, text] of Object.entries(ev.facet_evidence)) {
+      if (typeof text === "string" && text.trim()) {
+        merged.facet_evidence[axis] = text;
+      }
+    }
+  }
   merged.notes = Array.isArray(ev.notes) ? ev.notes.map(String) : [];
   merged.secrets_clean = auto.secretsClean === true;
   merged.env_ignored = auto.envIgnored === true;
@@ -758,6 +800,7 @@ export function scoreCompleteGate(
       seo_summary: ev.seo_summary || "",
       smoke_note: ev.smoke_note || "",
       ci_summary: ev.ci_summary || "",
+      advisor_audit: ev.advisor_audit || "",
       notes: [...(ev.notes || [])],
       dirty_paths:
         evidence && Array.isArray(evidence._dirtyPaths)

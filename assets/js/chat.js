@@ -214,6 +214,16 @@ window.scrollToCalc = function () {
 };
 
 // Render AI text as plain text, never as markup  -  the model's output is untrusted input.
+// Locale values own the whole sentence, including where a runtime value lands:
+// the {placeholder} contract (i18n.js translate) keeps word order translatable
+// instead of gluing pre-translated fragments together in code here.
+function chatText(key, fallback, vars) {
+  if (typeof window.becoT === "function") {
+    const value = window.becoT(key, vars);
+    if (value && value !== key) return value;
+  }
+  return fallback;
+}
 
 function renderBotReply(replyText) {
   var chatWindow = document.getElementById("chatWindow");
@@ -240,10 +250,12 @@ function renderBotReply(replyText) {
     "margin-top:0.6rem;padding-top:0.5rem;border-top:1px solid var(--border-card);" +
     "font-size:0.75rem;color:var(--text-muted);line-height:1.45;";
 
-  note.textContent =
+  note.textContent = chatText(
+    "advisorBotNote",
     "AI-generated estimate  -  may be inaccurate, including prices and specifications. " +
-    "Not engineering advice. Verify with a licensed electrician or engineer before " +
-    "buying or building anything.";
+      "Not engineering advice. Verify with a licensed electrician or engineer before " +
+      "buying or building anything.",
+  );
 
   botDiv.appendChild(note);
 
@@ -285,7 +297,7 @@ function sendChatMsg() {
 
   loadingDiv.className = "chat-msg bot";
 
-  loadingDiv.innerText = "\u23F3 Thinking...";
+  loadingDiv.innerText = chatText("advisorThinking", "\u23F3 Thinking...");
 
   loadingDiv.id = "loadingMsg";
 
@@ -301,7 +313,11 @@ function sendChatMsg() {
     };
   });
 
-  var payload = JSON.stringify({ message: userMsg, history: cleanHistory });
+  var payload = JSON.stringify({
+    message: userMsg,
+    history: cleanHistory,
+    language: window.becoLang || "en",
+  });
 
   function setLoadingText(t) {
     var el = document.getElementById("loadingMsg");
@@ -353,7 +369,11 @@ function sendChatMsg() {
         var waitSecs = Math.min(Math.max(err.retryAfter || 4, 3), 15);
 
         setLoadingText(
-          " The free AI engine is busy  -  retrying in " + waitSecs + "s…",
+          chatText(
+            "advisorBusyRetry",
+            " The free AI engine is busy  -  retrying in " + waitSecs + "s…",
+            { secs: waitSecs },
+          ),
         );
 
         return new Promise(function (resolve) {
@@ -377,7 +397,9 @@ function sendChatMsg() {
       if (data && data.reply) {
         renderBotReply(data.reply);
       } else {
-        renderBotReply(" No reply received. Please try again.");
+        renderBotReply(
+          chatText("advisorNoReply", " No reply received. Please try again."),
+        );
       }
     })
 
@@ -392,17 +414,24 @@ function sendChatMsg() {
 
       if (err && (err.status === 503 || err.status === 429)) {
         renderBotReply(
-          " The free AI engine is swamped right now (HTTP " +
-            err.status +
-            "  -  it runs on a shared free quota).\n\n" +
-            "Please wait about a minute and send that again.",
+          chatText(
+            "advisorBusy",
+            " The free AI engine is swamped right now (HTTP " +
+              err.status +
+              "  -  it runs on a shared free quota).\n\n" +
+              "Please wait about a minute and send that again.",
+            { status: err.status },
+          ),
         );
       } else {
         renderBotReply(
-          " The AI advisor is unreachable right now" +
-            (err && err.status ? " (HTTP " + err.status + ")" : "") +
-            ".\n\n" +
-            "Check your connection and try again in a moment.",
+          chatText(
+            "advisorUnreachable",
+            " The AI advisor is unreachable right now" +
+              (err && err.status ? " (HTTP " + err.status + ")" : "") +
+              ".\n\nCheck your connection and try again in a moment.",
+            { status: err && err.status ? " (HTTP " + err.status + ")" : "" },
+          ),
         );
       }
     });

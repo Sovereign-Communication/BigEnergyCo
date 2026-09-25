@@ -84,12 +84,21 @@ export async function runShareFlow(ctx, actions) {
     );
     gate("reload fixture holds a real in-flight sizing message", held);
     if (held) {
+      // Wait for the NEW document, not merely for "a document that is
+      // complete": the first poll tick can still evaluate against the page
+      // being navigated away from, which is complete and has the button. On CI
+      // that sampled a mid-load fresh document (readyState still "loading",
+      // default inputs on screen) and reported the share as lost while the same
+      // build passed locally. `performance.timeOrigin` identifies the document,
+      // so the navigation must have committed before anything is measured.
+      const originBefore = await evaluate(`performance.timeOrigin`);
       await ctx.send("Page.reload", { ignoreCache: false });
       const loaded = await ctx.poll(
         async () => {
           try {
             return await evaluate(
-              `document.readyState === "complete" && !!document.getElementById("btnRunSizing")`,
+              `performance.timeOrigin !== ${JSON.stringify(originBefore)} && ` +
+                `document.readyState === "complete" && !!document.getElementById("btnRunSizing")`,
             );
           } catch {
             return false;
@@ -106,22 +115,43 @@ export async function runShareFlow(ctx, actions) {
           return original.apply(this, arguments);
         };
       })()`);
-      const afterReload = await evaluate(`({
-        loaded: document.readyState === "complete",
-        kwh: document.getElementById("dailyKwhInput")?.value || "",
-        hash: location.hash,
-        resultsHidden: document.getElementById("resultsRegion")?.hidden,
-        status: document.getElementById("sizingStatus")?.textContent || "",
-        posts: window.__reloadPostsAfterLoad,
-      })`);
+      // Sample the SETTLED state, never the first frame after load. The
+      // restore is asynchronous (the shared site's weather has to resolve
+      // before the form is final), so on a slow runner the sample landed while
+      // the defaults were still on screen — reported as "the share was lost"
+      // on CI while the same build passed locally. Every post-condition is
+      // unchanged; only the timing assumption is gone, and a run posted at any
+      // point after the hook is installed still fails the gate.
+      let afterReload = { loaded: false };
+      const settled = await ctx.poll(
+        async () => {
+          try {
+            afterReload = await evaluate(`({
+              loaded: document.readyState === "complete",
+              kwh: document.getElementById("dailyKwhInput")?.value || "",
+              hash: location.hash,
+              resultsHidden: document.getElementById("resultsRegion")?.hidden,
+              status: document.getElementById("sizingStatus")?.textContent || "",
+              posts: window.__reloadPostsAfterLoad,
+            })`);
+          } catch {
+            return false; // a navigation is still in flight
+          }
+          return (
+            afterReload.loaded &&
+            Number(afterReload.kwh) === sharedState.kw &&
+            afterReload.hash === shareHash &&
+            afterReload.resultsHidden === true &&
+            /review the inputs/i.test(afterReload.status) &&
+            afterReload.posts === 0
+          );
+        },
+        15000,
+        250,
+      );
       gate(
         "reload during sizing preserves share inputs and waits for explicit consent",
-        loaded &&
-          Number(afterReload.kwh) === sharedState.kw &&
-          afterReload.hash === shareHash &&
-          afterReload.resultsHidden === true &&
-          /review the inputs/i.test(afterReload.status) &&
-          afterReload.posts === 0,
+        settled && loaded,
         JSON.stringify(afterReload),
       );
       const retry = await actions.runAndWaitCard();

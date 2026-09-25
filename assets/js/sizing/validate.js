@@ -154,3 +154,108 @@ export function renderSanityBadge(container, interp, t, onAsk) {
   container.appendChild(badge);
   return badge;
 }
+
+/**
+ * Build the second-opinion context handed to the prose advisor.
+ *
+ * Jev is deliberately not a second sizing engine: it sees only bounded engine
+ * numbers and returns a plausibility judgment. Keep that boundary explicit so
+ * the model cannot turn a pass into a safety certificate or a flag into a
+ * reason to silently replace the deterministic result.
+ */
+export function sanityResponseIsCurrent(
+  requestId,
+  activeRequestId,
+  requestedKey,
+  currentKey,
+) {
+  return (
+    Number.isInteger(requestId) &&
+    requestId === activeRequestId &&
+    typeof requestedKey === "string" &&
+    requestedKey === currentKey
+  );
+}
+
+export function advisorJevContext(
+  status,
+  interp,
+  reviewedState,
+  selectedLabel,
+) {
+  const boundedLabel =
+    typeof selectedLabel === "string"
+      ? selectedLabel
+          .replace(/[\\r\\n\\[\\]]/g, " ")
+          .trim()
+          .slice(0, 80)
+      : "";
+  const stateFields =
+    reviewedState && typeof reviewedState === "object"
+      ? [
+          ["mode", reviewedState.mode],
+          ["daily_kwh", reviewedState.dailyKwh],
+          ["pv_kw", reviewedState.pvKw],
+          ["battery_kwh", reviewedState.battKwh],
+          ["cost_low", reviewedState.costLo],
+          ["cost_high", reviewedState.costHi],
+          ["cut_pct", reviewedState.cutPct],
+          ["payback_years", reviewedState.paybackYears],
+          ["specific_yield", reviewedState.specificYieldKwhPerKwDay],
+          ["worst_month_ghi", reviewedState.worstMonthGhi],
+          ["mean_temp_c", reviewedState.meanTempC],
+        ]
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) =>
+            typeof value === "number" && Number.isFinite(value)
+              ? `${key}=${value.toFixed(2)}`
+              : `${key}=${String(value)
+                  .replace(/[^a-z0-9_-]/gi, "")
+                  .slice(0, 20)}`,
+          )
+          .join(", ")
+      : "";
+  const reviewed = [
+    "selected deterministic system",
+    boundedLabel || "the selected system",
+    stateFields
+      ? `Jev numeric inputs: ${stateFields}`
+      : "Jev numeric inputs unavailable",
+  ].join(": ");
+
+  if (status === "pending") {
+    return `[JEV REVIEW — PENDING] ${reviewed}. The independent numeric plausibility check has not returned yet. Do not claim that Jev approved or rejected this result; explain the calculator figures and any uncertainty.`;
+  }
+  if (status === "unavailable") {
+    return `[JEV REVIEW — UNAVAILABLE] ${reviewed}. No independent Jev result is available for this run. Do not imply that an independent check occurred; rely on the deterministic brief, state uncertainty, and invite verification.`;
+  }
+  if (status !== "available" || !interp) return "";
+  const plausible = Number.isFinite(Number(interp.plausible))
+    ? Number(interp.plausible)
+    : null;
+  const confidence = Number.isFinite(Number(interp.verdictConfidence))
+    ? Number(interp.verdictConfidence)
+    : null;
+  const redFlag = Number.isFinite(Number(interp.redFlag))
+    ? Number(interp.redFlag)
+    : null;
+  const level = ["pass", "flag", "uncertain"].includes(interp.level)
+    ? interp.level
+    : "unknown";
+  const verdict = /^[a-z_]{1,32}$/i.test(String(interp.verdict || ""))
+    ? String(interp.verdict)
+    : "unavailable";
+  const details = [
+    `level=${level}`,
+    `verdict=${verdict}`,
+    plausible === null ? null : `plausible=${plausible.toFixed(2)}`,
+    confidence === null ? null : `verdict_confidence=${confidence.toFixed(2)}`,
+    redFlag === null ? null : `red_flag=${redFlag.toFixed(2)}`,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  return (
+    "[JEV REVIEW — INDEPENDENT NUMERIC PLAUSIBILITY CHECK] " +
+    `${reviewed}; ${details}. Jev saw sizing numbers only, not location names or free text. Treat this as a second opinion, not ground truth: it does not validate local prices, product specifications, code compliance, or safety. Do not override the deterministic calculator figures. If level=flag, explain what deserves checking and ask for missing inputs; if level=pass or uncertain, do not overstate certainty.`
+  );
+}

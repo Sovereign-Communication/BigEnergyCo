@@ -2,7 +2,8 @@
 
 > **Superseded.** This guide targets deleted files (`proxy_server.py`) and a
 > retired model. The shipped advisor lives in `worker/index.js`
-> (`promptVersion 2026-09a`); see `README.md` and `docs/DEPLOY_RUNBOOK.md`.
+> (`promptVersion 2026-09c`); see `README.md`, `docs/DEPLOY_RUNBOOK.md`, and
+> `GROQ_AUDIT_AND_OPTIMIZATION.md`.
 
 This guide shows the exact code changes needed to implement the audit recommendations. Copy-paste ready.
 

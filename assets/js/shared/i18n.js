@@ -2,6 +2,7 @@
 // direction for RTL locales. Falls back to English silently. No network,
 // no storage beyond the user's own language choice in localStorage.
 import { LOCALES } from "./locales.js?v=20260921f";
+import { interpolate, pickString } from "./interpolate.js?v=20260921f";
 
 // Exported so the language gate (scripts/check-i18n.mjs) can prove every
 // offered locale actually has a dictionary, and that the picker never offers a
@@ -35,15 +36,33 @@ export function resolveLang() {
   return LOCALES[nav] ? nav : "en";
 }
 
+export function translate(key, vars = {}) {
+  const lang = resolveLang();
+  const dict = LOCALES[lang] || LOCALES.en;
+  return interpolate(pickString(dict, key, LOCALES.en), vars);
+}
+
 export function applyI18n() {
   const lang = resolveLang();
   const dict = LOCALES[lang];
   document.documentElement.lang = lang;
   document.documentElement.dir = dict && dict.rtl ? "rtl" : "ltr";
+  // Classic chat.js cannot import this module, so expose the same small,
+  // read-only translation contract to runtime-rendered advisor strings.
+  window.becoLang = lang;
+  window.becoT = translate;
   document.querySelectorAll("[data-i18n]").forEach((elNode) => {
     const key = elNode.getAttribute("data-i18n");
-    if (!dict || typeof dict[key] !== "string") return; // English is the source markup
-    elNode.textContent = dict[key];
+    if (typeof dict?.[key] === "string") elNode.textContent = dict[key];
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((elNode) => {
+    const key = elNode.getAttribute("data-i18n-placeholder");
+    if (typeof dict?.[key] === "string") elNode.placeholder = dict[key];
+  });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((elNode) => {
+    const key = elNode.getAttribute("data-i18n-aria-label");
+    if (typeof dict?.[key] === "string")
+      elNode.setAttribute("aria-label", dict[key]);
   });
 }
 

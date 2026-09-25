@@ -10,6 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LOCALES } from "../assets/js/shared/locales.js";
+import { pickString } from "../assets/js/shared/interpolate.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
@@ -77,6 +78,122 @@ test("every t() and data-i18n key exists in English", () => {
   );
 });
 
+test("advisor chrome is translated in every supported locale", () => {
+  const keys = [
+    "advisorTitle",
+    "advisorSubtitle",
+    "advisorIntro",
+    "advisorBotNote",
+    "advisorThinking",
+    "advisorLabel",
+    "advisorPlaceholder",
+    "advisorSend",
+    "advisorClose",
+    "advisorBusyRetry",
+    "advisorNoReply",
+    "advisorBusy",
+    "advisorUnreachable",
+  ];
+  for (const [loc, dict] of Object.entries(LOCALES)) {
+    for (const key of keys) {
+      assert.equal(typeof dict[key], "string", `${loc}.${key} missing`);
+      assert.ok(dict[key].trim().length > 0, `${loc}.${key} empty`);
+    }
+  }
+  const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+  assert.match(html, /data-i18n="advisorTitle"/);
+  assert.match(html, /data-i18n-placeholder="advisorPlaceholder"/);
+  assert.match(html, /data-i18n-aria-label="advisorClose"/);
+});
+
+// Two locale-file defects that no other gate could see: a string glued
+// together from pre-translated fragments in code cannot be reordered for
+// another language, and the shipped Arabic advisor title once carried a
+// corrupted byte pair (U+FFFD) that survived every existing check.
+const FRAGMENT_KEYS = [
+  "advisorBusyQuota",
+  "advisorBusyWait",
+  "advisorUnreachableRetry",
+];
+
+test("no locale string carries a lost byte or a split sentence", () => {
+  for (const [loc, dict] of Object.entries(LOCALES)) {
+    for (const [key, value] of Object.entries(dict)) {
+      if (typeof value !== "string") continue;
+      assert.ok(
+        !value.includes("\uFFFD"),
+        `${loc}.${key} carries U+FFFD — a lost byte, not a translation`,
+      );
+    }
+    for (const key of FRAGMENT_KEYS) {
+      assert.ok(
+        !(key in dict),
+        `${loc}.${key} is a sentence fragment — fold it into the key that owns the sentence`,
+      );
+    }
+  }
+});
+
+test("runtime advisor copy interpolates through the locale placeholder contract", () => {
+  const placeholders = {
+    advisorBusy: "{status}",
+    advisorBusyRetry: "{secs}",
+    advisorUnreachable: "{status}",
+  };
+  for (const [loc, dict] of Object.entries(LOCALES)) {
+    for (const [key, token] of Object.entries(placeholders)) {
+      assert.ok(
+        dict[key].includes(token),
+        `${loc}.${key} must place ${token} where the runtime value belongs`,
+      );
+    }
+  }
+  const chat = fs.readFileSync(path.join(ROOT, "assets/js/chat.js"), "utf8");
+  assert.match(
+    chat,
+    /\{ secs: waitSecs \}/,
+    "the retry countdown must travel as a placeholder variable",
+  );
+  assert.match(
+    chat,
+    /\{ status: err\.status \}/,
+    "the HTTP status must travel as a placeholder variable",
+  );
+});
+
+// Interpolation used to pass the value as a string replacement, so a value
+// containing "$&" or "$n" was read as a replacement pattern: the bill-start
+// note silently dropped the "$2" of "$200". That defect had to be fixed in two
+// separate helpers, which is why this used to pin both files' source. The
+// substitution now has one owner (shared/interpolate.js), so the pins point at
+// that single place and at the delegation from each reader.
+test("interpolation never re-reads a value as a replacement pattern", async () => {
+  const { translate } = await import("../assets/js/shared/i18n.js");
+  const rendered = translate("quickBillStarts", { bill: "$200", kwh: 5 });
+  assert.ok(
+    rendered.includes("$200"),
+    `the formatted bill must survive interpolation intact: ${rendered}`,
+  );
+  const helper = fs.readFileSync(
+    path.join(ROOT, "assets/js/shared/interpolate.js"),
+    "utf8",
+  );
+  assert.match(
+    helper,
+    /replaceAll\(`\{\$\{name\}\}`, \(\) =>/,
+    "the replacer must be a function, never a string",
+  );
+  const i18n = fs.readFileSync(
+    path.join(ROOT, "assets/js/shared/i18n.js"),
+    "utf8",
+  );
+  assert.match(
+    i18n,
+    /return interpolate\(pickString\(dict, key, LOCALES\.en\), vars\);/,
+    "i18n.js must delegate instead of substituting on its own",
+  );
+});
+
 test("German is exposed and has a translated core result vocabulary", () => {
   const src = fs.readFileSync(
     path.join(ROOT, "assets/js/shared/i18n.js"),
@@ -88,18 +205,38 @@ test("German is exposed and has a translated core result vocabulary", () => {
     "utf8",
   );
   assert.match(locale, /de: \{/);
-  assert.match(locale, /sizingTitle: "System dimensionieren"/);
+  assert.match(locale, /navSizing: "System dimensionieren"/);
   assert.match(locale, /frontierTitle:/);
 });
 
-test("ui t() falls back to English before the raw key", () => {
-  const src = fs.readFileSync(
-    path.join(ROOT, "assets/js/sizing/ui.js"),
+test("the locale lookup falls back to English before the raw key", () => {
+  const helper = fs.readFileSync(
+    path.join(ROOT, "assets/js/shared/interpolate.js"),
     "utf8",
   );
   assert.ok(
-    /LOCALES\.en\[key\]\s*\?\?\s*key/.test(src),
-    "t() must chain locale -> English -> raw key",
+    /fallbackDict\?\.\[key\]\s*\?\?\s*key/.test(helper),
+    "the lookup must chain locale -> English -> raw key",
+  );
+  // Behaviorally, not just textually: a key only English carries must read as
+  // English, and a key nothing carries must not read as key-ese garbage.
+  assert.equal(pickString({}, "navBlog", LOCALES.en), LOCALES.en.navBlog);
+  assert.equal(
+    pickString({}, "definitelyNotAKey", LOCALES.en),
+    "definitelyNotAKey",
+  );
+  // And the controller must not have grown a second lookup of its own again:
+  // that duplication is what let the money bug need fixing twice.
+  const ui = fs.readFileSync(path.join(ROOT, "assets/js/sizing/ui.js"), "utf8");
+  assert.match(
+    ui,
+    /translate as t,/,
+    "runtime copy binds to the shared lookup",
+  );
+  assert.doesNotMatch(
+    ui,
+    /function t\(key, params = \{\}\)/,
+    "a local t() would be a second implementation of the same contract",
   );
 });
 

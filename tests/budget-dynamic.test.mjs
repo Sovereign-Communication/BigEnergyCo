@@ -28,6 +28,7 @@ import {
   surplusAnchor,
   budgetSpanMax,
 } from "../assets/js/sizing/budget-span.js";
+import { infeasibleCopyKeys } from "../assets/js/sizing/infeasible-copy.js";
 import { runSizing } from "../assets/js/sizing/run.js";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
 import {
@@ -35,6 +36,7 @@ import {
   PROFILE_YEAR,
 } from "../assets/js/sizing/profiles.js";
 import { paretoFront } from "../assets/js/sizing/frontier.js";
+import { LOCALES } from "../assets/js/shared/locales.js";
 
 const hon = OFFLINE_PROFILES.find((p) => p.name.includes("Honolulu"));
 const fakeWeather = async () => ({
@@ -368,21 +370,35 @@ test("an unsolvable target with NO area input is envelope-limited, never area-li
 });
 
 test("hints: the area message exists only under area-limited", () => {
-  const src = readFileSync(
-    new URL("../assets/js/sizing/ui.js", import.meta.url),
-    "utf8",
-  );
-  assert.match(
-    src,
-    /"area-limited":\s*\{[\s\S]*?Too little roof\/yard area for this target/,
+  // The copy lives in locales.js (so the banner is translated) and the
+  // reason-to-key mapping lives in infeasible-copy.js, which is a value this
+  // can call. Both halves stay pinned, because either rename alone would
+  // silently swap "your area cap did this" for "the tool's search limit did
+  // this" — the distinction the banner exists to make in the first place.
+  const area = infeasibleCopyKeys("area-limited");
+  assert.equal(
+    area.titleKey,
+    "infeasibleAreaTitle",
     "the area-cap story is keyed to the evidence that proves it",
   );
-  const envBody = src.match(
-    /"envelope-limited":\s*\{[\s\S]*?body:\s*"([^"]+)"/,
+  assert.equal(area.bodyKey, "infeasibleAreaBody");
+  assert.equal(
+    LOCALES.en.infeasibleAreaTitle,
+    "Too little roof/yard area for this target",
   );
-  assert.ok(envBody, "envelope-limited has its own body text");
+  const envelope = infeasibleCopyKeys("envelope-limited");
+  assert.notEqual(
+    envelope.titleKey,
+    area.titleKey,
+    "a search limit must not reuse the cap's headline",
+  );
+  assert.notEqual(envelope.bodyKey, area.bodyKey);
+  assert.ok(
+    LOCALES.en.infeasibleEnvelopeBody.length > 0,
+    "envelope-limited has its own body text",
+  );
   assert.doesNotMatch(
-    envBody[1],
+    LOCALES.en.infeasibleEnvelopeBody,
     /area input/i,
     "the search-limit message must not blame the optional area input",
   );
@@ -552,6 +568,58 @@ test("ui.js routes empty-auto payloads to renderBestPick's honest empty state", 
     src,
     /if \(isAutoMode\) \{\s*\n\s*renderBestPick\(p\);/,
     "auto mode reaches renderBestPick even when p.auto is empty",
+  );
+});
+
+// ── 6. The reason banner cannot outlive the run that replaced it ──────────
+// The banner explains the CURRENT payload. Guarding the render call with
+// `if (p.unreachableReason)` made the clear branch unreachable, so a visitor
+// who hit off-grid + solar-only and then switched back to a solvable combo
+// kept reading "solar-only can't do this" above a result that solved fine.
+// Mirrored into the sr-only live region, the same staleness was announced to
+// screen readers, so both surfaces are pinned together here.
+test("infeasible banner is retracted by every path that replaces or hides results", () => {
+  const src = readFileSync(
+    new URL("../assets/js/sizing/ui.js", import.meta.url),
+    "utf8",
+  );
+  const render = src.slice(
+    src.indexOf("function renderInfeasibleBanner"),
+    src.indexOf("function fmtH"),
+  );
+  assert.match(
+    render,
+    /if \(!reason\) \{[\s\S]*?banner\.style\.display = "none";[\s\S]*?banner\.innerHTML = "";[\s\S]*?if \(live\) live\.textContent = "";/,
+    "the clear branch must retract the visual banner and the live region together",
+  );
+  assert.match(
+    render,
+    /if \(!banner\) \{\s*\n\s*if \(!reason\) return;/,
+    "the node is created only when there is a reason, so a page whose runs all " +
+      "solved never grows an empty banner under the status line",
+  );
+  // A payload WITHOUT a reason has to reach the banner so it can retract —
+  // this is the call that was guarded.
+  const callSites = src.match(/renderInfeasibleBanner\([^)]*\);/g) || [];
+  assert.ok(
+    callSites.includes("renderInfeasibleBanner(p.unreachableReason || null);"),
+    `every payload must reach the banner, reason or not: ${callSites}`,
+  );
+  assert.doesNotMatch(
+    src,
+    /if \(p\.unreachableReason\)\s*renderInfeasibleBanner/,
+    "guarding the call makes the clear branch dead code and strands the banner",
+  );
+  // Invalid inputs and a dead worker never render, so hiding the results has
+  // to retract the reason itself: it explains a region that is now gone.
+  const hidden = src.slice(
+    src.indexOf("function setResultsHidden"),
+    src.indexOf("function setResultsHidden") + 360,
+  );
+  assert.match(
+    hidden,
+    /if \(hidden\) renderInfeasibleBanner\(null\)/,
+    "hiding the results region retracts the reason with it",
   );
 });
 

@@ -62,10 +62,11 @@ import { BOM_ITEMS } from "../shared/content.js?v=20260921f";
 import {
   applyI18n,
   initLangPicker,
-  resolveLang,
+  // Runtime-rendered copy goes through the same translate() the markup pass
+  // uses, so `t` is a binding to the one implementation rather than a second
+  // copy of the placeholder contract.
+  translate as t,
 } from "../shared/i18n.js?v=20260921f";
-
-import { LOCALES } from "../shared/locales.js?v=20260921f";
 
 import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260921f";
 import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260921f";
@@ -78,7 +79,9 @@ import {
 } from "../shared/simple-mode.js?v=20260921f";
 import { buildSimpleView } from "../shared/simple-view.js?v=20260921f";
 import {
+  advisorJevContext,
   interpretSanity,
+  sanityResponseIsCurrent,
   renderSanityBadge,
   requestSanity,
   sanityState,
@@ -87,6 +90,23 @@ import {
   CUT_TARGET_PCT,
   targetForPct,
 } from "../shared/cut-targets.js?v=20260921f";
+import {
+  SHARE_PREFIX,
+  b64urlEncode,
+  parseShareHash,
+} from "./share-codec.js?v=20260921f";
+import {
+  hasInfeasibleCopy,
+  infeasibleCopyKeys,
+} from "./infeasible-copy.js?v=20260921f";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20260921f";
+import {
+  fuelBurnPerKwh,
+  fuelDisplay,
+  fuelRateUsd,
+  fuelTypeName,
+  isImperialLocation,
+} from "./fuel-units.js?v=20260921f";
 
 import {
   renderFrontier,
@@ -348,24 +368,11 @@ const RESCALE_MIN_KWH = 15;
 // True once the user applied the generator-fuel helper to the price field.
 let generatorBasis = false;
 
-// Translation helper with interpolation support (uses shared resolveLang so
-// auto-detection matches the chrome i18n — no split-brain between panel and
-// t() strings).
-function t(key, params = {}) {
-  const lang = resolveLang();
-
-  const dict = LOCALES[lang] || LOCALES.en;
-
-  // English fallback before the raw key: a string added in one locale must
-  // read as English everywhere else, never as key-ese.
-  let str = dict[key] ?? LOCALES.en[key] ?? key;
-
-  for (const [k, v] of Object.entries(params)) {
-    str = str.replace(new RegExp(`\\{${k}\\}`, "g"), v);
-  }
-
-  return str;
-}
+// `t` is shared/i18n.js's translate (imported above), which delegates the
+// placeholder contract to shared/interpolate.js. This file used to carry its
+// own lookup-then-substitute loop; it agreed with i18n.js by luck rather than
+// by construction, and the same "$200" replacer bug had to be found and fixed
+// in both. One owner now, so a fix to substitution lands once.
 
 // -- Appliance library -------------------------------------------------------
 
@@ -416,12 +423,6 @@ function setStatus(text) {
 // seconds. Weather chunk progress comes through the worker; simulation
 // length is unknowable up front, so its bar is indeterminate by design.
 const PIPELINE_STEP_IDS = ["pipeCity", "pipeWeather", "pipeSim", "pipeRender"];
-const PIPELINE_LABELS = {
-  pipeCity: "Location",
-  pipeWeather: "Weather",
-  pipeSim: "Simulating",
-  pipeRender: "Rendering",
-};
 let pipelineTimer = null;
 
 function pipelineEl() {
@@ -440,7 +441,7 @@ function pipelineStart(stage = "City") {
   pipelineTimer = setInterval(() => {
     if (note) {
       const s = ((Date.now() - started) / 1000).toFixed(1);
-      note.textContent = `${s}s elapsed`;
+      note.textContent = t("pipelineElapsed", { s });
     }
   }, 250);
   pipelineStage(stage);
@@ -475,12 +476,19 @@ function pipelineStage(stage, weatherDone = 0, weatherTotal = 0) {
           bar.dataset.mode = "determinate";
           const pct = Math.round((weatherDone / weatherTotal) * 100);
           bar.style.setProperty("--pipe-pct", pct + "%");
-          txt.textContent = `${weatherDone}/${weatherTotal} satellite chunks`;
+          txt.textContent = t("pipelineChunks", {
+            done: weatherDone,
+            total: weatherTotal,
+          });
         } else {
           bar.dataset.mode = "indeterminate";
           bar.style.setProperty("--pipe-pct", "0%");
           txt.textContent =
-            i < order ? "cached" : i === order ? "reaching satellite…" : "";
+            i < order
+              ? t("pipelineCached")
+              : i === order
+                ? t("pipelineReaching")
+                : "";
         }
       }
     }
@@ -524,10 +532,15 @@ function showSpeedNote(kind, meta) {
         ? `${lat.toFixed(2)}, ${lon.toFixed(2)}`
         : ""));
   if (kind === "repeat") {
-    note.textContent =
-      "⚡ Instant — repeat of this exact setup (computed moments ago)";
+    note.textContent = t("speedNoteRepeat");
   } else if (kind === "cache") {
-    note.textContent = `⚡ Instant — ${meta && meta.offline ? "offline typical-year" : "cached satellite weather"}${where ? ` for ${where}` : ""}`;
+    const offline = Boolean(meta && meta.offline);
+    const base = offline ? "speedNoteOffline" : "speedNoteCached";
+    note.textContent = where
+      ? t(offline ? "speedNoteOfflineWhere" : "speedNoteCachedWhere", {
+          where,
+        })
+      : t(base);
   } else {
     note.textContent = "";
     return;
@@ -587,11 +600,12 @@ function applySimpleMode() {
   if (simpleWrap) {
     simpleWrap.innerHTML = "";
     simpleWrap.style.display = "none";
-    if (simpleMode && lastPayload) {
-      renderSimpleResults(lastPayload);
-      runSanityCheck(lastPayload); // badge must survive mode toggles: cache re-mount, no refetch
-    }
+    if (simpleMode && lastPayload) renderSimpleResults(lastPayload);
   }
+  // The badge must survive mode toggles in BOTH directions: each surface's
+  // render re-mounts it through the same sanity owner (runSanityCheck), from
+  // the state cache — never a second /api/jev request.
+  if (lastPayload) runSanityCheck(lastPayload);
   document.querySelectorAll("[data-jargon]").forEach((node) => {
     if (simpleMode) {
       // Unknown/typo'd terms stay plain text: explainElement returns false
@@ -681,13 +695,13 @@ function renderSimpleResults(p) {
   const card = el("div", { class: "simple-results-card" });
   const goalText =
     p.mode === "gridtie"
-      ? "to cut about " + (entry.cutPct ?? 0) + "% off your bill"
-      : "to cover your home through the year";
+      ? t("simpleGoalGrid", { pct: entry.cutPct ?? 0 })
+      : t("simpleGoalOffgrid");
   card.appendChild(
     el(
       "div",
       { class: "simple-headline" },
-      `At your location, this system gets you ` + goalText + `:`,
+      t("simpleHeadline", { goal: goalText }),
     ),
   );
 
@@ -759,58 +773,57 @@ function renderSimpleResults(p) {
 // reason above the cards so visitors know WHY nothing solved and what to
 // change. Hides itself the moment a payload without a reason arrives (i.e.
 // a normal run) so it never lingers across the page.
-const INFEASIBLE_HINTS = {
-  // run.js emits this code only when an area cap was actually provided.
-  "area-limited": {
-    title: "Too little roof/yard area for this target",
-    body: "The searched solar size was capped by the optional area input (see “Hardware setup”). Clear that box — or draw a bigger area on the map — and re-run: the site itself can reach this target.",
-  },
-  // The search envelope, not any visitor input, is the limit here.
-  "envelope-limited": {
-    title: "Beyond this tool's search range for this target",
-    body: "At this load, reaching that target needs a solar array or battery bank larger than this calculator searches (see Hardware setup for the limits). Try a lower bill-cut target, or check whether part of the load can be reduced.",
-  },
-  "needs-battery": {
-    title: "Solar-only can't reach 100% off-grid",
-    body: "An off-grid home needs storage for nights and cloudy days. Add a battery to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).",
-  },
-  "needs-panels": {
-    title: "Battery-only can't run off-grid",
-    body: "Nothing recharges the bank at this site. Add panels to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).",
-  },
-  "needs-pv-surplus": {
-    title: "A battery-only bank can't produce surplus",
-    body: "Surplus needs panels to generate more than your load. Drop the target below 100% on the bill-cut slider, or switch the hardware setup to 'Solar + Battery'.",
-  },
-};
+// The code-to-copy mapping is owned by infeasible-copy.js (pure, testable in
+// isolation); the copy itself is owned by locales.js in all six languages.
+// What is left here is only the rendering.
 function renderInfeasibleBanner(reason) {
   let banner = $("infeasibleBanner");
+  // Created on demand, and only when there is something to say: clearing must
+  // stay a no-op on a page whose runs were all solvable, so a normal visitor
+  // never gets an empty banner node injected under the status line.
   if (!banner) {
+    if (!reason) return;
     banner = el("div", { id: "infeasibleBanner", class: "infeasible-banner" });
     const target = $("sizingStatus") || document.body;
     if (target.parentNode) target.parentNode.insertBefore(banner, target);
   }
+  // The visual banner is created on demand and toggled with display:none, which
+  // is exactly the shape a screen reader will not announce. The reason is
+  // mirrored into the sr-only region declared in the markup, which stays
+  // rendered — so "why did nothing solve?" reaches assistive tech too.
+  const live = $("infeasibleLive");
   if (!reason) {
     banner.style.display = "none";
     banner.innerHTML = "";
+    if (live) live.textContent = "";
     return;
   }
-  const hint = INFEASIBLE_HINTS[reason] || {
-    title: "This hardware and goal combination can't solve",
-    body: "Change the goal or hardware, then re-run.",
-  };
+  const hint = infeasibleCopyKeys(reason);
+  const title = t(hint.titleKey);
+  const body = t(hint.bodyKey);
   banner.style.display = "block";
   banner.innerHTML = "";
-  banner.appendChild(el("div", { class: "infeasible-title" }, hint.title));
-  banner.appendChild(el("div", { class: "infeasible-body" }, hint.body));
+  banner.appendChild(el("div", { class: "infeasible-title" }, title));
+  banner.appendChild(el("div", { class: "infeasible-body" }, body));
+  if (live) live.textContent = `${title}. ${body}`;
+}
+
+// The label for a cell or tier that produced no system: the reviewed copy when
+// the code has it, and the caller's own honest note otherwise. Defined at
+// module scope on purpose — renderTierCards shadows the translate helper with
+// its own loop variable, so a copy lookup written inside that scope would be
+// calling the tier object.
+function infeasibleLabel(reason, fallback) {
+  if (!reason || !hasInfeasibleCopy(reason)) return fallback;
+  return t(infeasibleCopyKeys(reason).titleKey);
 }
 
 function fmtH(h) {
-  if (h >= 24) return "all day (24 h)";
+  if (h >= 24) return t("fmtAllDay");
 
-  if (h >= 1) return Math.round(h * 2) / 2 + " h/day";
+  if (h >= 1) return t("fmtHoursDay", { h: Math.round(h * 2) / 2 });
 
-  return Math.round(h * 60) + " min/day";
+  return t("fmtMinutesDay", { m: Math.round(h * 60) });
 }
 
 function fmtKwh(x) {
@@ -911,20 +924,20 @@ function billForKwh(kwh, rate) {
 
 function fmtBill(v) {
   const fx = fxActive();
-  if (!fx) return "$" + Math.round(v).toLocaleString() + "/mo";
+  if (!fx) return "$" + Math.round(v).toLocaleString() + t("billPerMonth");
   try {
     return (
       new Intl.NumberFormat(undefined, {
         style: "currency",
         currency: fx.code,
         maximumFractionDigits: 0,
-      }).format(v) + "/mo"
+      }).format(v) + t("billPerMonth")
     );
   } catch {
     return (
       (CURRENCIES[fx.code]?.symbol || "") +
       Math.round(v).toLocaleString() +
-      "/mo"
+      t("billPerMonth")
     );
   }
 }
@@ -976,19 +989,20 @@ function syncBillSlider() {
       Math.max(parseFloat(offSlider.min) || 1, roundedKwh),
     );
     offSlider.value = String(clampedKwh);
-    if (offOut) offOut.textContent = "~" + clampedKwh + " kWh/day";
+    if (offOut)
+      offOut.textContent = t("offgridKwhReadout", { kwh: clampedKwh });
     if (kwhInput) kwhInput.value = String(clampedKwh);
   }
 
   const note = $("quickBillNote");
   if (note) {
+    const params = {
+      bill: fmtBill(value),
+      kwh: Math.round(billAnchorKwh),
+    };
     note.textContent = quickMode
-      ? "Starts from ~" +
-        fmtBill(value) +
-        ` (≈${Math.round(billAnchorKwh)} kWh/day). Set your real bill here, choose a location, then click Size My System. The bill-cut slider appears with results.`
-      : "Quick estimate: ~" +
-        fmtBill(value) +
-        ` (starts from ~${Math.round(billAnchorKwh)} kWh/day) — switch to Manual to change your bill, appliances, or rate.`;
+      ? t("quickBillStarts", params)
+      : t("quickBillManual", params);
   }
   updateLoadReadout();
 }
@@ -1114,7 +1128,7 @@ function renderAppliances() {
             "font-size:0.75rem;color:var(--text-muted);font-family:var(--font-mono);background:rgba(255,255,255,0.05);padding:0.1rem 0.45rem;border-radius:10px;",
         },
 
-        it.duty ? `~${it.w} W while running` : `~${it.w} W`,
+        it.duty ? t("apWattsRunning", { w: it.w }) : t("apWatts", { w: it.w }),
       );
 
       // quantity stepper (hidden until checked)
@@ -1211,9 +1225,9 @@ function renderAppliances() {
         const kwh = (it.w * parseInt(row.dataset.qty, 10) * h) / 1000;
 
         if (on) {
-          let txt = fmtKwh(kwh) + " kWh/day";
+          let txt = t("apKwhDay", { kwh: fmtKwh(kwh) });
 
-          if (it.duty) txt += ` (~${Math.round((it.w * h) / 24)} W avg)`;
+          if (it.duty) txt += t("apAvgW", { w: Math.round((it.w * h) / 24) });
 
           sub.textContent = txt;
 
@@ -1869,9 +1883,13 @@ function updateGuidedProgress(step = wizard.state.step) {
 
 // One owner for the results region: hidden until a successful render, so
 // old numbers can never masquerade as fresh after a failed or invalid run.
+// The infeasible banner explains why that region is empty, so it is retracted
+// with it — otherwise a reason from an earlier run keeps explaining a result
+// area that is no longer on screen.
 function setResultsHidden(hidden) {
   const region = $("resultsRegion");
   if (region) region.hidden = hidden;
+  if (hidden) renderInfeasibleBanner(null);
 }
 
 function setupRoofMap() {
@@ -2613,7 +2631,8 @@ function setupBillSlider() {
         Math.max(parseFloat(offSlider.min) || 1, roundedKwh),
       );
       offSlider.value = String(clampedKwh);
-      if (offOut) offOut.textContent = "~" + clampedKwh + " kWh/day";
+      if (offOut)
+        offOut.textContent = t("offgridKwhReadout", { kwh: clampedKwh });
       if (kwhInput) kwhInput.value = String(clampedKwh);
     }
     updateLoadReadout();
@@ -2687,7 +2706,7 @@ function setupGoalControls() {
         desc.textContent =
           "Size a self-reliant solar and battery storage system for your cabin, camper van, backup, or homestead. Enter your daily kWh or pick your appliances — hourly weather simulations ensure you never run out of power.";
       const optBill = $("optLoadBill");
-      if (optBill) optBill.textContent = "Daily energy need (kWh/day slider)";
+      if (optBill) optBill.textContent = t("dailyEnergyNeed");
     }
     updateAutoRows();
     setQuickMode(quickMode);
@@ -2733,14 +2752,14 @@ function setupOffgridControls() {
 
   const syncToVal = (val) => {
     slider.value = String(val);
-    if (out) out.textContent = "~" + val + " kWh/day";
+    if (out) out.textContent = t("offgridKwhReadout", { kwh: val });
     if (kwhInput) kwhInput.value = String(val);
     syncToBill(val);
   };
 
   slider.addEventListener("input", () => {
     const val = parseFloat(slider.value);
-    if (out) out.textContent = "~" + val + " kWh/day";
+    if (out) out.textContent = t("offgridKwhReadout", { kwh: val });
     if (kwhInput) kwhInput.value = String(val);
     syncToBill(val);
   });
@@ -2754,7 +2773,7 @@ function setupOffgridControls() {
       const val = parseFloat(kwhInput.value);
       if (Number.isFinite(val) && val >= 1 && val <= 60) {
         slider.value = String(val);
-        if (out) out.textContent = "~" + val + " kWh/day";
+        if (out) out.textContent = t("offgridKwhReadout", { kwh: val });
         syncToBill(val);
       }
     });
@@ -3309,7 +3328,10 @@ function ensureWorker() {
       if (worker !== runWorker) return;
       worker = null;
       runWorker.terminate();
-      setStatus(t("errorSim") + "Sizing engine failed to load.");
+      // The whole message (warning glyph, what failed, what to do next) is one
+      // locale value: concatenating English onto a translated emoji prefix is
+      // how an error ends up half-translated in five of six locales.
+      setStatus(t("errorSim"));
 
       setResultsHidden(true);
       pipelineStop(false);
@@ -4787,18 +4809,24 @@ function matrixHtml(p) {
             ? ` data-sel="${key}" role="button" tabindex="0" aria-label="Select ${escapeAttr(row.label)} at ${escapeAttr(col.label)}" style="cursor:pointer;"`
             : "";
           if (!cell || !cell.solvable) {
-            const hint =
-              cell && cell.reason ? INFEASIBLE_HINTS[cell.reason] : null;
-            const reasonText = hint
-              ? hint.title
-              : cell && cell.reason
-                ? cell.reason
-                : "not practical here";
+            // Resolve the copy through the same owner the banner uses. This
+            // cell used to read .title/.body off the key table, so a cell with
+            // a known reason rendered the word "undefined" in the print sheet —
+            // a defect no gate looked at, because only an infeasible run and a
+            // print-sheet walk reach it.
+            const reason = (cell && cell.reason) || null;
+            const keys =
+              reason && hasInfeasibleCopy(reason)
+                ? infeasibleCopyKeys(reason)
+                : null;
+            const reasonText = keys
+              ? t(keys.titleKey)
+              : reason || "not practical here";
             const detail =
               cell && cell.envelopeNote
                 ? ` — ${escapeHtml(cell.envelopeNote)}`
-                : hint && hint.body
-                  ? `<br><span style="font-size:0.7rem;opacity:0.85;">${escapeHtml(hint.body)}</span>`
+                : keys
+                  ? `<br><span style="font-size:0.7rem;opacity:0.85;">${escapeHtml(t(keys.bodyKey))}</span>`
                   : "";
             return `<td${cls}><span style="color:var(--text-muted);font-size:0.78rem;line-height:1.35;">${escapeHtml(reasonText)}${detail}</span></td>`;
           }
@@ -4848,18 +4876,38 @@ function renderMatrix(p) {
 // our deterministic engine's output would mean a rescale/merge bug — so the
 // on-the-spot response is one full engine re-run (deterministic self-heal);
 // a flag on the re-run renders as-is (refinedPayloads guards the loop).
-let sanityCache = { key: null, interp: null };
+let sanityCache = { key: null, state: null, interp: null };
+let sanityStatus = "idle";
+let sanityRequestSeq = 0;
+let sanityInFlight = null;
 const sanityRefined = new WeakSet();
 
+function clearSanityBadges() {
+  for (const id of ["resultsRegion", "simpleResultsWrap"]) {
+    const container = $(id);
+    if (container)
+      container.querySelectorAll(".sanity-badge").forEach((b) => b.remove());
+  }
+}
+
 function runSanityCheck(p) {
-  if (!p || p.unreachableReason) return;
+  if (!p || p.unreachableReason) {
+    sanityStatus = "unavailable";
+    clearSanityBadges();
+    return;
+  }
   const sel = resolveSelected(p);
   const entry = sel && sel.solvable ? sel : p.best;
   const state = sanityState(p, entry);
-  if (!state) return;
+  if (!state) {
+    sanityStatus = "unavailable";
+    clearSanityBadges();
+    return;
+  }
   const key = JSON.stringify(state);
 
   const mount = () => {
+    clearSanityBadges();
     if (!sanityCache.interp) return;
     const container = isSimpleMode()
       ? $("simpleResultsWrap")
@@ -4869,23 +4917,67 @@ function runSanityCheck(p) {
   };
 
   if (sanityCache.key === key && sanityCache.interp) {
+    sanityStatus = "available";
     mount();
     return;
   }
-  requestSanity(state).then((data) => {
-    const interp = interpretSanity(data);
-    sanityCache = { key, interp };
-    mount();
-    if (
-      interp &&
-      interp.level === "flag" &&
-      interp.verdict === "impossible" &&
-      !sanityRefined.has(p)
-    ) {
-      sanityRefined.add(p);
-      run(); // on-the-spot full deterministic re-run — never an AI number
-    }
-  });
+  // A selection change or a fresh payload supersedes every older request.
+  // Without this, a slow response for system A can mount its verdict on
+  // system B and the advisor can explain the wrong deterministic result.
+  if (sanityInFlight && sanityInFlight.key === key) {
+    sanityStatus = "pending";
+    return;
+  }
+  const requestId = ++sanityRequestSeq;
+  sanityInFlight = { id: requestId, key, state };
+  sanityCache = { key, state, interp: null };
+  sanityStatus = "pending";
+  clearSanityBadges();
+
+  requestSanity(state)
+    .then((data) => {
+      // Ignore late responses after a selection/payload change. Checking both
+      // the request identity and the current state also covers selection edits
+      // that happen while the same payload object is being re-rendered.
+      const currentEntry = lastPayload ? resolveSelected(lastPayload) : null;
+      const currentState = lastPayload
+        ? sanityState(
+            lastPayload,
+            currentEntry && currentEntry.solvable
+              ? currentEntry
+              : lastPayload.best,
+          )
+        : null;
+      if (
+        !sanityResponseIsCurrent(
+          requestId,
+          sanityInFlight?.id,
+          key,
+          currentState ? JSON.stringify(currentState) : null,
+        )
+      )
+        return;
+      const interp = interpretSanity(data);
+      sanityInFlight = null;
+      sanityCache = { key, state, interp };
+      sanityStatus = interp ? "available" : "unavailable";
+      mount();
+      if (
+        interp &&
+        interp.level === "flag" &&
+        interp.verdict === "impossible" &&
+        !sanityRefined.has(p)
+      ) {
+        sanityRefined.add(p);
+        run(); // on-the-spot full deterministic re-run — never an AI number
+      }
+    })
+    .catch(() => {
+      if (sanityInFlight && sanityInFlight.id === requestId) {
+        sanityInFlight = null;
+        sanityStatus = "unavailable";
+      }
+    });
 }
 
 function resolveSelected(p) {
@@ -5365,10 +5457,6 @@ function renderBomPanel() {
   }
 }
 
-function csvField(v) {
-  return `"${String(v ?? "").replace(/"/g, '""')}"`;
-}
-
 function downloadBomCsv() {
   const bom = buildFocusBom();
   // Label row describes the SELECTED system the BOM was built from — never
@@ -5377,146 +5465,18 @@ function downloadBomCsv() {
     (lastPayload && resolveSelected(lastPayload)) ||
     (lastPayload && lastPayload.focus);
   if (!bom || !f) return;
-  const rows = [
-    ["BigEnergyCo hardware list - educational estimate, not a quote"],
-    ["Generated", new Date().toISOString().slice(0, 10)],
-    [
-      "System",
-      `${f.pvKw || 0} kW PV + ${f.battNameplateKwh || 0} kWh nameplate (${bom.chemLabel || "Solar"})`,
-    ],
-    [
-      "Location",
-      `${lastPayload.meta.latitude.toFixed(2)}, ${lastPayload.meta.longitude.toFixed(2)}`,
-    ],
-    [],
-    ["Section", "Item", "Quantity / size", "Notes"],
-  ];
-  if (bom.panels) {
-    rows.push([
-      "Panels",
-      `${bom.panels.panelWatts} W mono panels`,
-      bom.panels.count,
-      `${bom.panels.kwActual} kW array, about ${bom.panels.areaM2} sq m`,
-    ]);
-  } else {
-    rows.push(["Panels", "None", 0, "Battery-only configuration"]);
-  }
-  if (bom.voltage && bom.battery) {
-    rows.push(
-      [
-        "Bank",
-        "System voltage",
-        `${bom.voltage.volts} V`,
-        bom.voltage.rationale,
-      ],
-      [
-        "Bank (DIY)",
-        bom.battery.diy.unitLabel,
-        `${bom.battery.diy.stringsParallel} string(s), ${bom.battery.diy.blocksTotal} cells`,
-        `${bom.battery.diy.stringKwh} kWh per string`,
-      ],
-      [
-        "Bank (retail alt.)",
-        bom.battery.retail.unitLabel,
-        bom.battery.retail.modules,
-        "BMS and enclosure included",
-      ],
-    );
-  } else {
-    rows.push(["Bank", "None", 0, "Solar-only configuration"]);
-  }
-  rows.push([
-    "Inverter",
-    `${bom.inverter.recommendedKw} kW class continuous`,
-    1,
-    bom.inverter.referenceUnit,
-  ]);
-  if (bom.controller) {
-    rows.push(
-      [
-        "Charging",
-        `MPPT controller capacity`,
-        `${bom.controller.ampsRequired} A total`,
-        bom.controller.suggestion,
-      ],
-      [
-        "Protection",
-        "Main battery fuse/breaker",
-        `${bom.protection.mainFuseAmps} A`,
-        `bank draws ~${bom.protection.batteryDischargeAmps} A at full load`,
-      ],
-      [
-        "Protection",
-        "PV disconnect/breaker",
-        `${bom.protection.pvBreakerAmps} A`,
-        "",
-      ],
-    );
-  }
-  if (bom.cable) {
-    for (const c of bom.cable) {
-      rows.push([
-        "Cable",
-        `Battery-to-inverter run ${c.meters} m`,
-        c.mm2 ? `${c.awg} (${c.mm2} sq mm) copper` : `larger than ${c.awg}`,
-        "2% max drop, conservative ampacity",
-      ]);
-    }
-  }
-  if (bom.panels && lastPayload?.meta?.latitude != null) {
-    const lat = lastPayload.meta.latitude;
-    const absLat = Math.abs(lat);
-    const facing = lat >= 0 ? "True South (180 deg)" : "True North (0 deg)";
-    rows.push([
-      "Mounting",
-      "Array Tilt & Orientation",
-      `Facing: ${facing}`,
-      `Year-round fixed: ~${Math.round(absLat * 0.9)} deg | Winter steep: ~${Math.min(70, Math.round(absLat + 15))} deg`,
-    ]);
-  }
-  rows.push(
-    [
-      "BOS Safety",
-      "DC Battery Disconnect & Fuse",
-      `Class-T fuse / DC breaker ${bom.protection?.mainFuseAmps || 200} A`,
-      "Mandatory overcurrent protection near positive terminal",
-    ],
-    [
-      "BOS Safety",
-      "PV DC Isolator & Surge Device",
-      "DC-rated breaker + SPD",
-      "Protects charge controller / inverter from PV lightning surges",
-    ],
-    [
-      "BOS Safety",
-      "Battery Shunt / Monitor",
-      "500 A precision current shunt",
-      "Tracks true SoC via Coulomb counting",
-    ],
-    [
-      "BOS Safety",
-      "Equipment Grounding & Bonding",
-      "Copper ground rod + bonding bus",
-      "Single common earth bond for frame rails, SPDs, and inverter chassis",
-    ],
+  // Row assembly and CSV framing are owned by parts-csv.js — a pure module
+  // with its own tests, so the spreadsheet can be checked without running the
+  // page and downloading a file. What is left here is the download itself.
+  const csv = csvDocument(
+    partsListRows({
+      bom,
+      focus: f,
+      meta: lastPayload.meta,
+      requiresSplitPhase: Boolean(window.lastInputs?.requiresSplitPhase),
+      generatedOn: new Date().toISOString().slice(0, 10),
+    }),
   );
-  if (window.lastInputs?.requiresSplitPhase) {
-    rows.push([
-      "BOS Notice",
-      "240V Split-Phase Required",
-      "L1 + L2 + Neutral (120/240V)",
-      "Required for 240V well pump, mini-split, or EV charger",
-    ]);
-  }
-  rows.push(
-    [],
-    [
-      "Disclaimer",
-      "Educational estimate only. Verify everything with a licensed electrician or engineer before purchasing or energizing.",
-    ],
-  );
-  const csv =
-    "\uFEFF" + rows.map((r) => r.map(csvField).join(",")).join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const aEl = document.createElement("a");
@@ -5533,49 +5493,26 @@ function downloadBomCsv() {
 
 // ── Generator fuel helper ────────────────────────────────────────────────────
 
-// Typical partial-load fuel burn for small gensets (fuel cost only), in the
-// site's native L/kWh and in US gallons/kWh. The input unit follows the
-// selected location: US / Hawaii / Alaska buy fuel by the gallon, everywhere
-// else by the litre, and the price is entered in the SAME currency the
-// results display, not hard-coded dollars.
-const GEN_L_PER_KWH = { petrol: 0.5, diesel: 0.35 };
-const LITRES_PER_GALLON = 3.785411784;
-const GEN_GAL_PER_KWH = {
-  petrol: GEN_L_PER_KWH.petrol / LITRES_PER_GALLON,
-  diesel: GEN_L_PER_KWH.diesel / LITRES_PER_GALLON,
-};
-// The parts of the world that sell fuel by the gallon (the US plus its
-// outlying states); everything else is metric.
-const IMPERIAL_BOXES = [
-  [24, 50, -125, -66], // US mainland
-  [18.5, 28.5, -179, -154], // Hawaii
-  [50.5, 72, -168, -129], // Alaska
-];
+// The burn tables, the gallon-or-litre geography and the local-price -> USD
+// maths live in fuel-units.js; what stays here is the input plumbing around
+// them. fuelImperial is the cached answer for the current location, refreshed
+// whenever the location changes so the label, the example and the maths below
+// can never disagree with each other.
 let fuelImperial = false;
 
 function usesImperialUnits() {
-  const lat = parseFloat($("latInput")?.value);
-  const lon = parseFloat($("lonInput")?.value);
-  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
-  return IMPERIAL_BOXES.some(
-    ([latMin, latMax, lonMin, lonMax]) =>
-      lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax,
+  return isImperialLocation(
+    parseFloat($("latInput")?.value),
+    parseFloat($("lonInput")?.value),
   );
 }
 
-// Fuel price -> effective USD cost per kWh. The user types a local-currency
-// price (the same unit the results use); this converts to USD, and also
-// converts volume liters <-> gallons when the country buys by the gallon.
 function genRateUsd() {
-  const type = $("genFuelType")?.value || "petrol";
-  const local = parseFloat($("genFuelPrice")?.value);
-  if (!(local > 0)) return null;
-  const fx = fxActive();
-  const priceUsd = fx && fx.rate ? local / fx.rate : local; // local -> USD
-  const perKwh = fuelImperial
-    ? (GEN_GAL_PER_KWH[type] ?? GEN_GAL_PER_KWH.petrol)
-    : (GEN_L_PER_KWH[type] ?? GEN_L_PER_KWH.petrol);
-  return priceUsd * perKwh;
+  return fuelRateUsd(parseFloat($("genFuelPrice")?.value), {
+    type: $("genFuelType")?.value || "petrol",
+    imperial: fuelImperial,
+    fxRate: fxActive()?.rate ?? null,
+  });
 }
 
 // Reflect the selected location + currency onto the helper's labels: the unit
@@ -5587,19 +5524,19 @@ function updateFuelUnits() {
   fuelImperial = newImp;
   const fx = fxActive();
   const sym = fx ? CURRENCIES[fx.code]?.symbol || fx.code : "$";
+  const display = fuelDisplay(fuelImperial);
   const label = document.querySelector('label[for="genFuelPrice"]');
-  if (label)
-    label.textContent = `${t(fuelImperial ? "fuelGalLabel" : "fuelLitLabel")} (${sym}):`;
+  if (label) label.textContent = `${t(display.labelKey)} (${sym}):`;
   const input = $("genFuelPrice");
-  if (input) input.placeholder = fuelImperial ? "e.g. 3.90" : "e.g. 1.20";
+  if (input) input.placeholder = display.placeholder;
   for (const id of ["genBurnUnit", "genBurnUnit2"]) {
     const ue = $(id);
-    if (ue) ue.textContent = fuelImperial ? "gal" : "L";
+    if (ue) ue.textContent = display.unit;
   }
   const petrolEl = $("genPetrolBurn");
-  if (petrolEl) petrolEl.textContent = fuelImperial ? "0.13" : "0.5";
+  if (petrolEl) petrolEl.textContent = display.petrolBurn;
   const dieselEl = $("genDieselBurn");
-  if (dieselEl) dieselEl.textContent = fuelImperial ? "0.09" : "0.35";
+  if (dieselEl) dieselEl.textContent = display.dieselBurn;
   if (changed) updateGenHelper();
 }
 
@@ -5614,14 +5551,15 @@ function updateGenHelper() {
     applyBtn.style.display = "none";
     return;
   }
-  const typeSel = $("genFuelType").value === "diesel" ? "Diesel" : "Petrol";
+  const type = $("genFuelType").value;
   const entry = $("genFuelPrice").value;
-  const burn = fuelImperial
-    ? (GEN_GAL_PER_KWH[$("genFuelType").value] ?? GEN_GAL_PER_KWH.petrol)
-    : (GEN_L_PER_KWH[$("genFuelType").value] ?? GEN_L_PER_KWH.petrol);
-  const unit = fuelImperial ? "gal" : "L";
+  const burn = fuelBurnPerKwh(type, fuelImperial);
+  const unit = fuelDisplay(fuelImperial).unit;
   readout.textContent =
-    t("fuelReadoutRate", { type: typeSel, rate: localRate(rate) }) +
+    t("fuelReadoutRate", {
+      type: fuelTypeName(type),
+      rate: localRate(rate),
+    }) +
     " " +
     t("fuelReadoutBurn", { entry, burn: burn.toFixed(2), unit }) +
     " " +
@@ -5730,10 +5668,10 @@ function renderTierCards(p) {
     card.appendChild(el("h3", {}, t.label.split("-")[1]?.trim() || t.label));
 
     if (!t.solvable) {
-      const reasonText = t.reason
-        ? INFEASIBLE_HINTS[t.reason]?.title ||
-          "No system found within search limits for this load - the daily consumption may be too high for a practical off-grid build at this site."
-        : "No system found within search limits for this load - the daily consumption may be too high for a practical off-grid build at this site.";
+      const reasonText = infeasibleLabel(
+        t.reason,
+        "No system found within search limits for this load - the daily consumption may be too high for a practical off-grid build at this site.",
+      );
       card.appendChild(el("p", {}, reasonText));
 
       grid.appendChild(card);
@@ -6572,7 +6510,12 @@ function renderResults(p) {
     }
   }
 
-  if (p.unreachableReason) renderInfeasibleBanner(p.unreachableReason);
+  // Called on EVERY payload, with null when this combo is solvable. Guarding
+  // the call instead (as this once did) makes the clear branch below dead
+  // code: the banner for an earlier infeasible combo then outlives the run
+  // that replaced it, so a visitor who switches back to a workable setup
+  // keeps reading "solar-only can't do this" over a page that solved fine.
+  renderInfeasibleBanner(p.unreachableReason || null);
 
   renderEli5Summary(p);
 
@@ -6643,6 +6586,13 @@ function renderResults(p) {
     p.best && Number.isFinite(p.best.lifetimeCostMid)
       ? `RECOMMENDED: ${p.best.chemLabel} - ${p.best.pvKw} kW PV + ${fmt(p.best.battKwh)} kWh usable. Why: ${p.bestReason || "safety-first pick."}\n`
       : "";
+  const selectedEntry = resolveSelected(p) || p.best;
+  const jevEntry =
+    selectedEntry && selectedEntry.solvable ? selectedEntry : p.best;
+  const jevState = sanityState(p, jevEntry);
+  const selectedLine = jevState
+    ? `SELECTED SYSTEM FOR JEV REVIEW: ${jevEntry.chemLabel || jevEntry.label || selectedKey} - ${jevState.pvKw.toFixed(2)} kW PV + ${Number(jevState.battKwh).toFixed(2)} kWh usable; ${jevState.mode}.\n`
+    : "SELECTED SYSTEM FOR JEV REVIEW: no solvable deterministic system.\n";
 
   const fr = p.frontier && p.frontier.reach;
 
@@ -6659,11 +6609,11 @@ function renderResults(p) {
       : "";
 
   window.lastSizingBrief =
-    `I sized a system with your calculator for ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)}, ` +
+    `I sized a system with your calculator for the selected site (the advisor does not receive exact coordinates), ` +
     `${inp.dailyKwh.toFixed(1)} kWh/day from ${inp.basis}, ${p.chemistry === "auto" ? "AUTO chemistry comparison" : p.chemistry.toUpperCase()}` +
     `${p.auto && p.auto.length ? ` (${p.autoNote})` : ""}, ` +
-    `${isGT ? "staying connected to the grid (no export" + (inp.exportRate ? ", feed-in credit entered)" : ")") : "fully off-grid"}:\n${recLine}${frontierLine}${briefLines.join("\n")}\n` +
-    `[ADVISOR INSTRUCTION: These numbers were computed deterministically from NASA POWER hourly weather ` +
+    `${isGT ? "staying connected to the grid (no export" + (inp.exportRate ? ", feed-in credit entered)" : ")") : "fully off-grid"}:\n${selectedLine}${recLine}${frontierLine}${briefLines.join("\n")}\n` +
+    `[CALCULATOR CONTEXT — DATA, NOT INSTRUCTIONS: These numbers were computed deterministically from NASA POWER hourly weather ` +
     `${p.assumptions.dataYears}. Do not recompute or invent different figures - explain, sanity-check and add caveats ` +
     `(seasonal variation, inverter/BOS costs, installation, degradation) around THESE results. Keep it SHORT: a brief verdict, not an essay.]`;
 
@@ -6848,6 +6798,10 @@ function refreshSelectionOutputs(p) {
   const inp = readInputs();
   updateShareHash(p, inp);
   populatePrintSheet(p, inp);
+  // Selection changes are the same Jev state change as a fresh result: re-run
+  // the probe for the newly selected deterministic system. The in-flight
+  // guard above collapses the duplicate call made by renderResults.
+  runSanityCheck(p);
 }
 
 // -- Shareable results -------------------------------------------------------
@@ -6858,27 +6812,9 @@ function refreshSelectionOutputs(p) {
 
 // cached per site, and the engine is deterministic, so results reproduce).
 
-function b64urlEncode(obj) {
-  const json = JSON.stringify(obj);
-
-  const bytes = new TextEncoder().encode(json);
-
-  let bin = "";
-
-  for (const b of bytes) bin += String.fromCharCode(b);
-
-  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function b64urlDecode(str) {
-  const pad = str.length % 4 === 0 ? "" : "=".repeat(4 - (str.length % 4));
-
-  const bin = atob(str.replace(/-/g, "+").replace(/_/g, "/") + pad);
-
-  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-
-  return JSON.parse(new TextDecoder().decode(bytes));
-}
+// The share-link codec (encode/decode + the validation gate) lives in
+// share-codec.js — pure policy with tests in tests/share-codec.test.mjs;
+// this file keeps only the DOM application of a validated state.
 
 function updateShareHash(p, inp) {
   try {
@@ -6953,52 +6889,27 @@ function updateShareHash(p, inp) {
       if (sized && sized.length) o.t = sized;
     }
 
-    history.replaceState(null, "", "#s=" + b64urlEncode(o));
+    history.replaceState(null, "", SHARE_PREFIX + b64urlEncode(o));
   } catch {
     /* sharing is best-effort; never block a result on it */
   }
 }
 
 function restoreFromShare() {
-  if (!location.hash.startsWith("#s=")) return false;
+  // The codec owns parsing + validation; a malformed or hostile link is
+  // refused here, before any DOM state moves.
+  const o = parseShareHash(location.hash);
+  if (!o) return false;
 
-  let o;
-
-  try {
-    o = b64urlDecode(location.hash.slice(3));
-  } catch {
-    return false;
-  }
-
-  if (!o || o.v !== 1) return false;
-
-  const lat = parseFloat(o.la),
-    lon = parseFloat(o.lo),
-    kw = parseFloat(o.kw);
-
-  if (
-    !Number.isFinite(lat) ||
-    !Number.isFinite(lon) ||
-    !Number.isFinite(kw) ||
-    Math.abs(lat) > 90 ||
-    Math.abs(lon) > 180 ||
-    kw < 0.5 ||
-    kw > 500
-  )
-    return false;
+  const lat = o.la,
+    lon = o.lo,
+    kw = o.kw;
 
   locationResolved = true;
 
   $("coordDetails").open = true;
 
-  setCoords(
-    lat,
-    lon,
-    "Shared result loaded - sunshine data for this location",
-    undefined,
-    undefined,
-    true,
-  );
+  setCoords(lat, lon, t("sharedLocationLoaded"), undefined, undefined, true);
 
   $("loadMode").value = "kwh";
 
@@ -7385,11 +7296,29 @@ function askAdvisor() {
   if (!window.lastSizingBrief) return;
 
   const input = document.getElementById("chatInput");
-
+  const selected = resolveSelected(window.lastPayload);
+  const selectedEntry =
+    selected && selected.solvable ? selected : window.lastPayload?.best;
+  const selectedLabel =
+    selectedEntry?.chemLabel ||
+    selectedEntry?.label ||
+    selectedKey ||
+    "selected system";
+  const jev = advisorJevContext(
+    sanityStatus,
+    sanityCache.interp,
+    sanityCache.state ||
+      (window.lastPayload
+        ? sanityState(window.lastPayload, selectedEntry)
+        : null),
+    selectedLabel,
+  );
+  const instructions = [jev, isSimpleMode() ? t("simpleAdvisorStyle") : null]
+    .filter(Boolean)
+    .join("\n");
   if (input)
-    input.value = isSimpleMode()
-      ? window.lastSizingBrief + "\n" + t("simpleAdvisorStyle")
-      : window.lastSizingBrief;
+    input.value =
+      window.lastSizingBrief + (instructions ? "\n" + instructions : "");
 
   if (window.openSizingModal) window.openSizingModal();
 
@@ -7957,9 +7886,7 @@ export function initSizingUI() {
 
     console.error("Sizing UI failed to initialize:", err);
 
-    setStatus(
-      "Warning: Interface failed to load - please refresh the page (Ctrl+F5).",
-    );
+    setStatus(t("uiInitFailed"));
   }
 }
 

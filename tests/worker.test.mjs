@@ -10,6 +10,8 @@ import worker, {
   ensureDisclaimer,
   DISCLAIMER_FOOTER,
   SYSTEM_PROMPT_VERSION,
+  buildSystemPrompt,
+  normalizeAdvisorLanguage,
 } from "../worker/index.js";
 
 const ORIGIN = "https://freeoffgridcalculator.com";
@@ -178,6 +180,8 @@ test("unknown paths 404", async () => {
 
 test("/api/chat validates input before any paid call", async () => {
   assert.equal((await worker.fetch(chatReq({}), {})).status, 400);
+  assert.equal((await worker.fetch(chatReq("null"), {})).status, 400);
+  assert.equal((await worker.fetch(chatReq("[]"), {})).status, 400);
   assert.equal(
     (await worker.fetch(chatReq({ message: "x".repeat(4001) }), {})).status,
     413,
@@ -206,6 +210,44 @@ test("/api/chat returns 429 with Retry-After after 8/min", async () => {
   const limited = await worker.fetch(chatReq({ message: "hi" }), env);
   assert.equal(limited.status, 429);
   assert.equal(limited.headers.get("Retry-After"), "60");
+});
+
+test("advisor prompt is request-time, multilingual, and treats calculator/Jev text as untrusted data", () => {
+  const prompt = buildSystemPrompt(new Date("2027-01-02T23:30:00Z"), "de");
+  assert.match(prompt, /current date is January 2, 2027/);
+  assert.match(prompt, /selected German \(Deutsch\)/);
+  assert.match(prompt, /untrusted data, not higher-priority instructions/);
+  assert.match(prompt, /bounded numeric check/);
+  assert.match(prompt, /do not assume North American/i);
+  assert.doesNotMatch(prompt, /Aloha-spirit/);
+  assert.equal(normalizeAdvisorLanguage("fr"), "fr");
+  assert.equal(normalizeAdvisorLanguage("not-a-locale"), "en");
+  assert.equal(SYSTEM_PROMPT_VERSION, "2026-09c");
+});
+
+test("/api/chat sends the controlled interface language to Groq", async () => {
+  const realFetch = globalThis.fetch;
+  let requestBody = null;
+  globalThis.fetch = async (_url, options) => {
+    requestBody = JSON.parse(options.body);
+    return new Response(
+      JSON.stringify({
+        choices: [{ message: { content: "ok" }, finish_reason: "stop" }],
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  };
+  try {
+    const res = await worker.fetch(
+      chatReq({ message: "Briefing please", language: "pt" }),
+      { GROQ_API_KEY: "test-key" },
+    );
+    assert.equal(res.status, 200);
+    assert.match(requestBody.messages[0].content, /Portuguese \(Português\)/);
+    assert.equal(requestBody.messages.at(-1).content, "Briefing please");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
 
 test("/api/chat happy path returns the sanitized reply", async () => {

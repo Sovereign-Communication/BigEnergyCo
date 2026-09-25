@@ -11,6 +11,16 @@
 // CACHE_VERSION to force every client to refresh on next visit.
 
 const CACHE_VERSION = "beco-v85";
+
+// Every cache operation races this budget; a slower one degrades to its
+// fallback instead of hanging the request that waited on it.
+const CACHE_OP_BUDGET_MS = 1500;
+function cacheOp(promise, fallback = null) {
+  return Promise.race([
+    promise.catch(() => fallback),
+    new Promise((ok) => setTimeout(() => ok(fallback), CACHE_OP_BUDGET_MS)),
+  ]);
+}
 // Explicit file URLs only: cache.addAll rejects the whole batch if ANY entry
 // 404s or redirects, and directory URLs ("./blog/") depend on server
 // directory-index behavior. Every entry below must exist on disk — the
@@ -65,17 +75,38 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // never touch API / satellite data
 
+  // Cache Storage queues behind the app's big concurrent writes (the ~2 MB
+  // NASA weather cache), so cache I/O must never sit on a request's critical
+  // path. Two rules enforce that:
+  //   * every cache operation races a short timeout — a stalled lookup
+  //     degrades to a network fetch, never a hung request (observed: a
+  //     module load hanging 8s+ behind a weather write);
+  //   * the response clone destined for the cache is drained into memory
+  //     immediately, so the tee can never backpressure the page's own byte
+  //     stream on a stalled cache write (the "reload 17s stall" class).
+  const serveFresh = (res) => {
+    if (!res || res.status !== 200) return res; // redirects/404/304 pass through
+    const copy = res.clone();
+    event.waitUntil(
+      copy
+        .arrayBuffer()
+        .then((body) =>
+          cacheOp(caches.open(CACHE_VERSION).then((c) => c.put(req, body))),
+        )
+        .catch(() => {}),
+    );
+    return res;
+  };
+
   if (req.mode === "navigate" || url.pathname.endsWith("/index.html")) {
     // Network-first for the page itself.
     event.respondWith(
       fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE_VERSION).then((c) => c.put(req, copy));
-          return res;
-        })
+        .then(serveFresh)
         .catch(() =>
-          caches.match(req).then((hit) => hit || caches.match("./index.html")),
+          cacheOp(caches.match(req)).then(
+            (hit) => hit || cacheOp(caches.match("./index.html")),
+          ),
         ),
     );
     return;
@@ -87,15 +118,9 @@ self.addEventListener("fetch", (event) => {
   ) {
     // Stale-while-revalidate for assets.
     event.respondWith(
-      caches.match(req).then((hit) => {
+      cacheOp(caches.match(req)).then((hit) => {
         const refresh = fetch(req)
-          .then((res) => {
-            if (res.ok) {
-              const copy = res.clone();
-              caches.open(CACHE_VERSION).then((c) => c.put(req, copy));
-            }
-            return res;
-          })
+          .then(serveFresh)
           .catch(() => hit);
         return hit || refresh;
       }),

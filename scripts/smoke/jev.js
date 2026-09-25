@@ -190,13 +190,17 @@ export async function runJevFlow(ctx) {
           flip(true);
           await new Promise((r) => setTimeout(r, 400));
           const simpleBadge = !!document.querySelector("#simpleResultsWrap .sanity-badge.sanity-pass");
+          const simpleBadgeCount = document.querySelectorAll("#simpleResultsWrap .sanity-badge").length;
           flip(false);
           await new Promise((r) => setTimeout(r, 400));
           const regularBadgeBack = !!document.querySelector("#resultsRegion .sanity-badge.sanity-pass");
+          const regularBadgeCount = document.querySelectorAll("#resultsRegion .sanity-badge").length;
           return JSON.stringify({
             regularBadge,
             simpleBadge,
             regularBadgeBack,
+            regularBadgeCount,
+            simpleBadgeCount,
             callsAtMount,
             callsAfterToggles: window.__jevCalls3 || 0,
           });
@@ -225,6 +229,8 @@ export async function runJevFlow(ctx) {
     tg.regularBadge === true &&
       tg.simpleBadge === true &&
       tg.regularBadgeBack === true &&
+      tg.regularBadgeCount === 1 &&
+      tg.simpleBadgeCount === 1 &&
       tg.callsAfterToggles === tg.callsAtMount,
     toggleGate,
   );

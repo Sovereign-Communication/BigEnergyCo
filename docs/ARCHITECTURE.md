@@ -1,7 +1,7 @@
 # Architecture map
 
-What owns what, as of #116–#123 (run channel → location picker → charts →
-a11y flow). Read this before
+What owns what, as of the #116–#127 sequence (run channel → location picker
+→ charts → a11y flow → run deadline → share-link codec). Read this before
 changing sizing behavior or the smoke harness; update it when the structure
 changes.
 
@@ -97,12 +97,120 @@ through the injected `setStatus`. No location state lives here.
   the module graph: every name ui.js imports exists, the export surface is
   exactly its consumers, and the palette stays out of ui.js.
 
+## Share-link codec (extracted from ui.js)
+
+- `assets/js/sizing/share-codec.js` — **single owner** of what a share link
+  is: the `#s=` + base64url JSON format, encode/decode, and the validation
+  gate (`parseShareHash`) every incoming link must pass (version and the
+  la/lo/kw bounds) before it is allowed to touch the form. Pure policy, no
+  DOM; `tests/share-codec.test.mjs` pins the round trip and the refusal
+  cases — the same malformed links the share smoke gates reject live.
+- `ui.js` keeps only the DOM application: writing a validated state into
+  inputs (`restoreFromShare`) and serializing the current form
+  (`updateShareHash`).
+
+## Infeasible-reason copy (extracted from ui.js)
+
+- `assets/js/sizing/infeasible-copy.js` — **single owner of which reason code
+  maps to which locale keys**. The engine decides the code
+  (`infeasibleReason`, plus the two search-limit codes `run.js` adds),
+  `locales.js` owns the copy in six languages, and this module owns the
+  mapping between them — a value a test can call. It used to be a table
+  inside `ui.js`, reachable only by regexing that file's source, so a code
+  with no reviewed copy could ship as a generic message nobody had read.
+- `ui.js` keeps only `renderInfeasibleBanner`: the banner DOM and the sr-only
+  live region that mirrors it for assistive tech.
+  `tests/infeasible-copy.test.mjs` proves every code the engine can emit has
+  copy, that the search-limit codes keep their own wording, and that all six
+  locales carry every pair.
+
+## Parts-list export (extracted from ui.js)
+
+- `assets/js/sizing/parts-csv.js` — **single owner of the spreadsheet**: the
+  field escaping (`csvField`), the document framing (`csvDocument`: UTF-8 BOM
+  plus CRLF, which is what makes a spreadsheet read the non-ASCII notes
+  correctly) and the row assembly (`partsListRows`), which is pure — a
+  hardware list, the selected system, a site and a date in; rows out. Every
+  section is optional by design: battery-only, solar-only, cable-less, and
+  either hemisphere.
+- `ui.js` keeps the download mechanics only: build the list, make a blob,
+  click a link. `tests/parts-csv.test.mjs` pins a byte-exact golden captured
+  from the pre-extraction implementation, so the move is proven to change
+  nothing a visitor downloads.
+
+## Generator fuel helper (extracted from ui.js)
+
+- `assets/js/sizing/fuel-units.js` — **single owner of the fuel rules**: the
+  litres-per-kWh burn table and its US-gallon twin, the three boxes that buy
+  fuel by the gallon (mainland US, Hawaii, Alaska), the coordinate predicate
+  (`isImperialLocation`), the burn lookup with its petrol fallback
+  (`fuelBurnPerKwh`), the typed local-price -> USD/kWh conversion
+  (`fuelRateUsd`) and the five display facts the page writes — label key,
+  example price, unit suffix, and the two footnote figures (`fuelDisplay`).
+  The footnote figures are derived from the burn table instead of typed in, so
+  editing the table can no longer leave the paragraph disagreeing with the
+  maths it describes.
+- `ui.js` keeps the input plumbing: read the coordinates and the price fields,
+  write the label, the example, the unit spans and the readout sentence.
+- `tests/fuel-units.test.mjs` freezes what the pre-extraction implementation
+  produced — every box boundary, the price/FX matrix, and the readout
+  sentences under both unit systems — and pins that the controller delegates
+  rather than duplicating. `scripts/smoke/location.js` checks the same five
+  slots in a real browser, switching Honolulu -> gallons and Paris -> litres.
+
+## Internationalization (translation ownership)
+
+- `assets/js/shared/locales.js` — **single owner** of every user-visible
+  string, in all six locales (`en`, `es`, `pt`, `fr`, `de`, `ar` with RTL).
+  There is no second copy. Three readers share one implementation of the
+  contract: `i18n.js`'s `translate()`/`applyI18n()` (the `data-i18n`,
+  `data-i18n-placeholder`, `data-i18n-aria-label` hooks), the sizing
+  controller (which binds `translate as t`), and the classic `chat.js` bridge
+  (`window.becoT`/`window.becoLang`).
+- `assets/js/shared/interpolate.js` — **single owner of the string contract**:
+  `pickString` (locale, then English, then the raw key) and `interpolate`
+  (`{placeholder}` substitution). This was implemented twice, once for the
+  markup pass and once for runtime copy, so the same replacement defect had
+  to be found and fixed in each; there is one loop now.
+- **Interpolation is `{placeholder}`, applied with a function replacer.** A
+  pre-translated fragment glued together in code cannot be reordered by a
+  translator, and a string replacer reads `$&`/`$n` inside the value as a
+  pattern — so a formatted money figure (`$200`) would silently lose its
+  dollars. Names are matched literally, never as a pattern, so a placeholder
+  is only ever filled by its own exact name. All three traps are pinned in
+  `tests/interpolate.test.mjs`, with the money case also pinned end to end in
+  `tests/i18n.test.mjs`.
+- Runtime copy is composed from keys, never literals: the pipeline stepper,
+  speed notes, infeasibility banners, appliance and slider readouts, the
+  share-restore label, the init-failure status, and the advisor modal's
+  loading/error/retry text.
+- **Boundary (deliberate):** the long-form static sections — hero, FAQ,
+  parts list, support, legal — are English-only documentation, and that is
+  visible as the absence of a `data-i18n` hook on those elements. The
+  translated surface is the calculator itself plus its advisor.
+- Gates: `scripts/check-i18n.mjs` (parity, hook coverage, placeholder
+  parity, no key-name leaks, RTL, runtime-composed families, and no key that
+  shipped code or markup never renders) and `tests/i18n.test.mjs` (corruption
+  such as a lost byte, split sentences, the placeholder contract,
+  interpolation safety).
+
 ## Known remaining debt (deliberate, not forgotten)
 
-- `ui.js` is still ~7.9k lines: form state, rendering, Jev, sliders,
-  sharing, modals. Three extractions are done (run channel, location picking,
-  chart rendering); each further one should follow the same pattern (policy in
-  a pure module, mechanics stay with the DOM, tests first).
+- `ui.js` is still ~8.0k lines (7,999 at this writing): form state, rendering
+  glue, Jev badge lifecycle, sliders, modals. Seven extraction seams are done
+  (run channel, location picking, chart rendering, share-link codec,
+  infeasible-reason copy, parts-list export, generator fuel helper) and the
+  string contract now has one owner in `shared/interpolate.js`; each further
+  seam should follow the same pattern (policy in a pure module, mechanics stay
+  with the DOM, tests first).
+- The two display-currency clusters are the next obvious seam: `fxActive` /
+  `money` / `localRate` / `energyRate` / `gridRate` / `moneyRange` all read the
+  same two inputs and the same rate table, and the tariff, export and fuel
+  fields each convert with it by hand.
+- The hero, FAQ, parts list, support and legal sections are still
+  English-only static markup. Translating them is an editorial pass (six
+  locales of long-form prose), not a code change, and nothing in the
+  calculator depends on it.
 - The live Jev path now runs directly against TypeSafe
   (`provider=typesafe fallback=false`, recorded across the complete-gate
   runs); OpenRouter stays configured as the rate-limit backup, and the

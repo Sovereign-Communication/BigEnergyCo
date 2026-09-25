@@ -1,10 +1,18 @@
 import { readFileSync } from "node:fs";
 let allClean = true;
+// Every file that ships user-facing non-ASCII text. Corruption (a UTF-8 byte
+// pair read back as Latin-1, or a byte lost to U+FFFD) surfaces here first:
+// the locales file carried a corrupted Arabic string that no other gate could
+// see, because it was not in this list.
 for (const f of [
   "assets/js/sizing/ui.js",
   "index.html",
   "assets/js/sizing/sizing-worker.js",
   "assets/js/sizing/run.js",
+  "assets/js/shared/locales.js",
+  "assets/js/shared/i18n.js",
+  "assets/js/chat.js",
+  "worker/index.js",
 ]) {
   const t = readFileSync(f, "utf8");
   const bad = /(\u00e2\u20ac|\u00c3[\u0080-\u00ff]|\u00f0\u0178|\uFFFD)/.test(

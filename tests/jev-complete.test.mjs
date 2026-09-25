@@ -218,6 +218,24 @@ test("PACK: validator rejects each malformed shape with a named error", () => {
   }
 });
 
+test("PACK: the AI advisor is a dedicated live-audited facet with a declared work bucket", () => {
+  const doc = validateCompletePack(DEFAULT_COMPLETE_PACK);
+  assert.equal(doc.axes.advisor.authority, "jev");
+  assert.equal(doc.axes.advisor.bucket, "advisor_gap");
+  assert.match(
+    doc.axes.advisor.instructions,
+    /deterministic calculator figures authoritative/,
+  );
+  assert.match(doc.axes.advisor.instructions, /privacy/);
+  assert.match(doc.axes.advisor.instructions, /multilingual/);
+  assert.ok(doc.buckets.advisor_gap);
+  assert.ok(
+    doc.buckets.advisor_gap.suggested_next_action.includes(
+      "same selected deterministic state",
+    ),
+  );
+});
+
 test("PACK: gate constants stay coherent with the pack", () => {
   const total = Object.values(HARD_GATE_POINTS).reduce((a, b) => a + b, 0);
   assert.equal(total, 100, "hard-gate points must sum to exactly 100");
@@ -258,6 +276,92 @@ test("QUESTIONS: one score per axis over the declared levels, one choice over th
 });
 
 // ── code-owned heuristic ─────────────────────────────────────────────────────
+
+test("EVIDENCE: advisor audit summary is transported without becoming an optimistic fact", () => {
+  const merged = mergeEvidence(
+    {
+      advisor_audit:
+        "same selected state, prompt-injection, locale, provider failure",
+    },
+    AUTO_CLEAN,
+  );
+  assert.match(
+    buildStateText(merged, AUTO_CLEAN),
+    /advisor_audit: same selected state/,
+  );
+  assert.equal(
+    buildStateText(mergeEvidence({}, AUTO_CLEAN), AUTO_CLEAN).includes(
+      "advisor_audit: not recorded",
+    ),
+    true,
+  );
+});
+
+test("EVIDENCE: per-facet proof lines survive transport intact, bounded per line", () => {
+  const proof =
+    "keyboard walks 64/81/47 stops + wrap, named controls, AA contrast, reduced-motion both modes";
+  const merged = mergeEvidence(
+    {
+      facet_evidence: {
+        accessibility: proof,
+        experience: "pipeline stepper + speed notes + retryable timeout error",
+        bogus: 42,
+        broken: "",
+      },
+      notes: Array.from(
+        { length: 8 },
+        (_, i) => `note ${i} ${"x".repeat(200)}`,
+      ),
+    },
+    AUTO_CLEAN,
+  );
+  const text = buildStateText(merged, AUTO_CLEAN);
+  assert.ok(
+    text.includes(`accessibility: ${proof}`),
+    "a facet proof line must reach the judge whole, not truncated mid-way",
+  );
+  assert.match(text, /experience: pipeline stepper/);
+  assert.ok(!text.includes("bogus"), "non-string facet entries are dropped");
+  assert.ok(!text.includes("broken:"), "empty facet entries are dropped");
+
+  const long = mergeEvidence(
+    { facet_evidence: { docs: "d".repeat(1000) } },
+    AUTO_CLEAN,
+  );
+  const longLine = buildStateText(long, AUTO_CLEAN)
+    .split("\n")
+    .find((l) => l.startsWith("docs: "));
+  assert.equal(
+    longLine.length,
+    "docs: ".length + 280,
+    "each facet line is bounded so one verbose axis cannot crowd out the rest",
+  );
+});
+
+test("TRANSPORT: a full 16-axis record survives whole — no axis lost to the tail", () => {
+  const facet_evidence = {};
+  for (const axis of AXIS_IDS) {
+    facet_evidence[axis] = `${axis} proof: ` + "x".repeat(120);
+  }
+  const merged = mergeEvidence(
+    {
+      ...ALL_GREEN,
+      facet_evidence,
+      notes: ["note one survives", "note two survives"],
+    },
+    AUTO_CLEAN,
+  );
+  const text = buildStateText(merged, AUTO_CLEAN);
+  for (const axis of AXIS_IDS) {
+    assert.ok(
+      text.includes(`${axis}: ${axis} proof: `),
+      `axis lost from transport: ${axis}`,
+    );
+  }
+  assert.ok(text.includes("note one survives"));
+  assert.ok(text.includes("note two survives"));
+  assert.ok(text.length <= 6000, "transport budget holds the full record");
+});
 
 test("HEURISTIC: only code-owned axes move, and only toward their evidence", () => {
   const cases = [
@@ -474,7 +578,7 @@ test("TRANSPORT: every recorded evidence channel reaches the live judge", () => 
   for (const n of notes) {
     assert.ok(text.includes(n), `note missing from transport: ${n}`);
   }
-  assert.ok(text.length <= 3000, "transport budget holds the full record");
+  assert.ok(text.length <= 6000, "transport budget holds the full record");
 });
 
 // ── score arithmetic ─────────────────────────────────────────────────────────

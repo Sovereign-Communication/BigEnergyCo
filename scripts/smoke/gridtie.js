@@ -96,6 +96,34 @@ export async function runGridTieFlow(ctx, actions) {
     `$${tariff}/kWh`,
   );
   gate("result card has Total 20-year cost", await actions.runAndWaitCard());
+  // This session showed a real infeasible banner above, so a stale one would
+  // still be sitting here. The reason explains the payload on screen, and the
+  // run that replaced it solved — so both the banner and the sr-only region
+  // that mirrors it must be retracted, while the region itself stays rendered
+  // (display:none is exactly what a screen reader will not announce, so
+  // "clearing" it by hiding it would silently disable the feature).
+  const bannerAfter = await evaluate(`(() => {
+      const b = document.getElementById("infeasibleBanner");
+      const live = document.getElementById("infeasibleLive");
+      return {
+        display: b ? getComputedStyle(b).display : "absent",
+        htmlEmpty: b ? b.innerHTML === "" : true,
+        liveEmpty: live ? live.textContent === "" : true,
+        liveRendered: live ? getComputedStyle(live).display !== "none" : false,
+      };
+    })()`);
+  gate(
+    "solvable run retracts the previous infeasible reason",
+    bannerAfter.display !== "block" &&
+      bannerAfter.htmlEmpty &&
+      bannerAfter.liveEmpty,
+    JSON.stringify(bannerAfter),
+  );
+  gate(
+    "infeasible live region stays rendered while empty",
+    bannerAfter.liveRendered,
+    JSON.stringify(bannerAfter),
+  );
   gate(
     "savings chart heading present",
     await evaluate(
