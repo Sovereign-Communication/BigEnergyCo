@@ -28,6 +28,7 @@ import {
   surplusAnchor,
   budgetSpanMax,
 } from "../assets/js/sizing/budget-span.js";
+import { infeasibleCopyKeys } from "../assets/js/sizing/infeasible-copy.js";
 import { runSizing } from "../assets/js/sizing/run.js";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
 import {
@@ -369,25 +370,29 @@ test("an unsolvable target with NO area input is envelope-limited, never area-li
 });
 
 test("hints: the area message exists only under area-limited", () => {
-  const src = readFileSync(
-    new URL("../assets/js/sizing/ui.js", import.meta.url),
-    "utf8",
-  );
-  // The copy lives in locales.js (so the banner is translated); ui.js owns
-  // which locale keys each reason maps to. Both halves are pinned, because
-  // either rename alone would silently swap "your area cap did this" for
-  // "the tool's search limit did this" — the distinction the banner exists to
-  // make in the first place.
-  assert.match(
-    src,
-    /"area-limited":\s*\{[\s\S]*?titleKey:\s*"infeasibleAreaTitle"[\s\S]*?bodyKey:\s*"infeasibleAreaBody"/,
+  // The copy lives in locales.js (so the banner is translated) and the
+  // reason-to-key mapping lives in infeasible-copy.js, which is a value this
+  // can call. Both halves stay pinned, because either rename alone would
+  // silently swap "your area cap did this" for "the tool's search limit did
+  // this" — the distinction the banner exists to make in the first place.
+  const area = infeasibleCopyKeys("area-limited");
+  assert.equal(
+    area.titleKey,
+    "infeasibleAreaTitle",
     "the area-cap story is keyed to the evidence that proves it",
   );
+  assert.equal(area.bodyKey, "infeasibleAreaBody");
   assert.equal(
     LOCALES.en.infeasibleAreaTitle,
     "Too little roof/yard area for this target",
   );
-  assert.match(src, /"envelope-limited":\s*\{/);
+  const envelope = infeasibleCopyKeys("envelope-limited");
+  assert.notEqual(
+    envelope.titleKey,
+    area.titleKey,
+    "a search limit must not reuse the cap's headline",
+  );
+  assert.notEqual(envelope.bodyKey, area.bodyKey);
   assert.ok(
     LOCALES.en.infeasibleEnvelopeBody.length > 0,
     "envelope-limited has its own body text",

@@ -62,10 +62,11 @@ import { BOM_ITEMS } from "../shared/content.js?v=20260921f";
 import {
   applyI18n,
   initLangPicker,
-  resolveLang,
+  // Runtime-rendered copy goes through the same translate() the markup pass
+  // uses, so `t` is a binding to the one implementation rather than a second
+  // copy of the placeholder contract.
+  translate as t,
 } from "../shared/i18n.js?v=20260921f";
-
-import { LOCALES } from "../shared/locales.js?v=20260921f";
 
 import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260921f";
 import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260921f";
@@ -94,6 +95,11 @@ import {
   b64urlEncode,
   parseShareHash,
 } from "./share-codec.js?v=20260921f";
+import {
+  hasInfeasibleCopy,
+  infeasibleCopyKeys,
+} from "./infeasible-copy.js?v=20260921f";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20260921f";
 
 import {
   renderFrontier,
@@ -355,27 +361,11 @@ const RESCALE_MIN_KWH = 15;
 // True once the user applied the generator-fuel helper to the price field.
 let generatorBasis = false;
 
-// Translation helper with interpolation support (uses shared resolveLang so
-// auto-detection matches the chrome i18n — no split-brain between panel and
-// t() strings).
-function t(key, params = {}) {
-  const lang = resolveLang();
-
-  const dict = LOCALES[lang] || LOCALES.en;
-
-  // English fallback before the raw key: a string added in one locale must
-  // read as English everywhere else, never as key-ese.
-  let str = dict[key] ?? LOCALES.en[key] ?? key;
-
-  for (const [k, v] of Object.entries(params)) {
-    // A function replacer, not a string: a value containing "$&" or "$n"
-    // (any formatted money figure) would otherwise be read as a replacement
-    // pattern and silently mangled — "$200" loses its dollars to the $2 rule.
-    str = str.replace(new RegExp(`\\{${k}\\}`, "g"), () => v);
-  }
-
-  return str;
-}
+// `t` is shared/i18n.js's translate (imported above), which delegates the
+// placeholder contract to shared/interpolate.js. This file used to carry its
+// own lookup-then-substitute loop; it agreed with i18n.js by luck rather than
+// by construction, and the same "$200" replacer bug had to be found and fixed
+// in both. One owner now, so a fix to substitution lands once.
 
 // -- Appliance library -------------------------------------------------------
 
@@ -776,33 +766,9 @@ function renderSimpleResults(p) {
 // reason above the cards so visitors know WHY nothing solved and what to
 // change. Hides itself the moment a payload without a reason arrives (i.e.
 // a normal run) so it never lingers across the page.
-// Every reason maps to its locale keys — the copy lives in locales.js so a
-// non-English visitor reads the failure in their own language, like the rest
-// of the chrome.
-const INFEASIBLE_HINTS = {
-  // run.js emits this code only when an area cap was actually provided.
-  "area-limited": {
-    titleKey: "infeasibleAreaTitle",
-    bodyKey: "infeasibleAreaBody",
-  },
-  // The search envelope, not any visitor input, is the limit here.
-  "envelope-limited": {
-    titleKey: "infeasibleEnvelopeTitle",
-    bodyKey: "infeasibleEnvelopeBody",
-  },
-  "needs-battery": {
-    titleKey: "infeasibleNeedsBatteryTitle",
-    bodyKey: "infeasibleNeedsBatteryBody",
-  },
-  "needs-panels": {
-    titleKey: "infeasibleNeedsPanelsTitle",
-    bodyKey: "infeasibleNeedsPanelsBody",
-  },
-  "needs-pv-surplus": {
-    titleKey: "infeasibleNeedsSurplusTitle",
-    bodyKey: "infeasibleNeedsSurplusBody",
-  },
-};
+// The code-to-copy mapping is owned by infeasible-copy.js (pure, testable in
+// isolation); the copy itself is owned by locales.js in all six languages.
+// What is left here is only the rendering.
 function renderInfeasibleBanner(reason) {
   let banner = $("infeasibleBanner");
   // Created on demand, and only when there is something to say: clearing must
@@ -825,10 +791,7 @@ function renderInfeasibleBanner(reason) {
     if (live) live.textContent = "";
     return;
   }
-  const hint = INFEASIBLE_HINTS[reason] || {
-    titleKey: "infeasibleGenericTitle",
-    bodyKey: "infeasibleGenericBody",
-  };
+  const hint = infeasibleCopyKeys(reason);
   const title = t(hint.titleKey);
   const body = t(hint.bodyKey);
   banner.style.display = "block";
@@ -836,6 +799,16 @@ function renderInfeasibleBanner(reason) {
   banner.appendChild(el("div", { class: "infeasible-title" }, title));
   banner.appendChild(el("div", { class: "infeasible-body" }, body));
   if (live) live.textContent = `${title}. ${body}`;
+}
+
+// The label for a cell or tier that produced no system: the reviewed copy when
+// the code has it, and the caller's own honest note otherwise. Defined at
+// module scope on purpose — renderTierCards shadows the translate helper with
+// its own loop variable, so a copy lookup written inside that scope would be
+// calling the tier object.
+function infeasibleLabel(reason, fallback) {
+  if (!reason || !hasInfeasibleCopy(reason)) return fallback;
+  return t(infeasibleCopyKeys(reason).titleKey);
 }
 
 function fmtH(h) {
@@ -4829,18 +4802,24 @@ function matrixHtml(p) {
             ? ` data-sel="${key}" role="button" tabindex="0" aria-label="Select ${escapeAttr(row.label)} at ${escapeAttr(col.label)}" style="cursor:pointer;"`
             : "";
           if (!cell || !cell.solvable) {
-            const hint =
-              cell && cell.reason ? INFEASIBLE_HINTS[cell.reason] : null;
-            const reasonText = hint
-              ? hint.title
-              : cell && cell.reason
-                ? cell.reason
-                : "not practical here";
+            // Resolve the copy through the same owner the banner uses. This
+            // cell used to read .title/.body off the key table, so a cell with
+            // a known reason rendered the word "undefined" in the print sheet —
+            // a defect no gate looked at, because only an infeasible run and a
+            // print-sheet walk reach it.
+            const reason = (cell && cell.reason) || null;
+            const keys =
+              reason && hasInfeasibleCopy(reason)
+                ? infeasibleCopyKeys(reason)
+                : null;
+            const reasonText = keys
+              ? t(keys.titleKey)
+              : reason || "not practical here";
             const detail =
               cell && cell.envelopeNote
                 ? ` — ${escapeHtml(cell.envelopeNote)}`
-                : hint && hint.body
-                  ? `<br><span style="font-size:0.7rem;opacity:0.85;">${escapeHtml(hint.body)}</span>`
+                : keys
+                  ? `<br><span style="font-size:0.7rem;opacity:0.85;">${escapeHtml(t(keys.bodyKey))}</span>`
                   : "";
             return `<td${cls}><span style="color:var(--text-muted);font-size:0.78rem;line-height:1.35;">${escapeHtml(reasonText)}${detail}</span></td>`;
           }
@@ -5471,10 +5450,6 @@ function renderBomPanel() {
   }
 }
 
-function csvField(v) {
-  return `"${String(v ?? "").replace(/"/g, '""')}"`;
-}
-
 function downloadBomCsv() {
   const bom = buildFocusBom();
   // Label row describes the SELECTED system the BOM was built from — never
@@ -5483,146 +5458,18 @@ function downloadBomCsv() {
     (lastPayload && resolveSelected(lastPayload)) ||
     (lastPayload && lastPayload.focus);
   if (!bom || !f) return;
-  const rows = [
-    ["BigEnergyCo hardware list - educational estimate, not a quote"],
-    ["Generated", new Date().toISOString().slice(0, 10)],
-    [
-      "System",
-      `${f.pvKw || 0} kW PV + ${f.battNameplateKwh || 0} kWh nameplate (${bom.chemLabel || "Solar"})`,
-    ],
-    [
-      "Location",
-      `${lastPayload.meta.latitude.toFixed(2)}, ${lastPayload.meta.longitude.toFixed(2)}`,
-    ],
-    [],
-    ["Section", "Item", "Quantity / size", "Notes"],
-  ];
-  if (bom.panels) {
-    rows.push([
-      "Panels",
-      `${bom.panels.panelWatts} W mono panels`,
-      bom.panels.count,
-      `${bom.panels.kwActual} kW array, about ${bom.panels.areaM2} sq m`,
-    ]);
-  } else {
-    rows.push(["Panels", "None", 0, "Battery-only configuration"]);
-  }
-  if (bom.voltage && bom.battery) {
-    rows.push(
-      [
-        "Bank",
-        "System voltage",
-        `${bom.voltage.volts} V`,
-        bom.voltage.rationale,
-      ],
-      [
-        "Bank (DIY)",
-        bom.battery.diy.unitLabel,
-        `${bom.battery.diy.stringsParallel} string(s), ${bom.battery.diy.blocksTotal} cells`,
-        `${bom.battery.diy.stringKwh} kWh per string`,
-      ],
-      [
-        "Bank (retail alt.)",
-        bom.battery.retail.unitLabel,
-        bom.battery.retail.modules,
-        "BMS and enclosure included",
-      ],
-    );
-  } else {
-    rows.push(["Bank", "None", 0, "Solar-only configuration"]);
-  }
-  rows.push([
-    "Inverter",
-    `${bom.inverter.recommendedKw} kW class continuous`,
-    1,
-    bom.inverter.referenceUnit,
-  ]);
-  if (bom.controller) {
-    rows.push(
-      [
-        "Charging",
-        `MPPT controller capacity`,
-        `${bom.controller.ampsRequired} A total`,
-        bom.controller.suggestion,
-      ],
-      [
-        "Protection",
-        "Main battery fuse/breaker",
-        `${bom.protection.mainFuseAmps} A`,
-        `bank draws ~${bom.protection.batteryDischargeAmps} A at full load`,
-      ],
-      [
-        "Protection",
-        "PV disconnect/breaker",
-        `${bom.protection.pvBreakerAmps} A`,
-        "",
-      ],
-    );
-  }
-  if (bom.cable) {
-    for (const c of bom.cable) {
-      rows.push([
-        "Cable",
-        `Battery-to-inverter run ${c.meters} m`,
-        c.mm2 ? `${c.awg} (${c.mm2} sq mm) copper` : `larger than ${c.awg}`,
-        "2% max drop, conservative ampacity",
-      ]);
-    }
-  }
-  if (bom.panels && lastPayload?.meta?.latitude != null) {
-    const lat = lastPayload.meta.latitude;
-    const absLat = Math.abs(lat);
-    const facing = lat >= 0 ? "True South (180 deg)" : "True North (0 deg)";
-    rows.push([
-      "Mounting",
-      "Array Tilt & Orientation",
-      `Facing: ${facing}`,
-      `Year-round fixed: ~${Math.round(absLat * 0.9)} deg | Winter steep: ~${Math.min(70, Math.round(absLat + 15))} deg`,
-    ]);
-  }
-  rows.push(
-    [
-      "BOS Safety",
-      "DC Battery Disconnect & Fuse",
-      `Class-T fuse / DC breaker ${bom.protection?.mainFuseAmps || 200} A`,
-      "Mandatory overcurrent protection near positive terminal",
-    ],
-    [
-      "BOS Safety",
-      "PV DC Isolator & Surge Device",
-      "DC-rated breaker + SPD",
-      "Protects charge controller / inverter from PV lightning surges",
-    ],
-    [
-      "BOS Safety",
-      "Battery Shunt / Monitor",
-      "500 A precision current shunt",
-      "Tracks true SoC via Coulomb counting",
-    ],
-    [
-      "BOS Safety",
-      "Equipment Grounding & Bonding",
-      "Copper ground rod + bonding bus",
-      "Single common earth bond for frame rails, SPDs, and inverter chassis",
-    ],
+  // Row assembly and CSV framing are owned by parts-csv.js — a pure module
+  // with its own tests, so the spreadsheet can be checked without running the
+  // page and downloading a file. What is left here is the download itself.
+  const csv = csvDocument(
+    partsListRows({
+      bom,
+      focus: f,
+      meta: lastPayload.meta,
+      requiresSplitPhase: Boolean(window.lastInputs?.requiresSplitPhase),
+      generatedOn: new Date().toISOString().slice(0, 10),
+    }),
   );
-  if (window.lastInputs?.requiresSplitPhase) {
-    rows.push([
-      "BOS Notice",
-      "240V Split-Phase Required",
-      "L1 + L2 + Neutral (120/240V)",
-      "Required for 240V well pump, mini-split, or EV charger",
-    ]);
-  }
-  rows.push(
-    [],
-    [
-      "Disclaimer",
-      "Educational estimate only. Verify everything with a licensed electrician or engineer before purchasing or energizing.",
-    ],
-  );
-  const csv =
-    "\uFEFF" + rows.map((r) => r.map(csvField).join(",")).join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const aEl = document.createElement("a");
@@ -5836,10 +5683,10 @@ function renderTierCards(p) {
     card.appendChild(el("h3", {}, t.label.split("-")[1]?.trim() || t.label));
 
     if (!t.solvable) {
-      const reasonText = t.reason
-        ? INFEASIBLE_HINTS[t.reason]?.title ||
-          "No system found within search limits for this load - the daily consumption may be too high for a practical off-grid build at this site."
-        : "No system found within search limits for this load - the daily consumption may be too high for a practical off-grid build at this site.";
+      const reasonText = infeasibleLabel(
+        t.reason,
+        "No system found within search limits for this load - the daily consumption may be too high for a practical off-grid build at this site.",
+      );
       card.appendChild(el("p", {}, reasonText));
 
       grid.appendChild(card);

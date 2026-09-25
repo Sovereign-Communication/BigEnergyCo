@@ -10,6 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LOCALES } from "../assets/js/shared/locales.js";
+import { pickString } from "../assets/js/shared/interpolate.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
@@ -162,8 +163,10 @@ test("runtime advisor copy interpolates through the locale placeholder contract"
 
 // Interpolation used to pass the value as a string replacement, so a value
 // containing "$&" or "$n" was read as a replacement pattern: the bill-start
-// note silently dropped the "$2" of "$200". Behavior (translate) and source
-// (ui.js's own t) are both pinned, because the two helpers are separate.
+// note silently dropped the "$2" of "$200". That defect had to be fixed in two
+// separate helpers, which is why this used to pin both files' source. The
+// substitution now has one owner (shared/interpolate.js), so the pins point at
+// that single place and at the delegation from each reader.
 test("interpolation never re-reads a value as a replacement pattern", async () => {
   const { translate } = await import("../assets/js/shared/i18n.js");
   const rendered = translate("quickBillStarts", { bill: "$200", kwh: 5 });
@@ -171,16 +174,23 @@ test("interpolation never re-reads a value as a replacement pattern", async () =
     rendered.includes("$200"),
     `the formatted bill must survive interpolation intact: ${rendered}`,
   );
+  const helper = fs.readFileSync(
+    path.join(ROOT, "assets/js/shared/interpolate.js"),
+    "utf8",
+  );
+  assert.match(
+    helper,
+    /replaceAll\(`\{\$\{name\}\}`, \(\) =>/,
+    "the replacer must be a function, never a string",
+  );
   const i18n = fs.readFileSync(
     path.join(ROOT, "assets/js/shared/i18n.js"),
     "utf8",
   );
-  assert.match(i18n, /replaceAll\(`\{\$\{name\}\}`, \(\) =>/);
-  const ui = fs.readFileSync(path.join(ROOT, "assets/js/sizing/ui.js"), "utf8");
   assert.match(
-    ui,
-    /"g"\),\s*\(\) => v\)/,
-    "ui.js t() must interpolate with a function replacer too",
+    i18n,
+    /return interpolate\(pickString\(dict, key, LOCALES\.en\), vars\);/,
+    "i18n.js must delegate instead of substituting on its own",
   );
 });
 
@@ -199,14 +209,34 @@ test("German is exposed and has a translated core result vocabulary", () => {
   assert.match(locale, /frontierTitle:/);
 });
 
-test("ui t() falls back to English before the raw key", () => {
-  const src = fs.readFileSync(
-    path.join(ROOT, "assets/js/sizing/ui.js"),
+test("the locale lookup falls back to English before the raw key", () => {
+  const helper = fs.readFileSync(
+    path.join(ROOT, "assets/js/shared/interpolate.js"),
     "utf8",
   );
   assert.ok(
-    /LOCALES\.en\[key\]\s*\?\?\s*key/.test(src),
-    "t() must chain locale -> English -> raw key",
+    /fallbackDict\?\.\[key\]\s*\?\?\s*key/.test(helper),
+    "the lookup must chain locale -> English -> raw key",
+  );
+  // Behaviorally, not just textually: a key only English carries must read as
+  // English, and a key nothing carries must not read as key-ese garbage.
+  assert.equal(pickString({}, "navBlog", LOCALES.en), LOCALES.en.navBlog);
+  assert.equal(
+    pickString({}, "definitelyNotAKey", LOCALES.en),
+    "definitelyNotAKey",
+  );
+  // And the controller must not have grown a second lookup of its own again:
+  // that duplication is what let the money bug need fixing twice.
+  const ui = fs.readFileSync(path.join(ROOT, "assets/js/sizing/ui.js"), "utf8");
+  assert.match(
+    ui,
+    /translate as t,/,
+    "runtime copy binds to the shared lookup",
+  );
+  assert.doesNotMatch(
+    ui,
+    /function t\(key, params = \{\}\)/,
+    "a local t() would be a second implementation of the same contract",
   );
 });
 

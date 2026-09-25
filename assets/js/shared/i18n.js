@@ -2,6 +2,7 @@
 // direction for RTL locales. Falls back to English silently. No network,
 // no storage beyond the user's own language choice in localStorage.
 import { LOCALES } from "./locales.js?v=20260921f";
+import { interpolate, pickString } from "./interpolate.js?v=20260921f";
 
 // Exported so the language gate (scripts/check-i18n.mjs) can prove every
 // offered locale actually has a dictionary, and that the picker never offers a
@@ -38,15 +39,7 @@ export function resolveLang() {
 export function translate(key, vars = {}) {
   const lang = resolveLang();
   const dict = LOCALES[lang] || LOCALES.en;
-  const value = dict[key] ?? LOCALES.en[key] ?? key;
-  return Object.entries(vars).reduce(
-    (text, [name, replacement]) =>
-      // A function replacer, not a string: a replacement containing "$&" or
-      // "$n" (any formatted money figure) would be read as a pattern and
-      // silently mangled — "$200" would lose its dollars to the $2 rule.
-      text.replaceAll(`{${name}}`, () => String(replacement ?? "")),
-    value,
-  );
+  return interpolate(pickString(dict, key, LOCALES.en), vars);
 }
 
 export function applyI18n() {
