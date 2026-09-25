@@ -8,7 +8,7 @@ export const MANUAL_VALIDATORS = new Map([
   ],
   [
     "scripts/validate-against-sheet.mjs",
-    "blocked on the owner's spreadsheet export (PHASE2_PLAN.md tracks it)",
+    "blocked on the owner's spreadsheet export (docs/archive/PHASE2_PLAN.md tracks it)",
   ],
   [
     "scripts/validate-jev-complete.mjs",

@@ -1,3 +1,18 @@
+> **SUPERSEDED — do not act on this document.**
+> Moved to `docs/archive/` by plan item **P0.2**. The governing document is
+> [`docs/plan/MASTER_PLAN.md`](../plan/MASTER_PLAN.md), which is hash-pinned by
+> `docs/plan/PLAN.lock.json` and changes only through a recorded amendment
+> (master plan §16). Where this file and the master plan disagree, **the master
+> plan wins**.
+>
+> **Reason for archiving this file specifically:** The plausibility-frontier build ledger. Shipped. It records what was deliberately left out of that pass, which is useful history.
+>
+> **Where its content went:** The frontier is changed, not replaced: §7 module disposition and R-CHART-01..05.
+>
+> Retained for history and for the provenance of decisions already shipped. Line
+> references below point at `main` as of the archive, not at the plan's `b60a651`
+> baseline.
+
 # PHASE 3 PLAN — The Plausibility Frontier
 
 **Created:** 2026-08-29. Implements roadmap phase 3 (bill-cut explorer) and pulls

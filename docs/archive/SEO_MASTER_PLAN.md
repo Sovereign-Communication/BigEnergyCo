@@ -1,3 +1,18 @@
+> **SUPERSEDED — do not act on this document.**
+> Moved to `docs/archive/` by plan item **P0.2**. The governing document is
+> [`docs/plan/MASTER_PLAN.md`](../plan/MASTER_PLAN.md), which is hash-pinned by
+> `docs/plan/PLAN.lock.json` and changes only through a recorded amendment
+> (master plan §16). Where this file and the master plan disagree, **the master
+> plan wins**.
+>
+> **Reason for archiving this file specifically:** An SEO strategy written before the registry and per-country pages existed. Its highest-value idea — answering 'how much does solar cost in {country}' — is now a first-class requirement rather than a content-engine suggestion.
+>
+> **Where its content went:** R-SEO-01..06 and P9.2/P9.3/P9.4, which build those pages from the data registry.
+>
+> Retained for history and for the provenance of decisions already shipped. Line
+> references below point at `main` as of the archive, not at the plan's `b60a651`
+> baseline.
+
 # BigEnergyCo — SEO Master Plan
 
 **Mission:** make BigEnergyCo the #1 free answer for "can solar + battery cut my bill / get me off-grid?" and drive real people to the estimator.

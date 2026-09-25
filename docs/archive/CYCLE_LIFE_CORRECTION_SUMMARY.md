@@ -1,3 +1,18 @@
+> **SUPERSEDED — do not act on this document.**
+> Moved to `docs/archive/` by plan item **P0.2**. The governing document is
+> [`docs/plan/MASTER_PLAN.md`](../plan/MASTER_PLAN.md), which is hash-pinned by
+> `docs/plan/PLAN.lock.json` and changes only through a recorded amendment
+> (master plan §16). Where this file and the master plan disagree, **the master
+> plan wins**.
+>
+> **Reason for archiving this file specifically:** A correction record for battery cycle-life data. Its substantive content is not a plan at all — it is the provenance of the reference document that stays at the repo root.
+>
+> **Where its content went:** `BATTERY_CYCLE_LIFE_REFERENCE_2026.md` stays live and is the current data reference; this file is the audit trail explaining how it was corrected.
+>
+> Retained for history and for the provenance of decisions already shipped. Line
+> references below point at `main` as of the archive, not at the plan's `b60a651`
+> baseline.
+
 # Critical Correction: Battery Cycle Life Data — August 3, 2026
 
 ## The Problem

@@ -1,3 +1,18 @@
+> **SUPERSEDED — do not act on this document.**
+> Moved to `docs/archive/` by plan item **P0.2**. The governing document is
+> [`docs/plan/MASTER_PLAN.md`](../plan/MASTER_PLAN.md), which is hash-pinned by
+> `docs/plan/PLAN.lock.json` and changes only through a recorded amendment
+> (master plan §16). Where this file and the master plan disagree, **the master
+> plan wins**.
+>
+> **Reason for archiving this file specifically:** The sizing-core build ledger. Phase 2A/2B plus the money, cohesion, grid-tie and worldwide passes all shipped. Its §5.1 reference-spreadsheet gate is still registered and still blocked on an owner export.
+>
+> **Where its content went:** R-ENG-01 keeps `engine.js` and extends it only through R-UC-01..06. The §5.1 gate remains live in `scripts/lib/gate-registry.mjs`; only the file path changed.
+>
+> Retained for history and for the provenance of decisions already shipped. Line
+> references below point at `main` as of the archive, not at the plan's `b60a651`
+> baseline.
+
 # PHASE 2 PLAN — Deterministic Sizing Core + 5-Year Hourly Simulation
 
 **Created:** 2026-08-22, after the P0 hardening pass.

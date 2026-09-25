@@ -1,3 +1,18 @@
+> **SUPERSEDED — do not act on this document.**
+> Moved to `docs/archive/` by plan item **P0.2**. The governing document is
+> [`docs/plan/MASTER_PLAN.md`](../plan/MASTER_PLAN.md), which is hash-pinned by
+> `docs/plan/PLAN.lock.json` and changes only through a recorded amendment
+> (master plan §16). Where this file and the master plan disagree, **the master
+> plan wins**.
+>
+> **Reason for archiving this file specifically:** The advisor context contract and the three-layer Jev audit. Substantively the most valuable archived document: it states requirements the master plan only partly absorbs. Its race-safety requirement is the one gap carried forward.
+>
+> **Where its content went:** R-AI-01..08 absorb the contract, the typed provider boundary and the verdict handling. The client race-safety rule is NOT covered — see the carry-forward table.
+>
+> Retained for history and for the provenance of decisions already shipped. Line
+> references below point at `main` as of the archive, not at the plan's `b60a651`
+> baseline.
+
 # AI advisor and Jev audit
 
 **Status:** current implementation contract for `worker/index.js`, `assets/js/chat.js`, and `assets/js/sizing/validate.js`.

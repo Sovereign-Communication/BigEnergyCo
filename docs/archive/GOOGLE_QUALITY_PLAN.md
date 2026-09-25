@@ -1,3 +1,18 @@
+> **SUPERSEDED — do not act on this document.**
+> Moved to `docs/archive/` by plan item **P0.2**. The governing document is
+> [`docs/plan/MASTER_PLAN.md`](../plan/MASTER_PLAN.md), which is hash-pinned by
+> `docs/plan/PLAN.lock.json` and changes only through a recorded amendment
+> (master plan §16). Where this file and the master plan disagree, **the master
+> plan wins**.
+>
+> **Reason for archiving this file specifically:** Executed in full. All six phases shipped: `jargon-dict.js`, `appliances.js` (extracted out of `ui.js`), `map-provider.js`, `wizard.js`, `tests/persona-matrix.test.mjs`, `tests/jargon-lint.test.mjs`, and `de` added to the language picker. It is a completed work order, not a forward plan.
+>
+> **Where its content went:** R-CONT-02 (glossary + jargon lint, extended to all locales), R-FLOW-01..07 (the location-first flow it designed), R-DS-02 (Simple/Technical mode), and P5/P6. The 12-persona matrix is subsumed by R-ENG-02's fixture matrix. Its roof-drawing Phase 5 is the one requirement NOT carried — see the carry-forward table in the P0.2 pull request.
+>
+> Retained for history and for the provenance of decisions already shipped. Line
+> references below point at `main` as of the archive, not at the plan's `b60a651`
+> baseline.
+
 # Google-Quality Worldwide Usability Overhaul — Execution Plan
 
 **For:** Any AI agent (or human) executing the "if Google released a free off-grid
