@@ -93,9 +93,22 @@ test("UI converts LCOE and grid rates into the selected currency", () => {
   );
   assert.match(ui, /function energyRate\(usdPerKwh\)/);
   assert.match(ui, /usdPerKwh \* \(fx \? fx\.rate : 1\)/);
-  assert.match(ui, /energyRate\(a\.lcoeUsdPerKwh\)/);
-  assert.match(ui, /energyRate\(b\.lcoeUsdPerKwh\)/);
-  assert.match(ui, /energyRate\(t\.lcoeUsdPerKwh\)/);
+  // The LCOE row now has ONE owner, because the label it carries depends on the
+  // mode (a battery-only run shifts energy, it does not make any) — so the row
+  // is built in one place instead of five. The currency contract is unchanged
+  // and is asserted where it now lives: both figures the row shows go through
+  // energyRate, which is the FX-aware formatter.
+  assert.match(ui, /function powerCostRow\(entry, tariff\)/);
+  assert.match(ui, /const lcoe = energyRate\(entry\.lcoeUsdPerKwh\)/);
+  assert.match(ui, /lcoe \+ gridRate\(tariff\)/);
+  assert.match(ui, /energyRate\(tariff\)/);
+  // Every card reaches it: five call sites, and no inline "your power cost"
+  // row left that could print the USD figure unconverted.
+  assert.equal((ui.match(/rows\.push\(powerCostRow\(/g) || []).length, 5);
+  assert.equal(
+    (ui.match(/\["Your power cost",\s*energyRate\(/g) || []).length,
+    0,
+  );
 });
 
 test("location changes refresh the display currency in existing results", () => {

@@ -2110,7 +2110,15 @@ async function runSizingUncached(msg, deps = {}) {
       payload.assumptions.cycleLifeTo80 = Object.fromEntries(
         ["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]),
       );
-      payload.assumptions.money = `Auto mode sizes sodium-ion and LFP to deliver the same bill cut within its depth-of-discharge window (sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). The 60/80/95% matrix columns are fixed reference points; the "your target" column follows the 1–150% slider and is sized by an exact engine run.${customFracGt > 1 ? " Above 100% the system is sized to produce sellable surplus; without a feed-in credit that surplus has no cash value and is flagged as clipped waste." : ""} Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended. Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; ${fixedMonthly > 0 ? `a fixed monthly charge is included in every bill figure (it cannot be cut)` : `fixed connection fees not counted`}.`;
+      // The percentages are read off the columns this run actually renders
+      // rather than hardcoded: a battery-only matrix has no bill-cut columns
+      // (its presets are 10/15/20% peak offsets), so the fixed "60/80/95%"
+      // named three columns the visitor could not see. On a grid-tie run with
+      // panels the derived list is 60/80/95 and the sentence is unchanged.
+      const presetPct = effectiveTargets
+        .map((t) => String(t.id).replace("cut", ""))
+        .join("/");
+      payload.assumptions.money = `Auto mode sizes sodium-ion and LFP to deliver the same bill cut within its depth-of-discharge window (sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). The ${presetPct}%${hardwareConfig === "battery" ? " peak-offset" : ""} matrix columns are fixed reference points; the "your target" column follows the 1–150% slider and is sized by an exact engine run.${customFracGt > 1 ? " Above 100% the system is sized to produce sellable surplus; without a feed-in credit that surplus has no cash value and is flagged as clipped waste." : ""} Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended. Payback compares first cost against bill savings${exportRate ? " plus feed-in credit on clipped surplus" : ""}; ${fixedMonthly > 0 ? `a fixed monthly charge is included in every bill figure (it cannot be cut)` : `fixed connection fees not counted`}.`;
       return attachFrontier(payload);
     }
 

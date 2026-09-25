@@ -92,6 +92,12 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // routing its sentences through the dictionary — 14 keys in all six locales,
   // no code beyond a pure composer. Same trade as the German parity raise:
   // user-facing strings, reviewed deliberately.
+  // 790,000 (+12 KB measured 786,390): the whole-surface sweep. Three more
+  // dictionary keys x six locales (a panel-free Simple-mode explainer, a
+  // battery-only curve method note, and the best-value range tail that was
+  // glued onto translated verdicts as an English literal), plus one small
+  // owner for the levelized-cost row and the reasoning that goes with each
+  // fix. No new module, no new eager feature: strings and comments.
   assert.ok(
     htmlBytes <= 125_000,
     `index.html ${htmlBytes} bytes exceeds 125,000 budget`,
@@ -101,8 +107,8 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     `site.css ${cssBytes} bytes exceeds 40,000 budget`,
   );
   assert.ok(
-    jsBytes <= 778_000,
-    `eager JS ${jsBytes} bytes exceeds 778,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
+    jsBytes <= 790_000,
+    `eager JS ${jsBytes} bytes exceeds 790,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
   );
 });
 

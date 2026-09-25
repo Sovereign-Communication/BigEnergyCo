@@ -93,6 +93,8 @@ export const LOCALES = {
       "At this location, no system we can build reaches that goal. Try a lower bill-cut target — or read the full details for how close solar can actually get.",
     simpleWhatItMeans:
       "Panels make power when the sun is out; the battery carries it into the evening and cloudy days. The system is sized from five years of hourly satellite weather at your exact location.",
+    simpleWhatItMeansBattery:
+      "A battery makes no power of its own — it charges in the cheap hours and holds that energy for the expensive ones. The system is sized from five years of hourly satellite weather at your exact location.",
     simpleCaveat:
       "This is an estimate, not a promise — the full figures behind every number are one click away.",
     simpleSeeDetails: "See all the details",
@@ -149,6 +151,7 @@ export const LOCALES = {
     frontierLegendCurve: "Cheapest system that reaches each level",
     frontierLegendBand: "Same systems, DIY sourcing to shipped retail",
     frontierLegendRange: "Best-value range — every extra percent still cheap",
+    frontierBestValueRange: "Best-value range: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "best value",
     fuelLitLabel: "Price per liter",
     fuelGalLabel: "Price per gallon",
@@ -190,6 +193,8 @@ export const LOCALES = {
       "Within the sizes this tool searches — up to {pvMax} kW of panels and {battMax} kWh of battery — the most you can cover here is about {ceilingPct}%, for around {ceilingCost}. Good value runs out at {kneePct}% for about {kneeCost}. Full independence is not impossible here, but it needs a system far larger than this, and a generator or a grid connection is almost certainly the cheaper way to cover the rest.",
     frontierMethod:
       "The curve comes from simulating every panel-and-battery combination on a coarse grid against the same hourly weather as the cards above, then keeping only the systems nothing cheaper beats. Prices use the same landed do-it-yourself middle as every other figure on this page.",
+    frontierMethodBattery:
+      "The curve comes from simulating every battery size on a coarse grid against the same hourly weather and tariff windows as the cards above, then keeping only the systems nothing cheaper beats. Panels are not part of this run, so the curve varies the bank alone. Prices use the same landed do-it-yourself middle as every other figure on this page.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "recommended",
     cumCostSelected: "selected",
@@ -398,6 +403,8 @@ export const LOCALES = {
       "En esta ubicación, ningún sistema que podamos construir alcanza ese objetivo. Prueba con un porcentaje de ahorro menor, o consulta los detalles completos para ver hasta dónde puede llegar la energía solar.",
     simpleWhatItMeans:
       "Los paneles generan electricidad cuando hay sol; la batería la guarda para la noche y los días nublados. El sistema se dimensiona con cinco años de datos meteorológicos horarios por satélite de tu ubicación exacta.",
+    simpleWhatItMeansBattery:
+      "Una batería no genera nada por sí sola: se carga en las horas baratas y guarda esa energía para las caras. El sistema se dimensiona con cinco años de datos meteorológicos horarios por satélite de tu ubicación exacta.",
     simpleCaveat:
       "Es una estimación, no una promesa; todas las cifras completas están a un clic.",
     simpleSeeDetails: "Ver todos los detalles",
@@ -454,6 +461,7 @@ export const LOCALES = {
     frontierLegendCurve: "El sistema más barato que alcanza cada nivel",
     frontierLegendBand: "Los mismos sistemas, de compra DIY a retail enviado",
     frontierLegendRange: "Rango óptimo — cada punto extra sigue barato",
+    frontierBestValueRange: "Rango óptimo: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "mejor valor",
     fuelLitLabel: "Precio por litro",
     fuelGalLabel: "Precio por galón",
@@ -502,6 +510,8 @@ export const LOCALES = {
       "Dentro de los tamaños que busca esta herramienta —hasta {pvMax} kW de paneles y {battMax} kWh de batería— lo máximo que puedes cubrir aquí es cerca del {ceilingPct}%, por unos {ceilingCost}. La buena relación se acaba en el {kneePct}% por unos {kneeCost}. La independencia total no es imposible aquí, pero exige un sistema mucho mayor; un generador o la red casi seguro son la forma más barata de cubrir el resto.",
     frontierMethod:
       "La curva sale de simular cada combinación de paneles y batería en una malla gruesa con el mismo clima horario que las tarjetas de arriba, y quedarse solo con los sistemas que nada más barato supera. Los precios usan el mismo punto medio DIY con flete que el resto de la página.",
+    frontierMethodBattery:
+      "La curva sale de simular cada tamaño de batería en una malla gruesa con el mismo clima horario y las mismas franjas tarifarias que las tarjetas de arriba, y quedarse solo con los sistemas que nada más barato supera. Aquí no hay paneles, así que la curva solo varía el banco de baterías. Los precios usan el mismo punto medio DIY con flete que el resto de la página.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "recomendado",
     cumCostSelected: "seleccionado",
@@ -723,6 +733,8 @@ export const LOCALES = {
       "Neste local, nenhum sistema que possamos construir atinge essa meta. Tente uma meta de economia menor, ou veja os detalhes completos para saber até onde a energia solar consegue chegar.",
     simpleWhatItMeans:
       "Os painéis geram energia enquanto há sol; a bateria a guarda para a noite e os dias nublados. O sistema é dimensionado com cinco anos de dados meteorológicos horários por satélite do seu local exato.",
+    simpleWhatItMeansBattery:
+      "Uma bateria não gera nada por si só: carrega nas horas baratas e guarda essa energia para as caras. O sistema é dimensionado com cinco anos de dados meteorológicos horários por satélite do seu local exato.",
     simpleCaveat:
       "É uma estimativa, não uma promessa — todos os números completos estão a um clique.",
     simpleSeeDetails: "Ver todos os detalhes",
@@ -779,6 +791,7 @@ export const LOCALES = {
     frontierLegendCurve: "O sistema mais barato que atinge cada nível",
     frontierLegendBand: "Os mesmos sistemas, de compra DIY a varejo entregue",
     frontierLegendRange: "Faixa ideal — cada ponto extra continua barato",
+    frontierBestValueRange: "Faixa ideal: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "melhor valor",
     fuelLitLabel: "Preço por litro",
     fuelGalLabel: "Preço por galão",
@@ -821,6 +834,8 @@ export const LOCALES = {
       "Dentro dos tamanhos que esta ferramenta busca — até {pvMax} kW de painéis e {battMax} kWh de bateria — o máximo que você cobre aqui é cerca de {ceilingPct}%, por uns {ceilingCost}. O bom custo-benefício acaba em {kneePct}% por uns {kneeCost}. A independência total não é impossível aqui, mas exige um sistema bem maior; um gerador ou a rede quase certamente são o jeito mais barato de cobrir o resto.",
     frontierMethod:
       "A curva vem de simular cada combinação de painéis e bateria numa malha grossa com o mesmo clima horário dos cartões acima, mantendo só os sistemas que nada mais barato supera. Os preços usam o mesmo meio-termo DIY desembaraçado do resto da página.",
+    frontierMethodBattery:
+      "A curva vem de simular cada tamanho de bateria numa malha grossa com o mesmo clima horário e as mesmas janelas tarifárias dos cartões acima, mantendo só os sistemas que nada mais barato supera. Não há painéis nesta execução, então a curva varia apenas o banco. Os preços usam o mesmo meio-termo DIY desembaraçado do resto da página.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "recomendado",
     cumCostSelected: "selecionado",
@@ -1044,6 +1059,8 @@ export const LOCALES = {
       "À cet endroit, aucun système constructible n'atteint cet objectif. Essayez un objectif d'économie plus bas, ou consultez les détails complets pour voir jusqu'où le solaire peut réellement aller.",
     simpleWhatItMeans:
       "Les panneaux produisent quand le soleil brille ; la batterie porte cette énergie jusqu'au soir et aux jours gris. Le système est dimensionné à partir de cinq ans de données météo horaires par satellite à votre position exacte.",
+    simpleWhatItMeansBattery:
+      "Une batterie ne produit rien par elle-même : elle se charge aux heures creuses et garde cette énergie pour les heures chères. Le système est dimensionné à partir de cinq ans de données météo horaires par satellite à votre position exacte.",
     simpleCaveat:
       "C'est une estimation, pas une promesse — tous les chiffres détaillés sont à un clic.",
     simpleSeeDetails: "Voir tous les détails",
@@ -1101,6 +1118,7 @@ export const LOCALES = {
     frontierLegendBand: "Les mêmes systèmes, de l'achat DIY au détail livré",
     frontierLegendRange:
       "Plage optimale — chaque point en plus reste bon marché",
+    frontierBestValueRange: "Plage optimale : ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "meilleur rapport",
     fuelLitLabel: "Prix au litre",
     fuelGalLabel: "Prix au gallon",
@@ -1143,6 +1161,8 @@ export const LOCALES = {
       "Dans les tailles explorées par cet outil — jusqu'à {pvMax} kW de panneaux et {battMax} kWh de batterie — le maximum que vous pouvez couvrir ici est d'environ {ceilingPct}%, pour environ {ceilingCost}. Le bon rapport s'arrête à {kneePct}% pour environ {kneeCost}. L'indépendance totale n'est pas impossible ici, mais elle demande un système bien plus grand ; un groupe électrogène ou le réseau est presque certainement le moyen le moins cher de couvrir le reste.",
     frontierMethod:
       "La courbe vient de la simulation de chaque combinaison panneaux-batterie sur une grille grossière avec la même météo horaire que les cartes ci-dessus, en ne gardant que les systèmes qu'aucun moins cher ne bat. Les prix utilisent le même milieu DIY rendu que tous les autres chiffres de la page.",
+    frontierMethodBattery:
+      "La courbe vient de la simulation de chaque taille de batterie sur une grille grossière avec la même météo horaire et les mêmes plages tarifaires que les cartes ci-dessus, en ne gardant que les systèmes qu'aucun moins cher ne bat. Aucun panneau n'entre dans ce calcul : la courbe ne fait varier que le parc de batteries. Les prix utilisent le même milieu DIY rendu que tous les autres chiffres de la page.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "recommandé",
     cumCostSelected: "sélectionné",
@@ -1338,6 +1358,8 @@ export const LOCALES = {
       "An diesem Standort erreicht kein baubares System dieses Ziel. Versuch ein niedrigeres Einspar-Ziel — oder lies die vollständigen Details, um zu sehen, wie weit Solar hier tatsächlich kommt.",
     simpleWhatItMeans:
       "Paneele liefern Strom, wenn die Sonne scheint; der Akku trägt ihn in den Abend und die Grautage. Bemessen wird das System aus fünf Jahren stündlicher Satelliten-Wetterdaten an deinem genauen Standort.",
+    simpleWhatItMeansBattery:
+      "Ein Akku erzeugt selbst keinen Strom: Er lädt in den günstigen Stunden und hält die Energie für die teuren bereit. Bemessen wird das System aus fünf Jahren stündlicher Satelliten-Wetterdaten an deinem genauen Standort.",
     simpleCaveat:
       "Das ist eine Schätzung, kein Versprechen — alle vollständigen Zahlen sind einen Klick entfernt.",
     simpleSeeDetails: "Alle Details anzeigen",
@@ -1394,6 +1416,7 @@ export const LOCALES = {
     frontierLegendBand: "Dieselben Systeme, von Selbstbau bis Versandhandel",
     frontierLegendRange:
       "Bestwert-Spanne — jedes weitere Prozent bleibt günstig",
+    frontierBestValueRange: "Bestwert-Spanne: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "Bestwert",
     fuelLitLabel: "Preis pro Liter",
     fuelGalLabel: "Preis pro Gallone",
@@ -1440,9 +1463,15 @@ export const LOCALES = {
       "Dimensionierung ist hier nicht deine Grenze. Das kleinste praktische System — {pv} kW Panels und {batt} kWh Batterie, etwa {cost} — deckt diesen Verbrauch bereits praktisch vollständig ab. Alles Größere kauft Reserve, keine größere Ersparnis.",
     frontierMethod:
       "Die Kurve nutzt dieselbe stündliche Wetter-Simulation und dieselben Preisannahmen wie die Ergebnisse oben.",
+    frontierMethodBattery:
+      "Die Kurve simuliert jede Batteriegröße auf einem groben Raster mit demselben stündlichen Wetter und denselben Tarifzeiten wie die Ergebnisse oben und behält nur die Systeme, die nichts Günstigeres schlägt. In diesem Lauf gibt es keine Module, die Kurve variiert also nur den Speicher. Die Preise verwenden dieselben Mittelwerte wie alle anderen Zahlen auf dieser Seite.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
-    cumCostRecommended: "empfohlenen",
-    cumCostSelected: "ausgewählten",
+    // The caption head is "Kumulierte Kosten … für das {which} System": after a
+    // definite neuter article the weak adjective takes -e, so the caption read
+    // "für das empfohlenen System" — visible German grammar, and the kind of
+    // thing only a real non-English pass turns up.
+    cumCostRecommended: "empfohlene",
+    cumCostSelected: "ausgewählte",
     cumCostCaptionHead:
       "Kumulierte Kosten über 20 Jahre für das {which} System ({label}): Die amberfarbene Linie ist das, was Sie an den Versorger zahlen, wenn Sie am Netz bleiben ({gridTotal}).",
     cumCostCaptionOwnCost:
@@ -1649,6 +1678,8 @@ export const LOCALES = {
       "في هذا الموقع، لا يوجد نظام يمكن بناؤه يصل إلى هذا الهدف. جرّب نسبة توفير أدنى، أو اطّلع على التفاصيل الكاملة لترى مدى ما يمكن للطاقة الشمسية الوصول إليه فعليًا.",
     simpleWhatItMeans:
       "تُنتج الألواح الكهرباء وقت وجود الشمس؛ وتحملها البطارية إلى المساء والأيام الغائمة. يُحجَّم النظام اعتمادًا على خمس سنوات من بيانات الطقس الساعية بالأقمار الصناعية لموقعك الدقيق.",
+    simpleWhatItMeansBattery:
+      "لا تولّد البطارية كهرباء بنفسها: تشحن في الساعات الرخيصة وتحفظ تلك الطاقة للساعات الغالية. ويُحجَّم النظام اعتمادًا على خمس سنوات من بيانات الطقس الساعية بالأقمار الصناعية لموقعك الدقيق.",
     simpleCaveat:
       "هذا تقدير وليس وعدًا — جميع الأرقام الكاملة على بُعد نقرة واحدة.",
     simpleSeeDetails: "عرض كل التفاصيل",
@@ -1705,6 +1736,8 @@ export const LOCALES = {
     frontierLegendCurve: "أرخص نظام يبلغ كل مستوى",
     frontierLegendBand: "الأنظمة نفسها، من الشراء الذاتي إلى التجزئة المشحونة",
     frontierLegendRange: "النطاق الأفضل قيمة — كل نقطة إضافية ما زالت رخيصة",
+    frontierBestValueRange:
+      "النطاق الأفضل قيمة: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "أفضل قيمة",
     fuelLitLabel: "السعر لكل لتر",
     fuelGalLabel: "السعر لكل غالون",
@@ -1747,6 +1780,8 @@ export const LOCALES = {
       "ضمن الأحجام التي تبحثها هذه الأداة — حتى {pvMax} كيلوواط ألواح و{battMax} كيلوواط ساعة بطارية — أقصى ما يمكن تغطيته هنا نحو {ceilingPct}%، بتكلفة قرابة {ceilingCost}. وتنتهي القيمة الجيدة عند {kneePct}% بنحو {kneeCost}. والاستقلال الكامل ليس مستحيلًا هنا، لكنه يحتاج نظامًا أكبر بكثير، وغالبًا يكون مولّد أو اتصال بالشبكة أرخص وسيلة لتغطية الباقي.",
     frontierMethod:
       "يأتي المنحنى من محاكاة كل توليفة ألواح وبطاريات على شبكة خشنة بنفس الطقس الساعي المستخدم في البطاقات أعلاه، ثم الإبقاء فقط على ما لا يتفوق عليه أي نظام أرخص. وتستخدم الأسعار نفس الوسط للتنفيذ الذاتي المستخدم في بقية الصفحة.",
+    frontierMethodBattery:
+      "يأتي المنحنى من محاكاة كل حجم بطارية على شبكة خشنة بنفس الطقس الساعي ونوافذ التعرفة المستخدمة في البطاقات أعلاه، ثم الإبقاء فقط على ما لا يتفوق عليه أي نظام أرخص. لا توجد ألواح في هذه الحالة، لذا يغيّر المنحنى حجم البطارية وحده. وتستخدم الأسعار نفس الوسط للتنفيذ الذاتي المستخدم في بقية الصفحة.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "الموصى به",
     cumCostSelected: "المحدد",

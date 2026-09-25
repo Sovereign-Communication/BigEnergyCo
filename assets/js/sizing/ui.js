@@ -730,11 +730,17 @@ function renderSimpleResults(p) {
   }
   card.appendChild(dl);
 
+  // "Panels make power when the sun is out" is how every system above behaves
+  // EXCEPT the one the headline just described as a peak-hour offset: a
+  // battery-only run has no array, so its own card cannot open by explaining
+  // what panels do. Same split as simpleGoalGrid/simpleGoalBattery.
   card.appendChild(
     el(
       "p",
       { class: "simple-note" },
-      t("simpleWhatItMeans") + " " + t("simpleCaveat"),
+      t(entry.pvKw > 0 ? "simpleWhatItMeans" : "simpleWhatItMeansBattery") +
+        " " +
+        t("simpleCaveat"),
     ),
   );
 
@@ -1369,7 +1375,7 @@ function applyAppliancePreset(presetKey) {
   }
 }
 
-function renderSunPath(lat) {
+function renderSunPath(lat, hasPv = $("hardwareConfig")?.value !== "battery") {
   const wrap = $("sunPathWrap");
 
   if (!wrap) return;
@@ -1479,6 +1485,18 @@ function renderSunPath(lat) {
             : "Flat mounting captures essentially the full harvest at your latitude"
         }</div>
       </div>`;
+
+  // No array, no tilt to advise on. The guide ends "Our simulation already
+  // assumes the recommended tilt when sizing your array" and asks what "a flat
+  // roof forfeits" — advice and a claim about an array a battery-only run
+  // never builds, on a page whose own card reads "Solar array None
+  // (Battery-only)". Before a run the hardware selector decides it, so the
+  // guide is gone the moment "Battery only" is chosen.
+  if (!hasPv) {
+    wrap.style.display = "none";
+    wrap.innerHTML = "";
+    return;
+  }
 
   wrap.style.display = "block";
 
@@ -3475,6 +3493,29 @@ function gridRate(usdPerKwh) {
   return Number.isFinite(usdPerKwh) ? ` (grid ${energyRate(usdPerKwh)})` : "";
 }
 
+/**
+ * The levelized-cost row, named for what it actually measures.
+ *
+ * `lcoeUsdPerKwh` is the system's own cost per kWh it serves. With panels that
+ * is most of the bill, so "your power cost" is the honest name. A battery-only
+ * run serves nothing new — it MOVES energy that is still bought at the tariff —
+ * so the same number is the cost of each shifted kWh. Printed as "your power
+ * cost" it read as a figure five times below the grid rate, on the same card
+ * that says the system never breaks even and beside a money bar that says a
+ * battery does not cut what you pay. The number is right; the name was not.
+ */
+function powerCostRow(entry, tariff) {
+  const lcoe = energyRate(entry.lcoeUsdPerKwh);
+  if (Number(entry.pvKw) > 0)
+    return ["Your power cost", lcoe + gridRate(tariff)];
+  return [
+    "Cost per shifted kWh",
+    Number.isFinite(tariff)
+      ? `${lcoe} — on top of the ${energyRate(tariff)} you still pay for that energy`
+      : lcoe,
+  ];
+}
+
 function moneyRange(lo, hi) {
   if (!Number.isFinite(Number(lo)) || !Number.isFinite(Number(hi))) return "–";
   return money(lo) + "–" + money(hi);
@@ -3663,10 +3704,7 @@ function renderAutoCards(p) {
     }
 
     if (Number.isFinite(a.lcoeUsdPerKwh)) {
-      rows.push([
-        "Your power cost",
-        energyRate(a.lcoeUsdPerKwh) + gridRate(p.tariff),
-      ]);
+      rows.push(powerCostRow(a, p.tariff));
     }
 
     appendRows(card, rows);
@@ -4608,10 +4646,7 @@ function renderBestPick(p) {
     ]);
   }
   if (Number.isFinite(b.lcoeUsdPerKwh)) {
-    rows.push([
-      "Your power cost",
-      energyRate(b.lcoeUsdPerKwh) + gridRate(p.tariff),
-    ]);
+    rows.push(powerCostRow(b, p.tariff));
   }
   appendRows(card, rows);
   if (p.bestReason) {
@@ -4708,10 +4743,21 @@ export function turnkeyQuoteText(sys, moneyFn = money, rangeFn = moneyRange) {
   const quotes = rangeFn(q.quoteLo, q.quoteHi);
   const allInLo = Math.round(((Number(sys.costLo) + 1500) / 100) * 100);
   const allInHi = Math.round(((Number(sys.costHi) + 3000) / 100) * 100);
-  const saved =
+  const delta =
     Math.round(((q.quoteLo + q.quoteHi) / 2 - (allInLo + allInHi) / 2) / 100) *
     100;
-  return `DIY or direct hardware cost is ~${directCost}. For this system size, full-service quotes typically run ${quotes} \u2014 the cheapest competitive markets land near the low end, high-commission sales outfits near the top \u2014 driven by commissions, permits, and markups. Ordering direct and hiring a licensed electrician for the final hookup (~$1,500\u2013$3,000) puts your all-in cost near ${rangeFn(allInLo, allInHi)} \u2014 roughly ${moneyFn(saved)} below a typical quote.`;
+  // The comparison is quote-mid minus all-in-mid, so a POSITIVE delta means the
+  // DIY-plus-hookup route lands under the quote. Which way the sign points is
+  // decided by the numbers, so the word has to follow it: printed
+  // unconditionally as "below", a small system rendered
+  // "roughly -$300.00 below a typical quote" — a sign saying one thing and the
+  // word saying the other. Whole-system sizes are the ones where an installer's
+  // spread exceeds the hookup labor; a battery-only build is not.
+  const vsQuote =
+    delta >= 0
+      ? `roughly ${moneyFn(delta)} below a typical quote`
+      : `roughly ${moneyFn(-delta)} ABOVE a typical quote`;
+  return `DIY or direct hardware cost is ~${directCost}. For this system size, full-service quotes typically run ${quotes} \u2014 the cheapest competitive markets land near the low end, high-commission sales outfits near the top \u2014 driven by commissions, permits, and markups. Ordering direct and hiring a licensed electrician for the final hookup (~$1,500\u2013$3,000) puts your all-in cost near ${rangeFn(allInLo, allInHi)} \u2014 ${vsQuote}.`;
 }
 
 /** Plain-English ELI5 breakdown for beginners and non-engineers. */
@@ -5207,10 +5253,7 @@ function entryDetailRows(p, e) {
   }
   pushSeriesBreakdown(rows, e);
   if (Number.isFinite(e.lcoeUsdPerKwh)) {
-    rows.push([
-      "Your power cost",
-      energyRate(e.lcoeUsdPerKwh) + gridRate(p.tariff),
-    ]);
+    rows.push(powerCostRow(e, p.tariff));
   }
   if (e.unmetHoursPerYear !== undefined && e.unmetHoursPerYear !== null) {
     rows.push([
@@ -5491,15 +5534,24 @@ function renderBomPanel() {
       "\uD83D\uDEE1\uFE0F Essential Balance-of-System (BOS) & Safety Checklist",
     ),
   );
+  // A no-panel build ships no PV, so this checklist must not send the visitor
+  // shopping for a PV isolator, an SPD "before the charge controller", or
+  // grounding for "panel mounting rails" — items the parts list above already
+  // reports as None. Same condition that gates the Panels row, one card up.
+  const hasPv = Boolean(bom.panels);
   const bosRows = [
     [
       "DC Battery Disconnect",
       `Heavy-duty rotary disconnect switch + Class-T fuse (or DC-rated breaker) sized to ${bom.protection?.mainFuseAmps || 200} A near battery positive terminal.`,
     ],
-    [
-      "PV Array Isolator + SPD",
-      "DC-rated 2-pole breaker and DC Surge Protective Device (lightning arrestor) before the charge controller.",
-    ],
+    ...(hasPv
+      ? [
+          [
+            "PV Array Isolator + SPD",
+            "DC-rated 2-pole breaker and DC Surge Protective Device (lightning arrestor) before the charge controller.",
+          ],
+        ]
+      : []),
     [
       "Battery Shunt / Monitor",
       "Precision 500 A shunt on main battery negative for exact State-of-Charge (SoC) tracking (voltage alone is inaccurate on lithium).",
@@ -5510,7 +5562,9 @@ function renderBomPanel() {
     ],
     [
       "Equipment Grounding",
-      "Common earth ground bonding for panel mounting rails, lightning arrestors, and inverter chassis to ground rod.",
+      hasPv
+        ? "Common earth ground bonding for panel mounting rails, lightning arrestors, and inverter chassis to ground rod."
+        : "Common earth ground bonding for the battery rack, the inverter chassis, and any metal enclosure to a ground rod.",
     ],
   ];
   if (window.lastInputs?.requiresSplitPhase) {
@@ -5814,10 +5868,7 @@ function renderTierCards(p) {
     }
 
     if (Number.isFinite(t.lcoeUsdPerKwh)) {
-      rows.push([
-        "Your power cost",
-        energyRate(t.lcoeUsdPerKwh) + gridRate(p.tariff),
-      ]);
+      rows.push(powerCostRow(t, p.tariff));
     }
 
     if (t.replacementsHorizon > 0) {
@@ -6002,10 +6053,7 @@ function renderTargetCards(p, extraTargets = []) {
     }
 
     if (Number.isFinite(t.lcoeUsdPerKwh)) {
-      rows.push([
-        "Your power cost",
-        energyRate(t.lcoeUsdPerKwh) + gridRate(p.tariff),
-      ]);
+      rows.push(powerCostRow(t, p.tariff));
     }
 
     if (t.replacementsHorizon > 0 && t.battKwh > 0) {
@@ -6216,6 +6264,31 @@ function renderFrontierPanel(p) {
 
   wrap.style.display = "block";
 
+  // The method note claims the curve simulates "every panel-and-battery
+
+  // combination". A battery-only sweep varies the bank alone, so the note and
+
+  // the curve above it disagreed about what was on the chart. Swapping the
+
+  // data-i18n hook (not just the text) keeps applyI18n translating the right
+
+  // variant on a later language switch — same pattern as the cut-slider label.
+
+  const methodNote = $("frontierMethodNote");
+
+  if (methodNote) {
+    const methodKey =
+      Number(resolveSelected(p)?.pvKw) > 0 || p.hardwareConfig !== "battery"
+        ? "frontierMethod"
+        : "frontierMethodBattery";
+
+    if (methodNote.getAttribute("data-i18n") !== methodKey) {
+      methodNote.setAttribute("data-i18n", methodKey);
+
+      methodNote.textContent = t(methodKey);
+    }
+  }
+
   // One source of truth for the blue dot: the visitor's click wins, but with
   // no click the dot sits on the RECOMMENDATION at its true position (the
   // marker) — never snapped onto the nearest curve point, which quietly
@@ -6267,9 +6340,19 @@ function renderFrontierPanel(p) {
       Number.isFinite(range.loPct) &&
       Number.isFinite(range.hiPct)
     ) {
+      // Through the dictionary: appended as a literal this sentence changed
+      // language halfway through ("… rund 2.6-mal so viel wie zuvor.
+      // Best-value range: ~$255.00–$543.00 (41.9–100%).") on every non-English
+      // run, because frontierVerdict() is composed from keys and this tail
+      // was not. English output is byte-identical to before.
       verdict.textContent +=
-        ` Best-value range: ~${money(range.loCostUsd)}–${money(range.hiCostUsd)}` +
-        ` (${range.loPct}–${range.hiPct}%).`;
+        " " +
+        t("frontierBestValueRange", {
+          lo: money(range.loCostUsd),
+          hi: money(range.hiCostUsd),
+          loPct: range.loPct,
+          hiPct: range.hiPct,
+        });
     }
   }
 
@@ -6499,7 +6582,12 @@ function renderResults(p) {
     else selectedKey = "best";
   }
 
-  renderSunPath(p.input?.latitude ?? parseFloat($("latInput")?.value));
+  // The run's own hardware, not the selector's current value: a restored result
+  // must keep the guide matching the system its cards describe.
+  renderSunPath(
+    p.input?.latitude ?? parseFloat($("latInput")?.value),
+    p.hardwareConfig !== "battery",
+  );
 
   renderMoneyBar(p);
 
@@ -7221,6 +7309,12 @@ function populatePrintSheet(p, inp) {
   // Hardware summary (SELECTED system) + full options matrix for the printout.
   let hwHtml = "";
   const hwEntry = resolveSelected(p) || p.focus;
+  // `footprintText` returns null when there is no array to describe, and this
+  // one site concatenated it straight into the sheet: every battery-only print
+  // read "location 21.31, -157.86 - null - grid price $0.44/kWh". A missing
+  // footprint has to read as nothing at all, never as the word null.
+  const foot = footprintText(hwEntry?.pvKw ?? p.focus?.pvKw ?? 0);
+  const footLine = foot ? foot + " - " : "";
   if (hwEntry) {
     const bom = buildBom({
       pvKw: hwEntry.pvKw,
@@ -7333,7 +7427,7 @@ function populatePrintSheet(p, inp) {
 
       ${hwEntry && hwEntry.chemLabel ? hwEntry.chemLabel : p.chemistry.toUpperCase()} battery - location ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)} -
 
-      ${hwEntry || p.focus ? footprintText((hwEntry || p.focus).pvKw) + " - " : ""}${p.tariff ? `grid price ${energyRate(p.tariff)} (~${money(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
+      ${footLine}${p.tariff ? `grid price ${energyRate(p.tariff)} (~${money(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
 
     ${hwHtml}
 
@@ -7957,6 +8051,13 @@ export function initSizingUI() {
     window.addEventListener("beco:lang", () => {
       updateFuelUnits();
       updateGenHelper();
+      // The results panel is assembled by JS, and applyI18n only rewrites
+      // data-i18n markup — so switching language left the caption, the tariff
+      // line and the frontier verdict in the previous language until the
+      // visitor happened to run again: one page, two languages. Re-rendering
+      // the payload the panel was built from costs nothing (no engine run, no
+      // fetch) and puts the whole surface in one language.
+      if (lastPayload) renderResults(lastPayload);
     });
 
     updateFuelUnits();

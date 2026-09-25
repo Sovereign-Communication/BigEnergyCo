@@ -129,7 +129,7 @@ function drawSunStrip(ctx, pv, X, W, padL, padR, stripH) {
   );
 }
 
-export function drawSocChart(history, chemLabel) {
+export function drawSocChart(history, chemLabel, hasPv = true) {
   const wrap = $("socChartWrap");
 
   const canvas = $("socCanvas");
@@ -185,8 +185,13 @@ export function drawSocChart(history, chemLabel) {
 
   const visibleDays = Math.max(1, zEnd - zStart);
 
+  // The strip is the SITE's daily harvest per kW of array, so the series exists
+  // even when the run has no array at all. Drawing it for a battery-only build
+  // put a solar signal on a panel-free chart and then explained it as what
+  // drives that battery's recharge rhythm — nothing about this battery follows
+  // the sun. `hasPv` is the run's own hardware, not the weather's.
   const pv =
-    history.pvDaily && nDays && history.pvDaily.length === nDays
+    hasPv && history.pvDaily && nDays && history.pvDaily.length === nDays
       ? history.pvDaily
       : null;
 
@@ -539,6 +544,21 @@ export function drawCumCostChart(p, chosenEntry = null) {
   const canvas = $("cumCostCanvas");
   if (!wrap || !canvas) return;
 
+  // The section's own question, decided by the RUN rather than by whatever the
+  // chart ends up showing. "What does solar really save you?" is the right
+  // question for a run with panels; a battery-only run builds none, so the
+  // panel asks what the bank it DID build changes. Set here, before the
+  // infeasible/unavailable branches return, so no path can leave the other
+  // mode's question above a battery-only panel. #cumCostTitle is markup, so the
+  // alternate wording is swapped in rather than duplicated.
+  const hasPvRun = p.hardwareConfig !== "battery";
+  const title = $("cumCostTitle");
+  if (title) {
+    title.textContent = hasPvRun
+      ? "What does solar really save you? (cumulative 20-year cost)"
+      : "What does the battery do to your 20-year cost? (cumulative 20-year cost)";
+  }
+
   // Pick the system the chart talks about: the selected one, else the
   // recommended one, else the focus system, else the first solvable entry.
   const pool =
@@ -848,8 +868,16 @@ export function drawCumCostChart(p, chosenEntry = null) {
     const rows = [
       ["#fbbf24", `Grid without solar: ${money(series.grid[nY - 1])}`],
     ];
+    // The emerald line is this system's own cost, and for a panel-free run this
+    // system is not a solar one — the same chart's caption says "the system's
+    // own cost" two lines under a legend that called it the solar system. The
+    // no-panel key matches the wording the frontier chart already uses.
+    const hasPv = Number(seriesEntry && seriesEntry.pvKw) > 0;
     if (hasSystem)
-      rows.push(["#34d399", `Solar system: ${money(series.system[nY - 1])}`]);
+      rows.push([
+        "#34d399",
+        `${hasPv ? "Solar system" : "Battery only"}: ${money(series.system[nY - 1])}`,
+      ]);
     if (residShown && residEnd !== null) {
       rows.push([
         "#94a3b8",
@@ -1062,6 +1090,7 @@ export function drawAutoChart(p) {
   const visibleDays = Math.max(1, zEnd - zStart);
 
   const pv =
+    p.hardwareConfig !== "battery" &&
     p.history &&
     Array.isArray(p.history.pvDaily) &&
     p.history.pvDaily.length === n

@@ -152,6 +152,52 @@ export async function runGridTieFlow(ctx, actions) {
     (caption || 0) > 20,
     `${caption} chars`,
   );
+  // The mode-aware copy must not have softened a correct surface. Every one of
+  // these is right for a run WITH panels, and each has a no-panel counterpart
+  // asserted further down: if a fix ever collapses the two into one wording,
+  // exactly one of the pair fails.
+  const panelSurface = await evaluate(`(() => {
+      const clean = (id) => {
+        const e = document.getElementById(id);
+        return e ? e.textContent.replace(/\\s+/g, " ").trim() : "";
+      };
+      return {
+        legend: clean("cumCostLegend"),
+        method: clean("frontierMethodNote"),
+        methodHook: document.getElementById("frontierMethodNote")
+          ? document.getElementById("frontierMethodNote").getAttribute("data-i18n")
+          : "",
+        region: clean("resultsRegion"),
+        tilt: document.getElementById("sunPathWrap")
+          ? document.getElementById("sunPathWrap").style.display
+          : "missing",
+      };
+    })()`);
+  gate(
+    "with-panels cumulative legend still names the solar system",
+    /Solar system:/.test(panelSurface.legend),
+    panelSurface.legend.slice(0, 170),
+  );
+  gate(
+    "with-panels curve method note still describes panel-and-battery",
+    panelSurface.methodHook === "frontierMethod" &&
+      /panel-and-battery/.test(panelSurface.method),
+    panelSurface.method.slice(0, 160),
+  );
+  gate(
+    "with-panels power-cost row is still the power cost",
+    /Your power cost/.test(panelSurface.region) &&
+      !/Cost per shifted kWh/.test(panelSurface.region),
+    (panelSurface.region.match(/Your power cost[^A-Z]{0,40}/) || [""])
+      .join("")
+      .slice(0, 120),
+  );
+  gate(
+    "with-panels keeps the tilt guide and its PV safety item",
+    panelSurface.tilt === "block" &&
+      /PV Array Isolator/.test(panelSurface.region),
+    `sunPathWrap display=${panelSurface.tilt}`,
+  );
 
   // ── Battery-only (no panels): peak offset must not be sold as a bill cut ──
   // run.js stores the peak-offset fraction in cutPct when pvKw is 0. The chip,
@@ -287,6 +333,79 @@ export async function runGridTieFlow(ctx, actions) {
     cumCaption.slice(-200),
   );
 
+  // The rest of the cumulative-cost panel, and every other surface that named
+  // the array: "What does solar really save you?", an emerald legend keyed
+  // "Solar system", a method note about panel-and-battery combinations, a LCOE
+  // row called "your power cost" (five times below the tariff, beside a card
+  // that never breaks even), a tilt guide advising on "your array", a PV
+  // isolator on a parts list whose Panels row says None, and a print sheet that
+  // printed the word null where the footprint was missing.
+  const noPanelSurface = await evaluate(`(() => {
+      const clean = (id) => {
+        const e = document.getElementById(id);
+        return e ? e.textContent.replace(/\\s+/g, " ").trim() : "";
+      };
+      const label = document.querySelector('label[for="cutSlider"]');
+      return {
+        title: clean("cumCostTitle"),
+        legend: clean("cumCostLegend"),
+        method: clean("frontierMethodNote"),
+        region: clean("resultsRegion"),
+        sheet: clean("printSheet"),
+        tilt: document.getElementById("sunPathWrap")
+          ? document.getElementById("sunPathWrap").style.display
+          : "missing",
+        cutLabel: label ? label.textContent.trim() : "",
+      };
+    })()`);
+  gate(
+    "battery-only cumulative panel asks what the battery changes",
+    /battery/i.test(noPanelSurface.title) &&
+      !/solar/i.test(noPanelSurface.title),
+    noPanelSurface.title.slice(0, 140),
+  );
+  gate(
+    "battery-only cumulative legend does not call the run a solar system",
+    /Battery only:/.test(noPanelSurface.legend) &&
+      !/Solar system:/.test(noPanelSurface.legend),
+    noPanelSurface.legend.slice(0, 170),
+  );
+  gate(
+    "battery-only curve method note describes a battery-only sweep",
+    /every battery size/i.test(noPanelSurface.method) &&
+      !/panel-and-battery/i.test(noPanelSurface.method),
+    noPanelSurface.method.slice(0, 160),
+  );
+  gate(
+    "battery-only power-cost row is named for what it measures",
+    /Cost per shifted kWh/.test(noPanelSurface.region) &&
+      !/Your power cost/.test(noPanelSurface.region),
+    (noPanelSurface.region.match(/Cost per shifted kWh[^A-Z]{0,70}/) || [""])
+      .join("")
+      .slice(0, 150),
+  );
+  gate(
+    "battery-only tilt guide is not advice about an array it does not build",
+    noPanelSurface.tilt === "none" &&
+      !/Tilt Guide|Value of the Right Angle/i.test(noPanelSurface.region),
+    `sunPathWrap display=${noPanelSurface.tilt}`,
+  );
+  gate(
+    "battery-only BOS checklist carries no PV-only item",
+    !/PV Array Isolator|PV DC Isolator/.test(noPanelSurface.region) &&
+      /battery rack, the inverter chassis/.test(noPanelSurface.region),
+    (noPanelSurface.region.match(/Equipment Grounding[^A-Z]{0,90}/) || [""])
+      .join("")
+      .slice(0, 150),
+  );
+  gate(
+    "battery-only print sheet carries no bare null",
+    noPanelSurface.sheet.length > 100 && !/\bnull\b/.test(noPanelSurface.sheet),
+    (noPanelSurface.sheet.match(/Basis:[^A-Z]{0,150}/) || [""])
+      .join("")
+      .slice(0, 190),
+  );
+
   await evaluate(`(() => {
       const b = document.getElementById("lvlMatrix");
       if (b) b.click();
@@ -395,6 +514,62 @@ export async function runGridTieFlow(ctx, actions) {
     /of your peak hours shifted/i.test(axis) && !/bill/i.test(axis),
     axis.slice(0, 220),
   );
+  // A language switch translated the data-i18n markup and left every
+  // JS-assembled sentence — the caption, the tariff line, the frontier verdict,
+  // the method note — in the previous language, so one page showed two. The
+  // re-render must also keep the MODE's variant, which is why the method note's
+  // hook is asserted alongside the translated text.
+  const langBefore = await evaluate(`(() => {
+      const e = document.getElementById("cumCostCaption");
+      return e ? e.textContent.replace(/\\s+/g, " ").trim().slice(0, 80) : "";
+    })()`);
+  await evaluate(`(() => {
+      const s = document.getElementById("langSelect");
+      s.value = "de";
+      s.dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    })()`);
+  await sleep(1500);
+  const langAfter = await evaluate(`(() => {
+      const cap = document.getElementById("cumCostCaption");
+      const method = document.getElementById("frontierMethodNote");
+      const label = document.querySelector('label[for="cutSlider"]');
+      return {
+        caption: cap ? cap.textContent.replace(/\\s+/g, " ").trim().slice(0, 130) : "",
+        methodHook: method ? method.getAttribute("data-i18n") : "",
+        methodText: method
+          ? method.textContent.replace(/\\s+/g, " ").trim().slice(0, 80)
+          : "",
+        cutLabel: label ? label.textContent.trim() : "",
+      };
+    })()`);
+  gate(
+    "language switch re-renders the results instead of half-translating them",
+    langAfter.caption.length > 40 &&
+      langAfter.caption !== langBefore &&
+      !/Running 20-year cost/i.test(langAfter.caption) &&
+      langAfter.methodHook === "frontierMethodBattery" &&
+      !/^The curve comes from/.test(langAfter.methodText) &&
+      /peak|Spitzen/i.test(langAfter.cutLabel),
+    `${langAfter.caption.slice(0, 90)} | ${langAfter.cutLabel}`,
+  );
+  await evaluate(`(() => {
+      const s = document.getElementById("langSelect");
+      s.value = "en";
+      s.dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    })()`);
+  await sleep(1500);
+  const langBack = await evaluate(`(() => {
+      const e = document.getElementById("cumCostCaption");
+      return e ? e.textContent.replace(/\\s+/g, " ").trim().slice(0, 90) : "";
+    })()`);
+  gate(
+    "switching back restores the English panel",
+    /Running 20-year cost/i.test(langBack),
+    langBack.slice(0, 120),
+  );
+
   // Back to the Best-pick tab so downstream flows see the familiar view.
   await evaluate(`(() => {
       const b = document.getElementById("lvlBest");

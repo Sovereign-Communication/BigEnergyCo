@@ -184,10 +184,29 @@ through the injected `setStatus`. No location state lives here.
   speed notes, infeasibility banners, appliance and slider readouts, the
   share-restore label, the init-failure status, and the advisor modal's
   loading/error/retry text.
-- **Boundary (deliberate):** the long-form static sections — hero, FAQ,
-  parts list, support, legal — are English-only documentation, and that is
-  visible as the absence of a `data-i18n` hook on those elements. The
-  translated surface is the calculator itself plus its advisor.
+- **Boundary (deliberate, and narrower than it looks):** the long-form static
+  sections — hero, FAQ, parts list, support, legal — are English-only
+  documentation, and that is visible as the absence of a `data-i18n` hook on
+  those elements. The translated surface is the calculator's CONTROLS, its
+  history and frontier charts, its result caption and its advisor. The
+  calculator's result CARDS are not: the focus chips, the best-pick and matrix
+  card rows, the hardware list, the ELI5 breakdown, the orientation guide, the
+  BOS checklist, the method notes and the print sheet are literals in `ui.js`
+  and `charts.js`. A non-English run therefore switches language between the
+  tabs and the numbers under them. Translating that tier is an editorial pass
+  (six locales of prose), not a code change; the switch itself must stay
+  honest in the meantime, which is why a language change re-renders the result
+  panel rather than only re-applying the markup hooks.
+- **A panel-free run is not a solar run.** `hardwareConfig: "battery"` builds
+  no array, and four surfaces have been caught describing one anyway (the
+  frontier verdict, the auto note, the capacity-spectrum baseline, the
+  cumulative caption). The rule that now holds: a string that NAMES the
+  energy source is selected by the run's own hardware — `simpleWhatItMeans` /
+  `simpleWhatItMeansBattery`, `frontierMethod` / `frontierMethodBattery`, the
+  `cumulative legend`, the tilt guide, the BOS checklist and the parts list
+  all read `pvKw`/`hardwareConfig`, and each has a smoke gate for both
+  directions. Numbers never move to satisfy copy: a levelized cost that means
+  "cost per shifted kWh" on a battery-only run is renamed, not recomputed.
 - Gates: `scripts/check-i18n.mjs` (parity, hook coverage, placeholder
   parity, no key-name leaks, RTL, runtime-composed families, and no key that
   shipped code or markup never renders) and `tests/i18n.test.mjs` (corruption
