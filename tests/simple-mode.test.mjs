@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { buildSimpleView } from "../assets/js/shared/simple-view.js";
+import { LOCALES } from "../assets/js/shared/locales.js";
 
 // One grid-tie auto entry, shaped exactly like run.js emits it.
 const ENTRY = {
@@ -42,6 +43,93 @@ test("simple view: heroes carry the headline figures from the same entry", () =>
   assert.equal(byLabel["Saved over 20 years"].value, "~$21000");
   // Saved wins over payback — one honest 20-year number, not both.
   assert.equal(byLabel["Payback"], undefined);
+});
+
+// Battery-only: no panels, so nothing generates and nothing displaces imported
+// energy. The entry still carries a number in cutPct, but it is the peak-hour
+// offset fraction (run.js gridtieCutPct), NOT a bill cut — and the very same
+// card reports "does not pay back in 20 years". Calling the number a bill cut
+// put a savings claim next to its own contradiction.
+const BATTERY_ONLY = {
+  solvable: true,
+  pvKw: 0,
+  battKwh: 2,
+  battNameplateKwh: 2.5,
+  costLo: 161,
+  costHi: 578,
+  cutPct: 92,
+  paybackYearsLo: null,
+  paybackYearsHi: null,
+  trueBreakEvenYear: null,
+};
+
+test("simple view: battery-only states the peak offset, never a bill cut", () => {
+  const view = buildSimpleView({
+    p: { mode: "gridtie" },
+    entry: BATTERY_ONLY,
+    saved: -1190,
+    fmt: FMT,
+  });
+
+  assert.ok(view.feasible);
+  const byLabel = Object.fromEntries(view.heroes.map((h) => [h.label, h]));
+  assert.equal(
+    byLabel["What it does"].value,
+    "shifts about 92% of peak hours onto the battery — your bill is unchanged",
+  );
+  // The honest 20-year line must stay exactly as it is: the fix makes the
+  // claim agree with this line rather than softening this line to match it.
+  assert.equal(
+    byLabel["Saved over 20 years"].value,
+    "does not pay back in 20 years",
+  );
+  // Nothing on the card may promise a bill cut for a system with no generator.
+  const flat = view.heroes
+    .map((h) => h.value + " " + (h.sub || ""))
+    .join(" | ");
+  assert.ok(!/off your bill/.test(flat), flat);
+  assert.ok(!/\bbill cut\b/.test(flat), flat);
+});
+
+test("simple view: the same entry WITH panels still reads as a bill cut", () => {
+  const view = buildSimpleView({
+    p: { mode: "gridtie" },
+    entry: { ...BATTERY_ONLY, pvKw: 6.6 },
+    saved: 21000,
+    fmt: FMT,
+  });
+  const goal = view.heroes.find((h) => h.label === "What it does");
+  assert.equal(goal.value, "cuts about 92% off your bill");
+});
+
+test("every real locale carries the battery-only goal and spend lines", () => {
+  const ids = ["en", "es", "pt", "fr", "de", "ar"];
+  assert.deepEqual(
+    ids.filter((id) => LOCALES[id]),
+    ids,
+    "a real locale went missing",
+  );
+  for (const id of ids) {
+    const L = LOCALES[id];
+    assert.match(L.simpleGoalBattery, /\{pct\}/, `${id}: simpleGoalBattery`);
+    assert.match(
+      L.tariffSpendBattery,
+      /\{tariff\}/,
+      `${id}: tariffSpendBattery`,
+    );
+    assert.match(
+      L.tariffSpendBattery,
+      /\{annual\}/,
+      `${id}: tariffSpendBattery`,
+    );
+    // The battery line must not promise a payback the panel denies.
+    assert.ok(
+      !/payback|repays|se paga|se rembourse|bezahlt/i.test(
+        L.tariffSpendBattery,
+      ),
+      `${id}: tariffSpendBattery still promises a payback`,
+    );
+  }
 });
 
 test("simple view: off-grid goal line reads coverage, not bill-cut", () => {

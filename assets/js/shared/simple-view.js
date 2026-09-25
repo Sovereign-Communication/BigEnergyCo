@@ -42,11 +42,18 @@ export function buildSimpleView({ p, entry, saved, fmt }) {
     push(null, "First cost", "~" + fmt.moneyRange(entry.costLo, entry.costHi));
   }
 
+  // Same rule the technical panel follows: no panels means no bill cut. A
+  // battery-only system moves when power is drawn; it does not lower the bill,
+  // and "does not pay back in 20 years" below already says so.
   const goal =
-    p.mode === "gridtie"
-      ? "cuts about " + (entry.cutPct ?? 0) + "% off your bill"
-      : Math.round(100 - (entry.unmetHoursPerYear || 0) / 87.6) +
-        "% of the year covered";
+    p.mode !== "gridtie"
+      ? Math.round(100 - (entry.unmetHoursPerYear || 0) / 87.6) +
+        "% of the year covered"
+      : entry.pvKw > 0
+        ? "cuts about " + (entry.cutPct ?? 0) + "% off your bill"
+        : "shifts about " +
+          (entry.cutPct ?? 0) +
+          "% of peak hours onto the battery — your bill is unchanged";
   push(null, "What it does", goal);
 
   if (Number.isFinite(saved) && saved > 0) {
