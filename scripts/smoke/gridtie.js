@@ -224,6 +224,128 @@ export async function runGridTieFlow(ctx, actions) {
       battSurfaces.chips + " " + battSurfaces.money,
     ),
   );
+  const frontierText = await evaluate(`(() => {
+      const e = document.getElementById("frontierVerdict");
+      return e ? e.innerText.replace(/\\s+/g, " ") : "";
+    })()`);
+  gate(
+    "battery-only frontier verdict does not call the ceiling a share of the bill",
+    frontierText.length > 0 && !/your bill/i.test(frontierText),
+    frontierText.slice(0, 170),
+  );
+  gate(
+    "battery-only frontier verdict describes shifting peak hours",
+    /peak hours|shift/i.test(frontierText),
+  );
+
+  // Two more surfaces phrase the same offset as a bill cut in this mode: the
+  // frontier chart's Y axis, and the target control that drives the run.
+  const control = await evaluate(`(() => {
+      const label = document.querySelector('label[for="cutSlider"]');
+      const val = document.getElementById("cutSliderVal");
+      return {
+        label: label ? label.textContent.replace(/\\s+/g, " ").trim() : "",
+        value: val ? val.textContent.replace(/\\s+/g, " ").trim() : "",
+      };
+    })()`);
+  gate(
+    "battery-only target control offers a peak offset, not a bill cut",
+    /peak/i.test(control.label) &&
+      /peak/i.test(control.value) &&
+      !/bill/i.test(control.label + " " + control.value),
+    `${control.label} | ${control.value}`.slice(0, 160),
+  );
+  const sizedFor = await evaluate(`(() => {
+      const m = document.body.innerText.match(/[^\\n]*sized for[^\\n]*/);
+      return m ? m[0].replace(/\\s+/g, " ").trim() : "";
+    })()`);
+  gate(
+    "battery-only auto note describes the peak-hour offset, not a bill cut",
+    sizedFor.length > 0 &&
+      /offset/i.test(sizedFor) &&
+      !/bill cut|bill-cut/i.test(sizedFor),
+    sizedFor.slice(0, 150),
+  );
+
+  await evaluate(`(() => {
+      const b = document.getElementById("lvlMatrix");
+      if (b) b.click();
+      return true;
+    })()`);
+  // Gate on the spectrum badge existing rather than on a fixed delay, so a slow
+  // render cannot be mistaken for a copy failure (textContent, not innerText:
+  // innerText is "" for a hidden subtree and would burn the whole timeout).
+  await ctx.poll(
+    async () =>
+      evaluate(`(() => {
+          const region = document.getElementById("resultsRegion");
+          if (!region) return false;
+          return [...region.querySelectorAll("span")].some((s) =>
+            (s.textContent || "").trim().startsWith("Baseline:"),
+          );
+        })()`),
+    RUN_TIMEOUT_MS,
+    1000,
+  );
+  // Read the two baseline phrases out of the spectrum header itself. Searching
+  // the whole region is not enough: the money bar above contributes its own
+  // "a battery with no panels..." sentence, so a region-wide /no panels/ check
+  // passes even while the header still advertises a solar baseline.
+  const baseHeader = await evaluate(`(() => {
+      const region = document.getElementById("resultsRegion");
+      if (!region) return { badge: "", subtitle: "" };
+      const norm = (e) =>
+        e ? (e.textContent || "").replace(/\\s+/g, " ").trim() : "";
+      const badgeEl = [...region.querySelectorAll("span")].find((s) =>
+        (s.textContent || "").trim().startsWith("Baseline:"),
+      );
+      const subEl = [...region.querySelectorAll("div")].find((d) =>
+        (d.textContent || "")
+          .trim()
+          .startsWith("Comparing larger and smaller configurations"),
+      );
+      return { badge: norm(badgeEl), subtitle: norm(subEl) };
+    })()`);
+  gate(
+    "battery-only capacity spectrum baseline badge has no phantom solar array",
+    /^Baseline: no panels/i.test(baseHeader.badge) &&
+      !/kW\s+Solar/i.test(baseHeader.badge),
+    baseHeader.badge.slice(0, 120),
+  );
+  gate(
+    "battery-only capacity spectrum baseline subtitle has no phantom solar array",
+    /around your baseline of [^.]*battery with no panels/i.test(
+      baseHeader.subtitle,
+    ) && !/kW\s+solar/i.test(baseHeader.subtitle),
+    baseHeader.subtitle.slice(0, 170),
+  );
+  // The frontier chart lives on this same All-options surface, and its Y axis
+  // plotted the outcome fraction under a "share of your power bill cut" label.
+  const axis = await evaluate(`(() => {
+      const host = document.getElementById("frontierChart");
+      if (!host) return "";
+      return [...host.querySelectorAll("text, title, desc")]
+        .map((n) => n.textContent)
+        .join(" | ")
+        .replace(/\\s+/g, " ")
+        .trim();
+    })()`);
+  gate(
+    "battery-only frontier chart axis says peak hours, not a bill cut",
+    // Name the axis wording itself: a bare /peak/ could be satisfied by any
+    // other label in the chart, which is how a soft version of this gate would
+    // pass while the axis still read "share of your power bill cut".
+    /of your peak hours shifted/i.test(axis) && !/bill/i.test(axis),
+    axis.slice(0, 220),
+  );
+  // Back to the Best-pick tab so downstream flows see the familiar view.
+  await evaluate(`(() => {
+      const b = document.getElementById("lvlBest");
+      if (b) b.click();
+      return true;
+    })()`);
+  await sleep(600);
+
   // Leave the default hardware behind for every downstream flow.
   await evaluate(`(() => {
       const hw = document.getElementById("hardwareConfig");

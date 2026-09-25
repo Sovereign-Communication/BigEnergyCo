@@ -8,6 +8,9 @@ export const LOCALES = {
     navSizing: "Size Your System",
     navSupport: "Support",
     cutLabel: "Your bill-cut target",
+    cutLabelBattery: "Your peak-offset target",
+    cutValueBattery:
+      "Target: shift ~{pct}% of your peak hours onto the battery",
     fxCodeLabel: "Currency code:",
     firstRunNote:
       "Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.",
@@ -78,6 +81,7 @@ export const LOCALES = {
       "Every system we could build at your location, cheapest first. The line is the best result any budget can buy — so you can see at a glance whether your goal here is easy, expensive, or out of reach.",
     frontierX: "Up-front system cost",
     frontierYGrid: "Share of your power bill cut",
+    frontierYGridBattery: "Share of your peak hours shifted",
     frontierYOffgrid: "Share of your energy covered, no generator",
     frontierTagSel: "selected",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
@@ -136,6 +140,7 @@ export const LOCALES = {
     frontierColCost: "Typical cost",
     frontierColRange: "DIY to retail",
     frontierColCut: "Bill cut",
+    frontierColCutBattery: "Peak hours shifted",
     frontierColCover: "Covered",
     frontierColPv: "Panels",
     frontierColBatt: "Battery",
@@ -161,6 +166,16 @@ export const LOCALES = {
       "Cutting about {kneePct}% of your bill costs around {kneeCost}. After that it gets expensive fast: roughly {tailCost} for each further percent, against {headCost} before.",
     frontierVerdictTaperingGrid:
       "Cutting about {kneePct}% of your bill costs around {kneeCost}. Past that, each further percent costs roughly {tailCost} — about {ratio} times the earlier rate.",
+    frontierVerdictCoveredBattery:
+      "Sizing is not your constraint here. The smallest practical battery — {batt} kWh, about {cost} — already shifts essentially all of this load's peak hours. Anything larger buys spare capacity, not a bigger offset.",
+    frontierVerdictBeyondSweepBattery:
+      "Within the battery sizes this tool searches — up to {battMax} kWh — the most you can shift here is about {ceilingPct}%, for around {ceilingCost}. Good value runs out well before that, at {kneePct}% for about {kneeCost}; shifting more needs a bigger bank than anything sized here.",
+    frontierVerdictSteepBattery:
+      "Shifting about {kneePct}% of your peak hours onto the battery costs around {kneeCost}. After that it gets expensive fast: roughly {tailCost} for each further percent, against {headCost} before.",
+    frontierVerdictTaperingBattery:
+      "Shifting about {kneePct}% of your peak hours onto the battery costs around {kneeCost}. Past that, each further percent costs roughly {tailCost} — about {ratio} times the earlier rate.",
+    frontierVerdictLinearBattery:
+      "Offset tracks spending fairly evenly here — about {headCost} for each percent of peak hours, all the way to {ceilingPct}%.",
     frontierVerdictLinearGrid:
       "Savings track spending fairly evenly here — about {headCost} for each percent of your bill, all the way to {ceilingPct}%.",
     frontierVerdictBeyondSweepGrid:
@@ -238,6 +253,9 @@ export const LOCALES = {
     navSizing: "Dimensiona tu sistema",
     navSupport: "Soporte",
     cutLabel: "Tu objetivo de reducción de factura",
+    cutLabelBattery: "Tu objetivo de desplazamiento de horas punta",
+    cutValueBattery:
+      "Objetivo: desplazar ~{pct}% de tus horas punta a la batería",
     fxCodeLabel: "Código de moneda:",
     firstRunNote:
       "Elige tu ubicación y tu consumo, y pulsa Dimensionar mi sistema. La primera ejecución descarga ~2 MB de datos satelitales y luego los guarda en tu navegador.",
@@ -340,6 +358,7 @@ export const LOCALES = {
       "Todos los sistemas posibles en tu ubicación, del más barato al más caro. La línea es el mejor resultado que puede comprar cada presupuesto, para que veas de un vistazo si tu objetivo aquí es fácil, caro o inalcanzable.",
     frontierX: "Coste inicial del sistema",
     frontierYGrid: "Parte de tu factura eliminada",
+    frontierYGridBattery: "Parte de tus horas punta desplazadas",
     frontierYOffgrid: "Parte de tu energía cubierta, sin generador",
     frontierTagSel: "seleccionado",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
@@ -399,6 +418,7 @@ export const LOCALES = {
     frontierColCost: "Coste típico",
     frontierColRange: "DIY a retail",
     frontierColCut: "Factura reducida",
+    frontierColCutBattery: "Horas punta desplazadas",
     frontierColCover: "Cubierto",
     frontierColPv: "Paneles",
     frontierColBatt: "Batería",
@@ -431,6 +451,16 @@ export const LOCALES = {
       "Recortar cerca del {kneePct}% de tu factura cuesta unos {kneeCost}. A partir de ahí se encarece rápido: unos {tailCost} por cada punto adicional, frente a {headCost} antes.",
     frontierVerdictTaperingGrid:
       "Recortar cerca del {kneePct}% de tu factura cuesta unos {kneeCost}. Después, cada punto adicional cuesta unos {tailCost}, alrededor de {ratio} veces el ritmo anterior.",
+    frontierVerdictCoveredBattery:
+      "El tamaño no es tu límite aquí. La batería práctica más pequeña — {batt} kWh, unos {cost} — ya desplaza casi todas las horas punta de este consumo. Algo mayor compra capacidad de reserva, no más desplazamiento.",
+    frontierVerdictBeyondSweepBattery:
+      "Dentro de los tamaños de batería que busca esta herramienta — hasta {battMax} kWh — lo máximo que puedes desplazar aquí es cerca del {ceilingPct}%, por unos {ceilingCost}. El buen valor se acaba mucho antes, en el {kneePct}% por unos {kneeCost}; desplazar más exige un banco mayor que cualquier cosa dimensionada aquí.",
+    frontierVerdictSteepBattery:
+      "Desplazar cerca del {kneePct}% de tus horas punta a la batería cuesta unos {kneeCost}. Después se encarece rápido: unos {tailCost} por cada punto adicional, frente a {headCost} antes.",
+    frontierVerdictTaperingBattery:
+      "Desplazar cerca del {kneePct}% de tus horas punta a la batería cuesta unos {kneeCost}. A partir de ahí, cada punto adicional cuesta unos {tailCost}, alrededor de {ratio} veces el ritmo anterior.",
+    frontierVerdictLinearBattery:
+      "El desplazamiento acompaña el gasto de forma bastante uniforme aquí — unos {headCost} por cada punto de horas punta, hasta el {ceilingPct}%.",
     frontierVerdictLinearGrid:
       "Aquí el ahorro sigue al gasto de forma bastante pareja: unos {headCost} por cada punto de tu factura, hasta el {ceilingPct}%.",
     frontierVerdictBeyondSweepGrid:
@@ -517,6 +547,9 @@ export const LOCALES = {
     navSizing: "Dimensione seu sistema",
     navSupport: "Suporte",
     cutLabel: "Sua meta de redução da conta",
+    cutLabelBattery: "Sua meta de deslocamento de horas de ponta",
+    cutValueBattery:
+      "Meta: deslocar ~{pct}% das suas horas de ponta para a bateria",
     fxCodeLabel: "Código da moeda:",
     firstRunNote:
       "Escolha sua localização e seu consumo e clique em Dimensionar meu sistema. A primeira execução baixa ~2 MB de dados de clima por satélite e depois os guarda no navegador.",
@@ -623,6 +656,7 @@ export const LOCALES = {
       "Todos os sistemas possíveis na sua localização, do mais barato ao mais caro. A linha é o melhor resultado que cada orçamento consegue comprar — para você ver de relance se o seu objetivo aqui é fácil, caro ou inalcançável.",
     frontierX: "Custo inicial do sistema",
     frontierYGrid: "Parte da sua conta de luz cortada",
+    frontierYGridBattery: "Parte das suas horas de ponta deslocadas",
     frontierYOffgrid: "Parte da sua energia coberta, sem gerador",
     frontierTagSel: "selecionado",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
@@ -682,6 +716,7 @@ export const LOCALES = {
     frontierColCost: "Custo típico",
     frontierColRange: "DIY a varejo",
     frontierColCut: "Conta cortada",
+    frontierColCutBattery: "Horas de ponta deslocadas",
     frontierColCover: "Coberto",
     frontierColPv: "Painéis",
     frontierColBatt: "Bateria",
@@ -708,6 +743,16 @@ export const LOCALES = {
       "Cortar cerca de {kneePct}% da sua conta custa uns {kneeCost}. Depois disso fica caro rápido: cerca de {tailCost} por ponto adicional, contra {headCost} antes.",
     frontierVerdictTaperingGrid:
       "Cortar cerca de {kneePct}% da sua conta custa uns {kneeCost}. Depois, cada ponto adicional custa cerca de {tailCost}, umas {ratio} vezes o ritmo anterior.",
+    frontierVerdictCoveredBattery:
+      "O tamanho não é o seu limite aqui. A bateria prática mais pequena — {batt} kWh, cerca de {cost} — já desloca quase todas as horas de pico deste consumo. Algo maior compra capacidade de reserva, não mais deslocamento.",
+    frontierVerdictBeyondSweepBattery:
+      "Dentro dos tamanhos de bateria que esta ferramenta procura — até {battMax} kWh — o máximo que consegue deslocar aqui é cerca de {ceilingPct}%, por uns {ceilingCost}. O bom valor acaba muito antes, nos {kneePct}% por cerca de {kneeCost}; deslocar mais exige um banco maior do que tudo o que aqui é dimensionado.",
+    frontierVerdictSteepBattery:
+      "Deslocar cerca de {kneePct}% das suas horas de pico para a bateria custa uns {kneeCost}. Depois fica caro depressa: cerca de {tailCost} por cada ponto adicional, contra {headCost} antes.",
+    frontierVerdictTaperingBattery:
+      "Deslocar cerca de {kneePct}% das suas horas de pico para a bateria custa uns {kneeCost}. A partir daí, cada ponto adicional custa cerca de {tailCost} — umas {ratio} vezes o ritmo anterior.",
+    frontierVerdictLinearBattery:
+      "O deslocamento acompanha o gasto de forma bastante uniforme aqui — cerca de {headCost} por cada ponto de horas de pico, até aos {ceilingPct}%.",
     frontierVerdictLinearGrid:
       "Aqui a economia acompanha o gasto de forma bem regular: cerca de {headCost} por ponto da sua conta, até {ceilingPct}%.",
     frontierVerdictBeyondSweepGrid:
@@ -790,6 +835,9 @@ export const LOCALES = {
     navSizing: "Dimensionner mon système",
     navSupport: "Assistance",
     cutLabel: "Votre objectif de réduction de facture",
+    cutLabelBattery: "Votre objectif de décalage des heures pleines",
+    cutValueBattery:
+      "Objectif : décaler ~{pct}% de vos heures pleines vers la batterie",
     fxCodeLabel: "Code de devise :",
     firstRunNote:
       "Choisissez votre lieu et votre consommation, puis cliquez sur Dimensionner. Le premier lancement télécharge ~2 Mo de données météo satellite et les met ensuite en cache.",
@@ -902,6 +950,7 @@ export const LOCALES = {
       "Tous les systèmes possibles chez vous, du moins cher au plus cher. La courbe montre le meilleur résultat que chaque budget peut acheter — pour voir d'un coup d'œil si votre objectif est ici facile, coûteux ou hors d'atteinte.",
     frontierX: "Coût initial du système",
     frontierYGrid: "Part de votre facture supprimée",
+    frontierYGridBattery: "Part de vos heures pleines décalées",
     frontierYOffgrid: "Part de votre énergie couverte, sans groupe électrogène",
     frontierTagSel: "sélectionné",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
@@ -961,6 +1010,7 @@ export const LOCALES = {
     frontierColCost: "Coût typique",
     frontierColRange: "DIY à détail",
     frontierColCut: "Facture réduite",
+    frontierColCutBattery: "Heures pleines décalées",
     frontierColCover: "Couvert",
     frontierColPv: "Panneaux",
     frontierColBatt: "Batterie",
@@ -988,6 +1038,16 @@ export const LOCALES = {
       "Supprimer environ {kneePct}% de votre facture coûte autour de {kneeCost}. Ensuite ça grimpe vite : environ {tailCost} par point supplémentaire, contre {headCost} avant.",
     frontierVerdictTaperingGrid:
       "Supprimer environ {kneePct}% de votre facture coûte autour de {kneeCost}. Ensuite, chaque point supplémentaire coûte environ {tailCost}, soit {ratio} fois le rythme précédent.",
+    frontierVerdictCoveredBattery:
+      "La taille n'est pas votre contrainte ici. La plus petite batterie réaliste — {batt} kWh, environ {cost} — décale déjà la quasi-totalité des heures de pointe de cette consommation. Plus gros achète de la capacité de réserve, pas plus de décalage.",
+    frontierVerdictBeyondSweepBattery:
+      "Dans les tailles de batterie que cet outil explore — jusqu'à {battMax} kWh — le maximum que vous pouvez décaler ici est d'environ {ceilingPct}%, pour environ {ceilingCost}. Le bon rapport s'arrête bien avant, à {kneePct}% pour environ {kneeCost} ; décaler davantage exige un parc plus grand que tout ce qui est dimensionné ici.",
+    frontierVerdictSteepBattery:
+      "Décaler environ {kneePct}% de vos heures de pointe vers la batterie coûte environ {kneeCost}. Ensuite cela devient vite cher : environ {tailCost} par point supplémentaire, contre {headCost} avant.",
+    frontierVerdictTaperingBattery:
+      "Décaler environ {kneePct}% de vos heures de pointe vers la batterie coûte environ {kneeCost}. Au-delà, chaque point supplémentaire coûte environ {tailCost} — environ {ratio} fois le rythme précédent.",
+    frontierVerdictLinearBattery:
+      "Le décalage suit la dépense de façon assez régulière ici — environ {headCost} par point d'heures de pointe, jusqu'à {ceilingPct}%.",
     frontierVerdictLinearGrid:
       "Ici les économies suivent la dépense assez régulièrement : environ {headCost} par point de facture, jusqu'à {ceilingPct}%.",
     frontierVerdictBeyondSweepGrid:
@@ -1072,6 +1132,9 @@ export const LOCALES = {
     navSizing: "System dimensionieren",
     navSupport: "Hilfe",
     cutLabel: "Ziel für die Rechnungssenkung",
+    cutLabelBattery: "Ziel für die Verschiebung der Spitzenlaststunden",
+    cutValueBattery:
+      "Ziel: ~{pct}% Ihrer Spitzenlaststunden auf den Akku verschieben",
     fxCodeLabel: "Währungscode:",
     firstRunNote:
       "Wählen Sie Standort und Verbrauch und klicken Sie auf System dimensionieren. Beim ersten Start werden Satelliten-Wetterdaten geladen und im Browser gespeichert.",
@@ -1154,6 +1217,7 @@ export const LOCALES = {
       "Wir zeigen die günstigsten Systeme für deinen Standort, damit du Kosten und erreichbare Versorgung vergleichen kannst.",
     frontierX: "Systemkosten zu Beginn",
     frontierYGrid: "Anteil der Rechnung gesenkt",
+    frontierYGridBattery: "Anteil der verschobenen Spitzenlaststunden",
     frontierYOffgrid: "Anteil der Energie ohne Generator",
     frontierTagSel: "ausgewählt",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct} % · {cost}",
@@ -1212,6 +1276,7 @@ export const LOCALES = {
     frontierColCost: "Typische Kosten",
     frontierColRange: "Selbstbau bis Handel",
     frontierColCut: "Rechnung gesenkt",
+    frontierColCutBattery: "Verschobene Spitzenlaststunden",
     frontierColCover: "Abgedeckt",
     frontierColPv: "Panels",
     frontierColBatt: "Batterie",
@@ -1239,6 +1304,16 @@ export const LOCALES = {
       "Etwa {kneePct} % deiner Rechnung zu senken kostet rund {kneeCost}. Danach wird es schnell teuer: etwa {tailCost} pro weiterem Prozent, gegenüber {headCost} davor.",
     frontierVerdictTaperingGrid:
       "Etwa {kneePct} % deiner Rechnung zu senken kostet rund {kneeCost}. Danach kostet jedes weitere Prozent etwa {tailCost} — rund {ratio}-mal so viel wie zuvor.",
+    frontierVerdictCoveredBattery:
+      "Die Größe ist hier nicht deine Grenze. Die kleinste praktische Batterie — {batt} kWh, etwa {cost} — verschiebt bereits praktisch alle Spitzenlaststunden dieser Last. Größer kauft Reservekapazität, nicht mehr Verschiebung.",
+    frontierVerdictBeyondSweepBattery:
+      "Innerhalb der Batteriegrößen, die dieses Werkzeug sucht — bis {battMax} kWh — kannst du hier höchstens etwa {ceilingPct}% verschieben, für rund {ceilingCost}. Der gute Gegenwert endet viel früher, bei {kneePct}% für etwa {kneeCost}; mehr Verschiebung braucht einen größeren Speicher als alles, was hier dimensioniert wird.",
+    frontierVerdictSteepBattery:
+      "Etwa {kneePct}% deiner Spitzenlaststunden in die Batterie zu verlagern kostet rund {kneeCost}. Danach wird es schnell teuer: rund {tailCost} je weiterem Prozent, gegenüber {headCost} zuvor.",
+    frontierVerdictTaperingBattery:
+      "Etwa {kneePct}% deiner Spitzenlaststunden in die Batterie zu verlagern kostet rund {kneeCost}. Darüber hinaus kostet jedes weitere Prozent etwa {tailCost} — rund {ratio}-mal so viel wie zuvor.",
+    frontierVerdictLinearBattery:
+      "Die Verschiebung folgt den Kosten hier recht gleichmäßig — etwa {headCost} je Prozent Spitzenlaststunden, bis {ceilingPct}%.",
     frontierVerdictLinearGrid:
       "Ersparnis folgt den Ausgaben hier ziemlich gleichmäßig — etwa {headCost} pro Prozent deiner Rechnung, bis {ceilingPct} %.",
     frontierVerdictBeyondSweepGrid:
@@ -1322,6 +1397,8 @@ export const LOCALES = {
     navSizing: "صمّم نظامك",
     navSupport: "الدعم",
     cutLabel: "هدف خفض الفاتورة",
+    cutLabelBattery: "هدف نقل ساعات الذروة",
+    cutValueBattery: "الهدف: نقل ~{pct}% من ساعات الذروة إلى البطارية",
     fxCodeLabel: "رمز العملة:",
     firstRunNote:
       "اختر موقعك واستهلاكك ثم اضغط صمّم نظامك. أول تشغيل يُنزّل حوالي 2 ميغابايت من بيانات الطقس الساتلية ثم يخزّنها في متصفحك.",
@@ -1425,6 +1502,7 @@ export const LOCALES = {
       "كل نظام يمكن بناؤه في موقعك، من الأرخص إلى الأغلى. يمثل الخط أفضل نتيجة يمكن لأي ميزانية شراؤها، لترى بلمحة واحدة هل هدفك هنا سهل أم مكلف أم بعيد المنال.",
     frontierX: "التكلفة الأولية للنظام",
     frontierYGrid: "نسبة فاتورتك المخفّضة",
+    frontierYGridBattery: "نسبة ساعات الذروة المنقولة",
     frontierYOffgrid: "نسبة طاقتك المغطّاة دون مولّد",
     frontierTagSel: "النقطة المحددة",
     frontierSelTag: "{pv} كيلوواط + {batt} كيلوواط ساعة · {pct}% · {cost}",
@@ -1483,6 +1561,7 @@ export const LOCALES = {
     frontierColCost: "التكلفة النموذجية",
     frontierColRange: "من الذاتي إلى التجزئة",
     frontierColCut: "خفض الفاتورة",
+    frontierColCutBattery: "ساعات الذروة المنقولة",
     frontierColCover: "التغطية",
     frontierColPv: "الألواح",
     frontierColBatt: "البطارية",
@@ -1509,6 +1588,16 @@ export const LOCALES = {
       "خفض نحو {kneePct}% من فاتورتك يكلف قرابة {kneeCost}. بعد ذلك ترتفع التكلفة سريعًا: نحو {tailCost} لكل نقطة إضافية، مقابل {headCost} قبلها.",
     frontierVerdictTaperingGrid:
       "خفض نحو {kneePct}% من فاتورتك يكلف قرابة {kneeCost}. بعد ذلك تكلف كل نقطة إضافية نحو {tailCost}، أي نحو {ratio} ضعف المعدل السابق.",
+    frontierVerdictCoveredBattery:
+      "الحجم ليس قيدك هنا. أصغر بطارية عملية — {batt} كيلوواط/ساعة، بنحو {cost} — تنقل بالفعل جميع ساعات الذروة لهذا الاستهلاك تقريبًا. أي شيء أكبر يشتري سعة احتياطية، لا نقلًا أكثر.",
+    frontierVerdictBeyondSweepBattery:
+      "ضمن أحجام البطاريات التي يبحث عنها هذا البرنامج — حتى {battMax} كيلوواط/ساعة — أقصى ما يمكن نقله هنا نحو {ceilingPct}%، بنحو {ceilingCost}. القيمة الجيدة تنتهي قبل ذلك بكثير، عند {kneePct}% بنحو {kneeCost}؛ ونقل المزيد يتطلب مخزونًا أكبر من أي شيء يُقاس هنا.",
+    frontierVerdictSteepBattery:
+      "نقل نحو {kneePct}% من ساعات الذروة إلى البطارية يكلف قرابة {kneeCost}. بعد ذلك يصبح مكلفًا بسرعة: نحو {tailCost} لكل نقطة إضافية، مقابل {headCost} قبلها.",
+    frontierVerdictTaperingBattery:
+      "نقل نحو {kneePct}% من ساعات الذروة إلى البطارية يكلف قرابة {kneeCost}. بعد ذلك تكلف كل نقطة إضافية نحو {tailCost} — أي نحو {ratio} ضعف المعدل السابق.",
+    frontierVerdictLinearBattery:
+      "النقل يواكب الإنفاق بانتظام نسبي هنا — نحو {headCost} لكل نقطة من ساعات الذروة، حتى {ceilingPct}%.",
     frontierVerdictLinearGrid:
       "هنا يسير التوفير مع الإنفاق بانتظام: نحو {headCost} لكل نقطة من فاتورتك، حتى {ceilingPct}%.",
     frontierVerdictBeyondSweepGrid:

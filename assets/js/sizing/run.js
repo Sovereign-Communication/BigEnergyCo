@@ -70,6 +70,16 @@ const TARGET_BASIS = {
   cut95: "a ~95% grid-bill cut",
 };
 
+// Battery-only (no PV) targets carry the same three ids as the solar ones but
+// describe peak-hour shifting, never a bill cut — a battery alone cannot lower
+// an import bill. Kept beside TARGET_BASIS because the subtitle, the matrix
+// headers and the print sheet must all say the same thing.
+const BATTERY_TARGET_BASIS = {
+  cut10: "a ~10% peak-hour offset",
+  cut15: "a ~15% peak-hour offset",
+  cut20: "a ~20% peak-hour offset",
+};
+
 const VALID_AUTO_TIERS = new Set(["tier100", "tier99", "tier95"]);
 const VALID_AUTO_TARGETS = new Set([
   "cut10",
@@ -458,9 +468,9 @@ async function runSizingUncached(msg, deps = {}) {
   const effectiveTargets =
     hardwareConfig === "battery"
       ? [
-          { id: "cut10", label: "a ~10% peak bill cut", minFraction: 0.1 },
-          { id: "cut15", label: "a ~15% peak bill cut", minFraction: 0.15 },
-          { id: "cut20", label: "a ~20% full peak offset", minFraction: 0.2 },
+          { id: "cut10", label: "a ~10% peak-hour offset", minFraction: 0.1 },
+          { id: "cut15", label: "a ~15% peak-hour offset", minFraction: 0.15 },
+          { id: "cut20", label: "a ~20% peak-hour offset", minFraction: 0.2 },
         ]
       : hardwareConfig === "solar" && !hasExport
         ? [
@@ -1947,8 +1957,13 @@ async function runSizingUncached(msg, deps = {}) {
       payload.autoFallback = autoFallback;
       payload.effectiveTargetId = effectiveTarget;
       payload.autoNote = autoFallback
-        ? `${TARGET_BASIS[repTargetId]} isn't reachable within the sizes this tool searches at this site, so the cards below show ${TARGET_BASIS[effectiveTarget]} instead — the curve shows how far this location can actually get.`
-        : autoNoteFor(auto, TARGET_BASIS[effectiveTarget]);
+        ? `${(hardwareConfig === "battery" ? BATTERY_TARGET_BASIS : TARGET_BASIS)[repTargetId]} isn't reachable within the sizes this tool searches at this site, so the cards below show ${(hardwareConfig === "battery" ? BATTERY_TARGET_BASIS : TARGET_BASIS)[effectiveTarget]} instead — the curve shows how far this location can actually get.`
+        : autoNoteFor(
+            auto,
+            (hardwareConfig === "battery"
+              ? BATTERY_TARGET_BASIS
+              : TARGET_BASIS)[effectiveTarget],
+          );
       payload.targets = [];
       // The recommendation follows the visitor's CURRENT bill-cut slider, not
       // the fixed 80% column: the slider's "your target" column is sized by an

@@ -134,6 +134,21 @@ export function axisTicks(max, count = 5) {
 }
 
 /**
+ * A grid-tie sweep that found no PV at all is a battery-only (time-of-use) run:
+ * the battery shifts WHEN power is drawn, it does not generate, so its outcome
+ * fraction is a peak-hour offset and can never be phrased as a share of the
+ * bill. One predicate so the axis, the accessible table and the verdict cannot
+ * disagree with each other.
+ */
+function isBatteryOnly(frontier) {
+  return (
+    !!frontier &&
+    frontier.mode === "gridtie" &&
+    !(Number(frontier.reach && frontier.reach.pvMaxKw) > 0)
+  );
+}
+
+/**
  * @param {HTMLElement} host        element to fill
  * @param {object} frontier         payload.frontier from run.js
  * @param {object} opts
@@ -153,7 +168,15 @@ export function renderFrontier(host, frontier, opts = {}) {
   }
 
   const gridTie = frontier.mode === "gridtie";
-  const yLabel = gridTie ? t("frontierYGrid") : t("frontierYOffgrid");
+  const batteryOnly = isBatteryOnly(frontier);
+  // A battery-only sweep plots the SAME fraction on both axes of the decision —
+  // but that fraction is a peak-hour offset, not a share of the bill, so the
+  // axis must not name a bill cut the battery cannot deliver.
+  const yLabel = batteryOnly
+    ? t("frontierYGridBattery")
+    : gridTie
+      ? t("frontierYGrid")
+      : t("frontierYOffgrid");
   const xLabel = t("frontierX");
 
   const box = chartBox(opts.width || host.getBoundingClientRect().width);
@@ -621,6 +644,7 @@ export function renderFrontierTable(host, frontier, opts = {}) {
   }
 
   const gridTie = frontier.mode === "gridtie";
+  const batteryOnly = isBatteryOnly(frontier);
   // Tag the row that matches the same selection the chart highlights, so the
   // numbers table and the blue dot always name the same system. An explicit
   // click always tags. The marker fallback tags ONLY when the nearest-cost
@@ -665,7 +689,7 @@ export function renderFrontierTable(host, frontier, opts = {}) {
     `<thead><tr>` +
     `<th scope="col" style="text-align:left;">${esc(t("frontierColCost"))}</th>` +
     `<th scope="col" style="text-align:left;">${esc(t("frontierColRange"))}</th>` +
-    `<th scope="col" style="text-align:left;">${esc(gridTie ? t("frontierColCut") : t("frontierColCover"))}</th>` +
+    `<th scope="col" style="text-align:left;">${esc(batteryOnly ? t("frontierColCutBattery") : gridTie ? t("frontierColCut") : t("frontierColCover"))}</th>` +
     `<th scope="col" style="text-align:left;">${esc(t("frontierColPv"))}</th>` +
     `<th scope="col" style="text-align:left;">${esc(t("frontierColBatt"))}</th>` +
     `<th scope="col" style="text-align:left;">&nbsp;</th>` +
@@ -710,7 +734,14 @@ export function frontierVerdict(frontier, opts = {}) {
         ? ""
         : money(r.entryCostUsd),
   };
-  const suffix = gridTie ? "Grid" : "Offgrid";
+  // A grid-tie sweep that never found any PV is a battery-only (ToU) run: its
+  // ceiling is a peak-offset fraction, so it must not borrow the grid-tie
+  // wording, which phrases the same number as a percentage "of your bill".
+  const suffix = isBatteryOnly(frontier)
+    ? "Battery"
+    : gridTie
+      ? "Grid"
+      : "Offgrid";
   if (r.id === "already-covered")
     return t("frontierVerdictCovered" + suffix, params);
   if (r.id === "beyond-sweep")
