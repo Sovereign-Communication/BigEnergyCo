@@ -5,7 +5,7 @@
 // `$` (DOM lookup), `el` (element factory), `t` (i18n), `fmt` (number format),
 // `money` (currency formatter). Chart state (socZoomRange, cachedChartState)
 // lives here as the single owner.
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260921f";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260925a";
 
 // ── injected boundary (set once by ui.js via initCharts) ──────────────────
 let _$;
