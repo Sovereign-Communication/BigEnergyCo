@@ -339,6 +339,8 @@ All amounts are in the visitor's display currency, converted from each registry 
 - **R-CHART-04: palette.** One validated categorical palette for the up-to-five series (four paths plus the grid), checked for colour-vision deficiency and contrast in light and dark, stored as tokens (§6.10).
 - **R-CHART-05: mobile.** Legible at 320 px: ≤ 5 series (the backup use case, which adds the plug-in power station, shows lease only in the cards, never as a chart line), tick labels ≥ 12 px, and no overlapping direct labels (collision-avoidance tested).
 
+Under the "today's money" or "account for the cost of money" toggles (§6.4), both charts plot the deflated or discounted equivalents of exactly the same definitions, and the axis titles say which view is on.
+
 The state-of-charge chart stays as a secondary "How your battery behaves" view, converted to SVG with a table.
 
 ### 6.6 Results composition (R-RES-01..08), in reading order
