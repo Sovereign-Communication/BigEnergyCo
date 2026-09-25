@@ -433,6 +433,107 @@ export function drawSocChart(history, chemLabel) {
       " The amber strip on top is the daily solar harvest (kWh per kW of panel) - its long dips line up with the battery's lowest floors.";
 }
 
+/**
+ * The sentence under the cumulative-cost canvas, assembled from figures the
+ * chart has already computed — so it can be read and tested without a canvas.
+ *
+ * Two things it must never do again:
+ *   - describe a panel-free run as a solar one. With no PV the emerald line is
+ *     still the system's own cost, but it is not a SOLAR system's, and the
+ *     smaller bills are not the ones left "after solar";
+ *   - call a NEGATIVE 20-year gap money the system "puts back in your pocket".
+ *     That claimed a saving and then, one sentence later, said the system never
+ *     pays for itself — the caption contradicting its own arithmetic in every
+ *     mode, not only battery-only.
+ */
+export function cumCostCaptionText({
+  seriesEntry = {},
+  isBest = false,
+  bd = {},
+  beIdx = -1,
+  nY = 0,
+  grid = [],
+  solar = [],
+  residShown = false,
+  residEnd = null,
+  residAnnual = 0,
+}) {
+  const noPanels = !(Number(seriesEntry.pvKw) > 0);
+  // One sentence per element, joined by a space: the locale strings carry no
+  // leading whitespace, so concatenating them directly ran the sentences
+  // together ("(~$65,237.00).The emerald line…").
+  const parts = [
+    t("cumCostCaptionHead", {
+      which: t(isBest ? "cumCostRecommended" : "cumCostSelected"),
+      label: seriesEntry.chemLabel || seriesEntry.label || "",
+      gridTotal: money(bd.gridTotal),
+    }),
+    t(noPanels ? "cumCostCaptionOwnCostNoPanels" : "cumCostCaptionOwnCost", {
+      systemTotal: money(bd.systemTotal),
+    }),
+  ];
+  if (bd.residualBills !== null && bd.residualBills < 0) {
+    parts.push(
+      t("cumCostCaptionSurplusCredit", {
+        withSolar:
+          bd.withSolar < 0
+            ? `\u2212${money(-bd.withSolar)}`
+            : money(bd.withSolar),
+        owed: money(-bd.residualBills),
+      }),
+    );
+  } else if (bd.saved < 0) {
+    parts.push(
+      t("cumCostCaptionNetNegative", {
+        residualBills: money(bd.residualBills),
+        loss: money(-bd.saved),
+      }),
+    );
+  } else {
+    parts.push(
+      t(noPanels ? "cumCostCaptionStackNoPanels" : "cumCostCaptionStack", {
+        residualBills: money(bd.residualBills),
+        saved: money(bd.saved),
+      }),
+    );
+  }
+  if (beIdx >= 0 && !(bd.saved < 0)) {
+    const saved = (grid[nY - 1] || 0) - (solar[nY - 1] || 0);
+    parts.push(
+      t("cumCostCaptionRepaid", {
+        year: beIdx + 1,
+        perYear: money(Math.round(saved / (nY - beIdx))),
+        saved: money(saved),
+      }),
+    );
+  } else if (beIdx < 0) {
+    parts.push(t("cumCostCaptionNeverRepays"));
+  }
+  // A curve that crosses break-even and then falls back under it (a late bank
+  // swap can push the solar line above the grid line again) gets neither
+  // sentence: "repaid by year N" would deny the loss, "never repays" would
+  // deny the crossing, and the net-negative sentence above already states the
+  // only thing that is true of the 20 years as a whole.
+  if (residShown) {
+    const kwh = seriesEntry.importedKwhPerYear || 0;
+    parts.push(
+      residEnd >= 0
+        ? t("cumCostCaptionResidual", {
+            annual: money(residAnnual),
+            kwh: fmt(kwh),
+            end: money(residEnd),
+          })
+        : t(
+            kwh > 0
+              ? "cumCostCaptionResidualCreditDraw"
+              : "cumCostCaptionResidualCreditBill",
+            { kwh: fmt(kwh), earned: money(-residEnd) },
+          ),
+    );
+  }
+  return parts.join(" ");
+}
+
 export function drawCumCostChart(p, chosenEntry = null) {
   const wrap = $("cumCostChartWrap");
   const canvas = $("cumCostCanvas");
@@ -842,47 +943,24 @@ export function drawCumCostChart(p, chosenEntry = null) {
   }
 
   // caption
-  const label = seriesEntry.chemLabel || seriesEntry.label || "";
   const cap = $("cumCostCaption");
-  if (cap) {
-    const isBest =
-      !!p.best &&
-      seriesEntry.chemistry === p.best.chemistry &&
-      seriesEntry.pvKw === p.best.pvKw &&
-      seriesEntry.battKwh === p.best.battKwh;
-    let txt =
-      `Running 20-year cost for the ${isBest ? "recommended" : "selected"} system (${label}): the amber line is what you` +
-      ` pay the utility if you stay on the grid (${money(bd.gridTotal)}). The emerald line is the solar system's` +
-      ` own cost (~${money(bd.systemTotal)}), matching the \u201CTotal 20-year cost\u201D row for this system.` +
-      (bd.residualBills !== null && bd.residualBills < 0
-        ? ` The with-solar total (${bd.withSolar < 0 ? `~\u2212${money(-bd.withSolar)}` : `~${money(bd.withSolar)}`}) sits BELOW` +
-          ` the system's own cost: your feed-in credit on surplus out-earns the small bill that remains, so the` +
-          ` stack runs negative and the utility owes you ~${money(-bd.residualBills)} in the 20-year picture.`
-        : ` The amber figure is a stack — the system, then the smaller bills that remain after solar (~${money(bd.residualBills)}),` +
-          ` then your saving — so the gap between amber and emerald at year 20 (${money(bd.saved)}) is what the` +
-          ` system puts back in your pocket.`);
-    if (beIdx >= 0) {
-      const saved = (series.grid[nY - 1] || 0) - (series.solar[nY - 1] || 0);
-      txt +=
-        ` The system has repaid its cost by year ${beIdx + 1} \u2014 every year after puts ~${money(Math.round(saved / (nY - beIdx)))} back in your pocket. ` +
-        `Total saving over 20 years: ~${money(saved)}. The lower bars are your running net position: red until break-even, then climbing.`;
-    } else {
-      txt += ` Within 20 years the system never repays its cost \u2014 battery replacements outpace bill savings, so the honest answer is: it does not pay for itself here.`;
-    }
-    if (residShown) {
-      const kwh = seriesEntry.importedKwhPerYear || 0;
-      txt +=
-        residEnd >= 0
-          ? ` The slate line is the residual grid cost itself — about ${money(residAnnual)}/yr for the ${fmt(kwh)}` +
-            ` kWh/yr still drawn from the grid (net of your feed-in credit), ${money(residEnd)} over the full 20 years.`
-          : ` The slate line runs below $0 — net metering: the feed-in value of your surplus exceeds` +
-            (kwh > 0
-              ? ` even the small ${fmt(kwh)} kWh/yr you still draw`
-              : ` the tiny bill you still pay`) +
-            `, so you earn ~${money(-residEnd)} over the full 20 years.`;
-    }
-    cap.textContent = txt;
-  }
+  if (cap)
+    cap.textContent = cumCostCaptionText({
+      seriesEntry,
+      isBest:
+        !!p.best &&
+        seriesEntry.chemistry === p.best.chemistry &&
+        seriesEntry.pvKw === p.best.pvKw &&
+        seriesEntry.battKwh === p.best.battKwh,
+      bd,
+      beIdx,
+      nY,
+      grid: series.grid,
+      solar: series.solar,
+      residShown,
+      residEnd,
+      residAnnual,
+    });
 }
 
 export function drawSocChartForEntry(p, entry) {

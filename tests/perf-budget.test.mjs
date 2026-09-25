@@ -85,6 +85,13 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // hide-scoping CSS. User-facing feature, reviewed deliberately.
   // 761,000 (+3 KB): cut-targets.js single-owner extraction (dedup of three
   // inline maps); net new bytes ≈ one module shell.
+  // 778,000 (+17 KB): the cumulative-cost caption became translated copy.
+  // It was an English-only string built in charts.js; enforcing "this system's
+  // own cost" (not the SOLAR system's) on a panel-free run, and replacing the
+  // claim that a NEGATIVE 20-year gap is money "back in your pocket", meant
+  // routing its sentences through the dictionary — 14 keys in all six locales,
+  // no code beyond a pure composer. Same trade as the German parity raise:
+  // user-facing strings, reviewed deliberately.
   assert.ok(
     htmlBytes <= 125_000,
     `index.html ${htmlBytes} bytes exceeds 125,000 budget`,
@@ -94,8 +101,8 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     `site.css ${cssBytes} bytes exceeds 40,000 budget`,
   );
   assert.ok(
-    jsBytes <= 761_000,
-    `eager JS ${jsBytes} bytes exceeds 761,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
+    jsBytes <= 778_000,
+    `eager JS ${jsBytes} bytes exceeds 778,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
   );
 });
 

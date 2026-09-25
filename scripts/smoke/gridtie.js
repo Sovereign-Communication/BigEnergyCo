@@ -267,6 +267,26 @@ export async function runGridTieFlow(ctx, actions) {
     sizedFor.slice(0, 150),
   );
 
+  // The cumulative-cost caption: it explained the emerald line as "the solar
+  // system's own cost" in a panel-free run, and called a NEGATIVE 20-year gap
+  // money the system "puts back in your pocket" — then said, one sentence
+  // later, that the system never pays for itself.
+  const cumCaption = await evaluate(`(() => {
+      const e = document.getElementById("cumCostCaption");
+      return e ? e.textContent.replace(/\\s+/g, " ").trim() : "";
+    })()`);
+  gate(
+    "battery-only cumulative caption never names the sun",
+    cumCaption.length > 40 && !/solar/i.test(cumCaption),
+    cumCaption.slice(0, 200),
+  );
+  gate(
+    "battery-only cumulative caption states the 20-year gap as a cost",
+    /MORE than staying on the grid/i.test(cumCaption) &&
+      !/puts [^.]*back in your pocket/i.test(cumCaption),
+    cumCaption.slice(-200),
+  );
+
   await evaluate(`(() => {
       const b = document.getElementById("lvlMatrix");
       if (b) b.click();
@@ -318,6 +338,43 @@ export async function runGridTieFlow(ctx, actions) {
       baseHeader.subtitle,
     ) && !/kW\s+solar/i.test(baseHeader.subtitle),
     baseHeader.subtitle.slice(0, 170),
+  );
+  // The five tier cards scaled a PV axis this mode never builds, and offered
+  // "Select This System" on a 17.9 kW array the run's own envelope (pvMax: 0)
+  // says cannot exist. They now scale the battery alone.
+  const tiers = await evaluate(`(() => {
+      const region = document.getElementById("resultsRegion");
+      if (!region) return [];
+      return [...region.querySelectorAll(".bom-card")]
+        .map((c) => {
+          const h = c.querySelector("h3");
+          const sub = c.querySelector("p");
+          return h && sub
+            ? { title: h.textContent.trim(), sub: sub.textContent.replace(/\\s+/g, " ").trim() }
+            : null;
+        })
+        .filter((c) => c && /battery with no panels|kW solar/.test(c.sub));
+    })()`);
+  gate(
+    "battery-only capacity spectrum tiers build no panels",
+    tiers.length >= 4 &&
+      tiers.every(
+        (c) =>
+          /battery with no panels$/.test(c.sub) && !/kW\s+solar/i.test(c.sub),
+      ),
+    JSON.stringify(tiers.map((c) => c.sub).slice(0, 2)),
+  );
+  const tierRegionText = await evaluate(`(() => {
+      const region = document.getElementById("resultsRegion");
+      return region ? region.innerText.replace(/\\s+/g, " ") : "";
+    })()`);
+  gate(
+    "no battery-only surface reports a solar array with a size",
+    /None \(Battery-only\)/.test(tierRegionText) &&
+      !/Solar array\s+\d/.test(tierRegionText),
+    (tierRegionText.match(/Solar array[^|]{0,26}/g) || [])
+      .slice(0, 3)
+      .join(" / "),
   );
   // The frontier chart lives on this same All-options surface, and its Y axis
   // plotted the outcome fraction under a "share of your power bill cut" label.
