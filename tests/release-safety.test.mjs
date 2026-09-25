@@ -45,6 +45,23 @@ test("GATE: anything a user can load is NOT documentation", () => {
   }
 });
 
+test("GATE: the pinned master plan is markdown but never docs-only", () => {
+  // docs/plan/** is hash-pinned; a direct push would skip the plan-pin gate
+  // that only runs on PRs, so these paths always require a PR.
+  for (const path of [
+    "docs/plan/MASTER_PLAN.md",
+    "docs/plan/AMENDMENTS.md",
+    "docs/plan/LEDGER.jsonl",
+    "docs/plan/PLAN.lock.json",
+  ]) {
+    assert.equal(isDocsOnly([path]), false, `${path} must require a PR`);
+  }
+  assert.equal(isDocsOnly(["README.md", "docs/plan/MASTER_PLAN.md"]), false);
+  // Neighbouring docs keep the exemption.
+  assert.equal(isDocsOnly(["docs/DEPLOY_RUNBOOK.md"]), true);
+  assert.equal(isDocsOnly(["docs/planning-notes.md"]), true);
+});
+
 test("GATE: mixed pushes are not docs-only", () => {
   assert.equal(isDocsOnly(["README.md", "assets/js/sizing/ui.js"]), false);
   assert.equal(isDocsOnly(["docs/a.md", "package.json"]), false);

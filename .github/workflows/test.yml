@@ -42,6 +42,21 @@ jobs:
       # One command, so CI and contributors cannot drift: JSON-LD, character
       # encoding, SEO shape, static quality (a11y/links/titles), i18n
       # completeness, security headers + CSP endpoint registry, asset tokens.
+      # docs/plan/MASTER_PLAN.md is hash-pinned: it changes only with an
+      # owner-approved amendment, and the amendment log + ledger are
+      # append-only against the PR's base branch.
+      - name: Master plan pin (immutable plan, append-only history)
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            git fetch --no-tags --depth=1 origin "$BASE_REF"
+            node scripts/check-plan-pin.mjs --base FETCH_HEAD
+          else
+            node scripts/check-plan-pin.mjs
+          fi
+
       - name: Site integrity gates (SEO, quality, i18n, headers, tokens)
         run: npm run seo
 

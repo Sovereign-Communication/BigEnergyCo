@@ -1,5 +1,11 @@
 # Agent & Contributor Guidelines for BigEnergyCo
 
+## 0. The Master Plan Governs All Product Work
+
+- `docs/plan/MASTER_PLAN.md` is the single, immutable plan (hash-pinned; `npm run plan:check`). It supersedes every other plan or roadmap document in the repo.
+- Every PR names the plan items and requirement IDs it delivers and follows the plan's per-PR definition of done (§9). The PR template carries the checklist.
+- The plan changes only through an owner-approved, append-only amendment in `docs/plan/AMENDMENTS.md`. Progress goes in `docs/plan/LEDGER.jsonl` and the pinned tracking issue, never in the plan itself.
+
 ## 1. Golden Rule: Always Push to `main` Through a Pull Request (PR)
 
 - **Never push commits directly to `main`**.
