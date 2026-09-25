@@ -1,4 +1,4 @@
-// Validation gate PHASE2_PLAN.md §5.1: replicate the reference Google Sheet.
+// Validation gate docs/archive/PHASE2_PLAN.md §5.1: replicate the reference Google Sheet.
 //
 // The sheet translates every hour's solar/cloud conditions into
 // "Wh a 1 kW array would produce this hour". Export that column from the

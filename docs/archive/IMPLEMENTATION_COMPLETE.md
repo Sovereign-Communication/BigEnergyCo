@@ -1,3 +1,18 @@
+> **SUPERSEDED — do not act on this document.**
+> Moved to `docs/archive/` by plan item **P0.2**. The governing document is
+> [`docs/plan/MASTER_PLAN.md`](../plan/MASTER_PLAN.md), which is hash-pinned by
+> `docs/plan/PLAN.lock.json` and changes only through a recorded amendment
+> (master plan §16). Where this file and the master plan disagree, **the master
+> plan wins**.
+>
+> **Reason for archiving this file specifically:** A shipped-status snapshot of the Groq optimization that references files since deleted. It is a status report, not a specification, and it goes stale silently.
+>
+> **Where its content went:** R-AI-01..08 and P7.1-P7.4 restate the advisor and Jev requirements in a form that is checked by tests.
+>
+> Retained for history and for the provenance of decisions already shipped. Line
+> references below point at `main` as of the archive, not at the plan's `b60a651`
+> baseline.
+
 # Groq AI Advisor Optimization — Implementation Complete ✅
 
 **Date Completed:** August 3, 2026  

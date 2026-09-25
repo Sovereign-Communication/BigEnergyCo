@@ -1,3 +1,18 @@
+> **SUPERSEDED — do not act on this document.**
+> Moved to `docs/archive/` by plan item **P0.2**. The governing document is
+> [`docs/plan/MASTER_PLAN.md`](../plan/MASTER_PLAN.md), which is hash-pinned by
+> `docs/plan/PLAN.lock.json` and changes only through a recorded amendment
+> (master plan §16). Where this file and the master plan disagree, **the master
+> plan wins**.
+>
+> **Reason for archiving this file specifically:** A point-in-time pre-launch checklist dated 2026-08-03. Most items shipped afterwards (deterministic core, NASA POWER, appliance builder, i18n, domain). It also documents the old quick-tunnel launch model and `LINK.bat`, which no longer exist. Remaining items are non-code (E&O insurance, quota monitoring).
+>
+> **Where its content went:** Security and abuse items are restated as R-PRIV-01..05 and P1.3. Non-code items remain the owner's and are tracked in §10.
+>
+> Retained for history and for the provenance of decisions already shipped. Line
+> references below point at `main` as of the archive, not at the plan's `b60a651`
+> baseline.
+
 # BigEnergyCo Pre-Launch Audit
 
 **Date:** 2026-08-03  

@@ -2,7 +2,7 @@
 
 Re-run 2026-08-01 against your actual decisions: **no LLC ever**, service **totally free**,
 **optional donations to you personally**, **your personal email published** as a contact.
-Supersedes the entity-based analysis in `PLAN.md` §1–2.
+Supersedes the entity-based analysis in `docs/archive/PLAN.md` §1–2.
 
 Not legal or tax advice. It flags where you need a real professional and where you probably don't.
 

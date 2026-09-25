@@ -1,3 +1,18 @@
+> **SUPERSEDED — do not act on this document.**
+> Moved to `docs/archive/` by plan item **P0.2**. The governing document is
+> [`docs/plan/MASTER_PLAN.md`](../plan/MASTER_PLAN.md), which is hash-pinned by
+> `docs/plan/PLAN.lock.json` and changes only through a recorded amendment
+> (master plan §16). Where this file and the master plan disagree, **the master
+> plan wins**.
+>
+> **Reason for archiving this file specifically:** A ten-phase vision superseded by a twelve-phase program with owners, requirement IDs and measured exit criteria. It carried no work that was not already done.
+>
+> **Where its content went:** P0-P11 in the master plan, plus the P1-P6 mapping in Appendix A.
+>
+> Retained for history and for the provenance of decisions already shipped. Line
+> references below point at `main` as of the archive, not at the plan's `b60a651`
+> baseline.
+
 # BigEnergyCo: 10-phase product roadmap
 
 ## North star

@@ -1,3 +1,18 @@
+> **SUPERSEDED — do not act on this document.**
+> Moved to `docs/archive/` by plan item **P0.2**. The governing document is
+> [`docs/plan/MASTER_PLAN.md`](../plan/MASTER_PLAN.md), which is hash-pinned by
+> `docs/plan/PLAN.lock.json` and changes only through a recorded amendment
+> (master plan §16). Where this file and the master plan disagree, **the master
+> plan wins**.
+>
+> **Reason for archiving this file specifically:** An implementation guide written against `proxy_server.py`, a file that no longer exists, describing a token scheme that was replaced. Following it would reintroduce deleted code.
+>
+> **Where its content went:** R-AI-04 (typed `facts` object) and R-AI-05 (per-reply verification), delivered as P7.1 and P7.2.
+>
+> Retained for history and for the provenance of decisions already shipped. Line
+> references below point at `main` as of the archive, not at the plan's `b60a651`
+> baseline.
+
 # Groq Optimization: Quick Implementation Guide
 
 > **Superseded.** This guide targets deleted files (`proxy_server.py`) and a

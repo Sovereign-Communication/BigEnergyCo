@@ -1,3 +1,18 @@
+> **SUPERSEDED — do not act on this document.**
+> Moved to `docs/archive/` by plan item **P0.2**. The governing document is
+> [`docs/plan/MASTER_PLAN.md`](../plan/MASTER_PLAN.md), which is hash-pinned by
+> `docs/plan/PLAN.lock.json` and changes only through a recorded amendment
+> (master plan §16). Where this file and the master plan disagree, **the master
+> plan wins**.
+>
+> **Reason for archiving this file specifically:** A pre-launch roadmap whose blockers are obsolete. Its critical item (quick-tunnel URL rotation) no longer exists: the site is on Cloudflare Pages behind a permanent domain. Its security item (move the API key out of `groq.env`) is done: `GROQ_API_KEY` is a Cloudflare Worker secret and `groq.env` no longer exists. Its quota-alert item is deliberately declined by D-13.
+>
+> **Where its content went:** Superseded wholesale by P0-P11. Retained for the decision history in its §0 'settled decisions' section.
+>
+> Retained for history and for the provenance of decisions already shipped. Line
+> references below point at `main` as of the archive, not at the plan's `b60a651`
+> baseline.
+
 # BigEnergyCo → Free Worldwide Solar & Storage Estimator
 
 **Roadmap.** Updated 2026-08-22. Complete rewrite from paid procurement agency to free donation-supported educational tool.

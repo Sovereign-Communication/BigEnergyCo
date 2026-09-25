@@ -1,3 +1,18 @@
+> **SUPERSEDED — do not act on this document.**
+> Moved to `docs/archive/` by plan item **P0.2**. The governing document is
+> [`docs/plan/MASTER_PLAN.md`](../plan/MASTER_PLAN.md), which is hash-pinned by
+> `docs/plan/PLAN.lock.json` and changes only through a recorded amendment
+> (master plan §16). Where this file and the master plan disagree, **the master
+> plan wins**.
+>
+> **Reason for archiving this file specifically:** A visual companion to the implementation guide, with the same deleted-file basis and the same stale token scheme.
+>
+> **Where its content went:** As GROQ_IMPLEMENTATION_GUIDE: R-AI-04/R-AI-05 via P7.1/P7.2.
+>
+> Retained for history and for the provenance of decisions already shipped. Line
+> references below point at `main` as of the archive, not at the plan's `b60a651`
+> baseline.
+
 # Groq Optimization Roadmap — Visual Guide
 
 ## Current State vs. Optimized State
