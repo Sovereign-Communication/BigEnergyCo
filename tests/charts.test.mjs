@@ -28,8 +28,10 @@ const charts = await import(
 );
 
 // Documented surface beyond ui.js's needs: the pure seams this file tests,
-// and the palette (one home; chart legends are its only consumers).
-const SEAMS = ["computeZoomSpan", "findWorstStreak"];
+// the cumulative-caption composer (tests/cum-cost-caption.test.mjs reads the
+// words a visitor gets, which needs no canvas and no DOM), and the palette
+// (one home; chart legends are its only consumers).
+const SEAMS = ["computeZoomSpan", "findWorstStreak", "cumCostCaptionText"];
 const PALETTE = ["TIER_COLORS", "TIER_NAMES"];
 
 test("MODULE GRAPH: every name ui.js imports exists in charts.js", () => {

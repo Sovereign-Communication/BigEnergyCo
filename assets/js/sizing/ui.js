@@ -4067,6 +4067,21 @@ function renderRelativeOptions(p, selectedSystem) {
   const basePvKw = Math.max(1, base.pvKw || (p.dailyKwh || 10) * 0.6);
   const landedF = (p.assumptions && p.assumptions.landedF) || 1;
   const isGT = p.mode === "gridtie";
+  // A battery-only run builds no panels, so its tiers must scale the battery
+  // alone. Feeding the clamped `basePvKw` into them presented a 12 kW array as
+  // the visitor's OWN system — card label, PV row, price and adoption alike —
+  // and priced it with that array's panels and inverter, which is why the
+  // "Current Selection" baseline quoted a different price for the same system
+  // than the Best-pick card. `baseInvKw` mirrors the engine's inverter basis
+  // (never below the load peak), so a no-panel tier is priced the way the
+  // engine prices that system.
+  const baseInvKw = Math.max(0, (Number(p.peakLoadW) || 0) / 1000);
+  const tierPvKw = (pvRatio) =>
+    hasBasePanels ? Math.round(basePvKw * pvRatio * 10) / 10 : 0;
+  const tierPrice = (pvKw, battKwh) =>
+    hasBasePanels
+      ? fullRange(pvKw, battKwh, chem, landedF)
+      : fullRange(pvKw, battKwh, chem, landedF, baseInvKw);
 
   const ratedDoD = chem === "naion" ? 0.85 : 0.8;
   const baseDailyKwh = p.dailyKwh || 10;
@@ -4076,7 +4091,7 @@ function renderRelativeOptions(p, selectedSystem) {
   );
   const baseRatedCycles = cycleLifeForDoD(chem, baseEffectiveDod);
 
-  const baseCost = fullRange(basePvKw, baseBattKwh, chem, landedF);
+  const baseCost = tierPrice(tierPvKw(1), baseBattKwh);
   const baseBattMid = landedMidBattKwhFor(chem, landedF);
   const baseCycles = Math.max(
     150,
@@ -4200,10 +4215,8 @@ function renderRelativeOptions(p, selectedSystem) {
 
   for (const t of tiers) {
     const battKwh = Math.round(baseBattKwh * t.battRatio * 10) / 10;
-    const pvKw = Math.round(basePvKw * t.pvRatio * 10) / 10;
-    const cost = t.isBaseline
-      ? baseCost
-      : fullRange(pvKw, battKwh, chem, landedF);
+    const pvKw = tierPvKw(t.pvRatio);
+    const cost = t.isBaseline ? baseCost : tierPrice(pvKw, battKwh);
     const battMid = landedMidBattKwhFor(chem, landedF);
     const cycles = Math.max(
       150,
@@ -4232,14 +4245,17 @@ function renderRelativeOptions(p, selectedSystem) {
     let tierAnnualSavings = baseAnnualSavings;
     let tierResidualAnnual = baseResidualAnnual;
     if (isGT && !t.isBaseline) {
-      const scaledFraction = Math.min(
-        1.0,
-        Math.max(
-          0.2,
-          (baseAnnualSavings / Math.max(1, totalAnnualSpend)) *
-            Math.min(t.pvRatio, t.battRatio),
-        ),
-      );
+      // A no-panel baseline displaces nothing, so its tiers must not inherit
+      // the solar floor: the 0.2 clamp would fabricate a 20% bill cut for a
+      // battery that the surface beside it says never cuts the bill at all.
+      // With panels the ratios still pair up exactly as before.
+      const ratio = hasBasePanels
+        ? Math.min(t.pvRatio, t.battRatio)
+        : t.battRatio;
+      const share = (baseAnnualSavings / Math.max(1, totalAnnualSpend)) * ratio;
+      const scaledFraction = hasBasePanels
+        ? Math.min(1.0, Math.max(0.2, share))
+        : Math.min(1.0, Math.max(0, share));
       tierAnnualSavings = Math.round(totalAnnualSpend * scaledFraction);
       tierResidualAnnual = Math.max(0, totalAnnualSpend - tierAnnualSavings);
     }
@@ -4283,12 +4299,16 @@ function renderRelativeOptions(p, selectedSystem) {
           style:
             "font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.6rem;",
         },
-        `${pvKw} kW solar + ${fmt(battKwh)} kWh ${chemLabel} battery`,
+        hasBasePanels
+          ? `${pvKw} kW solar + ${fmt(battKwh)} kWh ${chemLabel} battery`
+          : `${fmt(battKwh)} kWh ${chemLabel} battery with no panels`,
       ),
     );
 
     appendRows(card, [
-      ["PV array", `${pvKw} kW (${fmtDelta(pvKw - basePvKw, "")} kW)`],
+      hasBasePanels
+        ? ["PV array", `${pvKw} kW (${fmtDelta(pvKw - basePvKw, "")} kW)`]
+        : ["Solar array", "None (Battery-only)"],
       [
         "Battery bank",
         `${fmt(battKwh)} kWh (${fmtDelta(battKwh - baseBattKwh, "")} kWh)`,
@@ -4353,7 +4373,7 @@ function renderRelativeOptions(p, selectedSystem) {
                   : p.frontier.marker
                     ? p.frontier.marker.outcomePct
                     : 100,
-              pvKw: basePvKw,
+              pvKw: tierPvKw(1),
               battKwh: baseBattKwh,
               pointIndex: null,
             };
@@ -4361,7 +4381,7 @@ function renderRelativeOptions(p, selectedSystem) {
           }
           refreshSelectionOutputs(p);
           renderResults(p);
-          requestIncrementalCut(basePvKw, baseBattKwh, chem);
+          requestIncrementalCut(tierPvKw(1), baseBattKwh, chem);
         } else {
           adoptedEntry = {
             ...base,
@@ -5122,7 +5142,13 @@ function entryDetailRows(p, e) {
     e.chemistry ||
     "—";
   rows.push(["Chemistry", chemLabel]);
-  rows.push(["Solar array", `${e.pvKw} kW`]);
+  // The same wording the card above uses: this row is the selected system's
+  // own spec sheet, and "0 kW" beside a card reading "None (Battery-only)"
+  // described one system two ways.
+  rows.push([
+    "Solar array",
+    e.pvKw > 0 ? `${e.pvKw} kW` : "None (Battery-only)",
+  ]);
   rows.push([
     "Battery (usable)",
     e.battKwh > 0

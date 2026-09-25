@@ -190,6 +190,33 @@ export const LOCALES = {
       "Within the sizes this tool searches — up to {pvMax} kW of panels and {battMax} kWh of battery — the most you can cover here is about {ceilingPct}%, for around {ceilingCost}. Good value runs out at {kneePct}% for about {kneeCost}. Full independence is not impossible here, but it needs a system far larger than this, and a generator or a grid connection is almost certainly the cheaper way to cover the rest.",
     frontierMethod:
       "The curve comes from simulating every panel-and-battery combination on a coarse grid against the same hourly weather as the cards above, then keeping only the systems nothing cheaper beats. Prices use the same landed do-it-yourself middle as every other figure on this page.",
+    // -- Cumulative 20-year cost caption (under the chart canvas) --
+    cumCostRecommended: "recommended",
+    cumCostSelected: "selected",
+    cumCostCaptionHead:
+      "Running 20-year cost for the {which} system ({label}): the amber line is what you pay the utility if you stay on the grid ({gridTotal}).",
+    cumCostCaptionOwnCost:
+      "The emerald line is the solar system's own cost (~{systemTotal}), matching the “Total 20-year cost” row for this system.",
+    cumCostCaptionOwnCostNoPanels:
+      "The emerald line is the system's own cost (~{systemTotal}), matching the “Total 20-year cost” row for this system.",
+    cumCostCaptionStack:
+      "The amber figure is a stack — the system, then the smaller bills that remain after solar (~{residualBills}), then your saving — so this system puts {saved} back in your pocket over the 20 years.",
+    cumCostCaptionStackNoPanels:
+      "The amber figure is a stack — the system, then the smaller bills that remain (~{residualBills}), then your saving — so this system puts {saved} back in your pocket over the 20 years.",
+    cumCostCaptionNetNegative:
+      "The stack runs the other way here: those remaining bills (~{residualBills}) never shrink enough, so over 20 years this system costs about {loss} MORE than staying on the grid — money spent, not money saved.",
+    cumCostCaptionRepaid:
+      "The system has repaid its cost by year {year} — every year after puts ~{perYear} back in your pocket. Total saving over 20 years: ~{saved}. The lower bars are your running net position: red until break-even, then climbing.",
+    cumCostCaptionNeverRepays:
+      "Within 20 years the system never repays its cost — battery replacements outpace bill savings, so the honest answer is: it does not pay for itself here.",
+    cumCostCaptionResidual:
+      "The slate line is the residual grid cost itself — about {annual}/yr for the {kwh} kWh/yr still drawn from the grid (net of your feed-in credit), {end} over the full 20 years.",
+    cumCostCaptionResidualCreditDraw:
+      "The slate line runs below $0 — net metering: the feed-in value of your surplus exceeds even the small {kwh} kWh/yr you still draw, so you earn ~{earned} over the full 20 years.",
+    cumCostCaptionResidualCreditBill:
+      "The slate line runs below $0 — net metering: the feed-in value of your surplus exceeds the tiny bill you still pay, so you earn ~{earned} over the full 20 years.",
+    cumCostCaptionSurplusCredit:
+      "The with-solar total (~{withSolar}) sits BELOW the system's own cost: your feed-in credit on surplus out-earns the small bill that remains, so the stack runs negative and the utility owes you ~{owed} in the 20-year picture.",
     frontierVerdictCoveredOffgrid:
       "Sizing is not your constraint here. The smallest practical system — {pv} kW of panels and {batt} kWh of battery, about {cost} — already covers this entire load, year-round. Anything larger buys spare capacity, not more independence.",
     frontierVerdictCoveredGrid:
@@ -475,6 +502,33 @@ export const LOCALES = {
       "Dentro de los tamaños que busca esta herramienta —hasta {pvMax} kW de paneles y {battMax} kWh de batería— lo máximo que puedes cubrir aquí es cerca del {ceilingPct}%, por unos {ceilingCost}. La buena relación se acaba en el {kneePct}% por unos {kneeCost}. La independencia total no es imposible aquí, pero exige un sistema mucho mayor; un generador o la red casi seguro son la forma más barata de cubrir el resto.",
     frontierMethod:
       "La curva sale de simular cada combinación de paneles y batería en una malla gruesa con el mismo clima horario que las tarjetas de arriba, y quedarse solo con los sistemas que nada más barato supera. Los precios usan el mismo punto medio DIY con flete que el resto de la página.",
+    // -- Cumulative 20-year cost caption (under the chart canvas) --
+    cumCostRecommended: "recomendado",
+    cumCostSelected: "seleccionado",
+    cumCostCaptionHead:
+      "Coste acumulado a 20 años del sistema {which} ({label}): la línea ámbar es lo que pagas a la compañía si sigues conectado a la red ({gridTotal}).",
+    cumCostCaptionOwnCost:
+      "La línea esmeralda es el coste propio del sistema solar (~{systemTotal}), y coincide con la fila “Coste total a 20 años” de este sistema.",
+    cumCostCaptionOwnCostNoPanels:
+      "La línea esmeralda es el coste propio del sistema (~{systemTotal}), y coincide con la fila “Coste total a 20 años” de este sistema.",
+    cumCostCaptionStack:
+      "La cifra ámbar es una pila — el sistema, luego las facturas menores que quedan tras lo solar (~{residualBills}), luego tu ahorro — así que este sistema te devuelve {saved} en los 20 años.",
+    cumCostCaptionStackNoPanels:
+      "La cifra ámbar es una pila — el sistema, luego las facturas menores que quedan (~{residualBills}), luego tu ahorro — así que este sistema te devuelve {saved} en los 20 años.",
+    cumCostCaptionNetNegative:
+      "Aquí la pila va al revés: esas facturas que quedan (~{residualBills}) nunca bajan lo suficiente, así que en 20 años este sistema cuesta unos {loss} MÁS que seguir conectado a la red — dinero gastado, no dinero ahorrado.",
+    cumCostCaptionRepaid:
+      "El sistema ha recuperado su coste en el año {year} — cada año posterior devuelve ~{perYear} a tu bolsillo. Ahorro total en 20 años: ~{saved}. Las barras inferiores son tu posición neta: rojas hasta el punto de equilibrio y luego en ascenso.",
+    cumCostCaptionNeverRepays:
+      "En 20 años el sistema nunca recupera su coste — las sustituciones de batería superan el ahorro en factura, así que la respuesta honesta es: aquí no se paga solo.",
+    cumCostCaptionResidual:
+      "La línea gris pizarra es el coste residual de la red — unos {annual}/año por los {kwh} kWh/año que aún tomas de la red (neto de tu crédito por vertido), {end} en los 20 años.",
+    cumCostCaptionResidualCreditDraw:
+      "La línea gris pizarra baja de $0 — facturación neta: el valor de vertido de tu excedente supera incluso los pequeños {kwh} kWh/año que aún consumes, así que ganas ~{earned} en los 20 años.",
+    cumCostCaptionResidualCreditBill:
+      "La línea gris pizarra baja de $0 — facturación neta: el valor de vertido de tu excedente supera la pequeña factura que aún pagas, así que ganas ~{earned} en los 20 años.",
+    cumCostCaptionSurplusCredit:
+      "El total con solar (~{withSolar}) queda POR DEBAJO del coste propio del sistema: tu crédito por vertido del excedente supera la pequeña factura que queda, así que la pila sale negativa y la compañía te debe ~{owed} en el balance a 20 años.",
     frontierVerdictCoveredOffgrid:
       "Aquí el tamaño no es tu limitación. El sistema práctico más pequeño —{pv} kW de paneles y {batt} kWh de batería, unos {cost}— ya cubre toda esta carga durante todo el año. Cualquier cosa mayor compra capacidad de reserva, no más independencia.",
     frontierVerdictCoveredGrid:
@@ -767,6 +821,33 @@ export const LOCALES = {
       "Dentro dos tamanhos que esta ferramenta busca — até {pvMax} kW de painéis e {battMax} kWh de bateria — o máximo que você cobre aqui é cerca de {ceilingPct}%, por uns {ceilingCost}. O bom custo-benefício acaba em {kneePct}% por uns {kneeCost}. A independência total não é impossível aqui, mas exige um sistema bem maior; um gerador ou a rede quase certamente são o jeito mais barato de cobrir o resto.",
     frontierMethod:
       "A curva vem de simular cada combinação de painéis e bateria numa malha grossa com o mesmo clima horário dos cartões acima, mantendo só os sistemas que nada mais barato supera. Os preços usam o mesmo meio-termo DIY desembaraçado do resto da página.",
+    // -- Cumulative 20-year cost caption (under the chart canvas) --
+    cumCostRecommended: "recomendado",
+    cumCostSelected: "selecionado",
+    cumCostCaptionHead:
+      "Custo acumulado em 20 anos do sistema {which} ({label}): a linha âmbar é o que você paga à distribuidora se continuar na rede ({gridTotal}).",
+    cumCostCaptionOwnCost:
+      "A linha esmeralda é o custo próprio do sistema solar (~{systemTotal}), igual à linha “Custo total em 20 anos” deste sistema.",
+    cumCostCaptionOwnCostNoPanels:
+      "A linha esmeralda é o custo próprio do sistema (~{systemTotal}), igual à linha “Custo total em 20 anos” deste sistema.",
+    cumCostCaptionStack:
+      "O valor âmbar é uma pilha — o sistema, depois as contas menores que sobram depois do solar (~{residualBills}), depois a sua economia — então este sistema devolve {saved} ao seu bolso nos 20 anos.",
+    cumCostCaptionStackNoPanels:
+      "O valor âmbar é uma pilha — o sistema, depois as contas menores que sobram (~{residualBills}), depois a sua economia — então este sistema devolve {saved} ao seu bolso nos 20 anos.",
+    cumCostCaptionNetNegative:
+      "Aqui a pilha corre ao contrário: essas contas que sobram (~{residualBills}) nunca caem o bastante, então em 20 anos este sistema custa cerca de {loss} MAIS do que continuar na rede — dinheiro gasto, não dinheiro economizado.",
+    cumCostCaptionRepaid:
+      "O sistema pagou o próprio custo até o ano {year} — cada ano seguinte devolve ~{perYear} ao seu bolso. Economia total em 20 anos: ~{saved}. As barras de baixo são a sua posição líquida: vermelhas até o ponto de equilíbrio, depois subindo.",
+    cumCostCaptionNeverRepays:
+      "Em 20 anos o sistema nunca paga o próprio custo — as trocas de bateria superam a economia na conta, então a resposta honesta é: aqui ele não se paga.",
+    cumCostCaptionResidual:
+      "A linha cinza-ardósia é o custo residual da rede — cerca de {annual}/ano pelos {kwh} kWh/ano ainda tirados da rede (líquido do seu crédito de injeção), {end} nos 20 anos.",
+    cumCostCaptionResidualCreditDraw:
+      "A linha cinza-ardósia desce abaixo de $0 — compensação líquida: o valor de injeção do seu excedente supera até os pequenos {kwh} kWh/ano que você ainda consome, então você ganha ~{earned} nos 20 anos.",
+    cumCostCaptionResidualCreditBill:
+      "A linha cinza-ardósia desce abaixo de $0 — compensação líquida: o valor de injeção do seu excedente supera a pequena conta que você ainda paga, então você ganha ~{earned} nos 20 anos.",
+    cumCostCaptionSurplusCredit:
+      "O total com solar (~{withSolar}) fica ABAIXO do custo próprio do sistema: seu crédito de injeção sobre o excedente supera a pequena conta restante, então a pilha fica negativa e a distribuidora deve ~{owed} a você no balanço de 20 anos.",
     frontierVerdictCoveredOffgrid:
       "Aqui o tamanho não é a sua limitação. O menor sistema prático — {pv} kW de painéis e {batt} kWh de bateria, cerca de {cost} — já cobre toda essa carga o ano inteiro. Qualquer coisa maior compra capacidade sobrando, não mais independência.",
     frontierVerdictCoveredGrid:
@@ -1062,6 +1143,33 @@ export const LOCALES = {
       "Dans les tailles explorées par cet outil — jusqu'à {pvMax} kW de panneaux et {battMax} kWh de batterie — le maximum que vous pouvez couvrir ici est d'environ {ceilingPct}%, pour environ {ceilingCost}. Le bon rapport s'arrête à {kneePct}% pour environ {kneeCost}. L'indépendance totale n'est pas impossible ici, mais elle demande un système bien plus grand ; un groupe électrogène ou le réseau est presque certainement le moyen le moins cher de couvrir le reste.",
     frontierMethod:
       "La courbe vient de la simulation de chaque combinaison panneaux-batterie sur une grille grossière avec la même météo horaire que les cartes ci-dessus, en ne gardant que les systèmes qu'aucun moins cher ne bat. Les prix utilisent le même milieu DIY rendu que tous les autres chiffres de la page.",
+    // -- Cumulative 20-year cost caption (under the chart canvas) --
+    cumCostRecommended: "recommandé",
+    cumCostSelected: "sélectionné",
+    cumCostCaptionHead:
+      "Coût cumulé sur 20 ans du système {which} ({label}) : la ligne ambre est ce que vous payez au réseau si vous restez raccordé ({gridTotal}).",
+    cumCostCaptionOwnCost:
+      "La ligne émeraude est le coût propre du système solaire (~{systemTotal}), identique à la ligne « Coût total sur 20 ans » de ce système.",
+    cumCostCaptionOwnCostNoPanels:
+      "La ligne émeraude est le coût propre du système (~{systemTotal}), identique à la ligne « Coût total sur 20 ans » de ce système.",
+    cumCostCaptionStack:
+      "Le chiffre ambre est un empilement — le système, puis les factures plus petites qui restent après le solaire (~{residualBills}), puis votre économie — ce système vous rend donc {saved} sur les 20 ans.",
+    cumCostCaptionStackNoPanels:
+      "Le chiffre ambre est un empilement — le système, puis les factures plus petites qui restent (~{residualBills}), puis votre économie — ce système vous rend donc {saved} sur les 20 ans.",
+    cumCostCaptionNetNegative:
+      "Ici l'empilement s'inverse : ces factures restantes (~{residualBills}) ne baissent jamais assez, donc sur 20 ans ce système coûte environ {loss} DE PLUS que rester raccordé — de l'argent dépensé, pas économisé.",
+    cumCostCaptionRepaid:
+      "Le système a remboursé son coût dès l'année {year} — chaque année suivante remet ~{perYear} dans votre poche. Économie totale sur 20 ans : ~{saved}. Les barres du bas sont votre position nette : rouges jusqu'au seuil de rentabilité, puis en hausse.",
+    cumCostCaptionNeverRepays:
+      "En 20 ans, le système ne rembourse jamais son coût — les remplacements de batterie dépassent les économies de facture ; la réponse honnête est donc : ici, il ne s'amortit pas.",
+    cumCostCaptionResidual:
+      "La ligne gris ardoise est le coût résiduel du réseau — environ {annual}/an pour les {kwh} kWh/an encore tirés du réseau (net de votre crédit d'injection), {end} sur les 20 ans.",
+    cumCostCaptionResidualCreditDraw:
+      "La ligne gris ardoise passe sous 0 $ — comptage net : la valeur d'injection de votre surplus dépasse même les petits {kwh} kWh/an que vous consommez encore, vous gagnez donc ~{earned} sur les 20 ans.",
+    cumCostCaptionResidualCreditBill:
+      "La ligne gris ardoise passe sous 0 $ — comptage net : la valeur d'injection de votre surplus dépasse la petite facture que vous payez encore, vous gagnez donc ~{earned} sur les 20 ans.",
+    cumCostCaptionSurplusCredit:
+      "Le total avec solaire (~{withSolar}) est INFÉRIEUR au coût propre du système : votre crédit d'injection sur le surplus dépasse la petite facture restante, l'empilement devient donc négatif et le réseau vous doit ~{owed} sur le bilan à 20 ans.",
     frontierVerdictCoveredOffgrid:
       "Ici, la taille n'est pas votre contrainte. Le plus petit système réaliste — {pv} kW de panneaux et {batt} kWh de batterie, environ {cost} — couvre déjà toute cette consommation, toute l'année. Plus grand n'achète que de la réserve, pas plus d'indépendance.",
     frontierVerdictCoveredGrid:
@@ -1332,6 +1440,33 @@ export const LOCALES = {
       "Dimensionierung ist hier nicht deine Grenze. Das kleinste praktische System — {pv} kW Panels und {batt} kWh Batterie, etwa {cost} — deckt diesen Verbrauch bereits praktisch vollständig ab. Alles Größere kauft Reserve, keine größere Ersparnis.",
     frontierMethod:
       "Die Kurve nutzt dieselbe stündliche Wetter-Simulation und dieselben Preisannahmen wie die Ergebnisse oben.",
+    // -- Cumulative 20-year cost caption (under the chart canvas) --
+    cumCostRecommended: "empfohlenen",
+    cumCostSelected: "ausgewählten",
+    cumCostCaptionHead:
+      "Kumulierte Kosten über 20 Jahre für das {which} System ({label}): Die amberfarbene Linie ist das, was Sie an den Versorger zahlen, wenn Sie am Netz bleiben ({gridTotal}).",
+    cumCostCaptionOwnCost:
+      "Die smaragdgrüne Linie sind die eigentlichen Kosten der Solaranlage (~{systemTotal}) und entsprechen der Zeile “Gesamtkosten über 20 Jahre” für dieses System.",
+    cumCostCaptionOwnCostNoPanels:
+      "Die smaragdgrüne Linie sind die eigentlichen Kosten des Systems (~{systemTotal}) und entsprechen der Zeile “Gesamtkosten über 20 Jahre” für dieses System.",
+    cumCostCaptionStack:
+      "Der amberfarbene Wert ist ein Stapel — das System, dann die kleineren Rechnungen, die nach der Solaranlage bleiben (~{residualBills}), dann Ihre Ersparnis — dieses System bringt Ihnen über die 20 Jahre also {saved} zurück.",
+    cumCostCaptionStackNoPanels:
+      "Der amberfarbene Wert ist ein Stapel — das System, dann die kleineren Rechnungen, die bleiben (~{residualBills}), dann Ihre Ersparnis — dieses System bringt Ihnen über die 20 Jahre also {saved} zurück.",
+    cumCostCaptionNetNegative:
+      "Hier läuft der Stapel andersherum: Diese verbleibenden Rechnungen (~{residualBills}) sinken nie genug, also kostet dieses System über 20 Jahre rund {loss} MEHR als am Netz zu bleiben — ausgegebenes Geld, kein gespartes.",
+    cumCostCaptionRepaid:
+      "Das System hat seine Kosten bis Jahr {year} zurückverdient — jedes weitere Jahr bringt ~{perYear} zurück in Ihre Tasche. Gesamtersparnis über 20 Jahre: ~{saved}. Die unteren Balken sind Ihre Nettoposition: rot bis zum Break-even, danach steigend.",
+    cumCostCaptionNeverRepays:
+      "Über 20 Jahre verdient das System seine Kosten nie zurück — Batteriewechsel übersteigen die Rechnungseinsparung, also lautet die ehrliche Antwort: Hier rechnet es sich nicht.",
+    cumCostCaptionResidual:
+      "Die schiefergraue Linie sind die Restnetzkosten selbst — etwa {annual}/Jahr für die {kwh} kWh/Jahr, die noch aus dem Netz kommen (netto nach Ihrer Einspeisegutschrift), {end} über die vollen 20 Jahre.",
+    cumCostCaptionResidualCreditDraw:
+      "Die schiefergraue Linie läuft unter 0 $ — Net-Metering: Der Einspeisewert Ihres Überschusses übersteigt sogar die kleinen {kwh} kWh/Jahr, die Sie noch beziehen, Sie gewinnen also ~{earned} über die vollen 20 Jahre.",
+    cumCostCaptionResidualCreditBill:
+      "Die schiefergraue Linie läuft unter 0 $ — Net-Metering: Der Einspeisewert Ihres Überschusses übersteigt die kleine Rechnung, die Sie noch zahlen, Sie gewinnen also ~{earned} über die vollen 20 Jahre.",
+    cumCostCaptionSurplusCredit:
+      "Der Wert mit Solaranlage (~{withSolar}) liegt UNTER den eigentlichen Kosten des Systems: Ihre Einspeisegutschrift für den Überschuss übersteigt die kleine Restrechnung, der Stapel läuft also negativ und der Versorger schuldet Ihnen ~{owed} in der 20-Jahres-Bilanz.",
     pipelineLocation: "Standort",
     pipelineWeather: "Wetter",
     pipelineSimulating: "Simulieren",
@@ -1612,6 +1747,33 @@ export const LOCALES = {
       "ضمن الأحجام التي تبحثها هذه الأداة — حتى {pvMax} كيلوواط ألواح و{battMax} كيلوواط ساعة بطارية — أقصى ما يمكن تغطيته هنا نحو {ceilingPct}%، بتكلفة قرابة {ceilingCost}. وتنتهي القيمة الجيدة عند {kneePct}% بنحو {kneeCost}. والاستقلال الكامل ليس مستحيلًا هنا، لكنه يحتاج نظامًا أكبر بكثير، وغالبًا يكون مولّد أو اتصال بالشبكة أرخص وسيلة لتغطية الباقي.",
     frontierMethod:
       "يأتي المنحنى من محاكاة كل توليفة ألواح وبطاريات على شبكة خشنة بنفس الطقس الساعي المستخدم في البطاقات أعلاه، ثم الإبقاء فقط على ما لا يتفوق عليه أي نظام أرخص. وتستخدم الأسعار نفس الوسط للتنفيذ الذاتي المستخدم في بقية الصفحة.",
+    // -- Cumulative 20-year cost caption (under the chart canvas) --
+    cumCostRecommended: "الموصى به",
+    cumCostSelected: "المحدد",
+    cumCostCaptionHead:
+      "التكلفة التراكمية على 20 عامًا للنظام {which} ({label}): الخط الكهرماني هو ما تدفعه للشركة إذا بقيت على الشبكة ({gridTotal}).",
+    cumCostCaptionOwnCost:
+      "الخط الزمردي هو التكلفة الخاصة بالنظام الشمسي (~{systemTotal})، ويطابق صف “إجمالي التكلفة على 20 عامًا” لهذا النظام.",
+    cumCostCaptionOwnCostNoPanels:
+      "الخط الزمردي هو التكلفة الخاصة بالنظام (~{systemTotal})، ويطابق صف “إجمالي التكلفة على 20 عامًا” لهذا النظام.",
+    cumCostCaptionStack:
+      "الشكل الكهرماني كومة — النظام، ثم الفواتير الأصغر التي تبقى بعد الطاقة الشمسية (~{residualBills})، ثم توفيرك — أي أن هذا النظام يعيد إليك {saved} على مدى 20 عامًا.",
+    cumCostCaptionStackNoPanels:
+      "الشكل الكهرماني كومة — النظام، ثم الفواتير الأصغر التي تبقى (~{residualBills})، ثم توفيرك — أي أن هذا النظام يعيد إليك {saved} على مدى 20 عامًا.",
+    cumCostCaptionNetNegative:
+      "هنا تسير الكومة في الاتجاه المعاكس: تلك الفواتير المتبقية (~{residualBills}) لا تنخفض بما يكفي أبدًا، لذا يكلفك هذا النظام على مدى 20 عامًا نحو {loss} أكثر من البقاء على الشبكة — مال مُنفَق، لا مال مُوفَّر.",
+    cumCostCaptionRepaid:
+      "استرد النظام تكلفته بحلول السنة {year} — وكل سنة بعدها تعيد ~{perYear} إلى جيبك. إجمالي التوفير على 20 عامًا: ~{saved}. الأعمدة السفلية هي صافي مركزك: حمراء حتى نقطة التعادل ثم صاعدة.",
+    cumCostCaptionNeverRepays:
+      "خلال 20 عامًا لا يسترد النظام تكلفته أبدًا — استبدال البطاريات يتجاوز التوفير في الفاتورة، لذا فالجواب الصادق: هنا لا يدفع النظام تكلفته.",
+    cumCostCaptionResidual:
+      "الخط الرمادي الداكن هو تكلفة الشبكة المتبقية نفسها — نحو {annual} سنويًا مقابل {kwh} كيلوواط ساعة سنويًا لا تزال مسحوبة من الشبكة (بعد خصم رصيد التغذية)، أي {end} على مدى 20 عامًا كاملة.",
+    cumCostCaptionResidualCreditDraw:
+      "الخط الرمادي الداكن ينزل تحت 0 دولار — صافي القياس: قيمة تغذية فائضك تتجاوز حتى الكمية الصغيرة {kwh} كيلوواط ساعة سنويًا التي لا تزال تستهلكها، فتكسب ~{earned} على مدى 20 عامًا كاملة.",
+    cumCostCaptionResidualCreditBill:
+      "الخط الرمادي الداكن ينزل تحت 0 دولار — صافي القياس: قيمة تغذية فائضك تتجاوز الفاتورة الصغيرة التي لا تزال تدفعها، فتكسب ~{earned} على مدى 20 عامًا كاملة.",
+    cumCostCaptionSurplusCredit:
+      "الإجمالي مع الطاقة الشمسية (~{withSolar}) يقع تحت التكلفة الخاصة بالنظام: رصيد تغذية فائضك يتجاوز الفاتورة الصغيرة المتبقية، فتسير الكومة بالسالب وتكون الشركة مدينة لك بنحو ~{owed} في حساب 20 عامًا.",
     frontierVerdictCoveredOffgrid:
       "الحجم ليس قيدك هنا. أصغر نظام عملي — {pv} كيلوواط ألواح و{batt} كيلوواط ساعة بطارية، بنحو {cost} — يغطي هذا الحمل بالكامل طوال العام. وأي شيء أكبر يشتري سعة احتياطية، لا مزيدًا من الاستقلال.",
     frontierVerdictCoveredGrid:
