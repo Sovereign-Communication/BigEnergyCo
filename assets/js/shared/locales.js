@@ -40,7 +40,8 @@ export const LOCALES = {
     runningBtn: "⏳ Running 5-year simulation…",
     runBtnReady: "☀️ Size My System (5-yr simulation)",
     runBtn: "☀️ Size My System (5-yr simulation)",
-    errorSim: "⚠️ ",
+    errorSim:
+      "⚠️ Sizing engine failed to load. Refresh the page (Ctrl+F5) and try again.",
     statusSuccess:
       "✅ {years} yr of hourly data ({dataYears}) · {yield} kWh/yr per kW of panel.{offline}",
     offlineNote: " · 🌐 offline typical-year mode",
@@ -265,7 +266,8 @@ export const LOCALES = {
       "⏳ Obteniendo cinco años de clima satélite y buscando tamaños de sistema para recortar facturas…",
     statusOffgrid:
       "⏳ Obteniendo 5 años de clima horario por satélite y buscando tamaños de sistema…",
-    errorSim: "⚠️ ",
+    errorSim:
+      "⚠️ El motor de cálculo no pudo cargarse. Actualiza la página (Ctrl+F5) e inténtalo de nuevo.",
     statusSuccess:
       "✅ {years} años de datos horarios ({dataYears}) · {yield} kWh/año por kW de panel.{offline}",
     offlineNote: " · 🌐 modo offline típico",
@@ -568,7 +570,8 @@ export const LOCALES = {
       "⏳ Obtendo 5 anos de clima horário por satélite e buscando tamanhos de sistema…",
     runningBtn: "⏳ Simulando 5 anos...",
     runBtnReady: "☀️ Dimensionar meu sistema (simulação 5 anos)",
-    errorSim: "⚠️ ",
+    errorSim:
+      "⚠️ O motor de dimensionamento não pôde carregar. Atualize a página (Ctrl+F5) e tente novamente.",
     statusSuccess:
       "✅ {years} anos de dados horários ({dataYears}) · {yield} kWh/ano por kW de painel.{offline}",
     offlineNote: " · 🌐 modo offline típico",
@@ -840,7 +843,8 @@ export const LOCALES = {
       "⏳ Récupération de 5 ans de météo horaire par satellite et recherche de tailles de système…",
     runningBtn: "⏳ Simulation de 5 ans...",
     runBtnReady: "☀️ Dimensionner (simulation 5 ans)",
-    errorSim: "⚠️ ",
+    errorSim:
+      "⚠️ Le moteur de dimensionnement n'a pas pu se charger. Actualisez la page (Ctrl+F5) et réessayez.",
     statusSuccess:
       "✅ {years} ans de données horaires ({dataYears}) · {yield} kWh/an par kW de panneau.{offline}",
     offlineNote: " · 🌐 mode hors ligne typique",
@@ -1086,7 +1090,8 @@ export const LOCALES = {
       "⏳ 5 Jahre stündliches Satellitenwetter werden geladen, Systemgrößen gesucht…",
     runningBtn: "⏳ 5-Jahres-Simulation läuft…",
     runBtnReady: "☀️ System dimensionieren (5-Jahres-Simulation)",
-    errorSim: "⚠️ ",
+    errorSim:
+      "⚠️ Die Dimensionierungs-Engine konnte nicht geladen werden. Aktualisieren Sie die Seite (Ctrl+F5) und versuchen Sie es erneut.",
     tariffSpendLine:
       "Bei {tariff}/kWh kostet dein Strom heute etwa {annual} pro Jahr. Jede Option unten zeigt die Rechnung nach Solar und wie schnell sie sich aus den Ersparnissen bezahlt.",
     tariffSpendOffgrid:
@@ -1354,7 +1359,8 @@ export const LOCALES = {
       "⏳ جاري الحصول على 5 سنوات من طقس الأقمار الصناعية ساعة بساعة والبحث عن أحجام الأنظمة…",
     runningBtn: "⏳ جاري المحاكاة لمدة 5 سنوات...",
     runBtnReady: "☀️ احسب نظامي (محاكاة 5 سنوات)",
-    errorSim: "⚠️ ",
+    errorSim:
+      "⚠️ تعذّر تحميل محرك التقدير. حدّث الصفحة (Ctrl+F5) وحاول مرة أخرى.",
     statusSuccess:
       "✅ {years} سنوات من البيانات الساعة ({dataYears}) · {yield} كيلوواط ساعة/سنة لكل كيلوواط من اللوحة.{offline}",
     offlineNote: " · 🌐 وضع عدم الاتصال التقليدي",

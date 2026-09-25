@@ -1815,6 +1815,18 @@
                 <span>Show my options</span>
               </button>
 
+              <!-- Why nothing solved, announced. The visual banner below is
+                   built on demand and toggled with display:none, which is
+                   exactly the shape a screen reader will not announce; this
+                   region is declared once, stays rendered (sr-only), and is
+                   filled with the same reason. -->
+              <div
+                id="infeasibleLive"
+                class="sr-only"
+                role="status"
+                aria-live="polite"
+              ></div>
+
               <div
                 id="sizingStatus"
                 role="status"

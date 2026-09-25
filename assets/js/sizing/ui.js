@@ -805,26 +805,37 @@ const INFEASIBLE_HINTS = {
 };
 function renderInfeasibleBanner(reason) {
   let banner = $("infeasibleBanner");
+  // Created on demand, and only when there is something to say: clearing must
+  // stay a no-op on a page whose runs were all solvable, so a normal visitor
+  // never gets an empty banner node injected under the status line.
   if (!banner) {
+    if (!reason) return;
     banner = el("div", { id: "infeasibleBanner", class: "infeasible-banner" });
     const target = $("sizingStatus") || document.body;
     if (target.parentNode) target.parentNode.insertBefore(banner, target);
   }
+  // The visual banner is created on demand and toggled with display:none, which
+  // is exactly the shape a screen reader will not announce. The reason is
+  // mirrored into the sr-only region declared in the markup, which stays
+  // rendered — so "why did nothing solve?" reaches assistive tech too.
+  const live = $("infeasibleLive");
   if (!reason) {
     banner.style.display = "none";
     banner.innerHTML = "";
+    if (live) live.textContent = "";
     return;
   }
   const hint = INFEASIBLE_HINTS[reason] || {
     titleKey: "infeasibleGenericTitle",
     bodyKey: "infeasibleGenericBody",
   };
+  const title = t(hint.titleKey);
+  const body = t(hint.bodyKey);
   banner.style.display = "block";
   banner.innerHTML = "";
-  banner.appendChild(
-    el("div", { class: "infeasible-title" }, t(hint.titleKey)),
-  );
-  banner.appendChild(el("div", { class: "infeasible-body" }, t(hint.bodyKey)));
+  banner.appendChild(el("div", { class: "infeasible-title" }, title));
+  banner.appendChild(el("div", { class: "infeasible-body" }, body));
+  if (live) live.textContent = `${title}. ${body}`;
 }
 
 function fmtH(h) {
@@ -1892,9 +1903,13 @@ function updateGuidedProgress(step = wizard.state.step) {
 
 // One owner for the results region: hidden until a successful render, so
 // old numbers can never masquerade as fresh after a failed or invalid run.
+// The infeasible banner explains why that region is empty, so it is retracted
+// with it — otherwise a reason from an earlier run keeps explaining a result
+// area that is no longer on screen.
 function setResultsHidden(hidden) {
   const region = $("resultsRegion");
   if (region) region.hidden = hidden;
+  if (hidden) renderInfeasibleBanner(null);
 }
 
 function setupRoofMap() {
@@ -3333,7 +3348,10 @@ function ensureWorker() {
       if (worker !== runWorker) return;
       worker = null;
       runWorker.terminate();
-      setStatus(t("errorSim") + "Sizing engine failed to load.");
+      // The whole message (warning glyph, what failed, what to do next) is one
+      // locale value: concatenating English onto a translated emoji prefix is
+      // how an error ends up half-translated in five of six locales.
+      setStatus(t("errorSim"));
 
       setResultsHidden(true);
       pipelineStop(false);
@@ -6660,7 +6678,12 @@ function renderResults(p) {
     }
   }
 
-  if (p.unreachableReason) renderInfeasibleBanner(p.unreachableReason);
+  // Called on EVERY payload, with null when this combo is solvable. Guarding
+  // the call instead (as this once did) makes the clear branch below dead
+  // code: the banner for an earlier infeasible combo then outlives the run
+  // that replaced it, so a visitor who switches back to a workable setup
+  // keeps reading "solar-only can't do this" over a page that solved fine.
+  renderInfeasibleBanner(p.unreachableReason || null);
 
   renderEli5Summary(p);
 
