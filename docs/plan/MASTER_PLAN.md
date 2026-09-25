@@ -686,7 +686,7 @@ Every phase PR MUST:
 3. Pass the local preflight: `npm test`, `node scripts/check-chars.mjs`, `npm run seo`, `npx --yes prettier@3.9.6 --check .`, `npm run deploy:check`, `npm run plan:check`, plus every gate added by P0.4 as it lands.
 4. Be green in CI on every required check (`test`, `web-smoke`, `coverage`, `analyze`, plus `quality-lab` and `jev-complete` once they are required).
 5. Not regress any metric against its latest ledger baseline (§3.2), and meet every absolute threshold its phase has switched on.
-6. Attach the scoped live Jev report (Q-01). Before O-01, the owner runs it locally and attaches it. **Bootstrap:** P0.1 (adoption) and P0.2 (archive) carry no Jev report, because the scoped mode does not exist yet. P0.3 is judged by its own head's fixed gate (the new constants, no OpenRouter, the scoped mode) and MUST merge before any P1 or later PR. Every PR after P0.3 follows this rule with no exception.
+6. Attach the scoped live Jev report (Q-01). Before O-01, the owner runs it locally and attaches it. **Bootstrap:** P0.1 (adoption) and P0.2 (archive) carry no Jev report, because the scoped mode does not exist yet. P0.3 is judged by its own head's fixed gate (the new constants, no OpenRouter, the scoped mode) and MUST merge before any P1 or later PR. Here "P0.3" means the complete set: all five sub-PRs (a)–(e) merged, and each is judged by the gate as it stands at its own head. Every PR after P0.3 follows this rule with no exception.
 7. Append a ledger row (`item-done`) with the PR number, the head SHA, the gate outcomes and the Jev score.
 8. Follow the release rules when shipping (`CACHE_VERSION` and asset-token bumps; `docs/DEPLOY_RUNBOOK.md`).
 9. Tick the item in the tracking issue.
