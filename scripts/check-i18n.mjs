@@ -137,11 +137,14 @@ else
   );
 
 // ── 6. runtime-composed families ────────────────────────────────────────────
-// `frontierVerdict()` composes `base + ("Grid" | "Offgrid")` at runtime, so a
-// variant translated in one locale but not another renders English — or the raw
-// key — for that whole mode. Comparing suffix families catches it; counting
-// dictionary sizes cannot.
-const families = familyGaps(LOCALES);
+// `frontierVerdict()` composes `base + a suffix` at runtime, so a variant
+// translated in one locale but not another renders English — or the raw key —
+// for that whole mode. Comparing suffix families catches it; counting
+// dictionary sizes cannot. "Battery" is the battery-only frontier: a grid-tie
+// sweep that found no PV at all, whose ceiling is a peak offset rather than a
+// bill cut, so its verdict must not say "% of your bill".
+const composedSuffixes = ["Grid", "Offgrid", "Battery"];
+const families = familyGaps(LOCALES, composedSuffixes);
 for (const [lang, gaps] of Object.entries(families)) {
   if (gaps.length)
     fail(
@@ -183,10 +186,10 @@ function renderedKeys() {
 }
 
 const rendered = renderedKeys();
-// `frontierVerdict()` composes base + ("Grid" | "Offgrid") at runtime, so those
-// member names never appear literally — rule 6 already proves each family is
-// complete in every locale.
-const composedSuffixes = ["Grid", "Offgrid"];
+// `frontierVerdict()` composes base + a suffix at runtime, so those member names
+// never appear literally — rule 6 already proves each family is complete in
+// every locale. The list is shared with rule 6 so the two can never disagree
+// about which suffixes exist.
 const unrendered = Object.keys(en).filter(
   (k) => !rendered.has(k) && !composedSuffixes.some((s) => k.endsWith(s)),
 );

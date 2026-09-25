@@ -2343,10 +2343,24 @@ function syncCutLabel() {
 
   if (!slider) return;
   const v = parseInt(slider.value, 10) || 80;
+  // With no panels there is nothing generated, so this target moves WHEN power
+  // is drawn instead of selling back a share of the bill. Same control, same
+  // number, honest label. The label's data-i18n hook is kept in step with the
+  // wording so a later language switch re-translates the matching variant
+  // instead of silently snapping back to the bill-cut string.
+  const batteryOnly = ($("hardwareConfig") || {}).value === "battery";
+  const label = document.querySelector('label[for="cutSlider"]');
+  if (label) {
+    const key = batteryOnly ? "cutLabelBattery" : "cutLabel";
+    if (label.getAttribute("data-i18n") !== key)
+      label.setAttribute("data-i18n", key);
+    label.textContent = t(key);
+  }
 
   if (out)
-    out.textContent =
-      v > 100
+    out.textContent = batteryOnly
+      ? t("cutValueBattery", { pct: v })
+      : v > 100
         ? `Produce ~${v}% of your bill — bill gone, sellable surplus sizeable above`
         : `Cut ~${v}% of your bill`;
 }
@@ -4044,6 +4058,12 @@ function renderRelativeOptions(p, selectedSystem) {
   const chem = rawChem === "sodium" || rawChem === "naion" ? "naion" : "lfp";
   const chemLabel = chem === "naion" ? "Sodium-ion" : "LFP";
   const baseBattKwh = Math.max(2, base.battKwh || (p.dailyKwh || 10) * 1.5);
+  // `basePvKw` is clamped to >= 1 so the tier ratios always have a PV axis to
+  // scale, which means it is never 0 — a battery-only baseline therefore looks
+  // like a "6 kW Solar" array that this mode never builds. Key the labels off
+  // the selection's own pvKw so a no-panel run describes itself honestly; the
+  // clamp is left alone because tier costs are derived from it.
+  const hasBasePanels = Number(base.pvKw) > 0;
   const basePvKw = Math.max(1, base.pvKw || (p.dailyKwh || 10) * 0.6);
   const landedF = (p.assumptions && p.assumptions.landedF) || 1;
   const isGT = p.mode === "gridtie";
@@ -4114,11 +4134,19 @@ function renderRelativeOptions(p, selectedSystem) {
     <div style="font-weight: 700; color: var(--primary-accent); font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem;">
       <span>📊 Capacity Spectrum (Relative to Your Selection)</span>
       <span style="font-size: 0.8rem; font-weight: 600; color: #fff; background: rgba(255,255,255,0.08); padding: 0.15rem 0.5rem; border-radius: 6px;">
-        Baseline: ${basePvKw} kW Solar + ${fmt(baseBattKwh)} kWh ${chemLabel}
+        ${
+          hasBasePanels
+            ? `Baseline: ${basePvKw} kW Solar + ${fmt(baseBattKwh)} kWh ${chemLabel}`
+            : `Baseline: no panels — ${fmt(baseBattKwh)} kWh ${chemLabel}`
+        }
       </span>
     </div>
     <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem; line-height: 1.55;">
-      Comparing larger and smaller configurations around your baseline of <strong>${basePvKw} kW solar + ${fmt(baseBattKwh)} kWh ${chemLabel} battery</strong>.
+      Comparing larger and smaller configurations around your baseline of <strong>${
+        hasBasePanels
+          ? `${basePvKw} kW solar + ${fmt(baseBattKwh)} kWh ${chemLabel} battery`
+          : `${fmt(baseBattKwh)} kWh ${chemLabel} battery with no panels`
+      }</strong>.
       Includes <em>only cost-efficient chemistries</em> (excluding AGM). Evaluate upfront investment, storm buffer, and 20-year costs to find your ideal capacity.
     </div>
   `;
@@ -7733,6 +7761,10 @@ export function initSizingUI() {
         ) {
           selectedKey = "best";
         }
+        // The target means something different without panels, so the label
+        // must follow the control the moment it changes — not only after the
+        // next run finishes.
+        syncCutLabel();
         markPrecalcDirty();
       });
     }
