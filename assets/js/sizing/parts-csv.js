@@ -134,19 +134,27 @@ export function partsListRows({
       `Year-round fixed: ~${Math.round(absLat * 0.9)} deg | Winter steep: ~${Math.min(70, Math.round(absLat + 15))} deg`,
     ]);
   }
-  rows.push(
+  // PV-only safety items follow the Panels row above: a battery-only parts
+  // list that tells a supplier to ship a PV isolator and an SPD for an array
+  // the same file reports as None is asking for hardware the system cannot
+  // use. The grounding row keeps its place but not its panel rails.
+  const bosRows = [
     [
       "BOS Safety",
       "DC Battery Disconnect & Fuse",
       `Class-T fuse / DC breaker ${bom.protection?.mainFuseAmps || 200} A`,
       "Mandatory overcurrent protection near positive terminal",
     ],
-    [
+  ];
+  if (bom.panels) {
+    bosRows.push([
       "BOS Safety",
       "PV DC Isolator & Surge Device",
       "DC-rated breaker + SPD",
       "Protects charge controller / inverter from PV lightning surges",
-    ],
+    ]);
+  }
+  bosRows.push(
     [
       "BOS Safety",
       "Battery Shunt / Monitor",
@@ -157,9 +165,12 @@ export function partsListRows({
       "BOS Safety",
       "Equipment Grounding & Bonding",
       "Copper ground rod + bonding bus",
-      "Single common earth bond for frame rails, SPDs, and inverter chassis",
+      bom.panels
+        ? "Single common earth bond for frame rails, SPDs, and inverter chassis"
+        : "Single common earth bond for the battery rack, the inverter chassis, and any metal enclosure",
     ],
   );
+  rows.push(...bosRows);
   if (requiresSplitPhase) {
     rows.push([
       "BOS Notice",
