@@ -16,8 +16,39 @@ export async function runLocationFlow(ctx, actions) {
     };
   })()`);
 
+  // The five slots the generator fuel helper writes: the label phrase (the unit
+  // word lives inside the translated string), the example price, both unit
+  // suffixes, and the two footnote figures. Which unit system applies is derived
+  // from the site's coordinates, so the location flow is where it changes.
+  const fuelHelper = () =>
+    evaluate(`({
+      label: document.querySelector('label[for="genFuelPrice"]')?.textContent || "",
+      placeholder: document.getElementById("genFuelPrice")?.placeholder || "",
+      unit: document.getElementById("genBurnUnit")?.textContent || "",
+      unit2: document.getElementById("genBurnUnit2")?.textContent || "",
+      petrol: document.getElementById("genPetrolBurn")?.textContent || "",
+      diesel: document.getElementById("genDieselBurn")?.textContent || "",
+    })`);
+
   if (!(await actions.chooseHonolulu()))
     throw new Error("Honolulu suggestion missing");
+  const honoluluSwitched = await ctx.poll(
+    async () => (await fuelHelper()).unit === "gal",
+    5000,
+    250,
+  );
+  const honoluluFuel = await fuelHelper();
+  gate(
+    "Honolulu switches the fuel helper to gallons",
+    honoluluSwitched &&
+      /per gallon/.test(honoluluFuel.label) &&
+      honoluluFuel.placeholder === "e.g. 3.90" &&
+      honoluluFuel.unit === "gal" &&
+      honoluluFuel.unit2 === "gal" &&
+      honoluluFuel.petrol === "0.13" &&
+      honoluluFuel.diesel === "0.09",
+    JSON.stringify(honoluluFuel),
+  );
   await evaluate(`document.getElementById("btnRunSizing").click()`);
   let completed = await ctx.poll(
     async () =>
@@ -243,6 +274,37 @@ export async function runLocationFlow(ctx, actions) {
       JSON.stringify(invalidLoad),
     );
   }
+  // Back to a metric site: the same five slots must follow the second switch in
+  // the other direction, with the exact pre-refactor strings.
+  await evaluate(`(() => {
+    const lat = document.getElementById("latInput");
+    const lon = document.getElementById("lonInput");
+    lat.value = "48.85";
+    lat.dispatchEvent(new Event("input", { bubbles: true }));
+    lon.value = "2.35";
+    lon.dispatchEvent(new Event("input", { bubbles: true }));
+  })()`);
+  const parisSettled = await ctx.poll(
+    async () =>
+      evaluate(
+        `/Using custom coordinates \\(48\\.85, 2\\.35\\)/.test(document.getElementById("locNote")?.textContent || "")`,
+      ),
+    10000,
+    100,
+  );
+  const parisFuel = await fuelHelper();
+  gate(
+    "a metric site switches the fuel helper back to litres",
+    parisSettled &&
+      /per liter/.test(parisFuel.label) &&
+      parisFuel.placeholder === "e.g. 1.20" &&
+      parisFuel.unit === "L" &&
+      parisFuel.unit2 === "L" &&
+      parisFuel.petrol === "0.5" &&
+      parisFuel.diesel === "0.35",
+    JSON.stringify({ settled: parisSettled, ...parisFuel }),
+  );
+
   await evaluate(`(() => {
     Worker.prototype.postMessage = window.__locationOriginalPost;
     delete window.__locationOriginalPost;

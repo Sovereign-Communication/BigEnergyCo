@@ -138,6 +138,26 @@ through the injected `setStatus`. No location state lives here.
   from the pre-extraction implementation, so the move is proven to change
   nothing a visitor downloads.
 
+## Generator fuel helper (extracted from ui.js)
+
+- `assets/js/sizing/fuel-units.js` — **single owner of the fuel rules**: the
+  litres-per-kWh burn table and its US-gallon twin, the three boxes that buy
+  fuel by the gallon (mainland US, Hawaii, Alaska), the coordinate predicate
+  (`isImperialLocation`), the burn lookup with its petrol fallback
+  (`fuelBurnPerKwh`), the typed local-price -> USD/kWh conversion
+  (`fuelRateUsd`) and the five display facts the page writes — label key,
+  example price, unit suffix, and the two footnote figures (`fuelDisplay`).
+  The footnote figures are derived from the burn table instead of typed in, so
+  editing the table can no longer leave the paragraph disagreeing with the
+  maths it describes.
+- `ui.js` keeps the input plumbing: read the coordinates and the price fields,
+  write the label, the example, the unit spans and the readout sentence.
+- `tests/fuel-units.test.mjs` freezes what the pre-extraction implementation
+  produced — every box boundary, the price/FX matrix, and the readout
+  sentences under both unit systems — and pins that the controller delegates
+  rather than duplicating. `scripts/smoke/location.js` checks the same five
+  slots in a real browser, switching Honolulu -> gallons and Paris -> litres.
+
 ## Internationalization (translation ownership)
 
 - `assets/js/shared/locales.js` — **single owner** of every user-visible
@@ -176,12 +196,17 @@ through the injected `setStatus`. No location state lives here.
 
 ## Known remaining debt (deliberate, not forgotten)
 
-- `ui.js` is still ~8.0k lines: form state, rendering glue, Jev badge
-  lifecycle, sliders, modals. Six extraction seams are done (run channel,
-  location picking, chart rendering, share-link codec, infeasible-reason copy,
-  parts-list export) and the string contract now has one owner in
-  `shared/interpolate.js`; each further seam should follow the same pattern
-  (policy in a pure module, mechanics stay with the DOM, tests first).
+- `ui.js` is still ~8.0k lines (7,999 at this writing): form state, rendering
+  glue, Jev badge lifecycle, sliders, modals. Seven extraction seams are done
+  (run channel, location picking, chart rendering, share-link codec,
+  infeasible-reason copy, parts-list export, generator fuel helper) and the
+  string contract now has one owner in `shared/interpolate.js`; each further
+  seam should follow the same pattern (policy in a pure module, mechanics stay
+  with the DOM, tests first).
+- The two display-currency clusters are the next obvious seam: `fxActive` /
+  `money` / `localRate` / `energyRate` / `gridRate` / `moneyRange` all read the
+  same two inputs and the same rate table, and the tariff, export and fuel
+  fields each convert with it by hand.
 - The hero, FAQ, parts list, support and legal sections are still
   English-only static markup. Translating them is an editorial pass (six
   locales of long-form prose), not a code change, and nothing in the

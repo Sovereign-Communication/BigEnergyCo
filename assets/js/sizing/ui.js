@@ -100,6 +100,13 @@ import {
   infeasibleCopyKeys,
 } from "./infeasible-copy.js?v=20260921f";
 import { csvDocument, partsListRows } from "./parts-csv.js?v=20260921f";
+import {
+  fuelBurnPerKwh,
+  fuelDisplay,
+  fuelRateUsd,
+  fuelTypeName,
+  isImperialLocation,
+} from "./fuel-units.js?v=20260921f";
 
 import {
   renderFrontier,
@@ -5486,49 +5493,26 @@ function downloadBomCsv() {
 
 // ── Generator fuel helper ────────────────────────────────────────────────────
 
-// Typical partial-load fuel burn for small gensets (fuel cost only), in the
-// site's native L/kWh and in US gallons/kWh. The input unit follows the
-// selected location: US / Hawaii / Alaska buy fuel by the gallon, everywhere
-// else by the litre, and the price is entered in the SAME currency the
-// results display, not hard-coded dollars.
-const GEN_L_PER_KWH = { petrol: 0.5, diesel: 0.35 };
-const LITRES_PER_GALLON = 3.785411784;
-const GEN_GAL_PER_KWH = {
-  petrol: GEN_L_PER_KWH.petrol / LITRES_PER_GALLON,
-  diesel: GEN_L_PER_KWH.diesel / LITRES_PER_GALLON,
-};
-// The parts of the world that sell fuel by the gallon (the US plus its
-// outlying states); everything else is metric.
-const IMPERIAL_BOXES = [
-  [24, 50, -125, -66], // US mainland
-  [18.5, 28.5, -179, -154], // Hawaii
-  [50.5, 72, -168, -129], // Alaska
-];
+// The burn tables, the gallon-or-litre geography and the local-price -> USD
+// maths live in fuel-units.js; what stays here is the input plumbing around
+// them. fuelImperial is the cached answer for the current location, refreshed
+// whenever the location changes so the label, the example and the maths below
+// can never disagree with each other.
 let fuelImperial = false;
 
 function usesImperialUnits() {
-  const lat = parseFloat($("latInput")?.value);
-  const lon = parseFloat($("lonInput")?.value);
-  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
-  return IMPERIAL_BOXES.some(
-    ([latMin, latMax, lonMin, lonMax]) =>
-      lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax,
+  return isImperialLocation(
+    parseFloat($("latInput")?.value),
+    parseFloat($("lonInput")?.value),
   );
 }
 
-// Fuel price -> effective USD cost per kWh. The user types a local-currency
-// price (the same unit the results use); this converts to USD, and also
-// converts volume liters <-> gallons when the country buys by the gallon.
 function genRateUsd() {
-  const type = $("genFuelType")?.value || "petrol";
-  const local = parseFloat($("genFuelPrice")?.value);
-  if (!(local > 0)) return null;
-  const fx = fxActive();
-  const priceUsd = fx && fx.rate ? local / fx.rate : local; // local -> USD
-  const perKwh = fuelImperial
-    ? (GEN_GAL_PER_KWH[type] ?? GEN_GAL_PER_KWH.petrol)
-    : (GEN_L_PER_KWH[type] ?? GEN_L_PER_KWH.petrol);
-  return priceUsd * perKwh;
+  return fuelRateUsd(parseFloat($("genFuelPrice")?.value), {
+    type: $("genFuelType")?.value || "petrol",
+    imperial: fuelImperial,
+    fxRate: fxActive()?.rate ?? null,
+  });
 }
 
 // Reflect the selected location + currency onto the helper's labels: the unit
@@ -5540,19 +5524,19 @@ function updateFuelUnits() {
   fuelImperial = newImp;
   const fx = fxActive();
   const sym = fx ? CURRENCIES[fx.code]?.symbol || fx.code : "$";
+  const display = fuelDisplay(fuelImperial);
   const label = document.querySelector('label[for="genFuelPrice"]');
-  if (label)
-    label.textContent = `${t(fuelImperial ? "fuelGalLabel" : "fuelLitLabel")} (${sym}):`;
+  if (label) label.textContent = `${t(display.labelKey)} (${sym}):`;
   const input = $("genFuelPrice");
-  if (input) input.placeholder = fuelImperial ? "e.g. 3.90" : "e.g. 1.20";
+  if (input) input.placeholder = display.placeholder;
   for (const id of ["genBurnUnit", "genBurnUnit2"]) {
     const ue = $(id);
-    if (ue) ue.textContent = fuelImperial ? "gal" : "L";
+    if (ue) ue.textContent = display.unit;
   }
   const petrolEl = $("genPetrolBurn");
-  if (petrolEl) petrolEl.textContent = fuelImperial ? "0.13" : "0.5";
+  if (petrolEl) petrolEl.textContent = display.petrolBurn;
   const dieselEl = $("genDieselBurn");
-  if (dieselEl) dieselEl.textContent = fuelImperial ? "0.09" : "0.35";
+  if (dieselEl) dieselEl.textContent = display.dieselBurn;
   if (changed) updateGenHelper();
 }
 
@@ -5567,14 +5551,15 @@ function updateGenHelper() {
     applyBtn.style.display = "none";
     return;
   }
-  const typeSel = $("genFuelType").value === "diesel" ? "Diesel" : "Petrol";
+  const type = $("genFuelType").value;
   const entry = $("genFuelPrice").value;
-  const burn = fuelImperial
-    ? (GEN_GAL_PER_KWH[$("genFuelType").value] ?? GEN_GAL_PER_KWH.petrol)
-    : (GEN_L_PER_KWH[$("genFuelType").value] ?? GEN_L_PER_KWH.petrol);
-  const unit = fuelImperial ? "gal" : "L";
+  const burn = fuelBurnPerKwh(type, fuelImperial);
+  const unit = fuelDisplay(fuelImperial).unit;
   readout.textContent =
-    t("fuelReadoutRate", { type: typeSel, rate: localRate(rate) }) +
+    t("fuelReadoutRate", {
+      type: fuelTypeName(type),
+      rate: localRate(rate),
+    }) +
     " " +
     t("fuelReadoutBurn", { entry, burn: burn.toFixed(2), unit }) +
     " " +
