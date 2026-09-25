@@ -580,13 +580,31 @@ test("every workflow job declares a timeout-minutes", () => {
 // challenge itself as "up".
 test("daily static check survives the Cloudflare bot challenge", () => {
   const yml = read(".github/workflows/scheduled-static.yml");
+  // Compare HOSTS parsed from the workflow's URLs, never substrings of the
+  // file: "does this text mention example.com?" is equally true of
+  // example.com.evil.test, of a comment, and of a host that merely ends in the
+  // same label. (This is also CodeQL's
+  // js/incomplete-url-substring-sanitization rule, which blocks the merge.)
+  const hosts = new Set();
+  for (const m of yml.matchAll(/https:\/\/[^\s"'`)]+/g)) {
+    try {
+      hosts.add(new URL(m[0]).host);
+    } catch {
+      // A malformed match proves nothing about the workflow; the assertions
+      // below fail loudly if a real probe host is missing.
+    }
+  }
   assert.ok(
-    yml.includes("sovereign-communication.github.io"),
+    hosts.has("sovereign-communication.github.io"),
     "content drift is detected from the challenge-free Pages origin",
   );
   assert.ok(
-    yml.includes("freeoffgridcalculator.com"),
+    hosts.has("freeoffgridcalculator.com"),
     "the custom domain is still probed for DNS/routing health",
+  );
+  assert.ok(
+    hosts.has("bigenergyco-api.bigenergyco.workers.dev"),
+    "the API health probe still runs",
   );
   assert.match(
     yml,
