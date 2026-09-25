@@ -1,5 +1,5 @@
 {
-  "id": "bigenergyco-complete-gate-v1",
+  "id": "bigenergyco-complete-gate-v2",
   "sentiment": {
     "levels": [
       "failing — evidence contradicts quality",
@@ -82,6 +82,11 @@
       "authority": "code",
       "bucket": "release_gap",
       "instructions": "Rate RELEASE readiness from code-owned facts only: CI green, browser smoke green, and a clean tree mean proven; any recorded red means at risk; unknowns mean unverified."
+    },
+    "advisor": {
+      "authority": "jev",
+      "bucket": "advisor_gap",
+      "instructions": "Rate the AI ADVISOR implementation and its evidence: does the implementation keep deterministic calculator figures authoritative, pair the same selected result with Jev, avoid stereotypes and unsupported current claims, disclose uncertainty and safety limits, protect privacy, support multilingual use and the selected interface language, and fail safely when a provider is unavailable? Judge only what the evidence demonstrates; an unrun adversarial or live check is not proven."
     },
     "physics": {
       "authority": "jev",
@@ -213,6 +218,20 @@
       "work_type": "release-verify",
       "keywords": ["ci", "smoke", "dirty", "uncommitted", "merge", "staging"],
       "suggested_next_action": "Run the release-candidate pass: ship in-flight work through the protected path, get CI and browser smoke green on the merge, and re-run this gate on the clean tree."
+    },
+    "advisor_gap": {
+      "label": "AI advisor quality gap",
+      "path_id": "complete/advisor",
+      "work_type": "audit",
+      "keywords": [
+        "advisor",
+        "unbiased",
+        "privacy",
+        "multilingual",
+        "hallucination",
+        "jev context"
+      ],
+      "suggested_next_action": "Run the advisor audit against the real chat and worker paths: verify the same selected deterministic state reaches Jev and prose, exercise prompt-injection, stale-response, provider-failure, locale, privacy, uncertainty, neutrality, and safety cases, then add or fix regression evidence for every observed gap."
     },
     "physics_gap": {
       "label": "Physics / determinism gap",

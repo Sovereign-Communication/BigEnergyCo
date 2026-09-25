@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // The Jev complete gate CLI — scores THIS repo's current state 0-100 against
-// the 95 (9.5/10) google-quality target across all 15 facets, emits the
+// the 95 (9.5/10) google-quality target across all 16 facets, emits the
 // pack-declared required-work buckets, and groups recommended actions by work
 // type (the pass repertoire this repo actually runs).
 //
@@ -339,7 +339,7 @@ function printHuman(report) {
   for (const [k, v] of Object.entries(report.hard_gates)) {
     process.stdout.write(`  ${v ? "✓" : "✗"} ${k}\n`);
   }
-  process.stdout.write(`facets (15):\n`);
+  process.stdout.write(`facets (${Object.keys(report.facets).length}):\n`);
   for (const [axis, f] of Object.entries(report.facets)) {
     const mark = f.index <= 0 ? "✗" : f.index < 3 ? "·" : "✓";
     process.stdout.write(

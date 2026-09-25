@@ -44,11 +44,25 @@ test("share restoration keeps its source hash until all inputs are restored", ()
   const restoreStart = ui.indexOf("function restoreFromShare() {");
   const restoreEnd = ui.indexOf("// -- Printable summary", restoreStart);
   const restore = ui.slice(restoreStart, restoreEnd);
-  assert.match(restore, /undefined,\s*undefined,\s*true,/);
-  assert.match(restore, /Math\.abs\(lat\) > 90/);
-  assert.match(restore, /Math\.abs\(lon\) > 180/);
-  assert.match(restore, /kw < 0\.5/);
-  assert.match(restore, /kw > 500/);
+  // The restore path must pass skipShareUpdate (third-from-last argument) so
+  // the incoming #s= link survives until every input is written.
+  assert.match(
+    restore,
+    /setCoords\([\s\S]{0,90}undefined,\s*undefined,\s*true\)/,
+  );
+  // Parsing + the bounds gate moved to the codec (assets/js/sizing/
+  // share-codec.js, pinned by tests/share-codec.test.mjs). What the DOM path
+  // still owes us: delegate to that one owner, and refuse a rejected link
+  // before any form state moves. A second copy of the bounds here would be a
+  // fork of the policy, so its absence is the assertion.
+  assert.match(restore, /const o = parseShareHash\(location\.hash\);/);
+  assert.match(restore, /if \(!o\) return false;/);
+  assert.doesNotMatch(restore, /Math\.abs\(lat\) > 90/);
+  const codec = fs.readFileSync("assets/js/sizing/share-codec.js", "utf8");
+  assert.match(codec, /Math\.abs\(la\) > 90/);
+  assert.match(codec, /Math\.abs\(lo\) > 180/);
+  assert.match(codec, /kw < 0\.5/);
+  assert.match(codec, /kw > 500/);
 });
 
 test("background location refinements are tied to the current user choice", () => {

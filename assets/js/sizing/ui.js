@@ -78,7 +78,9 @@ import {
 } from "../shared/simple-mode.js?v=20260921f";
 import { buildSimpleView } from "../shared/simple-view.js?v=20260921f";
 import {
+  advisorJevContext,
   interpretSanity,
+  sanityResponseIsCurrent,
   renderSanityBadge,
   requestSanity,
   sanityState,
@@ -87,6 +89,11 @@ import {
   CUT_TARGET_PCT,
   targetForPct,
 } from "../shared/cut-targets.js?v=20260921f";
+import {
+  SHARE_PREFIX,
+  b64urlEncode,
+  parseShareHash,
+} from "./share-codec.js?v=20260921f";
 
 import {
   renderFrontier,
@@ -361,7 +368,10 @@ function t(key, params = {}) {
   let str = dict[key] ?? LOCALES.en[key] ?? key;
 
   for (const [k, v] of Object.entries(params)) {
-    str = str.replace(new RegExp(`\\{${k}\\}`, "g"), v);
+    // A function replacer, not a string: a value containing "$&" or "$n"
+    // (any formatted money figure) would otherwise be read as a replacement
+    // pattern and silently mangled — "$200" loses its dollars to the $2 rule.
+    str = str.replace(new RegExp(`\\{${k}\\}`, "g"), () => v);
   }
 
   return str;
@@ -416,12 +426,6 @@ function setStatus(text) {
 // seconds. Weather chunk progress comes through the worker; simulation
 // length is unknowable up front, so its bar is indeterminate by design.
 const PIPELINE_STEP_IDS = ["pipeCity", "pipeWeather", "pipeSim", "pipeRender"];
-const PIPELINE_LABELS = {
-  pipeCity: "Location",
-  pipeWeather: "Weather",
-  pipeSim: "Simulating",
-  pipeRender: "Rendering",
-};
 let pipelineTimer = null;
 
 function pipelineEl() {
@@ -440,7 +444,7 @@ function pipelineStart(stage = "City") {
   pipelineTimer = setInterval(() => {
     if (note) {
       const s = ((Date.now() - started) / 1000).toFixed(1);
-      note.textContent = `${s}s elapsed`;
+      note.textContent = t("pipelineElapsed", { s });
     }
   }, 250);
   pipelineStage(stage);
@@ -475,12 +479,19 @@ function pipelineStage(stage, weatherDone = 0, weatherTotal = 0) {
           bar.dataset.mode = "determinate";
           const pct = Math.round((weatherDone / weatherTotal) * 100);
           bar.style.setProperty("--pipe-pct", pct + "%");
-          txt.textContent = `${weatherDone}/${weatherTotal} satellite chunks`;
+          txt.textContent = t("pipelineChunks", {
+            done: weatherDone,
+            total: weatherTotal,
+          });
         } else {
           bar.dataset.mode = "indeterminate";
           bar.style.setProperty("--pipe-pct", "0%");
           txt.textContent =
-            i < order ? "cached" : i === order ? "reaching satellite…" : "";
+            i < order
+              ? t("pipelineCached")
+              : i === order
+                ? t("pipelineReaching")
+                : "";
         }
       }
     }
@@ -524,10 +535,15 @@ function showSpeedNote(kind, meta) {
         ? `${lat.toFixed(2)}, ${lon.toFixed(2)}`
         : ""));
   if (kind === "repeat") {
-    note.textContent =
-      "⚡ Instant — repeat of this exact setup (computed moments ago)";
+    note.textContent = t("speedNoteRepeat");
   } else if (kind === "cache") {
-    note.textContent = `⚡ Instant — ${meta && meta.offline ? "offline typical-year" : "cached satellite weather"}${where ? ` for ${where}` : ""}`;
+    const offline = Boolean(meta && meta.offline);
+    const base = offline ? "speedNoteOffline" : "speedNoteCached";
+    note.textContent = where
+      ? t(offline ? "speedNoteOfflineWhere" : "speedNoteCachedWhere", {
+          where,
+        })
+      : t(base);
   } else {
     note.textContent = "";
     return;
@@ -587,11 +603,12 @@ function applySimpleMode() {
   if (simpleWrap) {
     simpleWrap.innerHTML = "";
     simpleWrap.style.display = "none";
-    if (simpleMode && lastPayload) {
-      renderSimpleResults(lastPayload);
-      runSanityCheck(lastPayload); // badge must survive mode toggles: cache re-mount, no refetch
-    }
+    if (simpleMode && lastPayload) renderSimpleResults(lastPayload);
   }
+  // The badge must survive mode toggles in BOTH directions: each surface's
+  // render re-mounts it through the same sanity owner (runSanityCheck), from
+  // the state cache — never a second /api/jev request.
+  if (lastPayload) runSanityCheck(lastPayload);
   document.querySelectorAll("[data-jargon]").forEach((node) => {
     if (simpleMode) {
       // Unknown/typo'd terms stay plain text: explainElement returns false
@@ -681,13 +698,13 @@ function renderSimpleResults(p) {
   const card = el("div", { class: "simple-results-card" });
   const goalText =
     p.mode === "gridtie"
-      ? "to cut about " + (entry.cutPct ?? 0) + "% off your bill"
-      : "to cover your home through the year";
+      ? t("simpleGoalGrid", { pct: entry.cutPct ?? 0 })
+      : t("simpleGoalOffgrid");
   card.appendChild(
     el(
       "div",
       { class: "simple-headline" },
-      `At your location, this system gets you ` + goalText + `:`,
+      t("simpleHeadline", { goal: goalText }),
     ),
   );
 
@@ -759,28 +776,31 @@ function renderSimpleResults(p) {
 // reason above the cards so visitors know WHY nothing solved and what to
 // change. Hides itself the moment a payload without a reason arrives (i.e.
 // a normal run) so it never lingers across the page.
+// Every reason maps to its locale keys — the copy lives in locales.js so a
+// non-English visitor reads the failure in their own language, like the rest
+// of the chrome.
 const INFEASIBLE_HINTS = {
   // run.js emits this code only when an area cap was actually provided.
   "area-limited": {
-    title: "Too little roof/yard area for this target",
-    body: "The searched solar size was capped by the optional area input (see “Hardware setup”). Clear that box — or draw a bigger area on the map — and re-run: the site itself can reach this target.",
+    titleKey: "infeasibleAreaTitle",
+    bodyKey: "infeasibleAreaBody",
   },
   // The search envelope, not any visitor input, is the limit here.
   "envelope-limited": {
-    title: "Beyond this tool's search range for this target",
-    body: "At this load, reaching that target needs a solar array or battery bank larger than this calculator searches (see Hardware setup for the limits). Try a lower bill-cut target, or check whether part of the load can be reduced.",
+    titleKey: "infeasibleEnvelopeTitle",
+    bodyKey: "infeasibleEnvelopeBody",
   },
   "needs-battery": {
-    title: "Solar-only can't reach 100% off-grid",
-    body: "An off-grid home needs storage for nights and cloudy days. Add a battery to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).",
+    titleKey: "infeasibleNeedsBatteryTitle",
+    bodyKey: "infeasibleNeedsBatteryBody",
   },
   "needs-panels": {
-    title: "Battery-only can't run off-grid",
-    body: "Nothing recharges the bank at this site. Add panels to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).",
+    titleKey: "infeasibleNeedsPanelsTitle",
+    bodyKey: "infeasibleNeedsPanelsBody",
   },
   "needs-pv-surplus": {
-    title: "A battery-only bank can't produce surplus",
-    body: "Surplus needs panels to generate more than your load. Drop the target below 100% on the bill-cut slider, or switch the hardware setup to 'Solar + Battery'.",
+    titleKey: "infeasibleNeedsSurplusTitle",
+    bodyKey: "infeasibleNeedsSurplusBody",
   },
 };
 function renderInfeasibleBanner(reason) {
@@ -796,21 +816,23 @@ function renderInfeasibleBanner(reason) {
     return;
   }
   const hint = INFEASIBLE_HINTS[reason] || {
-    title: "This hardware and goal combination can't solve",
-    body: "Change the goal or hardware, then re-run.",
+    titleKey: "infeasibleGenericTitle",
+    bodyKey: "infeasibleGenericBody",
   };
   banner.style.display = "block";
   banner.innerHTML = "";
-  banner.appendChild(el("div", { class: "infeasible-title" }, hint.title));
-  banner.appendChild(el("div", { class: "infeasible-body" }, hint.body));
+  banner.appendChild(
+    el("div", { class: "infeasible-title" }, t(hint.titleKey)),
+  );
+  banner.appendChild(el("div", { class: "infeasible-body" }, t(hint.bodyKey)));
 }
 
 function fmtH(h) {
-  if (h >= 24) return "all day (24 h)";
+  if (h >= 24) return t("fmtAllDay");
 
-  if (h >= 1) return Math.round(h * 2) / 2 + " h/day";
+  if (h >= 1) return t("fmtHoursDay", { h: Math.round(h * 2) / 2 });
 
-  return Math.round(h * 60) + " min/day";
+  return t("fmtMinutesDay", { m: Math.round(h * 60) });
 }
 
 function fmtKwh(x) {
@@ -911,20 +933,20 @@ function billForKwh(kwh, rate) {
 
 function fmtBill(v) {
   const fx = fxActive();
-  if (!fx) return "$" + Math.round(v).toLocaleString() + "/mo";
+  if (!fx) return "$" + Math.round(v).toLocaleString() + t("billPerMonth");
   try {
     return (
       new Intl.NumberFormat(undefined, {
         style: "currency",
         currency: fx.code,
         maximumFractionDigits: 0,
-      }).format(v) + "/mo"
+      }).format(v) + t("billPerMonth")
     );
   } catch {
     return (
       (CURRENCIES[fx.code]?.symbol || "") +
       Math.round(v).toLocaleString() +
-      "/mo"
+      t("billPerMonth")
     );
   }
 }
@@ -976,19 +998,20 @@ function syncBillSlider() {
       Math.max(parseFloat(offSlider.min) || 1, roundedKwh),
     );
     offSlider.value = String(clampedKwh);
-    if (offOut) offOut.textContent = "~" + clampedKwh + " kWh/day";
+    if (offOut)
+      offOut.textContent = t("offgridKwhReadout", { kwh: clampedKwh });
     if (kwhInput) kwhInput.value = String(clampedKwh);
   }
 
   const note = $("quickBillNote");
   if (note) {
+    const params = {
+      bill: fmtBill(value),
+      kwh: Math.round(billAnchorKwh),
+    };
     note.textContent = quickMode
-      ? "Starts from ~" +
-        fmtBill(value) +
-        ` (≈${Math.round(billAnchorKwh)} kWh/day). Set your real bill here, choose a location, then click Size My System. The bill-cut slider appears with results.`
-      : "Quick estimate: ~" +
-        fmtBill(value) +
-        ` (starts from ~${Math.round(billAnchorKwh)} kWh/day) — switch to Manual to change your bill, appliances, or rate.`;
+      ? t("quickBillStarts", params)
+      : t("quickBillManual", params);
   }
   updateLoadReadout();
 }
@@ -1114,7 +1137,7 @@ function renderAppliances() {
             "font-size:0.75rem;color:var(--text-muted);font-family:var(--font-mono);background:rgba(255,255,255,0.05);padding:0.1rem 0.45rem;border-radius:10px;",
         },
 
-        it.duty ? `~${it.w} W while running` : `~${it.w} W`,
+        it.duty ? t("apWattsRunning", { w: it.w }) : t("apWatts", { w: it.w }),
       );
 
       // quantity stepper (hidden until checked)
@@ -1211,9 +1234,9 @@ function renderAppliances() {
         const kwh = (it.w * parseInt(row.dataset.qty, 10) * h) / 1000;
 
         if (on) {
-          let txt = fmtKwh(kwh) + " kWh/day";
+          let txt = t("apKwhDay", { kwh: fmtKwh(kwh) });
 
-          if (it.duty) txt += ` (~${Math.round((it.w * h) / 24)} W avg)`;
+          if (it.duty) txt += t("apAvgW", { w: Math.round((it.w * h) / 24) });
 
           sub.textContent = txt;
 
@@ -2613,7 +2636,8 @@ function setupBillSlider() {
         Math.max(parseFloat(offSlider.min) || 1, roundedKwh),
       );
       offSlider.value = String(clampedKwh);
-      if (offOut) offOut.textContent = "~" + clampedKwh + " kWh/day";
+      if (offOut)
+        offOut.textContent = t("offgridKwhReadout", { kwh: clampedKwh });
       if (kwhInput) kwhInput.value = String(clampedKwh);
     }
     updateLoadReadout();
@@ -2687,7 +2711,7 @@ function setupGoalControls() {
         desc.textContent =
           "Size a self-reliant solar and battery storage system for your cabin, camper van, backup, or homestead. Enter your daily kWh or pick your appliances — hourly weather simulations ensure you never run out of power.";
       const optBill = $("optLoadBill");
-      if (optBill) optBill.textContent = "Daily energy need (kWh/day slider)";
+      if (optBill) optBill.textContent = t("dailyEnergyNeed");
     }
     updateAutoRows();
     setQuickMode(quickMode);
@@ -2733,14 +2757,14 @@ function setupOffgridControls() {
 
   const syncToVal = (val) => {
     slider.value = String(val);
-    if (out) out.textContent = "~" + val + " kWh/day";
+    if (out) out.textContent = t("offgridKwhReadout", { kwh: val });
     if (kwhInput) kwhInput.value = String(val);
     syncToBill(val);
   };
 
   slider.addEventListener("input", () => {
     const val = parseFloat(slider.value);
-    if (out) out.textContent = "~" + val + " kWh/day";
+    if (out) out.textContent = t("offgridKwhReadout", { kwh: val });
     if (kwhInput) kwhInput.value = String(val);
     syncToBill(val);
   });
@@ -2754,7 +2778,7 @@ function setupOffgridControls() {
       const val = parseFloat(kwhInput.value);
       if (Number.isFinite(val) && val >= 1 && val <= 60) {
         slider.value = String(val);
-        if (out) out.textContent = "~" + val + " kWh/day";
+        if (out) out.textContent = t("offgridKwhReadout", { kwh: val });
         syncToBill(val);
       }
     });
@@ -4848,18 +4872,38 @@ function renderMatrix(p) {
 // our deterministic engine's output would mean a rescale/merge bug — so the
 // on-the-spot response is one full engine re-run (deterministic self-heal);
 // a flag on the re-run renders as-is (refinedPayloads guards the loop).
-let sanityCache = { key: null, interp: null };
+let sanityCache = { key: null, state: null, interp: null };
+let sanityStatus = "idle";
+let sanityRequestSeq = 0;
+let sanityInFlight = null;
 const sanityRefined = new WeakSet();
 
+function clearSanityBadges() {
+  for (const id of ["resultsRegion", "simpleResultsWrap"]) {
+    const container = $(id);
+    if (container)
+      container.querySelectorAll(".sanity-badge").forEach((b) => b.remove());
+  }
+}
+
 function runSanityCheck(p) {
-  if (!p || p.unreachableReason) return;
+  if (!p || p.unreachableReason) {
+    sanityStatus = "unavailable";
+    clearSanityBadges();
+    return;
+  }
   const sel = resolveSelected(p);
   const entry = sel && sel.solvable ? sel : p.best;
   const state = sanityState(p, entry);
-  if (!state) return;
+  if (!state) {
+    sanityStatus = "unavailable";
+    clearSanityBadges();
+    return;
+  }
   const key = JSON.stringify(state);
 
   const mount = () => {
+    clearSanityBadges();
     if (!sanityCache.interp) return;
     const container = isSimpleMode()
       ? $("simpleResultsWrap")
@@ -4869,23 +4913,67 @@ function runSanityCheck(p) {
   };
 
   if (sanityCache.key === key && sanityCache.interp) {
+    sanityStatus = "available";
     mount();
     return;
   }
-  requestSanity(state).then((data) => {
-    const interp = interpretSanity(data);
-    sanityCache = { key, interp };
-    mount();
-    if (
-      interp &&
-      interp.level === "flag" &&
-      interp.verdict === "impossible" &&
-      !sanityRefined.has(p)
-    ) {
-      sanityRefined.add(p);
-      run(); // on-the-spot full deterministic re-run — never an AI number
-    }
-  });
+  // A selection change or a fresh payload supersedes every older request.
+  // Without this, a slow response for system A can mount its verdict on
+  // system B and the advisor can explain the wrong deterministic result.
+  if (sanityInFlight && sanityInFlight.key === key) {
+    sanityStatus = "pending";
+    return;
+  }
+  const requestId = ++sanityRequestSeq;
+  sanityInFlight = { id: requestId, key, state };
+  sanityCache = { key, state, interp: null };
+  sanityStatus = "pending";
+  clearSanityBadges();
+
+  requestSanity(state)
+    .then((data) => {
+      // Ignore late responses after a selection/payload change. Checking both
+      // the request identity and the current state also covers selection edits
+      // that happen while the same payload object is being re-rendered.
+      const currentEntry = lastPayload ? resolveSelected(lastPayload) : null;
+      const currentState = lastPayload
+        ? sanityState(
+            lastPayload,
+            currentEntry && currentEntry.solvable
+              ? currentEntry
+              : lastPayload.best,
+          )
+        : null;
+      if (
+        !sanityResponseIsCurrent(
+          requestId,
+          sanityInFlight?.id,
+          key,
+          currentState ? JSON.stringify(currentState) : null,
+        )
+      )
+        return;
+      const interp = interpretSanity(data);
+      sanityInFlight = null;
+      sanityCache = { key, state, interp };
+      sanityStatus = interp ? "available" : "unavailable";
+      mount();
+      if (
+        interp &&
+        interp.level === "flag" &&
+        interp.verdict === "impossible" &&
+        !sanityRefined.has(p)
+      ) {
+        sanityRefined.add(p);
+        run(); // on-the-spot full deterministic re-run — never an AI number
+      }
+    })
+    .catch(() => {
+      if (sanityInFlight && sanityInFlight.id === requestId) {
+        sanityInFlight = null;
+        sanityStatus = "unavailable";
+      }
+    });
 }
 
 function resolveSelected(p) {
@@ -6643,6 +6731,13 @@ function renderResults(p) {
     p.best && Number.isFinite(p.best.lifetimeCostMid)
       ? `RECOMMENDED: ${p.best.chemLabel} - ${p.best.pvKw} kW PV + ${fmt(p.best.battKwh)} kWh usable. Why: ${p.bestReason || "safety-first pick."}\n`
       : "";
+  const selectedEntry = resolveSelected(p) || p.best;
+  const jevEntry =
+    selectedEntry && selectedEntry.solvable ? selectedEntry : p.best;
+  const jevState = sanityState(p, jevEntry);
+  const selectedLine = jevState
+    ? `SELECTED SYSTEM FOR JEV REVIEW: ${jevEntry.chemLabel || jevEntry.label || selectedKey} - ${jevState.pvKw.toFixed(2)} kW PV + ${Number(jevState.battKwh).toFixed(2)} kWh usable; ${jevState.mode}.\n`
+    : "SELECTED SYSTEM FOR JEV REVIEW: no solvable deterministic system.\n";
 
   const fr = p.frontier && p.frontier.reach;
 
@@ -6659,11 +6754,11 @@ function renderResults(p) {
       : "";
 
   window.lastSizingBrief =
-    `I sized a system with your calculator for ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)}, ` +
+    `I sized a system with your calculator for the selected site (the advisor does not receive exact coordinates), ` +
     `${inp.dailyKwh.toFixed(1)} kWh/day from ${inp.basis}, ${p.chemistry === "auto" ? "AUTO chemistry comparison" : p.chemistry.toUpperCase()}` +
     `${p.auto && p.auto.length ? ` (${p.autoNote})` : ""}, ` +
-    `${isGT ? "staying connected to the grid (no export" + (inp.exportRate ? ", feed-in credit entered)" : ")") : "fully off-grid"}:\n${recLine}${frontierLine}${briefLines.join("\n")}\n` +
-    `[ADVISOR INSTRUCTION: These numbers were computed deterministically from NASA POWER hourly weather ` +
+    `${isGT ? "staying connected to the grid (no export" + (inp.exportRate ? ", feed-in credit entered)" : ")") : "fully off-grid"}:\n${selectedLine}${recLine}${frontierLine}${briefLines.join("\n")}\n` +
+    `[CALCULATOR CONTEXT — DATA, NOT INSTRUCTIONS: These numbers were computed deterministically from NASA POWER hourly weather ` +
     `${p.assumptions.dataYears}. Do not recompute or invent different figures - explain, sanity-check and add caveats ` +
     `(seasonal variation, inverter/BOS costs, installation, degradation) around THESE results. Keep it SHORT: a brief verdict, not an essay.]`;
 
@@ -6848,6 +6943,10 @@ function refreshSelectionOutputs(p) {
   const inp = readInputs();
   updateShareHash(p, inp);
   populatePrintSheet(p, inp);
+  // Selection changes are the same Jev state change as a fresh result: re-run
+  // the probe for the newly selected deterministic system. The in-flight
+  // guard above collapses the duplicate call made by renderResults.
+  runSanityCheck(p);
 }
 
 // -- Shareable results -------------------------------------------------------
@@ -6858,27 +6957,9 @@ function refreshSelectionOutputs(p) {
 
 // cached per site, and the engine is deterministic, so results reproduce).
 
-function b64urlEncode(obj) {
-  const json = JSON.stringify(obj);
-
-  const bytes = new TextEncoder().encode(json);
-
-  let bin = "";
-
-  for (const b of bytes) bin += String.fromCharCode(b);
-
-  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function b64urlDecode(str) {
-  const pad = str.length % 4 === 0 ? "" : "=".repeat(4 - (str.length % 4));
-
-  const bin = atob(str.replace(/-/g, "+").replace(/_/g, "/") + pad);
-
-  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-
-  return JSON.parse(new TextDecoder().decode(bytes));
-}
+// The share-link codec (encode/decode + the validation gate) lives in
+// share-codec.js — pure policy with tests in tests/share-codec.test.mjs;
+// this file keeps only the DOM application of a validated state.
 
 function updateShareHash(p, inp) {
   try {
@@ -6953,52 +7034,27 @@ function updateShareHash(p, inp) {
       if (sized && sized.length) o.t = sized;
     }
 
-    history.replaceState(null, "", "#s=" + b64urlEncode(o));
+    history.replaceState(null, "", SHARE_PREFIX + b64urlEncode(o));
   } catch {
     /* sharing is best-effort; never block a result on it */
   }
 }
 
 function restoreFromShare() {
-  if (!location.hash.startsWith("#s=")) return false;
+  // The codec owns parsing + validation; a malformed or hostile link is
+  // refused here, before any DOM state moves.
+  const o = parseShareHash(location.hash);
+  if (!o) return false;
 
-  let o;
-
-  try {
-    o = b64urlDecode(location.hash.slice(3));
-  } catch {
-    return false;
-  }
-
-  if (!o || o.v !== 1) return false;
-
-  const lat = parseFloat(o.la),
-    lon = parseFloat(o.lo),
-    kw = parseFloat(o.kw);
-
-  if (
-    !Number.isFinite(lat) ||
-    !Number.isFinite(lon) ||
-    !Number.isFinite(kw) ||
-    Math.abs(lat) > 90 ||
-    Math.abs(lon) > 180 ||
-    kw < 0.5 ||
-    kw > 500
-  )
-    return false;
+  const lat = o.la,
+    lon = o.lo,
+    kw = o.kw;
 
   locationResolved = true;
 
   $("coordDetails").open = true;
 
-  setCoords(
-    lat,
-    lon,
-    "Shared result loaded - sunshine data for this location",
-    undefined,
-    undefined,
-    true,
-  );
+  setCoords(lat, lon, t("sharedLocationLoaded"), undefined, undefined, true);
 
   $("loadMode").value = "kwh";
 
@@ -7385,11 +7441,29 @@ function askAdvisor() {
   if (!window.lastSizingBrief) return;
 
   const input = document.getElementById("chatInput");
-
+  const selected = resolveSelected(window.lastPayload);
+  const selectedEntry =
+    selected && selected.solvable ? selected : window.lastPayload?.best;
+  const selectedLabel =
+    selectedEntry?.chemLabel ||
+    selectedEntry?.label ||
+    selectedKey ||
+    "selected system";
+  const jev = advisorJevContext(
+    sanityStatus,
+    sanityCache.interp,
+    sanityCache.state ||
+      (window.lastPayload
+        ? sanityState(window.lastPayload, selectedEntry)
+        : null),
+    selectedLabel,
+  );
+  const instructions = [jev, isSimpleMode() ? t("simpleAdvisorStyle") : null]
+    .filter(Boolean)
+    .join("\n");
   if (input)
-    input.value = isSimpleMode()
-      ? window.lastSizingBrief + "\n" + t("simpleAdvisorStyle")
-      : window.lastSizingBrief;
+    input.value =
+      window.lastSizingBrief + (instructions ? "\n" + instructions : "");
 
   if (window.openSizingModal) window.openSizingModal();
 
@@ -7957,9 +8031,7 @@ export function initSizingUI() {
 
     console.error("Sizing UI failed to initialize:", err);
 
-    setStatus(
-      "Warning: Interface failed to load - please refresh the page (Ctrl+F5).",
-    );
+    setStatus(t("uiInitFailed"));
   }
 }
 

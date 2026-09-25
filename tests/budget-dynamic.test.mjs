@@ -35,6 +35,7 @@ import {
   PROFILE_YEAR,
 } from "../assets/js/sizing/profiles.js";
 import { paretoFront } from "../assets/js/sizing/frontier.js";
+import { LOCALES } from "../assets/js/shared/locales.js";
 
 const hon = OFFLINE_PROFILES.find((p) => p.name.includes("Honolulu"));
 const fakeWeather = async () => ({
@@ -372,17 +373,27 @@ test("hints: the area message exists only under area-limited", () => {
     new URL("../assets/js/sizing/ui.js", import.meta.url),
     "utf8",
   );
+  // The copy lives in locales.js (so the banner is translated); ui.js owns
+  // which locale keys each reason maps to. Both halves are pinned, because
+  // either rename alone would silently swap "your area cap did this" for
+  // "the tool's search limit did this" — the distinction the banner exists to
+  // make in the first place.
   assert.match(
     src,
-    /"area-limited":\s*\{[\s\S]*?Too little roof\/yard area for this target/,
+    /"area-limited":\s*\{[\s\S]*?titleKey:\s*"infeasibleAreaTitle"[\s\S]*?bodyKey:\s*"infeasibleAreaBody"/,
     "the area-cap story is keyed to the evidence that proves it",
   );
-  const envBody = src.match(
-    /"envelope-limited":\s*\{[\s\S]*?body:\s*"([^"]+)"/,
+  assert.equal(
+    LOCALES.en.infeasibleAreaTitle,
+    "Too little roof/yard area for this target",
   );
-  assert.ok(envBody, "envelope-limited has its own body text");
+  assert.match(src, /"envelope-limited":\s*\{/);
+  assert.ok(
+    LOCALES.en.infeasibleEnvelopeBody.length > 0,
+    "envelope-limited has its own body text",
+  );
   assert.doesNotMatch(
-    envBody[1],
+    LOCALES.en.infeasibleEnvelopeBody,
     /area input/i,
     "the search-limit message must not blame the optional area input",
   );

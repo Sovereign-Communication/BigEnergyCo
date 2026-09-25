@@ -306,3 +306,22 @@ test("SW activate deletes only its own versioned shell caches — never the weat
     "the unfiltered != CACHE_VERSION wipe (the 17s-refetch bug) must not return",
   );
 });
+
+test("SW keeps cache I/O off the request critical path (stall-proof shape)", () => {
+  const sw = readFileSync("sw.js", "utf8");
+  const fetchHandler = sw.slice(sw.indexOf('addEventListener("fetch"'));
+  assert.ok(fetchHandler.length, "fetch handler found");
+  // Cache lookups race a bounded budget: a lookup queued behind the ~2 MB
+  // weather write must degrade to a network fetch, never hang the request
+  // (observed: a module load hanging 8s+ behind a weather cache write).
+  assert.match(fetchHandler, /cacheOp\(caches\.match\(req\)\)/);
+  assert.match(sw, /CACHE_OP_BUDGET_MS/);
+  // The response clone destined for the cache is drained into memory before
+  // the put: an un-drained `c.put(req, copy)` tee can backpressure the page's
+  // own byte stream on a stalled cache write (the "reload 17s stall" class).
+  assert.doesNotMatch(fetchHandler, /c\.put\(req, copy\)/);
+  assert.match(
+    fetchHandler,
+    /copy\s*\.arrayBuffer\(\)[\s\S]{0,240}?c\.put\(req, body\)/,
+  );
+});

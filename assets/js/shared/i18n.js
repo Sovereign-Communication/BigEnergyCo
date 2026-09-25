@@ -35,15 +35,41 @@ export function resolveLang() {
   return LOCALES[nav] ? nav : "en";
 }
 
+export function translate(key, vars = {}) {
+  const lang = resolveLang();
+  const dict = LOCALES[lang] || LOCALES.en;
+  const value = dict[key] ?? LOCALES.en[key] ?? key;
+  return Object.entries(vars).reduce(
+    (text, [name, replacement]) =>
+      // A function replacer, not a string: a replacement containing "$&" or
+      // "$n" (any formatted money figure) would be read as a pattern and
+      // silently mangled — "$200" would lose its dollars to the $2 rule.
+      text.replaceAll(`{${name}}`, () => String(replacement ?? "")),
+    value,
+  );
+}
+
 export function applyI18n() {
   const lang = resolveLang();
   const dict = LOCALES[lang];
   document.documentElement.lang = lang;
   document.documentElement.dir = dict && dict.rtl ? "rtl" : "ltr";
+  // Classic chat.js cannot import this module, so expose the same small,
+  // read-only translation contract to runtime-rendered advisor strings.
+  window.becoLang = lang;
+  window.becoT = translate;
   document.querySelectorAll("[data-i18n]").forEach((elNode) => {
     const key = elNode.getAttribute("data-i18n");
-    if (!dict || typeof dict[key] !== "string") return; // English is the source markup
-    elNode.textContent = dict[key];
+    if (typeof dict?.[key] === "string") elNode.textContent = dict[key];
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((elNode) => {
+    const key = elNode.getAttribute("data-i18n-placeholder");
+    if (typeof dict?.[key] === "string") elNode.placeholder = dict[key];
+  });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((elNode) => {
+    const key = elNode.getAttribute("data-i18n-aria-label");
+    if (typeof dict?.[key] === "string")
+      elNode.setAttribute("aria-label", dict[key]);
   });
 }
 

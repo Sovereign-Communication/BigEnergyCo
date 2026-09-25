@@ -1,0 +1,38 @@
+{
+  "tests_green": true,
+  "prettier_clean": true,
+  "seo_green": true,
+  "smoke_green": true,
+  "ci_green": true,
+  "tests_summary": "655/655 npm test green + coverage gate (engine/money/rescale/nasa/climate: lines>=66 branches>=76 funcs>=60) + verify:live GATE PASSED (SOC bands reach 100% at Honolulu and London) + syntax check 160 files",
+  "prettier_clean_summary": "prettier 3.9.6 --check repo-wide: All matched files use Prettier code style (exit 0)",
+  "seo_summary": "npm run seo + check-chars exit 0: JSON-LD, sitemap, metadata, characters, CSP/headers, country files, asset tokens (stamp 20260921f)",
+  "smoke_note": "local browser smoke ALL GATES PASSED on the allowlisted build under the real _headers policy: grid-tie + off-grid runs, held-response race, share-restore with 3 malformed-share rejects and mid-run reload recovery via explicit retry, run-deadline silent-worker error + fresh-worker retry, Jev badge lifecycle (Simple-mode toggle cache re-mount, zero refetch), a11y flow (keyboard 64/81/47 stops + wrap, named controls, WCAG AA contrast, reduced-motion both modes), zero console/page errors",
+  "ci_summary": "push CI green on main @5989f97 (Tests, Main audit, Deploy, Verify staging, CodeQL success 2026-09-24; PRs #126/#127 via the protected path); schedule-only Daily static check red only on the Cloudflare managed challenge (site up) — fixed this pass with a regression test",
+  "advisor_audit": "same selected deterministic system pairs Jev + prose (advisorJevContext); injection, fake instructions and secret-reveal ignored (calculator + Jev text treated as untrusted data); no exact coordinates in the brief; uncertainty and safety caveats mandatory; chemistries conditional, never a universal winner; provider 429/5xx degrade to sanitized textContent prose across 6 locales + RTL; pinned by worker, jev-sanitize and i18n suites",
+  "facet_evidence": {
+    "spec": "free worldwide estimator, zero runtime deps, no paywall/lead-collection; this pass ships run-deadline + share-restore recovery, Jev/advisor pairing and gate tooling only — no unrequested surface",
+    "design": "run-coordinator owns run state, validate.js owns Jev parse/interpret, engine/money/rescale own their math, nasa.js owns the weather cache, chat.js owns the advisor modal; ui.js is DOM glue over 30+ single-owner modules",
+    "correctness": "real-browser exercise: grid-tie + off-grid runs, held-response race, stale-verdict guard, share-restore + 3 malformed-share rejects + mid-run reload recovery, deadline + explicit retry; 655 unit tests green",
+    "quality": "prettier clean repo-wide, syntax check 160 files, deletion pass removed 800+ stale doc lines, bounded helpers, no dead scaffolding or duplicated logic",
+    "security": "tracked-secret scan clean, .env gitignored, CSP/headers green (no unsafe-inline/eval), geolocation and runs behind explicit consent, advisor receives no exact coordinates, output via textContent only",
+    "performance": "warm same-location reload = 0 NASA pulls (pinned), payload-cache instant repeats, badge re-mounts with zero refetch, rescale without re-run, SW cache I/O bounded at 1.5s off the request path",
+    "accessibility": "keyboard walks 64/81/47 stops + wrap (no trap), every visible control named, WCAG AA contrast verified in-browser, reduced-motion honored on both scroll surfaces, div-buttons operable with Enter/Space",
+    "i18n": "6-locale key parity (en/es/pt/fr/de/ar) pinned by tests + check-i18n, RTL Arabic, worker allow-lists the language code, English fallback for unknown keys and locales",
+    "seo": "sitemap, JSON-LD, metadata and character checks green (npm run seo exit 0)",
+    "resilience": "3-minute run deadline: silent worker surfaces an actionable timeout, releases the button, recovers on explicit fresh-worker retry (smoke-proven incl. share-restore); retry/timeout budget nesting + transient classification (42 tests)",
+    "experience": "staged pipeline stepper (Location → Weather → Simulating → Rendering) with per-chunk progress + elapsed seconds, honest speed notes, timeout errors name the next click, infeasibility banners say why + what to change",
+    "docs": "ARCHITECTURE + runbook reconciled to the code as it stands (PR #124), GROQ audit doc trimmed to current behavior this pass, llms.txt lists every sitemap guide (tested)",
+    "testing": "655/655 unit suite + coverage thresholds + mutation-proven gate contracts + a permanent browser smoke flow with per-flow gates",
+    "release": "gated promote path with ledger + rollback on record (778941f), asset tokens stamped 20260921f, smoke green on the exact allowlisted build under the real _headers policy",
+    "advisor": "adversarial suite green: prompt injection and fake instructions ignored, stale-response race-safe, provider failure falls back to the small model and sanitized prose, locale allow-list, Jev pending/unavailable framing",
+    "physics": "sizing engine deterministic from 5 years of hourly NASA POWER (contract tests); chemistry GATEs intact: sodium/LFP voltage trade-off, lead-acid no balancing, cold capacity floors, AGM < LFP, sodium premium; verify:live GATE PASSED"
+  },
+  "notes": [
+    "sw.js hardening this pass: cache lookups bounded to 1.5s, response clones drained to memory — cache I/O can never stall a page or module load (regression-tested)",
+    "share-restore auto-run defect CLOSED this pass: 3-minute run deadline + explicit fresh-worker retry, smoke-proven end to end",
+    "Daily static check de-risked: content drift probed from the challenge-free Pages origin; the Cloudflare challenge is an explicit accepted up state (regression-tested)",
+    "honest inventory: ui.js is a DOM controller over 30+ single-owner modules; coverage floor protects engine/money/rescale/nasa/climate",
+    "gate run provider=typesafe direct (key resolved read-only from ~/.config/harness/jev.env); no secrets, raw user messages or exact coordinates recorded here"
+  ]
+}

@@ -572,6 +572,29 @@ test("every workflow job declares a timeout-minutes", () => {
   );
 });
 
+// Cloudflare's managed challenge answers every non-browser probe of the
+// custom domain (403 "Just a moment" interstitial), which turned the daily
+// static check red on an up site. The content assertion must therefore run
+// against the GitHub Pages origin (identical build, no challenge), while the
+// custom-domain probe keeps asserting DNS/routing health and accepts the
+// challenge itself as "up".
+test("daily static check survives the Cloudflare bot challenge", () => {
+  const yml = read(".github/workflows/scheduled-static.yml");
+  assert.ok(
+    yml.includes("sovereign-communication.github.io"),
+    "content drift is detected from the challenge-free Pages origin",
+  );
+  assert.ok(
+    yml.includes("freeoffgridcalculator.com"),
+    "the custom domain is still probed for DNS/routing health",
+  );
+  assert.match(
+    yml,
+    /Just a moment/,
+    "the challenge interstitial is an explicit accepted 'up' state, not a silent skip",
+  );
+});
+
 test("promote wraps the verifier in the shared cap, not a hardcoded one", () => {
   const src = read("scripts/promote.mjs");
   // Scoped to the block that launches the verifier: other subprocesses in this

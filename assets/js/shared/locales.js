@@ -15,11 +15,7 @@ export const LOCALES = {
     navBlog: "Blog",
     navLegal: "Terms & Disclaimer",
     heroTag: "🌍 Free for everyone, everywhere • No signup • Nothing for sale",
-    heroTitle1: "Free Off-Grid Energy Estimator",
-    heroTitle2: "Size your solar & battery system, anywhere in the world",
     ctaStart: "Start a Free Estimate",
-    ctaCompare: "Rough Cost Comparison",
-    sizingTitle: "Size Your System",
     pickCity: "Pick a city (or use 📍 My location) so we know your sunshine.",
     shareLoaded:
       "Shared setup loaded. Review the inputs, then click Size My System to calculate.",
@@ -80,7 +76,6 @@ export const LOCALES = {
     frontierX: "Up-front system cost",
     frontierYGrid: "Share of your power bill cut",
     frontierYOffgrid: "Share of your energy covered, no generator",
-    frontierYouTag: "The option you're reading",
     frontierTagSel: "selected",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, no battery · {pct}% · {cost}",
@@ -119,14 +114,12 @@ export const LOCALES = {
       "Ask about cell specs, Sodium-ion vs LFP, freight costs...",
     advisorSend: "Send",
     advisorClose: "Close AI advisor",
-    advisorBusyRetry: " The free AI engine is busy — retrying in ",
+    advisorBusyRetry: " The free AI engine is busy — retrying in {secs}s…",
     advisorNoReply: " No reply received. Please try again.",
-    advisorBusy: " The free AI engine is swamped right now (HTTP ",
-    advisorBusyQuota: " — it runs on a shared free quota).\n\n",
-    advisorBusyWait: "Please wait about a minute and send that again.",
-    advisorUnreachable: " The AI advisor is unreachable right now",
-    advisorUnreachableRetry:
-      ".\n\nCheck your connection and try again in a moment.",
+    advisorBusy:
+      " The free AI engine is swamped right now (HTTP {status} — it runs on a shared free quota).\n\nPlease wait about a minute and send that again.",
+    advisorUnreachable:
+      " The AI advisor is unreachable right now{status}.\n\nCheck your connection and try again in a moment.",
     frontierCeilingTag: "Best within the sizes searched: {pct}%",
     frontierSvgTitle: "How far your money gets you",
     frontierSvgDesc:
@@ -149,7 +142,6 @@ export const LOCALES = {
     frontierLegendBand: "Same systems, DIY sourcing to shipped retail",
     frontierLegendRange: "Best-value range — every extra percent still cheap",
     frontierRangeTag: "best value",
-    frontierLegendYou: "The option you're reading",
     fuelLitLabel: "Price per liter",
     fuelGalLabel: "Price per gallon",
     fuelReadoutRate: "{type} at this price works out to about {rate} per kWh",
@@ -184,6 +176,58 @@ export const LOCALES = {
       "Sizing is not your constraint here. The smallest practical system — {pv} kW of panels and {batt} kWh of battery, about {cost} — already covers this entire load, year-round. Anything larger buys spare capacity, not more independence.",
     frontierVerdictCoveredGrid:
       "Sizing is not your constraint here. The smallest practical system — {pv} kW of panels and {batt} kWh of battery, about {cost} — already covers essentially all of this load. Anything larger buys spare capacity, not a bigger saving.",
+    pipelineLocation: "Location",
+    pipelineWeather: "Weather",
+    pipelineSimulating: "Simulating",
+    pipelineRendering: "Rendering",
+    pipelineElapsed: "{s}s elapsed",
+    pipelineCached: "cached",
+    pipelineReaching: "reaching satellite…",
+    pipelineChunks: "{done}/{total} satellite chunks",
+    speedNoteRepeat:
+      "⚡ Instant — repeat of this exact setup (computed moments ago)",
+    speedNoteCached: "⚡ Instant — cached satellite weather",
+    speedNoteCachedWhere: "⚡ Instant — cached satellite weather for {where}",
+    speedNoteOffline: "⚡ Instant — offline typical-year",
+    speedNoteOfflineWhere: "⚡ Instant — offline typical-year for {where}",
+    fmtAllDay: "all day (24 h)",
+    fmtHoursDay: "{h} h/day",
+    fmtMinutesDay: "{m} min/day",
+    apWattsRunning: "~{w} W while running",
+    apWatts: "~{w} W",
+    apKwhDay: "{kwh} kWh/day",
+    apAvgW: " (~{w} W avg)",
+    offgridKwhReadout: "~{kwh} kWh/day",
+    quickBillStarts:
+      "Starts from ~{bill} (≈{kwh} kWh/day). Set your real bill here, choose a location, then click Size My System. The bill-cut slider appears with results.",
+    quickBillManual:
+      "Quick estimate: ~{bill} (starts from ~{kwh} kWh/day) — switch to Manual to change your bill, appliances, or rate.",
+    dailyEnergyNeed: "Daily energy need (kWh/day slider)",
+    billPerMonth: "/mo",
+    simpleHeadline: "At your location, this system gets you {goal}:",
+    simpleGoalGrid: "to cut about {pct}% off your bill",
+    simpleGoalOffgrid: "to cover your home through the year",
+    sharedLocationLoaded:
+      "Shared result loaded - sunshine data for this location",
+    uiInitFailed:
+      "Warning: Interface failed to load - please refresh the page (Ctrl+F5).",
+    infeasibleAreaTitle: "Too little roof/yard area for this target",
+    infeasibleAreaBody:
+      "The searched solar size was capped by the optional area input (see “Hardware setup”). Clear that box — or draw a bigger area on the map — and re-run: the site itself can reach this target.",
+    infeasibleEnvelopeTitle: "Beyond this tool's search range for this target",
+    infeasibleEnvelopeBody:
+      "At this load, reaching that target needs a solar array or battery bank larger than this calculator searches (see Hardware setup for the limits). Try a lower bill-cut target, or check whether part of the load can be reduced.",
+    infeasibleNeedsBatteryTitle: "Solar-only can't reach 100% off-grid",
+    infeasibleNeedsBatteryBody:
+      "An off-grid home needs storage for nights and cloudy days. Add a battery to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).",
+    infeasibleNeedsPanelsTitle: "Battery-only can't run off-grid",
+    infeasibleNeedsPanelsBody:
+      "Nothing recharges the bank at this site. Add panels to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).",
+    infeasibleNeedsSurplusTitle: "A battery-only bank can't produce surplus",
+    infeasibleNeedsSurplusBody:
+      "Surplus needs panels to generate more than your load. Drop the target below 100% on the bill-cut slider, or switch the hardware setup to 'Solar + Battery'.",
+    infeasibleGenericTitle: "This hardware and goal combination can't solve",
+    infeasibleGenericBody: "Change the goal or hardware, then re-run.",
   },
   es: {
     navSizing: "Dimensiona tu sistema",
@@ -197,12 +241,7 @@ export const LOCALES = {
     navLegal: "Términos y aviso legal",
     heroTag:
       "Gratis para todos, en todo el mundo · Sin registro · Nada en venta",
-    heroTitle1: "Calculador gratuito de energía fuera de la red",
-    heroTitle2:
-      "Dimensiona tu sistema solar y de baterías, en cualquier lugar del mundo",
     ctaStart: "Empieza tu estimación gratis",
-    ctaCompare: "Comparación de costos",
-    sizingTitle: "Dimensiona tu sistema",
     pickCity:
       "Elige una ciudad (o usa 📍 Mi ubicación) para que sepamos tu insolación.",
     shareLoaded:
@@ -294,7 +333,6 @@ export const LOCALES = {
     frontierX: "Coste inicial del sistema",
     frontierYGrid: "Parte de tu factura eliminada",
     frontierYOffgrid: "Parte de tu energía cubierta, sin generador",
-    frontierYouTag: "La opción que estás viendo",
     frontierTagSel: "seleccionado",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, sin batería · {pct}% · {cost}",
@@ -334,14 +372,13 @@ export const LOCALES = {
       "Pregunta sobre celdas, sodio-ion frente a LFP, costes de transporte...",
     advisorSend: "Enviar",
     advisorClose: "Cerrar asesor de IA",
-    advisorBusyRetry: " El motor gratuito de IA está ocupado; reintentando en ",
+    advisorBusyRetry:
+      " El motor gratuito de IA está ocupado; reintentando en {secs}s…",
     advisorNoReply: " No se recibió respuesta. Inténtalo de nuevo.",
-    advisorBusy: " El motor gratuito de IA está satur ahora (HTTP ",
-    advisorBusyQuota: " — usa una cuota compartida).\n\n",
-    advisorBusyWait: "Espera aproximadamente un minuto y vuelve a enviarlo.",
-    advisorUnreachable: " El asesor de IA no está disponible ahora",
-    advisorUnreachableRetry:
-      ".\n\nComprueba tu conexión y vuelve a intentarlo en un momento.",
+    advisorBusy:
+      " El motor gratuito de IA está satur ahora (HTTP {status} — usa una cuota compartida).\n\nEspera aproximadamente un minuto y vuelve a enviarlo.",
+    advisorUnreachable:
+      " El asesor de IA no está disponible ahora{status}.\n\nComprueba tu conexión y vuelve a intentarlo en un momento.",
     frontierCeilingTag: "Lo máximo dentro de lo buscado: {pct}%",
     frontierSvgTitle: "Hasta dónde llega tu dinero",
     frontierSvgDesc:
@@ -363,7 +400,6 @@ export const LOCALES = {
     frontierLegendBand: "Los mismos sistemas, de compra DIY a retail enviado",
     frontierLegendRange: "Rango óptimo — cada punto extra sigue barato",
     frontierRangeTag: "mejor valor",
-    frontierLegendYou: "La opción que estás viendo",
     fuelLitLabel: "Precio por litro",
     fuelGalLabel: "Precio por galón",
     fuelReadoutRate: "{type} a este precio sale a unos {rate} por kWh",
@@ -405,6 +441,67 @@ export const LOCALES = {
       "Aquí el tamaño no es tu limitación. El sistema práctico más pequeño —{pv} kW de paneles y {batt} kWh de batería, unos {cost}— ya cubre toda esta carga durante todo el año. Cualquier cosa mayor compra capacidad de reserva, no más independencia.",
     frontierVerdictCoveredGrid:
       "Aquí el tamaño no es tu limitación. El sistema práctico más pequeño —{pv} kW de paneles y {batt} kWh de batería, unos {cost}— ya cubre prácticamente toda esta carga. Cualquier cosa mayor compra capacidad de reserva, no más ahorro.",
+    pipelineLocation: "Ubicación",
+    pipelineWeather: "Clima",
+    pipelineSimulating: "Simulando",
+    pipelineRendering: "Renderizando",
+    pipelineElapsed: "{s} s transcurridos",
+    pipelineCached: "en caché",
+    pipelineReaching: "contactando el satélite…",
+    pipelineChunks: "{done}/{total} fragmentos satelitales",
+    speedNoteRepeat:
+      "⚡ Instantáneo — repetición exacta de esta configuración (calculada hace un momento)",
+    speedNoteCached: "⚡ Instantáneo — clima satelital en caché",
+    speedNoteCachedWhere:
+      "⚡ Instantáneo — clima satelital en caché para {where}",
+    speedNoteOffline: "⚡ Instantáneo — año típico sin conexión",
+    speedNoteOfflineWhere:
+      "⚡ Instantáneo — año típico sin conexión para {where}",
+    fmtAllDay: "todo el día (24 h)",
+    fmtHoursDay: "{h} h/día",
+    fmtMinutesDay: "{m} min/día",
+    apWattsRunning: "~{w} W en funcionamiento",
+    apWatts: "~{w} W",
+    apKwhDay: "{kwh} kWh/día",
+    apAvgW: " (~{w} W de media)",
+    offgridKwhReadout: "~{kwh} kWh/día",
+    quickBillStarts:
+      "Empieza desde ~{bill} (≈{kwh} kWh/día). Pon aquí tu factura real, elige una ubicación y pulsa Dimensionar mi sistema. El control de recorte aparece con los resultados.",
+    quickBillManual:
+      "Estimación rápida: ~{bill} (empieza desde ~{kwh} kWh/día) — cambia a Manual para ajustar tu factura, electrodomésticos o tarifa.",
+    dailyEnergyNeed: "Necesidad diaria de energía (control kWh/día)",
+    billPerMonth: "/mes",
+    simpleHeadline: "En tu ubicación, este sistema consigue {goal}:",
+    simpleGoalGrid: "recortar cerca de un {pct}% de tu factura",
+    simpleGoalOffgrid: "cubrir tu hogar durante todo el año",
+    sharedLocationLoaded:
+      "Resultado compartido cargado — datos de sol para esta ubicación",
+    uiInitFailed:
+      "Aviso: la interfaz no pudo cargarse — actualiza la página (Ctrl+F5).",
+    infeasibleAreaTitle:
+      "Demasiada poca área de techo/terreno para este objetivo",
+    infeasibleAreaBody:
+      "El tamaño solar buscado quedó limitado por el campo opcional de área (ver “Configuración de hardware”). Borra ese campo — o dibuja un área mayor en el mapa — y vuelve a ejecutar: el sitio en sí puede alcanzar este objetivo.",
+    infeasibleEnvelopeTitle:
+      "Fuera del rango de búsqueda de esta herramienta para este objetivo",
+    infeasibleEnvelopeBody:
+      "Con este consumo, alcanzar el objetivo necesita un array solar o banco de baterías mayor que el que busca esta calculadora (ver Configuración de hardware para los límites). Prueba un objetivo de recorte menor, o mira si parte del consumo puede reducirse.",
+    infeasibleNeedsBatteryTitle:
+      "Solo solar no puede alcanzar el 100% fuera de la red",
+    infeasibleNeedsBatteryBody:
+      "Un hogar fuera de la red necesita almacenamiento para las noches y los días nublados. Añade una batería al selector de hardware, o cambia el objetivo a 'Recortar mi factura, seguir conectado' (conectado a la red).",
+    infeasibleNeedsPanelsTitle:
+      "Solo batería no puede funcionar fuera de la red",
+    infeasibleNeedsPanelsBody:
+      "Nada recarga el banco en este sitio. Añade paneles al selector de hardware, o cambia el objetivo a 'Recortar mi factura, seguir conectado' (conectado a la red).",
+    infeasibleNeedsSurplusTitle:
+      "Un banco solo de baterías no puede producir excedente",
+    infeasibleNeedsSurplusBody:
+      "El excedente necesita paneles que generen más que tu consumo. Baja el objetivo por debajo del 100% en el control de recorte, o cambia la configuración a 'Solar + Batería'.",
+    infeasibleGenericTitle:
+      "Esta combinación de hardware y objetivo no tiene solución",
+    infeasibleGenericBody:
+      "Cambia el objetivo o el hardware y vuelve a ejecutar.",
   },
   pt: {
     navSizing: "Dimensione seu sistema",
@@ -418,11 +515,7 @@ export const LOCALES = {
     navLegal: "Termos e aviso legal",
     heroTag:
       "Grátis para todos, no mundo inteiro · Sem cadastro · Nada à venda",
-    heroTitle1: "Calculadora gratuita de energia fora da rede",
-    heroTitle2:
-      "Dimensione seu sistema solar e de baterias, em qualquer lugar do mundo",
     ctaStart: "Comece sua estimativa grátis",
-    ctaCompare: "Comparação de custos",
     goalLabel: "O que você quer que este sistema faça?",
     goalOffgrid: "Me alimentar totalmente fora da rede",
     goalGridtie: "Reduzir minha conta permanecendo conectado",
@@ -451,7 +544,6 @@ export const LOCALES = {
       "Preço estimado para {label} — mude acima se souber sua tarifa.",
     fxNote:
       "Valores mostrados em {code} a {rate} por 1 US$; taxas unitárias de bateria permanecem em $/kWh porque os preços base são em USD.",
-    sizingTitle: "Dimensione seu sistema",
     pickCity:
       "Escolha uma cidade (ou use 📍 Minha localização) para sabermos sua insolação.",
     shareLoaded:
@@ -519,7 +611,6 @@ export const LOCALES = {
     frontierX: "Custo inicial do sistema",
     frontierYGrid: "Parte da sua conta de luz cortada",
     frontierYOffgrid: "Parte da sua energia coberta, sem gerador",
-    frontierYouTag: "A opção que você está vendo",
     frontierTagSel: "selecionado",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, sem bateria · {pct}% · {cost}",
@@ -560,14 +651,12 @@ export const LOCALES = {
     advisorSend: "Enviar",
     advisorClose: "Fechar consultor de IA",
     advisorBusyRetry:
-      " O motor gratuito de IA está ocupado — a tentar novamente em ",
+      " O motor gratuito de IA está ocupado — a tentar novamente em {secs}s…",
     advisorNoReply: " Não foi recebida resposta. Tente novamente.",
-    advisorBusy: " O motor gratuito de IA está sobrecarregado agora (HTTP ",
-    advisorBusyQuota: " — usa uma quota partilhada).\n\n",
-    advisorBusyWait: "Espere cerca de um minuto e envie novamente.",
-    advisorUnreachable: " O consultor de IA está indisponível neste momento",
-    advisorUnreachableRetry:
-      ".\n\nVerifique a ligação e tente novamente dentro de instantes.",
+    advisorBusy:
+      " O motor gratuito de IA está sobrecarregado agora (HTTP {status} — usa uma quota partilhada).\n\nEspere cerca de um minuto e envie novamente.",
+    advisorUnreachable:
+      " O consultor de IA está indisponível neste momento{status}.\n\nVerifique a ligação e tente novamente dentro de instantes.",
     frontierCeilingTag: "O máximo dentro do que foi buscado: {pct}%",
     frontierSvgTitle: "Até onde vai o seu dinheiro",
     frontierSvgDesc:
@@ -589,7 +678,6 @@ export const LOCALES = {
     frontierLegendBand: "Os mesmos sistemas, de compra DIY a varejo entregue",
     frontierLegendRange: "Faixa ideal — cada ponto extra continua barato",
     frontierRangeTag: "melhor valor",
-    frontierLegendYou: "A opção que você está vendo",
     fuelLitLabel: "Preço por litro",
     fuelGalLabel: "Preço por galão",
     fuelReadoutRate: "{type} a esse preço dá cerca de {rate} por kWh",
@@ -625,6 +713,63 @@ export const LOCALES = {
       "Aqui o tamanho não é a sua limitação. O menor sistema prático — {pv} kW de painéis e {batt} kWh de bateria, cerca de {cost} — já cobre toda essa carga o ano inteiro. Qualquer coisa maior compra capacidade sobrando, não mais independência.",
     frontierVerdictCoveredGrid:
       "Aqui o tamanho não é a sua limitação. O menor sistema prático — {pv} kW de painéis e {batt} kWh de bateria, cerca de {cost} — já cobre praticamente toda essa carga. Qualquer coisa maior compra capacidade sobrando, não mais economia.",
+    pipelineLocation: "Localização",
+    pipelineWeather: "Clima",
+    pipelineSimulating: "Simulando",
+    pipelineRendering: "Renderizando",
+    pipelineElapsed: "{s} s decorridos",
+    pipelineCached: "em cache",
+    pipelineReaching: "contatando o satélite…",
+    pipelineChunks: "{done}/{total} blocos de satélite",
+    speedNoteRepeat:
+      "⚡ Instantâneo — repetição exata desta configuração (calculada há instantes)",
+    speedNoteCached: "⚡ Instantâneo — clima de satélite em cache",
+    speedNoteCachedWhere:
+      "⚡ Instantâneo — clima de satélite em cache para {where}",
+    speedNoteOffline: "⚡ Instantâneo — ano típico offline",
+    speedNoteOfflineWhere: "⚡ Instantâneo — ano típico offline para {where}",
+    fmtAllDay: "o dia todo (24 h)",
+    fmtHoursDay: "{h} h/dia",
+    fmtMinutesDay: "{m} min/dia",
+    apWattsRunning: "~{w} W em funcionamento",
+    apWatts: "~{w} W",
+    apKwhDay: "{kwh} kWh/dia",
+    apAvgW: " (~{w} W méd.)",
+    offgridKwhReadout: "~{kwh} kWh/dia",
+    quickBillStarts:
+      "Começa em ~{bill} (≈{kwh} kWh/dia). Coloque aqui sua conta real, escolha uma localização e clique em Dimensionar meu sistema. O controle de corte aparece com os resultados.",
+    quickBillManual:
+      "Estimativa rápida: ~{bill} (começa em ~{kwh} kWh/dia) — mude para Manual para alterar sua conta, eletrodomésticos ou tarifa.",
+    dailyEnergyNeed: "Necessidade diária de energia (controle kWh/dia)",
+    billPerMonth: "/mês",
+    simpleHeadline: "Na sua localização, este sistema consegue {goal}:",
+    simpleGoalGrid: "cortar cerca de {pct}% da sua conta",
+    simpleGoalOffgrid: "cobrir sua casa ao longo do ano",
+    sharedLocationLoaded:
+      "Resultado compartilhado carregado — dados de sol para esta localização",
+    uiInitFailed:
+      "Aviso: a interface não pôde carregar — atualize a página (Ctrl+F5).",
+    infeasibleAreaTitle:
+      "Área de telhado/terreno pequena demais para este objetivo",
+    infeasibleAreaBody:
+      "O tamanho solar buscado foi limitado pelo campo opcional de área (ver “Configuração de hardware”). Limpe esse campo — ou desenhe uma área maior no mapa — e execute de novo: o local em si pode alcançar este objetivo.",
+    infeasibleEnvelopeTitle:
+      "Além da faixa de busca desta ferramenta para este objetivo",
+    infeasibleEnvelopeBody:
+      "Com este consumo, alcançar o objetivo exige um arranjo solar ou banco de baterias maior do que esta calculadora busca (ver Configuração de hardware para os limites). Tente um objetivo de corte menor, ou veja se parte do consumo pode ser reduzida.",
+    infeasibleNeedsBatteryTitle: "Só solar não alcança 100% fora da rede",
+    infeasibleNeedsBatteryBody:
+      "Uma casa fora da rede precisa de armazenamento para as noites e dias nublados. Adicione uma bateria ao seletor de hardware, ou mude o objetivo para 'Cortar minha conta, continuar conectado' (conectado à rede).",
+    infeasibleNeedsPanelsTitle: "Só bateria não pode funcionar fora da rede",
+    infeasibleNeedsPanelsBody:
+      "Nada recarrega o banco neste local. Adicione painéis ao seletor de hardware, ou mude o objetivo para 'Cortar minha conta, continuar conectado' (conectado à rede).",
+    infeasibleNeedsSurplusTitle:
+      "Um banco só de baterias não pode produzir excedente",
+    infeasibleNeedsSurplusBody:
+      "Excedente precisa de painéis que gerem mais que seu consumo. Baixe o objetivo abaixo de 100% no controle de corte, ou mude a configuração para 'Solar + Bateria'.",
+    infeasibleGenericTitle:
+      "Esta combinação de hardware e objetivo não tem solução",
+    infeasibleGenericBody: "Mude o objetivo ou o hardware e execute de novo.",
   },
   fr: {
     navSizing: "Dimensionner mon système",
@@ -637,11 +782,7 @@ export const LOCALES = {
     navBlog: "Blog",
     navLegal: "Conditions et avertissement",
     heroTag: "Gratuit pour tous, partout · Sans inscription · Rien à vendre",
-    heroTitle1: "Estimateur gratuit d'énergie hors réseau",
-    heroTitle2:
-      "Dimensionnez votre système solaire et batterie, partout dans le monde",
     ctaStart: "Lancer une estimation gratuite",
-    ctaCompare: "Comparaison des coûts",
     goalLabel: "Que doit faire ce système ?",
     goalOffgrid: "Me rendre totalement autonome",
     goalGridtie: "Réduire ma facture en restant raccordé",
@@ -672,7 +813,6 @@ export const LOCALES = {
       "Prix estimé pour {label} — changez-le ci-dessus si vous connaissez votre tarif.",
     fxNote:
       "Montants affichés en {code} à {rate} pour 1 US$ ; les taux unitaires de batterie restent en $/kWh car les prix de base sont en USD.",
-    sizingTitle: "Dimensionnez votre système",
     pickCity:
       "Choisissez une ville (ou utilisez 📍 Ma position) pour connaître votre ensoleillement.",
     shareLoaded:
@@ -745,7 +885,6 @@ export const LOCALES = {
     frontierX: "Coût initial du système",
     frontierYGrid: "Part de votre facture supprimée",
     frontierYOffgrid: "Part de votre énergie couverte, sans groupe électrogène",
-    frontierYouTag: "L'option que vous consultez",
     frontierTagSel: "sélectionné",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, sans batterie · {pct}% · {cost}",
@@ -786,15 +925,12 @@ export const LOCALES = {
     advisorSend: "Envoyer",
     advisorClose: "Fermer le conseiller IA",
     advisorBusyRetry:
-      " Le moteur IA gratuit est occupé — nouvelle tentative dans ",
+      " Le moteur IA gratuit est occupé — nouvelle tentative dans {secs}s…",
     advisorNoReply: " Aucune réponse reçue. Veuillez réessayer.",
-    advisorBusy: " Le moteur IA gratuit est saturé (HTTP ",
-    advisorBusyQuota: " — quota partagé).\n\n",
-    advisorBusyWait:
-      "Attendez environ une minute, puis renvoyez votre question.",
-    advisorUnreachable: " Le conseiller IA est momentanément inaccessible",
-    advisorUnreachableRetry:
-      ".\n\nVérifiez votre connexion et réessayez dans un instant.",
+    advisorBusy:
+      " Le moteur IA gratuit est saturé (HTTP {status} — quota partagé).\n\nAttendez environ une minute, puis renvoyez votre question.",
+    advisorUnreachable:
+      " Le conseiller IA est momentanément inaccessible{status}.\n\nVérifiez votre connexion et réessayez dans un instant.",
     frontierCeilingTag: "Maximum dans les tailles explorées : {pct}%",
     frontierSvgTitle: "Jusqu'où va votre argent",
     frontierSvgDesc:
@@ -817,7 +953,6 @@ export const LOCALES = {
     frontierLegendRange:
       "Plage optimale — chaque point en plus reste bon marché",
     frontierRangeTag: "meilleur rapport",
-    frontierLegendYou: "L'option que vous consultez",
     fuelLitLabel: "Prix au litre",
     fuelGalLabel: "Prix au gallon",
     fuelReadoutRate: "{type} à ce prix revient à environ {rate} par kWh",
@@ -853,6 +988,65 @@ export const LOCALES = {
       "Ici, la taille n'est pas votre contrainte. Le plus petit système réaliste — {pv} kW de panneaux et {batt} kWh de batterie, environ {cost} — couvre déjà toute cette consommation, toute l'année. Plus grand n'achète que de la réserve, pas plus d'indépendance.",
     frontierVerdictCoveredGrid:
       "Ici, la taille n'est pas votre contrainte. Le plus petit système réaliste — {pv} kW de panneaux et {batt} kWh de batterie, environ {cost} — couvre déjà l'essentiel de cette consommation. Plus grand n'achète que de la réserve, pas plus d'économies.",
+    pipelineLocation: "Lieu",
+    pipelineWeather: "Météo",
+    pipelineSimulating: "Simulation",
+    pipelineRendering: "Rendu",
+    pipelineElapsed: "{s} s écoulées",
+    pipelineCached: "en cache",
+    pipelineReaching: "contact du satellite…",
+    pipelineChunks: "{done}/{total} tranches satellite",
+    speedNoteRepeat:
+      "⚡ Instantané — répétition exacte de cette configuration (calculée à l'instant)",
+    speedNoteCached: "⚡ Instantané — météo satellite en cache",
+    speedNoteCachedWhere:
+      "⚡ Instantané — météo satellite en cache pour {where}",
+    speedNoteOffline: "⚡ Instantané — année type hors ligne",
+    speedNoteOfflineWhere: "⚡ Instantané — année type hors ligne pour {where}",
+    fmtAllDay: "journée entière (24 h)",
+    fmtHoursDay: "{h} h/jour",
+    fmtMinutesDay: "{m} min/jour",
+    apWattsRunning: "~{w} W en fonctionnement",
+    apWatts: "~{w} W",
+    apKwhDay: "{kwh} kWh/jour",
+    apAvgW: " (~{w} W moy.)",
+    offgridKwhReadout: "~{kwh} kWh/jour",
+    quickBillStarts:
+      "Démarre à ~{bill} (≈{kwh} kWh/jour). Indiquez ici votre vraie facture, choisissez un lieu, puis cliquez sur Dimensionner mon système. Le curseur de réduction apparaît avec les résultats.",
+    quickBillManual:
+      "Estimation rapide : ~{bill} (démarre à ~{kwh} kWh/jour) — passez en Manuel pour changer votre facture, vos appareils ou votre tarif.",
+    dailyEnergyNeed: "Besoin énergétique quotidien (curseur kWh/jour)",
+    billPerMonth: "/mois",
+    simpleHeadline: "À votre lieu, ce système vous permet de {goal} :",
+    simpleGoalGrid: "réduire d'environ {pct}% votre facture",
+    simpleGoalOffgrid: "couvrir votre maison toute l'année",
+    sharedLocationLoaded:
+      "Résultat partagé chargé — données d'ensoleillement pour ce lieu",
+    uiInitFailed:
+      "Avertissement : l'interface n'a pas pu se charger — actualisez la page (Ctrl+F5).",
+    infeasibleAreaTitle:
+      "Surface de toit/terrain trop petite pour cet objectif",
+    infeasibleAreaBody:
+      "La taille solaire explorée a été limitée par le champ de surface optionnel (voir « Configuration matériel »). Effacez ce champ — ou dessinez une zone plus grande sur la carte — et relancez : le site lui-même peut atteindre cet objectif.",
+    infeasibleEnvelopeTitle:
+      "Au-delà de la plage de recherche de cet outil pour cet objectif",
+    infeasibleEnvelopeBody:
+      "À cette consommation, atteindre l'objectif exige une installation solaire ou une batterie plus grande que ce que cette calculette explore (voir Configuration matériel pour les limites). Essayez un objectif de réduction plus bas, ou voyez si une partie de la consommation peut être réduite.",
+    infeasibleNeedsBatteryTitle:
+      "Le solaire seul ne peut pas atteindre 100% hors réseau",
+    infeasibleNeedsBatteryBody:
+      "Une maison hors réseau a besoin de stockage pour la nuit et les jours nuageux. Ajoutez une batterie au sélecteur matériel, ou changez l'objectif en 'Réduire ma facture, rester connecté' (au réseau).",
+    infeasibleNeedsPanelsTitle:
+      "La batterie seule ne peut pas fonctionner hors réseau",
+    infeasibleNeedsPanelsBody:
+      "Rien ne recharge la batterie sur ce site. Ajoutez des panneaux au sélecteur matériel, ou changez l'objectif en 'Réduire ma facture, rester connecté' (au réseau).",
+    infeasibleNeedsSurplusTitle:
+      "Une batterie seule ne peut pas produire de surplus",
+    infeasibleNeedsSurplusBody:
+      "Le surplus exige des panneaux produisant plus que votre consommation. Baissez l'objectif sous 100% sur le curseur de réduction, ou passez la configuration en 'Solaire + Batterie'.",
+    infeasibleGenericTitle:
+      "Cette combinaison matériel/objectif n'a pas de solution",
+    infeasibleGenericBody: "Changez l'objectif ou le matériel, puis relancez.",
   },
   de: {
     navSizing: "System dimensionieren",
@@ -866,12 +1060,7 @@ export const LOCALES = {
     navLegal: "Bedingungen & Haftungsausschluss",
     heroTag:
       "🌍 Kostenlos für alle, überall · Keine Anmeldung · Nichts zu verkaufen",
-    heroTitle1: "Kostenloser Off-Grid-Energierechner",
-    heroTitle2:
-      "Solar- und Batteriesysteme überall auf der Welt dimensionieren",
     ctaStart: "Kostenlose Schätzung starten",
-    ctaCompare: "Grobe Kosten vergleichen",
-    sizingTitle: "System dimensionieren",
     pickCity:
       "Wähle eine Stadt oder nutze 📍 deinen Standort für die Sonnendaten.",
     shareLoaded:
@@ -943,7 +1132,6 @@ export const LOCALES = {
     frontierX: "Systemkosten zu Beginn",
     frontierYGrid: "Anteil der Rechnung gesenkt",
     frontierYOffgrid: "Anteil der Energie ohne Generator",
-    frontierYouTag: "Die Option, die du gerade liest",
     frontierTagSel: "ausgewählt",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct} % · {cost}",
     frontierSelNoBatt: "{pv} kW, ohne Batterie · {pct} % · {cost}",
@@ -984,15 +1172,12 @@ export const LOCALES = {
     advisorSend: "Senden",
     advisorClose: "KI-Berater schließen",
     advisorBusyRetry:
-      " Die kostenlose KI ist ausgelastet — erneuter Versuch in ",
+      " Die kostenlose KI ist ausgelastet — erneuter Versuch in {secs}s…",
     advisorNoReply: " Keine Antwort erhalten. Bitte versuchen Sie es erneut.",
-    advisorBusy: " Die kostenlose KI ist gerade überlastet (HTTP ",
-    advisorBusyQuota: " — gemeinsames Kontingent).\n\n",
-    advisorBusyWait:
-      "Warten Sie etwa eine Minute und senden Sie die Frage erneut.",
-    advisorUnreachable: " Der KI-Berater ist gerade nicht erreichbar",
-    advisorUnreachableRetry:
-      ".\n\nPrüfen Sie Ihre Verbindung und versuchen Sie es gleich noch einmal.",
+    advisorBusy:
+      " Die kostenlose KI ist gerade überlastet (HTTP {status} — gemeinsames Kontingent).\n\nWarten Sie etwa eine Minute und senden Sie die Frage erneut.",
+    advisorUnreachable:
+      " Der KI-Berater ist gerade nicht erreichbar{status}.\n\nPrüfen Sie Ihre Verbindung und versuchen Sie es gleich noch einmal.",
     frontierCeilingTag: "Bestes in den durchsuchten Größen: {pct} %",
     frontierSvgTitle: "Wie weit dein Geld reicht",
     frontierSvgDesc:
@@ -1014,7 +1199,6 @@ export const LOCALES = {
     frontierLegendRange:
       "Bestwert-Spanne — jedes weitere Prozent bleibt günstig",
     frontierRangeTag: "Bestwert",
-    frontierLegendYou: "Die Option, die du gerade liest",
     fuelLitLabel: "Preis pro Liter",
     fuelGalLabel: "Preis pro Gallone",
     fuelReadoutRate: "{type} kostet bei diesem Preis etwa {rate} pro kWh",
@@ -1050,6 +1234,63 @@ export const LOCALES = {
       "Dimensionierung ist hier nicht deine Grenze. Das kleinste praktische System — {pv} kW Panels und {batt} kWh Batterie, etwa {cost} — deckt diesen Verbrauch bereits praktisch vollständig ab. Alles Größere kauft Reserve, keine größere Ersparnis.",
     frontierMethod:
       "Die Kurve nutzt dieselbe stündliche Wetter-Simulation und dieselben Preisannahmen wie die Ergebnisse oben.",
+    pipelineLocation: "Standort",
+    pipelineWeather: "Wetter",
+    pipelineSimulating: "Simulieren",
+    pipelineRendering: "Rendern",
+    pipelineElapsed: "{s} s vergangen",
+    pipelineCached: "im Cache",
+    pipelineReaching: "Satellit wird erreicht…",
+    pipelineChunks: "{done}/{total} Satelliten-Abschnitte",
+    speedNoteRepeat:
+      "⚡ Sofort — exakte Wiederholung dieses Setups (gerade berechnet)",
+    speedNoteCached: "⚡ Sofort — gespeichertes Satellitenwetter",
+    speedNoteCachedWhere:
+      "⚡ Sofort — gespeichertes Satellitenwetter für {where}",
+    speedNoteOffline: "⚡ Sofort — typisches Offline-Jahr",
+    speedNoteOfflineWhere: "⚡ Sofort — typisches Offline-Jahr für {where}",
+    fmtAllDay: "ganztägig (24 h)",
+    fmtHoursDay: "{h} h/Tag",
+    fmtMinutesDay: "{m} min/Tag",
+    apWattsRunning: "~{w} W im Betrieb",
+    apWatts: "~{w} W",
+    apKwhDay: "{kwh} kWh/Tag",
+    apAvgW: " (~{w} W Ø)",
+    offgridKwhReadout: "~{kwh} kWh/Tag",
+    quickBillStarts:
+      "Beginnt bei ~{bill} (≈{kwh} kWh/Tag). Tragen Sie hier Ihre echte Rechnung ein, wählen Sie einen Standort und klicken Sie auf Mein System dimensionieren. Der Spar-Schieber erscheint mit den Ergebnissen.",
+    quickBillManual:
+      "Schnellschätzung: ~{bill} (beginnt bei ~{kwh} kWh/Tag) — wechseln Sie zu Manuell, um Rechnung, Geräte oder Tarif zu ändern.",
+    dailyEnergyNeed: "Täglicher Energiebedarf (kWh/Tag-Schieber)",
+    billPerMonth: "/Mon.",
+    simpleHeadline: "An Ihrem Standort bringt Ihnen dieses System {goal}:",
+    simpleGoalGrid: "etwa {pct}% Ihrer Rechnung einsparen",
+    simpleGoalOffgrid: "Ihr Haus übers Jahr versorgen",
+    sharedLocationLoaded:
+      "Geteiltes Ergebnis geladen — Sonnendaten für diesen Standort",
+    uiInitFailed:
+      "Warnung: Die Oberfläche konnte nicht laden — bitte Seite neu laden (Strg+F5).",
+    infeasibleAreaTitle: "Zu wenig Dach-/Grundfläche für dieses Ziel",
+    infeasibleAreaBody:
+      "Die gesuchte Solargröße wurde durch das optionale Flächenfeld begrenzt (siehe „Hardware-Konfiguration“). Leeren Sie dieses Feld — oder zeichnen Sie eine größere Fläche auf der Karte — und rechnen Sie erneut: der Standort selbst kann dieses Ziel erreichen.",
+    infeasibleEnvelopeTitle:
+      "Außerhalb des Suchbereichs dieses Tools für dieses Ziel",
+    infeasibleEnvelopeBody:
+      "Bei diesem Verbrauch braucht das Ziel eine Solaranlage oder Batteriebank, die größer ist als der Suchbereich dieses Rechners (siehe Hardware-Konfiguration für die Grenzen). Versuchen Sie ein niedrigeres Sparziel, oder prüfen Sie, ob sich der Verbrauch senken lässt.",
+    infeasibleNeedsBatteryTitle: "Nur Solar erreicht 100% netzunabhängig nicht",
+    infeasibleNeedsBatteryBody:
+      "Ein netzunabhängiges Haus braucht Speicher für Nächte und bewölkte Tage. Fügen Sie eine Batterie zur Hardware-Auswahl hinzu, oder wechseln Sie das Ziel zu „Meine Rechnung senken, verbunden bleiben“ (Netzanbindung).",
+    infeasibleNeedsPanelsTitle: "Nur Batterie kann netzunabhängig nicht laufen",
+    infeasibleNeedsPanelsBody:
+      "An diesem Standort lädt nichts die Bank auf. Fügen Sie Module zur Hardware-Auswahl hinzu, oder wechseln Sie das Ziel zu „Meine Rechnung senken, verbunden bleiben“ (Netzanbindung).",
+    infeasibleNeedsSurplusTitle:
+      "Eine reine Batteriebank kann keinen Überschuss erzeugen",
+    infeasibleNeedsSurplusBody:
+      "Überschuss braucht Module, die mehr erzeugen als Ihr Verbrauch. Senken Sie das Ziel unter 100% am Spar-Schieber, oder wechseln Sie die Hardware zu „Solar + Batterie“.",
+    infeasibleGenericTitle:
+      "Diese Kombination aus Hardware und Ziel ist nicht lösbar",
+    infeasibleGenericBody:
+      "Ändern Sie das Ziel oder die Hardware und rechnen Sie erneut.",
   },
   ar: {
     rtl: true,
@@ -1063,10 +1304,7 @@ export const LOCALES = {
     navBlog: "المدونة",
     navLegal: "الشروط وإخلاء المسؤولية",
     heroTag: "مجاني للجميع، في كل مكان · بدون تسجيل · لا شيء للبيع",
-    heroTitle1: "حاسبة مجانية للطاقة خارج الشبكة",
-    heroTitle2: "صمّم نظام الطاقة الشمسية والبطاريات في أي مكان بالعالم",
     ctaStart: "ابدأ تقديرًا مجانيًا",
-    ctaCompare: "مقارنة التكاليف",
     goalLabel: "ماذا تريد من هذا النظام؟",
     goalOffgrid: "تغذيتي بالكامل خارج الشبكة",
     goalGridtie: "خفض فاتورتي مع البقاء متصلًا",
@@ -1094,7 +1332,6 @@ export const LOCALES = {
     tariffNote: "سعر تقديري لـ {label} — غيّره أعلاه إذا كنت تعرف تعريفتك.",
     fxNote:
       "المبالغ معروضة بـ {code} بسعر {rate} مقابل 1 دولار أمريكي؛ أسعار وحدات البطارية تبقى بالدولار للكيلوواط ساعة لأن الأسعار الأساسية بالدولار.",
-    sizingTitle: "صمّم نظامك",
     pickCity: "اختر مدينة (أو استخدم 📍 موقعي) لمعرفة إشعاعك الشمسي.",
     shareLoaded:
       "تم تحميل الإعدادات المشتركة. راجع المدخلات ثم اضغط احسب نظامي لبدء الحساب.",
@@ -1161,7 +1398,6 @@ export const LOCALES = {
     frontierX: "التكلفة الأولية للنظام",
     frontierYGrid: "نسبة فاتورتك المخفّضة",
     frontierYOffgrid: "نسبة طاقتك المغطّاة دون مولّد",
-    frontierYouTag: "الخيار الذي تطالعه",
     frontierTagSel: "النقطة المحددة",
     frontierSelTag: "{pv} كيلوواط + {batt} كيلوواط ساعة · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} كيلوواط دون بطارية · {pct}% · {cost}",
@@ -1187,7 +1423,7 @@ export const LOCALES = {
       "راجع مصنف ذكاء اصطناعي مستقل (Jev) أرقام التحجيم فقط — لا يخرج من متصفحك أي موقع أو نص أو بيانات شخصية غير هذه الأرقام. لا يغير أبدًا النتيجة المحسوبة.",
     simpleAdvisorStyle:
       "[تعليمات للمستشار: الزائر في الوضع المبسّط. أجب كخبير يتحدث إلى طفل ذكي في الثانية عشرة: كلمات يومية بسيطة، بلا مصطلحات تقنية (اشرح أي مصطلح تقني بين قوسين قصيرين)، أربع جمل قصيرة كحد أقصى، واختم بالرقم الأهم.]",
-    advisorTitle: "مستشار الطاقة المجاني بالذكاء الاص��ناعي",
+    advisorTitle: "مستشار الطاقة المجاني بالذكاء الاصطناعي",
     advisorSubtitle:
       "أنت تتحدث إلى ذكاء اصطناعي (محرك Groq) — تقديرات تعليمية فقط وليست استشارة هندسية",
     advisorIntro:
@@ -1201,13 +1437,12 @@ export const LOCALES = {
     advisorSend: "إرسال",
     advisorClose: "إغلاق مستشار الذكاء الاصطناعي",
     advisorBusyRetry:
-      " محرك الذكاء الاصطناعي المجاني مشغول — إعادة المحاولة خلال ",
+      " محرك الذكاء الاصطناعي المجاني مشغول — إعادة المحاولة خلال {secs}s…",
     advisorNoReply: " لم يصل رد. حاول مرة أخرى.",
-    advisorBusy: " محرك الذكاء الاصطناعي المجاني مزدحم الآن (HTTP ",
-    advisorBusyQuota: " — حصة مشتركة).\n\n",
-    advisorBusyWait: "انتظر نحو دقيقة ثم أرسل الطلب مجدداً.",
-    advisorUnreachable: " مستشار الذكاء الاصطناعي غير متاح حالياً",
-    advisorUnreachableRetry: ".\n\nتحقق من اتصالك وحاول مرة أخرى بعد قليل.",
+    advisorBusy:
+      " محرك الذكاء الاصطناعي المجاني مزدحم الآن (HTTP {status} — حصة مشتركة).\n\nانتظر نحو دقيقة ثم أرسل الطلب مجدداً.",
+    advisorUnreachable:
+      " مستشار الذكاء الاصطناعي غير متاح حالياً{status}.\n\nتحقق من اتصالك وحاول مرة أخرى بعد قليل.",
     frontierCeilingTag: "الأقصى ضمن الأحجام المبحوثة: {pct}%",
     frontierSvgTitle: "إلى أين يصل مالك",
     frontierSvgDesc:
@@ -1229,7 +1464,6 @@ export const LOCALES = {
     frontierLegendBand: "الأنظمة نفسها، من الشراء الذاتي إلى التجزئة المشحونة",
     frontierLegendRange: "النطاق الأفضل قيمة — كل نقطة إضافية ما زالت رخيصة",
     frontierRangeTag: "أفضل قيمة",
-    frontierLegendYou: "الخيار الذي تطالعه",
     fuelLitLabel: "السعر لكل لتر",
     fuelGalLabel: "السعر لكل غالون",
     fuelReadoutRate: "{type} بهذا السعر يخرج بحوالي {rate} لكل كيلوواط/ساعة",
@@ -1265,5 +1499,56 @@ export const LOCALES = {
       "الحجم ليس قيدك هنا. أصغر نظام عملي — {pv} كيلوواط ألواح و{batt} كيلوواط ساعة بطارية، بنحو {cost} — يغطي هذا الحمل بالكامل طوال العام. وأي شيء أكبر يشتري سعة احتياطية، لا مزيدًا من الاستقلال.",
     frontierVerdictCoveredGrid:
       "الحجم ليس قيدك هنا. أصغر نظام عملي — {pv} كيلوواط ألواح و{batt} كيلوواط ساعة بطارية، بنحو {cost} — يغطي عمليًا كل هذا الحمل. وأي شيء أكبر يشتري سعة احتياطية، لا مزيدًا من التوفير.",
+    pipelineLocation: "الموقع",
+    pipelineWeather: "الطقس",
+    pipelineSimulating: "المحاكاة",
+    pipelineRendering: "العرض",
+    pipelineElapsed: "مرّت {s} ثانية",
+    pipelineCached: "مخزّن",
+    pipelineReaching: "جارٍ الاتصال بالقمر الصناعي…",
+    pipelineChunks: "{done}/{total} مقاطع فضائية",
+    speedNoteRepeat: "⚡ فوري — تكرار دقيق لهذا الإعداد (حُسب الآن)",
+    speedNoteCached: "⚡ فوري — طقس الأقمار الصناعية مخزّن",
+    speedNoteCachedWhere: "⚡ فوري — طقس الأقمار الصناعية مخزّن لـ {where}",
+    speedNoteOffline: "⚡ فوري — سنة نموذجية دون اتصال",
+    speedNoteOfflineWhere: "⚡ فوري — سنة نموذجية دون اتصال لـ {where}",
+    fmtAllDay: "طوال اليوم (24 ساعة)",
+    fmtHoursDay: "{h} ساعة/يوم",
+    fmtMinutesDay: "{m} دقيقة/يوم",
+    apWattsRunning: "~{w} واط أثناء التشغيل",
+    apWatts: "~{w} واط",
+    apKwhDay: "{kwh} كيلوواط·ساعة/يوم",
+    apAvgW: " (~{w} واط في المتوسط)",
+    offgridKwhReadout: "~{kwh} كيلوواط·ساعة/يوم",
+    quickBillStarts:
+      "يبدأ من ~{bill} (≈{kwh} كيلوواط·ساعة/يوم). ضع فاتورتك الحقيقية هنا، واختر موقعًا، ثم انقر على «حجم نظامي». يظهر منزلق خفض الفاتورة مع النتائج.",
+    quickBillManual:
+      "تقدير سريع: ~{bill} (يبدأ من ~{kwh} كيلوواط·ساعة/يوم) — بدّل إلى اليدوي لتغيير فاتورتك أو أجهزتك أو التعرفة.",
+    dailyEnergyNeed: "الحاجة اليومية من الطاقة (منزلق كيلوواط·ساعة/يوم)",
+    billPerMonth: "/شهريًا",
+    simpleHeadline: "في موقعك، يمنحك هذا النظام {goal}:",
+    simpleGoalGrid: "خفض نحو {pct}% من فاتورتك",
+    simpleGoalOffgrid: "تغطية منزلك على مدار السنة",
+    sharedLocationLoaded:
+      "تم تحميل النتيجة المشتركة — بيانات أشعة الشمس لهذا الموقع",
+    uiInitFailed: "تنبيه: تعذّر تحميل الواجهة — يرجى تحديث الصفحة (Ctrl+F5).",
+    infeasibleAreaTitle: "مساحة السطح/الأرض صغيرة جدًا لهذا الهدف",
+    infeasibleAreaBody:
+      "حُدّ حجم الطاقة الشمسية المبحوث عنه بحقل المساحة الاختياري (راجع «إعدادات العتاد»). امسح هذا الحقل — أو ارسم مساحة أكبر على الخريطة — ثم أعد التشغيل: الموقع نفسه يمكنه بلوغ هذا الهدف.",
+    infeasibleEnvelopeTitle: "خارج نطاق بحث هذه الأداة لهذا الهدف",
+    infeasibleEnvelopeBody:
+      "عند هذا الاستهلاك، بلوغ الهدف يتطلب مصفوفًا شمسيًا أو بنك بطاريات أكبر مما تبحث عنه هذه الآلة الحاسبة (راجع إعدادات العتاد للحدود). جرّب هدف خفض أقل، أو تحقق من إمكانية تقليل جزء من الاستهلاك.",
+    infeasibleNeedsBatteryTitle:
+      "الطاقة الشمسية وحدها لا تبلغ 100% خارج الشبكة",
+    infeasibleNeedsBatteryBody:
+      "المنزل خارج الشبكة يحتاج تخزينًا للّيل والأيام الغائمة. أضف بطارية إلى اختيار العتاد، أو بدّل الهدف إلى «خفض فاتورتي، ابقَ موصولًا» (موصول بالشبكة).",
+    infeasibleNeedsPanelsTitle: "البطارية وحدها لا تعمل خارج الشبكة",
+    infeasibleNeedsPanelsBody:
+      "لا شيء يعيد شحن البنك في هذا الموقع. أضف ألواحًا إلى اختيار العتاد، أو بدّل الهدف إلى «خفض فاتورتي، ابقَ موصولًا» (موصول بالشبكة).",
+    infeasibleNeedsSurplusTitle: "بنك البطاريات وحده لا ينتج فائضًا",
+    infeasibleNeedsSurplusBody:
+      "الفائض يحتاج ألواحًا تولّد أكثر من استهلاكك. اخفض الهدف دون 100% في منزلق خفض الفاتورة، أو بدّل إعداد العتاد إلى «شمسي + بطارية».",
+    infeasibleGenericTitle: "هذا المزيج من العتاد والهدف لا حلّ له",
+    infeasibleGenericBody: "غيّر الهدف أو العتاد، ثم أعد التشغيل.",
   },
 };

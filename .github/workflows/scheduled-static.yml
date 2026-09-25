@@ -20,8 +20,24 @@ jobs:
     steps:
       - name: Homepage serves with versioned entry module
         run: |
-          html="$(curl -fsS "https://freeoffgridcalculator.com/?static=$(date +%s)")"
+          # Cloudflare's managed challenge answers every non-browser probe of
+          # the custom domain (Cf-Mitigated: challenge, HTTP 403 interstitial),
+          # so the content assertion runs against the GitHub Pages origin,
+          # which serves the identical deployed build without the challenge.
+          html="$(curl -fsS "https://sovereign-communication.github.io/BigEnergyCo/?static=$(date +%s)")"
           echo "$html" | grep -q "assets/js/sizing/ui.js?v=[0-9a-z]*" || (echo "entry module token missing" && exit 1)
+
+      - name: Custom domain is up (a challenge interstitial is "up", not drift)
+        run: |
+          code=$(curl -sS -o /tmp/cf-home.html -w "%{http_code}" "https://freeoffgridcalculator.com/?static=$(date +%s)" || echo 000)
+          if [ "$code" = "200" ]; then
+            grep -q "assets/js/sizing/ui.js?v=[0-9a-z]*" /tmp/cf-home.html || (echo "entry module token missing on custom domain" && exit 1)
+            echo "custom domain serves the app (HTTP 200)"
+          elif [ "$code" = "403" ] && grep -q "Just a moment" /tmp/cf-home.html; then
+            echo "Cloudflare managed challenge active (bot defense up; origin content verified in the previous step)"
+          else
+            echo "custom domain unhealthy: HTTP $code" && exit 1
+          fi
 
       - name: API health exposes version and limits
         run: |

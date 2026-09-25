@@ -22,7 +22,8 @@
 // false: locale key names collide with payload field names and DOM ids, so the
 // proxy demanded translations for strings nothing renders. The rules below are
 // checked against what shipped markup and code actually reference.
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { LOCALES } from "../assets/js/shared/locales.js";
 import { LANGS } from "../assets/js/shared/i18n.js";
 import {
@@ -148,6 +149,55 @@ for (const [lang, gaps] of Object.entries(families)) {
     );
   else ok(`${lang}: every runtime-composed verdict string present`);
 }
+
+// ── 7. rendered keys ────────────────────────────────────────────────────────
+// The expensive failure is the invisible one: translations added ahead of the
+// code that renders them — or left behind when the markup changed. They cost
+// every locale, no visitor can ever see them, and the silent English fallback
+// makes them undetectable by every rule above. A key counts as rendered when a
+// shipped file mentions it (a t()/translate()/becoT() call, a data-i18n hook,
+// or a plain literal). The plain-literal net is deliberately generous: a name
+// that merely collides with a DOM id still counts, because a false "rendered"
+// only softens the guard, while a false "unrendered" would fail a good build.
+function renderedKeys() {
+  const sources = new Set(deployedFiles());
+  const collect = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) {
+        if (name !== "city-data") collect(p);
+      } else if (p.endsWith(".js")) sources.add(p);
+    }
+  };
+  collect("assets/js");
+  sources.add("worker/index.js");
+  let text = "";
+  for (const file of sources) {
+    if (file.endsWith("locales.js") || !existsSync(file)) continue;
+    text += readFileSync(file, "utf8");
+  }
+  const seen = new Set();
+  for (const m of text.matchAll(/["']([A-Za-z][A-Za-z0-9_]*)['"]/g))
+    seen.add(m[1]);
+  return seen;
+}
+
+const rendered = renderedKeys();
+// `frontierVerdict()` composes base + ("Grid" | "Offgrid") at runtime, so those
+// member names never appear literally — rule 6 already proves each family is
+// complete in every locale.
+const composedSuffixes = ["Grid", "Offgrid"];
+const unrendered = Object.keys(en).filter(
+  (k) => !rendered.has(k) && !composedSuffixes.some((s) => k.endsWith(s)),
+);
+if (unrendered.length)
+  fail(
+    `${unrendered.length} key(s) no shipped code or markup renders: ${unrendered.slice(0, 8).join(", ")}`,
+  );
+else
+  ok(
+    `all ${Object.keys(en).length} en keys are rendered by shipped code or markup`,
+  );
 
 // ── coverage summary (informational, keeps the trend visible) ───────────────
 const rows = langs

@@ -1838,11 +1838,15 @@
                 <ol class="pipe-steps">
                   <li id="pipeCity" data-state="todo">
                     <span class="pipe-dot" aria-hidden="true"></span
-                    ><span class="pipe-label">Location</span>
+                    ><span class="pipe-label" data-i18n="pipelineLocation"
+                      >Location</span
+                    >
                   </li>
                   <li id="pipeWeather" data-state="todo">
                     <span class="pipe-dot" aria-hidden="true"></span
-                    ><span class="pipe-label">Weather</span>
+                    ><span class="pipe-label" data-i18n="pipelineWeather"
+                      >Weather</span
+                    >
                     <span
                       class="pipe-bar"
                       id="pipeWeatherBar"
@@ -1854,7 +1858,9 @@
                   </li>
                   <li id="pipeSim" data-state="todo">
                     <span class="pipe-dot" aria-hidden="true"></span
-                    ><span class="pipe-label">Simulating</span>
+                    ><span class="pipe-label" data-i18n="pipelineSimulating"
+                      >Simulating</span
+                    >
                     <span
                       class="pipe-bar"
                       data-mode="indeterminate"
@@ -1864,7 +1870,9 @@
                   </li>
                   <li id="pipeRender" data-state="todo">
                     <span class="pipe-dot" aria-hidden="true"></span
-                    ><span class="pipe-label">Rendering</span>
+                    ><span class="pipe-label" data-i18n="pipelineRendering"
+                      >Rendering</span
+                    >
                   </li>
                 </ol>
                 <span id="pipeElapsed" class="pipe-elapsed"></span>
@@ -3083,16 +3091,21 @@
       class="modal-overlay"
       role="dialog"
       aria-modal="true"
+      data-i18n-aria-label="advisorTitle"
       aria-label="AI advisor"
     >
       <div class="modal-card">
         <div class="modal-header">
           <div>
-            <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff">
+            <h3
+              data-i18n="advisorTitle"
+              style="font-size: 1.25rem; font-weight: 800; color: #fff"
+            >
               Free AI Energy Advisor
             </h3>
-
-            <span style="font-size: 0.8rem; color: var(--primary-accent)"
+            <span
+              data-i18n="advisorSubtitle"
+              style="font-size: 0.8rem; color: var(--primary-accent)"
               >You are talking to an AI (Groq AI Engine) &mdash; educational
               estimates only, not engineering advice</span
             >
@@ -3103,6 +3116,7 @@
             class="close-btn"
             role="button"
             tabindex="0"
+            data-i18n-aria-label="advisorClose"
             aria-label="Close AI advisor"
             style="cursor: pointer"
           >
@@ -3113,31 +3127,35 @@
         <div class="modal-body">
           <div class="chat-box" id="chatWindow">
             <div class="chat-msg bot">
-              &#9889; <strong>BigEnergyCo AI Advisor</strong>:<br />
-
-              Aloha! I explain the results from the main sizing tool above —
-              battery chemistry, wiring and fusing, or what questions to bring
-              to a local electrician. Run your sizing first, then click “Ask the
-              AI advisor about this result” for a briefing tied to your numbers,
-              or just ask me anything.<br /><br />
-
-              <em style="font-size: 0.85rem; color: var(--text-muted)"
-                >I'm an AI and I can be wrong &mdash; including about prices and
-                specifications. Everything here is a rough educational estimate,
-                free of charge, with nothing for sale. Please check anything
-                important with a licensed professional before you build it.</em
+              <span data-i18n="advisorIntro"
+                >⚡ <strong>BigEnergyCo AI Advisor</strong>: I explain the
+                results from the main sizing tool — battery chemistry, wiring
+                and fusing, or questions to bring to a local electrician. Run
+                your sizing first, then ask me about this result, or ask me
+                anything.</span
+              >
+              <br /><br />
+              <em
+                data-i18n="advisorBotNote"
+                style="font-size: 0.85rem; color: var(--text-muted)"
+                >AI-generated estimate — may be inaccurate, including prices and
+                specifications. Not engineering advice. Verify with a licensed
+                electrician or engineer before buying or building anything.</em
               >
             </div>
           </div>
 
           <div class="chat-input-row">
             <label class="sr-only" for="chatInput"
-              >Ask the AI advisor about your system</label
+              ><span data-i18n="advisorLabel"
+                >Ask the AI advisor about your system</span
+              ></label
             >
             <input
               type="text"
               id="chatInput"
               class="form-control"
+              data-i18n-placeholder="advisorPlaceholder"
               placeholder="Ask about cell specs, Sodium-ion vs LFP, freight costs..."
             />
 
@@ -3147,6 +3165,7 @@
               style="cursor: pointer"
               role="button"
               tabindex="0"
+              data-i18n="advisorSend"
             >
               Send
             </div>

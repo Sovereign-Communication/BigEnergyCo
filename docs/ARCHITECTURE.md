@@ -1,7 +1,7 @@
 # Architecture map
 
-What owns what, as of #116–#123 (run channel → location picker → charts →
-a11y flow). Read this before
+What owns what, as of the #116–#127 sequence (run channel → location picker
+→ charts → a11y flow → run deadline → share-link codec). Read this before
 changing sizing behavior or the smoke harness; update it when the structure
 changes.
 
@@ -97,12 +97,56 @@ through the injected `setStatus`. No location state lives here.
   the module graph: every name ui.js imports exists, the export surface is
   exactly its consumers, and the palette stays out of ui.js.
 
+## Share-link codec (extracted from ui.js)
+
+- `assets/js/sizing/share-codec.js` — **single owner** of what a share link
+  is: the `#s=` + base64url JSON format, encode/decode, and the validation
+  gate (`parseShareHash`) every incoming link must pass (version and the
+  la/lo/kw bounds) before it is allowed to touch the form. Pure policy, no
+  DOM; `tests/share-codec.test.mjs` pins the round trip and the refusal
+  cases — the same malformed links the share smoke gates reject live.
+- `ui.js` keeps only the DOM application: writing a validated state into
+  inputs (`restoreFromShare`) and serializing the current form
+  (`updateShareHash`).
+
+## Internationalization (translation ownership)
+
+- `assets/js/shared/locales.js` — **single owner** of every user-visible
+  string, in all six locales (`en`, `es`, `pt`, `fr`, `de`, `ar` with RTL).
+  There is no second copy: `ui.js`'s `t(key, params)`, `i18n.js`'s
+  `translate()`/`applyI18n()` (the `data-i18n`, `data-i18n-placeholder`,
+  `data-i18n-aria-label` hooks) and the classic `chat.js` bridge
+  (`window.becoT`/`window.becoLang`) all read that one dictionary.
+- **Interpolation is `{placeholder}`, applied with a function replacer.** A
+  pre-translated fragment glued together in code cannot be reordered by a
+  translator, and a string replacer reads `$&`/`$n` inside the value as a
+  pattern — so a formatted money figure (`$200`) would silently lose its
+  dollars. Both traps are pinned in `tests/i18n.test.mjs`.
+- Runtime copy is composed from keys, never literals: the pipeline stepper,
+  speed notes, infeasibility banners, appliance and slider readouts, the
+  share-restore label, the init-failure status, and the advisor modal's
+  loading/error/retry text.
+- **Boundary (deliberate):** the long-form static sections — hero, FAQ,
+  parts list, support, legal — are English-only documentation, and that is
+  visible as the absence of a `data-i18n` hook on those elements. The
+  translated surface is the calculator itself plus its advisor.
+- Gates: `scripts/check-i18n.mjs` (parity, hook coverage, placeholder
+  parity, no key-name leaks, RTL, runtime-composed families, and no key that
+  shipped code or markup never renders) and `tests/i18n.test.mjs` (corruption
+  such as a lost byte, split sentences, the placeholder contract,
+  interpolation safety).
+
 ## Known remaining debt (deliberate, not forgotten)
 
-- `ui.js` is still ~7.9k lines: form state, rendering, Jev, sliders,
-  sharing, modals. Three extractions are done (run channel, location picking,
-  chart rendering); each further one should follow the same pattern (policy in
-  a pure module, mechanics stay with the DOM, tests first).
+- `ui.js` is still ~7.8k lines: form state, rendering glue, Jev badge
+  lifecycle, sliders, modals. Four extraction seams are done (run channel,
+  location picking, chart rendering, share-link codec); each further one
+  should follow the same pattern (policy in a pure module, mechanics stay
+  with the DOM, tests first).
+- The hero, FAQ, parts list, support and legal sections are still
+  English-only static markup. Translating them is an editorial pass (six
+  locales of long-form prose), not a code change, and nothing in the
+  calculator depends on it.
 - The live Jev path now runs directly against TypeSafe
   (`provider=typesafe fallback=false`, recorded across the complete-gate
   runs); OpenRouter stays configured as the rate-limit backup, and the

@@ -22,10 +22,12 @@ import worker, {
   validateJevState,
 } from "../worker/index.js";
 import {
+  advisorJevContext,
   interpretSanity,
   jevEnabled,
   requestSanity,
   renderSanityBadge,
+  sanityResponseIsCurrent,
   sanityState,
   SANITY_THRESHOLDS,
 } from "../assets/js/sizing/validate.js";
@@ -213,7 +215,10 @@ test("/api/jev: full happy path maps the upstream answers into the client contra
       return new Response(JSON.stringify(UPSTREAM_OK), { status: 200 });
     },
   };
-  const res = await worker.fetch(jevReq({ state: GOOD_STATE }), env);
+  const res = await worker.fetch(
+    jevReq({ state: { ...GOOD_STATE, meanTempC: 27 } }),
+    env,
+  );
   assert.equal(res.status, 200);
   const body = await res.json();
   assert.equal(body.available, true);
@@ -223,6 +228,10 @@ test("/api/jev: full happy path maps the upstream answers into the client contra
   assert.ok(
     calls[0].body.questions.physically_plausible,
     "questions built server-side",
+  );
+  assert.match(
+    JSON.stringify(calls[0].body.questions),
+    /Mean site temperature is 27.0°C/,
   );
   assert.ok(
     !JSON.stringify(calls[0].body).includes("<script"),
@@ -403,6 +412,56 @@ test("renderSanityBadge: pass, flag, and inconclusive stay distinct", () => {
   } finally {
     globalThis.document = realDocument;
   }
+});
+
+test("advisorJevContext pairs the exact reviewed state and preserves Jev's limits", () => {
+  const state = {
+    mode: "offgrid",
+    dailyKwh: 10,
+    pvKw: 6.6,
+    battKwh: 13.4,
+  };
+  const pending = advisorJevContext("pending", null, state, "LFP option");
+  assert.match(pending, /LFP option/);
+  assert.match(pending, /pv_kw=6\.60/);
+  assert.match(pending, /has not returned yet/);
+
+  const unavailable = advisorJevContext(
+    "unavailable",
+    null,
+    state,
+    "LFP option",
+  );
+  assert.match(unavailable, /No independent Jev result/);
+  assert.doesNotMatch(unavailable, /approved|rejected/);
+
+  const available = advisorJevContext(
+    "available",
+    {
+      level: "flag",
+      verdict: "suspicious",
+      plausible: 0.19,
+      verdictConfidence: 0.63,
+      redFlag: 1.25,
+    },
+    state,
+    "LFP option",
+  );
+  assert.match(available, /level=flag/);
+  assert.match(available, /plausible=0\.19/);
+  assert.match(available, /not ground truth/);
+  assert.match(available, /not location names or free text/);
+  assert.match(
+    available,
+    /Do not override the deterministic calculator figures/,
+  );
+});
+
+test("sanityResponseIsCurrent rejects late responses after a selection or payload change", () => {
+  assert.equal(sanityResponseIsCurrent(3, 3, "state-a", "state-a"), true);
+  assert.equal(sanityResponseIsCurrent(2, 3, "state-a", "state-a"), false);
+  assert.equal(sanityResponseIsCurrent(3, 3, "state-a", "state-b"), false);
+  assert.equal(sanityResponseIsCurrent(null, 3, "state-a", "state-a"), false);
 });
 
 test("interpretSanity: unavailable/shapeless upstreams render nothing", () => {

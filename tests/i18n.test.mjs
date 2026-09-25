@@ -77,6 +77,113 @@ test("every t() and data-i18n key exists in English", () => {
   );
 });
 
+test("advisor chrome is translated in every supported locale", () => {
+  const keys = [
+    "advisorTitle",
+    "advisorSubtitle",
+    "advisorIntro",
+    "advisorBotNote",
+    "advisorThinking",
+    "advisorLabel",
+    "advisorPlaceholder",
+    "advisorSend",
+    "advisorClose",
+    "advisorBusyRetry",
+    "advisorNoReply",
+    "advisorBusy",
+    "advisorUnreachable",
+  ];
+  for (const [loc, dict] of Object.entries(LOCALES)) {
+    for (const key of keys) {
+      assert.equal(typeof dict[key], "string", `${loc}.${key} missing`);
+      assert.ok(dict[key].trim().length > 0, `${loc}.${key} empty`);
+    }
+  }
+  const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+  assert.match(html, /data-i18n="advisorTitle"/);
+  assert.match(html, /data-i18n-placeholder="advisorPlaceholder"/);
+  assert.match(html, /data-i18n-aria-label="advisorClose"/);
+});
+
+// Two locale-file defects that no other gate could see: a string glued
+// together from pre-translated fragments in code cannot be reordered for
+// another language, and the shipped Arabic advisor title once carried a
+// corrupted byte pair (U+FFFD) that survived every existing check.
+const FRAGMENT_KEYS = [
+  "advisorBusyQuota",
+  "advisorBusyWait",
+  "advisorUnreachableRetry",
+];
+
+test("no locale string carries a lost byte or a split sentence", () => {
+  for (const [loc, dict] of Object.entries(LOCALES)) {
+    for (const [key, value] of Object.entries(dict)) {
+      if (typeof value !== "string") continue;
+      assert.ok(
+        !value.includes("\uFFFD"),
+        `${loc}.${key} carries U+FFFD — a lost byte, not a translation`,
+      );
+    }
+    for (const key of FRAGMENT_KEYS) {
+      assert.ok(
+        !(key in dict),
+        `${loc}.${key} is a sentence fragment — fold it into the key that owns the sentence`,
+      );
+    }
+  }
+});
+
+test("runtime advisor copy interpolates through the locale placeholder contract", () => {
+  const placeholders = {
+    advisorBusy: "{status}",
+    advisorBusyRetry: "{secs}",
+    advisorUnreachable: "{status}",
+  };
+  for (const [loc, dict] of Object.entries(LOCALES)) {
+    for (const [key, token] of Object.entries(placeholders)) {
+      assert.ok(
+        dict[key].includes(token),
+        `${loc}.${key} must place ${token} where the runtime value belongs`,
+      );
+    }
+  }
+  const chat = fs.readFileSync(path.join(ROOT, "assets/js/chat.js"), "utf8");
+  assert.match(
+    chat,
+    /\{ secs: waitSecs \}/,
+    "the retry countdown must travel as a placeholder variable",
+  );
+  assert.match(
+    chat,
+    /\{ status: err\.status \}/,
+    "the HTTP status must travel as a placeholder variable",
+  );
+});
+
+// Interpolation used to pass the value as a string replacement, so a value
+// containing "$&" or "$n" was read as a replacement pattern: the bill-start
+// note silently dropped the "$2" of "$200". Behavior (translate) and source
+// (ui.js's own t) are both pinned, because the two helpers are separate.
+test("interpolation never re-reads a value as a replacement pattern", async () => {
+  const { translate } = await import("../assets/js/shared/i18n.js");
+  const rendered = translate("quickBillStarts", { bill: "$200", kwh: 5 });
+  assert.ok(
+    rendered.includes("$200"),
+    `the formatted bill must survive interpolation intact: ${rendered}`,
+  );
+  const i18n = fs.readFileSync(
+    path.join(ROOT, "assets/js/shared/i18n.js"),
+    "utf8",
+  );
+  assert.match(i18n, /replaceAll\(`\{\$\{name\}\}`, \(\) =>/);
+  const ui = fs.readFileSync(path.join(ROOT, "assets/js/sizing/ui.js"), "utf8");
+  assert.match(
+    ui,
+    /"g"\),\s*\(\) => v\)/,
+    "ui.js t() must interpolate with a function replacer too",
+  );
+});
+
 test("German is exposed and has a translated core result vocabulary", () => {
   const src = fs.readFileSync(
     path.join(ROOT, "assets/js/shared/i18n.js"),
@@ -88,7 +195,7 @@ test("German is exposed and has a translated core result vocabulary", () => {
     "utf8",
   );
   assert.match(locale, /de: \{/);
-  assert.match(locale, /sizingTitle: "System dimensionieren"/);
+  assert.match(locale, /navSizing: "System dimensionieren"/);
   assert.match(locale, /frontierTitle:/);
 });
 
