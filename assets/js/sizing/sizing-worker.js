@@ -14,7 +14,7 @@
 // carry a stream tag ("run"/"slice"/"unknown") for the same stale check.
 // Unknown types answer with an error instead of hanging the spinner.
 //
-import { runSizing, prefetchSiteWeather } from "./run.js?v=20260921f";
+import { runSizing, prefetchSiteWeather } from "./run.js?v=20260925a";
 
 self.onmessage = async (ev) => {
   const msg = ev.data;

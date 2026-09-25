@@ -10,7 +10,7 @@
 // here), so after one visit a location keeps working fully offline. Bump
 // CACHE_VERSION to force every client to refresh on next visit.
 
-const CACHE_VERSION = "beco-v85";
+const CACHE_VERSION = "beco-v86";
 
 // Every cache operation races this budget; a slower one degrades to its
 // fallback instead of hanging the request that waited on it.
