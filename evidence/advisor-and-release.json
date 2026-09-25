@@ -32,7 +32,7 @@
     "experience": "staged pipeline stepper with per-chunk progress and honest speed notes in the visitor's language; timeout errors name the next click; infeasibility reasons say why and what to change, localized in six locales",
     "docs": "ARCHITECTURE names the new owners (interpolate, infeasible-copy, parts-csv, fuel-units) and keeps the extraction seams plus remaining debt current; the runbook gate table matches CI",
     "testing": "704 tests plus coverage thresholds, mutation-proven gate contracts and 117 browser smoke gates; a byte-exact CSV golden, per-locale reason copy, and frozen fuel values with a 6272-fixture differential",
-    "release": "merged as #128/#129/#130; main cf6c693 has Tests, CodeQL and Main audit green with no open PRs; the gated promote shipped 20260925a to Pages, 358/358 byte-identical, smoke passing; the brand domain answers a Cloudflare challenge 403 - unverified, not claimed",
+    "release": "merged as #128/#129/#130, no open PRs, clean tree; main green on Tests, CodeQL and Main audit; the gated promote shipped stamp 20260925a to Cloudflare Pages, 358/358 byte-identical, smoke passing; the brand domain answers a Cloudflare challenge 403 - unverified, not claimed",
     "advisor": "adversarial suite green: injection and fake instructions ignored, a stale verdict is rejected after a selection change, provider failure falls back silently, locale allow-list enforced, reviewed state paired with prose",
     "physics": "sizing stays deterministic from five years of hourly NASA POWER (contract tests); chemistry gates intact (sodium/LFP trade-off, lead-acid no balancing, cold floors, AGM below LFP, sodium premium); verify:live PASSED"
   }
