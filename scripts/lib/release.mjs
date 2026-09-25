@@ -19,12 +19,20 @@ export const DOC_PATTERNS = [
   /^\.CYCLE_LIFE/i,
 ];
 
+/**
+ * Markdown that is NOT exempt: the hash-pinned master plan, its amendment
+ * log and its ledger only change through a PR, where the plan-pin gate runs.
+ */
+export const PR_ONLY_PATTERNS = [/^docs\/plan\//i];
+
 /** True when every changed path is documentation. Empty input is not docs. */
 export function isDocsOnly(paths) {
   if (!paths.length) return false;
-  return paths.every((p) =>
-    DOC_PATTERNS.some((rx) => rx.test(String(p).trim())),
-  );
+  return paths.every((p) => {
+    const path = String(p).trim();
+    if (PR_ONLY_PATTERNS.some((rx) => rx.test(path))) return false;
+    return DOC_PATTERNS.some((rx) => rx.test(path));
+  });
 }
 
 /** Merge commits and squash commits both name the PR they came from. */
@@ -78,7 +86,7 @@ export function directPushVerdict({ range, message, cwd } = {}) {
   if (hasPrReference(message))
     return { ok: true, reason: "PR merge commit", files };
   if (isDocsOnly(files)) return { ok: true, reason: "docs-only change", files };
-  const offending = files.filter((f) => !DOC_PATTERNS.some((rx) => rx.test(f)));
+  const offending = files.filter((f) => !isDocsOnly([f]));
   return {
     ok: false,
     reason: `${offending.length} non-documentation file(s) changed outside a PR`,
