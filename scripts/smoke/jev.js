@@ -234,4 +234,91 @@ export async function runJevFlow(ctx) {
       tg.callsAfterToggles === tg.callsAtMount,
     toggleGate,
   );
+
+  // ── the advisor brief must know what the run actually built ────────────────
+  // The advisor had no mode signal at all: the brief opened "Please size an
+  // off-grid battery system for me" whatever the visitor had configured, so a
+  // battery-only run could be answered with panels, an inverter and an
+  // off-grid budget it does not have. These gates read the real brief the page
+  // builds, in both modes, and both locales.
+  const setMode = (hw, goal) => `(() => {
+      const h = document.getElementById("hardwareConfig");
+      h.value = "${hw}";
+      h.dispatchEvent(new Event("change", { bubbles: true }));
+      const g = document.getElementById("systemGoal");
+      g.value = "${goal}";
+      g.dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    })()`;
+
+  await evaluate(setMode("battery", "gridtie"));
+  const batteryBrief = String(
+    await evaluate(`String(buildIntakeBrief ? buildIntakeBrief() : "")`),
+  );
+  gate(
+    "advisor brief states a battery-only run builds no solar panels",
+    /BATTERY ONLY/.test(batteryBrief) &&
+      /NO solar panels/i.test(batteryBrief) &&
+      /out of scope/i.test(batteryBrief),
+    batteryBrief.slice(0, 200),
+  );
+  gate(
+    "advisor brief bars panel advice on a battery-only run",
+    /Do not assume, recommend, or cost any panels/i.test(batteryBrief) &&
+      /grid-tied/.test(batteryBrief),
+    batteryBrief.slice(0, 200),
+  );
+  gate(
+    "advisor brief never promises a bill cut the battery cannot deliver",
+    /do not promise a bill cut/i.test(batteryBrief),
+    batteryBrief.slice(0, 200),
+  );
+
+  await evaluate(setMode("both", "gridtie"));
+  const panelsBrief = String(
+    await evaluate(`String(buildIntakeBrief ? buildIntakeBrief() : "")`),
+  );
+  gate(
+    "advisor brief still names the array on a with-panels run",
+    /battery plus solar panels/i.test(panelsBrief) &&
+      !/BATTERY ONLY/.test(panelsBrief),
+    panelsBrief.slice(0, 200),
+  );
+
+  // The mode-blind "before adding panels ... a real off-grid budget" copy rode
+  // on a block whose #gridEqBox/#gridEqText never existed in any page, so its
+  // own guard made it unreachable. Pin BOTH facts: the ids stay absent, and the
+  // copy is gone from the shipped source.
+  gate(
+    "grid-equivalence box is absent from the page (its copy was never reachable)",
+    (await evaluate(
+      `!document.getElementById("gridEqBox") && !document.getElementById("gridEqText")`,
+    )) === true,
+  );
+
+  // German: the brief is an English prompt to the model by design, but the
+  // mode branch must survive a language switch - a battery-only visitor who
+  // picked German still gets a no-panels brief, not an untranslated fallback.
+  const langSwitch = (lang) => `(() => {
+      const p = document.getElementById("langSelect");
+      if (!p) return "no-picker";
+      p.value = "${lang}";
+      p.dispatchEvent(new Event("change", { bubbles: true }));
+      return String(p.value);
+    })()`;
+
+  const langSet = String(await evaluate(langSwitch("de")));
+  await evaluate(setMode("battery", "gridtie"));
+  const germanBatteryBrief = String(
+    await evaluate(`String(buildIntakeBrief ? buildIntakeBrief() : "")`),
+  );
+  gate(
+    "advisor brief keeps the battery-only branch in German",
+    langSet === "de" &&
+      /BATTERY ONLY/.test(germanBatteryBrief) &&
+      /NO solar panels/i.test(germanBatteryBrief),
+    `lang=${langSet} ` + germanBatteryBrief.slice(0, 180),
+  );
+  await evaluate(langSwitch("en"));
+  await evaluate(setMode("both", "gridtie"));
 }
