@@ -43,8 +43,11 @@ import {
   scoreCompleteGate,
 } from "./lib/jev-complete.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
+// P0.3(a) / R-AI-08: the price lives in exactly one module, shared with the
+// worker. The previous private `JEV_INPUT_PRICE_PER_MILLION = 42.0` was 100,000x
+// the canonical D-13 rate (see worker/jev-price.mjs and plan finding F-37).
+import { jevCostUsd } from "../worker/jev-price.mjs";
 const JEV_TIMEOUT_MS = 15000;
-const JEV_INPUT_PRICE_PER_MILLION = 42.0; // TypeSafe input-only; outputs free
 const TYPESAFE_URL = "https://api.typesafe.ai/v1/systemone";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const OPENROUTER_MODEL = "~typesafe/jev-latest";
@@ -417,7 +420,7 @@ export async function main(argv = process.argv.slice(2)) {
           provider: result.provider,
           model: result.model,
           input_tokens: inputTokens,
-          cost_usd: (inputTokens * JEV_INPUT_PRICE_PER_MILLION) / 1e6,
+          cost_usd: jevCostUsd(inputTokens),
           notes: result.notes,
         };
       }

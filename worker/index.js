@@ -39,6 +39,11 @@ const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 const OPENROUTER_MODEL = "~typesafe/jev-latest";
 const JEV_TIMEOUT_MS = 8000; // quoted 70-500ms; generous ceiling
 
+// P0.3(a) / R-AI-08: the canonical Jev price (D-13) is owned by one module,
+// shared with the gate script. Imported here so the runtime's token accounting
+// and the gate's cost roll-up can never drift apart.
+import { jevCostUsd } from "./jev-price.mjs";
+
 // Strict numeric bounds: a result outside these is not a judgment call, it is
 // a malformed/hostile body (400) before any paid call happens.
 const JEV_STATE_FIELDS = {
@@ -238,7 +243,24 @@ export async function handleJevSanity(request, env, origin) {
         signal: AbortSignal.timeout(JEV_TIMEOUT_MS),
         body: JSON.stringify({ model: JEV_MODEL, state, questions }),
       });
-      if (upstream.ok) answers = await upstream.json();
+      if (upstream.ok) {
+        const payload = await upstream.json();
+        answers = payload;
+        // R-AI-08: log token COUNTS only, never content. The question set and
+        // the client's numeric state are both user-influenced in spirit, so
+        // neither is logged; only the metered volume and its cost.
+        const inputTokens = Number(payload?.usage?.input_tokens) || 0;
+        if (inputTokens > 0) {
+          console.log(
+            JSON.stringify({
+              evt: "jev_usage",
+              model: JEV_MODEL,
+              input_tokens: inputTokens,
+              cost_usd: jevCostUsd(inputTokens),
+            }),
+          );
+        }
+      }
     } catch {
       // OpenRouter below is the bounded backup for provider-side failures.
     }
