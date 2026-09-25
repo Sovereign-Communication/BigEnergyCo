@@ -16,7 +16,7 @@ import {
   searchCities,
   shouldAutoResolve,
   typedCityCandidates,
-} from "./cities.js?v=20260925a";
+} from "./cities.js?v=20260925b";
 
 function byId(id) {
   return document.getElementById(id);
