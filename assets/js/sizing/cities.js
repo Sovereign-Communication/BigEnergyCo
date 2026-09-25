@@ -2,7 +2,7 @@
 // offline; country partitions provide millions of additional place/coordinate
 // pairs and are lazy-loaded on demand — only the countries a query or a GPS
 // fix names are ever fetched, never the whole world at once.
-import { usStateCode, US_STATES } from "./pricing.js?v=20260925b";
+import { usStateCode, US_STATES } from "./pricing.js?v=20260925c";
 
 export const CITY_CATALOG = [
   ["Honolulu", "United States", "Hawaii", 21.31, -157.86],
@@ -447,7 +447,7 @@ export async function loadCountryCities(
       : null;
     try {
       const response = await fetchImpl(
-        `./assets/js/sizing/city-data/${cc}.json?v=20260925b`,
+        `./assets/js/sizing/city-data/${cc}.json?v=20260925c`,
         { cache: "force-cache", ...(ctrl ? { signal: ctrl.signal } : {}) },
       );
       if (!response.ok) return [];

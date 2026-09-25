@@ -555,6 +555,40 @@ function buildIntakeBrief() {
 
   lines.push("Destination region: " + region + ".");
 
+  // Hardware config, read from the SAME selects the sizing form uses - not a
+  // second source of truth and not a new mechanism. Without this the advisor
+  // had no way to know the run had no array: the brief opened "Please size an
+  // off-grid battery system for me" and a battery-only visitor could be handed
+  // panel, inverter and off-grid-budget advice for a system that has none.
+  // The battery-only branch is the one that matters: it states the absence and
+  // bars the advice, so the model sizes against peak load on the connection the
+  // user already has instead of quietly designing a solar system.
+  var hwEl = document.getElementById("hardwareConfig");
+
+  var goalEl = document.getElementById("systemGoal");
+
+  var hardware = hwEl ? hwEl.value : "";
+
+  var goal = goalEl ? goalEl.value : "";
+
+  if (hardware === "battery") {
+    lines.push(
+      "System: BATTERY ONLY - this run builds NO solar panels. Do not assume, " +
+        "recommend, or cost any panels, array, or solar inverter; a solar array " +
+        "is out of scope unless I ask for it explicitly. Size the battery " +
+        "against the peak load it must carry on the grid connection I already " +
+        "have (" +
+        (goal === "offgrid" ? "off-grid" : "grid-tied") +
+        "), and do not promise a bill cut the battery cannot deliver.",
+    );
+  } else {
+    lines.push(
+      "System: battery plus solar panels (" +
+        (goal === "offgrid" ? "off-grid" : "grid-tied") +
+        ").",
+    );
+  }
+
   // NEW: Add climate context for better battery chemistry recommendations
 
   lines.push("Climate: " + climate + ".");
@@ -627,12 +661,6 @@ function updateCalc() {
   // render "NaN kWh" or "~Infinity years" into the comparison panel.
   if (!isFinite(targetKwh) || targetKwh <= 0) return;
 
-  var utilityRateSelect = document.getElementById("utilityRate");
-
-  var utilityRate = utilityRateSelect
-    ? parseFloat(utilityRateSelect.value)
-    : 0.28;
-
   var targetKwhVal = document.getElementById("targetKwhVal");
 
   if (targetKwhVal) targetKwhVal.innerText = targetKwh + " kWh Usable Storage";
@@ -677,61 +705,17 @@ function updateCalc() {
     landedMidVal.innerText = "\u2248" + money(mid);
   }
 
-  // Grid-energy equivalence: what the stored energy would cost bought from the grid.
-
-  // Assumptions (stated in the UI): one full cycle per day, 90% round-trip efficiency,
-
-  // energy charge only  -  excludes connection fees, demand charges, degradation, and
-
-  // panels/inverter/BOS/labor. This is orientation, not a savings promise.
-
-  var gridEqBox = document.getElementById("gridEqBox");
-
-  var gridEqText = document.getElementById("gridEqText");
-
-  if (!gridEqBox || !gridEqText) return;
-
-  if (utilityRate > 0) {
-    var ROUND_TRIP_EFF = 0.9;
-
-    var annualKwh = targetKwh * 365 * ROUND_TRIP_EFF;
-
-    var annualValue = annualKwh * utilityRate;
-
-    var landedMid = (scopes.landed.lo + scopes.landed.hi) / 2;
-
-    var paybackYears = landedMid / annualValue;
-
-    var text =
-      "If this bank were cycled once daily at $" +
-      utilityRate.toFixed(2) +
-      "/kWh with 90% " +
-      "round-trip efficiency, the energy it moves in a year would cost about $" +
-      (Math.round(annualValue / 10) * 10).toLocaleString() +
-      " bought from the grid.";
-
-    var paybackRounded = Math.round(paybackYears);
-
-    text +=
-      " The landed DIY estimate shown above equals roughly " +
-      (paybackYears >= 1
-        ? paybackRounded === 1
-          ? "about one year"
-          : "~" + paybackRounded + " years"
-        : "under one year") +
-      " of that grid energy";
-
-    text +=
-      " \u2014 before adding panels, inverter, wiring, install, and battery degradation, which are " +
-      "the majority of a real off-grid budget. Off-grid is usually about where you live, not " +
-      "about beating the grid on price.";
-
-    gridEqText.textContent = text;
-
-    gridEqBox.style.display = "block";
-  } else {
-    gridEqBox.style.display = "none";
-  }
+  // The grid-energy equivalence box that used to end this function was DEAD:
+  // it read #gridEqBox/#gridEqText, and neither id exists in any page, so its
+  // own `if (!gridEqBox || !gridEqText) return;` guard made the block - and
+  // its "before adding panels ... a real off-grid budget" copy - unreachable.
+  // Verified in a browser: both getElementById calls return null. Deleted
+  // rather than localised: adding six translations for a string that never
+  // rendered would record a claim about a surface that does not exist.
+  //
+  // Its only consumer, `utilityRate`, went with it, so that read is gone too.
+  // #utilityRate still drives this panel's other event wiring in
+  // setupEventListeners; nothing else about the panel changed.
 }
 
 function scrollToSection(id) {

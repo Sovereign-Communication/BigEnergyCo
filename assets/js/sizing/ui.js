@@ -13,14 +13,14 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260925b";
+import { APPLIANCES } from "./appliances.js?v=20260925c";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20260925b";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20260925b";
+} from "./run-coordinator.js?v=20260925c";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20260925c";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -29,12 +29,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20260925b";
+} from "./charts.js?v=20260925c";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20260925b";
+} from "./location-picker.js?v=20260925c";
 
 import {
   estimateTariff,
@@ -42,22 +42,22 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260925b";
+} from "./pricing.js?v=20260925c";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260925b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260925c";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260925b";
+} from "./lead-acid.js?v=20260925c";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260925b";
+} from "./bom.js?v=20260925c";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260925b";
+import { BOM_ITEMS } from "../shared/content.js?v=20260925c";
 
 import {
   applyI18n,
@@ -66,18 +66,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20260925b";
+} from "../shared/i18n.js?v=20260925c";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260925b";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260925b";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260925c";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260925c";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260925b";
-import { buildSimpleView } from "../shared/simple-view.js?v=20260925b";
+} from "../shared/simple-mode.js?v=20260925c";
+import { buildSimpleView } from "../shared/simple-view.js?v=20260925c";
 import {
   advisorJevContext,
   interpretSanity,
@@ -85,56 +85,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20260925b";
+} from "./validate.js?v=20260925c";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20260925b";
+} from "../shared/cut-targets.js?v=20260925c";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20260925b";
+} from "./share-codec.js?v=20260925c";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20260925b";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20260925b";
+} from "./infeasible-copy.js?v=20260925c";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20260925c";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20260925b";
+} from "./fuel-units.js?v=20260925c";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260925b";
+} from "./frontier-chart.js?v=20260925c";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260925b";
+} from "./rescale.js?v=20260925c";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260925b";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260925c";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260925b";
+} from "./map-provider.js?v=20260925c";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260925b";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260925b";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260925b";
+} from "./wizard.js?v=20260925c";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260925c";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260925c";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -183,9 +183,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260925b";
+} from "./money.js?v=20260925c";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260925b";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260925c";
 
 let worker = null;
 
@@ -3226,7 +3226,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20260925b",
+      "./assets/js/sizing/sizing-worker.js?v=20260925c",
       {
         type: "module",
       },
