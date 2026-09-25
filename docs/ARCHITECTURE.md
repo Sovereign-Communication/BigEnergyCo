@@ -109,19 +109,57 @@ through the injected `setStatus`. No location state lives here.
   inputs (`restoreFromShare`) and serializing the current form
   (`updateShareHash`).
 
+## Infeasible-reason copy (extracted from ui.js)
+
+- `assets/js/sizing/infeasible-copy.js` — **single owner of which reason code
+  maps to which locale keys**. The engine decides the code
+  (`infeasibleReason`, plus the two search-limit codes `run.js` adds),
+  `locales.js` owns the copy in six languages, and this module owns the
+  mapping between them — a value a test can call. It used to be a table
+  inside `ui.js`, reachable only by regexing that file's source, so a code
+  with no reviewed copy could ship as a generic message nobody had read.
+- `ui.js` keeps only `renderInfeasibleBanner`: the banner DOM and the sr-only
+  live region that mirrors it for assistive tech.
+  `tests/infeasible-copy.test.mjs` proves every code the engine can emit has
+  copy, that the search-limit codes keep their own wording, and that all six
+  locales carry every pair.
+
+## Parts-list export (extracted from ui.js)
+
+- `assets/js/sizing/parts-csv.js` — **single owner of the spreadsheet**: the
+  field escaping (`csvField`), the document framing (`csvDocument`: UTF-8 BOM
+  plus CRLF, which is what makes a spreadsheet read the non-ASCII notes
+  correctly) and the row assembly (`partsListRows`), which is pure — a
+  hardware list, the selected system, a site and a date in; rows out. Every
+  section is optional by design: battery-only, solar-only, cable-less, and
+  either hemisphere.
+- `ui.js` keeps the download mechanics only: build the list, make a blob,
+  click a link. `tests/parts-csv.test.mjs` pins a byte-exact golden captured
+  from the pre-extraction implementation, so the move is proven to change
+  nothing a visitor downloads.
+
 ## Internationalization (translation ownership)
 
 - `assets/js/shared/locales.js` — **single owner** of every user-visible
   string, in all six locales (`en`, `es`, `pt`, `fr`, `de`, `ar` with RTL).
-  There is no second copy: `ui.js`'s `t(key, params)`, `i18n.js`'s
-  `translate()`/`applyI18n()` (the `data-i18n`, `data-i18n-placeholder`,
-  `data-i18n-aria-label` hooks) and the classic `chat.js` bridge
-  (`window.becoT`/`window.becoLang`) all read that one dictionary.
+  There is no second copy. Three readers share one implementation of the
+  contract: `i18n.js`'s `translate()`/`applyI18n()` (the `data-i18n`,
+  `data-i18n-placeholder`, `data-i18n-aria-label` hooks), the sizing
+  controller (which binds `translate as t`), and the classic `chat.js` bridge
+  (`window.becoT`/`window.becoLang`).
+- `assets/js/shared/interpolate.js` — **single owner of the string contract**:
+  `pickString` (locale, then English, then the raw key) and `interpolate`
+  (`{placeholder}` substitution). This was implemented twice, once for the
+  markup pass and once for runtime copy, so the same replacement defect had
+  to be found and fixed in each; there is one loop now.
 - **Interpolation is `{placeholder}`, applied with a function replacer.** A
   pre-translated fragment glued together in code cannot be reordered by a
   translator, and a string replacer reads `$&`/`$n` inside the value as a
   pattern — so a formatted money figure (`$200`) would silently lose its
-  dollars. Both traps are pinned in `tests/i18n.test.mjs`.
+  dollars. Names are matched literally, never as a pattern, so a placeholder
+  is only ever filled by its own exact name. All three traps are pinned in
+  `tests/interpolate.test.mjs`, with the money case also pinned end to end in
+  `tests/i18n.test.mjs`.
 - Runtime copy is composed from keys, never literals: the pipeline stepper,
   speed notes, infeasibility banners, appliance and slider readouts, the
   share-restore label, the init-failure status, and the advisor modal's
@@ -138,11 +176,12 @@ through the injected `setStatus`. No location state lives here.
 
 ## Known remaining debt (deliberate, not forgotten)
 
-- `ui.js` is still ~7.8k lines: form state, rendering glue, Jev badge
-  lifecycle, sliders, modals. Four extraction seams are done (run channel,
-  location picking, chart rendering, share-link codec); each further one
-  should follow the same pattern (policy in a pure module, mechanics stay
-  with the DOM, tests first).
+- `ui.js` is still ~8.0k lines: form state, rendering glue, Jev badge
+  lifecycle, sliders, modals. Six extraction seams are done (run channel,
+  location picking, chart rendering, share-link codec, infeasible-reason copy,
+  parts-list export) and the string contract now has one owner in
+  `shared/interpolate.js`; each further seam should follow the same pattern
+  (policy in a pure module, mechanics stay with the DOM, tests first).
 - The hero, FAQ, parts list, support and legal sections are still
   English-only static markup. Translating them is an editorial pass (six
   locales of long-form prose), not a code change, and nothing in the
