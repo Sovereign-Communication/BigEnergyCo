@@ -628,12 +628,23 @@ test("SCORE: Jev may lower a code fact but never raise one", () => {
   });
   assert.equal(down.facets.testing.index, 0, "live can lower a code fact");
   assert.equal(down.facets.testing.source, "live");
+  // P0.3(c) changed this premise. At the old 95 bar, fifteen facets at proven
+  // plus one at failing still averaged above target, so this test proved that
+  // a high mean cannot buy a pass. At 99 the same shape lands at 98.13, so the
+  // score refuses too — a STRONGER outcome, not a weaker assertion. The pass
+  // decision and the named blocking facet are still asserted below, and the
+  // all-proven exit rule now also fires.
   assert.ok(
-    down.score >= COMPLETE_MIN_SCORE,
-    "score can still be numerically high…",
+    down.score < COMPLETE_MIN_SCORE,
+    "one failing facet now drags the mean under 99 as well",
   );
-  assert.equal(down.pass, false, "…but a blocking facet refuses the pass");
+  assert.equal(down.pass, false, "a blocking facet refuses the pass");
   assert.deepEqual(down.blocking_facets, ["testing"]);
+  assert.deepEqual(
+    down.facets_not_proven,
+    ["testing"],
+    "and the all-proven exit rule names it too",
+  );
 
   // Raise attempt: tests are red (code 0) but Jev claims proven (4).
   const upJudgment = liveAll(4);
