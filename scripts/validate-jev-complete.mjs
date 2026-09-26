@@ -41,6 +41,9 @@ import {
   matchCompleteKeywords,
   mergeEvidence,
   parseLiveAnswers,
+  resolveScopeFacets,
+  readRatchetBaseline,
+  checkRatchet,
   scoreCompleteGate,
 } from "./lib/jev-complete.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
@@ -54,8 +57,8 @@ const TYPESAFE_URL = "https://api.typesafe.ai/v1/systemone";
 function usageError(msg) {
   process.stderr.write(`validate-jev-complete: ${msg}\n`);
   process.stderr.write(
-    "usage: node scripts/validate-jev-complete.mjs [--evidence FILE] [--out FILE] " +
-      "[--json] [--local-only]\n",
+    "usage: node scripts/validate-jev-complete.mjs [--scope P<n>.<m>] " +
+      "[--evidence FILE] [--out FILE] [ --json] [--local-only]\n",
   );
   process.exit(2);
 }
@@ -66,10 +69,14 @@ function parseArgs(argv) {
     out: null,
     json: false,
     localOnly: false,
+    scope: null,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === "--evidence") {
+    if (arg === "--scope") {
+      opts.scope =
+        argv[++i] ?? usageError("--scope requires a plan item id, e.g. P1.1");
+    } else if (arg === "--evidence") {
       opts.evidence =
         argv[++i] ?? usageError("--evidence requires a file path");
     } else if (arg === "--out") {
@@ -298,6 +305,33 @@ function printHuman(report) {
   if (report.blocking_facets.length) {
     process.stdout.write(`blocking: ${report.blocking_facets.join(", ")}\n`);
   }
+  if (report.facets_not_proven && report.facets_not_proven.length) {
+    process.stdout.write(
+      `not proven (${report.facets_not_proven.length}/${Object.keys(report.facets).length}): ${report.facets_not_proven.join(", ")}\n`,
+    );
+  }
+  if (report.scoped) {
+    const s = report.scoped;
+    process.stdout.write(
+      `\nscoped (${s.scope}): ${s.score.toFixed(2)} / 100  (target ${s.min_score})  [${bar(s.pass)}]\n`,
+    );
+    process.stdout.write(`  facets in scope: ${s.facets.join(", ")}\n`);
+    process.stdout.write(
+      `  short of proven: ${s.facets_short_of_proven.length ? s.facets_short_of_proven.join(", ") : "none"}\n`,
+    );
+    process.stdout.write(
+      `  ratchet: ${s.ratchet.status}${
+        s.ratchet.regressions && s.ratchet.regressions.length
+          ? ` — ${s.ratchet.regressions.length} regression(s): ` +
+            s.ratchet.regressions
+              .map(
+                (r) => `${r.axis} ${r.previous_ordinal}->${r.current_ordinal}`,
+              )
+              .join(", ")
+          : ""
+      }\n`,
+    );
+  }
   if (report.required_work.length) {
     process.stdout.write(`required work (by severity):\n`);
     for (const item of report.required_work) {
@@ -387,7 +421,17 @@ export async function main(argv = process.argv.slice(2)) {
     liveJudgment: live,
     keywordGap: live ? null : keywordGap,
   });
+  // The ratchet reads the ledger the plan makes append-only (§13.4). A missing
+  // or unreadable ledger is an inactive ratchet, reported as such — never a
+  // silent pass.
+  let ledgerText = "";
+  try {
+    ledgerText = readFileSync(join(repoRoot, "docs/plan/LEDGER.jsonl"), "utf8");
+  } catch {
+    ledgerText = "";
+  }
   report.target = auto.target;
+  report.scope = opts.scope || null;
   report.auto_facts = {
     tree_clean: auto.treeClean,
     secrets_clean: auto.secretsClean,
@@ -398,6 +442,55 @@ export async function main(argv = process.argv.slice(2)) {
   report.live_jev = { is_fallback: true, ...liveMeta };
   report.evidence_source = opts.evidence || "(none — run records default red)";
 
+  // ── scoped judgment (P0.3(c) / §13.3) ─────────────────────────────────────
+  // The whole-program verdict above is the P10 bar and is expected to fail
+  // until then. A scoped run judges only the facets the named item changes,
+  // against the same target, AND fails on any facet that dropped below the
+  // ordinal the ledger last recorded — in or out of scope.
+  let scopedPass = report.pass;
+  if (opts.scope) {
+    const scopeFacets = resolveScopeFacets(opts.scope, pack);
+    const inScope = {};
+    for (const axis of scopeFacets) inScope[axis] = report.facets[axis];
+    const semantic =
+      Object.values(inScope).reduce((s, f) => s + f.ordinal, 0) /
+      Math.max(1, scopeFacets.length);
+    const scopedCombined = report.hard_gates_passed
+      ? Math.max(
+          0,
+          Math.min(100, 0.7 * report.mechanical_score + 0.3 * semantic),
+        )
+      : 0;
+    const ratchet = checkRatchet(
+      report.facets,
+      readRatchetBaseline(ledgerText, pack),
+    );
+    const short = scopeFacets.filter((a) => report.facets[a].index < 4);
+    scopedPass =
+      report.hard_gates_passed &&
+      scopedCombined >= report.min_score &&
+      ratchet.status !== "violation";
+    report.scoped = {
+      scope: opts.scope,
+      facets: scopeFacets,
+      semantic_score: Math.round(semantic * 100) / 100,
+      score: Math.round(scopedCombined * 100) / 100,
+      min_score: report.min_score,
+      facets_short_of_proven: short,
+      // An inactive ratchet is stated, never implied. It is not a pass.
+      ratchet:
+        ratchet.status === "inactive_no_baseline"
+          ? {
+              status: ratchet.status,
+              note:
+                "no ledger row yet records per-facet ordinals, so there is no " +
+                "previous level to hold; the ratchet did not run",
+            }
+          : ratchet,
+      pass: scopedPass,
+    };
+  }
+
   if (opts.out) {
     writeFileSync(opts.out, JSON.stringify(report, null, 2), "utf8");
   }
@@ -407,7 +500,7 @@ export async function main(argv = process.argv.slice(2)) {
     printHuman(report);
     if (opts.out) process.stdout.write(`report written: ${opts.out}\n`);
   }
-  return report.pass ? 0 : 1;
+  return (opts.scope ? scopedPass : report.pass) ? 0 : 1;
 }
 
 const isDirectRun =
