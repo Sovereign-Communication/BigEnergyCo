@@ -24,8 +24,214 @@ import { readFileSync } from "node:fs";
 
 export const COMPLETE_PACK_PATH = "scripts/lib/jev-complete.pack.json";
 export const COMPLETE_SITE = "jev_complete";
-export const COMPLETE_MIN_SCORE = 95.0;
+// P0.3(c) / D-03: the owner asked for 99/100 on every aspect. The gate
+// previously accepted 95, which is finding F-37's "targets 95, not 99".
+export const COMPLETE_MIN_SCORE = 99.0;
 export const COMPLETE_SCORE_MAX = 100.0;
+
+// Program exit (P10.1) additionally requires EVERY facet at the top level,
+// not just a high average: index 4 == "proven". A single facet left at
+// "confident" is a gap the program has not closed, however good the mean.
+export const COMPLETE_EXIT_FACET_INDEX = 4;
+
+// ── Scoped mode (P0.3(c) / §13.3) ───────────────────────────────────────────
+// WHY THIS EXISTS. The full gate is a whole-program bar: 99 overall with every
+// facet `proven`, which the plan reaches at P10 and not before. §9 rule 6 makes
+// every phase PR carry a Jev report, so a phase PR that did NOT narrow the
+// judgment could never pass until P10 — P1's six truth fixes would be blocked by
+// facets they do not touch. `--scope P<n>.<m>` judges only the facets that item
+// actually changes, against the same 99 bar.
+//
+// The ratchet is the part that stops this being a loophole: a scoped run also
+// fails if ANY facet — in or out of scope — has dropped below the ordinal the
+// ledger last recorded. Without that clause, "scope it narrowly enough" would be
+// a way to hide a regression elsewhere.
+//
+// The plan does not define which facets an item owns. The map below is this
+// implementation's judgment, derived from what each item changes; it is
+// reviewed, not generated, and `tests/jev-scope.test.mjs` fails if a plan item
+// has no entry or names an axis the pack does not have. That makes a newly
+// added P-item a test failure rather than a silent whole-program run.
+export const SCOPE_FACETS = {
+  // P0 — governance, baseline, gates
+  "P0.1": ["spec", "docs"],
+  "P0.2": ["docs"],
+  "P0.3": ["correctness", "security", "testing", "docs"],
+  "P0.4": ["performance", "accessibility", "quality", "testing"],
+  "P0.5": ["security", "docs"],
+  // P1 — live truth fixes
+  "P1.1": ["correctness", "quality"],
+  "P1.2": ["correctness", "quality"],
+  "P1.3": ["security"],
+  "P1.4": ["quality", "docs"],
+  "P1.5": ["security", "performance", "quality"],
+  "P1.6": ["quality", "correctness"],
+  // P2 — registry and provenance
+  "P2.1": ["correctness", "quality"],
+  "P2.2": ["correctness", "docs"],
+  "P2.3": ["correctness"],
+  "P2.4": ["correctness", "quality"],
+  "P2.5": ["correctness", "quality"],
+  "P2.6": ["correctness", "quality"],
+  "P2.7": ["docs", "seo", "correctness"],
+  // P3 — economics engine
+  "P3.1": ["correctness", "quality"],
+  "P3.2": ["correctness", "quality"],
+  "P3.3": ["correctness", "quality"],
+  "P3.4": ["correctness", "quality"],
+  "P3.5": ["correctness", "experience"],
+  "P3.6": ["correctness", "testing"],
+  "P3.7": ["physics", "correctness", "testing"],
+  "P3.8": ["testing"],
+  // P4 — use-case engines
+  "P4.1": ["physics", "correctness"],
+  "P4.2": ["physics", "correctness"],
+  "P4.3": ["physics", "correctness"],
+  "P4.4": ["physics", "correctness"],
+  "P4.5": ["physics", "correctness"],
+  "P4.6": ["physics", "quality"],
+  // P5 — design system, shell, i18n infrastructure
+  "P5.1": ["design", "accessibility"],
+  "P5.2": ["design", "accessibility", "experience"],
+  "P5.3": ["security", "accessibility", "performance"],
+  "P5.4": ["i18n", "quality"],
+  "P5.5": ["i18n"],
+  // P6 — the new app at /next/
+  "P6.1": ["experience", "correctness", "quality", "performance"],
+  "P6.2": ["experience", "correctness"],
+  "P6.3": ["experience", "correctness"],
+  "P6.4": ["experience", "correctness"],
+  "P6.5": ["experience", "correctness"],
+  "P6.6": ["resilience"],
+  "P6.7": ["quality", "testing"],
+  "P6.8": ["performance", "experience"],
+  "P6.9": ["i18n", "quality"],
+  // P7 — advisor 2.0
+  "P7.1": ["advisor", "security"],
+  "P7.2": ["advisor", "security", "quality"],
+  "P7.3": ["advisor", "i18n"],
+  "P7.4": ["advisor", "testing"],
+  // P8 — the swap
+  "P8.1": ["quality", "i18n", "accessibility", "performance"],
+  "P8.2": ["release", "experience"],
+  "P8.3": ["quality", "testing"],
+  "P8.4": ["performance"],
+  "P8.5": ["release", "resilience"],
+  // P9 — reach
+  "P9.1": ["seo", "i18n"],
+  "P9.2": ["seo", "correctness"],
+  "P9.3": ["seo", "correctness"],
+  "P9.4": ["seo"],
+  "P9.5": ["seo", "quality"],
+  "P9.6": ["release", "seo"],
+  // P10 — program exit gate
+  "P10.1": ["correctness", "spec"],
+  "P10.2": ["accessibility", "performance", "physics", "advisor", "quality"],
+  "P10.3": ["quality", "spec"],
+  "P10.4": ["spec"],
+  // P11 — continuous
+  "P11.1": ["i18n"],
+  "P11.2": ["quality", "correctness"],
+  "P11.3": ["release", "resilience"],
+  "P11.4": ["release", "seo"],
+};
+
+/**
+ * The facets a scoped run judges. Returns null for the whole-program run.
+ * Throws on an unknown item so a typo in --scope fails loudly rather than
+ * silently widening to every facet.
+ */
+export function resolveScopeFacets(scopeId, doc) {
+  if (!scopeId) return null;
+  const axes = SCOPE_FACETS[scopeId];
+  if (!axes) {
+    throw new Error(
+      `unknown --scope "${scopeId}": expected a plan item id like P1.1 ` +
+        `(known: ${Object.keys(SCOPE_FACETS).join(", ")})`,
+    );
+  }
+  const known = new Set(Object.keys(doc.axes));
+  const missing = axes.filter((a) => !known.has(a));
+  if (missing.length) {
+    throw new Error(
+      `--scope "${scopeId}" names axes the pack does not have: ${missing.join(", ")}`,
+    );
+  }
+  return [...axes].sort();
+}
+
+/**
+ * The ratchet baseline: the per-facet ordinals the ledger last recorded.
+ *
+ * Returns {status, ...} rather than a bare number, because "no baseline yet"
+ * and "baseline met" must never look the same. `inactive_no_baseline` is an
+ * honest state, not a pass — the caller reports it so a first run cannot be
+ * mistaken for a checked one.
+ */
+export function readRatchetBaseline(ledgerText, doc) {
+  const lines = String(ledgerText || "")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const known = new Set(Object.keys(doc.axes));
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    let row;
+    try {
+      row = JSON.parse(lines[i]);
+    } catch {
+      continue;
+    }
+    const recorded = row?.evidence?.jev?.facet_ordinals;
+    if (recorded && typeof recorded === "object") {
+      return {
+        status: "active",
+        from_ts: row.ts || null,
+        from_ref: row.ref || null,
+        ordinals: Object.fromEntries(
+          Object.entries(recorded).filter(([a]) => known.has(a)),
+        ),
+      };
+    }
+  }
+  return {
+    status: "inactive_no_baseline",
+    from_ts: null,
+    from_ref: null,
+    ordinals: {},
+  };
+}
+
+/**
+ * Compare current facet ordinals against the ratchet baseline. EVERY facet is
+ * compared, not only the scoped ones — that is the anti-loophole clause.
+ */
+export function checkRatchet(facets, baseline) {
+  if (!baseline || baseline.status !== "active") {
+    return { status: "inactive_no_baseline", regressions: [] };
+  }
+  const regressions = [];
+  for (const [axis, f] of Object.entries(facets)) {
+    const prev = baseline.ordinals[axis];
+    if (typeof prev !== "number") continue;
+    if (f.ordinal < prev) {
+      regressions.push({
+        axis,
+        previous_ordinal: prev,
+        current_ordinal: f.ordinal,
+        previous_level: f.level,
+        current_level: f.level,
+      });
+    }
+  }
+  regressions.sort((a, b) => a.current_ordinal - b.current_ordinal);
+  return {
+    status: regressions.length ? "violation" : "met",
+    baseline_ts: baseline.from_ts,
+    baseline_ref: baseline.from_ref,
+    facets_compared: Object.keys(baseline.ordinals).length,
+    regressions,
+  };
+}
 
 // Mechanical points per passing hard gate. Sum == 100.
 export const HARD_GATE_POINTS = {
@@ -659,7 +865,19 @@ export function scoreCompleteGate(
     .filter(([, f]) => f.index <= doc.sentiment.blocking_max_index)
     .map(([axis]) => axis)
     .sort();
-  const pass = allHard && combined >= target && blocking.length === 0;
+
+  // P0.3(c): the program-exit rule. A whole-program run must reach the target
+  // AND leave no facet below `proven`. The average is not enough.
+  const notProven = Object.entries(facets)
+    .filter(([, f]) => f.index < COMPLETE_EXIT_FACET_INDEX)
+    .map(([axis]) => axis)
+    .sort();
+
+  const pass =
+    allHard &&
+    combined >= target &&
+    blocking.length === 0 &&
+    notProven.length === 0;
 
   // ── required work ────────────────────────────────────────────────────────
   const improvementByBucket = {};
@@ -781,6 +999,8 @@ export function scoreCompleteGate(
     min_score: target,
     score: Math.round(combined * 100) / 100,
     pass,
+    hard_gates_passed: allHard,
+    facets_not_proven: notProven,
     hard_gates: gates,
     mechanical_score: mechanical,
     semantic_score: Math.round(semantic * 100) / 100,
