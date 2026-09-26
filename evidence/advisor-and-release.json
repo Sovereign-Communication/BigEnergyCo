@@ -4,34 +4,42 @@
   "seo_green": true,
   "smoke_green": true,
   "ci_green": true,
-  "tests_summary": "749/749 npm test green (749 tests, 749 pass, 0 fail); the CI coverage gate passed on every PR of this release; deploy:check stages the 360-file allowlisted build clean",
-  "ci_summary": "each PR of this release 5/5 green (analyze, coverage, test, web-smoke, CodeQL); main green on Tests, CodeQL, Main audit and Deploy to GitHub Pages; no open PRs, clean tree",
+
+  "tests_summary": "794/794 npm test green (794 tests, 794 pass, 0 fail), measured on this tree. The 749 previously claimed here is stale: P0.1-P0.3b added 45 gates. deploy:check stages the build clean; the promote verifier counts 358 published files.",
+
+  "ci_summary": "every PR through #148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL); main green on Tests, CodeQL, Main audit and Pages deploy. #149 is open, unmerged: its scoped Jev gate exits 1. Branch tree clean.",
+
   "prettier_clean_summary": "prettier 3.9.6 --check repo-wide: all matched files use Prettier code style (exit 0)",
-  "seo_summary": "npm run seo and node scripts/check-chars.mjs exit 0 this release: JSON-LD, sitemap, metadata, characters, i18n, CSP/headers, country files, asset token 20260925c, SW cache beco-v88",
-  "smoke_note": "The browser smoke runs 153 gates, up from 147: six battery-only advisor gates were added where the flow had none. Local this release: 153 pass, 0 fail. Production: 358/358 byte parity, servedStamp 20260925b, verified:true.",
-  "advisor_audit": "measured this release against the live chat and worker paths. All 3 Jev gates pass in a real browser: the badge renders pass-shaped, the inconclusive verdict renders a NEUTRAL badge with the request firing (calls:1), and the badge survives the Simple-mode toggle with no refetch. The advisor button opens the chat modal and sends the brief. On the worker path, invalid kWh and malformed share coordinates are rejected before a worker starts. The provider is stubbed.",
+
+  "seo_summary": "npm run seo and node scripts/check-chars.mjs exit 0: JSON-LD, sitemap, metadata, characters, i18n, CSP/headers, country files, asset token 20260925c, SW cache beco-v88. Unchanged by P0.1-P0.3c, which touch no allowlisted file.",
+
+  "smoke_note": "the browser smoke runs 153 gates. Measured this session: 153 pass, 0 fail locally. Production re-verified today: 358/358 files byte-identical at servedStamp 20260925c, browser smoke passing. The 20260925b previously carried here was wrong.",
+
+  "advisor_audit": "measured against the live chat and worker paths: 3 Jev gates green, the neutral badge proving the request fires (calls:1), no refetch on Simple-mode toggle, worker inputs rejected before start. Mode-blindness fixed: the brief carries the run's hardware config, verified on the wire in a real browser. The provider is stubbed, so this proves the request path, not answer quality.",
+
   "notes": [
-    "the local browser smoke is 147/147 with zero failures. The earlier 146/147 was the Jev badge gate on calls:0 and two runs aborted on 'DevTools endpoint never came up'; all three were transient",
-    "FIXED. chat.js's grid-equivalence block was DEAD: #gridEqBox/#gridEqText exist in no page, so its own guard returned early and its 'before adding panels ... a real off-grid budget' copy could never reach a visitor - verified in a browser, then deleted rather than localized. The LIVE defect was the advisor brief: buildIntakeBrief had no mode signal, so a battery-only visitor could be answered with panels it does not have. It now reads #hardwareConfig/#systemGoal; the POST body is unchanged, so no server contract moved",
-    "the pre-promote probe proved the bug this release fixed: production served stamp 20260925a, which MATCHED the checkout, while 350 of 358 files differed and the smoke failed five gates. bump-asset-tokens --check passes on that tree, so the stamp is now bumped",
-    "freeoffgridcalculator.com answers HTTP 403 with Cf-Mitigated: challenge - a Cloudflare interstitial, not the application. It remains unverifiable from here and is not claimed; only the Pages surface was verified. provider=typesafe direct, key read-only"
+    "the local browser smoke is 153/153, zero failures, measured this session; the 147/147 previously claimed here predates the six battery-only advisor gates",
+    "P0.3a gave the Jev price one canonical constant (0.00042) shared by the gate and the worker, replacing a private 42.0 that was 100,000x the D-13 rate; the worker now records TypeSafe token counts and cost",
+    "P0.3b removed the second Jev provider from every path - both fallback blocks, both key lookups, the health flag, the config key and the doc. OPENROUTER_API_KEY was also deleted as a live Cloudflare Worker secret",
+    "freeoffgridcalculator.com answers HTTP 403 with Cf-Mitigated: challenge - a Cloudflare interstitial, not the application. It remains unverifiable from here and is not claimed; only the Pages surface was verified"
   ],
+
   "facet_evidence": {
-    "spec": "free worldwide estimator, zero runtime dependencies, no paywall or lead capture. This release ships copy fixes, the stamp they needed and four measurements - no new capability",
-    "design": "one owner per piece of state: run-coordinator, share-codec, infeasible-copy, parts-csv, interpolate, fuel-units. The battery-only copy split added no owner: each string is picked from hardwareConfig at its site",
-    "correctness": "the gate is the promote, which refuses to deploy unless staging serves the checkout's stamp at full byte parity with the smoke passing. It did: 358/358 at 20260925c, verified:true",
+    "spec": "free worldwide estimator, zero runtime dependencies, no paywall or lead capture. The adopted master plan is hash-pinned with a plan:check gate in the required test job; amendments need owner approval and the pin refuses a silent edit",
+    "design": "one owner per piece of state: run-coordinator, share-codec, infeasible-copy, parts-csv, interpolate, fuel-units, jev-price. The Jev price has one owner imported by both consumers, gated against a second copy",
+    "correctness": "the gate is the promote, which refuses to deploy unless staging serves the checkout's stamp at full byte parity with the smoke passing. Re-verified today: 358/358 at 20260925c, verified:true",
     "quality": "prettier clean repo-wide; the two duplications the design audit found are gone - one substitution implementation, and the fuel footnote figures derived from the burn table",
-    "security": "tracked-secret scan clean, .env ignored, CSP and headers green on the deployed surface: no unsafe-inline or eval. Verified against the live surface, not the checkout alone",
+    "security": "tracked-secret scan clean, .env ignored, CSP and headers green on the Pages surface: no unsafe-inline or eval. NOT clean on the brand domain: bot mitigation injects window.__CF$cv, which the app's script-src blocks - one live CSP violation, absent on pages.dev. Unfixed",
     "performance": "measured: eager first-load JS is 786,390 bytes LF-normalized against the 790,000 budget, 3,610 headroom. Perf suite 4/4 - payload budget, prefetch warms the memo, repeat run replays the cache",
     "accessibility": "measured in a real browser, 16 gates green: keyboard reaches and wraps with no trap at 64/64/81/47 stops across result, quick, manual and kWh panels; WCAG AA contrast all pass; reduced motion honored when emulated",
-    "i18n": "the i18n gate runs inside npm run seo and is green this release; the battery-only copy shipped across all six locales with key and placeholder parity enforced by that gate",
+    "i18n": "the i18n gate runs inside npm run seo and is green; the battery-only copy shipped across all six locales with parity enforced by that gate. Open: ~29 English-only result-card literals, which the plan removes by deleting ui.js at P8 rather than translating",
     "seo": "sitemap, JSON-LD, metadata, character and canonical checks green; npm run seo exit 0 with asset stamp 20260925c and SW cache beco-v88, the build that shipped",
-    "resilience": "measured: the silent-worker deadline surfaces an honest actionable error, releases the button and recovers on a fresh click; invalid kWh and malformed share coordinates are rejected before any worker starts",
+    "resilience": "measured: the silent-worker deadline surfaces an honest actionable error, releases the button and recovers on a fresh click; invalid kWh and malformed share coordinates are rejected before any worker starts. No dependency fault-injection flows exist yet (planned P6.6)",
     "experience": "battery-only runs no longer promise a payback or a bill cut they cannot deliver: the chip reads peak offset, the frontier verdict prices shifting peak hours, the caption states the cost as a cost",
-    "docs": "ARCHITECTURE names the copy owners and keeps the i18n boundary correct after this pass; the runbook gate table still matches CI, and the promote path it describes is the one used",
-    "testing": "749 tests green. The browser smoke runs 153 gates with zero failures; 28 are battery-only - 24 on the result surfaces and 4 on the advisor brief, which previously had none",
-    "release": "advisor fix merged as #141 and shipped by #142 (stamp 20260925c, cache beco-v88), 5/5 green, promoted 2026-09-25T20:57:24Z; production serves 20260925c at 358/358 parity with the browser smoke passing. freeoffgridcalculator.com still answers 403 challenge - unverified",
-    "advisor": "measured against the live chat and worker paths: 3 Jev gates green, the neutral badge proving the request fires (calls:1), no refetch on Simple-mode toggle, worker inputs rejected before start. Mode-blindness fixed: the brief now carries the run's hardware config",
-    "physics": "verify:live PASSED: live NASA POWER at Honolulu, 10 kWh/day, $0.42/kWh, lfp returned 43,824 hourly records (2021-2025) in 1.4s; off-grid tiers and grid-tie 60/80/95 all sized; SOC gate 6/6, every system reaches 100%"
+    "docs": "measured this session: ARCHITECTURE was corrected where it still described a removed fallback, the twelve superseded plans were archived with a per-file reason, and a gate now fails any live doc whose relative link rots. docs/INDEX.md leads with the governing plan",
+    "testing": "794 tests green, measured on this tree. The browser smoke runs 153 gates, zero failures, of which 30 are battery-only - 24 on result surfaces, 6 on the advisor brief, which previously had none",
+    "release": "advisor fix merged as #141, shipped by #142 (stamp 20260925c, cache beco-v88); P0.1-P0.3b merged as #144, #146-#148, all 5/5. Re-verified today: production at 20260925c, 358/358 parity, browser smoke passing. Brand domain still 403 challenge - unverified",
+    "advisor": "measured against the live chat and worker paths: 3 Jev gates green, the neutral badge proving the request fires (calls:1), no refetch on Simple-mode toggle, worker inputs rejected before start. Mode-blindness fixed: the brief carries the run's hardware config",
+    "physics": "verify:live PASSED: live NASA POWER at Honolulu, 10 kWh/day, $0.42/kWh, lfp returned 43,824 hourly records (2021-2025) in 1.4s; off-grid tiers and grid-tie 60/80/95 all sized; SOC gate 6/6, every system reaching 100%"
   }
 }
