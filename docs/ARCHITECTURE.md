@@ -230,7 +230,9 @@ through the injected `setStatus`. No location state lives here.
   English-only static markup. Translating them is an editorial pass (six
   locales of long-form prose), not a code change, and nothing in the
   calculator depends on it.
-- The live Jev path now runs directly against TypeSafe
-  (`provider=typesafe fallback=false`, recorded across the complete-gate
-  runs); OpenRouter stays configured as the rate-limit backup, and the
+- The live Jev path runs directly against TypeSafe and is the **only** Jev
+  provider (`provider=typesafe fallback=false`, recorded across the complete-gate
+  runs). The former second provider was removed in P0.3(b) under decision D-13,
+  so there is no fallback and no fallback key: a TypeSafe outage yields no Jev
+  verdict, which the client already treats as "hide the badge, silently". The
   deterministic stub still serves the dedicated smoke gates.

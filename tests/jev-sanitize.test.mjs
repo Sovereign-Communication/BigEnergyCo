@@ -134,10 +134,25 @@ test("/api/health exposes the jevSanity gate flag from the key's presence", asyn
   assert.equal(off.jevSanity, false, "no key -> route reported off");
   const on = await (
     await worker.fetch(new Request("https://api.test/api/health"), {
-      OPENROUTER_API_KEY: "k",
+      TYPESAFE_API_KEY: "k",
     })
   ).json();
-  assert.equal(on.jevSanity, true, "backup key present -> route reported on");
+  assert.equal(on.jevSanity, true, "direct key present -> route reported on");
+});
+
+test("P0.3(b): the removed second key alone no longer reports Jev as on", async () => {
+  // A leftover OPENROUTER_API_KEY in the deployed Worker must not resurrect a
+  // second provider by making /api/health advertise Jev as available.
+  const only = await (
+    await worker.fetch(new Request("https://api.test/api/health"), {
+      OPENROUTER_API_KEY: "leftover",
+    })
+  ).json();
+  assert.equal(
+    only.jevSanity,
+    false,
+    "the removed key must not switch the route on",
+  );
 });
 
 test("requestSanity: never asks when health says the route is off (silent, zero noise)", async () => {
@@ -239,47 +254,50 @@ test("/api/jev: full happy path maps the upstream answers into the client contra
   );
 });
 
-test("/api/jev: OpenRouter backs up a failed TypeSafe provider", async () => {
+test("P0.3(b): a failed TypeSafe provider makes NO second call anywhere", async () => {
+  // The behaviour this replaces used to be "the second provider backs up the
+  // first". D-13 removed that provider, so the failure must now be terminal
+  // and silent. A leftover key in env must not produce a second request.
   const calls = [];
   const res = await worker.fetch(jevReq({ state: GOOD_STATE }), {
     TYPESAFE_API_KEY: "typesafe",
-    OPENROUTER_API_KEY: "openrouter",
+    OPENROUTER_API_KEY: "leftover",
     fetch: async (url, options) => {
       calls.push({ url: String(url), body: JSON.parse(options.body) });
-      if (String(url).includes("typesafe"))
-        return new Response("provider down", { status: 503 });
-      return new Response(
-        JSON.stringify({
-          choices: [
-            {
-              message: {
-                content: JSON.stringify({ answers: UPSTREAM_OK.answers }),
+      // Everything except the direct call would be a surviving fallback.
+      if (!String(url).includes("typesafe")) {
+        return new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({ answers: UPSTREAM_OK.answers }),
+                },
               },
-            },
-          ],
-        }),
-        { status: 200 },
-      );
+            ],
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response("provider down", { status: 503 });
     },
   });
   const body = await res.json();
   assert.equal(res.status, 200);
-  assert.equal(body.available, true);
-  assert.equal(body.model, "~typesafe/jev-latest");
+  assert.deepEqual(body, {
+    available: false,
+    reason: "upstream_unavailable",
+  });
   assert.deepEqual(
-    calls.map((call) => call.url),
-    [
-      "https://api.typesafe.ai/v1/systemone",
-      "https://openrouter.ai/api/v1/chat/completions",
-    ],
+    calls.map((c) => c.url),
+    ["https://api.typesafe.ai/v1/systemone"],
+    "exactly one call, to the direct provider — no fallback may be reached",
   );
-  assert.equal(calls[1].body.model, "~typesafe/jev-latest");
 });
 
 test("/api/jev: provider failures remain a silent unavailable result", async () => {
   const res = await worker.fetch(jevReq({ state: GOOD_STATE }), {
     TYPESAFE_API_KEY: "typesafe",
-    OPENROUTER_API_KEY: "openrouter",
     fetch: async () => new Response("provider down", { status: 503 }),
   });
   assert.equal(res.status, 200);
