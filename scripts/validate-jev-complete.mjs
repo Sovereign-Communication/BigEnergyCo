@@ -45,6 +45,8 @@ import {
   readRatchetBaseline,
   checkRatchet,
   scoreCompleteGate,
+  planItemAtLeast,
+  COMPLETE_EXIT_RULE_FROM,
 } from "./lib/jev-complete.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 // P0.3(a) / R-AI-08: the price lives in exactly one module, shared with the
@@ -466,10 +468,14 @@ export async function main(argv = process.argv.slice(2)) {
       readRatchetBaseline(ledgerText, pack),
     );
     const short = scopeFacets.filter((a) => report.facets[a].index < 4);
+    // The all-proven exit rule binds from COMPLETE_EXIT_RULE_FROM. P0.3(c)
+    // defined the rule and is the one item it cannot judge (see the constant).
+    const exitRuleBinds = planItemAtLeast(opts.scope, COMPLETE_EXIT_RULE_FROM);
     scopedPass =
       report.hard_gates_passed &&
       scopedCombined >= report.min_score &&
-      ratchet.status !== "violation";
+      ratchet.status !== "violation" &&
+      (!exitRuleBinds || short.length === 0);
     report.scoped = {
       scope: opts.scope,
       facets: scopeFacets,
@@ -477,6 +483,8 @@ export async function main(argv = process.argv.slice(2)) {
       score: Math.round(scopedCombined * 100) / 100,
       min_score: report.min_score,
       facets_short_of_proven: short,
+      exit_rule_binds_from: COMPLETE_EXIT_RULE_FROM,
+      exit_rule_binding: exitRuleBinds,
       // An inactive ratchet is stated, never implied. It is not a pass.
       ratchet:
         ratchet.status === "inactive_no_baseline"

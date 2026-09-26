@@ -20,6 +20,8 @@ import {
   checkRatchet,
   loadCompletePack,
   scoreCompleteGate,
+  planItemAtLeast,
+  COMPLETE_EXIT_RULE_FROM,
 } from "../scripts/lib/jev-complete.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -218,5 +220,76 @@ test("GATE: the CLI wires --scope through to the exit code", () => {
     cli,
     /readRatchetBaseline/,
     "the CLI must read the ledger for the ratchet baseline",
+  );
+});
+
+// ── The all-proven exit rule binds from P0.4 ─────────────────────────────────
+// P0.3 wrote the rule and is the item it cannot judge: the record must
+// truthfully say the PR is open and its gate failing, which holds correctness
+// below `proven` until it merges, and it cannot merge until the gate passes.
+// The rule therefore starts at the next item — and from there it is stricter
+// than scoped mode ever was, because scoped mode did not enforce it at all.
+test("GATE: the all-proven exit rule starts at P0.4, not at its own author", () => {
+  assert.equal(COMPLETE_EXIT_RULE_FROM, "P0.4");
+  assert.equal(
+    planItemAtLeast("P0.3", COMPLETE_EXIT_RULE_FROM),
+    false,
+    "P0.3 must not be judged by the rule it introduced",
+  );
+  assert.equal(planItemAtLeast("P0.4", COMPLETE_EXIT_RULE_FROM), true);
+  assert.equal(planItemAtLeast("P10", COMPLETE_EXIT_RULE_FROM), true);
+});
+
+// The exemption is coarse because the PLAN is coarse: it lists P0.3 as one
+// item, so "P0.3d" is not an id a scoped run can be given. If the plan ever
+// grows sub-items, this test fails and the binding point must be revisited
+// rather than left quietly one item behind.
+test("GATE: the plan has no P0.3 sub-ids, which is why the rule binds at P0.4", () => {
+  const subIds = PLAN.match(/P0\.3\s*\([a-e]\)|P0\.3[a-e]\b/g) || [];
+  assert.deepEqual(
+    subIds,
+    [],
+    "the plan now has P0.3 sub-items: --scope can name them, so the all-proven " +
+      "exit rule can bind at P0.3(d) instead of exempting the whole of P0.3",
+  );
+});
+
+test("GATE: plan item ordering is (major, minor, letter), and a typo binds nothing", () => {
+  assert.equal(planItemAtLeast("P0.3c", "P0.3d"), false);
+  assert.equal(planItemAtLeast("P0.3d", "P0.3c"), true);
+  assert.equal(planItemAtLeast("P0.4", "P0.3d"), true, "minor rolls over");
+  assert.equal(planItemAtLeast("P1", "P0.3d"), true, "major rolls over");
+  assert.equal(planItemAtLeast("P0.3d", "P0.3d"), true, "equal binds");
+  // Fail closed on anything unparseable: a typo must never silently disable
+  // the exit rule, because that would turn a stricter gate into a no-op.
+  for (const bad of ["P0.3", "", null, undefined, "nonsense", "0.3d"]) {
+    assert.equal(
+      planItemAtLeast(bad, COMPLETE_EXIT_RULE_FROM),
+      false,
+      `unparseable item ${JSON.stringify(bad)} must not count as at-or-after`,
+    );
+  }
+});
+
+test("GATE: a scoped run at or after the binding point fails on any facet short of proven", () => {
+  const cli = readFileSync(
+    join(ROOT, "scripts/validate-jev-complete.mjs"),
+    "utf8",
+  );
+  // The rule must actually gate the scoped exit, not merely be reported.
+  assert.match(
+    cli,
+    /!exitRuleBinds \|\| short\.length === 0/,
+    "from the binding point a scoped run must also require every in-scope facet proven",
+  );
+  assert.match(
+    cli,
+    /planItemAtLeast\(opts\.scope, COMPLETE_EXIT_RULE_FROM\)/,
+    "the binding point must be data, not a hardcoded item id",
+  );
+  assert.match(
+    cli,
+    /exit_rule_binds_from: COMPLETE_EXIT_RULE_FROM/,
+    "the report must state where the rule binds, so it is never implicit",
   );
 });
