@@ -296,6 +296,62 @@ test("GATE: the CLI wires --scope through to the exit code", () => {
   );
 });
 
+// ── §9 rule 6: the P0.3 bootstrap, and what it must never relax ─────────────
+// P0.3 builds the gate that judges it, so a P0.3 sub-PR merges on green CI
+// plus no ratchet regression, even below 99. From P0.4 the ≥ 99 threshold and
+// the all-proven rule bind. The hard gates and the ratchet bind throughout.
+test("GATE: the P0.3 bootstrap relaxes the score, never the ratchet or hard gates", () => {
+  const cli = readFileSync(
+    join(ROOT, "scripts/validate-jev-complete.mjs"),
+    "utf8",
+  );
+  const block = cli.slice(cli.indexOf("scopedPass ="));
+  // The score and all-proven checks must sit INSIDE the !exitRuleBinds guard.
+  assert.match(
+    block,
+    /!exitRuleBinds \|\|\s*\(scopedCombined >= report\.min_score && short\.length === 0\)/,
+    "score and all-proven must only bind at or after the binding point",
+  );
+  // These two must be unconditional: a bootstrap that let a facet regress, or
+  // let a red hard gate through, would be a weakened gate wearing a name.
+  assert.match(
+    block,
+    /report\.hard_gates_passed &&\s*ratchet\.status === "met"/,
+    "hard gates and the ratchet bind for every scope, bootstrap or not",
+  );
+  assert.doesNotMatch(
+    block,
+    /ratchet\.status === "met" &&\s*(!exitRuleBinds|report\.hard_gates_passed)/,
+    "the ratchet and hard gates must not be moved inside the bootstrap guard",
+  );
+  assert.match(
+    cli,
+    /bootstrap_applies: !exitRuleBinds/,
+    "the report must state that the bootstrap applied, so a below-99 pass is never silent",
+  );
+});
+
+test("GATE: an inactive ratchet is not a bootstrap pass", () => {
+  // "No regression" must mean "checked and clean", never "never checked".
+  const b = readRatchetBaseline(LEDGER_WITHOUT, pack);
+  assert.equal(b.status, "inactive_no_baseline");
+  const r = checkRatchet({ release: facet(0) }, b);
+  assert.equal(r.status, "inactive_no_baseline");
+  // The CLI must require a literal "met". `!== "violation"` would let a run
+  // with no baseline at all pass the clause meant to catch a drop.
+  const cli = readFileSync(
+    join(ROOT, "scripts/validate-jev-complete.mjs"),
+    "utf8",
+  );
+  const block = cli.slice(cli.indexOf("scopedPass ="));
+  assert.match(block, /ratchet\.status === "met"/);
+  assert.doesNotMatch(
+    block,
+    /ratchet\.status !== "violation"/,
+    "an inactive ratchet must not satisfy the clause",
+  );
+});
+
 // ── §13.3: the evidence judges the change, not its merge state ──────────────
 // A gate that cannot require its own merge to pass (the P0.3(c) self-judging
 // deadlock) is a gate that can never go green. The record must therefore never
@@ -386,8 +442,8 @@ test("GATE: a scoped run at or after the binding point fails on any facet short 
   // The rule must actually gate the scoped exit, not merely be reported.
   assert.match(
     cli,
-    /!exitRuleBinds \|\| short\.length === 0/,
-    "from the binding point a scoped run must also require every in-scope facet proven",
+    /!exitRuleBinds \|\|\s*\(scopedCombined >= report\.min_score && short\.length === 0\)/,
+    "from the binding point a scoped run must require the score AND every in-scope facet proven",
   );
   assert.match(
     cli,
