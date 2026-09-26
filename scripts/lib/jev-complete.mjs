@@ -34,6 +34,50 @@ export const COMPLETE_SCORE_MAX = 100.0;
 // "confident" is a gap the program has not closed, however good the mean.
 export const COMPLETE_EXIT_FACET_INDEX = 4;
 
+// WHERE that all-proven rule starts judging a SCOPED run.
+//
+// P0.3 is the one item it cannot judge. The rule requires every in-scope facet
+// at `proven`, but the run record must truthfully state that the PR is open and
+// its gate failing — which holds `correctness` below `proven` until the PR
+// merges, and the PR cannot merge until the gate passes. Binding the rule to
+// its own author would make it permanently unsatisfiable.
+//
+// It starts at P0.4, the next item, and binds every item after. Note the
+// granularity honestly: the plan lists P0.3 as ONE item and has no `P0.3d`
+// id (tests/jev-scope.test.mjs pins that), so a scoped run can only ever be
+// named "P0.3" — a "binds from P0.3d" rule would be unexpressible and would
+// silently never bind. The whole of P0.3 is therefore exempt, and P0.3(d)/(e)
+// ride with it. `tests/jev-scope.test.mjs` fails if the plan ever grows
+// sub-ids, so this coarseness cannot go quietly unnoticed.
+//
+// This makes the scoped gate STRICTER from P0.4 on: scoped mode previously did
+// not enforce all-proven at all.
+export const COMPLETE_EXIT_RULE_FROM = "P0.4";
+
+/**
+ * Order two plan item ids on the (major, minor, letter) triple, so
+ * "P0.3c" < "P0.3d" < "P0.4" < "P1". Returns false for anything unparseable
+ * rather than guessing — a typo must not silently disable the exit rule.
+ */
+export function planItemAtLeast(item, min) {
+  const parse = (id) => {
+    // The minor segment is optional: real ids are both "P5.3" and "P1".
+    const m = /^P(\d+)(?:\.(\d+))?([a-z]*)$/.exec(String(id || ""));
+    return m
+      ? [Number(m[1]), m[2] === undefined ? 0 : Number(m[2]), m[3] || ""]
+      : null;
+  };
+  const a = parse(item);
+  const b = parse(min);
+  if (!a || !b) return false;
+  for (let i = 0; i < 3; i += 1) {
+    if (a[i] === b[i]) continue;
+    if (typeof a[i] === "number") return a[i] > b[i];
+    return a[i] > b[i];
+  }
+  return true;
+}
+
 // ── Scoped mode (P0.3(c) / §13.3) ───────────────────────────────────────────
 // WHY THIS EXISTS. The full gate is a whole-program bar: 99 overall with every
 // facet `proven`, which the plan reaches at P10 and not before. §9 rule 6 makes
