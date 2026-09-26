@@ -137,8 +137,19 @@ const LEDGER_WITH = JSON.stringify({
   kind: "item-done",
   ref: "P0.3c",
   evidence: {
-    jev: { facet_ordinals: { release: 85, physics: 100, testing: 100 } },
+    jev: {
+      facet_ordinals: { release: 85, physics: 100, testing: 100 },
+      baseline_advance: { reason: "declared baseline for the ratchet" },
+    },
   },
+});
+// A row that merely records a run: it carries levels but does NOT declare a
+// baseline, so it must never become one.
+const LEDGER_UNDECLARED = JSON.stringify({
+  ts: "2026-09-26",
+  kind: "item-done",
+  ref: "P0.3d",
+  evidence: { jev: { facet_ordinals: { release: 100, physics: 100 } } },
 });
 const LEDGER_WITHOUT = JSON.stringify({
   ts: "2026-09-26",
@@ -146,13 +157,75 @@ const LEDGER_WITHOUT = JSON.stringify({
   ref: "x",
 });
 
-test("GATE: the ratchet reads the LAST ledger row that recorded per-facet levels", () => {
+test("GATE: the ratchet reads the last DECLARED baseline, not the last run row", () => {
   const b = readRatchetBaseline(LEDGER_WITH, pack);
   assert.equal(b.status, "active");
   assert.equal(b.ordinals.release, 85);
   // A later row without facet_ordinals must not erase an earlier baseline.
   const later = `${LEDGER_WITHOUT}\n${LEDGER_WITH}\n${LEDGER_WITHOUT}`;
   assert.equal(readRatchetBaseline(later, pack).status, "active");
+});
+
+test("GATE: an undeclared run row can never become the ratchet baseline", () => {
+  // The loophole this closes: any ordinary ledger append used to reset the
+  // ratchet by carrying facet_ordinals, so a run could clear a real drop by
+  // writing down new numbers.
+  const b = readRatchetBaseline(`${LEDGER_WITH}\n${LEDGER_UNDECLARED}`, pack);
+  assert.equal(b.from_ref, "P0.3c", "the declared row must still win");
+  assert.equal(
+    b.ordinals.release,
+    85,
+    "the undeclared 100 must not be trusted",
+  );
+  assert.equal(b.undeclared_rows_skipped, 1);
+
+  // On its own it is not a baseline at all, and the count is reported.
+  const alone = readRatchetBaseline(LEDGER_UNDECLARED, pack);
+  assert.equal(alone.status, "inactive_no_baseline");
+  assert.equal(alone.undeclared_rows_skipped, 1);
+  assert.equal(alone.reason, null);
+});
+
+test("GATE: a declared baseline must state a reason, or it is not a declaration", () => {
+  for (const bad of [{}, { reason: "" }, { reason: "   " }, "", 0, false]) {
+    const row = JSON.stringify({
+      ts: "t",
+      ref: "x",
+      evidence: {
+        jev: { facet_ordinals: { release: 85 }, baseline_advance: bad },
+      },
+    });
+    const b = readRatchetBaseline(row, pack);
+    assert.equal(
+      b.status,
+      "inactive_no_baseline",
+      `baseline_advance ${JSON.stringify(bad)} must not count as a declaration`,
+    );
+  }
+  // A plain string reason is accepted, so a row can declare itself tersely.
+  const terse = JSON.stringify({
+    ts: "t",
+    ref: "x",
+    evidence: {
+      jev: { facet_ordinals: { release: 85 }, baseline_advance: "measured" },
+    },
+  });
+  const b = readRatchetBaseline(terse, pack);
+  assert.equal(b.status, "active");
+  assert.equal(b.reason, "measured");
+  assert.equal(b.ordinals.release, 85);
+});
+
+test("GATE: a declared baseline still catches a drop below it", () => {
+  // The ruling must not become a blank cheque: declaring a baseline fixes
+  // where the bar sits, it does not stop the bar being enforced.
+  const b = readRatchetBaseline(LEDGER_WITH, pack);
+  const r = checkRatchet(
+    { release: facet(60), physics: facet(100), testing: facet(100) },
+    b,
+  );
+  assert.equal(r.status, "violation");
+  assert.equal(r.regressions[0].axis, "release");
 });
 
 test("GATE: no baseline is reported as inactive, never as a pass", () => {
@@ -223,7 +296,41 @@ test("GATE: the CLI wires --scope through to the exit code", () => {
   );
 });
 
-// ── The all-proven exit rule binds from P0.4 ─────────────────────────────────
+// ── §13.3: the evidence judges the change, not its merge state ──────────────
+// A gate that cannot require its own merge to pass (the P0.3(c) self-judging
+// deadlock) is a gate that can never go green. The record must therefore never
+// describe whether a PR is open, unmerged or waiting on its own gate.
+test("GATE: the run record never tells the judge the PR's merge state", () => {
+  const ev = JSON.parse(
+    readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
+  );
+  // Deliberately narrow: it is the PR's own merge state that is forbidden, not
+  // ordinary English. "Open:" naming a known limitation is fine.
+  const mergeState =
+    /(#\d+\s+is\s+(open|unmerged)|unmerged|not merged|NOT MERGE-READY|its (own\s+)?(scoped\s+)?(jev\s+)?gate exits|waiting on (its|the) (own )?gate|is blocked by (its|the) (own )?gate)/i;
+  const lines = [];
+  for (const k of [
+    "tests_summary",
+    "ci_summary",
+    "smoke_note",
+    "seo_summary",
+    "advisor_audit",
+  ]) {
+    if (typeof ev[k] === "string") lines.push([k, ev[k]]);
+  }
+  (ev.notes || []).forEach((n, i) => lines.push([`note[${i}]`, String(n)]));
+  for (const [k, v] of Object.entries(ev.facet_evidence || {})) {
+    lines.push([`facet.${k}`, String(v)]);
+  }
+  for (const [k, v] of lines) {
+    assert.doesNotMatch(
+      v,
+      mergeState,
+      `evidence.${k} describes the PR's merge state, which §13.3 forbids — ` +
+        "describe the head commit's content, measurements and check outcomes",
+    );
+  }
+});
 // P0.3 wrote the rule and is the item it cannot judge: the record must
 // truthfully say the PR is open and its gate failing, which holds correctness
 // below `proven` until it merges, and it cannot merge until the gate passes.
