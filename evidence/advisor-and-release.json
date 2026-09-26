@@ -7,7 +7,7 @@
 
   "tests_summary": "794/794 npm test green (794 tests, 794 pass, 0 fail), measured on this tree. The 749 previously claimed here is stale: P0.1-P0.3b added 45 gates. deploy:check stages the build clean; the promote verifier counts 358 published files.",
 
-  "ci_summary": "every PR through #148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL); main green on Tests, CodeQL, Main audit and Pages deploy. #149 is open, unmerged: its scoped Jev gate exits 1. Branch tree clean.",
+  "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 798 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached",
 
   "prettier_clean_summary": "prettier 3.9.6 --check repo-wide: all matched files use Prettier code style (exit 0)",
 
@@ -38,7 +38,7 @@
     "experience": "battery-only runs no longer promise a payback or a bill cut they cannot deliver: the chip reads peak offset, the frontier verdict prices shifting peak hours, the caption states the cost as a cost",
     "docs": "measured this session: ARCHITECTURE was corrected where it still described a removed fallback, the twelve superseded plans were archived with a per-file reason, and a gate now fails any live doc whose relative link rots. docs/INDEX.md leads with the governing plan",
     "testing": "794 tests green, measured on this tree. The browser smoke runs 153 gates, zero failures, of which 30 are battery-only - 24 on result surfaces, 6 on the advisor brief, which previously had none",
-    "release": "advisor fix merged as #141, shipped by #142 (stamp 20260925c, cache beco-v88); P0.1-P0.3b merged as #144, #146-#148, all 5/5. Re-verified today: production at 20260925c, 358/358 parity, browser smoke passing. Brand domain still 403 challenge - unverified",
+    "release": "advisor fix merged as #141, shipped by #142 (stamp 20260925c, cache beco-v88); P0.1-P0.3b merged as #144, #146-#148, all 5/5. Re-verified today: production at 20260925c, 358/358 parity, browser smoke passing. Brand domain serves the app past its challenge (F-44)",
     "advisor": "measured against the live chat and worker paths: 3 Jev gates green, the neutral badge proving the request fires (calls:1), no refetch on Simple-mode toggle, worker inputs rejected before start. Mode-blindness fixed: the brief carries the run's hardware config",
     "physics": "verify:live PASSED: live NASA POWER at Honolulu, 10 kWh/day, $0.42/kWh, lfp returned 43,824 hourly records (2021-2025) in 1.4s; off-grid tiers and grid-tie 60/80/95 all sized; SOC gate 6/6, every system reaching 100%"
   }
