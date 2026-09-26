@@ -21,7 +21,7 @@
     "the local browser smoke is 153/153, zero failures, measured this session; the 147/147 previously claimed here predates the six battery-only advisor gates",
     "P0.3a gave the Jev price one canonical constant (0.00042) shared by the gate and the worker, replacing a private 42.0 that was 100,000x the D-13 rate; the worker now records TypeSafe token counts and cost",
     "P0.3b removed the second Jev provider from every path - both fallback blocks, both key lookups, the health flag, the config key and the doc. OPENROUTER_API_KEY was also deleted as a live Cloudflare Worker secret",
-    "freeoffgridcalculator.com answers HTTP 403 with Cf-Mitigated: challenge - a Cloudflare interstitial, not the application. It remains unverifiable from here and is not claimed; only the Pages surface was verified"
+    "freeoffgridcalculator.com 403s non-browser clients, but a real browser passes it and serves the app: verified in Chromium this session, mounts, FX 200, RUM 204. Its only CSP finding is the blocked inline __CF$cv$params script"
   ],
 
   "facet_evidence": {
