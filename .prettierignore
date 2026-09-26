@@ -6,6 +6,10 @@ solar-calculator/
 # Generated source (rewritten by scripts/build-offline-profiles.mjs):
 # formatting it would be undone on every regeneration.
 assets/js/sizing/profiles.js
+# Gate reports (rewritten by scripts/validate-jev-complete.mjs --out on every
+# run): same reason — hand-formatting is undone by the next run, and a report
+# nobody edits by hand is not where formatting drift is worth catching.
+.jev-*-report.json
 # Third-party bundles.
 *.min.js
 # Local tooling state (untracked): never part of the shipped site.
