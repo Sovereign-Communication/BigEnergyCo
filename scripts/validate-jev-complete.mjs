@@ -18,10 +18,11 @@
 //
 // Live Jev (unless --local-only): ONE direct attempt at TypeSafe with the
 // local key (env TYPESAFE_API_KEY / HARNESS_JEV_KEY, else ~/.config/harness/
-// jev.env), then ONE OpenRouter backup (~typesafe/jev-latest, env or .env
-// OPENROUTER_API_KEY), mirroring worker/index.js's bounded fallback — each
-// provider gets a single request with a hard timeout, never a retry loop.
-// Both failing is an honest blocker recorded in the report, not a crash.
+// jev.env) — a single request with a hard timeout, never a retry loop.
+// P0.3(b) / D-13: TypeSafe direct is the ONLY Jev path. The OpenRouter backup
+// that used to follow it is removed, so a provider failure is now an honest
+// blocker recorded in the report rather than a silent reroute to a second
+// provider. Failing is recorded, not crashed, and never worked around.
 //
 // Exit code: 0 only when the gate passes (all hard gates + score >= target +
 // no blocking facet); 1 otherwise; 2 on usage errors. `--out` writes the
@@ -49,8 +50,6 @@ import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 import { jevCostUsd } from "../worker/jev-price.mjs";
 const JEV_TIMEOUT_MS = 15000;
 const TYPESAFE_URL = "https://api.typesafe.ai/v1/systemone";
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const OPENROUTER_MODEL = "~typesafe/jev-latest";
 
 function usageError(msg) {
   process.stderr.write(`validate-jev-complete: ${msg}\n`);
@@ -208,10 +207,10 @@ function resolveKeys(repoRoot) {
       "JEV_API_KEY",
       "TYPESAFE_API_KEY",
     ]);
-  const openRouterKey =
-    fromEnv(["OPENROUTER_API_KEY"]) ||
-    fromFile(join(repoRoot, ".env"), ["OPENROUTER_API_KEY"]);
-  return { typesafeKey, openRouterKey };
+  // P0.3(b) / D-13: OpenRouter is no longer a Jev path, so it is no longer
+  // read from the environment or from .env. Nothing resolves an OpenRouter
+  // key here, and nothing downstream can ask for one.
+  return { typesafeKey };
 }
 
 async function attemptFetch(url, options) {
@@ -268,63 +267,10 @@ async function liveJevCall(stateText, questions, keys) {
     notes.push("direct: no key (TYPESAFE_API_KEY / HARNESS_JEV_KEY)");
   }
 
-  if (keys.openRouterKey) {
-    const r = await attemptFetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${keys.openRouterKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://freeoffgridcalculator.com",
-        "X-Title": "BigEnergyCo complete gate",
-      },
-      signal: AbortSignal.timeout(JEV_TIMEOUT_MS),
-      body: JSON.stringify({
-        model: OPENROUTER_MODEL,
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content:
-              "Return only a typed JSON answer object: {answers: {...}} where each " +
-              "facet key maps to {type:'score', score:<index>, legend:{'0':'<level>',...}, " +
-              "probabilities:{...summing to 1}, confidence:<0..1>} using exactly the " +
-              "criteria levels supplied, plus primary_gap as {type:'choice', choice, " +
-              "probabilities, confidence}. No prose.",
-          },
-          { role: "user", content: JSON.stringify(payload) },
-        ],
-      }),
-    });
-    if (r.ok && r.body) {
-      let parsed = r.body.answers ? r.body : null;
-      if (!parsed) {
-        const content = r.body?.choices?.[0]?.message?.content;
-        if (typeof content === "string") {
-          try {
-            parsed = JSON.parse(content);
-          } catch {
-            parsed = null;
-          }
-        }
-      }
-      if (parsed && parsed.answers) {
-        return {
-          answers: parsed.answers,
-          usage: r.body.usage || null,
-          provider: "openrouter",
-          model: OPENROUTER_MODEL,
-          notes,
-        };
-      }
-      notes.push(`backup: unparseable response (HTTP ${r.status})`);
-    } else {
-      notes.push(
-        `backup: ${r.error ? `network error: ${r.error}` : `HTTP ${r.status}`}`,
-      );
-    }
-  } else {
-    notes.push("backup: no key (OPENROUTER_API_KEY)");
-  }
+  // P0.3(b) / D-13: TypeSafe direct is the ONLY Jev path. The bounded
+  // OpenRouter backup that used to follow it is removed, so a provider outage
+  // is now an honest "no answers" in the report rather than a silent reroute to
+  // a second provider. Do not reintroduce a fallback here without an amendment.
 
   return { answers: null, usage: null, provider: null, model: null, notes };
 }

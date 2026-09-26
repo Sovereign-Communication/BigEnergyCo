@@ -35,8 +35,6 @@ const RATE_MAP_CLEAR_SIZE = 10000;
 // presentation thresholds live client-side in sizing/validate.js.
 const JEV_API_URL = "https://api.typesafe.ai/v1/systemone";
 const JEV_MODEL = "jev-latest";
-const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
-const OPENROUTER_MODEL = "~typesafe/jev-latest";
 const JEV_TIMEOUT_MS = 8000; // quoted 70-500ms; generous ceiling
 
 // P0.3(a) / R-AI-08: the canonical Jev price (D-13) is owned by one module,
@@ -208,8 +206,7 @@ export async function handleJevSanity(request, env, origin) {
   }
 
   const typesafeKey = env && env.TYPESAFE_API_KEY;
-  const openRouterKey = env && env.OPENROUTER_API_KEY;
-  if (!typesafeKey && !openRouterKey) {
+  if (!typesafeKey) {
     // Activation is a deployment concern, not a user-facing error: the
     // client treats any non-available reply as "hide the badge, silently".
     return jsonResponse(
@@ -262,46 +259,14 @@ export async function handleJevSanity(request, env, origin) {
         }
       }
     } catch {
-      // OpenRouter below is the bounded backup for provider-side failures.
+      // A provider-side failure leaves answers null. That is the whole
+      // policy: P0.3(b) removed the second provider, so there is nothing
+      // to fall back to and nothing to retry.
     }
   }
 
-  if (!answers && openRouterKey) {
-    try {
-      const upstream = await doFetch(OPENROUTER_API_URL, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${openRouterKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://freeoffgridcalculator.com",
-          "X-Title": "BigEnergyCo sanity check",
-        },
-        signal: AbortSignal.timeout(JEV_TIMEOUT_MS),
-        body: JSON.stringify({
-          model: OPENROUTER_MODEL,
-          response_format: { type: "json_object" },
-          messages: [
-            {
-              role: "system",
-              content:
-                "Return only the typed JSON answer object with answers.physically_plausible, answers.verdict, and answers.red_flag. No prose.",
-            },
-            { role: "user", content: JSON.stringify({ state, questions }) },
-          ],
-        }),
-      });
-      if (upstream.ok) {
-        const payload = await upstream.json();
-        const content = payload?.choices?.[0]?.message?.content;
-        answers =
-          payload?.answers ||
-          (typeof content === "string" ? JSON.parse(content) : content);
-        model = OPENROUTER_MODEL;
-      }
-    } catch {
-      // Optional sanity only: a failed backup remains an invisible no-badge.
-    }
-  }
+  // P0.3(b) / D-13: there is no second Jev provider. A TypeSafe outage
+  // yields no answers, which the client already treats as "hide the badge".
 
   answers = answers?.answers || answers;
   if (
@@ -741,10 +706,7 @@ export default {
           version: "2.1",
           model: GROQ_PRIMARY_MODEL,
           promptVersion: SYSTEM_PROMPT_VERSION,
-          jevSanity: !!(
-            env &&
-            (env.TYPESAFE_API_KEY || env.OPENROUTER_API_KEY)
-          ),
+          jevSanity: !!(env && env.TYPESAFE_API_KEY),
           rateLimits: {
             perIpPerMinute: RATE_PER_IP_PER_MIN,
             perIpPerDay: RATE_PER_IP_PER_DAY,
