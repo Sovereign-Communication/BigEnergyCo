@@ -2,7 +2,7 @@
   "gate": "jev-complete",
   "pack_id": "bigenergyco-complete-gate-v2",
   "min_score": 99,
-  "score": 94.94,
+  "score": 95.88,
   "pass": false,
   "hard_gates_passed": true,
   "facets_not_proven": [
@@ -30,7 +30,7 @@
     "tree_clean": true
   },
   "mechanical_score": 100,
-  "semantic_score": 83.13,
+  "semantic_score": 86.25,
   "facets": {
     "spec": {
       "bucket": "spec_gap",
@@ -39,7 +39,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.56
+      "confidence": 0.63
     },
     "design": {
       "bucket": "design_gap",
@@ -48,7 +48,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.78
+      "confidence": 0.79
     },
     "correctness": {
       "bucket": "correctness_gap",
@@ -57,7 +57,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.7
+      "confidence": 0.66
     },
     "quality": {
       "bucket": "quality_gap",
@@ -66,16 +66,16 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.59
+      "confidence": 0.52
     },
     "security": {
       "bucket": "security_gap",
       "authority": "jev",
-      "level": "at risk — known gap likely to hurt users or review",
-      "index": 1,
-      "ordinal": 35,
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
       "source": "live",
-      "confidence": 0.36
+      "confidence": 0.81
     },
     "performance": {
       "bucket": "perf_gap",
@@ -93,7 +93,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.64
+      "confidence": 0.6
     },
     "i18n": {
       "bucket": "i18n_gap",
@@ -102,7 +102,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.35
+      "confidence": 0.43
     },
     "seo": {
       "bucket": "seo_gap",
@@ -111,7 +111,7 @@
       "index": 4,
       "ordinal": 100,
       "source": "code",
-      "confidence": 0.82
+      "confidence": 0.81
     },
     "resilience": {
       "bucket": "resilience_gap",
@@ -120,7 +120,7 @@
       "index": 2,
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.7
+      "confidence": 0.72
     },
     "experience": {
       "bucket": "experience_gap",
@@ -138,7 +138,7 @@
       "index": 4,
       "ordinal": 100,
       "source": "live",
-      "confidence": 0.57
+      "confidence": 0.6
     },
     "testing": {
       "bucket": "tests_gap",
@@ -147,7 +147,7 @@
       "index": 4,
       "ordinal": 100,
       "source": "code",
-      "confidence": 0.78
+      "confidence": 0.77
     },
     "release": {
       "bucket": "release_gap",
@@ -156,7 +156,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.19
+      "confidence": 0.59
     },
     "advisor": {
       "bucket": "advisor_gap",
@@ -165,7 +165,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.63
+      "confidence": 0.62
     },
     "physics": {
       "bucket": "physics_gap",
@@ -180,16 +180,16 @@
   "blocking_facets": [],
   "required_work": [
     {
-      "bucket": "security_gap",
-      "label": "Security / consent gap",
-      "path_id": "complete/security",
-      "work_type": "adversarial-fix",
-      "suggested_next_action": "Run the adversarial pass over security surfaces: confirm no secret is tracked, headers/CSP intact, and every sensitive action stays behind explicit user consent; fix what contradicts that.",
-      "axis": "security",
-      "level": "at risk — known gap likely to hurt users or review",
-      "ordinal": 35,
+      "bucket": "i18n_gap",
+      "label": "Localization gap",
+      "path_id": "complete/i18n",
+      "work_type": "contract-tests",
+      "suggested_next_action": "Pin locale parity as a behavioral test (every locale carries every user-visible key), fix the drifting strings it exposes, and keep the parity check green.",
+      "axis": null,
+      "level": null,
+      "ordinal": null,
       "source": "live",
-      "confidence": 0.36,
+      "confidence": null,
       "primary": true
     },
     {
@@ -202,22 +202,24 @@
       "level": "mixed — partial or unverified evidence",
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.7,
+      "confidence": 0.72,
       "primary": false
     }
   ],
   "recommended_actions": {
-    "adversarial-fix": [
+    "contract-tests": [
       {
-        "bucket": "security_gap",
-        "label": "Security / consent gap",
-        "path_id": "complete/security",
-        "suggested_next_action": "Run the adversarial pass over security surfaces: confirm no secret is tracked, headers/CSP intact, and every sensitive action stays behind explicit user consent; fix what contradicts that.",
-        "axis": "security",
-        "level": "at risk — known gap likely to hurt users or review",
-        "ordinal": 35,
+        "bucket": "i18n_gap",
+        "label": "Localization gap",
+        "path_id": "complete/i18n",
+        "suggested_next_action": "Pin locale parity as a behavioral test (every locale carries every user-visible key), fix the drifting strings it exposes, and keep the parity check green.",
+        "axis": null,
+        "level": null,
+        "ordinal": null,
         "primary": true
-      },
+      }
+    ],
+    "adversarial-fix": [
       {
         "bucket": "resilience_gap",
         "label": "Delivery resilience gap",
@@ -230,17 +232,19 @@
       }
     ]
   },
-  "blockers": ["score 94.94 below target 99.00"],
+  "blockers": [
+    "score 95.88 below target 99.00"
+  ],
   "live": {
     "is_fallback": false,
-    "primary_gap": "security_gap",
+    "primary_gap": "i18n_gap",
     "primary_gap_source": "live",
     "notes": [
       "spec:confident — solid with minor gaps",
       "design:confident — solid with minor gaps",
       "correctness:confident — solid with minor gaps",
       "quality:confident — solid with minor gaps",
-      "security:at risk — known gap likely to hurt users or review",
+      "security:confident — solid with minor gaps",
       "performance:confident — solid with minor gaps",
       "accessibility:confident — solid with minor gaps",
       "i18n:confident — solid with minor gaps",
@@ -252,7 +256,7 @@
       "release:confident — solid with minor gaps",
       "advisor:confident — solid with minor gaps",
       "physics:confident — solid with minor gaps",
-      "primary_gap:security_gap"
+      "primary_gap:i18n_gap"
     ]
   },
   "evidence": {
@@ -265,11 +269,11 @@
       "the local browser smoke is 153/153, zero failures, measured this session; the 147/147 previously claimed here predates the six battery-only advisor gates",
       "P0.3a gave the Jev price one canonical constant (0.00042) shared by the gate and the worker, replacing a private 42.0 that was 100,000x the D-13 rate; the worker now records TypeSafe token counts and cost",
       "P0.3b removed the second Jev provider from every path - both fallback blocks, both key lookups, the health flag, the config key and the doc. OPENROUTER_API_KEY was also deleted as a live Cloudflare Worker secret",
-      "freeoffgridcalculator.com answers HTTP 403 with Cf-Mitigated: challenge - a Cloudflare interstitial, not the application. It remains unverifiable from here and is not claimed; only the Pages surface was verified"
+      "freeoffgridcalculator.com 403s non-browser clients, but a real browser passes it and serves the app: verified in Chromium this session, mounts, FX 200, RUM 204. Its only CSP finding is the blocked inline __CF$cv$params script"
     ],
     "dirty_paths": []
   },
-  "target": "chore/p0.3c-score-and-scope @ 485645d",
+  "target": "chore/p0.3c-score-and-scope @ 0fb10bd",
   "scope": "P0.3",
   "auto_facts": {
     "tree_clean": true,
@@ -282,31 +286,34 @@
     "is_fallback": false,
     "provider": "typesafe",
     "model": "jev-1.13.0",
-    "input_tokens": 4307,
-    "cost_usd": 0.00000180894,
+    "input_tokens": 4302,
+    "cost_usd": 0.00000180684,
     "notes": []
   },
   "evidence_source": "evidence/advisor-and-release.json",
   "scoped": {
     "scope": "P0.3",
-    "facets": ["correctness", "docs", "security", "testing"],
-    "semantic_score": 80,
-    "score": 94,
+    "facets": [
+      "correctness",
+      "docs",
+      "security",
+      "testing"
+    ],
+    "semantic_score": 92.5,
+    "score": 97.75,
     "min_score": 99,
-    "facets_short_of_proven": ["correctness", "security"],
+    "facets_short_of_proven": [
+      "correctness",
+      "security"
+    ],
+    "exit_rule_binds_from": "P0.4",
+    "exit_rule_binding": false,
     "ratchet": {
       "status": "violation",
       "baseline_ts": "2026-09-26",
       "baseline_ref": "P0.3c",
       "facets_compared": 16,
       "regressions": [
-        {
-          "axis": "security",
-          "previous_ordinal": 85,
-          "current_ordinal": 35,
-          "previous_level": "at risk — known gap likely to hurt users or review",
-          "current_level": "at risk — known gap likely to hurt users or review"
-        },
         {
           "axis": "resilience",
           "previous_ordinal": 85,
