@@ -205,7 +205,19 @@ export function resolveScopeFacets(scopeId, doc) {
 }
 
 /**
- * The ratchet baseline: the per-facet ordinals the ledger last recorded.
+ * The ratchet baseline: the per-facet ordinals the ledger last DECLARED.
+ *
+ * A run row is not a baseline. The baseline advances only through a row that
+ * explicitly declares itself one (`evidence.jev.baseline_advance`, with a
+ * reason), because the alternative — "the last row that happens to carry
+ * facet_ordinals" — lets any ordinary ledger append silently reset the
+ * ratchet, and treats a row derived from a since-corrected record as ground
+ * truth. Both happened in P0.3(c): the baseline overstated `correctness`
+ * (100 vs an honest 85) and `resilience` (85 vs 60), so a deliberate
+ * re-measurement read as a regression.
+ *
+ * Skipped undeclared rows are counted, not hidden: a run that finds the
+ * ratchet inactive says how many rows it declined to trust.
  *
  * Returns {status, ...} rather than a bare number, because "no baseline yet"
  * and "baseline met" must never look the same. `inactive_no_baseline` is an
@@ -218,6 +230,7 @@ export function readRatchetBaseline(ledgerText, doc) {
     .map((l) => l.trim())
     .filter(Boolean);
   const known = new Set(Object.keys(doc.axes));
+  let undeclared = 0;
   for (let i = lines.length - 1; i >= 0; i -= 1) {
     let row;
     try {
@@ -225,22 +238,37 @@ export function readRatchetBaseline(ledgerText, doc) {
     } catch {
       continue;
     }
-    const recorded = row?.evidence?.jev?.facet_ordinals;
-    if (recorded && typeof recorded === "object") {
-      return {
-        status: "active",
-        from_ts: row.ts || null,
-        from_ref: row.ref || null,
-        ordinals: Object.fromEntries(
-          Object.entries(recorded).filter(([a]) => known.has(a)),
-        ),
-      };
+    const jev = row?.evidence?.jev;
+    const recorded = jev?.facet_ordinals;
+    if (!recorded || typeof recorded !== "object") continue;
+    const declared = jev?.baseline_advance;
+    const reason =
+      typeof declared === "string"
+        ? declared.trim()
+        : declared && typeof declared === "object"
+          ? String(declared.reason || "").trim()
+          : "";
+    if (!reason) {
+      undeclared += 1;
+      continue;
     }
+    return {
+      status: "active",
+      from_ts: row.ts || null,
+      from_ref: row.ref || null,
+      reason,
+      undeclared_rows_skipped: undeclared,
+      ordinals: Object.fromEntries(
+        Object.entries(recorded).filter(([a]) => known.has(a)),
+      ),
+    };
   }
   return {
     status: "inactive_no_baseline",
     from_ts: null,
     from_ref: null,
+    reason: null,
+    undeclared_rows_skipped: undeclared,
     ordinals: {},
   };
 }
