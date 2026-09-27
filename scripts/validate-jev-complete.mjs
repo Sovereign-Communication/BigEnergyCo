@@ -487,7 +487,13 @@ export async function main(argv = process.argv.slice(2)) {
   // the same run two ways.
   attachRunFacts(report, {
     liveMeta,
-    attempted: !opts.localOnly && hasKey !== null,
+    // "Attempted" means a call was made, not that the key environment was
+    // read. The first live run of the jev-complete job caught the difference:
+    // with O-01 undone there is no key, nothing is called, and `hasKey !== null`
+    // reported that as an attempt — so the run was classified a re-runnable
+    // provider error while its own blocker said "no key". A configuration gap
+    // is not a provider failure, and re-running cannot conjure a secret.
+    attempted: !opts.localOnly && hasKey === true,
     hasKey,
     requireLive: opts.requireLive,
     evidence: opts.evidence ? runRecords : null,

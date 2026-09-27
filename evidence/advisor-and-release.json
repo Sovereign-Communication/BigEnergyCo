@@ -5,9 +5,9 @@
   "smoke_green": true,
   "ci_green": true,
 
-  "tests_summary": "832/832 npm test green (832 tests, 832 pass, 0 fail, 0 skipped), measured on this tree at P0.3(e). P0.3(d) added 12 gates: 11 for the five new pack facets, 1 pinning that the ledger's declared baseline actually resolves. P0.3(e) added 16 more, all about where the evidence comes from: a job result can only be written by the job that ran it, the live model has to be a pinned version rather than an alias, and one run may not be described two ways. deploy:check stages the build clean; this tree stages 360 manifest files.",
+  "tests_summary": "833/833 npm test green (833 tests, 833 pass, 0 fail, 0 skipped), measured on this tree at P0.3(e). P0.3(d) added 12 gates: 11 for the five new pack facets, 1 pinning that the ledger's declared baseline actually resolves. P0.3(e) added 17 more, all about where the evidence comes from: a job result can only be written by the job that ran it, the live model has to be a pinned version rather than an alias, one run may not be described two ways, and a run that never called the provider is a configuration gap rather than a provider error. deploy:check stages the build clean; this tree stages 360 manifest files.",
 
-  "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 832 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached. The jev-complete job runs on pull_request only, needs test, web-smoke and coverage, writes its evidence and its report to the runner temp dir so the checkout stays clean, and is red until O-01 lands the TYPESAFE_API_KEY secret.",
+  "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 833 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached. The jev-complete job runs on pull_request only, needs test, web-smoke and coverage, writes its evidence and its report to the runner temp dir so the checkout stays clean, and is red until O-01 lands the TYPESAFE_API_KEY secret.",
 
   "prettier_clean_summary": "prettier 3.9.6 --check repo-wide: all matched files use Prettier code style (exit 0)",
 
