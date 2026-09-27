@@ -39,6 +39,7 @@ const ALL_GREEN = {
   seo_green: true,
   smoke_green: true,
   ci_green: true,
+  legacy_gates_green: true,
   tests_summary: "606/606",
   seo_summary: "ok",
   smoke_note: "ALL GATES PASSED",
@@ -371,18 +372,43 @@ test("HEURISTIC: only code-owned axes move, and only toward their evidence", () 
     ["seo green", { seo_green: true }, { testing: 2, seo: 4, release: 2 }],
     [
       "all release facts green",
-      { ci_green: true, smoke_green: true, tree_clean: true },
+      { legacy_gates_green: true, smoke_green: true, tree_clean: true },
       { testing: 2, seo: 2, release: 4 },
     ],
     [
       "any release fact red",
-      { ci_green: true, smoke_green: false, tree_clean: true },
+      { legacy_gates_green: true, smoke_green: false, tree_clean: true },
       { testing: 2, seo: 2, release: 1 },
     ],
     [
       "release fact unknown",
-      { ci_green: true },
+      { legacy_gates_green: true },
       { testing: 2, seo: 2, release: 2 },
+    ],
+    // The widening must not leak into the axis the ratchet compares. This
+    // release ordinal is what the facet ratchet has been comparing across
+    // runs, so it keeps meaning "the three legacy gates, the smoke and the
+    // tree were green" — and ci_green, which now means every job the
+    // workflow runs, cannot quietly redefine it between two runs.
+    [
+      "a red fourth gate does not move the ratchet's comparison",
+      {
+        ci_green: false,
+        legacy_gates_green: true,
+        smoke_green: true,
+        tree_clean: true,
+      },
+      { testing: 2, seo: 2, release: 4 },
+    ],
+    [
+      "a red legacy gate does move it",
+      {
+        ci_green: true,
+        legacy_gates_green: false,
+        smoke_green: true,
+        tree_clean: true,
+      },
+      { testing: 2, seo: 2, release: 1 },
     ],
   ];
   for (const [name, ev, expect] of cases) {
