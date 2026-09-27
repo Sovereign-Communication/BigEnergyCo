@@ -92,6 +92,31 @@
       "authority": "jev",
       "bucket": "physics_gap",
       "instructions": "Rate PHYSICS/determinism of the sizing engine: hourly irradiance derivations deterministic, thresholds intact (none weakened), and live-model validation status as stated in the evidence."
+    },
+    "provenance": {
+      "authority": "jev",
+      "bucket": "provenance_gap",
+      "instructions": "Rate PROVENANCE of the numbers a visitor reads: does every displayed assumption, price, tariff and benchmark resolve to a cited source with a publisher, a grade and a date that the visitor can open, is an unknown shown as an unknown rather than guessed, and is every multiplier or rule of thumb either sourced or replaced? Judge only what the evidence demonstrates; a value whose source lives in a code comment is not a source a visitor can check."
+    },
+    "comparison": {
+      "authority": "jev",
+      "bucket": "comparison_gap",
+      "instructions": "Rate COMPARISON of the purchase paths: can a visitor see the turnkey installer, the lease or PPA, self-purchase with a licensed electrician, and DIY mounting with an electrician connection, priced for the SAME sized system over the same 20 years with the same definitions, including permits, incentives, replacements and the end-of-term choice, so the gap between them is a real gap and not a difference in what each path counts?"
+    },
+    "usecases": {
+      "authority": "jev",
+      "bucket": "usecases_gap",
+      "instructions": "Rate USE-CASE COVERAGE: does one unified flow offer cutting the bill, time-of-use battery-only savings, essential-load backup in an outage, an emergency reserve held inside the battery, full off-grid independence and portable or mobile power, each with its own outcome metric and its own honest verdict when the numbers do not work? A use case named only in copy is not offered; one that shares another use case's metric is not separately evidenced."
+    },
+    "privacy": {
+      "authority": "jev",
+      "bucket": "privacy_gap",
+      "instructions": "Rate PRIVACY against the free-public mission: zero cookies, no identifier stored or logged, coordinates rounded to 0.01 degrees on the device before any request leaves it, no ad, tracker, affiliate link or lead capture, advisor questions and facts disclosed as leaving the device, and nothing collected that the visitor did not choose to send."
+    },
+    "translation": {
+      "authority": "jev",
+      "bucket": "translation_gap",
+      "instructions": "Rate TRANSLATION quality per shipped locale: key and placeholder parity with English in BOTH directions, no English leakage and no raw key name ever shown to a visitor, numbers, currency, dates and plurals formatted through Intl, natural phrasing rather than machine literals, correct text direction and glyph coverage, and a path for a visitor to suggest a fix without data collection."
     }
   },
   "buckets": {
@@ -239,6 +264,80 @@
       "work_type": "contract-tests",
       "keywords": ["determinism", "threshold", "irradiance", "nasa", "engine"],
       "suggested_next_action": "Pin the physics contract with tests: deterministic derivations, thresholds intact, and a recorded verify:live run — fix any assertion the evidence shows weakened."
+    },
+    "provenance_gap": {
+      "label": "Provenance gap",
+      "path_id": "complete/provenance",
+      "work_type": "audit",
+      "keywords": [
+        "unsourced",
+        "no source",
+        "review_by",
+        "citation",
+        "registry entry",
+        "grade d",
+        "assumed"
+      ],
+      "suggested_next_action": "Trace every visible number back to a source a visitor can open: list each displayed assumption, name the publisher, grade and date behind it, mark every value that has none, and replace each unsourced multiplier with a cited value or an explicit unknown."
+    },
+    "comparison_gap": {
+      "label": "Path comparison gap",
+      "path_id": "complete/comparison",
+      "work_type": "architecture",
+      "keywords": [
+        "lease",
+        "ppa",
+        "four paths",
+        "premium",
+        "break-even",
+        "not modelled",
+        "unmodelled"
+      ],
+      "suggested_next_action": "Model all four purchase paths for one sized system over 20 years from the same registry inputs — turnkey benchmark, lease or PPA terms, self-purchase plus electrician labour, DIY mounting plus inspection — with permits, incentives, replacements and end-of-term choice counted identically, then check the paths rank in an order the evidence explains."
+    },
+    "usecases_gap": {
+      "label": "Use-case coverage gap",
+      "path_id": "complete/usecases",
+      "work_type": "playtest",
+      "keywords": [
+        "use case",
+        "backup",
+        "portable",
+        "reserve",
+        "autonomy",
+        "off-grid"
+      ],
+      "suggested_next_action": "Walk each of the six use cases through the real flow: bill cut, time-of-use battery-only, essential-load backup, an emergency reserve, full off-grid and portable power. For each, record the input a visitor is asked for, the outcome metric returned, and the honest verdict when the numbers do not work; name the step where a use case is only named in copy."
+    },
+    "privacy_gap": {
+      "label": "Privacy gap",
+      "path_id": "complete/privacy",
+      "work_type": "adversarial-fix",
+      "keywords": [
+        "cookie",
+        "tracker",
+        "pii",
+        "fingerprint",
+        "coordinates",
+        "egress",
+        "consent"
+      ],
+      "suggested_next_action": "Adversarially audit data egress: list every request that leaves the device with its payload, prove coordinates are rounded before each one, prove no cookie or identifier is set or logged, remove any ad, tracker or affiliate path, and state each third-party disclosure on the page."
+    },
+    "translation_gap": {
+      "label": "Translation quality gap",
+      "path_id": "complete/translation",
+      "work_type": "contract-tests",
+      "keywords": [
+        "key parity",
+        "placeholder",
+        "english leakage",
+        "back-translation",
+        "glyph",
+        "machine literal",
+        "raw key"
+      ],
+      "suggested_next_action": "Gate each locale on parity in both directions, placeholder integrity, no English leakage and no raw key name reaching a visitor, then back-translate the rendered strings and read them for meaning: fix any string that is technically present and not actually readable."
     }
   }
 }

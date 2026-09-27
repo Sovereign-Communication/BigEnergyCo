@@ -5,9 +5,9 @@
   "smoke_green": true,
   "ci_green": true,
 
-  "tests_summary": "794/794 npm test green (794 tests, 794 pass, 0 fail), measured on this tree. The 749 previously claimed here is stale: P0.1-P0.3b added 45 gates. deploy:check stages the build clean; the promote verifier counts 358 published files.",
+  "tests_summary": "815/815 npm test green (815 tests, 815 pass, 0 fail), measured on this tree. P0.3(d) added 11 gates for the five new pack facets. deploy:check stages the build clean; the promote verifier counts 358 published files.",
 
-  "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 798 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached",
+  "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 815 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached",
 
   "prettier_clean_summary": "prettier 3.9.6 --check repo-wide: all matched files use Prettier code style (exit 0)",
 
@@ -40,6 +40,11 @@
     "testing": "794 tests green, measured on this tree. The browser smoke runs 153 gates, zero failures, of which 30 are battery-only - 24 on result surfaces, 6 on the advisor brief, which previously had none",
     "release": "advisor fix merged as #141, shipped by #142 (stamp 20260925c, cache beco-v88); P0.1-P0.3b merged as #144, #146-#148, all 5/5. Re-verified today: production at 20260925c, 358/358 parity, browser smoke passing. Brand domain serves the app past its challenge (F-44)",
     "advisor": "measured against the live chat and worker paths: 3 Jev gates green, the neutral badge proving the request fires (calls:1), no refetch on Simple-mode toggle, worker inputs rejected before start. Mode-blindness fixed: the brief carries the run's hardware config",
-    "physics": "verify:live PASSED: live NASA POWER at Honolulu, 10 kWh/day, $0.42/kWh, lfp returned 43,824 hourly records (2021-2025) in 1.4s; off-grid tiers and grid-tie 60/80/95 all sized; SOC gate 6/6, every system reaching 100%"
+    "physics": "verify:live PASSED: live NASA POWER at Honolulu, 10 kWh/day, $0.42/kWh, lfp returned 43,824 hourly records (2021-2025) in 1.4s; off-grid tiers and grid-tie 60/80/95 all sized; SOC gate 6/6, every system reaching 100%",
+    "provenance": "measured: 0 registry files (assets/data holds only heatmap-grid.json), no data:check script. 43 tariff regions on a 5-deg grid + 51 US states + 24 currencies hand-written in pricing.js; fxMeta.asOf is null. Turnkey is TURNKEY_MULTIPLIER_LOW 10 / HIGH 5 on our own estimate (ui.js:4714). F-01/F-07/F-08 open",
+    "comparison": "measured: 2 of the 4 D-01 paths exist. lease/PPA: 0 occurrences in assets/js and worker. permit, inspection and interconnection: 0 modelled (4 hits, all prose). incentives: 0. hookup flat $1,500-$3,000 (ui.js:4742-4760). turnkey is a multiplier, not a benchmark",
+    "usecases": "measured: systemGoal offers 2 options (gridtie, offgrid) of D-16's 6 use cases. time-of-use battery-only exists only as hardwareConfig's third option, not a use case. backup, portable and reserve have no use-case surface; backup appears only in copy about a generator. F-13/F-14/F-16 open",
+    "privacy": "measured: 0 cookies (no document.cookie or Set-Cookie in assets/js, worker or index.html). script-src has no unsafe-inline; style-src carries one. Coordinates are NOT rounded: nasa.js:60 passes raw lat/lon to buildUrl, cities.js:311 reverse-geocodes raw; nasa.js:279 rounds the cache key only. R-PRIV-01 open (P1.3)",
+    "translation": "measured: 6 locales (en es pt fr de ar) in ONE 155,329-byte file, so every visitor downloads all six against a 25 KB per-locale budget. 29 keys exist in a non-English locale but not in en, so en cannot fall back for them; the i18n gate checks parity one way only (check-i18n.mjs:44) and passes. RTL is a hard-coded [ar] (check-i18n.mjs:124)"
   }
 }
