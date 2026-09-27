@@ -25,6 +25,7 @@
     "gate:jev-evidence": "node scripts/build-jev-evidence.mjs",
     "gate:byte-budgets": "node scripts/check-byte-budgets.mjs",
     "gate:a11y-matrix": "node scripts/check-a11y-matrix.mjs",
+    "gate:lighthouse": "node scripts/check-lighthouse.mjs",
     "smoke": "node scripts/browser-smoke.mjs",
     "deploy:check": "node scripts/deploy-pages-local.mjs --check",
     "verify:staging": "node scripts/verify-staging.mjs",
@@ -41,6 +42,8 @@
     "@trigger.dev/build": "4.6.3",
     "@types/node": "^26.6.2",
     "axe-core": "4.13.0",
+    "chrome-launcher": "1.2.1",
+    "lighthouse": "13.5.0",
     "playwright": "1.63.0",
     "typescript": "^5.9.3"
   },
