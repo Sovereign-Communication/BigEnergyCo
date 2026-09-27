@@ -9,7 +9,14 @@
 // 3. Cross-browser smoke (Chromium, Firefox, WebKit)
 // 4. Record baseline in LEDGER.jsonl with all Q-metrics
 
-import { execSync } from "node:child_process";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import lighthouse from "lighthouse";
+import { chromium } from "@playwright/test";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const rootDir = join(__dirname, "..");
 
 const Q_METRICS = {
   // From plan §4: Quality metrics (Q-nn)
@@ -17,7 +24,6 @@ const Q_METRICS = {
   // Q-02: Lighthouse mobile and desktop
   // Q-03: axe violations per template/state/theme/direction
   // Q-04: Cross-browser smoke pass rate
-  // (More Q-metrics as defined in plan §4)
 };
 
 function usage() {
@@ -35,6 +41,88 @@ Phases:
   `);
 }
 
+function median(numbers) {
+  const sorted = [...numbers].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 !== 0) return sorted[mid];
+  return (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+async function runLighthouse(url, config = {}) {
+  // Run Lighthouse with given config and return audit scores
+  const options = {
+    logLevel: "error",
+    output: "json",
+    disableDeviceEmulation: false,
+    ...config,
+  };
+
+  try {
+    const runnerResult = await lighthouse(url, options);
+    if (!runnerResult) return null;
+
+    const scores = {
+      performance: Math.round(runnerResult.lhr.categories.performance.score * 100),
+      accessibility: Math.round(runnerResult.lhr.categories.accessibility.score * 100),
+      best_practices: Math.round(runnerResult.lhr.categories["best-practices"].score * 100),
+      seo: Math.round(runnerResult.lhr.categories.seo.score * 100),
+    };
+    return scores;
+  } catch (e) {
+    console.error(`Lighthouse run failed: ${e.message}`);
+    return null;
+  }
+}
+
+async function measureLighthouse(url) {
+  // Measure Lighthouse on desktop and mobile, 3 runs each, report medians
+  const runs = 3;
+  const results = {
+    desktop: { runs: [], medians: null },
+    mobile: { runs: [], medians: null },
+  };
+
+  // Desktop runs
+  console.log("Running Lighthouse desktop (3 runs)...");
+  for (let i = 0; i < runs; i++) {
+    console.log(`  Run ${i + 1}...`);
+    const scores = await runLighthouse(url, {
+      formFactor: "desktop",
+      screenEmulation: false,
+    });
+    if (scores) results.desktop.runs.push(scores);
+  }
+
+  // Mobile runs
+  console.log("Running Lighthouse mobile (3 runs)...");
+  for (let i = 0; i < runs; i++) {
+    console.log(`  Run ${i + 1}...`);
+    const scores = await runLighthouse(url, {
+      formFactor: "mobile",
+    });
+    if (scores) results.mobile.runs.push(scores);
+  }
+
+  // Calculate medians
+  if (results.desktop.runs.length > 0) {
+    const desktopMetrics = {};
+    for (const metric of ["performance", "accessibility", "best_practices", "seo"]) {
+      desktopMetrics[metric] = median(results.desktop.runs.map((r) => r[metric]));
+    }
+    results.desktop.medians = desktopMetrics;
+  }
+
+  if (results.mobile.runs.length > 0) {
+    const mobileMetrics = {};
+    for (const metric of ["performance", "accessibility", "best_practices", "seo"]) {
+      mobileMetrics[metric] = median(results.mobile.runs.map((r) => r[metric]));
+    }
+    results.mobile.medians = mobileMetrics;
+  }
+
+  return results;
+}
+
 async function main(argv) {
   let stageDir = "_pages_staging";
   let outPath = null;
@@ -47,20 +135,50 @@ async function main(argv) {
     else if (argv[i].startsWith("--")) phases = [argv[i].slice(2)];
   }
 
-  console.log(`Quality-Lab Measurement (P0.4b foundation)`);
-  console.log(`Stage: ${stageDir}`);
-  console.log(`Phases: ${phases.join(", ")}`);
-  console.log(`Status: FOUNDATION BRANCH - implementation pending`);
+  const stagePath = join(rootDir, stageDir);
+  if (!existsSync(stagePath)) {
+    console.error(`Stage directory not found: ${stagePath}`);
+    process.exit(1);
+  }
 
-  // Placeholder structure for future implementation
+  console.log(`Quality-Lab Measurement (P0.4b)`);
+  console.log(`Stage: ${stagePath}`);
+  console.log(`Phases: ${phases.join(", ")}`);
+
   const metrics = {
     lighthouse: null,
     axe_violations: null,
     cross_browser_smoke: null,
   };
 
+  // Lighthouse phase
+  if (phases.includes("all") || phases.includes("lighthouse")) {
+    console.log("\n=== Phase: Lighthouse ===");
+    try {
+      // For now, log that Lighthouse phase is pending full implementation
+      console.log("Lighthouse measurement phase - implementation pending");
+      console.log("Requires: static server integration, Chrome/CDP session management");
+    } catch (e) {
+      console.error(`Lighthouse phase failed: ${e.message}`);
+    }
+  }
+
+  // axe phase
+  if (phases.includes("all") || phases.includes("axe")) {
+    console.log("\n=== Phase: axe-core ===");
+    console.log("axe-core measurement phase - implementation pending");
+    console.log("Requires: Playwright browser automation, template matrix scanning");
+  }
+
+  // Cross-browser smoke phase
+  if (phases.includes("all") || phases.includes("smoke")) {
+    console.log("\n=== Phase: Cross-Browser Smoke ===");
+    console.log("Cross-browser smoke phase - implementation pending");
+    console.log("Requires: Chromium, Firefox, WebKit test runs");
+  }
+
   if (outPath) {
-    console.log(`Output path set: ${outPath}`);
+    console.log(`\nOutput will be written to: ${outPath}`);
   }
 }
 
