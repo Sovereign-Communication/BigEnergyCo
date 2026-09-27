@@ -292,7 +292,7 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
           SCOPE="$(node -e '
-            const { resolveCiScope } = await import("./scripts/lib/jev-ci.mjs");
+            const { resolveCiScope } = await import("./scripts/lib/jev-scope.mjs");
             const r = resolveCiScope(process.env.PR_TITLE || "");
             if (!r.scope) {
               process.stderr.write(r.error + "\n");
