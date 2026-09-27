@@ -169,8 +169,28 @@ function initialRequests(html, read, staged) {
   return refs.size + 1; // +1: the document itself
 }
 
+// Comments are not code, and a graph walk that reads them counts files nobody
+// loads. Both comment forms are removed before any import is matched.
+const stripComments = (src) =>
+  src.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/[^\n]*/g, "$1 ");
+
 // The transitive ES module graph from a set of entry scripts: what the browser
 // must fetch before the module executes, which is before step 1 is interactive.
+//
+// The specifiers come from two shapes, and BOTH matter:
+//
+//   from "./x.js"   an import or export with bindings, which is the only place
+//                   this appears in a module — and the import LIST may span
+//                   many lines, so the clause is matched on its own rather than
+//                   as part of a one-line `import ... from` statement. That
+//                   mistake was live: assets/js/sizing/ui.js pulls in
+//                   shared/i18n.js across six lines, and the old walk never saw
+//                   it. It understated the first-result JavaScript by 78.6 KB.
+//   import "./x.js"  a side-effect import, which fetches just as surely.
+//
+// Anything the walk cannot resolve, or that is not a staged file, is dropped —
+// so a false positive costs nothing, while a false negative silently shrinks
+// the number the gate exists to hold.
 function moduleGraph(entries, read, staged) {
   const seen = new Set();
   const queue = [...entries];
@@ -178,11 +198,13 @@ function moduleGraph(entries, read, staged) {
     const rel = queue.shift();
     if (seen.has(rel) || !staged.has(rel) || !rel.endsWith(".js")) continue;
     seen.add(rel);
-    const src = read(rel).toString("utf8");
-    for (const m of src.matchAll(
-      /(?:^|[\s;])(?:import|export)[^;\n]*?from\s*"([^"]+)"/g,
-    )) {
-      const dep = resolveRelative(rel, m[1]);
+    const src = stripComments(read(rel).toString("utf8"));
+    const specifiers = [
+      ...[...src.matchAll(/\bfrom\s*["']([^"']+)["']/g)].map((m) => m[1]),
+      ...[...src.matchAll(/\bimport\s*["']([^"']+)["']/g)].map((m) => m[1]),
+    ];
+    for (const spec of specifiers) {
+      const dep = resolveRelative(rel, spec);
       if (dep) queue.push(dep);
     }
   }
