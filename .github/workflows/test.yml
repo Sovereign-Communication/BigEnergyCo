@@ -188,6 +188,45 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # P0.4's measurement gates. Named by the plan, and the first job in this
+  # workflow that needs `npm ci` — everything else here runs on zero
+  # dependencies, because the smoke suite drives the runner's own Chrome over
+  # raw CDP. axe-core and Playwright are pinned devDependencies (plan §8 P0.4),
+  # and the gate uses Playwright's `channel: "chrome"` to drive the Chrome the
+  # runner already has, so this job needs no Playwright browser download. The
+  # Firefox and WebKit downloads belong to Q-08's cross-browser cluster, which
+  # is the one that genuinely requires them.
+  quality-lab:
+    runs-on: ubuntu-latest
+    # Measured locally at ~3 minutes for the 11-cell matrix, of which the
+    # heatmap cell is most. 25 leaves room for a cold npm ci without racing.
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install the pinned devDependencies
+        run: npm ci --no-audit --no-fund
+      - name: Stage the build the matrix audits
+        run: node scripts/deploy-pages-local.mjs --check --stage _pages_a11y
+      - name: axe-core over the template x state x theme x direction matrix (Q-07)
+        id: a11y-matrix
+        run: node scripts/check-a11y-matrix.mjs --stage _pages_a11y --out a11y-report.json
+      # The report is the evidence: which cells ran, what each one found, and
+      # which combinations do not apply and why. Uploaded even on failure,
+      # because a red cell is the thing someone has to read.
+      - name: Upload the matrix report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: a11y-matrix-report
+          path: a11y-report.json
+          if-no-files-found: error
+          retention-days: 7
+
   # Coverage floor on the deterministic core. Scope is deliberate: the sizer's
   # math modules are the ones a wrong edit silently misprices, and the full
   # suite under instrumentation outruns a reasonable job timeout. Thresholds

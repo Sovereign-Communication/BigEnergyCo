@@ -191,7 +191,7 @@ const stripComments = (src) =>
 // Anything the walk cannot resolve, or that is not a staged file, is dropped —
 // so a false positive costs nothing, while a false negative silently shrinks
 // the number the gate exists to hold.
-function moduleGraph(entries, read, staged) {
+export function moduleGraph(entries, read, staged) {
   const seen = new Set();
   const queue = [...entries];
   while (queue.length) {
@@ -211,7 +211,7 @@ function moduleGraph(entries, read, staged) {
   return seen;
 }
 
-function scriptEntries(html, staged, from = "index.html") {
+export function scriptEntries(html, staged, from = "index.html") {
   const out = [];
   for (const m of html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/gi)) {
     const rel = resolveRelative(from, m[1]);

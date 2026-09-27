@@ -307,7 +307,66 @@ finding no heatmap page, resolving a `fetch()` against the script instead of the
 document, reading an absent subject as 0, printing a count as bytes, and
 comparing an unreadable metric anyway.
 
+## Accessibility matrix (P0.4(b): plan Q-07, axe over template × state × theme × direction)
+
+`scripts/lib/quality-matrix.mjs` decides **what** is audited and
+`scripts/check-a11y-matrix.mjs` runs it. They share no state: the library takes a
+staged build as data and returns the declared dimensions, the cells, the
+combinations that do not apply, and the per-cell ratchet; the driver supplies the
+disk and the browser.
+
+| module                           | owns                                                                                             | touches the network/disk?                  |
+| -------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| `scripts/lib/quality-matrix.mjs` | the four declared dimensions, the per-cell steps, the axe tag set, the per-cell bar, the ratchet | no — takes `{files, read}`                 |
+| `scripts/check-a11y-matrix.mjs`  | the stage server, one browser per cell, axe injection, the report                                | serves locally, drives the runner's Chrome |
+
+Four things worth knowing before changing any of it:
+
+- **A dimension the product lacks is still declared.** There is no theme in this
+  build, so the theme dimension carries one value, `none`, with the evidence for
+  its absence in the value itself. Dropping the dimension would shrink the cell
+  count and make the matrix look smaller than it is; inventing a dark theme would
+  audit something that does not exist.
+- **A cell exists only where the state does.** A blog post has no result card, so
+  that combination is recorded as not applicable **with a reason** — because "we
+  chose not to" and "we did, and it was clean" are different answers to "why was
+  this not audited?".
+- **Direction follows the module graph, not the markup.** `dir` is set by
+  `shared/i18n.js`, which the home page reaches through `ui.js` without ever naming
+  it. The matrix walks the graph — the same walk the byte budgets own — so a
+  translated page is not mistaken for an untranslated one.
+- **A hole is never a pass.** A cell that cannot be audited records
+  `violations: null, status: "unauditable"`, the bar reader refuses it, and the run
+  exits 1. Today the heatmap cell is exactly that: axe's `best-practice` tag does
+  not finish on that page (541s, then the renderer died, while every WCAG tag
+  completes in 0.7–6.4s). The rule set is not narrowed to make it pass.
+
+The driver bypasses CSP **on the audit context only**: the product ships a strict
+`script-src`, which correctly refuses axe injected as an inline script — the first
+version of this probe died on exactly that. The product's own policy is untouched
+and stays asserted by the smoke suite's CSP gate. Each cell also gets its own
+browser and a hard deadline, because a page that takes its renderer down must cost
+one cell and not the run.
+
+Guarded by `tests/quality-matrix.test.mjs` — the four dimensions, the
+representative, state applicability, graph-based direction, every driven selector,
+the tag set, the ratchet, the hole rule and the per-cell bar. Eleven mutations,
+each caught by its named assertion.
+
 ## Known remaining debt (deliberate, not forgotten)
+
+- **Five axe violations the P0.4(b) baseline now measures, in four cells.** Two on
+  a completed run, in both text directions: `aria-required-children` (critical) at
+  the cumulative-cost legend `#cumCostLegend`, and `nested-interactive` (serious) on
+  the result chart's `svg`. One on the blog index (`region`, moderate), one on a
+  blog post (`scrollable-region-focusable`, serious), two on 404
+  (`landmark-one-main` and `region`, both moderate). Q-07's cap is 0 per cell and is
+  absolute from P5/P8, so these are named debt with a measured baseline behind
+  them, not a gate that was loosened.
+- **The heatmap cell cannot be audited at all.** axe's `best-practice` tag does not
+  finish on that page: 541 seconds, then the renderer is gone. Every WCAG tag
+  completes in 0.7–6.4s, and a `wcag2aa` violation is already known on that page.
+  Until the cause is found the cell is a hole, and a hole is not a pass.
 
 - `ui.js` is still ~8.0k lines (7,999 at this writing): form state, rendering
   glue, Jev badge lifecycle, sliders, modals. Seven extraction seams are done

@@ -1,5 +1,30 @@
 version: 2
 updates:
+  # R-PRIV-04, and P0.4's last line of work: the npm ecosystem had no
+  # Dependabot at all, so a pinned devDependency could only rot until someone
+  # noticed. axe-core and Playwright are pinned exactly (plan §8 P0.4 names them
+  # as pinned devDependencies), which is exactly the state Dependabot keeps
+  # honest.
+  #
+  # Grouped and limited to one open PR for the same reason as the action
+  # ecosystem below: CI runs on a free account, so every dependency PR costs a
+  # full matrix. Playwright in particular is version-coupled to its browser
+  # builds, so separate bumps for it and for axe-core would be two PRs to
+  # review for one dependency tree.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 1
+    groups:
+      npm:
+        patterns:
+          - "*"
+    # Only version updates: an audit alert on a devDependency is CodeQL's and
+    # the secret scan's business, and a security bump here would land in the
+    # same one-PR-at-a-time queue as everything else.
+    labels:
+      - dependencies
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
