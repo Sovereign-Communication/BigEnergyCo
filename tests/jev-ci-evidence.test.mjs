@@ -43,13 +43,19 @@ import {
   parseJobResult,
   runRecordsFromArtifacts,
   composeEvidence,
-  resolveCiScope,
+  evidenceSourceKind,
+} from "../scripts/lib/jev-evidence.mjs";
+import { resolveCiScope } from "../scripts/lib/jev-scope.mjs";
+import {
   acceptLiveJudgment,
   attachRunFacts,
   classifyRun,
-  evidenceSourceKind,
   gateExitCode,
-} from "../scripts/lib/jev-ci.mjs";
+  liveRunRecord,
+} from "../scripts/lib/jev-run.mjs";
+// F-37: the price has one owner, shared with the worker. Imported here so the
+// assertion below fails if the record ever grows a private rate.
+import { jevCostUsd } from "../worker/jev-price.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const BUILDER = join(ROOT, "scripts/build-jev-evidence.mjs");
@@ -378,6 +384,101 @@ test("LIVE: the report's run class encodes the one re-run the plan allows", () =
     classifyRun({ attempted: true, accepted: false }).rerun_allowed,
     true,
     "a provider error may be re-run once",
+  );
+});
+
+test("RUN: the live-run record is assembled in one place, once per outcome", () => {
+  // The live-run state used to be four hand-written object literals in the CLI,
+  // one per branch, so the shape of what the report reads was decided by whoever
+  // was calling. Its owner is scripts/lib/jev-run.mjs now, and this pins all
+  // four outcomes against that one function.
+  const skipped = liveRunRecord({ skipped: true });
+  assert.deepEqual(skipped, {
+    is_fallback: true,
+    accepted: false,
+    blocker: "not attempted (--local-only)",
+  });
+  assert.equal(
+    skipped.provider,
+    undefined,
+    "nothing was called, so no provider",
+  );
+  assert.equal(
+    skipped.model,
+    undefined,
+    "no model may be named for a call never made",
+  );
+
+  // Called, no key: the honest "no answers" case, named from the wire's own note.
+  const noKey = liveRunRecord({
+    wire: {
+      answers: null,
+      provider: null,
+      model: null,
+      notes: ["direct: no key"],
+    },
+  });
+  assert.equal(noKey.provider, null);
+  assert.equal(noKey.blocker, "direct: no key");
+  assert.equal(noKey.accepted, false);
+  assert.deepEqual(noKey.notes, ["direct: no key"]);
+
+  // Answered, but the provider named no version: refused for that reason, not
+  // for a generic one.
+  const unpinned = liveRunRecord({
+    wire: {
+      answers: { a: 1 },
+      provider: "typesafe",
+      model: "jev-latest",
+      notes: [],
+    },
+    pin: { accepted: false, model: "jev-latest", blocker: "echoed the alias" },
+    parsed: { facets: {} },
+  });
+  assert.equal(unpinned.blocker, "echoed the alias");
+  assert.equal(unpinned.model, "jev-latest");
+  assert.equal(unpinned.is_fallback, true);
+
+  // Pinned, but the engine could not read a single facet answer. A different
+  // reason to refuse, and it says which.
+  const unreadable = liveRunRecord({
+    wire: {
+      answers: { a: 1 },
+      provider: "typesafe",
+      model: "jev-1.13.0",
+      notes: [],
+    },
+    pin: { accepted: true, model: "jev-1.13.0", blocker: null },
+    parsed: null,
+  });
+  assert.equal(unreadable.accepted, false);
+  assert.match(unreadable.blocker, /0-hallucination/);
+
+  // The one accepted shape, with the cost taken from the shared rate (F-37:
+  // a private 42.0 in this file was 100,000x the D-13 rate).
+  const good = liveRunRecord({
+    wire: {
+      answers: { a: 1 },
+      usage: { input_tokens: 5733 },
+      provider: "typesafe",
+      model: "jev-1.13.0",
+      notes: [],
+    },
+    pin: { accepted: true, model: "jev-1.13.0", blocker: null },
+    parsed: { facets: {} },
+  });
+  assert.equal(good.accepted, true);
+  assert.equal(good.is_fallback, false);
+  assert.equal(good.input_tokens, 5733);
+  assert.equal(
+    good.cost_usd,
+    jevCostUsd(5733),
+    "the cost comes from the one module that owns the rate, never a private constant",
+  );
+  assert.equal(
+    good.model_requested,
+    "jev-latest",
+    "what was asked for is recorded too",
   );
 });
 

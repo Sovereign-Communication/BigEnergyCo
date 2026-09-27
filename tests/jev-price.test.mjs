@@ -61,11 +61,14 @@ test("GATE: jevCostUsd never returns NaN for junk telemetry", () => {
   }
 });
 
-test("GATE: the gate script imports the price, it does not redeclare it", () => {
-  const gate = stripComments(read("scripts/validate-jev-complete.mjs"));
+test("GATE: the gate imports the price, it does not redeclare it", () => {
+  // The gate's cost now lives where the live-run record is assembled
+  // (scripts/lib/jev-run.mjs), which is the module that owns that record. The
+  // assertions are unchanged: import the shared module, never restate it.
+  const gate = stripComments(read("scripts/lib/jev-run.mjs"));
   assert.match(
     gate,
-    /from\s+"\.\.\/worker\/jev-price\.mjs"/,
+    /from\s+"\.\.\/\.\.\/worker\/jev-price\.mjs"/,
     "the gate must import the shared price module",
   );
   assert.doesNotMatch(
@@ -102,6 +105,9 @@ test("GATE: no second copy of the price exists anywhere in the Jev path", () => 
     "worker/index.js",
     "worker/jev-price.mjs",
     "scripts/lib/jev-complete.mjs",
+    // The live-run record assembles cost_usd, so it is a place a private rate
+    // could reappear.
+    "scripts/lib/jev-run.mjs",
   ];
   for (const rel of consumers) {
     const body = read(rel);

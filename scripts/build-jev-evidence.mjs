@@ -38,7 +38,7 @@ import {
   evidenceSourceKind,
   parseJobResult,
   RUN_RECORD_FIELDS,
-} from "./lib/jev-ci.mjs";
+} from "./lib/jev-evidence.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 
 const USAGE =
