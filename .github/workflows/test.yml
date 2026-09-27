@@ -226,6 +226,105 @@ jobs:
           path: a11y-report.json
           if-no-files-found: error
           retention-days: 7
+      # P0.4(c): this job is a required gate, and a required gate's real
+      # outcome is part of what `ci_green` means. The evidence builder derives
+      # the required set from this workflow, so this job records its result for
+      # the gate exactly as the other three do — without this, a red
+      # `quality-lab` left `ci_green` reading TRUE in the record the judge
+      # reads directly.
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/quality-lab.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "quality-lab",
+              conclusion: "${{ job.status }}",
+              steps: { "a11y-matrix": "${{ steps.a11y-matrix.outcome }}" },
+            };
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+          '
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-quality-lab
+          path: jev-artifacts/quality-lab.json
+          if-no-files-found: error
+          retention-days: 7
+
+  # Q-02 / Q-03: Lighthouse over every page template, mobile and desktop, median
+  # of 3 runs on the staged build. A separate job from quality-lab because the
+  # two gates have different failure modes and different runtimes: the matrix
+  # is axe over 11 cells, this is 42 Lighthouse passes, and a regression in
+  # either should name itself rather than appear as the other one failing.
+  #
+  # CONSEQUENCE, STATED RATHER THAN DISCOVERED: scripts/lib/jev-evidence.mjs
+  # derives `ci_green`'s required set from this workflow's own job list, so
+  # adding this job makes it a required gate AUTOMATICALLY, with no code change
+  # anywhere. A red `lighthouse` therefore takes `ci_green` red with it, and the
+  # 15-point ci_green hard gate goes red in the judge's record. That is the
+  # design working. Nothing here carves out an exemption to soften a score, and
+  # a future change that wants one should have to argue for it in the open.
+  lighthouse:
+    runs-on: ubuntu-latest
+    # 14 targets x 3 runs at ~7-12s each, measured locally at ~6 minutes, plus
+    # a cold npm ci (lighthouse + chrome-launcher) and the stage build. 30 leaves
+    # headroom for a slower runner without racing the free-tier queue.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install the pinned devDependencies
+        run: npm ci --no-audit --no-fund
+      - name: Stage the build Lighthouse audits
+        run: node scripts/deploy-pages-local.mjs --check --stage _pages_lighthouse
+      - name: Lighthouse over every page template, mobile and desktop (Q-02)
+        id: lighthouse
+        run: node scripts/check-lighthouse.mjs --stage _pages_lighthouse --out lighthouse-report.json
+      # The report is the proof: the raw per-run scores, the median, the floors,
+      # the Q-02 breaches and the variance calibration behind the ratchet split.
+      # Uploaded even on failure, because a red score is the thing to read.
+      - name: Upload the Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-report
+          path: lighthouse-report.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/lighthouse.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "lighthouse",
+              conclusion: "${{ job.status }}",
+              steps: { lighthouse: "${{ steps.lighthouse.outcome }}" },
+            };
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+          '
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-lighthouse
+          path: jev-artifacts/lighthouse.json
+          if-no-files-found: error
+          retention-days: 7
 
   # Coverage floor on the deterministic core. Scope is deliberate: the sizer's
   # math modules are the ones a wrong edit silently misprices, and the full
@@ -272,7 +371,10 @@ jobs:
           retention-days: 7
 
   # The live Jev gate as a CI job (plan §8 P0.3(e), §13.2, §13.3). It judges the
-  # plan item the PR names, against evidence built from the three jobs above.
+  # plan item the PR names, against evidence built from the gate jobs above —
+  # every job this workflow runs but this one, derived from this file rather
+  # than listed anywhere in the evidence code, so a gate added here is covered
+  # the day it is added.
   #
   # pull_request only, deliberately. The scoped Jev report is a PR obligation
   # (§9 rule 6); the full run belongs to P10 and to P11.3's weekly sweep, which
@@ -286,14 +388,17 @@ jobs:
   # not a gate result. That red is the standing, visible reminder of exactly one
   # owner action, and it disappears the moment the secret exists.
   jev-complete:
-    if: github.event_name == 'pull_request'
-    needs: [test, web-smoke, coverage]
+    # `always()` because a red gate is precisely the run that needs a record:
+    # without it GitHub skips this job on a red dependency, and the run where
+    # `ci_green` reads false would produce no evidence at all.
+    if: always() && github.event_name == 'pull_request'
+    needs: [test, web-smoke, quality-lab, lighthouse, coverage]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
-          # The gate reads the working tree AND consumes the three jobs' own
+          # The gate reads the working tree AND consumes the required jobs' own
           # results, so it must judge the same tree they ran on. On a
           # pull_request, actions/checkout's default is the merge ref — the
           # commit that would actually land. Naming it explicitly keeps the

@@ -31,15 +31,25 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   composeEvidence,
   evidenceSourceKind,
   parseJobResult,
+  requiredJobsFromWorkflow,
   RUN_RECORD_FIELDS,
 } from "./lib/jev-evidence.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
+
+// The workflow these artifacts came from, resolved against this script rather
+// than the caller's cwd: "CI was green" is defined by what the workflow runs,
+// and the one that runs it is this repository's own file. There is deliberately
+// no flag to point elsewhere — a required set is not an input an operator gets
+// to choose.
+const WORKFLOW = fileURLToPath(
+  new URL("../.github/workflows/test.yml", import.meta.url),
+);
 
 const USAGE =
   "usage: node scripts/build-jev-evidence.mjs --artifacts DIR --out FILE " +
@@ -153,14 +163,39 @@ export function main(argv = process.argv.slice(2)) {
   }
 
   const { artifacts, ignored } = readArtifacts(opts.artifacts);
+  // The required set, from the workflow's own declarations rather than a list
+  // kept beside this script: a gate the workflow runs and the record has never
+  // heard of is exactly how ci_green came to read true on a red run.
+  const preProblems = [];
+  let requiredJobs = [];
+  try {
+    requiredJobs = requiredJobsFromWorkflow(readFileSync(WORKFLOW, "utf8"));
+    if (requiredJobs.length === 0) {
+      preProblems.push(
+        `no required jobs could be derived from ${WORKFLOW}, so ci_green is unproven`,
+      );
+    }
+  } catch (err) {
+    preProblems.push(
+      `the workflow ${WORKFLOW} could not be read (${err.message}), so the required job set is unproven`,
+    );
+  }
   const { evidence, problems } = composeEvidence({
     artifacts,
+    requiredJobs,
     prose,
     run: runProvenance(opts),
     generatedAt: opts.now || new Date().toISOString(),
+    problems: preProblems,
   });
   if (ignored.length) {
     evidence.ci.ignored_files = ignored;
+  }
+  if (requiredJobs.length) {
+    // Recorded so a reader of the file can see which gates "CI was green"
+    // meant on this run, without re-deriving it from a workflow that has
+    // since gained a job.
+    evidence.ci.required_jobs = requiredJobs;
   }
 
   const outDir = dirname(opts.out);
@@ -171,6 +206,7 @@ export function main(argv = process.argv.slice(2)) {
   const green = problems.length === 0;
   process.stdout.write(
     `evidence: ${opts.out} (${kind})\n` +
+      `required jobs: ${requiredJobs.length ? requiredJobs.join(" ") : "none derived"}\n` +
       // Every run record, named from the field list rather than guessed from a
       // suffix: a `_clean` field would otherwise be silently left out of the
       // very line that claims to report them all.

@@ -40,7 +40,9 @@ import {
   EVIDENCE_GENERATED_BY,
   RUN_RECORD_FIELDS,
   CODE_OWNED_FIELDS,
+  LEGACY_GATE_JOBS,
   parseJobResult,
+  requiredJobsFromWorkflow,
   runRecordsFromArtifacts,
   composeEvidence,
   evidenceSourceKind,
@@ -62,6 +64,24 @@ const BUILDER = join(ROOT, "scripts/build-jev-evidence.mjs");
 const CLI = join(ROOT, "scripts/validate-jev-complete.mjs");
 const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
 
+// The required set is read from the workflow, never hand-listed here: a test
+// that pinned the list would be the same drift the field had, one file over.
+const WORKFLOW_REL = ".github/workflows/test.yml";
+const WORKFLOW_YAML = read(WORKFLOW_REL);
+const WORKFLOW_PATH = join(ROOT, WORKFLOW_REL);
+const REQUIRED = requiredJobsFromWorkflow(WORKFLOW_YAML);
+
+// A job's block runs until the next line indented by exactly two spaces and
+// then a non-space. Matching "\n  " alone would stop at the first nested line,
+// because every deeper line contains it as a substring.
+const jobBlock = (yaml, name) => {
+  const start = yaml.search(new RegExp(`^  ${name}:$`, "m"));
+  assert.notEqual(start, -1, `the ${name} job exists`);
+  const rest = yaml.slice(start);
+  const next = rest.slice(1).search(/\n {2}\S/);
+  return next === -1 ? rest : rest.slice(0, next + 1);
+};
+
 const GREEN = {
   test: {
     job: "test",
@@ -73,10 +93,24 @@ const GREEN = {
     conclusion: "success",
     steps: { smoke: "success" },
   },
+  "quality-lab": {
+    job: "quality-lab",
+    conclusion: "success",
+    steps: { "a11y-matrix": "success" },
+  },
   coverage: {
     job: "coverage",
     conclusion: "success",
     steps: { coverage: "success" },
+  },
+  // Q-02's gate. It is a required job because the workflow declares it, and
+  // the derivation is what makes a new gate required without a code edit — so
+  // every "all gates green" fixture has to carry it, exactly as it had to carry
+  // `quality-lab` when that job arrived.
+  lighthouse: {
+    job: "lighthouse",
+    conclusion: "success",
+    steps: { lighthouse: "success" },
   },
 };
 
@@ -147,12 +181,13 @@ const RED_TESTS = {
   },
   "web-smoke": GREEN["web-smoke"],
   coverage: GREEN.coverage,
+  lighthouse: GREEN.lighthouse,
 };
 
 test("EVIDENCE: every run record comes from the artifacts, never from prose", () => {
   // The F-45 killer: prose says green, CI says red. CI wins, or the whole
   // point of generating the evidence in CI is lost.
-  const { records, problems } = runRecordsFromArtifacts(RED_TESTS);
+  const { records, problems } = runRecordsFromArtifacts(RED_TESTS, REQUIRED);
   assert.equal(records.tests_green, false, "a failed unit-test step is red");
   assert.equal(
     records.prettier_clean,
@@ -171,15 +206,20 @@ test("EVIDENCE: a step's own outcome is the record; a job that did not finish is
   // are true at once: those steps passed, and the run was cut short. The record
   // must say both, and the caller must stop — not by falsifying the steps, and
   // not by ignoring the cancellation.
-  const { records, problems } = runRecordsFromArtifacts({
-    test: {
-      job: "test",
-      conclusion: "cancelled",
-      steps: { unit_tests: "success", prettier: "success", seo: "success" },
+  const { records, problems } = runRecordsFromArtifacts(
+    {
+      test: {
+        job: "test",
+        conclusion: "cancelled",
+        steps: { unit_tests: "success", prettier: "success", seo: "success" },
+      },
+      "web-smoke": GREEN["web-smoke"],
+      "quality-lab": GREEN["quality-lab"],
+      coverage: GREEN.coverage,
+      lighthouse: GREEN.lighthouse,
     },
-    "web-smoke": GREEN["web-smoke"],
-    coverage: GREEN.coverage,
-  });
+    REQUIRED,
+  );
   assert.equal(
     records.tests_green,
     true,
@@ -194,7 +234,7 @@ test("EVIDENCE: a step's own outcome is the record; a job that did not finish is
 });
 
 test("EVIDENCE: a missing artifact or a step that never ran is red, and named", () => {
-  const missing = runRecordsFromArtifacts({ test: GREEN.test });
+  const missing = runRecordsFromArtifacts({ test: GREEN.test }, REQUIRED);
   assert.equal(missing.records.smoke_green, false);
   assert.equal(missing.records.ci_green, false);
   assert.ok(
@@ -204,11 +244,16 @@ test("EVIDENCE: a missing artifact or a step that never ran is red, and named", 
 
   // A job that failed before the prettier step never records that step. An
   // absent step is not a pass.
-  const earlyExit = runRecordsFromArtifacts({
-    test: { job: "test", conclusion: "failure", steps: { seo: "success" } },
-    "web-smoke": GREEN["web-smoke"],
-    coverage: GREEN.coverage,
-  });
+  const earlyExit = runRecordsFromArtifacts(
+    {
+      test: { job: "test", conclusion: "failure", steps: { seo: "success" } },
+      "web-smoke": GREEN["web-smoke"],
+      "quality-lab": GREEN["quality-lab"],
+      coverage: GREEN.coverage,
+      lighthouse: GREEN.lighthouse,
+    },
+    REQUIRED,
+  );
   assert.equal(earlyExit.records.prettier_clean, false);
   assert.equal(earlyExit.records.seo_green, true, "that step did run and pass");
   assert.ok(
@@ -217,10 +262,122 @@ test("EVIDENCE: a missing artifact or a step that never ran is red, and named", 
   );
 });
 
+// ── what "CI was green" means ───────────────────────────────────────────────
+
+test("EVIDENCE: the required set is the workflow's own jobs, judge excluded", () => {
+  // The rule the field used to break: `ci_green` was a hand-written list of
+  // three job names inside the evidence module, so the fourth gate the plan
+  // named — quality-lab — was invisible to it and a run with that gate red
+  // recorded `ci_green: true`. A list in code and a list in the workflow are
+  // two sources that drift apart silently, and the field that drifts is the one
+  // the judge reads. So the set is derived from the workflow's declarations.
+  assert.ok(
+    REQUIRED.includes("quality-lab"),
+    "the fourth gate is required, whether or not any list remembers it",
+  );
+  for (const job of LEGACY_GATE_JOBS) {
+    assert.ok(REQUIRED.includes(job), `${job} stays a required gate`);
+  }
+  assert.equal(
+    REQUIRED.includes("jev-complete"),
+    false,
+    "the judge is excluded by what it does, not by name: a gate cannot be a " +
+      "required job whose own conclusion the record it composes must carry",
+  );
+
+  // A gate declared tomorrow is required the day it is declared, with no edit
+  // to the evidence code — which is the whole point of deriving the set.
+  const tomorrow = `${WORKFLOW_YAML}\n  lighthouse:\n    runs-on: ubuntu-latest\n    steps:\n      - run: npm run gate:lighthouse\n`;
+  const next = requiredJobsFromWorkflow(tomorrow);
+  assert.ok(
+    next.includes("lighthouse"),
+    "a gate added to the workflow is required with no change to the code",
+  );
+  assert.equal(
+    next.length,
+    REQUIRED.length + 1,
+    "and it is the only thing the derivation added",
+  );
+
+  // A workflow this cannot read yields no claim at all, rather than a
+  // fallback list: an empty set is a red ci_green, never a green one.
+  assert.deepEqual(requiredJobsFromWorkflow("name: nothing\non: [push]\n"), []);
+  assert.deepEqual(requiredJobsFromWorkflow(null), []);
+  assert.deepEqual(requiredJobsFromWorkflow(""), []);
+});
+
+test("EVIDENCE: ci_green is false when any required job is red; the legacy triple is its own fact", () => {
+  const all = runRecordsFromArtifacts(GREEN, REQUIRED);
+  assert.equal(
+    all.records.ci_green,
+    true,
+    "every required job concluded success",
+  );
+  assert.equal(all.records.legacy_gates_green, true);
+  assert.deepEqual(all.problems, [], "a fully green run reports no problem");
+
+  // The defect, stated as a test: one red required job must be enough, and
+  // which job it is must come from the workflow rather than from a list.
+  for (const red of REQUIRED) {
+    const r = runRecordsFromArtifacts(
+      { ...GREEN, [red]: { ...GREEN[red], conclusion: "failure" } },
+      REQUIRED,
+    );
+    assert.equal(r.records.ci_green, false, `a red ${red} is not a green CI`);
+    assert.ok(
+      r.problems.some((p) => p.includes(`"${red}"`)),
+      `the red job is named, or the artifact cannot be diagnosed: ${JSON.stringify(r.problems)}`,
+    );
+  }
+
+  // The case that actually happened: the three legacy gates green, the fourth
+  // gate red. Before this change ci_green read TRUE here.
+  const fourthRed = runRecordsFromArtifacts(
+    {
+      ...GREEN,
+      "quality-lab": { ...GREEN["quality-lab"], conclusion: "failure" },
+    },
+    REQUIRED,
+  );
+  assert.equal(fourthRed.records.ci_green, false);
+  assert.equal(
+    fourthRed.records.legacy_gates_green,
+    true,
+    "the three legacy gates really were green; widening ci_green must not " +
+      "overwrite that fact, because the ratchet has been comparing it",
+  );
+
+  // …and when the legacy triple itself is red, the legacy fact says so too.
+  const legacyRed = runRecordsFromArtifacts(
+    { ...GREEN, coverage: { ...GREEN.coverage, conclusion: "cancelled" } },
+    REQUIRED,
+  );
+  assert.equal(legacyRed.records.legacy_gates_green, false);
+  assert.equal(legacyRed.records.ci_green, false);
+
+  // A required job with no artifact is red and named — the builder is handed
+  // whatever survived, and a gate that vanished is not a gate that passed.
+  const missing = runRecordsFromArtifacts({ test: GREEN.test }, REQUIRED);
+  assert.equal(missing.records.ci_green, false);
+  assert.ok(
+    missing.problems.some((p) => p.includes("quality-lab")),
+    `the missing required job must be named: ${JSON.stringify(missing.problems)}`,
+  );
+
+  // No derived set, no claim: ci_green is unproven rather than green.
+  const unproven = runRecordsFromArtifacts(GREEN, []);
+  assert.equal(unproven.records.ci_green, false);
+  assert.ok(
+    unproven.problems.some((p) => /required job set/.test(p)),
+    `the missing derivation must be named: ${JSON.stringify(unproven.problems)}`,
+  );
+});
+
 test("EVIDENCE: the composed file says it was generated, and by what", () => {
   const { evidence } = composeEvidence({
     artifacts: GREEN,
     prose: PROSE,
+    requiredJobs: REQUIRED,
     run: {
       run_id: "12345",
       run_attempt: "2",
@@ -252,13 +409,15 @@ test("EVIDENCE: prose is carried through, and its booleans are not", () => {
     seo_green: true,
     smoke_green: true,
     ci_green: true,
+    legacy_gates_green: true,
     tree_clean: true,
     secrets_clean: true,
   };
-  const broken = runRecordsFromArtifacts(RED_TESTS);
+  const broken = runRecordsFromArtifacts(RED_TESTS, REQUIRED);
   const { evidence } = composeEvidence({
     artifacts: RED_TESTS,
     prose: hostile,
+    requiredJobs: REQUIRED,
     run: { run_id: "1", sha: "abc1234" },
   });
   assert.equal(
@@ -268,6 +427,11 @@ test("EVIDENCE: prose is carried through, and its booleans are not", () => {
   );
   assert.equal(evidence.seo_green, true, "seo really was green in CI");
   assert.equal(evidence.ci_green, false, "the test job did not finish");
+  assert.equal(
+    evidence.legacy_gates_green,
+    false,
+    "the test job is one of the three legacy gates, so that fact is red too",
+  );
   assert.equal(
     broken.records.tests_green,
     false,
@@ -874,11 +1038,74 @@ test("BUILDER: a red step in a green job is a problem, and the run is cut short"
         assert.equal(
           evidence.ci_green,
           true,
-          "ci_green tracks the three job conclusions, and they all concluded success; the step outcome is what tests_green carries",
+          "ci_green tracks every required job's conclusion, and they all concluded success; the step outcome is what tests_green carries",
+        );
+        assert.equal(
+          evidence.legacy_gates_green,
+          true,
+          "and the three legacy gates concluded success as well",
         );
       },
     );
   }
+});
+
+test("BUILDER: a red required gate writes ci_green false and stops, with the legacy fact kept", () => {
+  // The end-to-end shape of the defect this closes: the builder was handed a
+  // run in which the fourth gate was red and produced a file whose ci_green said
+  // true — the field the judge reads directly, describing a run that was not.
+  withArtifacts(
+    {
+      ...GREEN,
+      "quality-lab": {
+        job: "quality-lab",
+        conclusion: "failure",
+        steps: { "a11y-matrix": "failure" },
+      },
+    },
+    (dir) => {
+      const out = join(dir, "evidence.json");
+      const r = spawnSync(
+        process.execPath,
+        [
+          BUILDER,
+          "--artifacts",
+          dir,
+          "--prose",
+          writeProse(dir),
+          "--out",
+          out,
+          "--sha",
+          "abc1234",
+        ],
+        { encoding: "utf8" },
+      );
+      assert.equal(r.status, 1, "a red required gate must stop the builder");
+      assert.match(r.stderr, /quality-lab/, `and name it: ${r.stderr}`);
+      const ev = JSON.parse(readFileSync(out, "utf8"));
+      assert.equal(
+        ev.ci_green,
+        false,
+        "the file the judge reads must not call a run with a red required gate green",
+      );
+      assert.equal(
+        ev.legacy_gates_green,
+        true,
+        "the three legacy gates were green",
+      );
+      assert.equal(
+        ev.tests_green,
+        true,
+        "the green jobs are still recorded as green",
+      );
+      assert.equal(ev.ci.jobs["quality-lab"].conclusion, "failure");
+      assert.deepEqual(
+        ev.ci.required_jobs,
+        REQUIRED,
+        "the file records the set that defined ci_green, so its meaning is readable",
+      );
+    },
+  );
 });
 
 test("BUILDER: it never writes a key into the evidence", () => {
@@ -922,17 +1149,32 @@ test("BUILDER: it never writes a key into the evidence", () => {
 
 // ── the job itself ──────────────────────────────────────────────────────────
 
-test("WORKFLOW: the jev-complete job needs the three gates, judges live, and uploads", () => {
-  const yaml = read(".github/workflows/test.yml");
+test("WORKFLOW: the jev-complete job needs every required gate, judges live, and uploads", () => {
+  const yaml = WORKFLOW_YAML;
   assert.ok(
     yaml.includes("jev-complete:"),
     "plan §13.2 names a `jev-complete` job; it does not exist yet",
   );
   const job = yaml.slice(yaml.indexOf("  jev-complete:"));
+  // Derived, not hand-listed: the judge must depend on exactly the jobs the
+  // evidence treats as required, so a red gate is always upstream of the
+  // record that has to describe it.
+  const needs = (job.match(/needs:\s*\[([^\]]*)\]/) || [, ""])[1]
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .sort();
+  assert.deepEqual(
+    needs,
+    [...REQUIRED].sort(),
+    "the judge must depend on every required gate whose real results it turns into evidence",
+  );
+  // …and it must still run when one of them is red. Without `always()` a red
+  // gate skips the judge, so the run that most needs a record produces none.
   assert.match(
     job,
-    /needs:\s*\[test,\s*web-smoke,\s*coverage\]/,
-    "the job must depend on the three gates whose real results it turns into evidence",
+    /if:\s*always\(\)\s*&&\s*github\.event_name\s*==\s*'pull_request'/,
+    "the judge must run after a red gate so the red run is recorded, not skipped",
   );
   // The key comes from the repo's own secret wiring, and is never echoed.
   assert.match(
@@ -973,7 +1215,7 @@ test("WORKFLOW: the jev-complete job needs the three gates, judges live, and upl
   // the job is a PR gate only. The full run belongs to P10 and P11.3.
   assert.match(
     job,
-    /if:\s*github\.event_name\s*==\s*'pull_request'/,
+    /github\.event_name\s*==\s*'pull_request'/,
     "the job must be scoped to pull_request, or a push has nothing to judge",
   );
   // Everything the job WRITES belongs outside the checkout. The gate's
@@ -1002,22 +1244,14 @@ test("WORKFLOW: the jev-complete job needs the three gates, judges live, and upl
   );
 });
 
-test("WORKFLOW: each judged job records its own result for the gate", () => {
-  const yaml = read(".github/workflows/test.yml");
-  // A job's block runs until the next line indented by exactly two spaces and
-  // then a non-space. Matching "\n  " alone would stop at the first nested line,
-  // because every deeper line contains it as a substring.
-  const jobBlock = (name) => {
-    const start = yaml.search(new RegExp(`^  ${name}:$`, "m"));
-    assert.notEqual(start, -1, `the ${name} job exists`);
-    const rest = yaml.slice(start);
-    const next = rest.slice(1).search(/\n {2}\S/);
-    return next === -1 ? rest : rest.slice(0, next + 1);
-  };
+test("WORKFLOW: every required job records its own result for the gate", () => {
+  const yaml = WORKFLOW_YAML;
   // Without this the builder has nothing to read, and the whole design
-  // collapses back to a hand-typed file.
-  for (const job of ["test", "web-smoke", "coverage"]) {
-    const body = jobBlock(job);
+  // collapses back to a hand-typed file. Looping the DERIVED set is the drift
+  // net: a gate added to the workflow without a result artifact fails here,
+  // in the same test, rather than reaching the judge as an unmeasured gate.
+  for (const job of REQUIRED) {
+    const body = jobBlock(yaml, job);
     assert.match(
       body,
       /jev-artifacts/,

@@ -511,8 +511,12 @@ export function renderFrontier(host, frontier, opts = {}) {
       .join("") +
     `</ul>`;
 
+  // An interactive chart is a group of focusable points, not a picture: axe
+  // measured nested-interactive (serious) on a hardcoded role="img" here.
+  const svgRole = opts.onSelect ? "group" : "img";
+
   host.innerHTML =
-    `<svg viewBox="0 0 ${VB_W} ${VB_H}" role="img" dir="ltr" aria-labelledby="${titleId} ${descId}" ` +
+    `<svg viewBox="0 0 ${VB_W} ${VB_H}" role="${svgRole}" dir="ltr" aria-labelledby="${titleId} ${descId}" ` +
     // direction, not dir: the HTML dir attribute does not govern SVG text, and
     // under an RTL document `text-anchor="end"` resolves to the LEFT - which
     // sent the right-hand axis label off the edge of the plot in Arabic. The
