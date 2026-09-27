@@ -112,9 +112,10 @@ export function parseJobResult(text) {
  *     less truthful, which is the opposite of fail-closed.
  *   - A PROBLEM is anything that means the run cannot be trusted to describe
  *     itself: a missing artifact, an unreadable one, a step that never ran
- *     because the job died earlier, or a job that did not conclude success (so
- *     the run was cut short and whatever came after it is missing). A problem
- *     stops the caller; it does not invent an outcome.
+ *     because the job died earlier, a step that recorded an outcome other than
+ *     success, or a job that did not conclude success (so the run was cut short
+ *     and whatever came after it is missing). A problem stops the caller; it
+ *     does not invent an outcome.
  *
  * So a cancelled job with green steps records those steps honestly AND reports
  * the cancellation, and the builder exits non-zero. Nothing is papered over and
@@ -155,6 +156,17 @@ export function runRecordsFromArtifacts(artifacts) {
       continue;
     }
     records[field] = step === "success";
+    if (step !== "success") {
+      // A step that recorded an outcome other than success is the same kind of
+      // news as a job that did not conclude success: the run cannot be trusted
+      // to describe itself. Reachable whenever a recorded step is guarded by
+      // `if:` or `continue-on-error:`, because the job still concludes success.
+      // Without this, a skipped step left the builder exiting 0 with an
+      // evidence file that said the record was false and never said why.
+      problems.push(
+        `step "${source.step}" of job "${source.job}" concluded ${step}, so the run is cut short and ${field} is unproven`,
+      );
+    }
   }
 
   const missingOrRed = CI_GREEN_JOBS.filter((name) => {

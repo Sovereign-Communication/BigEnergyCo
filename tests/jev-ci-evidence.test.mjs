@@ -82,6 +82,12 @@ const PROSE = {
   facet_evidence: { spec: "a proof line", testing: "another proof line" },
 };
 
+function writeProse(dir) {
+  const prose = join(dir, "prose.json");
+  writeFileSync(prose, JSON.stringify(PROSE));
+  return prose;
+}
+
 function withArtifacts(artifacts, fn) {
   const dir = mkdtempSync(join(tmpdir(), "jev-ci-"));
   try {
@@ -697,6 +703,81 @@ test("BUILDER: it writes CI-derived evidence and refuses to proceed when it cann
     assert.equal(after.smoke_green, false);
     assert.equal(after.tests_green, true, "the green jobs are still recorded");
   });
+});
+
+test("BUILDER: a red step in a green job is a problem, and the run is cut short", () => {
+  // The gap an audit found by running the builder instead of reading it: a job
+  // that concludes `success` while one of its recorded steps is `skipped` or
+  // `failure` produced tests_green=false, exit 0, and NO problem at all. The
+  // file's own header promises exit 1 for "a step that is red", so the artifact
+  // the judge reads described a run as untrustworthy without ever saying why —
+  // the one thing the problems list exists to say.
+  //
+  // The pre-existing gate named "a step that never ran is red, and named" does
+  // not cover this: its fixture gives the job conclusion "failure", which is
+  // the path that already worked. Reaching this needs a GREEN job with a red
+  // step, which is what a step under `if:` or `continue-on-error:` produces.
+  for (const outcome of ["skipped", "failure", "cancelled"]) {
+    withArtifacts(
+      {
+        ...GREEN,
+        test: {
+          ...GREEN.test,
+          steps: { ...GREEN.test.steps, unit_tests: outcome },
+        },
+      },
+      (dir) => {
+        const out = join(dir, "evidence.json");
+        const r = spawnSync(
+          process.execPath,
+          [
+            BUILDER,
+            "--artifacts",
+            dir,
+            "--prose",
+            writeProse(dir),
+            "--out",
+            out,
+            "--sha",
+            "abc1234",
+          ],
+          { encoding: "utf8" },
+        );
+
+        assert.equal(
+          r.status,
+          1,
+          `a step that concluded "${outcome}" must fail the builder like a red job does`,
+        );
+        assert.match(
+          r.stderr,
+          /unit_tests/,
+          `the red step must be named, or the artifact cannot be diagnosed: ${r.stderr}`,
+        );
+        assert.match(
+          r.stderr,
+          new RegExp(outcome),
+          `the message must carry the outcome, not just the step id: ${r.stderr}`,
+        );
+
+        // The evidence is still written, so the failure is diagnosable after
+        // the fact — and the field is red.
+        const evidence = JSON.parse(readFileSync(out, "utf8"));
+        assert.equal(evidence.tests_green, false);
+
+        // The two channels stay separate. The other steps in that job really
+        // did pass, and a fix here must not invent failures for them.
+        assert.equal(evidence.prettier_clean, true, "prettier did pass");
+        assert.equal(evidence.seo_green, true, "seo did pass");
+        assert.equal(evidence.smoke_green, true);
+        assert.equal(
+          evidence.ci_green,
+          true,
+          "ci_green tracks the three job conclusions, and they all concluded success; the step outcome is what tests_green carries",
+        );
+      },
+    );
+  }
 });
 
 test("BUILDER: it never writes a key into the evidence", () => {
