@@ -5,6 +5,7 @@
   let gridData = null;
   let map = null;
   let dotLayer = null;
+  let dotRenderer = null;
   let usageIdx = 1; // 0=5kWh, 1=10kWh, 2=20kWh, 3=30kWh
   let metric = "cost"; // "cost" = True Grid Cost, "p" = payback, "b" = break-even
   let basis = "real"; // "real" = generator/unserved-aware, "grid" = nominal grid tariff only
@@ -31,6 +32,18 @@
   function costLabel(cost) {
     if (cost === null || cost === undefined) return "N/A";
     return "$" + Number(cost).toFixed(2) + "/kWh";
+  }
+
+  // The tile scale read as TEXT: same buckets, colours that clear 4.5:1 on
+  // this page's card, where the tile palette's dark end measures 2.12:1.
+  function costTextColor(cost) {
+    if (cost === null || cost === undefined || cost <= 0) return "#9aa4b2";
+    if (cost <= 0.1) return "#4ade9b";
+    if (cost <= 0.18) return "#a8e05f";
+    if (cost <= 0.28) return "#f2d024";
+    if (cost <= 0.4) return "#ffb14d";
+    if (cost <= 0.55) return "#ff8f8f";
+    return "#ff6b6b";
   }
 
   function getPointCost(pt) {
@@ -248,6 +261,9 @@
     const points = gridData.points;
     const markers = [];
 
+    // 39,707 points as SVG paths is 39,707 DOM nodes; on a canvas it is one.
+    if (!dotRenderer) dotRenderer = L.canvas({ padding: 0.5 });
+
     for (let i = 0; i < points.length; i++) {
       const pt = points[i];
       let color;
@@ -265,6 +281,7 @@
         fillColor: color,
         fillOpacity: 0.75,
         interactive: true,
+        renderer: dotRenderer,
       });
 
       marker._heatIdx = i;
@@ -400,14 +417,14 @@
           const splitText = pt.unserved
             ? `~${pt.unserved}% unserved`
             : "100% grid";
-          return `<li><span class="years" style="color:${costColor(cost)}">${costLabel(cost)}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${splitText}, paper $${pt.t}/kWh)</span></li>`;
+          return `<li><span class="years" style="color:${costTextColor(cost)}">${costLabel(cost)}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${splitText}, paper $${pt.t}/kWh)</span></li>`;
         })
         .join("");
 
       document.getElementById("worst-list").innerHTML = lowestByCountry
         .map((pt) => {
           const cost = getPointCost(pt);
-          return `<li><span class="years" style="color:${costColor(cost)}">${costLabel(cost)}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${pt.y} kWh/kWp/yr)</span></li>`;
+          return `<li><span class="years" style="color:${costTextColor(cost)}">${costLabel(cost)}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${pt.y} kWh/kWp/yr)</span></li>`;
         })
         .join("");
 
