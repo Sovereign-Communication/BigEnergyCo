@@ -2010,3 +2010,21 @@ footer {
     transition: none;
   }
 }
+
+/* #155: shared checkbox-toggle row (no-swap option); keeps the frozen
+   inline-style budget intact — markup carries no style attributes. */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.5rem 0 0.8rem;
+}
+.toggle-row label {
+  margin: 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+.toggle-row .toggle-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
