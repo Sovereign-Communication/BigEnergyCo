@@ -635,7 +635,12 @@ export function heuristicFacetLevels(evidence, pack) {
       out[axis] =
         ev.seo_green === true ? 4 : ev.seo_green === false ? 0 : neutral;
     } else if (axis === "release") {
-      const known = [ev.ci_green, ev.smoke_green, ev.tree_clean];
+      // The legacy fact, named: `ci_green` now means every job the workflow
+      // runs, and feeding THAT here would silently change what the release
+      // ordinal means between two runs — which is the axis the ratchet
+      // compares. The triple it has always been fed is recorded separately by
+      // lib/jev-evidence.mjs for exactly this reason.
+      const known = [ev.legacy_gates_green, ev.smoke_green, ev.tree_clean];
       if (known.every((v) => v === true)) out[axis] = 4;
       else if (known.some((v) => v === false)) out[axis] = 1;
       else out[axis] = neutral;
@@ -868,6 +873,7 @@ export function mergeEvidence(evidence, auto) {
     "seo_green",
     "smoke_green",
     "ci_green",
+    "legacy_gates_green",
   ];
   const merged = {};
   for (const key of keys) merged[key] = ev[key] === true;

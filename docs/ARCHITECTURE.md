@@ -219,17 +219,17 @@ through the injected `setStatus`. No location state lives here.
 concern below has one owner; the CLI only decides the order. Data flows one way,
 left to right, and nothing points back.
 
-| module                             | owns                                                                                                                                      | touches the network/disk? |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| `scripts/lib/jev-auto-facts.mjs`   | what the checkout looks like: `tree_clean`, `secrets_clean`, `env_ignored`, `test_count`, target sha                                      | git, read-only            |
-| `scripts/lib/jev-evidence.mjs`     | the **run records**: artifact in, `tests_green`/`prettier_clean`/`seo_green`/`smoke_green`/`ci_green` out, plus the evidence file's shape | no — zero imports         |
-| `scripts/build-jev-evidence.mjs`   | writing that evidence file; exits non-zero when it cannot be trusted                                                                      | reads artifacts           |
-| `scripts/lib/jev-live.mjs`         | the **wire**: where the key comes from, and the one TypeSafe request that spends it                                                       | yes, and the only place   |
-| `scripts/lib/jev-run.mjs`          | the **live-run state**, and only it: the model pin, the record of the call, the run class, the report's run facts, the exit rule          | no                        |
-| `scripts/lib/jev-complete.mjs`     | the **engine**: pack, questions, answers, facets, ordinals, ratchet comparison                                                            | reads the pack            |
-| `scripts/lib/jev-verdict.mjs`      | the **scoped verdict**: §9 rule 6 bootstrap, the binding point, what makes a scoped run pass                                              | no — pure policy          |
-| `scripts/lib/jev-scope.mjs`        | a PR **title** read as a plan item (imported directly by the CI job)                                                                      | no                        |
-| `scripts/lib/jev-report-print.mjs` | how a report reads to a person; `--json` bypasses it                                                                                      | no                        |
+| module                             | owns                                                                                                                                                                                                           | touches the network/disk? |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `scripts/lib/jev-auto-facts.mjs`   | what the checkout looks like: `tree_clean`, `secrets_clean`, `env_ignored`, `test_count`, target sha                                                                                                           | git, read-only            |
+| `scripts/lib/jev-evidence.mjs`     | the **run records**: artifact in, `tests_green`/`prettier_clean`/`seo_green`/`smoke_green`/`ci_green`/`legacy_gates_green` out, plus the evidence file's shape and the required-job set read from the workflow | no — zero imports         |
+| `scripts/build-jev-evidence.mjs`   | writing that evidence file; exits non-zero when it cannot be trusted                                                                                                                                           | reads artifacts           |
+| `scripts/lib/jev-live.mjs`         | the **wire**: where the key comes from, and the one TypeSafe request that spends it                                                                                                                            | yes, and the only place   |
+| `scripts/lib/jev-run.mjs`          | the **live-run state**, and only it: the model pin, the record of the call, the run class, the report's run facts, the exit rule                                                                               | no                        |
+| `scripts/lib/jev-complete.mjs`     | the **engine**: pack, questions, answers, facets, ordinals, ratchet comparison                                                                                                                                 | reads the pack            |
+| `scripts/lib/jev-verdict.mjs`      | the **scoped verdict**: §9 rule 6 bootstrap, the binding point, what makes a scoped run pass                                                                                                                   | no — pure policy          |
+| `scripts/lib/jev-scope.mjs`        | a PR **title** read as a plan item (imported directly by the CI job)                                                                                                                                           | no                        |
+| `scripts/lib/jev-report-print.mjs` | how a report reads to a person; `--json` bypasses it                                                                                                                                                           | no                        |
 
 Three things worth knowing before changing any of it:
 
@@ -398,10 +398,15 @@ tolerance, and no budget was relaxed to accommodate it.
   completes in 0.7–6.4s, and a `wcag2aa` violation is already known on that page.
   Until the cause is found the cell is a hole, and a hole is not a pass. Its own
   cluster, its own diagnosis — not folded into the P0.4(c) fix pass.
-- **`ci_green` does not know `quality-lab` exists.** A fourth hard gate is
-  unmodelled, so a red `quality-lab` does not make the field red. Teaching the
-  field what a fourth gate means is its own change, because it alters what the
-  field means.
+- **`ci_green` now means the whole workflow, and a red `quality-lab` caps every
+  scoped run.** The required set is read from `.github/workflows/test.yml` — every
+  job it runs except the judge — rather than from a list kept beside the evidence
+  code, so the fourth gate is covered and a fifth would be too. While the heatmap
+  cell above is unauditable that gate is red, `ci_green` reads false and the hard
+  gate with it: the honest reading, since the run really is not green. The older
+  three-gate fact is still recorded on its own (`legacy_gates_green`), and the
+  release facet the ratchet compares still reads that one, so widening the field
+  did not silently change what the ratchet compares.
 
 - `ui.js` is still ~8.0k lines (7,999 at this writing): form state, rendering
   glue, Jev badge lifecycle, sliders, modals. Seven extraction seams are done
