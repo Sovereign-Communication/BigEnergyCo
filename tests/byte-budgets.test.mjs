@@ -460,6 +460,71 @@ test("BUDGET: a baseline missing a metric is measured, not silently ignored", ()
   );
 });
 
+test("BUDGET: a budget over its limit is named a breach, never 'ok'", () => {
+  // The table's verdict column said "ok" beside a 3.3x breach, which is exactly
+  // how a breach stops being read. §3.2 makes these gates regression-blocking
+  // from P0, so the run still exits 0 — but the word in the column is the
+  // difference between a visible breach and a buried one.
+  const dir = mkdtempSync(join(tmpdir(), "jev-budget-breach-"));
+  const ledger = join(dir, "ledger.jsonl");
+  try {
+    // Pseudo-random, so brotli cannot squeeze it back under the limit: 20 KB of
+    // CSS budget has to be beaten by real bytes.
+    let seed = 123456789;
+    const next = () => (seed = (seed * 1103515245 + 12345) % 2147483648);
+    const css = Array.from(
+      { length: 4000 },
+      (_, i) =>
+        `.c${i}{color:rgb(${next() % 255},${next() % 255},${next() % 255});margin:${next() % 97}px}`,
+    ).join("");
+    assert.ok(
+      brotliBytes(Buffer.from(css)) > BYTE_BUDGET_LIMITS.css_total,
+      "the fixture must actually exceed the plan's CSS budget, or this test proves nothing",
+    );
+    writeFileSync(
+      join(dir, "index.html"),
+      '<!doctype html><html><head><link rel="stylesheet" href="./site.css"></head></html>',
+    );
+    writeFileSync(join(dir, "site.css"), css);
+    writeFileSync(ledger, "");
+
+    const run = spawnSync(
+      process.execPath,
+      [CLI, "--stage", dir, "--ledger", ledger, "--out", join(dir, "r.json")],
+      { encoding: "utf8" },
+    );
+    assert.equal(
+      run.status,
+      0,
+      "an over-limit reading is reported, not failed, until P6/P8 (plan §3.2)",
+    );
+    const row = run.stdout.split("\n").find((l) => l.startsWith("css_total"));
+    assert.ok(row, `the table must print a css_total row:\n${run.stdout}`);
+    assert.match(
+      row,
+      /breach/,
+      `an over-limit budget says so in its own row: ${row}`,
+    );
+    assert.match(
+      row,
+      /unmeasured/,
+      `and with no baseline declared it says both: over the limit, and nothing to compare against. ${row}`,
+    );
+    assert.doesNotMatch(
+      row,
+      /\bok\b/,
+      `a breach must never be printed as ok: ${row}`,
+    );
+    assert.match(
+      run.stdout,
+      /over the plan's limit/,
+      "and the breach still names the plan's own limit, not just the baseline",
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("BUDGET: the baseline is read from the latest ledger row that carries one", () => {
   // The P0.3d baseline row was nested wrongly and readRatchetBaseline skipped
   // it in silence, so the gate kept ratcheting against an older bar while the
