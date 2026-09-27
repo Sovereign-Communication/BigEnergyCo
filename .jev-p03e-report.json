@@ -2,7 +2,7 @@
   "gate": "jev-complete",
   "pack_id": "bigenergyco-complete-gate-v2",
   "min_score": 99,
-  "score": 87.93,
+  "score": 87.71,
   "pass": false,
   "hard_gates_passed": true,
   "facets_not_proven": [
@@ -19,6 +19,7 @@
     "privacy",
     "provenance",
     "quality",
+    "release",
     "resilience",
     "security",
     "spec",
@@ -35,7 +36,7 @@
     "tree_clean": true
   },
   "mechanical_score": 100,
-  "semantic_score": 59.76,
+  "semantic_score": 59.05,
   "facets": {
     "spec": {
       "bucket": "spec_gap",
@@ -44,7 +45,7 @@
       "index": 1,
       "ordinal": 35,
       "source": "live",
-      "confidence": 0.15
+      "confidence": 0.2
     },
     "design": {
       "bucket": "design_gap",
@@ -53,7 +54,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.77
+      "confidence": 0.81
     },
     "correctness": {
       "bucket": "correctness_gap",
@@ -71,7 +72,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.42
+      "confidence": 0.46
     },
     "security": {
       "bucket": "security_gap",
@@ -80,7 +81,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.16
+      "confidence": 0.23
     },
     "performance": {
       "bucket": "perf_gap",
@@ -89,7 +90,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.72
+      "confidence": 0.76
     },
     "accessibility": {
       "bucket": "a11y_gap",
@@ -98,7 +99,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.68
+      "confidence": 0.72
     },
     "i18n": {
       "bucket": "i18n_gap",
@@ -107,7 +108,7 @@
       "index": 1,
       "ordinal": 35,
       "source": "live",
-      "confidence": 0.7
+      "confidence": 0.68
     },
     "seo": {
       "bucket": "seo_gap",
@@ -116,7 +117,7 @@
       "index": 4,
       "ordinal": 100,
       "source": "code",
-      "confidence": 0.8
+      "confidence": 0.78
     },
     "resilience": {
       "bucket": "resilience_gap",
@@ -125,7 +126,7 @@
       "index": 2,
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.74
+      "confidence": 0.73
     },
     "experience": {
       "bucket": "experience_gap",
@@ -134,7 +135,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.55
+      "confidence": 0.54
     },
     "docs": {
       "bucket": "docs_gap",
@@ -143,7 +144,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.66
+      "confidence": 0.64
     },
     "testing": {
       "bucket": "tests_gap",
@@ -152,16 +153,16 @@
       "index": 4,
       "ordinal": 100,
       "source": "code",
-      "confidence": 0.5
+      "confidence": 0.31
     },
     "release": {
       "bucket": "release_gap",
       "authority": "code",
-      "level": "proven — google-quality, evidenced end to end",
-      "index": 4,
-      "ordinal": 100,
-      "source": "code",
-      "confidence": 0.28
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.4
     },
     "advisor": {
       "bucket": "advisor_gap",
@@ -170,7 +171,7 @@
       "index": 2,
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.64
+      "confidence": 0.63
     },
     "physics": {
       "bucket": "physics_gap",
@@ -179,7 +180,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.77
+      "confidence": 0.75
     },
     "provenance": {
       "bucket": "provenance_gap",
@@ -188,7 +189,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.65
+      "confidence": 0.68
     },
     "comparison": {
       "bucket": "comparison_gap",
@@ -197,7 +198,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.76
+      "confidence": 0.75
     },
     "usecases": {
       "bucket": "usecases_gap",
@@ -206,7 +207,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.56
+      "confidence": 0.53
     },
     "privacy": {
       "bucket": "privacy_gap",
@@ -215,7 +216,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.61
+      "confidence": 0.63
     },
     "translation": {
       "bucket": "translation_gap",
@@ -224,7 +225,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.77
+      "confidence": 0.78
     }
   },
   "blocking_facets": [
@@ -245,7 +246,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.76,
+      "confidence": 0.75,
       "primary": false
     },
     {
@@ -258,7 +259,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.61,
+      "confidence": 0.63,
       "primary": false
     },
     {
@@ -271,7 +272,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.65,
+      "confidence": 0.68,
       "primary": false
     },
     {
@@ -284,7 +285,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.77,
+      "confidence": 0.78,
       "primary": true
     },
     {
@@ -297,7 +298,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.56,
+      "confidence": 0.53,
       "primary": false
     },
     {
@@ -310,7 +311,7 @@
       "level": "at risk — known gap likely to hurt users or review",
       "ordinal": 35,
       "source": "live",
-      "confidence": 0.7,
+      "confidence": 0.68,
       "primary": false
     },
     {
@@ -323,7 +324,7 @@
       "level": "at risk — known gap likely to hurt users or review",
       "ordinal": 35,
       "source": "live",
-      "confidence": 0.15,
+      "confidence": 0.2,
       "primary": false
     },
     {
@@ -336,7 +337,7 @@
       "level": "mixed — partial or unverified evidence",
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.64,
+      "confidence": 0.63,
       "primary": false
     },
     {
@@ -349,7 +350,7 @@
       "level": "mixed — partial or unverified evidence",
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.74,
+      "confidence": 0.73,
       "primary": false
     }
   ],
@@ -461,7 +462,7 @@
     "blocking facet: provenance",
     "blocking facet: translation",
     "blocking facet: usecases",
-    "score 87.93 below target 99.00"
+    "score 87.71 below target 99.00"
   ],
   "live": {
     "is_fallback": false,
@@ -481,7 +482,7 @@
       "experience:confident — solid with minor gaps",
       "docs:confident — solid with minor gaps",
       "testing:proven — google-quality, evidenced end to end",
-      "release:proven — google-quality, evidenced end to end",
+      "release:confident — solid with minor gaps",
       "advisor:mixed — partial or unverified evidence",
       "physics:confident — solid with minor gaps",
       "provenance:failing — evidence contradicts quality",
@@ -496,10 +497,10 @@
     "model_requested": "jev-latest"
   },
   "evidence": {
-    "tests_summary": "833/833 npm test green (833 tests, 833 pass, 0 fail, 0 skipped), measured on this tree at P0.3(e). P0.3(d) added 12 gates: 11 for the five new pack facets, 1 pinning that the ledger's declared baseline actually resolves. P0.3(e) added 17 more, all about where the evidence comes from: a job result can only be written by the job that ran it, the live model has to be a pinned version rather than an alias, one run may not be described two ways, and a run that never called the provider is a configuration gap rather than a provider error. deploy:check stages the build clean; this tree stages 360 manifest files.",
+    "tests_summary": "834/834 npm test green (834 tests, 834 pass, 0 fail, 0 skipped), measured on this tree at P0.3(e). P0.3(d) added 12 gates: 11 for the five new pack facets, 1 pinning that the ledger's declared baseline actually resolves. P0.3(e) added 18 more, all about where the evidence comes from: a job result can only be written by the job that ran it, a recorded step that did not pass cuts the run short even when its job concludes success, the live model has to be a pinned version rather than an alias, one run may not be described two ways, and a run that never called the provider is a configuration gap rather than a provider error. deploy:check stages the build clean; this tree stages 360 manifest files.",
     "seo_summary": "npm run seo and node scripts/check-chars.mjs exit 0: JSON-LD, sitemap, metadata, characters, i18n, CSP/headers, country files, asset token 20260925c, SW cache beco-v88. Unchanged by P0.1-P0.3c, which touch no allowlisted file.",
     "smoke_note": "the browser smoke runs 153 gates. Measured this session: 153 pass, 0 fail locally. Production re-verified today: 358/358 files byte-identical at servedStamp 20260925c, browser smoke passing. The 20260925b previously carried here was wrong.",
-    "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 833 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached. The jev-complete job runs on pull_request only, needs test, web-smoke and coverage, writes its evidence and its report to the runner temp dir so the checkout stays clean, and is red until O-01 lands the TYPESAFE_API_KEY secret.",
+    "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 834 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached. The jev-complete job runs on pull_request only, needs test, web-smoke and coverage, writes its evidence and its report to the runner temp dir so the checkout stays clean, and is red until O-01 lands the TYPESAFE_API_KEY secret.",
     "advisor_audit": "measured against the live chat and worker paths: 3 Jev gates green, the neutral badge proving the request fires (calls:1), no refetch on Simple-mode toggle, worker inputs rejected before start. Mode-blindness fixed: the brief carries the run's hardware config, verified on the wire in a real browser. The provider is stubbed, so this proves the request path, not answer quality.",
     "notes": [
       "the local browser smoke is 153/153, zero failures, measured this session; the 147/147 previously claimed here predates the six battery-only advisor gates",
@@ -509,7 +510,7 @@
     ],
     "dirty_paths": []
   },
-  "target": "chore/p0.3e-ci-evidence @ 87379ff",
+  "target": "chore/p0.3e-ci-evidence @ c225677",
   "scope": "P0.3",
   "auto_facts": {
     "tree_clean": true,
