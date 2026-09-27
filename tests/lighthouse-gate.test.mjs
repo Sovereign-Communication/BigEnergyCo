@@ -414,8 +414,10 @@ test("CI: the job runs the gate, records its own result, and ci_green requires i
   );
   assert.match(
     WORKFLOW_YAML,
-    new RegExp(`name:\\s*lighthouse-report`),
-    "the Lighthouse report itself must be uploaded: the numbers are the proof",
+    new RegExp(`name:\\s*jev-results-lighthouse-report`),
+    "the Lighthouse report must be uploaded under a name the judge's " +
+      "jev-results-* download picks up, or no record can read it: the numbers " +
+      "are the proof and the artifact name is the wire",
   );
 
   // The consequence, asserted rather than discovered: because the required set

@@ -65,13 +65,16 @@
 // them rather than take this comment's word.
 import { readFileSync } from "node:fs";
 
-/** The four categories Q-02 names, in its order. */
-export const LIGHTHOUSE_CATEGORIES = [
-  "performance",
-  "accessibility",
-  "best-practices",
-  "seo",
-];
+/**
+ * The facet axes this gate IS the evidence for. Declared here, beside the
+ * measurement, and read by the gate that writes the report and by the tests that
+ * assert no axis is left unaccounted for — one source, so the report cannot claim
+ * an axis the rest of the repo believes is typed, or vice versa.
+ */
+export const LIGHTHOUSE_FACET_AXES = ["performance"];
+
+/** The four categories Q-02 names, in its order. */ export const LIGHTHOUSE_CATEGORIES =
+  ["performance", "accessibility", "best-practices", "seo"];
 
 /**
  * The three categories this gate ratchets. Chosen by measurement, not taste:
@@ -394,6 +397,83 @@ export const LIGHTHOUSE_FLOORS = {
   "404/mobile": { accessibility: 100, "best-practices": 96, seo: 63 },
   "404/desktop": { accessibility: 100, "best-practices": 100, seo: 63 },
 };
+
+/**
+ * Compose the `performance` facet line the judge reads, from THIS run's report.
+ *
+ * The gate owns this rather than the transport that carries it, for two reasons
+ * that are the whole point of the change. First, the honesty rules live next to
+ * the measurement instead of next to the plumbing. Second, the line has to fit
+ * `COMPLETE_FACET_CLIP` (280 characters) and a line that overflows is SILENTLY
+ * clipped on its way to the judge — which for this facet means the honest tail
+ * ("not ratcheted, do not read it as a fact") is exactly what gets cut.
+ *
+ * What goes on the line, and what deliberately does not:
+ *
+ *   · The three ratcheted categories, as facts. They read an identical value on
+ *     every run on every machine measured, so their range across the 14 targets
+ *     is a real measurement and belongs on the record.
+ *   · The performance score WITH its spread, and the words "not ratcheted". A
+ *     bare median here would be the same falsehood as the hand-typed byte proxy
+ *     this line replaced, only pointing the other way: it would make a bimodal
+ *     40-76 reading look like a stable 66.
+ *   · The calibration envelope, which is wider than any 3-run sample could
+ *     reveal, so the record cannot imply the run's own range is the truth.
+ *   · What the gate does NOT cover. One of the facet's three claims is measured
+ *     here; saying so is what stops a green gate reading as a proof.
+ */
+export function composeFacetLine(report) {
+  const measured = Array.isArray(report?.measured) ? report.measured : [];
+  const range = (category) => {
+    const values = measured
+      .map((m) => m?.scores?.[category])
+      .filter((v) => typeof v === "number");
+    if (!values.length) return null;
+    const lo = Math.min(...values);
+    const hi = Math.max(...values);
+    return lo === hi ? `${lo}` : `${lo}-${hi}`;
+  };
+
+  const ratcheted = (
+    report?.ratchet_categories || LIGHTHOUSE_RATCHET_CATEGORIES
+  )
+    .map((c) => {
+      const r = range(c);
+      return r ? `${c} ${r}` : null;
+    })
+    .filter(Boolean);
+  const perf = range("performance");
+
+  // The calibration envelope, from the recorded 21-run samples. This is the
+  // wider truth than the run's own three runs can show, and stating it is what
+  // stops "57-100 this run" from reading as "57-100 is the score".
+  const cal = Object.values(
+    LIGHTHOUSE_VARIANCE.performance_not_ratcheted || {},
+  ).filter((s) => typeof s?.min === "number" && typeof s?.max === "number");
+  const envelope = cal.length
+    ? `${Math.min(...cal.map((s) => s.min))}-${Math.max(...cal.map((s) => s.max))}`
+    : null;
+  const calN = cal.length ? Math.max(...cal.map((s) => s.n)) : 0;
+
+  const sentences = [
+    `Lighthouse ${report?.lighthouse_version || "?"}, ${measured.length} targets, median of 3`,
+  ];
+  if (ratcheted.length) sentences.push(`ratcheted ${ratcheted.join(", ")}`);
+  if (report?.regressions?.length)
+    sentences.push(`${report.regressions.length} REGRESSIONS`);
+  if (report?.holes?.length) sentences.push(`${report.holes.length} HOLES`);
+
+  const perfClause = ["performance NOT ratcheted"];
+  if (perf) perfClause.push(`${perf} this run`);
+  if (envelope) perfClause.push(`${envelope} over ${calN} calibration runs`);
+  if (report?.regressions?.length) perfClause.push("see regressions above");
+  if (perf || envelope) sentences.push(perfClause.join(", "));
+
+  sentences.push(
+    "first-paint claim only, not warm interactions or memoization",
+  );
+  return sentences.join(". ") + ".";
+}
 
 /** The median of a numeric list. Odd counts get the middle value. */
 export function median(values) {

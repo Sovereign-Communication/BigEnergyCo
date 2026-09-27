@@ -293,11 +293,18 @@ jobs:
       # The report is the proof: the raw per-run scores, the median, the floors,
       # the Q-02 breaches and the variance calibration behind the ratchet split.
       # Uploaded even on failure, because a red score is the thing to read.
+      #
+      # The NAME is the wire. `jev-complete` already downloads `jev-results-*`
+      # into its artifacts directory, and the builder reads gate reports from
+      # there — so a report under any other name is downloaded by nobody and the
+      # judge never sees it. That is exactly the state this upload was in: a
+      # real browser measurement that no record could read. Under the existing
+      # convention, a new gate report needs no change to the download step.
       - name: Upload the Lighthouse report
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: lighthouse-report
+          name: jev-results-lighthouse-report
           path: lighthouse-report.json
           if-no-files-found: error
           retention-days: 7
