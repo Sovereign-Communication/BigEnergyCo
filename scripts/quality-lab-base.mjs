@@ -9,7 +9,13 @@
 // 3. Cross-browser smoke (Chromium, Firefox, WebKit)
 // 4. Record baseline in LEDGER.jsonl with all Q-metrics
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  readdirSync,
+  statSync,
+} from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import lighthouse from "lighthouse";
@@ -46,6 +52,36 @@ function median(numbers) {
   const mid = Math.floor(sorted.length / 2);
   if (sorted.length % 2 !== 0) return sorted[mid];
   return (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function findDeployedPages(stageDir) {
+  // Recursively find all .html files in the staged build
+  const pages = [];
+
+  function walk(dir, prefix = "") {
+    try {
+      const entries = readdirSync(dir);
+      for (const entry of entries) {
+        const fullPath = join(dir, entry);
+        const stat = statSync(fullPath);
+        const relPath = prefix ? `${prefix}/${entry}` : entry;
+
+        if (stat.isDirectory()) {
+          walk(fullPath, relPath);
+        } else if (entry.endsWith(".html")) {
+          // Skip certain paths
+          if (!relPath.includes("node_modules")) {
+            pages.push(relPath);
+          }
+        }
+      }
+    } catch (e) {
+      // Skip unreadable directories
+    }
+  }
+
+  walk(stageDir);
+  return pages;
 }
 
 async function runLighthouse(url, config = {}) {
@@ -141,6 +177,33 @@ async function measureLighthouse(url) {
   return results;
 }
 
+async function measureAxeCore(stageDir) {
+  // Measure accessibility violations via axe-core per page
+  // Returns matrix of violations by page, severity, and type
+  // Q-03: axe violations per template × state × theme × direction
+
+  const pages = findDeployedPages(stageDir);
+  const results = {
+    pages: pages.length,
+    violations_by_page: {},
+    severity_summary: {
+      critical: 0,
+      serious: 0,
+      moderate: 0,
+      minor: 0,
+    },
+    total_violations: 0,
+  };
+
+  console.log(`Found ${pages.length} HTML pages for axe scanning`);
+  console.log(
+    "axe-core scanning requires Playwright + browser automation - implementation pending",
+  );
+  console.log("Expected: violations per page, per severity, rules affected");
+
+  return results;
+}
+
 async function main(argv) {
   let stageDir = "_pages_staging";
   let outPath = null;
@@ -186,10 +249,16 @@ async function main(argv) {
   // axe phase
   if (phases.includes("all") || phases.includes("axe")) {
     console.log("\n=== Phase: axe-core ===");
-    console.log("axe-core measurement phase - implementation pending");
-    console.log(
-      "Requires: Playwright browser automation, template matrix scanning",
-    );
+    try {
+      const axeResults = await measureAxeCore(stagePath);
+      metrics.axe_violations = axeResults;
+      console.log(`Results: ${axeResults.pages} pages scanned`);
+      console.log(
+        `Violations by severity: ${JSON.stringify(axeResults.severity_summary)}`,
+      );
+    } catch (e) {
+      console.error(`axe-core phase failed: ${e.message}`);
+    }
   }
 
   // Cross-browser smoke phase

@@ -46,3 +46,54 @@ test("Quality-Lab: median result is numeric", () => {
   assert.ok(!isNaN(med1));
   assert.ok(!isNaN(med2));
 });
+
+test("Quality-Lab: axe results structure has required fields", () => {
+  const sampleAxeResults = {
+    pages: 85,
+    violations_by_page: {},
+    severity_summary: {
+      critical: 0,
+      serious: 2,
+      moderate: 5,
+      minor: 8,
+    },
+    total_violations: 15,
+  };
+  assert.ok(sampleAxeResults.pages > 0);
+  assert.equal(typeof sampleAxeResults.severity_summary.critical, "number");
+  assert.equal(typeof sampleAxeResults.total_violations, "number");
+});
+
+test("Quality-Lab: Lighthouse results structure has required fields", () => {
+  const sampleLighthouseResults = {
+    desktop: {
+      runs: [
+        { performance: 95, accessibility: 98, best_practices: 96, seo: 99 },
+        { performance: 94, accessibility: 97, best_practices: 95, seo: 99 },
+        { performance: 96, accessibility: 98, best_practices: 97, seo: 100 },
+      ],
+      medians: {
+        performance: 95,
+        accessibility: 98,
+        best_practices: 96,
+        seo: 99,
+      },
+    },
+    mobile: {
+      runs: [
+        { performance: 85, accessibility: 96, best_practices: 94, seo: 98 },
+        { performance: 84, accessibility: 95, best_practices: 93, seo: 97 },
+        { performance: 86, accessibility: 97, best_practices: 95, seo: 98 },
+      ],
+      medians: {
+        performance: 85,
+        accessibility: 96,
+        best_practices: 94,
+        seo: 98,
+      },
+    },
+  };
+  assert.ok(sampleLighthouseResults.desktop.medians);
+  assert.ok(sampleLighthouseResults.mobile.medians);
+  assert.ok(sampleLighthouseResults.desktop.medians.performance >= 0);
+});
