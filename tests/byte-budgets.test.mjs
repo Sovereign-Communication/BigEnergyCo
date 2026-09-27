@@ -235,6 +235,58 @@ test("BUDGET: only same-origin resources count toward the request budget", () =>
   );
 });
 
+test("BUDGET: HTML is matched case-insensitively, so no request can hide in UPPERCASE", () => {
+  // CodeQL flagged the tag matchers as case-sensitive (a high-severity
+  // "does not match upper case <SCRIPT> tags"). The staged pages are ours, but
+  // a budget gate that silently misses a tag under-counts by exactly the amount
+  // someone wanted hidden, and HTML tag and attribute names are
+  // case-insensitive by spec, so an upper-case one is a real request.
+  const shouted = fixture({
+    "index.html": `<!doctype html><html><head>
+    <LINK REL="stylesheet" HREF="./assets/site.css">
+    <SCRIPT TYPE="module" SRC="./assets/js/sizing/ui.js"></SCRIPT>
+    </head><body></body></html>`,
+  });
+  const loud = measureStagedBuild(shouted);
+  assert.equal(
+    loud.metrics.requests_before_interaction.value,
+    3,
+    "the document, the stylesheet and the upper-case script are all requests",
+  );
+  const sameDocLowercase = measureStagedBuild(
+    fixture({
+      "index.html": shouted
+        .read("index.html")
+        .toString()
+        .replace(/SCRIPT/g, "script")
+        .replace(/SRC=/g, "src=")
+        .replace(/TYPE=/g, "type="),
+    }),
+  );
+  assert.equal(
+    loud.metrics.js_before_interactive.value,
+    sameDocLowercase.metrics.js_before_interactive.value,
+    "the same document reads the same either way: an upper-case entry script pulls the module graph too",
+  );
+  // The preconnect skip has to survive the same case change. It points at a
+  // STAGED path on purpose: a preconnect to a third-party origin is excluded by
+  // the same-origin rule anyway, so an off-origin fixture would pass whether or
+  // not the skip worked.
+  const shoutedPreconnect = measureStagedBuild(
+    fixture({
+      "index.html": `<!doctype html><html><head>
+      <LINK REL="stylesheet" HREF="./assets/site.css">
+      <LINK REL="PRECONNECT" HREF="./manifest.webmanifest">
+      </head></html>`,
+    }),
+  );
+  assert.equal(
+    shoutedPreconnect.metrics.requests_before_interaction.value,
+    2,
+    "an upper-case PRECONNECT is still not a request for a staged asset",
+  );
+});
+
 test("BUDGET: a count is never printed as a byte budget", () => {
   // §3.1's request line is "≤ 10", a count. The first run of this gate printed
   // "0.0 KB" beside a limit of "10 req" for a reading of 8, which reads like a

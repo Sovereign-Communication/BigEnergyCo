@@ -153,10 +153,15 @@ function resolveRelative(fromFile, target) {
 // problem behind a free line.
 function initialRequests(html, read, staged) {
   const refs = new Set();
-  for (const m of html.matchAll(/<(?:script|link|img)\b[^>]*>/g)) {
+  // Every matcher here is case-insensitive. HTML tag and attribute names are
+  // case-insensitive by spec, and a budget gate that skips an upper-case
+  // <SCRIPT> under-counts by precisely what someone wanted out of sight (this
+  // is also what CodeQL's high-severity "does not match upper case <SCRIPT>
+  // tags" alert was about).
+  for (const m of html.matchAll(/<(?:script|link|img)\b[^>]*>/gi)) {
     const tag = m[0];
-    if (/rel="(?:preconnect|dns-prefetch)"/.test(tag)) continue;
-    const src = /\bsrc="([^"]+)"/.exec(tag) || /\bhref="([^"]+)"/.exec(tag);
+    if (/rel="(?:preconnect|dns-prefetch)"/i.test(tag)) continue;
+    const src = /\bsrc="([^"]+)"/i.exec(tag) || /\bhref="([^"]+)"/i.exec(tag);
     if (!src) continue;
     const rel = resolveRelative("index.html", src[1]);
     if (rel && staged.has(rel)) refs.add(rel);
@@ -186,7 +191,7 @@ function moduleGraph(entries, read, staged) {
 
 function scriptEntries(html, staged, from = "index.html") {
   const out = [];
-  for (const m of html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)) {
+  for (const m of html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/gi)) {
     const rel = resolveRelative(from, m[1]);
     if (rel && staged.has(rel)) out.push(rel);
   }
