@@ -353,20 +353,55 @@ representative, state applicability, graph-based direction, every driven selecto
 the tag set, the ratchet, the hole rule and the per-cell bar. Eleven mutations,
 each caught by its named assertion.
 
+## The five violations it found, and where each one was fixed (P0.4(c))
+
+The P0.4(b) baseline measured five violations across four cells, eight violation
+instances in total. Q-07's cap is 0 per cell, so every one of them was a real
+defect the product had never been told about. The fixes:
+
+| finding                                                           | where                                                 | the fix                                                                                                                                                     |
+| ----------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `aria-required-children` (critical) at `#cumCostLegend`           | `sizing/charts.js`                                    | the appended rows carry `role="listitem"`, so the container's `role="list"` has items                                                                       |
+| `nested-interactive` (serious) on the result chart's `svg`        | `sizing/frontier-chart.js`                            | the role is interpolated from the same `opts.onSelect` switch that wires the click handlers: an interactive chart is a `group`, a static one stays an `img` |
+| `region` (moderate) on the blog index hero                        | `blog/index.html`                                     | the hero `<section>` is `aria-labelledby` its own `<h1>`, so it is a named landmark                                                                         |
+| `scrollable-region-focusable` (serious) on a post's table wrapper | `blog/battery-longevity-and-dod-reference/index.html` | both `.table-wrapper` divs take `tabindex="0" role="region"` and a name                                                                                     |
+| `landmark-one-main` + `region` (moderate) on 404                  | `404.html`                                            | the card, its `h1`, its link and its `nav` moved inside a `<main id="main">`                                                                                |
+
+Two of these were found by the matrix after the first-draft test had already gone
+green, and both are worth naming because they shaped the tests:
+
+- The post has **two** `.table-wrapper` divs. The first version of the test
+  matched one, passed, and the matrix on the staged build then reported the
+  second as `scrollable-region-focusable` (serious). The test now loops over
+  every wrapper, and three mutations (A5, A5b, A5c) exist to prove a defect in
+  the _second_ one — or in a third nobody has looked at yet — is caught.
+- The chart-role guard originally asserted on a regex that matched **its own
+  source**, so hardcoding the role back to `img` sailed straight through it. It
+  now asserts on the markup: a literal `role="img"` or `role="group"` in the svg
+  tag is the thing that must not come back.
+
+`tests/a11y-markup.test.mjs` guards all five, in five tests, mutation-proved at
+**15/15 caught** with every source restored byte-identical. Those tests read the
+source; the proof that the pages are actually clean is the matrix's own report on
+the staged build, attached to the PR.
+
+One cost worth recording: the first draft of the two JS comments was long enough
+to push `js_before_interactive` by 313 bytes, which is over the byte gate's 256-byte
+regression tolerance. The comments were cut to the fact; the reasoning lives in the
+test file, which nobody downloads. The shipped cost is now **+139 bytes**, inside
+tolerance, and no budget was relaxed to accommodate it.
+
 ## Known remaining debt (deliberate, not forgotten)
 
-- **Five axe violations the P0.4(b) baseline now measures, in four cells.** Two on
-  a completed run, in both text directions: `aria-required-children` (critical) at
-  the cumulative-cost legend `#cumCostLegend`, and `nested-interactive` (serious) on
-  the result chart's `svg`. One on the blog index (`region`, moderate), one on a
-  blog post (`scrollable-region-focusable`, serious), two on 404
-  (`landmark-one-main` and `region`, both moderate). Q-07's cap is 0 per cell and is
-  absolute from P5/P8, so these are named debt with a measured baseline behind
-  them, not a gate that was loosened.
 - **The heatmap cell cannot be audited at all.** axe's `best-practice` tag does not
   finish on that page: 541 seconds, then the renderer is gone. Every WCAG tag
   completes in 0.7–6.4s, and a `wcag2aa` violation is already known on that page.
-  Until the cause is found the cell is a hole, and a hole is not a pass.
+  Until the cause is found the cell is a hole, and a hole is not a pass. Its own
+  cluster, its own diagnosis — not folded into the P0.4(c) fix pass.
+- **`ci_green` does not know `quality-lab` exists.** A fourth hard gate is
+  unmodelled, so a red `quality-lab` does not make the field red. Teaching the
+  field what a fourth gate means is its own change, because it alters what the
+  field means.
 
 - `ui.js` is still ~8.0k lines (7,999 at this writing): form state, rendering
   glue, Jev badge lifecycle, sliders, modals. Seven extraction seams are done
