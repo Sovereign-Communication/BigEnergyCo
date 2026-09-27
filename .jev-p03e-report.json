@@ -45,7 +45,7 @@
       "index": 1,
       "ordinal": 35,
       "source": "live",
-      "confidence": 0.2
+      "confidence": 0.19
     },
     "design": {
       "bucket": "design_gap",
@@ -54,7 +54,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.81
+      "confidence": 0.76
     },
     "correctness": {
       "bucket": "correctness_gap",
@@ -63,7 +63,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.67
+      "confidence": 0.66
     },
     "quality": {
       "bucket": "quality_gap",
@@ -72,7 +72,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.46
+      "confidence": 0.47
     },
     "security": {
       "bucket": "security_gap",
@@ -81,7 +81,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.23
+      "confidence": 0.14
     },
     "performance": {
       "bucket": "perf_gap",
@@ -99,7 +99,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.72
+      "confidence": 0.73
     },
     "i18n": {
       "bucket": "i18n_gap",
@@ -108,7 +108,7 @@
       "index": 1,
       "ordinal": 35,
       "source": "live",
-      "confidence": 0.68
+      "confidence": 0.65
     },
     "seo": {
       "bucket": "seo_gap",
@@ -117,7 +117,7 @@
       "index": 4,
       "ordinal": 100,
       "source": "code",
-      "confidence": 0.78
+      "confidence": 0.81
     },
     "resilience": {
       "bucket": "resilience_gap",
@@ -126,7 +126,7 @@
       "index": 2,
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.73
+      "confidence": 0.76
     },
     "experience": {
       "bucket": "experience_gap",
@@ -135,7 +135,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.54
+      "confidence": 0.51
     },
     "docs": {
       "bucket": "docs_gap",
@@ -144,7 +144,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.64
+      "confidence": 0.66
     },
     "testing": {
       "bucket": "tests_gap",
@@ -153,7 +153,7 @@
       "index": 4,
       "ordinal": 100,
       "source": "code",
-      "confidence": 0.31
+      "confidence": 0.41
     },
     "release": {
       "bucket": "release_gap",
@@ -171,7 +171,7 @@
       "index": 2,
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.63
+      "confidence": 0.65
     },
     "physics": {
       "bucket": "physics_gap",
@@ -198,7 +198,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.75
+      "confidence": 0.78
     },
     "usecases": {
       "bucket": "usecases_gap",
@@ -207,7 +207,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.53
+      "confidence": 0.57
     },
     "privacy": {
       "bucket": "privacy_gap",
@@ -216,7 +216,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.63
+      "confidence": 0.64
     },
     "translation": {
       "bucket": "translation_gap",
@@ -246,7 +246,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.75,
+      "confidence": 0.78,
       "primary": false
     },
     {
@@ -259,7 +259,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.63,
+      "confidence": 0.64,
       "primary": false
     },
     {
@@ -298,7 +298,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.53,
+      "confidence": 0.57,
       "primary": false
     },
     {
@@ -311,7 +311,7 @@
       "level": "at risk — known gap likely to hurt users or review",
       "ordinal": 35,
       "source": "live",
-      "confidence": 0.68,
+      "confidence": 0.65,
       "primary": false
     },
     {
@@ -324,7 +324,7 @@
       "level": "at risk — known gap likely to hurt users or review",
       "ordinal": 35,
       "source": "live",
-      "confidence": 0.2,
+      "confidence": 0.19,
       "primary": false
     },
     {
@@ -337,7 +337,7 @@
       "level": "mixed — partial or unverified evidence",
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.63,
+      "confidence": 0.65,
       "primary": false
     },
     {
@@ -350,7 +350,7 @@
       "level": "mixed — partial or unverified evidence",
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.73,
+      "confidence": 0.76,
       "primary": false
     }
   ],
@@ -510,7 +510,7 @@
     ],
     "dirty_paths": []
   },
-  "target": "chore/p0.3e-ci-evidence @ c225677",
+  "target": "chore/p0.3e-ci-evidence @ 9d6ad08",
   "scope": "P0.3",
   "auto_facts": {
     "tree_clean": true,
