@@ -2,7 +2,7 @@
   "gate": "jev-complete",
   "pack_id": "bigenergyco-complete-gate-v2",
   "min_score": 99,
-  "score": 87.21,
+  "score": 87.71,
   "pass": false,
   "hard_gates_passed": true,
   "facets_not_proven": [
@@ -19,6 +19,7 @@
     "privacy",
     "provenance",
     "quality",
+    "release",
     "resilience",
     "security",
     "spec",
@@ -35,16 +36,16 @@
     "tree_clean": true
   },
   "mechanical_score": 100,
-  "semantic_score": 57.38,
+  "semantic_score": 59.05,
   "facets": {
     "spec": {
       "bucket": "spec_gap",
       "authority": "jev",
-      "level": "at risk — known gap likely to hurt users or review",
-      "index": 1,
-      "ordinal": 35,
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
       "source": "live",
-      "confidence": 0.11
+      "confidence": 0.16
     },
     "design": {
       "bucket": "design_gap",
@@ -53,7 +54,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.8
+      "confidence": 0.78
     },
     "correctness": {
       "bucket": "correctness_gap",
@@ -62,7 +63,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.69
+      "confidence": 0.68
     },
     "quality": {
       "bucket": "quality_gap",
@@ -71,7 +72,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.53
+      "confidence": 0.49
     },
     "security": {
       "bucket": "security_gap",
@@ -80,7 +81,7 @@
       "index": 1,
       "ordinal": 35,
       "source": "live",
-      "confidence": 0.18
+      "confidence": 0.16
     },
     "performance": {
       "bucket": "perf_gap",
@@ -89,7 +90,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.77
+      "confidence": 0.79
     },
     "accessibility": {
       "bucket": "a11y_gap",
@@ -98,7 +99,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.71
+      "confidence": 0.67
     },
     "i18n": {
       "bucket": "i18n_gap",
@@ -116,7 +117,7 @@
       "index": 4,
       "ordinal": 100,
       "source": "code",
-      "confidence": 0.78
+      "confidence": 0.77
     },
     "resilience": {
       "bucket": "resilience_gap",
@@ -125,7 +126,7 @@
       "index": 2,
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.73
+      "confidence": 0.76
     },
     "experience": {
       "bucket": "experience_gap",
@@ -134,7 +135,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.63
+      "confidence": 0.65
     },
     "docs": {
       "bucket": "docs_gap",
@@ -152,16 +153,16 @@
       "index": 4,
       "ordinal": 100,
       "source": "code",
-      "confidence": 0.46
+      "confidence": 0.34
     },
     "release": {
       "bucket": "release_gap",
       "authority": "code",
-      "level": "proven — google-quality, evidenced end to end",
-      "index": 4,
-      "ordinal": 100,
-      "source": "code",
-      "confidence": 0.19
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.33
     },
     "advisor": {
       "bucket": "advisor_gap",
@@ -179,7 +180,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.77
+      "confidence": 0.76
     },
     "provenance": {
       "bucket": "provenance_gap",
@@ -188,7 +189,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.73
+      "confidence": 0.72
     },
     "comparison": {
       "bucket": "comparison_gap",
@@ -197,7 +198,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.73
+      "confidence": 0.79
     },
     "usecases": {
       "bucket": "usecases_gap",
@@ -245,7 +246,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.73,
+      "confidence": 0.79,
       "primary": false
     },
     {
@@ -271,7 +272,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.73,
+      "confidence": 0.72,
       "primary": false
     },
     {
@@ -323,20 +324,7 @@
       "level": "at risk — known gap likely to hurt users or review",
       "ordinal": 35,
       "source": "live",
-      "confidence": 0.18,
-      "primary": false
-    },
-    {
-      "bucket": "spec_gap",
-      "label": "Spec conformance gap",
-      "path_id": "complete/spec",
-      "work_type": "audit",
-      "suggested_next_action": "Run the all-facet audit against the request as written: inspect every declared quality dimension with its evidence, list requested outcomes that are missing or unproven, and flag unrequested additions without treating unrun checks as passes.",
-      "axis": "spec",
-      "level": "at risk — known gap likely to hurt users or review",
-      "ordinal": 35,
-      "source": "live",
-      "confidence": 0.11,
+      "confidence": 0.16,
       "primary": false
     },
     {
@@ -362,7 +350,7 @@
       "level": "mixed — partial or unverified evidence",
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.73,
+      "confidence": 0.76,
       "primary": false
     }
   ],
@@ -423,16 +411,6 @@
         "primary": false
       },
       {
-        "bucket": "spec_gap",
-        "label": "Spec conformance gap",
-        "path_id": "complete/spec",
-        "suggested_next_action": "Run the all-facet audit against the request as written: inspect every declared quality dimension with its evidence, list requested outcomes that are missing or unproven, and flag unrequested additions without treating unrun checks as passes.",
-        "axis": "spec",
-        "level": "at risk — known gap likely to hurt users or review",
-        "ordinal": 35,
-        "primary": false
-      },
-      {
         "bucket": "advisor_gap",
         "label": "AI advisor quality gap",
         "path_id": "complete/advisor",
@@ -484,14 +462,14 @@
     "blocking facet: provenance",
     "blocking facet: translation",
     "blocking facet: usecases",
-    "score 87.21 below target 99.00"
+    "score 87.71 below target 99.00"
   ],
   "live": {
     "is_fallback": false,
     "primary_gap": "translation_gap",
     "primary_gap_source": "live",
     "notes": [
-      "spec:at risk — known gap likely to hurt users or review",
+      "spec:confident — solid with minor gaps",
       "design:confident — solid with minor gaps",
       "correctness:confident — solid with minor gaps",
       "quality:confident — solid with minor gaps",
@@ -504,7 +482,7 @@
       "experience:confident — solid with minor gaps",
       "docs:confident — solid with minor gaps",
       "testing:proven — google-quality, evidenced end to end",
-      "release:proven — google-quality, evidenced end to end",
+      "release:confident — solid with minor gaps",
       "advisor:mixed — partial or unverified evidence",
       "physics:confident — solid with minor gaps",
       "provenance:failing — evidence contradicts quality",
@@ -516,10 +494,10 @@
     ]
   },
   "evidence": {
-    "tests_summary": "815/815 npm test green (815 tests, 815 pass, 0 fail), measured on this tree. P0.3(d) added 11 gates for the five new pack facets. deploy:check stages the build clean; the promote verifier counts 358 published files.",
+    "tests_summary": "816/816 npm test green (816 tests, 816 pass, 0 fail), measured on this tree. P0.3(d) added 12 gates: 11 for the five new pack facets, 1 pinning that the ledger's declared baseline actually resolves. deploy:check stages the build clean; the promote verifier counts 358 published files.",
     "seo_summary": "npm run seo and node scripts/check-chars.mjs exit 0: JSON-LD, sitemap, metadata, characters, i18n, CSP/headers, country files, asset token 20260925c, SW cache beco-v88. Unchanged by P0.1-P0.3c, which touch no allowlisted file.",
     "smoke_note": "the browser smoke runs 153 gates. Measured this session: 153 pass, 0 fail locally. Production re-verified today: 358/358 files byte-identical at servedStamp 20260925c, browser smoke passing. The 20260925b previously carried here was wrong.",
-    "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 815 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached",
+    "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 816 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached",
     "advisor_audit": "measured against the live chat and worker paths: 3 Jev gates green, the neutral badge proving the request fires (calls:1), no refetch on Simple-mode toggle, worker inputs rejected before start. Mode-blindness fixed: the brief carries the run's hardware config, verified on the wire in a real browser. The provider is stubbed, so this proves the request path, not answer quality.",
     "notes": [
       "the local browser smoke is 153/153, zero failures, measured this session; the 147/147 previously claimed here predates the six battery-only advisor gates",
@@ -529,7 +507,7 @@
     ],
     "dirty_paths": []
   },
-  "target": "chore/p0.3d-new-pack-facets @ ed56f95",
+  "target": "chore/p0.3d-new-pack-facets @ 376bc1e",
   "scope": "P0.3",
   "auto_facts": {
     "tree_clean": true,
@@ -542,8 +520,8 @@
     "is_fallback": false,
     "provider": "typesafe",
     "model": "jev-1.13.0",
-    "input_tokens": 5670,
-    "cost_usd": 0.0000023814,
+    "input_tokens": 5688,
+    "cost_usd": 0.00000238896,
     "notes": []
   },
   "evidence_source": "evidence/advisor-and-release.json",
@@ -568,55 +546,12 @@
     "exit_rule_binds_from": "P0.4",
     "exit_rule_binding": false,
     "ratchet": {
-      "status": "violation",
+      "status": "met",
       "baseline_ts": "2026-09-26",
-      "baseline_ref": "P0.3c-baseline-2",
-      "facets_compared": 16,
-      "regressions": [
-        {
-          "axis": "spec",
-          "previous_ordinal": 85,
-          "current_ordinal": 35,
-          "previous_level": "at risk — known gap likely to hurt users or review",
-          "current_level": "at risk — known gap likely to hurt users or review"
-        },
-        {
-          "axis": "security",
-          "previous_ordinal": 85,
-          "current_ordinal": 35,
-          "previous_level": "at risk — known gap likely to hurt users or review",
-          "current_level": "at risk — known gap likely to hurt users or review"
-        },
-        {
-          "axis": "i18n",
-          "previous_ordinal": 85,
-          "current_ordinal": 35,
-          "previous_level": "at risk — known gap likely to hurt users or review",
-          "current_level": "at risk — known gap likely to hurt users or review"
-        },
-        {
-          "axis": "advisor",
-          "previous_ordinal": 85,
-          "current_ordinal": 60,
-          "previous_level": "mixed — partial or unverified evidence",
-          "current_level": "mixed — partial or unverified evidence"
-        },
-        {
-          "axis": "quality",
-          "previous_ordinal": 100,
-          "current_ordinal": 85,
-          "previous_level": "confident — solid with minor gaps",
-          "current_level": "confident — solid with minor gaps"
-        },
-        {
-          "axis": "docs",
-          "previous_ordinal": 100,
-          "current_ordinal": 85,
-          "previous_level": "confident — solid with minor gaps",
-          "current_level": "confident — solid with minor gaps"
-        }
-      ]
+      "baseline_ref": "P0.3d-baseline-2",
+      "facets_compared": 21,
+      "regressions": []
     },
-    "pass": false
+    "pass": true
   }
 }
