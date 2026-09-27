@@ -71,6 +71,11 @@ function fixture(overrides = {}) {
     'import { money } from "./money.js";\nexport const cities = money;',
   );
   add("assets/js/sizing/money.js", "export const money = 1;");
+  // The three shapes a staged module can pull in, each of which the graph walk
+  // has to see — and one it must not see.
+  add("assets/js/shared/interpolate.js", "export const interpolate = 1;");
+  add("assets/js/shared/side-effect.js", "export const sideEffect = 1;");
+  add("assets/js/shared/commented-out.js", "export const neverLoaded = 1;");
   add(
     "assets/js/shared/locales.js",
     "export const locales = { en: {}, es: {}, pt: {} };",
@@ -232,6 +237,54 @@ test("BUDGET: only same-origin resources count toward the request budget", () =>
     withFontFace.metrics.requests_before_interaction.value,
     n,
     "an unchanged document is the same request count",
+  );
+});
+
+test("BUDGET: the graph walk sees every import shape a module can use", () => {
+  // The first walk matched `import|export ... from "x"` on a single line, so a
+  // multi-line import statement was invisible — and that is exactly how
+  // assets/js/sizing/ui.js pulls in shared/i18n.js. It understated the
+  // first-result JavaScript by 78.6 KB on the real build, which is the failure
+  // this test exists to prevent.
+  const { metrics } = measureStagedBuild(
+    fixture({
+      "assets/js/sizing/ui.js": [
+        'import { engine } from "./engine.js";',
+        "// A comment is not an import. The walk used to read this line and",
+        "// pull in ./commented-out.js, which is staged and never loaded:",
+        "//   import { ghost } from '../shared/commented-out.js';",
+        "import {",
+        "  // the multi-line form, with a comment inside the braces",
+        "  money,",
+        '} from "./money.js";',
+        'import "../shared/side-effect.js";',
+        'import { interpolate } from "../shared/interpolate.js";',
+        "export const ui = [engine, money, interpolate];",
+      ].join("\n"),
+    }),
+  );
+  const files = metrics.js_before_interactive.files;
+  const seen = Object.keys(metrics.js_before_interactive.by_file);
+  assert.ok(
+    seen.includes("assets/js/sizing/money.js"),
+    "a from-clause on its own line after a multi-line import list is still an import",
+  );
+  assert.ok(
+    seen.includes("assets/js/shared/interpolate.js"),
+    "a relative path that walks up out of the importing module's directory resolves",
+  );
+  assert.ok(
+    seen.includes("assets/js/shared/side-effect.js"),
+    "a side-effect import with no bindings is still a fetch the browser makes",
+  );
+  assert.ok(
+    !seen.includes("assets/js/shared/commented-out.js"),
+    "a commented-out import is not an import; a graph that reads comments is a graph that counts files nobody loads",
+  );
+  assert.equal(
+    files,
+    seen.length,
+    "and the reported file count is the graph it walked",
   );
 });
 
