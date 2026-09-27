@@ -2,9 +2,9 @@
   "gate": "jev-complete",
   "pack_id": "bigenergyco-complete-gate-v2",
   "min_score": 99,
-  "score": 56.67,
+  "score": 87.71,
   "pass": false,
-  "hard_gates_passed": false,
+  "hard_gates_passed": true,
   "facets_not_proven": [
     "accessibility",
     "advisor",
@@ -32,11 +32,11 @@
     "ci_green": true,
     "prettier_clean": true,
     "seo_green": true,
-    "secrets_clean": false,
+    "secrets_clean": true,
     "tree_clean": true
   },
-  "mechanical_score": 90,
-  "semantic_score": 56.67,
+  "mechanical_score": 100,
+  "semantic_score": 59.05,
   "facets": {
     "spec": {
       "bucket": "spec_gap",
@@ -54,7 +54,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.79
+      "confidence": 0.78
     },
     "correctness": {
       "bucket": "correctness_gap",
@@ -63,7 +63,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.7
+      "confidence": 0.65
     },
     "quality": {
       "bucket": "quality_gap",
@@ -72,16 +72,16 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.54
+      "confidence": 0.44
     },
     "security": {
       "bucket": "security_gap",
       "authority": "jev",
-      "level": "at risk — known gap likely to hurt users or review",
-      "index": 1,
-      "ordinal": 35,
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
       "source": "live",
-      "confidence": 0.15
+      "confidence": 0.21
     },
     "performance": {
       "bucket": "perf_gap",
@@ -90,7 +90,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.77
+      "confidence": 0.76
     },
     "accessibility": {
       "bucket": "a11y_gap",
@@ -99,7 +99,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.68
+      "confidence": 0.69
     },
     "i18n": {
       "bucket": "i18n_gap",
@@ -108,7 +108,7 @@
       "index": 1,
       "ordinal": 35,
       "source": "live",
-      "confidence": 0.61
+      "confidence": 0.68
     },
     "seo": {
       "bucket": "seo_gap",
@@ -117,7 +117,7 @@
       "index": 4,
       "ordinal": 100,
       "source": "code",
-      "confidence": 0.79
+      "confidence": 0.8
     },
     "resilience": {
       "bucket": "resilience_gap",
@@ -126,7 +126,7 @@
       "index": 2,
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.76
+      "confidence": 0.74
     },
     "experience": {
       "bucket": "experience_gap",
@@ -135,7 +135,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.63
+      "confidence": 0.55
     },
     "docs": {
       "bucket": "docs_gap",
@@ -144,7 +144,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.63
+      "confidence": 0.58
     },
     "testing": {
       "bucket": "tests_gap",
@@ -153,7 +153,7 @@
       "index": 4,
       "ordinal": 100,
       "source": "code",
-      "confidence": 0.36
+      "confidence": 0.45
     },
     "release": {
       "bucket": "release_gap",
@@ -162,7 +162,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.35
+      "confidence": 0.38
     },
     "advisor": {
       "bucket": "advisor_gap",
@@ -171,7 +171,7 @@
       "index": 2,
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.61
+      "confidence": 0.6
     },
     "physics": {
       "bucket": "physics_gap",
@@ -180,7 +180,7 @@
       "index": 3,
       "ordinal": 85,
       "source": "live",
-      "confidence": 0.76
+      "confidence": 0.77
     },
     "provenance": {
       "bucket": "provenance_gap",
@@ -189,7 +189,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.77
+      "confidence": 0.65
     },
     "comparison": {
       "bucket": "comparison_gap",
@@ -198,7 +198,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.79
+      "confidence": 0.73
     },
     "usecases": {
       "bucket": "usecases_gap",
@@ -207,7 +207,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.61
+      "confidence": 0.54
     },
     "privacy": {
       "bucket": "privacy_gap",
@@ -216,7 +216,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.63
+      "confidence": 0.68
     },
     "translation": {
       "bucket": "translation_gap",
@@ -225,7 +225,7 @@
       "index": 0,
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.83
+      "confidence": 0.8
     }
   },
   "blocking_facets": [
@@ -237,19 +237,6 @@
   ],
   "required_work": [
     {
-      "bucket": "security_gap",
-      "label": "Security / consent gap",
-      "path_id": "complete/security",
-      "work_type": "adversarial-fix",
-      "suggested_next_action": "Run the adversarial pass over security surfaces: confirm no secret is tracked, headers/CSP intact, and every sensitive action stays behind explicit user consent; fix what contradicts that.",
-      "axis": null,
-      "level": null,
-      "ordinal": -1,
-      "source": "hard_gate",
-      "confidence": null,
-      "primary": false
-    },
-    {
       "bucket": "comparison_gap",
       "label": "Path comparison gap",
       "path_id": "complete/comparison",
@@ -259,7 +246,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.79,
+      "confidence": 0.73,
       "primary": false
     },
     {
@@ -272,7 +259,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.63,
+      "confidence": 0.68,
       "primary": false
     },
     {
@@ -285,7 +272,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.77,
+      "confidence": 0.65,
       "primary": false
     },
     {
@@ -298,7 +285,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.83,
+      "confidence": 0.8,
       "primary": true
     },
     {
@@ -311,7 +298,7 @@
       "level": "failing — evidence contradicts quality",
       "ordinal": 0,
       "source": "live",
-      "confidence": 0.61,
+      "confidence": 0.54,
       "primary": false
     },
     {
@@ -324,7 +311,7 @@
       "level": "at risk — known gap likely to hurt users or review",
       "ordinal": 35,
       "source": "live",
-      "confidence": 0.61,
+      "confidence": 0.68,
       "primary": false
     },
     {
@@ -350,7 +337,7 @@
       "level": "mixed — partial or unverified evidence",
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.61,
+      "confidence": 0.6,
       "primary": false
     },
     {
@@ -363,22 +350,12 @@
       "level": "mixed — partial or unverified evidence",
       "ordinal": 60,
       "source": "live",
-      "confidence": 0.76,
+      "confidence": 0.74,
       "primary": false
     }
   ],
   "recommended_actions": {
     "adversarial-fix": [
-      {
-        "bucket": "security_gap",
-        "label": "Security / consent gap",
-        "path_id": "complete/security",
-        "suggested_next_action": "Run the adversarial pass over security surfaces: confirm no secret is tracked, headers/CSP intact, and every sensitive action stays behind explicit user consent; fix what contradicts that.",
-        "axis": null,
-        "level": null,
-        "ordinal": -1,
-        "primary": false
-      },
       {
         "bucket": "privacy_gap",
         "label": "Privacy gap",
@@ -480,13 +457,12 @@
     ]
   },
   "blockers": [
-    "hard gate failed: secrets_clean",
     "blocking facet: comparison",
     "blocking facet: privacy",
     "blocking facet: provenance",
     "blocking facet: translation",
     "blocking facet: usecases",
-    "score 56.67 below target 99.00"
+    "score 87.71 below target 99.00"
   ],
   "live": {
     "is_fallback": false,
@@ -497,7 +473,7 @@
       "design:confident — solid with minor gaps",
       "correctness:confident — solid with minor gaps",
       "quality:confident — solid with minor gaps",
-      "security:at risk — known gap likely to hurt users or review",
+      "security:confident — solid with minor gaps",
       "performance:confident — solid with minor gaps",
       "accessibility:confident — solid with minor gaps",
       "i18n:at risk — known gap likely to hurt users or review",
@@ -516,15 +492,15 @@
       "translation:failing — evidence contradicts quality",
       "primary_gap:translation_gap"
     ],
-    "accepted": false,
+    "accepted": true,
     "model": "jev-1.13.0",
     "model_requested": "jev-latest"
   },
   "evidence": {
-    "tests_summary": "816/816 npm test green (816 tests, 816 pass, 0 fail), measured on this tree. P0.3(d) added 12 gates: 11 for the five new pack facets, 1 pinning that the ledger's declared baseline actually resolves. deploy:check stages the build clean; the promote verifier counts 358 published files.",
+    "tests_summary": "832/832 npm test green (832 tests, 832 pass, 0 fail, 0 skipped), measured on this tree at P0.3(e). P0.3(d) added 12 gates: 11 for the five new pack facets, 1 pinning that the ledger's declared baseline actually resolves. P0.3(e) added 16 more, all about where the evidence comes from: a job result can only be written by the job that ran it, the live model has to be a pinned version rather than an alias, and one run may not be described two ways. deploy:check stages the build clean; this tree stages 360 manifest files.",
     "seo_summary": "npm run seo and node scripts/check-chars.mjs exit 0: JSON-LD, sitemap, metadata, characters, i18n, CSP/headers, country files, asset token 20260925c, SW cache beco-v88. Unchanged by P0.1-P0.3c, which touch no allowlisted file.",
     "smoke_note": "the browser smoke runs 153 gates. Measured this session: 153 pass, 0 fail locally. Production re-verified today: 358/358 files byte-identical at servedStamp 20260925c, browser smoke passing. The 20260925b previously carried here was wrong.",
-    "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 816 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached",
+    "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 832 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached. The jev-complete job runs on pull_request only, needs test, web-smoke and coverage, writes its evidence and its report to the runner temp dir so the checkout stays clean, and is red until O-01 lands the TYPESAFE_API_KEY secret.",
     "advisor_audit": "measured against the live chat and worker paths: 3 Jev gates green, the neutral badge proving the request fires (calls:1), no refetch on Simple-mode toggle, worker inputs rejected before start. Mode-blindness fixed: the brief carries the run's hardware config, verified on the wire in a real browser. The provider is stubbed, so this proves the request path, not answer quality.",
     "notes": [
       "the local browser smoke is 153/153, zero failures, measured this session; the 147/147 previously claimed here predates the six battery-only advisor gates",
@@ -534,26 +510,26 @@
     ],
     "dirty_paths": []
   },
-  "target": "chore/p0.3d-new-pack-facets @ 67f60a6",
+  "target": "chore/p0.3d-new-pack-facets @ 52740ba",
   "scope": "P0.3",
   "auto_facts": {
     "tree_clean": true,
-    "secrets_clean": false,
+    "secrets_clean": true,
     "env_ignored": true,
     "test_count": 75,
     "dirty_paths": []
   },
   "live_jev": {
     "is_fallback": false,
-    "accepted": false,
+    "accepted": true,
     "provider": "typesafe",
     "model": "jev-1.13.0",
     "model_requested": "jev-latest",
-    "input_tokens": 5690,
-    "cost_usd": 0.0000023898,
+    "input_tokens": 5734,
+    "cost_usd": 0.00000240828,
     "notes": []
   },
-  "evidence_source": "scratch/p03e/jev-evidence.json",
+  "evidence_source": "scratch/p03e/out/jev-evidence.json",
   "evidence_source_kind": "ci-generated",
   "run_class": "judgment",
   "rerun_allowed": false,
@@ -566,8 +542,8 @@
       "security",
       "testing"
     ],
-    "semantic_score": 76.25,
-    "score": 0,
+    "semantic_score": 88.75,
+    "score": 96.63,
     "min_score": 99,
     "bootstrap_applies": true,
     "bootstrap_rule": "plan §9 rule 6: P0.3 sub-PRs merge on green CI plus no ratchet regression, even below 99",
@@ -585,6 +561,6 @@
       "facets_compared": 21,
       "regressions": []
     },
-    "pass": false
+    "pass": true
   }
 }
