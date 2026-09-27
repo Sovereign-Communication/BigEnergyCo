@@ -62,9 +62,15 @@ async function runLighthouse(url, config = {}) {
     if (!runnerResult) return null;
 
     const scores = {
-      performance: Math.round(runnerResult.lhr.categories.performance.score * 100),
-      accessibility: Math.round(runnerResult.lhr.categories.accessibility.score * 100),
-      best_practices: Math.round(runnerResult.lhr.categories["best-practices"].score * 100),
+      performance: Math.round(
+        runnerResult.lhr.categories.performance.score * 100,
+      ),
+      accessibility: Math.round(
+        runnerResult.lhr.categories.accessibility.score * 100,
+      ),
+      best_practices: Math.round(
+        runnerResult.lhr.categories["best-practices"].score * 100,
+      ),
       seo: Math.round(runnerResult.lhr.categories.seo.score * 100),
     };
     return scores;
@@ -106,15 +112,27 @@ async function measureLighthouse(url) {
   // Calculate medians
   if (results.desktop.runs.length > 0) {
     const desktopMetrics = {};
-    for (const metric of ["performance", "accessibility", "best_practices", "seo"]) {
-      desktopMetrics[metric] = median(results.desktop.runs.map((r) => r[metric]));
+    for (const metric of [
+      "performance",
+      "accessibility",
+      "best_practices",
+      "seo",
+    ]) {
+      desktopMetrics[metric] = median(
+        results.desktop.runs.map((r) => r[metric]),
+      );
     }
     results.desktop.medians = desktopMetrics;
   }
 
   if (results.mobile.runs.length > 0) {
     const mobileMetrics = {};
-    for (const metric of ["performance", "accessibility", "best_practices", "seo"]) {
+    for (const metric of [
+      "performance",
+      "accessibility",
+      "best_practices",
+      "seo",
+    ]) {
       mobileMetrics[metric] = median(results.mobile.runs.map((r) => r[metric]));
     }
     results.mobile.medians = mobileMetrics;
@@ -157,7 +175,9 @@ async function main(argv) {
     try {
       // For now, log that Lighthouse phase is pending full implementation
       console.log("Lighthouse measurement phase - implementation pending");
-      console.log("Requires: static server integration, Chrome/CDP session management");
+      console.log(
+        "Requires: static server integration, Chrome/CDP session management",
+      );
     } catch (e) {
       console.error(`Lighthouse phase failed: ${e.message}`);
     }
@@ -167,7 +187,9 @@ async function main(argv) {
   if (phases.includes("all") || phases.includes("axe")) {
     console.log("\n=== Phase: axe-core ===");
     console.log("axe-core measurement phase - implementation pending");
-    console.log("Requires: Playwright browser automation, template matrix scanning");
+    console.log(
+      "Requires: Playwright browser automation, template matrix scanning",
+    );
   }
 
   // Cross-browser smoke phase
