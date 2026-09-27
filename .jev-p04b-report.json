@@ -1,0 +1,564 @@
+{
+  "gate": "jev-complete",
+  "pack_id": "bigenergyco-complete-gate-v2",
+  "min_score": 99,
+  "score": 88.21,
+  "pass": false,
+  "hard_gates_passed": true,
+  "facets_not_proven": [
+    "accessibility",
+    "advisor",
+    "comparison",
+    "correctness",
+    "design",
+    "docs",
+    "experience",
+    "i18n",
+    "performance",
+    "physics",
+    "privacy",
+    "provenance",
+    "quality",
+    "release",
+    "resilience",
+    "security",
+    "spec",
+    "translation",
+    "usecases"
+  ],
+  "hard_gates": {
+    "tests_green": true,
+    "smoke_green": true,
+    "ci_green": true,
+    "prettier_clean": true,
+    "seo_green": true,
+    "secrets_clean": true,
+    "tree_clean": true
+  },
+  "mechanical_score": 100,
+  "semantic_score": 60.71,
+  "facets": {
+    "spec": {
+      "bucket": "spec_gap",
+      "authority": "jev",
+      "level": "at risk — known gap likely to hurt users or review",
+      "index": 1,
+      "ordinal": 35,
+      "source": "live",
+      "confidence": 0.1
+    },
+    "design": {
+      "bucket": "design_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.78
+    },
+    "correctness": {
+      "bucket": "correctness_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.69
+    },
+    "quality": {
+      "bucket": "quality_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.46
+    },
+    "security": {
+      "bucket": "security_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.16
+    },
+    "performance": {
+      "bucket": "perf_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.76
+    },
+    "accessibility": {
+      "bucket": "a11y_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.7
+    },
+    "i18n": {
+      "bucket": "i18n_gap",
+      "authority": "jev",
+      "level": "at risk — known gap likely to hurt users or review",
+      "index": 1,
+      "ordinal": 35,
+      "source": "live",
+      "confidence": 0.69
+    },
+    "seo": {
+      "bucket": "seo_gap",
+      "authority": "code",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "code",
+      "confidence": 0.78
+    },
+    "resilience": {
+      "bucket": "resilience_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.75
+    },
+    "experience": {
+      "bucket": "experience_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.56
+    },
+    "docs": {
+      "bucket": "docs_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.64
+    },
+    "testing": {
+      "bucket": "tests_gap",
+      "authority": "code",
+      "level": "proven — google-quality, evidenced end to end",
+      "index": 4,
+      "ordinal": 100,
+      "source": "code",
+      "confidence": 0.51
+    },
+    "release": {
+      "bucket": "release_gap",
+      "authority": "code",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.4
+    },
+    "advisor": {
+      "bucket": "advisor_gap",
+      "authority": "jev",
+      "level": "mixed — partial or unverified evidence",
+      "index": 2,
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.62
+    },
+    "physics": {
+      "bucket": "physics_gap",
+      "authority": "jev",
+      "level": "confident — solid with minor gaps",
+      "index": 3,
+      "ordinal": 85,
+      "source": "live",
+      "confidence": 0.75
+    },
+    "provenance": {
+      "bucket": "provenance_gap",
+      "authority": "jev",
+      "level": "failing — evidence contradicts quality",
+      "index": 0,
+      "ordinal": 0,
+      "source": "live",
+      "confidence": 0.68
+    },
+    "comparison": {
+      "bucket": "comparison_gap",
+      "authority": "jev",
+      "level": "failing — evidence contradicts quality",
+      "index": 0,
+      "ordinal": 0,
+      "source": "live",
+      "confidence": 0.73
+    },
+    "usecases": {
+      "bucket": "usecases_gap",
+      "authority": "jev",
+      "level": "at risk — known gap likely to hurt users or review",
+      "index": 1,
+      "ordinal": 35,
+      "source": "live",
+      "confidence": 0.6
+    },
+    "privacy": {
+      "bucket": "privacy_gap",
+      "authority": "jev",
+      "level": "failing — evidence contradicts quality",
+      "index": 0,
+      "ordinal": 0,
+      "source": "live",
+      "confidence": 0.64
+    },
+    "translation": {
+      "bucket": "translation_gap",
+      "authority": "jev",
+      "level": "failing — evidence contradicts quality",
+      "index": 0,
+      "ordinal": 0,
+      "source": "live",
+      "confidence": 0.78
+    }
+  },
+  "blocking_facets": [
+    "comparison",
+    "privacy",
+    "provenance",
+    "translation"
+  ],
+  "required_work": [
+    {
+      "bucket": "comparison_gap",
+      "label": "Path comparison gap",
+      "path_id": "complete/comparison",
+      "work_type": "architecture",
+      "suggested_next_action": "Model all four purchase paths for one sized system over 20 years from the same registry inputs — turnkey benchmark, lease or PPA terms, self-purchase plus electrician labour, DIY mounting plus inspection — with permits, incentives, replacements and end-of-term choice counted identically, then check the paths rank in an order the evidence explains.",
+      "axis": "comparison",
+      "level": "failing — evidence contradicts quality",
+      "ordinal": 0,
+      "source": "live",
+      "confidence": 0.73,
+      "primary": false
+    },
+    {
+      "bucket": "privacy_gap",
+      "label": "Privacy gap",
+      "path_id": "complete/privacy",
+      "work_type": "adversarial-fix",
+      "suggested_next_action": "Adversarially audit data egress: list every request that leaves the device with its payload, prove coordinates are rounded before each one, prove no cookie or identifier is set or logged, remove any ad, tracker or affiliate path, and state each third-party disclosure on the page.",
+      "axis": "privacy",
+      "level": "failing — evidence contradicts quality",
+      "ordinal": 0,
+      "source": "live",
+      "confidence": 0.64,
+      "primary": false
+    },
+    {
+      "bucket": "provenance_gap",
+      "label": "Provenance gap",
+      "path_id": "complete/provenance",
+      "work_type": "audit",
+      "suggested_next_action": "Trace every visible number back to a source a visitor can open: list each displayed assumption, name the publisher, grade and date behind it, mark every value that has none, and replace each unsourced multiplier with a cited value or an explicit unknown.",
+      "axis": "provenance",
+      "level": "failing — evidence contradicts quality",
+      "ordinal": 0,
+      "source": "live",
+      "confidence": 0.68,
+      "primary": false
+    },
+    {
+      "bucket": "translation_gap",
+      "label": "Translation quality gap",
+      "path_id": "complete/translation",
+      "work_type": "contract-tests",
+      "suggested_next_action": "Gate each locale on parity in both directions, placeholder integrity, no English leakage and no raw key name reaching a visitor, then back-translate the rendered strings and read them for meaning: fix any string that is technically present and not actually readable.",
+      "axis": "translation",
+      "level": "failing — evidence contradicts quality",
+      "ordinal": 0,
+      "source": "live",
+      "confidence": 0.78,
+      "primary": true
+    },
+    {
+      "bucket": "i18n_gap",
+      "label": "Localization gap",
+      "path_id": "complete/i18n",
+      "work_type": "contract-tests",
+      "suggested_next_action": "Pin locale parity as a behavioral test (every locale carries every user-visible key), fix the drifting strings it exposes, and keep the parity check green.",
+      "axis": "i18n",
+      "level": "at risk — known gap likely to hurt users or review",
+      "ordinal": 35,
+      "source": "live",
+      "confidence": 0.69,
+      "primary": false
+    },
+    {
+      "bucket": "spec_gap",
+      "label": "Spec conformance gap",
+      "path_id": "complete/spec",
+      "work_type": "audit",
+      "suggested_next_action": "Run the all-facet audit against the request as written: inspect every declared quality dimension with its evidence, list requested outcomes that are missing or unproven, and flag unrequested additions without treating unrun checks as passes.",
+      "axis": "spec",
+      "level": "at risk — known gap likely to hurt users or review",
+      "ordinal": 35,
+      "source": "live",
+      "confidence": 0.1,
+      "primary": false
+    },
+    {
+      "bucket": "usecases_gap",
+      "label": "Use-case coverage gap",
+      "path_id": "complete/usecases",
+      "work_type": "playtest",
+      "suggested_next_action": "Walk each of the six use cases through the real flow: bill cut, time-of-use battery-only, essential-load backup, an emergency reserve, full off-grid and portable power. For each, record the input a visitor is asked for, the outcome metric returned, and the honest verdict when the numbers do not work; name the step where a use case is only named in copy.",
+      "axis": "usecases",
+      "level": "at risk — known gap likely to hurt users or review",
+      "ordinal": 35,
+      "source": "live",
+      "confidence": 0.6,
+      "primary": false
+    },
+    {
+      "bucket": "advisor_gap",
+      "label": "AI advisor quality gap",
+      "path_id": "complete/advisor",
+      "work_type": "audit",
+      "suggested_next_action": "Run the advisor audit against the real chat and worker paths: verify the same selected deterministic state reaches Jev and prose, exercise prompt-injection, stale-response, provider-failure, locale, privacy, uncertainty, neutrality, and safety cases, then add or fix regression evidence for every observed gap.",
+      "axis": "advisor",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.62,
+      "primary": false
+    },
+    {
+      "bucket": "resilience_gap",
+      "label": "Delivery resilience gap",
+      "path_id": "complete/resilience",
+      "work_type": "adversarial-fix",
+      "suggested_next_action": "Run the adversarial pass over the delivery path: prove inner retry/timeout budgets fit every outer cap, classification covers transport failures end to end, and stuck runs recover. Exercise the page-side deadline with a silent worker, including share-restore, stale inputs, and an explicit retry; keep the error actionable and the worker/channel cleanup tested.",
+      "axis": "resilience",
+      "level": "mixed — partial or unverified evidence",
+      "ordinal": 60,
+      "source": "live",
+      "confidence": 0.75,
+      "primary": false
+    }
+  ],
+  "recommended_actions": {
+    "adversarial-fix": [
+      {
+        "bucket": "privacy_gap",
+        "label": "Privacy gap",
+        "path_id": "complete/privacy",
+        "suggested_next_action": "Adversarially audit data egress: list every request that leaves the device with its payload, prove coordinates are rounded before each one, prove no cookie or identifier is set or logged, remove any ad, tracker or affiliate path, and state each third-party disclosure on the page.",
+        "axis": "privacy",
+        "level": "failing — evidence contradicts quality",
+        "ordinal": 0,
+        "primary": false
+      },
+      {
+        "bucket": "resilience_gap",
+        "label": "Delivery resilience gap",
+        "path_id": "complete/resilience",
+        "suggested_next_action": "Run the adversarial pass over the delivery path: prove inner retry/timeout budgets fit every outer cap, classification covers transport failures end to end, and stuck runs recover. Exercise the page-side deadline with a silent worker, including share-restore, stale inputs, and an explicit retry; keep the error actionable and the worker/channel cleanup tested.",
+        "axis": "resilience",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      }
+    ],
+    "architecture": [
+      {
+        "bucket": "comparison_gap",
+        "label": "Path comparison gap",
+        "path_id": "complete/comparison",
+        "suggested_next_action": "Model all four purchase paths for one sized system over 20 years from the same registry inputs — turnkey benchmark, lease or PPA terms, self-purchase plus electrician labour, DIY mounting plus inspection — with permits, incentives, replacements and end-of-term choice counted identically, then check the paths rank in an order the evidence explains.",
+        "axis": "comparison",
+        "level": "failing — evidence contradicts quality",
+        "ordinal": 0,
+        "primary": false
+      }
+    ],
+    "audit": [
+      {
+        "bucket": "provenance_gap",
+        "label": "Provenance gap",
+        "path_id": "complete/provenance",
+        "suggested_next_action": "Trace every visible number back to a source a visitor can open: list each displayed assumption, name the publisher, grade and date behind it, mark every value that has none, and replace each unsourced multiplier with a cited value or an explicit unknown.",
+        "axis": "provenance",
+        "level": "failing — evidence contradicts quality",
+        "ordinal": 0,
+        "primary": false
+      },
+      {
+        "bucket": "spec_gap",
+        "label": "Spec conformance gap",
+        "path_id": "complete/spec",
+        "suggested_next_action": "Run the all-facet audit against the request as written: inspect every declared quality dimension with its evidence, list requested outcomes that are missing or unproven, and flag unrequested additions without treating unrun checks as passes.",
+        "axis": "spec",
+        "level": "at risk — known gap likely to hurt users or review",
+        "ordinal": 35,
+        "primary": false
+      },
+      {
+        "bucket": "advisor_gap",
+        "label": "AI advisor quality gap",
+        "path_id": "complete/advisor",
+        "suggested_next_action": "Run the advisor audit against the real chat and worker paths: verify the same selected deterministic state reaches Jev and prose, exercise prompt-injection, stale-response, provider-failure, locale, privacy, uncertainty, neutrality, and safety cases, then add or fix regression evidence for every observed gap.",
+        "axis": "advisor",
+        "level": "mixed — partial or unverified evidence",
+        "ordinal": 60,
+        "primary": false
+      }
+    ],
+    "contract-tests": [
+      {
+        "bucket": "translation_gap",
+        "label": "Translation quality gap",
+        "path_id": "complete/translation",
+        "suggested_next_action": "Gate each locale on parity in both directions, placeholder integrity, no English leakage and no raw key name reaching a visitor, then back-translate the rendered strings and read them for meaning: fix any string that is technically present and not actually readable.",
+        "axis": "translation",
+        "level": "failing — evidence contradicts quality",
+        "ordinal": 0,
+        "primary": true
+      },
+      {
+        "bucket": "i18n_gap",
+        "label": "Localization gap",
+        "path_id": "complete/i18n",
+        "suggested_next_action": "Pin locale parity as a behavioral test (every locale carries every user-visible key), fix the drifting strings it exposes, and keep the parity check green.",
+        "axis": "i18n",
+        "level": "at risk — known gap likely to hurt users or review",
+        "ordinal": 35,
+        "primary": false
+      }
+    ],
+    "playtest": [
+      {
+        "bucket": "usecases_gap",
+        "label": "Use-case coverage gap",
+        "path_id": "complete/usecases",
+        "suggested_next_action": "Walk each of the six use cases through the real flow: bill cut, time-of-use battery-only, essential-load backup, an emergency reserve, full off-grid and portable power. For each, record the input a visitor is asked for, the outcome metric returned, and the honest verdict when the numbers do not work; name the step where a use case is only named in copy.",
+        "axis": "usecases",
+        "level": "at risk — known gap likely to hurt users or review",
+        "ordinal": 35,
+        "primary": false
+      }
+    ]
+  },
+  "blockers": [
+    "blocking facet: comparison",
+    "blocking facet: privacy",
+    "blocking facet: provenance",
+    "blocking facet: translation",
+    "score 88.21 below target 99.00"
+  ],
+  "live": {
+    "is_fallback": false,
+    "primary_gap": "translation_gap",
+    "primary_gap_source": "live",
+    "notes": [
+      "spec:at risk — known gap likely to hurt users or review",
+      "design:confident — solid with minor gaps",
+      "correctness:confident — solid with minor gaps",
+      "quality:confident — solid with minor gaps",
+      "security:confident — solid with minor gaps",
+      "performance:confident — solid with minor gaps",
+      "accessibility:confident — solid with minor gaps",
+      "i18n:at risk — known gap likely to hurt users or review",
+      "seo:proven — google-quality, evidenced end to end",
+      "resilience:mixed — partial or unverified evidence",
+      "experience:confident — solid with minor gaps",
+      "docs:confident — solid with minor gaps",
+      "testing:proven — google-quality, evidenced end to end",
+      "release:confident — solid with minor gaps",
+      "advisor:mixed — partial or unverified evidence",
+      "physics:confident — solid with minor gaps",
+      "provenance:failing — evidence contradicts quality",
+      "comparison:failing — evidence contradicts quality",
+      "usecases:at risk — known gap likely to hurt users or review",
+      "privacy:failing — evidence contradicts quality",
+      "translation:failing — evidence contradicts quality",
+      "primary_gap:translation_gap"
+    ],
+    "accepted": true,
+    "model": "jev-1.13.0",
+    "model_requested": "jev-latest"
+  },
+  "evidence": {
+    "tests_summary": "835/835 npm test green (835 tests, 835 pass, 0 fail, 0 skipped), measured on this tree at P0.3(e). P0.3(d) added 12 gates: 11 for the five new pack facets, 1 pinning that the ledger's declared baseline actually resolves. P0.3(e) added 19 more: a job result can only be written by the job that ran it, a recorded step that did not pass cuts the run short even when its job concludes success, the live model has to be a pinned version rather than an alias, one run may not be described two ways, and a run that never called the provider is a configuration gap rather than a provider error. deploy:check stages the build clean; this tree stages 360 manifest files.",
+    "seo_summary": "npm run seo and node scripts/check-chars.mjs exit 0: JSON-LD, sitemap, metadata, characters, i18n, CSP/headers, country files, asset token 20260925c, SW cache beco-v88. Unchanged by P0.1-P0.3c, which touch no allowlisted file.",
+    "smoke_note": "the browser smoke runs 153 gates. Measured this session: 153 pass, 0 fail locally. Production re-verified today: 358/358 files byte-identical at servedStamp 20260925c, browser smoke passing. The 20260925b previously carried here was wrong.",
+    "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 835 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached. The jev-complete job runs on pull_request only, needs test, web-smoke and coverage, writes its evidence and its report to the runner temp dir so the checkout stays clean, and is red until O-01 lands the TYPESAFE_API_KEY secret.",
+    "advisor_audit": "measured against the live chat and worker paths: 3 Jev gates green, the neutral badge proving the request fires (calls:1), no refetch on Simple-mode toggle, worker inputs rejected before start. Mode-blindness fixed: the brief carries the run's hardware config, verified on the wire in a real browser. The provider is stubbed, so this proves the request path, not answer quality.",
+    "notes": [
+      "the local browser smoke is 153/153, zero failures, measured this session; the 147/147 previously claimed here predates the six battery-only advisor gates",
+      "P0.3a gave the Jev price one canonical constant (0.00042) shared by the gate and the worker, replacing a private 42.0 that was 100,000x the D-13 rate; the worker now records TypeSafe token counts and cost",
+      "P0.3b removed the second Jev provider from every path - both fallback blocks, both key lookups, the health flag, the config key and the doc. OPENROUTER_API_KEY was also deleted as a live Cloudflare Worker secret",
+      "freeoffgridcalculator.com 403s non-browser clients, but a real browser passes it and serves the app: verified in Chromium this session, mounts, FX 200, RUM 204. Its only CSP finding is the blocked inline __CF$cv$params script"
+    ],
+    "dirty_paths": []
+  },
+  "target": "chore/p0.4b-a11y-matrix @ 1580f1a",
+  "scope": "P0.4",
+  "auto_facts": {
+    "tree_clean": true,
+    "secrets_clean": true,
+    "env_ignored": true,
+    "test_count": 77,
+    "dirty_paths": []
+  },
+  "live_jev": {
+    "is_fallback": false,
+    "accepted": true,
+    "provider": "typesafe",
+    "model": "jev-1.13.0",
+    "model_requested": "jev-latest",
+    "input_tokens": 5738,
+    "cost_usd": 0.00000240996,
+    "notes": []
+  },
+  "evidence_source": "scratch/p04/jev-evidence-b.json",
+  "evidence_source_kind": "ci-generated",
+  "run_class": "judgment",
+  "rerun_allowed": false,
+  "rerun_policy": "plan §8 P0.3(e): a provider error may be re-run once; a judgment may not.",
+  "scoped": {
+    "scope": "P0.4",
+    "facets": [
+      "accessibility",
+      "performance",
+      "quality",
+      "testing"
+    ],
+    "semantic_score": 88.75,
+    "score": 96.63,
+    "min_score": 99,
+    "bootstrap_applies": false,
+    "bootstrap_rule": "plan §9 rule 6: P0.3 sub-PRs merge on green CI plus no ratchet regression, even below 99",
+    "facets_short_of_proven": [
+      "accessibility",
+      "performance",
+      "quality"
+    ],
+    "exit_rule_binds_from": "P0.4",
+    "exit_rule_binding": true,
+    "ratchet": {
+      "status": "met",
+      "baseline_ts": "2026-09-26",
+      "baseline_ref": "P0.3d-baseline-2",
+      "facets_compared": 21,
+      "regressions": []
+    },
+    "pass": false
+  }
+}
