@@ -6,6 +6,7 @@
 //
 //   node scripts/validate-jev-complete.mjs [--evidence ev.json] [--out r.json]
 //                                          [--json] [--local-only]
+//                                          [--scope P<n>.<m>] [--require-live]
 //
 // Evidence split (fail-closed both ways):
 //   auto facts   — collected here from code the evidence file cannot fake:
@@ -48,6 +49,15 @@ import {
   planItemAtLeast,
   COMPLETE_EXIT_RULE_FROM,
 } from "./lib/jev-complete.mjs";
+// P0.3(e) / F-45: the report has to say what kind of evidence it consumed and
+// what kind of run it was, so a CI judgment is distinguishable from a hand-typed
+// one, and the plan's re-run rule is readable from the report itself.
+import {
+  acceptLiveJudgment,
+  classifyRun,
+  evidenceSourceKind,
+  JEV_MODEL_ALIAS,
+} from "./lib/jev-ci.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 // P0.3(a) / R-AI-08: the price lives in exactly one module, shared with the
 // worker. The previous private `JEV_INPUT_PRICE_PER_MILLION = 42.0` was 100,000x
@@ -60,7 +70,8 @@ function usageError(msg) {
   process.stderr.write(`validate-jev-complete: ${msg}\n`);
   process.stderr.write(
     "usage: node scripts/validate-jev-complete.mjs [--scope P<n>.<m>] " +
-      "[--evidence FILE] [--out FILE] [ --json] [--local-only]\n",
+      "[--evidence FILE] [--out FILE] [ --json] [--local-only] " +
+      "[--require-live]\n",
   );
   process.exit(2);
 }
@@ -72,6 +83,7 @@ function parseArgs(argv) {
     json: false,
     localOnly: false,
     scope: null,
+    requireLive: false,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -87,6 +99,8 @@ function parseArgs(argv) {
       opts.json = true;
     } else if (arg === "--local-only") {
       opts.localOnly = true;
+    } else if (arg === "--require-live") {
+      opts.requireLive = true;
     } else if (arg === "--help" || arg === "-h") {
       usageError("this is the help text");
     } else {
@@ -238,8 +252,10 @@ async function attemptFetch(url, options) {
   }
 }
 
-// ONE direct attempt, ONE backup attempt — each provider a single request
-// with a hard timeout (the worker's bounded fallback shape, no retry loops).
+// ONE direct attempt — a single request with a hard timeout, never a retry
+// loop. P0.3(b) / D-13: TypeSafe direct is the only path, and the request asks
+// for the loose alias; what the gate will ACCEPT is a response naming a
+// concrete version (acceptLiveJudgment), so every score is attributable.
 async function liveJevCall(stateText, questions, keys) {
   const notes = [];
   // The official request shape is {model, state, questions} — the same
@@ -258,14 +274,14 @@ async function liveJevCall(stateText, questions, keys) {
         "Content-Type": "application/json",
       },
       signal: AbortSignal.timeout(JEV_TIMEOUT_MS),
-      body: JSON.stringify({ model: "jev-latest", ...payload }),
+      body: JSON.stringify({ model: JEV_MODEL_ALIAS, ...payload }),
     });
     if (r.ok && r.body) {
       return {
         answers: r.body.answers || r.body,
         usage: r.body.usage || null,
         provider: "typesafe",
-        model: r.body.model || "jev-latest",
+        model: r.body.model,
         notes,
       };
     }
@@ -384,18 +400,30 @@ export async function main(argv = process.argv.slice(2)) {
   // The transport budget is derived from the pack (P0.3(d)), so the gate hands
   // the state builder the axes it will actually ask about.
   const axisNames = Object.keys(pack.axes);
+  let hasKey = null;
+  let accepted = false;
+  let modelRequested = JEV_MODEL_ALIAS;
   if (!opts.localOnly) {
     const keys = resolveKeys(repoRoot);
+    hasKey = Boolean(keys.typesafeKey);
     const stateText = buildStateText(evidence, auto, axisNames);
     const questions = completeQuestionPack(pack);
     const result = await liveJevCall(stateText, questions, keys);
     if (result.answers) {
-      live = parseLiveAnswers(result.answers, pack);
-      if (!live) {
+      // The model version is pinned BEFORE the answers are believed: an
+      // unversioned response is not a judgment the gate will score on, however
+      // well-formed its answers look (plan §8 P0.3(e)).
+      const pin = acceptLiveJudgment({ model: result.model });
+      live = pin.accepted ? parseLiveAnswers(result.answers, pack) : null;
+      accepted = pin.accepted && Boolean(live);
+      if (!accepted) {
         liveMeta = {
           is_fallback: true,
           provider: result.provider,
+          model: pin.model,
+          model_requested: modelRequested,
           blocker:
+            pin.blocker ||
             "response had no valid facet answers (0-hallucination: nothing invented)",
         };
       } else {
@@ -403,7 +431,8 @@ export async function main(argv = process.argv.slice(2)) {
         liveMeta = {
           is_fallback: false,
           provider: result.provider,
-          model: result.model,
+          model: pin.model,
+          model_requested: modelRequested,
           input_tokens: inputTokens,
           cost_usd: jevCostUsd(inputTokens),
           notes: result.notes,
@@ -413,6 +442,7 @@ export async function main(argv = process.argv.slice(2)) {
       liveMeta = {
         is_fallback: true,
         provider: null,
+        model_requested: modelRequested,
         blocker: result.notes.join("; ") || "no provider reachable",
         notes: result.notes,
       };
@@ -444,8 +474,47 @@ export async function main(argv = process.argv.slice(2)) {
     test_count: auto.testCount,
     dirty_paths: auto.dirtyPaths,
   };
-  report.live_jev = { is_fallback: true, ...liveMeta };
+  report.live_jev = { is_fallback: true, accepted: false, ...liveMeta };
+  // `report.live` is the alias the report has always carried; the run class and
+  // the pinned model belong on both, so neither view can be read as a pass when
+  // the other says the run produced no judgment.
+  report.live = {
+    ...(report.live || {}),
+    is_fallback: report.live_jev.is_fallback,
+    accepted: report.live_jev.accepted,
+    model: report.live_jev.model,
+    model_requested: report.live_jev.model_requested,
+  };
   report.evidence_source = opts.evidence || "(none — run records default red)";
+  // §13.3: a hand-written evidence file is never proof on its own. That is only
+  // checkable if the report says which kind of file it read, so a reader can
+  // tell a CI judgment from a hand-typed one without leaving the report.
+  // No evidence file at all is its own state: "hand-maintained" would imply
+  // somebody maintained it, and the run records then default red.
+  report.evidence_source_kind = evidenceSourceKind(
+    opts.evidence ? runRecords : null,
+  );
+  // The plan allows one re-run of a provider error and none of a judgment
+  // (plan §8 P0.3(e)). Classifying the run makes that readable from the report
+  // instead of remembered from the plan.
+  const classified = classifyRun({
+    attempted: !opts.localOnly && hasKey !== null,
+    accepted,
+    hasKey,
+  });
+  report.run_class = classified.run_class;
+  report.rerun_allowed = classified.rerun_allowed;
+  report.rerun_policy = classified.policy;
+  if (opts.requireLive && !accepted) {
+    // Fail closed: --require-live means "this verdict only counts if a pinned
+    // live judgment made it". Without one there is no verdict, whatever the
+    // heuristic floors say.
+    report.blockers.push(
+      `--require-live: no accepted live judgment (${
+        liveMeta.blocker || "none was attempted"
+      }). A gate result without one is not a gate result.`,
+    );
+  }
 
   // ── scoped judgment (P0.3(c) / §13.3) ─────────────────────────────────────
   // The whole-program verdict above is the P10 bar and is expected to fail
@@ -524,7 +593,12 @@ export async function main(argv = process.argv.slice(2)) {
     printHuman(report);
     if (opts.out) process.stdout.write(`report written: ${opts.out}\n`);
   }
-  return (opts.scope ? scopedPass : report.pass) ? 0 : 1;
+  // `--require-live` can only ever make the run fail, never pass: a missing or
+  // unpinned judgment is a blocker, so the exit is 1 regardless of what the
+  // scores say.
+  const gatePassed = opts.scope ? scopedPass : report.pass;
+  const failed = !accepted && opts.requireLive;
+  return gatePassed && !failed ? 0 : 1;
 }
 
 const isDirectRun =
