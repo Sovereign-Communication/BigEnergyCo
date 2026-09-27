@@ -5,9 +5,9 @@
   "smoke_green": true,
   "ci_green": true,
 
-  "tests_summary": "815/815 npm test green (815 tests, 815 pass, 0 fail), measured on this tree. P0.3(d) added 11 gates for the five new pack facets. deploy:check stages the build clean; the promote verifier counts 358 published files.",
+  "tests_summary": "816/816 npm test green (816 tests, 816 pass, 0 fail), measured on this tree. P0.3(d) added 12 gates: 11 for the five new pack facets, 1 pinning that the ledger's declared baseline actually resolves. deploy:check stages the build clean; the promote verifier counts 358 published files.",
 
-  "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 815 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached",
+  "ci_summary": "PRs #144-#148 merged 5/5 green (analyze, coverage, test, web-smoke, CodeQL). This head: 816 tests, 153 smoke gates, prettier, seo, plan:check and deploy:check green, Jev report attached",
 
   "prettier_clean_summary": "prettier 3.9.6 --check repo-wide: all matched files use Prettier code style (exit 0)",
 
