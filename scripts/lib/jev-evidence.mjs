@@ -29,9 +29,63 @@ export const RECORD_SOURCES = {
 };
 
 // The whole of `ci_green`: every job the gate depends on, concluded success.
-export const CI_GREEN_JOBS = ["test", "web-smoke", "coverage"];
+//
+// It used to be a list written here, and that is the drift this replaces. A
+// hand-written list of job names in the evidence code and the set of gates the
+// workflow actually runs are two sources that fall apart silently: quality-lab
+// was a required gate and this list did not know it existed, so a run with
+// quality-lab red recorded `ci_green: true` — a field the judge reads directly,
+// describing a run that was not green. See requiredJobsFromWorkflow.
+export const EVIDENCE_JUDGE_MARKER = "build-jev-evidence.mjs";
 
-export const RUN_RECORD_FIELDS = [...Object.keys(RECORD_SOURCES), "ci_green"];
+/**
+ * The required set, read from the workflow's own declarations: every job it
+ * defines, minus the one that builds the evidence.
+ *
+ * Pure text in, list out — no YAML dependency, and the workflow file is the
+ * repo's own file, so what "CI was green" means is defined by what CI runs
+ * rather than by a second list to remember to update. The judge is excluded by
+ * what it does, not by name: a job that composes the record cannot be a
+ * required job whose own conclusion that record must carry (it is red by
+ * design until owner action O-01 lands, and a self-referential gate could
+ * never pass).
+ *
+ * A gate that declares no result artifact is still required: the missing
+ * artifact is then a named, fatal problem, not a pass.
+ */
+export function requiredJobsFromWorkflow(workflowText) {
+  if (typeof workflowText !== "string" || !workflowText.trim()) return [];
+  const jobsAt = workflowText.search(/^jobs:\s*$/m);
+  if (jobsAt === -1) return [];
+  const section = workflowText.slice(jobsAt);
+  const blockOf = (name) => {
+    const start = section.search(new RegExp(`^ {2}${name}:[ \\t]*$`, "m"));
+    if (start === -1) return "";
+    const rest = section.slice(start);
+    // A job's block runs to the next two-space key. Matching "\n  " alone would
+    // stop at the first nested line, because every deeper line contains it.
+    const next = rest.slice(1).search(/\n {2}\S/);
+    return next === -1 ? rest : rest.slice(0, next + 1);
+  };
+  const names = [...section.matchAll(/^ {2}([A-Za-z0-9_-]+):[ \t]*$/gm)].map(
+    (m) => m[1],
+  );
+  return names.filter((name) => !blockOf(name).includes(EVIDENCE_JUDGE_MARKER));
+}
+
+// What `ci_green` meant before it was widened: the three jobs this module named
+// for years. Kept as its own record because the ratchet has been comparing what
+// it describes — the release facet's floor, which lib/jev-complete.mjs derives
+// from it — and widening ci_green must not silently change what a ratchet
+// compares from one run to the next. It is a measurement, not a gate: a red
+// legacy job is already named as a problem because all three are required jobs.
+export const LEGACY_GATE_JOBS = ["test", "web-smoke", "coverage"];
+
+export const RUN_RECORD_FIELDS = [
+  ...Object.keys(RECORD_SOURCES),
+  "ci_green",
+  "legacy_gates_green",
+];
 
 // The gate measures these itself, from the tree in front of the process. An
 // evidence file cannot assert them: code-owned facts outrank any claim, and
@@ -120,7 +174,7 @@ export function parseJobResult(text) {
  * the cancellation, and the builder exits non-zero. Nothing is papered over and
  * nothing real is thrown away.
  */
-export function runRecordsFromArtifacts(artifacts) {
+export function runRecordsFromArtifacts(artifacts, requiredJobs) {
   const byJob = new Map();
   const problems = [];
   for (const [name, raw] of Object.entries(artifacts || {})) {
@@ -168,18 +222,37 @@ export function runRecordsFromArtifacts(artifacts) {
     }
   }
 
-  const missingOrRed = CI_GREEN_JOBS.filter((name) => {
-    const job = byJob.get(name);
-    return !job || job.conclusion !== "success";
-  });
-  records.ci_green = missingOrRed.length === 0;
-  for (const name of missingOrRed) {
-    const job = byJob.get(name);
-    const detail = job
-      ? `concluded ${job.conclusion}, so the run is cut short`
-      : "has no artifact at all";
-    problems.push(`job "${name}" ${detail}`);
+  // `ci_green` is the whole required set, and nothing else: the job that
+  // fails this is the one the judge reads. The set comes from the workflow, so
+  // the next gate declared there is covered without a code edit.
+  const required = Array.isArray(requiredJobs) ? requiredJobs : [];
+  if (required.length === 0) {
+    records.ci_green = false;
+    problems.push(
+      "the required job set was not derived from the workflow, so ci_green is unproven",
+    );
+  } else {
+    const missingOrRed = required.filter((name) => {
+      const job = byJob.get(name);
+      return !job || job.conclusion !== "success";
+    });
+    records.ci_green = missingOrRed.length === 0;
+    for (const name of missingOrRed) {
+      const job = byJob.get(name);
+      const detail = job
+        ? `concluded ${job.conclusion}, so the run is cut short`
+        : "has no artifact at all";
+      problems.push(`job "${name}" ${detail}`);
+    }
   }
+
+  // The legacy triple, as its own fact: computed from the same artifacts and
+  // never inferred from the wider ci_green, so the two can be compared
+  // honestly and the ratchet's older comparison keeps its meaning.
+  records.legacy_gates_green = LEGACY_GATE_JOBS.every((name) => {
+    const job = byJob.get(name);
+    return Boolean(job) && job.conclusion === "success";
+  });
   return { records, problems };
 }
 
@@ -206,12 +279,16 @@ const PROSE_ALLOWLIST = new Set([
  */
 export function composeEvidence({
   artifacts,
+  requiredJobs,
   prose,
   run = {},
   generatedAt = null,
   problems: extraProblems = [],
 } = {}) {
-  const { records, problems } = runRecordsFromArtifacts(artifacts);
+  const { records, problems } = runRecordsFromArtifacts(
+    artifacts,
+    requiredJobs,
+  );
   const allProblems = [...problems, ...extraProblems];
   const narrative = {};
   const source =

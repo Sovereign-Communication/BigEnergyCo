@@ -54,6 +54,7 @@ test("GATE: a whole-program run fails while any facet is short of proven", () =>
       "tests_green",
       "smoke_green",
       "ci_green",
+      "legacy_gates_green",
       "prettier_clean",
       "seo_green",
       "secrets_clean",
@@ -68,6 +69,11 @@ test("GATE: a whole-program run fails while any facet is short of proven", () =>
   });
   assert.equal(r.hard_gates_passed, true, "every hard gate is green");
   assert.equal(r.mechanical_score, 100);
+  assert.equal(
+    r.facets.release.ordinal,
+    85,
+    "release is a step below proven, which is the level its code fact feeds it",
+  );
   assert.equal(
     r.score >= COMPLETE_MIN_SCORE,
     true,
