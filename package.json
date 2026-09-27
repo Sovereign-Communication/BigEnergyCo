@@ -23,6 +23,7 @@
     "format:check": "npx --yes prettier@3.9.6 --check .",
     "gate:complete": "node scripts/validate-jev-complete.mjs",
     "gate:jev-evidence": "node scripts/build-jev-evidence.mjs",
+    "gate:byte-budgets": "node scripts/check-byte-budgets.mjs",
     "smoke": "node scripts/browser-smoke.mjs",
     "deploy:check": "node scripts/deploy-pages-local.mjs --check",
     "verify:staging": "node scripts/verify-staging.mjs",
