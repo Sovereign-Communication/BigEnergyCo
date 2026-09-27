@@ -237,6 +237,75 @@ export function evidenceSourceKind(evidence) {
     : "hand-maintained";
 }
 
+/**
+ * Write the run's own facts onto the report — the live view, the run class, the
+ * re-run permission, the evidence provenance, and the `--require-live` blocker.
+ *
+ * This lives here, in the pure core, rather than in the CLI because it is a rule
+ * and not plumbing: ONE report must not be able to say "judgment" on one field
+ * and "no judgment accepted" on another. A rehearsal caught exactly that — the
+ * success path left `accepted` at its false default while `run_class` correctly
+ * said "judgment". The two views are now written from one value.
+ */
+export function attachRunFacts(
+  report,
+  {
+    liveMeta = {},
+    attempted = false,
+    hasKey = null,
+    requireLive = false,
+    evidence = null,
+    evidenceSource = null,
+  } = {},
+) {
+  const accepted = liveMeta.accepted === true;
+  const live = {
+    is_fallback: liveMeta.is_fallback !== false,
+    accepted,
+    model: liveMeta.model ?? null,
+    model_requested: liveMeta.model_requested ?? JEV_MODEL_ALIAS,
+    ...(liveMeta.blocker ? { blocker: liveMeta.blocker } : {}),
+    ...(liveMeta.input_tokens != null
+      ? { input_tokens: liveMeta.input_tokens }
+      : {}),
+    ...(liveMeta.cost_usd != null ? { cost_usd: liveMeta.cost_usd } : {}),
+  };
+  const classified = classifyRun({ attempted, accepted, hasKey });
+  report.live_jev = { ...liveMeta, ...live };
+  // The alias the report has always carried, kept in step with the primary view
+  // so neither can be read as a pass when the other says no judgment was made.
+  report.live = {
+    ...(report.live || {}),
+    is_fallback: live.is_fallback,
+    accepted: live.accepted,
+    model: live.model,
+    model_requested: live.model_requested,
+  };
+  report.evidence_source = evidenceSource;
+  // No evidence file at all is its own state: "hand-maintained" would imply
+  // somebody maintained it, while the run records then default red.
+  report.evidence_source_kind = evidenceSourceKind(evidence);
+  report.run_class = classified.run_class;
+  report.rerun_allowed = classified.rerun_allowed;
+  report.rerun_policy = classified.policy;
+  if (requireLive && !accepted) {
+    // Fail closed: --require-live means this verdict only counts if a pinned
+    // live judgment made it. Without one there is no verdict, whatever the
+    // heuristic floors say.
+    report.blockers.push(
+      `--require-live: no accepted live judgment (${
+        liveMeta.blocker || "none was attempted"
+      }). A gate result without one is not a gate result.`,
+    );
+  }
+  return report;
+}
+
+/** The exit code: the gate's own verdict, and --require-live can only subtract. */
+export function gateExitCode({ gatePassed, accepted, requireLive }) {
+  return gatePassed && !(requireLive && !accepted) ? 0 : 1;
+}
+
 // The loose alias the request asks for. A response that only echoes it names no
 // version, so nothing about that judgment is reproducible.
 export const JEV_MODEL_ALIAS = "jev-latest";
@@ -316,7 +385,6 @@ export function classifyRun({ attempted, accepted, hasKey = null } = {}) {
 // Plan item ids, with an optional sub-letter the plan does not actually use:
 // P0.3d normalises to P0.3 rather than inventing an id the plan never lists.
 const PLAN_ITEM = /\bP(\d+)(?:\.(\d+))?([a-z])?\b/g;
-
 function normalisePlanItem(match) {
   const [, major, minor] = match;
   return minor === undefined ? `P${major}` : `P${major}.${minor}`;

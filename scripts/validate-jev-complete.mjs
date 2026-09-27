@@ -54,8 +54,8 @@ import {
 // one, and the plan's re-run rule is readable from the report itself.
 import {
   acceptLiveJudgment,
-  classifyRun,
-  evidenceSourceKind,
+  attachRunFacts,
+  gateExitCode,
   JEV_MODEL_ALIAS,
 } from "./lib/jev-ci.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
@@ -396,7 +396,11 @@ export async function main(argv = process.argv.slice(2)) {
   evidence._dirtyPaths = auto.dirtyPaths;
 
   let live = null;
-  let liveMeta = { is_fallback: true, blocker: "not attempted (--local-only)" };
+  let liveMeta = {
+    is_fallback: true,
+    accepted: false,
+    blocker: "not attempted (--local-only)",
+  };
   // The transport budget is derived from the pack (P0.3(d)), so the gate hands
   // the state builder the axes it will actually ask about.
   const axisNames = Object.keys(pack.axes);
@@ -419,6 +423,7 @@ export async function main(argv = process.argv.slice(2)) {
       if (!accepted) {
         liveMeta = {
           is_fallback: true,
+          accepted: false,
           provider: result.provider,
           model: pin.model,
           model_requested: modelRequested,
@@ -430,6 +435,7 @@ export async function main(argv = process.argv.slice(2)) {
         const inputTokens = Number(result.usage?.input_tokens) || 0;
         liveMeta = {
           is_fallback: false,
+          accepted: true,
           provider: result.provider,
           model: pin.model,
           model_requested: modelRequested,
@@ -441,6 +447,7 @@ export async function main(argv = process.argv.slice(2)) {
     } else {
       liveMeta = {
         is_fallback: true,
+        accepted: false,
         provider: null,
         model_requested: modelRequested,
         blocker: result.notes.join("; ") || "no provider reachable",
@@ -474,47 +481,18 @@ export async function main(argv = process.argv.slice(2)) {
     test_count: auto.testCount,
     dirty_paths: auto.dirtyPaths,
   };
-  report.live_jev = { is_fallback: true, accepted: false, ...liveMeta };
-  // `report.live` is the alias the report has always carried; the run class and
-  // the pinned model belong on both, so neither view can be read as a pass when
-  // the other says the run produced no judgment.
-  report.live = {
-    ...(report.live || {}),
-    is_fallback: report.live_jev.is_fallback,
-    accepted: report.live_jev.accepted,
-    model: report.live_jev.model,
-    model_requested: report.live_jev.model_requested,
-  };
-  report.evidence_source = opts.evidence || "(none — run records default red)";
-  // §13.3: a hand-written evidence file is never proof on its own. That is only
-  // checkable if the report says which kind of file it read, so a reader can
-  // tell a CI judgment from a hand-typed one without leaving the report.
-  // No evidence file at all is its own state: "hand-maintained" would imply
-  // somebody maintained it, and the run records then default red.
-  report.evidence_source_kind = evidenceSourceKind(
-    opts.evidence ? runRecords : null,
-  );
-  // The plan allows one re-run of a provider error and none of a judgment
-  // (plan §8 P0.3(e)). Classifying the run makes that readable from the report
-  // instead of remembered from the plan.
-  const classified = classifyRun({
+  // Every fact about the run itself — the live view, the run class, the re-run
+  // permission, the evidence provenance, and the --require-live blocker — is
+  // written in one place (scripts/lib/jev-ci.mjs) so the report cannot describe
+  // the same run two ways.
+  attachRunFacts(report, {
+    liveMeta,
     attempted: !opts.localOnly && hasKey !== null,
-    accepted,
     hasKey,
+    requireLive: opts.requireLive,
+    evidence: opts.evidence ? runRecords : null,
+    evidenceSource: opts.evidence || "(none — run records default red)",
   });
-  report.run_class = classified.run_class;
-  report.rerun_allowed = classified.rerun_allowed;
-  report.rerun_policy = classified.policy;
-  if (opts.requireLive && !accepted) {
-    // Fail closed: --require-live means "this verdict only counts if a pinned
-    // live judgment made it". Without one there is no verdict, whatever the
-    // heuristic floors say.
-    report.blockers.push(
-      `--require-live: no accepted live judgment (${
-        liveMeta.blocker || "none was attempted"
-      }). A gate result without one is not a gate result.`,
-    );
-  }
 
   // ── scoped judgment (P0.3(c) / §13.3) ─────────────────────────────────────
   // The whole-program verdict above is the P10 bar and is expected to fail
@@ -596,9 +574,11 @@ export async function main(argv = process.argv.slice(2)) {
   // `--require-live` can only ever make the run fail, never pass: a missing or
   // unpinned judgment is a blocker, so the exit is 1 regardless of what the
   // scores say.
-  const gatePassed = opts.scope ? scopedPass : report.pass;
-  const failed = !accepted && opts.requireLive;
-  return gatePassed && !failed ? 0 : 1;
+  return gateExitCode({
+    gatePassed: opts.scope ? scopedPass : report.pass,
+    accepted,
+    requireLive: opts.requireLive,
+  });
 }
 
 const isDirectRun =
