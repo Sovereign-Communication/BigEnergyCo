@@ -456,3 +456,50 @@ test("GATE: a scoped run at or after the binding point fails on any facet short 
     "the report must state where the rule binds, so it is never implicit",
   );
 });
+
+// A declared baseline that the reader cannot resolve is the quietest failure in
+// the whole ratchet: readRatchetBaseline SKIPS a row it cannot read, so the
+// declaration looks accepted in the ledger while the previous baseline keeps
+// binding. That happened once for real — the P0.3d-baseline row nested
+// `facet_ordinals` inside `baseline_advance`, and the reader looks for the two
+// as siblings, so the row was ignored and the gate kept ratcheting against
+// P0.3c-baseline-2 while the ledger claimed a new bar. This pins the real
+// ledger against it: the declared baseline must resolve, cover every axis the
+// pack declares, and be the row the ledger actually names.
+test("GATE: the ledger's declared baseline resolves, and covers every axis", () => {
+  const ledger = readFileSync(join(ROOT, "docs/plan/LEDGER.jsonl"), "utf8");
+  const baseline = readRatchetBaseline(ledger, pack);
+  assert.equal(
+    baseline.status,
+    "active",
+    "no ledger row declares a baseline the reader can resolve — the ratchet " +
+      "is inactive, so no run is checked against anything",
+  );
+  assert.ok(baseline.from_ref, "the resolved baseline must name its row");
+  assert.ok(baseline.reason, "a resolved baseline must carry its reason");
+  // Every axis the pack declares, including the five P0.3(d) facets. A
+  // baseline that silently omits an axis leaves that facet un-ratcheted.
+  for (const axis of Object.keys(pack.axes)) {
+    assert.equal(
+      typeof baseline.ordinals[axis],
+      "number",
+      `the declared baseline has no ordinal for "${axis}", so that facet ` +
+        "carries no regression protection",
+    );
+  }
+  // And the row the reader resolved must be one the ledger really contains,
+  // carrying its ordinals as a sibling of the declaration — the exact shape
+  // that was silently skipped.
+  const row = ledger
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((l) => JSON.parse(l))
+    .find((r) => r.ref === baseline.from_ref);
+  assert.ok(row, `the ledger has no row with ref ${baseline.from_ref}`);
+  assert.ok(
+    row.evidence?.jev?.facet_ordinals,
+    `${baseline.from_ref} must carry evidence.jev.facet_ordinals beside its ` +
+      "declaration, not nested inside it",
+  );
+});
