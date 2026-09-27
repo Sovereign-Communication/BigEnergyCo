@@ -124,11 +124,19 @@ export function main(argv = process.argv.slice(2)) {
   );
 
   const kb = (n) => formatReading(n, "bytes");
+  // More than one tag can be true of a budget at once, and dropping any of them
+  // loses something: a metric can be over the plan's limit AND unmeasured
+  // against no bar. A verdict column that printed "ok" beside a 3.3x breach is
+  // how a breach stops being read, so the tags accumulate and "ok" means what
+  // it says — within the limit, and not moved.
   const verdictOf = (name) => {
-    if (regressions.some((r) => r.metric === name)) return "REGRESSION";
-    if (unmeasured.some((u) => u.metric === name)) return "unmeasured";
-    if (improvements.some((i) => i.metric === name)) return "improved";
-    return "ok";
+    const m = metrics[name];
+    const tags = [];
+    if (regressions.some((r) => r.metric === name)) tags.push("REGRESSION");
+    if (typeof m.value === "number" && m.value > m.limit) tags.push("breach");
+    if (unmeasured.some((u) => u.metric === name)) tags.push("unmeasured");
+    if (improvements.some((i) => i.metric === name)) tags.push("improved");
+    return tags.length ? tags.join("+") : "ok";
   };
 
   const out = process.stdout;
