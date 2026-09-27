@@ -408,7 +408,11 @@ async function runSizingUncached(msg, deps = {}) {
     pvMaxOverride = null,
     wiringOverride = null,
     mpptOverride = null,
+    // #155: no-swap UI option. Default false = the oversize/swap strategy
+    // stays on (existing behavior); true disables it engine-wide.
+    noSwapMode = false,
   } = msg;
+  const oversizeStrategy = !noSwapMode;
   // Fixed monthly charge (utility connection fee, USD): it can never be cut,
   // so it rides along on every bill figure — grid spend, bill-after, and the
   // residual the cumulative chart keeps paying — while savings, payback and
@@ -1629,6 +1633,7 @@ async function runSizingUncached(msg, deps = {}) {
   // Shared sizing options for the fixed-chemistry bill-cut targets (used by
   // the full run and by the incremental slider patch alike).
   const billCutOpts = {
+    oversizeStrategy,
     e1kw,
     loadWh,
     tempsC,
@@ -1679,6 +1684,7 @@ async function runSizingUncached(msg, deps = {}) {
         const customEntries = [];
         for (const chemId of AUTO_CHEMS) {
           const sized = sizeForBillCut({
+            oversizeStrategy,
             e1kw,
             loadWh,
             tempsC,
@@ -1717,6 +1723,7 @@ async function runSizingUncached(msg, deps = {}) {
         }
         // Lead-acid reference at the same slider target (savings indicator).
         const agmSized = sizeForBillCut({
+          oversizeStrategy,
           e1kw,
           loadWh,
           tempsC,
@@ -1893,6 +1900,7 @@ async function runSizingUncached(msg, deps = {}) {
       for (const chemId of AUTO_CHEMS) {
         const capScale = effectiveCapacityScale(chemId, meanTempC);
         const results = sizeAllBillTargets({
+          oversizeStrategy,
           e1kw,
           loadWh,
           tempsC,
@@ -1981,6 +1989,7 @@ async function runSizingUncached(msg, deps = {}) {
       const customEntries = [];
       for (const chemId of AUTO_CHEMS) {
         const sized = sizeForBillCut({
+          oversizeStrategy,
           e1kw,
           loadWh,
           tempsC,
@@ -2022,6 +2031,7 @@ async function runSizingUncached(msg, deps = {}) {
       }
       // Lead-acid reference at the same slider target (savings indicator).
       const agmSized = sizeForBillCut({
+        oversizeStrategy,
         e1kw,
         loadWh,
         tempsC,
@@ -2219,6 +2229,7 @@ async function runSizingUncached(msg, deps = {}) {
       for (const chemId of AUTO_CHEMS) {
         const capScale = effectiveCapacityScale(chemId, meanTempC);
         const allTiers = sizeAllTiers({
+          oversizeStrategy,
           e1kw,
           loadWh,
           tempsC,
@@ -2358,6 +2369,7 @@ async function runSizingUncached(msg, deps = {}) {
     let agmReference = null;
     if (!unreachableReason) {
       const agmTiers = sizeAllTiers({
+        oversizeStrategy,
         e1kw,
         loadWh,
         tempsC,
@@ -2448,6 +2460,7 @@ async function runSizingUncached(msg, deps = {}) {
   const chem = CHEMISTRIES[chemistry] || CHEMISTRIES.lfp;
   const capScale = effectiveCapacityScale(chemistry, meanTempC);
   const results = sizeAllTiers({
+    oversizeStrategy,
     e1kw,
     loadWh,
     tempsC,

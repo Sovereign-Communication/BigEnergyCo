@@ -2184,6 +2184,9 @@ function readInputs() {
     peakSurgeW,
     requiresSplitPhase,
     climateAware: $("climateAwareToggle")?.checked === true,
+    // #155: no-swap UI option — unchecked by default, so default behavior
+    // is unchanged (the oversize/swap strategy stays on).
+    noSwapMode: $("noSwapToggle")?.checked === true,
     soilingOverride: null,
     wiringOverride: readPercentInput("wiringOverride"),
     mpptOverride: readPercentInput("mpptOverride"),
@@ -7701,6 +7704,12 @@ export function initSizingUI() {
     const climateToggle = $("climateAwareToggle");
     if (climateToggle)
       climateToggle.addEventListener("change", () => {
+        markPrecalcDirty();
+      });
+    // #155: toggling the no-swap option invalidates cached results.
+    const noSwapToggle = $("noSwapToggle");
+    if (noSwapToggle)
+      noSwapToggle.addEventListener("change", () => {
         markPrecalcDirty();
       });
 

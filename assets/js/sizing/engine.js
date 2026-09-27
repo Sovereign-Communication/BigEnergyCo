@@ -501,6 +501,27 @@ export function evaluateOversizeOptimization({
   }
 }
 
+// #155: the no-swap UI option. Builds the oversize-result stand-in used when
+// the oversize/swap strategy is disabled: no evaluation, no adoption — the
+// engine's direct pick, labeled so results are distinguishable in both modes.
+function strategyOffOpt(best, chemistry, years) {
+  const cyclesPerYear = best.result.cyclesEquivalent / years;
+  const replacements = batteryReplacements(
+    cyclesPerYear,
+    CHEMISTRIES[chemistry].cyclesTo80,
+  );
+  return {
+    useOversized: false,
+    oversizeScenario: "strategy_off",
+    oversizedBattKwh: best.battKwh,
+    oversizeSavingsUsd: 0,
+    bestPriceCallout:
+      replacements > 0
+        ? `Oversize strategy off: the engine's direct pick — ${replacements} bank swap(s) over 20 years are counted in the lifetime cost.`
+        : `Oversize strategy off: the engine's direct pick — the bank already lasts the full 20-year horizon with zero swaps.`,
+  };
+}
+
 // ── Tier sizing search ──────────────────────────────────────────────────────
 
 /**
@@ -527,6 +548,11 @@ export function sizeForTier({
   capacityScale = null,
   laborPerKwh,
   invMinKw = 0,
+  // #155: the battery-oversize swap strategy. When true (default), the
+  // engine evaluates a verified-cheaper oversized bank and adopts it;
+  // when false, the engine returns its direct pick (swaps included) with
+  // no oversize adoption. Default preserves existing behavior.
+  oversizeStrategy = true,
 }) {
   // The strictest tier ("100% — no generator") uses a fine shortfall
   // threshold (0.1 Wh): at a zero-hour budget, sub-1-Wh shortfalls must not
@@ -627,19 +653,27 @@ export function sizeForTier({
     }
   }
 
-  const opt = evaluateOversizeOptimization({
-    pvKw: best.pvKw,
-    battKwh: best.battKwh,
-    sizingResult: best.result,
-    chemistry,
-    years,
-    costPerWpv,
-    costPerKwhBatt,
-    costPerKwInv,
-    laborPerKwh,
-    invMinKw,
-  });
-  if (opt.useOversized && opt.oversizedBattKwh > best.battKwh) {
+  // #155: with the strategy off there is no oversize evaluation or
+  // adoption — the engine returns its direct pick (swaps included).
+  const opt = oversizeStrategy
+    ? evaluateOversizeOptimization({
+        pvKw: best.pvKw,
+        battKwh: best.battKwh,
+        sizingResult: best.result,
+        chemistry,
+        years,
+        costPerWpv,
+        costPerKwhBatt,
+        costPerKwInv,
+        laborPerKwh,
+        invMinKw,
+      })
+    : strategyOffOpt(best, chemistry, years);
+  if (
+    oversizeStrategy &&
+    opt.useOversized &&
+    opt.oversizedBattKwh > best.battKwh
+  ) {
     // Verify zero-swap on a fresh simulation instead of assuming it
     // (throughput shifts with bank size), growing the bank within the
     // envelope until replacements truly hit zero. Then re-optimize PV
@@ -951,6 +985,11 @@ export function sizeForBillCut({
   capacityScale = null,
   laborPerKwh,
   invMinKw = 0,
+  // #155: the battery-oversize swap strategy. When true (default), the
+  // engine evaluates a verified-cheaper oversized bank and adopts it;
+  // when false, the engine returns its direct pick (swaps included) with
+  // no oversize adoption. Default preserves existing behavior.
+  oversizeStrategy = true,
 }) {
   const f = Number(minFraction);
   if (!Number.isFinite(f) || f < 0.01 || f > 1.5) {
@@ -1093,19 +1132,27 @@ export function sizeForBillCut({
     }
   }
 
-  const opt = evaluateOversizeOptimization({
-    pvKw: best.pvKw,
-    battKwh: best.battKwh,
-    sizingResult: best.result,
-    chemistry,
-    years,
-    costPerWpv,
-    costPerKwhBatt,
-    costPerKwInv,
-    laborPerKwh,
-    invMinKw,
-  });
-  if (opt.useOversized && opt.oversizedBattKwh > best.battKwh) {
+  // #155: with the strategy off there is no oversize evaluation or
+  // adoption — the engine returns its direct pick (swaps included).
+  const opt = oversizeStrategy
+    ? evaluateOversizeOptimization({
+        pvKw: best.pvKw,
+        battKwh: best.battKwh,
+        sizingResult: best.result,
+        chemistry,
+        years,
+        costPerWpv,
+        costPerKwhBatt,
+        costPerKwInv,
+        laborPerKwh,
+        invMinKw,
+      })
+    : strategyOffOpt(best, chemistry, years);
+  if (
+    oversizeStrategy &&
+    opt.useOversized &&
+    opt.oversizedBattKwh > best.battKwh
+  ) {
     // Verify zero-swap on a fresh simulation (throughput shifts with bank
     // size), growing within the envelope until replacements truly hit zero.
     let b = opt.oversizedBattKwh;
