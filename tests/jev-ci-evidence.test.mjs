@@ -103,6 +103,15 @@ const GREEN = {
     conclusion: "success",
     steps: { coverage: "success" },
   },
+  // Q-02's gate. It is a required job because the workflow declares it, and
+  // the derivation is what makes a new gate required without a code edit — so
+  // every "all gates green" fixture has to carry it, exactly as it had to carry
+  // `quality-lab` when that job arrived.
+  lighthouse: {
+    job: "lighthouse",
+    conclusion: "success",
+    steps: { lighthouse: "success" },
+  },
 };
 
 const PROSE = {
@@ -172,6 +181,7 @@ const RED_TESTS = {
   },
   "web-smoke": GREEN["web-smoke"],
   coverage: GREEN.coverage,
+  lighthouse: GREEN.lighthouse,
 };
 
 test("EVIDENCE: every run record comes from the artifacts, never from prose", () => {
@@ -206,6 +216,7 @@ test("EVIDENCE: a step's own outcome is the record; a job that did not finish is
       "web-smoke": GREEN["web-smoke"],
       "quality-lab": GREEN["quality-lab"],
       coverage: GREEN.coverage,
+      lighthouse: GREEN.lighthouse,
     },
     REQUIRED,
   );
@@ -239,6 +250,7 @@ test("EVIDENCE: a missing artifact or a step that never ran is red, and named", 
       "web-smoke": GREEN["web-smoke"],
       "quality-lab": GREEN["quality-lab"],
       coverage: GREEN.coverage,
+      lighthouse: GREEN.lighthouse,
     },
     REQUIRED,
   );
