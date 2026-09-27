@@ -138,6 +138,19 @@ jobs:
       - name: Real-browser smoke on the staged build
         id: smoke
         run: npm run smoke:local
+      # P0.4: the plan's §3.1 compressed byte and request budgets, measured on
+      # a staged build and ratcheted against the last `baseline` ledger row.
+      # It lives here because this job already produces a real staged artifact;
+      # `smoke:local` deletes its own stage, and a second staging pass costs
+      # ~2s, so this measures the same allowlisted bytes the browser just saw.
+      # Plan §3.2 makes these gates regression-blocking from P0, so a failure
+      # here reds the job and the Jev gate's evidence builder fails closed on
+      # it. It moves to the `quality-lab` job when P0.4's browser gates land.
+      - name: Compressed byte and request budgets (plan §3.1)
+        id: byte-budgets
+        run: |
+          node scripts/deploy-pages-local.mjs --check --stage _pages_budget
+          node scripts/check-byte-budgets.mjs --stage _pages_budget
       # P0.3(e): the smoke outcome the gate reports is this runner's, not a
       # claim in a committed file.
       - name: Record this job's results for the Jev gate

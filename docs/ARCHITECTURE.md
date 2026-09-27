@@ -260,6 +260,53 @@ Guarded by:
   and the gate's modules import rather than restate it.
 - `tests/jev-facets.test.mjs` — the pack's axes, buckets and derived budget.
 
+## Byte budgets (P0.4(a): plan §3.1 measured on the staged build)
+
+Two files, one direction of travel. `scripts/lib/byte-budgets.mjs` never touches
+a filesystem: it takes a staged build described as data (a file list and a
+reader) and returns one reading per §3.1 budget. The CLI supplies the disk.
+
+| module                           | owns                                                                                                                                            | touches the network/disk?    |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| `scripts/lib/byte-budgets.mjs`   | the §3.1 limits (verbatim), what each budget's **scope** is, the brotli measurement, the per-metric bar from the ledger, the ratchet comparison | no — takes `{files, read}`   |
+| `scripts/check-byte-budgets.mjs` | walking a stage dir, the printed table, the exit code                                                                                           | reads the stage + the ledger |
+
+Three things worth knowing before changing any of it:
+
+- **The scope of a budget is a decision, not an implementation detail.**
+  "JavaScript before step 1 is interactive" is the transitive module graph the
+  document's scripts reach; the registry line is the **worst** country, not an
+  average; the locale line is the per-locale share, with the whole file reported
+  beside it. Each of those choices has a named test, because a budget measured
+  over the wrong set is a number nobody can act on.
+- **A subject that is not in the build reads `null`, never `0`.** A missing
+  stylesheet, strings file, country file or heatmap page is `status: "not_found"`
+  and compares as `unmeasured`. `0` would satisfy the budget without anything
+  having been read — which is how the first run of this gate reported a
+  0-byte heatmap payload and a `0.0 KB` request count, both of which looked
+  like budgets met.
+- **The bar is per metric and lives in the ledger.** Only a `baseline` row sets
+  it, the newest declared reading of each metric wins, and a row that says
+  nothing about a metric leaves that metric alone. A `gate-run` row carries the
+  metrics of the run that produced it; if it could set the bar, every run would
+  compare against itself.
+
+§3.2 makes these gates **regression-blocking from P0** and absolute only from P6
+(`/next/`) and P8 (all), so an over-limit reading is printed as a breach and only
+getting _worse_ against the declared baseline fails. Three limits are breached at
+the P0.4 baseline and stay visible rather than relaxed; §3.1 allows a relaxation
+only by measured evidence plus an owner-approved amendment, and the amendment
+lives in the plan.
+
+Guarded by `tests/byte-budgets.test.mjs` — the verbatim limits, every scope, the
+ratchet semantics, the absent-subject rule, the per-metric bar, and the CLI's
+exit codes. Every assertion here has a proven mutation: relaxing a limit,
+counting only the entry scripts, enforcing absolutely, letting an older row win,
+letting a gate run set the bar, passing on a regression, dropping the tolerance,
+finding no heatmap page, resolving a `fetch()` against the script instead of the
+document, reading an absent subject as 0, printing a count as bytes, and
+comparing an unreadable metric anyway.
+
 ## Known remaining debt (deliberate, not forgotten)
 
 - `ui.js` is still ~8.0k lines (7,999 at this writing): form state, rendering
