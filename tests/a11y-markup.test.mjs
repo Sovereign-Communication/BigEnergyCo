@@ -15,6 +15,7 @@
 //   scrollable-region-focusable [serious] a post's table wrapper
 //   landmark-one-main    [moderate]   404
 //   region               [moderate]   404
+//   AUDIT ERROR (the whole cell)       solar-heatmap — see the canvas gate below
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -29,6 +30,199 @@ const FRONTIER = "assets/js/sizing/frontier-chart.js";
 const BLOG_INDEX = "blog/index.html";
 const BLOG_POST = "blog/battery-longevity-and-dod-reference/index.html";
 const NOT_FOUND = "404.html";
+const HEATMAP = "assets/js/heatmap.js";
+const HEATMAP_PAGE = "solar-heatmap/index.html";
+const HEATMAP_GRID = "assets/data/heatmap-grid.json";
+
+test("A11Y: the heatmap draws its dots on a canvas, not one DOM node per grid point", () => {
+  // AUDIT ERROR on the `heatmap/arrival/none/ltr` cell since P0.4(b): the cell
+  // could not be audited at all, and a hole is never a pass. Measured on the
+  // staged build with one fresh browser per rule, this is the whole diagnosis:
+  //
+  //   · the page's DOM is 39,946 elements once its grid renders, and 39,707 of
+  //     them are one SVG <path> per data point in Leaflet's overlay pane — the
+  //     page's own content is 237 elements;
+  //   · of axe's 30 best-practice rules only two are slow there, and both are
+  //     slow BY NODE: hidden-content and region cost ~1-3 ms each (they do
+  //     layout/style work per node), so they exceed 120 s and the 180 s cell
+  //     budget goes. The other 28 finish in 0.7-2.2 s on that same DOM;
+  //   · with the marker layer emptied those two rules finish in 35-46 ms on
+  //     the page's own 237 elements, with 0 violations either way.
+  //
+  // So the cost is the node count, not the tool. Those paths carry no role, no
+  // accessible name and no focusability, and they are not even what a
+  // screen-reader user reads the data from — the same numbers are in
+  // #best-list / #worst-list as text, which is why drawing them on a canvas
+  // removes nothing anyone could reach.
+  const grid = JSON.parse(read(HEATMAP_GRID));
+  const points = grid.points.length;
+  assert.ok(
+    points > 5000,
+    `the grid must be big enough for a per-point DOM node to bite (${points} points)`,
+  );
+
+  const src = read(HEATMAP);
+  // The renderer the page builds, by the assignment that builds it — so the
+  // contract is "the markers are handed THAT renderer", not a variable name.
+  const canvas = /(\w+)\s*=\s*L\.canvas\(/.exec(src);
+  assert.ok(
+    canvas,
+    "the dot layer must be drawn on a Leaflet canvas renderer: one <path> per " +
+      "point is what put 39,707 nodes on the page and the cell out of reach",
+  );
+  const renderer = canvas[1];
+  // Every marker, not just the first: a call site without the renderer would put
+  // the node count straight back.
+  const sites = [...src.matchAll(/L\.circleMarker\(/g)];
+  assert.equal(
+    sites.length,
+    1,
+    `one marker constructor, found ${sites.length}`,
+  );
+  for (const site of sites) {
+    const call = src.slice(site.index, site.index + 400);
+    const end = call.indexOf("});");
+    assert.notEqual(end, -1, "the marker call is complete in the source");
+    assert.match(
+      call.slice(0, end + 3),
+      new RegExp(`renderer:\\s*${renderer}\\b`),
+      `every marker must be handed ${renderer}, the canvas renderer, or each ` +
+        "point is a DOM node again",
+    );
+  }
+
+  // The premise that makes the node count droppable: the data is still in text.
+  const page = read(HEATMAP_PAGE);
+  for (const id of ["best-list", "worst-list"]) {
+    assert.match(
+      page,
+      new RegExp(`id="${id}"`),
+      `#${id} must remain, so removing 39,707 unnameable paths removes no data`,
+    );
+  }
+  assert.match(
+    src,
+    /getElementById\("best-list"\)/,
+    "and the per-country lists must still be filled from the same grid",
+  );
+});
+
+test("A11Y: the ranking lists colour their numbers for reading, not for the map", () => {
+  // color-contrast [serious] on `#best-list > li:nth-child(1) > .years`, 10
+  // nodes: the first finding the heatmap cell ever produced, and it could only
+  // produce it once the canvas gate above made the cell auditable.
+  //
+  // The cause is a reuse, not a typo. `costColor()` is the MAP's scale — read
+  // against Carto's dark basemap tiles — and the cost-mode ranking lists used
+  // it as a TEXT colour on the page's own card. Measured on the staged build,
+  // with the card's rgba white over --bg composited the way a browser does:
+  //
+  //     #991b1b (worst cost)  2.12:1     #555 (no data)  1.03:1
+  //     #e64545               4.45:1     4.5:1 is the bar for text this size
+  //
+  // So the numbers a visitor reads in the best/worst lists were dark red on
+  // near-black. The map keeps its own scale — the dots are read against tiles,
+  // and repainting them would be a different change.
+  const page = read(HEATMAP_PAGE);
+  const src = read(HEATMAP);
+
+  // The palette is read from the page, so the test follows a palette change
+  // instead of carrying a copy of it.
+  const bg = /--bg:\s*(#[0-9a-f]{6})/i.exec(page);
+  const card =
+    /--card:\s*rgba\(([\d.]+),\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)\)/i.exec(
+      page,
+    );
+  assert.ok(bg && card, "the page declares --bg and --card");
+  const bgHex = bg[1];
+  const alpha = Number(card[4]);
+  const composite =
+    "#" +
+    [1, 3, 5]
+      .map((i) => {
+        const base = parseInt(
+          bgHex.slice(1 + 2 * (i - 1), 3 + 2 * (i - 1)),
+          16,
+        );
+        const over = Number(card[i]);
+        return Math.round(alpha * over + (1 - alpha) * base)
+          .toString(16)
+          .padStart(2, "0");
+      })
+      .join("");
+
+  const luminance = (hex) => {
+    const n = parseInt(hex.slice(1), 16);
+    const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const contrast = (a, b) => {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+
+  const textScale = /function costTextColor\([\s\S]*?\n {2}\}/.exec(src);
+  assert.ok(
+    textScale,
+    "the lists need a TEXT scale: the map's tile palette cannot be reused as a " +
+      "text colour, and axe measured its dark end at 2.12:1 on this card",
+  );
+  const literals = [...textScale[0].matchAll(/return "(#[0-9a-f]{6})";/gi)].map(
+    (m) => m[1],
+  );
+  assert.equal(
+    literals.length,
+    7,
+    `one text colour per cost bucket, as the map scale has (found ${literals.length})`,
+  );
+  for (const hex of literals) {
+    for (const [name, background] of [
+      ["the card", composite],
+      ["the page", bgHex],
+    ]) {
+      const ratio = contrast(hex, background);
+      assert.ok(
+        ratio >= 4.5,
+        `${hex} is ${ratio.toFixed(2)}:1 on ${name} (${background}); a number a ` +
+          "visitor reads is 4.5:1 text, not a tile colour",
+      );
+    }
+  }
+
+  // The dots keep the tile palette, and the lists stop using it.
+  const mapScale = /function costColor\([\s\S]*?\n {2}\}/.exec(src);
+  assert.ok(mapScale, "the map's own scale still exists for the dots");
+  assert.match(
+    src,
+    /fillColor:\s*color/,
+    "the markers are still painted from the map scale",
+  );
+  const listSites = [
+    ...src.matchAll(/class="years" style="color:\$\{([^}]+)\}"/g),
+  ];
+  assert.equal(
+    listSites.length,
+    2,
+    "two cost-mode lists colour a number inline",
+  );
+  for (const site of listSites) {
+    assert.equal(
+      site[1],
+      "costTextColor(cost)",
+      `a list number must use the text scale, not ${site[1]}`,
+    );
+  }
+  // …and the payback / break-even lists, which carry no inline colour, stay
+  // that way: they are #fff on the same card and already clear the bar.
+  assert.doesNotMatch(
+    src,
+    /class="years" style="color:[^"]*yearColor/,
+    "a year figure must not be painted with the map scale either",
+  );
+});
 
 test("A11Y: the chart legend is a list, so its rows are list items", () => {
   // aria-required-children [critical] at #cumCostLegend. The container has had
