@@ -888,7 +888,12 @@ export function drawCumCostChart(p, chosenEntry = null) {
     }
     legend.textContent = "";
     for (const [color, label] of rows) {
-      const row = el("span", { style: "display:flex;align-items:center;" });
+      // role=listitem: the container is role=list, and axe measured
+      // aria-required-children (critical) on it without one.
+      const row = el("span", {
+        role: "listitem",
+        style: "display:flex;align-items:center;",
+      });
       row.appendChild(swatch(color));
       row.appendChild(el("span", {}, label));
       legend.appendChild(row);
