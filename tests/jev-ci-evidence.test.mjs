@@ -441,6 +441,86 @@ test("CLI: --require-live fails closed when no pinned judgment was made", () => 
   }
 });
 
+test("CLI: a missing key is a configuration gap, not a re-runnable provider error", () => {
+  // Found by the first LIVE run of the jev-complete job, not by reading the
+  // code. With O-01 undone there is no key, and the report said
+  // run_class "provider_error" with rerun_allowed TRUE while its own blocker
+  // said "no key". Two views of one run, disagreeing — and the disagreement
+  // invited a retry loop the plan explicitly forbids: re-running cannot
+  // conjure a secret.
+  //
+  // The pure classifier was right all along (no_key is unit-tested at line ~358)
+  // and the call site never reached it: it passed attempted=true whenever the
+  // key environment had been resolved, and resolving an environment that holds
+  // no key is not an attempt. Unit tests of classifyRun could never have caught
+  // this, so the gate runs the real CLI on the real no-key path.
+  const repo = mkdtempSync(join(tmpdir(), "jev-no-key-"));
+  const home = mkdtempSync(join(tmpdir(), "jev-no-key-home-"));
+  try {
+    execFileSync("git", ["init", "-q"], { cwd: repo });
+    // HOME is redirected on purpose. resolveKeys falls back to
+    // ~/.config/harness/jev.env, so on a machine that has a harness key
+    // installed a "no key" run would quietly find one, spend a real judgment
+    // (a judgment may not be re-run, and this test must not cost one), and
+    // assert nothing about the path it is named for. USERPROFILE as well,
+    // because that is what homedir() reads on Windows.
+    const env = { ...process.env, HOME: home, USERPROFILE: home };
+    for (const name of ["TYPESAFE_API_KEY", "HARNESS_JEV_KEY", "JEV_API_KEY"]) {
+      delete env[name];
+    }
+    const evidence = join(tmpdir(), `jev-no-key-${process.pid}.json`);
+    writeFileSync(
+      evidence,
+      JSON.stringify({
+        ...PROSE,
+        ...Object.fromEntries(RUN_RECORD_FIELDS.map((f) => [f, true])),
+      }),
+    );
+    try {
+      const r = spawnSync(
+        process.execPath,
+        [CLI, "--require-live", "--json", "--evidence", evidence],
+        { cwd: repo, encoding: "utf8", env },
+      );
+      const report = JSON.parse(r.stdout);
+
+      assert.equal(
+        report.run_class,
+        "no_key",
+        "nothing was called, so nothing failed: a missing secret is a gap in configuration",
+      );
+      assert.equal(
+        report.rerun_allowed,
+        false,
+        "re-running cannot conjure a secret; calling this re-runnable invites a pointless retry loop",
+      );
+      // The two views of the run still have to agree with each other.
+      assert.equal(report.live.accepted, false);
+      assert.equal(report.live_jev.accepted, false);
+      assert.equal(
+        report.live_jev.model,
+        null,
+        "no provider answered, so no model may be named",
+      );
+      assert.match(
+        report.live_jev.blocker,
+        /no key/i,
+        "the blocker must name the actual cause, or the class is a guess",
+      );
+      assert.equal(
+        r.status,
+        1,
+        "--require-live still fails closed without a key",
+      );
+    } finally {
+      rmSync(evidence, { force: true });
+    }
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
 test("CLI: the report names its evidence source, machine or hand", () => {
   const repo = mkdtempSync(join(tmpdir(), "jev-source-kind-"));
   try {
