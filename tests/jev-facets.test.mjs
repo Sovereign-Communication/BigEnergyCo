@@ -128,19 +128,59 @@ test("SCOPE: the items that do the work are the items that judge the facet", () 
   }
 });
 
-test("EVIDENCE: every declared axis carries a proof line in the run record", () => {
+test("EVIDENCE: every declared axis carries a proof line in the run record", async () => {
   // The honest-failure mode this closes: an axis with no evidence line is
   // scored from nothing, and "mixed — partial or unverified evidence" then
   // reads like a product defect when it is really an empty record.
+  //
+  // An axis's line may now come from either place, and the test is about the
+  // axis being ACCOUNTED FOR, not about where the words are typed. A gate that
+  // measures an axis composes its line from the run (see
+  // tests/jev-derived-facets.test.mjs); everything else is prose. What must
+  // never happen is an axis in neither — that is the empty record this test
+  // exists to prevent, and the reason it reads the gates' declared axes rather
+  // than assuming every line is typed.
+  const { LIGHTHOUSE_FACET_AXES, composeFacetLine } =
+    await import("../scripts/lib/lighthouse-budgets.mjs");
   const ev = JSON.parse(
     readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
   );
+
+  // The derived lines a run of the Lighthouse gate would compose, built from the
+  // RECORDED first measurement so this test needs no browser and no network.
+  const derived = {};
+  if (LIGHTHOUSE_FACET_AXES.includes("performance")) {
+    const {
+      LIGHTHOUSE_FIRST_MEASUREMENT,
+      LIGHTHOUSE_RATCHET_CATEGORIES,
+      LIGHTHOUSE_TARGETS,
+    } = await import("../scripts/lib/lighthouse-budgets.mjs");
+    derived.performance = composeFacetLine({
+      lighthouse_version: "13.5.0",
+      ratchet_categories: LIGHTHOUSE_RATCHET_CATEGORIES,
+      regressions: [],
+      holes: [],
+      measured: LIGHTHOUSE_TARGETS.map((t) => ({
+        scores: {
+          performance: LIGHTHOUSE_FIRST_MEASUREMENT[t.id].performance.median,
+          ...Object.fromEntries(
+            LIGHTHOUSE_RATCHET_CATEGORIES.map((c) => [
+              c,
+              LIGHTHOUSE_FIRST_MEASUREMENT[t.id][c].median,
+            ]),
+          ),
+        },
+      })),
+    });
+  }
+
   for (const axis of axes) {
-    const line = ev.facet_evidence?.[axis];
+    const line = ev.facet_evidence?.[axis] ?? derived[axis];
     assert.equal(
       typeof line,
       "string",
-      `facet_evidence.${axis} is missing or not a string`,
+      `facet_evidence.${axis} is missing, is not a string, and no gate ` +
+        "declares it as derived — an axis in neither place is scored from nothing",
     );
     assert.ok(
       line.trim().length > 40,
@@ -231,12 +271,41 @@ test("TRANSPORT: every axis line fits the share the budget reserves for it", () 
   }
 });
 
-test("TRANSPORT: the real 21-axis record survives whole — every line and note", () => {
+test("TRANSPORT: the real 21-axis record survives whole — every line and note", async () => {
   // The proof that the derived budget is enough, measured on the actual run
   // record rather than a synthetic maximum.
+  const {
+    LIGHTHOUSE_FACET_AXES,
+    composeFacetLine,
+    LIGHTHOUSE_FIRST_MEASUREMENT,
+    LIGHTHOUSE_RATCHET_CATEGORIES,
+    LIGHTHOUSE_TARGETS,
+  } = await import("../scripts/lib/lighthouse-budgets.mjs");
   const ev = JSON.parse(
     readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
   );
+  // Built as the builder builds it: prose, plus the lines gates compose from a
+  // run. The derived line is the real composed one (from the recorded first
+  // measurement), so this measures the length that actually reaches the judge.
+  if (LIGHTHOUSE_FACET_AXES.includes("performance")) {
+    ev.facet_evidence.performance = composeFacetLine({
+      lighthouse_version: "13.5.0",
+      ratchet_categories: LIGHTHOUSE_RATCHET_CATEGORIES,
+      regressions: [],
+      holes: [],
+      measured: LIGHTHOUSE_TARGETS.map((t) => ({
+        scores: {
+          performance: LIGHTHOUSE_FIRST_MEASUREMENT[t.id].performance.median,
+          ...Object.fromEntries(
+            LIGHTHOUSE_RATCHET_CATEGORIES.map((c) => [
+              c,
+              LIGHTHOUSE_FIRST_MEASUREMENT[t.id][c].median,
+            ]),
+          ),
+        },
+      })),
+    });
+  }
   const merged = mergeEvidence(ev, AUTO);
   const text = buildStateText(merged, AUTO, axes);
   for (const axis of axes) {

@@ -24,6 +24,7 @@ import { launch } from "chrome-launcher";
 import { serveStatic } from "./serve-static.mjs";
 import {
   LIGHTHOUSE_CATEGORIES,
+  LIGHTHOUSE_FACET_AXES,
   LIGHTHOUSE_RATCHET_CATEGORIES,
   LIGHTHOUSE_REPORTED_ONLY,
   LIGHTHOUSE_ABSOLUTE,
@@ -34,6 +35,7 @@ import {
   LIGHTHOUSE_VARIANCE,
   compareLighthouse,
   compareSpeed,
+  composeFacetLine,
   median,
 } from "./lib/lighthouse-budgets.mjs";
 
@@ -181,6 +183,11 @@ const report = {
   plan_item: "P0.4",
   plan_refs: ["Q-02", "Q-03"],
   metric: "lighthouse",
+  // Which facet axes this report IS the evidence for, declared by the gate that
+  // measured them. The judge discovers this from the report rather than holding
+  // a list of gate names beside itself — the same derivation that stopped
+  // ci_green reading a list of three job names while a fourth gate ran.
+  facet_axes: LIGHTHOUSE_FACET_AXES,
   unit: "score 0-100, median of 3 runs, on the staged build",
   stage: opts.stage,
   lighthouse_version: "13.5.0",
@@ -214,6 +221,15 @@ const report = {
     "Warm interactions and NASA/weather memoization are not Lighthouse's " +
     "subject and are not measured here.",
 };
+
+// The facet line the judge will read is composed HERE, from this run, and
+// travels inside the report. A hand-typed line in the evidence file was the
+// defect this replaces; composing it at the measurement means the numbers on
+// the judge's record and the numbers in this report cannot drift apart.
+report.facet_line = composeFacetLine(report);
+console.log(
+  `facet line (${report.facet_line.length} chars):\n  ${report.facet_line}`,
+);
 
 if (opts.out) {
   const { writeFileSync } = await import("node:fs");
