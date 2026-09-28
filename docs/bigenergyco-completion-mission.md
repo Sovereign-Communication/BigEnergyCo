@@ -28,6 +28,7 @@ You are the owner of this PR and of all the work below. Read this whole file, th
 ### 1. P0.4 as one PR (option B, approved)
 
 Collapse #153 + #157 + #160 + #164 into a **single new PR** on fresh main:
+
 - §3.1 byte/request budgets (from #153)
 - axe-core quality-lab over the Q-07 matrix (from #157)
 - the a11y fixes (from #160)
