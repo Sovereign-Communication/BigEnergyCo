@@ -38,18 +38,14 @@ This dissolves the structural gate problem (every `P0.4x` title normalizing to `
 
 ### 2. Complete the Google quality pass (the rest of P0.4 / F-38)
 
-The four stack PRs deliberately deferred several P0.4 gate families — this item finishes them, because the "Google quality pass" is not complete without them:
+**Execution decision (Lucas, 2026-09-27): all Playwright-based gates run LOCALLY on your machine (the Codebuff/agent machine), NOT in GitHub Actions.** GitHub CI keeps running only what is already reliable there (Tests, CodeQL, coverage, web-smoke, jev-complete) — no browsers in CI, no CI wall-clock bloat.
 
-- **Lighthouse as a ratcheted gate.** `scripts/check-lighthouse.mjs` already measures 14 targets (median of 3 runs); #164 made the numbers legible to the judge but performance is explicitly NOT ratcheted. Ratchet the deterministic categories (accessibility, best-practices, SEO) and define the performance policy (median bands vs. hard gate — report calibration data before choosing).
-- **Cross-browser smoke** (the deferred cluster from #153/#157).
-- **Visual-regression scaffolding** (deferred).
-- **RTL-visual coverage** — F-38 names it; the a11y matrix already has rtl cells, extend the same discipline to the visual/quality gates.
-- **`/next/` noindex removal in the lab build** (deferred).
-- **npm Dependabot (R-PRIV-04)** — the P0.4 row names it; enable it.
-- **P0.4 exit evidence:** the `baseline` row with every Q-metric. P0.4 is not done until this row exists and is green.
+- Run locally on your machine: the axe-core quality matrix (`scripts/check-a11y-matrix.mjs`), Lighthouse (`scripts/check-lighthouse.mjs`, 14 targets, median of 3), cross-browser smoke, visual-regression scaffolding, RTL-visual coverage.
+- **Lighthouse as a ratcheted gate.** #164 made the numbers legible to the judge but performance is explicitly NOT ratcheted. Ratchet the deterministic categories (accessibility, best-practices, SEO) and define the performance policy (median bands vs. hard gate — report calibration data before choosing).
+- **Commit the machine-readable evidence to the repo** (reports JSON + the `baseline` row with every Q-metric — P0.4's exit evidence; P0.4 is not done until this row exists and is green). Evidence must be regenerable: document the exact commands in the PR.
+- **Add a lightweight CI validator job (no browsers):** a small script that reads the committed evidence files and asserts schema, thresholds, and freshness. This keeps the gate enforced on every PR through the reliable CI path, with the heavy work done locally.
+- `/next/` noindex removal in the lab build; npm Dependabot (R-PRIV-04).
 - **Real-device gate:** assess feasibility honestly. If a device-lab/CI path exists at reasonable cost, implement it; if not, document the assessment and the exact blocker for Lucas — do not silently drop it and do not fake it.
-
-Cost constraint (from the stack PRs' own deferral rationale): runner minutes on this account are a rationed shared budget, and Playwright's browser download is the largest new cost. Measure the CI-minute cost of the new gates, keep them lean (matrix only where it earns its keep), and report the measured cost in the PR.
 
 ### 3. Issue #156 — super-linear cycle-life model
 
