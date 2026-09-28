@@ -28,8 +28,8 @@
   # SEO, sitemap, JSON-LD, and token validation
   npm run seo
 
-  # Code style check
-  npx prettier --check .
+  # Code style check (the runner's view: tracked files, git's line endings)
+  npm run format:check
 
   # Deployment staging check
   npm run deploy:check

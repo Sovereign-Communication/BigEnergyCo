@@ -63,7 +63,13 @@ jobs:
 
       - name: Prettier check
         id: prettier
-        run: npx --yes prettier@3.9.6 --check .
+        # The same script the local preflight runs (npm run format:check). It
+        # checks the TRACKED tree with git's line endings, which is what a
+        # runner sees - and treats any non-zero exit as a failure, whatever
+        # prettier says. Running prettier here directly was a second code path
+        # that could disagree with the local one, which is how an unformatted
+        # file reached CI behind a locally green check (#166).
+        run: npm run format:check
 
       - name: Secret-scan tracked files
         run: |

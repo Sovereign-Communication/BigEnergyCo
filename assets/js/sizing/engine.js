@@ -95,12 +95,9 @@ export function capacityScaleFor(chemistry, meanTempC = null) {
 }
 
 /**
- * Cycle life to 80% SOH vs DoD: a segment-wise, SUPER-LINEAR Woeler curve
- * (issue #156). One exponent per chemistry cannot fit the reference's DoD
- * response (LFP needs 2.618 then 1.817, lead-acid 2.424 then 3.705, against the
- * old flat 1.65/1.45), so the exponent is per DoD band. `bands` is a flat
- * [anchorDoD, anchorCycles, exponentToNextBand] triple, precomputed: this file
- * ships raw under a plan §3.1 budget. Sources: BATTERY_CYCLE_LIFE_REFERENCE_2026.md.
+ * Cycles to 80% SOH vs DoD: SUPER-LINEAR, one exponent per DoD band (#156), as
+ * a precomputed [anchorDoD, anchorCycles, exponent] triple. The derivation, the
+ * per-band values and their sources: BATTERY_CYCLE_LIFE_REFERENCE_2026.md.
  */
 export const CYCLE_LIFE_CURVES = {
   // Winston 3,000 @ 80% scaled 2.0x onto CATL 280Ah's 6,000-8,000.
@@ -110,8 +107,7 @@ export const CYCLE_LIFE_CURVES = {
   },
   // Near-flat: the reference calls Na-ion DoD-insensitive.
   naion: { cap: 12000, bands: [0.85, 5500, 0.586, 1, 5000, 0] },
-  // No level shift: the old 500 @ 50% contradicted the reference and our own
-  // "3-5 years" copy. The model was the outlier.
+  // 500 = the reference's 1,250 @ 50% x a 0.4x derate; see CHEMISTRIES.
   agm: { cap: 2000, bands: [0.5, 1250, 2.424, 0.8, 400, 3.705, 1, 175, 0] },
 };
 
@@ -126,8 +122,7 @@ export function cycleLifeForDoD(chemistry, dod) {
     return e ? Math.min(curve.cap, Math.round(cy * Math.pow(a / d, e))) : cy;
   };
   // Band i owns [b[i], b[i+3]), so a point ON an anchor returns that anchor
-  // exactly. Backwards, the curve misses its own anchors (LFP read 5,999 at
-  // 0.8 DoD); see the reference doc.
+  // exactly; the other side re-evaluates the rounded exponent (LFP read 5,999).
   for (let i = 0; i < b.length; i += 3) {
     if (d >= b[i] && (i + 3 >= b.length || d < b[i + 3])) return hit(i);
   }
