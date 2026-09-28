@@ -192,7 +192,10 @@ async function main(argv) {
   const dir = mkdtempSync(join(tmpdir(), "beco-format-"));
   let code = 0;
   try {
-    const { written, skipped, crlf } = exportTrackedTree({ files, outDir: dir });
+    const { written, skipped, crlf } = exportTrackedTree({
+      files,
+      outDir: dir,
+    });
     if (skipped.length) {
       console.log(
         `format: ${skipped.length} tracked path(s) are deleted in this working tree and were not checked`,

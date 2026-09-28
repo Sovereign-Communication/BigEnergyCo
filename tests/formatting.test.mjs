@@ -55,7 +55,10 @@ test("GATE: every tracked file is formatted the way the runner reads it", () => 
   // The whole point of the file. `npm test` must not be able to pass on a tree
   // that CI rejects, so this runs the real thing rather than a proxy for it.
   const files = listTrackedFiles();
-  assert.ok(files.length > 100, `expected the tracked tree, got ${files.length}`);
+  assert.ok(
+    files.length > 100,
+    `expected the tracked tree, got ${files.length}`,
+  );
   const dir = mkdtempSync(join(tmpdir(), "beco-format-test-"));
   try {
     const { written } = exportTrackedTree({ files, outDir: dir });
@@ -81,13 +84,19 @@ test("runPrettier is not vacuously green: a bad file fails and a good one passes
   const dir = mkdtempSync(join(tmpdir(), "beco-format-probe-"));
   try {
     writeFileSync(join(dir, ".prettierrc"), '{ "endOfLine": "auto" }' + NL);
-    writeFileSync(join(dir, "bad.mjs"), "const x   =    1;" + NL + "export default x;" + NL);
+    writeFileSync(
+      join(dir, "bad.mjs"),
+      "const x   =    1;" + NL + "export default x;" + NL,
+    );
     assert.equal(
       runPrettier(dir, "--check", { spawn: { stdio: "pipe" } }),
       1,
       "an unformatted file must make the check fail",
     );
-    writeFileSync(join(dir, "bad.mjs"), "const x = 1;" + NL + "export default x;" + NL);
+    writeFileSync(
+      join(dir, "bad.mjs"),
+      "const x = 1;" + NL + "export default x;" + NL,
+    );
     assert.equal(
       runPrettier(dir, "--check", { spawn: { stdio: "pipe" } }),
       0,
@@ -129,7 +138,10 @@ test("the export reproduces git's line endings, and a binary byte survives", () 
       },
     });
     const exported = readFileSync(join(out, "a", "crlf.mjs"), "utf8");
-    assert.ok(!exported.includes("\r"), "a CRLF working copy must be checked as LF");
+    assert.ok(
+      !exported.includes("\r"),
+      "a CRLF working copy must be checked as LF",
+    );
     assert.equal(exported, "const a = 1;" + NL + "const b = 2;" + NL);
     assert.deepEqual(
       [...crlf],
@@ -173,8 +185,15 @@ test("tracked paths survive spaces, quotes and non-ASCII (git -z, not whitespace
   // it is told not to, and a whitespace split would mangle them and merge two
   // paths into one filename that does not exist.
   const paths = parseTrackedPaths(
-    'a b/c.mjs' + NUL + '"quo\\"te".md' + NUL + "docs/café.md" + NUL +
-      "weird\ttab.js" + NUL + NUL,
+    "a b/c.mjs" +
+      NUL +
+      '"quo\\"te".md' +
+      NUL +
+      "docs/café.md" +
+      NUL +
+      "weird\ttab.js" +
+      NUL +
+      NUL,
   );
   assert.deepEqual(paths, [
     "a b/c.mjs",
@@ -182,7 +201,11 @@ test("tracked paths survive spaces, quotes and non-ASCII (git -z, not whitespace
     "docs/café.md",
     "weird\ttab.js",
   ]);
-  assert.equal(paths.length, 4, "a whitespace split would have produced other names");
+  assert.equal(
+    paths.length,
+    4,
+    "a whitespace split would have produced other names",
+  );
 });
 
 test("writeBack restores line endings and writes back only what prettier fixed", () => {
@@ -213,7 +236,12 @@ test("writeBack restores line endings and writes back only what prettier fixed",
   const DATA_MIXED = '{"a":1}' + CRNL + '{"b":2}' + NL;
   writeFileSync(join(work, "sub", "data.jsonl"), DATA_MIXED);
   try {
-    const rels = ["sub/crlf.mjs", "sub/lf.mjs", "sub/same.mjs", "sub/data.jsonl"];
+    const rels = [
+      "sub/crlf.mjs",
+      "sub/lf.mjs",
+      "sub/same.mjs",
+      "sub/data.jsonl",
+    ];
     // What the export held BEFORE prettier ran: only the two misformatted .mjs
     // files differ afterwards. The .jsonl comes back byte-identical.
     const before = new Map([
@@ -222,10 +250,15 @@ test("writeBack restores line endings and writes back only what prettier fixed",
       ["sub/same.mjs", Buffer.from(CRLF_FIXED)],
       ["sub/data.jsonl", Buffer.from(DATA_LF)],
     ]);
-    const changed = writeBack(fixed, rels, new Set(["sub/crlf.mjs", "sub/data.jsonl"]), {
-      dest: work,
-      before,
-    });
+    const changed = writeBack(
+      fixed,
+      rels,
+      new Set(["sub/crlf.mjs", "sub/data.jsonl"]),
+      {
+        dest: work,
+        before,
+      },
+    );
     assert.deepEqual(
       changed,
       ["sub/crlf.mjs", "sub/lf.mjs"],
@@ -255,8 +288,16 @@ test("writeBack restores line endings and writes back only what prettier fixed",
 
 test("the line-ending helpers are inverse and total", () => {
   assert.equal(toGitEol("a" + CRNL + "b" + CRNL), "a" + NL + "b" + NL);
-  assert.equal(toGitEol("a" + NL + "b" + NL), "a" + NL + "b" + NL, "an LF file is unchanged");
-  assert.equal(toGitEol("a\rb"), "a\rb", "a lone CR is not a line ending git rewrites");
+  assert.equal(
+    toGitEol("a" + NL + "b" + NL),
+    "a" + NL + "b" + NL,
+    "an LF file is unchanged",
+  );
+  assert.equal(
+    toGitEol("a\rb"),
+    "a\rb",
+    "a lone CR is not a line ending git rewrites",
+  );
   assert.equal(fromGitEol("a" + NL + "b" + NL, true), "a" + CRNL + "b" + CRNL);
   assert.equal(fromGitEol("a" + NL + "b" + NL, false), "a" + NL + "b" + NL);
   assert.equal(
@@ -274,7 +315,10 @@ test("the checked file set is git's, so untracked files can never be in it", () 
   // not whatever happens to be lying around in the working directory.
   const files = listTrackedFiles();
   assert.ok(files.includes("package.json"), "the manifest is tracked");
-  assert.ok(files.includes("assets/js/sizing/engine.js"), "a shipped module is tracked");
+  assert.ok(
+    files.includes("assets/js/sizing/engine.js"),
+    "a shipped module is tracked",
+  );
   const untracked = listUntrackedFiles();
   assert.deepEqual(
     files.filter((f) => untracked.includes(f)),
