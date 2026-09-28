@@ -40,7 +40,7 @@ This dissolves the structural gate problem (every `P0.4x` title normalizing to `
 
 **Execution decision (Lucas, 2026-09-27): all Playwright-based gates run LOCALLY on your machine (the Codebuff/agent machine), NOT in GitHub Actions.** GitHub CI keeps running only what is already reliable there (Tests, CodeQL, coverage, web-smoke, jev-complete) — no browsers in CI, no CI wall-clock bloat.
 
-- Run locally on your machine: the axe-core quality matrix (`scripts/check-a11y-matrix.mjs`), Lighthouse (`scripts/check-lighthouse.mjs`, 14 targets, median of 3), cross-browser smoke, visual-regression scaffolding, RTL-visual coverage.
+- Run locally on your machine: the axe-core quality matrix script (from #157's stack), the Lighthouse script (14 targets, median of 3), cross-browser smoke, visual-regression scaffolding, RTL-visual coverage.
 - **Lighthouse as a ratcheted gate.** #164 made the numbers legible to the judge but performance is explicitly NOT ratcheted. Ratchet the deterministic categories (accessibility, best-practices, SEO) and define the performance policy (median bands vs. hard gate — report calibration data before choosing).
 - **Commit the machine-readable evidence to the repo** (reports JSON + the `baseline` row with every Q-metric — P0.4's exit evidence; P0.4 is not done until this row exists and is green). Evidence must be regenerable: document the exact commands in the PR.
 - **Add a lightweight CI validator job (no browsers):** a small script that reads the committed evidence files and asserts schema, thresholds, and freshness. This keeps the gate enforced on every PR through the reliable CI path, with the heavy work done locally.
