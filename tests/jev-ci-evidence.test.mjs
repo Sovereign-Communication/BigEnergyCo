@@ -112,6 +112,16 @@ const GREEN = {
     conclusion: "success",
     steps: { lighthouse: "success" },
   },
+  // The no-browser half of the quality pass. It is a required job for the same
+  // reason as the two above: the workflow declares it, and the derivation is
+  // what makes a new gate required without a code edit — so every "all gates
+  // green" fixture has to carry it, exactly as it had to carry `quality-lab`
+  // and `lighthouse` when those jobs arrived.
+  "quality-evidence": {
+    job: "quality-evidence",
+    conclusion: "success",
+    steps: { "quality-evidence": "success" },
+  },
 };
 
 const PROSE = {
@@ -182,6 +192,7 @@ const RED_TESTS = {
   "web-smoke": GREEN["web-smoke"],
   coverage: GREEN.coverage,
   lighthouse: GREEN.lighthouse,
+  "quality-evidence": GREEN["quality-evidence"],
 };
 
 test("EVIDENCE: every run record comes from the artifacts, never from prose", () => {
@@ -217,6 +228,7 @@ test("EVIDENCE: a step's own outcome is the record; a job that did not finish is
       "quality-lab": GREEN["quality-lab"],
       coverage: GREEN.coverage,
       lighthouse: GREEN.lighthouse,
+      "quality-evidence": GREEN["quality-evidence"],
     },
     REQUIRED,
   );
@@ -251,6 +263,7 @@ test("EVIDENCE: a missing artifact or a step that never ran is red, and named", 
       "quality-lab": GREEN["quality-lab"],
       coverage: GREEN.coverage,
       lighthouse: GREEN.lighthouse,
+      "quality-evidence": GREEN["quality-evidence"],
     },
     REQUIRED,
   );

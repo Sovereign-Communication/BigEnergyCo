@@ -333,6 +333,67 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  # P0.4 / F-38: the quality pass's one gate that still runs in CI.
+  #
+  # The browser gates (Lighthouse, axe-core over the Q-07 matrix,
+  # cross-browser, visual) run locally, on the agent machine, because CI on a
+  # free account should not pay that wall-clock. Moving them out of CI has one
+  # cost — nothing stops the committed evidence going stale — and this job is
+  # the answer. It opens no browser: it reads the evidence files the repository
+  # committed and asserts their schema, their thresholds and their freshness.
+  #
+  # NOT a blocking gate today, deliberately, and the distinction matters. The
+  # validator's own exit code blocks on REGRESSIONS — evidence that was fine
+  # and stopped being fine, or a committed file that stopped being readable as
+  # evidence. It reports, without blocking, the GAPS: the four P0.4 gates that
+  # have no committed evidence yet, and the one known hole in the a11y matrix
+  # (`heatmap/arrival/none/ltr`), which P0.4b already declared as its baseline
+  # row "with the hole in it". Blocking on those would make this job red on
+  # every PR in the repository, including the ones in the middle of closing
+  # them, which is the P0.3 deadlock the ledger already records once. What
+  # closes them is P0.4's exit evidence — the baseline ledger row carrying
+  # every Q-metric — not this job.
+  quality-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Assert the committed quality evidence is current and in its bar
+        id: quality-evidence
+        run: npm run gate:quality-evidence
+      # The evidence builder derives the required set from this workflow, so a
+      # job that did not record its own result would leave `ci_green` reading
+      # TRUE in the record the judge reads. It is the same wiring the other
+      # four jobs carry, for the same reason.
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/quality-evidence.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "quality-evidence",
+              conclusion: "${{ job.status }}",
+              steps: { "quality-evidence": "${{ steps.quality-evidence.outcome }}" },
+            };
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+          '
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-quality-evidence
+          path: jev-artifacts/quality-evidence.json
+          if-no-files-found: error
+          retention-days: 7
+
   # Coverage floor on the deterministic core. Scope is deliberate: the sizer's
   # math modules are the ones a wrong edit silently misprices, and the full
   # suite under instrumentation outruns a reasonable job timeout. Thresholds
@@ -399,7 +460,8 @@ jobs:
     # without it GitHub skips this job on a red dependency, and the run where
     # `ci_green` reads false would produce no evidence at all.
     if: always() && github.event_name == 'pull_request'
-    needs: [test, web-smoke, quality-lab, lighthouse, coverage]
+    needs:
+      [test, web-smoke, quality-lab, lighthouse, coverage, quality-evidence]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

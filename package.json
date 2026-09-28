@@ -26,6 +26,7 @@
     "gate:byte-budgets": "node scripts/check-byte-budgets.mjs",
     "gate:a11y-matrix": "node scripts/check-a11y-matrix.mjs",
     "gate:lighthouse": "node scripts/check-lighthouse.mjs",
+    "gate:quality-evidence": "node scripts/validate-quality-evidence.mjs",
     "smoke": "node scripts/browser-smoke.mjs",
     "deploy:check": "node scripts/deploy-pages-local.mjs --check",
     "verify:staging": "node scripts/verify-staging.mjs",

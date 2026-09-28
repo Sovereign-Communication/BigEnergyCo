@@ -254,6 +254,15 @@ const JOBS = {
     conclusion: "success",
     steps: { coverage: "success" },
   },
+  // Required for the same reason as `quality-lab` and `lighthouse` above: the
+  // workflow declares it and the required set is derived from the workflow, so
+  // a new gate is required without a code edit and every green-run fixture has
+  // to carry it.
+  "quality-evidence": {
+    job: "quality-evidence",
+    conclusion: "success",
+    steps: { "quality-evidence": "success" },
+  },
 };
 
 function artifactsWith(extra) {
