@@ -14,19 +14,22 @@
 // anything that only reads the file it is indistinguishable from a green run
 // today. So the evidence is committed, and this validator is what keeps the
 // COMMIT honest on every PR through the reliable CI path. It reads the
-// committed files and asserts three things about each one:
+// committed files and checks three contracts, then reports a fourth fact:
 //
 //   1. SCHEMA     - the fields the gate's own contract declares are present
 //                   and of the right type, so a report cannot be truncated or
 //                   half-written and still read as a result.
 //   2. THRESHOLD  - the readings the gate holds blocking are actually inside
 //                   the bar the gate declares for them.
-//   3. FRESHNESS  - the evidence describes a recent tree, not an old one.
+//   3. FRESHNESS  - generated_at falls inside the declared age window.
+//   4. TREE       - the commit named by code_sha and its relationship to this
+//                   checkout's HEAD, stated without making it a pass/fail.
 //
 // WHAT IT DELIBERATELY DOES NOT DO. It never opens a browser, never re-runs a
-// gate, and never invents a reading. Its entire authority is the sentence
-// "the file this repository committed says this, and it is current". A missing
-// file is not a reading it can substitute for.
+// gate, and never invents a reading. The tree relationship is reported because
+// the artifact is committed in the same commit that changes the tree, so it
+// cannot be required to equal HEAD. A missing file is not a reading it can
+// substitute for.
 //
 // THE LINE BETWEEN "FAILING" AND "UNMEASURED", and why it is drawn here.
 //
@@ -247,6 +250,96 @@ export function daysBetween(fromIso, toIso) {
   const to = Date.parse(toIso);
   if (!Number.isFinite(from) || !Number.isFinite(to)) return null;
   return (to - from) / 86_400_000;
+}
+
+// ── WHAT AN ARTIFACT DESCRIBES, AGAINST THE TREE IT SHIPS WITH ──────────────
+//
+// `code_sha` is REQUIRED on every entry above, five gates write it, and until
+// now nothing read it. The file's own header claims to assert that "the
+// evidence describes a recent tree"; what it actually measured was
+// `generated_at` against a 45-day window, which says how OLD a run is and
+// nothing about WHICH TREE it measured. Four of the five committed artifacts
+// carry a sha eleven commits behind HEAD, and the report said "committed
+// evidence is current" — the sentence was making a claim nothing checked.
+//
+// THE CONSTRAINT THAT SHAPES THIS, and why it rules out a pass/fail. The
+// evidence file is committed IN the commit that changes the tree, so its sha
+// can never equal HEAD: demanding a match would make the gate permanently red
+// by construction, which is noise, not a gate. So this states the RELATIONSHIP
+// and never turns it into a verdict. What a reader is owed is the plain fact —
+// which commit this file measured, and how that sits against the tree it
+// ships with — and the report's own authority ("the file this repository
+// committed says this") is exactly as true when it also says WHICH FILE.
+
+/**
+ * The relationship between an artifact's `code_sha` and the tree it ships with,
+ * as one line of plain English. `relation` is what the caller could determine
+ * from the checkout: `{ state: "head" | "behind" | "foreign" | "unknown",
+ * head, commits, reason }`.
+ *
+ * "unknown" is a first-class answer, not a failure. CI checks out with
+ * `fetch-depth: 1` by default, so the commit a report was measured against is
+ * frequently not in the clone at all, and guessing from a shallow history would
+ * be inventing a reading — the one thing this file does not do.
+ */
+export function describeCodeSha(sha, relation) {
+  // Abbreviated the way git abbreviates, and only for reading: `--json` carries
+  // the full sha, and a report whose every line is two 40-character hashes
+  // buries the one number a reader came for.
+  const id = sha ? String(sha).slice(0, 7) : null;
+  if (!id) return "declares no code_sha, so the tree it measured is unmeasured";
+  switch (relation?.state) {
+    case "head":
+      return `describes ${id} — this tree`;
+    case "behind":
+      return `describes ${id} — ${relation.commits} commit${
+        relation.commits === 1 ? "" : "s"
+      } behind this tree`;
+    case "foreign":
+      return `describes ${id} — present in this checkout, but not in this tree's history`;
+    default:
+      return `describes ${id} — its relation to this tree cannot be established from this checkout${
+        relation?.reason ? ` (${relation.reason})` : ""
+      }`;
+  }
+}
+
+/**
+ * One sentence covering every artifact, so the summary line cannot claim a
+ * currency the per-artifact lines do not support.
+ */
+export function currencySentence(states) {
+  const group = (s) => states.filter((x) => x.state === s);
+  const head = group("head");
+  const behind = group("behind");
+  const foreign = group("foreign");
+  const unknown = group("unknown");
+  const parts = [];
+  if (head.length) {
+    parts.push(
+      `${head.length} artifact${head.length === 1 ? "" : "s"} describe${head.length === 1 ? "s" : ""} this tree`,
+    );
+  }
+  if (behind.length) {
+    const oldest = Math.max(...behind.map((s) => s.commits));
+    parts.push(
+      `${behind.length} artifact${behind.length === 1 ? "" : "s"} describe${behind.length === 1 ? "s" : ""} an earlier commit (oldest is ${oldest} commit${
+        oldest === 1 ? "" : "s"
+      } behind this tree)`,
+    );
+  }
+  if (foreign.length) {
+    parts.push(
+      `${foreign.length} artifact${foreign.length === 1 ? "" : "s"} name${foreign.length === 1 ? "s" : ""} a commit outside this tree's history (but present in this checkout)`,
+    );
+  }
+  if (unknown.length) {
+    parts.push(
+      `${unknown.length} artifact${unknown.length === 1 ? "" : "s"} report${unknown.length === 1 ? "s" : ""} a code_sha whose relation to this tree cannot be established from this checkout`,
+    );
+  }
+  if (!parts.length) return "no artifact records the commit it measured";
+  return parts.join("; ");
 }
 
 function checkSchema(entry, doc) {

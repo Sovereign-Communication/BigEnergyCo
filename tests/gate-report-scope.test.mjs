@@ -16,7 +16,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -37,9 +43,14 @@ import {
   BYTE_BUDGET_LIMITS,
   brotliBytes,
 } from "../scripts/lib/byte-budgets.mjs";
+import {
+  currencySentence,
+  describeCodeSha,
+} from "../scripts/lib/quality-evidence.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = join(ROOT, "scripts/check-byte-budgets.mjs");
+const EVIDENCE_CLI = join(ROOT, "scripts/validate-quality-evidence.mjs");
 
 const bytes = (value, limit) => ({ value, limit, unit: "bytes" });
 const count = (value, limit) => ({ value, limit, unit: "count" });
@@ -430,4 +441,320 @@ test("A11Y: a cap breach is reported even when nothing regressed", () => {
   });
   assert.match(text, /0 regressions \(these block\)/);
   assert.match(text, /1 over the declared cap/);
+});
+
+// ── what the evidence says it measured ──────────────────────────────────────
+//
+// The third instance of this file's defect class, and the one that could hide
+// longest: `code_sha` is REQUIRED on every registry entry, five gates write it,
+// and nothing read it. Freshness was `generated_at` against a 45-day window —
+// how OLD a run is, never WHICH TREE it measured. The report's summary said
+// "committed evidence is current", which is a claim about a tree, while four of
+// the five committed artifacts carried a sha eleven commits behind HEAD.
+//
+// The constraint that shapes the fix, from the requester: the evidence file is
+// committed IN the commit that changes the tree, so its sha can never equal
+// HEAD. A gate demanding a match is red by construction. So the relationship is
+// STATED and never judged — these tests pin the statement and, just as
+// importantly, pin that stating it did not move the exit code.
+//
+// A real temporary git repository with real commits is the only way to test
+// this honestly: a fixture with a made-up sha would let a test pass against an
+// artifact that no checkout could ever place.
+
+const GIT_ENV = {
+  ...process.env,
+  GIT_AUTHOR_NAME: "t",
+  GIT_AUTHOR_EMAIL: "t@example.com",
+  GIT_COMMITTER_NAME: "t",
+  GIT_COMMITTER_EMAIL: "t@example.com",
+  GIT_CONFIG_COUNT: "2",
+  GIT_CONFIG_KEY_0: "user.name",
+  GIT_CONFIG_VALUE_0: "t",
+  GIT_CONFIG_KEY_1: "user.email",
+  GIT_CONFIG_VALUE_1: "t@example.com",
+  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_CONFIG_SYSTEM: "/dev/null",
+};
+
+function gitIn(dir, args) {
+  const result = spawnSync("git", args, {
+    cwd: dir,
+    encoding: "utf8",
+    env: GIT_ENV,
+  });
+  assert.equal(
+    result.status,
+    0,
+    `git ${args.join(" ")} failed: ${result.stderr || result.stdout || result.error?.message}`,
+  );
+  return result;
+}
+
+function commitFile(dir, rel, contents) {
+  const abs = join(dir, rel);
+  mkdirSync(dirname(abs), { recursive: true });
+  writeFileSync(abs, contents);
+  gitIn(dir, ["add", rel]);
+  gitIn(dir, ["commit", "-q", "-m", `add ${rel}`]);
+  return gitIn(dir, ["rev-parse", "HEAD"]).stdout.trim();
+}
+
+/** A byte_budgets artifact that satisfies the registry's required_keys. */
+function evidenceDoc(codeSha, extra = {}) {
+  return JSON.stringify(
+    {
+      plan_item: "P0.4",
+      metric: "byte_budgets",
+      generated_at: "2026-09-28T00:00:00.000Z",
+      code_sha: codeSha,
+      regressions: [],
+      breaches: [],
+      metrics: {},
+      ...extra,
+    },
+    null,
+    2,
+  );
+}
+
+/** A throwaway repository: `commits` empty commits, then the caller writes. */
+function evidenceRepo() {
+  const dir = mkdtempSync(join(tmpdir(), "jev-evidence-sha-"));
+  gitIn(dir, ["init", "-q", "-b", "main"]);
+  return dir;
+}
+
+function runEvidence(dir, args = []) {
+  return spawnSync(
+    process.execPath,
+    [EVIDENCE_CLI, ...args, "--now", "2026-09-28T00:00:00.000Z"],
+    {
+      cwd: dir,
+      encoding: "utf8",
+      env: GIT_ENV,
+    },
+  );
+}
+
+test("EVIDENCE: a SHA that names a tree object, not a commit, is unplaceable", () => {
+  const dir = evidenceRepo();
+  try {
+    const head = commitFile(dir, "seed.txt", "one");
+    const tree = gitIn(dir, ["rev-parse", "HEAD^{tree}"]).stdout.trim();
+    mkdirSync(join(dir, ".quality-evidence"), { recursive: true });
+    writeFileSync(
+      join(dir, ".quality-evidence/byte-budgets.json"),
+      evidenceDoc(tree),
+    );
+    const run = runEvidence(dir);
+    assert.equal(run.status, 0);
+    assert.match(
+      run.stdout,
+      /relation to this tree cannot be established from this checkout/,
+      "a tree sha is not a commit sha; merge-base can answer yes to both, but rev-list cannot count the distance",
+    );
+    assert.notEqual(tree, head);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("EVIDENCE: an artifact says which commit it measured, and how far it is behind", () => {
+  const dir = evidenceRepo();
+  try {
+    const measured = commitFile(dir, "seed.txt", "one");
+    commitFile(
+      dir,
+      ".quality-evidence/byte-budgets.json",
+      evidenceDoc(measured),
+    );
+    commitFile(dir, "second.txt", "two");
+    commitFile(dir, "third.txt", "three");
+    const head = gitIn(dir, ["rev-parse", "HEAD"]).stdout.trim();
+
+    const run = runEvidence(dir);
+    assert.equal(
+      run.status,
+      0,
+      `stating the relationship is not a verdict: ${run.stdout}${run.stderr}`,
+    );
+    assert.match(
+      run.stdout,
+      new RegExp(`tree: ${head}`),
+      "the report must name the tree it is judging against, once",
+    );
+    assert.match(
+      run.stdout,
+      new RegExp(
+        `describes ${measured.slice(0, 7)} — 3 commits behind this tree`,
+      ),
+      `the artifact measured a commit three behind and must say so:\n${run.stdout}`,
+    );
+    // The sentence that made the claim nothing supported. It is gone, and what
+    // replaced it is countable from the artifacts themselves.
+    assert.doesNotMatch(
+      run.stdout,
+      /committed evidence is current/,
+      "the old summary claimed a currency nothing checked",
+    );
+    assert.match(
+      run.stdout,
+      /1 artifact describes an earlier commit \(oldest is 3 commits behind this tree\)/,
+      "the summary must carry the same fact the per-artifact lines do",
+    );
+    // The other four entries have no file in this repo, and that stays a gap
+    // rather than a failure — the line between failing and unmeasured.
+    assert.match(run.stdout, /gap\s+a11y_matrix/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("EVIDENCE: an artifact measured on this tree says so", () => {
+  const dir = evidenceRepo();
+  try {
+    const head = commitFile(dir, "seed.txt", "one");
+    // In the fixture the report is uncommitted, so it can truthfully say it was
+    // measured on HEAD. A real committed report cannot: adding the sha changes
+    // the commit hash, which is the constraint the production report explains.
+    mkdirSync(join(dir, ".quality-evidence"), { recursive: true });
+    writeFileSync(
+      join(dir, ".quality-evidence/byte-budgets.json"),
+      evidenceDoc(head),
+    );
+
+    const run = runEvidence(dir);
+    assert.equal(run.status, 0);
+    assert.match(
+      run.stdout,
+      /describes [0-9a-f]{7} — this tree$/m,
+      `an artifact measured on HEAD is not behind it:\n${run.stdout}`,
+    );
+    assert.equal(head.length, 40);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("EVIDENCE: a commit that is not in this history is not the same as one this checkout cannot see", () => {
+  // The distinction the shallow clone forces. `fetch-depth: 1` is the default
+  // on actions/checkout, so in CI the commit a report measured against is
+  // frequently absent from the clone — and calling that "a different tree"
+  // would be a reading the checkout cannot support.
+  const dir = evidenceRepo();
+  try {
+    const main1 = commitFile(dir, "seed.txt", "one");
+    gitIn(dir, ["checkout", "-q", "-b", "side"]);
+    const onSide = commitFile(dir, "side.txt", "side");
+    gitIn(dir, ["checkout", "-q", "main"]);
+    commitFile(dir, "main.txt", "two");
+
+    // Present, and genuinely not an ancestor of this tree.
+    commitFile(dir, ".quality-evidence/byte-budgets.json", evidenceDoc(onSide));
+    const foreign = runEvidence(dir);
+    assert.equal(foreign.status, 0);
+    assert.match(
+      foreign.stdout,
+      new RegExp(
+        `describes ${onSide.slice(0, 7)} — present in this checkout, but not in this tree's history`,
+      ),
+      `a commit from another branch must not read as "behind":\n${foreign.stdout}`,
+    );
+
+    // Absent entirely: a sha no checkout has.
+    writeFileSync(
+      join(dir, ".quality-evidence/byte-budgets.json"),
+      evidenceDoc("0".repeat(40)),
+    );
+    const absent = runEvidence(dir);
+    assert.equal(absent.status, 0);
+    assert.match(
+      absent.stdout,
+      /relation to this tree cannot be established from this checkout/,
+      `a sha this checkout does not have is unmeasured, not a verdict:\n${absent.stdout}`,
+    );
+    assert.doesNotMatch(
+      absent.stdout,
+      /present in this checkout, but not in this tree's history/,
+      "and an absent sha must not be called a known foreign commit",
+    );
+    assert.equal(main1.length, 40);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("EVIDENCE: --json carries the relationship, and the full sha", () => {
+  const dir = evidenceRepo();
+  try {
+    const measured = commitFile(dir, "seed.txt", "one");
+    commitFile(
+      dir,
+      ".quality-evidence/byte-budgets.json",
+      evidenceDoc(measured),
+    );
+    commitFile(dir, "second.txt", "two");
+
+    const run = runEvidence(dir, ["--json"]);
+    assert.equal(run.status, 0);
+    const json = JSON.parse(run.stdout);
+    const budgets = json.code_sha.find((c) => c.metric === "byte_budgets");
+    assert.equal(
+      budgets.code_sha,
+      measured,
+      "a consumer gets the unabbreviated sha, not the 7 characters a human reads",
+    );
+    assert.equal(budgets.relation.state, "behind");
+    assert.equal(budgets.relation.commits, 2);
+    assert.match(
+      json.currency,
+      /1 artifact describes an earlier commit/,
+      "and the same sentence the terminal prints",
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("EVIDENCE: the wording covers every state, and says nothing it cannot support", () => {
+  // The lib half, so a state with no CLI path today is still worded rather than
+  // silently falling through to the "unknown" branch.
+  assert.match(
+    describeCodeSha("abc1234def", { state: "behind", commits: 1 }),
+    /describes abc1234 — 1 commit behind this tree$/,
+  );
+  assert.match(
+    describeCodeSha("abc1234def", { state: "behind", commits: 4 }),
+    /4 commits behind this tree$/,
+  );
+  assert.match(describeCodeSha("abc1234def", { state: "head" }), /this tree$/);
+  assert.match(
+    describeCodeSha("abc1234def", { state: "unknown" }),
+    /relation to this tree cannot be established from this checkout/,
+  );
+  assert.match(
+    describeCodeSha(null, { state: "head" }),
+    /declares no code_sha/,
+    "an artifact that records no commit says so rather than being skipped",
+  );
+  // No state may print a full 40-character sha: the human report abbreviates so
+  // the number a reader came for is not buried under hashes.
+  for (const state of ["head", "behind", "foreign", "unknown"]) {
+    const line = describeCodeSha("a".repeat(40), { state, commits: 2 });
+    assert.doesNotMatch(line, /a{40}/, `${state} prints a full sha`);
+  }
+  assert.equal(
+    currencySentence([]),
+    "no artifact records the commit it measured",
+  );
+  assert.match(
+    currencySentence([
+      { state: "head" },
+      { state: "behind", commits: 3 },
+      { state: "foreign" },
+      { state: "unknown" },
+    ]),
+    /^1 artifact describes this tree; 1 artifact describes an earlier commit \(oldest is 3 commits behind this tree\); 1 artifact names a commit outside this tree's history \(but present in this checkout\); 1 artifact reports a code_sha whose relation to this tree cannot be established from this checkout$/,
+  );
 });
