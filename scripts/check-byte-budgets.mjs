@@ -17,6 +17,7 @@
 //   0  no budget regressed against the declared baseline
 //   1  a budget regressed; every reading is still printed and written out
 //   2  usage error, or the staged build / ledger could not be read
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -29,6 +30,18 @@ import {
   REGRESSION_TOLERANCE_BYTES,
 } from "./lib/byte-budgets.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
+
+/** The tree this report describes, so committed evidence can be matched to a
+ *  commit and judged for freshness. */
+function codeSha() {
+  try {
+    return execFileSync("git", ["rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+  } catch {
+    return "unknown";
+  }
+}
 
 const USAGE =
   "usage: node scripts/check-byte-budgets.mjs [--stage DIR] [--ledger FILE] [--out FILE]";
@@ -186,6 +199,13 @@ export function main(argv = process.argv.slice(2)) {
   const report = {
     plan_item: "P0.4",
     plan_ref: "docs/plan/MASTER_PLAN.md §3.1, §3.2, §8 P0.4",
+    // The name the no-browser validator looks this report up by, and when the
+    // run happened and which tree it measured. Without the two timestamps a
+    // committed report cannot be checked for being current, which is the whole
+    // reason the validator exists (scripts/lib/quality-evidence.mjs).
+    metric: "byte_budgets",
+    generated_at: new Date().toISOString(),
+    code_sha: codeSha(),
     stage: opts.stage,
     ledger: opts.ledger,
     baseline_ref: baseline.source,
@@ -196,6 +216,7 @@ export function main(argv = process.argv.slice(2)) {
     regressions,
     improvements,
     unmeasured,
+    breaches: [],
     ledger_notes: baseline.skipped,
   };
   if (opts.out)

@@ -13,7 +13,7 @@
 // the line between them is the whole design. These tests pin it.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 
 import {
   COVERED_Q_METRICS,
@@ -24,7 +24,12 @@ import {
   validateEvidence,
 } from "../scripts/lib/quality-evidence.mjs";
 
-const NOW = "2026-09-27T12:00:00.000Z";
+// The clock these tests read the committed evidence against. It sits just after
+// the P0.4 evidence run, so the fixtures are neither future-dated (which the
+// freshness check correctly refuses) nor older than the 45-day window. It is a
+// fixed instant rather than `Date.now()` on purpose: a test that quietly ages
+// with the calendar turns into a flaky test the first week it is not run.
+const NOW = "2026-10-05T12:00:00.000Z";
 const byMetric = (metric) => EVIDENCE_REGISTRY.find((e) => e.metric === metric);
 
 function freshDoc(metric, extra = {}) {
@@ -263,96 +268,87 @@ test("a file that declares another metric's name is rejected", () => {
   );
 });
 
-test("the committed a11y matrix report is readable evidence, and its one hole is named", () => {
-  // This is the one gate whose evidence the repository actually commits, so it
-  // is the one the validator can be held to against a real file rather than a
-  // fixture. Two things are true of that file and both are asserted here,
-  // because between them they are the honest state of P0.4's a11y gate:
+test("the committed a11y matrix report is readable evidence, and its hole is closed", () => {
+  // This is the gate whose evidence the repository actually commits, so it is
+  // the one the validator can be held to against a real file rather than a
+  // fixture. Three things are true of that file and all three are asserted:
   //
   //   1. It parses, holds the schema and clears every blocking bar, so it IS
   //      usable evidence and the job stays green.
-  //   2. It is NOT complete. One cell -- heatmap/arrival/none/ltr -- is recorded
-  //      in both `audit_errors` and `unmeasured` with one violation, which is
-  //      the "hole in it" the P0.4b baseline row already names. The validator
-  //      reports it, by cell id, on every run.
-  //
-  // Both facts are asserted because both are true and both matter: the gate is
-  // enforceable today, and it does not pretend the a11y matrix is finished. An
-  // earlier version of this test assumed the committed report was clean and
-  // asserted a failure; a test asserting either would have been asserting a
-  // wish rather than reading the file.
+  //   2. It carries `generated_at` and `code_sha`. The report this one replaced
+  //      (the P0.4c run at the repo root) carried neither, and that is exactly
+  //      how it went on reading as live evidence long after #162 had fixed the
+  //      cell it claimed was broken. Asserted so the field cannot quietly go.
+  //   3. heatmap/arrival/none/ltr now reads 0 violations with no audit error.
+  //      That hole is CLOSED, and this is the test that says so.
   const entry = byMetric("a11y_matrix");
   const doc = JSON.parse(readFileSync(entry.file, "utf8"));
   const result = evaluateEntry(entry, doc, { now: NOW });
 
-  // (1) Real evidence: no schema problem, and nothing over a blocking bar.
   assert.deepEqual(
     result.problems,
     [],
     `unexpected problems: ${result.problems.join("; ")}`,
   );
+  assert.deepEqual(result.gaps, [], `unexpected gaps: ${result.gaps.join("; ")}`);
 
-  // (2) Both open items are named rather than summed into a number: the
-  //     freshness the file cannot state, and the cell it could not audit.
-  assert.ok(
-    result.gaps.some((g) =>
-      /no "generated_at", so freshness is unmeasured/.test(g),
-    ),
-    `expected the freshness gap, got: ${JSON.stringify(result.gaps)}`,
-  );
-  assert.ok(
-    result.gaps.some((g) => /heatmap\/arrival\/none\/ltr/.test(g)),
-    `expected the unaudited cell to be named, got: ${JSON.stringify(result.gaps)}`,
+  // (2) Freshness is stated, not inferred.
+  assert.ok(Number.isFinite(Date.parse(doc.generated_at)));
+  assert.match(doc.code_sha, /^[0-9a-f]{7,40}$/);
+  assert.doesNotMatch(
+    result.gaps.join(" "),
+    /freshness is unmeasured/,
+    "a report with a generated_at must not report its freshness as unmeasured",
   );
 
-  // And the cell is named in the evidence itself, so the report and the
-  // validator are describing the same single hole.
-  assert.deepEqual(doc.audit_errors, ["heatmap/arrival/none/ltr"]);
-  assert.deepEqual(
-    doc.regressions,
-    [],
-    "the matrix has no regression, only the unmeasured cell",
-  );
+  // (3) The hole is closed.
+  assert.deepEqual(doc.audit_errors, [], "no cell may be unauditable");
+  assert.deepEqual(doc.regressions, []);
+  assert.deepEqual(doc.unmeasured, [], "every declared cell must be measured");
+  const heatmap = doc.cells.find((c) => c.id === "heatmap/arrival/none/ltr");
+  assert.ok(heatmap, "the cell that was the hole must still be in the matrix");
+  assert.deepEqual(heatmap.violations, [], "and it must read 0 violations");
 });
 
-test("the repository's own committed evidence passes, and still names its open hole", () => {
-  // The end-to-end consequence of the test above, as its own assertion. With
-  // the evidence the repo actually has, the validator is GREEN -- and it still
-  // prints the unaudited cell. Both are correct, and both are the point: the
-  // gate is enforceable today, and it is not pretending P0.4's a11y matrix is
-  // finished. What closes the hole is P0.4's exit evidence, the baseline
-  // ledger row carrying every Q-metric.
-  const docs = {
-    a11y_matrix: JSON.parse(readFileSync(byMetric("a11y_matrix").file, "utf8")),
-  };
-  const { ok, problems, gaps } = validateEvidence(
-    [byMetric("a11y_matrix")],
-    docs,
-    { now: NOW },
-  );
+test("the repository's own committed evidence passes with no gaps at all", () => {
+  // The end-to-end consequence of the test above, as its own assertion. All
+  // five P0.4 gates now have a committed report, so the validator is GREEN and
+  // has nothing to report -- neither a problem nor a gap.
+  const docs = {};
+  for (const entry of EVIDENCE_REGISTRY) {
+    docs[entry.metric] = JSON.parse(readFileSync(entry.file, "utf8"));
+  }
+  const { ok, problems, gaps } = validateEvidence(EVIDENCE_REGISTRY, docs, {
+    now: NOW,
+  });
   assert.equal(
     ok,
     true,
     `the committed evidence must not block: ${problems.join("; ")}`,
   );
   assert.deepEqual(problems, []);
-  // The file IS committed, so it never reports as absent.
-  assert.ok(
-    gaps.every((g) => !/still owes this/.test(g)),
-    `a committed file must not report as absent: ${JSON.stringify(gaps)}`,
+  assert.deepEqual(gaps, [], `no gate may be unmeasured: ${gaps.join("; ")}`);
+});
+
+test("the superseded root report is gone, so it cannot be read as live evidence", () => {
+  // The stale file that motivated the freshness check. Asserting its ABSENCE is
+  // the point: a report that recorded an audit error for a cell that has read 0
+  // violations since #162 must not sit in the tree looking current.
+  assert.equal(
+    existsSync(".a11y-matrix-p04c-report.json"),
+    false,
+    "the superseded P0.4c report must be removed, not left beside the fresh one",
   );
-  assert.ok(gaps.some((g) => /heatmap\/arrival\/none\/ltr/.test(g)));
 });
 
 test("a whole unrun gate set reports every gap without failing the job", () => {
-  // The state P0.4 is in for four of its five gates today, pinned end to end:
-  // nothing is committed for them, every one is named with the command that
-  // would produce it, and the exit code stays 0 so the job is usable now.
-  const { ok, problems, gaps } = validateEvidence(
-    EVIDENCE_REGISTRY,
-    {},
-    { now: NOW },
-  );
+  // The state P0.4 was in for four of its five gates before this row landed,
+  // pinned end to end: nothing is committed for them, every one is named with
+  // the command that would produce it, and the exit code stays 0 so the job is
+  // usable while those gaps are honestly open.
+  const { ok, problems, gaps } = validateEvidence(EVIDENCE_REGISTRY, {}, {
+    now: NOW,
+  });
   assert.equal(ok, true);
   assert.deepEqual(problems, []);
   assert.equal(gaps.length, EVIDENCE_REGISTRY.length);

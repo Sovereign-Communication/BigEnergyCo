@@ -31,6 +31,7 @@
 //   1  a cell regressed; every reading is still printed and written out
 //   2  usage error, or the staged build / ledger / browser could not be used
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -130,6 +131,17 @@ async function launchChrome() {
   const require = createRequire(import.meta.url);
   const { chromium } = require("playwright");
   return chromium.launch({ channel: "chrome" });
+}
+
+/** The tree this report describes, so the evidence can be matched to a commit. */
+function codeSha() {
+  try {
+    return execFileSync("git", ["rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+  } catch {
+    return "unknown";
+  }
 }
 
 async function auditCellInner(base, cell, axeSource, tags, launch) {
@@ -397,6 +409,15 @@ async function audit({
     plan_ref: "docs/plan/MASTER_PLAN.md §8 P0.4, §3.2, Q-07",
     metric: "a11y_matrix",
     stage: opts.stage,
+    // When the run happened and what tree it measured. Added because the
+    // committed evidence this gate writes is what the no-browser CI validator
+    // (scripts/lib/quality-evidence.mjs) checks for freshness, and a report
+    // that cannot say when it was produced cannot be checked for being current.
+    // The committed P0.4c report carried neither field, which is exactly how a
+    // superseded report stayed in the tree reading as evidence long after #162
+    // had fixed the cell it claimed was broken.
+    generated_at: new Date().toISOString(),
+    code_sha: codeSha(),
     ledger: opts.ledger,
     baseline_ref: baseline.source,
     enforcement:

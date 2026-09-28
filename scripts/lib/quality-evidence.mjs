@@ -107,12 +107,22 @@ export const EVIDENCE_REGISTRY = [
   {
     metric: "a11y_matrix",
     q_metric: "Q-07",
-    file: ".a11y-matrix-p04c-report.json",
+    // The canonical path, beside the other four. The report used to sit at the
+    // repo root as `.a11y-matrix-p04c-report.json` and was SUPERSEDED: it was
+    // generated before #162 fixed the heatmap cell, so it recorded an audit
+    // error and one violation for `heatmap/arrival/none/ltr` that a fresh run
+    // shows are 0. It carried no `generated_at` and no `code_sha`, so nothing
+    // could tell a live reading from a dead one — which is precisely the failure
+    // this validator exists to catch, arrived at by the route it was built to
+    // prevent. The a11y driver now writes both fields.
+    file: ".quality-evidence/a11y-matrix.json",
     generated_by: "npm run gate:a11y-matrix",
     plan_ref: "docs/plan/MASTER_PLAN.md §8 P0.4, §3.2, Q-07",
     required_keys: {
       plan_item: "string",
       metric: "string",
+      generated_at: "string",
+      code_sha: "string",
       regressions: "array",
       audit_errors: "array",
       breaches: "array",

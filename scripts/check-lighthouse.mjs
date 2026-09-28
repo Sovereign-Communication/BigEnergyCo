@@ -17,6 +17,7 @@
 // discovered from a short candidate list so the same gate runs on a
 // developer's machine and on the Linux runner, which has Chrome but not at a
 // Windows path.
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import lighthouse from "lighthouse";
@@ -38,6 +39,18 @@ import {
   composeFacetLine,
   median,
 } from "./lib/lighthouse-budgets.mjs";
+
+/** The tree this report describes, so committed evidence can be matched to a
+ *  commit and judged for freshness. */
+function codeSha() {
+  try {
+    return execFileSync("git", ["rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+  } catch {
+    return "unknown";
+  }
+}
 
 function usage() {
   console.error(
@@ -183,6 +196,11 @@ const report = {
   plan_item: "P0.4",
   plan_refs: ["Q-02", "Q-03"],
   metric: "lighthouse",
+  // When the run happened and which tree it measured, so the no-browser
+  // validator (scripts/lib/quality-evidence.mjs) can tell a current reading from
+  // a committed one that has since gone stale.
+  generated_at: new Date().toISOString(),
+  code_sha: codeSha(),
   // Which facet axes this report IS the evidence for, declared by the gate that
   // measured them. The judge discovers this from the report rather than holding
   // a list of gate names beside itself — the same derivation that stopped
