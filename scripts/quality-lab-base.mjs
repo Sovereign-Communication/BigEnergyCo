@@ -239,6 +239,45 @@ async function measureCrossBrowserSmoke(stageDir) {
   return results;
 }
 
+async function measureVisualRegression(stageDir) {
+  // Visual regression testing via Playwright + screenshot comparison
+  // Captures snapshots of key pages and compares to baseline
+  // Q-05: Visual regression metrics (new snapshots, pixel diffs, threshold passes)
+
+  const pages = findDeployedPages(stageDir);
+  const visualPages = pages
+    .filter(
+      (p) =>
+        p === "index.html" ||
+        p.includes("/index.html") ||
+        p === "solar-heatmap/index.html",
+    )
+    .slice(0, 5); // Representative visual test subset
+
+  const results = {
+    snapshot_pages: visualPages.length,
+    baseline_mode: "pending", // Will be: "capture" (new baseline) or "compare" (existing)
+    snapshots_captured: 0,
+    snapshots_compared: 0,
+    visual_diffs: 0,
+    pass_rate: 0,
+    variants: {
+      light: { captured: 0, compared: 0, diffs: 0 },
+      dark: { captured: 0, compared: 0, diffs: 0 },
+    },
+  };
+
+  console.log(`Visual regression: ${visualPages.length} pages for snapshots`);
+  console.log(
+    "Playwright screenshot capture + pixel diff analysis - implementation pending",
+  );
+  console.log(
+    "Expected: per-theme snapshots, pixel difference thresholds, baseline drift tracking",
+  );
+
+  return results;
+}
+
 async function main(argv) {
   let stageDir = "_pages_staging";
   let outPath = null;
@@ -265,6 +304,7 @@ async function main(argv) {
     lighthouse: null,
     axe_violations: null,
     cross_browser_smoke: null,
+    visual_regression: null,
   };
 
   // Lighthouse phase
@@ -308,6 +348,22 @@ async function main(argv) {
       );
     } catch (e) {
       console.error(`Cross-browser smoke phase failed: ${e.message}`);
+    }
+  }
+
+  // Visual regression phase
+  if (phases.includes("all") || phases.includes("visual")) {
+    console.log("\n=== Phase: Visual Regression ===");
+    try {
+      const visualResults = await measureVisualRegression(stagePath);
+      metrics.visual_regression = visualResults;
+      console.log(`Pages for visual testing: ${visualResults.snapshot_pages}`);
+      console.log(
+        `Theme variants: ${Object.keys(visualResults.variants).join(", ")}`,
+      );
+      console.log(`Baseline mode: ${visualResults.baseline_mode}`);
+    } catch (e) {
+      console.error(`Visual regression phase failed: ${e.message}`);
     }
   }
 

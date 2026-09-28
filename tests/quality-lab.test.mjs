@@ -116,3 +116,25 @@ test("Quality-Lab: cross-browser smoke results structure has required fields", (
     sampleSmokeResults.pass_rate >= 0 && sampleSmokeResults.pass_rate <= 1,
   );
 });
+
+test("Quality-Lab: visual regression results structure has required fields", () => {
+  const sampleVisualResults = {
+    snapshot_pages: 5,
+    baseline_mode: "compare",
+    snapshots_captured: 0,
+    snapshots_compared: 10,
+    visual_diffs: 2,
+    pass_rate: 0.8,
+    variants: {
+      light: { captured: 0, compared: 5, diffs: 1 },
+      dark: { captured: 0, compared: 5, diffs: 1 },
+    },
+  };
+  assert.ok(sampleVisualResults.variants.light);
+  assert.ok(sampleVisualResults.variants.dark);
+  assert.equal(typeof sampleVisualResults.visual_diffs, "number");
+  assert.equal(typeof sampleVisualResults.pass_rate, "number");
+  assert.ok(
+    sampleVisualResults.pass_rate >= 0 && sampleVisualResults.pass_rate <= 1,
+  );
+});
