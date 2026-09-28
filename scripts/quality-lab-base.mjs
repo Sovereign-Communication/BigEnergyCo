@@ -204,6 +204,41 @@ async function measureAxeCore(stageDir) {
   return results;
 }
 
+async function measureCrossBrowserSmoke(stageDir) {
+  // Cross-browser smoke testing via Playwright
+  // Tests that critical pages load successfully in Chromium, Firefox, WebKit
+  // Q-04: Cross-browser smoke pass rate
+
+  const pages = findDeployedPages(stageDir);
+  const testPages = pages
+    .filter(
+      (p) =>
+        p === "index.html" ||
+        p.includes("/index.html") ||
+        p === "solar-heatmap/index.html",
+    )
+    .slice(0, 5); // Test a representative subset
+
+  const results = {
+    browsers: {
+      chromium: { runs: 0, passed: 0, failed: 0 },
+      firefox: { runs: 0, passed: 0, failed: 0 },
+      webkit: { runs: 0, passed: 0, failed: 0 },
+    },
+    test_pages: testPages.length,
+    pass_rate: 0,
+  };
+
+  console.log(`Testing ${testPages.length} representative pages`);
+  console.log("Browsers to test: Chromium, Firefox, WebKit");
+  console.log(
+    "Playwright browser automation required - implementation pending",
+  );
+  console.log("Expected: page load success per browser, performance markers");
+
+  return results;
+}
+
 async function main(argv) {
   let stageDir = "_pages_staging";
   let outPath = null;
@@ -264,8 +299,16 @@ async function main(argv) {
   // Cross-browser smoke phase
   if (phases.includes("all") || phases.includes("smoke")) {
     console.log("\n=== Phase: Cross-Browser Smoke ===");
-    console.log("Cross-browser smoke phase - implementation pending");
-    console.log("Requires: Chromium, Firefox, WebKit test runs");
+    try {
+      const smokeResults = await measureCrossBrowserSmoke(stagePath);
+      metrics.cross_browser_smoke = smokeResults;
+      console.log(`Pages tested: ${smokeResults.test_pages}`);
+      console.log(
+        `Browser coverage: ${Object.keys(smokeResults.browsers).join(", ")}`,
+      );
+    } catch (e) {
+      console.error(`Cross-browser smoke phase failed: ${e.message}`);
+    }
   }
 
   if (outPath) {

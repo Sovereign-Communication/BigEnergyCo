@@ -97,3 +97,22 @@ test("Quality-Lab: Lighthouse results structure has required fields", () => {
   assert.ok(sampleLighthouseResults.mobile.medians);
   assert.ok(sampleLighthouseResults.desktop.medians.performance >= 0);
 });
+
+test("Quality-Lab: cross-browser smoke results structure has required fields", () => {
+  const sampleSmokeResults = {
+    browsers: {
+      chromium: { runs: 5, passed: 5, failed: 0 },
+      firefox: { runs: 5, passed: 4, failed: 1 },
+      webkit: { runs: 5, passed: 5, failed: 0 },
+    },
+    test_pages: 5,
+    pass_rate: 0.933,
+  };
+  assert.ok(sampleSmokeResults.browsers.chromium);
+  assert.ok(sampleSmokeResults.browsers.firefox);
+  assert.ok(sampleSmokeResults.browsers.webkit);
+  assert.equal(typeof sampleSmokeResults.pass_rate, "number");
+  assert.ok(
+    sampleSmokeResults.pass_rate >= 0 && sampleSmokeResults.pass_rate <= 1,
+  );
+});
