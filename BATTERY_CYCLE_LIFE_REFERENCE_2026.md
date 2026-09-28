@@ -302,6 +302,159 @@ This reference uses Q2-Q3 2026 data. Update when:
 
 ---
 
+## SUPER-LINEAR CYCLE-LIFE MODEL (added September 28, 2026 — issue #156)
+
+This section is the documentation the model's implementation cites. It lives
+here rather than in `assets/js/sizing/engine.js` because that file ships raw and
+unminified to every first-load visitor under a plan §3.1 byte budget; the
+provenance of a constant belongs with the data, not in the payload.
+
+### What changed and why
+
+The previous model used **one exponent per chemistry** across the whole depth-of-
+discharge range: β = 1.65 (LFP), 1.55 (Na-ion), 1.45 (lead-acid), in
+`cycles = base * (refDoD / d)^β`.
+
+Measured against the data points already recorded in this document, that flat
+curve is wrong in both directions at once, and wrong _more_ the further you move
+from the point it was anchored at:
+
+**LFP, against the Winston Thundersky DoD response (line 65-67):**
+
+| DoD  | This document | Flat model | Error                |
+| ---- | ------------- | ---------- | -------------------- |
+| 1.00 | 2,000         | 4,152      | 2.08x too optimistic |
+| 0.80 | 3,000         | 6,000      | 2.00x too optimistic |
+| 0.55 | 8,000         | 11,134     | 1.39x too optimistic |
+
+**Lead-acid, against the DoD response at lines 132-136 (midpoints):**
+
+| DoD  | This document | Flat model | Error                 |
+| ---- | ------------- | ---------- | --------------------- |
+| 0.50 | 1,250         | 500        | 0.40x too pessimistic |
+| 0.80 | 400           | 253        | 0.63x too pessimistic |
+| 1.00 | 175           | 183        | 1.05x, about right    |
+
+The **local** exponent implied by those points is not constant, and that is the
+whole finding:
+
+| Chemistry | Band        | Implied beta | Flat model |
+| --------- | ----------- | ------------ | ---------- |
+| LFP       | 0.55 → 0.80 | **2.618**    | 1.65       |
+| LFP       | 0.80 → 1.00 | **1.817**    | 1.65       |
+| Lead-acid | 0.50 → 0.80 | **2.424**    | 1.45       |
+| Lead-acid | 0.80 → 1.00 | **3.705**    | 1.45       |
+
+Every one of those is well above 1, so the response is genuinely **super-linear**,
+and no single exponent can reproduce the curve. The old 1.65 sits between the two
+LFP bands and matches neither; the old 1.45 is nowhere near either lead-acid band.
+One flat constant was averaging away the very effect this document records — which
+is exactly how the model came to mis-estimate the long-life oversize tradeoffs
+issue #156 was opened for.
+
+### Shape is not level
+
+The exponents give the **shape** of the DoD response. The **level** is a separate
+declared multiplier, because conflating them would make every LFP bank behave like
+a value-tier one.
+
+Winston Thundersky 48V is the only row in this document that states cycle life at
+three depths (lines 65-67), so it is the only source of _shape_. Its 80% figure is
+3,000. The mainstream cells this calculator is built around are CATL 280Ah at
+6,000-8,000 and BYD Blade 2.0 at 4,500+ over 50-80% DoD (lines 55-57), and the
+product has always quoted 6,000 at 80% as its LFP baseline. So the LFP anchors are
+scaled 2.0x, which puts the 80% point back on 6,000 and leaves the curvature — the
+super-linear part — exactly as the documented product measured it.
+
+### Sodium-ion is the counter-example, on purpose
+
+The reference records sodium-ion as DoD-insensitive: "Full discharge capable: **No
+DoD derating**" (line 23) and "Sodium-Ion: Insensitive to DoD" (line 214).
+Sodium-ion's aluminium current collectors prevent the copper dissolution that
+makes DoD matter for LFP. So its band exponent is **0.586**, below 1, and it is the
+one chemistry this change does _not_ make super-linear. That is the "where
+evidence supports it" in the issue's end-state: the evidence points the other way
+here, and the model follows it.
+
+### One anchor moved: lead-acid 500 → 1,250
+
+The old lead-acid anchor was 500 cycles at 50% DoD. That contradicts **this
+document, twice** — line 124 and line 134 both give 1,000-1,500 at 50% DoD, and
+the "For user-facing documentation" block at the end of this file says
+"Lead-Acid: 1,000-1,500 cycles at 50% DoD (**3-5 year lifespan**)".
+
+It also contradicts this product's own user-facing copy, which says lead-acid lasts
+"3-5 years at typical home use depth (50% DoD)". At 300 cycles/year, 500 cycles is
+**1.7 years** and 1,250 is **4.2 years**. The copy and the datasheet agreed with
+each other and disagreed with the model, so the model moved. That is a 2.5x change
+to lead-acid cycle life and it is the largest single number this issue changed.
+
+A user-visible consequence followed from it: the chemistry comparison panel in
+`ui.js` carried its own **copy** of the three cycle-life figures as literals, so it
+kept displaying 500 for lead-acid while the engine priced 1,250. The panel now
+reads from the model instead of repeating it.
+
+The engine's own 20-year replacement economics read a flat per-chemistry
+`cyclesTo80` rather than the curve, and that rating now has to be _derived_ from
+the curve rather than asserted beside it. For LFP and sodium-ion it already was —
+`cyclesTo80` is exactly the model at the chemistry's own rated usable DoD (6,000
+at 0.80, 5,500 at 0.85) — and the new model leaves both untouched. Lead-acid
+carries a real field derate: a DIY series string without active balancing does
+not reach the balanced 1,250, so the economics keep a 0.4x factor, and 500 is now
+1,250 x 0.4 instead of a free-floating number whose justification ("manufacturer
+lab ratings ~600 cycles") never matched anything in this file. The 20-year
+replacement maths is therefore **unchanged** for every chemistry, and the
+invariant is asserted in `tests/battery-longevity.test.mjs` so the rating cannot
+drift from the curve again.
+
+### Old to new, at every point the goldens pin
+
+| Chemistry | DoD  | Old (flat) | New (super-linear) | Change                 |
+| --------- | ---- | ---------- | ------------------ | ---------------------- |
+| LFP       | 1.00 | 4,152      | 4,000              | -4%                    |
+| LFP       | 0.80 | 6,000      | 6,000              | unchanged (the anchor) |
+| LFP       | 0.60 | 9,946      | 12,741             | **+28%**               |
+| LFP       | 0.50 | 13,918     | 15,000 (cap)       | +8%                    |
+| Na-ion    | 1.00 | 4,202      | 5,000              | +19%                   |
+| Na-ion    | 0.85 | 5,500      | 5,500              | unchanged (the anchor) |
+| Na-ion    | 0.65 | 8,394      | 6,436              | **-23%**               |
+| Lead-acid | 1.00 | 183        | 175                | -4%                    |
+| Lead-acid | 0.50 | 500        | 1,250              | **+150%**              |
+| Lead-acid | 0.20 | 2,000      | 2,000              | unchanged (the cap)    |
+
+The two large LFP-side and Na-ion-side moves point in **opposite** directions, and
+that is the point rather than a problem: the change says an LFP bank rewards
+oversizing far more than it used to, while a sodium-ion bank rewards it far less.
+Both follow from the same evidence, read per chemistry.
+
+### Verification the model is fitted, not asserted
+
+- Every anchor is returned **exactly**: a piecewise curve that cannot hit the data
+  points it was built from is not fitted to them. Selecting a band's boundary on
+  the wrong side made LFP read 5,999 at 80% DoD instead of 6,000; that is now
+  impossible and is asserted in `tests/battery-longevity.test.mjs`.
+- Each **stored** band exponent is re-derived from its **encoded** anchor pairs in
+  the test suite, so the precomputed constants cannot drift from their own
+  arithmetic.
+- **Monotonicity is asserted** across the full 0.1-1.0 DoD range for all three
+  chemistries. A sign error in the band exponent makes cycle life _rise_ with
+  depth, which pins the cap on at the shallow end and turns a 20-year replacement
+  count into nonsense. Both failure modes are loud wrong numbers rather than a
+  crash, so only an explicit check catches them.
+- Lead-acid is asserted to reproduce all three of this document's midpoints
+  **exactly** (1,250 / 400 / 175). LFP is asserted on its **ratios** instead
+  (1.500x for the 80→100% drop), because its level is deliberately the mainstream
+  CATL figure rather than Winston's.
+
+### What is still not modelled
+
+**Calendar life.** Lead-acid carries a hard 6-8 year ceiling from sulfation and
+grid corrosion "regardless of shallow cycling". That is a limit in _time_, and a
+cycle-count curve cannot express it. It is the first thing a successor to this
+model must add, and until then a lead-acid sizing that cycles shallowly will keep
+reading longer-lived than the sulfation ceiling allows.
+---
+
 ## CITING THIS REFERENCE
 
 **For Groq system instruction:**

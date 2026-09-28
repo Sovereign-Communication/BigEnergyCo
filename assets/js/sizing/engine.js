@@ -61,10 +61,9 @@ export const CHEMISTRIES = {
     roundTrip: 0.85,
     chargeMinC: -20,
     dischargeMinC: -20,
-    // Field reality: DIY banks are series strings of 12 V blocks, usually
-    // WITHOUT active balancing (top-balancing at best, often misconfigured).
-    // Cells drift and one laggard drags the whole string, so manufacturer
-    // lab ratings (~600 cycles) aren't achieved. 500 is the honest number.
+    // Field reality: DIY 12 V series strings, usually WITHOUT active
+    // balancing. The reference rates 1,250 @ 50% DoD balanced; un-balanced
+    // strings miss it, so 500 = the model's 1,250 x a 0.4x derate.
     cyclesTo80: 500,
     usableScale: 0.85,
     coldPctPerC: 0.008,
@@ -96,32 +95,43 @@ export function capacityScaleFor(chemistry, meanTempC = null) {
 }
 
 /**
- * Empirical cycle life to 80% State of Health (SOH) as a function of operating Depth of Discharge (DoD).
- * Grounded in Wöhler power-law degradation models and manufacturer cell datasheets
- * (CATL, EVE LF280K/LF314K, HiNa Na-ion, BCI AGM standards).
- *
- * @param {"lfp" | "naion" | "agm"} chemistry
- * @param {number} dod - Operating depth of discharge between 0.1 and 1.0 (e.g., 0.8 for 80% DoD)
- * @returns {number} Estimated cycles to 80% capacity retention
+ * Cycle life to 80% SOH vs DoD: a segment-wise, SUPER-LINEAR Woeler curve
+ * (issue #156). One exponent per chemistry cannot fit the reference's DoD
+ * response (LFP needs 2.618 then 1.817, lead-acid 2.424 then 3.705, against the
+ * old flat 1.65/1.45), so the exponent is per DoD band. `bands` is a flat
+ * [anchorDoD, anchorCycles, exponentToNextBand] triple, precomputed: this file
+ * ships raw under a plan §3.1 budget. Sources: BATTERY_CYCLE_LIFE_REFERENCE_2026.md.
  */
+export const CYCLE_LIFE_CURVES = {
+  // Winston 3,000 @ 80% scaled 2.0x onto CATL 280Ah's 6,000-8,000.
+  lfp: {
+    cap: 15000,
+    bands: [0.55, 16000, 2.618, 0.8, 6000, 1.817, 1, 4000, 0],
+  },
+  // Near-flat: the reference calls Na-ion DoD-insensitive.
+  naion: { cap: 12000, bands: [0.85, 5500, 0.586, 1, 5000, 0] },
+  // No level shift: the old 500 @ 50% contradicted the reference and our own
+  // "3-5 years" copy. The model was the outlier.
+  agm: { cap: 2000, bands: [0.5, 1250, 2.424, 0.8, 400, 3.705, 1, 175, 0] },
+};
+
+/** Cycles to 80% SOH; `dod` clamped to 0.1..1.0. */
 export function cycleLifeForDoD(chemistry, dod) {
+  const curve = CYCLE_LIFE_CURVES[chemistry];
+  if (!curve) return 4000;
   const d = Math.max(0.1, Math.min(1.0, dod));
-  if (chemistry === "lfp") {
-    // Standard testing benchmark: 6,000 cycles at 80% DoD (0.80).
-    // Degradation exponent β ≈ 1.65 (Preger et al., J. Electrochem. Soc. 2020)
-    return Math.min(15000, Math.round(6000 * Math.pow(0.8 / d, 1.65)));
+  const b = curve.bands;
+  const hit = (i) => {
+    const [a, cy, e] = [b[i], b[i + 1], b[i + 2]];
+    return e ? Math.min(curve.cap, Math.round(cy * Math.pow(a / d, e))) : cy;
+  };
+  // Band i owns [b[i], b[i+3]), so a point ON an anchor returns that anchor
+  // exactly. Backwards, the curve misses its own anchors (LFP read 5,999 at
+  // 0.8 DoD); see the reference doc.
+  for (let i = 0; i < b.length; i += 3) {
+    if (d >= b[i] && (i + 3 >= b.length || d < b[i + 3])) return hit(i);
   }
-  if (chemistry === "naion") {
-    // Inherent cell window is 95%+; standard inverter window is ~85% (~5,500 cycles).
-    // Sodium-ion's aluminum current collectors prevent copper dissolution even at full discharge.
-    return Math.min(12000, Math.round(5500 * Math.pow(0.85 / d, 1.55)));
-  }
-  if (chemistry === "agm") {
-    // AGM baseline: 500 cycles at 50% DoD (0.50).
-    // Note: Calendar life imposes a hard ~6-8 year ceiling regardless of shallow cycling.
-    return Math.min(2000, Math.round(500 * Math.pow(0.5 / d, 1.45)));
-  }
-  return 4000;
+  return hit(0); // below the shallowest anchor: extrapolate, capped
 }
 
 export const RELIABILITY_TIERS = [

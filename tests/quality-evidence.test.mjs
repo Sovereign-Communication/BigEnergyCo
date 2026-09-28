@@ -290,7 +290,11 @@ test("the committed a11y matrix report is readable evidence, and its hole is clo
     [],
     `unexpected problems: ${result.problems.join("; ")}`,
   );
-  assert.deepEqual(result.gaps, [], `unexpected gaps: ${result.gaps.join("; ")}`);
+  assert.deepEqual(
+    result.gaps,
+    [],
+    `unexpected gaps: ${result.gaps.join("; ")}`,
+  );
 
   // (2) Freshness is stated, not inferred.
   assert.ok(Number.isFinite(Date.parse(doc.generated_at)));
@@ -346,9 +350,13 @@ test("a whole unrun gate set reports every gap without failing the job", () => {
   // pinned end to end: nothing is committed for them, every one is named with
   // the command that would produce it, and the exit code stays 0 so the job is
   // usable while those gaps are honestly open.
-  const { ok, problems, gaps } = validateEvidence(EVIDENCE_REGISTRY, {}, {
-    now: NOW,
-  });
+  const { ok, problems, gaps } = validateEvidence(
+    EVIDENCE_REGISTRY,
+    {},
+    {
+      now: NOW,
+    },
+  );
   assert.equal(ok, true);
   assert.deepEqual(problems, []);
   assert.equal(gaps.length, EVIDENCE_REGISTRY.length);

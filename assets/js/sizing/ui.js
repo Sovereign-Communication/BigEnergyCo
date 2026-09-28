@@ -3839,14 +3839,13 @@ function renderBatteryComparison(p, selectedSystem) {
       label: "LFP / LiFePO₄",
       tagline: "Standard lithium (6,000 cycles at 80% DoD)",
       dod: 0.8,
-      cyclesTo80: 6000,
       coldScale: 1.0,
       coldNotes: isCold
         ? "⚠️ Charge blocked <0°C (32°F). In freezing weather, requires a heated enclosure or internal heating pads to charge without lithium plating."
         : "✅ Excellent in moderate/warm climates. Normal operation 0°C to 45°C.",
       safety: "Very safe, stable lithium iron phosphate chemistry.",
       dodNote:
-        "80% DoD preserves the full 6,000+ cycle rating (cycling daily to 90%+ accelerates degradation to ~3,500–4,500 cycles).",
+        "80% DoD preserves the full 6,000 cycle rating (90%+ DoD degrades it to ~4,000–4,800).",
     },
     {
       id: "naion",
@@ -3854,7 +3853,6 @@ function renderBatteryComparison(p, selectedSystem) {
       tagline:
         "Extreme cold & ultra-safe (95% cell window, ~85% inverter utilized)",
       dod: 0.85,
-      cyclesTo80: 5500,
       coldScale: 1.0,
       coldNotes:
         "🛡️ Cold Champion: Zero capacity loss down to −20°C (−4°F). Safely charges below freezing without heating pads or battery warmers.",
@@ -3868,7 +3866,6 @@ function renderBatteryComparison(p, selectedSystem) {
       label: "Lead-Acid (AGM)",
       tagline: "Low upfront sticker / Short life (50% DoD limit)",
       dod: 0.5,
-      cyclesTo80: 500,
       coldScale: agmColdScale,
       coldNotes: isCold
         ? `❄️ Severe cold drop: loses ~${Math.round((1 - agmColdScale) * 100)}% capacity in winter. Freezes if discharged in sub-zero temps.`
@@ -3890,7 +3887,9 @@ function renderBatteryComparison(p, selectedSystem) {
     const nameplateKwh = +(targetBattKwh / effectiveDod).toFixed(1);
     const cost = fullRange(pvKw, nameplateKwh, c.id, landedF);
     const battMid = landedMidBattKwhFor(c.id, landedF);
-    const swaps = batteryReplacements(estCyclesPerYr, c.cyclesTo80, 20);
+    // From the model, not a literal: #156 moved it and this said 500.
+    const life80 = cycleLifeForDoD(c.id, c.dod);
+    const swaps = batteryReplacements(estCyclesPerYr, life80, 20);
     const life = lifetimeCostUsd({
       capexMidUsd: cost.objectiveMid,
       battKwhUsable: targetBattKwh,
