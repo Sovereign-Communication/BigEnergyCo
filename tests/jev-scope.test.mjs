@@ -407,13 +407,22 @@ test("GATE: the all-proven exit rule starts at P0.4, not at its own author", () 
 // item, so "P0.3d" is not an id a scoped run can be given. If the plan ever
 // grows sub-items, this test fails and the binding point must be revisited
 // rather than left quietly one item behind.
+//
+// 2026-09-27: the tripwire fired on A-001's prose cross-references ("measured
+// in Chromium in the P0.3(c) work"; finding F-45 mapped to P0.3(e)). Those are
+// not item definitions — the plan still lists P0.3 as one item (§9 rule 6:
+// "For scope purposes, P0.3's bullets (a)–(e) are one plan item, P0.3") — so
+// the check now looks for sub-ids in item-definition position (a table row's
+// ID cell), not in prose. A sub-id defined there would still trip it.
 test("GATE: the plan has no P0.3 sub-ids, which is why the rule binds at P0.4", () => {
-  const subIds = PLAN.match(/P0\.3\s*\([a-e]\)|P0\.3[a-e]\b/g) || [];
+  const subIds =
+    PLAN.match(/^\|\s*P0\.3\s*\([a-e]\)\s*\||^\|\s*P0\.3[a-e]\b\s*\|/gm) || [];
   assert.deepEqual(
     subIds,
     [],
-    "the plan now has P0.3 sub-items: --scope can name them, so the all-proven " +
-      "exit rule can bind at P0.3(d) instead of exempting the whole of P0.3",
+    "the plan now defines P0.3 sub-items: --scope can name them, so the " +
+      "all-proven exit rule can bind at P0.3(d) instead of exempting the " +
+      "whole of P0.3",
   );
 });
 
