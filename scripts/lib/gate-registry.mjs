@@ -13,8 +13,10 @@ export const MANUAL_VALIDATORS = new Map([
   [
     "scripts/validate-jev-complete.mjs",
     "the Jev complete gate: needs the direct provider key + network for live " +
-      "judgment (deterministic heuristic fallback offline); run it by hand " +
-      "before a promote",
+      "judgment. It also runs in CI (P0.3(e), the `jev-complete` job, live only " +
+      "once O-01 adds the repository secret); listed here because the LOCAL run " +
+      "is by hand, before a promote, where it falls back to a deterministic " +
+      "heuristic with no judgment",
   ],
 ]);
 
