@@ -25,6 +25,7 @@ import { serveStatic } from "../scripts/serve-static.mjs";
 import { securityPolicyVerdict } from "../scripts/lib/gates.mjs";
 import * as stamps from "../scripts/lib/stamps.mjs";
 import { attachWorktree, detachWorktree } from "../scripts/lib/worktree.mjs";
+import { extractVerdict } from "./verdict-json.mjs";
 
 const STAGE = "_pages_verify_test";
 const LEDGER = join(STAGE, "ledger.jsonl"); // inside the throwaway stage dir
@@ -92,7 +93,12 @@ const promote = (base, extra = [], opts = {}) =>
     opts,
   );
 
-const parse = (out) => JSON.parse(out.slice(out.indexOf("{")));
+// The two scripts here print different verdicts, and `out` is the child's
+// stdout AND stderr in arrival order, so each call says which fields its
+// verdict must carry. That also stops a stray but well-formed JSON line in a
+// log from being mistaken for the report.
+const parseVerify = (out) => extractVerdict(out, ["verified", "filesChecked"]);
+const parsePromote = (out) => extractVerdict(out, ["plan", "record"]);
 
 async function withServer(fn) {
   const srv = await serveStatic({ dir: STAGE });
@@ -162,7 +168,7 @@ test("VERIFY: a faithful artifact verifies (positive control)", async () => {
   await withServer(async (base) => {
     const r = await verify(base);
     assert.equal(r.code, 0, r.out);
-    const report = parse(r.out);
+    const report = parseVerify(r.out);
     assert.equal(report.verified, true);
     assert.ok(
       report.filesChecked > 300,
@@ -632,7 +638,7 @@ test("VERIFY: policy regressions fail through the real verifier, not just the he
     await withStagePolicy(async (base) => {
       const r = await verify(base, ["--surface", "cloudflare"]);
       assert.equal(r.code, 0, `the control run must pass: ${r.out}`);
-      const report = parse(r.out);
+      const report = parseVerify(r.out);
       assert.equal(report.surface, "cloudflare");
       assert.equal(report.verified, true);
       assert.equal(
@@ -892,7 +898,7 @@ test("PROMOTE: a credential-free dry run claims no way back it has not read", as
   await withServer(async (base) => {
     const r = await promote(base, ["--json"], { env });
     assert.equal(r.code, 0, r.out);
-    const payload = parse(r.out);
+    const payload = parsePromote(r.out);
     assert.equal(payload.plan.previousSha, null);
     assert.match(
       payload.plan.rollbackReason,
