@@ -17,6 +17,18 @@
 //   0  no budget regressed against the declared baseline
 //   1  a budget regressed; every reading is still printed and written out
 //   2  usage error, or the staged build / ledger could not be read
+//
+// WHY THE ENFORCEMENT RULE IS NOW PRINTED, AND WHY IT IS ONE CONSTANT. The
+// `breach` tag in the verdict column is deliberate (see `verdictOf` below), but
+// a reader of the TERMINAL had no way to learn what produced it: the run printed
+// `breach` on two budgets, exited 0, and said "no regression against the
+// declared baseline", with the rule that makes a breach non-blocking written
+// only in the report JSON. Two budgets really are over the §3.1 limit today —
+// `registry_country` by 12x — and a bare "breach" next to a green run is exactly
+// the reading this gate's own header warns against. `scripts/check-lighthouse.mjs`
+// already does the honest version in its human output ("N Q-02 breaches
+// (non-blocking until P5/P8)"). One constant, used by the JSON and the terminal,
+// so the two can never disagree about which rule is in force.
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -45,6 +57,59 @@ function codeSha() {
 
 const USAGE =
   "usage: node scripts/check-byte-budgets.mjs [--stage DIR] [--ledger FILE] [--out FILE]";
+
+// One owner for the rule, so the report and the terminal cannot disagree about
+// which bar is in force. §3.2 is the citation; the human-readable half is what
+// the terminal prints.
+const ENFORCEMENT =
+  "regression-blocking from P0 (plan §3.2); absolute from P6 (/next/) and P8 (all)";
+const ABSOLUTE_BINDS_FROM = "P6 (/next/) and P8 (all)";
+
+/** A budget's limit, formatted the way its unit reads. */
+export function limitOf(m) {
+  return m.unit === "count"
+    ? `${m.limit} req`
+    : formatReading(m.limit, "bytes");
+}
+
+/** The rule that judges the verdict column, on the terminal as well as in JSON. */
+export function enforcementLine() {
+  return `enforcement: ${ENFORCEMENT}\n`;
+}
+
+/** Every budget over the plan's §3.1 limit, whether or not it blocks. */
+export function overLimitMetrics(metrics) {
+  return Object.entries(metrics).filter(
+    ([, m]) => typeof m.value === "number" && m.value > m.limit,
+  );
+}
+
+/**
+ * The over-limit budgets, each named with its reading and its limit, under a
+ * heading that says the limit is not yet a bar and when it becomes one. Empty
+ * string when nothing is over, so a clean run says nothing about breaches.
+ *
+ * Its own section rather than a tag in the verdict column, because the verdict
+ * column answers "did this get worse" and this answers "is this over the
+ * plan's number" — two different rules, and a reader who cannot tell which one
+ * produced a `breach` is reading neither.
+ */
+export function breachSection(metrics) {
+  const over = overLimitMetrics(metrics);
+  if (!over.length) return "";
+  const lines = [
+    // "over the plan's limit" is the phrase tests/byte-budgets.test.mjs has
+    // always asserted for this, and it is the better one: the limit is the
+    // plan's, the regression is the baseline's, and the two are different bars.
+    `\nover the plan's limit (plan §3.1; reported, not blocking until ${ABSOLUTE_BINDS_FROM}):\n`,
+  ];
+  for (const [name, m] of over) {
+    lines.push(
+      `  ${name}: ${formatReading(m.value, m.unit)} > ${limitOf(m)}\n`,
+    );
+  }
+  return lines.join("");
+}
 
 // The staged build, described the way the module wants it: a list of posix
 // relative paths and a reader. Skipped: symlinks and anything unreadable, which
@@ -136,7 +201,6 @@ export function main(argv = process.argv.slice(2)) {
     baseline.metrics,
   );
 
-  const kb = (n) => formatReading(n, "bytes");
   // More than one tag can be true of a budget at once, and dropping any of them
   // loses something: a metric can be over the plan's limit AND unmeasured
   // against no bar. A verdict column that printed "ok" beside a 3.3x breach is
@@ -161,19 +225,16 @@ export function main(argv = process.argv.slice(2)) {
       baseline.source
         ? `${baseline.source} (ledger ${opts.ledger})`
         : `NONE DECLARED — every budget is unmeasured (ledger ${opts.ledger})`
-    }\n\n`,
+    }\n`,
   );
+  // The rule that judges the two columns above, stated where a reader sees it.
+  out.write(`${enforcementLine()}\n`);
   out.write(
     `${pad("budget", 30)}${pad("measured", 12)}${pad("limit", 10)}verdict\n`,
   );
   for (const [name, m] of Object.entries(metrics)) {
-    const limit = m.unit === "count" ? `${m.limit} req` : kb(m.limit);
-    const over =
-      typeof m.value === "number" && m.value > m.limit
-        ? "  <- over the plan's limit"
-        : "";
     out.write(
-      `${pad(name, 30)}${pad(formatReading(m.value, m.unit), 12)}${pad(limit, 10)}${verdictOf(name)}${over}\n`,
+      `${pad(name, 30)}${pad(formatReading(m.value, m.unit), 12)}${pad(limitOf(m), 10)}${verdictOf(name)}\n`,
     );
   }
   if (improvements.length) {
@@ -210,8 +271,7 @@ export function main(argv = process.argv.slice(2)) {
     ledger: opts.ledger,
     baseline_ref: baseline.source,
     tolerance_bytes: REGRESSION_TOLERANCE_BYTES,
-    enforcement:
-      "regression-blocking from P0 (plan §3.2); absolute from P6 (/next/) and P8 (all)",
+    enforcement: ENFORCEMENT,
     metrics,
     regressions,
     improvements,
@@ -223,16 +283,22 @@ export function main(argv = process.argv.slice(2)) {
     writeFileSync(opts.out, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   out.write(`\nreport: ${opts.out || "not written (pass --out FILE)"}\n`);
 
+  const overLimit = overLimitMetrics(metrics);
+
   if (regressions.length) {
     process.stderr.write(
       `check-byte-budgets: ${regressions.length} byte-budget regression(s) against the ` +
         `declared baseline:\n${regressions.map((r) => `  - ${r.message}`).join("\n")}\n`,
     );
-    return 1;
   }
+  // What the run was judged on, and what it merely reported. Lighthouse's shape:
+  // the count, and the phase at which the limit starts to block.
+  out.write(breachSection(metrics));
+  if (regressions.length) return 1;
   out.write(
     `no regression against the declared baseline (${regressions.length} regressions, ` +
-      `${improvements.length} improvements, ${unmeasured.length} unmeasured)\n`,
+      `${improvements.length} improvements, ${unmeasured.length} unmeasured, ` +
+      `${overLimit.length} over the §3.1 limit)\n`,
   );
   return 0;
 }

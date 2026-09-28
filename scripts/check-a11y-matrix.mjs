@@ -47,6 +47,63 @@ import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 
 const USAGE =
   "usage: node scripts/check-a11y-matrix.mjs [--stage DIR] [--ledger FILE] [--out FILE] [--only CELL]";
+
+// One owner for the rule, used by the report and the terminal, so the two can
+// never disagree about which bar is in force. `compareCells` already computes
+// `breaches` against the declared cap and its own comment says it reports them
+// "so the number [is not] a surprise later" — which it did, in the JSON, and not
+// on the terminal, where the summary line also mixed the two that block with
+// the four that do not. Same defect as the byte-budget report and the same fix
+// as check-lighthouse.mjs: name the phase, split what blocks from what is
+// reported.
+const ENFORCEMENT =
+  "regression-blocking from P0 (plan §3.2); absolute (0 violations) from P5 for templates in the new shell and P8 for everything";
+const ABSOLUTE_BINDS_FROM = "P5 (new shell) and P8 (everything)";
+
+/** The rule that judges this run, on the terminal as well as in the report. */
+export function enforcementLine() {
+  return `enforcement: ${ENFORCEMENT}\n`;
+}
+
+/**
+ * The counts, split by whether they block. An audit error or a regression
+ * fails the run; a violation count, an unmeasured cell and a cell over the
+ * declared cap do not, until the phase above. One line carrying all six is how
+ * a reader cannot tell which question a number answers.
+ */
+export function summaryLines({
+  cells,
+  violationTypes,
+  errors,
+  regressions,
+  improvements,
+  unmeasured,
+  breaches,
+}) {
+  return (
+    `matrix: ${cells} cells, ${errors} audit errors, ${regressions} regressions (these block)\n` +
+    `  reported: ${violationTypes} violation types, ${improvements} improvements, ` +
+    `${unmeasured} unmeasured, ${breaches} over the declared cap (reported, not blocking ` +
+    `until ${ABSOLUTE_BINDS_FROM})\n`
+  );
+}
+
+/**
+ * The cells over the declared absolute cap, each named, under a heading that
+ * says the cap is not yet a bar. `compareCells` computes these and its own
+ * comment says it reports them "so the number [is not] a surprise later" — which
+ * it did, in the report, and not here.
+ */
+export function breachSection(breaches) {
+  if (!breaches.length) return "";
+  const lines = [
+    `\nover the declared cap (reported, not blocking until ${ABSOLUTE_BINDS_FROM}):\n`,
+  ];
+  for (const b of breaches) {
+    lines.push(`  ${b.id}: ${b.violations} > ${b.cap} violations\n`);
+  }
+  return lines.join("");
+}
 const FLAGS = {
   "--stage": "stage",
   "--ledger": "ledger",
@@ -328,8 +385,9 @@ async function audit({
     `a11y matrix (plan Q-07) — ${cells.length} cells of ${matrix.cells.length}, tags ${tags.join(" ")}\n`,
   );
   out.write(
-    `stage ${opts.stage} · baseline ${baseline.source || "NONE DECLARED — every cell is unmeasured"}\n\n`,
+    `stage ${opts.stage} · baseline ${baseline.source || "NONE DECLARED — every cell is unmeasured"}\n`,
   );
+  out.write(`${enforcementLine()}\n`);
   out.write(`${"cell".padEnd(34)}${"violations".padEnd(12)}detail\n`);
 
   // A browser that will not launch at all is a usage/environment failure, not a
@@ -420,8 +478,7 @@ async function audit({
     code_sha: codeSha(),
     ledger: opts.ledger,
     baseline_ref: baseline.source,
-    enforcement:
-      "regression-blocking from P0 (plan §3.2); absolute (0 violations) from P5 for templates in the new shell and P8 for everything",
+    enforcement: ENFORCEMENT,
     tags,
     dimensions: matrix.dimensions.map((d) => ({
       name: d.name,
@@ -440,10 +497,17 @@ async function audit({
     writeFileSync(opts.out, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   out.write(`\nreport: ${opts.out || "not written (pass --out FILE)"}\n`);
   out.write(
-    `matrix: ${readings.length} cells, ${readings.reduce((n, r) => n + r.violations.length, 0)} violation types, ` +
-      `${errors.length} audit errors, ${regressions.length} regressions, ${improvements.length} improvements, ` +
-      `${unmeasured.length} unmeasured\n`,
+    summaryLines({
+      cells: readings.length,
+      violationTypes: readings.reduce((n, r) => n + r.violations.length, 0),
+      errors: errors.length,
+      regressions: regressions.length,
+      improvements: improvements.length,
+      unmeasured: unmeasured.length,
+      breaches: breaches.length,
+    }),
   );
+  out.write(breachSection(breaches));
   if (matrix.not_applicable.length) {
     out.write(
       `not applicable: ${matrix.not_applicable.length} combinations, recorded in the report\n`,
