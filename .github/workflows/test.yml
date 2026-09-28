@@ -58,9 +58,11 @@ jobs:
           fi
 
       - name: Site integrity gates (SEO, quality, i18n, headers, tokens)
+        id: seo
         run: npm run seo
 
       - name: Prettier check
+        id: prettier
         run: npx --yes prettier@3.9.6 --check .
 
       - name: Secret-scan tracked files
@@ -77,7 +79,44 @@ jobs:
         run: npm run verify:flow
 
       - name: Unit tests (offline)
+        id: unit_tests
         run: npm test
+
+      # ── P0.3(e) / F-45: this job's REAL outcomes, for the Jev gate ─────────
+      # The gate used to read a hand-maintained evidence file that could claim
+      # green while this suite was red. It now reads what the runner actually
+      # observed, written from `steps.*.outcome` — the runner's own record, not
+      # anything a person typed. `if: always()` so a FAILED job still reports
+      # why; a missing artifact is itself a named, fatal problem downstream.
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/test.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "test",
+              conclusion: "${{ job.status }}",
+              steps: {
+                seo: "${{ steps.seo.outcome }}",
+                prettier: "${{ steps.prettier.outcome }}",
+                unit_tests: "${{ steps.unit_tests.outcome }}",
+              },
+            };
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+          '
+
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-test
+          path: jev-artifacts/test.json
+          if-no-files-found: error
+          retention-days: 7
 
       # Live-API validation is manual (network): node scripts/validate-live.mjs
       # The live NASA-data model checks (validate-modes, validate-soc-pipeline)
@@ -97,7 +136,34 @@ jobs:
         with:
           node-version: 22
       - name: Real-browser smoke on the staged build
+        id: smoke
         run: npm run smoke:local
+      # P0.3(e): the smoke outcome the gate reports is this runner's, not a
+      # claim in a committed file.
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/web-smoke.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "web-smoke",
+              conclusion: "${{ job.status }}",
+              steps: { smoke: "${{ steps.smoke.outcome }}" },
+            };
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+          '
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-web-smoke
+          path: jev-artifacts/web-smoke.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Upload smoke artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v7
@@ -124,4 +190,141 @@ jobs:
         with:
           node-version: 22
       - name: Coverage floor (engine, money, rescale, nasa, climate)
+        id: coverage
         run: npm run coverage
+      # P0.3(e): recorded for the same reason as the other two jobs. The gate
+      # reads it as part of proving CI ran; a missing artifact is fatal.
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/coverage.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "coverage",
+              conclusion: "${{ job.status }}",
+              steps: { coverage: "${{ steps.coverage.outcome }}" },
+            };
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+          '
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-coverage
+          path: jev-artifacts/coverage.json
+          if-no-files-found: error
+          retention-days: 7
+
+  # The live Jev gate as a CI job (plan §8 P0.3(e), §13.2, §13.3). It judges the
+  # plan item the PR names, against evidence built from the three jobs above.
+  #
+  # pull_request only, deliberately. The scoped Jev report is a PR obligation
+  # (§9 rule 6); the full run belongs to P10 and to P11.3's weekly sweep, which
+  # is a different job with a different bar. A push to main carries neither a PR
+  # title to name a scope from nor a merge ref to judge, and inventing a scope
+  # for it would judge the P10 exit bar on every merge.
+  #
+  # NOT a required check yet: it needs the `TYPESAFE_API_KEY` repository secret,
+  # which is owner action O-01. Until that secret exists this job FAILS, loudly
+  # and by design — --require-live means a run with no pinned live judgment is
+  # not a gate result. That red is the standing, visible reminder of exactly one
+  # owner action, and it disappears the moment the secret exists.
+  jev-complete:
+    if: github.event_name == 'pull_request'
+    needs: [test, web-smoke, coverage]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The gate reads the working tree AND consumes the three jobs' own
+          # results, so it must judge the same tree they ran on. On a
+          # pull_request, actions/checkout's default is the merge ref — the
+          # commit that would actually land. Naming it explicitly keeps the
+          # evidence and the judgment about one commit instead of two.
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Download the jobs' real results
+        # Everything this job WRITES goes under RUNNER_TEMP, never into the
+        # checkout. The gate reads `git status --porcelain` for its `tree_clean`
+        # hard gate, so an evidence or report file left in the working tree
+        # would make the tree dirty and turn that gate red for a reason that has
+        # nothing to do with the code under review. Keeping the checkout
+        # pristine is what lets the judgment be about the commit and not about
+        # the job's own paperwork.
+        uses: actions/download-artifact@v7
+        with:
+          pattern: jev-results-*
+          path: ${{ runner.temp }}/jev-artifacts
+          merge-multiple: true
+
+      - name: Build the evidence from those results (fails closed)
+        # A missing artifact, a job that did not finish, or a step that never
+        # ran stops this step, so the gate below never spends a judgment on a
+        # run it cannot trust. The evidence file is still written, with those
+        # fields red, so the failure is diagnosable from the artifact.
+        run: |
+          node scripts/build-jev-evidence.mjs \
+            --artifacts "$RUNNER_TEMP/jev-artifacts" \
+            --prose evidence/advisor-and-release.json \
+            --out "$RUNNER_TEMP/jev-evidence.json" \
+            --sha "${{ github.event.pull_request.head.sha }}" \
+            --run-id "${{ github.run_id }}" \
+            --run-attempt "${{ github.run_attempt }}" \
+            --ref "${{ github.ref }}" \
+            --event "${{ github.event_name }}" \
+            --repository "${{ github.repository }}"
+
+      - name: Which plan item is this PR about?
+        id: scope
+        env:
+          # §9 rule 1: a PR names its plan items. That name is the only thing
+          # that tells the gate which facets to judge, so a PR that names none
+          # fails here rather than silently judging the whole program.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          SCOPE="$(node -e '
+            const { resolveCiScope } = await import("./scripts/lib/jev-scope.mjs");
+            const r = resolveCiScope(process.env.PR_TITLE || "");
+            if (!r.scope) {
+              process.stderr.write(r.error + "\n");
+              process.exit(1);
+            }
+            process.stdout.write(r.scope);
+          ' --input-type=module)"
+          echo "scope=$SCOPE" >> "$GITHUB_OUTPUT"
+          echo "judging the facets of $SCOPE"
+
+      - name: Jev complete gate (live, model-pinned)
+        env:
+          # The repository secret, never a literal. O-01 adds it; the job fails
+          # closed until then rather than scoring a run with no judgment.
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+        run: |
+          node scripts/validate-jev-complete.mjs \
+            --scope "${{ steps.scope.outputs.scope }}" \
+            --require-live \
+            --evidence "$RUNNER_TEMP/jev-evidence.json" \
+            --out "$RUNNER_TEMP/jev-report.json"
+
+      - name: Upload the Jev report and its evidence
+        # Always, so a failing run still leaves the report behind: the score,
+        # the per-facet ordinals, the pinned model, the run class and the
+        # evidence provenance are all in it.
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-complete-report
+          path: |
+            ${{ runner.temp }}/jev-report.json
+            ${{ runner.temp }}/jev-evidence.json
+          if-no-files-found: warn
+          retention-days: 30

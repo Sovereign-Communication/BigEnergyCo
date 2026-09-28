@@ -283,6 +283,13 @@ test("GATE: the CLI wires --scope through to the exit code", () => {
     join(ROOT, "scripts/validate-jev-complete.mjs"),
     "utf8",
   );
+  // The scoped policy moved to its own module (scripts/lib/jev-verdict.mjs) so
+  // the CLI could be a pipeline; the rules themselves are pinned there now, by
+  // the same expressions.
+  const verdict = readFileSync(
+    join(ROOT, "scripts/lib/jev-verdict.mjs"),
+    "utf8",
+  );
   assert.match(cli, /--scope/, "the CLI must accept --scope");
   assert.match(
     cli,
@@ -290,9 +297,9 @@ test("GATE: the CLI wires --scope through to the exit code", () => {
     "a scoped run must decide its own exit code, not the whole-program one",
   );
   assert.match(
-    cli,
+    verdict,
     /readRatchetBaseline/,
-    "the CLI must read the ledger for the ratchet baseline",
+    "the scoped verdict must read the ledger for the ratchet baseline",
   );
 });
 
@@ -301,11 +308,13 @@ test("GATE: the CLI wires --scope through to the exit code", () => {
 // plus no ratchet regression, even below 99. From P0.4 the ≥ 99 threshold and
 // the all-proven rule bind. The hard gates and the ratchet bind throughout.
 test("GATE: the P0.3 bootstrap relaxes the score, never the ratchet or hard gates", () => {
-  const cli = readFileSync(
-    join(ROOT, "scripts/validate-jev-complete.mjs"),
+  // The bootstrap rule is policy, and policy now has its own owner: the rules
+  // are pinned in scripts/lib/jev-verdict.mjs, by the same expressions.
+  const verdict = readFileSync(
+    join(ROOT, "scripts/lib/jev-verdict.mjs"),
     "utf8",
   );
-  const block = cli.slice(cli.indexOf("scopedPass ="));
+  const block = verdict.slice(verdict.indexOf("const pass ="));
   // The score and all-proven checks must sit INSIDE the !exitRuleBinds guard.
   assert.match(
     block,
@@ -325,7 +334,7 @@ test("GATE: the P0.3 bootstrap relaxes the score, never the ratchet or hard gate
     "the ratchet and hard gates must not be moved inside the bootstrap guard",
   );
   assert.match(
-    cli,
+    verdict,
     /bootstrap_applies: !exitRuleBinds/,
     "the report must state that the bootstrap applied, so a below-99 pass is never silent",
   );
@@ -337,13 +346,13 @@ test("GATE: an inactive ratchet is not a bootstrap pass", () => {
   assert.equal(b.status, "inactive_no_baseline");
   const r = checkRatchet({ release: facet(0) }, b);
   assert.equal(r.status, "inactive_no_baseline");
-  // The CLI must require a literal "met". `!== "violation"` would let a run
-  // with no baseline at all pass the clause meant to catch a drop.
-  const cli = readFileSync(
-    join(ROOT, "scripts/validate-jev-complete.mjs"),
+  // The scoped verdict must require a literal "met". `!== "violation"` would
+  // let a run with no baseline at all pass the clause meant to catch a drop.
+  const verdict = readFileSync(
+    join(ROOT, "scripts/lib/jev-verdict.mjs"),
     "utf8",
   );
-  const block = cli.slice(cli.indexOf("scopedPass ="));
+  const block = verdict.slice(verdict.indexOf("const pass ="));
   assert.match(block, /ratchet\.status === "met"/);
   assert.doesNotMatch(
     block,
@@ -444,23 +453,24 @@ test("GATE: plan item ordering is (major, minor, letter), and a typo binds nothi
 });
 
 test("GATE: a scoped run at or after the binding point fails on any facet short of proven", () => {
-  const cli = readFileSync(
-    join(ROOT, "scripts/validate-jev-complete.mjs"),
+  // Pinned in the module that owns the rule (scripts/lib/jev-verdict.mjs).
+  const verdict = readFileSync(
+    join(ROOT, "scripts/lib/jev-verdict.mjs"),
     "utf8",
   );
   // The rule must actually gate the scoped exit, not merely be reported.
   assert.match(
-    cli,
+    verdict,
     /!exitRuleBinds \|\|\s*\(scopedCombined >= report\.min_score && short\.length === 0\)/,
     "from the binding point a scoped run must require the score AND every in-scope facet proven",
   );
   assert.match(
-    cli,
-    /planItemAtLeast\(opts\.scope, COMPLETE_EXIT_RULE_FROM\)/,
+    verdict,
+    /planItemAtLeast\(scope, COMPLETE_EXIT_RULE_FROM\)/,
     "the binding point must be data, not a hardcoded item id",
   );
   assert.match(
-    cli,
+    verdict,
     /exit_rule_binds_from: COMPLETE_EXIT_RULE_FROM/,
     "the report must state where the rule binds, so it is never implicit",
   );

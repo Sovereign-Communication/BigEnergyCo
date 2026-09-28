@@ -213,6 +213,53 @@ through the injected `setStatus`. No location state lives here.
   such as a lost byte, split sentences, the placeholder contract,
   interpolation safety).
 
+## Jev complete gate (P0.3(c)–(e): evidence, the wire, the run, the verdict)
+
+`scripts/validate-jev-complete.mjs` is a **pipeline and nothing else**. Each
+concern below has one owner; the CLI only decides the order. Data flows one way,
+left to right, and nothing points back.
+
+| module                             | owns                                                                                                                                      | touches the network/disk? |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `scripts/lib/jev-auto-facts.mjs`   | what the checkout looks like: `tree_clean`, `secrets_clean`, `env_ignored`, `test_count`, target sha                                      | git, read-only            |
+| `scripts/lib/jev-evidence.mjs`     | the **run records**: artifact in, `tests_green`/`prettier_clean`/`seo_green`/`smoke_green`/`ci_green` out, plus the evidence file's shape | no — zero imports         |
+| `scripts/build-jev-evidence.mjs`   | writing that evidence file; exits non-zero when it cannot be trusted                                                                      | reads artifacts           |
+| `scripts/lib/jev-live.mjs`         | the **wire**: where the key comes from, and the one TypeSafe request that spends it                                                       | yes, and the only place   |
+| `scripts/lib/jev-run.mjs`          | the **live-run state**, and only it: the model pin, the record of the call, the run class, the report's run facts, the exit rule          | no                        |
+| `scripts/lib/jev-complete.mjs`     | the **engine**: pack, questions, answers, facets, ordinals, ratchet comparison                                                            | reads the pack            |
+| `scripts/lib/jev-verdict.mjs`      | the **scoped verdict**: §9 rule 6 bootstrap, the binding point, what makes a scoped run pass                                              | no — pure policy          |
+| `scripts/lib/jev-scope.mjs`        | a PR **title** read as a plan item (imported directly by the CI job)                                                                      | no                        |
+| `scripts/lib/jev-report-print.mjs` | how a report reads to a person; `--json` bypasses it                                                                                      | no                        |
+
+Three things worth knowing before changing any of it:
+
+- **Two report views, on purpose.** `report.live` is the **scorer's**: what the
+  judge said (`primary_gap`, its notes). `report.live_jev` is the **call's**:
+  provider, model, tokens, cost, blocker. They are not the same object and are
+  not meant to be. The four fields they share (`is_fallback`, `accepted`,
+  `model`, `model_requested`) are written from one value in `attachRunFacts`,
+  because a report that says "judgment" on one field and "nothing was accepted"
+  on another is the exact defect this PR cluster found twice.
+- **The record is assembled in one function.** `liveRunRecord` (jev-run.mjs)
+  has one branch per outcome: skipped / no answers / unpinned / unreadable /
+  accepted. It used to be four object literals in the CLI, so the shape of what
+  the report reads was decided by whoever was calling.
+- **The gate is fail-closed on its own dirt.** It reads `git status --porcelain`
+  for `tree_clean`, and `--out` writes into the working tree. A report written
+  but not committed makes the _next_ run measure a dirty tree, which is a red
+  hard gate and a collapsed score. The CI job therefore writes everything under
+  `$RUNNER_TEMP`, never into the checkout.
+
+Guarded by:
+
+- `tests/jev-ci-evidence.test.mjs` — the evidence rules, the model pin, the run
+  class, `--require-live`, and every branch of the live-run record.
+- `tests/jev-scope.test.mjs` — the bootstrap rule and the ratchet clause, pinned
+  in `jev-verdict.mjs` by source, and the declared baseline resolving.
+- `tests/jev-price.test.mjs` — the D-13 rate has one owner (`worker/jev-price.mjs`)
+  and the gate's modules import rather than restate it.
+- `tests/jev-facets.test.mjs` — the pack's axes, buckets and derived budget.
+
 ## Known remaining debt (deliberate, not forgotten)
 
 - `ui.js` is still ~8.0k lines (7,999 at this writing): form state, rendering
