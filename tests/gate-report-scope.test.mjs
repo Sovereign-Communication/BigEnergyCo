@@ -15,12 +15,15 @@
 // it compares, what it exits with, and the plan's bar are all untouched.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
   breachSection as budgetBreachSection,
+  breachesOf,
   enforcementLine as budgetEnforcementLine,
   limitOf,
   overLimitMetrics,
@@ -30,8 +33,13 @@ import {
   enforcementLine as a11yEnforcementLine,
   summaryLines as a11ySummaryLines,
 } from "../scripts/check-a11y-matrix.mjs";
+import {
+  BYTE_BUDGET_LIMITS,
+  brotliBytes,
+} from "../scripts/lib/byte-budgets.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const CLI = join(ROOT, "scripts/check-byte-budgets.mjs");
 
 const bytes = (value, limit) => ({ value, limit, unit: "bytes" });
 const count = (value, limit) => ({ value, limit, unit: "count" });
@@ -139,6 +147,196 @@ test("BUDGETS: a request budget's limit is read as a count, not as bytes", () =>
   // limit today, so the wrong rendering was invisible until one is.
   assert.equal(limitOf(count(8, 10)), "10 req");
   assert.equal(limitOf(bytes(1, 6144)), "6.0 KB");
+});
+
+// ── the artifact, not just the terminal ──────────────────────────────────────
+//
+// The report wrote a hardcoded `breaches: []` while the same run named three
+// over-limit budgets on the terminal. That is the same defect one level down
+// from the one the two fixes above address, and it is the worse of the two:
+// `breaches` is a field scripts/lib/quality-evidence.mjs REQUIRES every
+// byte_budgets artifact to carry, the committed evidence is what that validator
+// certifies as current, and a required field that is always empty asserts
+// nothing while the terminal says the opposite. These two tests drive the real
+// CLI and read what it wrote, because the defect lived in the write.
+
+/** A staged tree whose CSS genuinely beats the §3.1 `css_total` limit. */
+function stageOverCssLimit() {
+  const dir = mkdtempSync(join(tmpdir(), "jev-budget-artifact-"));
+  // Pseudo-random, so brotli cannot squeeze it back under the limit.
+  let seed = 987654321;
+  const next = () => (seed = (seed * 1103515245 + 12345) % 2147483648);
+  const css = Array.from(
+    { length: 4000 },
+    (_, i) =>
+      `.c${i}{color:rgb(${next() % 255},${next() % 255},${next() % 255});margin:${next() % 97}px}`,
+  ).join("");
+  assert.ok(
+    brotliBytes(Buffer.from(css)) > BYTE_BUDGET_LIMITS.css_total,
+    "the fixture must actually exceed the plan's CSS budget, or this test proves nothing",
+  );
+  writeFileSync(
+    join(dir, "index.html"),
+    '<!doctype html><html><head><link rel="stylesheet" href="./site.css"></head></html>',
+  );
+  writeFileSync(join(dir, "site.css"), css);
+  writeFileSync(join(dir, "ledger.jsonl"), "");
+  return dir;
+}
+
+/** Run the gate over a staged tree and read back both of its surfaces. */
+function runGate(dir) {
+  const run = spawnSync(
+    process.execPath,
+    [
+      CLI,
+      "--stage",
+      dir,
+      "--ledger",
+      join(dir, "ledger.jsonl"),
+      "--out",
+      join(dir, "r.json"),
+    ],
+    { encoding: "utf8" },
+  );
+  return { run, report: JSON.parse(readFileSync(join(dir, "r.json"), "utf8")) };
+}
+
+test("BUDGETS: the artifact names exactly the breaches the terminal names", () => {
+  const dir = stageOverCssLimit();
+  try {
+    const { run, report } = runGate(dir);
+    assert.equal(
+      run.status,
+      0,
+      `an over-limit reading is reported, not failed, until P6/P8 (plan §3.2): ${run.stderr}`,
+    );
+
+    // The invariant, derived from the numbers this run measured: whatever is
+    // over its limit is in the array, and nothing else is. Written as a
+    // derivation rather than as three literal names, so it holds for whatever
+    // the build measures tomorrow.
+    const over = Object.entries(report.metrics)
+      .filter(([, m]) => typeof m.value === "number" && m.value > m.limit)
+      .map(([name]) => name)
+      .sort();
+    assert.ok(
+      over.length,
+      `the fixture must breach something: ${JSON.stringify(report.metrics)}`,
+    );
+    assert.deepEqual(
+      report.breaches.map((b) => b.metric).sort(),
+      over,
+      "the artifact's breaches must be exactly the budgets over the plan's §3.1 limit",
+    );
+
+    for (const b of report.breaches) {
+      // The terminal's own line, character for character. If the two surfaces
+      // are rendered from one `message` they cannot drift; this is what proves
+      // that they are, rather than a coincidence of today's numbers.
+      const line = run.stdout
+        .split("\n")
+        .find((l) => l.startsWith(`  ${b.metric}: `));
+      assert.ok(
+        line,
+        `${b.metric} is in the artifact but not on the terminal:\n${run.stdout}`,
+      );
+      assert.equal(
+        b.message,
+        line.trimStart(),
+        `${b.metric}: the artifact's message must be the terminal's line`,
+      );
+      // And every number in the record is one the measurement produced, in the
+      // shape compareToBaseline already uses for this report's other arrays.
+      const m = report.metrics[b.metric];
+      assert.equal(
+        b.value,
+        m.value,
+        `${b.metric}: the reading must be the measured one`,
+      );
+      assert.equal(
+        b.limit,
+        m.limit,
+        `${b.metric}: the limit must be the plan's`,
+      );
+      assert.equal(
+        b.unit,
+        m.unit,
+        `${b.metric}: the unit must be the measured one`,
+      );
+    }
+
+    assert.match(
+      run.stdout,
+      new RegExp(`${over.length} over the §3\\.1 limit`),
+      "the summary's count must be the number of breaches in the artifact",
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("BUDGETS: a run with nothing over the limit writes no breaches", () => {
+  // The other direction, so the field is pinned as COMPUTED rather than
+  // constant: hardcoding `[]` fails the test above, and hardcoding a list of
+  // names fails this one.
+  const dir = mkdtempSync(join(tmpdir(), "jev-budget-clean-"));
+  try {
+    writeFileSync(
+      join(dir, "index.html"),
+      "<!doctype html><html><head><title>t</title></head><body></body></html>",
+    );
+    writeFileSync(join(dir, "ledger.jsonl"), "");
+    const { run, report } = runGate(dir);
+    assert.equal(run.status, 0, `a clean run passes: ${run.stderr}`);
+    assert.deepEqual(
+      report.breaches,
+      [],
+      "a build inside every limit has nothing to report as a breach",
+    );
+    assert.match(
+      run.stdout,
+      /0 over the §3\.1 limit/,
+      "and the terminal must agree with the empty array",
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("BUDGETS: one computation, and both consumers go through it", () => {
+  // The reason the two surfaces cannot drift is that there is one function.
+  // A second place that decides "which budgets are over" is the defect the
+  // hardcoded array was, one refactor away.
+  const metrics = {
+    a: bytes(100, 200),
+    b: bytes(300, 200),
+    d: count(11, 10),
+  };
+  assert.deepEqual(
+    breachesOf(metrics).map((b) => b.metric),
+    overLimitMetrics(metrics).map(([name]) => name),
+    "breachesOf must be the same set overLimitMetrics reports",
+  );
+  // And the terminal section is rendered from the records, not recomputed: every
+  // indented line in it is a breach record's own `message`.
+  const records = breachesOf(metrics);
+  const printed = budgetBreachSection(metrics)
+    .split("\n")
+    .filter((l) => l.startsWith("  "));
+  assert.equal(printed.length, records.length, "one line per breach, no more");
+  for (const line of printed) {
+    assert.ok(
+      records.some((b) => line.trim() === b.message),
+      `the section printed a line no breach record carries: ${line}`,
+    );
+  }
+  assert.deepEqual(breachesOf({ a: bytes(1, 2) }), []);
+  assert.deepEqual(
+    breachesOf({ a: bytes(2, 2) }),
+    [],
+    "at the limit is not over it",
+  );
 });
 
 // ── a11y matrix ─────────────────────────────────────────────────────────────

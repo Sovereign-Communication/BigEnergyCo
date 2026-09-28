@@ -2,9 +2,9 @@
   "plan_item": "P0.4",
   "plan_ref": "docs/plan/MASTER_PLAN.md §3.1, §3.2, §8 P0.4",
   "metric": "byte_budgets",
-  "generated_at": "2026-09-28T08:07:32.023Z",
-  "code_sha": "bd5f7038d35e66bd3d44637989799cae543f127e",
-  "stage": "_pages_xb",
+  "generated_at": "2026-09-28T19:54:44.004Z",
+  "code_sha": "ca0e007492519ed794ac4493f483028dff202687",
+  "stage": "_pages_staging",
   "ledger": "docs\\plan\\LEDGER.jsonl",
   "baseline_ref": "P0.4",
   "tolerance_bytes": 256,
@@ -25,7 +25,7 @@
       "files": 2
     },
     "js_before_interactive": {
-      "value": 198992,
+      "value": 199093,
       "limit": 35840,
       "unit": "bytes",
       "status": "measured",
@@ -35,7 +35,7 @@
         "assets/js/chat.js"
       ],
       "by_file": {
-        "assets/js/sizing/ui.js": 69116,
+        "assets/js/sizing/ui.js": 69134,
         "assets/js/chat.js": 7701,
         "assets/js/sizing/appliances.js": 901,
         "assets/js/sizing/run-coordinator.js": 1637,
@@ -60,7 +60,7 @@
         "assets/js/sizing/fuel-units.js": 1697,
         "assets/js/sizing/frontier-chart.js": 9145,
         "assets/js/sizing/rescale.js": 3784,
-        "assets/js/sizing/engine.js": 11643,
+        "assets/js/sizing/engine.js": 11726,
         "assets/js/sizing/map-provider.js": 2661,
         "assets/js/sizing/wizard.js": 937,
         "assets/js/sizing/tilt-harvest.js": 1694,
@@ -71,7 +71,7 @@
       "note": "every module the document's scripts statically reach, which the browser must fetch and evaluate before the entry module's code runs. The plan's 35 KB line; nothing lazy-loads in this build yet, so it is the whole graph."
     },
     "js_to_first_result": {
-      "value": 198992,
+      "value": 199093,
       "limit": 204800,
       "unit": "bytes",
       "status": "measured",
@@ -346,7 +346,29 @@
   "regressions": [],
   "improvements": [],
   "unmeasured": [],
-  "breaches": [],
+  "breaches": [
+    {
+      "metric": "js_before_interactive",
+      "value": 199093,
+      "limit": 35840,
+      "unit": "bytes",
+      "message": "js_before_interactive: 194.4 KB > 35.0 KB"
+    },
+    {
+      "metric": "registry_country",
+      "value": 76886,
+      "limit": 6144,
+      "unit": "bytes",
+      "message": "registry_country: 75.1 KB > 6.0 KB"
+    },
+    {
+      "metric": "heatmap_initial",
+      "value": 427322,
+      "limit": 307200,
+      "unit": "bytes",
+      "message": "heatmap_initial: 417.3 KB > 300.0 KB"
+    }
+  ],
   "ledger_notes": [
     "line 1: a baseline row (P0) carries no numeric metrics, so it sets no bar",
     "line 15: a baseline row (P0.3d-baseline) carries no numeric metrics, so it sets no bar",

@@ -85,6 +85,35 @@ export function overLimitMetrics(metrics) {
 }
 
 /**
+ * THE BREACHES, AS RECORDS. The one computation of "which budgets are over the
+ * plan's §3.1 limit", and both consumers of it come from here: the terminal
+ * below and the `breaches` array the report writes.
+ *
+ * The artifact used to carry a hardcoded `breaches: []` while the same run
+ * printed three over-limit budgets on the terminal. That is the worst version of
+ * the defect this gate was fixed for: the JSON is what a downstream consumer
+ * reads, `.quality-evidence/byte-budgets.json` is what
+ * `scripts/lib/quality-evidence.mjs` validates as current evidence, and
+ * `breaches` is a field that registry REQUIRES to be an array. A required field
+ * that is always empty is a required field that asserts nothing.
+ *
+ * The shape follows `compareToBaseline` in scripts/lib/byte-budgets.mjs, which
+ * is what the sibling `regressions` / `improvements` / `unmeasured` arrays
+ * already use in this same report: `metric`, the numbers, and a `message` in
+ * the gate's own voice. Nothing here is invented — every field is a value the
+ * measurement already produced.
+ */
+export function breachesOf(metrics) {
+  return overLimitMetrics(metrics).map(([metric, m]) => ({
+    metric,
+    value: m.value,
+    limit: m.limit,
+    unit: m.unit,
+    message: `${metric}: ${formatReading(m.value, m.unit)} > ${limitOf(m)}`,
+  }));
+}
+
+/**
  * The over-limit budgets, each named with its reading and its limit, under a
  * heading that says the limit is not yet a bar and when it becomes one. Empty
  * string when nothing is over, so a clean run says nothing about breaches.
@@ -93,9 +122,12 @@ export function overLimitMetrics(metrics) {
  * column answers "did this get worse" and this answers "is this over the
  * plan's number" — two different rules, and a reader who cannot tell which one
  * produced a `breach` is reading neither.
+ *
+ * Rendered from `breachesOf`, so a line on the terminal and a row in the report
+ * cannot disagree: they are the same `message`.
  */
 export function breachSection(metrics) {
-  const over = overLimitMetrics(metrics);
+  const over = breachesOf(metrics);
   if (!over.length) return "";
   const lines = [
     // "over the plan's limit" is the phrase tests/byte-budgets.test.mjs has
@@ -103,11 +135,7 @@ export function breachSection(metrics) {
     // plan's, the regression is the baseline's, and the two are different bars.
     `\nover the plan's limit (plan §3.1; reported, not blocking until ${ABSOLUTE_BINDS_FROM}):\n`,
   ];
-  for (const [name, m] of over) {
-    lines.push(
-      `  ${name}: ${formatReading(m.value, m.unit)} > ${limitOf(m)}\n`,
-    );
-  }
+  for (const b of over) lines.push(`  ${b.message}\n`);
   return lines.join("");
 }
 
@@ -216,6 +244,11 @@ export function main(argv = process.argv.slice(2)) {
     return tags.length ? tags.join("+") : "ok";
   };
 
+  // One computation, three consumers: the `breach` tag above, the breach section
+  // on the terminal, and the `breaches` array in the report. A budget over the
+  // plan's limit is the same fact in all three.
+  const breaches = breachesOf(metrics);
+
   const out = process.stdout;
   out.write(
     `byte budgets (plan §3.1) — stage ${opts.stage}, ${tree.files.length} files, brotli q11\n`,
@@ -276,14 +309,12 @@ export function main(argv = process.argv.slice(2)) {
     regressions,
     improvements,
     unmeasured,
-    breaches: [],
+    breaches,
     ledger_notes: baseline.skipped,
   };
   if (opts.out)
     writeFileSync(opts.out, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   out.write(`\nreport: ${opts.out || "not written (pass --out FILE)"}\n`);
-
-  const overLimit = overLimitMetrics(metrics);
 
   if (regressions.length) {
     process.stderr.write(
@@ -298,7 +329,7 @@ export function main(argv = process.argv.slice(2)) {
   out.write(
     `no regression against the declared baseline (${regressions.length} regressions, ` +
       `${improvements.length} improvements, ${unmeasured.length} unmeasured, ` +
-      `${overLimit.length} over the §3.1 limit)\n`,
+      `${breaches.length} over the §3.1 limit)\n`,
   );
   return 0;
 }
