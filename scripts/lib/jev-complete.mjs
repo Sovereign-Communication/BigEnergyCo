@@ -1,5 +1,5 @@
 // Pure core of the Jev complete gate — scores a BigEnergyCo tree/staging state
-// 0-100 (95 = the 9.5/10 target) across ALL 16 quality facets, emits required-work
+// 0-100 (99 = the owner's bar) across ALL 21 quality facets, emits required-work
 // buckets per category, and groups recommended actions by work type.
 //
 // Ownership model (the contract this file enforces, no exceptions):
@@ -104,78 +104,89 @@ export const SCOPE_FACETS = {
   "P0.4": ["performance", "accessibility", "quality", "testing"],
   "P0.5": ["security", "docs"],
   // P1 — live truth fixes
-  "P1.1": ["correctness", "quality"],
-  "P1.2": ["correctness", "quality"],
-  "P1.3": ["security"],
+  "P1.1": ["correctness", "quality", "provenance"],
+  "P1.2": ["correctness", "quality", "comparison"],
+  "P1.3": ["security", "privacy"],
   "P1.4": ["quality", "docs"],
   "P1.5": ["security", "performance", "quality"],
-  "P1.6": ["quality", "correctness"],
+  "P1.6": ["quality", "correctness", "provenance"],
   // P2 — registry and provenance
-  "P2.1": ["correctness", "quality"],
-  "P2.2": ["correctness", "docs"],
-  "P2.3": ["correctness"],
-  "P2.4": ["correctness", "quality"],
-  "P2.5": ["correctness", "quality"],
-  "P2.6": ["correctness", "quality"],
-  "P2.7": ["docs", "seo", "correctness"],
+  "P2.1": ["correctness", "quality", "provenance"],
+  "P2.2": ["correctness", "docs", "provenance"],
+  "P2.3": ["correctness", "provenance"],
+  "P2.4": ["correctness", "quality", "provenance"],
+  "P2.5": ["correctness", "quality", "provenance"],
+  "P2.6": ["correctness", "quality", "provenance"],
+  "P2.7": ["docs", "seo", "correctness", "provenance"],
   // P3 — economics engine
-  "P3.1": ["correctness", "quality"],
-  "P3.2": ["correctness", "quality"],
-  "P3.3": ["correctness", "quality"],
-  "P3.4": ["correctness", "quality"],
-  "P3.5": ["correctness", "experience"],
+  "P3.1": ["correctness", "quality", "comparison"],
+  "P3.2": ["correctness", "quality", "comparison"],
+  "P3.3": ["correctness", "quality", "comparison"],
+  "P3.4": ["correctness", "quality", "comparison"],
+  "P3.5": ["correctness", "experience", "comparison"],
   "P3.6": ["correctness", "testing"],
   "P3.7": ["physics", "correctness", "testing"],
   "P3.8": ["testing"],
   // P4 — use-case engines
-  "P4.1": ["physics", "correctness"],
-  "P4.2": ["physics", "correctness"],
-  "P4.3": ["physics", "correctness"],
-  "P4.4": ["physics", "correctness"],
-  "P4.5": ["physics", "correctness"],
-  "P4.6": ["physics", "quality"],
+  "P4.1": ["physics", "correctness", "usecases"],
+  "P4.2": ["physics", "correctness", "usecases"],
+  "P4.3": ["physics", "correctness", "usecases"],
+  "P4.4": ["physics", "correctness", "usecases"],
+  "P4.5": ["physics", "correctness", "usecases"],
+  "P4.6": ["physics", "quality", "usecases"],
   // P5 — design system, shell, i18n infrastructure
   "P5.1": ["design", "accessibility"],
   "P5.2": ["design", "accessibility", "experience"],
-  "P5.3": ["security", "accessibility", "performance"],
-  "P5.4": ["i18n", "quality"],
-  "P5.5": ["i18n"],
+  "P5.3": ["security", "accessibility", "performance", "privacy"],
+  "P5.4": ["i18n", "quality", "translation"],
+  "P5.5": ["i18n", "translation"],
   // P6 — the new app at /next/
-  "P6.1": ["experience", "correctness", "quality", "performance"],
-  "P6.2": ["experience", "correctness"],
-  "P6.3": ["experience", "correctness"],
-  "P6.4": ["experience", "correctness"],
-  "P6.5": ["experience", "correctness"],
+  "P6.1": ["experience", "correctness", "quality", "performance", "comparison"],
+  "P6.2": ["experience", "correctness", "usecases"],
+  "P6.3": ["experience", "correctness", "usecases"],
+  "P6.4": ["experience", "correctness", "usecases"],
+  "P6.5": ["experience", "correctness", "usecases"],
   "P6.6": ["resilience"],
   "P6.7": ["quality", "testing"],
   "P6.8": ["performance", "experience"],
-  "P6.9": ["i18n", "quality"],
+  "P6.9": ["i18n", "quality", "translation"],
   // P7 — advisor 2.0
-  "P7.1": ["advisor", "security"],
+  "P7.1": ["advisor", "security", "privacy"],
   "P7.2": ["advisor", "security", "quality"],
   "P7.3": ["advisor", "i18n"],
   "P7.4": ["advisor", "testing"],
   // P8 — the swap
-  "P8.1": ["quality", "i18n", "accessibility", "performance"],
+  "P8.1": ["quality", "i18n", "accessibility", "performance", "translation"],
   "P8.2": ["release", "experience"],
   "P8.3": ["quality", "testing"],
   "P8.4": ["performance"],
   "P8.5": ["release", "resilience"],
   // P9 — reach
-  "P9.1": ["seo", "i18n"],
+  "P9.1": ["seo", "i18n", "translation"],
   "P9.2": ["seo", "correctness"],
   "P9.3": ["seo", "correctness"],
   "P9.4": ["seo"],
   "P9.5": ["seo", "quality"],
-  "P9.6": ["release", "seo"],
+  "P9.6": ["release", "seo", "privacy"],
   // P10 — program exit gate
   "P10.1": ["correctness", "spec"],
-  "P10.2": ["accessibility", "performance", "physics", "advisor", "quality"],
+  "P10.2": [
+    "accessibility",
+    "performance",
+    "physics",
+    "advisor",
+    "quality",
+    "provenance",
+    "comparison",
+    "usecases",
+    "privacy",
+    "translation",
+  ],
   "P10.3": ["quality", "spec"],
   "P10.4": ["spec"],
   // P11 — continuous
-  "P11.1": ["i18n"],
-  "P11.2": ["quality", "correctness"],
+  "P11.1": ["i18n", "translation"],
+  "P11.2": ["quality", "correctness", "provenance"],
   "P11.3": ["release", "resilience"],
   "P11.4": ["release", "seo"],
 };
@@ -751,7 +762,49 @@ function clip(text, max) {
   return typeof text === "string" ? text.slice(0, max) : "";
 }
 
-export function buildStateText(evidence, auto = {}) {
+// ── evidence transport budget (P0.3(d)) ─────────────────────────────────────
+// The judge sees one text blob. Its length has to be bounded — an unbounded
+// record is an unbounded bill and a context window that may not hold it — but
+// the bound must never be what decides whether a facet is measurable.
+//
+// That is why the budget is DERIVED from the pack rather than pinned: the
+// record's fixed parts have fixed clips, and every declared axis owns a share
+// large enough for its own proof line. A flat 6000 sat at 5972 on the 16-axis
+// record — 28 characters of headroom — so the twenty-first axis would have had
+// to come out of someone else's line, which is the exact failure the cap was
+// raised twice (1200 → 3000 → 6000) to stop. Adding an axis now raises the
+// budget instead of evicting a facet.
+export const COMPLETE_FACET_CLIP = 280; // per-axis proof-line clip
+export const COMPLETE_STATE_PER_AXIS_CHARS = 300; // 280 + "axis: " + newline
+// The FIXED part of the record: the header, gate, tree and dirty lines, the
+// five summaries at the clips below (tests 300, ci 320, smoke 460, seo 260,
+// advisor 480), and the notes tail, which rides last and whole. It is set to
+// the 6000-character cap this gate shipped with, so nothing that used to reach
+// the judge whole stops reaching it — deriving the budget must not quietly
+// shrink what a record without facet evidence can say. Each declared axis then
+// adds its own share on top, which is the part P0.3(d) needed: 21 axes now
+// reserve 6000 + 21x300, and a 21-axis record is 7100 characters.
+export const COMPLETE_STATE_BASE_CHARS = 6000;
+
+/** The exact characters one axis's clipped proof line can occupy, newline
+ *  included. An axis whose name is long enough to need more than the standard
+ *  share gets that much instead, so a rename can never push a facet's proof
+ *  line out of the budget. */
+export function axisLineBudget(axis) {
+  const need = String(axis || "").length + 2 + COMPLETE_FACET_CLIP + 1;
+  return Math.max(COMPLETE_STATE_PER_AXIS_CHARS, need);
+}
+
+/** The record's total transport budget for a given set of declared axes. */
+export function stateTextBudget(axisNames) {
+  if (!Array.isArray(axisNames)) return COMPLETE_STATE_BASE_CHARS;
+  return (
+    COMPLETE_STATE_BASE_CHARS +
+    axisNames.reduce((sum, axis) => sum + axisLineBudget(axis), 0)
+  );
+}
+
+export function buildStateText(evidence, auto = {}, axisNames = null) {
   const ev = typeof evidence === "object" && evidence !== null ? evidence : {};
   const parts = [
     `target=${auto.target || "local"} ref=${auto.sha || "?"}`,
@@ -773,7 +826,7 @@ export function buildStateText(evidence, auto = {}) {
       ? ev.facet_evidence
       : {};
   for (const axis of Object.keys(facetEvidence).sort()) {
-    const line = clip(facetEvidence[axis], 280).trim();
+    const line = clip(facetEvidence[axis], COMPLETE_FACET_CLIP).trim();
     if (line) parts.push(`${axis}: ${line}`);
   }
   // Recorded notes ride last and whole (the TRANSPORT contract): facet
@@ -790,10 +843,16 @@ export function buildStateText(evidence, auto = {}) {
   // Raised from 1200 to 3000 when the cap started cutting per-facet
   // evidence mid-line, and to 6000 when a 16-axis record still overflowed
   // it (observed: the tail axes were cut whole and then rated "partial or
-  // unverified" despite green recorded runs). The per-part bounds above
-  // keep truncation deliberate (a bounded line, never a bisection); this
-  // slice is only the safety net. Pinned by the TRANSPORT contract test.
-  return parts.filter(Boolean).join("\n").slice(0, 6000);
+  // unverified" despite green recorded runs). P0.3(d) made the cap derived
+  // from the pack (stateTextBudget) so the five new facets could not be paid
+  // for out of the existing ones' proof lines. The per-part bounds above keep
+  // truncation deliberate (a bounded line, never a bisection); this slice is
+  // only the safety net. Pinned by the TRANSPORT contract tests.
+  const declared =
+    Array.isArray(axisNames) && axisNames.length
+      ? axisNames
+      : Object.keys(facetEvidence);
+  return parts.filter(Boolean).join("\n").slice(0, stateTextBudget(declared));
 }
 
 /**

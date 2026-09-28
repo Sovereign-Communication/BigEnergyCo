@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // The Jev complete gate CLI — scores THIS repo's current state 0-100 against
-// the 95 (9.5/10) google-quality target across all 16 facets, emits the
-// pack-declared required-work buckets, and groups recommended actions by work
-// type (the pass repertoire this repo actually runs).
+// the 99 google-quality bar across all 21 facets, emits the pack-declared
+// required-work buckets, and groups recommended actions by work type (the pass
+// repertoire this repo actually runs).
 //
 //   node scripts/validate-jev-complete.mjs [--evidence ev.json] [--out r.json]
 //                                          [--json] [--local-only]
@@ -381,9 +381,12 @@ export async function main(argv = process.argv.slice(2)) {
 
   let live = null;
   let liveMeta = { is_fallback: true, blocker: "not attempted (--local-only)" };
+  // The transport budget is derived from the pack (P0.3(d)), so the gate hands
+  // the state builder the axes it will actually ask about.
+  const axisNames = Object.keys(pack.axes);
   if (!opts.localOnly) {
     const keys = resolveKeys(repoRoot);
-    const stateText = buildStateText(evidence, auto);
+    const stateText = buildStateText(evidence, auto, axisNames);
     const questions = completeQuestionPack(pack);
     const result = await liveJevCall(stateText, questions, keys);
     if (result.answers) {
@@ -416,7 +419,7 @@ export async function main(argv = process.argv.slice(2)) {
     }
   }
 
-  const stateText = buildStateText(evidence, auto);
+  const stateText = buildStateText(evidence, auto, axisNames);
   const keywordGap = matchCompleteKeywords(stateText, pack);
   const report = scoreCompleteGate(evidence, {
     pack,
