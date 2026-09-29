@@ -22,6 +22,7 @@ export const LOCALES = {
     pickCity: "Pick a city (or use 📍 My location) so we know your sunshine.",
     shareLoaded:
       "Shared setup loaded. Review the inputs, then click Size My System to calculate.",
+    invalidShare: "Invalid share link.",
     customCoordsLocation: "Using custom coordinates ({lat}, {lon}).",
     resolvingCity: "Resolving your city — choose a match or wait for lookup.",
     chooseCityMatch: "Choose a city suggestion or wait for lookup to finish.",
@@ -301,6 +302,7 @@ export const LOCALES = {
       "Elige una ciudad (o usa 📍 Mi ubicación) para que sepamos tu insolación.",
     shareLoaded:
       "Configuración compartida cargada. Revisa los datos y pulsa Dimensionar mi sistema para calcular.",
+    invalidShare: "Enlace inválido.",
     customCoordsLocation: "Usando coordenadas personalizadas ({lat}, {lon}).",
     resolvingCity:
       "Buscando tu ciudad: elige una opción o espera el resultado.",
@@ -655,6 +657,7 @@ export const LOCALES = {
       "Escolha uma cidade (ou use 📍 Minha localização) para sabermos sua insolação.",
     shareLoaded:
       "Configuração compartilhada carregada. Confira os dados e clique em Dimensionar meu sistema para calcular.",
+    invalidShare: "Link inválido.",
     customCoordsLocation: "Usando coordenadas personalizadas ({lat}, {lon}).",
     resolvingCity:
       "Buscando sua cidade: escolha uma opção ou aguarde o resultado.",
@@ -976,6 +979,7 @@ export const LOCALES = {
       "Choisissez une ville (ou utilisez 📍 Ma position) pour connaître votre ensoleillement.",
     shareLoaded:
       "Configuration partagée chargée. Vérifiez les entrées, puis cliquez sur Dimensionner pour calculer.",
+    invalidShare: "Lien invalide.",
     customCoordsLocation:
       "Coordonnées personnalisées utilisées ({lat}, {lon}).",
     resolvingCity:
@@ -1276,6 +1280,7 @@ export const LOCALES = {
       "Wähle eine Stadt oder nutze 📍 deinen Standort für die Sonnendaten.",
     shareLoaded:
       "Geteilte Einstellungen geladen. Prüfe die Eingaben und klicke dann auf System dimensionieren.",
+    invalidShare: "Link ungültig.",
     customCoordsLocation: "Eigene Koordinaten verwendet ({lat}, {lon}).",
     resolvingCity:
       "Ort wird gesucht — wählen Sie einen Treffer oder warten Sie kurz.",
@@ -1601,6 +1606,7 @@ export const LOCALES = {
     pickCity: "اختر مدينة (أو استخدم 📍 موقعي) لمعرفة إشعاعك الشمسي.",
     shareLoaded:
       "تم تحميل الإعدادات المشتركة. راجع المدخلات ثم اضغط احسب نظامي لبدء الحساب.",
+    invalidShare: "رابط غير صالح.",
     customCoordsLocation: "يجري استخدام الإحداثيات المخصصة ({lat}, {lon}).",
     resolvingCity: "جارٍ البحث عن مدينتك — اختر نتيجة أو انتظر قليلاً.",
     chooseCityMatch: "اختر مدينة من الاقتراحات أو انتظر انتهاء البحث.",

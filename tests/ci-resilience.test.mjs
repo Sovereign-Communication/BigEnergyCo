@@ -23,6 +23,7 @@ import {
   isTransientFailure,
   retryTransient,
 } from "../scripts/lib/transient-retry.mjs";
+import { extractVerdict } from "./verdict-json.mjs";
 import {
   JOB_TIMEOUT_MINUTES,
   PROMOTE_TIMEOUT_MS,
@@ -764,7 +765,15 @@ test("a slow failure under a compressed budget returns a verdict, not a kill", a
   const elapsed = Date.now() - started;
   await new Promise((r) => server.close(r));
 
-  const payload = JSON.parse(out.slice(out.indexOf("{")));
+  // stdout and stderr were concatenated in arrival order, so the verdict is
+  // FOUND rather than assumed to start at the first brace: a stderr line that
+  // carried one used to decide where the JSON began.
+  const payload = extractVerdict(out, [
+    "verified",
+    "budgetMs",
+    "transientRetries",
+    "failures",
+  ]);
   assert.equal(code, 1, "an exhausted budget is a FAILED gate, not a crash");
   assert.equal(payload.verified, false);
   assert.equal(

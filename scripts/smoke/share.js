@@ -184,8 +184,14 @@ export async function runShareFlow(ctx, actions) {
             lon: document.getElementById("lonInput")?.value || "",
             kwh: document.getElementById("dailyKwhInput")?.value || "",
             hash: location.hash,
+            status: document.getElementById("sizingStatus")?.textContent || "",
           }))()`)
         : null;
+      gate(
+        `malformed share ${label} is explained before the user tries to run it`,
+        /invalid share link/i.test(before?.status || ""),
+        before?.status || "no status",
+      );
       await evaluate(`(() => {
         window.__invalidShareOriginalPost = Worker.prototype.postMessage;
         window.__invalidSharePosts = 0;
@@ -222,7 +228,7 @@ export async function runShareFlow(ctx, actions) {
           after.hash === malformedHash &&
           after.hidden === true &&
           after.posts === 0 &&
-          /pick a city|choose a city|latitude must|daily energy use/i.test(
+          /invalid share link|pick a city|choose a city|latitude must|daily energy use/i.test(
             after.status,
           ),
         JSON.stringify({ label, before, after }),

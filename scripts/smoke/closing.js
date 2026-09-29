@@ -14,6 +14,9 @@ export async function runClosingFlow(ctx, actions) {
 
   // ── External integrations (proves CSP + endpoints, not just silence)
   console.log("SMOKE      ── external integrations ──");
+  const workerProbe = ctx.isLocalBase
+    ? ""
+    : 'await tryFetch("worker", "https://bigenergyco-api.bigenergyco.workers.dev/api/health");';
   const probes = await evaluate(`(async () => {
       const out = {};
       const tryFetch = async (key, url, opts) => {
@@ -25,7 +28,7 @@ export async function runClosingFlow(ctx, actions) {
       };
       await tryFetch("fx", "https://open.er-api.com/v6/latest/USD?smoke=1");
       await tryFetch("geocoder", "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=Honolulu");
-      await tryFetch("worker", "https://bigenergyco-api.bigenergyco.workers.dev/api/health");
+      ${workerProbe}
       return out;
     })()`);
   gate("FX rates reachable", /^HTTP 200/.test(probes.fx || ""), probes.fx);
@@ -34,14 +37,17 @@ export async function runClosingFlow(ctx, actions) {
     /^HTTP \d+/.test(probes.geocoder || ""),
     probes.geocoder,
   );
-  gate(
-    "API health reachable",
-    /^HTTP 200/.test(probes.worker || "") || ctx.isLocalBase,
-    probes.worker ||
-      (ctx.isLocalBase
-        ? "skipped: API worker CORS allowlist excludes localhost (production-only check)"
-        : ""),
-  );
+  if (ctx.isLocalBase) {
+    console.log(
+      "SMOKE SKIP  API health — localhost is outside the worker CORS allowlist",
+    );
+  } else {
+    gate(
+      "API health reachable",
+      /^HTTP 200/.test(probes.worker || ""),
+      probes.worker,
+    );
+  }
   // NASA is proven end-to-end instead of probed: a bare API ping returns
   // 4xx (which Chrome logs as a console error), so assert the run used
   // live point weather rather than the bundled offline fallback.
@@ -69,22 +75,14 @@ export async function runClosingFlow(ctx, actions) {
   // ── Console/page errors: explicit CSP gate + general gate ─────────
   console.log("SMOKE      ── console / page errors ──");
   const seen = errors.filter((e) => !/favicon\.ico/i.test(e));
-  // The API worker's CORS allowlist covers the production origins only, so
-  // on a localhost run the health probe throws a CORS console error that is
-  // an artifact of the harness origin, not the page. Production runs keep
-  // the full strictness.
-  const localArtifacts = ctx.isLocalBase
-    ? (e) =>
-        /bigenergyco-api\.bigenergyco\.workers\.dev/.test(e) &&
-        (/CORS policy/i.test(e) || /net::ERR_FAILED/i.test(e))
-    : () => false;
-  const relevant = seen.filter((e) => !localArtifacts(e));
-  const csp = relevant.filter(isCsp);
+  // The local-only worker health probe is explicitly skipped above. Keep all
+  // remaining browser errors strict; none should be hidden as a harness artifact.
+  const csp = seen.filter(isCsp);
   gate("no CSP violations", csp.length === 0, csp.slice(0, 3).join(" | "));
   gate(
     "no other console/page errors",
-    relevant.length - csp.length === 0,
-    relevant
+    seen.length - csp.length === 0,
+    seen
       .filter((e) => !isCsp(e))
       .slice(0, 3)
       .join(" | "),

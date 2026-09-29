@@ -31,15 +31,26 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   composeEvidence,
   evidenceSourceKind,
   parseJobResult,
+  requiredJobsFromWorkflow,
   RUN_RECORD_FIELDS,
 } from "./lib/jev-evidence.mjs";
+import { COMPLETE_FACET_CLIP } from "./lib/jev-complete.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
+
+// The workflow these artifacts came from, resolved against this script rather
+// than the caller's cwd: "CI was green" is defined by what the workflow runs,
+// and the one that runs it is this repository's own file. There is deliberately
+// no flag to point elsewhere — a required set is not an input an operator gets
+// to choose.
+const WORKFLOW = fileURLToPath(
+  new URL("../.github/workflows/test.yml", import.meta.url),
+);
 
 const USAGE =
   "usage: node scripts/build-jev-evidence.mjs --artifacts DIR --out FILE " +
@@ -98,6 +109,73 @@ function runProvenance(opts) {
   return run;
 }
 
+/**
+ * Gate REPORTS, as distinct from job results, in the same artifacts directory.
+ *
+ * A gate that measures something the judge should read puts its report here and
+ * declares which facet axes it speaks for. The builder then composes those
+ * axes' proof lines FROM THE RUN rather than reading them from the prose file,
+ * where a typed line can sit looking like a measurement while being one.
+ *
+ * Two properties this is built to have:
+ *
+ *   · DISCOVERED, NOT LISTED. The axes come from the reports themselves, so a
+ *     new gate that measures a facet becomes visible to the judge with no edit
+ *     here — the same derivation that replaced CI_GREEN_JOBS in #161. A list of
+ *     gate names kept beside this script is the defect that made ci_green read
+ *     true on a red quality-lab run, and it is not reintroduced here.
+ *   · A MISSING REPORT IS NOT A CLEAN ONE. When a report is absent the axis is
+ *     simply absent from the record, and an absent proof line reads as
+ *     "mixed — partial or unverified evidence", never as proven. The job being
+ *     a required gate already makes its missing artifact a named fatal problem,
+ *     so the two mechanisms agree: no report, no claim, and a named hole.
+ */
+function readGateReports(dir) {
+  const reports = [];
+  const problems = [];
+  if (!existsSync(dir)) return { reports, problems };
+  for (const name of readdirSync(dir).sort()) {
+    if (!name.endsWith(".json") || name === "evidence.json") continue;
+    let parsed;
+    try {
+      parsed = JSON.parse(readFileSync(join(dir, name), "utf8"));
+    } catch {
+      continue; // a job result, or unreadable: readArtifacts already rules on it
+    }
+    if (!parsed || typeof parsed !== "object") continue;
+    if (!Array.isArray(parsed.facet_axes) || parsed.facet_axes.length === 0)
+      continue;
+    if (typeof parsed.facet_line !== "string" || !parsed.facet_line.trim()) {
+      problems.push(
+        `${name} declares facet_axes [${parsed.facet_axes.join(", ")}] but ` +
+          "carries no facet_line, so those axes get no proof line from the run " +
+          "that measured them",
+      );
+      continue;
+    }
+    // The clip is enforced here, loudly. A line that overflows is SILENTLY cut
+    // on its way to the judge, and for this cluster the honest tail is exactly
+    // what gets cut — so an over-long line is a named problem, not a trim.
+    if (parsed.facet_line.length > COMPLETE_FACET_CLIP) {
+      problems.push(
+        `${name} facet_line is ${parsed.facet_line.length} chars, over the ` +
+          `${COMPLETE_FACET_CLIP}-char per-axis clip; it would be cut in transit, ` +
+          "which would silently drop the part that says how to read it",
+      );
+      continue;
+    }
+    for (const axis of parsed.facet_axes) {
+      reports.push({
+        axis,
+        line: parsed.facet_line,
+        source: name,
+        metric: parsed.metric,
+      });
+    }
+  }
+  return { reports, problems };
+}
+
 function readArtifacts(dir) {
   if (!existsSync(dir)) {
     usageError(`artifacts directory not found: ${dir}`);
@@ -152,15 +230,73 @@ export function main(argv = process.argv.slice(2)) {
     );
   }
 
+  let preReportNote = null;
   const { artifacts, ignored } = readArtifacts(opts.artifacts);
+  // Facet proof lines DERIVED from the gate reports this run produced, rather
+  // than read from the prose file. Discovered, not listed: a new gate that
+  // declares facet_axes becomes visible to the judge with no edit here.
+  const { reports: derived, problems: reportProblems } = readGateReports(
+    opts.artifacts,
+  );
+  for (const d of derived) {
+    if (
+      typeof prose?.facet_evidence !== "object" ||
+      prose.facet_evidence === null
+    )
+      prose.facet_evidence = {};
+    // A typed line for a measured axis is overridden, never merged, and the
+    // override is recorded: two sources for one facet is how the record ended
+    // up describing a byte count while a browser measurement went unread.
+    if (Object.hasOwn(prose.facet_evidence, d.axis))
+      preReportNote =
+        `the prose file carried a hand-typed \`${d.axis}\` line, overridden by ` +
+        `the one composed from ${d.source}`;
+    prose.facet_evidence[d.axis] = d.line;
+  }
+  // The required set, from the workflow's own declarations rather than a list
+  // kept beside this script: a gate the workflow runs and the record has never
+  // heard of is exactly how ci_green came to read true on a red run.
+  const preProblems = [...reportProblems];
+  let requiredJobs = [];
+  try {
+    requiredJobs = requiredJobsFromWorkflow(readFileSync(WORKFLOW, "utf8"));
+    if (requiredJobs.length === 0) {
+      preProblems.push(
+        `no required jobs could be derived from ${WORKFLOW}, so ci_green is unproven`,
+      );
+    }
+  } catch (err) {
+    preProblems.push(
+      `the workflow ${WORKFLOW} could not be read (${err.message}), so the required job set is unproven`,
+    );
+  }
   const { evidence, problems } = composeEvidence({
     artifacts,
+    requiredJobs,
     prose,
     run: runProvenance(opts),
     generatedAt: opts.now || new Date().toISOString(),
+    problems: preProblems,
   });
   if (ignored.length) {
     evidence.ci.ignored_files = ignored;
+  }
+  if (derived.length) {
+    // Recorded so a reader of the file can see which facet proof lines came
+    // from which run's report, without re-deriving it.
+    evidence.derived_facet_lines = derived.map((d) => ({
+      axis: d.axis,
+      source: d.source,
+      metric: d.metric,
+      chars: d.line.length,
+    }));
+  }
+  if (preReportNote) evidence.derived_facet_line_note = preReportNote;
+  if (requiredJobs.length) {
+    // Recorded so a reader of the file can see which gates "CI was green"
+    // meant on this run, without re-deriving it from a workflow that has
+    // since gained a job.
+    evidence.ci.required_jobs = requiredJobs;
   }
 
   const outDir = dirname(opts.out);
@@ -171,6 +307,7 @@ export function main(argv = process.argv.slice(2)) {
   const green = problems.length === 0;
   process.stdout.write(
     `evidence: ${opts.out} (${kind})\n` +
+      `required jobs: ${requiredJobs.length ? requiredJobs.join(" ") : "none derived"}\n` +
       // Every run record, named from the field list rather than guessed from a
       // suffix: a `_clean` field would otherwise be silently left out of the
       // very line that claims to report them all.

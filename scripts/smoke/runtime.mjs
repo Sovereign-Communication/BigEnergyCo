@@ -64,6 +64,12 @@ export async function start() {
   );
 
   const errors = [];
+  // Every request the page issues, in order, so a measurement can count what
+  // went out over the wire during a window instead of asserting a number typed
+  // somewhere else. Owned here because the CDP wire is owned here: a second
+  // client in a perf gate would be a fork of this one, which is the same
+  // duplication the error collectors above exist to prevent.
+  const requests = [];
   let ws = null;
   let send, evaluate;
   const poll = async (fn, timeoutMs, stepMs = 2000) => {
@@ -112,6 +118,13 @@ export async function start() {
         pending.delete(msg.id);
         if (msg.error) rej(new Error(JSON.stringify(msg.error)));
         else res(msg.result);
+      } else if (msg.method === "Network.requestWillBeSent") {
+        const r = msg.params?.request;
+        requests.push({
+          url: r?.url || "",
+          type: msg.params?.type || "Other",
+          at: Date.now(),
+        });
       } else if (msg.method === "Runtime.exceptionThrown") {
         errors.push(
           `page exception: ${msg.params?.exceptionDetails?.text || JSON.stringify(msg.params).slice(0, 300)}`,
@@ -166,6 +179,14 @@ export async function start() {
         );
       return r?.result?.value;
     };
+    // Started AFTER evaluate is defined so the two cannot deadlock on the
+    // first frame, and best-effort: a browser that refuses the domain still
+    // drives the page, it just cannot account for the wire.
+    try {
+      await send("Network.enable");
+    } catch {
+      /* request accounting unavailable; callers see an empty list, never a guess */
+    }
   } catch (e) {
     try {
       ws?.close();
@@ -204,5 +225,5 @@ export async function start() {
     }
   };
 
-  return { ws, send, evaluate, errors, poll, close };
+  return { ws, send, evaluate, errors, requests, poll, close };
 }

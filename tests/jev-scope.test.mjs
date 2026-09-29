@@ -23,6 +23,7 @@ import {
   planItemAtLeast,
   COMPLETE_EXIT_RULE_FROM,
 } from "../scripts/lib/jev-complete.mjs";
+import { scopedVerdict } from "../scripts/lib/jev-verdict.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PLAN = readFileSync(join(ROOT, "docs/plan/MASTER_PLAN.md"), "utf8");
@@ -54,6 +55,7 @@ test("GATE: a whole-program run fails while any facet is short of proven", () =>
       "tests_green",
       "smoke_green",
       "ci_green",
+      "legacy_gates_green",
       "prettier_clean",
       "seo_green",
       "secrets_clean",
@@ -68,6 +70,11 @@ test("GATE: a whole-program run fails while any facet is short of proven", () =>
   });
   assert.equal(r.hard_gates_passed, true, "every hard gate is green");
   assert.equal(r.mechanical_score, 100);
+  assert.equal(
+    r.facets.release.ordinal,
+    85,
+    "release is a step below proven, which is the level its code fact feeds it",
+  );
   assert.equal(
     r.score >= COMPLETE_MIN_SCORE,
     true,
@@ -521,4 +528,163 @@ test("GATE: the ledger's declared baseline resolves, and covers every axis", () 
     `${baseline.from_ref} must carry evidence.jev.facet_ordinals beside its ` +
       "declaration, not nested inside it",
   );
+});
+
+// ── what a scoped run actually judges, exercised through the real function ──
+// The rules above are pinned by reading the source. These run `scopedVerdict`
+// itself, because the thing that went wrong for two review passes was not the
+// rule — the rule was correct, and the gate proved it — but the OUTPUT, which
+// listed five out-of-scope facets as the blockers of a P0.4 run. A policy that
+// is only pinned by regex can be right and still be reported as wrong, so the
+// property that actually matters is pinned by value: a facet outside the scope
+// cannot change the scoped verdict.
+//
+// Built from the real pack and the real verdict function — no stub of either.
+const AXES = Object.keys(pack.axes);
+const provenFacet = { ordinal: 100, index: 4, level: "l4" };
+
+/**
+ * A report whose in-scope facets are all proven and whose others carry
+ * `outOfScopeOrdinal`. Their `index` is left at 0 and never read: the
+ * all-proven check only looks at facets inside the scope, and the ratchet reads
+ * `ordinal` alone.
+ */
+const scopedReport = (outOfScopeOrdinal) => {
+  const facets = {};
+  for (const axis of AXES) {
+    facets[axis] = SCOPE_FACETS["P0.4"].includes(axis)
+      ? { ...provenFacet }
+      : {
+          ordinal: outOfScopeOrdinal,
+          index: 0,
+          level: `l${outOfScopeOrdinal}`,
+        };
+  }
+  return {
+    facets,
+    hard_gates_passed: true,
+    mechanical_score: 100,
+    min_score: COMPLETE_MIN_SCORE,
+  };
+};
+
+/** A ledger whose declared baseline records the report's own ordinals. */
+const baselineFor = (report, overrides = {}) =>
+  JSON.stringify({
+    ts: "2026-09-28",
+    kind: "baseline",
+    ref: "test-baseline",
+    evidence: {
+      jev: {
+        facet_ordinals: {
+          ...Object.fromEntries(
+            Object.entries(report.facets).map(([a, f]) => [a, f.ordinal]),
+          ),
+          ...overrides,
+        },
+        baseline_advance: { reason: "declared by the test" },
+      },
+    },
+  });
+
+const judge = (report, ledgerText, scope = "P0.4") =>
+  scopedVerdict({ report, scope, pack, ledgerText });
+
+test("GATE: out-of-scope facets cannot decide a scoped verdict", () => {
+  // Seventeen facets at zero, and the four P0.4 facets all proven. If scope
+  // worked by anything other than reading its own facets, this could not pass.
+  const report = scopedReport(0);
+  const v = judge(report, baselineFor(report));
+  assert.equal(
+    v.pass,
+    true,
+    "a run whose own facets are all proven must pass with 17 others at zero",
+  );
+  assert.equal(v.scoped.ratchet.status, "met");
+  assert.equal(v.scoped.facets_short_of_proven.length, 0);
+});
+
+test("GATE: out-of-scope facets cannot move a scoped verdict at all", () => {
+  // The by-hand proof, kept as a test: raise, lower and delete every facet
+  // outside the scope and the scoped score, the short list and the verdict must
+  // not budge by a single digit.
+  const base = scopedReport(0);
+  const ledger = baselineFor(base);
+  const first = judge(base, ledger);
+  assert.equal(first.pass, true);
+
+  for (const ordinal of [0, 35, 60, 85, 100]) {
+    const moved = scopedReport(ordinal);
+    // Re-baseline so the ratchet stays `met` and cannot be what is being
+    // measured here; the ratchet has its own test below.
+    const v = judge(moved, baselineFor(moved));
+    assert.equal(
+      v.scoped.score,
+      first.scoped.score,
+      `out-of-scope ordinal ${ordinal} moved the scoped score`,
+    );
+    assert.equal(
+      v.pass,
+      first.pass,
+      `out-of-scope ordinal ${ordinal} moved the verdict`,
+    );
+  }
+
+  const deleted = JSON.parse(JSON.stringify(base));
+  for (const axis of AXES) {
+    if (!SCOPE_FACETS["P0.4"].includes(axis)) delete deleted.facets[axis];
+  }
+  const without = judge(deleted, ledger);
+  assert.equal(without.scoped.score, first.scoped.score);
+  assert.equal(
+    without.pass,
+    first.pass,
+    "deleting 17 facets changed the verdict",
+  );
+});
+
+test("GATE: the ratchet still fails a run over an OUT-of-scope drop", () => {
+  // The counterpart, and the reason neutrality is not a loophole. `comparison`
+  // is not a P0.4 facet; it is baselined at 85 and the run reports 60. Nothing
+  // in scope changed, so only the ratchet can be what fails this.
+  const report = scopedReport(0);
+  report.facets.comparison = { ordinal: 60, index: 0, level: "l60" };
+  const dropped = judge(
+    report,
+    baselineFor(scopedReport(0), { comparison: 85 }),
+  );
+  assert.equal(
+    dropped.pass,
+    false,
+    "an out-of-scope regression must fail the run",
+  );
+  assert.equal(dropped.scoped.ratchet.status, "violation");
+  assert.equal(dropped.scoped.ratchet.regressions[0].axis, "comparison");
+  // And the in-scope facets are all still proven, so nothing else failed.
+  assert.equal(dropped.scoped.facets_short_of_proven.length, 0);
+  assert.equal(dropped.scoped.score, 100, "the in-scope score is untouched");
+});
+
+test("GATE: the scoped score is computed from the scoped facets only", () => {
+  // The absolute-value half of neutrality, and the part an equality-only test
+  // cannot see. With the 17 out-of-scope facets at ZERO, averaging them in is
+  // invisible: the full sum divided by the facet count happens to equal the
+  // in-scope mean. So they sit at 60 here, where the two readings differ — an
+  // all-facet mean would be 66.9 and the score 90.07, against 96.25 and 98.88.
+  const report = scopedReport(60);
+  report.facets.quality = { ordinal: 85, index: 3, level: "l85" };
+  const v = judge(report, baselineFor(scopedReport(60), { quality: 85 }));
+  assert.equal(v.scoped.semantic_score, 96.25, "the mean is over 4 facets");
+  assert.equal(v.scoped.score, 98.88, "and not over 21");
+});
+
+test("GATE: an in-scope facet short of proven fails, and only that", () => {
+  const report = scopedReport(0);
+  report.facets.quality = { ordinal: 85, index: 3, level: "l85" };
+  const v = judge(report, baselineFor(scopedReport(0), { quality: 85 }));
+  assert.equal(v.pass, false);
+  assert.deepEqual(v.scoped.facets_short_of_proven, ["quality"]);
+  // (100+100+85+100)/4 = 96.25, so 0.7*100 + 0.3*96.25 = 98.875. One facet a
+  // step down costs 0.3*15/4 = 1.125 — which is why "confident" is not the bar.
+  assert.equal(v.scoped.score, 98.88);
 });

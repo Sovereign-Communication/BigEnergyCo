@@ -27,7 +27,7 @@ import { runGridTieFlow } from "./smoke/gridtie.js";
 import { runLifecycleFlow } from "./smoke/lifecycle.js";
 import { runResultsFlow } from "./smoke/results.js";
 import { runA11yFlow } from "./smoke/a11y.js";
-import { runJevFlow } from "./smoke/jev.js";
+import { runJevFlow, jevHealthAtDocumentStart } from "./smoke/jev.js";
 import { runShareFlow } from "./smoke/share.js";
 import { runClosingFlow } from "./smoke/closing.js";
 import { runDeadlineFlow } from "./smoke/deadline.js";
@@ -54,6 +54,23 @@ async function main() {
     await ctx.send("Page.enable");
     await ctx.send("Runtime.enable");
     await ctx.send("Log.enable");
+
+    // Registered BEFORE the first navigation, so the harness answers the
+    // app's own boot-time /api/health probe. The client gate keeps one answer
+    // per page session, so a stub installed later can no longer be consulted —
+    // see jevHealthAtDocumentStart for the full reason.
+    //
+    // LOCAL STAGE ONLY. The local server is a workerless emulator whose
+    // /api/health says the Jev route is off and whose /api/jev 503s, so the
+    // stub is what makes the Jev gates meaningful there. On a real surface
+    // (staging, pages.dev, the brand domain) the probe must reach the real
+    // worker and a real /api/jev must answer: faking either would turn
+    // "API health reachable" and the server-side activation state into lies.
+    if (isLocalBase) {
+      await ctx.send("Page.addScriptToEvaluateOnNewDocument", {
+        source: jevHealthAtDocumentStart,
+      });
+    }
 
     // ── Main page: grid-tie (the runbook flow, verbatim) ──────────────
     console.log("SMOKE      ── main page: grid-tie ──");

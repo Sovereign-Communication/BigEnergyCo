@@ -63,7 +63,13 @@ jobs:
 
       - name: Prettier check
         id: prettier
-        run: npx --yes prettier@3.9.6 --check .
+        # The same script the local preflight runs (npm run format:check). It
+        # checks the TRACKED tree with git's line endings, which is what a
+        # runner sees - and treats any non-zero exit as a failure, whatever
+        # prettier says. Running prettier here directly was a second code path
+        # that could disagree with the local one, which is how an unformatted
+        # file reached CI behind a locally green check (#166).
+        run: npm run format:check
 
       - name: Secret-scan tracked files
         run: |
@@ -138,6 +144,19 @@ jobs:
       - name: Real-browser smoke on the staged build
         id: smoke
         run: npm run smoke:local
+      # P0.4: the plan's §3.1 compressed byte and request budgets, measured on
+      # a staged build and ratcheted against the last `baseline` ledger row.
+      # It lives here because this job already produces a real staged artifact;
+      # `smoke:local` deletes its own stage, and a second staging pass costs
+      # ~2s, so this measures the same allowlisted bytes the browser just saw.
+      # Plan §3.2 makes these gates regression-blocking from P0, so a failure
+      # here reds the job and the Jev gate's evidence builder fails closed on
+      # it. It moves to the `quality-lab` job when P0.4's browser gates land.
+      - name: Compressed byte and request budgets (plan §3.1)
+        id: byte-budgets
+        run: |
+          node scripts/deploy-pages-local.mjs --check --stage _pages_budget
+          node scripts/check-byte-budgets.mjs --stage _pages_budget
       # P0.3(e): the smoke outcome the gate reports is this runner's, not a
       # claim in a committed file.
       - name: Record this job's results for the Jev gate
@@ -173,6 +192,212 @@ jobs:
             _pages_smoke/
             *.png
           if-no-files-found: ignore
+          retention-days: 7
+
+  # P0.4's measurement gates. Named by the plan, and the first job in this
+  # workflow that needs `npm ci` — everything else here runs on zero
+  # dependencies, because the smoke suite drives the runner's own Chrome over
+  # raw CDP. axe-core and Playwright are pinned devDependencies (plan §8 P0.4),
+  # and the gate uses Playwright's `channel: "chrome"` to drive the Chrome the
+  # runner already has, so this job needs no Playwright browser download. The
+  # Firefox and WebKit downloads belong to Q-08's cross-browser cluster, which
+  # is the one that genuinely requires them.
+  quality-lab:
+    runs-on: ubuntu-latest
+    # Measured locally at ~3 minutes for the 11-cell matrix, of which the
+    # heatmap cell is most. 25 leaves room for a cold npm ci without racing.
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install the pinned devDependencies
+        run: npm ci --no-audit --no-fund
+      - name: Stage the build the matrix audits
+        run: node scripts/deploy-pages-local.mjs --check --stage _pages_a11y
+      - name: axe-core over the template x state x theme x direction matrix (Q-07)
+        id: a11y-matrix
+        run: node scripts/check-a11y-matrix.mjs --stage _pages_a11y --out a11y-report.json
+      # The report is the evidence: which cells ran, what each one found, and
+      # which combinations do not apply and why. Uploaded even on failure,
+      # because a red cell is the thing someone has to read.
+      - name: Upload the matrix report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: a11y-matrix-report
+          path: a11y-report.json
+          if-no-files-found: error
+          retention-days: 7
+      # P0.4(c): this job is a required gate, and a required gate's real
+      # outcome is part of what `ci_green` means. The evidence builder derives
+      # the required set from this workflow, so this job records its result for
+      # the gate exactly as the other three do — without this, a red
+      # `quality-lab` left `ci_green` reading TRUE in the record the judge
+      # reads directly.
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/quality-lab.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "quality-lab",
+              conclusion: "${{ job.status }}",
+              steps: { "a11y-matrix": "${{ steps.a11y-matrix.outcome }}" },
+            };
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+          '
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-quality-lab
+          path: jev-artifacts/quality-lab.json
+          if-no-files-found: error
+          retention-days: 7
+
+  # Q-02 / Q-03: Lighthouse over every page template, mobile and desktop, median
+  # of 3 runs on the staged build. A separate job from quality-lab because the
+  # two gates have different failure modes and different runtimes: the matrix
+  # is axe over 11 cells, this is 42 Lighthouse passes, and a regression in
+  # either should name itself rather than appear as the other one failing.
+  #
+  # CONSEQUENCE, STATED RATHER THAN DISCOVERED: scripts/lib/jev-evidence.mjs
+  # derives `ci_green`'s required set from this workflow's own job list, so
+  # adding this job makes it a required gate AUTOMATICALLY, with no code change
+  # anywhere. A red `lighthouse` therefore takes `ci_green` red with it, and the
+  # 15-point ci_green hard gate goes red in the judge's record. That is the
+  # design working. Nothing here carves out an exemption to soften a score, and
+  # a future change that wants one should have to argue for it in the open.
+  lighthouse:
+    runs-on: ubuntu-latest
+    # 14 targets x 3 runs at ~7-12s each, measured locally at ~6 minutes, plus
+    # a cold npm ci (lighthouse + chrome-launcher) and the stage build. 30 leaves
+    # headroom for a slower runner without racing the free-tier queue.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install the pinned devDependencies
+        run: npm ci --no-audit --no-fund
+      - name: Stage the build Lighthouse audits
+        run: node scripts/deploy-pages-local.mjs --check --stage _pages_lighthouse
+      - name: Lighthouse over every page template, mobile and desktop (Q-02)
+        id: lighthouse
+        run: node scripts/check-lighthouse.mjs --stage _pages_lighthouse --out lighthouse-report.json
+      # The report is the proof: the raw per-run scores, the median, the floors,
+      # the Q-02 breaches and the variance calibration behind the ratchet split.
+      # Uploaded even on failure, because a red score is the thing to read.
+      #
+      # The NAME is the wire. `jev-complete` already downloads `jev-results-*`
+      # into its artifacts directory, and the builder reads gate reports from
+      # there — so a report under any other name is downloaded by nobody and the
+      # judge never sees it. That is exactly the state this upload was in: a
+      # real browser measurement that no record could read. Under the existing
+      # convention, a new gate report needs no change to the download step.
+      - name: Upload the Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-lighthouse-report
+          path: lighthouse-report.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/lighthouse.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "lighthouse",
+              conclusion: "${{ job.status }}",
+              steps: { lighthouse: "${{ steps.lighthouse.outcome }}" },
+            };
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+          '
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-lighthouse
+          path: jev-artifacts/lighthouse.json
+          if-no-files-found: error
+          retention-days: 7
+
+  # P0.4 / F-38: the quality pass's one gate that still runs in CI.
+  #
+  # The browser gates (Lighthouse, axe-core over the Q-07 matrix,
+  # cross-browser, visual) run locally, on the agent machine, because CI on a
+  # free account should not pay that wall-clock. Moving them out of CI has one
+  # cost — nothing stops the committed evidence going stale — and this job is
+  # the answer. It opens no browser: it reads the evidence files the repository
+  # committed and asserts their schema, their thresholds and their freshness.
+  #
+  # NOT a blocking gate today, deliberately, and the distinction matters. The
+  # validator's own exit code blocks on REGRESSIONS — evidence that was fine
+  # and stopped being fine, or a committed file that stopped being readable as
+  # evidence. It reports, without blocking, the GAPS: the four P0.4 gates that
+  # have no committed evidence yet, and the one known hole in the a11y matrix
+  # (`heatmap/arrival/none/ltr`), which P0.4b already declared as its baseline
+  # row "with the hole in it". Blocking on those would make this job red on
+  # every PR in the repository, including the ones in the middle of closing
+  # them, which is the P0.3 deadlock the ledger already records once. What
+  # closes them is P0.4's exit evidence — the baseline ledger row carrying
+  # every Q-metric — not this job.
+  quality-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Assert the committed quality evidence is current and in its bar
+        id: quality-evidence
+        run: npm run gate:quality-evidence
+      # The evidence builder derives the required set from this workflow, so a
+      # job that did not record its own result would leave `ci_green` reading
+      # TRUE in the record the judge reads. It is the same wiring the other
+      # four jobs carry, for the same reason.
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/quality-evidence.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "quality-evidence",
+              conclusion: "${{ job.status }}",
+              steps: { "quality-evidence": "${{ steps.quality-evidence.outcome }}" },
+            };
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+          '
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-quality-evidence
+          path: jev-artifacts/quality-evidence.json
+          if-no-files-found: error
           retention-days: 7
 
   # Coverage floor on the deterministic core. Scope is deliberate: the sizer's
@@ -220,7 +445,10 @@ jobs:
           retention-days: 7
 
   # The live Jev gate as a CI job (plan §8 P0.3(e), §13.2, §13.3). It judges the
-  # plan item the PR names, against evidence built from the three jobs above.
+  # plan item the PR names, against evidence built from the gate jobs above —
+  # every job this workflow runs but this one, derived from this file rather
+  # than listed anywhere in the evidence code, so a gate added here is covered
+  # the day it is added.
   #
   # pull_request only, deliberately. The scoped Jev report is a PR obligation
   # (§9 rule 6); the full run belongs to P10 and to P11.3's weekly sweep, which
@@ -234,14 +462,18 @@ jobs:
   # not a gate result. That red is the standing, visible reminder of exactly one
   # owner action, and it disappears the moment the secret exists.
   jev-complete:
-    if: github.event_name == 'pull_request'
-    needs: [test, web-smoke, coverage]
+    # `always()` because a red gate is precisely the run that needs a record:
+    # without it GitHub skips this job on a red dependency, and the run where
+    # `ci_green` reads false would produce no evidence at all.
+    if: always() && github.event_name == 'pull_request'
+    needs:
+      [test, web-smoke, quality-lab, lighthouse, coverage, quality-evidence]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
-          # The gate reads the working tree AND consumes the three jobs' own
+          # The gate reads the working tree AND consumes the required jobs' own
           # results, so it must judge the same tree they ran on. On a
           # pull_request, actions/checkout's default is the merge ref — the
           # commit that would actually land. Naming it explicitly keeps the

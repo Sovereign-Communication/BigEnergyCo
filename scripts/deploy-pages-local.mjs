@@ -15,7 +15,16 @@
 //   --stage <dir>: staging directory (default _pages_staging). The GitHub
 //     workflow reuses this same script with --stage _pages, so the manifest
 //     module is the SINGLE source of truth for both deploys.
-import { cpSync, mkdirSync, rmSync, readdirSync, statSync } from "node:fs";
+import {
+  cpSync,
+  mkdirSync,
+  rmSync,
+  readdirSync,
+  statSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
+import { labTransform } from "./lib/lab-build.mjs";
 import { execSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import {
@@ -34,6 +43,14 @@ const STAGE = join(
 );
 const CHECK = process.argv.includes("--check");
 const LIST = process.argv.includes("--list");
+// Lab builds strip `/next/`'s noindex in the staged tree so the SEO audit can
+// see the preview (plan §8 P0.4). Refused on a push: a deploy that carried the
+// strip would publish an unreleased app as indexable.
+const LAB = process.argv.includes("--lab");
+if (LAB && !CHECK)
+  throw new Error(
+    "--lab is a staging-only flag; it cannot be combined with a push",
+  );
 
 function sh(cmd, opts = {}) {
   return execSync(cmd, {
@@ -79,6 +96,29 @@ if (LIST) {
     const dest = join(STAGE, f);
     mkdirSync(dirname(dest), { recursive: true });
     cpSync(join(ROOT, f), dest);
+  }
+
+  // Lab builds only (plan §8 P0.4): the `/next/` preview is noindex until the
+  // P8 swap, and a noindexed page is excluded from SEO evaluation, so the
+  // quality pass could not measure it. `--lab` removes the tag from the STAGED
+  // tree the gates audit. It is never applied on the push path below, because
+  // the push path is a deploy and a deploy must never carry an indexable
+  // preview of an unreleased app. The transform itself also refuses any path
+  // outside `/next/`; see scripts/lib/lab-build.mjs for why that is enforced
+  // twice rather than once.
+  if (LAB) {
+    let stripped = 0;
+    for (const f of deployList()) {
+      const dest = join(STAGE, f);
+      const r = labTransform(f, readFileSync(dest, "utf8"));
+      if (r.changed) {
+        writeFileSync(dest, r.html);
+        stripped += 1;
+      }
+    }
+    console.log(
+      `Lab build: removed noindex from ${stripped} /next/ page(s) in the STAGED tree only. Not pushed.`,
+    );
   }
 
   // Safety net: the staged tree must contain only what the allowlist put there.

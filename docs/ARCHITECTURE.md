@@ -219,17 +219,17 @@ through the injected `setStatus`. No location state lives here.
 concern below has one owner; the CLI only decides the order. Data flows one way,
 left to right, and nothing points back.
 
-| module                             | owns                                                                                                                                      | touches the network/disk? |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| `scripts/lib/jev-auto-facts.mjs`   | what the checkout looks like: `tree_clean`, `secrets_clean`, `env_ignored`, `test_count`, target sha                                      | git, read-only            |
-| `scripts/lib/jev-evidence.mjs`     | the **run records**: artifact in, `tests_green`/`prettier_clean`/`seo_green`/`smoke_green`/`ci_green` out, plus the evidence file's shape | no — zero imports         |
-| `scripts/build-jev-evidence.mjs`   | writing that evidence file; exits non-zero when it cannot be trusted                                                                      | reads artifacts           |
-| `scripts/lib/jev-live.mjs`         | the **wire**: where the key comes from, and the one TypeSafe request that spends it                                                       | yes, and the only place   |
-| `scripts/lib/jev-run.mjs`          | the **live-run state**, and only it: the model pin, the record of the call, the run class, the report's run facts, the exit rule          | no                        |
-| `scripts/lib/jev-complete.mjs`     | the **engine**: pack, questions, answers, facets, ordinals, ratchet comparison                                                            | reads the pack            |
-| `scripts/lib/jev-verdict.mjs`      | the **scoped verdict**: §9 rule 6 bootstrap, the binding point, what makes a scoped run pass                                              | no — pure policy          |
-| `scripts/lib/jev-scope.mjs`        | a PR **title** read as a plan item (imported directly by the CI job)                                                                      | no                        |
-| `scripts/lib/jev-report-print.mjs` | how a report reads to a person; `--json` bypasses it                                                                                      | no                        |
+| module                             | owns                                                                                                                                                                                                           | touches the network/disk? |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `scripts/lib/jev-auto-facts.mjs`   | what the checkout looks like: `tree_clean`, `secrets_clean`, `env_ignored`, `test_count`, target sha                                                                                                           | git, read-only            |
+| `scripts/lib/jev-evidence.mjs`     | the **run records**: artifact in, `tests_green`/`prettier_clean`/`seo_green`/`smoke_green`/`ci_green`/`legacy_gates_green` out, plus the evidence file's shape and the required-job set read from the workflow | no — zero imports         |
+| `scripts/build-jev-evidence.mjs`   | writing that evidence file; exits non-zero when it cannot be trusted                                                                                                                                           | reads artifacts           |
+| `scripts/lib/jev-live.mjs`         | the **wire**: where the key comes from, and the one TypeSafe request that spends it                                                                                                                            | yes, and the only place   |
+| `scripts/lib/jev-run.mjs`          | the **live-run state**, and only it: the model pin, the record of the call, the run class, the report's run facts, the exit rule                                                                               | no                        |
+| `scripts/lib/jev-complete.mjs`     | the **engine**: pack, questions, answers, facets, ordinals, ratchet comparison                                                                                                                                 | reads the pack            |
+| `scripts/lib/jev-verdict.mjs`      | the **scoped verdict**: §9 rule 6 bootstrap, the binding point, what makes a scoped run pass                                                                                                                   | no — pure policy          |
+| `scripts/lib/jev-scope.mjs`        | a PR **title** read as a plan item (imported directly by the CI job)                                                                                                                                           | no                        |
+| `scripts/lib/jev-report-print.mjs` | how a report reads to a person; `--json` bypasses it                                                                                                                                                           | no                        |
 
 Three things worth knowing before changing any of it:
 
@@ -260,7 +260,153 @@ Guarded by:
   and the gate's modules import rather than restate it.
 - `tests/jev-facets.test.mjs` — the pack's axes, buckets and derived budget.
 
+## Byte budgets (P0.4(a): plan §3.1 measured on the staged build)
+
+Two files, one direction of travel. `scripts/lib/byte-budgets.mjs` never touches
+a filesystem: it takes a staged build described as data (a file list and a
+reader) and returns one reading per §3.1 budget. The CLI supplies the disk.
+
+| module                           | owns                                                                                                                                            | touches the network/disk?    |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| `scripts/lib/byte-budgets.mjs`   | the §3.1 limits (verbatim), what each budget's **scope** is, the brotli measurement, the per-metric bar from the ledger, the ratchet comparison | no — takes `{files, read}`   |
+| `scripts/check-byte-budgets.mjs` | walking a stage dir, the printed table, the exit code                                                                                           | reads the stage + the ledger |
+
+Three things worth knowing before changing any of it:
+
+- **The scope of a budget is a decision, not an implementation detail.**
+  "JavaScript before step 1 is interactive" is the transitive module graph the
+  document's scripts reach; the registry line is the **worst** country, not an
+  average; the locale line is the per-locale share, with the whole file reported
+  beside it. Each of those choices has a named test, because a budget measured
+  over the wrong set is a number nobody can act on.
+- **A subject that is not in the build reads `null`, never `0`.** A missing
+  stylesheet, strings file, country file or heatmap page is `status: "not_found"`
+  and compares as `unmeasured`. `0` would satisfy the budget without anything
+  having been read — which is how the first run of this gate reported a
+  0-byte heatmap payload and a `0.0 KB` request count, both of which looked
+  like budgets met.
+- **The bar is per metric and lives in the ledger.** Only a `baseline` row sets
+  it, the newest declared reading of each metric wins, and a row that says
+  nothing about a metric leaves that metric alone. A `gate-run` row carries the
+  metrics of the run that produced it; if it could set the bar, every run would
+  compare against itself.
+
+§3.2 makes these gates **regression-blocking from P0** and absolute only from P6
+(`/next/`) and P8 (all), so an over-limit reading is printed as a breach and only
+getting _worse_ against the declared baseline fails. Three limits are breached at
+the P0.4 baseline and stay visible rather than relaxed; §3.1 allows a relaxation
+only by measured evidence plus an owner-approved amendment, and the amendment
+lives in the plan.
+
+Guarded by `tests/byte-budgets.test.mjs` — the verbatim limits, every scope, the
+ratchet semantics, the absent-subject rule, the per-metric bar, and the CLI's
+exit codes. Every assertion here has a proven mutation: relaxing a limit,
+counting only the entry scripts, enforcing absolutely, letting an older row win,
+letting a gate run set the bar, passing on a regression, dropping the tolerance,
+finding no heatmap page, resolving a `fetch()` against the script instead of the
+document, reading an absent subject as 0, printing a count as bytes, and
+comparing an unreadable metric anyway.
+
+## Accessibility matrix (P0.4(b): plan Q-07, axe over template × state × theme × direction)
+
+`scripts/lib/quality-matrix.mjs` decides **what** is audited and
+`scripts/check-a11y-matrix.mjs` runs it. They share no state: the library takes a
+staged build as data and returns the declared dimensions, the cells, the
+combinations that do not apply, and the per-cell ratchet; the driver supplies the
+disk and the browser.
+
+| module                           | owns                                                                                             | touches the network/disk?                  |
+| -------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| `scripts/lib/quality-matrix.mjs` | the four declared dimensions, the per-cell steps, the axe tag set, the per-cell bar, the ratchet | no — takes `{files, read}`                 |
+| `scripts/check-a11y-matrix.mjs`  | the stage server, one browser per cell, axe injection, the report                                | serves locally, drives the runner's Chrome |
+
+Four things worth knowing before changing any of it:
+
+- **A dimension the product lacks is still declared.** There is no theme in this
+  build, so the theme dimension carries one value, `none`, with the evidence for
+  its absence in the value itself. Dropping the dimension would shrink the cell
+  count and make the matrix look smaller than it is; inventing a dark theme would
+  audit something that does not exist.
+- **A cell exists only where the state does.** A blog post has no result card, so
+  that combination is recorded as not applicable **with a reason** — because "we
+  chose not to" and "we did, and it was clean" are different answers to "why was
+  this not audited?".
+- **Direction follows the module graph, not the markup.** `dir` is set by
+  `shared/i18n.js`, which the home page reaches through `ui.js` without ever naming
+  it. The matrix walks the graph — the same walk the byte budgets own — so a
+  translated page is not mistaken for an untranslated one.
+- **A hole is never a pass.** A cell that cannot be audited records
+  `violations: null, status: "unauditable"`, the bar reader refuses it, and the run
+  exits 1. Today the heatmap cell is exactly that: axe's `best-practice` tag does
+  not finish on that page (541s, then the renderer died, while every WCAG tag
+  completes in 0.7–6.4s). The rule set is not narrowed to make it pass.
+
+The driver bypasses CSP **on the audit context only**: the product ships a strict
+`script-src`, which correctly refuses axe injected as an inline script — the first
+version of this probe died on exactly that. The product's own policy is untouched
+and stays asserted by the smoke suite's CSP gate. Each cell also gets its own
+browser and a hard deadline, because a page that takes its renderer down must cost
+one cell and not the run.
+
+Guarded by `tests/quality-matrix.test.mjs` — the four dimensions, the
+representative, state applicability, graph-based direction, every driven selector,
+the tag set, the ratchet, the hole rule and the per-cell bar. Eleven mutations,
+each caught by its named assertion.
+
+## The five violations it found, and where each one was fixed (P0.4(c))
+
+The P0.4(b) baseline measured five violations across four cells, eight violation
+instances in total. Q-07's cap is 0 per cell, so every one of them was a real
+defect the product had never been told about. The fixes:
+
+| finding                                                           | where                                                 | the fix                                                                                                                                                     |
+| ----------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `aria-required-children` (critical) at `#cumCostLegend`           | `sizing/charts.js`                                    | the appended rows carry `role="listitem"`, so the container's `role="list"` has items                                                                       |
+| `nested-interactive` (serious) on the result chart's `svg`        | `sizing/frontier-chart.js`                            | the role is interpolated from the same `opts.onSelect` switch that wires the click handlers: an interactive chart is a `group`, a static one stays an `img` |
+| `region` (moderate) on the blog index hero                        | `blog/index.html`                                     | the hero `<section>` is `aria-labelledby` its own `<h1>`, so it is a named landmark                                                                         |
+| `scrollable-region-focusable` (serious) on a post's table wrapper | `blog/battery-longevity-and-dod-reference/index.html` | both `.table-wrapper` divs take `tabindex="0" role="region"` and a name                                                                                     |
+| `landmark-one-main` + `region` (moderate) on 404                  | `404.html`                                            | the card, its `h1`, its link and its `nav` moved inside a `<main id="main">`                                                                                |
+
+Two of these were found by the matrix after the first-draft test had already gone
+green, and both are worth naming because they shaped the tests:
+
+- The post has **two** `.table-wrapper` divs. The first version of the test
+  matched one, passed, and the matrix on the staged build then reported the
+  second as `scrollable-region-focusable` (serious). The test now loops over
+  every wrapper, and three mutations (A5, A5b, A5c) exist to prove a defect in
+  the _second_ one — or in a third nobody has looked at yet — is caught.
+- The chart-role guard originally asserted on a regex that matched **its own
+  source**, so hardcoding the role back to `img` sailed straight through it. It
+  now asserts on the markup: a literal `role="img"` or `role="group"` in the svg
+  tag is the thing that must not come back.
+
+`tests/a11y-markup.test.mjs` guards all five, in five tests, mutation-proved at
+**15/15 caught** with every source restored byte-identical. Those tests read the
+source; the proof that the pages are actually clean is the matrix's own report on
+the staged build, attached to the PR.
+
+One cost worth recording: the first draft of the two JS comments was long enough
+to push `js_before_interactive` by 313 bytes, which is over the byte gate's 256-byte
+regression tolerance. The comments were cut to the fact; the reasoning lives in the
+test file, which nobody downloads. The shipped cost is now **+139 bytes**, inside
+tolerance, and no budget was relaxed to accommodate it.
+
 ## Known remaining debt (deliberate, not forgotten)
+
+- **The heatmap cell cannot be audited at all.** axe's `best-practice` tag does not
+  finish on that page: 541 seconds, then the renderer is gone. Every WCAG tag
+  completes in 0.7–6.4s, and a `wcag2aa` violation is already known on that page.
+  Until the cause is found the cell is a hole, and a hole is not a pass. Its own
+  cluster, its own diagnosis — not folded into the P0.4(c) fix pass.
+- **`ci_green` now means the whole workflow, and a red `quality-lab` caps every
+  scoped run.** The required set is read from `.github/workflows/test.yml` — every
+  job it runs except the judge — rather than from a list kept beside the evidence
+  code, so the fourth gate is covered and a fifth would be too. While the heatmap
+  cell above is unauditable that gate is red, `ci_green` reads false and the hard
+  gate with it: the honest reading, since the run really is not green. The older
+  three-gate fact is still recorded on its own (`legacy_gates_green`), and the
+  release facet the ratchet compares still reads that one, so widening the field
+  did not silently change what the ratchet compares.
 
 - `ui.js` is still ~8.0k lines (7,999 at this writing): form state, rendering
   glue, Jev badge lifecycle, sliders, modals. Seven extraction seams are done
