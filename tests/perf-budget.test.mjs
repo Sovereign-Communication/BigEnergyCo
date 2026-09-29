@@ -98,6 +98,16 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // glued onto translated verdicts as an English literal), plus one small
   // owner for the levelized-cost row and the reasoning that goes with each
   // fix. No new module, no new eager feature: strings and comments.
+  // 808,000 (+18 KB measured 802,753): the slider-workflow canonical-state
+  // work. The drag preview now projects the slider's % onto the curve
+  // (interpolateCurveTarget in frontier.js) instead of snapping the card to
+  // a neighboring lattice entry that contradicted the thumb; a run reply
+  // that lands behind the visitor's sliders is detected and reconciled
+  // instead of clobbering them; both sliders write the share hash at input
+  // time; and the worker's feasibility-sims memo (engine.js + run.js) makes
+  // subsequent slider adjustments reuse the run's simulations instead of
+  // re-deriving seconds of hourly physics. Correctness code on the slider
+  // path, reviewed deliberately — the bar moves with it.
   assert.ok(
     htmlBytes <= 125_000,
     `index.html ${htmlBytes} bytes exceeds 125,000 budget`,
@@ -107,8 +117,8 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     `site.css ${cssBytes} bytes exceeds 40,000 budget`,
   );
   assert.ok(
-    jsBytes <= 790_000,
-    `eager JS ${jsBytes} bytes exceeds 790,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
+    jsBytes <= 808_000,
+    `eager JS ${jsBytes} bytes exceeds 808,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
   );
 });
 

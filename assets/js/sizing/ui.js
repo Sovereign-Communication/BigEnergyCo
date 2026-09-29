@@ -13,14 +13,14 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260929a";
+import { APPLIANCES } from "./appliances.js?v=20260929b";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20260929a";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20260929a";
+} from "./run-coordinator.js?v=20260929b";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20260929b";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -29,12 +29,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20260929a";
+} from "./charts.js?v=20260929b";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20260929a";
+} from "./location-picker.js?v=20260929b";
 
 import {
   estimateTariff,
@@ -42,22 +42,22 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260929a";
+} from "./pricing.js?v=20260929b";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260929a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260929b";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260929a";
+} from "./lead-acid.js?v=20260929b";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260929a";
+} from "./bom.js?v=20260929b";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260929a";
+import { BOM_ITEMS } from "../shared/content.js?v=20260929b";
 
 import {
   applyI18n,
@@ -66,18 +66,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20260929a";
+} from "../shared/i18n.js?v=20260929b";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260929a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260929a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260929b";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260929b";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260929a";
-import { buildSimpleView } from "../shared/simple-view.js?v=20260929a";
+} from "../shared/simple-mode.js?v=20260929b";
+import { buildSimpleView } from "../shared/simple-view.js?v=20260929b";
 import {
   advisorJevContext,
   interpretSanity,
@@ -85,56 +85,58 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20260929a";
+} from "./validate.js?v=20260929b";
 import {
   CUT_TARGET_PCT,
+  sliderStateDrifted,
   targetForPct,
-} from "../shared/cut-targets.js?v=20260929a";
+} from "../shared/cut-targets.js?v=20260929b";
+import { interpolateCurveTarget } from "./frontier.js?v=20260929b";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20260929a";
+} from "./share-codec.js?v=20260929b";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20260929a";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20260929a";
+} from "./infeasible-copy.js?v=20260929b";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20260929b";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20260929a";
+} from "./fuel-units.js?v=20260929b";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260929a";
+} from "./frontier-chart.js?v=20260929b";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260929a";
+} from "./rescale.js?v=20260929b";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260929a";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260929b";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260929a";
+} from "./map-provider.js?v=20260929b";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260929a";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260929a";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260929a";
+} from "./wizard.js?v=20260929b";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20260929b";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260929b";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -183,9 +185,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260929a";
+} from "./money.js?v=20260929b";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260929a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260929b";
 
 let worker = null;
 
@@ -302,6 +304,18 @@ function handleRunDeadline() {
 // The last full-run inputs, kept so a bill-only change can compute the exact
 // load factor for an instant rescale against the retained payload.
 let lastRunInput = null;
+
+// The slider-owned state (bill-cut target + budget position) at the moment a
+// run is posted. The sliders are the single canonical owners of that state:
+// if they move while a run is in flight, the reply is data for a position the
+// visitor has already left, and its arrival must not re-seat their thumbs or
+// replace the selection they imply (sliderStateDrifted decides;
+// reconcileDriftedRun settles the view back onto the thumbs).
+let lastRunSlider = null;
+
+function readSliderState() {
+  return { cut: customCutFraction, budget: budgetPinnedUsd };
+}
 
 // JSON fingerprint of the inputs behind the last successful run: an identical
 // next run is answered from the engine's payload cache in milliseconds, so
@@ -2309,6 +2323,7 @@ function run(quiet = false, explicit = false) {
   }
 
   lastRunInput = inp;
+  lastRunSlider = readSliderState();
   wizard.setValue("dailyKwh", inp.dailyKwh);
   wizard.setValue("tariff", inp.tariff);
   wizard.setValue("mode", inp.mode);
@@ -2417,11 +2432,13 @@ function setupCutSlider() {
     syncCutLabel();
     if (lastPayload && lastPayload.mode === "gridtie") {
       frontierSelected = null;
-      // Cached-only drag preview: the nearest curve system at this %.
-      previewCurvePoint(
-        nearestCurvePoint(parseInt(slider.value, 10) || 1, "y"),
-      );
+      // Cached-only drag preview: the curve's projection at the exact % the
+      // slider holds, with the budget thumb riding along — card, readout and
+      // both thumbs then describe ONE position at every input event.
+      previewCurvePoint(previewTargetAt(parseInt(slider.value, 10) || 1));
     }
+    // The share link encodes slider state, so it must never lag the thumb.
+    updateShareHash(lastPayload, readInputs());
   });
 
   slider.addEventListener("change", () => {
@@ -2939,6 +2956,52 @@ function nearestCurvePoint(value, axis) {
   return best;
 }
 
+// The drag preview's projection of the slider's % onto the curve: a
+// pool-shaped point whose entry is the interpolated system for exactly that
+// %. The budget thumb rides along (unpinned — pinning is commit-time only),
+// so the pair, the card and the label move together at every input instead
+// of the card snapping to a neighbor the thumbs do not hold.
+function previewTargetAt(pct) {
+  const p = lastPayload;
+  if (!p || !p.frontier || !Array.isArray(p.frontier.points)) return null;
+  const proj = interpolateCurveTarget(p.frontier.points, pct, surplusAnchor(p));
+  if (!proj) return null;
+  const bs = $("budgetSlider");
+  if (bs && Number.isFinite(proj.capexUsd)) {
+    const min = parseFloat(bs.min);
+    const max = parseFloat(bs.max);
+    bs.value = String(Math.min(max, Math.max(min, Math.round(proj.capexUsd))));
+    syncBudgetLabel();
+  }
+  return {
+    kind: "point",
+    index: proj.loIndex,
+    x: proj.capexUsd,
+    y: proj.outcomePct,
+    pvKw: proj.pvKw,
+    battKwh: proj.battKwh,
+    chem: (proj.entry && proj.entry.chemistry) || p.frontier.chemistry,
+    chemLabel: (proj.entry && proj.entry.chemLabel) || p.frontier.chemLabel,
+    entry: proj.entry,
+  };
+}
+
+// A run reply that landed behind the visitor's sliders: keep its data, then
+// settle the position back onto the sliders (which own the state). No marker
+// re-seat, selection on the slider's own target, and one coalesced slice so
+// the numbers catch up with the thumb.
+function reconcileDriftedRun() {
+  followMarkerOnce = false;
+  if (!lastPayload) return;
+  syncCutControls(Math.round(customCutFraction * 100));
+  if (lastPayload.mode === "gridtie") {
+    frontierSelected = null;
+    if (!lastPayload.auto) selectedKey = "custom";
+    curvePreview = null;
+    if (lastRunSlider?.cut !== customCutFraction) requestIncrementalCut();
+  }
+}
+
 function previewCurvePoint(q) {
   curvePreview = q ? { capexUsd: q.x, outcomePct: q.y } : null;
   renderPlayReadout(q);
@@ -3208,6 +3271,8 @@ function setupBudgetSlider() {
     budgetPinnedUsd = parseFloat(slider.value);
     syncBudgetLabel();
     previewCurvePoint(nearestCurvePoint(parseFloat(slider.value), "x"));
+    // The share link encodes slider state, so it must never lag the thumb.
+    updateShareHash(lastPayload, readInputs());
   });
   slider.addEventListener("change", () => {
     if (!curveReady()) return;
@@ -3229,7 +3294,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20260929a",
+      "./assets/js/sizing/sizing-worker.js?v=20260929b",
       {
         type: "module",
       },
@@ -3274,6 +3339,11 @@ function ensureWorker() {
           return;
         }
 
+        // A run that started before the visitor's last slider move is data
+        // for a position they already left. It still refreshes the payload,
+        // but the sliders stay canonical once it lands.
+        const runDrifted = sliderStateDrifted(lastRunSlider, readSliderState());
+
         if (lastRunAdoptsFocus) {
           selectedKey = "focus";
           lastRunAdoptsFocus = false;
@@ -3295,6 +3365,7 @@ function ensureWorker() {
         lastOkKey = lastRunInput ? JSON.stringify(lastRunInput) : null;
 
         renderResults(ev.data.payload);
+        if (runDrifted) reconcileDriftedRun();
 
         // bring the results into view - the run button can be far above them
         // (instant scroll for reduced-motion users)
@@ -7013,10 +7084,13 @@ function updateShareHash(p, inp) {
     if (inp.chemistry === "auto" && inp.mode !== "gridtie" && $("autoTier"))
       o.at = $("autoTier").value;
 
-    if (inp.chemistry === "auto" && inp.mode === "gridtie" && $("autoTarget")) {
+    if (inp.chemistry === "auto" && inp.mode === "gridtie") {
       // Only a real target is worth serializing: "custom" is mirror state of
-      // the slider, and the fraction itself already travels as o.cc.
-      const ag = $("autoTarget").value;
+      // the slider, and the fraction itself already travels as o.cc. The id
+      // is derived from the SLIDER's fraction, never from the select mirror —
+      // mid-drag the mirror lags one sync behind, and reading it once wrote
+      // the contradictory pair {ag: "cut80", cc: 0.73} into one link.
+      const ag = targetForPct(Math.round(inp.customCut * 100));
       if (CUT_TARGET_PCT[ag]) o.ag = ag;
     }
 
