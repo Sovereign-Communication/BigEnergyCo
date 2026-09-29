@@ -141,8 +141,10 @@ import {
 } from "./validate.js?v=20261022p";
 import {
   CUT_TARGET_PCT,
+  sliderStateDrifted,
   targetForPct,
 } from "../shared/cut-targets.js?v=20261022p";
+import { interpolateCurveTarget } from "./frontier.js?v=20261022p";
 import {
   SHARE_PREFIX,
   b64urlEncode,
@@ -393,6 +395,18 @@ function handleRunDeadline() {
 // The last full-run inputs, kept so a bill-only change can compute the exact
 // load factor for an instant rescale against the retained payload.
 let lastRunInput = null;
+
+// The slider-owned state (bill-cut target + budget position) at the moment a
+// run is posted. The sliders are the single canonical owners of that state:
+// if they move while a run is in flight, the reply is data for a position the
+// visitor has already left, and its arrival must not re-seat their thumbs or
+// replace the selection they imply (sliderStateDrifted decides;
+// reconcileDriftedRun settles the view back onto the thumbs).
+let lastRunSlider = null;
+
+function readSliderState() {
+  return { cut: customCutFraction, budget: budgetPinnedUsd };
+}
 
 // JSON fingerprint of the inputs behind the last successful run: an identical
 // next run is answered from the engine's payload cache in milliseconds, so
@@ -2872,6 +2886,7 @@ function run(quiet = false, explicit = false) {
   }
 
   lastRunInput = inp;
+  lastRunSlider = readSliderState();
   wizard.setValue("dailyKwh", inp.dailyKwh);
   wizard.setValue("tariff", inp.tariff);
   wizard.setValue("mode", inp.mode);
@@ -2980,11 +2995,11 @@ function setupCutSlider() {
     syncCutLabel();
     if (lastPayload && lastPayload.mode === "gridtie") {
       if (!Number.isFinite(budgetPinnedUsd)) frontierSelected = null;
-      // Cached-only drag preview: the nearest curve system at this %.
-      previewCurvePoint(
-        nearestCurvePoint(parseInt(slider.value, 10) || 1, "y"),
-      );
+      // Cached-only drag preview projects the exact target without rewriting a pinned budget choice.
+      previewCurvePoint(previewTargetAt(parseInt(slider.value, 10) || 1));
     }
+    // The share link encodes slider state, so it must never lag the thumb.
+    updateShareHash(lastPayload, readInputs());
   });
 
   slider.addEventListener("change", () => {
@@ -3501,6 +3516,52 @@ function nearestCurvePoint(value, axis) {
   return best;
 }
 
+// The drag preview projects the slider's % onto the curve. When there is no
+// explicit budget choice, the budget thumb may follow the projected point; an
+// already pinned budget remains independent and is never moved by this preview.
+function previewTargetAt(pct) {
+  const p = lastPayload;
+  if (!p || !p.frontier || !Array.isArray(p.frontier.points)) return null;
+  const proj = interpolateCurveTarget(p.frontier.points, pct, surplusAnchor(p));
+  if (!proj) return null;
+  if (!Number.isFinite(budgetPinnedUsd) && Number.isFinite(proj.capexUsd)) {
+    const bs = $("budgetSlider");
+    if (bs) {
+      const min = parseFloat(bs.min);
+      const max = parseFloat(bs.max);
+      bs.value = String(Math.min(max, Math.max(min, Math.round(proj.capexUsd))));
+      syncBudgetLabel();
+    }
+  }
+  return {
+    kind: "point",
+    index: proj.loIndex,
+    x: proj.capexUsd,
+    y: proj.outcomePct,
+    pvKw: proj.pvKw,
+    battKwh: proj.battKwh,
+    chem: (proj.entry && proj.entry.chemistry) || p.frontier.chemistry,
+    chemLabel: (proj.entry && proj.entry.chemLabel) || p.frontier.chemLabel,
+    entry: proj.entry,
+  };
+}
+
+// A run reply that landed behind the visitor's sliders: keep its data, then
+// settle the position back onto the sliders (which own the state). No marker
+// re-seat, selection on the slider's own target, and one coalesced slice so
+// the numbers catch up with the thumb.
+function reconcileDriftedRun() {
+  followMarkerOnce = false;
+  if (!lastPayload) return;
+  syncCutControls(Math.round(customCutFraction * 100));
+  if (lastPayload.mode === "gridtie") {
+    frontierSelected = null;
+    if (!lastPayload.auto) selectedKey = "custom";
+    curvePreview = null;
+    if (lastRunSlider?.cut !== customCutFraction) requestIncrementalCut();
+  }
+}
+
 function previewCurvePoint(q) {
   curvePreview = q ? { capexUsd: q.x, outcomePct: q.y } : null;
   renderPlayReadout(q);
@@ -3770,6 +3831,8 @@ function setupBudgetSlider() {
     previewCurvePoint(
       bestAffordableCurvePoint(curvePool(), parseFloat(slider.value)),
     );
+    // The share link captures the budget position while the thumb moves.
+    updateShareHash(lastPayload, readInputs());
   });
   slider.addEventListener("change", () => {
     if (!curveReady()) return;
@@ -3838,6 +3901,11 @@ function ensureWorker() {
           return;
         }
 
+        // A run that started before the visitor's last slider move is data
+        // for a position they already left. It still refreshes the payload,
+        // but the sliders stay canonical once it lands.
+        const runDrifted = sliderStateDrifted(lastRunSlider, readSliderState());
+
         if (lastRunAdoptsFocus) {
           selectedKey = "focus";
           lastRunAdoptsFocus = false;
@@ -3859,6 +3927,7 @@ function ensureWorker() {
         lastOkKey = lastRunInput ? JSON.stringify(lastRunInput) : null;
 
         renderResults(ev.data.payload);
+        if (runDrifted) reconcileDriftedRun();
 
         // bring the results into view - the run button can be far above them
         // (instant scroll for reduced-motion users)
@@ -7563,10 +7632,13 @@ function updateShareHash(p, inp) {
     if (inp.chemistry === "auto" && inp.mode !== "gridtie" && $("autoTier"))
       o.at = $("autoTier").value;
 
-    if (inp.chemistry === "auto" && inp.mode === "gridtie" && $("autoTarget")) {
+    if (inp.chemistry === "auto" && inp.mode === "gridtie") {
       // Only a real target is worth serializing: "custom" is mirror state of
-      // the slider, and the fraction itself already travels as o.cc.
-      const ag = $("autoTarget").value;
+      // the slider, and the fraction itself already travels as o.cc. The id
+      // is derived from the SLIDER's fraction, never from the select mirror —
+      // mid-drag the mirror lags one sync behind, and reading it once wrote
+      // the contradictory pair {ag: "cut80", cc: 0.73} into one link.
+      const ag = targetForPct(Math.round(inp.customCut * 100));
       if (CUT_TARGET_PCT[ag]) o.ag = ag;
     }
 
