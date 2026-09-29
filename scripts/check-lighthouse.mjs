@@ -23,6 +23,9 @@ import { resolve } from "node:path";
 import lighthouse from "lighthouse";
 import { launch } from "chrome-launcher";
 import { serveStatic } from "./serve-static.mjs";
+import { start, sleep } from "./smoke/runtime.mjs";
+import { measureWarmInteraction } from "./lib/warm-interaction.mjs";
+import { COMPLETE_FACET_CLIP } from "./lib/jev-complete.mjs";
 import {
   LIGHTHOUSE_CATEGORIES,
   LIGHTHOUSE_FACET_AXES,
@@ -55,18 +58,28 @@ function codeSha() {
 function usage() {
   console.error(
     "usage: node scripts/check-lighthouse.mjs [--stage DIR] [--out FILE] " +
-      "[--only ID] [--runs N]",
+      "[--only ID] [--runs N] [--skip-warm]",
   );
   process.exit(2);
 }
 
 const argv = process.argv.slice(2);
-const opts = { stage: "_pages_lighthouse", out: null, only: null, runs: null };
+const opts = {
+  stage: "_pages_lighthouse",
+  out: null,
+  only: null,
+  runs: null,
+  skipWarm: false,
+};
 for (let i = 0; i < argv.length; i++) {
   if (argv[i] === "--stage") opts.stage = argv[++i] ?? usage();
   else if (argv[i] === "--out") opts.out = argv[++i] ?? usage();
   else if (argv[i] === "--only") opts.only = argv[++i] ?? usage();
   else if (argv[i] === "--runs") opts.runs = Number(argv[++i]) ?? usage();
+  // A local look at the Lighthouse numbers alone. Never for CI: the warm
+  // measurement is the point of the facet line, and skipping it there would
+  // publish a first-paint-only line as if it were the whole claim.
+  else if (argv[i] === "--skip-warm") opts.skipWarm = true;
   else usage();
 }
 
@@ -186,6 +199,68 @@ try {
 } catch (e) {
   console.error(`note: chrome teardown reported ${e.code}; continuing`);
 }
+
+// ── The WARM half of the performance facet, in a real browser. ──
+//
+// Lighthouse is a first-paint instrument, and its composite is a simulated
+// throttling number so wide (40-76 across 21 calibration runs) that no
+// affordable floor reproduces it. The facet also claims the sizing interaction
+// is measured and that a warm path pulls nothing redundant — and nothing
+// measured either, so the facet line could only say "first paint only" and the
+// judge read it as unverified. This is that measurement.
+//
+// A failure here is recorded and NOT fatal: the gate still reports first paint,
+// the composed line falls back to saying the warm claims are unmeasured, and an
+// absent measurement stays visible as an absent one rather than being invented.
+let warmInteraction = null;
+if (!opts.skipWarm) {
+  let ctx = null;
+  try {
+    ctx = await start();
+    await ctx.send("Page.enable");
+    const loaded = new Promise((res) => {
+      const prev = ctx.ws.onmessage;
+      ctx.ws.onmessage = (ev) => {
+        prev(ev);
+        try {
+          if (JSON.parse(ev.data).method === "Page.loadEventFired") {
+            ctx.ws.onmessage = prev;
+            res();
+          }
+        } catch {
+          /* not a frame we care about */
+        }
+      };
+    });
+    await ctx.send("Page.navigate", { url: srv.url });
+    await Promise.race([loaded, sleep(60000)]);
+    await sleep(4000);
+    warmInteraction = await measureWarmInteraction(ctx, { url: srv.url });
+    console.log(
+      `warm interaction: ${JSON.stringify(
+        {
+          cold_run_ms: warmInteraction.cold_run?.ms,
+          warm_rerun_ms: warmInteraction.warm_rerun?.ms,
+          preview_median_ms:
+            warmInteraction.warm_adjustments?.preview_median_ms,
+          confirm_median_ms:
+            warmInteraction.warm_adjustments?.confirm_median_ms,
+          warm_network_requests: warmInteraction.warm_network_requests,
+        },
+        null,
+        0,
+      )}`,
+    );
+  } catch (e) {
+    warmInteraction = { ok: false, error: String(e.message || e) };
+    console.error(
+      `note: warm-interaction measurement failed (${e.message || e}); the ` +
+        "report carries the hole and the facet line falls back to first paint",
+    );
+  } finally {
+    await ctx?.close().catch(() => {});
+  }
+}
 await srv.close();
 
 const { regressions, improvements, breaches, holes, unmeasured } =
@@ -217,6 +292,7 @@ const report = {
   variance_calibration: LIGHTHOUSE_VARIANCE,
   targets,
   measured,
+  warm_interaction: warmInteraction,
   first_measurement: LIGHTHOUSE_FIRST_MEASUREMENT,
   floors: LIGHTHOUSE_FLOORS,
   absolute_targets: LIGHTHOUSE_ABSOLUTE,
@@ -234,10 +310,22 @@ const report = {
     "the measured reason in `reported_only`. Absolute Q-02 thresholds become " +
     "blocking at P5 (new shell) / P8 (everything) per plan §3.2, and are " +
     "reported as breaches until then.",
-  scope_limit:
-    "this gate measures the first-paint claim of the performance facet only. " +
-    "Warm interactions and NASA/weather memoization are not Lighthouse's " +
-    "subject and are not measured here.",
+  scope_limit: warmInteraction?.ok
+    ? "this gate measures the first-paint claim with Lighthouse's SIMULATED " +
+      "throttling, and the warm claims (cold sizing run, warm re-run, " +
+      "slider drag preview, confirm re-slice, and the requests a warm path " +
+      "issues) with one unthrottled Chrome on one machine, one city and three " +
+      "adjustments. It is a real reading of this machine, not a device matrix " +
+      "and not a population claim. The warm request count is whatever the " +
+      "browser put on the wire: a non-zero count is a finding about the " +
+      "product and is reported, never tuned away."
+    : "this gate measures the first-paint claim of the performance facet only. " +
+      "Warm interactions and NASA/weather memoization are not Lighthouse's " +
+      "subject and are not measured here." +
+      (warmInteraction
+        ? " The warm measurement did not run this time, so " +
+          "that limit stands in full."
+        : ""),
 };
 
 // The facet line the judge will read is composed HERE, from this run, and
@@ -248,6 +336,22 @@ report.facet_line = composeFacetLine(report);
 console.log(
   `facet line (${report.facet_line.length} chars):\n  ${report.facet_line}`,
 );
+// An over-long line is SILENTLY cut in transit by the evidence builder, and the
+// part that gets cut is the tail — which here is the warm measurement, the whole
+// reason this gate now carries a second instrument. So the gate refuses to
+// publish rather than let the axis decay to a truncated prefix: a red gate with
+// the line printed beats a green one whose claim quietly lost its numbers.
+if (report.facet_line.length > COMPLETE_FACET_CLIP) {
+  console.error(
+    `\nfacet line is ${report.facet_line.length} chars, over the ` +
+      `${COMPLETE_FACET_CLIP}-char per-axis clip. It would be cut on the way to ` +
+      "the judge, so the `performance` axis would arrive without its warm " +
+      "numbers. Shorten the clause in composeFacetLine rather than raising the " +
+      "clip.\n  " +
+      report.facet_line,
+  );
+  process.exitCode = 1;
+}
 
 if (opts.out) {
   const { writeFileSync } = await import("node:fs");

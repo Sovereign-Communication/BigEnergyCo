@@ -422,6 +422,72 @@ export const LIGHTHOUSE_FLOORS = {
  *   · What the gate does NOT cover. One of the facet's three claims is measured
  *     here; saying so is what stops a green gate reading as a proof.
  */
+/**
+ * The WARM clause, composed from report.warm_interaction when the gate measured
+ * it and ABSENT when it did not.
+ *
+ * The absence is the load-bearing half. Until this existed, the line ended "not
+ * warm interactions or memoization" and the judge read the facet as unverified,
+ * which was the honest reading of a first-paint-only measurement. The fix for
+ * that is a measurement, not a better sentence — so when there is no warm
+ * measurement the line still says the warm claims are not measured, and no
+ * wording change can make a green first-paint run read as a proven facet.
+ *
+ * Both ends of a slider move are reported because they are two different claims.
+ * The drag preview is what the visitor feels (cached, no worker); the confirm
+ * re-slice is a real background wait. Reporting only the first would flatter the
+ * product and only the second would libel it.
+ *
+ * It is FIRST in the line because it is the part that was missing, and a
+ * 280-char clip is finite: the least load-bearing sentence must not be the one
+ * that gets cut.
+ */
+function warmClause(warm) {
+  const sec = (ms) =>
+    typeof ms === "number" && Number.isFinite(ms)
+      ? ms >= 1000
+        ? `${(ms / 1000).toFixed(1)}s`
+        : `${Math.round(ms)}ms`
+      : null;
+  const cold = sec(warm?.cold_run?.ms);
+  const repeat = sec(warm?.warm_rerun?.ms);
+  const drag = sec(warm?.warm_adjustments?.preview_median_ms);
+  const confirm = sec(warm?.warm_adjustments?.confirm_median_ms);
+  if (cold === null || repeat === null || drag === null || confirm === null)
+    return null;
+  const parts = [`cold ${cold}`, `repeat ${repeat}`, `drag ${drag}`];
+  // The confirm wait is stated whenever it is slower than the drag it follows.
+  // Hiding it because the drag was fast is exactly the flattering edit this
+  // line exists to make impossible.
+  if (confirm !== drag) parts.push(`confirm ${confirm}`);
+  const reqs = warm?.warm_network_requests;
+  if (typeof reqs === "number") {
+    if (reqs === 0) {
+      parts.push("0 warm requests");
+    } else {
+      // WHAT went on the wire, derived from the measured URLs rather than typed
+      // here. A count with no identity ("4 warm requests") reads as four
+      // redundant weather pulls; a count that names the probe reads as what it
+      // is — the Jev capability gate, re-asked per render on purpose. If the
+      // requests ever become something else, this word changes with them.
+      const urls = Array.isArray(warm?.warm_request_urls)
+        ? warm.warm_request_urls
+        : [];
+      const allHealth =
+        urls.length === reqs && urls.every((u) => /\/api\/health/.test(u));
+      parts.push(
+        allHealth
+          ? `${reqs} warm requests (all Jev /api/health)`
+          : `${reqs} warm requests`,
+      );
+    }
+  }
+  // "1 unthrottled Chrome" is the limit that is still true after the warm
+  // measurement landed: one machine, one city, three adjustments, no simulated
+  // throttling. A real reading, not a device matrix and not a population claim.
+  return `WARM, 1 unthrottled Chrome: ${parts.join(", ")}`;
+}
+
 export function composeFacetLine(report) {
   const measured = Array.isArray(report?.measured) ? report.measured : [];
   const range = (category) => {
@@ -455,23 +521,33 @@ export function composeFacetLine(report) {
     : null;
   const calN = cal.length ? Math.max(...cal.map((s) => s.n)) : 0;
 
-  const sentences = [
-    `Lighthouse ${report?.lighthouse_version || "?"}, ${measured.length} targets, median of 3`,
-  ];
+  const sentences = [];
+  const warm = warmClause(
+    report?.warm_interaction?.ok ? report.warm_interaction : null,
+  );
+  if (warm) sentences.push(warm);
+  sentences.push(
+    `Lighthouse, ${measured.length} target${measured.length === 1 ? "" : "s"}, median of 3`,
+  );
   if (ratcheted.length) sentences.push(`ratcheted ${ratcheted.join(", ")}`);
   if (report?.regressions?.length)
     sentences.push(`${report.regressions.length} REGRESSIONS`);
   if (report?.holes?.length) sentences.push(`${report.holes.length} HOLES`);
 
-  const perfClause = ["performance NOT ratcheted"];
+  const perfClause = ["perf NOT ratcheted"];
   if (perf) perfClause.push(`${perf} this run`);
-  if (envelope) perfClause.push(`${envelope} over ${calN} calibration runs`);
+  if (envelope) perfClause.push(`${envelope} over ${calN} runs`);
   if (report?.regressions?.length) perfClause.push("see regressions above");
   if (perf || envelope) sentences.push(perfClause.join(", "));
 
-  sentences.push(
-    "first-paint claim only, not warm interactions or memoization",
-  );
+  // With no warm measurement this is the whole honest limit. With one, the warm
+  // clause above has already stated its own narrower limit, and repeating the
+  // first-paint disclaimer next to a real warm reading would read as though the
+  // warm reading were also unmeasured.
+  if (!warm)
+    sentences.push(
+      "first-paint claim only, not warm interactions or memoization",
+    );
   return sentences.join(". ") + ".";
 }
 
