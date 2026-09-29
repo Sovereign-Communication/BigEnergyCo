@@ -7071,8 +7071,12 @@ function updateShareHash(p, inp) {
 function restoreFromShare() {
   // The codec owns parsing + validation; a malformed or hostile link is
   // refused here, before any DOM state moves.
+  if (!location.hash.startsWith(SHARE_PREFIX)) return false;
   const o = parseShareHash(location.hash);
-  if (!o) return false;
+  if (!o) {
+    setStatus(t("invalidShare"));
+    return false;
+  }
 
   const lat = o.la,
     lon = o.lo,

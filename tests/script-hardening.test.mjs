@@ -204,3 +204,23 @@ test("SCRIPTS: the hardened helpers are the ones actually used", () => {
     "base-URL handling stays in normalizeBase",
   );
 });
+
+test("local smoke explicitly skips the production-only API CORS probe", () => {
+  const closing = readFileSync("scripts/smoke/closing.js", "utf8");
+  assert.match(
+    closing,
+    /const workerProbe = ctx\.isLocalBase\s*\? ""\s*:/,
+    "localhost must not send a CORS-blocked API health request",
+  );
+  assert.match(closing, /\$\{workerProbe\}/);
+  assert.match(
+    closing,
+    /SMOKE SKIP  API health — localhost is outside the worker CORS allowlist/,
+    "the production-only check must be visibly skipped, not reported as a pass",
+  );
+  assert.match(
+    closing,
+    /"API health reachable",\s*\/(?:\^HTTP 200)\/\.test\(probes\.worker \|\| ""\)/,
+    "on production origins the health probe must still require HTTP 200",
+  );
+});
