@@ -81,19 +81,53 @@ export function interpretSanity(data) {
 /**
  * Feature gate: the badge only ever asks the worker when the deployed worker
  * says the Jev route is live (/api/health carries jevSanity:true only with
- * the key present). Checked per render — one ~60-byte GET, every disabled
- * state stays completely silent (no POST, no failed requests, no console
- * noise), and activating the feature server-side needs no client redeploy.
+ * the key present). Every disabled state stays completely silent — no POST, no
+ * failed requests, no console noise — and activating the feature server-side
+ * needs no client redeploy: a page LOADED after the worker turns the route on
+ * gets the feature with no new JS shipped.
+ *
+ * Asked AT MOST ONCE per page session, not once per render. Owner ruling
+ * (2026-09-29): the per-render re-ask cost a redundant `GET /api/health` on
+ * every badge render, which a real-browser measurement counted at 4 warm
+ * requests across one slider session — the `performance` facet's
+ * "zero redundant network pulls" claim, and it was not zero. The stated
+ * trade-off: a tab already open ACROSS an activation loses mid-session pickup.
+ * A page loaded after activation still gets the feature, which is the guarantee
+ * the comment above has always claimed.
+ *
+ * A transport failure is deliberately NOT memoized. Nothing was learned from a
+ * request that never completed, so a page that loaded while offline is still
+ * able to pick the feature up once it is back — only a completed answer is
+ * remembered, and it is remembered for the life of the page.
  */
+const _healthAnswers = new Map();
+
+/** Test-only: forget this session's answers. A page reload is the real reset. */
+export function resetJevHealthForTest() {
+  _healthAnswers.clear();
+}
+
 export async function jevEnabled(base) {
+  const key = String(base);
+  if (_healthAnswers.has(key)) return _healthAnswers.get(key);
+  let res;
   try {
-    const res = await fetch(base + "/api/health", { cache: "no-store" });
-    if (!res.ok) return false;
-    const data = await res.json();
-    return data && data.jevSanity === true;
+    res = await fetch(base + "/api/health", { cache: "no-store" });
   } catch {
+    // No memo: a network that never answered has told us nothing.
     return false;
   }
+  let answer = false;
+  if (res.ok) {
+    try {
+      const data = await res.json();
+      answer = data && data.jevSanity === true;
+    } catch {
+      answer = false;
+    }
+  }
+  _healthAnswers.set(key, answer);
+  return answer;
 }
 
 /** Fire-and-forget probe. Any failure resolves to null — never throws. */
