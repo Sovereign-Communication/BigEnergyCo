@@ -17,3 +17,23 @@ export function targetForPct(pct) {
   const match = Object.entries(CUT_TARGET_PCT).find(([, p]) => p === pct);
   return match ? match[0] : CUSTOM_TARGET;
 }
+
+/**
+ * Did the slider-owned state move since a run was posted? The sliders are the
+ * single canonical owners of the target/budget position in the workflow: a
+ * payload computed before the visitor's last slider move is data for a state
+ * they have already left, so its arrival must not re-seat the thumbs or
+ * replace the selection they imply. Pure policy — the UI snapshots its slider
+ * state when it posts a run and compares again when the reply lands.
+ *
+ * @param {{cut: number, budget: number|null}|null} posted snapshot at post
+ * @param {{cut: number, budget: number|null}|null} current snapshot now
+ * @returns {boolean} true when the visitor has moved a slider since the post
+ */
+export function sliderStateDrifted(posted, current) {
+  if (!posted || !current) return false;
+  if (posted.cut !== current.cut) return true;
+  // A null budget means "not pinned / not yet seated" on both sides; any
+  // transition between null and a number, or between two numbers, is drift.
+  return posted.budget !== current.budget;
+}
