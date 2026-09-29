@@ -372,6 +372,28 @@ function payloadCacheKey(msg) {
   return JSON.stringify(canon);
 }
 
+// The bounded feasibility-sims memo, keyed to the site series + derate +
+// load identity (see the engine's evaluate contract). One map lives per
+// generation of identical inputs: series._simCacheState keeps the arrays the
+// map was scoped against, and the map is replaced the moment any of them
+// changes. Exact by construction — the memo can never serve a result that
+// was not computed for byte-identical inputs.
+function simCacheFor(series, e1kw, tempsC, loadWh) {
+  const st = series._simCacheState;
+  if (
+    st &&
+    st.e1kw === e1kw &&
+    st.tempsC === tempsC &&
+    st.loadWh.length === loadWh.length &&
+    st.loadWh.every((v, i) => v === loadWh[i])
+  ) {
+    return st.map;
+  }
+  const map = new Map();
+  series._simCacheState = { e1kw, tempsC, loadWh, map };
+  return map;
+}
+
 async function runSizingCore(msg, deps = {}) {
   if (!deps.fetchWeather) {
     const cacheKey = payloadCacheKey(msg);
@@ -605,6 +627,17 @@ async function runSizingUncached(msg, deps = {}) {
   const loadWh = expandProfile(flatProfile(dailyKwh), hours.length);
   if (!series._tempsC) series._tempsC = Float64Array.from(hours, (h) => h.tAmb);
   const tempsC = series._tempsC;
+  // One bounded feasibility-sims memo per (site series, derates, load): the
+  // battery-row searches behind the target columns and the slider's re-slice
+  // probe overlapping (pv, batt) candidates, and a slider edit should reuse
+  // the run's simulations instead of re-deriving seconds of hourly physics.
+  // simulateOffset is pure in exactly (pv, batt, chemistry, capacityScale,
+  // e1kw, loadWh, tempsC) and the engine keys the first four, so sharing the
+  // map across calls is sound ONLY while the last three are identical — which
+  // is exactly what simCacheFor verifies (identity for the memoized arrays,
+  // an element-wise compare for the load, never a hash) before handing the
+  // same map over; any change starts a fresh one.
+  const simCache = simCacheFor(series, e1kw, tempsC, loadWh);
 
   // Highest AC demand hour — the number the hardware list (inverter class,
   // DC protection) and the inverter cost basis are built around. The caller
@@ -1718,6 +1751,7 @@ async function runSizingUncached(msg, deps = {}) {
   // Shared sizing options for the fixed-chemistry bill-cut targets (used by
   // the full run and by the incremental slider patch alike).
   const billCutOpts = {
+    simCache,
     oversizeStrategy,
     e1kw,
     loadWh,
@@ -1769,6 +1803,7 @@ async function runSizingUncached(msg, deps = {}) {
         const customEntries = [];
         for (const chemId of AUTO_CHEMS) {
           const sized = sizeForBillCut({
+            simCache,
             oversizeStrategy,
             e1kw,
             loadWh,
@@ -1808,6 +1843,7 @@ async function runSizingUncached(msg, deps = {}) {
         }
         // Lead-acid reference at the same slider target (savings indicator).
         const agmSized = sizeForBillCut({
+          simCache,
           oversizeStrategy,
           e1kw,
           loadWh,
@@ -2074,6 +2110,7 @@ async function runSizingUncached(msg, deps = {}) {
       const customEntries = [];
       for (const chemId of AUTO_CHEMS) {
         const sized = sizeForBillCut({
+          simCache,
           oversizeStrategy,
           e1kw,
           loadWh,
@@ -2116,6 +2153,7 @@ async function runSizingUncached(msg, deps = {}) {
       }
       // Lead-acid reference at the same slider target (savings indicator).
       const agmSized = sizeForBillCut({
+        simCache,
         oversizeStrategy,
         e1kw,
         loadWh,

@@ -1081,6 +1081,11 @@ export function simulateOffset({
  *
  * @returns {{pvKw:number, battKwh:number, result:object, cost:number} | null}
  */
+// Cap for the shared feasibility-sims memo (see evaluate below). Big enough
+// to hold several full battery-row sweeps (battMax 150 x ~10 probes x a few
+// chemistries), small enough to stay flat in a long session.
+export const SIM_CACHE_MAX_ENTRIES = 30000;
+
 export function sizeForBillCut({
   e1kw,
   loadWh,
@@ -1104,6 +1109,8 @@ export function sizeForBillCut({
   // when false, the engine returns its direct pick (swaps included) with
   // no oversize adoption. Default preserves existing behavior.
   oversizeStrategy = true,
+  // Shared feasibility-sims memo (contract documented at evaluate below).
+  simCache = null,
 }) {
   const f = Number(minFraction);
   if (!Number.isFinite(f) || f < 0.01 || f > 1.5) {
@@ -1140,8 +1147,36 @@ export function sizeForBillCut({
     });
   const surplusTarget = f > 1;
   const importBudget = surplusTarget ? loadTotal * 0.005 : loadTotal * (1 - f);
-  const evaluate = (pv, batt) =>
-    simulateOffset({
+  // Bounded feasibility-sims memo. simulateOffset is pure in exactly the
+  // inputs below (pv/batt vary, the rest are constant within one search), so
+  // an exact-key hit is byte-for-byte the same computation a miss would run:
+  // memoization, never approximation (a warm-start guess can diverge; a
+  // lookup cannot). The Map is owned by the caller, which must share it only
+  // across calls whose (e1kw, loadWh, tempsC) inputs are identical — run.js
+  // enforces that by keying the map to the site series + derate + load
+  // identity and starting a fresh map whenever any of them changes.
+  const evaluate = (pv, batt) => {
+    if (simCache) {
+      const key = `${chemistry}|${capacityScale}|${pv}|${batt}`;
+      const hit = simCache.get(key);
+      if (hit) return hit;
+      const r = simulateOffset({
+        pvKw: pv,
+        battKwhUsable: batt,
+        e1kw,
+        loadWh,
+        chemistry,
+        tempsC,
+        capacityScale,
+      });
+      // Bounded: a long session sweeps an unbounded union of lattices. A
+      // full clear is safe (hits are pure repeats, misses recompute) and
+      // keeps the worker's memory flat.
+      if (simCache.size >= SIM_CACHE_MAX_ENTRIES) simCache.clear();
+      simCache.set(key, r);
+      return r;
+    }
+    return simulateOffset({
       pvKw: pv,
       battKwhUsable: batt,
       e1kw,
@@ -1150,6 +1185,7 @@ export function sizeForBillCut({
       tempsC,
       capacityScale,
     });
+  };
   const meets = peakOnly
     ? (r) => r.peakOffsetFraction + 1e-9 >= f
     : surplusTarget && !hasCredit
