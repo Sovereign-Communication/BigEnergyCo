@@ -224,3 +224,31 @@ test("local smoke explicitly skips the production-only API CORS probe", () => {
     "on production origins the health probe must still require HTTP 200",
   );
 });
+
+test("the document-start worker stub covers the local stage only", () => {
+  // The stub fakes /api/health (jevSanity:true) and /api/jev (available:false)
+  // so the Jev gates are meaningful against a workerless local emulator. If it
+  // ever ran against a real surface it would fake the worker's own answers —
+  // "API health reachable" and the server-side activation state would read as
+  // passes for requests that never left the machine.
+  const orchestrator = readFileSync("scripts/browser-smoke.mjs", "utf8");
+  assert.match(
+    orchestrator,
+    /if \(isLocalBase\) \{\s*await ctx\.send\("Page\.addScriptToEvaluateOnNewDocument", \{\s*source: jevHealthAtDocumentStart,/,
+    "the fake worker layer must be installed only when the smoke targets a local stage",
+  );
+  assert.equal(
+    orchestrator.split("Page.addScriptToEvaluateOnNewDocument").length,
+    2,
+    "the stub must have exactly one registration site — the guarded one",
+  );
+
+  // The layer owns BOTH routes: answering only /api/health would enable the
+  // Jev path against a no-key server whose /api/jev then 503s on every
+  // out-of-gate render and fails the strict console-error gate.
+  const jev = readFileSync("scripts/smoke/jev.js", "utf8");
+  const layer = jev.slice(jev.indexOf("jevHealthAtDocumentStart"));
+  assert.match(layer, /\/api\/health/);
+  assert.match(layer, /\/api\/jev/);
+  assert.match(layer, /available: false/);
+});

@@ -59,9 +59,18 @@ async function main() {
     // app's own boot-time /api/health probe. The client gate keeps one answer
     // per page session, so a stub installed later can no longer be consulted —
     // see jevHealthAtDocumentStart for the full reason.
-    await ctx.send("Page.addScriptToEvaluateOnNewDocument", {
-      source: jevHealthAtDocumentStart,
-    });
+    //
+    // LOCAL STAGE ONLY. The local server is a workerless emulator whose
+    // /api/health says the Jev route is off and whose /api/jev 503s, so the
+    // stub is what makes the Jev gates meaningful there. On a real surface
+    // (staging, pages.dev, the brand domain) the probe must reach the real
+    // worker and a real /api/jev must answer: faking either would turn
+    // "API health reachable" and the server-side activation state into lies.
+    if (isLocalBase) {
+      await ctx.send("Page.addScriptToEvaluateOnNewDocument", {
+        source: jevHealthAtDocumentStart,
+      });
+    }
 
     // ── Main page: grid-tie (the runbook flow, verbatim) ──────────────
     console.log("SMOKE      ── main page: grid-tie ──");

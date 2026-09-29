@@ -30,7 +30,9 @@ function stubFetch(callsVar, jevJson) {
  * This layer is installed at DOCUMENT-START instead — before any app script
  * runs — and answers BOTH Jev routes, so the app never reaches the real worker
  * from a smoke run: /api/health as live, and /api/jev as a silent
- * `available:false`.
+ * `available:false`. It is registered for LOCAL STAGED RUNS ONLY
+ * (browser-smoke.mjs gates it on isLocalBase): a real surface must be probed
+ * for real, or the smoke would certify a health answer the worker never gave.
  *
  * The per-gate stubs below still wrap this one and keep their own payloads and
  * their own call counts, so nothing they assert is affected — a gate that wants
