@@ -13,9 +13,12 @@
 //   · COLD RUN. City search, inputs, click Size My System, first result card.
 //     This is the slow interaction: it is the one that waits on NASA POWER.
 //   · WARM RE-RUN. The same click again, immediately, with nothing cold left.
-//   · WARM ADJUSTMENT. The result-stage slider, which re-slices locally
-//     without a worker round trip. Median of several moves, because one sample
-//     is an anecdote.
+//   · WARM ADJUSTMENT, BOTH SLIDERS. The result stage carries a pair — the
+//     bill-cut slider and the budget slider — and the pair is what the visitor
+//     actually drags. Both are driven and timed on their own paths, because
+//     timing one and reading the other off its side effect (the budget thumb
+//     following the cut) would leave half the claim measured and half assumed.
+//     Median of several moves each, because one sample is an anecdote.
 //   · WARM NETWORK. Every request the page issued inside the warm window,
 //     counted from the CDP wire rather than asserted. The number is reported
 //     whatever it is: a non-zero count here is a real finding about the product
@@ -40,7 +43,7 @@ function warmWindowSource(adjustments) {
   return `(async () => {
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     const cardUp = () => document.body.textContent.includes(${JSON.stringify(CARD)});
-    const out = { rerun: null, adjusts: [], skipped: [] };
+    const out = { rerun: null, adjusts: [], budgetAdjusts: [], skipped: [] };
 
     // ── WARM RE-RUN: the same click, with every cache now populated. ──
     const btn = document.getElementById("btnRunSizing");
@@ -117,6 +120,65 @@ function warmWindowSource(adjustments) {
           confirm_ms: Math.round(performance.now() - t1),
           cut: target,
           budget_followed: moved,
+        });
+      }
+
+      // ── WARM ADJUSTMENT: move the BUDGET slider itself. ──
+      // The other half of the pair, on its own path: the input handler pins the
+      // visitor's own budget, relabels the thumb, walks the cached curve and
+      // re-encodes the share hash; the change handler commits that curve point.
+      // Neither posts to the sizing worker, so a slow number here would be a
+      // real finding about the budget slider's own path.
+      //
+      // The observable ends differ from the cut slider's on purpose, because the
+      // controls differ: the budget thumb's visible consequence is the money
+      // label (#budgetSliderVal), and its commit is the curve preview being
+      // cleared. preview_rendered and committed are recorded separately so a
+      // timing of zero that measured nothing cannot read as a fast path.
+      const budgetLabel = document.getElementById("budgetSliderVal");
+      const blo = +budget.min,
+        bhi = +budget.max;
+      const readoutText = () =>
+        (readout && (readout.textContent || "").trim()) || "";
+      for (let i = 0; i < ${adjustments}; i++) {
+        const labelBefore = (budgetLabel && budgetLabel.textContent) || "";
+        const next = +budget.value + Math.max(1, Math.round((bhi - blo) / (i + 4)));
+        const target =
+          next > bhi ? next - (bhi - blo) : next < blo ? next + (bhi - blo) : next;
+        budget.value = String(target);
+
+        const b0 = performance.now();
+        budget.dispatchEvent(new Event("input", { bubbles: true }));
+        let relabelled = false;
+        for (let k = 0; k < 40; k++) {
+          if (budgetLabel && budgetLabel.textContent !== labelBefore) {
+            relabelled = true;
+            break;
+          }
+          await wait(5);
+        }
+        const budgetPreviewMs = Math.round(performance.now() - b0);
+        const budgetPreviewed = readoutText() !== "";
+
+        const b1 = performance.now();
+        budget.dispatchEvent(new Event("change", { bubbles: true }));
+        let committed = false;
+        // Bounded: a budget commit that never clears the preview is recorded as
+        // not committed with the time it took, not waited on forever.
+        for (let k = 0; k < 100; k++) {
+          if (readoutText() === "") {
+            committed = true;
+            break;
+          }
+          await wait(40);
+        }
+        out.budgetAdjusts.push({
+          preview_ms: budgetPreviewMs,
+          relabelled,
+          preview_rendered: budgetPreviewed,
+          confirm_ms: Math.round(performance.now() - b1),
+          budget: target,
+          committed,
         });
       }
     }
@@ -211,6 +273,12 @@ export async function measureWarmInteraction(ctx, options = {}) {
 
   const previewSamples = warm.adjusts.map((a) => a.preview_ms);
   const confirmSamples = warm.adjusts.map((a) => a.confirm_ms);
+  const budgetPreviewSamples = (warm.budgetAdjusts || []).map(
+    (a) => a.preview_ms,
+  );
+  const budgetConfirmSamples = (warm.budgetAdjusts || []).map(
+    (a) => a.confirm_ms,
+  );
   return {
     ok: true,
     page,
@@ -231,6 +299,24 @@ export async function measureWarmInteraction(ctx, options = {}) {
         ? Math.max(...confirmSamples)
         : null,
       all_followed_through: warm.adjusts.every((a) => a.budget_followed),
+    },
+    // The budget slider's own path, measured the same way and reported next to
+    // the cut slider's numbers rather than inferred from the thumb following it.
+    warm_budget_adjustments: {
+      samples: warm.budgetAdjusts || [],
+      preview_median_ms: median(budgetPreviewSamples),
+      preview_max_ms: budgetPreviewSamples.length
+        ? Math.max(...budgetPreviewSamples)
+        : null,
+      all_relabelled: (warm.budgetAdjusts || []).every((a) => a.relabelled),
+      all_previews_rendered: (warm.budgetAdjusts || []).every(
+        (a) => a.preview_rendered,
+      ),
+      confirm_median_ms: median(budgetConfirmSamples),
+      confirm_max_ms: budgetConfirmSamples.length
+        ? Math.max(...budgetConfirmSamples)
+        : null,
+      all_committed: (warm.budgetAdjusts || []).every((a) => a.committed),
     },
     warm_window_ms: warmWindowMs,
     warm_network_requests: warmRequests.length,

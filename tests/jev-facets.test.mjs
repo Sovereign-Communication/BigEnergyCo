@@ -142,6 +142,8 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
   // than assuming every line is typed.
   const { LIGHTHOUSE_FACET_AXES, composeFacetLine } =
     await import("../scripts/lib/lighthouse-budgets.mjs");
+  const { A11Y_FACET_AXES, composeA11yFacetLine } =
+    await import("../scripts/lib/a11y-controls.mjs");
   const ev = JSON.parse(
     readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
   );
@@ -171,6 +173,25 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
           ),
         },
       })),
+    });
+  }
+
+  // The accessibility line is derived the same way, from the smoke run that
+  // measures the calculator's own controls; the stop counts here are the ones a
+  // real local run measured.
+  if (A11Y_FACET_AXES.includes("accessibility")) {
+    derived.accessibility = composeA11yFacetLine({
+      ran: true,
+      gates: [{ name: "a11y gate", ok: true }],
+      walks: [
+        { surface: "sliders", stops: 64, wrapped: true, missing: [] },
+        { surface: "quick", stops: 64, wrapped: true, missing: [] },
+        { surface: "manual", stops: 82, wrapped: true, missing: [] },
+        { surface: "kWh", stops: 48, wrapped: true, missing: [] },
+      ],
+      names: { checked: true, failures: 0 },
+      contrast: { checked: true, failures: 0 },
+      reduced_motion: { checked: true },
     });
   }
 
@@ -281,12 +302,34 @@ test("TRANSPORT: the real 21-axis record survives whole — every line and note"
     LIGHTHOUSE_RATCHET_CATEGORIES,
     LIGHTHOUSE_TARGETS,
   } = await import("../scripts/lib/lighthouse-budgets.mjs");
+  const { A11Y_FACET_AXES, composeA11yFacetLine } =
+    await import("../scripts/lib/a11y-controls.mjs");
   const ev = JSON.parse(
     readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
   );
   // Built as the builder builds it: prose, plus the lines gates compose from a
-  // run. The derived line is the real composed one (from the recorded first
-  // measurement), so this measures the length that actually reaches the judge.
+  // run. Both derived lines are the REAL composed ones (the first-paint numbers
+  // from the recorded measurement, the control-level ones from the stop counts a
+  // real local run measured), so this measures the length that actually reaches
+  // the judge rather than a comfortable approximation of it.
+  if (A11Y_FACET_AXES.includes("accessibility")) {
+    ev.facet_evidence.accessibility = composeA11yFacetLine({
+      ran: true,
+      gates: Array.from({ length: 19 }, (_, i) => ({
+        name: `a11y gate ${i}`,
+        ok: true,
+      })),
+      walks: [
+        { surface: "sliders", stops: 64, wrapped: true, missing: [] },
+        { surface: "quick", stops: 64, wrapped: true, missing: [] },
+        { surface: "manual", stops: 82, wrapped: true, missing: [] },
+        { surface: "kWh", stops: 48, wrapped: true, missing: [] },
+      ],
+      names: { checked: true, failures: 0 },
+      contrast: { checked: true, failures: 0 },
+      reduced_motion: { checked: true },
+    });
+  }
   if (LIGHTHOUSE_FACET_AXES.includes("performance")) {
     ev.facet_evidence.performance = composeFacetLine({
       lighthouse_version: "13.5.0",

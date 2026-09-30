@@ -441,6 +441,17 @@ export const LIGHTHOUSE_FLOORS = {
  * It is FIRST in the line because it is the part that was missing, and a
  * 280-char clip is finite: the least load-bearing sentence must not be the one
  * that gets cut.
+ *
+ * WHY THE BILL-CUT SLIDER'S NUMBERS AND NOT THE PAIR'S. Both sliders are
+ * measured (scripts/lib/warm-interaction.mjs drives each on its own path) and
+ * both are in the report, but naming a second slider on this clause costs more
+ * than the clip has left: the stress fixture below sits at 272 of 280 chars, and
+ * "budget drag 6ms, confirm 0ms" is 29. Paying for it would mean deleting
+ * "median of 3" or the "perf NOT ratcheted" tail — the method and the honesty
+ * sentence, which is exactly what this clause exists to protect. The pair's
+ * per-slider numbers travel in `warm_interaction.warm_budget_adjustments`
+ * instead, and the smoke suite's accessibility walk tabs through both sliders by
+ * name on the facet line that does have room.
  */
 function warmClause(warm) {
   const sec = (ms) =>

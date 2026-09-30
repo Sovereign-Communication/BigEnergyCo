@@ -241,10 +241,17 @@ if (!opts.skipWarm) {
         {
           cold_run_ms: warmInteraction.cold_run?.ms,
           warm_rerun_ms: warmInteraction.warm_rerun?.ms,
-          preview_median_ms:
+          // Both sliders of the result-stage pair, on their own paths. The
+          // budget slider's numbers are reported here beside the cut
+          // slider's, so neither is inferred from the other's side effect.
+          cut_preview_median_ms:
             warmInteraction.warm_adjustments?.preview_median_ms,
-          confirm_median_ms:
+          cut_confirm_median_ms:
             warmInteraction.warm_adjustments?.confirm_median_ms,
+          budget_preview_median_ms:
+            warmInteraction.warm_budget_adjustments?.preview_median_ms,
+          budget_confirm_median_ms:
+            warmInteraction.warm_budget_adjustments?.confirm_median_ms,
           warm_network_requests: warmInteraction.warm_network_requests,
         },
         null,
@@ -313,10 +320,12 @@ const report = {
   scope_limit: warmInteraction?.ok
     ? "this gate measures the first-paint claim with Lighthouse's SIMULATED " +
       "throttling, and the warm claims (cold sizing run, warm re-run, " +
-      "slider drag preview, confirm re-slice, and the requests a warm path " +
+      "both result-stage sliders driven on their own paths — drag preview " +
+      "and confirm re-slice for the bill-cut slider and for the budget " +
+      "slider — and the requests a warm path " +
       "issues) with one unthrottled Chrome on one machine, one city and three " +
-      "adjustments. It is a real reading of this machine, not a device matrix " +
-      "and not a population claim. The warm request count is whatever the " +
+      "adjustments each. It is a real reading of this machine, not a device matrix " +
+      +"and not a population claim. The warm request count is whatever the " +
       "browser put on the wire: a non-zero count is a finding about the " +
       "product and is reported, never tuned away."
     : "this gate measures the first-paint claim of the performance facet only. " +

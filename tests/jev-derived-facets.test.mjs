@@ -44,11 +44,25 @@ test("EVIDENCE: the performance facet line is derived from the run, not typed by
       "measured it, so a typed line here is a second, unverified source for the " +
       "same facet - and it is the one that was wrong.",
   );
+  // The accessibility axis is derived the same way and for the same reason: the
+  // smoke suite measures the calculator's own controls (keyboard reach, control
+  // names, WCAG AA contrast, reduced motion) in a real browser on every run, and
+  // the hand-typed sentence that used to stand here was the only source for all
+  // four numbers. Composed at the measurement means a run that stops measuring
+  // the controls says so, instead of leaving the claim standing.
+  assert.equal(
+    Object.hasOwn(PROSE.facet_evidence || {}, "accessibility"),
+    false,
+    "evidence/advisor-and-release.json must not carry a hand-typed " +
+      "`accessibility` line either. The smoke run composes it from the run that " +
+      "measured the controls, so a typed line here is a second, unverifiable " +
+      "source for the same facet.",
+  );
   // …and the other axes stay typed, because nothing measures them yet. This is
-  // the scope boundary: this cluster wires Lighthouse, not everything.
+  // the scope boundary: the measured facets are derived, not everything.
   assert.ok(
     Object.keys(PROSE.facet_evidence || {}).length > 10,
-    "the remaining axes keep their prose lines; only the measured one is derived",
+    "the remaining axes keep their prose lines; only the measured ones are derived",
   );
 });
 

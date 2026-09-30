@@ -289,3 +289,46 @@ test("WARM: the request count is read off the wire, not inferred", () => {
     "timings must come from the page clock, not the CDP round trip",
   );
 });
+
+test("WARM: the budget slider is timed on its own path, not read off the cut slider", () => {
+  // The result stage carries a PAIR, and the cut slider's move is also the
+  // budget thumb's observation point — so measuring only the cut slider left the
+  // budget slider's own drag, label and commit assumed rather than measured.
+  // Its paths are different (a cached curve walk, no worker round trip), so a
+  // slow number here would be a real finding about the budget slider.
+  const warm = readFileSync(WARM, "utf8");
+  assert.match(warm, /WARM ADJUSTMENT: move the BUDGET slider itself/);
+  assert.match(warm, /getElementById\("budgetSlider"\)/);
+  assert.match(warm, /out\.budgetAdjusts\.push\(/);
+  // Both ends of a budget move, for the same reason the cut slider reports both,
+  // with the observables recorded separately from the timings so a zero that
+  // measured nothing cannot read as a fast path.
+  assert.match(warm, /preview_ms: budgetPreviewMs/);
+  assert.match(warm, /relabelled,/);
+  assert.match(warm, /preview_rendered: budgetPreviewed,/);
+  assert.match(warm, /confirm_ms: Math\.round\(performance\.now\(\) - b1\)/);
+  assert.match(warm, /committed,/);
+  // Aggregated as medians plus all_* flags: one slow sample cannot hide behind
+  // an average, and a sample that never committed is visible as such.
+  assert.match(warm, /warm_budget_adjustments: \{/);
+  assert.match(warm, /preview_median_ms: median\(budgetPreviewSamples\)/);
+  assert.match(warm, /confirm_median_ms: median\(budgetConfirmSamples\)/);
+  assert.match(warm, /all_committed: \(warm\.budgetAdjusts \|\| \[\]\)\.every/);
+});
+
+test("WARM: both sliders' numbers reach the report the builder reads", () => {
+  const gate = readFileSync(GATE, "utf8");
+  // The judge's facet line carries one slider's numbers (the 280-char clip has
+  // 8 chars of headroom on the stress fixture, so a second slider's pair costs
+  // more than it has — see composeFacetLine). The REPORT has no such limit, so
+  // the pair's numbers belong there, side by side and named.
+  assert.match(gate, /cut_preview_median_ms:/);
+  assert.match(gate, /cut_confirm_median_ms:/);
+  assert.match(gate, /budget_preview_median_ms:/);
+  assert.match(gate, /budget_confirm_median_ms:/);
+  assert.match(gate, /warm_budget_adjustments\?\.confirm_median_ms/);
+  // Carried whole into the report, which is what the builder reads.
+  assert.match(gate, /warm_interaction: warmInteraction/);
+  // And the gate's own statement of what it measured names both sliders.
+  assert.match(gate, /both result-stage sliders driven on their own paths/);
+});
