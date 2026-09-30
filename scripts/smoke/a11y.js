@@ -31,12 +31,26 @@
 // card is intentionally left invalidated ("Inputs changed" status), which
 // closing-flow gates do not assert on.
 import {
-  gate,
+  gate as smokeGate,
   gateCheckpoint,
   gatesSince,
   sleep,
   writeFacetReport,
 } from "./runtime.mjs";
+
+let summary = null;
+function gate(name, ok, detail = "") {
+  if (summary)
+    summary.gates.push({
+      name: String(name),
+      ok: ok === true,
+      detail: String(detail),
+    });
+  return smokeGate(name, ok, detail);
+}
+function walkRecord(walk) {
+  if (summary) summary.walks.push(walk);
+}
 
 // Serialized into the page: every function passed to page() must be
 // self-contained or composed in dependency order — a module-scope reference
@@ -264,11 +278,18 @@ function fireAndSample(sel) {
   };
 }
 
-async function tabWalk(ctx, label, expectIds) {
+async function tabWalk(ctx, label, expectIds, surface) {
   const { evaluate, send } = ctx;
   const seed = await evaluate(page(descOf, seedFirstTabbable));
   if (seed === "NONE" || seed === "BODY") {
     gate(`keyboard ${label}: page has a tabbable`, false, seed);
+    walkRecord({
+      surface,
+      state: label,
+      stops: null,
+      wrapped: false,
+      missing: expectIds,
+    });
     return;
   }
   const reached = new Set([(seed.split("#")[1] || "").split("|")[0]]);
@@ -311,6 +332,7 @@ async function tabWalk(ctx, label, expectIds) {
     wrapped,
     `${seen.size} stops`,
   );
+  walkRecord({ surface, state: label, stops: seen.size, wrapped, missing });
 }
 
 // Focusable DIV buttons must also be OPERABLE: Enter and Space must reach
@@ -439,6 +461,7 @@ const RESULTS = ["cutSlider", "budgetSlider"];
 export async function runA11yFlow(ctx) {
   const reportCheckpoint = gateCheckpoint();
   const { evaluate, send } = ctx;
+  summary = { ran: false, gates: [], walks: [] };
   const setMode = (id) =>
     evaluate(`(() => { const r = document.getElementById(${JSON.stringify(id)});
       if (!r) return false;
@@ -466,6 +489,9 @@ export async function runA11yFlow(ctx) {
 
   // Names in the arrival state (covers whatever is visible right now).
   const nameSets = [await evaluate(page(accessibleName, nameFailures))];
+  // The contrast reading, declared here so both branches below can record what
+  // was actually checked: a hole must never be recorded as a pass.
+  let contrastFails = null;
 
   // Result-stage keyboard + WCAG AA contrast (card surface).
   const cardVisible = await evaluate(
@@ -474,8 +500,8 @@ export async function runA11yFlow(ctx) {
   );
   gate("result card present for result-stage checks", cardVisible, "");
   if (cardVisible) {
-    await tabWalk(ctx, "result stage", RESULTS);
-    const contrastFails = await evaluate(
+    await tabWalk(ctx, "result stage", RESULTS, "sliders");
+    contrastFails = await evaluate(
       page(parseColor, relativeLuminance, effectiveBg, contrastFailures),
     );
     gate(
@@ -554,6 +580,7 @@ export async function runA11yFlow(ctx) {
         sel: CHAT_NAV_PATH,
         instant: true,
       });
+      if (summary) summary.reduced_motion = { checked: true };
     } finally {
       await emulated(""); // emulation must never leak past this flow
       const cleared = await evaluate(`(${reduceMatches})()`);
@@ -576,12 +603,12 @@ export async function runA11yFlow(ctx) {
 
   // Quick mode (document default): structural CTA controls.
   await setMode("modeQuick");
-  await tabWalk(ctx, "quick mode", STRUCTURAL);
+  await tabWalk(ctx, "quick mode", STRUCTURAL, "quick");
 
   // Manual mode: the #fullControls panel + its names sample.
   const manualOk = await setMode("modeManual");
   if (manualOk) {
-    await tabWalk(ctx, "manual mode", MANUAL_PANEL);
+    await tabWalk(ctx, "manual mode", MANUAL_PANEL, "manual");
     nameSets.push(await evaluate(page(accessibleName, nameFailures)));
   } else {
     gate("manual mode radio present for keyboard phase", false, "not found");
@@ -592,7 +619,7 @@ export async function runA11yFlow(ctx) {
   // card-dependent check above has already run.
   const kwhSet = await setLoadMode("kwh");
   if (kwhSet === "kwh") {
-    await tabWalk(ctx, "kWh load panel", KWH_PANEL);
+    await tabWalk(ctx, "kWh load panel", KWH_PANEL, "kWh");
     nameSets.push(await evaluate(page(accessibleName, nameFailures)));
   } else {
     gate("loadMode switch to kwh for keyboard phase", false, String(kwhSet));
@@ -683,4 +710,20 @@ export async function runA11yFlow(ctx) {
     reduced_motion_scroll_sites: reducedMotion.length,
     complete: Boolean(complete),
   });
+
+  if (summary) {
+    summary.names = {
+      checked: nameSets.length > 0,
+      failures: nameFails.length,
+    };
+    summary.contrast = {
+      checked: contrastFails !== null,
+      failures: contrastFails ? contrastFails.length : 0,
+    };
+    if (!summary.reduced_motion) summary.reduced_motion = { checked: false };
+    summary.card = cardVisible === true;
+    summary.ran = true;
+  }
+  return summary;
+
 }
