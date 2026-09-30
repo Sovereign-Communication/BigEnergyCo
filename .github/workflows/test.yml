@@ -156,7 +156,7 @@ jobs:
         id: byte-budgets
         run: |
           node scripts/deploy-pages-local.mjs --check --stage _pages_budget
-          node scripts/check-byte-budgets.mjs --stage _pages_budget
+          node scripts/check-byte-budgets.mjs --stage _pages_budget --out byte-budgets-report.json
       # P0.3(e): the smoke outcome the gate reports is this runner's, not a
       # claim in a committed file.
       - name: Record this job's results for the Jev gate
@@ -198,6 +198,21 @@ jobs:
         with:
           name: jev-results-a11y-controls
           path: a11y-controls-report.json
+          if-no-files-found: error
+          retention-days: 7
+      # P0.4 / §3.1: the `quality` facet line is composed by the run that
+      # measured the shipped bytes (scripts/lib/byte-budgets.mjs,
+      # `composeQualityFacetLine`, written by the byte-budgets step above) and
+      # rides in this report, the same wire the a11y controls report uses. The
+      # step fails closed on a regression, so the report is written on the way
+      # out and uploaded `always()`: a REGRESSED payload must reach the judge as
+      # a regression, never as an absent axis.
+      - name: Upload the byte-budgets report for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-byte-budgets
+          path: byte-budgets-report.json
           if-no-files-found: error
           retention-days: 7
       - name: Upload smoke artifacts on failure

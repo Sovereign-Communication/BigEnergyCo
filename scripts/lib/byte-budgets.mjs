@@ -419,3 +419,137 @@ export function compareToBaseline(metrics, baseline = {}) {
   }
   return { regressions, improvements, unmeasured };
 }
+
+// ── The `quality` facet line, composed from this gate's own measurement ──────
+//
+// The judge used to read a hand-typed sentence for QUALITY ("prettier clean
+// repo-wide; the two duplications the design audit found are gone"), which is
+// the same defect the performance and accessibility axes already had fixed: a
+// claim with no run behind it, and nothing that could contradict it. The pack
+// asks this axis for concision — "the smallest version that keeps the proven
+// behavior" — and the one thing in this repository that measures that on the
+// real surface is this gate: the shipped payload, compressed, measured against
+// a baseline the ledger declares and ratcheted at a 256-byte tolerance.
+//
+// The gate already reports the two facts the axis is about, and they are not the
+// same fact:
+//
+//   · The RATCHET — this change did not make the payload bigger. That is the
+//     concision verdict on the change under review, and it is what the PR had to
+//     earn (the slider work below paid for its own bytes).
+//   · The plan's §3.1 ABSOLUTE limits — a reading over one of them is debt the
+//     plan schedules to bind at P6 (/next/) and P8 (everything), NOT a verdict
+//     on this change. Both facts go on the line, each with the rule that makes
+//     it what it is, because a line that printed the §3.1 count alone would read
+//     as a failure and one that printed the ratchet alone would hide the debt.
+//
+// What the line says about itself is the same limit the other derived lines
+// carry: this measures the size of what ships, so duplication and dead code that
+// does not ship are invisible here. Saying so is what stops a green line reading
+// as proof that the code is minimal.
+export const BYTE_BUDGET_FACET_AXES = ["quality"];
+
+// Bounded variable parts, so the line is bounded BY CONSTRUCTION and never has
+// to be sliced to fit — the same rule the other two derived lines run under. A
+// name the judge can read matters more than a long list (the full set is in
+// `breaches` / `regressions` in the report beside it), so two are printed and
+// the rest counted; a name is clipped rather than allowed to stretch the line.
+// The resulting worst case is a measurement, not a guess: this report's metric
+// set is `BYTE_BUDGET_LIMITS`, nine budgets can be measured and each can be an
+// improvement, a breach or unmeasured at once, and the fixture holding every one
+// of those shapes comes out at 261 of the 280-char transport clip
+// (tests/byte-budgets.test.mjs pins the whole set there, so a longer clause
+// fails a test rather than losing its tail in transit).
+const MAX_NAMES = 2;
+const MAX_METRIC_NAME = 18;
+
+// The absolute-limit half of the line names the phase in the plan's own short
+// form: the full "P6 (/next/) and P8 (all)" is 25 characters of a 280-char
+// clip, and the report beside this line carries the rule in full, in
+// `enforcement` and in scripts/check-byte-budgets.mjs's ABSOLUTE_BINDS_FROM.
+// What must not be compressed away is the FACT that there is a phase at all —
+// that is what separates debt the plan scheduled from a verdict on this change.
+const ABS_BINDS_SHORT = "P6/P8";
+
+function clipMetricName(name) {
+  const text = String(name || "?").trim() || "?";
+  return text.length > MAX_METRIC_NAME
+    ? `${text.slice(0, MAX_METRIC_NAME - 1)}…`
+    : text;
+}
+
+/** "js_before_interactive, registry_country (+1)" — bounded, never all of them. */
+function nameList(items, pick) {
+  const names = items
+    .slice(0, MAX_NAMES)
+    .map((item) => clipMetricName(pick(item)));
+  const more =
+    items.length > MAX_NAMES ? ` (+${items.length - MAX_NAMES})` : "";
+  return `${names.join(", ")}${more}`;
+}
+
+/**
+ * Compose the `quality` facet line the judge reads, from the run's own report.
+ *
+ * Three honest shapes, and no fourth:
+ *   · not measured — no budgets were read: say so, claim nothing.
+ *   · regressed    — name the budgets that grew and withdraw the claim, rather
+ *                    than reporting the ones that did not.
+ *   · green        — the ratchet verdict, the plan's §3.1 debt with its phase,
+ *                    and the limit of what a size measurement can see.
+ */
+export function composeQualityFacetLine(report) {
+  const metrics =
+    report && typeof report.metrics === "object" && report.metrics !== null
+      ? report.metrics
+      : null;
+  if (!metrics || Object.keys(metrics).length === 0) {
+    return (
+      "the staged build's plan §3.1 budgets were NOT measured this run, so " +
+      "whether this is the smallest version that keeps the proven behavior " +
+      "rests on nothing from this run"
+    );
+  }
+
+  const measured = Object.keys(metrics).length;
+  const regressions = Array.isArray(report.regressions)
+    ? report.regressions
+    : [];
+  const improvements = Array.isArray(report.improvements)
+    ? report.improvements
+    : [];
+  const unmeasured = Array.isArray(report.unmeasured) ? report.unmeasured : [];
+  const breaches = Array.isArray(report.breaches) ? report.breaches : [];
+  const tolerance = Number.isFinite(report.tolerance_bytes)
+    ? ` (±${report.tolerance_bytes}B)`
+    : "";
+  const against = `plan §3.1 shipped bytes, staged vs the declared baseline${tolerance}`;
+
+  if (regressions.length) {
+    return (
+      `${against}: ${regressions.length} REGRESSED of ${measured} measured — ` +
+      `${nameList(regressions, (r) => r && r.metric)}. The payload grew against ` +
+      "the version it was measured against: not the smallest version that " +
+      "keeps the proven behavior"
+    );
+  }
+
+  // `0/n` rather than "n measured, 0 regressed": the denominator carries the
+  // same coverage fact in a third of the characters, which is what the 280-char
+  // transport clip demands. The numerator is zero by construction here, since a
+  // non-empty `regressions` returned above.
+  const counts = [`0/${measured} regressed`, `${improvements.length} improved`];
+  if (unmeasured.length) counts.push(`${unmeasured.length} unmeasured`);
+  // The plan's absolute limits are DEBT, not a verdict on this change, and the
+  // phase they bind from is on the line so a reader cannot mistake one for the
+  // other. Both halves go on, because the ratchet alone would hide the debt and
+  // the count alone would read as a failure.
+  const over = breaches.length
+    ? `${breaches.length} over §3.1 limits (${nameList(breaches, (b) => b && b.metric)}), binds at ${ABS_BINDS_SHORT}`
+    : "0 over §3.1 limits";
+  return (
+    `${against}: ${counts.join(", ")}; ${over}. ` +
+    "Compressed payload only: duplication or dead code that does not ship is " +
+    "invisible here"
+  );
+}

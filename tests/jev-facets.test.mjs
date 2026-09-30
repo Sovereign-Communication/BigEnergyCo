@@ -32,6 +32,11 @@ import {
   COMPLETE_STATE_BASE_CHARS,
   COMPLETE_STATE_PER_AXIS_CHARS,
 } from "../scripts/lib/jev-complete.mjs";
+import {
+  BYTE_BUDGET_FACET_AXES,
+  BYTE_BUDGET_LIMITS,
+  composeQualityFacetLine,
+} from "../scripts/lib/byte-budgets.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PLAN = readFileSync(join(ROOT, "docs/plan/MASTER_PLAN.md"), "utf8");
@@ -56,6 +61,26 @@ const AUTO = {
   dirtyPaths: [],
   testCount: 66,
 };
+
+/**
+ * The `quality` line the plan §3.1 byte-budget gate composes, shaped like a run
+ * on this tree: every budget measured, two improved, the three long-standing §3.1
+ * breaches named. Built through the real composer rather than copied from it, so
+ * this measures the length that actually reaches the judge.
+ */
+function derivedQualityLine() {
+  const names = Object.keys(BYTE_BUDGET_LIMITS);
+  return composeQualityFacetLine({
+    metrics: Object.fromEntries(
+      names.map((n) => [n, { value: 1, limit: 1024, unit: "bytes" }]),
+    ),
+    regressions: [],
+    improvements: names.slice(0, 2).map((metric) => ({ metric })),
+    unmeasured: [],
+    breaches: names.slice(0, 3).map((metric) => ({ metric })),
+    tolerance_bytes: 256,
+  });
+}
 
 test("PACK: the plan's five P0.3(d) facets exist, each with its own bucket", () => {
   for (const axis of NEW_FACETS) {
@@ -193,6 +218,15 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
       contrast: { checked: true, failures: 0 },
       reduced_motion: { checked: true },
     });
+  }
+
+  // The quality line comes from the byte-budget gate for the same reason: the
+  // axis is about the smallest version that keeps the proven behavior, and the
+  // shipped payload ratcheted against a declared baseline is the one place this
+  // repository measures it. The typed sentence that used to stand here could not
+  // be contradicted by any run.
+  if (BYTE_BUDGET_FACET_AXES.includes("quality")) {
+    derived.quality = derivedQualityLine();
   }
 
   for (const axis of axes) {
@@ -348,6 +382,12 @@ test("TRANSPORT: the real 21-axis record survives whole — every line and note"
         },
       })),
     });
+  }
+  // And the quality line, composed by the byte-budget gate. This is the length
+  // check that matters for it: the typed line it replaced was short, so the
+  // budget is only proven on the line a run actually produces.
+  if (BYTE_BUDGET_FACET_AXES.includes("quality")) {
+    ev.facet_evidence.quality = derivedQualityLine();
   }
   const merged = mergeEvidence(ev, AUTO);
   const text = buildStateText(merged, AUTO, axes);

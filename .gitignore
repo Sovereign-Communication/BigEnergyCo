@@ -14,6 +14,8 @@ _pages_*/
 # Gate reports a run writes for the Jev gate to read. Generated per run and
 # uploaded as artifacts; the COMMITTED evidence is .quality-evidence/, which is
 # a different thing and is tracked. `lighthouse-report.json` is the first-paint
-# measurement, `a11y-controls-report.json` the calculator-controls one.
+# measurement, `a11y-controls-report.json` the calculator-controls one, and
+# `byte-budgets-report.json` the plan §3.1 shipped-bytes one.
 lighthouse-report.json
 a11y-controls-report.json
+byte-budgets-report.json
