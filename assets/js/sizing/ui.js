@@ -144,7 +144,6 @@ import {
   sliderStateDrifted,
   targetForPct,
 } from "../shared/cut-targets.js?v=20261022p";
-import { interpolateCurveTarget } from "./frontier.js?v=20261022p";
 import {
   SHARE_PREFIX,
   b64urlEncode,
@@ -176,7 +175,11 @@ import {
   restoreWizard,
 } from "./wizard.js?v=20261022p";
 import { tiltValueSummary } from "./tilt-harvest.js?v=20261022p";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261022p";
+import {
+  interpolateCurveTarget,
+  surplusAnchor,
+  budgetSpanMax,
+} from "./budget-span.js?v=20261022p";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -396,12 +399,9 @@ function handleRunDeadline() {
 // load factor for an instant rescale against the retained payload.
 let lastRunInput = null;
 
-// The slider-owned state (bill-cut target + budget position) at the moment a
-// run is posted. The sliders are the single canonical owners of that state:
-// if they move while a run is in flight, the reply is data for a position the
-// visitor has already left, and its arrival must not re-seat their thumbs or
-// replace the selection they imply (sliderStateDrifted decides;
-// reconcileDriftedRun settles the view back onto the thumbs).
+// Slider-owned state (cut target + budget) at post time: the sliders are the
+// canonical owners, so a reply landing behind them must not re-seat their
+// thumbs (sliderStateDrifted decides, reconcileDriftedRun settles the view).
 let lastRunSlider = null;
 
 function readSliderState() {
@@ -2995,7 +2995,7 @@ function setupCutSlider() {
     syncCutLabel();
     if (lastPayload && lastPayload.mode === "gridtie") {
       frontierSelected = null;
-      // Project the drag to the exact target; keep the card and both thumbs aligned.
+      // Cached drag preview projects the exact cut before the confirmed slice.
       previewCurvePoint(previewTargetAt(parseInt(slider.value, 10) || 1));
     }
     // The share link encodes slider state, so it must never lag the thumb.
@@ -3516,11 +3516,9 @@ function nearestCurvePoint(value, axis) {
   return best;
 }
 
-// The drag preview's projection of the slider's % onto the curve: a
-// pool-shaped point whose entry is the interpolated system for exactly that
-// %. The budget thumb rides along (unpinned — pinning is commit-time only),
-// so the pair, the card and the label move together at every input instead
-// of the card snapping to a neighbor the thumbs do not hold.
+// The drag preview's projection of the slider's % onto the curve; the budget
+// thumb rides along (unpinned — pinning is commit-time only) so the pair, the
+// card and the label move together at every input.
 function previewTargetAt(pct) {
   const p = lastPayload;
   if (!p || !p.frontier || !Array.isArray(p.frontier.points)) return null;
@@ -3546,10 +3544,9 @@ function previewTargetAt(pct) {
   };
 }
 
-// A run reply that landed behind the visitor's sliders: keep its data, then
-// settle the position back onto the sliders (which own the state). No marker
-// re-seat, selection on the slider's own target, and one coalesced slice so
-// the numbers catch up with the thumb.
+// A run reply that landed behind the sliders: keep its data, then settle the
+// position back onto the sliders — no marker re-seat, selection on the
+// slider's own target, one coalesced slice so the numbers catch up.
 function reconcileDriftedRun() {
   followMarkerOnce = false;
   if (!lastPayload) return;
@@ -3901,9 +3898,9 @@ function ensureWorker() {
           return;
         }
 
-        // A run that started before the visitor's last slider move is data
-        // for a position they already left. It still refreshes the payload,
-        // but the sliders stay canonical once it lands.
+        // A run posted before the visitor's last slider move is data for a
+        // position they already left: it refreshes the payload, the sliders
+        // stay canonical once it lands.
         const runDrifted = sliderStateDrifted(lastRunSlider, readSliderState());
 
         if (lastRunAdoptsFocus) {
@@ -7633,11 +7630,9 @@ function updateShareHash(p, inp) {
       o.at = $("autoTier").value;
 
     if (inp.chemistry === "auto" && inp.mode === "gridtie") {
-      // Only a real target is worth serializing: "custom" is mirror state of
-      // the slider, and the fraction itself already travels as o.cc. The id
-      // is derived from the SLIDER's fraction, never from the select mirror —
-      // mid-drag the mirror lags one sync behind, and reading it once wrote
-      // the contradictory pair {ag: "cut80", cc: 0.73} into one link.
+      // Derived from the SLIDER's fraction, never the select mirror (mid-drag
+      // the mirror lags one sync behind and once wrote the contradictory
+      // pair {ag: "cut80", cc: 0.73} into one link).
       const ag = targetForPct(Math.round(inp.customCut * 100));
       if (CUT_TARGET_PCT[ag]) o.ag = ag;
     }
