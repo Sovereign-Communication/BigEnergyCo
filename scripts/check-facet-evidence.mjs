@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { COMPLETE_FACET_CLIP } from "./lib/jev-complete.mjs";
 import { FACET_EVIDENCE } from "./lib/jev-facet-evidence.mjs";
 import { EXPERIENCE_FACET_AXES } from "./lib/experience-budgets.mjs";
+import { BYTE_BUDGET_FACET_AXES } from "./lib/byte-budgets.mjs";
 import { LIGHTHOUSE_FACET_AXES } from "./lib/lighthouse-budgets.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -57,7 +58,11 @@ export function main() {
   }
 
   const axes = Object.keys(pack.axes || {});
-  const derivedAxes = [...LIGHTHOUSE_FACET_AXES, ...EXPERIENCE_FACET_AXES];
+  const derivedAxes = [
+    ...LIGHTHOUSE_FACET_AXES,
+    ...EXPERIENCE_FACET_AXES,
+    ...BYTE_BUDGET_FACET_AXES,
+  ];
   const result = validateFacetEvidence({
     axes,
     facetEvidence: FACET_EVIDENCE,
