@@ -1,45 +1,45 @@
 // Tiny i18n applier: translates elements carrying data-i18n="key" and flips
 // direction for RTL locales. Falls back to English silently. No network,
 // no storage beyond the user's own language choice in localStorage.
-//
-// THE DICTIONARY IS DEFERRED, and that is a measured decision, not a taste.
-// At 37 KB compressed it was the second-largest module in the first-paint
-// graph (`js_before_interactive`), ahead of the whole engine — because it is
-// six locales of prose that no calculation needs. It is now fetched with a
-// dynamic import, which takes it out of the static graph the budget measures
-// while the browser still starts the fetch at module evaluation, in parallel
-// with everything else. No extra round trip, no waterfall.
-//
-// Nothing renders untranslated while it loads, and that is the property that
-// actually matters: `localesReady` is awaited before ANY string is resolved,
-// and the boot path in ui.js awaits it before the first paint of translated
-// chrome. A German or Arabic visitor sees native copy from the first frame,
-// including the advisor's degraded-failure surface — proven per-locale through
-// the real client path in tests/i18n-lazy.test.mjs.
-import { interpolate, pickString } from "./interpolate.js?v=20261005h";
-
-// Populated by the dynamic import below. Null until it resolves; every
-// consumer either awaits `localesReady` or degrades explicitly.
-let LOCALES = null;
-
-/**
- * Resolves when the dictionary is in memory.
- *
- * Started at module evaluation, not lazily on first use: the fetch overlaps
- * the rest of boot instead of adding latency to the first translate() call.
- * A failed import RESOLVES with the English-only dictionary rather than
- * rejecting, because an untranslated-but-working page beats a blank one — and
- * `translate` already falls back to English for a missing key.
- */
-export const localesReady = import("./locales.js?v=20261005h")
-  .then((m) => {
-    LOCALES = m.LOCALES;
-    return LOCALES;
-  })
-  .catch(() => {
-    LOCALES = { en: {} };
-    return LOCALES;
-  });
+//
+// THE DICTIONARY IS DEFERRED, and that is a measured decision, not a taste.
+// At 37 KB compressed it was the second-largest module in the first-paint
+// graph (`js_before_interactive`), ahead of the whole engine — because it is
+// six locales of prose that no calculation needs. It is now fetched with a
+// dynamic import, which takes it out of the static graph the budget measures
+// while the browser still starts the fetch at module evaluation, in parallel
+// with everything else. No extra round trip, no waterfall.
+//
+// Nothing renders untranslated while it loads, and that is the property that
+// actually matters: `localesReady` is awaited before ANY string is resolved,
+// and the boot path in ui.js awaits it before the first paint of translated
+// chrome. A German or Arabic visitor sees native copy from the first frame,
+// including the advisor's degraded-failure surface — proven per-locale through
+// the real client path in tests/i18n-lazy.test.mjs.
+import { interpolate, pickString } from "./interpolate.js?v=20261005h";
+
+// Populated by the dynamic import below. Null until it resolves; every
+// consumer either awaits `localesReady` or degrades explicitly.
+let LOCALES = null;
+
+/**
+ * Resolves when the dictionary is in memory.
+ *
+ * Started at module evaluation, not lazily on first use: the fetch overlaps
+ * the rest of boot instead of adding latency to the first translate() call.
+ * A failed import RESOLVES with the English-only dictionary rather than
+ * rejecting, because an untranslated-but-working page beats a blank one — and
+ * `translate` already falls back to English for a missing key.
+ */
+export const localesReady = import("./locales.js?v=20261005h")
+  .then((m) => {
+    LOCALES = m.LOCALES;
+    return LOCALES;
+  })
+  .catch(() => {
+    LOCALES = { en: {} };
+    return LOCALES;
+  });
 
 // Exported so the language gate (scripts/check-i18n.mjs) can prove every
 // offered locale actually has a dictionary, and that the picker never offers a

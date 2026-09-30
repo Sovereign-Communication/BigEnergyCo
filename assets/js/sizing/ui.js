@@ -13,18 +13,18 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261005h";
-import {
-  USE_CASES,
-  USE_CASE_IDS,
-  useCase,
-  deriveLegacy,
-  loadsFor,
-  normaliseReservePct,
-  normaliseOutageTarget,
-  DEFAULT_RESERVE_PCT,
-  DEFAULT_TOU,
-} from "./usecases.js?v=20261005h";
+import { APPLIANCES } from "./appliances.js?v=20261005h";
+import {
+  USE_CASES,
+  USE_CASE_IDS,
+  useCase,
+  deriveLegacy,
+  loadsFor,
+  normaliseReservePct,
+  normaliseOutageTarget,
+  DEFAULT_RESERVE_PCT,
+  DEFAULT_TOU,
+} from "./usecases.js?v=20261005h";
 import {
   createRunChannel,
   staleRunAction,
@@ -53,52 +53,52 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261005h";
-// The country -> currency table. Static, not lazy: it is consulted the moment
-// a location resolves, so a dynamic import would only add a round trip to the
-// one path that must not wait. Its 11.5 KB is data, and the first-load budget
-// below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261005h";
-
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261005h";
-
-// THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
-//
-// LAZY, and the measurement is why. It used to be a static import, on the
-// reasoning that the ELI5 card's installer-vs-direct sentence and the
-// comparison panel both read it on first paint. The browser says otherwise:
-// paths.js is fetched and parsed BEFORE the first result card renders, and the
-// plan's own js_to_first_result budget read 201,806 B against a 204,800 B cap
-// on the tree that shipped this — 2,994 B of headroom, of which paths.js was
-// 10,310 B. A pricing model nobody can see yet was sitting on the critical
-// path for a section that renders after the result does.
-//
-// The D-01 objection is answered structurally, not waved away: BOTH surfaces
-// that read the model (the panel and the ELI5 sentence) are rendered inside
-// ONE await, after the module resolves, in the same tick. So there is never a
-// window in which the page shows a guessed quote and then corrects it — which
-// was the exact defect D-01 exists to remove. The module resolves in a few
-// milliseconds from cache and the whole comparison appears at once, priced by
-// one owner.
-let pathsApi = null;
-// The one place the horizon crosses into the copy. A bare binding rather than
-// pathsApi.HORIZON_YEARS because turnkeyQuoteText is exported and sliced out
-// of this file by tests/quote-text-bridge.mjs, which supplies the horizon as an
-// injected argument; renaming it would silently unbind the test. The VALUE has
-// one owner (paths.js) either way, and no surface renders before the module has
-// resolved.
-let PATHS_HORIZON_YEARS = null;
-let pathsLoading = null;
-function loadPaths() {
-  if (pathsApi) return Promise.resolve(pathsApi);
-  if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261005h").then((mod) => {
-      pathsApi = mod;
-      PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
-      return mod;
-    });
-  return pathsLoading;
-}
+} from "./pricing.js?v=20261005h";
+// The country -> currency table. Static, not lazy: it is consulted the moment
+// a location resolves, so a dynamic import would only add a round trip to the
+// one path that must not wait. Its 11.5 KB is data, and the first-load budget
+// below records the deliberate trade.
+import { currencyForCountry } from "./country-currency.js?v=20261005h";
+
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261005h";
+
+// THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
+//
+// LAZY, and the measurement is why. It used to be a static import, on the
+// reasoning that the ELI5 card's installer-vs-direct sentence and the
+// comparison panel both read it on first paint. The browser says otherwise:
+// paths.js is fetched and parsed BEFORE the first result card renders, and the
+// plan's own js_to_first_result budget read 201,806 B against a 204,800 B cap
+// on the tree that shipped this — 2,994 B of headroom, of which paths.js was
+// 10,310 B. A pricing model nobody can see yet was sitting on the critical
+// path for a section that renders after the result does.
+//
+// The D-01 objection is answered structurally, not waved away: BOTH surfaces
+// that read the model (the panel and the ELI5 sentence) are rendered inside
+// ONE await, after the module resolves, in the same tick. So there is never a
+// window in which the page shows a guessed quote and then corrects it — which
+// was the exact defect D-01 exists to remove. The module resolves in a few
+// milliseconds from cache and the whole comparison appears at once, priced by
+// one owner.
+let pathsApi = null;
+// The one place the horizon crosses into the copy. A bare binding rather than
+// pathsApi.HORIZON_YEARS because turnkeyQuoteText is exported and sliced out
+// of this file by tests/quote-text-bridge.mjs, which supplies the horizon as an
+// injected argument; renaming it would silently unbind the test. The VALUE has
+// one owner (paths.js) either way, and no surface renders before the module has
+// resolved.
+let PATHS_HORIZON_YEARS = null;
+let pathsLoading = null;
+function loadPaths() {
+  if (pathsApi) return Promise.resolve(pathsApi);
+  if (!pathsLoading)
+    pathsLoading = import("./paths.js?v=20261005h").then((mod) => {
+      pathsApi = mod;
+      PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
+      return mod;
+    });
+  return pathsLoading;
+}
 import {
   leadAcidChipCopy,
   leadAcidComparison,
@@ -145,7 +145,6 @@ import {
   sliderStateDrifted,
   targetForPct,
 } from "../shared/cut-targets.js?v=20261005h";
-import { interpolateCurveTarget } from "./frontier.js?v=20261005h";
 import {
   SHARE_PREFIX,
   b64urlEncode,
@@ -177,7 +176,10 @@ import {
   relocalizeOversizeCallout,
 } from "./rescale.js?v=20261005h";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261005h";
+import {
+  coldCapacityScale,
+  cycleLifeForDoD,
+} from "./chem-model.js?v=20261005h";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
@@ -190,7 +192,11 @@ import {
   restoreWizard,
 } from "./wizard.js?v=20261005h";
 import { tiltValueSummary } from "./tilt-harvest.js?v=20261005h";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261005h";
+import {
+  interpolateCurveTarget,
+  surplusAnchor,
+  budgetSpanMax,
+} from "./budget-span.js?v=20261005h";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -376,12 +382,9 @@ function handleRunDeadline() {
 // load factor for an instant rescale against the retained payload.
 let lastRunInput = null;
 
-// The slider-owned state (bill-cut target + budget position) at the moment a
-// run is posted. The sliders are the single canonical owners of that state:
-// if they move while a run is in flight, the reply is data for a position the
-// visitor has already left, and its arrival must not re-seat their thumbs or
-// replace the selection they imply (sliderStateDrifted decides;
-// reconcileDriftedRun settles the view back onto the thumbs).
+// Slider-owned state (cut target + budget) at post time: the sliders are the
+// canonical owners, so a reply landing behind them must not re-seat their
+// thumbs (sliderStateDrifted decides, reconcileDriftedRun settles the view).
 let lastRunSlider = null;
 
 function readSliderState() {
@@ -2942,8 +2945,7 @@ function setupCutSlider() {
     if (lastPayload && lastPayload.mode === "gridtie") {
       frontierSelected = null;
       // Cached-only drag preview: the curve's projection at the exact % the
-      // slider holds, with the budget thumb riding along — card, readout and
-      // both thumbs then describe ONE position at every input event.
+      // slider holds, budget thumb riding along — one position everywhere.
       previewCurvePoint(previewTargetAt(parseInt(slider.value, 10) || 1));
     }
     // The share link encodes slider state, so it must never lag the thumb.
@@ -3465,11 +3467,9 @@ function nearestCurvePoint(value, axis) {
   return best;
 }
 
-// The drag preview's projection of the slider's % onto the curve: a
-// pool-shaped point whose entry is the interpolated system for exactly that
-// %. The budget thumb rides along (unpinned — pinning is commit-time only),
-// so the pair, the card and the label move together at every input instead
-// of the card snapping to a neighbor the thumbs do not hold.
+// The drag preview's projection of the slider's % onto the curve; the budget
+// thumb rides along (unpinned — pinning is commit-time only) so the pair, the
+// card and the label move together at every input.
 function previewTargetAt(pct) {
   const p = lastPayload;
   if (!p || !p.frontier || !Array.isArray(p.frontier.points)) return null;
@@ -3495,10 +3495,9 @@ function previewTargetAt(pct) {
   };
 }
 
-// A run reply that landed behind the visitor's sliders: keep its data, then
-// settle the position back onto the sliders (which own the state). No marker
-// re-seat, selection on the slider's own target, and one coalesced slice so
-// the numbers catch up with the thumb.
+// A run reply that landed behind the sliders: keep its data, then settle the
+// position back onto the sliders — no marker re-seat, selection on the
+// slider's own target, one coalesced slice so the numbers catch up.
 function reconcileDriftedRun() {
   followMarkerOnce = false;
   if (!lastPayload) return;
@@ -3848,9 +3847,9 @@ function ensureWorker() {
           return;
         }
 
-        // A run that started before the visitor's last slider move is data
-        // for a position they already left. It still refreshes the payload,
-        // but the sliders stay canonical once it lands.
+        // A run posted before the visitor's last slider move is data for a
+        // position they already left: it refreshes the payload, the sliders
+        // stay canonical once it lands.
         const runDrifted = sliderStateDrifted(lastRunSlider, readSliderState());
 
         if (lastRunAdoptsFocus) {
@@ -7565,11 +7564,9 @@ function updateShareHash(p, inp) {
       o.at = $("autoTier").value;
 
     if (inp.chemistry === "auto" && inp.mode === "gridtie") {
-      // Only a real target is worth serializing: "custom" is mirror state of
-      // the slider, and the fraction itself already travels as o.cc. The id
-      // is derived from the SLIDER's fraction, never from the select mirror —
-      // mid-drag the mirror lags one sync behind, and reading it once wrote
-      // the contradictory pair {ag: "cut80", cc: 0.73} into one link.
+      // Derived from the SLIDER's fraction, never the select mirror (mid-drag
+      // the mirror lags one sync behind and once wrote the contradictory
+      // pair {ag: "cut80", cc: 0.73} into one link).
       const ag = targetForPct(Math.round(inp.customCut * 100));
       if (CUT_TARGET_PCT[ag]) o.ag = ag;
     }
