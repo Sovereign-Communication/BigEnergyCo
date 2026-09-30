@@ -58,6 +58,21 @@ test("EVIDENCE: the performance facet line is derived from the run, not typed by
       "measured the controls, so a typed line here is a second, unverifiable " +
       "source for the same facet.",
   );
+  // The quality axis is the third derived one, and the reason is the same: the
+  // sentence that stood here ("prettier clean repo-wide; the two duplications the
+  // design audit found are gone") named a past audit and a formatter, so a run
+  // that measured nothing looked exactly like a run that measured green. What
+  // measures the axis is the plan §3.1 gate on the shipped payload — the
+  // smallest version that keeps the proven behavior, ratcheted against a
+  // declared baseline — and it composes the line from its own reading.
+  assert.equal(
+    Object.hasOwn(PROSE.facet_evidence || {}, "quality"),
+    false,
+    "evidence/advisor-and-release.json must not carry a hand-typed `quality` " +
+      "line: the byte-budget gate composes it from the run that measured the " +
+      "shipped bytes, so a typed line here is a second, unverifiable source for " +
+      "the same facet",
+  );
   // …and the other axes stay typed, because nothing measures them yet. This is
   // the scope boundary: the measured facets are derived, not everything.
   assert.ok(
@@ -88,6 +103,28 @@ test("EVIDENCE: the experience facet line is derived from the run, not typed by 
       /`experience` facet line was REMOVED/.test(n),
     ),
     "the removal note must sit in notes[] beside the performance one",
+  );
+});
+
+test("EVIDENCE: the byte-budget gate declares the axis it is the evidence for", () => {
+  // Same defect as the Lighthouse report's missing `facet_axes`: without the
+  // declaration the builder has to keep a list of gate names beside it, which is
+  // the list-beside-the-code shape #161 removed from ci_green.
+  const src = readFileSync("scripts/check-byte-budgets.mjs", "utf8");
+  assert.match(
+    src,
+    /facet_axes\s*:/,
+    "the byte-budgets report must declare facet_axes",
+  );
+  assert.match(
+    src,
+    /facet_line = composeQualityFacetLine\(report\)/,
+    "…and compose the line from the report it just built, not from a typed copy",
+  );
+  assert.match(
+    src,
+    /COMPLETE_FACET_CLIP/,
+    "…holding it against the clip it has to fit rather than letting transport cut it",
   );
 });
 
@@ -357,6 +394,35 @@ test("EVIDENCE: the builder puts the run's numbers on the judge's record", () =>
   );
 });
 
+test("EVIDENCE: the byte-budget run's line reaches the judge's quality axis", () => {
+  // The key IS the file name `artifactsWith` writes, which is the name the
+  // web-smoke job uploads and the builder discovers.
+  const dir = artifactsWith({
+    "byte-budgets-report.json": {
+      metric: "byte_budgets",
+      facet_axes: ["quality"],
+      facet_line:
+        "plan §3.1 shipped bytes, staged vs the declared baseline (±256B): 0/9 regressed, 2 improved; 3 over §3.1 limits (js_before_interactive, registry_country (+1)), binds at P6/P8. Compressed payload only: duplication or dead code that does not ship is invisible here",
+      metrics: {},
+    },
+  });
+  const { status, stderr, out } = buildWith(dir, PROSE_MIN);
+  assert.equal(status, 0, stderr);
+  assert.match(
+    out.facet_evidence.quality,
+    /^plan §3\.1 shipped bytes/,
+    "the judge's quality line must be the one composed from this run's byte-budget report",
+  );
+  assert.ok(
+    out.derived_facet_lines?.some(
+      (d) => d.axis === "quality" && d.source === "byte-budgets-report.json",
+    ),
+    `the record must say which report the line came from: ${JSON.stringify(
+      out.derived_facet_lines,
+    )}`,
+  );
+});
+
 test("EVIDENCE: a missing gate report leaves the axis absent, not clean", () => {
   // No report in the artifacts dir, and a typed line the builder must NOT fall
   // back to. This is the `ci_green: true` on a red run, one layer over: a
@@ -423,6 +489,24 @@ test("CI: the report reaches the judge through the download the job already does
     /name:\s*jev-results-lighthouse-report/,
     "the Lighthouse report must be uploaded under a name that pattern picks up, " +
       "so a new gate report needs no change to the judge's download step",
+  );
+  // The byte-budget report rides the same wire, and its upload has to survive a
+  // red gate: `check-byte-budgets` exits 1 on a regression, and a REGRESSED
+  // payload must reach the judge as a regression rather than as an absent axis.
+  assert.match(
+    WORKFLOW_YAML,
+    /name:\s*jev-results-byte-budgets/,
+    "the byte-budgets report must be uploaded under a name the judge's download picks up",
+  );
+  assert.match(
+    WORKFLOW_YAML,
+    /path:\s*byte-budgets-report\.json/,
+    "…and the path must be the file the gate writes with --out",
+  );
+  assert.match(
+    WORKFLOW_YAML,
+    /check-byte-budgets\.mjs --stage _pages_budget --out byte-budgets-report\.json/,
+    "…which means the step itself has to ask for it",
   );
 });
 

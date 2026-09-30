@@ -35,12 +35,15 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import {
+  BYTE_BUDGET_FACET_AXES,
   compareToBaseline,
+  composeQualityFacetLine,
   formatReading,
   measureStagedBuild,
   readByteBudgetBaseline,
   REGRESSION_TOLERANCE_BYTES,
 } from "./lib/byte-budgets.mjs";
+import { COMPLETE_FACET_CLIP } from "./lib/jev-complete.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 
 /** The tree this report describes, so committed evidence can be matched to a
@@ -311,10 +314,41 @@ export function main(argv = process.argv.slice(2)) {
     unmeasured,
     breaches,
     ledger_notes: baseline.skipped,
+    // Which facet axis this report IS the evidence for, declared by the gate
+    // that measured it, and the line composed from THIS run's reading. The
+    // judge's evidence builder discovers `facet_axes` inside whatever report it
+    // finds in the artifacts directory — the same derivation the Lighthouse and
+    // a11y-controls reports already use — so the `quality` proof line and the
+    // numbers behind it cannot drift apart, and a run that measured no budgets
+    // says so instead of leaving a typed claim standing. See
+    // `composeQualityFacetLine` in scripts/lib/byte-budgets.mjs for what the
+    // line says, what it refuses to claim, and why it fits the 280-char clip by
+    // construction rather than by trimming.
+    facet_axes: BYTE_BUDGET_FACET_AXES,
   };
+  // Composed HERE, from this run, exactly as the Lighthouse gate does it.
+  report.facet_line = composeQualityFacetLine(report);
+  out.write(
+    `\nfacet line (${report.facet_line.length} chars):\n  ${report.facet_line}\n`,
+  );
   if (opts.out)
     writeFileSync(opts.out, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   out.write(`\nreport: ${opts.out || "not written (pass --out FILE)"}\n`);
+  // An over-long line is SILENTLY cut in transit by the evidence builder, and
+  // what gets cut is the tail — here the sentence saying this measures the
+  // shipped payload and not the code. So the gate fails rather than let the axis
+  // decay to a truncated prefix: a red gate with the line printed beats a green
+  // one whose claim quietly lost its limit. The line is bounded by construction
+  // (`composeQualityFacetLine`), so this is a backstop and not a trimmer.
+  if (report.facet_line.length > COMPLETE_FACET_CLIP) {
+    process.stderr.write(
+      `check-byte-budgets: facet line is ${report.facet_line.length} chars, over ` +
+        `the ${COMPLETE_FACET_CLIP}-char per-axis clip, so the \`quality\` axis ` +
+        "would arrive at the judge without the sentence that limits it. Shorten " +
+        "a clause in composeQualityFacetLine rather than raising the clip.\n",
+    );
+    return 1;
+  }
 
   if (regressions.length) {
     process.stderr.write(

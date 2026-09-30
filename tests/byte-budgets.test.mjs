@@ -31,9 +31,11 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = join(ROOT, "scripts/check-byte-budgets.mjs");
 
 import {
+  BYTE_BUDGET_FACET_AXES,
   BYTE_BUDGET_LIMITS,
   brotliBytes,
   compareToBaseline,
+  composeQualityFacetLine,
   formatReading,
   measureStagedBuild,
   moduleGraph,
@@ -41,6 +43,7 @@ import {
   REGRESSION_TOLERANCE_BYTES,
   scriptEntries,
 } from "../scripts/lib/byte-budgets.mjs";
+import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
 import { deployList } from "../scripts/lib/deploy-manifest.mjs";
 
 const KB = 1024;
@@ -823,6 +826,173 @@ test("BUDGET: the CLI measures a real staged tree and exits on a regression", as
     );
     assert.match(worse.stderr, /css_total/, "and the failing budget is named");
     assert.match(worse.stderr, /regression/i);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── The `quality` facet line: what a run of this gate says on the record ─────
+//
+// The line the judge reads for QUALITY used to be hand-typed ("prettier clean
+// repo-wide; the two duplications the design audit found are gone") with no run
+// behind it, which is the same defect the performance and accessibility axes
+// already had fixed. The gate that measures the shipped payload now composes it
+// from the run it just measured. These tests pin what the line may and may not
+// claim — and that every shape this report can produce fits the 280-char
+// transport clip, because an over-long line is SILENTLY cut and the sentence
+// that gets cut here is the one saying the measurement is a payload size and
+// not a verdict on the code.
+
+/** A report shaped like the real one: every §3.1 budget measured. */
+function budgetReport(overrides = {}) {
+  const names = Object.keys(BYTE_BUDGET_LIMITS);
+  return {
+    metrics: Object.fromEntries(
+      names.map((n) => [n, { value: 1, limit: 1024, unit: "bytes" }]),
+    ),
+    regressions: [],
+    improvements: names.slice(0, 2).map((metric) => ({ metric })),
+    unmeasured: [],
+    breaches: names.slice(0, 3).map((metric) => ({ metric })),
+    tolerance_bytes: REGRESSION_TOLERANCE_BYTES,
+    ...overrides,
+  };
+}
+
+test("FACET: the quality line is composed from the run and names what it measured", () => {
+  const line = composeQualityFacetLine(budgetReport());
+  assert.deepEqual(BYTE_BUDGET_FACET_AXES, ["quality"]);
+  assert.match(
+    line,
+    /0\/9 regressed/,
+    "the ratchet verdict is the axis's own concision claim",
+  );
+  assert.match(line, /2 improved/, "…with the improvements the run found");
+  assert.match(
+    line,
+    /3 over §3\.1 limits/,
+    "and the plan's debt, named as debt",
+  );
+  assert.match(
+    line,
+    /home_document, css_total/,
+    "…naming the budgets, so a reader can check the claim",
+  );
+  assert.match(
+    line,
+    /binds at P6\/P8/,
+    "a breach is not a bar until its phase, and the phase belongs on the line so debt is not read as a verdict",
+  );
+  assert.match(
+    line,
+    /Compressed payload only/,
+    "a size measurement that does not state its own limit reads as proof the code is minimal",
+  );
+});
+
+test("FACET: a regressed payload withdraws the concision claim", () => {
+  const names = Object.keys(BYTE_BUDGET_LIMITS);
+  const line = composeQualityFacetLine(
+    budgetReport({ regressions: names.map((metric) => ({ metric })) }),
+  );
+  assert.match(line, /9 REGRESSED of 9 measured/);
+  assert.match(
+    line,
+    /not the smallest version that keeps the proven behavior/,
+    "the axis's own words, withdrawn — not a green sentence over a red reading",
+  );
+  assert.doesNotMatch(
+    line,
+    /improved|over §3\.1 limits/,
+    "…and the budgets that did not move are not reported as though the run were fine",
+  );
+});
+
+test("FACET: a run that measured nothing says so, and claims nothing", () => {
+  const line = composeQualityFacetLine({ metrics: {}, regressions: [] });
+  assert.match(line, /NOT measured this run/);
+  assert.match(line, /rests on nothing from this run/);
+  assert.doesNotMatch(
+    line,
+    /regressed|improved/,
+    "no reading means no verdict, in either direction — not even a flattering one",
+  );
+});
+
+test("FACET: every shape this report can produce fits the transport clip", () => {
+  const names = Object.keys(BYTE_BUDGET_LIMITS);
+  // The bound is a measurement, not a hope: this report's metric set is
+  // `BYTE_BUDGET_LIMITS`, and all nine can be an improvement, a breach AND
+  // unmeasured at once, so that shape is the longest the gate can produce.
+  const shapes = {
+    worst: budgetReport({
+      improvements: names.map((metric) => ({ metric })),
+      unmeasured: names.map((metric) => ({ metric })),
+      breaches: names.map((metric) => ({ metric })),
+    }),
+    regressed: budgetReport({
+      regressions: names.map((metric) => ({ metric })),
+    }),
+    clean: budgetReport({ improvements: [], breaches: [] }),
+    partial: budgetReport({
+      metrics: Object.fromEntries(
+        names.slice(0, 3).map((n) => [n, { value: 1, limit: 1024 }]),
+      ),
+      unmeasured: names.slice(3).map((metric) => ({ metric })),
+    }),
+    none: {},
+    // A pathological metric name is clipped, never allowed to stretch the line.
+    long_names: budgetReport({
+      breaches: names.map((metric) => ({ metric: metric.repeat(4) })),
+    }),
+  };
+  for (const [shape, report] of Object.entries(shapes)) {
+    const line = composeQualityFacetLine(report);
+    assert.ok(
+      line.length <= COMPLETE_FACET_CLIP,
+      `${shape} composes to ${line.length} chars, over the ${COMPLETE_FACET_CLIP}-char ` +
+        "clip; an over-long line is cut in transit and the tail is the limit sentence",
+    );
+  }
+  assert.ok(
+    composeQualityFacetLine(shapes.worst).length >= 200,
+    "the bound is only worth pinning if the worst case is actually long",
+  );
+});
+
+test("FACET: the CLI publishes the composed line in the report it writes", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "jev-budget-facet-"));
+  const ledger = join(dir, "ledger.jsonl");
+  try {
+    writeFileSync(
+      join(dir, "index.html"),
+      '<!doctype html><html><head><link rel="stylesheet" href="./site.css"></head></html>',
+    );
+    writeFileSync(join(dir, "site.css"), "body{color:#111}");
+    writeFileSync(ledger, "");
+    const out = join(dir, "report.json");
+    const run = spawnSync(
+      process.execPath,
+      [CLI, "--stage", dir, "--ledger", ledger, "--out", out],
+      { encoding: "utf8" },
+    );
+    assert.equal(run.status, 0, run.stderr);
+    const report = JSON.parse(readFileSync(out, "utf8"));
+    assert.deepEqual(
+      report.facet_axes,
+      ["quality"],
+      "the report must declare the axis it speaks for, or the builder discovers nothing",
+    );
+    assert.equal(
+      report.facet_line,
+      composeQualityFacetLine(report),
+      "the line must be the one THIS report's reading composes, or the judge's line and the numbers behind it can drift apart",
+    );
+    assert.match(
+      run.stdout,
+      /facet line \(\d+ chars\)/,
+      "and the run prints it, so a human sees the sentence the judge will read",
+    );
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
