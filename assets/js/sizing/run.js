@@ -40,6 +40,7 @@ import {
   normaliseOutageTarget,
   outcomeFor,
 } from "./usecases.js?v=20261005h";
+import { memoizeSimulate } from "./sim-cache.js?v=20261005h";
 
 import {
   fetchHourlyCached,
@@ -638,6 +639,7 @@ async function runSizingUncached(msg, deps = {}) {
   // an element-wise compare for the load, never a hash) before handing the
   // same map over; any change starts a fresh one.
   const simCache = simCacheFor(series, e1kw, tempsC, loadWh);
+  const simMemo = memoizeSimulate(simulateOffset, simCache);
 
   // Highest AC demand hour — the number the hardware list (inverter class,
   // DC protection) and the inverter cost basis are built around. The caller
@@ -1751,7 +1753,7 @@ async function runSizingUncached(msg, deps = {}) {
   // Shared sizing options for the fixed-chemistry bill-cut targets (used by
   // the full run and by the incremental slider patch alike).
   const billCutOpts = {
-    simCache,
+    simulate: simMemo,
     oversizeStrategy,
     e1kw,
     loadWh,
@@ -1803,7 +1805,7 @@ async function runSizingUncached(msg, deps = {}) {
         const customEntries = [];
         for (const chemId of AUTO_CHEMS) {
           const sized = sizeForBillCut({
-            simCache,
+            simulate: simMemo,
             oversizeStrategy,
             e1kw,
             loadWh,
@@ -1843,7 +1845,7 @@ async function runSizingUncached(msg, deps = {}) {
         }
         // Lead-acid reference at the same slider target (savings indicator).
         const agmSized = sizeForBillCut({
-          simCache,
+          simulate: simMemo,
           oversizeStrategy,
           e1kw,
           loadWh,
@@ -2110,7 +2112,7 @@ async function runSizingUncached(msg, deps = {}) {
       const customEntries = [];
       for (const chemId of AUTO_CHEMS) {
         const sized = sizeForBillCut({
-          simCache,
+          simulate: simMemo,
           oversizeStrategy,
           e1kw,
           loadWh,
@@ -2153,7 +2155,7 @@ async function runSizingUncached(msg, deps = {}) {
       }
       // Lead-acid reference at the same slider target (savings indicator).
       const agmSized = sizeForBillCut({
-        simCache,
+        simulate: simMemo,
         oversizeStrategy,
         e1kw,
         loadWh,

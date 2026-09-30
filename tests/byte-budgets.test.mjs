@@ -15,7 +15,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,9 +36,12 @@ import {
   compareToBaseline,
   formatReading,
   measureStagedBuild,
+  moduleGraph,
   readByteBudgetBaseline,
   REGRESSION_TOLERANCE_BYTES,
+  scriptEntries,
 } from "../scripts/lib/byte-budgets.mjs";
+import { deployList } from "../scripts/lib/deploy-manifest.mjs";
 
 const KB = 1024;
 
@@ -816,4 +826,115 @@ test("BUDGET: the CLI measures a real staged tree and exits on a regression", as
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// The slider-workflow byte diet's regression gate, measured on the REAL tree:
+// js_before_interactive is the transitive module graph of the page's script
+// entries, and the drag preview needs interpolateCurveTarget synchronously —
+// but the 47 KB deterministic search engine, the frontier builder and the
+// sims memo are worker-side code. A static ui.js import of any of them is
+// exactly the mistake that once cost +11,201 compressed bytes against the
+// declared baseline, and it must fail HERE, in a second, not in CI.
+//
+// What the slider workflow may carry eagerly: the curve projection and drift
+// policy (budget-span.js, cut-targets.js) and the pure chemistry/cell model
+// (chem-model.js — extracted so the engine itself could leave the payload).
+// What it must never carry: engine.js, frontier.js, run.js, sim-cache.js.
+function realEagerGraph() {
+  const html = readFileSync(join(ROOT, "index.html"), "utf8");
+  const staged = new Set(deployList());
+  const entries = scriptEntries(html, staged);
+  return moduleGraph(entries, (rel) => readFileSync(join(ROOT, rel)), staged);
+}
+
+test("GRAPH: the pre-interactive slider graph carries the projection, never the engine", () => {
+  const graph = realEagerGraph();
+  for (const eager of [
+    "assets/js/sizing/budget-span.js",
+    "assets/js/shared/cut-targets.js",
+    "assets/js/sizing/chem-model.js",
+  ]) {
+    assert.ok(graph.has(eager), `${eager} must ship pre-interactive`);
+  }
+  for (const workerOnly of [
+    "assets/js/sizing/engine.js",
+    "assets/js/sizing/frontier.js",
+    "assets/js/sizing/run.js",
+    "assets/js/sizing/sim-cache.js",
+  ]) {
+    assert.ok(
+      !graph.has(workerOnly),
+      `${workerOnly} is worker-side code — a static eager import re-bloats js_before_interactive`,
+    );
+  }
+});
+
+// Module-graph integrity, the class of breakage a unit test cannot see: a
+// named import that no export satisfies is a LINK error, so the browser
+// kills the whole module (and everything that imports it) at boot — while
+// every node:test stays green, because the tests never import the browser
+// modules. That happened for real: ui.js named an export that only
+// budget-span.js provides while importing it from cut-targets.js, and only
+// the browser smoke noticed the app was dead. This walks every shipped
+// module in assets/js and proves each named import resolves.
+function shippedModules(dir, out = []) {
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) shippedModules(p, out);
+    else if (name.endsWith(".js")) out.push(p);
+  }
+  return out;
+}
+
+// Import/export braces may carry comments; they are not names. Exports name
+// their RIGHT side (`x as y` ships y); imports bind their LEFT side (importing
+// x as y requires the target to export x).
+const clauseNames = (clause, side) =>
+  clause
+    .replace(/\/\/[^\n\r]*/g, "")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split(",")
+    .map((spec) => {
+      const parts = spec.trim().split(/\s+as\s+/);
+      return (parts[side === "left" ? 0 : 1] || parts[0]).trim();
+    })
+    .filter(Boolean);
+
+function exportsOf(src) {
+  const names = new Set();
+  for (const m of src.matchAll(
+    /export\s+(?:async\s+)?(?:function|const|let|var|class)\s+([\w$]+)/g,
+  ))
+    names.add(m[1]);
+  for (const m of src.matchAll(/\bexport\s*\{([^}]*)\}/g))
+    for (const name of clauseNames(m[1])) names.add(name);
+  return names;
+}
+
+test("GRAPH: every named import in the shipped modules resolves to a real export", () => {
+  const root = join(ROOT, "assets", "js");
+  const exported = new Map();
+  const files = shippedModules(root);
+  for (const f of files) exported.set(f, exportsOf(readFileSync(f, "utf8")));
+  const missing = [];
+  for (const f of files) {
+    const src = readFileSync(f, "utf8");
+    for (const m of src.matchAll(
+      /\bimport\s*\{([^}]*)\}\s*from\s*["']([^"']+)["']/g,
+    )) {
+      const spec = m[2];
+      if (!spec.startsWith(".")) continue;
+      const target = join(dirname(f), spec.split("?")[0]);
+      const exp = exported.get(target);
+      if (!exp) {
+        missing.push(`${f} imports from missing module ${spec}`);
+        continue;
+      }
+      for (const name of clauseNames(m[1], "left")) {
+        if (!exp.has(name))
+          missing.push(`${f}: { ${name} } is not exported by ${spec}`);
+      }
+    }
+  }
+  assert.deepEqual(missing, [], missing.join("; "));
 });

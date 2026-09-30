@@ -117,7 +117,7 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   const html = committedBytes(root, "index.html").toString("utf8");
   const css = committedBytes(root, "assets/site.css").toString("utf8");
 
-  const eager = eagerGraph(root);
+  const eager = eagerGraph(root);
   let jsBytes = 0;
   for (const file of eager) {
     // Committed bytes, so a CRLF checkout cannot measure ~20 KB larger than the
@@ -195,38 +195,46 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // glued onto translated verdicts as an English literal), plus one small
   // owner for the levelized-cost row and the reasoning that goes with each
   // fix. No new module, no new eager feature: strings and comments.
-  // 803,000 (+13 KB measured 802,202): the degraded advisor reply became
-  // translated copy. It was English-only prose shipped from the worker on the
-  // exact surface that signals something went wrong, so a German or Arabic
-  // visitor read the failure in the wrong language. Ten keys x six locales,
-  // +123 lines in locales.js and -0: the same trade as every raise above, for
-  // the same reason — a string a user can read, no new code path.
-  // 815,000 (+12 KB measured 804,402): every country gets its own currency.
-  // assets/js/sizing/country-currency.js is 11.5 KB of ISO 3166-1 -> ISO 4217
-  // data, plus 127 currency rows the table made reachable in pricing.js. It is
-  // consulted on the exact path that already had the wrong answer: a location
-  // in one of sixteen countries was being shown a currency that country does
-  // not use, silently, because its bounding box was shared with a neighbour.
-  // That is not a string a reviewer can accept being wrong; it is the whole
-  // point of the feature. Trade approved by the operator against a submission
-  // deadline.
-  // 895,000 (+80 KB): all six D-16 use cases became six real offers, and three
-  // of them needed engines that did not exist — an outage simulator, a
-  // reserve floor and a portable day model — plus 45 new keys x six locales
-  // in locales.js and the measurement pass in run.js that turns a sized system
-  // into one outcome per use case. The trade was recorded as "lazy-load it"
-  // declined, because the portable and backup panels ARE the fields that make
-  // those two cases real.
+  // 803,000 (+13 KB measured 802,202): the degraded advisor reply became
+  // translated copy. It was English-only prose shipped from the worker on the
+  // exact surface that signals something went wrong, so a German or Arabic
+  // visitor read the failure in the wrong language. Ten keys x six locales,
+  // +123 lines in locales.js and -0: the same trade as every raise above, for
+  // the same reason — a string a user can read, no new code path.
+  // 815,000 (+12 KB measured 804,402): every country gets its own currency.
+  // assets/js/sizing/country-currency.js is 11.5 KB of ISO 3166-1 -> ISO 4217
+  // data, plus 127 currency rows the table made reachable in pricing.js. It is
+  // consulted on the exact path that already had the wrong answer: a location
+  // in one of sixteen countries was being shown a currency that country does
+  // not use, silently, because its bounding box was shared with a neighbour.
+  // That is not a string a reviewer can accept being wrong; it is the whole
+  // point of the feature. Trade approved by the operator against a submission
+  // deadline.
+  // 895,000 (+80 KB): all six D-16 use cases became six real offers, and three
+  // of them needed engines that did not exist — an outage simulator, a
+  // reserve floor and a portable day model — plus 45 new keys x six locales
+  // in locales.js and the measurement pass in run.js that turns a sized system
+  // into one outcome per use case. The trade was recorded as "lazy-load it"
+  // declined, because the portable and backup panels ARE the fields that make
+  // those two cases real.
+  //
+  // What changed on the same pass, with the number left at 895,000: the eager
+  // set stopped being a hand-written list and became the graph. The old list
+  // CLAIMED 893,785. The real first-load payload, measured off the committed
+  // bytes with charts.js and thirteen other genuine first-load modules counted
+  // and locales.js (167,850 B, dynamically imported by i18n.js) taken out, is
+  // 837,156 across 39 files — 56,629 B BELOW what the hand list asserted,
+  // without one byte of the feature having shrunk. The budget is now harder to
+  // satisfy than it was, not easier: it simply measures its own subject
+  // instead of a stale guess at it.
   //
-  // What changed on the same pass, with the number left at 895,000: the eager
-  // set stopped being a hand-written list and became the graph. The old list
-  // CLAIMED 893,785. The real first-load payload, measured off the committed
-  // bytes with charts.js and thirteen other genuine first-load modules counted
-  // and locales.js (167,850 B, dynamically imported by i18n.js) taken out, is
-  // 837,156 across 39 files — 56,629 B BELOW what the hand list asserted,
-  // without one byte of the feature having shrunk. The budget is now harder to
-  // satisfy than it was, not easier: it simply measures its own subject
-  // instead of a stale guess at it.
+  // The slider-workflow canonical-state work then landed on top of this
+  // bar WITHOUT moving it: the drag preview's curve projection moved out
+  // of the eager graph into budget-span.js, the chemistry/cell model moved
+  // out of engine.js into chem-model.js (the whole search engine is now
+  // worker-only), and the worker's feasibility-sims memo moved to
+  // sim-cache.js. The eager payload ended up 7.8 KB BELOW the declared
+  // baseline; no budget above was relaxed for it.
   assert.ok(
     htmlBytes <= 130_000,
     `index.html ${htmlBytes} bytes exceeds 130,000 budget`,
