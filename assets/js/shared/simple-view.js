@@ -4,7 +4,11 @@
 // no formatting — ui.js injects its formatters so currency/locale handling
 // stays single-owner. Anything missing or non-finite is dropped, never
 // rendered as "NaN".
+<<<<<<< HEAD
 import { seriesBreakdown } from "../sizing/money.js?v=20261005h";
+=======
+import { seriesBreakdown } from "../sizing/money.js?v=20260930b";
+>>>>>>> 2dc37e1 (fix(sizing): fit the slider workflow inside the byte ratchet without moving it)
 
 export function buildSimpleView({ p, entry, saved, fmt }) {
   if (!p || !entry || !entry.solvable) return { feasible: false };

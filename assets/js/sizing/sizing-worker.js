@@ -14,7 +14,11 @@
 // carry a stream tag ("run"/"slice"/"unknown") for the same stale check.
 // Unknown types answer with an error instead of hanging the spinner.
 //
+<<<<<<< HEAD
 import { runSizing, prefetchSiteWeather } from "./run.js?v=20261005h";
+=======
+import { runSizing, prefetchSiteWeather } from "./run.js?v=20260930b";
+>>>>>>> 2dc37e1 (fix(sizing): fit the slider workflow inside the byte ratchet without moving it)
 
 self.onmessage = async (ev) => {
   const msg = ev.data;

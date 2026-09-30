@@ -556,7 +556,11 @@
   // ── Init ───────────────────────────────────────────────────────────────
   async function init() {
     try {
+<<<<<<< HEAD
       const res = await fetch("../assets/data/heatmap-grid.json?v=20261005h");
+=======
+      const res = await fetch("../assets/data/heatmap-grid.json?v=20260930b");
+>>>>>>> 2dc37e1 (fix(sizing): fit the slider workflow inside the byte ratchet without moving it)
       if (!res.ok) throw new Error("Failed to load heatmap data");
       gridData = await res.json();
     } catch (err) {

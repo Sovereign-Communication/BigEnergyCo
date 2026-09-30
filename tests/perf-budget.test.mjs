@@ -117,7 +117,44 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   const html = committedBytes(root, "index.html").toString("utf8");
   const css = committedBytes(root, "assets/site.css").toString("utf8");
 
+<<<<<<< HEAD
   const eager = eagerGraph(root);
+=======
+  const sizingDir = join(root, "assets/js/sizing");
+  const sharedDir = join(root, "assets/js/shared");
+  const eagerSizing = [
+    "ui.js",
+    "run.js",
+    "engine.js",
+    "frontier.js",
+    "frontier-chart.js",
+    "nasa.js",
+    "cities.js",
+    "pricing.js",
+    "money.js",
+    "climate.js",
+    "wizard.js",
+    "appliances.js",
+    "map-provider.js",
+    "tilt-harvest.js",
+    "rescale.js",
+    "bom.js",
+    "budget-span.js",
+    "chem-model.js",
+    "sim-cache.js",
+    "sizing-worker.js",
+  ];
+  const eagerShared = [
+    "content.js",
+    "locales.js",
+    "escape.js",
+    "jargon-dict.js",
+    "i18n.js",
+    "simple-mode.js",
+    "simple-view.js",
+    "cut-targets.js",
+  ];
+>>>>>>> 2dc37e1 (fix(sizing): fit the slider workflow inside the byte ratchet without moving it)
   let jsBytes = 0;
   for (const file of eager) {
     // Committed bytes, so a CRLF checkout cannot measure ~20 KB larger than the
@@ -195,6 +232,7 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // glued onto translated verdicts as an English literal), plus one small
   // owner for the levelized-cost row and the reasoning that goes with each
   // fix. No new module, no new eager feature: strings and comments.
+<<<<<<< HEAD
   // 803,000 (+13 KB measured 802,202): the degraded advisor reply became
   // translated copy. It was English-only prose shipped from the worker on the
   // exact surface that signals something went wrong, so a German or Arabic
@@ -227,6 +265,22 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // without one byte of the feature having shrunk. The budget is now harder to
   // satisfy than it was, not easier: it simply measures its own subject
   // instead of a stale guess at it.
+=======
+  // 808,000 (+18 KB measured 802,753): the slider-workflow canonical-state
+  // work. The drag preview now projects the slider's % onto the curve
+  // (interpolateCurveTarget in budget-span.js) instead of snapping the card
+  // to a neighboring lattice entry that contradicted the thumb; a run reply
+  // that lands behind the visitor's sliders is detected and reconciled
+  // instead of clobbering them; both sliders write the share hash at input
+  // time; and the worker's feasibility-sims memo (sim-cache.js + run.js)
+  // makes subsequent slider adjustments reuse the run's simulations instead
+  // of re-deriving seconds of hourly physics. Correctness code on the slider
+  // path, reviewed deliberately — the bar moves with it. The same work then
+  // paid for its own bytes WITHOUT moving the bar: the chemistry/cell model
+  // moved out of the eager engine into chem-model.js (the whole 47 KB search
+  // engine is now worker-only), and budget-span.js / chem-model.js /
+  // sim-cache.js joined this list so no shipped byte hides from the guard.
+>>>>>>> 2dc37e1 (fix(sizing): fit the slider workflow inside the byte ratchet without moving it)
   assert.ok(
     htmlBytes <= 130_000,
     `index.html ${htmlBytes} bytes exceeds 130,000 budget`,

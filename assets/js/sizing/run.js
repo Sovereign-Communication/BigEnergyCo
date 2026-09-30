@@ -26,6 +26,7 @@ import {
   capacityScaleFor,
   evaluateOversizeOptimization,
   billCutFraction,
+<<<<<<< HEAD
   simulateOutage,
   simulatePortable,
 } from "./engine.js?v=20261005h";
@@ -40,21 +41,36 @@ import {
   normaliseOutageTarget,
   outcomeFor,
 } from "./usecases.js?v=20261005h";
+=======
+} from "./engine.js?v=20260930b";
+import { memoizeSimulate } from "./sim-cache.js?v=20260930b";
+>>>>>>> 2dc37e1 (fix(sizing): fit the slider workflow inside the byte ratchet without moving it)
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
+<<<<<<< HEAD
 } from "./nasa.js?v=20261005h";
 import { buildFrontier } from "./frontier.js?v=20261005h";
 import { oversizeCallout } from "./rescale.js?v=20261005h";
 import { climateSummary } from "./climate.js?v=20261005h";
+=======
+} from "./nasa.js?v=20260930b";
+import { buildFrontier } from "./frontier.js?v=20260930b";
+import { oversizeCallout } from "./rescale.js?v=20260930b";
+import { climateSummary } from "./climate.js?v=20260930b";
+>>>>>>> 2dc37e1 (fix(sizing): fit the slider workflow inside the byte ratchet without moving it)
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
+<<<<<<< HEAD
 } from "./pricing.js?v=20261005h";
+=======
+} from "./pricing.js?v=20260930b";
+>>>>>>> 2dc37e1 (fix(sizing): fit the slider workflow inside the byte ratchet without moving it)
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -65,7 +81,11 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
+<<<<<<< HEAD
 } from "./money.js?v=20261005h";
+=======
+} from "./money.js?v=20260930b";
+>>>>>>> 2dc37e1 (fix(sizing): fit the slider workflow inside the byte ratchet without moving it)
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -307,7 +327,11 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
+<<<<<<< HEAD
       await import("./profiles.js?v=20261005h");
+=======
+      await import("./profiles.js?v=20260930b");
+>>>>>>> 2dc37e1 (fix(sizing): fit the slider workflow inside the byte ratchet without moving it)
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -638,6 +662,7 @@ async function runSizingUncached(msg, deps = {}) {
   // an element-wise compare for the load, never a hash) before handing the
   // same map over; any change starts a fresh one.
   const simCache = simCacheFor(series, e1kw, tempsC, loadWh);
+  const simMemo = memoizeSimulate(simulateOffset, simCache);
 
   // Highest AC demand hour — the number the hardware list (inverter class,
   // DC protection) and the inverter cost basis are built around. The caller
@@ -1751,7 +1776,7 @@ async function runSizingUncached(msg, deps = {}) {
   // Shared sizing options for the fixed-chemistry bill-cut targets (used by
   // the full run and by the incremental slider patch alike).
   const billCutOpts = {
-    simCache,
+    simulate: simMemo,
     oversizeStrategy,
     e1kw,
     loadWh,
@@ -1803,7 +1828,7 @@ async function runSizingUncached(msg, deps = {}) {
         const customEntries = [];
         for (const chemId of AUTO_CHEMS) {
           const sized = sizeForBillCut({
-            simCache,
+            simulate: simMemo,
             oversizeStrategy,
             e1kw,
             loadWh,
@@ -1843,7 +1868,7 @@ async function runSizingUncached(msg, deps = {}) {
         }
         // Lead-acid reference at the same slider target (savings indicator).
         const agmSized = sizeForBillCut({
-          simCache,
+          simulate: simMemo,
           oversizeStrategy,
           e1kw,
           loadWh,
@@ -2110,7 +2135,7 @@ async function runSizingUncached(msg, deps = {}) {
       const customEntries = [];
       for (const chemId of AUTO_CHEMS) {
         const sized = sizeForBillCut({
-          simCache,
+          simulate: simMemo,
           oversizeStrategy,
           e1kw,
           loadWh,
@@ -2153,7 +2178,7 @@ async function runSizingUncached(msg, deps = {}) {
       }
       // Lead-acid reference at the same slider target (savings indicator).
       const agmSized = sizeForBillCut({
-        simCache,
+        simulate: simMemo,
         oversizeStrategy,
         e1kw,
         loadWh,

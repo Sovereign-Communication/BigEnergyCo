@@ -16,7 +16,11 @@ import {
   searchCities,
   shouldAutoResolve,
   typedCityCandidates,
+<<<<<<< HEAD
 } from "./cities.js?v=20261005h";
+=======
+} from "./cities.js?v=20260930b";
+>>>>>>> 2dc37e1 (fix(sizing): fit the slider workflow inside the byte ratchet without moving it)
 
 function byId(id) {
   return document.getElementById(id);

@@ -259,10 +259,17 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
+<<<<<<< HEAD
     <link rel="preload" href="./assets/site.css?v=20261005h" as="style" />
     <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261005h" />
 
     <link rel="stylesheet" href="./assets/site.css?v=20261005h" />
+=======
+    <link rel="preload" href="./assets/site.css?v=20260930b" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20260930b" />
+
+    <link rel="stylesheet" href="./assets/site.css?v=20260930b" />
+>>>>>>> 2dc37e1 (fix(sizing): fit the slider workflow inside the byte ratchet without moving it)
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -3625,6 +3632,7 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
+<<<<<<< HEAD
     <script type="module" src="./assets/js/sizing/ui.js?v=20261005h"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
@@ -3634,6 +3642,11 @@
       src="./assets/js/turnstile-client.js?v=20261005h"
     ></script>
     <script defer src="./assets/js/chat.js?v=20261005h"></script>
+=======
+    <script type="module" src="./assets/js/sizing/ui.js?v=20260930b"></script>
+
+    <script defer src="./assets/js/chat.js?v=20260930b"></script>
+>>>>>>> 2dc37e1 (fix(sizing): fit the slider workflow inside the byte ratchet without moving it)
   </body>
 </html>
 
