@@ -40,10 +40,10 @@ import {
   composeQualityFacetLine,
   formatReading,
   measureStagedBuild,
+  QUALITY_SIZE_CLAUSE_MAX,
   readByteBudgetBaseline,
   REGRESSION_TOLERANCE_BYTES,
 } from "./lib/byte-budgets.mjs";
-import { COMPLETE_FACET_CLIP } from "./lib/jev-complete.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 
 /** The tree this report describes, so committed evidence can be matched to a
@@ -334,18 +334,21 @@ export function main(argv = process.argv.slice(2)) {
   if (opts.out)
     writeFileSync(opts.out, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   out.write(`\nreport: ${opts.out || "not written (pass --out FILE)"}\n`);
-  // An over-long line is SILENTLY cut in transit by the evidence builder, and
-  // what gets cut is the tail — here the sentence saying this measures the
-  // shipped payload and not the code. So the gate fails rather than let the axis
-  // decay to a truncated prefix: a red gate with the line printed beats a green
-  // one whose claim quietly lost its limit. The line is bounded by construction
-  // (`composeQualityFacetLine`), so this is a backstop and not a trimmer.
-  if (report.facet_line.length > COMPLETE_FACET_CLIP) {
+  // The clause is HALF of the `quality` axis — the shipped-size half — and its
+  // budget is smaller than the transport clip because the builder appends the
+  // clarity clause the required test job's own steps support
+  // (`composeQualityContractClause`). A clause over this budget would push the
+  // JOIN over the clip, and an over-long line is silently cut on its way to the
+  // judge: a red gate with the clause printed beats a green one whose claim
+  // quietly lost its numbers. The clause is bounded by construction, so this is
+  // a backstop and not a trimmer.
+  if (report.facet_line.length > QUALITY_SIZE_CLAUSE_MAX) {
     process.stderr.write(
-      `check-byte-budgets: facet line is ${report.facet_line.length} chars, over ` +
-        `the ${COMPLETE_FACET_CLIP}-char per-axis clip, so the \`quality\` axis ` +
-        "would arrive at the judge without the sentence that limits it. Shorten " +
-        "a clause in composeQualityFacetLine rather than raising the clip.\n",
+      `check-byte-budgets: facet clause is ${report.facet_line.length} chars, ` +
+        `over the ${QUALITY_SIZE_CLAUSE_MAX}-char budget for the size half of the ` +
+        "`quality` axis; the clarity clause the builder appends has to fit " +
+        "beside it. Shorten a phrase in composeQualityFacetLine rather than " +
+        "raising the budget.\n",
     );
     return 1;
   }
