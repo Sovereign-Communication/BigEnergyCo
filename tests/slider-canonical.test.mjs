@@ -22,12 +22,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { interpolateCurveTarget } from "../assets/js/sizing/frontier.js";
+import { interpolateCurveTarget } from "../assets/js/sizing/budget-span.js";
 import { sliderStateDrifted } from "../assets/js/shared/cut-targets.js";
+import { sizeForBillCut, simulateOffset } from "../assets/js/sizing/engine.js";
 import {
-  sizeForBillCut,
   SIM_CACHE_MAX_ENTRIES,
-} from "../assets/js/sizing/engine.js";
+  memoizeSimulate,
+} from "../assets/js/sizing/sim-cache.js";
 import { runSizing } from "../assets/js/sizing/run.js";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
 import {
@@ -202,7 +203,7 @@ test("slider drift: the sliders own the state a run was posted against", () => {
 
 // ── The memo can never diverge ──────────────────────────────────────────────
 // simulateOffset is pure in (pv, batt, chemistry, capacityScale, e1kw,
-// loadWh, tempsC); the engine keys the first four and the owner scopes the
+// loadWh, tempsC); the memo keys the first four and the owner scopes the
 // rest. A cached search must be IDENTICAL to a cold one — memoization, never
 // approximation (the reverted warm start diverged; this must never).
 
@@ -260,10 +261,11 @@ function engineOpts(series, minFraction) {
 test("GATE: the feasibility-sims memo cannot diverge from a cold engine", () => {
   const series = seriesOnce();
   const cache = new Map();
+  const memo = () => memoizeSimulate(simulateOffset, cache);
   for (const f of [0.6, 0.75, 0.4, 1.1, 0.75]) {
     const cached = sizeForBillCut({
       ...engineOpts(series, f),
-      simCache: cache,
+      simulate: memo(),
     });
     const cold = sizeForBillCut(engineOpts(series, f));
     assert.deepEqual(
@@ -280,7 +282,7 @@ test("GATE: the feasibility-sims memo cannot diverge from a cold engine", () => 
   // A deterministic repeat probes the same candidates: served entirely from
   // the memo, so the map must not grow.
   const grown = cache.size;
-  sizeForBillCut({ ...engineOpts(series, 0.75), simCache: cache });
+  sizeForBillCut({ ...engineOpts(series, 0.75), simulate: memo() });
   assert.equal(cache.size, grown, "an identical repeat adds no new sims");
 });
 
@@ -350,6 +352,7 @@ test("GATE: slider slices share the run's sims and a load change drops them", as
 const ui = fs.readFileSync("assets/js/sizing/ui.js", "utf8");
 const run = fs.readFileSync("assets/js/sizing/run.js", "utf8");
 const engine = fs.readFileSync("assets/js/sizing/engine.js", "utf8");
+const simCacheSrc = fs.readFileSync("assets/js/sizing/sim-cache.js", "utf8");
 
 test("wiring: the cut drag preview projects the slider's %, never the nearest entry", () => {
   assert.match(
@@ -414,12 +417,21 @@ test("wiring: the sims memo is scoped to identical inputs and bounded", () => {
     run,
     /st\.loadWh\.length === loadWh\.length &&\s*st\.loadWh\.every\(\(v, i\) => v === loadWh\[i\]\)/,
   );
+  // run.js wraps one simulateOffset in the memo and injects it everywhere.
   assert.match(
-    engine,
-    /if \(simCache\.size >= SIM_CACHE_MAX_ENTRIES\) simCache\.clear\(\);/,
+    run,
+    /const simMemo = memoizeSimulate\(simulateOffset, simCache\);/,
+  );
+  assert.match(run, /simulate: simMemo,/);
+  // The memo lives in sim-cache.js, OUTSIDE the eager engine module.
+  assert.doesNotMatch(engine, /simCache/, "the eager engine holds no memo");
+  assert.match(engine, /simulate = simulateOffset/);
+  assert.match(
+    simCacheSrc,
+    /if \(cache\.size >= SIM_CACHE_MAX_ENTRIES\) cache\.clear\(\);/,
   );
   assert.match(
-    engine,
-    /const key = `\$\{chemistry\}\|\$\{capacityScale\}\|\$\{pv\}\|\$\{batt\}`;/,
+    simCacheSrc,
+    /const key = `\$\{o\.chemistry\}\|\$\{o\.capacityScale\}\|\$\{o\.pvKw\}\|\$\{o\.battKwhUsable\}`;/,
   );
 });

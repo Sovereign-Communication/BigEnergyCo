@@ -47,6 +47,9 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     "tilt-harvest.js",
     "rescale.js",
     "bom.js",
+    "budget-span.js",
+    "chem-model.js",
+    "sim-cache.js",
     "sizing-worker.js",
   ];
   const eagerShared = [
@@ -100,14 +103,18 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // fix. No new module, no new eager feature: strings and comments.
   // 808,000 (+18 KB measured 802,753): the slider-workflow canonical-state
   // work. The drag preview now projects the slider's % onto the curve
-  // (interpolateCurveTarget in frontier.js) instead of snapping the card to
-  // a neighboring lattice entry that contradicted the thumb; a run reply
+  // (interpolateCurveTarget in budget-span.js) instead of snapping the card
+  // to a neighboring lattice entry that contradicted the thumb; a run reply
   // that lands behind the visitor's sliders is detected and reconciled
   // instead of clobbering them; both sliders write the share hash at input
-  // time; and the worker's feasibility-sims memo (engine.js + run.js) makes
-  // subsequent slider adjustments reuse the run's simulations instead of
-  // re-deriving seconds of hourly physics. Correctness code on the slider
-  // path, reviewed deliberately — the bar moves with it.
+  // time; and the worker's feasibility-sims memo (sim-cache.js + run.js)
+  // makes subsequent slider adjustments reuse the run's simulations instead
+  // of re-deriving seconds of hourly physics. Correctness code on the slider
+  // path, reviewed deliberately — the bar moves with it. The same work then
+  // paid for its own bytes WITHOUT moving the bar: the chemistry/cell model
+  // moved out of the eager engine into chem-model.js (the whole 47 KB search
+  // engine is now worker-only), and budget-span.js / chem-model.js /
+  // sim-cache.js joined this list so no shipped byte hides from the guard.
   assert.ok(
     htmlBytes <= 125_000,
     `index.html ${htmlBytes} bytes exceeds 125,000 budget`,
