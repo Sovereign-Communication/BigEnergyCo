@@ -144,7 +144,7 @@ import {
   sliderStateDrifted,
   targetForPct,
 } from "../shared/cut-targets.js?v=20261022p";
-import { interpolateCurveTarget } from "./frontier.js?v=20261022p";
+import { interpolateCurveTarget } from "./budget-span.js?v=20261022p";
 import {
   SHARE_PREFIX,
   b64urlEncode,

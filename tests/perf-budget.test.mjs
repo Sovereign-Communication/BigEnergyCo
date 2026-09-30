@@ -215,10 +215,9 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // declined, because the portable and backup panels ARE the fields that make
   // those two cases real.
   //
-  // The eager graph and the first-result graph intentionally have different
-  // scopes. The former measures code needed before the page responds; the
-  // latter also follows the result modules preloadRunModules awaits before
-  // renderResults paints. Both readings are derived from staged files.
+  // The eager graph starts at the page and worker entry points, follows only
+  // static imports, and is computed from staged files. The first-result graph
+  // also includes the modules awaited before renderResults paints.
   // The owner-approved +2 KB allowance (130,000 to 132,000 bytes) covers the
   // generator-runtime question added per the 2026-10-19 direction.
   assert.ok(
