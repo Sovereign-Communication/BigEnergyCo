@@ -21,11 +21,21 @@
 //      byte count — it just fails in the direction of looking good.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, mkdtempSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
+import {
+  BYTE_BUDGET_FACET_AXES,
+  BYTE_BUDGET_LIMITS,
+  composeQualityFacetLine,
+} from "../scripts/lib/byte-budgets.mjs";
+import {
+  composeQualityContractClause,
+  QUALITY_CONTRACT_AXIS,
+  QUALITY_CONTRACT_FIELDS,
+} from "../scripts/lib/jev-evidence.mjs";
 
 const WORKFLOW_YAML = readFileSync(".github/workflows/test.yml", "utf8");
 const PROSE = JSON.parse(
@@ -61,10 +71,11 @@ test("EVIDENCE: the performance facet line is derived from the run, not typed by
   // The quality axis is the third derived one, and the reason is the same: the
   // sentence that stood here ("prettier clean repo-wide; the two duplications the
   // design audit found are gone") named a past audit and a formatter, so a run
-  // that measured nothing looked exactly like a run that measured green. What
-  // measures the axis is the plan §3.1 gate on the shipped payload — the
-  // smallest version that keeps the proven behavior, ratcheted against a
-  // declared baseline — and it composes the line from its own reading.
+  // that measured nothing looked exactly like a run that measured green. It is
+  // now composed from the two instruments that DO measure the axis — the plan
+  // §3.1 reading of the shipped payload (the gate that took it composes that
+  // clause) and the required test job's own clarity readings (the builder
+  // appends that clause from the run records).
   assert.equal(
     Object.hasOwn(PROSE.facet_evidence || {}, "quality"),
     false,
@@ -98,8 +109,85 @@ test("EVIDENCE: the byte-budget gate declares the axis it is the evidence for", 
   );
   assert.match(
     src,
-    /COMPLETE_FACET_CLIP/,
-    "…holding it against the clip it has to fit rather than letting transport cut it",
+    /QUALITY_SIZE_CLAUSE_MAX/,
+    "…holding it against the budget for its half, so the joined line still fits the clip",
+  );
+});
+
+test("EVIDENCE: one axis, two instruments — and the two agree on which axis", () => {
+  // The size clause and the contract clause each declare the axis they belong to,
+  // once per instrument. A disagreement would produce two axes or none, so it
+  // fails here rather than in the judge's record.
+  assert.ok(
+    BYTE_BUDGET_FACET_AXES.includes(QUALITY_CONTRACT_AXIS),
+    `the byte-budget gate declares ${JSON.stringify(BYTE_BUDGET_FACET_AXES)} and the ` +
+      `contract clause speaks for "${QUALITY_CONTRACT_AXIS}"`,
+  );
+  // The clarity half is worded from the job/step map, not from a second list: a
+  // reading the required job records but this clause has no phrase for would be
+  // silently left off the line.
+  for (const field of QUALITY_CONTRACT_FIELDS) {
+    const clause = composeQualityContractClause({ [field]: true });
+    assert.ok(
+      typeof clause === "string" && clause.length > 20,
+      `${field} passes in the record but composes no clause`,
+    );
+    assert.doesNotMatch(
+      clause,
+      new RegExp(field),
+      `${field} has no phrase of its own, so the clause would print the raw field name`,
+    );
+  }
+});
+
+test("EVIDENCE: the clarity clause names contracts the suite actually asserts", () => {
+  // The clause claims the `test` job carries the one-owner and no-second-copy
+  // contracts. That is a fact about this repository, so it is checked here: if
+  // those contracts are ever deleted, the clause's claim fails a test rather
+  // than shipping as a sentence with nothing behind it.
+  const clause = composeQualityContractClause({
+    tests_green: true,
+    prettier_clean: true,
+    seo_green: true,
+  });
+  assert.match(clause, /one-owner\/no-second-copy contracts/);
+  const suite = readdirSync("tests")
+    .filter((f) => f.endsWith(".test.mjs"))
+    .map((f) => readFileSync(join("tests", f), "utf8"))
+    .join("\n");
+  for (const [contract, pattern] of [
+    ["one owner", /one owner/i],
+    ["no second copy", /second copy of the /],
+  ]) {
+    assert.match(
+      suite,
+      pattern,
+      `the clause names the "${contract}" contract, so the suite must assert it`,
+    );
+  }
+});
+
+test("EVIDENCE: a red clarity reading is named, never softened", () => {
+  const green = composeQualityContractClause({
+    tests_green: true,
+    prettier_clean: true,
+    seo_green: true,
+  });
+  assert.match(green, /^Test job green/);
+  // A missing record contributes nothing rather than a claim: the builder then
+  // carries the size clause alone.
+  assert.equal(composeQualityContractClause({}), null);
+  assert.equal(composeQualityContractClause(null), null);
+  const red = composeQualityContractClause({
+    tests_green: false,
+    prettier_clean: true,
+    seo_green: true,
+  });
+  assert.match(red, /^Test job RED \(unit tests\)/);
+  assert.doesNotMatch(
+    red,
+    /green/,
+    "a red reading must not ride under a green sentence",
   );
 });
 
@@ -372,29 +460,97 @@ test("EVIDENCE: the builder puts the run's numbers on the judge's record", () =>
 test("EVIDENCE: the byte-budget run's line reaches the judge's quality axis", () => {
   // The key IS the file name `artifactsWith` writes, which is the name the
   // web-smoke job uploads and the builder discovers.
+  const sizeClause = composeQualityFacetLine({
+    metrics: Object.fromEntries(
+      Object.keys(BYTE_BUDGET_LIMITS).map((n) => [
+        n,
+        { value: 1, limit: 1024, unit: "bytes" },
+      ]),
+    ),
+    regressions: [],
+    improvements: [{ metric: "css_total" }],
+    unmeasured: [],
+    breaches: [{ metric: "js_before_interactive" }],
+  });
   const dir = artifactsWith({
     "byte-budgets-report.json": {
       metric: "byte_budgets",
       facet_axes: ["quality"],
-      facet_line:
-        "plan §3.1 shipped bytes, staged vs the declared baseline (±256B): 0/9 regressed, 2 improved; 3 over §3.1 limits (js_before_interactive, registry_country (+1)), binds at P6/P8. Compressed payload only: duplication or dead code that does not ship is invisible here",
+      facet_line: sizeClause,
       metrics: {},
     },
   });
   const { status, stderr, out } = buildWith(dir, PROSE_MIN);
   assert.equal(status, 0, stderr);
+  // BOTH halves reach the judge, joined: the size clause the gate composed, and
+  // the clarity clause composed from the required test job's own records. The
+  // size half alone is the defect this fixes — it disclaimed the rest of the
+  // axis, and the judge read that partial measurement as unproven.
+  assert.ok(
+    out.facet_evidence.quality.startsWith(sizeClause),
+    `the judge's quality line must carry the clause this run's report composed: ${out.facet_evidence.quality}`,
+  );
   assert.match(
     out.facet_evidence.quality,
-    /^plan §3\.1 shipped bytes/,
-    "the judge's quality line must be the one composed from this run's byte-budget report",
+    /Test job green: .*contracts.*dead code or duplication is unmeasured/,
+    `…joined to the clarity clause the run records support: ${out.facet_evidence.quality}`,
+  );
+  assert.match(
+    out.facet_evidence.quality,
+    /prettier/,
+    "…and that clause names the formatter reading the test job records",
   );
   assert.ok(
-    out.derived_facet_lines?.some(
-      (d) => d.axis === "quality" && d.source === "byte-budgets-report.json",
-    ),
+    out.facet_evidence.quality.length <= COMPLETE_FACET_CLIP,
+    `the joined line is ${out.facet_evidence.quality.length} chars, over the clip`,
+  );
+  const entry = out.derived_facet_lines?.find((d) => d.axis === "quality");
+  assert.equal(
+    entry?.source,
+    "byte-budgets-report.json",
     `the record must say which report the line came from: ${JSON.stringify(
       out.derived_facet_lines,
     )}`,
+  );
+  assert.equal(
+    entry?.joined_chars,
+    out.facet_evidence.quality.length,
+    "the record must record the length that actually reached the judge",
+  );
+});
+
+test("EVIDENCE: a red test job withdraws the clarity half of the quality axis", () => {
+  // The half that is NOT the byte gate's to see. A run whose suite or formatter
+  // is red must reach the judge with that red on the line, not as a clause the
+  // byte gate could not have known about.
+  const dir = artifactsWith({
+    "byte-budgets-report.json": {
+      metric: "byte_budgets",
+      facet_axes: ["quality"],
+      facet_line: composeQualityFacetLine({ metrics: {}, regressions: [] }),
+      metrics: {},
+    },
+    "test.json": {
+      job: "test",
+      conclusion: "success",
+      steps: {
+        unit_tests: "failure",
+        prettier: "success",
+        seo: "success",
+      },
+    },
+  });
+  const { status } = buildWith(dir, PROSE_MIN);
+  // A red required step is a problem, so the builder exits non-zero — but it
+  // still WRITES the record, red field and all, which is what the judge reads on
+  // a run that cannot be trusted. That is the file this test reads.
+  assert.equal(status, 1, "a red required step must stop the run");
+  const evidence = JSON.parse(readFileSync(join(dir, "evidence.json"), "utf8"));
+  assert.equal(evidence.tests_green, false);
+  assert.match(
+    evidence.facet_evidence.quality,
+    /Test job RED \(unit tests\)/,
+    `the red clarity reading must be on the judge's line: ${evidence.facet_evidence.quality}`,
   );
 });
 

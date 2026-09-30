@@ -449,23 +449,42 @@ export function compareToBaseline(metrics, baseline = {}) {
 // as proof that the code is minimal.
 export const BYTE_BUDGET_FACET_AXES = ["quality"];
 
-// Bounded variable parts, so the line is bounded BY CONSTRUCTION and never has
-// to be sliced to fit — the same rule the other two derived lines run under. A
-// name the judge can read matters more than a long list (the full set is in
-// `breaches` / `regressions` in the report beside it), so two are printed and
-// the rest counted; a name is clipped rather than allowed to stretch the line.
-// The resulting worst case is a measurement, not a guess: this report's metric
-// set is `BYTE_BUDGET_LIMITS`, nine budgets can be measured and each can be an
-// improvement, a breach or unmeasured at once, and the fixture holding every one
-// of those shapes comes out at 261 of the 280-char transport clip
-// (tests/byte-budgets.test.mjs pins the whole set there, so a longer clause
-// fails a test rather than losing its tail in transit).
-const MAX_NAMES = 2;
+// THIS CLAUSE IS HALF OF THE `quality` LINE, and that is why it is short. The
+// axis has two instruments and one transport slot (COMPLETE_FACET_CLIP, 280
+// chars), so the byte gate composes the clause it measured — the SHIPPED SIZE
+// half — and the evidence builder appends the clause the required `test` job's
+// own recorded steps support — the code-CLARITY half (see
+// `composeQualityContractClause` in scripts/lib/jev-evidence.mjs, and the join
+// in scripts/build-jev-evidence.mjs). Neither half may claim to be the axis.
+//
+// Bounded variable parts, so the clause is bounded BY CONSTRUCTION and never has
+// to be sliced to fit — the same rule the other derived lines run under. One
+// name is printed and the rest counted: a name the judge can read matters more
+// than a long list (the full set is in `breaches` / `regressions` in the report
+// beside it), and the widest shape this report can produce is pinned by
+// tests/byte-budgets.test.mjs, with the CLIP below reserving the room the
+// contract clause needs — a longer clause fails a test rather than being cut in
+// transit.
+const MAX_NAMES = 1;
 const MAX_METRIC_NAME = 18;
 
-// The absolute-limit half of the line names the phase in the plan's own short
-// form: the full "P6 (/next/) and P8 (all)" is 25 characters of a 280-char
-// clip, and the report beside this line carries the rule in full, in
+/**
+ * The most characters the SIZE clause may take. The rest of the 280-char clip
+ * belongs to the clarity clause the builder appends
+ * (`composeQualityContractClause`), and that budget is asserted from both ends:
+ * this constant plus the contract clause's own bound must fit the clip, which
+ * tests/byte-budgets.test.mjs and tests/jev-derived-facets.test.mjs each check.
+ *
+ * It is a bound on the WIDEST shape this report can produce, not a wish: nine
+ * budgets can each be an improvement, a breach or unmeasured at once, and one
+ * clipped name is printed per list, so the fixture holding exactly that comes
+ * out under this number (tests/byte-budgets.test.mjs pins it there).
+ */
+export const QUALITY_SIZE_CLAUSE_MAX = 140;
+
+// The absolute-limit half of the clause names the phase in the plan's own short
+// form: the full "P6 (/next/) and P8 (all)" is 25 characters of a 140-char
+// clause, and the report beside this line carries the rule in full, in
 // `enforcement` and in scripts/check-byte-budgets.mjs's ABSOLUTE_BINDS_FROM.
 // What must not be compressed away is the FACT that there is a phase at all —
 // that is what separates debt the plan scheduled from a verdict on this change.
@@ -489,14 +508,21 @@ function nameList(items, pick) {
 }
 
 /**
- * Compose the `quality` facet line the judge reads, from the run's own report.
+ * Compose the SIZE clause of the `quality` axis, from the run's own report.
  *
  * Three honest shapes, and no fourth:
  *   · not measured — no budgets were read: say so, claim nothing.
  *   · regressed    — name the budgets that grew and withdraw the claim, rather
  *                    than reporting the ones that did not.
- *   · green        — the ratchet verdict, the plan's §3.1 debt with its phase,
- *                    and the limit of what a size measurement can see.
+ *   · green        — the ratchet verdict and the plan's §3.1 debt with the phase
+ *                    it binds from, because the ratchet alone would hide the
+ *                    debt and the count alone would read as a failure.
+ *
+ * It deliberately does NOT say what it cannot see. That sentence, and the
+ * clarity reading it points at, are the contract clause the builder appends
+ * from the required `test` job's own steps: one axis, two instruments, one slot,
+ * and each instrument words its own half. Claiming the axis from here is the
+ * defect this clause's bound (QUALITY_SIZE_CLAUSE_MAX) exists to prevent.
  */
 export function composeQualityFacetLine(report) {
   const metrics =
@@ -505,9 +531,8 @@ export function composeQualityFacetLine(report) {
       : null;
   if (!metrics || Object.keys(metrics).length === 0) {
     return (
-      "the staged build's plan §3.1 budgets were NOT measured this run, so " +
-      "whether this is the smallest version that keeps the proven behavior " +
-      "rests on nothing from this run"
+      "§3.1 shipped bytes were NOT measured this run: nothing here measures " +
+      "the smallest version that keeps the proven behavior."
     );
   }
 
@@ -520,36 +545,29 @@ export function composeQualityFacetLine(report) {
     : [];
   const unmeasured = Array.isArray(report.unmeasured) ? report.unmeasured : [];
   const breaches = Array.isArray(report.breaches) ? report.breaches : [];
-  const tolerance = Number.isFinite(report.tolerance_bytes)
-    ? ` (±${report.tolerance_bytes}B)`
-    : "";
-  const against = `plan §3.1 shipped bytes, staged vs the declared baseline${tolerance}`;
+  // The tolerance is not printed: it is the ratchet's own slack, it is in the
+  // report beside this clause, and two numbers the judge cannot act on do not
+  // fit beside the half of the axis this clause does not measure.
+  const head = "plan §3.1 shipped bytes, staged:";
 
   if (regressions.length) {
     return (
-      `${against}: ${regressions.length} REGRESSED of ${measured} measured — ` +
-      `${nameList(regressions, (r) => r && r.metric)}. The payload grew against ` +
-      "the version it was measured against: not the smallest version that " +
-      "keeps the proven behavior"
+      `${head} ${regressions.length}/${measured} REGRESSED — ` +
+      `${nameList(regressions, (r) => r && r.metric)}. It grew: not the smallest ` +
+      "version that keeps the proven behavior."
     );
   }
 
   // `0/n` rather than "n measured, 0 regressed": the denominator carries the
-  // same coverage fact in a third of the characters, which is what the 280-char
-  // transport clip demands. The numerator is zero by construction here, since a
-  // non-empty `regressions` returned above.
+  // same coverage fact in a third of the characters. The numerator is zero by
+  // construction here, since a non-empty `regressions` returned above.
   const counts = [`0/${measured} regressed`, `${improvements.length} improved`];
   if (unmeasured.length) counts.push(`${unmeasured.length} unmeasured`);
   // The plan's absolute limits are DEBT, not a verdict on this change, and the
-  // phase they bind from is on the line so a reader cannot mistake one for the
-  // other. Both halves go on, because the ratchet alone would hide the debt and
-  // the count alone would read as a failure.
+  // phase they bind from is in the clause so a reader cannot mistake one for the
+  // other.
   const over = breaches.length
-    ? `${breaches.length} over §3.1 limits (${nameList(breaches, (b) => b && b.metric)}), binds at ${ABS_BINDS_SHORT}`
-    : "0 over §3.1 limits";
-  return (
-    `${against}: ${counts.join(", ")}; ${over}. ` +
-    "Compressed payload only: duplication or dead code that does not ship is " +
-    "invisible here"
-  );
+    ? `${breaches.length} over limits (${nameList(breaches, (b) => b && b.metric)}), binds at ${ABS_BINDS_SHORT}`
+    : "0 over limits";
+  return `${head} ${counts.join(", ")}; ${over}.`;
 }

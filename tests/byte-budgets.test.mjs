@@ -39,6 +39,7 @@ import {
   formatReading,
   measureStagedBuild,
   moduleGraph,
+  QUALITY_SIZE_CLAUSE_MAX,
   readByteBudgetBaseline,
   REGRESSION_TOLERANCE_BYTES,
   scriptEntries,
@@ -859,34 +860,34 @@ function budgetReport(overrides = {}) {
   };
 }
 
-test("FACET: the quality line is composed from the run and names what it measured", () => {
+test("FACET: the SIZE clause is composed from the run and names what it measured", () => {
   const line = composeQualityFacetLine(budgetReport());
   assert.deepEqual(BYTE_BUDGET_FACET_AXES, ["quality"]);
   assert.match(
     line,
     /0\/9 regressed/,
-    "the ratchet verdict is the axis's own concision claim",
+    "the ratchet verdict is the size half's own concision claim",
   );
   assert.match(line, /2 improved/, "…with the improvements the run found");
+  assert.match(line, /3 over limits/, "and the plan's debt, named as debt");
   assert.match(
     line,
-    /3 over §3\.1 limits/,
-    "and the plan's debt, named as debt",
-  );
-  assert.match(
-    line,
-    /home_document, css_total/,
-    "…naming the budgets, so a reader can check the claim",
+    /home_document \(\+2\)/,
+    "…naming a budget and counting the rest, so a reader can check the claim without the clause growing with the list",
   );
   assert.match(
     line,
     /binds at P6\/P8/,
-    "a breach is not a bar until its phase, and the phase belongs on the line so debt is not read as a verdict",
+    "a breach is not a bar until its phase, and the phase belongs on the clause so debt is not read as a verdict",
   );
-  assert.match(
+  // The clause is HALF of the axis, and it must not pretend otherwise: the
+  // sentence that says what a size measurement cannot see belongs to the
+  // contract clause the builder appends, and a size clause claiming the axis
+  // from here is the defect this split exists to prevent.
+  assert.doesNotMatch(
     line,
-    /Compressed payload only/,
-    "a size measurement that does not state its own limit reads as proof the code is minimal",
+    /duplication|dead code|minimal|clarity/i,
+    "the size clause must claim the shipped-size half only; the clarity half is measured by the required test job",
   );
 });
 
@@ -895,7 +896,7 @@ test("FACET: a regressed payload withdraws the concision claim", () => {
   const line = composeQualityFacetLine(
     budgetReport({ regressions: names.map((metric) => ({ metric })) }),
   );
-  assert.match(line, /9 REGRESSED of 9 measured/);
+  assert.match(line, /9\/9 REGRESSED/);
   assert.match(
     line,
     /not the smallest version that keeps the proven behavior/,
@@ -903,7 +904,7 @@ test("FACET: a regressed payload withdraws the concision claim", () => {
   );
   assert.doesNotMatch(
     line,
-    /improved|over §3\.1 limits/,
+    /improved|over limits/,
     "…and the budgets that did not move are not reported as though the run were fine",
   );
 });
@@ -911,7 +912,7 @@ test("FACET: a regressed payload withdraws the concision claim", () => {
 test("FACET: a run that measured nothing says so, and claims nothing", () => {
   const line = composeQualityFacetLine({ metrics: {}, regressions: [] });
   assert.match(line, /NOT measured this run/);
-  assert.match(line, /rests on nothing from this run/);
+  assert.match(line, /nothing here measures the smallest version/);
   assert.doesNotMatch(
     line,
     /regressed|improved/,
@@ -919,7 +920,7 @@ test("FACET: a run that measured nothing says so, and claims nothing", () => {
   );
 });
 
-test("FACET: every shape this report can produce fits the transport clip", () => {
+test("FACET: every size-clause shape this report can produce fits its budget", () => {
   const names = Object.keys(BYTE_BUDGET_LIMITS);
   // The bound is a measurement, not a hope: this report's metric set is
   // `BYTE_BUDGET_LIMITS`, and all nine can be an improvement, a breach AND
@@ -932,6 +933,9 @@ test("FACET: every shape this report can produce fits the transport clip", () =>
     }),
     regressed: budgetReport({
       regressions: names.map((metric) => ({ metric })),
+    }),
+    single_regression: budgetReport({
+      regressions: [{ metric: names[0] }],
     }),
     clean: budgetReport({ improvements: [], breaches: [] }),
     partial: budgetReport({
@@ -949,14 +953,29 @@ test("FACET: every shape this report can produce fits the transport clip", () =>
   for (const [shape, report] of Object.entries(shapes)) {
     const line = composeQualityFacetLine(report);
     assert.ok(
-      line.length <= COMPLETE_FACET_CLIP,
-      `${shape} composes to ${line.length} chars, over the ${COMPLETE_FACET_CLIP}-char ` +
-        "clip; an over-long line is cut in transit and the tail is the limit sentence",
+      line.length <= QUALITY_SIZE_CLAUSE_MAX,
+      `${shape} composes to ${line.length} chars, over the ${QUALITY_SIZE_CLAUSE_MAX}-char ` +
+        "budget for the size half; the clarity clause has to fit beside it",
     );
   }
   assert.ok(
-    composeQualityFacetLine(shapes.worst).length >= 200,
+    composeQualityFacetLine(shapes.worst).length >= 100,
     "the bound is only worth pinning if the worst case is actually long",
+  );
+});
+
+test("FACET: the two quality clauses fit the transport clip TOGETHER, by construction", async () => {
+  // The invariant the split rests on: one axis, two instruments, one 280-char
+  // slot. Each clause is bounded by its own declared maximum, and the sum of
+  // those two maxima must fit the clip — otherwise the builder's join would be
+  // the first thing to overflow, and an over-long line is CUT in transit, which
+  // for this axis means losing the sentence that limits the claim.
+  const { QUALITY_CONTRACT_CLAUSE_MAX } =
+    await import("../scripts/lib/jev-evidence.mjs");
+  assert.ok(
+    QUALITY_SIZE_CLAUSE_MAX + 1 + QUALITY_CONTRACT_CLAUSE_MAX <=
+      COMPLETE_FACET_CLIP,
+    `${QUALITY_SIZE_CLAUSE_MAX} + 1 + ${QUALITY_CONTRACT_CLAUSE_MAX} must fit ${COMPLETE_FACET_CLIP}`,
   );
 });
 

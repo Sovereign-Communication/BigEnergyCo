@@ -37,6 +37,10 @@ import {
   BYTE_BUDGET_LIMITS,
   composeQualityFacetLine,
 } from "../scripts/lib/byte-budgets.mjs";
+import {
+  composeQualityContractClause,
+  QUALITY_CONTRACT_FIELDS,
+} from "../scripts/lib/jev-evidence.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PLAN = readFileSync(join(ROOT, "docs/plan/MASTER_PLAN.md"), "utf8");
@@ -63,14 +67,17 @@ const AUTO = {
 };
 
 /**
- * The `quality` line the plan §3.1 byte-budget gate composes, shaped like a run
- * on this tree: every budget measured, two improved, the three long-standing §3.1
- * breaches named. Built through the real composer rather than copied from it, so
- * this measures the length that actually reaches the judge.
+ * The `quality` line the run composes for the judge, shaped like this tree:
+ * every §3.1 budget measured, two improved, three long-standing breaches — the
+ * SIZE clause from the gate that took the reading, joined to the CLARITY clause
+ * the required test job's own records support, exactly as
+ * scripts/build-jev-evidence.mjs joins them. Built through the real composers
+ * rather than copied from them, so this measures the length that actually
+ * reaches the judge.
  */
 function derivedQualityLine() {
   const names = Object.keys(BYTE_BUDGET_LIMITS);
-  return composeQualityFacetLine({
+  const size = composeQualityFacetLine({
     metrics: Object.fromEntries(
       names.map((n) => [n, { value: 1, limit: 1024, unit: "bytes" }]),
     ),
@@ -80,6 +87,10 @@ function derivedQualityLine() {
     breaches: names.slice(0, 3).map((metric) => ({ metric })),
     tolerance_bytes: 256,
   });
+  const contracts = composeQualityContractClause(
+    Object.fromEntries(QUALITY_CONTRACT_FIELDS.map((f) => [f, true])),
+  );
+  return contracts ? `${size} ${contracts}` : size;
 }
 
 test("PACK: the plan's five P0.3(d) facets exist, each with its own bucket", () => {

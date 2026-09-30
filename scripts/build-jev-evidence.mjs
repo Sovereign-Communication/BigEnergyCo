@@ -35,12 +35,17 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   composeEvidence,
+  composeQualityContractClause,
   evidenceSourceKind,
   parseJobResult,
+  QUALITY_CONTRACT_AXIS,
+  QUALITY_CONTRACT_CLAUSE_MAX,
+  QUALITY_CONTRACT_FIELDS,
   requiredJobsFromWorkflow,
   RUN_RECORD_FIELDS,
 } from "./lib/jev-evidence.mjs";
 import { COMPLETE_FACET_CLIP } from "./lib/jev-complete.mjs";
+import { QUALITY_SIZE_CLAUSE_MAX } from "./lib/byte-budgets.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 
 // The workflow these artifacts came from, resolved against this script rather
@@ -281,14 +286,70 @@ export function main(argv = process.argv.slice(2)) {
   if (ignored.length) {
     evidence.ci.ignored_files = ignored;
   }
+  // ── ONE AXIS HAS TWO INSTRUMENTS, AND THIS IS WHERE THEY MEET ─────────────
+  //
+  // The `quality` axis is the only one whose subject is split across two
+  // required jobs, and the split is not an accident of this layout: "the
+  // smallest version that keeps the proven behavior" is measured on the shipped
+  // payload by the plan §3.1 byte gate (web-smoke), while "no duplicated logic;
+  // formatting clean" is measured by the contract suite, the formatter and the
+  // site-integrity gates the `test` job runs. Each half words itself from its own
+  // run — the byte gate composes its clause into its report, and the contract
+  // clause is composed here from the run records the record already carries — and
+  // neither half may claim the axis alone.
+  //
+  // So this joins them, and it is the only place that can: the byte gate cannot
+  // see another job's outcomes, and the test job measures no bytes. The join is
+  // BOUNDED from both ends rather than trimmed: each clause has its own declared
+  // maximum, and a union over the transport clip is a NAMED PROBLEM here — the
+  // failure mode this whole pass exists to prevent is a line silently cut on its
+  // way to the judge, and silently dropping the clause that limits the claim is
+  // exactly what a trim would do. A second two-instrument axis should join here
+  // too, rather than growing a second mechanism.
+  if (derived.some((d) => d.axis === QUALITY_CONTRACT_AXIS)) {
+    const contractClause = composeQualityContractClause(
+      Object.fromEntries(QUALITY_CONTRACT_FIELDS.map((f) => [f, evidence[f]])),
+    );
+    if (contractClause) {
+      const sizeClause = evidence.facet_evidence[QUALITY_CONTRACT_AXIS];
+      // Each half is checked against its OWN declared maximum, not just the
+      // total: a clause that grew past its budget moves the other half out of
+      // room, and naming the half that grew is what makes the failure fixable.
+      const over = [
+        ["size", sizeClause, QUALITY_SIZE_CLAUSE_MAX],
+        ["clarity", contractClause, QUALITY_CONTRACT_CLAUSE_MAX],
+      ].filter(([, text, max]) => text.length > max);
+      const joined = `${sizeClause} ${contractClause}`;
+      if (over.length || joined.length > COMPLETE_FACET_CLIP) {
+        const which = over.length
+          ? over
+              .map(([half, text, max]) => `${half} ${text.length}>${max}`)
+              .join(", ")
+          : `joined ${joined.length}>${COMPLETE_FACET_CLIP}`;
+        problems.push(
+          `the ${QUALITY_CONTRACT_AXIS} facet line is over budget (${which}); ` +
+            "it would be cut in transit, which for this axis drops the sentence " +
+            "that limits the claim — shorten the clause rather than letting it " +
+            "silently lose its tail",
+        );
+      } else {
+        evidence.facet_evidence[QUALITY_CONTRACT_AXIS] = joined;
+      }
+    }
+  }
   if (derived.length) {
     // Recorded so a reader of the file can see which facet proof lines came
-    // from which run's report, without re-deriving it.
+    // from which run's report, without re-deriving it — and, for the axis the
+    // join above touched, the length that actually reaches the judge.
     evidence.derived_facet_lines = derived.map((d) => ({
       axis: d.axis,
       source: d.source,
       metric: d.metric,
       chars: d.line.length,
+      ...(d.axis === QUALITY_CONTRACT_AXIS &&
+      typeof evidence.facet_evidence?.[d.axis] === "string"
+        ? { joined_chars: evidence.facet_evidence[d.axis].length }
+        : {}),
     }));
   }
   if (preReportNote) evidence.derived_facet_line_note = preReportNote;
