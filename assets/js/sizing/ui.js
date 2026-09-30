@@ -175,7 +175,11 @@ import {
   restoreWizard,
 } from "./wizard.js?v=20261022j";
 import { tiltValueSummary } from "./tilt-harvest.js?v=20261022j";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261022j";
+import {
+  interpolateCurveTarget,
+  surplusAnchor,
+  budgetSpanMax,
+} from "./budget-span.js?v=20261022j";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
