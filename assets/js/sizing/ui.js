@@ -13,18 +13,23 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261005h";
-import {
-  USE_CASES,
-  USE_CASE_IDS,
-  useCase,
-  deriveLegacy,
-  loadsFor,
-  normaliseReservePct,
-  normaliseOutageTarget,
-  DEFAULT_RESERVE_PCT,
-  DEFAULT_TOU,
-} from "./usecases.js?v=20261005h";
+import { APPLIANCES } from "./appliances.js?v=20261005h";
+import { byId as $, el } from "../shared/dom.js?v=20261005h";
+import {
+  INSTALL_NAV_BREAKPOINT_PX,
+  installReveal,
+} from "./pwa-install.js?v=20261005h";
+import {
+  USE_CASES,
+  USE_CASE_IDS,
+  useCase,
+  deriveLegacy,
+  loadsFor,
+  normaliseReservePct,
+  normaliseOutageTarget,
+  DEFAULT_RESERVE_PCT,
+  DEFAULT_TOU,
+} from "./usecases.js?v=20261005h";
 import {
   createRunChannel,
   staleRunAction,
@@ -53,52 +58,52 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261005h";
-// The country -> currency table. Static, not lazy: it is consulted the moment
-// a location resolves, so a dynamic import would only add a round trip to the
-// one path that must not wait. Its 11.5 KB is data, and the first-load budget
-// below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261005h";
-
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261005h";
-
-// THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
-//
-// LAZY, and the measurement is why. It used to be a static import, on the
-// reasoning that the ELI5 card's installer-vs-direct sentence and the
-// comparison panel both read it on first paint. The browser says otherwise:
-// paths.js is fetched and parsed BEFORE the first result card renders, and the
-// plan's own js_to_first_result budget read 201,806 B against a 204,800 B cap
-// on the tree that shipped this — 2,994 B of headroom, of which paths.js was
-// 10,310 B. A pricing model nobody can see yet was sitting on the critical
-// path for a section that renders after the result does.
-//
-// The D-01 objection is answered structurally, not waved away: BOTH surfaces
-// that read the model (the panel and the ELI5 sentence) are rendered inside
-// ONE await, after the module resolves, in the same tick. So there is never a
-// window in which the page shows a guessed quote and then corrects it — which
-// was the exact defect D-01 exists to remove. The module resolves in a few
-// milliseconds from cache and the whole comparison appears at once, priced by
-// one owner.
-let pathsApi = null;
-// The one place the horizon crosses into the copy. A bare binding rather than
-// pathsApi.HORIZON_YEARS because turnkeyQuoteText is exported and sliced out
-// of this file by tests/quote-text-bridge.mjs, which supplies the horizon as an
-// injected argument; renaming it would silently unbind the test. The VALUE has
-// one owner (paths.js) either way, and no surface renders before the module has
-// resolved.
-let PATHS_HORIZON_YEARS = null;
-let pathsLoading = null;
-function loadPaths() {
-  if (pathsApi) return Promise.resolve(pathsApi);
-  if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261005h").then((mod) => {
-      pathsApi = mod;
-      PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
-      return mod;
-    });
-  return pathsLoading;
-}
+} from "./pricing.js?v=20261005h";
+// The country -> currency table. Static, not lazy: it is consulted the moment
+// a location resolves, so a dynamic import would only add a round trip to the
+// one path that must not wait. Its 11.5 KB is data, and the first-load budget
+// below records the deliberate trade.
+import { currencyForCountry } from "./country-currency.js?v=20261005h";
+
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261005h";
+
+// THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
+//
+// LAZY, and the measurement is why. It used to be a static import, on the
+// reasoning that the ELI5 card's installer-vs-direct sentence and the
+// comparison panel both read it on first paint. The browser says otherwise:
+// paths.js is fetched and parsed BEFORE the first result card renders, and the
+// plan's own js_to_first_result budget read 201,806 B against a 204,800 B cap
+// on the tree that shipped this — 2,994 B of headroom, of which paths.js was
+// 10,310 B. A pricing model nobody can see yet was sitting on the critical
+// path for a section that renders after the result does.
+//
+// The D-01 objection is answered structurally, not waved away: BOTH surfaces
+// that read the model (the panel and the ELI5 sentence) are rendered inside
+// ONE await, after the module resolves, in the same tick. So there is never a
+// window in which the page shows a guessed quote and then corrects it — which
+// was the exact defect D-01 exists to remove. The module resolves in a few
+// milliseconds from cache and the whole comparison appears at once, priced by
+// one owner.
+let pathsApi = null;
+// The one place the horizon crosses into the copy. A bare binding rather than
+// pathsApi.HORIZON_YEARS because turnkeyQuoteText is exported and sliced out
+// of this file by tests/quote-text-bridge.mjs, which supplies the horizon as an
+// injected argument; renaming it would silently unbind the test. The VALUE has
+// one owner (paths.js) either way, and no surface renders before the module has
+// resolved.
+let PATHS_HORIZON_YEARS = null;
+let pathsLoading = null;
+function loadPaths() {
+  if (pathsApi) return Promise.resolve(pathsApi);
+  if (!pathsLoading)
+    pathsLoading = import("./paths.js?v=20261005h").then((mod) => {
+      pathsApi = mod;
+      PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
+      return mod;
+    });
+  return pathsLoading;
+}
 import {
   leadAcidChipCopy,
   leadAcidComparison,
@@ -471,24 +476,6 @@ let generatorBasis = false;
 // to realistic compressor time, and the row shows the resulting average draw.
 
 const CHEM_KEYS = new Set(["auto", "naion", "lfp", "agm"]);
-
-function $(id) {
-  return document.getElementById(id);
-}
-
-function el(tag, attrs = {}, text) {
-  const e = document.createElement(tag);
-
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === "style") e.style.cssText = v;
-    else if (k === "class") e.className = v;
-    else e.setAttribute(k, v);
-  }
-
-  if (text !== undefined) e.textContent = text;
-
-  return e;
-}
 
 // Reduced-motion users get instant scrolling instead of JS smooth scroll.
 // Same contract as chat.js's helper (a classic script can't share imports).
@@ -8178,13 +8165,30 @@ function setupPwaControls() {
 
   const badge = $("offlineBadge");
 
+  // The install prompt arrives long after first paint, so WHICH control is
+  // revealed is a layout decision, not a cosmetic one: showing both reflowed
+  // the header CTA row 109px and measured 0.121 CLS on home/mobile. The rule
+  // and the measurement behind it live in ./pwa-install.js.
+  const narrowNav =
+    typeof window.matchMedia === "function"
+      ? window.matchMedia(`(max-width: ${INSTALL_NAV_BREAKPOINT_PX}px)`)
+      : null;
+
+  const applyInstallVisibility = (available) => {
+    const next = installReveal(
+      narrowNav ? narrowNav.matches : false,
+      available,
+    );
+    if (btnH) btnH.style.display = next.header;
+    if (btnM) btnM.style.display = next.drawer;
+  };
+
   const triggerInstall = async () => {
     if (!deferredInstallPrompt) return;
     deferredInstallPrompt.prompt();
     const res = await deferredInstallPrompt.userChoice;
     if (res && res.outcome === "accepted") {
-      if (btnH) btnH.style.display = "none";
-      if (btnM) btnM.style.display = "none";
+      applyInstallVisibility(false);
     }
     deferredInstallPrompt = null;
   };
@@ -8196,15 +8200,22 @@ function setupPwaControls() {
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
-    if (btnH) btnH.style.display = "inline-flex";
-    if (btnM) btnM.style.display = "flex";
+    applyInstallVisibility(true);
   });
 
   window.addEventListener("appinstalled", () => {
-    if (btnH) btnH.style.display = "none";
-    if (btnM) btnM.style.display = "none";
+    applyInstallVisibility(false);
     deferredInstallPrompt = null;
   });
+
+  // Rotating a phone past the breakpoint leaves the revealed control in the
+  // layout that no longer exists. Re-resolve, so there is never a button on
+  // screen that the current layout does not use.
+  if (narrowNav && typeof narrowNav.addEventListener === "function") {
+    narrowNav.addEventListener("change", () => {
+      applyInstallVisibility(Boolean(deferredInstallPrompt));
+    });
+  }
 
   function updateNetworkStatus() {
     if (!badge) return;

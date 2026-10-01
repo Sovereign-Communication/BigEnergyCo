@@ -9,10 +9,13 @@
 //      browser must fetch to make step 1 interactive, not the entry file. The
 //      registry budget is per country, so the reading is the WORST country, not
 //      an average and not whichever sorts first.
-//   2. THE PLAN OWNS THE NUMBERS. `BYTE_BUDGET_LIMITS` is §3.1 verbatim. §3.1
-//      says a physically unreachable limit may be relaxed "by measured evidence
-//      plus an amendment", and the amendment lives in the plan. Nothing here
-//      may widen a limit; the gate's job is to keep the breach visible.
+//   2. THE PLAN OWNS THE NUMBERS. `BYTE_BUDGET_LIMITS` is the §3.1 table as
+//      amended by A-002 (owner-approved 2026-09-29): three physically
+//      unreachable lines bind at shipped +10 % until the P6/P8 absolute phases,
+//      the other seven are the table's own values. §3.1 says a limit may be
+//      relaxed only "by measured evidence plus an amendment", and that
+//      amendment lives in the plan (docs/plan/AMENDMENTS.md, A-002). Nothing
+//      here may widen a limit; the gate's job is to keep a breach visible.
 //   3. P0.4 RATCHETS, IT DOES NOT ENFORCE ABSOLUTELY. §3.2 makes these gates
 //      regression-blocking from P0 and absolute only from P6 (/next/) and P8
 //      (all). A reading already over its limit is reported; only getting worse
@@ -24,18 +27,22 @@ import { brotliCompressSync, constants } from "node:zlib";
 
 const KB = 1024;
 
-// §3.1, verbatim. Do not edit: relax a limit in the plan, through an
-// amendment, and let this read the new value.
+// §3.1 as amended by A-002. Do not edit: relax a limit in the plan, through an
+// amendment, and let this read the new value. The six unchanged lines are the
+// table's own figures; the three A-002 interim lines are the measured shipped
+// bytes at PR #171 plus 10 % (186.5 KB → 206 KB, 75.1 KB → 83 KB,
+// 417.3 KB → 460 KB). The table's original figures (35 / 6 / 300 KB) remain
+// the absolute thresholds that bind from P6 (/next/) and P8 (all) per §3.2.
 export const BYTE_BUDGET_LIMITS = {
   home_document: 30 * KB,
   css_total: 20 * KB,
-  js_before_interactive: 35 * KB,
+  js_before_interactive: 206 * KB,
   js_to_first_result: 200 * KB,
   locale_strings: 25 * KB,
-  registry_country: 6 * KB,
+  registry_country: 83 * KB,
   requests_before_interaction: 10,
   web_fonts: 0,
-  heatmap_initial: 300 * KB,
+  heatmap_initial: 460 * KB,
 };
 
 // Brotli output moves a byte or two between compressor versions and across
@@ -329,7 +336,7 @@ export function measureStagedBuild({ files, read }) {
         files: graph.length,
         entries,
         by_file: graphSizes,
-        note: "every module the document's scripts statically reach, which the browser must fetch and evaluate before the entry module's code runs. The plan's 35 KB line; nothing lazy-loads in this build yet, so it is the whole graph.",
+        note: "every module the document's scripts statically reach, which the browser must fetch and evaluate before the entry module's code runs. The §3.1 line as amended by A-002 (206 KB interim; the table's 35 KB figure binds absolutely from P6/P8); nothing lazy-loads in this build yet, so it is the whole graph.",
       }),
       js_to_first_result: metric("js_to_first_result", graphBytes, {
         files: graph.length,
@@ -443,10 +450,14 @@ export function compareToBaseline(metrics, baseline = {}) {
 //     it what it is, because a line that printed the §3.1 count alone would read
 //     as a failure and one that printed the ratchet alone would hide the debt.
 //
-// What the line says about itself is the same limit the other derived lines
-// carry: this measures the size of what ships, so duplication and dead code that
-// does not ship are invisible here. Saying so is what stops a green line reading
-// as proof that the code is minimal.
+// What this half cannot see is stated where the axis's other half words it:
+// this gate measures the size of what ships, so dead code that does not ship
+// is invisible HERE — and the clarity clause the builder joins carries the
+// instrument that does measure it (the hygiene scan: dead code and duplication
+// across the tracked tree) plus the sentence for what neither measures
+// (unnecessary branches or abstractions). A green line still may not read as
+// "this code is minimal"; it reads as "the parts that have instruments are
+// green, and the rest is named".
 export const BYTE_BUDGET_FACET_AXES = ["quality"];
 
 // THIS CLAUSE IS HALF OF THE `quality` LINE, and that is why it is short. The

@@ -21,7 +21,7 @@ function clamp(v, lo, hi) {
 }
 
 /** Geometry for one render, derived from the width actually available. */
-export function chartBox(hostWidth) {
+function chartBox(hostWidth) {
   const w = clamp(Math.round(hostWidth) || 720, VB_MIN, VB_MAX);
   // "narrow" means phone-narrow: too tight for the in-chart callouts, which
   // the legend and the verdict sentence say in words anyway. The results
@@ -68,7 +68,7 @@ function textWidth(str, fontSize) {
  * the plot when neither side has room.
  * @returns {{x:number, anchor:string}}
  */
-export function placeLabel(x, text, fontSize, bounds, offset = 10) {
+function placeLabel(x, text, fontSize, bounds, offset = 10) {
   const w = textWidth(text, fontSize);
   if (x + offset + w <= bounds.right) return { x: x + offset, anchor: "start" };
   if (x - offset - w >= bounds.left) return { x: x - offset, anchor: "end" };

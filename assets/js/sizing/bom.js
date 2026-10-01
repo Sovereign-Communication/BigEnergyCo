@@ -15,7 +15,7 @@ import { POWMR_CATALOG } from "./pricing.js?v=20261005h";
 export const PANEL_WATTS_DEFAULT = 550;
 // Modern mono-PERC modules run ~210-220 W/m² STC; dividing by 200 also
 // absorbs the walk/gap spacing on a typical rooftop layout.
-export const PANEL_AREA_W_PER_M2 = 200;
+const PANEL_AREA_W_PER_M2 = 200;
 
 export const INVERTER_STANDARD_KW = [1, 1.5, 2, 3, 4, 5, 6, 8, 10, 12, 15];
 
@@ -26,9 +26,9 @@ export const FUSE_STANDARD_AMPS = [
 // Copper resistivity at operating temperature, Ω·mm²/m (20 °C value is
 // 0.0172; warm DC wiring in an enclosure runs hotter — 0.0175 is the usual
 // planning figure).
-export const CU_RESISTIVITY = 0.0175;
-export const CABLE_DROP_FRACTION = 0.02; // 2% allowed drop, battery-to-inverter
-export const CABLE_RUN_METERS = [2, 5, 10];
+const CU_RESISTIVITY = 0.0175;
+const CABLE_DROP_FRACTION = 0.02; // 2% allowed drop, battery-to-inverter
+const CABLE_RUN_METERS = [2, 5, 10];
 
 // Cross-section mm² → AWG, plus conservative continuous ampacity (75 °C
 // column, copper, free air reduced for bundling). Deliberately coarse.
@@ -46,8 +46,8 @@ export const WIRE_TABLE = [
   { awg: "3/0", mm2: 85.0, ampacity: 200 },
   { awg: "4/0", mm2: 107.0, ampacity: 230 },
 ];
-export const HOT_DERATE_ABOVE_C = 40; // ambient above this → ampacity × 0.88
-export const HOT_DERATE_FACTOR = 0.88;
+const HOT_DERATE_ABOVE_C = 40; // ambient above this → ampacity × 0.88
+const HOT_DERATE_FACTOR = 0.88;
 
 // DIY cell formats (the common large-prismatic buys of 2025-2026):
 const DIY_CELLS = {
@@ -70,7 +70,7 @@ export function nextInverterSize(kw) {
 }
 
 /** True when `kw` exceeds the largest standard inverter class (stacked units needed). */
-export function inverterOverflows(kw) {
+function inverterOverflows(kw) {
   return kw > INVERTER_STANDARD_KW[INVERTER_STANDARD_KW.length - 1];
 }
 
@@ -80,14 +80,14 @@ export function nextFuseSize(amps) {
 }
 
 /** True when `amps` exceeds the largest standard fuse rating. */
-export function fuseOverflows(amps) {
+function fuseOverflows(amps) {
   return amps > FUSE_STANDARD_AMPS[FUSE_STANDARD_AMPS.length - 1];
 }
 
 // Standard MPPT controller classes (A) — fuse ratings are NOT controller
 // sizes; a "125 A-class controller" names a product that does not exist.
-export const CONTROLLER_STANDARD_AMPS = [30, 40, 60, 80, 100];
-export function nextControllerSize(amps) {
+const CONTROLLER_STANDARD_AMPS = [30, 40, 60, 80, 100];
+function nextControllerSize(amps) {
   return ceilTo(amps, CONTROLLER_STANDARD_AMPS);
 }
 

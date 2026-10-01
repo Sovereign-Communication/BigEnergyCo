@@ -46,6 +46,11 @@ import {
 } from "./lib/jev-evidence.mjs";
 import { COMPLETE_FACET_CLIP } from "./lib/jev-complete.mjs";
 import { QUALITY_SIZE_CLAUSE_MAX } from "./lib/byte-budgets.mjs";
+import {
+  A11Y_CONTROLS_CLAUSE_MAX,
+  A11Y_FACET_AXES,
+} from "./lib/a11y-controls.mjs";
+import { A11Y_MATRIX_CLAUSE_MAX } from "./lib/quality-matrix.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 
 // The workflow these artifacts came from, resolved against this script rather
@@ -64,6 +69,46 @@ const USAGE =
 function usageError(msg) {
   process.stderr.write(`build-jev-evidence: ${msg}\n${USAGE}\n`);
   process.exit(2);
+}
+
+/**
+ * Join one axis's clauses into the single line the judge reads for that axis.
+ *
+ * The `quality` join invented this shape — the byte gate's size half and the
+ * contract suite's clarity half, neither allowed to claim the axis alone — and
+ * `accessibility` is the second axis with the same shape, joined by this same
+ * code because the failure it exists to prevent is identical: a line SILENTLY
+ * CUT on its way to the judge drops whichever sentence limits the claim, and
+ * that is exactly what a trim would eat.
+ *
+ * Bounded from both ends rather than trimmed: each clause carries its own
+ * declared maximum, so naming the half that grew is what makes the failure
+ * fixable, and a union over the transport clip is a named problem — never a
+ * shortened line. Returns true when the joined line was written.
+ */
+function joinAxisClauses(evidence, problems, axis, clauses) {
+  if (clauses.some((c) => !c || typeof c.text !== "string" || !c.text))
+    return false;
+  // Each half against ITS OWN bound, not just the total: a clause that grew
+  // past its budget moves the other half out of room.
+  const over = clauses
+    .filter((c) => c.text.length > c.max)
+    .map((c) => `${c.half} ${c.text.length}>${c.max}`);
+  const joined = clauses.map((c) => c.text).join(" ");
+  if (over.length || joined.length > COMPLETE_FACET_CLIP) {
+    const which = over.length
+      ? over.join(", ")
+      : `joined ${joined.length}>${COMPLETE_FACET_CLIP}`;
+    problems.push(
+      `the ${axis} facet line is over budget (${which}); ` +
+        "it would be cut in transit, which for this axis drops the sentence " +
+        "that limits the claim — shorten the clause rather than letting it " +
+        "silently lose its tail",
+    );
+    return false;
+  }
+  evidence.facet_evidence[axis] = joined;
+  return true;
 }
 
 function parseArgs(argv) {
@@ -392,56 +437,65 @@ export function main(argv = process.argv.slice(2)) {
   // run — the byte gate composes its clause into its report, and the contract
   // clause is composed here from the run records the record already carries — and
   // neither half may claim the axis alone.
-  //
-  // So this joins them, and it is the only place that can: the byte gate cannot
-  // see another job's outcomes, and the test job measures no bytes. The join is
-  // BOUNDED from both ends rather than trimmed: each clause has its own declared
-  // maximum, and a union over the transport clip is a NAMED PROBLEM here — the
-  // failure mode this whole pass exists to prevent is a line silently cut on its
-  // way to the judge, and silently dropping the clause that limits the claim is
-  // exactly what a trim would do. A second two-instrument axis should join here
-  // too, rather than growing a second mechanism.
+  //// So this joins them, and the join below is the only place that can: the byte
+  // gate cannot see another job's outcomes, and the test job measures no bytes.
+  // The join is BOUNDED from both ends rather than trimmed: each clause has its
+  // own declared maximum, and a union over the transport clip is a NAMED PROBLEM
+  // here — the failure mode this whole pass exists to prevent is a line silently
+  // cut on its way to the judge, and silently dropping the clause that limits the
+  // claim is exactly what a trim would do.
   if (derived.some((d) => d.axis === QUALITY_CONTRACT_AXIS)) {
     const contractClause = composeQualityContractClause(
       Object.fromEntries(QUALITY_CONTRACT_FIELDS.map((f) => [f, evidence[f]])),
     );
     if (contractClause) {
-      const sizeClause = evidence.facet_evidence[QUALITY_CONTRACT_AXIS];
-      // Each half is checked against its OWN declared maximum, not just the
-      // total: a clause that grew past its budget moves the other half out of
-      // room, and naming the half that grew is what makes the failure fixable.
-      const over = [
-        ["size", sizeClause, QUALITY_SIZE_CLAUSE_MAX],
-        ["clarity", contractClause, QUALITY_CONTRACT_CLAUSE_MAX],
-      ].filter(([, text, max]) => text.length > max);
-      const joined = `${sizeClause} ${contractClause}`;
-      if (over.length || joined.length > COMPLETE_FACET_CLIP) {
-        const which = over.length
-          ? over
-              .map(([half, text, max]) => `${half} ${text.length}>${max}`)
-              .join(", ")
-          : `joined ${joined.length}>${COMPLETE_FACET_CLIP}`;
-        problems.push(
-          `the ${QUALITY_CONTRACT_AXIS} facet line is over budget (${which}); ` +
-            "it would be cut in transit, which for this axis drops the sentence " +
-            "that limits the claim — shorten the clause rather than letting it " +
-            "silently lose its tail",
-        );
-      } else {
-        evidence.facet_evidence[QUALITY_CONTRACT_AXIS] = joined;
-      }
+      joinAxisClauses(evidence, problems, QUALITY_CONTRACT_AXIS, [
+        {
+          half: "size",
+          text: evidence.facet_evidence[QUALITY_CONTRACT_AXIS],
+          max: QUALITY_SIZE_CLAUSE_MAX,
+        },
+        {
+          half: "clarity",
+          text: contractClause,
+          max: QUALITY_CONTRACT_CLAUSE_MAX,
+        },
+      ]);
     }
+  }
+  // `accessibility` is the second two-instrument axis, joined by the SAME code
+  // for the same reason. The controls walk (web-smoke) words the pack's four
+  // questions — reachability, names, contrast, reduced motion — and ends on its
+  // own limit: "1 Chrome, no screen reader, no theme/RTL matrix". The axe
+  // matrix (quality-lab) is the run that measured exactly that matrix, and
+  // neither half may claim the axis alone: the controls walk never loaded the
+  // matrix, and the matrix never touched a keyboard. Matched by `metric`, the
+  // field each gate stamps into its own report — the file names are an
+  // implementation of the artifact upload, the metric is the measurement.
+  const a11yAxis = A11Y_FACET_AXES[0];
+  const controls = derived.find(
+    (d) => d.axis === a11yAxis && d.metric === "a11y_controls",
+  );
+  const matrix = derived.find(
+    (d) => d.axis === a11yAxis && d.metric === "a11y_matrix",
+  );
+  if (controls && matrix) {
+    joinAxisClauses(evidence, problems, a11yAxis, [
+      { half: "controls", text: controls.line, max: A11Y_CONTROLS_CLAUSE_MAX },
+      { half: "matrix", text: matrix.line, max: A11Y_MATRIX_CLAUSE_MAX },
+    ]);
   }
   if (derived.length) {
     // Recorded so a reader of the file can see which facet proof lines came
-    // from which run's report, without re-deriving it — and, for the axis the
+    // from which run's report, without re-deriving it — and, for each axis the
     // join above touched, the length that actually reaches the judge.
+    const joinedAxes = new Set([QUALITY_CONTRACT_AXIS, A11Y_FACET_AXES[0]]);
     evidence.derived_facet_lines = derived.map((d) => ({
       axis: d.axis,
       source: d.source,
       metric: d.metric,
       chars: d.line.length,
-      ...(d.axis === QUALITY_CONTRACT_AXIS &&
+      ...(joinedAxes.has(d.axis) &&
       typeof evidence.facet_evidence?.[d.axis] === "string"
         ? { joined_chars: evidence.facet_evidence[d.axis].length }
         : {}),

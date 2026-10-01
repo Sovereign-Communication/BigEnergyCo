@@ -25,21 +25,21 @@ import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261005h";
 
 // Points below this coverage are real but not decision-useful; plotting them
 // squashes the interesting part of the curve into the top corner.
-export const FRONTIER_MIN_OUTCOME = 0.25;
+const FRONTIER_MIN_OUTCOME = 0.25;
 
 // Two points one-third of a percentage point apart are the same answer to a
 // human. Thinning keeps the chart readable without touching the math.
-export const FRONTIER_MIN_STEP_PP = 1.0;
-export const FRONTIER_MAX_POINTS = 22;
+const FRONTIER_MIN_STEP_PP = 1.0;
+const FRONTIER_MAX_POINTS = 22;
 
 // Verdict thresholds. Ratio of marginal cost-per-point AFTER the knee to
 // marginal cost-per-point BEFORE it.
-export const TAIL_RATIO_TAPERING = 2;
-export const TAIL_RATIO_STEEP = 6;
+const TAIL_RATIO_TAPERING = 2;
+const TAIL_RATIO_STEEP = 6;
 
 // Coverage a site must reach before "full independence" is honest.
-export const CEILING_REACHED_PCT = 99;
-export const CEILING_NEAR_PCT = 90;
+const CEILING_REACHED_PCT = 99;
+const CEILING_NEAR_PCT = 90;
 
 /**
  * Did the best system found sit on the edge of the lattice? If so, the sweep
