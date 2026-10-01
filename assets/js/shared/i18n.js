@@ -1,8 +1,8 @@
 // Tiny i18n applier: translates elements carrying data-i18n="key" and flips
 // direction for RTL locales. Falls back to English silently. No network,
 // no storage beyond the user's own language choice in localStorage.
-import { LOCALES } from "./locales.js?v=20260930b";
-import { interpolate, pickString } from "./interpolate.js?v=20260930b";
+import { LOCALES } from "./locales.js?v=20261001b";
+import { interpolate, pickString } from "./interpolate.js?v=20261001b";
 
 // Exported so the language gate (scripts/check-i18n.mjs) can prove every
 // offered locale actually has a dictionary, and that the picker never offers a
