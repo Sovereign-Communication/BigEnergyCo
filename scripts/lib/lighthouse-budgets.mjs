@@ -538,10 +538,20 @@ function secS(s) {
  * that sum is checked at the join rather than assumed here.
  */
 export const PERF_RATCHET_CLAUSE_MAX = 250;
-export const PERF_SPEED_CLAUSE_MAX = 40;
+// The room the axis clip leaves the speed half once the ratchet half has its
+// own: the two halves are joined into one facet line that must reach the judge
+// WHOLE, so `ratchet + 1 + speed <= COMPLETE_FACET_CLIP` is a constraint on
+// this number, not a preference. It was 40 with three metrics; the fourth
+// (TBT, with its ceiling) is what the difference buys.
+//
+// A run whose worst readings need more than this does NOT get a trimmed
+// clause: it gets an over-budget clause, which the gate reports as a named
+// failure. That is the intended reading of a bound - evidence that does not
+// fit says so, rather than being shortened until it fits.
+export const PERF_SPEED_CLAUSE_MAX = 49;
 
 /**
- * The speed half: this run's WORST measured FCP, LCP and CLS across every
+ * The speed half: this run's WORST measured FCP, LCP, TBT and CLS across every
  * target the gate measured.
  *
  * WORST, and the word is on the clause, because the alternative is the exact
@@ -551,10 +561,18 @@ export const PERF_SPEED_CLAUSE_MAX = 40;
  * "median of 3" about runs; without "worst" here, the two halves would be
  * describing different statistics with the same words and neither would say so.
  *
+ * TBT is the one metric that carries its CEILING with it, as `89/100ms`. It is
+ * the metric the plan bounds in absolute terms (Q-03) rather than by
+ * ratchet, so a bare "TBT 89ms" would leave the reader comparing it against a
+ * bar they have to remember. Over the ceiling the clause reads `124/100ms`:
+ * the number is still the run's own, and it is visibly over rather than
+ * quietly rounded or dropped. The same reading is a NAMED FAILURE in
+ * `check-lighthouse`'s `speed_over`, which is unchanged and still fires.
+ *
  * Derived from `report.measured`, so the numbers are the run's own and cannot
  * drift from the report the judge is handed. Returns null when any metric is
- * missing rather than emitting a partial clause, because three metrics and two
- * is a claim about a different measurement.
+ * missing rather than emitting a partial clause, because four metrics and
+ * three is a claim about a different measurement.
  */
 export function composeSpeedClause(report) {
   const measured = Array.isArray(report?.measured) ? report.measured : [];
@@ -567,8 +585,10 @@ export function composeSpeedClause(report) {
   const fcp = secS(worst((m) => m?.speed?.fcp_s));
   const lcp = secS(worst((m) => m?.speed?.lcp_s));
   const cls = worst((m) => m?.speed?.cls);
-  if (fcp === null || lcp === null || cls === null) return null;
-  return `worst FCP ${fcp}, LCP ${lcp}, CLS ${cls.toFixed(3)}`;
+  const tbt = worst((m) => m?.speed?.tbt_ms);
+  if (fcp === null || lcp === null || cls === null || tbt === null) return null;
+  const tbtCeiling = LIGHTHOUSE_SPEED_CEILINGS.tbt_ms;
+  return `worst FCP ${fcp}, LCP ${lcp}, TBT ${Math.round(tbt)}/${tbtCeiling}ms, CLS ${cls.toFixed(3)}`;
 }
 
 /**
