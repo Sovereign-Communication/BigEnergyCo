@@ -38,7 +38,8 @@
     "promote:apply": "node scripts/promote.mjs --apply",
     "promote:apply:oauth": "node scripts/promote.mjs --apply --assume-auth",
     "rollback": "node scripts/promote.mjs --to",
-    "trigger:dev": "trigger dev"
+    "trigger:dev": "trigger dev",
+    "cf:check": "node scripts/cf-provision-check.mjs"
   },
   "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {

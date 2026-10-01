@@ -1,17 +1,36 @@
 {
-  "name": "bigenergyco-api",
-  "main": "index.js",
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat"],
-  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "USAGE_DB",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_name": "bigenergyco-usage-showcase",
+      "preview_database_id": "REPLACE_WITH_D1_PREVIEW_DATABASE_ID"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "SHARE_KV",
+      "id": "REPLACE_WITH_KV_NAMESPACE_ID",
+      "preview_id": "REPLACE_WITH_KV_PREVIEW_NAMESPACE_ID"
+    }
+  ],
+  "main": "index.js",
+  "name": "bigenergyco-api-showcase",
+  "r2_buckets": [
+    {
+      "binding": "EVIDENCE_BUCKET",
+      "bucket_name": "bigenergyco-evidence-showcase"
+    }
+  ],
   "ratelimits": [
     {
       "name": "RL_CHAT_PER_MIN",
       "namespace_id": "9001",
-      "simple": {
-        "limit": 8,
-        "period": 60
-      }
+      "simple": { "limit": 8, "period": 60 }
     }
-  ]
+  ],
+  "vars": { "TURNSTILE_SITE_KEY": "REPLACE_WITH_TURNSTILE_SITE_KEY" },
+  "workers_dev": true
 }

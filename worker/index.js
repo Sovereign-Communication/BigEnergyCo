@@ -1,14 +1,22 @@
 // ============================================================
 // BigEnergyCo API — Cloudflare Worker
-// Handles: POST /api/chat  (Groq AI advisor)
+// Handles: POST /api/chat  (Groq AI advisor, Turnstile-guarded)
 //          GET  /api/health
+//          POST /api/jev   (Jev sanity-check)
+//          POST /api/share (KV edge cache for share-link payloads)
+//          GET  /api/share?id= (read a cached share payload)
+//          POST /api/evidence (R2 upload for quality-evidence artifacts)
+//          POST /api/events (D1 anonymized usage-event ledger)
 //
 // Security posture:
 //  - CORS locked to an explicit origin allowlist (no wildcards).
 //  - In-isolate fixed-window rate limiting (best-effort first layer;
 //    pair with a Cloudflare WAF rate-limiting rule for enforcement
-//    that survives isolate eviction).
+//    that survives isolate eviction — exact rule in
+//    docs/cloudflare-showcase.md).
 //  - Strict payload caps before any paid API call.
+//  - Showcase bindings (KV/R2/D1/Turnstile) fail with a provisioning
+//    checklist, never a bare TypeError, when unprovisioned.
 // ============================================================
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
@@ -41,6 +49,32 @@ const JEV_TIMEOUT_MS = 8000; // quoted 70-500ms; generous ceiling
 // shared with the gate script. Imported here so the runtime's token accounting
 // and the gate's cost roll-up can never drift apart.
 import { jevCostUsd } from "./jev-price.mjs";
+
+// Showcase branch (Cold Start): genuine Cloudflare platform integrations.
+// Each module degrades to a provisioning error when its binding is absent —
+// see docs/cloudflare-showcase.md for the provisioning checklist.
+import { verifyTurnstile } from "./turnstile.mjs";
+import {
+  storeSharePayload,
+  getSharePayload,
+  SHARE_TTL_SECONDS,
+} from "./share-cache.mjs";
+import { putEvidence, EVIDENCE_MAX_BYTES } from "./evidence.mjs";
+import { recordUsageEvent, USAGE_EVENTS } from "./usage-ledger.mjs";
+
+// Provisioning hint returned whenever a showcase binding is absent. The
+// worker must never 500 with a bare TypeError on env.X being undefined;
+// it tells the operator exactly what to provision and where.
+function unprovisioned(what, origin) {
+  return jsonResponse(
+    {
+      error: `${what} is not provisioned on this Worker`,
+      hint: "See docs/cloudflare-showcase.md for the provisioning checklist",
+    },
+    503,
+    origin,
+  );
+}
 
 // Strict numeric bounds: a result outside these is not a judgment call, it is
 // a malformed/hostile body (400) before any paid call happens.
@@ -518,6 +552,30 @@ async function handleChat(request, env, origin) {
     );
   }
 
+  // Turnstile (showcase): once TURNSTILE_SECRET_KEY is provisioned, every
+  // chat call must carry a valid token — fail-closed. Unprovisioned, the
+  // endpoint keeps its existing behavior so nothing breaks before the
+  // dashboard steps in docs/cloudflare-showcase.md are done. The check
+  // runs before rate limiting so bots never consume limiter budget or
+  // paid Groq tokens.
+  if (env && env.TURNSTILE_SECRET_KEY) {
+    const ts = await verifyTurnstile(
+      typeof body.turnstileToken === "string" ? body.turnstileToken : "",
+      env.TURNSTILE_SECRET_KEY,
+      env.fetch,
+    );
+    if (!ts.ok) {
+      return jsonResponse(
+        {
+          error: "Human verification failed. Please retry the challenge.",
+          reason: ts.reason,
+        },
+        403,
+        origin,
+      );
+    }
+  }
+
   // Rate limit BEFORE any paid call, including for requests that would fail later.
   // Layer 1 (hard): Cloudflare Rate Limiting binding — consistent across isolates
   // within a location. Layer 2 (soft): in-isolate daily/global counters.
@@ -687,6 +745,120 @@ async function handleChat(request, env, origin) {
   );
 }
 
+// ── Showcase endpoints (Cold Start) ───────────────────────────────────────
+// All three degrade to a 503 provisioning error when their binding is
+// absent — never a bare TypeError, never silent.
+
+async function handleShareStore(request, env, origin) {
+  if (!env || !env.SHARE_KV)
+    return unprovisioned("KV namespace SHARE_KV", origin);
+  const { allowed, retryAfter } = checkRateLimit(getClientIp(request));
+  if (!allowed) {
+    return jsonResponse({ error: "Rate limit exceeded" }, 429, origin, {
+      "Retry-After": String(retryAfter),
+    });
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ error: "invalid_json" }, 400, origin);
+  }
+  const stored = await storeSharePayload(env.SHARE_KV, body && body.hash);
+  if (!stored.ok) {
+    return jsonResponse(
+      {
+        error:
+          stored.reason === "invalid_payload"
+            ? "invalid_share_hash"
+            : "kv_unavailable",
+      },
+      stored.reason === "invalid_payload" ? 400 : 503,
+      origin,
+    );
+  }
+  return jsonResponse(
+    { id: stored.id, ttlSeconds: SHARE_TTL_SECONDS },
+    200,
+    origin,
+  );
+}
+
+async function handleShareGet(request, env, origin) {
+  if (!env || !env.SHARE_KV)
+    return unprovisioned("KV namespace SHARE_KV", origin);
+  const id = new URL(request.url).searchParams.get("id");
+  const found = await getSharePayload(env.SHARE_KV, id);
+  if (!found.ok) {
+    return jsonResponse(
+      { error: found.reason },
+      found.reason === "invalid_id" ? 400 : 404,
+      origin,
+    );
+  }
+  return jsonResponse({ payload: found.payload }, 200, origin);
+}
+
+async function handleEvidencePut(request, env, origin) {
+  if (!env || !env.EVIDENCE_BUCKET)
+    return unprovisioned("R2 bucket EVIDENCE_BUCKET", origin);
+  const { allowed, retryAfter } = checkRateLimit(getClientIp(request));
+  if (!allowed) {
+    return jsonResponse({ error: "Rate limit exceeded" }, 429, origin, {
+      "Retry-After": String(retryAfter),
+    });
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ error: "invalid_json" }, 400, origin);
+  }
+  const saved = await putEvidence(
+    env.EVIDENCE_BUCKET,
+    body && body.kind,
+    body && body.name,
+    body && body.data,
+    body && body.contentType,
+  );
+  if (!saved.ok) {
+    const status = saved.reason === "too_large" ? 413 : 400;
+    return jsonResponse({ error: saved.reason }, status, origin);
+  }
+  return jsonResponse({ key: saved.key }, 200, origin);
+}
+
+async function handleUsageEvent(request, env, origin) {
+  if (!env || !env.USAGE_DB)
+    return unprovisioned("D1 database USAGE_DB", origin);
+  const { allowed, retryAfter } = checkRateLimit(getClientIp(request));
+  if (!allowed) {
+    return jsonResponse({ error: "Rate limit exceeded" }, 429, origin, {
+      "Retry-After": String(retryAfter),
+    });
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ error: "invalid_json" }, 400, origin);
+  }
+  // Country comes from Cloudflare's own header, never from the client —
+  // the client cannot spoof its analytics geography.
+  const country = request.headers.get("cf-ipcountry");
+  const recorded = await recordUsageEvent(env.USAGE_DB, {
+    event: body && body.event,
+    page: body && body.page,
+    country,
+  });
+  if (!recorded.ok) {
+    if (recorded.reason === "d1_unavailable")
+      return unprovisioned("D1 database USAGE_DB", origin);
+    return jsonResponse({ error: "invalid_event" }, 400, origin);
+  }
+  return jsonResponse({ ok: true }, 200, origin);
+}
+
 export default {
   async fetch(request, env) {
     const origin = getAllowedOrigin(request.headers.get("Origin"));
@@ -707,6 +879,13 @@ export default {
           model: GROQ_PRIMARY_MODEL,
           promptVersion: SYSTEM_PROMPT_VERSION,
           jevSanity: !!(env && env.TYPESAFE_API_KEY),
+          showcase: {
+            // Presence flags only — never secret values.
+            turnstile: !!(env && env.TURNSTILE_SECRET_KEY),
+            kv: !!(env && env.SHARE_KV),
+            r2: !!(env && env.EVIDENCE_BUCKET),
+            d1: !!(env && env.USAGE_DB),
+          },
           rateLimits: {
             perIpPerMinute: RATE_PER_IP_PER_MIN,
             perIpPerDay: RATE_PER_IP_PER_DAY,
@@ -726,6 +905,25 @@ export default {
 
     if (path === "/api/jev" && request.method === "POST") {
       return handleJevSanity(request, env, origin);
+    }
+
+    // Showcase endpoints (Cold Start). GET /api/share is intentionally
+    // public-read: share payloads are already public-by-design (they used
+    // to live in the URL hash).
+    if (path === "/api/share" && request.method === "POST") {
+      return handleShareStore(request, env, origin);
+    }
+
+    if (path === "/api/share" && request.method === "GET") {
+      return handleShareGet(request, env, origin);
+    }
+
+    if (path === "/api/evidence" && request.method === "POST") {
+      return handleEvidencePut(request, env, origin);
+    }
+
+    if (path === "/api/events" && request.method === "POST") {
+      return handleUsageEvent(request, env, origin);
     }
 
     return jsonResponse({ error: "Not found" }, 404, origin);
