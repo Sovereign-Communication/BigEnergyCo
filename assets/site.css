@@ -150,10 +150,14 @@ header {
 
   z-index: 100;
 
-  backdrop-filter: blur(16px);
-
-  -webkit-backdrop-filter: blur(16px);
-
+  /* No backdrop-filter here, deliberately. The header background is
+     rgba(9,13,22,0.9) — 90% opaque — so a 16px blur of the page behind it
+     contributes about a tenth of the backdrop's contribution and is not what
+     makes the header look the way it does. What it does cost is real: the
+     sticky header sits directly above `section.hero`, the largest contentful
+     element, so Chromium has to snapshot and blur the region behind it on
+     every composite of the region the LCP element lives in. Kept the opaque
+     background, dropped the blur. */
   background: rgba(9, 13, 22, 0.9);
 
   border-bottom: 1px solid var(--border-card);

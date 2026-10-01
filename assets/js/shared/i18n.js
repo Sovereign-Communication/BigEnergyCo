@@ -121,11 +121,27 @@ export async function applyI18n() {
   // read-only translation contract to runtime-rendered advisor strings.
   window.becoLang = lang;
   window.becoT = translate;
+  // Write ONLY what differs. On the default locale — which is every visit
+  // unless someone picks a language — every string below already equals what
+  // the server sent, so the unconditional assignment was destroying and
+  // recreating every translated text node for nothing.
+  //
+  // That is not a tidy-up. Assigning `textContent` replaces the node's
+  // children, which dirties layout for the whole subtree: measured on the
+  // staged build, it forced a style/layout/paint pass of `section.hero`
+  // roughly a second AFTER first paint, and the hero is the largest
+  // contentful element, so the write produced a SECOND LCP candidate and
+  // pushed LCP out by the cost of repainting a page that had not changed. A
+  // visitor who chose no language was paying to be re-measured.
+  //
+  // Reading `textContent` is cheap and the guard is exact: when a language IS
+  // chosen the values differ and every write still happens.
+  const setText = (node, value) => {
+    if (node.textContent !== value) node.textContent = value;
+  };
   document.querySelectorAll("[data-i18n]").forEach((elNode) => {
     const key = elNode.getAttribute("data-i18n");
-    const value = dict?.[key];
-    if (typeof value === "string" && elNode.textContent !== value)
-      elNode.textContent = value;
+    if (typeof dict?.[key] === "string") setText(elNode, dict[key]);
   });
   document.querySelectorAll("[data-i18n-placeholder]").forEach((elNode) => {
     const key = elNode.getAttribute("data-i18n-placeholder");
@@ -139,9 +155,8 @@ export async function applyI18n() {
     if (
       typeof value === "string" &&
       elNode.getAttribute("aria-label") !== value
-    ) {
+    )
       elNode.setAttribute("aria-label", value);
-    }
   });
 }
 

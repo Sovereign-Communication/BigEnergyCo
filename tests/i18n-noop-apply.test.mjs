@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 
 const I18N_URL = new URL("../assets/js/shared/i18n.js", import.meta.url);
+const SRC = readFileSync(I18N_URL, "utf8");
 
 function makeElement(attributeName, key, property, initialValue = "") {
   let currentValue = initialValue;
   let writes = 0;
   const attributes = { [attributeName]: key };
+  if (property === "aria-label") attributes["aria-label"] = initialValue;
   return {
     get writes() {
       return writes;
@@ -49,16 +52,18 @@ test("applyI18n skips unchanged DOM writes and still updates changed translation
   const mod = await import(I18N_URL.href + "?no-op=" + Date.now());
   await mod.localesReady;
   let selectedLanguage = "en";
-  const text = makeElement("data-i18n", "advisorTitle", "textContent");
+  const text = makeElement("data-i18n", "advisorTitle", "textContent", mod.translate("advisorTitle", {}, "en"));
   const placeholder = makeElement(
     "data-i18n-placeholder",
     "advisorPlaceholder",
     "placeholder",
+    mod.translate("advisorPlaceholder", {}, "en"),
   );
   const aria = makeElement(
     "data-i18n-aria-label",
     "advisorClose",
     "aria-label",
+    mod.translate("advisorClose", {}, "en"),
   );
   const globals = {
     localStorage: { getItem: () => selectedLanguage },
@@ -85,7 +90,7 @@ test("applyI18n skips unchanged DOM writes and still updates changed translation
     }
 
     await mod.applyI18n();
-    assert.deepEqual([text.writes, placeholder.writes, aria.writes], [1, 1, 1]);
+    assert.deepEqual([text.writes, placeholder.writes, aria.writes], [0, 0, 0]);
     assert.equal(text.read(), mod.translate("advisorTitle", {}, "en"));
     assert.equal(
       placeholder.read(),
@@ -96,19 +101,23 @@ test("applyI18n skips unchanged DOM writes and still updates changed translation
     await mod.applyI18n();
     assert.deepEqual(
       [text.writes, placeholder.writes, aria.writes],
-      [1, 1, 1],
+      [0, 0, 0],
       "applying the same locale must not write unchanged DOM values",
     );
 
     selectedLanguage = "es";
     await mod.applyI18n();
-    assert.deepEqual([text.writes, placeholder.writes, aria.writes], [2, 2, 2]);
+    assert.deepEqual([text.writes, placeholder.writes, aria.writes], [1, 1, 1]);
     assert.equal(text.read(), mod.translate("advisorTitle", {}, "es"));
     assert.equal(
       placeholder.read(),
       mod.translate("advisorPlaceholder", {}, "es"),
     );
     assert.equal(aria.read(), mod.translate("advisorClose", {}, "es"));
+
+    assert.match(SRC, /if \(node\.textContent !== value\) node\.textContent = value/);
+    assert.match(SRC, /elNode\.placeholder !== value/);
+    assert.match(SRC, /getAttribute\("aria-label"\) !== value/);
   } finally {
     for (const [name, descriptor] of previous) {
       if (descriptor) Object.defineProperty(globalThis, name, descriptor);
