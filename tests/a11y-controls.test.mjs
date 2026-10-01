@@ -247,8 +247,10 @@ test("A11Y: the report reaches the judge through the download it already does", 
     /path: a11y-controls-report\.json/,
     "…and the artifact it downloads must be the file the smoke run wrote",
   );
-  // The axe matrix is a different measurement and keeps its own name.
-  assert.match(WORKFLOW, /name: a11y-matrix-report/);
+  // The axe matrix is a different measurement, in a different file — and on
+  // the same wire, because it now composes its own clause of this same facet
+  // and a report the builder never downloads is a line the judge never reads.
+  assert.match(WORKFLOW, /name: jev-results-a11y-matrix/);
 });
 
 test("A11Y: the typed line is gone, so there is one source for the facet", () => {
@@ -272,6 +274,7 @@ function buildWith(extraReports) {
         unit_tests: "success",
         prettier: "success",
         seo: "success",
+        hygiene: "success",
       },
     },
     "web-smoke": {

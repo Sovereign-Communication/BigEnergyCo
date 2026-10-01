@@ -40,6 +40,17 @@
 /** The one axis this gate speaks for; the builder discovers it from the report. */
 export const A11Y_FACET_AXES = ["accessibility"];
 
+/**
+ * The most characters THIS half of the accessibility line may take once the
+ * axe matrix's clause joins it (the builder's second two-instrument join).
+ * The green line composes to 239; 240 keeps a stop count going to three
+ * digits from reding the join, and the pair is asserted against the 280-char
+ * clip from both ends: 240 + 1 + A11Y_MATRIX_CLAUSE_MAX (39) = 280 exactly.
+ * A half over its own bound is a NAMED problem, never a trim — the sentence a
+ * trim would eat is this line's limit sentence.
+ */
+export const A11Y_CONTROLS_CLAUSE_MAX = 240;
+
 // Bounded variable parts. FAILURES is small because a name the judge can read
 // matters more than a long list of them (the full set is in the report), NAME is
 // wide enough that every gate name this flow actually uses survives whole, and
@@ -47,7 +58,7 @@ export const A11Y_FACET_AXES = ["accessibility"];
 const MAX_FAILURES = 2;
 const MAX_NAME = 52;
 const MAX_SURFACE = 10;
-const LIMIT = "1 Chrome, no screen reader, no theme/RTL matrix";
+const LIMIT = "1 Chrome, no screen reader, no theme/RTL matrix.";
 
 function clipTo(value, limit) {
   const text = String(value || "").trim();
