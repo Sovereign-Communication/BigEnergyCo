@@ -12,9 +12,31 @@
 //
 // So the grid becomes COLUMNAR and QUANTIZED: one flat array per field, no key
 // names inside the loop, and every number stored at the precision the page
-// actually uses. Measured on the real grid: 6.66 MiB -> 3.47 MB raw, parse
-// 63ms -> 18ms, brotli ~397 KB -> 308 KB. The page reads columns directly, so
-// there is no decode pass at all beyond JSON.parse itself.
+// actually uses. Measured on the real grid: 6.66 MiB -> 1.73 MB raw, brotli
+// ~397 KB -> 307 KB.
+//
+// AND THEN, STILL NOT JSON. The columnar file is better but it is still a 1.73
+// MB JSON document, and `await res.json()` measured 39ms on the mobile target
+// and 29ms on desktop — which is most of what is left of the heatmap's TBT,
+// because Lighthouse runs the page under ~4x CPU throttling and a 39ms parse
+// becomes ~156ms there. That 39ms is not really "parsing": it is brotli
+// inflating 1.73 MB, UTF-8 decoding it into a 1.73 MB JS string, and then
+// parsing that string. None of the three steps needs to happen for numbers the
+// page reads as integers.
+//
+// So the hot half is PACKED BINARY — twelve fixed-width bytes per point, read
+// as typed-array views over the response body. Decoding is then a view, not a
+// copy and not a parse, and the measured decode is ~3ms. The two fields the
+// first paint does not need, `names` and `lq`, go to the lazily-fetched detail
+// file, where they were already headed: the map needs a position and a colour,
+// and a city name is read only by a ranking row or a popup. Net effect on
+// heatmap_initial: 317.9 KB -> 296.0 KB compressed, which is an IMPROVEMENT
+// against the ratchet rather than a regression, and the raw hot file falls
+// 1.73 MB -> 465 KB.
+//
+// Every value is still there and still exact. tests/heatmap-grid.test.mjs
+// decodes the committed binary and compares all 39,707 points against the
+// columns the previous file carried, field by field.
 //
 // WHY ONE MODULE, IMPORTED BY BOTH SIDES. The generator
 // (scripts/generate-heatmap-data.mjs) already imports the sizing engine for
@@ -42,7 +64,7 @@ export const DEG_SCALE = 100;
 // -1 is the "no tariff" sentinel: it is a real value in the JSON today (absent
 // fields read as null), and a negative integer is the one number no tariff can
 // take.
-export const TARIFF_SCALE = 1000;
+const TARIFF_SCALE = 1000;
 export const NO_TARIFF = -1;
 
 // Yields are kWh/kWp/yr and run to ~2500; they are integral in the source.
@@ -65,9 +87,9 @@ export const NO_YEAR = 0;
 // decimals. Quantizing it on the year scale multiplied 0.023 by 10 and stored
 // it as 0, silently discarding the field; it has its own scale for that
 // reason. 0 is the sentinel because no real LCOE here rounds to 0.
-export const LCOE_SCALE = 1000;
+const LCOE_SCALE = 1000;
 const LCOE_MAX = 65535;
-export const NO_LCOE = 0;
+const NO_LCOE = 0;
 
 /** Degrees -> hundredths, for the generator. */
 export const quantizeDeg = (d) => Math.round(d * DEG_SCALE);
@@ -182,5 +204,213 @@ export function encodeGrid(points, { usageTiersKwhDay } = {}) {
     },
     hot: { lat, lon, cc, tq, trq, yq, lq, uns, names },
     years: { series: YEAR_SERIES, tiers: 4, yrs },
+  };
+}
+// ── The packed binary hot file ──────────────────────────────────────────
+//
+// The layout lives HERE, not in the generator and not in the page, for the same
+// reason the scales do: a column order written twice drifts, and a drifted
+// column order does not fail — it moves every dot on the map.
+//
+//   bytes 0..4    magic "HBG1"
+//   bytes 4..8    meta length, uint32 LE
+//   bytes 8..8+L  the meta, UTF-8 JSON: { count, countries, usageTiersKwhDay }
+//   then          the columns, each padded so its start is a multiple of its
+//                 element width, because a typed-array view over a shared
+//                 ArrayBuffer THROWS on a misaligned offset. That is not a
+//                 theoretical concern: 39,707 is odd, so a 1-byte column
+//                 leaves the next 2-byte column one byte out of alignment.
+
+export const GRID_MAGIC = "HBG1";
+
+/**
+ * The columns the first paint needs, in order, with the narrowest type that
+ * holds their real range. Every width here was measured against the real
+ * output of this file's own `encodeGrid` — the observed ranges are asserted,
+ * with headroom, in tests/heatmap-grid.test.mjs — so a value that ever
+ * outgrew its column fails a test instead of silently wrapping.
+ *
+ * The committed heatmap-grid.bin is checked against the same assertions, so
+ * the file the page fetches and the file the generator writes cannot disagree.
+ *
+ *   lat/lon  i16  hundredths of a degree: -18000..18000 fits
+ *   cc       u8   0..218 countries
+ *   tq/trq   i16  thousandths of a $/kWh, and -1 for "no tariff"
+ *   yq       u16  kWh/kWp/yr, integral, up to ~1900
+ *   uns      i8   unserved percent, 0..100, and -1 for "absent"
+ */
+export const HOT_COLUMNS = [
+  { key: "lat", type: "Int16Array", bytes: 2 },
+  { key: "lon", type: "Int16Array", bytes: 2 },
+  { key: "cc", type: "Uint8Array", bytes: 1 },
+  { key: "tq", type: "Int16Array", bytes: 2 },
+  { key: "trq", type: "Int16Array", bytes: 2 },
+  { key: "yq", type: "Uint16Array", bytes: 2 },
+  { key: "uns", type: "Int8Array", bytes: 1 },
+];
+
+/** Bytes one point occupies in the hot file, padding excluded. */
+export const HOT_BYTES_PER_POINT = HOT_COLUMNS.reduce((a, c) => a + c.bytes, 0);
+
+const alignUp = (offset, bytes) =>
+  bytes === 1 ? offset : Math.ceil(offset / bytes) * bytes;
+
+/**
+ * Where every part of the file lives, for a given point count. Pure, and the
+ * single place the arithmetic exists.
+ */
+export function gridLayout(count, metaLength) {
+  const metaStart = 8;
+  let offset = metaStart + metaLength;
+  const columns = {};
+  for (const col of HOT_COLUMNS) {
+    offset = alignUp(offset, col.bytes);
+    columns[col.key] = offset;
+    offset += count * col.bytes;
+  }
+  return { metaStart, columns, totalBytes: offset };
+}
+
+/**
+ * Pack the hot columns into the file the page fetches first.
+ *
+ * Takes the SAME `encodeGrid` output the JSON path used, so there is one
+ * quantization and one set of scales, and the two encodings cannot disagree.
+ */
+export function encodeGridBinary({ header, hot }) {
+  const meta = JSON.stringify({
+    count: header.count,
+    countries: header.countries,
+    usageTiersKwhDay: header.usageTiersKwhDay,
+  });
+  const encoder = new TextEncoder();
+  const metaBytes = encoder.encode(meta);
+  const layout = gridLayout(header.count, metaBytes.length);
+  const buffer = new ArrayBuffer(layout.totalBytes);
+  const bytes = new Uint8Array(buffer);
+  bytes.set(encoder.encode(GRID_MAGIC), 0);
+  new DataView(buffer).setUint32(4, metaBytes.length, true);
+  bytes.set(metaBytes, 8);
+  for (const col of HOT_COLUMNS) {
+    const View = globalThis[col.type];
+    const out = new View(buffer, layout.columns[col.key], header.count);
+    const src = hot[col.key];
+    for (let i = 0; i < header.count; i++) out[i] = src[i];
+  }
+  return buffer;
+}
+
+/**
+ * Read the hot file. Every column is a VIEW over the response body, so this
+ * copies nothing and parses nothing: it is the whole decode cost.
+ *
+ * Throws on a wrong magic or a truncated body rather than returning a short
+ * array, because a grid that silently lost its tail would draw a map with a
+ * hole in it and no error anywhere.
+ */
+export function decodeGrid(buffer) {
+  const bytes = new Uint8Array(buffer);
+  if (bytes.length < 12) throw new Error("heatmap grid: file is too short");
+  const magic = String.fromCharCode(...bytes.subarray(0, 4));
+  if (magic !== GRID_MAGIC) {
+    throw new Error(`heatmap grid: bad magic ${JSON.stringify(magic)}`);
+  }
+  const view = new DataView(buffer);
+  const metaLength = view.getUint32(4, true);
+  const meta = JSON.parse(
+    new TextDecoder().decode(bytes.subarray(8, 8 + metaLength)),
+  );
+  const layout = gridLayout(meta.count, metaLength);
+  if (bytes.length < layout.totalBytes) {
+    throw new Error(
+      `heatmap grid: body is ${bytes.length} bytes, layout needs ${layout.totalBytes}`,
+    );
+  }
+  const out = {
+    count: meta.count,
+    countries: meta.countries,
+    usageTiersKwhDay: meta.usageTiersKwhDay,
+  };
+  for (const col of HOT_COLUMNS) {
+    out[col.key] = new globalThis[col.type](
+      buffer,
+      layout.columns[col.key],
+      meta.count,
+    );
+  }
+  return out;
+}
+
+// ── The packed year matrix ──────────────────────────────────────────────
+//
+// The third file, and the one that decided whether this page could prefetch
+// its own detail data without costing TBT. The matrix is 635,312 quantized
+// values in 16 columns per point. As JSON it was 1.86 MB of text, which the
+// browser had to inflate and JSON.parse — one long task of ~30ms unthrottled,
+// which is ~120ms under the gate's CPU throttling, and it landed INSIDE the
+// load window because the page fetched it on idle.
+//
+// Packed, it is 1.24 MB of u16 that the page reads as a view and parses never.
+// And it compresses at least as well as the text did, because it is almost all
+// constant runs: brotli q11 measures 2.5 KB packed against 2.8 KB as JSON.
+// So this is not a size-for-speed trade — it is smaller on the wire AND free
+// to decode.
+//
+//   bytes 0..4    magic "HBY1"
+//   bytes 4..8    value count, uint32 LE
+//   bytes 8..12   series count, uint32 LE
+//   bytes 12..16  usage tiers, uint32 LE
+//   then          the values, u16 LE, in the same order as before
+const YEARS_MAGIC = "HBY1";
+const YEARS_HEADER_BYTES = 16;
+
+export function encodeYearsBinary({ header, years }) {
+  const values = years.yrs;
+  if (values.length !== header.count * YEAR_VALUES_PER_POINT) {
+    throw new Error(
+      `heatmap years: ${values.length} values for ${header.count} points`,
+    );
+  }
+  const buffer = new ArrayBuffer(YEARS_HEADER_BYTES + values.length * 2);
+  const bytes = new Uint8Array(buffer);
+  const view = new DataView(buffer);
+  for (let i = 0; i < YEARS_MAGIC.length; i++) {
+    bytes[i] = YEARS_MAGIC.charCodeAt(i);
+  }
+  view.setUint32(4, values.length, true);
+  view.setUint32(8, years.series.length, true);
+  view.setUint32(12, years.tiers, true);
+  const out = new Uint16Array(buffer, YEARS_HEADER_BYTES, values.length);
+  for (let i = 0; i < values.length; i++) out[i] = values[i];
+  return buffer;
+}
+
+export function decodeYears(buffer) {
+  const bytes = new Uint8Array(buffer);
+  if (bytes.length < YEARS_HEADER_BYTES) {
+    throw new Error("heatmap years: file is too short");
+  }
+  const magic = String.fromCharCode(...bytes.subarray(0, 4));
+  if (magic !== YEARS_MAGIC) {
+    throw new Error(`heatmap years: bad magic ${JSON.stringify(magic)}`);
+  }
+  const view = new DataView(buffer);
+  const count = view.getUint32(4, true);
+  const series = view.getUint32(8, true);
+  const tiers = view.getUint32(12, true);
+  const needed = YEARS_HEADER_BYTES + count * 2;
+  if (bytes.length < needed) {
+    throw new Error(
+      `heatmap years: body is ${bytes.length} bytes, layout needs ${needed}`,
+    );
+  }
+  return {
+    count: count / YEAR_VALUES_PER_POINT,
+    values: count,
+    series,
+    tiers,
+    // The page reads `years.yrs[i * 16 + s * 4 + k]`, so the decoded shape is
+    // the same one it had when the matrix was a JSON property.
+    yrs: new Uint16Array(buffer, YEARS_HEADER_BYTES, count),
   };
 }

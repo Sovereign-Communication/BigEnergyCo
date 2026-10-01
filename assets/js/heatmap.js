@@ -7,6 +7,8 @@ import {
   dequantizeTariff,
   dequantizeYear,
   dequantizeLcoe,
+  decodeGrid,
+  decodeYears,
   YEAR_VALUES_PER_POINT,
   NO_YEAR,
 } from "./sizing/heatmap-grid.js?v=20261001b";
@@ -19,11 +21,29 @@ import {
 } from "./sizing/heatmap-dots.js?v=20261001b";
 
 const DOT_RADIUS = 3.5;
+// How many tasks the FIRST draw is spread over. TWO, and the number is
+// measured, not guessed: drawing in four pieces halved the longest JavaScript
+// task but tripled the number of times a 1448x873 canvas is painted, and the
+// raster of the extra repaints cost far more main-thread time than the smaller
+// tasks saved — heatmap/desktop TBT went 110ms -> 354ms. See
+// DotLayer._firstDraw for what the split bought.
+const DRAW_PARTS = 2;
 
 // ── State ──────────────────────────────────────────────────────────────
-let header = null; // { count, countries, usageTiersKwhDay, ...columns }
-let years = null; // the year matrix, fetched on demand
+// The hot half of the grid: a packed binary file decoded into typed-array
+// views, so the page never inflates, UTF-8 decodes or JSON-parses it.
+let grid = null;
+// The two deferred halves, both fetched after the map is on screen because
+// nothing on the first paint reads them. They are separate files because they
+// have opposite costs: the names are text the browser reads in about 6ms, and
+// the year matrix was 1.86 MB of JSON that cost a ~30ms parse INSIDE the load
+// window. Packed, it is a file the page reads as a view and never parses.
+let nameList = null; // city names, one per point
+let lqCol = null; // quantized LCOE, one per point
+let namesPending = null;
+let years = null; // the year matrix, decoded into views over the response
 let yearsPending = null;
+let header = null; // { count, countries, usageTiersKwhDay } from the binary meta
 let map = null;
 let dotLayer = null;
 let usageIdx = 1; // 0=5kWh, 1=10kWh, 2=20kWh, 3=30kWh
@@ -158,17 +178,22 @@ function yearSeries(i, s) {
   return out;
 }
 
+/** A city name, or "" while the names file is still in flight. */
+function nameOf(i) {
+  return nameList ? nameList[i] : "";
+}
+
 function pt(i) {
   return {
-    lat: dequantizeDeg(header.lat[i]),
-    lon: dequantizeDeg(header.lon[i]),
-    n: header.names[i],
-    c: header.countries[header.cc[i]],
-    t: dequantizeTariff(header.tq[i]),
-    tr: dequantizeTariff(header.trq[i]),
-    y: header.yq[i],
-    l: dequantizeLcoe(header.lq[i]),
-    unserved: header.uns[i] < 0 ? undefined : header.uns[i],
+    lat: dequantizeDeg(grid.lat[i]),
+    lon: dequantizeDeg(grid.lon[i]),
+    n: nameOf(i),
+    c: header.countries[grid.cc[i]],
+    t: dequantizeTariff(grid.tq[i]),
+    tr: dequantizeTariff(grid.trq[i]),
+    y: grid.yq[i],
+    l: lqCol ? dequantizeLcoe(lqCol[i]) : null,
+    unserved: grid.uns[i] < 0 ? undefined : grid.uns[i],
     p: yearSeries(i, 0),
     pr: yearSeries(i, 1),
     b: yearSeries(i, 2),
@@ -191,10 +216,10 @@ function columnYearAt(i) {
 
 function costOfColumn(i) {
   if (basis === "real") {
-    const tr = dequantizeTariff(header.trq[i]);
+    const tr = dequantizeTariff(grid.trq[i]);
     if (tr !== null) return tr;
   }
-  return dequantizeTariff(header.tq[i]);
+  return dequantizeTariff(grid.tq[i]);
 }
 
 function getPointCost(p) {
@@ -370,13 +395,17 @@ const DotLayer = L.Layer.extend({
     );
     this._ctx = this._canvas.getContext("2d");
     this._frame = 0;
+    this._gen = 0;
     this._map.on("move zoom resize zoomanim", this._schedule, this);
-    this._redraw();
+    this._firstDraw();
   },
 
   onRemove() {
     this._map.off("move zoom resize zoomanim", this._schedule, this);
     if (this._frame) cancelAnimationFrame(this._frame);
+    // Stand down a split first draw that has not finished: its later passes
+    // would bucket against a projection this layer no longer has.
+    this._gen++;
     if (this._canvas) L.DomUtil.remove(this._canvas);
   },
 
@@ -392,6 +421,55 @@ const DotLayer = L.Layer.extend({
 
   _redraw() {
     if (!map || !header) return;
+    this._gen++;
+    this._prepare();
+    bucketLen.fill(0);
+    this._bucketRange(0, grid.count);
+    this._fillBuckets();
+    this._indexDrawn();
+  },
+
+  // The FIRST draw is split across several tasks, and this is the whole reason.
+  // Measured on the staged build with real Chrome, one draw is 22ms: 2.3ms to
+  // project, 13.8ms of path building and seven fills, and 4ms to index. Under
+  // the gate's ~4x CPU throttling that single task measured as a 210-243ms
+  // blocking task, which on its own is twice the Q-03 ceiling. Drawn in
+  // DRAW_PARTS pieces with a real yield between each, the longest piece is
+  // about 11ms and the throttled draw adds little to TBT.
+  //
+  // Each pass APPENDS to the same buckets rather than replacing them, so the
+  // index built at the end still covers every drawn dot and not only the last
+  // piece's.
+  _firstDraw() {
+    if (!map || !header) return;
+    const gen = ++this._gen;
+    const count = grid.count;
+    this._prepare();
+    bucketLen.fill(0);
+    const step = Math.ceil(count / DRAW_PARTS);
+    let lo = 0;
+    const pass = () => {
+      // A pan between passes invalidates the rest, because the earlier pieces
+      // were bucketed against a projection that is no longer on screen. The
+      // redraw it triggers draws the whole grid, so this stands down.
+      if (this._gen !== gen || lo >= count) return;
+      const hi = Math.min(count, lo + step);
+      this._bucketRange(lo, hi);
+      this._fillBuckets();
+      lo = hi;
+      if (lo >= count) {
+        return nextFrame().then(() => {
+          if (this._gen === gen) this._indexDrawn();
+        });
+      }
+      nextFrame().then(pass);
+    };
+    pass();
+  },
+
+  // Size the canvas to the viewport and project every point into it. Measured
+  // at 2.3ms, on its own.
+  _prepare() {
     const size = map.getSize();
     const centre = map.getCenter();
 
@@ -406,7 +484,7 @@ const DotLayer = L.Layer.extend({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, size.x, size.y);
 
-    const count = header.count;
+    this._size = size;
     const t = dotTransform({
       centerLat: centre.lat,
       centerLng: centre.lng,
@@ -414,15 +492,16 @@ const DotLayer = L.Layer.extend({
       width: size.x,
       height: size.y,
     });
-    projectDots(header.lat, header.lon, count, t, xs, ys);
+    projectDots(grid.lat, grid.lon, grid.count, t, xs, ys);
+  },
 
-    // Bucket into colours, culling what the viewport cannot show. At world zoom
-    // that is most of the grid, and this runs on the pan path.
-    bucketLen.fill(0);
+  // Bucket points [lo, hi) into colour buckets, culling what the viewport
+  // cannot show. At world zoom that is most of the grid.
+  _bucketRange(lo, hi) {
+    const size = this._size;
     const r = DOT_RADIUS;
-    const useCost = metric === "cost";
     const col = colorColumn();
-    for (let i = 0; i < count; i++) {
+    for (let i = lo; i < hi; i++) {
       const x = xs[i];
       const y = ys[i];
       if (x < -r || y < -r || x > size.x + r || y > size.y + r) continue;
@@ -433,8 +512,13 @@ const DotLayer = L.Layer.extend({
       bucketId[b][k] = i;
       bucketLen[b] = k + 1;
     }
+  },
 
-    const palette = useCost ? COST_PALETTE : YEAR_PALETTE;
+  // One path per colour, one fill. A per-dot fill() is what this replaced.
+  _fillBuckets() {
+    const ctx = this._ctx;
+    const r = DOT_RADIUS;
+    const palette = metric === "cost" ? COST_PALETTE : YEAR_PALETTE;
     for (let b = 0; b < BUCKETS; b++) {
       const len = bucketLen[b];
       if (!len) continue;
@@ -449,9 +533,13 @@ const DotLayer = L.Layer.extend({
       ctx.fillStyle = palette[b];
       ctx.fill();
     }
+  },
 
-    // The index is over the DRAWN points only — a dot scrolled off screen is
-    // not clickable, so indexing it would only cost time.
+  // The index is over the points the LAST pass drew, which is the whole grid
+  // on the load path and whichever half is current after a split first draw.
+  // A dot scrolled off screen is not clickable, so indexing it would only cost
+  // time.
+  _indexDrawn() {
     let total = 0;
     for (let b = 0; b < BUCKETS; b++) total += bucketLen[b];
     if (hitXs === null || hitXs.length < total) {
@@ -574,6 +662,18 @@ function popupHtml(p) {
 // is also what the per-layer version did, 39,707 times over.
 let popup = null;
 
+function openPopupAt(latlng, i) {
+  if (!popup) popup = L.popup({ maxWidth: 300 });
+  // `openOn` is `map.addLayer`, and `addLayer` returns early when the layer is
+  // already there — so reusing one popup would leave the previous city's
+  // content on screen. Close it first, then open at the new position.
+  if (map.hasLayer(popup)) map.removeLayer(popup);
+  popup
+    .setLatLng(latlng)
+    .setContent(popupHtml(pt(i)))
+    .openOn(map);
+}
+
 function onMapClick(e) {
   if (!hitIndex) return;
   const container = map.latLngToContainerPoint(e.latlng);
@@ -586,15 +686,18 @@ function onMapClick(e) {
     DOT_RADIUS + 4,
   );
   if (slot < 0) return;
-  if (!popup) popup = L.popup({ maxWidth: 300 });
-  // `openOn` is `map.addLayer`, and `addLayer` returns early when the layer is
-  // already there — so reusing one popup would leave the previous city's
-  // content on screen. Close it first, then open at the new position.
-  if (map.hasLayer(popup)) map.removeLayer(popup);
-  popup
-    .setLatLng(e.latlng)
-    .setContent(popupHtml(pt(hitIds[slot])))
-    .openOn(map);
+  const i = hitIds[slot];
+  // A popup prints the city's name and its payback years, and both live in the
+  // deferred files. A click in the first few hundred milliseconds lands before
+  // they have, and a popup with a blank heading and two N/A rows is worse than
+  // one that arrives a moment later — so wait for them here.
+  if (!nameList || !years) {
+    Promise.all([ensureNames(), ensureYears()]).then(() => {
+      if (nameList && years) openPopupAt(e.latlng, i);
+    });
+    return;
+  }
+  openPopupAt(e.latlng, i);
 }
 
 // ── Render dots ────────────────────────────────────────────────────────
@@ -622,14 +725,18 @@ function renderDots() {
 }
 
 // ── Rankings ────────────────────────────────────────────────────────────
+// Two steps, deliberately. `updateRankings()` decides WHICH ten cities sit in
+// each list — that is the 39,707-point scan — and `paintRankings()` only
+// writes those rows out. Names live in the deferred file, which lands after the
+// map is already on screen, so splitting the two means the scan runs once and
+// the rows simply acquire their names the moment the names arrive.
+let rankRows = null;
+
 function updateRankings() {
   if (!header) return;
   const count = header.count;
   const usage = header.usageTiersKwhDay[usageIdx];
   const basisLabel = basis === "real" ? "weighted" : "grid-only";
-
-  const bestCard = document.getElementById("best-card");
-  const worstCard = document.getElementById("worst-card");
 
   if (metric === "cost") {
     // One pass, one cost per point. The previous shape re-derived a point's
@@ -644,7 +751,7 @@ function updateRankings() {
       const cost = costOfColumn(i);
       if (cost === null || cost === undefined || cost <= 0) continue;
       costCol[i] = cost;
-      const c = header.countries[header.cc[i]];
+      const c = header.countries[grid.cc[i]];
 
       const hi = countryHighest.get(c);
       if (hi === undefined || cost > costCol[hi]) countryHighest.set(c, i);
@@ -662,33 +769,18 @@ function updateRankings() {
       .sort((a, b) => a.cost - b.cost)
       .slice(0, 10);
 
-    document.getElementById("best-list").innerHTML = highestByCountry
-      .map(({ i, cost }) => {
-        const p = pt(i);
-        const splitText = p.unserved ? `~${p.unserved}% unserved` : "100% grid";
-        return `<li><span class="years" style="color:${costTextColor(cost)}">${costLabel(cost)}</span> — ${esc(p.n)}, ${esc(countryName(p.c))} <span class="detail">(${splitText}, paper $${p.t}/kWh)</span></li>`;
-      })
-      .join("");
-
-    document.getElementById("worst-list").innerHTML = lowestByCountry
-      .map(({ i, cost }) => {
-        const p = pt(i);
-        return `<li><span class="years" style="color:${costTextColor(cost)}">${costLabel(cost)}</span> — ${esc(p.n)}, ${esc(countryName(p.c))} <span class="detail">(${p.y} kWh/kWp/yr)</span></li>`;
-      })
-      .join("");
-
-    if (bestCard) bestCard.className = "rank-card worst";
-    if (worstCard) worstCard.className = "rank-card";
-
-    document.querySelector("#best-card h3").textContent =
-      `🔴 Highest Electricity Cost (${basisLabel})`;
-    document.querySelector("#worst-card h3").textContent =
-      `⚡ Lowest Electricity Cost (${basisLabel})`;
+    rankRows = {
+      kind: "cost",
+      best: highestByCountry,
+      worst: lowestByCountry,
+      bestClass: "rank-card worst",
+      worstClass: "rank-card",
+      bestTitle: `🔴 Highest Electricity Cost (${basisLabel})`,
+      worstTitle: `⚡ Lowest Electricity Cost (${basisLabel})`,
+    };
+    paintRankings();
     return;
   }
-
-  if (bestCard) bestCard.className = "rank-card";
-  if (worstCard) worstCard.className = "rank-card worst";
 
   const countryBest = new Map();
   const countryWorst = new Map();
@@ -696,7 +788,7 @@ function updateRankings() {
   for (let i = 0; i < count; i++) {
     const yrs = columnYearAt(i);
     if (yrs === null || yrs <= 0) continue;
-    const c = header.countries[header.cc[i]];
+    const c = header.countries[grid.cc[i]];
 
     if (!countryBest.has(c)) countryBest.set(c, i);
     else if (yrs < columnYearAt(countryBest.get(c))) countryBest.set(c, i);
@@ -719,26 +811,61 @@ function updateRankings() {
 
   const metricLabel = metric === "p" ? "payback" : "break-even";
 
-  document.getElementById("best-list").innerHTML = bestByCountry
-    .map(({ i, yrs }) => {
-      const p = pt(i);
-      const rateDisplay = basis === "real" && p.tr ? `$${p.tr}` : `$${p.t}`;
-      return `<li><span class="years">${yearLabel(yrs)}</span> — ${esc(p.n)}, ${esc(countryName(p.c))} <span class="detail">(${rateDisplay}/kWh, ${p.y} kWh/kWp)</span></li>`;
-    })
-    .join("");
+  rankRows = {
+    kind: "years",
+    best: bestByCountry,
+    worst: worstByCountry,
+    bestClass: "rank-card",
+    worstClass: "rank-card worst",
+    bestTitle: `⚡ Fastest ${metricLabel} (${basisLabel}, ${usage} kWh/d)`,
+    worstTitle: `🔴 Slowest ${metricLabel} (${basisLabel}, ${usage} kWh/d)`,
+  };
+  paintRankings();
+}
 
-  document.getElementById("worst-list").innerHTML = worstByCountry
-    .map(({ i, yrs }) => {
-      const p = pt(i);
-      const rateDisplay = basis === "real" && p.tr ? `$${p.tr}` : `$${p.t}`;
-      return `<li><span class="years">${yearLabel(yrs)}</span> — ${esc(p.n)}, ${esc(countryName(p.c))} <span class="detail">(${rateDisplay}/kWh, ${p.y} kWh/kWp)</span></li>`;
-    })
-    .join("");
+// The write-only half of a ranking pass. It reads the rows `updateRankings`
+// decided on and reads the point data live, so calling it again after the
+// names file lands fills in the names without re-running the scan that chose
+// them.
+function paintRankings() {
+  if (!rankRows) return;
+  const bestCard = document.getElementById("best-card");
+  const worstCard = document.getElementById("worst-card");
+  if (bestCard) bestCard.className = rankRows.bestClass;
+  if (worstCard) worstCard.className = rankRows.worstClass;
 
-  document.querySelector("#best-card h3").textContent =
-    `⚡ Fastest ${metricLabel} (${basisLabel}, ${usage} kWh/d)`;
-  document.querySelector("#worst-card h3").textContent =
-    `🔴 Slowest ${metricLabel} (${basisLabel}, ${usage} kWh/d)`;
+  if (rankRows.kind === "cost") {
+    document.getElementById("best-list").innerHTML = rankRows.best
+      .map(({ i, cost }) => {
+        const p = pt(i);
+        const splitText = p.unserved ? `~${p.unserved}% unserved` : "100% grid";
+        return `<li><span class="years" style="color:${costTextColor(cost)}">${costLabel(cost)}</span> — ${esc(p.n)}, ${esc(countryName(p.c))} <span class="detail">(${splitText}, paper $${p.t}/kWh)</span></li>`;
+      })
+      .join("");
+
+    document.getElementById("worst-list").innerHTML = rankRows.worst
+      .map(({ i, cost }) => {
+        const p = pt(i);
+        return `<li><span class="years" style="color:${costTextColor(cost)}">${costLabel(cost)}</span> — ${esc(p.n)}, ${esc(countryName(p.c))} <span class="detail">(${p.y} kWh/kWp/yr)</span></li>`;
+      })
+      .join("");
+  } else {
+    const rateOf = (p) => (basis === "real" && p.tr ? `$${p.tr}` : `$${p.t}`);
+    const row = ({ i, yrs }) => {
+      const p = pt(i);
+      return `<li><span class="years">${yearLabel(yrs)}</span> — ${esc(p.n)}, ${esc(countryName(p.c))} <span class="detail">(${rateOf(p)}/kWh, ${p.y} kWh/kWp)</span></li>`;
+    };
+
+    document.getElementById("best-list").innerHTML = rankRows.best
+      .map(row)
+      .join("");
+    document.getElementById("worst-list").innerHTML = rankRows.worst
+      .map(row)
+      .join("");
+  }
+
+  document.querySelector("#best-card h3").textContent = rankRows.bestTitle;
+  document.querySelector("#worst-card h3").textContent = rankRows.worstTitle;
 }
 
 void getPointCost;
@@ -778,29 +905,65 @@ document
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     metric = btn.dataset.metric;
-    // The year matrix lives in its own file and is only read by the two year
-    // metrics. Fetch on the switch rather than during the load window.
+    // Names are needed by every metric, the year matrix only by the two year
+    // metrics. Both are already in flight from the idle prefetch; this waits
+    // for them rather than assuming they landed.
+    await ensureNames();
     if (metric !== "cost") await ensureYears();
     invalidateColorColumn();
     renderDots();
   });
 
-// ── Init ───────────────────────────────────────────────────────────────
-async function ensureYears() {
-  if (years) return years;
-  if (yearsPending) return yearsPending;
-  yearsPending = fetch("../assets/data/heatmap-years.json?v=20261001b")
+// ── Deferred data ───────────────────────────────────────────────────────
+//
+// Two files, and the split between them is measured rather than tidiness. The
+// names are text: 39,707 of them parse in about 6ms, which is a task the
+// throttled page can afford. The year matrix was never affordable — 635,312
+// JSON numbers, ~30ms of parse — and it was landing inside the load window
+// because the page fetched it on idle. As its own packed file it decodes into
+// views, so the prefetch that makes the first metric switch instant costs no
+// main-thread time at all.
+async function ensureNames() {
+  if (nameList) return nameList;
+  if (namesPending) return namesPending;
+  namesPending = fetch("../assets/data/heatmap-names.json?v=20261001b")
     .then((r) => {
-      if (!r.ok) throw new Error("Failed to load heatmap year data");
+      if (!r.ok) throw new Error("Failed to load heatmap city names");
       return r.json();
     })
     .then((d) => {
-      years = d;
+      nameList = d.names;
+      lqCol = d.lq;
+      namesPending = null;
+      // The ranking rows were decided without names; they can be painted now
+      // that the names are here, without re-running the ranking itself.
+      paintRankings();
+      return nameList;
+    })
+    .catch((err) => {
+      namesPending = null;
+      console.error(err);
+      return null;
+    });
+  return namesPending;
+}
+
+async function ensureYears() {
+  if (years) return years;
+  if (yearsPending) return yearsPending;
+  yearsPending = fetch("../assets/data/heatmap-years.bin?v=20261001b")
+    .then((r) => {
+      if (!r.ok) throw new Error("Failed to load heatmap year matrix");
+      return r.arrayBuffer();
+    })
+    .then((buf) => {
+      years = decodeYears(buf);
       yearsPending = null;
       // The colour column was built while the year matrix was still absent, so
       // every year metric would have painted bucket 0.
       invalidateColorColumn();
-      return d;
+      paintRankings();
+      return years;
     })
     .catch((err) => {
       yearsPending = null;
@@ -812,12 +975,23 @@ async function ensureYears() {
 
 async function init() {
   try {
-    const res = await fetch("../assets/data/heatmap-grid.json?v=20261001b");
+    // Packed binary, not JSON. The previous columnar JSON was 1.73 MB, and
+    // `await res.json()` measured 39ms (mobile) / 29ms (desktop) on the staged
+    // build — which, under the gate's ~4x CPU throttling, is most of what was
+    // left of this page's TBT. This is 466 KB and `arrayBuffer()` is a read, not
+    // an inflate-plus-decode-plus-parse; `decodeGrid` hands back typed-array
+    // VIEWS over that buffer, so decoding copies nothing.
+    const res = await fetch("../assets/data/heatmap-grid.bin?v=20261001b");
     if (!res.ok) throw new Error("Failed to load heatmap data");
-    header = await res.json();
-    ensureScratch(header.count);
-    // Parsing 39,707 columns and drawing them are each a sizeable task; run
-    // them separately so neither blocks the main thread for their sum.
+    grid = decodeGrid(await res.arrayBuffer());
+    header = {
+      count: grid.count,
+      countries: grid.countries,
+      usageTiersKwhDay: grid.usageTiersKwhDay,
+    };
+    ensureScratch(grid.count);
+    // Reading the grid and drawing it are each a sizeable task; run them
+    // separately so neither blocks the main thread for their sum.
     await nextFrame();
   } catch (err) {
     document.getElementById("loading").innerHTML =
@@ -863,10 +1037,13 @@ async function init() {
   // clickable by the time this runs.
   nextFrame().then(updateRankings);
 
-  // Pull the year matrix in while the reader is still reading the map, so the
-  // first switch to a year metric is instant rather than a spinner.
+  // Pull the deferred halves in while the reader is still reading the map, so
+  // the first metric switch or popup is instant rather than a spinner. The
+  // names parse in about 6ms and the year matrix decodes into views, so this
+  // prefetch costs no measurable main-thread time.
   const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 400));
   idle(() => {
+    ensureNames();
     ensureYears();
   });
 }

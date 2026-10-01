@@ -21,6 +21,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { decodeGrid } from "../assets/js/sizing/heatmap-grid.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
@@ -32,7 +33,15 @@ const BLOG_POST = "blog/battery-longevity-and-dod-reference/index.html";
 const NOT_FOUND = "404.html";
 const HEATMAP = "assets/js/heatmap.js";
 const HEATMAP_PAGE = "solar-heatmap/index.html";
-const HEATMAP_GRID = "assets/data/heatmap-grid.json";
+// The grid the page reads first is packed binary now, not JSON, so the point
+// count comes out of the decoded meta rather than a parsed document.
+const HEATMAP_GRID = "assets/data/heatmap-grid.bin";
+const gridCount = () => {
+  const buf = readFileSync(join(ROOT, HEATMAP_GRID));
+  return decodeGrid(
+    buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),
+  ).count;
+};
 
 test("A11Y: the heatmap draws its dots on a canvas, not one DOM node per grid point", () => {
   // AUDIT ERROR on the `heatmap/arrival/none/ltr` cell since P0.4(b): the cell
@@ -54,17 +63,15 @@ test("A11Y: the heatmap draws its dots on a canvas, not one DOM node per grid po
   // screen-reader user reads the data from — the same numbers are in
   // #best-list / #worst-list as text, which is why drawing them on a canvas
   // removes nothing anyone could reach.
-  const grid = JSON.parse(read(HEATMAP_GRID));
-  // The grid is columnar now, so the count is a declared field rather than an
-  // array's length. It must still be the whole world: a gate that stopped
-  // biting because the data shrank would be a gate that stopped measuring.
-  const points = grid.count;
+  // The grid is packed binary now, so the count is a declared field in the
+  // file's meta rather than an array's length. It must still be the whole
+  // world: a gate that stopped biting because the data shrank would be a gate
+  // that stopped measuring.
+  const points = gridCount();
   assert.ok(
     points > 5000,
     `the grid must be big enough for a per-point DOM node to bite (${points} points)`,
   );
-  assert.equal(grid.lat.length, points, "every point has a latitude");
-  assert.equal(grid.lon.length, points, "every point has a longitude");
 
   const src = read(HEATMAP);
   // DELIBERATE CHANGE, 2026-10-01. This test used to require a

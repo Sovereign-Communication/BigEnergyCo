@@ -440,6 +440,45 @@ test("BUDGET: the heatmap budget is measured on the page that fetches the grid",
   ]);
 });
 
+test("BUDGET: deferring a payload does not take it out of the reading", () => {
+  // The heatmap splits its data in two: a packed binary grid the map waits on,
+  // and a names/year-matrix file fetched after the map is on screen. The split
+  // made `heatmap_initial` honest to schedule, and the obvious way to cheat
+  // with it is to make the deferred half invisible to this walk — by moving
+  // the fetch out of a string literal, or by renaming the file. Neither is
+  // allowed: every fetch in an entry script is counted, and the reading below
+  // is the sum of BOTH payloads.
+  const grid = JSON.stringify({ cells: "x".repeat(5000) });
+  const detail = JSON.stringify({ names: "y".repeat(9000) });
+  const { metrics } = measureStagedBuild(
+    fixture({
+      "assets/js/heatmap.js":
+        'fetch("../assets/data/heatmap-grid.json");' +
+        'fetch("../assets/data/heatmap-detail.json");',
+      "assets/data/heatmap-grid.json": grid,
+      "assets/data/heatmap-detail.json": detail,
+    }),
+  );
+  const h = metrics.heatmap_initial;
+  assert.equal(
+    h.value,
+    brotliBytes(
+      Buffer.from(
+        'fetch("../assets/data/heatmap-grid.json");' +
+          'fetch("../assets/data/heatmap-detail.json");',
+      ),
+    ) +
+      brotliBytes(Buffer.from(grid)) +
+      brotliBytes(Buffer.from(detail)),
+    "a payload fetched after first paint is still bytes this page ships",
+  );
+  assert.deepEqual(h.parts.slice().sort(), [
+    "assets/data/heatmap-detail.json",
+    "assets/data/heatmap-grid.json",
+    "assets/js/heatmap.js",
+  ]);
+});
+
 test("BUDGET: a budget whose subject is absent is unmeasured, never zero", () => {
   // Nothing named heatmap in this build. The honest reading is "not measured":
   // a 0 would satisfy a 300 KB budget without anything having been fetched,

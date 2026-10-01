@@ -3,7 +3,9 @@
 // Pure math — no NASA API calls, no network.
 //
 // Usage:  node scripts/generate-heatmap-data.mjs
-// Output: assets/data/heatmap-grid.json
+// Output: assets/data/heatmap-grid.bin (first paint, packed binary)
+//         assets/data/heatmap-names.json (city names + LCOE, deferred)
+//         assets/data/heatmap-years.bin (year matrix, deferred, packed binary)
 //
 // For each city in city-data/*.json, look up the nearest offline profile,
 // compute annual yield per kWp, look up the regional tariff, and compute
@@ -33,7 +35,11 @@ import {
   landedMidBattKwhFor,
 } from "../assets/js/sizing/pricing.js";
 import { batteryReplacements } from "../assets/js/sizing/money.js";
-import { encodeGrid } from "../assets/js/sizing/heatmap-grid.js";
+import {
+  encodeGrid,
+  encodeGridBinary,
+  encodeYearsBinary,
+} from "../assets/js/sizing/heatmap-grid.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
@@ -415,36 +421,45 @@ mkdirSync(outDir, { recursive: true });
 // dequantizes exactly what this script quantized.
 const encoded = encodeGrid(results, { usageTiersKwhDay: USAGE_TIERS });
 
-// The year matrix is a SEPARATE file. It is 16 of the 20 numbers per point and
-// is read only when the reader switches to a payback/break-even metric or opens
-// a popup, so keeping it out of the first paint is what makes the grid cheap to
-// load. Nothing is dropped: every number the old file carried is still written.
-const outPath = join(outDir, "heatmap-grid.json");
-const yearsPath = join(outDir, "heatmap-years.json");
+// The first-paint half is PACKED BINARY: twelve fixed-width bytes per point,
+// read by the page as typed-array views over the response body. Both the
+// quantization scales and the column layout live in
+// assets/js/sizing/heatmap-grid.js, so the page decodes exactly what this
+// script encoded — one owner, two encodings that cannot drift apart.
+const outPath = join(outDir, "heatmap-grid.bin");
 
+// The two deferred files carry what the first paint does not read: the city
+// names and LCOE (a ranking row or a popup) and the year matrix (a metric
+// switch or a popup). Nothing is dropped — names, lq, yrs and the estimate
+// note are all still written, just not on the path the map needs.
+//
+// The names stay JSON because they are text and the browser reads them in
+// about 6ms. The year matrix does NOT: as JSON it was 1.86 MB that the page
+// had to JSON.parse, one long task inside the load window, and packed as u16
+// it is a file the page reads as a view — smaller on the wire too, because it
+// is almost all constant runs (brotli q11: 2.5 KB packed, 2.8 KB as JSON).
+const namesPath = join(outDir, "heatmap-names.json");
+const yearsPath = join(outDir, "heatmap-years.bin");
+
+writeFileSync(outPath, Buffer.from(encodeGridBinary(encoded)));
 writeFileSync(
-  outPath,
-  JSON.stringify({
-    ...encoded.header,
-    generated: new Date().toISOString(),
-    ...encoded.hot,
-  }),
-);
-writeFileSync(
-  yearsPath,
+  namesPath,
   JSON.stringify({
     v: encoded.header.v,
+    generated: new Date().toISOString(),
     count: encoded.header.count,
-    series: encoded.years.series,
-    tiers: encoded.years.tiers,
-    yrs: encoded.years.yrs,
+    metric: encoded.header.metric,
+    names: encoded.hot.names,
+    lq: encoded.hot.lq,
   }),
 );
+writeFileSync(yearsPath, Buffer.from(encodeYearsBinary(encoded)));
 
 const kb = (p) => Math.round(readFileSync(p).length / 1024);
 console.log(
   `\nWrote ${results.length} points to ${outPath} (${kb(outPath)} KB)`,
 );
+console.log(`Wrote the names to ${namesPath} (${kb(namesPath)} KB)`);
 console.log(`Wrote the year matrix to ${yearsPath} (${kb(yearsPath)} KB)`);
 
 // Verification checks
