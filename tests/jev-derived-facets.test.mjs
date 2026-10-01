@@ -787,10 +787,25 @@ test("EVIDENCE: an over-budget half of the accessibility line is named", () => {
   // The record is still written — red problem and all — so read it as the
   // judge would and assert the over-budget clause is not half-joined into it.
   const evidence = JSON.parse(readFileSync(join(dir, "evidence.json"), "utf8"));
+  // Neither half may reach the record on its own. The half that DID fit must
+  // not stand in for the axis: run 36932232421 is the measurement — the
+  // performance halves were 250 and 51 against a 300 clip, the join was
+  // refused, and the axis reached the judge as a bare speed line, which reads
+  // as the whole claim and is not one. The axis must be a HOLE.
   assert.equal(
-    evidence.facet_evidence.accessibility.includes("c".repeat(100)),
+    Object.hasOwn(evidence.facet_evidence, "accessibility"),
+    false,
+    "a refused join must leave no half-line behind as if it were the axis",
+  );
+  assert.equal(
+    String(evidence.facet_evidence.accessibility).includes("c".repeat(100)),
     false,
     "…and the over-budget clause must not be half-joined into the record",
+  );
+  assert.match(
+    stderr,
+    /REMOVED rather than trimmed/,
+    `the failure must say the axis was removed, not shortened: ${stderr}`,
   );
 });
 
