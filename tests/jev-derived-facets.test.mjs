@@ -35,7 +35,9 @@ import {
   composeQualityContractClause,
   QUALITY_CONTRACT_AXIS,
   QUALITY_CONTRACT_FIELDS,
+  RECORD_SOURCES,
 } from "../scripts/lib/jev-evidence.mjs";
+import { A11Y_CONTROLS_CLAUSE_MAX } from "../scripts/lib/a11y-controls.mjs";
 
 const WORKFLOW_YAML = readFileSync(".github/workflows/test.yml", "utf8");
 const PROSE = JSON.parse(
@@ -150,7 +152,7 @@ test("EVIDENCE: the clarity clause names contracts the suite actually asserts", 
     prettier_clean: true,
     seo_green: true,
   });
-  assert.match(clause, /one-owner\/no-second-copy contracts/);
+  assert.match(clause, /one-owner\/no-second-copy/);
   const suite = readdirSync("tests")
     .filter((f) => f.endsWith(".test.mjs"))
     .map((f) => readFileSync(join("tests", f), "utf8"))
@@ -165,6 +167,26 @@ test("EVIDENCE: the clarity clause names contracts the suite actually asserts", 
       `the clause names the "${contract}" contract, so the suite must assert it`,
     );
   }
+  // The other half of the clause's claim: "dead-code/duplication scan" names a
+  // STEP of the required test job, so the workflow must declare that step, the
+  // RECORD_SOURCES map must route it, and the suite must test the instrument —
+  // a phrase with no step behind it would be the exact defect this clause exists
+  // to avoid.
+  assert.match(
+    WORKFLOW_YAML,
+    /id: hygiene\n\s+run: node scripts\/check-code-hygiene\.mjs/,
+    "the workflow must declare the hygiene step the clause's phrase is worded from",
+  );
+  assert.equal(
+    RECORD_SOURCES.hygiene_clean?.step,
+    "hygiene",
+    "the clause's phrase routes through RECORD_SOURCES like every other reading",
+  );
+  assert.match(
+    suite,
+    /analyzeHygiene|check-code-hygiene/,
+    "the suite must exercise the instrument the clause claims ran",
+  );
 });
 
 test("EVIDENCE: a red clarity reading is named, never softened", () => {
@@ -371,7 +393,12 @@ const JOBS = {
   test: {
     job: "test",
     conclusion: "success",
-    steps: { unit_tests: "success", prettier: "success", seo: "success" },
+    steps: {
+      unit_tests: "success",
+      prettier: "success",
+      seo: "success",
+      hygiene: "success",
+    },
   },
   "web-smoke": {
     job: "web-smoke",
@@ -492,7 +519,7 @@ test("EVIDENCE: the byte-budget run's line reaches the judge's quality axis", ()
   );
   assert.match(
     out.facet_evidence.quality,
-    /Test job green: .*contracts.*dead code or duplication is unmeasured/,
+    /Test job green: .*dead-code\/duplication scan.*Unmeasured: branches\/abstractions/,
     `…joined to the clarity clause the run records support: ${out.facet_evidence.quality}`,
   );
   assert.match(
@@ -537,6 +564,7 @@ test("EVIDENCE: a red test job withdraws the clarity half of the quality axis", 
         unit_tests: "failure",
         prettier: "success",
         seo: "success",
+        hygiene: "success",
       },
     },
   });
@@ -638,5 +666,105 @@ test("CI: the report reaches the judge through the download the job already does
     WORKFLOW_YAML,
     /check-byte-budgets\.mjs --stage _pages_budget --out byte-budgets-report\.json/,
     "…which means the step itself has to ask for it",
+  );
+  // The axe matrix is the second instrument of the `accessibility` facet, so
+  // its report rides the same wire: a clause the builder never downloads is a
+  // half of the line the judge never reads.
+  assert.match(
+    WORKFLOW_YAML,
+    /name:\s*jev-results-a11y-matrix/,
+    "the matrix report must be uploaded under the name the judge's download picks up",
+  );
+  assert.match(
+    WORKFLOW_YAML,
+    /path:\s*a11y-report\.json/,
+    "…and the path must be the file the gate writes with --out",
+  );
+  assert.match(
+    WORKFLOW_YAML,
+    /check-a11y-matrix\.mjs --stage _pages_a11y --out a11y-report\.json/,
+    "…which means the step itself has to ask for it",
+  );
+});
+
+test("EVIDENCE: the accessibility axis joins the two instruments measured", () => {
+  // The controls walk ends on its own limit — "no theme/RTL matrix" — and the
+  // axe matrix is the run that measured exactly that matrix. Neither half may
+  // claim the axis alone: the controls walk never loaded the matrix, and the
+  // matrix never touched a keyboard.
+  const controlsLine =
+    "real Chrome, calculator controls: keyboard reaches sliders/quick/manual/kWh, wrapping with no trap (64/64/81/48 stops); every visible control named; WCAG AA contrast; reduced motion honored. 1 Chrome, no screen reader, no theme/RTL matrix.";
+  const matrixLine = "axe matrix: 11/11 cells, 0 violations";
+  const dir = artifactsWith({
+    "a11y-controls-report.json": {
+      metric: "a11y_controls",
+      facet_axes: ["accessibility"],
+      facet_line: controlsLine,
+    },
+    "a11y-report.json": {
+      metric: "a11y_matrix",
+      facet_axes: ["accessibility"],
+      facet_line: matrixLine,
+    },
+  });
+  const { status, stderr, out } = buildWith(dir, PROSE_MIN);
+  assert.equal(status, 0, stderr);
+  assert.equal(
+    out.facet_evidence.accessibility,
+    `${controlsLine} ${matrixLine}`,
+    `both clauses must reach the judge, controls first, joined whole: ${out.facet_evidence.accessibility}`,
+  );
+  assert.ok(
+    out.facet_evidence.accessibility.length <= COMPLETE_FACET_CLIP,
+    `the joined line is ${out.facet_evidence.accessibility.length} chars, over the clip`,
+  );
+  const entries = (out.derived_facet_lines || []).filter(
+    (d) => d.axis === "accessibility",
+  );
+  assert.deepEqual(
+    entries.map((d) => d.metric).sort(),
+    ["a11y_controls", "a11y_matrix"],
+    `the record must say both instruments measured this axis: ${JSON.stringify(entries)}`,
+  );
+  for (const entry of entries) {
+    assert.equal(
+      entry.joined_chars,
+      out.facet_evidence.accessibility.length,
+      "every entry of a joined axis records the length that actually reached the judge",
+    );
+  }
+});
+
+test("EVIDENCE: an over-budget half of the accessibility line is named", () => {
+  // Bounded from both ends: a controls clause past its declared half of the
+  // clip cannot be trimmed — the part a trim would eat is the limit sentence
+  // that keeps the claims honest — so the builder names the half that grew
+  // and refuses the run instead of joining.
+  const dir = artifactsWith({
+    "a11y-controls-report.json": {
+      metric: "a11y_controls",
+      facet_axes: ["accessibility"],
+      facet_line: `real Chrome, calculator controls: ${"c".repeat(A11Y_CONTROLS_CLAUSE_MAX + 1 - 34)}`,
+    },
+    "a11y-report.json": {
+      metric: "a11y_matrix",
+      facet_axes: ["accessibility"],
+      facet_line: "axe matrix: 11/11 cells, 0 violations",
+    },
+  });
+  const { status, stderr } = buildWith(dir, PROSE_MIN);
+  assert.equal(status, 1, "an over-budget half must stop the run");
+  assert.match(
+    stderr,
+    /the accessibility facet line is over budget \(controls \d+>240\)/,
+    `the half that grew must be named: ${stderr}`,
+  );
+  // The record is still written — red problem and all — so read it as the
+  // judge would and assert the over-budget clause is not half-joined into it.
+  const evidence = JSON.parse(readFileSync(join(dir, "evidence.json"), "utf8"));
+  assert.equal(
+    evidence.facet_evidence.accessibility.includes("c".repeat(100)),
+    false,
+    "…and the over-budget clause must not be half-joined into the record",
   );
 });

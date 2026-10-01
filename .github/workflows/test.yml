@@ -88,6 +88,17 @@ jobs:
         id: unit_tests
         run: npm test
 
+      # Quality axis, second half: DEAD CODE AND DUPLICATION, MEASURED. The
+      # quality facet line used to end with "dead code or duplication is
+      # unmeasured" because nothing measured them; this step is the instrument.
+      # It under-reports by design (a name counts as used if ANY tracked source
+      # mentions it), so a red here is a finding, never noise. Its outcome
+      # travels on this job's record below as the `hygiene` step, which is what
+      # the quality facet's clarity clause is worded from.
+      - name: Hygiene (dead code and duplication, plan quality axis)
+        id: hygiene
+        run: node scripts/check-code-hygiene.mjs --out hygiene-report.json
+
       # ── P0.3(e) / F-45: this job's REAL outcomes, for the Jev gate ─────────
       # The gate used to read a hand-maintained evidence file that could claim
       # green while this suite was red. It now reads what the runner actually
@@ -109,6 +120,7 @@ jobs:
                 seo: "${{ steps.seo.outcome }}",
                 prettier: "${{ steps.prettier.outcome }}",
                 unit_tests: "${{ steps.unit_tests.outcome }}",
+                hygiene: "${{ steps.hygiene.outcome }}",
               },
             };
             fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
@@ -121,6 +133,20 @@ jobs:
         with:
           name: jev-results-test
           path: jev-artifacts/test.json
+          if-no-files-found: error
+          retention-days: 7
+
+      # The hygiene reading itself, beside the record: named findings when red,
+      # the counts when green. Uploaded under the jev-results-* pattern so the
+      # evidence builder's artifact directory carries it; it declares no
+      # facet_axes (the clarity clause words this axis from the job record), so
+      # it is evidence, not a second line.
+      - name: Upload the hygiene report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-hygiene
+          path: hygiene-report.json
           if-no-files-found: error
           retention-days: 7
 
@@ -188,10 +214,11 @@ jobs:
       # written by scripts/browser-smoke.mjs) and rides in this report. The NAME
       # is the wire — jev-complete downloads `jev-results-*` and the evidence
       # builder discovers `facet_axes` inside whatever it finds, so a report
-      # under any other name is read by nobody. Deliberately NOT the same file as
-      # quality-lab's `a11y-matrix-report`: that is a different measurement (axe
-      # over the template x state x theme x direction matrix) and it stays on its
-      # own name.
+      # under any other name is read by nobody. Deliberately not the same FILE
+      # as quality-lab's axe matrix: that is a different measurement (axe over
+      # the template x state x theme x direction matrix) with its own clause —
+      # and, since the two-instrument join, its own `jev-results-a11y-matrix`
+      # artifact on this same wire. Two files, two clauses, one joined line.
       - name: Upload the a11y controls report for the Jev gate
         if: always()
         uses: actions/upload-artifact@v7
@@ -255,12 +282,16 @@ jobs:
         run: node scripts/check-a11y-matrix.mjs --stage _pages_a11y --out a11y-report.json
       # The report is the evidence: which cells ran, what each one found, and
       # which combinations do not apply and why. Uploaded even on failure,
-      # because a red cell is the thing someone has to read.
-      - name: Upload the matrix report
+      # because a red cell is the thing someone has to read. The NAME is the
+      # same wire every other facet instrument rides: the report now carries
+      # `facet_axes`/`facet_line` (this run's clause of the accessibility line,
+      # composed by scripts/lib/quality-matrix.mjs), and a report the evidence
+      # builder never downloads is a line the judge never reads.
+      - name: Upload the matrix report for the Jev gate
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: a11y-matrix-report
+          name: jev-results-a11y-matrix
           path: a11y-report.json
           if-no-files-found: error
           retention-days: 7

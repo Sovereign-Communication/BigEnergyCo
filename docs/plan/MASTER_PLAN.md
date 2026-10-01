@@ -100,6 +100,8 @@ The owner asked for **99/100 on every aspect**. A metric scored out of 100 must 
 
 P0.4 measures the compressed baseline. If a limit proves physically unreachable, measured evidence plus an amendment may relax it. Nothing else may.
 
+**A-002 (owner-approved 2026-09-29): interim limits for the three unreachable lines.** Measured evidence, staged build at PR #171 (brotli q11): JavaScript before step 1 is interactive 186.5 KB, worst-country registry data 75.1 KB, heatmap initial payload 417.3 KB. Until the §3.2 absolute phases, the byte gate reports those three budgets against **shipped +10 %** — `js_before_interactive` ≤ 206 KB, `registry_country` ≤ 83 KB, `heatmap_initial` ≤ 460 KB — and an over-limit reading is counted against that interim line. The table above is unchanged: its figures remain the absolute thresholds that bind from P6 (`/next/`) and P8 (all), per §3.2. The amendment moves no shipped byte, so runtime performance is untouched.
+
 ### 3.2 Gate enforcement: ratchet first, absolute later
 
 Every gate starts in P0 as **regression-blocking**: no PR may make a metric worse than its last ledger baseline. Each gate becomes **absolute-blocking** in the phase that delivers the capability it measures:

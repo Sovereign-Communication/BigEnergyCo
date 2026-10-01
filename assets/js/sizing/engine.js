@@ -35,7 +35,6 @@ export const GAMMA_PMAX = -0.0034; // per °C, mono-PERC typical (range -0.0029.
 export const NOCT = 45; // nominal operating cell temp, °C
 
 export const ETA_INVERTER = 0.94; // DC->AC conversion, continuous
-export const ROUND_TRIP_DEFAULT = 0.92;
 
 // The chemistry/cell model — CHEMISTRIES, coldCapacityScale, capacityScaleFor,
 // CYCLE_LIFE_CURVES, cycleLifeForDoD — lives in chem-model.js (imported at the
@@ -304,14 +303,6 @@ export function downsampleEnvelope(series, buckets) {
     out.push({ lo, hi });
   }
   return out;
-}
-
-/**
- * Size all tiers at once. Returns array aligned with RELIABILITY_TIERS order.
- * @deprecated — use simulate() directly; kept for backwards compat.
- */
-export function simulateWithCycles(opts) {
-  return simulate(opts);
 }
 
 // ── Oversizing vs. Swaps Optimization ───────────────────────────────────────
@@ -683,7 +674,7 @@ export function sizeAllTiers(opts) {
 // peak-offset metric can never disagree between views.
 export const PEAK_HOUR_START = 16;
 export const PEAK_HOUR_END = 21; // exclusive
-export function isPeakHour(hourOfDay) {
+function isPeakHour(hourOfDay) {
   return hourOfDay >= PEAK_HOUR_START && hourOfDay < PEAK_HOUR_END;
 }
 

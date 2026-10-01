@@ -14,6 +14,11 @@
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
 import { APPLIANCES } from "./appliances.js?v=20260930b";
+import { byId as $, el } from "../shared/dom.js?v=20260930b";
+import {
+  INSTALL_NAV_BREAKPOINT_PX,
+  installReveal,
+} from "./pwa-install.js?v=20260930b";
 import {
   createRunChannel,
   staleRunAction,
@@ -400,24 +405,6 @@ let generatorBasis = false;
 // to realistic compressor time, and the row shows the resulting average draw.
 
 const CHEM_KEYS = new Set(["auto", "naion", "lfp", "agm"]);
-
-function $(id) {
-  return document.getElementById(id);
-}
-
-function el(tag, attrs = {}, text) {
-  const e = document.createElement(tag);
-
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === "style") e.style.cssText = v;
-    else if (k === "class") e.className = v;
-    else e.setAttribute(k, v);
-  }
-
-  if (text !== undefined) e.textContent = text;
-
-  return e;
-}
 
 // Reduced-motion users get instant scrolling instead of JS smooth scroll.
 // Same contract as chat.js's helper (a classic script can't share imports).
@@ -7680,13 +7667,30 @@ function setupPwaControls() {
 
   const badge = $("offlineBadge");
 
+  // The install prompt arrives long after first paint, so WHICH control is
+  // revealed is a layout decision, not a cosmetic one: showing both reflowed
+  // the header CTA row 109px and measured 0.121 CLS on home/mobile. The rule
+  // and the measurement behind it live in ./pwa-install.js.
+  const narrowNav =
+    typeof window.matchMedia === "function"
+      ? window.matchMedia(`(max-width: ${INSTALL_NAV_BREAKPOINT_PX}px)`)
+      : null;
+
+  const applyInstallVisibility = (available) => {
+    const next = installReveal(
+      narrowNav ? narrowNav.matches : false,
+      available,
+    );
+    if (btnH) btnH.style.display = next.header;
+    if (btnM) btnM.style.display = next.drawer;
+  };
+
   const triggerInstall = async () => {
     if (!deferredInstallPrompt) return;
     deferredInstallPrompt.prompt();
     const res = await deferredInstallPrompt.userChoice;
     if (res && res.outcome === "accepted") {
-      if (btnH) btnH.style.display = "none";
-      if (btnM) btnM.style.display = "none";
+      applyInstallVisibility(false);
     }
     deferredInstallPrompt = null;
   };
@@ -7698,15 +7702,22 @@ function setupPwaControls() {
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
-    if (btnH) btnH.style.display = "inline-flex";
-    if (btnM) btnM.style.display = "flex";
+    applyInstallVisibility(true);
   });
 
   window.addEventListener("appinstalled", () => {
-    if (btnH) btnH.style.display = "none";
-    if (btnM) btnM.style.display = "none";
+    applyInstallVisibility(false);
     deferredInstallPrompt = null;
   });
+
+  // Rotating a phone past the breakpoint leaves the revealed control in the
+  // layout that no longer exists. Re-resolve, so there is never a button on
+  // screen that the current layout does not use.
+  if (narrowNav && typeof narrowNav.addEventListener === "function") {
+    narrowNav.addEventListener("change", () => {
+      applyInstallVisibility(Boolean(deferredInstallPrompt));
+    });
+  }
 
   function updateNetworkStatus() {
     if (!badge) return;
@@ -7739,7 +7750,7 @@ function setupPwaControls() {
   updateNetworkStatus();
 }
 
-export function initSizingUI() {
+function initSizingUI() {
   try {
     // Landing-page storage widget reads through this hook (same pricing
     // module the engine uses — no second source of truth).

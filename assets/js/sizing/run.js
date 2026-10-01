@@ -167,16 +167,16 @@ export function bestPickReason(winner, allEntries, meanT, agmRef = null) {
 // Auto-compare chemistries: sodium-ion and LFP only. Lead-acid (AGM) is
 // searched alongside as a savings reference but never recommended — its
 // entry ships as payload.agmReference, never in auto/cards/matrix/best.
-export const AUTO_CHEMS = ["naion", "lfp"];
-export const REF_CHEM = "agm";
+const AUTO_CHEMS = ["naion", "lfp"];
+const REF_CHEM = "agm";
 
 // Sodium-first preference: LFP takes the recommendation only when its true
 // 20-year cost beats sodium by more than this margin — otherwise sodium's
 // safety (no thermal runaway, charges to −20 °C) decides it.
-export const COST_MARGIN = 0.1;
+const COST_MARGIN = 0.1;
 // Mean-temp proxy for freezing-winter danger to LFP (must not charge below
 // 0 °C; this cold a mean says sub-zero nights are routine).
-export const COLD_MEAN_C = 10;
+const COLD_MEAN_C = 10;
 
 export function isColdSite(meanTempC) {
   return Number.isFinite(meanTempC) && meanTempC < COLD_MEAN_C;

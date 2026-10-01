@@ -18,6 +18,7 @@ import { createReadStream, existsSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { constants, createBrotliCompress, createGzip } from "node:zlib";
 import {
   headersFor,
   parseHeadersFile,
@@ -50,6 +51,109 @@ const MIME = {
   ".mp4": "video/mp4",
   ".wasm": "application/wasm",
 };
+
+/**
+ * Extensions worth compressing. The MIME table above is not the filter: a
+ * `.png` or `.woff2` is already compressed, and running it through gzip only
+ * buys CPU and a slightly larger body. Text, markup, script, style and JSON
+ * are what actually shrink.
+ */
+const COMPRESSIBLE = new Set([
+  ".html",
+  ".js",
+  ".mjs",
+  ".css",
+  ".json",
+  ".webmanifest",
+  ".xml",
+  ".txt",
+  ".svg",
+  ".wasm",
+]);
+
+/** Below this size the compression header costs more than it saves. */
+const COMPRESS_MIN_BYTES = 1024;
+
+/**
+ * Pick a content coding from the request's `Accept-Encoding`, or null.
+ *
+ * brotli first, gzip as the universal fallback. An `identity` token is present
+ * on essentially every request and is deliberately NOT treated as a veto: a
+ * client that also accepts `br` is served brotli, and a client that sends only
+ * `identity` matches neither pattern and is served the raw bytes.
+ */
+export function negotiateEncoding(acceptEncoding, compressible) {
+  if (!compressible) return null;
+  const header = String(acceptEncoding || "");
+  if (!header) return null;
+  // Parse the offered codings with their quality values. `q=0` means
+  // "explicitly not acceptable" and is dropped, and the highest q wins rather
+  // than a fixed preference: a client that writes `gzip;q=1.0, br;q=0.5` has
+  // told us it would rather have gzip, and serving brotli anyway would be
+  // ignoring an explicit statement. Ties go to brotli, the better ratio.
+  const offered = new Map();
+  for (const part of header.split(",")) {
+    const [rawToken, ...params] = part.split(";");
+    const token = rawToken.trim().toLowerCase();
+    if (!token) continue;
+    let q = 1;
+    for (const p of params) {
+      const m = p.trim().match(/^q\s*=\s*([0-9.]+)$/i);
+      if (m) q = Number(m[1]);
+    }
+    if (q <= 0) continue;
+    if (!offered.has(token) || q > offered.get(token)) offered.set(token, q);
+  }
+  let best = null;
+  for (const [token, q] of offered) {
+    if (token !== "br" && token !== "gzip") continue;
+    if (!best || q > best.q || (q === best.q && token === "br"))
+      best = { token, q };
+  }
+  return best ? best.token : null;
+}
+
+/**
+ * Stream a file to the response, compressing text bodies when the client asked
+ * for it.
+ *
+ * WHY THIS EXISTS HERE AND NOT IN THE PLATFORM: the static server exists so
+ * the browser gates measure the surface production serves. Cloudflare Pages
+ * applies Brotli and gzip automatically, so a build that is only ever measured
+ * through this server would report `uses-text-compression` as a failure for a
+ * thing production already does — the measurement would be wrong about the
+ * product in the pessimistic direction, which is the direction that quietly
+ * justifies "optimising" something that is already fine. Mirroring the
+ * platform's compression makes the local reading match the deployed one.
+ */
+function sendFile(res, file, status, { ext, mime }, req, byteLength) {
+  res.setHeader("Content-Type", mime);
+  const encoding = negotiateEncoding(
+    req?.headers?.["accept-encoding"],
+    COMPRESSIBLE.has(ext) && (byteLength ?? 1) >= COMPRESS_MIN_BYTES,
+  );
+  const stream = createReadStream(file);
+  if (!encoding) {
+    res.writeHead(status);
+    stream.pipe(res);
+    return;
+  }
+  res.setHeader("Content-Encoding", encoding);
+  res.setHeader("Vary", "Accept-Encoding");
+  res.writeHead(status);
+  const compressor =
+    encoding === "br"
+      ? createBrotliCompress({
+          params: {
+            [constants.BROTLI_PARAM_QUALITY]: 5,
+            [constants.BROTLI_PARAM_SIZE_HINT]: byteLength ?? 0,
+          },
+        })
+      : createGzip({ level: 6 });
+  stream.on("error", () => res.destroy());
+  compressor.on("error", () => res.destroy());
+  stream.pipe(compressor).pipe(res);
+}
 
 /**
  * Start the server. Returns `{ url, port, close }`.
@@ -130,9 +234,14 @@ export async function serveStatic({
       const notFound = join(root, "404.html");
       applyPolicy();
       if (existsSync(notFound)) {
-        res.setHeader("Content-Type", MIME[".html"]);
-        res.writeHead(404);
-        createReadStream(notFound).pipe(res);
+        sendFile(
+          res,
+          notFound,
+          404,
+          { ext: ".html", mime: MIME[".html"] },
+          req,
+          statSync(notFound).size,
+        );
         return;
       }
       res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
@@ -148,9 +257,14 @@ export async function serveStatic({
     // fresh in production.
     if (type === ".html" && !res.getHeader("Cache-Control"))
       res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
-    res.setHeader("Content-Type", MIME[type] || "application/octet-stream");
-    res.writeHead(200);
-    createReadStream(file).pipe(res);
+    sendFile(
+      res,
+      file,
+      200,
+      { ext: type, mime: MIME[type] || "application/octet-stream" },
+      req,
+      statSync(file).size,
+    );
   });
 
   await new Promise((ok, fail) => {
