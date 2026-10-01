@@ -350,12 +350,9 @@ test("GATE: the heatmap app runs from a versioned module, not the markup", () =>
     /L\.map\(/,
     "the extracted module must still build the map",
   );
-  // Pre-rendered PNG architecture: versioned PNG manifest or on-demand data
-  assert.ok(
-    /heatmap-grid\.min\.json\?v=/.test(app) ||
-      /assets\/img\/heatmap\/manifest\.json/.test(app),
-    "the heatmap module must reference versioned data (min.json) or PNG manifest",
-  );
+  assert.match(app, /heatmap-grid\.bin\?v=/);
+  assert.match(app, /\.arrayBuffer\(\)/, "packed heatmap data is read as bytes");
+  assert.match(app, /assets\/img\/heatmap\/manifest\.json/, "the image-overlay first paint remains");
 });
 
 // ── static server: the policy the smoke test runs under ─────────────────────

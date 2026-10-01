@@ -21,6 +21,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { decodeGrid } from "../assets/js/sizing/heatmap-grid.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
@@ -32,12 +33,13 @@ const BLOG_POST = "blog/battery-longevity-and-dod-reference/index.html";
 const NOT_FOUND = "404.html";
 const HEATMAP = "assets/js/heatmap.js";
 const HEATMAP_PAGE = "solar-heatmap/index.html";
-const HEATMAP_GRID = "assets/data/heatmap-grid.json";
+const HEATMAP_GRID = "assets/data/heatmap-grid.bin";
 
 test("A11Y: the heatmap draws its dots on a canvas, not one DOM node per grid point", () => {
   // The data stays accessible in the ranking lists, while dots render on one
   // canvas instead of creating one interactive Leaflet object per location.
-  const grid = JSON.parse(read(HEATMAP_GRID));
+  const bytes = readFileSync(join(ROOT, HEATMAP_GRID));
+  const grid = decodeGrid(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
   const points = grid.count;
   assert.ok(points > 5000, "the full heatmap data set remains available");
   assert.equal(grid.lat.length, points, "every point has a latitude");

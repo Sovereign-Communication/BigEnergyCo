@@ -117,59 +117,61 @@ function fixture(overrides = {}) {
   };
 }
 
-test("BUDGET: the limits are the plan's — §3.1's table, as amended by A-002", () => {
-  // Every byte budget is a KB figure in the plan. The one that is not bytes is
-  // a COUNT, and it is held as a count so nobody "fixes" it into 10 KB later.
-  //
-  // Seven lines are §3.1 verbatim. Three are A-002's interim lines (owner-
-  // approved 2026-09-29): measured shipped bytes +10 %, binding until the
-  // P6/P8 absolute phases. BOTH sets live in the plan — this test reads the
-  // amendment's own numbers out of MASTER_PLAN.md, so a constant that drifts
-  // from the plan fails here, and a real relaxation must be made where §3.1
-  // says it may be: measured evidence plus an owner-approved amendment.
+test("BUDGET: the limits are the plan section 3.1 table", () => {
   const plan = readFileSync(join(ROOT, "docs/plan/MASTER_PLAN.md"), "utf8");
-  const tableLimits = {
+  const limits = {
     home_document: 30,
     css_total: 20,
+    js_before_interactive: 35,
     js_to_first_result: 200,
     locale_strings: 25,
-    web_fonts: 0,
+    registry_country: 6,
+    heatmap_initial: 300,
   };
-  const amendedLimits = {
-    js_before_interactive: 206,
-    registry_country: 83,
-    heatmap_initial: 460,
-  };
-  for (const [metric, kb] of Object.entries(tableLimits)) {
+  for (const [metric, kb] of Object.entries(limits)) {
     assert.equal(
       BYTE_BUDGET_LIMITS[metric],
       kb * KB,
-      `${metric} is ${kb} KB in plan §3.1's table, unchanged by A-002.`,
+      "limit must match section 3.1 for " + metric,
     );
   }
-  for (const [metric, kb] of Object.entries(amendedLimits)) {
-    assert.equal(
-      BYTE_BUDGET_LIMITS[metric],
-      kb * KB,
-      `${metric} is ${kb} KB under A-002. Only an owner-approved amendment may relax it, and the amendment lives in the plan — not here.`,
-    );
+  const rows = [
+    ["Home document", "30 KB"],
+    ["All CSS", "20 KB"],
+    ["JavaScript executed before step 1 is interactive", "35 KB"],
+    ["JavaScript to the first result", "200 KB"],
+    ["Strings for one locale", "25 KB"],
+    ["Registry data for one country", "6 KB"],
+    ["Heatmap initial payload", "300 KB"],
+  ];
+  const lessThanOrEqual = String.fromCharCode(0x2264);
+  const planLines = plan.split(/\r?\n/);
+  for (const [label, limit] of rows) {
+    const row = planLines.find((line) => line.includes(label));
+    assert.ok(row, "plan section 3.1 contains " + label);
     assert.ok(
-      plan.includes(`\`${metric}\` ≤ ${kb} KB`),
-      `plan §3.1 must carry A-002's line \`${metric}\` ≤ ${kb} KB — the gate reads the amendment from the plan, never the other way`,
+      row.includes(lessThanOrEqual + " " + limit),
+      "plan threshold matches for " + label,
     );
   }
-  assert.ok(
-    plan.includes("A-002 (owner-approved 2026-09-29)"),
-    "the relaxation must be recorded as a numbered amendment entry, not as prose the gate happens to agree with",
-  );
   assert.equal(
     BYTE_BUDGET_LIMITS.requests_before_interaction,
     10,
-    "requests before first interaction is a count (≤ 10), not a byte budget",
+    "requests before first interaction is a count",
   );
-  // A 6 KB country budget against a city catalogue is the one §3.1 flagged as
-  // possibly unreachable; A-002 relaxed it to the measured 75.1 KB +10 %.
-  assert.equal(BYTE_BUDGET_LIMITS.registry_country, 83 * KB);
+  const requests = planLines.find((line) =>
+    line.includes("Requests before first interaction"),
+  );
+  assert.ok(requests && requests.includes(lessThanOrEqual + " 10"));
+  assert.equal(
+    BYTE_BUDGET_LIMITS.web_fonts,
+    0,
+    "covered scripts use no web fonts",
+  );
+  const fonts = planLines.find((line) =>
+    line.includes("Web fonts for scripts that system fonts cover"),
+  );
+  assert.ok(fonts && fonts.includes("0 bytes"));
 });
 
 test("BUDGET: a staged build is measured on every plan budget", () => {
@@ -460,6 +462,45 @@ test("BUDGET: the heatmap budget is measured on the page that fetches the grid",
     "the reading is the entry script plus the grid it fetches, compressed",
   );
   assert.deepEqual(h.parts.slice().sort(), [
+    "assets/data/heatmap-grid.json",
+    "assets/js/heatmap.js",
+  ]);
+});
+
+test("BUDGET: deferring a payload does not take it out of the reading", () => {
+  // The heatmap splits its data in two: a packed binary grid the map waits on,
+  // and a names/year-matrix file fetched after the map is on screen. The split
+  // made `heatmap_initial` honest to schedule, and the obvious way to cheat
+  // with it is to make the deferred half invisible to this walk — by moving
+  // the fetch out of a string literal, or by renaming the file. Neither is
+  // allowed: every fetch in an entry script is counted, and the reading below
+  // is the sum of BOTH payloads.
+  const grid = JSON.stringify({ cells: "x".repeat(5000) });
+  const detail = JSON.stringify({ names: "y".repeat(9000) });
+  const { metrics } = measureStagedBuild(
+    fixture({
+      "assets/js/heatmap.js":
+        'fetch("../assets/data/heatmap-grid.json");' +
+        'fetch("../assets/data/heatmap-detail.json");',
+      "assets/data/heatmap-grid.json": grid,
+      "assets/data/heatmap-detail.json": detail,
+    }),
+  );
+  const h = metrics.heatmap_initial;
+  assert.equal(
+    h.value,
+    brotliBytes(
+      Buffer.from(
+        'fetch("../assets/data/heatmap-grid.json");' +
+          'fetch("../assets/data/heatmap-detail.json");',
+      ),
+    ) +
+      brotliBytes(Buffer.from(grid)) +
+      brotliBytes(Buffer.from(detail)),
+    "a payload fetched after first paint is still bytes this page ships",
+  );
+  assert.deepEqual(h.parts.slice().sort(), [
+    "assets/data/heatmap-detail.json",
     "assets/data/heatmap-grid.json",
     "assets/js/heatmap.js",
   ]);

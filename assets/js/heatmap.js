@@ -3,6 +3,8 @@ import {
   dequantizeTariff,
   dequantizeYear,
   dequantizeLcoe,
+  decodeGrid,
+  decodeYears,
   YEAR_VALUES_PER_POINT,
 } from "./sizing/heatmap-grid.js?v=20261022p";
 import {
@@ -51,6 +53,8 @@ import {
   var dotLayer = null;
   var yearsData = null;
   var yearsLoading = null;
+  var namesData = null;
+  var namesLoading = null;
   var pointColors = null;
   var dotPalette = [];
   var CanvasDotLayer = function () {};
@@ -347,19 +351,14 @@ import {
   function ensureData() {
     if (gridData) return Promise.resolve(gridData);
     if (dataLoading) return dataLoading;
-    dataLoading = fetch(
-      "../assets/data/heatmap-grid.json?v=" + encodeURIComponent(ASSET_V),
-    )
+    dataLoading = fetch("../assets/data/heatmap-grid.bin?v=" + encodeURIComponent(ASSET_V))
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to load heatmap data");
-        return res.json();
+        return res.arrayBuffer();
       })
-      .then(function (data) {
-        if (
-          !Number.isInteger(data.count) ||
-          data.lat.length !== data.count ||
-          data.lon.length !== data.count
-        ) {
+      .then(function (buffer) {
+        var data = decodeGrid(buffer);
+        if (!Number.isInteger(data.count) || data.lat.length !== data.count || data.lon.length !== data.count) {
           throw new Error("Heatmap grid is incomplete");
         }
         gridData = data;
@@ -373,22 +372,40 @@ import {
     return dataLoading;
   }
 
-  function ensureYears() {
-    if (yearsData) return Promise.resolve(yearsData);
-    if (yearsLoading) return yearsLoading;
-    yearsLoading = fetch(
-      "../assets/data/heatmap-years.json?v=" + encodeURIComponent(ASSET_V),
-    )
+  function ensureNames() {
+    if (namesData) return Promise.resolve(namesData);
+    if (namesLoading) return namesLoading;
+    namesLoading = fetch("../assets/data/heatmap-names.json?v=" + encodeURIComponent(ASSET_V))
       .then(function (res) {
-        if (!res.ok) throw new Error("Failed to load heatmap year data");
+        if (!res.ok) throw new Error("Failed to load heatmap point details");
         return res.json();
       })
       .then(function (data) {
-        if (
-          !gridData ||
-          data.count !== gridData.count ||
-          data.yrs.length !== data.count * YEAR_VALUES_PER_POINT
-        ) {
+        if (!gridData || data.count !== gridData.count || data.names.length !== data.count || data.lq.length !== data.count) {
+          throw new Error("Heatmap point details do not match the grid");
+        }
+        namesData = data;
+        namesLoading = null;
+        return data;
+      })
+      .catch(function (err) {
+        namesLoading = null;
+        throw err;
+      });
+    return namesLoading;
+  }
+
+  function ensureYears() {
+    if (yearsData) return Promise.resolve(yearsData);
+    if (yearsLoading) return yearsLoading;
+    yearsLoading = fetch("../assets/data/heatmap-years.bin?v=" + encodeURIComponent(ASSET_V))
+      .then(function (res) {
+        if (!res.ok) throw new Error("Failed to load heatmap year data");
+        return res.arrayBuffer();
+      })
+      .then(function (buffer) {
+        var data = decodeYears(buffer);
+        if (!gridData || data.count !== gridData.count || data.yrs.length !== data.count * YEAR_VALUES_PER_POINT) {
           throw new Error("Heatmap year data does not match the grid");
         }
         yearsData = data;
@@ -419,10 +436,10 @@ import {
       t: dequantizeTariff(gridData.tq[index]),
       tr: dequantizeTariff(gridData.trq[index]),
       y: gridData.yq[index],
-      l: dequantizeLcoe(gridData.lq[index]),
+      l: dequantizeLcoe(namesData.lq[index]),
       unserved: gridData.uns[index] < 0 ? 0 : gridData.uns[index],
       u: gridData.uns[index] < 0 ? 0 : gridData.uns[index],
-      n: gridData.names[index],
+      n: namesData.names[index],
       p: yearSeries(index, 0),
       pr: yearSeries(index, 1),
       b: yearSeries(index, 2),
@@ -867,7 +884,7 @@ import {
         map.on("click", function (e) {
           ensureData()
             .then(function () {
-              return ensureYears().then(function () {
+              return Promise.all([ensureYears(), ensureNames()]).then(function () {
                 var pt = nearestPoint(e.latlng.lat, e.latlng.lng);
                 if (pt) showPopup(pt, e.latlng);
               });
