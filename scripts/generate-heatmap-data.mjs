@@ -33,6 +33,7 @@ import {
   landedMidBattKwhFor,
 } from "../assets/js/sizing/pricing.js";
 import { batteryReplacements } from "../assets/js/sizing/money.js";
+import { encodeGrid } from "../assets/js/sizing/heatmap-grid.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
@@ -406,20 +407,45 @@ results.sort((a, b) => (a.pr[1] ?? 999) - (b.pr[1] ?? 999));
 const outDir = join(ROOT, "assets/data");
 mkdirSync(outDir, { recursive: true });
 
-const output = {
-  generated: new Date().toISOString(),
-  usageTiersKwhDay: USAGE_TIERS,
-  metric:
-    "ESTIMATE (not a sizing): 80% bill-cut rule-of-thumb, LFP, landed-DIY costs, exactly one bank replacement assumed, generator/grid-deficit aware. Run the calculator for hourly-simulated sizing.",
-  count: results.length,
-  points: results,
-};
+// The grid is written COLUMNAR and QUANTIZED, not as an array of objects. The
+// page measured the difference: 39,707 objects with thirteen key names each is
+// 6.66 MiB and cost 245ms (mobile) / 600ms (desktop) of JSON.parse on the
+// staged build, which was the whole of the heatmap's TBT breach. The
+// quantization scales live in assets/js/sizing/heatmap-grid.js so the page
+// dequantizes exactly what this script quantized.
+const encoded = encodeGrid(results, { usageTiersKwhDay: USAGE_TIERS });
 
+// The year matrix is a SEPARATE file. It is 16 of the 20 numbers per point and
+// is read only when the reader switches to a payback/break-even metric or opens
+// a popup, so keeping it out of the first paint is what makes the grid cheap to
+// load. Nothing is dropped: every number the old file carried is still written.
 const outPath = join(outDir, "heatmap-grid.json");
-writeFileSync(outPath, JSON.stringify(output));
+const yearsPath = join(outDir, "heatmap-years.json");
 
-const sizeKB = Math.round(readFileSync(outPath).length / 1024);
-console.log(`\nWrote ${results.length} points to ${outPath} (${sizeKB} KB)`);
+writeFileSync(
+  outPath,
+  JSON.stringify({
+    ...encoded.header,
+    generated: new Date().toISOString(),
+    ...encoded.hot,
+  }),
+);
+writeFileSync(
+  yearsPath,
+  JSON.stringify({
+    v: encoded.header.v,
+    count: encoded.header.count,
+    series: encoded.years.series,
+    tiers: encoded.years.tiers,
+    yrs: encoded.years.yrs,
+  }),
+);
+
+const kb = (p) => Math.round(readFileSync(p).length / 1024);
+console.log(
+  `\nWrote ${results.length} points to ${outPath} (${kb(outPath)} KB)`,
+);
+console.log(`Wrote the year matrix to ${yearsPath} (${kb(yearsPath)} KB)`);
 
 // Verification checks
 const lagos = results.find(

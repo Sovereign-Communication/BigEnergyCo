@@ -1,3 +1,18 @@
+import {
+  dequantizeDeg,
+  dequantizeTariff,
+  dequantizeYear,
+  dequantizeLcoe,
+  YEAR_VALUES_PER_POINT,
+} from "./sizing/heatmap-grid.js?v=20261022p";
+import {
+  dotTransform,
+  projectDots,
+  buildHitIndex,
+  hitTest,
+  HIT_CELL_PX,
+} from "./sizing/heatmap-dots.js?v=20261022p";
+
 // Heatmap: pre-rendered image + on-demand data architecture.
 //
 // DESIGN (2026-10-14, issue #216):
@@ -28,28 +43,17 @@
     return;
   }
 
-  // Asset version: read from our own <script src="?v="> so the manifest and
-  // data URLs bust the immutable cache in lockstep with the code. Works with
-  // deferred scripts (document.currentScript is set during execution).
-  function assetVersion() {
-    try {
-      var s = document.currentScript;
-      if (s && s.src) {
-        var m = s.src.match(/[?&]v=([^&]+)/);
-        if (m) return m[1];
-      }
-    } catch (e) {
-      /* ignore */
-    }
-    return "dev";
-  }
-  var ASSET_V = assetVersion();
+  var ASSET_V = new URL(import.meta.url).searchParams.get("v") || "dev";
 
   // ── State ──────────────────────────────────────────────────────────────
   var map = null;
   var imageLayer = null;
   var dotLayer = null;
-  var dotRenderer = null;
+  var yearsData = null;
+  var yearsLoading = null;
+  var pointColors = null;
+  var dotPalette = [];
+  var CanvasDotLayer = function () {};
   var gridData = null; // fetched on demand (first click / zoom threshold)
   var dataLoading = null; // in-flight fetch promise
   var manifest = null;
@@ -343,12 +347,21 @@
   function ensureData() {
     if (gridData) return Promise.resolve(gridData);
     if (dataLoading) return dataLoading;
-    dataLoading = fetch("../assets/data/heatmap-grid.min.json?v=20261022p")
+    dataLoading = fetch(
+      "../assets/data/heatmap-grid.json?v=" + encodeURIComponent(ASSET_V),
+    )
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to load heatmap data");
         return res.json();
       })
       .then(function (data) {
+        if (
+          !Number.isInteger(data.count) ||
+          data.lat.length !== data.count ||
+          data.lon.length !== data.count
+        ) {
+          throw new Error("Heatmap grid is incomplete");
+        }
         gridData = data;
         enableCanvasDots();
         return data;
@@ -360,25 +373,79 @@
     return dataLoading;
   }
 
+  function ensureYears() {
+    if (yearsData) return Promise.resolve(yearsData);
+    if (yearsLoading) return yearsLoading;
+    yearsLoading = fetch(
+      "../assets/data/heatmap-years.json?v=" + encodeURIComponent(ASSET_V),
+    )
+      .then(function (res) {
+        if (!res.ok) throw new Error("Failed to load heatmap year data");
+        return res.json();
+      })
+      .then(function (data) {
+        if (
+          !gridData ||
+          data.count !== gridData.count ||
+          data.yrs.length !== data.count * YEAR_VALUES_PER_POINT
+        ) {
+          throw new Error("Heatmap year data does not match the grid");
+        }
+        yearsData = data;
+        yearsLoading = null;
+        return data;
+      })
+      .catch(function (err) {
+        yearsLoading = null;
+        throw err;
+      });
+    return yearsLoading;
+  }
+
+  function yearSeries(index, seriesIndex) {
+    if (!yearsData) return null;
+    var values = [];
+    var offset = index * YEAR_VALUES_PER_POINT + seriesIndex * 4;
+    for (var i = 0; i < 4; i++)
+      values.push(dequantizeYear(yearsData.yrs[offset + i]));
+    return values;
+  }
+
+  function pointAt(index) {
+    return {
+      lat: dequantizeDeg(gridData.lat[index]),
+      lon: dequantizeDeg(gridData.lon[index]),
+      c: gridData.countries[gridData.cc[index]],
+      t: dequantizeTariff(gridData.tq[index]),
+      tr: dequantizeTariff(gridData.trq[index]),
+      y: gridData.yq[index],
+      l: dequantizeLcoe(gridData.lq[index]),
+      unserved: gridData.uns[index] < 0 ? 0 : gridData.uns[index],
+      u: gridData.uns[index] < 0 ? 0 : gridData.uns[index],
+      n: gridData.names[index],
+      p: yearSeries(index, 0),
+      pr: yearSeries(index, 1),
+      b: yearSeries(index, 2),
+      br: yearSeries(index, 3),
+    };
+  }
+
   function nearestPoint(lat, lng) {
     if (!gridData) return null;
-    var best = null;
+    var bestIndex = -1;
     var bestD = Infinity;
-    var pts = gridData.points;
-    for (var i = 0; i < pts.length; i++) {
-      var pt = pts[i];
-      var dLat = P.pointLat(pt) - lat;
-      var dLng = P.pointLon(pt) - lng;
-      // Wrap longitude distance.
+    for (var i = 0; i < gridData.count; i++) {
+      var dLat = dequantizeDeg(gridData.lat[i]) - lat;
+      var dLng = dequantizeDeg(gridData.lon[i]) - lng;
       if (dLng > 180) dLng -= 360;
       if (dLng < -180) dLng += 360;
       var d = dLat * dLat + dLng * dLng;
       if (d < bestD) {
         bestD = d;
-        best = pt;
+        bestIndex = i;
       }
     }
-    return best;
+    return bestIndex < 0 ? null : pointAt(bestIndex);
   }
 
   function showPopup(pt, latlng) {
@@ -489,40 +556,165 @@
   }
 
   // ── Canvas dots (hybrid mode, after data loads) ──────────────────────────
-  function enableCanvasDots() {
-    if (!map || !gridData || dotLayer) return;
-    if (!dotRenderer) dotRenderer = L.canvas({ padding: 0.5 });
-    var markers = [];
-    var points = gridData.points;
-    for (var i = 0; i < points.length; i++) {
-      (function (pt) {
-        var m = L.circleMarker([P.pointLat(pt), P.pointLon(pt)], {
-          radius: 3.5,
-          weight: 0,
-          fillColor: dotColor(pt),
-          fillOpacity: 0.0, // invisible until zoomed; PNG shows the dots
-          interactive: true,
-          renderer: dotRenderer,
-        });
-        m.on("click", function (e) {
-          showPopup(pt, e.latlng);
-        });
-        markers.push(m);
-      })(points[i]);
-    }
-    dotLayer = L.layerGroup(markers).addTo(map);
-
-    // Past zoom 5 the PNG pixels stretch; fade canvas dots in for sharpness.
-    map.on("zoomend", function () {
-      if (!dotLayer) return;
-      var sharp = map.getZoom() >= 5;
-      dotLayer.eachLayer(function (layer) {
-        layer.setStyle({ fillOpacity: sharp ? 0.85 : 0.0 });
-      });
-    });
+  function costColorAt(index) {
+    var tariff = basis === "real" ? gridData.trq[index] : gridData.tq[index];
+    return P.costColor(dequantizeTariff(tariff));
   }
 
-  // ── Controls ─────────────────────────────────────────────────────────────
+  function yearColorAt(index) {
+    if (!yearsData) return P.yearColor(null);
+    var seriesIndex =
+      metric === "p" ? (basis === "real" ? 1 : 0) : basis === "real" ? 3 : 2;
+    var offset = index * YEAR_VALUES_PER_POINT + seriesIndex * 4 + usageIdx;
+    return P.yearColor(dequantizeYear(yearsData.yrs[offset]));
+  }
+
+  function enableCanvasDots() {
+    if (!map || !gridData || dotLayer) return;
+    if (!CanvasDotLayer.prototype.addTo) initializeCanvasDotLayer();
+    dotLayer = new CanvasDotLayer();
+    dotLayer.addTo(map);
+    refreshCanvasColors();
+  }
+
+  function initializeCanvasDotLayer() {
+    CanvasDotLayer.prototype = Object.create(L.Layer.prototype);
+    CanvasDotLayer.prototype.constructor = CanvasDotLayer;
+    CanvasDotLayer.prototype.onAdd = function (leafletMap) {
+      this._map = leafletMap;
+      this._canvas = L.DomUtil.create(
+        "canvas",
+        "heat-dots",
+        leafletMap.getPane("overlayPane"),
+      );
+      this._canvas.style.position = "absolute";
+      this._canvas.style.pointerEvents = "none";
+      this._ctx = this._canvas.getContext("2d");
+      this._frame = 0;
+      leafletMap.on("move zoom resize zoomanim", this._schedule, this);
+      this._redraw();
+    };
+    CanvasDotLayer.prototype.onRemove = function (leafletMap) {
+      leafletMap.off("move zoom resize zoomanim", this._schedule, this);
+      if (this._frame) cancelAnimationFrame(this._frame);
+      if (this._canvas) L.DomUtil.remove(this._canvas);
+    };
+    CanvasDotLayer.prototype._schedule = function () {
+      if (this._frame) return;
+      this._frame = requestAnimationFrame(
+        function () {
+          this._frame = 0;
+          this._redraw();
+        }.bind(this),
+      );
+    };
+    CanvasDotLayer.prototype.redraw = function () {
+      this._schedule();
+    };
+    CanvasDotLayer.prototype.bringToFront = function () {
+      var pane = this._map && this._map.getPane("overlayPane");
+      if (pane && this._canvas) pane.appendChild(this._canvas);
+    };
+    CanvasDotLayer.prototype._redraw = function () {
+      if (!this._map || !gridData || !pointColors) return;
+      var size = this._map.getSize();
+      var center = this._map.getCenter();
+      L.DomUtil.setPosition(
+        this._canvas,
+        this._map.containerPointToLayerPoint([0, 0]),
+      );
+      var dpr = window.devicePixelRatio || 1;
+      this._canvas.width = Math.round(size.x * dpr);
+      this._canvas.height = Math.round(size.y * dpr);
+      this._canvas.style.width = size.x + "px";
+      this._canvas.style.height = size.y + "px";
+      this._canvas.style.opacity = this._map.getZoom() >= 5 ? "0.85" : "0";
+      var ctx = this._ctx;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, size.x, size.y);
+      var count = gridData.count;
+      var transform = dotTransform({
+        centerLat: center.lat,
+        centerLng: center.lng,
+        zoom: this._map.getZoom(),
+        width: size.x,
+        height: size.y,
+        projection: "epsg4326",
+      });
+      var xs = this._xs || (this._xs = new Float32Array(count));
+      var ys = this._ys || (this._ys = new Float32Array(count));
+      projectDots(gridData.lat, gridData.lon, count, transform, xs, ys);
+      var bucketXY = this._bucketXY;
+      var bucketLen = this._bucketLen;
+      if (!bucketXY || bucketXY.length !== dotPalette.length) {
+        bucketXY = this._bucketXY = dotPalette.map(function () {
+          return new Float32Array(count * 2);
+        });
+        bucketLen = this._bucketLen = new Int32Array(dotPalette.length);
+      }
+      bucketLen.fill(0);
+      var radius = 3.5;
+      var hitXs = this._hitXs || (this._hitXs = new Float32Array(count));
+      var hitYs = this._hitYs || (this._hitYs = new Float32Array(count));
+      var hitIds = this._hitIds || (this._hitIds = new Int32Array(count));
+      var visible = 0;
+      for (var i = 0; i < count; i++) {
+        var x = xs[i],
+          y = ys[i];
+        if (
+          x < -radius ||
+          y < -radius ||
+          x > size.x + radius ||
+          y > size.y + radius
+        )
+          continue;
+        var bucket = pointColors[i],
+          slot = bucketLen[bucket];
+        bucketXY[bucket][slot * 2] = x;
+        bucketXY[bucket][slot * 2 + 1] = y;
+        bucketLen[bucket] = slot + 1;
+        hitXs[visible] = x;
+        hitYs[visible] = y;
+        hitIds[visible] = i;
+        visible++;
+      }
+      for (var b = 0; b < dotPalette.length; b++) {
+        var length = bucketLen[b];
+        if (!length) continue;
+        var coords = bucketXY[b];
+        ctx.beginPath();
+        for (var j = 0; j < length; j++) {
+          var px = coords[j * 2],
+            py = coords[j * 2 + 1];
+          ctx.moveTo(px + radius, py);
+          ctx.arc(px, py, radius, 0, Math.PI * 2);
+        }
+        ctx.fillStyle = dotPalette[b];
+        ctx.fill();
+      }
+      this._visibleCount = visible;
+      this._hitIndex = buildHitIndex(
+        hitXs.subarray(0, visible),
+        hitYs.subarray(0, visible),
+        visible,
+        HIT_CELL_PX,
+      );
+    };
+    CanvasDotLayer.prototype.nearestVisible = function (latlng) {
+      if (!this._hitIndex) return -1;
+      var container = this._map.latLngToContainerPoint(latlng);
+      var slot = hitTest(
+        this._hitIndex,
+        this._hitXs.subarray(0, this._visibleCount),
+        this._hitYs.subarray(0, this._visibleCount),
+        container.x,
+        container.y,
+        7.5,
+      );
+      return slot < 0 ? -1 : this._hitIds[slot];
+    };
+  }
+
   function setupControls() {
     var basisBtns = document.getElementById("basis-btns");
     if (basisBtns)
@@ -574,15 +766,35 @@
   }
 
   function refreshCanvasColors() {
-    if (!dotLayer || !gridData) return;
-    var points = gridData.points;
-    var i = 0;
-    dotLayer.eachLayer(function (layer) {
-      layer.setStyle({ fillColor: dotColor(points[i++]) });
-    });
+    if (!gridData) return Promise.resolve();
+    if (metric !== "cost" && !yearsData) {
+      return ensureYears()
+        .then(function () {
+          return refreshCanvasColors();
+        })
+        .catch(function (err) {
+          console.error(err);
+        });
+    }
+    var colors = new Uint8Array(gridData.count);
+    var palette = [];
+    var indexes = new Map();
+    for (var i = 0; i < gridData.count; i++) {
+      var color = metric === "cost" ? costColorAt(i) : yearColorAt(i);
+      var bucket = indexes.get(color);
+      if (bucket === undefined) {
+        bucket = palette.length;
+        palette.push(color);
+        indexes.set(color, bucket);
+      }
+      colors[i] = bucket;
+    }
+    pointColors = colors;
+    dotPalette = palette;
+    if (dotLayer) dotLayer.redraw();
+    return Promise.resolve();
   }
 
-  // ── Init ─────────────────────────────────────────────────────────────────
   function init() {
     if (!window.L || typeof window.L.map !== "function") {
       var loading = document.getElementById("loading");
@@ -655,8 +867,10 @@
         map.on("click", function (e) {
           ensureData()
             .then(function () {
-              var pt = nearestPoint(e.latlng.lat, e.latlng.lng);
-              if (pt) showPopup(pt, e.latlng);
+              return ensureYears().then(function () {
+                var pt = nearestPoint(e.latlng.lat, e.latlng.lng);
+                if (pt) showPopup(pt, e.latlng);
+              });
             })
             .catch(function () {
               if (!hintShown) {

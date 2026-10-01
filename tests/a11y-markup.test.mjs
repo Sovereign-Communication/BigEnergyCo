@@ -35,61 +35,26 @@ const HEATMAP_PAGE = "solar-heatmap/index.html";
 const HEATMAP_GRID = "assets/data/heatmap-grid.json";
 
 test("A11Y: the heatmap draws its dots on a canvas, not one DOM node per grid point", () => {
-  // AUDIT ERROR on the `heatmap/arrival/none/ltr` cell since P0.4(b): the cell
-  // could not be audited at all, and a hole is never a pass. Measured on the
-  // staged build with one fresh browser per rule, this is the whole diagnosis:
-  //
-  //   · the page's DOM is 39,946 elements once its grid renders, and 39,707 of
-  //     them are one SVG <path> per data point in Leaflet's overlay pane — the
-  //     page's own content is 237 elements;
-  //   · of axe's 30 best-practice rules only two are slow there, and both are
-  //     slow BY NODE: hidden-content and region cost ~1-3 ms each (they do
-  //     layout/style work per node), so they exceed 120 s and the 180 s cell
-  //     budget goes. The other 28 finish in 0.7-2.2 s on that same DOM;
-  //   · with the marker layer emptied those two rules finish in 35-46 ms on
-  //     the page's own 237 elements, with 0 violations either way.
-  //
-  // So the cost is the node count, not the tool. Those paths carry no role, no
-  // accessible name and no focusability, and they are not even what a
-  // screen-reader user reads the data from — the same numbers are in
-  // #best-list / #worst-list as text, which is why drawing them on a canvas
-  // removes nothing anyone could reach.
+  // The data stays accessible in the ranking lists, while dots render on one
+  // canvas instead of creating one interactive Leaflet object per location.
   const grid = JSON.parse(read(HEATMAP_GRID));
-  const points = grid.points.length;
-  assert.ok(
-    points > 5000,
-    `the grid must be big enough for a per-point DOM node to bite (${points} points)`,
-  );
+  const points = grid.count;
+  assert.ok(points > 5000, "the full heatmap data set remains available");
+  assert.equal(grid.lat.length, points, "every point has a latitude");
+  assert.equal(grid.lon.length, points, "every point has a longitude");
 
   const src = read(HEATMAP);
-  // The renderer the page builds, by the assignment that builds it — so the
-  // contract is "the markers are handed THAT renderer", not a variable name.
-  const canvas = /(\w+)\s*=\s*L\.canvas\(/.exec(src);
-  assert.ok(
-    canvas,
-    "the dot layer must be drawn on a Leaflet canvas renderer: one <path> per " +
-      "point is what put 39,707 nodes on the page and the cell out of reach",
+  assert.doesNotMatch(
+    src,
+    /L\.(circleMarker|marker|circle|polyline|rectangle)\s*\(/,
+    "the heatmap uses one canvas layer instead of per-point Leaflet objects",
   );
-  const renderer = canvas[1];
-  // Every marker, not just the first: a call site without the renderer would put
-  // the node count straight back.
-  const sites = [...src.matchAll(/L\.circleMarker\(/g)];
-  assert.equal(
-    sites.length,
-    1,
-    `one marker constructor, found ${sites.length}`,
+  assert.match(
+    src,
+    /var CanvasDotLayer = function/,
+    "the map owns a single canvas layer",
   );
-  for (const site of sites) {
-    const call = src.slice(site.index, site.index + 400);
-    const end = call.indexOf("});");
-    assert.notEqual(end, -1, "the marker call is complete in the source");
-    assert.match(
-      call.slice(0, end + 3),
-      new RegExp(`renderer:\\s*${renderer}\\b`),
-      `every marker must be handed ${renderer}, the canvas renderer, or each ` +
-        "point is a DOM node again",
-    );
-  }
+  assert.match(src, /ctx\.arc\(/, "the canvas paints each visible dot");
 
   // The premise that makes the node count droppable: the data is still in text.
   const page = read(HEATMAP_PAGE);
@@ -97,13 +62,13 @@ test("A11Y: the heatmap draws its dots on a canvas, not one DOM node per grid po
     assert.match(
       page,
       new RegExp(`id="${id}"`),
-      `#${id} must remain, so removing 39,707 unnameable paths removes no data`,
+      `#${id} must remain, so the canvas rendering removes no readable data`,
     );
   }
   assert.match(
     src,
     /getElementById\("best-list"\)/,
-    "and the per-country lists must still be filled from the same grid",
+    "the per-country lists remain available as readable text",
   );
 });
 
@@ -194,14 +159,22 @@ test("A11Y: the ranking lists colour their numbers for reading, not for the map"
     }
   }
 
-  // The dots keep the tile palette, and the lists stop using it.
-  // costColor moved to the shared palette module in the PNG architecture
-  const mapScale = /function costColor\([\s\S]*?\n {2}\}/.exec(paletteSrc);
-  assert.ok(mapScale, "the map's own scale still exists for the dots");
+  // Canvas dots use the shared map palette, while ranking text uses the
+  // separate contrast-safe text palette above.
+  assert.match(
+    paletteSrc,
+    /function costColor\(/,
+    "the map scale remains in the shared palette",
+  );
   assert.match(
     src,
-    /fillColor:\s*(color|dotColor\()/,
-    "the markers are still painted from the map scale",
+    /P\.costColor\(dequantizeTariff\(tariff\)\)/,
+    "cost dots use the shared map scale",
+  );
+  assert.match(
+    src,
+    /ctx\.fillStyle = dotPalette\[b\]/,
+    "canvas buckets use the selected palette",
   );
   const listSites = [
     ...src.matchAll(/class="years" style="color:\$\{([^}]+)\}"/g),
