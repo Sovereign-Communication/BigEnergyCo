@@ -104,11 +104,21 @@ function joinAxisClauses(evidence, problems, axis, clauses) {
     const which = over.length
       ? over.join(", ")
       : `joined ${joined.length}>${COMPLETE_FACET_CLIP}`;
+    // The halves are written into `facet_evidence` one at a time as they are
+    // derived, so without this the axis is left carrying the LAST half ALONE
+    // when the join does not fit. That is not a shorter version of the claim,
+    // it is a different claim: for `performance` it is the sentence that says
+    // what was measured without the sentence that says how to read it, and a
+    // judge cannot tell it from the whole. Run 36932232421 is the measurement
+    // - the performance axis reached the judge as a bare speed line because
+    // 250 + 1 + 51 did not fit 300. A hole reads as a hole; a half-line reads
+    // as the whole.
+    if (evidence.facet_evidence) delete evidence.facet_evidence[axis];
     problems.push(
-      `the ${axis} facet line is over budget (${which}); ` +
-        "it would be cut in transit, which for this axis drops the sentence " +
-        "that limits the claim — shorten the clause rather than letting it " +
-        "silently lose its tail",
+      `the ${axis} facet line is over budget (${which}) and has been REMOVED ` +
+        "rather than trimmed to fit; a half-line would read as the whole " +
+        "claim, so this axis is now a hole — shorten the clause rather than " +
+        "letting it silently lose either its tail or its qualifier",
     );
     return false;
   }
