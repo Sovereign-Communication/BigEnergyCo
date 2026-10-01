@@ -324,10 +324,10 @@ export const A11Y_MATRIX_FACET_AXES = ["accessibility"];
 /**
  * The most characters this clause may take inside the joined accessibility
  * line. The controls half declares its own bound (A11Y_CONTROLS_CLAUSE_MAX in
- * scripts/lib/a11y-controls.mjs, 240) and 240 + 1 + 39 = the 280-char clip
- * exactly, so the pair is bounded from both ends: a half over its own bound is
- * a NAMED problem in the evidence builder, never a silent trim — a trim would
- * eat whichever sentence limits the claim.
+ * scripts/lib/a11y-controls.mjs, 240) and 240 + 1 + 39 = 280, inside the
+ * 300-char clip, so the pair is bounded from both ends: a half over its own
+ * bound is a NAMED problem in the evidence builder, never a silent trim — a
+ * trim would eat whichever sentence limits the claim.
  */
 export const A11Y_MATRIX_CLAUSE_MAX = 39;
 

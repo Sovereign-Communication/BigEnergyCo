@@ -236,13 +236,14 @@ test("EVIDENCE: a gate report declares which facet axes it speaks for", async ()
 });
 
 test("EVIDENCE: a derived facet line must fit the transport clip", () => {
-  // COMPLETE_FACET_CLIP is 280 characters. A line longer than that is SILENTLY
+  // COMPLETE_FACET_CLIP is 300 characters (raised from 280 at P0.4 so the
+  // performance axis's joined clauses fit). A line longer than that is SILENTLY
   // clipped on its way to the judge, which for this cluster is the worst
   // possible failure: the honest part ("this score is not reproducible, do not
   // read it as a fact") is exactly what gets cut off the end.
   assert.equal(
     COMPLETE_FACET_CLIP,
-    280,
+    300,
     "the per-axis clip this test budgets against; if it moves, re-measure",
   );
   const src = readFileSync("scripts/check-lighthouse.mjs", "utf8");
@@ -623,7 +624,7 @@ test("EVIDENCE: a report with an over-long line is a named problem, not a trim",
   );
   assert.match(
     stderr,
-    /facet_line is \d+ chars, over the 280-char per-axis clip/,
+    /facet_line is \d+ chars, over the 300-char per-axis clip/,
     `the over-long line must be named: ${stderr}`,
   );
   assert.doesNotMatch(

@@ -325,7 +325,7 @@ export function main(argv = process.argv.slice(2)) {
     // numbers behind it cannot drift apart, and a run that measured no budgets
     // says so instead of leaving a typed claim standing. See
     // `composeQualityFacetLine` in scripts/lib/byte-budgets.mjs for what the
-    // line says, what it refuses to claim, and why it fits the 280-char clip by
+    // line says, what it refuses to claim, and why it fits the per-axis clip by
     // construction rather than by trimming.
     facet_axes: BYTE_BUDGET_FACET_AXES,
   };

@@ -864,7 +864,7 @@ test("BUDGET: the CLI measures a real staged tree and exits on a regression", as
 // behind it, which is the same defect the performance and accessibility axes
 // already had fixed. The gate that measures the shipped payload now composes it
 // from the run it just measured. These tests pin what the line may and may not
-// claim — and that every shape this report can produce fits the 280-char
+// claim — and that every shape this report can produce fits the per-axis
 // transport clip, because an over-long line is SILENTLY cut and the sentence
 // that gets cut here is the one saying the measurement is a payload size and
 // not a verdict on the code.
@@ -990,7 +990,7 @@ test("FACET: every size-clause shape this report can produce fits its budget", (
 });
 
 test("FACET: the two quality clauses fit the transport clip TOGETHER, by construction", async () => {
-  // The invariant the split rests on: one axis, two instruments, one 280-char
+  // The invariant the split rests on: one axis, two instruments, one per-axis
   // slot. Each clause is bounded by its own declared maximum, and the sum of
   // those two maxima must fit the clip — otherwise the builder's join would be
   // the first thing to overflow, and an over-long line is CUT in transit, which

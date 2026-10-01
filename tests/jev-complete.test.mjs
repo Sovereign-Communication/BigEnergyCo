@@ -24,6 +24,7 @@ import {
   mergeEvidence,
   buildStateText,
   scoreCompleteGate,
+  COMPLETE_FACET_CLIP,
 } from "../scripts/lib/jev-complete.mjs";
 
 const CLI = fileURLToPath(
@@ -334,7 +335,7 @@ test("EVIDENCE: per-facet proof lines survive transport intact, bounded per line
     .find((l) => l.startsWith("docs: "));
   assert.equal(
     longLine.length,
-    "docs: ".length + 280,
+    "docs: ".length + COMPLETE_FACET_CLIP,
     "each facet line is bounded so one verbose axis cannot crowd out the rest",
   );
 });

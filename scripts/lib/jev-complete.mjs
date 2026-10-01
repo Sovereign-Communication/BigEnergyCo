@@ -779,8 +779,25 @@ function clip(text, max) {
 // to come out of someone else's line, which is the exact failure the cap was
 // raised twice (1200 → 3000 → 6000) to stop. Adding an axis now raises the
 // budget instead of evicting a facet.
-export const COMPLETE_FACET_CLIP = 280; // per-axis proof-line clip
-export const COMPLETE_STATE_PER_AXIS_CHARS = 300; // 280 + "axis: " + newline
+// RAISED 280 -> 300 at P0.4, by owner decision, for a measured reason rather
+// than a felt one: the `performance` axis's two clauses join to 286 characters
+// (ratchet 250 + speed 35 + 1 separator) on the real 14-target report, so the
+// speed half could not reach the judge at all. The word "worst" on that half is
+// 6 characters and is not negotiable — without it the numbers read as one
+// page's first paint or a median when they are the slowest of 14 templates.
+//
+// The clip is a per-axis SHARE, not a transport limit: the record's total
+// budget below is DERIVED from it, so raising it costs reserved headroom
+// (21 axes x 20 = 420 characters) and nothing is evicted. That is the same
+// mechanism the 1200 -> 3000 -> 6000 base raises used, applied one level down.
+//
+// This also stops four axes being SILENTLY CUT at 280 today — `translation`
+// arrives at 340, `privacy` 315, `provenance` 306, `usecases` 288 — which is
+// the exact failure this file exists to prevent, already happening on axes out
+// of P0.4 scope. Those three longest are still over 300 and remain a separate
+// finding, not something this raise pretends to have fixed.
+export const COMPLETE_FACET_CLIP = 300; // per-axis proof-line clip
+export const COMPLETE_STATE_PER_AXIS_CHARS = 320; // 300 + "axis: " + newline
 // The FIXED part of the record: the header, gate, tree and dirty lines, the
 // five summaries at the clips below (tests 300, ci 320, smoke 460, seo 260,
 // advisor 480), and the notes tail, which rides last and whole. It is set to
@@ -788,7 +805,7 @@ export const COMPLETE_STATE_PER_AXIS_CHARS = 300; // 280 + "axis: " + newline
 // the judge whole stops reaching it — deriving the budget must not quietly
 // shrink what a record without facet evidence can say. Each declared axis then
 // adds its own share on top, which is the part P0.3(d) needed: 21 axes now
-// reserve 6000 + 21x300, and a 21-axis record is 7100 characters.
+// reserve 6000 + 21x320, and a 21-axis record is 7100 characters.
 export const COMPLETE_STATE_BASE_CHARS = 6000;
 
 /** The exact characters one axis's clipped proof line can occupy, newline

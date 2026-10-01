@@ -536,7 +536,7 @@ async function audit({
     return 1;
   }
   // The clause-length backstop, same rule as the byte gate's
-  // QUALITY_SIZE_CLAUSE_MAX: a clause that outgrew its half of the 280-char
+  // QUALITY_SIZE_CLAUSE_MAX: a clause that outgrew its half of the per-axis
   // clip would be refused (or cut) on its way to the judge, so the gate that
   // composed it fails it here, by name, where the fix is — the composer's own
   // shapes are bounded, so reaching this means a counter grew past what the

@@ -40,6 +40,7 @@ import {
   compareLighthouse,
   compareSpeed,
   composeFacetLine,
+  composePerfClauses,
   median,
 } from "./lib/lighthouse-budgets.mjs";
 
@@ -341,16 +342,65 @@ const report = {
 // travels inside the report. A hand-typed line in the evidence file was the
 // defect this replaces; composing it at the measurement means the numbers on
 // the judge's record and the numbers in this report cannot drift apart.
-report.facet_line = composeFacetLine(report);
-console.log(
-  `facet line (${report.facet_line.length} chars):\n  ${report.facet_line}`,
-);
-// An over-long line is SILENTLY cut in transit by the evidence builder, and the
-// part that gets cut is the tail — which here is the warm measurement, the whole
-// reason this gate now carries a second instrument. So the gate refuses to
-// publish rather than let the axis decay to a truncated prefix: a red gate with
-// the line printed beats a green one whose claim quietly lost its numbers.
-if (report.facet_line.length > COMPLETE_FACET_CLIP) {
+//
+// TWO clauses for one axis. The ratchet half is the warm reading, the target
+// count and method, the deterministic categories and the "perf NOT ratcheted"
+// sentence. The speed half is this run's worst FCP, LCP and CLS — measured
+// here on every run since the gate existed and previously shown to no one,
+// which is why a measured halving of FCP and LCP moved the ordinal by
+// nothing. They are emitted as two records so the evidence builder joins them
+// under one bound, the same shape `quality` and `accessibility` already use.
+const perfClauses = composePerfClauses(report);
+report.facet_line = perfClauses
+  ? perfClauses[0].text
+  : composeFacetLine(report);
+report.facet_clauses = perfClauses
+  ? perfClauses.map((c) => ({
+      axis: LIGHTHOUSE_FACET_AXES[0],
+      metric: c.metric,
+      line: c.text,
+    }))
+  : undefined;
+for (const c of perfClauses || [])
+  console.log(
+    `facet clause [${c.half}] (${c.text.length}/${c.max} chars):\n  ${c.text}`,
+  );
+if (report.facet_clauses) {
+  const joined = report.facet_clauses.map((c) => c.line).join(" ");
+  console.log(
+    `facet line joined (${joined.length}/${COMPLETE_FACET_CLIP}):\n  ${joined}`,
+  );
+}
+// Each half against ITS OWN bound first, because a half that outgrows its
+// budget pushes the other half out of room and the joint total alone would
+// name neither. Then the join, which is what actually reaches the judge.
+for (const c of perfClauses || []) {
+  if (c.text.length > c.max) {
+    console.error(
+      `\nfacet clause [${c.half}] is ${c.text.length} chars, over its ` +
+        `${c.max}-char bound. Shorten the clause in ${c.metric === "perf_speed" ? "composeSpeedClause" : "composeFacetLine"} ` +
+        "rather than raising the bound.\n  " +
+        c.text,
+    );
+    process.exitCode = 1;
+  }
+}
+if (
+  report.facet_clauses &&
+  report.facet_clauses.map((c) => c.line).join(" ").length > COMPLETE_FACET_CLIP
+) {
+  const joined = report.facet_clauses.map((c) => c.line).join(" ");
+  console.error(
+    `\nfacet line joins to ${joined.length} chars, over the ` +
+      `${COMPLETE_FACET_CLIP}-char per-axis clip. It would be cut on the way to ` +
+      "the judge, so the `performance` axis would arrive without its speed " +
+      "numbers. Shorten a clause rather than raising the clip.\n  " +
+      joined,
+  );
+  process.exitCode = 1;
+}
+// A single-clause report still has to respect the transport clip on its own.
+if (!report.facet_clauses && report.facet_line.length > COMPLETE_FACET_CLIP) {
   console.error(
     `\nfacet line is ${report.facet_line.length} chars, over the ` +
       `${COMPLETE_FACET_CLIP}-char per-axis clip. It would be cut on the way to ` +

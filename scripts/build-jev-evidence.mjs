@@ -51,6 +51,11 @@ import {
   A11Y_FACET_AXES,
 } from "./lib/a11y-controls.mjs";
 import { A11Y_MATRIX_CLAUSE_MAX } from "./lib/quality-matrix.mjs";
+import {
+  LIGHTHOUSE_FACET_AXES as PERF_FACET_AXES,
+  PERF_RATCHET_CLAUSE_MAX,
+  PERF_SPEED_CLAUSE_MAX,
+} from "./lib/lighthouse-budgets.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 
 // The workflow these artifacts came from, resolved against this script rather
@@ -201,6 +206,45 @@ function readGateReports(dir) {
           "carries no facet_line, so those axes get no proof line from the run " +
           "that measured them",
       );
+      continue;
+    }
+    // A report may declare SEVERAL clauses for one axis, each with its own
+    // `metric`, when the axis has two instruments that each owe the judge half
+    // a line. `facet_axes` + `facet_line` is the single-clause form and still
+    // works; the plural form exists so the join happens here, once, in the one
+    // code path that already knows how to bound a joined axis.
+    if (Array.isArray(parsed.facet_clauses) && parsed.facet_clauses.length) {
+      for (const clause of parsed.facet_clauses) {
+        if (
+          !clause ||
+          typeof clause.line !== "string" ||
+          !clause.line.trim() ||
+          typeof clause.axis !== "string" ||
+          typeof clause.metric !== "string"
+        ) {
+          problems.push(
+            `${name} carries a facet_clauses entry without an axis, a metric ` +
+              "and a line, so the clause cannot be joined and the axis would " +
+              "get a partial line",
+          );
+          continue;
+        }
+        if (clause.line.length > COMPLETE_FACET_CLIP) {
+          problems.push(
+            `${name} facet clause [${clause.metric}] is ${clause.line.length} ` +
+              `chars, over the ${COMPLETE_FACET_CLIP}-char per-axis clip; it ` +
+              "would be cut in transit, which would silently drop the part " +
+              "that says how to read it",
+          );
+          continue;
+        }
+        reports.push({
+          axis: clause.axis,
+          line: clause.line,
+          source: name,
+          metric: clause.metric,
+        });
+      }
       continue;
     }
     // The clip is enforced here, loudly. A line that overflows is SILENTLY cut
@@ -390,11 +434,39 @@ export function main(argv = process.argv.slice(2)) {
       { half: "matrix", text: matrix.line, max: A11Y_MATRIX_CLAUSE_MAX },
     ]);
   }
+  // `performance` is the third joined axis, and the first whose two clauses come
+  // from ONE report rather than two: the Lighthouse gate measured both the warm
+  // interaction and the speed readings, so it emits both halves itself. The join
+  // is still here rather than in the gate, because the gate cannot see the other
+  // axes' lines and the per-axis clip is a property of the transport, not of one
+  // measurement. Matched by `metric` for the same reason the a11y halves are:
+  // the metric is the measurement, the file name is an implementation detail.
+  const perfAxis = PERF_FACET_AXES[0];
+  const perfRatchet = derived.find(
+    (d) => d.axis === perfAxis && d.metric === "perf_ratchet",
+  );
+  const perfSpeed = derived.find(
+    (d) => d.axis === perfAxis && d.metric === "perf_speed",
+  );
+  if (perfRatchet && perfSpeed) {
+    joinAxisClauses(evidence, problems, perfAxis, [
+      {
+        half: "ratchet",
+        text: perfRatchet.line,
+        max: PERF_RATCHET_CLAUSE_MAX,
+      },
+      { half: "speed", text: perfSpeed.line, max: PERF_SPEED_CLAUSE_MAX },
+    ]);
+  }
   if (derived.length) {
     // Recorded so a reader of the file can see which facet proof lines came
     // from which run's report, without re-deriving it — and, for each axis the
     // join above touched, the length that actually reaches the judge.
-    const joinedAxes = new Set([QUALITY_CONTRACT_AXIS, A11Y_FACET_AXES[0]]);
+    const joinedAxes = new Set([
+      QUALITY_CONTRACT_AXIS,
+      A11Y_FACET_AXES[0],
+      PERF_FACET_AXES[0],
+    ]);
     evidence.derived_facet_lines = derived.map((d) => ({
       axis: d.axis,
       source: d.source,
