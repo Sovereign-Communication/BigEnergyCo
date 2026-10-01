@@ -55,41 +55,64 @@ test("A11Y: the heatmap draws its dots on a canvas, not one DOM node per grid po
   // #best-list / #worst-list as text, which is why drawing them on a canvas
   // removes nothing anyone could reach.
   const grid = JSON.parse(read(HEATMAP_GRID));
-  const points = grid.points.length;
+  // The grid is columnar now, so the count is a declared field rather than an
+  // array's length. It must still be the whole world: a gate that stopped
+  // biting because the data shrank would be a gate that stopped measuring.
+  const points = grid.count;
   assert.ok(
     points > 5000,
     `the grid must be big enough for a per-point DOM node to bite (${points} points)`,
   );
+  assert.equal(grid.lat.length, points, "every point has a latitude");
+  assert.equal(grid.lon.length, points, "every point has a longitude");
 
   const src = read(HEATMAP);
-  // The renderer the page builds, by the assignment that builds it — so the
-  // contract is "the markers are handed THAT renderer", not a variable name.
-  const canvas = /(\w+)\s*=\s*L\.canvas\(/.exec(src);
-  assert.ok(
-    canvas,
-    "the dot layer must be drawn on a Leaflet canvas renderer: one <path> per " +
-      "point is what put 39,707 nodes on the page and the cell out of reach",
-  );
-  const renderer = canvas[1];
-  // Every marker, not just the first: a call site without the renderer would put
-  // the node count straight back.
-  const sites = [...src.matchAll(/L\.circleMarker\(/g)];
+  // DELIBERATE CHANGE, 2026-10-01. This test used to require a
+  // `renderer:` argument on the page's single `L.circleMarker(` call site, which
+  // pinned the MECHANISM (Leaflet's canvas renderer). The dots are now drawn on
+  // a canvas the page owns outright — one path per colour bucket, 39,707 `arc()`
+  // calls and seven `fill()`s — because the Leaflet layer objects were not free
+  // even when they drew to a canvas: `L.layerGroup(markers).addTo(map)` measured
+  // 140ms (mobile) / 143ms (desktop) and the 39,707 click handlers another
+  // 26/29ms, against 20ms of actual fill work. That was the heatmap's whole TBT
+  // breach.
+  //
+  // The PROPERTY is unchanged and is what is asserted here: no DOM node per grid
+  // point, and the numbers still readable as text. Both were the reason the cell
+  // became auditable, and the new renderer satisfies them more strongly than the
+  // old one — zero per-point DOM nodes, zero per-point Leaflet layers, zero
+  // per-point event handlers. So the assertion is now on the thing that
+  // actually matters, and it is stronger: no per-point constructor may come back
+  // in any form.
+  const perPoint = [
+    ...src.matchAll(/L\.(circleMarker|marker|circle|polyline|rectangle)\s*\(/g),
+  ];
   assert.equal(
-    sites.length,
-    1,
-    `one marker constructor, found ${sites.length}`,
+    perPoint.length,
+    0,
+    `per-point Leaflet layers are what put 39,707 nodes (or 39,707 layer ` +
+      `objects) on this page; found ${perPoint.length}: ` +
+      perPoint.map((m) => m[0]).join(", "),
   );
-  for (const site of sites) {
-    const call = src.slice(site.index, site.index + 400);
-    const end = call.indexOf("});");
-    assert.notEqual(end, -1, "the marker call is complete in the source");
-    assert.match(
-      call.slice(0, end + 3),
-      new RegExp(`renderer:\\s*${renderer}\\b`),
-      `every marker must be handed ${renderer}, the canvas renderer, or each ` +
-        "point is a DOM node again",
-    );
-  }
+  // A page-owned canvas, drawn through a 2d context: that is the replacement
+  // the measurement bought, pinned so it cannot quietly become one-per-point.
+  assert.match(
+    src,
+    /L\.DomUtil\.create\(\s*"canvas"/,
+    "the dots must be drawn on one canvas of the page's own",
+  );
+  assert.match(
+    src,
+    /getContext\("2d"\)/,
+    "…and that canvas is drawn through a 2d context, not per-point DOM",
+  );
+  // The dots are batched into colour buckets rather than drawn one at a time:
+  // one path per bucket, filled once. A per-dot fill() would restore the cost.
+  assert.match(
+    src,
+    /ctx\.beginPath\(\)/,
+    "the dots must be accumulated into paths, not filled one at a time",
+  );
 
   // The premise that makes the node count droppable: the data is still in text.
   const page = read(HEATMAP_PAGE);
@@ -192,13 +215,33 @@ test("A11Y: the ranking lists colour their numbers for reading, not for the map"
     }
   }
 
-  // The dots keep the tile palette, and the lists stop using it.
-  const mapScale = /function costColor\([\s\S]*?\n {2}\}/.exec(src);
-  assert.ok(mapScale, "the map's own scale still exists for the dots");
+  // The dots keep the tile palette, and the lists stop using it. The scale is
+  // now a palette array the canvas fills from (the dots are drawn as paths, not
+  // as `fillColor:` options on per-point markers), so the assertion follows the
+  // palette rather than the drawing API that used to consume it.
   assert.match(
     src,
-    /fillColor:\s*color/,
-    "the markers are still painted from the map scale",
+    /const COST_PALETTE = \[/,
+    "the map's own scale still exists for the dots",
+  );
+  const palette = /const COST_PALETTE = \[([\s\S]*?)\];/.exec(src);
+  assert.ok(palette, "the tile palette is readable from the page");
+  const dotColours = palette[1].match(/#[0-9a-f]{3,6}/gi) || [];
+  assert.equal(
+    dotColours.length,
+    7,
+    `the tile scale has seven buckets, found ${dotColours.length}`,
+  );
+  assert.match(
+    src,
+    /ctx\.fillStyle = palette\[b\]/,
+    "the dots are still painted from the map scale",
+  );
+  // The two palettes must stay distinct: that separation is the fix.
+  assert.notEqual(
+    dotColours.join(","),
+    (src.match(/#[0-9a-f]{6}/gi) || []).slice(0, 7).join(","),
+    "the dot palette and the text palette must not be the same list",
   );
   const listSites = [
     ...src.matchAll(/class="years" style="color:\$\{([^}]+)\}"/g),

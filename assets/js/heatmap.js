@@ -1,229 +1,332 @@
-(function () {
-  "use strict";
+// The heatmap: one canvas, 39,707 dots, and no per-point DOM node or Leaflet
+// layer. See assets/js/sizing/heatmap-dots.js for why the dots are drawn here
+// rather than as `L.circleMarker`s, and assets/js/sizing/heatmap-grid.js for
+// the columnar payload both this page and the generator read.
+import {
+  dequantizeDeg,
+  dequantizeTariff,
+  dequantizeYear,
+  dequantizeLcoe,
+  YEAR_VALUES_PER_POINT,
+  NO_YEAR,
+} from "./sizing/heatmap-grid.js?v=20261001b";
+import {
+  dotTransform,
+  projectDots,
+  buildHitIndex,
+  hitTest,
+  HIT_CELL_PX,
+} from "./sizing/heatmap-dots.js?v=20261001b";
 
-  // ── State ──────────────────────────────────────────────────────────────
-  let gridData = null;
-  let map = null;
-  let dotLayer = null;
-  let dotRenderer = null;
-  let usageIdx = 1; // 0=5kWh, 1=10kWh, 2=20kWh, 3=30kWh
-  let metric = "cost"; // "cost" = True Grid Cost, "p" = payback, "b" = break-even
-  let basis = "real"; // "real" = generator/unserved-aware, "grid" = nominal grid tariff only
+const DOT_RADIUS = 3.5;
 
-  // Get active metric key depending on basis for payback/break-even
-  function getMetricKey() {
-    if (basis === "real") {
-      return metric === "p" ? "pr" : "br";
-    }
-    return metric; // "p" or "b"
+// ── State ──────────────────────────────────────────────────────────────
+let header = null; // { count, countries, usageTiersKwhDay, ...columns }
+let years = null; // the year matrix, fetched on demand
+let yearsPending = null;
+let map = null;
+let dotLayer = null;
+let usageIdx = 1; // 0=5kWh, 1=10kWh, 2=20kWh, 3=30kWh
+let metric = "cost"; // "cost" = True Grid Cost, "p" = payback, "b" = break-even
+let basis = "real"; // "real" = generator/unserved-aware, "grid" = nominal grid tariff only
+
+// Scratch buffers, allocated once and refilled per redraw.
+let xs = null;
+let ys = null;
+// Seven buckets, one per colour. `bucketXY` holds drawn positions and
+// `bucketId` the point each position came from, because the hit test resolves
+// a click to a POSITION and the caller needs the POINT behind it.
+const bucketXY = [];
+const bucketId = [];
+let bucketLen = new Int32Array(7);
+// The compacted, drawn-only view the hit index is built over.
+let hitXs = null;
+let hitYs = null;
+let hitIds = null;
+let hitIndex = null;
+
+// ── Colour scales ──────────────────────────────────────────────────────
+//
+// The map's scale, read against Carto's dark basemap. `costTextColor` is a
+// DIFFERENT palette for text on this page's own card; keeping them apart is
+// what makes the ranking numbers legible (tests/a11y-markup.test.mjs).
+const COST_PALETTE = [
+  "#555",
+  "#00e699",
+  "#7ec850",
+  "#c8b400",
+  "#e68a00",
+  "#e64545",
+  "#991b1b",
+];
+const YEAR_PALETTE = [
+  "#555",
+  "#00e699",
+  "#7ec850",
+  "#c8b400",
+  "#e68a00",
+  "#e64545",
+  "#888",
+];
+const BUCKETS = COST_PALETTE.length;
+
+// The colour a point gets depends only on (metric, basis, usageIdx) — never on
+// the view. Bucketing 39,707 points on every pan frame was 18ms of the load
+// task for a value that cannot change between frames, so it is computed once
+// per selection and the redraw reads the column.
+let colorCol = null;
+let colorColKey = "";
+
+function colorColumn() {
+  const key = `${metric}|${basis}|${usageIdx}`;
+  if (colorCol && colorColKey === key) return colorCol;
+  const n = header.count;
+  const col = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    col[i] =
+      metric === "cost"
+        ? costBucket(costOfColumn(i))
+        : yearBucket(columnYearAt(i));
   }
+  colorCol = col;
+  colorColKey = key;
+  return col;
+}
 
-  // ── Color scales & helpers ─────────────────────────────────────────────
-  function costColor(cost) {
-    if (cost === null || cost === undefined || cost <= 0) return "#555";
-    if (cost <= 0.1) return "#00e699";
-    if (cost <= 0.18) return "#7ec850";
-    if (cost <= 0.28) return "#c8b400";
-    if (cost <= 0.4) return "#e68a00";
-    if (cost <= 0.55) return "#e64545";
-    return "#991b1b";
+/** Drop the cached colours — the year matrix arriving changes what they mean. */
+function invalidateColorColumn() {
+  colorCol = null;
+  colorColKey = "";
+}
+
+function costBucket(cost) {
+  if (cost === null || cost === undefined || cost <= 0) return 0;
+  if (cost <= 0.1) return 1;
+  if (cost <= 0.18) return 2;
+  if (cost <= 0.28) return 3;
+  if (cost <= 0.4) return 4;
+  if (cost <= 0.55) return 5;
+  return 6;
+}
+
+function yearBucket(years_) {
+  if (years_ === null || years_ === undefined || years_ <= 0) return 0;
+  if (years_ <= 2) return 1;
+  if (years_ <= 3) return 2;
+  if (years_ <= 5) return 3;
+  if (years_ <= 7) return 4;
+  if (years_ <= 12) return 5;
+  return 6;
+}
+
+function costLabel(cost) {
+  if (cost === null || cost === undefined) return "N/A";
+  return "$" + Number(cost).toFixed(2) + "/kWh";
+}
+
+// The tile scale read as TEXT: same buckets, colours that clear 4.5:1 on
+// this page's card, where the tile palette's dark end measures 2.12:1.
+function costTextColor(cost) {
+  if (cost === null || cost === undefined || cost <= 0) return "#9aa4b2";
+  if (cost <= 0.1) return "#4ade9b";
+  if (cost <= 0.18) return "#a8e05f";
+  if (cost <= 0.28) return "#f2d024";
+  if (cost <= 0.4) return "#ffb14d";
+  if (cost <= 0.55) return "#ff8f8f";
+  return "#ff6b6b";
+}
+
+function yearLabel(years_) {
+  if (years_ === null || years_ === undefined) return "N/A";
+  if (years_ > 50) return ">50 yr";
+  return Number(years_).toFixed(1) + " yr";
+}
+
+// ── Column access ──────────────────────────────────────────────────────
+//
+// One accessor, so the ranking and popup code below reads the field names it
+// always did. The draw loop does NOT use it — 39,707 of these objects per
+// redraw is exactly the object churn this page no longer has a budget for.
+function yearSeries(i, s) {
+  if (!years) return null;
+  const out = [null, null, null, null];
+  const base = i * YEAR_VALUES_PER_POINT + s * 4;
+  for (let k = 0; k < 4; k++) {
+    const q = years.yrs[base + k];
+    out[k] = q === NO_YEAR ? null : dequantizeYear(q);
   }
+  return out;
+}
 
-  function costLabel(cost) {
-    if (cost === null || cost === undefined) return "N/A";
-    return "$" + Number(cost).toFixed(2) + "/kWh";
-  }
-
-  // The tile scale read as TEXT: same buckets, colours that clear 4.5:1 on
-  // this page's card, where the tile palette's dark end measures 2.12:1.
-  function costTextColor(cost) {
-    if (cost === null || cost === undefined || cost <= 0) return "#9aa4b2";
-    if (cost <= 0.1) return "#4ade9b";
-    if (cost <= 0.18) return "#a8e05f";
-    if (cost <= 0.28) return "#f2d024";
-    if (cost <= 0.4) return "#ffb14d";
-    if (cost <= 0.55) return "#ff8f8f";
-    return "#ff6b6b";
-  }
-
-  function getPointCost(pt) {
-    if (basis === "real") {
-      return pt.tr !== undefined ? pt.tr : pt.t;
-    }
-    return pt.t;
-  }
-
-  function getPointYears(pt, m) {
-    const isReal = basis === "real";
-    if (m === "p") {
-      const series = isReal && pt.pr ? pt.pr : pt.p;
-      return series ? series[usageIdx] : null;
-    } else if (m === "b") {
-      const series = isReal && pt.br ? pt.br : pt.b;
-      return series ? series[usageIdx] : null;
-    }
-    return null;
-  }
-
-  function yearColor(years) {
-    if (years === null || years === undefined || years <= 0) return "#555";
-    if (years <= 2) return "#00e699";
-    if (years <= 3) return "#7ec850";
-    if (years <= 5) return "#c8b400";
-    if (years <= 7) return "#e68a00";
-    if (years <= 12) return "#e64545";
-    return "#888";
-  }
-
-  function yearLabel(years) {
-    if (years === null || years === undefined) return "N/A";
-    if (years > 50) return ">50 yr";
-    return Number(years).toFixed(1) + " yr";
-  }
-
-  function ratingText(years) {
-    if (years === null) return "No data";
-    if (years <= 2) return "Excellent";
-    if (years <= 3) return "Very Good";
-    if (years <= 5) return "Good";
-    if (years <= 7) return "Moderate";
-    if (years <= 12) return "Long";
-    return "Very Long";
-  }
-
-  // ── Country code → name (compact) ──────────────────────────────────────
-  const CC = {
-    IT: "Italy",
-    AT: "Austria",
-    DE: "Germany",
-    AU: "Australia",
-    US: "United States",
-    GB: "United Kingdom",
-    FR: "France",
-    ES: "Spain",
-    PT: "Portugal",
-    NL: "Netherlands",
-    BE: "Belgium",
-    PL: "Poland",
-    CZ: "Czechia",
-    GR: "Greece",
-    HU: "Hungary",
-    RO: "Romania",
-    BG: "Bulgaria",
-    HR: "Croatia",
-    SE: "Sweden",
-    NO: "Norway",
-    DK: "Denmark",
-    FI: "Finland",
-    IE: "Ireland",
-    CH: "Switzerland",
-    IL: "Israel",
-    TR: "Türkiye",
-    JP: "Japan",
-    KR: "South Korea",
-    CN: "China",
-    IN: "India",
-    PK: "Pakistan",
-    BD: "Bangladesh",
-    ID: "Indonesia",
-    PH: "Philippines",
-    TH: "Thailand",
-    VN: "Vietnam",
-    MY: "Malaysia",
-    SG: "Singapore",
-    TW: "Taiwan",
-    HK: "Hong Kong",
-    BR: "Brazil",
-    MX: "Mexico",
-    AR: "Argentina",
-    CL: "Chile",
-    CO: "Colombia",
-    PE: "Peru",
-    EC: "Ecuador",
-    BO: "Bolivia",
-    VE: "Venezuela",
-    CA: "Canada",
-    ZA: "South Africa",
-    NG: "Nigeria",
-    KE: "Kenya",
-    EG: "Egypt",
-    MA: "Morocco",
-    GH: "Ghana",
-    ET: "Ethiopia",
-    TZ: "Tanzania",
-    UG: "Uganda",
-    SA: "Saudi Arabia",
-    AE: "UAE",
-    QA: "Qatar",
-    RU: "Russia",
-    UA: "Ukraine",
-    NZ: "New Zealand",
-    FJ: "Fiji",
-    CU: "Cuba",
-    DO: "Dominican Republic",
-    PR: "Puerto Rico",
-    HT: "Haiti",
-    JM: "Jamaica",
-    GT: "Guatemala",
-    PA: "Panama",
-    CR: "Costa Rica",
-    SV: "El Salvador",
-    HN: "Honduras",
-    NI: "Nicaragua",
-    LB: "Lebanon",
-    YE: "Yemen",
-    CD: "DR Congo",
-    SS: "South Sudan",
-    TD: "Chad",
-    NE: "Niger",
-    CF: "Central African Rep",
-    MW: "Malawi",
-    BF: "Burkina Faso",
-    SL: "Sierra Leone",
-    LR: "Liberia",
-    MG: "Madagascar",
+function pt(i) {
+  return {
+    lat: dequantizeDeg(header.lat[i]),
+    lon: dequantizeDeg(header.lon[i]),
+    n: header.names[i],
+    c: header.countries[header.cc[i]],
+    t: dequantizeTariff(header.tq[i]),
+    tr: dequantizeTariff(header.trq[i]),
+    y: header.yq[i],
+    l: dequantizeLcoe(header.lq[i]),
+    unserved: header.uns[i] < 0 ? undefined : header.uns[i],
+    p: yearSeries(i, 0),
+    pr: yearSeries(i, 1),
+    b: yearSeries(i, 2),
+    br: yearSeries(i, 3),
   };
+}
 
-  function countryName(code) {
-    return CC[code] || code;
+// The year column index for the current metric and basis: p=0, b=2, and the
+// real-basis variants sit one slot higher (pr=1, br=3).
+function yearSlot() {
+  const s = metric === "p" ? 0 : 2;
+  return basis === "real" ? s + 1 : s;
+}
+
+function columnYearAt(i) {
+  if (!years) return null;
+  const q = years.yrs[i * YEAR_VALUES_PER_POINT + yearSlot() * 4 + usageIdx];
+  return q === NO_YEAR ? null : dequantizeYear(q);
+}
+
+function costOfColumn(i) {
+  if (basis === "real") {
+    const tr = dequantizeTariff(header.trq[i]);
+    if (tr !== null) return tr;
   }
+  return dequantizeTariff(header.tq[i]);
+}
 
-  // ── City slug for calculator link ──────────────────────────────────────
-  function citySlug(name) {
-    return name
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
+function getPointCost(p) {
+  if (basis === "real") {
+    return p.tr !== null && p.tr !== undefined ? p.tr : p.t;
   }
+  return p.t;
+}
 
-  const esc = (v) =>
-    String(v ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+// ── Country code → name (compact) ──────────────────────────────────────
+const CC = {
+  IT: "Italy",
+  AT: "Austria",
+  DE: "Germany",
+  AU: "Australia",
+  US: "United States",
+  GB: "United Kingdom",
+  FR: "France",
+  ES: "Spain",
+  PT: "Portugal",
+  NL: "Netherlands",
+  BE: "Belgium",
+  PL: "Poland",
+  CZ: "Czechia",
+  GR: "Greece",
+  HU: "Hungary",
+  RO: "Romania",
+  BG: "Bulgaria",
+  HR: "Croatia",
+  SE: "Sweden",
+  NO: "Norway",
+  DK: "Denmark",
+  FI: "Finland",
+  IE: "Ireland",
+  CH: "Switzerland",
+  IL: "Israel",
+  TR: "Türkiye",
+  JP: "Japan",
+  KR: "South Korea",
+  CN: "China",
+  IN: "India",
+  PK: "Pakistan",
+  BD: "Bangladesh",
+  ID: "Indonesia",
+  PH: "Philippines",
+  TH: "Thailand",
+  VN: "Vietnam",
+  MY: "Malaysia",
+  SG: "Singapore",
+  TW: "Taiwan",
+  HK: "Hong Kong",
+  BR: "Brazil",
+  MX: "Mexico",
+  AR: "Argentina",
+  CL: "Chile",
+  CO: "Colombia",
+  PE: "Peru",
+  EC: "Ecuador",
+  BO: "Bolivia",
+  VE: "Venezuela",
+  CA: "Canada",
+  ZA: "South Africa",
+  NG: "Nigeria",
+  KE: "Kenya",
+  EG: "Egypt",
+  MA: "Morocco",
+  GH: "Ghana",
+  ET: "Ethiopia",
+  TZ: "Tanzania",
+  UG: "Uganda",
+  SA: "Saudi Arabia",
+  AE: "UAE",
+  QA: "Qatar",
+  RU: "Russia",
+  UA: "Ukraine",
+  NZ: "New Zealand",
+  FJ: "Fiji",
+  CU: "Cuba",
+  DO: "Dominican Republic",
+  PR: "Puerto Rico",
+  HT: "Haiti",
+  JM: "Jamaica",
+  GT: "Guatemala",
+  PA: "Panama",
+  CR: "Costa Rica",
+  SV: "El Salvador",
+  HN: "Honduras",
+  NI: "Nicaragua",
+  LB: "Lebanon",
+  YE: "Yemen",
+  CD: "DR Congo",
+  SS: "South Sudan",
+  TD: "Chad",
+  NE: "Niger",
+  CF: "Central African Rep",
+  MW: "Malawi",
+  BF: "Burkina Faso",
+  SL: "Sierra Leone",
+  LR: "Liberia",
+  MG: "Madagascar",
+};
 
-  // ── Legend ─────────────────────────────────────────────────────────────
-  function updateLegend() {
-    const titleEl = document.getElementById("legend-title");
-    const labelsEl = document.getElementById("legend-labels");
-    const lastBarEl = document.getElementById("legend-bar-last");
-    const usageWrap = document.getElementById("usage-control-wrap");
+function countryName(code) {
+  return CC[code] || code;
+}
 
-    if (metric === "cost") {
-      if (usageWrap) usageWrap.style.display = "none";
-      if (titleEl) {
-        titleEl.textContent =
-          basis === "real"
-            ? "True Grid Cost ($/kWh, weighted)"
-            : "Official Grid Tariff ($/kWh)";
-      }
-      if (lastBarEl) lastBarEl.style.background = "#991b1b";
-      if (labelsEl) {
-        labelsEl.innerHTML = `
+const esc = (v) =>
+  String(v ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+// ── Legend ──────────────────────────────────────────────────────────────
+function updateLegend() {
+  const titleEl = document.getElementById("legend-title");
+  const labelsEl = document.getElementById("legend-labels");
+  const lastBarEl = document.getElementById("legend-bar-last");
+  const usageWrap = document.getElementById("usage-control-wrap");
+
+  if (metric === "cost") {
+    if (usageWrap) usageWrap.style.display = "none";
+    if (titleEl) {
+      titleEl.textContent =
+        basis === "real"
+          ? "True Grid Cost ($/kWh, weighted)"
+          : "Official Grid Tariff ($/kWh)";
+    }
+    if (lastBarEl) lastBarEl.style.background = "#991b1b";
+    if (labelsEl) {
+      labelsEl.innerHTML = `
           <span>&le;$0.10</span>
           <span>$0.18</span>
           <span>$0.28</span>
@@ -231,129 +334,226 @@
           <span>$0.55</span>
           <span>&gt;$0.55</span>
         `;
-      }
-    } else {
-      if (usageWrap) usageWrap.style.display = "block";
-      if (titleEl) {
-        titleEl.textContent =
-          metric === "p"
-            ? "Years to pay for itself"
-            : "Years to true break-even";
-      }
-      if (lastBarEl) lastBarEl.style.background = "#888";
-      if (labelsEl) {
-        labelsEl.innerHTML = `
+    }
+  } else {
+    if (usageWrap) usageWrap.style.display = "block";
+    if (titleEl) {
+      titleEl.textContent =
+        metric === "p" ? "Years to pay for itself" : "Years to true break-even";
+    }
+    if (lastBarEl) lastBarEl.style.background = "#888";
+    if (labelsEl) {
+      labelsEl.innerHTML = `
           <span>&lt;2yr</span>
           <span>3</span>
           <span>5</span>
           <span>7</span>
           <span>12+</span>
         `;
-      }
     }
   }
+}
 
-  // ── Render dots ────────────────────────────────────────────────────────
-  function renderDots() {
-    if (!map || !gridData) return;
-    if (dotLayer) map.removeLayer(dotLayer);
+// ── The dot layer ──────────────────────────────────────────────────────
+//
+// One canvas, seven paths. Every visible dot is `arc()`ed into the path for
+// its colour and each bucket is filled once, so the fill cost is seven draw
+// calls rather than 39,707, and there is no per-point Leaflet layer to
+// project, register or redraw. It is still a Leaflet Layer, so the map owns
+// its lifetime and its pane.
+const DotLayer = L.Layer.extend({
+  onAdd() {
+    this._canvas = L.DomUtil.create(
+      "canvas",
+      "heat-dots",
+      this._map.getPane("overlayPane"),
+    );
+    this._ctx = this._canvas.getContext("2d");
+    this._frame = 0;
+    this._map.on("move zoom resize zoomanim", this._schedule, this);
+    this._redraw();
+  },
 
-    const points = gridData.points;
-    const markers = [];
+  onRemove() {
+    this._map.off("move zoom resize zoomanim", this._schedule, this);
+    if (this._frame) cancelAnimationFrame(this._frame);
+    if (this._canvas) L.DomUtil.remove(this._canvas);
+  },
 
-    // 39,707 points as SVG paths is 39,707 DOM nodes; on a canvas it is one.
-    if (!dotRenderer) dotRenderer = L.canvas({ padding: 0.5 });
+  // Panning repaints on the next frame rather than synchronously, so a drag
+  // costs one redraw per displayed frame instead of one per pointer event.
+  _schedule() {
+    if (this._frame) return;
+    this._frame = requestAnimationFrame(() => {
+      this._frame = 0;
+      this._redraw();
+    });
+  },
 
-    for (let i = 0; i < points.length; i++) {
-      const pt = points[i];
-      let color;
-      if (metric === "cost") {
-        const cost = getPointCost(pt);
-        color = costColor(cost);
-      } else {
-        const yrs = getPointYears(pt, metric);
-        color = yearColor(yrs);
-      }
+  _redraw() {
+    if (!map || !header) return;
+    const size = map.getSize();
+    const centre = map.getCenter();
 
-      const marker = L.circleMarker([pt.lat, pt.lon], {
-        radius: 3.5,
-        weight: 0,
-        fillColor: color,
-        fillOpacity: 0.75,
-        interactive: true,
-        renderer: dotRenderer,
-      });
+    const topLeft = map.containerPointToLayerPoint([0, 0]);
+    L.DomUtil.setPosition(this._canvas, topLeft);
+    const dpr = window.devicePixelRatio || 1;
+    this._canvas.width = Math.round(size.x * dpr);
+    this._canvas.height = Math.round(size.y * dpr);
+    this._canvas.style.width = size.x + "px";
+    this._canvas.style.height = size.y + "px";
+    const ctx = this._ctx;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, size.x, size.y);
 
-      marker._heatIdx = i;
-      markers.push(marker);
+    const count = header.count;
+    const t = dotTransform({
+      centerLat: centre.lat,
+      centerLng: centre.lng,
+      zoom: map.getZoom(),
+      width: size.x,
+      height: size.y,
+    });
+    projectDots(header.lat, header.lon, count, t, xs, ys);
+
+    // Bucket into colours, culling what the viewport cannot show. At world zoom
+    // that is most of the grid, and this runs on the pan path.
+    bucketLen.fill(0);
+    const r = DOT_RADIUS;
+    const useCost = metric === "cost";
+    const col = colorColumn();
+    for (let i = 0; i < count; i++) {
+      const x = xs[i];
+      const y = ys[i];
+      if (x < -r || y < -r || x > size.x + r || y > size.y + r) continue;
+      const b = col[i];
+      const k = bucketLen[b];
+      bucketXY[b][k * 2] = x;
+      bucketXY[b][k * 2 + 1] = y;
+      bucketId[b][k] = i;
+      bucketLen[b] = k + 1;
     }
 
-    dotLayer = L.layerGroup(markers).addTo(map);
+    const palette = useCost ? COST_PALETTE : YEAR_PALETTE;
+    for (let b = 0; b < BUCKETS; b++) {
+      const len = bucketLen[b];
+      if (!len) continue;
+      const arr = bucketXY[b];
+      ctx.beginPath();
+      for (let k = 0; k < len; k++) {
+        const x = arr[k * 2];
+        const y = arr[k * 2 + 1];
+        ctx.moveTo(x + r, y);
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+      }
+      ctx.fillStyle = palette[b];
+      ctx.fill();
+    }
 
-    // Use event delegation on the layer group
-    dotLayer.eachLayer(function (layer) {
-      layer.on("click", function () {
-        const pt = points[layer._heatIdx];
-        const isReal = basis === "real";
-        const pSeries = isReal && pt.pr ? pt.pr : pt.p;
-        const bSeries = isReal && pt.br ? pt.br : pt.b;
-        const paybackYrs = pSeries ? pSeries[usageIdx] : null;
-        const breakevenYrs = bSeries ? bSeries[usageIdx] : null;
-        const usage = gridData.usageTiersKwhDay[usageIdx];
-        const hasDeficit = pt.tr && pt.tr !== pt.t;
+    // The index is over the DRAWN points only — a dot scrolled off screen is
+    // not clickable, so indexing it would only cost time.
+    let total = 0;
+    for (let b = 0; b < BUCKETS; b++) total += bucketLen[b];
+    if (hitXs === null || hitXs.length < total) {
+      hitXs = new Float32Array(Math.max(total, 1024));
+      hitYs = new Float32Array(Math.max(total, 1024));
+      hitIds = new Int32Array(Math.max(total, 1024));
+    }
+    let m = 0;
+    for (let b = 0; b < BUCKETS; b++) {
+      const len = bucketLen[b];
+      const xy = bucketXY[b];
+      const ids = bucketId[b];
+      for (let k = 0; k < len; k++) {
+        hitXs[m] = xy[k * 2];
+        hitYs[m] = xy[k * 2 + 1];
+        hitIds[m] = ids[k];
+        m++;
+      }
+    }
+    hitIndex = buildHitIndex(
+      hitXs.subarray(0, m),
+      hitYs.subarray(0, m),
+      m,
+      HIT_CELL_PX,
+    );
+  },
+});
 
-        const unservedPct = pt.unserved || 0;
-        const coverageBadge = pt.unserved
-          ? `<div style="background:rgba(255,170,0,0.15);border:1px solid rgba(255,170,0,0.3);border-radius:4px;padding:4px 7px;font-size:.75rem;color:#ffaa00;margin-bottom:.5rem;line-height:1.4;">
+function ensureScratch(count) {
+  xs = new Float32Array(count);
+  ys = new Float32Array(count);
+  bucketXY.length = 0;
+  bucketId.length = 0;
+  for (let b = 0; b < BUCKETS; b++) {
+    bucketXY.push(new Float32Array(count * 2));
+    bucketId.push(new Int32Array(count));
+  }
+  bucketLen = new Int32Array(BUCKETS);
+}
+
+// ── Popups ─────────────────────────────────────────────────────────────
+function popupHtml(p) {
+  const isReal = basis === "real";
+  const pSeries = isReal && p.pr ? p.pr : p.p;
+  const bSeries = isReal && p.br ? p.br : p.b;
+  const paybackYrs = pSeries ? pSeries[usageIdx] : null;
+  const breakevenYrs = bSeries ? bSeries[usageIdx] : null;
+  const usage = header.usageTiersKwhDay[usageIdx];
+  const hasDeficit = p.tr && p.tr !== p.t;
+
+  const unservedPct = p.unserved || 0;
+  const coverageBadge = p.unserved
+    ? `<div style="background:rgba(255,170,0,0.15);border:1px solid rgba(255,170,0,0.3);border-radius:4px;padding:4px 7px;font-size:.75rem;color:#ffaa00;margin-bottom:.5rem;line-height:1.4;">
               ⚠️ <strong>Area Grid Split:</strong> ~${100 - unservedPct}% grid / ~${unservedPct}% unserved (generators)
             </div>`
-          : `<div style="background:rgba(0,230,153,0.08);border:1px solid rgba(0,230,153,0.2);border-radius:4px;padding:3px 6px;font-size:.75rem;color:var(--accent);margin-bottom:.5rem;">
+    : `<div style="background:rgba(0,230,153,0.08);border:1px solid rgba(0,230,153,0.2);border-radius:4px;padding:3px 6px;font-size:.75rem;color:var(--accent);margin-bottom:.5rem;">
               ✓ ~100% grid-connected population
             </div>`;
 
-        let tariffRows = "";
-        if (hasDeficit) {
-          tariffRows = isReal
-            ? `<tr style="${metric === "cost" ? "background:rgba(0,230,153,0.12);" : ""}">
+  let tariffRows = "";
+  if (hasDeficit) {
+    tariffRows = isReal
+      ? `<tr style="${metric === "cost" ? "background:rgba(0,230,153,0.12);" : ""}">
                 <td style="color:var(--muted);padding:.15rem 0;">True Grid Cost</td>
-                <td style="text-align:right;color:#00e699;font-weight:700;">$${pt.tr}/kWh <span style="font-size:.7rem;color:var(--muted);font-weight:normal;">(weighted)</span></td>
+                <td style="text-align:right;color:#00e699;font-weight:700;">$${p.tr}/kWh <span style="font-size:.7rem;color:var(--muted);font-weight:normal;">(weighted)</span></td>
                </tr>
                <tr>
                 <td style="color:var(--muted);padding:.15rem 0;">Paper grid tariff</td>
-                <td style="text-align:right;color:var(--muted);font-size:.8rem;">$${pt.t}/kWh (when on)</td>
+                <td style="text-align:right;color:var(--muted);font-size:.8rem;">$${p.t}/kWh (when on)</td>
                </tr>`
-            : `<tr style="${metric === "cost" ? "background:rgba(0,230,153,0.12);" : ""}">
+      : `<tr style="${metric === "cost" ? "background:rgba(0,230,153,0.12);" : ""}">
                 <td style="color:var(--muted);padding:.15rem 0;">Paper grid tariff</td>
-                <td style="text-align:right;color:#fff;font-weight:600;">$${pt.t}/kWh</td>
+                <td style="text-align:right;color:#fff;font-weight:600;">$${p.t}/kWh</td>
                </tr>
                <tr>
                 <td style="color:var(--muted);padding:.15rem 0;">True Grid Cost</td>
-                <td style="text-align:right;color:#00e699;font-size:.8rem;">$${pt.tr}/kWh (weighted)</td>
+                <td style="text-align:right;color:#00e699;font-size:.8rem;">$${p.tr}/kWh (weighted)</td>
                </tr>`;
-        } else {
-          tariffRows = `
+  } else {
+    tariffRows = `
             <tr style="${metric === "cost" ? "background:rgba(0,230,153,0.12);" : ""}">
               <td style="color:var(--muted);padding:.15rem 0;">Grid tariff</td>
-              <td style="text-align:right;color:#fff;font-weight:600;">$${pt.t}/kWh</td>
+              <td style="text-align:right;color:#fff;font-weight:600;">$${p.t}/kWh</td>
             </tr>
           `;
-        }
+  }
 
-        const popup = `
+  return `
           <div style="min-width:220px;">
-            <div style="font-weight:700;font-size:1rem;color:#fff;margin-bottom:.2rem;">${esc(pt.n)}</div>
-            <div style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem;">${esc(countryName(pt.c))} · ${pt.lat}°, ${pt.lon}°</div>
+            <div style="font-weight:700;font-size:1rem;color:#fff;margin-bottom:.2rem;">${esc(p.n)}</div>
+            <div style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem;">${esc(countryName(p.c))} · ${p.lat}°, ${p.lon}°</div>
             ${coverageBadge}
             <table style="width:100%;font-size:.85rem;border-collapse:collapse;">
               ${tariffRows}
-              <tr><td style="color:var(--muted);padding:.15rem 0;">Solar yield</td><td style="text-align:right;color:#fff;font-weight:600;">${pt.y} kWh/kWp/yr</td></tr>
+              <tr><td style="color:var(--muted);padding:.15rem 0;">Solar yield</td><td style="text-align:right;color:#fff;font-weight:600;">${p.y} kWh/kWp/yr</td></tr>
               <tr style="${metric === "p" ? "background:rgba(0,230,153,0.12);" : ""}">
                 <td style="color:var(--muted);padding:.15rem 0;">Payback (${basis === "real" ? "weighted" : "grid"})</td>
-                <td style="text-align:right;color:${yearColor(paybackYrs)};font-weight:700;">${yearLabel(paybackYrs)}</td>
+                <td style="text-align:right;color:${YEAR_PALETTE[yearBucket(paybackYrs)]};font-weight:700;">${yearLabel(paybackYrs)}</td>
               </tr>
               <tr style="${metric === "b" ? "background:rgba(0,230,153,0.12);" : ""}">
                 <td style="color:var(--muted);padding:.15rem 0;">True break-even</td>
-                <td style="text-align:right;color:${yearColor(breakevenYrs)};font-weight:700;">${yearLabel(breakevenYrs)}</td>
+                <td style="text-align:right;color:${YEAR_PALETTE[yearBucket(breakevenYrs)]};font-weight:700;">${yearLabel(breakevenYrs)}</td>
               </tr>
               <tr><td style="color:var(--muted);padding:.15rem 0;">Usage assumed</td><td style="text-align:right;color:#fff;">${usage} kWh/day</td></tr>
             </table>
@@ -362,237 +562,313 @@
             </div>
           </div>
         `;
-        layer.bindPopup(popup, { maxWidth: 300 }).openPopup();
-      });
-    });
+}
 
-    updateLegend();
-    updateRankings();
-  }
+// One handler for 39,707 dots: resolve the click to the nearest drawn point
+// and open its popup there. This replaces 39,707 per-layer handlers.
+//
+// `map.openPopup(latlng, html)` looks like the call for this and is not: its
+// second argument is an OPTIONS object, so passing markup made Leaflet throw
+// `appendChild: parameter 1 is not of type 'Node'` and no popup ever opened.
+// The supported form is a popup instance, so there is ONE here, reused — which
+// is also what the per-layer version did, 39,707 times over.
+let popup = null;
 
-  // ── Rankings ────────────────────────────────────────────────────────────
-  function updateRankings() {
-    if (!gridData) return;
-    const points = gridData.points;
-    const usage = gridData.usageTiersKwhDay[usageIdx];
-    const basisLabel = basis === "real" ? "weighted" : "grid-only";
+function onMapClick(e) {
+  if (!hitIndex) return;
+  const container = map.latLngToContainerPoint(e.latlng);
+  const slot = hitTest(
+    hitIndex,
+    hitXs,
+    hitYs,
+    container.x,
+    container.y,
+    DOT_RADIUS + 4,
+  );
+  if (slot < 0) return;
+  if (!popup) popup = L.popup({ maxWidth: 300 });
+  // `openOn` is `map.addLayer`, and `addLayer` returns early when the layer is
+  // already there — so reusing one popup would leave the previous city's
+  // content on screen. Close it first, then open at the new position.
+  if (map.hasLayer(popup)) map.removeLayer(popup);
+  popup
+    .setLatLng(e.latlng)
+    .setContent(popupHtml(pt(hitIds[slot])))
+    .openOn(map);
+}
 
-    const bestCard = document.getElementById("best-card");
-    const worstCard = document.getElementById("worst-card");
+// ── Render dots ────────────────────────────────────────────────────────
+//
+// The load path used to be one unbroken task: parse 1.7 MB, build the map,
+// project and fill 39,707 dots, then run the ranking pass. That measured
+// 53-95ms of blocked main thread on an idle machine and 141-212ms of TBT under
+// the gate's CPU throttling, against a 100ms ceiling, with every one of those
+// milliseconds spent before the reader could see or touch anything.
+//
+// So the phases are separated by a real yield. Each phase still runs exactly
+// once — nothing is re-run, nothing is dropped, and the ranking pass is not
+// deferred out of the session, it simply happens after the map is on screen.
+// A rAF is a task boundary, so the browser paints and can respond between
+// them.
+const nextFrame = () =>
+  new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
 
-    if (metric === "cost") {
-      const countryHighest = new Map();
-      const countryLowest = new Map();
+function renderDots() {
+  if (!map || !header) return;
+  updateLegend();
+  if (dotLayer) dotLayer._redraw();
+  // The map is drawn by the time this resolves; the lists are built after.
+  nextFrame().then(updateRankings);
+}
 
-      for (const pt of points) {
-        const cost = getPointCost(pt);
-        if (cost === null || cost === undefined || cost <= 0) continue;
+// ── Rankings ────────────────────────────────────────────────────────────
+function updateRankings() {
+  if (!header) return;
+  const count = header.count;
+  const usage = header.usageTiersKwhDay[usageIdx];
+  const basisLabel = basis === "real" ? "weighted" : "grid-only";
 
-        const curHigh = countryHighest.has(pt.c)
-          ? getPointCost(countryHighest.get(pt.c))
-          : -Infinity;
-        if (!countryHighest.has(pt.c) || cost > curHigh) {
-          countryHighest.set(pt.c, pt);
-        }
+  const bestCard = document.getElementById("best-card");
+  const worstCard = document.getElementById("worst-card");
 
-        const curLow = countryLowest.has(pt.c)
-          ? getPointCost(countryLowest.get(pt.c))
-          : Infinity;
-        if (!countryLowest.has(pt.c) || cost < curLow) {
-          countryLowest.set(pt.c, pt);
-        }
-      }
+  if (metric === "cost") {
+    // One pass, one cost per point. The previous shape re-derived a point's
+    // cost inside each of the two comparisons, so the 39,707-point loop paid
+    // for up to three dequantizations per point; `costCol` is filled once and
+    // read back for the comparisons.
+    const countryHighest = new Map();
+    const countryLowest = new Map();
+    const costCol = new Float32Array(count);
 
-      const highestByCountry = [...countryHighest.values()]
-        .sort((a, b) => getPointCost(b) - getPointCost(a))
-        .slice(0, 10);
+    for (let i = 0; i < count; i++) {
+      const cost = costOfColumn(i);
+      if (cost === null || cost === undefined || cost <= 0) continue;
+      costCol[i] = cost;
+      const c = header.countries[header.cc[i]];
 
-      const lowestByCountry = [...countryLowest.values()]
-        .sort((a, b) => getPointCost(a) - getPointCost(b))
-        .slice(0, 10);
-
-      document.getElementById("best-list").innerHTML = highestByCountry
-        .map((pt) => {
-          const cost = getPointCost(pt);
-          const splitText = pt.unserved
-            ? `~${pt.unserved}% unserved`
-            : "100% grid";
-          return `<li><span class="years" style="color:${costTextColor(cost)}">${costLabel(cost)}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${splitText}, paper $${pt.t}/kWh)</span></li>`;
-        })
-        .join("");
-
-      document.getElementById("worst-list").innerHTML = lowestByCountry
-        .map((pt) => {
-          const cost = getPointCost(pt);
-          return `<li><span class="years" style="color:${costTextColor(cost)}">${costLabel(cost)}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${pt.y} kWh/kWp/yr)</span></li>`;
-        })
-        .join("");
-
-      if (bestCard) bestCard.className = "rank-card worst";
-      if (worstCard) worstCard.className = "rank-card";
-
-      document.querySelector("#best-card h3").textContent =
-        `🔴 Highest Electricity Cost (${basisLabel})`;
-      document.querySelector("#worst-card h3").textContent =
-        `⚡ Lowest Electricity Cost (${basisLabel})`;
-      return;
+      const hi = countryHighest.get(c);
+      if (hi === undefined || cost > costCol[hi]) countryHighest.set(c, i);
+      const lo = countryLowest.get(c);
+      if (lo === undefined || cost < costCol[lo]) countryLowest.set(c, i);
     }
 
-    if (bestCard) bestCard.className = "rank-card";
-    if (worstCard) worstCard.className = "rank-card worst";
-
-    const mKey = getMetricKey();
-    const countryBest = new Map();
-    const countryWorst = new Map();
-
-    for (const pt of points) {
-      const series = pt[mKey] || pt[metric];
-      const yrs = series ? series[usageIdx] : null;
-      if (yrs === null || yrs <= 0) continue;
-
-      const bestSeries = countryBest.has(pt.c)
-        ? countryBest.get(pt.c)[mKey] || countryBest.get(pt.c)[metric]
-        : null;
-      if (
-        !countryBest.has(pt.c) ||
-        (bestSeries && yrs < bestSeries[usageIdx])
-      ) {
-        countryBest.set(pt.c, pt);
-      }
-
-      const worstSeries = countryWorst.has(pt.c)
-        ? countryWorst.get(pt.c)[mKey] || countryWorst.get(pt.c)[metric]
-        : null;
-      if (
-        !countryWorst.has(pt.c) ||
-        (worstSeries && yrs > worstSeries[usageIdx])
-      ) {
-        countryWorst.set(pt.c, pt);
-      }
-    }
-
-    const bestByCountry = [...countryBest.values()]
-      .sort((a, b) => {
-        const sA = a[mKey] || a[metric],
-          sB = b[mKey] || b[metric];
-        return sA[usageIdx] - sB[usageIdx];
-      })
+    const highestByCountry = [...countryHighest.values()]
+      .map((i) => ({ i, cost: costCol[i] }))
+      .sort((a, b) => b.cost - a.cost)
       .slice(0, 10);
 
-    const worstByCountry = [...countryWorst.values()]
-      .filter((pt) => {
-        const s = pt[mKey] || pt[metric];
-        return s && s[usageIdx] !== null;
-      })
-      .sort((a, b) => {
-        const sA = a[mKey] || a[metric],
-          sB = b[mKey] || b[metric];
-        return sB[usageIdx] - sA[usageIdx];
-      })
+    const lowestByCountry = [...countryLowest.values()]
+      .map((i) => ({ i, cost: costCol[i] }))
+      .sort((a, b) => a.cost - b.cost)
       .slice(0, 10);
 
-    const metricLabel = metric === "p" ? "payback" : "break-even";
-
-    document.getElementById("best-list").innerHTML = bestByCountry
-      .map((pt) => {
-        const s = pt[mKey] || pt[metric];
-        const rateDisplay =
-          basis === "real" && pt.tr ? `$${pt.tr}` : `$${pt.t}`;
-        return `<li><span class="years">${yearLabel(s[usageIdx])}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${rateDisplay}/kWh, ${pt.y} kWh/kWp)</span></li>`;
+    document.getElementById("best-list").innerHTML = highestByCountry
+      .map(({ i, cost }) => {
+        const p = pt(i);
+        const splitText = p.unserved ? `~${p.unserved}% unserved` : "100% grid";
+        return `<li><span class="years" style="color:${costTextColor(cost)}">${costLabel(cost)}</span> — ${esc(p.n)}, ${esc(countryName(p.c))} <span class="detail">(${splitText}, paper $${p.t}/kWh)</span></li>`;
       })
       .join("");
 
-    document.getElementById("worst-list").innerHTML = worstByCountry
-      .map((pt) => {
-        const s = pt[mKey] || pt[metric];
-        const rateDisplay =
-          basis === "real" && pt.tr ? `$${pt.tr}` : `$${pt.t}`;
-        return `<li><span class="years">${yearLabel(s[usageIdx])}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${rateDisplay}/kWh, ${pt.y} kWh/kWp)</span></li>`;
+    document.getElementById("worst-list").innerHTML = lowestByCountry
+      .map(({ i, cost }) => {
+        const p = pt(i);
+        return `<li><span class="years" style="color:${costTextColor(cost)}">${costLabel(cost)}</span> — ${esc(p.n)}, ${esc(countryName(p.c))} <span class="detail">(${p.y} kWh/kWp/yr)</span></li>`;
       })
       .join("");
+
+    if (bestCard) bestCard.className = "rank-card worst";
+    if (worstCard) worstCard.className = "rank-card";
 
     document.querySelector("#best-card h3").textContent =
-      `⚡ Fastest ${metricLabel} (${basisLabel}, ${usage} kWh/d)`;
+      `🔴 Highest Electricity Cost (${basisLabel})`;
     document.querySelector("#worst-card h3").textContent =
-      `🔴 Slowest ${metricLabel} (${basisLabel}, ${usage} kWh/d)`;
+      `⚡ Lowest Electricity Cost (${basisLabel})`;
+    return;
   }
 
-  // ── Controls ───────────────────────────────────────────────────────────
-  document.getElementById("basis-btns").addEventListener("click", function (e) {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-    document
-      .querySelectorAll("#basis-btns button")
-      .forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    basis = btn.dataset.basis;
-    renderDots();
-  });
+  if (bestCard) bestCard.className = "rank-card";
+  if (worstCard) worstCard.className = "rank-card worst";
 
-  document.getElementById("usage-btns").addEventListener("click", function (e) {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-    document
-      .querySelectorAll("#usage-btns button")
-      .forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    usageIdx = parseInt(btn.dataset.idx, 10);
-    renderDots();
-  });
+  const countryBest = new Map();
+  const countryWorst = new Map();
 
+  for (let i = 0; i < count; i++) {
+    const yrs = columnYearAt(i);
+    if (yrs === null || yrs <= 0) continue;
+    const c = header.countries[header.cc[i]];
+
+    if (!countryBest.has(c)) countryBest.set(c, i);
+    else if (yrs < columnYearAt(countryBest.get(c))) countryBest.set(c, i);
+
+    if (!countryWorst.has(c)) countryWorst.set(c, i);
+    else if (yrs > columnYearAt(countryWorst.get(c))) countryWorst.set(c, i);
+  }
+
+  const bestByCountry = [...countryBest.values()]
+    .map((i) => ({ i, yrs: columnYearAt(i) }))
+    .filter((e) => e.yrs !== null)
+    .sort((a, b) => a.yrs - b.yrs)
+    .slice(0, 10);
+
+  const worstByCountry = [...countryWorst.values()]
+    .map((i) => ({ i, yrs: columnYearAt(i) }))
+    .filter((e) => e.yrs !== null)
+    .sort((a, b) => b.yrs - a.yrs)
+    .slice(0, 10);
+
+  const metricLabel = metric === "p" ? "payback" : "break-even";
+
+  document.getElementById("best-list").innerHTML = bestByCountry
+    .map(({ i, yrs }) => {
+      const p = pt(i);
+      const rateDisplay = basis === "real" && p.tr ? `$${p.tr}` : `$${p.t}`;
+      return `<li><span class="years">${yearLabel(yrs)}</span> — ${esc(p.n)}, ${esc(countryName(p.c))} <span class="detail">(${rateDisplay}/kWh, ${p.y} kWh/kWp)</span></li>`;
+    })
+    .join("");
+
+  document.getElementById("worst-list").innerHTML = worstByCountry
+    .map(({ i, yrs }) => {
+      const p = pt(i);
+      const rateDisplay = basis === "real" && p.tr ? `$${p.tr}` : `$${p.t}`;
+      return `<li><span class="years">${yearLabel(yrs)}</span> — ${esc(p.n)}, ${esc(countryName(p.c))} <span class="detail">(${rateDisplay}/kWh, ${p.y} kWh/kWp)</span></li>`;
+    })
+    .join("");
+
+  document.querySelector("#best-card h3").textContent =
+    `⚡ Fastest ${metricLabel} (${basisLabel}, ${usage} kWh/d)`;
+  document.querySelector("#worst-card h3").textContent =
+    `🔴 Slowest ${metricLabel} (${basisLabel}, ${usage} kWh/d)`;
+}
+
+void getPointCost;
+
+// ── Controls ───────────────────────────────────────────────────────────
+document.getElementById("basis-btns").addEventListener("click", function (e) {
+  const btn = e.target.closest("button");
+  if (!btn) return;
   document
-    .getElementById("metric-btns")
-    .addEventListener("click", function (e) {
-      const btn = e.target.closest("button");
-      if (!btn) return;
-      document
-        .querySelectorAll("#metric-btns button")
-        .forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      metric = btn.dataset.metric;
-      renderDots();
-    });
+    .querySelectorAll("#basis-btns button")
+    .forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+  basis = btn.dataset.basis;
+  invalidateColorColumn();
+  renderDots();
+});
 
-  // ── Init ───────────────────────────────────────────────────────────────
-  async function init() {
-    try {
-      const res = await fetch("../assets/data/heatmap-grid.json?v=20261005h");
-      if (!res.ok) throw new Error("Failed to load heatmap data");
-      gridData = await res.json();
-    } catch (err) {
-      document.getElementById("loading").innerHTML =
-        `<div style="text-align:center;color:#e64545;">Failed to load heatmap data. <a href="" style="color:var(--accent);">Reload</a></div>`;
-      console.error(err);
-      return;
-    }
+document.getElementById("usage-btns").addEventListener("click", function (e) {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  document
+    .querySelectorAll("#usage-btns button")
+    .forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+  usageIdx = parseInt(btn.dataset.idx, 10);
+  invalidateColorColumn();
+  renderDots();
+});
 
-    // Show map, hide loading
-    document.getElementById("loading").style.display = "none";
-    document.getElementById("map").style.display = "block";
-    document.getElementById("controls").style.display = "block";
-
-    // Init Leaflet
-    map = L.map("map", {
-      center: [20, 0],
-      zoom: 2,
-      minZoom: 2,
-      maxZoom: 12,
-      zoomControl: true,
-      attributionControl: false,
-      worldCopyJump: true,
-    });
-
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      {
-        subdomains: "abcd",
-        maxZoom: 19,
-      },
-    ).addTo(map);
-
-    // Use CartoDB Dark Matter for matching dark theme (no API key needed)
+document
+  .getElementById("metric-btns")
+  .addEventListener("click", async function (e) {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    document
+      .querySelectorAll("#metric-btns button")
+      .forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    metric = btn.dataset.metric;
+    // The year matrix lives in its own file and is only read by the two year
+    // metrics. Fetch on the switch rather than during the load window.
+    if (metric !== "cost") await ensureYears();
+    invalidateColorColumn();
     renderDots();
+  });
+
+// ── Init ───────────────────────────────────────────────────────────────
+async function ensureYears() {
+  if (years) return years;
+  if (yearsPending) return yearsPending;
+  yearsPending = fetch("../assets/data/heatmap-years.json?v=20261001b")
+    .then((r) => {
+      if (!r.ok) throw new Error("Failed to load heatmap year data");
+      return r.json();
+    })
+    .then((d) => {
+      years = d;
+      yearsPending = null;
+      // The colour column was built while the year matrix was still absent, so
+      // every year metric would have painted bucket 0.
+      invalidateColorColumn();
+      return d;
+    })
+    .catch((err) => {
+      yearsPending = null;
+      console.error(err);
+      return null;
+    });
+  return yearsPending;
+}
+
+async function init() {
+  try {
+    const res = await fetch("../assets/data/heatmap-grid.json?v=20261001b");
+    if (!res.ok) throw new Error("Failed to load heatmap data");
+    header = await res.json();
+    ensureScratch(header.count);
+    // Parsing 39,707 columns and drawing them are each a sizeable task; run
+    // them separately so neither blocks the main thread for their sum.
+    await nextFrame();
+  } catch (err) {
+    document.getElementById("loading").innerHTML =
+      `<div style="text-align:center;color:#e64545;">Failed to load heatmap data. <a href="" style="color:var(--accent);">Reload</a></div>`;
+    console.error(err);
+    return;
   }
 
-  init();
-})();
+  // Show map, hide loading
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("map").style.display = "block";
+  document.getElementById("controls").style.display = "block";
+
+  // Bucket the whole grid once, on its own task. It is 39,707 colour
+  // decisions, and folding it into the first draw pushed that draw to 70ms.
+  colorColumn();
+  await nextFrame();
+
+  // Init Leaflet
+  map = L.map("map", {
+    center: [20, 0],
+    zoom: 2,
+    minZoom: 2,
+    maxZoom: 12,
+    zoomControl: true,
+    attributionControl: false,
+    worldCopyJump: true,
+  });
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    subdomains: "abcd",
+    maxZoom: 19,
+  }).addTo(map);
+
+  dotLayer = new DotLayer();
+  // `addTo` runs the layer's `onAdd`, which draws. Calling renderDots() here as
+  // well drew every one of the 39,707 dots a second time for nothing.
+  dotLayer.addTo(map);
+  map.on("click", onMapClick);
+  updateLegend();
+
+  // The lists last, on their own task: the map is already on screen and
+  // clickable by the time this runs.
+  nextFrame().then(updateRankings);
+
+  // Pull the year matrix in while the reader is still reading the map, so the
+  // first switch to a year metric is instant rather than a spinner.
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 400));
+  idle(() => {
+    ensureYears();
+  });
+}
+
+init();
