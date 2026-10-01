@@ -973,7 +973,40 @@ async function ensureYears() {
   return yearsPending;
 }
 
+// Leaflet's CSS is declared in the markup as `rel=preload`, which fetches it
+// without letting it block the first paint. This turns that preload into the
+// real stylesheet.
+//
+// Cloning rather than re-declaring is the point: the URL, the SRI hash and the
+// CORS mode are written down once, in the HTML, and the clone inherits all
+// three — which is what lets the promoted sheet match the preload in the cache
+// instead of costing a second request.
+//
+// The load event is awaited rather than fired and forgotten because the map is
+// revealed immediately afterwards, and Leaflet's layout rules decide where the
+// panes and the canvas go. Not waiting would mean a visible flash of unstyled
+// map. A failed stylesheet resolves false rather than rejecting: an unstyled
+// map is still a map, and failing the whole page over a third-party CSS file
+// would be worse.
+function applyLeafletStyles() {
+  const preloaded = document.getElementById("leaflet-css");
+  if (!preloaded) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    const link = preloaded.cloneNode();
+    link.rel = "stylesheet";
+    link.removeAttribute("as");
+    link.removeAttribute("id");
+    link.addEventListener("load", () => resolve(true), { once: true });
+    link.addEventListener("error", () => resolve(false), { once: true });
+    document.head.append(link);
+  });
+}
+
 async function init() {
+  // Started here, awaited below. It has to be in flight across the grid fetch
+  // and the first frame yield, because that is the window this page already
+  // spends waiting — so the stylesheet costs no latency beyond what was there.
+  const stylesReady = applyLeafletStyles();
   try {
     // Packed binary, not JSON. The previous columnar JSON was 1.73 MB, and
     // `await res.json()` measured 39ms (mobile) / 29ms (desktop) on the staged
@@ -1001,6 +1034,7 @@ async function init() {
   }
 
   // Show map, hide loading
+  await stylesReady;
   document.getElementById("loading").style.display = "none";
   document.getElementById("map").style.display = "block";
   document.getElementById("controls").style.display = "block";
