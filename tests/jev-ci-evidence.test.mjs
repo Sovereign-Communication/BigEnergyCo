@@ -86,7 +86,12 @@ const GREEN = {
   test: {
     job: "test",
     conclusion: "success",
-    steps: { unit_tests: "success", prettier: "success", seo: "success" },
+    steps: {
+      unit_tests: "success",
+      prettier: "success",
+      seo: "success",
+      hygiene: "success",
+    },
   },
   "web-smoke": {
     job: "web-smoke",
@@ -187,7 +192,12 @@ const RED_TESTS = {
   test: {
     job: "test",
     conclusion: "failure",
-    steps: { unit_tests: "failure", prettier: "success", seo: "success" },
+    steps: {
+      unit_tests: "failure",
+      prettier: "success",
+      seo: "success",
+      hygiene: "success",
+    },
   },
   "web-smoke": GREEN["web-smoke"],
   coverage: GREEN.coverage,

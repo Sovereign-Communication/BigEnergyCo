@@ -5,7 +5,7 @@
 // main-thread bundle; tests/pin the mirror to the engine instead.
 export const CUT_TARGET_PCT = { cut95: 95, cut80: 80, cut60: 60 };
 
-export const CUSTOM_TARGET = "custom";
+const CUSTOM_TARGET = "custom";
 
 /**
  * Which select state a given cut percentage is: a real target id, or the
