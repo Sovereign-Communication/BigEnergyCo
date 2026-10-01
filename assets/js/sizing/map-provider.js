@@ -1,6 +1,6 @@
 // Optional map integration boundary. Importing this module never loads a map
 // library, requests coordinates, or changes core sizing behavior.
-export const PANEL_AREA_M2 = 6;
+const PANEL_AREA_M2 = 6;
 export const LEAFLET_SCRIPT_URL =
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 // Subresource-integrity pins, identical to the static pins on
@@ -8,8 +8,7 @@ export const LEAFLET_SCRIPT_URL =
 // instead of running inside the page. Keep all three files on one version.
 export const LEAFLET_SCRIPT_SRI =
   "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
-export const LEAFLET_STYLE_URL =
-  "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+const LEAFLET_STYLE_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
 export const LEAFLET_STYLE_SRI =
   "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
 export const CARTO_TILE_URL =

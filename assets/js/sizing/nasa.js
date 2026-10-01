@@ -12,7 +12,7 @@
 //   Timestamps are LOCAL SOLAR TIME (time_standard=LST) — hour-of-day lines up
 //   with load profiles without timezone math. Fill value: -999.
 
-export const POWER_HOURLY_URL =
+const POWER_HOURLY_URL =
   "https://power.larc.nasa.gov/api/temporal/hourly/point";
 
 // One owner of the coordinate precision, shared with every other egress.
@@ -160,7 +160,7 @@ const IDB_VERSION = 2;
 const IDB_STORE = "series";
 
 export const IN_MEMORY_WEATHER_CACHE = new Map();
-export const IN_FLIGHT_WEATHER_PROMISES = new Map();
+const IN_FLIGHT_WEATHER_PROMISES = new Map();
 
 function idbOpen() {
   if (typeof indexedDB === "undefined") return null;
@@ -274,12 +274,6 @@ async function idbDelete(key) {
 
 function v2Key(lat, lon, years) {
   return cacheKey(lat, lon, years).replace(CACHE_PREFIX, CACHE_PREFIX_V2);
-}
-
-/** Test/ops hook: drop the compact persistent layer for one site. */
-export async function clearCompactCache(latitude, longitude, years = 5) {
-  IN_MEMORY_WEATHER_CACHE.delete(cacheKey(latitude, longitude, years));
-  await idbDelete(v2Key(latitude, longitude, years));
 }
 
 export function cacheKey(lat, lon, years) {

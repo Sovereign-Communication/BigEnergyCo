@@ -37,6 +37,9 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import {
+  A11Y_MATRIX_CLAUSE_MAX,
+  A11Y_MATRIX_FACET_AXES,
+  composeA11yMatrixClause,
   compareCells,
   matrixCells,
   readA11yBaseline,
@@ -493,6 +496,12 @@ async function audit({
     audit_errors: errors.map((r) => r.id),
     ledger_notes: baseline.skipped,
   };
+  // The facet line, composed from the report just built. Both fields are set
+  // together or neither: a report declaring facet_axes with no line is a named
+  // problem in the builder, by design — the axis gets its proof line from the
+  // run that measured it, or it gets no claim at all.
+  report.facet_axes = A11Y_MATRIX_FACET_AXES;
+  report.facet_line = composeA11yMatrixClause(report);
   if (opts.out)
     writeFileSync(opts.out, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   out.write(`\nreport: ${opts.out || "not written (pass --out FILE)"}\n`);
@@ -523,6 +532,18 @@ async function audit({
   if (regressions.length) {
     process.stderr.write(
       `check-a11y-matrix: ${regressions.length} cell(s) regressed against the declared bar:\n${regressions.map((r) => `  - ${r.message}`).join("\n")}\n`,
+    );
+    return 1;
+  }
+  // The clause-length backstop, same rule as the byte gate's
+  // QUALITY_SIZE_CLAUSE_MAX: a clause that outgrew its half of the 280-char
+  // clip would be refused (or cut) on its way to the judge, so the gate that
+  // composed it fails it here, by name, where the fix is — the composer's own
+  // shapes are bounded, so reaching this means a counter grew past what the
+  // bound anticipated.
+  if (report.facet_line.length > A11Y_MATRIX_CLAUSE_MAX) {
+    process.stderr.write(
+      `check-a11y-matrix: the accessibility clause is ${report.facet_line.length} chars, over its ${A11Y_MATRIX_CLAUSE_MAX}-char half of the clip: ${report.facet_line}\n`,
     );
     return 1;
   }

@@ -25,6 +25,7 @@ export const RECORD_SOURCES = {
   tests_green: { job: "test", step: "unit_tests" },
   prettier_clean: { job: "test", step: "prettier" },
   seo_green: { job: "test", step: "seo" },
+  hygiene_clean: { job: "test", step: "hygiene" },
   smoke_green: { job: "web-smoke", step: "smoke" },
 };
 
@@ -103,19 +104,25 @@ export const RUN_RECORD_FIELDS = [
 // from the same records the judge's hard gates are derived from — no new step
 // name, no new artifact, no second list to keep in step.
 //
-// What it deliberately does NOT do: claim the axis. "No unnecessary lines,
-// branches or dead scaffolding" has NO instrument anywhere in this repository,
-// and saying so is the honest half of this clause — the same discipline the size
-// clause's own bound enforces from the other end. A clause that named the
-// contracts without that sentence would read as "this code is minimal", which
+// What it deliberately does NOT do: claim the axis. "No unnecessary lines or
+// branches" still has NO instrument anywhere in this repository — the hygiene
+// step measures dead scaffolding and duplicated logic (scripts/check-code-hygiene.mjs),
+// the formatter covers formatting, and the byte gate covers shipped size; what
+// remains unmeasured is said so in the clause itself — the same discipline the
+// size clause's own bound enforces from the other end. A clause that named the
+// readings without that sentence would read as "this code is minimal", which
 // nothing measured.
 const QUALITY_CONTRACT_PHRASES = {
   tests_green: {
-    green: "suite (one-owner/no-second-copy contracts)",
+    green: "suite (one-owner/no-second-copy)",
     red: "unit tests",
   },
   prettier_clean: { green: "prettier", red: "formatting" },
   seo_green: { green: "site-integrity", red: "site-integrity" },
+  hygiene_clean: {
+    green: "dead-code/duplication scan",
+    red: "dead-code/duplication scan",
+  },
 };
 
 // Bounded like the size clause's name list, so the clause is bounded BY
@@ -176,18 +183,17 @@ export function composeQualityContractClause(records) {
       red.length > MAX_RED_NAMES ? ` (+${red.length - MAX_RED_NAMES})` : "";
     return (
       `Test job RED (${named.join(", ")}${more}): the clarity readings did ` +
-      "not all pass. Dead code or duplication beyond them is unmeasured"
+      "not all pass. Unmeasured: branches/abstractions"
     );
   }
   const names = green
     .map((f) => QUALITY_CONTRACT_PHRASES[f]?.green || f)
     .join(", ");
   // The hole, said once and bounded: it is the sentence that stops this clause
-  // reading as "this code is minimal", which nothing in the repository measures.
-  return (
-    `Test job green: ${names}. ` +
-    "Beyond them, dead code or duplication is unmeasured"
-  );
+  // reading as "this code is minimal". Dead scaffolding and duplicated logic are
+  // now measured (the hygiene scan above); unnecessary branches and
+  // abstractions are not, and that stays said.
+  return `Test job green: ${names}. ` + "Unmeasured: branches/abstractions";
 }
 
 // The gate measures these itself, from the tree in front of the process. An

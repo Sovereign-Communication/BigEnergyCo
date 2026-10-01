@@ -6,7 +6,7 @@ export const WIZARD_STEPS = Object.freeze([
   "tariff",
   "result",
 ]);
-export const WIZARD_STORAGE_KEY = "beco-wizard-state";
+const WIZARD_STORAGE_KEY = "beco-wizard-state";
 
 const NEXT = Object.freeze({
   location: "load",

@@ -23,8 +23,11 @@
 // a reader of the TERMINAL had no way to learn what produced it: the run printed
 // `breach` on two budgets, exited 0, and said "no regression against the
 // declared baseline", with the rule that makes a breach non-blocking written
-// only in the report JSON. Two budgets really are over the §3.1 limit today —
-// `registry_country` by 12x — and a bare "breach" next to a green run is exactly
+// only in the report JSON. Three budgets were over the table's §3.1 figures
+// when P0.4 measured them — `registry_country` by 12x — and A-002 (owner-
+// approved 2026-09-29) moved the REPORTED line to shipped +10 % for those
+// three, so an over-limit reading today means worse than what shipped at the
+// amendment. A bare "breach" next to a green run is exactly
 // the reading this gate's own header warns against. `scripts/check-lighthouse.mjs`
 // already does the honest version in its human output ("N Q-02 breaches
 // (non-blocking until P5/P8)"). One constant, used by the JSON and the terminal,

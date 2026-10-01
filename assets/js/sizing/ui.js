@@ -15,6 +15,10 @@
 // bundle, so it is deliberately not imported.
 import { APPLIANCES } from "./appliances.js?v=20261022j";
 import {
+  INSTALL_NAV_BREAKPOINT_PX,
+  installReveal,
+} from "./pwa-install.js?v=20261022j";
+import {
   USE_CASES,
   USE_CASE_IDS,
   useCase,
@@ -8274,13 +8278,26 @@ function setupPwaControls() {
 
   const badge = $("offlineBadge");
 
+  const narrowNav =
+    typeof window.matchMedia === "function"
+      ? window.matchMedia(`(max-width: ${INSTALL_NAV_BREAKPOINT_PX}px)`)
+      : null;
+
+  const applyInstallVisibility = (available) => {
+    const next = installReveal(
+      narrowNav ? narrowNav.matches : false,
+      available,
+    );
+    if (btnH) btnH.style.display = next.header;
+    if (btnM) btnM.style.display = next.drawer;
+  };
+
   const triggerInstall = async () => {
     if (!deferredInstallPrompt) return;
     deferredInstallPrompt.prompt();
     const res = await deferredInstallPrompt.userChoice;
     if (res && res.outcome === "accepted") {
-      if (btnH) btnH.style.display = "none";
-      if (btnM) btnM.style.display = "none";
+      applyInstallVisibility(false);
     }
     deferredInstallPrompt = null;
   };
@@ -8292,16 +8309,19 @@ function setupPwaControls() {
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
-    if (btnH) btnH.style.display = "inline-flex";
-    if (btnM) btnM.style.display = "flex";
+    applyInstallVisibility(true);
   });
 
   window.addEventListener("appinstalled", () => {
-    if (btnH) btnH.style.display = "none";
-    if (btnM) btnM.style.display = "none";
+    applyInstallVisibility(false);
     deferredInstallPrompt = null;
   });
 
+  if (narrowNav && typeof narrowNav.addEventListener === "function") {
+    narrowNav.addEventListener("change", () => {
+      applyInstallVisibility(Boolean(deferredInstallPrompt));
+    });
+  }
   function updateNetworkStatus() {
     if (!badge) return;
     if (!navigator.onLine) {
