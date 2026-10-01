@@ -67,7 +67,12 @@ test("the speed clause reports the WORST target, and says so on the line", () =>
   const clause = composeSpeedClause(
     reportWith([
       target("home/mobile", { fcp_s: 1.99, lcp_s: 2.37, tbt_ms: 88, cls: 0.0 }),
-      target("home/desktop", { fcp_s: 2.08, lcp_s: 2.7, tbt_ms: 89, cls: 0.005 }),
+      target("home/desktop", {
+        fcp_s: 2.08,
+        lcp_s: 2.7,
+        tbt_ms: 89,
+        cls: 0.005,
+      }),
       target("city/mobile", { fcp_s: 0.64, lcp_s: 0.9, tbt_ms: 45, cls: 0.0 }),
     ]),
   );
@@ -95,13 +100,17 @@ test("FCP and LCP are seconds and must not read as milliseconds", () => {
   // routing `fcp_s` through it renders 2.08 seconds as "2ms" — wrong by three
   // orders of magnitude and reading as an instant first paint.
   const clause = composeSpeedClause(
-    reportWith([target("home/desktop", { fcp_s: 2.08, lcp_s: 2.7, tbt_ms: 89, cls: 0.0 })]),
+    reportWith([
+      target("home/desktop", { fcp_s: 2.08, lcp_s: 2.7, tbt_ms: 89, cls: 0.0 }),
+    ]),
   );
   assert.ok(!/\b2ms\b/.test(clause), `2.08s must not render as 2ms: ${clause}`);
   assert.match(clause, /FCP 2\.1s/);
   // Sub-second readings are the same trap from the other side: 0.9s is 900ms.
   const sub = composeSpeedClause(
-    reportWith([target("city/mobile", { fcp_s: 0.64, lcp_s: 0.9, tbt_ms: 45, cls: 0 })]),
+    reportWith([
+      target("city/mobile", { fcp_s: 0.64, lcp_s: 0.9, tbt_ms: 45, cls: 0 }),
+    ]),
   );
   assert.match(sub, /FCP 0\.6s|FCP 640ms/);
   assert.ok(!/FCP 0\.6ms/.test(sub), `0.64s must not render as 0.6ms: ${sub}`);
@@ -111,7 +120,9 @@ test("a missing metric yields no clause at all, not a partial one", () => {
   // Three metrics and two is a claim about a different measurement.
   assert.equal(
     composeSpeedClause(
-      reportWith([target("home/mobile", { fcp_s: 1.99, lcp_s: 2.37, tbt_ms: 90 })]),
+      reportWith([
+        target("home/mobile", { fcp_s: 1.99, lcp_s: 2.37, tbt_ms: 90 }),
+      ]),
     ),
     null,
     "a missing cls must suppress the whole clause, not emit FCP and LCP alone",
@@ -135,7 +146,9 @@ test("a missing metric yields no clause at all, not a partial one", () => {
   // But when NOTHING measured, that is a hole, not a zero.
   assert.equal(
     composeSpeedClause(
-      reportWith([target("holed", { fcp_s: Number.NaN, lcp_s: 2, tbt_ms: 80, cls: 0 })]),
+      reportWith([
+        target("holed", { fcp_s: Number.NaN, lcp_s: 2, tbt_ms: 80, cls: 0 }),
+      ]),
     ),
     null,
   );
@@ -267,11 +280,20 @@ test("TBT over its ceiling is printed over, never rounded down or dropped", () =
   // raises the number.
   const worse = composeSpeedClause(
     reportWith([
-      target("heatmap/desktop", { fcp_s: 2.1, lcp_s: 4.1, tbt_ms: 124.4, cls: 0 }),
+      target("heatmap/desktop", {
+        fcp_s: 2.1,
+        lcp_s: 4.1,
+        tbt_ms: 124.4,
+        cls: 0,
+      }),
       target("home/mobile", { fcp_s: 1, lcp_s: 2, tbt_ms: 310, cls: 0 }),
     ]),
   );
-  assert.match(worse, /TBT 310\/100ms/, "the WORST target's reading is the one");
+  assert.match(
+    worse,
+    /TBT 310\/100ms/,
+    "the WORST target's reading is the one",
+  );
 });
 
 test("a missing TBT suppresses the whole clause, not just that field", () => {
@@ -280,9 +302,7 @@ test("a missing TBT suppresses the whole clause, not just that field", () => {
   // blocking time.
   assert.equal(
     composeSpeedClause(
-      reportWith([
-        target("home/mobile", { fcp_s: 1.99, lcp_s: 2.37, cls: 0 }),
-      ]),
+      reportWith([target("home/mobile", { fcp_s: 1.99, lcp_s: 2.37, cls: 0 })]),
     ),
     null,
     "a missing tbt_ms must suppress the whole clause",
