@@ -351,14 +351,20 @@ import {
   function ensureData() {
     if (gridData) return Promise.resolve(gridData);
     if (dataLoading) return dataLoading;
-    dataLoading = fetch("../assets/data/heatmap-grid.bin?v=" + encodeURIComponent(ASSET_V))
+    dataLoading = fetch(
+      "../assets/data/heatmap-grid.bin?v=" + encodeURIComponent(ASSET_V),
+    )
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to load heatmap data");
         return res.arrayBuffer();
       })
       .then(function (buffer) {
         var data = decodeGrid(buffer);
-        if (!Number.isInteger(data.count) || data.lat.length !== data.count || data.lon.length !== data.count) {
+        if (
+          !Number.isInteger(data.count) ||
+          data.lat.length !== data.count ||
+          data.lon.length !== data.count
+        ) {
           throw new Error("Heatmap grid is incomplete");
         }
         gridData = data;
@@ -375,13 +381,20 @@ import {
   function ensureNames() {
     if (namesData) return Promise.resolve(namesData);
     if (namesLoading) return namesLoading;
-    namesLoading = fetch("../assets/data/heatmap-names.json?v=" + encodeURIComponent(ASSET_V))
+    namesLoading = fetch(
+      "../assets/data/heatmap-names.json?v=" + encodeURIComponent(ASSET_V),
+    )
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to load heatmap point details");
         return res.json();
       })
       .then(function (data) {
-        if (!gridData || data.count !== gridData.count || data.names.length !== data.count || data.lq.length !== data.count) {
+        if (
+          !gridData ||
+          data.count !== gridData.count ||
+          data.names.length !== data.count ||
+          data.lq.length !== data.count
+        ) {
           throw new Error("Heatmap point details do not match the grid");
         }
         namesData = data;
@@ -398,14 +411,20 @@ import {
   function ensureYears() {
     if (yearsData) return Promise.resolve(yearsData);
     if (yearsLoading) return yearsLoading;
-    yearsLoading = fetch("../assets/data/heatmap-years.bin?v=" + encodeURIComponent(ASSET_V))
+    yearsLoading = fetch(
+      "../assets/data/heatmap-years.bin?v=" + encodeURIComponent(ASSET_V),
+    )
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to load heatmap year data");
         return res.arrayBuffer();
       })
       .then(function (buffer) {
         var data = decodeYears(buffer);
-        if (!gridData || data.count !== gridData.count || data.yrs.length !== data.count * YEAR_VALUES_PER_POINT) {
+        if (
+          !gridData ||
+          data.count !== gridData.count ||
+          data.yrs.length !== data.count * YEAR_VALUES_PER_POINT
+        ) {
           throw new Error("Heatmap year data does not match the grid");
         }
         yearsData = data;
@@ -812,6 +831,32 @@ import {
     return Promise.resolve();
   }
 
+  function applyLeafletStyles() {
+    var preload = document.getElementById("leaflet-css");
+    if (!preload) return Promise.resolve(false);
+    return new Promise(function (resolve) {
+      var link = preload.cloneNode();
+      link.rel = "stylesheet";
+      link.removeAttribute("as");
+      link.removeAttribute("id");
+      link.addEventListener(
+        "load",
+        function () {
+          resolve(true);
+        },
+        { once: true },
+      );
+      link.addEventListener(
+        "error",
+        function () {
+          resolve(false);
+        },
+        { once: true },
+      );
+      document.head.append(link);
+    });
+  }
+
   function init() {
     if (!window.L || typeof window.L.map !== "function") {
       var loading = document.getElementById("loading");
@@ -836,6 +881,7 @@ import {
       /* leave default loading state */
     }
 
+    var stylesReady = applyLeafletStyles();
     var boot = Promise.all([
       fetch("../assets/img/heatmap/manifest.json?v=20261022p").then(
         function (r) {
@@ -852,10 +898,11 @@ import {
     ]);
 
     boot
-      .then(function (parts) {
+      .then(async function (parts) {
         manifest = parts[0];
         rankings = parts[1];
 
+        await stylesReady;
         document.getElementById("loading").style.display = "none";
         document.getElementById("map").style.display = "block";
         document.getElementById("controls").style.display = "block";
@@ -884,10 +931,12 @@ import {
         map.on("click", function (e) {
           ensureData()
             .then(function () {
-              return Promise.all([ensureYears(), ensureNames()]).then(function () {
-                var pt = nearestPoint(e.latlng.lat, e.latlng.lng);
-                if (pt) showPopup(pt, e.latlng);
-              });
+              return Promise.all([ensureYears(), ensureNames()]).then(
+                function () {
+                  var pt = nearestPoint(e.latlng.lat, e.latlng.lng);
+                  if (pt) showPopup(pt, e.latlng);
+                },
+              );
             })
             .catch(function () {
               if (!hintShown) {
