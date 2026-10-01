@@ -53,7 +53,12 @@ const reportWith = (measured) => ({
 
 const target = (id, speed, perf = 90) => ({
   id,
-  scores: { performance: perf, accessibility: 100, "best-practices": 100, seo: 100 },
+  scores: {
+    performance: perf,
+    accessibility: 100,
+    "best-practices": 100,
+    seo: 100,
+  },
   speed,
 });
 
@@ -76,7 +81,10 @@ test("the speed clause reports the WORST target, and says so on the line", () =>
       "single page's reading",
   );
   // And it must be the max, not the first, the min, or an average.
-  assert.ok(clause.includes("2.1s"), "FCP must be home/desktop's 2.08s, not the min");
+  assert.ok(
+    clause.includes("2.1s"),
+    "FCP must be home/desktop's 2.08s, not the min",
+  );
   assert.ok(clause.includes("2.7s"), "LCP must be home/desktop's 2.7s");
   assert.ok(clause.includes("0.005"), "CLS must be the worst 0.005, not 0");
 });
@@ -221,7 +229,10 @@ test("MEASURED: the real 14-target line reaches the judge whole", () => {
   );
   // The word that made this cost 6 characters, asserted so a future edit
   // cannot drop it silently and leave a number that reads like a median.
-  assert.ok(speed.startsWith("worst "), "the 'worst' qualifier is not optional");
+  assert.ok(
+    speed.startsWith("worst "),
+    "the 'worst' qualifier is not optional",
+  );
 });
 
 test("the gate emits both clauses and never lets a half be trimmed", () => {
