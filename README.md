@@ -13,7 +13,7 @@ BigEnergyCo is permanently free and donation-supported. It sells no products or 
 | ------------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Public site (brand)**  | `freeoffgridcalculator.com` (Cloudflare Pages)                | Primary public domain (apex). Same allowlisted build, deployed to the `bigenergyco` Pages project per the runbook below (`node scripts/deploy-pages-local.mjs --check` + `npx wrangler pages deploy`). Served with `_headers`/`_redirects` for caching and legacy-domain consolidation. `bigenergyco.pages.dev` remains as dual-serve/rollback until Phase 4 301.                                      |
 | **Public site (legacy)** | `sovereign-communication.github.io/BigEnergyCo/`              | Legacy GitHub Pages URL — serves a fresh canonicalized mirror of the brand build (GitHub Pages ignores `_redirects`, so this is a 200 mirror, not a 301; canonical tags point at the brand domain). Deploys via the allowlist workflow (`.github/workflows/deploy.yml`). The old `treystu.github.io/BigEnergyCo/` URL also redirects here; both remain on the API's CORS allowlist for cached clients. |
-| **AI API**               | Cloudflare Worker (`bigenergyco-api.bigenergyco.workers.dev`) | Proxies Groq. CORS-locked to the Pages origins + localhost, rate-limited, payload-capped. Deploy with `deploy_worker.bat` (or `npx wrangler deploy` in `worker/`).                                                                                                                                                                                                                                     |
+| **AI API**               | Cloudflare Worker (`bigenergyco-api.bigenergyco.workers.dev`) | Proxies Groq. CORS-locked to the Pages origins + localhost, rate-limited, payload-capped. Deploy with `deploy_worker.bat`, or `cd worker && npx wrangler deploy --config wrangler.production.json`. The config is named explicitly: a bare `wrangler deploy` resolves to `worker/wrangler.json`, which is the **showcase** surface.                                                                    |
 | **Local/dev**            | Any static HTTP server                                        | The public site is a static Pages build; no local tunnel or alternate runtime is required.                                                                                                                                                                                                                                                                                                             |
 
 ## Deploy runbook — GitHub first, then Cloudflare
@@ -78,8 +78,10 @@ Cloudflare (`freeoffgridcalculator.com`, with `bigenergyco.pages.dev` dual-servi
    `github.io` URL publicly — canonicals stay on `freeoffgridcalculator.com`.
 
    > The API Worker is a separate concern: only redeploy it
-   > (`cd worker && npx wrangler deploy`) when `worker/index.js` actually
-   > changed. Front-end site changes never require a Worker deploy.
+   > (`cd worker && npx wrangler deploy --config wrangler.production.json`)
+   > when `worker/index.js` actually changed. Front-end site changes never
+   > require a Worker deploy. The config must be named: `worker/wrangler.json`
+   > is the showcase surface, and omitting `--config` deploys that instead.
 
 ## How it's put together
 
