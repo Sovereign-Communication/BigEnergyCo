@@ -58,9 +58,11 @@ export async function withMutationLock(fn, root = process.cwd()) {
  * timeout the caller proceeds — a stale lock then costs a flake, which is
  * strictly better than a suite that hangs.
  */
-export async function waitForMutationLockFree(
-  { timeoutMs = 30000, stepMs = 100, root = process.cwd() } = {},
-) {
+export async function waitForMutationLockFree({
+  timeoutMs = 30000,
+  stepMs = 100,
+  root = process.cwd(),
+} = {}) {
   const path = mutationLockPath(root);
   const start = Date.now();
   while (existsSync(path)) {

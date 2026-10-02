@@ -140,7 +140,8 @@ export async function runAdvisorFlow(ctx, actions) {
   // same "green for the wrong reason" defect this suite exists to remove.
   gate(
     "advisor: the answer is prose, not an API error",
-    gotReply === true && !/Chat API error|\bundefined\b|\bnull\b/i.test(rendered || ""),
+    gotReply === true &&
+      !/Chat API error|\bundefined\b|\bnull\b/i.test(rendered || ""),
     `text=${(rendered || "").slice(0, 80)}`,
   );
 
