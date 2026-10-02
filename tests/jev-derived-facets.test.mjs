@@ -236,14 +236,17 @@ test("EVIDENCE: a gate report declares which facet axes it speaks for", async ()
 });
 
 test("EVIDENCE: a derived facet line must fit the transport clip", () => {
-  // COMPLETE_FACET_CLIP is 300 characters (raised from 280 at P0.4 so the
-  // performance axis's joined clauses fit). A line longer than that is SILENTLY
-  // clipped on its way to the judge, which for this cluster is the worst
-  // possible failure: the honest part ("this score is not reproducible, do not
-  // read it as a fact") is exactly what gets cut off the end.
+  // COMPLETE_FACET_CLIP is 301 characters (280 at P0.4, then 300, then 301).
+  // The last one character bought a run's worth of evidence: the performance
+  // speed clause renders the worst TBT as `NNN/100ms`, so a three-digit worst
+  // TBT overflowed a 300 clip and the axis was dropped instead of shown. A line
+  // longer than the clip is SILENTLY clipped on its way to the judge, which for
+  // this cluster is the worst possible failure: the honest part ("this score is
+  // not reproducible, do not read it as a fact") is exactly what gets cut off
+  // the end.
   assert.equal(
     COMPLETE_FACET_CLIP,
-    300,
+    301,
     "the per-axis clip this test budgets against; if it moves, re-measure",
   );
   const src = readFileSync("scripts/check-lighthouse.mjs", "utf8");
@@ -624,7 +627,9 @@ test("EVIDENCE: a report with an over-long line is a named problem, not a trim",
   );
   assert.match(
     stderr,
-    /facet_line is \d+ chars, over the 300-char per-axis clip/,
+    new RegExp(
+      `facet_line is \\d+ chars, over the ${COMPLETE_FACET_CLIP}-char per-axis clip`,
+    ),
     `the over-long line must be named: ${stderr}`,
   );
   assert.doesNotMatch(

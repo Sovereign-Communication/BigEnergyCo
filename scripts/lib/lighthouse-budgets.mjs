@@ -439,7 +439,7 @@ export const LIGHTHOUSE_FLOORS = {
  * product and only the second would libel it.
  *
  * It is FIRST in the line because it is the part that was missing, and a
- * 300-char clip is finite: the least load-bearing sentence must not be the one
+ * 301-char clip is finite: the least load-bearing sentence must not be the one
  * that gets cut.
  *
  * WHY THE BILL-CUT SLIDER'S NUMBERS AND NOT THE PAIR'S. Both sliders are
@@ -542,13 +542,26 @@ export const PERF_RATCHET_CLAUSE_MAX = 250;
 // own: the two halves are joined into one facet line that must reach the judge
 // WHOLE, so `ratchet + 1 + speed <= COMPLETE_FACET_CLIP` is a constraint on
 // this number, not a preference. It was 40 with three metrics; the fourth
-// (TBT, with its ceiling) is what the difference buys.
+// (TBT, with its ceiling) is what the difference buys, and the TBT rendering is
+// what sets the width now.
 //
-// A run whose worst readings need more than this does NOT get a trimmed
-// clause: it gets an over-budget clause, which the gate reports as a named
-// failure. That is the intended reading of a bound - evidence that does not
-// fit says so, rather than being shortened until it fits.
-export const PERF_SPEED_CLAUSE_MAX = 49;
+// RAISED 49 -> 50, WITH COMPLETE_FACET_CLIP 300 -> 301, because the bound was
+// sized for a TWO-DIGIT worst TBT and the first run with a three-digit one could
+// not be reported at all. `worst FCP 2.2s, LCP 2.9s, TBT 104/100ms, CLS 0.005`
+// is 50 characters: one over this cap, and although the join itself came to
+// exactly the 300 clip, the per-half cap refused first, the performance axis
+// became a hole, and the run produced no verdict at all. So the rule as written
+// deleted the evidence precisely when the run was WORSE and the number most
+// worth showing - TBT over the Q-03 ceiling - is exactly the one that no longer
+// fit. One character of prose budget is what separates that from a usable
+// record.
+//
+// WHAT THIS DOES NOT DO. No speed ceiling moved, no ratchet moved, no pass or
+// fail on speed changed, and no score is computed from this number: it is a
+// character budget for one sentence, not a bound on quality. A run whose worst
+// readings need MORE than this still gets an over-budget clause and a named
+// failure rather than a trimmed one.
+export const PERF_SPEED_CLAUSE_MAX = 50;
 
 /**
  * The speed half: this run's WORST measured FCP, LCP, TBT and CLS across every

@@ -480,7 +480,7 @@ const MAX_NAMES = 1;
 const MAX_METRIC_NAME = 18;
 
 /**
- * The most characters the SIZE clause may take. The rest of the 300-char clip
+ * The most characters the SIZE clause may take. The rest of the 301-char clip
  * belongs to the clarity clause the builder appends
  * (`composeQualityContractClause`), and that budget is asserted from both ends:
  * this constant plus the contract clause's own bound must fit the clip, which

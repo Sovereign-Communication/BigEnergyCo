@@ -204,6 +204,44 @@ test("the two declared bounds and the transport clip are accounted for", () => {
   );
 });
 
+test("MEASURED: a THREE-DIGIT worst TBT still reaches the judge whole", () => {
+  // This is the case that broke, verbatim from run 36940063636 at 10f9710 —
+  // the first run whose worst blocking time went OVER the Q-03 ceiling, which
+  // made the clause one character wider and cost the whole performance axis.
+  // It is pinned because the failure mode is backwards: the worse the run, the
+  // more the number is worth showing, and a bound sized for two digits deleted
+  // it instead. The cap moved 49 -> 50 and COMPLETE_FACET_CLIP 300 -> 301 for
+  // this, so that `104/100ms` can be stated rather than trimmed away.
+  const ratchet =
+    "WARM, 1 unthrottled Chrome: cold 4.3s, repeat 51ms, drag 7ms, confirm 0ms, 0 warm requests. Lighthouse, 14 targets, median of 3. ratcheted accessibility 100, best-practices 96-100, seo 63-100. perf NOT ratcheted, 72-100 this run, 40-76 over 21 runs.";
+  const speed = "worst FCP 2.2s, LCP 2.9s, TBT 104/100ms, CLS 0.005";
+  const joined = `${ratchet} ${speed}`;
+
+  assert.ok(
+    ratchet.length <= PERF_RATCHET_CLAUSE_MAX,
+    `ratchet half is ${ratchet.length}, over its ${PERF_RATCHET_CLAUSE_MAX}`,
+  );
+  assert.ok(
+    speed.length <= PERF_SPEED_CLAUSE_MAX,
+    `speed half is ${speed.length}, over its ${PERF_SPEED_CLAUSE_MAX}`,
+  );
+  assert.ok(
+    joined.length <= COMPLETE_FACET_CLIP,
+    `the joined line is ${joined.length} chars against the ` +
+      `${COMPLETE_FACET_CLIP}-char clip`,
+  );
+  // And the two budgets still cannot jointly overrun: the speed cap is exactly
+  // the room the clip leaves once the ratchet half has its own.
+  assert.equal(
+    PERF_RATCHET_CLAUSE_MAX + 1 + PERF_SPEED_CLAUSE_MAX,
+    COMPLETE_FACET_CLIP,
+    "the halves' worst case must still sum to the clip, or a run can pass " +
+      "both per-half bounds and still be refused at the join",
+  );
+  // The number stays the run's own, and stays visibly over its ceiling.
+  assert.match(speed, /TBT 104\/100ms/);
+});
+
 test("MEASURED: the real 14-target line reaches the judge whole", () => {
   // These are the numbers run 36892624209 actually produced, verbatim: the
   // 14-target ratchet clause and the speed clause derived from the same

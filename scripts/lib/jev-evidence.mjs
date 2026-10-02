@@ -153,7 +153,7 @@ export const QUALITY_CONTRACT_AXIS = "quality";
 
 /**
  * The most characters the contract clause may take. The other half of the
- * 300-char clip belongs to the size clause
+ * 301-char clip belongs to the size clause
  * (QUALITY_SIZE_CLAUSE_MAX in scripts/lib/byte-budgets.mjs), and the join is
  * asserted against the clip from both ends.
  */
