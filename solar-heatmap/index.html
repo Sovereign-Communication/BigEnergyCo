@@ -116,26 +116,10 @@
         ]
       }
     </script>
-    <!-- There is deliberately no <link> for Leaflet's CSS here.
-         As a stylesheet it is render-blocking, and it sat in front of the intro
-         paragraph below — the largest text on this page, so the LCP element —
-         costing that paragraph a whole extra first-paint round trip to a third
-         party. Measured on the staged build: heatmap/desktop LCP 4.51-4.56s
-         against FCP 1.91-2.23s, and with the file off the render-blocking path
-         1.21-2.21s against 1.06-1.83s, on a page whose init() never ran at all.
-         So this was never about the map or its data.
-
-         A stylesheet link is only non-blocking if something flips its media
-         afterwards, which normally means an inline onload handler — and this
-         page's CSP allows no 'unsafe-inline' in script-src. So the file is
-         fetched as a preload and promoted by
-         assets/js/sizing/leaflet-styles.js, which owns its URL, SRI hash and
-         CORS mode and reads the first two from
-         assets/js/sizing/map-provider.js. One declaration, in one place.
-
-         Nothing can want it sooner: #map is display:none in this markup, and
-         heatmap.js is a module, so it cannot run until the parser-blocking
-         leaflet.js at the foot of this file has executed. -->
+    <!-- No <link> for Leaflet's CSS here on purpose: as a stylesheet it is
+         render-blocking and it sat in front of the intro paragraph below, the
+         LCP element. assets/js/sizing/leaflet-styles.js fetches it as a preload
+         and promotes it, reading the URL and SRI from map-provider.js. -->
     <style>
       :root {
         color-scheme: dark;
