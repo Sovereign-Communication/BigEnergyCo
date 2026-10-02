@@ -1714,7 +1714,7 @@ export const LOCALES = {
       "⚠️ تعذّر تحميل محرك التقدير. حدّث الصفحة (Ctrl+F5) وحاول مرة أخرى.",
     statusSuccess:
       "✅ {years} سنوات من البيانات الساعة ({dataYears}) · {yield} كيلوواط ساعة/سنة لكل كيلوواط من اللوحة.{offline}",
-    offlineNote: " · 🌐 وضع عدم الاتصال التقليدي",
+    offlineNote: " · 🌐 وضع السنة النموذجية دون اتصال",
     offlineCity: "باستخدام الملف النموذجي لـ {city}",
     assumptionsPrefix:
       "البيانات: {source}، بالساعة {dataYears}. ديارات مطبق: اتساخ {soil}%، أسلاك {wire}%، عدم تطابق {mismatch}%، MPPT {mppt}%. نموذج درجة الحرارة: NOCT {noct}°C، معامل حراري {gamma}%/°C. كفاءة العاكس {eta}%. الشحن ممنوع تحت حد كيمياء البرودة (LFP 0°C). أساس الحمل: {basis}. التكاليف من {basisLabel} ({source}) — الطرف المنخفض هو المكونات قبل الشحن/الرسوم/BMS، الطرف العالي هو البيع بالتجزئة مع BMS والصندوق. ",
@@ -1770,7 +1770,7 @@ export const LOCALES = {
     simpleSeeDetails: "عرض كل التفاصيل",
     simpleDownloadBom: "تنزيل قائمة القطع (CSV)",
     simpleAskAdvisor: "اسأل مستشار الذكاء الاصطناعي (بكلمات بسيطة)",
-    sanityOk: "تم التحقق بشكل مستقل ✓ — plausible من الناحية الفيزيائية",
+    sanityOk: "تم التحقق بشكل مستقل ✓ — معقول فيزيائيًا",
     sanityFlag:
       "⚠ تشير مراجعة ذكاء اصطناعي مستقلة إلى أن هذه النتيجة غير معقولة فيزيائيًا —",
     sanityAskAdvisor: "اسأل المستشار لماذا",
@@ -1799,7 +1799,7 @@ export const LOCALES = {
     advisorBusy:
       " محرك الذكاء الاصطناعي المجاني مزدحم الآن (HTTP {status} — حصة مشتركة).\n\nانتظر نحو دقيقة ثم أرسل الطلب مجدداً.",
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
-    advisorDegradedLabel: "دون اتصال · ليس الذكاء الطبيعي مباشرة",
+    advisorDegradedLabel: "دون اتصال · ليس الذكاء الحيّ مباشرة",
     advisorDegradedLine: "لا أستطيع الإجابة الآن — {why}.",
     advisorDegradedWhyUnavailable: "الخدمة التي يجيب لم يستجب",
     advisorDegradedWhyNoKey: "لا مفتاح نموذج، فالمشير غير متصل عمدًا",

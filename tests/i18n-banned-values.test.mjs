@@ -9,6 +9,13 @@
 // printed "6 locale(s) rendered, no English left in the body" — over text a
 // native reader rejects.
 //
+// The label then failed a SECOND time, and that failure is why this file also
+// pins meaning rather than just badness. The first repair replaced a non-word
+// with "الطبيعي" — grammatical, plausible-looking Arabic that says "not the
+// NATURAL AI", where all five siblings say "not the LIVE AI". It passed the
+// banned-value rule, because it was not the string the rule named. So the
+// original value is banned too, and this file asserts the LIVE wording directly.
+//
 // So the gate now bans known-bad VALUES (rule 8 in scripts/check-i18n.mjs) and
 // this file proves that rule can actually fail, which a gate nobody has seen
 // red cannot.
@@ -25,17 +32,25 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const LOCALES_PATH = join(ROOT, "assets", "js", "shared", "locales.js");
 const CHECK = join(ROOT, "scripts", "check-i18n.mjs");
 
-test("BANNED: the two known-bad Arabic values are gone", () => {
+test("BANNED: the known-bad Arabic values are gone", () => {
   // Asserted directly, so this test fails even if the gate is deleted.
   assert.doesNotMatch(
     LOCALES.ar.advisorDegradedLabel,
     /الطناعيا/,
     "advisorDegradedLabel still contains a non-word",
   );
+  // Not just "some Arabic" — the MEANING has to match the five siblings, all of
+  // which say "not the live AI". "not the natural AI" is valid Arabic that
+  // tells the visitor something else entirely.
   assert.match(
     LOCALES.ar.advisorDegradedLabel,
+    /الحيّ/,
+    "advisorDegradedLabel must say 'not the LIVE AI', as en/es/pt/fr/de do",
+  );
+  assert.doesNotMatch(
+    LOCALES.ar.advisorDegradedLabel,
     /الطبيعي/,
-    "advisorDegradedLabel should now read 'the natural one'",
+    "advisorDegradedLabel must not say 'the natural one'",
   );
   assert.doesNotMatch(
     LOCALES.ar.advisorDegradedWhyNoKey,
@@ -47,9 +62,28 @@ test("BANNED: the two known-bad Arabic values are gone", () => {
     /عمدًا/,
     "advisorDegradedWhyNoKey should now say 'by design'",
   );
+  // An untranslated English fragment inside an Arabic sentence: every sibling
+  // translates "plausible", so a Latin word here is a leak, not a loanword.
+  assert.doesNotMatch(
+    LOCALES.ar.sanityOk,
+    /plausible/,
+    "ar.sanityOk still carries the English word 'plausible'",
+  );
+  // "التقليدي" is "traditional". The siblings say typical-YEAR, which is what
+  // the offline badge actually asserts about the numbers.
+  assert.doesNotMatch(
+    LOCALES.ar.offlineNote,
+    /التقليدي/,
+    "ar.offlineNote says 'traditional', not 'typical-year'",
+  );
+  assert.match(
+    LOCALES.ar.offlineNote,
+    /النموذجية/,
+    "ar.offlineNote should say 'typical year', the same word offlineLabel uses",
+  );
 });
 
-test("BANNED: reintroducing either value makes check-i18n fail", () => {
+test("BANNED: reintroducing any known-bad value makes the gate fail", () => {
   // Run the gate against a THROWAWAY COPY of the repo, never the real working
   // tree: this test deliberately writes a broken dictionary, and a test that
   // mutates the checkout it runs in is the race that cost three CI cycles on
@@ -64,6 +98,9 @@ test("BANNED: reintroducing either value makes check-i18n fail", () => {
     const BANNED = ${JSON.stringify([
       "دون اتصال · ليس الذكاء الطناعيا مباشرة",
       "لا مفتاح مدية، فالمشير منطقً عند الاتصال",
+      "دون اتصال · ليس الذكاء الطبيعي مباشرة",
+      "تم التحقق بشكل مستقل ✓ — plausible من الناحية الفيزيائية",
+      " · 🌐 وضع عدم الاتصال التقليدي",
     ])};
     let hits = 0;
     for (const lang of langs)
@@ -92,13 +129,22 @@ test("BANNED: reintroducing either value makes check-i18n fail", () => {
   // Now put each bad value back, one at a time, and require a red gate.
   const MUTATIONS = [
     [
-      "دون اتصال · ليس الذكاء الطبيعي مباشرة",
+      "دون اتصال · ليس الذكاء الحيّ مباشرة",
       "دون اتصال · ليس الذكاء الطناعيا مباشرة",
     ],
     [
       "لا مفتاح نموذج، فالمشير غير متصل عمدًا",
       "لا مفتاح مدية، فالمشير منطقً عند الاتصال",
     ],
+    [
+      "دون اتصال · ليس الذكاء الحيّ مباشرة",
+      "دون اتصال · ليس الذكاء الطبيعي مباشرة",
+    ],
+    [
+      "تم التحقق بشكل مستقل ✓ — معقول فيزيائيًا",
+      "تم التحقق بشكل مستقل ✓ — plausible من الناحية الفيزيائية",
+    ],
+    [" · 🌐 وضع السنة النموذجية دون اتصال", " · 🌐 وضع عدم الاتصال التقليدي"],
   ];
   const good = readFileSync(LOCALES_PATH, "utf8");
   for (const [ok, bad] of MUTATIONS) {

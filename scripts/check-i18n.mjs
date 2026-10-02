@@ -228,11 +228,39 @@ else
 const BANNED_VALUES = [
   {
     value: "دون اتصال · ليس الذكاء الطناعيا مباشرة",
-    why: "ar.advisorDegradedLabel shipped a non-word (الطناعيا); it now reads 'not the natural one', matching the other locales' 'not the live AI'",
+    why: "ar.advisorDegradedLabel shipped a non-word (الطناعيا)",
   },
   {
     value: "لا مفتاح مدية، فالمشير منطقً عند الاتصال",
     why: "ar.advisorDegradedWhyNoKey ended on a dangling tanwin, leaving the clause unfinished; it now says 'offline by design', which is what the English says",
+  },
+  {
+    // A mistranslation, not a garbled string: this one is well-formed Arabic
+    // that says "not the NATURAL one". All five siblings say "not the LIVE AI"
+    // (en directo / em directo / en direct / Live-KI), which is what tells a
+    // visitor this reply is canned rather than generated. It shipped because
+    // the first fix for the non-word above chose a replacement that was valid
+    // Arabic but meant something else — a reminder that "renders as Arabic" and
+    // "means what the siblings mean" are different properties, and only the
+    // second one is what a visitor needs.
+    value: "دون اتصال · ليس الذكاء الطبيعي مباشرة",
+    why: "ar.advisorDegradedLabel said 'not the natural AI'; it must say 'not the LIVE AI' (الحيّ), matching en/es/pt/fr/de",
+  },
+  {
+    // An untranslated fragment: the English word "plausible" was left sitting in
+    // the middle of an Arabic sentence. en/es/pt/fr/de all translate it. A
+    // visitor reading Arabic met a Latin word mid-clause.
+    value: "تم التحقق بشكل مستقل ✓ — plausible من الناحية الفيزيائية",
+    why: "ar.sanityOk carried the English word 'plausible' untranslated; the Arabic is now 'معقول فيزيائيًا', the same word sanityFlag already uses for this pair",
+  },
+  {
+    // A wrong CLAIM, which is worse than a wrong word. "التقليدي" is
+    // "traditional"; all five siblings say "typical-YEAR" (typical / típico /
+    // típico / typique / typisches Offline-Jahr). The badge tells a visitor the
+    // tool substituted a typical year of weather, and "traditional" misstates
+    // what the numbers actually represent.
+    value: " · 🌐 وضع عدم الاتصال التقليدي",
+    why: "ar.offlineNote said 'the traditional offline mode'; it must say 'typical-year', which is what all five siblings mean and what the badge asserts",
   },
 ];
 const bannedHits = [];
