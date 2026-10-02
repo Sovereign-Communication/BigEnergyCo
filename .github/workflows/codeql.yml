@@ -39,6 +39,10 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: javascript
+          # One paths-scoped exclusion, explained in the file. Declaring a query
+          # suite here instead would pin this repo to today's suite and silently
+          # drop every rule GitHub adds later, so the config carries only this.
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4

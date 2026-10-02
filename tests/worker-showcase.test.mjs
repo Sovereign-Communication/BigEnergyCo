@@ -201,13 +201,64 @@ test("share ids are 12 lowercase-alphanumeric chars", () => {
   assert.ok(!isValidShareId(null));
 });
 
+test("share ids are uniform, and rejected bytes are retaken rather than folded", () => {
+  // The bug this pins: mapping a raw byte with `b % 36` is biased, because
+  // 256 % 36 leaves residues 0-3 reachable by 8 byte values and the other 32
+  // by only 7. Measured, that made '0'-'3' ~14% more likely than every other
+  // symbol — and those are the first four an attacker enumerating a share id
+  // would reach for. Rejection sampling removes it.
+  //
+  // Asserted EXACTLY, not statistically: a seam that walks the byte range
+  // covers all 252 usable values once per cycle, and 252 / 36 == 7, so a
+  // correct implementation puts every symbol in the alphabet exactly 7 times.
+  // A folded implementation would put '0'-'3' in 8 times. No randomness, no
+  // flake, and the assertion states the property rather than a proxy for it.
+  const ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
+  let next = 0;
+  const walkUsable = (b) => {
+    b[0] = next % 252; // every usable byte value, once per 252 draws
+    next++;
+  };
+  // 252 usable bytes / 36 symbols = exactly 7 each, and 252 / 12 chars per id
+  // = exactly 21 ids. Feed one complete cycle and the output must contain
+  // every symbol exactly seven times. Nothing random, nothing statistical.
+  const counts = new Map();
+  for (let i = 0; i < 21; i++) {
+    for (const ch of makeShareId(walkUsable)) {
+      counts.set(ch, (counts.get(ch) || 0) + 1);
+    }
+  }
+  assert.equal(next, 252, "the seam must have been drawn exactly 252 times");
+  assert.equal(counts.size, 36, "every symbol must be reachable");
+  for (const ch of ALPHABET) {
+    assert.equal(
+      counts.get(ch),
+      7,
+      `symbol '${ch}' must appear exactly 7 times per 252-byte cycle`,
+    );
+  }
+
+  // And the rejection path itself: a source that hands back only unusable
+  // bytes first must still produce a valid id, by drawing again — which is
+  // what makes the uniformity above true rather than incidental.
+  let draws = 0;
+  const lateStart = (b) => {
+    draws++;
+    b[0] = draws <= 3 ? 255 : (draws * 7) % 252;
+  };
+  assert.ok(isValidShareId(makeShareId(lateStart)));
+  assert.equal(
+    draws,
+    15,
+    "3 unusable bytes must be retaken before 12 usable ones are accepted",
+  );
+});
+
 test("share payload round-trips through KV with a 7-day TTL", async () => {
   const kv = memoryKv();
-  const stored = await storeSharePayload(
-    kv,
-    validHash(),
-    new Array(12).fill(7),
-  );
+  const stored = await storeSharePayload(kv, validHash(), (b) => {
+    b[0] = 7; // deterministic id for this round trip
+  });
   assert.equal(stored.ok, true);
   assert.ok(isValidShareId(stored.id));
   const [[key, entry]] = [...kv.store.entries()];

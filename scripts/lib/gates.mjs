@@ -520,7 +520,7 @@ const PROSE_HOOK_ATTR = /\sdata-i18n(?:-placeholder|-aria-label)?\s*=/i;
 // them inflated the ceiling by 6 and left the ceiling hostage to any future
 // comment that happened to contain a long <p> example.
 const BLIND_REGIONS =
-  /<!--[\s\S]*?-->|<script\b[\s\S]*?<\/script\s*>|<style\b[\s\S]*?<\/style\s*>/gi;
+  /<!--[\s\S]*?-->|<script\b[\s\S]*?<\/script(?:\s[^>]*)?\s*>|<style\b[\s\S]*?<\/style(?:\s[^>]*)?\s*>/gi;
 const PROSE_TAGS = "p|li|blockquote|figcaption|dd|label";
 // Containers whose close tag also ends a prose block. `</p>` is optional in
 // practice (browsers close it) and `</li>` is optional in VALID HTML5 — the

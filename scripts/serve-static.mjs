@@ -129,12 +129,20 @@ export async function serveStatic({
       }).catch((e) => {
         // A bridge that throws must not leave the request hanging, and must
         // not look like a passing run.
+        //
+        // The cause goes to stderr, not into the response body. Reflecting an
+        // internal error message to the client is an information disclosure
+        // (js/stack-trace-exposure), and the diagnostic is worth exactly as
+        // much on the terminal that is running the gate as it is in the reply —
+        // while the reply travels to whatever asked.
+        console.error(
+          `serve-static: worker bridge failed: ${String((e && e.stack) || e).slice(0, 800)}`,
+        );
         if (res.headersSent) return res.end();
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(
           JSON.stringify({
             error: "worker bridge failed",
-            cause: String((e && e.message) || e).slice(0, 300),
           }),
         );
       });
