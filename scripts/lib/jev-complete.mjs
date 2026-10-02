@@ -796,19 +796,16 @@ function clip(text, max) {
 // the exact failure this file exists to prevent, already happening on axes out
 // of P0.4 scope. Those three longest are still over 300 and remain a separate
 // finding, not something this raise pretends to have fixed.
-// RAISED 300 -> 301, WITH PERF_SPEED_CLAUSE_MAX 49 -> 50, and for one reason:
-// the performance speed clause renders the worst TBT as `NNN/100ms`, so a
-// three-digit worst TBT makes the clause 50 characters, and a 49-character
-// cap meant the first run whose worst blocking time went OVER the plan's own
-// Q-03 ceiling lost the whole performance axis instead of showing it. The join
-// came to exactly 300 that run, so the pair would have fitted whole; the
-// per-half cap refused first, the axis was deleted rather than trimmed, and no
+// RAISED 300 -> 301, WITH PERF_SPEED_CLAUSE_MAX 49 -> 50. The speed clause
+// renders the worst TBT as `NNN/100ms`, so the first run whose worst blocking
+// time went OVER the plan's Q-03 ceiling made it one character too long: the
+// per-half cap refused, the axis was deleted rather than trimmed, and no
 // verdict was produced at all. One character is the whole difference between
-// reporting `TBT 104/100ms` and reporting nothing. The 250/1/50 invariant still
-// sums exactly to this clip, so the two halves still cannot jointly overrun.
+// reporting `TBT 104/100ms` and reporting nothing. The halves still sum to this
+// clip exactly, so they cannot jointly overrun.
 //
-// This is a character budget for one sentence reaching the judge. It is not a
-// quality bound: no ceiling, ratchet or score is derived from it.
+// This is a character budget for one sentence reaching the judge, not a quality
+// bound: no ceiling, ratchet or score is derived from it.
 export const COMPLETE_FACET_CLIP = 301; // per-axis proof-line clip
 export const COMPLETE_STATE_PER_AXIS_CHARS = 320; // 300 + "axis: " + newline
 // The FIXED part of the record: the header, gate, tree and dirty lines, the

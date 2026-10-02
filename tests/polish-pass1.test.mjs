@@ -16,7 +16,6 @@ import {
 import {
   LEAFLET_SCRIPT_SRI,
   LEAFLET_STYLE_SRI,
-  LEAFLET_STYLE_URL,
   createLeafletProvider,
 } from "../assets/js/sizing/map-provider.js";
 import {
@@ -142,29 +141,15 @@ test("lookupCityOnline returns null instead of hanging forever", async () => {
 
 test("the heatmap's static Leaflet script pin matches the dynamic one", () => {
   // The SCRIPT pin has to stay in the markup: a parser-blocking <script> has to
-  // be found during the preload scan, so it cannot be injected by a module.
+  // be found during the preload scan, so it cannot be injected by a module. The
+  // stylesheet pin has no such constraint — it is fetched as a preload by
+  // assets/js/sizing/leaflet-styles.js — so the markup declares no stylesheet
+  // pin at all, and tests/heatmap-first-paint.test.mjs asserts that both pins
+  // are declared exactly once across the repo.
   const heatmap = read("solar-heatmap/index.html");
   assert.ok(
     heatmap.includes(LEAFLET_SCRIPT_SRI),
     "script SRI identical to heatmap pin",
-  );
-});
-
-// The STYLE pin used to be asserted identical to a second hand-written copy in
-// solar-heatmap/index.html. That is no longer a thing to keep in sync: the
-// stylesheet is fetched as a preload by assets/js/sizing/leaflet-styles.js,
-// which reads its URL and hash from this module, so the markup holds no
-// stylesheet pin at all and there is nothing to drift. The assertion moved
-// rather than being dropped — same pin, still covered, now proven single.
-test("the Leaflet stylesheet pin is declared once, not restated in the markup", () => {
-  const heatmap = read("solar-heatmap/index.html");
-  assert.ok(
-    !heatmap.includes(LEAFLET_STYLE_SRI),
-    "the markup declares no stylesheet pin; the module owns it",
-  );
-  assert.ok(
-    !heatmap.includes(LEAFLET_STYLE_URL),
-    "the markup declares no stylesheet URL either",
   );
 });
 

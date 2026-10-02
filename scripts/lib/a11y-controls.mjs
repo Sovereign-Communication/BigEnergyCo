@@ -45,10 +45,8 @@ export const A11Y_FACET_AXES = ["accessibility"];
  * axe matrix's clause joins it (the builder's second two-instrument join).
  * The green line composes to 239; 240 keeps a stop count going to three
  * digits from reding the join, and the pair is asserted against the per-axis
- * clip from both ends: 240 + 1 + A11Y_MATRIX_CLAUSE_MAX (39) = 280, inside the
- * 301-char clip (raised from 280 at P0.4, so the performance axis's two clauses
- * fit, then 300 -> 301 so a three-digit worst TBT fits too; this pair already
- * summed to exactly the old bound and now has 21 spare).
+ * clip from both ends: 240 + 1 + A11Y_MATRIX_CLAUSE_MAX (39) = 280, inside
+ * COMPLETE_FACET_CLIP (which has spare room at 301).
  * A half over its own bound is a NAMED problem, never a trim — the sentence a
  * trim would eat is this line's limit sentence.
  */

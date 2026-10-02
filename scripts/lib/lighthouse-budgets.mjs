@@ -541,26 +541,16 @@ export const PERF_RATCHET_CLAUSE_MAX = 250;
 // The room the axis clip leaves the speed half once the ratchet half has its
 // own: the two halves are joined into one facet line that must reach the judge
 // WHOLE, so `ratchet + 1 + speed <= COMPLETE_FACET_CLIP` is a constraint on
-// this number, not a preference. It was 40 with three metrics; the fourth
-// (TBT, with its ceiling) is what the difference buys, and the TBT rendering is
-// what sets the width now.
+// this number, not a preference.
 //
-// RAISED 49 -> 50, WITH COMPLETE_FACET_CLIP 300 -> 301, because the bound was
-// sized for a TWO-DIGIT worst TBT and the first run with a three-digit one could
-// not be reported at all. `worst FCP 2.2s, LCP 2.9s, TBT 104/100ms, CLS 0.005`
-// is 50 characters: one over this cap, and although the join itself came to
-// exactly the 300 clip, the per-half cap refused first, the performance axis
-// became a hole, and the run produced no verdict at all. So the rule as written
-// deleted the evidence precisely when the run was WORSE and the number most
-// worth showing - TBT over the Q-03 ceiling - is exactly the one that no longer
-// fit. One character of prose budget is what separates that from a usable
-// record.
+// It was 40 with three metrics, and the TBT rendering (`104/100ms`) is what sets
+// the width now — so it was RAISED 49 -> 50 with COMPLETE_FACET_CLIP 300 -> 301
+// when the first three-digit worst TBT arrived and the rule deleted the
+// performance axis instead of showing the number. See COMPLETE_FACET_CLIP.
 //
-// WHAT THIS DOES NOT DO. No speed ceiling moved, no ratchet moved, no pass or
-// fail on speed changed, and no score is computed from this number: it is a
-// character budget for one sentence, not a bound on quality. A run whose worst
-// readings need MORE than this still gets an over-budget clause and a named
-// failure rather than a trimmed one.
+// A run needing more than this still gets an over-budget clause and a named
+// failure rather than a trimmed one. No speed ceiling, ratchet or score derives
+// from it: it is a character budget for one sentence.
 export const PERF_SPEED_CLAUSE_MAX = 50;
 
 /**
