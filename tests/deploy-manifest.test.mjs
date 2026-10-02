@@ -21,6 +21,7 @@ import {
   deployList,
   trackedFiles,
 } from "../scripts/lib/deploy-manifest.mjs";
+import { withMutationLock } from "../scripts/lib/mutation-lock.mjs";
 
 // Runs the CLI the gates actually shell out to, and parses it the same way
 // scripts/lib/gates.mjs does.
@@ -169,28 +170,37 @@ test("MUTATION TOOTH: an untracked file inside a nested dir cannot enter either"
 test("MUTATION TOOTH: a deleted-but-tracked file fails loudly, not silently", () => {
   // The index still names the file, so the contract keeps it — but the copy
   // step would ENOENT. That must be a hard error, never a smaller site.
+  //
+  // Held under the cross-process mutation lock. This tooth deletes a file at the
+  // repo root while `tests/ci-resilience.test.mjs` concurrently spawns
+  // `scripts/verify-staging.mjs`, which reads every allowlisted file. Without
+  // the lock, node --test's parallel file execution let the verifier observe
+  // this deletion and report `parity robots.txt — unreadable: local read
+  // failed: ENOENT`, failing a budget-verdict test for an unrelated reason.
   const victim = "robots.txt";
   const backup = execSync(`git cat-file blob HEAD:${victim}`, {
     cwd: ROOT,
     encoding: "utf8",
   });
-  rmSync(join(ROOT, victim), { force: true });
-  try {
-    assert.ok(
-      deployList().includes(victim),
-      "a working-tree deletion must not shrink the manifest (index is the truth)",
-    );
-    assert.throws(
-      () =>
-        execSync("test -f " + victim, {
-          cwd: ROOT,
-          shell: true,
-        }),
-      "the file must really be gone from the working tree during this test",
-    );
-  } finally {
-    writeFileSync(join(ROOT, victim), backup);
-  }
+  return withMutationLock(async () => {
+    rmSync(join(ROOT, victim), { force: true });
+    try {
+      assert.ok(
+        deployList().includes(victim),
+        "a working-tree deletion must not shrink the manifest (index is the truth)",
+      );
+      assert.throws(
+        () =>
+          execSync("test -f " + victim, {
+            cwd: ROOT,
+            shell: true,
+          }),
+        "the file must really be gone from the working tree during this test",
+      );
+    } finally {
+      writeFileSync(join(ROOT, victim), backup);
+    }
+  }, ROOT);
 });
 
 test("CLI PARITY: --list output equals deployList() exactly", () => {

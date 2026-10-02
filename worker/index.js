@@ -1,17 +1,38 @@
 // ============================================================
 // BigEnergyCo API — Cloudflare Worker
-// Handles: POST /api/chat  (Groq AI advisor)
+// Handles: POST /api/chat  (Groq AI advisor, Turnstile-guarded)
 //          GET  /api/health
+//          POST /api/jev   (Jev sanity-check)
+//          POST /api/share (KV edge cache for share-link payloads)
+//          GET  /api/share?id= (read a cached share payload)
+//          POST /api/evidence (R2 upload for quality-evidence artifacts)
+//          POST /api/events (D1 anonymized usage-event ledger)
 //
 // Security posture:
 //  - CORS locked to an explicit origin allowlist (no wildcards).
 //  - In-isolate fixed-window rate limiting (best-effort first layer;
 //    pair with a Cloudflare WAF rate-limiting rule for enforcement
-//    that survives isolate eviction).
+//    that survives isolate eviction — exact rule in
+//    docs/cloudflare-showcase.md).
 //  - Strict payload caps before any paid API call.
+//  - Showcase bindings (KV/R2/D1/Turnstile) fail with a provisioning
+//    checklist, never a bare TypeError, when unprovisioned.
 // ============================================================
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+
+// How long we wait out ONE upstream 429 before giving up on it. Exported (as a
+// live binding) and overridable because the test that pins the degraded-reply
+// path was taking 15 seconds of real wall-clock to get there - a suite this
+// size cannot afford one slow test per run, and a sleep is not what that test
+// measures. The default is asserted directly, so compressing it in tests
+// cannot quietly shorten the production wait.
+export let GROQ_BUSY_BACKOFF_MS = 15000;
+
+export function setGroqBusyBackoffMs(ms) {
+  GROQ_BUSY_BACKOFF_MS =
+    typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? ms : 15000;
+}
 const GROQ_PRIMARY_MODEL = "openai/gpt-oss-120b";
 const GROQ_FALLBACK_MODEL = "openai/gpt-oss-20b";
 
@@ -41,6 +62,33 @@ const JEV_TIMEOUT_MS = 8000; // quoted 70-500ms; generous ceiling
 // shared with the gate script. Imported here so the runtime's token accounting
 // and the gate's cost roll-up can never drift apart.
 import { jevCostUsd } from "./jev-price.mjs";
+
+// Showcase branch (Cold Start): genuine Cloudflare platform integrations.
+// Each module degrades to a provisioning error when its binding is absent —
+// see docs/cloudflare-showcase.md for the provisioning checklist.
+import { verifyTurnstile } from "./turnstile.mjs";
+import { buildDegradedReply, mentionsSystem } from "./advisor-fallback.mjs";
+import {
+  storeSharePayload,
+  getSharePayload,
+  SHARE_TTL_SECONDS,
+} from "./share-cache.mjs";
+import { putEvidence, EVIDENCE_MAX_BYTES } from "./evidence.mjs";
+import { recordUsageEvent, USAGE_EVENTS } from "./usage-ledger.mjs";
+
+// Provisioning hint returned whenever a showcase binding is absent. The
+// worker must never 500 with a bare TypeError on env.X being undefined;
+// it tells the operator exactly what to provision and where.
+function unprovisioned(what, origin) {
+  return jsonResponse(
+    {
+      error: `${what} is not provisioned on this Worker`,
+      hint: "See docs/cloudflare-showcase.md for the provisioning checklist",
+    },
+    503,
+    origin,
+  );
+}
 
 // Strict numeric bounds: a result outside these is not a judgment call, it is
 // a malformed/hostile body (400) before any paid call happens.
@@ -316,8 +364,30 @@ const ALLOWED_ORIGINS = new Set([
   "http://localhost:3000",
 ]);
 
-export function getAllowedOrigin(origin) {
-  return origin && ALLOWED_ORIGINS.has(origin) ? origin : null;
+// Origins trusted IN ADDITION to the set above, supplied per deployment so a
+// showcase build can trust its own Pages host without editing this file — and,
+// more importantly, without anyone editing the production list to accommodate
+// it. This is a union, never a replacement: the set above is the floor and no
+// deployment can remove an entry from it.
+//
+// EXACT STRINGS ONLY. No wildcard, no prefix or suffix match, no case folding,
+// no trailing-slash tolerance — the same discipline the set above is held to,
+// because a pattern here would hand CORS to every origin that can be made to
+// look like ours. A deployment can therefore widen trust for its own domain and
+// for nothing else.
+function extraAllowedOrigins(env) {
+  const raw = env && env.EXTRA_ALLOWED_ORIGINS;
+  if (typeof raw !== "string" || !raw.trim()) return [];
+  return raw
+    .split(/[\s,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+export function getAllowedOrigin(origin, env) {
+  if (!origin) return null;
+  if (ALLOWED_ORIGINS.has(origin)) return origin;
+  return extraAllowedOrigins(env).includes(origin) ? origin : null;
 }
 
 export function corsHeaders(origin) {
@@ -469,8 +539,13 @@ export function ensureDisclaimer(reply) {
   return `${reply.trimEnd()}\n\n${DISCLAIMER_FOOTER}`;
 }
 
-async function callGroq(apiKey, model, messages) {
-  const res = await fetch(GROQ_API_URL, {
+// The fetch is a parameter, not the global. Two reasons, one of which is a
+// defect this fixes: `env.fetch` is the Workers-native seam /api/jev already
+// used, so reading the global here meant the advisor path could not be
+// exercised without real network calls - which is exactly how B2's fallback
+// shipped untested. In production `env.fetch || fetch` is the same function.
+async function callGroq(apiKey, model, messages, doFetch = fetch) {
+  const res = await doFetch(GROQ_API_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -518,6 +593,30 @@ async function handleChat(request, env, origin) {
     );
   }
 
+  // Turnstile (showcase): once TURNSTILE_SECRET_KEY is provisioned, every
+  // chat call must carry a valid token — fail-closed. Unprovisioned, the
+  // endpoint keeps its existing behavior so nothing breaks before the
+  // dashboard steps in docs/cloudflare-showcase.md are done. The check
+  // runs before rate limiting so bots never consume limiter budget or
+  // paid Groq tokens.
+  if (env && env.TURNSTILE_SECRET_KEY) {
+    const ts = await verifyTurnstile(
+      typeof body.turnstileToken === "string" ? body.turnstileToken : "",
+      env.TURNSTILE_SECRET_KEY,
+      env.fetch,
+    );
+    if (!ts.ok) {
+      return jsonResponse(
+        {
+          error: "Human verification failed. Please retry the challenge.",
+          reason: ts.reason,
+        },
+        403,
+        origin,
+      );
+    }
+  }
+
   // Rate limit BEFORE any paid call, including for requests that would fail later.
   // Layer 1 (hard): Cloudflare Rate Limiting binding — consistent across isolates
   // within a location. Layer 2 (soft): in-isolate daily/global counters.
@@ -551,13 +650,25 @@ async function handleChat(request, env, origin) {
     );
   }
 
+  // R-CF-01: an unprovisioned binding fails LOUD and NAMED, never with a bare
+  // TypeError. Here "loud" means a real answer with a visible degraded label,
+  // not an error status the visitor reads as a broken product: B2's whole point
+  // is that an unavailable advisor never presents as a dead chat box.
   const apiKey = env.GROQ_API_KEY;
-  if (!apiKey)
+  if (!apiKey) {
+    console.error(
+      "chat: GROQ_API_KEY is not configured; serving the degraded advisor reply (R-CF-10)",
+    );
     return jsonResponse(
-      { error: "GROQ_API_KEY secret not configured in Cloudflare Worker" },
-      500,
+      buildDegradedReply(
+        "key_missing",
+        { language: body.language, hasSystem: mentionsSystem(userMsg) },
+        ensureDisclaimer,
+      ),
+      200,
       origin,
     );
+  }
 
   const history = rawHistory
     .map((m) => ({
@@ -584,9 +695,36 @@ async function handleChat(request, env, origin) {
   let retriedUpstreamBusy = false;
   const maxContinuations = 2;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const degradedOpts = {
+    language: body.language,
+    hasSystem: mentionsSystem(userMsg),
+  };
+  // One seam for every upstream call the advisor makes, so the degraded paths
+  // are reachable in a test without a network.
+  const doFetch = (env && env.fetch) || fetch;
+
+  // Every upstream failure below returns 200 + a labelled deterministic reply.
+  // The busy (429/503) and error (502) statuses are gone on purpose: a
+  // non-2xx here drove the client's retry ladder, and a retried chat against a
+  // provider that is already busy is how a demo turns into a spinner. The
+  // Retry-After header goes with it; the client no longer needs it for this
+  // path, and the Rate Limiting paths that still return 429 are unchanged.
 
   while (turns <= maxContinuations) {
-    let groqRes = await callGroq(apiKey, usedModel, currentMessages);
+    let groqRes = await callGroq(
+      apiKey,
+      usedModel,
+      currentMessages,
+      doFetch,
+    ).catch(() => null);
+    if (!groqRes) {
+      console.warn("chat: groq fetch threw; serving the degraded reply");
+      return jsonResponse(
+        buildDegradedReply("groq_unavailable", degradedOpts, ensureDisclaimer),
+        200,
+        origin,
+      );
+    }
 
     // Upstream rate limit (shared org TPM pool). Wait out the provider's own
     // window once, invisibly, before giving up — the free tier's 8k TPM makes
@@ -601,18 +739,18 @@ async function handleChat(request, env, origin) {
         /* keep default */
       }
       retriedUpstreamBusy = true;
-      await sleep(Math.min(retryAfter * 1000, 25000));
-      groqRes = await callGroq(apiKey, usedModel, currentMessages);
+      await sleep(Math.min(retryAfter * 1000, GROQ_BUSY_BACKOFF_MS));
+      groqRes = await callGroq(apiKey, usedModel, currentMessages, doFetch);
 
       if (groqRes.status === 429) {
         return jsonResponse(
-          {
-            error:
-              "The AI provider is busy right now. Please try again shortly.",
-          },
-          503,
+          buildDegradedReply(
+            "groq_unavailable",
+            degradedOpts,
+            ensureDisclaimer,
+          ),
+          200,
           origin,
-          { "Retry-After": "60" },
         );
       }
     } else if (groqRes.status === 429) {
@@ -620,12 +758,9 @@ async function handleChat(request, env, origin) {
       // ship it rather than discarding the user's time.
       if (fullReply.length > 0) break;
       return jsonResponse(
-        {
-          error: "The AI provider is busy right now. Please try again shortly.",
-        },
-        503,
+        buildDegradedReply("groq_unavailable", degradedOpts, ensureDisclaimer),
+        200,
         origin,
-        { "Retry-After": "30" },
       );
     }
 
@@ -636,18 +771,19 @@ async function handleChat(request, env, origin) {
         `Primary model ${GROQ_PRIMARY_MODEL} failed (${groqRes.status}). Trying fallback ${GROQ_FALLBACK_MODEL}...`,
       );
       usedModel = GROQ_FALLBACK_MODEL;
-      groqRes = await callGroq(apiKey, usedModel, currentMessages);
+      groqRes = await callGroq(apiKey, usedModel, currentMessages, doFetch);
     }
 
     if (!groqRes.ok) {
       if (fullReply.length > 0) {
         break; // Return whatever complete text was accumulated
       }
+      console.warn(
+        `chat: groq returned ${groqRes.status}; serving the degraded reply`,
+      );
       return jsonResponse(
-        {
-          error: `AI provider error (${groqRes.status}). Please try again later.`,
-        },
-        502,
+        buildDegradedReply("groq_error", degradedOpts, ensureDisclaimer),
+        200,
         origin,
       );
     }
@@ -687,9 +823,123 @@ async function handleChat(request, env, origin) {
   );
 }
 
+// ── Showcase endpoints (Cold Start) ───────────────────────────────────────
+// All three degrade to a 503 provisioning error when their binding is
+// absent — never a bare TypeError, never silent.
+
+async function handleShareStore(request, env, origin) {
+  if (!env || !env.SHARE_KV)
+    return unprovisioned("KV namespace SHARE_KV", origin);
+  const { allowed, retryAfter } = checkRateLimit(getClientIp(request));
+  if (!allowed) {
+    return jsonResponse({ error: "Rate limit exceeded" }, 429, origin, {
+      "Retry-After": String(retryAfter),
+    });
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ error: "invalid_json" }, 400, origin);
+  }
+  const stored = await storeSharePayload(env.SHARE_KV, body && body.hash);
+  if (!stored.ok) {
+    return jsonResponse(
+      {
+        error:
+          stored.reason === "invalid_payload"
+            ? "invalid_share_hash"
+            : "kv_unavailable",
+      },
+      stored.reason === "invalid_payload" ? 400 : 503,
+      origin,
+    );
+  }
+  return jsonResponse(
+    { id: stored.id, ttlSeconds: SHARE_TTL_SECONDS },
+    200,
+    origin,
+  );
+}
+
+async function handleShareGet(request, env, origin) {
+  if (!env || !env.SHARE_KV)
+    return unprovisioned("KV namespace SHARE_KV", origin);
+  const id = new URL(request.url).searchParams.get("id");
+  const found = await getSharePayload(env.SHARE_KV, id);
+  if (!found.ok) {
+    return jsonResponse(
+      { error: found.reason },
+      found.reason === "invalid_id" ? 400 : 404,
+      origin,
+    );
+  }
+  return jsonResponse({ payload: found.payload }, 200, origin);
+}
+
+async function handleEvidencePut(request, env, origin) {
+  if (!env || !env.EVIDENCE_BUCKET)
+    return unprovisioned("R2 bucket EVIDENCE_BUCKET", origin);
+  const { allowed, retryAfter } = checkRateLimit(getClientIp(request));
+  if (!allowed) {
+    return jsonResponse({ error: "Rate limit exceeded" }, 429, origin, {
+      "Retry-After": String(retryAfter),
+    });
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ error: "invalid_json" }, 400, origin);
+  }
+  const saved = await putEvidence(
+    env.EVIDENCE_BUCKET,
+    body && body.kind,
+    body && body.name,
+    body && body.data,
+    body && body.contentType,
+  );
+  if (!saved.ok) {
+    const status = saved.reason === "too_large" ? 413 : 400;
+    return jsonResponse({ error: saved.reason }, status, origin);
+  }
+  return jsonResponse({ key: saved.key }, 200, origin);
+}
+
+async function handleUsageEvent(request, env, origin) {
+  if (!env || !env.USAGE_DB)
+    return unprovisioned("D1 database USAGE_DB", origin);
+  const { allowed, retryAfter } = checkRateLimit(getClientIp(request));
+  if (!allowed) {
+    return jsonResponse({ error: "Rate limit exceeded" }, 429, origin, {
+      "Retry-After": String(retryAfter),
+    });
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ error: "invalid_json" }, 400, origin);
+  }
+  // Country comes from Cloudflare's own header, never from the client —
+  // the client cannot spoof its analytics geography.
+  const country = request.headers.get("cf-ipcountry");
+  const recorded = await recordUsageEvent(env.USAGE_DB, {
+    event: body && body.event,
+    page: body && body.page,
+    country,
+  });
+  if (!recorded.ok) {
+    if (recorded.reason === "d1_unavailable")
+      return unprovisioned("D1 database USAGE_DB", origin);
+    return jsonResponse({ error: "invalid_event" }, 400, origin);
+  }
+  return jsonResponse({ ok: true }, 200, origin);
+}
+
 export default {
   async fetch(request, env) {
-    const origin = getAllowedOrigin(request.headers.get("Origin"));
+    const origin = getAllowedOrigin(request.headers.get("Origin"), env);
 
     if (request.method === "OPTIONS") {
       if (!origin) return new Response(null, { status: 204 }); // no CORS headers -> browser blocks
@@ -707,6 +957,13 @@ export default {
           model: GROQ_PRIMARY_MODEL,
           promptVersion: SYSTEM_PROMPT_VERSION,
           jevSanity: !!(env && env.TYPESAFE_API_KEY),
+          showcase: {
+            // Presence flags only — never secret values.
+            turnstile: !!(env && env.TURNSTILE_SECRET_KEY),
+            kv: !!(env && env.SHARE_KV),
+            r2: !!(env && env.EVIDENCE_BUCKET),
+            d1: !!(env && env.USAGE_DB),
+          },
           rateLimits: {
             perIpPerMinute: RATE_PER_IP_PER_MIN,
             perIpPerDay: RATE_PER_IP_PER_DAY,
@@ -728,9 +985,39 @@ export default {
       return handleJevSanity(request, env, origin);
     }
 
+    // Showcase endpoints (Cold Start). GET /api/share is intentionally
+    // public-read: share payloads are already public-by-design (they used
+    // to live in the URL hash).
+    if (path === "/api/share" && request.method === "POST") {
+      return handleShareStore(request, env, origin);
+    }
+
+    if (path === "/api/share" && request.method === "GET") {
+      return handleShareGet(request, env, origin);
+    }
+
+    if (path === "/api/evidence" && request.method === "POST") {
+      return handleEvidencePut(request, env, origin);
+    }
+
+    if (path === "/api/events" && request.method === "POST") {
+      return handleUsageEvent(request, env, origin);
+    }
+
     return jsonResponse({ error: "Not found" }, 404, origin);
   },
 };
+
+// Re-exported so callers that already depend on the worker entry point keep
+// working; the implementation now lives in advisor-fallback.mjs.
+export {
+  DEGRADED_LABEL,
+  FALLBACK_MODEL,
+  FALLBACK_REASON_KEY,
+  FALLBACK_REASON_TEXT,
+  buildDegradedReply,
+  mentionsSystem,
+} from "./advisor-fallback.mjs";
 
 export const SYSTEM_PROMPT_VERSION = "2026-09c";
 const ADVISOR_PROMPT_BODY = `MISSION: Help people understand a sizing result and make safer questions for a qualified local professional. The deterministic calculator is the source of truth for its displayed sizing numbers. Jev is a separate numeric plausibility check, not an engineer, not a certification body, and not permission to change the calculator result. If the user gives you a calculator brief, explain it rather than recomputing it.

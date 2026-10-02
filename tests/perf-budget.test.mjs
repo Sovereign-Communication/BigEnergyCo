@@ -98,6 +98,12 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // glued onto translated verdicts as an English literal), plus one small
   // owner for the levelized-cost row and the reasoning that goes with each
   // fix. No new module, no new eager feature: strings and comments.
+  // 803,000 (+13 KB measured 802,202): the degraded advisor reply became
+  // translated copy. It was English-only prose shipped from the worker on the
+  // exact surface that signals something went wrong, so a German or Arabic
+  // visitor read the failure in the wrong language. Ten keys x six locales,
+  // +123 lines in locales.js and -0: the same trade as every raise above, for
+  // the same reason — a string a user can read, no new code path.
   assert.ok(
     htmlBytes <= 125_000,
     `index.html ${htmlBytes} bytes exceeds 125,000 budget`,
@@ -107,7 +113,7 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     `site.css ${cssBytes} bytes exceeds 40,000 budget`,
   );
   assert.ok(
-    jsBytes <= 790_000,
+    jsBytes <= 803_000,
     `eager JS ${jsBytes} bytes exceeds 790,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
   );
 });

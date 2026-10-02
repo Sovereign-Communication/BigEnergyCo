@@ -54,6 +54,11 @@ import {
   budgetFitsInside,
 } from "./lib/budgets.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
+import {
+  API_TARGET_ENV,
+  assertProductionArtifact,
+  productionBuildEnv,
+} from "./lib/api-target.mjs";
 import { runNpx } from "./lib/npx.mjs";
 import {
   artifactStamp,
@@ -125,6 +130,40 @@ const historyArgs = () =>
   ]);
 const WAIT_SECONDS = Number(arg("--wait", "300")) || 300;
 const TO_SHA = arg("--to", null);
+
+// Production builds never honour an ambient BEC_API_BASE. A child inherits the
+// shell's environment, so a variable exported to build a showcase artifact
+// would otherwise ride into the artifact production serves — measured: chat.js,
+// the sanity fallback and the shipped CSP all came out pointing at the showcase
+// worker. Two layers, because one is a convention and the other reads what was
+// actually built: the spawn is handed a scrubbed environment, and the finished
+// artifact is asserted to name production before it can be deployed.
+const IGNORED_API_TARGET = process.env[API_TARGET_ENV] || null;
+const BUILD_ENV = productionBuildEnv();
+
+/** Spawn a builder for an artifact that will be deployed to production. */
+function buildProductionStage(cwd, stage, stdio = "pipe") {
+  execFileSync(
+    process.execPath,
+    ["scripts/deploy-pages-local.mjs", "--check", "--stage", stage],
+    { cwd, stdio, env: BUILD_ENV },
+  );
+}
+
+/** Refuse to ship an artifact that does not name the production worker. */
+function assertProduction(stageDir) {
+  try {
+    assertProductionArtifact((f) => readFileSync(join(stageDir, f), "utf8"));
+  } catch (e) {
+    // A refusal, not a crash: this is a precondition failure with a named
+    // cause, so it carries the exit code and leaves production untouched.
+    fatal(
+      2,
+      "the built artifact does not point at the production API",
+      String(e.message).slice(0, 400),
+    );
+  }
+}
 
 const say = (s) => {
   if (!JSON_MODE) console.log(s);
@@ -206,6 +245,15 @@ async function main() {
   }
   const action = TO_SHA ? "rollback" : "promote";
 
+  // Say what was ignored. A silent scrub would leave an operator who exported
+  // this variable for a showcase build unable to tell why production ignored it.
+  if (IGNORED_API_TARGET)
+    say(
+      `PROMOTE NOTE  ${API_TARGET_ENV}=${IGNORED_API_TARGET} is set in this environment and is ` +
+        "IGNORED here: this artifact ships to production and always resolves " +
+        "bigenergyco-api.bigenergyco.workers.dev.",
+    );
+
   // ── 1. preconditions ──────────────────────────────────────────────────────
   if (APPLY) {
     if (!TO_SHA) {
@@ -266,11 +314,8 @@ async function main() {
         },
       );
       const built = join(worktree, STAGE);
-      execFileSync(
-        process.execPath,
-        ["scripts/deploy-pages-local.mjs", "--check", "--stage", STAGE],
-        { cwd: worktree, stdio: "pipe" },
-      );
+      buildProductionStage(worktree, STAGE);
+      assertProduction(built);
       artifactDir = built;
       const declared = artifactStamp(
         readFileSync(join(worktree, "index.html"), "utf8"),
@@ -470,6 +515,9 @@ async function main() {
   if (!APPLY) {
     const plannedRecord = releaseRecord(recordFields({}, null));
     say("\nPROMOTE      DRY RUN — nothing deployed. The promote would run:");
+    // Printed verbatim: no platform-specific `env -u` incantation, which would
+    // be wrong on Windows and would make the recipe untypeable. The NOTE above
+    // already names the variable, so the operator knows it is not inert here.
     say(`  node scripts/deploy-pages-local.mjs --check --stage ${STAGE}`);
     say(`  ${plan.command}`);
     say("\nPROMOTE      what would be recorded:");
@@ -506,11 +554,8 @@ async function main() {
   // ── 6. build + deploy the artifact ───────────────────────────────────────
   if (!TO_SHA) {
     rmSync(STAGE, { recursive: true, force: true });
-    execFileSync(
-      process.execPath,
-      ["scripts/deploy-pages-local.mjs", "--check", "--stage", STAGE],
-      { stdio: JSON_MODE ? "pipe" : "inherit" },
-    );
+    buildProductionStage(undefined, STAGE, JSON_MODE ? "pipe" : "inherit");
+    assertProduction(STAGE);
     artifactDir = STAGE;
   }
   let deployOut = "";

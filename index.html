@@ -427,18 +427,22 @@
           </div>
 
           <h1>
-            <span>Cut your electricity bill.</span> <br /><span
+            <span data-i18n="heroTitle1">Cut your electricity bill.</span>
+            <br /><span data-i18n="heroTitle2"
               >See exactly what it would take.</span
             >
           </h1>
 
           <p>
-            Start with your location &mdash; your phone knows it &mdash; and we
-            size every option that could cut your bill, from 1% all the way to
-            producing a sellable surplus. For any amount you could spend, the
-            price-cut curve shows what it buys, in your local currency.
-            Educational estimates only, nothing for sale. Built and given away
-            by <strong>Lucas Ballek</strong>.
+            <span data-i18n="heroIntro"
+              >Start with your location &mdash; your phone knows it &mdash; and
+              we size every option that could cut your bill, from 1% all the way
+              to producing a sellable surplus. For any amount you could spend,
+              the price-cut curve shows what it buys, in your local currency.
+              Educational estimates only, nothing for sale. Built and given away
+              by</span
+            >
+            <strong>Lucas Ballek</strong>.
           </p>
 
           <div class="hero-actions">
@@ -2518,7 +2522,7 @@
                       id="btnDownloadBom"
                       class="btn btn-outline"
                       style="cursor: pointer"
-                      data-i18n="bomDownload"
+                      data-i18n="simpleDownloadBom"
                     >
                       Download parts list (CSV)
                     </button>
@@ -2935,7 +2939,7 @@
             <div class="legal-card">
               <h3>You are talking to an AI</h3>
 
-              <p>
+              <p data-i18n="advisorIsAi">
                 The advisor is a large language model. It generates
                 plausible-sounding text and can state wrong numbers with total
                 confidence. Treat every figure as a starting point to check,
@@ -3041,8 +3045,13 @@
         </div>
 
         <p style="margin-bottom: 0.75rem">
-          A free tool built and given away by <strong>Lucas Ballek</strong>. Not
-          a company, not incorporated, nothing for sale.
+          <span data-i18n="footerAboutPre"
+            >A free tool built and given away by</span
+          >
+          <strong>Lucas Ballek</strong>.
+          <span data-i18n="footerAboutPost"
+            >Not a company, not incorporated, nothing for sale.</span
+          >
         </p>
 
         <p
@@ -3419,6 +3428,12 @@
 
     <script type="module" src="./assets/js/sizing/ui.js?v=20260929a"></script>
 
+    <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
+         the advisor posts without a token in that case, exactly as before. -->
+    <script
+      type="module"
+      src="./assets/js/turnstile-client.js?v=20260929a"
+    ></script>
     <script defer src="./assets/js/chat.js?v=20260929a"></script>
   </body>
 </html>
