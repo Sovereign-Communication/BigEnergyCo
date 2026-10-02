@@ -39,7 +39,8 @@
     "promote:apply:oauth": "node scripts/promote.mjs --apply --assume-auth",
     "rollback": "node scripts/promote.mjs --to",
     "trigger:dev": "trigger dev",
-    "cf:check": "node scripts/cf-provision-check.mjs"
+    "cf:check": "node scripts/cf-provision-check.mjs",
+    "smoke:advisor": "node scripts/smoke/advisor-fallbacks.mjs"
   },
   "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {

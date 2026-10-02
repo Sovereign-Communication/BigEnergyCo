@@ -30,7 +30,10 @@ const PLACEHOLDERS = [
   },
 ];
 
-const SECRETS = [
+// Exported so a test can pin the list: this gate's whole job is to name the
+// exact provisioning steps CI cannot see, and B5 was a secret that lived only
+// in a PR description instead of here.
+export const REQUIRED_SECRETS = [
   {
     name: "TURNSTILE_SECRET_KEY",
     step: "wrangler secret put TURNSTILE_SECRET_KEY (dashboard: Turnstile -> site -> secret key)",
@@ -39,7 +42,14 @@ const SECRETS = [
     name: "GROQ_API_KEY",
     step: "wrangler secret put GROQ_API_KEY (already set on the production worker)",
   },
+  {
+    name: "TYPESAFE_API_KEY",
+    step: "wrangler secret put TYPESAFE_API_KEY (the Jev truthfulness wire; same value as production)",
+  },
 ];
+
+// Local alias kept so the rest of this file reads unchanged.
+const SECRETS = REQUIRED_SECRETS;
 
 export function checkProvisioning(wranglerJsonText) {
   const missing = [];

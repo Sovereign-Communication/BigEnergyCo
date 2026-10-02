@@ -1,9 +1,13 @@
 // Cloudflare Turnstile server-side verification for the showcase branch.
 //
-// Why: the free calculator is the top of a verified-electrician lead funnel,
-// so lead quality IS the business. Bot-submitted chat sessions burn paid
-// Groq tokens and poison the funnel. Turnstile makes "is this a human"
-// a Cloudflare-answered question instead of our problem.
+// Why: the advisor calls a third-party model on a paid token, on a free and
+// permanently public tool, with no accounts. So the exposure is real but the
+// stakes are uptime and cost, not leads: automated sessions burn paid Groq
+// tokens and let a bot occupy the chat box a real visitor is using.
+// Turnstile makes "is this a human" a Cloudflare-answered question instead of
+// our problem. There is no capture, no CRM, and no sales motion behind it -
+// D-18 and the plan's §14 non-goals forbid all three, and this module stores
+// nothing but a pass/fail.
 //
 // Contract:
 //   verifyTurnstile(token, secret, doFetch?) -> { ok: true } or

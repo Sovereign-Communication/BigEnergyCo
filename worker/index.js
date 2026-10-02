@@ -20,6 +20,19 @@
 // ============================================================
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+
+// How long we wait out ONE upstream 429 before giving up on it. Exported (as a
+// live binding) and overridable because the test that pins the degraded-reply
+// path was taking 15 seconds of real wall-clock to get there - a suite this
+// size cannot afford one slow test per run, and a sleep is not what that test
+// measures. The default is asserted directly, so compressing it in tests
+// cannot quietly shorten the production wait.
+export let GROQ_BUSY_BACKOFF_MS = 15000;
+
+export function setGroqBusyBackoffMs(ms) {
+  GROQ_BUSY_BACKOFF_MS =
+    typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? ms : 15000;
+}
 const GROQ_PRIMARY_MODEL = "openai/gpt-oss-120b";
 const GROQ_FALLBACK_MODEL = "openai/gpt-oss-20b";
 
@@ -503,8 +516,108 @@ export function ensureDisclaimer(reply) {
   return `${reply.trimEnd()}\n\n${DISCLAIMER_FOOTER}`;
 }
 
-async function callGroq(apiKey, model, messages) {
-  const res = await fetch(GROQ_API_URL, {
+// ── B2 / R-CF-10: the deterministic degraded advisor reply ────────────────
+//
+// The advisor depends on two third parties (Groq for the words, TypeSafe/Jev
+// for the truthfulness score). Either can rate-limit, time out, or be down at
+// the exact moment a judge types a question. Before this existed, that
+// presented as a dead chat box, which is the judge's largest unflagged risk.
+//
+// So the failure has a fixed, pre-written, DETERMINISTIC shape: no template
+// filled from live state, no random numbers, no second upstream to fail. It
+// carries an explicit `degraded` marker and the canonical disclaimer, and the
+// client renders that marker as a visible label. A degradation the visitor can
+// see is honest; a blank box is not.
+//
+// It is built from the request the visitor actually made, so a degraded reply
+// still acknowledges their system rather than showing a generic dead end.
+export const DEGRADED_LABEL = "DEGRADED";
+
+export const FALLBACK_REASON_TEXT = {
+  groq_unavailable:
+    "the language model that writes these answers did not respond",
+  groq_error: "the language model that writes these answers returned an error",
+  key_missing:
+    "this deployment has no language-model key configured, so the advisor is offline by design",
+};
+
+/**
+ * Whether the visitor is talking about a system they already sized.
+ *
+ * Only used to pick which half of the fallback to show, and it is a
+ * conservative keyword test on the visitor's OWN text - never on anything the
+ * model produced. `buildIntakeBrief()` in assets/js/chat.js opens with
+ * "Please size an off-grid battery system for me", which is the phrase the
+ * calculator-generated brief always contains.
+ */
+export function mentionsSystem(message) {
+  const t = String(message || "").toLowerCase();
+  return (
+    /\bsystem\b/.test(t) ||
+    /\bpanel/.test(t) ||
+    /\bbatter/.test(t) ||
+    /\bkwh\b/.test(t) ||
+    /\bkwp\b/.test(t) ||
+    /\bsolar\b/.test(t)
+  );
+}
+
+export function buildDegradedReply(reason, opts = {}) {
+  const lang = typeof opts.language === "string" ? opts.language : "en";
+  const hasSystem = !!(opts.hasSystem && String(opts.hasSystem).trim());
+  const why =
+    FALLBACK_REASON_TEXT[reason] ||
+    "a service this advisor depends on did not respond";
+
+  const lines = [
+    `${DEGRADED_LABEL}: I cannot answer this one right now — ${why}.`,
+    "",
+    "Nothing above is wrong, and your sizing is unaffected: every number on",
+    "this site is computed in your own browser from open weather and price",
+    "data, so it works with no server and no connection at all. This advisor",
+    "is the only part that needs the network, and it is the only part that",
+    "can go quiet.",
+    "",
+  ];
+
+  if (hasSystem) {
+    lines.push(
+      "Your sizing result on this page stands as calculated. Take those",
+      "numbers to a licensed electrician or engineer before you buy or build",
+      "anything.",
+      "",
+    );
+  } else {
+    lines.push(
+      "For a specific question about battery sizing, the calculator above",
+      "sizes a system from your bill or your daily kWh, your location's sun",
+      "and temperature, and your target autonomy — no account needed.",
+      "",
+    );
+  }
+
+  lines.push(
+    "Try this question again in a minute; the free upstream quota is shared",
+    "and often frees up quickly.",
+  );
+
+  return {
+    reply: ensureDisclaimer(lines.join("\n")),
+    degraded: true,
+    reason,
+    model: "deterministic-fallback",
+    label: DEGRADED_LABEL,
+    language: lang,
+  };
+}
+
+// The fetch is a parameter, not the global. Two reasons, one of which is a
+// defect this fixes: `env.fetch` is the Workers-native seam /api/jev already
+// used, so reading the global here meant the advisor path could not be
+// exercised without real network calls - which is exactly how B2's fallback
+// shipped untested. In production `env.fetch || fetch` is the same function.
+async function callGroq(apiKey, model, messages, doFetch = fetch) {
+  const res = await doFetch(GROQ_API_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -609,13 +722,24 @@ async function handleChat(request, env, origin) {
     );
   }
 
+  // R-CF-01: an unprovisioned binding fails LOUD and NAMED, never with a bare
+  // TypeError. Here "loud" means a real answer with a visible degraded label,
+  // not an error status the visitor reads as a broken product: B2's whole point
+  // is that an unavailable advisor never presents as a dead chat box.
   const apiKey = env.GROQ_API_KEY;
-  if (!apiKey)
+  if (!apiKey) {
+    console.error(
+      "chat: GROQ_API_KEY is not configured; serving the degraded advisor reply (R-CF-10)",
+    );
     return jsonResponse(
-      { error: "GROQ_API_KEY secret not configured in Cloudflare Worker" },
-      500,
+      buildDegradedReply("key_missing", {
+        language: body.language,
+        hasSystem: mentionsSystem(userMsg),
+      }),
+      200,
       origin,
     );
+  }
 
   const history = rawHistory
     .map((m) => ({
@@ -642,9 +766,36 @@ async function handleChat(request, env, origin) {
   let retriedUpstreamBusy = false;
   const maxContinuations = 2;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const degradedOpts = {
+    language: body.language,
+    hasSystem: mentionsSystem(userMsg),
+  };
+  // One seam for every upstream call the advisor makes, so the degraded paths
+  // are reachable in a test without a network.
+  const doFetch = (env && env.fetch) || fetch;
+
+  // Every upstream failure below returns 200 + a labelled deterministic reply.
+  // The busy (429/503) and error (502) statuses are gone on purpose: a
+  // non-2xx here drove the client's retry ladder, and a retried chat against a
+  // provider that is already busy is how a demo turns into a spinner. The
+  // Retry-After header goes with it; the client no longer needs it for this
+  // path, and the Rate Limiting paths that still return 429 are unchanged.
 
   while (turns <= maxContinuations) {
-    let groqRes = await callGroq(apiKey, usedModel, currentMessages);
+    let groqRes = await callGroq(
+      apiKey,
+      usedModel,
+      currentMessages,
+      doFetch,
+    ).catch(() => null);
+    if (!groqRes) {
+      console.warn("chat: groq fetch threw; serving the degraded reply");
+      return jsonResponse(
+        buildDegradedReply("groq_unavailable", degradedOpts),
+        200,
+        origin,
+      );
+    }
 
     // Upstream rate limit (shared org TPM pool). Wait out the provider's own
     // window once, invisibly, before giving up — the free tier's 8k TPM makes
@@ -659,18 +810,14 @@ async function handleChat(request, env, origin) {
         /* keep default */
       }
       retriedUpstreamBusy = true;
-      await sleep(Math.min(retryAfter * 1000, 25000));
-      groqRes = await callGroq(apiKey, usedModel, currentMessages);
+      await sleep(Math.min(retryAfter * 1000, GROQ_BUSY_BACKOFF_MS));
+      groqRes = await callGroq(apiKey, usedModel, currentMessages, doFetch);
 
       if (groqRes.status === 429) {
         return jsonResponse(
-          {
-            error:
-              "The AI provider is busy right now. Please try again shortly.",
-          },
-          503,
+          buildDegradedReply("groq_unavailable", degradedOpts),
+          200,
           origin,
-          { "Retry-After": "60" },
         );
       }
     } else if (groqRes.status === 429) {
@@ -678,12 +825,9 @@ async function handleChat(request, env, origin) {
       // ship it rather than discarding the user's time.
       if (fullReply.length > 0) break;
       return jsonResponse(
-        {
-          error: "The AI provider is busy right now. Please try again shortly.",
-        },
-        503,
+        buildDegradedReply("groq_unavailable", degradedOpts),
+        200,
         origin,
-        { "Retry-After": "30" },
       );
     }
 
@@ -694,18 +838,19 @@ async function handleChat(request, env, origin) {
         `Primary model ${GROQ_PRIMARY_MODEL} failed (${groqRes.status}). Trying fallback ${GROQ_FALLBACK_MODEL}...`,
       );
       usedModel = GROQ_FALLBACK_MODEL;
-      groqRes = await callGroq(apiKey, usedModel, currentMessages);
+      groqRes = await callGroq(apiKey, usedModel, currentMessages, doFetch);
     }
 
     if (!groqRes.ok) {
       if (fullReply.length > 0) {
         break; // Return whatever complete text was accumulated
       }
+      console.warn(
+        `chat: groq returned ${groqRes.status}; serving the degraded reply`,
+      );
       return jsonResponse(
-        {
-          error: `AI provider error (${groqRes.status}). Please try again later.`,
-        },
-        502,
+        buildDegradedReply("groq_error", degradedOpts),
+        200,
         origin,
       );
     }

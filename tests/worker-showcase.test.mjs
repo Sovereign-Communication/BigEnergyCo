@@ -160,12 +160,29 @@ test("chat rejects a missing token once the secret exists", async () => {
   assert.equal((await res.json()).reason, "missing_token");
 });
 
-test("chat keeps its existing behavior while Turnstile is unprovisioned", async () => {
-  // No TURNSTILE_SECRET_KEY: the request must sail past the Turnstile gate
-  // and reach the same code path as before (here, the missing Groq key).
+test("chat keeps its ungated behavior while Turnstile is unprovisioned", async () => {
+  // PORTED (B2 / R-CF-10), not weakened. No TURNSTILE_SECRET_KEY: the request
+  // must sail past the Turnstile gate exactly as before — that is still the
+  // assertion. The terminal status moved from 500 to the labelled degraded
+  // reply, because a 500 IS a dead chat box to a visitor and was the defect.
+  //
+  // What this test guards is the presence-gating, so it now also pins that
+  // Turnstile's absence is the ONLY thing that let the call through: with the
+  // secret set, the same request is a 403 (the tests above).
   const res = await post("/api/chat", { message: "hello" }, {});
-  assert.equal(res.status, 500);
-  assert.match((await res.json()).error, /GROQ_API_KEY/);
+  assert.equal(
+    res.status,
+    200,
+    "unprovisioned Turnstile must not gate the advisor",
+  );
+  const body = await res.json();
+  assert.equal(body.degraded, true);
+  assert.equal(body.reason, "key_missing");
+  assert.equal(
+    body.turnstile,
+    undefined,
+    "no Turnstile verdict on an ungated path",
+  );
 });
 
 // ── KV share cache ─────────────────────────────────────────────────────

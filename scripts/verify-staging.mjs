@@ -299,7 +299,25 @@ const isText = (f) =>
 const HTML_FILE = /\.html$/i;
 
 const parity = await mapPool(parityTargets, CONCURRENCY, async (file) => {
-  const localBuf = readFileSync(file);
+  // Read the local copy INSIDE the guarded path. It used to sit above the
+  // try, so a file that vanished between enumeration and read (ENOUT/ENOENT)
+  // escaped as an uncaught exception, the top-level await rejected, and the
+  // gate exited on a stack trace with NO verdict at all. That is the one thing
+  // a gate must never do: the caller learns nothing about whether staging
+  // matched, and "crashed" is indistinguishable from "silently skipped".
+  // The deploy manifest enumerates from the git INDEX, so a file can genuinely
+  // be named-but-absent on disk - a concurrent test's mutation tooth, or a
+  // half-copied checkout. That is a finding, so it is reported as one.
+  let localBuf;
+  try {
+    localBuf = readFileSync(file);
+  } catch (e) {
+    return {
+      file,
+      state: "unreadable",
+      detail: `local read failed: ${e.code || e.message}`,
+    };
+  }
   let res;
   try {
     res = await retryTransient(
