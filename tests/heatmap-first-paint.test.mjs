@@ -1,154 +1,137 @@
-// The heatmap page's FIRST PAINT, and specifically the one thing on it that
-// was render-blocking and had no business being.
-//
-// WHY THIS IS PINNED. The LCP element on /solar-heatmap/ is the intro
-// paragraph under the h1 — the largest text on the page, so by definition the
-// largest contentful paint, and it is in the very first paint with no font, no
-// image and no data of its own behind it. Measured on the staged build, with
-// `init()` never called at all so that no JavaScript on the page could be
-// responsible:
-//
-//   desktop, Leaflet CSS as a stylesheet : FCP 1.91-2.23s, LCP 4.51-4.56s
-//   desktop, Leaflet CSS non-blocking   : FCP 1.06-1.83s, LCP 1.21-2.21s
-//
-// A ~2.6s gap that came and went with one attribute on one third-party link.
-// So the fix is structural and it is asserted here rather than trusted to
-// review: if a future edit puts Leaflet's CSS back in front of the first
-// paint, this fails loudly instead of costing a third of a second on every
-// visitor's first frame.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import fs from "node:fs";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { applyLeafletStyles } from "../assets/js/sizing/leaflet-styles.js?v=20261022p";
+import {
+  LEAFLET_STYLE_SRI,
+  LEAFLET_STYLE_URL,
+} from "../assets/js/sizing/map-provider.js?v=20261022p";
 
-const html = fs.readFileSync(
+const html = readFileSync(
   new URL("../solar-heatmap/index.html", import.meta.url),
   "utf8",
 );
-const js = fs.readFileSync(
+const js = readFileSync(
   new URL("../assets/js/heatmap.js", import.meta.url),
   "utf8",
 );
-const headers = fs.readFileSync(
-  new URL("../_headers", import.meta.url),
+const styles = readFileSync(
+  new URL("../assets/js/sizing/leaflet-styles.js", import.meta.url),
   "utf8",
 );
-
+const provider = readFileSync(
+  new URL("../assets/js/sizing/map-provider.js", import.meta.url),
+  "utf8",
+);
+const headers = readFileSync(new URL("../_headers", import.meta.url), "utf8");
 const csp = headers
   .split("\n")
-  .find((l) => l.trim().startsWith("Content-Security-Policy"));
+  .find((line) => line.trim().startsWith("Content-Security-Policy"));
 
-test("Leaflet's CSS is preloaded, not linked as a render-blocking stylesheet", () => {
-  // A <link rel="stylesheet"> for leaflet.css anywhere in the document puts a
-  // stylesheet request in front of the LCP element. Assert the absence,
-  // not just the presence of the preload, so a leftover second link is caught.
-  const stylesheetLinks = [...html.matchAll(/<link\b[^>]*>/g)].filter(
-    (m) => /rel="stylesheet"/.test(m[0]) && /leaflet\.css/.test(m[0]),
-  );
-  assert.deepEqual(
-    stylesheetLinks.map((m) => m[0]),
-    [],
-    "leaflet.css must not be a render-blocking stylesheet",
-  );
+function mockLink() {
+  const listeners = new Map();
+  const link = {
+    id: "",
+    rel: "",
+    as: "",
+    href: "",
+    integrity: "",
+    crossOrigin: "",
+    cloneNode() {
+      return Object.assign(mockLink(), {
+        id: this.id,
+        rel: this.rel,
+        as: this.as,
+        href: this.href,
+        integrity: this.integrity,
+        crossOrigin: this.crossOrigin,
+      });
+    },
+    removeAttribute(name) {
+      delete this[name];
+    },
+    addEventListener(type, listener) {
+      listeners.set(type, listener);
+    },
+    listeners,
+  };
+  return link;
+}
 
-  const preloads = [...html.matchAll(/<link\b[^>]*>/g)].filter(
-    (m) =>
-      /rel="preload"/.test(m[0]) &&
-      /as="style"/.test(m[0]) &&
-      /leaflet\.css/.test(m[0]),
+function mockDocument(outcome) {
+  const appended = [];
+  return {
+    appended,
+    createElement(tag) {
+      assert.equal(tag, "link");
+      return mockLink();
+    },
+    head: {
+      append(link) {
+        appended.push(link);
+        if (link.rel === "stylesheet") link.listeners.get(outcome)?.();
+      },
+    },
+  };
+}
+
+test("Leaflet CSS is module-owned and fetched as a nonblocking same-origin preload", () => {
+  assert.doesNotMatch(html, /leaflet\.css|LEAFLET_STYLE_(URL|SRI)/);
+  assert.match(js, /import \{\s*applyLeafletStyles\s*\} from/);
+  assert.match(styles, /preloaded\.rel = "preload"/);
+  assert.match(styles, /preloaded\.as = "style"/);
+  assert.match(provider, /LEAFLET_STYLE_URL = versionedLocalAsset/);
+  assert.match(provider, /\.\.\/\.\.\/vendor\/leaflet\/leaflet\.css/);
+  assert.equal(
+    LEAFLET_STYLE_SRI,
+    "sha256-" +
+      createHash("sha256")
+        .update(
+          readFileSync(
+            new URL("../assets/vendor/leaflet/leaflet.css", import.meta.url),
+          ),
+        )
+        .digest("base64"),
   );
-  assert.equal(preloads.length, 1, "exactly one leaflet.css preload");
-  assert.match(preloads[0][0], /integrity="sha256-/, "the preload keeps SRI");
-  assert.match(
-    preloads[0][0],
-    /crossorigin="anonymous"/,
-    "the preload keeps the CORS mode",
-  );
+  const url = new URL(LEAFLET_STYLE_URL);
+  assert.ok(url.pathname.endsWith("/assets/vendor/leaflet/leaflet.css"));
+  assert.equal(url.searchParams.get("v"), "20261022p");
 });
 
-test("the preload carries the id heatmap.js promotes it by", () => {
-  assert.match(
-    html,
-    /<link\b[^>]*id="leaflet-css"[^>]*>/,
-    "the preload needs id=leaflet-css so the module can find it",
+test("stylesheet promotion preserves URL, SRI and CORS and is awaited before the map appears", async () => {
+  const documentRef = mockDocument("load");
+  assert.equal(await applyLeafletStyles(documentRef), true);
+  assert.equal(documentRef.appended.length, 2);
+  const [preload, stylesheet] = documentRef.appended;
+  assert.equal(preload.rel, "preload");
+  assert.equal(preload.as, "style");
+  assert.equal(preload.id, "leaflet-css");
+  assert.equal(preload.href, LEAFLET_STYLE_URL);
+  assert.equal(preload.integrity, LEAFLET_STYLE_SRI);
+  assert.equal(preload.crossOrigin, "anonymous");
+  assert.equal(stylesheet.rel, "stylesheet");
+  assert.equal(stylesheet.as, undefined);
+  assert.equal(stylesheet.id, undefined);
+  assert.equal(stylesheet.href, preload.href);
+  assert.equal(stylesheet.integrity, preload.integrity);
+  assert.equal(stylesheet.crossOrigin, preload.crossOrigin);
+
+  const awaitIndex = js.indexOf("await stylesReady;");
+  const revealIndex = js.indexOf(
+    'document.getElementById("map").style.display',
   );
-  assert.match(html, /<link\b[^>]*id="leaflet-css"[^>]*rel="preload"/);
+  assert.ok(awaitIndex >= 0 && awaitIndex < revealIndex);
 });
 
-test("heatmap.js promotes the preload by CLONING it, so SRI survives", () => {
-  assert.match(
-    js,
-    /getElementById\("leaflet-css"\)/,
-    "the module promotes the declared preload",
-  );
-  assert.match(
-    js,
-    /cloneNode\(\)/,
-    "clone, so href/integrity/crossorigin carry over",
-  );
-  assert.match(js, /link\.rel = "stylesheet"/);
-  assert.match(
-    js,
-    /removeAttribute\("as"\)/,
-    "a stylesheet must not keep as=style",
-  );
-  assert.match(
-    js,
-    /removeAttribute\("id"\)/,
-    "the clone must not duplicate the id",
-  );
-  // A literal URL here would be a second declaration that can drift from the
-  // markup's, and the whole point of the clone is that there is only one.
-  assert.doesNotMatch(
-    js,
-    /unpkg\.com\/leaflet@[\d.]+\/dist\/leaflet\.css/,
-    "the URL is declared once, in the markup",
-  );
+test("missing stylesheet document or failed load degrades without rejecting", async () => {
+  assert.equal(await applyLeafletStyles(null), false);
+  assert.equal(await applyLeafletStyles(mockDocument("error")), false);
 });
 
-test("the map is not revealed before the stylesheet has applied", () => {
-  // Not waiting would mean a visible flash of unstyled map: Leaflet's layout
-  // rules decide where the tile pane and the canvas sit.
-  const awaitIdx = js.indexOf("await stylesReady;");
-  const revealIdx = js.indexOf('document.getElementById("map").style.display');
-  assert.ok(awaitIdx > -1, "init awaits the stylesheet");
-  assert.ok(revealIdx > -1, "init still reveals the map");
-  assert.ok(
-    awaitIdx < revealIdx,
-    "the await has to come BEFORE the map is shown, not after",
-  );
-});
-
-test("a missing preload degrades to an unstyled map, never a broken page", () => {
-  // Failing init over a Leaflet stylesheet would be worse than an unstyled
-  // map, so both the absent link and a failed load resolve rather than throw.
-  assert.match(
-    js,
-    /if \(!preload\) return Promise\.resolve\(false\)/,
-    "no preload is not an error",
-  );
-  assert.match(
-    js,
-    /addEventListener\(\s*"error"/,
-    "a failed stylesheet resolves instead of rejecting",
-  );
-  assert.match(
-    js,
-    /resolve\(false\)/,
-    "load errors resolve without rejecting init",
-  );
-});
-
-test("the swap is in the module because this page's CSP forbids an inline one", () => {
+test("the stylesheet loader does not depend on inline event handlers", () => {
   assert.ok(csp, "the repo ships a Content-Security-Policy");
   const scriptSrc = csp.match(/script-src ([^;]+);/)[1];
-  assert.ok(
-    !/unsafe-inline/.test(scriptSrc),
-    "script-src has no 'unsafe-inline', so onload=\"this.media='all'\" would be blocked",
-  );
-  // Which is why the markup must not have reached for it in the first place.
-  assert.doesNotMatch(
-    html,
-    /<link\b[^>]*onload=/,
-    "no inline onload on a link (blocked by CSP)",
-  );
+  assert.ok(!/unsafe-inline/.test(scriptSrc));
+  assert.doesNotMatch(html, /<link\b[^>]*onload=/);
 });

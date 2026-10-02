@@ -14,6 +14,7 @@ import {
   hitTest,
   HIT_CELL_PX,
 } from "./sizing/heatmap-dots.js?v=20261022p";
+import { applyLeafletStyles } from "./sizing/leaflet-styles.js?v=20261022p";
 
 // Heatmap: pre-rendered image + on-demand data architecture.
 //
@@ -829,32 +830,6 @@ import {
     dotPalette = palette;
     if (dotLayer) dotLayer.redraw();
     return Promise.resolve();
-  }
-
-  function applyLeafletStyles() {
-    var preload = document.getElementById("leaflet-css");
-    if (!preload) return Promise.resolve(false);
-    return new Promise(function (resolve) {
-      var link = preload.cloneNode();
-      link.rel = "stylesheet";
-      link.removeAttribute("as");
-      link.removeAttribute("id");
-      link.addEventListener(
-        "load",
-        function () {
-          resolve(true);
-        },
-        { once: true },
-      );
-      link.addEventListener(
-        "error",
-        function () {
-          resolve(false);
-        },
-        { once: true },
-      );
-      document.head.append(link);
-    });
   }
 
   function init() {

@@ -11,9 +11,9 @@ function versionedLocalAsset(path) {
 export const LEAFLET_SCRIPT_URL = versionedLocalAsset(
   "../../vendor/leaflet/leaflet.js",
 );
-// Subresource-integrity pins, identical to the static pins on
-// solar-heatmap/index.html: a changed vendored response refuses to execute.
-// Keep the library, stylesheet, and static page pins on one release.
+// Subresource-integrity pins: a changed vendored response refuses to execute.
+// Keep the library and stylesheet pins on one release. The script pin remains
+// static in the heatmap page so the parser can discover the blocking library.
 export const LEAFLET_SCRIPT_SRI =
   "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
 export const LEAFLET_STYLE_URL = versionedLocalAsset(

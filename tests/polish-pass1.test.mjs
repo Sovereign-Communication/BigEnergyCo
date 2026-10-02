@@ -140,21 +140,40 @@ test("lookupCityOnline returns null instead of hanging forever", async () => {
 
 // ── map-provider: SRI pins match the heatmap's static pins ──────────────────
 
-test("dynamic Leaflet SRI matches the static heatmap pins", () => {
+test("Leaflet SRI pins have one owner per resource", () => {
   const heatmap = read("solar-heatmap/index.html");
-  const stylesheetSRI = `sha256-${createHash("sha256")
-    .update(
-      fs.readFileSync(path.join(ROOT, "assets/vendor/leaflet/leaflet.css")),
-    )
-    .digest("base64")}`;
+  const styleModule = read("assets/js/sizing/leaflet-styles.js");
+  const stylesheetSRI =
+    "sha256-" +
+    createHash("sha256")
+      .update(
+        fs.readFileSync(path.join(ROOT, "assets/vendor/leaflet/leaflet.css")),
+      )
+      .digest("base64");
+  const scriptSRI =
+    "sha256-" +
+    createHash("sha256")
+      .update(
+        fs.readFileSync(path.join(ROOT, "assets/vendor/leaflet/leaflet.js")),
+      )
+      .digest("base64");
   assert.equal(LEAFLET_STYLE_SRI, stylesheetSRI);
+  assert.equal(LEAFLET_SCRIPT_SRI, scriptSRI);
   assert.ok(
     heatmap.includes(LEAFLET_SCRIPT_SRI),
-    "script SRI identical to heatmap pin",
+    "the parser-discovered script keeps its SRI pin",
   );
   assert.ok(
-    heatmap.includes(stylesheetSRI),
-    "stylesheet SRI identical to heatmap pin",
+    !heatmap.includes(LEAFLET_STYLE_SRI),
+    "the stylesheet pin is owned by map-provider",
+  );
+  assert.ok(
+    !heatmap.includes(LEAFLET_STYLE_URL),
+    "the stylesheet URL is absent from markup",
+  );
+  assert.ok(
+    styleModule.includes("LEAFLET_STYLE_URL") &&
+      styleModule.includes("LEAFLET_STYLE_SRI"),
   );
 });
 
