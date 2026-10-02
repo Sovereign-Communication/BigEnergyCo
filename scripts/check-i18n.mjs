@@ -323,14 +323,30 @@ for (const page of shippedPages()) {
       `${page}: <${block.tag}> ${JSON.stringify(block.text.slice(0, 60))}…`,
     );
 }
-// The remaining 39 are REAL and KNOWN: FAQ answers, the bill-of-materials spec
-// text, and the legal copy on the one translated page. Keying them is P5 work
-// (R-I18N-07 waves), not this branch. This ceiling is a committed constant on
-// purpose — it started as an env override, which is a gate anyone can loosen
-// without touching the file, which is the failure mode this repo treats as
-// worse than a red build. Lower it as blocks get keyed; never raise it without
-// a measured reason in the commit that raises it.
-const PROSE_CEILING = 39;
+// The remaining 51 are REAL and KNOWN: the FAQ answers, the bill-of-materials
+// spec text, the legal copy, and the wizard/field help on the one translated
+// page. Keying them is P5 work (R-I18N-07 waves), not this branch. This ceiling
+// is a committed constant on purpose — it started as an env override, which is a
+// gate anyone can loosen without touching the file, which is the failure mode
+// this repo treats as worse than a red build. Lower it as blocks get keyed;
+// never raise it without a measured reason in the commit that raises it.
+//
+// THIS NUMBER WENT UP, 39 -> 51, AND IT MUST BE READ AS A FIX, NOT A LOOSENING.
+// The 39 was not a count of unkeyed prose; it was a count of what the detector
+// was able to SEE. The old block regex required a literal `</tag>`, so a prose
+// paragraph nested inside a `<label>` or a `<li>` was swallowed whole by its
+// parent match and never examined. Measured in a real browser at Accept-Language
+// de-DE against document.body.textContent: of the 51 blocks below, 48 are
+// English in the rendered German DOM (the other 3 fragments straddle a `<br>`,
+// where textContent inserts no whitespace, so the search misses them — they are
+// English too). The 12 the fix added are the 12 the old gate was blind to.
+// A ceiling of 39 would have been satisfiable while 12 real leaks shipped.
+//
+// The blind-region and case-insensitivity fixes in the detector did NOT move
+// this number: index.html contains no <p> inside any of its four script blocks,
+// so the JSON-LD FAQ text was never a false positive. Recorded here because I
+// first believed it was, and the belief was wrong.
+const PROSE_CEILING = 51;
 if (proseFindings.length > PROSE_CEILING) {
   fail(
     `${proseFindings.length} visible prose block(s) on a translated page carry no i18n hook ` +

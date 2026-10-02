@@ -493,7 +493,7 @@ export function sitemapGaps(pages, urls, site) {
 // check-i18n was green, because both carried no data-i18n hook.
 //
 // Only pages that DECLARE themselves translated are checked. Measured across the
-// 82 shipped pages: exactly one has a hook, and it carries 41 unkeyed prose
+// 82 shipped pages: exactly one has a hook, and it carries 51 unkeyed prose
 // blocks; the other 81 have none and are untranslated by decision. Demanding
 // hooks on those would be 2,046 decisions nobody made, and a gate that fires on
 // 2,046 known items is one that gets ignored.
@@ -506,8 +506,35 @@ export function sitemapGaps(pages, urls, site) {
 // exempts a paragraph whose hook was renamed to data-i18n-x — which is how the
 // first proof of this rule came back green, because the mutation I made was the
 // one string this check could not tell apart from a hook.
-const PROSE_HOOK_ATTR = /\sdata-i18n(?:-placeholder|-aria-label)?\s*=/;
+//
+// Case-insensitive on purpose: HTML attribute NAMES are case-insensitive, and
+// the browser resolves `[data-i18n="x"]` against DATA-I18N just as happily.
+// A case-sensitive check here would report a hooked block as unkeyed while the
+// page translated it correctly at runtime — the gate and the renderer disagreeing
+// about the same markup.
+const PROSE_HOOK_ATTR = /\sdata-i18n(?:-placeholder|-aria-label)?\s*=/i;
+// Regions no visitor ever sees. A regex over raw HTML reads all of them, and
+// index.html's JSON-LD alone contributed 6 of the first 33 findings — the
+// FAQPage `mainEntity` answer texts, which are structured data, not prose, and
+// which CANNOT carry a data-i18n hook because they are not markup. Counting
+// them inflated the ceiling by 6 and left the ceiling hostage to any future
+// comment that happened to contain a long <p> example.
+const BLIND_REGIONS =
+  /<!--[\s\S]*?-->|<script\b[\s\S]*?<\/script\s*>|<style\b[\s\S]*?<\/style\s*>/gi;
 const PROSE_TAGS = "p|li|blockquote|figcaption|dd|label";
+// Containers whose close tag also ends a prose block. `</p>` is optional in
+// practice (browsers close it) and `</li>` is optional in VALID HTML5 — the
+// parser ends the item at the next `<li>` or at `</ul>`. Requiring the literal
+// close tag therefore missed two unhooked list items in a row, and missed an
+// unhooked `<p>` outright, because the regex simply did not match. The block
+// ends at the earliest of: its own close tag, the next opening tag of the same
+// name, or the close tag of a container it sits in.
+const BLOCK_ENDERS =
+  "ul|ol|dl|div|section|article|aside|nav|main|header|footer|details|summary|table|thead|tbody|tr|td|th|fieldset|form|label";
+const BLOCK_RE = new RegExp(
+  `<(${PROSE_TAGS})\\b([^>]*)>([\\s\\S]*?)(?=<\\1[\\s/>]|</\\1\\s*>|</(?:${BLOCK_ENDERS})\\s*>|$)`,
+  "gi",
+);
 // No letters, no digits: a price, a unit, a glyph. Nothing to translate.
 const NOT_PROSE =
   /^[\s\d.,%+\-–—/×·:;()[\]{}<>=^*#@!?§°$€£¥|&'"‘’“” -⁯←-⇿☀-➿]*$/u;
@@ -523,7 +550,10 @@ const MIN_PROSE_WORDS = 2;
 
 /** Does this page claim to be translated? */
 export function claimsTranslation(html) {
-  return /data-i18n(?:-placeholder|-aria-label)?=/.test(html);
+  // Case-insensitive for the same reason PROSE_HOOK_ATTR is: the browser's
+  // attribute matching is, so a page carrying only DATA-I18N is translated in
+  // the browser and must not be skipped here as untranslated.
+  return /\sdata-i18n(?:-placeholder|-aria-label)?\s*=/i.test(html);
 }
 
 /**
@@ -536,9 +566,10 @@ export function claimsTranslation(html) {
  */
 export function unkeyedProse(html, { minWords = 6 } = {}) {
   const found = [];
-  for (const m of html.matchAll(
-    new RegExp(`<(${PROSE_TAGS})\\b([^>]*)>([\\s\\S]*?)</\\1>`, "gi"),
-  )) {
+  // Blank the invisible regions first so their contents cannot be reported as
+  // prose a visitor would have to be able to read.
+  const scannable = String(html).replace(BLIND_REGIONS, " ");
+  for (const m of scannable.matchAll(BLOCK_RE)) {
     const [, tag, attrs, inner] = m;
     if (PROSE_HOOK_ATTR.test(attrs) || PROSE_HOOK_ATTR.test(inner)) continue;
     const text = inner

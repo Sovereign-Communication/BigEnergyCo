@@ -80,7 +80,7 @@ test("BANNED: the known-bad Arabic values are gone", () => {
   assert.match(
     LOCALES.ar.offlineNote,
     /النموذجية/,
-    "ar.offlineNote should say 'typical year', the same word offlineLabel uses",
+    "ar.offlineNote should say 'typical year', not 'traditional'",
   );
 });
 
@@ -302,6 +302,91 @@ test("PROSE: the unkeyed-prose detector fires on unhooked prose, and only on pro
     unkeyedProse("<p></p>").length,
     0,
     "an empty block is not prose",
+  );
+});
+
+test("PROSE: nesting does not hide a paragraph from the detector", () => {
+  // The detector used to require a literal `</tag>`, so a paragraph nested
+  // inside a <label> or a <li> was swallowed whole by its parent's match and
+  // never examined — 12 real English blocks on index.html hid that way, and a
+  // ceiling of 39 was satisfiable while they shipped. Measured in a browser at
+  // Accept-Language de-DE: 48 of the 51 blocks the fixed detector reports are
+  // English in the rendered DOM.
+  const PROSE =
+    "Satellite imagery loads only after you ask for it, and coordinates are rounded.";
+  assert.equal(
+    unkeyedProse(`<label>Roof area <p>${PROSE}</p></label>`).length,
+    1,
+    "a paragraph inside a label must still be reported",
+  );
+  // </li> is OPTIONAL in valid HTML5: the parser ends the item at the next <li>
+  // or at </ul>. Requiring the close tag missed two unhooked items in a row.
+  assert.equal(
+    unkeyedProse(`<ul><li>${PROSE}<li>${PROSE}</ul>`).length,
+    2,
+    "unclosed list items are valid HTML and must both be reported",
+  );
+  assert.equal(
+    unkeyedProse(
+      `<ul><li data-i18n="row"><span data-i18n="row"></span>${PROSE}<li>${PROSE}</ul>`,
+    ).length,
+    1,
+    "a hooked first item must not exempt the unhooked second one",
+  );
+  assert.equal(
+    unkeyedProse(`<p>${PROSE}`).length,
+    1,
+    "an unclosed paragraph is still reported",
+  );
+});
+
+test("PROSE: text no visitor can read is not reported as prose", () => {
+  // A comment or a <script> is not copy. index.html carries a 4.9 KB JSON-LD
+  // block; if the scanner reads inside it, the ceiling becomes hostage to any
+  // future comment containing a long <p> example.
+  const PROSE =
+    "Every number comes from testable code simulating your exact location.";
+  assert.equal(
+    unkeyedProse(`<!-- <p>${PROSE}</p> -->`).length,
+    0,
+    "a comment is not visible prose",
+  );
+  assert.equal(
+    unkeyedProse(`<script>var a="<p>${PROSE}</p>";</script>`).length,
+    0,
+    "a script body is not visible prose",
+  );
+  assert.equal(
+    unkeyedProse(`<style>/* <p>${PROSE}</p> */</style>`).length,
+    0,
+    "a style body is not visible prose",
+  );
+  // Panels hidden at first paint ARE reported: they are what the visitor reads
+  // the moment they click. Suppressing them would hide the exact strings that
+  // leak on interaction.
+  assert.equal(
+    unkeyedProse(`<p style="display:none">${PROSE}</p>`).length,
+    1,
+    "a hidden panel is reported: it is what appears on click",
+  );
+});
+
+test("PROSE: hook detection agrees with the browser about attribute case", () => {
+  // HTML attribute NAMES are case-insensitive and querySelector resolves
+  // DATA-I18N exactly as it resolves data-i18n. A case-sensitive check reports a
+  // hooked block as unkeyed while the page translates it correctly — the gate
+  // and the renderer disagreeing about identical markup.
+  const PROSE =
+    "Your monthly electric bill is auto-adjusted to your location's prices.";
+  assert.equal(
+    unkeyedProse(`<p DATA-I18N="loadBill">${PROSE}</p>`).length,
+    0,
+    "an uppercase hook is still a hook",
+  );
+  assert.equal(
+    claimsTranslation('<span DATA-I18N="x"></span>'),
+    true,
+    "a page using only uppercase hooks still claims translation",
   );
 });
 
