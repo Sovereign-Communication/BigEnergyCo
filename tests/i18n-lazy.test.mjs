@@ -6,13 +6,22 @@
 // renders as an English default or a raw key while the import is in flight.
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
-const I18N =
-  "file:///C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo-showcase/assets/js/shared/i18n.js";
+// Repo-relative, never absolute: these tests run on the Linux CI runner too,
+// where a Windows checkout path does not exist. That failure mode cost a CI
+// cycle on this file.
+const I18N_URL = new URL("../assets/js/shared/i18n.js", import.meta.url);
+const LOCALES_URL = new URL("../assets/js/shared/locales.js", import.meta.url);
+const UI_PATH = fileURLToPath(
+  new URL("../assets/js/sizing/ui.js", import.meta.url),
+);
+const I18N_PATH = fileURLToPath(I18N_URL);
 
 test("LAZY: translate echoes the key before the dictionary lands, never English", async () => {
   // Fresh module registry so the import is genuinely in flight.
-  const mod = await import(`${I18N}?fresh=${Date.now()}`);
+  const mod = await import(`${I18N_URL.href}?fresh=${Date.now()}`);
   // Before `localesReady` resolves there is no honest translation. Echoing the
   // KEY is the contract every caller already understands: chat.js treats
   // `value === key` as "fall back to the worker's English", and check-i18n
@@ -37,9 +46,8 @@ test("LAZY: translate echoes the key before the dictionary lands, never English"
 });
 
 test("LAZY: every locale renders native copy once loaded — including RTL", async () => {
-  const mod = await import(I18N);
-  const { LOCALES } =
-    await import("file:///C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo-showcase/assets/js/shared/locales.js");
+  const mod = await import(I18N_URL.href);
+  const { LOCALES } = await import(LOCALES_URL.href);
   await mod.localesReady;
   const probe = "advisorDegradedReassure";
   const seen = new Map();
@@ -77,11 +85,7 @@ test("LAZY: the boot path awaits the dictionary, so first paint is never English
   // The property is enforced in ui.js by awaiting applyI18n() before the first
   // paint. Pinned at the source, because the failure it prevents — a flash of
   // the wrong language — is invisible to every other gate and to CI screenshots.
-  const { readFileSync } = await import("node:fs");
-  const ui = readFileSync(
-    "C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo-showcase/assets/js/sizing/ui.js",
-    "utf8",
-  );
+  const ui = readFileSync(UI_PATH, "utf8");
   assert.match(
     ui,
     /await applyI18n\(\)/,
@@ -90,10 +94,7 @@ test("LAZY: the boot path awaits the dictionary, so first paint is never English
   // A dynamic import, not a static one: a static `import` at the top of
   // i18n.js would put locales.js straight back into the eager graph and undo
   // the whole point.
-  const i18n = readFileSync(
-    "C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo-showcase/assets/js/shared/i18n.js",
-    "utf8",
-  );
+  const i18n = readFileSync(I18N_PATH, "utf8");
   assert.doesNotMatch(
     i18n,
     /^import \{ LOCALES \}/m,

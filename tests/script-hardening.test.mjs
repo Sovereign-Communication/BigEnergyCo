@@ -12,6 +12,7 @@ import {
   sameOriginPath,
   sitemapGaps,
 } from "../scripts/lib/gates.mjs";
+import { withMutationLock } from "../scripts/lib/mutation-lock.mjs";
 import { normalizeBase } from "../scripts/lib/base-url.mjs";
 
 // ── normalizeBase (browser smoke) ───────────────────────────────────────────
@@ -141,7 +142,7 @@ test("ALLOWLIST PARSE: dotless platform files and nested paths survive the parse
   assert.deepEqual(deployedFilesFrom(""), []);
 });
 
-test("ALLOWLIST QUERY: --list reports exactly what a staged build contains", () => {
+test("ALLOWLIST QUERY: --list reports exactly what a staged build contains", async () => {
   // The gates validate what --list returns, so it must be the same SET a real
   // deploy ships. One staged build (into a throwaway dir) proves it.
   // --stage is resolved relative to the repo root by design (deploy.yml passes

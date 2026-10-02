@@ -25,6 +25,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { labTransform } from "./lib/lab-build.mjs";
+import { withMutationLock } from "./lib/mutation-lock.mjs";
 import { execSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import {
@@ -92,11 +93,19 @@ if (LIST) {
     `Staging ${deployList().length} manifest files into ${STAGE.replace(ROOT + "/", "")}/ ...`,
   );
   rmSync(STAGE, { recursive: true, force: true });
-  for (const f of deployList()) {
-    const dest = join(STAGE, f);
-    mkdirSync(dirname(dest), { recursive: true });
-    cpSync(join(ROOT, f), dest);
-  }
+  // The lock is taken HERE, in the one component every staging build goes
+  // through, rather than in each test that happens to call it. Three separate
+  // test files were patched one at a time before this, and the fourth reader
+  // still raced: `tests/deploy-manifest.test.mjs` briefly deletes robots.txt
+  // at the repo root, and a concurrent staging build ENOENTs on it. Excluding
+  // the mutation at the reader is the fix that stops needing to remember.
+  await withMutationLock(async () => {
+    for (const f of deployList()) {
+      const dest = join(STAGE, f);
+      mkdirSync(dirname(dest), { recursive: true });
+      cpSync(join(ROOT, f), dest);
+    }
+  }, ROOT);
 
   // Lab builds only (plan §8 P0.4): the `/next/` preview is noindex until the
   // P8 swap, and a noindexed page is excluded from SEO evaluation, so the
