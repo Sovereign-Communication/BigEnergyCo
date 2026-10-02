@@ -26,22 +26,23 @@ import {
   capacityScaleFor,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20260929a";
+} from "./engine.js?v=20261001b";
+import { memoizeSimulate } from "./sim-cache.js?v=20261001b";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20260929a";
-import { buildFrontier } from "./frontier.js?v=20260929a";
-import { oversizeCallout } from "./rescale.js?v=20260929a";
-import { climateSummary } from "./climate.js?v=20260929a";
+} from "./nasa.js?v=20261001b";
+import { buildFrontier } from "./frontier.js?v=20261001b";
+import { oversizeCallout } from "./rescale.js?v=20261001b";
+import { climateSummary } from "./climate.js?v=20261001b";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20260929a";
+} from "./pricing.js?v=20261001b";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -52,7 +53,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20260929a";
+} from "./money.js?v=20261001b";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -166,16 +167,16 @@ export function bestPickReason(winner, allEntries, meanT, agmRef = null) {
 // Auto-compare chemistries: sodium-ion and LFP only. Lead-acid (AGM) is
 // searched alongside as a savings reference but never recommended — its
 // entry ships as payload.agmReference, never in auto/cards/matrix/best.
-export const AUTO_CHEMS = ["naion", "lfp"];
-export const REF_CHEM = "agm";
+const AUTO_CHEMS = ["naion", "lfp"];
+const REF_CHEM = "agm";
 
 // Sodium-first preference: LFP takes the recommendation only when its true
 // 20-year cost beats sodium by more than this margin — otherwise sodium's
 // safety (no thermal runaway, charges to −20 °C) decides it.
-export const COST_MARGIN = 0.1;
+const COST_MARGIN = 0.1;
 // Mean-temp proxy for freezing-winter danger to LFP (must not charge below
 // 0 °C; this cold a mean says sub-zero nights are routine).
-export const COLD_MEAN_C = 10;
+const COLD_MEAN_C = 10;
 
 export function isColdSite(meanTempC) {
   return Number.isFinite(meanTempC) && meanTempC < COLD_MEAN_C;
@@ -301,7 +302,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20260929a");
+      await import("./profiles.js?v=20261001b");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -364,6 +365,28 @@ function payloadCacheKey(msg) {
   const canon = {};
   for (const k of keys) canon[k] = msg[k];
   return JSON.stringify(canon);
+}
+
+// The bounded feasibility-sims memo, keyed to the site series + derate +
+// load identity (see the engine's evaluate contract). One map lives per
+// generation of identical inputs: series._simCacheState keeps the arrays the
+// map was scoped against, and the map is replaced the moment any of them
+// changes. Exact by construction — the memo can never serve a result that
+// was not computed for byte-identical inputs.
+function simCacheFor(series, e1kw, tempsC, loadWh) {
+  const st = series._simCacheState;
+  if (
+    st &&
+    st.e1kw === e1kw &&
+    st.tempsC === tempsC &&
+    st.loadWh.length === loadWh.length &&
+    st.loadWh.every((v, i) => v === loadWh[i])
+  ) {
+    return st.map;
+  }
+  const map = new Map();
+  series._simCacheState = { e1kw, tempsC, loadWh, map };
+  return map;
 }
 
 export async function runSizing(msg, deps = {}) {
@@ -561,6 +584,18 @@ async function runSizingUncached(msg, deps = {}) {
   const loadWh = expandProfile(flatProfile(dailyKwh), hours.length);
   if (!series._tempsC) series._tempsC = Float64Array.from(hours, (h) => h.tAmb);
   const tempsC = series._tempsC;
+  // One bounded feasibility-sims memo per (site series, derates, load): the
+  // battery-row searches behind the target columns and the slider's re-slice
+  // probe overlapping (pv, batt) candidates, and a slider edit should reuse
+  // the run's simulations instead of re-deriving seconds of hourly physics.
+  // simulateOffset is pure in exactly (pv, batt, chemistry, capacityScale,
+  // e1kw, loadWh, tempsC) and the engine keys the first four, so sharing the
+  // map across calls is sound ONLY while the last three are identical — which
+  // is exactly what simCacheFor verifies (identity for the memoized arrays,
+  // an element-wise compare for the load, never a hash) before handing the
+  // same map over; any change starts a fresh one.
+  const simCache = simCacheFor(series, e1kw, tempsC, loadWh);
+  const simMemo = memoizeSimulate(simulateOffset, simCache);
 
   // Highest AC demand hour — the number the hardware list (inverter class,
   // DC protection) and the inverter cost basis are built around. The caller
@@ -1633,6 +1668,7 @@ async function runSizingUncached(msg, deps = {}) {
   // Shared sizing options for the fixed-chemistry bill-cut targets (used by
   // the full run and by the incremental slider patch alike).
   const billCutOpts = {
+    simulate: simMemo,
     oversizeStrategy,
     e1kw,
     loadWh,
@@ -1684,6 +1720,7 @@ async function runSizingUncached(msg, deps = {}) {
         const customEntries = [];
         for (const chemId of AUTO_CHEMS) {
           const sized = sizeForBillCut({
+            simulate: simMemo,
             oversizeStrategy,
             e1kw,
             loadWh,
@@ -1723,6 +1760,7 @@ async function runSizingUncached(msg, deps = {}) {
         }
         // Lead-acid reference at the same slider target (savings indicator).
         const agmSized = sizeForBillCut({
+          simulate: simMemo,
           oversizeStrategy,
           e1kw,
           loadWh,
@@ -1989,6 +2027,7 @@ async function runSizingUncached(msg, deps = {}) {
       const customEntries = [];
       for (const chemId of AUTO_CHEMS) {
         const sized = sizeForBillCut({
+          simulate: simMemo,
           oversizeStrategy,
           e1kw,
           loadWh,
@@ -2031,6 +2070,7 @@ async function runSizingUncached(msg, deps = {}) {
       }
       // Lead-acid reference at the same slider target (savings indicator).
       const agmSized = sizeForBillCut({
+        simulate: simMemo,
         oversizeStrategy,
         e1kw,
         loadWh,

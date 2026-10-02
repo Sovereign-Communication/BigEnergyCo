@@ -23,8 +23,11 @@
 // a reader of the TERMINAL had no way to learn what produced it: the run printed
 // `breach` on two budgets, exited 0, and said "no regression against the
 // declared baseline", with the rule that makes a breach non-blocking written
-// only in the report JSON. Two budgets really are over the §3.1 limit today —
-// `registry_country` by 12x — and a bare "breach" next to a green run is exactly
+// only in the report JSON. Three budgets were over the table's §3.1 figures
+// when P0.4 measured them — `registry_country` by 12x — and A-002 (owner-
+// approved 2026-09-29) moved the REPORTED line to shipped +10 % for those
+// three, so an over-limit reading today means worse than what shipped at the
+// amendment. A bare "breach" next to a green run is exactly
 // the reading this gate's own header warns against. `scripts/check-lighthouse.mjs`
 // already does the honest version in its human output ("N Q-02 breaches
 // (non-blocking until P5/P8)"). One constant, used by the JSON and the terminal,
@@ -35,9 +38,12 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import {
+  BYTE_BUDGET_FACET_AXES,
   compareToBaseline,
+  composeQualityFacetLine,
   formatReading,
   measureStagedBuild,
+  QUALITY_SIZE_CLAUSE_MAX,
   readByteBudgetBaseline,
   REGRESSION_TOLERANCE_BYTES,
 } from "./lib/byte-budgets.mjs";
@@ -311,10 +317,44 @@ export function main(argv = process.argv.slice(2)) {
     unmeasured,
     breaches,
     ledger_notes: baseline.skipped,
+    // Which facet axis this report IS the evidence for, declared by the gate
+    // that measured it, and the line composed from THIS run's reading. The
+    // judge's evidence builder discovers `facet_axes` inside whatever report it
+    // finds in the artifacts directory — the same derivation the Lighthouse and
+    // a11y-controls reports already use — so the `quality` proof line and the
+    // numbers behind it cannot drift apart, and a run that measured no budgets
+    // says so instead of leaving a typed claim standing. See
+    // `composeQualityFacetLine` in scripts/lib/byte-budgets.mjs for what the
+    // line says, what it refuses to claim, and why it fits the per-axis clip by
+    // construction rather than by trimming.
+    facet_axes: BYTE_BUDGET_FACET_AXES,
   };
+  // Composed HERE, from this run, exactly as the Lighthouse gate does it.
+  report.facet_line = composeQualityFacetLine(report);
+  out.write(
+    `\nfacet line (${report.facet_line.length} chars):\n  ${report.facet_line}\n`,
+  );
   if (opts.out)
     writeFileSync(opts.out, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   out.write(`\nreport: ${opts.out || "not written (pass --out FILE)"}\n`);
+  // The clause is HALF of the `quality` axis — the shipped-size half — and its
+  // budget is smaller than the transport clip because the builder appends the
+  // clarity clause the required test job's own steps support
+  // (`composeQualityContractClause`). A clause over this budget would push the
+  // JOIN over the clip, and an over-long line is silently cut on its way to the
+  // judge: a red gate with the clause printed beats a green one whose claim
+  // quietly lost its numbers. The clause is bounded by construction, so this is
+  // a backstop and not a trimmer.
+  if (report.facet_line.length > QUALITY_SIZE_CLAUSE_MAX) {
+    process.stderr.write(
+      `check-byte-budgets: facet clause is ${report.facet_line.length} chars, ` +
+        `over the ${QUALITY_SIZE_CLAUSE_MAX}-char budget for the size half of the ` +
+        "`quality` axis; the clarity clause the builder appends has to fit " +
+        "beside it. Shorten a phrase in composeQualityFacetLine rather than " +
+        "raising the budget.\n",
+    );
+    return 1;
+  }
 
   if (regressions.length) {
     process.stderr.write(

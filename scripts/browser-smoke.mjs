@@ -18,7 +18,12 @@
 //   silent sizing worker: deadline surfaces an actionable error and an explicit
 //   retry completes on a fresh worker.
 // Exit 0 = pass, 1 = fail (prints every failed gate).
+import { writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { normalizeBase } from "./lib/base-url.mjs";
+import { A11Y_FACET_AXES, composeA11yFacetLine } from "./lib/a11y-controls.mjs";
 import { start, gate, gateSummary } from "./smoke/runtime.mjs";
 import { createActions } from "./smoke/actions.mjs";
 import { runLocationFlow } from "./smoke/location.js";
@@ -46,10 +51,59 @@ const BASE = normalizeBase(
 // full strictness.
 const isLocalBase = /^https?:\/\/localhost|^http:\/\/127\.0\.0\.1/.test(BASE);
 
+/**
+ * Write the `accessibility` facet report from the a11y flow that just ran.
+ *
+ * The judge's evidence builder DISCOVERS this file — it carries `facet_axes`,
+ * so the `accessibility` line on the judge's record is the one composed from
+ * this run rather than a sentence typed beside it. That is the whole reason the
+ * file exists, and it is written even when the flow did not finish: a run that
+ * measured nothing must say that, not leave a stale claim standing.
+ *
+ * The name and the upload are the wire (see the web-smoke job in
+ * .github/workflows/test.yml): the judge downloads `jev-results-*`, so a report
+ * under any other name is read by nobody.
+ */
+function writeA11yControlsReport(a11y, base) {
+  const summary = a11y || {
+    ran: false,
+    error: "the a11y flow did not complete in this run",
+  };
+  const report = {
+    plan_item: "P0.4",
+    plan_ref: "docs/plan/MASTER_PLAN.md §3.2, Q-07",
+    metric: "a11y_controls",
+    base,
+    generated_at: new Date().toISOString(),
+    facet_axes: A11Y_FACET_AXES,
+    facet_line: composeA11yFacetLine(summary),
+    measured: summary,
+  };
+  try {
+    writeFileSync(
+      join(
+        dirname(fileURLToPath(import.meta.url)),
+        "..",
+        "a11y-controls-report.json",
+      ),
+      `${JSON.stringify(report, null, 2)}\n`,
+      "utf8",
+    );
+  } catch (e) {
+    // Loud rather than silent: without the file the judge sees no accessibility
+    // measurement at all, which is a real gap and must not look like a green run.
+    console.error(
+      `SMOKE FAIL  could not write a11y-controls-report.json (${(e && e.message) || e})`,
+    );
+  }
+  return report;
+}
+
 async function main() {
   console.log(`SMOKE      base: ${BASE}`);
   const ctx = { base: BASE, isLocalBase, ...(await start()) };
   const actions = createActions(ctx);
+  let a11ySummary = null;
   try {
     await ctx.send("Page.enable");
     await ctx.send("Runtime.enable");
@@ -96,7 +150,7 @@ async function main() {
     // A11y needs a completed run (contrast, result-stage keyboard, the two
     // scroll sites) and ends with the card invalidated by its own loadMode
     // change — closing below runs a fresh off-grid run regardless.
-    await runA11yFlow(ctx);
+    a11ySummary = await runA11yFlow(ctx);
     await runClosingFlow(ctx, actions);
     // Last: the silent-worker deadline on a fresh page. Appended after closing
     // so every existing gate keeps its exact order.
@@ -109,6 +163,11 @@ async function main() {
     );
   } finally {
     await ctx.close();
+    const report = writeA11yControlsReport(a11ySummary, BASE);
+    console.log(
+      `SMOKE      a11y facet line (${report.facet_line.length} chars):\n` +
+        `  ${report.facet_line}`,
+    );
   }
   process.exit(gateSummary());
 }

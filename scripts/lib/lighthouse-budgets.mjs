@@ -404,7 +404,7 @@ export const LIGHTHOUSE_FLOORS = {
  * The gate owns this rather than the transport that carries it, for two reasons
  * that are the whole point of the change. First, the honesty rules live next to
  * the measurement instead of next to the plumbing. Second, the line has to fit
- * `COMPLETE_FACET_CLIP` (280 characters) and a line that overflows is SILENTLY
+ * `COMPLETE_FACET_CLIP` (300 characters) and a line that overflows is SILENTLY
  * clipped on its way to the judge — which for this facet means the honest tail
  * ("not ratcheted, do not read it as a fact") is exactly what gets cut.
  *
@@ -439,16 +439,22 @@ export const LIGHTHOUSE_FLOORS = {
  * product and only the second would libel it.
  *
  * It is FIRST in the line because it is the part that was missing, and a
- * 280-char clip is finite: the least load-bearing sentence must not be the one
+ * 301-char clip is finite: the least load-bearing sentence must not be the one
  * that gets cut.
+ *
+ * WHY THE BILL-CUT SLIDER'S NUMBERS AND NOT THE PAIR'S. Both sliders are
+ * measured (scripts/lib/warm-interaction.mjs drives each on its own path) and
+ * both are in the report, but naming a second slider on this clause costs more
+ * than the clip has left: the stress fixture below sits at 272 of 280 chars, and
+ * the speed half now takes a declared 35 of the remaining share, so
+ * "budget drag 6ms, confirm 0ms" is 29. Paying for it would mean deleting
+ * "median of 3" or the "perf NOT ratcheted" tail — the method and the honesty
+ * sentence, which is exactly what this clause exists to protect. The pair's
+ * per-slider numbers travel in `warm_interaction.warm_budget_adjustments`
+ * instead, and the smoke suite's accessibility walk tabs through both sliders by
+ * name on the facet line that does have room.
  */
 function warmClause(warm) {
-  const sec = (ms) =>
-    typeof ms === "number" && Number.isFinite(ms)
-      ? ms >= 1000
-        ? `${(ms / 1000).toFixed(1)}s`
-        : `${Math.round(ms)}ms`
-      : null;
   const cold = sec(warm?.cold_run?.ms);
   const repeat = sec(warm?.warm_rerun?.ms);
   const drag = sec(warm?.warm_adjustments?.preview_median_ms);
@@ -486,6 +492,133 @@ function warmClause(warm) {
   // measurement landed: one machine, one city, three adjustments, no simulated
   // throttling. A real reading, not a device matrix and not a population claim.
   return `WARM, 1 unthrottled Chrome: ${parts.join(", ")}`;
+}
+
+/**
+ * Milliseconds -> a short human string, or null when there is no reading.
+ * Used by the warm clause, whose timings the harness records in ms.
+ */
+function sec(ms) {
+  return typeof ms === "number" && Number.isFinite(ms)
+    ? ms >= 1000
+      ? `${(ms / 1000).toFixed(1)}s`
+      : `${Math.round(ms)}ms`
+    : null;
+}
+
+/**
+ * SECONDS already in seconds -> a short human string.
+ *
+ * A separate function from `sec` on purpose. The gate stores `fcp_s`/`lcp_s`
+ * in seconds, so routing them through the millisecond formatter renders 2.08
+ * seconds as "2ms" — a number that is wrong by three orders of magnitude and
+ * reads as an instant first paint. Two units, two formatters.
+ */
+function secS(s) {
+  if (typeof s !== "number" || !Number.isFinite(s)) return null;
+  return s >= 1 ? `${s.toFixed(1)}s` : `${Math.round(s * 1000)}ms`;
+}
+
+/**
+ * The `performance` axis's TWO clauses and their declared bounds.
+ *
+ * `performance` is the third two-instrument axis, and the first two clauses of
+ * one rather than one clause of two. The ratchet half is what this gate has
+ * always composed: the warm-interaction reading, the target count and method,
+ * the three deterministic categories, and the "perf NOT ratcheted" sentence
+ * with its range and calibration envelope. The speed half is the run's own
+ * worst FCP, LCP and CLS — numbers this gate has measured on every run since
+ * the gate existed and has never put in front of the judge, which is why a
+ * measured halving of FCP and LCP at P0.4 moved the ordinal by nothing.
+ *
+ * The bounds are declared per half, not once for the pair, for the reason
+ * `joinAxisClauses` already documents: a half that outgrows its own budget
+ * pushes the OTHER half out of room, and naming which half grew is what makes
+ * the failure fixable. The pair must also sum to COMPLETE_FACET_CLIP, and
+ * that sum is checked at the join rather than assumed here.
+ */
+export const PERF_RATCHET_CLAUSE_MAX = 250;
+// The room the axis clip leaves the speed half once the ratchet half has its
+// own: the two halves are joined into one facet line that must reach the judge
+// WHOLE, so `ratchet + 1 + speed <= COMPLETE_FACET_CLIP` is a constraint on
+// this number, not a preference.
+//
+// It was 40 with three metrics, and the TBT rendering (`104/100ms`) is what sets
+// the width now — so it was RAISED 49 -> 50 with COMPLETE_FACET_CLIP 300 -> 301
+// when the first three-digit worst TBT arrived and the rule deleted the
+// performance axis instead of showing the number. See COMPLETE_FACET_CLIP.
+//
+// A run needing more than this still gets an over-budget clause and a named
+// failure rather than a trimmed one. No speed ceiling, ratchet or score derives
+// from it: it is a character budget for one sentence.
+export const PERF_SPEED_CLAUSE_MAX = 50;
+
+/**
+ * The speed half: this run's WORST measured FCP, LCP, TBT and CLS across every
+ * target the gate measured.
+ *
+ * WORST, and the word is on the clause, because the alternative is the exact
+ * lie this module exists to prevent. The gate measures 14 templates x 2 form
+ * factors; a bare "FCP 2.1s" reads as the page's first paint, or as a median,
+ * when it is the single slowest target in the run. The ratchet half says
+ * "median of 3" about runs; without "worst" here, the two halves would be
+ * describing different statistics with the same words and neither would say so.
+ *
+ * TBT is the one metric that carries its CEILING with it, as `89/100ms`. It is
+ * the metric the plan bounds in absolute terms (Q-03) rather than by
+ * ratchet, so a bare "TBT 89ms" would leave the reader comparing it against a
+ * bar they have to remember. Over the ceiling the clause reads `124/100ms`:
+ * the number is still the run's own, and it is visibly over rather than
+ * quietly rounded or dropped. The same reading is a NAMED FAILURE in
+ * `check-lighthouse`'s `speed_over`, which is unchanged and still fires.
+ *
+ * Derived from `report.measured`, so the numbers are the run's own and cannot
+ * drift from the report the judge is handed. Returns null when any metric is
+ * missing rather than emitting a partial clause, because four metrics and
+ * three is a claim about a different measurement.
+ */
+export function composeSpeedClause(report) {
+  const measured = Array.isArray(report?.measured) ? report.measured : [];
+  const worst = (pick) => {
+    const values = measured
+      .map(pick)
+      .filter((v) => typeof v === "number" && Number.isFinite(v));
+    return values.length ? Math.max(...values) : null;
+  };
+  const fcp = secS(worst((m) => m?.speed?.fcp_s));
+  const lcp = secS(worst((m) => m?.speed?.lcp_s));
+  const cls = worst((m) => m?.speed?.cls);
+  const tbt = worst((m) => m?.speed?.tbt_ms);
+  if (fcp === null || lcp === null || cls === null || tbt === null) return null;
+  const tbtCeiling = LIGHTHOUSE_SPEED_CEILINGS.tbt_ms;
+  return `worst FCP ${fcp}, LCP ${lcp}, TBT ${Math.round(tbt)}/${tbtCeiling}ms, CLS ${cls.toFixed(3)}`;
+}
+
+/**
+ * Both halves of the `performance` axis, in join order, each with its own
+ * bound. The gate emits them as two clause records and the evidence builder
+ * joins them — the same two-instrument shape `quality` and `accessibility`
+ * already use, so the over-budget failure is raised by the one code path that
+ * already raises it.
+ */
+export function composePerfClauses(report) {
+  const ratchet = composeFacetLine(report);
+  const speed = composeSpeedClause(report);
+  if (!ratchet || !speed) return null;
+  return [
+    {
+      half: "ratchet",
+      metric: "perf_ratchet",
+      text: ratchet,
+      max: PERF_RATCHET_CLAUSE_MAX,
+    },
+    {
+      half: "speed",
+      metric: "perf_speed",
+      text: speed,
+      max: PERF_SPEED_CLAUSE_MAX,
+    },
+  ];
 }
 
 export function composeFacetLine(report) {

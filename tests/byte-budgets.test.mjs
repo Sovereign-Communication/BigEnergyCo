@@ -2,9 +2,10 @@
 // the staged build, with the baseline recorded in the ledger.
 //
 // What these tests hold in place:
-//   • the §3.1 limits, verbatim — a relaxed number must fail here, because the
-//     plan says only an owner-approved amendment may relax one (and the
-//     amendment lives in the plan, not in this file);
+//   • the §3.1 limits as amended by A-002 — a relaxed number must fail here,
+//     because the plan says only an owner-approved amendment may relax one
+//     (and the amendment lives in the plan, not in this file), and the test
+//     reads A-002's numbers back out of MASTER_PLAN.md;
 //   • that each metric measures the scope the plan names: the first-result JS
 //     is the TRANSITIVE module graph, not the entry file, and the registry
 //     budget is per country so the worst country is the honest reading;
@@ -15,7 +16,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,14 +32,21 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = join(ROOT, "scripts/check-byte-budgets.mjs");
 
 import {
+  BYTE_BUDGET_FACET_AXES,
   BYTE_BUDGET_LIMITS,
   brotliBytes,
   compareToBaseline,
+  composeQualityFacetLine,
   formatReading,
   measureStagedBuild,
+  moduleGraph,
+  QUALITY_SIZE_CLAUSE_MAX,
   readByteBudgetBaseline,
   REGRESSION_TOLERANCE_BYTES,
+  scriptEntries,
 } from "../scripts/lib/byte-budgets.mjs";
+import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
+import { deployList } from "../scripts/lib/deploy-manifest.mjs";
 
 const KB = 1024;
 
@@ -102,35 +117,59 @@ function fixture(overrides = {}) {
   };
 }
 
-test("BUDGET: the section 3.1 limits are the plan's, verbatim", () => {
+test("BUDGET: the limits are the plan's — §3.1's table, as amended by A-002", () => {
   // Every byte budget is a KB figure in the plan. The one that is not bytes is
   // a COUNT, and it is held as a count so nobody "fixes" it into 10 KB later.
-  const byteLimits = {
+  //
+  // Seven lines are §3.1 verbatim. Three are A-002's interim lines (owner-
+  // approved 2026-09-29): measured shipped bytes +10 %, binding until the
+  // P6/P8 absolute phases. BOTH sets live in the plan — this test reads the
+  // amendment's own numbers out of MASTER_PLAN.md, so a constant that drifts
+  // from the plan fails here, and a real relaxation must be made where §3.1
+  // says it may be: measured evidence plus an owner-approved amendment.
+  const plan = readFileSync(join(ROOT, "docs/plan/MASTER_PLAN.md"), "utf8");
+  const tableLimits = {
     home_document: 30,
     css_total: 20,
-    js_before_interactive: 35,
     js_to_first_result: 200,
     locale_strings: 25,
-    registry_country: 6,
     web_fonts: 0,
-    heatmap_initial: 300,
   };
-  for (const [metric, kb] of Object.entries(byteLimits)) {
+  const amendedLimits = {
+    js_before_interactive: 206,
+    registry_country: 83,
+    heatmap_initial: 460,
+  };
+  for (const [metric, kb] of Object.entries(tableLimits)) {
     assert.equal(
       BYTE_BUDGET_LIMITS[metric],
       kb * KB,
-      `${metric} is ${kb} KB in plan §3.1. Only an owner-approved amendment may relax it, and the amendment lives in the plan — not here.`,
+      `${metric} is ${kb} KB in plan §3.1's table, unchanged by A-002.`,
     );
   }
+  for (const [metric, kb] of Object.entries(amendedLimits)) {
+    assert.equal(
+      BYTE_BUDGET_LIMITS[metric],
+      kb * KB,
+      `${metric} is ${kb} KB under A-002. Only an owner-approved amendment may relax it, and the amendment lives in the plan — not here.`,
+    );
+    assert.ok(
+      plan.includes(`\`${metric}\` ≤ ${kb} KB`),
+      `plan §3.1 must carry A-002's line \`${metric}\` ≤ ${kb} KB — the gate reads the amendment from the plan, never the other way`,
+    );
+  }
+  assert.ok(
+    plan.includes("A-002 (owner-approved 2026-09-29)"),
+    "the relaxation must be recorded as a numbered amendment entry, not as prose the gate happens to agree with",
+  );
   assert.equal(
     BYTE_BUDGET_LIMITS.requests_before_interaction,
     10,
     "requests before first interaction is a count (≤ 10), not a byte budget",
   );
-  // A 6 KB country budget against a city catalogue is the one the plan already
-  // flagged as possibly unreachable; it is kept at the plan's value so the
-  // breach stays visible until an amendment says otherwise.
-  assert.equal(BYTE_BUDGET_LIMITS.registry_country, 6 * KB);
+  // A 6 KB country budget against a city catalogue is the one §3.1 flagged as
+  // possibly unreachable; A-002 relaxed it to the measured 75.1 KB +10 %.
+  assert.equal(BYTE_BUDGET_LIMITS.registry_country, 83 * KB);
 });
 
 test("BUDGET: a staged build is measured on every plan budget", () => {
@@ -396,6 +435,45 @@ test("BUDGET: the heatmap budget is measured on the page that fetches the grid",
     "the reading is the entry script plus the grid it fetches, compressed",
   );
   assert.deepEqual(h.parts.slice().sort(), [
+    "assets/data/heatmap-grid.json",
+    "assets/js/heatmap.js",
+  ]);
+});
+
+test("BUDGET: deferring a payload does not take it out of the reading", () => {
+  // The heatmap splits its data in two: a packed binary grid the map waits on,
+  // and a names/year-matrix file fetched after the map is on screen. The split
+  // made `heatmap_initial` honest to schedule, and the obvious way to cheat
+  // with it is to make the deferred half invisible to this walk — by moving
+  // the fetch out of a string literal, or by renaming the file. Neither is
+  // allowed: every fetch in an entry script is counted, and the reading below
+  // is the sum of BOTH payloads.
+  const grid = JSON.stringify({ cells: "x".repeat(5000) });
+  const detail = JSON.stringify({ names: "y".repeat(9000) });
+  const { metrics } = measureStagedBuild(
+    fixture({
+      "assets/js/heatmap.js":
+        'fetch("../assets/data/heatmap-grid.json");' +
+        'fetch("../assets/data/heatmap-detail.json");',
+      "assets/data/heatmap-grid.json": grid,
+      "assets/data/heatmap-detail.json": detail,
+    }),
+  );
+  const h = metrics.heatmap_initial;
+  assert.equal(
+    h.value,
+    brotliBytes(
+      Buffer.from(
+        'fetch("../assets/data/heatmap-grid.json");' +
+          'fetch("../assets/data/heatmap-detail.json");',
+      ),
+    ) +
+      brotliBytes(Buffer.from(grid)) +
+      brotliBytes(Buffer.from(detail)),
+    "a payload fetched after first paint is still bytes this page ships",
+  );
+  assert.deepEqual(h.parts.slice().sort(), [
+    "assets/data/heatmap-detail.json",
     "assets/data/heatmap-grid.json",
     "assets/js/heatmap.js",
   ]);
@@ -816,4 +894,300 @@ test("BUDGET: the CLI measures a real staged tree and exits on a regression", as
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// ── The `quality` facet line: what a run of this gate says on the record ─────
+//
+// The line the judge reads for QUALITY used to be hand-typed ("prettier clean
+// repo-wide; the two duplications the design audit found are gone") with no run
+// behind it, which is the same defect the performance and accessibility axes
+// already had fixed. The gate that measures the shipped payload now composes it
+// from the run it just measured. These tests pin what the line may and may not
+// claim — and that every shape this report can produce fits the per-axis
+// transport clip, because an over-long line is SILENTLY cut and the sentence
+// that gets cut here is the one saying the measurement is a payload size and
+// not a verdict on the code.
+
+/** A report shaped like the real one: every §3.1 budget measured. */
+function budgetReport(overrides = {}) {
+  const names = Object.keys(BYTE_BUDGET_LIMITS);
+  return {
+    metrics: Object.fromEntries(
+      names.map((n) => [n, { value: 1, limit: 1024, unit: "bytes" }]),
+    ),
+    regressions: [],
+    improvements: names.slice(0, 2).map((metric) => ({ metric })),
+    unmeasured: [],
+    breaches: names.slice(0, 3).map((metric) => ({ metric })),
+    tolerance_bytes: REGRESSION_TOLERANCE_BYTES,
+    ...overrides,
+  };
+}
+
+test("FACET: the SIZE clause is composed from the run and names what it measured", () => {
+  const line = composeQualityFacetLine(budgetReport());
+  assert.deepEqual(BYTE_BUDGET_FACET_AXES, ["quality"]);
+  assert.match(
+    line,
+    /0\/9 regressed/,
+    "the ratchet verdict is the size half's own concision claim",
+  );
+  assert.match(line, /2 improved/, "…with the improvements the run found");
+  assert.match(line, /3 over limits/, "and the plan's debt, named as debt");
+  assert.match(
+    line,
+    /home_document \(\+2\)/,
+    "…naming a budget and counting the rest, so a reader can check the claim without the clause growing with the list",
+  );
+  assert.match(
+    line,
+    /binds at P6\/P8/,
+    "a breach is not a bar until its phase, and the phase belongs on the clause so debt is not read as a verdict",
+  );
+  // The clause is HALF of the axis, and it must not pretend otherwise: the
+  // sentence that says what a size measurement cannot see belongs to the
+  // contract clause the builder appends, and a size clause claiming the axis
+  // from here is the defect this split exists to prevent.
+  assert.doesNotMatch(
+    line,
+    /duplication|dead code|minimal|clarity/i,
+    "the size clause must claim the shipped-size half only; the clarity half is measured by the required test job",
+  );
+});
+
+test("FACET: a regressed payload withdraws the concision claim", () => {
+  const names = Object.keys(BYTE_BUDGET_LIMITS);
+  const line = composeQualityFacetLine(
+    budgetReport({ regressions: names.map((metric) => ({ metric })) }),
+  );
+  assert.match(line, /9\/9 REGRESSED/);
+  assert.match(
+    line,
+    /not the smallest version that keeps the proven behavior/,
+    "the axis's own words, withdrawn — not a green sentence over a red reading",
+  );
+  assert.doesNotMatch(
+    line,
+    /improved|over limits/,
+    "…and the budgets that did not move are not reported as though the run were fine",
+  );
+});
+
+test("FACET: a run that measured nothing says so, and claims nothing", () => {
+  const line = composeQualityFacetLine({ metrics: {}, regressions: [] });
+  assert.match(line, /NOT measured this run/);
+  assert.match(line, /nothing here measures the smallest version/);
+  assert.doesNotMatch(
+    line,
+    /regressed|improved/,
+    "no reading means no verdict, in either direction — not even a flattering one",
+  );
+});
+
+test("FACET: every size-clause shape this report can produce fits its budget", () => {
+  const names = Object.keys(BYTE_BUDGET_LIMITS);
+  // The bound is a measurement, not a hope: this report's metric set is
+  // `BYTE_BUDGET_LIMITS`, and all nine can be an improvement, a breach AND
+  // unmeasured at once, so that shape is the longest the gate can produce.
+  const shapes = {
+    worst: budgetReport({
+      improvements: names.map((metric) => ({ metric })),
+      unmeasured: names.map((metric) => ({ metric })),
+      breaches: names.map((metric) => ({ metric })),
+    }),
+    regressed: budgetReport({
+      regressions: names.map((metric) => ({ metric })),
+    }),
+    single_regression: budgetReport({
+      regressions: [{ metric: names[0] }],
+    }),
+    clean: budgetReport({ improvements: [], breaches: [] }),
+    partial: budgetReport({
+      metrics: Object.fromEntries(
+        names.slice(0, 3).map((n) => [n, { value: 1, limit: 1024 }]),
+      ),
+      unmeasured: names.slice(3).map((metric) => ({ metric })),
+    }),
+    none: {},
+    // A pathological metric name is clipped, never allowed to stretch the line.
+    long_names: budgetReport({
+      breaches: names.map((metric) => ({ metric: metric.repeat(4) })),
+    }),
+  };
+  for (const [shape, report] of Object.entries(shapes)) {
+    const line = composeQualityFacetLine(report);
+    assert.ok(
+      line.length <= QUALITY_SIZE_CLAUSE_MAX,
+      `${shape} composes to ${line.length} chars, over the ${QUALITY_SIZE_CLAUSE_MAX}-char ` +
+        "budget for the size half; the clarity clause has to fit beside it",
+    );
+  }
+  assert.ok(
+    composeQualityFacetLine(shapes.worst).length >= 100,
+    "the bound is only worth pinning if the worst case is actually long",
+  );
+});
+
+test("FACET: the two quality clauses fit the transport clip TOGETHER, by construction", async () => {
+  // The invariant the split rests on: one axis, two instruments, one per-axis
+  // slot. Each clause is bounded by its own declared maximum, and the sum of
+  // those two maxima must fit the clip — otherwise the builder's join would be
+  // the first thing to overflow, and an over-long line is CUT in transit, which
+  // for this axis means losing the sentence that limits the claim.
+  const { QUALITY_CONTRACT_CLAUSE_MAX } =
+    await import("../scripts/lib/jev-evidence.mjs");
+  assert.ok(
+    QUALITY_SIZE_CLAUSE_MAX + 1 + QUALITY_CONTRACT_CLAUSE_MAX <=
+      COMPLETE_FACET_CLIP,
+    `${QUALITY_SIZE_CLAUSE_MAX} + 1 + ${QUALITY_CONTRACT_CLAUSE_MAX} must fit ${COMPLETE_FACET_CLIP}`,
+  );
+});
+
+test("FACET: the CLI publishes the composed line in the report it writes", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "jev-budget-facet-"));
+  const ledger = join(dir, "ledger.jsonl");
+  try {
+    writeFileSync(
+      join(dir, "index.html"),
+      '<!doctype html><html><head><link rel="stylesheet" href="./site.css"></head></html>',
+    );
+    writeFileSync(join(dir, "site.css"), "body{color:#111}");
+    writeFileSync(ledger, "");
+    const out = join(dir, "report.json");
+    const run = spawnSync(
+      process.execPath,
+      [CLI, "--stage", dir, "--ledger", ledger, "--out", out],
+      { encoding: "utf8" },
+    );
+    assert.equal(run.status, 0, run.stderr);
+    const report = JSON.parse(readFileSync(out, "utf8"));
+    assert.deepEqual(
+      report.facet_axes,
+      ["quality"],
+      "the report must declare the axis it speaks for, or the builder discovers nothing",
+    );
+    assert.equal(
+      report.facet_line,
+      composeQualityFacetLine(report),
+      "the line must be the one THIS report's reading composes, or the judge's line and the numbers behind it can drift apart",
+    );
+    assert.match(
+      run.stdout,
+      /facet line \(\d+ chars\)/,
+      "and the run prints it, so a human sees the sentence the judge will read",
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// The slider-workflow byte diet's regression gate, measured on the REAL tree:
+// js_before_interactive is the transitive module graph of the page's script
+// entries, and the drag preview needs interpolateCurveTarget synchronously —
+// but the 47 KB deterministic search engine, the frontier builder and the
+// sims memo are worker-side code. A static ui.js import of any of them is
+// exactly the mistake that once cost +11,201 compressed bytes against the
+// declared baseline, and it must fail HERE, in a second, not in CI.
+//
+// What the slider workflow may carry eagerly: the curve projection and drift
+// policy (budget-span.js, cut-targets.js) and the pure chemistry/cell model
+// (chem-model.js — extracted so the engine itself could leave the payload).
+// What it must never carry: engine.js, frontier.js, run.js, sim-cache.js.
+function realEagerGraph() {
+  const html = readFileSync(join(ROOT, "index.html"), "utf8");
+  const staged = new Set(deployList());
+  const entries = scriptEntries(html, staged);
+  return moduleGraph(entries, (rel) => readFileSync(join(ROOT, rel)), staged);
+}
+
+test("GRAPH: the pre-interactive slider graph carries the projection, never the engine", () => {
+  const graph = realEagerGraph();
+  for (const eager of [
+    "assets/js/sizing/budget-span.js",
+    "assets/js/shared/cut-targets.js",
+    "assets/js/sizing/chem-model.js",
+  ]) {
+    assert.ok(graph.has(eager), `${eager} must ship pre-interactive`);
+  }
+  for (const workerOnly of [
+    "assets/js/sizing/engine.js",
+    "assets/js/sizing/frontier.js",
+    "assets/js/sizing/run.js",
+    "assets/js/sizing/sim-cache.js",
+  ]) {
+    assert.ok(
+      !graph.has(workerOnly),
+      `${workerOnly} is worker-side code — a static eager import re-bloats js_before_interactive`,
+    );
+  }
+});
+
+// Module-graph integrity, the class of breakage a unit test cannot see: a
+// named import that no export satisfies is a LINK error, so the browser
+// kills the whole module (and everything that imports it) at boot — while
+// every node:test stays green, because the tests never import the browser
+// modules. That happened for real: ui.js named an export that only
+// budget-span.js provides while importing it from cut-targets.js, and only
+// the browser smoke noticed the app was dead. This walks every shipped
+// module in assets/js and proves each named import resolves.
+function shippedModules(dir, out = []) {
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) shippedModules(p, out);
+    else if (name.endsWith(".js")) out.push(p);
+  }
+  return out;
+}
+
+// Import/export braces may carry comments; they are not names. Exports name
+// their RIGHT side (`x as y` ships y); imports bind their LEFT side (importing
+// x as y requires the target to export x).
+const clauseNames = (clause, side) =>
+  clause
+    .replace(/\/\/[^\n\r]*/g, "")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split(",")
+    .map((spec) => {
+      const parts = spec.trim().split(/\s+as\s+/);
+      return (parts[side === "left" ? 0 : 1] || parts[0]).trim();
+    })
+    .filter(Boolean);
+
+function exportsOf(src) {
+  const names = new Set();
+  for (const m of src.matchAll(
+    /export\s+(?:async\s+)?(?:function|const|let|var|class)\s+([\w$]+)/g,
+  ))
+    names.add(m[1]);
+  for (const m of src.matchAll(/\bexport\s*\{([^}]*)\}/g))
+    for (const name of clauseNames(m[1])) names.add(name);
+  return names;
+}
+
+test("GRAPH: every named import in the shipped modules resolves to a real export", () => {
+  const root = join(ROOT, "assets", "js");
+  const exported = new Map();
+  const files = shippedModules(root);
+  for (const f of files) exported.set(f, exportsOf(readFileSync(f, "utf8")));
+  const missing = [];
+  for (const f of files) {
+    const src = readFileSync(f, "utf8");
+    for (const m of src.matchAll(
+      /\bimport\s*\{([^}]*)\}\s*from\s*["']([^"']+)["']/g,
+    )) {
+      const spec = m[2];
+      if (!spec.startsWith(".")) continue;
+      const target = join(dirname(f), spec.split("?")[0]);
+      const exp = exported.get(target);
+      if (!exp) {
+        missing.push(`${f} imports from missing module ${spec}`);
+        continue;
+      }
+      for (const name of clauseNames(m[1], "left")) {
+        if (!exp.has(name))
+          missing.push(`${f}: { ${name} } is not exported by ${spec}`);
+      }
+    }
+  }
+  assert.deepEqual(missing, [], missing.join("; "));
 });

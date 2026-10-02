@@ -116,12 +116,10 @@
         ]
       }
     </script>
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-      crossorigin=""
-    />
+    <!-- No <link> for Leaflet's CSS here on purpose: as a stylesheet it is
+         render-blocking and it sat in front of the intro paragraph below, the
+         LCP element. assets/js/sizing/leaflet-styles.js fetches it as a preload
+         and promotes it, reading the URL and SRI from map-provider.js. -->
     <style>
       :root {
         color-scheme: dark;
@@ -812,6 +810,6 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-    <script src="../assets/js/heatmap.js?v=20260929a"></script>
+    <script type="module" src="../assets/js/heatmap.js?v=20261001b"></script>
   </body>
 </html>

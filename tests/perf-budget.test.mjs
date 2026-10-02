@@ -47,6 +47,9 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     "tilt-harvest.js",
     "rescale.js",
     "bom.js",
+    "budget-span.js",
+    "chem-model.js",
+    "sim-cache.js",
     "sizing-worker.js",
   ];
   const eagerShared = [
@@ -98,6 +101,20 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // glued onto translated verdicts as an English literal), plus one small
   // owner for the levelized-cost row and the reasoning that goes with each
   // fix. No new module, no new eager feature: strings and comments.
+  // 808,000 (+18 KB measured 802,753): the slider-workflow canonical-state
+  // work. The drag preview now projects the slider's % onto the curve
+  // (interpolateCurveTarget in budget-span.js) instead of snapping the card
+  // to a neighboring lattice entry that contradicted the thumb; a run reply
+  // that lands behind the visitor's sliders is detected and reconciled
+  // instead of clobbering them; both sliders write the share hash at input
+  // time; and the worker's feasibility-sims memo (sim-cache.js + run.js)
+  // makes subsequent slider adjustments reuse the run's simulations instead
+  // of re-deriving seconds of hourly physics. Correctness code on the slider
+  // path, reviewed deliberately — the bar moves with it. The same work then
+  // paid for its own bytes WITHOUT moving the bar: the chemistry/cell model
+  // moved out of the eager engine into chem-model.js (the whole 47 KB search
+  // engine is now worker-only), and budget-span.js / chem-model.js /
+  // sim-cache.js joined this list so no shipped byte hides from the guard.
   assert.ok(
     htmlBytes <= 125_000,
     `index.html ${htmlBytes} bytes exceeds 125,000 budget`,
@@ -107,8 +124,8 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     `site.css ${cssBytes} bytes exceeds 40,000 budget`,
   );
   assert.ok(
-    jsBytes <= 790_000,
-    `eager JS ${jsBytes} bytes exceeds 790,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
+    jsBytes <= 808_000,
+    `eager JS ${jsBytes} bytes exceeds 808,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
   );
 });
 
@@ -284,4 +301,38 @@ test("PERF-CONTRACT: injected test weather bypasses the payload cache", async ()
   assert.notEqual(a, b, "hermetic fixtures must never share cached payloads");
   assert.equal(RUN_PAYLOAD_CACHE.hits, 0);
   clearRunPayloadCache();
+});
+
+// ── Paint cost in the first-paint path ─────────────────────────────────────
+//
+// WHY THIS IS A GATE AND NOT A COMMENT. `header` is `position: sticky` and sits
+// directly above `section.hero`, which is the largest contentful element. A
+// `backdrop-filter` there makes Chromium snapshot and blur the region behind the
+// header on every composite of the region the LCP element lives in. The header's
+// own background is rgba(9,13,22,0.9) — 90% opaque — so the blur contributes
+// about a tenth of what the opaque background already contributes, and is not
+// what makes the header look the way it does.
+//
+// The measured effect is recorded in the commit rather than here, because a
+// Lighthouse median is a noisy instrument and this test exists to pin the
+// STRUCTURAL fact, which is not noisy: the sticky header must not ask the
+// compositor for a backdrop blur. A designer re-adding the blur for the glass
+// look should see this fail and the measurement, not quietly ship the cost.
+test("the sticky header does not force a backdrop blur on the LCP element", () => {
+  const css = readFileSync(join(root, "assets/site.css"), "utf8");
+  const headerBlock = css.match(/(^|\n)header\s*\{([^}]*)\}/);
+  assert.ok(headerBlock, "assets/site.css must still have a header rule");
+  // Strip comments first. The block carries a comment explaining WHY the blur is
+  // gone, and a naive substring match would fail on its own explanation — which
+  // is the wrong way for a gate to be wrong, and the reason this strips rather
+  // than searching.
+  const body = headerBlock[2].replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.match(body, /position:\s*sticky/, "the header stays sticky");
+  assert.doesNotMatch(
+    body,
+    /backdrop-filter/,
+    "a backdrop-filter on the sticky header costs a blurred composite of the " +
+      "hero — the LCP element — on every paint, for a 10% visual contribution " +
+      "the 0.9-opaque background already makes",
+  );
 });

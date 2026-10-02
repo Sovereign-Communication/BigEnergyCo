@@ -13,14 +13,19 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260929a";
+import { APPLIANCES } from "./appliances.js?v=20261001b";
+import { byId as $, el } from "../shared/dom.js?v=20261001b";
+import {
+  INSTALL_NAV_BREAKPOINT_PX,
+  installReveal,
+} from "./pwa-install.js?v=20261001b";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20260929a";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20260929a";
+} from "./run-coordinator.js?v=20261001b";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261001b";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -29,12 +34,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20260929a";
+} from "./charts.js?v=20261001b";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20260929a";
+} from "./location-picker.js?v=20261001b";
 
 import {
   estimateTariff,
@@ -42,22 +47,22 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260929a";
+} from "./pricing.js?v=20261001b";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260929a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261001b";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260929a";
+} from "./lead-acid.js?v=20261001b";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260929a";
+} from "./bom.js?v=20261001b";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260929a";
+import { BOM_ITEMS } from "../shared/content.js?v=20261001b";
 
 import {
   applyI18n,
@@ -66,18 +71,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20260929a";
+} from "../shared/i18n.js?v=20261001b";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260929a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260929a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261001b";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261001b";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260929a";
-import { buildSimpleView } from "../shared/simple-view.js?v=20260929a";
+} from "../shared/simple-mode.js?v=20261001b";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261001b";
 import {
   advisorJevContext,
   interpretSanity,
@@ -85,56 +90,64 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20260929a";
+} from "./validate.js?v=20261001b";
 import {
   CUT_TARGET_PCT,
+  sliderStateDrifted,
   targetForPct,
-} from "../shared/cut-targets.js?v=20260929a";
+} from "../shared/cut-targets.js?v=20261001b";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20260929a";
+} from "./share-codec.js?v=20261001b";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20260929a";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20260929a";
+} from "./infeasible-copy.js?v=20261001b";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261001b";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20260929a";
+} from "./fuel-units.js?v=20261001b";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260929a";
+} from "./frontier-chart.js?v=20261001b";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260929a";
+} from "./rescale.js?v=20261001b";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260929a";
+import {
+  coldCapacityScale,
+  cycleLifeForDoD,
+} from "./chem-model.js?v=20261001b";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260929a";
+} from "./map-provider.js?v=20261001b";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260929a";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260929a";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260929a";
+} from "./wizard.js?v=20261001b";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261001b";
+import {
+  interpolateCurveTarget,
+  surplusAnchor,
+  budgetSpanMax,
+} from "./budget-span.js?v=20261001b";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -183,9 +196,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260929a";
+} from "./money.js?v=20261001b";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260929a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261001b";
 
 let worker = null;
 
@@ -303,6 +316,15 @@ function handleRunDeadline() {
 // load factor for an instant rescale against the retained payload.
 let lastRunInput = null;
 
+// Slider-owned state (cut target + budget) at post time: the sliders are the
+// canonical owners, so a reply landing behind them must not re-seat their
+// thumbs (sliderStateDrifted decides, reconcileDriftedRun settles the view).
+let lastRunSlider = null;
+
+function readSliderState() {
+  return { cut: customCutFraction, budget: budgetPinnedUsd };
+}
+
 // JSON fingerprint of the inputs behind the last successful run: an identical
 // next run is answered from the engine's payload cache in milliseconds, so
 // the UI skips the loading choreography entirely (isInstantRepeat in run()).
@@ -383,24 +405,6 @@ let generatorBasis = false;
 // to realistic compressor time, and the row shows the resulting average draw.
 
 const CHEM_KEYS = new Set(["auto", "naion", "lfp", "agm"]);
-
-function $(id) {
-  return document.getElementById(id);
-}
-
-function el(tag, attrs = {}, text) {
-  const e = document.createElement(tag);
-
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === "style") e.style.cssText = v;
-    else if (k === "class") e.className = v;
-    else e.setAttribute(k, v);
-  }
-
-  if (text !== undefined) e.textContent = text;
-
-  return e;
-}
 
 // Reduced-motion users get instant scrolling instead of JS smooth scroll.
 // Same contract as chat.js's helper (a classic script can't share imports).
@@ -2309,6 +2313,7 @@ function run(quiet = false, explicit = false) {
   }
 
   lastRunInput = inp;
+  lastRunSlider = readSliderState();
   wizard.setValue("dailyKwh", inp.dailyKwh);
   wizard.setValue("tariff", inp.tariff);
   wizard.setValue("mode", inp.mode);
@@ -2417,11 +2422,12 @@ function setupCutSlider() {
     syncCutLabel();
     if (lastPayload && lastPayload.mode === "gridtie") {
       frontierSelected = null;
-      // Cached-only drag preview: the nearest curve system at this %.
-      previewCurvePoint(
-        nearestCurvePoint(parseInt(slider.value, 10) || 1, "y"),
-      );
+      // Cached-only drag preview: the curve's projection at the exact % the
+      // slider holds, budget thumb riding along — one position everywhere.
+      previewCurvePoint(previewTargetAt(parseInt(slider.value, 10) || 1));
     }
+    // The share link encodes slider state, so it must never lag the thumb.
+    updateShareHash(lastPayload, readInputs());
   });
 
   slider.addEventListener("change", () => {
@@ -2939,6 +2945,49 @@ function nearestCurvePoint(value, axis) {
   return best;
 }
 
+// The drag preview's projection of the slider's % onto the curve; the budget
+// thumb rides along (unpinned — pinning is commit-time only) so the pair, the
+// card and the label move together at every input.
+function previewTargetAt(pct) {
+  const p = lastPayload;
+  if (!p || !p.frontier || !Array.isArray(p.frontier.points)) return null;
+  const proj = interpolateCurveTarget(p.frontier.points, pct, surplusAnchor(p));
+  if (!proj) return null;
+  const bs = $("budgetSlider");
+  if (bs && Number.isFinite(proj.capexUsd)) {
+    const min = parseFloat(bs.min);
+    const max = parseFloat(bs.max);
+    bs.value = String(Math.min(max, Math.max(min, Math.round(proj.capexUsd))));
+    syncBudgetLabel();
+  }
+  return {
+    kind: "point",
+    index: proj.loIndex,
+    x: proj.capexUsd,
+    y: proj.outcomePct,
+    pvKw: proj.pvKw,
+    battKwh: proj.battKwh,
+    chem: (proj.entry && proj.entry.chemistry) || p.frontier.chemistry,
+    chemLabel: (proj.entry && proj.entry.chemLabel) || p.frontier.chemLabel,
+    entry: proj.entry,
+  };
+}
+
+// A run reply that landed behind the sliders: keep its data, then settle the
+// position back onto the sliders — no marker re-seat, selection on the
+// slider's own target, one coalesced slice so the numbers catch up.
+function reconcileDriftedRun() {
+  followMarkerOnce = false;
+  if (!lastPayload) return;
+  syncCutControls(Math.round(customCutFraction * 100));
+  if (lastPayload.mode === "gridtie") {
+    frontierSelected = null;
+    if (!lastPayload.auto) selectedKey = "custom";
+    curvePreview = null;
+    if (lastRunSlider?.cut !== customCutFraction) requestIncrementalCut();
+  }
+}
+
 function previewCurvePoint(q) {
   curvePreview = q ? { capexUsd: q.x, outcomePct: q.y } : null;
   renderPlayReadout(q);
@@ -3208,6 +3257,8 @@ function setupBudgetSlider() {
     budgetPinnedUsd = parseFloat(slider.value);
     syncBudgetLabel();
     previewCurvePoint(nearestCurvePoint(parseFloat(slider.value), "x"));
+    // The share link encodes slider state, so it must never lag the thumb.
+    updateShareHash(lastPayload, readInputs());
   });
   slider.addEventListener("change", () => {
     if (!curveReady()) return;
@@ -3229,7 +3280,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20260929a",
+      "./assets/js/sizing/sizing-worker.js?v=20261001b",
       {
         type: "module",
       },
@@ -3274,6 +3325,11 @@ function ensureWorker() {
           return;
         }
 
+        // A run posted before the visitor's last slider move is data for a
+        // position they already left: it refreshes the payload, the sliders
+        // stay canonical once it lands.
+        const runDrifted = sliderStateDrifted(lastRunSlider, readSliderState());
+
         if (lastRunAdoptsFocus) {
           selectedKey = "focus";
           lastRunAdoptsFocus = false;
@@ -3295,6 +3351,7 @@ function ensureWorker() {
         lastOkKey = lastRunInput ? JSON.stringify(lastRunInput) : null;
 
         renderResults(ev.data.payload);
+        if (runDrifted) reconcileDriftedRun();
 
         // bring the results into view - the run button can be far above them
         // (instant scroll for reduced-motion users)
@@ -7013,10 +7070,11 @@ function updateShareHash(p, inp) {
     if (inp.chemistry === "auto" && inp.mode !== "gridtie" && $("autoTier"))
       o.at = $("autoTier").value;
 
-    if (inp.chemistry === "auto" && inp.mode === "gridtie" && $("autoTarget")) {
-      // Only a real target is worth serializing: "custom" is mirror state of
-      // the slider, and the fraction itself already travels as o.cc.
-      const ag = $("autoTarget").value;
+    if (inp.chemistry === "auto" && inp.mode === "gridtie") {
+      // Derived from the SLIDER's fraction, never the select mirror (mid-drag
+      // the mirror lags one sync behind and once wrote the contradictory
+      // pair {ag: "cut80", cc: 0.73} into one link).
+      const ag = targetForPct(Math.round(inp.customCut * 100));
       if (CUT_TARGET_PCT[ag]) o.ag = ag;
     }
 
@@ -7609,13 +7667,30 @@ function setupPwaControls() {
 
   const badge = $("offlineBadge");
 
+  // The install prompt arrives long after first paint, so WHICH control is
+  // revealed is a layout decision, not a cosmetic one: showing both reflowed
+  // the header CTA row 109px and measured 0.121 CLS on home/mobile. The rule
+  // and the measurement behind it live in ./pwa-install.js.
+  const narrowNav =
+    typeof window.matchMedia === "function"
+      ? window.matchMedia(`(max-width: ${INSTALL_NAV_BREAKPOINT_PX}px)`)
+      : null;
+
+  const applyInstallVisibility = (available) => {
+    const next = installReveal(
+      narrowNav ? narrowNav.matches : false,
+      available,
+    );
+    if (btnH) btnH.style.display = next.header;
+    if (btnM) btnM.style.display = next.drawer;
+  };
+
   const triggerInstall = async () => {
     if (!deferredInstallPrompt) return;
     deferredInstallPrompt.prompt();
     const res = await deferredInstallPrompt.userChoice;
     if (res && res.outcome === "accepted") {
-      if (btnH) btnH.style.display = "none";
-      if (btnM) btnM.style.display = "none";
+      applyInstallVisibility(false);
     }
     deferredInstallPrompt = null;
   };
@@ -7627,15 +7702,22 @@ function setupPwaControls() {
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
-    if (btnH) btnH.style.display = "inline-flex";
-    if (btnM) btnM.style.display = "flex";
+    applyInstallVisibility(true);
   });
 
   window.addEventListener("appinstalled", () => {
-    if (btnH) btnH.style.display = "none";
-    if (btnM) btnM.style.display = "none";
+    applyInstallVisibility(false);
     deferredInstallPrompt = null;
   });
+
+  // Rotating a phone past the breakpoint leaves the revealed control in the
+  // layout that no longer exists. Re-resolve, so there is never a button on
+  // screen that the current layout does not use.
+  if (narrowNav && typeof narrowNav.addEventListener === "function") {
+    narrowNav.addEventListener("change", () => {
+      applyInstallVisibility(Boolean(deferredInstallPrompt));
+    });
+  }
 
   function updateNetworkStatus() {
     if (!badge) return;
@@ -7668,7 +7750,7 @@ function setupPwaControls() {
   updateNetworkStatus();
 }
 
-export function initSizingUI() {
+function initSizingUI() {
   try {
     // Landing-page storage widget reads through this hook (same pricing
     // module the engine uses — no second source of truth).
