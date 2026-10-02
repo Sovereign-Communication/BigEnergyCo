@@ -168,7 +168,11 @@ test("runtime advisor copy interpolates through the locale placeholder contract"
 // substitution now has one owner (shared/interpolate.js), so the pins point at
 // that single place and at the delegation from each reader.
 test("interpolation never re-reads a value as a replacement pattern", async () => {
-  const { translate } = await import("../assets/js/shared/i18n.js");
+  const { translate, localesReady } =
+    await import("../assets/js/shared/i18n.js");
+  // The dictionary is a deferred dynamic import, so it must be awaited before
+  // anything can be translated.
+  await localesReady;
   const rendered = translate("quickBillStarts", { bill: "$200", kwh: 5 });
   assert.ok(
     rendered.includes("$200"),

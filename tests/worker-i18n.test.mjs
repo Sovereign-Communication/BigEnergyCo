@@ -57,10 +57,7 @@ const REQUIRED_KEYS = [
   "advisorDegradedReassure",
   "advisorDegradedRetry",
 ];
-const REASON_KEYS = [
-  ...Object.values(FALLBACK_REASON_KEY),
-  "advisorDegradedWhyGeneric",
-];
+const REASON_KEYS = [...Object.values(FALLBACK_REASON_KEY)];
 const BODY_KEYS = ["advisorDegradedSystem", "advisorDegradedGeneral"];
 
 // ══ 1. the surface audit ═══════════════════════════════════════════════════
@@ -147,10 +144,30 @@ test("AUDIT: the worker emits a key set that matches the dictionary", () => {
 test("AUDIT: the reason key is per-reason, never a single generic string", () => {
   // A single reason for every failure is how "it didn't respond" and "it is
   // not configured at all" become indistinguishable to a user.
-  const keys = new Set(
-    Object.values(FALLBACK_REASON_KEY).concat("advisorDegradedWhyGeneric"),
+  // The invariant is NOT one key per reason code. Three transport-class codes
+  // (did not answer / errored / a dependency did not answer) are the same
+  // sentence to a visitor, and shipping them three times in six locales cost
+  // ~700 bytes of dictionary to say nothing extra. What MUST stay distinct is
+  // "the advisor could not be reached" from "this deployment is offline by
+  // design" — collapsing those would make an outage indistinguishable from a
+  // product that was never configured, which is the confusion R-CF-10 exists
+  // to prevent.
+  const keys = new Set(Object.values(FALLBACK_REASON_KEY));
+  const transport = FALLBACK_REASON_KEY.groq_unavailable;
+  const misconfigured = FALLBACK_REASON_KEY.key_missing;
+  assert.notEqual(
+    transport,
+    misconfigured,
+    "an unreachable advisor and an unconfigured deployment must read differently",
   );
-  assert.ok(keys.size >= 4, `expected distinct reason keys, got ${keys.size}`);
+  assert.ok(
+    [transport, misconfigured].every((k) => typeof LOCALES.de[k] === "string"),
+    "both clauses must exist in every locale",
+  );
+  assert.ok(
+    keys.size >= 2,
+    `expected at least the two clause kinds, got ${keys.size}`,
+  );
   for (const reason of ["groq_unavailable", "groq_error", "key_missing"]) {
     const body = buildDegradedReply(reason, {}, ensureDisclaimer);
     assert.ok(
@@ -209,7 +226,7 @@ test("FALLBACK: an unknown reason still produces a complete answer", () => {
   // A reason the worker has never heard of must not yield a half-built
   // sentence or a missing key that the client would render as a raw key.
   const body = buildDegradedReply("brand_new_reason", {}, ensureDisclaimer);
-  assert.equal(body.i18n.why, "advisorDegradedWhyGeneric");
+  assert.equal(body.i18n.why, "advisorDegradedWhyUnavailable");
   assert.ok(
     typeof LOCALES.ar[body.i18n.why] === "string",
     "the generic reason must exist in every locale too",

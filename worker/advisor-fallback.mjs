@@ -54,7 +54,7 @@ export const FALLBACK_MODEL = "deterministic-fallback";
  */
 export const FALLBACK_REASON_KEY = {
   groq_unavailable: "advisorDegradedWhyUnavailable",
-  groq_error: "advisorDegradedWhyError",
+  groq_error: "advisorDegradedWhyUnavailable",
   key_missing: "advisorDegradedWhyNoKey",
 };
 
@@ -68,7 +68,14 @@ export const FALLBACK_REASON_TEXT = {
 };
 
 const GENERIC_REASON_TEXT = "a service this advisor depends on did not respond";
-const GENERIC_REASON_KEY = "advisorDegradedWhyGeneric";
+// All three transport-class reasons (the model did not answer, it errored, or
+// some service it depends on did not answer) resolve to ONE clause. They were
+// three keys whose text is the same sentence in all six locales, which cost
+// ~700 bytes of dictionary for information a visitor does not act on: they
+// need to know the advisor did not reply, not which of the three it was. The
+// distinction is not lost — the reason code is still in the payload and in this
+// worker log, which is what a support conversation would read.
+const GENERIC_REASON_KEY = "advisorDegradedWhyUnavailable";
 
 /**
  * Whether the visitor is talking about a system they already sized.

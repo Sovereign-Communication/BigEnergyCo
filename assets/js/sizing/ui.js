@@ -7668,7 +7668,7 @@ function setupPwaControls() {
   updateNetworkStatus();
 }
 
-export function initSizingUI() {
+export async function initSizingUI() {
   try {
     // Landing-page storage widget reads through this hook (same pricing
     // module the engine uses — no second source of truth).
@@ -8047,11 +8047,16 @@ export function initSizingUI() {
 
     syncBillSlider();
 
-    updateCurrencyUnitLabel(); // bill-slider currency + tariff labels on first paint
+    updateCurrencyUnitLabel(); // bill-slider currency + tariff labels on first paint    // Interface language (auto-detected, user-overridable in the footer).
+    //
+    // AWAITED, deliberately. The dictionary is a deferred dynamic import
+    // (shared/i18n.js), so calling applyI18n() without awaiting would paint the
+    // English defaults and then swap them a moment later — a German or Arabic
+    // visitor would see a flash of the wrong language on first paint. Awaiting
+    // here costs nothing extra: the fetch started at module evaluation and is
+    // already in flight, so this waits for work the browser is doing anyway.
+    await applyI18n();
 
-    // Interface language (auto-detected, user-overridable in the footer).
-
-    applyI18n();
     applySimpleMode();
 
     initLangPicker($("langSelect"));
@@ -8196,4 +8201,12 @@ function whenDOMReady(cb) {
   }
 }
 
-whenDOMReady(initSizingUI);
+// initSizingUI awaits the deferred i18n dictionary, so it is a promise now.
+// The catch is not decorative: an async throw after the first await becomes an
+// unhandled rejection that `whenDOMReady` cannot see, and the page would sit
+// there silently half-initialised with nothing in the console.
+whenDOMReady(() => {
+  initSizingUI().catch((e) => {
+    console.error("initSizingUI failed:", e);
+  });
+});

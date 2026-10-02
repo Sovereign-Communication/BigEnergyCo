@@ -314,7 +314,7 @@ function renderBotReply(replyText, degraded, data) {
     // English fallback for a client with no dictionary.
     label.textContent = chatText(
       (data && data.i18n && data.i18n.label) || "advisorDegradedLabel",
-      "Offline \u00b7 offline answer, not the live AI",
+      "Offline \u00b7 not the live AI",
     );
 
     botDiv.appendChild(label);
