@@ -27,6 +27,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { LOCALES } from "../assets/js/shared/locales.js";
+import { claimsTranslation, unkeyedProse } from "../scripts/lib/gates.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const LOCALES_PATH = join(ROOT, "assets", "js", "shared", "locales.js");
@@ -218,4 +219,114 @@ test("HERO + FOOTER: the h1 gradient survives translation", () => {
   );
   assert.match(h1, /data-i18n="heroTitle1"/);
   assert.match(h1, /data-i18n="heroTitle2"/);
+});
+
+test("PROSE: the two remaining paragraphs are keyed, hooks on inner elements", () => {
+  // These two shipped as English to every non-English visitor: 61 words in the
+  // hero and 31 in the legal card, neither carrying a hook, so no rule in
+  // check-i18n could see them. Both now have a key in all six locales.
+  const html = readFileSync(join(ROOT, "index.html"), "utf8");
+  assert.match(
+    html,
+    /data-i18n="heroIntro"/,
+    "the hero paragraph must be keyed",
+  );
+  assert.match(
+    html,
+    /data-i18n="advisorIsAi"/,
+    "the advisor disclaimer must be keyed",
+  );
+  for (const key of ["heroIntro", "advisorIsAi"]) {
+    for (const lang of ["en", "es", "pt", "fr", "de", "ar"]) {
+      assert.equal(
+        typeof LOCALES[lang][key],
+        "string",
+        `${lang} is missing ${key}`,
+      );
+      // en IS the English, so the equality check only means something for the
+      // five locales that are supposed to differ from it.
+      if (lang !== "en")
+        assert.notEqual(
+          LOCALES[lang][key],
+          LOCALES.en[key],
+          `${lang}.${key} is identical to English — it was never translated`,
+        );
+    }
+  }
+  // The hook brackets the <strong>, because applyI18n writes textContent: a
+  // hook on the <p> itself would delete the element holding the author's name.
+  assert.match(
+    html,
+    /data-i18n="heroIntro"[\s\S]{0,900}?<\/span\s*>\s*<strong>Lucas Ballek<\/strong>/,
+    "heroIntro must end before the <strong>, not wrap it",
+  );
+});
+
+test("PROSE: the unkeyed-prose detector fires on unhooked prose, and only on prose", () => {
+  // A gate nobody has seen red is not a gate. This proves the DETECTOR — the
+  // function rule 9 is built on — recognises the exact markup shape that caused
+  // the defect, without mutating the working tree.
+  const PROSE =
+    "Start with your location and we size every option that could cut your bill.";
+  assert.equal(
+    unkeyedProse(`<p>${PROSE}</p>`).length,
+    1,
+    "an unhooked prose paragraph must be reported",
+  );
+  assert.equal(
+    unkeyedProse(`<p data-i18n="heroIntro">${PROSE}</p>`).length,
+    0,
+    "a hook on the element exempts it",
+  );
+  // The real shape of the hero fix: the hook is on an inner span so the
+  // <strong> survives applyI18n's textContent. That must NOT read as unkeyed.
+  assert.equal(
+    unkeyedProse(
+      `<p><span data-i18n="heroIntro">${PROSE}</span> <strong>Lucas</strong>.</p>`,
+    ).length,
+    0,
+    "a hook on a descendant exempts the paragraph",
+  );
+  // The exemptions: not prose, and too short to be prose.
+  assert.equal(
+    unkeyedProse("<p>5 m² · 12 kWh · 3.5 %</p>").length,
+    0,
+    "units are not prose",
+  );
+  assert.equal(
+    unkeyedProse("<p>Send</p>").length,
+    0,
+    "a one-word label is not prose",
+  );
+  assert.equal(
+    unkeyedProse("<p></p>").length,
+    0,
+    "an empty block is not prose",
+  );
+});
+
+test("PROSE: only pages that claim translation are checked", () => {
+  // 81 of 82 shipped pages carry no hook at all and are untranslated by
+  // decision. A gate that fired on all of them would be a gate nobody runs.
+  assert.equal(claimsTranslation('<span data-i18n="x"></span>'), true);
+  assert.equal(claimsTranslation('<input data-i18n-placeholder="x">'), true);
+  assert.equal(
+    claimsTranslation("<p>Plain English prose, with no hook at all.</p>"),
+    false,
+  );
+});
+
+test("PROSE: the ceiling is a committed constant, not an env override", () => {
+  // An env-overridable ceiling is a gate anyone can loosen without a diff.
+  const src = readFileSync(join(ROOT, "scripts", "check-i18n.mjs"), "utf8");
+  assert.doesNotMatch(
+    src,
+    /process\.env\.[A-Z_]*PROSE[A-Z_]*/,
+    "the unkeyed-prose ceiling must not be environment-overridable",
+  );
+  assert.match(
+    src,
+    /const PROSE_CEILING = \d+;/,
+    "the ceiling must be a committed constant",
+  );
 });

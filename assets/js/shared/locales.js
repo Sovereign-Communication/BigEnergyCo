@@ -21,6 +21,8 @@ export const LOCALES = {
     heroTitle1: "Cut your electricity bill.",
     heroTitle2: "See exactly what it would take.",
     footerAboutPre: "Built and given away by",
+    heroIntro:
+      "Start with your location — your phone knows it — and we size every option that could cut your bill, from 1% to sellable surplus. The price-cut curve shows what any budget buys, in your currency. Educational estimates only, nothing for sale. Built and given away by",
     footerAboutPost: "Not a company, not incorporated, nothing for sale.",
     ctaStart: "Start a Free Estimate",
     pickCity: "Pick a city (or use 📍 My location) so we know your sunshine.",
@@ -143,6 +145,8 @@ export const LOCALES = {
       "Nothing above is wrong, and your sizing is unaffected.",
     advisorDegradedSystem:
       "Take those numbers to a licensed electrician before you build.",
+    advisorIsAi:
+      "The advisor is a large language model. It writes plausible text and can state wrong numbers confidently. Check every figure — never take it as fact.",
     advisorDegradedGeneral:
       "For sizing help, use the calculator above — no account needed.",
     advisorDegradedRetry: "Try again in a minute; the free quota is shared.",
@@ -319,6 +323,8 @@ export const LOCALES = {
     heroTitle1: "Reduce tu factura de luz.",
     heroTitle2: "Vea exactamente lo que haría falta.",
     footerAboutPre: "Creada y entregada por",
+    heroIntro:
+      "Empieza con tu ubicación — tu móvil la sabe — y calculamos cada opción que puede reducir tu factura, del 1% al excedente vendible. La curva de precio muestra qué compra cada presupuesto, en tu moneda. Solo estimaciones educativas, nada en venta. Creada y entregada por",
     footerAboutPost: "No es una empresa, no está constituida, nada en venta.",
     ctaStart: "Empieza tu estimación gratis",
     pickCity:
@@ -351,25 +357,13 @@ export const LOCALES = {
       "✅ {years} años de datos horarios ({dataYears}) · {yield} kWh/año por kW de panel.{offline}",
     offlineNote: " · 🌐 modo offline típico",
     offlineCity: "usando perfil típico de {city}",
-    assumptionsPrefix:
-      "Datos: {source}, horario {dataYears}. Derates aplicados: ensuciamiento {soil}%, cableado {wire}%, desajuste {mismatch}%, MPPT {mppt}%. Modelo de temperatura: NOCT {noct}°C, coef. temp. {gamma}%/°C. Eficiencia inversor {eta}%. Carga bloqueada bajo límite de frío de la química (LFP 0°C). Base de carga: {basis}. Costes desde {basisLabel} ({source}) — el extremo bajo es componentes antes de flete/arancel/BMS, el alto es retail con BMS y caja. ",
-    fxNotePrefix: " ",
-    offlineNotePrefix:
-      "MODO OFFLINE: esta ejecución usó el perfil típico anual para {offlineCity} — una aproximación cercana, no tu sitio exacto. Vuelve a ejecutar online para cinco años de clima puntual. ",
     tariffSpend: "El gasto en red asume ${tariff}/kWh a {dailyKwh} kWh/día.",
     noTariff: "Sin tarifa introducida, no se muestra amortización.",
-    currencyNote:
-      "Las cantidades se muestran en {code} a {rate} por 1 US$; las tarifas unitarias de batería se quedan en $/kWh porque los ámbitos de precio base son en USD.",
-    offlineLabel:
-      "MODO OFFLINE: esta ejecución usó el perfil típico anual para {offlineCity} — una aproximación cercana, no tu sitio exacto. Vuelve a ejecutar online para cinco años de clima puntual. ",
     tariffSpendLine:
       "A {tariff}/kWh, tu electricidad te cuesta unos {annual} al año hoy. Cada opción de abajo muestra la factura tras la solar y cuánto tarda en pagarse con los ahorros.",
     tariffSpendBattery:
       "A {tariff}/kWh, tu electricidad te cuesta unos {annual} al año hoy. Una batería sin paneles cambia cuándo consumes; no reduce lo que pagas.",
-    noTariffLine: "Sin tarifa introducida, no se muestra amortización.",
     goalLabel: "¿Qué quieres que haga este sistema?",
-    goalOffgrid: "Abastecerme totalmente sin red",
-    goalGridtie: "Reducir mi factura manteniendo la conexión",
     cityLabel: "¿Dónde se instalará el sistema?",
     loadLabel: "¿Cuánta energía consumes?",
     loadAppliances: "Elijo mis electrodomésticos",
@@ -388,10 +382,7 @@ export const LOCALES = {
     runningBtn: "⏳ Simulando 5 años...",
     runBtnReady: "Dimensionar mi sistema (simulación 5 años)",
     locBtn: "Usar mi ubicación actual",
-    locNotePrefix: "Clima estimado para ",
-    locNoteSuffix: " — cambia la ciudad arriba si es necesario.",
     chemLabel: "Química de la batería:",
-    tariffLabel: "Precio de la electricidad donde vives:",
     tariffNote:
       "Precio estimado para {label} — cámbialo arriba si conoces tu tarifa.",
     fxNote:
@@ -468,6 +459,8 @@ export const LOCALES = {
       "Nada de lo anterior está mal y tus cálculos no se ven afectados.",
     advisorDegradedSystem:
       "Lleva esas cifras a un electricista habilitado antes de construir.",
+    advisorIsAi:
+      "El asesor es un modelo de lenguaje. Escribe texto plausible y puede dar cifras incorrectas con confianza. Comprueba cada número: nunca lo tomes como hecho.",
     advisorDegradedGeneral:
       "Para dimensionar, usa la calculadora de arriba; sin cuenta.",
     advisorDegradedRetry:
@@ -660,11 +653,11 @@ export const LOCALES = {
     heroTitle1: "Corte a sua conta de luz.",
     heroTitle2: "Veja exatamente o que seria preciso.",
     footerAboutPre: "Criada e oferecida por",
+    heroIntro:
+      "Comece pela sua localização — o telemóvel sabe — e calculamos cada opção que corta a sua conta, de 1% ao excedente vendável. A curva de preço mostra o que cada orçamento compra, na sua moeda. Apenas estimativas educativas, nada à venda. Criada e oferecida por",
     footerAboutPost: "Não é uma empresa, não é constituída, nada à venda.",
     ctaStart: "Comece sua estimativa grátis",
     goalLabel: "O que você quer que este sistema faça?",
-    goalOffgrid: "Me alimentar totalmente fora da rede",
-    goalGridtie: "Reduzir minha conta permanecendo conectado",
     cityLabel: "Onde o sistema será instalado?",
     loadLabel: "Quanta energia você consome?",
     loadAppliances: "Escolho meus eletrodomésticos",
@@ -682,10 +675,7 @@ export const LOCALES = {
     readoutKwhReady: "Usando {kwh} kWh/dia diretamente.",
     runBtn: "Dimensionar meu sistema (simulação de 5 anos)",
     locBtn: "Usar minha localização atual",
-    locNotePrefix: "Clima estimado para ",
-    locNoteSuffix: " — mude a cidade acima se necessário.",
     chemLabel: "Química da bateria:",
-    tariffLabel: "Preço da eletricidade onde você mora:",
     tariffNote:
       "Preço estimado para {label} — mude acima se souber sua tarifa.",
     fxNote:
@@ -721,22 +711,12 @@ export const LOCALES = {
       "✅ {years} anos de dados horários ({dataYears}) · {yield} kWh/ano por kW de painel.{offline}",
     offlineNote: " · 🌐 modo offline típico",
     offlineCity: "usando perfil típico de {city}",
-    assumptionsPrefix:
-      "Dados: {source}, horário {dataYears}. Derates aplicados: sujeira {soil}%, fiação {wire}%, descompasso {mismatch}%, MPPT {mppt}%. Modelo de temperatura: NOCT {noct}°C, coef. temp. {gamma}%/°C. Eficiência do inversor {eta}%. Carga bloqueada abaixo do limite de frio da química (LFP 0°C). Base de carga: {basis}. Custos de {basisLabel} ({source}) — o extremo baixo é componentes antes de frete/imposto/BMS, o alto é varejo com BMS e caixa. ",
-    fxNotePrefix: " ",
-    offlineNotePrefix:
-      "MODO OFFLINE: esta execução usou o perfil típico anual para {offlineCity} — uma aproximação próxima, não seu local exato. Rode novamente online para cinco anos de clima pontual. ",
     tariffSpend: "O gasto na rede assume ${tariff}/kWh a {dailyKwh} kWh/dia.",
     noTariff: "Sem tarifa informada, não há amortização mostrada.",
-    currencyNote:
-      "Valores mostrados em {code} a {rate} por 1 US$; taxas unitárias de bateria permanecem em $/kWh porque os preços base são em USD.",
-    offlineLabel:
-      "MODO OFFLINE: esta execução usou o perfil típico anual para {offlineCity} — uma aproximação próxima, não seu local exato. Rode novamente online para cinco anos de clima pontual. ",
     tariffSpendLine:
       "A {tariff}/kWh, a sua eletricidade custa cerca de {annual} por ano hoje. Cada opção abaixo mostra a conta após a solar e em quanto tempo ela se paga com as economias.",
     tariffSpendBattery:
       "A {tariff}/kWh, a sua eletricidade custa cerca de {annual} por ano hoje. Uma bateria sem painéis muda quando consome; não reduz o que paga.",
-    noTariffLine: "Sem tarifa informada, não há amortização mostrada.",
     tariffSpendOffgrid:
       "A {tariff}/kWh, este uso custa cerca de {annual} por ano em energia da rede. Os valores de retorno abaixo comparam o custo do sistema com esse gasto.",
     tariffSpendFixed:
@@ -813,6 +793,8 @@ export const LOCALES = {
       "Nada acima está errado e o seu dimensionamento não é afetado.",
     advisorDegradedSystem:
       "Leve esses valores a um eletricista credenciado antes de construir.",
+    advisorIsAi:
+      "O consultor é um modelo de linguagem. Escreve texto plausível e pode dar números errados com confiança. Verifique cada número: nunca o leve como facto.",
     advisorDegradedGeneral:
       "Para dimensionar, use a calculadora acima; sem conta.",
     advisorDegradedRetry:
@@ -994,11 +976,11 @@ export const LOCALES = {
     heroTitle1: "Réduisez votre facture d'électricité.",
     heroTitle2: "Voyez exactement ce qu'il faudrait.",
     footerAboutPre: "Conçu et offert par",
+    heroIntro:
+      "Commencez par votre localisation — votre téléphone la connaît — et nous calculons chaque option qui réduit votre facture, de 1 % à l'excédent vendable. La courbe de prix montre ce que chaque budget achète, dans votre devise. Estimations éducatives, rien à vendre. Conçu et offert par",
     footerAboutPost: "Pas une société, pas immatriculée, rien à vendre.",
     ctaStart: "Lancer une estimation gratuite",
     goalLabel: "Que doit faire ce système ?",
-    goalOffgrid: "Me rendre totalement autonome",
-    goalGridtie: "Réduire ma facture en restant raccordé",
     cityLabel: "Où sera installé le système ?",
     loadLabel: "Quelle est votre consommation ?",
     loadAppliances: "Je choisis mes appareils",
@@ -1018,10 +1000,7 @@ export const LOCALES = {
     readoutKwhReady: "Utilisation de {kwh} kWh/jour directement.",
     runBtn: "Dimensionner (simulation sur 5 ans)",
     locBtn: "Utiliser ma position actuelle",
-    locNotePrefix: "Climat estimé pour ",
-    locNoteSuffix: " — changez la ville ci-dessus si nécessaire.",
     chemLabel: "Chimie de la batterie :",
-    tariffLabel: "Prix de l'électricité chez vous :",
     tariffNote:
       "Prix estimé pour {label} — changez-le ci-dessus si vous connaissez votre tarif.",
     fxNote:
@@ -1060,23 +1039,13 @@ export const LOCALES = {
       "✅ {years} ans de données horaires ({dataYears}) · {yield} kWh/an par kW de panneau.{offline}",
     offlineNote: " · 🌐 mode hors ligne typique",
     offlineCity: "utilisation du profil typique de {city}",
-    assumptionsPrefix:
-      "Données : {source}, horaires {dataYears}. Derates appliqués : salissure {soil}%, câblage {wire}%, désaccord {mismatch}%, MPPT {mppt}%. Modèle de température : NOCT {noct}°C, coef. temp. {gamma}%/°C. Efficacité onduleur {eta}%. Charge bloquée sous la limite de froid de la chimie (LFP 0°C). Base de charge : {basis}. Coûts de {basisLabel} ({source}) — le bas est composants avant fret/droits/BMS, le haut est détail avec BMS et boîte. ",
-    fxNotePrefix: " ",
-    offlineNotePrefix:
-      "MODE HORS LIGNE : cette exécution a utilisé le profil annuel typique pour {offlineCity} — une approximation proche, pas votre site exact. Relancez en ligne pour cinq ans de météo précise. ",
     tariffSpend:
       "La dépense réseau suppose ${tariff}/kWh à {dailyKwh} kWh/jour.",
     noTariff: "Aucun tarif saisi, pas d'amortissement affiché.",
-    currencyNote:
-      "Montants affichés en {code} à {rate} pour 1 US$ ; les taux unitaires de batterie restent en $/kWh car les prix de base sont en USD.",
-    offlineLabel:
-      "MODE HORS LIGNE : cette exécution a utilisé le profil annuel typique pour {offlineCity} — une approximation proche, pas votre site exact. Relancez en ligne pour cinq ans de météo précise. ",
     tariffSpendLine:
       "À {tariff}/kWh, votre électricité coûte environ {annual} par an aujourd'hui. Chaque option ci-dessous montre la facture après le solaire et combien de temps elle se rembourse grâce aux économies.",
     tariffSpendBattery:
       "À {tariff}/kWh, votre électricité coûte environ {annual} par an aujourd'hui. Une batterie sans panneaux décale le moment où vous consommez ; elle ne réduit pas ce que vous payez.",
-    noTariffLine: "Aucun tarif saisi, pas d'amortissement affiché.",
     tariffSpendOffgrid:
       "À {tariff}/kWh, cet usage coûte environ {annual} par an en électricité du réseau. Les délais de retour ci-dessous comparent le coût du système à cette dépense.",
     tariffSpendFixed:
@@ -1154,6 +1123,8 @@ export const LOCALES = {
       "Rien de ce qui précède n’est faux, et votre dimensionnement n’est pas affecté.",
     advisorDegradedSystem:
       "Portez ces chiffres à un électricien agréé avant de construire.",
+    advisorIsAi:
+      "Le conseiller est un modèle de langage. Il écrit un texte plausible et peut donner de faux chiffres avec assurance. Vérifiez chaque chiffre : ne le prenez jamais pour un fait.",
     advisorDegradedGeneral:
       "Pour dimensionner, utilisez le calculateur ci-dessus ; sans compte.",
     advisorDegradedRetry:
@@ -1339,6 +1310,8 @@ export const LOCALES = {
     heroTitle1: "Senken Sie Ihre Stromrechnung.",
     heroTitle2: "Sehen Sie genau, was dafür nötig wäre.",
     footerAboutPre: "Erstellt und bereitgestellt von",
+    heroIntro:
+      "Beginnen Sie mit Ihrem Standort — Ihr Telefon kennt ihn — und wir rechnen jede Option durch, die Ihre Rechnung senkt, von 1 % bis zum verkaufbaren Überschuss. Die Preiskurve zeigt, was jedes Budget kauft, in Ihrer Währung. Nur Schätzungen, nichts zu verkaufen. Erstellt und bereitgestellt von",
     footerAboutPost:
       "Kein Unternehmen, nicht eingetragen, nichts zu verkaufen.",
     ctaStart: "Kostenlose Schätzung starten",
@@ -1391,8 +1364,6 @@ export const LOCALES = {
       "✅ {years} Jahre stündliche Daten ({dataYears}) · {yield} kWh/Jahr pro kW Panel.{offline}",
     offlineNote: " · 🌐 typisches Offline-Jahr",
     goalLabel: "Welches Ergebnis möchtest du untersuchen?",
-    goalOffgrid: "Vollständig unabhängig vom Netz",
-    goalGridtie: "Rechnung senken, am Netz bleiben",
     chemLabel: "Batteriechemie:",
     cityLabel: "Wo wird das System installiert?",
     loadLabel: "Wie viel Strom verbrauchst du?",
@@ -1473,6 +1444,8 @@ export const LOCALES = {
       "An dem oben Gesagten ist nichts falsch und Ihre Berechnung ist nicht betroffen.",
     advisorDegradedSystem:
       "Lassen Sie diese Zahlen vor dem Bau von einem Elektriker prüfen.",
+    advisorIsAi:
+      "Der Berater ist ein Sprachmodell. Er schreibt plausiblen Text und kann falsche Zahlen sicher nennen. Prüfen Sie jede Zahl — nehmen Sie sie nie als Tatsache.",
     advisorDegradedGeneral:
       "Für die Dimensionierung: der Rechner oben, ohne Konto.",
     advisorDegradedRetry:
@@ -1658,11 +1631,11 @@ export const LOCALES = {
     heroTitle1: "قلّل فاتورة الكهرباء.",
     heroTitle2: "شاهد بالضبط ما يتطلبه الأمر.",
     footerAboutPre: "أنشأها وقدّمها",
+    heroIntro:
+      "ابدأ بموقعك — هاتفك يعرفه — ونحسب كل خيار يخفض فاتورتك، من 1% إلى فائض قابل للبيع. منحنى السعر يوضح ما يشتريه كل مبلغ، بعملتك. تقديرات تعليمية فقط، ولا شيء للبيع. أنشأها وقدّمها",
     footerAboutPost: "ليست شركة، ولا مُسجّلة، ولا شيء للبيع.",
     ctaStart: "ابدأ تقديرًا مجانيًا",
     goalLabel: "ماذا تريد من هذا النظام؟",
-    goalOffgrid: "تغذيتي بالكامل خارج الشبكة",
-    goalGridtie: "خفض فاتورتي مع البقاء متصلًا",
     cityLabel: "أين سيُركَّب النظام؟",
     loadLabel: "كم تستهلك من الطاقة؟",
     loadAppliances: "أختار أجهزتي الكهربائية",
@@ -1680,10 +1653,7 @@ export const LOCALES = {
     readoutKwhReady: "استخدام {kwh} كيلوواط ساعة/يوم مباشرة.",
     runBtn: "احسب نظامي (محاكاة خمس سنوات)",
     locBtn: "استخدم موقعي الحالي",
-    locNotePrefix: "المناخ المقدر لـ ",
-    locNoteSuffix: " — غير المدينة أعلاه إذا لزم الأمر.",
     chemLabel: "نوع البطارية:",
-    tariffLabel: "سعر الكهرباء في منطقتك:",
     tariffNote: "سعر تقديري لـ {label} — غيّره أعلاه إذا كنت تعرف تعريفتك.",
     fxNote:
       "المبالغ معروضة بـ {code} بسعر {rate} مقابل 1 دولار أمريكي؛ أسعار وحدات البطارية تبقى بالدولار للكيلوواط ساعة لأن الأسعار الأساسية بالدولار.",
@@ -1716,23 +1686,13 @@ export const LOCALES = {
       "✅ {years} سنوات من البيانات الساعة ({dataYears}) · {yield} كيلوواط ساعة/سنة لكل كيلوواط من اللوحة.{offline}",
     offlineNote: " · 🌐 وضع السنة النموذجية دون اتصال",
     offlineCity: "باستخدام الملف النموذجي لـ {city}",
-    assumptionsPrefix:
-      "البيانات: {source}، بالساعة {dataYears}. ديارات مطبق: اتساخ {soil}%، أسلاك {wire}%، عدم تطابق {mismatch}%، MPPT {mppt}%. نموذج درجة الحرارة: NOCT {noct}°C، معامل حراري {gamma}%/°C. كفاءة العاكس {eta}%. الشحن ممنوع تحت حد كيمياء البرودة (LFP 0°C). أساس الحمل: {basis}. التكاليف من {basisLabel} ({source}) — الطرف المنخفض هو المكونات قبل الشحن/الرسوم/BMS، الطرف العالي هو البيع بالتجزئة مع BMS والصندوق. ",
-    fxNotePrefix: " ",
-    offlineNotePrefix:
-      "وضع عدم الاتصال: استخدم هذا الملف السنوي النموذجي لـ {offlineCity} — تقريب قريب، ليس موقعك الدقيق. أعد التشغيل على الإنترنت لخمس سنوات من الطقس الدقيق. ",
     tariffSpend:
       "الإنفاق على الشبكة يفترض ${tariff}/كيلوواط ساعة عند {dailyKwh} كيلوواط ساعة/يوم.",
     noTariff: "لم يتم إدخال تعريفة، لا يتم عرض فترة الاسترداد.",
-    currencyNote:
-      "المبالغ معروضة بـ {code} بسعر {rate} مقابل 1 دولار أمريكي؛ أسعار وحدات البطارية تبقى بالدولار للكيلوواط ساعة لأن الأسعار الأساسية بالدولار.",
-    offlineLabel:
-      "وضع عدم الاتصال: هذه العملية استخدم الملف السنوي النموذجي لـ {offlineCity} — تقريب قريب، ليس موقعك الدقيق. أعد التشغيل على الإنترنت لخمس سنوات من الطقس الدقيق. ",
     tariffSpendLine:
       "بسعر {tariff}/كيلوواط/ساعة، تكلفك كهرباؤك حوالي {annual} سنويًا اليوم. كل خيار أدناه يوضح الفاتورة بعد الشمسي ومدى سرعة استرداد التكلفة من الادخار.",
     tariffSpendBattery:
       "بسعر {tariff}/كيلوواط/ساعة، تكلفك كهرباؤك حوالي {annual} سنويًا اليوم. البطارية بدون ألواح تغيّر وقت الاستهلاك؛ ولا تخفّض ما تدفعه.",
-    noTariffLine: "لم يتم إدخال تعريفة، لا يتم عرض فترة الاسترداد.",
     tariffSpendOffgrid:
       "بسعر {tariff}/كيلوواط/ساعة، يكلفك هذا الاستخدام حوالي {annual} سنويًا من كهرباء الشبكة. أرقام الاسترداد أدناه تقارن تكلفة النظام بهذا الإنفاق.",
     tariffSpendFixed:
@@ -1805,6 +1765,8 @@ export const LOCALES = {
     advisorDegradedWhyNoKey: "لا مفتاح نموذج، فالمشير غير متصل عمدًا",
     advisorDegradedReassure: "لا خطأ في ما سبق وحسابك لم يتأثر.",
     advisorDegradedSystem: "خذ هذه الأرقام إلى كهربائي مرخَّص قبل البناء.",
+    advisorIsAi:
+      "المستشار نموذج لغوي. يكتب نصًا مقنعًا وقد يذكر أرقامًا خاطئة بثقة. تحقّق من كل رقم — لا تأخذه كحقيقة.",
     advisorDegradedGeneral: "للتحجيم: استخدم الحاسبة أعلاه؛ بلا حساب.",
     advisorDegradedRetry: "أعد المحاولة بعد دقيقة؛ الحصة مشتركة.",
     advisorUnreachable:

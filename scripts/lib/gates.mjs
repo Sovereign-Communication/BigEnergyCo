@@ -485,3 +485,73 @@ export function sitemapGaps(pages, urls, site) {
     extra: urls.filter((u) => !expectedSet.has(u)),
   };
 }
+
+// ── unkeyed prose on a translated page ───────────────────────────────────────
+// Every other i18n rule reads the DICTIONARY. Copy that was never put into it is
+// invisible to all of them: index.html's hero paragraph and the legal-card
+// advisor disclaimer shipped in English to every non-English visitor while
+// check-i18n was green, because both carried no data-i18n hook.
+//
+// Only pages that DECLARE themselves translated are checked. Measured across the
+// 82 shipped pages: exactly one has a hook, and it carries 41 unkeyed prose
+// blocks; the other 81 have none and are untranslated by decision. Demanding
+// hooks on those would be 2,046 decisions nobody made, and a gate that fires on
+// 2,046 known items is one that gets ignored.
+//
+// Exempt on purpose: text that is not prose (units, numbers, punctuation),
+// blocks under `minWords` (labels and captions), and pages with no hook at all.
+// Split out as a pure function so a test can prove the detector FIRES on the
+// markup that caused the defect, without mutating the working tree.
+// A real hook ATTRIBUTE, not the substring. Testing for "data-i18n" alone
+// exempts a paragraph whose hook was renamed to data-i18n-x — which is how the
+// first proof of this rule came back green, because the mutation I made was the
+// one string this check could not tell apart from a hook.
+const PROSE_HOOK_ATTR = /\sdata-i18n(?:-placeholder|-aria-label)?\s*=/;
+const PROSE_TAGS = "p|li|blockquote|figcaption|dd|label";
+// No letters, no digits: a price, a unit, a glyph. Nothing to translate.
+const NOT_PROSE =
+  /^[\s\d.,%+\-–—/×·:;()[\]{}<>=^*#@!?§°$€£¥|&'"‘’“” -⁯←-⇿☀-➿]*$/u;
+
+// The unit exemption NOT_PROSE cannot express on its own: "5 m² · 12 kWh · 3.5 %"
+// is six whitespace-separated words — so the length floor alone does not exempt
+// it, and "kWh" is three letters, so a letter-run test alone does not either —
+// yet it holds no sentence to translate. Real prose is dense with four-letter-or-
+// longer words; a unit line has none. Two of them is the threshold: below that a
+// block is a spec line, not a sentence.
+const PROSE_WORD = /[^\W\d_]{4,}/gu;
+const MIN_PROSE_WORDS = 2;
+
+/** Does this page claim to be translated? */
+export function claimsTranslation(html) {
+  return /data-i18n(?:-placeholder|-aria-label)?=/.test(html);
+}
+
+/**
+ * Visible prose blocks in `html` that carry no i18n hook.
+ *
+ * A hook on the element OR on any descendant counts: bracketing a <strong>
+ * inside a paragraph is how the author's name survives applyI18n's textContent.
+ *
+ * @returns {{tag: string, text: string, words: number}[]}
+ */
+export function unkeyedProse(html, { minWords = 6 } = {}) {
+  const found = [];
+  for (const m of html.matchAll(
+    new RegExp(`<(${PROSE_TAGS})\\b([^>]*)>([\\s\\S]*?)</\\1>`, "gi"),
+  )) {
+    const [, tag, attrs, inner] = m;
+    if (PROSE_HOOK_ATTR.test(attrs) || PROSE_HOOK_ATTR.test(inner)) continue;
+    const text = inner
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&mdash;/g, "—")
+      .replace(/&[a-z]+;|&#\d+;/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!text || NOT_PROSE.test(text)) continue;
+    const words = text.split(/\s+/).length;
+    if (words < minWords) continue;
+    if ((text.match(PROSE_WORD) || []).length < MIN_PROSE_WORDS) continue;
+    found.push({ tag, text, words });
+  }
+  return found;
+}

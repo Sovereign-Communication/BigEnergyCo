@@ -23,6 +23,11 @@
 //                  is PRESENT; none of them can see that it is BAD. Every one
 //                  of these shipped and passed every other rule, so they are
 //                  listed by value and the gate fails if any returns.
+//   9. UNKEYED    visible PROSE on a translated page must carry a hook. Every
+//                  other rule reads the dictionary; copy that was never put IN
+//                  it is invisible to all of them, which is how the hero
+//                  headline and the footer shipped in English on German and
+//                  Arabic browsers while the gate was green.
 //
 // An earlier version of this gate compared the *union* of the locale
 // dictionaries as a proxy for "what must be translated". That premise was
@@ -34,10 +39,12 @@ import { join } from "node:path";
 import { LOCALES } from "../assets/js/shared/locales.js";
 import { LANGS } from "../assets/js/shared/i18n.js";
 import {
+  claimsTranslation,
   deployedFiles,
   familyGaps,
   hookCoverage,
   placeholders,
+  unkeyedProse,
 } from "./lib/gates.mjs";
 
 let failures = 0;
@@ -279,6 +286,62 @@ if (bannedHits.length)
       .join(" | ")}`,
   );
 else ok(`none of the ${BANNED_VALUES.length} known-bad values are present`);
+
+// ── 9. unkeyed prose on a translated page ───────────────────────────────────
+// The class of defect, not an instance of it.
+//
+// Measured before this rule was written: index.html carried 41 visible prose
+// blocks with no hook, including the hero headline and the footer disclaimer —
+// the two most prominent strings on the page, in English, for every visitor
+// whose browser is not English. Rule 2 cannot see that, because rule 2 asks
+// "does every hook resolve?", never "does every string have a hook?". The
+// dictionary was complete; the markup simply never asked for it.
+//
+// SCOPE, and why it is drawn here. Only 1 of 82 shipped pages declares itself
+// translated (it has at least one hook); the other 81 have none and are
+// untranslated by decision, not by oversight. Demanding hooks on those would be
+// 2,046 decisions nobody made, and a gate that fires on 2,046 known items is a
+// gate that gets ignored — which is how this branch started. So the rule
+// applies to pages that claim translation, which is the claim the product makes
+// about itself.
+//
+// EXEMPT, deliberately:
+//   - text that is not prose (units, bare numbers, symbols, punctuation);
+//   - blocks shorter than six words, which are labels and captions;
+//   - pages with no hook at all, which are not claimed to be translated.
+// The floor and the ceiling are both reported, so the number is visible and can
+// only fall.
+const proseFindings = [];
+for (const page of shippedPages()) {
+  const html = readFileSync(page, "utf8");
+  // The detector lives in scripts/lib/gates.mjs as a pure function, so a test
+  // can prove it FIRES on the markup that caused this defect without mutating
+  // the working tree — the race that cost three CI cycles on this branch.
+  if (!claimsTranslation(html)) continue; // page does not claim translation
+  for (const block of unkeyedProse(html))
+    proseFindings.push(
+      `${page}: <${block.tag}> ${JSON.stringify(block.text.slice(0, 60))}…`,
+    );
+}
+// The remaining 39 are REAL and KNOWN: FAQ answers, the bill-of-materials spec
+// text, and the legal copy on the one translated page. Keying them is P5 work
+// (R-I18N-07 waves), not this branch. This ceiling is a committed constant on
+// purpose — it started as an env override, which is a gate anyone can loosen
+// without touching the file, which is the failure mode this repo treats as
+// worse than a red build. Lower it as blocks get keyed; never raise it without
+// a measured reason in the commit that raises it.
+const PROSE_CEILING = 39;
+if (proseFindings.length > PROSE_CEILING) {
+  fail(
+    `${proseFindings.length} visible prose block(s) on a translated page carry no i18n hook ` +
+      `(ceiling ${PROSE_CEILING}): ${proseFindings.slice(0, 4).join(" | ")}`,
+  );
+} else {
+  console.log(
+    `     unkeyed prose on translated pages: ${proseFindings.length}/${PROSE_CEILING} ceiling ` +
+      `(known, tracked, must fall)`,
+  );
+}
 
 // ── coverage summary (informational, keeps the trend visible) ───────────────
 const rows = langs
