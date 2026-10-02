@@ -11,6 +11,20 @@
 // Stamp convention: YYYYMMDD + letter (20260906a). One stamp is applied to
 // the WHOLE graph (simpler than per-file stamps, and a release invalidates
 // the graph atomically so clients can never mix module versions).
+//
+// Why check (d) exists. Checks (a)-(c) only prove the token is PRESENT and
+// CONSISTENT. None of them asks whether it is still TRUE — that is, whether the
+// bytes behind `?v=20260929a` are the bytes that stamp was minted for. The
+// consequence is silent and expensive: `/assets/*` is immutable for a year, so
+// a merged change to a referenced asset under an unchanged token is not served
+// to anyone whose cache already holds it. A release then reaches first-time
+// visitors only, while returning visitors keep the old advisor rendering and
+// the old locale dictionary — with every gate green.
+//
+// So (d) compares each referenced asset's content against the commit that
+// minted the current stamp. Changed since? The token is stale and the release
+// is refused. This is a content comparison, not a convention, so it cannot be
+// satisfied by leaving the stamp alone.
 import {
   readFileSync,
   writeFileSync,
@@ -18,7 +32,13 @@ import {
   statSync,
   existsSync,
 } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, resolve, dirname, relative } from "node:path";
+import {
+  GRAPH_PATHSPEC,
+  findStaleAssets,
+  gitBlob,
+  stampCommit,
+} from "./lib/asset-tokens.mjs";
 
 const ROOT = resolve(
   new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
@@ -100,6 +120,47 @@ function currentTokens() {
   return [...tokens];
 }
 
+// Every first-party asset the graph points at, resolved to a repo-relative
+// path. Returns a Map<assetPath, token> so a single asset referenced from many
+// pages is reported once.
+//
+// Resolution mirrors how a browser resolves the URL: `./x` and `../x` are
+// relative to the FILE THAT REFERENCES THEM, while `assets/…` and `/assets/…`
+// are already root-relative.
+function referencedAssets() {
+  const out = new Map();
+  for (const f of GRAPH_FILES) {
+    if (!existsSync(f)) continue;
+    const text = readFileSync(f, "utf8");
+    for (const re of [...MODULE_RES, ...FETCH_RES]) {
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(text))) {
+        const url = m[1];
+        if (!isFirstParty(url)) continue;
+        // Runtime-built URLs (city partitions) have no single file behind them,
+        // so there is no blob to compare. Skipped deliberately rather than
+        // guessed at.
+        if (url.includes("${")) continue;
+        let p;
+        if (url.startsWith("/assets/")) p = url.slice(1);
+        else if (url.startsWith("assets/")) p = url;
+        else p = relative(ROOT, join(dirname(f), url));
+        // MUST be repo-relative with forward slashes. An absolute Windows path
+        // makes `git show <rev>:<path>` fail, which would silently classify
+        // every asset as "new" and turn this whole check into a green light.
+        const rel = p.split("\\").join("/");
+        if (rel.startsWith("../") || !out.has(rel))
+          out.set(rel, m[3] || "(token-less)");
+      }
+    }
+  }
+  return out;
+}
+
+// The stamp's setter and the blob accessor both live in lib/asset-tokens.mjs
+// so they can be unit-tested without executing this rewriting script.
+
 function nextStamp() {
   if (stampArg) return stampArg;
   const d = new Date();
@@ -164,10 +225,34 @@ if (CHECK) {
   } catch (e) {
     fail(e.message);
   }
+  // (d) STALENESS: the stamp must still describe the bytes behind it.
+  //
+  // Git blobs are compared to git blobs, never to the working tree: this repo
+  // has core.autocrlf=true on Windows, so reading files from disk would report
+  // every asset as changed and the gate would be unpassable on a contributor's
+  // machine.
+  const assets = referencedAssets();
+  if (!assets.size) fail("no first-party asset references found to check");
+  else {
+    const { sha: setter, short, error } = stampCommit(ROOT, toks[0] ?? "");
+    if (error) fail(`stamp staleness could not be determined — ${error}`);
+    else {
+      const stale = findStaleAssets(assets.keys(), setter, (rev, p) =>
+        gitBlob(ROOT, rev, p),
+      );
+      if (stale.length)
+        fail(
+          `${stale.length} referenced asset(s) changed but the stamp stayed ` +
+            `${toks[0]} (set at ${short}): ${stale.join(", ")}. The /assets/* ` +
+            `layer is Cache-Control: immutable 1yr, so these stay stale for ` +
+            `every returning visitor. Run: node scripts/bump-asset-tokens.mjs`,
+        );
+    }
+  }
   console.log(
     failures
       ? "asset-token check FAILED"
-      : `asset-token check OK (stamp ${toks[0] ?? "n/a"})`,
+      : `asset-token check OK (stamp ${toks[0] ?? "n/a"}, ${assets.size} referenced assets verified against the stamp commit)`,
   );
   process.exit(failures ? 1 : 0);
 }
