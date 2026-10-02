@@ -157,7 +157,16 @@ test("the deploy path cannot pass --lab", () => {
     /labTransform/,
     "the copy loop must copy verbatim, with no transform",
   );
-  assert.match(src.slice(from, guard), /cpSync\(join\(ROOT, f\), dest\)/);
+  // The verbatim copy is now `stageFromIndex(ROOT, STAGE, files)` — it stages
+  // the committed bytes rather than the working tree, so a CRLF checkout cannot
+  // ship line endings the repository does not hold. The invariant being pinned
+  // is unchanged and still matters: this region COPIES and nothing else.
+  assert.match(src.slice(from, guard), /stageFromIndex\(ROOT, STAGE, files\)/);
+  assert.doesNotMatch(
+    src.slice(from, guard),
+    /readFileSync\(join\(ROOT, f\)/,
+    "the staging region must not read deployable bytes from the working tree",
+  );
 });
 
 test("the prefix is declared once, so /next/ is spelled in one place", () => {

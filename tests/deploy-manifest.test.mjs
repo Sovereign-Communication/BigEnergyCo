@@ -168,8 +168,12 @@ test("MUTATION TOOTH: an untracked file inside a nested dir cannot enter either"
 });
 
 test("MUTATION TOOTH: a deleted-but-tracked file fails loudly, not silently", () => {
-  // The index still names the file, so the contract keeps it — but the copy
-  // step would ENOENT. That must be a hard error, never a smaller site.
+  // The index still names the file, so the contract keeps it — and since the
+  // staging builder now copies from the INDEX (`scripts/lib/deploy-blobs.mjs`),
+  // the copy step no longer ENOENTs either: it stages the committed bytes. That
+  // is the better failure mode. A working-tree deletion cannot shrink the site,
+  // and it cannot crash the build either; the bytes under review are the bytes
+  // that ship.
   //
   // Held under the cross-process mutation lock. This tooth deletes a file at the
   // repo root while `tests/ci-resilience.test.mjs` concurrently spawns

@@ -32,6 +32,7 @@ import {
   assertNoDefaultRemains,
 } from "./lib/api-target.mjs";
 import { withMutationLock } from "./lib/mutation-lock.mjs";
+import { stageFromIndex } from "./lib/deploy-blobs.mjs";
 import { execSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import {
@@ -106,10 +107,26 @@ if (LIST) {
   // at the repo root, and a concurrent staging build ENOENTs on it. Excluding
   // the mutation at the reader is the fix that stops needing to remember.
   await withMutationLock(async () => {
-    for (const f of deployList()) {
-      const dest = join(STAGE, f);
-      mkdirSync(dirname(dest), { recursive: true });
-      cpSync(join(ROOT, f), dest);
+    const files = deployList();
+    const divergences = stageFromIndex(ROOT, STAGE, files);
+    if (divergences.length) {
+      // Said out loud, by name. The stage is the COMMITTED tree, so an
+      // uncommitted edit to a deployable file is not in this build. The
+      // production promote already refuses to run on a dirty tree, so this can
+      // only ever bite a local preview — but a preview that silently shows
+      // yesterday's bytes is worse than one that says so.
+      console.warn(
+        `\nSTAGE NOTE  staged from the git INDEX (the committed bytes). ` +
+          `${divergences.length} file(s) have uncommitted working-tree edits ` +
+          `and are NOT in this build:`,
+      );
+      for (const f of divergences.slice(0, 20))
+        console.warn(`STAGE NOTE    ${f}`);
+      if (divergences.length > 20)
+        console.warn(
+          `STAGE NOTE    …and ${divergences.length - 20} more (\`git diff --name-only\`)`,
+        );
+      console.warn("");
     }
   }, ROOT);
 
