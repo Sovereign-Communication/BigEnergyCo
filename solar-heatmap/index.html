@@ -116,33 +116,26 @@
         ]
       }
     </script>
-    <!-- Leaflet's CSS is PRELOADED, not linked as a stylesheet. As a
-         stylesheet it was render-blocking, and it sat in front of the intro
+    <!-- There is deliberately no <link> for Leaflet's CSS here.
+         As a stylesheet it is render-blocking, and it sat in front of the intro
          paragraph below — the largest text on this page, so the LCP element —
          costing that paragraph a whole extra first-paint round trip to a third
          party. Measured on the staged build: heatmap/desktop LCP 4.51-4.56s
-         against FCP 1.91-2.23s, and with the link non-blocking 1.21-2.21s
-         against 1.06-1.83s, on a page whose init() never ran at all. So this
-         was never about the map or its data.
+         against FCP 1.91-2.23s, and with the file off the render-blocking path
+         1.21-2.21s against 1.06-1.83s, on a page whose init() never ran at all.
+         So this was never about the map or its data.
 
-         A rel=stylesheet link is only non-blocking if something flips its
-         media afterwards, which normally means an inline onload handler — and
-         this page's CSP allows no 'unsafe-inline' in script-src. So the
-         declaration stays here as the single source of the URL and its hash,
-         and heatmap.js promotes the preload into a stylesheet (see
-         applyLeafletStyles) and waits for it before revealing the map.
+         A stylesheet link is only non-blocking if something flips its media
+         afterwards, which normally means an inline onload handler — and this
+         page's CSP allows no 'unsafe-inline' in script-src. So the file is
+         fetched as a preload and promoted by
+         assets/js/sizing/leaflet-styles.js, which owns its URL, SRI hash and
+         CORS mode and reads the first two from
+         assets/js/sizing/map-provider.js. One declaration, in one place.
 
-         Nothing can want it sooner: #map is display:none in the markup, and
+         Nothing can want it sooner: #map is display:none in this markup, and
          heatmap.js is a module, so it cannot run until the parser-blocking
-         leaflet.js below has executed. -->
-    <link
-      id="leaflet-css"
-      rel="preload"
-      as="style"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-      crossorigin=""
-    />
+         leaflet.js at the foot of this file has executed. -->
     <style>
       :root {
         color-scheme: dark;
