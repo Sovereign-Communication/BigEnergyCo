@@ -30,14 +30,16 @@ test("LAZY: translate echoes the key before the dictionary lands, never English"
     "advisorDegradedReassure",
     "after the dictionary lands the same call must return copy",
   );
-  assert.ok(late.length > 10, `expected real copy, got ${JSON.stringify(late)}`);
+  assert.ok(
+    late.length > 10,
+    `expected real copy, got ${JSON.stringify(late)}`,
+  );
 });
 
 test("LAZY: every locale renders native copy once loaded — including RTL", async () => {
   const mod = await import(I18N);
-  const { LOCALES } = await import(
-    "file:///C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo-showcase/assets/js/shared/locales.js"
-  );
+  const { LOCALES } =
+    await import("file:///C:/Users/SCM/Documents/GitHub/BigEnergyCo/BigEnergyCo-showcase/assets/js/shared/locales.js");
   await mod.localesReady;
   const probe = "advisorDegradedReassure";
   const seen = new Map();
@@ -64,7 +66,11 @@ test("LAZY: every locale renders native copy once loaded — including RTL", asy
   // Word-based, not character-based: a German sentence is not required to
   // contain an umlaut, and asserting one made this test fail the moment the
   // copy was tightened — a test that breaks on good copy teaches nothing.
-  assert.match(seen.get("de"), /Berechnung|nicht|falsch/, "German must be German");
+  assert.match(
+    seen.get("de"),
+    /Berechnung|nicht|falsch/,
+    "German must be German",
+  );
 });
 
 test("LAZY: the boot path awaits the dictionary, so first paint is never English", async () => {
