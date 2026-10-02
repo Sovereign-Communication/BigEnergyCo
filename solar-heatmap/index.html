@@ -116,18 +116,9 @@
         ]
       }
     </script>
-    <!-- Leaflet CSS is preloaded so it does not block the intro text. 
-         heatmap.js promotes this node to a stylesheet after boot starts and 
-         waits for it before revealing the map. This keeps URL, SRI, and CORS 
-         declarations in one place without an inline CSP handler. -->
-    <link
-      id="leaflet-css"
-      rel="preload"
-      as="style"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-      crossorigin=""
-    />
+    <!-- Leaflet CSS is loaded by the map module after the intro can paint.
+         The module owns its URL and integrity pin; this page has no inline
+         handler, keeping the stylesheet lifecycle compatible with CSP. -->
     <style>
       :root {
         color-scheme: dark;
@@ -814,12 +805,10 @@
     </footer>
 
     <script
-      defer
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-    <script defer src="../assets/js/heatmap-palette.js?v=20261022j"></script>
-    <script defer src="../assets/js/heatmap.js?v=20261022j"></script>
+    <script src="../assets/js/heatmap.js?v=20261005h"></script>
   </body>
 </html>

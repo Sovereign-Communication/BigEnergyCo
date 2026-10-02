@@ -3,12 +3,19 @@
 const PANEL_AREA_M2 = 6;
 export const LEAFLET_SCRIPT_URL =
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-// Subresource-integrity pins, identical to the static pins on
-// solar-heatmap/index.html: a compromised CDN response refuses to execute
+// Subresource-integrity pins: a compromised CDN response refuses to execute
 // instead of running inside the page. Keep all three files on one version.
+//
+// The SCRIPT pin is still written out by hand in solar-heatmap/index.html,
+// because a parser-blocking <script> has to be discovered during the preload
+// scan and cannot be injected by a module. The STYLE pin used to be written out
+// there too, and now is not: it is fetched as a preload by
+// assets/js/sizing/leaflet-styles.js, which reads both values from this module.
+// One declaration per resource is the point.
 export const LEAFLET_SCRIPT_SRI =
   "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
-const LEAFLET_STYLE_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+export const LEAFLET_STYLE_URL =
+  "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
 export const LEAFLET_STYLE_SRI =
   "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
 export const CARTO_TILE_URL =

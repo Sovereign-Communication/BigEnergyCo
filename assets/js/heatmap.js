@@ -583,22 +583,6 @@
   }
 
   // ── Init ─────────────────────────────────────────────────────────────────
-  // Promote the preload after first paint so Leaflet cannot block the intro.
-  // Clone it to retain the declared URL, SRI hash, and CORS mode.
-  function applyLeafletStyles() {
-    var preloaded = document.getElementById("leaflet-css");
-    if (!preloaded) return Promise.resolve(false);
-    return new Promise(function (resolve) {
-      var link = preloaded.cloneNode();
-      link.rel = "stylesheet";
-      link.removeAttribute("as");
-      link.removeAttribute("id");
-      link.addEventListener("load", function () { resolve(true); }, { once: true });
-      link.addEventListener("error", function () { resolve(false); }, { once: true });
-      document.head.append(link);
-    });
-  }
-
   function init() {
     // WebGL detection for the fallback notice (P1-1).
     try {
@@ -614,7 +598,13 @@
       /* leave default loading state */
     }
 
-    var stylesReady = applyLeafletStyles();
+    var stylesReady = import("./sizing/leaflet-styles.js?v=20261022j")
+      .then(function (styles) {
+        return styles.applyLeafletStyles();
+      })
+      .catch(function () {
+        return false;
+      });
 
     var boot = Promise.all([
       fetch("../assets/img/heatmap/manifest.json?v=20261022j").then(
