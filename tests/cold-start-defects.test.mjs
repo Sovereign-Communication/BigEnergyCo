@@ -777,12 +777,18 @@ test("CSP: the widget's script host is the one the client actually loads", () =>
   // Ties the constant the loader uses to the constant the policy is checked
   // against, so changing one without the other is a test failure rather than a
   // blocked widget in a demo.
-  assert.match(
-    turnstileClient.TURNSTILE_SCRIPT_SRC,
-    new RegExp(
-      `^https://${turnstileClient.TURNSTILE_CSP_REQUIREMENTS.host.replace(/\./g, "\\.")}/`,
-    ),
-    "TURNSTILE_SCRIPT_SRC and TURNSTILE_CSP_REQUIREMENTS must name the same host",
+  //
+  // Compared as strings, not as a RegExp built from the host. Escaping a host
+  // into a pattern by hand is incomplete sanitization by construction — the
+  // dots get escaped and nothing else does, so the assertion is only as correct
+  // as that one replace() (CodeQL: js/incomplete-sanitization, high). A
+  // hostnames are a fixed, known-shape literal here, so string comparison
+  // states the same intent with nothing to sanitize and nothing to get wrong.
+  const host = turnstileClient.TURNSTILE_CSP_REQUIREMENTS.host;
+  const src = turnstileClient.TURNSTILE_SCRIPT_SRC;
+  assert.ok(
+    src.startsWith(`https://${host}/`),
+    `TURNSTILE_SCRIPT_SRC must load from https://${host}/, got ${src}`,
   );
 });
 
