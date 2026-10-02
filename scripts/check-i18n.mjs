@@ -16,6 +16,13 @@
 //   5. RTL FLAGS   only `ar` flips direction.
 //   6. FAMILIES    strings composed at runtime (base + "Grid"/"Offgrid") must
 //                  exist in every locale, not only in the one that got them.
+//   7. RENDERED   every English key is named by shipped code or markup, so a
+//                  translation cannot sit in the file costing every locale
+//                  while no visitor can ever see it.
+//   8. BANNED     specific VALUES known to be wrong. Rules 1-7 prove a string
+//                  is PRESENT; none of them can see that it is BAD. Every one
+//                  of these shipped and passed every other rule, so they are
+//                  listed by value and the gate fails if any returns.
 //
 // An earlier version of this gate compared the *union* of the locale
 // dictionaries as a proxy for "what must be translated". That premise was
@@ -207,6 +214,43 @@ else
   ok(
     `all ${Object.keys(en).length} en keys are rendered by shipped code or markup`,
   );
+
+// ── 8. banned values ────────────────────────────────────────────────────────
+// Every entry here is a string that WAS shipped and passed rules 1-7. They are
+// listed by value rather than by key because the key was never the problem:
+// the key existed in all six locales, carried the right placeholders, and was
+// named by shipped code. It was the TEXT that was wrong — a garbled Arabic word
+// and a sentence left hanging on a dangling case ending. A presence gate is
+// blind to that by construction, so these are pinned as literals.
+//
+// Each entry names the defect, because "this string is banned" tells a future
+// editor nothing about what to write instead.
+const BANNED_VALUES = [
+  {
+    value: "دون اتصال · ليس الذكاء الطناعيا مباشرة",
+    why: "ar.advisorDegradedLabel shipped a non-word (الطناعيا); it now reads 'not the natural one', matching the other locales' 'not the live AI'",
+  },
+  {
+    value: "لا مفتاح مدية، فالمشير منطقً عند الاتصال",
+    why: "ar.advisorDegradedWhyNoKey ended on a dangling tanwin, leaving the clause unfinished; it now says 'offline by design', which is what the English says",
+  },
+];
+const bannedHits = [];
+for (const lang of langs) {
+  for (const [key, value] of Object.entries(LOCALES[lang])) {
+    for (const b of BANNED_VALUES) {
+      if (typeof value === "string" && value.includes(b.value))
+        bannedHits.push(`${lang}.${key}: ${b.why}`);
+    }
+  }
+}
+if (bannedHits.length)
+  fail(
+    `${bannedHits.length} known-bad value(s) shipped again: ${bannedHits
+      .slice(0, 4)
+      .join(" | ")}`,
+  );
+else ok(`none of the ${BANNED_VALUES.length} known-bad values are present`);
 
 // ── coverage summary (informational, keeps the trend visible) ───────────────
 const rows = langs

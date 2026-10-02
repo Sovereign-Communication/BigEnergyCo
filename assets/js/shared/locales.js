@@ -18,6 +18,10 @@ export const LOCALES = {
     navBlog: "Blog",
     navLegal: "Terms & Disclaimer",
     heroTag: "🌍 Free for everyone, everywhere • No signup • Nothing for sale",
+    heroTitle1: "Cut your electricity bill.",
+    heroTitle2: "See exactly what it would take.",
+    footerAboutPre: "Built and given away by",
+    footerAboutPost: "Not a company, not incorporated, nothing for sale.",
     ctaStart: "Start a Free Estimate",
     pickCity: "Pick a city (or use 📍 My location) so we know your sunshine.",
     shareLoaded:
@@ -69,9 +73,8 @@ export const LOCALES = {
     lvlBest: "Best pick",
     lvlCompare: "Compare batteries",
     lvlMatrix: "All options",
-    bomPanelTitle: "Your hardware list \u2014 what this system is made of",
-    bomDownload: "Download parts list (CSV)",
-    genSummary: "I run a generator \u2014 what does its power really cost?",
+    bomPanelTitle: "Your hardware list — what this system is made of",
+    genSummary: "I run a generator — what does its power really cost?",
     genApply: "Use this as my electricity price",
 
     // -- Plausibility frontier (spend -> coverage curve) --
@@ -84,7 +87,6 @@ export const LOCALES = {
     frontierYGrid: "Share of your power bill cut",
     frontierYGridBattery: "Share of your peak hours shifted",
     frontierYOffgrid: "Share of your energy covered, no generator",
-    frontierTagSel: "selected",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, no battery · {pct}% · {cost}",
     frontierLegendSel: "Selected option — click any point to choose it",
@@ -132,8 +134,8 @@ export const LOCALES = {
     // The worker emits these KEYS next to canonical English text. A browser
     // resolves them here, so a failure message is never English-only; the
     // English `reply` field stays what a non-browser client reads.
-    advisorDegradedLabel: "Offline \u00b7 not the live AI",
-    advisorDegradedLine: "I can't answer right now \u2014 {why}.",
+    advisorDegradedLabel: "Offline · not the live AI",
+    advisorDegradedLine: "I can't answer right now — {why}.",
     advisorDegradedWhyUnavailable: "the service that answers did not reply",
     advisorDegradedWhyNoKey:
       "no model key is configured, so the advisor is offline by design",
@@ -142,7 +144,7 @@ export const LOCALES = {
     advisorDegradedSystem:
       "Take those numbers to a licensed electrician before you build.",
     advisorDegradedGeneral:
-      "For sizing help, use the calculator above \u2014 no account needed.",
+      "For sizing help, use the calculator above — no account needed.",
     advisorDegradedRetry: "Try again in a minute; the free quota is shared.",
     advisorUnreachable:
       " The AI advisor is unreachable right now{status}.\n\nCheck your connection and try again in a moment.",
@@ -170,6 +172,7 @@ export const LOCALES = {
     frontierLegendRange: "Best-value range — every extra percent still cheap",
     frontierBestValueRange: "Best-value range: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "best value",
+    frontierTagSel: "selected",
     fuelLitLabel: "Price per liter",
     fuelGalLabel: "Price per gallon",
     fuelReadoutRate: "{type} at this price works out to about {rate} per kWh",
@@ -313,6 +316,10 @@ export const LOCALES = {
     navLegal: "Términos y aviso legal",
     heroTag:
       "Gratis para todos, en todo el mundo · Sin registro · Nada en venta",
+    heroTitle1: "Reduce tu factura de luz.",
+    heroTitle2: "Vea exactamente lo que haría falta.",
+    footerAboutPre: "Creada y entregada por",
+    footerAboutPost: "No es una empresa, no está constituida, nada en venta.",
     ctaStart: "Empieza tu estimación gratis",
     pickCity:
       "Elige una ciudad (o usa 📍 Mi ubicación) para que sepamos tu insolación.",
@@ -346,8 +353,6 @@ export const LOCALES = {
     offlineCity: "usando perfil típico de {city}",
     assumptionsPrefix:
       "Datos: {source}, horario {dataYears}. Derates aplicados: ensuciamiento {soil}%, cableado {wire}%, desajuste {mismatch}%, MPPT {mppt}%. Modelo de temperatura: NOCT {noct}°C, coef. temp. {gamma}%/°C. Eficiencia inversor {eta}%. Carga bloqueada bajo límite de frío de la química (LFP 0°C). Base de carga: {basis}. Costes desde {basisLabel} ({source}) — el extremo bajo es componentes antes de flete/arancel/BMS, el alto es retail con BMS y caja. ",
-    moneyPrefix: "",
-    capacityNotePrefix: "",
     fxNotePrefix: " ",
     offlineNotePrefix:
       "MODO OFFLINE: esta ejecución usó el perfil típico anual para {offlineCity} — una aproximación cercana, no tu sitio exacto. Vuelve a ejecutar online para cinco años de clima puntual. ",
@@ -355,7 +360,6 @@ export const LOCALES = {
     noTariff: "Sin tarifa introducida, no se muestra amortización.",
     currencyNote:
       "Las cantidades se muestran en {code} a {rate} por 1 US$; las tarifas unitarias de batería se quedan en $/kWh porque los ámbitos de precio base son en USD.",
-    capacityNote: "",
     offlineLabel:
       "MODO OFFLINE: esta ejecución usó el perfil típico anual para {offlineCity} — una aproximación cercana, no tu sitio exacto. Vuelve a ejecutar online para cinco años de clima puntual. ",
     tariffSpendLine:
@@ -396,7 +400,6 @@ export const LOCALES = {
     lvlCompare: "Comparar baterías",
     lvlMatrix: "Todas las opciones",
     bomPanelTitle: "Tu lista de hardware — de qué está hecho este sistema",
-    bomDownload: "Descargar lista de piezas (CSV)",
     genSummary: "Uso un generador — ¿cuánto cuesta realmente su energía?",
     genApply: "Usar esto como mi precio de electricidad",
 
@@ -410,7 +413,6 @@ export const LOCALES = {
     frontierYGrid: "Parte de tu factura eliminada",
     frontierYGridBattery: "Parte de tus horas punta desplazadas",
     frontierYOffgrid: "Parte de tu energía cubierta, sin generador",
-    frontierTagSel: "seleccionado",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, sin batería · {pct}% · {cost}",
     frontierLegendSel:
@@ -457,19 +459,19 @@ export const LOCALES = {
     advisorBusy:
       " El motor gratuito de IA está satur ahora (HTTP {status} — usa una cuota compartida).\n\nEspera aproximadamente un minuto y vuelve a enviarlo.",
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
-    advisorDegradedLabel: "Sin conexi\u00f3n \u00b7 no la IA en directo",
-    advisorDegradedLine: "No puedo responder ahora \u2014 {why}.",
+    advisorDegradedLabel: "Sin conexión · no la IA en directo",
+    advisorDegradedLine: "No puedo responder ahora — {why}.",
     advisorDegradedWhyUnavailable: "el servicio que responde no ha contestado",
     advisorDegradedWhyNoKey:
-      "no hay clave de modelo: el asesor est\u00e1 apagado por dise\u00f1o",
+      "no hay clave de modelo: el asesor está apagado por diseño",
     advisorDegradedReassure:
-      "Nada de lo anterior est\u00e1 mal y tus c\u00e1lculos no se ven afectados.",
+      "Nada de lo anterior está mal y tus cálculos no se ven afectados.",
     advisorDegradedSystem:
       "Lleva esas cifras a un electricista habilitado antes de construir.",
     advisorDegradedGeneral:
       "Para dimensionar, usa la calculadora de arriba; sin cuenta.",
     advisorDegradedRetry:
-      "Int\u00e9ntalo en un minuto; la cuota gratuita es compartida.",
+      "Inténtalo en un minuto; la cuota gratuita es compartida.",
     advisorUnreachable:
       " El asesor de IA no está disponible ahora{status}.\n\nComprueba tu conexión y vuelve a intentarlo en un momento.",
     frontierCeilingTag: "Lo máximo dentro de lo buscado: {pct}%",
@@ -495,6 +497,7 @@ export const LOCALES = {
     frontierLegendRange: "Rango óptimo — cada punto extra sigue barato",
     frontierBestValueRange: "Rango óptimo: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "mejor valor",
+    frontierTagSel: "seleccionado",
     fuelLitLabel: "Precio por litro",
     fuelGalLabel: "Precio por galón",
     fuelReadoutRate: "{type} a este precio sale a unos {rate} por kWh",
@@ -654,6 +657,10 @@ export const LOCALES = {
     navLegal: "Termos e aviso legal",
     heroTag:
       "Grátis para todos, no mundo inteiro · Sem cadastro · Nada à venda",
+    heroTitle1: "Corte a sua conta de luz.",
+    heroTitle2: "Veja exatamente o que seria preciso.",
+    footerAboutPre: "Criada e oferecida por",
+    footerAboutPost: "Não é uma empresa, não é constituída, nada à venda.",
     ctaStart: "Comece sua estimativa grátis",
     goalLabel: "O que você quer que este sistema faça?",
     goalOffgrid: "Me alimentar totalmente fora da rede",
@@ -716,8 +723,6 @@ export const LOCALES = {
     offlineCity: "usando perfil típico de {city}",
     assumptionsPrefix:
       "Dados: {source}, horário {dataYears}. Derates aplicados: sujeira {soil}%, fiação {wire}%, descompasso {mismatch}%, MPPT {mppt}%. Modelo de temperatura: NOCT {noct}°C, coef. temp. {gamma}%/°C. Eficiência do inversor {eta}%. Carga bloqueada abaixo do limite de frio da química (LFP 0°C). Base de carga: {basis}. Custos de {basisLabel} ({source}) — o extremo baixo é componentes antes de frete/imposto/BMS, o alto é varejo com BMS e caixa. ",
-    moneyPrefix: "",
-    capacityNotePrefix: "",
     fxNotePrefix: " ",
     offlineNotePrefix:
       "MODO OFFLINE: esta execução usou o perfil típico anual para {offlineCity} — uma aproximação próxima, não seu local exato. Rode novamente online para cinco anos de clima pontual. ",
@@ -725,7 +730,6 @@ export const LOCALES = {
     noTariff: "Sem tarifa informada, não há amortização mostrada.",
     currencyNote:
       "Valores mostrados em {code} a {rate} por 1 US$; taxas unitárias de bateria permanecem em $/kWh porque os preços base são em USD.",
-    capacityNote: "",
     offlineLabel:
       "MODO OFFLINE: esta execução usou o perfil típico anual para {offlineCity} — uma aproximação próxima, não seu local exato. Rode novamente online para cinco anos de clima pontual. ",
     tariffSpendLine:
@@ -741,7 +745,6 @@ export const LOCALES = {
     lvlCompare: "Comparar baterias",
     lvlMatrix: "Todas as opções",
     bomPanelTitle: "Sua lista de hardware — do que este sistema é feito",
-    bomDownload: "Baixar lista de peças (CSV)",
     genSummary: "Uso um gerador — quanto custa de verdade a energia dele?",
     genApply: "Usar isto como meu preço de eletricidade",
 
@@ -755,7 +758,6 @@ export const LOCALES = {
     frontierYGrid: "Parte da sua conta de luz cortada",
     frontierYGridBattery: "Parte das suas horas de ponta deslocadas",
     frontierYOffgrid: "Parte da sua energia coberta, sem gerador",
-    frontierTagSel: "selecionado",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, sem bateria · {pct}% · {cost}",
     frontierLegendSel:
@@ -802,21 +804,19 @@ export const LOCALES = {
     advisorBusy:
       " O motor gratuito de IA está sobrecarregado agora (HTTP {status} — usa uma quota partilhada).\n\nEspere cerca de um minuto e envie novamente.",
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
-    advisorDegradedLabel:
-      "Sem liga\u00e7\u00e3o \u00b7 n\u00e3o a IA em direto",
-    advisorDegradedLine: "N\u00e3o consigo responder agora \u2014 {why}.",
-    advisorDegradedWhyUnavailable:
-      "o servi\u00e7o que responde n\u00e3o replied",
+    advisorDegradedLabel: "Sem ligação · não a IA em direto",
+    advisorDegradedLine: "Não consigo responder agora — {why}.",
+    advisorDegradedWhyUnavailable: "o serviço que responde não replied",
     advisorDegradedWhyNoKey:
-      "n\u00e3o h\u00e1 chave de modelo: o consultor est\u00e1 off por desenho",
+      "não há chave de modelo: o consultor está off por desenho",
     advisorDegradedReassure:
-      "Nada acima est\u00e1 errado e o seu dimensionamento n\u00e3o \u00e9 afetado.",
+      "Nada acima está errado e o seu dimensionamento não é afetado.",
     advisorDegradedSystem:
       "Leve esses valores a um eletricista credenciado antes de construir.",
     advisorDegradedGeneral:
       "Para dimensionar, use a calculadora acima; sem conta.",
     advisorDegradedRetry:
-      "Tente dentro de um minuto; a quota gratuita \u00e9 partilhada.",
+      "Tente dentro de um minuto; a quota gratuita é partilhada.",
     advisorUnreachable:
       " O consultor de IA está indisponível neste momento{status}.\n\nVerifique a ligação e tente novamente dentro de instantes.",
     frontierCeilingTag: "O máximo dentro do que foi buscado: {pct}%",
@@ -842,6 +842,7 @@ export const LOCALES = {
     frontierLegendRange: "Faixa ideal — cada ponto extra continua barato",
     frontierBestValueRange: "Faixa ideal: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "melhor valor",
+    frontierTagSel: "selecionado",
     fuelLitLabel: "Preço por litro",
     fuelGalLabel: "Preço por galão",
     fuelReadoutRate: "{type} a esse preço dá cerca de {rate} por kWh",
@@ -990,6 +991,10 @@ export const LOCALES = {
     navBlog: "Blog",
     navLegal: "Conditions et avertissement",
     heroTag: "Gratuit pour tous, partout · Sans inscription · Rien à vendre",
+    heroTitle1: "Réduisez votre facture d'électricité.",
+    heroTitle2: "Voyez exactement ce qu'il faudrait.",
+    footerAboutPre: "Conçu et offert par",
+    footerAboutPost: "Pas une société, pas immatriculée, rien à vendre.",
     ctaStart: "Lancer une estimation gratuite",
     goalLabel: "Que doit faire ce système ?",
     goalOffgrid: "Me rendre totalement autonome",
@@ -1057,8 +1062,6 @@ export const LOCALES = {
     offlineCity: "utilisation du profil typique de {city}",
     assumptionsPrefix:
       "Données : {source}, horaires {dataYears}. Derates appliqués : salissure {soil}%, câblage {wire}%, désaccord {mismatch}%, MPPT {mppt}%. Modèle de température : NOCT {noct}°C, coef. temp. {gamma}%/°C. Efficacité onduleur {eta}%. Charge bloquée sous la limite de froid de la chimie (LFP 0°C). Base de charge : {basis}. Coûts de {basisLabel} ({source}) — le bas est composants avant fret/droits/BMS, le haut est détail avec BMS et boîte. ",
-    moneyPrefix: "",
-    capacityNotePrefix: "",
     fxNotePrefix: " ",
     offlineNotePrefix:
       "MODE HORS LIGNE : cette exécution a utilisé le profil annuel typique pour {offlineCity} — une approximation proche, pas votre site exact. Relancez en ligne pour cinq ans de météo précise. ",
@@ -1067,7 +1070,6 @@ export const LOCALES = {
     noTariff: "Aucun tarif saisi, pas d'amortissement affiché.",
     currencyNote:
       "Montants affichés en {code} à {rate} pour 1 US$ ; les taux unitaires de batterie restent en $/kWh car les prix de base sont en USD.",
-    capacityNote: "",
     offlineLabel:
       "MODE HORS LIGNE : cette exécution a utilisé le profil annuel typique pour {offlineCity} — une approximation proche, pas votre site exact. Relancez en ligne pour cinq ans de météo précise. ",
     tariffSpendLine:
@@ -1083,7 +1085,6 @@ export const LOCALES = {
     lvlCompare: "Comparer les batteries",
     lvlMatrix: "Toutes les options",
     bomPanelTitle: "Votre liste de matériel — de quoi ce système est composé",
-    bomDownload: "Télécharger la liste des pièces (CSV)",
     genSummary:
       "J'utilise un générateur — combien coûte vraiment son électricité ?",
     genApply: "Utiliser ceci comme mon prix de l'électricité",
@@ -1098,7 +1099,6 @@ export const LOCALES = {
     frontierYGrid: "Part de votre facture supprimée",
     frontierYGridBattery: "Part de vos heures pleines décalées",
     frontierYOffgrid: "Part de votre énergie couverte, sans groupe électrogène",
-    frontierTagSel: "sélectionné",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, sans batterie · {pct}% · {cost}",
     frontierLegendSel:
@@ -1145,20 +1145,19 @@ export const LOCALES = {
     advisorBusy:
       " Le moteur IA gratuit est saturé (HTTP {status} — quota partagé).\n\nAttendez environ une minute, puis renvoyez votre question.",
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
-    advisorDegradedLabel: "Hors ligne \u00b7 pas l\u2019IA en direct",
-    advisorDegradedLine: "Je ne peux pas r\u00e9pondre \u2014 {why}.",
-    advisorDegradedWhyUnavailable:
-      "le service qui r\u00e9pond n\u2019a pas r\u00e9pondu",
+    advisorDegradedLabel: "Hors ligne · pas l’IA en direct",
+    advisorDegradedLine: "Je ne peux pas répondre — {why}.",
+    advisorDegradedWhyUnavailable: "le service qui répond n’a pas répondu",
     advisorDegradedWhyNoKey:
-      "aucune cl\u00e9 mod\u00e8le : le conseiller est hors ligne par conception",
+      "aucune clé modèle : le conseiller est hors ligne par conception",
     advisorDegradedReassure:
-      "Rien de ce qui pr\u00e9c\u00e8de n\u2019est faux, et votre dimensionnement n\u2019est pas affect\u00e9.",
+      "Rien de ce qui précède n’est faux, et votre dimensionnement n’est pas affecté.",
     advisorDegradedSystem:
-      "Portez ces chiffres \u00e0 un \u00e9lectricien agr\u00e9\u00e9 avant de construire.",
+      "Portez ces chiffres à un électricien agréé avant de construire.",
     advisorDegradedGeneral:
       "Pour dimensionner, utilisez le calculateur ci-dessus ; sans compte.",
     advisorDegradedRetry:
-      "R\u00e9essayez dans une minute ; le quota gratuit est partag\u00e9.",
+      "Réessayez dans une minute ; le quota gratuit est partagé.",
     advisorUnreachable:
       " Le conseiller IA est momentanément inaccessible{status}.\n\nVérifiez votre connexion et réessayez dans un instant.",
     frontierCeilingTag: "Maximum dans les tailles explorées : {pct}%",
@@ -1185,6 +1184,7 @@ export const LOCALES = {
       "Plage optimale — chaque point en plus reste bon marché",
     frontierBestValueRange: "Plage optimale : ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "meilleur rapport",
+    frontierTagSel: "sélectionné",
     fuelLitLabel: "Prix au litre",
     fuelGalLabel: "Prix au gallon",
     fuelReadoutRate: "{type} à ce prix revient à environ {rate} par kWh",
@@ -1336,6 +1336,11 @@ export const LOCALES = {
     navLegal: "Bedingungen & Haftungsausschluss",
     heroTag:
       "🌍 Kostenlos für alle, überall · Keine Anmeldung · Nichts zu verkaufen",
+    heroTitle1: "Senken Sie Ihre Stromrechnung.",
+    heroTitle2: "Sehen Sie genau, was dafür nötig wäre.",
+    footerAboutPre: "Erstellt und bereitgestellt von",
+    footerAboutPost:
+      "Kein Unternehmen, nicht eingetragen, nichts zu verkaufen.",
     ctaStart: "Kostenlose Schätzung starten",
     pickCity:
       "Wähle eine Stadt oder nutze 📍 deinen Standort für die Sonnendaten.",
@@ -1401,7 +1406,6 @@ export const LOCALES = {
     lvlCompare: "Batterien vergleichen",
     lvlMatrix: "Alle Optionen",
     bomPanelTitle: "Deine Hardware-Liste — woraus dieses System besteht",
-    bomDownload: "Teileliste herunterladen (CSV)",
     genSummary: "Ich habe einen Generator — was kostet sein Strom wirklich?",
     genApply: "Als meinen Strompreis übernehmen",
     socChartTitle:
@@ -1413,7 +1417,6 @@ export const LOCALES = {
     frontierYGrid: "Anteil der Rechnung gesenkt",
     frontierYGridBattery: "Anteil der verschobenen Spitzenlaststunden",
     frontierYOffgrid: "Anteil der Energie ohne Generator",
-    frontierTagSel: "ausgewählt",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct} % · {cost}",
     frontierSelNoBatt: "{pv} kW, ohne Batterie · {pct} % · {cost}",
     frontierLegendSel:
@@ -1460,18 +1463,18 @@ export const LOCALES = {
     advisorBusy:
       " Die kostenlose KI ist gerade überlastet (HTTP {status} — gemeinsames Kontingent).\n\nWarten Sie etwa eine Minute und senden Sie die Frage erneut.",
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
-    advisorDegradedLabel: "Offline \u00b7 nicht die Live-KI",
-    advisorDegradedLine: "Das kann ich gerade nicht beantworten \u2014 {why}.",
+    advisorDegradedLabel: "Offline · nicht die Live-KI",
+    advisorDegradedLine: "Das kann ich gerade nicht beantworten — {why}.",
     advisorDegradedWhyUnavailable:
       "der Dienst, der antwortet, hat nicht geantwortet",
     advisorDegradedWhyNoKey:
-      "kein Modellschl\u00fcssel: der Berater ist planm\u00e4\u00dfig offline",
+      "kein Modellschlüssel: der Berater ist planmäßig offline",
     advisorDegradedReassure:
       "An dem oben Gesagten ist nichts falsch und Ihre Berechnung ist nicht betroffen.",
     advisorDegradedSystem:
-      "Lassen Sie diese Zahlen vor dem Bau von einem Elektriker pr\u00fcfen.",
+      "Lassen Sie diese Zahlen vor dem Bau von einem Elektriker prüfen.",
     advisorDegradedGeneral:
-      "F\u00fcr die Dimensionierung: der Rechner oben, ohne Konto.",
+      "Für die Dimensionierung: der Rechner oben, ohne Konto.",
     advisorDegradedRetry:
       "In einer Minute erneut versuchen; das Kontingent ist geteilt.",
     advisorUnreachable:
@@ -1499,6 +1502,7 @@ export const LOCALES = {
       "Bestwert-Spanne — jedes weitere Prozent bleibt günstig",
     frontierBestValueRange: "Bestwert-Spanne: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "Bestwert",
+    frontierTagSel: "ausgewählt",
     fuelLitLabel: "Preis pro Liter",
     fuelGalLabel: "Preis pro Gallone",
     fuelReadoutRate: "{type} kostet bei diesem Preis etwa {rate} pro kWh",
@@ -1651,6 +1655,10 @@ export const LOCALES = {
     navBlog: "المدونة",
     navLegal: "الشروط وإخلاء المسؤولية",
     heroTag: "مجاني للجميع، في كل مكان · بدون تسجيل · لا شيء للبيع",
+    heroTitle1: "قلّل فاتورة الكهرباء.",
+    heroTitle2: "شاهد بالضبط ما يتطلبه الأمر.",
+    footerAboutPre: "أنشأها وقدّمها",
+    footerAboutPost: "ليست شركة، ولا مُسجّلة، ولا شيء للبيع.",
     ctaStart: "ابدأ تقديرًا مجانيًا",
     goalLabel: "ماذا تريد من هذا النظام؟",
     goalOffgrid: "تغذيتي بالكامل خارج الشبكة",
@@ -1710,8 +1718,6 @@ export const LOCALES = {
     offlineCity: "باستخدام الملف النموذجي لـ {city}",
     assumptionsPrefix:
       "البيانات: {source}، بالساعة {dataYears}. ديارات مطبق: اتساخ {soil}%، أسلاك {wire}%، عدم تطابق {mismatch}%، MPPT {mppt}%. نموذج درجة الحرارة: NOCT {noct}°C، معامل حراري {gamma}%/°C. كفاءة العاكس {eta}%. الشحن ممنوع تحت حد كيمياء البرودة (LFP 0°C). أساس الحمل: {basis}. التكاليف من {basisLabel} ({source}) — الطرف المنخفض هو المكونات قبل الشحن/الرسوم/BMS، الطرف العالي هو البيع بالتجزئة مع BMS والصندوق. ",
-    moneyPrefix: "",
-    capacityNotePrefix: "",
     fxNotePrefix: " ",
     offlineNotePrefix:
       "وضع عدم الاتصال: استخدم هذا الملف السنوي النموذجي لـ {offlineCity} — تقريب قريب، ليس موقعك الدقيق. أعد التشغيل على الإنترنت لخمس سنوات من الطقس الدقيق. ",
@@ -1720,7 +1726,6 @@ export const LOCALES = {
     noTariff: "لم يتم إدخال تعريفة، لا يتم عرض فترة الاسترداد.",
     currencyNote:
       "المبالغ معروضة بـ {code} بسعر {rate} مقابل 1 دولار أمريكي؛ أسعار وحدات البطارية تبقى بالدولار للكيلوواط ساعة لأن الأسعار الأساسية بالدولار.",
-    capacityNote: "",
     offlineLabel:
       "وضع عدم الاتصال: هذه العملية استخدم الملف السنوي النموذجي لـ {offlineCity} — تقريب قريب، ليس موقعك الدقيق. أعد التشغيل على الإنترنت لخمس سنوات من الطقس الدقيق. ",
     tariffSpendLine:
@@ -1736,7 +1741,6 @@ export const LOCALES = {
     lvlCompare: "مقارنة البطاريات",
     lvlMatrix: "كل الخيارات",
     bomPanelTitle: "قائمة المعدات الخاصة بك — مم يتكون هذا النظام",
-    bomDownload: "تنزيل قائمة القطع (CSV)",
     genSummary: "أستخدم مولدا — كم تبلغ التكلفة الحقيقية للكهرباء منه؟",
     genApply: "استخدم هذا كسعر الكهرباء لدي",
 
@@ -1750,7 +1754,6 @@ export const LOCALES = {
     frontierYGrid: "نسبة فاتورتك المخفّضة",
     frontierYGridBattery: "نسبة ساعات الذروة المنقولة",
     frontierYOffgrid: "نسبة طاقتك المغطّاة دون مولّد",
-    frontierTagSel: "النقطة المحددة",
     frontierSelTag: "{pv} كيلوواط + {batt} كيلوواط ساعة · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} كيلوواط دون بطارية · {pct}% · {cost}",
     frontierLegendSel: "الخيار المحدد — انقر أي نقطة للاختيار",
@@ -1796,15 +1799,11 @@ export const LOCALES = {
     advisorBusy:
       " محرك الذكاء الاصطناعي المجاني مزدحم الآن (HTTP {status} — حصة مشتركة).\n\nانتظر نحو دقيقة ثم أرسل الطلب مجدداً.",
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
-    advisorDegradedLabel:
-      "\u062f\u0648\u0646 \u0627\u062a\u0635\u0627\u0644 \u00b7 \u0644\u064a\u0633 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0637\u0646\u0627\u0639\u064a\u0627 \u0645\u0628\u0627\u0634\u0631\u0629",
-    advisorDegradedLine: "لا أستطيع الإجابة الآن \u2014 {why}.",
-    advisorDegradedWhyUnavailable:
-      "\u0627\u0644\u062e\u062f\u0645\u0629 \u0627\u0644\u062a\u064a \u064a\u062c\u064a\u0628 \u0644\u0645 \u064a\u0633\u062a\u062c\u0628",
-    advisorDegradedWhyNoKey:
-      "\u0644\u0627 \u0645\u0641\u062a\u0627\u062d \u0645\u062f\u064a\u0629\u060c \u0641\u0627\u0644\u0645\u0634\u064a\u0631 \u0645\u0646\u0637\u0642\u064b \u0639\u0646\u062f \u0627\u0644\u0627\u062a\u0635\u0627\u0644",
-    advisorDegradedReassure:
-      "\u0644\u0627 \u062e\u0637\u0623 \u0641\u064a \u0645\u0627 \u0633\u0628\u0642 \u0648\u062d\u0633\u0627\u0628\u0643 \u0644\u0645 \u064a\u062a\u0623\u062b\u0631.",
+    advisorDegradedLabel: "دون اتصال · ليس الذكاء الطبيعي مباشرة",
+    advisorDegradedLine: "لا أستطيع الإجابة الآن — {why}.",
+    advisorDegradedWhyUnavailable: "الخدمة التي يجيب لم يستجب",
+    advisorDegradedWhyNoKey: "لا مفتاح نموذج، فالمشير غير متصل عمدًا",
+    advisorDegradedReassure: "لا خطأ في ما سبق وحسابك لم يتأثر.",
     advisorDegradedSystem: "خذ هذه الأرقام إلى كهربائي مرخَّص قبل البناء.",
     advisorDegradedGeneral: "للتحجيم: استخدم الحاسبة أعلاه؛ بلا حساب.",
     advisorDegradedRetry: "أعد المحاولة بعد دقيقة؛ الحصة مشتركة.",
@@ -1834,6 +1833,7 @@ export const LOCALES = {
     frontierBestValueRange:
       "النطاق الأفضل قيمة: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "أفضل قيمة",
+    frontierTagSel: "النقطة المحددة",
     fuelLitLabel: "السعر لكل لتر",
     fuelGalLabel: "السعر لكل غالون",
     fuelReadoutRate: "{type} بهذا السعر يخرج بحوالي {rate} لكل كيلوواط/ساعة",
