@@ -23,6 +23,11 @@ import {
   parseHeadersFile,
   resolveRequestPath,
 } from "./lib/gates.mjs";
+import {
+  API_PREFIX,
+  handleWorkerRequest,
+  loadWorker,
+} from "./lib/worker-bridge.mjs";
 
 export const ROOT = resolve(
   new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
@@ -62,10 +67,19 @@ export async function serveStatic({
   host = "127.0.0.1",
   headersFile = join(ROOT, "_headers"),
   applyHeaders = true,
+  // Mount the real API worker on this same origin. Default ON: the deployed
+  // product is one origin serving both the static site and /api/*, and a
+  // server that answers /api/health but 404s /api/chat is not a faithful
+  // stand-in for it. `wrangler dev` is not an option here — the web-smoke job
+  // runs on zero dependencies by design (see scripts/lib/worker-bridge.mjs).
+  mountWorker = true,
+  workerEnv = {},
 } = {}) {
   const root = resolve(dir);
   if (!existsSync(root))
     throw new Error(`serve-static: no such build dir: ${root}`);
+
+  const worker = mountWorker ? await loadWorker() : null;
 
   const rules =
     applyHeaders && existsSync(headersFile)
@@ -90,37 +104,39 @@ export async function serveStatic({
       return;
     }
 
-    // The static server stands in for the API boundary too: it mirrors the
-    // worker's no-key reality — /api/health says the Jev route is off (so the
-    // client never even asks), and a direct /api/jev POST gets the same 503
-    // the deployed worker without a key returns. Quiet degradation, no
-    // console-404 noise in smoke sessions.
-    if (urlPath === "/api/health" && req.method === "GET") {
-      res.writeHead(200, {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store",
-      });
-      res.end(
-        JSON.stringify({
-          status: "ok",
-          service: "local static mirror (no API worker here)",
-          jevSanity: false,
-        }),
-      );
-      return;
-    }
-    if (urlPath === "/api/jev" && req.method === "POST") {
-      let raw = "";
-      req.on("data", (c) => {
-        raw += c;
-        if (raw.length > 20000) req.destroy();
-      });
-      req.on("end", () => {
-        res.writeHead(503, {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-store",
-        });
-        res.end(JSON.stringify({ available: false, reason: "key_missing" }));
+    // The API surface. With the worker mounted, /api/* is the REAL worker:
+    // its routing, its validation, and its degraded-reply contract. That is
+    // what makes the smoke's advisor gates mean something.
+    if (urlPath.startsWith(API_PREFIX)) {
+      if (!worker) {
+        // LOUD, not a 404. A missing endpoint and a wrongly-mounted worker
+        // look identical from the client (both are "Chat API error: 404"),
+        // and that ambiguity is what let this gate sit red for weeks. Say
+        // which one it is.
+        res.writeHead(501, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            error:
+              "API worker not mounted: serveStatic({ mountWorker: false }) — this server has no worker behind /api/*",
+          }),
+        );
+        return;
+      }
+      handleWorkerRequest(worker, req, res, {
+        env: workerEnv,
+        host,
+        port: server.address()?.port ?? 0,
+      }).catch((e) => {
+        // A bridge that throws must not leave the request hanging, and must
+        // not look like a passing run.
+        if (res.headersSent) return res.end();
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            error: "worker bridge failed",
+            cause: String((e && e.message) || e).slice(0, 300),
+          }),
+        );
       });
       return;
     }
@@ -173,6 +189,7 @@ function cliArgs(argv) {
     else if (a === "--port") out.port = Number(argv[++i]);
     else if (a === "--host") out.host = argv[++i];
     else if (a === "--no-headers") out.applyHeaders = false;
+    else if (a === "--no-worker") out.mountWorker = false;
   }
   return out;
 }
@@ -188,6 +205,7 @@ if (invokedDirectly) {
     port: Number.isFinite(args.port) ? args.port : 0,
     host: args.host,
     applyHeaders: args.applyHeaders !== false,
+    mountWorker: args.mountWorker !== false,
   });
   console.log(`SERVING ${srv.url}`);
   const stop = async () => {

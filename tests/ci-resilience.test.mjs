@@ -42,6 +42,7 @@ import {
   selectStuckRuns,
 } from "../scripts/lib/stuck-runs.mjs";
 import { deployedFiles } from "../scripts/lib/gates.mjs";
+import { withMutationLock } from "../scripts/lib/mutation-lock.mjs";
 
 const url = (rel) => new URL(`../${rel}`, import.meta.url);
 const read = (rel) => readFileSync(url(rel), "utf8");
@@ -779,38 +780,50 @@ const failingSource = () =>
   });
 
 const runVerifier = async (server, env) => {
+  // tests/deploy-manifest.test.mjs briefly deletes a tracked file at the repo
+  // root to prove the manifest reports it. This test spawns the verifier,
+  // which reads every allowlisted file — so without exclusion, the verifier can
+  // observe that deletion and report `parity robots.txt — unreadable:
+  // ENOENT`, failing a budget test for a reason that has nothing to do with
+  // budgets. Measured at 1 run in 4 before the lock.
+  //
+  // The lock is HELD for the whole run, not merely waited on before it:
+  // waiting alone still lets the writer take the lock one millisecond after the
+  // wait ends and delete the file mid-read. Both sides must exclude each other.
   await new Promise((r) => server.listen(0, "127.0.0.1", r));
   const port = server.address().port;
-  const started = Date.now();
-  const child = spawn(
-    process.execPath,
-    [
-      "scripts/verify-staging.mjs",
-      "--base",
-      `http://127.0.0.1:${port}/`,
-      "--json",
-    ],
-    { env: { ...process.env, ...env }, stdio: ["ignore", "pipe", "pipe"] },
-  );
-  let out = "";
-  child.stdout.on("data", (d) => (out += d));
-  child.stderr.on("data", (d) => (out += d));
-  const code = await new Promise((r) => child.on("close", r));
-  const elapsed = Date.now() - started;
-  await new Promise((r) => server.close(r));
-  // stdout and stderr were concatenated in arrival order, so the verdict is
-  // FOUND rather than assumed to start at the first brace: a stderr line that
-  // carried one used to decide where the JSON began.
-  return {
-    code,
-    elapsed,
-    payload: extractVerdict(out, [
-      "verified",
-      "budgetMs",
-      "transientRetries",
-      "failures",
-    ]),
-  };
+  return withMutationLock(async () => {
+    const started = Date.now();
+    const child = spawn(
+      process.execPath,
+      [
+        "scripts/verify-staging.mjs",
+        "--base",
+        `http://127.0.0.1:${port}/`,
+        "--json",
+      ],
+      { env: { ...process.env, ...env }, stdio: ["ignore", "pipe", "pipe"] },
+    );
+    let out = "";
+    child.stdout.on("data", (d) => (out += d));
+    child.stderr.on("data", (d) => (out += d));
+    const code = await new Promise((r) => child.on("close", r));
+    const elapsed = Date.now() - started;
+    await new Promise((r) => server.close(r));
+    // stdout and stderr were concatenated in arrival order, so the verdict is
+    // FOUND rather than assumed to start at the first brace: a stderr line
+    // that carried one used to decide where the JSON began.
+    return {
+      code,
+      elapsed,
+      payload: extractVerdict(out, [
+        "verified",
+        "budgetMs",
+        "transientRetries",
+        "failures",
+      ]),
+    };
+  });
 };
 
 test("a source that fails under a spent budget returns a verdict, not a kill", async () => {

@@ -38,8 +38,43 @@ export async function runClosingFlow(ctx, actions) {
     probes.geocoder,
   );
   if (ctx.isLocalBase) {
-    console.log(
-      "SMOKE SKIP  API health — localhost is outside the worker CORS allowlist",
+    // This used to print "SMOKE SKIP" and move on. A skip is a gate that
+    // cannot fail, and this one hid the fact that the local server had no
+    // /api/chat route at all — which is what kept `web-smoke` permanently
+    // red. The local server now mounts the REAL worker on this same origin
+    // (scripts/lib/worker-bridge.mjs), so there is nothing left to skip: probe
+    // it and let it fail loudly if the worker is not there.
+    //
+    // Probed from the HARNESS, not the page. The page's /api/health is
+    // intercepted by jevHealthAtDocumentStart (browser-smoke.mjs), so an
+    // in-page probe would grade the stub and tell us nothing about the
+    // worker. Node's fetch is not stubbed, so this is the real endpoint.
+    const health = await (async () => {
+      try {
+        const r = await fetch(new URL("api/health", ctx.base), {
+          headers: { "CF-Connecting-IP": "127.0.0.1" },
+        });
+        const j = await r.json().catch(() => ({}));
+        return { status: r.status, service: j.service || "" };
+      } catch (e) {
+        return {
+          status: 0,
+          service: String((e && e.message) || e).slice(0, 120),
+        };
+      }
+    })();
+    gate(
+      "API health reachable (local: real worker, same origin)",
+      health.status === 200,
+      `status=${health.status} service=${health.service}`,
+    );
+    // Proves it is the shipped worker and not a hand-written stand-in: the
+    // old local mirror answered with service "local static mirror (no API
+    // worker here)".
+    gate(
+      "API health is served by the real worker, not a stub",
+      health.service === "BigEnergyCo Cloudflare Worker API",
+      `service=${health.service}`,
     );
   } else {
     gate(
@@ -75,8 +110,9 @@ export async function runClosingFlow(ctx, actions) {
   // ── Console/page errors: explicit CSP gate + general gate ─────────
   console.log("SMOKE      ── console / page errors ──");
   const seen = errors.filter((e) => !/favicon\.ico/i.test(e));
-  // The local-only worker health probe is explicitly skipped above. Keep all
-  // remaining browser errors strict; none should be hidden as a harness artifact.
+  // The local run now GATES the real worker above rather than skipping it, so
+  // every remaining browser error is a real finding. Keep this strict: none
+  // should be hidden as a harness artifact.
   const csp = seen.filter(isCsp);
   gate("no CSP violations", csp.length === 0, csp.slice(0, 3).join(" | "));
   gate(

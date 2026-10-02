@@ -30,6 +30,7 @@ import { runA11yFlow } from "./smoke/a11y.js";
 import { runJevFlow, jevHealthAtDocumentStart } from "./smoke/jev.js";
 import { runShareFlow } from "./smoke/share.js";
 import { runClosingFlow } from "./smoke/closing.js";
+import { runAdvisorFlow } from "./smoke/advisor.js";
 import { runDeadlineFlow } from "./smoke/deadline.js";
 
 // BASE must always end in "/": sub-pages are built as `${BASE}solar-heatmap/`,
@@ -98,6 +99,10 @@ async function main() {
     // change — closing below runs a fresh off-grid run regardless.
     await runA11yFlow(ctx);
     await runClosingFlow(ctx, actions);
+    // The advisor round trip runs last of the product flows (before the
+    // deadline suite, which wants a fresh page) because it needs the chat
+    // modal's DOM present and leaves a rendered reply behind.
+    await runAdvisorFlow(ctx, actions);
     // Last: the silent-worker deadline on a fresh page. Appended after closing
     // so every existing gate keeps its exact order.
     await runDeadlineFlow(ctx, actions);

@@ -205,7 +205,7 @@ test("SCRIPTS: the hardened helpers are the ones actually used", () => {
   );
 });
 
-test("local smoke explicitly skips the production-only API CORS probe", () => {
+test("local smoke GATES the API health probe instead of skipping it", () => {
   const closing = readFileSync("scripts/smoke/closing.js", "utf8");
   assert.match(
     closing,
@@ -213,15 +213,61 @@ test("local smoke explicitly skips the production-only API CORS probe", () => {
     "localhost must not send a CORS-blocked API health request",
   );
   assert.match(closing, /\$\{workerProbe\}/);
+  // This used to be pinned as a REQUIRED SKIP ("the production-only check must
+  // be visibly skipped"). That skip is what let `web-smoke` sit red for weeks:
+  // the local server had no /api/chat route, the console-error gate failed on
+  // the resulting 404, and the health check itself reported nothing. The local
+  // server now mounts the real worker, so the probe is a real gate.
+  //
+  // The intent is preserved and tightened: a local run must not quietly report
+  // success for a check it did not perform.
+  assert.doesNotMatch(
+    closing,
+    /SMOKE SKIP\s+API health/,
+    "the local API health check must be a gate, not a skip — a skip is a check that cannot fail",
+  );
   assert.match(
     closing,
-    /SMOKE SKIP  API health — localhost is outside the worker CORS allowlist/,
-    "the production-only check must be visibly skipped, not reported as a pass",
+    /gate\(\s*"API health reachable \(local: real worker, same origin\)"/,
+    "the local run must gate on the real worker answering on its own origin",
+  );
+  assert.match(
+    closing,
+    /"API health is served by the real worker, not a stub"/,
+    "and must prove the answer came from the worker, not a hand-written stand-in",
   );
   assert.match(
     closing,
     /"API health reachable",\s*\/(?:\^HTTP 200)\/\.test\(probes\.worker \|\| ""\)/,
     "on production origins the health probe must still require HTTP 200",
+  );
+});
+
+test("the local static server mounts the real API worker", () => {
+  // The root cause of the permanently-red smoke: /api/* was hand-written
+  // stand-ins for two routes and nothing at all for /api/chat. Pinned here so
+  // the mount cannot be quietly removed, and so the unmounted path is required
+  // to fail loudly rather than 404 like a broken product.
+  const serve = readFileSync("scripts/serve-static.mjs", "utf8");
+  assert.match(
+    serve,
+    /mountWorker = true/,
+    "the worker must be mounted by default, like the deployed one-origin surface",
+  );
+  assert.match(
+    serve,
+    /handleWorkerRequest\(worker, req, res/,
+    "/api/* must be routed to the real worker, not to a local stand-in",
+  );
+  assert.match(
+    serve,
+    /501[\s\S]{0,200}API worker not mounted/,
+    "an unmounted worker must answer 501 naming why, not 404 like a missing endpoint",
+  );
+  assert.doesNotMatch(
+    serve,
+    /local static mirror \(no API worker here\)/,
+    "the hand-written /api/health stand-in must be gone",
   );
 });
 
