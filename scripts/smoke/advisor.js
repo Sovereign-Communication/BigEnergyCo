@@ -132,6 +132,21 @@ export async function runAdvisorFlow(ctx, actions) {
   );
   const before = errors.length;
 
+  // The chat modal renders its own opening intro as a bot node ("I explain the
+  // results from the main sizing tool...") before any request is sent. That
+  // intro is long, so it satisfies any length threshold, and it is a perfectly
+  // good-looking piece of prose — which is exactly how a generic
+  // "last .chat-msg.bot" selector comes to match the INTRO rather than the
+  // advisor's answer, and report a reply that never arrived.
+  //
+  // So the baseline count is taken here, and the poll below requires a node
+  // that did not exist yet. That identifies the answer by when it appeared
+  // rather than by what it says, so no pre-existing message can satisfy it and
+  // no future change to the intro's wording can break it.
+  const baselineBots = await evaluate(
+    `document.querySelectorAll('#chatWindow .chat-msg.bot:not(#loadingMsg)').length`,
+  );
+
   // Drive the real entry point the buttons call. The modal is already on the
   // page, so this exercises sendChatMsg -> fetch -> renderBotReply without
   // depending on which surface (simple mode, results card) opened it.
@@ -161,6 +176,7 @@ export async function runAdvisorFlow(ctx, actions) {
       const node = await evaluate(
         `(() => {
           const all = document.querySelectorAll('#chatWindow .chat-msg.bot:not(#loadingMsg)');
+          if (all.length <= ${baselineBots}) return null;
           const n = all[all.length - 1];
           if (!n) return null;
           return {

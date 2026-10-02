@@ -32,7 +32,13 @@ import { runAdvisorFlow } from "../scripts/smoke/advisor.js";
 // Drives the real flow with a stubbed browser context and returns the gate lines
 // it printed. `gate()` keeps a module-level failure counter, so the assertions
 // read the emitted lines rather than any return value.
-async function runFlow({ probe, node, isLocalBase }) {
+async function runFlow({
+  probe,
+  node,
+  isLocalBase,
+  baseline = 0,
+  nodeIndex = null,
+}) {
   const lines = [];
   const originalLog = console.log;
   console.log = (...a) => lines.push(a.join(" "));
@@ -43,20 +49,28 @@ async function runFlow({ probe, node, isLocalBase }) {
           ? "http://127.0.0.1:7510"
           : "https://example.pages.dev",
         isLocalBase,
-        errors: [],
-        // The flow's first evaluate is the endpoint probe; the ones inside
-        // `poll` ask for the rendered node. Distinguishing them by content
-        // keeps the stub honest about what the real page is being asked.
+        errors: [], // The flow's evaluates are, in order: the endpoint probe, a baseline
+        // count of existing bot nodes, then the poll asking for a node beyond
+        // that baseline. Distinguishing them by content keeps the stub honest
+        // about what the real page is being asked, and `baseline` lets a case
+        // model the modal's pre-existing intro node.
         evaluate: async (expr) => {
-          if (typeof expr === "string" && expr.includes("/api/chat"))
-            return probe;
-          if (
-            typeof expr === "string" &&
-            expr.includes("chatWindow .chat-msg.bot")
-          ) {
-            return node;
+          const e = String(expr);
+          if (e.includes("/api/chat")) return probe;
+          if (!e.includes("chatWindow .chat-msg.bot")) return true;
+          // The baseline count is a bare `.length` expression; the poll wraps
+          // its lookup in an IIFE. Both mention `.length`, so the IIFE is what
+          // tells them apart.
+          if (!e.includes("=>")) return baseline ?? 0;
+          // Emulate the page-side guard the expression carries: a node only
+          // counts once it sits beyond the baseline count. `nodeIndex` is
+          // where `node` actually sits in the bot list, so a case can model
+          // the modal's pre-existing intro rather than assume it away.
+          const guard = e.match(/all\.length <= (\d+)/);
+          if (guard && nodeIndex !== null && nodeIndex <= Number(guard[1])) {
+            return null;
           }
-          return true;
+          return node;
         },
         poll: async (fn) => !!(await fn()),
       },
@@ -208,4 +222,59 @@ test("an API error string is still failed on the deployed surface", async () => 
   });
   const names = failed(lines).join(" | ");
   assert.match(names, /renders the advisor's answer as prose/);
+});
+
+// The modal renders its opening intro as a bot node before any request is sent.
+// It is long enough to satisfy any length threshold, so a selector that just
+// takes "the last .chat-msg.bot" matches the INTRO and reports an answer that
+// never arrived. This is not hypothetical: web-smoke caught exactly that when
+// the selector was first generalised, reading the intro as a non-degraded
+// reply on a surface whose worker has no key and therefore owes a degraded one.
+test("the pre-existing intro cannot satisfy the reply wait", async () => {
+  const lines = await runFlow({
+    isLocalBase: true,
+    probe: {
+      ok: true,
+      status: 200,
+      chars: 320,
+      base: "same-origin",
+      degraded: true,
+      keys: 6,
+    },
+    // Node 0 is the intro; node 1 is the only thing on screen and it is still
+    // the intro. Nothing has been appended by the advisor yet.
+    baseline: 1,
+    nodeIndex: 1,
+    node: {
+      text: "I explain the results from the main sizing tool.",
+      degraded: false,
+    },
+  });
+  const names = failed(lines).join(" | ");
+  assert.match(names, /renders the advisor's answer as prose/);
+});
+
+test("the advisor's answer appended after the intro does satisfy it", async () => {
+  const lines = await runFlow({
+    isLocalBase: true,
+    probe: {
+      ok: true,
+      status: 200,
+      chars: 320,
+      base: "same-origin",
+      degraded: true,
+      keys: 6,
+    },
+    baseline: 1,
+    nodeIndex: 2,
+    node: {
+      text: "You are offline - this is not the live AI advisor. A 3 kWh/day home typically needs 2-3 panels.",
+      degraded: true,
+    },
+  });
+  assert.deepEqual(
+    failed(lines),
+    [],
+    `unexpected gate failures:\n${lines.join("\n")}`,
+  );
 });
