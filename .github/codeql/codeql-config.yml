@@ -4,8 +4,13 @@
 # deliberately: naming `queries:` would pin this repo to whatever suite was
 # listed today, so every future rule GitHub adds or upgrades would silently
 # stop running. Omitting it keeps the default suite for the language.
+#
+# NOTE the key is `paths-ignore` and it is TOP LEVEL. `paths:` is the opposite
+# — an include list — and writing the exclusion under it does not suppress
+# anything; it tells CodeQL to analyse ONLY the listed paths. That was tried
+# first, and it is the reason this file exists in this shape.
 
-paths:
+paths-ignore:
   # ── js/incomplete-url-substring-sanitization ──────────────────────────────
   #
   # Fires 10 times across these three files, on `text.includes(
@@ -27,7 +32,7 @@ paths:
   # to extend, so the failure mode the rule describes cannot occur: a hostile
   # origin cannot be substituted into a literal.
   #
-  # Note what is being asserted here about the security of the shipped build,
+  # Note what is being asserted about the security of the shipped build,
   # because it is easy to over-read this exclusion. The CORS decision in
   # worker/index.js is NOT a substring test — it compares a full origin against
   # an exact-match Set, and is covered by its own negative tests (suffix,
