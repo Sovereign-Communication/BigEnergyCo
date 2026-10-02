@@ -30,6 +30,15 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Full history, deliberately. `npm run seo` ends in
+          # bump-asset-tokens.mjs --check, which now asks git for the commit that
+          # minted the current ?v= stamp so it can compare each referenced
+          # asset's bytes against it. A shallow checkout cannot answer that, and
+          # the check refuses to report green when it cannot — so a depth-1
+          # clone here would fail every run for the wrong reason. The repo is
+          # small; this costs a few seconds.
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v7
