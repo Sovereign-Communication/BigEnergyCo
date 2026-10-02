@@ -68,6 +68,25 @@ const CHAT_PROBE = `(async () => {
 export async function runAdvisorFlow(ctx, actions) {
   const { evaluate, poll, errors } = ctx;
 
+  // ── Stand on a page that has actually loaded the app ───────────────
+  // `runClosingFlow` leaves the browser on `solar-heatmap/`, a different page
+  // that never loads `assets/js/chat.js`. Two things are missing there: the
+  // chat DOM, and `CF_API_URL` — the constant that records which worker this
+  // build talks to. Both the endpoint probe and the client round trip need
+  // this page, so it is taken once, here.
+  //
+  // This is the actual cause of the staging failure, and it is why the probe
+  // could not be fixed by resolving a better URL: probing from the heatmap
+  // read no constant at all, fell back to a relative `/api/chat`, and got 405
+  // and an HTML body from Pages. A probe that cannot see the app cannot
+  // meaningfully grade the app.
+  await actions.navigate(`${ctx.base}?smoke=${Date.now()}`);
+  await poll(
+    async () => await evaluate(`!!document.getElementById("chatInput")`),
+    30000,
+    500,
+  );
+
   // ── The endpoint the shipped client actually posts to answers ──────
   // Asserted in the page so it travels the same CORS path, response headers and
   // failure surface a visitor's request does.
@@ -120,16 +139,6 @@ export async function runAdvisorFlow(ctx, actions) {
 
   // ── The shipped client, end to end, with nothing stubbed ───────────
   console.log("SMOKE      ── advisor: shipped client round trip ──");
-  // Back to the main page first: runClosingFlow leaves the browser on the
-  // heatmap, which has no chat DOM, so without this the client round trip
-  // graded an empty #chatWindow and reported "no reply" — a failure caused by
-  // where the harness was standing, not by the advisor.
-  await actions.navigate(`${ctx.base}?smoke=${Date.now()}`);
-  await poll(
-    async () => await evaluate(`!!document.getElementById("chatInput")`),
-    30000,
-    500,
-  );
   const before = errors.length;
 
   // The chat modal renders its own opening intro as a bot node ("I explain the

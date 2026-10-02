@@ -40,6 +40,7 @@ async function runFlow({
   nodeIndex = null,
 }) {
   const lines = [];
+  const calls = [];
   const originalLog = console.log;
   console.log = (...a) => lines.push(a.join(" "));
   try {
@@ -49,23 +50,31 @@ async function runFlow({
           ? "http://127.0.0.1:7510"
           : "https://example.pages.dev",
         isLocalBase,
-        errors: [], // The flow's evaluates are, in order: the endpoint probe, a baseline
+        errors: [],
+        // The flow's evaluates are, in order: the endpoint probe, a baseline
         // count of existing bot nodes, then the poll asking for a node beyond
         // that baseline. Distinguishing them by content keeps the stub honest
         // about what the real page is being asked, and `baseline` lets a case
         // model the modal's pre-existing intro node.
         evaluate: async (expr) => {
           const e = String(expr);
-          if (e.includes("/api/chat")) return probe;
+          if (e.includes("/api/chat")) {
+            calls.push("probe");
+            return probe;
+          }
           if (!e.includes("chatWindow .chat-msg.bot")) return true;
           // The baseline count is a bare `.length` expression; the poll wraps
           // its lookup in an IIFE. Both mention `.length`, so the IIFE is what
           // tells them apart.
-          if (!e.includes("=>")) return baseline ?? 0;
+          if (!e.includes("=>")) {
+            calls.push("baseline");
+            return baseline ?? 0;
+          }
           // Emulate the page-side guard the expression carries: a node only
           // counts once it sits beyond the baseline count. `nodeIndex` is
           // where `node` actually sits in the bot list, so a case can model
           // the modal's pre-existing intro rather than assume it away.
+          calls.push("node");
           const guard = e.match(/all\.length <= (\d+)/);
           if (guard && nodeIndex !== null && nodeIndex <= Number(guard[1])) {
             return null;
@@ -74,12 +83,16 @@ async function runFlow({
         },
         poll: async (fn) => !!(await fn()),
       },
-      { navigate: async () => {} },
+      {
+        navigate: async () => {
+          calls.push("navigate");
+        },
+      },
     );
   } finally {
     console.log = originalLog;
   }
-  return lines;
+  return { lines, calls };
 }
 
 const failed = (lines) =>
@@ -97,7 +110,7 @@ const gateNames = (lines) =>
 test("the deployed surface passes when the advisor answers LIVE", async () => {
   // The exact shape production returns: a real completion, no `degraded`, no
   // `i18n` object, and therefore no `data-degraded` attribute on the node.
-  const lines = await runFlow({
+  const { lines } = await runFlow({
     isLocalBase: false,
     probe: {
       ok: true,
@@ -121,7 +134,7 @@ test("the deployed surface passes when the advisor answers LIVE", async () => {
 
 test("the deployed surface still fails when the endpoint is genuinely dead", async () => {
   // A 405 whose body is HTML is what the relative probe actually saw on Pages.
-  const lines = await runFlow({
+  const { lines } = await runFlow({
     isLocalBase: false,
     probe: {
       ok: false,
@@ -139,7 +152,7 @@ test("the deployed surface still fails when the endpoint is genuinely dead", asy
 });
 
 test("the local surface still proves the degraded path", async () => {
-  const lines = await runFlow({
+  const { lines } = await runFlow({
     isLocalBase: true,
     probe: {
       ok: true,
@@ -165,7 +178,7 @@ test("the local surface still proves the degraded path", async () => {
 });
 
 test("a degraded answer with no offline label still fails (R-CF-10 is not weakened)", async () => {
-  const lines = await runFlow({
+  const { lines } = await runFlow({
     isLocalBase: true,
     probe: {
       ok: true,
@@ -189,7 +202,7 @@ test("a degraded answer with no offline label still fails (R-CF-10 is not weaken
 });
 
 test("a live reply carrying no label is NOT failed for lacking one", async () => {
-  const lines = await runFlow({
+  const { lines } = await runFlow({
     isLocalBase: false,
     probe: {
       ok: true,
@@ -208,7 +221,7 @@ test("a live reply carrying no label is NOT failed for lacking one", async () =>
 });
 
 test("an API error string is still failed on the deployed surface", async () => {
-  const lines = await runFlow({
+  const { lines } = await runFlow({
     isLocalBase: false,
     probe: {
       ok: true,
@@ -231,7 +244,7 @@ test("an API error string is still failed on the deployed surface", async () => 
 // the selector was first generalised, reading the intro as a non-degraded
 // reply on a surface whose worker has no key and therefore owes a degraded one.
 test("the pre-existing intro cannot satisfy the reply wait", async () => {
-  const lines = await runFlow({
+  const { lines } = await runFlow({
     isLocalBase: true,
     probe: {
       ok: true,
@@ -255,7 +268,7 @@ test("the pre-existing intro cannot satisfy the reply wait", async () => {
 });
 
 test("the advisor's answer appended after the intro does satisfy it", async () => {
-  const lines = await runFlow({
+  const { lines } = await runFlow({
     isLocalBase: true,
     probe: {
       ok: true,
@@ -277,4 +290,33 @@ test("the advisor's answer appended after the intro does satisfy it", async () =
     [],
     `unexpected gate failures:\n${lines.join("\n")}`,
   );
+});
+
+// The root cause of the staging failure. `runClosingFlow` leaves the browser on
+// `solar-heatmap/`, a page that never loads `assets/js/chat.js` — so the
+// endpoint probe ran where `CF_API_URL` does not exist, could not read the
+// endpoint this build actually targets, fell back to a relative `/api/chat`,
+// and was answered 405 + HTML by Pages. Resolving the base better could not
+// have helped, because there was no constant on that page to resolve.
+test("the flow navigates onto the app page BEFORE probing the endpoint", async () => {
+  const { calls } = await runFlow({
+    isLocalBase: false,
+    probe: {
+      ok: true,
+      status: 200,
+      chars: 395,
+      base: "https://api.example.dev",
+      degraded: false,
+      keys: 0,
+    },
+    node: {
+      text: "A live completion from the upstream model.",
+      degraded: false,
+    },
+  });
+  const nav = calls.indexOf("navigate");
+  const probeAt = calls.indexOf("probe");
+  assert.ok(nav >= 0, "flow never navigated");
+  assert.ok(probeAt >= 0, "flow never probed the endpoint");
+  assert.ok(nav < probeAt, `probe ran before navigate: ${calls.join(" -> ")}`);
 });
