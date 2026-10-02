@@ -225,7 +225,60 @@ function chatText(key, fallback, vars) {
   return fallback;
 }
 
-function renderBotReply(replyText, degraded) {
+/**
+ * Compose a degraded reply in the visitor's language from the worker's i18n
+ * keys, or return null to say "use the English text instead".
+ *
+ * Returning null rather than throwing is deliberate: a missing key, an
+ * unknown language, or a malformed payload must degrade to English, never to a
+ * blank message and never to a half-translated sentence with an English clause
+ * in the middle. Every early return below is a documented fallback, and
+ * tests/worker-i18n.test.mjs asserts each one.
+ */
+function localizedDegradedReply(data) {
+  if (!data || !data.i18n) return null;
+  if (typeof window.becoT !== "function") return null; // no dictionary loaded
+
+  var keys = data.i18n;
+  // The worker cannot see the dictionary, so the key set is data from the
+  // network. Anything unexpected here falls back to English rather than
+  // rendering whatever a malformed payload asks for.
+  if (typeof keys.line !== "string" || typeof keys.why !== "string")
+    return null;
+
+  function t(key, vars) {
+    if (typeof key !== "string") return null;
+    var value = window.becoT(key, vars);
+    // becoT echoes the key back when a locale is missing it, which is the
+    // signal to use the worker's English text instead of showing a key.
+    if (!value || value === key) return null;
+    return value;
+  }
+
+  var why = t(keys.why);
+  if (!why) return null;
+
+  var line = t(keys.line, { why: why });
+  if (!line) return null;
+
+  // Blank line between every paragraph, matching the English original. A
+  // degraded message is a wall of text by nature; without the spacing it reads
+  // as one run-on block, which is the opposite of the calm it is trying to be.
+  var parts = [line, ""];
+  var reassure = t(keys.reassure);
+  if (!reassure) return null;
+  parts.push(reassure, "");
+  var body = t(keys.body);
+  if (!body) return null;
+  parts.push(body, "");
+  var retry = t(keys.retry);
+  if (!retry) return null;
+  parts.push(retry);
+
+  return parts.join("\n");
+}
+
+function renderBotReply(replyText, degraded, data) {
   var chatWindow = document.getElementById("chatWindow");
 
   if (!chatWindow) return;
@@ -247,7 +300,6 @@ function renderBotReply(replyText, degraded) {
   body.textContent = replyText;
 
   botDiv.appendChild(body);
-
   if (degraded) {
     var label = document.createElement("div");
 
@@ -257,8 +309,11 @@ function renderBotReply(replyText, degraded) {
       "border:1px solid var(--border-card);border-radius:4px;" +
       "padding:0.15rem 0.4rem;display:inline-block;";
 
+    // The label key comes from the payload when present, so the worker stays the
+    // single owner of the key set; chatText's second argument is the explicit
+    // English fallback for a client with no dictionary.
     label.textContent = chatText(
-      "advisorDegraded",
+      (data && data.i18n && data.i18n.label) || "advisorDegradedLabel",
       "Offline \u00b7 offline answer, not the live AI",
     );
 
@@ -482,7 +537,17 @@ function sendChatMsg() {
         loading.parentNode.removeChild(loading);
 
       if (data && data.reply) {
-        renderBotReply(data.reply, !!(data && data.degraded));
+        // A degraded reply arrives with BOTH the worker's canonical English
+        // text and a set of i18n keys. A browser resolves the keys through
+        // assets/js/shared/locales.js so the failure message is in the
+        // visitor's own language; a client with no dictionary (or a language
+        // the dictionary lacks) falls back to the English text the worker
+        // already sent. The fallback is explicit and asserted, not accidental.
+        renderBotReply(
+          localizedDegradedReply(data) || data.reply,
+          !!(data && data.degraded),
+          data,
+        );
       } else {
         renderBotReply(
           chatText("advisorNoReply", " No reply received. Please try again."),

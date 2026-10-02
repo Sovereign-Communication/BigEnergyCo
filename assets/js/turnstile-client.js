@@ -26,9 +26,32 @@
 export const TURNSTILE_SCRIPT_SRC =
   "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=";
 
+/**
+ * Every origin this widget needs, declared once so the CSP gate can check the
+ * POLICY against the CODE instead of against a comment nobody maintains.
+ *
+ * Turnstile's documented requirements (developers.cloudflare.com/turnstile/
+ * reference/content-security-policy) are exactly two directives on one host:
+ *
+ *   script-src  the api.js bundle injected by loadTurnstileScript()
+ *   frame-src   the challenge iframe the widget renders inside
+ *
+ * connect-src is NOT required: the token comes back through the iframe's
+ * postMessage, not an XHR from the page. That is why this list has two entries
+ * and not three, and why adding connect-src for it would widen the policy for
+ * nothing.
+ *
+ * tests/cold-start-defects.test.mjs asserts `_headers` allows exactly these
+ * two on this host, so a future edit to either side fails a test instead of
+ * failing in a browser.
+ */
+export const TURNSTILE_CSP_REQUIREMENTS = Object.freeze({
+  host: "challenges.cloudflare.com",
+  directives: Object.freeze(["script-src", "frame-src"]),
+});
+
 /** The placeholder wrangler.json ships with. Never a real site key. */
-export const TURNSTILE_PLACEHOLDER_SITE_KEY =
-  "REPLACE_WITH_TURNSTILE_SITE_KEY";
+export const TURNSTILE_PLACEHOLDER_SITE_KEY = "REPLACE_WITH_TURNSTILE_SITE_KEY";
 
 /**
  * Where the PUBLIC site key comes from, in precedence order:
@@ -51,7 +74,8 @@ export function resolveTurnstileSiteKey(doc, win) {
     typeof doc.querySelector === "function"
       ? doc.querySelector('meta[name="bec-turnstile-site-key"]')
       : null;
-  var fromMeta = metaEl && metaEl.getAttribute ? metaEl.getAttribute("content") : null;
+  var fromMeta =
+    metaEl && metaEl.getAttribute ? metaEl.getAttribute("content") : null;
 
   var key = (fromWindow || fromMeta || "").trim();
   if (!key || key === TURNSTILE_PLACEHOLDER_SITE_KEY) return null;
@@ -101,7 +125,7 @@ export function loadTurnstileScript(doc, win, onloadName) {
       reject(new Error("turnstile script failed to load"));
     };
 
-    var parent = (doc.head || doc.body || doc.documentElement);
+    var parent = doc.head || doc.body || doc.documentElement;
     if (!parent || typeof parent.appendChild !== "function") {
       reject(new Error("no mount point for the turnstile script"));
       return;
@@ -140,7 +164,11 @@ export function requestTurnstileToken(options) {
     return Promise.resolve(null);
   }
 
-  return loadTurnstileScript(doc, win, opts.onloadName || "__becTurnstileOnload").then(
+  return loadTurnstileScript(
+    doc,
+    win,
+    opts.onloadName || "__becTurnstileOnload",
+  ).then(
     function (w) {
       var api = (w && w.turnstile) || null;
       if (!api || typeof api.render !== "function") return null;

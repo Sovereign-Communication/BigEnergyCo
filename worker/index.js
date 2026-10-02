@@ -67,6 +67,7 @@ import { jevCostUsd } from "./jev-price.mjs";
 // Each module degrades to a provisioning error when its binding is absent —
 // see docs/cloudflare-showcase.md for the provisioning checklist.
 import { verifyTurnstile } from "./turnstile.mjs";
+import { buildDegradedReply, mentionsSystem } from "./advisor-fallback.mjs";
 import {
   storeSharePayload,
   getSharePayload,
@@ -516,101 +517,6 @@ export function ensureDisclaimer(reply) {
   return `${reply.trimEnd()}\n\n${DISCLAIMER_FOOTER}`;
 }
 
-// ── B2 / R-CF-10: the deterministic degraded advisor reply ────────────────
-//
-// The advisor depends on two third parties (Groq for the words, TypeSafe/Jev
-// for the truthfulness score). Either can rate-limit, time out, or be down at
-// the exact moment a judge types a question. Before this existed, that
-// presented as a dead chat box, which is the judge's largest unflagged risk.
-//
-// So the failure has a fixed, pre-written, DETERMINISTIC shape: no template
-// filled from live state, no random numbers, no second upstream to fail. It
-// carries an explicit `degraded` marker and the canonical disclaimer, and the
-// client renders that marker as a visible label. A degradation the visitor can
-// see is honest; a blank box is not.
-//
-// It is built from the request the visitor actually made, so a degraded reply
-// still acknowledges their system rather than showing a generic dead end.
-export const DEGRADED_LABEL = "DEGRADED";
-
-export const FALLBACK_REASON_TEXT = {
-  groq_unavailable:
-    "the language model that writes these answers did not respond",
-  groq_error: "the language model that writes these answers returned an error",
-  key_missing:
-    "this deployment has no language-model key configured, so the advisor is offline by design",
-};
-
-/**
- * Whether the visitor is talking about a system they already sized.
- *
- * Only used to pick which half of the fallback to show, and it is a
- * conservative keyword test on the visitor's OWN text - never on anything the
- * model produced. `buildIntakeBrief()` in assets/js/chat.js opens with
- * "Please size an off-grid battery system for me", which is the phrase the
- * calculator-generated brief always contains.
- */
-export function mentionsSystem(message) {
-  const t = String(message || "").toLowerCase();
-  return (
-    /\bsystem\b/.test(t) ||
-    /\bpanel/.test(t) ||
-    /\bbatter/.test(t) ||
-    /\bkwh\b/.test(t) ||
-    /\bkwp\b/.test(t) ||
-    /\bsolar\b/.test(t)
-  );
-}
-
-export function buildDegradedReply(reason, opts = {}) {
-  const lang = typeof opts.language === "string" ? opts.language : "en";
-  const hasSystem = !!(opts.hasSystem && String(opts.hasSystem).trim());
-  const why =
-    FALLBACK_REASON_TEXT[reason] ||
-    "a service this advisor depends on did not respond";
-
-  const lines = [
-    `${DEGRADED_LABEL}: I cannot answer this one right now — ${why}.`,
-    "",
-    "Nothing above is wrong, and your sizing is unaffected: every number on",
-    "this site is computed in your own browser from open weather and price",
-    "data, so it works with no server and no connection at all. This advisor",
-    "is the only part that needs the network, and it is the only part that",
-    "can go quiet.",
-    "",
-  ];
-
-  if (hasSystem) {
-    lines.push(
-      "Your sizing result on this page stands as calculated. Take those",
-      "numbers to a licensed electrician or engineer before you buy or build",
-      "anything.",
-      "",
-    );
-  } else {
-    lines.push(
-      "For a specific question about battery sizing, the calculator above",
-      "sizes a system from your bill or your daily kWh, your location's sun",
-      "and temperature, and your target autonomy — no account needed.",
-      "",
-    );
-  }
-
-  lines.push(
-    "Try this question again in a minute; the free upstream quota is shared",
-    "and often frees up quickly.",
-  );
-
-  return {
-    reply: ensureDisclaimer(lines.join("\n")),
-    degraded: true,
-    reason,
-    model: "deterministic-fallback",
-    label: DEGRADED_LABEL,
-    language: lang,
-  };
-}
-
 // The fetch is a parameter, not the global. Two reasons, one of which is a
 // defect this fixes: `env.fetch` is the Workers-native seam /api/jev already
 // used, so reading the global here meant the advisor path could not be
@@ -732,10 +638,11 @@ async function handleChat(request, env, origin) {
       "chat: GROQ_API_KEY is not configured; serving the degraded advisor reply (R-CF-10)",
     );
     return jsonResponse(
-      buildDegradedReply("key_missing", {
-        language: body.language,
-        hasSystem: mentionsSystem(userMsg),
-      }),
+      buildDegradedReply(
+        "key_missing",
+        { language: body.language, hasSystem: mentionsSystem(userMsg) },
+        ensureDisclaimer,
+      ),
       200,
       origin,
     );
@@ -791,7 +698,7 @@ async function handleChat(request, env, origin) {
     if (!groqRes) {
       console.warn("chat: groq fetch threw; serving the degraded reply");
       return jsonResponse(
-        buildDegradedReply("groq_unavailable", degradedOpts),
+        buildDegradedReply("groq_unavailable", degradedOpts, ensureDisclaimer),
         200,
         origin,
       );
@@ -815,7 +722,11 @@ async function handleChat(request, env, origin) {
 
       if (groqRes.status === 429) {
         return jsonResponse(
-          buildDegradedReply("groq_unavailable", degradedOpts),
+          buildDegradedReply(
+            "groq_unavailable",
+            degradedOpts,
+            ensureDisclaimer,
+          ),
           200,
           origin,
         );
@@ -825,7 +736,7 @@ async function handleChat(request, env, origin) {
       // ship it rather than discarding the user's time.
       if (fullReply.length > 0) break;
       return jsonResponse(
-        buildDegradedReply("groq_unavailable", degradedOpts),
+        buildDegradedReply("groq_unavailable", degradedOpts, ensureDisclaimer),
         200,
         origin,
       );
@@ -849,7 +760,7 @@ async function handleChat(request, env, origin) {
         `chat: groq returned ${groqRes.status}; serving the degraded reply`,
       );
       return jsonResponse(
-        buildDegradedReply("groq_error", degradedOpts),
+        buildDegradedReply("groq_error", degradedOpts, ensureDisclaimer),
         200,
         origin,
       );
@@ -1074,6 +985,17 @@ export default {
     return jsonResponse({ error: "Not found" }, 404, origin);
   },
 };
+
+// Re-exported so callers that already depend on the worker entry point keep
+// working; the implementation now lives in advisor-fallback.mjs.
+export {
+  DEGRADED_LABEL,
+  FALLBACK_MODEL,
+  FALLBACK_REASON_KEY,
+  FALLBACK_REASON_TEXT,
+  buildDegradedReply,
+  mentionsSystem,
+} from "./advisor-fallback.mjs";
 
 export const SYSTEM_PROMPT_VERSION = "2026-09c";
 const ADVISOR_PROMPT_BODY = `MISSION: Help people understand a sizing result and make safer questions for a qualified local professional. The deterministic calculator is the source of truth for its displayed sizing numbers. Jev is a separate numeric plausibility check, not an engineer, not a certification body, and not permission to change the calculator result. If the user gives you a calculator brief, explain it rather than recomputing it.

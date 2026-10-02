@@ -47,6 +47,7 @@ import {
   FETCH_TIMEOUT_MS,
   SMOKE_ATTEMPT_TIMEOUT_MS,
   budgetFromEnv,
+  retryDelayFromEnv,
 } from "./lib/budgets.mjs";
 import {
   deployedFiles,
@@ -101,6 +102,8 @@ const remaining = () => DEADLINE - Date.now();
 // deterministic regression fails every attempt, so this cannot turn a red gate
 // green — it only absorbs a runner's TLS/socket flake.
 const TRANSIENT_ATTEMPTS = 3;
+// Configurable so a test can compress the backoff; 5s in production.
+const RETRY_DELAY_MS = retryDelayFromEnv();
 
 const failures = [];
 const notes = [];
@@ -338,6 +341,7 @@ const parity = await mapPool(parityTargets, CONCURRENCY, async (file) => {
       },
       {
         attempts: TRANSIENT_ATTEMPTS,
+        delayMs: RETRY_DELAY_MS,
         deadline: DEADLINE,
         onRetry: (info) => recordRetry(`parity ${file}`, info),
       },
@@ -466,6 +470,7 @@ try {
     },
     {
       attempts: TRANSIENT_ATTEMPTS,
+      delayMs: RETRY_DELAY_MS,
       deadline: DEADLINE,
       onRetry: (info) => recordRetry("security headers", info),
     },
@@ -517,6 +522,7 @@ if (SKIP_BROWSER) {
         }),
       {
         attempts: TRANSIENT_ATTEMPTS,
+        delayMs: RETRY_DELAY_MS,
         deadline: DEADLINE,
         onRetry: (info) => recordRetry("browser smoke", info),
       },

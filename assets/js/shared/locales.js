@@ -128,6 +128,28 @@ export const LOCALES = {
     advisorNoReply: " No reply received. Please try again.",
     advisorBusy:
       " The free AI engine is swamped right now (HTTP {status} — it runs on a shared free quota).\n\nPlease wait about a minute and send that again.",
+    // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
+    // The worker emits these KEYS next to canonical English text. A browser
+    // resolves them here, so a failure message is never English-only; the
+    // English `reply` field stays what a non-browser client reads.
+    advisorDegradedLabel: "Offline \u00b7 offline answer, not the live AI",
+    advisorDegradedLine: "I cannot answer this one right now \u2014 {why}.",
+    advisorDegradedWhyUnavailable:
+      "the language model that writes these answers did not respond",
+    advisorDegradedWhyError:
+      "the language model that writes these answers returned an error",
+    advisorDegradedWhyNoKey:
+      "this deployment has no language-model key configured, so the advisor is offline by design",
+    advisorDegradedWhyGeneric:
+      "a service this advisor depends on did not respond",
+    advisorDegradedReassure:
+      "Nothing above is wrong, and your sizing is unaffected: every number on this site is computed in your own browser from open weather and price data, so it works with no server and no connection at all. This advisor is the only part that needs the network, and it is the only part that can go quiet.",
+    advisorDegradedSystem:
+      "Your sizing result on this page stands as calculated. Take those numbers to a licensed electrician or engineer before you buy or build anything.",
+    advisorDegradedGeneral:
+      "For a specific question about battery sizing, the calculator above sizes a system from your bill or your daily kWh, your location's sun and temperature, and your target autonomy \u2014 no account needed.",
+    advisorDegradedRetry:
+      "Try this question again in a minute; the free upstream quota is shared and often frees up quickly.",
     advisorUnreachable:
       " The AI advisor is unreachable right now{status}.\n\nCheck your connection and try again in a moment.",
     frontierCeilingTag: "Best within the sizes searched: {pct}%",
@@ -440,6 +462,26 @@ export const LOCALES = {
     advisorNoReply: " No se recibió respuesta. Inténtalo de nuevo.",
     advisorBusy:
       " El motor gratuito de IA está satur ahora (HTTP {status} — usa una cuota compartida).\n\nEspera aproximadamente un minuto y vuelve a enviarlo.",
+    // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
+    advisorDegradedLabel:
+      "Sin conexi\u00f3n \u00b7 respuesta local, no la IA en directo",
+    advisorDegradedLine: "No puedo responderte esto ahora mismo: {why}.",
+    advisorDegradedWhyUnavailable:
+      "el modelo de lenguaje que redacta estas respuestas no ha respondido",
+    advisorDegradedWhyError:
+      "el modelo de lenguaje que redacta estas respuestas ha devuelto un error",
+    advisorDegradedWhyNoKey:
+      "esta instalaci\u00f3n no tiene configurada ninguna clave de modelo, as\u00ed que el asesor est\u00e1 desactivado por dise\u00f1o",
+    advisorDegradedWhyGeneric:
+      "un servicio del que depende este asesor no ha respondido",
+    advisorDegradedReassure:
+      "Nada de lo anterior est\u00e1 mal, y tus c\u00e1lculos no se ven afectados: cada n\u00famero de este sitio se calcula en tu propio navegador con datos meteorol\u00f3gicos y de precios abiertos, as\u00ed que funciona sin servidor y sin conexi\u00f3n. Este asesor es la \u00fanica parte que necesita red, y la \u00fanica que puede quedarse en silencio.",
+    advisorDegradedSystem:
+      "El resultado de tu dimensionamiento en esta p\u00e1gina se mantiene tal y como se calcul\u00f3. Lleva esas cifras a un electricista o ingeniero habilitado antes de comprar o construir nada.",
+    advisorDegradedGeneral:
+      "Para una pregunta concreta sobre el tama\u00f1o de la bater\u00eda, el calculador de arriba dimensiona un sistema a partir de tu factura o de tus kWh diarios, el sol y la temperatura de tu ubicaci\u00f3n y tu objetivo de autonom\u00eda \u2014 sin necesidad de cuenta.",
+    advisorDegradedRetry:
+      "Vuelve a hacer esta pregunta en un minuto; la cuota gratuita del servicio es compartida y suele liberarse pronto.",
     advisorUnreachable:
       " El asesor de IA no está disponible ahora{status}.\n\nComprueba tu conexión y vuelve a intentarlo en un momento.",
     frontierCeilingTag: "Lo máximo dentro de lo buscado: {pct}%",
@@ -771,6 +813,27 @@ export const LOCALES = {
     advisorNoReply: " Não foi recebida resposta. Tente novamente.",
     advisorBusy:
       " O motor gratuito de IA está sobrecarregado agora (HTTP {status} — usa uma quota partilhada).\n\nEspere cerca de um minuto e envie novamente.",
+    // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
+    advisorDegradedLabel:
+      "Sem liga\u00e7\u00e3o \u00b7 resposta local, n\u00e3o a IA em direto",
+    advisorDegradedLine:
+      "N\u00e3o consigo responder a esta agora \u2014 {why}.",
+    advisorDegradedWhyUnavailable:
+      "o modelo de linguagem que escreve estas respostas n\u00e3o respondeu",
+    advisorDegradedWhyError:
+      "o modelo de linguagem que escreve estas respostas devolveu um erro",
+    advisorDegradedWhyNoKey:
+      "esta instala\u00e7\u00e3o n\u00e3o tem nenhuma chave de modelo configurada, por isso o consultor est\u00e1 desligado por concep\u00e7\u00e3o",
+    advisorDegradedWhyGeneric:
+      "um servi\u00e7o de que este consultor depende n\u00e3o respondeu",
+    advisorDegradedReassure:
+      "Nada acima est\u00e1 errado, e o seu dimensionamento n\u00e3o \u00e9 afetado: todos os n\u00fameros deste site s\u00e3o calculados no seu pr\u00f3prio navegador a partir de dados meteorol\u00f3gicos e de pre\u00e7os abertos, por isso funciona sem servidor e sem liga\u00e7\u00e3o. Este consultor \u00e9 a \u00fanica parte que precisa de rede, e a \u00fanica que pode ficar em sil\u00eancio.",
+    advisorDegradedSystem:
+      "O resultado do seu dimensionamento nesta p\u00e1gina mant\u00e9m-se tal como foi calculado. Leve esses valores a um eletricista ou engenheiro credenciado antes de comprar ou construir seja o que for.",
+    advisorDegradedGeneral:
+      "Para uma quest\u00e3o concreta sobre o tamanho da bateria, a calculadora acima dimensiona um sistema a partir da sua fatura ou dos seus kWh di\u00e1rios, do sol e da temperatura da sua localiza\u00e7\u00e3o e da sua autonomia desejada \u2014 sem necessidade de conta.",
+    advisorDegradedRetry:
+      "Fa\u00e7a esta pergunta outra vez dentro de um minuto; a quota gratuita do servi\u00e7o \u00e9 partilhada e costuma libertar-se depressa.",
     advisorUnreachable:
       " O consultor de IA está indisponível neste momento{status}.\n\nVerifique a ligação e tente novamente dentro de instantes.",
     frontierCeilingTag: "O máximo dentro do que foi buscado: {pct}%",
@@ -1098,6 +1161,27 @@ export const LOCALES = {
     advisorNoReply: " Aucune réponse reçue. Veuillez réessayer.",
     advisorBusy:
       " Le moteur IA gratuit est saturé (HTTP {status} — quota partagé).\n\nAttendez environ une minute, puis renvoyez votre question.",
+    // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
+    advisorDegradedLabel:
+      "Hors ligne \u00b7 r\u00e9ponse locale, pas l\u2019IA en direct",
+    advisorDegradedLine:
+      "Je ne peux pas r\u00e9pondre \u00e0 cela pour l\u2019instant : {why}.",
+    advisorDegradedWhyUnavailable:
+      "le mod\u00e8le de langage qui r\u00e9dige ces r\u00e9ponses n\u2019a pas r\u00e9pondu",
+    advisorDegradedWhyError:
+      "le mod\u00e8le de langage qui r\u00e9dige ces r\u00e9ponses a renvoy\u00e9 une erreur",
+    advisorDegradedWhyNoKey:
+      "ce d\u00e9ploiement n\u2019a aucune cl\u00e9 de mod\u00e8le configur\u00e9e, le conseiller est donc hors ligne par conception",
+    advisorDegradedWhyGeneric:
+      "un service dont ce conseiller d\u00e9pend n\u2019a pas r\u00e9pondu",
+    advisorDegradedReassure:
+      "Rien de ce qui pr\u00e9c\u00e8de n\u2019est faux, et votre dimensionnement n\u2019est pas affect\u00e9 : chaque chiffre de ce site est calcul\u00e9 dans votre propre navigateur, \u00e0 partir de donn\u00e9es m\u00e9t\u00e9orologiques et tarifaires ouvertes. Le site fonctionne donc sans serveur et sans connexion. Ce conseiller est la seule partie qui ait besoin du r\u00e9seau, et la seule qui puisse se taire.",
+    advisorDegradedSystem:
+      "Le r\u00e9sultat de votre dimensionnement sur cette page reste tel qu\u2019il a \u00e9t\u00e9 calcul\u00e9. Portez ces chiffres \u00e0 un \u00e9lectricien ou un ing\u00e9nieur agr\u00e9\u00e9 avant tout achat ou toute construction.",
+    advisorDegradedGeneral:
+      "Pour une question pr\u00e9cise sur le dimensionnement d\u2019une batterie, le calculateur ci-dessus dimensionne un syst\u00e8me \u00e0 partir de votre facture ou de votre consommation quotidienne en kWh, du soleil et de la temp\u00e9rature de votre emplacement, et de votre autonomie vis\u00e9e \u2014 sans aucun compte.",
+    advisorDegradedRetry:
+      "Posez \u00e0 nouveau la question dans une minute ; le quota gratuit du service est partag\u00e9 et se lib\u00e8re souvent rapidement.",
     advisorUnreachable:
       " Le conseiller IA est momentanément inaccessible{status}.\n\nVérifiez votre connexion et réessayez dans un instant.",
     frontierCeilingTag: "Maximum dans les tailles explorées : {pct}%",
@@ -1398,6 +1482,26 @@ export const LOCALES = {
     advisorNoReply: " Keine Antwort erhalten. Bitte versuchen Sie es erneut.",
     advisorBusy:
       " Die kostenlose KI ist gerade überlastet (HTTP {status} — gemeinsames Kontingent).\n\nWarten Sie etwa eine Minute und senden Sie die Frage erneut.",
+    // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
+    advisorDegradedLabel: "Offline \u00b7 lokale Antwort, nicht die Live-KI",
+    advisorDegradedLine:
+      "Das kann ich Ihnen gerade nicht beantworten \u2014 {why}.",
+    advisorDegradedWhyUnavailable:
+      "das Sprachmodell, das diese Antworten schreibt, hat nicht reagiert",
+    advisorDegradedWhyError:
+      "das Sprachmodell, das diese Antworten schreibt, hat einen Fehler gemeldet",
+    advisorDegradedWhyNoKey:
+      "in dieser Installation ist kein Sprachmodell-Schl\u00fcssel hinterlegt, der Berater ist deshalb bewusst offline",
+    advisorDegradedWhyGeneric:
+      "ein Dienst, von dem dieser Berater abh\u00e4ngt, hat nicht reagiert",
+    advisorDegradedReassure:
+      "An dem oben Gesagten ist nichts falsch, und Ihre Berechnung ist nicht betroffen: Jede Zahl auf dieser Seite wird in Ihrem eigenen Browser aus offenen Wetter- und Preisdaten berechnet. Die Seite funktioniert daher ganz ohne Server und ganz ohne Verbindung. Dieser Berater ist der einzige Teil, der eine Verbindung braucht \u2014 und der einzige, der schweigen kann.",
+    advisorDegradedSystem:
+      "Das Ergebnis Ihrer Dimensionierung auf dieser Seite gilt so, wie es berechnet wurde. Lassen Sie diese Zahlen von einem zugelassenen Elektriker oder Ingenieur pr\u00fcfen, bevor Sie etwas kaufen oder bauen.",
+    advisorDegradedGeneral:
+      "F\u00fcr eine konkrete Frage zur Batteriegr\u00f6\u00dfe dimensioniert der Rechner oben ein System aus Ihrer Stromrechnung oder Ihrem t\u00e4glichen Verbrauch in kWh, aus Sonne und Temperatur an Ihrem Standort und aus Ihrer gew\u00fcnschten Autonomie \u2014 ganz ohne Konto.",
+    advisorDegradedRetry:
+      "Stellen Sie die Frage in einer Minute erneut; das kostenlose Kontingent des Anbieters wird gemeinsam genutzt und ist meist schnell wieder frei.",
     advisorUnreachable:
       " Der KI-Berater ist gerade nicht erreichbar{status}.\n\nPrüfen Sie Ihre Verbindung und versuchen Sie es gleich noch einmal.",
     frontierCeilingTag: "Bestes in den durchsuchten Größen: {pct} %",
@@ -1719,6 +1823,25 @@ export const LOCALES = {
     advisorNoReply: " لم يصل رد. حاول مرة أخرى.",
     advisorBusy:
       " محرك الذكاء الاصطناعي المجاني مزدحم الآن (HTTP {status} — حصة مشتركة).\n\nانتظر نحو دقيقة ثم أرسل الطلب مجدداً.",
+    // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
+    advisorDegradedLabel:
+      "دون اتصال \u00b7 رد محلي وليس ذكاءً اصطناعيًا مباشرًا",
+    advisorDegradedLine: "لا أستطيع الإجابة عن هذا الآن \u2014 {why}.",
+    advisorDegradedWhyUnavailable:
+      "لم يستجب نموذج اللغة الذي يكتب هذه الإجابات",
+    advisorDegradedWhyError: "أعاد نموذج اللغة الذي يكتب هذه الإجابات خطأً",
+    advisorDegradedWhyNoKey:
+      "لا يوجد مفتاح لنموذج اللغة مُهيّأ في هذا التثبيت، لذلك يعمل المستشار دون اتصال بشكل مقصود",
+    advisorDegradedWhyGeneric:
+      "لم تستجب إحدى الخدمات التي يعتمد عليها هذا المستشار",
+    advisorDegradedReassure:
+      "لا خطأ في ما سبق، وحسابك لم يتأثر: كل رقم في هذا الموقع يُحسب داخل متصفحك من بيانات الطقس والأسعار المفتوحة، فيعمل الموقع بلا خادم وبلا اتصال. هذا المستشار هو الجزء الوحيد الذي يحتاج إلى الشبكة، وهو أيضًا الجزء الوحيد الذي قد يصمت.",
+    advisorDegradedSystem:
+      "نتيجة تحجيم نظامك في هذه الصفحة تبقى كما حُسبت. خذ هذه الأرقام إلى كهربائي أو مهندس مرخَّص قبل أن تشتري أو تبني أي شيء.",
+    advisorDegradedGeneral:
+      "لأي سؤال محدد حول حجم البطارية، تقوم الحاسبة أعلاه بتحجيم النظام انطلاقًا من فاتورتك أو من استهلاكك اليومي بالكيلوواط ساعي، ومن شمس وحرارة موقعك، ومن هدف الاستقلالية الذي تريده \u2014 دون حاجة إلى أي حساب.",
+    advisorDegradedRetry:
+      "أعد طرح السؤال بعد دقيقة؛ الحصة المجانية للخدمة مشتركة وغالبًا ما تتحرر سريعًا.",
     advisorUnreachable:
       " مستشار الذكاء الاصطناعي غير متاح حالياً{status}.\n\nتحقق من اتصالك وحاول مرة أخرى بعد قليل.",
     frontierCeilingTag: "الأقصى ضمن الأحجام المبحوثة: {pct}%",

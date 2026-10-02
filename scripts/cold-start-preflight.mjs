@@ -44,8 +44,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-const DEFAULT_CHAT =
-  "https://bigenergyco-api-showcase.bigenergyco.workers.dev";
+const DEFAULT_CHAT = "https://bigenergyco-api-showcase.bigenergyco.workers.dev";
 const DEFAULT_PAGE = "https://bigenergyco-showcase.pages.dev";
 
 /** Kept short and generic: this hits a paid upstream, so it asks nothing big. */
@@ -64,7 +63,11 @@ export async function probeAdvisor(base, { doFetch = fetch } = {}) {
     const res = await doFetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: PROBE_QUESTION, history: [], language: "en" }),
+      body: JSON.stringify({
+        message: PROBE_QUESTION,
+        history: [],
+        language: "en",
+      }),
     });
     const ms = Date.now() - started;
     if (!res.ok) {
@@ -89,7 +92,12 @@ export async function probeAdvisor(base, { doFetch = fetch } = {}) {
       live: !body.degraded && reply.length > 0,
     };
   } catch (e) {
-    return { ok: false, status: null, ms: Date.now() - started, detail: e.message };
+    return {
+      ok: false,
+      status: null,
+      ms: Date.now() - started,
+      detail: e.message,
+    };
   }
 }
 
@@ -113,7 +121,13 @@ export async function probeJev(base, { doFetch = fetch } = {}) {
       body: JSON.stringify(body),
     });
     const ms = Date.now() - started;
-    if (!res.ok) return { ok: false, status: res.status, ms, detail: `HTTP ${res.status}` };
+    if (!res.ok)
+      return {
+        ok: false,
+        status: res.status,
+        ms,
+        detail: `HTTP ${res.status}`,
+      };
     const payload = await res.json();
     return {
       ok: true,
@@ -124,7 +138,12 @@ export async function probeJev(base, { doFetch = fetch } = {}) {
       reason: payload.reason || null,
     };
   } catch (e) {
-    return { ok: false, status: null, ms: Date.now() - started, detail: e.message };
+    return {
+      ok: false,
+      status: null,
+      ms: Date.now() - started,
+      detail: e.message,
+    };
   }
 }
 
@@ -188,7 +207,11 @@ export async function probeCookies(pageUrl, { doFetch = fetch } = {}) {
  * no gate is the same as not naming it.
  */
 export function cookieGateDecision(measurement) {
-  if (!measurement || measurement.ok !== true || typeof measurement.cookieCount !== "number") {
+  if (
+    !measurement ||
+    measurement.ok !== true ||
+    typeof measurement.cookieCount !== "number"
+  ) {
     return {
       provision: false,
       action: "do_not_provision",
@@ -262,7 +285,9 @@ async function main() {
   if (args.json) {
     console.log(JSON.stringify(result, null, 2));
   } else {
-    console.log("Cold Start pre-flight — what is actually answering right now\n");
+    console.log(
+      "Cold Start pre-flight — what is actually answering right now\n",
+    );
     console.log(`  advisor : ${describeAdvisor(advisor)}`);
     console.log(`  jev     : ${describeJev(jev)}`);
     if (cookies) {
@@ -276,7 +301,9 @@ async function main() {
           `  §9 gate : ${gate.provision ? "PROVISION Turnstile" : "DO NOT provision"} — ${gate.why}`,
         );
     } else {
-      console.log("  cookies : not measured (pass --cookies to run the §9 gate)");
+      console.log(
+        "  cookies : not measured (pass --cookies to run the §9 gate)",
+      );
     }
     console.log("");
     console.log(`  verdict : ${result.verdict}`);
@@ -299,7 +326,8 @@ function describeAdvisor(a) {
 
 function describeJev(j) {
   if (!j.ok) return `UNREACHABLE (${j.detail || "no reply"}) after ${j.ms}ms`;
-  if (!j.available) return `endpoint OK, Jev unavailable (${j.reason}) — badge hidden, as designed`;
+  if (!j.available)
+    return `endpoint OK, Jev unavailable (${j.reason}) — badge hidden, as designed`;
   return `available in ${j.ms}ms — verdict ${j.verdict}`;
 }
 

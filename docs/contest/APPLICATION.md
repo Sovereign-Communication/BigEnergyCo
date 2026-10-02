@@ -3,8 +3,8 @@
 Everything a human needs to file the entry by hand, and nothing that files it
 for them.
 
-**The rules bar automated entry** (Official Rules §4: *"Persons may not enter
-using robotic, programmed, or any other automated means of entry."*). So this
+**The rules bar automated entry** (Official Rules §4: _"Persons may not enter
+using robotic, programmed, or any other automated means of entry."_). So this
 document is copy and structure, ready to paste. No script in this repo submits
 anything, and `tests/cold-start-preflight.test.mjs` asserts that the pre-flight
 contains no `forms.gle` and no `execSync` for exactly that reason.
@@ -12,7 +12,7 @@ contains no `forms.gle` and no `execSync` for exactly that reason.
 **Placeholders are marked `[ ... ]` and are not optional to leave as-is.**
 `[REPO URL]`, `[DEMO URL]` and every traction figure must be replaced with a
 measured value before filing. Per §11 of the contest plan, anything not verified
-in a browser is described as *shipping*, never as *shipped*.
+in a browser is described as _shipping_, never as _shipped_.
 
 ---
 
@@ -47,9 +47,9 @@ in a browser is described as *shipping*, never as *shipped*.
 >
 > Try it: `[DEMO URL]`
 
-*(261 words of body copy, excluding the "Try it" line — measured with `wc -w`
+_(261 words of body copy, excluding the "Try it" line — measured with `wc -w`
 on this file, not asserted from memory. Comfortably inside a 300-word field
-either way.)*
+either way.)_
 
 ---
 
@@ -234,7 +234,7 @@ the whole idea. Thank you."
 - [ ] Repository is public and readable
 - [ ] Traction figures measured and their windows stated
 - [ ] Every Cloudflare product listed is actually deployed and verified
-- [ ] Anything unverified is described as *shipping*, never *shipped*
+- [ ] Anything unverified is described as _shipping_, never _shipped_
 - [ ] No competitor named
 - [ ] No account, paywall, or lead capture anywhere in the product
 - [ ] Entered **by hand**, by a person

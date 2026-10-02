@@ -7,7 +7,7 @@ so it can be followed start to finish without re-deriving the reasoning.
 
 - **Isolation.** A concurrent session owns the sibling checkout
   `.../BigEnergyCo/BigEnergyCo` and `.worktrees/slider-canonical`. Never `git
-  add`, `stash`, `checkout`, `worktree`, `clean`, `reset` or `restore` there.
+add`, `stash`, `checkout`, `worktree`, `clean`, `reset` or `restore` there.
   Its ground, not this branch's.
 - **One submission.** Official Rules §4. There is no second attempt, and
   automated entry is barred. The application is filled in by a person, by hand,
@@ -17,13 +17,13 @@ so it can be followed start to finish without re-deriving the reasoning.
 
 ## Where things are
 
-| Thing | Value |
-| ----- | ----- |
-| Branch | `contest/cold-start` |
-| Fork | `Treystu/BigEnergyCo` |
-| Showcase Pages site | `bigenergyco-showcase.pages.dev` |
-| Showcase worker | `bigenergyco-api-showcase` (workers.dev: `bigenergyco-api-showcase.bigenergyco.workers.dev`) |
-| Production (do not touch) | `freeoffgridcalculator.com`, worker `bigenergyco-api` |
+| Thing                     | Value                                                                                        |
+| ------------------------- | -------------------------------------------------------------------------------------------- |
+| Branch                    | `contest/cold-start`                                                                         |
+| Fork                      | `Treystu/BigEnergyCo`                                                                        |
+| Showcase Pages site       | `bigenergyco-showcase.pages.dev`                                                             |
+| Showcase worker           | `bigenergyco-api-showcase` (workers.dev: `bigenergyco-api-showcase.bigenergyco.workers.dev`) |
+| Production (do not touch) | `freeoffgridcalculator.com`, worker `bigenergyco-api`                                        |
 
 The `-showcase` suffix on the worker name is what makes promotion structurally
 impossible by accident: `wrangler deploy` from `worker/` can never overwrite
@@ -46,7 +46,7 @@ Then add the Turnstile site key as a meta tag **only if** Step 4 provisions
 Turnstile:
 
 ```html
-<meta name="bec-turnstile-site-key" content="<site key>">
+<meta name="bec-turnstile-site-key" content="<site key>" />
 ```
 
 Until then, omit it. `assets/js/turnstile-client.js` resolves `null` for a
@@ -100,7 +100,7 @@ Read `cookieGate`, then act on it:
   together (R-CF-02); shipping the secret first is what 403'd the advisor.
 - **`provision: false`** → do **not** set the secret. The advisor runs
   unguarded on the showcase, and the application describes Turnstile as
-  *shipping*, not *shipped*.
+  _shipping_, not _shipped_.
 - **Not measured** → also do not set it, and re-run until it is. An unmeasured
   risk is not a passed gate.
 
@@ -138,7 +138,7 @@ nothing on their own. Drive the page:
 Then capture the demo URL and a short screen recording.
 
 **Anything on this list you did not watch working is described in the
-application as *shipping*, never as *shipped*.**
+application as _shipping_, never as _shipped_.**
 
 ## Step 8 — file, by hand
 

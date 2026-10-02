@@ -31,12 +31,18 @@ import worker, {
   setGroqBusyBackoffMs,
   GROQ_BUSY_BACKOFF_MS,
 } from "../worker/index.js";
-import { checkProvisioning, REQUIRED_SECRETS } from "../scripts/cf-provision-check.mjs";
+import {
+  checkProvisioning,
+  REQUIRED_SECRETS,
+} from "../scripts/cf-provision-check.mjs";
 import * as turnstileClient from "../assets/js/turnstile-client.js";
 import {
-  runScenario,
-  scenarios,
-} from "../scripts/smoke/advisor-fallbacks.mjs";
+  cspAllowsHost,
+  headersFor,
+  parseCsp,
+  parseHeadersFile,
+} from "../scripts/lib/gates.mjs";
+import { runScenario, scenarios } from "../scripts/smoke/advisor-fallbacks.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
@@ -50,7 +56,11 @@ const postChat = (body, env = {}, headers = {}) =>
   worker.fetch(
     new Request("https://api.test/api/chat", {
       method: "POST",
-      headers: { Origin: ORIGIN, "Content-Type": "application/json", ...headers },
+      headers: {
+        Origin: ORIGIN,
+        "Content-Type": "application/json",
+        ...headers,
+      },
       body: JSON.stringify(body),
     }),
     env,
@@ -61,7 +71,9 @@ const groqOk = async () => ({
   ok: true,
   status: 200,
   json: async () => ({
-    choices: [{ message: { content: "A real answer." }, finish_reason: "stop" }],
+    choices: [
+      { message: { content: "A real answer." }, finish_reason: "stop" },
+    ],
   }),
 });
 
@@ -136,7 +148,10 @@ test("B1: the Turnstile client resolves a real site key and refuses the placehol
 
 test("B1: no site key means no widget and no token, and the widget is explicit", async () => {
   // Non-fatal is the requirement: an unconfigured deployment must still send.
-  assert.equal(await turnstileClient.requestTurnstileToken({ doc: null, win: {} }), null);
+  assert.equal(
+    await turnstileClient.requestTurnstileToken({ doc: null, win: {} }),
+    null,
+  );
   assert.equal(
     await turnstileClient.requestTurnstileToken({
       doc: { querySelector: () => null },
@@ -220,7 +235,11 @@ test("B1: a rendered widget resolves a token and is removed afterwards", async (
   assert.equal(rendered.opts.sitekey, "0xREALKEY");
   rendered.opts.callback("token-abc");
   assert.equal(await p, "token-abc");
-  assert.equal(removed, "widget-1", "a spent widget must not linger as an iframe");
+  assert.equal(
+    removed,
+    "widget-1",
+    "a spent widget must not linger as an iframe",
+  );
 });
 
 test("B1: an expired or errored widget resolves null instead of hanging", async () => {
@@ -272,7 +291,11 @@ test("B1: the loader injects the script once, never twice", async () => {
   await turnstileClient.loadTurnstileScript(doc, {}, "cb");
   const first = doc.appended.length;
   await turnstileClient.loadTurnstileScript(doc, {}, "cb");
-  assert.equal(doc.appended.length, first, "a second advisor question must not stack scripts");
+  assert.equal(
+    doc.appended.length,
+    first,
+    "a second advisor question must not stack scripts",
+  );
   assert.equal(first, 1);
 });
 
@@ -283,10 +306,18 @@ test("B1: the worker still fails CLOSED on a bad token (the server half holds)",
     fetch: async () => ({ json: async () => ({ success: false }) }),
   };
   const res = await postChat({ message: "hi", turnstileToken: "bad" }, env);
-  assert.equal(res.status, 403, "client integration must not weaken the server gate");
+  assert.equal(
+    res.status,
+    403,
+    "client integration must not weaken the server gate",
+  );
   const body = await res.json();
   assert.equal(body.reason, "invalid_token");
-  assert.equal(body.degraded, undefined, "a rejected challenge is not a degraded ANSWER");
+  assert.equal(
+    body.degraded,
+    undefined,
+    "a rejected challenge is not a degraded ANSWER",
+  );
 });
 
 // ══ B2 — the degraded advisor reply ═══════════════════════════════════════
@@ -384,26 +415,52 @@ test("B2: a thrown fetch (network down) answers with the labelled fallback", asy
 
 test("B2: a healthy provider is NOT degraded", async () => {
   resetRateLimitsForTest();
-  const res = await postChat({ message: "hello" }, { GROQ_API_KEY: "g", fetch: groqOk });
+  const res = await postChat(
+    { message: "hello" },
+    { GROQ_API_KEY: "g", fetch: groqOk },
+  );
   assert.equal(res.status, 200);
   const body = await res.json();
-  assert.equal(body.degraded, undefined, "a working advisor must not wear a degraded label");
+  assert.equal(
+    body.degraded,
+    undefined,
+    "a working advisor must not wear a degraded label",
+  );
   assert.match(body.reply, /A real answer\./);
 });
 
 test("B2: the fallback is deterministic and always carries the disclaimer", () => {
-  const a = buildDegradedReply("groq_unavailable", { hasSystem: true });
-  const b = buildDegradedReply("groq_unavailable", { hasSystem: true });
+  // ensureDisclaimer is now INJECTED: advisor-fallback.mjs must not depend on
+  // the router. The worker passes the same function the live-reply path uses,
+  // and tests/worker-i18n.test.mjs pins that a real HTTP response still
+  // carries the footer.
+  const a = buildDegradedReply(
+    "groq_unavailable",
+    { hasSystem: true },
+    ensureDisclaimer,
+  );
+  const b = buildDegradedReply(
+    "groq_unavailable",
+    { hasSystem: true },
+    ensureDisclaimer,
+  );
   assert.equal(a.reply, b.reply, "the same reason must produce the same text");
-  assert.equal(ensureDisclaimer(a.reply), a.reply, "the footer must already be present");
+  assert.equal(
+    ensureDisclaimer(a.reply),
+    a.reply,
+    "the footer must already be present",
+  );
   assert.match(a.reply, /licensed professional/);
-  assert.ok(a.reply.length > 120, "a fallback must be a real answer, not a stub");
+  assert.ok(
+    a.reply.length > 120,
+    "a fallback must be a real answer, not a stub",
+  );
 });
 
 test("B2: the fallback names the actual failure and never guesses a number", () => {
-  const missing = buildDegradedReply("key_missing");
+  const missing = buildDegradedReply("key_missing", {}, ensureDisclaimer);
   assert.match(missing.reply, /no language-model key configured/);
-  const unknown = buildDegradedReply("something_new");
+  const unknown = buildDegradedReply("something_new", {}, ensureDisclaimer);
   assert.match(unknown.reply, /did not respond/);
   // No fabricated sizing: a degraded reply must not invent kWh, dollars or
   // panels, because the whole product is that its numbers are real.
@@ -415,24 +472,51 @@ test("B2: the fallback names the actual failure and never guesses a number", () 
 });
 
 test("B2: hasSystem picks a system-aware fallback without touching model output", () => {
-  assert.equal(mentionsSystem("Please size an off-grid battery system for me."), true);
+  assert.equal(
+    mentionsSystem("Please size an off-grid battery system for me."),
+    true,
+  );
   assert.equal(mentionsSystem("why is my bill so high?"), false);
-  const sized = buildDegradedReply("groq_unavailable", { hasSystem: true });
-  const general = buildDegradedReply("groq_unavailable", { hasSystem: false });
+  const sized = buildDegradedReply(
+    "groq_unavailable",
+    { hasSystem: true },
+    ensureDisclaimer,
+  );
+  const general = buildDegradedReply(
+    "groq_unavailable",
+    { hasSystem: false },
+    ensureDisclaimer,
+  );
   assert.notEqual(sized.reply, general.reply);
   assert.match(sized.reply, /sizing result on this page stands as calculated/);
-  assert.match(general.reply, /sizes a system from your bill or your daily kWh/);
+  assert.match(
+    general.reply,
+    /sizes a system from your bill or your daily kWh/,
+  );
 });
 
 test("B2: the client renders the degraded label visibly", () => {
   const exec = executable(chatSrc);
   assert.match(
     exec,
-    /renderBotReply\(data\.reply,\s*!!\(data && data\.degraded\)\)/,
+    /localizedDegradedReply\(data\)\s*\|\|\s*data\.reply/,
+    "the reply must be rendered in the visitor's language, falling back to the worker's English text",
+  );
+  assert.match(
+    exec,
+    /!!\(data && data\.degraded\)/,
     "the reply must be rendered with its degraded state",
   );
-  assert.match(exec, /data-degraded/, "the message must carry a machine-readable marker");
-  assert.match(exec, /advisorDegraded/, "the label copy must be translatable, not hardcoded only");
+  assert.match(
+    exec,
+    /data-degraded/,
+    "the message must carry a machine-readable marker",
+  );
+  assert.match(
+    exec,
+    /advisorDegradedLabel/,
+    "the label copy must be translatable, not hardcoded only",
+  );
 });
 
 // ══ B3 — no lead funnel ═══════════════════════════════════════════════════
@@ -525,7 +609,11 @@ test("B4: the showcase doc must not instruct enabling Bot Fight Mode", () => {
 
 test("B4: the doc cites the finding it would otherwise re-create", () => {
   assert.match(docSrc, /F-44/, "the reasoning must cite F-44");
-  assert.match(docSrc, /R-SEO-07/, "and the requirement that governs it, R-SEO-07");
+  assert.match(
+    docSrc,
+    /R-SEO-07/,
+    "and the requirement that governs it, R-SEO-07",
+  );
   assert.match(docSrc, /O-09/, "and the owner action that closes it, O-09");
 });
 
@@ -548,7 +636,11 @@ test("B5: cf-provision-check requires TYPESAFE_API_KEY", () => {
   assert.ok(names.includes("TURNSTILE_SECRET_KEY"));
   // Every entry must carry actionable instructions, not just a name.
   for (const s of REQUIRED_SECRETS) {
-    assert.match(s.step, /wrangler secret put/, `${s.name} needs its wrangler command`);
+    assert.match(
+      s.step,
+      /wrangler secret put/,
+      `${s.name} needs its wrangler command`,
+    );
   }
 });
 
@@ -570,8 +662,16 @@ test("B5: the provision check still fails on an unprovisioned placeholder", () =
 
 test("EXECUTED: the shipped send path puts a real token in the request body", async () => {
   const o = await runScenario(scenarios[1]);
-  assert.equal(o.tokenSent, true, "the widget's token must reach the POST body");
-  assert.equal(o.tokenValue, "token-abc-123", "and it must be the widget's own token");
+  assert.equal(
+    o.tokenSent,
+    true,
+    "the widget's token must reach the POST body",
+  );
+  assert.equal(
+    o.tokenValue,
+    "token-abc-123",
+    "and it must be the widget's own token",
+  );
   assert.equal(o.requestsSent, 1);
 });
 
@@ -581,10 +681,18 @@ test("EXECUTED: an unconfigured deployment sends no token and still gets a reply
   // fully usable in that state. B1's fix must not have broken the default.
   const o = await runScenario(scenarios[0]);
   assert.equal(o.tokenSent, false);
-  assert.equal(o.degradedRendered, false, "a working advisor must not be labelled degraded");
+  assert.equal(
+    o.degradedRendered,
+    false,
+    "a working advisor must not be labelled degraded",
+  );
   assert.equal(o.disclaimerPresent, true);
   assert.equal(o.spinnerCleared, true, "the Thinking spinner must be removed");
-  assert.match(o.firstLine, /30 kWh\/day/, "and the reply text is actually rendered");
+  assert.match(
+    o.firstLine,
+    /30 kWh\/day/,
+    "and the reply text is actually rendered",
+  );
 });
 
 test("EXECUTED: a blocked Turnstile script degrades instead of hanging", async () => {
@@ -595,7 +703,11 @@ test("EXECUTED: a blocked Turnstile script degrades instead of hanging", async (
     1,
     "the advisor must still be reachable when the challenge cannot render",
   );
-  assert.equal(o.spinnerCleared, true, "and it must not leave the spinner up forever");
+  assert.equal(
+    o.spinnerCleared,
+    true,
+    "and it must not leave the spinner up forever",
+  );
 });
 
 test("EXECUTED: the degraded fallback renders with its visible label", async () => {
@@ -616,6 +728,105 @@ test("EXECUTED: every advisor scenario behaves as specified", async () => {
       assert.ok(ok, `${s.name}: ${why}`);
     }
   }
+});
+
+// ══ B1 under the site's real CSP ══════════════════════════════════════════
+//
+// B1 was reported fixed and was not: the widget script is loaded from
+// challenges.cloudflare.com, and `_headers` script-src did not allow that host,
+// so the browser blocked the widget. The unit tests passed because they assert
+// the client SENDS a token, never that the page can LOAD one. A test that
+// cannot see the deployment's security policy is a test with a hole in it.
+//
+// So the client half and the policy half are pinned against each other here,
+// using the same parsers the gate uses.
+
+test("CSP: the shipped policy allows exactly what the Turnstile widget needs", () => {
+  const rules = parseHeadersFile(readFileSync(join(ROOT, "_headers"), "utf8"));
+  const csp = parseCsp(
+    headersFor("/", rules).get("content-security-policy") || "",
+  );
+  const { host, directives } = turnstileClient.TURNSTILE_CSP_REQUIREMENTS;
+  for (const directive of directives) {
+    assert.ok(
+      cspAllowsHost(csp[directive] || [], host),
+      `_headers ${directive} must allow ${host} or the widget cannot load; got [${(csp[directive] || []).join(" ")}]`,
+    );
+  }
+});
+
+test("CSP: frame-src is declared, so the widget iframe is not blocked", () => {
+  // frame-src falls back to default-src 'self' when absent, which blocks EVERY
+  // cross-origin frame. That is a silent failure: the script loads, the widget
+  // renders nothing, and nothing in the console names the policy.
+  const rules = parseHeadersFile(readFileSync(join(ROOT, "_headers"), "utf8"));
+  const csp = parseCsp(
+    headersFor("/", rules).get("content-security-policy") || "",
+  );
+  assert.ok(csp["frame-src"], "frame-src must be declared explicitly");
+  assert.ok(
+    cspAllowsHost(
+      csp["frame-src"],
+      turnstileClient.TURNSTILE_CSP_REQUIREMENTS.host,
+    ),
+    "frame-src must allow the Turnstile origin",
+  );
+});
+
+test("CSP: the widget's script host is the one the client actually loads", () => {
+  // Ties the constant the loader uses to the constant the policy is checked
+  // against, so changing one without the other is a test failure rather than a
+  // blocked widget in a demo.
+  assert.match(
+    turnstileClient.TURNSTILE_SCRIPT_SRC,
+    new RegExp(
+      `^https://${turnstileClient.TURNSTILE_CSP_REQUIREMENTS.host.replace(/\./g, "\\.")}/`,
+    ),
+    "TURNSTILE_SCRIPT_SRC and TURNSTILE_CSP_REQUIREMENTS must name the same host",
+  );
+});
+
+test("CSP: the policy was not widened beyond what the widget needs", () => {
+  // The fix must be the two documented directives on one host, not a blanket
+  // relaxation. A wildcard or 'unsafe-*' added to get the widget working would
+  // be a security regression traded for a convenience.
+  const rules = parseHeadersFile(readFileSync(join(ROOT, "_headers"), "utf8"));
+  const csp = parseCsp(
+    headersFor("/", rules).get("content-security-policy") || "",
+  );
+  assert.equal(
+    csp["script-src"].includes("*"),
+    false,
+    "script-src must stay closed",
+  );
+  assert.equal(csp["script-src"].includes("'unsafe-inline'"), false);
+  assert.equal(
+    csp["frame-src"].includes("*"),
+    false,
+    "frame-src must name the origin, not the whole web",
+  );
+});
+
+test("GATE: the headers gate itself derives hosts from the shipped asset set", () => {
+  // The gate is only as good as its discovery. It used to classify a ".js" URL
+  // as "any directive will do", so a script served from a connect-src-only host
+  // passed the gate while the browser blocked it - verified before this change.
+  const src = readFileSync(join(ROOT, "scripts/check-headers.mjs"), "utf8");
+  assert.match(
+    src,
+    /EXT_DIRECTIVE/,
+    "extensions must map to their governing directive",
+  );
+  assert.match(
+    src,
+    /frame-src/,
+    "frame-src must be part of the registry's directive set",
+  );
+  assert.match(
+    src,
+    /untracked shipped asset/,
+    "an untracked new asset must be caught before it is committed",
+  );
 });
 
 // ── helpers ────────────────────────────────────────────────────────────────

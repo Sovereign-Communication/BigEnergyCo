@@ -245,7 +245,7 @@ async function runScenario({ name, expect, turnstile, respond, siteKey }) {
     scenario: name,
     requestsSent: sent.length,
     tokenSent: !!(request && request.body.turnstileToken),
-    tokenValue: request ? request.body.turnstileToken ?? null : null,
+    tokenValue: request ? (request.body.turnstileToken ?? null) : null,
     degradedRendered: rendered.some((r) => r.degraded),
     labelShown: rendered.some((r) => DEGRADED_LABEL_HINT.test(r.text)),
     firstLine: (rendered[0]?.text || "").split("\n")[0] || "",
@@ -268,12 +268,23 @@ const scenarios = [
     expect: { message: "how big a battery do I need?" },
     siteKey: null,
     turnstile: null,
-    respond: okJson({ reply: "For a 30 kWh/day household, start near 40 kWh usable." }),
+    respond: okJson({
+      reply: "For a 30 kWh/day household, start near 40 kWh usable.",
+    }),
     assertions: (o) => [
-      [o.tokenSent === false, "no token is sent when no site key is configured"],
-      [o.degradedRendered === false, "a healthy advisor wears no degraded label"],
+      [
+        o.tokenSent === false,
+        "no token is sent when no site key is configured",
+      ],
+      [
+        o.degradedRendered === false,
+        "a healthy advisor wears no degraded label",
+      ],
       [o.disclaimerPresent, "the disclaimer still travels with the answer"],
-      [o.spinnerCleared, "the Thinking spinner is removed once the reply lands"],
+      [
+        o.spinnerCleared,
+        "the Thinking spinner is removed once the reply lands",
+      ],
     ],
   },
   {
@@ -284,8 +295,14 @@ const scenarios = [
     respond: okJson({ reply: "Start near 40 kWh usable." }),
     assertions: (o) => [
       [o.tokenSent === true, "the client sends turnstileToken"],
-      [o.tokenValue === "token-abc-123", "the token is the one the widget produced"],
-      [o.degradedRendered === false, "a guarded but healthy advisor is not degraded"],
+      [
+        o.tokenValue === "token-abc-123",
+        "the token is the one the widget produced",
+      ],
+      [
+        o.degradedRendered === false,
+        "a guarded but healthy advisor is not degraded",
+      ],
     ],
   },
   {
@@ -295,8 +312,14 @@ const scenarios = [
     turnstile: { produce: () => null },
     respond: okJson({ reply: "Start near 40 kWh usable." }),
     assertions: (o) => [
-      [o.tokenSent === false, "an unavailable widget sends no token rather than hanging"],
-      [o.requestsSent === 1, "and the request still goes out — it is non-fatal"],
+      [
+        o.tokenSent === false,
+        "an unavailable widget sends no token rather than hanging",
+      ],
+      [
+        o.requestsSent === 1,
+        "and the request still goes out — it is non-fatal",
+      ],
     ],
   },
   {
@@ -305,14 +328,18 @@ const scenarios = [
     siteKey: null,
     turnstile: null,
     respond: okJson({
-      reply: "DEGRADED: I cannot answer this one right now — a service this advisor depends on did not respond.",
+      reply:
+        "DEGRADED: I cannot answer this one right now — a service this advisor depends on did not respond.",
       degraded: true,
       reason: "groq_unavailable",
       model: "deterministic-fallback",
     }),
     assertions: (o) => [
       [o.degradedRendered === true, "the fallback is rendered as degraded"],
-      [o.labelShown, "and it carries a visible label, not a silent short answer"],
+      [
+        o.labelShown,
+        "and it carries a visible label, not a silent short answer",
+      ],
       [o.disclaimerPresent, "even the fallback carries the disclaimer"],
     ],
   },
@@ -337,7 +364,9 @@ async function main() {
   if (asJson) {
     console.log(JSON.stringify({ results, failed }, null, 2));
   } else {
-    console.log("Advisor client smoke — the shipped sendChatMsg path, fake DOM, no browser\n");
+    console.log(
+      "Advisor client smoke — the shipped sendChatMsg path, fake DOM, no browser\n",
+    );
     for (const r of results) {
       console.log(`  ${r.scenario}`);
       console.log(
@@ -350,7 +379,11 @@ async function main() {
       }
       console.log("");
     }
-    console.log(failed === 0 ? "  ALL SCENARIOS BEHAVED AS SPECIFIED" : `  ${failed} CHECK(S) FAILED`);
+    console.log(
+      failed === 0
+        ? "  ALL SCENARIOS BEHAVED AS SPECIFIED"
+        : `  ${failed} CHECK(S) FAILED`,
+    );
   }
   process.exit(failed === 0 ? 0 : 1);
 }

@@ -75,23 +75,23 @@ agree on the carve-out rather than one of them being quietly wrong.
 
 ### R-CF-01 .. R-CF-10 (new requirements)
 
-| ID        | Requirement |
-| --------- | ----------- |
-| **R-CF-01** | Every Cloudflare binding is **presence-gated**. Unprovisioned returns HTTP 503 naming the exact missing step — never a bare `TypeError`, never a silent empty response. |
-| **R-CF-02** | Turnstile is provisioned **only when the client can produce a token**. Server and client are one item, never a follow-up. |
-| **R-CF-03** | The D1 ledger stores **no** IP, user agent, email, coordinates, or free-form client field. Country only, from `cf-ipcountry`. |
-| **R-CF-04** | R2 evidence uploads are kind-allowlisted, content-type allowlisted, and capped at 5 MB. |
-| **R-CF-05** | KV share payloads are re-validated on read and expire in 7 days. |
-| **R-CF-06** | The showcase surface **cannot mutate production**. Asserted by test. |
-| **R-CF-07** | No hostname carrying R-SEO-07 may serve a managed challenge or Bot Fight Mode to verified crawlers. Closes the F-44 recurrence path. |
-| **R-CF-08** | Web Analytics stays cookieless, per D-18 and R-PRIV-05. |
+| ID          | Requirement                                                                                                                                                                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **R-CF-01** | Every Cloudflare binding is **presence-gated**. Unprovisioned returns HTTP 503 naming the exact missing step — never a bare `TypeError`, never a silent empty response.                                                               |
+| **R-CF-02** | Turnstile is provisioned **only when the client can produce a token**. Server and client are one item, never a follow-up.                                                                                                             |
+| **R-CF-03** | The D1 ledger stores **no** IP, user agent, email, coordinates, or free-form client field. Country only, from `cf-ipcountry`.                                                                                                         |
+| **R-CF-04** | R2 evidence uploads are kind-allowlisted, content-type allowlisted, and capped at 5 MB.                                                                                                                                               |
+| **R-CF-05** | KV share payloads are re-validated on read and expire in 7 days.                                                                                                                                                                      |
+| **R-CF-06** | The showcase surface **cannot mutate production**. Asserted by test.                                                                                                                                                                  |
+| **R-CF-07** | No hostname carrying R-SEO-07 may serve a managed challenge or Bot Fight Mode to verified crawlers. Closes the F-44 recurrence path.                                                                                                  |
+| **R-CF-08** | Web Analytics stays cookieless, per D-18 and R-PRIV-05.                                                                                                                                                                               |
 | **R-CF-09** | **Every showcase datastore — `SHARE_KV`, `EVIDENCE_BUCKET`, `USAGE_DB` — gets a registry entry with source, grade and `review_by`, covered by `data:check`, with retention stated**, exactly like every P2 registry entry under Q-10. |
-| **R-CF-10** | The advisor degrades to a **labelled deterministic fallback** when Groq or Jev is unavailable — never a blank or broken UI. |
+| **R-CF-10** | The advisor degrades to a **labelled deterministic fallback** when Groq or Jev is unavailable — never a blank or broken UI.                                                                                                           |
 
 **R-CF-09 is the direct answer to the judge's lowest score.** Run against the
 plan before any of this was written, server-side-state reconciliation scored
-**0.88/5**, with 79 % reading *"prose only, no governance for the new
-datastores"*. Q-10's entire mechanism is "every value resolves to a registry
+**0.88/5**, with 79 % reading _"prose only, no governance for the new
+datastores"_. Q-10's entire mechanism is "every value resolves to a registry
 entry with source, grade and date", and three new datastores with no such entry
 is exactly the failure mode it exists to prevent.
 
@@ -112,7 +112,7 @@ space of things someone can express.
   the P1→P11 dependency graph is untouched). Exit: R-CF gate green, a
   `baseline` ledger row, a live showcase URL.
 - **V-12 — Turnstile cookie behaviour** (new verified-against item). Closed by a
-  gate that decides provisioning *before* the secret is set.
+  gate that decides provisioning _before_ the secret is set.
 - **V-13 — the judging criteria** (new verified-against item). **Answered** in
   §1.1 of the contest plan, which maps each of the five criteria to where it is
   addressed and cites Official Rules §6.
@@ -127,10 +127,10 @@ space of things someone can express.
 The Cold Start entry adds three server-side datastores and a bot gate to a
 project whose governing doctrine is "100 % client-side, zero runtime
 dependencies". Scored against the plan before any of it was written: 0.88/5 on
-server-side-state reconciliation (79 % *"prose only, no governance for the new
-datastores"*), 1.77/5 on cookie-bar protection (45 % *"named as a risk with no
-owner and no gate"*), 3.26/5 on plan integrity, 2.77/5 on contest completeness
-(18 % *"serious gaps"*).
+server-side-state reconciliation (79 % _"prose only, no governance for the new
+datastores"_), 1.77/5 on cookie-bar protection (45 % _"named as a risk with no
+owner and no gate"_), 3.26/5 on plan integrity, 2.77/5 on contest completeness
+(18 % _"serious gaps"_).
 
 Each addition answers one of those findings rather than restating the plan:
 

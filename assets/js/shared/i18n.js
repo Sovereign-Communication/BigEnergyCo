@@ -36,8 +36,17 @@ export function resolveLang() {
   return LOCALES[nav] ? nav : "en";
 }
 
-export function translate(key, vars = {}) {
-  const lang = resolveLang();
+/**
+ * Translate a key.
+ *
+ * `langOverride` exists so a caller (and a test) can render a specific locale
+ * without mutating localStorage or stubbing navigator. The default is the
+ * ambient resolved language, which is what every shipped call site wants — this
+ * parameter only removes the ambient dependency, it never changes the default
+ * behaviour.
+ */
+export function translate(key, vars = {}, langOverride) {
+  const lang = langOverride || resolveLang();
   const dict = LOCALES[lang] || LOCALES.en;
   return interpolate(pickString(dict, key, LOCALES.en), vars);
 }

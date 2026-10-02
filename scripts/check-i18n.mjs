@@ -169,11 +169,17 @@ function renderedKeys() {
       const p = join(dir, name);
       if (statSync(p).isDirectory()) {
         if (name !== "city-data") collect(p);
-      } else if (p.endsWith(".js")) sources.add(p);
+      } else if (p.endsWith(".js") || p.endsWith(".mjs")) sources.add(p);
     }
   };
   collect("assets/js");
-  sources.add("worker/index.js");
+  // The whole worker directory, not a hardcoded worker/index.js. The worker
+  // ships dictionary key names to the client (the degraded reply names the
+  // keys it wants rendered in the visitor's language), so a module that owns
+  // that copy IS a render site even though the markup lives in the client.
+  // Naming one file here made this rule silently blind to every module the
+  // router was split into — a false green on unrendered keys.
+  collect("worker");
   let text = "";
   for (const file of sources) {
     if (file.endsWith("locales.js") || !existsSync(file)) continue;

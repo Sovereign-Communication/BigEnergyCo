@@ -40,7 +40,9 @@
     "rollback": "node scripts/promote.mjs --to",
     "trigger:dev": "trigger dev",
     "cf:check": "node scripts/cf-provision-check.mjs",
-    "smoke:advisor": "node scripts/smoke/advisor-fallbacks.mjs"
+    "smoke:advisor": "node scripts/smoke/advisor-fallbacks.mjs",
+    "smoke:advisor-i18n": "node scripts/smoke/advisor-i18n.mjs",
+    "check-headers": "node scripts/check-headers.mjs"
   },
   "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {

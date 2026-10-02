@@ -26,12 +26,14 @@ import {
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-const jsonResponse = (body, status = 200) => async () => ({
-  ok: status >= 200 && status < 300,
-  status,
-  json: async () => body,
-  headers: new Headers(),
-});
+const jsonResponse =
+  (body, status = 200) =>
+  async () => ({
+    ok: status >= 200 && status < 300,
+    status,
+    json: async () => body,
+    headers: new Headers(),
+  });
 
 // ── advisor probe ──────────────────────────────────────────────────────────
 
@@ -66,7 +68,9 @@ test("the advisor probe reports a degraded answer as degraded, not as success", 
 });
 
 test("the advisor probe reports an unreachable advisor as a failure", async () => {
-  const r = await probeAdvisor("https://api.test", { doFetch: jsonResponse({}, 502) });
+  const r = await probeAdvisor("https://api.test", {
+    doFetch: jsonResponse({}, 502),
+  });
   assert.equal(r.ok, false);
   assert.match(r.detail, /502/);
   const thrown = await probeAdvisor("https://api.test", {
@@ -86,10 +90,15 @@ test("the Jev probe distinguishes 'unavailable by design' from 'endpoint broken'
   assert.equal(hidden.ok, true, "a 200 is a healthy endpoint");
   assert.equal(hidden.available, false, "and Jev is honestly unavailable");
   const scored = await probeJev("https://api.test", {
-    doFetch: jsonResponse({ available: true, verdict: { choice: "plausible" } }),
+    doFetch: jsonResponse({
+      available: true,
+      verdict: { choice: "plausible" },
+    }),
   });
   assert.equal(scored.available, true);
-  const broken = await probeJev("https://api.test", { doFetch: jsonResponse({}, 500) });
+  const broken = await probeJev("https://api.test", {
+    doFetch: jsonResponse({}, 500),
+  });
   assert.equal(broken.ok, false);
 });
 
@@ -144,8 +153,16 @@ test("§9 GATE: any cookie means do not provision, and names the cookies", () =>
   });
   assert.equal(d.provision, false, "Q-15 is 0 cookies; 1 is a breach");
   assert.equal(d.action, "do_not_provision");
-  assert.match(d.why, /cf_clearance/, "the evidence must be named, not summarized");
-  assert.match(d.why, /shipping rather than shipped/, "the honest fallback must be stated");
+  assert.match(
+    d.why,
+    /cf_clearance/,
+    "the evidence must be named, not summarized",
+  );
+  assert.match(
+    d.why,
+    /shipping rather than shipped/,
+    "the honest fallback must be stated",
+  );
 });
 
 test("§9 GATE: an unmeasured risk never provisions", () => {
@@ -153,7 +170,11 @@ test("§9 GATE: an unmeasured risk never provisions", () => {
   // same as not naming it, so a missing measurement must resolve to NO.
   for (const bad of [null, undefined, {}, { ok: false }, { ok: true }]) {
     const d = cookieGateDecision(bad);
-    assert.equal(d.provision, false, `unmeasured input provisioned: ${JSON.stringify(bad)}`);
+    assert.equal(
+      d.provision,
+      false,
+      `unmeasured input provisioned: ${JSON.stringify(bad)}`,
+    );
     assert.match(d.why, /NOT measured|not a passed gate/i);
   }
 });
@@ -166,13 +187,20 @@ test("§9 GATE: the decision is pure, so the doc cannot drift from the code", ()
   ];
   const once = inputs.map(cookieGateDecision);
   const twice = inputs.map(cookieGateDecision);
-  assert.deepEqual(once, twice, "the same measurement must always decide the same way");
+  assert.deepEqual(
+    once,
+    twice,
+    "the same measurement must always decide the same way",
+  );
 });
 
 // ── the script's own safety contract ───────────────────────────────────────
 
 test("the pre-flight script never provisions, deploys, or files", () => {
-  const src = readFileSync(join(ROOT, "scripts/cold-start-preflight.mjs"), "utf8");
+  const src = readFileSync(
+    join(ROOT, "scripts/cold-start-preflight.mjs"),
+    "utf8",
+  );
   // A measurement script that can change cloud state is not a measurement
   // script. These are the exact commands the contest plan forbids automating
   // away from a human anyway.
@@ -193,8 +221,15 @@ test("the pre-flight script never provisions, deploys, or files", () => {
 });
 
 test("the pre-flight refuses to report a pass when nothing was measured", () => {
-  const src = readFileSync(join(ROOT, "scripts/cold-start-preflight.mjs"), "utf8");
-  assert.match(src, /process\.exit\(2\)/, "no --chat URL must be exit 2, never 0");
+  const src = readFileSync(
+    join(ROOT, "scripts/cold-start-preflight.mjs"),
+    "utf8",
+  );
+  assert.match(
+    src,
+    /process\.exit\(2\)/,
+    "no --chat URL must be exit 2, never 0",
+  );
   assert.match(
     src,
     /nothing was measured/,
