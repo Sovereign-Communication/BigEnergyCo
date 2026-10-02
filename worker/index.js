@@ -364,8 +364,30 @@ const ALLOWED_ORIGINS = new Set([
   "http://localhost:3000",
 ]);
 
-export function getAllowedOrigin(origin) {
-  return origin && ALLOWED_ORIGINS.has(origin) ? origin : null;
+// Origins trusted IN ADDITION to the set above, supplied per deployment so a
+// showcase build can trust its own Pages host without editing this file — and,
+// more importantly, without anyone editing the production list to accommodate
+// it. This is a union, never a replacement: the set above is the floor and no
+// deployment can remove an entry from it.
+//
+// EXACT STRINGS ONLY. No wildcard, no prefix or suffix match, no case folding,
+// no trailing-slash tolerance — the same discipline the set above is held to,
+// because a pattern here would hand CORS to every origin that can be made to
+// look like ours. A deployment can therefore widen trust for its own domain and
+// for nothing else.
+function extraAllowedOrigins(env) {
+  const raw = env && env.EXTRA_ALLOWED_ORIGINS;
+  if (typeof raw !== "string" || !raw.trim()) return [];
+  return raw
+    .split(/[\s,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+export function getAllowedOrigin(origin, env) {
+  if (!origin) return null;
+  if (ALLOWED_ORIGINS.has(origin)) return origin;
+  return extraAllowedOrigins(env).includes(origin) ? origin : null;
 }
 
 export function corsHeaders(origin) {
@@ -917,7 +939,7 @@ async function handleUsageEvent(request, env, origin) {
 
 export default {
   async fetch(request, env) {
-    const origin = getAllowedOrigin(request.headers.get("Origin"));
+    const origin = getAllowedOrigin(request.headers.get("Origin"), env);
 
     if (request.method === "OPTIONS") {
       if (!origin) return new Response(null, { status: 204 }); // no CORS headers -> browser blocks

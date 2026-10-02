@@ -54,6 +54,83 @@ test("getAllowedOrigin locks to the explicit allowlist", () => {
   assert.equal(getAllowedOrigin(undefined), null);
 });
 
+test("EXTRA_ALLOWED_ORIGINS trusts only the exact origins it is given", () => {
+  // The showcase Pages host is trusted via config so the production allowlist
+  // never has to be edited to accommodate another deployment. The whole value
+  // of that arrangement is that it cannot become a pattern, so the negative
+  // cases below are the test that matters.
+  const env = {
+    EXTRA_ALLOWED_ORIGINS: "https://bigenergyco-showcase.pages.dev",
+  };
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev", env),
+    "https://bigenergyco-showcase.pages.dev",
+    "the configured origin must be trusted",
+  );
+  assert.equal(getAllowedOrigin("https://anything.pages.dev", env), null);
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev.evil.com", env),
+    null,
+    "a suffix attack must not match",
+  );
+  assert.equal(
+    getAllowedOrigin(
+      "https://evil.com/https://bigenergyco-showcase.pages.dev",
+      env,
+    ),
+    null,
+    "an embedded match must not count",
+  );
+  assert.equal(
+    getAllowedOrigin("https://BIGENERGYCO-SHOWCASE.PAGES.DEV", env),
+    null,
+    "matching stays case-sensitive, like the static list",
+  );
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev/", env),
+    null,
+    "a trailing slash is still a different origin string",
+  );
+  // A union, never a replacement: the built-in list is the floor.
+  assert.equal(
+    getAllowedOrigin(ORIGIN),
+    ORIGIN,
+    "no env keeps the static list",
+  );
+  assert.equal(
+    getAllowedOrigin(ORIGIN, env),
+    ORIGIN,
+    "env cannot revoke an entry",
+  );
+  assert.equal(
+    getAllowedOrigin("https://staging-bca832d.bigenergyco.pages.dev", env),
+    "https://staging-bca832d.bigenergyco.pages.dev",
+  );
+  // Absent, empty, or wrong-typed config grants nothing.
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev"),
+    null,
+    "the showcase origin is NOT trusted without the var",
+  );
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev", {}),
+    null,
+  );
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev", {
+      EXTRA_ALLOWED_ORIGINS: "",
+    }),
+    null,
+  );
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev", {
+      EXTRA_ALLOWED_ORIGINS: 42,
+    }),
+    null,
+    "a non-string config must not be coerced into trusting origins",
+  );
+});
+
 test("corsHeaders echoes only allowed origins and always varies", () => {
   const h = corsHeaders(ORIGIN);
   assert.equal(h["Access-Control-Allow-Origin"], ORIGIN);

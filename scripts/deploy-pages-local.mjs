@@ -25,6 +25,12 @@ import {
   writeFileSync,
 } from "node:fs";
 import { labTransform } from "./lib/lab-build.mjs";
+import {
+  API_TARGET_FILES,
+  apiTarget,
+  apiTargetTransform,
+  assertNoDefaultRemains,
+} from "./lib/api-target.mjs";
 import { withMutationLock } from "./lib/mutation-lock.mjs";
 import { execSync } from "node:child_process";
 import { dirname, join } from "node:path";
@@ -106,6 +112,41 @@ if (LIST) {
       cpSync(join(ROOT, f), dest);
     }
   }, ROOT);
+
+  // API endpoint, from ONE source of truth (scripts/lib/api-target.mjs).
+  //
+  // Unset — the default — means this loop does nothing at all, and the staged
+  // tree is byte-for-byte the build that has always shipped. Setting
+  // BEC_API_BASE retargets the client endpoint AND the CSP `connect-src` entry
+  // that permits it, together, so a showcase build can reach its own worker
+  // without anyone hand-editing this generated directory: that edit used to
+  // survive exactly one `deploy:check`, after which a second showcase deploy
+  // would have quietly retargeted the live advisor.
+  //
+  // The origin lives in configuration, never in tracked client source, so this
+  // file has no idea what a showcase is.
+  const target = apiTarget();
+  if (!target.isDefault) {
+    const rewritten = [];
+    for (const f of deployList()) {
+      const dest = join(STAGE, f);
+      const r = apiTargetTransform(f, readFileSync(dest, "utf8"), target.base);
+      if (r.changed) {
+        writeFileSync(dest, r.text);
+        rewritten.push(f);
+      }
+    }
+    // Refuse to publish a half-retargeted build: a site that looks configured
+    // while still calling production is the exact failure this prevents.
+    assertNoDefaultRemains(
+      API_TARGET_FILES.filter((f) => !rewritten.includes(f)),
+      target.base,
+    );
+    console.log(
+      `API target: staged build points at ${target.base} ` +
+        `(${rewritten.length} file(s): ${rewritten.join(", ")}).`,
+    );
+  }
 
   // Lab builds only (plan §8 P0.4): the `/next/` preview is noindex until the
   // P8 swap, and a noindexed page is excluded from SEO evaluation, so the

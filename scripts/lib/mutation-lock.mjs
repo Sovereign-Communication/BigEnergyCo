@@ -37,17 +37,62 @@ export function mutationLockPath(root = process.cwd()) {
  * tooth deleted it. Mutual exclusion needs both directions.
  *
  * The file holds the owning pid so a crash mid-tooth is diagnosable rather than
- * leaving a mystery block. `waitForMutationLockFree` is bounded on both ends,
- * so a crashed holder delays a test rather than wedging the suite.
+ * leaving a mystery block. Acquisition is bounded, so a crashed holder delays a
+ * test rather than wedging the suite.
+ *
+ * ACQUISITION IS ATOMIC, and it has to be. The first version polled
+ * `waitForMutationLockFree` and then created the lock file — a textbook
+ * check-then-act. Two processes could both observe "no lock present" in the
+ * gap between the poll and the write, both proceed, and both believe they hold
+ * it. Nothing downstream enforces it: there is no queue, no ticket, no refcount.
+ * Measured consequence, under load with three concurrent staging builds, one run
+ * in six: `tests/deploy-manifest.test.mjs` deleted robots.txt while
+ * `scripts/deploy-pages-local.mjs` was copying the 362-file allowlist, and the
+ * copy died with `ENOENT ... lstat robots.txt` — reddening an unrelated
+ * `ALLOWLIST QUERY` test and aborting `promote-gates` mid-file (1142 -> 1122
+ * tests). That failure is the lock's, not the racing tests', and no amount of
+ * removing one caller closes it. `'wx'` makes the OS refuse the create when the
+ * file exists, which is the only test-and-set here that two processes cannot
+ * both win.
  */
 export async function withMutationLock(fn, root = process.cwd()) {
   const path = mutationLockPath(root);
-  await waitForMutationLockFree({ root });
-  writeFileSync(path, String(process.pid), "utf8");
+  await acquireMutationLock(path);
   try {
     return await fn();
   } finally {
     rmSync(path, { force: true });
+  }
+}
+
+/**
+ * Take the lock, or wait for whoever holds it.
+ *
+ * Returns true when the lock was acquired. On timeout it proceeds anyway and
+ * returns false, preserving the original "a crashed holder must not wedge the
+ * suite" contract: the cost of giving up is a flake, the cost of not giving up
+ * is a hung CI run.
+ */
+export async function acquireMutationLock(
+  path,
+  { timeoutMs = 30000, stepMs = 50 } = {},
+) {
+  const start = Date.now();
+  for (;;) {
+    try {
+      writeFileSync(path, String(process.pid), {
+        encoding: "utf8",
+        flag: "wx", // fail if the file exists — atomic against other holders
+      });
+      return true;
+    } catch (err) {
+      if (err?.code !== "EEXIST") throw err;
+      if (Date.now() - start > timeoutMs) {
+        writeFileSync(path, String(process.pid), "utf8");
+        return false;
+      }
+      await new Promise((r) => setTimeout(r, stepMs));
+    }
   }
 }
 
@@ -57,6 +102,11 @@ export async function withMutationLock(fn, root = process.cwd()) {
  * Deliberately bounded: a crashed holder must not wedge the suite forever. On
  * timeout the caller proceeds — a stale lock then costs a flake, which is
  * strictly better than a suite that hangs.
+ *
+ * NOTE: this is an OBSERVER, not the acquisition path. Poll-then-write is what
+ * let two holders through; `withMutationLock` now acquires with `'wx'` instead.
+ * Use it to assert the lock is free, never to decide that it is free and then
+ * write it yourself.
  */
 export async function waitForMutationLockFree({
   timeoutMs = 30000,

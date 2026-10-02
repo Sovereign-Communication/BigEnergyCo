@@ -24,6 +24,7 @@
     "gate:complete": "node scripts/validate-jev-complete.mjs",
     "gate:jev-evidence": "node scripts/build-jev-evidence.mjs",
     "gate:byte-budgets": "node scripts/check-byte-budgets.mjs",
+    "gate:api-target": "node scripts/gate-api-target.mjs",
     "gate:a11y-matrix": "node scripts/check-a11y-matrix.mjs",
     "gate:lighthouse": "node scripts/check-lighthouse.mjs",
     "gate:cross-browser": "node scripts/check-cross-browser.mjs",

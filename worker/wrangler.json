@@ -4,33 +4,27 @@
   "d1_databases": [
     {
       "binding": "USAGE_DB",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
       "database_name": "bigenergyco-usage-showcase",
-      "preview_database_id": "REPLACE_WITH_D1_PREVIEW_DATABASE_ID"
+      "database_id": "b99aa7ea-bd4d-43ad-b312-37d0fc2608e8"
     }
   ],
   "kv_namespaces": [
     {
       "binding": "SHARE_KV",
-      "id": "REPLACE_WITH_KV_NAMESPACE_ID",
-      "preview_id": "REPLACE_WITH_KV_PREVIEW_NAMESPACE_ID"
+      "id": "352d6d3f9d634f729a31a0b2a7dc0176"
     }
   ],
   "main": "index.js",
   "name": "bigenergyco-api-showcase",
-  "r2_buckets": [
-    {
-      "binding": "EVIDENCE_BUCKET",
-      "bucket_name": "bigenergyco-evidence-showcase"
-    }
-  ],
   "ratelimits": [
     {
       "name": "RL_CHAT_PER_MIN",
-      "namespace_id": "9001",
+      "namespace_id": "19002",
       "simple": { "limit": 8, "period": 60 }
     }
   ],
-  "vars": { "TURNSTILE_SITE_KEY": "REPLACE_WITH_TURNSTILE_SITE_KEY" },
+  "vars": {
+    "EXTRA_ALLOWED_ORIGINS": "https://bigenergyco-showcase.pages.dev"
+  },
   "workers_dev": true
 }
