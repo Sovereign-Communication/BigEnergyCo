@@ -11,6 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LOCALES } from "../assets/js/shared/locales.js";
 import { pickString } from "../assets/js/shared/interpolate.js";
+import { deployList } from "../scripts/lib/deploy-manifest.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
@@ -259,4 +260,56 @@ test("locale parity: every English key exists in each translated locale", () => 
       `${code} missing English keys: ${missing.join(", ")}`,
     );
   }
+});
+
+test("no locale carries a key that no shipped code renders", () => {
+  // Parity in BOTH directions. The rule above proves English has no dangling
+  // key; this proves the reverse — that a dead string cannot survive by living
+  // in a non-English dictionary, which is where four of them (offlineCity,
+  // tariffSpend, noTariff, fxNote) were hiding until this branch removed them.
+  // It matters because translate() falls back through English: a key only `de`
+  // answers is dead for an English visitor AND unrenderable everywhere else.
+  //
+  // The source set is the deploy allowlist plus every JS module under
+  // assets/js and worker — the same net the gate uses, so this test cannot
+  // pass where scripts/check-i18n.mjs rule 7 would fail.
+  const sources = new Set([...deployList()]);
+  const walk = (dir) => {
+    for (const name of fs.readdirSync(path.join(ROOT, dir))) {
+      const rel = path.join(dir, name);
+      if (fs.statSync(path.join(ROOT, rel)).isDirectory()) {
+        if (name !== "city-data") walk(rel);
+      } else if (name.endsWith(".js") || name.endsWith(".mjs"))
+        sources.add(rel);
+    }
+  };
+  walk("assets/js");
+  walk("worker");
+
+  let text = "";
+  for (const rel of sources) {
+    if (rel.endsWith("locales.js")) continue;
+    const full = path.join(ROOT, rel);
+    if (!fs.existsSync(full)) continue;
+    text += fs.readFileSync(full, "utf8");
+  }
+  const rendered = new Set();
+  for (const m of text.matchAll(/["'`]([A-Za-z][A-Za-z0-9_]*)["'`]/g))
+    rendered.add(m[1]);
+
+  // frontierVerdict() composes base + a suffix at runtime, so those member
+  // names never appear literally; rule 6 proves each family is complete.
+  const composed = ["Grid", "Offgrid", "Battery"];
+  const everyKey = new Set();
+  for (const dict of Object.values(LOCALES))
+    for (const key of Object.keys(dict)) everyKey.add(key);
+
+  const dead = [...everyKey].filter(
+    (k) => !rendered.has(k) && !composed.some((s) => k.endsWith(s)),
+  );
+  assert.deepEqual(
+    dead,
+    [],
+    `keys no shipped code renders, in ANY locale: ${dead.join(", ")}`,
+  );
 });

@@ -356,9 +356,6 @@ export const LOCALES = {
     statusSuccess:
       "✅ {years} años de datos horarios ({dataYears}) · {yield} kWh/año por kW de panel.{offline}",
     offlineNote: " · 🌐 modo offline típico",
-    offlineCity: "usando perfil típico de {city}",
-    tariffSpend: "El gasto en red asume ${tariff}/kWh a {dailyKwh} kWh/día.",
-    noTariff: "Sin tarifa introducida, no se muestra amortización.",
     tariffSpendLine:
       "A {tariff}/kWh, tu electricidad te cuesta unos {annual} al año hoy. Cada opción de abajo muestra la factura tras la solar y cuánto tarda en pagarse con los ahorros.",
     tariffSpendBattery:
@@ -385,8 +382,6 @@ export const LOCALES = {
     chemLabel: "Química de la batería:",
     tariffNote:
       "Precio estimado para {label} — cámbialo arriba si conoces tu tarifa.",
-    fxNote:
-      "Cantidades mostradas en {code} a {rate} por 1 US$; las tarifas unitarias de batería siguen en $/kWh porque los precios base son en USD.",
     lvlBest: "Mejor opción",
     lvlCompare: "Comparar baterías",
     lvlMatrix: "Todas las opciones",
@@ -678,8 +673,6 @@ export const LOCALES = {
     chemLabel: "Química da bateria:",
     tariffNote:
       "Preço estimado para {label} — mude acima se souber sua tarifa.",
-    fxNote:
-      "Valores mostrados em {code} a {rate} por 1 US$; taxas unitárias de bateria permanecem em $/kWh porque os preços base são em USD.",
     pickCity:
       "Escolha uma cidade (ou use 📍 Minha localização) para sabermos sua insolação.",
     shareLoaded:
@@ -710,9 +703,6 @@ export const LOCALES = {
     statusSuccess:
       "✅ {years} anos de dados horários ({dataYears}) · {yield} kWh/ano por kW de painel.{offline}",
     offlineNote: " · 🌐 modo offline típico",
-    offlineCity: "usando perfil típico de {city}",
-    tariffSpend: "O gasto na rede assume ${tariff}/kWh a {dailyKwh} kWh/dia.",
-    noTariff: "Sem tarifa informada, não há amortização mostrada.",
     tariffSpendLine:
       "A {tariff}/kWh, a sua eletricidade custa cerca de {annual} por ano hoje. Cada opção abaixo mostra a conta após a solar e em quanto tempo ela se paga com as economias.",
     tariffSpendBattery:
@@ -1003,8 +993,6 @@ export const LOCALES = {
     chemLabel: "Chimie de la batterie :",
     tariffNote:
       "Prix estimé pour {label} — changez-le ci-dessus si vous connaissez votre tarif.",
-    fxNote:
-      "Montants affichés en {code} à {rate} pour 1 US$ ; les taux unitaires de batterie restent en $/kWh car les prix de base sont en USD.",
     pickCity:
       "Choisissez une ville (ou utilisez 📍 Ma position) pour connaître votre ensoleillement.",
     shareLoaded:
@@ -1038,10 +1026,6 @@ export const LOCALES = {
     statusSuccess:
       "✅ {years} ans de données horaires ({dataYears}) · {yield} kWh/an par kW de panneau.{offline}",
     offlineNote: " · 🌐 mode hors ligne typique",
-    offlineCity: "utilisation du profil typique de {city}",
-    tariffSpend:
-      "La dépense réseau suppose ${tariff}/kWh à {dailyKwh} kWh/jour.",
-    noTariff: "Aucun tarif saisi, pas d'amortissement affiché.",
     tariffSpendLine:
       "À {tariff}/kWh, votre électricité coûte environ {annual} par an aujourd'hui. Chaque option ci-dessous montre la facture après le solaire et combien de temps elle se rembourse grâce aux économies.",
     tariffSpendBattery:
@@ -1655,8 +1639,6 @@ export const LOCALES = {
     locBtn: "استخدم موقعي الحالي",
     chemLabel: "نوع البطارية:",
     tariffNote: "سعر تقديري لـ {label} — غيّره أعلاه إذا كنت تعرف تعريفتك.",
-    fxNote:
-      "المبالغ معروضة بـ {code} بسعر {rate} مقابل 1 دولار أمريكي؛ أسعار وحدات البطارية تبقى بالدولار للكيلوواط ساعة لأن الأسعار الأساسية بالدولار.",
     pickCity: "اختر مدينة (أو استخدم 📍 موقعي) لمعرفة إشعاعك الشمسي.",
     shareLoaded:
       "تم تحميل الإعدادات المشتركة. راجع المدخلات ثم اضغط احسب نظامي لبدء الحساب.",
@@ -1685,10 +1667,6 @@ export const LOCALES = {
     statusSuccess:
       "✅ {years} سنوات من البيانات الساعة ({dataYears}) · {yield} كيلوواط ساعة/سنة لكل كيلوواط من اللوحة.{offline}",
     offlineNote: " · 🌐 وضع السنة النموذجية دون اتصال",
-    offlineCity: "باستخدام الملف النموذجي لـ {city}",
-    tariffSpend:
-      "الإنفاق على الشبكة يفترض ${tariff}/كيلوواط ساعة عند {dailyKwh} كيلوواط ساعة/يوم.",
-    noTariff: "لم يتم إدخال تعريفة، لا يتم عرض فترة الاسترداد.",
     tariffSpendLine:
       "بسعر {tariff}/كيلوواط/ساعة، تكلفك كهرباؤك حوالي {annual} سنويًا اليوم. كل خيار أدناه يوضح الفاتورة بعد الشمسي ومدى سرعة استرداد التكلفة من الادخار.",
     tariffSpendBattery:

@@ -206,20 +206,38 @@ function renderedKeys() {
 }
 
 const rendered = renderedKeys();
+// PARITY IN BOTH DIRECTIONS, and this used to be one-way. Keying the check off
+// `Object.keys(en)` meant a key that survived ONLY in a non-English dictionary
+// was invisible here — and that is the same dead string this rule exists to
+// catch, just filed in a locale nobody audits. Measured: four keys
+// (offlineCity, tariffSpend, noTariff, fxNote) sat in four locales each and
+// were asked for by no shipped code at all. The near-misses are the reason
+// they survived: `offlineCity` is a property on `meta`, `tariffSpend` is the
+// prefix of a real key family (tariffSpendLine/Battery/Fixed/Offgrid),
+// `noTariff` is a local variable, and `fxNote` is a local function — each name
+// appears in code, just never as a lookup.
+//
+// The union is the honest set: a key nobody renders is dead wherever it lives,
+// and the case that matters most is the one English cannot see, because
+// `translate()` falls back through English and would hand a visitor the raw key
+// name.
+const everyLocaleKey = [
+  ...new Set(langs.flatMap((l) => Object.keys(LOCALES[l]))),
+];
 // `frontierVerdict()` composes base + a suffix at runtime, so those member names
 // never appear literally — rule 6 already proves each family is complete in
 // every locale. The list is shared with rule 6 so the two can never disagree
 // about which suffixes exist.
-const unrendered = Object.keys(en).filter(
+const unrendered = everyLocaleKey.filter(
   (k) => !rendered.has(k) && !composedSuffixes.some((s) => k.endsWith(s)),
 );
 if (unrendered.length)
   fail(
-    `${unrendered.length} key(s) no shipped code or markup renders: ${unrendered.slice(0, 8).join(", ")}`,
+    `${unrendered.length} key(s) no shipped code or markup renders, in any locale: ${unrendered.slice(0, 8).join(", ")}`,
   );
 else
   ok(
-    `all ${Object.keys(en).length} en keys are rendered by shipped code or markup`,
+    `all ${everyLocaleKey.length} keys across ${langs.length} locales are rendered by shipped code or markup`,
   );
 
 // ── 8. banned values ────────────────────────────────────────────────────────
