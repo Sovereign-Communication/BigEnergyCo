@@ -740,7 +740,31 @@ async function handleChat(request, env, origin) {
       }
       retriedUpstreamBusy = true;
       await sleep(Math.min(retryAfter * 1000, GROQ_BUSY_BACKOFF_MS));
-      groqRes = await callGroq(apiKey, usedModel, currentMessages, doFetch);
+      // Same treatment as the first call, and for the same reason: a THROW
+      // here is not an upstream status, it is a transport failure, and it would
+      // escape this handler as a Worker exception — a 500 with no CORS headers,
+      // which the browser reports as an opaque network failure with the chat box
+      // stuck on "Thinking…". This is the retry that runs when Groq is already
+      // in trouble, so it is the single most likely place for the network to be
+      // the thing that is broken.
+      groqRes = await callGroq(
+        apiKey,
+        usedModel,
+        currentMessages,
+        doFetch,
+      ).catch(() => null);
+      if (!groqRes) {
+        console.warn("chat: groq retry threw; serving the degraded reply");
+        return jsonResponse(
+          buildDegradedReply(
+            "groq_unavailable",
+            degradedOpts,
+            ensureDisclaimer,
+          ),
+          200,
+          origin,
+        );
+      }
 
       if (groqRes.status === 429) {
         return jsonResponse(
@@ -771,7 +795,27 @@ async function handleChat(request, env, origin) {
         `Primary model ${GROQ_PRIMARY_MODEL} failed (${groqRes.status}). Trying fallback ${GROQ_FALLBACK_MODEL}...`,
       );
       usedModel = GROQ_FALLBACK_MODEL;
-      groqRes = await callGroq(apiKey, usedModel, currentMessages, doFetch);
+      // Also guarded: this path runs precisely when the primary model is
+      // failing, which is the moment the network is least likely to be the
+      // healthiest thing in the request.
+      groqRes = await callGroq(
+        apiKey,
+        usedModel,
+        currentMessages,
+        doFetch,
+      ).catch(() => null);
+      if (!groqRes) {
+        console.warn("chat: groq fallback threw; serving the degraded reply");
+        return jsonResponse(
+          buildDegradedReply(
+            "groq_unavailable",
+            degradedOpts,
+            ensureDisclaimer,
+          ),
+          200,
+          origin,
+        );
+      }
     }
 
     if (!groqRes.ok) {
@@ -880,6 +924,26 @@ async function handleShareGet(request, env, origin) {
 async function handleEvidencePut(request, env, origin) {
   if (!env || !env.EVIDENCE_BUCKET)
     return unprovisioned("R2 bucket EVIDENCE_BUCKET", origin);
+  // A bearer secret, not CORS and not the in-isolate rate limiter. CORS is
+  // irrelevant to curl; the limiter does not survive isolate eviction; and the
+  // keys are DETERMINISTIC (`evidence/<kind>/<name>.json`) with no existence
+  // check, so an unauthenticated writer could both fill the bucket and OVERWRITE
+  // the Lighthouse, axe and Jev records this endpoint exists to make durable --
+  // forging the evidence a judge reads.
+  //
+  // Unset secret => the endpoint stays closed and says so by name, which is the
+  // same rule every other binding follows: nothing is open because nobody
+  // finished provisioning it.
+  if (!env.EVIDENCE_UPLOAD_TOKEN)
+    return unprovisioned("secret EVIDENCE_UPLOAD_TOKEN", origin);
+  const presented = request.headers.get("authorization") || "";
+  // The scheme is REQUIRED, not stripped-if-present. A bare token with no
+  // `Bearer ` prefix is a client sending the secret in a shape we did not ask
+  // for, and accepting it means the check tolerates exactly the kind of
+  // improvisation that produces a credential leak in a log.
+  const scheme = /^Bearer\s+(.+)$/i.exec(presented);
+  if (!scheme || !timingSafeEqual(scheme[1], String(env.EVIDENCE_UPLOAD_TOKEN)))
+    return jsonResponse({ error: "forbidden" }, 403, origin);
   const { allowed, retryAfter } = checkRateLimit(getClientIp(request));
   if (!allowed) {
     return jsonResponse({ error: "Rate limit exceeded" }, 429, origin, {
@@ -904,6 +968,21 @@ async function handleEvidencePut(request, env, origin) {
     return jsonResponse({ error: saved.reason }, status, origin);
   }
   return jsonResponse({ key: saved.key }, 200, origin);
+}
+
+/**
+ * Constant-time string comparison.
+ *
+ * A length-independent early return is exactly the oracle a timing attack
+ * reads, and this compares a caller-supplied secret against a configured one.
+ * Length is compared first because it is not secret.
+ */
+function timingSafeEqual(a, b) {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
 }
 
 async function handleUsageEvent(request, env, origin) {
