@@ -60,7 +60,16 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           if [ "$EVENT_NAME" = "pull_request" ]; then
-            git fetch --no-tags --depth=1 origin "$BASE_REF"
+            # NO --depth here, ever. `git fetch --depth=N` does not fetch "this
+            # ref shallowly", it converts the WHOLE repository to shallow and
+            # writes .git/shallow. The checkout above is full precisely so the
+            # asset-stamp staleness gate can reach the commit that minted the
+            # current ?v= token; this step used to undo that one line before
+            # `npm run seo` ran, and the gate correctly refused to report green
+            # on a history it could not walk. Caught by the e2e gate tests in
+            # tests/asset-token-gate-e2e.test.mjs, which prove the refusal.
+            # The repo is already complete, so this fetch downloads nothing.
+            git fetch --no-tags origin "$BASE_REF"
             node scripts/check-plan-pin.mjs --base FETCH_HEAD
           else
             node scripts/check-plan-pin.mjs
