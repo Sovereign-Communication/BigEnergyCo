@@ -119,6 +119,16 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // visitor read the failure in the wrong language. Ten keys x six locales,
   // +123 lines in locales.js and -0: the same trade as every raise above, for
   // the same reason — a string a user can read, no new code path.
+  // 815,000 (+12 KB measured 804,402): every country gets its own currency.
+  // assets/js/sizing/country-currency.js is 11.5 KB of ISO 3166-1 -> ISO 4217
+  // data, plus 127 currency rows the table made reachable in pricing.js. It is
+  // consulted on the exact path that already had the wrong answer: a location
+  // in one of sixteen countries was being shown a currency that country does
+  // not use, silently, because its bounding box was shared with a neighbour.
+  // That is not a string a reviewer can accept being wrong; it is the whole
+  // point of the feature. Trade approved by the operator against a submission
+  // deadline. If the budget ever needs to come back down, this table is the
+  // thing to move behind a click, not the country mapping to be deleted.
   assert.ok(
     htmlBytes <= 125_000,
     `index.html ${htmlBytes} bytes exceeds 125,000 budget`,
@@ -128,8 +138,8 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     `site.css ${cssBytes} bytes exceeds 40,000 budget`,
   );
   assert.ok(
-    jsBytes <= 803_000,
-    `eager JS ${jsBytes} bytes exceeds 790,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
+    jsBytes <= 815_000,
+    `eager JS ${jsBytes} bytes exceeds 815,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
   );
 });
 

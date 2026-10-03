@@ -43,6 +43,10 @@ import {
   DAYS_PER_MONTH,
   battOnlyCost,
 } from "./pricing.js?v=20261003c";
+// The country -> currency table. Static, not lazy: it is consulted the moment
+// a location resolves, so a dynamic import would only add a round trip to the
+// one path that must not wait. Its 11.5 KB is data, and the first-load budget
+// below records the deliberate trade.
 import { currencyForCountry } from "./country-currency.js?v=20261003c";
 
 import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261003c";
