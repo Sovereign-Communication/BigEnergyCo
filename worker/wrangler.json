@@ -26,11 +26,15 @@
     {
       "name": "RL_CHAT_PER_MIN",
       "namespace_id": "19002",
-      "simple": { "limit": 8, "period": 60 }
+      "simple": {
+        "limit": 8,
+        "period": 60
+      }
     }
   ],
   "vars": {
-    "EXTRA_ALLOWED_ORIGINS": "https://bigenergyco-showcase.pages.dev"
+    "EXTRA_ALLOWED_ORIGINS": "https://bigenergyco-showcase.pages.dev",
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAFMjOWTWDS2Yid61"
   },
   "workers_dev": true
 }
