@@ -486,6 +486,15 @@ test("SCOPE: the job judges the plan item the PR names, and fails when it cannot
   // A sub-letter is not a scope id: the plan lists P0.3 as one item, so the
   // honest scope is the item, and the letter is dropped rather than invented.
   assert.equal(resolveCiScope("feat: five pack facets (P0.3d)").scope, "P0.3");
+  assert.equal(
+    resolveCiScope("fix(contest): green the CF-SHOWCASE scope selector").scope,
+    "CF-SHOWCASE",
+  );
+  assert.equal(
+    resolveCiScope("fix(contest): CF-SHOWCASE (P0.3)").scope,
+    null,
+    "mixing a named contest scope and a phase item must remain ambiguous",
+  );
 
   for (const title of [
     "chore: tidy up",

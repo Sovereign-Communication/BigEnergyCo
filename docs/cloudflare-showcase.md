@@ -1,11 +1,23 @@
 # Cloudflare Showcase — provisioning & configuration guide
 
 Repository: `Sovereign-Communication/BigEnergyCo`. Current submission lane:
-PR #182; see `docs/contest/DEPLOY-AND-FILE.md` for current filing status.
-Purpose: make the Cloudflare developer platform a first-class, demonstrable
-part of the stack for the Cold Start pitch competition. Every integration
-below is genuine: the worker code is written, tested, and fails loudly when
-its Cloudflare-side counterpart is not provisioned yet.
+PR #182; see `docs/contest/DEPLOY-AND-FILE.md` for the evidence record. The
+verified showcase deployment is source commit `19d5c378a1883901c5754df4566ad2bbbad2bd89`,
+Pages deployment `70d5c3f9.bigenergyco-showcase.pages.dev` (stamp `20261003e`),
+and Worker version `8b371a06-1f75-470c-8fe9-36de3927f7ca`. This documentation
+revision records that deployed source and is being prepared for commit; it does
+not change the deployed artifact. All four health flags were true, and KV, D1,
+R2, and the browser flow were independently exercised. The corrected
+owner-approved security gate is Turnstile plus the Worker 8/minute rate limit,
+with no site-wide challenge and Bot Fight Mode off where applicable. The Jev
+advisory CI step was red because its title lacked the plan item ID, scope
+selection failed, and the live call was skipped. The Worker Jev sanity flag was
+false; these are distinct findings, and neither establishes an independent Jev
+result.
+Purpose: document the Cloudflare showcase integrations and related setup
+guidance for the Cold Start pitch competition. The current deployment evidence
+is summarized above; remaining dashboard recipes below are proposals, not
+claims that those optional Cloudflare products are configured.
 
 **Nothing here touches production.** The showcase worker is named
 `bigenergyco-api-showcase` (wrangler.json), so deploying it can never
@@ -14,9 +26,10 @@ clobber the production `bigenergyco-api` worker. The showcase Pages project
 
 ## 1. Provisioning checklist
 
-Do these once, in order. The worker returns a 503 naming the missing piece
-(plus this document) until each is done; `npm run cf:check` (see §8) fails
-locally on any remaining `REPLACE_WITH_*` placeholder.
+These steps document how to provision a fresh showcase environment. The
+recorded deployment is already provisioned and verified as summarized above;
+do not repeat creation steps against it. The worker returns a 503 naming a
+missing piece; `npm run cf:check` (see §8) checks local placeholders.
 
 ### 1a. Separate Pages project for the org repository
 
@@ -46,9 +59,9 @@ Paste both ids into `worker/wrangler.json` (`kv_namespaces`).
 ### 1c. R2 bucket (quality-evidence artifacts)
 
 The Cloudflare account is activated and bucket
-**`bigenergyco-evidence-showcase`** has been created. Its binding is still
-being added; verify the `EVIDENCE_BUCKET` binding and a successful upload plus
-readback before calling R2 operational. R2 binds by name, with no id to paste.
+**`bigenergyco-evidence-showcase`** is bound as `EVIDENCE_BUCKET`. The deployed
+showcase accepted an evidence upload and returned the stored object on
+readback. R2 binds by name, with no id to paste.
 
 Upload path: `POST /api/evidence` with JSON
 `{kind, name, contentType, data}`. `kind` ∈ `lighthouse|axe|jev|smoke`,
@@ -90,9 +103,15 @@ requires a valid `turnstileToken` in the body and rejects without one
 (HTTP 403, fail-closed). Unprovisioned, the endpoint keeps its current
 behavior and `/api/health` reports `"turnstile": false`.
 
-Cookie bar: Q-15 requires 0 cookies, and Turnstile's managed-mode cookie
-behavior is unverified. Run the §9 gate BEFORE setting the secret, and let the
-measurement decide. Do not set it on the assumption.
+The deployed client and Worker have been exercised together: the browser
+obtained a Turnstile token, and the advisor returned a real online response.
+The owner-approved security gate is Turnstile plus the Worker 8-requests-per-
+minute limit. No site-wide challenge is enabled; Bot Fight Mode is off where
+applicable. Q-15 remains a separate zero-cookie gate: the pre-provisioning
+HTTP probe observed zero `Set-Cookie` headers, so the secret was provisioned.
+This does not verify browser third-party cookie behavior; no `cf_clearance`
+cookie was observed in the widget flow. Do not claim WAF configuration from
+this evidence.
 
 Client integration: **in this branch** — `assets/js/chat.js` renders the
 widget explicitly and sends the token as `turnstileToken` in the `/api/chat`
@@ -103,17 +122,21 @@ project (or `window.BEC_TURNSTILE_SITE_KEY`); the secret never does.
 **Server and client ship as one item (R-CF-02).** Do not run
 `wrangler secret put TURNSTILE_SECRET_KEY` until the site key meta is live
 on the showcase host, or every advisor call 403s with no client recovery — the
-exact defect B1 records. The cookie gate in §9 runs first for a separate
-reason.
+exact defect B1 records. The deployed client and Worker have since passed a
+real browser challenge-and-response flow.
 
 ### 1f. Secrets on the showcase worker
 
 ```bash
-npx wrangler secret put GROQ_API_KEY          # same value as production
-npx wrangler secret put TYPESAFE_API_KEY      # same value as production
+npx wrangler secret put GROQ_API_KEY          # advisor provider credential
 npx wrangler secret put TURNSTILE_SECRET_KEY  # §1e
 npx wrangler secret put EVIDENCE_UPLOAD_TOKEN # authorizes POST /api/evidence uploads
 ```
+
+`TYPESAFE_API_KEY` supports the independent Jev advisory check. The recorded
+CI job did not call it: the title lacked the plan item ID and scope selection
+failed. Separately, the deployed Worker Jev sanity flag was false. No
+independent Jev result is established by these facts.
 
 ### 1g. Web Analytics token
 
@@ -130,10 +153,12 @@ Copy the 32-char hex token and expose it to the site as ONE of:
 real 32-char hex value; the placeholder is never sent to the network.
 CSP already allows `https://static.cloudflareinsights.com` (see `_headers`).
 
-## 2. WAF configuration (dashboard steps with exact rules)
+## 2. Rate limiting and site-wide challenge posture
 
-These pair with the worker's in-isolate limiter. The worker comment has
-asked for the WAF rate-limiting rule since the beginning; this is that rule.
+The deployed Worker has an 8-requests-per-minute advisor limit. This is the
+verified rate limit for the showcase. No WAF rate-limiting rules have been
+verified or are claimed. The dashboard instructions below are optional
+proposals only and must not be described as deployed configuration.
 
 ### Rule 1 — hard rate limit on the AI advisor (scope must be verified)
 
@@ -152,9 +177,10 @@ Security → WAF → Rate limiting rules → Create rule:
   ```
 - With the following traffic: IP (characteristics) — note: prefer
   `CF-Connecting-IP`-derived IP; the dashboard default is correct.
-- Rate: **8 requests per 1 minute** (mirrors the worker's
-  `RATE_PER_IP_PER_MIN`; the WAF is the hard enforcement that survives
-  isolate eviction, the worker limiter is the burst brake).
+- Proposed rate: **8 requests per 1 minute** (mirrors the worker's
+  `RATE_PER_IP_PER_MIN`; if configured in an eligible zone, a WAF rule could
+  enforce this at the edge while the Worker limiter remains the verified
+  showcase control).
 - When rate exceeds: Block, for 60 seconds.
 
 ### Rule 2 — evidence and event endpoints
@@ -165,8 +191,8 @@ Security → WAF → Rate limiting rules → Create rule:
   (http.request.uri.path in {"/api/share" "/api/evidence" "/api/events"} and http.request.method eq "POST")
   ```
 - Rate: **20 requests per 1 minute** per IP. Action: Block 60 s.
-- Rationale: these write to KV/R2/D1; the worker also rate-limits them,
-  but the WAF keeps junk from ever reaching the isolate.
+- Proposed rationale: these write to KV/R2/D1; an eligible-zone WAF rule could
+  filter requests before they reach the Worker.
 
 ### Rule 3 — verified-bot allowance, NOT Bot Fight Mode
 
@@ -185,29 +211,25 @@ R-SEO-07 may serve a managed challenge or Bot Fight Mode to verified crawlers.
 What to configure instead:
 
 - Security → Bots → **Bot Fight Mode: Off** for the showcase hostname.
-- Security → Bots → **Verified Bots: Allow.** Cloudflare's verified-bot
-  allowance is the narrow, correct control here: it stops the impersonation
-  traffic without serving a challenge to a search engine that has verified
-  itself.
-- PR #182 currently has a checkbox that says Bot Fight Mode ON. That conflicts
-  with this documented regression requirement; the conflict remains unresolved
-  until the gated review explicitly resolves it.
-- Bot score / machine-learning learning: leave the documented default. We want
-  the advisor's paid upstream protected (Rule 1 and Rule 2 do that
-  enforcement), not the crawl path blinded.
+- Security → Bots → **Verified Bots: Allow**, where an applicable customer
+  zone exposes this setting. This is the required posture for those zones; no
+  such zone setting is claimed for the Cloudflare-owned `pages.dev` hostname.
+- Any older PR checkbox or guidance that proposed Bot Fight Mode ON is
+  superseded by the owner-approved posture above. Current PR state was not
+  checked as part of this evidence update.
+- The Worker limiter is the verified advisor protection. The WAF rules below
+  remain unconfigured proposals.
 
-The genuine business reason, without the framing that does not exist: bot
-traffic burns paid Groq tokens and occupies the advisor chat box a real visitor
-is trying to use. That is an uptime-and-cost argument, and it is the whole
-argument. There is no lead capture here and the project forbids any — D-18
-and the master plan's §14 non-goals both rule out accounts, lead forms and
-sales.
+The advisor protection addresses abuse of a paid upstream while preserving
+access to the calculator. There is no lead capture here; D-18 and the master
+plan's §14 non-goals rule out accounts, lead forms and sales.
 
 ### Managed ruleset
 
-Security → WAF → Managed rulesets → Cloudflare Managed Ruleset: **On**,
-sensitivity Medium. The API surface is JSON-only; OWASP paranoia above
-Medium risks false positives on calculator payloads.
+Optional, unverified proposal: Security → WAF → Managed rulesets → Cloudflare
+Managed Ruleset: On, sensitivity Medium. The API surface is JSON-only; OWASP
+paranoia above Medium risks false positives on calculator payloads. This is
+not part of the verified deployed configuration.
 
 ## 3. Cache Rules (tie-in to the byte-budget performance story)
 
@@ -345,6 +367,12 @@ action with a name attached, recorded in `docs/plan/LEDGER.jsonl`.
 Whichever way it goes, record the outcome in the ledger — the cookies measured
 and the decision they forced. A gate nobody records is indistinguishable from a
 gate that was never run.
+
+**Recorded result:** the pre-provisioning HTTP response probe observed zero
+`Set-Cookie` headers, so the secret was provisioned. This measures response
+headers from that HTTP probe only; it does not establish browser third-party
+cookie behavior. In the observed widget flow, no `cf_clearance` cookie was set.
+Third-party cookie behavior in the browser remains unverified.
 
 ## 7. Promoting to production (later, explicitly)
 

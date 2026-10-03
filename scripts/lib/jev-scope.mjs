@@ -4,7 +4,11 @@
 // the evidence rules because it has nothing to do with them — the jev-complete
 // CI job reads this module directly to decide which facets to judge, and the
 // evidence builder never touches it.
-import { SCOPE_FACETS } from "./jev-complete.mjs";
+import { NAMED_SCOPE_FACETS, SCOPE_FACETS } from "./jev-complete.mjs";
+
+// This exact standalone label evaluates only the public Cloudflare contest
+// surface. It is not a master-plan item and has a separate facet registry.
+const NAMED_SCOPE = /(?<![A-Z0-9])CF-SHOWCASE(?![A-Z0-9])/gi;
 
 // Plan item ids, with an optional sub-letter the plan does not actually use:
 // P0.3d normalises to P0.3 rather than inventing an id the plan never lists.
@@ -32,13 +36,22 @@ export function resolveCiScope(title) {
       resolved.set(id, match[0]);
     }
   }
+  for (const match of text.matchAll(NAMED_SCOPE)) {
+    const id = match[0].toUpperCase();
+    if (considered.includes(id)) continue;
+    considered.push(id);
+    if (Object.prototype.hasOwnProperty.call(NAMED_SCOPE_FACETS, id)) {
+      resolved.set(id, match[0]);
+    }
+  }
   if (resolved.size === 0) {
     return {
       scope: null,
       considered,
       error:
-        `no plan item id in the title (looked for ${considered.join(", ") || "none"}). ` +
-        'Name the item this PR delivers, e.g. "(P1.3)" — §9 rule 1, and the ' +
+        `no recognized scope id in the title (looked for ${considered.join(", ") || "none"}). ` +
+        'Name the item this PR delivers, e.g. "(P1.3)", or the named ' +
+        'contest scope "CF-SHOWCASE" — §9 rule 1, and the ' +
         "gate cannot choose which facets to judge without it.",
     };
   }
