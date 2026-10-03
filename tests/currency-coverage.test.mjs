@@ -41,6 +41,14 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 // own country actually uses. The old value is what the box produced.
 
 const WAS_WRONG = [
+  ["AG", "XCD", "USD", "Antigua and Barbuda uses the East Caribbean dollar"],
+  ["CW", "XCG", "ANG", "Curaçao adopted the Caribbean guilder in 2025"],
+  [
+    "ZW",
+    "ZWG",
+    "ZWL",
+    "Zimbabwe replaced the Zimbabwe dollar with ZiG in 2024",
+  ],
   ["IE", "EUR", "GBP", "Ireland is in the eurozone, not the UK box"],
   ["IE", "EUR", "GBP", "Ireland by name, not by ISO code"],
   ["NZ", "NZD", "AUD", "New Zealand has its own dollar"],
@@ -99,6 +107,12 @@ for (const [country, expected, wasWrong, why] of WAS_WRONG) {
     assert.notEqual(currencyForCountry(country), wasWrong);
   });
 }
+
+test("replacement currencies have usable offline fallback rows", () => {
+  assert.equal(CURRENCIES.XCD.perUSD, 2.7);
+  assert.equal(CURRENCIES.XCG.perUSD, 1.79);
+  assert.equal(CURRENCIES.ZWG.perUSD, 26.7813);
+});
 
 // ── coverage: the table must be able to answer for the data we ship ───────
 
