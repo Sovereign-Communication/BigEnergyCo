@@ -70,7 +70,13 @@ export function apiTarget(env = process.env) {
         "written into the shipped CSP connect-src and would trust every " +
         "origin matching it",
     );
-  return { base: u.origin, isDefault: false };
+  // An operator who explicitly pins BEC_API_BASE at the production origin has
+  // asked for the default, and gets exactly that. Reporting isDefault: false
+  // here made the build retarget nothing, then trip assertNoDefaultRemains and
+  // abort with a "partial retarget" message describing a retarget that never
+  // happened. isDefault is a question about the VALUE, not about whether a
+  // variable was set.
+  return { base: u.origin, isDefault: u.origin === DEFAULT_API_BASE };
 }
 
 // Every shipped file that must agree about the endpoint. Missing one is the
@@ -146,6 +152,55 @@ export function productionBuildEnv(env = process.env) {
 }
 
 /**
+ * Does this file name the production origin EXACTLY?
+//
+// A bare `.includes(DEFAULT_API_BASE)` also accepts any origin that merely
+// CONTAINS it — `…workers.dev:8443`, `…workers.dev.example.com`, or a path
+// suffix — so a retargeted build could pass the last check before deploy. That
+// is the same `js/incomplete-url-substring-sanitization` shape this repo
+// suppresses in its own build tooling, so the guard that is supposed to catch
+// a bad retarget must not commit it here.
+//
+// Three conditions, all required:
+//   1. the production origin is preceded by a real boundary — start of string,
+//      quote, backtick, whitespace, `=`, `,` or `(` — so it STARTS a URL rather
+//      than sitting inside a longer one (`https://x.com/<production>`);
+//   2. it is followed by a real terminator — quote, backtick, whitespace, `,`,
+//      `;`, `)` or end of string — so no more URL follows it (`:8443`,
+//      `.example.com`);
+//   3. NO other workers.dev origin appears, so a file carrying the production
+//      host AND a second host is rejected too.
+ */
+export function pointsExactlyAtProduction(content) {
+  const text = String(content);
+  const exact = new RegExp(
+    `(^|["'\`\\s=,(])${escapeRe(DEFAULT_API_BASE)}(?=["'\`\\s,;)]|$)`,
+    "g",
+  );
+  // A match only counts if the production origin STARTS a URL. `=` is a legal
+  // leading boundary (CSP directives, `const API = "…"`) but it is also a query
+  // separator, so `https://evil.example.com/?x=<production>` satisfies every
+  // character rule and still names the wrong host. The discriminator is what
+  // precedes it: if the text so far already ends inside a live URL, this match
+  // is a parameter of that URL, not the endpoint.
+  const insideAnotherUrl = /(?:^|[^a-z0-9+.-])[a-z][a-z0-9+.-]*:\/\/[^"'\s]*$/i;
+  let startsOne = false;
+  for (const m of text.matchAll(exact)) {
+    const before = text.slice(0, m.index + m[1].length);
+    if (insideAnotherUrl.test(before)) continue;
+    startsOne = true;
+    break;
+  }
+  if (!startsOne) return false;
+  const other = text.match(/https:\/\/[a-z0-9.-]*workers\.dev/gi) || [];
+  return other.every((u) => u === DEFAULT_API_BASE);
+}
+
+function escapeRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
  * Prove a BUILT artifact names production, before anything deploys it.
  *
  * The scrub above is the fix; this is the check that the fix held. It reads the
@@ -161,7 +216,7 @@ export function assertProductionArtifact(
 ) {
   const wrong = [];
   for (const f of files) {
-    if (!read(f).includes(DEFAULT_API_BASE)) wrong.push(f);
+    if (!pointsExactlyAtProduction(read(f))) wrong.push(f);
   }
   if (wrong.length)
     throw new ApiTargetError(

@@ -116,9 +116,9 @@ if (LIST) {
       // only ever bite a local preview — but a preview that silently shows
       // yesterday's bytes is worse than one that says so.
       console.warn(
-        `\nSTAGE NOTE  staged from the git INDEX (the committed bytes). ` +
-          `${divergences.length} file(s) have uncommitted working-tree edits ` +
-          `and are NOT in this build:`,
+        `\nSTAGE NOTE  staged from the git INDEX — what the next commit would ` +
+          `contain. ${divergences.length} file(s) differ from that index ` +
+          `(unstaged or staged-but-uncommitted):`,
       );
       for (const f of divergences.slice(0, 20))
         console.warn(`STAGE NOTE    ${f}`);

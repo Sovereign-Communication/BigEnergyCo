@@ -103,6 +103,59 @@ test("an uncommitted edit IS reported, by name", () => {
   assert.deepEqual(workingTreeDivergences(ROOT, [victim]), []);
 });
 
+test("a STAGED edit is reported too, because the build reads the index", (t) => {
+  // The stage is built from the INDEX, so a `git add`ed edit is not excluded
+  // from the artifact — it is IN it, and the next commit carries it. Calling the
+  // bytes "committed" while silently omitting staged ones made the warning lie
+  // in the direction that matters least. Measured before the fix: a staged edit
+  // produced zero STAGE NOTE lines.
+  const victim = "robots.txt";
+  const backup = readFileSync(join(ROOT, victim));
+  const g = (...args) =>
+    execFileSync("git", args, { cwd: ROOT, encoding: "utf8" });
+  t.after(() => {
+    // Byte-exact restore from the saved copy, never `git checkout`: on an
+    // autocrlf checkout that re-applies the smudge filter and silently rewrites
+    // the working tree to CRLF, which then breaks a later test that compares the
+    // staged blob against it.
+    g("restore", "--staged", "--", victim);
+    writeFileSync(join(ROOT, victim), backup);
+  });
+
+  writeFileSync(
+    join(ROOT, victim),
+    Buffer.concat([backup, Buffer.from("\n<!-- staged -->\n")]),
+  );
+  g("add", "--", victim);
+
+  // The working tree now matches the index, so the old index-vs-worktree diff
+  // saw nothing at all. Scoped to the victim: the test run may have other
+  // uncommitted work in the tree, and this is not about that.
+  assert.deepEqual(g("diff", "--name-only", "--", victim).trim(), "");
+  assert.deepEqual(workingTreeDivergences(ROOT, [victim]), [victim]);
+
+  // And the same file, unstaged, is caught by the other half of the union.
+  g("restore", "--staged", "--", victim);
+  assert.deepEqual(workingTreeDivergences(ROOT, [victim]), [victim]);
+});
+
+test("divergences normalise a Windows-style path before matching", () => {
+  // readIndexBlobs normalises `\` to `/` for the same reason: git always speaks
+  // forward slashes, so a backslash path would match nothing and report a clean
+  // tree over a dirty index.
+  const g = (...args) =>
+    execFileSync("git", args, { cwd: ROOT, encoding: "utf8" });
+  const dirty = g("status", "--porcelain", "-z")
+    .split("\0")
+    .filter(Boolean)
+    .map((l) => l.slice(3).replace(/^"|"$/g, ""));
+  if (!dirty.length) return; // nothing staged; the normalising test needs a hit
+  assert.deepEqual(
+    workingTreeDivergences(ROOT, [dirty[0].split("/").join("\\")]),
+    [dirty[0]],
+  );
+});
+
 // ── staging behaviour ────────────────────────────────────────────────────
 
 test("stageFromIndex writes committed bytes and excludes a local edit", () => {
