@@ -32,8 +32,36 @@ export const GRAPH_PATHSPEC = [
  * the newest match points at the very release this check exists to catch, and
  * the check then compares the release against itself and passes.
  */
+export function isShallow(root) {
+  try {
+    return (
+      execFileSync("git", ["rev-parse", "--is-shallow-repository"], {
+        cwd: root,
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "pipe"],
+      }).trim() === "true"
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function stampCommit(root, stamp, pathspec = GRAPH_PATHSPEC) {
   if (!stamp) return { error: "no stamp given" };
+  // MUST be checked before `git log`, not by catching its failure.
+  //
+  // A shallow clone does not make `git log -S` throw. HEAD is a grafted root,
+  // so the log diffs it against the empty tree, reports exactly one commit, and
+  // `setter` becomes HEAD. `findStaleAssets` then compares HEAD against HEAD and
+  // returns [] — a green "42 referenced assets verified" that verified nothing.
+  // Measured on a `git clone --depth 1` of this repo before this guard existed.
+  if (isShallow(root))
+    return {
+      error:
+        "this checkout is shallow, so the commit that set the stamp is not " +
+        "reachable and the staleness of the asset graph cannot be determined. " +
+        "Run `git fetch --unshallow` and re-run. Refusing to report green.",
+    };
   try {
     const out = execFileSync(
       "git",
@@ -89,22 +117,31 @@ export function gitBlob(root, rev, path) {
  * `assets` is an iterable of repo-relative paths. `getBlob(rev, path)` returns
  * a Buffer or null. Pure: every git call is injected.
  *
- * Two kinds of asset are deliberately NOT reported:
+ * Two kinds of asset are deliberately NOT counted as stale, and they must not be
+ * conflated — the difference is a green light versus a hard failure:
  *
  *   - Absent at the setter commit, i.e. NEW. A URL that never existed cannot be
  *     in anyone's cache, so there is nothing to invalidate. This is the normal
  *     case when a release adds a script alongside an existing stamp.
- *   - Absent now, i.e. deleted. Nothing references it any more; a cached copy
- *     is unreachable by definition.
+ *   - Absent NOW. Every path here came from `referencedAssets()`, so by
+ *     definition something references it; a missing blob means a broken
+ *     reference, a path that escapes the repo, or an untracked new file — not a
+ *     deletion. Silently skipping it would let a resolution bug report every
+ *     asset as verified while checking none of them, so these are returned
+ *     separately as `unresolvable` for the caller to fail on.
  */
 export function findStaleAssets(assets, setter, getBlob) {
   const stale = [];
+  const unresolvable = [];
   for (const asset of assets) {
     const then = getBlob(setter, asset);
-    if (then === null || then === undefined) continue;
+    if (then === null || then === undefined) continue; // new since the setter
     const now = getBlob("HEAD", asset);
-    if (now === null || now === undefined) continue;
+    if (now === null || now === undefined) {
+      unresolvable.push(asset);
+      continue;
+    }
     if (!Buffer.from(then).equals(Buffer.from(now))) stale.push(asset);
   }
-  return stale.sort();
+  return { stale: stale.sort(), unresolvable: unresolvable.sort() };
 }

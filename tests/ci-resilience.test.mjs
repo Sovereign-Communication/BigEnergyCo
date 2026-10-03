@@ -578,6 +578,53 @@ test("every workflow job declares a timeout-minutes", () => {
   );
 });
 
+// `git fetch --depth=N` is not "fetch this ref shallowly". It converts the WHOLE
+// repository to shallow and writes .git/shallow — including a checkout that was
+// deliberately made complete. The `test` job's plan-pin step carried
+// `--depth=1`, and it ran ONE LINE BEFORE `npm run seo`, whose last command is
+// the asset-stamp staleness gate. So CI was silently re-shallowing the history
+// the gate exists to walk, one step before the gate asked for it.
+//
+// This is the failure that motivated the gate's shallow guard at all: the
+// reviewer's finding was that a shallow clone makes the gate report green
+// vacuously. Fixing the guard without noticing this would have converted a
+// silent false-green into a loud CI failure — correct, but for the wrong reason,
+// and still wrong. Both halves are pinned here.
+test("no workflow shallows a checkout behind a gate that needs history", () => {
+  const offenders = [];
+  for (const f of list(".github/workflows")) {
+    const yml = read(`.github/workflows/${f}`);
+    for (const [i, line] of yml.split("\n").entries()) {
+      if (/^\s*#/.test(line)) continue; // prose about depth is not a fetch
+      if (/\bgit\b.*--depth(?!-)/.test(line)) offenders.push(`${f}:${i + 1}`);
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    `these commands re-shallow the checkout:\n${offenders.join("\n")}`,
+  );
+});
+
+test("the test job checks out full history, and the plan-pin step keeps it", () => {
+  const yml = read(".github/workflows/test.yml");
+  assert.match(
+    yml,
+    /actions\/checkout@v[\s\S]{0,1500}?fetch-depth:\s*0/,
+    "the test job must check out full history for the asset-stamp gate",
+  );
+  // ...and the fetch between checkout and `npm run seo` must not undo it.
+  const between = yml.slice(
+    yml.indexOf("fetch-depth: 0"),
+    yml.indexOf("npm run seo"),
+  );
+  assert.doesNotMatch(
+    between,
+    /git fetch[^\n]*--depth(?!-)/,
+    "a --depth fetch after checkout re-shallows the repo before the gates run",
+  );
+});
+
 // Cloudflare's managed challenge answers every non-browser probe of the
 // custom domain (403 "Just a moment" interstitial), which turned the daily
 // static check red on an up site. The content assertion must therefore run

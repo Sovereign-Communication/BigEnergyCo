@@ -12,6 +12,7 @@ import {
   assertNoDefaultRemains,
   productionBuildEnv,
   assertProductionArtifact,
+  pointsExactlyAtProduction,
 } from "../scripts/lib/api-target.mjs";
 import { deployList } from "../scripts/lib/deploy-manifest.mjs";
 
@@ -202,6 +203,78 @@ test("TARGET: an artifact that does not name production is refused", () => {
       `${f} must name production in tracked source`,
     );
   }
+});
+
+test("TARGET: naming production EXACTLY is not the same as containing it", () => {
+  // The last gate before deploy used `.includes(DEFAULT_API_BASE)`, which
+  // accepts any string CONTAINING the production origin. That is a retarget
+  // slipping through the one check that exists to stop it — and it is the same
+  // incomplete-url-substring-sanitization shape CodeQL is configured to
+  // suppress in this very repo. Measured before the fix: every row below
+  // except the first two returned true and the deploy would have proceeded.
+  const P = DEFAULT_API_BASE;
+  const cases = [
+    // [content, expected, why]
+    [`// ${P}\n`, true, "the bare literal, as tracked source carries it"],
+    [`const API = "${P}";`, true, "in a string literal"],
+    [`connect-src ${P}`, true, "in a CSP directive"],
+    [
+      `https://evil.example.com/?x=${P}`,
+      false,
+      "production nested inside a longer URL",
+    ],
+    [`${P}:8443`, false, "a port suffix on the production host"],
+    [`${P}.example.com`, false, "a subdomain suffix"],
+    [`${P}@evil.example.com`, false, "production as userinfo of another host"],
+    [
+      `${P}@bigenergyco-api.evil.dev`,
+      false,
+      "production as userinfo, real host elsewhere",
+    ],
+    [`${P} ${SHOWCASE}`, false, "both the default and a retarget in one file"],
+    [`${P}.workers.dev`, false, "a doubled suffix"],
+  ];
+  for (const [content, expected, why] of cases) {
+    assert.equal(
+      pointsExactlyAtProduction(content),
+      expected,
+      `${why}: ${JSON.stringify(content)}`,
+    );
+  }
+
+  // The rule must survive the files that actually ship.
+  for (const f of API_TARGET_FILES) {
+    assert.equal(
+      pointsExactlyAtProduction(readFileSync(join(ROOT, f), "utf8")),
+      true,
+      `${f} must name production exactly`,
+    );
+  }
+});
+
+test("TARGET: BEC_API_BASE pinned to production is a default, not a retarget", () => {
+  // Measured before the fix: this returned isDefault:false, so the builder
+  // rewrote nothing, assertNoDefaultRemains then fired, and the build aborted
+  // with "partially retargeted" — describing a retarget that never happened,
+  // for an operator who had explicitly asked for production.
+  const t = apiTarget({ [API_TARGET_ENV]: DEFAULT_API_BASE });
+  assert.equal(t.base, DEFAULT_API_BASE);
+  assert.equal(t.isDefault, true);
+
+  // Trailing slashes and a path must not smuggle it past the same check.
+  assert.equal(
+    apiTarget({ [API_TARGET_ENV]: `${DEFAULT_API_BASE}/` }).isDefault,
+    true,
+    "a trailing slash is the same origin",
+  );
+
+  // A genuinely different origin is still a retarget.
+  assert.equal(apiTarget({ [API_TARGET_ENV]: SHOWCASE }).isDefault, false);
+  assert.equal(
+    apiTarget({ [API_TARGET_ENV]: `${DEFAULT_API_BASE}:8443` }).isDefault,
+    false,
+    "a different PORT is a different origin",
+  );
 });
 
 test("TARGET: the promote path builds production in a scrubbed environment", () => {
