@@ -510,7 +510,7 @@ jobs:
         # nothing to do with the code under review. Keeping the checkout
         # pristine is what lets the judgment be about the commit and not about
         # the job's own paperwork.
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: jev-results-*
           path: ${{ runner.temp }}/jev-artifacts
