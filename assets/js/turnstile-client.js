@@ -100,7 +100,14 @@ export function turnstileIsConfigured(doc, win) {
  * callers treat rejection as "unavailable", never as fatal.
  */
 export function loadTurnstileScript(doc, win, onloadName) {
-  return new Promise(function (resolve, reject) {
+  // The in-flight load is remembered, not just the tag's existence. A second
+  // send while the first is still fetching used to resolve IMMEDIATELY off the
+  // present-but-not-yet-loaded <script>, so `win.turnstile` was undefined, the
+  // token came back null, and the send went out to be rejected 403 -- a window
+  // that opens exactly when someone is most likely to double-send.
+  var memoised = doc && typeof doc === "object" ? loadMemo.get(doc) : null;
+  if (memoised) return memoised;
+  var loadingPromise = new Promise(function (resolve, reject) {
     if (!doc || typeof doc.createElement !== "function") {
       reject(new Error("no document"));
       return;
@@ -122,6 +129,18 @@ export function loadTurnstileScript(doc, win, onloadName) {
       resolve(win);
     };
     el.onerror = function () {
+      // A script that failed to load leaves a tag behind, and the existence
+      // check at the top of this function treats ANY such tag as "already
+      // injected" — so the retry resolved instantly with no API and no token,
+      // which is the 403 this whole change set out to remove. Clearing the
+      // memo was not enough; the evidence the memo check reads has to be
+      // corrected too. So the dead tag goes.
+      try {
+        if (parent && typeof parent.removeChild === "function")
+          parent.removeChild(el);
+      } catch (e) {
+        /* best-effort; the memo clear below is the backstop */
+      }
       reject(new Error("turnstile script failed to load"));
     };
 
@@ -132,6 +151,14 @@ export function loadTurnstileScript(doc, win, onloadName) {
     }
     parent.appendChild(el);
   });
+  // A failed load must not be cached forever: the next send gets to try again.
+  if (doc && typeof doc === "object") {
+    loadMemo.set(doc, loadingPromise);
+    loadingPromise.catch(function () {
+      loadMemo.delete(doc);
+    });
+  }
+  return loadingPromise;
 }
 
 /**
@@ -149,6 +176,24 @@ export function loadTurnstileScript(doc, win, onloadName) {
  *     unprovisioned server accepts that. A provisioned one answers 403, which
  *     is the honest fail-closed answer and is what the §5 curl documents.
  */
+// The in-flight script load, memoised per DOCUMENT rather than per module.
+//
+// Per module looked fine and was not: a single global slot meant one page's
+// load state was visible to every other caller, so a second request against a
+// DIFFERENT document was handed a promise describing the first one — resolved,
+// long settled, with no relation to the script actually in its own page. Keyed
+// on the document, which is the thing the tag actually lives in, a page has
+// exactly one entry and unrelated documents never share one.
+var loadMemo = new WeakMap();
+
+// How long a challenge may stay unanswered before the send proceeds anyway.
+// `postTo` bounds the REQUEST, but its signal is only created after this
+// promise settles, so without this bound an interactive challenge nobody
+// completes -- or one occluded, stalled, or simply never firing a callback --
+// leaves the chat box on "Thinking…" indefinitely. That is the exact hung state
+// the send timeout exists to prevent, reached by a different road.
+var TOKEN_WAIT_MS = 120000;
+
 export function requestTurnstileToken(options) {
   var opts = options || {};
   var doc = opts.doc;
@@ -178,6 +223,7 @@ export function requestTurnstileToken(options) {
         function finish(token) {
           if (settled) return;
           settled = true;
+          if (timer !== null) clearTimeout(timer);
           // Always drop the widget: a one-shot token is spent once used, and a
           // leftover iframe in the modal is a focus trap for keyboard users.
           try {
@@ -191,6 +237,14 @@ export function requestTurnstileToken(options) {
         }
 
         var widgetId = null;
+        var timer = null;
+        // The bound that does not exist anywhere else. A challenge that is never
+        // completed must still END, so the send proceeds without a token and the
+        // worker gets to answer 403 -- a visible, retryable refusal -- instead
+        // of the widget spinning forever.
+        timer = setTimeout(function () {
+          finish(null);
+        }, opts.tokenTimeoutMs || TOKEN_WAIT_MS);
         try {
           widgetId = api.render(container, {
             sitekey: siteKey,
