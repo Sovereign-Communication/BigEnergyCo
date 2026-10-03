@@ -24,13 +24,32 @@ import {
 export const SHARE_TTL_SECONDS = 7 * 24 * 3600;
 
 const ID_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
+const ID_LENGTH = 12;
 
-export function makeShareId(randomValues = null) {
-  // randomValues is a test seam: an array of 12 bytes. Production passes
-  // crypto.getRandomValues(new Uint8Array(12)).
-  const bytes = randomValues || crypto.getRandomValues(new Uint8Array(12));
+// 256 % 36 leaves residues 0-3 reachable by 8 byte values and the other 32
+// residues by only 7, so mapping a raw byte with `b % 36` makes '0'-'3' about
+// 14% more likely than every other symbol. The first four symbols are exactly
+// the ones an attacker would try. Rejecting the 4 unusable values removes the
+// bias entirely and costs nothing: 252/256 of draws are kept.
+const REJECT_FROM = 252;
+
+/**
+ * A 12-character share id, uniform over the alphabet.
+ *
+ * `fill` is a test seam: a function that fills the given byte array.
+ * Production passes crypto.getRandomValues. Draws are rejected and retaken
+ * rather than folded, so a seam that always returns >= REJECT_FROM loops
+ * forever — which is the correct behaviour for a source that cannot produce a
+ * fair symbol, and is the reason this is a loop and not a fold.
+ */
+export function makeShareId(fill = (bytes) => crypto.getRandomValues(bytes)) {
+  const byte = new Uint8Array(1);
   let id = "";
-  for (const b of bytes) id += ID_ALPHABET[b % 36];
+  while (id.length < ID_LENGTH) {
+    fill(byte);
+    if (byte[0] >= REJECT_FROM) continue; // biased residue; draw again
+    id += ID_ALPHABET[byte[0] % 36];
+  }
   return id;
 }
 
@@ -49,13 +68,13 @@ function kvKey(id) {
  * payload in KV. Returns { ok: true, id } or { ok: false, reason }.
  * reason: "invalid_payload" | "kv_unavailable"
  */
-export async function storeSharePayload(kv, shareHash, randomValues = null) {
+export async function storeSharePayload(kv, shareHash, fill = null) {
   const parsed = parseShareHash(shareHash);
   if (!parsed) return { ok: false, reason: "invalid_payload" };
   if (!kv || typeof kv.put !== "function") {
     return { ok: false, reason: "kv_unavailable" };
   }
-  const id = makeShareId(randomValues);
+  const id = makeShareId(fill || undefined);
   await kv.put(kvKey(id), JSON.stringify(parsed), {
     expirationTtl: SHARE_TTL_SECONDS,
   });

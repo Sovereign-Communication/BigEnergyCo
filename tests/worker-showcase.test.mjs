@@ -160,12 +160,29 @@ test("chat rejects a missing token once the secret exists", async () => {
   assert.equal((await res.json()).reason, "missing_token");
 });
 
-test("chat keeps its existing behavior while Turnstile is unprovisioned", async () => {
-  // No TURNSTILE_SECRET_KEY: the request must sail past the Turnstile gate
-  // and reach the same code path as before (here, the missing Groq key).
+test("chat keeps its ungated behavior while Turnstile is unprovisioned", async () => {
+  // PORTED (B2 / R-CF-10), not weakened. No TURNSTILE_SECRET_KEY: the request
+  // must sail past the Turnstile gate exactly as before — that is still the
+  // assertion. The terminal status moved from 500 to the labelled degraded
+  // reply, because a 500 IS a dead chat box to a visitor and was the defect.
+  //
+  // What this test guards is the presence-gating, so it now also pins that
+  // Turnstile's absence is the ONLY thing that let the call through: with the
+  // secret set, the same request is a 403 (the tests above).
   const res = await post("/api/chat", { message: "hello" }, {});
-  assert.equal(res.status, 500);
-  assert.match((await res.json()).error, /GROQ_API_KEY/);
+  assert.equal(
+    res.status,
+    200,
+    "unprovisioned Turnstile must not gate the advisor",
+  );
+  const body = await res.json();
+  assert.equal(body.degraded, true);
+  assert.equal(body.reason, "key_missing");
+  assert.equal(
+    body.turnstile,
+    undefined,
+    "no Turnstile verdict on an ungated path",
+  );
 });
 
 // ── KV share cache ─────────────────────────────────────────────────────
@@ -184,13 +201,64 @@ test("share ids are 12 lowercase-alphanumeric chars", () => {
   assert.ok(!isValidShareId(null));
 });
 
+test("share ids are uniform, and rejected bytes are retaken rather than folded", () => {
+  // The bug this pins: mapping a raw byte with `b % 36` is biased, because
+  // 256 % 36 leaves residues 0-3 reachable by 8 byte values and the other 32
+  // by only 7. Measured, that made '0'-'3' ~14% more likely than every other
+  // symbol — and those are the first four an attacker enumerating a share id
+  // would reach for. Rejection sampling removes it.
+  //
+  // Asserted EXACTLY, not statistically: a seam that walks the byte range
+  // covers all 252 usable values once per cycle, and 252 / 36 == 7, so a
+  // correct implementation puts every symbol in the alphabet exactly 7 times.
+  // A folded implementation would put '0'-'3' in 8 times. No randomness, no
+  // flake, and the assertion states the property rather than a proxy for it.
+  const ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
+  let next = 0;
+  const walkUsable = (b) => {
+    b[0] = next % 252; // every usable byte value, once per 252 draws
+    next++;
+  };
+  // 252 usable bytes / 36 symbols = exactly 7 each, and 252 / 12 chars per id
+  // = exactly 21 ids. Feed one complete cycle and the output must contain
+  // every symbol exactly seven times. Nothing random, nothing statistical.
+  const counts = new Map();
+  for (let i = 0; i < 21; i++) {
+    for (const ch of makeShareId(walkUsable)) {
+      counts.set(ch, (counts.get(ch) || 0) + 1);
+    }
+  }
+  assert.equal(next, 252, "the seam must have been drawn exactly 252 times");
+  assert.equal(counts.size, 36, "every symbol must be reachable");
+  for (const ch of ALPHABET) {
+    assert.equal(
+      counts.get(ch),
+      7,
+      `symbol '${ch}' must appear exactly 7 times per 252-byte cycle`,
+    );
+  }
+
+  // And the rejection path itself: a source that hands back only unusable
+  // bytes first must still produce a valid id, by drawing again — which is
+  // what makes the uniformity above true rather than incidental.
+  let draws = 0;
+  const lateStart = (b) => {
+    draws++;
+    b[0] = draws <= 3 ? 255 : (draws * 7) % 252;
+  };
+  assert.ok(isValidShareId(makeShareId(lateStart)));
+  assert.equal(
+    draws,
+    15,
+    "3 unusable bytes must be retaken before 12 usable ones are accepted",
+  );
+});
+
 test("share payload round-trips through KV with a 7-day TTL", async () => {
   const kv = memoryKv();
-  const stored = await storeSharePayload(
-    kv,
-    validHash(),
-    new Array(12).fill(7),
-  );
+  const stored = await storeSharePayload(kv, validHash(), (b) => {
+    b[0] = 7; // deterministic id for this round trip
+  });
   assert.equal(stored.ok, true);
   assert.ok(isValidShareId(stored.id));
   const [[key, entry]] = [...kv.store.entries()];

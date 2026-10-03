@@ -25,6 +25,10 @@ import {
 } from "../scripts/lib/transient-retry.mjs";
 import { extractVerdict } from "./verdict-json.mjs";
 import {
+  VERIFY_RETRY_DELAY_MS,
+  retryDelayFromEnv,
+} from "../scripts/lib/budgets.mjs";
+import {
   JOB_TIMEOUT_MINUTES,
   PROMOTE_TIMEOUT_MS,
   SMOKE_ATTEMPT_TIMEOUT_MS,
@@ -38,6 +42,7 @@ import {
   selectStuckRuns,
 } from "../scripts/lib/stuck-runs.mjs";
 import { deployedFiles } from "../scripts/lib/gates.mjs";
+import { withMutationLock } from "../scripts/lib/mutation-lock.mjs";
 
 const url = (rel) => new URL(`../${rel}`, import.meta.url);
 const read = (rel) => readFileSync(url(rel), "utf8");
@@ -730,50 +735,104 @@ test("every retried step in the verifier carries the deadline", () => {
   );
 });
 
-// The end-to-end direction: a source that fails SLOWLY (every request 5xx) under
-// a compressed budget must return a verdict that names the budget and reports
-// its retries — exiting 1 on its own terms, well inside any outer cap.
-test("a slow failure under a compressed budget returns a verdict, not a kill", async () => {
-  const server = createServer((_req, res) => {
+// The end-to-end direction, in TWO parts.
+//
+// This used to be one test that asked a 500-everything server for two outcomes
+// that cannot both happen. It flaked ~1 run in 6 under full-suite load, and
+// compressing the backoff turned the flake into a hard failure rather than
+// fixing it, because it changed WHICH assertion broke instead of removing the
+// dependence on the machine.
+//
+// Why the two are mutually exclusive, measured rather than assumed. Every
+// request 5xxes, so every file burns all TRANSIENT_ATTEMPTS and comes back
+// `state: "network"` — not `state: "budget"`. The "were NOT" line lives in the
+// `else if (!unchecked.length)` branch, which is reachable only when
+// `bad.length === 0`, i.e. when NO file ended network/missing/differs. So:
+//
+//   • retries happened  => the budget outlasted a backoff  => the parity loop
+//     ran  => every file ended `network`  => bad.length > 0  => the "were NOT"
+//     line is never printed.
+//   • the "were NOT" line printed  => the deadline expired before the first
+//     file finished its attempts  => the first backoff never fit  =>
+//     transientRetries is empty.
+//
+// No choice of budgetMs/delayMs satisfies both. So they are two tests, each
+// proving one half, each with a premise that cannot depend on machine speed:
+//
+//   A. The deadline is ALREADY spent at the first attempt. Process startup
+//      alone exceeds a 1ms budget on every machine, so `remaining <= 0` on
+//      attempt 1 is a certainty rather than a race. This is what makes the
+//      "were NOT" line deterministic: it is reached by construction, not by
+//      out-running a clock.
+//   B. The deadline is generous enough that a retry always lands. What is being
+//      proved here is the opposite half — that a retry is REPORTED — and that
+//      half never depended on the budget expiring, only on a backoff fitting
+//      inside it. A 5s backoff cannot be relied on to fit inside any budget a
+//      test can afford, so it is compressed; the production default is pinned
+//      in the next test so the compression cannot leak.
+//
+// Both still assert the property that matters most: a source that fails returns
+// exit 1 and a verdict on its own terms, never a kill by an outer cap.
+const failingSource = () =>
+  createServer((_req, res) => {
     res.writeHead(500, { "content-type": "text/plain" });
     res.end("upstream is down");
   });
+
+const runVerifier = async (server, env) => {
+  // tests/deploy-manifest.test.mjs briefly deletes a tracked file at the repo
+  // root to prove the manifest reports it. This test spawns the verifier,
+  // which reads every allowlisted file — so without exclusion, the verifier can
+  // observe that deletion and report `parity robots.txt — unreadable:
+  // ENOENT`, failing a budget test for a reason that has nothing to do with
+  // budgets. Measured at 1 run in 4 before the lock.
+  //
+  // The lock is HELD for the whole run, not merely waited on before it:
+  // waiting alone still lets the writer take the lock one millisecond after the
+  // wait ends and delete the file mid-read. Both sides must exclude each other.
   await new Promise((r) => server.listen(0, "127.0.0.1", r));
   const port = server.address().port;
-  // Big enough for a real retry to happen (first failure + one 5s backoff), and
-  // far too small for the loop to finish — so the run must cut itself short and
-  // still report both the retries and the reason.
-  const budgetMs = 8000;
-  const started = Date.now();
-  const child = spawn(
-    process.execPath,
-    [
-      "scripts/verify-staging.mjs",
-      "--base",
-      `http://127.0.0.1:${port}/`,
-      "--json",
-    ],
-    {
-      env: { ...process.env, VERIFY_BUDGET_MS: String(budgetMs) },
-      stdio: ["ignore", "pipe", "pipe"],
-    },
-  );
-  let out = "";
-  child.stdout.on("data", (d) => (out += d));
-  child.stderr.on("data", (d) => (out += d));
-  const code = await new Promise((r) => child.on("close", r));
-  const elapsed = Date.now() - started;
-  await new Promise((r) => server.close(r));
+  return withMutationLock(async () => {
+    const started = Date.now();
+    const child = spawn(
+      process.execPath,
+      [
+        "scripts/verify-staging.mjs",
+        "--base",
+        `http://127.0.0.1:${port}/`,
+        "--json",
+      ],
+      { env: { ...process.env, ...env }, stdio: ["ignore", "pipe", "pipe"] },
+    );
+    let out = "";
+    child.stdout.on("data", (d) => (out += d));
+    child.stderr.on("data", (d) => (out += d));
+    const code = await new Promise((r) => child.on("close", r));
+    const elapsed = Date.now() - started;
+    await new Promise((r) => server.close(r));
+    // stdout and stderr were concatenated in arrival order, so the verdict is
+    // FOUND rather than assumed to start at the first brace: a stderr line
+    // that carried one used to decide where the JSON began.
+    return {
+      code,
+      elapsed,
+      payload: extractVerdict(out, [
+        "verified",
+        "budgetMs",
+        "transientRetries",
+        "failures",
+      ]),
+    };
+  });
+};
 
-  // stdout and stderr were concatenated in arrival order, so the verdict is
-  // FOUND rather than assumed to start at the first brace: a stderr line that
-  // carried one used to decide where the JSON began.
-  const payload = extractVerdict(out, [
-    "verified",
-    "budgetMs",
-    "transientRetries",
-    "failures",
-  ]);
+test("a source that fails under a spent budget returns a verdict, not a kill", async () => {
+  const budgetMs = 1;
+  const { code, elapsed, payload } = await runVerifier(failingSource(), {
+    VERIFY_BUDGET_MS: String(budgetMs),
+    VERIFY_RETRY_DELAY_MS: "1",
+  });
+
   assert.equal(code, 1, "an exhausted budget is a FAILED gate, not a crash");
   assert.equal(payload.verified, false);
   assert.equal(
@@ -782,16 +841,15 @@ test("a slow failure under a compressed budget returns a verdict, not a kill", a
     "the compressed budget is visible in the verdict",
   );
   assert.ok(
-    payload.transientRetries.length > 0,
-    "the retries it did make must be reported",
-  );
-  assert.ok(
     payload.failures.some((f) => /budget/i.test(f)),
     `the verdict must name the budget: ${payload.failures.join(" | ")}`,
   );
+  // The unchecked files must be reported as unchecked. They were never fetched,
+  // so claiming they "match" would be a lie and claiming they "differ" would be
+  // a guess; this is the branch that says neither.
   assert.ok(
     payload.failures.some((f) => /were NOT/.test(f)),
-    "and say the unchecked work was not checked rather than claiming it differs",
+    `and say the unchecked work was not checked: ${payload.failures.join(" | ")}`,
   );
   assert.ok(
     !payload.failures.some((f) => /all \d+ deployed files match/.test(f)),
@@ -804,6 +862,64 @@ test("a slow failure under a compressed budget returns a verdict, not a kill", a
   // The checkout itself is intact: the failure came from the source, so a red
   // verdict here is about the source and not about missing build inputs.
   assert.match(read("index.html"), /\?v=/);
+});
+
+test("a source that fails is retried, and the retries are reported", async () => {
+  // A budget this size cannot expire during the parity loop, so every file
+  // completes its attempts and every backoff fits. That is what makes the retry
+  // count a certainty instead of a race: the assertion is about the retry
+  // being REPORTED, which the old test could only reach on the runs where the
+  // budget happened to expire at exactly the wrong moment.
+  const budgetMs = 600_000;
+  const { code, elapsed, payload } = await runVerifier(failingSource(), {
+    VERIFY_BUDGET_MS: String(budgetMs),
+    VERIFY_RETRY_DELAY_MS: "1",
+  });
+
+  assert.equal(code, 1, "a red source is a FAILED gate, not a crash");
+  assert.equal(payload.verified, false);
+  assert.ok(
+    payload.transientRetries.length > 0,
+    `the retries it did make must be reported; got ${JSON.stringify(payload.transientRetries)}`,
+  );
+  // A reported retry names the step it belongs to, so a flake is visible in the
+  // log rather than absorbed into the failure count.
+  assert.ok(
+    payload.transientRetries.every((r) => r && r.step),
+    `each retry must name its step: ${JSON.stringify(payload.transientRetries)}`,
+  );
+  assert.ok(
+    payload.failures.some((f) => /HTTP 5\d\d/.test(f)),
+    `and the surviving failure must be reported as the 5xx it was: ${payload.failures.join(" | ")}`,
+  );
+  assert.ok(
+    elapsed < budgetMs,
+    `it must finish inside the budget it was given (${elapsed}ms)`,
+  );
+});
+
+test("the retry backoff is 5s in production, not the 1ms this test uses", () => {
+  // Guards the compression above from leaking into shipped behaviour. Asserted
+  // on the default WITHOUT sleeping: a test that proves a duration by waiting
+  // it out is the slow test this one replaces.
+  assert.equal(
+    VERIFY_RETRY_DELAY_MS,
+    5000,
+    "a real transient retry must still be waited out, not abandoned instantly",
+  );
+  assert.equal(retryDelayFromEnv({}), 5000, "unset env must mean the default");
+  assert.equal(
+    retryDelayFromEnv({ VERIFY_RETRY_DELAY_MS: "1" }),
+    1,
+    "an explicit value must be honoured, or the test above cannot be deterministic",
+  );
+  for (const junk of ["", "abc", "-5", "NaN"]) {
+    assert.equal(
+      retryDelayFromEnv({ VERIFY_RETRY_DELAY_MS: junk }),
+      5000,
+      `junk input ${JSON.stringify(junk)} must fall back to the default, not to a zero backoff`,
+    );
+  }
 });
 
 test("the watchdog refuses to run without credentials instead of no-opping", () => {

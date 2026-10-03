@@ -39,5 +39,6 @@
 
 - **Permanently Free & Public**: No paywalls, no lead collection forms, no commercial sales pitches.
 - **Zero Runtime Dependencies**: The calculator runs 100% client-side with pure vanilla JavaScript and Web Workers.
+- **Named carve-out — D-21 (isolated platform surface)**: Cloudflare bindings on the _showcase_ surface are optional, presence-gated, and structurally incapable of promoting. A missing binding fails loud and named (HTTP 503 naming the provisioning step), the showcase worker is separately named so `wrangler deploy` cannot reach production, and the calculator and sizing engine stay 100% client-side. This is a declared exception to the zero-dependency doctrine, not a violation smuggled through it — the exception is written down here and in the master plan (D-21, R-CF-01..10) so both governing documents agree.
 - **Physics & Determinism First**: All sizing calculations derive deterministically from hourly NASA POWER solar irradiance and temperature data.
 - **Educational Mission**: Provide transparent, plain-English breakdowns (ELI5) of system components, physical footprints, and honest DIY/wholesale equipment costs vs. high-markup turnkey installer quotes.

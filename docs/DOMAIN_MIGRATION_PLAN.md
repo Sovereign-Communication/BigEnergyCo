@@ -250,10 +250,12 @@ Edit `worker/index.js` `ALLOWED_ORIGINS`:
 
 Keep **all** existing origins (`pages.dev`, both `github.io`, localhost).
 
-Deploy worker (only this file changed):
+Deploy worker (only this file changed). The config is named explicitly: a bare
+`wrangler deploy` picks up `worker/wrangler.json`, which is the **showcase**
+surface (`bigenergyco-api-showcase`), not production.
 
 ```bash
-cd worker && npx wrangler deploy
+cd worker && npx wrangler deploy --config wrangler.production.json
 ```
 
 ### 1C. Prove dual-serve

@@ -1,0 +1,57 @@
+# CodeQL configuration.
+#
+# One exclusion, three paths, and a reason. No query suite is declared here,
+# deliberately: naming `queries:` would pin this repo to whatever suite was
+# listed today, so every future rule GitHub adds or upgrades would silently
+# stop running. Omitting it keeps the default suite for the language.
+#
+# NOTE the key is `paths-ignore` and it is TOP LEVEL. `paths:` is the opposite
+# — an include list — and writing the exclusion under it does not suppress
+# anything; it tells CodeQL to analyse ONLY the listed paths. That was tried
+# first, and it is the reason this file exists in this shape.
+
+paths-ignore:
+  # ── js/incomplete-url-substring-sanitization ──────────────────────────────
+  #
+  # Fires 10 times across these three files, on `text.includes(
+  # DEFAULT_API_BASE)`, `stray.all.includes(SHOWCASE)` and their siblings in
+  # the gate and the test.
+  #
+  # THIS IS A FALSE POSITIVE, and the reason is specific rather than
+  # convenient. The rule guards a real bug: `url.includes(ALLOWED_ORIGIN)`
+  # succeeds for `https://bigenergyco-api.bigenergyco.workers.dev.attacker.com`,
+  # because the trusted string appears inside a longer hostile one. That is
+  # what makes substring matching unsafe for deciding whether an ORIGIN is
+  # trusted.
+  #
+  # Every call site here does the opposite of that decision. The argument is a
+  # string CONSTANT holding a full origin, and the question being asked is
+  # "does this generated file still contain this exact origin string" — which
+  # is precisely a substring containment test, over a file the build itself
+  # wrote. There is no attacker-supplied string anywhere in these expressions
+  # to extend, so the failure mode the rule describes cannot occur: a hostile
+  # origin cannot be substituted into a literal.
+  #
+  # Note what is being asserted about the security of the shipped build,
+  # because it is easy to over-read this exclusion. The CORS decision in
+  # worker/index.js is NOT a substring test — it compares a full origin against
+  # an exact-match Set, and is covered by its own negative tests (suffix,
+  # embedded, case, trailing slash) in tests/worker.test.mjs. Nothing in this
+  # exclusion weakens that path; these three files are build tooling.
+  #
+  # WHAT THIS EXCLUSION COSTS, stated plainly: `paths-ignore` is path-scoped,
+  # not rule-scoped, so it silences EVERY query in these three files, not just
+  # this one. That is the price of a config-file exclusion. The accepted
+  # trade-off is that three build-tool files — no browser code, no worker
+  # request handler, no deployed asset — lose a rule they were already
+  # producing only false positives on.
+  #
+  # If this ever needs to be narrower, the fix is not a better suppression but
+  # better code: parse the endpoint constant out of the built file (compare
+  # `CF_API_URL = "…"` as a value) instead of searching the file's bytes, and
+  # the rule stops firing on correctness grounds. That change would also close
+  # a real weakness in the assertion — a retargeted file that still MENTIONS
+  # the production host in a comment currently passes a substring test.
+  - scripts/lib/api-target.mjs
+  - scripts/gate-api-target.mjs
+  - tests/api-target.test.mjs

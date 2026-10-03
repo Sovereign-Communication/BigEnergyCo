@@ -85,10 +85,21 @@ requires a valid `turnstileToken` in the body and rejects without one
 (HTTP 403, fail-closed). Unprovisioned, the endpoint keeps its current
 behavior and `/api/health` reports `"turnstile": false`.
 
-Client integration (follow-up, not in this branch): render the Turnstile
-widget in `assets/js/chat.js` and include the token as `turnstileToken` in
-the `/api/chat` POST body. Site key is available to the client via the
-worker or a Pages env var — never the secret.
+Cookie bar: Q-15 requires 0 cookies, and Turnstile's managed-mode cookie
+behavior is unverified. Run the §9 gate BEFORE setting the secret, and let the
+measurement decide. Do not set it on the assumption.
+
+Client integration: **in this branch** — `assets/js/chat.js` renders the
+widget explicitly and sends the token as `turnstileToken` in the `/api/chat`
+POST body. The site key reaches the client via
+`<meta name="bec-turnstile-site-key" content="...">` on the showcase Pages
+project (or `window.BEC_TURNSTILE_SITE_KEY`); the secret never does.
+
+**Server and client ship as one item (R-CF-02).** Do not run
+`wrangler secret put TURNSTILE_SECRET_KEY` until the site key meta is live
+on the showcase host, or every advisor call 403s with no client recovery — the
+exact defect B1 records. The cookie gate in §9 runs first for a separate
+reason.
 
 ### 1f. Secrets on the showcase worker
 
@@ -145,15 +156,37 @@ Security → WAF → Rate limiting rules → Create rule:
 - Rationale: these write to KV/R2/D1; the worker also rate-limits them,
   but the WAF keeps junk from ever reaching the isolate.
 
-### Rule 3 — Bot Fight Mode
+### Rule 3 — verified-bot allowance, NOT Bot Fight Mode
 
-Security → Bots → **Bot Fight Mode: On** for the showcase hostname.
+**Do not enable Bot Fight Mode on this hostname.** An earlier draft of this
+document told operators to turn it on. That was wrong, and it re-creates this
+repo's own open finding **F-44**: the production domain returns
+`HTTP 403 cf-mitigated: challenge` to non-browser clients and to verified
+crawlers, which is what F-44 records. Bot Fight Mode is that same class of
+challenge applied to everyone.
 
-Business reason (this is the pitch story, not just hygiene): the free
-calculator feeds a verified-electrician lead funnel. Bot traffic burns paid
-Groq tokens and — worse — fake chat sessions and junk share links poison
-lead quality, which is what the paying electricians buy. Bot management
-protects revenue, not just uptime.
+F-44 is closed by owner action **O-09** — turning managed challenges off for
+real visitors and allowing verified bots — and is governed by **R-SEO-07**.
+R-CF-07 carries the same rule onto the showcase surface: no hostname carrying
+R-SEO-07 may serve a managed challenge or Bot Fight Mode to verified crawlers.
+
+What to configure instead:
+
+- Security → Bots → **Bot Fight Mode: Off** for the showcase hostname.
+- Security → Bots → **Verified Bots: Allow.** Cloudflare's verified-bot
+  allowance is the narrow, correct control here: it stops the impersonation
+  traffic without serving a challenge to a search engine that has verified
+  itself.
+- Bot score / machine-learning learning: leave the documented default. We want
+  the advisor's paid upstream protected (Rule 1 and Rule 2 do that
+  enforcement), not the crawl path blinded.
+
+The genuine business reason, without the framing that does not exist: bot
+traffic burns paid Groq tokens and occupies the advisor chat box a real visitor
+is trying to use. That is an uptime-and-cost argument, and it is the whole
+argument. There is no lead capture here and the project forbids any — D-18
+and the master plan's §14 non-goals both rule out accounts, lead forms and
+sales.
 
 ### Managed ruleset
 
@@ -207,6 +240,31 @@ is the honest version of "served from 300+ cities" in the pitch.
 Unprovisioned bindings return HTTP 503 with this document's name — never a
 bare TypeError.
 
+## 4a. Verifying BEFORE the demo: a real browser, not just curl
+
+The curls in §5 are necessary and **not sufficient**. They would all have passed
+against the configuration that shipped broken: a `/api/chat` curl without a
+token _expects_ a 403, so a worker whose client can never produce one looks
+perfect to curl. Drive the real page.
+
+```bash
+node scripts/cold-start-preflight.mjs --chat <worker-url> --cookies --json
+```
+
+Then, in a browser against `bigenergyco-showcase.pages.dev`:
+
+1. **The advisor answers** — or degrades with its visible "offline answer, not
+   the live AI" label. A blank box or a silent failure is a failed demo.
+2. **The calculator sizes a system end to end** — bill in, sized system out.
+3. **The share-link round trip** — share, open the returned link, same numbers.
+4. **An evidence upload** succeeds.
+5. **A usage event posts.**
+6. **`/api/health` shows all four showcase flags true.**
+
+Capture the demo URL and a short screen recording. Anything on that list you did
+not watch working is described in the application as _shipping_, never as
+_shipped_.
+
 ## 5. Verifying the showcase (after provisioning)
 
 ```bash
@@ -233,7 +291,42 @@ curl -s -X POST .../api/chat -H 'Content-Type: application/json' \
 # expect HTTP 403 turnstile failure (no token), not a Groq call
 ```
 
-## 6. Promoting to production (later, explicitly)
+## 6. The cookie gate — decide BEFORE provisioning, not after
+
+Q-15 demands **0 cookies**. Cloudflare Turnstile's cookie behaviour in managed
+mode is unverified. So it is measured, and the measurement decides — before the
+secret exists, not after.
+
+```bash
+# Measures cookies AND whether the advisor is actually answering right now.
+node scripts/cold-start-preflight.mjs \
+  --chat https://bigenergyco-api-showcase.bigenergyco.workers.dev \
+  --cookies --json
+```
+
+The decision function is `cookieGateDecision()` in
+`scripts/cold-start-preflight.mjs`, pinned by
+`tests/cold-start-preflight.test.mjs` so this section cannot drift from it:
+
+| Measurement                             | Action                                                                                                                                                                  |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **0 cookies**                           | Provision `TURNSTILE_SECRET_KEY`. Record the measurement as evidence.                                                                                                   |
+| **≥ 1 cookie**                          | Do **not** provision. Switch Turnstile to a non-cookie mode and re-measure, or ship the advisor unguarded and describe Turnstile honestly as _shipping_, not _shipped_. |
+| **Not measured** (fetch failed, no URL) | Do **not** provision. An unmeasured risk is not a passed gate.                                                                                                          |
+
+That last row is the one that matters. The judge who reviewed this repo scored
+Q-15 at 45 % with the finding _"named as a risk with no owner and no gate"_ —
+naming the risk without a gate is the same as not naming it. So a missing
+measurement resolves to **no**, deterministically, in code.
+
+Q-15 is never silently broken. If an exception is ever taken it is a named owner
+action with a name attached, recorded in `docs/plan/LEDGER.jsonl`.
+
+Whichever way it goes, record the outcome in the ledger — the cookies measured
+and the decision they forced. A gate nobody records is indistinguishable from a
+gate that was never run.
+
+## 7. Promoting to production (later, explicitly)
 
 This branch never auto-promotes. Promotion is a deliberate, separate PR
 against the org repo with its own review, and only after the showcase

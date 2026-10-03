@@ -20,6 +20,19 @@
 // ============================================================
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+
+// How long we wait out ONE upstream 429 before giving up on it. Exported (as a
+// live binding) and overridable because the test that pins the degraded-reply
+// path was taking 15 seconds of real wall-clock to get there - a suite this
+// size cannot afford one slow test per run, and a sleep is not what that test
+// measures. The default is asserted directly, so compressing it in tests
+// cannot quietly shorten the production wait.
+export let GROQ_BUSY_BACKOFF_MS = 15000;
+
+export function setGroqBusyBackoffMs(ms) {
+  GROQ_BUSY_BACKOFF_MS =
+    typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? ms : 15000;
+}
 const GROQ_PRIMARY_MODEL = "openai/gpt-oss-120b";
 const GROQ_FALLBACK_MODEL = "openai/gpt-oss-20b";
 
@@ -54,6 +67,7 @@ import { jevCostUsd } from "./jev-price.mjs";
 // Each module degrades to a provisioning error when its binding is absent —
 // see docs/cloudflare-showcase.md for the provisioning checklist.
 import { verifyTurnstile } from "./turnstile.mjs";
+import { buildDegradedReply, mentionsSystem } from "./advisor-fallback.mjs";
 import {
   storeSharePayload,
   getSharePayload,
@@ -350,8 +364,30 @@ const ALLOWED_ORIGINS = new Set([
   "http://localhost:3000",
 ]);
 
-export function getAllowedOrigin(origin) {
-  return origin && ALLOWED_ORIGINS.has(origin) ? origin : null;
+// Origins trusted IN ADDITION to the set above, supplied per deployment so a
+// showcase build can trust its own Pages host without editing this file — and,
+// more importantly, without anyone editing the production list to accommodate
+// it. This is a union, never a replacement: the set above is the floor and no
+// deployment can remove an entry from it.
+//
+// EXACT STRINGS ONLY. No wildcard, no prefix or suffix match, no case folding,
+// no trailing-slash tolerance — the same discipline the set above is held to,
+// because a pattern here would hand CORS to every origin that can be made to
+// look like ours. A deployment can therefore widen trust for its own domain and
+// for nothing else.
+function extraAllowedOrigins(env) {
+  const raw = env && env.EXTRA_ALLOWED_ORIGINS;
+  if (typeof raw !== "string" || !raw.trim()) return [];
+  return raw
+    .split(/[\s,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+export function getAllowedOrigin(origin, env) {
+  if (!origin) return null;
+  if (ALLOWED_ORIGINS.has(origin)) return origin;
+  return extraAllowedOrigins(env).includes(origin) ? origin : null;
 }
 
 export function corsHeaders(origin) {
@@ -503,8 +539,13 @@ export function ensureDisclaimer(reply) {
   return `${reply.trimEnd()}\n\n${DISCLAIMER_FOOTER}`;
 }
 
-async function callGroq(apiKey, model, messages) {
-  const res = await fetch(GROQ_API_URL, {
+// The fetch is a parameter, not the global. Two reasons, one of which is a
+// defect this fixes: `env.fetch` is the Workers-native seam /api/jev already
+// used, so reading the global here meant the advisor path could not be
+// exercised without real network calls - which is exactly how B2's fallback
+// shipped untested. In production `env.fetch || fetch` is the same function.
+async function callGroq(apiKey, model, messages, doFetch = fetch) {
+  const res = await doFetch(GROQ_API_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -609,13 +650,25 @@ async function handleChat(request, env, origin) {
     );
   }
 
+  // R-CF-01: an unprovisioned binding fails LOUD and NAMED, never with a bare
+  // TypeError. Here "loud" means a real answer with a visible degraded label,
+  // not an error status the visitor reads as a broken product: B2's whole point
+  // is that an unavailable advisor never presents as a dead chat box.
   const apiKey = env.GROQ_API_KEY;
-  if (!apiKey)
+  if (!apiKey) {
+    console.error(
+      "chat: GROQ_API_KEY is not configured; serving the degraded advisor reply (R-CF-10)",
+    );
     return jsonResponse(
-      { error: "GROQ_API_KEY secret not configured in Cloudflare Worker" },
-      500,
+      buildDegradedReply(
+        "key_missing",
+        { language: body.language, hasSystem: mentionsSystem(userMsg) },
+        ensureDisclaimer,
+      ),
+      200,
       origin,
     );
+  }
 
   const history = rawHistory
     .map((m) => ({
@@ -642,9 +695,36 @@ async function handleChat(request, env, origin) {
   let retriedUpstreamBusy = false;
   const maxContinuations = 2;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const degradedOpts = {
+    language: body.language,
+    hasSystem: mentionsSystem(userMsg),
+  };
+  // One seam for every upstream call the advisor makes, so the degraded paths
+  // are reachable in a test without a network.
+  const doFetch = (env && env.fetch) || fetch;
+
+  // Every upstream failure below returns 200 + a labelled deterministic reply.
+  // The busy (429/503) and error (502) statuses are gone on purpose: a
+  // non-2xx here drove the client's retry ladder, and a retried chat against a
+  // provider that is already busy is how a demo turns into a spinner. The
+  // Retry-After header goes with it; the client no longer needs it for this
+  // path, and the Rate Limiting paths that still return 429 are unchanged.
 
   while (turns <= maxContinuations) {
-    let groqRes = await callGroq(apiKey, usedModel, currentMessages);
+    let groqRes = await callGroq(
+      apiKey,
+      usedModel,
+      currentMessages,
+      doFetch,
+    ).catch(() => null);
+    if (!groqRes) {
+      console.warn("chat: groq fetch threw; serving the degraded reply");
+      return jsonResponse(
+        buildDegradedReply("groq_unavailable", degradedOpts, ensureDisclaimer),
+        200,
+        origin,
+      );
+    }
 
     // Upstream rate limit (shared org TPM pool). Wait out the provider's own
     // window once, invisibly, before giving up — the free tier's 8k TPM makes
@@ -659,18 +739,18 @@ async function handleChat(request, env, origin) {
         /* keep default */
       }
       retriedUpstreamBusy = true;
-      await sleep(Math.min(retryAfter * 1000, 25000));
-      groqRes = await callGroq(apiKey, usedModel, currentMessages);
+      await sleep(Math.min(retryAfter * 1000, GROQ_BUSY_BACKOFF_MS));
+      groqRes = await callGroq(apiKey, usedModel, currentMessages, doFetch);
 
       if (groqRes.status === 429) {
         return jsonResponse(
-          {
-            error:
-              "The AI provider is busy right now. Please try again shortly.",
-          },
-          503,
+          buildDegradedReply(
+            "groq_unavailable",
+            degradedOpts,
+            ensureDisclaimer,
+          ),
+          200,
           origin,
-          { "Retry-After": "60" },
         );
       }
     } else if (groqRes.status === 429) {
@@ -678,12 +758,9 @@ async function handleChat(request, env, origin) {
       // ship it rather than discarding the user's time.
       if (fullReply.length > 0) break;
       return jsonResponse(
-        {
-          error: "The AI provider is busy right now. Please try again shortly.",
-        },
-        503,
+        buildDegradedReply("groq_unavailable", degradedOpts, ensureDisclaimer),
+        200,
         origin,
-        { "Retry-After": "30" },
       );
     }
 
@@ -694,18 +771,19 @@ async function handleChat(request, env, origin) {
         `Primary model ${GROQ_PRIMARY_MODEL} failed (${groqRes.status}). Trying fallback ${GROQ_FALLBACK_MODEL}...`,
       );
       usedModel = GROQ_FALLBACK_MODEL;
-      groqRes = await callGroq(apiKey, usedModel, currentMessages);
+      groqRes = await callGroq(apiKey, usedModel, currentMessages, doFetch);
     }
 
     if (!groqRes.ok) {
       if (fullReply.length > 0) {
         break; // Return whatever complete text was accumulated
       }
+      console.warn(
+        `chat: groq returned ${groqRes.status}; serving the degraded reply`,
+      );
       return jsonResponse(
-        {
-          error: `AI provider error (${groqRes.status}). Please try again later.`,
-        },
-        502,
+        buildDegradedReply("groq_error", degradedOpts, ensureDisclaimer),
+        200,
         origin,
       );
     }
@@ -861,7 +939,7 @@ async function handleUsageEvent(request, env, origin) {
 
 export default {
   async fetch(request, env) {
-    const origin = getAllowedOrigin(request.headers.get("Origin"));
+    const origin = getAllowedOrigin(request.headers.get("Origin"), env);
 
     if (request.method === "OPTIONS") {
       if (!origin) return new Response(null, { status: 204 }); // no CORS headers -> browser blocks
@@ -929,6 +1007,17 @@ export default {
     return jsonResponse({ error: "Not found" }, 404, origin);
   },
 };
+
+// Re-exported so callers that already depend on the worker entry point keep
+// working; the implementation now lives in advisor-fallback.mjs.
+export {
+  DEGRADED_LABEL,
+  FALLBACK_MODEL,
+  FALLBACK_REASON_KEY,
+  FALLBACK_REASON_TEXT,
+  buildDegradedReply,
+  mentionsSystem,
+} from "./advisor-fallback.mjs";
 
 export const SYSTEM_PROMPT_VERSION = "2026-09c";
 const ADVISOR_PROMPT_BODY = `MISSION: Help people understand a sizing result and make safer questions for a qualified local professional. The deterministic calculator is the source of truth for its displayed sizing numbers. Jev is a separate numeric plausibility check, not an engineer, not a certification body, and not permission to change the calculator result. If the user gives you a calculator brief, explain it rather than recomputing it.

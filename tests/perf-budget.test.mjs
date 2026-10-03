@@ -18,15 +18,28 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
+
+import { committedBytes } from "../scripts/lib/deploy-blobs.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 // ── 1. Size budgets ────────────────────────────────────────────────────────
 
 test("PERF-BUDGET: eager first-load payload stays within budget", () => {
-  const html = readFileSync(join(root, "index.html"), "utf8");
-  const css = readFileSync(join(root, "assets/site.css"), "utf8");
+  // Measured from the COMMITTED bytes — the ones the deploy staging builder now
+  // copies. A budget is a claim about what ships, so it has to measure the
+  // artifact that ships.
+  //
+  // This replaces a hand-rolled `.replace(/\r\n/g, "\n")` applied only to the JS.
+  // That was a second, local normalization: it left index.html and site.css
+  // raw, so a `core.autocrlf = true` checkout measured index.html at 125,266
+  // bytes — 266 OVER this very budget — while CI measured the committed 121,825
+  // and passed. The gate was not lying about the checkout; it was measuring the
+  // CRLF working tree rather than the site. Reading the index fixes all three
+  // files at once and leaves `.gitattributes` the single source of truth.
+  const html = committedBytes(root, "index.html").toString("utf8");
+  const css = committedBytes(root, "assets/site.css").toString("utf8");
 
   const sizingDir = join(root, "assets/js/sizing");
   const sharedDir = join(root, "assets/js/shared");
@@ -61,12 +74,14 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   ];
   let jsBytes = 0;
   for (const name of [...eagerSizing, ...eagerShared]) {
-    const base = eagerSizing.includes(name) ? sizingDir : sharedDir;
-    // LF-normalized: the browser never sees git's checkout line endings, so
-    // a CRLF checkout (Windows, core.autocrlf=true) must not measure ~20 KB
-    // larger than the identical source on CI. Threshold unchanged.
-    const src = readFileSync(join(base, name), "utf8").replace(/\r\n/g, "\n");
-    jsBytes += Buffer.byteLength(src);
+    const rel = relative(
+      root,
+      join(eagerSizing.includes(name) ? sizingDir : sharedDir, name),
+    );
+    // Committed bytes, so a CRLF checkout cannot measure ~20 KB larger than the
+    // identical source on CI. No local newline pass is needed or wanted: the
+    // index already holds the post-.gitattributes form.
+    jsBytes += committedBytes(root, rel).length;
   }
 
   const htmlBytes = Buffer.byteLength(html);
@@ -98,6 +113,12 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // glued onto translated verdicts as an English literal), plus one small
   // owner for the levelized-cost row and the reasoning that goes with each
   // fix. No new module, no new eager feature: strings and comments.
+  // 803,000 (+13 KB measured 802,202): the degraded advisor reply became
+  // translated copy. It was English-only prose shipped from the worker on the
+  // exact surface that signals something went wrong, so a German or Arabic
+  // visitor read the failure in the wrong language. Ten keys x six locales,
+  // +123 lines in locales.js and -0: the same trade as every raise above, for
+  // the same reason — a string a user can read, no new code path.
   assert.ok(
     htmlBytes <= 125_000,
     `index.html ${htmlBytes} bytes exceeds 125,000 budget`,
@@ -107,7 +128,7 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     `site.css ${cssBytes} bytes exceeds 40,000 budget`,
   );
   assert.ok(
-    jsBytes <= 790_000,
+    jsBytes <= 803_000,
     `eager JS ${jsBytes} bytes exceeds 790,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
   );
 });

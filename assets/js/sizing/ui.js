@@ -13,14 +13,14 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20260929a";
+import { APPLIANCES } from "./appliances.js?v=20261002a";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20260929a";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20260929a";
+} from "./run-coordinator.js?v=20261002a";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261002a";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -29,12 +29,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20260929a";
+} from "./charts.js?v=20261002a";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20260929a";
+} from "./location-picker.js?v=20261002a";
 
 import {
   estimateTariff,
@@ -42,22 +42,22 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20260929a";
+} from "./pricing.js?v=20261002a";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20260929a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261002a";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20260929a";
+} from "./lead-acid.js?v=20261002a";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20260929a";
+} from "./bom.js?v=20261002a";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20260929a";
+import { BOM_ITEMS } from "../shared/content.js?v=20261002a";
 
 import {
   applyI18n,
@@ -66,18 +66,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20260929a";
+} from "../shared/i18n.js?v=20261002a";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20260929a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20260929a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261002a";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261002a";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20260929a";
-import { buildSimpleView } from "../shared/simple-view.js?v=20260929a";
+} from "../shared/simple-mode.js?v=20261002a";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261002a";
 import {
   advisorJevContext,
   interpretSanity,
@@ -85,56 +85,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20260929a";
+} from "./validate.js?v=20261002a";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20260929a";
+} from "../shared/cut-targets.js?v=20261002a";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20260929a";
+} from "./share-codec.js?v=20261002a";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20260929a";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20260929a";
+} from "./infeasible-copy.js?v=20261002a";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261002a";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20260929a";
+} from "./fuel-units.js?v=20261002a";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20260929a";
+} from "./frontier-chart.js?v=20261002a";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20260929a";
+} from "./rescale.js?v=20261002a";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20260929a";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261002a";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20260929a";
+} from "./map-provider.js?v=20261002a";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20260929a";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20260929a";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20260929a";
+} from "./wizard.js?v=20261002a";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261002a";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261002a";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -183,9 +183,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20260929a";
+} from "./money.js?v=20261002a";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20260929a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261002a";
 
 let worker = null;
 
@@ -3229,7 +3229,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20260929a",
+      "./assets/js/sizing/sizing-worker.js?v=20261002a",
       {
         type: "module",
       },
@@ -7668,7 +7668,7 @@ function setupPwaControls() {
   updateNetworkStatus();
 }
 
-export function initSizingUI() {
+export async function initSizingUI() {
   try {
     // Landing-page storage widget reads through this hook (same pricing
     // module the engine uses — no second source of truth).
@@ -8047,11 +8047,16 @@ export function initSizingUI() {
 
     syncBillSlider();
 
-    updateCurrencyUnitLabel(); // bill-slider currency + tariff labels on first paint
+    updateCurrencyUnitLabel(); // bill-slider currency + tariff labels on first paint    // Interface language (auto-detected, user-overridable in the footer).
+    //
+    // AWAITED, deliberately. The dictionary is a deferred dynamic import
+    // (shared/i18n.js), so calling applyI18n() without awaiting would paint the
+    // English defaults and then swap them a moment later — a German or Arabic
+    // visitor would see a flash of the wrong language on first paint. Awaiting
+    // here costs nothing extra: the fetch started at module evaluation and is
+    // already in flight, so this waits for work the browser is doing anyway.
+    await applyI18n();
 
-    // Interface language (auto-detected, user-overridable in the footer).
-
-    applyI18n();
     applySimpleMode();
 
     initLangPicker($("langSelect"));
@@ -8196,4 +8201,12 @@ function whenDOMReady(cb) {
   }
 }
 
-whenDOMReady(initSizingUI);
+// initSizingUI awaits the deferred i18n dictionary, so it is a promise now.
+// The catch is not decorative: an async throw after the first await becomes an
+// unhandled rejection that `whenDOMReady` cannot see, and the page would sit
+// there silently half-initialised with nothing in the console.
+whenDOMReady(() => {
+  initSizingUI().catch((e) => {
+    console.error("initSizingUI failed:", e);
+  });
+});

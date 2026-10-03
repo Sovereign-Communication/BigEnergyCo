@@ -9,7 +9,12 @@
 //
 // Usage (after provisioning):
 //   <meta name="cf-beacon-token" content="<real token>">
-//   <script src="/assets/js/cf-beacon.js" defer></script>
+//   <script src="/assets/js/cf-beacon.js?v=<stamp>" defer></script>
+//
+// The `?v=` is not decoration: scripts/bump-asset-tokens.mjs fails on any
+// first-party reference without a content token, including one written inside a
+// comment — which is how the line above shipped unversioned and turned
+// `npm run seo` red on this branch.
 
 export const BEACON_SRC = "https://static.cloudflareinsights.com/beacon.min.js";
 export const PLACEHOLDER_TOKEN = "REPLACE_WITH_CLOUDFLARE_WEB_ANALYTICS_TOKEN";
