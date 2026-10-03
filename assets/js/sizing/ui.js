@@ -13,14 +13,14 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261003a";
+import { APPLIANCES } from "./appliances.js?v=20261003d";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261003a";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261003a";
+} from "./run-coordinator.js?v=20261003d";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261003d";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -29,12 +29,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261003a";
+} from "./charts.js?v=20261003d";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261003a";
+} from "./location-picker.js?v=20261003d";
 
 import {
   estimateTariff,
@@ -42,22 +42,27 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261003a";
+} from "./pricing.js?v=20261003d";
+// The country -> currency table. Static, not lazy: it is consulted the moment
+// a location resolves, so a dynamic import would only add a round trip to the
+// one path that must not wait. Its 11.5 KB is data, and the first-load budget
+// below records the deliberate trade.
+import { currencyForCountry } from "./country-currency.js?v=20261003d";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261003a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261003d";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261003a";
+} from "./lead-acid.js?v=20261003d";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261003a";
+} from "./bom.js?v=20261003d";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261003a";
+import { BOM_ITEMS } from "../shared/content.js?v=20261003d";
 
 import {
   applyI18n,
@@ -66,18 +71,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261003a";
+} from "../shared/i18n.js?v=20261003d";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261003a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261003a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261003d";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261003d";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261003a";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261003a";
+} from "../shared/simple-mode.js?v=20261003d";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261003d";
 import {
   advisorJevContext,
   interpretSanity,
@@ -85,56 +90,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261003a";
+} from "./validate.js?v=20261003d";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261003a";
+} from "../shared/cut-targets.js?v=20261003d";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261003a";
+} from "./share-codec.js?v=20261003d";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261003a";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261003a";
+} from "./infeasible-copy.js?v=20261003d";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261003d";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261003a";
+} from "./fuel-units.js?v=20261003d";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261003a";
+} from "./frontier-chart.js?v=20261003d";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261003a";
+} from "./rescale.js?v=20261003d";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261003a";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261003d";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20261003a";
+} from "./map-provider.js?v=20261003d";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261003a";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261003a";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261003a";
+} from "./wizard.js?v=20261003d";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261003d";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261003d";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -183,9 +188,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261003a";
+} from "./money.js?v=20261003d";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261003a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261003d";
 
 let worker = null;
 
@@ -1855,10 +1860,25 @@ function applyEstimatedTariff(lat, lon, region, country) {
 
   const est = estimateTariff(lat, lon, region, country);
 
+  // Which currency, in order of authority:
+  //
+  //   1. the country, when the location carries one. Every city partition
+  //      records its ISO 3166-1 code and the seed catalogue its name, so this
+  //      is a lookup and not a guess.
+  //   2. the tariff box, which is GEOGRAPHIC and routinely spans countries the
+  //      one named in its label does not speak for -- "United Kingdom /
+  //      Ireland" says GBP, so Dublin got pounds. The box still decides when
+  //      there is no country at all, which is the bare-coordinate case.
+  //
+  // The box decides the TARIFF either way; only the currency is overridden.
+  const byCountry = currencyForCountry(country);
+  const currency =
+    (byCountry && CURRENCIES[byCountry] ? byCountry : null) || est.currency;
+
   // Auto-select the country's currency first, then express the estimated
   // tariff in it - the two share one FX rate, so they round-trip exactly.
-  if (est.currency && !currencyTouched && CURRENCIES[est.currency])
-    setCurrency(est.currency);
+  if (currency && !currencyTouched && CURRENCIES[currency])
+    setCurrency(currency);
 
   const fx = fxActive();
   // Four decimals: sub-cent tariffs (e.g. $0.0725/kWh) must survive the
@@ -3229,7 +3249,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261003a",
+      "./assets/js/sizing/sizing-worker.js?v=20261003d",
       {
         type: "module",
       },
