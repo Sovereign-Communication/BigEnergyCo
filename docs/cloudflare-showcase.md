@@ -1,6 +1,7 @@
 # Cloudflare Showcase — provisioning & configuration guide
 
-Branch: `showcase/cold-start` (fork `Treystu/BigEnergyCo`).
+Repository: `Sovereign-Communication/BigEnergyCo`. Current submission lane:
+PR #182; see `docs/contest/DEPLOY-AND-FILE.md` for current filing status.
 Purpose: make the Cloudflare developer platform a first-class, demonstrable
 part of the stack for the Cold Start pitch competition. Every integration
 below is genuine: the worker code is written, tested, and fails loudly when
@@ -17,18 +18,21 @@ Do these once, in order. The worker returns a 503 naming the missing piece
 (plus this document) until each is done; `npm run cf:check` (see §8) fails
 locally on any remaining `REPLACE_WITH_*` placeholder.
 
-### 1a. Separate Pages project for the fork (the secondary test link)
+### 1a. Separate Pages project for the org repository
 
 1. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git.
-2. Select the **`Treystu/BigEnergyCo`** repo (the fork, not the org repo).
-3. Production branch: `main`. Build command: none (static output is built by
-   `scripts/deploy-pages-local.mjs`; use output directory `_pages`).
+2. Select **`Sovereign-Communication/BigEnergyCo`**.
+3. Stage committed bytes from the repository root with
+   `node scripts/stage-showcase.mjs --output _pages_showcase --turnstile-site-key <public-key>`.
+   The helper runs the local builder in check mode with the fixed showcase API
+   target and writes the Pages advanced-mode `/api/*` proxy. Deploy the staged
+   `_pages_showcase` output through the Pages project. This does not deploy it.
 4. Name it `bigenergyco-showcase`. This yields
    `bigenergyco-showcase.pages.dev` — the secondary link for testing the
    submission version, fully isolated from staging (`bigenergyco.pages.dev`)
    and production (`freeoffgridcalculator.com`).
-5. Every branch push then gets its own `*.bigenergyco-showcase.pages.dev`
-   preview URL automatically.
+5. Verify the actual Pages build/deployment and proxy in a browser; do not
+   infer deployment success from a staged directory.
 
 ### 1b. KV namespace (share-link edge cache)
 
@@ -41,9 +45,10 @@ Paste both ids into `worker/wrangler.json` (`kv_namespaces`).
 
 ### 1c. R2 bucket (quality-evidence artifacts)
 
-Dashboard → R2 → Create bucket → **`bigenergyco-evidence-showcase`**.
-The bucket name is already wired in `worker/wrangler.json`; no id to paste
-(R2 binds by name).
+The Cloudflare account is activated and bucket
+**`bigenergyco-evidence-showcase`** has been created. Its binding is still
+being added; verify the `EVIDENCE_BUCKET` binding and a successful upload plus
+readback before calling R2 operational. R2 binds by name, with no id to paste.
 
 Upload path: `POST /api/evidence` with JSON
 `{kind, name, contentType, data}`. `kind` ∈ `lighthouse|axe|jev|smoke`,
@@ -107,6 +112,7 @@ reason.
 npx wrangler secret put GROQ_API_KEY          # same value as production
 npx wrangler secret put TYPESAFE_API_KEY      # same value as production
 npx wrangler secret put TURNSTILE_SECRET_KEY  # §1e
+npx wrangler secret put EVIDENCE_UPLOAD_TOKEN # authorizes POST /api/evidence uploads
 ```
 
 ### 1g. Web Analytics token
@@ -129,7 +135,13 @@ CSP already allows `https://static.cloudflareinsights.com` (see `_headers`).
 These pair with the worker's in-isolate limiter. The worker comment has
 asked for the WAF rate-limiting rule since the beginning; this is that rule.
 
-### Rule 1 — hard rate limit on the AI advisor (the rule the code asks for)
+### Rule 1 — hard rate limit on the AI advisor (scope must be verified)
+
+Before configuring these custom WAF rules, verify that the hostname is served
+through a zone where this account can apply them. A `pages.dev` hostname does
+not by itself establish that this project's customer-zone custom rules own the
+traffic. Treat the rules below as conditional instructions until their scope
+is confirmed; do not claim them as configured based on the Pages hostname.
 
 Security → WAF → Rate limiting rules → Create rule:
 
@@ -177,6 +189,9 @@ What to configure instead:
   allowance is the narrow, correct control here: it stops the impersonation
   traffic without serving a challenge to a search engine that has verified
   itself.
+- PR #182 currently has a checkbox that says Bot Fight Mode ON. That conflicts
+  with this documented regression requirement; the conflict remains unresolved
+  until the gated review explicitly resolves it.
 - Bot score / machine-learning learning: leave the documented default. We want
   the advisor's paid upstream protected (Rule 1 and Rule 2 do that
   enforcement), not the crawl path blinded.
@@ -259,7 +274,8 @@ Then, in a browser against `bigenergyco-showcase.pages.dev`:
 3. **The share-link round trip** — share, open the returned link, same numbers.
 4. **An evidence upload** succeeds.
 5. **A usage event posts.**
-6. **`/api/health` shows all four showcase flags true.**
+6. `/api/health` reports the four showcase flags. They show binding/config
+   presence only; they do not prove the APIs work.
 
 Capture the demo URL and a short screen recording. Anything on that list you did
 not watch working is described in the application as _shipping_, never as
@@ -270,16 +286,20 @@ _shipped_.
 ```bash
 # 1. bindings present?
 curl -s https://bigenergyco-api-showcase.bigenergyco.workers.dev/api/health | jq .showcase
-# expect: {"turnstile":true,"kv":true,"r2":true,"d1":true}
+# These are presence flags only; complete the operational checks below.
 
 # 2. share round-trip (use any #s= hash from the live site)
 curl -s -X POST .../api/share -H 'Content-Type: application/json' \
   -d '{"hash":"#s=..."}'
 curl -s ".../api/share?id=<id>"
 
-# 3. evidence upload
-curl -s -X POST .../api/evidence -H 'Content-Type: application/json' \
-  -d '{"kind":"lighthouse","name":"2026-09-28T120000Z","contentType":"application/json","data":"{}"}'
+# 3. evidence upload. Set EVIDENCE_UPLOAD_TOKEN in your shell from the
+#    Worker secret value; never put a real token in docs or command history.
+curl -i -X POST https://bigenergyco-api-showcase.bigenergyco.workers.dev/api/evidence \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $EVIDENCE_UPLOAD_TOKEN" \
+  -d '{"kind":"lighthouse","name":"run-label","contentType":"application/json","data":"{}"}'
+# Read the resulting object back from R2 and verify its contents.
 
 # 4. anonymized event (country auto-filled from cf-ipcountry)
 curl -s -X POST .../api/events -H 'Content-Type: application/json' \

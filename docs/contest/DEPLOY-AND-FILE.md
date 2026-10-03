@@ -1,165 +1,104 @@
 # Cold Start — deploy and file, in order
 
-Everything below needs a human with Cloudflare dashboard access. It is written
-so it can be followed start to finish without re-deriving the reasoning.
+This is the current manual runbook for the contest showcase. The repository is
+`Sovereign-Communication/BigEnergyCo`; latest `main` is `d7665c9` (PR #184).
+PR #182 is the sole gated merge lane. PR #172 is a draft tracker only and must
+never be merged. Follow the newest Lucas comment on #182:
+[submission gate](https://github.com/Sovereign-Communication/BigEnergyCo/pull/182#issuecomment-5965638088).
+The outcome is either **API 200 on all four required checks** or
+**NOsubmission**.
 
-**Two standing constraints hold throughout:**
+The filing deadline is **20:59 HST on October 2, 2026**; target filing by
+20:20 HST to leave time for a manual review. Once the checks are green, freeze
+the candidate. There is no automated entry: a person completes and submits the
+application by hand.
 
-- **Isolation.** A concurrent session owns the sibling checkout
-  `.../BigEnergyCo/BigEnergyCo` and `.worktrees/slider-canonical`. Never `git
-add`, `stash`, `checkout`, `worktree`, `clean`, `reset` or `restore` there.
-  Its ground, not this branch's.
-- **One submission.** Official Rules §4. There is no second attempt, and
-  automated entry is barred. The application is filled in by a person, by hand,
-  from `docs/contest/APPLICATION.md`.
+## Current targets and status
 
----
+| Item             | Current fact                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| Org repository   | `Sovereign-Communication/BigEnergyCo`                                                 |
+| `main`           | `d7665c9` (PR #184)                                                                   |
+| Gated merge lane | PR #182 only                                                                          |
+| PR #172          | Draft tracker; never merge                                                            |
+| Pages            | `bigenergyco-showcase.pages.dev`                                                      |
+| Showcase Worker  | `bigenergyco-api-showcase.bigenergyco.workers.dev`                                    |
+| R2               | Account activated; `bigenergyco-evidence-showcase` created; binding still being added |
+| Production       | `freeoffgridcalculator.com`, Worker `bigenergyco-api`; do not deploy to it            |
 
-## Where things are
-
-| Thing                     | Value                                                                                        |
-| ------------------------- | -------------------------------------------------------------------------------------------- |
-| Branch                    | `contest/cold-start`                                                                         |
-| Fork                      | `Treystu/BigEnergyCo`                                                                        |
-| Showcase Pages site       | `bigenergyco-showcase.pages.dev`                                                             |
-| Showcase worker           | `bigenergyco-api-showcase` (workers.dev: `bigenergyco-api-showcase.bigenergyco.workers.dev`) |
-| Production (do not touch) | `freeoffgridcalculator.com`, worker `bigenergyco-api`                                        |
-
-The `-showcase` suffix on the worker name is what makes promotion structurally
-impossible by accident: `wrangler deploy` from `worker/` can never overwrite
-production `bigenergyco-api`.
-
----
-
-## Step 1 — land the fixes (done, needs a PR)
-
-The five defects are fixed and tested on this branch. Open a PR against `main`,
-per `AGENTS.md` §1. Nothing in the demo depends on the merge, only on the
-branch being pushed.
-
-## Step 2 — Pages project (the demo URL)
-
-Dashboard → Workers & Pages → Create → Pages → Connect to Git → select
-**`Treystu/BigEnergyCo`** (the fork) → production branch `main`.
-
-Then add the Turnstile site key as a meta tag **only if** Step 4 provisions
-Turnstile:
-
-```html
-<meta name="bec-turnstile-site-key" content="<site key>" />
-```
-
-Until then, omit it. `assets/js/turnstile-client.js` resolves `null` for a
-missing key and the advisor posts without a token, which is exactly the
-pre-existing behaviour.
-
-## Step 3 — worker bindings
+The showcase Pages build is staged from committed bytes. From the repository
+root, with the public Turnstile site key available:
 
 ```bash
-cd worker
-
-npx wrangler kv namespace create SHARE_KV
-npx wrangler kv namespace create SHARE_KV --preview
-# paste both ids into worker/wrangler.json
-
-# R2 binds by name; create it in the dashboard, no id to paste:
-#   bigenergyco-evidence-showcase
-
-npx wrangler d1 create bigenergyco-usage-showcase
-# paste database_id (+ preview id) into worker/wrangler.json
-npx wrangler d1 execute bigenergyco-usage-showcase --file d1-schema.sql
-
-npx wrangler secret put GROQ_API_KEY
-npx wrangler secret put TYPESAFE_API_KEY
+node scripts/stage-showcase.mjs --output _pages_showcase --turnstile-site-key <public-key>
 ```
 
-`npm run cf:check` fails while any `REPLACE_WITH_*` placeholder remains, and it
-now names all three required secrets.
+This runs the local Pages builder in check mode with the fixed showcase API
+target, injects the public key, and writes the Pages advanced-mode `/api/*`
+proxy files. The output is local and is not deployed by this command. Do not
+put a Turnstile secret or any other secret in the site key argument.
 
-## Step 4 — the cookie gate, BEFORE Turnstile
+## Provision and deploy
 
-This ordering is the whole point of §9, and it is the one step most likely to
-be skipped by someone in a hurry. **Do not create the Turnstile site until this
-has run.**
+1. Create/configure the separate Pages project for the org repository and
+   showcase hostname. Use `_pages_showcase` as the output directory and deploy
+   the staged output only after the submission gate permits it.
+2. Create the showcase KV namespaces, D1 database and schema, and R2 bucket;
+   bind them to the showcase Worker. R2 account activation and bucket creation
+   are complete, but its binding is still in progress. Do not call R2 ready
+   until the Worker binding and readback work.
+3. Set the showcase Worker secrets using Wrangler: `GROQ_API_KEY`,
+   `TYPESAFE_API_KEY`, `TURNSTILE_SECRET_KEY`, and `EVIDENCE_UPLOAD_TOKEN`.
+   The latter is required for evidence uploads. Keep secret values out of
+   commands, docs, and output.
+4. Configure the site's public Turnstile key through the stage helper, deploy
+   the matching Worker/client, and verify the advisor in a browser. The
+   presence of a Turnstile key or secret alone is not proof of a working
+   challenge flow.
+5. Keep **Bot Fight Mode OFF** and **Verified Bots: Allow**. This is a required
+   regression check because enabling Bot Fight Mode previously challenged
+   verified crawlers (F-44). PR #182's checkbox currently says ON; that
+   conflict is unresolved and must be resolved under its gated review before
+   treating configuration as approved.
+6. Do not assume custom WAF rules on `pages.dev` are owned by this project's
+   customer zone. Verify the actual account/hostname scope before claiming
+   such rules are configured; use the Worker protections where applicable.
+
+## Verify the four gates and live behavior
+
+`/api/health`'s four flags (`turnstile`, `kv`, `r2`, `d1`) report binding or
+configuration presence only. Four `true` values do not establish operation.
+Meet the #182 requirement with API 200 on all four required checks, then
+complete the following read/write and browser checks before calling the
+showcase ready:
+
+- KV: create a share link and read it back with the same values.
+- R2: upload with bearer authorization and read the stored object back.
+- D1: post a usage event and verify the resulting row.
+- Turnstile/chat: browser obtains a valid token and advisor request succeeds;
+  a tokenless request returns 403 when the secret is configured.
+- Browser: calculator completes a sizing flow; advisor answers or clearly
+  shows its offline fallback; share round trip works; evidence upload and usage
+  event work.
+
+Example authorized R2 upload (set `EVIDENCE_UPLOAD_TOKEN` in the shell from the
+Worker secret value; never substitute a real secret into this document):
 
 ```bash
-node scripts/cold-start-preflight.mjs \
-  --chat https://bigenergyco-api-showcase.bigenergyco.workers.dev \
-  --page https://bigenergyco-showcase.pages.dev \
-  --cookies --json
+curl -i -X POST https://bigenergyco-api-showcase.bigenergyco.workers.dev/api/evidence \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $EVIDENCE_UPLOAD_TOKEN" \
+  -d '{"kind":"smoke","name":"run-label","contentType":"application/json","data":"{}"}'
 ```
 
-(Needs the worker deployed first for the `--chat` half; the cookie half only
-needs the Pages site up.)
+Do not mark Turnstile or deployment verification complete until these checks
+have actually passed. Unobserved behavior remains unverified in the
+application.
 
-Read `cookieGate`, then act on it:
+## File by hand
 
-- **`provision: true`** → create the Turnstile site for
-  `bigenergyco-showcase.pages.dev`, add the site-key meta (Step 2), and only
-  then `npx wrangler secret put TURNSTILE_SECRET_KEY`. Server and client ship
-  together (R-CF-02); shipping the secret first is what 403'd the advisor.
-- **`provision: false`** → do **not** set the secret. The advisor runs
-  unguarded on the showcase, and the application describes Turnstile as
-  _shipping_, not _shipped_.
-- **Not measured** → also do not set it, and re-run until it is. An unmeasured
-  risk is not a passed gate.
-
-Whichever way it goes, record it in the ledger.
-
-## Step 5 — deploy the worker
-
-```bash
-cd worker && npx wrangler deploy
-npm run cf:check
-```
-
-## Step 6 — WAF, cache rules, bot management
-
-Per `docs/cloudflare-showcase.md` §2 and §3. The one thing to get right:
-
-- **Bot Fight Mode: OFF.** Verified Bots: **Allow**. Turning Bot Fight Mode on
-  re-creates this repo's own finding **F-44**, where the domain 403s verified
-  crawlers. It is governed by R-SEO-07 and closed by owner action O-09, and
-  R-CF-07 carries the same rule onto the showcase hostname.
-
-## Step 7 — verify in a real browser, not just curl
-
-The §5 curls all pass against the configuration that was broken, so they prove
-nothing on their own. Drive the page:
-
-1. Advisor answers — or degrades with its visible **"offline answer, not the
-   live AI"** label.
-2. Calculator sizes a system end to end.
-3. Share-link round trip returns the same numbers.
-4. An evidence upload succeeds.
-5. A usage event posts.
-6. `/api/health` shows all four showcase flags true.
-
-Then capture the demo URL and a short screen recording.
-
-**Anything on this list you did not watch working is described in the
-application as _shipping_, never as _shipped_.**
-
-## Step 8 — file, by hand
-
-Open `docs/contest/APPLICATION.md`. Fill the form yourself:
-
-- [ ] 300-word description, demo URL substituted
-- [ ] Traction figures **measured now**, each with its window
-- [ ] **Repository URL** — required by Official Rules §5
-- [ ] Repository is public and readable — Cloudflare reads it
-- [ ] Only verified Cloudflare products listed as shipped
-- [ ] No competitor named anywhere
-- [ ] Submitted by a person, by hand
-
-## Step 9 — record it
-
-Append rows to `docs/plan/LEDGER.jsonl` with the SHA that was actually
-measured:
-
-- `gate-run` — the preflight's JSON output (advisor state, Jev state, cookie
-  count, and the §9 decision it forced)
-- `note` — anything that could not be verified, named as such
-
-The ledger records what was measured, not what was hoped. A gate nobody records
-is indistinguishable from a gate that was never run.
+After the gate is green, freeze the candidate and have a person complete
+`docs/contest/APPLICATION.md` and submit before the deadline. Confirm the
+repository URL is the org repo and publicly readable, use only verified
+product claims and measured traction, and name no competitor. If any required
+check is not API 200, the outcome is **NOsubmission**; do not file.

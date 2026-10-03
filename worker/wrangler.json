@@ -16,6 +16,12 @@
   ],
   "main": "index.js",
   "name": "bigenergyco-api-showcase",
+  "r2_buckets": [
+    {
+      "binding": "EVIDENCE_BUCKET",
+      "bucket_name": "bigenergyco-evidence-showcase"
+    }
+  ],
   "ratelimits": [
     {
       "name": "RL_CHAT_PER_MIN",

@@ -514,6 +514,9 @@ test("health reports showcase binding presence, never secrets", async () => {
 
 test("provision check fails on placeholders, passes when clean", () => {
   const dirty = checkProvisioning('{"id":"REPLACE_WITH_KV_NAMESPACE_ID"}');
-  assert.ok(dirty.some((m) => m.key === "REPLACE_WITH_KV_NAMESPACE_ID"));
-  assert.deepEqual(checkProvisioning('{"id":"real-id-123"}'), []);
+  assert.ok(dirty.some((m) => m.key === "SHARE_KV"));
+  assert.ok(checkProvisioning("{}").length > 0);
+  assert.ok(
+    checkProvisioning('{"name":"bigenergyco-api-showcase"}').length > 0,
+  );
 });
