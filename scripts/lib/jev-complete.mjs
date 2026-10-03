@@ -191,18 +191,39 @@ export const SCOPE_FACETS = {
   "P11.4": ["release", "seo"],
 };
 
+// Explicit non-plan evaluation scopes. These do not extend or alter the
+// canonical P-item registry above; they are narrowly sourced from the Cold
+// Start contest requirements in docs/contest/COLD-START-PLAN.md §10.
+export const NAMED_SCOPE_FACETS = {
+  "CF-SHOWCASE": [
+    "advisor",
+    "correctness",
+    "docs",
+    "privacy",
+    "provenance",
+    "release",
+    "resilience",
+    "security",
+    "testing",
+  ],
+};
+
 /**
  * The facets a scoped run judges. Returns null for the whole-program run.
- * Throws on an unknown item so a typo in --scope fails loudly rather than
+ * Throws on an unknown scope so a typo in --scope fails loudly rather than
  * silently widening to every facet.
  */
 export function resolveScopeFacets(scopeId, doc) {
   if (!scopeId) return null;
-  const axes = SCOPE_FACETS[scopeId];
+  const axes = SCOPE_FACETS[scopeId] || NAMED_SCOPE_FACETS[scopeId];
   if (!axes) {
+    const knownScopes = [
+      ...Object.keys(SCOPE_FACETS),
+      ...Object.keys(NAMED_SCOPE_FACETS),
+    ].join(", ");
     throw new Error(
-      `unknown --scope "${scopeId}": expected a plan item id like P1.1 ` +
-        `(known: ${Object.keys(SCOPE_FACETS).join(", ")})`,
+      `unknown --scope "${scopeId}": expected a plan item id like P1.1 or ` +
+        `a named scope (known: ${knownScopes})`,
     );
   }
   const known = new Set(Object.keys(doc.axes));

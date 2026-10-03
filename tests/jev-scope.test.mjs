@@ -15,6 +15,7 @@ import {
   COMPLETE_MIN_SCORE,
   COMPLETE_EXIT_FACET_INDEX,
   SCOPE_FACETS,
+  NAMED_SCOPE_FACETS,
   resolveScopeFacets,
   readRatchetBaseline,
   checkRatchet,
@@ -127,6 +128,21 @@ test("GATE: a known scope resolves, an unknown one throws rather than widening",
     "no scope = whole program",
   );
   assert.throws(() => resolveScopeFacets("P9.9", pack), /unknown --scope/);
+  assert.deepEqual(
+    resolveScopeFacets("CF-SHOWCASE", pack),
+    [
+      "advisor",
+      "correctness",
+      "docs",
+      "privacy",
+      "provenance",
+      "release",
+      "resilience",
+      "security",
+      "testing",
+    ],
+    "the standalone contest scope must judge only its declared R-CF facets",
+  );
   // P0.3 owns four axes; a pack missing one must be rejected rather than
   // silently scored against a partial set.
   assert.throws(
@@ -419,6 +435,85 @@ test("GATE: the all-proven exit rule starts at P0.4, not at its own author", () 
   assert.equal(planItemAtLeast("P10", COMPLETE_EXIT_RULE_FROM), true);
 });
 
+test("GATE: the contest scope binds 99 and all-proven without inheriting P0.3 bootstrap", () => {
+  // CF-SHOWCASE is sourced from COLD-START-PLAN R-CF-01..10 and deliberately
+  // lives outside the immutable P-item registry. Every mapped facet is proven;
+  // the other twelve axes are low to demonstrate that contest scoping is real.
+  const facets = Object.fromEntries(
+    AXES.map((axis) => [
+      axis,
+      NAMED_SCOPE_FACETS["CF-SHOWCASE"].includes(axis)
+        ? { ...provenFacet }
+        : { ordinal: 0, index: 0, level: "failing" },
+    ]),
+  );
+  const report = {
+    facets,
+    hard_gates_passed: true,
+    mechanical_score: 100,
+    min_score: COMPLETE_MIN_SCORE,
+  };
+  const good = scopedVerdict({
+    report,
+    scope: "CF-SHOWCASE",
+    pack,
+    ledgerText: baselineFor(report),
+  });
+  assert.equal(good.pass, true);
+  assert.equal(good.scoped.bootstrap_applies, false);
+  assert.equal(good.scoped.exit_rule_binding, true);
+  assert.equal(good.scoped.exit_rule_binds_from, "CF-SHOWCASE (always)");
+  assert.deepEqual(good.scoped.facets_short_of_proven, []);
+
+  const redGate = scopedVerdict({
+    report: { ...report, hard_gates_passed: false },
+    scope: "CF-SHOWCASE",
+    pack,
+    ledgerText: baselineFor(report),
+  });
+  assert.equal(
+    redGate.pass,
+    false,
+    "named scopes still require every hard gate",
+  );
+  const unratcheted = scopedVerdict({
+    report,
+    scope: "CF-SHOWCASE",
+    pack,
+    ledgerText: LEDGER_WITHOUT,
+  });
+  assert.equal(
+    unratcheted.pass,
+    false,
+    "named scopes require an active ratchet",
+  );
+
+  const gap = structuredClone(report);
+  gap.facets.security = { ordinal: 85, index: 3, level: "confident" };
+  const bad = scopedVerdict({
+    report: gap,
+    scope: "CF-SHOWCASE",
+    pack,
+    ledgerText: baselineFor(gap),
+  });
+  assert.equal(bad.pass, false);
+  assert.deepEqual(bad.scoped.facets_short_of_proven, ["security"]);
+
+  const p03 = Object.fromEntries(
+    AXES.map((axis) => [axis, { ordinal: 85, index: 3, level: "confident" }]),
+  );
+  const p03Report = { ...report, facets: p03 };
+  const bootstrap = scopedVerdict({
+    report: p03Report,
+    scope: "P0.3",
+    pack,
+    ledgerText: baselineFor(p03Report),
+  });
+  assert.equal(bootstrap.pass, true, "canonical P0.3 bootstrap stays intact");
+  assert.equal(bootstrap.scoped.bootstrap_applies, true);
+  assert.equal(bootstrap.scoped.exit_rule_binding, false);
+});
+
 // The exemption is coarse because the PLAN is coarse: it lists P0.3 as one
 // item, so "P0.3d" is not an id a scoped run can be given. If the plan ever
 // grows sub-items, this test fails and the binding point must be revisited
@@ -478,8 +573,8 @@ test("GATE: a scoped run at or after the binding point fails on any facet short 
   );
   assert.match(
     verdict,
-    /exit_rule_binds_from: COMPLETE_EXIT_RULE_FROM/,
-    "the report must state where the rule binds, so it is never implicit",
+    /exit_rule_binds_from: exitRuleBindsFrom/,
+    "the report must state the applicable binding rule, so it is never implicit",
   );
 });
 

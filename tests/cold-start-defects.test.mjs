@@ -634,6 +634,7 @@ test("B5: cf-provision-check requires TYPESAFE_API_KEY", () => {
   );
   assert.ok(names.includes("GROQ_API_KEY"));
   assert.ok(names.includes("TURNSTILE_SECRET_KEY"));
+  assert.ok(names.includes("EVIDENCE_UPLOAD_TOKEN"));
   // Every entry must carry actionable instructions, not just a name.
   for (const s of REQUIRED_SECRETS) {
     assert.match(
@@ -644,12 +645,84 @@ test("B5: cf-provision-check requires TYPESAFE_API_KEY", () => {
   }
 });
 
-test("B5: the provision check still fails on an unprovisioned placeholder", () => {
-  assert.ok(
-    checkProvisioning('{"id":"REPLACE_WITH_KV_NAMESPACE_ID"}').length > 0,
-    "the placeholder gate must keep working",
+test("B5: provision check rejects empty and structurally incomplete configs", () => {
+  for (const invalid of ["null", "[]", "true", "invalid JSON"]) {
+    assert.equal(checkProvisioning(invalid).length, 5);
+  }
+  assert.deepEqual(
+    checkProvisioning("{}").map((item) => item.key),
+    [
+      "worker.name",
+      "SHARE_KV",
+      "USAGE_DB",
+      "EVIDENCE_BUCKET",
+      "TURNSTILE_SITE_KEY",
+    ],
   );
-  assert.deepEqual(checkProvisioning('{"id":"real"}'), []);
+  assert.deepEqual(
+    checkProvisioning(
+      JSON.stringify({
+        name: "bigenergyco-api-showcase",
+        kv_namespaces: [
+          { binding: "SHARE_KV", id: "352d6d3f9d634f729a31a0b2a7dc0176" },
+        ],
+      }),
+    ).map((item) => item.key),
+    ["USAGE_DB", "EVIDENCE_BUCKET", "TURNSTILE_SITE_KEY"],
+  );
+  assert.ok(
+    checkProvisioning(
+      '{"name":"bigenergyco-api","vars":{"TURNSTILE_SITE_KEY":"REPLACE_WITH_TURNSTILE_SITE_KEY"}}',
+    ).length > 0,
+    "production worker names and placeholders must not pass",
+  );
+  const placeholderConfig = {
+    name: "bigenergyco-api-showcase",
+    kv_namespaces: [
+      { binding: "SHARE_KV", id: "REPLACE_WITH_KV_NAMESPACE_ID" },
+    ],
+    d1_databases: [
+      { binding: "USAGE_DB", database_id: "REPLACE_WITH_D1_DATABASE_ID" },
+    ],
+    r2_buckets: [{ binding: "EVIDENCE_BUCKET", bucket_name: "bucket" }],
+    vars: { TURNSTILE_SITE_KEY: "REPLACE_WITH_TURNSTILE_SITE_KEY" },
+  };
+  assert.deepEqual(
+    checkProvisioning(JSON.stringify(placeholderConfig)).map(
+      (item) => item.key,
+    ),
+    ["SHARE_KV", "USAGE_DB", "TURNSTILE_SITE_KEY"],
+    "the previous KV, D1, and Turnstile placeholders must remain blocked",
+  );
+  assert.ok(
+    checkProvisioning('{"name":"bigenergyco-api-showcase"}').some(
+      (item) => item.key === "SHARE_KV",
+    ),
+    "an omitted binding must name its provisioning step",
+  );
+});
+
+test("B5: provision check accepts a fully provisioned showcase configuration", () => {
+  const complete = {
+    name: "bigenergyco-api-showcase",
+    kv_namespaces: [
+      { binding: "SHARE_KV", id: "352d6d3f9d634f729a31a0b2a7dc0176" },
+    ],
+    d1_databases: [
+      {
+        binding: "USAGE_DB",
+        database_id: "b99aa7ea-bd4d-43ad-b312-37d0fc2608e8",
+      },
+    ],
+    r2_buckets: [
+      {
+        binding: "EVIDENCE_BUCKET",
+        bucket_name: "bigenergyco-evidence-showcase",
+      },
+    ],
+    vars: { TURNSTILE_SITE_KEY: "0x4AAAAAAvalidExampleSiteKey" },
+  };
+  assert.deepEqual(checkProvisioning(JSON.stringify(complete)), []);
 });
 
 // ══ the shipped client path, executed ═════════════════════════════════════

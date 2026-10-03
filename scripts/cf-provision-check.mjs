@@ -2,9 +2,8 @@
 //
 // Usage: node scripts/cf-provision-check.mjs [--json]
 //
-// Fails (exit 1) when worker/wrangler.json still carries REPLACE_WITH_*
-// placeholders, printing the exact provisioning checklist from
-// docs/cloudflare-showcase.md. Passes when every binding is real.
+// Fails (exit 1) when worker/wrangler.json is missing showcase configuration,
+// printing the exact provisioning checklist from docs/cloudflare-showcase.md.
 // This is the fail-loud counterpart to the worker's runtime 503
 // provisioning errors: CI catches the missing step before deploy does.
 
@@ -15,20 +14,38 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const WRANGLER = join(ROOT, "worker", "wrangler.json");
 
-const PLACEHOLDERS = [
+const REQUIRED_CONFIGURATION = [
   {
-    key: "REPLACE_WITH_KV_NAMESPACE_ID",
+    key: "worker.name",
+    step: "Worker: set name to bigenergyco-api-showcase (the isolated showcase worker)",
+  },
+  {
+    key: "SHARE_KV",
     step: "KV: wrangler kv namespace create SHARE_KV (and --preview), paste both ids",
   },
   {
-    key: "REPLACE_WITH_D1_DATABASE_ID",
+    key: "USAGE_DB",
     step: "D1: wrangler d1 create bigenergyco-usage-showcase, paste id (+ preview id)",
   },
   {
-    key: "REPLACE_WITH_TURNSTILE_SITE_KEY",
+    key: "EVIDENCE_BUCKET",
+    step: "R2: create bucket bigenergyco-evidence-showcase and bind it as EVIDENCE_BUCKET",
+  },
+  {
+    key: "TURNSTILE_SITE_KEY",
     step: "Turnstile: Cloudflare dashboard -> Turnstile -> add site, paste site key; then wrangler secret put TURNSTILE_SECRET_KEY",
   },
 ];
+
+const isRealString = (value) =>
+  typeof value === "string" &&
+  value.trim().length > 0 &&
+  !/(?:REPLACE_WITH|PLACEHOLDER|CHANGEME|TODO|YOUR[_ -])/i.test(value);
+
+const findBinding = (list, name) =>
+  Array.isArray(list)
+    ? list.find((item) => item && item.binding === name)
+    : null;
 
 // Exported so a test can pin the list: this gate's whole job is to name the
 // exact provisioning steps CI cannot see, and B5 was a secret that lived only
@@ -46,16 +63,43 @@ export const REQUIRED_SECRETS = [
     name: "TYPESAFE_API_KEY",
     step: "wrangler secret put TYPESAFE_API_KEY (the Jev truthfulness wire; same value as production)",
   },
+  {
+    name: "EVIDENCE_UPLOAD_TOKEN",
+    step: "wrangler secret put EVIDENCE_UPLOAD_TOKEN (required to authorize POST /api/evidence uploads)",
+  },
 ];
 
 // Local alias kept so the rest of this file reads unchanged.
 const SECRETS = REQUIRED_SECRETS;
 
 export function checkProvisioning(wranglerJsonText) {
-  const missing = [];
-  for (const p of PLACEHOLDERS) {
-    if (wranglerJsonText.includes(p.key)) missing.push(p);
+  let config;
+  try {
+    config = JSON.parse(wranglerJsonText);
+  } catch {
+    return REQUIRED_CONFIGURATION.slice();
   }
+  if (!config || typeof config !== "object" || Array.isArray(config)) {
+    return REQUIRED_CONFIGURATION.slice();
+  }
+
+  const kv = findBinding(config.kv_namespaces, "SHARE_KV");
+  const d1 = findBinding(config.d1_databases, "USAGE_DB");
+  const r2 = findBinding(config.r2_buckets, "EVIDENCE_BUCKET");
+  const vars =
+    config.vars && typeof config.vars === "object" ? config.vars : {};
+  const valid = {
+    "worker.name": config.name === "bigenergyco-api-showcase",
+    SHARE_KV: !!kv && /^[a-f0-9]{32}$/i.test(kv.id || ""),
+    USAGE_DB:
+      !!d1 &&
+      /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(
+        d1.database_id || "",
+      ),
+    EVIDENCE_BUCKET: !!r2 && isRealString(r2.bucket_name),
+    TURNSTILE_SITE_KEY: isRealString(vars.TURNSTILE_SITE_KEY),
+  };
+  const missing = REQUIRED_CONFIGURATION.filter((item) => !valid[item.key]);
   return missing;
 }
 
@@ -76,7 +120,9 @@ function main() {
   if (asJson) {
     console.log(JSON.stringify(result, null, 2));
   } else if (result.ok) {
-    console.log("cf-provision-check: all wrangler.json bindings are real.");
+    console.log(
+      "cf-provision-check: showcase worker configuration is complete.",
+    );
     console.log(
       "Remember secrets (not visible here): " +
         SECRETS.map((s) => s.name).join(", "),

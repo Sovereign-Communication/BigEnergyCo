@@ -257,10 +257,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20261003d" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261003d" />
+    <link rel="preload" href="./assets/site.css?v=20261003e" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261003e" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20261003d" />
+    <link rel="stylesheet" href="./assets/site.css?v=20261003e" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -3426,15 +3426,15 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20261003d"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20261003e"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
       type="module"
-      src="./assets/js/turnstile-client.js?v=20261003d"
+      src="./assets/js/turnstile-client.js?v=20261003e"
     ></script>
-    <script defer src="./assets/js/chat.js?v=20261003d"></script>
+    <script defer src="./assets/js/chat.js?v=20261003e"></script>
   </body>
 </html>
 

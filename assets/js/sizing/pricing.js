@@ -230,7 +230,6 @@ export const CURRENCIES = {
   AFN: { symbol: "؋", perUSD: 70, name: "Afghan afghani" },
   ALL: { symbol: "L", perUSD: 92, name: "Albanian lek" },
   AMD: { symbol: "֏", perUSD: 385, name: "Armenian dram" },
-  ANG: { symbol: "ƒ", perUSD: 1.79, name: "Netherlands Antillean guilder" },
   AOA: { symbol: "Kz", perUSD: 900, name: "Angolan kwanza" },
   ARS: { symbol: "$", perUSD: 1400, name: "Argentine peso" },
   AWG: { symbol: "ƒ", perUSD: 1.79, name: "Aruban florin" },
@@ -349,10 +348,12 @@ export const CURRENCIES = {
   XAF: { symbol: "FCFA", perUSD: 600, name: "Central African CFA franc" },
   XCD: { symbol: "EC$", perUSD: 2.7, name: "East Caribbean dollar" },
   XOF: { symbol: "CFA", perUSD: 600, name: "West African CFA franc" },
+  XCG: { symbol: "Cg", perUSD: 1.79, name: "Caribbean guilder" },
   XPF: { symbol: "₣", perUSD: 110, name: "CFP franc" },
   YER: { symbol: "YER", perUSD: 250, name: "Yemeni rial" },
   ZMW: { symbol: "ZK", perUSD: 27, name: "Zambian kwacha" },
-  ZWL: { symbol: "Z$", perUSD: 13000, name: "Zimbabwean dollar" },
+  // Offline fallback: RBZ interbank mid rate of 26.7813 ZiG per USD, 2026-10-01.
+  ZWG: { symbol: "ZiG", perUSD: 26.7813, name: "Zimbabwe Gold" },
 };
 
 // Last-update timestamp for the FX rates in use (set by live fetch in ui.js).

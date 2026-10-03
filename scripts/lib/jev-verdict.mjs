@@ -11,6 +11,7 @@ import {
   planItemAtLeast,
   readRatchetBaseline,
   resolveScopeFacets,
+  SCOPE_FACETS,
   COMPLETE_EXIT_RULE_FROM,
 } from "./jev-complete.mjs";
 
@@ -37,9 +38,19 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
     readRatchetBaseline(ledgerText, pack),
   );
   const short = scopeFacets.filter((a) => report.facets[a].index < 4);
-  // The all-proven exit rule binds from COMPLETE_EXIT_RULE_FROM. P0.3(c)
-  // defined the rule and is the one item it cannot judge (see the constant).
-  const exitRuleBinds = planItemAtLeast(scope, COMPLETE_EXIT_RULE_FROM);
+  // Canonical phase scopes retain the P0.3 bootstrap policy. Named contest
+  // scopes are independent deliverables and always bind the full scoped bar;
+  // treating a non-P identifier as "before P0.4" would grant it the bootstrap.
+  const isPhaseScope = Object.prototype.hasOwnProperty.call(
+    SCOPE_FACETS,
+    scope,
+  );
+  const exitRuleBinds = isPhaseScope
+    ? planItemAtLeast(scope, COMPLETE_EXIT_RULE_FROM)
+    : true;
+  const exitRuleBindsFrom = isPhaseScope
+    ? COMPLETE_EXIT_RULE_FROM
+    : `${scope} (always)`;
   // P0.3 bootstrap (plan §9 rule 6, owner ruling 2026-09-26): a P0.3
   // sub-PR builds the gate that judges it, so it merges on green CI plus an
   // attached scoped report with NO RATCHET REGRESSION, even below 99. The
@@ -64,10 +75,11 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
       score: Math.round(scopedCombined * 100) / 100,
       min_score: report.min_score,
       bootstrap_applies: !exitRuleBinds,
-      bootstrap_rule:
-        "plan §9 rule 6: P0.3 sub-PRs merge on green CI plus no ratchet regression, even below 99",
+      bootstrap_rule: isPhaseScope
+        ? "plan §9 rule 6: P0.3 sub-PRs merge on green CI plus no ratchet regression, even below 99"
+        : null,
       facets_short_of_proven: short,
-      exit_rule_binds_from: COMPLETE_EXIT_RULE_FROM,
+      exit_rule_binds_from: exitRuleBindsFrom,
       exit_rule_binding: exitRuleBinds,
       // An inactive ratchet is stated, never implied. It is not a pass.
       ratchet:

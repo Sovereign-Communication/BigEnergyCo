@@ -1,10 +1,23 @@
 # Cloudflare Showcase — provisioning & configuration guide
 
-Branch: `showcase/cold-start` (fork `Treystu/BigEnergyCo`).
-Purpose: make the Cloudflare developer platform a first-class, demonstrable
-part of the stack for the Cold Start pitch competition. Every integration
-below is genuine: the worker code is written, tested, and fails loudly when
-its Cloudflare-side counterpart is not provisioned yet.
+Repository: `Sovereign-Communication/BigEnergyCo`. Current submission lane:
+PR #182; see `docs/contest/DEPLOY-AND-FILE.md` for the evidence record. The
+verified showcase deployment is source commit `19d5c378a1883901c5754df4566ad2bbbad2bd89`,
+Pages deployment `70d5c3f9.bigenergyco-showcase.pages.dev` (stamp `20261003e`),
+and Worker version `8b371a06-1f75-470c-8fe9-36de3927f7ca`. This documentation
+revision records that deployed source and is being prepared for commit; it does
+not change the deployed artifact. All four health flags were true, and KV, D1,
+R2, and the browser flow were independently exercised. The corrected
+owner-approved security gate is Turnstile plus the Worker 8/minute rate limit,
+with no site-wide challenge and Bot Fight Mode off where applicable. The Jev
+advisory CI step was red because its title lacked the plan item ID, scope
+selection failed, and the live call was skipped. The Worker Jev sanity flag was
+false; these are distinct findings, and neither establishes an independent Jev
+result.
+Purpose: document the Cloudflare showcase integrations and related setup
+guidance for the Cold Start pitch competition. The current deployment evidence
+is summarized above; remaining dashboard recipes below are proposals, not
+claims that those optional Cloudflare products are configured.
 
 **Nothing here touches production.** The showcase worker is named
 `bigenergyco-api-showcase` (wrangler.json), so deploying it can never
@@ -13,22 +26,26 @@ clobber the production `bigenergyco-api` worker. The showcase Pages project
 
 ## 1. Provisioning checklist
 
-Do these once, in order. The worker returns a 503 naming the missing piece
-(plus this document) until each is done; `npm run cf:check` (see §8) fails
-locally on any remaining `REPLACE_WITH_*` placeholder.
+These steps document how to provision a fresh showcase environment. The
+recorded deployment is already provisioned and verified as summarized above;
+do not repeat creation steps against it. The worker returns a 503 naming a
+missing piece; `npm run cf:check` (see §8) checks local placeholders.
 
-### 1a. Separate Pages project for the fork (the secondary test link)
+### 1a. Separate Pages project for the org repository
 
 1. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git.
-2. Select the **`Treystu/BigEnergyCo`** repo (the fork, not the org repo).
-3. Production branch: `main`. Build command: none (static output is built by
-   `scripts/deploy-pages-local.mjs`; use output directory `_pages`).
+2. Select **`Sovereign-Communication/BigEnergyCo`**.
+3. Stage committed bytes from the repository root with
+   `node scripts/stage-showcase.mjs --output _pages_showcase --turnstile-site-key <public-key>`.
+   The helper runs the local builder in check mode with the fixed showcase API
+   target and writes the Pages advanced-mode `/api/*` proxy. Deploy the staged
+   `_pages_showcase` output through the Pages project. This does not deploy it.
 4. Name it `bigenergyco-showcase`. This yields
    `bigenergyco-showcase.pages.dev` — the secondary link for testing the
    submission version, fully isolated from staging (`bigenergyco.pages.dev`)
    and production (`freeoffgridcalculator.com`).
-5. Every branch push then gets its own `*.bigenergyco-showcase.pages.dev`
-   preview URL automatically.
+5. Verify the actual Pages build/deployment and proxy in a browser; do not
+   infer deployment success from a staged directory.
 
 ### 1b. KV namespace (share-link edge cache)
 
@@ -41,9 +58,10 @@ Paste both ids into `worker/wrangler.json` (`kv_namespaces`).
 
 ### 1c. R2 bucket (quality-evidence artifacts)
 
-Dashboard → R2 → Create bucket → **`bigenergyco-evidence-showcase`**.
-The bucket name is already wired in `worker/wrangler.json`; no id to paste
-(R2 binds by name).
+The Cloudflare account is activated and bucket
+**`bigenergyco-evidence-showcase`** is bound as `EVIDENCE_BUCKET`. The deployed
+showcase accepted an evidence upload and returned the stored object on
+readback. R2 binds by name, with no id to paste.
 
 Upload path: `POST /api/evidence` with JSON
 `{kind, name, contentType, data}`. `kind` ∈ `lighthouse|axe|jev|smoke`,
@@ -85,9 +103,15 @@ requires a valid `turnstileToken` in the body and rejects without one
 (HTTP 403, fail-closed). Unprovisioned, the endpoint keeps its current
 behavior and `/api/health` reports `"turnstile": false`.
 
-Cookie bar: Q-15 requires 0 cookies, and Turnstile's managed-mode cookie
-behavior is unverified. Run the §9 gate BEFORE setting the secret, and let the
-measurement decide. Do not set it on the assumption.
+The deployed client and Worker have been exercised together: the browser
+obtained a Turnstile token, and the advisor returned a real online response.
+The owner-approved security gate is Turnstile plus the Worker 8-requests-per-
+minute limit. No site-wide challenge is enabled; Bot Fight Mode is off where
+applicable. Q-15 remains a separate zero-cookie gate: the pre-provisioning
+HTTP probe observed zero `Set-Cookie` headers, so the secret was provisioned.
+This does not verify browser third-party cookie behavior; no `cf_clearance`
+cookie was observed in the widget flow. Do not claim WAF configuration from
+this evidence.
 
 Client integration: **in this branch** — `assets/js/chat.js` renders the
 widget explicitly and sends the token as `turnstileToken` in the `/api/chat`
@@ -98,16 +122,21 @@ project (or `window.BEC_TURNSTILE_SITE_KEY`); the secret never does.
 **Server and client ship as one item (R-CF-02).** Do not run
 `wrangler secret put TURNSTILE_SECRET_KEY` until the site key meta is live
 on the showcase host, or every advisor call 403s with no client recovery — the
-exact defect B1 records. The cookie gate in §9 runs first for a separate
-reason.
+exact defect B1 records. The deployed client and Worker have since passed a
+real browser challenge-and-response flow.
 
 ### 1f. Secrets on the showcase worker
 
 ```bash
-npx wrangler secret put GROQ_API_KEY          # same value as production
-npx wrangler secret put TYPESAFE_API_KEY      # same value as production
+npx wrangler secret put GROQ_API_KEY          # advisor provider credential
 npx wrangler secret put TURNSTILE_SECRET_KEY  # §1e
+npx wrangler secret put EVIDENCE_UPLOAD_TOKEN # authorizes POST /api/evidence uploads
 ```
+
+`TYPESAFE_API_KEY` supports the independent Jev advisory check. The recorded
+CI job did not call it: the title lacked the plan item ID and scope selection
+failed. Separately, the deployed Worker Jev sanity flag was false. No
+independent Jev result is established by these facts.
 
 ### 1g. Web Analytics token
 
@@ -124,12 +153,20 @@ Copy the 32-char hex token and expose it to the site as ONE of:
 real 32-char hex value; the placeholder is never sent to the network.
 CSP already allows `https://static.cloudflareinsights.com` (see `_headers`).
 
-## 2. WAF configuration (dashboard steps with exact rules)
+## 2. Rate limiting and site-wide challenge posture
 
-These pair with the worker's in-isolate limiter. The worker comment has
-asked for the WAF rate-limiting rule since the beginning; this is that rule.
+The deployed Worker has an 8-requests-per-minute advisor limit. This is the
+verified rate limit for the showcase. No WAF rate-limiting rules have been
+verified or are claimed. The dashboard instructions below are optional
+proposals only and must not be described as deployed configuration.
 
-### Rule 1 — hard rate limit on the AI advisor (the rule the code asks for)
+### Rule 1 — hard rate limit on the AI advisor (scope must be verified)
+
+Before configuring these custom WAF rules, verify that the hostname is served
+through a zone where this account can apply them. A `pages.dev` hostname does
+not by itself establish that this project's customer-zone custom rules own the
+traffic. Treat the rules below as conditional instructions until their scope
+is confirmed; do not claim them as configured based on the Pages hostname.
 
 Security → WAF → Rate limiting rules → Create rule:
 
@@ -140,9 +177,10 @@ Security → WAF → Rate limiting rules → Create rule:
   ```
 - With the following traffic: IP (characteristics) — note: prefer
   `CF-Connecting-IP`-derived IP; the dashboard default is correct.
-- Rate: **8 requests per 1 minute** (mirrors the worker's
-  `RATE_PER_IP_PER_MIN`; the WAF is the hard enforcement that survives
-  isolate eviction, the worker limiter is the burst brake).
+- Proposed rate: **8 requests per 1 minute** (mirrors the worker's
+  `RATE_PER_IP_PER_MIN`; if configured in an eligible zone, a WAF rule could
+  enforce this at the edge while the Worker limiter remains the verified
+  showcase control).
 - When rate exceeds: Block, for 60 seconds.
 
 ### Rule 2 — evidence and event endpoints
@@ -153,8 +191,8 @@ Security → WAF → Rate limiting rules → Create rule:
   (http.request.uri.path in {"/api/share" "/api/evidence" "/api/events"} and http.request.method eq "POST")
   ```
 - Rate: **20 requests per 1 minute** per IP. Action: Block 60 s.
-- Rationale: these write to KV/R2/D1; the worker also rate-limits them,
-  but the WAF keeps junk from ever reaching the isolate.
+- Proposed rationale: these write to KV/R2/D1; an eligible-zone WAF rule could
+  filter requests before they reach the Worker.
 
 ### Rule 3 — verified-bot allowance, NOT Bot Fight Mode
 
@@ -173,26 +211,25 @@ R-SEO-07 may serve a managed challenge or Bot Fight Mode to verified crawlers.
 What to configure instead:
 
 - Security → Bots → **Bot Fight Mode: Off** for the showcase hostname.
-- Security → Bots → **Verified Bots: Allow.** Cloudflare's verified-bot
-  allowance is the narrow, correct control here: it stops the impersonation
-  traffic without serving a challenge to a search engine that has verified
-  itself.
-- Bot score / machine-learning learning: leave the documented default. We want
-  the advisor's paid upstream protected (Rule 1 and Rule 2 do that
-  enforcement), not the crawl path blinded.
+- Security → Bots → **Verified Bots: Allow**, where an applicable customer
+  zone exposes this setting. This is the required posture for those zones; no
+  such zone setting is claimed for the Cloudflare-owned `pages.dev` hostname.
+- Any older PR checkbox or guidance that proposed Bot Fight Mode ON is
+  superseded by the owner-approved posture above. Current PR state was not
+  checked as part of this evidence update.
+- The Worker limiter is the verified advisor protection. The WAF rules below
+  remain unconfigured proposals.
 
-The genuine business reason, without the framing that does not exist: bot
-traffic burns paid Groq tokens and occupies the advisor chat box a real visitor
-is trying to use. That is an uptime-and-cost argument, and it is the whole
-argument. There is no lead capture here and the project forbids any — D-18
-and the master plan's §14 non-goals both rule out accounts, lead forms and
-sales.
+The advisor protection addresses abuse of a paid upstream while preserving
+access to the calculator. There is no lead capture here; D-18 and the master
+plan's §14 non-goals rule out accounts, lead forms and sales.
 
 ### Managed ruleset
 
-Security → WAF → Managed rulesets → Cloudflare Managed Ruleset: **On**,
-sensitivity Medium. The API surface is JSON-only; OWASP paranoia above
-Medium risks false positives on calculator payloads.
+Optional, unverified proposal: Security → WAF → Managed rulesets → Cloudflare
+Managed Ruleset: On, sensitivity Medium. The API surface is JSON-only; OWASP
+paranoia above Medium risks false positives on calculator payloads. This is
+not part of the verified deployed configuration.
 
 ## 3. Cache Rules (tie-in to the byte-budget performance story)
 
@@ -259,7 +296,8 @@ Then, in a browser against `bigenergyco-showcase.pages.dev`:
 3. **The share-link round trip** — share, open the returned link, same numbers.
 4. **An evidence upload** succeeds.
 5. **A usage event posts.**
-6. **`/api/health` shows all four showcase flags true.**
+6. `/api/health` reports the four showcase flags. They show binding/config
+   presence only; they do not prove the APIs work.
 
 Capture the demo URL and a short screen recording. Anything on that list you did
 not watch working is described in the application as _shipping_, never as
@@ -270,16 +308,20 @@ _shipped_.
 ```bash
 # 1. bindings present?
 curl -s https://bigenergyco-api-showcase.bigenergyco.workers.dev/api/health | jq .showcase
-# expect: {"turnstile":true,"kv":true,"r2":true,"d1":true}
+# These are presence flags only; complete the operational checks below.
 
 # 2. share round-trip (use any #s= hash from the live site)
 curl -s -X POST .../api/share -H 'Content-Type: application/json' \
   -d '{"hash":"#s=..."}'
 curl -s ".../api/share?id=<id>"
 
-# 3. evidence upload
-curl -s -X POST .../api/evidence -H 'Content-Type: application/json' \
-  -d '{"kind":"lighthouse","name":"2026-09-28T120000Z","contentType":"application/json","data":"{}"}'
+# 3. evidence upload. Set EVIDENCE_UPLOAD_TOKEN in your shell from the
+#    Worker secret value; never put a real token in docs or command history.
+curl -i -X POST https://bigenergyco-api-showcase.bigenergyco.workers.dev/api/evidence \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $EVIDENCE_UPLOAD_TOKEN" \
+  -d '{"kind":"lighthouse","name":"run-label","contentType":"application/json","data":"{}"}'
+# Read the resulting object back from R2 and verify its contents.
 
 # 4. anonymized event (country auto-filled from cf-ipcountry)
 curl -s -X POST .../api/events -H 'Content-Type: application/json' \
@@ -325,6 +367,12 @@ action with a name attached, recorded in `docs/plan/LEDGER.jsonl`.
 Whichever way it goes, record the outcome in the ledger — the cookies measured
 and the decision they forced. A gate nobody records is indistinguishable from a
 gate that was never run.
+
+**Recorded result:** the pre-provisioning HTTP response probe observed zero
+`Set-Cookie` headers, so the secret was provisioned. This measures response
+headers from that HTTP probe only; it does not establish browser third-party
+cookie behavior. In the observed widget flow, no `cf_clearance` cookie was set.
+Third-party cookie behavior in the browser remains unverified.
 
 ## 7. Promoting to production (later, explicitly)
 
