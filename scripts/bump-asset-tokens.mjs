@@ -39,6 +39,7 @@ import {
   gitBlob,
   stampCommit,
 } from "./lib/asset-tokens.mjs";
+import { execFileSync } from "node:child_process";
 
 const ROOT = resolve(
   new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
@@ -129,6 +130,7 @@ function currentTokens() {
 // are already root-relative.
 function referencedAssets() {
   const out = new Map();
+  const escaping = new Set();
   for (const f of GRAPH_FILES) {
     if (!existsSync(f)) continue;
     const text = readFileSync(f, "utf8");
@@ -150,12 +152,23 @@ function referencedAssets() {
         // makes `git show <rev>:<path>` fail, which would silently classify
         // every asset as "new" and turn this whole check into a green light.
         const rel = p.split("\\").join("/");
-        if (rel.startsWith("../") || !out.has(rel))
-          out.set(rel, m[3] || "(token-less)");
+        // A first-party reference that resolves OUTSIDE the repository is not an
+        // asset, and it is not a harmless one to drop. It used to be inserted
+        // anyway, which meant `git show <rev>:../…` failed, the path was
+        // classified "new since the setter" and therefore exempt — and was still
+        // counted in the "N referenced assets verified" tally at the end. A
+        // broken resolution was indistinguishable from a clean run.
+        if (rel === ".." || rel.startsWith("../")) {
+          escaping.add(
+            `${rel}  (referenced from ${relative(ROOT, f) || f} as "${url}")`,
+          );
+          continue;
+        }
+        if (!out.has(rel)) out.set(rel, m[3] || "(token-less)");
       }
     }
   }
-  return out;
+  return { assets: out, escaping: [...escaping].sort() };
 }
 
 // The stamp's setter and the blob accessor both live in lib/asset-tokens.mjs
@@ -231,15 +244,60 @@ if (CHECK) {
   // has core.autocrlf=true on Windows, so reading files from disk would report
   // every asset as changed and the gate would be unpassable on a contributor's
   // machine.
-  const assets = referencedAssets();
+  const { assets, escaping } = referencedAssets();
+  if (escaping.length)
+    fail(
+      `${escaping.length} first-party reference(s) resolve OUTSIDE the ` +
+        `repository and cannot be stamped: ${escaping.slice(0, 5).join("; ")}` +
+        `${escaping.length > 5 ? "; …" : ""}. They were previously skipped and ` +
+        `still counted as verified. Fix the reference or the path.`,
+    );
   if (!assets.size) fail("no first-party asset references found to check");
   else {
     const { sha: setter, short, error } = stampCommit(ROOT, toks[0] ?? "");
     if (error) fail(`stamp staleness could not be determined — ${error}`);
     else {
-      const stale = findStaleAssets(assets.keys(), setter, (rev, p) =>
-        gitBlob(ROOT, rev, p),
+      const { stale, unresolvable } = findStaleAssets(
+        assets.keys(),
+        setter,
+        (rev, p) => gitBlob(ROOT, rev, p),
       );
+      // A referenced asset with no blob at HEAD is a broken reference or a path
+      // that escapes the repo — never a deletion, since these paths came from
+      // the reference scan. Skipping it would let a resolution bug report every
+      // asset as "verified" while checking none.
+      if (unresolvable.length)
+        fail(
+          `${unresolvable.length} referenced asset(s) have no blob in the ` +
+            `repository and were NOT checked: ${unresolvable.slice(0, 8).join(", ")}` +
+            `${unresolvable.length > 8 ? ", …" : ""}. Every path here is ` +
+            `something the graph points at, so this means a broken reference, ` +
+            `a path escaping the repo, or an untracked file.`,
+        );
+      // STAGED-but-uncommitted edits. The blobs above are compared at HEAD,
+      // while the stamp on disk is what the next commit will carry. So an asset
+      // that is `git add`ed without a bump would sail through: HEAD still equals
+      // the setter, nothing looks stale, and the stale commit lands. The index
+      // is what a commit actually contains, so it is checked too.
+      const stagedChanged = [
+        ...new Set(
+          execFileSync("git", ["diff", "--name-only", "-z", "--cached"], {
+            cwd: ROOT,
+            maxBuffer: 64 * 1024 * 1024,
+            encoding: "utf8",
+            stdio: ["pipe", "pipe", "pipe"],
+          })
+            .split("\0")
+            .filter(Boolean),
+        ),
+      ].filter((f) => assets.has(f));
+      if (stagedChanged.length)
+        fail(
+          `${stagedChanged.length} referenced asset(s) are STAGED but the ` +
+            `stamp is unchanged: ${stagedChanged.slice(0, 8).join(", ")}` +
+            `${stagedChanged.length > 8 ? ", …" : ""}. A commit would ship ` +
+            `these bytes under a token that promises the old ones.`,
+        );
       if (stale.length)
         fail(
           `${stale.length} referenced asset(s) changed but the stamp stayed ` +

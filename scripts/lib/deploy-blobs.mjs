@@ -150,17 +150,24 @@ export function stageFromIndex(root, stageDir, paths) {
  */
 export function workingTreeDivergences(root, paths) {
   if (!paths.length) return [];
-  // No revision argument: this is INDEX vs WORKING TREE, which is exactly the
-  // comparison that matters here — the stage reads the index, so a difference
-  // against HEAD says nothing about whether an edit was left out of the build.
-  // No pathspec either: passing 362 paths risks a command-line length limit on
-  // Windows for no gain, and the repo is small enough to diff wholesale.
-  const out = execFileSync("git", ["diff", "--name-only", "-z"], {
-    cwd: root,
-    maxBuffer: 64 * 1024 * 1024,
-    encoding: "utf8",
-    stdio: ["pipe", "pipe", "pipe"],
-  });
-  const changed = new Set(out.split("\0").filter(Boolean));
-  return paths.filter((p) => changed.has(p));
+  // Normalised like readIndexBlobs, so a Windows-style input cannot silently
+  // match nothing and report "no divergences".
+  const wanted = paths.map((p) => p.split("\\").join("/"));
+  // BOTH halves of the index are covered, because the build reads the index:
+  //   `git diff`         index vs WORKING TREE — an unstaged edit, which the
+  //                      build does NOT contain.
+  //   `git diff --cached` HEAD vs INDEX — a STAGED edit, which the build DOES
+  //                      contain and the next commit will carry. Reporting it is
+  //                      what keeps the word "committed" in the warning honest.
+  const seen = new Set();
+  for (const argv of [["diff"], ["diff", "--cached"]]) {
+    const out = execFileSync("git", [...argv, "--name-only", "-z"], {
+      cwd: root,
+      maxBuffer: 64 * 1024 * 1024,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    for (const p of out.split("\0")) if (p) seen.add(p);
+  }
+  return wanted.filter((p) => seen.has(p));
 }

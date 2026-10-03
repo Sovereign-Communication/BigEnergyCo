@@ -51,7 +51,23 @@ export async function putEvidence(bucket, kind, name, body, contentType) {
   }
   const bytes =
     typeof body === "string" ? new TextEncoder().encode(body) : body;
-  if (!bytes || bytes.byteLength > EVIDENCE_MAX_BYTES) {
+  // `body` is whatever JSON carried. A number, an object or an array has no
+  // `.byteLength`, and `undefined > LIMIT` is false — so the size check passed
+  // a value it could not measure, and `bucket.put` then threw a TypeError that
+  // escaped the handler as a 500 with no CORS headers. Anything that is not a
+  // string (or bytes) is a client error, named as one.
+  if (
+    typeof bytes !== "string" &&
+    !(bytes instanceof Uint8Array) &&
+    !(bytes instanceof ArrayBuffer)
+  ) {
+    return { ok: false, reason: "invalid_body" };
+  }
+  const size = typeof bytes === "string" ? bytes.length : bytes.byteLength;
+  if (!Number.isFinite(size)) {
+    return { ok: false, reason: "invalid_body" };
+  }
+  if (size > EVIDENCE_MAX_BYTES) {
     return { ok: false, reason: "too_large" };
   }
   if (!bucket || typeof bucket.put !== "function") {
