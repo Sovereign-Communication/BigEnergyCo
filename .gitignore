@@ -10,3 +10,40 @@
 # `node scripts/deploy-pages-local.mjs --check --stage DIR`; a copy of the site,
 # never a source of truth.
 _pages_*/
+
+# Local secrets and runtime state. `.env` carries a real TRIGGER_SECRET_KEY and
+# was previously untracked-but-committable: one `git add -A` would have published
+# it. Ignored, never committed, never read by the static site (it is 100%
+# client-side and has no server runtime).
+.env
+.env.*
+!.env.example
+
+# Local tool state and binaries that must never reach the deploy manifest.
+.wrangler/
+.workers/
+__pycache__/
+cloudflared.exe
+
+# Desktop-agent and tool state that lives in the checkout but is not repo
+# content. Untracked-but-unignored is the same exposure .env had: one
+# `git add -A` publishes whatever is sitting here.
+.abacusai/
+.agents/
+.freebuff/
+.trigger/
+.worktrees/
+.launcher_pids.json
+skills-lock.json
+node_modules/
+
+# Local run logs from the deploy and smoke passes.
+*.log
+
+# Preserved copies of work this tree replaced — the unrunnable canvas heatmap
+# rewrite is kept here rather than committed, so the replacement is auditable
+# without shipping something that cannot load.
+.backup/
+
+# Local media scratch.
+appdriving.mp4

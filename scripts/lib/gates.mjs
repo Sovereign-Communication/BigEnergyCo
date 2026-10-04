@@ -59,11 +59,17 @@ export function attr(tag, name) {
   return new RegExp(`\\b${name}(?=[\\s/>])`, "i").test(tag) ? "" : null;
 }
 
-/** Every `<tag ...>` opening tag in the document. */
+/**
+ * Every `<tag ...>` opening tag in the document.
+ *
+ * The attribute run skips `>` inside quoted values, because HTML does not
+ * require escaping it and Prettier does not escape it either. Truncating at
+ * the first `>` handed callers half a tag, so `alt="a > b"` reported alt "a "
+ * and every later attribute as absent.
+ */
 export function tags(html, name) {
-  return [...html.matchAll(new RegExp(`<${name}\\b[\\s\\S]*?>`, "gi"))].map(
-    (m) => m[0],
-  );
+  const pattern = `<${name}\\b[^>"']*(?:"[^"]*"[^>"']*|'[^']*'[^>"']*)*>`;
+  return [...html.matchAll(new RegExp(pattern, "gi"))].map((m) => m[0]);
 }
 
 /** Content of a <meta> whose `key` attribute equals `value`, case-insensitive. */
@@ -88,17 +94,6 @@ export function decodeEntities(text) {
     .replace(/&quot;/g, '"')
     .replace(/&#0?39;|&apos;/g, "'")
     .replace(/&amp;/g, "&");
-}
-
-/**
- * The title as a search result renders it: entities decoded, whitespace
- * collapsed, trimmed. Measuring the raw markup instead would count Prettier's
- * line wrapping and `&amp;` as characters a human never sees — which is how a
- * 59-character title reads as 76 and a healthy page gets flagged.
- */
-export function documentTitle(html) {
-  const raw = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] || "";
-  return decodeEntities(raw).replace(/\s+/g, " ").trim();
 }
 
 /**
@@ -284,7 +279,7 @@ export function cspDirective(csp, name) {
  * drop a directive from `_headers` and this must fail, with no network and no
  * Cloudflare account in the loop.
  *
- * @param {{"gh-pages"|"cloudflare"|"local"}} surface
+ * @param {"gh-pages"|"cloudflare"|"local"} surface
  * @param {(name:string) => (string|null)} getHeader
  * @returns {{checks:{name:string,ok:boolean,detail:string}[], notes:string[]}}
  */
@@ -451,7 +446,7 @@ export function familyGaps(locales, suffixes = ["Grid", "Offgrid"]) {
 // a sitemap entry pointing at another site would have passed validation. Both
 // checks now compare real URLs. Pure, so both can be unit-tested.
 
-/** @returns {null} when the URL is unparseable or not on `origin`. */
+/** @returns {string | null} when the URL is unparseable or not on `origin`. */
 export function sameOriginPath(url, origin) {
   let parsed;
   try {

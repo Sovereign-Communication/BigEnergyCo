@@ -57,6 +57,32 @@ test("GATE: tags finds multi-line opening tags", () => {
   assert.match(imgs[1], /b\.png/);
 });
 
+test("GATE: tags does not stop at a > inside a quoted attribute", () => {
+  // HTML does not require escaping `>` in an attribute value and Prettier does
+  // not escape it. Stopping there handed callers half a tag: alt read as "a "
+  // and every attribute after it read as absent.
+  const img = tags(`<img src="x.png" alt="a > b" width="4">`, "img");
+  assert.equal(img.length, 1);
+  assert.equal(attr(img[0], "alt"), "a > b");
+  assert.equal(attr(img[0], "width"), "4");
+
+  const meta = tags(`<meta name="description" content="x > y" />`, "meta");
+  assert.equal(meta.length, 1);
+  assert.equal(
+    metaContent(
+      `<meta name="description" content="x > y" />`,
+      "name",
+      "description",
+    ),
+    "x > y",
+  );
+  // Single quotes and a self-closing slash are both still part of the tag.
+  assert.equal(
+    tags(`<meta name="description" content='c < d' />`, "meta").length,
+    1,
+  );
+});
+
 test("GATE: metaContent ignores attribute order and case", () => {
   const a = `<meta name="description" content="one" />`;
   const b = `<meta CONTENT="two" NAME="Description" />`;

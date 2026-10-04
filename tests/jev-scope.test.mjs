@@ -285,6 +285,89 @@ test("GATE: the ratchet ignores facets the baseline never recorded", () => {
   assert.equal(r.regressions.length, 0);
 });
 
+// The ledger carries a baseline bar in two shapes, and the 2026-09-27 P0.4
+// rows use the second: {ordinal, level} rather than a bare ordinal. The reader
+// used to keep either shape and the comparator used only the first, so every
+// bar in those rows was skipped — a 25-point drop reported as `met`, with
+// facets_compared still claiming the coverage.
+const RECORDS_BASELINE = {
+  status: "active",
+  from_ts: "2026-09-27",
+  from_ref: "P0.4",
+  reason: "declared",
+  ordinals: {
+    performance: { ordinal: 85, level: "confident" },
+    seo: { ordinal: 100, level: "proven" },
+  },
+};
+
+test("GATE: a baseline bar recorded as {ordinal, level} is enforced, not skipped", () => {
+  const r = checkRatchet(
+    { performance: facet(60), seo: facet(100) },
+    RECORDS_BASELINE,
+  );
+  assert.equal(r.status, "violation");
+  assert.equal(r.regressions.length, 1);
+  assert.equal(r.regressions[0].axis, "performance");
+  assert.equal(r.regressions[0].previous_ordinal, 85);
+  assert.equal(r.regressions[0].current_ordinal, 60);
+  assert.equal(r.unreadable_bars.length, 0);
+});
+
+test("GATE: a bar the reader cannot resolve is a facet with no protection, not a pass", () => {
+  // Fail-closed for the same reason an absent baseline is not a pass: nothing
+  // was checked, and "no regression" must mean "checked and clean".
+  const r = checkRatchet(
+    { performance: facet(100), seo: facet(100) },
+    {
+      ...RECORDS_BASELINE,
+      ordinals: { performance: { level: "confident" }, seo: "100" },
+    },
+  );
+  assert.equal(r.status, "unreadable_baseline");
+  assert.deepEqual(r.unreadable_bars.sort(), ["performance", "seo"]);
+  assert.equal(r.facets_compared, 0);
+});
+
+test("GATE: an unreadable baseline bar fails a scoped verdict, end to end", () => {
+  // End to end through the real reader and the real verdict function: a
+  // declared baseline whose bars cannot be resolved must not pass a run, even
+  // when every facet in scope is proven and every hard gate is green.
+  const report = scopedReport(0);
+  const verdict = judge(
+    report,
+    baselineFor(report, { performance: { level: "confident" } }),
+  );
+  assert.equal(verdict.scoped.ratchet.status, "unreadable_baseline");
+  assert.deepEqual(verdict.scoped.ratchet.unreadable_bars, ["performance"]);
+  assert.equal(verdict.scoped.facets_short_of_proven.length, 0);
+  assert.equal(verdict.pass, false);
+});
+
+test("GATE: facets_compared counts what was compared, not what the baseline holds", () => {
+  const r = checkRatchet({ performance: facet(60) }, RECORDS_BASELINE);
+  assert.equal(r.baseline_bars, 2, "two bars were declared");
+  assert.equal(r.facets_compared, 1, "only one facet was measured this run");
+});
+
+test("GATE: previous_level is the baseline's level, not the current facet's", () => {
+  // Both fields used to read the CURRENT facet, so the artifact asserted a
+  // previous level that had never been measured.
+  const r = checkRatchet({ performance: facet(60) }, RECORDS_BASELINE);
+  assert.equal(r.regressions[0].previous_level, "confident");
+  assert.equal(r.regressions[0].current_level, "l60");
+  assert.notEqual(
+    r.regressions[0].previous_level,
+    r.regressions[0].current_level,
+  );
+  // A baseline that recorded only an ordinal says so rather than inventing one.
+  const bare = checkRatchet(
+    { release: facet(60) },
+    readRatchetBaseline(LEDGER_WITH, pack),
+  );
+  assert.equal(bare.regressions[0].previous_level, null);
+});
+
 test("GATE: the CLI wires --scope through to the exit code", () => {
   const cli = readFileSync(
     join(ROOT, "scripts/validate-jev-complete.mjs"),
