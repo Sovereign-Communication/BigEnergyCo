@@ -137,3 +137,50 @@ test("GATE: the privacy gate is wired into the preflight, not merely present", (
     "CI must run the preflight that now contains the privacy gate",
   );
 });
+
+// The evidence the judge reads is a committed, hand-typed file. It went stale
+// once already: it still read "Coordinates are NOT rounded" AFTER the rounding
+// landed, and the live judge rated privacy 0 - "evidence contradicts quality" -
+// because the one sentence describing this work was a lie. A hand-typed claim
+// about a gate that runs in CI is exactly the "check that reports success"
+// failure this repo keeps legislating against, so the claim is pinned to the
+// gate instead of trusted.
+const facetLine = (facet) =>
+  JSON.parse(
+    readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
+  ).facet_evidence[facet];
+
+const gateExit = (script) =>
+  spawnSync(process.execPath, [script], { cwd: ROOT, encoding: "utf8" }).status;
+
+test("EVIDENCE: the privacy facet line cannot contradict a green privacy gate", () => {
+  const line = facetLine("privacy");
+  assert.ok(
+    line.includes("check-privacy.mjs"),
+    "the privacy line must name the gate that measures it, so a reader can re-run it",
+  );
+  if (gateExit("scripts/check-privacy.mjs") === 0) {
+    assert.ok(
+      !/coordinates?\s+are\s+NOT\s+rounded|rounded the cache key only/i.test(
+        line,
+      ),
+      `the privacy evidence line still denies the fix the gate now proves:\n${line}`,
+    );
+  }
+});
+
+test("EVIDENCE: the translation facet line cannot contradict a green i18n gate", () => {
+  const line = facetLine("translation");
+  assert.ok(
+    line.includes("check-i18n.mjs"),
+    "the translation line must name the gate that measures it",
+  );
+  if (gateExit("scripts/check-i18n.mjs") === 0) {
+    assert.ok(
+      !/parity one way only|keys exist in a non-English locale but not in en/i.test(
+        line,
+      ),
+      `the translation evidence line still describes the defect check-i18n rule 1b now prevents:\n${line}`,
+    );
+  }
+});
