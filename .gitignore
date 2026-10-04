@@ -10,3 +10,17 @@
 # `node scripts/deploy-pages-local.mjs --check --stage DIR`; a copy of the site,
 # never a source of truth.
 _pages_*/
+
+# Local secrets and runtime state. `.env` carries a real TRIGGER_SECRET_KEY and
+# was previously untracked-but-committable: one `git add -A` would have published
+# it. Ignored, never committed, never read by the static site (it is 100%
+# client-side and has no server runtime).
+.env
+.env.*
+!.env.example
+
+# Local tool state and binaries that must never reach the deploy manifest.
+.wrangler/
+.workers/
+__pycache__/
+cloudflared.exe

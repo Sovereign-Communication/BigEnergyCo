@@ -4,6 +4,7 @@
 import { readFileSync, existsSync } from "node:fs";
 
 import { deployedFiles, sitemapGaps } from "./lib/gates.mjs";
+import { metadataIssues } from "./lib/seo.mjs";
 
 let failures = 0;
 const fail = (msg) => {
@@ -23,17 +24,14 @@ function publicPages() {
 const pages = publicPages().filter((p) => p !== "404.html"); // 404 is a utility page
 if (!pages.length) fail("no public pages discovered");
 
+const seoPages = [];
 for (const page of pages) {
   if (!existsSync(page)) {
     fail(`${page}: file missing`);
     continue;
   }
   const html = readFileSync(page, "utf8");
-
-  // h1: exactly one per page
-  const h1s = [...html.matchAll(/<h1[\s>]/g)].length;
-  if (h1s === 1) ok(`${page}: single h1`);
-  else fail(`${page}: expected exactly 1 <h1>, found ${h1s}`);
+  seoPages.push({ page, html });
 
   // canonical (home, blog index, posts, city pages, heatmap, about — not utility pages).
   // Accepts self-closing tags and line-wrapped attributes: Prettier
@@ -123,6 +121,7 @@ for (const page of pages) {
     }
   }
 }
+for (const issue of metadataIssues(seoPages)) fail(issue);
 
 // Sitemap URLs must correspond to real files
 const sitemap = readFileSync("sitemap.xml", "utf8");
