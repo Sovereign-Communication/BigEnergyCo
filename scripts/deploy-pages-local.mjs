@@ -25,6 +25,14 @@ import {
   writeFileSync,
 } from "node:fs";
 import { labTransform } from "./lib/lab-build.mjs";
+import {
+  API_TARGET_FILES,
+  apiTarget,
+  apiTargetTransform,
+  assertNoDefaultRemains,
+} from "./lib/api-target.mjs";
+import { withMutationLock } from "./lib/mutation-lock.mjs";
+import { stageFromIndex } from "./lib/deploy-blobs.mjs";
 import { execSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import {
@@ -92,10 +100,69 @@ if (LIST) {
     `Staging ${deployList().length} manifest files into ${STAGE.replace(ROOT + "/", "")}/ ...`,
   );
   rmSync(STAGE, { recursive: true, force: true });
-  for (const f of deployList()) {
-    const dest = join(STAGE, f);
-    mkdirSync(dirname(dest), { recursive: true });
-    cpSync(join(ROOT, f), dest);
+  // The lock is taken HERE, in the one component every staging build goes
+  // through, rather than in each test that happens to call it. Three separate
+  // test files were patched one at a time before this, and the fourth reader
+  // still raced: `tests/deploy-manifest.test.mjs` briefly deletes robots.txt
+  // at the repo root, and a concurrent staging build ENOENTs on it. Excluding
+  // the mutation at the reader is the fix that stops needing to remember.
+  await withMutationLock(async () => {
+    const files = deployList();
+    const divergences = stageFromIndex(ROOT, STAGE, files);
+    if (divergences.length) {
+      // Said out loud, by name. The stage is the COMMITTED tree, so an
+      // uncommitted edit to a deployable file is not in this build. The
+      // production promote already refuses to run on a dirty tree, so this can
+      // only ever bite a local preview — but a preview that silently shows
+      // yesterday's bytes is worse than one that says so.
+      console.warn(
+        `\nSTAGE NOTE  staged from the git INDEX — what the next commit would ` +
+          `contain. ${divergences.length} file(s) differ from that index ` +
+          `(unstaged or staged-but-uncommitted):`,
+      );
+      for (const f of divergences.slice(0, 20))
+        console.warn(`STAGE NOTE    ${f}`);
+      if (divergences.length > 20)
+        console.warn(
+          `STAGE NOTE    …and ${divergences.length - 20} more (\`git diff --name-only\`)`,
+        );
+      console.warn("");
+    }
+  }, ROOT);
+
+  // API endpoint, from ONE source of truth (scripts/lib/api-target.mjs).
+  //
+  // Unset — the default — means this loop does nothing at all, and the staged
+  // tree is byte-for-byte the build that has always shipped. Setting
+  // BEC_API_BASE retargets the client endpoint AND the CSP `connect-src` entry
+  // that permits it, together, so a showcase build can reach its own worker
+  // without anyone hand-editing this generated directory: that edit used to
+  // survive exactly one `deploy:check`, after which a second showcase deploy
+  // would have quietly retargeted the live advisor.
+  //
+  // The origin lives in configuration, never in tracked client source, so this
+  // file has no idea what a showcase is.
+  const target = apiTarget();
+  if (!target.isDefault) {
+    const rewritten = [];
+    for (const f of deployList()) {
+      const dest = join(STAGE, f);
+      const r = apiTargetTransform(f, readFileSync(dest, "utf8"), target.base);
+      if (r.changed) {
+        writeFileSync(dest, r.text);
+        rewritten.push(f);
+      }
+    }
+    // Refuse to publish a half-retargeted build: a site that looks configured
+    // while still calling production is the exact failure this prevents.
+    assertNoDefaultRemains(
+      API_TARGET_FILES.filter((f) => !rewritten.includes(f)),
+      target.base,
+    );
+    console.log(
+      `API target: staged build points at ${target.base} ` +
+        `(${rewritten.length} file(s): ${rewritten.join(", ")}).`,
+    );
   }
 
   // Lab builds only (plan §8 P0.4): the `/next/` preview is noindex until the

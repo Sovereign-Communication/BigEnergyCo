@@ -55,8 +55,15 @@ test("share restoration keeps its source hash until all inputs are restored", ()
   // still owes us: delegate to that one owner, and refuse a rejected link
   // before any form state moves. A second copy of the bounds here would be a
   // fork of the policy, so its absence is the assertion.
+  assert.match(
+    restore,
+    /if \(!location\.hash\.startsWith\(SHARE_PREFIX\)\) return false;/,
+  );
   assert.match(restore, /const o = parseShareHash\(location\.hash\);/);
-  assert.match(restore, /if \(!o\) return false;/);
+  assert.match(
+    restore,
+    /if \(!o\) \{\s*setStatus\(t\("invalidShare"\)\);\s*return false;/,
+  );
   assert.doesNotMatch(restore, /Math\.abs\(lat\) > 90/);
   const codec = fs.readFileSync("assets/js/sizing/share-codec.js", "utf8");
   assert.match(codec, /Math\.abs\(la\) > 90/);
@@ -91,5 +98,9 @@ test("validation feedback exists in every supported language", () => {
     assert.match(strings.invalidCoordinates, /90/);
     assert.match(strings.invalidCoordinates, /180/);
     assert.match(strings.invalidDailyKwh, /500/);
+    assert.ok(
+      strings.invalidShare.trim().length > 0,
+      `${locale}.invalidShare is empty`,
+    );
   }
 });

@@ -26,6 +26,7 @@ import { securityPolicyVerdict } from "../scripts/lib/gates.mjs";
 import * as stamps from "../scripts/lib/stamps.mjs";
 import { attachWorktree, detachWorktree } from "../scripts/lib/worktree.mjs";
 import { extractVerdict } from "./verdict-json.mjs";
+import { withMutationLock } from "../scripts/lib/mutation-lock.mjs";
 
 const STAGE = "_pages_verify_test";
 const LEDGER = join(STAGE, "ledger.jsonl"); // inside the throwaway stage dir
@@ -66,31 +67,42 @@ async function runNode(args, opts = {}) {
 
 const run = (script, args, opts) => runNode([script, ...args], opts);
 
+// Both of these read every allowlisted file in the working tree (promote spawns
+// the verifier itself), so they must exclude `tests/deploy-manifest.test.mjs`,
+// which briefly deletes a tracked file to prove the manifest reports it.
+// Without the lock, node --test's parallel file execution let a verifier
+// observe that deletion and report `parity robots.txt — unreadable: local read
+// failed: ENOENT`, failing a gate about asset stamps for a reason that had
+// nothing to do with stamps. Measured at 1 run in 6 before the lock.
 const verify = (base, extra = []) =>
-  run("scripts/verify-staging.mjs", [
-    "--base",
-    base,
-    "--no-browser",
-    "--json",
-    ...extra,
-  ]);
-
-const promote = (base, extra = [], opts = {}) =>
-  run(
-    "scripts/promote.mjs",
-    [
+  withMutationLock(() =>
+    run("scripts/verify-staging.mjs", [
       "--base",
       base,
-      "--pages",
-      base,
-      "--brand",
-      base,
       "--no-browser",
-      "--ledger",
-      LEDGER,
+      "--json",
       ...extra,
-    ],
-    opts,
+    ]),
+  );
+
+const promote = (base, extra = [], opts = {}) =>
+  withMutationLock(() =>
+    run(
+      "scripts/promote.mjs",
+      [
+        "--base",
+        base,
+        "--pages",
+        base,
+        "--brand",
+        base,
+        "--no-browser",
+        "--ledger",
+        LEDGER,
+        ...extra,
+      ],
+      opts,
+    ),
   );
 
 // The two scripts here print different verdicts, and `out` is the child's

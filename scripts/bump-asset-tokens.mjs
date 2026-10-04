@@ -11,6 +11,20 @@
 // Stamp convention: YYYYMMDD + letter (20260906a). One stamp is applied to
 // the WHOLE graph (simpler than per-file stamps, and a release invalidates
 // the graph atomically so clients can never mix module versions).
+//
+// Why check (d) exists. Checks (a)-(c) only prove the token is PRESENT and
+// CONSISTENT. None of them asks whether it is still TRUE — that is, whether the
+// bytes behind `?v=20260929a` are the bytes that stamp was minted for. The
+// consequence is silent and expensive: `/assets/*` is immutable for a year, so
+// a merged change to a referenced asset under an unchanged token is not served
+// to anyone whose cache already holds it. A release then reaches first-time
+// visitors only, while returning visitors keep the old advisor rendering and
+// the old locale dictionary — with every gate green.
+//
+// So (d) compares each referenced asset's content against the commit that
+// minted the current stamp. Changed since? The token is stale and the release
+// is refused. This is a content comparison, not a convention, so it cannot be
+// satisfied by leaving the stamp alone.
 import {
   readFileSync,
   writeFileSync,
@@ -18,7 +32,14 @@ import {
   statSync,
   existsSync,
 } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, resolve, dirname, relative } from "node:path";
+import {
+  GRAPH_PATHSPEC,
+  findStaleAssets,
+  gitBlob,
+  stampCommit,
+} from "./lib/asset-tokens.mjs";
+import { execFileSync } from "node:child_process";
 
 const ROOT = resolve(
   new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
@@ -100,6 +121,59 @@ function currentTokens() {
   return [...tokens];
 }
 
+// Every first-party asset the graph points at, resolved to a repo-relative
+// path. Returns a Map<assetPath, token> so a single asset referenced from many
+// pages is reported once.
+//
+// Resolution mirrors how a browser resolves the URL: `./x` and `../x` are
+// relative to the FILE THAT REFERENCES THEM, while `assets/…` and `/assets/…`
+// are already root-relative.
+function referencedAssets() {
+  const out = new Map();
+  const escaping = new Set();
+  for (const f of GRAPH_FILES) {
+    if (!existsSync(f)) continue;
+    const text = readFileSync(f, "utf8");
+    for (const re of [...MODULE_RES, ...FETCH_RES]) {
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(text))) {
+        const url = m[1];
+        if (!isFirstParty(url)) continue;
+        // Runtime-built URLs (city partitions) have no single file behind them,
+        // so there is no blob to compare. Skipped deliberately rather than
+        // guessed at.
+        if (url.includes("${")) continue;
+        let p;
+        if (url.startsWith("/assets/")) p = url.slice(1);
+        else if (url.startsWith("assets/")) p = url;
+        else p = relative(ROOT, join(dirname(f), url));
+        // MUST be repo-relative with forward slashes. An absolute Windows path
+        // makes `git show <rev>:<path>` fail, which would silently classify
+        // every asset as "new" and turn this whole check into a green light.
+        const rel = p.split("\\").join("/");
+        // A first-party reference that resolves OUTSIDE the repository is not an
+        // asset, and it is not a harmless one to drop. It used to be inserted
+        // anyway, which meant `git show <rev>:../…` failed, the path was
+        // classified "new since the setter" and therefore exempt — and was still
+        // counted in the "N referenced assets verified" tally at the end. A
+        // broken resolution was indistinguishable from a clean run.
+        if (rel === ".." || rel.startsWith("../")) {
+          escaping.add(
+            `${rel}  (referenced from ${relative(ROOT, f) || f} as "${url}")`,
+          );
+          continue;
+        }
+        if (!out.has(rel)) out.set(rel, m[3] || "(token-less)");
+      }
+    }
+  }
+  return { assets: out, escaping: [...escaping].sort() };
+}
+
+// The stamp's setter and the blob accessor both live in lib/asset-tokens.mjs
+// so they can be unit-tested without executing this rewriting script.
+
 function nextStamp() {
   if (stampArg) return stampArg;
   const d = new Date();
@@ -164,10 +238,79 @@ if (CHECK) {
   } catch (e) {
     fail(e.message);
   }
+  // (d) STALENESS: the stamp must still describe the bytes behind it.
+  //
+  // Git blobs are compared to git blobs, never to the working tree: this repo
+  // has core.autocrlf=true on Windows, so reading files from disk would report
+  // every asset as changed and the gate would be unpassable on a contributor's
+  // machine.
+  const { assets, escaping } = referencedAssets();
+  if (escaping.length)
+    fail(
+      `${escaping.length} first-party reference(s) resolve OUTSIDE the ` +
+        `repository and cannot be stamped: ${escaping.slice(0, 5).join("; ")}` +
+        `${escaping.length > 5 ? "; …" : ""}. They were previously skipped and ` +
+        `still counted as verified. Fix the reference or the path.`,
+    );
+  if (!assets.size) fail("no first-party asset references found to check");
+  else {
+    const { sha: setter, short, error } = stampCommit(ROOT, toks[0] ?? "");
+    if (error) fail(`stamp staleness could not be determined — ${error}`);
+    else {
+      const { stale, unresolvable } = findStaleAssets(
+        assets.keys(),
+        setter,
+        (rev, p) => gitBlob(ROOT, rev, p),
+      );
+      // A referenced asset with no blob at HEAD is a broken reference or a path
+      // that escapes the repo — never a deletion, since these paths came from
+      // the reference scan. Skipping it would let a resolution bug report every
+      // asset as "verified" while checking none.
+      if (unresolvable.length)
+        fail(
+          `${unresolvable.length} referenced asset(s) have no blob in the ` +
+            `repository and were NOT checked: ${unresolvable.slice(0, 8).join(", ")}` +
+            `${unresolvable.length > 8 ? ", …" : ""}. Every path here is ` +
+            `something the graph points at, so this means a broken reference, ` +
+            `a path escaping the repo, or an untracked file.`,
+        );
+      // STAGED-but-uncommitted edits. The blobs above are compared at HEAD,
+      // while the stamp on disk is what the next commit will carry. So an asset
+      // that is `git add`ed without a bump would sail through: HEAD still equals
+      // the setter, nothing looks stale, and the stale commit lands. The index
+      // is what a commit actually contains, so it is checked too.
+      const stagedChanged = [
+        ...new Set(
+          execFileSync("git", ["diff", "--name-only", "-z", "--cached"], {
+            cwd: ROOT,
+            maxBuffer: 64 * 1024 * 1024,
+            encoding: "utf8",
+            stdio: ["pipe", "pipe", "pipe"],
+          })
+            .split("\0")
+            .filter(Boolean),
+        ),
+      ].filter((f) => assets.has(f));
+      if (stagedChanged.length)
+        fail(
+          `${stagedChanged.length} referenced asset(s) are STAGED but the ` +
+            `stamp is unchanged: ${stagedChanged.slice(0, 8).join(", ")}` +
+            `${stagedChanged.length > 8 ? ", …" : ""}. A commit would ship ` +
+            `these bytes under a token that promises the old ones.`,
+        );
+      if (stale.length)
+        fail(
+          `${stale.length} referenced asset(s) changed but the stamp stayed ` +
+            `${toks[0]} (set at ${short}): ${stale.join(", ")}. The /assets/* ` +
+            `layer is Cache-Control: immutable 1yr, so these stay stale for ` +
+            `every returning visitor. Run: node scripts/bump-asset-tokens.mjs`,
+        );
+    }
+  }
   console.log(
     failures
       ? "asset-token check FAILED"
-      : `asset-token check OK (stamp ${toks[0] ?? "n/a"})`,
+      : `asset-token check OK (stamp ${toks[0] ?? "n/a"}, ${assets.size} referenced assets verified against the stamp commit)`,
   );
   process.exit(failures ? 1 : 0);
 }
