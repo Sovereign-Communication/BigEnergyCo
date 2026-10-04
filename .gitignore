@@ -24,3 +24,26 @@ _pages_*/
 .workers/
 __pycache__/
 cloudflared.exe
+
+# Desktop-agent and tool state that lives in the checkout but is not repo
+# content. Untracked-but-unignored is the same exposure .env had: one
+# `git add -A` publishes whatever is sitting here.
+.abacusai/
+.agents/
+.freebuff/
+.trigger/
+.worktrees/
+.launcher_pids.json
+skills-lock.json
+node_modules/
+
+# Local run logs from the deploy and smoke passes.
+*.log
+
+# Preserved copies of work this tree replaced — the unrunnable canvas heatmap
+# rewrite is kept here rather than committed, so the replacement is auditable
+# without shipping something that cannot load.
+.backup/
+
+# Local media scratch.
+appdriving.mp4
