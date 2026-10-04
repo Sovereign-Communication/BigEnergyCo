@@ -2,7 +2,9 @@
 // offline; country partitions provide millions of additional place/coordinate
 // pairs and are lazy-loaded on demand — only the countries a query or a GPS
 // fix names are ever fetched, never the whole world at once.
-import { usStateCode, US_STATES } from "./pricing.js?v=20261003d";
+import { usStateCode, US_STATES } from "./pricing.js?v=20261004a";
+// One owner of the coordinate precision, shared with the weather egress.
+import { roundCoords } from "../shared/coords.js?v=20261004a";
 
 export const CITY_CATALOG = [
   ["Honolulu", "United States", "Hawaii", 21.31, -157.86],
@@ -308,7 +310,10 @@ export async function lookupCountryOnline(lat, lon, fetchImpl) {
     ? setTimeout(() => ctrl.abort(), CITY_LOOKUP_TIMEOUT_MS)
     : null;
   try {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`;
+    // Rounded on the device before the request leaves it: a GPS fix is
+    // metre-accurate and this one only needs the region, not the house.
+    const c = roundCoords(lat, lon);
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${c.lat}&lon=${c.lon}&zoom=10`;
     const response = await doFetch(url, {
       headers: { Accept: "application/json" },
       ...(ctrl ? { signal: ctrl.signal } : {}),
@@ -447,7 +452,7 @@ export async function loadCountryCities(
       : null;
     try {
       const response = await fetchImpl(
-        `./assets/js/sizing/city-data/${cc}.json?v=20261003d`,
+        `./assets/js/sizing/city-data/${cc}.json?v=20261004a`,
         { cache: "force-cache", ...(ctrl ? { signal: ctrl.signal } : {}) },
       );
       if (!response.ok) return [];
