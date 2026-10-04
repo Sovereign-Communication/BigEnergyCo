@@ -304,6 +304,30 @@ export const LOCALES = {
       "Surplus needs panels to generate more than your load. Drop the target below 100% on the bill-cut slider, or switch the hardware setup to 'Solar + Battery'.",
     infeasibleGenericTitle: "This hardware and goal combination can't solve",
     infeasibleGenericBody: "Change the goal or hardware, then re-run.",
+
+    // These seven existed only in the five non-English dictionaries. Their
+    // English text was authored straight into index.html, where no gate could
+    // see it, so the translations were pinned to whatever the copy used to say
+    // and drifted: "Where is this system going?" here versus "Where will the
+    // system be installed?" in es/fr/de. Declaring the English makes this the
+    // single source the other five are checked against, and lets the
+    // reverse-parity rule fail if one is ever dropped again.
+    goalLabel: "What outcome are you exploring?",
+    cityLabel: "Where is this system going?",
+    loadLabel: "How much power do you use?",
+    loadAppliances: "Let me pick my appliances",
+    loadBill: "I know my monthly electric bill",
+    loadKwh: "I know my kWh/day (advanced)",
+    chemLabel: "Battery chemistry:",
+
+    // Same story as the seven above: English lived in the markup (or, for
+    // tariffNote, in a template literal in ui.js) while only the translated
+    // dictionaries carried the key. tariffNote is the one that actually LEAKED
+    // English: its five translations existed and nothing ever read them.
+    langLabel: "Language",
+    locBtn: "📍 Use my precise location",
+    tariffNote:
+      "Electricity price estimated for {label} — change it above if you know your rate.",
   },
   es: {
     navSizing: "Dimensiona tu sistema",
@@ -1349,6 +1373,12 @@ export const LOCALES = {
     offlineNote: " · 🌐 typisches Offline-Jahr",
     goalLabel: "Welches Ergebnis möchtest du untersuchen?",
     chemLabel: "Batteriechemie:",
+    // Added with the English key. German was the one locale that never
+    // received this note at all: it lived only in the translated
+    // dictionaries, which ui.js never read, so the note rendered in English
+    // everywhere and no rule could see the hole until English declared it.
+    tariffNote:
+      "Geschätzter Strompreis für {label} – ändere ihn oben, wenn du deinen Tarif kennst.",
     cityLabel: "Wo wird das System installiert?",
     loadLabel: "Wie viel Strom verbrauchst du?",
     loadAppliances: "Geräte auswählen",

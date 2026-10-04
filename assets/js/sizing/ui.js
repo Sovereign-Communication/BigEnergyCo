@@ -13,14 +13,14 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261004a";
+import { APPLIANCES } from "./appliances.js?v=20261004b";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261004a";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261004a";
+} from "./run-coordinator.js?v=20261004b";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261004b";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -29,12 +29,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261004a";
+} from "./charts.js?v=20261004b";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261004a";
+} from "./location-picker.js?v=20261004b";
 
 import {
   estimateTariff,
@@ -42,27 +42,27 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261004a";
+} from "./pricing.js?v=20261004b";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261004a";
+import { currencyForCountry } from "./country-currency.js?v=20261004b";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261004a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261004b";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261004a";
+} from "./lead-acid.js?v=20261004b";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261004a";
+} from "./bom.js?v=20261004b";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261004a";
+import { BOM_ITEMS } from "../shared/content.js?v=20261004b";
 
 import {
   applyI18n,
@@ -71,18 +71,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261004a";
+} from "../shared/i18n.js?v=20261004b";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261004a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261004a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261004b";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261004b";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261004a";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261004a";
+} from "../shared/simple-mode.js?v=20261004b";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261004b";
 import {
   advisorJevContext,
   interpretSanity,
@@ -90,56 +90,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261004a";
+} from "./validate.js?v=20261004b";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261004a";
+} from "../shared/cut-targets.js?v=20261004b";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261004a";
+} from "./share-codec.js?v=20261004b";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261004a";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261004a";
+} from "./infeasible-copy.js?v=20261004b";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261004b";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261004a";
+} from "./fuel-units.js?v=20261004b";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261004a";
+} from "./frontier-chart.js?v=20261004b";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261004a";
+} from "./rescale.js?v=20261004b";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261004a";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261004b";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20261004a";
+} from "./map-provider.js?v=20261004b";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261004a";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261004a";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261004a";
+} from "./wizard.js?v=20261004b";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261004b";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261004b";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -188,9 +188,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261004a";
+} from "./money.js?v=20261004b";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261004a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261004b";
 
 let worker = null;
 
@@ -1891,7 +1891,12 @@ function applyEstimatedTariff(lat, lon, region, country) {
   const note = el(
     "div",
     { style: "font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;" },
-    `Electricity price estimated for ${est.label}${fx ? ` (~ ${est.rate.toFixed(2)} US$/kWh)` : ""} - change it above if you know your rate.`,
+    // Translated, not a template literal: all five translated tariffNote
+    // strings existed and nothing read them, so this one line is why the note
+    // rendered in English on every locale. The rate is appended outside the
+    // translated sentence so the placeholder set stays {label}, which is what
+    // every existing translation already carries.
+    `${t("tariffNote", { label: est.label })}${fx ? ` (~ ${est.rate.toFixed(2)} US$/kWh)` : ""}`,
   );
 
   const existing = document.getElementById("tariffNote");
@@ -3249,7 +3254,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261004a",
+      "./assets/js/sizing/sizing-worker.js?v=20261004b",
       {
         type: "module",
       },
