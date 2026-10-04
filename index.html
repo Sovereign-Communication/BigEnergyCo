@@ -259,10 +259,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20261004b" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261004b" />
+    <link rel="preload" href="./assets/site.css?v=20261004g" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261004g" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20261004b" />
+    <link rel="stylesheet" href="./assets/site.css?v=20261004g" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -1386,14 +1386,7 @@
                     "
                   ></div>
 
-                  <p
-                    style="
-                      font-size: 0.78rem;
-                      color: var(--text-muted);
-                      margin-top: 0.5rem;
-                      line-height: 1.5;
-                    "
-                  >
+                  <p class="uc-note">
                     Wattages are typical values &mdash; yours may differ.
                     Cycling appliances (fridges, freezers, air conditioners,
                     pumps) only draw power while running: their slider is
@@ -1462,6 +1455,47 @@
                   ></div>
                 </div>
 
+                <!-- ONE vocabulary for "what do you want to do" (D-16).
+                     The six tiles of §6.2 Step 3. The legacy systemGoal /
+                     hardwareConfig pair still exists BELOW, hidden, because
+                     every existing sizing path reads it: it is DERIVED from
+                     this select by ui.js and never shown, which is what closes
+                     F-17 (three overlapping vocabularies for one choice). -->
+                <div class="form-group" id="useCaseRow" hidden>
+                  <label for="useCase" data-i18n="useCaseLabel"
+                    >What do you want to do?</label
+                  >
+
+                  <select id="useCase" class="form-control">
+                    <option value="billcut" selected data-i18n="useCaseBillCut">
+                      Cut my electricity bill
+                    </option>
+
+                    <option value="tou" data-i18n="useCaseTou">
+                      Save with a battery on time-of-use rates
+                    </option>
+
+                    <option value="backup" data-i18n="useCaseBackup">
+                      Keep essentials running in a power cut
+                    </option>
+
+                    <option value="reserve" data-i18n="useCaseReserve">
+                      Keep a backup reserve in my battery
+                    </option>
+
+                    <option value="offgrid" data-i18n="useCaseOffGrid">
+                      Go fully off-grid
+                    </option>
+
+                    <option value="portable" data-i18n="useCasePortable">
+                      Portable power (RV, van, boat, camping)
+                    </option>
+                  </select>
+
+                  <p id="useCaseBlurb" class="uc-note"></p>
+                </div>
+
+                <!-- The two legacy enum selects, now derived and never shown. -->
                 <div
                   class="form-group"
                   id="systemGoalRow"
@@ -1471,7 +1505,7 @@
                     >What outcome are you exploring?</label
                   >
 
-                  <select id="systemGoal" class="form-control">
+                  <select id="systemGoal" class="form-control" hidden>
                     <option value="gridtie" selected>
                       Cut my bill, stay connected
                     </option>
@@ -1480,12 +1514,12 @@
                   </select>
                 </div>
 
-                <div class="form-group" id="hardwareConfigRow">
+                <div class="form-group" id="hardwareConfigRow" hidden>
                   <label for="hardwareConfig" data-jargon="inverter"
                     >Hardware setup:</label
                   >
 
-                  <select id="hardwareConfig" class="form-control">
+                  <select id="hardwareConfig" class="form-control" hidden>
                     <option value="both" selected>
                       Solar + Battery (Default)
                     </option>
@@ -1498,6 +1532,146 @@
                       Battery only (Peak-hour ToU offset)
                     </option>
                   </select>
+                </div>
+
+                <!-- ── Use-case inputs. Each block is shown for exactly the
+                     use cases that declare it (usecases.js INPUTS); none is
+                     visible to a visitor whose goal does not ask for it. ── -->
+                <div id="touInputs" hidden>
+                  <div class="form-group">
+                    <label for="touPeakRate" data-i18n="touPeakLabel"
+                      >Your peak price (per kWh)</label
+                    >
+                    <input
+                      type="number"
+                      id="touPeakRate"
+                      class="form-control"
+                      min="0.01"
+                      step="0.01"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="touOffPeakRate" data-i18n="touOffPeakLabel"
+                      >Your off-peak price (per kWh)</label
+                    >
+                    <input
+                      type="number"
+                      id="touOffPeakRate"
+                      class="form-control"
+                      min="0.01"
+                      step="0.01"
+                    />
+                  </div>
+
+                  <p
+                    style="
+                      font-size: 0.78rem;
+                      color: var(--text-muted);
+                      margin-top: 0.4rem;
+                      line-height: 1.5;
+                    "
+                    data-i18n="touDefaultNote"
+                  ></p>
+                </div>
+
+                <div id="backupInputs" hidden>
+                  <div class="form-group">
+                    <label for="essentialLoadList" data-i18n="essentialLabel"
+                      >What must keep running? (pick any)</label
+                    >
+                    <div id="essentialLoadList" class="appliance-presets"></div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="outageTargetHours" data-i18n="outageLabel"
+                      >How long must it last?</label
+                    >
+                    <input
+                      type="number"
+                      id="outageTargetHours"
+                      class="form-control"
+                      min="1"
+                      max="168"
+                      step="1"
+                      value="8"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="backupSolarRecharge" class="uc-check">
+                      <input type="checkbox" id="backupSolarRecharge" checked />
+                      <span data-i18n="backupRechargeLabel"
+                        >Let the panels recharge it during the outage</span
+                      >
+                    </label>
+                  </div>
+                </div>
+
+                <div id="reserveInputs" hidden>
+                  <div class="form-group">
+                    <label for="reserveSlider" data-i18n="reserveLabel"
+                      >Emergency reserve held in the battery</label
+                    >
+                    <input
+                      type="range"
+                      id="reserveSlider"
+                      min="0"
+                      max="60"
+                      step="5"
+                      value="20"
+                    />
+                    <span id="reserveSliderVal" class="uc-value"></span>
+                  </div>
+                </div>
+
+                <div id="offgridInputs" hidden>
+                  <div class="form-group">
+                    <label for="generatorAllowed" class="uc-check">
+                      <input type="checkbox" id="generatorAllowed" checked />
+                      <span data-i18n="generatorLabel"
+                        >A generator is available for the worst weeks</span
+                      >
+                    </label>
+                  </div>
+                </div>
+
+                <div id="portableInputs" hidden>
+                  <div class="form-group">
+                    <label
+                      for="portableDeviceList"
+                      data-i18n="portableDeviceLabel"
+                      >What are you powering? (pick any)</label
+                    >
+                    <div
+                      id="portableDeviceList"
+                      class="appliance-presets"
+                    ></div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="portableBankKwh" data-i18n="portableBankLabel"
+                      >Power station usable size (kWh)</label
+                    >
+                    <input
+                      type="number"
+                      id="portableBankKwh"
+                      class="form-control"
+                      min="0.2"
+                      max="100"
+                      step="0.1"
+                      value="3"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="portableShorePower" class="uc-check">
+                      <input type="checkbox" id="portableShorePower" />
+                      <span data-i18n="portableShoreLabel"
+                        >I can recharge from mains or a vehicle</span
+                      >
+                    </label>
+                  </div>
                 </div>
 
                 <div
@@ -2047,6 +2221,12 @@
                 ></p>
               </div>
               <div id="resultsRegion" hidden>
+                <!-- The use case's OWN outcome, above everything else: its own
+                     metric, its own honest verdict, and what it was measured
+                     on. Rendered from payload.useCaseOutcome, which only
+                     assets/js/sizing/usecases.js can shape. -->
+                <div id="useCaseOutcomeWrap" aria-live="polite"></div>
+
                 <div id="simpleResultsWrap" aria-live="polite"></div>
 
                 <div
@@ -2141,15 +2321,7 @@
                       align-items: baseline;
                     "
                   ></div>
-                  <div
-                    id="focusNote"
-                    style="
-                      font-size: 0.78rem;
-                      color: var(--text-muted);
-                      margin-top: 0.5rem;
-                      line-height: 1.5;
-                    "
-                  ></div>
+                  <div id="focusNote" class="uc-note"></div>
                 </div>
 
                 <div
@@ -3428,15 +3600,15 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20261004b"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20261004g"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
       type="module"
-      src="./assets/js/turnstile-client.js?v=20261004b"
+      src="./assets/js/turnstile-client.js?v=20261004g"
     ></script>
-    <script defer src="./assets/js/chat.js?v=20261004b"></script>
+    <script defer src="./assets/js/chat.js?v=20261004g"></script>
   </body>
 </html>
 

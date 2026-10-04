@@ -313,6 +313,68 @@ export const LOCALES = {
     // single source the other five are checked against, and lets the
     // reverse-parity rule fail if one is ever dropped again.
     goalLabel: "What outcome are you exploring?",
+    useCaseLabel: "What do you want to do?",
+    useCaseBillCut: "Cut my electricity bill",
+    useCaseTou: "Save with a battery on time-of-use rates",
+    useCaseBackup: "Keep essentials running in a power cut",
+    useCaseReserve: "Keep a backup reserve in my battery",
+    useCaseOffGrid: "Go fully off-grid",
+    useCasePortable: "Portable power (RV, van, boat, camping)",
+    useCaseBillCutBlurb:
+      "Grid-tied solar, with a battery only if it earns its place. Measured as the share of your bill the system removes over 20 years.",
+    useCaseTouBlurb:
+      "A battery on its own: it charges in the cheap hours and covers the expensive ones. No panels.",
+    useCaseBackupBlurb:
+      "Sized on the appliances you tick, not on your whole home. Measured as the share of power cuts your essentials ride out.",
+    useCaseReserveBlurb:
+      "Hold part of the battery back for outages, and see exactly what that costs you in savings.",
+    useCaseOffGridBlurb:
+      "Solar and battery sized for your whole home. Measured as the share of hours that run with no grid at all.",
+    useCasePortableBlurb:
+      "A power station for a van, a boat or a campsite. No roof, no grid, no tariff.",
+    metricBillCut: "of your bill removed over 20 years",
+    metricTouOffset: "of your peak-window energy run by the battery",
+    metricOutageCoverage:
+      "of power cuts your essentials ride out for the full target",
+    metricReserveTradeoff: "what holding a reserve costs, in savings and hours",
+    metricGridIndependence: "of the year running with no grid at all",
+    metricPortableRuntime: "of days the station runs your devices all day",
+    statusWorks: "Works",
+    statusPartial: "Partly",
+    statusNotHere: "Does not work here",
+    useCaseOutcomeTitle: "Your {useCase} result",
+    useCaseVerdictFooter:
+      "Measured for {useCase} against {metric}, using this location's own hourly weather.",
+    useCaseNotMeasured:
+      "Not measured: this combination cannot be sized at all, so there is no {metric} to report.",
+    metricReserveTradeoffValue: "{lost}% of savings, {hours} h of cover",
+    reserveOff: "off",
+    touPeakLabel: "Your peak price (per kWh)",
+    touOffPeakLabel: "Your off-peak price (per kWh)",
+    touDefaultNote:
+      "We have no published time-of-use schedule for your area, so we prefilled a peak price 60% above and an off-peak price 45% below your flat rate. Change either number if your bill says otherwise — the verdict below uses whatever you enter.",
+    essentialLabel: "What must keep running? (pick any)",
+    outageLabel: "How long must it last?",
+    backupRechargeLabel: "Let the panels recharge it during the outage",
+    reserveLabel: "Emergency reserve held in the battery",
+    portableDeviceLabel: "What are you powering? (pick any)",
+    portableBankLabel: "Power station usable size (kWh)",
+    portableShoreLabel: "I can recharge from mains or a vehicle",
+    generatorLabel: "A generator is available for the worst weeks",
+    verdictBillCut:
+      "{status}: this system removes {pct}% of your bill over 20 years.",
+    verdictTou:
+      "{status}: the battery covers {pct}% of your peak-window energy, worth about {saving} over 20 years against a {cost} battery. Your peak-to-off-peak spread here is {spread} per kWh.",
+    verdictBackup:
+      "{status}: your essentials run for the full {targetHours} hours in {pct}% of the power cuts we simulated (typical night: {hours} hours).",
+    verdictReserve:
+      "{status}: holding that reserve costs {pct}% of your bill savings and buys {coverHours} hours of cover.",
+    verdictReserveNoBattery:
+      "There is nothing to hold a reserve in: the cheapest system for this goal carries no battery at all.",
+    verdictOffGrid:
+      "{status}: {pct}% of the year runs with no grid — {unmetHours} hours short in the worst year, {autonomy} days of autonomy.",
+    verdictPortable:
+      "{status}: your station runs a full day on {days} of {trips} days here, and one charge lasts {runtime} hours.",
     cityLabel: "Where is this system going?",
     loadLabel: "How much power do you use?",
     loadAppliances: "Let me pick my appliances",
@@ -385,6 +447,69 @@ export const LOCALES = {
     tariffSpendBattery:
       "A {tariff}/kWh, tu electricidad te cuesta unos {annual} al año hoy. Una batería sin paneles cambia cuándo consumes; no reduce lo que pagas.",
     goalLabel: "¿Qué quieres que haga este sistema?",
+    useCaseLabel: "¿Qué quieres conseguir?",
+    useCaseBillCut: "Reducir tu factura de electricidad",
+    useCaseTou: "Ahorrar con una batería en tarifas horarias",
+    useCaseBackup: "Mantener los básicos funcionando durante un apagón",
+    useCaseReserve: "Guardar una reserva de emergencia en la batería",
+    useCaseOffGrid: "Quedarte totalmente sin red",
+    useCasePortable: "Energía portátil (furgoneta, barco, camping)",
+    useCaseBillCutBlurb:
+      "Solar conectado a la red, con batería solo si compensa. Se mide como la parte de tu factura que el sistema elimina en 20 años.",
+    useCaseTouBlurb:
+      "Solo batería: carga en las horas baratas y cubre las caras. Sin paneles.",
+    useCaseBackupBlurb:
+      "Se dimensiona con los aparatos que marques, no con toda tu casa. Se mide como la parte de los apagones que lo esencial aguanta.",
+    useCaseReserveBlurb:
+      "Deja guardada una parte de la batería para los apagones y mira lo que eso te cuesta en ahorro.",
+    useCaseOffGridBlurb:
+      "Solar y batería dimensionados para toda tu casa. Se mide como la parte de las horas que funcionan sin red.",
+    useCasePortableBlurb:
+      "Una estación de energía para furgoneta, barco o campamento. Sin tejado, sin red, sin tarifa.",
+    metricBillCut: "de tu factura eliminada en 20 años",
+    metricTouOffset: "de tu energía en horas punta cubierta por la batería",
+    metricOutageCoverage:
+      "de los apagones que lo esencial aguanta el tiempo completo",
+    metricReserveTradeoff: "lo que cuesta la reserva, en ahorro y horas",
+    metricGridIndependence: "del año funcionando sin red",
+    metricPortableRuntime:
+      "de los días que la estación alimenta tus dispositivos todo el día",
+    statusWorks: "Funciona",
+    statusPartial: "En parte",
+    statusNotHere: "Aquí no funciona",
+    useCaseOutcomeTitle: "Tu resultado de {useCase}",
+    useCaseVerdictFooter:
+      "Medido para {useCase} frente a {metric}, con el clima horario de esta ubicación.",
+    useCaseNotMeasured:
+      "Sin medir: esta combinación no se puede dimensionar, así que no hay {metric} que informar.",
+    metricReserveTradeoffValue: "{lost}% de ahorro, {hours} h de cobertura",
+    reserveOff: "desactivada",
+    touPeakLabel: "Tu precio en punta (por kWh)",
+    touOffPeakLabel: "Tu precio fuera de punta (por kWh)",
+    touDefaultNote:
+      "No tenemos una tarifa horaria publicada para tu zona, así que hemos puesto un precio en punta un 60 % más alto y uno fuera de punta un 45 % más bajo que tu tarifa plana. Cambia cualquiera de los dos si tu factura dice otra cosa: el veredicto usa lo que escribas.",
+    essentialLabel: "¿Qué debe seguir funcionando? (elige lo que quieras)",
+    outageLabel: "¿Cuánto tiempo debe durar?",
+    backupRechargeLabel: "Deja que los paneles la recarguen durante el apagón",
+    reserveLabel: "Reserva de emergencia guardada en la batería",
+    portableDeviceLabel: "¿Qué vas a alimentar? (elige lo que quieras)",
+    portableBankLabel: "Capacidad útil de la estación (kWh)",
+    portableShoreLabel: "Puedo recargar desde la red o desde el vehículo",
+    generatorLabel: "Hay un generador disponible para las peores semanas",
+    verdictBillCut:
+      "{status}: este sistema elimina el {pct}% de tu factura en 20 años.",
+    verdictTou:
+      "{status}: la batería cubre el {pct}% de tu energía en horas punta, unos {saving} en 20 años frente a una batería de {cost}. Aquí la diferencia entre punta y valle es de {spread} por kWh.",
+    verdictBackup:
+      "{status}: lo esencial aguanta las {targetHours} horas completas en el {pct}% de los apagones que simulamos (noche típica: {hours} horas).",
+    verdictReserve:
+      "{status}: guardar esa reserva cuesta el {pct}% de tu ahorro y compra {coverHours} horas de cobertura.",
+    verdictReserveNoBattery:
+      "No hay nada donde guardar una reserva: el sistema más barato para este objetivo no lleva batería.",
+    verdictOffGrid:
+      "{status}: el {pct}% del año funciona sin red, con {unmetHours} horas de déficit en el peor año y {autonomy} días de autonomía.",
+    verdictPortable:
+      "{status}: tu estación alimenta tus dispositivos todo el día en {days} de {trips} días aquí, y una carga dura {runtime} horas.",
     cityLabel: "¿Dónde se instalará el sistema?",
     loadLabel: "¿Cuánta energía consumes?",
     loadAppliances: "Elijo mis electrodomésticos",
@@ -677,6 +802,71 @@ export const LOCALES = {
     footerAboutPost: "Não é uma empresa, não é constituída, nada à venda.",
     ctaStart: "Comece sua estimativa grátis",
     goalLabel: "O que você quer que este sistema faça?",
+    useCaseLabel: "O que você quer fazer?",
+    useCaseBillCut: "Reduzir minha conta de luz",
+    useCaseTou: "Economizar com uma bateria em tarifas horárias",
+    useCaseBackup:
+      "Manter o essencial funcionando durante uma queda de energia",
+    useCaseReserve: "Guardar uma reserva de emergência na bateria",
+    useCaseOffGrid: "Ficar totalmente sem rede",
+    useCasePortable: "Energia portátil (van, barco, camping)",
+    useCaseBillCutBlurb:
+      "Solar ligado à rede, com bateria só quando ela se paga. Medido como a parcela da sua conta que o sistema elimina em 20 anos.",
+    useCaseTouBlurb:
+      "Só bateria: carrega nas horas baratas e cobre as caras. Sem painéis.",
+    useCaseBackupBlurb:
+      "Dimensionado pelos eletrodomésticos que você marcar, não pela casa toda. Medido como a parcela dos apagões que o essencial atravessa.",
+    useCaseReserveBlurb:
+      "Deixe uma parte da bateria guardada para os apagões e veja exatamente quanto isso custa em economia.",
+    useCaseOffGridBlurb:
+      "Solar e bateria dimensionados para a casa inteira. Medido como a parcela das horas que funcionam sem rede nenhuma.",
+    useCasePortableBlurb:
+      "Uma estação de energia para van, barco ou acampamento. Sem telhado, sem rede, sem tarifa.",
+    metricBillCut: "da sua conta eliminada em 20 anos",
+    metricTouOffset: "da sua energia nas horas de pico coberta pela bateria",
+    metricOutageCoverage:
+      "dos apagões que o essencial atravessa pelo tempo todo",
+    metricReserveTradeoff: "o que custar a reserva, em economia e horas",
+    metricGridIndependence: "do ano funcionando sem rede nenhuma",
+    metricPortableRuntime:
+      "dos dias em que a estação alimenta seus aparelhos o dia todo",
+    statusWorks: "Funciona",
+    statusPartial: "Em parte",
+    statusNotHere: "Aqui não funciona",
+    useCaseOutcomeTitle: "Seu resultado de {useCase}",
+    useCaseVerdictFooter:
+      "Medido para {useCase} em relação a {metric}, com o clima horário deste local.",
+    useCaseNotMeasured:
+      "Sem medir: esta combinação não pode ser dimensionada, então não há {metric} a informar.",
+    metricReserveTradeoffValue: "{lost}% de economia, {hours} h de cobertura",
+    reserveOff: "desativada",
+    touPeakLabel: "Seu preço de pico (por kWh)",
+    touOffPeakLabel: "Seu preço fora do pico (por kWh)",
+    touDefaultNote:
+      "Não temos uma tarifa horária publicada para sua região, então deixamos um preço de pico 60% maior e um preço fora do pico 45% menor que sua tarifa plana. Mude qualquer um dos dois se a sua conta disser outra coisa: o veredicto usa o que você digitar.",
+    essentialLabel:
+      "O que precisa continuar funcionando? (marque o que quiser)",
+    outageLabel: "Por quanto tempo precisa durar?",
+    backupRechargeLabel: "Deixe os painéis recarregá-la durante o apagão",
+    reserveLabel: "Reserva de emergência guardada na bateria",
+    portableDeviceLabel: "O que você vai alimentar? (marque o que quiser)",
+    portableBankLabel: "Capacidade útil da estação (kWh)",
+    portableShoreLabel: "Posso recarregar pela rede ou pelo veículo",
+    generatorLabel: "Há um gerador disponível para as piores semanas",
+    verdictBillCut:
+      "{status}: este sistema elimina {pct}% da sua conta em 20 anos.",
+    verdictTou:
+      "{status}: a bateria cobre {pct}% da sua energia nas horas de pico, valendo cerca de {saving} em 20 anos contra uma bateria de {cost}. A diferença entre pico e fora do pico aqui é de {spread} por kWh.",
+    verdictBackup:
+      "{status}: o essencial funciona as {targetHours} horas completas em {pct}% dos apagões que simulamos (noite típica: {hours} horas).",
+    verdictReserve:
+      "{status}: guardar essa reserva custa {pct}% da sua economia e compra {coverHours} horas de cobertura.",
+    verdictReserveNoBattery:
+      "Não há onde guardar uma reserva: o sistema mais barato para esse objetivo não tem bateria nenhuma.",
+    verdictOffGrid:
+      "{status}: {pct}% do ano funciona sem rede — faltam {unmetHours} horas no pior ano, com {autonomy} dias de autonomia.",
+    verdictPortable:
+      "{status}: sua estação alimenta seus aparelhos o dia todo em {days} de {trips} dias aqui, e uma carga dura {runtime} horas.",
     cityLabel: "Onde o sistema será instalado?",
     loadLabel: "Quanta energia você consome?",
     loadAppliances: "Escolho meus eletrodomésticos",
@@ -995,6 +1185,73 @@ export const LOCALES = {
     footerAboutPost: "Pas une société, pas immatriculée, rien à vendre.",
     ctaStart: "Lancer une estimation gratuite",
     goalLabel: "Que doit faire ce système ?",
+    useCaseLabel: "Que voulez-vous faire ?",
+    useCaseBillCut: "Réduire votre facture d'électricité",
+    useCaseTou: "Économiser avec une batterie en tarification horaire",
+    useCaseBackup: "Garder l'essentiel en marche pendant une coupure",
+    useCaseReserve: "Garder une réserve d'urgence dans la batterie",
+    useCaseOffGrid: "Devenir totalement indépendant du réseau",
+    useCasePortable: "Énergie portable (camping-car, bateau, camping)",
+    useCaseBillCutBlurb:
+      "Solaire raccordé au réseau, avec une batterie seulement si elle le mérite. Mesuré comme la part de votre facture que le système supprime sur 20 ans.",
+    useCaseTouBlurb:
+      "Une batterie seule : elle charge aux heures creuses et couvre les heures pleines. Aucun panneau.",
+    useCaseBackupBlurb:
+      "Dimensionné sur les appareils que vous cochez, pas sur toute la maison. Mesuré comme la part des coupures que l'essentiel traverse.",
+    useCaseReserveBlurb:
+      "Gardez une partie de la batterie en réserve pour les coupures, et voyez exactement ce que cela vous coûte en économies.",
+    useCaseOffGridBlurb:
+      "Solaire et batterie dimensionnés pour toute la maison. Mesuré comme la part des heures qui fonctionnent sans aucun réseau.",
+    useCasePortableBlurb:
+      "Une station d'énergie pour un van, un bateau ou un camp-site. Pas de toit, pas de réseau, pas de tarif.",
+    metricBillCut: "de votre facture supprimée sur 20 ans",
+    metricTouOffset:
+      "de votre énergie en heures pleines couverte par la batterie",
+    metricOutageCoverage:
+      "des coupures que l'essentiel traverse pendant toute la durée visée",
+    metricReserveTradeoff: "ce que coûte la réserve, en économies et en heures",
+    metricGridIndependence: "de l'année fonctionnant sans aucun réseau",
+    metricPortableRuntime:
+      "des jours où la station alimente vos appareils toute la journée",
+    statusWorks: "Fonctionne",
+    statusPartial: "En partie",
+    statusNotHere: "Ne fonctionne pas ici",
+    useCaseOutcomeTitle: "Votre résultat : {useCase}",
+    useCaseVerdictFooter:
+      "Mesuré pour {useCase} au regard de {metric}, avec la météo horaire de ce lieu.",
+    useCaseNotMeasured:
+      "Non mesuré : cette combinaison ne peut pas être dimensionnée, il n'y a donc pas de {metric} à annoncer.",
+    metricReserveTradeoffValue: "{lost}% d'économies, {hours} h de couverture",
+    reserveOff: "désactivée",
+    touPeakLabel: "Votre prix en heures pleines (par kWh)",
+    touOffPeakLabel: "Votre prix en heures creuses (par kWh)",
+    touDefaultNote:
+      "Nous n'avons pas de grille tarifaire horaire publiée pour votre secteur : nous avons prérempli un prix de pointe supérieur de 60 % et un prix creux inférieur de 45 % à votre tarif forfaitaire. Modifiez l'un ou l'autre si votre facture dit le contraire — le verdict ci-dessous utilise ce que vous saisissez.",
+    essentialLabel:
+      "Qu'est-ce qui doit continuer à fonctionner ? (cochez ce que vous voulez)",
+    outageLabel: "Combien de temps doit tenir ?",
+    backupRechargeLabel: "Laissez les panneaux la recharger pendant la coupure",
+    reserveLabel: "Réserve d'urgence conservée dans la batterie",
+    portableDeviceLabel: "Qu'alimentez-vous ? (cochez ce que vous voulez)",
+    portableBankLabel: "Capacité utile de la station (kWh)",
+    portableShoreLabel:
+      "Je peux recharger sur le secteur ou depuis le véhicule",
+    generatorLabel:
+      "Un groupe électrogène est disponible pour les pires semaines",
+    verdictBillCut:
+      "{status} : ce système supprime {pct}% de votre facture sur 20 ans.",
+    verdictTou:
+      "{status} : la batterie couvre {pct}% de votre énergie en heures pleines, soit environ {saving} sur 20 ans face à une batterie de {cost}. L'écart entre pointe et creux ici est de {spread} par kWh.",
+    verdictBackup:
+      "{status} : l'essentiel tient les {targetHours} heures complètes dans {pct}% des coupures que nous avons simulées (nuit typique : {hours} heures).",
+    verdictReserve:
+      "{status} : garder cette réserve coûte {pct}% de vos économies et achète {coverHours} heures de couverture.",
+    verdictReserveNoBattery:
+      "Il n'y a rien où garder une réserve : le système le moins cher pour cet objectif ne comporte aucune batterie.",
+    verdictOffGrid:
+      "{status} : {pct}% de l'année fonctionne sans réseau — {unmetHours} heures manquantes la pire année, {autonomy} jours d'autonomie.",
+    verdictPortable:
+      "{status} : votre station alimente vos appareils toute la journée sur {days} jours sur {trips} ici, et une charge dure {runtime} heures.",
     cityLabel: "Où sera installé le système ?",
     loadLabel: "Quelle est votre consommation ?",
     loadAppliances: "Je choisis mes appareils",
@@ -1372,6 +1629,71 @@ export const LOCALES = {
       "✅ {years} Jahre stündliche Daten ({dataYears}) · {yield} kWh/Jahr pro kW Panel.{offline}",
     offlineNote: " · 🌐 typisches Offline-Jahr",
     goalLabel: "Welches Ergebnis möchtest du untersuchen?",
+    useCaseLabel: "Was willst du erreichen?",
+    useCaseBillCut: "Meine Stromrechnung senken",
+    useCaseTou: "Mit einer Batterie bei Zeittarifen sparen",
+    useCaseBackup: "Das Nötigste läuft bei einem Stromausfall weiter",
+    useCaseReserve: "Einen Notfall-Reservestand in der Batteri halten",
+    useCaseOffGrid: "Vollständig unabhängig vom Netz",
+    useCasePortable: "Tragbare Stromversorgung (Wohnmobil, Boot, Camping)",
+    useCaseBillCutBlurb:
+      "Netzgebundene Solaranlage, mit Batterie nur, wenn sie sich lohnt. Gemessen als Anteil deiner Rechnung, den das System über 20 Jahre einspart.",
+    useCaseTouBlurb:
+      "Nur eine Batterie: Sie lädt in den günstigen Stunden und deckt die teuren. Keine Module.",
+    useCaseBackupBlurb:
+      "Ausgelegt auf den Geräten, die du ankreuzt, nicht auf dein ganzes Haus. Gemessen als Anteil der Stromausfälle, die das Nötigste übersteht.",
+    useCaseReserveBlurb:
+      "Lass einen Teil der Batteri für Stromausfälle zurück und sieh genau, was dich das an Ersparnis kostet.",
+    useCaseOffGridBlurb:
+      "Solar und Batterie für dein ganzes Haus ausgelegt. Gemessen als Anteil der Stunden, die ganz ohne Netz laufen.",
+    useCasePortableBlurb:
+      "Eine Stromstation für Wohnmobil, Boot oder Campingplatz. Kein Dach, kein Netz, kein Tarif.",
+    metricBillCut: "deiner Rechnung, über 20 Jahre eingespart",
+    metricTouOffset:
+      "deiner Energie in den Spitzenstunden, die die Batterie deckt",
+    metricOutageCoverage:
+      "der Stromausfälle, die dein Nötigstes über die volle Dauer übersteht",
+    metricReserveTradeoff: "was die Reserve kostet, in Ersparnis und Stunden",
+    metricGridIndependence: "des Jahres ganz ohne Netz",
+    metricPortableRuntime:
+      "der Tage, an denen die Station deine Geräte den ganzen Tag versorgt",
+    statusWorks: "Funktioniert",
+    statusPartial: "Teilweise",
+    statusNotHere: "Funktioniert hier nicht",
+    useCaseOutcomeTitle: "Dein Ergebnis: {useCase}",
+    useCaseVerdictFooter:
+      "Gemessen für {useCase} anhand von {metric}, mit dem stündlichen Wetter dieses Ortes.",
+    useCaseNotMeasured:
+      "Nicht gemessen: Diese Kombination lässt sich überhaupt nicht auslegen, es gibt also kein {metric} zu nennen.",
+    metricReserveTradeoffValue: "{lost}% Ersparnis, {hours} h Reserve",
+    reserveOff: "aus",
+    touPeakLabel: "Dein Preis in den Spitzenstunden (pro kWh)",
+    touOffPeakLabel: "Dein Preis außerhalb der Spitzenzeiten (pro kWh)",
+    touDefaultNote:
+      "Für deine Region haben wir keine veröffentlichte Zeittarif-Tabelle. Deshalb haben wir einen Spitzenpreis von 60 % über und einen Preis außerhalb der Spitze von 45 % unter deinem Pauschalpreis eingetragen. Ändere beide Werte, wenn deine Rechnung etwas anderes sagt — das Urteil unten nutzt, was du eingibst.",
+    essentialLabel: "Was muss weiterlaufen? (Auswählen, was passt)",
+    outageLabel: "Wie lange muss es durchhalten?",
+    backupRechargeLabel: "Die Module dürfen sie während des Ausfalls nachladen",
+    reserveLabel: "Notfall-Reservestand in der Batteri",
+    portableDeviceLabel: "Was versorgst du? (Auswählen, was passt)",
+    portableBankLabel: "Nutzbare Größe der Stromstation (kWh)",
+    portableShoreLabel: "Ich kann am Netz oder am Fahrzeug nachladen",
+    generatorLabel:
+      "Ein Generator steht für die schlimmsten Wochen zur Verfügung",
+    verdictBillCut:
+      "{status}: Dieses System spart {pct}% deiner Rechnung über 20 Jahre.",
+    verdictTou:
+      "{status}: Die Batterie deckt {pct}% deiner Energie in den Spitzenstunden, rund {saving} über 20 Jahre gegen eine {cost}-Batterie. Der Abstand zwischen Spitze und Tal beträgt hier {spread} pro kWh.",
+    verdictBackup:
+      "{status}: Dein Nötigstes läuft die vollen {targetHours} Stunden in {pct}% der simulierten Stromausfälle (typische Nacht: {hours} Stunden).",
+    verdictReserve:
+      "{status}: Dieser Reserve kostet dich {pct}% deiner Ersparnis und bringt {coverHours} Stunden Deckung.",
+    verdictReserveNoBattery:
+      "Es gibt nichts, worin eine Reserve stecken könnte: das billigste System für dieses Ziel hat gar keine Batterie.",
+    verdictOffGrid:
+      "{status}: {pct}% des Jahres laufen ganz ohne Netz — {unmetHours} Stunden fehlen im schlechtesten Jahr, {autonomy} Tage Autonomie.",
+    verdictPortable:
+      "{status}: Deine Station versorgt deine Geräte hier an {days} von {trips} Tagen den ganzen Tag, und eine Ladung reicht {runtime} Stunden.",
     chemLabel: "Batteriechemie:",
     // Added with the English key. German was the one locale that never
     // received this note at all: it lived only in the translated
@@ -1650,6 +1972,68 @@ export const LOCALES = {
     footerAboutPost: "ليست شركة، ولا مُسجّلة، ولا شيء للبيع.",
     ctaStart: "ابدأ تقديرًا مجانيًا",
     goalLabel: "ماذا تريد من هذا النظام؟",
+    useCaseLabel: "ماذا تريد أن تنجز؟",
+    useCaseBillCut: "خفض فاتورة الكهرباء",
+    useCaseTou: "الاقتصاد ببطارية مع تعرفة الساعات",
+    useCaseBackup: "إبقاء الأساسيات تعمل أثناء انقطاع الكهرباء",
+    useCaseReserve: "الاحتفاظ بهامش طوارئ في البطارية",
+    useCaseOffGrid: "الاعتماد الكامل على عدم وجود شبكة",
+    useCasePortable: "طاقة محمولة (شاحنة، قارب، تخييم)",
+    useCaseBillCutBlurb:
+      "طاقة شمسية مرتبطة بالشبكة، مع بطارية فقط إذا استحقت. يُقاس كنسبة فاتورتك التي يزيلها النظام على مدى 20 عامًا.",
+    useCaseTouBlurb:
+      "بطارية وحدها: تشحن في الساعات الرخيصة وتغطي الغالية. بدون ألواح.",
+    useCaseBackupBlurb:
+      "يُحجَّم حسب الأجهزة التي تختارها، لا حسب المنزل كله. يُقاس كنسبة انقطاعات الكهرباء التي تصمد الأساسيات خلالها.",
+    useCaseReserveBlurb:
+      "اترك جزءًا من البطارية جانبًا لحالات الانقطاع، وانظر بدقة ما يكلفه ذلك من fourni.",
+    useCaseOffGridBlurb:
+      "طاقة شمسية وبطارية محجَّمة لمنزلك كله. يُقاس كنسبة الساعات التي تعمل بلا شبكة إطلاقًا.",
+    useCasePortableBlurb:
+      "محطة طاقة لشاحنة أو قارب أو مخيم. بلا سطح، بلا شبكة، بلا تعرفة.",
+    metricBillCut: "من فاتورتك يزيلها النظام على مدى 20 عامًا",
+    metricTouOffset: "من طاقتك في ساعات الذروة تغطيها البطارية",
+    metricOutageCoverage:
+      "من انقطاعات الكهرباء التي تصمد الأساسيات خلالها طوال المدة المطلوبة",
+    metricReserveTradeoff: "تكلفة الاحتفاظ بالهامش، بالوفوفير والساعات",
+    metricGridIndependence: "من السنة تعمل بلا شبكة إطلاقًا",
+    metricPortableRuntime: "من الأيام التي تغذّي فيها المحطة أجهزتك طوال اليوم",
+    statusWorks: "ينجح",
+    statusPartial: "جزئيًا",
+    statusNotHere: "لا ينجح هنا",
+    useCaseOutcomeTitle: "نتيجتك: {useCase}",
+    useCaseVerdictFooter:
+      "قِيست لـ {useCase} مقابل {metric}، باستخدام بيانات الطقس الساعية لهذا الموقع.",
+    useCaseNotMeasured:
+      "غير مقيس: هذا التركيب لا يمكن تحجيمه أصلًا، فلا يوجد {metric} للإبلاغ عنه.",
+    metricReserveTradeoffValue: "{lost}% من الوفر، {hours} ساعة تغطية",
+    reserveOff: "موقوف",
+    touPeakLabel: "سعر الذروة عندك (لكل ك.و.س)",
+    touOffPeakLabel: "سعر خارج الذروة عندك (لكل ك.و.س)",
+    touDefaultNote:
+      "لا نملك جدول تعرفة ساعية منشورًا لمنطقتك، لذلك وضعنا سعر ذروة أعلى بنسبة 60٪ وسعرًا خارج الذروة أدنى بنسبة 45٪ من تسعيرتك الثابتة. غيّر أيًّا منهما إن كانت فاتورتك تقول غير ذلك — والحكم أدناه يستخدم ما تكتبه.",
+    essentialLabel: "ما الذي يجب أن يبقى يعمل؟ (اختر ما تشاء)",
+    outageLabel: "كم يجب أن يصمد؟",
+    backupRechargeLabel: "دع الألواح تعيد الشحن أثناء الانقطاع",
+    reserveLabel: "هامش طوارئ محفوظ في البطارية",
+    portableDeviceLabel: "ما الذي ستغذّيه؟ (اختر ما تشاء)",
+    portableBankLabel: "السعة الفعلية للمحطة (ك.و.س)",
+    portableShoreLabel: "أستطيع الشحن من الشبكة أو من المركبة",
+    generatorLabel: "تتوفر مولدة للأسابيع الأسوأ",
+    verdictBillCut:
+      "{status}: يزيل هذا النظام {pct}% من فاتورتك على مدى 20 عامًا.",
+    verdictTou:
+      "{status}: تغطي البطارية {pct}% من طاقتك في ساعات الذروة، بقيمة نحو {saving} على مدى 20 عامًا مقابل بطارية تكلف {cost}. الفارق بين الذروة وخارج الذروة هنا {spread} لكل ك.و.س.",
+    verdictBackup:
+      "{status}: تعمل أساسياتك كاملة الساعات {targetHours} في {pct}% من انقطاعات الكهرباء التي حاكيناها (ليلة نموذجية: {hours} ساعات).",
+    verdictReserve:
+      "{status}: الاحتفاظ بهذا الهامش يكلفك {pct}% من وفورك ويشتري {coverHours} ساعة من التغطية.",
+    verdictReserveNoBattery:
+      "لا يوجد مكان للاحتفاظ بهامش: أرخص نظام لهذا الهدف لا يحمل بطارية إطلاقًا.",
+    verdictOffGrid:
+      "{status}: {pct}% من السنة تعمل بلا شبكة — تنقص {unmetHours} ساعة في أسوأ عام، مع {autonomy} يومًا من الاستقلالية.",
+    verdictPortable:
+      "{status}: تغذّي محطتك أجهزتك طوال اليوم في {days} يومًا من {trips} يومًا هنا، وشحنة واحدة تدوم {runtime} ساعة.",
     cityLabel: "أين سيُركَّب النظام؟",
     loadLabel: "كم تستهلك من الطاقة؟",
     loadAppliances: "أختار أجهزتي الكهربائية",

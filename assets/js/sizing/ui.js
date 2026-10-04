@@ -13,14 +13,25 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261004b";
+import { APPLIANCES } from "./appliances.js?v=20261004g";
+import {
+  USE_CASES,
+  USE_CASE_IDS,
+  useCase,
+  deriveLegacy,
+  loadsFor,
+  normaliseReservePct,
+  normaliseOutageTarget,
+  DEFAULT_RESERVE_PCT,
+  DEFAULT_TOU,
+} from "./usecases.js?v=20261004g";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261004b";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261004b";
+} from "./run-coordinator.js?v=20261004g";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261004g";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -29,12 +40,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261004b";
+} from "./charts.js?v=20261004g";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261004b";
+} from "./location-picker.js?v=20261004g";
 
 import {
   estimateTariff,
@@ -42,27 +53,27 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261004b";
+} from "./pricing.js?v=20261004g";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261004b";
+import { currencyForCountry } from "./country-currency.js?v=20261004g";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261004b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261004g";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261004b";
+} from "./lead-acid.js?v=20261004g";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261004b";
+} from "./bom.js?v=20261004g";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261004b";
+import { BOM_ITEMS } from "../shared/content.js?v=20261004g";
 
 import {
   applyI18n,
@@ -71,18 +82,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261004b";
+} from "../shared/i18n.js?v=20261004g";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261004b";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261004b";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261004g";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261004g";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261004b";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261004b";
+} from "../shared/simple-mode.js?v=20261004g";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261004g";
 import {
   advisorJevContext,
   interpretSanity,
@@ -90,56 +101,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261004b";
+} from "./validate.js?v=20261004g";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261004b";
+} from "../shared/cut-targets.js?v=20261004g";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261004b";
+} from "./share-codec.js?v=20261004g";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261004b";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261004b";
+} from "./infeasible-copy.js?v=20261004g";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261004g";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261004b";
+} from "./fuel-units.js?v=20261004g";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261004b";
+} from "./frontier-chart.js?v=20261004g";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261004b";
+} from "./rescale.js?v=20261004g";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261004b";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261004g";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20261004b";
+} from "./map-provider.js?v=20261004g";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261004b";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261004b";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261004b";
+} from "./wizard.js?v=20261004g";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261004g";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261004g";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -188,9 +199,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261004b";
+} from "./money.js?v=20261004g";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261004b";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261004g";
 
 let worker = null;
 
@@ -669,6 +680,375 @@ function setupSimpleMode() {
 
 // Simple mode's single results surface. Reads the same payload and the same
 // selected entry the technical cards render — the numbers cannot diverge.
+// ── Use cases: the one vocabulary the visitor sees ─────────────────────────
+//
+// Everything below reads assets/js/sizing/usecases.js and nothing else
+// defines what a use case is. The six blocks in index.html are shown or
+// hidden from the registry's own `inputsFor`, so a use case cannot be added
+// to the engine without also being asked of the visitor, and cannot be asked
+// of the visitor without a place to put the answer.
+
+// F-13: the essential-load catalogue the plan names. Typical running watts
+// and typical daily hours — the same conventions appliances.js already
+// documents for cycling loads, stated here so the sum is auditable.
+const ESSENTIAL_LOADS = [
+  { id: "fridge", w: 100, hours: 10, label: "Fridge" },
+  { id: "freezer", w: 100, hours: 8, label: "Freezer" },
+  { id: "lights", w: 60, hours: 6, label: "Lights" },
+  { id: "router", w: 15, hours: 24, label: "Router / internet" },
+  { id: "phones", w: 10, hours: 3, label: "Phone charging" },
+  { id: "cpap", w: 40, hours: 8, label: "CPAP / medical" },
+  { id: "laptop", w: 45, hours: 4, label: "Laptop" },
+  { id: "tv", w: 100, hours: 3, label: "Television" },
+  { id: "wellpump", w: 400, hours: 1, label: "Water pump" },
+];
+
+// F-16: the portable device catalogue. Same shape, and deliberately small:
+// this is what a van or a boat actually runs, not a second household.
+const PORTABLE_DEVICES = [
+  { id: "phone", w: 12, hours: 3, label: "Phones" },
+  { id: "laptop", w: 45, hours: 4, label: "Laptop" },
+  { id: "lights", w: 25, hours: 5, label: "Lights" },
+  { id: "fridge", w: 60, hours: 10, label: "Fridge" },
+  { id: "router", w: 12, hours: 24, label: "Router" },
+  { id: "coffee", w: 900, hours: 1, label: "Coffee maker" },
+  { id: "blender", w: 400, hours: 0.5, label: "Blender" },
+  { id: "tv", w: 80, hours: 2, label: "Television" },
+  { id: "tools", w: 500, hours: 1, label: "Power tools" },
+];
+
+function selectedUseCase() {
+  const el = $("useCase");
+  const id = el && el.value;
+  return useCase(id) ? id : "billcut";
+}
+
+/** The kWh/day a checked set of catalogue rows asks for. */
+function catalogueKwh(list, prefix) {
+  let wh = 0;
+  for (const row of list) {
+    const node = $(row.id + prefix);
+    if (node && node.checked) wh += row.w * row.hours;
+  }
+  return wh / 1000;
+}
+
+function renderCatalogue(list, hostId, prefix) {
+  const host = $(hostId);
+  if (!host) return;
+  host.innerHTML = "";
+  for (const row of list) {
+    const id = row.id + prefix;
+    const label = el("label", {
+      style:
+        "display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;font-weight:600;cursor:pointer",
+    });
+    const box = el("input", { type: "checkbox", id, value: String(row.w) });
+    // Fridge, lights and router are the answer for most people; pre-checking
+    // the three that are always on is a starting point, not a claim.
+    if (["fridge", "lights", "router", "phone"].includes(row.id))
+      box.checked = true;
+    box.addEventListener("change", () => markPrecalcDirty());
+    label.appendChild(box);
+    label.appendChild(
+      el(
+        "span",
+        {},
+        `${row.label} (${row.w} W${row.hours < 24 ? ` × ${row.hours} h` : ""})`,
+      ),
+    );
+    host.appendChild(label);
+  }
+}
+
+/**
+ * Apply a use case: derive the legacy enum pair from it, sync the hidden
+ * selects, show only the inputs this case declares, and say what it is for.
+ *
+ * The hidden selects are still dispatched, because every existing listener
+ * downstream (auto rows, cut labels, chemistry dimming) hangs off them. That
+ * is the point of deriving rather than replacing: the F-17 collapse happens
+ * at this one boundary, and nothing below it has to change.
+ */
+function applyUseCase(id, { silent = false } = {}) {
+  const node = $("useCase");
+  const uc = useCase(id) ? id : "billcut";
+  if (node && node.value !== uc) node.value = uc;
+  const legacy = deriveLegacy(uc);
+
+  const goal = $("systemGoal");
+  if (goal) {
+    const next = legacy.mode === "offgrid" ? "offgrid" : "gridtie";
+    if (goal.value !== next) {
+      goal.value = next;
+      if (!silent) goal.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+  const hw = $("hardwareConfig");
+  if (hw) {
+    const next = legacy.hardwareConfig || "both";
+    if (hw.value !== next) {
+      hw.value = next;
+      if (!silent) hw.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+
+  // Only the declared inputs are visible. The registry decides, so a control
+  // cannot be shown for a case that does not read it.
+  const panels = {
+    touInputs: uc === "tou",
+    backupInputs: uc === "backup",
+    reserveInputs: uc === "reserve",
+    offgridInputs: uc === "offgrid",
+    portableInputs: uc === "portable",
+  };
+  for (const [id2, show] of Object.entries(panels)) {
+    const host = $(id2);
+    if (host) host.hidden = !show;
+  }
+
+  // Bill-cut's own inputs (the cut target) are meaningless for a case that
+  // does not report a bill cut.
+  const cutRow = $("cutSliderRow");
+  if (cutRow) cutRow.style.display = uc === "billcut" ? "" : "none";
+
+  const c = useCase(uc);
+  const blurb = $("useCaseBlurb");
+  if (blurb) blurb.textContent = c ? t(c.blurbKey) : "";
+
+  // Prefill the time-of-use rates from the documented default rather than
+  // leaving them blank: a blank field would make the honest verdict
+  // "unsolved" instead of the answer the visitor actually wants.
+  if (uc === "tou") prefillTouRates();
+  if (uc === "reserve") syncReserveLabel();
+  return uc;
+}
+
+function prefillTouRates() {
+  const rate = parseFloat($("customRateVal")?.value);
+  if (!Number.isFinite(rate) || rate <= 0) return false;
+  const peak = $("touPeakRate");
+  const off = $("touOffPeakRate");
+  if (peak && !peak.dataset.touched)
+    peak.value = (rate * DEFAULT_TOU.peakMultiplier).toFixed(4);
+  if (off && !off.dataset.touched)
+    off.value = (rate * DEFAULT_TOU.offPeakMultiplier).toFixed(4);
+  return true;
+}
+
+function syncReserveLabel() {
+  const out = $("reserveSliderVal");
+  const slider = $("reserveSlider");
+  if (!out || !slider) return;
+  const pct = normaliseReservePct(parseFloat(slider.value) / 100);
+  out.textContent = pct > 0 ? `${Math.round(pct * 100)}%` : t("reserveOff");
+}
+
+/** Every use-case input the run message needs, read from the live controls. */
+function useCaseInputs() {
+  const id = selectedUseCase();
+  const ess = catalogueKwh(ESSENTIAL_LOADS, "Ess");
+  const dev = catalogueKwh(PORTABLE_DEVICES, "Port");
+  return {
+    useCase: id,
+    reservePct: normaliseReservePct(
+      parseFloat($("reserveSlider")?.value) / 100,
+    ),
+    outageTargetHours: normaliseOutageTarget(
+      parseFloat($("outageTargetHours")?.value),
+    ),
+    essentialKwh: ess > 0 ? ess : null,
+    backupSolarRecharge: $("backupSolarRecharge")?.checked === true,
+    portableDeviceKwh: dev > 0 ? dev : null,
+    portableBankKwh: parseFloat($("portableBankKwh")?.value) || null,
+    portableShorePower: $("portableShorePower")?.checked === true,
+    touPeakRate: parseFloat($("touPeakRate")?.value) || null,
+    touOffPeakRate: parseFloat($("touOffPeakRate")?.value) || null,
+    generatorAllowed: $("generatorAllowed")?.checked !== false,
+  };
+}
+
+/**
+ * The use case's own result: its own metric, its own verdict, and the numbers
+ * the verdict rests on. Rendered from payload.useCaseOutcome, which only the
+ * registry can shape, so a case can never borrow another's headline.
+ */
+function renderUseCaseOutcome(p) {
+  const wrap = $("useCaseOutcomeWrap");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  const o = p && p.useCaseOutcome;
+  if (!o) return;
+  const c = useCase(o.useCase);
+  if (!c) return;
+
+  const card = el("div", {
+    style:
+      "margin-bottom:1rem;padding:1rem 1.1rem;border-radius:12px;border:1px solid var(--border-glow);background:rgba(0,230,153,0.06)",
+  });
+  card.appendChild(
+    el(
+      "div",
+      {
+        style:
+          "font-weight:800;font-size:0.95rem;margin-bottom:0.5rem;color:var(--text-main)",
+      },
+      t("useCaseOutcomeTitle", { useCase: t(c.labelKey) }),
+    ),
+  );
+
+  // The metric: one number, in the case's own unit.
+  const value =
+    o.unit === "tradeoff"
+      ? t("metricReserveTradeoffValue", {
+          lost: Math.round(o.value?.savingsLostPct ?? 0),
+          hours: Math.round(o.value?.coverHours ?? 0),
+        })
+      : `${Math.round(Number(o.value) || 0)}%`;
+  card.appendChild(
+    el(
+      "div",
+      {
+        style: "font-size:1.35rem;font-weight:800;color:var(--primary-accent)",
+      },
+      value,
+    ),
+  );
+  card.appendChild(
+    el(
+      "div",
+      {
+        style: "font-size:0.8rem;color:var(--text-muted);margin-bottom:0.6rem",
+      },
+      t(o.labelKey),
+    ),
+  );
+
+  // The verdict, in the case's own words, with the number that produced it.
+  if (!o.measured) {
+    card.appendChild(
+      el(
+        "p",
+        {
+          style:
+            "font-size:0.9rem;font-weight:700;color:var(--text-muted);margin:0 0 0.4rem",
+        },
+        t("useCaseNotMeasured", { metric: t(o.labelKey) }),
+      ),
+    );
+    wrap.style.display = "block";
+    wrap.appendChild(card);
+    return;
+  }
+  const tone =
+    o.status === "works"
+      ? "var(--primary-accent)"
+      : o.status === "partial"
+        ? "var(--text-main)"
+        : "var(--text-muted)";
+  card.appendChild(
+    el(
+      "p",
+      {
+        style: `font-size:0.9rem;font-weight:700;color:${tone};margin:0 0 0.4rem`,
+      },
+      t(o.reasonKey, verdictParams(o)),
+    ),
+  );
+  card.appendChild(
+    el(
+      "p",
+      {
+        style:
+          "font-size:0.8rem;color:var(--text-muted);margin:0;line-height:1.5",
+      },
+      t("useCaseVerdictFooter", {
+        useCase: t(c.labelKey),
+        metric: t(o.labelKey),
+      }),
+    ),
+  );
+  wrap.style.display = "block";
+  wrap.appendChild(card);
+}
+
+/** The measured numbers each verdict key interpolates, so no sentence invents one. */
+function verdictParams(o) {
+  const m = o.measurement || {};
+  const round = (v) => Math.round(Number(v) || 0);
+  return {
+    // The status word is a parameter, so one sentence per case reads correctly
+    // whether it is saying yes, half, or no. Three words, six languages.
+    status: t(
+      o.status === "works"
+        ? "statusWorks"
+        : o.status === "partial"
+          ? "statusPartial"
+          : "statusNotHere",
+    ),
+    metric: t(o.labelKey),
+    pct: round(o.unit === "tradeoff" ? m.reserveSavingsLostPct : o.value),
+    hours: round(m.backupHoursP50 ?? m.reserveCoverHours),
+    targetHours: round(m.backupTargetHours ?? m.outageTargetHours),
+    coverHours: round(m.reserveCoverHours),
+    saving: round(m.touSavingUsd20y),
+    cost: round(m.touBatteryCostUsd20y),
+    spread: (Number(m.touSpreadPerKwh) || 0).toFixed(2),
+    unmetHours: round(m.unmetHoursWorstYear),
+    autonomy: (Number(m.autonomyDays) || 0).toFixed(1),
+    runtime: round(m.portableAutonomyHours),
+    days: round(m.portablePoweredTrips),
+    trips: round(m.portableTrips),
+  };
+}
+
+/**
+ * Listeners for the one use-case chooser and the inputs it reveals. Split out
+ * so init() reads as wiring rather than as physics.
+ */
+function setupUseCaseChooser() {
+  const node = $("useCase");
+  if (node) {
+    node.addEventListener("change", () => {
+      const uc = applyUseCase(node.value);
+      markPrecalcDirty();
+      return uc;
+    });
+  }
+  const row = $("useCaseRow");
+  if (row) row.hidden = false;
+
+  for (const id of ["touPeakRate", "touOffPeakRate"]) {
+    const input = $(id);
+    if (input) {
+      input.addEventListener("input", () => {
+        input.dataset.touched = "1";
+        markPrecalcDirty();
+      });
+    }
+  }
+  for (const id of [
+    "outageTargetHours",
+    "portableBankKwh",
+    "reserveSlider",
+    "backupSolarRecharge",
+    "portableShorePower",
+    "generatorAllowed",
+  ]) {
+    const input = $(id);
+    if (input)
+      input.addEventListener("change", () => {
+        syncReserveLabel();
+        markPrecalcDirty();
+      });
+  }
+  // The default time-of-use split is a multiple of the visitor's own rate, so
+  // it has to be recomputed whenever the rate moves — until they edit it.
+  const rate = $("customRateVal");
+  if (rate) rate.addEventListener("input", () => prefillTouRates());
+  syncReserveLabel();
+}
+
 function renderSimpleResults(p) {
   const wrap = $("simpleResultsWrap");
   if (!wrap) return;
@@ -2212,6 +2592,9 @@ function readInputs() {
     // #155: no-swap UI option — unchecked by default, so default behavior
     // is unchanged (the oversize/swap strategy stays on).
     noSwapMode: $("noSwapToggle")?.checked === true,
+    // The use case is the ONE choice; mode and hardwareConfig above are what
+    // it derives (applyUseCase), and these are its own inputs.
+    ...useCaseInputs(),
     soilingOverride: null,
     wiringOverride: readPercentInput("wiringOverride"),
     mpptOverride: readPercentInput("mpptOverride"),
@@ -3254,7 +3637,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261004b",
+      "./assets/js/sizing/sizing-worker.js?v=20261004g",
       {
         type: "module",
       },
@@ -6196,7 +6579,7 @@ function appendRows(card, rows) {
  */
 
 // Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
-const PAYLOAD_CONTRACT = 15;
+const PAYLOAD_CONTRACT = 16;
 
 // -- Plausibility frontier ---------------------------------------------------
 
@@ -6721,6 +7104,9 @@ function renderResults(p) {
   // technical surfaces.
   if (isSimpleMode()) renderSimpleResults(p);
 
+  // The use case's own metric and verdict, from payload.useCaseOutcome.
+  renderUseCaseOutcome(p);
+
   // Independent sanity check — reads the finished result, never changes it.
   // See runSanityCheck below; every failure mode is silent by design.
   runSanityCheck(p);
@@ -7030,6 +7416,15 @@ function updateShareHash(p, inp) {
 
     if (inp.mode === "gridtie") o.g = 1;
 
+    // The use case travels by NAME, not by the pair it derives: backup and
+    // reserve share bill-cut's pair exactly, so a link carrying only g/hw
+    // would silently reopen as bill cut.
+    if (inp.useCase && inp.useCase !== "billcut") o.uc = inp.useCase;
+
+    if (inp.reservePct > 0) o.rp = Math.round(inp.reservePct * 100) / 100;
+
+    if (inp.outageTargetHours) o.oh = inp.outageTargetHours;
+
     if (inp.hardwareConfig && inp.hardwareConfig !== "both")
       o.hw = inp.hardwareConfig;
 
@@ -7119,6 +7514,24 @@ function restoreFromShare() {
 
   if ($("systemGoal"))
     $("systemGoal").value = o.g === 1 ? "gridtie" : "offgrid";
+
+  // A shared link names the use case explicitly (o.uc) because two of the six
+  // share the same legacy pair with bill-cut and could not be recovered from
+  // it. v1 links carry no o.uc and still resolve to the right case.
+  if (o.uc && useCase(o.uc)) {
+    applyUseCase(o.uc, { silent: true });
+  } else {
+    applyUseCase(
+      o.g === 0 ? "offgrid" : o.hw === "battery" ? "tou" : "billcut",
+      { silent: true },
+    );
+  }
+  if (Number.isFinite(o.rp) && $("reserveSlider")) {
+    $("reserveSlider").value = String(Math.round(o.rp * 100));
+    syncReserveLabel();
+  }
+  if (Number.isFinite(o.oh) && $("outageTargetHours"))
+    $("outageTargetHours").value = String(Math.round(o.oh));
 
   $("dailyKwhInput").value = String(kw);
 
@@ -7720,6 +8133,12 @@ export async function initSizingUI() {
     purgeLegacyCityCache();
 
     renderAppliances();
+    // The two use-case catalogues, rendered from the same data the engine
+    // reads, so a checkbox always means the wattage it displays.
+    renderCatalogue(ESSENTIAL_LOADS, "essentialLoadList", "Ess");
+    renderCatalogue(PORTABLE_DEVICES, "portableDeviceList", "Port");
+    setupUseCaseChooser();
+    applyUseCase(selectedUseCase(), { silent: true });
     setupSimpleMode();
     setupRoofMap();
     setupRoofAreaInput();

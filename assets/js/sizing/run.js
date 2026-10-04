@@ -26,22 +26,35 @@ import {
   capacityScaleFor,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20261004b";
+  simulateOutage,
+  simulatePortable,
+} from "./engine.js?v=20261004g";
+
+import {
+  isUseCaseId,
+  deriveLegacy,
+  useCaseForLegacy,
+  loadsFor,
+  sizingTierFor,
+  normaliseReservePct,
+  normaliseOutageTarget,
+  outcomeFor,
+} from "./usecases.js?v=20261004g";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20261004b";
-import { buildFrontier } from "./frontier.js?v=20261004b";
-import { oversizeCallout } from "./rescale.js?v=20261004b";
-import { climateSummary } from "./climate.js?v=20261004b";
+} from "./nasa.js?v=20261004g";
+import { buildFrontier } from "./frontier.js?v=20261004g";
+import { oversizeCallout } from "./rescale.js?v=20261004g";
+import { climateSummary } from "./climate.js?v=20261004g";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20261004b";
+} from "./pricing.js?v=20261004g";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -52,7 +65,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20261004b";
+} from "./money.js?v=20261004g";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -209,7 +222,7 @@ export function autoNoteFor(entries, basis) {
 // UI-contract version: bump whenever payload fields change shape. The
 // renderer compares this to its own constant and warns on mismatch instead
 // of rendering garbage from a stale cached module.
-export const PAYLOAD_CONTRACT = 15;
+export const PAYLOAD_CONTRACT = 16;
 
 const AUTO_CARD_NOTES = {
   naion:
@@ -301,7 +314,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20261004b");
+      await import("./profiles.js?v=20261004g");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -366,7 +379,7 @@ function payloadCacheKey(msg) {
   return JSON.stringify(canon);
 }
 
-export async function runSizing(msg, deps = {}) {
+async function runSizingCore(msg, deps = {}) {
   if (!deps.fetchWeather) {
     const cacheKey = payloadCacheKey(msg);
     if (RUN_PAYLOAD_CACHE.key === cacheKey) {
@@ -374,11 +387,35 @@ export async function runSizing(msg, deps = {}) {
       // repeat:true tells the UI to show the "instant — repeat" note. A
       // shallow copy: callers treat the payload as read-only, and one
       // extra top-level field costs nothing next to the seconds saved.
-      return { ...RUN_PAYLOAD_CACHE.payload, repeat: true };
+      // The use-case measurement context is non-enumerable and so is NOT
+      // copied by the spread — re-attach it explicitly, or a cached repeat
+      // would come back with no way to measure its use case.
+      const cached = RUN_PAYLOAD_CACHE.payload;
+      const out = { ...cached, repeat: true };
+      if (cached.__useCaseContext)
+        Object.defineProperty(out, "__useCaseContext", {
+          value: cached.__useCaseContext,
+          enumerable: false,
+          writable: true,
+          configurable: true,
+        });
+      return out;
     }
     const payload = await runSizingUncached(msg, deps);
     RUN_PAYLOAD_CACHE.key = cacheKey;
-    RUN_PAYLOAD_CACHE.payload = payload;
+    // Cache a COPY that keeps the measurement context. The wrapper deletes
+    // the context from the payload it RETURNS, and that is this very object —
+    // caching it directly made every repeat come back with no way to measure
+    // its use case (useCaseOutcome: null on the second identical run).
+    const cached = { ...payload };
+    if (payload.__useCaseContext)
+      Object.defineProperty(cached, "__useCaseContext", {
+        value: payload.__useCaseContext,
+        enumerable: false,
+        writable: true,
+        configurable: true,
+      });
+    RUN_PAYLOAD_CACHE.payload = cached;
     return payload;
   }
   return runSizingUncached(msg, deps);
@@ -411,6 +448,20 @@ async function runSizingUncached(msg, deps = {}) {
     // #155: no-swap UI option. Default false = the oversize/swap strategy
     // stays on (existing behavior); true disables it engine-wide.
     noSwapMode = false,
+    // ── Use-case inputs (D-16). Every one of these is asked of the visitor
+    // for exactly one use case and read by exactly one measurement below.
+    // They default to null so a caller that has never heard of a use case
+    // behaves identically to before.
+    reservePct: msgReservePct = null,
+    outageTargetHours: msgOutageTargetHours = null,
+    essentialKwh: msgEssentialKwh = null,
+    backupSolarRecharge: msgBackupSolarRecharge = false,
+    portableDeviceKwh: msgPortableDeviceKwh = null,
+    portableBankKwh: msgPortableBankKwh = null,
+    portablePvW: msgPortablePvW = null,
+    portableShorePower: msgPortableShorePower = false,
+    touPeakRate: msgTouPeakRate = null,
+    touOffPeakRate: msgTouOffPeakRate = null,
   } = msg;
   const oversizeStrategy = !noSwapMode;
   // Fixed monthly charge (utility connection fee, USD): it can never be cut,
@@ -1559,76 +1610,117 @@ async function runSizingUncached(msg, deps = {}) {
     return payload;
   }
 
-  const basePayload = () => ({
-    contract: PAYLOAD_CONTRACT,
-    meta: series.meta,
-    annualYieldPerKw: Math.round(annualYield),
-    dailyKwh: +dailyKwh.toFixed(2),
-    peakLoadW: Math.round(peakLoadW),
-    peakIsAverage,
-    chemistry,
-    hardwareConfig: hardwareConfig || "both",
-    tariff: tariff ?? null,
-    exportRate: exportRate ?? null,
-    fixedMonthlyUsd:
-      fixedMonthly > 0 ? Math.round(fixedMonthly * 100) / 100 : null,
-    annualGridSpendUsd: gridSpend === null ? null : Math.round(gridSpend),
-    // Mirrors the local `unreachableReason`; the UI reads it off the
-    // payload to render the infeasibility banner and to suppress the
-    // broken savings panel.
-    unreachableReason,
-    pricing: {
-      basisLabel: "ex-factory China through PowMr-class budget retail",
-      source: "cell market indications → PowMr public catalog, Aug 2026",
-      catalog: POWMR_CATALOG,
-    },
-    assumptions: {
-      derates: effectiveDerates,
-      climateAware,
-      climate: climate.climate,
-      soilingFactor: climate.soiling,
-      worstMonth: climate.worstMonth,
-      thermal: climate.thermal,
-      gammaPerC: GAMMA_PMAX,
-      noctC: NOCT,
-      etaInverter: ETA_INVERTER,
-      dataYears: `${series.meta.startYear}–${series.meta.endYear}`,
-      source: series.meta.source,
-      offline: !!series.meta.offline,
-      capacityScale:
-        chemistry === "auto"
-          ? Object.fromEntries(
-              ["naion", "lfp", "agm"].map((c) => [
-                c,
-                +effectiveCapacityScale(c, meanTempC).toFixed(3),
-              ]),
-            )
-          : +effectiveCapacityScale(chemistry, meanTempC).toFixed(3),
-      meanTempC: Math.round(meanTempC),
-      capacityNote: (() => {
-        if (chemistry === "auto") {
+  const basePayload = () =>
+    attachUseCaseContext({
+      contract: PAYLOAD_CONTRACT,
+      meta: series.meta,
+      annualYieldPerKw: Math.round(annualYield),
+      dailyKwh: +dailyKwh.toFixed(2),
+      peakLoadW: Math.round(peakLoadW),
+      peakIsAverage,
+      chemistry,
+      hardwareConfig: hardwareConfig || "both",
+      tariff: tariff ?? null,
+      exportRate: exportRate ?? null,
+      fixedMonthlyUsd:
+        fixedMonthly > 0 ? Math.round(fixedMonthly * 100) / 100 : null,
+      annualGridSpendUsd: gridSpend === null ? null : Math.round(gridSpend),
+      // Mirrors the local `unreachableReason`; the UI reads it off the
+      // payload to render the infeasibility banner and to suppress the
+      // broken savings panel.
+      unreachableReason,
+      pricing: {
+        basisLabel: "ex-factory China through PowMr-class budget retail",
+        source: "cell market indications → PowMr public catalog, Aug 2026",
+        catalog: POWMR_CATALOG,
+      },
+      assumptions: {
+        derates: effectiveDerates,
+        climateAware,
+        climate: climate.climate,
+        soilingFactor: climate.soiling,
+        worstMonth: climate.worstMonth,
+        thermal: climate.thermal,
+        gammaPerC: GAMMA_PMAX,
+        noctC: NOCT,
+        etaInverter: ETA_INVERTER,
+        dataYears: `${series.meta.startYear}–${series.meta.endYear}`,
+        source: series.meta.source,
+        offline: !!series.meta.offline,
+        capacityScale:
+          chemistry === "auto"
+            ? Object.fromEntries(
+                ["naion", "lfp", "agm"].map((c) => [
+                  c,
+                  +effectiveCapacityScale(c, meanTempC).toFixed(3),
+                ]),
+              )
+            : +effectiveCapacityScale(chemistry, meanTempC).toFixed(3),
+        meanTempC: Math.round(meanTempC),
+        capacityNote: (() => {
+          if (chemistry === "auto") {
+            const tC = Math.round(meanTempC);
+            const agm = Math.round(
+              effectiveCapacityScale("agm", meanTempC) * 100,
+            );
+            return `Capacity model at this site's mean ${tC}°C: LFP 100%, sodium-ion 85% (LFP voltage settings), lead-acid (AGM) about ${agm}% (cold derating where applicable).`;
+          }
+          const capChem = chemistry;
+          const scale = effectiveCapacityScale(capChem, meanTempC);
+          const pct = Math.round(scale * 100);
           const tC = Math.round(meanTempC);
-          const agm = Math.round(
-            effectiveCapacityScale("agm", meanTempC) * 100,
-          );
-          return `Capacity model at this site's mean ${tC}°C: LFP 100%, sodium-ion 85% (LFP voltage settings), lead-acid (AGM) about ${agm}% (cold derating where applicable).`;
-        }
-        const capChem = chemistry;
-        const scale = effectiveCapacityScale(capChem, meanTempC);
-        const pct = Math.round(scale * 100);
-        const tC = Math.round(meanTempC);
-        if (capChem === "agm" && tC <= 10) {
-          return `Cold site: at a mean ${tC}°C, lead-acid (AGM) is derated to about ${pct}% of nameplate capacity; lithium and sodium are unaffected by cold in this model (they charge more slowly instead).`;
-        }
-        if (scale < 1) {
-          const name =
-            capChem === "naion" ? "sodium-ion" : capChem.toUpperCase();
-          return `At this site's mean ${tC}°C, ${name} delivers about ${pct}% of nameplate usable capacity (rate/cold scaling).`;
-        }
-        return `Capacity model assumes full nameplate usable capacity at this site's mean ${tC}°C.`;
-      })(),
-    },
-  });
+          if (capChem === "agm" && tC <= 10) {
+            return `Cold site: at a mean ${tC}°C, lead-acid (AGM) is derated to about ${pct}% of nameplate capacity; lithium and sodium are unaffected by cold in this model (they charge more slowly instead).`;
+          }
+          if (scale < 1) {
+            const name =
+              capChem === "naion" ? "sodium-ion" : capChem.toUpperCase();
+            return `At this site's mean ${tC}°C, ${name} delivers about ${pct}% of nameplate usable capacity (rate/cold scaling).`;
+          }
+          return `Capacity model assumes full nameplate usable capacity at this site's mean ${tC}°C.`;
+        })(),
+      },
+    });
+
+  // The use-case measurement (usecases.js) needs the hourly series, which
+  // lives in this closure and must NOT travel to the worker thread. It is
+  // attached NON-ENUMERABLE, so structuredClone and JSON.stringify both drop
+  // it by construction: the runSizing wrapper reads it and deletes it, and a
+  // caller that forgot could never post a Float64Array the length of a year
+  // down the main thread. Enumerable would be a bug waiting to happen.
+  function attachUseCaseContext(payload) {
+    Object.defineProperty(payload, "__useCaseContext", {
+      value: {
+        e1kw,
+        loadWh,
+        tempsC,
+        meanTempC,
+        dailyKwh,
+        tariff,
+        exportRate,
+        fixedMonthly,
+        years: series.meta.years,
+        reservePct: normaliseReservePct(msgReservePct),
+        outageTargetHours: normaliseOutageTarget(msgOutageTargetHours),
+        essentialKwh: msgEssentialKwh,
+        backupSolarRecharge: msgBackupSolarRecharge,
+        portableDeviceKwh: msgPortableDeviceKwh,
+        portableBankKwh: msgPortableBankKwh,
+        portablePvW: msgPortablePvW,
+        portableShorePower: msgPortableShorePower,
+        touPeakRate: msgTouPeakRate,
+        touOffPeakRate: msgTouOffPeakRate,
+        targetMinFraction:
+          (effectiveTargets.find((t) => t.id === repTargetId) || {})
+            .minFraction ?? null,
+        effectiveCapacityScale,
+      },
+      enumerable: false,
+      writable: true,
+      configurable: true,
+    });
+    return payload;
+  }
 
   // Shared sizing options for the fixed-chemistry bill-cut targets (used by
   // the full run and by the incremental slider patch alike).
@@ -2615,4 +2707,307 @@ async function runSizingUncached(msg, deps = {}) {
   payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
   payload.assumptions.money = `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 20-year horizon, and assumes panels/inverter last the full 20 years. Lifetime figures include install labor on the first bank and every swap. Generator fuel is not counted${fixedMonthly > 0 ? `; a fixed monthly charge is included in every bill figure` : `, nor are grid fixed charges`}.`;
   return attachFrontier(payload);
+}
+
+// ── The six use cases, measured on the sized system ────────────────────────
+//
+// One measurement pass, one engine, one system: whatever payload.focus the
+// sizing search chose is re-simulated through the case's OWN physics, and the
+// case's own registry entry turns that into a metric plus a verdict. Nothing
+// here decides what a use case means (usecases.js owns that) and nothing here
+// invents a number (engine.js owns the physics).
+//
+// Every measurement is over the same weather record the sizing used, with the
+// same derates and the same capacity model, so the six cases can never be
+// compared against each other on different data.
+function measureUseCase(id, payload, ctx) {
+  const {
+    e1kw,
+    loadWh,
+    tempsC,
+    meanTempC,
+    tariff,
+    exportRate,
+    effectiveCapacityScale,
+  } = ctx;
+  const n = e1kw.length;
+  const years = Math.max(1, ctx.years);
+  const focus = payload.focus || null;
+  const chemId = (focus && focus.chemistry) || payload.chemistry || "lfp";
+  const capScale = effectiveCapacityScale(chemId, meanTempC);
+  const pvKw = (focus && focus.pvKw) || 0;
+  const battKwh = (focus && focus.battKwh) || 0;
+  const reserve = ctx.reservePct;
+  // `measured` starts false and each branch sets it true ONLY when its own
+  // simulator actually ran. It is the flag that stops an infeasible run from
+  // reporting a verdict built on numbers nobody computed.
+  const m = { useCase: id, reservePct: reserve, measured: false };
+  const totalLoadWh = loadWh.reduce((a, b) => a + b, 0);
+  // A structurally infeasible run (off-grid + solar-only, off-grid +
+  // battery-only) has no focus and no bank. It still owes the caller a
+  // payload, so the measurement degrades to an honest "not here" instead of
+  // calling the engine with a 0 kWh bank and throwing. Every case's verdict
+  // already answers "not-here" on a non-finite metric, so the only job here is
+  // to not reach a simulator that requires capacity.
+  const infeasible = payload.unreachableReason || null;
+  m.unreachableReason = infeasible;
+  const hasBank = battKwh > 0;
+  const hasArray = pvKw > 0;
+
+  // Grid-tied, no generator: the physics shared by bill cut and time-of-use.
+  const gridSim = (reserveFloor) =>
+    simulateOffset({
+      pvKw,
+      battKwhUsable: battKwh,
+      e1kw,
+      loadWh,
+      chemistry: chemId,
+      tempsC,
+      capacityScale: capScale,
+      reserveFloor,
+    });
+  const cutPctOf = (sim) =>
+    totalLoadWh > 0
+      ? billCutFraction({
+          importedWh: sim.importedWh,
+          curtailedWh: sim.curtailedWh,
+          loadTotalWh: totalLoadWh,
+          tariff,
+          exportRate,
+        }) * 100
+      : 0;
+
+  // Essential loads. 0.6 kWh/day is a fridge, a router, a few lights and a
+  // phone — the plan's own catalogue example — and the flag lets the card say
+  // it used a default instead of pretending the visitor chose one.
+  const essKwh =
+    Number.isFinite(ctx.essentialKwh) && ctx.essentialKwh > 0
+      ? ctx.essentialKwh
+      : 0.6;
+  m.essentialKwhDefaulted = !(
+    Number.isFinite(ctx.essentialKwh) && ctx.essentialKwh > 0
+  );
+  const essentialsWh = expandProfile(flatProfile(essKwh), n);
+  const essentialsPowerW = (essKwh * 1000) / 24;
+
+  if (id === "billcut" || id === "tou") {
+    const sim = gridSim(reserve);
+    // A battery-only ToU system imports MORE than the load uses (it charges
+    // off-peak), so a bill-cut % for it is a negative number and means
+    // nothing. Time-of-use is answered by the peak offset, and only the
+    // bill-cut case reports a cut.
+    m.measured = true;
+    if (id === "billcut") {
+      m.billCutPct = cutPctOf(sim);
+      m.targetBillCutPct =
+        Number.isFinite(ctx.targetMinFraction) && ctx.targetMinFraction > 0
+          ? ctx.targetMinFraction * 100
+          : null;
+    }
+    m.touPeakOffsetPct = sim.peakOffsetFraction * 100;
+    // peakLoadWh / peakImportedWh are already totals over the whole record,
+    // so the displaced energy needs no extra year multiplier. Multiplying here
+    // would have inflated a 5-year saving by 5x — the single easiest way to
+    // make a battery look profitable, so the comment stays.
+    const displacedKwh = Math.max(
+      0,
+      (sim.peakLoadWh - sim.peakImportedWh) / 1000,
+    );
+    const peak = ctx.touPeakRate;
+    const offPeak = ctx.touOffPeakRate;
+    const spread =
+      Number.isFinite(peak) && Number.isFinite(offPeak) && peak > offPeak
+        ? peak - offPeak
+        : 0;
+    m.touSpreadPerKwh = spread;
+    m.touSavingUsd20y = spread > 0 ? displacedKwh * spread : 0;
+    const cell =
+      (payload.targets || []).find((t) => t.solvable && t.minFraction) || null;
+    m.touBatteryCostUsd20y = cell
+      ? Number.isFinite(cell.lifetimeCostMid) && cell.lifetimeCostMid > 0
+        ? cell.lifetimeCostMid
+        : Number.isFinite(cell.costLo)
+          ? cell.costLo
+          : null
+      : null;
+    m.battKwh = battKwh;
+  }
+
+  if (id === "backup" && hasBank) {
+    // The bank starts each outage at the charge it actually holds at that
+    // hour, taken from a grid-connected run on the same system — measured,
+    // not assumed to be empty.
+    const socRun = simulate({
+      pvKw,
+      battKwhUsable: battKwh,
+      e1kw,
+      loadWh: essentialsWh,
+      chemistry: chemId,
+      tempsC,
+      capacityScale: capScale,
+      reserveFloor: reserve,
+      capture: true,
+    });
+    const out = simulateOutage({
+      battKwhUsable: battKwh,
+      e1kw,
+      essentialsWh,
+      chemistry: chemId,
+      tempsC,
+      capacityScale: capScale,
+      reserveFloor: reserve,
+      targetHours: ctx.outageTargetHours,
+      startSocSeries: socRun.socSeries,
+      pvKw: ctx.backupSolarRecharge ? pvKw : 0,
+    });
+    m.measured = true;
+    m.outageCoveragePct = out.coveragePct;
+    m.backupHoursP10 = out.hoursBackupP10;
+    m.backupHoursP50 = out.hoursBackupP50;
+    m.backupTargetHours = out.targetHours;
+    m.backupStartState = out.startState;
+    m.essentialKwhPerDay = out.essentialKwhPerDay;
+    m.autonomyDays = out.autonomyDays;
+    m.pvKw = pvKw;
+    m.battKwh = battKwh;
+  }
+
+  if (id === "reserve") {
+    // The trade-off, measured both ways on the SAME system: what the bank
+    // earns cycling fully, against what it earns once the floor is held.
+    const base = cutPctOf(gridSim(0));
+    const held = cutPctOf(gridSim(reserve));
+    m.measured = true;
+    m.reserveBillCutPct = base;
+    m.reserveBillCutWithFloorPct = held;
+    m.reserveSavingsLostPct =
+      base > 0 ? Math.max(0, ((base - held) / base) * 100) : 0;
+    m.reserveCoverHours =
+      essentialsPowerW > 0
+        ? (battKwh * reserve * capScale * 1000) / essentialsPowerW
+        : 0;
+    m.battKwh = battKwh;
+  }
+
+  if (id === "offgrid" && hasBank && hasArray) {
+    const sim = simulate({
+      pvKw,
+      battKwhUsable: battKwh,
+      e1kw,
+      loadWh,
+      chemistry: chemId,
+      tempsC,
+      capacityScale: capScale,
+    });
+    m.measured = true;
+    const hoursPerYear = n / years;
+    // Independence is measured on the WORST year, for the same reason the
+    // reliability budgets are: an average year hides the storm that is the
+    // entire reason someone asked for off-grid.
+    m.gridIndependencePct = Math.max(
+      0,
+      100 * (1 - sim.worstYearUnmetHours / hoursPerYear),
+    );
+    m.unmetHoursWorstYear = sim.worstYearUnmetHours;
+    m.unmetHoursPerYear = sim.unmetHours / years;
+    m.longestGapHours = sim.longestGapHours;
+    m.autonomyDays = ctx.dailyKwh > 0 ? (battKwh * capScale) / ctx.dailyKwh : 0;
+    m.pvKw = pvKw;
+    m.battKwh = battKwh;
+  }
+
+  // Portable is sized from the visitor's own device profile and bank size, not
+  // from payload.focus, so it is the one case that needs no capacity guard.
+  if (id === "portable") {
+    const devKwh =
+      Number.isFinite(ctx.portableDeviceKwh) && ctx.portableDeviceKwh > 0
+        ? ctx.portableDeviceKwh
+        : 1;
+    const bankKwh =
+      Number.isFinite(ctx.portableBankKwh) && ctx.portableBankKwh > 0
+        ? ctx.portableBankKwh
+        : 2;
+    const out = simulatePortable({
+      battKwhUsable: bankKwh,
+      e1kw,
+      devicesWh: expandProfile(flatProfile(devKwh), n),
+      chemistry: chemId,
+      tempsC,
+      capacityScale: capScale,
+      pvKw: Math.max(0, ctx.portablePvW || 0) / 1000,
+      shorePower: !!ctx.portableShorePower,
+      startSoc: 1,
+      hoursPerTrip: 24,
+    });
+    m.measured = true;
+    m.portableCoveragePct = out.coveragePct;
+    m.portableTrips = out.trips;
+    m.portablePoweredTrips = out.poweredTrips;
+    m.portableMedianRuntimeHours = out.medianRuntimeHours;
+    m.portableWorstRuntimeHours = out.worstRuntimeHours;
+    m.portableAutonomyHours = out.autonomyHours;
+    m.portableDeviceKwh = devKwh;
+    m.portableBankKwh = bankKwh;
+    m.portablePvW = ctx.portablePvW || 0;
+    m.portableShorePower = !!ctx.portableShorePower;
+  }
+
+  return outcomeFor(id, m);
+}
+
+/**
+ * The one entry point. Three jobs, in this order:
+ *
+ *   1. Resolve WHICH use case this run is (D-16). A caller that names one
+ *      gets it; a legacy caller that only sets `mode`/`hardwareConfig` is
+ *      resolved backwards, and in that case the pair is left ALONE — solar-only
+ *      is a bill-cut configuration, and re-deriving it from "billcut" would
+ *      silently add a battery to every solar-only run ever shipped.
+ *   2. When a use case IS named, derive the legacy enum pair FROM IT. This is
+ *      the F-17 collapse: one vocabulary in, one enum pair out.
+ *   3. Measure the case and attach its outcome, then delete the hourly context
+ *      so it can never leave this module.
+ */
+export async function runSizing(msg, deps = {}) {
+  const explicit = isUseCaseId(msg && msg.useCase);
+  const useCaseId = explicit
+    ? msg.useCase
+    : useCaseForLegacy({
+        mode: msg && msg.mode,
+        hardwareConfig: msg && msg.hardwareConfig,
+      });
+  const legacy = deriveLegacy(useCaseId);
+  const forwarded = { ...msg };
+  if (explicit) {
+    // Portable has no grid and no array (R-UC-06). The core still needs a
+    // mode it understands to size the small system that fills the payload
+    // shape the renderer expects; battery-only is the cheapest honest one,
+    // and its numbers are never shown for this use case.
+    forwarded.mode = legacy.mode === "portable" ? "gridtie" : legacy.mode;
+    forwarded.hardwareConfig =
+      legacy.hardwareConfig === null ? "battery" : legacy.hardwareConfig;
+    // The load each use case is SIZED on is part of its definition. Backup
+    // answers to the essentials (at a zero-unmet-hours budget), portable to
+    // the devices. Sizing either on the household load would hand the outage
+    // simulator a system nobody asked for.
+    const loads = loadsFor(useCaseId);
+    if (loads === "essentials") {
+      const ess =
+        Number.isFinite(msg.essentialKwh) && msg.essentialKwh > 0
+          ? msg.essentialKwh
+          : 0.6;
+      forwarded.dailyKwh = ess;
+      forwarded.autoTier = sizingTierFor(useCaseId) || "tier100";
+    } else if (loads === "devices") {
+      if (Number.isFinite(msg.portableDeviceKwh))
+        forwarded.dailyKwh = msg.portableDeviceKwh;
+    }
+  }
+
+  const payload = await runSizingCore(forwarded, deps);
+  const ctx = payload.__useCaseContext;
+  if (ctx) delete payload.__useCaseContext;
+  payload.useCase = useCaseId;
+  payload.useCaseOutcome = ctx ? measureUseCase(useCaseId, payload, ctx) : null;
+  return payload;
 }

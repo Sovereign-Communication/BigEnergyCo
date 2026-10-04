@@ -1152,6 +1152,29 @@ textarea:focus-visible {
   margin-bottom: 1.5rem;
 }
 
+/* ── Use-case form utilities ────────────────────────────────────────────────
+   Added with the six-case chooser (D-16) so the new markup spends ZERO inline
+   style attributes: check-quality.mjs freezes that count as a ratchet, and a
+   feature that needs four looks repeated four times needs four named classes
+   instead. */
+.uc-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+.uc-value {
+  font-weight: 800;
+  color: var(--primary-accent);
+}
+
+.uc-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .form-group label {
   display: block;
 
