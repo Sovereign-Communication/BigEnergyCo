@@ -292,26 +292,58 @@ export function checkRatchet(facets, baseline) {
   if (!baseline || baseline.status !== "active") {
     return { status: "inactive_no_baseline", regressions: [] };
   }
+  // The ledger holds a baseline bar in two shapes: a bare ordinal, or an
+  // {ordinal, level} record. Resolve both, and keep the unreadable ones.
+  // A bar that cannot be resolved is a facet with NO protection, and this
+  // function used to skip it while reporting a full comparison — a 25-point
+  // drop read as `met`, and `facets_compared` claimed a coverage it did not
+  // have. That is the check that reports success, so an unreadable bar fails
+  // the run instead of passing it.
+  const bars = [];
+  const unreadable = [];
+  for (const [axis, entry] of Object.entries(baseline.ordinals)) {
+    const ordinal = typeof entry === "number" ? entry : entry?.ordinal;
+    if (typeof ordinal !== "number") {
+      unreadable.push(axis);
+      continue;
+    }
+    bars.push({
+      axis,
+      ordinal,
+      level:
+        typeof entry === "object" && entry !== null
+          ? (entry.level ?? null)
+          : null,
+    });
+  }
   const regressions = [];
-  for (const [axis, f] of Object.entries(facets)) {
-    const prev = baseline.ordinals[axis];
-    if (typeof prev !== "number") continue;
-    if (f.ordinal < prev) {
+  let compared = 0;
+  for (const bar of bars) {
+    const f = facets[bar.axis];
+    if (!f || typeof f.ordinal !== "number") continue;
+    compared += 1;
+    if (f.ordinal < bar.ordinal) {
       regressions.push({
-        axis,
-        previous_ordinal: prev,
+        axis: bar.axis,
+        previous_ordinal: bar.ordinal,
         current_ordinal: f.ordinal,
-        previous_level: f.level,
-        current_level: f.level,
+        previous_level: bar.level,
+        current_level: f.level ?? null,
       });
     }
   }
   regressions.sort((a, b) => a.current_ordinal - b.current_ordinal);
   return {
-    status: regressions.length ? "violation" : "met",
+    status: unreadable.length
+      ? "unreadable_baseline"
+      : regressions.length
+        ? "violation"
+        : "met",
     baseline_ts: baseline.from_ts,
     baseline_ref: baseline.from_ref,
-    facets_compared: Object.keys(baseline.ordinals).length,
+    facets_compared: compared,
+    baseline_bars: bars.length,
+    unreadable_bars: unreadable,
     regressions,
   };
 }
