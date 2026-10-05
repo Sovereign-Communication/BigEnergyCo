@@ -390,6 +390,83 @@ export const LOCALES = {
     locBtn: "📍 Use my precise location",
     tariffNote:
       "Electricity price estimated for {label} — change it above if you know your rate.",
+
+    pathsLabel_turnkey: "Installer, turnkey",
+    pathsLabel_lease: "Lease or PPA",
+    pathsLabel_selfpurchase: "You buy the parts",
+    pathsLabel_diy: "You mount it, an electrician connects",
+    pathsTitle: "Four ways to pay for this same system",
+    pathsSub:
+      "One system, one set of definitions, twenty years. The gap between these cards is a gap in price, not a difference in what each one counts.",
+    pathsCheapest: "Cheapest",
+    pathsSpend20: "20-year cost",
+    pathsRowIncentives: "Incentives",
+    pathsRowBillCut: "Bill cut",
+    pathsRowBreakEven: "Break-even",
+    pathsRowNet: "Net over 20 years",
+    pathsRowOwnership: "Ownership",
+    pathsRowEndOfTerm: "At the end",
+    pathsCountsHeading: "What this price counts",
+    pathsInstrumentLabel: "Third-party route:",
+    pathsGradeNote:
+      "Every figure above comes from one regional price registry with a named source and a confidence grade. Hardware is your own build estimate; labour, permits, incentives and replacements are registry figures. Nothing here is a vendor's quote.",
+    pathsWhy:
+      "{cheaper} is {gap} cheaper than {dearer} over 20 years, driven mostly by {driver}.",
+    pathsWhyCombined: " No single item explains the whole gap.",
+    pathsDriver_year0: "the up-front price",
+    pathsDriver_incentives: "who the incentives go to",
+    pathsDriver_om: "maintenance",
+    pathsDriver_replacements: "battery and inverter replacements",
+    pathsDriver_leasePayments: "the payments you make",
+    pathsDriver_none: "no single item",
+    pathsInstrumentPpa: "PPA (you buy the energy)",
+    pathsInstrumentLease: "Lease (you rent the system)",
+    pathsEndOfTermBuyout:
+      "Year {years}: you can buy it out for {buyoutPct}% of the installed price, and that buyout is inside this figure.",
+    pathsEndOfTermStillLeasing:
+      "In year {years} the term is still running, so no buyout is priced. Beyond 20 years you would still owe payments.",
+    pathsOwnershipTurnkey: "You own it from day one.",
+    pathsOwnershipPpa: "The provider owns it and keeps it maintained.",
+    pathsOwnershipLease:
+      "You rent it until the term ends, then you buy it out or hand it back.",
+    pathsOwnershipSelf: "You own it once it is installed.",
+    pathsIncentiveTaxCredit: "Federal tax credit",
+    pathsIncentiveRebate: "Utility rebate",
+    pathsIncentivesToProvider: "Incentives go to the provider, not to you.",
+    pathsIncentivesGoToProvider: "The provider keeps them — you own nothing.",
+    pathsNoIncentive: "None applies to this route.",
+    pathsNoVerifiedIncentive: "We have no verified incentive for your region.",
+    pathsUnknown: "Unknown",
+    pathsNotWithinHorizon: "Not within 20 years",
+    pathsBreakEvenYear: "Year {year}",
+    pathsUnavailable: "Not available",
+    pathsNoSystem: "There is no system to price.",
+    pathsNoTariff:
+      "A PPA needs a tariff to price against, so it is not shown here.",
+    pathsDiyNotPermitted:
+      "Not offered here: where you are, a licensed installer has to do the electrical work.",
+    pathsDiyRestricted:
+      "Not offered here: DIY mounting is restricted where you are.",
+    pathsDiyUnknown:
+      "Not offered here: we could not verify whether you may mount your own array.",
+    pathsNoteTurnkeyAllIn:
+      "One all-in price: the same hardware, plus labour, permits and the installer's margin.",
+    pathsIncludesInstalledAllIn: "Parts, labour and permits, already installed",
+    pathsIncludesProviderSwaps:
+      "The provider maintains and replaces the battery and inverter",
+    pathsIncludesIncentivesToProvider:
+      "Incentives go to the provider, not to you",
+    pathsIncludesIncentivesIfEligible: "Incentives, if you qualify for them",
+    pathsIncludesNoYear0Hardware: "No hardware purchase up front",
+    pathsIncludesEndOfTerm: "The end-of-term choice is priced in",
+    pathsIncludesHardwareYouBuy: "The hardware you buy yourself",
+    pathsIncludesElectricianInstalls: "A licensed electrician installs it",
+    pathsIncludesPermitsAndInterconnection:
+      "Permits, inspection and interconnection",
+    pathsIncludesYouDoSwaps: "You arrange and pay for bank swaps",
+    pathsIncludesYouMountTheArray: "You mount the array yourself",
+    pathsIncludesElectricianConnects: "An electrician does the connection",
+    pathsIncludesToolsAndSafety: "Tools and safety gear",
   },
   es: {
     navSizing: "Dimensiona tu sistema",
@@ -778,6 +855,90 @@ export const LOCALES = {
       "Esta combinación de hardware y objetivo no tiene solución",
     infeasibleGenericBody:
       "Cambia el objetivo o el hardware y vuelve a ejecutar.",
+
+    pathsLabel_turnkey: "Instalador, llave en mano",
+    pathsLabel_lease: "Alquiler o PPA",
+    pathsLabel_selfpurchase: "Tú compras las piezas",
+    pathsLabel_diy: "Tú lo montas, un electricista lo conecta",
+    pathsTitle: "Cuatro formas de pagar este mismo sistema",
+    pathsSub:
+      "Un sistema, una sola definición, veinte años. La diferencia entre estas tarjetas es de precio, no de qué incluye cada una.",
+    pathsCheapest: "Más barato",
+    pathsSpend20: "Coste a 20 años",
+    pathsRowIncentives: "Incentivos",
+    pathsRowBillCut: "Ahorro en la factura",
+    pathsRowBreakEven: "Equilibrio",
+    pathsRowNet: "Neto a 20 años",
+    pathsRowOwnership: "Titularidad",
+    pathsRowEndOfTerm: "Al final",
+    pathsCountsHeading: "Qué incluye este precio",
+    pathsInstrumentLabel: "Vía de terceros:",
+    pathsGradeNote:
+      "Todas las cifras provienen de un único registro de precios regional con fuente indicada y grado de confianza. El hardware es tu propia estimación; la mano de obra, los permisos, los incentivos y las sustituciones son datos del registro. Nada de esto es una oferta de un vendedor.",
+    pathsWhy:
+      "{cheaper} sale {gap} menos que {dearer} en 20 años, sobre todo por {driver}.",
+    pathsWhyCombined:
+      " Ningún elemento explica por sí solo toda la diferencia.",
+    pathsDriver_year0: "el precio inicial",
+    pathsDriver_incentives: "a quién van los incentivos",
+    pathsDriver_om: "el mantenimiento",
+    pathsDriver_replacements: "las sustituciones de batería e inversor",
+    pathsDriver_leasePayments: "los pagos que haces",
+    pathsDriver_none: "ningún elemento concreto",
+    pathsInstrumentPpa: "PPA (compras la energía)",
+    pathsInstrumentLease: "Alquiler (alquilas el sistema)",
+    pathsEndOfTermBuyout:
+      "Año {years}: puedes comprarlo por el {buyoutPct}% del precio instalado, y esa compra ya está incluida en esta cifra.",
+    pathsEndOfTermStillLeasing:
+      "En el año {years} el contrato sigue vigente, así que no se incluye ninguna compra. Pasados los 20 años seguirías debiendo pagos.",
+    pathsOwnershipTurnkey: "Eres propietario desde el primer día.",
+    pathsOwnershipPpa: "El proveedor es el propietario y lo mantiene.",
+    pathsOwnershipLease:
+      "Lo alquileres hasta que termine el contrato y luego lo compras o lo devuelves.",
+    pathsOwnershipSelf: "Eres propietario una vez instalado.",
+    pathsIncentiveTaxCredit: "Crédito fiscal federal",
+    pathsIncentiveRebate: "Subvención de la compañía eléctrica",
+    pathsIncentivesToProvider: "Los incentivos van al proveedor, no a ti.",
+    pathsIncentivesGoToProvider:
+      "El proveedor se los queda: no eres propietario de nada.",
+    pathsNoIncentive: "Ninguno se aplica a esta vía.",
+    pathsNoVerifiedIncentive:
+      "No tenemos un incentivo verificado para tu región.",
+    pathsUnknown: "Desconocido",
+    pathsNotWithinHorizon: "No dentro de 20 años",
+    pathsBreakEvenYear: "Año {year}",
+    pathsUnavailable: "No disponible",
+    pathsNoSystem: "No hay ningún sistema que presupuestar.",
+    pathsNoTariff:
+      "Un PPA necesita una tarifa con la que comparar, así que no se muestra aquí.",
+    pathsDiyNotPermitted:
+      "No se ofrece aquí: en tu zona, la instalación eléctrica la debe hacer un instalador con licencia.",
+    pathsDiyRestricted:
+      "No se ofrece aquí: el montaje DIY está restringido en tu zona.",
+    pathsDiyUnknown:
+      "No se ofrece aquí: no pudimos verificar si puedes montar tu propio panel.",
+    pathsNoteTurnkeyAllIn:
+      "Un único precio que incluye todo: el mismo hardware, más mano de obra, permisos y el margen del instalador.",
+    pathsIncludesInstalledAllIn:
+      "Piezas, mano de obra y permisos, ya instalados",
+    pathsIncludesProviderSwaps:
+      "El proveedor mantiene y sustituye batería e inversor",
+    pathsIncludesIncentivesToProvider:
+      "Los incentivos van al proveedor, no a ti",
+    pathsIncludesIncentivesIfEligible: "Incentivos, si te corresponden",
+    pathsIncludesNoYear0Hardware: "Sin compra de hardware al inicio",
+    pathsIncludesEndOfTerm:
+      "La decisión al final del contrato está incluida en el precio",
+    pathsIncludesHardwareYouBuy: "El hardware que compras tú",
+    pathsIncludesElectricianInstalls:
+      "Un electricista con licencia hace la instalación",
+    pathsIncludesPermitsAndInterconnection:
+      "Permisos, inspección y conexión a la red",
+    pathsIncludesYouDoSwaps:
+      "Tú gestionas y pagas las sustituciones de baterías",
+    pathsIncludesYouMountTheArray: "Tú montas el panel",
+    pathsIncludesElectricianConnects: "Un electricista hace la conexión",
+    pathsIncludesToolsAndSafety: "Herramientas y equipo de seguridad",
   },
   pt: {
     navSizing: "Dimensione seu sistema",
@@ -1162,6 +1323,87 @@ export const LOCALES = {
     infeasibleGenericTitle:
       "Esta combinação de hardware e objetivo não tem solução",
     infeasibleGenericBody: "Mude o objetivo ou o hardware e execute de novo.",
+
+    pathsLabel_turnkey: "Instalador, chave na mão",
+    pathsLabel_lease: "Locação ou PPA",
+    pathsLabel_selfpurchase: "Você compra as peças",
+    pathsLabel_diy: "Você monta, um eletricista conecta",
+    pathsTitle: "Quatro formas de pagar este mesmo sistema",
+    pathsSub:
+      "Um sistema, uma única definição, vinte anos. A diferença entre estes cartões é de preço, não do que cada um inclui.",
+    pathsCheapest: "Mais barato",
+    pathsSpend20: "Custo em 20 anos",
+    pathsRowIncentives: "Incentivos",
+    pathsRowBillCut: "Corte na conta",
+    pathsRowBreakEven: "Equilíbrio",
+    pathsRowNet: "Líquido em 20 anos",
+    pathsRowOwnership: "Propriedade",
+    pathsRowEndOfTerm: "No final",
+    pathsCountsHeading: "O que este preço inclui",
+    pathsInstrumentLabel: "Via de terceiros:",
+    pathsGradeNote:
+      "Todos os números vêm de um único registro regional de preços com fonte declarada e grau de confiança. O hardware é a sua própria estimativa; mão de obra, licenças, incentivos e substituições são dados do registro. Nada aqui é a oferta de um fornecedor.",
+    pathsWhy:
+      "{cheaper} sai {gap} menos que {dearer} em 20 anos, principalmente por causa de {driver}.",
+    pathsWhyCombined: " Nenhum item isolado explica toda a diferença.",
+    pathsDriver_year0: "o preço inicial",
+    pathsDriver_incentives: "para quem vão os incentivos",
+    pathsDriver_om: "a manutenção",
+    pathsDriver_replacements: "as substituições de bateria e inversor",
+    pathsDriver_leasePayments: "os pagamentos que você faz",
+    pathsDriver_none: "nenhum item isolado",
+    pathsInstrumentPpa: "PPA (você compra a energia)",
+    pathsInstrumentLease: "Locação (você aluga o sistema)",
+    pathsEndOfTermBuyout:
+      "Ano {years}: você pode quitarlo por {buyoutPct}% do preço instalado, e essa compra já está neste valor.",
+    pathsEndOfTermStillLeasing:
+      "No ano {years} o contrato ainda está em vigor, então nenhuma compra é incluída. Depois de 20 anos você ainda teria pagamentos a fazer.",
+    pathsOwnershipTurnkey: "Você é dono desde o primeiro dia.",
+    pathsOwnershipPpa: "O provedor é o dono e faz a manutenção.",
+    pathsOwnershipLease:
+      "Você aluga até o fim do contrato e então compra ou devolve.",
+    pathsOwnershipSelf: "Você é dono assim que está instalado.",
+    pathsIncentiveTaxCredit: "Crédito de imposto federal",
+    pathsIncentiveRebate: "Desconto da concessionária",
+    pathsIncentivesToProvider:
+      "Os incentivos vão para o provedor, não para você.",
+    pathsIncentivesGoToProvider:
+      "O provedor fica com eles — você não é dono de nada.",
+    pathsNoIncentive: "Nenhum se aplica a esta via.",
+    pathsNoVerifiedIncentive: "Não temos incentivo verificado para sua região.",
+    pathsUnknown: "Desconhecido",
+    pathsNotWithinHorizon: "Não em 20 anos",
+    pathsBreakEvenYear: "Ano {year}",
+    pathsUnavailable: "Indisponível",
+    pathsNoSystem: "Não há sistema a precificar.",
+    pathsNoTariff:
+      "Um PPA precisa de uma tarifa para servir de referência, então não aparece aqui.",
+    pathsDiyNotPermitted:
+      "Não oferecida aqui: na sua região, um instalador licenciado precisa fazer a parte elétrica.",
+    pathsDiyRestricted:
+      "Não oferecida aqui: a instalação DIY é restrita na sua região.",
+    pathsDiyUnknown:
+      "Não oferecida aqui: não conseguimos verificar se você pode montar seu próprio painel.",
+    pathsNoteTurnkeyAllIn:
+      "Um preço único que inclui tudo: o mesmo hardware, mais mão de obra, licenças e a margem do instalador.",
+    pathsIncludesInstalledAllIn: "Peças, mão de obra e licenças, já instalados",
+    pathsIncludesProviderSwaps:
+      "O provedor faz a manutenção e substitui bateria e inversor",
+    pathsIncludesIncentivesToProvider:
+      "Os incentivos vão para o provedor, não para você",
+    pathsIncludesIncentivesIfEligible: "Incentivos, se você se qualificar",
+    pathsIncludesNoYear0Hardware: "Sem compra de hardware no início",
+    pathsIncludesEndOfTerm: "A escolha no fim do contrato já está no preço",
+    pathsIncludesHardwareYouBuy: "O hardware que você compra",
+    pathsIncludesElectricianInstalls:
+      "Um eletricista licenciado faz a instalação",
+    pathsIncludesPermitsAndInterconnection:
+      "Licenças, inspeção e conexão à rede",
+    pathsIncludesYouDoSwaps:
+      "Você providencia e paga as substituições de baterias",
+    pathsIncludesYouMountTheArray: "Você monta o painel",
+    pathsIncludesElectricianConnects: "Um eletricista faz a conexão",
+    pathsIncludesToolsAndSafety: "Ferramentas e equipamento de segurança",
   },
   fr: {
     navSizing: "Dimensionner mon système",
@@ -1556,6 +1798,89 @@ export const LOCALES = {
     infeasibleGenericTitle:
       "Cette combinaison matériel/objectif n'a pas de solution",
     infeasibleGenericBody: "Changez l'objectif ou le matériel, puis relancez.",
+
+    pathsLabel_turnkey: "Installateur, clé en main",
+    pathsLabel_lease: "Location ou PPA",
+    pathsLabel_selfpurchase: "Vous achetez les pièces",
+    pathsLabel_diy: "Vous montez, un électricien raccorde",
+    pathsTitle: "Quatre façons de payer ce même système",
+    pathsSub:
+      "Un système, une seule définition, vingt ans. L'écart entre ces cartes est un écart de prix, pas une différence de ce que chacune compte.",
+    pathsCheapest: "Le moins cher",
+    pathsSpend20: "Coût sur 20 ans",
+    pathsRowIncentives: "Subventions",
+    pathsRowBillCut: "Réduction de facture",
+    pathsRowBreakEven: "Rentabilité",
+    pathsRowNet: "Net sur 20 ans",
+    pathsRowOwnership: "Propriété",
+    pathsRowEndOfTerm: "Au terme",
+    pathsCountsHeading: "Ce que ce prix inclut",
+    pathsInstrumentLabel: "Voie tierce :",
+    pathsGradeNote:
+      "Tous les chiffres proviennent d'un même registre régional de prix avec source nommée et niveau de confiance. Le matériel est votre propre estimation ; la main-d'œuvre, les permis, les subventions et les remplacements viennent du registre. Rien ici n'est un devis de fournisseur.",
+    pathsWhy:
+      "{cheaper} coûte {gap} de moins que {dearer} sur 20 ans, surtout à cause de {driver}.",
+    pathsWhyCombined: " Aucun poste n'explique à lui seul tout l'écart.",
+    pathsDriver_year0: "le coût initial",
+    pathsDriver_incentives: "à qui vont les subventions",
+    pathsDriver_om: "la maintenance",
+    pathsDriver_replacements: "les remplacements de batterie et d'onduleur",
+    pathsDriver_leasePayments: "les versements que vous effectuez",
+    pathsDriver_none: "aucun poste précis",
+    pathsInstrumentPpa: "PPA (vous achetez l'énergie)",
+    pathsInstrumentLease: "Location (vous louez le système)",
+    pathsEndOfTermBuyout:
+      "Année {years} : vous pouvez le racheter à {buyoutPct}% du prix installé, et ce rachat est inclus dans ce montant.",
+    pathsEndOfTermStillLeasing:
+      "En année {years} le contrat court encore : aucun rachat n'est inclus. Au-delà de 20 ans, vous resteriez redevable.",
+    pathsOwnershipTurnkey: "Il est à vous dès le premier jour.",
+    pathsOwnershipPpa: "Le fournisseur en reste propriétaire et l'entretient.",
+    pathsOwnershipLease:
+      "Vous le louez jusqu'au terme, puis vous le rachetez ou le rendez.",
+    pathsOwnershipSelf: "Il est à vous une fois installé.",
+    pathsIncentiveTaxCredit: "Crédit d'impôt fédéral",
+    pathsIncentiveRebate: "Subvention du distributeur",
+    pathsIncentivesToProvider:
+      "Les subventions vont au fournisseur, pas à vous.",
+    pathsIncentivesGoToProvider:
+      "Le fournisseur les conserve — vous ne possédez rien.",
+    pathsNoIncentive: "Aucune ne s'applique à cette voie.",
+    pathsNoVerifiedIncentive:
+      "Nous n'avons pas de subvention vérifiée pour votre région.",
+    pathsUnknown: "Inconnu",
+    pathsNotWithinHorizon: "Pas sous 20 ans",
+    pathsBreakEvenYear: "Année {year}",
+    pathsUnavailable: "Non disponible",
+    pathsNoSystem: "Aucun système à chiffrer.",
+    pathsNoTariff:
+      "Un PPA a besoin d'un tarif de référence ; il n'est donc pas affiché ici.",
+    pathsDiyNotPermitted:
+      "Non proposée ici : dans votre région, l'installation électrique exige un installateur agréé.",
+    pathsDiyRestricted:
+      "Non proposée ici : l'autoconsommation DIY est restreinte dans votre région.",
+    pathsDiyUnknown:
+      "Non proposée ici : nous n'avons pas pu vérifier si vous pouvez monter votre propre centrale.",
+    pathsNoteTurnkeyAllIn:
+      "Un prix tout compris : le même matériel, plus la main-d'œuvre, les permis et la marge de l'installateur.",
+    pathsIncludesInstalledAllIn:
+      "Pièces, main-d'œuvre et permis, déjà installés",
+    pathsIncludesProviderSwaps:
+      "Le fournisseur entretient et remplace batterie et onduleur",
+    pathsIncludesIncentivesToProvider:
+      "Les subventions vont au fournisseur, pas à vous",
+    pathsIncludesIncentivesIfEligible: "Subventions, si vous y avez droit",
+    pathsIncludesNoYear0Hardware: "Aucun achat de matériel au départ",
+    pathsIncludesEndOfTerm: "L'option de fin de contrat est intégrée au prix",
+    pathsIncludesHardwareYouBuy: "Le matériel que vous achetez",
+    pathsIncludesElectricianInstalls:
+      "Un électricien agréé réalise l'installation",
+    pathsIncludesPermitsAndInterconnection:
+      "Permis, inspection et raccordement au réseau",
+    pathsIncludesYouDoSwaps:
+      "C'est vous qui organisez et payez les remplacements",
+    pathsIncludesYouMountTheArray: "Vous montez la centrale",
+    pathsIncludesElectricianConnects: "Un électricien fait le raccordement",
+    pathsIncludesToolsAndSafety: "Outillage et équipement de sécurité",
   },
   de: {
     navSizing: "System dimensionieren",
@@ -1949,6 +2274,88 @@ export const LOCALES = {
       "Diese Kombination aus Hardware und Ziel ist nicht lösbar",
     infeasibleGenericBody:
       "Ändern Sie das Ziel oder die Hardware und rechnen Sie erneut.",
+
+    pathsLabel_turnkey: "Installateur, schlüsselfertig",
+    pathsLabel_lease: "Leasing oder PPA",
+    pathsLabel_selfpurchase: "Sie kaufen die Teile selbst",
+    pathsLabel_diy: "Sie montieren, ein Elektriker schließt an",
+    pathsTitle: "Vier Wege, dieses selbe System zu bezahlen",
+    pathsSub:
+      "Ein System, eine Definition, zwanzig Jahre. Der Abstand zwischen diesen Karten ist ein Preisunterschied, kein Unterschied dessen, was jeweils mitgezählt wird.",
+    pathsCheapest: "Am günstigsten",
+    pathsSpend20: "20-jährige Kosten",
+    pathsRowIncentives: "Förderungen",
+    pathsRowBillCut: "Rechnungssenkung",
+    pathsRowBreakEven: "Amortisation",
+    pathsRowNet: "Netto über 20 Jahre",
+    pathsRowOwnership: "Eigentum",
+    pathsRowEndOfTerm: "Am Ende",
+    pathsCountsHeading: "Was dieser Preis umfasst",
+    pathsInstrumentLabel: "Drittanbieter-Weg:",
+    pathsGradeNote:
+      "Alle Zahlen stammen aus einem regionalen Preisregister mit genannter Quelle und Vertrauensstufe. Die Hardware ist Ihre eigene Schätzung; Arbeitszeit, Genehmigungen, Förderungen und Austausch kommen aus dem Register. Nichts davon ist ein Angebot eines Anbieters.",
+    pathsWhy:
+      "{cheaper} ist über 20 Jahre {gap} günstiger als {dearer}, vor allem wegen {driver}.",
+    pathsWhyCombined: " Kein Einzelposten erklärt die ganze Differenz.",
+    pathsDriver_year0: "der Vorauszahlungspreis",
+    pathsDriver_incentives: "an wen die Förderungen gehen",
+    pathsDriver_om: "die Wartung",
+    pathsDriver_replacements: "die Batterie- und Wechselrichtertausche",
+    pathsDriver_leasePayments: "die Zahlungen, die Sie leisten",
+    pathsDriver_none: "kein Einzelposten",
+    pathsInstrumentPpa: "PPA (Sie kaufen den Strom)",
+    pathsInstrumentLease: "Leasing (Sie mieten das System)",
+    pathsEndOfTermBuyout:
+      "Jahr {years}: Sie können es für {buyoutPct}% des Installationspreises übernehmen, und diese Übernahme steckt in dieser Zahl.",
+    pathsEndOfTermStillLeasing:
+      "Im Jahr {years} läuft der Vertrag noch, eine Übernahme ist also nicht eingerechnet. Nach 20 Jahren wären weiterhin Zahlungen fällig.",
+    pathsOwnershipTurnkey: "Es gehört Ihnen vom ersten Tag an.",
+    pathsOwnershipPpa: "Der Anbieter bleibt Eigentümer und wartet es.",
+    pathsOwnershipLease:
+      "Sie mieten es bis zum Vertragsende und übernehmen es dann oder geben es zurück.",
+    pathsOwnershipSelf: "Es gehört Ihnen, sobald es installiert ist.",
+    pathsIncentiveTaxCredit: "Bundessteuergutschrift",
+    pathsIncentiveRebate: "Zuschuss des Netzbetreibers",
+    pathsIncentivesToProvider:
+      "Förderungen gehen an den Anbieter, nicht an Sie.",
+    pathsIncentivesGoToProvider:
+      "Der Anbieter behält sie — Sie besitzen nichts.",
+    pathsNoIncentive: "Für diesen Weg gilt keiner.",
+    pathsNoVerifiedIncentive:
+      "Für Ihre Region haben wir keinen geprüften Anreiz.",
+    pathsUnknown: "Unbekannt",
+    pathsNotWithinHorizon: "Nicht in 20 Jahren",
+    pathsBreakEvenYear: "Jahr {year}",
+    pathsUnavailable: "Nicht verfügbar",
+    pathsNoSystem: "Es gibt kein System zu bepreisen.",
+    pathsNoTariff:
+      "Ein PPA braucht einen Tarif als Bezugsgröße und wird hier deshalb nicht gezeigt.",
+    pathsDiyNotPermitted:
+      "Hier nicht angeboten: Bei Ihnen muss die Elektroinstallation von einem zugelassenen Fachbetrieb ausgeführt werden.",
+    pathsDiyRestricted:
+      "Hier nicht angeboten: Die Eigenmontage ist bei Ihnen eingeschränkt.",
+    pathsDiyUnknown:
+      "Hier nicht angeboten: Wir konnten nicht prüfen, ob Sie Ihre Anlage selbst montieren dürfen.",
+    pathsNoteTurnkeyAllIn:
+      "Ein Pauschalpreis: dieselbe Hardware, plus Arbeitszeit, Genehmigungen und die Marge des Installateurs.",
+    pathsIncludesInstalledAllIn:
+      "Teile, Arbeitszeit und Genehmigungen, bereits installiert",
+    pathsIncludesProviderSwaps:
+      "Der Anbieter wartet und tauscht Batterie und Wechselrichter",
+    pathsIncludesIncentivesToProvider:
+      "Förderungen gehen an den Anbieter, nicht an Sie",
+    pathsIncludesIncentivesIfEligible: "Förderungen, sofern Sie Anspruch haben",
+    pathsIncludesNoYear0Hardware: "Keine Anschaffung von Hardware vorab",
+    pathsIncludesEndOfTerm: "Die Option am Vertragsende ist eingepreist",
+    pathsIncludesHardwareYouBuy: "die Hardware, die Sie selbst kaufen",
+    pathsIncludesElectricianInstalls: "Ein zugelassener Elektriker montiert es",
+    pathsIncludesPermitsAndInterconnection:
+      "Genehmigungen, Abnahme und Netzanschluss",
+    pathsIncludesYouDoSwaps:
+      "Sie organisieren und bezahlen die Batteriewechsel selbst",
+    pathsIncludesYouMountTheArray: "Sie montieren die Anlage selbst",
+    pathsIncludesElectricianConnects: "Ein Elektriker nimmt den Anschluss vor",
+    pathsIncludesToolsAndSafety: "Werkzeug und Schutzausrüstung",
   },
   ar: {
     rtl: true,
@@ -2314,5 +2721,77 @@ export const LOCALES = {
       "الفائض يحتاج ألواحًا تولّد أكثر من استهلاكك. اخفض الهدف دون 100% في منزلق خفض الفاتورة، أو بدّل إعداد العتاد إلى «شمسي + بطارية».",
     infeasibleGenericTitle: "هذا المزيج من العتاد والهدف لا حلّ له",
     infeasibleGenericBody: "غيّر الهدف أو العتاد، ثم أعد التشغيل.",
+
+    pathsLabel_turnkey: "مُثبِّت، تسليم كامل",
+    pathsLabel_lease: "إيجار أو عقد شراء",
+    pathsLabel_selfpurchase: "أنت تشتري القطع",
+    pathsLabel_diy: "أنت تركّب، وكهربائي يوصّل",
+    pathsTitle: "أربع طرق لدفع ثمن النظام نفسه",
+    pathsSub:
+      "نظام واحد، وتعريف واحد، وعشرون سنة. الفرق بين هذه البطاقات فرق في السعر، لا اختلاف في ما تحسبه كل واحدة.",
+    pathsCheapest: "الأرخص",
+    pathsSpend20: "تكلفة 20 عامًا",
+    pathsRowIncentives: "حوافز",
+    pathsRowBillCut: "خفض الفاتورة",
+    pathsRowBreakEven: "نقطة التعادل",
+    pathsRowNet: "صافي 20 عامًا",
+    pathsRowOwnership: "الملكية",
+    pathsRowEndOfTerm: "في النهاية",
+    pathsCountsHeading: "ما يشمله هذا السعر",
+    pathsInstrumentLabel: "طريق الغير:",
+    pathsGradeNote:
+      "كل رقم أعلاه يأتي من سجل أسعار إقليمي واحد بمصدر مذكور ودرجة ثقة. العتاد هو تقديرك أنت؛ أما العمل والتراخيص والحوافز والاستبدال فهي أرقام السجل. ولا شيء هنا عرض سعر من بائع.",
+    pathsWhy:
+      "{cheaper} أرخص بمقدار {gap} من {dearer} على 20 عامًا، والسبب الأهم هو {driver}.",
+    pathsWhyCombined: " لا يفسّر عنصر واحد وحده الفرق كاملًا.",
+    pathsDriver_year0: "سعر البداية",
+    pathsDriver_incentives: "الجهة التي تذهب إليها الحوافز",
+    pathsDriver_om: "الصيانة",
+    pathsDriver_replacements: "استبدال البطاريات والعاكسات",
+    pathsDriver_leasePayments: "الأقساط التي تدفعها",
+    pathsDriver_none: "لا عنصر بعينه",
+    pathsInstrumentPpa: "عقد شراء الطاقة",
+    pathsInstrumentLease: "إيجار (تستأجر النظام)",
+    pathsEndOfTermBuyout:
+      "السنة {years}: يمكنك شراؤه مقابل {buyoutPct}% من سعر التركيب، وهذا الشراء مُحتسب أصلًا في هذا الرقم.",
+    pathsEndOfTermStillLeasing:
+      "في السنة {years} لا يزال العقد ساريًا، لذا لا يُحتسب أي شراء. وبعد 20 عامًا ستظل مدينًا بأقساط.",
+    pathsOwnershipTurnkey: "أنت تملكه من اليوم الأول.",
+    pathsOwnershipPpa: "المزوّد هو المالك ويتولى الصيانة.",
+    pathsOwnershipLease: "تستأجره حتى نهاية العقد ثم تشتريه أو تعيده.",
+    pathsOwnershipSelf: "تملكه بعد تركيبه.",
+    pathsIncentiveTaxCredit: "ائتمان ضريبي فيدرالي",
+    pathsIncentiveRebate: "خصم من شركة الكهرباء",
+    pathsIncentivesToProvider: "الحوافز تذهب إلى المزوّد لا إليك.",
+    pathsIncentivesGoToProvider: "المزوّد يحتفظ بها — وأنت لا تملك شيئًا.",
+    pathsNoIncentive: "لا ينطبق أي منها على هذه الطريقة.",
+    pathsNoVerifiedIncentive: "لا يوجد لدينا حافز موثّق لمنطقتك.",
+    pathsUnknown: "غير معروف",
+    pathsNotWithinHorizon: "ليس خلال 20 عامًا",
+    pathsBreakEvenYear: "السنة {year}",
+    pathsUnavailable: "غير متاح",
+    pathsNoSystem: "لا يوجد نظام لتسعيره.",
+    pathsNoTariff:
+      "يحتاج عقد الشراء إلى سعر كهرباء ليُسعَّر بمقابله، لذلك لا يظهر هنا.",
+    pathsDiyNotPermitted:
+      "غير معروضة هنا: في منطقتك يجب أن ينفّذ العمل الكهربائي مُثبِّت مرخّص.",
+    pathsDiyRestricted: "غير معروضة هنا: التركيب الذاتي مقيّد في منطقتك.",
+    pathsDiyUnknown:
+      "غير معروضة هنا: تعذّر التحقق مما إذا كان بإمكانك تركيب ألواحك بنفسك.",
+    pathsNoteTurnkeyAllIn:
+      "سعر واحد شامل: نفس العتاد، إضافة إلى العمل والتراخيص وهامش المُثبِّت.",
+    pathsIncludesInstalledAllIn: "القطع والعمل والتراخيص، بعد التركيب",
+    pathsIncludesProviderSwaps: "المزوّد يصون ويستبدل البطارية والعاكس",
+    pathsIncludesIncentivesToProvider: "الحوافز تذهب إلى المزوّد لا إليك",
+    pathsIncludesIncentivesIfEligible: "الحوافز، إن كنت مؤهلًا لها",
+    pathsIncludesNoYear0Hardware: "دون شراء عتاد مقدمًا",
+    pathsIncludesEndOfTerm: "خيار نهاية العقد مُحتسب في السعر",
+    pathsIncludesHardwareYouBuy: "العتاد الذي تشتريه بنفسك",
+    pathsIncludesElectricianInstalls: "كهربائي مرخّص يتولى التركيب",
+    pathsIncludesPermitsAndInterconnection: "التراخيص، الفحص، والربط بالشبكة",
+    pathsIncludesYouDoSwaps: "أنت تنظّم وتدفع استبدال البطاريات",
+    pathsIncludesYouMountTheArray: "أنت تركّب الألواح بنفسك",
+    pathsIncludesElectricianConnects: "كهربائي يتولى عملية الربط",
+    pathsIncludesToolsAndSafety: "الأدوات ومعدات السلامة",
   },
 };
