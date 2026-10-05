@@ -205,13 +205,41 @@ export async function runGridTieFlow(ctx, actions) {
   // payback, while the panel beside them reported "never" break-even and 20-year
   // bills identical to staying on the grid. This gate is what fails on that.
   console.log("SMOKE      ── battery-only: peak offset, not a bill cut ──");
+  // The block below mutates global page state (the use case, and through it
+  // both hidden legacy selects). Sequential browser suites have to put it back
+  // or every later gate tests a state it was never written for: leaving the
+  // page on `tou` turned the Simple-mode and share-restore gates red for
+  // reasons that had nothing to do with either of them. Restoring here does
+  // not weaken them \u2014 each still runs in the state it was authored against.
+  //
+  // SEPARATE, STILL OPEN: whether Simple mode renders a card for a genuinely
+  // battery-only system is not answered by this restore, and is not answered
+  // by the battery-only gates either. That is a product question about
+  // renderSimpleResults() bailing on `!view.feasible`, not a smoke-harness
+  // one, and it is recorded as such rather than hidden behind a restore.
   await evaluate(`(() => {
-      const hw = document.getElementById("hardwareConfig");
-      hw.value = "battery";
-      hw.dispatchEvent(new Event("change", { bubbles: true }));
-      document.getElementById("systemGoal").value = "gridtie";
-      document.getElementById("systemGoal").dispatchEvent(new Event("change", { bubbles: true }));
-      return true;
+      const uc = document.getElementById("useCase");
+      window.__smokeRestoreUseCase = uc.value;
+      return uc.value;
+    })()`);
+  // Select the USE CASE, not the legacy pair.
+  //
+  // This gate used to poke the hidden `hardwareConfig` select directly, and it
+  // started failing the moment D-16 landed: `applyUseCase` DERIVES both legacy
+  // values from the case, so the next `systemGoal` change overwrote
+  // hardwareConfig back to "both" and the run built 1.92 kW of solar. Twenty-
+  // three battery-only gates went red at once, all of them reporting a system
+  // the visitor cannot even select.
+  //
+  // The `tou` case is the one that derives to {gridtie, battery}, so choosing
+  // it is both the correct setup AND a stronger gate: it now proves the
+  // derivation works, which is what check-usecases.mjs clause 6 claims and
+  // nothing on this page used to exercise.
+  await evaluate(`(() => {
+      const uc = document.getElementById("useCase");
+      uc.value = "tou";
+      uc.dispatchEvent(new Event("change", { bubbles: true }));
+      return document.getElementById("hardwareConfig").value;
     })()`);
   await evaluate(`document.getElementById("btnRunSizing").click()`);
   // Wait for the BATTERY-ONLY payload specifically, not merely for some result
@@ -578,11 +606,21 @@ export async function runGridTieFlow(ctx, actions) {
     })()`);
   await sleep(600);
 
-  // Leave the default hardware behind for every downstream flow.
+  // Leave the default case behind for every downstream flow.
+  //
+  // This used to reset `hardwareConfig` directly, which is the exact mistake
+  // this block made at its start: applyUseCase DERIVES that select from the
+  // use case, so the change event immediately re-derived "battery" and the
+  // page stayed in battery-only for the Simple-mode and share-restore gates.
+  // The restore has to travel the way a visitor travels: the use case.
   await evaluate(`(() => {
-      const hw = document.getElementById("hardwareConfig");
-      hw.value = "both";
-      hw.dispatchEvent(new Event("change", { bubbles: true }));
-      return true;
+      const uc = document.getElementById("useCase");
+      const was = window.__smokeRestoreUseCase || "billcut";
+      if (uc.value !== was) {
+        uc.value = was;
+        uc.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      return uc.value;
     })()`);
+  await sleep(600);
 }
