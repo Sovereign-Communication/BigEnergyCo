@@ -43,10 +43,7 @@ import {
   PROFILE_YEAR,
 } from "../assets/js/sizing/profiles.js";
 
-const ROOT = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-);
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const site = OFFLINE_PROFILES.find((p) => p.name.includes("Honolulu"));
 const fakeWeather = async () => ({
@@ -100,7 +97,10 @@ test("D-16's six use cases are declared exactly once, each with an owner", () =>
     assert.equal(c.id, id, `${id}.id names itself`);
     assert.ok(c.labelKey && c.blurbKey, `${id} has visitor-facing copy`);
     assert.ok(c.legacy, `${id} declares how it reaches the engine enum pair`);
-    assert.ok(c.metric && c.metric.labelKey, `${id} has a metric and its label`);
+    assert.ok(
+      c.metric && c.metric.labelKey,
+      `${id} has a metric and its label`,
+    );
     assert.equal(typeof c.verdict, "function");
     assert.equal(typeof c.metricOf, "function");
   }
@@ -112,7 +112,11 @@ test("D-16's six use cases are declared exactly once, each with an owner", () =>
 
 test("every use case reports its OWN outcome metric", () => {
   const ids = metricIds();
-  assert.equal(new Set(ids).size, 6, `metrics must be distinct: ${ids.join(",")}`);
+  assert.equal(
+    new Set(ids).size,
+    6,
+    `metrics must be distinct: ${ids.join(",")}`,
+  );
   // Names are pinned because the facet reads them: a case that quietly
   // renamed its metric would be a case that quietly changed what it answers.
   assert.deepEqual(ids, [
@@ -197,9 +201,7 @@ test("the legacy pair is DERIVED from the use case, and hidden from the visitor"
     ["systemGoal", "select"],
     ["hardwareConfig", "select"],
   ]) {
-    const m = html.match(
-      new RegExp(`<${tag}[^>]*id="${id}"[^>]*>`),
-    );
+    const m = html.match(new RegExp(`<${tag}[^>]*id="${id}"[^>]*>`));
     assert.ok(m, `${id} is in the markup`);
     assert.match(
       m[0],
@@ -283,7 +285,10 @@ test("verdicts only ever report works/partial/not-here", () => {
 test("outcomeFor never invents an outcome for an unknown use case", () => {
   assert.equal(outcomeFor("nonsense", { billCutPct: 50 }), null);
   assert.equal(outcomeFor("billcut", null), null);
-  const o = outcomeFor("offgrid", { gridIndependencePct: 99.5, measured: true });
+  const o = outcomeFor("offgrid", {
+    gridIndependencePct: 99.5,
+    measured: true,
+  });
   assert.equal(o.metricId, "grid_independence_pct");
   assert.equal(o.measured, true);
 });
@@ -357,7 +362,10 @@ test("a zero reserveFloor is bit-identical to not passing one", () => {
     "the default must not change a single existing payload",
   );
   const off = { ...args, battKwhUsable: 5 };
-  assert.deepEqual(simulateOffset(off), simulateOffset({ ...off, reserveFloor: 0 }));
+  assert.deepEqual(
+    simulateOffset(off),
+    simulateOffset({ ...off, reserveFloor: 0 }),
+  );
 });
 
 // ── R-UC-03: the outage simulator ───────────────────────────────────────────
@@ -698,18 +706,16 @@ test("the reserve measures the same system with and without the floor", async ()
   // exactly that rather than reporting a free reserve.
   if (m.battKwh === 0)
     assert.equal(withFloor.useCaseOutcome.reasonKey, "verdictReserveNoBattery");
-  else
-    assert.ok(m.reserveBillCutWithFloorPct <= m.reserveBillCutPct);
+  else assert.ok(m.reserveBillCutWithFloorPct <= m.reserveBillCutPct);
 });
 
 // ── the gate and the evidence line ──────────────────────────────────────────
 
 test("GATE: the use-case playtest passes on the real tree", () => {
-  const out = execFileSync(
-    process.execPath,
-    ["scripts/check-usecases.mjs"],
-    { cwd: ROOT, encoding: "utf8" },
-  );
+  const out = execFileSync(process.execPath, ["scripts/check-usecases.mjs"], {
+    cwd: ROOT,
+    encoding: "utf8",
+  });
   assert.match(out, /USECASES OK/);
   assert.match(out, /own metric: bill_cut_pct/);
   // The walk must actually reach the engine, not be a table of constants.
@@ -726,7 +732,10 @@ test("GATE: the use-case gate is wired into the preflight, not merely present", 
 
 test("EVIDENCE: the usecases facet line cannot contradict the gate", () => {
   const ev = JSON.parse(
-    fs.readFileSync(path.join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
+    fs.readFileSync(
+      path.join(ROOT, "evidence/advisor-and-release.json"),
+      "utf8",
+    ),
   );
   const line = ev.facet_evidence.usecases;
   assert.ok(line && line.length > 40, "the facet line is a measurement");

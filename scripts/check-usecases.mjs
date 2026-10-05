@@ -63,7 +63,9 @@ const D16 = [
 
 // ── 1. the six, declared once ───────────────────────────────────────────────
 if (UC.USE_CASE_IDS.length !== 6)
-  fail(`the registry declares ${UC.USE_CASE_IDS.length} use cases, D-16 names 6`);
+  fail(
+    `the registry declares ${UC.USE_CASE_IDS.length} use cases, D-16 names 6`,
+  );
 else ok("the registry declares exactly D-16's six use cases, in one place");
 
 // ── 2. distinct outcome metrics ─────────────────────────────────────────────
@@ -73,7 +75,8 @@ else ok("the registry declares exactly D-16's six use cases, in one place");
 // returning.
 const ids = UC.metricIds();
 const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
-if (dupes.length) fail(`two use cases share an outcome metric: ${dupes.join(", ")}`);
+if (dupes.length)
+  fail(`two use cases share an outcome metric: ${dupes.join(", ")}`);
 else ok(`all six report their own metric: ${ids.join(", ")}`);
 
 // ── 3. every declared control exists in the shipped markup ──────────────────
@@ -111,14 +114,19 @@ const silentCases = UC.USE_CASE_IDS.filter((id) => {
   return c.verdict({}).status !== "not-here";
 });
 if (silentCases.length)
-  fail(`use cases that cannot report "not-here" on an unmeasured run: ${silentCases.join(", ")}`);
+  fail(
+    `use cases that cannot report "not-here" on an unmeasured run: ${silentCases.join(", ")}`,
+  );
 else ok("all six can report an honest 'not-here' with no measurement at all");
 
 // The reserve is the case that most easily reports a free lunch: if the sized
 // system carries no battery there is nothing to reserve, and saying so is the
 // only honest answer.
 {
-  const v = UC.USE_CASES.reserve.verdict({ battKwh: 0, reserveSavingsLostPct: 0 });
+  const v = UC.USE_CASES.reserve.verdict({
+    battKwh: 0,
+    reserveSavingsLostPct: 0,
+  });
   if (v.status !== "not-here" || v.reasonKey !== "verdictReserveNoBattery")
     fail(
       `the reserve case does not refuse a system with no battery (got ${JSON.stringify(v)})`,
@@ -171,7 +179,10 @@ const walk = [];
 for (const id of UC.USE_CASE_IDS) {
   let p;
   try {
-    p = await runSizing({ ...INPUTS, useCase: id }, { fetchWeather: fakeWeather });
+    p = await runSizing(
+      { ...INPUTS, useCase: id },
+      { fetchWeather: fakeWeather },
+    );
   } catch (err) {
     fail(`use case ${id} threw through the real engine: ${err.message}`);
     continue;
@@ -239,15 +250,19 @@ if (walk.length === 6) {
     if (!m) return true; // absent from the page entirely: also not visible
     return /\bhidden\b/.test(m[0]) || /display:\s*none/.test(m[0]);
   };
-  const leaks = ["systemGoalRow", "hardwareConfigRow"].filter((id) => !isHidden(id));
-  if (leaks.length)
-    fail(`the legacy goal/hardware controls are still visible: ${leaks.join(", ")}`);
-  else ok("the legacy goal/hardware selects are derived and hidden from the visitor");
-
-  const ui = readFileSync(
-    join(ROOT, "assets/js/sizing/ui.js"),
-    "utf8",
+  const leaks = ["systemGoalRow", "hardwareConfigRow"].filter(
+    (id) => !isHidden(id),
   );
+  if (leaks.length)
+    fail(
+      `the legacy goal/hardware controls are still visible: ${leaks.join(", ")}`,
+    );
+  else
+    ok(
+      "the legacy goal/hardware selects are derived and hidden from the visitor",
+    );
+
+  const ui = readFileSync(join(ROOT, "assets/js/sizing/ui.js"), "utf8");
   if (!/deriveLegacy\(/.test(ui))
     fail("ui.js never calls deriveLegacy — the chooser is not the owner");
   else ok("ui.js derives the legacy pair from the use case, in one place");
@@ -256,7 +271,9 @@ if (walk.length === 6) {
   // one; a case with no declaration would silently fall back to bill-cut.
   const undeclared = UC.USE_CASE_IDS.filter((id) => !UC.USE_CASES[id].legacy);
   if (undeclared.length)
-    fail(`use cases with no declared legacy derivation: ${undeclared.join(", ")}`);
+    fail(
+      `use cases with no declared legacy derivation: ${undeclared.join(", ")}`,
+    );
   else ok("all six declare how they reach the engine's enum pair");
 }
 

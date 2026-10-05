@@ -54,6 +54,11 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     "pricing.js",
     "money.js",
     "climate.js",
+    // The use-case registry. It was missing from this list when it was
+    // written, which would have let a whole new eager module grow outside
+    // the budget — the exact thing the budget exists to catch. It is eager
+    // because both run.js and ui.js import it on first paint.
+    "usecases.js",
     "wizard.js",
     "appliances.js",
     "map-provider.js",
@@ -129,17 +134,39 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // point of the feature. Trade approved by the operator against a submission
   // deadline. If the budget ever needs to come back down, this table is the
   // thing to move behind a click, not the country mapping to be deleted.
+  // 130,000 (+5 KB measured 129,073): the six D-16 use cases became six real
+  // offers. Four of them had no form at all — backup, reserve, portable and the
+  // time-of-use rates are the only way a visitor can hand the engine what those
+  // cases are sized on, and shipping them lazily would have meant a field
+  // registry plus a descriptor-to-DOM layer purely to save ~7 KB of static
+  // markup. That trade buys a clean per-case budget, not fewer bytes for its
+  // own sake. The thing to move behind a click if this budget ever needs to
+  // come back down is the portable and backup input panels, not the use-case
+  // chooser itself: the chooser is 2 KB and is the whole product surface.
   assert.ok(
-    htmlBytes <= 125_000,
-    `index.html ${htmlBytes} bytes exceeds 125,000 budget`,
+    htmlBytes <= 130_000,
+    `index.html ${htmlBytes} bytes exceeds 130,000 budget`,
   );
   assert.ok(
     cssBytes <= 40_000,
     `site.css ${cssBytes} bytes exceeds 40,000 budget`,
   );
+  // 895,000 (+80 KB measured ~889,900): all six D-16 use cases became six real
+  // offers, and three of them needed engines that did not exist — an outage
+  // simulator, a reserve floor and a portable day model (+11.6 KB in
+  // engine.js). On top of that: +27.3 KB in locales.js for 45 new keys x six
+  // locales (the same trade the country-currency raise above records), and
+  // +15.2 KB in run.js for the measurement pass that turns a sized system into
+  // one outcome per use case. usecases.js itself was ALSO missing from the
+  // eager list above, so a brand-new eager module could have grown outside
+  // this budget entirely — it is listed now, and its bytes are in the number.
+  // This is the one place where "lazy-load it" was the better answer and was
+  // not taken: the portable and backup panels are the fields that make those
+  // two cases real, and rendering them behind a click would have hidden the
+  // question the visitor came to answer.
   assert.ok(
-    jsBytes <= 815_000,
-    `eager JS ${jsBytes} bytes exceeds 815,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
+    jsBytes <= 895_000,
+    `eager JS ${jsBytes} bytes exceeds 895,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,
   );
 });
 

@@ -87,9 +87,7 @@ const INPUTS = {
     { control: "outageTargetHours", kind: "visitor" },
     { control: "backupSolarRecharge", kind: "visitor" },
   ],
-  reserve: [
-    { control: "reserveSlider", kind: "visitor" },
-  ],
+  reserve: [{ control: "reserveSlider", kind: "visitor" }],
   offgrid: [
     { control: "dailyKwhInput", kind: "visitor" },
     { control: "generatorAllowed", kind: "visitor" },
@@ -132,11 +130,12 @@ export const USE_CASES = {
           status: "not-here",
           reasonKey: "verdictBillCut",
         };
-      const target = Number.isFinite(m.targetBillCutPct) ? m.targetBillCutPct : 0;
+      const target = Number.isFinite(m.targetBillCutPct)
+        ? m.targetBillCutPct
+        : 0;
       if (target > 0 && v >= target)
         return { status: "works", reasonKey: "verdictBillCut" };
-      if (v >= 0.5)
-        return { status: "partial", reasonKey: "verdictBillCut" };
+      if (v >= 0.5) return { status: "partial", reasonKey: "verdictBillCut" };
       return { status: "not-here", reasonKey: "verdictBillCut" };
     },
   },
@@ -161,7 +160,10 @@ export const USE_CASES = {
     verdict: (m) => {
       // The plan's own honest verdict: when the peak/off-peak spread cannot
       // pay for the kWh you would store, a battery alone does not pay back.
-      if (!Number.isFinite(m.touSavingUsd20y) || !Number.isFinite(m.touBatteryCostUsd20y))
+      if (
+        !Number.isFinite(m.touSavingUsd20y) ||
+        !Number.isFinite(m.touBatteryCostUsd20y)
+      )
         return { status: "not-here", reasonKey: "verdictTou" };
       if (m.touSavingUsd20y <= 0)
         return { status: "not-here", reasonKey: "verdictTou" };
@@ -330,7 +332,9 @@ export function inputsFor(id) {
 
 /** Every control id any use case declares (for the "control must exist" check). */
 export function declaredControls() {
-  return [...new Set(USE_CASE_IDS.flatMap((id) => INPUTS[id].map((i) => i.control)))];
+  return [
+    ...new Set(USE_CASE_IDS.flatMap((id) => INPUTS[id].map((i) => i.control))),
+  ];
 }
 
 /**
@@ -425,8 +429,28 @@ export function verdictKeys() {
   return [
     ...new Set(
       USE_CASE_LIST.flatMap((c) => [
-        c.verdict({ billCutPct: 1, touPeakOffsetPct: 1, touSavingUsd20y: 2, touBatteryCostUsd20y: 1, outageCoveragePct: 99, reserveSavingsLostPct: 0.1, reserveCoverHours: 4, gridIndependencePct: 99.9, portableCoveragePct: 99 }).reasonKey,
-        c.verdict({ billCutPct: 0, touPeakOffsetPct: 0, touSavingUsd20y: 0, touBatteryCostUsd20y: 1, outageCoveragePct: 0, reserveSavingsLostPct: 0.9, reserveCoverHours: 0, gridIndependencePct: 0, portableCoveragePct: 0 }).reasonKey,
+        c.verdict({
+          billCutPct: 1,
+          touPeakOffsetPct: 1,
+          touSavingUsd20y: 2,
+          touBatteryCostUsd20y: 1,
+          outageCoveragePct: 99,
+          reserveSavingsLostPct: 0.1,
+          reserveCoverHours: 4,
+          gridIndependencePct: 99.9,
+          portableCoveragePct: 99,
+        }).reasonKey,
+        c.verdict({
+          billCutPct: 0,
+          touPeakOffsetPct: 0,
+          touSavingUsd20y: 0,
+          touBatteryCostUsd20y: 1,
+          outageCoveragePct: 0,
+          reserveSavingsLostPct: 0.9,
+          reserveCoverHours: 0,
+          gridIndependencePct: 0,
+          portableCoveragePct: 0,
+        }).reasonKey,
       ]),
     ),
   ];
