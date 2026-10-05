@@ -1583,3 +1583,41 @@ test("AUDIT/locale-sweep: the gate drives all six locales, not a list of one", (
     "and the key list must read it too, or the sweep is vacuous",
   );
 });
+
+test("AUDIT/tests: no top-level test in the suites this cycle added is nested inside another", () => {
+  // A `test(` call inside another test's callback is a SUBTEST, and a subtest is
+  // cancelled rather than failed when its parent finishes first. That happened
+  // here for real: a splice dropped one closing brace, ten mutation tests ended
+  // up nested inside the test above them, and the file reported 62/62 on Node 24
+  // while CI's Node 22 reported one failure and ten cancellations — the same
+  // bytes, two verdicts, and the one that mattered was the one nobody watched
+  // locally.
+  //
+  // The lesson is not "be careful with braces". It is that a mistake which
+  // changes a test's MEANING can still report a green suite on the machine you
+  // wrote it on, which is the exact situation this repo's gates exist to
+  // distrust — so the shape is checked rather than trusted.
+  //
+  // Scoped to the two files this cycle added, and checked at column 0, because
+  // the rest of the suite generates top-level tests inside `for` loops: indented
+  // source that is still top level, which a repo-wide rule would either flag or
+  // be too loose to catch anything. For these two files the distinction is
+  // exact — nothing here generates tests.
+  for (const file of [
+    "tests/experience-facet.test.mjs",
+    "tests/gate-self-audit.test.mjs",
+  ]) {
+    const offenders = readFileSync(file, "utf8")
+      .split("\n")
+      .map((line, i) => ({ line, n: i + 1 }))
+      .filter(({ line }) => /^[ \t]+test\(/.test(line))
+      .map(({ line, n }) => `${file}:${n}: ${line.trim().slice(0, 60)}`);
+    assert.deepEqual(
+      offenders,
+      [],
+      "these test() calls are nested inside another test, so a parent that " +
+        "finishes early CANCELS them instead of failing them — and Node 24 " +
+        "runs the file green while Node 22 (CI) reports failures",
+    );
+  }
+});
