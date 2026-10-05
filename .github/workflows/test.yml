@@ -129,8 +129,23 @@ jobs:
                 unit_tests: "${{ steps.unit_tests.outcome }}",
               },
             };
+            // What the suite MEASURED, from the file its own runner wrote. A
+            // conclusion says the step passed; it says nothing about how many
+            // tests ran, and the record used to type that number and carry it
+            // forward until it was false. Composed here, it cannot be.
+            const m = fs.existsSync("jev-artifacts/test-measurement.json")
+              ? JSON.parse(fs.readFileSync("jev-artifacts/test-measurement.json", "utf8"))
+              : null;
+            if (m) {
+              job.measurements = {
+                tests_total: m.tests,
+                tests_passed: m.pass,
+                tests_failed: m.fail,
+                tests_skipped: m.skipped,
+              };
+            }
             fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
-            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps) + " measurements " + JSON.stringify(job.measurements || {}));
           '
 
       - name: Upload this job's results for the Jev gate
@@ -207,8 +222,22 @@ jobs:
                 privacyBrowser: "${{ steps.privacy-browser.outcome }}",
               },
             };
+            // The gate count the smoke runner counted, not one anybody wrote
+            // down. Same reason as the test job above: this record is read by a
+            // judge before it reads any facet, so a number in it that the tree
+            // contradicts costs every facet at once.
+            const m = fs.existsSync("jev-artifacts/smoke-measurement.json")
+              ? JSON.parse(fs.readFileSync("jev-artifacts/smoke-measurement.json", "utf8"))
+              : null;
+            if (m) {
+              job.measurements = {
+                smoke_gates_total: m.gates_total,
+                smoke_gates_passed: m.gates_passed,
+                smoke_gates_failed: m.gates_failed,
+              };
+            }
             fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
-            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps) + " measurements " + JSON.stringify(job.measurements || {}));
           '
       - name: Upload this job's results for the Jev gate
         if: always()

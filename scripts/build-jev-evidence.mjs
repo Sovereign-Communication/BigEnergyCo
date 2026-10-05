@@ -196,12 +196,68 @@ function readArtifacts(dir) {
         job: parsed.job,
         conclusion: parsed.conclusion,
         steps: parsed.steps,
+        measurements: parsed.measurements || {},
       };
     } else {
       ignored.push(name);
     }
   }
   return { artifacts, ignored };
+}
+
+/**
+ * The fields of the prose record that may quote a measured count, and so may
+ * carry `{{placeholders}}`.
+ *
+ * A count is the one thing in this record that is true only on the day it was
+ * measured. Typed, it goes stale silently and nobody notices, because a stale
+ * count still reads as a confident sentence. Composed from the run, it cannot.
+ */
+export const COMPOSABLE_FIELDS = [
+  "tests_summary",
+  "ci_summary",
+  "smoke_note",
+  "seo_summary",
+];
+
+const PLACEHOLDER = /\{\{([a-z0-9_]+)\}\}/g;
+
+/**
+ * Replace `{{name}}` in the composable prose fields with what the run measured.
+ *
+ * Fails closed, and this is the important part: a placeholder no artifact
+ * answered is a NAMED problem, and the literal is left visible rather than
+ * silently blanked or quietly dropped. A judge reading "the browser smoke runs
+ * {{smoke_gates_total}} gates" learns the record is unfinished; a judge reading
+ * a smoothed-over sentence learns nothing at all.
+ */
+export function composeMeasuredCounts(prose, artifacts) {
+  const measured = {};
+  for (const art of Object.values(artifacts || {})) {
+    for (const [k, v] of Object.entries(art.measurements || {}))
+      measured[k] = v;
+  }
+  const problems = [];
+  const filled = { ...prose };
+  for (const field of COMPOSABLE_FIELDS) {
+    const text = filled[field];
+    if (typeof text !== "string" || !PLACEHOLDER.test(text)) {
+      PLACEHOLDER.lastIndex = 0;
+      continue;
+    }
+    PLACEHOLDER.lastIndex = 0;
+    filled[field] = text.replace(PLACEHOLDER, (whole, name) => {
+      if (Object.hasOwn(measured, name) && measured[name] !== null)
+        return String(measured[name]);
+      problems.push(
+        `\`${field}\` quotes {{${name}}}, which no artifact on this run ` +
+          "measured, so the record would reach the judge with the number still " +
+          "unresolved — write the number the run measured, or drop the claim",
+      );
+      return whole;
+    });
+  }
+  return { prose: filled, problems, measured };
 }
 
 export function main(argv = process.argv.slice(2)) {
@@ -232,6 +288,12 @@ export function main(argv = process.argv.slice(2)) {
 
   let preReportNote = null;
   const { artifacts, ignored } = readArtifacts(opts.artifacts);
+  // The measured counts, composed from the run rather than typed, BEFORE any
+  // proof line is built: a facet line is allowed to quote them, and it may only
+  // do so if the number came from this run.
+  const composed = composeMeasuredCounts(prose, artifacts);
+  prose = composed.prose;
+  const countProblems = composed.problems;
   // Facet proof lines DERIVED from the gate reports this run produced, rather
   // than read from the prose file. Discovered, not listed: a new gate that
   // declares facet_axes becomes visible to the judge with no edit here.
@@ -256,7 +318,7 @@ export function main(argv = process.argv.slice(2)) {
   // The required set, from the workflow's own declarations rather than a list
   // kept beside this script: a gate the workflow runs and the record has never
   // heard of is exactly how ci_green came to read true on a red run.
-  const preProblems = [...reportProblems];
+  const preProblems = [...reportProblems, ...countProblems];
   let requiredJobs = [];
   try {
     requiredJobs = requiredJobsFromWorkflow(readFileSync(WORKFLOW, "utf8"));
