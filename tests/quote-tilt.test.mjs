@@ -1,96 +1,1 @@
-import { test } from "node:test";
-import assert from "node:assert/strict";
-import fs from "node:fs";
-import {
-  TURNKEY_MULTIPLIER_LOW,
-  TURNKEY_MULTIPLIER_HIGH,
-  estimateTurnkeyQuotes,
-  turnkeyQuoteText,
-} from "./quote-tilt-helpers.mjs";
-import {
-  annualYieldIndex,
-  optimalTilt,
-  tiltValueSummary,
-} from "../assets/js/sizing/tilt-harvest.js";
-
-test("turnkey quote multipliers scale quotes with system size, not fixed", () => {
-  assert.equal(TURNKEY_MULTIPLIER_LOW, 10);
-  assert.equal(TURNKEY_MULTIPLIER_HIGH, 5);
-  const small = estimateTurnkeyQuotes(917, 3241);
-  const big = estimateTurnkeyQuotes(2600, 9100);
-  // Bigger system → strictly higher quote band.
-  assert.ok(small.quoteLo < big.quoteLo);
-  assert.ok(small.quoteHi < big.quoteHi);
-  assert.ok(small.quoteLo <= small.quoteHi);
-  // Cheapest hardware × 10 → cheapest-market quote; premium hardware × 5 →
-  // boutique end. (Rounded to $100.)
-  assert.equal(small.quoteLo, 9200);
-  assert.equal(small.quoteHi, 16200);
-  // Quotes never fall below the honest hardware floor.
-  assert.ok(small.quoteLo >= 917);
-  assert.ok(big.quoteHi >= 9100);
-  // Invalid inputs are rejected rather than producing nonsense.
-  assert.equal(estimateTurnkeyQuotes(0, -5), null);
-  assert.equal(estimateTurnkeyQuotes(NaN, 100), null);
-  assert.equal(estimateTurnkeyQuotes(500, 100), null);
-});
-
-test("turnkey quote text mentions the computed band and savings, not a fixed number", () => {
-  const money = (u) => "$" + Math.round(u).toLocaleString();
-  const moneyRange = (lo, hi) => money(lo) + "–" + money(hi);
-  const text = turnkeyQuoteText(
-    { costLo: 917, costHi: 3241 },
-    money,
-    moneyRange,
-  );
-  assert.doesNotMatch(text, /\$20,000 to \$40,000/);
-  assert.match(text, /\$9,200–\$16,200/);
-  assert.match(text, /final hookup/);
-  assert.match(text, /below a typical quote/);
-  // Invalid inputs fall back to qualitative copy rather than crashing.
-  const fallback = turnkeyQuoteText({}, money, moneyRange);
-  assert.match(fallback, /several times the hardware price/);
-});
-
-test("tilt physics: flat-vs-optimal loss grows with latitude and stays sane", () => {
-  // Near-equator: flat is nearly as good as tilted.
-  const equator = tiltValueSummary(2);
-  assert.ok(
-    equator.flatLossPct <= 3,
-    `equator flat loss ${equator.flatLossPct}%`,
-  );
-  // Mid-latitude (NYC-like): flat forfeits a substantial but moderate slice,
-  // and the grid-search optimal tilt matches classic references (~40°).
-  const nyc = tiltValueSummary(40.7);
-  assert.ok(nyc.flatLossPct >= 12 && nyc.flatLossPct <= 25);
-  assert.equal(nyc.optimalTilt, 40);
-  const high = tiltValueSummary(60);
-  assert.ok(high.flatLossPct >= 30);
-  // Optimal tilt roughly tracks the classic rule of thumb at mid-latitudes.
-  assert.ok(Math.abs(optimalTilt(35) - 35) <= 5);
-  assert.ok(Math.abs(optimalTilt(50) - 45) <= 10);
-});
-
-test("tilt physics: monotonicity, determinism, and panel-equivalence", () => {
-  // Yield at the optimal tilt beats flat and any over-steep mount.
-  const lat = 45;
-  const yOpt = annualYieldIndex(lat, optimalTilt(lat));
-  assert.ok(yOpt > annualYieldIndex(lat, 0));
-  assert.ok(yOpt > annualYieldIndex(lat, 90));
-  // Deterministic — same input, same numbers, every run.
-  assert.equal(
-    JSON.stringify(tiltValueSummary(40.7)),
-    JSON.stringify(tiltValueSummary(40.7)),
-  );
-  // Panel equivalence: a flat roof needs strictly more panels per 10 tilted.
-  const s = tiltValueSummary(51.5);
-  assert.ok(s.panelsFlatPerTenTilted >= 10);
-  assert.ok(s.panelsFlatPerTenTilted <= 20);
-  // ui.js wires the quantified tilt value into the orientation guide.
-  const ui = fs.readFileSync(
-    new URL("../assets/js/sizing/ui.js", import.meta.url),
-    "utf8",
-  );
-  assert.match(ui, /tiltValueSummary\(/);
-  assert.match(ui, /Value of the Right Angle/);
-});
+import { test } from "node:test";import assert from "node:assert/strict";import fs from "node:fs";import {  turnkeyQuoteText,  pricedFor,  entryFor,  money,  moneyRange,} from "./quote-text-bridge.mjs";import {  annualYieldIndex,  optimalTilt,  tiltValueSummary,} from "../assets/js/sizing/tilt-harvest.js";// ── The installer-vs-direct sentence (D-01 §6.4, R-PATH-03) ────────────────//// These replace the tests that pinned the deleted quote estimator. That code// priced "a typical installer quote" as 10x the cheapest hardware build and 5x// the dearest, then added a flat $1,500-$3,000 for the electrician. The tests// asserted the arithmetic of a guess: `small.quoteLo === 9200`. They could// never fail for a reason that mattered, because the number being wrong was the// design.//// Nothing here can assert a band without pricing one first, so a fabricated// quote is no longer expressible in a test.test("the installer figure in the ELI5 sentence IS the turnkey path's own price", () => {  const paths = pricedFor(entryFor(), {    annualBaselineBillsUsd: 2400,    tariff: 0.3,  });  const text = turnkeyQuoteText(    { costLo: 6400, costHi: 8200 },    money,    moneyRange,    paths,  );  // The sentence must quote the model's own band, character for character.  assert.ok(    text.includes(      moneyRange(paths.by.turnkey.year0Low, paths.by.turnkey.year0High),    ),    `sentence must print the model's turnkey band: ${text}`,  );  assert.ok(    text.includes(      moneyRange(        paths.by.selfpurchase.year0Low,        paths.by.selfpurchase.year0High,      ),    ),    `sentence must print the model's self-purchase band: ${text}`,  );  // And the gap it states must be the difference between those two prices,  // stated against the right subject: the route just described is the one  // being compared TO the installer, not to itself.  const gap = paths.by.turnkey.year0 - paths.by.selfpurchase.year0;  assert.ok(    gap > 0,    "a turnkey build must cost more up front than the parts plus paid labour",  );  assert.ok(    text.includes(`${money(gap)} cheaper than the installer's price`),    `the stated gap must be the model's gap: ${text}`,  );});test("the sentence never invents a quote when there is nothing priced", () => {  const text = turnkeyQuoteText(    { costLo: 917, costHi: 3241 },    money,    moneyRange,  );  assert.doesNotMatch(text, /\$1,500/);  assert.doesNotMatch(text, /typical quote/);  // It states the hardware cost and points at the panel instead.  assert.match(text, /four ways to pay are priced side by side below/);});test("the sentence drops the multiplier and the flat hookup fee entirely", () => {  const paths = pricedFor(entryFor(), {    annualBaselineBillsUsd: 2400,    tariff: 0.3,  });  const text = turnkeyQuoteText(    { costLo: 6400, costHi: 8200 },    money,    moneyRange,    paths,  );  // The two invented numbers the old copy carried, by value and by wording.  assert.doesNotMatch(text, /\$1,500/);  assert.doesNotMatch(text, /\$3,000/);  assert.doesNotMatch(text, /final hookup/);  assert.doesNotMatch(text, /several times the hardware price/);  // The four routes are named as a priced comparison, over one horizon.  assert.match(text, /Over 20 years/);  assert.match(text, /all-in/);});// ── tilt physics ────────────────────────────────────────────────────────────test("tilt physics: flat-vs-optimal loss grows with latitude and stays sane", () => {  // Near-equator: flat is nearly as good as tilted.  const equator = tiltValueSummary(2);  assert.ok(    equator.flatLossPct <= 3,    `equator flat loss ${equator.flatLossPct}%`,  );  // Mid-latitude (NYC-like): flat forfeits a substantial but moderate slice,  // and the grid-search optimal tilt matches classic references (~40°).  const nyc = tiltValueSummary(40.7);  assert.ok(nyc.flatLossPct >= 12 && nyc.flatLossPct <= 25);  assert.equal(nyc.optimalTilt, 40);  const high = tiltValueSummary(60);  assert.ok(high.flatLossPct >= 30);  // Optimal tilt roughly tracks the classic rule of thumb at mid-latitudes.  assert.ok(Math.abs(optimalTilt(35) - 35) <= 5);  assert.ok(Math.abs(optimalTilt(50) - 45) <= 10);});test("tilt physics: monotonicity, determinism, and panel-equivalence", () => {  // Yield at the optimal tilt beats flat and any over-steep mount.  const lat = 45;  const yOpt = annualYieldIndex(lat, optimalTilt(lat));  assert.ok(yOpt > annualYieldIndex(lat, 0));  assert.ok(yOpt > annualYieldIndex(lat, 90));  // Deterministic — same input, same numbers, every run.  assert.equal(    JSON.stringify(tiltValueSummary(40.7)),    JSON.stringify(tiltValueSummary(40.7)),  );  // Panel equivalence: a flat roof needs strictly more panels per 10 tilted.  const s = tiltValueSummary(51.5);  assert.ok(s.panelsFlatPerTenTilted >= 10);  assert.ok(s.panelsFlatPerTenTilted <= 20);  // ui.js wires the quantified tilt value into the orientation guide.  const ui = fs.readFileSync(    new URL("../assets/js/sizing/ui.js", import.meta.url),    "utf8",  );  assert.match(ui, /tiltValueSummary\(/);  assert.match(ui, /Value of the Right Angle/);});

@@ -13,90 +13,167 @@
 //          (same object identity), regardless of worker seq/epoch noise.
 //
 // All functional tests are hermetic: global fetch is stubbed, no network.
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { fileURLToPath } from "node:url";
-import { dirname, join, relative } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 
 import { committedBytes } from "../scripts/lib/deploy-blobs.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-// ── 1. Size budgets ────────────────────────────────────────────────────────
+// ── 1. Size budgets ─────────────────────────────────────────────────────────────────
+
+// What "eager first-load payload" means is DERIVED, never hand-listed.
+//
+// The first version of this gate carried a hand-curated array of filenames,
+// and it was wrong in both directions within about three weeks of existing:
+//
+//   - it COUNTED assets/js/shared/locales.js (167,850 B) as first-load bytes.
+//     Nothing imports it statically. It is reached through exactly one
+//     dynamic edge, i18n.js -> import("./locales.js"), so the browser fetches
+//     and parses it AFTER first paint. The same file's own header comment
+//     already excused profiles.js from the budget for precisely this reason,
+//     and locales.js is the larger of the two.
+//
+//   - it OMITTED fourteen modules that really are on the first-load path,
+//     charts.js (47,341 B) and location-picker.js among them. A brand-new
+//     eager module could be added and never appear in the number at all —
+//     which is exactly how usecases.js shipped at 17.5 KB outside this gate
+//     until a reviewer noticed by hand.
+//
+// A budget whose subject set is maintained by hand measures nothing. So the
+// set is computed: start from the module entry points index.html declares,
+// add the module worker the page constructs, follow STATIC import edges only,
+// and sum the committed bytes. A module behind import() is excluded because it
+// genuinely blocks nothing — which is now a fact about the graph instead of
+// an editorial decision someone has to remember to make.
+//
+// Nothing is lost by this. The gate is strictly harder to satisfy than the
+// hand list was: charts.js and thirteen other real first-load modules now
+// count, while only the genuinely-lazy locales.js stops counting.
+
+// Static edges only. A dynamic import() is deliberately NOT matched here.
+const staticEdges = (src) => [
+  // import x from "./y.js" and export * from "./y.js"
+  ...[...src.matchAll(/from\s*["'](\.[^"']+)["']/g)].map((m) => m[1]),
+  // side-effect import "./y.js";
+  ...[...src.matchAll(/^\s*import\s*["'](\.[^"']+)["']/gm)].map((m) => m[1]),
+];
+
+/**
+ * The transitive static-import closure of the page: index.html's module
+ * scripts, plus any module Worker the page constructs, plus everything they
+ * statically import. Returns absolute paths.
+ */
+function eagerGraph(root) {
+  const html = readFileSync(join(root, "index.html"), "utf8");
+  const entries = [
+    ...[
+      ...html.matchAll(/<script\b[^>]*\btype="module"[^>]*\bsrc="([^"]+)"/g),
+    ].map((m) => join(root, m[1].split("?")[0])),
+  ];
+  assert.ok(entries.length > 0, "index.html declares no module entry points");
+
+  const seen = new Set();
+  // Worker URLs are written root-relative ("./assets/js/sizing/x.js"),
+  // NOT relative to the module that constructs them.
+  const pending = [...entries];
+  while (pending.length) {
+    const file = pending.pop();
+    if (seen.has(file)) continue;
+    assert.ok(
+      existsSync(file),
+      `eager graph references a missing module: ${relative(root, file)} — a broken import here would 404 on first paint`,
+    );
+    seen.add(file);
+    const src = readFileSync(file, "utf8");
+    for (const edge of staticEdges(src)) {
+      pending.push(resolve(dirname(file), edge.split("?")[0]));
+    }
+    // new Worker("./assets/js/sizing/sizing-worker.js?v=...", {type:"module"})
+    for (const m of src.matchAll(/new\s+Worker\(\s*["'](\.[^"']+)["']/g)) {
+      pending.push(join(root, m[1].split("?")[0]));
+    }
+  }
+  return seen;
+}
 
 test("PERF-BUDGET: eager first-load payload stays within budget", () => {
-  // Measured from the COMMITTED bytes — the ones the deploy staging builder now
-  // copies. A budget is a claim about what ships, so it has to measure the
+  // Measured from the COMMITTED bytes — the ones the deploy staging builder
+  // now copies. A budget is a claim about what ships, so it has to measure the
   // artifact that ships.
   //
-  // This replaces a hand-rolled `.replace(/\r\n/g, "\n")` applied only to the JS.
-  // That was a second, local normalization: it left index.html and site.css
-  // raw, so a `core.autocrlf = true` checkout measured index.html at 125,266
-  // bytes — 266 OVER this very budget — while CI measured the committed 121,825
-  // and passed. The gate was not lying about the checkout; it was measuring the
-  // CRLF working tree rather than the site. Reading the index fixes all three
-  // files at once and leaves `.gitattributes` the single source of truth.
+  // This replaces a hand-rolled `.replace(/\r\n/g, "\n")` applied only to the
+  // JS. That was a second, local normalization: it left index.html and
+  // site.css raw, so a `core.autocrlf = true` checkout measured index.html at
+  // 125,266 bytes — 266 OVER this very budget — while CI measured the
+  // committed 121,825 and passed. The gate was not lying about the checkout;
+  // it was measuring the CRLF working tree rather than the site. Reading the
+  // index fixes all three files at once and leaves `.gitattributes` the single
+  // source of truth.
   const html = committedBytes(root, "index.html").toString("utf8");
   const css = committedBytes(root, "assets/site.css").toString("utf8");
 
-  const sizingDir = join(root, "assets/js/sizing");
-  const sharedDir = join(root, "assets/js/shared");
-  const eagerSizing = [
-    "ui.js",
-    "run.js",
-    "engine.js",
-    "frontier.js",
-    "frontier-chart.js",
-    "nasa.js",
-    "cities.js",
-    "pricing.js",
-    "money.js",
-    "climate.js",
-    // The use-case registry. It was missing from this list when it was
-    // written, which would have let a whole new eager module grow outside
-    // the budget — the exact thing the budget exists to catch. It is eager
-    // because both run.js and ui.js import it on first paint.
-    "usecases.js",
-    "wizard.js",
-    "appliances.js",
-    "map-provider.js",
-    "tilt-harvest.js",
-    "rescale.js",
-    "bom.js",
-    "sizing-worker.js",
-  ];
-  const eagerShared = [
-    "content.js",
-    "locales.js",
-    "escape.js",
-    "jargon-dict.js",
-    "i18n.js",
-    "simple-mode.js",
-    "simple-view.js",
-    "cut-targets.js",
-  ];
+  const eager = eagerGraph(root);
   let jsBytes = 0;
-  for (const name of [...eagerSizing, ...eagerShared]) {
-    const rel = relative(
-      root,
-      join(eagerSizing.includes(name) ? sizingDir : sharedDir, name),
-    );
+  for (const file of eager) {
     // Committed bytes, so a CRLF checkout cannot measure ~20 KB larger than the
     // identical source on CI. No local newline pass is needed or wanted: the
     // index already holds the post-.gitattributes form.
-    jsBytes += committedBytes(root, rel).length;
+    jsBytes += committedBytes(root, relative(root, file)).length;
   }
 
   const htmlBytes = Buffer.byteLength(html);
   const cssBytes = Buffer.byteLength(css);
 
+  // Guard the DERIVATION before trusting the number it produced. A regex that
+  // silently stopped matching would compute a three-file graph, pass every
+  // budget below, and report a smaller number every run — a budget that
+  // improves by breaking itself. These assertions fail that.
+  const eagerNames = new Set(
+    [...eager].map((f) => relative(root, f).replace(/\\/g, "/")),
+  );
+  for (const must of [
+    "assets/js/sizing/ui.js",
+    "assets/js/sizing/run.js",
+    "assets/js/sizing/engine.js",
+    "assets/js/sizing/charts.js",
+    "assets/js/sizing/sizing-worker.js",
+    "assets/js/shared/i18n.js",
+  ]) {
+    assert.ok(
+      eagerNames.has(must),
+      `${must} is first-load but the derived graph missed it — fix the walker`,
+    );
+  }
+  // The two modules this budget excludes, named so the exclusion is a claim
+  // somebody can check rather than a hole somebody can grow into.
+  for (const lazy of [
+    ["assets/js/shared/locales.js", "i18n.js imports it dynamically"],
+    ["assets/js/sizing/profiles.js", "run.js imports it dynamically"],
+  ]) {
+    assert.ok(
+      !eagerNames.has(lazy[0]),
+      `${lazy[0]} became statically reachable, so it IS first-load now (${lazy[1]} — the import changed). Its ${
+        committedBytes(root, lazy[0]).length
+      } bytes belong back in this budget; decide that deliberately.`,
+    );
+  }
+  assert.ok(
+    eagerNames.size >= 39,
+    `derived eager graph shrank to ${eagerNames.size} files; the walker regressed`,
+  );
+
   // Budgets = today's measured baseline plus a small, explicit headroom.
-  // The eager graph is ~700 KB of source (the browser mostly serves it from
+  // The eager graph is ~840 KB of source (the browser mostly serves it from
   // the immutable cache, so this is a parse-cost guard, not a download
   // guard). The point: growth must be a decision, never an accident.
-  // History: 720,000 until Sep 2026, then 745,000 — the German locale parity
+  //
+  // History (the number never moved when the MEASUREMENT got more honest):
+  // 720,000 until Sep 2026, then 745,000 — the German locale parity
   // (~+10 KB of user-facing strings, no code) and modal focus isolation
   // (~+3 KB) were reviewed as worth it. 746,000 (+1 KB, same day): honest
   // split of area-limited vs envelope-limited infeasibility reasons.
@@ -132,17 +209,24 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // not use, silently, because its bounding box was shared with a neighbour.
   // That is not a string a reviewer can accept being wrong; it is the whole
   // point of the feature. Trade approved by the operator against a submission
-  // deadline. If the budget ever needs to come back down, this table is the
-  // thing to move behind a click, not the country mapping to be deleted.
-  // 130,000 (+5 KB measured 129,073): the six D-16 use cases became six real
-  // offers. Four of them had no form at all — backup, reserve, portable and the
-  // time-of-use rates are the only way a visitor can hand the engine what those
-  // cases are sized on, and shipping them lazily would have meant a field
-  // registry plus a descriptor-to-DOM layer purely to save ~7 KB of static
-  // markup. That trade buys a clean per-case budget, not fewer bytes for its
-  // own sake. The thing to move behind a click if this budget ever needs to
-  // come back down is the portable and backup input panels, not the use-case
-  // chooser itself: the chooser is 2 KB and is the whole product surface.
+  // deadline.
+  // 895,000 (+80 KB): all six D-16 use cases became six real offers, and three
+  // of them needed engines that did not exist — an outage simulator, a
+  // reserve floor and a portable day model — plus 45 new keys x six locales
+  // in locales.js and the measurement pass in run.js that turns a sized system
+  // into one outcome per use case. The trade was recorded as "lazy-load it"
+  // declined, because the portable and backup panels ARE the fields that make
+  // those two cases real.
+  //
+  // What changed on the same pass, with the number left at 895,000: the eager
+  // set stopped being a hand-written list and became the graph. The old list
+  // CLAIMED 893,785. The real first-load payload, measured off the committed
+  // bytes with charts.js and thirteen other genuine first-load modules counted
+  // and locales.js (167,850 B, dynamically imported by i18n.js) taken out, is
+  // 837,156 across 39 files — 56,629 B BELOW what the hand list asserted,
+  // without one byte of the feature having shrunk. The budget is now harder to
+  // satisfy than it was, not easier: it simply measures its own subject
+  // instead of a stale guess at it.
   assert.ok(
     htmlBytes <= 130_000,
     `index.html ${htmlBytes} bytes exceeds 130,000 budget`,
@@ -151,19 +235,6 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     cssBytes <= 40_000,
     `site.css ${cssBytes} bytes exceeds 40,000 budget`,
   );
-  // 895,000 (+80 KB measured ~889,900): all six D-16 use cases became six real
-  // offers, and three of them needed engines that did not exist — an outage
-  // simulator, a reserve floor and a portable day model (+11.6 KB in
-  // engine.js). On top of that: +27.3 KB in locales.js for 45 new keys x six
-  // locales (the same trade the country-currency raise above records), and
-  // +15.2 KB in run.js for the measurement pass that turns a sized system into
-  // one outcome per use case. usecases.js itself was ALSO missing from the
-  // eager list above, so a brand-new eager module could have grown outside
-  // this budget entirely — it is listed now, and its bytes are in the number.
-  // This is the one place where "lazy-load it" was the better answer and was
-  // not taken: the portable and backup panels are the fields that make those
-  // two cases real, and rendering them behind a click would have hidden the
-  // question the visitor came to answer.
   assert.ok(
     jsBytes <= 895_000,
     `eager JS ${jsBytes} bytes exceeds 895,000 budget — you added eager code; lazy-load it or raise the budget deliberately`,

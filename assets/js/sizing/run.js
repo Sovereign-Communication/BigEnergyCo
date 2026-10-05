@@ -28,7 +28,7 @@ import {
   billCutFraction,
   simulateOutage,
   simulatePortable,
-} from "./engine.js?v=20261005b";
+} from "./engine.js?v=20261005c";
 
 import {
   isUseCaseId,
@@ -39,22 +39,22 @@ import {
   normaliseReservePct,
   normaliseOutageTarget,
   outcomeFor,
-} from "./usecases.js?v=20261005b";
+} from "./usecases.js?v=20261005c";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20261005b";
-import { buildFrontier } from "./frontier.js?v=20261005b";
-import { oversizeCallout } from "./rescale.js?v=20261005b";
-import { climateSummary } from "./climate.js?v=20261005b";
+} from "./nasa.js?v=20261005c";
+import { buildFrontier } from "./frontier.js?v=20261005c";
+import { oversizeCallout } from "./rescale.js?v=20261005c";
+import { climateSummary } from "./climate.js?v=20261005c";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20261005b";
+} from "./pricing.js?v=20261005c";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -65,7 +65,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20261005b";
+} from "./money.js?v=20261005c";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -94,16 +94,9 @@ const BATTERY_TARGET_BASIS = {
 };
 
 const VALID_AUTO_TIERS = new Set(["tier100", "tier99", "tier95"]);
-const VALID_AUTO_TARGETS = new Set([
-  "cut10",
-  "cut15",
-  "cut20",
-  "cut25",
-  "cut30",
-  "cut60",
-  "cut80",
-  "cut95",
-]);
+// REMOVED 2026-10-05: VALID_AUTO_TARGETS (the Set of eight cut-target ids).
+// Unreachable: nothing validated an auto target against it, so it constrained
+// nothing and shipped on every first load.
 
 /**
  * Count-aware sentence for the auto cards: names exactly the chemistries
@@ -314,7 +307,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20261005b");
+      await import("./profiles.js?v=20261005c");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -837,6 +830,55 @@ async function runSizingUncached(msg, deps = {}) {
     });
   }
 
+  /**
+   * Levelized cost for one system, rounded for the payload. ONE owner.
+   *
+   * This call was spelled out seven times across the entry builders with the
+   * same seven arguments and no name; a change to what levelized cost counts
+   * (labour on the swap, the served-energy denominator) had to be found seven
+   * times to be applied seven times. Rounding lives here too, so a card can
+   * never carry 4 decimal places where another carries 6.
+   */
+  const lcoeFor = (m, battKwh, chemId, annualServedKwh) => {
+    const l = lcoeUsdPerKwh({
+      capexMidUsd: m.cost.objectiveMid,
+      battReplaceCostUsd: replCostFor(battKwh, chemId),
+      replacements: m.replacementsHorizon,
+      firstLaborUsd: m.firstLaborUsd,
+      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
+      annualServedKwh,
+    });
+    return l === null ? null : +l.toFixed(4);
+  };
+
+  /**
+   * The money tail every result entry carries: replacements, lifetime cost,
+   * levelized cost, payback, break-even, the cumulative series and the
+   * oversize verdict.
+   *
+   * ONE owner. Three entry builders (focus, target, tier) each spelled this
+   * block out by hand, and a field added to one was silently missing from the
+   * others — which is how a card can promise a figure its neighbours do not
+   * carry. Now there is one definition and a builder cannot forget it.
+   */
+  function moneyTail(m, lcoe, gridSpend) {
+    return {
+      replacementsHorizon: m.replacementsHorizon,
+      swapsAndLaborUsd: m.swapsAndLaborUsd,
+      lifetimeCostMid: m.lifetimeCostMid,
+      lcoeUsdPerKwh:
+        lcoe === null || lcoe === undefined ? null : +lcoe.toFixed(4),
+      paybackYearsLo: gridSpend ? paybackYears(m.cost.lo, gridSpend) : null,
+      paybackYearsHi: gridSpend ? paybackYears(m.cost.hi, gridSpend) : null,
+      trueBreakEvenYear: breakEvenFor(m, gridSpend),
+      cumCostSeries: gridSpend !== null ? cumCostFor(m, gridSpend) : null,
+      bestPriceCallout: m.bestPriceCallout,
+      oversizeScenario: m.oversizeScenario,
+      oversizeSavingsUsd: m.oversizeSavingsUsd,
+      oversizedBattKwh: m.oversizedBattKwh,
+    };
+  }
+
   // The system the hardware list (BOM panel) is built around.
   function focusFor(chemId, sizing) {
     const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
@@ -868,14 +910,7 @@ async function runSizingUncached(msg, deps = {}) {
         : sizing.result.directWh + sizing.result.battWhAc) /
       1000 /
       yrs;
-    const lcoe = lcoeUsdPerKwh({
-      capexMidUsd: m.cost.objectiveMid,
-      battReplaceCostUsd: replCostFor(sizing.battKwh, chemId),
-      replacements: m.replacementsHorizon,
-      firstLaborUsd: m.firstLaborUsd,
-      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
-      annualServedKwh: servedKwhPerYear,
-    });
+    const lcoe = lcoeFor(m, sizing.battKwh, chemId, servedKwhPerYear);
     const cell = {
       solvable: true,
       pvKw: sizing.pvKw,
@@ -1040,17 +1075,7 @@ async function runSizingUncached(msg, deps = {}) {
       oversizeScenario: m.oversizeScenario,
       oversizeSavingsUsd: m.oversizeSavingsUsd,
       oversizedBattKwh: m.oversizedBattKwh,
-      lcoeUsdPerKwh: (() => {
-        const l = lcoeUsdPerKwh({
-          capexMidUsd: m.cost.objectiveMid,
-          battReplaceCostUsd: replCostFor(sizing.battKwh, chemId),
-          replacements: m.replacementsHorizon,
-          firstLaborUsd: m.firstLaborUsd,
-          swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
-          annualServedKwh: servedKwhPerYear,
-        });
-        return l === null ? null : +l.toFixed(4);
-      })(),
+      lcoeUsdPerKwh: lcoeFor(m, sizing.battKwh, chemId, servedKwhPerYear),
     };
     const sim = simulateOffset({
       pvKw: sizing.pvKw,
@@ -1176,14 +1201,7 @@ async function runSizingUncached(msg, deps = {}) {
       const m = moneyFor(fChem, fSized);
       const yrs = series.meta.years;
       const servYr = sim.servedWh / 1000 / yrs;
-      const lcoe = lcoeUsdPerKwh({
-        capexMidUsd: m.cost.objectiveMid,
-        battReplaceCostUsd: replCostFor(fBatt, fChem),
-        replacements: m.replacementsHorizon,
-        firstLaborUsd: m.firstLaborUsd,
-        swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
-        annualServedKwh: servYr,
-      });
+      const lcoe = lcoeFor(m, fBatt, fChem, servYr);
       const chemObj = CHEMISTRIES[fChem] || CHEMISTRIES.lfp;
       const entry = {
         chemistry: fChem,
@@ -1205,22 +1223,11 @@ async function runSizingUncached(msg, deps = {}) {
           sim.worstYearUnmetHours ?? sim.unmetHours / yrs
         ).toFixed(1),
         longestGapHours: sim.longestGapHours,
-        replacementsHorizon: m.replacementsHorizon,
-        swapsAndLaborUsd: m.swapsAndLaborUsd,
-        lifetimeCostMid: m.lifetimeCostMid,
+        ...moneyTail(m, lcoe, gridSpend),
         servedKwhPerYear: Math.round(servYr),
         batteryLifeYears: m.batteryLifeYears,
         cyclesPerYear: m.cyclesPerYear,
         minSocPct: +(sim.minSoc * 100).toFixed(0),
-        lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
-        paybackYearsLo: gridSpend ? paybackYears(m.cost.lo, gridSpend) : null,
-        paybackYearsHi: gridSpend ? paybackYears(m.cost.hi, gridSpend) : null,
-        trueBreakEvenYear: breakEvenFor(m, gridSpend),
-        cumCostSeries: gridSpend !== null ? cumCostFor(m, gridSpend) : null,
-        bestPriceCallout: m.bestPriceCallout,
-        oversizeScenario: m.oversizeScenario,
-        oversizeSavingsUsd: m.oversizeSavingsUsd,
-        oversizedBattKwh: m.oversizedBattKwh,
       };
       entry.socNameplatePct = nameplateBands(
         sim,
@@ -1269,14 +1276,7 @@ async function runSizingUncached(msg, deps = {}) {
         ? Math.max(0, gridSpend - billAfterUsd)
         : null;
     const exportVal = exportValueUsd(clippedKwhPerYear, exportRate);
-    const lcoe = lcoeUsdPerKwh({
-      capexMidUsd: m.cost.objectiveMid,
-      battReplaceCostUsd: replCostFor(sizing.battKwh, chemId),
-      replacements: m.replacementsHorizon,
-      firstLaborUsd: m.firstLaborUsd,
-      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
-      annualServedKwh: servedKwhPerYear,
-    });
+    const lcoe = lcoeFor(m, sizing.battKwh, chemId, servedKwhPerYear);
     const sim = simulateOffset({
       pvKw: sizing.pvKw,
       battKwhUsable: sizing.battKwh,
@@ -1525,14 +1525,7 @@ async function runSizingUncached(msg, deps = {}) {
           : pt.result.servedWh) /
         1000 /
         yrs;
-      const lcoe = lcoeUsdPerKwh({
-        capexMidUsd: m.cost.objectiveMid,
-        battReplaceCostUsd: replCostFor(pt.battKwh, chemId),
-        replacements: m.replacementsHorizon,
-        firstLaborUsd: m.firstLaborUsd,
-        swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
-        annualServedKwh: servYr,
-      });
+      const lcoe = lcoeFor(m, pt.battKwh, chemId, servYr);
       const chemObj = CHEMISTRIES[chemId] || CHEMISTRIES.lfp;
       const d = {
         chemistry: chemId,
@@ -2369,14 +2362,7 @@ async function runSizingUncached(msg, deps = {}) {
         const m = moneyFor(chemId, sizing);
         const servedKwhPerYear =
           sizing.result.servedWh / 1000 / series.meta.years;
-        const lcoe = lcoeUsdPerKwh({
-          capexMidUsd: m.cost.objectiveMid,
-          battReplaceCostUsd: replCostFor(sizing.battKwh, chemId),
-          replacements: m.replacementsHorizon,
-          firstLaborUsd: m.firstLaborUsd,
-          swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
-          annualServedKwh: servedKwhPerYear,
-        });
+        const lcoe = lcoeFor(m, sizing.battKwh, chemId, servedKwhPerYear);
         const entry = {
           chemistry: chemId,
           cardNote: AUTO_CARD_NOTES[chemId] ?? null,
@@ -2393,21 +2379,10 @@ async function runSizingUncached(msg, deps = {}) {
             sizing.result.unmetHours / series.meta.years
           ).toFixed(1),
           longestGapHours: sizing.result.longestGapHours,
-          replacementsHorizon: m.replacementsHorizon,
-          swapsAndLaborUsd: m.swapsAndLaborUsd,
-          lifetimeCostMid: m.lifetimeCostMid,
+          ...moneyTail(m, lcoe, gridSpend),
           servedKwhPerYear: Math.round(servedKwhPerYear),
           batteryLifeYears: m.batteryLifeYears,
           cyclesPerYear: m.cyclesPerYear,
-          lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
-          paybackYearsLo: gridSpend ? paybackYears(m.cost.lo, gridSpend) : null,
-          paybackYearsHi: gridSpend ? paybackYears(m.cost.hi, gridSpend) : null,
-          trueBreakEvenYear: breakEvenFor(m, gridSpend),
-          cumCostSeries: gridSpend !== null ? cumCostFor(m, gridSpend) : null,
-          bestPriceCallout: m.bestPriceCallout,
-          oversizeScenario: m.oversizeScenario,
-          oversizeSavingsUsd: m.oversizeSavingsUsd,
-          oversizedBattKwh: m.oversizedBattKwh,
         };
         const sim = simulate({
           pvKw: sizing.pvKw,
@@ -2601,14 +2576,7 @@ async function runSizingUncached(msg, deps = {}) {
     }
     const m = moneyFor(chemistry, sizing);
     const servedKwhPerYear = sizing.result.servedWh / 1000 / series.meta.years;
-    const lcoe = lcoeUsdPerKwh({
-      capexMidUsd: m.cost.objectiveMid,
-      battReplaceCostUsd: replCostFor(sizing.battKwh, chemistry),
-      replacements: m.replacementsHorizon,
-      firstLaborUsd: m.firstLaborUsd,
-      swapsAndLaborTotalUsd: m.swapsAndLaborUsd,
-      annualServedKwh: servedKwhPerYear,
-    });
+    const lcoe = lcoeFor(m, sizing.battKwh, chemistry, servedKwhPerYear);
     const sim = simulate({
       pvKw: sizing.pvKw,
       battKwhUsable: sizing.battKwh,
@@ -2658,18 +2626,7 @@ async function runSizingUncached(msg, deps = {}) {
       batteryLifeYears: m.batteryLifeYears,
       minSocPct: +(sizing.result.minSoc * 100).toFixed(0),
       servedKwhPerYear: Math.round(servedKwhPerYear),
-      replacementsHorizon: m.replacementsHorizon,
-      swapsAndLaborUsd: m.swapsAndLaborUsd,
-      lifetimeCostMid: m.lifetimeCostMid,
-      lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
-      paybackYearsLo: gridSpend ? paybackYears(m.cost.lo, gridSpend) : null,
-      paybackYearsHi: gridSpend ? paybackYears(m.cost.hi, gridSpend) : null,
-      trueBreakEvenYear: breakEvenFor(m, gridSpend),
-      cumCostSeries: gridSpend !== null ? cumCostFor(m, gridSpend) : null,
-      bestPriceCallout: m.bestPriceCallout,
-      oversizeScenario: m.oversizeScenario,
-      oversizeSavingsUsd: m.oversizeSavingsUsd,
-      oversizedBattKwh: m.oversizedBattKwh,
+      ...moneyTail(m, lcoe, gridSpend),
     };
   });
 

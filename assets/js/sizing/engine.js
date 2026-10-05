@@ -2,8 +2,8 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261005b";
-import { oversizeCallout } from "./rescale.js?v=20261005b";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261005c";
+import { oversizeCallout } from "./rescale.js?v=20261005c";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -242,6 +242,85 @@ export function expandProfile(profile24, totalHours) {
 export function clampReserveFloor(reserveFloor) {
   if (!Number.isFinite(reserveFloor) || reserveFloor <= 0) return 0;
   return Math.min(0.9, reserveFloor);
+}
+
+/**
+ * ONE discharge loop, shared by simulateOutage and both simulatePortable runs.
+ *
+ * These were three hand-written copies of the same hour-by-hour arithmetic and
+ * they had already drifted: the outage loop computed discharge from `soc`
+ * alone while the portable ones subtracted the reserve floor. Two different
+ * answers to "how much is available right now" from one physics file is
+ * exactly the class of defect the single-owner rule exists to stop, so the
+ * loop lives here once and `reserveFloor` is the same on all three paths.
+ *
+ * Returns the state it stopped in, so the caller decides what a shortfall
+ * means (`breakEven: false` stops at the first unmet hour, which is how
+ * "how long did it last" is measured; `breakEven: true` lets a caller run a
+ * whole window and report only whether it survived).
+ */
+/**
+ * ONE discharge loop, three callers \u2014 and the floor is a CALLER's decision.
+ *
+ * `floor` is the share of the bank the owner refuses to spend. It is a
+ * parameter, not a property of this loop, because the three callers genuinely
+ * disagree and the disagreement is the physics:
+ *
+ *   - the portable day model holds the floor. A station parked in a field
+ *     keeps its reserve; there is no grid coming back.
+ *   - simulateOutage passes 0. R-UC-04: the reserve is released exactly when
+ *     the grid is gone, which is the entire reason to hold one. Folding the
+ *     floor in here "for consistency" silently deleted that behaviour, and
+ *     tests/usecases.test.mjs caught it: a 3 kWh bank started at 20% covered
+ *     nothing at all.
+ *
+ * Extract this loop and the floor has to stay a parameter. A shared helper
+ * that hides a caller-specific rule is not a dedup.
+ */
+function runDischarge({
+  soc,
+  floor,
+  cap,
+  eta,
+  chem,
+  e1kw,
+  loadWh,
+  tempsC,
+  pvKw,
+  fromIndex,
+  hours,
+  wrap,
+  unmetThresholdWh,
+}) {
+  const n = e1kw.length;
+  let cur = soc;
+  let runHours = 0;
+  let unmetWh = 0;
+  for (let h = 0; h < hours; h++) {
+    const i = wrap ? (fromIndex + h) % n : fromIndex + h;
+    const load = loadWh[i];
+    const pvAc = pvKw * e1kw[i] * ETA_INVERTER;
+    const direct = Math.min(pvAc, load);
+    const surplus = pvAc - direct;
+    const deficit = load - direct;
+    const tooCold = tempsC ? tempsC[i] < chem.chargeMinC : false;
+    if (surplus > 0 && !tooCold) {
+      const charged = Math.min(surplus * eta, Math.max(0, cap - cur * cap));
+      cur += charged / cap;
+    }
+    if (deficit > 0) {
+      const available = Math.max(0, (cur - floor) * cap * eta);
+      const coveredAc = Math.min(deficit, available);
+      cur = Math.max(floor, cur - coveredAc / eta / cap);
+      const shortfall = deficit - coveredAc;
+      if (shortfall > unmetThresholdWh) {
+        unmetWh += shortfall;
+        return { soc: cur, runHours, shortfall: true, unmetWh };
+      }
+    }
+    runHours++;
+  }
+  return { soc: cur, runHours, shortfall: false, unmetWh };
 }
 
 /**
@@ -1349,33 +1428,28 @@ export function simulateOutage({
     let soc = useSeries
       ? Math.min(1, Math.max(floor, startSocSeries[s]))
       : soc0;
-    let runHours = 0;
-    let failed = false;
-    for (let h = 0; h < hours; h++) {
-      const i = (s + h) % n;
-      const load = essentialsWh[i];
-      const pvAc = pvKw * e1kw[i] * ETA_INVERTER;
-      const direct = Math.min(pvAc, load);
-      const surplus = pvAc - direct;
-      const deficit = load - direct;
-      const tooCold = tempsC ? tempsC[i] < chem.chargeMinC : false;
-      if (surplus > 0 && !tooCold) {
-        const charged = Math.min(surplus * eta, Math.max(0, cap - soc * cap));
-        soc += charged / cap;
-      }
-      if (deficit > 0) {
-        const available = Math.max(0, soc * cap * eta);
-        const coveredAc = Math.min(deficit, available);
-        soc = Math.max(0, soc - coveredAc / eta / cap);
-        if (deficit - coveredAc > unmetThresholdWh) {
-          failed = true;
-          break;
-        }
-      }
-      runHours++;
-    }
-    if (!failed) coveredStarts++;
-    held.push(runHours);
+    const run = runDischarge({
+      soc,
+      // floor: 0 \u2014 R-UC-04. Inside an actual outage the reserve is SPENT,
+      // not held: that is what the reserve is for. The floor still applies to
+      // where an outage BEGINS (the series above is floored), so the bank can
+      // never dip below it while the grid is up.
+      floor: 0,
+      cap,
+      eta,
+      chem,
+      e1kw,
+      loadWh: essentialsWh,
+      tempsC,
+      pvKw,
+      fromIndex: s,
+      hours,
+      wrap: true,
+      unmetThresholdWh,
+    });
+    soc = run.soc;
+    if (!run.shortfall) coveredStarts++;
+    held.push(run.runHours);
   }
   void soc0;
 
@@ -1461,66 +1535,48 @@ export function simulatePortable({
   //                   carry, carrying state over day to day as it really does.
   const runOne = (fromSoc) => {
     let s = fromSoc;
-    let run = 0;
     // Run past the trip window: "how long does one charge last" is capped by
     // the trip length if you let the trip bound it, which would report the
     // trip length back and call it autonomy. 168 h is a week, past which a
     // portable station nobody has recharged is not a question worth asking.
     const span = Math.min(n, Math.max(hours, 168));
-    for (let h = 0; h < span; h++) {
-      const i = 0 + h;
-      const load = devicesWh[i];
-      const pvAc = pvKw * e1kw[i] * ETA_INVERTER;
-      const direct = Math.min(pvAc, load);
-      const surplus = pvAc - direct;
-      const deficit = load - direct;
-      const tooCold = tempsC ? tempsC[i] < chem.chargeMinC : false;
-      if (surplus > 0 && !tooCold) {
-        const charged = Math.min(surplus * eta, Math.max(0, cap - s * cap));
-        s += charged / cap;
-      }
-      if (deficit > 0) {
-        const available = Math.max(0, (s - floor) * cap * eta);
-        const coveredAc = Math.min(deficit, available);
-        s = Math.max(0, s - coveredAc / eta / cap);
-        if (deficit - coveredAc > unmetThresholdWh) return run;
-      }
-      run++;
-    }
-    return run;
+    return runDischarge({
+      soc: fromSoc,
+      floor,
+      cap,
+      eta,
+      chem,
+      e1kw,
+      loadWh: devicesWh,
+      tempsC,
+      pvKw,
+      fromIndex: 0,
+      hours: span,
+      unmetThresholdWh,
+    }).runHours;
   };
   const autonomyHours = runOne(Math.min(1, Math.max(floor, startSoc)));
 
   for (let d = 0; d + hours <= n; d += dayStride) {
     if (shorePower) soc = Math.min(1, Math.max(floor, startSoc));
     trips++;
-    let runHours = 0;
-    let failed = false;
-    for (let h = 0; h < hours; h++) {
-      const i = d + h;
-      const load = devicesWh[i];
-      const pvAc = pvKw * e1kw[i] * ETA_INVERTER;
-      const direct = Math.min(pvAc, load);
-      const surplus = pvAc - direct;
-      const deficit = load - direct;
-      const tooCold = tempsC ? tempsC[i] < chem.chargeMinC : false;
-      if (surplus > 0 && !tooCold) {
-        const charged = Math.min(surplus * eta, Math.max(0, cap - soc * cap));
-        soc += charged / cap;
-      }
-      if (deficit > 0) {
-        const available = Math.max(0, (soc - floor) * cap * eta);
-        const coveredAc = Math.min(deficit, available);
-        soc = Math.max(0, soc - coveredAc / eta / cap);
-        if (deficit - coveredAc > unmetThresholdWh) {
-          failed = true;
-          break;
-        }
-      }
-      runHours++;
-    }
-    if (!failed) poweredTrips++;
-    runtimes.push(runHours);
+    const run = runDischarge({
+      soc,
+      floor,
+      cap,
+      eta,
+      chem,
+      e1kw,
+      loadWh: devicesWh,
+      tempsC,
+      pvKw,
+      fromIndex: d,
+      hours,
+      unmetThresholdWh,
+    });
+    soc = run.soc;
+    if (!run.shortfall) poweredTrips++;
+    runtimes.push(run.runHours);
     if (!Number.isFinite(soc)) soc = floor;
   }
   runtimes.sort((a, b) => a - b);

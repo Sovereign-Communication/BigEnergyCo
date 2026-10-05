@@ -230,8 +230,10 @@ test("oversize notes render through the currency-aware helper", () => {
   assert.match(src, /relocalizeOversizeCallout\(text, money\)/);
   assert.equal(
     [...src.matchAll(/bestPriceNote\(\w+\.bestPriceCallout\)/g)].length,
-    5,
-    "all five render sites convert",
+    4,
+    "every live render site converts. This was five until the dead " +
+      "renderAutoCards() came out \u2014 a 232-line function called from nothing " +
+      "but itself, whose call site therefore never rendered.",
   );
 });
 

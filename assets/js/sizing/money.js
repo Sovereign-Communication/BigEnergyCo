@@ -102,6 +102,38 @@ export function exportValueUsd(clippedKwhPerYear, exportRatePerKwh) {
 }
 
 /**
+ * The swap schedule, as per-year multiplicities: replacement k falls due at
+ * round(k x batteryLifeYears), aggregated into the year it lands in.
+ *
+ * ONE owner, because `cumulativeCostSeries` and `trueBreakEvenYear` MUST
+ * count replacements identically — when they were separate copies of this
+ * loop they agreed only by hand, and the chart and the break-even row are
+ * both read as the same story. When a battery wears out in under a year
+ * (heavy lead-acid cycling) several swaps can land in ONE year, which a Set
+ * cannot express and would silently drop, flattering break-even.
+ * `replacements` remains the single source of truth.
+ */
+export function swapSchedule({
+  replacements = 0,
+  batteryLifeYears,
+  horizonYears = HORIZON_YEARS,
+}) {
+  const swapCounts = new Array(horizonYears + 1).fill(0);
+  if (
+    replacements > 0 &&
+    Number.isFinite(batteryLifeYears) &&
+    batteryLifeYears > 0
+  ) {
+    for (let k = 1; k <= replacements; k++) {
+      const yr = Math.round(k * batteryLifeYears);
+      if (yr > horizonYears) break;
+      swapCounts[Math.max(1, yr)]++;
+    }
+  }
+  return swapCounts;
+}
+
+/**
  * Per-year cumulative cost series over the horizon — the data behind the
  * "running cost" chart. Three lines:
  *   grid[y]   = cumulative spend if you had stayed on the grid (the FULL bill,
@@ -155,25 +187,11 @@ export function cumulativeCostSeries({
   )
     return null;
   const perSwap = replacements > 0 ? swapsAndLaborTotalUsd / replacements : 0;
-
-  // Swap schedule: replacement k falls due at round(k × batteryLifeYears),
-  // aggregated as per-year multiplicities. When a battery wears out in under
-  // a year (heavy lead-acid cycling), several swaps CAN land in the same
-  // year — a Set can't express that and would silently drop them, making the
-  // series apply fewer swaps than the card counts (chart/card disagreement,
-  // flattering break-even). `replacements` is the single source of truth.
-  const swapCounts = new Array(horizonYears + 1).fill(0);
-  if (
-    replacements > 0 &&
-    Number.isFinite(batteryLifeYears) &&
-    batteryLifeYears > 0
-  ) {
-    for (let k = 1; k <= replacements; k++) {
-      const yr = Math.round(k * batteryLifeYears);
-      if (yr > horizonYears) break;
-      swapCounts[Math.max(1, yr)]++;
-    }
-  }
+  const swapCounts = swapSchedule({
+    replacements,
+    batteryLifeYears,
+    horizonYears,
+  });
 
   const grid = new Array(horizonYears);
   const solar = new Array(horizonYears);
@@ -255,21 +273,13 @@ export function trueBreakEvenYear({
 }) {
   if (!(annualSavingsUsd > 0) || !Number.isFinite(capexMidUsd)) return null;
   const perSwap = replacements > 0 ? swapsAndLaborTotalUsd / replacements : 0;
-
-  // Same per-year multiplicity schedule as the series above — the two must
-  // count replacements identically or break-even and the chart will disagree.
-  const swapCounts = new Array(horizonYears + 1).fill(0);
-  if (
-    replacements > 0 &&
-    Number.isFinite(batteryLifeYears) &&
-    batteryLifeYears > 0
-  ) {
-    for (let k = 1; k <= replacements; k++) {
-      const yr = Math.round(k * batteryLifeYears);
-      if (yr > horizonYears) break;
-      swapCounts[Math.max(1, yr)]++;
-    }
-  }
+  // The SAME owner the chart series uses — the two must count replacements
+  // identically or break-even and the chart will disagree.
+  const swapCounts = swapSchedule({
+    replacements,
+    batteryLifeYears,
+    horizonYears,
+  });
 
   const first = Number.isFinite(firstLaborUsd) ? firstLaborUsd : 0;
   let cumCost = capexMidUsd + first;
