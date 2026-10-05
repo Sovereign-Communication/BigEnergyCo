@@ -8,7 +8,10 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
-const flow = readFileSync(join(ROOT, "scripts", "smoke", "privacy.mjs"), "utf8");
+const flow = readFileSync(
+  join(ROOT, "scripts", "smoke", "privacy.mjs"),
+  "utf8",
+);
 const gate = readFileSync(
   join(ROOT, "scripts", "check-privacy-browser.mjs"),
   "utf8",
@@ -82,7 +85,10 @@ test("the identifier rule is deliberately broad rather than an enumeration", () 
   // A gate that lists the identifiers it has seen measures the ones it
   // imagined; one that asks "could this be a person" catches the one nobody
   // thought of.
-  const src = readFileSync(join(ROOT, "scripts", "smoke", "privacy.mjs"), "utf8");
+  const src = readFileSync(
+    join(ROOT, "scripts", "smoke", "privacy.mjs"),
+    "utf8",
+  );
   assert.match(src, /email|phone|token|session|jwt/i);
   assert.match(src, /Bearer/);
 });
@@ -104,7 +110,10 @@ test("the browser privacy gate runs in the web-smoke job so the evidence is the 
 test("the committed privacy artifact records journeys, not just a first load", () => {
   let raw;
   try {
-    raw = readFileSync(join(ROOT, "jev-artifacts", "privacy-browser.json"), "utf8");
+    raw = readFileSync(
+      join(ROOT, "jev-artifacts", "privacy-browser.json"),
+      "utf8",
+    );
   } catch {
     // No local run yet. The gate is what produces it; skipping is honest here
     // rather than asserting a file that has not been written.
