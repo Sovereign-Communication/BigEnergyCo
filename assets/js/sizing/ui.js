@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261005f";
+import { APPLIANCES } from "./appliances.js?v=20261005g";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -24,14 +24,14 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261005f";
+} from "./usecases.js?v=20261005g";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261005f";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261005f";
+} from "./run-coordinator.js?v=20261005g";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261005g";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -40,12 +40,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261005f";
+} from "./charts.js?v=20261005g";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261005f";
+} from "./location-picker.js?v=20261005g";
 
 import {
   estimateTariff,
@@ -53,14 +53,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261005f";
+} from "./pricing.js?v=20261005g";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261005f";
+import { currencyForCountry } from "./country-currency.js?v=20261005g";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261005f";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261005g";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -92,7 +92,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261005f").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261005g").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -103,15 +103,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261005f";
+} from "./lead-acid.js?v=20261005g";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261005f";
+} from "./bom.js?v=20261005g";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261005f";
+import { BOM_ITEMS } from "../shared/content.js?v=20261005g";
 
 import {
   applyI18n,
@@ -120,18 +120,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261005f";
+} from "../shared/i18n.js?v=20261005g";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261005f";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261005f";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261005g";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261005g";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261005f";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261005f";
+} from "../shared/simple-mode.js?v=20261005g";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261005g";
 import {
   advisorJevContext,
   interpretSanity,
@@ -139,56 +139,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261005f";
+} from "./validate.js?v=20261005g";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261005f";
+} from "../shared/cut-targets.js?v=20261005g";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261005f";
+} from "./share-codec.js?v=20261005g";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261005f";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261005f";
+} from "./infeasible-copy.js?v=20261005g";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261005g";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261005f";
+} from "./fuel-units.js?v=20261005g";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261005f";
+} from "./frontier-chart.js?v=20261005g";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261005f";
+} from "./rescale.js?v=20261005g";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261005f";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261005g";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20261005f";
+} from "./map-provider.js?v=20261005g";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261005f";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261005f";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261005f";
+} from "./wizard.js?v=20261005g";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261005g";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261005g";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -237,9 +237,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261005f";
+} from "./money.js?v=20261005g";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261005f";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261005g";
 
 let worker = null;
 
@@ -1460,6 +1460,36 @@ function syncBillSlider() {
 
 function displayRate() {
   return getTariff() || 0.28;
+}
+
+/**
+ * Repaint every surface whose text comes from the dictionary but whose node is
+ * built by JS rather than by `data-i18n` markup.
+ *
+ * This is the single owner of that class, and it is called from two places that
+ * must agree: once after `applyI18n()` resolves on first paint, and once per
+ * `beco:lang` change. The second call is what stops the page from showing two
+ * languages at once; the first is what stops it from showing a key at all.
+ *
+ * Both calls re-run existing painters rather than reaching into the DOM: the
+ * painters own their own selectors and their own fallbacks, so a surface cannot
+ * drift out of sync with the code that knows how to fill it.
+ */
+function repaintRuntimeCopy() {
+  updateFuelUnits();
+  updateGenHelper();
+  // The load readout and the use-case blurb are the two surfaces painted by JS
+  // during setup. Both read the DOM for their own state, so re-running them is
+  // idempotent and costs nothing.
+  setLoadPanel();
+  applyUseCase(selectedUseCase(), { silent: true });
+  // The results panel is assembled by JS, and applyI18n only rewrites
+  // data-i18n markup — so switching language left the caption, the tariff
+  // line and the frontier verdict in the previous language until the
+  // visitor happened to run again: one page, two languages. Re-rendering
+  // the payload the panel was built from costs nothing (no engine run, no
+  // fetch) and puts the whole surface in one language.
+  if (lastPayload) renderResults(lastPayload);
 }
 
 function updateLoadReadout() {
@@ -3708,7 +3738,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261005f",
+      "./assets/js/sizing/sizing-worker.js?v=20261005g",
       {
         type: "module",
       },
@@ -8540,16 +8570,34 @@ export async function initSizingUI() {
     // language changes, since those live outside the data-i18n scan.
 
     window.addEventListener("beco:lang", () => {
-      updateFuelUnits();
-      updateGenHelper();
-      // The results panel is assembled by JS, and applyI18n only rewrites
-      // data-i18n markup — so switching language left the caption, the tariff
-      // line and the frontier verdict in the previous language until the
-      // visitor happened to run again: one page, two languages. Re-rendering
-      // the payload the panel was built from costs nothing (no engine run, no
-      // fetch) and puts the whole surface in one language.
-      if (lastPayload) renderResults(lastPayload);
+      repaintRuntimeCopy();
     });
+
+    // THE SAME REPAINT, once, immediately — and this is the load-bearing call.
+    //
+    // The dictionary is a deferred dynamic import (shared/i18n.js) and
+    // `translate()` echoes the KEY when it has not landed. Two surfaces are
+    // painted by JS during setup, which runs BEFORE the `await applyI18n()`
+    // above: `updateLoadReadout()` writes the load-mode readout and
+    // `applyUseCase()` writes the use-case blurb. Both therefore painted a raw
+    // key — `readoutBillIncomplete`, `useCaseBillCutBlurb` — and applyI18n
+    // cannot repair them, because it only rewrites `data-i18n` MARKUP and these
+    // two nodes carry none.
+    //
+    // What made it survivable until now is that both surfaces sit inside
+    // #fullControls, which quick mode hides. So the keys were painted, parked
+    // out of sight, and only reached the screen the moment a visitor switched
+    // to manual controls — where they read as "the page printed its own
+    // variable names at me". A hidden defect is still a defect; the only reason
+    // it survived a full cycle is that nothing had walked the journey to the
+    // manual-controls branch and looked.
+    //
+    // Fixing it where it is painted would mean awaiting the dictionary inside
+    // three unrelated setup functions. Re-running the two painters afterwards
+    // costs one extra function call and no network, because the fetch already
+    // finished — and it puts every runtime-painted surface in one owner, so the
+    // next one added is repainted by the same line rather than by luck.
+    repaintRuntimeCopy();
 
     updateFuelUnits();
 

@@ -174,6 +174,56 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
     });
   }
 
+  // The experience gate, the same way: composed from a healthy reading so this
+  // test needs no browser. Adding the axis to the record without teaching this
+  // block about its owner is how an axis ends up in NEITHER place, which is
+  // precisely the empty record the test exists to prevent — so the owner list
+  // grows here rather than the assertion being loosened.
+  const { EXPERIENCE_FACET_AXES, composeExperienceFacetLine } =
+    await import("../scripts/lib/experience-budgets.mjs");
+  if (EXPERIENCE_FACET_AXES.includes("experience")) {
+    const { EXPERIENCE_ACTIONS, EXPERIENCE_ERRORS, EXPERIENCE_EMPTY_STATES } =
+      await import("../scripts/smoke/experience.mjs");
+    derived.experience = composeExperienceFacetLine({
+      experience_reading: {
+        ok: true,
+        actions: EXPERIENCE_ACTIONS.map((a) => ({
+          id: a.id,
+          label: a.label,
+          kind: a.kind,
+          attempted: true,
+          acknowledged: true,
+          ms: 90,
+          acknowledged_before_result: true,
+        })),
+        errors: EXPERIENCE_ERRORS.map((e) => ({
+          id: e.id,
+          label: e.label,
+          triggered: true,
+          // A message that names a next step, which is what the shipped copy now
+          // says. Composing from a dead-end message here would fail this test for
+          // a reason unrelated to what it is testing.
+          status:
+            "Something failed — enter a figure in that range and try again.",
+          next_step: true,
+        })),
+        empty_states: EXPERIENCE_EMPTY_STATES.map((e) => ({
+          id: e.id,
+          label: e.label,
+          selector: e.selector,
+          ok: true,
+          visible: true,
+          controls: 0,
+          text: "Enter something and the estimate appears here.",
+          invites: true,
+          blank_while_visible: false,
+          raw_key: false,
+        })),
+        key_leaks: [],
+      },
+    });
+  }
+
   for (const axis of axes) {
     const line = ev.facet_evidence?.[axis] ?? derived[axis];
     assert.equal(
@@ -304,6 +354,51 @@ test("TRANSPORT: the real 21-axis record survives whole — every line and note"
           ),
         },
       })),
+    });
+  }
+  // The experience line, composed the same way — the gate's own composer over a
+  // healthy reading. Without it the record this test measures is not the record
+  // the judge receives, and the axis would be reported as "lost from transport"
+  // when in fact nothing was lost.
+  const { EXPERIENCE_FACET_AXES, composeExperienceFacetLine } =
+    await import("../scripts/lib/experience-budgets.mjs");
+  if (EXPERIENCE_FACET_AXES.includes("experience")) {
+    const { EXPERIENCE_ACTIONS, EXPERIENCE_ERRORS, EXPERIENCE_EMPTY_STATES } =
+      await import("../scripts/smoke/experience.mjs");
+    ev.facet_evidence.experience = composeExperienceFacetLine({
+      experience_reading: {
+        ok: true,
+        actions: EXPERIENCE_ACTIONS.map((a) => ({
+          id: a.id,
+          label: a.label,
+          kind: a.kind,
+          attempted: true,
+          acknowledged: true,
+          ms: 90,
+          acknowledged_before_result: true,
+        })),
+        errors: EXPERIENCE_ERRORS.map((e) => ({
+          id: e.id,
+          label: e.label,
+          triggered: true,
+          status:
+            "Something failed — enter a figure in that range and try again.",
+          next_step: true,
+        })),
+        empty_states: EXPERIENCE_EMPTY_STATES.map((e) => ({
+          id: e.id,
+          label: e.label,
+          selector: e.selector,
+          ok: true,
+          visible: true,
+          controls: 0,
+          text: "Enter something and the estimate appears here.",
+          invites: true,
+          blank_while_visible: false,
+          raw_key: false,
+        })),
+        key_leaks: [],
+      },
     });
   }
   const merged = mergeEvidence(ev, AUTO);

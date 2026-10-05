@@ -52,6 +52,31 @@ test("EVIDENCE: the performance facet line is derived from the run, not typed by
   );
 });
 
+test("EVIDENCE: the experience facet line is derived from the run, not typed by hand", () => {
+  // The same standing condition as `performance`, for the same reason. The typed
+  // line was a fact about test coverage - "30 of 153 smoke gates are
+  // battery-only" - which is true and says nothing a visitor touches. Now that
+  // scripts/check-experience.mjs measures the axis, a typed line here would be a
+  // second source of truth for it, and it would be the stale one.
+  assert.equal(
+    Object.hasOwn(PROSE.facet_evidence || {}, "experience"),
+    false,
+    "evidence/advisor-and-release.json must not carry a hand-typed " +
+      "`experience` line. The experience gate composes it from the run that " +
+      "walked the journey, so a typed line here is a second, unverified " +
+      "source for the same facet.",
+  );
+  // And the removal is recorded where a reader will look for it, rather than
+  // leaving a silent gap that reads as "never measured" when it means
+  // "measured, and the old wording was wrong".
+  assert.ok(
+    (PROSE.notes || []).some((n) =>
+      /`experience` facet line was REMOVED/.test(n),
+    ),
+    "the removal note must sit in notes[] beside the performance one",
+  );
+});
+
 test("EVIDENCE: a gate report declares which facet axes it speaks for", async () => {
   const { LIGHTHOUSE_TARGETS } =
     await import("../scripts/lib/lighthouse-budgets.mjs");

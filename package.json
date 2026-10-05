@@ -13,6 +13,7 @@
     "gate:privacy": "node scripts/check-privacy.mjs",
     "gate:privacy-browser": "node scripts/check-privacy-browser.mjs",
     "gate:resilience": "node scripts/check-resilience.mjs",
+    "gate:experience": "node scripts/check-experience.mjs",
     "gate:usecases": "node scripts/check-usecases.mjs",
     "gate:comparison": "node scripts/check-comparison.mjs",
     "gate:evidence-freshness": "node scripts/check-evidence-freshness.mjs",

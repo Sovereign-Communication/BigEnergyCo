@@ -105,12 +105,36 @@ export function liveRunRecord({
           "response had no valid facet answers (0-hallucination: nothing invented)",
       };
     }
+    // The pin is the CALLER's verdict, so this re-checks the one thing the
+    // verdict itself is about rather than trusting it. `acceptLiveJudgment`
+    // refuses the unpinned alias, and the CLI is its only caller — but the
+    // record is the thing the judge reads, and a record builder that accepts
+    // whatever `pin.accepted` says will happily publish a judgment attributed
+    // to "jev-latest", which is the exact unreproducible artifact plan §8
+    // P0.3(e) forbids. The alias is a known string, so refusing it here costs
+    // nothing and closes the gap between "the pin said yes" and "the model is
+    // pinned". Found by tests/gate-self-audit.test.mjs.
+    const named = typeof pin.model === "string" ? pin.model.trim() : "";
+    if (!named || named.toLowerCase() === JEV_MODEL_ALIAS) {
+      return {
+        is_fallback: true,
+        accepted: false,
+        provider: wire.provider,
+        model: named || null,
+        model_requested: modelRequested,
+        blocker:
+          (named
+            ? `the pin named the unpinned alias "${named}" rather than a version `
+            : "the pin named no model version, so nothing about this judgment is ") +
+          "reproducible (plan §8 P0.3(e))",
+      };
+    }
     const inputTokens = Number(wire.usage?.input_tokens) || 0;
     return {
       is_fallback: false,
       accepted: true,
       provider: wire.provider,
-      model: pin.model,
+      model: named,
       model_requested: modelRequested,
       input_tokens: inputTokens,
       // D-13's rate, from the one module that owns it (shared with the worker).

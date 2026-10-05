@@ -329,8 +329,21 @@ test("the method note describes the sweep the run actually performed", () => {
 test("a language switch re-renders the results instead of half-translating them", () => {
   assert.match(
     ui,
-    /window\.addEventListener\(\"beco:lang\", \(\) => \{[\s\S]{0,700}if \(lastPayload\) renderResults\(lastPayload\);/,
-    "applyI18n only rewrites markup: the JS-built panel must re-render too",
+    /function repaintRuntimeCopy\(\) \{[\s\S]{0,900}if \(lastPayload\) renderResults\(lastPayload\);/,
+    "the JS-built results panel must be re-rendered from the payload",
+  );
+  // …and both call sites must reach it: the language change, and the moment the
+  // deferred dictionary resolves. The second is what stops a surface being
+  // painted with a raw dictionary key before any translation exists.
+  assert.match(
+    ui,
+    /window\.addEventListener\(\"beco:lang\", \(\) => \{\s*repaintRuntimeCopy\(\);/,
+    "the language switch must reach the re-render",
+  );
+  assert.match(
+    ui,
+    /await applyI18n\(\);[\s\S]{0,400}repaintRuntimeCopy\(\);/,
+    "the repaint must also run once the deferred dictionary has resolved",
   );
 });
 

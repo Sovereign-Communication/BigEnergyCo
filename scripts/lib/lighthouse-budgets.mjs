@@ -616,6 +616,30 @@ export function compareLighthouse(measured, floors = LIGHTHOUSE_FLOORS) {
   const holes = [];
   const unmeasured = [];
 
+  // A run that measured NOTHING is the hole this whole function exists to catch,
+  // and the empty-array case is the one that reads most like a pass. Every loop
+  // below iterates over `measured`, so an empty array produced five empty lists
+  // and the gate's `failed` came out false: a browser that refused to launch, a
+  // target list that resolved to nothing, or a run interrupted before the first
+  // audit would all have exited GREEN, and composeFacetLine would still have
+  // printed a well-formed line about a measurement that never happened.
+  //
+  // Found by tests/gate-self-audit.test.mjs, which feeds this function an empty
+  // set precisely because it is the input a green gate is most likely to receive
+  // by accident.
+  if (!Array.isArray(measured) || measured.length === 0) {
+    holes.push({
+      id: "*",
+      category: "*",
+      message:
+        "no Lighthouse target was measured at all. An empty measurement set " +
+        "produces no regression and no hole by construction, so it would read " +
+        "as a clean run; it is the one input this function must refuse rather " +
+        "than pass.",
+    });
+    return { regressions, improvements, breaches, holes, unmeasured };
+  }
+
   for (const entry of measured) {
     const bar = floors[entry.id];
     if (!bar) {
