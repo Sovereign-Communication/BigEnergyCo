@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261005e";
+import { APPLIANCES } from "./appliances.js?v=20261005f";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -24,14 +24,14 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261005e";
+} from "./usecases.js?v=20261005f";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261005e";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261005e";
+} from "./run-coordinator.js?v=20261005f";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261005f";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -40,12 +40,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261005e";
+} from "./charts.js?v=20261005f";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261005e";
+} from "./location-picker.js?v=20261005f";
 
 import {
   estimateTariff,
@@ -53,44 +53,65 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261005e";
+} from "./pricing.js?v=20261005f";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261005e";
+import { currencyForCountry } from "./country-currency.js?v=20261005f";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261005e";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261005f";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
-// Static, not lazy: the ELI5 card's installer-vs-direct sentence and the
-// comparison panel both read it on first paint, so a dynamic import here would
-// mean the page shows a guessed quote and then corrects it a moment later —
-// two different turnkey numbers on one screen, which is the exact defect
-// D-01 exists to remove. The eager budget in tests/perf-budget.test.mjs now
-// counts this file like any other member of the graph.
-import {
-  priceAllPaths,
-  describePaths,
-  systemForPaths,
-  DRIVER_KEYS,
-  LABEL_KEYS,
-  PATH_IDS,
-  HORIZON_YEARS as PATHS_HORIZON_YEARS,
-} from "./paths.js?v=20261005e";
+//
+// LAZY, and the measurement is why. It used to be a static import, on the
+// reasoning that the ELI5 card's installer-vs-direct sentence and the
+// comparison panel both read it on first paint. The browser says otherwise:
+// paths.js is fetched and parsed BEFORE the first result card renders, and the
+// plan's own js_to_first_result budget read 201,806 B against a 204,800 B cap
+// on the tree that shipped this — 2,994 B of headroom, of which paths.js was
+// 10,310 B. A pricing model nobody can see yet was sitting on the critical
+// path for a section that renders after the result does.
+//
+// The D-01 objection is answered structurally, not waved away: BOTH surfaces
+// that read the model (the panel and the ELI5 sentence) are rendered inside
+// ONE await, after the module resolves, in the same tick. So there is never a
+// window in which the page shows a guessed quote and then corrects it — which
+// was the exact defect D-01 exists to remove. The module resolves in a few
+// milliseconds from cache and the whole comparison appears at once, priced by
+// one owner.
+let pathsApi = null;
+// The one place the horizon crosses into the copy. A bare binding rather than
+// pathsApi.HORIZON_YEARS because turnkeyQuoteText is exported and sliced out
+// of this file by tests/quote-text-bridge.mjs, which supplies the horizon as an
+// injected argument; renaming it would silently unbind the test. The VALUE has
+// one owner (paths.js) either way, and no surface renders before the module has
+// resolved.
+let PATHS_HORIZON_YEARS = null;
+let pathsLoading = null;
+function loadPaths() {
+  if (pathsApi) return Promise.resolve(pathsApi);
+  if (!pathsLoading)
+    pathsLoading = import("./paths.js?v=20261005f").then((mod) => {
+      pathsApi = mod;
+      PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
+      return mod;
+    });
+  return pathsLoading;
+}
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261005e";
+} from "./lead-acid.js?v=20261005f";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261005e";
+} from "./bom.js?v=20261005f";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261005e";
+import { BOM_ITEMS } from "../shared/content.js?v=20261005f";
 
 import {
   applyI18n,
@@ -99,18 +120,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261005e";
+} from "../shared/i18n.js?v=20261005f";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261005e";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261005e";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261005f";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261005f";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261005e";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261005e";
+} from "../shared/simple-mode.js?v=20261005f";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261005f";
 import {
   advisorJevContext,
   interpretSanity,
@@ -118,56 +139,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261005e";
+} from "./validate.js?v=20261005f";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261005e";
+} from "../shared/cut-targets.js?v=20261005f";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261005e";
+} from "./share-codec.js?v=20261005f";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261005e";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261005e";
+} from "./infeasible-copy.js?v=20261005f";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261005f";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261005e";
+} from "./fuel-units.js?v=20261005f";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261005e";
+} from "./frontier-chart.js?v=20261005f";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261005e";
+} from "./rescale.js?v=20261005f";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261005e";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261005f";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20261005e";
+} from "./map-provider.js?v=20261005f";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261005e";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261005e";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261005e";
+} from "./wizard.js?v=20261005f";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261005f";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261005f";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -216,9 +237,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261005e";
+} from "./money.js?v=20261005f";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261005e";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261005f";
 
 let worker = null;
 
@@ -332,10 +353,19 @@ function handleRunDeadline() {
   // retried against a fresh worker; otherwise retire the timed-out sequence
   // and leave recovery to the visitor. Every branch releases through the
   // same funnel.
+  //
+  // `abandon()` and not `invalidate()`, and the difference is the whole reason
+  // this recovery works. The worker above has been terminated, so no reply is
+  // ever coming; invalidate() leaves the channel BUSY (correctly, for the
+  // pre-calculation edit path, where a run really is still running), and a busy
+  // channel sends the visitor's next click straight into the collapse branch
+  // where it returns without starting anything. The page then says "click Size
+  // My System to try again" above a button that cannot be retried, which is the
+  // exact failure the deadline exists to end.
   if (current) {
     setStatus(t("errorTimeout"));
     pipelineStop(false);
-    if (!hasPendingRun) runChannel.invalidate();
+    if (!hasPendingRun) runChannel.abandon();
   }
   flushPendingRun();
 }
@@ -3678,7 +3708,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261005e",
+      "./assets/js/sizing/sizing-worker.js?v=20261005f",
       {
         type: "module",
       },
@@ -4971,8 +5001,8 @@ function purchasePaths(p, sys) {
     pathsInstrument,
   ].join("|");
   if (pathsCache.key === key) return pathsCache.result;
-  const result = priceAllPaths(
-    systemForPaths(sys, {
+  const result = pathsApi.priceAllPaths(
+    pathsApi.systemForPaths(sys, {
       annualBaselineBillsUsd: baseline,
       tariff: p.tariff,
     }),
@@ -5036,7 +5066,9 @@ function renderPathsSection(p, sys) {
     return null;
   }
   const cheapest = paths.cheapest;
-  const cards = describePaths(paths, money, (k, params) => t(k, params));
+  const cards = pathsApi.describePaths(paths, money, (k, params) =>
+    t(k, params),
+  );
   const rows = (list) =>
     list.map((k) => `<li>${escapeHtml(t(k))}</li>`).join("");
   const body = cards
@@ -5101,8 +5133,48 @@ function renderPathsSection(p, sys) {
  * BOTH surfaces that read the priced comparison, in the order that guarantees
  * they agree: the panel prices, the sentence quotes the result. Two call sites
  * (a fresh result, a selection change) plus the instrument toggle above.
+ *
+ * Awaited, because the model is loaded lazily (see loadPaths). The await is
+ * the whole point and not a convenience: the two surfaces are painted INSIDE
+ * it, one after the other, from one priced result. The alternative — rendering
+ * the sentence without a price and correcting it a moment later — is the
+ * "two different turnkey numbers on one screen" defect D-01 exists to remove,
+ * so nothing here paints until the model is in hand.
+ *
+ * A generation counter, not a lock: several of these can be in flight at once
+ * (a fresh result, then a selection change, then an instrument toggle) and the
+ * newest request is the only one whose payload is still current. An older
+ * render that resolves late must not repaint the panel with a superseded
+ * system.
  */
-function renderPathSurfaces(p) {
+let pathRenderGeneration = 0;
+async function renderPathSurfaces(p) {
+  const generation = ++pathRenderGeneration;
+  try {
+    await loadPaths();
+  } catch (e) {
+    // A pricing model that will not load is a missing comparison, and the
+    // honest way to say so is the panel's own "priced comparison unavailable"
+    // empty state plus a status line — never a silent blank section, and never
+    // an unhandled rejection that the browser logs and nobody reads. The
+    // in-flight load is cleared so the NEXT render retries rather than
+    // inheriting this failure forever.
+    pathsLoading = null;
+    pathsApi = null;
+    const wrap = $("pathsPanel");
+    if (wrap) {
+      wrap.innerHTML = "";
+      wrap.style.display = "none";
+    }
+    const eli5 = $("eli5CardWrap");
+    if (eli5) {
+      eli5.innerHTML = "";
+      eli5.style.display = "none";
+    }
+    setStatus(`\u26A0\uFE0F ${t("pathsUnavailable")}`);
+    return null;
+  }
+  if (generation !== pathRenderGeneration) return null;
   const sys = resolveSelected(p) || p.best;
   const paths = renderPathsSection(p, sys);
   renderEli5Section(p, sys, paths);
@@ -5116,10 +5188,11 @@ function whyText(row) {
   const tail = row.dominance === "combined" ? t("pathsWhyCombined") : "";
   return (
     t("pathsWhy", {
-      cheaper: t(LABEL_KEYS[row.cheaper] || "pathsUnavailable"),
-      dearer: t(LABEL_KEYS[row.dearer] || "pathsUnavailable"),
+      cheaper: t(pathsApi.LABEL_KEYS[row.cheaper] || "pathsUnavailable"),
+      dearer: t(pathsApi.LABEL_KEYS[row.dearer] || "pathsUnavailable"),
       gap: money(Math.abs(row.gap)),
-      driver: t(DRIVER_KEYS[row.driver] || "pathsDriver_none") + amount,
+      driver:
+        t(pathsApi.DRIVER_KEYS[row.driver] || "pathsDriver_none") + amount,
     }) + tail
   );
 }

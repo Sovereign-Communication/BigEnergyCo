@@ -24,7 +24,16 @@ import lighthouse from "lighthouse";
 import { launch } from "chrome-launcher";
 import { serveStatic } from "./serve-static.mjs";
 import { start, sleep } from "./smoke/runtime.mjs";
-import { measureWarmInteraction } from "./lib/warm-interaction.mjs";
+import {
+  measureWithPathsUnavailable,
+  measureWarmReload,
+  runPerformancePlaytest,
+} from "./smoke/performance.mjs";
+import {
+  PERFORMANCE_FACET_AXES,
+  PERFORMANCE_SCOPE_LIMIT,
+  evaluatePerformance,
+} from "./lib/performance-budgets.mjs";
 import { COMPLETE_FACET_CLIP } from "./lib/jev-complete.mjs";
 import {
   LIGHTHOUSE_CATEGORIES,
@@ -40,6 +49,7 @@ import {
   compareLighthouse,
   compareSpeed,
   composeFacetLine,
+  facetLineOmitted,
   median,
 } from "./lib/lighthouse-budgets.mjs";
 
@@ -213,6 +223,9 @@ try {
 // the composed line falls back to saying the warm claims are unmeasured, and an
 // absent measurement stays visible as an absent one rather than being invented.
 let warmInteraction = null;
+const playtestRegressions = [];
+const playtestHoles = [];
+let axisOwnershipConflict = false;
 if (!opts.skipWarm) {
   let ctx = null;
   try {
@@ -235,17 +248,53 @@ if (!opts.skipWarm) {
     await ctx.send("Page.navigate", { url: srv.url });
     await Promise.race([loaded, sleep(60000)]);
     await sleep(4000);
-    warmInteraction = await measureWarmInteraction(ctx, { url: srv.url });
+    // THE PLAYTEST, in the order the claims are actually independent. The cold
+    // run first because it is the slow interaction and it is the stage that
+    // populates every cache the later stages claim not to re-read. The warm
+    // reload second because it is the warm path that survives a page load, and
+    // the pricing model comes LAST because that stage blocks a URL on every
+    // session: run it after the stages that need a working build, never before.
+    const play = await runPerformancePlaytest(ctx, { url: srv.url });
+    if (play?.ok) {
+      play.warm_reload = await measureWarmReload(ctx, { url: srv.url });
+      play.paths_unavailable = await measureWithPathsUnavailable(ctx, {
+        url: srv.url,
+      });
+    }
+    warmInteraction = play;
+    const verdict = evaluatePerformance(warmInteraction);
+    for (const n of verdict.notes) console.log(`  playtest  ${n}`);
+    // A HOLE and a REGRESSION both stop this gate, and that is a change worth
+    // naming. It used to be non-fatal, on the reasoning that a browser hiccup
+    // should not fail a Lighthouse run. But this gate OWNS the performance axis,
+    // and its facet line says the interaction claims are measured. A run that
+    // could not measure them and exited green would publish a first-paint line
+    // with a green gate beside it — which is precisely how this facet spent a
+    // whole cycle reading as verified while nothing but a byte count was ever
+    // checked. So: measured-and-wrong fails, and not-measured fails harder.
+    for (const h of verdict.holes) {
+      console.error(`  playtest  HOLE ${h.what}: ${h.why}`);
+      playtestHoles.push(h);
+    }
+    for (const r of verdict.regressions) {
+      console.error(`  playtest  REGRESSION ${r.message}`);
+      playtestRegressions.push(r);
+    }
     console.log(
       `warm interaction: ${JSON.stringify(
         {
-          cold_run_ms: warmInteraction.cold_run?.ms,
-          warm_rerun_ms: warmInteraction.warm_rerun?.ms,
+          cold_run_ms: warmInteraction?.cold_run?.ms,
+          warm_rerun_ms: warmInteraction?.warm_rerun?.ms,
           preview_median_ms:
-            warmInteraction.warm_adjustments?.preview_median_ms,
+            warmInteraction?.warm_adjustments?.preview_median_ms,
           confirm_median_ms:
-            warmInteraction.warm_adjustments?.confirm_median_ms,
-          warm_network_requests: warmInteraction.warm_network_requests,
+            warmInteraction?.warm_adjustments?.confirm_median_ms,
+          warm_network: warmInteraction?.warm_network,
+          warm_reload_ms: warmInteraction?.warm_reload?.ms,
+          warm_reload_nasa: warmInteraction?.warm_reload?.warm_network?.nasa,
+          paths_blocked_attempts:
+            warmInteraction?.paths_unavailable?.blocked_attempts,
+          paths_blocked_card: warmInteraction?.paths_unavailable?.card_rendered,
         },
         null,
         0,
@@ -281,6 +330,15 @@ const report = {
   // a list of gate names beside itself — the same derivation that stopped
   // ci_green reading a list of three job names while a fourth gate ran.
   facet_axes: LIGHTHOUSE_FACET_AXES,
+  // The axis is declared by two modules now — the Lighthouse side and the
+  // playtest side — and the evidence builder OVERWRITES prose.facet_evidence by
+  // axis, so a second gate declaring `performance` would not add a second proof
+  // line, it would silently delete the first. Asserted here rather than assumed:
+  // a disagreement between the two declarations is a build-time fact about which
+  // owner is wrong, and the report says which.
+  playtest_facet_axes: PERFORMANCE_FACET_AXES,
+  playtest_regressions: playtestRegressions,
+  playtest_holes: playtestHoles,
   unit: "score 0-100, median of 3 runs, on the staged build",
   stage: opts.stage,
   lighthouse_version: "13.5.0",
@@ -312,19 +370,20 @@ const report = {
     "reported as breaches until then.",
   scope_limit: warmInteraction?.ok
     ? "this gate measures the first-paint claim with Lighthouse's SIMULATED " +
-      "throttling, and the warm claims (cold sizing run, warm re-run, " +
-      "slider drag preview, confirm re-slice, and the requests a warm path " +
-      "issues) with one unthrottled Chrome on one machine, one city and three " +
-      "adjustments. It is a real reading of this machine, not a device matrix " +
-      "and not a population claim. The warm request count is whatever the " +
-      "browser put on the wire: a non-zero count is a finding about the " +
-      "product and is reported, never tuned away."
+      "throttling, and the interaction claims (cold sizing run, warm re-run, " +
+      "slider drag preview, confirm re-slice, the requests a warm path issues, " +
+      "the requests a warm RELOAD issues after the page's RAM is gone, and " +
+      "whether the first result renders with the pricing model blocked) with " +
+      `one unthrottled Chrome on one machine, one city and three adjustments. ${PERFORMANCE_SCOPE_LIMIT}. ` +
+      "Every count is whatever the browser put on the wire, worker sessions " +
+      "included: a non-zero count is a finding about the product and is " +
+      "reported, never tuned away."
     : "this gate measures the first-paint claim of the performance facet only. " +
-      "Warm interactions and NASA/weather memoization are not Lighthouse's " +
-      "subject and are not measured here." +
+      "Interactions, memoization across a reload, and first-result " +
+      "independence are not Lighthouse's subject and were not measured this " +
+      "run." +
       (warmInteraction
-        ? " The warm measurement did not run this time, so " +
-          "that limit stands in full."
+        ? " The playtest did not complete, so that limit stands in full."
         : ""),
 };
 
@@ -333,9 +392,42 @@ const report = {
 // defect this replaces; composing it at the measurement means the numbers on
 // the judge's record and the numbers in this report cannot drift apart.
 report.facet_line = composeFacetLine(report);
+// What the fit to the transport's clip had to leave off, named rather than
+// assumed. The composer degrades the least load-bearing sentence in place and
+// records the swap; the gate prints it, because a sentence that quietly did not
+// make the judge's line while the run reports green is the defect the clip
+// itself creates.
+report.facet_line_omitted = facetLineOmitted.slice();
+if (facetLineOmitted.length) {
+  for (const o of facetLineOmitted)
+    console.warn(
+      `note: the ${COMPLETE_FACET_CLIP}-char axis clip dropped` +
+        (o.replaced_with
+          ? ` detail (${o.sentence} -> ${o.replaced_with})`
+          : ` "${o.sentence}"`) +
+        "; it is in this report in full",
+    );
+}
 console.log(
   `facet line (${report.facet_line.length} chars):\n  ${report.facet_line}`,
 );
+
+// The axis's two declarations must agree, and the reason is written into the
+// report rather than left to a reader: the evidence builder overwrites a prose
+// proof line by axis, so two owners of `performance` means one of them vanishes
+// without a word.
+if (
+  JSON.stringify(report.facet_axes) !==
+  JSON.stringify(report.playtest_facet_axes)
+) {
+  console.error(
+    `\nFACET AXIS OWNERSHIP DISAGREES: the Lighthouse side declares ` +
+      `[${report.facet_axes.join(", ")}] and the playtest side ` +
+      `[${report.playtest_facet_axes.join(", ")}]. Two gates owning one axis ` +
+      "means the evidence builder overwrites one of them silently.",
+  );
+  axisOwnershipConflict = true;
+}
 // An over-long line is SILENTLY cut in transit by the evidence builder, and the
 // part that gets cut is the tail — which here is the warm measurement, the whole
 // reason this gate now carries a second instrument. So the gate refuses to
@@ -403,7 +495,19 @@ if (holes.length) {
   for (const h of holes) console.log(`  ${h.message}`);
 }
 
-const failed = regressions.length > 0 || holes.length > 0;
+const failed =
+  regressions.length > 0 ||
+  holes.length > 0 ||
+  playtestRegressions.length > 0 ||
+  playtestHoles.length > 0 ||
+  axisOwnershipConflict;
+if (playtestRegressions.length || playtestHoles.length)
+  console.log(
+    `\nPLAYTEST: ${playtestRegressions.length} regression(s), ` +
+      `${playtestHoles.length} hole(s). Both stop this gate: the axis line ` +
+      "says the interaction claims are measured, so a run that could not " +
+      "measure them, or measured them wrong, cannot exit green beside it.",
+  );
 console.log(
   failed
     ? "\nno regression allowed against the declared floor, and a hole is not a pass"

@@ -12,6 +12,7 @@
     "seo": "node scripts/validate-jsonld.mjs && node scripts/check-chars.mjs && node scripts/check-seo.mjs && node scripts/check-quality.mjs && node scripts/check-i18n.mjs && node scripts/check-headers.mjs && node scripts/check-privacy.mjs && node scripts/check-usecases.mjs && node scripts/check-comparison.mjs && node scripts/check-evidence-freshness.mjs && node scripts/check-provenance.mjs && node scripts/sync-country-files.mjs --check && node scripts/bump-asset-tokens.mjs --check",
     "gate:privacy": "node scripts/check-privacy.mjs",
     "gate:privacy-browser": "node scripts/check-privacy-browser.mjs",
+    "gate:resilience": "node scripts/check-resilience.mjs",
     "gate:usecases": "node scripts/check-usecases.mjs",
     "gate:comparison": "node scripts/check-comparison.mjs",
     "gate:evidence-freshness": "node scripts/check-evidence-freshness.mjs",

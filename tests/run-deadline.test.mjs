@@ -144,3 +144,93 @@ test("deadline watch: begin alone never resurrects a retired watch", () => {
     "the never-armed token is never current",
   );
 });
+
+// ── the channel cleanup a timed-out worker actually needs ────────────────────
+//
+// Found by driving the real page, not by reading this file: with a worker that
+// never replies, the deadline fired and the page printed an actionable error,
+// but the channel stayed BUSY. `run()` checks `runChannel.isBusy` and, when
+// true, collapses and returns without starting anything — so the visitor was
+// told "click Size My System to try again" above a button whose every click was
+// swallowed. The error was honest and the recovery was unreachable.
+//
+// The fix is a new operation rather than a change to `invalidate()`, because
+// `invalidate()`'s other caller genuinely needs the busy state kept: a
+// pre-calculation edit invalidates the inputs an in-flight run carries, that run
+// is still computing, and the worker cannot be preempted. Freeing the channel
+// there would start a second run behind the first. These tests pin both halves,
+// because a fix that only half-lands is how the leak comes back.
+test("channel cleanup: abandon frees the channel; invalidate deliberately does not", () => {
+  const abandoned = createRunChannel();
+  abandoned.begin();
+  assert.equal(abandoned.isBusy, true, "begin marks the channel busy");
+  abandoned.abandon();
+  assert.equal(
+    abandoned.isBusy,
+    false,
+    "a worker that was terminated will never reply, so a timed-out run MUST " +
+      "free the channel or every later click collapses instead of running",
+  );
+  assert.equal(abandoned.pending, false, "abandon drops queued work too");
+
+  const invalidated = createRunChannel();
+  invalidated.begin();
+  invalidated.invalidate();
+  assert.equal(
+    invalidated.isBusy,
+    true,
+    "invalidate() must NOT free the channel: its other caller (a " +
+      "pre-calculation edit) has a run that is still computing, and the " +
+      "worker cannot be preempted",
+  );
+});
+
+test("channel cleanup: a late reply from an abandoned run still fails its freshness check", () => {
+  const ch = createRunChannel();
+  const seq = ch.begin();
+  const abandoned = ch.abandon();
+  assert.notEqual(
+    abandoned,
+    seq,
+    "abandon must bump the sequence, or the terminated worker's late reply " +
+      "passes the freshness check and paints over the recovery",
+  );
+  const next = ch.begin();
+  assert.ok(
+    next > seq,
+    "a run started after the abandon is newer than the abandoned one",
+  );
+});
+
+test("channel cleanup: abandoning retires the deadline watch", () => {
+  const ch = createRunChannel();
+  const seq = ch.begin();
+  const token = ch.armDeadline(seq);
+  assert.ok(ch.deadlineCurrent(token));
+  ch.abandon();
+  assert.equal(
+    ch.deadlineCurrent(token),
+    false,
+    "nothing is waiting for a reply any more, so the watch must retire — " +
+      "otherwise a fired timer acts on a channel that has already been given up",
+  );
+  assert.equal(ch.deadlineOwns(seq), false);
+});
+
+test("channel cleanup: the deadline path abandons, and the edit path invalidates", () => {
+  // Which operation each call site uses is the whole fix, so it is pinned here
+  // rather than left to a future reader of ui.js to infer.
+  const ui = fs.readFileSync("assets/js/sizing/ui.js", "utf8");
+  assert.match(
+    ui,
+    /if \(!hasPendingRun\) runChannel\.abandon\(\);/,
+    "a timed-out run with nothing queued must ABANDON the channel, or the " +
+      "page's own recovery instruction leads to a button that does nothing",
+  );
+  assert.match(
+    ui,
+    /runChannel\.invalidate\(\);/,
+    "the pre-calculation edit path still invalidates; the run it invalidates " +
+      "is real and must keep the channel busy",
+  );
+});
