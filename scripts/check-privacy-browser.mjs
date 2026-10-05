@@ -133,26 +133,49 @@ else
 // a DECLARED origin (next clause) and carries nothing that identifies the
 // visitor. That second half is a runtime measurement no static scan can make,
 // because it reads the URL the browser actually sent.
-const identifying = [];
+const identifying = measured.identifying || [];
+const journeyNames =
+  (measured.journeysDriven || []).map((j) => j.name).join(", ") ||
+  "arrival only";
+
+// Two clauses that no source scan can make, because they read the URL the
+// browser actually sent. They live here, on the union across every journey the
+// flow drove, so a leak introduced by the city search or the advisor is caught
+// exactly as one on arrival would be.
+//
+//  1. A coordinate finer than 0.01 deg is ~1.1 km of location. The static gate
+//     proves the SOURCE rounds; this proves the bytes did.
+//  2. A free-text query may only go to a geocoder. A visitor typing a place is
+//     the single most personal thing this product handles, and sending it
+//     anywhere that is not a geocoder is a finding whatever the origin.
 for (const u of measured.thirdPartyUrls) {
-  // A coordinate finer than 0.01° is ~1.1 km of location. The static gate
-  // proves the SOURCE rounds; this proves the bytes on the wire did.
   const coarse = /[?&](?:lat|lng|lon|latitude|longitude)=(-?\d+\.\d{3,})/i.exec(
     u,
   );
   if (coarse) identifying.push(`${u} (coordinate ${coarse[1]})`);
-  if (/[?&][^=]*=.*@/.test(u) && /email|mail|e=/i.test(u)) identifying.push(u);
   if (/[?&](q|query|search)=/i.test(u) && !/nominatim/i.test(u))
     identifying.push(`${u} (free-text query to a non-geocoder)`);
 }
-if (identifying.length === 0)
+// A coordinate finer than 0.01° is ~1.1 km of location. The static gate proves
+// the SOURCE rounds; this proves the bytes on the wire did, across every
+// journey driven rather than only the arrival one.
+const coordinateFindings = measured.coordinateFindings || [];
+if (identifying.length === 0 && coordinateFindings.length === 0)
   ok(
-    `egress: no third-party request carried an identifier (${measured.thirdPartyUrls.length} third-party request(s) inspected)`,
+    `egress: no third-party request carried an identifier or a coordinate finer than 0.01 deg (${measured.thirdPartyUrls.length} third-party request(s) across ${journeyNames})`,
   );
-else
-  fail(
-    `egress: third-party requests carried identifiers:\n     ${identifying.join("\n     ")}`,
-  ); // ── 3. is that egress DECLARED? ─────────────────────────────────────────────
+else {
+  if (identifying.length)
+    fail(
+      `egress: third-party requests carried identifiers:\n     ${identifying.join("\n     ")}`,
+    );
+  if (coordinateFindings.length)
+    fail(
+      `egress: third-party requests carried a coordinate finer than the 0.01 deg this product ships:\n     ${coordinateFindings.join("\n     ")}`,
+    );
+}
+
+// ── 3. is that egress DECLARED? ─────────────────────────────────────────────
 // Checked against `_headers`' own `connect-src`, not a hardcoded list.
 //
 // This started life as "every third-party origin must be NASA POWER" and it
@@ -210,6 +233,37 @@ else
 if (measured.requestCount > 0)
   ok(`the run measured a real page load (${measured.requestCount} requests)`);
 else fail("the run issued no requests — nothing was actually loaded");
+
+// ── 5. was every egress path actually EXERCISED? ──────────────────────────
+// The clause that stops this gate from quietly becoming a first-load gate
+// again. A privacy claim measured on arrival is true of arrival, and the
+// journeys most likely to carry something personal — a typed place, a sizing
+// input, an advisor conversation — are not arrival. So the measurement names
+// the journeys it drove and requires the ones the product can actually take.
+// A journey that ran zero requests is reported as unmeasured rather than
+// counted as clean, because a path nothing exercised has unknown egress.
+const EXPECTED_JOURNEYS = ["city-search", "sizing-run", "advisor"];
+const driven = new Map(
+  (measured.journeysDriven || []).map((j) => [j.name, j.requests]),
+);
+const missing = EXPECTED_JOURNEYS.filter((n) => !driven.has(n));
+const quiet = EXPECTED_JOURNEYS.filter((n) => driven.get(n) === 0);
+if (missing.length === 0)
+  ok(
+    `egress: drove every declared journey (${EXPECTED_JOURNEYS.join(", ")}) — ` +
+      EXPECTED_JOURNEYS.map((n) => `${n} ${driven.get(n)} req`).join(", "),
+  );
+else
+  fail(
+    `egress: journeys never driven: ${missing.join(", ")}. An unexercised path ` +
+      "has unknown egress, which is not the same as none.",
+  );
+if (quiet.length === 0) ok("every driven journey actually issued a request");
+else
+  fail(
+    `egress: driven but silent: ${quiet.join(", ")}. The flow did not reach ` +
+      "that journey, so its egress was not measured.",
+  );
 
 ok(
   `Turnstile decision from cookieGateDecision: ${decision.action} — ${decision.why}`,
