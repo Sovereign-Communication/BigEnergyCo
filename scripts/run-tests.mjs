@@ -8,12 +8,21 @@
 // of whoever ran it. The evidence record therefore carried a hand-typed
 // "835/835 npm test green ... measured on this tree" that stayed true for
 // exactly as long as nobody added a test — and it read 835 on a tree carrying
-// 1362. That sentence is not decoration: it is the substrate the judge reads
+// 1378. That sentence is not decoration: it is the substrate the judge reads
 // before it reads any facet, so a false one costs every facet at once.
 //
 // It cannot be fixed by being careful. It is fixed by the runner that already
 // knows the number writing it, which is the same move the Lighthouse proof line
 // makes (composed from the run, never typed) applied to the run record itself.
+//
+// BOTH STREAMS ARE CAPTURED, and that is not tidiness. Node's test runner writes
+// its summary block to stderr, and whether the same block also lands on stdout
+// varies with the environment: locally it arrived on stdout, and on the first CI
+// run it did not, so the wrapper reported "no summary block seen" and recorded
+// nothing. The record then reached the builder with its `{{tests_total}}`
+// placeholders unresolved, which the builder names as a fatal problem rather
+// than filling in — the fail-closed path working, but the measurement was lost.
+// A parser that reads one stream and hopes is a parser that will read zero.
 //
 // WHAT IT DOES NOT DO. It does not change which tests run, how they are
 // selected, or what they assert: the same `node --test` invocation with the same
@@ -74,24 +83,30 @@ function write(counts) {
 function main() {
   const child = spawn(process.execPath, ["--test", "tests/*.test.mjs"], {
     cwd: ROOT,
-    stdio: ["ignore", "pipe", "inherit"],
+    // Both piped so the summary can be read wherever the runner chose to put
+    // it. Every byte still reaches the terminal, in order, on its own stream.
+    stdio: ["ignore", "pipe", "pipe"],
   });
-  // Piped rather than inherited so the summary can be read out of it. Every
-  // byte still reaches the terminal, in order, exactly as the runner wrote it.
-  let out = "";
-  child.stdout.on("data", (d) => {
-    const s = d.toString();
-    out += s;
-    process.stdout.write(s);
-  });
+  // Streamed rather than buffered, so a long suite does not hold its output
+  // hostage until the end.
+  let captured = "";
+  const tee = (stream, sink) => {
+    stream.on("data", (d) => {
+      captured += d.toString();
+      sink.write(d);
+    });
+  };
+  tee(child.stdout, process.stdout);
+  tee(child.stderr, process.stderr);
+
   child.on("close", (code) => {
-    const counts = parseCounts(out);
+    const counts = parseCounts(captured);
     write(counts);
     const measured =
       counts.tests === null
-        ? "no summary block seen, so no count was recorded"
+        ? "no summary block seen on either stream, so no count was recorded"
         : `${counts.pass}/${counts.tests} recorded in jev-artifacts/test-measurement.json`;
-    console.log(`run-tests: ${measured}`);
+    console.error(`run-tests: ${measured}`);
     // The child's verdict is the verdict. A missing summary block is reported
     // above rather than invented into a zero.
     process.exit(code ?? 1);

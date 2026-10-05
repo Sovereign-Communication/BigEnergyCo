@@ -216,6 +216,29 @@ test("a summary block the runner never printed is reported as missing, not zero"
   assert.equal(counts.tests, null, "a missing count is null, never 0");
 });
 
+test("the wrapper captures BOTH streams, because the runner writes the summary to stderr", () => {
+  const src = readFileSync(join(ROOT, "scripts", "run-tests.mjs"), "utf8");
+  // This is not a style preference. Node's test runner puts its summary block
+  // on stderr, and whether it ALSO lands on stdout varies by environment: it did
+  // locally and did not on the first CI run, so the wrapper recorded nothing and
+  // the record reached the builder with unresolved placeholders. Reading one
+  // stream and hoping is how a measurement silently becomes zero.
+  assert.match(
+    src,
+    /stdio:\s*\["ignore",\s*"pipe",\s*"pipe"\]/,
+    "the wrapper must capture both streams",
+  );
+  assert.match(src, /tee\(child\.stdout/);
+  assert.match(src, /tee\(child\.stderr/);
+});
+
+test("the summary block is parsed out of combined output, not one stream", () => {
+  // The exact failure: a summary that arrives on stderr alone still parses.
+  const stderrOnly = "ℹ tests 1378\nℹ pass 1378\nℹ fail 0\n";
+  assert.equal(parseCounts(stderrOnly).tests, 1378);
+  assert.equal(parseCounts(stderrOnly).pass, 1378);
+});
+
 test("npm test is the wrapper that records, and the wrapper spawns node --test", () => {
   assert.equal(
     pkg.scripts.test,
