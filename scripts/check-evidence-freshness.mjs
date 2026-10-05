@@ -84,7 +84,10 @@ function stagedFileCount() {
  */
 const TYPED_COUNT = [
   { re: /\b\d{2,}\/\d{2,}\b/g, why: "an N/N count" },
-  { re: /\b\d{2,}\s+(?:pass|tests?|gates?|files?)\b/g, why: "an N tests/gates/files count" },
+  {
+    re: /\b\d{2,}\s+(?:pass|tests?|gates?|files?)\b/g,
+    why: "an N tests/gates/files count",
+  },
   { re: /\bruns\s+\d{2,}\s+gates\b/g, why: "a gate count" },
 ];
 
@@ -145,7 +148,11 @@ const stamp = shippedStamp();
 const stampClaims = (prose.seo_summary || "").match(/\b\d{8}[a-z]\b/g) || [];
 const statedStamps = [...new Set(stampClaims)];
 if (statedStamps.length === 0) ok("seo_summary states no asset stamp");
-else if (stamp.length === 1 && statedStamps.length === 1 && statedStamps[0] === stamp[0])
+else if (
+  stamp.length === 1 &&
+  statedStamps.length === 1 &&
+  statedStamps[0] === stamp[0]
+)
   ok(`seo_summary's asset stamp matches the tree (${stamp[0]})`);
 else
   fail(

@@ -60,7 +60,11 @@ export function measurementFrom(counts) {
 function write(counts) {
   try {
     mkdirSync(dirname(ARTIFACT), { recursive: true });
-    writeFileSync(ARTIFACT, JSON.stringify(measurementFrom(counts), null, 2) + "\n", "utf8");
+    writeFileSync(
+      ARTIFACT,
+      JSON.stringify(measurementFrom(counts), null, 2) + "\n",
+      "utf8",
+    );
   } catch {
     // Same reasoning as the smoke runner: a run that already reported its
     // verdict must not be turned red by an unwritable scratch file.
@@ -68,14 +72,10 @@ function write(counts) {
 }
 
 function main() {
-  const child = spawn(
-    process.execPath,
-    ["--test", "tests/*.test.mjs"],
-    {
-      cwd: ROOT,
-      stdio: ["ignore", "pipe", "inherit"],
-    },
-  );
+  const child = spawn(process.execPath, ["--test", "tests/*.test.mjs"], {
+    cwd: ROOT,
+    stdio: ["ignore", "pipe", "inherit"],
+  });
   // Piped rather than inherited so the summary can be read out of it. Every
   // byte still reaches the terminal, in order, exactly as the runner wrote it.
   let out = "";

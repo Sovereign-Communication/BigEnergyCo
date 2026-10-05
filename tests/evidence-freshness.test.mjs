@@ -26,12 +26,16 @@ function gateAgainst(mutate) {
     const file = join(dir, "prose.json");
     writeFileSync(file, JSON.stringify(copy, null, 2));
     try {
-      const out = execFileSync(process.execPath, [join(ROOT, "scripts", "check-evidence-freshness.mjs")], {
-        cwd: ROOT,
-        env: { ...process.env, PROSE_OVERRIDE: file },
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "pipe"],
-      });
+      const out = execFileSync(
+        process.execPath,
+        [join(ROOT, "scripts", "check-evidence-freshness.mjs")],
+        {
+          cwd: ROOT,
+          env: { ...process.env, PROSE_OVERRIDE: file },
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "pipe"],
+        },
+      );
       return { code: 0, out };
     } catch (e) {
       return { code: e.status ?? 1, out: `${e.stdout || ""}${e.stderr || ""}` };
@@ -147,7 +151,11 @@ test("every quoted count resolves from a measurement the runners write", () => {
       },
     },
   });
-  assert.deepEqual(problems, [], "the committed record quotes only real channels");
+  assert.deepEqual(
+    problems,
+    [],
+    "the committed record quotes only real channels",
+  );
   for (const field of COMPOSABLE_FIELDS) {
     assert.doesNotMatch(
       filled[field],
@@ -230,7 +238,11 @@ test("the smoke gate reporter counts every gate it reports", () => {
     "utf8",
   );
   assert.match(src, /smoke-measurement\.json/);
-  assert.match(src, /gates_total/, "the count the record quotes must be written");
+  assert.match(
+    src,
+    /gates_total/,
+    "the count the record quotes must be written",
+  );
   // The counter has to advance on every gate, not only failing ones, or the
   // number the record quotes is the number that broke.
   assert.match(src, /total\+\+\s*;\s*if \(!ok\) failures\+\+;/);
