@@ -97,17 +97,37 @@ test("WIRING: package.json exposes the gate as a named script", () => {
   );
 });
 
-test("WIRING: the gate claims the experience axis and only that one", () => {
-  // One owner per axis. build-jev-evidence.mjs overwrites
+test("WIRING: the gate claims the axes it composes a line for, and only those", () => {
+  // One owner PER AXIS. build-jev-evidence.mjs overwrites
   // prose.facet_evidence[axis] per axis, so a second gate claiming `experience`
   // would not add a proof line, it would delete this one.
+  //
+  // The gate now claims two axes rather than one, which is a different claim
+  // from "two owners": `translation` moved here because the judge's demand for
+  // it — "no raw key name reaching a visitor" — is a question about a rendered
+  // surface, and only this gate drives a browser. The wiring that must hold is
+  // that every declared axis has a line composed FOR it, which is why the
+  // builder takes `facet_lines` and refuses one sentence served to two axes.
   const budgets = readFileSync("scripts/lib/experience-budgets.mjs", "utf8");
-  assert.match(budgets, /EXPERIENCE_FACET_AXES = \["experience"\]/);
+  assert.match(
+    budgets,
+    /EXPERIENCE_FACET_AXES = \["experience", "translation"\]/,
+  );
   const gate = readFileSync("scripts/check-experience.mjs", "utf8");
   assert.match(
     gate,
     /facet_axes: EXPERIENCE_FACET_AXES/,
     "the report must declare its axes so the builder discovers them",
+  );
+  assert.match(
+    gate,
+    /facet_lines/,
+    "and must carry a line per axis, or the builder serves one sentence twice",
+  );
+  assert.match(
+    gate,
+    /composeTranslationFacetLine/,
+    "the translation line must be composed for translation, not reused",
   );
 });
 

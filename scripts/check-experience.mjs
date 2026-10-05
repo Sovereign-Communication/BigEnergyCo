@@ -36,6 +36,8 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 import { ROOT, serveStatic } from "./serve-static.mjs";
+import { deployList } from "./lib/deploy-manifest.mjs";
+import { splitDivergences } from "./lib/deploy-blobs.mjs";
 import { start } from "./smoke/runtime.mjs";
 import { runExperienceWalk } from "./smoke/experience.mjs";
 import { jevHealthAtDocumentStart } from "./smoke/jev.js";
@@ -44,6 +46,7 @@ import {
   EXPERIENCE_FACET_AXES,
   EXPERIENCE_SCOPE_LIMIT,
   composeExperienceFacetLine,
+  composeTranslationFacetLine,
   evaluateExperience,
 } from "./lib/experience-budgets.mjs";
 import { COMPLETE_FACET_CLIP } from "./lib/jev-complete.mjs";
@@ -81,6 +84,40 @@ const fail = (m) => {
   failures += 1;
   console.error(`FAIL ${m}`);
 };
+
+// ── 0. refuse to measure a build that is not the tree ─────────────────────────
+// THE STAGING TRAP, GUARDED. `deploy-pages-local.mjs` stages from the git
+// INDEX, so an edit written to the working tree is simply not in the build this
+// gate is about to walk. The staging script says so, by name, in its output —
+// and it was still missed twice in one session, both times caught only because
+// the numbers came out identical to the previous run. A gate that measures
+// yesterday's page and reports it as this page's verdict is the specific thing
+// this project distrusts everywhere else, so here it is a refusal rather than a
+// note.
+//
+// Only the UNSTAGED half blocks. A staged-but-uncommitted deployable IS in the
+// build and is the ordinary state of a branch under review; refusing that would
+// mean never measuring work in progress.
+const stageDivergence = splitDivergences(ROOT, deployList());
+if (stageDivergence.unstaged.length) {
+  console.error(
+    `\nFAIL the staged build does NOT contain unstaged edits to ` +
+      `${stageDivergence.unstaged.length} deployable file(s), because staging ` +
+      `reads the git INDEX. This gate would measure a page you did not edit:`,
+  );
+  for (const f of stageDivergence.unstaged.slice(0, 20))
+    console.error(`FAIL   ${f}`);
+  console.error(
+    `FAIL   \`git add\` them (or commit) and re-stage. Not measuring this; a ` +
+      `verdict about a different build is worse than no verdict.\n`,
+  );
+  process.exit(1);
+}
+if (stageDivergence.staged.length)
+  console.log(
+    `     note: ${stageDivergence.staged.length} deployable file(s) are staged ` +
+      `but uncommitted — they ARE in this build, and the next commit carries them`,
+  );
 
 // ── 1. the walk, on the real page ────────────────────────────────────────────
 const srv = await serveStatic({ dir: resolve(opts.stage) });
@@ -151,6 +188,11 @@ const report = {
   // prose.facet_evidence[axis], so a second experience gate would not add a
   // proof line, it would delete this one.
   facet_axes: EXPERIENCE_FACET_AXES,
+  // One line PER AXIS. The builder applies a single string to every axis in
+  // `facet_axes`, which would file the journey walk's sentence under the
+  // translation heading too — and a heading that never mentions a locale is not
+  // evidence about locales. See `facet_lines` in scripts/build-jev-evidence.mjs.
+  facet_lines_owner: "one line per axis, composed per axis",
   unit: "browser-observed journey outcomes on the staged build",
   stage: opts.stage,
   expectations: EXPERIENCE_EXPECTATIONS,
@@ -166,26 +208,30 @@ const report = {
     "or error or surface that could not be exercised at all",
 };
 
-// The line is composed from the run, so the numbers the judge reads and the
+// The lines are composed from the run, so the numbers the judge reads and the
 // numbers in this report cannot drift apart — the defect a hand-typed line in
 // the prose file was.
 report.facet_line = composeExperienceFacetLine(report) || "";
-if (report.facet_line.length > COMPLETE_FACET_CLIP) {
-  fail(
-    `the composed facet line is ${report.facet_line.length} chars, over the ` +
-      `${COMPLETE_FACET_CLIP}-char clip. It would be cut in transit and the ` +
-      "limit half of the claim is exactly what gets cut. Shorten the clause; " +
-      "do not raise the clip.",
-  );
-} else if (report.facet_line)
-  console.log(
-    `facet line (${report.facet_line.length} chars):\n  ${report.facet_line}`,
-  );
-else
-  fail(
-    "no facet line could be composed: the walk measured nothing, so the axis " +
-      "has no proof line from this run",
-  );
+report.facet_lines = {
+  experience: report.facet_line,
+  translation: composeTranslationFacetLine(report) || "",
+};
+for (const [axis, line] of Object.entries(report.facet_lines)) {
+  if (line.length > COMPLETE_FACET_CLIP) {
+    fail(
+      `the composed \`${axis}\` facet line is ${line.length} chars, over the ` +
+        `${COMPLETE_FACET_CLIP}-char clip. It would be cut in transit and the ` +
+        "limit half of the claim is exactly what gets cut. Shorten the clause; " +
+        "do not raise the clip.",
+    );
+  } else if (line)
+    console.log(`facet line [${axis}] (${line.length} chars):\n  ${line}`);
+  else
+    fail(
+      `no \`${axis}\` facet line could be composed: the walk measured nothing, ` +
+        "so the axis has no proof line from this run",
+    );
+}
 
 if (opts.out) {
   mkdirSync(dirname(opts.out), { recursive: true });

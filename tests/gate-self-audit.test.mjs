@@ -24,8 +24,8 @@
 // composes a proof line nobody can check is the mechanism by which a score
 // rises without the product changing.
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -59,6 +59,9 @@ import {
   gateExitCode,
 } from "../scripts/lib/jev-run.mjs";
 import { comparisonIntegrity } from "../scripts/lib/paths-integrity.mjs";
+import { splitDivergences } from "../scripts/lib/deploy-blobs.mjs";
+import { deployList } from "../scripts/lib/deploy-manifest.mjs";
+import { ROOT } from "../scripts/serve-static.mjs";
 import { HORIZON_YEARS, PATH_IDS } from "../assets/js/sizing/paths.js";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1620,4 +1623,196 @@ test("AUDIT/tests: no top-level test in the suites this cycle added is nested in
         "runs the file green while Node 22 (CI) reports failures",
     );
   }
+});
+
+test("AUDIT/staging: an UNSTAGED deployable edit is told apart from a staged one", (t) => {
+  // The trap, and the reason the two halves are split rather than merged into
+  // one list. Staging reads the git INDEX, so an edit left in the working tree
+  // is simply not in the build a gate is about to measure — and the gate
+  // reports a clean page for a page nobody edited. That happened twice in one
+  // session and was caught both times by noticing the numbers had not moved.
+  //
+  // The trap was ALREADY instrumented: `stageFromIndex` prints a STAGE NOTE.
+  // It was missed anyway, because it is a note. The split exists so a GATE can
+  // act on it, not for a human to read.
+  //
+  // A SCRATCH repository, deliberately. `splitDivergences` takes its root as a
+  // parameter precisely so this is possible, and the first version of this test
+  // dirtied the real root — which is a bet against 1600 tests running in
+  // parallel, one of which already writes robots.txt there. A test that fights
+  // its neighbours for a file teaches people to re-run, which is worse than no
+  // test.
+  const dir = mkdtempSync(join(tmpdir(), "bec-stagediv-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const g = (...args) =>
+    execFileSync("git", args, { cwd: dir, encoding: "utf8", stdio: "ignore" });
+  writeFileSync(join(dir, "index.html"), "<!doctype html>\n");
+  writeFileSync(join(dir, "robots.txt"), "User-agent: *\n");
+  g("init", "-q", ".");
+  g("-c", "user.name=t", "-c", "user.email=t@e", "add", "-A");
+  g("-c", "user.name=t", "-c", "user.email=t@e", "commit", "-q", "-m", "base");
+
+  const clean = splitDivergences(dir, ["robots.txt", "index.html"]);
+  assert.deepEqual(clean.unstaged, [], "a clean tree has neither half");
+  assert.deepEqual(clean.staged, []);
+
+  writeFileSync(join(dir, "robots.txt"), "User-agent: *\n<!-- probe -->\n");
+  const dirty = splitDivergences(dir, ["robots.txt", "index.html"]);
+  assert.deepEqual(
+    dirty.unstaged,
+    ["robots.txt"],
+    "an unstaged edit to a deployable must be in the unstaged half, by name",
+  );
+  assert.deepEqual(
+    dirty.staged,
+    [],
+    "and NOT in the staged half: that half means the build contains it",
+  );
+  assert.deepEqual(dirty.all, ["robots.txt"], "and the union is both halves");
+
+  // Staged is the opposite claim, and the gate must be able to tell the
+  // difference — a branch under review is staged-but-uncommitted all day, and
+  // refusing to measure that would mean never measuring work in progress.
+  g("add", "robots.txt");
+  const staged = splitDivergences(dir, ["robots.txt", "index.html"]);
+  assert.deepEqual(
+    staged.staged,
+    ["robots.txt"],
+    "a staged edit IS in the build and must be reported as such",
+  );
+  assert.deepEqual(
+    staged.unstaged,
+    [],
+    "and must not be reported as missing from it, which would refuse the run",
+  );
+  assert.deepEqual(
+    staged.all,
+    ["robots.txt"],
+    "an axis cannot be in both halves; it is one state or the other",
+  );
+});
+
+test("AUDIT/staging: the experience gate refuses to measure a stale build", () => {
+  // The guard itself, asserted at the source, because a guard that can be
+  // deleted silently is a comment. It must run BEFORE the browser starts (a
+  // refused run is cheap) and it must name the files and the remedy.
+  const src = readFileSync("scripts/check-experience.mjs", "utf8");
+  const guardAt = src.indexOf("splitDivergences(");
+  const walkAt = src.indexOf("runExperienceWalk(");
+  assert.ok(guardAt > 0, "the gate must consult the index before walking");
+  assert.ok(
+    guardAt < walkAt,
+    "the guard must run BEFORE the walk: a refused run must not have driven a " +
+      "browser or reported a verdict",
+  );
+  assert.match(
+    src,
+    /\.unstaged\.length/,
+    "and it must act on the unstaged half",
+  );
+  assert.match(
+    src,
+    /process\.exit\(1\)/,
+    "and it must refuse, not merely warn",
+  );
+  assert.match(
+    src,
+    /git add/,
+    "naming the remedy, which is the part people skip",
+  );
+});
+
+test("AUDIT/staging: the split is the one the gate reads, not a private copy", () => {
+  // If the gate computed its own divergence list, the helper and the gate could
+  // disagree and only one of them would be tested.
+  const gate = readFileSync("scripts/check-experience.mjs", "utf8");
+  assert.match(
+    gate,
+    /import \{ splitDivergences \} from "\.\/lib\/deploy-blobs\.mjs"/,
+    "the gate must use the shared helper, so one test covers both",
+  );
+  const staging = readFileSync("scripts/deploy-pages-local.mjs", "utf8");
+  assert.match(
+    staging,
+    /stageFromIndex/,
+    "and the staging script must keep reading the index, which is the whole " +
+      "reason the guard exists",
+  );
+});
+test("AUDIT/staging: the experience gate refuses to measure a stale build", () => {
+  // The guard itself, asserted at the source, because a guard that can be
+  // deleted silently is a comment. It must run BEFORE the browser starts (a
+  // refused run is cheap) and it must name the files and the remedy.
+  const src = readFileSync("scripts/check-experience.mjs", "utf8");
+  const guardAt = src.indexOf("splitDivergences(");
+  const walkAt = src.indexOf("runExperienceWalk(");
+  assert.ok(guardAt > 0, "the gate must consult the index before walking");
+  assert.ok(
+    guardAt < walkAt,
+    "the guard must run BEFORE the walk: a refused run must not have driven a " +
+      "browser or reported a verdict",
+  );
+  assert.match(
+    src,
+    /\.unstaged\.length/,
+    "and it must act on the unstaged half",
+  );
+  assert.match(
+    src,
+    /process\.exit\(1\)/,
+    "and it must refuse, not merely warn",
+  );
+  assert.match(
+    src,
+    /git add/,
+    "naming the remedy, which is the part people skip",
+  );
+});
+
+test("AUDIT/staging: the split is the one the gate reads, not a private copy", () => {
+  // If the gate computed its own divergence list, the helper and the gate could
+  // disagree and only one of them would be tested.
+  const gate = readFileSync("scripts/check-experience.mjs", "utf8");
+  assert.match(
+    gate,
+    /import \{ splitDivergences \} from "\.\/lib\/deploy-blobs\.mjs"/,
+    "the gate must use the shared helper, so one test covers both",
+  );
+  const staging = readFileSync("scripts/deploy-pages-local.mjs", "utf8");
+  assert.match(
+    staging,
+    /stageFromIndex/,
+    "and the staging script must keep reading the index, which is the whole " +
+      "reason the guard exists",
+  );
+});
+test("AUDIT/tokens: running npm run tokens is NOT a no-op, and that is written down", () => {
+  // Measured this session: three consecutive runs with no change to any shipped
+  // byte advanced the stamp i -> j -> k. It is unconditional. The churn nearly
+  // shipped, because a successful run looks identical to a justified one and
+  // the next step (commit) then carries a whole-graph cache bust for no change.
+  //
+  // This is a documentation guard, not a behavioural one: the behaviour is what
+  // it is, and changing it is a separate decision. What is guarded is that the
+  // WARNING stays where the next person will read it — inside the script, next
+  // to the command — rather than in a transcript nobody re-reads.
+  const src = readFileSync("scripts/bump-asset-tokens.mjs", "utf8");
+  assert.match(
+    src,
+    /RUNNING THIS IS NOT FREE|NOT a no-op/i,
+    "the script must say in its own header that running it changes the stamp " +
+      "whether or not the bytes changed",
+  );
+  assert.match(
+    src,
+    /git checkout --/,
+    "and must name the remedy, because telling someone a thing is not free " +
+      "without telling them what to do about it is only half a warning",
+  );
+  assert.match(
+    src,
+    /seo_summary/,
+    "and must name the second-order cost: the evidence line has to be updated " +
+      "to match, or the release is refused for a stamp nobody changed bytes for",
+  );
 });

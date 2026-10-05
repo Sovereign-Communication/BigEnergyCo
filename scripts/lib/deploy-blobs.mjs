@@ -149,25 +149,43 @@ export function stageFromIndex(root, stageDir, paths) {
  * working tree agree, which is what every gate and every promote assumes.
  */
 export function workingTreeDivergences(root, paths) {
-  if (!paths.length) return [];
-  // Normalised like readIndexBlobs, so a Windows-style input cannot silently
-  // match nothing and report "no divergences".
+  return splitDivergences(root, paths).all;
+}
+
+/**
+ * The two halves of a divergence, kept apart because they mean OPPOSITE things.
+ *
+ *   UNSTAGED — index vs working tree. The build, which reads the index, does NOT
+ *     contain this edit. Measuring the build and reporting the result as a
+ *     statement about the working tree is wrong, and it is wrong invisibly: the
+ *     numbers come out fine and describe a page nobody is looking at.
+ *   STAGED-BUT-UNCOMMITTED — HEAD vs index. The build DOES contain it, and the
+ *     next commit will carry it. Naming it is what keeps the word "committed"
+ *     in the staging note honest; failing on it would refuse to measure work in
+ *     progress, which is the ordinary state of a branch.
+ *
+ * This split exists because that confusion cost a real measurement twice in one
+ * session: a mutation was written to the working tree, the build was staged
+ * without it, and the gate reported a clean page. Both times it was caught by
+ * noticing the numbers made no sense, never by an instrument. A gate that
+ * cannot tell the difference is an instrument that will say the wrong thing
+ * quietly, so it is now told the difference.
+ */
+export function splitDivergences(root, paths) {
+  if (!paths.length) return { unstaged: [], staged: [], all: [] };
   const wanted = paths.map((p) => p.split("\\").join("/"));
-  // BOTH halves of the index are covered, because the build reads the index:
-  //   `git diff`         index vs WORKING TREE — an unstaged edit, which the
-  //                      build does NOT contain.
-  //   `git diff --cached` HEAD vs INDEX — a STAGED edit, which the build DOES
-  //                      contain and the next commit will carry. Reporting it is
-  //                      what keeps the word "committed" in the warning honest.
-  const seen = new Set();
-  for (const argv of [["diff"], ["diff", "--cached"]]) {
+  const collect = (argv) => {
     const out = execFileSync("git", [...argv, "--name-only", "-z"], {
       cwd: root,
       maxBuffer: 64 * 1024 * 1024,
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
     });
-    for (const p of out.split("\0")) if (p) seen.add(p);
-  }
-  return wanted.filter((p) => seen.has(p));
+    return new Set(out.split("\0").filter(Boolean));
+  };
+  const inWorktree = collect(["diff"]);
+  const inIndex = collect(["diff", "--cached"]);
+  const unstaged = wanted.filter((p) => inWorktree.has(p));
+  const staged = wanted.filter((p) => !unstaged.includes(p) && inIndex.has(p));
+  return { unstaged, staged, all: [...unstaged, ...staged] };
 }

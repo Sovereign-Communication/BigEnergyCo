@@ -25,6 +25,7 @@ import {
   LOCALE_PHASES,
   LOCALE_SURFACES,
   composeExperienceFacetLine,
+  composeTranslationFacetLine,
   evaluateExperience,
   judgeLocaleSweep,
   summariseLocaleSweep,
@@ -172,7 +173,46 @@ test("TABLES: every empty state has a selector and an invite pattern", () => {
 });
 
 test("TABLES: the facet has exactly one owner", () => {
-  assert.deepEqual(EXPERIENCE_FACET_AXES, ["experience"]);
+  // The rule is ONE OWNER PER AXIS, not one axis per gate. This gate now speaks
+  // for two, because the judge's demand for `translation` names a question only
+  // a browser can answer ("no raw key name reaching a visitor") and leaving it
+  // to a typed line meant the measurement went unread under `experience`. What
+  // must never happen is the same axis being claimed twice: the builder
+  // overwrites per axis, so a second claimant deletes the first line rather than
+  // adding a second.
+  assert.deepEqual(EXPERIENCE_FACET_AXES, ["experience", "translation"]);
+  assert.equal(
+    new Set(EXPERIENCE_FACET_AXES).size,
+    EXPERIENCE_FACET_AXES.length,
+    "an axis declared twice is one line silently overwriting the other",
+  );
+  // And every declared axis must have a line composed FOR it, or the builder
+  // would file one axis's sentence under the other's name.
+  for (const axis of EXPERIENCE_FACET_AXES) {
+    const line =
+      axis === "translation"
+        ? composeTranslationFacetLine({ experience_reading: HEALTHY() })
+        : composeExperienceFacetLine({ experience_reading: HEALTHY() });
+    assert.ok(line, `axis ${axis} composes nothing from a healthy run`);
+  }
+});
+
+test("TABLES: no other gate claims an axis this one owns", () => {
+  // One owner, checked against the tree rather than against intent. A second
+  // gate declaring `translation` would not add a proof line — it would delete
+  // the one the browser run just composed.
+  for (const file of [
+    "scripts/check-lighthouse.mjs",
+    "scripts/check-resilience.mjs",
+  ]) {
+    const src = readFileSync(file, "utf8");
+    for (const axis of EXPERIENCE_FACET_AXES)
+      assert.doesNotMatch(
+        src,
+        new RegExp(`"${axis}"`),
+        `${file} must not claim \`${axis}\`: this gate composes it from the run`,
+      );
+  }
 });
 
 // ── the next-step matcher, which is the load-bearing judgment ────────────────
@@ -953,4 +993,70 @@ test("SCOPE: the scope limit no longer claims copy is checked in English only", 
   // reads as a licence to stop measuring.
   assert.match(EXPERIENCE_SCOPE_LIMIT, /NOT walked/);
   assert.match(EXPERIENCE_SCOPE_LIMIT, /not the prose/);
+});
+
+test("FACETS: one gate speaking for two axes emits a DIFFERENT line for each", () => {
+  // The builder applies a single string to every axis in facet_axes. Reusing
+  // the journey line as the translation line would file a first-run walk under
+  // a heading that never mentions a locale, so `facet_lines` is the mechanism
+  // and it has to produce two sentences, not one sentence twice.
+  const exp = composeExperienceFacetLine({ experience_reading: HEALTHY() });
+  const tra = composeTranslationFacetLine({ experience_reading: HEALTHY() });
+  assert.ok(exp && tra, "both axes compose from a healthy run");
+  assert.notEqual(
+    exp,
+    tra,
+    "two axes cannot be served by one sentence; serving them one sentence is " +
+      "exactly the 'one line silently wins' failure this move was meant to fix",
+  );
+  assert.match(tra, /locales/, "the translation line must name the locales");
+  assert.match(tra, /check-i18n/, "and say where parity is gated");
+  assert.match(tra, /Not done/, "and what it did not do");
+  for (const [axis, line] of [
+    ["experience", exp],
+    ["translation", tra],
+  ]) {
+    assert.ok(
+      line.length <= COMPLETE_FACET_CLIP,
+      `the ${axis} line is ${line.length} chars and would be cut in transit`,
+    );
+  }
+});
+
+test("FACETS: the translation line refuses to compose from an unwalked run", () => {
+  // A line about six locales composed from a walk that never happened is the
+  // most expensive sentence available on this axis, and it is exactly what the
+  // typed line it replaced was doing. Null has to stay null.
+  for (const reading of [
+    null,
+    {},
+    { experience_reading: null },
+    { experience_reading: { actions: [] } },
+    { experience_reading: { actions: [{ id: "land", acknowledged: true }] } },
+  ]) {
+    assert.equal(
+      composeTranslationFacetLine(reading),
+      null,
+      `a line composed from ${JSON.stringify(reading)} is a claim about nothing`,
+    );
+  }
+});
+
+test("FACETS: the translation line counts the locales and moments it swept", () => {
+  const tra = composeTranslationFacetLine({ experience_reading: HEALTHY() });
+  const s = summariseLocaleSweep(HEALTHY());
+  assert.ok(
+    tra.includes(`${s.matched}/${s.judged}`),
+    "the denominator must be the evaluator's, not a number typed beside it",
+  );
+  assert.match(tra, new RegExp(`${s.locales} locales`));
+  assert.match(tra, new RegExp(`${s.phases} re-entry points`));
+  // …and it must NOT claim a locale it did not walk, which is the whole reason
+  // the count comes from the sweep rather than from the constant six.
+  const oneLocale = HEALTHY();
+  oneLocale.locales = oneLocale.locales.filter((p) => p.locale === "en");
+  const short = composeTranslationFacetLine({
+    experience_reading: oneLocale,
+  });
+  assert.match(short, /1 locales/, "a sweep of one locale must say one locale");
 });

@@ -179,49 +179,85 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
   // block about its owner is how an axis ends up in NEITHER place, which is
   // precisely the empty record the test exists to prevent — so the owner list
   // grows here rather than the assertion being loosened.
-  const { EXPERIENCE_FACET_AXES, composeExperienceFacetLine } =
-    await import("../scripts/lib/experience-budgets.mjs");
+  const {
+    EXPERIENCE_FACET_AXES,
+    composeExperienceFacetLine,
+    composeTranslationFacetLine,
+  } = await import("../scripts/lib/experience-budgets.mjs");
   if (EXPERIENCE_FACET_AXES.includes("experience")) {
-    const { EXPERIENCE_ACTIONS, EXPERIENCE_ERRORS, EXPERIENCE_EMPTY_STATES } =
-      await import("../scripts/smoke/experience.mjs");
-    derived.experience = composeExperienceFacetLine({
-      experience_reading: {
+    const {
+      EXPERIENCE_ACTIONS,
+      EXPERIENCE_EMPTY_STATES,
+      EXPERIENCE_ERRORS,
+      EXPERIENCE_LOCALES,
+      LOCALE_PHASES,
+      LOCALE_SURFACES,
+    } = await import("../scripts/smoke/experience.mjs");
+    const { LOCALES } = await import("../assets/js/shared/locales.js");
+    const reading = {
+      ok: true,
+      actions: EXPERIENCE_ACTIONS.map((a) => ({
+        id: a.id,
+        label: a.label,
+        kind: a.kind,
+        attempted: true,
+        acknowledged: true,
+        ms: 90,
+        acknowledged_before_result: true,
+      })),
+      errors: EXPERIENCE_ERRORS.map((e) => ({
+        id: e.id,
+        label: e.label,
+        triggered: true,
+        // A message that names a next step, which is what the shipped copy now
+        // says. Composing from a dead-end message here would fail this test for
+        // a reason unrelated to what it is testing.
+        status:
+          "Something failed — enter a figure in that range and try again.",
+        next_step: true,
+      })),
+      empty_states: EXPERIENCE_EMPTY_STATES.map((e) => ({
+        id: e.id,
+        label: e.label,
+        selector: e.selector,
         ok: true,
-        actions: EXPERIENCE_ACTIONS.map((a) => ({
-          id: a.id,
-          label: a.label,
-          kind: a.kind,
-          attempted: true,
-          acknowledged: true,
-          ms: 90,
-          acknowledged_before_result: true,
+        visible: true,
+        controls: 0,
+        text: "Enter something and the estimate appears here.",
+        invites: true,
+        blank_while_visible: false,
+        raw_key: false,
+      })),
+      key_leaks: [],
+      // The six-locale sweep, in the shape the walk produces. `translation` is
+      // composed from this and nothing else, which is the point: the axis moved
+      // off a hand-typed line precisely so it could be composed from a run.
+      locales: EXPERIENCE_LOCALES.flatMap((locale) =>
+        LOCALE_PHASES.map((phase) => ({
+          locale,
+          phase,
+          lang: locale,
+          dir: locale === "ar" ? "rtl" : "ltr",
+          ready: true,
+          surfaces: LOCALE_SURFACES.map((spec) => ({
+            id: spec.id,
+            key: spec.key,
+            exists: true,
+            text: LOCALES[locale][spec.key],
+            visible: true,
+            raw_key: false,
+          })),
+          leaks: [],
         })),
-        errors: EXPERIENCE_ERRORS.map((e) => ({
-          id: e.id,
-          label: e.label,
-          triggered: true,
-          // A message that names a next step, which is what the shipped copy now
-          // says. Composing from a dead-end message here would fail this test for
-          // a reason unrelated to what it is testing.
-          status:
-            "Something failed — enter a figure in that range and try again.",
-          next_step: true,
-        })),
-        empty_states: EXPERIENCE_EMPTY_STATES.map((e) => ({
-          id: e.id,
-          label: e.label,
-          selector: e.selector,
-          ok: true,
-          visible: true,
-          controls: 0,
-          text: "Enter something and the estimate appears here.",
-          invites: true,
-          blank_while_visible: false,
-          raw_key: false,
-        })),
-        key_leaks: [],
-      },
+      ),
+    };
+    derived.experience = composeExperienceFacetLine({
+      experience_reading: reading,
     });
+    if (EXPERIENCE_FACET_AXES.includes("translation"))
+      derived.translation = composeTranslationFacetLine({
+        experience_reading: reading,
+      });
   }
 
   for (const axis of axes) {
@@ -360,46 +396,83 @@ test("TRANSPORT: the real 21-axis record survives whole — every line and note"
   // healthy reading. Without it the record this test measures is not the record
   // the judge receives, and the axis would be reported as "lost from transport"
   // when in fact nothing was lost.
-  const { EXPERIENCE_FACET_AXES, composeExperienceFacetLine } =
-    await import("../scripts/lib/experience-budgets.mjs");
+  const {
+    EXPERIENCE_FACET_AXES,
+    composeExperienceFacetLine,
+    composeTranslationFacetLine,
+  } = await import("../scripts/lib/experience-budgets.mjs");
   if (EXPERIENCE_FACET_AXES.includes("experience")) {
-    const { EXPERIENCE_ACTIONS, EXPERIENCE_ERRORS, EXPERIENCE_EMPTY_STATES } =
-      await import("../scripts/smoke/experience.mjs");
-    ev.facet_evidence.experience = composeExperienceFacetLine({
-      experience_reading: {
+    const {
+      EXPERIENCE_ACTIONS,
+      EXPERIENCE_EMPTY_STATES,
+      EXPERIENCE_ERRORS,
+      EXPERIENCE_LOCALES,
+      LOCALE_PHASES,
+      LOCALE_SURFACES,
+    } = await import("../scripts/smoke/experience.mjs");
+    const { LOCALES } = await import("../assets/js/shared/locales.js");
+    const reading = {
+      ok: true,
+      actions: EXPERIENCE_ACTIONS.map((a) => ({
+        id: a.id,
+        label: a.label,
+        kind: a.kind,
+        attempted: true,
+        acknowledged: true,
+        ms: 90,
+        acknowledged_before_result: true,
+      })),
+      errors: EXPERIENCE_ERRORS.map((e) => ({
+        id: e.id,
+        label: e.label,
+        triggered: true,
+        status:
+          "Something failed — enter a figure in that range and try again.",
+        next_step: true,
+      })),
+      empty_states: EXPERIENCE_EMPTY_STATES.map((e) => ({
+        id: e.id,
+        label: e.label,
+        selector: e.selector,
         ok: true,
-        actions: EXPERIENCE_ACTIONS.map((a) => ({
-          id: a.id,
-          label: a.label,
-          kind: a.kind,
-          attempted: true,
-          acknowledged: true,
-          ms: 90,
-          acknowledged_before_result: true,
+        visible: true,
+        controls: 0,
+        text: "Enter something and the estimate appears here.",
+        invites: true,
+        blank_while_visible: false,
+        raw_key: false,
+      })),
+      key_leaks: [],
+      locales: EXPERIENCE_LOCALES.flatMap((locale) =>
+        LOCALE_PHASES.map((phase) => ({
+          locale,
+          phase,
+          lang: locale,
+          dir: locale === "ar" ? "rtl" : "ltr",
+          ready: true,
+          surfaces: LOCALE_SURFACES.map((spec) => ({
+            id: spec.id,
+            key: spec.key,
+            exists: true,
+            text: LOCALES[locale][spec.key],
+            visible: true,
+            raw_key: false,
+          })),
+          leaks: [],
         })),
-        errors: EXPERIENCE_ERRORS.map((e) => ({
-          id: e.id,
-          label: e.label,
-          triggered: true,
-          status:
-            "Something failed — enter a figure in that range and try again.",
-          next_step: true,
-        })),
-        empty_states: EXPERIENCE_EMPTY_STATES.map((e) => ({
-          id: e.id,
-          label: e.label,
-          selector: e.selector,
-          ok: true,
-          visible: true,
-          controls: 0,
-          text: "Enter something and the estimate appears here.",
-          invites: true,
-          blank_while_visible: false,
-          raw_key: false,
-        })),
-        key_leaks: [],
-      },
+      ),
+    };
+    ev.facet_evidence.experience = composeExperienceFacetLine({
+      experience_reading: reading,
     });
+    // …and the translation line, which is no longer typed at all. If this block
+    // does not compose it, the record measured here is missing an axis the judge
+    // WILL receive, and the transport budget would be asserted against a record
+    // that is smaller than the real one.
+    if (EXPERIENCE_FACET_AXES.includes("translation"))
+      ev.facet_evidence.translation = composeTranslationFacetLine({
+        experience_reading: reading,
+      });
   }
   const merged = mergeEvidence(ev, AUTO);
   const text = buildStateText(merged, AUTO, axes);

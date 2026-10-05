@@ -145,32 +145,65 @@ function readGateReports(dir) {
     if (!parsed || typeof parsed !== "object") continue;
     if (!Array.isArray(parsed.facet_axes) || parsed.facet_axes.length === 0)
       continue;
-    if (typeof parsed.facet_line !== "string" || !parsed.facet_line.trim()) {
+    // ONE LINE PER AXIS, and this is the reason. A report may speak for several
+    // facets, and a single string applied to all of them says the same thing
+    // twice while answering neither: the experience walk's line is evidence
+    // about a first-run journey, and reusing it as the translation facet's line
+    // would file six locales of measured copy under a heading that never
+    // mentions a locale. So `facet_lines` maps an axis to the line composed FOR
+    // that axis, and `facet_line` remains the fallback for a gate that owns one.
+    const perAxis =
+      parsed.facet_lines && typeof parsed.facet_lines === "object"
+        ? parsed.facet_lines
+        : null;
+    const lineFor = (axis) => {
+      if (perAxis) {
+        // A report that composes per axis must compose EVERY axis. Falling back
+        // to the single line for one of them is the silent-wins failure with an
+        // extra step: the second facet's proof would be a copy of the first's.
+        return typeof perAxis[axis] === "string"
+          ? { line: perAxis[axis], from: `facet_lines.${axis}` }
+          : null;
+      }
+      // No per-axis map: one sentence may serve the report only while it speaks
+      // for one facet. Two axes off one string means the second facet's proof
+      // line is a duplicate of the first's, which is worse than no line.
+      if (parsed.facet_axes.length > 1)
+        return { line: null, from: "facet_line" };
+      return typeof parsed.facet_line === "string"
+        ? { line: parsed.facet_line, from: "facet_line" }
+        : null;
+    };
+    const missing = parsed.facet_axes.filter((a) => !lineFor(a)?.line?.trim());
+    if (missing.length) {
       problems.push(
-        `${name} declares facet_axes [${parsed.facet_axes.join(", ")}] but ` +
-          "carries no facet_line, so those axes get no proof line from the run " +
-          "that measured them",
+        `${name} declares facet_axes [${missing.join(", ")}] but carries no ` +
+          (parsed.facet_axes.length > 1 && !perAxis
+            ? "line of its own for each. One sentence cannot be the proof line " +
+              "for two facets — a duplicate reads as a second measurement, and " +
+              "the facet it actually describes is the one that gets read. Use " +
+              "`facet_lines`"
+            : "line for them, so those axes get no proof line from the run that " +
+              "measured them"),
       );
       continue;
     }
-    // The clip is enforced here, loudly. A line that overflows is SILENTLY cut
-    // on its way to the judge, and for this cluster the honest tail is exactly
-    // what gets cut — so an over-long line is a named problem, not a trim.
-    if (parsed.facet_line.length > COMPLETE_FACET_CLIP) {
-      problems.push(
-        `${name} facet_line is ${parsed.facet_line.length} chars, over the ` +
-          `${COMPLETE_FACET_CLIP}-char per-axis clip; it would be cut in transit, ` +
-          "which would silently drop the part that says how to read it",
-      );
-      continue;
-    }
+    // The clip is enforced here, loudly, and PER LINE. A line that overflows is
+    // SILENTLY cut on its way to the judge, and for this cluster the honest tail
+    // is exactly what gets cut — so an over-long line is a named problem, not a
+    // trim. Checked per axis because two axes from one gate are two sentences
+    // the judge reads separately, and either can be the one that overflows.
     for (const axis of parsed.facet_axes) {
-      reports.push({
-        axis,
-        line: parsed.facet_line,
-        source: name,
-        metric: parsed.metric,
-      });
+      const { line, from } = lineFor(axis);
+      if (line.length > COMPLETE_FACET_CLIP) {
+        problems.push(
+          `${name} ${from} is ${line.length} chars, over the ` +
+            `${COMPLETE_FACET_CLIP}-char per-axis clip; it would be cut in ` +
+            "transit, which would silently drop the part that says how to read it",
+        );
+        continue;
+      }
+      reports.push({ axis, line, source: name, metric: parsed.metric });
     }
   }
   return { reports, problems };

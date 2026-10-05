@@ -169,8 +169,39 @@ test("EVIDENCE: the privacy facet line cannot contradict a green privacy gate", 
   }
 });
 
-test("EVIDENCE: the translation facet line cannot contradict a green i18n gate", () => {
-  const line = facetLine("translation");
+test("EVIDENCE: the translation facet line cannot contradict a green i18n gate", async () => {
+  // The line is COMPOSED now, not typed: `translation` moved to the gate that
+  // walks six locales, because the judge's demand for the axis is a question
+  // about a rendered surface. The claim being checked here is unchanged and the
+  // teeth are not: whatever reaches the judge must name the gate that measures
+  // parity, and must not describe a defect that gate now prevents.
+  const {
+    EXPERIENCE_LOCALES,
+    LOCALE_PHASES,
+    LOCALE_SURFACES,
+    composeTranslationFacetLine,
+  } = await load("scripts/lib/experience-budgets.mjs");
+  const { LOCALES } = await load("assets/js/shared/locales.js");
+  const line = composeTranslationFacetLine({
+    experience_reading: {
+      actions: [{ id: "land", acknowledged: true }],
+      key_leaks: [],
+      locales: EXPERIENCE_LOCALES.flatMap((locale) =>
+        LOCALE_PHASES.map((phase) => ({
+          locale,
+          phase,
+          surfaces: LOCALE_SURFACES.map((spec) => ({
+            id: spec.id,
+            key: spec.key,
+            text: LOCALES[locale][spec.key],
+            visible: true,
+          })),
+          leaks: [],
+        })),
+      ),
+    },
+  });
+  assert.ok(line, "a healthy six-locale walk composes a translation line");
   assert.ok(
     line.includes("check-i18n.mjs"),
     "the translation line must name the gate that measures it",
