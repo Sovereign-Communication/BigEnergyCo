@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261005b";
+import { APPLIANCES } from "./appliances.js?v=20261005c";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -24,14 +24,14 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261005b";
+} from "./usecases.js?v=20261005c";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261005b";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261005b";
+} from "./run-coordinator.js?v=20261005c";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261005c";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -40,12 +40,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261005b";
+} from "./charts.js?v=20261005c";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261005b";
+} from "./location-picker.js?v=20261005c";
 
 import {
   estimateTariff,
@@ -53,27 +53,44 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261005b";
+} from "./pricing.js?v=20261005c";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261005b";
+import { currencyForCountry } from "./country-currency.js?v=20261005c";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261005b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261005c";
+
+// THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
+// Static, not lazy: the ELI5 card's installer-vs-direct sentence and the
+// comparison panel both read it on first paint, so a dynamic import here would
+// mean the page shows a guessed quote and then corrects it a moment later —
+// two different turnkey numbers on one screen, which is the exact defect
+// D-01 exists to remove. The eager budget in tests/perf-budget.test.mjs now
+// counts this file like any other member of the graph.
+import {
+  priceAllPaths,
+  describePaths,
+  systemForPaths,
+  DRIVER_KEYS,
+  LABEL_KEYS,
+  PATH_IDS,
+  HORIZON_YEARS as PATHS_HORIZON_YEARS,
+} from "./paths.js?v=20261005c";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261005b";
+} from "./lead-acid.js?v=20261005c";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261005b";
+} from "./bom.js?v=20261005c";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261005b";
+import { BOM_ITEMS } from "../shared/content.js?v=20261005c";
 
 import {
   applyI18n,
@@ -82,18 +99,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261005b";
+} from "../shared/i18n.js?v=20261005c";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261005b";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261005b";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261005c";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261005c";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261005b";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261005b";
+} from "../shared/simple-mode.js?v=20261005c";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261005c";
 import {
   advisorJevContext,
   interpretSanity,
@@ -101,56 +118,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261005b";
+} from "./validate.js?v=20261005c";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261005b";
+} from "../shared/cut-targets.js?v=20261005c";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261005b";
+} from "./share-codec.js?v=20261005c";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261005b";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261005b";
+} from "./infeasible-copy.js?v=20261005c";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261005c";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261005b";
+} from "./fuel-units.js?v=20261005c";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261005b";
+} from "./frontier-chart.js?v=20261005c";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261005b";
+} from "./rescale.js?v=20261005c";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261005b";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261005c";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20261005b";
+} from "./map-provider.js?v=20261005c";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261005b";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261005b";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261005b";
+} from "./wizard.js?v=20261005c";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261005c";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261005c";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -199,9 +216,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261005b";
+} from "./money.js?v=20261005c";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261005b";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261005c";
 
 let worker = null;
 
@@ -248,6 +265,14 @@ let customCutFraction = 0.8;
 // shows: "best" | "focus" (adopted curve point) | "matrix:chem:colId" | "custom" |
 // "adopted" (a curve point adopted instantly, without a full re-run).
 let selectedKey = "best";
+
+// Purchase-path comparison state (D-01 §6.4). Declared up here with the rest
+// of the module state because setCoords() resets the cache long before this
+// file's first function definition \u2014 a `let` further down would be a temporal
+// dead zone waiting for someone to wire up a new caller.
+let pathsCache = { key: null, result: null }; // priced per selection; two callers ask
+let pathsInstrument = "ppa"; // ppa buys ENERGY; lease rents the SYSTEM
+let resolvedCountry = null; // picks the price registry
 
 // The exact system the visitor just clicked on the price curve. Adopting it
 // is instant (its full analysis rides along in the cached frontier point);
@@ -2141,6 +2166,13 @@ function setCoords(lat, lon, label, region, country, skipShareUpdate = false) {
     lastPayload = null;
   }
 
+  // The purchase-path registry is chosen by COUNTRY, and it is read long after
+  // this call \u2014 so the resolved value is stored here rather than re-derived
+  // when the comparison panel renders.
+  resolvedCountry =
+    resolveRegionCountry(lat, lon, region, country).country || null;
+  pathsCache = { key: null, result: null };
+
   applyEstimatedTariff(lat, lon, region, country);
 
   updateFuelUnits();
@@ -2227,16 +2259,25 @@ function updateCurrencyUnitLabel() {
   updateFuelUnits();
 }
 
+/**
+ * The region and country a bare coordinate sits in. ONE owner: the tariff
+ * estimate and the purchase-path price registry both need the resolved
+ * country, and two lookups that could drift would price a system in one
+ * country's registry and quote its bill in another's.
+ */
+function resolveRegionCountry(lat, lon, region, country) {
+  if (region || country || !Number.isFinite(lat) || !Number.isFinite(lon))
+    return { region, country };
+  const near = nearestCity(lat, lon, CITY_CATALOG, 80);
+  return near ? { region: near.r, country: near.country } : { region, country };
+}
+
 function applyEstimatedTariff(lat, lon, region, country) {
   if (tariffTouched) return;
 
-  if (!region && !country && Number.isFinite(lat) && Number.isFinite(lon)) {
-    const near = nearestCity(lat, lon, CITY_CATALOG, 80);
-    if (near) {
-      region = near.r;
-      country = near.country;
-    }
-  }
+  const resolved = resolveRegionCountry(lat, lon, region, country);
+  region = resolved.region;
+  country = resolved.country;
 
   const est = estimateTariff(lat, lon, region, country);
 
@@ -3637,7 +3678,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261005b",
+      "./assets/js/sizing/sizing-worker.js?v=20261005c",
       {
         type: "module",
       },
@@ -3953,238 +3994,11 @@ function fxNote() {
   return `Amounts shown in ${fx.code} at ${fx.rate} per US$1. Energy cost rates and recommendations are converted to ${fx.code}; source price scopes remain USD-denominated.`;
 }
 
-function renderAutoCards(p) {
-  const grid = $("tierResults");
-
-  grid.innerHTML = "";
-
-  const isGT = p.mode === "gridtie";
-
-  // Highlight the recommended bank (sodium-first on safety; LFP only when
-  // genuinely cheaper — see pickBest), falling back to cheapest when the
-  // payload carries no recommendation.
-  let bestId = (p.best && p.best.chemistry) || null;
-  if (!bestId) {
-    let bestLife = Infinity;
-    for (const a of p.auto) {
-      if (a.solvable && a.lifetimeCostMid < bestLife) {
-        bestLife = a.lifetimeCostMid;
-        bestId = a.chemistry;
-      }
-    }
-  }
-
-  for (const a of p.auto) {
-    const isSelected = selectedKey === "auto:" + a.chemistry;
-
-    const card = el("div", {
-      class:
-        "bom-card" +
-        (a.solvable ? " card-selectable" : "") +
-        (isSelected ? " bom-card-selected" : ""),
-    });
-
-    if (a.solvable) {
-      card.setAttribute("role", "button");
-      card.setAttribute("tabindex", "0");
-      card.style.cursor = "pointer";
-      const selectCard = () => {
-        frontierSelected = null;
-        selectedKey = "auto:" + a.chemistry;
-        renderFrontierPanel(p);
-        refreshSelectionOutputs(p);
-        renderAutoCards(p);
-      };
-      card.addEventListener("click", selectCard);
-      card.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          selectCard();
-        }
-      });
-    }
-
-    card.style.borderColor = isSelected
-      ? "var(--primary-accent)"
-      : a.chemistry === bestId
-        ? "var(--border-glow)"
-        : "var(--border-card)";
-
-    card.appendChild(
-      el(
-        "div",
-        { class: "bom-badge" },
-        isGT && a.cutPct
-          ? a.pvKw > 0
-            ? `Bill -${a.cutPct}%`
-            : `${a.cutPct}% peak offset`
-          : "Same job done",
-      ),
-    );
-
-    card.appendChild(el("h3", {}, a.chemLabel));
-
-    if (!a.solvable) {
-      card.appendChild(
-        el("p", {}, "Not practical at this site/load within search limits."),
-      );
-
-      grid.appendChild(card);
-
-      continue;
-    }
-
-    const rows = [
-      ["Solar", `${a.pvKw} kW`],
-      ["Battery", `${fmt(a.battKwh)} kWh usable`],
-      ["Cost to buy", `~${moneyRange(a.costLo, a.costHi)}`],
-      [
-        "Battery swaps",
-        a.replacementsHorizon > 0
-          ? a.batteryLifeYears
-            ? `~${a.replacementsHorizon}x (about every ${fmtLife(a.batteryLifeYears)})`
-            : `~${a.replacementsHorizon}x`
-          : "None in 20 years",
-      ],
-    ];
-
-    const footAuto = footprintText(a.pvKw);
-
-    if (footAuto) rows.splice(2, 0, ["Footprint", footAuto]);
-
-    if (a.swapsAndLaborUsd > 0) {
-      rows.push(["Swaps + labor add", `~${money(a.swapsAndLaborUsd)}`]);
-    }
-
-    rows.push([
-      "Total 20-year cost",
-      `~${money(a.lifetimeCostMid)}` +
-        (a.chemistry === bestId && p.auto.filter((x) => x.solvable).length >= 2
-          ? " — recommended"
-          : ""),
-    ]);
-
-    pushSeriesBreakdown(rows, a);
-
-    if (isGT) {
-      rows.push([
-        a.pvKw > 0 ? "Bill after solar" : "Bill after",
-        fmtBillAfter(a.billAfterMonthlyUsd) ?? "needs your tariff",
-      ]);
-
-      rows.push([
-        "Sun clipped (no export)",
-        `${fmt(a.clippedKwhPerYear)} kWh/yr`,
-      ]);
-
-      if (a.exportValueAnnualUsd > 0) {
-        rows.push([
-          "Feed-in credit on clipped sun",
-          `+${money(a.exportValueAnnualUsd)}/yr`,
-        ]);
-      }
-    }
-
-    // Headline economics: TRUE break-even counts every swap. When a bank
-
-    // wears out fast enough that it never catches up, say so outright.
-
-    // undefined = stale payload (contract warning already shown) ? omit row.
-
-    if (p.tariff && a.trueBreakEvenYear !== undefined) {
-      if (typeof a.trueBreakEvenYear === "number") {
-        rows.push(["Pays for itself", `Year ${a.trueBreakEvenYear}`]);
-
-        if (a.replacementsHorizon > 0 && a.paybackYearsLo !== null) {
-          rows.push([
-            "  - first cost alone pays back in",
-            fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi),
-          ]);
-        }
-      } else {
-        rows.push([
-          "True 20-yr break-even",
-          "never - replacements outpace savings",
-        ]);
-      }
-    } else if (!p.tariff && a.paybackYearsLo !== null) {
-      rows.push([
-        "Pays for itself in",
-        fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi),
-      ]);
-    }
-
-    if (Number.isFinite(a.lcoeUsdPerKwh)) {
-      rows.push(powerCostRow(a, p.tariff));
-    }
-
-    appendRows(card, rows);
-
-    if (a.bestPriceCallout) {
-      card.appendChild(
-        el(
-          "div",
-          { class: "best-price-callout" },
-          `💡 ${bestPriceNote(a.bestPriceCallout)}`,
-        ),
-      );
-    }
-
-    if (a.cardNote) {
-      card.appendChild(
-        el(
-          "p",
-          {
-            style:
-              "font-size:0.8rem;color:var(--text-muted);margin-top:0.6rem;line-height:1.5;",
-          },
-          a.cardNote,
-        ),
-      );
-    }
-
-    card.appendChild(
-      el(
-        "p",
-        {
-          style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;",
-        },
-
-        `${p.autoNote}. Lifetime cost includes install labor on the first bank and every swap.`,
-      ),
-    );
-
-    grid.appendChild(card);
-  }
-
-  // Lead-acid savings indicator (reference only — never recommended).
-  // Skipped when it is literally the same system (bank-free designs share one
-  // PV-only system, so there is no comparison to draw) and whenever the shared
-  // helper says no honest comparison exists.
-  const agm = p.agmReference;
-  const agmIdentical =
-    agm &&
-    agm.battKwh > 0 &&
-    agm.solvable &&
-    agm.replacementsHorizon === 0 &&
-    (p.auto || []).some(
-      (a) => a.solvable && a.lifetimeCostMid === agm.lifetimeCostMid,
-    );
-  const agmRef = agmIdentical ? null : leadAcidReferenceCopy(agm);
-  if (agmRef) {
-    const ref = el("p", {
-      style:
-        "font-size:0.8rem;color:var(--text-muted);margin-top:0.9rem;line-height:1.55;grid-column:1/-1;",
-    });
-    ref.textContent =
-      `🏚️ Lead-acid reference (not recommended): ~${money(agmRef.lifetimeCostUsd)} over 20 years` +
-      (agmRef.swaps > 0
-        ? ` with ~${agmRef.swaps} bank swaps`
-        : ` with a ${fmt(agmRef.battKwh)} kWh bank oversized to avoid swaps`) +
-      ` — shown only so you can see what the recommended chemistries save you.`;
-    grid.appendChild(ref);
-  }
-}
+// REMOVED 2026-10-05: renderAutoCards (232 lines) was UNREACHABLE shipped
+// weight — a leftover renderer for the auto-chemistry ladder card, replaced
+// by renderBestPick/renderBatteryComparison, and called from nothing but
+// itself. Removing it is where the four-path module's bytes came from;
+// nothing a visitor loads executed a line of it.
 
 // ── Battery Chemistry Comparison (Compare Batteries tab) ────────────────────
 // Uses the selected system as baseline, comparing LFP, Sodium-ion, and AGM
@@ -5089,7 +4903,7 @@ function renderBestPick(p) {
 }
 
 /** Renders the Plain-English ELI5 breakdown into its dedicated container. */
-function renderEli5Section(p, sys) {
+function renderEli5Section(p, sys, paths = null) {
   const wrap = $("eli5CardWrap");
   if (!wrap) return;
   if (!sys || !p || sys.solvable === false) {
@@ -5098,7 +4912,7 @@ function renderEli5Section(p, sys) {
     return;
   }
   wrap.innerHTML = "";
-  const card = renderEli5Card(p, sys);
+  const card = renderEli5Card(p, sys, paths);
   if (card) {
     wrap.appendChild(card);
     wrap.style.display = "block";
@@ -5108,70 +4922,210 @@ function renderEli5Section(p, sys) {
 }
 
 /**
- * Real-world turnkey quotes vary VASTLY with market, competition, and sales
- * model — so instead of quoting a fixed "$20k–$40k" for every size, we scale
- * from the user's own hardware estimate:
+ * THE INSTALLER-vs-DIRECT SENTENCE, priced instead of guessed.
  *
- *   - the CHEAPEST hardware build corresponds to the cheapest fair-ish
- *     turnkey market (highly competitive, thin margin): ~10× hardware cost;
- *   - the EXPENSIVE hardware build corresponds to boutique retail pricing:
- *     ~5× hardware cost (premium hardware still dilutes the sales markup).
+ * This used to price "a typical installer quote" as a MULTIPLE of the hardware
+ * estimate — 10x the cheapest build, 5x the dearest — and then add a flat
+ * $1,500-$3,000 for the electrician's final hookup. Both numbers were invented
+ * at the point of display, so the gap between "hire an installer" and "buy the
+ * parts yourself" was a difference in what each side counted rather than a
+ * difference in price. That is precisely the claim D-01 §6.4 forbids
+ * (R-PATH-03), and it is why the two paths now come out of ONE priced model
+ * over ONE system: the turnkey path's all-in band (parts, labour, permits and
+ * the installer's margin already inside it) against the self-purchase path's
+ * all-in band (the SAME parts, plus paid labour, permits and interconnection).
  *
- * The result: a proportional "market spread" band that grows with system
- * size, plus a hardware-relative savings statement that stays honest at every
- * scale. Exported for regression tests.
+ * A useful side effect: the old text compared a midpoint against a midpoint and
+ * could print "roughly -$300 below a typical quote" — a negative number
+ * described as a saving. Two registry prices cannot produce that, so the
+ * sign-follows-the-number defect is gone structurally rather than patched.
+ *
+ * With no priced comparison available the sentence degrades to the hardware
+ * cost and points at the panel, instead of inventing a band.
  */
-export const TURNKEY_MULTIPLIER_LOW = 10;
-export const TURNKEY_MULTIPLIER_HIGH = 5;
 
-export function estimateTurnkeyQuotes(costLo, costHi) {
-  const lo = Number(costLo);
-  const hi = Number(costHi);
-  if (
-    !Number.isFinite(lo) ||
-    lo <= 0 ||
-    !Number.isFinite(hi) ||
-    hi <= 0 ||
-    lo > hi
-  )
-    return null;
-  const quoteLo = Math.round((lo * TURNKEY_MULTIPLIER_LOW) / 100) * 100;
-  const quoteHi = Math.round((hi * TURNKEY_MULTIPLIER_HIGH) / 100) * 100;
-  return { quoteLo, quoteHi };
+/**
+ * The four paths for ONE system, or null when there is nothing to price.
+ *
+ * ONE owner. The ELI5 sentence and the comparison panel must not price the
+ * same system twice, or the two can disagree on the turnkey band — the defect
+ * this module removed. The cache key is the priced identity of the system, not
+ * an object identity, so re-selecting the same system does not reprice it.
+ */
+function purchasePaths(p, sys) {
+  if (!p || !sys || sys.solvable === false) return null;
+  // The payload carries the bill and tariff at its TOP level. Reading them off
+  // `p.input` (which does not exist on a result) yields undefined, and an
+  // undefined baseline silently turns every break-even into "not within 20
+  // years" — a whole column of honest-looking wrong answers.
+  const baseline = p.annualGridSpendUsd;
+  const key = [
+    sys.pvKw,
+    sys.battKwh,
+    sys.servedKwhPerYear,
+    sys.replacementsHorizon,
+    sys.batteryLifeYears,
+    baseline,
+    p.tariff,
+    resolvedCountry,
+    pathsInstrument,
+  ].join("|");
+  if (pathsCache.key === key) return pathsCache.result;
+  const result = priceAllPaths(
+    systemForPaths(sys, {
+      annualBaselineBillsUsd: baseline,
+      tariff: p.tariff,
+    }),
+    { country: resolvedCountry, instrument: pathsInstrument },
+  );
+  pathsCache = { key, result };
+  return result;
 }
 
-export function turnkeyQuoteText(sys, moneyFn = money, rangeFn = moneyRange) {
+export function turnkeyQuoteText(
+  sys,
+  moneyFn = money,
+  rangeFn = moneyRange,
+  paths = null,
+) {
   const directCost =
     Number.isFinite(sys?.costLo) && Number.isFinite(sys?.costHi)
       ? rangeFn(sys.costLo, sys.costHi)
       : Number.isFinite(sys?.costMid)
         ? moneyFn(sys.costMid)
         : "wholesale";
-  const q = estimateTurnkeyQuotes(sys?.costLo, sys?.costHi);
-  if (!q)
-    return `DIY or direct hardware cost is ~${directCost}. Full-service installers quote this size at several times the hardware price once commissions, permits, and markups are added. Ordering direct and hiring a licensed electrician for the final hookup (~$1,500\u2013$3,000) keeps most of that spread in your pocket.`;
-  const quotes = rangeFn(q.quoteLo, q.quoteHi);
-  const allInLo = Math.round(((Number(sys.costLo) + 1500) / 100) * 100);
-  const allInHi = Math.round(((Number(sys.costHi) + 3000) / 100) * 100);
-  const delta =
-    Math.round(((q.quoteLo + q.quoteHi) / 2 - (allInLo + allInHi) / 2) / 100) *
-    100;
-  // The comparison is quote-mid minus all-in-mid, so a POSITIVE delta means the
-  // DIY-plus-hookup route lands under the quote. Which way the sign points is
-  // decided by the numbers, so the word has to follow it: printed
-  // unconditionally as "below", a small system rendered
-  // "roughly -$300.00 below a typical quote" — a sign saying one thing and the
-  // word saying the other. Whole-system sizes are the ones where an installer's
-  // spread exceeds the hookup labor; a battery-only build is not.
-  const vsQuote =
-    delta >= 0
-      ? `roughly ${moneyFn(delta)} below a typical quote`
-      : `roughly ${moneyFn(-delta)} ABOVE a typical quote`;
-  return `DIY or direct hardware cost is ~${directCost}. For this system size, full-service quotes typically run ${quotes} \u2014 the cheapest competitive markets land near the low end, high-commission sales outfits near the top \u2014 driven by commissions, permits, and markups. Ordering direct and hiring a licensed electrician for the final hookup (~$1,500\u2013$3,000) puts your all-in cost near ${rangeFn(allInLo, allInHi)} \u2014 ${vsQuote}.`;
+  const turnkey = paths?.by?.turnkey;
+  const direct = paths?.by?.selfpurchase;
+  const band = (p) =>
+    p.year0Low === p.year0High
+      ? moneyFn(p.year0)
+      : rangeFn(p.year0Low, p.year0High);
+  if (!turnkey?.available || !direct?.available) {
+    return `DIY or direct hardware cost is ~${directCost}. A full-service installer builds that same system for one all-in price covering the parts, the labour, the permits and their margin — the four ways to pay are priced side by side below.`;
+  }
+  const gap = turnkey.year0 - direct.year0;
+  // The gap is installer MINUS self-purchase, so the sentence compares the
+  // route it has just described against the installer's price. The word
+  // follows the sign: two registry prices cannot produce a negative number
+  // described as a saving, which is how the old midpoint arithmetic printed
+  // "-$300 below a typical quote" for a system that cost MORE.
+  const vs =
+    gap >= 0
+      ? `${moneyFn(gap)} cheaper than the installer's price`
+      : `${moneyFn(-gap)} dearer than the installer's price`;
+  return `Hardware for this system is ~${directCost}. A full-service installer quotes ${band(turnkey)} all-in for exactly this array. Buying the same parts yourself and paying a licensed electrician for the connection lands near ${band(direct)} — ${vs}. Over ${PATHS_HORIZON_YEARS} years, permits, incentives and every bank replacement included, all four routes are priced together below.`;
+}
+
+/**
+ * THE COMPARISON PANEL: four priced routes to the SAME system, side by side.
+ *
+ * The panel never computes. Every figure below is read out of the model that
+ * `purchasePaths` priced, so a card cannot disagree with the ELI5 sentence
+ * above it or with the ranking that explains why the cheapest one is cheapest.
+ * What the panel owns is the presentation and the instrument toggle — because
+ * a PPA buys ENERGY and a lease rents the SYSTEM, and switching between them
+ * genuinely changes the price, which is R-PATH-02.
+ */
+function renderPathsSection(p, sys) {
+  const wrap = $("pathsPanel");
+  if (!wrap) return null;
+  const paths = purchasePaths(p, sys);
+  if (!paths) {
+    wrap.innerHTML = "";
+    wrap.style.display = "none";
+    return null;
+  }
+  const cheapest = paths.cheapest;
+  const cards = describePaths(paths, money, (k, params) => t(k, params));
+  const rows = (list) =>
+    list.map((k) => `<li>${escapeHtml(t(k))}</li>`).join("");
+  const body = cards
+    .map((c) => {
+      if (!c.available) {
+        return `<div class="paths-card paths-card-off"><h4>${escapeHtml(t(c.labelKey))}</h4><p class="paths-off">${escapeHtml(t(c.reasonKey))}</p></div>`;
+      }
+      const driver = paths.rankingExplained.find(
+        (r) => r.cheaper === c.id || r.dearer === c.id,
+      );
+      return (
+        `<div class="paths-card${c.id === cheapest ? " paths-card-best" : ""}">` +
+        `<h4>${escapeHtml(t(c.labelKey))}${c.id === cheapest ? ` <span class="paths-best-tag">${escapeHtml(t("pathsCheapest"))}</span>` : ""}</h4>` +
+        `<p class="paths-upfront">${escapeHtml(c.year0RangeText)}</p>` +
+        `<p class="paths-total">${escapeHtml(t("pathsSpend20"))} <strong>${escapeHtml(c.spend20Text)}</strong></p>` +
+        `<dl class="paths-rows">` +
+        `<dt>${escapeHtml(t("pathsRowIncentives"))}</dt><dd>${escapeHtml(c.incentivesText)}</dd>` +
+        `<dt>${escapeHtml(t("pathsRowBillCut"))}</dt><dd>${escapeHtml(c.billCutText)}</dd>` +
+        `<dt>${escapeHtml(t("pathsRowBreakEven"))}</dt><dd>${escapeHtml(c.breakEvenText)}</dd>` +
+        `<dt>${escapeHtml(t("pathsRowNet"))}</dt><dd>${escapeHtml(c.netText)}</dd>` +
+        `<dt>${escapeHtml(t("pathsRowOwnership"))}</dt><dd>${escapeHtml(t(c.ownershipKey))}</dd>` +
+        (c.endOfTerm
+          ? `<dt>${escapeHtml(t("pathsRowEndOfTerm"))}</dt><dd>${escapeHtml(t(c.endOfTerm.noteKey, { years: c.endOfTerm.termYears, buyoutPct: Math.round(c.endOfTerm.buyoutPct * 100) }))}</dd>`
+          : "") +
+        `</dl>` +
+        `<p class="paths-counts">${escapeHtml(t("pathsCountsHeading"))}</p><ul>${rows(c.included)}</ul>` +
+        (driver
+          ? `<p class="paths-why">${escapeHtml(whyText(driver))}</p>`
+          : "") +
+        `</div>`
+      );
+    })
+    .join("");
+
+  wrap.innerHTML =
+    `<h3 data-i18n="pathsTitle">${escapeHtml(t("pathsTitle"))}</h3>` +
+    `<p class="paths-sub" data-i18n="pathsSub">${escapeHtml(t("pathsSub"))}</p>` +
+    `<div class="paths-instr">` +
+    `<label for="pathsInstrument">${escapeHtml(t("pathsInstrumentLabel"))}</label> ` +
+    `<select id="pathsInstrument">` +
+    `<option value="ppa"${pathsInstrument === "ppa" ? " selected" : ""}>${escapeHtml(t("pathsInstrumentPpa"))}</option>` +
+    `<option value="lease"${pathsInstrument === "lease" ? " selected" : ""}>${escapeHtml(t("pathsInstrumentLease"))}</option>` +
+    `</select></div>` +
+    `<div class="paths-grid">${body}</div>` +
+    `<p class="paths-grade">${escapeHtml(t("pathsGradeNote"))}</p>`;
+  wrap.style.display = "block";
+
+  // Switching instrument re-prices, so it must invalidate the cache AND
+  // redraw the ELI5 sentence underneath: a lease left on screen while the
+  // cards show a PPA is two answers to one question.
+  const sel = $("pathsInstrument");
+  if (sel)
+    sel.onchange = () => {
+      pathsInstrument = sel.value === "lease" ? "lease" : "ppa";
+      pathsCache = { key: null, result: null };
+      if (lastPayload) renderPathSurfaces(lastPayload);
+    };
+  return paths;
+}
+
+/**
+ * BOTH surfaces that read the priced comparison, in the order that guarantees
+ * they agree: the panel prices, the sentence quotes the result. Two call sites
+ * (a fresh result, a selection change) plus the instrument toggle above.
+ */
+function renderPathSurfaces(p) {
+  const sys = resolveSelected(p) || p.best;
+  const paths = renderPathsSection(p, sys);
+  renderEli5Section(p, sys, paths);
+  return paths;
+}
+
+/** One line of the ranking's account: which component, and by how much. */
+function whyText(row) {
+  const amount =
+    row.driver === "none" ? "" : ` ${money(Math.abs(row.driverAmount))}`;
+  const tail = row.dominance === "combined" ? t("pathsWhyCombined") : "";
+  return (
+    t("pathsWhy", {
+      cheaper: t(LABEL_KEYS[row.cheaper] || "pathsUnavailable"),
+      dearer: t(LABEL_KEYS[row.dearer] || "pathsUnavailable"),
+      gap: money(Math.abs(row.gap)),
+      driver: t(DRIVER_KEYS[row.driver] || "pathsDriver_none") + amount,
+    }) + tail
+  );
 }
 
 /** Plain-English ELI5 breakdown for beginners and non-engineers. */
-function renderEli5Card(p, sys) {
+function renderEli5Card(p, sys, paths = null) {
   if (!sys) return null;
   const eli5 = el("div", { class: "eli5-card" });
   eli5.appendChild(
@@ -5245,7 +5199,7 @@ function renderEli5Card(p, sys) {
       : Number.isFinite(sys.costMid)
         ? money(sys.costMid)
         : "wholesale";
-  const costDesc = turnkeyQuoteText(sys);
+  const costDesc = turnkeyQuoteText(sys, money, moneyRange, paths);
   const itemCost = el("div", { class: "eli5-item" });
   itemCost.appendChild(
     el("div", { class: "eli5-item-label" }, "💰 Wholesale vs Turnkey Quotes"),
@@ -7377,7 +7331,10 @@ function refreshSelectionOutputs(p) {
   // Granular panel follows the same committed selection.
   if (focusFirst) renderFocusPanel(p, sel, false);
 
-  renderEli5Section(p, sel || p.best);
+  // ONE priced comparison, read by both surfaces below. The panel renders
+  // first because it is the thing that prices; the ELI5 sentence then quotes
+  // the SAME model, so the installer figure on this page has one source.
+  renderPathSurfaces(p);
 
   const inp = readInputs();
   updateShareHash(p, inp);
