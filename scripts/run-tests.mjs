@@ -8,27 +8,32 @@
 // of whoever ran it. The evidence record therefore carried a hand-typed
 // "835/835 npm test green ... measured on this tree" that stayed true for
 // exactly as long as nobody added a test — and it read 835 on a tree carrying
-// 1378. That sentence is not decoration: it is the substrate the judge reads
+// 1397. That sentence is not decoration: it is the substrate the judge reads
 // before it reads any facet, so a false one costs every facet at once.
 //
 // It cannot be fixed by being careful. It is fixed by the runner that already
 // knows the number writing it, which is the same move the Lighthouse proof line
 // makes (composed from the run, never typed) applied to the run record itself.
 //
-// BOTH STREAMS ARE CAPTURED, and that is not tidiness. Node's test runner writes
-// its summary block to stderr, and whether the same block also lands on stdout
-// varies with the environment: locally it arrived on stdout, and on the first CI
-// run it did not, so the wrapper reported "no summary block seen" and recorded
-// nothing. The record then reached the builder with its `{{tests_total}}`
-// placeholders unresolved, which the builder names as a fatal problem rather
-// than filling in — the fail-closed path working, but the measurement was lost.
-// A parser that reads one stream and hopes is a parser that will read zero.
+// TWO THINGS THIS HAD TO LEARN THE HARD WAY, both from CI runs where it
+// silently recorded nothing:
+//
+//   1. Node's test runner writes its summary to STDERR, and whether the same
+//      block also lands on stdout varies by environment. Locally it did; on the
+//      runner it did not. Both streams are captured.
+//   2. The DEFAULT REPORTER IS VERSION-DEPENDENT. Node 22 defaults to TAP
+//      ("# tests 1397"); Node 24 defaults to spec ("ℹ tests 1397"). This repo's
+//      CI pins Node 22 and a developer machine runs Node 24, so the same command
+//      printed two different summaries and the parser read zero on one of them.
+//      The reporter is now pinned, so the format cannot drift with the runtime,
+//      and BOTH forms are parsed anyway — because the next version bump should
+//      cost a line of parser, not a silently empty measurement.
 //
 // WHAT IT DOES NOT DO. It does not change which tests run, how they are
 // selected, or what they assert: the same `node --test` invocation with the same
 // glob, and the child's exit code is this process's exit code, so a red suite is
-// still a red `npm test`. The only additions are the measurement file and one
-// summary line.
+// still a red `npm test`. The only additions are the pinned reporter, the
+// measurement file, and one summary line.
 import { spawn } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -37,21 +42,34 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ARTIFACT = join(ROOT, "jev-artifacts", "test-measurement.json");
 
-// The runner prints a summary block; these are its lines. Read as numbers and
-// as integers — the runner pads them with the glyphs a terminal would draw.
+/**
+ * The summary line for each count, per reporter.
+ *
+ * `spec` prints the ℹ-prefixed block; `tap` prints the #-prefixed one. The
+ * reporter is pinned below so the first is what actually appears, but a parser
+ * that only knows one of them is a parser that reads zero the moment somebody
+ * runs this on a Node whose default differs.
+ */
 const FIELD = {
-  tests: /^ℹ tests (\d+)/m,
-  pass: /^ℹ pass (\d+)/m,
-  fail: /^ℹ fail (\d+)/m,
-  skipped: /^ℹ skipped (\d+)/m,
-  cancelled: /^ℹ cancelled (\d+)/m,
+  tests: [/^ℹ tests (\d+)/m, /^# tests (\d+)/m],
+  pass: [/^ℹ pass (\d+)/m, /^# pass (\d+)/m],
+  fail: [/^ℹ fail (\d+)/m, /^# fail (\d+)/m],
+  skipped: [/^ℹ skipped (\d+)/m, /^# skipped (\d+)/m],
+  cancelled: [/^ℹ cancelled (\d+)/m, /^# cancelled (\d+)/m],
 };
 
 export function parseCounts(output) {
   const counts = {};
-  for (const [key, re] of Object.entries(FIELD)) {
-    const m = output.match(re);
-    counts[key] = m ? Number(m[1]) : null;
+  for (const [key, patterns] of Object.entries(FIELD)) {
+    let value = null;
+    for (const re of patterns) {
+      const m = output.match(re);
+      if (m) {
+        value = Number(m[1]);
+        break;
+      }
+    }
+    counts[key] = value;
   }
   return counts;
 }
@@ -62,7 +80,8 @@ export function measurementFrom(counts) {
     ...counts,
     // What `npm test` runs, so a reader can see the measurement and the thing
     // measured are the same command rather than two that look alike.
-    command: 'node --test "tests/*.test.mjs"',
+    command: 'node --test --test-reporter=spec "tests/*.test.mjs"',
+    node: process.version,
   };
 }
 
@@ -81,14 +100,13 @@ function write(counts) {
 }
 
 function main() {
-  const child = spawn(process.execPath, ["--test", "tests/*.test.mjs"], {
-    cwd: ROOT,
-    // Both piped so the summary can be read wherever the runner chose to put
-    // it. Every byte still reaches the terminal, in order, on its own stream.
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  const child = spawn(
+    process.execPath,
+    ["--test", "--test-reporter=spec", "tests/*.test.mjs"],
+    { cwd: ROOT, stdio: ["ignore", "pipe", "pipe"] },
+  );
   // Streamed rather than buffered, so a long suite does not hold its output
-  // hostage until the end.
+  // hostage until the end. Every byte reaches the terminal on its own stream.
   let captured = "";
   const tee = (stream, sink) => {
     stream.on("data", (d) => {
@@ -117,6 +135,6 @@ function main() {
 // whatever the caller typed (npm passes a relative path), so comparing it to
 // import.meta.url as a string is a comparison that silently fails — and a
 // runner that exits 0 having run nothing is the worst possible way for that to
-// happen, which is why the tests below assert this guard fires.
+// happen, which is why the tests assert this guard fires.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
   main();

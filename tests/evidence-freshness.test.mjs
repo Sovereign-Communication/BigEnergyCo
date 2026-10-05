@@ -239,6 +239,30 @@ test("the summary block is parsed out of combined output, not one stream", () =>
   assert.equal(parseCounts(stderrOnly).pass, 1378);
 });
 
+test("both reporter formats parse, because the default reporter is version-dependent", () => {
+  // The second CI failure: Node 22 defaults to TAP, Node 24 to spec, this repo's
+  // CI pins 22 and a developer machine runs 24, and the parser read zero on one
+  // of them. The reporter is now pinned; both forms are parsed anyway so the
+  // next version bump costs a parser line rather than an empty measurement.
+  const tap = "# tests 1397\n# suites 0\n# pass 1397\n# fail 0\n# skipped 0\n";
+  const spec = "ℹ tests 1397\nℹ suites 0\nℹ pass 1397\nℹ fail 0\nℹ skipped 0\n";
+  for (const block of [tap, spec]) {
+    const c = parseCounts(block);
+    assert.equal(c.tests, 1397, `tests not parsed from:\n${block}`);
+    assert.equal(c.pass, 1397);
+    assert.equal(c.fail, 0);
+  }
+});
+
+test("the wrapper pins the reporter, so the format cannot drift with the runtime", () => {
+  const src = readFileSync(join(ROOT, "scripts", "run-tests.mjs"), "utf8");
+  assert.match(
+    src,
+    /--test-reporter=spec/,
+    "an unpinned reporter is a measurement that disappears on a Node upgrade",
+  );
+});
+
 test("npm test is the wrapper that records, and the wrapper spawns node --test", () => {
   assert.equal(
     pkg.scripts.test,
