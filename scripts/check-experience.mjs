@@ -95,6 +95,22 @@ try {
   await ctx.send("Page.enable");
   await ctx.send("Runtime.enable");
   await ctx.send("Log.enable");
+  // THE HTTP CACHE IS OFF. The facet under test is the FIRST-RUN journey, and
+  // the first run of a dictionary is the one that matters: the dictionary is a
+  // deferred dynamic import, so on a first visit it is in flight while the
+  // setup code paints. Measured on this page, `#readoutBill`'s very first text
+  // is the raw key `readoutBillIncomplete`, and it holds that key for about
+  // 20ms until `repaintRuntimeCopy()` runs — a real window in which a visitor
+  // is looking at a build defect, not a hypothetical one.
+  //
+  // Recorded honestly: the cache setting is NOT what makes this gate bite.
+  // Deleting the boot repaint was caught with the cache off (12 failures) and
+  // with it on (12 failures), so the failure comes from reading the surfaces at
+  // all, not from the timing of the fetch. The cache is disabled because a warm
+  // cache makes the deferred import arrive before the first paint, and a gate
+  // that claims to walk the first visit should not be measuring a second one.
+  await ctx.send("Network.enable");
+  await ctx.send("Network.setCacheDisabled", { cacheDisabled: true });
   // The Jev stub is installed at document start, so a step is never measuring
   // the third-party probe instead of the product.
   await ctx.send("Page.addScriptToEvaluateOnNewDocument", {

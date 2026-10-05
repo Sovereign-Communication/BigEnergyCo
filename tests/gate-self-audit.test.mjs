@@ -1365,3 +1365,221 @@ test("AUDIT/composer: every axis this cycle added has exactly one owner", () => 
   }
   assert.ok(axes && typeof axes === "object");
 });
+import {
+  EXPERIENCE_ACTIONS,
+  EXPERIENCE_EMPTY_STATES,
+  EXPERIENCE_ERRORS,
+  EXPERIENCE_LOCALES,
+  LOCALE_PHASES,
+  LOCALE_SURFACES,
+  evaluateExperience,
+} from "../scripts/lib/experience-budgets.mjs";
+import { LOCALES } from "../assets/js/shared/locales.js";
+
+// The healthy reading, built from the tables and the shipped dictionary so it
+// cannot drift from either. Identical in spirit to the facet suite's fixture,
+// duplicated here on purpose: the audit must stand on its own, and a shared
+// helper that both the healthy tests and the mutation tests call is a helper a
+// single broken line can make agree with itself.
+function HEALTHY_READING() {
+  return {
+    ok: true,
+    actions: EXPERIENCE_ACTIONS.map((a) => ({
+      id: a.id,
+      label: a.label,
+      kind: a.kind,
+      attempted: true,
+      acknowledged: true,
+      moved: ["status"],
+      ms: 90,
+      acknowledged_before_result: true,
+      status: "a plausible status line",
+    })),
+    errors: EXPERIENCE_ERRORS.map((e) => ({
+      id: e.id,
+      label: e.label,
+      triggered: true,
+      acknowledged: true,
+      status:
+        "Something went wrong — enter a figure in that range and try again.",
+      next_step: true,
+    })),
+    empty_states: EXPERIENCE_EMPTY_STATES.map((e) => ({
+      id: e.id,
+      label: e.label,
+      selector: e.selector,
+      ok: true,
+      visible: true,
+      controls: 0,
+      text: "Enter something and the estimate appears here.",
+      invites: true,
+      blank_while_visible: false,
+      raw_key: false,
+    })),
+    locales: EXPERIENCE_LOCALES.flatMap((l) =>
+      LOCALE_PHASES.map((p) => ({
+        locale: l,
+        phase: p,
+        lang: l,
+        dir: l === "ar" ? "rtl" : "ltr",
+        beco_lang: l,
+        picker: l,
+        ready: true,
+        surfaces: LOCALE_SURFACES.map((s) => ({
+          id: s.id,
+          key: s.key,
+          exists: true,
+          text: LOCALES[l][s.key],
+          visible: true,
+          raw_key: false,
+        })),
+        leaks: [],
+      })),
+    ),
+    key_leaks: [],
+  };
+}
+
+// ── the six-locale sweep, audited the same way ─────────────────────────────────
+//
+// THE TWO MUTATIONS BELOW WERE RUN AGAINST THE REAL STAGED PAGE, not only
+// against a fixture. Both were produced by deleting one line from
+// assets/js/sizing/ui.js, restaging, and running the gate:
+//
+//   deleting the boot repaint      → exit 1, 12 named regressions,
+//                                    `locale:<l>:boot:{bill_readout,
+//                                    use_case_blurb}` for all six locales
+//   deleting the beco:lang repaint → exit 1, 10 named regressions, every one
+//                                    of them a surface still showing the
+//                                    PREVIOUS language
+//
+// The second is the one that matters. A gate looking for the SHAPE of a raw key
+// passes on it without complaint: every string on that page is a real sentence
+// in a real language. Only comparing the surface with the dictionary the page
+// claims to be using catches a page that is half-translated.
+//
+// One process note, because it nearly invalidated the whole exercise: the
+// staging script stages from the GIT INDEX, not the working tree. The first
+// attempt at each mutation changed the file, restaged, and measured a build
+// that had never contained the mutation — a green gate reporting on a defect
+// that was not there. If a mutation "passes", check that the mutation was
+// actually served before believing anything else about the run.
+test("AUDIT/locale-sweep: deleting the boot repaint is a named failure", () => {
+  const r = HEALTHY_READING();
+  // The boot repaint is what puts these two surfaces back after the deferred
+  // dictionary lands. Without it they keep whatever they held when the setup
+  // code painted them — which, on a cold cache, is the key.
+  for (const locale of EXPERIENCE_LOCALES)
+    for (const id of ["bill_readout", "use_case_blurb"]) {
+      const row = r.locales
+        .find((p) => p.locale === locale && p.phase === "boot")
+        .surfaces.find((s) => s.id === id);
+      row.text = LOCALE_SURFACES.find((s) => s.id === id).key;
+    }
+  const v = evaluateExperience(r);
+  const ids = v.regressions.map((x) => x.id);
+  for (const locale of EXPERIENCE_LOCALES) {
+    assert.ok(
+      ids.includes(`locale:${locale}:boot:bill_readout`),
+      `${locale}: a key at boot must be named, not averaged into a count`,
+    );
+    assert.ok(ids.includes(`locale:${locale}:boot:use_case_blurb`));
+  }
+  assert.equal(
+    v.regressions.length,
+    EXPERIENCE_LOCALES.length * 2,
+    "and nothing else may fail, or the finding is not this one",
+  );
+});
+
+test("AUDIT/locale-sweep: deleting the switch repaint is a named failure", () => {
+  const r = HEALTHY_READING();
+  // No key anywhere on this page. The surfaces simply keep the language they
+  // had before the visitor changed it, which is what a person sees as a
+  // half-translated page and what a key-shaped check reports as clean.
+  const order = EXPERIENCE_LOCALES;
+  order.forEach((locale, i) => {
+    const previous = order[(i - 1 + order.length) % order.length];
+    const pass = r.locales.find(
+      (p) => p.locale === locale && p.phase === "after_switch",
+    );
+    for (const spec of LOCALE_SURFACES) {
+      const row = pass.surfaces.find((s) => s.id === spec.id);
+      if (row.visible !== true) continue;
+      row.text = LOCALES[previous][spec.key];
+    }
+  });
+  const v = evaluateExperience(r);
+  const stale = v.regressions.filter((x) => x.id.includes(":after_switch:"));
+  assert.ok(
+    stale.length >= EXPERIENCE_LOCALES.length,
+    "every switch must be named",
+  );
+  for (const hit of stale)
+    assert.match(
+      hit.message,
+      /previous language|still in English|where \w+ says/,
+      "the message must say the surface is in the wrong language",
+    );
+  assert.ok(
+    !v.regressions.some((x) => /raw dictionary key/.test(x.message)),
+    "and the diagnosis must not be a raw key — there is no key on this page",
+  );
+});
+
+test("AUDIT/locale-sweep: a hole in ONE locale's dictionary is a named failure", () => {
+  // Run for real against the staged build: blanking `es.readoutBillIncomplete`
+  // produced 14 named failures, including a hole for each visible reading that
+  // said nothing at all.
+  const r = HEALTHY_READING();
+  const pass = r.locales.find(
+    (p) => p.locale === "es" && p.phase === "after_rerun",
+  );
+  pass.surfaces.find((s) => s.id === "bill_readout").text = "";
+  const v = evaluateExperience(r);
+  assert.ok(
+    v.holes.some((h) => h.what === "locale:es:after_rerun:bill_readout"),
+    "a missing translation is silence, and silence is not a pass",
+  );
+});
+
+test("AUDIT/locale-sweep: the repaint owner is reached on BOTH re-entry paths", () => {
+  // The class-closing claim is about a single owner reached twice. If either
+  // call site is deleted, the product regresses in a way the gate above catches
+  // and the tests/mode-copy source assertions below catch — from both sides, so
+  // neither a missing call nor a missing check can pass unnoticed.
+  const src = readFileSync("assets/js/sizing/ui.js", "utf8");
+  assert.match(
+    src,
+    /window\.addEventListener\("beco:lang",[\s\S]{0,200}repaintRuntimeCopy\(\)/,
+    "a language switch must reach the repaint owner",
+  );
+  assert.match(
+    src,
+    /await applyI18n\(\);[\s\S]{0,900}repaintRuntimeCopy\(\);/,
+    "first paint must reach the repaint owner too",
+  );
+});
+
+test("AUDIT/locale-sweep: the gate drives all six locales, not a list of one", () => {
+  // A sweep hard-coded to `en` would satisfy every other test in this file while
+  // measuring one locale. The table is read from the shipped dictionary, so a
+  // seventh locale joins the sweep the day it is added.
+  assert.equal(EXPERIENCE_LOCALES.length, 6);
+  assert.deepEqual(
+    EXPERIENCE_LOCALES,
+    Object.keys(LOCALES),
+    "the sweep's locales must be the dictionary's, not a typed subset",
+  );
+  const src = readFileSync("scripts/smoke/experience.mjs", "utf8");
+  assert.match(
+    src,
+    /export const EXPERIENCE_LOCALES = Object\.keys\(LOCALES\)/,
+    "the sweep must read the shipped dictionary",
+  );
+  assert.match(
+    src,
+    /export const LOCALE_KEYS = Object\.keys\(LOCALES\.en\)/,
+    "and the key list must read it too, or the sweep is vacuous",
+  );
+});

@@ -20,8 +20,14 @@ import {
   EXPERIENCE_ERRORS,
   EXPERIENCE_EXPECTATIONS,
   EXPERIENCE_FACET_AXES,
+  EXPERIENCE_LOCALES,
+  EXPERIENCE_SCOPE_LIMIT,
+  LOCALE_PHASES,
+  LOCALE_SURFACES,
   composeExperienceFacetLine,
   evaluateExperience,
+  judgeLocaleSweep,
+  summariseLocaleSweep,
 } from "../scripts/lib/experience-budgets.mjs";
 import {
   LOCALE_KEYS,
@@ -77,11 +83,39 @@ function goodEmpty(id) {
   };
 }
 
+// A healthy locale reading: every locale, at every moment, each surface holding
+// the sentence the SHIPPED DICTIONARY holds for that locale. Built from the
+// tables and the dictionary rather than typed, so a new surface or a new locale
+// is covered by construction.
+function goodLocalePass(locale, phase) {
+  return {
+    locale,
+    phase,
+    lang: locale,
+    dir: locale === "ar" ? "rtl" : "ltr",
+    beco_lang: locale,
+    picker: locale,
+    ready: true,
+    surfaces: LOCALE_SURFACES.map((s) => ({
+      id: s.id,
+      key: s.key,
+      exists: true,
+      text: LOCALES[locale][s.key],
+      visible: true,
+      raw_key: false,
+    })),
+    leaks: [],
+  };
+}
+
 const HEALTHY = () => ({
   ok: true,
   actions: EXPERIENCE_ACTIONS.map((a) => goodAction(a.id)),
   errors: EXPERIENCE_ERRORS.map((e) => goodError(e.id)),
   empty_states: EXPERIENCE_EMPTY_STATES.map((e) => goodEmpty(e.id)),
+  locales: EXPERIENCE_LOCALES.flatMap((l) =>
+    LOCALE_PHASES.map((p) => goodLocalePass(l, p)),
+  ),
   key_leaks: [],
 });
 
@@ -505,10 +539,14 @@ test("FACET LINE: composed from a healthy run, and says what it did", () => {
   assert.match(line, /9\/9 steps acknowledge/);
   assert.match(line, /3\/3 errors give a next step/);
   assert.match(line, /3 empty states invite/);
-  assert.match(line, /0 raw keys visible/);
+  // The raw-key claim now carries its own scope — how many pages it covers —
+  // because "0 raw keys" means one very different thing over one English boot
+  // than it does over nineteen pages in six languages.
+  assert.match(line, /0 raw keys on 19 pages/);
+  assert.match(line, /72\/72 surfaces match the dictionary/);
   assert.match(
     line,
-    /No device matrix/,
+    /No AT run/,
     "the scope limit must travel with the numbers",
   );
 });
@@ -537,7 +575,7 @@ test("FACET LINE: a visible key is reported in the line, not hidden by it", () =
     },
   ];
   const line = composeExperienceFacetLine({ experience_reading: r });
-  assert.match(line, /1 raw key\(s\) visible/);
+  assert.match(line, /1 raw keys on 19 pages/);
 });
 
 test("FACET LINE: it fits the transport's clip", () => {
@@ -597,4 +635,321 @@ test("SWEEP: no shipped dictionary value IS its own key", () => {
     [],
     `a dictionary value equals its key, so the sweep would flag real copy: ${leaks.join(", ")}`,
   );
+});
+
+// ── the locale sweep: the class behind "no raw key reaching a visitor" ───────
+//
+// Every test below is a MUTATION: a reading that is green in every other clause
+// and violates exactly this one, with the assertion that a NAMED failure comes
+// out. The two that matter most are the last pair, because they are the two the
+// live gate was actually run against: deleting the boot repaint, and deleting
+// the repaint on a language switch. Both were confirmed against the real staged
+// page, and both produced named regressions rather than silence.
+
+// The healthy reading has to be clean, or none of the mutations below mean
+// anything. Asserted first so a broken fixture cannot make the rest vacuous.
+test("SWEEP: the healthy reading is clean", () => {
+  const v = evaluateExperience(HEALTHY());
+  assert.deepEqual(v.regressions, [], JSON.stringify(v.regressions, null, 1));
+  assert.deepEqual(v.holes, [], JSON.stringify(v.holes, null, 1));
+});
+
+test("SWEEP: the tables cover every shipped locale at every moment", () => {
+  assert.equal(EXPERIENCE_LOCALES.length, 6);
+  assert.deepEqual(EXPERIENCE_LOCALES, Object.keys(LOCALES));
+  for (const locale of EXPERIENCE_LOCALES)
+    for (const spec of LOCALE_SURFACES)
+      assert.equal(
+        typeof LOCALES[locale][spec.key],
+        "string",
+        `${locale} has no ${spec.key}, so the sweep would compare against nothing`,
+      );
+});
+
+test("SWEEP: every surface names a key, a selector and a way to paint it", () => {
+  for (const s of LOCALE_SURFACES) {
+    assert.ok(s.id && s.key && s.selector && s.label, JSON.stringify(s));
+    assert.match(
+      s.setup,
+      /dispatchEvent/,
+      `${s.id} has no visitor action to run`,
+    );
+  }
+  assert.equal(
+    new Set(LOCALE_SURFACES.map((s) => s.id)).size,
+    LOCALE_SURFACES.length,
+  );
+});
+
+test("SWEEP: at least one surface is judged in every locale at every moment", () => {
+  const s = summariseLocaleSweep(HEALTHY());
+  // Six locales x three moments, and every judged reading must have matched —
+  // a denominator smaller than the locale count would mean the sweep looked at
+  // fewer places than it claims.
+  assert.equal(s.matched, s.judged);
+  assert.equal(s.locales, 6);
+  assert.equal(s.phases, 3);
+  assert.ok(s.judged >= EXPERIENCE_LOCALES.length * LOCALE_PHASES.length);
+});
+
+test("MUTATION: a raw key in ONE locale is a regression naming that locale", () => {
+  const r = HEALTHY();
+  const pass = r.locales.find((p) => p.locale === "de" && p.phase === "boot");
+  pass.surfaces.find((s) => s.id === "bill_readout").text =
+    "readoutBillIncomplete";
+  const v = evaluateExperience(r);
+  const hit = v.regressions.find((x) => x.id === "locale:de:boot:bill_readout");
+  assert.ok(hit, "a key in German at boot must be named, not averaged away");
+  assert.match(hit.message, /readoutBillIncomplete/);
+});
+test("MUTATION: a key on a HIDDEN surface at boot still fails", () => {
+  // The disguise that let the first two survive: quick mode hides the panel they
+  // live in, so every landing-frame check reported clean.
+  const r = HEALTHY();
+  const pass = r.locales.find((p) => p.locale === "ar" && p.phase === "boot");
+  const row = pass.surfaces.find((s) => s.id === "use_case_blurb");
+  row.text = "useCaseBillCutBlurb";
+  row.visible = false;
+  const v = evaluateExperience(r);
+  assert.ok(
+    v.regressions.some((x) => x.id === "locale:ar:boot:use_case_blurb"),
+    "hiding a broken surface must not be a way to pass",
+  );
+  test("MUTATION: a surface left in the PREVIOUS language is a regression", () => {
+    // The language-switch defect, and the reason the sweep compares against the
+    // dictionary rather than looking for the shape of a key: no key is involved
+    // anywhere here. The surface shows a perfect sentence in the wrong language.
+    const r = HEALTHY();
+    const pass = r.locales.find(
+      (p) => p.locale === "en" && p.phase === "after_switch",
+    );
+    pass.surfaces.find((s) => s.id === "bill_readout").text =
+      LOCALES.ar.readoutBillIncomplete;
+    const v = evaluateExperience(r);
+    const hit = v.regressions.find(
+      (x) => x.id === "locale:en:after_switch:bill_readout",
+    );
+    assert.ok(hit, "a half-translated surface must be named");
+    assert.match(hit.message, /previous language/);
+  });
+
+  test("MUTATION: a surface still in English after a switch is named as leakage", () => {
+    const r = HEALTHY();
+    const pass = r.locales.find(
+      (p) => p.locale === "es" && p.phase === "after_switch",
+    );
+    pass.surfaces.find((s) => s.id === "use_case_blurb").text =
+      LOCALES.en.useCaseBillCutBlurb;
+    const v = evaluateExperience(r);
+    const hit = v.regressions.find(
+      (x) => x.id === "locale:es:after_switch:use_case_blurb",
+    );
+    assert.ok(hit);
+    assert.match(hit.message, /still in English/);
+  });
+
+  test("MUTATION: a locale that was never swept is a hole, not a pass", () => {
+    const r = HEALTHY();
+    r.locales = r.locales.filter((p) => p.locale !== "pt");
+    const v = evaluateExperience(r);
+    const holes = v.holes.filter((h) => h.what.startsWith("locale:pt:"));
+    assert.equal(
+      holes.length,
+      LOCALE_PHASES.length,
+      "a locale dropped from the sweep must produce a hole at every moment",
+    );
+    assert.match(holes[0].why, /never read/);
+  });
+
+  test("MUTATION: a locale swept only at boot is a hole at the other moments", () => {
+    const r = HEALTHY();
+    r.locales = r.locales.filter(
+      (p) => !(p.locale === "fr" && p.phase !== "boot"),
+    );
+    const v = evaluateExperience(r);
+    assert.ok(v.holes.some((h) => h.what === "locale:fr:after_rerun"));
+    assert.ok(v.holes.some((h) => h.what === "locale:fr:after_switch"));
+  });
+
+  test("MUTATION: no locale sweep at all is a hole", () => {
+    const r = HEALTHY();
+    delete r.locales;
+    const v = evaluateExperience(r);
+    assert.ok(v.holes.some((h) => h.what === "locales"));
+    assert.deepEqual(v.regressions, []);
+  });
+
+  test("MUTATION: a locale sweep that is not a list is a hole", () => {
+    for (const bad of [null, "clean", 0, {}]) {
+      const r = HEALTHY();
+      r.locales = bad;
+      const v = evaluateExperience(r);
+      assert.ok(
+        v.holes.some((h) => h.what === "locales"),
+        `a sweep returning ${JSON.stringify(bad)} must not read as clean`,
+      );
+    }
+  });
+
+  test("MUTATION: a reading claiming a locale or moment that does not exist is a hole", () => {
+    const r = HEALTHY();
+    r.locales.push({
+      ...goodLocalePass("en", "boot"),
+      locale: "klingon",
+      phase: "after_telepathy",
+    });
+    const v = evaluateExperience(r);
+    assert.ok(
+      v.holes.some((h) => h.what === "locale:klingon:after_telepathy"),
+      "a sweep that walked somewhere else must not read as one that passed",
+    );
+  });
+
+  test("MUTATION: a page that reported the wrong language is a hole", () => {
+    const r = HEALTHY();
+    r.locales.find((p) => p.locale === "de" && p.phase === "boot").lang = "en";
+    const v = evaluateExperience(r);
+    assert.ok(
+      v.holes.some((h) => h.what === "locale:de:boot"),
+      "a boot reading of the wrong locale describes a page nobody walked",
+    );
+  });
+
+  test("MUTATION: a boot page whose dictionary never landed is a hole", () => {
+    const r = HEALTHY();
+    r.locales.find((p) => p.locale === "es" && p.phase === "boot").ready =
+      false;
+    const v = evaluateExperience(r);
+    assert.ok(v.holes.some((h) => h.what === "locale:es:boot"));
+  });
+
+  test("MUTATION: a surface missing from a reading is a hole", () => {
+    const r = HEALTHY();
+    const pass = r.locales.find(
+      (p) => p.locale === "pt" && p.phase === "after_rerun",
+    );
+    pass.surfaces = pass.surfaces.filter((s) => s.id !== "bill_readout");
+    const v = evaluateExperience(r);
+    assert.ok(
+      v.holes.some((h) => h.what === "locale:pt:after_rerun:bill_readout"),
+    );
+  });
+
+  test("MUTATION: a visible surface saying nothing is a hole, not a match", () => {
+    // A hole in one locale's dictionary leaves the surface empty rather than
+    // wrong. Silence is not a pass, and it must never be counted as a match.
+    const r = HEALTHY();
+    const pass = r.locales.find(
+      (p) => p.locale === "es" && p.phase === "after_rerun",
+    );
+    pass.surfaces.find((s) => s.id === "bill_readout").text = "";
+    const v = evaluateExperience(r);
+    assert.ok(
+      v.holes.some((h) => h.what === "locale:es:after_rerun:bill_readout"),
+    );
+    const s = summariseLocaleSweep(r);
+    assert.ok(
+      s.matched < s.judged,
+      "an empty surface must not be scored as a match on the facet line",
+    );
+  });
+});
+test("MUTATION: a surface absent from the document is a hole", () => {
+  const r = HEALTHY();
+  const pass = r.locales.find(
+    (p) => p.locale === "ar" && p.phase === "after_switch",
+  );
+  pass.surfaces.find((s) => s.id === "kwh_readout").exists = false;
+  const v = evaluateExperience(r);
+  assert.ok(
+    v.holes.some((h) => h.what === "locale:ar:after_switch:kwh_readout"),
+  );
+});
+
+test("MUTATION: a visible raw key anywhere on a locale's page is a regression", () => {
+  const r = HEALTHY();
+  r.locales.find((p) => p.locale === "en" && p.phase === "after_switch").leaks =
+    [
+      {
+        tag: "P",
+        id: "pathsDriverNote",
+        key: "pathsDriver_leasePayments",
+        visible: true,
+      },
+    ];
+  const v = evaluateExperience(r);
+  const hit = v.regressions.find(
+    (x) => x.id === "locale:en:after_switch:sweep",
+  );
+  assert.ok(hit, "a key anywhere on a page in that locale must be named");
+  assert.match(hit.message, /pathsDriver_leasePayments/);
+});
+
+test("MUTATION: a per-locale key sweep that did not report is a hole", () => {
+  const r = HEALTHY();
+  delete r.locales.find((p) => p.locale === "de").leaks;
+  const v = evaluateExperience(r);
+  assert.ok(
+    v.holes.some(
+      (h) => h.what.startsWith("locale:de:") && /did not report/.test(h.why),
+    ),
+  );
+});
+
+test("MUTATION: a walk that mislabels its own raw_key flag is overruled by the text", () => {
+  // The instrument's flag is compared, never believed. The disagreement is
+  // recorded rather than silently resolved in the walk's favour.
+  const clean = HEALTHY();
+  const row = clean.locales
+    .find((p) => p.locale === "en" && p.phase === "after_switch")
+    .surfaces.find((s) => s.id === "bill_readout");
+  row.raw_key = true; // the walk panics about a key
+  row.text = LOCALES.en.readoutBillIncomplete; // and the text is clean
+  const v1 = evaluateExperience(clean);
+  assert.ok(
+    v1.notes.some((n) => /the text decides/.test(n)),
+    "a disagreement between the flag and the text must be named",
+  );
+  assert.deepEqual(v1.regressions, [], "a clean sentence is not a defect");
+
+  const dirty = HEALTHY();
+  const row2 = dirty.locales
+    .find((p) => p.locale === "fr" && p.phase === "boot")
+    .surfaces.find((s) => s.id === "bill_readout");
+  row2.text = "readoutBillIncomplete";
+  row2.raw_key = false; // the walk says fine
+  const v2 = evaluateExperience(dirty);
+  assert.ok(
+    v2.regressions.some((x) => x.id === "locale:fr:boot:bill_readout"),
+    "the evaluator must re-judge the text, not the flag",
+  );
+});
+
+test("SWEEP: the facet line claims the coverage the evaluator judged", () => {
+  const line = composeExperienceFacetLine({ experience_reading: HEALTHY() });
+  assert.ok(
+    line.length <= COMPLETE_FACET_CLIP,
+    `the line is ${line.length} chars and would be cut in transit`,
+  );
+  assert.match(line, /6 locales x 3 moments/);
+  const judged = summariseLocaleSweep(HEALTHY());
+  assert.ok(
+    line.includes(`${judged.matched}/${judged.judged} surfaces`),
+    "the denominator must be the one the evaluator used",
+  );
+});
+
+test("SCOPE: the scope limit no longer claims copy is checked in English only", () => {
+  // The old sentence said the other five locales were "asserted to exist rather
+  // than read". That is now false, and a scope limit that lies is worse than
+  // one that is missing.
+  assert.match(EXPERIENCE_SCOPE_LIMIT, /all six locales/);
+  assert.doesNotMatch(
+    EXPERIENCE_SCOPE_LIMIT,
+    /asserted to exist rather than read/,
+  );
+  // …and it must still say what the sweep does NOT cover, or the new sentence
+  // reads as a licence to stop measuring.
+  assert.match(EXPERIENCE_SCOPE_LIMIT, /NOT walked/);
+  assert.match(EXPERIENCE_SCOPE_LIMIT, /not the prose/);
 });

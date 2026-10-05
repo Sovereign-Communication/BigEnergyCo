@@ -250,6 +250,131 @@ export const EXPERIENCE_EMPTY_STATES = [
   },
 ];
 
+/**
+ * Every locale the page can be IN, read from the shipped dictionary.
+ *
+ * Object.keys(LOCALES) rather than a typed list, for the same reason
+ * LOCALE_KEYS is read rather than typed: a locale added to the dictionary and
+ * forgotten here would make this sweep report "every locale" while walking five.
+ */
+export const EXPERIENCE_LOCALES = Object.keys(LOCALES);
+
+/**
+ * The three moments a runtime-painted surface can be read.
+ *
+ * BOOT is the first paint, and it is where the two real defects lived: the
+ * dictionary is a deferred import, so anything painted before it lands holds a
+ * raw key until something repaints it. AFTER_RERUN is a fresh run's output —
+ * the state a visitor returns to. AFTER_SWITCH is a language change on a page
+ * that already has results, which is the path that was NEVER checked: one
+ * process, six dictionaries, and surfaces painted by three functions that
+ * `applyI18n` cannot see.
+ */
+export const LOCALE_PHASES = ["boot", "after_rerun", "after_switch"];
+
+/**
+ * The runtime-painted surfaces, and the key each one is supposed to show.
+ *
+ * These are the surfaces that carry a key rather than prose: `updateLoadReadout`
+ * writes the load readout and `applyUseCase` writes the blurb, neither of which
+ * is `data-i18n` markup, so the translation pass never touches them. Naming the
+ * expected KEY per surface is what makes this a check rather than a sweep —
+ * with a key, the reading can be compared against the dictionary value for the
+ * locale, and a surface that never repainted is caught as a stale language
+ * rather than passing because "something is there".
+ *
+ * Each `setup` is the real visitor action that puts that surface in its named
+ * state. They run in order and the LAST load mode is bill, because
+ * `updateLoadReadout` only ever paints the active readout: setting appliances
+ * does not refresh the kWh one, so all four setups have to run before a single
+ * probe or three of the four readings describe a surface nobody re-painted.
+ */
+export const LOCALE_SURFACES = [
+  {
+    id: "appliance_readout",
+    selector: "#readoutAppliances",
+    key: "readoutAppliancesEmpty",
+    label: "the appliance readout with nothing ticked",
+    setup: `(() => {
+      const s = document.getElementById("loadMode");
+      if (s) { s.value = "appliances"; s.dispatchEvent(new Event("change", { bubbles: true })); }
+      return true;
+    })()`,
+  },
+  {
+    id: "kwh_readout",
+    selector: "#readoutKwh",
+    key: "readoutKwhEmpty",
+    label: "the kWh readout with nothing entered",
+    setup: `(() => {
+      const s = document.getElementById("loadMode");
+      if (s) { s.value = "kwh"; s.dispatchEvent(new Event("change", { bubbles: true })); }
+      const k = document.getElementById("dailyKwhInput");
+      if (k) { k.value = ""; k.dispatchEvent(new Event("input", { bubbles: true })); }
+      return true;
+    })()`,
+  },
+  {
+    id: "bill_readout",
+    selector: "#readoutBill",
+    key: "readoutBillIncomplete",
+    label: "the bill readout with no bill entered",
+    // The surface that shipped `readoutBillIncomplete` to a visitor. It is also
+    // the default load mode, so it is the one nobody has to go looking for.
+    setup: `(() => {
+      const s = document.getElementById("loadMode");
+      if (s) { s.value = "bill"; s.dispatchEvent(new Event("change", { bubbles: true })); }
+      const b = document.getElementById("billSlider");
+      if (b) { b.value = "0"; b.dispatchEvent(new Event("input", { bubbles: true })); b.dispatchEvent(new Event("change", { bubbles: true })); }
+      return true;
+    })()`,
+  },
+  {
+    id: "use_case_blurb",
+    selector: "#useCaseBlurb",
+    key: "useCaseBillCutBlurb",
+    label: "the use-case blurb",
+    // The second surface that shipped a raw key. Re-selected on every pass, so
+    // a blurb left over from a previous use case cannot pass as translated.
+    setup: `(() => {
+      const u = document.getElementById("useCase");
+      if (u) { u.value = "billcut"; u.dispatchEvent(new Event("change", { bubbles: true })); }
+      return true;
+    })()`,
+  },
+];
+
+/** Put the page in manual mode and paint each named surface in its named state. */
+const REVEAL_RUNTIME_SURFACES = `(() => {
+  const m = document.getElementById("modeManual");
+  if (m && !m.checked) { m.checked = true; m.dispatchEvent(new Event("change", { bubbles: true })); }
+  return true;
+})()`;
+
+const SURFACE_PROBE = `(() => {
+  const specs = ${JSON.stringify(
+    LOCALE_SURFACES.map((s) => ({ id: s.id, selector: s.selector })),
+  )};
+  const surfaces = specs.map((s) => {
+    const el = document.querySelector(s.selector);
+    const r = el ? el.getBoundingClientRect() : null;
+    return {
+      id: s.id,
+      exists: !!el,
+      text: el ? (el.textContent || "").trim().slice(0, 300) : "",
+      visible: !!r && r.width > 0 && r.height > 0,
+    };
+  });
+  const sel = document.getElementById("langSelect");
+  return {
+    lang: document.documentElement.lang || "",
+    dir: document.documentElement.dir || "",
+    beco_lang: typeof window.becoLang === "string" ? window.becoLang : "",
+    picker: sel ? sel.value : "",
+    surfaces,
+  };
+})()`;
+
 const STATE_PROBE = `(() => {
   const $ = (id) => document.getElementById(id);
   const region = $("resultsRegion");
@@ -336,6 +461,14 @@ export async function runExperienceWalk(ctx, options = {}) {
   const actions = [];
   const errors = [];
   const emptyStates = [];
+
+  // The locale is PINNED, not inherited. Three of the four clauses below are
+  // matched against English verbs, so a CI runner whose browser reports
+  // de-DE would have the whole journey judged in a language it is not checking.
+  // The six-locale sweep below is what covers the other five, and it does so by
+  // choosing them deliberately rather than by inheriting whatever the machine
+  // happens to be set to.
+  const pinned = await setLocaleForNextLoad(ctx, "en");
 
   await send("Page.navigate", { url: ctx.base || `/${page}` }).catch(() => {});
   await sleep(5000);
@@ -485,9 +618,15 @@ export async function runExperienceWalk(ctx, options = {}) {
       ok: true,
       page,
       city,
+      pinned_locale: pinned,
       actions,
       errors,
       empty_states: emptyStates,
+      locales: [],
+      locale_sweep_skipped:
+        "no city suggestion appeared, so the journey never reached the results " +
+        "surfaces the locale sweep reads. The sweep is not skippable — the " +
+        "gate turns an absent list into a hole rather than into a pass.",
       key_leaks: await rawKeyLeaks(ctx, localeKeys),
     };
   }
@@ -686,6 +825,25 @@ export async function runExperienceWalk(ctx, options = {}) {
     after: repeat.after.status,
   });
 
+  // ── every locale, on every painted surface, at every re-entry point ────
+  // Before the two errors below, and not as a footnote to them: this is the
+  // sweep that closes the raw-key CLASS rather than the two instances of it.
+  // The first fix re-painted the runtime copy once, in English, at first paint.
+  // The class is bigger than that — a surface is re-entered by a language
+  // switch and by every run after the first — and neither path was measured.
+  const locales = await runLocaleSweep(ctx, {
+    keys: localeKeys,
+    page,
+    timeoutMs,
+  });
+
+  // Back to English for the two errors below. Their next-step patterns are
+  // English verb lists by design (EXPERIENCE_ERRORS), so reading them in
+  // whatever locale the sweep ended in would grade six dictionaries against one
+  // language's grammar. The sweep is what covers the other five; this is what
+  // keeps the error clause measuring what it claims to measure.
+  await switchLocale(ctx, "en");
+
   // ── a share link that cannot be read ──────────────────────────────────
   // Last, because it leaves the document: the arrival is a fresh load from
   // about:blank, so anything after it would be measuring the wrong page.
@@ -707,15 +865,21 @@ export async function runExperienceWalk(ctx, options = {}) {
   // applyI18n cannot repair a node it does not scan. Both sat inside a panel
   // that quick mode hides, so nothing that looked at the landing frame could
   // see them.
+  //
+  // This final reading is the whole page AFTER the journey — the errors, the
+  // re-runs and six language switches. The per-locale readings above say which
+  // locale and which moment; this one says the page as it is left.
   const keyLeaks = await rawKeyLeaks(ctx, localeKeys);
 
   return {
     ok: true,
     page,
     city,
+    pinned_locale: pinned,
     actions,
     errors,
     empty_states: emptyStates,
+    locales,
     key_leaks: keyLeaks,
   };
 }
@@ -757,6 +921,263 @@ async function rawKeyLeaks(ctx, keys) {
     )
     .catch(() => []);
   return out || [];
+}
+
+/**
+ * Read the four runtime-painted surfaces in ONE locale at ONE moment.
+ *
+ * Everything the visitor can see on this page is read through this probe, and
+ * nothing about it is asserted here: the gate re-judges every value against the
+ * shipped dictionary, because a walk that grades its own homework is the exact
+ * failure this file was written to stop. The `raw_key` flag is a convenience,
+ * and the evaluator compares it with its own judgement rather than believing it.
+ */
+export async function readLocalePass(
+  ctx,
+  { locale, phase, keys = LOCALE_KEYS, rows },
+) {
+  const node = (await ctx.evaluate(SURFACE_PROBE).catch(() => null)) || {};
+  const byId = new Map((node.surfaces || []).map((s) => [s.id, s]));
+  return {
+    locale,
+    phase,
+    // What the page believes its own language is. Recorded so a reader can tell
+    // a sweep that never switched from one that switched and came back.
+    lang: node.lang || "",
+    dir: node.dir || "",
+    beco_lang: node.beco_lang || "",
+    picker: node.picker || "",
+    // `rows` lets a caller hand in readings it took one at a time, each while
+    // its own surface was the ACTIVE load mode. That matters: `updateLoadReadout`
+    // paints only the active readout, so a single probe taken after the last
+    // setup sees the other two as dormant and judges two surfaces that no
+    // visitor is looking at.
+    surfaces:
+      rows ||
+      LOCALE_SURFACES.map((spec) => {
+        const got = byId.get(spec.id) || {
+          exists: false,
+          text: "",
+          visible: false,
+        };
+        return {
+          id: spec.id,
+          key: spec.key,
+          exists: got.exists !== false,
+          text: got.text || "",
+          visible: got.visible === true,
+          raw_key: keys.includes(got.text || ""),
+        };
+      }),
+    // The whole-document sweep in this locale, so a raw key anywhere on the page
+    // counts too and not only the four surfaces named above.
+    leaks: await rawKeyLeaks(ctx, keys),
+  };
+}
+
+/** Put one surface in its named state and read it while it is on screen. */
+async function readActiveSurface(ctx, spec, keys) {
+  await ctx.evaluate(spec.setup).catch(() => {});
+  await sleep(200);
+  const got = await ctx
+    .evaluate(
+      `(() => {
+         const el = document.querySelector(${JSON.stringify(spec.selector)});
+         if (!el) return { exists: false, text: "", visible: false };
+         const r = el.getBoundingClientRect();
+         return {
+           exists: true,
+           text: (el.textContent || "").trim().slice(0, 300),
+           visible: r.width > 0 && r.height > 0,
+         };
+       })()`,
+    )
+    .catch(() => ({ exists: false, text: "", visible: false }));
+  return {
+    id: spec.id,
+    key: spec.key,
+    exists: got.exists !== false,
+    text: got.text || "",
+    visible: got.visible === true,
+    raw_key: keys.includes(got.text || ""),
+  };
+}
+
+/**
+ * Change the language the way a visitor does: through the picker.
+ *
+ * Dispatching `change` on `#langSelect` is the only route that exercises the
+ * real path — the handler persists the choice, calls `applyI18n()` and fires
+ * `beco:lang`, and `repaintRuntimeCopy()` hangs off that event. Writing
+ * `localStorage` and reloading instead would test a different page than the one
+ * that ships, which is how a whole class of re-entry bugs stays invisible.
+ *
+ * Waits on `window.becoLang` rather than on a sleep: the bridge is installed by
+ * `applyI18n()` after the dictionary lands, so it is the one observable that
+ * means "this locale is live", and a slow machine gets longer rather than a
+ * false pass.
+ */
+export async function switchLocale(ctx, locale) {
+  const applied = await ctx
+    .evaluate(
+      `(() => {
+         const s = document.getElementById("langSelect");
+         if (!s) return "no-picker";
+         s.value = ${JSON.stringify(locale)};
+         s.dispatchEvent(new Event("change", { bubbles: true }));
+         return "switched";
+       })()`,
+    )
+    .catch(() => "failed");
+  await ctx
+    .poll(
+      async () =>
+        (await ctx
+          .evaluate(`String((window && window.becoLang) || "")`)
+          .catch(() => "")) === locale,
+      10000,
+      120,
+    )
+    .catch(() => false);
+  // The repaint runs in the same task as the event, so this is slack for the
+  // microtask the awaited `applyI18n()` leaves behind, not a guess at a
+  // duration. Anything that is genuinely late shows up as a stale-language
+  // reading rather than as a pass.
+  await sleep(350);
+  return applied;
+}
+
+/** Pin the language before a fresh load, so the walk starts in a known locale. */
+export async function setLocaleForNextLoad(ctx, locale) {
+  return ctx
+    .evaluate(
+      `(() => {
+         try { localStorage.setItem("beco-lang", ${JSON.stringify(locale)}); return "pinned"; }
+         catch { return "unavailable"; }
+       })()`,
+    )
+    .catch(() => "failed");
+}
+
+/** Prepare a load that can actually finish, so the "after a re-run" pass is one. */
+const RERUN_PREPARE = `(() => {
+  const s = document.getElementById("loadMode");
+  if (s) { s.value = "bill"; s.dispatchEvent(new Event("change", { bubbles: true })); }
+  const b = document.getElementById("billSlider");
+  if (b) { b.value = "150"; b.dispatchEvent(new Event("input", { bubbles: true })); }
+  return true;
+})()`;
+
+/**
+ * Every locale, on every painted surface, at every re-entry point.
+ *
+ * Three passes, and the order is the argument:
+ *
+ *   1. BOOT — a fresh load in each locale, read before anything is touched.
+ *      This is the pass that finds a surface painted before the deferred
+ *      dictionary lands. It is read WITHOUT the reveal sequence on purpose:
+ *      revealing re-paints through the same handlers that repair the page, so
+ *      a reveal-then-probe would report clean on a build that ships a key.
+ *   2. AFTER_RERUN — switch locale, run again, THEN put the surfaces in their
+ *      named states and read them. The run leaves a payload on screen, so the
+ *      results panel is in play here as well as the four readouts.
+ *   3. AFTER_SWITCH — switch locale on a page that already has results, and
+ *      read WITHOUT re-running or re-selecting. Nothing in this pass paints
+ *      anything, which is the point: it is the only reading that a missing
+ *      `beco:lang` repaint cannot excuse, because no action in it repairs the
+ *      page. Only surfaces a visitor can SEE are judged here — the two readouts
+ *      that are not the active load mode are legitimately left alone by a
+ *      language switch, and holding them to a standard the product does not
+ *      claim would be a gate that fails on correct behaviour.
+ */
+export async function runLocaleSweep(ctx, options = {}) {
+  const {
+    locales = EXPERIENCE_LOCALES,
+    keys = LOCALE_KEYS,
+    page = "index.html",
+    rerunSettleMs = 8000,
+  } = options;
+  const { send, evaluate } = ctx;
+  const passes = [];
+  const base = ctx.base || "/";
+
+  // ── pass 1: one fresh load per locale ───────────────────────────────────
+  for (const locale of locales) {
+    await setLocaleForNextLoad(ctx, locale);
+    await send("Page.navigate", { url: `${base}${page}` }).catch(() => {});
+    // `window.becoLang` is installed by applyI18n() once the dictionary is real,
+    // and the boot repaint runs immediately after it in the same task, so the
+    // surface is waiting for us the moment this turns true.
+    const ready = await ctx
+      .poll(
+        async () =>
+          (await evaluate(`typeof window.becoLang === "string"`).catch(
+            () => false,
+          )) === true,
+        20000,
+        150,
+      )
+      .catch(() => false);
+    await sleep(300);
+    const pass = await readLocalePass(ctx, { locale, phase: "boot", keys });
+    pass.ready = ready;
+    passes.push(pass);
+  }
+
+  // ── pass 2: switch, re-run, then read the named surfaces ───────────────
+  await evaluate(REVEAL_RUNTIME_SURFACES).catch(() => {});
+  await sleep(300);
+  for (const locale of locales) {
+    const switched = await switchLocale(ctx, locale);
+    await evaluate(RERUN_PREPARE).catch(() => {});
+    await sleep(200);
+    const before = await evaluate(STATE_PROBE).catch(() => null);
+    await evaluate(`document.getElementById("btnRunSizing").click()`).catch(
+      () => {},
+    );
+    const acked = before
+      ? await waitForChange(
+          ctx,
+          before,
+          ["status", "button", "results"],
+          rerunSettleMs,
+        )
+      : { moved: [], ms: null };
+    await sleep(600);
+    // Each surface is read immediately after its OWN setup, while it is the
+    // active readout and therefore on screen. One probe taken after the last
+    // setup would see the first two as dormant and quietly skip them.
+    const rows = [];
+    for (const spec of LOCALE_SURFACES)
+      rows.push(await readActiveSurface(ctx, spec, keys));
+    const pass = await readLocalePass(ctx, {
+      locale,
+      phase: "after_rerun",
+      keys,
+      rows,
+    });
+    pass.switched = switched;
+    // Whether the run finished is NOT re-litigated here: `repeat_run` and
+    // `result` own that claim, with the full timeout behind them. What this
+    // pass needs from the run is that the page repainted after it.
+    pass.run_acknowledged = acked.moved.length > 0;
+    pass.run_ack_ms = acked.ms;
+    passes.push(pass);
+  }
+
+  // ── pass 3: switch only, on a page that already has a result ───────────
+  for (const locale of locales) {
+    const switched = await switchLocale(ctx, locale);
+    const pass = await readLocalePass(ctx, {
+      locale,
+      phase: "after_switch",
+      keys,
+    });
+    pass.switched = switched;
+    passes.push(pass);
+  }
+
+  return passes;
 }
 
 function allowedOf(id) {
