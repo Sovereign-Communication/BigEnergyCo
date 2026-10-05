@@ -136,10 +136,25 @@ test("LEAD-ACID: the footnote refuses a bank-free reference too", () => {
   assert.equal(leadAcidReferenceCopy(agm({ lifetimeCostMid: NaN })), null);
 });
 
-test("LEAD-ACID: ui.js renders both places from the shared helper", () => {
+test("LEAD-ACID: ui.js renders the comparison from the shared helper", () => {
   const ui = readFileSync("assets/js/sizing/ui.js", "utf8");
+  // ONE live render site, not two. The second was inside renderAutoCards(),
+  // a 232-line function called from nothing but itself, so it never rendered;
+  // it went out with the dead code. The invariant that matters is unchanged
+  // and is the one below: no call site may rebuild the comparison inline,
+  // because the inline copy is what disagreed with itself.
   assert.match(ui, /leadAcidComparison\(entry, p\.agmReference\)/);
-  assert.match(ui, /leadAcidReferenceCopy\(agm\)/);
+  assert.equal(
+    (ui.match(/leadAcidComparison\(/g) || []).length,
+    1,
+    "exactly one live site, and it must go through the helper",
+  );
+  // The copy itself is still one owner: lead-acid.js owns every sentence the
+  // reference renders, so a card cannot word its way out of agreement with
+  // the footnote.
+  const leadAcid = readFileSync("assets/js/sizing/lead-acid.js", "utf8");
+  assert.match(leadAcid, /export function leadAcidReferenceCopy/);
+  assert.match(leadAcid, /export function leadAcidComparison/);
   // Tab-adopted entries say where their money came from, and the tab tells the
   // visitor which model it used.
   assert.match(ui, /estimatedFromTab: true/);

@@ -1,0 +1,235 @@
+// Browser privacy gate. Run: node scripts/check-privacy-browser.mjs
+//
+// The static gate (scripts/check-privacy.mjs) proves six claims about the
+// shipped SOURCE. This one measures what the page DOES in a browser, because
+// the three mechanisms privacy claims usually break on are invisible to a grep:
+//
+//   1. an HttpOnly cookie — invisible to `document.cookie` AND to any source
+//      scan, visible only in the response Set-Cookie header
+//   2. a third-party request from injected markup, a CSS url(), a font, or a
+//      service-worker import — never a JavaScript string
+//   3. storage written by an inline handler or a worker
+//
+// It stages the SAME allowlisted artifact the deploy workflows publish and
+// serves it under the real `_headers` policy, so the thing measured is the
+// thing that ships. Writes its measurement to jev-artifacts/privacy-browser.json
+// for the Jev gate, and exits non-zero on a breach so it can be a CI step.
+//
+// Zero dependencies: drives the installed Chrome/Edge over CDP, like every
+// other flow in scripts/smoke/.
+import { spawn } from "node:child_process";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { join, resolve } from "node:path";
+
+import { ROOT, serveStatic } from "./serve-static.mjs";
+import { start } from "./smoke/runtime.mjs";
+import { runPrivacyFlow } from "./smoke/privacy.mjs";
+import { cookieGateDecision } from "./cold-start-preflight.mjs";
+
+const STAGE = join(ROOT, "_pages_privacy");
+const ARTIFACT = join(ROOT, "jev-artifacts", "privacy-browser.json");
+
+let failures = 0;
+const ok = (m) => console.log(`OK   ${m}`);
+const fail = (m) => {
+  failures += 1;
+  console.error(`FAIL ${m}`);
+};
+
+function run(cmd, args) {
+  return new Promise((done) => {
+    const child = spawn(cmd, args, { cwd: ROOT, stdio: "inherit" });
+    child.on("exit", (code) => done(code ?? 1));
+  });
+}
+
+const staged = await run(process.execPath, [
+  join(ROOT, "scripts", "deploy-pages-local.mjs"),
+  "--check",
+  "--stage",
+  "_pages_privacy",
+]);
+if (staged !== 0) {
+  console.error("PRIVACY-BROWSER FAIL  could not stage the allowlisted build");
+  process.exit(staged || 1);
+}
+
+if (!existsSync(join(ROOT, "scripts", "smoke", "privacy.mjs"))) {
+  console.error("PRIVACY-BROWSER FAIL  the privacy flow is missing");
+  process.exit(1);
+}
+
+const srv = await serveStatic({ dir: STAGE });
+console.log(
+  `PRIVACY    staged build served at ${srv.url} (with _headers policy)`,
+);
+
+let measured = null;
+let b = null;
+try {
+  b = await start();
+  await b.send("Page.enable");
+  await b.send("Network.enable");
+  await b.send("Page.navigate", { url: srv.url });
+  // Give the first paint, the worker boot and the weather pull time to happen:
+  // the claim under test is about what a visitor's first load does, so the
+  // window has to cover it rather than stop at DOMContentLoaded.
+  await new Promise((r) => setTimeout(r, 8000));
+  measured = await runPrivacyFlow(b, srv.url);
+} catch (err) {
+  fail(`the browser could not be driven: ${err.message}`);
+} finally {
+  if (b) await b.close();
+  await srv.close();
+  rmSync(resolve(STAGE), { recursive: true, force: true });
+}
+
+// ── the gates ───────────────────────────────────────────────────────────────
+// An unmeasured run is not a passed gate. If the browser never started, this
+// file says so and fails; it does not fall back to "no breaches observed".
+if (!measured) {
+  fail("nothing was measured — an unmeasured risk is not a passed gate");
+  writeResult({ ok: false, measured: false });
+  console.error("\nPRIVACY-BROWSER FAIL (nothing measured)");
+  process.exit(1);
+}
+
+const decision = cookieGateDecision({
+  ok: true,
+  cookieCount: measured.cookieCount,
+  cookieNames: measured.cookieNames,
+});
+
+if (measured.cookieCount === 0)
+  ok(
+    `cookies: 0 set on first load (also invisible to document.cookie: ${measured.visibleToDocument === 0})`,
+  );
+else
+  fail(
+    `cookies: ${measured.cookieCount} set on first load (${measured.cookieNames.join(", ")}) — Q-15 requires 0`,
+  );
+
+if (
+  measured.localStorageKeys.length === 0 &&
+  measured.sessionStorageKeys.length === 0
+)
+  ok(
+    "storage: neither localStorage nor sessionStorage holds a key after first load",
+  );
+else
+  fail(
+    `storage: local=[${measured.localStorageKeys.join(", ")}] session=[${measured.sessionStorageKeys.join(", ")}]`,
+  );
+
+// The property worth asserting is not "zero third-party origins" — the site
+// declares five, and pretending otherwise would be a gate that only passes
+// because it measures the wrong thing. It is: every third-party request goes to
+// a DECLARED origin (next clause) and carries nothing that identifies the
+// visitor. That second half is a runtime measurement no static scan can make,
+// because it reads the URL the browser actually sent.
+const identifying = [];
+for (const u of measured.thirdPartyUrls) {
+  // A coordinate finer than 0.01° is ~1.1 km of location. The static gate
+  // proves the SOURCE rounds; this proves the bytes on the wire did.
+  const coarse = /[?&](?:lat|lng|lon|latitude|longitude)=(-?\d+\.\d{3,})/i.exec(
+    u,
+  );
+  if (coarse) identifying.push(`${u} (coordinate ${coarse[1]})`);
+  if (/[?&][^=]*=.*@/.test(u) && /email|mail|e=/i.test(u)) identifying.push(u);
+  if (/[?&](q|query|search)=/i.test(u) && !/nominatim/i.test(u))
+    identifying.push(`${u} (free-text query to a non-geocoder)`);
+}
+if (identifying.length === 0)
+  ok(
+    `egress: no third-party request carried an identifier (${measured.thirdPartyUrls.length} third-party request(s) inspected)`,
+  );
+else
+  fail(
+    `egress: third-party requests carried identifiers:\n     ${identifying.join("\n     ")}`,
+  ); // ── 3. is that egress DECLARED? ─────────────────────────────────────────────
+// Checked against `_headers`' own `connect-src`, not a hardcoded list.
+//
+// This started life as "every third-party origin must be NASA POWER" and it
+// failed on the first run, correctly: the page fetches
+// open.er-api.com/v6/latest/USD to keep the per-country currency table current.
+// That egress is real, it is in connect-src, it is in the deploy runbook's
+// egress table, and it is the mechanism behind the per-country-currency feature
+// the 815,000 budget entry records. So it stays — a parameterless GET of a
+// public rates table, carrying nothing about the visitor.
+//
+// The bug was the rule, not the egress. A hand-written allowlist here would be
+// a THIRD declaration of the same fact, free to drift from the two that ship.
+// Reading the CSP instead means a new origin can only pass this gate if
+// somebody deliberately put it in the shipped policy — which is the review
+// step this gate exists to force.
+const headers = readFileSync(join(ROOT, "_headers"), "utf8");
+const connectSrc = (headers.match(/connect-src\s+([^;]+);/i) || [])[1] || "";
+const declared = connectSrc
+  .split(/\s+/)
+  .map((s) => s.replace(/^'|'$/g, ""))
+  .filter((s) => s && s !== "self" && /^https?:/i.test(s))
+  .map((s) => {
+    try {
+      return new URL(s).origin;
+    } catch {
+      return s;
+    }
+  });
+const isDeclared = (origin) =>
+  declared.some(
+    (d) => origin === d || origin.endsWith(d.replace(/^https:\/\//, "")),
+  );
+
+const UNDECLARED = measured.thirdPartyOrigins.filter((o) => !isDeclared(o));
+if (UNDECLARED.length === 0)
+  ok(
+    `egress: every measured third-party origin is declared in connect-src (${measured.thirdPartyOrigins.join(", ") || "none this run"})`,
+  );
+else
+  fail(
+    `egress: undeclared third-party origins: ${UNDECLARED.join(", ")} — add them to _headers connect-src deliberately, or remove the call`,
+  );
+
+// And the declaration itself must stay small and named. A CSP that grows a
+// dozen origins is the same finding one layer up.
+if (declared.length > 0 && declared.length <= 8)
+  ok(
+    `egress: ${declared.length} declared origin(s) in connect-src: ${declared.join(", ")}`,
+  );
+else
+  fail(
+    `egress: connect-src declares ${declared.length} origins — review the list`,
+  );
+
+if (measured.requestCount > 0)
+  ok(`the run measured a real page load (${measured.requestCount} requests)`);
+else fail("the run issued no requests — nothing was actually loaded");
+
+ok(
+  `Turnstile decision from cookieGateDecision: ${decision.action} — ${decision.why}`,
+);
+
+writeResult({ ok: failures === 0, ...measured, turnstile: decision });
+
+console.log(
+  failures
+    ? `\n${failures} PRIVACY-BROWSER FAILURE(S)`
+    : `\nPRIVACY-BROWSER OK — 0 cookies, 0 stored keys, 0 undeclared origins`,
+);
+process.exit(failures ? 1 : 0);
+
+function writeResult(payload) {
+  try {
+    mkdirSync(join(ROOT, "jev-artifacts"), { recursive: true });
+    writeFileSync(ARTIFACT, JSON.stringify(payload, null, 2) + "\n", "utf8");
+    console.log(`PRIVACY    measured: ${ARTIFACT}`);
+  } catch (e) {
+    console.error(`could not write ${ARTIFACT}: ${e.message}`);
+  }
+}
