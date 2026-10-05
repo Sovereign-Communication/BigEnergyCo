@@ -135,7 +135,11 @@ test("a registry entry naming a symbol that no longer exists fails", () => {
     c.assumptions[0].used_by = ["assets/js/sizing/nasa.js:POWER_HOURLY_URL"];
     c.assumptions[1].used_by = ["assets/js/sizing/pricing.js:DELETED_SYMBOL"];
   });
-  assert.notEqual(r.code, 0, "a registry that outlived its code is a stale record");
+  assert.notEqual(
+    r.code,
+    0,
+    "a registry that outlived its code is a stale record",
+  );
   assert.match(r.out, /is no longer in the file/);
 });
 
@@ -166,8 +170,15 @@ test("a shipped page links the registry, so a visitor can open it", () => {
 });
 
 test("the sources card is translated in every locale", () => {
-  const src = readFileSync(join(ROOT, "assets", "js", "shared", "locales.js"), "utf8");
-  for (const key of ["sourcesCardTitle", "sourcesCardBody", "sourcesCardLink"]) {
+  const src = readFileSync(
+    join(ROOT, "assets", "js", "shared", "locales.js"),
+    "utf8",
+  );
+  for (const key of [
+    "sourcesCardTitle",
+    "sourcesCardBody",
+    "sourcesCardLink",
+  ]) {
     const n = (src.match(new RegExp(`${key}:`, "g")) || []).length;
     assert.equal(n, 6, `${key} must exist in all six locales, found ${n}`);
   }
@@ -176,7 +187,10 @@ test("the sources card is translated in every locale", () => {
 // ── the registry itself, read rather than trusted ─────────────────────────
 test("every assumption family names what a visitor actually sees", () => {
   for (const a of reg.assumptions) {
-    assert.ok(a.shown_as && a.shown_as.length > 3, `${a.id} says what it is shown as`);
+    assert.ok(
+      a.shown_as && a.shown_as.length > 3,
+      `${a.id} says what it is shown as`,
+    );
   }
 });
 

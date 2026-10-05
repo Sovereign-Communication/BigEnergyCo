@@ -19,8 +19,8 @@ export const LOCALES = {
     navLegal: "Terms & Disclaimer",
     sourcesCardTitle: "Where these numbers come from",
     sourcesCardBody:
-      "Every assumption behind a number on this page is listed with the publisher behind it, the date it was checked, and how closely it matches what we ship. The ones we could not source say so instead of borrowing someone else's authority.",
-    sourcesCardLink: "Open the full source list →",
+      "Each assumption behind a number here lists its publisher, the date checked, and how well it matches what we ship. Ones we cannot source say so.",
+    sourcesCardLink: "See all sources →",
     heroTag: "🌍 Free for everyone, everywhere • No signup • Nothing for sale",
     heroTitle1: "Cut your electricity bill.",
     heroTitle2: "See exactly what it would take.",
@@ -487,8 +487,8 @@ export const LOCALES = {
     navLegal: "Términos y aviso legal",
     sourcesCardTitle: "De dónde salen estos números",
     sourcesCardBody:
-      "Cada supuesto detrás de una cifra de esta página aparece con su editor, la fecha en que se comprobó y hasta qué punto coincide con lo que aplicamos. Los que no pudimos documentar lo dicen, en lugar de tomar prestada la autoridad de otro.",
-    sourcesCardLink: "Abrir la lista completa de fuentes →",
+      "Cada supuesto detrás de una cifra indica aquí su editor, la fecha de verificación y hasta qué punto coincide con lo que aplicamos. Los que no podemos documentar lo dicen.",
+    sourcesCardLink: "Ver todas las fuentes →",
     heroTag:
       "Gratis para todos, en todo el mundo · Sin registro · Nada en venta",
     heroTitle1: "Reduce tu factura de luz.",
@@ -963,8 +963,8 @@ export const LOCALES = {
     navLegal: "Termos e aviso legal",
     sourcesCardTitle: "De onde vêm estes números",
     sourcesCardBody:
-      "Cada premissa por trás de um número desta página aparece com o responsável pela publicação, a data em que foi verificada e o quanto corresponde ao que aplicamos. As que não conseguimos documentar dizem isso, em vez de tomar emprestada a autoridade de outra fonte.",
-    sourcesCardLink: "Abrir a lista completa de fontes →",
+      "Cada premissa por trás de um número indica aqui o responsável, a data da verificação e o quanto corresponde ao que aplicamos. As que não conseguimos documentar dizem isso.",
+    sourcesCardLink: "Ver todas as fontes →",
     heroTag:
       "Grátis para todos, no mundo inteiro · Sem cadastro · Nada à venda",
     heroTitle1: "Corte a sua conta de luz.",
@@ -1432,8 +1432,8 @@ export const LOCALES = {
     navLegal: "Conditions et avertissement",
     sourcesCardTitle: "D'où viennent ces chiffres",
     sourcesCardBody:
-      "Chaque hypothèse derrière un chiffre de cette page est publiée avec son éditeur, la date de vérification et sa proximité avec la valeur que nous appliquons. Celles que nous n'avons pas pu sourcer le disent, plutôt que d'emprunter l'autorité d'un autre.",
-    sourcesCardLink: "Ouvrir la liste complète des sources →",
+      "Chaque hypothèse derrière un chiffre indique ici son éditeur, la date de vérification et sa proximité avec la valeur appliquée. Celles que nous ne pouvons pas sourcer le disent.",
+    sourcesCardLink: "Voir toutes les sources →",
     heroTag: "Gratuit pour tous, partout · Sans inscription · Rien à vendre",
     heroTitle1: "Réduisez votre facture d'électricité.",
     heroTitle2: "Voyez exactement ce qu'il faudrait.",
@@ -1913,8 +1913,8 @@ export const LOCALES = {
     navLegal: "Bedingungen & Haftungsausschluss",
     sourcesCardTitle: "Woher diese Zahlen kommen",
     sourcesCardBody:
-      "Jede Annahme hinter einer Zahl auf dieser Seite ist mit Herausgeber, Prüfdatum und dem Grad der Übereinstimmung mit dem, was wir anwenden, aufgeführt. Was wir nicht belegen konnten, sagt das auch — statt die Autorität anderer zu beanspruchen.",
-    sourcesCardLink: "Vollständige Quellenliste öffnen →",
+      "Jede Annahme hinter einer Zahl nennt hier Herausgeber, Prüfdatum und die Übereinstimmung mit dem Angewendeten. Was wir nicht belegen können, sagt das.",
+    sourcesCardLink: "Alle Quellen ansehen →",
     heroTag:
       "🌍 Kostenlos für alle, überall · Keine Anmeldung · Nichts zu verkaufen",
     heroTitle1: "Senken Sie Ihre Stromrechnung.",
@@ -2392,8 +2392,8 @@ export const LOCALES = {
     navLegal: "الشروط وإخلاء المسؤولية",
     sourcesCardTitle: "من أين تأتي هذه الأرقام",
     sourcesCardBody:
-      "كل افتراض وراء أي رقم في هذه الصفحة مذكور مع الناشر الذي احتُسب منه، وتاريخ التحقق، ومدى مطابقته للقيمة التي نستخدمها. وما تعذّر توثيقه يقول ذلك صراحةً بدلاً من استعارة سلطة مصدر آخر.",
-    sourcesCardLink: "افتح قائمة المصادر كاملة ←",
+      "كل افتراض وراء أي رقم يذكر هنا الناشر وتاريخ التحقق ومدى مطابقته للقيمة المستخدمة. وما تعذّر توثيقه يقول ذلك صراحةً.",
+    sourcesCardLink: "عرض كل المصادر ←",
     heroTag: "مجاني للجميع، في كل مكان · بدون تسجيل · لا شيء للبيع",
     heroTitle1: "قلّل فاتورة الكهرباء.",
     heroTitle2: "شاهد بالضبط ما يتطلبه الأمر.",
