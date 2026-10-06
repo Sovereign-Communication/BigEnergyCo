@@ -24,3 +24,12 @@ No amendments yet: the plan is at its genesis hash.
 - Plan-SHA256-after: 307738296920d7d18b741ea1ffe5e7812cb1c8637f00b6f14af10a8c734a5ac7
 - Sections: P0 (new item P0.6)
 - Rationale: The full-codebase Jev audit produces evidence PRs (docs/jev-completion/) that the jev-complete gate cannot scope — §9 rule 1 requires every PR title to name a plan item, and no P-item covered audit evidence, so the gate failed closed at scope resolution (seen on PR #193). The owner approved adding P0.6 in chat on 2026-10-06. Facets ["docs"] follow the P0.2 precedent (docs-only). The SCOPE_FACETS entry lands in the same change; tests/jev-scope.test.mjs enforces the plan↔scope mapping in both directions.
+
+## A-003: P0.6 evidence ruling — the gate cannot judge audit evidence at 99
+
+- Date: 2026-10-06
+- Approved-by: @Treystu
+- Plan-SHA256-before: 307738296920d7d18b741ea1ffe5e7812cb1c8637f00b6f14af10a8c734a5ac7
+- Plan-SHA256-after: 6f9c8c7e7d33140fb6ec5ef36848f27d0387a5ab0501985df71dba77b20279cf
+- Sections: §9 rule 6 (P0.6 evidence ruling)
+- Rationale: PR #193 (docs/jev-completion/, scoped P0.6) got the scope fix but the live gate still failed: 95.5 < 99, docs facet at ordinal 85 ("solid with minor gaps") with Jev confidence 0.57. The scoped score is 0.7*mechanical + 0.3*docs, so reaching 99 needs the docs facet near 97 and proven — unreachable at Jev's confidence calibration. The owner ruled in chat on 2026-10-06, following the P0.3 bootstrap precedent (§9 rule 6, 2026-09-26): P0.6 evidence PRs merge on green CI plus an attached scoped report with no ratchet regression, even below 99. The hard gates and the ratchet bind throughout and are never relaxed. scripts/lib/jev-verdict.mjs implements the exemption (P0.6 bypasses the exit rule only).
