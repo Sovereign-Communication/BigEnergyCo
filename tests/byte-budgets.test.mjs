@@ -2,10 +2,9 @@
 // the staged build, with the baseline recorded in the ledger.
 //
 // What these tests hold in place:
-//   • the §3.1 limits as amended by A-002 — a relaxed number must fail here,
-//     because the plan says only an owner-approved amendment may relax one
-//     (and the amendment lives in the plan, not in this file), and the test
-//     reads A-002's numbers back out of MASTER_PLAN.md;
+//   • the §3.1 limits, verbatim — a relaxed number must fail here, because the
+//     plan says only an owner-approved amendment may relax one (and the
+//     amendment lives in the plan, not in this file);
 //   • that each metric measures the scope the plan names: the first-result JS
 //     is the TRANSITIVE module graph, not the entry file, and the registry
 //     budget is per country so the worst country is the honest reading;
@@ -117,59 +116,35 @@ function fixture(overrides = {}) {
   };
 }
 
-test("BUDGET: the limits are the plan's — §3.1's table, as amended by A-002", () => {
+test("BUDGET: the section 3.1 limits are the plan's, verbatim", () => {
   // Every byte budget is a KB figure in the plan. The one that is not bytes is
   // a COUNT, and it is held as a count so nobody "fixes" it into 10 KB later.
-  //
-  // Seven lines are §3.1 verbatim. Three are A-002's interim lines (owner-
-  // approved 2026-09-29): measured shipped bytes +10 %, binding until the
-  // P6/P8 absolute phases. BOTH sets live in the plan — this test reads the
-  // amendment's own numbers out of MASTER_PLAN.md, so a constant that drifts
-  // from the plan fails here, and a real relaxation must be made where §3.1
-  // says it may be: measured evidence plus an owner-approved amendment.
-  const plan = readFileSync(join(ROOT, "docs/plan/MASTER_PLAN.md"), "utf8");
-  const tableLimits = {
+  const byteLimits = {
     home_document: 30,
     css_total: 20,
+    js_before_interactive: 35,
     js_to_first_result: 200,
     locale_strings: 25,
+    registry_country: 6,
     web_fonts: 0,
+    heatmap_initial: 300,
   };
-  const amendedLimits = {
-    js_before_interactive: 206,
-    registry_country: 83,
-    heatmap_initial: 460,
-  };
-  for (const [metric, kb] of Object.entries(tableLimits)) {
+  for (const [metric, kb] of Object.entries(byteLimits)) {
     assert.equal(
       BYTE_BUDGET_LIMITS[metric],
       kb * KB,
-      `${metric} is ${kb} KB in plan §3.1's table, unchanged by A-002.`,
+      `${metric} is ${kb} KB in plan §3.1. Only an owner-approved amendment may relax it, and the amendment lives in the plan — not here.`,
     );
   }
-  for (const [metric, kb] of Object.entries(amendedLimits)) {
-    assert.equal(
-      BYTE_BUDGET_LIMITS[metric],
-      kb * KB,
-      `${metric} is ${kb} KB under A-002. Only an owner-approved amendment may relax it, and the amendment lives in the plan — not here.`,
-    );
-    assert.ok(
-      plan.includes(`\`${metric}\` ≤ ${kb} KB`),
-      `plan §3.1 must carry A-002's line \`${metric}\` ≤ ${kb} KB — the gate reads the amendment from the plan, never the other way`,
-    );
-  }
-  assert.ok(
-    plan.includes("A-002 (owner-approved 2026-09-29)"),
-    "the relaxation must be recorded as a numbered amendment entry, not as prose the gate happens to agree with",
-  );
   assert.equal(
     BYTE_BUDGET_LIMITS.requests_before_interaction,
     10,
     "requests before first interaction is a count (≤ 10), not a byte budget",
   );
-  // A 6 KB country budget against a city catalogue is the one §3.1 flagged as
-  // possibly unreachable; A-002 relaxed it to the measured 75.1 KB +10 %.
-  assert.equal(BYTE_BUDGET_LIMITS.registry_country, 83 * KB);
+  // A 6 KB country budget against a city catalogue is the one the plan already
+  // flagged as possibly unreachable; it is kept at the plan's value so the
+  // breach stays visible until an amendment says otherwise.
+  assert.equal(BYTE_BUDGET_LIMITS.registry_country, 6 * KB);
 });
 
 test("BUDGET: a staged build is measured on every plan budget", () => {
