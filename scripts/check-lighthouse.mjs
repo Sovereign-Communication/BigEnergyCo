@@ -51,8 +51,7 @@ import {
   FIRST_PAINT_ENFORCEMENT,
   compareLighthouse,
   compareSpeed,
-  composeFacetLine,
-  facetLineOmitted,
+  composeFacetLineWithOmissions,
   measureFirstPaintWeight,
   median,
 } from "./lib/lighthouse-budgets.mjs";
@@ -473,15 +472,16 @@ const report = {
 // travels inside the report. A hand-typed line in the evidence file was the
 // defect this replaces; composing it at the measurement means the numbers on
 // the judge's record and the numbers in this report cannot drift apart.
-report.facet_line = composeFacetLine(report);
+const composed = composeFacetLineWithOmissions(report);
+report.facet_line = composed.line;
 // What the fit to the transport's clip had to leave off, named rather than
 // assumed. The composer degrades the least load-bearing sentence in place and
-// records the swap; the gate prints it, because a sentence that quietly did not
+// returns the swap; the gate prints it, because a sentence that quietly did not
 // make the judge's line while the run reports green is the defect the clip
 // itself creates.
-report.facet_line_omitted = facetLineOmitted.slice();
-if (facetLineOmitted.length) {
-  for (const o of facetLineOmitted)
+report.facet_line_omitted = composed.omitted;
+if (composed.omitted.length) {
+  for (const o of composed.omitted)
     console.warn(
       `note: the ${COMPLETE_FACET_CLIP}-char axis clip dropped` +
         (o.replaced_with

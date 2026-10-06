@@ -31,6 +31,7 @@ import {
   LIGHTHOUSE_FIRST_PAINT_BUDGETS,
   LIGHTHOUSE_FIRST_PAINT_MEASUREMENT,
   composeFacetLine,
+  composeFacetLineWithOmissions,
   facetLineOmitted,
   firstPaintWeightClause,
   measureFirstPaintWeight,
@@ -404,7 +405,6 @@ test("FIRST PAINT: all three rubric clauses reach the judge's line", () => {
 });
 
 test("FIRST PAINT: the line survives the slowest plausible run", () => {
-  facetLineOmitted.length = 0;
   const line = composeFacetLine(
     report({
       first_paint_weight: realReading(),
@@ -440,7 +440,6 @@ test("FIRST PAINT: the line survives the slowest plausible run", () => {
 });
 
 test("FIRST PAINT: an unmeasured weight says so, and never as a number", () => {
-  facetLineOmitted.length = 0;
   const line = composeFacetLine(report({ warm_interaction: warmReading() }));
   assert.match(
     line,
@@ -455,7 +454,6 @@ test("FIRST PAINT: an unmeasured weight says so, and never as a number", () => {
 });
 
 test("FIRST PAINT: an empty measurement set names the absence, never the envelope", () => {
-  facetLineOmitted.length = 0;
   const line = composeFacetLine({
     measured: [],
     regressions: [],
@@ -480,16 +478,56 @@ test("FIRST PAINT: an empty measurement set names the absence, never the envelop
 });
 
 test("FIRST PAINT: whatever the clip drops, it names", () => {
-  facetLineOmitted.length = 0;
-  composeFacetLine(
+  const { omitted } = composeFacetLineWithOmissions(
     report({
       first_paint_weight: realReading(),
       warm_interaction: warmReading(),
     }),
   );
-  for (const omitted of facetLineOmitted)
+  assert.ok(
+    omitted.length > 0,
+    "this fixture is the regime where the clip actually bites; a loop over an " +
+      "empty report would assert nothing about what the gate prints",
+  );
+  for (const o of omitted)
     assert.ok(
-      typeof omitted.sentence === "string" && omitted.sentence.length > 0,
+      typeof o.sentence === "string" && o.sentence.length > 0,
       "an omission must name what was omitted",
     );
+});
+
+test("FIRST PAINT: the omission report is returned, not state a caller clears", () => {
+  // The defect this replaces: the composer returned the line and PUSHED the
+  // omissions into a module-level array, so the report accumulated across calls
+  // and every caller had to remember to clear it. Two composes with no clearing
+  // in between must each describe only their own run.
+  const drops = composeFacetLineWithOmissions(
+    report({
+      ratchet_categories: [
+        "accessibility",
+        "best-practices",
+        "seo",
+        "performance",
+        "pwa",
+      ],
+      first_paint_weight: realReading(),
+      warm_interaction: warmReading(),
+    }),
+  );
+  assert.ok(
+    drops.omitted.length > 0,
+    `this case must drop something for the assertion below to mean anything: ${drops.line}`,
+  );
+  const clean = composeFacetLineWithOmissions(report({}));
+  assert.deepEqual(
+    clean.omitted,
+    [],
+    "a report with nothing to drop must report nothing",
+  );
+  assert.deepEqual(
+    facetLineOmitted,
+    clean.omitted,
+    "the compatibility view must describe the LAST compose, not every compose " +
+      `since the process started: ${JSON.stringify(facetLineOmitted)}`,
+  );
 });
