@@ -32,7 +32,6 @@ import {
   LIGHTHOUSE_FIRST_PAINT_MEASUREMENT,
   composeFacetLine,
   composeFacetLineWithOmissions,
-  facetLineOmitted,
   firstPaintWeightClause,
   measureFirstPaintWeight,
 } from "../scripts/lib/lighthouse-budgets.mjs";
@@ -524,10 +523,23 @@ test("FIRST PAINT: the omission report is returned, not state a caller clears", 
     [],
     "a report with nothing to drop must report nothing",
   );
+  const again = composeFacetLineWithOmissions(
+    report({
+      ratchet_categories: [
+        "accessibility",
+        "best-practices",
+        "seo",
+        "performance",
+        "pwa",
+      ],
+      first_paint_weight: realReading(),
+      warm_interaction: warmReading(),
+    }),
+  );
   assert.deepEqual(
-    facetLineOmitted,
-    clean.omitted,
-    "the compatibility view must describe the LAST compose, not every compose " +
-      `since the process started: ${JSON.stringify(facetLineOmitted)}`,
+    again.omitted,
+    drops.omitted,
+    "each call must carry its own report; an accumulated one would grow with " +
+      "every compose since the process started",
   );
 });

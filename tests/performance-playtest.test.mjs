@@ -35,7 +35,7 @@ import test from "node:test";
 
 import {
   composeFacetLine,
-  facetLineOmitted,
+  composeFacetLineWithOmissions,
 } from "../scripts/lib/lighthouse-budgets.mjs";
 import {
   PERFORMANCE_BUDGETS,
@@ -432,8 +432,7 @@ test("PLAYTEST: no measurement means the line still says the claims are unmeasur
 });
 
 test("PLAYTEST: the clip degrades a sentence in place rather than cutting the tail", () => {
-  facetLineOmitted.length = 0;
-  const line = composeFacetLine(
+  const { line, omitted } = composeFacetLineWithOmissions(
     lighthouseReport({ warm_interaction: playtestReading() }),
   );
   assert.ok(
@@ -442,9 +441,9 @@ test("PLAYTEST: the clip degrades a sentence in place rather than cutting the ta
   );
   // Whatever the fit gave up must be RECORDED, so a sentence that did not reach
   // the judge cannot vanish silently while the run reports green.
-  for (const omitted of facetLineOmitted)
+  for (const o of omitted)
     assert.ok(
-      typeof omitted.sentence === "string" && omitted.sentence.length > 0,
+      typeof o.sentence === "string" && o.sentence.length > 0,
       "an omission must name what was omitted",
     );
   // …and the honesty tail is never the thing that gets dropped.
