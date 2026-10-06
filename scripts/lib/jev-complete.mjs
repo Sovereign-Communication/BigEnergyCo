@@ -54,6 +54,30 @@ export const COMPLETE_EXIT_FACET_INDEX = 4;
 // not enforce all-proven at all.
 export const COMPLETE_EXIT_RULE_FROM = "P0.4";
 
+// WHERE each PROJECTED facet's own absolute phase starts (A-002, plan §3.2
+// "Projection"). A facet whose evidence is DERIVED from another gate cannot be
+// required at `proven` before that gate is absolute-blocking, or the scoped rule
+// silently moves the projected gate's phase — which is what had happened:
+// requiring `performance` at P0.4 made Q-02 and the §3.1 budgets absolute five
+// phases early, against §3.2's table and against P0.4's own row ("measurement
+// gates (ratchet mode)").
+//
+// `performance` and `accessibility` are read out of the Lighthouse report and
+// the first paint's weight out of the §3.1 budgets. §3.2 makes Lighthouse
+// absolute at P5 (new shell) / P8 (everything) and the byte budgets at P6
+// (`/next/`) / P8 (all). Until then the ratchet — which binds every facet, in
+// and out of scope, unchanged — is the whole requirement. A facet not listed
+// here takes COMPLETE_EXIT_RULE_FROM.
+export const ABSOLUTE_FACET_FROM = {
+  performance: "P5",
+  accessibility: "P5",
+};
+
+/** The plan item from which `axis` must be `proven` in a scoped run. */
+export function facetAbsoluteFrom(axis) {
+  return ABSOLUTE_FACET_FROM[axis] ?? COMPLETE_EXIT_RULE_FROM;
+}
+
 /**
  * Order two plan item ids on the (major, minor, letter) triple, so
  * "P0.3c" < "P0.3d" < "P0.4" < "P1". Returns false for anything unparseable
@@ -103,6 +127,7 @@ export const SCOPE_FACETS = {
   "P0.3": ["correctness", "security", "testing", "docs"],
   "P0.4": ["performance", "accessibility", "quality", "testing"],
   "P0.5": ["security", "docs"],
+  "P0.6": ["security", "docs"],
   // P1 — live truth fixes
   "P1.1": ["correctness", "quality", "provenance"],
   "P1.2": ["correctness", "quality", "comparison"],
