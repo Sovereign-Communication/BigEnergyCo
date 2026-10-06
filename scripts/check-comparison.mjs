@@ -33,6 +33,7 @@ import {
   OFFLINE_PROFILES,
   PROFILE_YEAR,
 } from "../assets/js/sizing/profiles.js";
+import { stripComments } from "./lib/comments.mjs";
 import { comparisonIntegrity } from "./lib/paths-integrity.mjs";
 
 const ROOT = resolve(
@@ -338,8 +339,9 @@ if (walk.length) {
   // Scan what a visitor can actually READ, not the source around it. Without
   // this the clause fires on the comment that documents the deletion — and a
   // gate that punishes the explanation gets disabled rather than obeyed.
-  const stripComments = (s) =>
-    s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/<!--[\s\S]*?-->/g, "");
+  // The stripper is scripts/lib/comments.mjs, which is a scanner rather than a
+  // regex because the regex version was a fail-open sanitizer CodeQL raised
+  // against this file as a high-severity alert.
   const shipped = stripComments(ui) + stripComments(indexHtml);
   const ghosts = [
     [/TURNKEY_MULTIPLIER/, "the deleted quote multiplier"],
