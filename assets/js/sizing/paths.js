@@ -51,7 +51,7 @@ export const DEFAULT_PATH_ID = "turnkey";
 export const HORIZON_YEARS = 20;
 
 /** Install labour per usable battery kWh, paid again on every bank swap. */
-export const BANK_LABOUR_PER_KWH = [12, 21, 30];
+const BANK_LABOUR_PER_KWH = [12, 21, 30];
 
 /**
  * Degradation (plan §6.4): E_1 = E_sim x (1 - d_1), E_y = E_1 x (1 - d_ann)^(y-1).
@@ -300,7 +300,7 @@ export function registryFor(region) {
  * PPA buys ENERGY and the provider keeps the system; a lease rents the SYSTEM
  * and ends, which is a real fork with a real buyout price.
  */
-export const LEASE_TERMS = {
+const LEASE_TERMS = {
   ppa: {
     instrument: "ppa",
     labelKey: "pathsInstrumentPpa",

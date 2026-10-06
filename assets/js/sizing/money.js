@@ -113,7 +113,7 @@ export function exportValueUsd(clippedKwhPerYear, exportRatePerKwh) {
  * cannot express and would silently drop, flattering break-even.
  * `replacements` remains the single source of truth.
  */
-export function swapSchedule({
+function swapSchedule({
   replacements = 0,
   batteryLifeYears,
   horizonYears = HORIZON_YEARS,

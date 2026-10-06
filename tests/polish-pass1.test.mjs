@@ -17,6 +17,7 @@ import {
 import {
   LEAFLET_SCRIPT_SRI,
   LEAFLET_STYLE_SRI,
+  LEAFLET_STYLE_URL,
   createLeafletProvider,
 } from "../assets/js/sizing/map-provider.js";
 import {

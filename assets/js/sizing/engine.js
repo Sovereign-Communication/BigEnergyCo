@@ -11,13 +11,6 @@ import {
   CYCLE_LIFE_CURVES,
   cycleLifeForDoD,
 } from "./chem-model.js?v=20261022p";
-export {
-  CHEMISTRIES,
-  coldCapacityScale,
-  capacityScaleFor,
-  CYCLE_LIFE_CURVES,
-  cycleLifeForDoD,
-};
 
 //
 // Units:

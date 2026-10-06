@@ -74,7 +74,7 @@ function chosen() {
   return "auto";
 }
 
-export function resolveLang() {
+function resolveLang() {
   const pick = chosen();
   if (pick !== "auto") return pick;
   const nav = (navigator.language || "en").slice(0, 2).toLowerCase();

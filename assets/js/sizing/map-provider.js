@@ -1,6 +1,6 @@
 // Optional map integration boundary. Importing this module never loads a map
 // library, requests coordinates, or changes core sizing behavior.
-export const PANEL_AREA_M2 = 6;
+const PANEL_AREA_M2 = 6;
 function versionedLocalAsset(path) {
   const url = new URL(path, import.meta.url);
   const version = new URL(import.meta.url).searchParams.get("v");
