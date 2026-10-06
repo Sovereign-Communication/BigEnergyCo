@@ -565,16 +565,17 @@ export function measureFirstPaintWeight(tree) {
         what: name,
         why: "the staged build produced no reading for a budget the plan sets",
       });
-    else if (value > budget.limit)
+    else if (value > budget.limit) {
+      const shown = unit === "count" ? `${value}` : `${value} B`;
+      const bar = unit === "count" ? `${budget.limit}` : `${budget.limit} B`;
       over.push({
         metric: name,
         value,
         limit: budget.limit,
         unit,
-        message:
-          `${name}: ${unit === "count" ? value : `${value} B`} over the §3.1 line of ` +
-          `${unit === "count" ? budget.limit : `${budget.limit} B`}`,
+        message: `${name}: ${shown} over the §3.1 line of ${bar}`,
       });
+    }
   }
   return {
     ok: holes.length === 0,
@@ -718,15 +719,6 @@ export function composeFacetLine(report) {
   // end is the first thing to go on a long run — which is precisely how a facet
   // ends up reading "measured" while the measurement that never happened.
   const firstPaint = weight || "first-paint weight not measured";
-  // The calibration envelope, not this run's own range. The envelope is the
-  // wider truth the run's three samples cannot show, and stating it is what
-  // stops "57-100 this run" from reading as "57-100 IS the score" — which is
-  // the exact substitution this clause exists to prevent. The run's own range
-  // is in `measured`, in full, for anyone who wants it; the line's job is to
-  // tell the reader how to read it.
-  const perfTargets = measured.filter(
-    (m) => typeof m?.scores?.performance === "number",
-  ).length;
   const perfClause = [];
   if (perf) {
     perfClause.push("perf NOT ratcheted");
@@ -739,9 +731,12 @@ export function composeFacetLine(report) {
     // exactly the substitution this clause exists to prevent — a line that
     // reads as a finished measurement of a run that measured nothing. So the
     // absence is stated by name, in the same slot the number would occupy.
+    const scored = measured.filter(
+      (m) => typeof m?.scores?.performance === "number",
+    ).length;
     perfClause.push(
       measured.length
-        ? `perf unmeasured, ${perfTargets} of ${measured.length} targets scored`
+        ? `perf unmeasured, ${scored} of ${measured.length} targets scored`
         : "perf unmeasured, no target measured",
     );
   }
