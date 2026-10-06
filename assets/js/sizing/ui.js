@@ -8336,7 +8336,7 @@ function setupPwaControls() {
   updateNetworkStatus();
 }
 
-export async function initSizingUI() {
+async function initSizingUI() {
   try {
     // Landing-page storage widget reads through this hook (same pricing
     // module the engine uses — no second source of truth).

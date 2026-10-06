@@ -24,6 +24,10 @@
 //      weather profile, returns a measured number and a verdict
 //   6. the legacy mode/hardware pair is DERIVED from the case and never
 //      exposed to the visitor
+//   7. every verdict reason key the six cases can emit is TRANSLATED in all
+//      six locales — a key with no dictionary entry renders the raw name
+//      to a visitor, and no i18n rule sees it, because a key that exists in
+//      shipped code counts as rendered there
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -275,6 +279,29 @@ if (walk.length === 6) {
       `use cases with no declared legacy derivation: ${undeclared.join(", ")}`,
     );
   else ok("all six declare how they reach the engine's enum pair");
+}
+
+// ── 7. every verdict reason key is translated ───────────────────────────────
+// usecases.js owns the keys its verdicts emit; a visitor sees one of them the
+// moment a case declines. A key added there without a dictionary entry falls
+// back to English silently (the right product behavior, and the reason the
+// gap is invisible), so the list owner and the six dictionaries are compared
+// here rather than trusted to stay in step.
+{
+  const { LOCALES } = await import_("assets/js/shared/locales.js");
+  const keys = UC.verdictKeys();
+  const missing = [];
+  for (const [lang, dict] of Object.entries(LOCALES))
+    for (const key of keys)
+      if (typeof dict[key] !== "string" || !dict[key].trim())
+        missing.push(`${lang}.${key}`);
+  if (missing.length)
+    fail(`verdict reason key(s) with no translation: ${missing.join(", ")}`);
+  else
+    ok(
+      `${keys.length} verdict reason keys are translated in all ` +
+        `${Object.keys(LOCALES).length} locales`,
+    );
 }
 
 // ── the record the facet is judged on ───────────────────────────────────────
