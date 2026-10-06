@@ -18,8 +18,8 @@
 // developer's machine and on the Linux runner, which has Chrome but not at a
 // Windows path.
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { join, resolve } from "node:path";
 import lighthouse from "lighthouse";
 import { launch } from "chrome-launcher";
 import { serveStatic } from "./serve-static.mjs";
@@ -45,11 +45,15 @@ import {
   LIGHTHOUSE_TARGETS,
   LIGHTHOUSE_FLOORS,
   LIGHTHOUSE_FIRST_MEASUREMENT,
+  LIGHTHOUSE_FIRST_PAINT_BUDGETS,
+  LIGHTHOUSE_FIRST_PAINT_MEASUREMENT,
   LIGHTHOUSE_VARIANCE,
+  FIRST_PAINT_ENFORCEMENT,
   compareLighthouse,
   compareSpeed,
   composeFacetLine,
   facetLineOmitted,
+  measureFirstPaintWeight,
   median,
 } from "./lib/lighthouse-budgets.mjs";
 
@@ -63,6 +67,32 @@ function codeSha() {
   } catch {
     return "unknown";
   }
+}
+
+/**
+ * The staged build as data — a file list and a reader — which is the shape
+ * `measureStagedBuild` takes.
+ *
+ * The same walk `scripts/check-byte-budgets.mjs` performs, and deliberately the
+ * same SHAPE: a second way to describe a staged build is a second place for the
+ * first-paint weight to be measured differently from the §3.1 gate's number.
+ * Symlinks and unreadable files are skipped, which is what
+ * `deploy-pages-local.mjs --check` stages out of the way in the first place.
+ */
+function stagedTree(dir) {
+  const files = [];
+  const walk = (rel) => {
+    for (const entry of readdirSync(join(dir, rel), { withFileTypes: true })) {
+      const child = rel ? `${rel}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walk(child);
+      else if (entry.isFile()) files.push(child);
+    }
+  };
+  walk("");
+  return {
+    files: files.sort(),
+    read: (rel) => readFileSync(join(dir, rel)),
+  };
 }
 
 function usage() {
@@ -118,6 +148,46 @@ if (!targets.length) {
   console.error(`no target named ${opts.only}`);
   process.exit(2);
 }
+
+// ── The first paint's WEIGHT, on the same staged build. ────────────────────
+//
+// THE CLAUSE THAT HAD NO MEASUREMENT. `performance` is three claims; this gate
+// measured two of them (the playtest below) and had been standing in for the
+// third with the Lighthouse composite — a score the module above documents as
+// unreproducible and deliberately un-ratcheted. "Light" is a weight, and the
+// repo measures weights: plan §3.1's budgets, on this very staged build, by
+// scripts/check-byte-budgets.mjs. That gate declares no facet axis and writes no
+// report, so none of it ever reached the judge.
+//
+// So it is measured here, on the artifact Lighthouse is about to be run against,
+// with the same `measureStagedBuild` the §3.1 gate uses and the same plan limits
+// read from `BYTE_BUDGET_LIMITS`. Measuring it costs one brotli pass over ~35
+// modules and buys the facet's third clause a real number.
+//
+// It is measured BEFORE the browsers launch, so that a build this gate cannot
+// read is a named failure rather than an absence discovered after six minutes of
+// Lighthouse. An unreadable staged build is a HOLE and a hole fails: a gate that
+// can go green by not measuring something is the same gate under a new name.
+const firstPaintWeight = measureFirstPaintWeight(stagedTree(opts.stage));
+for (const h of firstPaintWeight.holes)
+  console.error(
+    `  first paint  HOLE ${h.what}: ${h.why}. "The first paint stays light" is ` +
+      "one of this facet's three claims; a claim nobody measured is not a claim " +
+      "that passed.",
+  );
+if (firstPaintWeight.over.length) {
+  console.log(
+    `  first paint  ${firstPaintWeight.over.length} over the plan §3.1 line ` +
+      `(${FIRST_PAINT_ENFORCEMENT}):`,
+  );
+  for (const o of firstPaintWeight.over) console.log(`    ${o.message}`);
+}
+console.log(
+  `  first paint  js before interactive: ` +
+    `${firstPaintWeight.budgets?.js_before_interactive?.value ?? "unmeasured"} B ` +
+    `vs §3.1 ${LIGHTHOUSE_FIRST_PAINT_BUDGETS.js_before_interactive.limit} B, ` +
+    `across ${firstPaintWeight.modules ?? "?"} modules on the critical path`,
+);
 
 const srv = await serveStatic({ dir: resolve(opts.stage), port: 0 });
 const chrome = await launch({
@@ -339,6 +409,15 @@ const report = {
   playtest_facet_axes: PERFORMANCE_FACET_AXES,
   playtest_regressions: playtestRegressions,
   playtest_holes: playtestHoles,
+  // The first paint's WEIGHT, measured on the same staged artifact, plus the
+  // budgets it was measured against and the phase at which a breach starts
+  // blocking. Carried whole — every budget, not only the over ones — so a
+  // comfortable reading is on the record beside the uncomfortable one, which is
+  // what stops `js_before_interactive` being the only number anyone looks at.
+  first_paint_weight: firstPaintWeight,
+  first_paint_budgets: LIGHTHOUSE_FIRST_PAINT_BUDGETS,
+  first_paint_measurement: LIGHTHOUSE_FIRST_PAINT_MEASUREMENT,
+  first_paint_enforcement: FIRST_PAINT_ENFORCEMENT,
   unit: "score 0-100, median of 3 runs, on the staged build",
   stage: opts.stage,
   lighthouse_version: "13.5.0",
@@ -369,19 +448,22 @@ const report = {
     "blocking at P5 (new shell) / P8 (everything) per plan §3.2, and are " +
     "reported as breaches until then.",
   scope_limit: warmInteraction?.ok
-    ? "this gate measures the first-paint claim with Lighthouse's SIMULATED " +
-      "throttling, and the interaction claims (cold sizing run, warm re-run, " +
-      "slider drag preview, confirm re-slice, the requests a warm path issues, " +
-      "the requests a warm RELOAD issues after the page's RAM is gone, and " +
-      "whether the first result renders with the pricing model blocked) with " +
-      `one unthrottled Chrome on one machine, one city and three adjustments. ${PERFORMANCE_SCOPE_LIMIT}. ` +
+    ? "this gate measures the first-paint claim in TWO forms — the staged " +
+      "build's brotli WEIGHT against plan §3.1's budgets, and Lighthouse's " +
+      "LCP/FCP/CLS/TBT TIMING under SIMULATED throttling — and the interaction " +
+      "claims (cold sizing run, warm re-run, slider drag preview, confirm " +
+      "re-slice, the requests a warm path issues, the requests a warm RELOAD " +
+      "issues after the page's RAM is gone, and whether the first result " +
+      "renders with the pricing model blocked) with one unthrottled Chrome on " +
+      `one machine, one city and three adjustments. ${PERFORMANCE_SCOPE_LIMIT}. ` +
       "Every count is whatever the browser put on the wire, worker sessions " +
       "included: a non-zero count is a finding about the product and is " +
       "reported, never tuned away."
-    : "this gate measures the first-paint claim of the performance facet only. " +
-      "Interactions, memoization across a reload, and first-result " +
-      "independence are not Lighthouse's subject and were not measured this " +
-      "run." +
+    : "this gate measures the first-paint claim of the performance facet — its " +
+      "staged brotli weight against plan §3.1, and its Lighthouse timings — " +
+      "but nothing else. Interactions, memoization across a reload, and " +
+      "first-result independence are not Lighthouse's subject and were not " +
+      "measured this run." +
       (warmInteraction
         ? " The playtest did not complete, so that limit stands in full."
         : ""),
@@ -458,6 +540,10 @@ console.log(
     `${speedOver.length} Q-03 speed readings over ceiling (non-blocking until P5/P8)`,
 );
 console.log(
+  `first paint weight: ${firstPaintWeight.over.length} over the plan §3.1 line, ` +
+    `${firstPaintWeight.holes.length} hole(s) — ${FIRST_PAINT_ENFORCEMENT}`,
+);
+console.log(
   `ratcheted: ${LIGHTHOUSE_RATCHET_CATEGORIES.join(", ")} | ` +
     `reported only: ${Object.keys(LIGHTHOUSE_REPORTED_ONLY).join(", ")}`,
 );
@@ -500,6 +586,11 @@ const failed =
   holes.length > 0 ||
   playtestRegressions.length > 0 ||
   playtestHoles.length > 0 ||
+  // An UNREADABLE staged build is not a warning. This gate owns the
+  // `performance` axis and the axis line now states a first-paint weight; if the
+  // run could not measure it, the line says so and the gate is red, so a missing
+  // artifact can never again read as a facet whose first paint was fine.
+  firstPaintWeight.holes.length > 0 ||
   axisOwnershipConflict;
 if (playtestRegressions.length || playtestHoles.length)
   console.log(

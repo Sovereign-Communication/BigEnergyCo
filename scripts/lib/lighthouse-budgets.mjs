@@ -8,7 +8,14 @@
 //
 //   · "the first paint stays light"  — THIS IS THE GATE'S SUBJECT. LCP, FCP,
 //     Speed Index, CLS and TBT on a cold-cache load under a simulated network
-//     are exactly that claim's measurement.
+//     are that claim's TIMING. Its WEIGHT — the bytes that have to arrive
+//     before the first pixels can exist — was measured by plan §3.1's byte
+//     budgets and reported NOWHERE: the sibling gate never declared a facet
+//     axis and wrote no report, so the sentence that reached the judge for
+//     this claim was the composite score's own admission that no floor
+//     reproduces it. LIGHTHOUSE_FIRST_PAINT_BUDGETS below measures the weight
+//     on the same staged build and puts it on this axis, from the plan's own
+//     numbers.
 //   · "warm same-location interactions are instant" — NOT MEASURED. Lighthouse
 //     audits one page load and never performs a second interaction. Q-03 names
 //     Playwright event timing for that: a different instrument, a later cluster.
@@ -66,6 +73,7 @@
 import { readFileSync } from "node:fs";
 import { COMPLETE_FACET_CLIP } from "./jev-complete.mjs";
 import { playtestClause } from "./performance-budgets.mjs";
+import { BYTE_BUDGET_LIMITS, measureStagedBuild } from "./byte-budgets.mjs";
 
 /**
  * The facet axes this gate IS the evidence for. Declared here, beside the
@@ -426,6 +434,204 @@ function warmClause(warm) {
   return playtestClause(warm);
 }
 
+// ── The first paint's WEIGHT ─────────────────────────────────────────────────
+//
+// WHY THIS EXISTS, in the plainest terms available. The `performance` facet is
+// three claims (see the header). Two of them are interactions and the playtest
+// measures both. The third — "the first paint stays light" — was measured by
+// Lighthouse as a TIME, and the composite score that carries that time is
+// deliberately not a ratchet, because the composite is dominated by the
+// simulated-throttling model rather than by what the page shipped.
+//
+// "Light" is a weight. The repo measures it: plan §3.1's budgets, measured on
+// the staged brotli build by scripts/check-byte-budgets.mjs. But that gate
+// declared no facet axis and wrote no report, so not one byte of it ever
+// reached the judge. The `performance` proof line therefore carried, for its
+// first-paint claim, only "perf NOT ratcheted, 40-76 over 21 runs" — which is
+// this repo saying out loud that it has no measurement of the thing. A facet
+// reading 60 while its own header says it cannot measure one of its three
+// clauses is not a scoring problem. It is an unmeasured clause.
+//
+// So it is measured HERE, on the same staged build this gate already serves,
+// with the SAME function the §3.1 gate uses — `measureStagedBuild` — and
+// against the SAME numbers, read from `BYTE_BUDGET_LIMITS` rather than copied.
+// A second implementation of "how big is the first paint" would be a second
+// place for the answer to be wrong, and the whole reason this clause reads 60
+// is that one answer was invisible. The budgets are therefore a REFERENCE to
+// the plan, not a second statement of it: widening one here cannot move the
+// §3.1 gate, and tests/byte-budgets.test.mjs already pins the constant to the
+// plan's own table.
+
+/** The §3.1 budgets that make up "the first paint stays light", and why each
+ *  one is on this list. `limit` is READ, never written here. */
+export const LIGHTHOUSE_FIRST_PAINT_BUDGETS = {
+  js_before_interactive: {
+    limit: BYTE_BUDGET_LIMITS.js_before_interactive,
+    why:
+      "plan §3.1, verbatim: 'JavaScript executed before step 1 is interactive ≤ 35 KB'. " +
+      "This is THE first-paint weight line — every module the document's scripts " +
+      "statically reach must download and evaluate before the entry module's own " +
+      "code runs, so it is all on the critical path to first pixels.",
+  },
+  home_document: {
+    limit: BYTE_BUDGET_LIMITS.home_document,
+    why: "the document itself is the request every first paint waits on",
+  },
+  css_total: {
+    limit: BYTE_BUDGET_LIMITS.css_total,
+    why: "style is render-blocking: nothing paints unstyled, so this is first-paint weight too",
+  },
+  requests_before_interaction: {
+    limit: BYTE_BUDGET_LIMITS.requests_before_interaction,
+    why: "the count half of 'light' — round trips cost more than their bytes on a cold load",
+  },
+  web_fonts: {
+    limit: BYTE_BUDGET_LIMITS.web_fonts,
+    why: "a web font blocks the text that paints; the plan's budget for one is 0 bytes",
+  },
+};
+
+/** The reading these budgets were declared against, recorded so the shape of the
+ *  claim is checkable rather than asserted. Brotli q11 over the staged build on
+ *  this tree; the same function and the same plan limits as the §3.1 gate. */
+export const LIGHTHOUSE_FIRST_PAINT_MEASUREMENT = {
+  conditions: {
+    surface: "the staged allowlisted build this gate already serves Lighthouse",
+    compression: "brotli q11, the same compressor the §3.1 byte budgets use",
+    subject: "every module the home document's scripts statically reach",
+  },
+  runs: {
+    js_before_interactive_bytes: [193804],
+    js_before_interactive_modules: [35],
+    home_document_bytes: [19050],
+    css_total_bytes: [10049],
+    requests_before_interaction: [9],
+    web_fonts_bytes: [0],
+  },
+  reading:
+    "js_before_interactive is 5.4x its §3.1 line while every other first-paint " +
+    "budget sits under it. That is the honest state of the tree and it is why " +
+    "this clause names the breach rather than reporting a passing number: the " +
+    "facet's third claim is not currently met, and the judge has to be able to " +
+    "read that off the line instead of inferring it from an absent sentence.",
+};
+
+/** Absolute byte/request bars are reported, not blocking, until P6/P8 — the plan
+ *  §3.2 rule the §3.1 gate already prints. Named here so this axis can state the
+ *  same rule from the same string rather than paraphrasing it. */
+export const FIRST_PAINT_ENFORCEMENT =
+  "plan §3.1 line; regression-blocking from P0, absolute from P6 (/next/) and P8 (all)";
+
+const kb = (bytes) => `${Math.round(bytes / 1024)}KB`;
+
+/**
+ * Measure the first paint's weight on a staged build described as data.
+ *
+ * Takes the same `{ files, read }` shape `measureStagedBuild` already takes, so
+ * this is a projection of one measurement rather than a second one.
+ *
+ * Returns `{ ok, budgets, over, holes }`. `ok` is false when a budget produced no
+ * number at all — and that is a HOLE, not a pass, for the same reason the
+ * playtest's holes are: a gate that can go green by not measuring something is
+ * the same gate under a new name.
+ */
+export function measureFirstPaintWeight(tree) {
+  const budgets = {};
+  const over = [];
+  const holes = [];
+  let metrics;
+  try {
+    metrics = measureStagedBuild(tree).metrics;
+  } catch (err) {
+    return {
+      ok: false,
+      error: String(err.message || err),
+      budgets: {},
+      over: [],
+      holes: [
+        {
+          what: "first_paint_weight",
+          why: `the staged build could not be measured: ${err.message || err}`,
+        },
+      ],
+    };
+  }
+  for (const [name, budget] of Object.entries(LIGHTHOUSE_FIRST_PAINT_BUDGETS)) {
+    const value = metrics[name]?.value;
+    const unit = name === "requests_before_interaction" ? "count" : "bytes";
+    budgets[name] = { value, limit: budget.limit, unit };
+    if (typeof value !== "number")
+      holes.push({
+        what: name,
+        why: "the staged build produced no reading for a budget the plan sets",
+      });
+    else if (value > budget.limit)
+      over.push({
+        metric: name,
+        value,
+        limit: budget.limit,
+        unit,
+        message:
+          `${name}: ${unit === "count" ? value : `${value} B`} over the §3.1 line of ` +
+          `${unit === "count" ? budget.limit : `${budget.limit} B`}`,
+      });
+  }
+  return {
+    ok: holes.length === 0,
+    budgets,
+    over,
+    holes,
+    modules: metrics.js_before_interactive?.files ?? null,
+  };
+}
+
+/**
+ * The first-paint WEIGHT clause, composed from THIS run's reading.
+ *
+ * Returns null when nothing was measured, and that null is load-bearing in the
+ * same way the playtest's is: a clause composed from an absent reading would
+ * print a zero, and "0 bytes before interactive" from a run that measured
+ * nothing is the most dangerous sentence this axis can publish. So an absent
+ * measurement leaves the claim visibly unmeasured instead.
+ */
+export function firstPaintWeightClause(reading) {
+  const js = reading?.budgets?.js_before_interactive;
+  if (!reading?.ok || typeof js?.value !== "number") return null;
+
+  const over = Array.isArray(reading.over) ? reading.over : [];
+  const jsOver = over.some((o) => o.metric === "js_before_interactive");
+  const others = over.filter((o) => o.metric !== "js_before_interactive");
+
+  // The headline states the reading and the line it is held to, in that order,
+  // because a byte count without its budget is the same defect as a score
+  // without its floor. KB on BOTH sides, so the number cannot be quoted as
+  // something it is not.
+  //
+  // The ENFORCEMENT RULE is deliberately not on the line. "5.4x over" is the
+  // measurement and its verdict; WHICH phase of the plan makes that verdict
+  // blocking is gate policy, it is identical for every breach, and it lives in
+  // the report's `enforcement` field and on the gate's terminal — the same
+  // place scripts/check-byte-budgets.mjs keeps it. Printing it here cost 24
+  // characters, which is a whole rubric clause.
+  const parts = [
+    `first paint ${kb(js.value)} brotli JS pre-interactive vs §3.1 ${kb(js.limit)}`,
+  ];
+
+  if (jsOver) {
+    // The multiple, not just "over": 5.4x and 1.2x are different problems, and a
+    // reader who has to go find the report to learn which one this is will not
+    // go looking.
+    const verdict = [`${(js.value / js.limit).toFixed(1)}x over`];
+    if (others.length) verdict.push(`+${others.length} more over`);
+    parts.push(verdict.join(", "));
+  } else if (others.length) {
+    parts.push(`${others.map((o) => o.metric).join("+")} over`);
+  } else {
+    parts.push("all within");
+  }
+  return parts.join(", ");
+}
+
 /**
  * Compose the `performance` facet line the judge reads, from THIS run's report.
  *
@@ -491,24 +697,66 @@ export function composeFacetLine(report) {
   );
   if (warm) sentences.push(warm);
 
-  const perfClause = ["perf NOT ratcheted"];
-  if (perf) perfClause.push(`${perf} this run`);
-  if (envelope) perfClause.push(`${envelope} over ${calN} runs`);
-  if (report?.regressions?.length) perfClause.push("see regressions above");
+  // The first paint's WEIGHT, and the composite's disclosure, in ONE sentence.
+  //
+  // They are one sentence on purpose. Both are the same rubric clause, and the
+  // clip drops from the tail — so as two sentences the least load-bearing one is
+  // cut first, and the run that cuts it is a run where the playtest was slow,
+  // i.e. exactly the runs where the record is already hardest to read. Merged,
+  // the measurement and the caveat about the score standing next to it arrive
+  // together or not at all, and "not at all" is a gate failure upstream (an
+  // unreadable staged build is a hole, not a pass) rather than a silent absence
+  // on the judge's line.
+  //
+  // The weight leads because it is the measurement; the composite follows
+  // because it is the caveat. That order is the argument: the sentence is
+  // saying "here is what the first paint weighs, and here is the score you
+  // should NOT read that as".
+  const weight = firstPaintWeightClause(report?.first_paint_weight ?? null);
+  // An ABSENT weight states itself in the same slot the measurement occupies,
+  // not at the tail. The clip drops from the tail, so an absence parked at the
+  // end is the first thing to go on a long run — which is precisely how a facet
+  // ends up reading "measured" while the measurement that never happened.
+  const firstPaint = weight || "first-paint weight not measured";
+  // The calibration envelope, not this run's own range. The envelope is the
+  // wider truth the run's three samples cannot show, and stating it is what
+  // stops "57-100 this run" from reading as "57-100 IS the score" — which is
+  // the exact substitution this clause exists to prevent. The run's own range
+  // is in `measured`, in full, for anyone who wants it; the line's job is to
+  // tell the reader how to read it.
+  const perfTargets = measured.filter(
+    (m) => typeof m?.scores?.performance === "number",
+  ).length;
+  const perfClause = [];
+  if (perf) {
+    perfClause.push("perf NOT ratcheted");
+    if (envelope) perfClause.push(`${envelope} over ${calN} runs`);
+    if (report?.regressions?.length) perfClause.push("see regressions above");
+  } else {
+    // A run with NO performance reading must not borrow the calibration
+    // envelope to look like it has one. `envelope` is the 21-run calibration
+    // set, not this run: quoting it beside an empty `measured` would produce
+    // exactly the substitution this clause exists to prevent — a line that
+    // reads as a finished measurement of a run that measured nothing. So the
+    // absence is stated by name, in the same slot the number would occupy.
+    perfClause.push(
+      measured.length
+        ? `perf unmeasured, ${perfTargets} of ${measured.length} targets scored`
+        : "perf unmeasured, no target measured",
+    );
+  }
+  sentences.push(
+    [firstPaint, `Lighthouse ${perfClause.join(", ")}`].join("; "),
+  );
 
   // ORDER IS PRIORITY, and the order is the argument.
   //
   // The playtest measurement comes first because it is the claim the facet was
-  // held for. "perf NOT ratcheted" comes before the per-category list because it
-  // is the sentence that tells a reader how to read the number printed next to
-  // it: lose that one and a bimodal 40-76 reading arrives looking like a fact.
+  // held for. The first-paint weight + composite caveat comes second because it
+  // is the one clause of three that had no measurement at all until this run.
   // The per-category ratcheted list is last because it is genuinely the most
   // redundant thing on the line — all three of those categories are written out
   // in full in the report, and on the line they are a summary.
-  sentences.push(
-    `Lighthouse, ${measured.length} target${measured.length === 1 ? "" : "s"}, median of 3`,
-  );
-  if (perf || envelope) sentences.push(perfClause.join(", "));
   if (ratcheted.length) sentences.push(`ratcheted ${ratcheted.join(", ")}`);
   if (report?.regressions?.length)
     sentences.push(`${report.regressions.length} REGRESSIONS`);
@@ -518,6 +766,9 @@ export function composeFacetLine(report) {
   // clause above has already stated its own narrower limit, and repeating the
   // first-paint disclaimer beside a real interaction reading would read as
   // though the interaction reading were also unmeasured.
+  //
+  // The first paint's WEIGHT is not mentioned here: it already stated itself,
+  // measured or not, in its own slot above.
   if (!warm)
     sentences.push(
       "first-paint claim only, not warm interactions or memoization",
