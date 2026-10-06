@@ -183,3 +183,96 @@ export function printReport(report, out = process.stdout) {
   );
   write(`\n`);
 }
+
+// ── Score explanation ──────────────────────────────────────────────────────
+// WHY THIS EXISTS. `printReport` above says WHAT failed; on a red gate the
+// next question is always "why is the score low and where do I focus", and
+// answering it used to mean downloading the artifact and reading JSON. The
+// explanation below is built by scripts/lib/jev-explain.mjs — a pure function
+// of the report and the evidence — so these two functions stay presentation
+// only: they arrange fields that already exist, and invent no buckets, no
+// reasons, and no actions.
+
+function explanationLines(expl, md) {
+  const lines = [];
+  const b = (s) => (md ? `**${s}**` : s);
+  const code = (s) => (md ? `\`${s}\`` : s);
+  lines.push(
+    md
+      ? `## Why the score is ${expl.score} (target ${expl.target})`
+      : `why the score is ${expl.score} (target ${expl.target}):`,
+  );
+  if (expl.scoped) {
+    const s = expl.scoped;
+    const shorts = s.short_of_proven
+      .map((f) => `${code(f.axis)} (${f.level})`)
+      .join(", ");
+    lines.push(
+      md
+        ? `**Scoped gate (${s.scope}): ${s.score}/${s.target} — ${s.gap} points short.** ` +
+            `Short of proven: ${shorts || "none"}. Ratchet: ${s.ratchet}.`
+        : `  scoped (${s.scope}): ${s.score}/${s.target}, ${s.gap} short — ` +
+            `short of proven: ${shorts || "none"}; ratchet: ${s.ratchet}`,
+    );
+    for (const f of s.short_of_proven) {
+      lines.push(
+        md
+          ? `- ${code(f.axis)}: ${f.level} (ordinal ${f.ordinal}, ${f.source})`
+          : `    - ${f.axis}: ${f.level} (ordinal ${f.ordinal}, ${f.source})`,
+      );
+      for (const r of f.reasons)
+        lines.push(md ? `  - _why:_ ${r}` : `        why: ${r}`);
+      if (f.proof)
+        lines.push(
+          md
+            ? `  - _what the judge saw:_ "${f.proof}"`
+            : `        judge saw: "${f.proof}"`,
+        );
+    }
+  }
+  expl.buckets.forEach((bucket, i) => {
+    const head = md
+      ? `### ${i + 1}. ${bucket.primary ? "⭐ PRIMARY " : ""}${code(bucket.bucket)} — ${bucket.label} _(work type: ${bucket.work_type})_`
+      : `  ${i + 1}. ${bucket.primary ? "*PRIMARY* " : ""}[${bucket.bucket}] ${bucket.label} (${bucket.work_type})`;
+    lines.push(head);
+    for (const f of bucket.facets) {
+      const name = f.axis || "hard gate";
+      lines.push(
+        md
+          ? `- ${b(name)}: ${f.level} (ordinal ${f.ordinal}, source: ${f.source})`
+          : `    - ${name}: ${f.level} (ordinal ${f.ordinal}, source: ${f.source})`,
+      );
+      for (const r of f.reasons)
+        lines.push(md ? `  - _why:_ ${r}` : `        why: ${r}`);
+      if (f.proof)
+        lines.push(
+          md
+            ? `  - _what the judge saw:_ "${f.proof}"`
+            : `        judge saw: "${f.proof}"`,
+        );
+    }
+    lines.push(
+      md ? `- **Focus:** ${bucket.focus}` : `    focus: ${bucket.focus}`,
+    );
+  });
+  return lines;
+}
+
+/**
+ * Console rendering of a score explanation (goes to the job log, right
+ * after printReport, when the verdict failed).
+ */
+export function printExplanation(explanation, out = process.stdout) {
+  const write = (s) => out.write(s);
+  write(`\n`);
+  for (const line of explanationLines(explanation, false)) write(`${line}\n`);
+}
+
+/**
+ * Markdown rendering of a score explanation (written to a file the workflow
+ * appends to $GITHUB_STEP_SUMMARY, so the buckets read on the run page
+ * itself — no artifact download needed to learn where to focus).
+ */
+export function renderExplanationMarkdown(explanation) {
+  return explanationLines(explanation, true).join("\n") + "\n";
+}

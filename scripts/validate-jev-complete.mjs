@@ -5,6 +5,7 @@
 // repertoire this repo actually runs).
 //
 //   node scripts/validate-jev-complete.mjs [--evidence ev.json] [--out r.json]
+//                                          [--explain-out explain.md]
 //                                          [--json] [--local-only]
 //                                          [--scope P<n>.<m>] [--require-live]
 //
@@ -66,15 +67,20 @@ import {
 import { collectAutoFacts } from "./lib/jev-auto-facts.mjs";
 import { liveJevCall, resolveKeys } from "./lib/jev-live.mjs";
 import { scopedVerdict } from "./lib/jev-verdict.mjs";
-import { printReport } from "./lib/jev-report-print.mjs";
+import {
+  printExplanation,
+  printReport,
+  renderExplanationMarkdown,
+} from "./lib/jev-report-print.mjs";
+import { explainLowScore } from "./lib/jev-explain.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 
 function usageError(msg) {
   process.stderr.write(`validate-jev-complete: ${msg}\n`);
   process.stderr.write(
     "usage: node scripts/validate-jev-complete.mjs [--scope P<n>.<m>] " +
-      "[--evidence FILE] [--out FILE] [ --json] [--local-only] " +
-      "[--require-live]\n",
+      "[--evidence FILE] [--out FILE] [--explain-out FILE] [--json] " +
+      "[--local-only] [--require-live]\n",
   );
   process.exit(2);
 }
@@ -83,6 +89,7 @@ function parseArgs(argv) {
   const opts = {
     evidence: null,
     out: null,
+    explainOut: null,
     json: false,
     localOnly: false,
     requireLive: false,
@@ -92,6 +99,8 @@ function parseArgs(argv) {
     const arg = argv[i];
     if (arg === "--evidence") opts.evidence = argv[++i] ?? usageError("x");
     else if (arg === "--out") opts.out = argv[++i] ?? usageError("x");
+    else if (arg === "--explain-out")
+      opts.explainOut = argv[++i] ?? usageError("x");
     else if (arg === "--scope") opts.scope = argv[++i] ?? usageError("x");
     else if (arg === "--json") opts.json = true;
     else if (arg === "--local-only") opts.localOnly = true;
@@ -217,6 +226,23 @@ export async function main(argv = process.argv.slice(2)) {
     report.scoped = verdict.scoped;
   }
 
+  // Bucketed "why is the score low" explanation. Computed only when the
+  // verdict failed — a passing gate's required_work is empty and printReport
+  // already says so. Pure analysis over the report and the merged evidence;
+  // the proof lines it quotes are the exact text the judge saw.
+  const verdictFailed = opts.scope ? !scopedPass : !report.pass;
+  let explanation = null;
+  if (verdictFailed) {
+    explanation = explainLowScore(report, evidence);
+    if (opts.explainOut) {
+      writeFileSync(
+        opts.explainOut,
+        renderExplanationMarkdown(explanation),
+        "utf8",
+      );
+    }
+  }
+
   if (opts.out) {
     writeFileSync(opts.out, JSON.stringify(report, null, 2), "utf8");
   }
@@ -224,7 +250,10 @@ export async function main(argv = process.argv.slice(2)) {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   } else {
     printReport(report);
+    if (explanation) printExplanation(explanation);
     if (opts.out) process.stdout.write(`report written: ${opts.out}\n`);
+    if (opts.explainOut && explanation)
+      process.stdout.write(`explanation written: ${opts.explainOut}\n`);
   }
   // `--require-live` can only ever make the run fail, never pass: a missing or
   // unpinned judgment is a blocker, so the exit is 1 regardless of what the
