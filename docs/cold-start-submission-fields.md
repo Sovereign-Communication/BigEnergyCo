@@ -68,7 +68,7 @@ gives us.
 - **Workers** — our API layer: the AI system-design advisor (POST /api/chat),
   share-link and evidence endpoints, health checks. In-isolate rate limiting
   paired with WAF rules; strict payload caps before any paid upstream call.
-- **Turnstile** — guards the advisor API. This is a *revenue* story, not infra:
+- **Turnstile** — guards the advisor API. This is a _revenue_ story, not infra:
   lead-gen marketplaces die on fake leads, and paying electricians churn on the
   first batch of junk. Bot protection is lead-quality protection, and lead quality
   is the entire business.
