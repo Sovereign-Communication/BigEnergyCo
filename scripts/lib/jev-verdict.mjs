@@ -12,6 +12,8 @@ import {
   readRatchetBaseline,
   resolveScopeFacets,
   COMPLETE_EXIT_RULE_FROM,
+  ABSOLUTE_FACET_FROM,
+  facetAbsoluteFrom,
 } from "./jev-complete.mjs";
 
 /**
@@ -24,11 +26,24 @@ import {
  */
 export function scopedVerdict({ report, scope, pack, ledgerText }) {
   const scopeFacets = resolveScopeFacets(scope, pack);
+  // §3.2's Projection clause (A-002): a facet that projects a gate still in
+  // regression-only mode is NOT required at `proven` — the ratchet holds it
+  // instead — and the ≥ 99 threshold is computed over the facets whose gates are
+  // absolute at this item's phase. `absoluteFacets` is that set. When it is
+  // empty the absolute requirement is vacuous and the run exits on the ratchet,
+  // which is exactly the position P0.3 is in.
+  const absoluteFacets = scopeFacets.filter((a) =>
+    planItemAtLeast(scope, facetAbsoluteFrom(a)),
+  );
+  const regressionOnlyFacets = scopeFacets.filter(
+    (a) => !absoluteFacets.includes(a),
+  );
+  const judged = absoluteFacets.length ? absoluteFacets : scopeFacets;
   const inScope = {};
-  for (const axis of scopeFacets) inScope[axis] = report.facets[axis];
+  for (const axis of judged) inScope[axis] = report.facets[axis];
   const semantic =
     Object.values(inScope).reduce((s, f) => s + f.ordinal, 0) /
-    Math.max(1, scopeFacets.length);
+    Math.max(1, judged.length);
   const scopedCombined = report.hard_gates_passed
     ? Math.max(0, Math.min(100, 0.7 * report.mechanical_score + 0.3 * semantic))
     : 0;
@@ -36,10 +51,13 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
     report.facets,
     readRatchetBaseline(ledgerText, pack),
   );
-  const short = scopeFacets.filter((a) => report.facets[a].index < 4);
-  // The all-proven exit rule binds from COMPLETE_EXIT_RULE_FROM. P0.3(c)
-  // defined the rule and is the one item it cannot judge (see the constant).
-  const exitRuleBinds = planItemAtLeast(scope, COMPLETE_EXIT_RULE_FROM);
+  const short = absoluteFacets.filter((a) => report.facets[a].index < 4);
+  // The all-proven exit rule binds from COMPLETE_EXIT_RULE_FROM, PER FACET: a
+  // facet that projects a gate §3.2 still holds regression-only is judged by the
+  // ratchet instead. P0.3(c) defined the rule and is the one item it cannot
+  // judge (see the constant); a scope whose facets are ALL still regression-only
+  // exits the same way.
+  const exitRuleBinds = absoluteFacets.length > 0;
   // P0.3 bootstrap (plan §9 rule 6, owner ruling 2026-09-26): a P0.3
   // sub-PR builds the gate that judges it, so it merges on green CI plus an
   // attached scoped report with NO RATCHET REGRESSION, even below 99. The
@@ -60,12 +78,18 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
     scoped: {
       scope,
       facets: scopeFacets,
+      absolute_facets: absoluteFacets,
+      regression_only_facets: regressionOnlyFacets,
+      absolute_facet_from: ABSOLUTE_FACET_FROM,
       semantic_score: Math.round(semantic * 100) / 100,
       score: Math.round(scopedCombined * 100) / 100,
       min_score: report.min_score,
       bootstrap_applies: !exitRuleBinds,
       bootstrap_rule:
-        "plan §9 rule 6: P0.3 sub-PRs merge on green CI plus no ratchet regression, even below 99",
+        "plan §9 rule 6: no absolute threshold applies to an item whose gates, " +
+        "or whose in-scope facets' projected gates, §3.2 still holds " +
+        "regression-only (P0.3's bootstrap; §3.2 Projection from A-002) — the " +
+        "run exits on the ratchet, which still binds every facet",
       facets_short_of_proven: short,
       exit_rule_binds_from: COMPLETE_EXIT_RULE_FROM,
       exit_rule_binding: exitRuleBinds,

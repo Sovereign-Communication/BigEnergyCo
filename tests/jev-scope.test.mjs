@@ -556,8 +556,8 @@ test("GATE: a scoped run at or after the binding point fails on any facet short 
   );
   assert.match(
     verdict,
-    /planItemAtLeast\(scope, COMPLETE_EXIT_RULE_FROM\)/,
-    "the binding point must be data, not a hardcoded item id",
+    /planItemAtLeast\(scope, facetAbsoluteFrom\(a\)\)/,
+    "the binding point must be per-facet data, not a hardcoded item id",
   );
   assert.match(
     verdict,
@@ -726,6 +726,43 @@ test("GATE: out-of-scope facets cannot move a scoped verdict at all", () => {
   );
 });
 
+test("GATE: a projected facet is held to the ratchet, not to proven (A-002)", () => {
+  // §3.2's Projection clause: `performance` projects Lighthouse and the §3.1
+  // budgets, which §3.2 holds regression-only until P5/P6/P8. At P0.4 it is
+  // therefore NOT required at `proven` — a run whose projected facet is failing
+  // without having dropped passes, and the report names the facet as held to the
+  // ratchet rather than silently dropping it from the scope.
+  const report = scopedReport(0);
+  report.facets.performance = { ordinal: 0, index: 0, level: "l0" };
+  const held = judge(report, baselineFor(scopedReport(0), { performance: 0 }));
+  assert.equal(
+    held.pass,
+    true,
+    "a projected, regression-only facet must not be required at proven",
+  );
+  assert.deepEqual([...held.scoped.absolute_facets].sort(), [
+    "quality",
+    "testing",
+  ]);
+  assert.ok(
+    held.scoped.regression_only_facets.includes("performance"),
+    "the report must say which facets were held to the ratchet",
+  );
+  // The other direction, and the reason this is not a loophole: the same
+  // failing facet DOES fail the run when it dropped below its baseline.
+  const dropped = judge(
+    report,
+    baselineFor(scopedReport(0), { performance: 85 }),
+  );
+  assert.equal(
+    dropped.pass,
+    false,
+    "the ratchet still binds a projected facet",
+  );
+  assert.equal(dropped.scoped.ratchet.status, "violation");
+  assert.equal(dropped.scoped.ratchet.regressions[0].axis, "performance");
+});
+
 test("GATE: the ratchet still fails a run over an OUT-of-scope drop", () => {
   // The counterpart, and the reason neutrality is not a loophole. `comparison`
   // is not a P0.4 facet; it is baselined at 85 and the run reports 60. Nothing
@@ -757,8 +794,20 @@ test("GATE: the scoped score is computed from the scoped facets only", () => {
   const report = scopedReport(60);
   report.facets.quality = { ordinal: 85, index: 3, level: "l85" };
   const v = judge(report, baselineFor(scopedReport(60), { quality: 85 }));
-  assert.equal(v.scoped.semantic_score, 96.25, "the mean is over 4 facets");
-  assert.equal(v.scoped.score, 98.88, "and not over 21");
+  // A-002: `performance` and `accessibility` project Lighthouse and the §3.1
+  // budgets, which §3.2 holds regression-only until P5/P6/P8 — so the judged set
+  // at P0.4 is the two facets whose gates are absolute here, and the mean is over
+  // those two, not over 4 and not over 21.
+  assert.deepEqual([...v.scoped.absolute_facets].sort(), [
+    "quality",
+    "testing",
+  ]);
+  assert.deepEqual([...v.scoped.regression_only_facets].sort(), [
+    "accessibility",
+    "performance",
+  ]);
+  assert.equal(v.scoped.semantic_score, 92.5, "the mean is over 2 facets");
+  assert.equal(v.scoped.score, 97.75, "and not over 21");
 });
 
 test("GATE: an in-scope facet short of proven fails, and only that", () => {
@@ -767,7 +816,8 @@ test("GATE: an in-scope facet short of proven fails, and only that", () => {
   const v = judge(report, baselineFor(scopedReport(0), { quality: 85 }));
   assert.equal(v.pass, false);
   assert.deepEqual(v.scoped.facets_short_of_proven, ["quality"]);
-  // (100+100+85+100)/4 = 96.25, so 0.7*100 + 0.3*96.25 = 98.875. One facet a
-  // step down costs 0.3*15/4 = 1.125 — which is why "confident" is not the bar.
-  assert.equal(v.scoped.score, 98.88);
+  // (85+100)/2 = 92.5, so 0.7*100 + 0.3*92.5 = 97.75. One facet a step down in
+  // a two-facet judged set costs 0.3*15/2 = 2.25 — which is why "confident" is
+  // not the bar.
+  assert.equal(v.scoped.score, 97.75);
 });
