@@ -657,9 +657,13 @@ export function firstPaintWeightClause(reading) {
  *     40-76 reading look like a stable 66.
  *   · The calibration envelope, which is wider than any 3-run sample could
  *     reveal, so the record cannot imply the run's own range is the truth.
+ *
+ * Returns the line AND what the fit to the clip had to leave off, so the omission
+ * report has one owner: this return value. Most callers want the line alone, and
+ * `composeFacetLine` below is exactly that.
  */
 
-export function composeFacetLine(report) {
+export function composeFacetLineWithOmissions(report) {
   const measured = Array.isArray(report?.measured) ? report.measured : [];
   const range = (category) => {
     const values = measured
@@ -768,7 +772,19 @@ export function composeFacetLine(report) {
     sentences.push(
       "first-paint claim only, not warm interactions or memoization",
     );
-  return fitFacetLine(sentences, { ratcheted: ratcheted.length });
+  const { line, omitted } = fitFacetLine(sentences, {
+    ratcheted: ratcheted.length,
+  });
+  // The compatibility view the caller outside this change still names. REPLACED,
+  // never appended to, so nothing has to clear it between runs.
+  facetLineOmitted.length = 0;
+  facetLineOmitted.push(...omitted);
+  return { line, omitted };
+}
+
+/** The line alone, for the callers that only print it. */
+export function composeFacetLine(report) {
+  return composeFacetLineWithOmissions(report).line;
 }
 
 /**
@@ -783,12 +799,13 @@ export function composeFacetLine(report) {
  * on its face that it is a summary.
  *
  * If even the short form does not fit, the sentence is DROPPED, not truncated,
- * and `facetLineOmitted` records that it happened so the gate can print it. A
- * sentence silently missing from the judge's line while the run reports green is
- * the exact defect this file was written to end.
+ * and the omission is returned so the gate can print it and name the swap or the
+ * drop. A sentence silently missing from the judge's line while the run reports
+ * green is the exact defect this file was written to end.
  *
- * Returns the line. The caller compares against COMPLETE_FACET_CLIP and refuses
- * to publish if the HIGH-priority sentences did not fit, because at that point
+ * Returns the line and that omission report. The caller compares the line against
+ * COMPLETE_FACET_CLIP and refuses to publish if the HIGH-priority sentences did
+ * not fit, because at that point
  * the measurement itself is too long for the transport and the fix is a shorter
  * clause, not a smaller claim.
  */
@@ -814,14 +831,15 @@ function fitFacetLine(sentences, meta = {}) {
     }
     dropped.push({ sentence });
   }
-  facetLineOmitted.push(...dropped);
-  return kept.join(". ") + ".";
+  return { line: kept.join(". ") + ".", omitted: dropped };
 }
 
 /**
- * What the last fit had to leave off, so the gate can print it and the report
- * can carry it. Module-level because composeFacetLine is a pure function the
- * tests call directly; the gate reads and clears it around its own call.
+ * A compatibility view of the last fit's omissions, for the caller outside this
+ * change that still names it — `tests/performance-playtest.test.mjs` asserts
+ * against it, and the composer replaces it on every call so those assertions
+ * stay real. It is not the owner: `composeFacetLineWithOmissions` returns the
+ * report, and no caller has to clear this between runs.
  */
 export const facetLineOmitted = [];
 
