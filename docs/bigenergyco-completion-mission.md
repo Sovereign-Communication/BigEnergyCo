@@ -1,5 +1,19 @@
 # BigEnergyCo Completion Mission
 
+> **STATUS (recorded 2026-10-06): this file is a HISTORICAL MISSION RECORD, not
+> current state.** It was written on 2026-09-27 and is preserved as the brief
+> that drove P0.3/P0.4. Work items 1 and 3 below are DONE and their branches
+> are gone: the P0.4 collapse landed as **#166** on 2026-09-29, and #153/#157/
+> #160/#164 were closed SUPERSEDED by it on 2026-10-06 after verifying their
+> scope was already contained in `main`. Issue #156 (super-linear cycle-life)
+> is implemented and recorded in `docs/plan/LEDGER.jsonl`. The "Verified
+> starting state" snapshot below is nine days stale and its stated main HEAD no
+> longer exists in that form.
+>
+> Do not execute this file as instructions. For current state read
+> `docs/plan/MASTER_PLAN.md` (the immutable, hash-pinned plan — it supersedes
+> every other plan document, this one included) and `docs/plan/LEDGER.jsonl`.
+
 You are the owner of this PR and of all the work below. Read this whole file, then do everything it says. When every item is complete and Jev-confirmed, merge this PR yourself — you are authorized to.
 
 ## Your authority (granted by Lucas, the repo owner)
