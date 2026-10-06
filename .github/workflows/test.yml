@@ -280,10 +280,17 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - name: Upload the browser privacy measurement
+        # The NAME is the wire, and this one was wrong. `jev-complete`
+        # downloads `jev-results-*`, so an artifact called
+        # `jev-privacy-browser` was uploaded by every run and downloaded by
+        # none: a real browser measurement that no record could read, which is
+        # the exact defect the resilience and experience uploads were renamed
+        # to prevent. Renamed here so the privacy facet is judged on this run
+        # rather than on a typed sentence that names a fraction of it.
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: jev-privacy-browser
+          name: jev-results-privacy-browser
           path: jev-artifacts/privacy-browser.json
           if-no-files-found: error
           retention-days: 7

@@ -15,7 +15,7 @@
 // Jev gate reads, and the evidence line must name it.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -203,4 +203,84 @@ test("EVIDENCE: the privacy facet line names both gates and the measurement", ()
   // The egress that the browser gate found must be named, or the finding is
   // invisible to the reader.
   assert.match(line, /open\.er-api\.com/);
+});
+
+// ── the measurement the judge actually reads (2026-10-06) ───────────────────
+//
+// The browser gate ran on every PR and its result reached nobody: the report
+// was uploaded as `jev-privacy-browser` while `jev-complete` downloads
+// `jev-results-*`. A real browser measurement that no record could read is the
+// exact defect the resilience and experience gates were renamed to prevent, and
+// it was still happening here — which is why the privacy facet fell back to a
+// typed sentence naming a fraction of what had been checked.
+test("WIRING: the privacy report is uploaded under a name the gate downloads", () => {
+  const wf = read(".github/workflows/test.yml");
+  // The upload name IS the wire. A report under any other name is downloaded
+  // by nobody and the judge never sees it.
+  assert.match(wf, /name: jev-results-privacy-browser/);
+  assert.ok(
+    !/name: jev-privacy-browser/.test(wf),
+    "the pre-2026-10-06 name downloads nothing; the facet falls back to prose",
+  );
+  // And the pattern has to actually match it, or the rename is cosmetic.
+  assert.match(wf, /pattern: jev-results-\*/);
+});
+
+test("WIRING: the privacy report declares the axis so the builder adopts it", () => {
+  const gate = read("scripts/check-privacy-browser.mjs");
+  // `facet_axes` is what makes build-jev-evidence.mjs prefer the composed line
+  // over the typed one, with no change to the builder itself.
+  assert.match(gate, /const FACET_AXES = \["privacy"\]/);
+  assert.match(gate, /facet_axes: FACET_AXES/);
+  assert.match(gate, /facet_line: composeFacetLine\(/);
+});
+
+test("CLIP: the composed privacy line fits the clip the builder enforces", () => {
+  // COMPLETE_FACET_CLIP is 280 and the builder refuses an over-length line
+  // PER LINE rather than truncating quietly. The first draft of this line was
+  // 754 chars and the builder caught it, so the gate now asserts its own
+  // length; this test pins that the assertion is still wired.
+  const gate = read("scripts/check-privacy-browser.mjs");
+  assert.match(gate, /COMPLETE_FACET_CLIP/);
+  assert.match(gate, /line\.length > COMPLETE_FACET_CLIP/);
+  // The clip itself must not be widened to fit a longer sentence: raising it
+  // would raise the cost of every one of the 21 axes at once.
+  const budget = read("scripts/lib/jev-complete.mjs");
+  assert.match(
+    budget,
+    /export const COMPLETE_FACET_CLIP = 280;/,
+    "the per-axis clip is 280 and this change must not quietly raise it",
+  );
+});
+
+test("COMPOSED: the privacy line reads its numbers out of the measurement", () => {
+  // Every number in the line must come from `measured`, so a bad run reports a
+  // bad line instead of a stale good one. Asserted on the committed artifact
+  // when one exists, and on the composer contract when it does not.
+  const artifact = path.join(ROOT, "jev-artifacts/privacy-browser.json");
+  if (!existsSync(artifact)) {
+    const gate = read("scripts/check-privacy-browser.mjs");
+    for (const field of [
+      "m.cookieCount",
+      "m.httpOnlyCount",
+      "m.localStorageKeys",
+      "m.sessionStorageKeys",
+      "m.identifying",
+      "m.coordinateFindings",
+      "m.thirdPartyOrigins",
+    ])
+      assert.ok(
+        gate.includes(field),
+        `the composed line must read ${field} out of the measurement`,
+      );
+    return;
+  }
+  const report = JSON.parse(readFileSync(artifact, "utf8"));
+  assert.deepEqual(report.facet_axes, ["privacy"]);
+  assert.ok(
+    report.facet_line.length <= 280,
+    `the composed line is ${report.facet_line.length} chars and would be cut`,
+  );
+  assert.match(report.facet_line, new RegExp(String(report.cookieCount)));
+  assert.match(report.facet_line, new RegExp(String(report.requestCount)));
 });
