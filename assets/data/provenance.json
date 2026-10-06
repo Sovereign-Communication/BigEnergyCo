@@ -135,10 +135,10 @@
       "id": "round_trip_efficiency",
       "family": "Battery charge/discharge round trip",
       "shown_as": "usable capacity, autonomy hours, outage coverage",
-      "used_by": ["assets/js/sizing/engine.js:ROUND_TRIP_DEFAULT"],
+      "used_by": ["assets/js/sizing/chem-model.js:CHEMISTRIES"],
       "source": "fraunhofer_pv",
       "grade": "C",
-      "disclosure": "92% is our planning figure for a lithium system including inverter and BMS overhead. It is NOT taken from a datasheet and is the most optimistic end of the plausible band."
+      "disclosure": "92% is our planning figure for a lithium system including inverter and BMS overhead, and the same model carries 90% for sodium-ion and 85% for AGM. None of the three is taken from a datasheet; 92% is the most optimistic end of the plausible band."
     },
     {
       "id": "panel_temperature_coefficient",

@@ -338,6 +338,7 @@ jobs:
         with:
           name: jev-results-experience-report
           path: jev-artifacts/experience-report.json
+          if-no-files-found: error
       # P0.4 / Q-07: the `accessibility` facet line is composed by the run that
       # measured the calculator's own controls (scripts/lib/a11y-controls.mjs,
       # written by scripts/browser-smoke.mjs) and rides in this report. The NAME
