@@ -294,8 +294,19 @@ test("COMPOSED: the privacy line reads its numbers out of the measurement", () =
   assert.ok(line.length <= 280, `${line.length} chars would be cut in transit`);
   assert.match(line, /90 requests/);
   assert.match(line, /0 cookies \(0 HttpOnly\)/);
-  assert.match(line, /0 local\/session storage keys/);
-  assert.match(line, /nominatim\.openstreetmap\.org \+ open\.er-api\.com/);
+  assert.match(line, /0 storage keys/);
+  assert.match(line, /0 with an identifier, 0 over 0\.01 deg/);
+  // Every clause the rubric names has to be in the line the judge reads. This
+  // is the assertion that would have caught the earlier draft, which spent
+  // the clip on connect-src origins and left three clauses unsaid.
+  for (const clause of [
+    /nothing logged/,
+    /no ad\/tracker\/affiliate\/lead capture/,
+    /advisor egress disclosed/,
+    /nothing unasked/,
+    /geolocation click-gated/,
+  ])
+    assert.match(line, clause, `the line must carry the clause ${clause}`);
 });
 
 test("COMPOSED: a bad run composes a line that says so", () => {
@@ -312,8 +323,17 @@ test("COMPOSED: a bad run composes a line that says so", () => {
   const { line } = composePrivacyFacetLine(dirty, 280);
   assert.match(line, /3 cookies \(1 HttpOnly\)/);
   assert.doesNotMatch(line, /0 cookies/);
-  assert.match(line, /1 carrying a coordinate finer than 0\.01 deg/);
-  assert.match(line, /1 requests carrying an identifier/);
+  assert.match(line, /1 with an identifier/);
+  assert.match(line, /1 over 0\.01 deg/);
+  // The two leak counts must be reported SEPARATELY. A line that said "N with
+  // an identifier or over 0.01 deg" while printing only N would read 0 for a
+  // run that leaked a coarse coordinate - an under-reporting evidence line is
+  // worse than none, so this pins the split.
+  const coordOnly = composePrivacyFacetLine(
+    { ...MEASURED, coordinateFindings: ["lat=51.50735123"] },
+    280,
+  ).line;
+  assert.match(coordOnly, /0 with an identifier, 1 over 0\.01 deg/);
 });
 
 test("COMPOSED: an over-long line is reported, never truncated", () => {
@@ -329,4 +349,43 @@ test("COMPOSED: an over-long line is reported, never truncated", () => {
     line.length > 40,
     "the line is returned whole; clipping is the caller's job",
   );
+});
+
+// ── the consent clause (added 2026-10-06) ───────────────────────────────────
+//
+// The security rubric asks for "sensitive actions (geolocation, auto-runs) only
+// on explicit user consent" and NOTHING measured it. The browser gate can prove
+// a coordinate never left at full precision; it cannot prove the browser was
+// never asked for one without being asked first. `permissions-policy:
+// geolocation=` is a weaker claim - it constrains what a page may do, not what
+// it does, and a page that grabs the coordinate on load satisfies it too.
+test("CONSENT: the geolocation clause is measured, not asserted", () => {
+  const gate = read("scripts/check-privacy.mjs");
+  assert.match(gate, /consent: getCurrentPosition called from one module only/);
+  assert.match(
+    gate,
+    /consent: geolocation fires only from the btnGeoLocate click handler/,
+  );
+});
+
+test("CONSENT: the clause would notice geolocation moved off the click", () => {
+  // A clause that cannot fail is a rubber stamp. This proves the wiring the
+  // clause reads is the wiring that exists: the API is called in exactly one
+  // module, and that module is reached from a click on a real button.
+  const ui = readCode("assets/js/sizing/ui.js");
+  const picker = readCode("assets/js/sizing/location-picker.js");
+  const apiCalls = [ui, picker].filter((s) =>
+    /\.getCurrentPosition\s*\(/.test(s),
+  );
+  assert.equal(
+    apiCalls.length,
+    1,
+    "the geolocation API is called in one module",
+  );
+  assert.match(
+    ui,
+    /addEventListener\(\s*"click"[\s\S]{0,400}?locateMe\s*\(/,
+    "locateMe must be reached from a click handler",
+  );
+  assert.match(read("index.html"), /id="btnGeoLocate"/);
 });

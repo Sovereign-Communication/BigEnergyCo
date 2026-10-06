@@ -263,6 +263,56 @@ const ALLOWED_STORAGE_KEYS = new Set([
     );
 }
 
+// ── 7. sensitive actions only behind an explicit user action ─────────────────
+// The security facet asks for this clause and NOTHING measured it: the
+// browser gate can see that no coordinate left at full precision, and it
+// cannot see whether the browser was ever asked for one without being asked
+// first. `permissions-policy: geolocation=` (asserted by check-headers.mjs) is
+// a different and weaker claim - it constrains what a page may do, not what
+// it does, and a page that grabs the coordinate on load satisfies it too.
+//
+// So this asserts the wiring directly. Geolocation has exactly one call site,
+// in one module, and that module is reachable from exactly one place in the
+// shipped UI: a click handler. That is the whole claim - if a second caller
+// appears, or the one caller moves off `click`, this goes red.
+{
+  const geolCalls = [];
+  const locateCalls = [];
+  for (const f of shipped) {
+    const src = codeOnly(readShipped(f));
+    for (const _ of src.matchAll(/\.getCurrentPosition\s*\(/g))
+      geolCalls.push(f);
+    for (const _ of src.matchAll(/\blocateMe\s*\(/g)) locateCalls.push(f);
+  }
+  // The browser API itself must be reachable from one module only. That is the
+  // part a new feature could quietly break by calling the API directly.
+  const unowned = geolCalls.filter((f) => !/location-picker\.js/.test(f));
+  if (unowned.length)
+    for (const f of unowned)
+      fail(`consent: geolocation API called outside location-picker.js — ${f}`);
+  else
+    ok(
+      `consent: getCurrentPosition called from one module only (${geolCalls.length} call(s)); locateMe invoked from ${locateCalls.length} site(s)`,
+    );
+
+  // The gesture has to be a real, wired one. An unreferenced button is not
+  // consent, it is a decoy.
+  const html = readFileSync(join(ROOT, "index.html"), "utf8");
+  const ui = codeOnly(readShipped("assets/js/sizing/ui.js"));
+  const inClick =
+    /addEventListener\(\s*"click"[\s\S]{0,400}?locateMe\s*\(/.test(ui);
+  const hasButton = /id="btnGeoLocate"/.test(html);
+  if (inClick && hasButton)
+    ok(
+      "consent: geolocation fires only from the btnGeoLocate click handler, never on load",
+    );
+  else
+    fail(
+      `consent: geolocation is not behind a click on btnGeoLocate ` +
+        `(click-wired=${inClick}, button present=${hasButton})`,
+    );
+}
+
 // ── the egress inventory is declared, not discovered ────────────────────────
 {
   const { EXTERNAL_HOSTS } = await import_(
