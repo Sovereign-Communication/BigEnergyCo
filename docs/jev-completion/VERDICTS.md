@@ -15,6 +15,7 @@ Cost-no-object iteration round: every queue was re-judged with expanded context 
 - needs-human-look: 15
 
 Top must-fix items:
+
 - `tests/weather-persistence.test.mjs:110` `put` (security-bypass, conf 0.86)
 - `assets/js/sizing/ui.js:5015` `purchasePaths` (silent-wrong-output, conf 0.85)
 - `tests/weather-persistence.test.mjs:116` `delete` (silent-wrong-output, conf 0.85)
@@ -52,6 +53,7 @@ Top must-fix items:
 - refined: 8
 
 Killed (false positives):
+
 - `assets/js/sizing/frontier.js:56` `isBoundLimited` (was: validate-early)
 - `assets/js/sizing/ui.js:3451` `previewCurvePoint` (was: validate-guard)
 - `assets/js/sizing/ui.js:6170` `applyGenRate` (was: validate-guard)
@@ -74,6 +76,7 @@ Killed (false positives):
 - `assets/js/sizing/nasa.js:115` `buildUrl` (was: validate-guard)
 
 Refined:
+
 - `assets/js/sizing/frontier.js:90` `battLadder`: validate-early -> **fallback-default**
 - `assets/js/sizing/charts.js:1435` `findWorstStreak`: validate-early -> **fallback-default**
 - `assets/js/sizing/money.js:70` `laborMidPerKwh`: validate-early -> **fallback-default**
@@ -89,4 +92,3 @@ Refined:
 - Fail-open items dispositioned acceptable: 55
 - Wiring flags Jev-exonerated as noise: 201
 - Wiring flags rank-exonerated (below top-300): 1227
-

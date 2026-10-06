@@ -95,4 +95,3 @@ Prescription confidence runs **0.39–0.66**, nowhere near the 0.95 gate. The gr
 - Concurrency: bug likely+ (>=2.0): 4
 - Context: critical need (>2.25): 75
 - Dead/experimental functions: 1
-
