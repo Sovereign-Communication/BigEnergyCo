@@ -775,10 +775,6 @@ export function composeFacetLineWithOmissions(report) {
   const { line, omitted } = fitFacetLine(sentences, {
     ratcheted: ratcheted.length,
   });
-  // The compatibility view the caller outside this change still names. REPLACED,
-  // never appended to, so nothing has to clear it between runs.
-  facetLineOmitted.length = 0;
-  facetLineOmitted.push(...omitted);
   return { line, omitted };
 }
 
@@ -833,15 +829,6 @@ function fitFacetLine(sentences, meta = {}) {
   }
   return { line: kept.join(". ") + ".", omitted: dropped };
 }
-
-/**
- * A compatibility view of the last fit's omissions, for the caller outside this
- * change that still names it — `tests/performance-playtest.test.mjs` asserts
- * against it, and the composer replaces it on every call so those assertions
- * stay real. It is not the owner: `composeFacetLineWithOmissions` returns the
- * report, and no caller has to clear this between runs.
- */
-export const facetLineOmitted = [];
 
 /** The median of a numeric list. Odd counts get the middle value. */
 export function median(values) {
