@@ -33,7 +33,6 @@ import {
   OFFLINE_PROFILES,
   PROFILE_YEAR,
 } from "../assets/js/sizing/profiles.js";
-import { stripComments } from "./lib/comments.mjs";
 import { comparisonIntegrity } from "./lib/paths-integrity.mjs";
 
 const ROOT = resolve(
@@ -339,9 +338,31 @@ if (walk.length) {
   // Scan what a visitor can actually READ, not the source around it. Without
   // this the clause fires on the comment that documents the deletion — and a
   // gate that punishes the explanation gets disabled rather than obeyed.
-  // The stripper is scripts/lib/comments.mjs, which is a scanner rather than a
-  // regex because the regex version was a fail-open sanitizer CodeQL raised
-  // against this file as a high-severity alert.
+  //
+  // A scanner, not a regex, and CodeQL is why. `.replace(/<!--[\s\S]*?-->/g,
+  // "")` is an incomplete multi-character sanitization: the sweep is
+  // non-overlapping and needs a closer, so a comment left unclosed keeps its
+  // opener, and the opener is what this clause then scans for. One pass that
+  // consumes an unterminated comment to end of input leaves none by
+  // construction. Plan Q-15 holds this repo to 0 CodeQL alerts.
+  const stripComments = (src) => {
+    let out = "";
+    let i = 0;
+    for (; i < src.length;) {
+      const open = src.startsWith("<!--", i)
+        ? ["<!--", "-->"]
+        : src.startsWith("/*", i)
+          ? ["/*", "*/"]
+          : null;
+      if (!open) {
+        out += src[i++];
+        continue;
+      }
+      const end = src.indexOf(open[1], i + open[0].length);
+      i = end === -1 ? src.length : end + open[1].length;
+    }
+    return out;
+  };
   const shipped = stripComments(ui) + stripComments(indexHtml);
   const ghosts = [
     [/TURNKEY_MULTIPLIER/, "the deleted quote multiplier"],

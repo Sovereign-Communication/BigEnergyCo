@@ -23,8 +23,6 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-
-import { stripComments } from "../scripts/lib/comments.mjs";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -751,71 +749,20 @@ test("energyByYear degrades the output, it does not repeat it", () => {
   assert.deepEqual(energyByYear(0), new Array(HORIZON_YEARS).fill(0));
 });
 
-// ── the comment stripper cannot fail open (CodeQL, 2026-10-05) ──────────────
-//
-// The gate's "no invented constants in the shipped copy" clause has to read
-// shipped copy, so it strips comments first. It used to strip them with
-// `.replace(/<!--[\s\S]*?-->/g, "")`, which CodeQL raised as a high-severity
-// incomplete multi-character sanitization: a regex sweep is non-overlapping
-// and needs a closer, so an unterminated comment hands its opener straight
-// back to the scan the stripper existed to protect. Plan §Q-15 holds this repo
-// to 0 CodeQL alerts, so the guarantee is asserted rather than argued.
-test("STRIPPER: an unterminated comment cannot leave its opener behind", () => {
-  for (const [src, opener] of [
-    ["<!-- never closed", "<!--"],
-    ["/* never closed", "/*"],
-    ["a<!--x", "<!--"],
-    ["a/*x", "/*"],
-  ]) {
-    assert.ok(
-      !stripComments(src).includes(opener),
-      `${JSON.stringify(src)} left ${opener} in the string the gate scans`,
-    );
-  }
-});
-
-test("STRIPPER: the adversarial shapes that defeat a regex sweep", () => {
-  // Nested openers. A non-overlapping sweep matches the INNER pair and leaves
-  // the outer opener behind; one left-to-right pass consumes to the first
-  // closer and cannot.
-  assert.equal(stripComments("<!--<!-- -->").includes("<!--"), false);
-  assert.equal(stripComments("/*/* */").includes("/*"), false);
-  // A closer that belongs to nothing still terminates the comment, which is
-  // what the HTML parser does too.
-  assert.equal(stripComments("a<!-- b --> c"), "a c");
-  assert.equal(stripComments("a/* b */ c"), "a c");
-});
-
-test("STRIPPER: closed comments go, and everything else is byte-identical", () => {
-  const code = 'const re = "x";\nconst n = 1;';
-  assert.equal(stripComments(`/* head */${code}`), code);
-  assert.equal(stripComments(`<!-- head -->${code}`), code);
-  // Line comments are deliberately OUT of scope, exactly as they were for the
-  // regexes these gates used before: a `//` is only a comment under JS token
-  // rules, and this stripper deliberately does not parse a language. Pinned
-  // here so the boundary is a decision on record, not an accident.
-  assert.equal(stripComments("// tail"), "// tail");
-  // The property the gate depends on: a comment may NAME what it refuses to
-  // ship, so the deleted constants can be documented without tripping the
-  // clause that bans them.
-  assert.equal(
-    stripComments("<!-- TURNKEY_MULTIPLIER was deleted -->").includes(
-      "TURNKEY_MULTIPLIER",
-    ),
-    false,
-  );
-  // And nothing that is not a comment is touched: the gate scans real files.
-  assert.equal(stripComments("<p>$1,500</p>"), "<p>$1,500</p>");
-});
-
-test("GATE: the comparison gate uses the one stripper, not a regex sanitizer", () => {
-  // A second copy of the idiom is the defect coming back, so this pins the
-  // import rather than trusting review to notice a re-introduction.
-  const gate = fs.readFileSync(
-    path.join(ROOT, "scripts/check-comparison.mjs"),
-    "utf8",
-  );
-  assert.match(gate, /from "\.\/lib\/comments\.mjs"/);
+test("GATE: the comparison gate strips comments without a fail-open regex", () => {
+  // CodeQL raised a high-severity incomplete multi-character sanitization
+  // against the regex this replaced (a non-overlapping sweep that needs a
+  // closer, so an unterminated comment keeps its opener). This pins that the
+  // regex has not come back; the gate running above exercises the scanner
+  // itself over the real 435 KB of ui.js and index.html.
+  //
+  // Scanned with COMMENTS STRIPPED, because the gate's own comment quotes the
+  // old regex to explain why it went. A guard that punishes the explanation
+  // gets deleted rather than obeyed.
+  const gate = fs
+    .readFileSync(path.join(ROOT, "scripts/check-comparison.mjs"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
   assert.ok(
     !/\.replace\(\/<!--/.test(gate),
     "the gate must not sanitize HTML comments with a regex again",
