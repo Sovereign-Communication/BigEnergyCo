@@ -64,6 +64,8 @@
 // it necessary are in LIGHTHOUSE_VARIANCE below so the next person can check
 // them rather than take this comment's word.
 import { readFileSync } from "node:fs";
+import { COMPLETE_FACET_CLIP } from "./jev-complete.mjs";
+import { playtestClause } from "./performance-budgets.mjs";
 
 /**
  * The facet axes this gate IS the evidence for. Declared here, beside the
@@ -399,6 +401,32 @@ export const LIGHTHOUSE_FLOORS = {
 };
 
 /**
+ * The WARM / PLAYTEST clause, delegated to scripts/lib/performance-budgets.mjs.
+ *
+ * It used to be built here and it now is not, for one reason: the readings it
+ * formats stopped being the ones this gate took. This module's own clause knew
+ * about a cold run, a warm re-run and a drag preview; the playtest also measures
+ * what a warm RELOAD pulls after the page's memory is gone, and whether the first
+ * result renders with the pricing model blocked. Formatting the richer shape
+ * from the older module would have been formatting a claim the run never made.
+ *
+ * The composition itself lives with the budgets, so the numbers a line can print
+ * and the numbers a gate can fail on are derived in one place and cannot drift
+ * apart — which is the same reason the byte budget and the byte measurement were
+ * separated in the first place.
+ *
+ * The absence is the load-bearing half. When there is no playtest the clause is
+ * null, the line ends "first-paint claim only, not warm interactions or
+ * memoization", and the judge reads the facet as unverified — which is the
+ * honest reading of a first-paint-only measurement. The fix for that is a
+ * measurement, not a better sentence, so no wording change can make a green
+ * first-paint run read as a proven facet.
+ */
+function warmClause(warm) {
+  return playtestClause(warm);
+}
+
+/**
  * Compose the `performance` facet line the judge reads, from THIS run's report.
  *
  * The gate owns this rather than the transport that carries it, for two reasons
@@ -410,6 +438,9 @@ export const LIGHTHOUSE_FLOORS = {
  *
  * What goes on the line, and what deliberately does not:
  *
+ *   · The playtest clause, FIRST. It is the part that was missing, and a
+ *     280-char clip is finite: the least load-bearing sentence must not be the
+ *     one that gets cut.
  *   · The three ratcheted categories, as facts. They read an identical value on
  *     every run on every machine measured, so their range across the 14 targets
  *     is a real measurement and belongs on the record.
@@ -419,74 +450,7 @@ export const LIGHTHOUSE_FLOORS = {
  *     40-76 reading look like a stable 66.
  *   · The calibration envelope, which is wider than any 3-run sample could
  *     reveal, so the record cannot imply the run's own range is the truth.
- *   · What the gate does NOT cover. One of the facet's three claims is measured
- *     here; saying so is what stops a green gate reading as a proof.
  */
-/**
- * The WARM clause, composed from report.warm_interaction when the gate measured
- * it and ABSENT when it did not.
- *
- * The absence is the load-bearing half. Until this existed, the line ended "not
- * warm interactions or memoization" and the judge read the facet as unverified,
- * which was the honest reading of a first-paint-only measurement. The fix for
- * that is a measurement, not a better sentence — so when there is no warm
- * measurement the line still says the warm claims are not measured, and no
- * wording change can make a green first-paint run read as a proven facet.
- *
- * Both ends of a slider move are reported because they are two different claims.
- * The drag preview is what the visitor feels (cached, no worker); the confirm
- * re-slice is a real background wait. Reporting only the first would flatter the
- * product and only the second would libel it.
- *
- * It is FIRST in the line because it is the part that was missing, and a
- * 280-char clip is finite: the least load-bearing sentence must not be the one
- * that gets cut.
- */
-function warmClause(warm) {
-  const sec = (ms) =>
-    typeof ms === "number" && Number.isFinite(ms)
-      ? ms >= 1000
-        ? `${(ms / 1000).toFixed(1)}s`
-        : `${Math.round(ms)}ms`
-      : null;
-  const cold = sec(warm?.cold_run?.ms);
-  const repeat = sec(warm?.warm_rerun?.ms);
-  const drag = sec(warm?.warm_adjustments?.preview_median_ms);
-  const confirm = sec(warm?.warm_adjustments?.confirm_median_ms);
-  if (cold === null || repeat === null || drag === null || confirm === null)
-    return null;
-  const parts = [`cold ${cold}`, `repeat ${repeat}`, `drag ${drag}`];
-  // The confirm wait is stated whenever it is slower than the drag it follows.
-  // Hiding it because the drag was fast is exactly the flattering edit this
-  // line exists to make impossible.
-  if (confirm !== drag) parts.push(`confirm ${confirm}`);
-  const reqs = warm?.warm_network_requests;
-  if (typeof reqs === "number") {
-    if (reqs === 0) {
-      parts.push("0 warm requests");
-    } else {
-      // WHAT went on the wire, derived from the measured URLs rather than typed
-      // here. A count with no identity ("4 warm requests") reads as four
-      // redundant weather pulls; a count that names the probe reads as what it
-      // is — the Jev capability gate, re-asked per render on purpose. If the
-      // requests ever become something else, this word changes with them.
-      const urls = Array.isArray(warm?.warm_request_urls)
-        ? warm.warm_request_urls
-        : [];
-      const allHealth =
-        urls.length === reqs && urls.every((u) => /\/api\/health/.test(u));
-      parts.push(
-        allHealth
-          ? `${reqs} warm requests (all Jev /api/health)`
-          : `${reqs} warm requests`,
-      );
-    }
-  }
-  // "1 unthrottled Chrome" is the limit that is still true after the warm
-  // measurement landed: one machine, one city, three adjustments, no simulated
-  // throttling. A real reading, not a device matrix and not a population claim.
-  return `WARM, 1 unthrottled Chrome: ${parts.join(", ")}`;
-}
 
 export function composeFacetLine(report) {
   const measured = Array.isArray(report?.measured) ? report.measured : [];
@@ -526,30 +490,94 @@ export function composeFacetLine(report) {
     report?.warm_interaction?.ok ? report.warm_interaction : null,
   );
   if (warm) sentences.push(warm);
-  sentences.push(
-    `Lighthouse, ${measured.length} target${measured.length === 1 ? "" : "s"}, median of 3`,
-  );
-  if (ratcheted.length) sentences.push(`ratcheted ${ratcheted.join(", ")}`);
-  if (report?.regressions?.length)
-    sentences.push(`${report.regressions.length} REGRESSIONS`);
-  if (report?.holes?.length) sentences.push(`${report.holes.length} HOLES`);
 
   const perfClause = ["perf NOT ratcheted"];
   if (perf) perfClause.push(`${perf} this run`);
   if (envelope) perfClause.push(`${envelope} over ${calN} runs`);
   if (report?.regressions?.length) perfClause.push("see regressions above");
-  if (perf || envelope) sentences.push(perfClause.join(", "));
 
-  // With no warm measurement this is the whole honest limit. With one, the warm
+  // ORDER IS PRIORITY, and the order is the argument.
+  //
+  // The playtest measurement comes first because it is the claim the facet was
+  // held for. "perf NOT ratcheted" comes before the per-category list because it
+  // is the sentence that tells a reader how to read the number printed next to
+  // it: lose that one and a bimodal 40-76 reading arrives looking like a fact.
+  // The per-category ratcheted list is last because it is genuinely the most
+  // redundant thing on the line — all three of those categories are written out
+  // in full in the report, and on the line they are a summary.
+  sentences.push(
+    `Lighthouse, ${measured.length} target${measured.length === 1 ? "" : "s"}, median of 3`,
+  );
+  if (perf || envelope) sentences.push(perfClause.join(", "));
+  if (ratcheted.length) sentences.push(`ratcheted ${ratcheted.join(", ")}`);
+  if (report?.regressions?.length)
+    sentences.push(`${report.regressions.length} REGRESSIONS`);
+  if (report?.holes?.length) sentences.push(`${report.holes.length} HOLES`);
+
+  // With no playtest this is the whole honest limit. With one, the playtest
   // clause above has already stated its own narrower limit, and repeating the
-  // first-paint disclaimer next to a real warm reading would read as though the
-  // warm reading were also unmeasured.
+  // first-paint disclaimer beside a real interaction reading would read as
+  // though the interaction reading were also unmeasured.
   if (!warm)
     sentences.push(
       "first-paint claim only, not warm interactions or memoization",
     );
-  return sentences.join(". ") + ".";
+  return fitFacetLine(sentences, { ratcheted: ratcheted.length });
 }
+
+/**
+ * Fit the sentences to the transport's per-axis clip, in the priority order they
+ * were pushed, WITHOUT quietly losing one.
+ *
+ * The clip is COMPLETE_FACET_CLIP (280) and the transport cuts the tail. A naive
+ * composer therefore does the worst possible thing: it puts the load-bearing
+ * sentence last and lets the cut take it. This one puts it first, and then
+ * degrades the least load-bearing sentence — the per-category ratcheted list,
+ * which is fully written out in the report anyway — into a short form that says
+ * on its face that it is a summary.
+ *
+ * If even the short form does not fit, the sentence is DROPPED, not truncated,
+ * and `facetLineOmitted` records that it happened so the gate can print it. A
+ * sentence silently missing from the judge's line while the run reports green is
+ * the exact defect this file was written to end.
+ *
+ * Returns the line. The caller compares against COMPLETE_FACET_CLIP and refuses
+ * to publish if the HIGH-priority sentences did not fit, because at that point
+ * the measurement itself is too long for the transport and the fix is a shorter
+ * clause, not a smaller claim.
+ */
+function fitFacetLine(sentences, meta = {}) {
+  const SHORTENABLE = /^ratcheted /;
+  const kept = [];
+  const dropped = [];
+  for (const sentence of sentences) {
+    const candidate = [...kept, sentence].join(". ") + ".";
+    if (candidate.length <= COMPLETE_FACET_CLIP) {
+      kept.push(sentence);
+      continue;
+    }
+    // It did not fit whole. Try the one documented short form.
+    if (SHORTENABLE.test(sentence) && meta.ratcheted) {
+      const short = `${meta.ratcheted} categories ratcheted (in report)`;
+      const withShort = [...kept, short].join(". ") + ".";
+      if (withShort.length <= COMPLETE_FACET_CLIP) {
+        kept.push(short);
+        dropped.push({ sentence, replaced_with: short });
+        continue;
+      }
+    }
+    dropped.push({ sentence });
+  }
+  facetLineOmitted.push(...dropped);
+  return kept.join(". ") + ".";
+}
+
+/**
+ * What the last fit had to leave off, so the gate can print it and the report
+ * can carry it. Module-level because composeFacetLine is a pure function the
+ * tests call directly; the gate reads and clears it around its own call.
+ */
+export const facetLineOmitted = [];
 
 /** The median of a numeric list. Odd counts get the middle value. */
 export function median(values) {
@@ -587,6 +615,30 @@ export function compareLighthouse(measured, floors = LIGHTHOUSE_FLOORS) {
   const breaches = [];
   const holes = [];
   const unmeasured = [];
+
+  // A run that measured NOTHING is the hole this whole function exists to catch,
+  // and the empty-array case is the one that reads most like a pass. Every loop
+  // below iterates over `measured`, so an empty array produced five empty lists
+  // and the gate's `failed` came out false: a browser that refused to launch, a
+  // target list that resolved to nothing, or a run interrupted before the first
+  // audit would all have exited GREEN, and composeFacetLine would still have
+  // printed a well-formed line about a measurement that never happened.
+  //
+  // Found by tests/gate-self-audit.test.mjs, which feeds this function an empty
+  // set precisely because it is the input a green gate is most likely to receive
+  // by accident.
+  if (!Array.isArray(measured) || measured.length === 0) {
+    holes.push({
+      id: "*",
+      category: "*",
+      message:
+        "no Lighthouse target was measured at all. An empty measurement set " +
+        "produces no regression and no hole by construction, so it would read " +
+        "as a clean run; it is the one input this function must refuse rather " +
+        "than pass.",
+    });
+    return { regressions, improvements, breaches, holes, unmeasured };
+  }
 
   for (const entry of measured) {
     const bar = floors[entry.id];

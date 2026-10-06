@@ -150,7 +150,32 @@ export function parseJobResult(text) {
     job: data.job,
     conclusion: data.conclusion,
     steps: { ...data.steps },
+    measurements: readMeasurements(data.measurements),
   };
+}
+
+/**
+ * What a job MEASURED, as distinct from what it concluded.
+ *
+ * A conclusion says a step passed. It does not say how many tests ran, how many
+ * browser gates fired, or what the tree's asset stamp was — and those are the
+ * numbers the run record quotes back to the judge. Carrying them on the
+ * artifact is what lets the record state a measured count instead of a typed
+ * one, which is the whole difference between a record that describes this run
+ * and a record that describes whichever run someone last remembered.
+ *
+ * Strict like the rest of this module: a malformed measurement is dropped and
+ * named rather than half-believed, because a count the record cannot verify is
+ * the exact defect this channel exists to remove.
+ */
+function readMeasurements(raw) {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return {};
+  const out = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (typeof value === "number" && Number.isFinite(value)) out[key] = value;
+    else if (typeof value === "string" && value.trim()) out[key] = value;
+  }
+  return out;
 }
 
 /**

@@ -145,32 +145,65 @@ function readGateReports(dir) {
     if (!parsed || typeof parsed !== "object") continue;
     if (!Array.isArray(parsed.facet_axes) || parsed.facet_axes.length === 0)
       continue;
-    if (typeof parsed.facet_line !== "string" || !parsed.facet_line.trim()) {
+    // ONE LINE PER AXIS, and this is the reason. A report may speak for several
+    // facets, and a single string applied to all of them says the same thing
+    // twice while answering neither: the experience walk's line is evidence
+    // about a first-run journey, and reusing it as the translation facet's line
+    // would file six locales of measured copy under a heading that never
+    // mentions a locale. So `facet_lines` maps an axis to the line composed FOR
+    // that axis, and `facet_line` remains the fallback for a gate that owns one.
+    const perAxis =
+      parsed.facet_lines && typeof parsed.facet_lines === "object"
+        ? parsed.facet_lines
+        : null;
+    const lineFor = (axis) => {
+      if (perAxis) {
+        // A report that composes per axis must compose EVERY axis. Falling back
+        // to the single line for one of them is the silent-wins failure with an
+        // extra step: the second facet's proof would be a copy of the first's.
+        return typeof perAxis[axis] === "string"
+          ? { line: perAxis[axis], from: `facet_lines.${axis}` }
+          : null;
+      }
+      // No per-axis map: one sentence may serve the report only while it speaks
+      // for one facet. Two axes off one string means the second facet's proof
+      // line is a duplicate of the first's, which is worse than no line.
+      if (parsed.facet_axes.length > 1)
+        return { line: null, from: "facet_line" };
+      return typeof parsed.facet_line === "string"
+        ? { line: parsed.facet_line, from: "facet_line" }
+        : null;
+    };
+    const missing = parsed.facet_axes.filter((a) => !lineFor(a)?.line?.trim());
+    if (missing.length) {
       problems.push(
-        `${name} declares facet_axes [${parsed.facet_axes.join(", ")}] but ` +
-          "carries no facet_line, so those axes get no proof line from the run " +
-          "that measured them",
+        `${name} declares facet_axes [${missing.join(", ")}] but carries no ` +
+          (parsed.facet_axes.length > 1 && !perAxis
+            ? "line of its own for each. One sentence cannot be the proof line " +
+              "for two facets — a duplicate reads as a second measurement, and " +
+              "the facet it actually describes is the one that gets read. Use " +
+              "`facet_lines`"
+            : "line for them, so those axes get no proof line from the run that " +
+              "measured them"),
       );
       continue;
     }
-    // The clip is enforced here, loudly. A line that overflows is SILENTLY cut
-    // on its way to the judge, and for this cluster the honest tail is exactly
-    // what gets cut — so an over-long line is a named problem, not a trim.
-    if (parsed.facet_line.length > COMPLETE_FACET_CLIP) {
-      problems.push(
-        `${name} facet_line is ${parsed.facet_line.length} chars, over the ` +
-          `${COMPLETE_FACET_CLIP}-char per-axis clip; it would be cut in transit, ` +
-          "which would silently drop the part that says how to read it",
-      );
-      continue;
-    }
+    // The clip is enforced here, loudly, and PER LINE. A line that overflows is
+    // SILENTLY cut on its way to the judge, and for this cluster the honest tail
+    // is exactly what gets cut — so an over-long line is a named problem, not a
+    // trim. Checked per axis because two axes from one gate are two sentences
+    // the judge reads separately, and either can be the one that overflows.
     for (const axis of parsed.facet_axes) {
-      reports.push({
-        axis,
-        line: parsed.facet_line,
-        source: name,
-        metric: parsed.metric,
-      });
+      const { line, from } = lineFor(axis);
+      if (line.length > COMPLETE_FACET_CLIP) {
+        problems.push(
+          `${name} ${from} is ${line.length} chars, over the ` +
+            `${COMPLETE_FACET_CLIP}-char per-axis clip; it would be cut in ` +
+            "transit, which would silently drop the part that says how to read it",
+        );
+        continue;
+      }
+      reports.push({ axis, line, source: name, metric: parsed.metric });
     }
   }
   return { reports, problems };
@@ -196,12 +229,68 @@ function readArtifacts(dir) {
         job: parsed.job,
         conclusion: parsed.conclusion,
         steps: parsed.steps,
+        measurements: parsed.measurements || {},
       };
     } else {
       ignored.push(name);
     }
   }
   return { artifacts, ignored };
+}
+
+/**
+ * The fields of the prose record that may quote a measured count, and so may
+ * carry `{{placeholders}}`.
+ *
+ * A count is the one thing in this record that is true only on the day it was
+ * measured. Typed, it goes stale silently and nobody notices, because a stale
+ * count still reads as a confident sentence. Composed from the run, it cannot.
+ */
+export const COMPOSABLE_FIELDS = [
+  "tests_summary",
+  "ci_summary",
+  "smoke_note",
+  "seo_summary",
+];
+
+const PLACEHOLDER = /\{\{([a-z0-9_]+)\}\}/g;
+
+/**
+ * Replace `{{name}}` in the composable prose fields with what the run measured.
+ *
+ * Fails closed, and this is the important part: a placeholder no artifact
+ * answered is a NAMED problem, and the literal is left visible rather than
+ * silently blanked or quietly dropped. A judge reading "the browser smoke runs
+ * {{smoke_gates_total}} gates" learns the record is unfinished; a judge reading
+ * a smoothed-over sentence learns nothing at all.
+ */
+export function composeMeasuredCounts(prose, artifacts) {
+  const measured = {};
+  for (const art of Object.values(artifacts || {})) {
+    for (const [k, v] of Object.entries(art.measurements || {}))
+      measured[k] = v;
+  }
+  const problems = [];
+  const filled = { ...prose };
+  for (const field of COMPOSABLE_FIELDS) {
+    const text = filled[field];
+    if (typeof text !== "string" || !PLACEHOLDER.test(text)) {
+      PLACEHOLDER.lastIndex = 0;
+      continue;
+    }
+    PLACEHOLDER.lastIndex = 0;
+    filled[field] = text.replace(PLACEHOLDER, (whole, name) => {
+      if (Object.hasOwn(measured, name) && measured[name] !== null)
+        return String(measured[name]);
+      problems.push(
+        `\`${field}\` quotes {{${name}}}, which no artifact on this run ` +
+          "measured, so the record would reach the judge with the number still " +
+          "unresolved — write the number the run measured, or drop the claim",
+      );
+      return whole;
+    });
+  }
+  return { prose: filled, problems, measured };
 }
 
 export function main(argv = process.argv.slice(2)) {
@@ -232,6 +321,12 @@ export function main(argv = process.argv.slice(2)) {
 
   let preReportNote = null;
   const { artifacts, ignored } = readArtifacts(opts.artifacts);
+  // The measured counts, composed from the run rather than typed, BEFORE any
+  // proof line is built: a facet line is allowed to quote them, and it may only
+  // do so if the number came from this run.
+  const composed = composeMeasuredCounts(prose, artifacts);
+  prose = composed.prose;
+  const countProblems = composed.problems;
   // Facet proof lines DERIVED from the gate reports this run produced, rather
   // than read from the prose file. Discovered, not listed: a new gate that
   // declares facet_axes becomes visible to the judge with no edit here.
@@ -256,7 +351,7 @@ export function main(argv = process.argv.slice(2)) {
   // The required set, from the workflow's own declarations rather than a list
   // kept beside this script: a gate the workflow runs and the record has never
   // heard of is exactly how ci_green came to read true on a red run.
-  const preProblems = [...reportProblems];
+  const preProblems = [...reportProblems, ...countProblems];
   let requiredJobs = [];
   try {
     requiredJobs = requiredJobsFromWorkflow(readFileSync(WORKFLOW, "utf8"));

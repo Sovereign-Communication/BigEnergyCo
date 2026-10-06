@@ -3,7 +3,13 @@
 // gate reporter. Flows import { start, gate, gateSummary } — nothing here
 // knows what a "gate" means for the product.
 import { spawn } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -26,19 +32,58 @@ export const isCsp = (e) =>
   );
 
 let failures = 0;
+let total = 0;
 
 export function gate(name, ok, extra = "") {
   console.log(
     `${ok ? "SMOKE OK    " : "SMOKE FAIL  "}${name}${extra ? " — " + extra : ""}`,
   );
+  total++;
   if (!ok) failures++;
 }
 
+/**
+ * Persist what this run actually measured, so no record has to type it.
+ *
+ * The evidence record used to carry a hand-written "the browser smoke runs 153
+ * gates ... 153 pass", which was true on the day it was written and false on
+ * every day after: the count moved with the suite and nothing recomputed it.
+ * That is not a stale sentence, it is the substrate every facet's proof line
+ * sits on, and a judge that finds it contradicted by the tree has reason to
+ * doubt all of them. So the runner that KNOWS the count writes it, and the
+ * record reads it (scripts/check-evidence-freshness.mjs refuses a typed one).
+ */
+function writeMeasurement() {
+  try {
+    const dir = join(process.cwd(), "jev-artifacts");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, "smoke-measurement.json"),
+      JSON.stringify(
+        {
+          measured_by: "scripts/smoke/runtime.mjs gate()",
+          gates_total: total,
+          gates_failed: failures,
+          gates_passed: total - failures,
+        },
+        null,
+        2,
+      ) + "\n",
+      "utf8",
+    );
+  } catch {
+    // A measurement that cannot be written is not a reason to fail a run that
+    // already reported its verdict on stdout; it is a reason the record will
+    // have no measured count, which check-evidence-freshness.mjs then says so.
+  }
+}
+
 export function gateSummary() {
+  writeMeasurement();
   console.log(
     failures
-      ? `\n${failures} SMOKE GATE(S) FAILED`
-      : "\nALL SMOKE GATES PASSED",
+      ? `\n${failures} SMOKE GATE(S) FAILED of ${total}`
+      : `\nALL SMOKE GATES PASSED (${total} gates)`,
   );
   return failures ? 1 : 0;
 }

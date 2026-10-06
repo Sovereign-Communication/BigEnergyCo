@@ -1,0 +1,207 @@
+{
+  "version": 1,
+  "policy": "Every assumption that reaches a displayed number is listed here exactly once, with the publisher behind it, a URL a visitor can open, a grade saying how well that publisher's figure matches the value we ship, and the date the value was checked. A value with no honest source carries source: null and an explicit reason. It is never omitted, and never dressed up with a citation that does not actually support it — a registry that invents provenance is worse than one that admits a gap, because a reader cannot tell which entries to trust.",
+  "grades": {
+    "A": "the cited publisher's published figure IS the value we ship",
+    "B": "the value sits inside the range the publisher publishes, at a stated position in it",
+    "C": "the publisher supports the order of magnitude and the direction, not the figure",
+    "unknown": "no publisher we can name stands behind this number; it is our estimate"
+  },
+  "sources": {
+    "nasa_power": {
+      "publisher": "NASA POWER Project, Langley Research Center",
+      "title": "POWER Hourly API — solar irradiance and ambient temperature",
+      "url": "https://power.larc.nasa.gov/",
+      "as_of": "2026-10-05",
+      "license": "Public domain (US Government work)"
+    },
+    "eia_retail": {
+      "publisher": "US Energy Information Administration",
+      "title": "Electric Power Monthly — state average retail price of electricity",
+      "url": "https://www.eia.gov/electricity/monthly/",
+      "as_of": "2026-08-01",
+      "license": "US Government public domain"
+    },
+    "iso_4217": {
+      "publisher": "International Organization for Standardization",
+      "title": "ISO 4217 — Currency codes",
+      "url": "https://www.iso.org/iso-4217-currency-codes.html",
+      "as_of": "2026-10-05",
+      "license": "ISO standard, free to access"
+    },
+    "iso_3166": {
+      "publisher": "International Organization for Standardization",
+      "title": "ISO 3166-1 — Country codes",
+      "url": "https://www.iso.org/iso-3166-country-codes.html",
+      "as_of": "2026-10-05",
+      "license": "ISO standard, free to access"
+    },
+    "open_er_api_fx": {
+      "publisher": "open.er-api.com",
+      "title": "Exchange rate API — live USD rates",
+      "url": "https://www.exchangerate-api.com/",
+      "as_of": "live per request",
+      "license": "Free tier, terms at the linked site"
+    },
+    "nrel_degradation": {
+      "publisher": "NREL — PV Lifetime Project",
+      "title": "Photovoltaic Degradation Rate Study",
+      "url": "https://www.nrel.gov/pv/lifetime-project.html",
+      "as_of": "2026-10-05",
+      "license": "US Government / public domain"
+    },
+    "fraunhofer_pv": {
+      "publisher": "Fraunhofer ISE Photovoltaics Report",
+      "title": "Photovoltaics Report — efficiencies, prices and LCOE",
+      "url": "https://www.ise.fraunhofer.de/en/publications/studies/photovoltaics-report.html",
+      "as_of": "2026-10-05",
+      "license": "Freely downloadable"
+    }
+  },
+  "assumptions": [
+    {
+      "id": "weather_irradiance",
+      "family": "Hourly solar irradiance and ambient temperature",
+      "shown_as": "sunshine hours, annual kWh per kW, weather year range",
+      "used_by": ["assets/js/sizing/nasa.js:POWER_HOURLY_URL"],
+      "source": "nasa_power",
+      "grade": "A",
+      "disclosure": "Live API. The page names the years and the record count it received; offline profiles are labelled offline in the payload and on screen."
+    },
+    {
+      "id": "us_state_tariffs",
+      "family": "US state average retail electricity price, cents per kWh",
+      "shown_as": "the energy cost rate when a US state is chosen",
+      "used_by": ["assets/js/sizing/pricing.js:US_STATES"],
+      "source": "eia_retail",
+      "grade": "B",
+      "disclosure": "State AVERAGES. A real utility in that state can differ materially, and the page says so where the rate is shown."
+    },
+    {
+      "id": "intl_tariff_regions",
+      "family": "Energy cost rate outside the US, by 5-degree grid region",
+      "shown_as": "the energy cost rate for a non-US site",
+      "used_by": ["assets/js/sizing/pricing.js:PRICING_SCOPES", "assets/js/sizing/pricing.js:POWMR_CATALOG"],
+      "source": null,
+      "grade": "unknown",
+      "disclosure": "OUR ESTIMATE, and the weakest input on the page. There is no free, current, per-country equivalent of the EIA table, so these are hand-set planning ranges. The page labels them as estimates and every figure derived from them inherits that uncertainty."
+    },
+    {
+      "id": "fx_live",
+      "family": "USD exchange rate used to show the bill in the visitor's currency",
+      "shown_as": "every amount in a non-USD currency",
+      "used_by": ["assets/js/sizing/ui.js:refreshFxRates"],
+      "source": "open_er_api_fx",
+      "grade": "A",
+      "disclosure": "Fetched live, and the date the API itself reports is shown on the page ('Live rates as of <date>'). When the fetch fails the page says so and falls back to built-in rates, labelled indicative."
+    },
+    {
+      "id": "fx_fallback",
+      "family": "Built-in USD exchange rates used only when the live fetch fails",
+      "shown_as": "amounts in a non-USD currency, labelled indicative",
+      "used_by": ["assets/js/sizing/pricing.js:CURRENCIES"],
+      "source": "iso_4217",
+      "grade": "C",
+      "disclosure": "ISO 4217 fixes the CODE and its name, not the rate. The rates themselves are our snapshot. The page says these are indicative whenever they are used, so a visitor is never shown a stale rate as a live one."
+    },
+    {
+      "id": "country_currency_map",
+      "family": "Which currency a country shows in",
+      "shown_as": "the currency symbol and code on every amount",
+      "used_by": ["assets/js/sizing/country-currency.js:COUNTRY_CURRENCY"],
+      "source": "iso_3166",
+      "grade": "A",
+      "disclosure": "Countries are matched by ISO 3166-1 alpha-2 code, resolved from the site's own coordinates rather than a bounding box, so a country cannot be guessed from a corner of a map."
+    },
+    {
+      "id": "panel_degradation",
+      "family": "Annual array output loss",
+      "shown_as": "year-by-year production and lifetime cost",
+      "used_by": ["assets/js/sizing/paths.js:DEGRADATION"],
+      "source": "nrel_degradation",
+      "grade": "B",
+      "disclosure": "2% first-year and 0.5%/yr thereafter, inside the range NREL reports for current modules. The first-year step is larger than the annual one because that is how degradation actually behaves, and the card shows both."
+    },
+    {
+      "id": "inverter_efficiency",
+      "family": "DC to AC conversion efficiency",
+      "shown_as": "system output, payback, lifetime cost",
+      "used_by": ["assets/js/sizing/engine.js:ETA_INVERTER"],
+      "source": "fraunhofer_pv",
+      "grade": "B",
+      "disclosure": "94% continuous, consistent with current residential string inverters. String, not microinverter; a microinverter system is modelled differently and is not what this figure describes."
+    },
+    {
+      "id": "round_trip_efficiency",
+      "family": "Battery charge/discharge round trip",
+      "shown_as": "usable capacity, autonomy hours, outage coverage",
+      "used_by": ["assets/js/sizing/engine.js:ROUND_TRIP_DEFAULT"],
+      "source": "fraunhofer_pv",
+      "grade": "C",
+      "disclosure": "92% is our planning figure for a lithium system including inverter and BMS overhead. It is NOT taken from a datasheet and is the most optimistic end of the plausible band."
+    },
+    {
+      "id": "panel_temperature_coefficient",
+      "family": "Module output loss per degree above nominal cell temperature",
+      "shown_as": "summer production, peak-hour output",
+      "used_by": ["assets/js/sizing/engine.js:GAMMA_PMAX"],
+      "source": null,
+      "grade": "unknown",
+      "disclosure": "OUR ESTIMATE (-0.34%/°C). The comment in engine.js records the plausible range as -0.29 to -0.40 but names no publisher, so we cite none. A visitor reading a hot-climate number should treat it as an estimate."
+    },
+    {
+      "id": "module_price",
+      "family": "Panel, battery and inverter unit prices behind the BOM",
+      "shown_as": "hardware cost on every route",
+      "used_by": ["assets/js/sizing/pricing.js:PRICING_SCOPES", "assets/js/sizing/pricing.js:POWMR_CATALOG"],
+      "source": null,
+      "grade": "unknown",
+      "disclosure": "OUR ESTIMATE: shipped retail catalogue prices we recorded by hand, checked Aug 2026. No free public price index exists at this granularity, so there is no publisher to cite. This is why the comparison quotes a RANGE and shows three bands rather than one number."
+    },
+    {
+      "id": "installed_costs",
+      "family": "Installed system cost per region, by route",
+      "shown_as": "the turnkey, self-purchase and DIY prices side by side",
+      "used_by": ["assets/js/sizing/paths.js:REGION_ROWS"],
+      "source": null,
+      "grade": "unknown",
+      "disclosure": "OUR ESTIMATE, graded B per region because the ranges are wide and regional rather than per-quote. They come from installed-price surveys we read, but no single survey is published free at this resolution, so no URL is claimed. Every gap between the four routes is a difference between OUR two estimates, not between two measured prices, and the page says so."
+    },
+    {
+      "id": "incentives",
+      "family": "Tax credits, rebates and feed-in rates",
+      "shown_as": "the incentives line in every route's 20-year total",
+      "used_by": ["assets/js/sizing/paths.js:INCENTIVES"],
+      "source": null,
+      "grade": "unknown",
+      "disclosure": "OUR ESTIMATE. Incentives change constantly, eligibility is per household and per jurisdiction, and we do not verify a visitor's eligibility. The route that receives them is shown explicitly so the reader can discount them."
+    },
+    {
+      "id": "battery_labour",
+      "family": "Battery replacement labour, by region",
+      "shown_as": "the replacement line in the 20-year total",
+      "used_by": ["assets/js/sizing/paths.js:BANK_LABOUR_PER_KWH"],
+      "source": null,
+      "grade": "unknown",
+      "disclosure": "OUR ESTIMATE by region. Sourced to nothing, and flagged as such in the path text itself."
+    },
+    {
+      "id": "lease_terms",
+      "family": "PPA and lease escalators and terms",
+      "shown_as": "the lease route's payment line and end-of-term choice",
+      "used_by": ["assets/js/sizing/paths.js:LEASE_TERMS"],
+      "source": null,
+      "grade": "unknown",
+      "disclosure": "OUR ESTIMATE from published ranges, not from any one provider's disclosed contract. The end-of-term buyout is priced inside the 20-year total so the lease is compared on the same horizon as the routes a visitor owns."
+    },
+    {
+      "id": "cycle_life",
+      "family": "Battery cycle-life curves by chemistry",
+      "shown_as": "warranty years, replacements in the 20-year total",
+      "used_by": ["assets/js/sizing/engine.js:CYCLE_LIFE_CURVES"],
+      "source": null,
+      "grade": "unknown",
+      "disclosure": "OUR ESTIMATE, set so the replacement schedule is plausible rather than optimistic. A datasheet warranty is a floor, not an expectation, and the curve is deliberately more conservative than the warranty it is judged against."
+    }
+  ]
+}

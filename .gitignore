@@ -37,6 +37,13 @@ cloudflared.exe
 skills-lock.json
 node_modules/
 
+# Job results and measurements a local run writes for the Jev gate's evidence
+# builder (scripts/run-tests.mjs, scripts/smoke/runtime.mjs,
+# scripts/check-privacy-browser.mjs). A local measurement of THIS tree; in CI the
+# same files are uploaded as artifacts and composed into the record there. Never
+# committed, because a committed one would be a stale count by definition.
+jev-artifacts/
+
 # Local run logs from the deploy and smoke passes.
 *.log
 

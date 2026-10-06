@@ -15,6 +15,9 @@
 export const POWER_HOURLY_URL =
   "https://power.larc.nasa.gov/api/temporal/hourly/point";
 
+// One owner of the coordinate precision, shared with every other egress.
+import { roundCoords } from "../shared/coords.js?v=20261005h";
+
 // A satellite request that hangs must never hold the sizing hostage: after
 // this long with no answer, abort and let the caller fall back to bundled
 // typical-year weather for the nearest city (with an honest offline flag).
@@ -110,9 +113,13 @@ export async function fetchHourlySeries({
 }
 
 export function buildUrl(latitude, longitude, start, end) {
+  // Rounded here, on the device, because this string IS the request that
+  // leaves it. cacheKey rounds too, but that only builds a cache key and
+  // never touched the wire, so the raw metre-accurate fix used to go to NASA.
+  const c = roundCoords(latitude, longitude);
   return (
     `${POWER_HOURLY_URL}?parameters=ALLSKY_SFC_SW_DWN,T2M` +
-    `&community=RE&latitude=${latitude}&longitude=${longitude}` +
+    `&community=RE&latitude=${c.lat}&longitude=${c.lon}` +
     `&start=${start}&end=${end}&format=JSON`
   );
 }
@@ -276,9 +283,10 @@ export async function clearCompactCache(latitude, longitude, years = 5) {
 }
 
 export function cacheKey(lat, lon, years) {
-  const rlat = lat.toFixed(2),
-    rlon = lon.toFixed(2); // ~1.1 km grid
-  return `${CACHE_PREFIX}${rlat},${rlon},${years}y`;
+  // Same owner as the request URL, so the cache can never key on a precision
+  // the wire does not use.
+  const c = roundCoords(lat, lon); // ~1.1 km grid
+  return `${CACHE_PREFIX}${c.lat},${c.lon},${years}y`;
 }
 
 /** The exact year window fetchHourlySeries would request right now. */

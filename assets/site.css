@@ -1152,6 +1152,29 @@ textarea:focus-visible {
   margin-bottom: 1.5rem;
 }
 
+/* ── Use-case form utilities ────────────────────────────────────────────────
+   Added with the six-case chooser (D-16) so the new markup spends ZERO inline
+   style attributes: check-quality.mjs freezes that count as a ratchet, and a
+   feature that needs four looks repeated four times needs four named classes
+   instead. */
+.uc-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+.uc-value {
+  font-weight: 800;
+  color: var(--primary-accent);
+}
+
+.uc-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .form-group label {
   display: block;
 
@@ -1386,6 +1409,27 @@ textarea:focus-visible {
   font-size: 0.9rem;
 
   margin-bottom: 1.25rem;
+}
+
+/* The provenance link. It is the one place the product hands the visitor the
+ * audit trail itself, so it is a real link and not a styled div: a reader
+ * should be able to open it in a new tab, copy it, or send it to someone
+ * arguing about whether the numbers are made up. */
+.sources-link {
+  color: var(--primary-accent);
+
+  font-size: 0.85rem;
+
+  font-weight: 500;
+
+  text-decoration: underline;
+
+  text-underline-offset: 3px;
+}
+
+.sources-link:hover,
+.sources-link:focus-visible {
+  color: var(--primary);
 }
 
 /* Modals */
@@ -1862,6 +1906,120 @@ footer {
   font-size: 0.88rem;
   color: var(--text-main);
   line-height: 1.45;
+}
+
+/* ── The four ways to pay (D-01 §6.4) ──────────────────────────────────────
+   Four cards of the SAME system side by side, so a reader can compare two
+   real prices instead of two descriptions of what each side counts. */
+#pathsPanel h3 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 0.3rem;
+}
+.paths-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 0.7rem;
+}
+.paths-instr {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.8rem;
+}
+.paths-instr select {
+  background: rgba(9, 13, 22, 0.9);
+  color: var(--text-main);
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+}
+.paths-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.8rem;
+}
+.paths-card {
+  background: rgba(9, 13, 22, 0.75);
+  border: 1px solid var(--border-card);
+  border-radius: 10px;
+  padding: 0.85rem 0.95rem;
+}
+.paths-card h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.paths-card-best {
+  border-color: var(--primary-accent);
+  box-shadow: 0 0 0 1px var(--primary-accent) inset;
+}
+.paths-card-off {
+  opacity: 0.72;
+}
+.paths-best-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary-accent);
+}
+.paths-upfront {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.15rem;
+}
+.paths-total {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+.paths-rows {
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+.paths-rows dt {
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+.paths-rows dd {
+  color: var(--text-main);
+  margin: 0;
+}
+.paths-counts {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary-accent);
+  margin: 0.6rem 0 0.25rem;
+}
+.paths-card ul {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+  padding-left: 1.05rem;
+}
+.paths-why,
+.paths-off {
+  font-size: 0.75rem;
+  color: var(--text-main);
+  line-height: 1.45;
+  margin-top: 0.55rem;
+}
+.paths-grade {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-top: 0.7rem;
 }
 
 /* Balance-of-System Checklist */

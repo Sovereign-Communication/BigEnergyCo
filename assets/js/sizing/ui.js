@@ -13,14 +13,25 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261003d";
+import { APPLIANCES } from "./appliances.js?v=20261005h";
+import {
+  USE_CASES,
+  USE_CASE_IDS,
+  useCase,
+  deriveLegacy,
+  loadsFor,
+  normaliseReservePct,
+  normaliseOutageTarget,
+  DEFAULT_RESERVE_PCT,
+  DEFAULT_TOU,
+} from "./usecases.js?v=20261005h";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261003d";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261003d";
+} from "./run-coordinator.js?v=20261005h";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261005h";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -29,12 +40,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261003d";
+} from "./charts.js?v=20261005h";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261003d";
+} from "./location-picker.js?v=20261005h";
 
 import {
   estimateTariff,
@@ -42,27 +53,65 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261003d";
+} from "./pricing.js?v=20261005h";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261003d";
+import { currencyForCountry } from "./country-currency.js?v=20261005h";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261003d";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261005h";
+
+// THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
+//
+// LAZY, and the measurement is why. It used to be a static import, on the
+// reasoning that the ELI5 card's installer-vs-direct sentence and the
+// comparison panel both read it on first paint. The browser says otherwise:
+// paths.js is fetched and parsed BEFORE the first result card renders, and the
+// plan's own js_to_first_result budget read 201,806 B against a 204,800 B cap
+// on the tree that shipped this — 2,994 B of headroom, of which paths.js was
+// 10,310 B. A pricing model nobody can see yet was sitting on the critical
+// path for a section that renders after the result does.
+//
+// The D-01 objection is answered structurally, not waved away: BOTH surfaces
+// that read the model (the panel and the ELI5 sentence) are rendered inside
+// ONE await, after the module resolves, in the same tick. So there is never a
+// window in which the page shows a guessed quote and then corrects it — which
+// was the exact defect D-01 exists to remove. The module resolves in a few
+// milliseconds from cache and the whole comparison appears at once, priced by
+// one owner.
+let pathsApi = null;
+// The one place the horizon crosses into the copy. A bare binding rather than
+// pathsApi.HORIZON_YEARS because turnkeyQuoteText is exported and sliced out
+// of this file by tests/quote-text-bridge.mjs, which supplies the horizon as an
+// injected argument; renaming it would silently unbind the test. The VALUE has
+// one owner (paths.js) either way, and no surface renders before the module has
+// resolved.
+let PATHS_HORIZON_YEARS = null;
+let pathsLoading = null;
+function loadPaths() {
+  if (pathsApi) return Promise.resolve(pathsApi);
+  if (!pathsLoading)
+    pathsLoading = import("./paths.js?v=20261005h").then((mod) => {
+      pathsApi = mod;
+      PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
+      return mod;
+    });
+  return pathsLoading;
+}
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261003d";
+} from "./lead-acid.js?v=20261005h";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261003d";
+} from "./bom.js?v=20261005h";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261003d";
+import { BOM_ITEMS } from "../shared/content.js?v=20261005h";
 
 import {
   applyI18n,
@@ -71,18 +120,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261003d";
+} from "../shared/i18n.js?v=20261005h";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261003d";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261003d";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261005h";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261005h";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261003d";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261003d";
+} from "../shared/simple-mode.js?v=20261005h";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261005h";
 import {
   advisorJevContext,
   interpretSanity,
@@ -90,56 +139,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261003d";
+} from "./validate.js?v=20261005h";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261003d";
+} from "../shared/cut-targets.js?v=20261005h";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261003d";
+} from "./share-codec.js?v=20261005h";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261003d";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261003d";
+} from "./infeasible-copy.js?v=20261005h";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261005h";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261003d";
+} from "./fuel-units.js?v=20261005h";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261003d";
+} from "./frontier-chart.js?v=20261005h";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261003d";
+} from "./rescale.js?v=20261005h";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261003d";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261005h";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20261003d";
+} from "./map-provider.js?v=20261005h";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261003d";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261003d";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261003d";
+} from "./wizard.js?v=20261005h";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261005h";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261005h";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -188,9 +237,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261003d";
+} from "./money.js?v=20261005h";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261003d";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261005h";
 
 let worker = null;
 
@@ -237,6 +286,14 @@ let customCutFraction = 0.8;
 // shows: "best" | "focus" (adopted curve point) | "matrix:chem:colId" | "custom" |
 // "adopted" (a curve point adopted instantly, without a full re-run).
 let selectedKey = "best";
+
+// Purchase-path comparison state (D-01 §6.4). Declared up here with the rest
+// of the module state because setCoords() resets the cache long before this
+// file's first function definition \u2014 a `let` further down would be a temporal
+// dead zone waiting for someone to wire up a new caller.
+let pathsCache = { key: null, result: null }; // priced per selection; two callers ask
+let pathsInstrument = "ppa"; // ppa buys ENERGY; lease rents the SYSTEM
+let resolvedCountry = null; // picks the price registry
 
 // The exact system the visitor just clicked on the price curve. Adopting it
 // is instant (its full analysis rides along in the cached frontier point);
@@ -296,10 +353,19 @@ function handleRunDeadline() {
   // retried against a fresh worker; otherwise retire the timed-out sequence
   // and leave recovery to the visitor. Every branch releases through the
   // same funnel.
+  //
+  // `abandon()` and not `invalidate()`, and the difference is the whole reason
+  // this recovery works. The worker above has been terminated, so no reply is
+  // ever coming; invalidate() leaves the channel BUSY (correctly, for the
+  // pre-calculation edit path, where a run really is still running), and a busy
+  // channel sends the visitor's next click straight into the collapse branch
+  // where it returns without starting anything. The page then says "click Size
+  // My System to try again" above a button that cannot be retried, which is the
+  // exact failure the deadline exists to end.
   if (current) {
     setStatus(t("errorTimeout"));
     pipelineStop(false);
-    if (!hasPendingRun) runChannel.invalidate();
+    if (!hasPendingRun) runChannel.abandon();
   }
   flushPendingRun();
 }
@@ -669,6 +735,375 @@ function setupSimpleMode() {
 
 // Simple mode's single results surface. Reads the same payload and the same
 // selected entry the technical cards render — the numbers cannot diverge.
+// ── Use cases: the one vocabulary the visitor sees ─────────────────────────
+//
+// Everything below reads assets/js/sizing/usecases.js and nothing else
+// defines what a use case is. The six blocks in index.html are shown or
+// hidden from the registry's own `inputsFor`, so a use case cannot be added
+// to the engine without also being asked of the visitor, and cannot be asked
+// of the visitor without a place to put the answer.
+
+// F-13: the essential-load catalogue the plan names. Typical running watts
+// and typical daily hours — the same conventions appliances.js already
+// documents for cycling loads, stated here so the sum is auditable.
+const ESSENTIAL_LOADS = [
+  { id: "fridge", w: 100, hours: 10, label: "Fridge" },
+  { id: "freezer", w: 100, hours: 8, label: "Freezer" },
+  { id: "lights", w: 60, hours: 6, label: "Lights" },
+  { id: "router", w: 15, hours: 24, label: "Router / internet" },
+  { id: "phones", w: 10, hours: 3, label: "Phone charging" },
+  { id: "cpap", w: 40, hours: 8, label: "CPAP / medical" },
+  { id: "laptop", w: 45, hours: 4, label: "Laptop" },
+  { id: "tv", w: 100, hours: 3, label: "Television" },
+  { id: "wellpump", w: 400, hours: 1, label: "Water pump" },
+];
+
+// F-16: the portable device catalogue. Same shape, and deliberately small:
+// this is what a van or a boat actually runs, not a second household.
+const PORTABLE_DEVICES = [
+  { id: "phone", w: 12, hours: 3, label: "Phones" },
+  { id: "laptop", w: 45, hours: 4, label: "Laptop" },
+  { id: "lights", w: 25, hours: 5, label: "Lights" },
+  { id: "fridge", w: 60, hours: 10, label: "Fridge" },
+  { id: "router", w: 12, hours: 24, label: "Router" },
+  { id: "coffee", w: 900, hours: 1, label: "Coffee maker" },
+  { id: "blender", w: 400, hours: 0.5, label: "Blender" },
+  { id: "tv", w: 80, hours: 2, label: "Television" },
+  { id: "tools", w: 500, hours: 1, label: "Power tools" },
+];
+
+function selectedUseCase() {
+  const el = $("useCase");
+  const id = el && el.value;
+  return useCase(id) ? id : "billcut";
+}
+
+/** The kWh/day a checked set of catalogue rows asks for. */
+function catalogueKwh(list, prefix) {
+  let wh = 0;
+  for (const row of list) {
+    const node = $(row.id + prefix);
+    if (node && node.checked) wh += row.w * row.hours;
+  }
+  return wh / 1000;
+}
+
+function renderCatalogue(list, hostId, prefix) {
+  const host = $(hostId);
+  if (!host) return;
+  host.innerHTML = "";
+  for (const row of list) {
+    const id = row.id + prefix;
+    const label = el("label", {
+      style:
+        "display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;font-weight:600;cursor:pointer",
+    });
+    const box = el("input", { type: "checkbox", id, value: String(row.w) });
+    // Fridge, lights and router are the answer for most people; pre-checking
+    // the three that are always on is a starting point, not a claim.
+    if (["fridge", "lights", "router", "phone"].includes(row.id))
+      box.checked = true;
+    box.addEventListener("change", () => markPrecalcDirty());
+    label.appendChild(box);
+    label.appendChild(
+      el(
+        "span",
+        {},
+        `${row.label} (${row.w} W${row.hours < 24 ? ` × ${row.hours} h` : ""})`,
+      ),
+    );
+    host.appendChild(label);
+  }
+}
+
+/**
+ * Apply a use case: derive the legacy enum pair from it, sync the hidden
+ * selects, show only the inputs this case declares, and say what it is for.
+ *
+ * The hidden selects are still dispatched, because every existing listener
+ * downstream (auto rows, cut labels, chemistry dimming) hangs off them. That
+ * is the point of deriving rather than replacing: the F-17 collapse happens
+ * at this one boundary, and nothing below it has to change.
+ */
+function applyUseCase(id, { silent = false } = {}) {
+  const node = $("useCase");
+  const uc = useCase(id) ? id : "billcut";
+  if (node && node.value !== uc) node.value = uc;
+  const legacy = deriveLegacy(uc);
+
+  const goal = $("systemGoal");
+  if (goal) {
+    const next = legacy.mode === "offgrid" ? "offgrid" : "gridtie";
+    if (goal.value !== next) {
+      goal.value = next;
+      if (!silent) goal.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+  const hw = $("hardwareConfig");
+  if (hw) {
+    const next = legacy.hardwareConfig || "both";
+    if (hw.value !== next) {
+      hw.value = next;
+      if (!silent) hw.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+
+  // Only the declared inputs are visible. The registry decides, so a control
+  // cannot be shown for a case that does not read it.
+  const panels = {
+    touInputs: uc === "tou",
+    backupInputs: uc === "backup",
+    reserveInputs: uc === "reserve",
+    offgridInputs: uc === "offgrid",
+    portableInputs: uc === "portable",
+  };
+  for (const [id2, show] of Object.entries(panels)) {
+    const host = $(id2);
+    if (host) host.hidden = !show;
+  }
+
+  // Bill-cut's own inputs (the cut target) are meaningless for a case that
+  // does not report a bill cut.
+  const cutRow = $("cutSliderRow");
+  if (cutRow) cutRow.style.display = uc === "billcut" ? "" : "none";
+
+  const c = useCase(uc);
+  const blurb = $("useCaseBlurb");
+  if (blurb) blurb.textContent = c ? t(c.blurbKey) : "";
+
+  // Prefill the time-of-use rates from the documented default rather than
+  // leaving them blank: a blank field would make the honest verdict
+  // "unsolved" instead of the answer the visitor actually wants.
+  if (uc === "tou") prefillTouRates();
+  if (uc === "reserve") syncReserveLabel();
+  return uc;
+}
+
+function prefillTouRates() {
+  const rate = parseFloat($("customRateVal")?.value);
+  if (!Number.isFinite(rate) || rate <= 0) return false;
+  const peak = $("touPeakRate");
+  const off = $("touOffPeakRate");
+  if (peak && !peak.dataset.touched)
+    peak.value = (rate * DEFAULT_TOU.peakMultiplier).toFixed(4);
+  if (off && !off.dataset.touched)
+    off.value = (rate * DEFAULT_TOU.offPeakMultiplier).toFixed(4);
+  return true;
+}
+
+function syncReserveLabel() {
+  const out = $("reserveSliderVal");
+  const slider = $("reserveSlider");
+  if (!out || !slider) return;
+  const pct = normaliseReservePct(parseFloat(slider.value) / 100);
+  out.textContent = pct > 0 ? `${Math.round(pct * 100)}%` : t("reserveOff");
+}
+
+/** Every use-case input the run message needs, read from the live controls. */
+function useCaseInputs() {
+  const id = selectedUseCase();
+  const ess = catalogueKwh(ESSENTIAL_LOADS, "Ess");
+  const dev = catalogueKwh(PORTABLE_DEVICES, "Port");
+  return {
+    useCase: id,
+    reservePct: normaliseReservePct(
+      parseFloat($("reserveSlider")?.value) / 100,
+    ),
+    outageTargetHours: normaliseOutageTarget(
+      parseFloat($("outageTargetHours")?.value),
+    ),
+    essentialKwh: ess > 0 ? ess : null,
+    backupSolarRecharge: $("backupSolarRecharge")?.checked === true,
+    portableDeviceKwh: dev > 0 ? dev : null,
+    portableBankKwh: parseFloat($("portableBankKwh")?.value) || null,
+    portableShorePower: $("portableShorePower")?.checked === true,
+    touPeakRate: parseFloat($("touPeakRate")?.value) || null,
+    touOffPeakRate: parseFloat($("touOffPeakRate")?.value) || null,
+    generatorAllowed: $("generatorAllowed")?.checked !== false,
+  };
+}
+
+/**
+ * The use case's own result: its own metric, its own verdict, and the numbers
+ * the verdict rests on. Rendered from payload.useCaseOutcome, which only the
+ * registry can shape, so a case can never borrow another's headline.
+ */
+function renderUseCaseOutcome(p) {
+  const wrap = $("useCaseOutcomeWrap");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  const o = p && p.useCaseOutcome;
+  if (!o) return;
+  const c = useCase(o.useCase);
+  if (!c) return;
+
+  const card = el("div", {
+    style:
+      "margin-bottom:1rem;padding:1rem 1.1rem;border-radius:12px;border:1px solid var(--border-glow);background:rgba(0,230,153,0.06)",
+  });
+  card.appendChild(
+    el(
+      "div",
+      {
+        style:
+          "font-weight:800;font-size:0.95rem;margin-bottom:0.5rem;color:var(--text-main)",
+      },
+      t("useCaseOutcomeTitle", { useCase: t(c.labelKey) }),
+    ),
+  );
+
+  // The metric: one number, in the case's own unit.
+  const value =
+    o.unit === "tradeoff"
+      ? t("metricReserveTradeoffValue", {
+          lost: Math.round(o.value?.savingsLostPct ?? 0),
+          hours: Math.round(o.value?.coverHours ?? 0),
+        })
+      : `${Math.round(Number(o.value) || 0)}%`;
+  card.appendChild(
+    el(
+      "div",
+      {
+        style: "font-size:1.35rem;font-weight:800;color:var(--primary-accent)",
+      },
+      value,
+    ),
+  );
+  card.appendChild(
+    el(
+      "div",
+      {
+        style: "font-size:0.8rem;color:var(--text-muted);margin-bottom:0.6rem",
+      },
+      t(o.labelKey),
+    ),
+  );
+
+  // The verdict, in the case's own words, with the number that produced it.
+  if (!o.measured) {
+    card.appendChild(
+      el(
+        "p",
+        {
+          style:
+            "font-size:0.9rem;font-weight:700;color:var(--text-muted);margin:0 0 0.4rem",
+        },
+        t("useCaseNotMeasured", { metric: t(o.labelKey) }),
+      ),
+    );
+    wrap.style.display = "block";
+    wrap.appendChild(card);
+    return;
+  }
+  const tone =
+    o.status === "works"
+      ? "var(--primary-accent)"
+      : o.status === "partial"
+        ? "var(--text-main)"
+        : "var(--text-muted)";
+  card.appendChild(
+    el(
+      "p",
+      {
+        style: `font-size:0.9rem;font-weight:700;color:${tone};margin:0 0 0.4rem`,
+      },
+      t(o.reasonKey, verdictParams(o)),
+    ),
+  );
+  card.appendChild(
+    el(
+      "p",
+      {
+        style:
+          "font-size:0.8rem;color:var(--text-muted);margin:0;line-height:1.5",
+      },
+      t("useCaseVerdictFooter", {
+        useCase: t(c.labelKey),
+        metric: t(o.labelKey),
+      }),
+    ),
+  );
+  wrap.style.display = "block";
+  wrap.appendChild(card);
+}
+
+/** The measured numbers each verdict key interpolates, so no sentence invents one. */
+function verdictParams(o) {
+  const m = o.measurement || {};
+  const round = (v) => Math.round(Number(v) || 0);
+  return {
+    // The status word is a parameter, so one sentence per case reads correctly
+    // whether it is saying yes, half, or no. Three words, six languages.
+    status: t(
+      o.status === "works"
+        ? "statusWorks"
+        : o.status === "partial"
+          ? "statusPartial"
+          : "statusNotHere",
+    ),
+    metric: t(o.labelKey),
+    pct: round(o.unit === "tradeoff" ? m.reserveSavingsLostPct : o.value),
+    hours: round(m.backupHoursP50 ?? m.reserveCoverHours),
+    targetHours: round(m.backupTargetHours ?? m.outageTargetHours),
+    coverHours: round(m.reserveCoverHours),
+    saving: round(m.touSavingUsd20y),
+    cost: round(m.touBatteryCostUsd20y),
+    spread: (Number(m.touSpreadPerKwh) || 0).toFixed(2),
+    unmetHours: round(m.unmetHoursWorstYear),
+    autonomy: (Number(m.autonomyDays) || 0).toFixed(1),
+    runtime: round(m.portableAutonomyHours),
+    days: round(m.portablePoweredTrips),
+    trips: round(m.portableTrips),
+  };
+}
+
+/**
+ * Listeners for the one use-case chooser and the inputs it reveals. Split out
+ * so init() reads as wiring rather than as physics.
+ */
+function setupUseCaseChooser() {
+  const node = $("useCase");
+  if (node) {
+    node.addEventListener("change", () => {
+      const uc = applyUseCase(node.value);
+      markPrecalcDirty();
+      return uc;
+    });
+  }
+  const row = $("useCaseRow");
+  if (row) row.hidden = false;
+
+  for (const id of ["touPeakRate", "touOffPeakRate"]) {
+    const input = $(id);
+    if (input) {
+      input.addEventListener("input", () => {
+        input.dataset.touched = "1";
+        markPrecalcDirty();
+      });
+    }
+  }
+  for (const id of [
+    "outageTargetHours",
+    "portableBankKwh",
+    "reserveSlider",
+    "backupSolarRecharge",
+    "portableShorePower",
+    "generatorAllowed",
+  ]) {
+    const input = $(id);
+    if (input)
+      input.addEventListener("change", () => {
+        syncReserveLabel();
+        markPrecalcDirty();
+      });
+  }
+  // The default time-of-use split is a multiple of the visitor's own rate, so
+  // it has to be recomputed whenever the rate moves — until they edit it.
+  const rate = $("customRateVal");
+  if (rate) rate.addEventListener("input", () => prefillTouRates());
+  syncReserveLabel();
+}
+
 function renderSimpleResults(p) {
   const wrap = $("simpleResultsWrap");
   if (!wrap) return;
@@ -1025,6 +1460,36 @@ function syncBillSlider() {
 
 function displayRate() {
   return getTariff() || 0.28;
+}
+
+/**
+ * Repaint every surface whose text comes from the dictionary but whose node is
+ * built by JS rather than by `data-i18n` markup.
+ *
+ * This is the single owner of that class, and it is called from two places that
+ * must agree: once after `applyI18n()` resolves on first paint, and once per
+ * `beco:lang` change. The second call is what stops the page from showing two
+ * languages at once; the first is what stops it from showing a key at all.
+ *
+ * Both calls re-run existing painters rather than reaching into the DOM: the
+ * painters own their own selectors and their own fallbacks, so a surface cannot
+ * drift out of sync with the code that knows how to fill it.
+ */
+function repaintRuntimeCopy() {
+  updateFuelUnits();
+  updateGenHelper();
+  // The load readout and the use-case blurb are the two surfaces painted by JS
+  // during setup. Both read the DOM for their own state, so re-running them is
+  // idempotent and costs nothing.
+  setLoadPanel();
+  applyUseCase(selectedUseCase(), { silent: true });
+  // The results panel is assembled by JS, and applyI18n only rewrites
+  // data-i18n markup — so switching language left the caption, the tariff
+  // line and the frontier verdict in the previous language until the
+  // visitor happened to run again: one page, two languages. Re-rendering
+  // the payload the panel was built from costs nothing (no engine run, no
+  // fetch) and puts the whole surface in one language.
+  if (lastPayload) renderResults(lastPayload);
 }
 
 function updateLoadReadout() {
@@ -1761,6 +2226,13 @@ function setCoords(lat, lon, label, region, country, skipShareUpdate = false) {
     lastPayload = null;
   }
 
+  // The purchase-path registry is chosen by COUNTRY, and it is read long after
+  // this call \u2014 so the resolved value is stored here rather than re-derived
+  // when the comparison panel renders.
+  resolvedCountry =
+    resolveRegionCountry(lat, lon, region, country).country || null;
+  pathsCache = { key: null, result: null };
+
   applyEstimatedTariff(lat, lon, region, country);
 
   updateFuelUnits();
@@ -1847,16 +2319,25 @@ function updateCurrencyUnitLabel() {
   updateFuelUnits();
 }
 
+/**
+ * The region and country a bare coordinate sits in. ONE owner: the tariff
+ * estimate and the purchase-path price registry both need the resolved
+ * country, and two lookups that could drift would price a system in one
+ * country's registry and quote its bill in another's.
+ */
+function resolveRegionCountry(lat, lon, region, country) {
+  if (region || country || !Number.isFinite(lat) || !Number.isFinite(lon))
+    return { region, country };
+  const near = nearestCity(lat, lon, CITY_CATALOG, 80);
+  return near ? { region: near.r, country: near.country } : { region, country };
+}
+
 function applyEstimatedTariff(lat, lon, region, country) {
   if (tariffTouched) return;
 
-  if (!region && !country && Number.isFinite(lat) && Number.isFinite(lon)) {
-    const near = nearestCity(lat, lon, CITY_CATALOG, 80);
-    if (near) {
-      region = near.r;
-      country = near.country;
-    }
-  }
+  const resolved = resolveRegionCountry(lat, lon, region, country);
+  region = resolved.region;
+  country = resolved.country;
 
   const est = estimateTariff(lat, lon, region, country);
 
@@ -1891,7 +2372,12 @@ function applyEstimatedTariff(lat, lon, region, country) {
   const note = el(
     "div",
     { style: "font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;" },
-    `Electricity price estimated for ${est.label}${fx ? ` (~ ${est.rate.toFixed(2)} US$/kWh)` : ""} - change it above if you know your rate.`,
+    // Translated, not a template literal: all five translated tariffNote
+    // strings existed and nothing read them, so this one line is why the note
+    // rendered in English on every locale. The rate is appended outside the
+    // translated sentence so the placeholder set stays {label}, which is what
+    // every existing translation already carries.
+    `${t("tariffNote", { label: est.label })}${fx ? ` (~ ${est.rate.toFixed(2)} US$/kWh)` : ""}`,
   );
 
   const existing = document.getElementById("tariffNote");
@@ -2207,6 +2693,9 @@ function readInputs() {
     // #155: no-swap UI option — unchecked by default, so default behavior
     // is unchanged (the oversize/swap strategy stays on).
     noSwapMode: $("noSwapToggle")?.checked === true,
+    // The use case is the ONE choice; mode and hardwareConfig above are what
+    // it derives (applyUseCase), and these are its own inputs.
+    ...useCaseInputs(),
     soilingOverride: null,
     wiringOverride: readPercentInput("wiringOverride"),
     mpptOverride: readPercentInput("mpptOverride"),
@@ -3249,7 +3738,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261003d",
+      "./assets/js/sizing/sizing-worker.js?v=20261005h",
       {
         type: "module",
       },
@@ -3565,238 +4054,11 @@ function fxNote() {
   return `Amounts shown in ${fx.code} at ${fx.rate} per US$1. Energy cost rates and recommendations are converted to ${fx.code}; source price scopes remain USD-denominated.`;
 }
 
-function renderAutoCards(p) {
-  const grid = $("tierResults");
-
-  grid.innerHTML = "";
-
-  const isGT = p.mode === "gridtie";
-
-  // Highlight the recommended bank (sodium-first on safety; LFP only when
-  // genuinely cheaper — see pickBest), falling back to cheapest when the
-  // payload carries no recommendation.
-  let bestId = (p.best && p.best.chemistry) || null;
-  if (!bestId) {
-    let bestLife = Infinity;
-    for (const a of p.auto) {
-      if (a.solvable && a.lifetimeCostMid < bestLife) {
-        bestLife = a.lifetimeCostMid;
-        bestId = a.chemistry;
-      }
-    }
-  }
-
-  for (const a of p.auto) {
-    const isSelected = selectedKey === "auto:" + a.chemistry;
-
-    const card = el("div", {
-      class:
-        "bom-card" +
-        (a.solvable ? " card-selectable" : "") +
-        (isSelected ? " bom-card-selected" : ""),
-    });
-
-    if (a.solvable) {
-      card.setAttribute("role", "button");
-      card.setAttribute("tabindex", "0");
-      card.style.cursor = "pointer";
-      const selectCard = () => {
-        frontierSelected = null;
-        selectedKey = "auto:" + a.chemistry;
-        renderFrontierPanel(p);
-        refreshSelectionOutputs(p);
-        renderAutoCards(p);
-      };
-      card.addEventListener("click", selectCard);
-      card.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          selectCard();
-        }
-      });
-    }
-
-    card.style.borderColor = isSelected
-      ? "var(--primary-accent)"
-      : a.chemistry === bestId
-        ? "var(--border-glow)"
-        : "var(--border-card)";
-
-    card.appendChild(
-      el(
-        "div",
-        { class: "bom-badge" },
-        isGT && a.cutPct
-          ? a.pvKw > 0
-            ? `Bill -${a.cutPct}%`
-            : `${a.cutPct}% peak offset`
-          : "Same job done",
-      ),
-    );
-
-    card.appendChild(el("h3", {}, a.chemLabel));
-
-    if (!a.solvable) {
-      card.appendChild(
-        el("p", {}, "Not practical at this site/load within search limits."),
-      );
-
-      grid.appendChild(card);
-
-      continue;
-    }
-
-    const rows = [
-      ["Solar", `${a.pvKw} kW`],
-      ["Battery", `${fmt(a.battKwh)} kWh usable`],
-      ["Cost to buy", `~${moneyRange(a.costLo, a.costHi)}`],
-      [
-        "Battery swaps",
-        a.replacementsHorizon > 0
-          ? a.batteryLifeYears
-            ? `~${a.replacementsHorizon}x (about every ${fmtLife(a.batteryLifeYears)})`
-            : `~${a.replacementsHorizon}x`
-          : "None in 20 years",
-      ],
-    ];
-
-    const footAuto = footprintText(a.pvKw);
-
-    if (footAuto) rows.splice(2, 0, ["Footprint", footAuto]);
-
-    if (a.swapsAndLaborUsd > 0) {
-      rows.push(["Swaps + labor add", `~${money(a.swapsAndLaborUsd)}`]);
-    }
-
-    rows.push([
-      "Total 20-year cost",
-      `~${money(a.lifetimeCostMid)}` +
-        (a.chemistry === bestId && p.auto.filter((x) => x.solvable).length >= 2
-          ? " — recommended"
-          : ""),
-    ]);
-
-    pushSeriesBreakdown(rows, a);
-
-    if (isGT) {
-      rows.push([
-        a.pvKw > 0 ? "Bill after solar" : "Bill after",
-        fmtBillAfter(a.billAfterMonthlyUsd) ?? "needs your tariff",
-      ]);
-
-      rows.push([
-        "Sun clipped (no export)",
-        `${fmt(a.clippedKwhPerYear)} kWh/yr`,
-      ]);
-
-      if (a.exportValueAnnualUsd > 0) {
-        rows.push([
-          "Feed-in credit on clipped sun",
-          `+${money(a.exportValueAnnualUsd)}/yr`,
-        ]);
-      }
-    }
-
-    // Headline economics: TRUE break-even counts every swap. When a bank
-
-    // wears out fast enough that it never catches up, say so outright.
-
-    // undefined = stale payload (contract warning already shown) ? omit row.
-
-    if (p.tariff && a.trueBreakEvenYear !== undefined) {
-      if (typeof a.trueBreakEvenYear === "number") {
-        rows.push(["Pays for itself", `Year ${a.trueBreakEvenYear}`]);
-
-        if (a.replacementsHorizon > 0 && a.paybackYearsLo !== null) {
-          rows.push([
-            "  - first cost alone pays back in",
-            fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi),
-          ]);
-        }
-      } else {
-        rows.push([
-          "True 20-yr break-even",
-          "never - replacements outpace savings",
-        ]);
-      }
-    } else if (!p.tariff && a.paybackYearsLo !== null) {
-      rows.push([
-        "Pays for itself in",
-        fmtPaybackRange(a.paybackYearsLo, a.paybackYearsHi),
-      ]);
-    }
-
-    if (Number.isFinite(a.lcoeUsdPerKwh)) {
-      rows.push(powerCostRow(a, p.tariff));
-    }
-
-    appendRows(card, rows);
-
-    if (a.bestPriceCallout) {
-      card.appendChild(
-        el(
-          "div",
-          { class: "best-price-callout" },
-          `💡 ${bestPriceNote(a.bestPriceCallout)}`,
-        ),
-      );
-    }
-
-    if (a.cardNote) {
-      card.appendChild(
-        el(
-          "p",
-          {
-            style:
-              "font-size:0.8rem;color:var(--text-muted);margin-top:0.6rem;line-height:1.5;",
-          },
-          a.cardNote,
-        ),
-      );
-    }
-
-    card.appendChild(
-      el(
-        "p",
-        {
-          style: "font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;",
-        },
-
-        `${p.autoNote}. Lifetime cost includes install labor on the first bank and every swap.`,
-      ),
-    );
-
-    grid.appendChild(card);
-  }
-
-  // Lead-acid savings indicator (reference only — never recommended).
-  // Skipped when it is literally the same system (bank-free designs share one
-  // PV-only system, so there is no comparison to draw) and whenever the shared
-  // helper says no honest comparison exists.
-  const agm = p.agmReference;
-  const agmIdentical =
-    agm &&
-    agm.battKwh > 0 &&
-    agm.solvable &&
-    agm.replacementsHorizon === 0 &&
-    (p.auto || []).some(
-      (a) => a.solvable && a.lifetimeCostMid === agm.lifetimeCostMid,
-    );
-  const agmRef = agmIdentical ? null : leadAcidReferenceCopy(agm);
-  if (agmRef) {
-    const ref = el("p", {
-      style:
-        "font-size:0.8rem;color:var(--text-muted);margin-top:0.9rem;line-height:1.55;grid-column:1/-1;",
-    });
-    ref.textContent =
-      `🏚️ Lead-acid reference (not recommended): ~${money(agmRef.lifetimeCostUsd)} over 20 years` +
-      (agmRef.swaps > 0
-        ? ` with ~${agmRef.swaps} bank swaps`
-        : ` with a ${fmt(agmRef.battKwh)} kWh bank oversized to avoid swaps`) +
-      ` — shown only so you can see what the recommended chemistries save you.`;
-    grid.appendChild(ref);
-  }
-}
+// REMOVED 2026-10-05: renderAutoCards (232 lines) was UNREACHABLE shipped
+// weight — a leftover renderer for the auto-chemistry ladder card, replaced
+// by renderBestPick/renderBatteryComparison, and called from nothing but
+// itself. Removing it is where the four-path module's bytes came from;
+// nothing a visitor loads executed a line of it.
 
 // ── Battery Chemistry Comparison (Compare Batteries tab) ────────────────────
 // Uses the selected system as baseline, comparing LFP, Sodium-ion, and AGM
@@ -4701,7 +4963,7 @@ function renderBestPick(p) {
 }
 
 /** Renders the Plain-English ELI5 breakdown into its dedicated container. */
-function renderEli5Section(p, sys) {
+function renderEli5Section(p, sys, paths = null) {
   const wrap = $("eli5CardWrap");
   if (!wrap) return;
   if (!sys || !p || sys.solvable === false) {
@@ -4710,7 +4972,7 @@ function renderEli5Section(p, sys) {
     return;
   }
   wrap.innerHTML = "";
-  const card = renderEli5Card(p, sys);
+  const card = renderEli5Card(p, sys, paths);
   if (card) {
     wrap.appendChild(card);
     wrap.style.display = "block";
@@ -4720,70 +4982,253 @@ function renderEli5Section(p, sys) {
 }
 
 /**
- * Real-world turnkey quotes vary VASTLY with market, competition, and sales
- * model — so instead of quoting a fixed "$20k–$40k" for every size, we scale
- * from the user's own hardware estimate:
+ * THE INSTALLER-vs-DIRECT SENTENCE, priced instead of guessed.
  *
- *   - the CHEAPEST hardware build corresponds to the cheapest fair-ish
- *     turnkey market (highly competitive, thin margin): ~10× hardware cost;
- *   - the EXPENSIVE hardware build corresponds to boutique retail pricing:
- *     ~5× hardware cost (premium hardware still dilutes the sales markup).
+ * This used to price "a typical installer quote" as a MULTIPLE of the hardware
+ * estimate — 10x the cheapest build, 5x the dearest — and then add a flat
+ * $1,500-$3,000 for the electrician's final hookup. Both numbers were invented
+ * at the point of display, so the gap between "hire an installer" and "buy the
+ * parts yourself" was a difference in what each side counted rather than a
+ * difference in price. That is precisely the claim D-01 §6.4 forbids
+ * (R-PATH-03), and it is why the two paths now come out of ONE priced model
+ * over ONE system: the turnkey path's all-in band (parts, labour, permits and
+ * the installer's margin already inside it) against the self-purchase path's
+ * all-in band (the SAME parts, plus paid labour, permits and interconnection).
  *
- * The result: a proportional "market spread" band that grows with system
- * size, plus a hardware-relative savings statement that stays honest at every
- * scale. Exported for regression tests.
+ * A useful side effect: the old text compared a midpoint against a midpoint and
+ * could print "roughly -$300 below a typical quote" — a negative number
+ * described as a saving. Two registry prices cannot produce that, so the
+ * sign-follows-the-number defect is gone structurally rather than patched.
+ *
+ * With no priced comparison available the sentence degrades to the hardware
+ * cost and points at the panel, instead of inventing a band.
  */
-export const TURNKEY_MULTIPLIER_LOW = 10;
-export const TURNKEY_MULTIPLIER_HIGH = 5;
 
-export function estimateTurnkeyQuotes(costLo, costHi) {
-  const lo = Number(costLo);
-  const hi = Number(costHi);
-  if (
-    !Number.isFinite(lo) ||
-    lo <= 0 ||
-    !Number.isFinite(hi) ||
-    hi <= 0 ||
-    lo > hi
-  )
-    return null;
-  const quoteLo = Math.round((lo * TURNKEY_MULTIPLIER_LOW) / 100) * 100;
-  const quoteHi = Math.round((hi * TURNKEY_MULTIPLIER_HIGH) / 100) * 100;
-  return { quoteLo, quoteHi };
+/**
+ * The four paths for ONE system, or null when there is nothing to price.
+ *
+ * ONE owner. The ELI5 sentence and the comparison panel must not price the
+ * same system twice, or the two can disagree on the turnkey band — the defect
+ * this module removed. The cache key is the priced identity of the system, not
+ * an object identity, so re-selecting the same system does not reprice it.
+ */
+function purchasePaths(p, sys) {
+  if (!p || !sys || sys.solvable === false) return null;
+  // The payload carries the bill and tariff at its TOP level. Reading them off
+  // `p.input` (which does not exist on a result) yields undefined, and an
+  // undefined baseline silently turns every break-even into "not within 20
+  // years" — a whole column of honest-looking wrong answers.
+  const baseline = p.annualGridSpendUsd;
+  const key = [
+    sys.pvKw,
+    sys.battKwh,
+    sys.servedKwhPerYear,
+    sys.replacementsHorizon,
+    sys.batteryLifeYears,
+    baseline,
+    p.tariff,
+    resolvedCountry,
+    pathsInstrument,
+  ].join("|");
+  if (pathsCache.key === key) return pathsCache.result;
+  const result = pathsApi.priceAllPaths(
+    pathsApi.systemForPaths(sys, {
+      annualBaselineBillsUsd: baseline,
+      tariff: p.tariff,
+    }),
+    { country: resolvedCountry, instrument: pathsInstrument },
+  );
+  pathsCache = { key, result };
+  return result;
 }
 
-export function turnkeyQuoteText(sys, moneyFn = money, rangeFn = moneyRange) {
+export function turnkeyQuoteText(
+  sys,
+  moneyFn = money,
+  rangeFn = moneyRange,
+  paths = null,
+) {
   const directCost =
     Number.isFinite(sys?.costLo) && Number.isFinite(sys?.costHi)
       ? rangeFn(sys.costLo, sys.costHi)
       : Number.isFinite(sys?.costMid)
         ? moneyFn(sys.costMid)
         : "wholesale";
-  const q = estimateTurnkeyQuotes(sys?.costLo, sys?.costHi);
-  if (!q)
-    return `DIY or direct hardware cost is ~${directCost}. Full-service installers quote this size at several times the hardware price once commissions, permits, and markups are added. Ordering direct and hiring a licensed electrician for the final hookup (~$1,500\u2013$3,000) keeps most of that spread in your pocket.`;
-  const quotes = rangeFn(q.quoteLo, q.quoteHi);
-  const allInLo = Math.round(((Number(sys.costLo) + 1500) / 100) * 100);
-  const allInHi = Math.round(((Number(sys.costHi) + 3000) / 100) * 100);
-  const delta =
-    Math.round(((q.quoteLo + q.quoteHi) / 2 - (allInLo + allInHi) / 2) / 100) *
-    100;
-  // The comparison is quote-mid minus all-in-mid, so a POSITIVE delta means the
-  // DIY-plus-hookup route lands under the quote. Which way the sign points is
-  // decided by the numbers, so the word has to follow it: printed
-  // unconditionally as "below", a small system rendered
-  // "roughly -$300.00 below a typical quote" — a sign saying one thing and the
-  // word saying the other. Whole-system sizes are the ones where an installer's
-  // spread exceeds the hookup labor; a battery-only build is not.
-  const vsQuote =
-    delta >= 0
-      ? `roughly ${moneyFn(delta)} below a typical quote`
-      : `roughly ${moneyFn(-delta)} ABOVE a typical quote`;
-  return `DIY or direct hardware cost is ~${directCost}. For this system size, full-service quotes typically run ${quotes} \u2014 the cheapest competitive markets land near the low end, high-commission sales outfits near the top \u2014 driven by commissions, permits, and markups. Ordering direct and hiring a licensed electrician for the final hookup (~$1,500\u2013$3,000) puts your all-in cost near ${rangeFn(allInLo, allInHi)} \u2014 ${vsQuote}.`;
+  const turnkey = paths?.by?.turnkey;
+  const direct = paths?.by?.selfpurchase;
+  const band = (p) =>
+    p.year0Low === p.year0High
+      ? moneyFn(p.year0)
+      : rangeFn(p.year0Low, p.year0High);
+  if (!turnkey?.available || !direct?.available) {
+    return `DIY or direct hardware cost is ~${directCost}. A full-service installer builds that same system for one all-in price covering the parts, the labour, the permits and their margin — the four ways to pay are priced side by side below.`;
+  }
+  const gap = turnkey.year0 - direct.year0;
+  // The gap is installer MINUS self-purchase, so the sentence compares the
+  // route it has just described against the installer's price. The word
+  // follows the sign: two registry prices cannot produce a negative number
+  // described as a saving, which is how the old midpoint arithmetic printed
+  // "-$300 below a typical quote" for a system that cost MORE.
+  const vs =
+    gap >= 0
+      ? `${moneyFn(gap)} cheaper than the installer's price`
+      : `${moneyFn(-gap)} dearer than the installer's price`;
+  return `Hardware for this system is ~${directCost}. A full-service installer quotes ${band(turnkey)} all-in for exactly this array. Buying the same parts yourself and paying a licensed electrician for the connection lands near ${band(direct)} — ${vs}. Over ${PATHS_HORIZON_YEARS} years, permits, incentives and every bank replacement included, all four routes are priced together below.`;
+}
+
+/**
+ * THE COMPARISON PANEL: four priced routes to the SAME system, side by side.
+ *
+ * The panel never computes. Every figure below is read out of the model that
+ * `purchasePaths` priced, so a card cannot disagree with the ELI5 sentence
+ * above it or with the ranking that explains why the cheapest one is cheapest.
+ * What the panel owns is the presentation and the instrument toggle — because
+ * a PPA buys ENERGY and a lease rents the SYSTEM, and switching between them
+ * genuinely changes the price, which is R-PATH-02.
+ */
+function renderPathsSection(p, sys) {
+  const wrap = $("pathsPanel");
+  if (!wrap) return null;
+  const paths = purchasePaths(p, sys);
+  if (!paths) {
+    wrap.innerHTML = "";
+    wrap.style.display = "none";
+    return null;
+  }
+  const cheapest = paths.cheapest;
+  const cards = pathsApi.describePaths(paths, money, (k, params) =>
+    t(k, params),
+  );
+  const rows = (list) =>
+    list.map((k) => `<li>${escapeHtml(t(k))}</li>`).join("");
+  const body = cards
+    .map((c) => {
+      if (!c.available) {
+        return `<div class="paths-card paths-card-off"><h4>${escapeHtml(t(c.labelKey))}</h4><p class="paths-off">${escapeHtml(t(c.reasonKey))}</p></div>`;
+      }
+      const driver = paths.rankingExplained.find(
+        (r) => r.cheaper === c.id || r.dearer === c.id,
+      );
+      return (
+        `<div class="paths-card${c.id === cheapest ? " paths-card-best" : ""}">` +
+        `<h4>${escapeHtml(t(c.labelKey))}${c.id === cheapest ? ` <span class="paths-best-tag">${escapeHtml(t("pathsCheapest"))}</span>` : ""}</h4>` +
+        `<p class="paths-upfront">${escapeHtml(c.year0RangeText)}</p>` +
+        `<p class="paths-total">${escapeHtml(t("pathsSpend20"))} <strong>${escapeHtml(c.spend20Text)}</strong></p>` +
+        `<dl class="paths-rows">` +
+        `<dt>${escapeHtml(t("pathsRowIncentives"))}</dt><dd>${escapeHtml(c.incentivesText)}</dd>` +
+        `<dt>${escapeHtml(t("pathsRowBillCut"))}</dt><dd>${escapeHtml(c.billCutText)}</dd>` +
+        `<dt>${escapeHtml(t("pathsRowBreakEven"))}</dt><dd>${escapeHtml(c.breakEvenText)}</dd>` +
+        `<dt>${escapeHtml(t("pathsRowNet"))}</dt><dd>${escapeHtml(c.netText)}</dd>` +
+        `<dt>${escapeHtml(t("pathsRowOwnership"))}</dt><dd>${escapeHtml(t(c.ownershipKey))}</dd>` +
+        (c.endOfTerm
+          ? `<dt>${escapeHtml(t("pathsRowEndOfTerm"))}</dt><dd>${escapeHtml(t(c.endOfTerm.noteKey, { years: c.endOfTerm.termYears, buyoutPct: Math.round(c.endOfTerm.buyoutPct * 100) }))}</dd>`
+          : "") +
+        `</dl>` +
+        `<p class="paths-counts">${escapeHtml(t("pathsCountsHeading"))}</p><ul>${rows(c.included)}</ul>` +
+        (driver
+          ? `<p class="paths-why">${escapeHtml(whyText(driver))}</p>`
+          : "") +
+        `</div>`
+      );
+    })
+    .join("");
+
+  wrap.innerHTML =
+    `<h3 data-i18n="pathsTitle">${escapeHtml(t("pathsTitle"))}</h3>` +
+    `<p class="paths-sub" data-i18n="pathsSub">${escapeHtml(t("pathsSub"))}</p>` +
+    `<div class="paths-instr">` +
+    `<label for="pathsInstrument">${escapeHtml(t("pathsInstrumentLabel"))}</label> ` +
+    `<select id="pathsInstrument">` +
+    `<option value="ppa"${pathsInstrument === "ppa" ? " selected" : ""}>${escapeHtml(t("pathsInstrumentPpa"))}</option>` +
+    `<option value="lease"${pathsInstrument === "lease" ? " selected" : ""}>${escapeHtml(t("pathsInstrumentLease"))}</option>` +
+    `</select></div>` +
+    `<div class="paths-grid">${body}</div>` +
+    `<p class="paths-grade">${escapeHtml(t("pathsGradeNote"))}</p>`;
+  wrap.style.display = "block";
+
+  // Switching instrument re-prices, so it must invalidate the cache AND
+  // redraw the ELI5 sentence underneath: a lease left on screen while the
+  // cards show a PPA is two answers to one question.
+  const sel = $("pathsInstrument");
+  if (sel)
+    sel.onchange = () => {
+      pathsInstrument = sel.value === "lease" ? "lease" : "ppa";
+      pathsCache = { key: null, result: null };
+      if (lastPayload) renderPathSurfaces(lastPayload);
+    };
+  return paths;
+}
+
+/**
+ * BOTH surfaces that read the priced comparison, in the order that guarantees
+ * they agree: the panel prices, the sentence quotes the result. Two call sites
+ * (a fresh result, a selection change) plus the instrument toggle above.
+ *
+ * Awaited, because the model is loaded lazily (see loadPaths). The await is
+ * the whole point and not a convenience: the two surfaces are painted INSIDE
+ * it, one after the other, from one priced result. The alternative — rendering
+ * the sentence without a price and correcting it a moment later — is the
+ * "two different turnkey numbers on one screen" defect D-01 exists to remove,
+ * so nothing here paints until the model is in hand.
+ *
+ * A generation counter, not a lock: several of these can be in flight at once
+ * (a fresh result, then a selection change, then an instrument toggle) and the
+ * newest request is the only one whose payload is still current. An older
+ * render that resolves late must not repaint the panel with a superseded
+ * system.
+ */
+let pathRenderGeneration = 0;
+async function renderPathSurfaces(p) {
+  const generation = ++pathRenderGeneration;
+  try {
+    await loadPaths();
+  } catch (e) {
+    // A pricing model that will not load is a missing comparison, and the
+    // honest way to say so is the panel's own "priced comparison unavailable"
+    // empty state plus a status line — never a silent blank section, and never
+    // an unhandled rejection that the browser logs and nobody reads. The
+    // in-flight load is cleared so the NEXT render retries rather than
+    // inheriting this failure forever.
+    pathsLoading = null;
+    pathsApi = null;
+    const wrap = $("pathsPanel");
+    if (wrap) {
+      wrap.innerHTML = "";
+      wrap.style.display = "none";
+    }
+    const eli5 = $("eli5CardWrap");
+    if (eli5) {
+      eli5.innerHTML = "";
+      eli5.style.display = "none";
+    }
+    setStatus(`\u26A0\uFE0F ${t("pathsUnavailable")}`);
+    return null;
+  }
+  if (generation !== pathRenderGeneration) return null;
+  const sys = resolveSelected(p) || p.best;
+  const paths = renderPathsSection(p, sys);
+  renderEli5Section(p, sys, paths);
+  return paths;
+}
+
+/** One line of the ranking's account: which component, and by how much. */
+function whyText(row) {
+  const amount =
+    row.driver === "none" ? "" : ` ${money(Math.abs(row.driverAmount))}`;
+  const tail = row.dominance === "combined" ? t("pathsWhyCombined") : "";
+  return (
+    t("pathsWhy", {
+      cheaper: t(pathsApi.LABEL_KEYS[row.cheaper] || "pathsUnavailable"),
+      dearer: t(pathsApi.LABEL_KEYS[row.dearer] || "pathsUnavailable"),
+      gap: money(Math.abs(row.gap)),
+      driver:
+        t(pathsApi.DRIVER_KEYS[row.driver] || "pathsDriver_none") + amount,
+    }) + tail
+  );
 }
 
 /** Plain-English ELI5 breakdown for beginners and non-engineers. */
-function renderEli5Card(p, sys) {
+function renderEli5Card(p, sys, paths = null) {
   if (!sys) return null;
   const eli5 = el("div", { class: "eli5-card" });
   eli5.appendChild(
@@ -4857,7 +5302,7 @@ function renderEli5Card(p, sys) {
       : Number.isFinite(sys.costMid)
         ? money(sys.costMid)
         : "wholesale";
-  const costDesc = turnkeyQuoteText(sys);
+  const costDesc = turnkeyQuoteText(sys, money, moneyRange, paths);
   const itemCost = el("div", { class: "eli5-item" });
   itemCost.appendChild(
     el("div", { class: "eli5-item-label" }, "💰 Wholesale vs Turnkey Quotes"),
@@ -6191,7 +6636,7 @@ function appendRows(card, rows) {
  */
 
 // Must match run.js PAYLOAD_CONTRACT. Mismatch = stale cached module.
-const PAYLOAD_CONTRACT = 15;
+const PAYLOAD_CONTRACT = 16;
 
 // -- Plausibility frontier ---------------------------------------------------
 
@@ -6716,6 +7161,9 @@ function renderResults(p) {
   // technical surfaces.
   if (isSimpleMode()) renderSimpleResults(p);
 
+  // The use case's own metric and verdict, from payload.useCaseOutcome.
+  renderUseCaseOutcome(p);
+
   // Independent sanity check — reads the finished result, never changes it.
   // See runSanityCheck below; every failure mode is silent by design.
   runSanityCheck(p);
@@ -6986,7 +7434,10 @@ function refreshSelectionOutputs(p) {
   // Granular panel follows the same committed selection.
   if (focusFirst) renderFocusPanel(p, sel, false);
 
-  renderEli5Section(p, sel || p.best);
+  // ONE priced comparison, read by both surfaces below. The panel renders
+  // first because it is the thing that prices; the ELI5 sentence then quotes
+  // the SAME model, so the installer figure on this page has one source.
+  renderPathSurfaces(p);
 
   const inp = readInputs();
   updateShareHash(p, inp);
@@ -7024,6 +7475,15 @@ function updateShareHash(p, inp) {
     };
 
     if (inp.mode === "gridtie") o.g = 1;
+
+    // The use case travels by NAME, not by the pair it derives: backup and
+    // reserve share bill-cut's pair exactly, so a link carrying only g/hw
+    // would silently reopen as bill cut.
+    if (inp.useCase && inp.useCase !== "billcut") o.uc = inp.useCase;
+
+    if (inp.reservePct > 0) o.rp = Math.round(inp.reservePct * 100) / 100;
+
+    if (inp.outageTargetHours) o.oh = inp.outageTargetHours;
 
     if (inp.hardwareConfig && inp.hardwareConfig !== "both")
       o.hw = inp.hardwareConfig;
@@ -7114,6 +7574,24 @@ function restoreFromShare() {
 
   if ($("systemGoal"))
     $("systemGoal").value = o.g === 1 ? "gridtie" : "offgrid";
+
+  // A shared link names the use case explicitly (o.uc) because two of the six
+  // share the same legacy pair with bill-cut and could not be recovered from
+  // it. v1 links carry no o.uc and still resolve to the right case.
+  if (o.uc && useCase(o.uc)) {
+    applyUseCase(o.uc, { silent: true });
+  } else {
+    applyUseCase(
+      o.g === 0 ? "offgrid" : o.hw === "battery" ? "tou" : "billcut",
+      { silent: true },
+    );
+  }
+  if (Number.isFinite(o.rp) && $("reserveSlider")) {
+    $("reserveSlider").value = String(Math.round(o.rp * 100));
+    syncReserveLabel();
+  }
+  if (Number.isFinite(o.oh) && $("outageTargetHours"))
+    $("outageTargetHours").value = String(Math.round(o.oh));
 
   $("dailyKwhInput").value = String(kw);
 
@@ -7715,6 +8193,12 @@ export async function initSizingUI() {
     purgeLegacyCityCache();
 
     renderAppliances();
+    // The two use-case catalogues, rendered from the same data the engine
+    // reads, so a checkbox always means the wattage it displays.
+    renderCatalogue(ESSENTIAL_LOADS, "essentialLoadList", "Ess");
+    renderCatalogue(PORTABLE_DEVICES, "portableDeviceList", "Port");
+    setupUseCaseChooser();
+    applyUseCase(selectedUseCase(), { silent: true });
     setupSimpleMode();
     setupRoofMap();
     setupRoofAreaInput();
@@ -8086,16 +8570,34 @@ export async function initSizingUI() {
     // language changes, since those live outside the data-i18n scan.
 
     window.addEventListener("beco:lang", () => {
-      updateFuelUnits();
-      updateGenHelper();
-      // The results panel is assembled by JS, and applyI18n only rewrites
-      // data-i18n markup — so switching language left the caption, the tariff
-      // line and the frontier verdict in the previous language until the
-      // visitor happened to run again: one page, two languages. Re-rendering
-      // the payload the panel was built from costs nothing (no engine run, no
-      // fetch) and puts the whole surface in one language.
-      if (lastPayload) renderResults(lastPayload);
+      repaintRuntimeCopy();
     });
+
+    // THE SAME REPAINT, once, immediately — and this is the load-bearing call.
+    //
+    // The dictionary is a deferred dynamic import (shared/i18n.js) and
+    // `translate()` echoes the KEY when it has not landed. Two surfaces are
+    // painted by JS during setup, which runs BEFORE the `await applyI18n()`
+    // above: `updateLoadReadout()` writes the load-mode readout and
+    // `applyUseCase()` writes the use-case blurb. Both therefore painted a raw
+    // key — `readoutBillIncomplete`, `useCaseBillCutBlurb` — and applyI18n
+    // cannot repair them, because it only rewrites `data-i18n` MARKUP and these
+    // two nodes carry none.
+    //
+    // What made it survivable until now is that both surfaces sit inside
+    // #fullControls, which quick mode hides. So the keys were painted, parked
+    // out of sight, and only reached the screen the moment a visitor switched
+    // to manual controls — where they read as "the page printed its own
+    // variable names at me". A hidden defect is still a defect; the only reason
+    // it survived a full cycle is that nothing had walked the journey to the
+    // manual-controls branch and looked.
+    //
+    // Fixing it where it is painted would mean awaiting the dictionary inside
+    // three unrelated setup functions. Re-running the two painters afterwards
+    // costs one extra function call and no network, because the fetch already
+    // finished — and it puts every runtime-painted surface in one owner, so the
+    // next one added is repainted by the same line rather than by luck.
+    repaintRuntimeCopy();
 
     updateFuelUnits();
 

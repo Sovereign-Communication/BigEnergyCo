@@ -52,6 +52,31 @@ test("EVIDENCE: the performance facet line is derived from the run, not typed by
   );
 });
 
+test("EVIDENCE: the experience facet line is derived from the run, not typed by hand", () => {
+  // The same standing condition as `performance`, for the same reason. The typed
+  // line was a fact about test coverage - "30 of 153 smoke gates are
+  // battery-only" - which is true and says nothing a visitor touches. Now that
+  // scripts/check-experience.mjs measures the axis, a typed line here would be a
+  // second source of truth for it, and it would be the stale one.
+  assert.equal(
+    Object.hasOwn(PROSE.facet_evidence || {}, "experience"),
+    false,
+    "evidence/advisor-and-release.json must not carry a hand-typed " +
+      "`experience` line. The experience gate composes it from the run that " +
+      "walked the journey, so a typed line here is a second, unverified " +
+      "source for the same facet.",
+  );
+  // And the removal is recorded where a reader will look for it, rather than
+  // leaving a silent gap that reads as "never measured" when it means
+  // "measured, and the old wording was wrong".
+  assert.ok(
+    (PROSE.notes || []).some((n) =>
+      /`experience` facet line was REMOVED/.test(n),
+    ),
+    "the removal note must sit in notes[] beside the performance one",
+  );
+});
+
 test("EVIDENCE: a gate report declares which facet axes it speaks for", async () => {
   const { LIGHTHOUSE_TARGETS } =
     await import("../scripts/lib/lighthouse-budgets.mjs");
@@ -384,5 +409,151 @@ test("CI: the report reaches the judge through the download the job already does
     /name:\s*jev-results-lighthouse-report/,
     "the Lighthouse report must be uploaded under a name that pattern picks up, " +
       "so a new gate report needs no change to the judge's download step",
+  );
+});
+
+test("EVIDENCE: the translation facet line is derived from the run, not typed by hand", () => {
+  // THIRD axis to move, and the first where the typed line was not merely
+  // weak but unrepresentable: 1233 characters against a 280-character transport
+  // clip. The judge read its first clause — a sentence about check-i18n and key
+  // parity — and the cut fell mid-sentence, while the sweep that actually
+  // answers the demand ("no raw key name reaching a visitor") sat unread under
+  // `experience`. Two stories about one facet, and the weaker one won.
+  assert.equal(
+    Object.hasOwn(PROSE.facet_evidence || {}, "translation"),
+    false,
+    "evidence/advisor-and-release.json must not carry a hand-typed " +
+      "`translation` line. scripts/check-experience.mjs composes that axis " +
+      "from the run that walked six locales, so a typed line here is a second, " +
+      "unfalsifiable source for a facet that can now be measured.",
+  );
+  const note = (PROSE.notes || []).find((n) =>
+    /`translation` facet line was REMOVED/.test(n),
+  );
+  assert.ok(
+    note,
+    "the removal must be recorded in notes[], or the axis reads as never measured",
+  );
+  // The note has to preserve what the deletion would otherwise lose: that
+  // parity still lives somewhere, and that the back-translation clause is still
+  // open. A removal note that only says "removed" is a lost fact.
+  assert.match(note, /check-i18n/, "the note must say where parity went");
+  assert.match(
+    note,
+    /back-translat/i,
+    "and that back-translation is still open",
+  );
+  assert.match(note, /P5\.5/, "and the plan item that does not exist yet");
+});
+
+test("EVIDENCE: parity is not lost with the translation line — it has an axis", () => {
+  // The typed translation line was the only prose the judge read about key
+  // parity. Removing it without somewhere else to stand would trade one gap for
+  // another, so the parity claim must still be reachable: the `i18n` axis
+  // carries it, and it must still be there.
+  assert.equal(
+    Object.hasOwn(PROSE.facet_evidence || {}, "i18n"),
+    true,
+    "the i18n axis carries the parity and placeholder claims and must survive",
+  );
+  assert.match(
+    PROSE.facet_evidence.i18n,
+    /parity/i,
+    "and it must still actually say so",
+  );
+});
+test("EVIDENCE: one gate may compose a DIFFERENT line per axis", () => {
+  // The mechanism behind moving `translation` onto the browser gate. The
+  // builder applies one string to every axis in facet_axes, which is right when
+  // a gate speaks for one facet and wrong the moment it speaks for two: the
+  // journey walk's sentence would then also be the translation facet's proof.
+  const dir = artifactsWith({
+    "experience-report.json": {
+      metric: "experience",
+      facet_axes: ["experience", "translation"],
+      facet_lines: {
+        experience: "WALKED, 1 Chrome, 1 city: 9/9 steps acknowledge.",
+        translation:
+          "RUNTIME, 6 locales x 3 re-entry points: 0 raw keys on 19 pages.",
+      },
+    },
+  });
+  const { status, out } = buildWith(dir, PROSE_MIN);
+  assert.equal(status, 0);
+  assert.equal(
+    out?.facet_evidence?.experience,
+    "WALKED, 1 Chrome, 1 city: 9/9 steps acknowledge.",
+  );
+  assert.equal(
+    out?.facet_evidence?.translation,
+    "RUNTIME, 6 locales x 3 re-entry points: 0 raw keys on 19 pages.",
+    "each axis must get the line composed FOR it, not the first one that exists",
+  );
+});
+
+test("EVIDENCE: a single facet_line still serves a one-axis report", () => {
+  // Backward compatibility is the point: three other gates emit one string and
+  // must keep working untouched.
+  const dir = artifactsWith({
+    "lighthouse-report.json": {
+      metric: "lighthouse",
+      facet_axes: ["performance"],
+      facet_line: "PLAYTEST, 1 Chrome, 1 city: cold 5.8s, repeat 40ms.",
+    },
+  });
+  const { status, out } = buildWith(dir, PROSE_MIN);
+  assert.equal(status, 0);
+  assert.equal(
+    out?.facet_evidence?.performance,
+    "PLAYTEST, 1 Chrome, 1 city: cold 5.8s, repeat 40ms.",
+  );
+});
+
+test("EVIDENCE: two axes served by ONE sentence is refused, not published", () => {
+  // The failure this whole move exists to prevent, asserted at the boundary
+  // where it would otherwise happen quietly: a gate claiming two axes with a
+  // single line, so the second facet's proof line is a copy of the first's.
+  const dir = artifactsWith({
+    "experience-report.json": {
+      metric: "experience",
+      facet_axes: ["experience", "translation"],
+      facet_line: "WALKED, 1 Chrome, 1 city: 9/9 steps acknowledge.",
+    },
+  });
+  const { status, stderr, out } = buildWith(dir, PROSE_MIN);
+  assert.equal(
+    status,
+    1,
+    "publishing one sentence under two facet names is the silent-wins failure",
+  );
+  assert.match(
+    stderr,
+    /translation/,
+    `the missing line must be named: ${stderr}`,
+  );
+  assert.equal(
+    out?.facet_evidence?.translation,
+    undefined,
+    "and nothing may be published for the axis that had no line of its own",
+  );
+});
+
+test("EVIDENCE: an over-long per-axis line is a named problem, not a trim", () => {
+  const dir = artifactsWith({
+    "experience-report.json": {
+      metric: "experience",
+      facet_axes: ["experience", "translation"],
+      facet_lines: {
+        experience: "short enough",
+        translation: "x".repeat(COMPLETE_FACET_CLIP + 1),
+      },
+    },
+  });
+  const { status, stderr } = buildWith(dir, PROSE_MIN);
+  assert.equal(status, 1, "an over-long line must FAIL the build");
+  assert.match(
+    stderr,
+    /facet_lines\.translation is \d+ chars, over the 280-char per-axis clip/,
+    `the offending axis and its field must be named: ${stderr}`,
   );
 });

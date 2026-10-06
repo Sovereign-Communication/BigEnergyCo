@@ -4,7 +4,10 @@
 // behavior — a missing string shows English, never a raw key. That safety net
 // is exactly why the failure mode is invisible, so it is gated here instead:
 //
-//   1. PARITY      every `en` key exists in every locale (no half-migrations).
+//   1. PARITY      every `en` key exists in every locale (no half-migrations),
+//                  AND every translated string exists in English — parity in
+//                  BOTH directions, because a key only the translations carry
+//                  has no source to be checked against and drifts silently.
 //   2. HOOKS       every `data-i18n="key"` a shipped page declares resolves in
 //                  every non-English locale. English is exempt because the
 //                  English string IS the markup. A hook that resolves in NO
@@ -72,6 +75,34 @@ if (missing.length)
     `${missing.length} key(s) missing from a locale: ${missing.slice(0, 8).join(", ")}`,
   );
 else ok(`every en key exists in all ${langs.length - 1} locales`);
+
+// ── 1b. parity the OTHER way ─────────────────────────────────────────────────
+// Rule 1 asks "can a locale miss something English has?". This asks the
+// question that let seven strings drift apart unnoticed: "can a locale carry
+// something English does not have?". A key that lives only in the translated
+// dictionaries has no English source to be checked against, so nothing ties its
+// translations to the copy a reader actually sees - which is exactly how
+// "Where is this system going?" and "¿Dónde se instalará el sistema?" ended up
+// asking different questions on the same page.
+//
+// Non-string values are exempt: `rtl` is a boolean locale flag driving
+// document.dir, and only Arabic carries it by design. Exempting by TYPE rather
+// than by a hand-kept allowlist means a new flag needs no list entry and a new
+// untranslated string cannot buy its way past this rule by being a string.
+const orphans = [];
+for (const lang of langs) {
+  if (lang === "en") continue;
+  for (const [key, value] of Object.entries(LOCALES[lang])) {
+    if (typeof value !== "string") continue;
+    if (typeof en[key] !== "string") orphans.push(`${lang}.${key}`);
+  }
+}
+if (orphans.length)
+  fail(
+    `${orphans.length} translated key(s) have no English source: ${orphans.slice(0, 8).join(", ")}`,
+  );
+else
+  ok("every translated string also exists in English (parity holds both ways)");
 
 // ── 2. HTML hooks resolve everywhere ────────────────────────────────────────
 function shippedPages() {

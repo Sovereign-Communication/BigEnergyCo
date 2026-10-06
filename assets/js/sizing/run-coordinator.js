@@ -64,6 +64,33 @@ export function createRunChannel() {
       pending = null;
       return ++seq;
     },
+    // ABANDON: give the channel up entirely, because nothing is going to answer
+    // for it any more. This exists because invalidate() deliberately does NOT
+    // free `busy`, and the deadline path needed the opposite.
+    //
+    // The two callers of invalidate() want different things and cannot share one
+    // operation:
+    //
+    //   · A pre-calculation edit invalidates the very inputs an in-flight run
+    //     carries. That run is STILL RUNNING and its worker cannot be preempted
+    //     (one full sizing at a time), so the channel must stay busy or a second
+    //     run would start behind the first.
+    //   · A timed-out worker has been TERMINATED. Nothing will ever reply, so
+    //     leaving the channel busy means the visitor is told "click Size My
+    //     System to try again" and every subsequent click lands in the collapse
+    //     branch and returns without doing anything — a dead button with a live
+    //     label. That is the leak this operation closes.
+    //
+    // Both bump the sequence, so a late reply from the abandoned worker still
+    // fails its freshness check, and both retire the deadline watch: the channel
+    // is free, so nothing is waiting for a reply any more.
+    abandon() {
+      busy = false;
+      pending = null;
+      watchGen++;
+      deadlineSeq = null;
+      return ++seq;
+    },
     // The run() validation-failure path discards queued work while leaving
     // the busy state and sequence unchanged.
     dropPending() {

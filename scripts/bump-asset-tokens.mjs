@@ -25,6 +25,22 @@
 // minted the current stamp. Changed since? The token is stale and the release
 // is refused. This is a content comparison, not a convention, so it cannot be
 // satisfied by leaving the stamp alone.
+//
+// ── RUNNING THIS IS NOT FREE, AND IT IS NOT A NO-OP ────────────────────────────
+// Measured on this branch, 2026-10-05: run three times in a row with NO change
+// to any shipped byte, and the stamp went 20261005i -> 20261005j -> 20261005k.
+// It is unconditional. Running `npm run tokens` "just to be sure" therefore
+// COMMITS a cache-busting change to the whole module graph and forces the next
+// commit's evidence line (`evidence/advisor-and-release.json`'s `seo_summary`)
+// to name a stamp nobody's bytes changed for. That churn nearly shipped once,
+// and the tell is easy to miss because the run prints a confident success line
+// either way.
+//
+// The rule that follows: run `npm run tokens` immediately AFTER a change to a
+// shipped file and BEFORE you commit, and never as a standalone step. If you
+// have just run it and `git status` shows `assets/`, `index.html`, `sw.js` or
+// `solar-heatmap/` modified with no shipped edit of your own, that churn is the
+// cause — `git checkout -- ` those paths and keep the stamp you already had.
 import {
   readFileSync,
   writeFileSync,

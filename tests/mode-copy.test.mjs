@@ -6,13 +6,14 @@
 //
 // The browser-coupled surfaces (ui.js, charts.js) cannot be imported under
 // plain Node, so they are pinned two ways: the pure seams behaviourally (the
-// turnkey estimator through the existing extraction bridge, the parts list
-// directly), and the render wiring by source, with the rendered result pinned
-// again by the smoke gates that drive a real browser.
+// installer-vs-direct sentence through the extraction bridge, against a REAL
+// priced four-path comparison; the parts list directly), and the render wiring
+// by source, with the rendered result pinned again by the smoke gates that
+// drive a real browser.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { turnkeyQuoteText } from "./quote-tilt-helpers.mjs";
+import { turnkeyQuoteText, pricedFor, entryFor } from "./quote-text-bridge.mjs";
 import { partsListRows } from "../assets/js/sizing/parts-csv.js";
 import { LOCALES } from "../assets/js/shared/locales.js";
 
@@ -32,41 +33,82 @@ const moneyRange = (lo, hi) => money(lo) + "–" + money(hi);
 const LANGS = ["en", "es", "pt", "fr", "de", "ar"];
 
 // ── the sign has to follow the number ───────────────────────────────────────
+//
+// This invariant outlived the estimator that broke it. The old sentence
+// compared a quote midpoint against an all-in midpoint and could print
+// "roughly -$300.00 below a typical quote" for a battery-only build whose real
+// all-in was dearer than its real quote. Nothing may describe a negative gap as
+// a saving. The fix is structural now — both sides are registry prices, so a
+// subtraction of one real price from another is what gets printed — and these
+// tests hold the door on it for both sizes.
 
-test("the quote comparison says ABOVE when the hookup costs more than the quote", () => {
-  // A battery-only build: $165–$591 of hardware, so the quote band (hardware ×
-  // 10 … × 5) is $1,700–$3,000 while DIY plus hookup lands $1,700–$3,600. The
-  // midpoint comparison is NEGATIVE, and the old copy printed it as
-  // "roughly -$300.00 below a typical quote".
+test("the installer comparison never reads a negative gap as a saving", () => {
+  // A battery-only build, the exact shape that used to print the defect.
+  const paths = pricedFor(
+    entryFor({ pvKw: 0, battKwh: 2.5, servedKwhPerYear: 1400 }),
+    { annualBaselineBillsUsd: 900, tariff: 0.3 },
+  );
   const text = turnkeyQuoteText(
     { costLo: 165, costHi: 591 },
     money,
     moneyRange,
+    paths,
   );
   assert.doesNotMatch(
     text,
-    /-\$[\d,]+ below/,
-    `a negative delta must never read as a saving: ${text}`,
+    /-\$[\d,]+/,
+    `a negative figure must never appear: ${text}`,
   );
-  assert.match(text, /below a typical quote|ABOVE a typical quote/);
-  assert.match(
-    text,
-    /ABOVE a typical quote/,
-    `this system's all-in is above the quote band: ${text}`,
-  );
-  assert.doesNotMatch(text, /below a typical quote/);
+  // Exactly one of the two words, and it must be the one the model's sign
+  // implies. Both at once would be a sentence arguing with itself.
+  const gap = paths.by.turnkey.year0 - paths.by.selfpurchase.year0;
+  const word =
+    gap >= 0
+      ? /cheaper than the installer's price/
+      : /dearer than the installer's price/;
+  const other =
+    gap >= 0
+      ? /dearer than the installer's price/
+      : /cheaper than the installer's price/;
+  assert.match(text, word, `the word must follow the model's sign: ${text}`);
+  assert.doesNotMatch(text, other);
 });
 
-test("the quote comparison still says below when the quote really is dearer", () => {
-  // A whole-home system: hardware $917–$3,241 against a $9,200–$16,200 quote.
+test("a whole-home system still reports the installer as the dearer route", () => {
+  const paths = pricedFor(entryFor(), {
+    annualBaselineBillsUsd: 2400,
+    tariff: 0.3,
+  });
   const text = turnkeyQuoteText(
     { costLo: 917, costHi: 3241 },
     money,
     moneyRange,
+    paths,
   );
-  assert.match(text, /below a typical quote/);
-  assert.doesNotMatch(text, /ABOVE a typical quote/);
-  assert.doesNotMatch(text, /-\$[\d,]+ below/);
+  assert.ok(
+    paths.by.turnkey.year0 > paths.by.selfpurchase.year0,
+    "the installer route must cost more up front than parts plus paid labour",
+  );
+  assert.match(text, /cheaper than the installer's price/);
+  assert.doesNotMatch(text, /dearer than the installer's price/);
+  assert.doesNotMatch(text, /-\$[\d,]+/);
+});
+
+test("no purchase-path sentence may name a fixed dollar amount it did not price", () => {
+  // Both the installed band and the connection cost now come from the
+  // registry. The two invented figures the old copy carried are gone with it.
+  const paths = pricedFor(entryFor(), {
+    annualBaselineBillsUsd: 2400,
+    tariff: 0.3,
+  });
+  const text = turnkeyQuoteText(
+    { costLo: 917, costHi: 3241 },
+    money,
+    moneyRange,
+    paths,
+  );
+  assert.doesNotMatch(text, /\$1,500/);
+  assert.doesNotMatch(text, /\$3,000/);
 });
 
 // ── the parts list must not shop for an array the build has none of ─────────
@@ -207,8 +249,11 @@ test("the levelized-cost row is named for what it measures in each mode", () => 
   assert.equal(raw, null, "a call site still builds the row inline");
   assert.equal(
     (ui.match(/rows\.push\(powerCostRow\(/g) || []).length,
-    5,
-    "each of the five cards must go through powerCostRow",
+    4,
+    "each live card must go through powerCostRow. This was 5 until the dead " +
+      "renderAutoCards() came out \u2014 that 232-line function was called from " +
+      "nothing but itself, so its call site was unreachable code wearing the " +
+      "same uniform. The four that remain are the four that render.",
   );
 });
 
@@ -284,8 +329,21 @@ test("the method note describes the sweep the run actually performed", () => {
 test("a language switch re-renders the results instead of half-translating them", () => {
   assert.match(
     ui,
-    /window\.addEventListener\(\"beco:lang\", \(\) => \{[\s\S]{0,700}if \(lastPayload\) renderResults\(lastPayload\);/,
-    "applyI18n only rewrites markup: the JS-built panel must re-render too",
+    /function repaintRuntimeCopy\(\) \{[\s\S]{0,900}if \(lastPayload\) renderResults\(lastPayload\);/,
+    "the JS-built results panel must be re-rendered from the payload",
+  );
+  // …and both call sites must reach it: the language change, and the moment the
+  // deferred dictionary resolves. The second is what stops a surface being
+  // painted with a raw dictionary key before any translation exists.
+  assert.match(
+    ui,
+    /window\.addEventListener\(\"beco:lang\", \(\) => \{\s*repaintRuntimeCopy\(\);/,
+    "the language switch must reach the re-render",
+  );
+  assert.match(
+    ui,
+    /await applyI18n\(\);[\s\S]{0,400}repaintRuntimeCopy\(\);/,
+    "the repaint must also run once the deferred dictionary has resolved",
   );
 });
 
