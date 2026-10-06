@@ -15,11 +15,12 @@
 // Jev gate reads, and the evidence line must name it.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { cookieGateDecision } from "../scripts/cold-start-preflight.mjs";
+import { composePrivacyFacetLine } from "../scripts/lib/privacy-facet-line.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(path.join(ROOT, rel), "utf8");
@@ -233,6 +234,7 @@ test("WIRING: the privacy report declares the axis so the builder adopts it", ()
   assert.match(gate, /const FACET_AXES = \["privacy"\]/);
   assert.match(gate, /facet_axes: FACET_AXES/);
   assert.match(gate, /facet_line: composeFacetLine\(/);
+  assert.match(gate, /from "\.\/lib\/privacy-facet-line\.mjs"/);
 });
 
 test("CLIP: the composed privacy line fits the clip the builder enforces", () => {
@@ -242,7 +244,13 @@ test("CLIP: the composed privacy line fits the clip the builder enforces", () =>
   // length; this test pins that the assertion is still wired.
   const gate = read("scripts/check-privacy-browser.mjs");
   assert.match(gate, /COMPLETE_FACET_CLIP/);
-  assert.match(gate, /line\.length > COMPLETE_FACET_CLIP/);
+  // The composer returns an overflow NUMBER and the gate fails on it, rather
+  // than the gate comparing lengths itself - so the arithmetic is testable and
+  // the clip is enforced in one place.
+  assert.match(gate, /composePrivacyFacetLine\(m, COMPLETE_FACET_CLIP\)/);
+  assert.match(gate, /if \(overflow\)/);
+  const composer = read("scripts/lib/privacy-facet-line.mjs");
+  assert.match(composer, /line\.length - clip/);
   // The clip itself must not be widened to fit a longer sentence: raising it
   // would raise the cost of every one of the 21 axes at once.
   const budget = read("scripts/lib/jev-complete.mjs");
@@ -253,34 +261,72 @@ test("CLIP: the composed privacy line fits the clip the builder enforces", () =>
   );
 });
 
+// A synthetic measurement. The composer is pure, so this needs no browser, no
+// staged build and no artifact on disk - which is the whole point of it living
+// in scripts/lib rather than inside the gate that starts Chrome on import.
+const MEASURED = {
+  cookieCount: 0,
+  httpOnlyCount: 0,
+  localStorageKeys: [],
+  sessionStorageKeys: [],
+  identifying: [],
+  coordinateFindings: [],
+  requestCount: 90,
+  journeysDriven: [
+    { name: "city-search", requests: 2 },
+    { name: "sizing-run", requests: 3 },
+    { name: "advisor", requests: 1 },
+  ],
+  thirdPartyOrigins: [
+    "https://nominatim.openstreetmap.org",
+    "https://open.er-api.com",
+  ],
+};
+
 test("COMPOSED: the privacy line reads its numbers out of the measurement", () => {
   // Every number in the line must come from `measured`, so a bad run reports a
-  // bad line instead of a stale good one. Asserted on the committed artifact
-  // when one exists, and on the composer contract when it does not.
-  const artifact = path.join(ROOT, "jev-artifacts/privacy-browser.json");
-  if (!existsSync(artifact)) {
-    const gate = read("scripts/check-privacy-browser.mjs");
-    for (const field of [
-      "m.cookieCount",
-      "m.httpOnlyCount",
-      "m.localStorageKeys",
-      "m.sessionStorageKeys",
-      "m.identifying",
-      "m.coordinateFindings",
-      "m.thirdPartyOrigins",
-    ])
-      assert.ok(
-        gate.includes(field),
-        `the composed line must read ${field} out of the measurement`,
-      );
-    return;
-  }
-  const report = JSON.parse(readFileSync(artifact, "utf8"));
-  assert.deepEqual(report.facet_axes, ["privacy"]);
-  assert.ok(
-    report.facet_line.length <= 280,
-    `the composed line is ${report.facet_line.length} chars and would be cut`,
+  // bad line instead of a stale good one. Asserted against the composer
+  // DIRECTLY - the previous version of this test branched on the artifact
+  // existing, and because `jev-artifacts/` is gitignored it took the fallback
+  // branch on every CI runner, so these assertions never ran where they matter.
+  const { line, overflow } = composePrivacyFacetLine(MEASURED, 280);
+  assert.equal(overflow, 0, `the composed line overflows by ${overflow} chars`);
+  assert.ok(line.length <= 280, `${line.length} chars would be cut in transit`);
+  assert.match(line, /90 requests/);
+  assert.match(line, /0 cookies \(0 HttpOnly\)/);
+  assert.match(line, /0 local\/session storage keys/);
+  assert.match(line, /nominatim\.openstreetmap\.org \+ open\.er-api\.com/);
+});
+
+test("COMPOSED: a bad run composes a line that says so", () => {
+  // The line must not be able to flatter a run. If the browser measured
+  // cookies, the line says cookies - the gate is red either way, but a line
+  // that read "0 cookies" off a 3-cookie run would cost every facet at once.
+  const dirty = {
+    ...MEASURED,
+    cookieCount: 3,
+    httpOnlyCount: 1,
+    coordinateFindings: ["lat=51.50735123"],
+    identifying: ["gclid=abc"],
+  };
+  const { line } = composePrivacyFacetLine(dirty, 280);
+  assert.match(line, /3 cookies \(1 HttpOnly\)/);
+  assert.doesNotMatch(line, /0 cookies/);
+  assert.match(line, /1 carrying a coordinate finer than 0\.01 deg/);
+  assert.match(line, /1 requests carrying an identifier/);
+});
+
+test("COMPOSED: an over-long line is reported, never truncated", () => {
+  // The builder cuts an over-length line in transit, silently dropping the end
+  // of the sentence. So overflow has to be a number the caller can fail on.
+  const { line, overflow } = composePrivacyFacetLine(
+    { ...MEASURED, thirdPartyOrigins: ["https://a.example"] },
+    40,
   );
-  assert.match(report.facet_line, new RegExp(String(report.cookieCount)));
-  assert.match(report.facet_line, new RegExp(String(report.requestCount)));
+  assert.ok(overflow > 0, "a 40-char clip must report overflow");
+  assert.equal(line.length - 40, overflow);
+  assert.ok(
+    line.length > 40,
+    "the line is returned whole; clipping is the caller's job",
+  );
 });

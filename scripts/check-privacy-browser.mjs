@@ -32,6 +32,7 @@ import { start } from "./smoke/runtime.mjs";
 import { runPrivacyFlow } from "./smoke/privacy.mjs";
 import { cookieGateDecision } from "./cold-start-preflight.mjs";
 import { COMPLETE_FACET_CLIP } from "./lib/jev-complete.mjs";
+import { composePrivacyFacetLine } from "./lib/privacy-facet-line.mjs";
 
 const STAGE = join(ROOT, "_pages_privacy");
 const ARTIFACT = join(ROOT, "jev-artifacts", "privacy-browser.json");
@@ -280,7 +281,7 @@ writeResult({
   ...measured,
   turnstile: decision,
   facet_axes: FACET_AXES,
-  facet_line: composeFacetLine(measured, decision),
+  facet_line: composeFacetLine(measured),
 });
 
 console.log(
@@ -321,28 +322,13 @@ process.exit(failures ? 1 : 0);
  * collected the visitor did not choose to send) are proven by
  * `check-privacy.mjs` and stated there.
  */
-function composeFacetLine(m, turnstile) {
-  const origins = m.thirdPartyOrigins || [];
-  const line =
-    `CDP browser, ${(m.journeysDriven || []).length + 1} journeys, ` +
-    `${m.requestCount} requests: ` +
-    `${m.cookieCount} cookies (${m.httpOnlyCount} HttpOnly), ` +
-    `${(m.localStorageKeys || []).length + (m.sessionStorageKeys || []).length} ` +
-    `local/session storage keys, ` +
-    `${(m.identifying || []).length} requests carrying an identifier, ` +
-    `${(m.coordinateFindings || []).length} carrying a coordinate finer than ` +
-    `0.01 deg; third-party egress ` +
-    `${origins.length ? origins.map((o) => o.replace(/^https?:\/\//, "")).join(" + ") : "none"}` +
-    `${origins.length ? ", all declared in connect-src" : ""}.`;
-  // The Turnstile decision is deliberately NOT in this line: it is a deployment
-  // choice, it is already printed by the gate's own ok() line, and the 280-char
-  // clip cannot carry it without dropping one of the measured facts above.
-  void turnstile;
-  if (line.length > COMPLETE_FACET_CLIP)
+function composeFacetLine(m) {
+  const { line, overflow } = composePrivacyFacetLine(m, COMPLETE_FACET_CLIP);
+  if (overflow)
     fail(
       `the composed privacy facet line is ${line.length} chars, over the ` +
         `${COMPLETE_FACET_CLIP}-char clip, so the judge run would cut it. ` +
-        "Shorten composeFacetLine rather than raising the clip.",
+        "Shorten composePrivacyFacetLine rather than raising the clip.",
     );
   return line;
 }
