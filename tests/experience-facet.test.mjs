@@ -338,7 +338,13 @@ test("MUTATION: AT violations are reported, never regressed", () => {
   r.at = {
     ran: true,
     violations: [
-      { id: "color-contrast", impact: "serious", help: "x", nodes: 2, example: "" },
+      {
+        id: "color-contrast",
+        impact: "serious",
+        help: "x",
+        nodes: 2,
+        example: "",
+      },
     ],
     counts: { critical: 0, serious: 1, moderate: 0, minor: 0 },
     incomplete: 0,
