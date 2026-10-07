@@ -33,6 +33,7 @@
 // reads exactly like a journey that passed.
 import { RUN_TIMEOUT_MS } from "./actions.mjs";
 import { LOCALES } from "../../assets/js/shared/locales.js";
+import { runAtPass } from "./at-pass.mjs";
 
 /**
  * Every dictionary key, read from the shipped locale module.
@@ -871,6 +872,19 @@ export async function runExperienceWalk(ctx, options = {}) {
   // locale and which moment; this one says the page as it is left.
   const keyLeaks = await rawKeyLeaks(ctx, localeKeys);
 
+  // ── the assistive-technology pass ────────────────────────────────────
+  // WHY HERE, WHY LAST. The AT pass audits the page AFTER the journey — the
+  // errors, the re-runs, the six language switches — so axe sees the page as
+  // the walk left it, not a fresh load. Same staged build, same CDP wire; no
+  // separate staging, no second browser. A pass that throws is recorded as
+  // not-ran rather than allowed to take the whole walk down with it: the
+  // evaluator rules on the absence, and the journey's own verdict stands on
+  // its own measurements.
+  const at = await runAtPass(ctx).catch((err) => ({
+    ran: false,
+    error: `at-pass threw: ${String(err?.message || err)}`,
+  }));
+
   return {
     ok: true,
     page,
@@ -881,6 +895,7 @@ export async function runExperienceWalk(ctx, options = {}) {
     empty_states: emptyStates,
     locales,
     key_leaks: keyLeaks,
+    at,
   };
 }
 
