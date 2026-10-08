@@ -26,22 +26,22 @@ import {
   capacityScaleFor,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20261008e";
+} from "./engine.js?v=20261008f";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20261008e";
-import { buildFrontier } from "./frontier.js?v=20261008e";
-import { oversizeCallout } from "./rescale.js?v=20261008e";
-import { climateSummary } from "./climate.js?v=20261008e";
+} from "./nasa.js?v=20261008f";
+import { buildFrontier } from "./frontier.js?v=20261008f";
+import { oversizeCallout } from "./rescale.js?v=20261008f";
+import { climateSummary } from "./climate.js?v=20261008f";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20261008e";
+} from "./pricing.js?v=20261008f";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -52,7 +52,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20261008e";
+} from "./money.js?v=20261008f";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -301,7 +301,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20261008e");
+      await import("./profiles.js?v=20261008f");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -414,6 +414,8 @@ async function runSizingUncached(msg, deps = {}) {
     reservePct = 0,
     touPeakRate = 0,
     touOffPeakRate = 0,
+    outageTargetHours = 0,
+    essentialLoadKwh = 0,
   } = msg;
   const oversizeStrategy = !noSwapMode;
   // Fixed monthly charge (utility connection fee, USD): it can never be cut,
@@ -2405,7 +2407,7 @@ async function runSizingUncached(msg, deps = {}) {
       }
     }
     const payload = basePayload();
-    payload.mode = "offgrid";
+    payload.mode = mode; // "offgrid" or "backup" (backup reuses the offgrid engine)
     payload.auto = auto;
     payload.autoFallback = autoFallback;
     payload.effectiveTierId = effectiveTier;
@@ -2504,6 +2506,35 @@ async function runSizingUncached(msg, deps = {}) {
       ["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]),
     );
     payload.assumptions.money = `Auto mode sizes sodium-ion and LFP for the same job — lights stay on with a generator as rare backup — inside its depth-of-discharge window. Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended.`;
+    // Backup mode: outage backup analysis (offgrid engine, essentials only)
+    if (mode === "backup") {
+      const battKwh = payload.focus?.battKwh || 0;
+      const targetHrs = Number(outageTargetHours);
+      const essentialKwhDay = Number(essentialLoadKwh);
+      if (battKwh <= 0) {
+        payload.backup = { viable: false, reason: "verdictBackup" };
+      } else if (
+        !Number.isFinite(targetHrs) ||
+        targetHrs <= 0 ||
+        !Number.isFinite(essentialKwhDay) ||
+        essentialKwhDay <= 0
+      ) {
+        payload.backup = { viable: false, reason: "verdictBackup" };
+      } else {
+        // Essential load per hour; usable battery energy; hours of backup.
+        const essentialKwAvg = essentialKwhDay / 24;
+        const usableKwh = battKwh * 0.9;
+        const hoursOfBackup = usableKwh / essentialKwAvg;
+        const coveragePct = Math.min(100, (hoursOfBackup / targetHrs) * 100);
+        payload.backup = {
+          viable: true,
+          targetHours: targetHrs,
+          essentialKwh: essentialKwhDay,
+          hoursOfBackup: Math.round(hoursOfBackup * 10) / 10,
+          coveragePct: Math.round(coveragePct * 10) / 10,
+        };
+      }
+    }
     return attachFrontier(payload);
   }
 
@@ -2632,7 +2663,7 @@ async function runSizingUncached(msg, deps = {}) {
   });
 
   const payload = basePayload();
-  payload.mode = "offgrid";
+  payload.mode = mode; // "offgrid" or "backup" (backup reuses the offgrid engine)
   payload.chemLabel = chem.label;
   payload.tiers = tiers;
   payload.auto = null;
@@ -2664,5 +2695,33 @@ async function runSizingUncached(msg, deps = {}) {
   };
   payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
   payload.assumptions.money = `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 20-year horizon, and assumes panels/inverter last the full 20 years. Lifetime figures include install labor on the first bank and every swap. Generator fuel is not counted${fixedMonthly > 0 ? `; a fixed monthly charge is included in every bill figure` : `, nor are grid fixed charges`}.`;
+  // Backup mode: outage backup analysis (offgrid engine, essentials only)
+  if (mode === "backup") {
+    const battKwh = payload.focus?.battKwh || 0;
+    const targetHrs = Number(outageTargetHours);
+    const essentialKwhDay = Number(essentialLoadKwh);
+    if (battKwh <= 0) {
+      payload.backup = { viable: false, reason: "verdictBackup" };
+    } else if (
+      !Number.isFinite(targetHrs) ||
+      targetHrs <= 0 ||
+      !Number.isFinite(essentialKwhDay) ||
+      essentialKwhDay <= 0
+    ) {
+      payload.backup = { viable: false, reason: "verdictBackup" };
+    } else {
+      const essentialKwAvg = essentialKwhDay / 24;
+      const usableKwh = battKwh * 0.9;
+      const hoursOfBackup = usableKwh / essentialKwAvg;
+      const coveragePct = Math.min(100, (hoursOfBackup / targetHrs) * 100);
+      payload.backup = {
+        viable: true,
+        targetHours: targetHrs,
+        essentialKwh: essentialKwhDay,
+        hoursOfBackup: Math.round(hoursOfBackup * 10) / 10,
+        coveragePct: Math.round(coveragePct * 10) / 10,
+      };
+    }
+  }
   return attachFrontier(payload);
 }
