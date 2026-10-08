@@ -26,6 +26,15 @@ export const LOCALES = {
     footerAboutPost: "Not a company, not incorporated, nothing for sale.",
     ctaStart: "Start a Free Estimate",
     pickCity: "Pick a city (or use 📍 My location) so we know your sunshine.",
+    goalLabel: "What do you want this system to do?",
+    cityLabel: "Where will the system be installed?",
+    loadLabel: "How much energy do you use?",
+    loadAppliances: "I'll pick my appliances",
+    loadBill: "I know my monthly electric bill",
+    loadKwh: "I know my kWh/day (advanced)",
+    langLabel: "Language",
+    locBtn: "Use my current location",
+    chemLabel: "Battery chemistry:",
     shareLoaded:
       "Shared setup loaded. Review the inputs, then click Size My System to calculate.",
     invalidShare: "Invalid share link.",
@@ -382,8 +391,6 @@ export const LOCALES = {
     runBtnReady: "Dimensionar mi sistema (simulación 5 años)",
     locBtn: "Usar mi ubicación actual",
     chemLabel: "Química de la batería:",
-    tariffNote:
-      "Precio estimado para {label} — cámbialo arriba si conoces tu tarifa.",
     lvlBest: "Mejor opción",
     lvlCompare: "Comparar baterías",
     lvlMatrix: "Todas las opciones",
@@ -675,8 +682,6 @@ export const LOCALES = {
     runBtn: "Dimensionar meu sistema (simulação de 5 anos)",
     locBtn: "Usar minha localização atual",
     chemLabel: "Química da bateria:",
-    tariffNote:
-      "Preço estimado para {label} — mude acima se souber sua tarifa.",
     pickCity:
       "Escolha uma cidade (ou use 📍 Minha localização) para sabermos sua insolação.",
     shareLoaded:
@@ -997,8 +1002,6 @@ export const LOCALES = {
     runBtn: "Dimensionner (simulation sur 5 ans)",
     locBtn: "Utiliser ma position actuelle",
     chemLabel: "Chimie de la batterie :",
-    tariffNote:
-      "Prix estimé pour {label} — changez-le ci-dessus si vous connaissez votre tarif.",
     pickCity:
       "Choisissez une ville (ou utilisez 📍 Ma position) pour connaître votre ensoleillement.",
     shareLoaded:
@@ -1648,7 +1651,6 @@ export const LOCALES = {
     runBtn: "احسب نظامي (محاكاة خمس سنوات)",
     locBtn: "استخدم موقعي الحالي",
     chemLabel: "نوع البطارية:",
-    tariffNote: "سعر تقديري لـ {label} — غيّره أعلاه إذا كنت تعرف تعريفتك.",
     pickCity: "اختر مدينة (أو استخدم 📍 موقعي) لمعرفة إشعاعك الشمسي.",
     shareLoaded:
       "تم تحميل الإعدادات المشتركة. راجع المدخلات ثم اضغط احسب نظامي لبدء الحساب.",
