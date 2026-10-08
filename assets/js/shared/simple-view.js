@@ -4,7 +4,7 @@
 // no formatting — ui.js injects its formatters so currency/locale handling
 // stays single-owner. Anything missing or non-finite is dropped, never
 // rendered as "NaN".
-import { seriesBreakdown } from "../sizing/money.js?v=20261008f";
+import { seriesBreakdown } from "../sizing/money.js?v=20261008g";
 
 export function buildSimpleView({ p, entry, saved, fmt }) {
   if (!p || !entry || !entry.solvable) return { feasible: false };

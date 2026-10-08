@@ -26,22 +26,22 @@ import {
   capacityScaleFor,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20261008f";
+} from "./engine.js?v=20261008g";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20261008f";
-import { buildFrontier } from "./frontier.js?v=20261008f";
-import { oversizeCallout } from "./rescale.js?v=20261008f";
-import { climateSummary } from "./climate.js?v=20261008f";
+} from "./nasa.js?v=20261008g";
+import { buildFrontier } from "./frontier.js?v=20261008g";
+import { oversizeCallout } from "./rescale.js?v=20261008g";
+import { climateSummary } from "./climate.js?v=20261008g";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20261008f";
+} from "./pricing.js?v=20261008g";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -52,7 +52,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20261008f";
+} from "./money.js?v=20261008g";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -301,7 +301,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20261008f");
+      await import("./profiles.js?v=20261008g");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -416,6 +416,8 @@ async function runSizingUncached(msg, deps = {}) {
     touOffPeakRate = 0,
     outageTargetHours = 0,
     essentialLoadKwh = 0,
+    portableBankKwh = 0,
+    portableDailyKwh = 0,
   } = msg;
   const oversizeStrategy = !noSwapMode;
   // Fixed monthly charge (utility connection fee, USD): it can never be cut,
@@ -2407,7 +2409,7 @@ async function runSizingUncached(msg, deps = {}) {
       }
     }
     const payload = basePayload();
-    payload.mode = mode; // "offgrid" or "backup" (backup reuses the offgrid engine)
+    payload.mode = mode; // "offgrid", "backup", or "portable" (backup/portable reuse the offgrid engine)
     payload.auto = auto;
     payload.autoFallback = autoFallback;
     payload.effectiveTierId = effectiveTier;
@@ -2532,6 +2534,29 @@ async function runSizingUncached(msg, deps = {}) {
           essentialKwh: essentialKwhDay,
           hoursOfBackup: Math.round(hoursOfBackup * 10) / 10,
           coveragePct: Math.round(coveragePct * 10) / 10,
+        };
+      }
+    }
+    // Portable mode: mobile power analysis (offgrid engine, no fixed location)
+    if (mode === "portable") {
+      const bankKwh = Number(portableBankKwh);
+      const dailyKwh = Number(portableDailyKwh);
+      if (
+        !Number.isFinite(bankKwh) ||
+        bankKwh <= 0 ||
+        !Number.isFinite(dailyKwh) ||
+        dailyKwh <= 0
+      ) {
+        payload.portable = { viable: false, reason: "verdictPortable" };
+      } else {
+        // Usable energy (90% DoD); runtime in days.
+        const usableKwh = bankKwh * 0.9;
+        const runtimeDays = usableKwh / dailyKwh;
+        payload.portable = {
+          viable: true,
+          bankKwh: Math.round(bankKwh * 10) / 10,
+          dailyKwh: Math.round(dailyKwh * 10) / 10,
+          runtimeDays: Math.round(runtimeDays * 10) / 10,
         };
       }
     }
@@ -2720,6 +2745,28 @@ async function runSizingUncached(msg, deps = {}) {
         essentialKwh: essentialKwhDay,
         hoursOfBackup: Math.round(hoursOfBackup * 10) / 10,
         coveragePct: Math.round(coveragePct * 10) / 10,
+      };
+    }
+  }
+  // Portable mode: mobile power analysis (offgrid engine, no fixed location)
+  if (mode === "portable") {
+    const bankKwh = Number(portableBankKwh);
+    const dailyKwh = Number(portableDailyKwh);
+    if (
+      !Number.isFinite(bankKwh) ||
+      bankKwh <= 0 ||
+      !Number.isFinite(dailyKwh) ||
+      dailyKwh <= 0
+    ) {
+      payload.portable = { viable: false, reason: "verdictPortable" };
+    } else {
+      const usableKwh = bankKwh * 0.9;
+      const runtimeDays = usableKwh / dailyKwh;
+      payload.portable = {
+        viable: true,
+        bankKwh: Math.round(bankKwh * 10) / 10,
+        dailyKwh: Math.round(dailyKwh * 10) / 10,
+        runtimeDays: Math.round(runtimeDays * 10) / 10,
       };
     }
   }
