@@ -3023,7 +3023,9 @@ function flushPendingSlice() {
 // curve point — its SOC chart once the capture bands arrive.
 function mergeReSlice(result) {
   const p = lastPayload;
-  if (!p || !result) return;
+  // The `in` checks below throw a TypeError on a non-object result (e.g. a
+  // malformed worker message). A truthy non-object is not a slice to merge.
+  if (!p || !result || typeof result !== "object") return;
   if (result.customCut) p.customCut = result.customCut;
   if ("agmReference" in result) p.agmReference = result.agmReference;
   if (result.cells && p.matrix && p.matrix.cells)
@@ -5076,6 +5078,10 @@ function purchasePaths(p, sys) {
   // undefined baseline silently turns every break-even into "not within 20
   // years" — a whole column of honest-looking wrong answers.
   const baseline = p.annualGridSpendUsd;
+  // A non-finite baseline prices against undefined: every break-even becomes
+  // "not within 20 years" without any signal that the input was bad. Return
+  // null (nothing to price) instead of a column of honest-looking wrong answers.
+  if (!Number.isFinite(baseline)) return null;
   const key = [
     sys.pvKw,
     sys.battKwh,

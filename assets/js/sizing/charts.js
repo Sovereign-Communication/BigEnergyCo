@@ -78,7 +78,10 @@ export const TIER_NAMES = {
   "auto-lfp": "LFP bank over five real years",
 };
 
-function drawSunStrip(ctx, pv, X, W, padL, padR, stripH) {
+export function drawSunStrip(ctx, pv, X, W, padL, padR, stripH) {
+  // Spreading a null/undefined pv throws a TypeError. Nothing to draw without
+  // a context and a non-empty series — return early instead of crashing.
+  if (!ctx || !Array.isArray(pv) || !pv.length) return;
   const pvMax = Math.max(...pv, 0.1);
 
   const amp = stripH - 16;
