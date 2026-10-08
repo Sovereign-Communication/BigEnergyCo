@@ -2,15 +2,15 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261006a";
-import { oversizeCallout } from "./rescale.js?v=20261006a";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261008a";
+import { oversizeCallout } from "./rescale.js?v=20261008a";
 import {
   CHEMISTRIES,
   coldCapacityScale,
   capacityScaleFor,
   CYCLE_LIFE_CURVES,
   cycleLifeForDoD,
-} from "./chem-model.js?v=20261006a";
+} from "./chem-model.js?v=20261008a";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -387,11 +387,6 @@ export function dailyExtremes(series) {
  * @returns {Array<{lo:number, hi:number}>}
  */
 export function downsampleEnvelope(series, buckets) {
-  // Validate early: a null/undefined series throws a bare TypeError on
-  // `.length`, and a non-finite bucket count silently produces garbage.
-  // Nothing to downsample (or no valid bucketing) means an empty envelope.
-  if (!Array.isArray(series) || !series.length) return [];
-  if (!Number.isFinite(buckets) || buckets < 1) return [];
   const n = series.length;
   const out = [];
   const size = n / buckets;

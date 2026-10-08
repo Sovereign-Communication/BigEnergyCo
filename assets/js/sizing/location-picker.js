@@ -16,8 +16,8 @@ import {
   searchCities,
   shouldAutoResolve,
   typedCityCandidates,
-} from "./cities.js?v=20261006a";
-import { byId, el } from "../shared/dom.js?v=20261006a";
+} from "./cities.js?v=20261008a";
+import { byId, el } from "../shared/dom.js?v=20261008a";
 
 export function setupCitySearch({
   onPick,

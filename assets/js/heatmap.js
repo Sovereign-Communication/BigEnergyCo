@@ -11,15 +11,15 @@ import {
   decodeYears,
   YEAR_VALUES_PER_POINT,
   NO_YEAR,
-} from "./sizing/heatmap-grid.js?v=20261006a";
+} from "./sizing/heatmap-grid.js?v=20261008a";
 import {
   dotTransform,
   projectDots,
   buildHitIndex,
   hitTest,
   HIT_CELL_PX,
-} from "./sizing/heatmap-dots.js?v=20261006a";
-import { applyLeafletStyles } from "./sizing/leaflet-styles.js?v=20261006a";
+} from "./sizing/heatmap-dots.js?v=20261008a";
+import { applyLeafletStyles } from "./sizing/leaflet-styles.js?v=20261008a";
 
 const DOT_RADIUS = 3.5;
 // How many tasks the FIRST draw is spread over. TWO, and the number is
@@ -927,7 +927,7 @@ document
 async function ensureNames() {
   if (nameList) return nameList;
   if (namesPending) return namesPending;
-  namesPending = fetch("../assets/data/heatmap-names.json?v=20261006a")
+  namesPending = fetch("../assets/data/heatmap-names.json?v=20261008a")
     .then((r) => {
       if (!r.ok) throw new Error("Failed to load heatmap city names");
       return r.json();
@@ -952,7 +952,7 @@ async function ensureNames() {
 async function ensureYears() {
   if (years) return years;
   if (yearsPending) return yearsPending;
-  yearsPending = fetch("../assets/data/heatmap-years.bin?v=20261006a")
+  yearsPending = fetch("../assets/data/heatmap-years.bin?v=20261008a")
     .then((r) => {
       if (!r.ok) throw new Error("Failed to load heatmap year matrix");
       return r.arrayBuffer();
@@ -986,7 +986,7 @@ async function init() {
     // left of this page's TBT. This is 466 KB and `arrayBuffer()` is a read, not
     // an inflate-plus-decode-plus-parse; `decodeGrid` hands back typed-array
     // VIEWS over that buffer, so decoding copies nothing.
-    const res = await fetch("../assets/data/heatmap-grid.bin?v=20261006a");
+    const res = await fetch("../assets/data/heatmap-grid.bin?v=20261008a");
     if (!res.ok) throw new Error("Failed to load heatmap data");
     grid = decodeGrid(await res.arrayBuffer());
     header = {
