@@ -1,53 +1,13 @@
 // Jev-audit-backed fixes: validate-early guards. Run: node --test tests/
 // Covers the audit findings applied to PR #171's quality gap:
-// - engine.js::downsampleEnvelope (validate-early, 0.89)
 // - charts.js::drawSunStrip (validate-early, 0.82)
 // - frontier-chart.js::textWidth (validate-early, 0.92)
+// (engine.js::downsampleEnvelope tests live in tests/engine.test.mjs)
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { downsampleEnvelope } from "../assets/js/sizing/engine.js";
-import { drawSunStrip } from "../assets/js/sizing/charts.js";
+import { drawSunStrip, initCharts } from "../assets/js/sizing/charts.js";
 import { textWidth } from "../assets/js/sizing/frontier-chart.js";
 
-// ── downsampleEnvelope ────────────────────────────────────────────────────
-
-test("downsampleEnvelope: null series returns [] instead of throwing", () => {
-  assert.deepEqual(downsampleEnvelope(null, 10), []);
-});
-
-test("downsampleEnvelope: undefined series returns [] instead of throwing", () => {
-  assert.deepEqual(downsampleEnvelope(undefined, 10), []);
-});
-
-test("downsampleEnvelope: empty series returns []", () => {
-  assert.deepEqual(downsampleEnvelope([], 10), []);
-});
-
-test("downsampleEnvelope: non-array series returns []", () => {
-  assert.deepEqual(downsampleEnvelope("not an array", 10), []);
-});
-
-test("downsampleEnvelope: zero buckets returns []", () => {
-  assert.deepEqual(downsampleEnvelope([1, 2, 3, 4], 0), []);
-});
-
-test("downsampleEnvelope: NaN buckets returns []", () => {
-  assert.deepEqual(downsampleEnvelope([1, 2, 3, 4], NaN), []);
-});
-
-test("downsampleEnvelope: basic downsampling computes lo/hi per bucket", () => {
-  const out = downsampleEnvelope([1, 5, 3, 7, 2, 8], 3);
-  assert.equal(out.length, 3);
-  assert.deepEqual(out[0], { lo: 1, hi: 5 });
-  assert.deepEqual(out[1], { lo: 3, hi: 7 });
-  assert.deepEqual(out[2], { lo: 2, hi: 8 });
-});
-
-test("downsampleEnvelope: single bucket covers whole series", () => {
-  const out = downsampleEnvelope([4, 1, 9, 2], 1);
-  assert.equal(out.length, 1);
-  assert.deepEqual(out[0], { lo: 1, hi: 9 });
-});
 
 // ── drawSunStrip ──────────────────────────────────────────────────────────
 
@@ -101,6 +61,7 @@ test("drawSunStrip: null ctx returns early without throwing", () => {
 });
 
 test("drawSunStrip: valid input draws the strip", () => {
+  initCharts({ $: () => null, el: () => null, t: (key) => key, fmt: String, money: String });
   const ctx = mockCtx();
   drawSunStrip(ctx, [1, 2, 3, 4], X, 100, 5, 5, 40);
   assert.ok(ctx.calls.includes("save"));
