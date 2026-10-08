@@ -556,7 +556,7 @@
   // ── Init ───────────────────────────────────────────────────────────────
   async function init() {
     try {
-      const res = await fetch("../assets/data/heatmap-grid.json?v=20261008c");
+      const res = await fetch("../assets/data/heatmap-grid.json?v=20261008d");
       if (!res.ok) throw new Error("Failed to load heatmap data");
       gridData = await res.json();
     } catch (err) {

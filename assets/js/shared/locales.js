@@ -315,6 +315,9 @@ export const LOCALES = {
     infeasibleGenericBody: "Change the goal or hardware, then re-run.",
     financeOwnNote:
       "Leasing a solar system always costs far more over its lifetime than owning — you’re paying a company’s profit margin on top of the hardware for 20+ years. The cheapest path is to own outright: a collateral loan or private funding for the upfront cost typically pays for itself in bill savings within a few years, and then the power is free. When you own your system, you answer to no one — no monthly lease, no escalator clauses, no company deciding your rates. Stay sovereign: own your power.",
+    useCaseReserve: "Emergency reserve",
+    reserveSliderLabel: "Reserve percentage:",
+    verdictReserveNoBattery: "Emergency reserve requires a battery. Add battery storage to use this mode.",
   },
   es: {
     navSizing: "Dimensiona tu sistema",
@@ -640,6 +643,9 @@ export const LOCALES = {
       "Cambia el objetivo o el hardware y vuelve a ejecutar.",
     financeOwnNote:
       "Arrendar un sistema solar siempre cuesta mucho más a lo largo de su vida útil que ser propietario: estás pagando el margen de beneficio de una empresa además del hardware durante más de 20 años. El camino más barato es ser propietario: un préstamo con garantía o financiación privada para el costo inicial generalmente se amortiza con el ahorro en facturas en pocos años, y luego la energía es gratis. Cuando eres dueño de tu sistema, no respondes ante nadie: sin arrendamiento mensual, sin cláusulas de aumento, sin empresa que decida tus tarifas. Mantén tu soberanía: sé dueño de tu energía.",
+    useCaseReserve: "Reserva de emergencia",
+    reserveSliderLabel: "Porcentaje de reserva:",
+    verdictReserveNoBattery: "La reserva de emergencia requiere una batería. Agregue almacenamiento de batería para usar este modo.",
   },
   pt: {
     navSizing: "Dimensione seu sistema",
@@ -959,6 +965,9 @@ export const LOCALES = {
     infeasibleGenericBody: "Mude o objetivo ou o hardware e execute de novo.",
     financeOwnNote:
       "Alugar um sistema solar sempre custa muito mais ao longo de sua vida útil do que ser proprietário — você está pagando a margem de lucro de uma empresa além do hardware por mais de 20 anos. O caminho mais barato é ser proprietário: um empréstimo com garantia ou financiamento privado para o custo inicial geralmente se paga com a economia na conta em poucos anos, e depois a energia é gratuita. Quando você é dono do seu sistema, não responde a ninguém — sem aluguel mensal, sem cláusulas de reajuste, sem empresa decidindo suas tarifas. Mantenha sua soberania: seja dono da sua energia.",
+    useCaseReserve: "Reserva de emergência",
+    reserveSliderLabel: "Percentual de reserva:",
+    verdictReserveNoBattery: "A reserva de emergência requer uma bateria. Adicione armazenamento de bateria para usar este modo.",
   },
   fr: {
     navSizing: "Dimensionner mon système",
@@ -1286,6 +1295,9 @@ export const LOCALES = {
     infeasibleGenericBody: "Changez l'objectif ou le matériel, puis relancez.",
     financeOwnNote:
       "Louer un système solaire coûte toujours beaucoup plus cher sur sa durée de vie que d’en être propriétaire — vous payez la marge bénéficiaire d’une entreprise en plus du matériel pendant plus de 20 ans. Le chemin le moins cher est d’être propriétaire : un prêt garanti ou un financement privé pour le coût initial s’amortit généralement grâce aux économies sur les factures en quelques années, puis l’énergie est gratuite. Quand vous possédez votre système, vous ne répondez devant personne — pas de loyer mensuel, pas de clauses d’augmentation, pas d’entreprise qui décide de vos tarifs. Restez souverain : possédez votre énergie.",
+    useCaseReserve: "Réserve d'urgence",
+    reserveSliderLabel: "Pourcentage de réserve :",
+    verdictReserveNoBattery: "La réserve d'urgence nécessite une batterie. Ajoutez un stockage par batterie pour utiliser ce mode.",
   },
   de: {
     navSizing: "System dimensionieren",
@@ -1610,6 +1622,9 @@ export const LOCALES = {
       "Ändern Sie das Ziel oder die Hardware und rechnen Sie erneut.",
     financeOwnNote:
       "Ein Solarsystem zu leasen kostet über seine Lebensdauer immer weitaus mehr als es zu besitzen — Sie zahlen über 20 Jahre lang die Gewinnmarge eines Unternehmens zusätzlich zur Hardware. Der günstigste Weg ist der Kauf: Ein besichertes Darlehen oder eine private Finanzierung für die Anschaffungskosten amortisiert sich in der Regel innerhalb weniger Jahre durch die Stromersparnis, danach ist der Strom gratis. Wenn Sie Ihr System besitzen, sind Sie niemandem Rechenschaft schuldig — keine monatliche Leasingrate, keine Preisanpassungsklauseln, kein Unternehmen, das Ihre Tarife bestimmt. Bleiben Sie souverän: Besitzen Sie Ihre Energie.",
+    useCaseReserve: "Notreserve",
+    reserveSliderLabel: "Reserveprozentsatz:",
+    verdictReserveNoBattery: "Die Notreserve erfordert eine Batterie. Fügen Sie Batteriespeicher hinzu, um diesen Modus zu verwenden.",
   },
   ar: {
     rtl: true,
@@ -1914,5 +1929,8 @@ export const LOCALES = {
     infeasibleGenericBody: "غيّر الهدف أو العتاد، ثم أعد التشغيل.",
     financeOwnNote:
       "إن استئجار نظام شمسي يكلف دائمًا أكثر بكثير على مدى عمره الافتراضي من امتلاكه — فأنت تدفع هامش ربح الشركة بالإضافة إلى الأجهزة لأكثر من 20 عامًا. أرخص طريق هو الامتلاك الكامل: القرض المضمون أو التمويل الخاص للتكلفة الأولية يُسدَّد عادةً من وفورات الفواتير خلال بضع سنوات، ثم تصبح الطاقة مجانية. عندما تمتلك نظامك، فأنت لا تخضع لأحد — لا إيجار شهري، لا بنود تصعيدية، لا شركة تقرر أسعارك. حافظ على سيادتك: امتلك طاقتك.",
+    useCaseReserve: "احتياطي الطوارئ",
+    reserveSliderLabel: "نسبة الاحتياطي:",
+    verdictReserveNoBattery: "يتطلب احتياطي الطوارئ بطارية. أضف تخزين البطارية لاستخدام هذا الوضع.",
   },
 };

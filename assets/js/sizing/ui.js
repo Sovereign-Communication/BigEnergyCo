@@ -13,14 +13,14 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261008c";
+import { APPLIANCES } from "./appliances.js?v=20261008d";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261008c";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261008c";
+} from "./run-coordinator.js?v=20261008d";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261008d";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -29,12 +29,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261008c";
+} from "./charts.js?v=20261008d";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261008c";
+} from "./location-picker.js?v=20261008d";
 
 import {
   estimateTariff,
@@ -42,27 +42,27 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261008c";
+} from "./pricing.js?v=20261008d";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261008c";
+import { currencyForCountry } from "./country-currency.js?v=20261008d";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261008c";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261008d";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261008c";
+} from "./lead-acid.js?v=20261008d";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261008c";
+} from "./bom.js?v=20261008d";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261008c";
+import { BOM_ITEMS } from "../shared/content.js?v=20261008d";
 
 import {
   applyI18n,
@@ -71,18 +71,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261008c";
+} from "../shared/i18n.js?v=20261008d";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261008c";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261008c";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261008d";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261008d";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261008c";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261008c";
+} from "../shared/simple-mode.js?v=20261008d";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261008d";
 import {
   advisorJevContext,
   interpretSanity,
@@ -90,56 +90,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261008c";
+} from "./validate.js?v=20261008d";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261008c";
+} from "../shared/cut-targets.js?v=20261008d";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261008c";
+} from "./share-codec.js?v=20261008d";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261008c";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261008c";
+} from "./infeasible-copy.js?v=20261008d";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261008d";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261008c";
+} from "./fuel-units.js?v=20261008d";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261008c";
+} from "./frontier-chart.js?v=20261008d";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261008c";
+} from "./rescale.js?v=20261008d";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261008c";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261008d";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20261008c";
+} from "./map-provider.js?v=20261008d";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261008c";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261008c";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261008c";
+} from "./wizard.js?v=20261008d";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261008d";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261008d";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -188,9 +188,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261008c";
+} from "./money.js?v=20261008d";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261008c";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261008d";
 
 let worker = null;
 
@@ -857,11 +857,18 @@ function updateAutoRows() {
   const isAuto = $("chemSelect").value === "auto";
 
   const gt = $("systemGoal") ? $("systemGoal").value === "gridtie" : false;
+  const isReserve = $("systemGoal")
+    ? $("systemGoal").value === "reserve"
+    : false;
 
   const tierRow = $("autoTierRow"),
-    targetRow = $("autoTargetRow");
+    targetRow = $("autoTargetRow"),
+    reserveRow = $("reserveSliderRow");
 
   if (tierRow) tierRow.style.display = isAuto && !gt ? "block" : "none";
+
+  // Reserve mode shows the reserve percentage slider
+  if (reserveRow) reserveRow.style.display = isReserve ? "block" : "none";
 
   // Bill-cut is a continuous post-result control, not an upfront preset.
   // Keep the hidden select as the internal compatibility state for share links
@@ -2190,6 +2197,11 @@ function readInputs() {
 
     mode: $("systemGoal") ? $("systemGoal").value : "offgrid",
 
+    reservePct:
+      $("systemGoal")?.value === "reserve"
+        ? (parseInt($("reserveSlider")?.value, 10) || 0) / 100
+        : 0,
+
     basis,
 
     hardwareConfig: $("hardwareConfig")?.value || "both",
@@ -2853,6 +2865,20 @@ function setupOffgridControls() {
   });
 }
 
+function setupReserveControls() {
+  const slider = $("reserveSlider");
+  const out = $("reserveSliderVal");
+  if (!slider) return;
+
+  const sync = () => {
+    const v = parseInt(slider.value, 10) || 0;
+    if (out) out.textContent = v + "%";
+    markPrecalcDirty();
+  };
+
+  slider.addEventListener("input", sync);
+  sync();
+}
 function setupMatrixSelection() {
   const grid = $("tierResults");
   if (!grid) return;
@@ -3056,7 +3082,7 @@ function renderFocusPanel(p, entry, isPreview) {
     return;
   }
   wrap.style.display = "block";
-  const isGT = p.mode === "gridtie";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve";
   const sel = resolveSelected(p);
   const isRec = !isPreview && (!sel || !p.best || sameSystem(sel, p.best));
   $("focusTitle").textContent = isPreview
@@ -3249,7 +3275,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261008c",
+      "./assets/js/sizing/sizing-worker.js?v=20261008d",
       {
         type: "module",
       },
@@ -3570,7 +3596,7 @@ function renderAutoCards(p) {
 
   grid.innerHTML = "";
 
-  const isGT = p.mode === "gridtie";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve";
 
   // Highlight the recommended bank (sodium-first on safety; LFP only when
   // genuinely cheaper — see pickBest), falling back to cheapest when the
@@ -4126,7 +4152,7 @@ function renderRelativeOptions(p, selectedSystem) {
   const hasBasePanels = Number(base.pvKw) > 0;
   const basePvKw = Math.max(1, base.pvKw || (p.dailyKwh || 10) * 0.6);
   const landedF = (p.assumptions && p.assumptions.landedF) || 1;
-  const isGT = p.mode === "gridtie";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve";
   // A battery-only run builds no panels, so its tiers must scale the battery
   // alone. Feeding the clamped `basePvKw` into them presented a 12 kW array as
   // the visitor's OWN system — card label, PV row, price and adoption alike —
@@ -4569,7 +4595,7 @@ function renderBestPick(p) {
     return;
   }
   const b = p.best;
-  const isGT = p.mode === "gridtie";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve";
   const solvablePool = (p.auto || []).filter(
     (a) => a.solvable && Number.isFinite(a.lifetimeCostMid),
   );
@@ -6537,7 +6563,7 @@ function renderResults(p) {
 
   frontierSelected = null; // new result -> blue dot follows the new recommendation
 
-  const isGT = p.mode === "gridtie";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve";
 
   if (p.contract !== undefined && p.contract !== PAYLOAD_CONTRACT) {
     setStatus(
@@ -6755,6 +6781,9 @@ function renderResults(p) {
     `Costs span ${pr.basisLabel || "ex-factory China to PowMr-class budget retail"} (${pr.source || "cell market indications through PowMr catalog, Aug 2026"}) - ` +
     `the low end is components before freight/duty/BMS, the high end is shipped retail with BMS and enclosure included. ` +
     t("financeOwnNote") + " " +
+    (p.mode === "reserve" && p.reserve?.viable
+      ? `Emergency reserve: ${Math.round(p.reserve.reservePct * 100)}% (${p.reserve.reserveKwh} kWh) held for outages. `
+      : "") +
     (a.money ? a.money + " " : "") +
     (a.capacityNote ? a.capacityNote + " " : "") +
     (fxNote() ? fxNote() + " " : "") +
@@ -6963,7 +6992,7 @@ function renderSelectedBanner(p, sel) {
 // already sitting in the cached payload.
 function refreshSelectionOutputs(p) {
   if (!p) return;
-  const isGT = p.mode === "gridtie";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve";
   const hasAuto = !!(p.auto && p.auto.length);
   const sel = resolveSelected(p);
   // Banner follows the selection (no-op when the selection IS the best —
@@ -7252,7 +7281,7 @@ function populatePrintSheet(p, inp) {
 
   if (!sheet) return;
 
-  const isGT = p.mode === "gridtie";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve";
 
   let rows, head, title;
 
@@ -7987,6 +8016,7 @@ export async function initSizingUI() {
     // Goal control + Offgrid slider + Monthly-bill slider + bill-cut slider.
     setupGoalControls();
     setupOffgridControls();
+    setupReserveControls();
     setupBillSlider();
     setupCutSlider();
     setupBudgetSlider();

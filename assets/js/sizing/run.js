@@ -26,22 +26,22 @@ import {
   capacityScaleFor,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20261008c";
+} from "./engine.js?v=20261008d";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20261008c";
-import { buildFrontier } from "./frontier.js?v=20261008c";
-import { oversizeCallout } from "./rescale.js?v=20261008c";
-import { climateSummary } from "./climate.js?v=20261008c";
+} from "./nasa.js?v=20261008d";
+import { buildFrontier } from "./frontier.js?v=20261008d";
+import { oversizeCallout } from "./rescale.js?v=20261008d";
+import { climateSummary } from "./climate.js?v=20261008d";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20261008c";
+} from "./pricing.js?v=20261008d";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -52,7 +52,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20261008c";
+} from "./money.js?v=20261008d";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -301,7 +301,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20261008c");
+      await import("./profiles.js?v=20261008d");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -411,6 +411,7 @@ async function runSizingUncached(msg, deps = {}) {
     // #155: no-swap UI option. Default false = the oversize/swap strategy
     // stays on (existing behavior); true disables it engine-wide.
     noSwapMode = false,
+    reservePct = 0,
   } = msg;
   const oversizeStrategy = !noSwapMode;
   // Fixed monthly charge (utility connection fee, USD): it can never be cut,
@@ -1875,7 +1876,7 @@ async function runSizingUncached(msg, deps = {}) {
   }
 
   // ── GRID-TIE ──────────────────────────────────────────────────────────────
-  if (mode === "gridtie") {
+  if (mode === "gridtie" || mode === "reserve") {
     if (chemistry === "auto") {
       const matrixCells = {};
       const resultsByChem = {};
@@ -2168,7 +2169,7 @@ async function runSizingUncached(msg, deps = {}) {
       customTarget.cutPct = Math.round(customFracSp * 100);
     }
     const payload = basePayload();
-    payload.mode = "gridtie";
+    payload.mode = mode; // "gridtie" or "reserve"
     payload.chemLabel = chem.label;
     payload.targets = targets;
     payload.customTarget = customTarget;
@@ -2201,6 +2202,26 @@ async function runSizingUncached(msg, deps = {}) {
     };
     payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
     payload.assumptions.money = `Bill reduction simulated hour-by-hour across five years of weather: solar serves the load first, surplus charges the battery, the grid covers the rest, nothing is exported unless you enter a feed-in credit (then clipped surplus is valued at that rate). Lifetime cost includes bank swaps plus install labor each time. ${fixedMonthly > 0 ? `A fixed monthly charge is included in every bill figure (it cannot be cut).` : `Fixed connection fees not counted.`}`;
+    // Reserve mode: calculate emergency reserve analysis
+    if (mode === "reserve") {
+      const battKwh = payload.focus?.battKwh || 0;
+      if (battKwh <= 0) {
+        payload.reserve = { viable: false, reason: "verdictReserveNoBattery" };
+      } else {
+        const reserveKwh = battKwh * reservePct;
+        const usableKwh = battKwh - reserveKwh;
+        // Simple tradeoff: reserve provides emergency hours, costs cycling value
+        // Higher reserve = more emergency preparedness, less daily arbitrage
+        const reserveTradeoff = reservePct > 0 ? (1 - reservePct) / reservePct : Infinity;
+        payload.reserve = {
+          viable: true,
+          reservePct,
+          reserveKwh: Math.round(reserveKwh * 10) / 10,
+          usableKwh: Math.round(usableKwh * 10) / 10,
+          reserveTradeoff: Math.round(reserveTradeoff * 100) / 100,
+        };
+      }
+    }
     return attachFrontier(payload);
   }
 

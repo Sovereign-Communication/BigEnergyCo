@@ -259,10 +259,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20261008c" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261008c" />
+    <link rel="preload" href="./assets/site.css?v=20261008d" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261008d" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20261008c" />
+    <link rel="stylesheet" href="./assets/site.css?v=20261008d" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -1477,7 +1477,27 @@
                     </option>
 
                     <option value="offgrid">Power me fully off-grid</option>
+
+                    <option value="reserve" data-i18n="useCaseReserve">
+                      Emergency reserve
+                    </option>
                   </select>
+                </div>
+
+                <div class="form-group" id="reserveSliderRow" style="display: none">
+                  <label for="reserveSlider" data-i18n="reserveSliderLabel"
+                    >Reserve percentage:</label
+                  >
+                  <input
+                    type="range"
+                    id="reserveSlider"
+                    class="form-control"
+                    min="0"
+                    max="50"
+                    value="20"
+                    step="5"
+                  />
+                  <span id="reserveSliderVal">20%</span>
                 </div>
 
                 <div class="form-group" id="hardwareConfigRow">
@@ -3438,15 +3458,15 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20261008c"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20261008d"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
       type="module"
-      src="./assets/js/turnstile-client.js?v=20261008c"
+      src="./assets/js/turnstile-client.js?v=20261008d"
     ></script>
-    <script defer src="./assets/js/chat.js?v=20261008c"></script>
+    <script defer src="./assets/js/chat.js?v=20261008d"></script>
   </body>
 </html>
 
