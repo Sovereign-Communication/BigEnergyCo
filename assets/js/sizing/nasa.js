@@ -110,9 +110,14 @@ export async function fetchHourlySeries({
 }
 
 export function buildUrl(latitude, longitude, start, end) {
+  // Privacy: round to ~1.1 km before egress. NASA POWER's grid is ~55 km
+  // (0.5°), so 2-decimal rounding has zero impact on the returned data —
+  // but it keeps metre-accurate GPS coordinates off the wire.
+  const rlat = Number(latitude).toFixed(2);
+  const rlon = Number(longitude).toFixed(2);
   return (
     `${POWER_HOURLY_URL}?parameters=ALLSKY_SFC_SW_DWN,T2M` +
-    `&community=RE&latitude=${latitude}&longitude=${longitude}` +
+    `&community=RE&latitude=${rlat}&longitude=${rlon}` +
     `&start=${start}&end=${end}&format=JSON`
   );
 }
