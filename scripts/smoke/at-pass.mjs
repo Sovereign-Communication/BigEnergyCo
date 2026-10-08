@@ -13,20 +13,31 @@
 // a violation is a note in the evaluator, never a regression here. What
 // blocks is the ABSENCE of a run: an unexercised claim is a hole, never a
 // pass.
+//
+// WHY VENDORED, NOT require.resolve. The web-smoke job deliberately runs on
+// zero npm dependencies (the smoke suite drives the runner's Chrome over raw
+// CDP) — axe-core is a pinned devDependency that is NOT installed there, so
+// require.resolve fails in CI. scripts/vendor/axe.min.js is the exact pinned
+// build (axe-core 4.13.0, from the npm tarball), committed so this gate stays
+// dependency-free. If the pin moves, re-vendor the file and update the version
+// note below.
 import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { AXE_TAGS } from "../lib/quality-matrix.mjs";
 
-const require = createRequire(import.meta.url);
+// Vendored axe-core 4.13.0 — see WHY VENDORED above.
+const AXE_VENDOR_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "vendor",
+  "axe.min.js",
+);
 
-// Pinned devDependency, resolved exactly the way check-a11y-matrix.mjs
-// resolves it: require.resolve against the installed package, not a path
-// typed by hand that drifts when the pin moves.
 let axeSource = null;
 function getAxeSource() {
-  if (!axeSource)
-    axeSource = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
+  if (!axeSource) axeSource = readFileSync(AXE_VENDOR_PATH, "utf8");
   return axeSource;
 }
 
