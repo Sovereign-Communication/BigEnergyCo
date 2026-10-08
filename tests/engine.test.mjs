@@ -548,3 +548,13 @@ test("tropical site annual yield lands in plausible range", () => {
     `annual yield per kW was ${annualKwhPerKw.toFixed(0)} kWh`,
   );
 });
+
+test("downsampleEnvelope rejects invalid inputs and accepts typed arrays", () => {
+  assert.deepEqual(downsampleEnvelope(null, 10), []);
+  assert.deepEqual(downsampleEnvelope("not a series", 10), []);
+  assert.deepEqual(downsampleEnvelope([1, 2, 3], 0), []);
+  assert.deepEqual(downsampleEnvelope([1, 2, 3], NaN), []);
+  assert.deepEqual(downsampleEnvelope(new Float64Array([2, 5, 1]), 1), [
+    { lo: 1, hi: 5 },
+  ]);
+});

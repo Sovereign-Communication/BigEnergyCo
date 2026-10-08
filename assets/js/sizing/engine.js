@@ -388,10 +388,11 @@ export function dailyExtremes(series) {
  * @returns {Array<{lo:number, hi:number}>}
  */
 export function downsampleEnvelope(series, buckets) {
-  // Validate early: a null/undefined series throws a bare TypeError on
-  // `.length`, and a non-finite bucket count silently produces garbage.
-  // Nothing to downsample (or no valid bucketing) means an empty envelope.
-  if (!Array.isArray(series) || !series.length) return [];
+  // Accept ordinary and typed numeric arrays; DataView has no length and is rejected.
+  const isSeries =
+    Array.isArray(series) ||
+    (ArrayBuffer.isView(series) && typeof series.length === "number");
+  if (!isSeries || series.length === 0) return [];
   if (!Number.isFinite(buckets) || buckets < 1) return [];
   const n = series.length;
   const out = [];
