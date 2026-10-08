@@ -39,7 +39,10 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
   const short = scopeFacets.filter((a) => report.facets[a].index < 4);
   // The all-proven exit rule binds from COMPLETE_EXIT_RULE_FROM. P0.3(c)
   // defined the rule and is the one item it cannot judge (see the constant).
-  const exitRuleBinds = planItemAtLeast(scope, COMPLETE_EXIT_RULE_FROM);
+  // P0.6 is owner-ruled (§9 rule 6, 2026-10-06) into the same bootstrap: the
+  // gate's confidence calibration cannot reach `proven` on audit evidence.
+  const exitRuleBinds =
+    planItemAtLeast(scope, COMPLETE_EXIT_RULE_FROM) && scope !== "P0.6";
   // P0.3 bootstrap (plan §9 rule 6, owner ruling 2026-09-26): a P0.3
   // sub-PR builds the gate that judges it, so it merges on green CI plus an
   // attached scoped report with NO RATCHET REGRESSION, even below 99. The
@@ -65,7 +68,9 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
       min_score: report.min_score,
       bootstrap_applies: !exitRuleBinds,
       bootstrap_rule:
-        "plan §9 rule 6: P0.3 sub-PRs merge on green CI plus no ratchet regression, even below 99",
+        scope === "P0.6"
+          ? "plan §9 rule 6: P0.6 evidence PRs merge on green CI plus no ratchet regression, even below 99 (owner ruling 2026-10-06)"
+          : "plan §9 rule 6: P0.3 sub-PRs merge on green CI plus no ratchet regression, even below 99",
       facets_short_of_proven: short,
       exit_rule_binds_from: COMPLETE_EXIT_RULE_FROM,
       exit_rule_binding: exitRuleBinds,

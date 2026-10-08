@@ -437,6 +437,33 @@ export function evaluateExperience(
     judgeLocaleSweep(reading, expectations, { regressions, holes, notes });
   }
 
+  // ── the assistive-technology pass ─────────────────────────────────────
+  // WHY A NOTE AND NEVER A REGRESSION. scripts/check-a11y-matrix.mjs already
+  // ratchets axe violations against its baseline — that gate owns them, and a
+  // violation re-litigated here would double-block a single finding. This
+  // gate's job is the journey a visitor walks; the AT pass exists so the
+  // facet line can truthfully say an assistive-technology run happened. What
+  // blocks is the ABSENCE of the run: an unexercised claim is a hole, never a
+  // pass.
+  const at = reading.at;
+  if (!at || at.ran !== true) {
+    hole(
+      "at",
+      `AT pass did not run: ${at?.error || "no AT result recorded"}. The ` +
+        "facet line reports an assistive-technology run, so a reading without " +
+        "one is a claim this gate never exercised",
+    );
+  } else {
+    const c = at.counts || {};
+    const total = Array.isArray(at.violations) ? at.violations.length : 0;
+    notes.push(
+      `AT run: axe reported ${total} violation(s) ` +
+        `(${c.critical ?? 0} critical, ${c.serious ?? 0} serious, ` +
+        `${c.moderate ?? 0} moderate, ${c.minor ?? 0} minor; ` +
+        `${at.incomplete ?? 0} incomplete)`,
+    );
+  }
+
   return { regressions, holes, notes };
 }
 
@@ -766,12 +793,35 @@ export function composeExperienceFacetLine(report) {
         : "0 raw keys visible",
     );
 
+  // The AT clause, truthful either way. When the pass ran, the counts it
+  // reported; when it did not, the admission — never a claim of a run that
+  // never happened.
+  const at = reading.at;
+  const atClause =
+    at?.ran === true
+      ? (() => {
+          const v = Array.isArray(at.violations) ? at.violations.length : 0;
+          const c = at.counts || {};
+          return (
+            `AT run: axe ${v} violation(s) ` +
+            `(${c.critical ?? 0} critical, ${c.serious ?? 0} serious)`
+          );
+        })()
+      : "No AT run.";
+
   // The limit travels with the numbers, and it is the second half of the line
   // that earns the first half its keep. Kept short deliberately: the transport
   // clips this to 280 characters and silently cuts the TAIL.
+  //
+  // The acknowledgement sentence is compressed (not removed): with the AT
+  // clause the line would otherwise exceed the clip, and the clip is not
+  // raised — the tail is what gets cut. "Whether moved" keeps the
+  // methodology: this gate judges WHETHER something observable changed, never
+  // WHICH thing.
   return (
     `WALKED, 1 Chrome, 1 city: ${parts.join("; ")}. ` +
-    "Ack = an observable moved, weak on which, strict on whether. No AT run."
+    "Ack = whether moved. " +
+    atClause
   );
 }
 

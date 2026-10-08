@@ -103,6 +103,7 @@ export const SCOPE_FACETS = {
   "P0.3": ["correctness", "security", "testing", "docs"],
   "P0.4": ["performance", "accessibility", "quality", "testing"],
   "P0.5": ["security", "docs"],
+  "P0.6": ["docs"],
   // P1 — live truth fixes
   "P1.1": ["correctness", "quality", "provenance"],
   "P1.2": ["correctness", "quality", "comparison"],

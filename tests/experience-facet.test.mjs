@@ -118,6 +118,15 @@ const HEALTHY = () => ({
     LOCALE_PHASES.map((p) => goodLocalePass(l, p)),
   ),
   key_leaks: [],
+  // The walk always runs the AT pass last; a healthy fixture is a walk that
+  // ran it and found nothing. Without this the evaluator would (correctly)
+  // hole on the missing pass.
+  at: {
+    ran: true,
+    violations: [],
+    counts: { critical: 0, serious: 0, moderate: 0, minor: 0 },
+    incomplete: 0,
+  },
 });
 
 // ── the shape of the tables themselves ───────────────────────────────────────
@@ -304,6 +313,49 @@ test("HEALTHY: an absent reading is a hole, never a pass", () => {
     );
     assert.deepEqual(v.regressions, []);
   }
+});
+
+test("MUTATION: an AT pass that did not run is a hole", () => {
+  // The facet line claims an assistive-technology run; a reading without one
+  // is an unexercised claim, never a pass.
+  for (const at of [undefined, { ran: false, error: "axe timed out" }]) {
+    const r = HEALTHY();
+    if (at === undefined) delete r.at;
+    else r.at = at;
+    const v = evaluateExperience(r);
+    assert.ok(
+      v.holes.some((h) => h.what === "at"),
+      "a missing AT run must hole",
+    );
+    assert.deepEqual(v.regressions, []);
+  }
+});
+
+test("MUTATION: AT violations are reported, never regressed", () => {
+  // check-a11y-matrix.mjs owns axe violations and ratchets them against its
+  // baseline; this gate must not double-block a single finding.
+  const r = HEALTHY();
+  r.at = {
+    ran: true,
+    violations: [
+      {
+        id: "color-contrast",
+        impact: "serious",
+        help: "x",
+        nodes: 2,
+        example: "",
+      },
+    ],
+    counts: { critical: 0, serious: 1, moderate: 0, minor: 0 },
+    incomplete: 0,
+  };
+  const v = evaluateExperience(r);
+  assert.deepEqual(v.regressions, [], "violations must not regress here");
+  assert.deepEqual(v.holes, [], "a ran pass must not hole");
+  assert.ok(
+    v.notes.some((n) => /AT run: axe reported 1 violation/.test(n)),
+    "the violation count must be reported",
+  );
 });
 
 // ── MUTATION: each expectation, violated one at a time ───────────────────────
@@ -584,10 +636,12 @@ test("FACET LINE: composed from a healthy run, and says what it did", () => {
   // than it does over nineteen pages in six languages.
   assert.match(line, /0 raw keys on 19 pages/);
   assert.match(line, /72\/72 surfaces match the dictionary/);
+  // The AT pass ran on the healthy fixture and found nothing: the line says
+  // so, instead of the old admission that no AT run had ever happened.
   assert.match(
     line,
-    /No AT run/,
-    "the scope limit must travel with the numbers",
+    /AT run: axe 0 violation\(s\) \(0 critical, 0 serious\)/,
+    "the AT clause must travel with the numbers",
   );
 });
 
