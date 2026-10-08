@@ -13,14 +13,14 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261008a";
+import { APPLIANCES } from "./appliances.js?v=20261008b";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261008a";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261008a";
+} from "./run-coordinator.js?v=20261008b";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261008b";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -29,12 +29,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261008a";
+} from "./charts.js?v=20261008b";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261008a";
+} from "./location-picker.js?v=20261008b";
 
 import {
   estimateTariff,
@@ -42,27 +42,27 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261008a";
+} from "./pricing.js?v=20261008b";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261008a";
+import { currencyForCountry } from "./country-currency.js?v=20261008b";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261008a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261008b";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261008a";
+} from "./lead-acid.js?v=20261008b";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261008a";
+} from "./bom.js?v=20261008b";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261008a";
+import { BOM_ITEMS } from "../shared/content.js?v=20261008b";
 
 import {
   applyI18n,
@@ -71,18 +71,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261008a";
+} from "../shared/i18n.js?v=20261008b";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261008a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261008a";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261008b";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261008b";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261008a";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261008a";
+} from "../shared/simple-mode.js?v=20261008b";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261008b";
 import {
   advisorJevContext,
   interpretSanity,
@@ -90,56 +90,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261008a";
+} from "./validate.js?v=20261008b";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261008a";
+} from "../shared/cut-targets.js?v=20261008b";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261008a";
+} from "./share-codec.js?v=20261008b";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261008a";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261008a";
+} from "./infeasible-copy.js?v=20261008b";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261008b";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261008a";
+} from "./fuel-units.js?v=20261008b";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261008a";
+} from "./frontier-chart.js?v=20261008b";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261008a";
+} from "./rescale.js?v=20261008b";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261008a";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261008b";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20261008a";
+} from "./map-provider.js?v=20261008b";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261008a";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261008a";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261008a";
+} from "./wizard.js?v=20261008b";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261008b";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261008b";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -188,9 +188,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261008a";
+} from "./money.js?v=20261008b";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261008a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261008b";
 
 let worker = null;
 
@@ -3249,7 +3249,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261008a",
+      "./assets/js/sizing/sizing-worker.js?v=20261008b",
       {
         type: "module",
       },
@@ -5609,6 +5609,19 @@ function renderBomPanel() {
       ),
     );
   }
+  // Provenance: every price the visitor decides on gets a source.
+  const pricingSource =
+    lastPayload?.pricing?.source || "cell market indications through PowMr catalog, Aug 2026";
+  body.appendChild(
+    el(
+      "p",
+      {
+        style:
+          "font-size:0.75rem;color:var(--text-muted);margin-top:0.4rem;line-height:1.5;",
+      },
+      `Data: prices from ${pricingSource}.`,
+    ),
+  );
 }
 
 function downloadBomCsv() {
@@ -6392,6 +6405,15 @@ function renderFrontierPanel(p) {
     note.textContent = text;
 
     note.style.display = text ? "block" : "none";
+  }
+
+  // Provenance: the curve is priced from market data and shaped by weather.
+  const frontierSource = $("frontierSource");
+  if (frontierSource) {
+    const weatherSrc = p.meta?.source || "NASA POWER";
+    const priceSrc =
+      p.pricing?.source || "cell market indications through PowMr catalog, Aug 2026";
+    frontierSource.textContent = `Data: weather ${weatherSrc}; prices ${priceSrc}.`;
   }
 }
 
