@@ -139,15 +139,17 @@ test("lookupCityOnline returns null instead of hanging forever", async () => {
 
 // ── map-provider: SRI pins match the heatmap's static pins ──────────────────
 
-test("dynamic Leaflet SRI matches the static heatmap pins", () => {
+test("the heatmap's static Leaflet script pin matches the dynamic one", () => {
+  // The SCRIPT pin has to stay in the markup: a parser-blocking <script> has to
+  // be found during the preload scan, so it cannot be injected by a module. The
+  // stylesheet pin has no such constraint — it is fetched as a preload by
+  // assets/js/sizing/leaflet-styles.js — so the markup declares no stylesheet
+  // pin at all, and tests/heatmap-first-paint.test.mjs asserts that both pins
+  // are declared exactly once across the repo.
   const heatmap = read("solar-heatmap/index.html");
   assert.ok(
     heatmap.includes(LEAFLET_SCRIPT_SRI),
     "script SRI identical to heatmap pin",
-  );
-  assert.ok(
-    heatmap.includes(LEAFLET_STYLE_SRI),
-    "stylesheet SRI identical to heatmap pin",
   );
 });
 

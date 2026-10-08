@@ -25,6 +25,7 @@ export const RECORD_SOURCES = {
   tests_green: { job: "test", step: "unit_tests" },
   prettier_clean: { job: "test", step: "prettier" },
   seo_green: { job: "test", step: "seo" },
+  hygiene_clean: { job: "test", step: "hygiene" },
   smoke_green: { job: "web-smoke", step: "smoke" },
 };
 
@@ -86,6 +87,114 @@ export const RUN_RECORD_FIELDS = [
   "ci_green",
   "legacy_gates_green",
 ];
+
+// ── The `quality` facet's CONTRACT half, from the required job's own steps ───
+//
+// WHY THE AXIS HAS TWO INSTRUMENTS, and why this half belongs here. The pack
+// asks QUALITY for two different things — "no unnecessary lines, branches,
+// abstractions, dead scaffolding, or duplicated logic; formatting clean" and
+// "the smallest version that keeps the proven behavior". The plan §3.1 byte
+// gate measures the second on the shipped payload
+// (scripts/lib/byte-budgets.mjs composes that clause from its own run), and the
+// FIRST is what the required `test` job asserts every run: the suite carries the
+// one-owner and no-second-copy contracts (a duplicated implementation fails
+// there), the formatter runs over the tracked tree, and the site-integrity gates
+// assert the page invariants. `RECORD_SOURCES` is already the mapping from those
+// three readings to the job and step that produce them, so this half is worded
+// from the same records the judge's hard gates are derived from — no new step
+// name, no new artifact, no second list to keep in step.
+//
+// What it deliberately does NOT do: claim the axis. "No unnecessary lines or
+// branches" still has NO instrument anywhere in this repository — the hygiene
+// step measures dead scaffolding and duplicated logic (scripts/check-code-hygiene.mjs),
+// the formatter covers formatting, and the byte gate covers shipped size; what
+// remains unmeasured is said so in the clause itself — the same discipline the
+// size clause's own bound enforces from the other end. A clause that named the
+// readings without that sentence would read as "this code is minimal", which
+// nothing measured.
+const QUALITY_CONTRACT_PHRASES = {
+  tests_green: {
+    green: "suite (one-owner/no-second-copy)",
+    red: "unit tests",
+  },
+  prettier_clean: { green: "prettier", red: "formatting" },
+  seo_green: { green: "site-integrity", red: "site-integrity" },
+  hygiene_clean: {
+    green: "dead-code/duplication scan",
+    red: "dead-code/duplication scan",
+  },
+};
+
+// Bounded like the size clause's name list, so the clause is bounded BY
+// CONSTRUCTION: at most two red readings are named and the rest counted (all
+// three names are in the record's run fields anyway).
+const MAX_RED_NAMES = 2;
+
+/**
+ * The record fields the contract clause words, DERIVED from the job/step map
+ * rather than written again here: a reading that moves to another job, or a
+ * fourth reading added to `test`'s own steps, changes this set with no edit.
+ * tests/jev-derived-facets.test.mjs asserts every one of these has a phrase
+ * above, so a new reading can never be silently left out of the clause.
+ */
+export const QUALITY_CONTRACT_FIELDS = Object.entries(RECORD_SOURCES)
+  .filter(([, src]) => src.job === "test")
+  .map(([field]) => field)
+  .sort();
+
+/**
+ * The axis this clause belongs to. Named here because the clause is worded
+ * here; the OTHER half of the same axis is declared by the gate that measures
+ * it (`BYTE_BUDGET_FACET_AXES` in scripts/lib/byte-budgets.mjs), and a test
+ * asserts the two agree — so the axis is declared once per instrument and a
+ * disagreement fails the build rather than producing two axes or none.
+ */
+export const QUALITY_CONTRACT_AXIS = "quality";
+
+/**
+ * The most characters the contract clause may take. The other half of the
+ * 280-char clip belongs to the size clause
+ * (QUALITY_SIZE_CLAUSE_MAX in scripts/lib/byte-budgets.mjs), and the join is
+ * asserted against the clip from both ends.
+ */
+export const QUALITY_CONTRACT_CLAUSE_MAX = 138;
+
+/**
+ * Compose the clarity clause of the `quality` axis from the run records.
+ *
+ * Two honest shapes, and no third. `null` when the required job left no records
+ * at all: an absent measurement contributes nothing rather than a claim, and the
+ * builder then carries the size clause alone.
+ *
+ * A reading that is not `true` is RED, named, and never softened — the same rule
+ * `runRecordsFromArtifacts` applies to the hard gates, worded for the facet.
+ */
+export function composeQualityContractClause(records) {
+  if (!records || typeof records !== "object") return null;
+  const present = QUALITY_CONTRACT_FIELDS.filter((f) => f in records);
+  if (!present.length) return null;
+  const green = present.filter((f) => records[f] === true);
+  const red = present.filter((f) => records[f] !== true);
+  if (red.length) {
+    const named = red
+      .slice(0, MAX_RED_NAMES)
+      .map((f) => QUALITY_CONTRACT_PHRASES[f]?.red || f);
+    const more =
+      red.length > MAX_RED_NAMES ? ` (+${red.length - MAX_RED_NAMES})` : "";
+    return (
+      `Test job RED (${named.join(", ")}${more}): the clarity readings did ` +
+      "not all pass. Unmeasured: branches/abstractions"
+    );
+  }
+  const names = green
+    .map((f) => QUALITY_CONTRACT_PHRASES[f]?.green || f)
+    .join(", ");
+  // The hole, said once and bounded: it is the sentence that stops this clause
+  // reading as "this code is minimal". Dead scaffolding and duplicated logic are
+  // now measured (the hygiene scan above); unnecessary branches and
+  // abstractions are not, and that stays said.
+  return `Test job green: ${names}. ` + "Unmeasured: branches/abstractions";
+}
 
 // The gate measures these itself, from the tree in front of the process. An
 // evidence file cannot assert them: code-owned facts outrank any claim, and

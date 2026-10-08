@@ -16,25 +16,8 @@ import {
   searchCities,
   shouldAutoResolve,
   typedCityCandidates,
-} from "./cities.js?v=20261005h";
-
-function byId(id) {
-  return document.getElementById(id);
-}
-
-function el(tag, attrs = {}, text) {
-  const e = document.createElement(tag);
-
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === "style") e.style.cssText = v;
-    else if (k === "class") e.className = v;
-    else e.setAttribute(k, v);
-  }
-
-  if (text !== undefined) e.textContent = text;
-
-  return e;
-}
+} from "./cities.js?v=20261008a";
+import { byId, el } from "../shared/dom.js?v=20261008a";
 
 export function setupCitySearch({
   onPick,

@@ -227,6 +227,14 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // without one byte of the feature having shrunk. The budget is now harder to
   // satisfy than it was, not easier: it simply measures its own subject
   // instead of a stale guess at it.
+  //
+  // The slider-workflow canonical-state work then landed on top of this
+  // bar WITHOUT moving it: the drag preview's curve projection moved out
+  // of the eager graph into budget-span.js, the chemistry/cell model moved
+  // out of engine.js into chem-model.js (the whole search engine is now
+  // worker-only), and the worker's feasibility-sims memo moved to
+  // sim-cache.js. The eager payload ended up 7.8 KB BELOW the declared
+  // baseline; no budget above was relaxed for it.
   assert.ok(
     htmlBytes <= 130_000,
     `index.html ${htmlBytes} bytes exceeds 130,000 budget`,

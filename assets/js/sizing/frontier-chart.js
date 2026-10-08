@@ -21,7 +21,7 @@ function clamp(v, lo, hi) {
 }
 
 /** Geometry for one render, derived from the width actually available. */
-export function chartBox(hostWidth) {
+function chartBox(hostWidth) {
   const w = clamp(Math.round(hostWidth) || 720, VB_MIN, VB_MAX);
   // "narrow" means phone-narrow: too tight for the in-chart callouts, which
   // the legend and the verdict sentence say in words anyway. The results
@@ -59,7 +59,11 @@ const C = {
 // Rough advance width for the system UI stack at a given size. Good enough to
 // decide which side of a marker a label fits on - which is the only thing
 // standing between a callout and being sliced off at the plot edge.
-function textWidth(str, fontSize) {
+export function textWidth(str, fontSize) {
+  // A non-finite fontSize poisons every label placement with NaN downstream.
+  // Zero width is the safe fallback: labels may overlap but never misplace
+  // silently.
+  if (!Number.isFinite(fontSize) || fontSize <= 0) return 0;
   return String(str).length * fontSize * 0.55;
 }
 
@@ -68,7 +72,7 @@ function textWidth(str, fontSize) {
  * the plot when neither side has room.
  * @returns {{x:number, anchor:string}}
  */
-export function placeLabel(x, text, fontSize, bounds, offset = 10) {
+function placeLabel(x, text, fontSize, bounds, offset = 10) {
   const w = textWidth(text, fontSize);
   if (x + offset + w <= bounds.right) return { x: x + offset, anchor: "start" };
   if (x - offset - w >= bounds.left) return { x: x - offset, anchor: "end" };
