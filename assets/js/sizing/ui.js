@@ -13,14 +13,14 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261008d";
+import { APPLIANCES } from "./appliances.js?v=20261008e";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261008d";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261008d";
+} from "./run-coordinator.js?v=20261008e";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261008e";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -29,12 +29,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261008d";
+} from "./charts.js?v=20261008e";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261008d";
+} from "./location-picker.js?v=20261008e";
 
 import {
   estimateTariff,
@@ -42,27 +42,27 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261008d";
+} from "./pricing.js?v=20261008e";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261008d";
+import { currencyForCountry } from "./country-currency.js?v=20261008e";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261008d";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261008e";
 import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261008d";
+} from "./lead-acid.js?v=20261008e";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261008d";
+} from "./bom.js?v=20261008e";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261008d";
+import { BOM_ITEMS } from "../shared/content.js?v=20261008e";
 
 import {
   applyI18n,
@@ -71,18 +71,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261008d";
+} from "../shared/i18n.js?v=20261008e";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261008d";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261008d";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261008e";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261008e";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261008d";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261008d";
+} from "../shared/simple-mode.js?v=20261008e";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261008e";
 import {
   advisorJevContext,
   interpretSanity,
@@ -90,56 +90,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261008d";
+} from "./validate.js?v=20261008e";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261008d";
+} from "../shared/cut-targets.js?v=20261008e";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261008d";
+} from "./share-codec.js?v=20261008e";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261008d";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261008d";
+} from "./infeasible-copy.js?v=20261008e";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261008e";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261008d";
+} from "./fuel-units.js?v=20261008e";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261008d";
+} from "./frontier-chart.js?v=20261008e";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261008d";
+} from "./rescale.js?v=20261008e";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261008d";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261008e";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20261008d";
+} from "./map-provider.js?v=20261008e";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261008d";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261008d";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261008d";
+} from "./wizard.js?v=20261008e";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261008e";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261008e";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -188,9 +188,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261008d";
+} from "./money.js?v=20261008e";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261008d";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261008e";
 
 let worker = null;
 
@@ -860,15 +860,20 @@ function updateAutoRows() {
   const isReserve = $("systemGoal")
     ? $("systemGoal").value === "reserve"
     : false;
+  const isTou = $("systemGoal") ? $("systemGoal").value === "tou" : false;
 
   const tierRow = $("autoTierRow"),
     targetRow = $("autoTargetRow"),
-    reserveRow = $("reserveSliderRow");
+    reserveRow = $("reserveSliderRow"),
+    touRow = $("touRateRow");
 
   if (tierRow) tierRow.style.display = isAuto && !gt ? "block" : "none";
 
   // Reserve mode shows the reserve percentage slider
   if (reserveRow) reserveRow.style.display = isReserve ? "block" : "none";
+
+  // TOU mode shows the peak/off-peak rate inputs
+  if (touRow) touRow.style.display = isTou ? "block" : "none";
 
   // Bill-cut is a continuous post-result control, not an upfront preset.
   // Keep the hidden select as the internal compatibility state for share links
@@ -2202,6 +2207,15 @@ function readInputs() {
         ? (parseInt($("reserveSlider")?.value, 10) || 0) / 100
         : 0,
 
+    touPeakRate:
+      $("systemGoal")?.value === "tou"
+        ? parseFloat($("touPeakRate")?.value) || 0
+        : 0,
+    touOffPeakRate:
+      $("systemGoal")?.value === "tou"
+        ? parseFloat($("touOffPeakRate")?.value) || 0
+        : 0,
+
     basis,
 
     hardwareConfig: $("hardwareConfig")?.value || "both",
@@ -3082,7 +3096,7 @@ function renderFocusPanel(p, entry, isPreview) {
     return;
   }
   wrap.style.display = "block";
-  const isGT = p.mode === "gridtie" || p.mode === "reserve";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve" || p.mode === "tou";
   const sel = resolveSelected(p);
   const isRec = !isPreview && (!sel || !p.best || sameSystem(sel, p.best));
   $("focusTitle").textContent = isPreview
@@ -3275,7 +3289,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261008d",
+      "./assets/js/sizing/sizing-worker.js?v=20261008e",
       {
         type: "module",
       },
@@ -3596,7 +3610,7 @@ function renderAutoCards(p) {
 
   grid.innerHTML = "";
 
-  const isGT = p.mode === "gridtie" || p.mode === "reserve";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve" || p.mode === "tou";
 
   // Highlight the recommended bank (sodium-first on safety; LFP only when
   // genuinely cheaper — see pickBest), falling back to cheapest when the
@@ -4152,7 +4166,7 @@ function renderRelativeOptions(p, selectedSystem) {
   const hasBasePanels = Number(base.pvKw) > 0;
   const basePvKw = Math.max(1, base.pvKw || (p.dailyKwh || 10) * 0.6);
   const landedF = (p.assumptions && p.assumptions.landedF) || 1;
-  const isGT = p.mode === "gridtie" || p.mode === "reserve";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve" || p.mode === "tou";
   // A battery-only run builds no panels, so its tiers must scale the battery
   // alone. Feeding the clamped `basePvKw` into them presented a 12 kW array as
   // the visitor's OWN system — card label, PV row, price and adoption alike —
@@ -4595,7 +4609,7 @@ function renderBestPick(p) {
     return;
   }
   const b = p.best;
-  const isGT = p.mode === "gridtie" || p.mode === "reserve";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve" || p.mode === "tou";
   const solvablePool = (p.auto || []).filter(
     (a) => a.solvable && Number.isFinite(a.lifetimeCostMid),
   );
@@ -6563,7 +6577,7 @@ function renderResults(p) {
 
   frontierSelected = null; // new result -> blue dot follows the new recommendation
 
-  const isGT = p.mode === "gridtie" || p.mode === "reserve";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve" || p.mode === "tou";
 
   if (p.contract !== undefined && p.contract !== PAYLOAD_CONTRACT) {
     setStatus(
@@ -6784,6 +6798,9 @@ function renderResults(p) {
     (p.mode === "reserve" && p.reserve?.viable
       ? `Emergency reserve: ${Math.round(p.reserve.reservePct * 100)}% (${p.reserve.reserveKwh} kWh) held for outages. `
       : "") +
+    (p.mode === "tou" && p.tou?.viable
+      ? `Time-of-use: peak $${p.tou.peakRate}/kWh, off-peak $${p.tou.offPeakRate}/kWh. `
+      : "") +
     (a.money ? a.money + " " : "") +
     (a.capacityNote ? a.capacityNote + " " : "") +
     (fxNote() ? fxNote() + " " : "") +
@@ -6992,7 +7009,7 @@ function renderSelectedBanner(p, sel) {
 // already sitting in the cached payload.
 function refreshSelectionOutputs(p) {
   if (!p) return;
-  const isGT = p.mode === "gridtie" || p.mode === "reserve";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve" || p.mode === "tou";
   const hasAuto = !!(p.auto && p.auto.length);
   const sel = resolveSelected(p);
   // Banner follows the selection (no-op when the selection IS the best —
@@ -7281,7 +7298,7 @@ function populatePrintSheet(p, inp) {
 
   if (!sheet) return;
 
-  const isGT = p.mode === "gridtie" || p.mode === "reserve";
+  const isGT = p.mode === "gridtie" || p.mode === "reserve" || p.mode === "tou";
 
   let rows, head, title;
 

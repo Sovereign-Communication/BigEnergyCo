@@ -26,22 +26,22 @@ import {
   capacityScaleFor,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20261008d";
+} from "./engine.js?v=20261008e";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20261008d";
-import { buildFrontier } from "./frontier.js?v=20261008d";
-import { oversizeCallout } from "./rescale.js?v=20261008d";
-import { climateSummary } from "./climate.js?v=20261008d";
+} from "./nasa.js?v=20261008e";
+import { buildFrontier } from "./frontier.js?v=20261008e";
+import { oversizeCallout } from "./rescale.js?v=20261008e";
+import { climateSummary } from "./climate.js?v=20261008e";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20261008d";
+} from "./pricing.js?v=20261008e";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -52,7 +52,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20261008d";
+} from "./money.js?v=20261008e";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -301,7 +301,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20261008d");
+      await import("./profiles.js?v=20261008e");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -412,6 +412,8 @@ async function runSizingUncached(msg, deps = {}) {
     // stays on (existing behavior); true disables it engine-wide.
     noSwapMode = false,
     reservePct = 0,
+    touPeakRate = 0,
+    touOffPeakRate = 0,
   } = msg;
   const oversizeStrategy = !noSwapMode;
   // Fixed monthly charge (utility connection fee, USD): it can never be cut,
@@ -1876,7 +1878,7 @@ async function runSizingUncached(msg, deps = {}) {
   }
 
   // ── GRID-TIE ──────────────────────────────────────────────────────────────
-  if (mode === "gridtie" || mode === "reserve") {
+  if (mode === "gridtie" || mode === "reserve" || mode === "tou") {
     if (chemistry === "auto") {
       const matrixCells = {};
       const resultsByChem = {};
@@ -2169,7 +2171,7 @@ async function runSizingUncached(msg, deps = {}) {
       customTarget.cutPct = Math.round(customFracSp * 100);
     }
     const payload = basePayload();
-    payload.mode = mode; // "gridtie" or "reserve"
+    payload.mode = mode; // "gridtie", "reserve", or "tou"
     payload.chemLabel = chem.label;
     payload.targets = targets;
     payload.customTarget = customTarget;
@@ -2219,6 +2221,33 @@ async function runSizingUncached(msg, deps = {}) {
           reserveKwh: Math.round(reserveKwh * 10) / 10,
           usableKwh: Math.round(usableKwh * 10) / 10,
           reserveTradeoff: Math.round(reserveTradeoff * 100) / 100,
+        };
+      }
+    }
+    // TOU mode: time-of-use arbitrage analysis (battery charges off-peak, discharges at peak)
+    if (mode === "tou") {
+      const battKwh = payload.focus?.battKwh || 0;
+      const peak = Number(touPeakRate);
+      const offPeak = Number(touOffPeakRate);
+      if (battKwh <= 0) {
+        payload.tou = { viable: false, reason: "verdictTouNoBattery" };
+      } else if (!Number.isFinite(peak) || !Number.isFinite(offPeak) || peak <= offPeak) {
+        payload.tou = { viable: false, reason: "verdictTou" };
+      } else {
+        // Arbitrage: shift as much daily cycling as the battery allows.
+        // Assume one full usable cycle per day at 90% round-trip efficiency.
+        const usableKwh = battKwh * 0.9;
+        const spreadPerKwh = peak - offPeak;
+        const dailySaving = usableKwh * spreadPerKwh * 0.9;
+        const annualSaving = dailySaving * 365;
+        payload.tou = {
+          viable: true,
+          peakRate: peak,
+          offPeakRate: offPeak,
+          spreadPerKwh: Math.round(spreadPerKwh * 1000) / 1000,
+          dailyShiftedKwh: Math.round(usableKwh * 10) / 10,
+          dailySavingUsd: Math.round(dailySaving * 100) / 100,
+          annualSavingUsd: Math.round(annualSaving * 100) / 100,
         };
       }
     }
