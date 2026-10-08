@@ -8,7 +8,6 @@ import assert from "node:assert/strict";
 import { drawSunStrip } from "../assets/js/sizing/charts.js";
 import { textWidth } from "../assets/js/sizing/frontier-chart.js";
 
-
 // ── drawSunStrip ──────────────────────────────────────────────────────────
 
 // Minimal canvas-2d mock: records calls, never throws.
@@ -16,23 +15,57 @@ function mockCtx() {
   const calls = [];
   return {
     calls,
-    save() { calls.push("save"); },
-    beginPath() { calls.push("beginPath"); },
-    rect() { calls.push("rect"); },
-    clip() { calls.push("clip"); },
-    moveTo() { calls.push("moveTo"); },
-    lineTo() { calls.push("lineTo"); },
-    closePath() { calls.push("closePath"); },
-    fill() { calls.push("fill"); },
-    stroke() { calls.push("stroke"); },
-    restore() { calls.push("restore"); },
-    fillText() { calls.push("fillText"); },
-    set font(v) { calls.push(`font=${v}`); },
-    set lineWidth(v) { calls.push(`lineWidth=${v}`); },
-    set strokeStyle(v) { calls.push(`strokeStyle=${v}`); },
-    set textAlign(v) { calls.push(`textAlign=${v}`); },
-    set globalAlpha(v) { calls.push(`globalAlpha=${v}`); },
-    set fillStyle(v) { calls.push(`fillStyle=${v}`); },
+    save() {
+      calls.push("save");
+    },
+    beginPath() {
+      calls.push("beginPath");
+    },
+    rect() {
+      calls.push("rect");
+    },
+    clip() {
+      calls.push("clip");
+    },
+    moveTo() {
+      calls.push("moveTo");
+    },
+    lineTo() {
+      calls.push("lineTo");
+    },
+    closePath() {
+      calls.push("closePath");
+    },
+    fill() {
+      calls.push("fill");
+    },
+    stroke() {
+      calls.push("stroke");
+    },
+    restore() {
+      calls.push("restore");
+    },
+    fillText() {
+      calls.push("fillText");
+    },
+    set font(v) {
+      calls.push(`font=${v}`);
+    },
+    set lineWidth(v) {
+      calls.push(`lineWidth=${v}`);
+    },
+    set strokeStyle(v) {
+      calls.push(`strokeStyle=${v}`);
+    },
+    set textAlign(v) {
+      calls.push(`textAlign=${v}`);
+    },
+    set globalAlpha(v) {
+      calls.push(`globalAlpha=${v}`);
+    },
+    set fillStyle(v) {
+      calls.push(`fillStyle=${v}`);
+    },
   };
 }
 
