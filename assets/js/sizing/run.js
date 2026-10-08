@@ -438,6 +438,11 @@ async function runSizingCore(msg, deps = {}) {
 }
 
 async function runSizingUncached(msg, deps = {}) {
+  // Destructuring a null/undefined msg throws a bare TypeError deep in the
+  // pipeline. Fail fast with a clear error at the boundary instead.
+  if (!msg || typeof msg !== "object") {
+    throw new Error("runSizingUncached: msg must be an object");
+  }
   const {
     latitude,
     longitude,

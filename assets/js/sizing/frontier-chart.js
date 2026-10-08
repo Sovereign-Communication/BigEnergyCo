@@ -59,7 +59,11 @@ const C = {
 // Rough advance width for the system UI stack at a given size. Good enough to
 // decide which side of a marker a label fits on - which is the only thing
 // standing between a callout and being sliced off at the plot edge.
-function textWidth(str, fontSize) {
+export function textWidth(str, fontSize) {
+  // A non-finite fontSize poisons every label placement with NaN downstream.
+  // Zero width is the safe fallback: labels may overlap but never misplace
+  // silently.
+  if (!Number.isFinite(fontSize) || fontSize <= 0) return 0;
   return String(str).length * fontSize * 0.55;
 }
 
