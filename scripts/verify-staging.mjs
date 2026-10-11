@@ -311,14 +311,22 @@ const parity = await mapPool(parityTargets, CONCURRENCY, async (file) => {
   // The deploy manifest enumerates from the git INDEX, so a file can genuinely
   // be named-but-absent on disk - a concurrent test's mutation tooth, or a
   // half-copied checkout. That is a finding, so it is reported as one.
+  // Read the COMMITTED blob for this path, not the working tree. The deploy
+  // manifest enumerates from the git index, so every parityTarget is tracked;
+  // reading the index blob means a dirty or half-checked-out working tree can
+  // never make a faithful artifact look wrong (or a broken one look clean).
   let localBuf;
   try {
-    localBuf = readFileSync(file);
+    localBuf = execFileSync("git", ["show", ":" + file], {
+      cwd: ROOT,
+      maxBuffer: 32 * 1024 * 1024,
+      encoding: "buffer",
+    });
   } catch (e) {
     return {
       file,
       state: "unreadable",
-      detail: `local read failed: ${e.code || e.message}`,
+      detail: `committed read failed: ${e.message}`,
     };
   }
   let res;
