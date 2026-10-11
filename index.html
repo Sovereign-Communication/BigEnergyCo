@@ -2,94 +2,59 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-
     <meta name="color-scheme" content="dark" />
-
     <meta name="theme-color" content="#090d16" />
-
     <meta name="apple-mobile-web-app-capable" content="yes" />
-
     <meta
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
-
     <title>
       Cut Your Electricity Bill — Free Solar &amp; Battery Calculator
     </title>
-
-    <!-- Google Search Console: active property for freeoffgridcalculator.com.
-         Domain properties verify via DNS TXT in Cloudflare; this HTML tag is
-         the verification method for URL-prefix properties (and a fallback). -->
-    <meta
-      name="google-site-verification"
       content="zVFiMH4WnfvhMHtnivIgDm_-5XtelVgcL709oHh3pWk"
     />
-    <!-- Legacy: verification token of the old pages.dev URL-prefix property.
-         Keep until that property is retired, then remove.
-         Revisit: if the pages.dev property is still verified after
-         2027-01-01, either retire it there or extend this note. -->
-    <meta
       name="google-site-verification"
       content="iXiF6PQy5IhjMtll2YzS3-amK6BtApSkpdlKM73dSEc"
     />
-
     <meta
       name="description"
       content="See how solar and batteries can cut your electricity bill using NASA weather and honest payback math. Free, no signup, nothing for sale."
     />
-
     <meta property="og:type" content="website" />
-
     <meta property="og:site_name" content="Free Off-Grid Calculator" />
-
     <meta property="og:locale" content="en_US" />
-
     <meta
       property="og:title"
       content="Cut Your Electricity Bill — Free Solar &amp; Battery Calculator"
     />
-
     <meta
       property="og:description"
       content="See how solar and batteries can cut your electricity bill using NASA weather and honest payback math. Free, no signup, nothing for sale."
     />
-
     <meta property="og:url" content="https://freeoffgridcalculator.com/" />
-
     <meta
       property="og:image"
       content="https://freeoffgridcalculator.com/assets/og-card.jpg"
     />
-
     <meta property="og:image:width" content="1200" />
-
     <meta property="og:image:height" content="630" />
-
     <meta name="twitter:card" content="summary_large_image" />
-
     <meta
       name="twitter:title"
       content="Cut Your Electricity Bill — Free Solar &amp; Battery Calculator"
     />
-
     <meta
       name="twitter:description"
       content="See how solar and batteries can cut your electricity bill using NASA weather and honest payback math. Free, no signup, nothing for sale."
     />
-
     <meta
       name="twitter:image"
       content="https://freeoffgridcalculator.com/assets/og-card.jpg"
-    />
-
-    <!-- hreflang is intentionally en + x-default only. The ?lang= variants
-         are client-side translations that canonical to this URL, so Google
          would discard them as non-indexable hreflang targets. Add a locale
          hreflang only together with a real indexable, self-canonical URL. -->
     <link
@@ -97,24 +62,19 @@
       hreflang="en"
       href="https://freeoffgridcalculator.com/"
     />
-
     <link
       rel="alternate"
       hreflang="x-default"
       href="https://freeoffgridcalculator.com/"
     />
-
     <link rel="canonical" href="https://freeoffgridcalculator.com/" />
-
     <link
       rel="alternate"
       type="application/rss+xml"
       title="Free Off-Grid Calculator Blog"
       href="https://freeoffgridcalculator.com/rss.xml"
     />
-
     <link rel="manifest" href="./manifest.webmanifest" />
-
     <link rel="icon" type="image/svg+xml" href="./assets/icon.svg" />
     <link
       rel="icon"
@@ -123,37 +83,25 @@
       href="./assets/favicon-48.png"
     />
     <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png" />
-
     <!-- Structured data: what this tool is, and the questions people ask it -->
-
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-
         "@graph": [
           {
             "@type": "WebApplication",
-
             "@id": "https://freeoffgridcalculator.com/#app",
-
             "name": "Free Off-Grid Calculator",
-
             "url": "https://freeoffgridcalculator.com/",
-
             "applicationCategory": "UtilitiesApplication",
-
             "operatingSystem": "Any (web browser)",
-
             "browserRequirements": "Requires JavaScript",
-
             "description": "Free solar and battery sizing for anywhere on Earth. Simulates your location against five years of NASA satellite weather: fully off-grid systems at three reliability levels, or grid-connected bill cutting. Nothing for sale.",
-
             "offers": {
               "@type": "Offer",
               "price": "0",
               "priceCurrency": "USD"
             },
-
             "publisher": {
               "@type": "Organization",
               "name": "BigEnergyCo",
@@ -165,86 +113,61 @@
                 "height": 512
               }
             },
-
             "featureList": [
               "Off-grid sizing with 5-year hourly weather simulation",
-
               "Grid-tie bill-cutting targets",
-
               "Battery lifetime cost comparison (LFP, sodium-ion, lead-acid)",
-
               "Payback and levelized cost of energy",
-
               "Works offline after first visit"
             ]
           },
-
           {
             "@type": "FAQPage",
-
             "@id": "https://freeoffgridcalculator.com/#faq",
-
             "mainEntity": [
               {
                 "@type": "Question",
-
                 "name": "How accurate are the estimates?",
-
                 "acceptedAnswer": {
                   "@type": "Answer",
                   "text": "Every number comes from testable code simulating your exact location against five years of NASA satellite weather  -  not an AI guessing. Real-world results still vary with shading, installation quality, and hardware, so have a licensed professional verify anything you build."
                 }
               },
-
               {
                 "@type": "Question",
-
                 "name": "Will a solar and battery system pay for itself?",
-
                 "acceptedAnswer": {
                   "@type": "Answer",
                   "text": "Where grid power is expensive  -  Hawaii, islands, much of Europe, Africa, South Asia  -  properly built solar plus storage commonly repays its component cost in one to four years, then runs nearly free for decades. The calculator shows your personal payback from your own tariff."
                 }
               },
-
               {
                 "@type": "Question",
-
                 "name": "What does an off-grid battery system actually cost?",
-
                 "acceptedAnswer": {
                   "@type": "Answer",
                   "text": "Battery banks self-built from prismatic cells typically land around $80–125 per usable kWh shipped and duty-paid; budget retail packs run roughly $110–165. Panels add about $0.16–0.38 per watt. Every result states its price scope honestly."
                 }
               },
-
               {
                 "@type": "Question",
-
                 "name": "Do I need a generator with an off-grid system?",
-
                 "acceptedAnswer": {
                   "@type": "Answer",
                   "text": "Only if you want near-total independence through weeks of bad weather. The three off-grid options show exactly that trade-off: one never needs a generator, one needs it about a day a year, one only now and then. Grid-connected users skip this entirely."
                 }
               },
-
               {
                 "@type": "Question",
-
                 "name": "Does the calculator work without internet?",
-
                 "acceptedAnswer": {
                   "@type": "Answer",
                   "text": "Yes. After your first visit the tool installs itself as an offline app: sizing math runs entirely in your browser, and if the network is down it falls back to bundled typical-year weather for the nearest of 66 reference cities."
                 }
               },
-
               {
                 "@type": "Question",
-
                 "name": "Is building my own battery safe?",
-
                 "acceptedAnswer": {
                   "@type": "Answer",
                   "text": "It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. Proper fusing, BMS use, and code compliance are essential  -  and a licensed electrician should check anything before you energize it."
@@ -255,15 +178,9 @@
         ]
       }
     </script>
-
-    <!-- Early Hints prep: these two are on every page's critical path. When
-         the zone's Early Hints setting is on, Cloudflare turns them into a
-         103 response so the browser starts fetching before the HTML lands. -->
     <link rel="preload" href="./assets/site.css?v=20261008a" as="style" />
     <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261008a" />
-
     <link rel="stylesheet" href="./assets/site.css?v=20261008a" />
-
     <!--
       Preconnect: every external origin the calculator talks to. Warming
       DNS+TCP+TLS while the page parses removes hundreds of milliseconds of
@@ -278,12 +195,10 @@
       crossorigin
     />
   </head>
-
   <body>
     <a class="skip-link" href="#sizing">Skip to calculator</a>
     <main id="main-content">
       <!-- Header / Navigation Bar -->
-
       <header>
         <div class="container nav-flex">
           <a
@@ -293,22 +208,15 @@
             aria-label="BigEnergyCo Home"
           >
             <span aria-hidden="true">&#9889;</span>
-
             <span>BigEnergy<span class="highlight">Co</span></span>
           </a>
-
           <nav class="nav-links">
             <a href="./solar-heatmap/">Heatmap</a>
-
             <a href="#bom" data-i18n="navBom">Hardware Reference</a>
-
             <a href="./blog/" data-i18n="navBlog">Guides &amp; Blog</a>
-
             <a href="./about/">About</a>
-
             <a href="#legal" data-i18n="navLegal">Terms &amp; Disclaimer</a>
           </nav>
-
           <div class="header-cta">
             <span
               id="offlineBadge"
@@ -319,7 +227,6 @@
             >
               <span class="offline-dot"></span> Offline
             </span>
-
             <button
               id="btnInstallApp"
               class="btn btn-outline btn-xs"
@@ -329,7 +236,6 @@
             >
               &#128242; Install App
             </button>
-
             <a
               href="#support"
               class="btn btn-secondary"
@@ -337,7 +243,6 @@
               data-i18n="navSupport"
               >Support</a
             >
-
             <div
               id="btnNavSizeArray"
               class="btn btn-primary"
@@ -348,7 +253,6 @@
             >
               Size Your System
             </div>
-
             <button
               type="button"
               id="btnNavToggle"
@@ -357,14 +261,11 @@
               aria-expanded="false"
             >
               <span class="nav-toggle-bar"></span>
-
               <span class="nav-toggle-bar"></span>
-
               <span class="nav-toggle-bar"></span>
             </button>
           </div>
         </div>
-
         <nav
           id="mobileNavDrawer"
           class="mobile-nav-drawer"
@@ -385,31 +286,24 @@
           >
             &#128242; Install BigEnergyCo App
           </button>
-
           <a href="#sizing" class="mobile-nav-link" data-i18n="navSizing"
             >Size Your System <span>&rarr;</span></a
           >
-
           <a href="./solar-heatmap/" class="mobile-nav-link"
             >Payback Heatmap <span>&rarr;</span></a
           >
-
           <a href="#bom" class="mobile-nav-link" data-i18n="navBom"
             >Hardware Reference <span>&rarr;</span></a
           >
-
           <a href="./blog/" class="mobile-nav-link" data-i18n="navBlog"
             >Guides &amp; Blog <span>&rarr;</span></a
           >
-
           <a href="./about/" class="mobile-nav-link"
             >About <span>&rarr;</span></a
           >
-
           <a href="#legal" class="mobile-nav-link" data-i18n="navLegal"
             >Terms &amp; Disclaimer <span>&rarr;</span></a
           >
-
           <a
             href="#support"
             class="mobile-nav-link"
@@ -419,22 +313,18 @@
           >
         </nav>
       </header>
-
       <!-- Hero Section -->
-
       <section class="hero">
         <div class="container">
           <div class="hero-tag" data-i18n="heroTag">
             🌍 Free for everyone, everywhere • No signup • Nothing for sale
           </div>
-
           <h1>
             <span data-i18n="heroTitle1">Cut your electricity bill.</span>
             <br /><span data-i18n="heroTitle2"
               >See exactly what it would take.</span
             >
           </h1>
-
           <p>
             <span data-i18n="heroIntro"
               >Start with your location &mdash; your phone knows it &mdash; and
@@ -446,7 +336,6 @@
             >
             <strong>Lucas Ballek</strong>.
           </p>
-
           <div class="hero-actions">
             <div
               id="btnHeroSizing"
@@ -459,33 +348,25 @@
               Start a Free Estimate
             </div>
           </div>
-
           <div class="hero-stats-grid">
             <div class="stat-card">
               <div class="stat-val">$0</div>
-
               <div class="stat-label">
                 Free, always &mdash; donations optional
               </div>
             </div>
-
             <div class="stat-card">
               <div class="stat-val">No signup</div>
-
               <div class="stat-label">No account, no email required</div>
             </div>
-
             <div class="stat-card">
               <div class="stat-val">50%+</div>
-
               <div class="stat-label">
                 Explore realistic bill-cut scenarios, not promises
               </div>
             </div>
-
             <div class="stat-card">
               <div class="stat-val">Estimates only</div>
-
               <div class="stat-label">
                 Verify with a licensed pro before building
               </div>
@@ -493,16 +374,13 @@
           </div>
         </div>
       </section>
-
       <!-- Interactive Sizing Section (deterministic engine + NASA POWER) -->
-
       <section id="sizing" class="calc-section">
         <div class="container">
           <div class="section-header">
             <h2 class="section-title">
               Find your cheapest path to lower bills
             </h2>
-
             <p class="section-desc">
               Enter your location and average electric bill. We simulate 5 years
               of hourly NASA satellite weather to size the exact solar panel
@@ -511,7 +389,6 @@
               currency.
             </p>
           </div>
-
           <div class="calc-card">
             <div class="calc-controls">
               <!-- Primary Goal Selection: Grid-Tie Bill Cutting vs Full Off-grid / Backup -->
@@ -575,7 +452,6 @@
                   </button>
                 </div>
               </div>
-
               <!-- Quick vs Manual mode. Quick shows the essential inputs;
                Manual reveals the full form. Both require an explicit run. -->
               <div class="form-group" style="margin-bottom: 0.7rem">
@@ -596,7 +472,6 @@
                     "
                     >Mode:</span
                   >
-
                   <label
                     style="
                       display: inline-flex;
@@ -629,7 +504,6 @@
                       >— choose inputs, then click Size My System</span
                     >
                   </label>
-
                   <label
                     style="
                       display: inline-flex;
@@ -662,7 +536,6 @@
                     >
                   </label>
                 </div>
-
                 <div
                   class="simple-mode-control"
                   style="
@@ -682,7 +555,6 @@
                     >just the key numbers</span
                   >
                 </div>
-
                 <div
                   id="quickBillNote"
                   style="
@@ -694,7 +566,6 @@
                   "
                 ></div>
               </div>
-
               <div class="form-group" style="margin-bottom: 0">
                 <div
                   style="
@@ -725,7 +596,6 @@
                     >Works worldwide &bull; any city, town, or coordinates</span
                   >
                 </div>
-
                 <div
                   style="
                     display: flex;
@@ -750,7 +620,6 @@
                   >
                     📍 Use my precise location
                   </div>
-
                   <div
                     style="
                       flex: 1;
@@ -770,7 +639,6 @@
                       aria-expanded="false"
                       aria-label="Search any city or coordinates worldwide"
                     />
-
                     <div
                       id="citySuggestions"
                       role="listbox"
@@ -792,7 +660,6 @@
                     ></div>
                   </div>
                 </div>
-
                 <p
                   id="locHint"
                   style="
@@ -862,7 +729,6 @@
                     aria-live="polite"
                   ></p>
                 </div>
-
                 <details
                   id="coordDetails"
                   style="margin-top: 0.5rem; display: none"
@@ -876,7 +742,6 @@
                   >
                     More precise option: use your exact/custom coordinates
                   </summary>
-
                   <p
                     style="
                       font-size: 0.8rem;
@@ -901,7 +766,6 @@
                   >
                     <div class="form-group" style="margin-bottom: 0">
                       <label for="latInput">Latitude (&minus;90 to 90):</label>
-
                       <input
                         type="number"
                         id="latInput"
@@ -910,12 +774,10 @@
                         step="0.01"
                       />
                     </div>
-
                     <div class="form-group" style="margin-bottom: 0">
                       <label for="lonInput"
                         >Longitude (&minus;180 to 180):</label
                       >
-
                       <input
                         type="number"
                         id="lonInput"
@@ -927,7 +789,6 @@
                   </div>
                 </details>
               </div>
-
               <!-- Bill slider: revealed once location is known in auto mode, or in manual mode -->
               <div
                 id="billSliderWrap"
@@ -967,7 +828,6 @@
                       prices</span
                     ></label
                   >
-
                   <div
                     id="billSliderVal"
                     style="
@@ -978,7 +838,6 @@
                     "
                   ></div>
                 </div>
-
                 <input
                   type="range"
                   id="billSlider"
@@ -989,7 +848,6 @@
                   style="width: 100%; margin-top: 0.4rem; cursor: pointer"
                 />
               </div>
-
               <!-- Off-grid quick load wrap: revealed in off-grid goal mode -->
               <div
                 id="offgridLoadWrap"
@@ -1033,7 +891,6 @@
                     ~10 kWh/day
                   </div>
                 </div>
-
                 <div
                   class="offgrid-presets"
                   style="
@@ -1093,7 +950,6 @@
                     🏡 Homestead (15 kWh/day)
                   </button>
                 </div>
-
                 <input
                   type="range"
                   id="offgridKwhSlider"
@@ -1104,7 +960,6 @@
                   style="width: 100%; cursor: pointer"
                 />
               </div>
-
               <!-- Everything below the location row is the "full form": hidden in
                Quick setup, revealed when the visitor switches to Manual. -->
               <div id="fullControls">
@@ -1112,12 +967,10 @@
                   <label for="loadMode" data-i18n="loadLabel"
                     >How much power do you use?</label
                   >
-
                   <select id="loadMode" class="form-control">
                     <option value="appliances" data-i18n="loadAppliances">
                       Let me pick my appliances
                     </option>
-
                     <option
                       value="bill"
                       selected
@@ -1126,13 +979,11 @@
                     >
                       I know my monthly electric bill
                     </option>
-
                     <option value="kwh" data-i18n="loadKwh">
                       I know my kWh/day (advanced)
                     </option>
                   </select>
                 </div>
-
                 <div class="form-group">
                   <label for="customRateVal" data-jargon="tariff"
                     >Electricity price where you live
@@ -1141,7 +992,6 @@
                     >
                     - your price per kWh ($):</label
                   >
-
                   <input
                     type="number"
                     id="customRateVal"
@@ -1150,7 +1000,6 @@
                     step="0.01"
                     min="0.01"
                   />
-
                   <details
                     id="genHelper"
                     style="margin-top: 0.6rem; font-size: 0.85rem"
@@ -1161,7 +1010,6 @@
                     >
                       I run a generator &mdash; what does its power really cost?
                     </summary>
-
                     <div
                       style="
                         display: grid;
@@ -1172,19 +1020,15 @@
                     >
                       <div class="form-group" style="margin-bottom: 0">
                         <label for="genFuelType">Fuel:</label>
-
                         <select id="genFuelType" class="form-control">
                           <option value="petrol" selected>
                             Petrol / gasoline
                           </option>
-
                           <option value="diesel">Diesel</option>
                         </select>
                       </div>
-
                       <div class="form-group" style="margin-bottom: 0">
                         <label for="genFuelPrice">Price per liter ($):</label>
-
                         <input
                           type="number"
                           id="genFuelPrice"
@@ -1195,7 +1039,6 @@
                         />
                       </div>
                     </div>
-
                     <div
                       id="genReadout"
                       style="
@@ -1209,7 +1052,6 @@
                         display: none;
                       "
                     ></div>
-
                     <button
                       type="button"
                       id="btnApplyGenRate"
@@ -1219,7 +1061,6 @@
                     >
                       Use this as my electricity price
                     </button>
-
                     <p
                       style="
                         font-size: 0.72rem;
@@ -1238,7 +1079,6 @@
                       instead.
                     </p>
                   </details>
-
                   <div style="margin-top: 0.6rem">
                     <label for="exportRate"
                       >Feed-in credit for surplus you can sell
@@ -1246,7 +1086,6 @@
                         >($/kWh, optional &mdash; grid-tie only)</span
                       >:</label
                     >
-
                     <input
                       type="number"
                       id="exportRate"
@@ -1256,7 +1095,6 @@
                       min="0"
                     />
                   </div>
-
                   <div style="margin-top: 0.6rem">
                     <label for="fixedChargeVal"
                       >Fixed monthly charge on your bill
@@ -1264,7 +1102,6 @@
                         >($/mo, optional &mdash; solar can't cut it)</span
                       >:</label
                     >
-
                     <input
                       type="number"
                       id="fixedChargeVal"
@@ -1275,7 +1112,6 @@
                     />
                   </div>
                 </div>
-
                 <div id="panelAppliances">
                   <div
                     class="appliance-presets"
@@ -1370,9 +1206,7 @@
                       &#129529; Clear All
                     </button>
                   </div>
-
                   <div id="applianceList"></div>
-
                   <div
                     id="readoutAppliances"
                     style="
@@ -1385,7 +1219,6 @@
                       font-weight: 700;
                     "
                   ></div>
-
                   <p class="uc-note">
                     Wattages are typical values &mdash; yours may differ.
                     Cycling appliances (fridges, freezers, air conditioners,
@@ -1396,7 +1229,6 @@
                     h/day) really does use about 1 kWh/day.
                   </p>
                 </div>
-
                 <div id="panelBill" style="display: block">
                   <div
                     id="readoutBill"
@@ -1410,7 +1242,6 @@
                       font-weight: 700;
                     "
                   ></div>
-
                   <p
                     style="
                       font-size: 0.78rem;
@@ -1423,13 +1254,11 @@
                     err.
                   </p>
                 </div>
-
                 <div id="panelKwh" style="display: none">
                   <div class="form-group">
                     <label for="dailyKwhInput" data-jargon="kWh"
                       >Daily energy use (kWh/day):</label
                     >
-
                     <input
                       type="number"
                       id="dailyKwhInput"
@@ -1440,7 +1269,6 @@
                       step="1"
                     />
                   </div>
-
                   <div
                     id="readoutKwh"
                     style="
@@ -1454,7 +1282,6 @@
                     "
                   ></div>
                 </div>
-
                 <!-- ONE vocabulary for "what do you want to do" (D-16).
                      The six tiles of §6.2 Step 3. The legacy systemGoal /
                      hardwareConfig pair still exists BELOW, hidden, because
@@ -1465,36 +1292,28 @@
                   <label for="useCase" data-i18n="useCaseLabel"
                     >What do you want to do?</label
                   >
-
                   <select id="useCase" class="form-control">
                     <option value="billcut" selected data-i18n="useCaseBillCut">
                       Cut my electricity bill
                     </option>
-
                     <option value="tou" data-i18n="useCaseTou">
                       Save with a battery on time-of-use rates
                     </option>
-
                     <option value="backup" data-i18n="useCaseBackup">
                       Keep essentials running in a power cut
                     </option>
-
                     <option value="reserve" data-i18n="useCaseReserve">
                       Keep a backup reserve in my battery
                     </option>
-
                     <option value="offgrid" data-i18n="useCaseOffGrid">
                       Go fully off-grid
                     </option>
-
                     <option value="portable" data-i18n="useCasePortable">
                       Portable power (RV, van, boat, camping)
                     </option>
                   </select>
-
                   <p id="useCaseBlurb" class="uc-note"></p>
                 </div>
-
                 <!-- The two legacy enum selects, now derived and never shown. -->
                 <div
                   class="form-group"
@@ -1504,36 +1323,29 @@
                   <label for="systemGoal" data-i18n="goalLabel"
                     >What outcome are you exploring?</label
                   >
-
                   <select id="systemGoal" class="form-control" hidden>
                     <option value="gridtie" selected>
                       Cut my bill, stay connected
                     </option>
-
                     <option value="offgrid">Power me fully off-grid</option>
                   </select>
                 </div>
-
                 <div class="form-group" id="hardwareConfigRow" hidden>
                   <label for="hardwareConfig" data-jargon="inverter"
                     >Hardware setup:</label
                   >
-
                   <select id="hardwareConfig" class="form-control" hidden>
                     <option value="both" selected>
                       Solar + Battery (Default)
                     </option>
-
                     <option value="solar">
                       Solar only (Grid-tie credits/metering)
                     </option>
-
                     <option value="battery">
                       Battery only (Peak-hour ToU offset)
                     </option>
                   </select>
                 </div>
-
                 <!-- ── Use-case inputs. Each block is shown for exactly the
                      use cases that declare it (usecases.js INPUTS); none is
                      visible to a visitor whose goal does not ask for it. ── -->
@@ -1550,7 +1362,6 @@
                       step="0.01"
                     />
                   </div>
-
                   <div class="form-group">
                     <label for="touOffPeakRate" data-i18n="touOffPeakLabel"
                       >Your off-peak price (per kWh)</label
@@ -1563,7 +1374,6 @@
                       step="0.01"
                     />
                   </div>
-
                   <p
                     style="
                       font-size: 0.78rem;
@@ -1574,7 +1384,6 @@
                     data-i18n="touDefaultNote"
                   ></p>
                 </div>
-
                 <div id="backupInputs" hidden>
                   <div class="form-group">
                     <label for="essentialLoadList" data-i18n="essentialLabel"
@@ -1582,7 +1391,6 @@
                     >
                     <div id="essentialLoadList" class="appliance-presets"></div>
                   </div>
-
                   <div class="form-group">
                     <label for="outageTargetHours" data-i18n="outageLabel"
                       >How long must it last?</label
@@ -1597,7 +1405,6 @@
                       value="8"
                     />
                   </div>
-
                   <div class="form-group">
                     <label for="backupSolarRecharge" class="uc-check">
                       <input type="checkbox" id="backupSolarRecharge" checked />
@@ -1607,7 +1414,6 @@
                     </label>
                   </div>
                 </div>
-
                 <div id="reserveInputs" hidden>
                   <div class="form-group">
                     <label for="reserveSlider" data-i18n="reserveLabel"
@@ -1624,7 +1430,6 @@
                     <span id="reserveSliderVal" class="uc-value"></span>
                   </div>
                 </div>
-
                 <div id="offgridInputs" hidden>
                   <div class="form-group">
                     <label for="generatorAllowed" class="uc-check">
@@ -1635,7 +1440,6 @@
                     </label>
                   </div>
                 </div>
-
                 <div id="portableInputs" hidden>
                   <div class="form-group">
                     <label
@@ -1648,7 +1452,6 @@
                       class="appliance-presets"
                     ></div>
                   </div>
-
                   <div class="form-group">
                     <label for="portableBankKwh" data-i18n="portableBankLabel"
                       >Power station usable size (kWh)</label
@@ -1663,7 +1466,6 @@
                       value="3"
                     />
                   </div>
-
                   <div class="form-group">
                     <label for="portableShorePower" class="uc-check">
                       <input type="checkbox" id="portableShorePower" />
@@ -1673,7 +1475,6 @@
                     </label>
                   </div>
                 </div>
-
                 <div
                   style="
                     display: flex;
@@ -1692,7 +1493,6 @@
                     >dust and cold are estimated from local weather</span
                   >
                 </div>
-
                 <div class="toggle-row">
                   <input type="checkbox" id="noSwapToggle" />
                   <label for="noSwapToggle">Show the no-swap option</label>
@@ -1701,7 +1501,6 @@
                     counted instead of avoided by oversizing</span
                   >
                 </div>
-
                 <div
                   id="worstMonthCaveat"
                   role="note"
@@ -1716,7 +1515,6 @@
                     color: var(--text-muted);
                   "
                 ></div>
-
                 <div
                   style="
                     margin: 0.5rem 0 0.8rem;
@@ -1762,7 +1560,6 @@
                     "
                   ></p>
                 </div>
-
                 <div
                   style="
                     margin: 0.5rem 0 0.8rem;
@@ -1833,7 +1630,6 @@
                     </div>
                   </div>
                 </div>
-
                 <div class="form-group" style="margin-bottom: 0">
                   <label
                     for="chemSelect"
@@ -1841,33 +1637,27 @@
                     data-jargon="usableCapacity"
                     >Battery chemistry:</label
                   >
-
                   <select id="chemSelect" class="form-control">
                     <option value="auto" selected>
                       Auto &mdash; compare all three chemistries by lifetime
                       cost
                     </option>
-
                     <option value="naion">
                       Sodium-Ion &mdash; cold-capable, no thermal runaway
                     </option>
-
                     <option value="lfp">
                       LFP (LiFePO4) &mdash; the proven standard
                     </option>
-
                     <option value="agm">
                       Lead-Acid (AGM) &mdash; cheapest upfront, shortest-lived
                     </option>
                   </select>
-
                   <div
                     id="chemTempVisualizer"
                     class="chem-temp-wrap"
                     style="margin-top: 0.75rem"
                   ></div>
                 </div>
-
                 <div
                   class="form-group"
                   id="autoTierRow"
@@ -1879,22 +1669,18 @@
                       >(applied to all three chemistries)</span
                     >:</label
                   >
-
                   <select id="autoTier" class="form-control">
                     <option value="tier100">
                       100% &mdash; never see a generator
                     </option>
-
                     <option value="tier99" selected>
                       99% &mdash; generator about a day a year
                     </option>
-
                     <option value="tier95">
                       95% &mdash; generator now and then
                     </option>
                   </select>
                 </div>
-
                 <div
                   class="form-group"
                   id="autoTargetRow"
@@ -1906,21 +1692,17 @@
                       >&nbsp;&mdash; sets the results slider too</span
                     >:</label
                   >
-
                   <select id="autoTarget" class="form-control">
                     <!-- These three are exactly the grid-tie columns the engine
                          sizes (BILL_TARGETS): the recommendation can always
                          honor the choice. -->
                     <option value="cut95">95% &mdash; near-zero bill</option>
-
                     <option value="cut80" selected>
                       80% &mdash; heavy bill cut (cheapest path)
                     </option>
-
                     <option value="cut60">
                       60% &mdash; daytime solar priority
                     </option>
-
                     <!-- Filled in whenever the results slider holds an
                          arbitrary cut: the two controls are one decision. -->
                     <option value="custom" hidden disabled>
@@ -1928,7 +1710,6 @@
                     </option>
                   </select>
                 </div>
-
                 <div
                   class="form-grid-2col"
                   style="
@@ -1944,7 +1725,6 @@
                         >(optional)</span
                       >:</label
                     >
-
                     <input
                       type="number"
                       id="fxRate"
@@ -1968,12 +1748,10 @@
                       rate.
                     </p>
                   </div>
-
                   <div class="form-group">
                     <label for="fxCode" data-i18n="fxCodeLabel"
                       >Currency code:</label
                     >
-
                     <input
                       type="text"
                       id="fxCode"
@@ -1981,7 +1759,6 @@
                       placeholder="e.g. PHP"
                       maxlength="4"
                     />
-
                     <p
                       id="fxAsOf"
                       style="
@@ -1993,7 +1770,6 @@
                   </div>
                 </div>
               </div>
-
               <button
                 id="btnRunSizing"
                 class="btn btn-primary btn-full"
@@ -2003,7 +1779,6 @@
               >
                 <span>Show my options</span>
               </button>
-
               <!-- Why nothing solved, announced. The visual banner below is
                    built on demand and toggled with display:none, which is
                    exactly the shape a screen reader will not announce; this
@@ -2015,7 +1790,6 @@
                 role="status"
                 aria-live="polite"
               ></div>
-
               <div
                 id="sizingStatus"
                 role="status"
@@ -2031,7 +1805,6 @@
                 First run downloads ~2 MB of satellite weather data, then caches
                 it in your browser.
               </div>
-
               <!-- Staged loading pipeline: makes every data-loading phase
                    legible (determinate where counts are known). Populated by
                    ui.js pipelineStart/pipelineStage/pipelineStop. -->
@@ -2078,12 +1851,10 @@
                 </ol>
                 <span id="pipeElapsed" class="pipe-elapsed"></span>
               </div>
-
               <!-- Speed note: honest explanation when a run resolves instantly
                    (repeat configuration or cached weather). -->
               <p id="speedNote" style="display: none" role="status"></p>
             </div>
-
             <div class="results-box">
               <!-- Bill-cut slider (1–150%), grid-tie only: drives the "your target"
                matrix column, the curve marker, and every downstream chart. -->
@@ -2118,7 +1889,6 @@
                     "
                     >Your bill-cut target</label
                   >
-
                   <div
                     id="cutSliderVal"
                     style="
@@ -2129,7 +1899,6 @@
                     "
                   ></div>
                 </div>
-
                 <input
                   type="range"
                   id="cutSlider"
@@ -2139,7 +1908,6 @@
                   value="80"
                   style="width: 100%; margin-top: 0.4rem; cursor: pointer"
                 />
-
                 <p
                   style="
                     font-size: 0.75rem;
@@ -2154,7 +1922,6 @@
                   matrix column and the price-cut curve follow this slider.
                 </p>
               </div>
-
               <!-- Budget slider: walks the cached spectrum by up-front cost.
                Drag previews from cache only; release selects that system. -->
               <div
@@ -2188,7 +1955,6 @@
                     "
                     >Your budget (up-front)</label
                   >
-
                   <div
                     id="budgetSliderVal"
                     style="
@@ -2199,7 +1965,6 @@
                     "
                   ></div>
                 </div>
-
                 <input
                   type="range"
                   id="budgetSlider"
@@ -2209,7 +1974,6 @@
                   value="50"
                   style="width: 100%; margin-top: 0.4rem; cursor: pointer"
                 />
-
                 <p
                   id="playReadout"
                   style="
@@ -2226,9 +1990,7 @@
                      on. Rendered from payload.useCaseOutcome, which only
                      assets/js/sizing/usecases.js can shape. -->
                 <div id="useCaseOutcomeWrap" aria-live="polite"></div>
-
                 <div id="simpleResultsWrap" aria-live="polite"></div>
-
                 <div
                   id="resultLadder"
                   style="display: none; margin-bottom: 1rem"
@@ -2266,16 +2028,13 @@
                     All options
                   </button>
                 </div>
-
                 <div
                   id="eli5Summary"
                   class="eli5-card"
                   style="display: none"
                   aria-live="polite"
                 ></div>
-
                 <div id="bestPickWrap"></div>
-
                 <div
                   id="moneyBar"
                   style="
@@ -2289,7 +2048,6 @@
                     line-height: 1.5;
                   "
                 ></div>
-
                 <!-- Granular panel: the selected system as icons + big numbers.
                Follows every chart's selection; renders from cached data. -->
                 <div
@@ -2323,7 +2081,6 @@
                   ></div>
                   <div id="focusNote" class="uc-note"></div>
                 </div>
-
                 <div
                   id="tierResults"
                   style="
@@ -2345,21 +2102,17 @@
                     backup.
                   </p>
                 </div>
-
                 <!-- Dedicated Plain-English Translation (ELI5) Container -->
                 <div
                   id="eli5CardWrap"
                   style="display: none; margin-top: 1.25rem"
                 ></div>
-
                 <!-- Four ways to pay for this one system, priced together. -->
                 <div
                   id="pathsPanel"
                   style="display: none; margin-top: 1.25rem"
                 ></div>
-
                 <!-- Plausibility frontier: what every budget buys, cheapest first. -->
-
                 <div
                   id="frontierWrap"
                   style="display: none; margin-top: 1.5rem"
@@ -2375,7 +2128,6 @@
                   >
                     How far does your money get you?
                   </div>
-
                   <p
                     style="
                       font-size: 0.85rem;
@@ -2390,7 +2142,6 @@
                     &mdash; so you can see at a glance whether your goal here is
                     easy, expensive, or out of reach.
                   </p>
-
                   <p
                     id="frontierVerdict"
                     style="
@@ -2404,9 +2155,7 @@
                       border-radius: 0 8px 8px 0;
                     "
                   ></p>
-
                   <div id="frontierChart"></div>
-
                   <p
                     id="frontierSource"
                     style="
@@ -2416,7 +2165,6 @@
                       line-height: 1.5;
                     "
                   ></p>
-
                   <p
                     id="frontierNote"
                     style="
@@ -2427,7 +2175,6 @@
                       line-height: 1.55;
                     "
                   ></p>
-
                   <details style="margin-top: 0.9rem">
                     <summary
                       style="
@@ -2439,12 +2186,10 @@
                     >
                       Show every point as a table
                     </summary>
-
                     <div
                       id="frontierTable"
                       style="margin-top: 0.6rem; overflow-x: auto"
                     ></div>
-
                     <p
                       id="frontierMethodNote"
                       style="
@@ -2463,13 +2208,11 @@
                     </p>
                   </details>
                 </div>
-
                 <div
                   id="sunPathWrap"
                   class="sun-path-wrap"
                   style="display: none; margin-top: 1.25rem"
                 ></div>
-
                 <div
                   id="socChartWrap"
                   style="display: none; margin-top: 1.25rem"
@@ -2557,9 +2300,7 @@
                       </button>
                     </div>
                   </div>
-
                   <div id="socLegend" style="display: none"></div>
-
                   <canvas
                     id="socCanvas"
                     role="img"
@@ -2575,7 +2316,6 @@
                     Battery charge over the year renders here after you run a
                     sizing.
                   </canvas>
-
                   <p
                     id="socCaption"
                     style="
@@ -2586,7 +2326,6 @@
                     "
                   ></p>
                 </div>
-
                 <div
                   id="cumCostChartWrap"
                   style="display: none; margin-top: 1.25rem"
@@ -2602,7 +2341,6 @@
                   >
                     What does solar really save you? (cumulative 20-year cost)
                   </div>
-
                   <div
                     id="cumSavingsBox"
                     class="savings-highlight"
@@ -2617,10 +2355,8 @@
                       class="savings-num"
                       style="font-size: 1.6rem"
                     ></div>
-
                     <div id="cumSavingsSub" class="savings-sub"></div>
                   </div>
-
                   <canvas
                     id="cumCostCanvas"
                     role="img"
@@ -2635,7 +2371,6 @@
                     Cumulative 20-year cost comparison renders here after you
                     run a sizing.
                   </canvas>
-
                   <div
                     id="cumCostLegend"
                     role="list"
@@ -2651,7 +2386,6 @@
                       align-items: center;
                     "
                   ></div>
-
                   <p
                     id="cumCostCaption"
                     style="
@@ -2662,7 +2396,6 @@
                     "
                   ></p>
                 </div>
-
                 <details
                   id="bomPanel"
                   style="display: none; margin-top: 1.25rem"
@@ -2678,7 +2411,6 @@
                   >
                     Your hardware list &mdash; what this system is made of
                   </summary>
-
                   <div
                     style="
                       margin-top: 0.8rem;
@@ -2695,7 +2427,6 @@
                       <label for="panelWatts"
                         >Panel wattage you'd buy (W):</label
                       >
-
                       <input
                         type="number"
                         id="panelWatts"
@@ -2706,7 +2437,6 @@
                         step="10"
                       />
                     </div>
-
                     <button
                       type="button"
                       id="btnDownloadBom"
@@ -2717,9 +2447,7 @@
                       Download parts list (CSV)
                     </button>
                   </div>
-
                   <div id="bomBody" style="margin-top: 1rem"></div>
-
                   <p
                     style="
                       font-size: 0.75rem;
@@ -2736,7 +2464,6 @@
                     buying or energizing anything.
                   </p>
                 </details>
-
                 <details
                   style="
                     margin-top: 1.25rem;
@@ -2749,7 +2476,6 @@
                   >
                     How this was calculated
                   </summary>
-
                   <p
                     id="assumpText"
                     style="margin-top: 0.5rem; line-height: 1.6"
@@ -2759,7 +2485,6 @@
                     source) is listed here.
                   </p>
                 </details>
-
                 <div
                   class="result-actions-row"
                   style="
@@ -2777,7 +2502,6 @@
                   >
                     Ask the AI advisor about this result
                   </button>
-
                   <button
                     id="btnShareResult"
                     class="btn btn-outline"
@@ -2786,7 +2510,6 @@
                   >
                     Copy share link
                   </button>
-
                   <button
                     id="btnPrintResult"
                     class="btn btn-outline"
@@ -2801,14 +2524,11 @@
           </div>
         </div>
       </section>
-
       <!-- Factory BOM Breakdown Section -->
-
       <section id="bom" class="bom-section">
         <div class="container">
           <div class="section-header">
             <h2 class="section-title">What a ~100 kWh Build Is Made Of</h2>
-
             <p class="section-desc">
               A reference parts list so you know what the pieces are and roughly
               what they cost. Nothing here is sold by this site &mdash; prices
@@ -2816,18 +2536,14 @@
               constantly.
             </p>
           </div>
-
           <div class="bom-grid">
             <div class="bom-card">
               <div class="bom-badge">Cells</div>
-
               <h3>EVE MB31 3.2V 314Ah Cells</h3>
-
               <p>
                 Brand new Grade-A prismatic LFP cells. 16S configuration per
                 pack (51.2V nominal).
               </p>
-
               <div class="bom-price">
                 ~$43.50 / cell
                 <span
@@ -2840,17 +2556,13 @@
                 >
               </div>
             </div>
-
             <div class="bom-card">
               <div class="bom-badge">BMS</div>
-
               <h3>JK 200A Active Balance BMS</h3>
-
               <p>
                 Smart active balancing (2A balance current), dual temperature
                 probes, RS485/CANbus comms with Sol-Ark & Victron.
               </p>
-
               <div class="bom-price">
                 ~$92.00 / unit
                 <span
@@ -2863,18 +2575,14 @@
                 >
               </div>
             </div>
-
             <div class="bom-card">
               <div class="bom-badge">Fusing</div>
-
               <h3>Eaton Class-T 200A Fuses</h3>
-
               <p>
                 20kA AIC interrupt rating @ 160V DC. Clears very high
                 short-circuit DC currents in milliseconds &mdash; sized to
                 protect the BMS and wiring.
               </p>
-
               <div class="bom-price">
                 ~$14.50 / unit
                 <span
@@ -2887,18 +2595,14 @@
                 >
               </div>
             </div>
-
             <div class="bom-card">
               <div class="bom-badge">Rack & Compression</div>
-
               <h3>300 kgf Compression Racks</h3>
-
               <p>
                 Belleville spring washer endplates hold uniform compression
                 (about 3,000 N). Manufacturers cite cycle-life benefits; treat
                 specific gains as unverified.
               </p>
-
               <div class="bom-price">
                 ~$28.00 / rack
                 <span
@@ -2914,24 +2618,19 @@
           </div>
         </div>
       </section>
-
       <!-- FAQ -->
-
       <section id="faq" class="legal-section">
         <div class="container">
           <div class="section-header">
             <h2 class="section-title">Common Questions</h2>
-
             <p class="section-desc">
               Short answers to what people ask most. The AI advisor can go
               deeper on any of these.
             </p>
           </div>
-
           <div class="legal-grid">
             <div class="legal-card">
               <h3>How accurate are the estimates?</h3>
-
               <p>
                 Every number comes from testable code simulating your exact
                 location against five years of NASA satellite weather - not an
@@ -2940,10 +2639,8 @@
                 professional verify anything you build.
               </p>
             </div>
-
             <div class="legal-card">
               <h3>Will a system pay for itself?</h3>
-
               <p>
                 Where grid power is expensive - Hawaii, islands, much of Europe,
                 Africa, South Asia - properly built solar plus storage commonly
@@ -2952,10 +2649,8 @@
                 from your own tariff.
               </p>
             </div>
-
             <div class="legal-card">
               <h3>What does a system actually cost?</h3>
-
               <p>
                 Battery banks self-built from prismatic cells typically land
                 around $80–125 per usable kWh shipped and duty-paid; budget
@@ -2964,11 +2659,9 @@
               </p>
             </div>
           </div>
-
           <div class="legal-grid" style="margin-top: 1rem">
             <div class="legal-card">
               <h3>Do I need a generator?</h3>
-
               <p>
                 Only if you want near-total independence through weeks of bad
                 weather. The three off-grid options show exactly that trade-off:
@@ -2976,10 +2669,8 @@
                 one only now and then. Grid-connected users skip this entirely.
               </p>
             </div>
-
             <div class="legal-card">
               <h3>Does it work without internet?</h3>
-
               <p>
                 Yes. After your first visit the tool installs itself as an
                 offline app: sizing math runs entirely in your browser, and if
@@ -2987,10 +2678,8 @@
                 weather for the nearest of 66 reference cities.
               </p>
             </div>
-
             <div class="legal-card">
               <h3>Is building my own battery safe?</h3>
-
               <p>
                 It demands respect: lithium cells store enough energy to start
                 fires, and DC arcs don't switch off. The guides here insist on
@@ -3001,27 +2690,22 @@
           </div>
         </div>
       </section>
-
       <!-- Support / Donation Section -->
-
       <section id="support" class="legal-section">
         <div class="container">
           <div class="section-header">
             <h2 class="section-title">Support This Tool</h2>
-
             <p class="section-desc">
               This is free and always will be. If it helped you and you want to
               chip in toward the AI and hosting costs, here's where.
             </p>
           </div>
-
           <div style="max-width: 640px; margin: 0 auto">
             <div class="legal-card" style="text-align: center">
               <p style="margin-bottom: 1.25rem">
                 Contributions go directly to
                 <strong>Lucas Ballek</strong> personally.
               </p>
-
               <div
                 style="
                   display: flex;
@@ -3039,7 +2723,6 @@
                   style="text-decoration: none"
                   >PayPal</a
                 >
-
                 <a
                   href="https://venmo.com/u/lucas-ballek"
                   target="_blank"
@@ -3048,7 +2731,6 @@
                   style="text-decoration: none"
                   >Venmo &mdash; @lucas-ballek</a
                 >
-
                 <a
                   href="https://cash.app/$luball"
                   target="_blank"
@@ -3058,7 +2740,6 @@
                   >Cash App &mdash; $luball</a
                 >
               </div>
-
               <p
                 style="
                   font-size: 0.85rem;
@@ -3084,32 +2765,26 @@
           </div>
         </div>
       </section>
-
       <!-- Terms & Disclaimer Section -->
-
       <section id="legal" class="legal-section">
         <div class="container">
           <div class="section-header">
             <h2 class="section-title">Terms &amp; Disclaimer</h2>
-
             <p class="section-desc">
               Short version: this is a free educational toy that produces rough
               estimates, run by one person, with no warranty of any kind.
             </p>
           </div>
-
           <div class="legal-grid">
             <div class="legal-card">
               <h3 data-i18n="sourcesCardTitle">
                 Where these numbers come from
               </h3>
-
               <p data-i18n="sourcesCardBody">
                 Each assumption behind a number here lists its publisher, the
                 date checked, and how well it matches what we ship. Ones we
                 cannot source say so.
               </p>
-
               <a
                 class="sources-link"
                 href="./assets/data/provenance.json"
@@ -3117,10 +2792,8 @@
                 >Open the full source list &rarr;</a
               >
             </div>
-
             <div class="legal-card">
               <h3>Estimates, not engineering</h3>
-
               <p>
                 Output is an automated educational estimate. It is not
                 engineering, not a stamped design, not a quote, and not a safety
@@ -3128,7 +2801,6 @@
                 a licensed electrician or engineer before you build or energize
                 it.
               </p>
-
               <div
                 id="btnLegalTerms1"
                 class="btn btn-outline"
@@ -3144,17 +2816,14 @@
                 Read full terms &rarr;
               </div>
             </div>
-
             <div class="legal-card">
               <h3>You are talking to an AI</h3>
-
               <p data-i18n="advisorIsAi">
                 The advisor is a large language model. It generates
                 plausible-sounding text and can state wrong numbers with total
                 confidence. Treat every figure as a starting point to check,
                 never as fact.
               </p>
-
               <div
                 id="btnLegalTerms2"
                 class="btn btn-outline"
@@ -3170,16 +2839,13 @@
                 Read AI disclaimer &rarr;
               </div>
             </div>
-
             <div class="legal-card">
               <h3>No accounts, no tracking</h3>
-
               <p>
                 No signup, no cookies for advertising, no analytics profile.
                 Your chat text is sent to the AI provider to generate a reply
                 and is not stored here. Don't type anything sensitive into it.
               </p>
-
               <div
                 id="btnLegalTerms3"
                 class="btn btn-outline"
@@ -3196,23 +2862,19 @@
               </div>
             </div>
           </div>
-
           <div
             style="max-width: 640px; margin: 2.5rem auto 0; text-align: center"
           >
             <div class="legal-card">
               <h3>Questions the AI couldn't answer?</h3>
-
               <p style="margin-bottom: 1rem">
                 You're welcome to email me:
-
                 <a
                   href="mailto:lucasballek@gmail.com"
                   style="color: var(--primary-accent)"
                   >lucasballek@gmail.com</a
                 >
               </p>
-
               <p
                 style="
                   font-size: 0.85rem;
@@ -3237,9 +2899,7 @@
         </div>
       </section>
     </main>
-
     <!-- Footer -->
-
     <footer>
       <div class="container">
         <div
@@ -3252,7 +2912,6 @@
         >
           &#9889; BigEnergy<span style="color: var(--primary-accent)">Co</span>
         </div>
-
         <p style="margin-bottom: 0.75rem">
           <span data-i18n="footerAboutPre"
             >A free tool built and given away by</span
@@ -3262,7 +2921,6 @@
             >Not a company, not incorporated, nothing for sale.</span
           >
         </p>
-
         <p
           style="
             font-size: 0.85rem;
@@ -3280,26 +2938,20 @@
           code. Verify everything with a licensed professional before building.
           &nbsp;-&nbsp;
           <a href="./blog/" style="color: var(--primary-accent)">Blog</a>
-
           &nbsp;-&nbsp;
           <a href="./solar-calculator/" style="color: var(--primary-accent)"
             >Worldwide Benchmarks</a
           >
-
           &nbsp;-&nbsp;
           <a href="./solar-heatmap/" style="color: var(--primary-accent)"
             >Heatmap</a
           >
-
           &nbsp;-&nbsp;
           <a href="./about/" style="color: var(--primary-accent)">About</a>
-
           &nbsp;-&nbsp;
           <a href="#legal" style="color: var(--primary-accent)">Terms</a>
-
           &nbsp;-&nbsp;
           <a href="#support" style="color: var(--primary-accent)">Support</a>
-
           &nbsp;-&nbsp;
           <a
             href="mailto:lucasballek@gmail.com"
@@ -3307,7 +2959,6 @@
             >lucasballek@gmail.com</a
           >
         </p>
-
         <p style="margin-top: 1rem; font-size: 0.85rem">
           <label
             for="langSelect"
@@ -3315,7 +2966,6 @@
             data-i18n="langLabel"
             >Language</label
           >
-
           <select
             id="langSelect"
             class="form-control"
@@ -3324,9 +2974,7 @@
         </p>
       </div>
     </footer>
-
     <!-- Sizing & AI Chatbot Modal -->
-
     <div
       id="sizingModal"
       class="modal-overlay"
@@ -3351,7 +2999,6 @@
               estimates only, not engineering advice</span
             >
           </div>
-
           <div
             id="btnCloseSizing"
             class="close-btn"
@@ -3364,7 +3011,6 @@
             &times;
           </div>
         </div>
-
         <div class="modal-body">
           <div class="chat-box" id="chatWindow">
             <div class="chat-msg bot">
@@ -3385,7 +3031,6 @@
               >
             </div>
           </div>
-
           <div class="chat-input-row">
             <label class="sr-only" for="chatInput"
               ><span data-i18n="advisorLabel"
@@ -3399,7 +3044,6 @@
               data-i18n-placeholder="advisorPlaceholder"
               placeholder="Ask about cell specs, Sodium-ion vs LFP, freight costs..."
             />
-
             <div
               id="btnSendChat"
               class="btn btn-primary"
@@ -3414,9 +3058,7 @@
         </div>
       </div>
     </div>
-
     <!-- Terms & Disclaimer Modal -->
-
     <div
       id="legalModal"
       class="modal-overlay"
@@ -3430,12 +3072,10 @@
             <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff">
               Terms of Use &amp; Disclaimer
             </h3>
-
             <span style="font-size: 0.8rem; color: var(--primary-accent)"
               >Free tool - no warranty - last updated 1 August 2026</span
             >
           </div>
-
           <div
             id="btnCloseLegal"
             class="close-btn"
@@ -3447,7 +3087,6 @@
             &times;
           </div>
         </div>
-
         <div
           class="modal-body"
           style="
@@ -3458,7 +3097,6 @@
           "
         >
           <h4 style="color: #fff; margin-bottom: 0.5rem">1. What this is</h4>
-
           <p style="margin-bottom: 1rem">
             This is a free, personal, non-commercial educational tool operated
             by an individual, Lucas Ballek. It is not a company, not
@@ -3466,11 +3104,9 @@
             contracting, or financial advisory practice. Nothing on this site is
             for sale and no service is being offered or promised to you.
           </p>
-
           <h4 style="color: #fff; margin-bottom: 0.5rem">
             2. Estimates only &mdash; no reliance
           </h4>
-
           <p style="margin-bottom: 1rem">
             All output is an automated educational estimate produced from
             assumptions you supply. It is not a design, not a stamped drawing,
@@ -3482,20 +3118,16 @@
             engineer in your jurisdiction before purchasing, building, or
             energizing anything.
           </p>
-
           <h4 style="color: #fff; margin-bottom: 0.5rem">
             3. AI-generated content
           </h4>
-
           <p style="margin-bottom: 1rem">
             You are interacting with a large language model. It produces fluent,
             confident text that can be factually wrong, including specific
             numbers, prices, product specifications, and regulations. Treat
             every output as an unverified starting point.
           </p>
-
           <h4 style="color: #fff; margin-bottom: 0.5rem">4. Safety</h4>
-
           <p style="margin-bottom: 1rem">
             Battery banks, high DC currents, and mains wiring can cause arc
             flash, electric shock, fire, toxic gas release, serious injury, and
@@ -3505,9 +3137,7 @@
             inspections, and compliance with your local electrical and fire
             codes.
           </p>
-
           <h4 style="color: #fff; margin-bottom: 0.5rem">5. No warranty</h4>
-
           <p style="margin-bottom: 1rem">
             THIS SITE AND ITS OUTPUT ARE PROVIDED "AS IS" AND "AS AVAILABLE",
             WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
@@ -3516,11 +3146,9 @@
             availability, correctness, or continued operation, and the site may
             change or disappear at any time without notice.
           </p>
-
           <h4 style="color: #fff; margin-bottom: 0.5rem">
             6. Limitation of liability
           </h4>
-
           <p style="margin-bottom: 1rem">
             To the fullest extent permitted by applicable law, the operator
             shall not be liable for any direct, indirect, incidental,
@@ -3533,9 +3161,7 @@
             liability for death or personal injury caused by negligence, or for
             fraud.
           </p>
-
           <h4 style="color: #fff; margin-bottom: 0.5rem">7. Contributions</h4>
-
           <p style="margin-bottom: 1rem">
             Any contribution you choose to send is a voluntary gift to an
             individual. It is <strong>not tax-deductible</strong>, is not
@@ -3543,9 +3169,7 @@
             nothing, and is not refundable in exchange for any obligation.
             Contributing does not change the service you receive in any way.
           </p>
-
           <h4 style="color: #fff; margin-bottom: 0.5rem">8. Privacy</h4>
-
           <p style="margin-bottom: 1rem">
             No account is required and no personal details are requested. Text
             you type into the advisor is transmitted to a third-party AI
@@ -3555,9 +3179,7 @@
             request counts may be recorded to keep the service running and
             prevent abuse.
           </p>
-
           <h4 style="color: #fff; margin-bottom: 0.5rem">9. Acceptable use</h4>
-
           <p>
             Please don't automate, scrape, or hammer this tool &mdash; it is one
             person paying for the AI calls. Rate limits apply and abuse will be
@@ -3566,9 +3188,7 @@
         </div>
       </div>
     </div>
-
     <!-- Full-analysis modal for a chosen system (price-cut curve point or matrix cell) -->
-
     <div
       id="systemModal"
       class="modal-overlay"
@@ -3584,7 +3204,6 @@
           >
             Full system analysis
           </h3>
-
           <div
             id="btnCloseSystem"
             class="close-btn"
@@ -3596,9 +3215,7 @@
             &times;
           </div>
         </div>
-
         <div id="systemModalBody" class="modal-body"></div>
-
         <div
           style="
             display: flex;
@@ -3616,7 +3233,6 @@
           >
             ✓ Use this system
           </button>
-
           <button
             type="button"
             class="btn btn-outline"
@@ -3628,15 +3244,10 @@
         </div>
       </div>
     </div>
-
     <!-- Printable one-pager (populated after a sizing run; only this prints) -->
-
     <div id="printSheet"></div>
-
     <!-- Browser helpers (classic script: advisor + modal globals) -->
-
     <script type="module" src="./assets/js/sizing/ui.js?v=20261008a"></script>
-
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
@@ -3646,5 +3257,4 @@
     <script defer src="./assets/js/chat.js?v=20261008a"></script>
   </body>
 </html>
-
 <!-- utf8 fix -->
