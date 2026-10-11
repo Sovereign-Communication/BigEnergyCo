@@ -45,13 +45,15 @@ test("tou arbitrage math: high spread yields positive savings", () => {
 test("tou with flat rate (no spread) is not viable", () => {
   const peak = 0.2;
   const offPeak = 0.2;
-  const viable = Number.isFinite(peak) && Number.isFinite(offPeak) && peak > offPeak;
+  const viable =
+    Number.isFinite(peak) && Number.isFinite(offPeak) && peak > offPeak;
   assert.equal(viable, false);
 });
 
 test("tou with peak <= off-peak is not viable", () => {
   const peak = 0.1;
   const offPeak = 0.15;
-  const viable = Number.isFinite(peak) && Number.isFinite(offPeak) && peak > offPeak;
+  const viable =
+    Number.isFinite(peak) && Number.isFinite(offPeak) && peak > offPeak;
   assert.equal(viable, false);
 });
