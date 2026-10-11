@@ -124,8 +124,6 @@
     />
     <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png" />
 
-    <!-- Structured data: what this tool is, and the questions people ask it -->
-
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -282,7 +280,6 @@
   <body>
     <a class="skip-link" href="#sizing">Skip to calculator</a>
     <main id="main-content">
-      <!-- Header / Navigation Bar -->
 
       <header>
         <div class="container nav-flex">
@@ -420,8 +417,6 @@
         </nav>
       </header>
 
-      <!-- Hero Section -->
-
       <section class="hero">
         <div class="container">
           <div class="hero-tag" data-i18n="heroTag">
@@ -494,8 +489,6 @@
         </div>
       </section>
 
-      <!-- Interactive Sizing Section (deterministic engine + NASA POWER) -->
-
       <section id="sizing" class="calc-section">
         <div class="container">
           <div class="section-header">
@@ -514,7 +507,6 @@
 
           <div class="calc-card">
             <div class="calc-controls">
-              <!-- Primary Goal Selection: Grid-Tie Bill Cutting vs Full Off-grid / Backup -->
               <div
                 class="form-group goal-segmented-wrap"
                 style="margin-bottom: 0.9rem"
@@ -928,7 +920,6 @@
                 </details>
               </div>
 
-              <!-- Bill slider: revealed once location is known in auto mode, or in manual mode -->
               <div
                 id="billSliderWrap"
                 style="
@@ -990,7 +981,6 @@
                 />
               </div>
 
-              <!-- Off-grid quick load wrap: revealed in off-grid goal mode -->
               <div
                 id="offgridLoadWrap"
                 style="
@@ -1495,7 +1485,6 @@
                   <p id="useCaseBlurb" class="uc-note"></p>
                 </div>
 
-                <!-- The two legacy enum selects, now derived and never shown. -->
                 <div
                   class="form-group"
                   id="systemGoalRow"
@@ -2346,19 +2335,15 @@
                   </p>
                 </div>
 
-                <!-- Dedicated Plain-English Translation (ELI5) Container -->
                 <div
                   id="eli5CardWrap"
                   style="display: none; margin-top: 1.25rem"
                 ></div>
 
-                <!-- Four ways to pay for this one system, priced together. -->
                 <div
                   id="pathsPanel"
                   style="display: none; margin-top: 1.25rem"
                 ></div>
-
-                <!-- Plausibility frontier: what every budget buys, cheapest first. -->
 
                 <div
                   id="frontierWrap"
@@ -2792,8 +2777,6 @@
         </div>
       </section>
 
-      <!-- Factory BOM Breakdown Section -->
-
       <section id="bom" class="bom-section">
         <div class="container">
           <div class="section-header">
@@ -2905,8 +2888,6 @@
         </div>
       </section>
 
-      <!-- FAQ -->
-
       <section id="faq" class="legal-section">
         <div class="container">
           <div class="section-header">
@@ -2992,8 +2973,6 @@
         </div>
       </section>
 
-      <!-- Support / Donation Section -->
-
       <section id="support" class="legal-section">
         <div class="container">
           <div class="section-header">
@@ -3074,8 +3053,6 @@
           </div>
         </div>
       </section>
-
-      <!-- Terms & Disclaimer Section -->
 
       <section id="legal" class="legal-section">
         <div class="container">
@@ -3228,8 +3205,6 @@
       </section>
     </main>
 
-    <!-- Footer -->
-
     <footer>
       <div class="container">
         <div
@@ -3314,8 +3289,6 @@
         </p>
       </div>
     </footer>
-
-    <!-- Sizing & AI Chatbot Modal -->
 
     <div
       id="sizingModal"
@@ -3404,8 +3377,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Terms & Disclaimer Modal -->
 
     <div
       id="legalModal"
@@ -3557,8 +3528,6 @@
       </div>
     </div>
 
-    <!-- Full-analysis modal for a chosen system (price-cut curve point or matrix cell) -->
-
     <div
       id="systemModal"
       class="modal-overlay"
@@ -3619,11 +3588,7 @@
       </div>
     </div>
 
-    <!-- Printable one-pager (populated after a sizing run; only this prints) -->
-
     <div id="printSheet"></div>
-
-    <!-- Browser helpers (classic script: advisor + modal globals) -->
 
     <script type="module" src="./assets/js/sizing/ui.js?v=20261005h"></script>
 
@@ -3636,5 +3601,4 @@
     <script defer src="./assets/js/chat.js?v=20261005h"></script>
   </body>
 </html>
-
-<!-- utf8 fix -->
+
