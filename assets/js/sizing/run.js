@@ -2303,7 +2303,8 @@ async function runSizingUncached(msg, deps = {}) {
         const usableKwh = battKwh - reserveKwh;
         // Simple tradeoff: reserve provides emergency hours, costs cycling value
         // Higher reserve = more emergency preparedness, less daily arbitrage
-        const reserveTradeoff = reservePct > 0 ? (1 - reservePct) / reservePct : Infinity;
+        const reserveTradeoff =
+          reservePct > 0 ? (1 - reservePct) / reservePct : Infinity;
         payload.reserve = {
           viable: true,
           reservePct,
@@ -2336,7 +2337,6 @@ async function runSizingUncached(msg, deps = {}) {
       }
     }
 
-
     // Backup mode: calculate outage coverage
     if (mode === "backup") {
       const battKwh = payload.focus?.battKwh || 0;
@@ -2345,7 +2345,10 @@ async function runSizingUncached(msg, deps = {}) {
       } else {
         const avgKw = essentialLoadKwh / 24;
         const hoursOfBackup = avgKw > 0 ? (battKwh * 0.9) / avgKw : 0;
-        const coveragePct = outageTargetHours > 0 ? Math.min(100, (hoursOfBackup / outageTargetHours) * 100) : 0;
+        const coveragePct =
+          outageTargetHours > 0
+            ? Math.min(100, (hoursOfBackup / outageTargetHours) * 100)
+            : 0;
         payload.backup = {
           viable: coveragePct > 0,
           hoursOfBackup: Math.round(hoursOfBackup * 10) / 10,
