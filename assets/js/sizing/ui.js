@@ -6056,7 +6056,8 @@ function renderBomPanel() {
   }
   // Provenance: every price the visitor decides on gets a source.
   const pricingSource =
-    lastPayload?.pricing?.source || "cell market indications through PowMr catalog, Aug 2026";
+    lastPayload?.pricing?.source ||
+    "cell market indications through PowMr catalog, Aug 2026";
   body.appendChild(
     el(
       "p",
@@ -6712,7 +6713,8 @@ function adoptFrontierPoint(i, opts = {}) {
   if (frontierSource) {
     const weatherSrc = p.meta?.source || "NASA POWER";
     const priceSrc =
-      p.pricing?.source || "cell market indications through PowMr catalog, Aug 2026";
+      p.pricing?.source ||
+      "cell market indications through PowMr catalog, Aug 2026";
     frontierSource.textContent = `Data: weather ${weatherSrc}; prices ${priceSrc}.`;
   }
 }
@@ -7201,7 +7203,8 @@ function renderResults(p) {
     `Charging blocked below chemistry's cold limit (LFP 0°C). Load basis: ${inp.basis}. ` +
     `Costs span ${pr.basisLabel || "ex-factory China to PowMr-class budget retail"} (${pr.source || "cell market indications through PowMr catalog, Aug 2026"}) - ` +
     `the low end is components before freight/duty/BMS, the high end is shipped retail with BMS and enclosure included. ` +
-    t("financeOwnNote") + " " +
+    t("financeOwnNote") +
+    " " +
     (a.money ? a.money + " " : "") +
     (a.capacityNote ? a.capacityNote + " " : "") +
     (fxNote() ? fxNote() + " " : "") +
