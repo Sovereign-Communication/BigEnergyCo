@@ -371,10 +371,22 @@ test("the controller still writes the module's values into the same slots", () =
     "the two-decimal readout figure stays the controller's formatting choice",
   );
   assert.match(ui, /type: fuelTypeName\(type\),/);
+  // The language switch re-renders the labels. It used to do that by naming
+  // updateFuelUnits() and updateGenHelper() inline in the beco:lang listener;
+  // those two calls now live inside repaintRuntimeCopy(), which is the single
+  // owner of "text the dictionary supplies to a node the markup pass never
+  // touches". The behaviour this asserts is unchanged and still enforced — only
+  // its home moved — so the assertion follows the owner rather than pinning a
+  // call site that was never the point.
   assert.match(
     ui,
-    /window\.addEventListener\("beco:lang", \(\) => \{\s*updateFuelUnits\(\);\s*updateGenHelper\(\);/,
-    "the language switch still re-renders the labels",
+    /function repaintRuntimeCopy\(\) \{\s*updateFuelUnits\(\);\s*updateGenHelper\(\);/,
+    "repaintRuntimeCopy must re-render the fuel labels and the gen helper",
+  );
+  assert.match(
+    ui,
+    /window\.addEventListener\("beco:lang", \(\) => \{\s*repaintRuntimeCopy\(\);/,
+    "the language switch must still reach the label re-render",
   );
 });
 

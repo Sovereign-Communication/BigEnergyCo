@@ -128,19 +128,145 @@ test("SCOPE: the items that do the work are the items that judge the facet", () 
   }
 });
 
-test("EVIDENCE: every declared axis carries a proof line in the run record", () => {
+test("EVIDENCE: every declared axis carries a proof line in the run record", async () => {
   // The honest-failure mode this closes: an axis with no evidence line is
   // scored from nothing, and "mixed — partial or unverified evidence" then
   // reads like a product defect when it is really an empty record.
+  //
+  // An axis's line may now come from either place, and the test is about the
+  // axis being ACCOUNTED FOR, not about where the words are typed. A gate that
+  // measures an axis composes its line from the run (see
+  // tests/jev-derived-facets.test.mjs); everything else is prose. What must
+  // never happen is an axis in neither — that is the empty record this test
+  // exists to prevent, and the reason it reads the gates' declared axes rather
+  // than assuming every line is typed.
+  const { LIGHTHOUSE_FACET_AXES, composeFacetLine } =
+    await import("../scripts/lib/lighthouse-budgets.mjs");
   const ev = JSON.parse(
     readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
   );
+
+  // The derived lines a run of the Lighthouse gate would compose, built from the
+  // RECORDED first measurement so this test needs no browser and no network.
+  const derived = {};
+  if (LIGHTHOUSE_FACET_AXES.includes("performance")) {
+    const {
+      LIGHTHOUSE_FIRST_MEASUREMENT,
+      LIGHTHOUSE_RATCHET_CATEGORIES,
+      LIGHTHOUSE_TARGETS,
+    } = await import("../scripts/lib/lighthouse-budgets.mjs");
+    derived.performance = composeFacetLine({
+      lighthouse_version: "13.5.0",
+      ratchet_categories: LIGHTHOUSE_RATCHET_CATEGORIES,
+      regressions: [],
+      holes: [],
+      measured: LIGHTHOUSE_TARGETS.map((t) => ({
+        scores: {
+          performance: LIGHTHOUSE_FIRST_MEASUREMENT[t.id].performance.median,
+          ...Object.fromEntries(
+            LIGHTHOUSE_RATCHET_CATEGORIES.map((c) => [
+              c,
+              LIGHTHOUSE_FIRST_MEASUREMENT[t.id][c].median,
+            ]),
+          ),
+        },
+      })),
+    });
+  }
+
+  // The experience gate, the same way: composed from a healthy reading so this
+  // test needs no browser. Adding the axis to the record without teaching this
+  // block about its owner is how an axis ends up in NEITHER place, which is
+  // precisely the empty record the test exists to prevent — so the owner list
+  // grows here rather than the assertion being loosened.
+  const {
+    EXPERIENCE_FACET_AXES,
+    composeExperienceFacetLine,
+    composeTranslationFacetLine,
+  } = await import("../scripts/lib/experience-budgets.mjs");
+  if (EXPERIENCE_FACET_AXES.includes("experience")) {
+    const {
+      EXPERIENCE_ACTIONS,
+      EXPERIENCE_EMPTY_STATES,
+      EXPERIENCE_ERRORS,
+      EXPERIENCE_LOCALES,
+      LOCALE_PHASES,
+      LOCALE_SURFACES,
+    } = await import("../scripts/smoke/experience.mjs");
+    const { LOCALES } = await import("../assets/js/shared/locales.js");
+    const reading = {
+      ok: true,
+      actions: EXPERIENCE_ACTIONS.map((a) => ({
+        id: a.id,
+        label: a.label,
+        kind: a.kind,
+        attempted: true,
+        acknowledged: true,
+        ms: 90,
+        acknowledged_before_result: true,
+      })),
+      errors: EXPERIENCE_ERRORS.map((e) => ({
+        id: e.id,
+        label: e.label,
+        triggered: true,
+        // A message that names a next step, which is what the shipped copy now
+        // says. Composing from a dead-end message here would fail this test for
+        // a reason unrelated to what it is testing.
+        status:
+          "Something failed — enter a figure in that range and try again.",
+        next_step: true,
+      })),
+      empty_states: EXPERIENCE_EMPTY_STATES.map((e) => ({
+        id: e.id,
+        label: e.label,
+        selector: e.selector,
+        ok: true,
+        visible: true,
+        controls: 0,
+        text: "Enter something and the estimate appears here.",
+        invites: true,
+        blank_while_visible: false,
+        raw_key: false,
+      })),
+      key_leaks: [],
+      // The six-locale sweep, in the shape the walk produces. `translation` is
+      // composed from this and nothing else, which is the point: the axis moved
+      // off a hand-typed line precisely so it could be composed from a run.
+      locales: EXPERIENCE_LOCALES.flatMap((locale) =>
+        LOCALE_PHASES.map((phase) => ({
+          locale,
+          phase,
+          lang: locale,
+          dir: locale === "ar" ? "rtl" : "ltr",
+          ready: true,
+          surfaces: LOCALE_SURFACES.map((spec) => ({
+            id: spec.id,
+            key: spec.key,
+            exists: true,
+            text: LOCALES[locale][spec.key],
+            visible: true,
+            raw_key: false,
+          })),
+          leaks: [],
+        })),
+      ),
+    };
+    derived.experience = composeExperienceFacetLine({
+      experience_reading: reading,
+    });
+    if (EXPERIENCE_FACET_AXES.includes("translation"))
+      derived.translation = composeTranslationFacetLine({
+        experience_reading: reading,
+      });
+  }
+
   for (const axis of axes) {
-    const line = ev.facet_evidence?.[axis];
+    const line = ev.facet_evidence?.[axis] ?? derived[axis];
     assert.equal(
       typeof line,
       "string",
-      `facet_evidence.${axis} is missing or not a string`,
+      `facet_evidence.${axis} is missing, is not a string, and no gate ` +
+        "declares it as derived — an axis in neither place is scored from nothing",
     );
     assert.ok(
       line.trim().length > 40,
@@ -231,12 +357,123 @@ test("TRANSPORT: every axis line fits the share the budget reserves for it", () 
   }
 });
 
-test("TRANSPORT: the real 21-axis record survives whole — every line and note", () => {
+test("TRANSPORT: the real 21-axis record survives whole — every line and note", async () => {
   // The proof that the derived budget is enough, measured on the actual run
   // record rather than a synthetic maximum.
+  const {
+    LIGHTHOUSE_FACET_AXES,
+    composeFacetLine,
+    LIGHTHOUSE_FIRST_MEASUREMENT,
+    LIGHTHOUSE_RATCHET_CATEGORIES,
+    LIGHTHOUSE_TARGETS,
+  } = await import("../scripts/lib/lighthouse-budgets.mjs");
   const ev = JSON.parse(
     readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
   );
+  // Built as the builder builds it: prose, plus the lines gates compose from a
+  // run. The derived line is the real composed one (from the recorded first
+  // measurement), so this measures the length that actually reaches the judge.
+  if (LIGHTHOUSE_FACET_AXES.includes("performance")) {
+    ev.facet_evidence.performance = composeFacetLine({
+      lighthouse_version: "13.5.0",
+      ratchet_categories: LIGHTHOUSE_RATCHET_CATEGORIES,
+      regressions: [],
+      holes: [],
+      measured: LIGHTHOUSE_TARGETS.map((t) => ({
+        scores: {
+          performance: LIGHTHOUSE_FIRST_MEASUREMENT[t.id].performance.median,
+          ...Object.fromEntries(
+            LIGHTHOUSE_RATCHET_CATEGORIES.map((c) => [
+              c,
+              LIGHTHOUSE_FIRST_MEASUREMENT[t.id][c].median,
+            ]),
+          ),
+        },
+      })),
+    });
+  }
+  // The experience line, composed the same way — the gate's own composer over a
+  // healthy reading. Without it the record this test measures is not the record
+  // the judge receives, and the axis would be reported as "lost from transport"
+  // when in fact nothing was lost.
+  const {
+    EXPERIENCE_FACET_AXES,
+    composeExperienceFacetLine,
+    composeTranslationFacetLine,
+  } = await import("../scripts/lib/experience-budgets.mjs");
+  if (EXPERIENCE_FACET_AXES.includes("experience")) {
+    const {
+      EXPERIENCE_ACTIONS,
+      EXPERIENCE_EMPTY_STATES,
+      EXPERIENCE_ERRORS,
+      EXPERIENCE_LOCALES,
+      LOCALE_PHASES,
+      LOCALE_SURFACES,
+    } = await import("../scripts/smoke/experience.mjs");
+    const { LOCALES } = await import("../assets/js/shared/locales.js");
+    const reading = {
+      ok: true,
+      actions: EXPERIENCE_ACTIONS.map((a) => ({
+        id: a.id,
+        label: a.label,
+        kind: a.kind,
+        attempted: true,
+        acknowledged: true,
+        ms: 90,
+        acknowledged_before_result: true,
+      })),
+      errors: EXPERIENCE_ERRORS.map((e) => ({
+        id: e.id,
+        label: e.label,
+        triggered: true,
+        status:
+          "Something failed — enter a figure in that range and try again.",
+        next_step: true,
+      })),
+      empty_states: EXPERIENCE_EMPTY_STATES.map((e) => ({
+        id: e.id,
+        label: e.label,
+        selector: e.selector,
+        ok: true,
+        visible: true,
+        controls: 0,
+        text: "Enter something and the estimate appears here.",
+        invites: true,
+        blank_while_visible: false,
+        raw_key: false,
+      })),
+      key_leaks: [],
+      locales: EXPERIENCE_LOCALES.flatMap((locale) =>
+        LOCALE_PHASES.map((phase) => ({
+          locale,
+          phase,
+          lang: locale,
+          dir: locale === "ar" ? "rtl" : "ltr",
+          ready: true,
+          surfaces: LOCALE_SURFACES.map((spec) => ({
+            id: spec.id,
+            key: spec.key,
+            exists: true,
+            text: LOCALES[locale][spec.key],
+            visible: true,
+            raw_key: false,
+          })),
+          leaks: [],
+        })),
+      ),
+    };
+    ev.facet_evidence.experience = composeExperienceFacetLine({
+      experience_reading: reading,
+    });
+    // …and the translation line, which is no longer typed at all. If this block
+    // does not compose it, the record measured here is missing an axis the judge
+    // WILL receive, and the transport budget would be asserted against a record
+    // that is smaller than the real one.
+    if (EXPERIENCE_FACET_AXES.includes("translation"))
+      ev.facet_evidence.translation = composeTranslationFacetLine({
+        experience_reading: reading,
+      });
+  }
   const merged = mergeEvidence(ev, AUTO);
   const text = buildStateText(merged, AUTO, axes);
   for (const axis of axes) {

@@ -20,21 +20,96 @@ export async function runGridTieFlow(ctx, actions) {
     180000,
     2000,
   );
+  // Then let the page go QUIET before arming. The auto-location flow above
+  // leaves a debounced coordinate/tariff update in flight, and when it lands it
+  // calls markPrecalcDirty(), which bumps payloadEpoch and retires whatever run
+  // is in flight. A post made in that window is answered and then dropped on the
+  // epoch check, so the banner never paints no matter what the engine said. An
+  // idle button is not enough — wait for the status line to stop moving.
+  let lastStatus = null;
+  let stableReads = 0;
+  await ctx.poll(
+    async () => {
+      const s = await evaluate(
+        `document.getElementById("sizingStatus")?.textContent || ""`,
+      );
+      stableReads = s === lastStatus ? stableReads + 1 : 0;
+      lastStatus = s;
+      return stableReads >= 3;
+    },
+    30000,
+    1000,
+  );
+  // Drive the guard's REAL input, through the page's own worker.
+  //
+  // This gate used to set the hidden `systemGoal` and `hardwareConfig` selects
+  // to offgrid+solar and wait 120s for a banner that can never appear. It
+  // stopped appearing the moment D-16 landed, and the reason is not staleness:
+  // run.js overwrites hardwareConfig from deriveLegacy(useCaseId) whenever a
+  // use case is named, and selectedUseCase() ALWAYS names one — so
+  // offgrid+solar-only is unreachable through the product. The page offers six
+  // cases, and every pair they derive to is servable.
+  //
+  // So the structural guard in infeasibleReason() is defence-in-depth for the
+  // engine's own API, not a visitor path, and the honest test is the engine's
+  // real input rather than a UI state that cannot exist. It is delivered the
+  // way deadline.js already delivers its fixtures: wrap postMessage, rewrite
+  // the run message in flight, and let the page's ordinary seq/epoch handshake
+  // and render path carry it. Nothing is stubbed — real worker, real engine,
+  // real banner. Stripping `useCase` is what makes the pair pass through
+  // instead of being re-derived, which is exactly the engine's documented
+  // behaviour when no case is named (pinned in infeasible-combos.test.mjs).
+  //
+  // The rewrite stays ARMED until the engine has actually answered with a
+  // reason, rather than firing exactly once. The page retires an in-flight run
+  // whenever a pre-calc input changes (markPrecalcDirty bumps payloadEpoch), and
+  // the debounced coordinate/tariff work left over from the location flow can
+  // land after our post — the reply then arrives stale, is dropped on the epoch
+  // check, and never paints. A one-shot fixture loses that race and waits out a
+  // run that can no longer render; re-delivering is what a second click does
+  // for a real visitor, so the loop below re-clicks while the button is idle.
   await evaluate(`(() => {
-      document.getElementById("systemGoal").value = "offgrid";
-      document.getElementById("systemGoal").dispatchEvent(new Event("change", { bubbles: true }));
-      const hw = document.getElementById("hardwareConfig");
-      hw.value = "solar";
-      hw.dispatchEvent(new Event("change", { bubbles: true }));
+      window.__origPost = Worker.prototype.postMessage;
+      window.__infeasibleArmed = true;
+      window.__infeasibleFired = 0;
+      window.__runSeen = 0;
+      window.__lastUnreachable = null;
+      const orig = window.__origPost;
+      Worker.prototype.postMessage = function (m) {
+        if (m && m.type === "run") window.__runSeen += 1;
+        if (
+          m &&
+          m.type === "run" &&
+          window.__infeasibleArmed &&
+          !window.__lastUnreachable
+        ) {
+          window.__infeasibleFired += 1;
+          const r = Object.assign({}, m);
+          delete r.useCase;
+          r.mode = "offgrid";
+          r.hardwareConfig = "solar";
+          // Only the reply to THIS message is the verdict. An older run can
+          // still be in flight when the wrapper goes up, and its solvable
+          // payload would otherwise read as "this pair solved" and disarm the
+          // fixture before the rewritten run ever came back.
+          this.addEventListener("message", (ev) => {
+            if (
+              ev.data &&
+              ev.data.type === "ok" &&
+              ev.data.seq === r.seq &&
+              ev.data.payload
+            )
+              window.__lastUnreachable =
+                ev.data.payload.unreachableReason ?? "(none)";
+          });
+          return orig.call(this, r);
+        }
+        return orig.call(this, m);
+      };
       return true;
     })()`);
-  await evaluate(`document.getElementById("btnRunSizing").click()`);
-  // Re-click while idle: guarantees a run actually started even if the
-  // first click hit a disabled button. Repeated clicks are harmless —
-  // same inputs, stale responses are dropped by seq.
   let infeasibleShown = false;
-  for (let i = 0; i < 60; i++) {
-    await sleep(2000);
+  for (let i = 0; i < 30; i++) {
     if (
       await evaluate(
         `document.getElementById("infeasibleBanner")?.style.display === "block"`,
@@ -43,20 +118,45 @@ export async function runGridTieFlow(ctx, actions) {
       infeasibleShown = true;
       break;
     }
-    if (
-      !(await evaluate(`document.getElementById("btnRunSizing")?.disabled`))
-    ) {
+    if (!(await evaluate(`document.getElementById("btnRunSizing")?.disabled`)))
       await evaluate(`document.getElementById("btnRunSizing").click()`);
-    }
+    await sleep(3000);
   }
+  // Put the transport back before anything else runs through it.
+  await evaluate(`(() => {
+      if (window.__origPost) Worker.prototype.postMessage = window.__origPost;
+      return true;
+    })()`);
+  // The banner must carry the RIGHT reason and reach the sr-only region, not
+  // merely exist. "needs-battery" is this pair's structural verdict, read off
+  // the page's own worker reply, so a banner that appeared for any other cause
+  // cannot satisfy this; the live region is what makes it reachable without
+  // sight, and clearing the banner by hiding it is exactly what a screen reader
+  // will not announce.
+  const infeasibleState = await evaluate(`(() => {
+      const b = document.getElementById("infeasibleBanner");
+      const live = document.getElementById("infeasibleLive");
+      const title = b ? b.querySelector(".infeasible-title")?.textContent || "" : "";
+      return {
+        display: b ? b.style.display : "absent",
+        title,
+        liveText: live ? live.textContent || "" : "",
+        liveRendered: live ? getComputedStyle(live).display !== "none" : false,
+        fired: window.__infeasibleFired,
+        runSeen: window.__runSeen,
+        unreachable: window.__lastUnreachable ?? null,
+      };
+    })()`);
   gate(
-    "infeasible banner shown for offgrid+solar-only",
-    infeasibleShown,
-    String(
-      await evaluate(
-        `document.getElementById("infeasibleBanner")?.style.display ?? "absent"`,
-      ),
-    ),
+    "infeasible banner names the real reason, in the banner and the live region",
+    infeasibleShown &&
+      infeasibleState.fired > 0 &&
+      infeasibleState.unreachable === "needs-battery" &&
+      infeasibleState.display === "block" &&
+      infeasibleState.title.length > 0 &&
+      infeasibleState.liveRendered &&
+      infeasibleState.liveText.includes(infeasibleState.title),
+    JSON.stringify(infeasibleState).slice(0, 220),
   );
   gate(
     "no savings-unavailable fallback on infeasible run",
@@ -205,13 +305,41 @@ export async function runGridTieFlow(ctx, actions) {
   // payback, while the panel beside them reported "never" break-even and 20-year
   // bills identical to staying on the grid. This gate is what fails on that.
   console.log("SMOKE      ── battery-only: peak offset, not a bill cut ──");
+  // The block below mutates global page state (the use case, and through it
+  // both hidden legacy selects). Sequential browser suites have to put it back
+  // or every later gate tests a state it was never written for: leaving the
+  // page on `tou` turned the Simple-mode and share-restore gates red for
+  // reasons that had nothing to do with either of them. Restoring here does
+  // not weaken them \u2014 each still runs in the state it was authored against.
+  //
+  // SEPARATE, STILL OPEN: whether Simple mode renders a card for a genuinely
+  // battery-only system is not answered by this restore, and is not answered
+  // by the battery-only gates either. That is a product question about
+  // renderSimpleResults() bailing on `!view.feasible`, not a smoke-harness
+  // one, and it is recorded as such rather than hidden behind a restore.
   await evaluate(`(() => {
-      const hw = document.getElementById("hardwareConfig");
-      hw.value = "battery";
-      hw.dispatchEvent(new Event("change", { bubbles: true }));
-      document.getElementById("systemGoal").value = "gridtie";
-      document.getElementById("systemGoal").dispatchEvent(new Event("change", { bubbles: true }));
-      return true;
+      const uc = document.getElementById("useCase");
+      window.__smokeRestoreUseCase = uc.value;
+      return uc.value;
+    })()`);
+  // Select the USE CASE, not the legacy pair.
+  //
+  // This gate used to poke the hidden `hardwareConfig` select directly, and it
+  // started failing the moment D-16 landed: `applyUseCase` DERIVES both legacy
+  // values from the case, so the next `systemGoal` change overwrote
+  // hardwareConfig back to "both" and the run built 1.92 kW of solar. Twenty-
+  // three battery-only gates went red at once, all of them reporting a system
+  // the visitor cannot even select.
+  //
+  // The `tou` case is the one that derives to {gridtie, battery}, so choosing
+  // it is both the correct setup AND a stronger gate: it now proves the
+  // derivation works, which is what check-usecases.mjs clause 6 claims and
+  // nothing on this page used to exercise.
+  await evaluate(`(() => {
+      const uc = document.getElementById("useCase");
+      uc.value = "tou";
+      uc.dispatchEvent(new Event("change", { bubbles: true }));
+      return document.getElementById("hardwareConfig").value;
     })()`);
   await evaluate(`document.getElementById("btnRunSizing").click()`);
   // Wait for the BATTERY-ONLY payload specifically, not merely for some result
@@ -578,11 +706,21 @@ export async function runGridTieFlow(ctx, actions) {
     })()`);
   await sleep(600);
 
-  // Leave the default hardware behind for every downstream flow.
+  // Leave the default case behind for every downstream flow.
+  //
+  // This used to reset `hardwareConfig` directly, which is the exact mistake
+  // this block made at its start: applyUseCase DERIVES that select from the
+  // use case, so the change event immediately re-derived "battery" and the
+  // page stayed in battery-only for the Simple-mode and share-restore gates.
+  // The restore has to travel the way a visitor travels: the use case.
   await evaluate(`(() => {
-      const hw = document.getElementById("hardwareConfig");
-      hw.value = "both";
-      hw.dispatchEvent(new Event("change", { bubbles: true }));
-      return true;
+      const uc = document.getElementById("useCase");
+      const was = window.__smokeRestoreUseCase || "billcut";
+      if (uc.value !== was) {
+        uc.value = was;
+        uc.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      return uc.value;
     })()`);
+  await sleep(600);
 }

@@ -27,6 +27,7 @@ import {
   jevEnabled,
   requestSanity,
   renderSanityBadge,
+  resetJevHealthForTest,
   sanityResponseIsCurrent,
   sanityState,
   SANITY_THRESHOLDS,
@@ -71,7 +72,13 @@ const GOOD_STATE = {
   meanTempC: 27,
 };
 
-beforeEach(() => resetRateLimitsForTest());
+// The client gate memoizes one answered probe per page session, so a test that
+// does not reset it inherits the previous test's answer. Resetting is the
+// module's own equivalent of a page reload, which is the real reset.
+beforeEach(() => {
+  resetRateLimitsForTest();
+  resetJevHealthForTest();
+});
 
 // ── 1. Worker contract ───────────────────────────────────────────────────────
 
@@ -168,12 +175,100 @@ test("requestSanity: never asks when health says the route is off (silent, zero 
     const out = await requestSanity({ mode: "offgrid" });
     assert.equal(out, null);
     assert.equal(calls, 1, "health asked; no /api/jev POST at all");
-    await requestSanity({ mode: "offgrid" });
+    // OWNER RULING 2026-09-29: the probe is asked AT MOST ONCE per page
+    // session, not once per render. A real-browser measurement counted 4
+    // warm `GET /api/health` requests across a single slider session, which
+    // is the `performance` facet's "zero redundant network pulls" claim, and
+    // it was not zero. The guarantee that is being protected here is not the
+    // request COUNT but what the count was buying — see the two tests below,
+    // which pin that guarantee directly.
+    for (let i = 0; i < 25; i++) await requestSanity({ mode: "offgrid" });
     assert.equal(
       calls,
-      2,
-      "each render re-asks: activation is server-side only",
+      1,
+      "25 further renders must issue no further /api/health request",
     );
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("JEV GATE: server-side activation still needs no client redeploy", async () => {
+  // THE INTENT, pinned. `jevEnabled`'s comment has always claimed that turning
+  // the feature on in the worker requires no new JavaScript shipped. That claim
+  // is what the per-render re-ask was paying for, and it is the guarantee the
+  // session memo must not cost us: a page LOADED AFTER the activation sees the
+  // route live. A page reload is a new session, and a new session re-asks.
+  const realFetch = globalThis.fetch;
+  let keyPresent = false;
+  globalThis.fetch = async (u) =>
+    new Response(JSON.stringify({ status: "ok", jevSanity: keyPresent }), {
+      status: 200,
+    });
+  try {
+    // Session 1: the worker has no key yet.
+    assert.equal(await jevEnabled(""), false, "route off before activation");
+    // The owner activates it server-side. Nothing about this page changes.
+    keyPresent = true;
+    // Session 2: a page loaded after the activation — the same code, no redeploy.
+    resetJevHealthForTest();
+    assert.equal(
+      await jevEnabled(""),
+      true,
+      "a page loaded after activation must get the feature with no redeploy",
+    );
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("JEV GATE: one answered probe is remembered for the whole session", async () => {
+  // The redundancy the memo exists to remove, asserted directly: N renders,
+  // one request. And the answer is a COPY, not a live view of the worker's
+  // state — the memo is what makes the count 1, and the count is the point.
+  const realFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async (u) => {
+    calls += 1;
+    return new Response(JSON.stringify({ status: "ok", jevSanity: true }), {
+      status: 200,
+    });
+  };
+  try {
+    for (let i = 0; i < 10; i++) assert.equal(await jevEnabled(""), true);
+    assert.equal(calls, 1, "ten asks, one request");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("JEV GATE: a transport failure is not memoized as an answer", async () => {
+  // A request that never completed taught us nothing, so it must not disable
+  // the feature for the rest of the page's life. A page that loaded while
+  // offline has to be able to pick the badge up once it is back — the memo is
+  // for redundancy, not for a verdict nobody delivered.
+  const realFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async (u) => {
+    calls += 1;
+    if (calls === 1) throw new TypeError("Failed to fetch");
+    return new Response(JSON.stringify({ status: "ok", jevSanity: true }), {
+      status: 200,
+    });
+  };
+  try {
+    assert.equal(
+      await jevEnabled(""),
+      false,
+      "an unreachable worker is not live",
+    );
+    assert.equal(calls, 1, "the failure is not cached");
+    assert.equal(
+      await jevEnabled(""),
+      true,
+      "a later attempt after the network returns must see the route go live",
+    );
+    assert.equal(calls, 2);
   } finally {
     globalThis.fetch = realFetch;
   }
@@ -207,7 +302,7 @@ test("requestSanity: health-on path POSTs and maps the response; failures stay s
   };
   try {
     const data = await requestSanity({ mode: "offgrid" });
-    assert.equal(data.available, true);
+    assert.equal(data.available, true, "the health-on path still POSTs");
     const interp = interpretSanity(data);
     assert.equal(interp.level, "pass");
     assert.equal(

@@ -54,6 +54,83 @@ test("getAllowedOrigin locks to the explicit allowlist", () => {
   assert.equal(getAllowedOrigin(undefined), null);
 });
 
+test("EXTRA_ALLOWED_ORIGINS trusts only the exact origins it is given", () => {
+  // The showcase Pages host is trusted via config so the production allowlist
+  // never has to be edited to accommodate another deployment. The whole value
+  // of that arrangement is that it cannot become a pattern, so the negative
+  // cases below are the test that matters.
+  const env = {
+    EXTRA_ALLOWED_ORIGINS: "https://bigenergyco-showcase.pages.dev",
+  };
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev", env),
+    "https://bigenergyco-showcase.pages.dev",
+    "the configured origin must be trusted",
+  );
+  assert.equal(getAllowedOrigin("https://anything.pages.dev", env), null);
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev.evil.com", env),
+    null,
+    "a suffix attack must not match",
+  );
+  assert.equal(
+    getAllowedOrigin(
+      "https://evil.com/https://bigenergyco-showcase.pages.dev",
+      env,
+    ),
+    null,
+    "an embedded match must not count",
+  );
+  assert.equal(
+    getAllowedOrigin("https://BIGENERGYCO-SHOWCASE.PAGES.DEV", env),
+    null,
+    "matching stays case-sensitive, like the static list",
+  );
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev/", env),
+    null,
+    "a trailing slash is still a different origin string",
+  );
+  // A union, never a replacement: the built-in list is the floor.
+  assert.equal(
+    getAllowedOrigin(ORIGIN),
+    ORIGIN,
+    "no env keeps the static list",
+  );
+  assert.equal(
+    getAllowedOrigin(ORIGIN, env),
+    ORIGIN,
+    "env cannot revoke an entry",
+  );
+  assert.equal(
+    getAllowedOrigin("https://staging-bca832d.bigenergyco.pages.dev", env),
+    "https://staging-bca832d.bigenergyco.pages.dev",
+  );
+  // Absent, empty, or wrong-typed config grants nothing.
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev"),
+    null,
+    "the showcase origin is NOT trusted without the var",
+  );
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev", {}),
+    null,
+  );
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev", {
+      EXTRA_ALLOWED_ORIGINS: "",
+    }),
+    null,
+  );
+  assert.equal(
+    getAllowedOrigin("https://bigenergyco-showcase.pages.dev", {
+      EXTRA_ALLOWED_ORIGINS: 42,
+    }),
+    null,
+    "a non-string config must not be coerced into trusting origins",
+  );
+});
+
 test("corsHeaders echoes only allowed origins and always varies", () => {
   const h = corsHeaders(ORIGIN);
   assert.equal(h["Access-Control-Allow-Origin"], ORIGIN);
@@ -192,23 +269,47 @@ test("/api/chat validates input before any paid call", async () => {
   );
 });
 
-test("/api/chat 500s without a configured key (never leaks key state)", async () => {
+// PORTED, not weakened (B2 / R-CF-10). This test used to assert HTTP 500 when
+// GROQ_API_KEY is absent. That assertion WAS the defect: a 500 drove the
+// client's busy/retry ladder and presented as a dead chat box, which the judge
+// run called the largest unflagged risk (45%). R-CF-10 replaces it with a
+// labelled deterministic reply at 200.
+//
+// The invariant this test actually exists for — never leak key state — is
+// KEPT and strengthened: it now asserts the degraded reply says nothing about
+// the secret's name or value, and says the advisor is offline rather than
+// implying the visitor did something wrong.
+test("/api/chat without a configured key answers degraded (never leaks key state)", async () => {
   const res = await worker.fetch(chatReq({ message: "hello" }), {});
-  assert.equal(res.status, 500);
+  assert.equal(res.status, 200, "an unprovisioned advisor must still answer");
   const body = await res.json();
-  assert.ok(!JSON.stringify(body).includes("GROQ_API_KEY="));
+  assert.equal(body.degraded, true);
+  assert.equal(body.reason, "key_missing");
+  // The original leak check, plus the name of the secret itself.
+  const text = JSON.stringify(body);
+  assert.ok(!text.includes("GROQ_API_KEY="));
+  assert.ok(!text.includes("GROQ_API_KEY"));
+  assert.ok(!/secret key/i.test(body.reply));
 });
 
+// PORTED for the same reason. The rate LIMIT is unchanged and still enforced —
+// only the pre-limit response status moved from 500 to the degraded reply, so
+// this loop now asserts 200 eight times before the 429. The 429 and its
+// Retry-After are asserted exactly as before, because a rate limit is a real
+// answer and must not be softened into a fallback.
 test("/api/chat returns 429 with Retry-After after 8/min", async () => {
   const env = {};
   for (let i = 0; i < 8; i++) {
-    assert.equal(
-      (await worker.fetch(chatReq({ message: "hi" }), env)).status,
-      500,
-    );
+    const res = await worker.fetch(chatReq({ message: "hi" }), env);
+    assert.equal(res.status, 200, "pre-limit calls answer degraded, not 500");
+    assert.equal((await res.json()).degraded, true);
   }
   const limited = await worker.fetch(chatReq({ message: "hi" }), env);
-  assert.equal(limited.status, 429);
+  assert.equal(
+    limited.status,
+    429,
+    "a rate limit is a real verdict, not a fallback",
+  );
   assert.equal(limited.headers.get("Retry-After"), "60");
 });
 

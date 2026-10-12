@@ -20,6 +20,46 @@ function stubFetch(callsVar, jevJson) {
         };`;
 }
 
+/**
+ * The health probe is answered ONCE per page session (owner ruling
+ * 2026-09-29), so a stub installed after the app has booted can never take
+ * effect: the app already asked during boot and that answer is now the
+ * session's. These three gates therefore installed a stub into a network the
+ * app had already consulted, and the badge silently never rendered.
+ *
+ * This layer is installed at DOCUMENT-START instead — before any app script
+ * runs — and answers BOTH Jev routes, so the app never reaches the real worker
+ * from a smoke run: /api/health as live, and /api/jev as a silent
+ * `available:false`. It is registered for LOCAL STAGED RUNS ONLY
+ * (browser-smoke.mjs gates it on isLocalBase): a real surface must be probed
+ * for real, or the smoke would certify a health answer the worker never gave.
+ *
+ * The per-gate stubs below still wrap this one and keep their own payloads and
+ * their own call counts, so nothing they assert is affected — a gate that wants
+ * the pass badge still gets it from its own stub, and a render outside a gate
+ * gets the documented no-badge result instead of a real POST that 503s (the
+ * staged build has no worker key) and logs a console error the strict
+ * no-console-errors gate would correctly fail on.
+ */
+export const jevHealthAtDocumentStart = `(() => {
+  const of = window.fetch;
+  window.fetch = function (u, o) {
+    if (String(u).indexOf("/api/health") !== -1) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ status: "ok", jevSanity: true }),
+      });
+    }
+    if (String(u).indexOf("/api/jev") !== -1) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ available: false }),
+      });
+    }
+    return of.apply(this, arguments);
+  };
+})();`;
+
 const PASS_JSON = `{
               available: true, model: "jev-smoke", plausible: 0.9,
               verdict: "reasonable", verdictConfidence: 0.9,

@@ -17,11 +17,23 @@ export const LOCALES = {
     navBom: "Hardware Reference",
     navBlog: "Blog",
     navLegal: "Terms & Disclaimer",
+    sourcesCardTitle: "Where these numbers come from",
+    sourcesCardBody:
+      "Each assumption behind a number here lists its publisher, the date checked, and how well it matches what we ship. Ones we cannot source say so.",
+    sourcesCardLink: "See all sources →",
     heroTag: "🌍 Free for everyone, everywhere • No signup • Nothing for sale",
+    heroTitle1: "Cut your electricity bill.",
+    heroTitle2: "See exactly what it would take.",
+    footerAboutPre: "Built and given away by",
+    heroIntro:
+      "Start with your location — your phone knows it — and we size every option that could cut your bill, from 1% to sellable surplus. The price-cut curve shows what any budget buys, in your currency. Educational estimates only, nothing for sale. Built and given away by",
+    footerAboutPost: "Not a company, not incorporated, nothing for sale.",
     ctaStart: "Start a Free Estimate",
     pickCity: "Pick a city (or use 📍 My location) so we know your sunshine.",
     shareLoaded:
       "Shared setup loaded. Review the inputs, then click Size My System to calculate.",
+    invalidShare:
+      "This share link could not be read — it may have been cut short when it was copied. Ignore it and set up your own estimate below.",
     customCoordsLocation: "Using custom coordinates ({lat}, {lon}).",
     resolvingCity: "Resolving your city — choose a match or wait for lookup.",
     chooseCityMatch: "Choose a city suggestion or wait for lookup to finish.",
@@ -29,7 +41,7 @@ export const LOCALES = {
     invalidCoordinates:
       "Latitude must be between −90 and 90 and longitude between −180 and 180.",
     invalidDailyKwh:
-      "Daily energy use must be between 0.5 and 500 kWh per day.",
+      "Daily energy use must be between 0.5 and 500 kWh per day — enter a figure in that range, or tick the appliances you want to power instead.",
     inputsChanged:
       "Inputs changed — click Size My System to update the estimate.",
     errorTimeout:
@@ -68,9 +80,8 @@ export const LOCALES = {
     lvlBest: "Best pick",
     lvlCompare: "Compare batteries",
     lvlMatrix: "All options",
-    bomPanelTitle: "Your hardware list \u2014 what this system is made of",
-    bomDownload: "Download parts list (CSV)",
-    genSummary: "I run a generator \u2014 what does its power really cost?",
+    bomPanelTitle: "Your hardware list — what this system is made of",
+    genSummary: "I run a generator — what does its power really cost?",
     genApply: "Use this as my electricity price",
 
     // -- Plausibility frontier (spend -> coverage curve) --
@@ -83,7 +94,6 @@ export const LOCALES = {
     frontierYGrid: "Share of your power bill cut",
     frontierYGridBattery: "Share of your peak hours shifted",
     frontierYOffgrid: "Share of your energy covered, no generator",
-    frontierTagSel: "selected",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, no battery · {pct}% · {cost}",
     frontierLegendSel: "Selected option — click any point to choose it",
@@ -127,6 +137,24 @@ export const LOCALES = {
     advisorNoReply: " No reply received. Please try again.",
     advisorBusy:
       " The free AI engine is swamped right now (HTTP {status} — it runs on a shared free quota).\n\nPlease wait about a minute and send that again.",
+    // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
+    // The worker emits these KEYS next to canonical English text. A browser
+    // resolves them here, so a failure message is never English-only; the
+    // English `reply` field stays what a non-browser client reads.
+    advisorDegradedLabel: "Offline · not the live AI",
+    advisorDegradedLine: "I can't answer right now — {why}.",
+    advisorDegradedWhyUnavailable: "the service that answers did not reply",
+    advisorDegradedWhyNoKey:
+      "no model key is configured, so the advisor is offline by design",
+    advisorDegradedReassure:
+      "Nothing above is wrong, and your sizing is unaffected.",
+    advisorDegradedSystem:
+      "Take those numbers to a licensed electrician before you build.",
+    advisorIsAi:
+      "The advisor is a large language model. It writes plausible text and can state wrong numbers confidently. Check every figure — never take it as fact.",
+    advisorDegradedGeneral:
+      "For sizing help, use the calculator above — no account needed.",
+    advisorDegradedRetry: "Try again in a minute; the free quota is shared.",
     advisorUnreachable:
       " The AI advisor is unreachable right now{status}.\n\nCheck your connection and try again in a moment.",
     frontierCeilingTag: "Best within the sizes searched: {pct}%",
@@ -153,6 +181,7 @@ export const LOCALES = {
     frontierLegendRange: "Best-value range — every extra percent still cheap",
     frontierBestValueRange: "Best-value range: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "best value",
+    frontierTagSel: "selected",
     fuelLitLabel: "Price per liter",
     fuelGalLabel: "Price per gallon",
     fuelReadoutRate: "{type} at this price works out to about {rate} per kWh",
@@ -280,6 +309,169 @@ export const LOCALES = {
       "Surplus needs panels to generate more than your load. Drop the target below 100% on the bill-cut slider, or switch the hardware setup to 'Solar + Battery'.",
     infeasibleGenericTitle: "This hardware and goal combination can't solve",
     infeasibleGenericBody: "Change the goal or hardware, then re-run.",
+
+    // These seven existed only in the five non-English dictionaries. Their
+    // English text was authored straight into index.html, where no gate could
+    // see it, so the translations were pinned to whatever the copy used to say
+    // and drifted: "Where is this system going?" here versus "Where will the
+    // system be installed?" in es/fr/de. Declaring the English makes this the
+    // single source the other five are checked against, and lets the
+    // reverse-parity rule fail if one is ever dropped again.
+    goalLabel: "What outcome are you exploring?",
+    useCaseLabel: "What do you want to do?",
+    useCaseBillCut: "Cut my electricity bill",
+    useCaseTou: "Save with a battery on time-of-use rates",
+    useCaseBackup: "Keep essentials running in a power cut",
+    useCaseReserve: "Keep a backup reserve in my battery",
+    useCaseOffGrid: "Go fully off-grid",
+    useCasePortable: "Portable power (RV, van, boat, camping)",
+    useCaseBillCutBlurb:
+      "Grid-tied solar, with a battery only if it earns its place. Measured as the share of your bill the system removes over 20 years.",
+    useCaseTouBlurb:
+      "A battery on its own: it charges in the cheap hours and covers the expensive ones. No panels.",
+    useCaseBackupBlurb:
+      "Sized on the appliances you tick, not on your whole home. Measured as the share of power cuts your essentials ride out.",
+    useCaseReserveBlurb:
+      "Hold part of the battery back for outages, and see exactly what that costs you in savings.",
+    useCaseOffGridBlurb:
+      "Solar and battery sized for your whole home. Measured as the share of hours that run with no grid at all.",
+    useCasePortableBlurb:
+      "A power station for a van, a boat or a campsite. No roof, no grid, no tariff.",
+    metricBillCut: "of your bill removed over 20 years",
+    metricTouOffset: "of your peak-window energy run by the battery",
+    metricOutageCoverage:
+      "of power cuts your essentials ride out for the full target",
+    metricReserveTradeoff: "what holding a reserve costs, in savings and hours",
+    metricGridIndependence: "of the year running with no grid at all",
+    metricPortableRuntime: "of days the station runs your devices all day",
+    statusWorks: "Works",
+    statusPartial: "Partly",
+    statusNotHere: "Does not work here",
+    useCaseOutcomeTitle: "Your {useCase} result",
+    useCaseVerdictFooter:
+      "Measured for {useCase} against {metric}, using this location's own hourly weather.",
+    useCaseNotMeasured:
+      "Not measured: this combination cannot be sized at all, so there is no {metric} to report.",
+    metricReserveTradeoffValue: "{lost}% of savings, {hours} h of cover",
+    reserveOff: "off",
+    touPeakLabel: "Your peak price (per kWh)",
+    touOffPeakLabel: "Your off-peak price (per kWh)",
+    touDefaultNote:
+      "We have no published time-of-use schedule for your area, so we prefilled a peak price 60% above and an off-peak price 45% below your flat rate. Change either number if your bill says otherwise — the verdict below uses whatever you enter.",
+    essentialLabel: "What must keep running? (pick any)",
+    outageLabel: "How long must it last?",
+    backupRechargeLabel: "Let the panels recharge it during the outage",
+    reserveLabel: "Emergency reserve held in the battery",
+    portableDeviceLabel: "What are you powering? (pick any)",
+    portableBankLabel: "Power station usable size (kWh)",
+    portableShoreLabel: "I can recharge from mains or a vehicle",
+    generatorLabel: "A generator is available for the worst weeks",
+    verdictBillCut:
+      "{status}: this system removes {pct}% of your bill over 20 years.",
+    verdictTou:
+      "{status}: the battery covers {pct}% of your peak-window energy, worth about {saving} over 20 years against a {cost} battery. Your peak-to-off-peak spread here is {spread} per kWh.",
+    verdictBackup:
+      "{status}: your essentials run for the full {targetHours} hours in {pct}% of the power cuts we simulated (typical night: {hours} hours).",
+    verdictReserve:
+      "{status}: holding that reserve costs {pct}% of your bill savings and buys {coverHours} hours of cover.",
+    verdictReserveNoBattery:
+      "There is nothing to hold a reserve in: the cheapest system for this goal carries no battery at all.",
+    verdictOffGrid:
+      "{status}: {pct}% of the year runs with no grid — {unmetHours} hours short in the worst year, {autonomy} days of autonomy.",
+    verdictPortable:
+      "{status}: your station runs a full day on {days} of {trips} days here, and one charge lasts {runtime} hours.",
+    cityLabel: "Where is this system going?",
+    loadLabel: "How much power do you use?",
+    loadAppliances: "Let me pick my appliances",
+    loadBill: "I know my monthly electric bill",
+    loadKwh: "I know my kWh/day (advanced)",
+    chemLabel: "Battery chemistry:",
+
+    // Same story as the seven above: English lived in the markup (or, for
+    // tariffNote, in a template literal in ui.js) while only the translated
+    // dictionaries carried the key. tariffNote is the one that actually LEAKED
+    // English: its five translations existed and nothing ever read them.
+    langLabel: "Language",
+    locBtn: "📍 Use my precise location",
+    tariffNote:
+      "Electricity price estimated for {label} — change it above if you know your rate.",
+
+    pathsLabel_turnkey: "Installer, turnkey",
+    pathsLabel_lease: "Lease or PPA",
+    pathsLabel_selfpurchase: "You buy the parts",
+    pathsLabel_diy: "You mount it, an electrician connects",
+    pathsTitle: "Four ways to pay for this same system",
+    pathsSub:
+      "One system, one set of definitions, twenty years. The gap between these cards is a gap in price, not a difference in what each one counts.",
+    pathsCheapest: "Cheapest",
+    pathsSpend20: "20-year cost",
+    pathsRowIncentives: "Incentives",
+    pathsRowBillCut: "Bill cut",
+    pathsRowBreakEven: "Break-even",
+    pathsRowNet: "Net over 20 years",
+    pathsRowOwnership: "Ownership",
+    pathsRowEndOfTerm: "At the end",
+    pathsCountsHeading: "What this price counts",
+    pathsInstrumentLabel: "Third-party route:",
+    pathsGradeNote:
+      "Every figure above comes from one regional price registry with a named source and a confidence grade. Hardware is your own build estimate; labour, permits, incentives and replacements are registry figures. Nothing here is a vendor's quote.",
+    pathsWhy:
+      "{cheaper} is {gap} cheaper than {dearer} over 20 years, driven mostly by {driver}.",
+    pathsWhyCombined: " No single item explains the whole gap.",
+    pathsDriver_year0: "the up-front price",
+    pathsDriver_incentives: "who the incentives go to",
+    pathsDriver_om: "maintenance",
+    pathsDriver_replacements: "battery and inverter replacements",
+    pathsDriver_leasePayments: "the payments you make",
+    pathsDriver_none: "no single item",
+    pathsInstrumentPpa: "PPA (you buy the energy)",
+    pathsInstrumentLease: "Lease (you rent the system)",
+    pathsEndOfTermBuyout:
+      "Year {years}: you can buy it out for {buyoutPct}% of the installed price, and that buyout is inside this figure.",
+    pathsEndOfTermStillLeasing:
+      "In year {years} the term is still running, so no buyout is priced. Beyond 20 years you would still owe payments.",
+    pathsOwnershipTurnkey: "You own it from day one.",
+    pathsOwnershipPpa: "The provider owns it and keeps it maintained.",
+    pathsOwnershipLease:
+      "You rent it until the term ends, then you buy it out or hand it back.",
+    pathsOwnershipSelf: "You own it once it is installed.",
+    pathsIncentiveTaxCredit: "Federal tax credit",
+    pathsIncentiveRebate: "Utility rebate",
+    pathsIncentivesToProvider: "Incentives go to the provider, not to you.",
+    pathsIncentivesGoToProvider: "The provider keeps them — you own nothing.",
+    pathsNoIncentive: "None applies to this route.",
+    pathsNoVerifiedIncentive: "We have no verified incentive for your region.",
+    pathsUnknown: "Unknown",
+    pathsNotWithinHorizon: "Not within 20 years",
+    pathsBreakEvenYear: "Year {year}",
+    pathsUnavailable: "Not available",
+    pathsNoSystem: "There is no system to price.",
+    pathsNoTariff:
+      "A PPA needs a tariff to price against, so it is not shown here.",
+    pathsDiyNotPermitted:
+      "Not offered here: where you are, a licensed installer has to do the electrical work.",
+    pathsDiyRestricted:
+      "Not offered here: DIY mounting is restricted where you are.",
+    pathsDiyUnknown:
+      "Not offered here: we could not verify whether you may mount your own array.",
+    pathsNoteTurnkeyAllIn:
+      "One all-in price: the same hardware, plus labour, permits and the installer's margin.",
+    pathsIncludesInstalledAllIn: "Parts, labour and permits, already installed",
+    pathsIncludesProviderSwaps:
+      "The provider maintains and replaces the battery and inverter",
+    pathsIncludesIncentivesToProvider:
+      "Incentives go to the provider, not to you",
+    pathsIncludesIncentivesIfEligible: "Incentives, if you qualify for them",
+    pathsIncludesNoYear0Hardware: "No hardware purchase up front",
+    pathsIncludesEndOfTerm: "The end-of-term choice is priced in",
+    pathsIncludesHardwareYouBuy: "The hardware you buy yourself",
+    pathsIncludesElectricianInstalls: "A licensed electrician installs it",
+    pathsIncludesPermitsAndInterconnection:
+      "Permits, inspection and interconnection",
+    pathsIncludesYouDoSwaps: "You arrange and pay for bank swaps",
+    pathsIncludesYouMountTheArray: "You mount the array yourself",
+    pathsIncludesElectricianConnects: "An electrician does the connection",
+    pathsIncludesToolsAndSafety: "Tools and safety gear",
   },
   es: {
     navSizing: "Dimensiona tu sistema",
@@ -294,13 +486,25 @@ export const LOCALES = {
     navBom: "Referencia de hardware",
     navBlog: "Blog",
     navLegal: "Términos y aviso legal",
+    sourcesCardTitle: "De dónde salen estos números",
+    sourcesCardBody:
+      "Cada supuesto detrás de una cifra indica aquí su editor, la fecha de verificación y hasta qué punto coincide con lo que aplicamos. Los que no podemos documentar lo dicen.",
+    sourcesCardLink: "Ver todas las fuentes →",
     heroTag:
       "Gratis para todos, en todo el mundo · Sin registro · Nada en venta",
+    heroTitle1: "Reduce tu factura de luz.",
+    heroTitle2: "Vea exactamente lo que haría falta.",
+    footerAboutPre: "Creada y entregada por",
+    heroIntro:
+      "Empieza con tu ubicación — tu móvil la sabe — y calculamos cada opción que puede reducir tu factura, del 1% al excedente vendible. La curva de precio muestra qué compra cada presupuesto, en tu moneda. Solo estimaciones educativas, nada en venta. Creada y entregada por",
+    footerAboutPost: "No es una empresa, no está constituida, nada en venta.",
     ctaStart: "Empieza tu estimación gratis",
     pickCity:
       "Elige una ciudad (o usa 📍 Mi ubicación) para que sepamos tu insolación.",
     shareLoaded:
       "Configuración compartida cargada. Revisa los datos y pulsa Dimensionar mi sistema para calcular.",
+    invalidShare:
+      "No se pudo leer este enlace compartido: puede que se haya cortado al copiarlo. Ignóralo y prepara tu propia estimación más abajo.",
     customCoordsLocation: "Usando coordenadas personalizadas ({lat}, {lon}).",
     resolvingCity:
       "Buscando tu ciudad: elige una opción o espera el resultado.",
@@ -309,7 +513,8 @@ export const LOCALES = {
     resolvingCoords: "Comprobando esas coordenadas…",
     invalidCoordinates:
       "La latitud debe estar entre −90 y 90 y la longitud entre −180 y 180.",
-    invalidDailyKwh: "El consumo diario debe estar entre 0,5 y 500 kWh al día.",
+    invalidDailyKwh:
+      "El consumo diario debe estar entre 0,5 y 500 kWh al día: introduce una cifra en ese rango o marca los electrodomésticos que quieras alimentar.",
     inputsChanged:
       "Los datos cambiaron: pulsa Dimensionar mi sistema para actualizar.",
     errorTimeout:
@@ -325,29 +530,74 @@ export const LOCALES = {
     statusSuccess:
       "✅ {years} años de datos horarios ({dataYears}) · {yield} kWh/año por kW de panel.{offline}",
     offlineNote: " · 🌐 modo offline típico",
-    offlineCity: "usando perfil típico de {city}",
-    assumptionsPrefix:
-      "Datos: {source}, horario {dataYears}. Derates aplicados: ensuciamiento {soil}%, cableado {wire}%, desajuste {mismatch}%, MPPT {mppt}%. Modelo de temperatura: NOCT {noct}°C, coef. temp. {gamma}%/°C. Eficiencia inversor {eta}%. Carga bloqueada bajo límite de frío de la química (LFP 0°C). Base de carga: {basis}. Costes desde {basisLabel} ({source}) — el extremo bajo es componentes antes de flete/arancel/BMS, el alto es retail con BMS y caja. ",
-    moneyPrefix: "",
-    capacityNotePrefix: "",
-    fxNotePrefix: " ",
-    offlineNotePrefix:
-      "MODO OFFLINE: esta ejecución usó el perfil típico anual para {offlineCity} — una aproximación cercana, no tu sitio exacto. Vuelve a ejecutar online para cinco años de clima puntual. ",
-    tariffSpend: "El gasto en red asume ${tariff}/kWh a {dailyKwh} kWh/día.",
-    noTariff: "Sin tarifa introducida, no se muestra amortización.",
-    currencyNote:
-      "Las cantidades se muestran en {code} a {rate} por 1 US$; las tarifas unitarias de batería se quedan en $/kWh porque los ámbitos de precio base son en USD.",
-    capacityNote: "",
-    offlineLabel:
-      "MODO OFFLINE: esta ejecución usó el perfil típico anual para {offlineCity} — una aproximación cercana, no tu sitio exacto. Vuelve a ejecutar online para cinco años de clima puntual. ",
     tariffSpendLine:
       "A {tariff}/kWh, tu electricidad te cuesta unos {annual} al año hoy. Cada opción de abajo muestra la factura tras la solar y cuánto tarda en pagarse con los ahorros.",
     tariffSpendBattery:
       "A {tariff}/kWh, tu electricidad te cuesta unos {annual} al año hoy. Una batería sin paneles cambia cuándo consumes; no reduce lo que pagas.",
-    noTariffLine: "Sin tarifa introducida, no se muestra amortización.",
     goalLabel: "¿Qué quieres que haga este sistema?",
-    goalOffgrid: "Abastecerme totalmente sin red",
-    goalGridtie: "Reducir mi factura manteniendo la conexión",
+    useCaseLabel: "¿Qué quieres conseguir?",
+    useCaseBillCut: "Reducir tu factura de electricidad",
+    useCaseTou: "Ahorrar con una batería en tarifas horarias",
+    useCaseBackup: "Mantener los básicos funcionando durante un apagón",
+    useCaseReserve: "Guardar una reserva de emergencia en la batería",
+    useCaseOffGrid: "Quedarte totalmente sin red",
+    useCasePortable: "Energía portátil (furgoneta, barco, camping)",
+    useCaseBillCutBlurb:
+      "Solar conectado a la red, con batería solo si compensa. Se mide como la parte de tu factura que el sistema elimina en 20 años.",
+    useCaseTouBlurb:
+      "Solo batería: carga en las horas baratas y cubre las caras. Sin paneles.",
+    useCaseBackupBlurb:
+      "Se dimensiona con los aparatos que marques, no con toda tu casa. Se mide como la parte de los apagones que lo esencial aguanta.",
+    useCaseReserveBlurb:
+      "Deja guardada una parte de la batería para los apagones y mira lo que eso te cuesta en ahorro.",
+    useCaseOffGridBlurb:
+      "Solar y batería dimensionados para toda tu casa. Se mide como la parte de las horas que funcionan sin red.",
+    useCasePortableBlurb:
+      "Una estación de energía para furgoneta, barco o campamento. Sin tejado, sin red, sin tarifa.",
+    metricBillCut: "de tu factura eliminada en 20 años",
+    metricTouOffset: "de tu energía en horas punta cubierta por la batería",
+    metricOutageCoverage:
+      "de los apagones que lo esencial aguanta el tiempo completo",
+    metricReserveTradeoff: "lo que cuesta la reserva, en ahorro y horas",
+    metricGridIndependence: "del año funcionando sin red",
+    metricPortableRuntime:
+      "de los días que la estación alimenta tus dispositivos todo el día",
+    statusWorks: "Funciona",
+    statusPartial: "En parte",
+    statusNotHere: "Aquí no funciona",
+    useCaseOutcomeTitle: "Tu resultado de {useCase}",
+    useCaseVerdictFooter:
+      "Medido para {useCase} frente a {metric}, con el clima horario de esta ubicación.",
+    useCaseNotMeasured:
+      "Sin medir: esta combinación no se puede dimensionar, así que no hay {metric} que informar.",
+    metricReserveTradeoffValue: "{lost}% de ahorro, {hours} h de cobertura",
+    reserveOff: "desactivada",
+    touPeakLabel: "Tu precio en punta (por kWh)",
+    touOffPeakLabel: "Tu precio fuera de punta (por kWh)",
+    touDefaultNote:
+      "No tenemos una tarifa horaria publicada para tu zona, así que hemos puesto un precio en punta un 60 % más alto y uno fuera de punta un 45 % más bajo que tu tarifa plana. Cambia cualquiera de los dos si tu factura dice otra cosa: el veredicto usa lo que escribas.",
+    essentialLabel: "¿Qué debe seguir funcionando? (elige lo que quieras)",
+    outageLabel: "¿Cuánto tiempo debe durar?",
+    backupRechargeLabel: "Deja que los paneles la recarguen durante el apagón",
+    reserveLabel: "Reserva de emergencia guardada en la batería",
+    portableDeviceLabel: "¿Qué vas a alimentar? (elige lo que quieras)",
+    portableBankLabel: "Capacidad útil de la estación (kWh)",
+    portableShoreLabel: "Puedo recargar desde la red o desde el vehículo",
+    generatorLabel: "Hay un generador disponible para las peores semanas",
+    verdictBillCut:
+      "{status}: este sistema elimina el {pct}% de tu factura en 20 años.",
+    verdictTou:
+      "{status}: la batería cubre el {pct}% de tu energía en horas punta, unos {saving} en 20 años frente a una batería de {cost}. Aquí la diferencia entre punta y valle es de {spread} por kWh.",
+    verdictBackup:
+      "{status}: lo esencial aguanta las {targetHours} horas completas en el {pct}% de los apagones que simulamos (noche típica: {hours} horas).",
+    verdictReserve:
+      "{status}: guardar esa reserva cuesta el {pct}% de tu ahorro y compra {coverHours} horas de cobertura.",
+    verdictReserveNoBattery:
+      "No hay nada donde guardar una reserva: el sistema más barato para este objetivo no lleva batería.",
+    verdictOffGrid:
+      "{status}: el {pct}% del año funciona sin red, con {unmetHours} horas de déficit en el peor año y {autonomy} días de autonomía.",
+    verdictPortable:
+      "{status}: tu estación alimenta tus dispositivos todo el día en {days} de {trips} días aquí, y una carga dura {runtime} horas.",
     cityLabel: "¿Dónde se instalará el sistema?",
     loadLabel: "¿Cuánta energía consumes?",
     loadAppliances: "Elijo mis electrodomésticos",
@@ -366,19 +616,13 @@ export const LOCALES = {
     runningBtn: "⏳ Simulando 5 años...",
     runBtnReady: "Dimensionar mi sistema (simulación 5 años)",
     locBtn: "Usar mi ubicación actual",
-    locNotePrefix: "Clima estimado para ",
-    locNoteSuffix: " — cambia la ciudad arriba si es necesario.",
     chemLabel: "Química de la batería:",
-    tariffLabel: "Precio de la electricidad donde vives:",
     tariffNote:
       "Precio estimado para {label} — cámbialo arriba si conoces tu tarifa.",
-    fxNote:
-      "Cantidades mostradas en {code} a {rate} por 1 US$; las tarifas unitarias de batería siguen en $/kWh porque los precios base son en USD.",
     lvlBest: "Mejor opción",
     lvlCompare: "Comparar baterías",
     lvlMatrix: "Todas las opciones",
     bomPanelTitle: "Tu lista de hardware — de qué está hecho este sistema",
-    bomDownload: "Descargar lista de piezas (CSV)",
     genSummary: "Uso un generador — ¿cuánto cuesta realmente su energía?",
     genApply: "Usar esto como mi precio de electricidad",
 
@@ -392,7 +636,6 @@ export const LOCALES = {
     frontierYGrid: "Parte de tu factura eliminada",
     frontierYGridBattery: "Parte de tus horas punta desplazadas",
     frontierYOffgrid: "Parte de tu energía cubierta, sin generador",
-    frontierTagSel: "seleccionado",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, sin batería · {pct}% · {cost}",
     frontierLegendSel:
@@ -438,6 +681,22 @@ export const LOCALES = {
     advisorNoReply: " No se recibió respuesta. Inténtalo de nuevo.",
     advisorBusy:
       " El motor gratuito de IA está satur ahora (HTTP {status} — usa una cuota compartida).\n\nEspera aproximadamente un minuto y vuelve a enviarlo.",
+    // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
+    advisorDegradedLabel: "Sin conexión · no la IA en directo",
+    advisorDegradedLine: "No puedo responder ahora — {why}.",
+    advisorDegradedWhyUnavailable: "el servicio que responde no ha contestado",
+    advisorDegradedWhyNoKey:
+      "no hay clave de modelo: el asesor está apagado por diseño",
+    advisorDegradedReassure:
+      "Nada de lo anterior está mal y tus cálculos no se ven afectados.",
+    advisorDegradedSystem:
+      "Lleva esas cifras a un electricista habilitado antes de construir.",
+    advisorIsAi:
+      "El asesor es un modelo de lenguaje. Escribe texto plausible y puede dar cifras incorrectas con confianza. Comprueba cada número: nunca lo tomes como hecho.",
+    advisorDegradedGeneral:
+      "Para dimensionar, usa la calculadora de arriba; sin cuenta.",
+    advisorDegradedRetry:
+      "Inténtalo en un minuto; la cuota gratuita es compartida.",
     advisorUnreachable:
       " El asesor de IA no está disponible ahora{status}.\n\nComprueba tu conexión y vuelve a intentarlo en un momento.",
     frontierCeilingTag: "Lo máximo dentro de lo buscado: {pct}%",
@@ -463,6 +722,7 @@ export const LOCALES = {
     frontierLegendRange: "Rango óptimo — cada punto extra sigue barato",
     frontierBestValueRange: "Rango óptimo: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "mejor valor",
+    frontierTagSel: "seleccionado",
     fuelLitLabel: "Precio por litro",
     fuelGalLabel: "Precio por galón",
     fuelReadoutRate: "{type} a este precio sale a unos {rate} por kWh",
@@ -606,6 +866,90 @@ export const LOCALES = {
       "Esta combinación de hardware y objetivo no tiene solución",
     infeasibleGenericBody:
       "Cambia el objetivo o el hardware y vuelve a ejecutar.",
+
+    pathsLabel_turnkey: "Instalador, llave en mano",
+    pathsLabel_lease: "Alquiler o PPA",
+    pathsLabel_selfpurchase: "Tú compras las piezas",
+    pathsLabel_diy: "Tú lo montas, un electricista lo conecta",
+    pathsTitle: "Cuatro formas de pagar este mismo sistema",
+    pathsSub:
+      "Un sistema, una sola definición, veinte años. La diferencia entre estas tarjetas es de precio, no de qué incluye cada una.",
+    pathsCheapest: "Más barato",
+    pathsSpend20: "Coste a 20 años",
+    pathsRowIncentives: "Incentivos",
+    pathsRowBillCut: "Ahorro en la factura",
+    pathsRowBreakEven: "Equilibrio",
+    pathsRowNet: "Neto a 20 años",
+    pathsRowOwnership: "Titularidad",
+    pathsRowEndOfTerm: "Al final",
+    pathsCountsHeading: "Qué incluye este precio",
+    pathsInstrumentLabel: "Vía de terceros:",
+    pathsGradeNote:
+      "Todas las cifras provienen de un único registro de precios regional con fuente indicada y grado de confianza. El hardware es tu propia estimación; la mano de obra, los permisos, los incentivos y las sustituciones son datos del registro. Nada de esto es una oferta de un vendedor.",
+    pathsWhy:
+      "{cheaper} sale {gap} menos que {dearer} en 20 años, sobre todo por {driver}.",
+    pathsWhyCombined:
+      " Ningún elemento explica por sí solo toda la diferencia.",
+    pathsDriver_year0: "el precio inicial",
+    pathsDriver_incentives: "a quién van los incentivos",
+    pathsDriver_om: "el mantenimiento",
+    pathsDriver_replacements: "las sustituciones de batería e inversor",
+    pathsDriver_leasePayments: "los pagos que haces",
+    pathsDriver_none: "ningún elemento concreto",
+    pathsInstrumentPpa: "PPA (compras la energía)",
+    pathsInstrumentLease: "Alquiler (alquilas el sistema)",
+    pathsEndOfTermBuyout:
+      "Año {years}: puedes comprarlo por el {buyoutPct}% del precio instalado, y esa compra ya está incluida en esta cifra.",
+    pathsEndOfTermStillLeasing:
+      "En el año {years} el contrato sigue vigente, así que no se incluye ninguna compra. Pasados los 20 años seguirías debiendo pagos.",
+    pathsOwnershipTurnkey: "Eres propietario desde el primer día.",
+    pathsOwnershipPpa: "El proveedor es el propietario y lo mantiene.",
+    pathsOwnershipLease:
+      "Lo alquileres hasta que termine el contrato y luego lo compras o lo devuelves.",
+    pathsOwnershipSelf: "Eres propietario una vez instalado.",
+    pathsIncentiveTaxCredit: "Crédito fiscal federal",
+    pathsIncentiveRebate: "Subvención de la compañía eléctrica",
+    pathsIncentivesToProvider: "Los incentivos van al proveedor, no a ti.",
+    pathsIncentivesGoToProvider:
+      "El proveedor se los queda: no eres propietario de nada.",
+    pathsNoIncentive: "Ninguno se aplica a esta vía.",
+    pathsNoVerifiedIncentive:
+      "No tenemos un incentivo verificado para tu región.",
+    pathsUnknown: "Desconocido",
+    pathsNotWithinHorizon: "No dentro de 20 años",
+    pathsBreakEvenYear: "Año {year}",
+    pathsUnavailable: "No disponible",
+    pathsNoSystem: "No hay ningún sistema que presupuestar.",
+    pathsNoTariff:
+      "Un PPA necesita una tarifa con la que comparar, así que no se muestra aquí.",
+    pathsDiyNotPermitted:
+      "No se ofrece aquí: en tu zona, la instalación eléctrica la debe hacer un instalador con licencia.",
+    pathsDiyRestricted:
+      "No se ofrece aquí: el montaje DIY está restringido en tu zona.",
+    pathsDiyUnknown:
+      "No se ofrece aquí: no pudimos verificar si puedes montar tu propio panel.",
+    pathsNoteTurnkeyAllIn:
+      "Un único precio que incluye todo: el mismo hardware, más mano de obra, permisos y el margen del instalador.",
+    pathsIncludesInstalledAllIn:
+      "Piezas, mano de obra y permisos, ya instalados",
+    pathsIncludesProviderSwaps:
+      "El proveedor mantiene y sustituye batería e inversor",
+    pathsIncludesIncentivesToProvider:
+      "Los incentivos van al proveedor, no a ti",
+    pathsIncludesIncentivesIfEligible: "Incentivos, si te corresponden",
+    pathsIncludesNoYear0Hardware: "Sin compra de hardware al inicio",
+    pathsIncludesEndOfTerm:
+      "La decisión al final del contrato está incluida en el precio",
+    pathsIncludesHardwareYouBuy: "El hardware que compras tú",
+    pathsIncludesElectricianInstalls:
+      "Un electricista con licencia hace la instalación",
+    pathsIncludesPermitsAndInterconnection:
+      "Permisos, inspección y conexión a la red",
+    pathsIncludesYouDoSwaps:
+      "Tú gestionas y pagas las sustituciones de baterías",
+    pathsIncludesYouMountTheArray: "Tú montas el panel",
+    pathsIncludesElectricianConnects: "Un electricista hace la conexión",
+    pathsIncludesToolsAndSafety: "Herramientas y equipo de seguridad",
   },
   pt: {
     navSizing: "Dimensione seu sistema",
@@ -620,12 +964,85 @@ export const LOCALES = {
     navBom: "Referência de hardware",
     navBlog: "Blog",
     navLegal: "Termos e aviso legal",
+    sourcesCardTitle: "De onde vêm estes números",
+    sourcesCardBody:
+      "Cada premissa por trás de um número indica aqui o responsável, a data da verificação e o quanto corresponde ao que aplicamos. As que não conseguimos documentar dizem isso.",
+    sourcesCardLink: "Ver todas as fontes →",
     heroTag:
       "Grátis para todos, no mundo inteiro · Sem cadastro · Nada à venda",
+    heroTitle1: "Corte a sua conta de luz.",
+    heroTitle2: "Veja exatamente o que seria preciso.",
+    footerAboutPre: "Criada e oferecida por",
+    heroIntro:
+      "Comece pela sua localização — o telemóvel sabe — e calculamos cada opção que corta a sua conta, de 1% ao excedente vendável. A curva de preço mostra o que cada orçamento compra, na sua moeda. Apenas estimativas educativas, nada à venda. Criada e oferecida por",
+    footerAboutPost: "Não é uma empresa, não é constituída, nada à venda.",
     ctaStart: "Comece sua estimativa grátis",
     goalLabel: "O que você quer que este sistema faça?",
-    goalOffgrid: "Me alimentar totalmente fora da rede",
-    goalGridtie: "Reduzir minha conta permanecendo conectado",
+    useCaseLabel: "O que você quer fazer?",
+    useCaseBillCut: "Reduzir minha conta de luz",
+    useCaseTou: "Economizar com uma bateria em tarifas horárias",
+    useCaseBackup:
+      "Manter o essencial funcionando durante uma queda de energia",
+    useCaseReserve: "Guardar uma reserva de emergência na bateria",
+    useCaseOffGrid: "Ficar totalmente sem rede",
+    useCasePortable: "Energia portátil (van, barco, camping)",
+    useCaseBillCutBlurb:
+      "Solar ligado à rede, com bateria só quando ela se paga. Medido como a parcela da sua conta que o sistema elimina em 20 anos.",
+    useCaseTouBlurb:
+      "Só bateria: carrega nas horas baratas e cobre as caras. Sem painéis.",
+    useCaseBackupBlurb:
+      "Dimensionado pelos eletrodomésticos que você marcar, não pela casa toda. Medido como a parcela dos apagões que o essencial atravessa.",
+    useCaseReserveBlurb:
+      "Deixe uma parte da bateria guardada para os apagões e veja exatamente quanto isso custa em economia.",
+    useCaseOffGridBlurb:
+      "Solar e bateria dimensionados para a casa inteira. Medido como a parcela das horas que funcionam sem rede nenhuma.",
+    useCasePortableBlurb:
+      "Uma estação de energia para van, barco ou acampamento. Sem telhado, sem rede, sem tarifa.",
+    metricBillCut: "da sua conta eliminada em 20 anos",
+    metricTouOffset: "da sua energia nas horas de pico coberta pela bateria",
+    metricOutageCoverage:
+      "dos apagões que o essencial atravessa pelo tempo todo",
+    metricReserveTradeoff: "o que custar a reserva, em economia e horas",
+    metricGridIndependence: "do ano funcionando sem rede nenhuma",
+    metricPortableRuntime:
+      "dos dias em que a estação alimenta seus aparelhos o dia todo",
+    statusWorks: "Funciona",
+    statusPartial: "Em parte",
+    statusNotHere: "Aqui não funciona",
+    useCaseOutcomeTitle: "Seu resultado de {useCase}",
+    useCaseVerdictFooter:
+      "Medido para {useCase} em relação a {metric}, com o clima horário deste local.",
+    useCaseNotMeasured:
+      "Sem medir: esta combinação não pode ser dimensionada, então não há {metric} a informar.",
+    metricReserveTradeoffValue: "{lost}% de economia, {hours} h de cobertura",
+    reserveOff: "desativada",
+    touPeakLabel: "Seu preço de pico (por kWh)",
+    touOffPeakLabel: "Seu preço fora do pico (por kWh)",
+    touDefaultNote:
+      "Não temos uma tarifa horária publicada para sua região, então deixamos um preço de pico 60% maior e um preço fora do pico 45% menor que sua tarifa plana. Mude qualquer um dos dois se a sua conta disser outra coisa: o veredicto usa o que você digitar.",
+    essentialLabel:
+      "O que precisa continuar funcionando? (marque o que quiser)",
+    outageLabel: "Por quanto tempo precisa durar?",
+    backupRechargeLabel: "Deixe os painéis recarregá-la durante o apagão",
+    reserveLabel: "Reserva de emergência guardada na bateria",
+    portableDeviceLabel: "O que você vai alimentar? (marque o que quiser)",
+    portableBankLabel: "Capacidade útil da estação (kWh)",
+    portableShoreLabel: "Posso recarregar pela rede ou pelo veículo",
+    generatorLabel: "Há um gerador disponível para as piores semanas",
+    verdictBillCut:
+      "{status}: este sistema elimina {pct}% da sua conta em 20 anos.",
+    verdictTou:
+      "{status}: a bateria cobre {pct}% da sua energia nas horas de pico, valendo cerca de {saving} em 20 anos contra uma bateria de {cost}. A diferença entre pico e fora do pico aqui é de {spread} por kWh.",
+    verdictBackup:
+      "{status}: o essencial funciona as {targetHours} horas completas em {pct}% dos apagões que simulamos (noite típica: {hours} horas).",
+    verdictReserve:
+      "{status}: guardar essa reserva custa {pct}% da sua economia e compra {coverHours} horas de cobertura.",
+    verdictReserveNoBattery:
+      "Não há onde guardar uma reserva: o sistema mais barato para esse objetivo não tem bateria nenhuma.",
+    verdictOffGrid:
+      "{status}: {pct}% do ano funciona sem rede — faltam {unmetHours} horas no pior ano, com {autonomy} dias de autonomia.",
+    verdictPortable:
+      "{status}: sua estação alimenta seus aparelhos o dia todo em {days} de {trips} dias aqui, e uma carga dura {runtime} horas.",
     cityLabel: "Onde o sistema será instalado?",
     loadLabel: "Quanta energia você consome?",
     loadAppliances: "Escolho meus eletrodomésticos",
@@ -643,18 +1060,15 @@ export const LOCALES = {
     readoutKwhReady: "Usando {kwh} kWh/dia diretamente.",
     runBtn: "Dimensionar meu sistema (simulação de 5 anos)",
     locBtn: "Usar minha localização atual",
-    locNotePrefix: "Clima estimado para ",
-    locNoteSuffix: " — mude a cidade acima se necessário.",
     chemLabel: "Química da bateria:",
-    tariffLabel: "Preço da eletricidade onde você mora:",
     tariffNote:
       "Preço estimado para {label} — mude acima se souber sua tarifa.",
-    fxNote:
-      "Valores mostrados em {code} a {rate} por 1 US$; taxas unitárias de bateria permanecem em $/kWh porque os preços base são em USD.",
     pickCity:
       "Escolha uma cidade (ou use 📍 Minha localização) para sabermos sua insolação.",
     shareLoaded:
       "Configuração compartilhada carregada. Confira os dados e clique em Dimensionar meu sistema para calcular.",
+    invalidShare:
+      "Não foi possível ler este link compartilhado — ele pode ter sido cortado na cópia. Ignore-o e monte sua própria estimativa abaixo.",
     customCoordsLocation: "Usando coordenadas personalizadas ({lat}, {lon}).",
     resolvingCity:
       "Buscando sua cidade: escolha uma opção ou aguarde o resultado.",
@@ -662,7 +1076,8 @@ export const LOCALES = {
     resolvingCoords: "Verificando essas coordenadas…",
     invalidCoordinates:
       "A latitude deve estar entre −90 e 90 e a longitude entre −180 e 180.",
-    invalidDailyKwh: "O consumo diário deve ficar entre 0,5 e 500 kWh por dia.",
+    invalidDailyKwh:
+      "O consumo diário deve ficar entre 0,5 e 500 kWh por dia: informe um valor nessa faixa ou marque os eletrodomésticos que quer alimentar.",
     inputsChanged:
       "Os dados mudaram — clique em Dimensionar meu sistema para atualizar.",
     errorTimeout:
@@ -680,26 +1095,10 @@ export const LOCALES = {
     statusSuccess:
       "✅ {years} anos de dados horários ({dataYears}) · {yield} kWh/ano por kW de painel.{offline}",
     offlineNote: " · 🌐 modo offline típico",
-    offlineCity: "usando perfil típico de {city}",
-    assumptionsPrefix:
-      "Dados: {source}, horário {dataYears}. Derates aplicados: sujeira {soil}%, fiação {wire}%, descompasso {mismatch}%, MPPT {mppt}%. Modelo de temperatura: NOCT {noct}°C, coef. temp. {gamma}%/°C. Eficiência do inversor {eta}%. Carga bloqueada abaixo do limite de frio da química (LFP 0°C). Base de carga: {basis}. Custos de {basisLabel} ({source}) — o extremo baixo é componentes antes de frete/imposto/BMS, o alto é varejo com BMS e caixa. ",
-    moneyPrefix: "",
-    capacityNotePrefix: "",
-    fxNotePrefix: " ",
-    offlineNotePrefix:
-      "MODO OFFLINE: esta execução usou o perfil típico anual para {offlineCity} — uma aproximação próxima, não seu local exato. Rode novamente online para cinco anos de clima pontual. ",
-    tariffSpend: "O gasto na rede assume ${tariff}/kWh a {dailyKwh} kWh/dia.",
-    noTariff: "Sem tarifa informada, não há amortização mostrada.",
-    currencyNote:
-      "Valores mostrados em {code} a {rate} por 1 US$; taxas unitárias de bateria permanecem em $/kWh porque os preços base são em USD.",
-    capacityNote: "",
-    offlineLabel:
-      "MODO OFFLINE: esta execução usou o perfil típico anual para {offlineCity} — uma aproximação próxima, não seu local exato. Rode novamente online para cinco anos de clima pontual. ",
     tariffSpendLine:
       "A {tariff}/kWh, a sua eletricidade custa cerca de {annual} por ano hoje. Cada opção abaixo mostra a conta após a solar e em quanto tempo ela se paga com as economias.",
     tariffSpendBattery:
       "A {tariff}/kWh, a sua eletricidade custa cerca de {annual} por ano hoje. Uma bateria sem painéis muda quando consome; não reduz o que paga.",
-    noTariffLine: "Sem tarifa informada, não há amortização mostrada.",
     tariffSpendOffgrid:
       "A {tariff}/kWh, este uso custa cerca de {annual} por ano em energia da rede. Os valores de retorno abaixo comparam o custo do sistema com esse gasto.",
     tariffSpendFixed:
@@ -708,7 +1107,6 @@ export const LOCALES = {
     lvlCompare: "Comparar baterias",
     lvlMatrix: "Todas as opções",
     bomPanelTitle: "Sua lista de hardware — do que este sistema é feito",
-    bomDownload: "Baixar lista de peças (CSV)",
     genSummary: "Uso um gerador — quanto custa de verdade a energia dele?",
     genApply: "Usar isto como meu preço de eletricidade",
 
@@ -722,7 +1120,6 @@ export const LOCALES = {
     frontierYGrid: "Parte da sua conta de luz cortada",
     frontierYGridBattery: "Parte das suas horas de ponta deslocadas",
     frontierYOffgrid: "Parte da sua energia coberta, sem gerador",
-    frontierTagSel: "selecionado",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, sem bateria · {pct}% · {cost}",
     frontierLegendSel:
@@ -768,6 +1165,22 @@ export const LOCALES = {
     advisorNoReply: " Não foi recebida resposta. Tente novamente.",
     advisorBusy:
       " O motor gratuito de IA está sobrecarregado agora (HTTP {status} — usa uma quota partilhada).\n\nEspere cerca de um minuto e envie novamente.",
+    // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
+    advisorDegradedLabel: "Sem ligação · não a IA em direto",
+    advisorDegradedLine: "Não consigo responder agora — {why}.",
+    advisorDegradedWhyUnavailable: "o serviço que responde não replied",
+    advisorDegradedWhyNoKey:
+      "não há chave de modelo: o consultor está off por desenho",
+    advisorDegradedReassure:
+      "Nada acima está errado e o seu dimensionamento não é afetado.",
+    advisorDegradedSystem:
+      "Leve esses valores a um eletricista credenciado antes de construir.",
+    advisorIsAi:
+      "O consultor é um modelo de linguagem. Escreve texto plausível e pode dar números errados com confiança. Verifique cada número: nunca o leve como facto.",
+    advisorDegradedGeneral:
+      "Para dimensionar, use a calculadora acima; sem conta.",
+    advisorDegradedRetry:
+      "Tente dentro de um minuto; a quota gratuita é partilhada.",
     advisorUnreachable:
       " O consultor de IA está indisponível neste momento{status}.\n\nVerifique a ligação e tente novamente dentro de instantes.",
     frontierCeilingTag: "O máximo dentro do que foi buscado: {pct}%",
@@ -793,6 +1206,7 @@ export const LOCALES = {
     frontierLegendRange: "Faixa ideal — cada ponto extra continua barato",
     frontierBestValueRange: "Faixa ideal: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "melhor valor",
+    frontierTagSel: "selecionado",
     fuelLitLabel: "Preço por litro",
     fuelGalLabel: "Preço por galão",
     fuelReadoutRate: "{type} a esse preço dá cerca de {rate} por kWh",
@@ -926,6 +1340,87 @@ export const LOCALES = {
     infeasibleGenericTitle:
       "Esta combinação de hardware e objetivo não tem solução",
     infeasibleGenericBody: "Mude o objetivo ou o hardware e execute de novo.",
+
+    pathsLabel_turnkey: "Instalador, chave na mão",
+    pathsLabel_lease: "Locação ou PPA",
+    pathsLabel_selfpurchase: "Você compra as peças",
+    pathsLabel_diy: "Você monta, um eletricista conecta",
+    pathsTitle: "Quatro formas de pagar este mesmo sistema",
+    pathsSub:
+      "Um sistema, uma única definição, vinte anos. A diferença entre estes cartões é de preço, não do que cada um inclui.",
+    pathsCheapest: "Mais barato",
+    pathsSpend20: "Custo em 20 anos",
+    pathsRowIncentives: "Incentivos",
+    pathsRowBillCut: "Corte na conta",
+    pathsRowBreakEven: "Equilíbrio",
+    pathsRowNet: "Líquido em 20 anos",
+    pathsRowOwnership: "Propriedade",
+    pathsRowEndOfTerm: "No final",
+    pathsCountsHeading: "O que este preço inclui",
+    pathsInstrumentLabel: "Via de terceiros:",
+    pathsGradeNote:
+      "Todos os números vêm de um único registro regional de preços com fonte declarada e grau de confiança. O hardware é a sua própria estimativa; mão de obra, licenças, incentivos e substituições são dados do registro. Nada aqui é a oferta de um fornecedor.",
+    pathsWhy:
+      "{cheaper} sai {gap} menos que {dearer} em 20 anos, principalmente por causa de {driver}.",
+    pathsWhyCombined: " Nenhum item isolado explica toda a diferença.",
+    pathsDriver_year0: "o preço inicial",
+    pathsDriver_incentives: "para quem vão os incentivos",
+    pathsDriver_om: "a manutenção",
+    pathsDriver_replacements: "as substituições de bateria e inversor",
+    pathsDriver_leasePayments: "os pagamentos que você faz",
+    pathsDriver_none: "nenhum item isolado",
+    pathsInstrumentPpa: "PPA (você compra a energia)",
+    pathsInstrumentLease: "Locação (você aluga o sistema)",
+    pathsEndOfTermBuyout:
+      "Ano {years}: você pode quitarlo por {buyoutPct}% do preço instalado, e essa compra já está neste valor.",
+    pathsEndOfTermStillLeasing:
+      "No ano {years} o contrato ainda está em vigor, então nenhuma compra é incluída. Depois de 20 anos você ainda teria pagamentos a fazer.",
+    pathsOwnershipTurnkey: "Você é dono desde o primeiro dia.",
+    pathsOwnershipPpa: "O provedor é o dono e faz a manutenção.",
+    pathsOwnershipLease:
+      "Você aluga até o fim do contrato e então compra ou devolve.",
+    pathsOwnershipSelf: "Você é dono assim que está instalado.",
+    pathsIncentiveTaxCredit: "Crédito de imposto federal",
+    pathsIncentiveRebate: "Desconto da concessionária",
+    pathsIncentivesToProvider:
+      "Os incentivos vão para o provedor, não para você.",
+    pathsIncentivesGoToProvider:
+      "O provedor fica com eles — você não é dono de nada.",
+    pathsNoIncentive: "Nenhum se aplica a esta via.",
+    pathsNoVerifiedIncentive: "Não temos incentivo verificado para sua região.",
+    pathsUnknown: "Desconhecido",
+    pathsNotWithinHorizon: "Não em 20 anos",
+    pathsBreakEvenYear: "Ano {year}",
+    pathsUnavailable: "Indisponível",
+    pathsNoSystem: "Não há sistema a precificar.",
+    pathsNoTariff:
+      "Um PPA precisa de uma tarifa para servir de referência, então não aparece aqui.",
+    pathsDiyNotPermitted:
+      "Não oferecida aqui: na sua região, um instalador licenciado precisa fazer a parte elétrica.",
+    pathsDiyRestricted:
+      "Não oferecida aqui: a instalação DIY é restrita na sua região.",
+    pathsDiyUnknown:
+      "Não oferecida aqui: não conseguimos verificar se você pode montar seu próprio painel.",
+    pathsNoteTurnkeyAllIn:
+      "Um preço único que inclui tudo: o mesmo hardware, mais mão de obra, licenças e a margem do instalador.",
+    pathsIncludesInstalledAllIn: "Peças, mão de obra e licenças, já instalados",
+    pathsIncludesProviderSwaps:
+      "O provedor faz a manutenção e substitui bateria e inversor",
+    pathsIncludesIncentivesToProvider:
+      "Os incentivos vão para o provedor, não para você",
+    pathsIncludesIncentivesIfEligible: "Incentivos, se você se qualificar",
+    pathsIncludesNoYear0Hardware: "Sem compra de hardware no início",
+    pathsIncludesEndOfTerm: "A escolha no fim do contrato já está no preço",
+    pathsIncludesHardwareYouBuy: "O hardware que você compra",
+    pathsIncludesElectricianInstalls:
+      "Um eletricista licenciado faz a instalação",
+    pathsIncludesPermitsAndInterconnection:
+      "Licenças, inspeção e conexão à rede",
+    pathsIncludesYouDoSwaps:
+      "Você providencia e paga as substituições de baterias",
+    pathsIncludesYouMountTheArray: "Você monta o painel",
+    pathsIncludesElectricianConnects: "Um eletricista faz a conexão",
+    pathsIncludesToolsAndSafety: "Ferramentas e equipamento de segurança",
   },
   fr: {
     navSizing: "Dimensionner mon système",
@@ -940,11 +1435,86 @@ export const LOCALES = {
     navBom: "Référence matériel",
     navBlog: "Blog",
     navLegal: "Conditions et avertissement",
+    sourcesCardTitle: "D'où viennent ces chiffres",
+    sourcesCardBody:
+      "Chaque hypothèse derrière un chiffre indique ici son éditeur, la date de vérification et sa proximité avec la valeur appliquée. Celles que nous ne pouvons pas sourcer le disent.",
+    sourcesCardLink: "Voir toutes les sources →",
     heroTag: "Gratuit pour tous, partout · Sans inscription · Rien à vendre",
+    heroTitle1: "Réduisez votre facture d'électricité.",
+    heroTitle2: "Voyez exactement ce qu'il faudrait.",
+    footerAboutPre: "Conçu et offert par",
+    heroIntro:
+      "Commencez par votre localisation — votre téléphone la connaît — et nous calculons chaque option qui réduit votre facture, de 1 % à l'excédent vendable. La courbe de prix montre ce que chaque budget achète, dans votre devise. Estimations éducatives, rien à vendre. Conçu et offert par",
+    footerAboutPost: "Pas une société, pas immatriculée, rien à vendre.",
     ctaStart: "Lancer une estimation gratuite",
     goalLabel: "Que doit faire ce système ?",
-    goalOffgrid: "Me rendre totalement autonome",
-    goalGridtie: "Réduire ma facture en restant raccordé",
+    useCaseLabel: "Que voulez-vous faire ?",
+    useCaseBillCut: "Réduire votre facture d'électricité",
+    useCaseTou: "Économiser avec une batterie en tarification horaire",
+    useCaseBackup: "Garder l'essentiel en marche pendant une coupure",
+    useCaseReserve: "Garder une réserve d'urgence dans la batterie",
+    useCaseOffGrid: "Devenir totalement indépendant du réseau",
+    useCasePortable: "Énergie portable (camping-car, bateau, camping)",
+    useCaseBillCutBlurb:
+      "Solaire raccordé au réseau, avec une batterie seulement si elle le mérite. Mesuré comme la part de votre facture que le système supprime sur 20 ans.",
+    useCaseTouBlurb:
+      "Une batterie seule : elle charge aux heures creuses et couvre les heures pleines. Aucun panneau.",
+    useCaseBackupBlurb:
+      "Dimensionné sur les appareils que vous cochez, pas sur toute la maison. Mesuré comme la part des coupures que l'essentiel traverse.",
+    useCaseReserveBlurb:
+      "Gardez une partie de la batterie en réserve pour les coupures, et voyez exactement ce que cela vous coûte en économies.",
+    useCaseOffGridBlurb:
+      "Solaire et batterie dimensionnés pour toute la maison. Mesuré comme la part des heures qui fonctionnent sans aucun réseau.",
+    useCasePortableBlurb:
+      "Une station d'énergie pour un van, un bateau ou un camp-site. Pas de toit, pas de réseau, pas de tarif.",
+    metricBillCut: "de votre facture supprimée sur 20 ans",
+    metricTouOffset:
+      "de votre énergie en heures pleines couverte par la batterie",
+    metricOutageCoverage:
+      "des coupures que l'essentiel traverse pendant toute la durée visée",
+    metricReserveTradeoff: "ce que coûte la réserve, en économies et en heures",
+    metricGridIndependence: "de l'année fonctionnant sans aucun réseau",
+    metricPortableRuntime:
+      "des jours où la station alimente vos appareils toute la journée",
+    statusWorks: "Fonctionne",
+    statusPartial: "En partie",
+    statusNotHere: "Ne fonctionne pas ici",
+    useCaseOutcomeTitle: "Votre résultat : {useCase}",
+    useCaseVerdictFooter:
+      "Mesuré pour {useCase} au regard de {metric}, avec la météo horaire de ce lieu.",
+    useCaseNotMeasured:
+      "Non mesuré : cette combinaison ne peut pas être dimensionnée, il n'y a donc pas de {metric} à annoncer.",
+    metricReserveTradeoffValue: "{lost}% d'économies, {hours} h de couverture",
+    reserveOff: "désactivée",
+    touPeakLabel: "Votre prix en heures pleines (par kWh)",
+    touOffPeakLabel: "Votre prix en heures creuses (par kWh)",
+    touDefaultNote:
+      "Nous n'avons pas de grille tarifaire horaire publiée pour votre secteur : nous avons prérempli un prix de pointe supérieur de 60 % et un prix creux inférieur de 45 % à votre tarif forfaitaire. Modifiez l'un ou l'autre si votre facture dit le contraire — le verdict ci-dessous utilise ce que vous saisissez.",
+    essentialLabel:
+      "Qu'est-ce qui doit continuer à fonctionner ? (cochez ce que vous voulez)",
+    outageLabel: "Combien de temps doit tenir ?",
+    backupRechargeLabel: "Laissez les panneaux la recharger pendant la coupure",
+    reserveLabel: "Réserve d'urgence conservée dans la batterie",
+    portableDeviceLabel: "Qu'alimentez-vous ? (cochez ce que vous voulez)",
+    portableBankLabel: "Capacité utile de la station (kWh)",
+    portableShoreLabel:
+      "Je peux recharger sur le secteur ou depuis le véhicule",
+    generatorLabel:
+      "Un groupe électrogène est disponible pour les pires semaines",
+    verdictBillCut:
+      "{status} : ce système supprime {pct}% de votre facture sur 20 ans.",
+    verdictTou:
+      "{status} : la batterie couvre {pct}% de votre énergie en heures pleines, soit environ {saving} sur 20 ans face à une batterie de {cost}. L'écart entre pointe et creux ici est de {spread} par kWh.",
+    verdictBackup:
+      "{status} : l'essentiel tient les {targetHours} heures complètes dans {pct}% des coupures que nous avons simulées (nuit typique : {hours} heures).",
+    verdictReserve:
+      "{status} : garder cette réserve coûte {pct}% de vos économies et achète {coverHours} heures de couverture.",
+    verdictReserveNoBattery:
+      "Il n'y a rien où garder une réserve : le système le moins cher pour cet objectif ne comporte aucune batterie.",
+    verdictOffGrid:
+      "{status} : {pct}% de l'année fonctionne sans réseau — {unmetHours} heures manquantes la pire année, {autonomy} jours d'autonomie.",
+    verdictPortable:
+      "{status} : votre station alimente vos appareils toute la journée sur {days} jours sur {trips} ici, et une charge dure {runtime} heures.",
     cityLabel: "Où sera installé le système ?",
     loadLabel: "Quelle est votre consommation ?",
     loadAppliances: "Je choisis mes appareils",
@@ -964,18 +1534,15 @@ export const LOCALES = {
     readoutKwhReady: "Utilisation de {kwh} kWh/jour directement.",
     runBtn: "Dimensionner (simulation sur 5 ans)",
     locBtn: "Utiliser ma position actuelle",
-    locNotePrefix: "Climat estimé pour ",
-    locNoteSuffix: " — changez la ville ci-dessus si nécessaire.",
     chemLabel: "Chimie de la batterie :",
-    tariffLabel: "Prix de l'électricité chez vous :",
     tariffNote:
       "Prix estimé pour {label} — changez-le ci-dessus si vous connaissez votre tarif.",
-    fxNote:
-      "Montants affichés en {code} à {rate} pour 1 US$ ; les taux unitaires de batterie restent en $/kWh car les prix de base sont en USD.",
     pickCity:
       "Choisissez une ville (ou utilisez 📍 Ma position) pour connaître votre ensoleillement.",
     shareLoaded:
       "Configuration partagée chargée. Vérifiez les entrées, puis cliquez sur Dimensionner pour calculer.",
+    invalidShare:
+      "Ce lien partagé n’a pas pu être lu — il a peut-être été tronqué en le copiant. Ignorez-le et faites votre propre estimation ci-dessous.",
     customCoordsLocation:
       "Coordonnées personnalisées utilisées ({lat}, {lon}).",
     resolvingCity:
@@ -986,7 +1553,7 @@ export const LOCALES = {
     invalidCoordinates:
       "La latitude doit être comprise entre −90 et 90 et la longitude entre −180 et 180.",
     invalidDailyKwh:
-      "La consommation quotidienne doit être comprise entre 0,5 et 500 kWh par jour.",
+      "La consommation quotidienne doit être comprise entre 0,5 et 500 kWh par jour : saisissez un chiffre dans cette plage ou cochez les appareils à alimenter.",
     inputsChanged:
       "Les entrées ont changé — cliquez sur Dimensionner pour actualiser l’estimation.",
     errorTimeout:
@@ -1004,27 +1571,10 @@ export const LOCALES = {
     statusSuccess:
       "✅ {years} ans de données horaires ({dataYears}) · {yield} kWh/an par kW de panneau.{offline}",
     offlineNote: " · 🌐 mode hors ligne typique",
-    offlineCity: "utilisation du profil typique de {city}",
-    assumptionsPrefix:
-      "Données : {source}, horaires {dataYears}. Derates appliqués : salissure {soil}%, câblage {wire}%, désaccord {mismatch}%, MPPT {mppt}%. Modèle de température : NOCT {noct}°C, coef. temp. {gamma}%/°C. Efficacité onduleur {eta}%. Charge bloquée sous la limite de froid de la chimie (LFP 0°C). Base de charge : {basis}. Coûts de {basisLabel} ({source}) — le bas est composants avant fret/droits/BMS, le haut est détail avec BMS et boîte. ",
-    moneyPrefix: "",
-    capacityNotePrefix: "",
-    fxNotePrefix: " ",
-    offlineNotePrefix:
-      "MODE HORS LIGNE : cette exécution a utilisé le profil annuel typique pour {offlineCity} — une approximation proche, pas votre site exact. Relancez en ligne pour cinq ans de météo précise. ",
-    tariffSpend:
-      "La dépense réseau suppose ${tariff}/kWh à {dailyKwh} kWh/jour.",
-    noTariff: "Aucun tarif saisi, pas d'amortissement affiché.",
-    currencyNote:
-      "Montants affichés en {code} à {rate} pour 1 US$ ; les taux unitaires de batterie restent en $/kWh car les prix de base sont en USD.",
-    capacityNote: "",
-    offlineLabel:
-      "MODE HORS LIGNE : cette exécution a utilisé le profil annuel typique pour {offlineCity} — une approximation proche, pas votre site exact. Relancez en ligne pour cinq ans de météo précise. ",
     tariffSpendLine:
       "À {tariff}/kWh, votre électricité coûte environ {annual} par an aujourd'hui. Chaque option ci-dessous montre la facture après le solaire et combien de temps elle se rembourse grâce aux économies.",
     tariffSpendBattery:
       "À {tariff}/kWh, votre électricité coûte environ {annual} par an aujourd'hui. Une batterie sans panneaux décale le moment où vous consommez ; elle ne réduit pas ce que vous payez.",
-    noTariffLine: "Aucun tarif saisi, pas d'amortissement affiché.",
     tariffSpendOffgrid:
       "À {tariff}/kWh, cet usage coûte environ {annual} par an en électricité du réseau. Les délais de retour ci-dessous comparent le coût du système à cette dépense.",
     tariffSpendFixed:
@@ -1033,7 +1583,6 @@ export const LOCALES = {
     lvlCompare: "Comparer les batteries",
     lvlMatrix: "Toutes les options",
     bomPanelTitle: "Votre liste de matériel — de quoi ce système est composé",
-    bomDownload: "Télécharger la liste des pièces (CSV)",
     genSummary:
       "J'utilise un générateur — combien coûte vraiment son électricité ?",
     genApply: "Utiliser ceci comme mon prix de l'électricité",
@@ -1048,7 +1597,6 @@ export const LOCALES = {
     frontierYGrid: "Part de votre facture supprimée",
     frontierYGridBattery: "Part de vos heures pleines décalées",
     frontierYOffgrid: "Part de votre énergie couverte, sans groupe électrogène",
-    frontierTagSel: "sélectionné",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, sans batterie · {pct}% · {cost}",
     frontierLegendSel:
@@ -1094,6 +1642,22 @@ export const LOCALES = {
     advisorNoReply: " Aucune réponse reçue. Veuillez réessayer.",
     advisorBusy:
       " Le moteur IA gratuit est saturé (HTTP {status} — quota partagé).\n\nAttendez environ une minute, puis renvoyez votre question.",
+    // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
+    advisorDegradedLabel: "Hors ligne · pas l’IA en direct",
+    advisorDegradedLine: "Je ne peux pas répondre — {why}.",
+    advisorDegradedWhyUnavailable: "le service qui répond n’a pas répondu",
+    advisorDegradedWhyNoKey:
+      "aucune clé modèle : le conseiller est hors ligne par conception",
+    advisorDegradedReassure:
+      "Rien de ce qui précède n’est faux, et votre dimensionnement n’est pas affecté.",
+    advisorDegradedSystem:
+      "Portez ces chiffres à un électricien agréé avant de construire.",
+    advisorIsAi:
+      "Le conseiller est un modèle de langage. Il écrit un texte plausible et peut donner de faux chiffres avec assurance. Vérifiez chaque chiffre : ne le prenez jamais pour un fait.",
+    advisorDegradedGeneral:
+      "Pour dimensionner, utilisez le calculateur ci-dessus ; sans compte.",
+    advisorDegradedRetry:
+      "Réessayez dans une minute ; le quota gratuit est partagé.",
     advisorUnreachable:
       " Le conseiller IA est momentanément inaccessible{status}.\n\nVérifiez votre connexion et réessayez dans un instant.",
     frontierCeilingTag: "Maximum dans les tailles explorées : {pct}%",
@@ -1120,6 +1684,7 @@ export const LOCALES = {
       "Plage optimale — chaque point en plus reste bon marché",
     frontierBestValueRange: "Plage optimale : ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "meilleur rapport",
+    frontierTagSel: "sélectionné",
     fuelLitLabel: "Prix au litre",
     fuelGalLabel: "Prix au gallon",
     fuelReadoutRate: "{type} à ce prix revient à environ {rate} par kWh",
@@ -1255,6 +1820,89 @@ export const LOCALES = {
     infeasibleGenericTitle:
       "Cette combinaison matériel/objectif n'a pas de solution",
     infeasibleGenericBody: "Changez l'objectif ou le matériel, puis relancez.",
+
+    pathsLabel_turnkey: "Installateur, clé en main",
+    pathsLabel_lease: "Location ou PPA",
+    pathsLabel_selfpurchase: "Vous achetez les pièces",
+    pathsLabel_diy: "Vous montez, un électricien raccorde",
+    pathsTitle: "Quatre façons de payer ce même système",
+    pathsSub:
+      "Un système, une seule définition, vingt ans. L'écart entre ces cartes est un écart de prix, pas une différence de ce que chacune compte.",
+    pathsCheapest: "Le moins cher",
+    pathsSpend20: "Coût sur 20 ans",
+    pathsRowIncentives: "Subventions",
+    pathsRowBillCut: "Réduction de facture",
+    pathsRowBreakEven: "Rentabilité",
+    pathsRowNet: "Net sur 20 ans",
+    pathsRowOwnership: "Propriété",
+    pathsRowEndOfTerm: "Au terme",
+    pathsCountsHeading: "Ce que ce prix inclut",
+    pathsInstrumentLabel: "Voie tierce :",
+    pathsGradeNote:
+      "Tous les chiffres proviennent d'un même registre régional de prix avec source nommée et niveau de confiance. Le matériel est votre propre estimation ; la main-d'œuvre, les permis, les subventions et les remplacements viennent du registre. Rien ici n'est un devis de fournisseur.",
+    pathsWhy:
+      "{cheaper} coûte {gap} de moins que {dearer} sur 20 ans, surtout à cause de {driver}.",
+    pathsWhyCombined: " Aucun poste n'explique à lui seul tout l'écart.",
+    pathsDriver_year0: "le coût initial",
+    pathsDriver_incentives: "à qui vont les subventions",
+    pathsDriver_om: "la maintenance",
+    pathsDriver_replacements: "les remplacements de batterie et d'onduleur",
+    pathsDriver_leasePayments: "les versements que vous effectuez",
+    pathsDriver_none: "aucun poste précis",
+    pathsInstrumentPpa: "PPA (vous achetez l'énergie)",
+    pathsInstrumentLease: "Location (vous louez le système)",
+    pathsEndOfTermBuyout:
+      "Année {years} : vous pouvez le racheter à {buyoutPct}% du prix installé, et ce rachat est inclus dans ce montant.",
+    pathsEndOfTermStillLeasing:
+      "En année {years} le contrat court encore : aucun rachat n'est inclus. Au-delà de 20 ans, vous resteriez redevable.",
+    pathsOwnershipTurnkey: "Il est à vous dès le premier jour.",
+    pathsOwnershipPpa: "Le fournisseur en reste propriétaire et l'entretient.",
+    pathsOwnershipLease:
+      "Vous le louez jusqu'au terme, puis vous le rachetez ou le rendez.",
+    pathsOwnershipSelf: "Il est à vous une fois installé.",
+    pathsIncentiveTaxCredit: "Crédit d'impôt fédéral",
+    pathsIncentiveRebate: "Subvention du distributeur",
+    pathsIncentivesToProvider:
+      "Les subventions vont au fournisseur, pas à vous.",
+    pathsIncentivesGoToProvider:
+      "Le fournisseur les conserve — vous ne possédez rien.",
+    pathsNoIncentive: "Aucune ne s'applique à cette voie.",
+    pathsNoVerifiedIncentive:
+      "Nous n'avons pas de subvention vérifiée pour votre région.",
+    pathsUnknown: "Inconnu",
+    pathsNotWithinHorizon: "Pas sous 20 ans",
+    pathsBreakEvenYear: "Année {year}",
+    pathsUnavailable: "Non disponible",
+    pathsNoSystem: "Aucun système à chiffrer.",
+    pathsNoTariff:
+      "Un PPA a besoin d'un tarif de référence ; il n'est donc pas affiché ici.",
+    pathsDiyNotPermitted:
+      "Non proposée ici : dans votre région, l'installation électrique exige un installateur agréé.",
+    pathsDiyRestricted:
+      "Non proposée ici : l'autoconsommation DIY est restreinte dans votre région.",
+    pathsDiyUnknown:
+      "Non proposée ici : nous n'avons pas pu vérifier si vous pouvez monter votre propre centrale.",
+    pathsNoteTurnkeyAllIn:
+      "Un prix tout compris : le même matériel, plus la main-d'œuvre, les permis et la marge de l'installateur.",
+    pathsIncludesInstalledAllIn:
+      "Pièces, main-d'œuvre et permis, déjà installés",
+    pathsIncludesProviderSwaps:
+      "Le fournisseur entretient et remplace batterie et onduleur",
+    pathsIncludesIncentivesToProvider:
+      "Les subventions vont au fournisseur, pas à vous",
+    pathsIncludesIncentivesIfEligible: "Subventions, si vous y avez droit",
+    pathsIncludesNoYear0Hardware: "Aucun achat de matériel au départ",
+    pathsIncludesEndOfTerm: "L'option de fin de contrat est intégrée au prix",
+    pathsIncludesHardwareYouBuy: "Le matériel que vous achetez",
+    pathsIncludesElectricianInstalls:
+      "Un électricien agréé réalise l'installation",
+    pathsIncludesPermitsAndInterconnection:
+      "Permis, inspection et raccordement au réseau",
+    pathsIncludesYouDoSwaps:
+      "C'est vous qui organisez et payez les remplacements",
+    pathsIncludesYouMountTheArray: "Vous montez la centrale",
+    pathsIncludesElectricianConnects: "Un électricien fait le raccordement",
+    pathsIncludesToolsAndSafety: "Outillage et équipement de sécurité",
   },
   de: {
     navSizing: "System dimensionieren",
@@ -1269,13 +1917,26 @@ export const LOCALES = {
     navBom: "Hardware-Referenz",
     navBlog: "Blog",
     navLegal: "Bedingungen & Haftungsausschluss",
+    sourcesCardTitle: "Woher diese Zahlen kommen",
+    sourcesCardBody:
+      "Jede Annahme hinter einer Zahl nennt hier Herausgeber, Prüfdatum und die Übereinstimmung mit dem Angewendeten. Was wir nicht belegen können, sagt das.",
+    sourcesCardLink: "Alle Quellen ansehen →",
     heroTag:
       "🌍 Kostenlos für alle, überall · Keine Anmeldung · Nichts zu verkaufen",
+    heroTitle1: "Senken Sie Ihre Stromrechnung.",
+    heroTitle2: "Sehen Sie genau, was dafür nötig wäre.",
+    footerAboutPre: "Erstellt und bereitgestellt von",
+    heroIntro:
+      "Beginnen Sie mit Ihrem Standort — Ihr Telefon kennt ihn — und wir rechnen jede Option durch, die Ihre Rechnung senkt, von 1 % bis zum verkaufbaren Überschuss. Die Preiskurve zeigt, was jedes Budget kauft, in Ihrer Währung. Nur Schätzungen, nichts zu verkaufen. Erstellt und bereitgestellt von",
+    footerAboutPost:
+      "Kein Unternehmen, nicht eingetragen, nichts zu verkaufen.",
     ctaStart: "Kostenlose Schätzung starten",
     pickCity:
       "Wähle eine Stadt oder nutze 📍 deinen Standort für die Sonnendaten.",
     shareLoaded:
       "Geteilte Einstellungen geladen. Prüfe die Eingaben und klicke dann auf System dimensionieren.",
+    invalidShare:
+      "Dieser geteilte Link ließ sich nicht lesen — beim Kopieren wurde er vielleicht abgeschnitten. Ignoriere ihn und stell unten deine eigene Schätzung auf.",
     customCoordsLocation: "Eigene Koordinaten verwendet ({lat}, {lon}).",
     resolvingCity:
       "Ort wird gesucht — wählen Sie einen Treffer oder warten Sie kurz.",
@@ -1285,7 +1946,7 @@ export const LOCALES = {
     invalidCoordinates:
       "Der Breitengrad muss zwischen −90 und 90 und der Längengrad zwischen −180 und 180 liegen.",
     invalidDailyKwh:
-      "Der tägliche Energieverbrauch muss zwischen 0,5 und 500 kWh liegen.",
+      "Der tägliche Energieverbrauch muss zwischen 0,5 und 500 kWh liegen — gib einen Wert in diesem Bereich ein oder häk die Geräte an, die du versorgen willst.",
     inputsChanged:
       "Eingaben geändert — klicken Sie auf System dimensionieren, um die Schätzung zu aktualisieren.",
     errorTimeout:
@@ -1320,9 +1981,78 @@ export const LOCALES = {
       "✅ {years} Jahre stündliche Daten ({dataYears}) · {yield} kWh/Jahr pro kW Panel.{offline}",
     offlineNote: " · 🌐 typisches Offline-Jahr",
     goalLabel: "Welches Ergebnis möchtest du untersuchen?",
-    goalOffgrid: "Vollständig unabhängig vom Netz",
-    goalGridtie: "Rechnung senken, am Netz bleiben",
+    useCaseLabel: "Was willst du erreichen?",
+    useCaseBillCut: "Meine Stromrechnung senken",
+    useCaseTou: "Mit einer Batterie bei Zeittarifen sparen",
+    useCaseBackup: "Das Nötigste läuft bei einem Stromausfall weiter",
+    useCaseReserve: "Einen Notfall-Reservestand in der Batteri halten",
+    useCaseOffGrid: "Vollständig unabhängig vom Netz",
+    useCasePortable: "Tragbare Stromversorgung (Wohnmobil, Boot, Camping)",
+    useCaseBillCutBlurb:
+      "Netzgebundene Solaranlage, mit Batterie nur, wenn sie sich lohnt. Gemessen als Anteil deiner Rechnung, den das System über 20 Jahre einspart.",
+    useCaseTouBlurb:
+      "Nur eine Batterie: Sie lädt in den günstigen Stunden und deckt die teuren. Keine Module.",
+    useCaseBackupBlurb:
+      "Ausgelegt auf den Geräten, die du ankreuzt, nicht auf dein ganzes Haus. Gemessen als Anteil der Stromausfälle, die das Nötigste übersteht.",
+    useCaseReserveBlurb:
+      "Lass einen Teil der Batteri für Stromausfälle zurück und sieh genau, was dich das an Ersparnis kostet.",
+    useCaseOffGridBlurb:
+      "Solar und Batterie für dein ganzes Haus ausgelegt. Gemessen als Anteil der Stunden, die ganz ohne Netz laufen.",
+    useCasePortableBlurb:
+      "Eine Stromstation für Wohnmobil, Boot oder Campingplatz. Kein Dach, kein Netz, kein Tarif.",
+    metricBillCut: "deiner Rechnung, über 20 Jahre eingespart",
+    metricTouOffset:
+      "deiner Energie in den Spitzenstunden, die die Batterie deckt",
+    metricOutageCoverage:
+      "der Stromausfälle, die dein Nötigstes über die volle Dauer übersteht",
+    metricReserveTradeoff: "was die Reserve kostet, in Ersparnis und Stunden",
+    metricGridIndependence: "des Jahres ganz ohne Netz",
+    metricPortableRuntime:
+      "der Tage, an denen die Station deine Geräte den ganzen Tag versorgt",
+    statusWorks: "Funktioniert",
+    statusPartial: "Teilweise",
+    statusNotHere: "Funktioniert hier nicht",
+    useCaseOutcomeTitle: "Dein Ergebnis: {useCase}",
+    useCaseVerdictFooter:
+      "Gemessen für {useCase} anhand von {metric}, mit dem stündlichen Wetter dieses Ortes.",
+    useCaseNotMeasured:
+      "Nicht gemessen: Diese Kombination lässt sich überhaupt nicht auslegen, es gibt also kein {metric} zu nennen.",
+    metricReserveTradeoffValue: "{lost}% Ersparnis, {hours} h Reserve",
+    reserveOff: "aus",
+    touPeakLabel: "Dein Preis in den Spitzenstunden (pro kWh)",
+    touOffPeakLabel: "Dein Preis außerhalb der Spitzenzeiten (pro kWh)",
+    touDefaultNote:
+      "Für deine Region haben wir keine veröffentlichte Zeittarif-Tabelle. Deshalb haben wir einen Spitzenpreis von 60 % über und einen Preis außerhalb der Spitze von 45 % unter deinem Pauschalpreis eingetragen. Ändere beide Werte, wenn deine Rechnung etwas anderes sagt — das Urteil unten nutzt, was du eingibst.",
+    essentialLabel: "Was muss weiterlaufen? (Auswählen, was passt)",
+    outageLabel: "Wie lange muss es durchhalten?",
+    backupRechargeLabel: "Die Module dürfen sie während des Ausfalls nachladen",
+    reserveLabel: "Notfall-Reservestand in der Batteri",
+    portableDeviceLabel: "Was versorgst du? (Auswählen, was passt)",
+    portableBankLabel: "Nutzbare Größe der Stromstation (kWh)",
+    portableShoreLabel: "Ich kann am Netz oder am Fahrzeug nachladen",
+    generatorLabel:
+      "Ein Generator steht für die schlimmsten Wochen zur Verfügung",
+    verdictBillCut:
+      "{status}: Dieses System spart {pct}% deiner Rechnung über 20 Jahre.",
+    verdictTou:
+      "{status}: Die Batterie deckt {pct}% deiner Energie in den Spitzenstunden, rund {saving} über 20 Jahre gegen eine {cost}-Batterie. Der Abstand zwischen Spitze und Tal beträgt hier {spread} pro kWh.",
+    verdictBackup:
+      "{status}: Dein Nötigstes läuft die vollen {targetHours} Stunden in {pct}% der simulierten Stromausfälle (typische Nacht: {hours} Stunden).",
+    verdictReserve:
+      "{status}: Dieser Reserve kostet dich {pct}% deiner Ersparnis und bringt {coverHours} Stunden Deckung.",
+    verdictReserveNoBattery:
+      "Es gibt nichts, worin eine Reserve stecken könnte: das billigste System für dieses Ziel hat gar keine Batterie.",
+    verdictOffGrid:
+      "{status}: {pct}% des Jahres laufen ganz ohne Netz — {unmetHours} Stunden fehlen im schlechtesten Jahr, {autonomy} Tage Autonomie.",
+    verdictPortable:
+      "{status}: Deine Station versorgt deine Geräte hier an {days} von {trips} Tagen den ganzen Tag, und eine Ladung reicht {runtime} Stunden.",
     chemLabel: "Batteriechemie:",
+    // Added with the English key. German was the one locale that never
+    // received this note at all: it lived only in the translated
+    // dictionaries, which ui.js never read, so the note rendered in English
+    // everywhere and no rule could see the hole until English declared it.
+    tariffNote:
+      "Geschätzter Strompreis für {label} – ändere ihn oben, wenn du deinen Tarif kennst.",
     cityLabel: "Wo wird das System installiert?",
     loadLabel: "Wie viel Strom verbrauchst du?",
     loadAppliances: "Geräte auswählen",
@@ -1335,7 +2065,6 @@ export const LOCALES = {
     lvlCompare: "Batterien vergleichen",
     lvlMatrix: "Alle Optionen",
     bomPanelTitle: "Deine Hardware-Liste — woraus dieses System besteht",
-    bomDownload: "Teileliste herunterladen (CSV)",
     genSummary: "Ich habe einen Generator — was kostet sein Strom wirklich?",
     genApply: "Als meinen Strompreis übernehmen",
     socChartTitle:
@@ -1347,7 +2076,6 @@ export const LOCALES = {
     frontierYGrid: "Anteil der Rechnung gesenkt",
     frontierYGridBattery: "Anteil der verschobenen Spitzenlaststunden",
     frontierYOffgrid: "Anteil der Energie ohne Generator",
-    frontierTagSel: "ausgewählt",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct} % · {cost}",
     frontierSelNoBatt: "{pv} kW, ohne Batterie · {pct} % · {cost}",
     frontierLegendSel:
@@ -1393,6 +2121,23 @@ export const LOCALES = {
     advisorNoReply: " Keine Antwort erhalten. Bitte versuchen Sie es erneut.",
     advisorBusy:
       " Die kostenlose KI ist gerade überlastet (HTTP {status} — gemeinsames Kontingent).\n\nWarten Sie etwa eine Minute und senden Sie die Frage erneut.",
+    // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
+    advisorDegradedLabel: "Offline · nicht die Live-KI",
+    advisorDegradedLine: "Das kann ich gerade nicht beantworten — {why}.",
+    advisorDegradedWhyUnavailable:
+      "der Dienst, der antwortet, hat nicht geantwortet",
+    advisorDegradedWhyNoKey:
+      "kein Modellschlüssel: der Berater ist planmäßig offline",
+    advisorDegradedReassure:
+      "An dem oben Gesagten ist nichts falsch und Ihre Berechnung ist nicht betroffen.",
+    advisorDegradedSystem:
+      "Lassen Sie diese Zahlen vor dem Bau von einem Elektriker prüfen.",
+    advisorIsAi:
+      "Der Berater ist ein Sprachmodell. Er schreibt plausiblen Text und kann falsche Zahlen sicher nennen. Prüfen Sie jede Zahl — nehmen Sie sie nie als Tatsache.",
+    advisorDegradedGeneral:
+      "Für die Dimensionierung: der Rechner oben, ohne Konto.",
+    advisorDegradedRetry:
+      "In einer Minute erneut versuchen; das Kontingent ist geteilt.",
     advisorUnreachable:
       " Der KI-Berater ist gerade nicht erreichbar{status}.\n\nPrüfen Sie Ihre Verbindung und versuchen Sie es gleich noch einmal.",
     frontierCeilingTag: "Bestes in den durchsuchten Größen: {pct} %",
@@ -1418,6 +2163,7 @@ export const LOCALES = {
       "Bestwert-Spanne — jedes weitere Prozent bleibt günstig",
     frontierBestValueRange: "Bestwert-Spanne: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "Bestwert",
+    frontierTagSel: "ausgewählt",
     fuelLitLabel: "Preis pro Liter",
     fuelGalLabel: "Preis pro Gallone",
     fuelReadoutRate: "{type} kostet bei diesem Preis etwa {rate} pro kWh",
@@ -1555,6 +2301,88 @@ export const LOCALES = {
       "Diese Kombination aus Hardware und Ziel ist nicht lösbar",
     infeasibleGenericBody:
       "Ändern Sie das Ziel oder die Hardware und rechnen Sie erneut.",
+
+    pathsLabel_turnkey: "Installateur, schlüsselfertig",
+    pathsLabel_lease: "Leasing oder PPA",
+    pathsLabel_selfpurchase: "Sie kaufen die Teile selbst",
+    pathsLabel_diy: "Sie montieren, ein Elektriker schließt an",
+    pathsTitle: "Vier Wege, dieses selbe System zu bezahlen",
+    pathsSub:
+      "Ein System, eine Definition, zwanzig Jahre. Der Abstand zwischen diesen Karten ist ein Preisunterschied, kein Unterschied dessen, was jeweils mitgezählt wird.",
+    pathsCheapest: "Am günstigsten",
+    pathsSpend20: "20-jährige Kosten",
+    pathsRowIncentives: "Förderungen",
+    pathsRowBillCut: "Rechnungssenkung",
+    pathsRowBreakEven: "Amortisation",
+    pathsRowNet: "Netto über 20 Jahre",
+    pathsRowOwnership: "Eigentum",
+    pathsRowEndOfTerm: "Am Ende",
+    pathsCountsHeading: "Was dieser Preis umfasst",
+    pathsInstrumentLabel: "Drittanbieter-Weg:",
+    pathsGradeNote:
+      "Alle Zahlen stammen aus einem regionalen Preisregister mit genannter Quelle und Vertrauensstufe. Die Hardware ist Ihre eigene Schätzung; Arbeitszeit, Genehmigungen, Förderungen und Austausch kommen aus dem Register. Nichts davon ist ein Angebot eines Anbieters.",
+    pathsWhy:
+      "{cheaper} ist über 20 Jahre {gap} günstiger als {dearer}, vor allem wegen {driver}.",
+    pathsWhyCombined: " Kein Einzelposten erklärt die ganze Differenz.",
+    pathsDriver_year0: "der Vorauszahlungspreis",
+    pathsDriver_incentives: "an wen die Förderungen gehen",
+    pathsDriver_om: "die Wartung",
+    pathsDriver_replacements: "die Batterie- und Wechselrichtertausche",
+    pathsDriver_leasePayments: "die Zahlungen, die Sie leisten",
+    pathsDriver_none: "kein Einzelposten",
+    pathsInstrumentPpa: "PPA (Sie kaufen den Strom)",
+    pathsInstrumentLease: "Leasing (Sie mieten das System)",
+    pathsEndOfTermBuyout:
+      "Jahr {years}: Sie können es für {buyoutPct}% des Installationspreises übernehmen, und diese Übernahme steckt in dieser Zahl.",
+    pathsEndOfTermStillLeasing:
+      "Im Jahr {years} läuft der Vertrag noch, eine Übernahme ist also nicht eingerechnet. Nach 20 Jahren wären weiterhin Zahlungen fällig.",
+    pathsOwnershipTurnkey: "Es gehört Ihnen vom ersten Tag an.",
+    pathsOwnershipPpa: "Der Anbieter bleibt Eigentümer und wartet es.",
+    pathsOwnershipLease:
+      "Sie mieten es bis zum Vertragsende und übernehmen es dann oder geben es zurück.",
+    pathsOwnershipSelf: "Es gehört Ihnen, sobald es installiert ist.",
+    pathsIncentiveTaxCredit: "Bundessteuergutschrift",
+    pathsIncentiveRebate: "Zuschuss des Netzbetreibers",
+    pathsIncentivesToProvider:
+      "Förderungen gehen an den Anbieter, nicht an Sie.",
+    pathsIncentivesGoToProvider:
+      "Der Anbieter behält sie — Sie besitzen nichts.",
+    pathsNoIncentive: "Für diesen Weg gilt keiner.",
+    pathsNoVerifiedIncentive:
+      "Für Ihre Region haben wir keinen geprüften Anreiz.",
+    pathsUnknown: "Unbekannt",
+    pathsNotWithinHorizon: "Nicht in 20 Jahren",
+    pathsBreakEvenYear: "Jahr {year}",
+    pathsUnavailable: "Nicht verfügbar",
+    pathsNoSystem: "Es gibt kein System zu bepreisen.",
+    pathsNoTariff:
+      "Ein PPA braucht einen Tarif als Bezugsgröße und wird hier deshalb nicht gezeigt.",
+    pathsDiyNotPermitted:
+      "Hier nicht angeboten: Bei Ihnen muss die Elektroinstallation von einem zugelassenen Fachbetrieb ausgeführt werden.",
+    pathsDiyRestricted:
+      "Hier nicht angeboten: Die Eigenmontage ist bei Ihnen eingeschränkt.",
+    pathsDiyUnknown:
+      "Hier nicht angeboten: Wir konnten nicht prüfen, ob Sie Ihre Anlage selbst montieren dürfen.",
+    pathsNoteTurnkeyAllIn:
+      "Ein Pauschalpreis: dieselbe Hardware, plus Arbeitszeit, Genehmigungen und die Marge des Installateurs.",
+    pathsIncludesInstalledAllIn:
+      "Teile, Arbeitszeit und Genehmigungen, bereits installiert",
+    pathsIncludesProviderSwaps:
+      "Der Anbieter wartet und tauscht Batterie und Wechselrichter",
+    pathsIncludesIncentivesToProvider:
+      "Förderungen gehen an den Anbieter, nicht an Sie",
+    pathsIncludesIncentivesIfEligible: "Förderungen, sofern Sie Anspruch haben",
+    pathsIncludesNoYear0Hardware: "Keine Anschaffung von Hardware vorab",
+    pathsIncludesEndOfTerm: "Die Option am Vertragsende ist eingepreist",
+    pathsIncludesHardwareYouBuy: "die Hardware, die Sie selbst kaufen",
+    pathsIncludesElectricianInstalls: "Ein zugelassener Elektriker montiert es",
+    pathsIncludesPermitsAndInterconnection:
+      "Genehmigungen, Abnahme und Netzanschluss",
+    pathsIncludesYouDoSwaps:
+      "Sie organisieren und bezahlen die Batteriewechsel selbst",
+    pathsIncludesYouMountTheArray: "Sie montieren die Anlage selbst",
+    pathsIncludesElectricianConnects: "Ein Elektriker nimmt den Anschluss vor",
+    pathsIncludesToolsAndSafety: "Werkzeug und Schutzausrüstung",
   },
   ar: {
     rtl: true,
@@ -1569,11 +2397,81 @@ export const LOCALES = {
     navBom: "مرجع المكونات",
     navBlog: "المدونة",
     navLegal: "الشروط وإخلاء المسؤولية",
+    sourcesCardTitle: "من أين تأتي هذه الأرقام",
+    sourcesCardBody:
+      "كل افتراض وراء أي رقم يذكر هنا الناشر وتاريخ التحقق ومدى مطابقته للقيمة المستخدمة. وما تعذّر توثيقه يقول ذلك صراحةً.",
+    sourcesCardLink: "عرض كل المصادر ←",
     heroTag: "مجاني للجميع، في كل مكان · بدون تسجيل · لا شيء للبيع",
+    heroTitle1: "قلّل فاتورة الكهرباء.",
+    heroTitle2: "شاهد بالضبط ما يتطلبه الأمر.",
+    footerAboutPre: "أنشأها وقدّمها",
+    heroIntro:
+      "ابدأ بموقعك — هاتفك يعرفه — ونحسب كل خيار يخفض فاتورتك، من 1% إلى فائض قابل للبيع. منحنى السعر يوضح ما يشتريه كل مبلغ، بعملتك. تقديرات تعليمية فقط، ولا شيء للبيع. أنشأها وقدّمها",
+    footerAboutPost: "ليست شركة، ولا مُسجّلة، ولا شيء للبيع.",
     ctaStart: "ابدأ تقديرًا مجانيًا",
     goalLabel: "ماذا تريد من هذا النظام؟",
-    goalOffgrid: "تغذيتي بالكامل خارج الشبكة",
-    goalGridtie: "خفض فاتورتي مع البقاء متصلًا",
+    useCaseLabel: "ماذا تريد أن تنجز؟",
+    useCaseBillCut: "خفض فاتورة الكهرباء",
+    useCaseTou: "الاقتصاد ببطارية مع تعرفة الساعات",
+    useCaseBackup: "إبقاء الأساسيات تعمل أثناء انقطاع الكهرباء",
+    useCaseReserve: "الاحتفاظ بهامش طوارئ في البطارية",
+    useCaseOffGrid: "الاعتماد الكامل على عدم وجود شبكة",
+    useCasePortable: "طاقة محمولة (شاحنة، قارب، تخييم)",
+    useCaseBillCutBlurb:
+      "طاقة شمسية مرتبطة بالشبكة، مع بطارية فقط إذا استحقت. يُقاس كنسبة فاتورتك التي يزيلها النظام على مدى 20 عامًا.",
+    useCaseTouBlurb:
+      "بطارية وحدها: تشحن في الساعات الرخيصة وتغطي الغالية. بدون ألواح.",
+    useCaseBackupBlurb:
+      "يُحجَّم حسب الأجهزة التي تختارها، لا حسب المنزل كله. يُقاس كنسبة انقطاعات الكهرباء التي تصمد الأساسيات خلالها.",
+    useCaseReserveBlurb:
+      "اترك جزءًا من البطارية جانبًا لحالات الانقطاع، وانظر بدقة ما يكلفه ذلك من fourni.",
+    useCaseOffGridBlurb:
+      "طاقة شمسية وبطارية محجَّمة لمنزلك كله. يُقاس كنسبة الساعات التي تعمل بلا شبكة إطلاقًا.",
+    useCasePortableBlurb:
+      "محطة طاقة لشاحنة أو قارب أو مخيم. بلا سطح، بلا شبكة، بلا تعرفة.",
+    metricBillCut: "من فاتورتك يزيلها النظام على مدى 20 عامًا",
+    metricTouOffset: "من طاقتك في ساعات الذروة تغطيها البطارية",
+    metricOutageCoverage:
+      "من انقطاعات الكهرباء التي تصمد الأساسيات خلالها طوال المدة المطلوبة",
+    metricReserveTradeoff: "تكلفة الاحتفاظ بالهامش، بالوفوفير والساعات",
+    metricGridIndependence: "من السنة تعمل بلا شبكة إطلاقًا",
+    metricPortableRuntime: "من الأيام التي تغذّي فيها المحطة أجهزتك طوال اليوم",
+    statusWorks: "ينجح",
+    statusPartial: "جزئيًا",
+    statusNotHere: "لا ينجح هنا",
+    useCaseOutcomeTitle: "نتيجتك: {useCase}",
+    useCaseVerdictFooter:
+      "قِيست لـ {useCase} مقابل {metric}، باستخدام بيانات الطقس الساعية لهذا الموقع.",
+    useCaseNotMeasured:
+      "غير مقيس: هذا التركيب لا يمكن تحجيمه أصلًا، فلا يوجد {metric} للإبلاغ عنه.",
+    metricReserveTradeoffValue: "{lost}% من الوفر، {hours} ساعة تغطية",
+    reserveOff: "موقوف",
+    touPeakLabel: "سعر الذروة عندك (لكل ك.و.س)",
+    touOffPeakLabel: "سعر خارج الذروة عندك (لكل ك.و.س)",
+    touDefaultNote:
+      "لا نملك جدول تعرفة ساعية منشورًا لمنطقتك، لذلك وضعنا سعر ذروة أعلى بنسبة 60٪ وسعرًا خارج الذروة أدنى بنسبة 45٪ من تسعيرتك الثابتة. غيّر أيًّا منهما إن كانت فاتورتك تقول غير ذلك — والحكم أدناه يستخدم ما تكتبه.",
+    essentialLabel: "ما الذي يجب أن يبقى يعمل؟ (اختر ما تشاء)",
+    outageLabel: "كم يجب أن يصمد؟",
+    backupRechargeLabel: "دع الألواح تعيد الشحن أثناء الانقطاع",
+    reserveLabel: "هامش طوارئ محفوظ في البطارية",
+    portableDeviceLabel: "ما الذي ستغذّيه؟ (اختر ما تشاء)",
+    portableBankLabel: "السعة الفعلية للمحطة (ك.و.س)",
+    portableShoreLabel: "أستطيع الشحن من الشبكة أو من المركبة",
+    generatorLabel: "تتوفر مولدة للأسابيع الأسوأ",
+    verdictBillCut:
+      "{status}: يزيل هذا النظام {pct}% من فاتورتك على مدى 20 عامًا.",
+    verdictTou:
+      "{status}: تغطي البطارية {pct}% من طاقتك في ساعات الذروة، بقيمة نحو {saving} على مدى 20 عامًا مقابل بطارية تكلف {cost}. الفارق بين الذروة وخارج الذروة هنا {spread} لكل ك.و.س.",
+    verdictBackup:
+      "{status}: تعمل أساسياتك كاملة الساعات {targetHours} في {pct}% من انقطاعات الكهرباء التي حاكيناها (ليلة نموذجية: {hours} ساعات).",
+    verdictReserve:
+      "{status}: الاحتفاظ بهذا الهامش يكلفك {pct}% من وفورك ويشتري {coverHours} ساعة من التغطية.",
+    verdictReserveNoBattery:
+      "لا يوجد مكان للاحتفاظ بهامش: أرخص نظام لهذا الهدف لا يحمل بطارية إطلاقًا.",
+    verdictOffGrid:
+      "{status}: {pct}% من السنة تعمل بلا شبكة — تنقص {unmetHours} ساعة في أسوأ عام، مع {autonomy} يومًا من الاستقلالية.",
+    verdictPortable:
+      "{status}: تغذّي محطتك أجهزتك طوال اليوم في {days} يومًا من {trips} يومًا هنا، وشحنة واحدة تدوم {runtime} ساعة.",
     cityLabel: "أين سيُركَّب النظام؟",
     loadLabel: "كم تستهلك من الطاقة؟",
     loadAppliances: "أختار أجهزتي الكهربائية",
@@ -1591,16 +2489,13 @@ export const LOCALES = {
     readoutKwhReady: "استخدام {kwh} كيلوواط ساعة/يوم مباشرة.",
     runBtn: "احسب نظامي (محاكاة خمس سنوات)",
     locBtn: "استخدم موقعي الحالي",
-    locNotePrefix: "المناخ المقدر لـ ",
-    locNoteSuffix: " — غير المدينة أعلاه إذا لزم الأمر.",
     chemLabel: "نوع البطارية:",
-    tariffLabel: "سعر الكهرباء في منطقتك:",
     tariffNote: "سعر تقديري لـ {label} — غيّره أعلاه إذا كنت تعرف تعريفتك.",
-    fxNote:
-      "المبالغ معروضة بـ {code} بسعر {rate} مقابل 1 دولار أمريكي؛ أسعار وحدات البطارية تبقى بالدولار للكيلوواط ساعة لأن الأسعار الأساسية بالدولار.",
     pickCity: "اختر مدينة (أو استخدم 📍 موقعي) لمعرفة إشعاعك الشمسي.",
     shareLoaded:
       "تم تحميل الإعدادات المشتركة. راجع المدخلات ثم اضغط احسب نظامي لبدء الحساب.",
+    invalidShare:
+      "تعذّرت قراءة رابط المشاركة — ربما قُطع عند نسخه. تجاهله واضبط تقديرك الخاص أدناه.",
     customCoordsLocation: "يجري استخدام الإحداثيات المخصصة ({lat}, {lon}).",
     resolvingCity: "جارٍ البحث عن مدينتك — اختر نتيجة أو انتظر قليلاً.",
     chooseCityMatch: "اختر مدينة من الاقتراحات أو انتظر انتهاء البحث.",
@@ -1608,7 +2503,7 @@ export const LOCALES = {
     invalidCoordinates:
       "يجب أن يتراوح خط العرض بين −90 و90 وخط الطول بين −180 و180.",
     invalidDailyKwh:
-      "يجب أن يتراوح استهلاك الطاقة اليومي بين 0.5 و500 كيلوواط ساعة.",
+      "يجب أن يتراوح استهلاك الطاقة اليومي بين 0.5 و500 كيلوواط ساعة — أدخل رقماً في هذا المدى أو حدّد الأجهزة التي تريد تغذيتها.",
     inputsChanged: "تغيرت المدخلات — اضغط احسب نظامي لتحديث التقدير.",
     errorTimeout:
       "لم يرد محرك الحساب في الوقت المحدد — تحقق من اتصالك وحاول مرة أخرى.",
@@ -1624,28 +2519,11 @@ export const LOCALES = {
       "⚠️ تعذّر تحميل محرك التقدير. حدّث الصفحة (Ctrl+F5) وحاول مرة أخرى.",
     statusSuccess:
       "✅ {years} سنوات من البيانات الساعة ({dataYears}) · {yield} كيلوواط ساعة/سنة لكل كيلوواط من اللوحة.{offline}",
-    offlineNote: " · 🌐 وضع عدم الاتصال التقليدي",
-    offlineCity: "باستخدام الملف النموذجي لـ {city}",
-    assumptionsPrefix:
-      "البيانات: {source}، بالساعة {dataYears}. ديارات مطبق: اتساخ {soil}%، أسلاك {wire}%، عدم تطابق {mismatch}%، MPPT {mppt}%. نموذج درجة الحرارة: NOCT {noct}°C، معامل حراري {gamma}%/°C. كفاءة العاكس {eta}%. الشحن ممنوع تحت حد كيمياء البرودة (LFP 0°C). أساس الحمل: {basis}. التكاليف من {basisLabel} ({source}) — الطرف المنخفض هو المكونات قبل الشحن/الرسوم/BMS، الطرف العالي هو البيع بالتجزئة مع BMS والصندوق. ",
-    moneyPrefix: "",
-    capacityNotePrefix: "",
-    fxNotePrefix: " ",
-    offlineNotePrefix:
-      "وضع عدم الاتصال: استخدم هذا الملف السنوي النموذجي لـ {offlineCity} — تقريب قريب، ليس موقعك الدقيق. أعد التشغيل على الإنترنت لخمس سنوات من الطقس الدقيق. ",
-    tariffSpend:
-      "الإنفاق على الشبكة يفترض ${tariff}/كيلوواط ساعة عند {dailyKwh} كيلوواط ساعة/يوم.",
-    noTariff: "لم يتم إدخال تعريفة، لا يتم عرض فترة الاسترداد.",
-    currencyNote:
-      "المبالغ معروضة بـ {code} بسعر {rate} مقابل 1 دولار أمريكي؛ أسعار وحدات البطارية تبقى بالدولار للكيلوواط ساعة لأن الأسعار الأساسية بالدولار.",
-    capacityNote: "",
-    offlineLabel:
-      "وضع عدم الاتصال: هذه العملية استخدم الملف السنوي النموذجي لـ {offlineCity} — تقريب قريب، ليس موقعك الدقيق. أعد التشغيل على الإنترنت لخمس سنوات من الطقس الدقيق. ",
+    offlineNote: " · 🌐 وضع السنة النموذجية دون اتصال",
     tariffSpendLine:
       "بسعر {tariff}/كيلوواط/ساعة، تكلفك كهرباؤك حوالي {annual} سنويًا اليوم. كل خيار أدناه يوضح الفاتورة بعد الشمسي ومدى سرعة استرداد التكلفة من الادخار.",
     tariffSpendBattery:
       "بسعر {tariff}/كيلوواط/ساعة، تكلفك كهرباؤك حوالي {annual} سنويًا اليوم. البطارية بدون ألواح تغيّر وقت الاستهلاك؛ ولا تخفّض ما تدفعه.",
-    noTariffLine: "لم يتم إدخال تعريفة، لا يتم عرض فترة الاسترداد.",
     tariffSpendOffgrid:
       "بسعر {tariff}/كيلوواط/ساعة، يكلفك هذا الاستخدام حوالي {annual} سنويًا من كهرباء الشبكة. أرقام الاسترداد أدناه تقارن تكلفة النظام بهذا الإنفاق.",
     tariffSpendFixed:
@@ -1654,7 +2532,6 @@ export const LOCALES = {
     lvlCompare: "مقارنة البطاريات",
     lvlMatrix: "كل الخيارات",
     bomPanelTitle: "قائمة المعدات الخاصة بك — مم يتكون هذا النظام",
-    bomDownload: "تنزيل قائمة القطع (CSV)",
     genSummary: "أستخدم مولدا — كم تبلغ التكلفة الحقيقية للكهرباء منه؟",
     genApply: "استخدم هذا كسعر الكهرباء لدي",
 
@@ -1668,7 +2545,6 @@ export const LOCALES = {
     frontierYGrid: "نسبة فاتورتك المخفّضة",
     frontierYGridBattery: "نسبة ساعات الذروة المنقولة",
     frontierYOffgrid: "نسبة طاقتك المغطّاة دون مولّد",
-    frontierTagSel: "النقطة المحددة",
     frontierSelTag: "{pv} كيلوواط + {batt} كيلوواط ساعة · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} كيلوواط دون بطارية · {pct}% · {cost}",
     frontierLegendSel: "الخيار المحدد — انقر أي نقطة للاختيار",
@@ -1685,7 +2561,7 @@ export const LOCALES = {
     simpleSeeDetails: "عرض كل التفاصيل",
     simpleDownloadBom: "تنزيل قائمة القطع (CSV)",
     simpleAskAdvisor: "اسأل مستشار الذكاء الاصطناعي (بكلمات بسيطة)",
-    sanityOk: "تم التحقق بشكل مستقل ✓ — plausible من الناحية الفيزيائية",
+    sanityOk: "تم التحقق بشكل مستقل ✓ — معقول فيزيائيًا",
     sanityFlag:
       "⚠ تشير مراجعة ذكاء اصطناعي مستقلة إلى أن هذه النتيجة غير معقولة فيزيائيًا —",
     sanityAskAdvisor: "اسأل المستشار لماذا",
@@ -1713,6 +2589,17 @@ export const LOCALES = {
     advisorNoReply: " لم يصل رد. حاول مرة أخرى.",
     advisorBusy:
       " محرك الذكاء الاصطناعي المجاني مزدحم الآن (HTTP {status} — حصة مشتركة).\n\nانتظر نحو دقيقة ثم أرسل الطلب مجدداً.",
+    // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
+    advisorDegradedLabel: "دون اتصال · ليس الذكاء الحيّ مباشرة",
+    advisorDegradedLine: "لا أستطيع الإجابة الآن — {why}.",
+    advisorDegradedWhyUnavailable: "الخدمة التي يجيب لم يستجب",
+    advisorDegradedWhyNoKey: "لا مفتاح نموذج، فالمشير غير متصل عمدًا",
+    advisorDegradedReassure: "لا خطأ في ما سبق وحسابك لم يتأثر.",
+    advisorDegradedSystem: "خذ هذه الأرقام إلى كهربائي مرخَّص قبل البناء.",
+    advisorIsAi:
+      "المستشار نموذج لغوي. يكتب نصًا مقنعًا وقد يذكر أرقامًا خاطئة بثقة. تحقّق من كل رقم — لا تأخذه كحقيقة.",
+    advisorDegradedGeneral: "للتحجيم: استخدم الحاسبة أعلاه؛ بلا حساب.",
+    advisorDegradedRetry: "أعد المحاولة بعد دقيقة؛ الحصة مشتركة.",
     advisorUnreachable:
       " مستشار الذكاء الاصطناعي غير متاح حالياً{status}.\n\nتحقق من اتصالك وحاول مرة أخرى بعد قليل.",
     frontierCeilingTag: "الأقصى ضمن الأحجام المبحوثة: {pct}%",
@@ -1739,6 +2626,7 @@ export const LOCALES = {
     frontierBestValueRange:
       "النطاق الأفضل قيمة: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "أفضل قيمة",
+    frontierTagSel: "النقطة المحددة",
     fuelLitLabel: "السعر لكل لتر",
     fuelGalLabel: "السعر لكل غالون",
     fuelReadoutRate: "{type} بهذا السعر يخرج بحوالي {rate} لكل كيلوواط/ساعة",
@@ -1865,5 +2753,77 @@ export const LOCALES = {
       "الفائض يحتاج ألواحًا تولّد أكثر من استهلاكك. اخفض الهدف دون 100% في منزلق خفض الفاتورة، أو بدّل إعداد العتاد إلى «شمسي + بطارية».",
     infeasibleGenericTitle: "هذا المزيج من العتاد والهدف لا حلّ له",
     infeasibleGenericBody: "غيّر الهدف أو العتاد، ثم أعد التشغيل.",
+
+    pathsLabel_turnkey: "مُثبِّت، تسليم كامل",
+    pathsLabel_lease: "إيجار أو عقد شراء",
+    pathsLabel_selfpurchase: "أنت تشتري القطع",
+    pathsLabel_diy: "أنت تركّب، وكهربائي يوصّل",
+    pathsTitle: "أربع طرق لدفع ثمن النظام نفسه",
+    pathsSub:
+      "نظام واحد، وتعريف واحد، وعشرون سنة. الفرق بين هذه البطاقات فرق في السعر، لا اختلاف في ما تحسبه كل واحدة.",
+    pathsCheapest: "الأرخص",
+    pathsSpend20: "تكلفة 20 عامًا",
+    pathsRowIncentives: "حوافز",
+    pathsRowBillCut: "خفض الفاتورة",
+    pathsRowBreakEven: "نقطة التعادل",
+    pathsRowNet: "صافي 20 عامًا",
+    pathsRowOwnership: "الملكية",
+    pathsRowEndOfTerm: "في النهاية",
+    pathsCountsHeading: "ما يشمله هذا السعر",
+    pathsInstrumentLabel: "طريق الغير:",
+    pathsGradeNote:
+      "كل رقم أعلاه يأتي من سجل أسعار إقليمي واحد بمصدر مذكور ودرجة ثقة. العتاد هو تقديرك أنت؛ أما العمل والتراخيص والحوافز والاستبدال فهي أرقام السجل. ولا شيء هنا عرض سعر من بائع.",
+    pathsWhy:
+      "{cheaper} أرخص بمقدار {gap} من {dearer} على 20 عامًا، والسبب الأهم هو {driver}.",
+    pathsWhyCombined: " لا يفسّر عنصر واحد وحده الفرق كاملًا.",
+    pathsDriver_year0: "سعر البداية",
+    pathsDriver_incentives: "الجهة التي تذهب إليها الحوافز",
+    pathsDriver_om: "الصيانة",
+    pathsDriver_replacements: "استبدال البطاريات والعاكسات",
+    pathsDriver_leasePayments: "الأقساط التي تدفعها",
+    pathsDriver_none: "لا عنصر بعينه",
+    pathsInstrumentPpa: "عقد شراء الطاقة",
+    pathsInstrumentLease: "إيجار (تستأجر النظام)",
+    pathsEndOfTermBuyout:
+      "السنة {years}: يمكنك شراؤه مقابل {buyoutPct}% من سعر التركيب، وهذا الشراء مُحتسب أصلًا في هذا الرقم.",
+    pathsEndOfTermStillLeasing:
+      "في السنة {years} لا يزال العقد ساريًا، لذا لا يُحتسب أي شراء. وبعد 20 عامًا ستظل مدينًا بأقساط.",
+    pathsOwnershipTurnkey: "أنت تملكه من اليوم الأول.",
+    pathsOwnershipPpa: "المزوّد هو المالك ويتولى الصيانة.",
+    pathsOwnershipLease: "تستأجره حتى نهاية العقد ثم تشتريه أو تعيده.",
+    pathsOwnershipSelf: "تملكه بعد تركيبه.",
+    pathsIncentiveTaxCredit: "ائتمان ضريبي فيدرالي",
+    pathsIncentiveRebate: "خصم من شركة الكهرباء",
+    pathsIncentivesToProvider: "الحوافز تذهب إلى المزوّد لا إليك.",
+    pathsIncentivesGoToProvider: "المزوّد يحتفظ بها — وأنت لا تملك شيئًا.",
+    pathsNoIncentive: "لا ينطبق أي منها على هذه الطريقة.",
+    pathsNoVerifiedIncentive: "لا يوجد لدينا حافز موثّق لمنطقتك.",
+    pathsUnknown: "غير معروف",
+    pathsNotWithinHorizon: "ليس خلال 20 عامًا",
+    pathsBreakEvenYear: "السنة {year}",
+    pathsUnavailable: "غير متاح",
+    pathsNoSystem: "لا يوجد نظام لتسعيره.",
+    pathsNoTariff:
+      "يحتاج عقد الشراء إلى سعر كهرباء ليُسعَّر بمقابله، لذلك لا يظهر هنا.",
+    pathsDiyNotPermitted:
+      "غير معروضة هنا: في منطقتك يجب أن ينفّذ العمل الكهربائي مُثبِّت مرخّص.",
+    pathsDiyRestricted: "غير معروضة هنا: التركيب الذاتي مقيّد في منطقتك.",
+    pathsDiyUnknown:
+      "غير معروضة هنا: تعذّر التحقق مما إذا كان بإمكانك تركيب ألواحك بنفسك.",
+    pathsNoteTurnkeyAllIn:
+      "سعر واحد شامل: نفس العتاد، إضافة إلى العمل والتراخيص وهامش المُثبِّت.",
+    pathsIncludesInstalledAllIn: "القطع والعمل والتراخيص، بعد التركيب",
+    pathsIncludesProviderSwaps: "المزوّد يصون ويستبدل البطارية والعاكس",
+    pathsIncludesIncentivesToProvider: "الحوافز تذهب إلى المزوّد لا إليك",
+    pathsIncludesIncentivesIfEligible: "الحوافز، إن كنت مؤهلًا لها",
+    pathsIncludesNoYear0Hardware: "دون شراء عتاد مقدمًا",
+    pathsIncludesEndOfTerm: "خيار نهاية العقد مُحتسب في السعر",
+    pathsIncludesHardwareYouBuy: "العتاد الذي تشتريه بنفسك",
+    pathsIncludesElectricianInstalls: "كهربائي مرخّص يتولى التركيب",
+    pathsIncludesPermitsAndInterconnection: "التراخيص، الفحص، والربط بالشبكة",
+    pathsIncludesYouDoSwaps: "أنت تنظّم وتدفع استبدال البطاريات",
+    pathsIncludesYouMountTheArray: "أنت تركّب الألواح بنفسك",
+    pathsIncludesElectricianConnects: "كهربائي يتولى عملية الربط",
+    pathsIncludesToolsAndSafety: "الأدوات ومعدات السلامة",
   },
 };

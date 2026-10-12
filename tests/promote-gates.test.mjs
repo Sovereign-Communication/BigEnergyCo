@@ -25,6 +25,8 @@ import { serveStatic } from "../scripts/serve-static.mjs";
 import { securityPolicyVerdict } from "../scripts/lib/gates.mjs";
 import * as stamps from "../scripts/lib/stamps.mjs";
 import { attachWorktree, detachWorktree } from "../scripts/lib/worktree.mjs";
+import { extractVerdict } from "./verdict-json.mjs";
+import { withMutationLock } from "../scripts/lib/mutation-lock.mjs";
 
 const STAGE = "_pages_verify_test";
 const LEDGER = join(STAGE, "ledger.jsonl"); // inside the throwaway stage dir
@@ -65,34 +67,50 @@ async function runNode(args, opts = {}) {
 
 const run = (script, args, opts) => runNode([script, ...args], opts);
 
+// Both of these read every allowlisted file in the working tree (promote spawns
+// the verifier itself), so they must exclude `tests/deploy-manifest.test.mjs`,
+// which briefly deletes a tracked file to prove the manifest reports it.
+// Without the lock, node --test's parallel file execution let a verifier
+// observe that deletion and report `parity robots.txt — unreadable: local read
+// failed: ENOENT`, failing a gate about asset stamps for a reason that had
+// nothing to do with stamps. Measured at 1 run in 6 before the lock.
 const verify = (base, extra = []) =>
-  run("scripts/verify-staging.mjs", [
-    "--base",
-    base,
-    "--no-browser",
-    "--json",
-    ...extra,
-  ]);
-
-const promote = (base, extra = [], opts = {}) =>
-  run(
-    "scripts/promote.mjs",
-    [
+  withMutationLock(() =>
+    run("scripts/verify-staging.mjs", [
       "--base",
       base,
-      "--pages",
-      base,
-      "--brand",
-      base,
       "--no-browser",
-      "--ledger",
-      LEDGER,
+      "--json",
       ...extra,
-    ],
-    opts,
+    ]),
   );
 
-const parse = (out) => JSON.parse(out.slice(out.indexOf("{")));
+const promote = (base, extra = [], opts = {}) =>
+  withMutationLock(() =>
+    run(
+      "scripts/promote.mjs",
+      [
+        "--base",
+        base,
+        "--pages",
+        base,
+        "--brand",
+        base,
+        "--no-browser",
+        "--ledger",
+        LEDGER,
+        ...extra,
+      ],
+      opts,
+    ),
+  );
+
+// The two scripts here print different verdicts, and `out` is the child's
+// stdout AND stderr in arrival order, so each call says which fields its
+// verdict must carry. That also stops a stray but well-formed JSON line in a
+// log from being mistaken for the report.
+const parseVerify = (out) => extractVerdict(out, ["verified", "filesChecked"]);
+const parsePromote = (out) => extractVerdict(out, ["plan", "record"]);
 
 async function withServer(fn) {
   const srv = await serveStatic({ dir: STAGE });
@@ -162,7 +180,7 @@ test("VERIFY: a faithful artifact verifies (positive control)", async () => {
   await withServer(async (base) => {
     const r = await verify(base);
     assert.equal(r.code, 0, r.out);
-    const report = parse(r.out);
+    const report = parseVerify(r.out);
     assert.equal(report.verified, true);
     assert.ok(
       report.filesChecked > 300,
@@ -632,7 +650,7 @@ test("VERIFY: policy regressions fail through the real verifier, not just the he
     await withStagePolicy(async (base) => {
       const r = await verify(base, ["--surface", "cloudflare"]);
       assert.equal(r.code, 0, `the control run must pass: ${r.out}`);
-      const report = parse(r.out);
+      const report = parseVerify(r.out);
       assert.equal(report.surface, "cloudflare");
       assert.equal(report.verified, true);
       assert.equal(
@@ -892,7 +910,7 @@ test("PROMOTE: a credential-free dry run claims no way back it has not read", as
   await withServer(async (base) => {
     const r = await promote(base, ["--json"], { env });
     assert.equal(r.code, 0, r.out);
-    const payload = parse(r.out);
+    const payload = parsePromote(r.out);
     assert.equal(payload.plan.previousSha, null);
     assert.match(
       payload.plan.rollbackReason,

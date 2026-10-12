@@ -55,3 +55,30 @@ export function budgetFromEnv(env = process.env) {
   if (!Number.isFinite(raw) || raw <= 0) return VERIFY_BUDGET_MS;
   return Math.min(raw, VERIFY_BUDGET_MS);
 }
+
+/**
+ * The backoff between transient retries, in ms.
+ *
+ * Exists for the same reason the budget is configurable: a test that must prove
+ * "a retry happened AND the budget then ran out" cannot rely on a real 5s sleep
+ * fitting inside a compressed budget. Under runner load the sleep can outlast
+ * the budget, the first retry never lands, and the test fails for a reason that
+ * has nothing to do with the behaviour it is checking. Compressing the delay
+ * removes the wall clock from the assertion; the default is unchanged, and
+ * tests/ci-resilience.test.mjs asserts that default so it cannot be quietly
+ * shortened in production.
+ */
+export const VERIFY_RETRY_DELAY_MS = 5000;
+
+export function retryDelayFromEnv(env = process.env) {
+  const value = env?.VERIFY_RETRY_DELAY_MS;
+  // Reject the empty string explicitly. `Number("")` is 0, so a CI runner that
+  // exports the variable but leaves it blank would otherwise get a ZERO
+  // backoff — retrying a transport flake with no wait at all, which is exactly
+  // the hammering this backoff exists to prevent, and it would look configured.
+  if (typeof value !== "string" || value.trim() === "")
+    return VERIFY_RETRY_DELAY_MS;
+  const raw = Number(value);
+  if (!Number.isFinite(raw) || raw < 0) return VERIFY_RETRY_DELAY_MS;
+  return raw;
+}

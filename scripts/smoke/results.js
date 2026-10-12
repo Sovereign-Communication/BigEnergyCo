@@ -269,40 +269,62 @@ export async function runResultsFlow(ctx) {
     ),
   );
   // Behavioral, not existential: the click must open the chat modal AND
-  // compose the advisor POST. fetch is intercepted so no network call ever
-  // leaves the page (a real request would 404 on bare static servers and
-  // hit the production advisor endpoint on deployed surfaces). An earlier
-  // version asserted `typeof b.onclick === "function"` — always false for
-  // addEventListener wiring, and shadowed by a trailing `|| !!b` anyway —
-  // so the gate passed on mere existence. See the #82 precedent.
+  // get a real answer back.
+  //
+  // This gate referenced `btnSimpleAdvisor`, an id that exists NOWHERE in the
+  // repo. The product's button is `btnAskAdvisor` (index.html), wired in
+  // ui.js to askAdvisor(), which fills the brief, opens the modal and calls
+  // sendChatMsg(). So the gate could never pass — it has been red on every PR
+  // of this branch, and its "existence" check was the only thing it ever
+  // managed to assert.
+  //
+  // It also stubbed window.fetch. That is no longer necessary or desirable:
+  // the local server mounts the REAL worker (scripts/lib/worker-bridge.mjs),
+  // so the button can be exercised against the endpoint the contest demo
+  // actually calls. Nothing is stubbed here now — an earlier version of this
+  // gate asserted `typeof b.onclick === "function"`, always false for
+  // addEventListener wiring (see the #82 precedent), and the stub only ever
+  // proved the page could fake its own answer.
+  const advisorClick = await evaluate(
+    `(() => {
+      const b = document.getElementById("btnAskAdvisor");
+      const m = document.getElementById("sizingModal");
+      if (!b || b.textContent.length === 0 || !m) return "no-button";
+      if (!window.lastSizingBrief) return "no-brief";
+      b.click();
+      return m.style.display === "flex" ? "opened" : "did-not-open";
+    })()`,
+  );
   gate(
     "simple mode: AI advisor button opens the chat modal and sends the brief",
-    await evaluate(
-      `(() => {
-          const b = document.getElementById("btnSimpleAdvisor");
-          const m = document.getElementById("sizingModal");
-          if (!b || b.textContent.length === 0 || !m) return false;
-          const of = window.fetch;
-          let sent = false;
-          window.fetch = function (u, o) {
-            if (String(u).indexOf("/api/chat") !== -1) {
-              sent = true;
-              return Promise.resolve({ ok: true, json: function () { return Promise.resolve({ reply: "smoke-stub" }); } });
-            }
-            return of.apply(this, arguments);
-          };
-          let opened = false;
-          try {
-            b.click();
-            opened = m.style.display === "flex";
-          } finally {
-            window.fetch = of;
-            m.style.display = "none";
-          }
-          return opened && sent;
-        })()`,
-    ),
+    advisorClick === "opened",
+    `click=${advisorClick}`,
   );
+  // A modal that opened is not yet an answer. Wait for the real reply, which
+  // is the part the stub used to fake.
+  let advisorReply = "";
+  const gotAdvisorReply = await poll(
+    async () => {
+      advisorReply = await evaluate(
+        `(() => {
+          const n = document.querySelector('#chatWindow .chat-msg.bot:not(#loadingMsg)');
+          return n ? (n.textContent || "").trim() : "";
+        })()`,
+      );
+      return typeof advisorReply === "string" && advisorReply.length > 40;
+    },
+    30000,
+    500,
+  );
+  gate(
+    "simple mode: the advisor button gets a real answer from the worker",
+    gotAdvisorReply === true,
+    `chars=${(advisorReply || "").length} text=${(advisorReply || "").slice(0, 60)}`,
+  );
+  await evaluate(`(() => {
+    const m = document.getElementById("sizingModal");
+    if (m) m.style.display = "none";
+  })()`);
   gate(
     "simple mode: dense panels hidden (computed)",
     await evaluate(

@@ -59,11 +59,17 @@ export function attr(tag, name) {
   return new RegExp(`\\b${name}(?=[\\s/>])`, "i").test(tag) ? "" : null;
 }
 
-/** Every `<tag ...>` opening tag in the document. */
+/**
+ * Every `<tag ...>` opening tag in the document.
+ *
+ * The attribute run skips `>` inside quoted values, because HTML does not
+ * require escaping it and Prettier does not escape it either. Truncating at
+ * the first `>` handed callers half a tag, so `alt="a > b"` reported alt "a "
+ * and every later attribute as absent.
+ */
 export function tags(html, name) {
-  return [...html.matchAll(new RegExp(`<${name}\\b[\\s\\S]*?>`, "gi"))].map(
-    (m) => m[0],
-  );
+  const pattern = `<${name}\\b[^>"']*(?:"[^"]*"[^>"']*|'[^']*'[^>"']*)*>`;
+  return [...html.matchAll(new RegExp(pattern, "gi"))].map((m) => m[0]);
 }
 
 /** Content of a <meta> whose `key` attribute equals `value`, case-insensitive. */
@@ -88,17 +94,6 @@ export function decodeEntities(text) {
     .replace(/&quot;/g, '"')
     .replace(/&#0?39;|&apos;/g, "'")
     .replace(/&amp;/g, "&");
-}
-
-/**
- * The title as a search result renders it: entities decoded, whitespace
- * collapsed, trimmed. Measuring the raw markup instead would count Prettier's
- * line wrapping and `&amp;` as characters a human never sees — which is how a
- * 59-character title reads as 76 and a healthy page gets flagged.
- */
-export function documentTitle(html) {
-  const raw = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] || "";
-  return decodeEntities(raw).replace(/\s+/g, " ").trim();
 }
 
 /**
@@ -284,7 +279,7 @@ export function cspDirective(csp, name) {
  * drop a directive from `_headers` and this must fail, with no network and no
  * Cloudflare account in the loop.
  *
- * @param {{"gh-pages"|"cloudflare"|"local"}} surface
+ * @param {"gh-pages"|"cloudflare"|"local"} surface
  * @param {(name:string) => (string|null)} getHeader
  * @returns {{checks:{name:string,ok:boolean,detail:string}[], notes:string[]}}
  */
@@ -451,7 +446,7 @@ export function familyGaps(locales, suffixes = ["Grid", "Offgrid"]) {
 // a sitemap entry pointing at another site would have passed validation. Both
 // checks now compare real URLs. Pure, so both can be unit-tested.
 
-/** @returns {null} when the URL is unparseable or not on `origin`. */
+/** @returns {string | null} when the URL is unparseable or not on `origin`. */
 export function sameOriginPath(url, origin) {
   let parsed;
   try {
@@ -484,4 +479,105 @@ export function sitemapGaps(pages, urls, site) {
     missing: [...expectedSet].filter((u) => !listed.has(u)),
     extra: urls.filter((u) => !expectedSet.has(u)),
   };
+}
+
+// ── unkeyed prose on a translated page ───────────────────────────────────────
+// Every other i18n rule reads the DICTIONARY. Copy that was never put into it is
+// invisible to all of them: index.html's hero paragraph and the legal-card
+// advisor disclaimer shipped in English to every non-English visitor while
+// check-i18n was green, because both carried no data-i18n hook.
+//
+// Only pages that DECLARE themselves translated are checked. Measured across the
+// 82 shipped pages: exactly one has a hook, and it carries 51 unkeyed prose
+// blocks; the other 81 have none and are untranslated by decision. Demanding
+// hooks on those would be 2,046 decisions nobody made, and a gate that fires on
+// 2,046 known items is one that gets ignored.
+//
+// Exempt on purpose: text that is not prose (units, numbers, punctuation),
+// blocks under `minWords` (labels and captions), and pages with no hook at all.
+// Split out as a pure function so a test can prove the detector FIRES on the
+// markup that caused the defect, without mutating the working tree.
+// A real hook ATTRIBUTE, not the substring. Testing for "data-i18n" alone
+// exempts a paragraph whose hook was renamed to data-i18n-x — which is how the
+// first proof of this rule came back green, because the mutation I made was the
+// one string this check could not tell apart from a hook.
+//
+// Case-insensitive on purpose: HTML attribute NAMES are case-insensitive, and
+// the browser resolves `[data-i18n="x"]` against DATA-I18N just as happily.
+// A case-sensitive check here would report a hooked block as unkeyed while the
+// page translated it correctly at runtime — the gate and the renderer disagreeing
+// about the same markup.
+const PROSE_HOOK_ATTR = /\sdata-i18n(?:-placeholder|-aria-label)?\s*=/i;
+// Regions no visitor ever sees. A regex over raw HTML reads all of them, and
+// index.html's JSON-LD alone contributed 6 of the first 33 findings — the
+// FAQPage `mainEntity` answer texts, which are structured data, not prose, and
+// which CANNOT carry a data-i18n hook because they are not markup. Counting
+// them inflated the ceiling by 6 and left the ceiling hostage to any future
+// comment that happened to contain a long <p> example.
+const BLIND_REGIONS =
+  /<!--[\s\S]*?-->|<script\b[\s\S]*?<\/script(?:\s[^>]*)?\s*>|<style\b[\s\S]*?<\/style(?:\s[^>]*)?\s*>/gi;
+const PROSE_TAGS = "p|li|blockquote|figcaption|dd|label";
+// Containers whose close tag also ends a prose block. `</p>` is optional in
+// practice (browsers close it) and `</li>` is optional in VALID HTML5 — the
+// parser ends the item at the next `<li>` or at `</ul>`. Requiring the literal
+// close tag therefore missed two unhooked list items in a row, and missed an
+// unhooked `<p>` outright, because the regex simply did not match. The block
+// ends at the earliest of: its own close tag, the next opening tag of the same
+// name, or the close tag of a container it sits in.
+const BLOCK_ENDERS =
+  "ul|ol|dl|div|section|article|aside|nav|main|header|footer|details|summary|table|thead|tbody|tr|td|th|fieldset|form|label";
+const BLOCK_RE = new RegExp(
+  `<(${PROSE_TAGS})\\b([^>]*)>([\\s\\S]*?)(?=<\\1[\\s/>]|</\\1\\s*>|</(?:${BLOCK_ENDERS})\\s*>|$)`,
+  "gi",
+);
+// No letters, no digits: a price, a unit, a glyph. Nothing to translate.
+const NOT_PROSE =
+  /^[\s\d.,%+\-–—/×·:;()[\]{}<>=^*#@!?§°$€£¥|&'"‘’“” -⁯←-⇿☀-➿]*$/u;
+
+// The unit exemption NOT_PROSE cannot express on its own: "5 m² · 12 kWh · 3.5 %"
+// is six whitespace-separated words — so the length floor alone does not exempt
+// it, and "kWh" is three letters, so a letter-run test alone does not either —
+// yet it holds no sentence to translate. Real prose is dense with four-letter-or-
+// longer words; a unit line has none. Two of them is the threshold: below that a
+// block is a spec line, not a sentence.
+const PROSE_WORD = /[^\W\d_]{4,}/gu;
+const MIN_PROSE_WORDS = 2;
+
+/** Does this page claim to be translated? */
+export function claimsTranslation(html) {
+  // Case-insensitive for the same reason PROSE_HOOK_ATTR is: the browser's
+  // attribute matching is, so a page carrying only DATA-I18N is translated in
+  // the browser and must not be skipped here as untranslated.
+  return /\sdata-i18n(?:-placeholder|-aria-label)?\s*=/i.test(html);
+}
+
+/**
+ * Visible prose blocks in `html` that carry no i18n hook.
+ *
+ * A hook on the element OR on any descendant counts: bracketing a <strong>
+ * inside a paragraph is how the author's name survives applyI18n's textContent.
+ *
+ * @returns {{tag: string, text: string, words: number}[]}
+ */
+export function unkeyedProse(html, { minWords = 6 } = {}) {
+  const found = [];
+  // Blank the invisible regions first so their contents cannot be reported as
+  // prose a visitor would have to be able to read.
+  const scannable = String(html).replace(BLIND_REGIONS, " ");
+  for (const m of scannable.matchAll(BLOCK_RE)) {
+    const [, tag, attrs, inner] = m;
+    if (PROSE_HOOK_ATTR.test(attrs) || PROSE_HOOK_ATTR.test(inner)) continue;
+    const text = inner
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&mdash;/g, "—")
+      .replace(/&[a-z]+;|&#\d+;/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!text || NOT_PROSE.test(text)) continue;
+    const words = text.split(/\s+/).length;
+    if (words < minWords) continue;
+    if ((text.match(PROSE_WORD) || []).length < MIN_PROSE_WORDS) continue;
+    found.push({ tag, text, words });
+  }
+  return found;
 }

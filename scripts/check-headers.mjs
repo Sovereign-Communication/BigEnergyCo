@@ -23,6 +23,9 @@ import {
   parseCsp,
   parseHeadersFile,
 } from "./lib/gates.mjs";
+// The deploy contract itself, not a second copy of it. Two hardcoded lists of
+// "what ships" is how they drift: this one is read from the single owner.
+import { ALLOWLIST } from "./lib/deploy-manifest.mjs";
 
 const LIVE = process.argv.includes("--live");
 const LIVE_BASES = (
@@ -111,6 +114,11 @@ for (const directive of [
   "connect-src",
   "object-src",
   "base-uri",
+  // frame-src is required now, not optional. Without it, frame-src falls back
+  // to default-src 'self' and EVERY cross-origin frame is blocked - which is
+  // how the Turnstile widget would fail to render while the script loaded
+  // perfectly and no other check complained.
+  "frame-src",
   "frame-ancestors",
 ]) {
   if (!csp[directive]) fail(`CSP is missing the ${directive} directive`);
@@ -193,6 +201,38 @@ const stripComments = (js) =>
 /** Tile/script templates carry {s}/{z}/{x}/{y}; normalize before parsing. */
 const deTemplate = (text) => text.replace(/\{[a-z]+\}/gi, "x");
 
+// Files that build a <script> element and assign its src from a constant.
+// Declared before the scan so the .src pattern below has somewhere to record
+// itself; the host is picked up by the extension catch-all, but flagging the
+// file lets the summary name the mechanism that was recognised.
+const scriptLoaderFiles = new Set();
+
+/** Extension -> the directive that actually governs loading it. */
+const EXT_DIRECTIVE = {
+  js: "script-src",
+  mjs: "script-src",
+  wasm: "script-src",
+  css: "style-src",
+  png: "img-src",
+  jpg: "img-src",
+  jpeg: "img-src",
+  svg: "img-src",
+  webp: "img-src",
+  gif: "img-src",
+  ico: "img-src",
+  woff: "font-src",
+  woff2: "font-src",
+};
+
+/**
+ * The shipped top-level entries, as directories. The registry scan needs to
+ * know which paths a new untracked file could still land in, and that list is
+ * the deploy contract's own, never a second hardcoded copy of it.
+ */
+const ALLOWLIST_DIRS = ALLOWLIST.filter((e) => !/\.[a-z0-9]+$/i.test(e)).map(
+  (e) => e.replace(/\/$/, ""),
+);
+
 const found = []; // {host, directive, where}
 const addHost = (raw, directive, where) => {
   try {
@@ -217,6 +257,19 @@ for (const file of shippedSources()) {
       addHost(m[1], "connect-src", file);
     for (const m of text.matchAll(/new\s+Worker\(\s*[`"'](https:\/\/[^`"']+)/g))
       addHost(m[1], "script-src", file);
+    // A script ELEMENT whose src is assigned from a constant. This is how
+    // assets/js/turnstile-client.js loads the widget, and it is invisible to
+    // the fetch()/Worker() patterns above - the widget is loaded, not called.
+    // `.src =` on a createElement("script") element is the signature; matching
+    // the assignment rather than the literal keeps a host built by string
+    // concatenation or a template constant from slipping through.
+    for (const m of text.matchAll(
+      /\.src\s*=\s*([A-Za-z_$][\w$]*)\s*\+|createElement\(\s*["']script["']\s*\)/g,
+    )) {
+      // The host is resolved below by scanning the module's own constants, so
+      // record only the file; addHost needs a concrete URL.
+      if (m[1] && /createElement/.test(m[0])) scriptLoaderFiles.add(file);
+    }
     // Catch-all for SUBRESOURCES only: an absolute URL whose path ends in an
     // asset extension, or a raster-tile template. This catches a new tile host
     // or CDN constant that no fetch() pattern reveals, while leaving outbound
@@ -237,8 +290,19 @@ for (const file of shippedSources()) {
           url,
         );
       if (!isTile && !isAsset) continue;
+      // The directive is INFERRED from the extension, not left as "any". A
+      // ".js" URL is a script and must be allowed by script-src; treating it as
+      // "any directive will do" let a script from a connect-src-only host pass
+      // this gate while the browser blocked it - the exact silent-break this
+      // section exists to prevent. An unknown extension keeps the permissive
+      // "any" behaviour so an unrecognised asset type cannot fail the build for
+      // a directive the gate cannot infer.
+      const ext = (url.split(/[?#]/)[0].match(/\.([a-z0-9]+)$/i) || [])[1];
+      const directive = isTile
+        ? "img-src"
+        : (EXT_DIRECTIVE[String(ext || "").toLowerCase()] ?? "any");
       if (![...found].some((f) => f.host === host && f.where === file))
-        found.push({ host, directive: "any", where: file });
+        found.push({ host, directive, where: file });
     }
   } else {
     for (const m of raw.matchAll(/<script[^>]*\ssrc="(https:\/\/[^"]+)"/gi))
@@ -254,6 +318,12 @@ for (const file of shippedSources()) {
     }
     for (const m of raw.matchAll(/<img[^>]*\ssrc="(https:\/\/[^"]+)"/gi))
       addHost(m[1], "img-src", file);
+    // An iframe is governed by frame-src, which nothing above could discover:
+    // no shipped page embeds a cross-origin frame today, so a future one (or
+    // the Turnstile widget, which renders into a container as an iframe) would
+    // be blocked silently. frame-src is now a required directive below.
+    for (const m of raw.matchAll(/<iframe[^>]*\ssrc="(https:\/\/[^"]+)"/gi))
+      addHost(m[1], "frame-src", file);
   }
 }
 
@@ -264,6 +334,7 @@ const ALL_DIRECTIVES = [
   "connect-src",
   "font-src",
   "media-src",
+  "frame-src",
 ];
 const registry = new Map();
 for (const { host, directive, where } of found) {
@@ -294,6 +365,75 @@ else
   ok(
     `endpoint registry: ${allowedHosts.size} external host(s) allowlisted — ${[...allowedHosts].sort().join(", ")}`,
   );
+
+// ── 5b. untracked assets in shipped dirs ────────────────────────────────────
+// The registry above reads `git ls-files`, which is correct for the deploy
+// contract (an untracked file must not ship) and WRONG for catching a new
+// dependency before it is committed. The failure this closes is real and
+// happened in this very branch: assets/js/turnstile-client.js referenced
+// challenges.cloudflare.com, the policy did not allow it, and the gate was
+// green - because the file was not yet in the index, so the registry could not
+// see it. `npm run seo` then went red the moment the file was committed, which
+// is the right outcome arrived at by the wrong route.
+//
+// So scan the WORKING TREE under the shipped top-level dirs for external hosts
+// the policy does not allow, ignoring anything git already tracks (that is the
+// check above) and ignoring .gitignore. A brand-new asset that adds a host is
+// reported now, while it is still one `git add` away from shipping broken.
+const SHIPPED_DIRS = ALLOWLIST_DIRS;
+let untrackedHosts = [];
+try {
+  const status = execSync("git status --porcelain --untracked-files=all", {
+    encoding: "utf8",
+    maxBuffer: 8 * 1024 * 1024,
+  });
+  for (const line of status.split("\n")) {
+    if (!line.trim()) continue;
+    const rel = line
+      .slice(3)
+      .trim()
+      .replace(/^"(.*)"$/, "$1");
+    if (!rel || line.slice(0, 2).includes("D")) continue;
+    if (!/\.(?:html|js|mjs|css)$/i.test(rel)) continue;
+    if (!SHIPPED_DIRS.some((d) => rel === d || rel.startsWith(d + "/")))
+      continue;
+    if (!existsSync(rel)) continue;
+    const raw = readFileSync(rel, "utf8");
+    for (const m of raw.matchAll(/https:\/\/[^\s"'`)\\]+/g)) {
+      let host;
+      try {
+        host = new URL(deTemplate(m[0])).hostname.toLowerCase();
+      } catch {
+        continue;
+      }
+      if (METADATA_HOSTS.has(host)) continue;
+      const isTile = /\{[zyx]\}/i.test(m[0]);
+      const isAsset =
+        /\.(?:js|mjs|css|png|jpe?g|svg|webp|gif|ico|json|woff2?|wasm)(?:\?|#|$)/i.test(
+          m[0],
+        );
+      if (!isTile && !isAsset) continue;
+      const ext = (m[0].split(/[?#]/)[0].match(/\.([a-z0-9]+)$/i) || [])[1];
+      const directive = isTile
+        ? "img-src"
+        : (EXT_DIRECTIVE[String(ext || "").toLowerCase()] ?? "any");
+      const allowed =
+        directive === "any"
+          ? ALL_DIRECTIVES.some((d) => cspAllowsHost(csp[d] || [], host))
+          : cspAllowsHost(csp[directive] || [], host);
+      if (!allowed) untrackedHosts.push(`${host} (in untracked ${rel})`);
+    }
+  }
+} catch {
+  /* git unavailable: the tracked-file registry above is still authoritative */
+}
+untrackedHosts = [...new Set(untrackedHosts)];
+if (untrackedHosts.length)
+  for (const h of untrackedHosts)
+    fail(
+      `untracked shipped asset references a host CSP does not allow — git add it and the registry will check it: ${h}`,
+    );
+else ok("no untracked shipped asset introduces an external host");
 
 // ── 6. live verification (opt-in) ───────────────────────────────────────────
 if (LIVE) {

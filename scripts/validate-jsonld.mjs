@@ -5,6 +5,7 @@
 import { readFileSync, existsSync } from "node:fs";
 
 import { sameOriginPath } from "./lib/gates.mjs";
+import { isFreeUsdOffer } from "./lib/seo.mjs";
 
 const ORIGIN = "https://freeoffgridcalculator.com";
 const sitemap = readFileSync("sitemap.xml", "utf8");
@@ -16,11 +17,8 @@ if (!locs.length) {
 
 const pages = [];
 for (const url of locs) {
-  // Compare the parsed ORIGIN, not a string prefix: `startsWith` accepts
-  // `https://freeoffgridcalculator.com.evil.example/…` as our own page, which
-  // would make this validator read another site's HTML path as ours.
-  const path = sameOriginPath(url, ORIGIN);
-  if (path === null) {
+  const path = sameOriginPath(url, ORIGIN) || "";
+  if (!path) {
     console.error(`FAIL sitemap.xml: unexpected origin ${url}`);
     process.exit(1);
   }
@@ -30,8 +28,10 @@ for (const url of locs) {
     );
     process.exit(1);
   }
-  const file = path === "/" ? "index.html" : `${path.slice(1)}index.html`;
-  pages.push({ url, file });
+  pages.push({
+    url,
+    file: path === "/" ? "index.html" : `${path.slice(1)}index.html`,
+  });
 }
 
 let failures = 0;
@@ -102,6 +102,20 @@ for (const { url, file } of pages) {
               failures++;
             }
           }
+        }
+      }
+      if (file === "index.html") {
+        const app = all.find((n) => n["@type"] === "WebApplication");
+        if (!app) {
+          console.error(
+            `FAIL ${file} [block ${i + 1}]: missing WebApplication schema`,
+          );
+          failures++;
+        } else if (!isFreeUsdOffer(app.offers)) {
+          console.error(
+            `FAIL ${file} [block ${i + 1}]: WebApplication must advertise a free USD Offer (price 0)`,
+          );
+          failures++;
         }
       }
     } catch (e) {

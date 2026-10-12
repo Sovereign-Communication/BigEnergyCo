@@ -1,17 +1,30 @@
 {
-  "name": "bigenergyco-api",
-  "main": "index.js",
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat"],
-  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "USAGE_DB",
+      "database_name": "bigenergyco-usage-showcase",
+      "database_id": "b99aa7ea-bd4d-43ad-b312-37d0fc2608e8"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "SHARE_KV",
+      "id": "352d6d3f9d634f729a31a0b2a7dc0176"
+    }
+  ],
+  "main": "index.js",
+  "name": "bigenergyco-api-showcase",
   "ratelimits": [
     {
       "name": "RL_CHAT_PER_MIN",
-      "namespace_id": "9001",
-      "simple": {
-        "limit": 8,
-        "period": 60
-      }
+      "namespace_id": "19002",
+      "simple": { "limit": 8, "period": 60 }
     }
-  ]
+  ],
+  "vars": {
+    "EXTRA_ALLOWED_ORIGINS": "https://bigenergyco-showcase.pages.dev"
+  },
+  "workers_dev": true
 }

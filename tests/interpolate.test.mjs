@@ -14,7 +14,7 @@ import {
   pickString,
   PLACEHOLDER_NAME,
 } from "../assets/js/shared/interpolate.js";
-import { translate } from "../assets/js/shared/i18n.js";
+import { translate, localesReady } from "../assets/js/shared/i18n.js";
 import { LOCALES } from "../assets/js/shared/locales.js";
 
 test("interpolate: a formatted money value survives substitution intact", () => {
@@ -88,9 +88,13 @@ test("pickString: active dictionary, then English, then the raw key", () => {
   );
 });
 
-test("translate is the one implementation both readers share", () => {
+test("translate is the one implementation both readers share", async () => {
   // The runtime path (ui.js renders through this) and the markup path agree by
   // construction now, so this equality is a contract rather than a coincidence.
+  //
+  // Awaited: the dictionary is a deferred dynamic import now, so translate()
+  // before it lands echoes the key instead of rendering copy.
+  await localesReady;
   const rendered = translate("quickBillStarts", { bill: "$200", kwh: 5 });
   assert.equal(
     rendered,

@@ -12,6 +12,7 @@ import {
   sameOriginPath,
   sitemapGaps,
 } from "../scripts/lib/gates.mjs";
+import { withMutationLock } from "../scripts/lib/mutation-lock.mjs";
 import { normalizeBase } from "../scripts/lib/base-url.mjs";
 
 // ── normalizeBase (browser smoke) ───────────────────────────────────────────
@@ -141,7 +142,7 @@ test("ALLOWLIST PARSE: dotless platform files and nested paths survive the parse
   assert.deepEqual(deployedFilesFrom(""), []);
 });
 
-test("ALLOWLIST QUERY: --list reports exactly what a staged build contains", () => {
+test("ALLOWLIST QUERY: --list reports exactly what a staged build contains", async () => {
   // The gates validate what --list returns, so it must be the same SET a real
   // deploy ships. One staged build (into a throwaway dir) proves it.
   // --stage is resolved relative to the repo root by design (deploy.yml passes
@@ -203,4 +204,98 @@ test("SCRIPTS: the hardened helpers are the ones actually used", () => {
     /pathname\.replace\(/,
     "base-URL handling stays in normalizeBase",
   );
+});
+
+test("local smoke GATES the API health probe instead of skipping it", () => {
+  const closing = readFileSync("scripts/smoke/closing.js", "utf8");
+  assert.match(
+    closing,
+    /const workerProbe = ctx\.isLocalBase\s*\? ""\s*:/,
+    "localhost must not send a CORS-blocked API health request",
+  );
+  assert.match(closing, /\$\{workerProbe\}/);
+  // This used to be pinned as a REQUIRED SKIP ("the production-only check must
+  // be visibly skipped"). That skip is what let `web-smoke` sit red for weeks:
+  // the local server had no /api/chat route, the console-error gate failed on
+  // the resulting 404, and the health check itself reported nothing. The local
+  // server now mounts the real worker, so the probe is a real gate.
+  //
+  // The intent is preserved and tightened: a local run must not quietly report
+  // success for a check it did not perform.
+  assert.doesNotMatch(
+    closing,
+    /SMOKE SKIP\s+API health/,
+    "the local API health check must be a gate, not a skip — a skip is a check that cannot fail",
+  );
+  assert.match(
+    closing,
+    /gate\(\s*"API health reachable \(local: real worker, same origin\)"/,
+    "the local run must gate on the real worker answering on its own origin",
+  );
+  assert.match(
+    closing,
+    /"API health is served by the real worker, not a stub"/,
+    "and must prove the answer came from the worker, not a hand-written stand-in",
+  );
+  assert.match(
+    closing,
+    /"API health reachable",\s*\/(?:\^HTTP 200)\/\.test\(probes\.worker \|\| ""\)/,
+    "on production origins the health probe must still require HTTP 200",
+  );
+});
+
+test("the local static server mounts the real API worker", () => {
+  // The root cause of the permanently-red smoke: /api/* was hand-written
+  // stand-ins for two routes and nothing at all for /api/chat. Pinned here so
+  // the mount cannot be quietly removed, and so the unmounted path is required
+  // to fail loudly rather than 404 like a broken product.
+  const serve = readFileSync("scripts/serve-static.mjs", "utf8");
+  assert.match(
+    serve,
+    /mountWorker = true/,
+    "the worker must be mounted by default, like the deployed one-origin surface",
+  );
+  assert.match(
+    serve,
+    /handleWorkerRequest\(worker, req, res/,
+    "/api/* must be routed to the real worker, not to a local stand-in",
+  );
+  assert.match(
+    serve,
+    /501[\s\S]{0,200}API worker not mounted/,
+    "an unmounted worker must answer 501 naming why, not 404 like a missing endpoint",
+  );
+  assert.doesNotMatch(
+    serve,
+    /local static mirror \(no API worker here\)/,
+    "the hand-written /api/health stand-in must be gone",
+  );
+});
+
+test("the document-start worker stub covers the local stage only", () => {
+  // The stub fakes /api/health (jevSanity:true) and /api/jev (available:false)
+  // so the Jev gates are meaningful against a workerless local emulator. If it
+  // ever ran against a real surface it would fake the worker's own answers —
+  // "API health reachable" and the server-side activation state would read as
+  // passes for requests that never left the machine.
+  const orchestrator = readFileSync("scripts/browser-smoke.mjs", "utf8");
+  assert.match(
+    orchestrator,
+    /if \(isLocalBase\) \{\s*await ctx\.send\("Page\.addScriptToEvaluateOnNewDocument", \{\s*source: jevHealthAtDocumentStart,/,
+    "the fake worker layer must be installed only when the smoke targets a local stage",
+  );
+  assert.equal(
+    orchestrator.split("Page.addScriptToEvaluateOnNewDocument").length,
+    2,
+    "the stub must have exactly one registration site — the guarded one",
+  );
+
+  // The layer owns BOTH routes: answering only /api/health would enable the
+  // Jev path against a no-key server whose /api/jev then 503s on every
+  // out-of-gate render and fails the strict console-error gate.
+  const jev = readFileSync("scripts/smoke/jev.js", "utf8");
+  const layer = jev.slice(jev.indexOf("jevHealthAtDocumentStart"));
+  assert.match(layer, /\/api\/health/);
+  assert.match(layer, /\/api\/jev/);
+  assert.match(layer, /available: false/);
 });

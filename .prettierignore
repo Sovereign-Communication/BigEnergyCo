@@ -10,6 +10,13 @@ assets/js/sizing/profiles.js
 # run): same reason — hand-formatting is undone by the next run, and a report
 # nobody edits by hand is not where formatting drift is worth catching.
 .jev-*-report.json
+# The P0.4 quality-pass evidence (plan §8 P0.4). Same reason as the gate reports
+# above: these are rewritten by their gate on every run, and formatting drift in
+# a file nobody hand-edits is not where catching drift is worth the churn.
+.quality-evidence/*.json
+# Staged builds produced by `npm run deploy:check -- --stage DIR` and audited by
+# the local quality gates. Generated, never hand-edited.
+_pages_*/
 # Third-party bundles.
 *.min.js
 # Local tooling state (untracked): never part of the shipped site.

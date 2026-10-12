@@ -184,8 +184,24 @@ export async function runShareFlow(ctx, actions) {
             lon: document.getElementById("lonInput")?.value || "",
             kwh: document.getElementById("dailyKwhInput")?.value || "",
             hash: location.hash,
+            status: document.getElementById("sizingStatus")?.textContent || "",
           }))()`)
         : null;
+      // Matched by MEANING, not by the old literal wording. This gate used to
+      // assert /invalid share link/i, so rewriting that message to give the
+      // visitor a next step — which is what the experience facet asks for —
+      // failed three smoke gates. A gate that pins the exact sentence cannot
+      // survive the copy being improved; it fails on the fix and passes on the
+      // defect. What it actually means to check is that the refusal is NAMED at
+      // all, so the patterns accept any phrasing that says the link could not be
+      // read and never assert one particular string.
+      const shareRefusal =
+        /invalid share link|share link could not be read|share link.*(not|could not|couldn't|cannot).*read|link (is|was) (invalid|broken|truncated)/i;
+      gate(
+        `malformed share ${label} is explained before the user tries to run it`,
+        shareRefusal.test(before?.status || ""),
+        before?.status || "no status",
+      );
       await evaluate(`(() => {
         window.__invalidShareOriginalPost = Worker.prototype.postMessage;
         window.__invalidSharePosts = 0;
@@ -222,7 +238,7 @@ export async function runShareFlow(ctx, actions) {
           after.hash === malformedHash &&
           after.hidden === true &&
           after.posts === 0 &&
-          /pick a city|choose a city|latitude must|daily energy use/i.test(
+          /share link could not be read|invalid share link|pick a city|choose a city|latitude must|daily energy use/i.test(
             after.status,
           ),
         JSON.stringify({ label, before, after }),

@@ -225,7 +225,60 @@ function chatText(key, fallback, vars) {
   return fallback;
 }
 
-function renderBotReply(replyText) {
+/**
+ * Compose a degraded reply in the visitor's language from the worker's i18n
+ * keys, or return null to say "use the English text instead".
+ *
+ * Returning null rather than throwing is deliberate: a missing key, an
+ * unknown language, or a malformed payload must degrade to English, never to a
+ * blank message and never to a half-translated sentence with an English clause
+ * in the middle. Every early return below is a documented fallback, and
+ * tests/worker-i18n.test.mjs asserts each one.
+ */
+function localizedDegradedReply(data) {
+  if (!data || !data.i18n) return null;
+  if (typeof window.becoT !== "function") return null; // no dictionary loaded
+
+  var keys = data.i18n;
+  // The worker cannot see the dictionary, so the key set is data from the
+  // network. Anything unexpected here falls back to English rather than
+  // rendering whatever a malformed payload asks for.
+  if (typeof keys.line !== "string" || typeof keys.why !== "string")
+    return null;
+
+  function t(key, vars) {
+    if (typeof key !== "string") return null;
+    var value = window.becoT(key, vars);
+    // becoT echoes the key back when a locale is missing it, which is the
+    // signal to use the worker's English text instead of showing a key.
+    if (!value || value === key) return null;
+    return value;
+  }
+
+  var why = t(keys.why);
+  if (!why) return null;
+
+  var line = t(keys.line, { why: why });
+  if (!line) return null;
+
+  // Blank line between every paragraph, matching the English original. A
+  // degraded message is a wall of text by nature; without the spacing it reads
+  // as one run-on block, which is the opposite of the calm it is trying to be.
+  var parts = [line, ""];
+  var reassure = t(keys.reassure);
+  if (!reassure) return null;
+  parts.push(reassure, "");
+  var body = t(keys.body);
+  if (!body) return null;
+  parts.push(body, "");
+  var retry = t(keys.retry);
+  if (!retry) return null;
+  parts.push(retry);
+
+  return parts.join("\n");
+}
+
+function renderBotReply(replyText, degraded, data) {
   var chatWindow = document.getElementById("chatWindow");
 
   if (!chatWindow) return;
@@ -234,6 +287,12 @@ function renderBotReply(replyText) {
 
   botDiv.className = "chat-msg bot";
 
+  // A degraded reply is a real answer, not an error: it carries the same
+  // disclaimer and the same history weight, and it is LABELLED so the visitor
+  // knows the live advisor did not answer. Hiding that label would make an
+  // outage indistinguishable from the product working (R-CF-10).
+  if (degraded) botDiv.setAttribute("data-degraded", "true");
+
   var body = document.createElement("div");
 
   body.style.whiteSpace = "pre-wrap";
@@ -241,6 +300,25 @@ function renderBotReply(replyText) {
   body.textContent = replyText;
 
   botDiv.appendChild(body);
+  if (degraded) {
+    var label = document.createElement("div");
+
+    label.style.cssText =
+      "margin-top:0.4rem;font-size:0.7rem;letter-spacing:0.06em;" +
+      "text-transform:uppercase;color:var(--text-muted);" +
+      "border:1px solid var(--border-card);border-radius:4px;" +
+      "padding:0.15rem 0.4rem;display:inline-block;";
+
+    // The label key comes from the payload when present, so the worker stays the
+    // single owner of the key set; chatText's second argument is the explicit
+    // English fallback for a client with no dictionary.
+    label.textContent = chatText(
+      (data && data.i18n && data.i18n.label) || "advisorDegradedLabel",
+      "Offline \u00b7 not the live AI",
+    );
+
+    botDiv.appendChild(label);
+  }
 
   // The disclaimer travels with every answer, not buried in a modal nobody opens.
 
@@ -313,18 +391,78 @@ function sendChatMsg() {
     };
   });
 
+  // Build the body WITHOUT the token first, so the POST can go out the moment
+  // it is ready when no challenge is configured. `sendBody` is replaced below
+  // by the token-bearing one only if a token is actually produced.
   var payload = JSON.stringify({
     message: userMsg,
     history: cleanHistory,
     language: window.becoLang || "en",
   });
 
+  // ── Turnstile (B1 / R-CF-02) ──────────────────────────────────────────
+  // The worker fails CLOSED on /api/chat once TURNSTILE_SECRET_KEY exists, so
+  // the token is not optional decoration: without it the advisor is a 403 with
+  // no client-side recovery. askTurnstileToken() resolves to null whenever the
+  // widget is unconfigured, unavailable, expired or errored - every one of
+  // those is NON-FATAL, because an unprovisioned server accepts a tokenless
+  // call and a provisioned one answers 403 honestly rather than hanging.
+  function askTurnstileToken() {
+    if (typeof window.requestTurnstileToken !== "function") {
+      return Promise.resolve(null);
+    }
+    try {
+      return Promise.resolve(
+        window.requestTurnstileToken({
+          doc: document,
+          win: window,
+          container: turnstileContainer(chatWindow),
+        }),
+      ).catch(function () {
+        return null;
+      });
+    } catch (e) {
+      return Promise.resolve(null);
+    }
+  }
+
+  // A Turnstile token is single-use and short-lived, so it is requested PER
+  // ATTEMPT, never cached across the busy-retry below: a replayed token is
+  // exactly what the server is entitled to reject with "invalid_token".
+  function bodyWithToken() {
+    return askTurnstileToken().then(function (token) {
+      if (!token) return payload;
+      var body;
+      try {
+        body = JSON.parse(payload);
+      } catch (e) {
+        return payload;
+      }
+      body.turnstileToken = token;
+      return JSON.stringify(body);
+    });
+  }
+
+  // Where the widget renders. One reusable host per chat window, cleared before
+  // each render so a spent widget never leaves an iframe behind.
+  function turnstileContainer(win) {
+    if (!win) return null;
+    var existing = document.getElementById("turnstileHost");
+    if (existing) return existing;
+    var host = document.createElement("div");
+    host.id = "turnstileHost";
+    host.style.cssText =
+      "margin:0.5rem 0;min-height:0;display:flex;justify-content:center;";
+    win.appendChild(host);
+    return host;
+  }
+
   function setLoadingText(t) {
     var el = document.getElementById("loadingMsg");
     if (el) el.innerText = t;
   }
 
-  function postTo(url) {
+  function postTo(url, body) {
     // Bound the advisor request: a hung POST must surface the "unreachable"
     // path instead of leaving "Thinking…" on screen forever.
     var timeoutSignal =
@@ -336,7 +474,7 @@ function sendChatMsg() {
 
       headers: { "Content-Type": "application/json" },
 
-      body: payload,
+      body: body,
     };
     if (timeoutSignal) opts.signal = timeoutSignal;
     return fetch(url, opts).then(function (res) {
@@ -362,29 +500,33 @@ function sendChatMsg() {
         ? ""
         : CF_API_URL || "";
 
-    return postTo(apiBase2 + "/api/chat").catch(function (err) {
-      // Busy (free AI quota)  -  wait out the provider and retry once automatically.
+    return bodyWithToken()
+      .then(function (body) {
+        return postTo(apiBase2 + "/api/chat", body);
+      })
+      .catch(function (err) {
+        // Busy (free AI quota)  -  wait out the provider and retry once automatically.
 
-      if ((err.status === 503 || err.status === 429) && retriesLeft > 0) {
-        var waitSecs = Math.min(Math.max(err.retryAfter || 4, 3), 15);
+        if ((err.status === 503 || err.status === 429) && retriesLeft > 0) {
+          var waitSecs = Math.min(Math.max(err.retryAfter || 4, 3), 15);
 
-        setLoadingText(
-          chatText(
-            "advisorBusyRetry",
-            " The free AI engine is busy  -  retrying in " + waitSecs + "s…",
-            { secs: waitSecs },
-          ),
-        );
+          setLoadingText(
+            chatText(
+              "advisorBusyRetry",
+              " The free AI engine is busy  -  retrying in " + waitSecs + "s…",
+              { secs: waitSecs },
+            ),
+          );
 
-        return new Promise(function (resolve) {
-          setTimeout(resolve, waitSecs * 1000);
-        }).then(function () {
-          return attemptSend(retriesLeft - 1);
-        });
-      }
+          return new Promise(function (resolve) {
+            setTimeout(resolve, waitSecs * 1000);
+          }).then(function () {
+            return attemptSend(retriesLeft - 1);
+          });
+        }
 
-      throw err;
-    });
+        throw err;
+      });
   }
 
   attemptSend(2)
@@ -395,7 +537,17 @@ function sendChatMsg() {
         loading.parentNode.removeChild(loading);
 
       if (data && data.reply) {
-        renderBotReply(data.reply);
+        // A degraded reply arrives with BOTH the worker's canonical English
+        // text and a set of i18n keys. A browser resolves the keys through
+        // assets/js/shared/locales.js so the failure message is in the
+        // visitor's own language; a client with no dictionary (or a language
+        // the dictionary lacks) falls back to the English text the worker
+        // already sent. The fallback is explicit and asserted, not accidental.
+        renderBotReply(
+          localizedDegradedReply(data) || data.reply,
+          !!(data && data.degraded),
+          data,
+        );
       } else {
         renderBotReply(
           chatText("advisorNoReply", " No reply received. Please try again."),

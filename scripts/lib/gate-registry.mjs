@@ -18,6 +18,25 @@ export const MANUAL_VALIDATORS = new Map([
       "is by hand, before a promote, where it falls back to a deterministic " +
       "heuristic with no judgment",
   ],
+  [
+    "scripts/check-cross-browser.mjs",
+    "Q-08, and MANUAL BY DECISION, not by omission. It drives Firefox and WebKit, " +
+      "which exist only as Playwright downloads, so the mission decision of " +
+      "2026-09-27 moved the browser gates OFF GitHub CI and onto the agent " +
+      "machine: no browsers in CI, no CI wall-clock bloat. It runs locally " +
+      "against a staged build and its report is committed to .quality-evidence/, " +
+      "where scripts/validate-quality-evidence.mjs — which IS wired into CI as " +
+      "the `quality-evidence` job — asserts the report is present, in schema and " +
+      "in its bar. So the gate is not orphaned by leaving CI; its evidence is " +
+      "enforced on every PR by the half that needs no browser",
+  ],
+  [
+    "scripts/check-visual.mjs",
+    "Q-09, and MANUAL for the same reason as check-cross-browser.mjs: the capture " +
+      "needs a browser. Its baseline PNGs are a local artifact and its report is " +
+      "committed, so the no-browser CI validator asserts the report's schema and " +
+      "its unapproved-diffs count",
+  ],
 ]);
 
 export const RETIRED = new Map([

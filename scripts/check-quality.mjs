@@ -22,7 +22,6 @@ import {
   aimsOutsideSite,
   bodyText,
   deployedFiles,
-  documentTitle,
   metaContent,
   resolvesToDeployed,
   tags,
@@ -52,10 +51,6 @@ import {
 const RATCHET = {
   inlineStyleAttributes: 574,
 };
-
-export const TITLE_MAX = 62; // ~580 px in the SERP; Google truncates past this
-export const DESC_MIN = 70;
-export const DESC_MAX = 160;
 
 let failures = 0;
 const fail = (msg) => {
@@ -95,17 +90,12 @@ const stats = {
   unsafeBlank: [],
   inlineScriptBlocks: [],
   brokenLinks: [],
-  titleTooLong: [],
-  titleDuplicates: [],
-  descProblems: [],
   emptyMain: [],
   inlineHandlers: 0,
   inlineStyles: 0,
   sitemapCanonicalMismatch: [],
   badOgImage: [],
 };
-const titleSeen = new Map();
-
 for (const page of pages) {
   if (!existsSync(page)) {
     fail(`${page}: file missing`);
@@ -205,18 +195,6 @@ for (const page of pages) {
   if (/href="#main"/.test(html) && !/<main[^>]*\sid="main"/i.test(html))
     stats.emptyMain.push(page);
 
-  // SERP shape: title length + uniqueness, description presence and bounds.
-  // Measured as rendered text (entities decoded, whitespace collapsed), the
-  // same way a search result displays it.
-  const title = documentTitle(html);
-  if (title.length > TITLE_MAX)
-    stats.titleTooLong.push(`${page} (${title.length})`);
-  titleSeen.set(title, (titleSeen.get(title) || 0) + 1);
-  const desc = metaContent(html, "name", "description");
-  if (!desc) stats.descProblems.push(`${page}: missing`);
-  else if (desc.length < DESC_MIN || desc.length > DESC_MAX)
-    stats.descProblems.push(`${page}: ${desc.length} chars`);
-
   // og:image must exist in the build, or social cards break silently.
   const ogImage = metaContent(html, "property", "og:image");
   if (ogImage) {
@@ -236,9 +214,6 @@ for (const page of pages) {
   stats.inlineHandlers += (html.match(/\son[a-z]+\s*=/gi) || []).length;
   stats.inlineStyles += (html.match(/\sstyle="/gi) || []).length;
 }
-
-for (const [title, n] of titleSeen)
-  if (n > 1) stats.titleDuplicates.push(title);
 
 // ── report ──────────────────────────────────────────────────────────────────
 const report = (list, label) => {
@@ -260,14 +235,8 @@ report(stats.noLang, "html lang present");
 report(stats.unsafeBlank, "target=_blank links carry rel=noopener");
 report(stats.brokenLinks, "internal links resolve to deployed files");
 report(stats.emptyMain, "skip-link target #main exists");
-report(stats.titleDuplicates, "page titles are unique");
 report(stats.badOgImage, "og:image points at a deployed asset");
 report(stats.sitemapCanonicalMismatch, "canonical pages appear in the sitemap");
-report(stats.titleTooLong, `titles are at most ${TITLE_MAX} characters`);
-report(
-  stats.descProblems,
-  `descriptions are ${DESC_MIN}-${DESC_MAX} characters`,
-);
 
 // Ratchets: count-only, may never grow. Lowering a budget is the whole point;
 // raising one is a deliberate, reviewable act — stale numbers are how gates

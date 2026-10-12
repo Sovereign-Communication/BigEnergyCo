@@ -192,3 +192,40 @@ test("gridtie battery-only surplus custom carries needs-pv-surplus", async () =>
   assert.equal(payload.customCut.best, null);
   assert.equal(payload.customCut.unreachableReason, "needs-pv-surplus");
 });
+
+// ── the pair a named use case owns vs. the pair it does not ────────────────
+// The browser gate proves the infeasible banner end to end by delivering an
+// off-grid + solar-only message to the page's own worker. That only works
+// because of the rule pinned here: a message that names NO use case keeps the
+// legacy pair it carries, while a message that names one has its pair derived
+// from that case. If the first half ever changes, the banner gate would go
+// green against a pair the engine silently re-derived — and this test is the
+// tripwire for exactly that.
+test("a legacy pair with no use case is preserved and judged on its own terms", async () => {
+  const payload = await runSizing(
+    { ...baseMsg, mode: "offgrid", hardwareConfig: "solar" },
+    { fetchWeather: weather },
+  );
+  assert.equal(payload.mode, "offgrid");
+  assert.equal(payload.hardwareConfig, "solar");
+  assert.equal(payload.unreachableReason, "needs-battery");
+});
+
+// The mirror of that rule, and the reason the guard above is defence-in-depth
+// rather than a visitor path: every pair a use case derives to is servable, so
+// naming a case can never reach the structural guard. Asserted rather than
+// assumed, because the banner gate's whole premise rests on it.
+test("every use case derives to a feasible pair, so none of them can be infeasible", async () => {
+  for (const id of ["billcut", "offgrid", "tou", "backup", "portable"]) {
+    const payload = await runSizing(
+      { ...baseMsg, useCase: id, essentialKwh: 1.7 },
+      { fetchWeather: weather },
+    );
+    assert.equal(payload.useCase, id);
+    assert.equal(
+      payload.unreachableReason,
+      null,
+      `${id} derives to an infeasible pair (${payload.mode}/${payload.hardwareConfig})`,
+    );
+  }
+});
