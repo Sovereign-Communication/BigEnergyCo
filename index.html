@@ -277,6 +277,17 @@
       href="https://nominatim.openstreetmap.org"
       crossorigin
     />
+    <style>
+      .link-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        text-decoration: underline;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+      }
+    </style>
   </head>
 
   <body>
@@ -457,6 +468,11 @@
               tabindex="0"
             >
               Start a Free Estimate
+            </div>
+            <div class="example-wrap">
+              <button type="button" id="btnSeeExample" class="link-btn">
+                See an example &rarr;
+              </button>
             </div>
           </div>
 
@@ -672,7 +688,7 @@
                     margin-top: 0.65rem;
                   "
                 >
-                  <input type="checkbox" id="simpleModeToggle" />
+                  <input type="checkbox" id="simpleModeToggle" checked />
                   <label
                     for="simpleModeToggle"
                     style="margin: 0; font-weight: 700; cursor: pointer"
@@ -1239,7 +1255,7 @@
                     </p>
                   </details>
 
-                  <div style="margin-top: 0.6rem">
+                  <div class="example-wrap">
                     <label for="exportRate"
                       >Feed-in credit for surplus you can sell
                       <span style="font-weight: 400; color: var(--text-muted)"
@@ -1257,7 +1273,7 @@
                     />
                   </div>
 
-                  <div style="margin-top: 0.6rem">
+                  <div class="example-wrap">
                     <label for="fixedChargeVal"
                       >Fixed monthly charge on your bill
                       <span style="font-weight: 400; color: var(--text-muted)"
@@ -2986,6 +3002,50 @@
                 fires, and DC arcs don't switch off. The guides here insist on
                 proper fusing, BMS use, and code compliance - and on having a
                 licensed electrician check anything before you energize it.
+              </p>
+            </div>
+
+            <div class="legal-card">
+              <h3>Will solar keep my power on during a hurricane?</h3>
+
+              <p>
+                Grid-tied solar alone shuts off during outages (anti-islanding).
+                You need battery storage plus islanding hardware to ride
+                through. See
+                <a href="./blog/hawaii-2026-hurricane-season-backup-power/"
+                  >what Hawaii's 2026 hurricane season taught us</a
+                >
+                about sizing backup for real storms.
+              </p>
+            </div>
+
+            <div class="legal-card">
+              <h3>How does net metering affect payback?</h3>
+
+              <p>
+                Where net metering pays full retail for exports, payback is
+                fastest - often under 5 years. Where exports earn little or
+                nothing, a battery that stores daytime surplus for evening use
+                matters more. The
+                <a href="./blog/time-of-use-tariffs-battery/"
+                  >time-of-use guide</a
+                >
+                walks through the math.
+              </p>
+            </div>
+
+            <div class="legal-card">
+              <h3>DIY or prebuilt battery?</h3>
+
+              <p>
+                DIY LiFePO4 runs $80–125 per usable kWh; budget prebuilt
+                $110–165. DIY saves money but demands electrical competence and
+                time. The
+                <a
+                  href="./blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/"
+                  >DIY vs prebuilt guide</a
+                >
+                breaks down every component with 2026 prices.
               </p>
             </div>
           </div>

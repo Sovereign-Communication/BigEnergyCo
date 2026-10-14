@@ -566,6 +566,30 @@
         outline-offset: 2px;
       }
     </style>
+    <style>
+      .fallback-notice {
+        padding: 1.5rem;
+        text-align: center;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+      }
+      .fallback-notice-info {
+        background: rgba(0, 230, 153, 0.06);
+        border: 1px solid rgba(0, 230, 153, 0.25);
+      }
+      .fallback-notice-warn {
+        background: rgba(250, 204, 21, 0.08);
+        border: 1px solid rgba(250, 204, 21, 0.3);
+      }
+      .fallback-title {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+      .fallback-text {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+    </style>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -606,6 +630,27 @@
         </p>
 
         <div id="map-wrapper">
+          <noscript>
+            <div class="fallback-notice fallback-notice-info">
+              <p class="fallback-title">
+                🗺️ The interactive heatmap needs JavaScript
+              </p>
+              <p class="fallback-text">
+                The 40,000-city payback data is below in the rankings tables.
+                For detailed solar profiles by city, see the
+                <a href="../solar-calculator/">66 City Benchmarks</a>.
+              </p>
+            </div>
+          </noscript>
+          <div id="webgl-fallback" style="display: none">
+            <div class="fallback-notice fallback-notice-warn">
+              <p class="fallback-title">⚠️ Interactive map unavailable</p>
+              <p class="fallback-text">
+                Your device doesn't support WebGL, which the interactive map
+                needs. The payback rankings below contain the same data as text.
+              </p>
+            </div>
+          </div>
           <div id="loading" role="status">
             <div class="spinner" aria-hidden="true"></div>
             Loading 40,000 cities…

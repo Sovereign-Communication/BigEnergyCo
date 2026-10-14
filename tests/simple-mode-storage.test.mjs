@@ -7,50 +7,53 @@ import {
   isSimpleMode,
 } from "../assets/js/shared/simple-mode.js";
 
-// The v1 key carried "simple" written by default-on builds. The rotation
-// contract: the new key starts unset, unset reads OFF, and nothing ever
-// reads the old key again — so every legacy profile deterministically
-// boots in Regular mode.
-test("storage contract: rotation makes every legacy profile boot OFF", () => {
-  const legacy = new Map([
-    ["beco-simple-mode", "simple"], // what default-on builds wrote
-  ]);
+// The v3 contract: first-time visitors (no stored preference) default to
+// simple mode ON. Only an explicit "technical" opts out. This reverses the
+// v2 "off by default" posture per the 2026-10-13 UX audit (P0-1).
+test("storage contract: no stored preference boots ON (simple)", () => {
   const store = {
-    getItem: (k) => (legacy.has(k) ? legacy.get(k) : null),
-    setItem: (k, v) => legacy.set(k, v),
+    _map: new Map(),
+    getItem(k) {
+      return this._map.has(k) ? this._map.get(k) : null;
+    },
+    setItem(k, v) {
+      this._map.set(k, v);
+    },
   };
 
-  // The rotated key is unset on every existing profile -> OFF, regardless
-  // of what the old key holds.
+  // No stored value -> simple mode ON.
+  initSimpleMode(store);
+  assert.equal(isSimpleMode(), true);
+
+  // An explicit "technical" choice persists and is respected.
+  setSimpleMode(false, store);
+  assert.equal(store._map.get("beco-simple-mode-v2"), "technical");
+  assert.equal(isSimpleMode(), false);
+
+  // Re-init from stored "technical" stays technical.
   initSimpleMode(store);
   assert.equal(isSimpleMode(), false);
 
-  // An explicit toggle still persists and round-trips through the setter.
+  // Explicit "simple" round-trips too.
   setSimpleMode(true, store);
-  assert.equal(legacy.get("beco-simple-mode-v2"), "simple");
   assert.equal(isSimpleMode(), true);
-  setSimpleMode(false, store);
-  assert.equal(isSimpleMode(), false);
-
-  // The old key is never read or rewritten by the new code.
-  assert.equal(legacy.get("beco-simple-mode"), "simple");
 });
 
-test("storage contract: unset, corrupt and throwing storage all read OFF", () => {
-  assert.equal(readSimpleMode({ getItem: () => null }), false);
-  assert.equal(readSimpleMode({ getItem: () => "garbage" }), false);
+test("storage contract: unset, corrupt and throwing storage all read ON (simple)", () => {
+  assert.equal(readSimpleMode({ getItem: () => null }), true);
+  assert.equal(readSimpleMode({ getItem: () => "garbage" }), true);
   assert.equal(
     readSimpleMode({
       getItem: () => {
         throw new Error("blocked");
       },
     }),
-    false,
+    true,
   );
   // Default storage absent (SSR/worker contexts) must not throw either.
-  assert.equal(readSimpleMode(undefined), false);
+  assert.equal(readSimpleMode(undefined), true);
 
-  // The state owner degrades the same way: init from hostile storage -> OFF.
+  // The state owner degrades the same way: init from hostile storage -> ON.
   initSimpleMode(undefined);
-  assert.equal(isSimpleMode(), false);
+  assert.equal(isSimpleMode(), true);
 });

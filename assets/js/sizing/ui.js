@@ -7310,6 +7310,15 @@ function renderResults(p) {
     if (focusWrap) focusWrap.style.display = "none";
     if (resultLevel === "best" && bpWrap) bpWrap.style.display = "";
   }
+
+  // P0-2: first successful estimate -> install prompt may now appear.
+  if (window.__becoNotifyEstimateComplete) {
+    try {
+      window.__becoNotifyEstimateComplete();
+    } catch {
+      // Non-fatal: install prompt deferral must never break results.
+    }
+  }
 }
 
 function sameSystem(a, b) {
@@ -8124,6 +8133,44 @@ function setupPwaControls() {
 
   const badge = $("offlineBadge");
 
+  // P0-2 (2026-10-13 UX audit): install prompts are deferred until AFTER the
+  // visitor's first successful estimate. Showing them before any value is
+  // delivered hurts the "useful estimate in 60 seconds" goal (Jev adv=0.11).
+  const INSTALL_DISMISSED_KEY = "beco-install-dismissed-v1";
+  let hasCompletedEstimate = false;
+
+  const isDismissed = () => {
+    try {
+      return localStorage.getItem(INSTALL_DISMISSED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  };
+
+  const maybeShowInstall = () => {
+    if (!deferredInstallPrompt || !hasCompletedEstimate || isDismissed())
+      return;
+    if (btnH) btnH.style.display = "inline-flex";
+    if (btnM) btnM.style.display = "flex";
+  };
+
+  // Called by renderResults after the first successful sizing.
+  window.__becoNotifyEstimateComplete = () => {
+    hasCompletedEstimate = true;
+    maybeShowInstall();
+  };
+
+  const dismissInstall = () => {
+    try {
+      localStorage.setItem(INSTALL_DISMISSED_KEY, "1");
+    } catch {
+      // Private browsing: dismissal just lasts the session.
+    }
+    if (btnH) btnH.style.display = "none";
+    if (btnM) btnM.style.display = "none";
+    deferredInstallPrompt = null;
+  };
+
   const triggerInstall = async () => {
     if (!deferredInstallPrompt) return;
     deferredInstallPrompt.prompt();
@@ -8142,8 +8189,8 @@ function setupPwaControls() {
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
-    if (btnH) btnH.style.display = "inline-flex";
-    if (btnM) btnM.style.display = "flex";
+    // Deferred: only show after first estimate (P0-2).
+    maybeShowInstall();
   });
 
   window.addEventListener("appinstalled", () => {
@@ -8474,6 +8521,25 @@ export async function initSizingUI() {
 
     setupPwaControls();
     setupChartInteractions();
+
+    // P0-3 (2026-10-13 UX audit): "See an example" pre-fills Honolulu $250/mo.
+    const btnExample = $("btnSeeExample");
+    if (btnExample) {
+      btnExample.addEventListener("click", () => {
+        const city = $("citySearch");
+        if (city) {
+          city.value = "Honolulu, HI";
+          city.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        const bill = $("billSlider");
+        if (bill) {
+          bill.value = "250";
+          bill.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        const sizing = $("sizing");
+        if (sizing) sizing.scrollIntoView({ behavior: "smooth" });
+      });
+    }
 
     // Wire up preset buttons
     document.querySelectorAll(".preset-btn").forEach((btn) => {
