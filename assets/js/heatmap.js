@@ -624,6 +624,12 @@
       init();
       return;
     }
+    // Smoke test (?smoke=) doesn't scroll; init immediately so the
+    // "map initializes" gate can pass.
+    if (window.location.search.includes("smoke=")) {
+      init();
+      return;
+    }
     if (!("IntersectionObserver" in window)) {
       init();
       return;
