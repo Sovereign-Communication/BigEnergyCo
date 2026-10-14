@@ -22,6 +22,7 @@ import {
   aimsOutsideSite,
   bodyText,
   deployedFiles,
+  inlineStyleDeclarations,
   metaContent,
   resolvesToDeployed,
   tags,
@@ -42,14 +43,23 @@ import {
  * both counts are now zero-tolerance invariants below — a new inline script or
  * on* attribute re-opens the exact hole 'unsafe-inline' filled.
  *
- *   inlineStyleAttributes     633 — tracked so the count cannot grow while the
- *                              utility-class migration is deferred. (Was 574;
- *                              unifying blog headers with the main-page header
- *                              copied its inline styles to 11 blog pages, and
- *                              the ratchet follows the measurement.)
+ *   inlineStyleDeclarations   180 — DISTINCT declarations, tracked so the count
+ *                              cannot grow while the utility-class migration is
+ *                              deferred. This replaces a count of OCCURRENCES
+ *                              (574 -> 633 in b1dc77a): that +59 was the blog
+ *                              header's own declarations copied onto 11 more
+ *                              pages, and it added ZERO new declarations — 180
+ *                              before, 180 after. Occurrences make the budget a
+ *                              function of page count, so the next launch would
+ *                              have raised it again; the debt is the set of
+ *                              values that needs a token, so that is what is
+ *                              frozen, and paying one down still lowers it.
+ *                              Whitespace in a declaration is normalised (see
+ *                              lib/gates.mjs): prettier wraps long attributes,
+ *                              and a re-wrap is not new debt.
  */
 const RATCHET = {
-  inlineStyleAttributes: 633,
+  inlineStyleDeclarations: 180,
 };
 
 let failures = 0;
@@ -92,7 +102,8 @@ const stats = {
   brokenLinks: [],
   emptyMain: [],
   inlineHandlers: 0,
-  inlineStyles: 0,
+  inlineStyleOccurrences: 0,
+  inlineStyleDeclarations: new Set(),
   sitemapCanonicalMismatch: [],
   badOgImage: [],
 };
@@ -212,7 +223,12 @@ for (const page of pages) {
   }
 
   stats.inlineHandlers += (html.match(/\son[a-z]+\s*=/gi) || []).length;
-  stats.inlineStyles += (html.match(/\sstyle="/gi) || []).length;
+  // The declarations themselves, not how often they appear: the same value
+  // copied onto another page is not new debt, and charging it as though it were
+  // is what forced the last raise.
+  const styles = inlineStyleDeclarations(html);
+  stats.inlineStyleOccurrences += styles.occurrences;
+  for (const value of styles.distinct) stats.inlineStyleDeclarations.add(value);
 }
 
 // ── report ──────────────────────────────────────────────────────────────────
@@ -261,11 +277,18 @@ if (stats.inlineHandlers)
     `inline event handler attributes: ${stats.inlineHandlers} — delegate to addEventListener; an on* attribute only runs because CSP allows 'unsafe-inline'`,
   );
 else ok("no inline event handler attribute (CSP script-src stays closed)");
+console.log(
+  `     inline style attributes: ${stats.inlineStyleOccurrences} occurrence(s), ` +
+    `${stats.inlineStyleDeclarations.size} distinct declaration(s) — the freeze counts the ` +
+    "distinct values that need a token, not the copies",
+);
 ratchet(
-  stats.inlineStyles,
-  RATCHET.inlineStyleAttributes,
-  "inline style attributes",
-  "use an existing utility class instead of a style attribute",
+  stats.inlineStyleDeclarations.size,
+  RATCHET.inlineStyleDeclarations,
+  "distinct inline style declarations",
+  "add the value to the token file and use a utility class instead of a style attribute",
+  `${stats.inlineStyleOccurrences} style="" attribute(s) ship in total; copying an ` +
+    "already-counted declaration adds no value to tokenise, so it is not charged here",
 );
 
 console.log(

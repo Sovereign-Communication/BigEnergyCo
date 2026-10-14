@@ -27,7 +27,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { LOCALES } from "../assets/js/shared/locales.js";
-import { claimsTranslation, unkeyedProse } from "../scripts/lib/gates.mjs";
+import {
+  claimsTranslation,
+  deployedFiles,
+  unkeyedProse,
+  unkeyedProseByClass,
+  unkeyedProseDebt,
+} from "../scripts/lib/gates.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const LOCALES_PATH = join(ROOT, "assets", "js", "shared", "locales.js");
@@ -398,6 +404,112 @@ test("PROSE: only pages that claim translation are checked", () => {
   assert.equal(
     claimsTranslation("<p>Plain English prose, with no hook at all.</p>"),
     false,
+  );
+});
+
+test("PROSE: the article-body class is opt-in, so an <article> is not automatically content", () => {
+  // The class boundary is an HTML element, but whether it APPLIES is the page
+  // lane's decision. The blog's <article> is the page body; solar-calculator's
+  // is its own <h1> and reassurance callout, which is UI.
+  const BODY =
+    "Peak vs off-peak arbitrage math with a worked two-kilowatt-hour example.";
+  const FOOTER =
+    "Provided free, as-is, with no warranty. Educational estimates only.";
+  const page =
+    `<main><article><p>${BODY}</p></article></main>` +
+    `<footer><p>${FOOTER}</p></footer>`;
+
+  const blog = unkeyedProseByClass(page, { articleBody: true });
+  assert.deepEqual(
+    blog.content.map((b) => b.text),
+    [BODY],
+    "the blog lane's article body is content",
+  );
+  assert.deepEqual(
+    blog.ui.map((b) => b.text),
+    [FOOTER],
+    "the blog lane's footer is still UI",
+  );
+
+  const other = unkeyedProseByClass(page, { articleBody: false });
+  assert.deepEqual(other.content, []);
+  assert.equal(
+    other.ui.length,
+    2,
+    "on any other page both blocks are debt — an <article> is not a synonym for content",
+  );
+  assert.equal(
+    unkeyedProseByClass(page).content.length,
+    0,
+    "the class must be opted into, never inferred",
+  );
+});
+
+test("PROSE: the debt counts distinct strings, so copying a leak adds none", () => {
+  const FOOTER =
+    "Provided free, as-is, with no warranty. Educational estimates only.";
+  const body = (text) => `<article><p>${text}</p></article>`;
+  const pages = [
+    { page: "index.html", html: `<footer><p>${FOOTER}</p></footer>` },
+    {
+      page: "blog/index.html",
+      html: `<p>${FOOTER}</p>${body("A body that ships English-only by decision.")}`,
+      articleBody: true,
+    },
+    {
+      page: "blog/one/index.html",
+      html: `<p>${FOOTER}</p>${body("Another article body that also ships English-only by decision.")}`,
+      articleBody: true,
+    },
+  ];
+  const { ui, content, distinct, occurrences } = unkeyedProseDebt(pages);
+  assert.equal(occurrences, 3, "three UI blocks ship");
+  assert.equal(
+    distinct,
+    1,
+    "one string needs a dictionary entry; the copies are not new debt",
+  );
+  assert.equal(distinct, ui.length);
+  assert.equal(
+    content.length,
+    2,
+    "article bodies are measured and reported, never charged to the UI ceiling",
+  );
+
+  // ...and a genuinely new string is exactly +1, which is what the ceiling sees.
+  const withNew = unkeyedProseDebt([
+    ...pages,
+    {
+      page: "blog/two/index.html",
+      html: "<p>A second, differently worded footer disclaimer.</p>",
+    },
+  ]);
+  assert.equal(withNew.distinct, 2);
+});
+
+test("PROSE: the ceiling is pinned to the measured debt, with no slack", () => {
+  // The 51 -> 422 raise was possible because a global ceiling absorbs anything
+  // put in front of it. This pins the committed constant to the debt the shipped
+  // pages actually carry, so a raise without the debt falling fails here too.
+  const pages = deployedFiles()
+    .filter((f) => f.endsWith(".html"))
+    .map((page) => ({
+      page,
+      html: readFileSync(page, "utf8"),
+      articleBody: page.startsWith("blog/"),
+    }))
+    .filter(({ html }) => claimsTranslation(html));
+  assert.ok(pages.length > 1, "the translated pages must not go empty");
+  const { distinct, content } = unkeyedProseDebt(pages);
+  assert.ok(content.length > 100, "the article-body class must not go empty");
+  const src = readFileSync(join(ROOT, "scripts", "check-i18n.mjs"), "utf8");
+  const ceiling = /const PROSE_CEILING = (\d+);/.exec(src);
+  assert.ok(ceiling, "the ceiling must be a committed constant");
+  assert.equal(
+    Number(ceiling[1]),
+    distinct,
+    "the ceiling must equal the measured debt — distinct UI strings, not the " +
+      "422 blocks that bundled 341 article bodies and 19 copies in with them",
   );
 });
 

@@ -47,7 +47,7 @@ import {
   familyGaps,
   hookCoverage,
   placeholders,
-  unkeyedProse,
+  unkeyedProseDebt,
 } from "./lib/gates.mjs";
 
 let failures = 0;
@@ -360,18 +360,24 @@ else ok(`none of the ${BANNED_VALUES.length} known-bad values are present`);
 //   - pages with no hook at all, which are not claimed to be translated.
 // The floor and the ceiling are both reported, so the number is visible and can
 // only fall.
-const proseFindings = [];
-for (const page of shippedPages()) {
-  const html = readFileSync(page, "utf8");
-  // The detector lives in scripts/lib/gates.mjs as a pure function, so a test
-  // can prove it FIRES on the markup that caused this defect without mutating
-  // the working tree — the race that cost three CI cycles on this branch.
-  if (!claimsTranslation(html)) continue; // page does not claim translation
-  for (const block of unkeyedProse(html))
-    proseFindings.push(
-      `${page}: <${block.tag}> ${JSON.stringify(block.text.slice(0, 60))}…`,
-    );
-}
+// The detector lives in scripts/lib/gates.mjs as a pure function, so a test can
+// prove it FIRES on the markup that caused this defect without mutating the
+// working tree — the race that cost three CI cycles on this branch.
+const { ui, content, distinct, occurrences } = unkeyedProseDebt(
+  shippedPages()
+    .map((page) => ({
+      page,
+      html: readFileSync(page, "utf8"),
+      // The article-body class applies to the blog lane, where the <article> IS
+      // the page's body. solar-calculator/index.html also carries an <article>
+      // — its own <h1> and reassurance callout — so it stays UI and stays debt.
+      articleBody: page.startsWith("blog/"),
+    }))
+    .filter(({ html }) => claimsTranslation(html)), // the pages the claim is about
+);
+const proseFindings = ui.map(
+  (b) => `${b.page}: <${b.tag}> ${JSON.stringify(b.text.slice(0, 60))}…`,
+);
 // The remaining 51 are REAL and KNOWN: the FAQ answers, the bill-of-materials
 // spec text, the legal copy, and the wizard/field help on the one translated
 // page. Keying them is P5 work (R-I18N-07 waves), not this branch. This ceiling
@@ -396,24 +402,42 @@ for (const page of shippedPages()) {
 // so the JSON-LD FAQ text was never a false positive. Recorded here because I
 // first believed it was, and the belief was wrong.
 //
-// CEILING RAISED 51 -> 422 (2026-10-12, measured reason): header unification
-// added data-i18n hooks to the nav on 12 blog pages (product requirement:
-// uniform header with i18n nav across the site). The 371 new blocks are blog
-// article bodies — English-only by product decision, unchanged. The main page's
-// 51 remain. The detector now sees blog prose because the pages claim
-// translation via nav hooks; the articles themselves were never translated.
-const PROSE_CEILING = 422;
-if (proseFindings.length > PROSE_CEILING) {
+// CEILING 51 -> 62, AND THE RAISE TO 422 IS UNDONE BY SCOPING, NOT BY A NUMBER.
+//
+// Header unification put data-i18n hooks on the blog nav, so the detector began
+// reading 12 more pages. Measured across that commit: 51 -> 422 blocks, of which
+// 341 are article bodies and 30 are UI. Charging all of it to one global ceiling
+// was wrong twice, and both errors are fixed at their cause:
+//
+//   1. CLASS. Article bodies are long-form copy that ships English-only by
+//      product decision — the status the 81 untranslated pages already have.
+//      They are reported below and are not debt, so they can no longer lend
+//      371 blocks of headroom to a page that ships none of them.
+//   2. UNIT. Only 11 of the 30 UI blocks are distinct strings; the other 19 are
+//      the same strings copied onto more pages. The debt is the set of strings
+//      that need a dictionary entry, so distinct strings is what is counted —
+//      which also stops the number being a function of page count, the
+//      mechanism that forced the raise rather than the instance it fixed.
+//
+// 62 = index.html's 51, unchanged since the 39 -> 51 fix, plus the 11 distinct
+// strings the blog lane's own footer introduced. A test pins this constant to
+// the measured debt, so raising it without the debt falling fails there.
+const PROSE_CEILING = 62;
+if (distinct > PROSE_CEILING) {
   fail(
-    `${proseFindings.length} visible prose block(s) on a translated page carry no i18n hook ` +
+    `${distinct} distinct UI string(s) on a translated page carry no i18n hook ` +
       `(ceiling ${PROSE_CEILING}): ${proseFindings.slice(0, 4).join(" | ")}`,
   );
 } else {
   console.log(
-    `     unkeyed prose on translated pages: ${proseFindings.length}/${PROSE_CEILING} ceiling ` +
-      `(known, tracked, must fall)`,
+    `     unkeyed prose on translated pages: ${distinct}/${PROSE_CEILING} ceiling ` +
+      `(${occurrences} block(s) shipped — distinct UI strings, known, tracked, must fall)`,
   );
 }
+console.log(
+  `     article bodies (content, not UI, not debt): ${content.length} block(s) on ` +
+    `${new Set(content.map((b) => b.page)).size} page(s)`,
+);
 
 // ── coverage summary (informational, keeps the trend visible) ───────────────
 const rows = langs

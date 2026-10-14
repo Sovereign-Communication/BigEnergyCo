@@ -21,6 +21,7 @@ import {
   attr,
   tags,
   deployedFiles,
+  inlineStyleDeclarations,
   metaContent,
   bodyText,
   wrappedByLabel,
@@ -307,6 +308,78 @@ test("GATE: no deployed page ships an inline script or an on* handler", () => {
   assert.equal(
     inlineHandlers('<button aria-expanded="false">x</button>').length,
     0,
+  );
+});
+
+test("GATE: the inline-style freeze counts declarations, not copies", () => {
+  // Non-vacuity: the counter must see a declaration at all.
+  const one = inlineStyleDeclarations('<p style="color:#fff">x</p>');
+  assert.deepEqual([...one.distinct], ["color:#fff"]);
+  assert.equal(one.occurrences, 1);
+
+  // The property that was wrong. Unifying the blog header copied its own
+  // declarations onto 11 more pages and the budget went 574 -> 633 while the
+  // distinct set never moved: there is nothing new to tokenise.
+  const DECL = "font-weight:700;color:#fff";
+  const once = `<header><span style="${DECL}">a</span></header>`;
+  const twice = `${once}<footer><span style="${DECL}">b</span></footer>`;
+  assert.equal(inlineStyleDeclarations(once).distinct.size, 1);
+  assert.equal(
+    inlineStyleDeclarations(twice).distinct.size,
+    1,
+    "a copied declaration is not new debt",
+  );
+  assert.equal(
+    inlineStyleDeclarations(twice).occurrences,
+    2,
+    "...though it is still reported",
+  );
+
+  // A genuinely new raw value must move the count, or the freeze is blind to
+  // the thing it protects (Q-09: no raw colour, spacing or font value outside
+  // the token file).
+  assert.equal(
+    inlineStyleDeclarations(`${twice}<p style="margin-top:9px">c</p>`).distinct
+      .size,
+    2,
+  );
+
+  // Prettier wraps a long attribute across lines, so the literal text of one
+  // declaration changes when a formatter touches the file. 99 of the values
+  // that ship today are wrapped; a re-wrap is not new debt.
+  const wrapped = '<p style="font-weight: 700;\n            color: #fff">x</p>';
+  assert.equal(
+    inlineStyleDeclarations(wrapped).distinct.size,
+    1,
+    "a re-wrapped declaration is the same declaration",
+  );
+  assert.ok(
+    inlineStyleDeclarations(wrapped).distinct.has(
+      "font-weight: 700; color: #fff",
+    ),
+  );
+});
+
+test("GATE: the inline-style freeze is pinned to the measured debt, with no slack", () => {
+  // The budget must equal the debt it freezes. 633 was 59 copies of values that
+  // were already counted, which is how a raise of +0 real debt became a widening
+  // of the freeze.
+  const pages = deployedFiles().filter((f) => f.endsWith(".html"));
+  assert.ok(pages.length > 50, "page discovery must not silently go empty");
+  const distinct = new Set();
+  for (const page of pages)
+    for (const value of inlineStyleDeclarations(readFileSync(page, "utf8"))
+      .distinct)
+      distinct.add(value);
+  const src = readFileSync("scripts/check-quality.mjs", "utf8");
+  const budget = /const RATCHET = \{\s*inlineStyleDeclarations:\s*(\d+),/.exec(
+    src,
+  );
+  assert.ok(budget, "the ratchet must be a committed constant");
+  assert.equal(
+    Number(budget[1]),
+    distinct.size,
+    "the frozen budget must equal the measured declaration count",
   );
 });
 

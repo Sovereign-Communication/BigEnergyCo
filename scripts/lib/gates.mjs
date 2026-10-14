@@ -557,7 +557,7 @@ export function claimsTranslation(html) {
  * A hook on the element OR on any descendant counts: bracketing a <strong>
  * inside a paragraph is how the author's name survives applyI18n's textContent.
  *
- * @returns {{tag: string, text: string, words: number}[]}
+ * @returns {{tag: string, text: string, words: number, index: number}[]}
  */
 export function unkeyedProse(html, { minWords = 6 } = {}) {
   const found = [];
@@ -577,7 +577,126 @@ export function unkeyedProse(html, { minWords = 6 } = {}) {
     const words = text.split(/\s+/).length;
     if (words < minWords) continue;
     if ((text.match(PROSE_WORD) || []).length < MIN_PROSE_WORDS) continue;
-    found.push({ tag, text, words });
+    // `index` is the match offset in `scannable`, which is what lets a caller
+    // tell a class boundary (inside an <article> body?) without re-parsing.
+    found.push({ tag, text, words, index: m.index });
   }
   return found;
+}
+
+// ── the unkeyed-prose DEBT: which class, and in what unit ────────────────────
+// Both answers come from measuring the commit that raised the ceiling
+// (b1dc77a, 51 -> 422), because the raise was half right and half mechanism:
+//
+//   prose blocks, total        51 -> 422   (+371)
+//   ... outside <article>      51 ->  81   (+30)
+//   ... DISTINCT UI strings    51 ->  62   (+11)
+//   ... inside <article>        0 -> 341   (+341)
+//
+// THE CLASS. The 341 are blog article bodies — long-form copy that ships
+// English-only by product decision, exactly the status the 81 untranslated
+// pages already have. A dictionary covers UI, not a body of work, so that class
+// is reported rather than charged, and it can no longer lend a block of
+// headroom to the UI ceiling. That lending is the part of the raise that was
+// wrong: 371 blocks of allowance appeared on a page that has none of them.
+//
+// THE UNIT. Of the +30 UI blocks only +11 are distinct strings; the other 19 are
+// the same strings copied onto more pages. Charging copies makes the number a
+// function of page count, so the next launch raises the ceiling again — the
+// mechanism, not the instance. The debt is the set of strings that need a
+// dictionary entry, so distinct strings is what the ceiling counts.
+
+/** Every `<article>` body, as [start, end) offsets into the scanned string. */
+const CONTENT_REGION = /<article\b[\s\S]*?<\/article\s*>/gi;
+
+export function articleRanges(html) {
+  const scannable = String(html).replace(BLIND_REGIONS, " ");
+  return [...scannable.matchAll(CONTENT_REGION)].map((m) => [
+    m.index,
+    m.index + m[0].length,
+  ]);
+}
+
+/**
+ * Unkeyed prose split into the two classes the rule distinguishes.
+ *
+ * `content` is prose inside an `<article>` body; `ui` is everything else —
+ * nav, headings, disclaimers, hero copy, callouts, the strings a data-i18n
+ * dictionary is supposed to cover.
+ *
+ * The boundary is an HTML element, but whether it APPLIES is the caller's
+ * decision (`articleBody`), because `<article>` is not a synonym for "content"
+ * on this site: solar-calculator/index.html carries an `<article>` holding its
+ * own `<h1>` and reassurance callout — UI — so an "<article> is always a body"
+ * rule would silently exempt that page the moment it gained a hook.
+ *
+ * @returns {{ui: object[], content: object[]}}
+ */
+export function unkeyedProseByClass(html, { articleBody = false } = {}) {
+  const blocks = unkeyedProse(html);
+  if (!articleBody) return { ui: blocks, content: [] };
+  const ranges = articleRanges(html);
+  const ui = [];
+  const content = [];
+  for (const block of blocks) {
+    const inside = ranges.some(([a, b]) => block.index >= a && block.index < b);
+    (inside ? content : ui).push(block);
+  }
+  return { ui, content };
+}
+
+/**
+ * The debt across the pages that claim translation: DISTINCT unhooked UI
+ * strings. One string is one entry however many pages ship it.
+ *
+ * @param {{page: string, html: string, articleBody?: boolean}[]} pages
+ * @returns {{ui: object[], content: object[], distinct: number, occurrences: number}}
+ */
+export function unkeyedProseDebt(pages) {
+  const ui = [];
+  const content = [];
+  const seen = new Set();
+  let occurrences = 0;
+  for (const { page, html, articleBody = false } of pages) {
+    const split = unkeyedProseByClass(html, { articleBody });
+    for (const block of split.content) content.push({ page, ...block });
+    for (const block of split.ui) {
+      occurrences++;
+      // Whitespace is already collapsed by the detector; normalising again makes
+      // the key independent of prettier re-wrapping the same sentence.
+      const text = block.text.replace(/\s+/g, " ");
+      if (seen.has(text)) continue;
+      seen.add(text);
+      ui.push({ page, ...block });
+    }
+  }
+  return { ui, content, distinct: ui.length, occurrences };
+}
+
+// ── inline style declarations (the quality gate's frozen debt) ──────────────
+/**
+ * The `style="…"` declarations in a page, split into what the freeze counts
+ * (DISTINCT declarations — the values that must become tokens in the token file)
+ * and what it reports (occurrences).
+ *
+ * The unit is load-bearing and it was wrong. Counting occurrences made the
+ * budget a function of page count: b1dc77a copied the blog header's own
+ * declarations onto 11 more pages, the number went 574 -> 633, and the distinct
+ * set never moved — 180 before, 180 after. The raise that followed widened a
+ * freeze over zero new debt, and the next launch would have forced another.
+ *
+ * @returns {{occurrences: number, distinct: Set<string>}}
+ */
+export function inlineStyleDeclarations(html) {
+  const values = [...String(html).matchAll(/\sstyle="([^"]*)"/gi)].map((m) =>
+    // Prettier wraps a long attribute across lines, so the LITERAL text of one
+    // declaration changes when a formatter touches the file — 99 of the values
+    // that ship today are wrapped that way, and an unrelated reformat would
+    // otherwise read as new debt. Collapsing the whitespace makes the key the
+    // declaration rather than the indentation prettier chose. It cannot merge
+    // two different CSS values here: no shipped declaration contains a quote,
+    // which is the only place whitespace inside a value is significant.
+    m[1].replace(/\s+/g, " ").trim(),
+  );
+  return { occurrences: values.length, distinct: new Set(values) };
 }
