@@ -45,26 +45,10 @@ export function hasPrReference(message) {
   );
 }
 
-/** Files changed by a commit range, one level of rename detection included. */
-export function changedFiles(range, cwd = process.cwd()) {
+/** One way to shell out to git: exact arguments, empty output on any failure. */
+function git(args, cwd) {
   try {
-    return execFileSync("git", ["diff", "--name-only", range], {
-      cwd,
-      encoding: "utf8",
-      stdio: ["pipe", "pipe", "pipe"],
-    })
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
-/** Commit subject+body for a single revision. */
-export function commitMessage(rev, cwd = process.cwd()) {
-  try {
-    return execFileSync("git", ["log", "-1", "--format=%B", rev], {
+    return execFileSync("git", args, {
       cwd,
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
@@ -72,6 +56,64 @@ export function commitMessage(rev, cwd = process.cwd()) {
   } catch {
     return "";
   }
+}
+
+/** Files changed by a commit range, one level of rename detection included. */
+export function changedFiles(range, cwd = process.cwd()) {
+  return git(["diff", "--name-only", range], cwd)
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+}
+
+/** Commit subject+body for a single revision. */
+export function commitMessage(rev, cwd = process.cwd()) {
+  return git(["log", "-1", "--format=%B", rev], cwd);
+}
+
+/** Parent shas of one revision, first parent first. Empty when it cannot be read. */
+export function commitParents(rev, cwd = process.cwd()) {
+  const line = git(["rev-list", "--parents", "-n", "1", rev], cwd).trim();
+  if (!line) return [];
+  const [, ...parents] = line.split(/\s+/);
+  return parents;
+}
+
+/**
+ * Commits that arrived WITH a PR merge, rather than being pushed straight to
+ * the branch.
+ *
+ * A merge commit names the PR it landed (`Merge pull request #N from ...`), and
+ * the commits it brought in are exactly those reachable from its non-first
+ * parents but not from its first. The server-side audit needs that set because
+ * it inspects every commit in the pushed range one at a time: without it a PR's
+ * own branch commits are indistinguishable from commits typed straight onto
+ * main, and every non-documentation pull request merged with a merge commit is
+ * reported as a violation. Measured on this repository before the fix: 4 of the
+ * 10 most recent Main audit runs read that way, including the range that landed
+ * PR #220.
+ *
+ * LIMIT, stated rather than hidden: a merge commit created locally with a
+ * fabricated `Merge pull request #N` subject is indistinguishable from a
+ * GitHub merge here, because the object graph and the commit message are all
+ * this function can see. That ambiguity is older than this function — the merge
+ * commit itself has always been forgiven by `hasPrReference`. Telling the two
+ * apart needs the API (`/commits/{sha}/pulls`), which would make the audit
+ * depend on a network call and a token, so it is deliberately not done.
+ */
+export function prDeliveredShas(commits, { cwd = process.cwd() } = {}) {
+  const delivered = new Set();
+  for (const sha of commits) {
+    const parents = commitParents(sha, cwd);
+    if (parents.length < 2) continue;
+    if (!hasPrReference(commitMessage(sha, cwd))) continue;
+    const [first, ...side] = parents;
+    for (const rev of git(["rev-list", ...side, "--not", first], cwd).split("\n")) {
+      const trimmed = rev.trim();
+      if (trimmed) delivered.add(trimmed);
+    }
+  }
+  return delivered;
 }
 
 /**
