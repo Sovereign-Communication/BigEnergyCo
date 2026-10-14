@@ -14,6 +14,7 @@
 //      measured unreproducible, and nothing wider.
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import {
   WIDTHS,
@@ -183,4 +184,45 @@ test("snapshots are captured in one declared engine", () => {
   // A cross-engine visual diff compares rasterisers and reports their
   // differences as the product's. Q-08 covers the engines; this covers pixels.
   assert.equal(SNAPSHOT_ENGINE, "chromium");
+});
+
+test("the declared stable-cell count describes the committed measurement it came from", () => {
+  // `stable_cells_for_comparison` is the one number in this file that is a
+  // READING rather than a rule, and nothing read it: the matrix could gain a
+  // template or a width, the committed evidence would grow, and the sentence
+  // "all 27 other cells read 0.0000%" would quietly stop being true while every
+  // gate stayed green. It is a claim about the committed run, so it is checked
+  // against the committed run — the evidence file the gate itself writes.
+  // Bump the number without a new measurement, or land a measurement whose
+  // stable set differs, and this goes red until the narration is re-derived.
+  const evidence = JSON.parse(
+    readFileSync(
+      new URL("../.quality-evidence/visual.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const declared = MEASURED_UNSTABLE_TEMPLATES.reduce(
+    (n, u) => n + Number(u.stable_cells_for_comparison || 0),
+    0,
+  );
+  assert.equal(
+    declared,
+    evidence.cells.filter((c) => c.ratio === 0).length,
+    "the declared stable-cell count must equal the cells that read 0.0000% in the committed run",
+  );
+  // The exclusion and the count must describe the same measurement: every
+  // excluded template was measured, and only excluded templates read unstable.
+  for (const u of MEASURED_UNSTABLE_TEMPLATES)
+    assert.ok(
+      evidence.cells.some((c) => c.template === u.template),
+      `${u.template} is declared unreproducible but the committed run never measured it`,
+    );
+  assert.ok(
+    evidence.cells
+      .filter((c) => c.status === "unstable")
+      .every((c) =>
+        MEASURED_UNSTABLE_TEMPLATES.some((u) => u.template === c.template),
+      ),
+    "only a declared-unstable template may read unstable",
+  );
 });

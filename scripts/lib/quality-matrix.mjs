@@ -96,11 +96,21 @@ const SHAPES = [
   { id: "blog-index", match: (p) => /(^|\/)blog\/index\.html$/.test(p) },
   { id: "blog-post", match: (p) => /^blog\/.+\/index\.html$/.test(p) },
   { id: "404", match: (p) => p === "404.html" },
-  // City pages are flat `<slug>.html` in the staged build. The shape is
-  // "everything that is a top-level .html and not one of the named pages".
+  // City pages ship NESTED — `solar-calculator/<slug>/index.html`, 66 of them
+  // plus the hub — and the flat `<slug>.html` form this shape was written for
+  // matches nothing on the shipped allowlist, which is what the stage copies.
+  // Measured on the shipped tree at 0454e74: with the flat form alone, NO page
+  // matched this shape at all, so 67 pages (66 cities + the hub) were matched
+  // by no shape and the Q-07/Q-09 matrices silently skipped every one of them
+  // while a fixture with flat city pages kept the shape "covered" in tests.
+  // The nested branch is the fix; the flat one stays for a flattened stage and
+  // for the offline fixture, and the coverage test in tests/lighthouse-gate.test.mjs
+  // is what keeps the nested branch alive.
   {
     id: "city",
-    match: (p) => /^[^/]+\.html$/.test(p),
+    match: (p) =>
+      /^[^/]+\.html$/.test(p) ||
+      /^solar-calculator\/[^/]+\/index\.html$/.test(p),
     exclude: ["index.html", "404.html"],
   },
 ];

@@ -432,3 +432,59 @@ test("CI: the job runs the gate, records its own result, and ci_green requires i
       `that goes red makes ci_green red (required: ${required.join(", ")})`,
   );
 });
+
+test("Q-02: the targets cover every template the matrices derive from the shipped tree", async () => {
+  // The two heavy matrices derive their template dimension from the SHIPPED
+  // inventory (`templateMatrix` over the allowlist the stage copies), while
+  // LIGHTHOUSE_TARGETS is a hand-written list and nothing compared the two. So
+  // a page family could enter the site with no Lighthouse target — or a target
+  // could point at a page no matrix owns — while both gates read green.
+  //
+  // Measured on the shipped tree at 0454e74: it derives {home, heatmap, about,
+  // blog-index, blog-post, 404, city} and every one has a target. Before the
+  // city matcher knew the nested layout, NO page matched `city` and 67 pages
+  // were invisible to the matrices while a flat-path fixture kept the shape
+  // looking covered.
+  const { LIGHTHOUSE_TARGETS } = await lib();
+  const { templateMatrix } = await import("../scripts/lib/quality-matrix.mjs");
+  const { deployList } = await import("../scripts/lib/deploy-manifest.mjs");
+  const files = deployList();
+  const read = (rel) => readFileSync(rel);
+  // One page per shape is enough to classify it; the id is the shape.
+  const shapeOf = (page) =>
+    templateMatrix({ files: [page], read })[0]?.id ?? null;
+
+  const templates = templateMatrix({ files, read });
+  assert.ok(
+    templates.some((t) => t.id === "city"),
+    "the city shape must be derivable from the shipped layout, or every city page is invisible to the matrices",
+  );
+  for (const t of templates)
+    assert.ok(
+      LIGHTHOUSE_TARGETS.some((target) => shapeOf(target.page) === t.id),
+      `the ${t.id} template (${t.path}) ships with no Lighthouse target`,
+    );
+  for (const target of LIGHTHOUSE_TARGETS) {
+    assert.ok(
+      files.includes(target.page),
+      `target ${target.id} points at ${target.page}, which does not ship`,
+    );
+    assert.ok(
+      shapeOf(target.page),
+      `target ${target.id} points at ${target.page}, which no page shape owns`,
+    );
+  }
+  // The one shipped page no shape owns, recorded rather than silent: the city
+  // hub. Giving it a shape also needs a Lighthouse target (a fresh browser
+  // measurement), so it is named here; a second unmatched page fails this
+  // assertion, which is how a new page family is stopped from shipping outside
+  // the matrices.
+  const unmatched = files
+    .filter((f) => f.endsWith(".html"))
+    .filter((p) => shapeOf(p) === null);
+  assert.deepEqual(
+    unmatched,
+    ["solar-calculator/index.html"],
+    "the set of pages no shape owns changed — a page family entered or left the matrices",
+  );
+});

@@ -311,6 +311,46 @@ test("PROSE: the unkeyed-prose detector fires on unhooked prose, and only on pro
   );
 });
 
+test("PROSE: the word floor is pinned in BOTH directions, so it cannot be loosened into silence", () => {
+  // The floor decides what COUNTS as debt, and it is the one number in this
+  // rule whose loosening direction is silent: a block under it is never
+  // reported, so raising it exempts a class of copy from the gate — and unlike
+  // a ceiling, raising it makes the measured debt FALL, which reads as
+  // progress. Every other fixture here is well above it, so it was pinned only
+  // from the tightening side. Two fixtures, one on each side of the shipped
+  // default (six words, with at least two words of four letters or more — the
+  // other half of the rule):
+  //
+  //   * exactly at the floor must be counted as debt;
+  //   * one word under it must not be.
+  //
+  // Asserted through `unkeyedProseDebt`, the function the GATE calls, so a
+  // floor moved at the pipeline's call site fails here too — not only one moved
+  // in the lib's default.
+  const page = (body) => ({
+    page: "fixture.html",
+    html: `<html data-i18n="x"><body>${body}</body></html>`,
+    articleBody: false,
+  });
+  assert.equal(
+    unkeyedProseDebt([page("<p>Size your system with real data</p>")]).distinct,
+    1,
+    "a six-word block sits exactly at the floor and must be counted as debt",
+  );
+  assert.equal(
+    unkeyedProseDebt([page("<p>Size plan with real data</p>")]).distinct,
+    0,
+    "a five-word block is under the floor and must not be counted",
+  );
+  // Non-vacuity: the two fixtures differ only in word count, so the pair cannot
+  // both hold for an unrelated reason (a missing hook, an unreadable block).
+  assert.equal(
+    unkeyedProse("<p>Size your system with real data</p>").length,
+    1,
+  );
+  assert.equal(unkeyedProse("<p>Size plan with real data</p>").length, 0);
+});
+
 test("PROSE: nesting does not hide a paragraph from the detector", () => {
   // The detector used to require a literal `</tag>`, so a paragraph nested
   // inside a <label> or a <li> was swallowed whole by its parent's match and
