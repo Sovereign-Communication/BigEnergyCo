@@ -143,11 +143,24 @@ export const EVIDENCE_REGISTRY = [
     // make this job red on every PR in the repository, including the PRs that
     // are in the middle of fixing it.
     blocking: [{ path: "regressions", rule: "empty-array" }],
-    // Reported, never blocking: the cells the matrix could not audit. These are
-    // named here so the printed report says which cells are still open rather
-    // than only that some number of them are.
+    // Reported, never blocking: the cells the baseline declares no bar for.
+    // These are named here so the printed report says which cells are still
+    // open rather than only that some number of them are.
+    //
+    // THE LABEL USED TO SAY "cells the matrix could not audit", and that was
+    // true of the only case it had seen: the heatmap cell whose audit errored
+    // under the external Leaflet load. It stopped being true when P0.4's
+    // gate-drift pin restored the `city` shape: the 66 nested city pages were
+    // matched by no shape at all, so the matrix had never had a city cell to
+    // audit, and the ledger declares no bar for the one the restored shape now
+    // audits (`city/arrival/none/ltr`, measured clean). A cell lands in
+    // `unmeasured` because the BASELINE has no row for it — which covers an
+    // audit that could not complete, a cell the matrix gained after the last
+    // baseline row, and any future hole — and the printed line must say that
+    // rather than assert something about the audit that may be false. An audit
+    // error is a separate list (`audit_errors`) and still blocks.
     reported_gaps: [
-      { path: "unmeasured", label: "cells the matrix could not audit" },
+      { path: "unmeasured", label: "cells with no declared bar" },
     ],
     freshness_key: "generated_at",
     max_age_days: 45,

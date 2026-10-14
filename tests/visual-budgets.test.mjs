@@ -186,15 +186,24 @@ test("snapshots are captured in one declared engine", () => {
   assert.equal(SNAPSHOT_ENGINE, "chromium");
 });
 
-test("the declared stable-cell count describes the committed measurement it came from", () => {
+test("the declared gated-cell count describes the committed measurement it came from", () => {
   // `stable_cells_for_comparison` is the one number in this file that is a
   // READING rather than a rule, and nothing read it: the matrix could gain a
   // template or a width, the committed evidence would grow, and the sentence
-  // "all 27 other cells read 0.0000%" would quietly stop being true while every
-  // gate stayed green. It is a claim about the committed run, so it is checked
-  // against the committed run — the evidence file the gate itself writes.
-  // Bump the number without a new measurement, or land a measurement whose
-  // stable set differs, and this goes red until the narration is re-derived.
+  // about the cells outside the exclusion would quietly stop being true while
+  // every gate stayed green. It is a claim about the committed run, so it is
+  // checked against the committed run — the evidence file the gate itself
+  // writes.
+  //
+  // It counts the GATED cells, which is the part of the matrix whose pixels are
+  // a function of the product. Counting every zero-reading cell instead would
+  // fold in whichever heatmap widths happened to paint a zero that afternoon —
+  // measured here at three of four on the calibration runs and four of four on
+  // the 2026-10-14T09:00Z re-measurement — so the pin would flake with the CDN
+  // rather
+  // than move with the product. Bump the number without a new measurement, or
+  // land a measurement whose gated set differs, and this goes red until the
+  // declaration is re-derived.
   const evidence = JSON.parse(
     readFileSync(
       new URL("../.quality-evidence/visual.json", import.meta.url),
@@ -205,10 +214,25 @@ test("the declared stable-cell count describes the committed measurement it came
     (n, u) => n + Number(u.stable_cells_for_comparison || 0),
     0,
   );
+  const gated = evidence.cells.filter((c) => c.gated);
   assert.equal(
     declared,
-    evidence.cells.filter((c) => c.ratio === 0).length,
-    "the declared stable-cell count must equal the cells that read 0.0000% in the committed run",
+    gated.filter((c) => c.ratio === 0).length,
+    "the declared gated-cell count must equal the gated cells that read 0.0000% in the committed run",
+  );
+  // THE EVIDENCE IS A MEASUREMENT, NOT A FIRST RUN. The driver records every
+  // cell as `new` when no baseline exists, which is honest on the machine that
+  // recorded it and worthless as committed evidence: it measures a snapshot
+  // against nothing. So the committed run must carry a real reading on every
+  // cell — this is the assertion that keeps a first run from being committed as
+  // coverage, city template included.
+  const unread = evidence.cells.filter(
+    (c) => c.status === "new" || c.status === "error" || c.ratio === null,
+  );
+  assert.deepEqual(
+    unread.map((c) => `${c.id}: ${c.status}`),
+    [],
+    "every committed cell must carry a real reading — a `new` or errored cell is a baseline that was recorded, not a product that was measured",
   );
   // The exclusion and the count must describe the same measurement: every
   // excluded template was measured, and only excluded templates read unstable.

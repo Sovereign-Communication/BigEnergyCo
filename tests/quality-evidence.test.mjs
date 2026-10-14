@@ -24,12 +24,23 @@ import {
   validateEvidence,
 } from "../scripts/lib/quality-evidence.mjs";
 
-// The clock these tests read the committed evidence against. It sits just after
-// the P0.4 evidence run, so the fixtures are neither future-dated (which the
-// freshness check correctly refuses) nor older than the 45-day window. It is a
-// fixed instant rather than `Date.now()` on purpose: a test that quietly ages
-// with the calendar turns into a flaky test the first week it is not run.
+// The clock the FIXTURE tests read their synthetic evidence against. It sits
+// just after the P0.4 evidence run, so those documents are neither future-dated
+// (which the freshness check correctly refuses) nor older than the 45-day
+// window. It is a fixed instant rather than `Date.now()` on purpose: a fixture
+// that quietly ages with the calendar turns into a flaky test the first week it
+// is not run.
+//
+// THE TWO TESTS THAT READ THE REPOSITORY'S OWN COMMITTED EVIDENCE DO NOT USE
+// IT. They assert what the validator does to real files, so they run it against
+// the real clock — the same clock CI uses. Pinning them to a constant made the
+// gate that refreshes evidence unable to land: every refreshed report is
+// generated after the constant, so the freshness check reads it as
+// future-dated and the suite goes red on the one change it is supposed to
+// accept. Staleness still fails there — that is what the 45-day window is for,
+// and it is a real obligation of the repository, not a fixture's.
 const NOW = "2026-10-05T12:00:00.000Z";
+const REAL_NOW = () => new Date().toISOString();
 const byMetric = (metric) => EVIDENCE_REGISTRY.find((e) => e.metric === metric);
 
 function freshDoc(metric, extra = {}) {
@@ -199,6 +210,12 @@ test("Q-07's known hole is a named gap, not a blocking regression", () => {
   // gap: named on every run, by cell id, and it does not redden the job.
   // Blocking on it would red every PR in the repository, including the ones
   // that are in the middle of closing it.
+  //
+  // The gap's label says what `unmeasured` means — the baseline declares no bar
+  // for the cell — because the list is not only audit holes: the restored city
+  // shape audits a cell the ledger has no bar for, and that cell is measured
+  // clean. A label claiming the matrix "could not audit" it would have been
+  // false about the very case this refresh produced.
   const entry = byMetric("a11y_matrix");
   const doc = {
     ...freshDoc("a11y_matrix"),
@@ -209,9 +226,7 @@ test("Q-07's known hole is a named gap, not a blocking regression", () => {
   assert.deepEqual(result.problems, [], "a declared hole must not block");
   assert.ok(
     result.gaps.some((g) =>
-      /1 cells the matrix could not audit \(heatmap\/arrival\/none\/ltr\)/.test(
-        g,
-      ),
+      /1 cells with no declared bar \(heatmap\/arrival\/none\/ltr\)/.test(g),
     ),
     `the hole must be named by cell id, got: ${JSON.stringify(result.gaps)}`,
   );
@@ -281,20 +296,43 @@ test("the committed a11y matrix report is readable evidence, and its hole is clo
   //      cell it claimed was broken. Asserted so the field cannot quietly go.
   //   3. heatmap/arrival/none/ltr now reads 0 violations with no audit error.
   //      That hole is CLOSED, and this is the test that says so.
+  //   4. The cells the BASELINE has no bar for are exactly the cells that are
+  //      audited clean and named — no more. Before the drift pin restored the
+  //      `city` shape the city cell did not exist, so this list was empty. It
+  //      is not any more, and the shape of the allowance is what keeps that
+  //      from becoming a way to hide an unmeasured cell: an entry must be a
+  //      real reading (0 violations) and must be exactly the named gap.
   const entry = byMetric("a11y_matrix");
   const doc = JSON.parse(readFileSync(entry.file, "utf8"));
-  const result = evaluateEntry(entry, doc, { now: NOW });
+  const result = evaluateEntry(entry, doc, { now: REAL_NOW() });
 
   assert.deepEqual(
     result.problems,
     [],
     `unexpected problems: ${result.problems.join("; ")}`,
   );
+  const unmeasuredIds = doc.unmeasured.map((u) => u.id).sort();
   assert.deepEqual(
     result.gaps,
-    [],
+    unmeasuredIds.length
+      ? [
+          `a11y_matrix: ${unmeasuredIds.length} cells with no declared bar (${unmeasuredIds.join(", ")})`,
+        ]
+      : [],
     `unexpected gaps: ${result.gaps.join("; ")}`,
   );
+  for (const u of doc.unmeasured) {
+    const cell = doc.cells.find((c) => c.id === u.id);
+    assert.ok(
+      cell && cell.error !== true,
+      `${u.id} is reported with no declared bar but was never audited: a gap only counts as a bar's absence when there is a reading behind it`,
+    );
+    assert.deepEqual(
+      cell.violations,
+      [],
+      `${u.id} is audited clean and the ledger declares no bar for it`,
+    );
+  }
 
   // (2) Freshness is stated, not inferred.
   assert.ok(Number.isFinite(Date.parse(doc.generated_at)));
@@ -308,22 +346,24 @@ test("the committed a11y matrix report is readable evidence, and its hole is clo
   // (3) The hole is closed.
   assert.deepEqual(doc.audit_errors, [], "no cell may be unauditable");
   assert.deepEqual(doc.regressions, []);
-  assert.deepEqual(doc.unmeasured, [], "every declared cell must be measured");
   const heatmap = doc.cells.find((c) => c.id === "heatmap/arrival/none/ltr");
   assert.ok(heatmap, "the cell that was the hole must still be in the matrix");
   assert.deepEqual(heatmap.violations, [], "and it must read 0 violations");
 });
 
-test("the repository's own committed evidence passes with no gaps at all", () => {
-  // The end-to-end consequence of the test above, as its own assertion. All
-  // five P0.4 gates now have a committed report, so the validator is GREEN and
-  // has nothing to report -- neither a problem nor a gap.
+test("the repository's own committed evidence blocks on nothing, and its gaps are named", () => {
+  // The end-to-end consequence of the test above, as its own assertion: all
+  // five P0.4 gates have a committed report, so the validator finds nothing to
+  // block on. It does report gaps, and they are allowed to exist — a gap is a
+  // cell the ledger declares no bar for, which is a gap in the BAR rather than
+  // in the measurement — but every one of them must be named by metric and
+  // cell, so an unmeasured gate can never hide behind the distinction.
   const docs = {};
   for (const entry of EVIDENCE_REGISTRY) {
     docs[entry.metric] = JSON.parse(readFileSync(entry.file, "utf8"));
   }
   const { ok, problems, gaps } = validateEvidence(EVIDENCE_REGISTRY, docs, {
-    now: NOW,
+    now: REAL_NOW(),
   });
   assert.equal(
     ok,
@@ -331,7 +371,17 @@ test("the repository's own committed evidence passes with no gaps at all", () =>
     `the committed evidence must not block: ${problems.join("; ")}`,
   );
   assert.deepEqual(problems, []);
-  assert.deepEqual(gaps, [], `no gate may be unmeasured: ${gaps.join("; ")}`);
+  const unmeasured = docs.a11y_matrix.unmeasured.map((u) => u.id).sort();
+  const expected = unmeasured.length
+    ? [
+        `a11y_matrix: ${unmeasured.length} cells with no declared bar (${unmeasured.join(", ")})`,
+      ]
+    : [];
+  assert.deepEqual(
+    gaps,
+    expected,
+    `the reported gaps must be exactly the cells the ledger has no bar for: ${gaps.join("; ")}`,
+  );
 });
 
 test("the superseded root report is gone, so it cannot be read as live evidence", () => {

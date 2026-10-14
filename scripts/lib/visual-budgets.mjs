@@ -65,9 +65,29 @@ export const SNAPSHOT_ENGINE = "chromium";
  *     run 2   75250 / 1443200 px = 5.2141 %
  *     run 3   70062 / 1443200 px = 4.8546 %
  *
- * Meanwhile all 27 other cells read 0.0000 % on every one of those runs. So the
- * variance is not the capture, the comparator, or the engine — it is this one
- * page.
+ * Meanwhile every cell outside the exclusion read 0.0000 % on every one of
+ * those runs — 27 of them when the measurement was taken (the 24 gated cells
+ * plus the three other heatmap widths, which happened to be painted exactly
+ * like the baseline). So the variance is not the capture, the comparator, or
+ * the engine — it is this one page.
+ *
+ * WHAT `stable_cells_for_comparison` COUNTS NOW, and why it is no longer 27.
+ * It is the number of cells the exclusion leaves GATED on the current matrix,
+ * and the pin in tests/visual-budgets.test.mjs holds it to the gated cells that
+ * read 0.0000 % in the committed run. The gated count is the honest one to
+ * pin: it is a function of the declared matrix, not of whether the heatmap
+ * happened to paint a zero that afternoon, so the pin cannot flake. The count
+ * is 28 rather than 24 because the matrix gained the `city` template — the
+ * shape the flat-path matcher missed, which left 66 nested city pages matched
+ * by no shape at all until P0.4's gate-drift pin restored it. RE-MEASURED
+ * over the grown 32-cell matrix (the run committed in
+ * .quality-evidence/visual.json, generated_at 2026-10-14T09:00Z): a fresh
+ * baseline was recorded first, then three consecutive runs; all 28 gated cells
+ * read 0.0000 % in every one of them, and the heatmap's 320 px cell read
+ * 5.1615 % against a baseline recorded minutes earlier while its other three
+ * widths read 0.0000 %. That cell is the same one that moved
+ * 5.2141 / 5.2141 / 4.8546 % in the calibration above, which is why it stays
+ * excluded rather than re-baselined.
  *
  * THE CAUSE, and it is the same cause as the open Q-07 hole. The heatmap pulls
  * Leaflet from `https://unpkg.com/leaflet` — an EXTERNAL CDN — and then holds a
@@ -77,9 +97,9 @@ export const SNAPSHOT_ENGINE = "chromium";
  * measured while that load is still in flight. One root cause, two open items.
  *
  * WHAT THIS DOES NOT DO. It does not lower the bar, and it does not mean the
- * page is exempt forever: the remaining 27 cells are gated at Q-09's full
- * threshold right now. It records that one template's pixels are not a
- * function of the product, and names what would make them one (a
+ * page is exempt forever: the 28 cells outside the exclusion are gated at
+ * Q-09's full threshold right now. It records that one template's pixels are
+ * not a function of the product, and names what would make them one (a
  * self-hosted Leaflet — which is already a separate plan item, P1.5) so the
  * exclusion can be removed on evidence rather than on a feeling.
  *
@@ -92,7 +112,7 @@ export const MEASURED_UNSTABLE_TEMPLATES = [
     template: "heatmap",
     measured_runs: 3,
     measured_ratios: [0.052141, 0.052141, 0.048546],
-    stable_cells_for_comparison: 27,
+    stable_cells_for_comparison: 28,
     cause:
       "loads Leaflet from the external CDN https://unpkg.com/leaflet and holds a grid fetch open, so the painted map depends on third-party response timing",
     same_root_cause_as: "Q-07 heatmap/arrival/none/ltr",

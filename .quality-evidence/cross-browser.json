@@ -2,9 +2,9 @@
   "plan_item": "P0.4",
   "plan_ref": "docs/plan/MASTER_PLAN.md §8 P0.4, Q-08",
   "metric": "cross_browser",
-  "stage": "_pages_xb",
-  "generated_at": "2026-09-28T07:47:39.138Z",
-  "code_sha": "bd5f7038d35e66bd3d44637989799cae543f127e",
+  "stage": "_pages_crossbrowser",
+  "generated_at": "2026-10-14T09:03:45.064Z",
+  "code_sha": "219ccc1e679b7c4e6a6058d46782d9ee602a0747",
   "enforcement": "absolute from P0 (plan Q-08): 0 console errors, 0 CSP violations on every engine x width x template",
   "engines": [
     "chromium",
@@ -37,8 +37,8 @@
       "csp_violations": 0,
       "detail": [],
       "load_event": true,
-      "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
-      "ms": 4544,
+      "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
+      "ms": 2275,
       "error": false
     },
     {
@@ -52,7 +52,7 @@
       "detail": [],
       "load_event": true,
       "title": "Global Solar Payback Heatmap — Where Does It Pay Off?",
-      "ms": 4572,
+      "ms": 2028,
       "error": false
     },
     {
@@ -66,7 +66,7 @@
       "detail": [],
       "load_event": true,
       "title": "About BigEnergyCo — Free Solar Method (2026)",
-      "ms": 3041,
+      "ms": 1665,
       "error": false
     },
     {
@@ -80,7 +80,7 @@
       "detail": [],
       "load_event": true,
       "title": "BigEnergyCo Blog — Free Solar & Battery Storage Knowledge",
-      "ms": 2398,
+      "ms": 1698,
       "error": false
     },
     {
@@ -94,7 +94,7 @@
       "detail": [],
       "load_event": true,
       "title": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-      "ms": 2395,
+      "ms": 1767,
       "error": false
     },
     {
@@ -108,7 +108,21 @@
       "detail": [],
       "load_event": true,
       "title": "Page not found — BigEnergyCo",
-      "ms": 1882,
+      "ms": 1631,
+      "error": false
+    },
+    {
+      "id": "chromium/320/city",
+      "engine": "chromium",
+      "width": 320,
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "console_errors": 0,
+      "csp_violations": 0,
+      "detail": [],
+      "load_event": true,
+      "title": "Accra Solar & Battery Calculator — Free Sizing",
+      "ms": 1701,
       "error": false
     },
     {
@@ -121,8 +135,8 @@
       "csp_violations": 0,
       "detail": [],
       "load_event": true,
-      "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
-      "ms": 2366,
+      "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
+      "ms": 1882,
       "error": false
     },
     {
@@ -136,7 +150,7 @@
       "detail": [],
       "load_event": true,
       "title": "Global Solar Payback Heatmap — Where Does It Pay Off?",
-      "ms": 2324,
+      "ms": 1901,
       "error": false
     },
     {
@@ -150,7 +164,7 @@
       "detail": [],
       "load_event": true,
       "title": "About BigEnergyCo — Free Solar Method (2026)",
-      "ms": 1806,
+      "ms": 1667,
       "error": false
     },
     {
@@ -164,7 +178,7 @@
       "detail": [],
       "load_event": true,
       "title": "BigEnergyCo Blog — Free Solar & Battery Storage Knowledge",
-      "ms": 2299,
+      "ms": 1700,
       "error": false
     },
     {
@@ -178,7 +192,7 @@
       "detail": [],
       "load_event": true,
       "title": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-      "ms": 2458,
+      "ms": 1732,
       "error": false
     },
     {
@@ -192,7 +206,21 @@
       "detail": [],
       "load_event": true,
       "title": "Page not found — BigEnergyCo",
-      "ms": 2166,
+      "ms": 1667,
+      "error": false
+    },
+    {
+      "id": "chromium/390/city",
+      "engine": "chromium",
+      "width": 390,
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "console_errors": 0,
+      "csp_violations": 0,
+      "detail": [],
+      "load_event": true,
+      "title": "Accra Solar & Battery Calculator — Free Sizing",
+      "ms": 1747,
       "error": false
     },
     {
@@ -205,8 +233,8 @@
       "csp_violations": 0,
       "detail": [],
       "load_event": true,
-      "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
-      "ms": 2945,
+      "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
+      "ms": 1904,
       "error": false
     },
     {
@@ -220,7 +248,7 @@
       "detail": [],
       "load_event": true,
       "title": "Global Solar Payback Heatmap — Where Does It Pay Off?",
-      "ms": 2603,
+      "ms": 1902,
       "error": false
     },
     {
@@ -234,7 +262,7 @@
       "detail": [],
       "load_event": true,
       "title": "About BigEnergyCo — Free Solar Method (2026)",
-      "ms": 2299,
+      "ms": 1664,
       "error": false
     },
     {
@@ -248,7 +276,7 @@
       "detail": [],
       "load_event": true,
       "title": "BigEnergyCo Blog — Free Solar & Battery Storage Knowledge",
-      "ms": 2183,
+      "ms": 1703,
       "error": false
     },
     {
@@ -262,7 +290,7 @@
       "detail": [],
       "load_event": true,
       "title": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-      "ms": 2227,
+      "ms": 1741,
       "error": false
     },
     {
@@ -276,7 +304,21 @@
       "detail": [],
       "load_event": true,
       "title": "Page not found — BigEnergyCo",
-      "ms": 1863,
+      "ms": 1655,
+      "error": false
+    },
+    {
+      "id": "chromium/768/city",
+      "engine": "chromium",
+      "width": 768,
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "console_errors": 0,
+      "csp_violations": 0,
+      "detail": [],
+      "load_event": true,
+      "title": "Accra Solar & Battery Calculator — Free Sizing",
+      "ms": 1666,
       "error": false
     },
     {
@@ -289,8 +331,8 @@
       "csp_violations": 0,
       "detail": [],
       "load_event": true,
-      "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
-      "ms": 2151,
+      "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
+      "ms": 1937,
       "error": false
     },
     {
@@ -304,7 +346,7 @@
       "detail": [],
       "load_event": true,
       "title": "Global Solar Payback Heatmap — Where Does It Pay Off?",
-      "ms": 2132,
+      "ms": 1945,
       "error": false
     },
     {
@@ -318,7 +360,7 @@
       "detail": [],
       "load_event": true,
       "title": "About BigEnergyCo — Free Solar Method (2026)",
-      "ms": 1723,
+      "ms": 1665,
       "error": false
     },
     {
@@ -332,7 +374,7 @@
       "detail": [],
       "load_event": true,
       "title": "BigEnergyCo Blog — Free Solar & Battery Storage Knowledge",
-      "ms": 2614,
+      "ms": 1700,
       "error": false
     },
     {
@@ -346,7 +388,7 @@
       "detail": [],
       "load_event": true,
       "title": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-      "ms": 1808,
+      "ms": 1730,
       "error": false
     },
     {
@@ -360,7 +402,21 @@
       "detail": [],
       "load_event": true,
       "title": "Page not found — BigEnergyCo",
-      "ms": 1712,
+      "ms": 1655,
+      "error": false
+    },
+    {
+      "id": "chromium/1440/city",
+      "engine": "chromium",
+      "width": 1440,
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "console_errors": 0,
+      "csp_violations": 0,
+      "detail": [],
+      "load_event": true,
+      "title": "Accra Solar & Battery Calculator — Free Sizing",
+      "ms": 1669,
       "error": false
     },
     {
@@ -373,8 +429,8 @@
       "csp_violations": 0,
       "detail": [],
       "load_event": true,
-      "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
-      "ms": 3933,
+      "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
+      "ms": 3058,
       "error": false
     },
     {
@@ -388,7 +444,7 @@
       "detail": [],
       "load_event": true,
       "title": "Global Solar Payback Heatmap — Where Does It Pay Off?",
-      "ms": 2674,
+      "ms": 2222,
       "error": false
     },
     {
@@ -402,7 +458,7 @@
       "detail": [],
       "load_event": true,
       "title": "About BigEnergyCo — Free Solar Method (2026)",
-      "ms": 1915,
+      "ms": 1850,
       "error": false
     },
     {
@@ -416,7 +472,7 @@
       "detail": [],
       "load_event": true,
       "title": "BigEnergyCo Blog — Free Solar & Battery Storage Knowledge",
-      "ms": 1902,
+      "ms": 1823,
       "error": false
     },
     {
@@ -430,7 +486,7 @@
       "detail": [],
       "load_event": true,
       "title": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-      "ms": 1831,
+      "ms": 1840,
       "error": false
     },
     {
@@ -444,7 +500,21 @@
       "detail": [],
       "load_event": true,
       "title": "Page not found — BigEnergyCo",
-      "ms": 1818,
+      "ms": 1921,
+      "error": false
+    },
+    {
+      "id": "firefox/320/city",
+      "engine": "firefox",
+      "width": 320,
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "console_errors": 0,
+      "csp_violations": 0,
+      "detail": [],
+      "load_event": true,
+      "title": "Accra Solar & Battery Calculator — Free Sizing",
+      "ms": 1830,
       "error": false
     },
     {
@@ -457,8 +527,8 @@
       "csp_violations": 0,
       "detail": [],
       "load_event": true,
-      "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
-      "ms": 1989,
+      "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
+      "ms": 2122,
       "error": false
     },
     {
@@ -472,7 +542,7 @@
       "detail": [],
       "load_event": true,
       "title": "Global Solar Payback Heatmap — Where Does It Pay Off?",
-      "ms": 2121,
+      "ms": 2172,
       "error": false
     },
     {
@@ -486,7 +556,7 @@
       "detail": [],
       "load_event": true,
       "title": "About BigEnergyCo — Free Solar Method (2026)",
-      "ms": 1775,
+      "ms": 2736,
       "error": false
     },
     {
@@ -500,7 +570,7 @@
       "detail": [],
       "load_event": true,
       "title": "BigEnergyCo Blog — Free Solar & Battery Storage Knowledge",
-      "ms": 2793,
+      "ms": 2035,
       "error": false
     },
     {
@@ -514,7 +584,7 @@
       "detail": [],
       "load_event": true,
       "title": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-      "ms": 1882,
+      "ms": 1864,
       "error": false
     },
     {
@@ -528,7 +598,21 @@
       "detail": [],
       "load_event": true,
       "title": "Page not found — BigEnergyCo",
-      "ms": 1760,
+      "ms": 1848,
+      "error": false
+    },
+    {
+      "id": "firefox/390/city",
+      "engine": "firefox",
+      "width": 390,
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "console_errors": 0,
+      "csp_violations": 0,
+      "detail": [],
+      "load_event": true,
+      "title": "Accra Solar & Battery Calculator — Free Sizing",
+      "ms": 1808,
       "error": false
     },
     {
@@ -541,8 +625,8 @@
       "csp_violations": 0,
       "detail": [],
       "load_event": true,
-      "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
-      "ms": 1961,
+      "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
+      "ms": 2093,
       "error": false
     },
     {
@@ -556,7 +640,7 @@
       "detail": [],
       "load_event": true,
       "title": "Global Solar Payback Heatmap — Where Does It Pay Off?",
-      "ms": 2263,
+      "ms": 2126,
       "error": false
     },
     {
@@ -570,7 +654,7 @@
       "detail": [],
       "load_event": true,
       "title": "About BigEnergyCo — Free Solar Method (2026)",
-      "ms": 1771,
+      "ms": 1790,
       "error": false
     },
     {
@@ -584,7 +668,7 @@
       "detail": [],
       "load_event": true,
       "title": "BigEnergyCo Blog — Free Solar & Battery Storage Knowledge",
-      "ms": 1795,
+      "ms": 1829,
       "error": false
     },
     {
@@ -598,7 +682,7 @@
       "detail": [],
       "load_event": true,
       "title": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-      "ms": 1755,
+      "ms": 2100,
       "error": false
     },
     {
@@ -612,7 +696,21 @@
       "detail": [],
       "load_event": true,
       "title": "Page not found — BigEnergyCo",
-      "ms": 1753,
+      "ms": 3274,
+      "error": false
+    },
+    {
+      "id": "firefox/768/city",
+      "engine": "firefox",
+      "width": 768,
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "console_errors": 0,
+      "csp_violations": 0,
+      "detail": [],
+      "load_event": true,
+      "title": "Accra Solar & Battery Calculator — Free Sizing",
+      "ms": 1963,
       "error": false
     },
     {
@@ -625,8 +723,8 @@
       "csp_violations": 0,
       "detail": [],
       "load_event": true,
-      "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
-      "ms": 1979,
+      "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
+      "ms": 2057,
       "error": false
     },
     {
@@ -640,7 +738,7 @@
       "detail": [],
       "load_event": true,
       "title": "Global Solar Payback Heatmap — Where Does It Pay Off?",
-      "ms": 3976,
+      "ms": 2147,
       "error": false
     },
     {
@@ -654,7 +752,7 @@
       "detail": [],
       "load_event": true,
       "title": "About BigEnergyCo — Free Solar Method (2026)",
-      "ms": 2026,
+      "ms": 1856,
       "error": false
     },
     {
@@ -668,7 +766,7 @@
       "detail": [],
       "load_event": true,
       "title": "BigEnergyCo Blog — Free Solar & Battery Storage Knowledge",
-      "ms": 1830,
+      "ms": 1774,
       "error": false
     },
     {
@@ -682,7 +780,7 @@
       "detail": [],
       "load_event": true,
       "title": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-      "ms": 1831,
+      "ms": 1830,
       "error": false
     },
     {
@@ -696,7 +794,21 @@
       "detail": [],
       "load_event": true,
       "title": "Page not found — BigEnergyCo",
-      "ms": 1796,
+      "ms": 1845,
+      "error": false
+    },
+    {
+      "id": "firefox/1440/city",
+      "engine": "firefox",
+      "width": 1440,
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "console_errors": 0,
+      "csp_violations": 0,
+      "detail": [],
+      "load_event": true,
+      "title": "Accra Solar & Battery Calculator — Free Sizing",
+      "ms": 1907,
       "error": false
     },
     {
@@ -709,8 +821,8 @@
       "csp_violations": 0,
       "detail": [],
       "load_event": true,
-      "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
-      "ms": 2811,
+      "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
+      "ms": 2502,
       "error": false
     },
     {
@@ -724,7 +836,7 @@
       "detail": [],
       "load_event": true,
       "title": "Global Solar Payback Heatmap — Where Does It Pay Off?",
-      "ms": 2218,
+      "ms": 2175,
       "error": false
     },
     {
@@ -738,7 +850,7 @@
       "detail": [],
       "load_event": true,
       "title": "About BigEnergyCo — Free Solar Method (2026)",
-      "ms": 1844,
+      "ms": 1768,
       "error": false
     },
     {
@@ -752,7 +864,7 @@
       "detail": [],
       "load_event": true,
       "title": "BigEnergyCo Blog — Free Solar & Battery Storage Knowledge",
-      "ms": 1827,
+      "ms": 1836,
       "error": false
     },
     {
@@ -766,7 +878,7 @@
       "detail": [],
       "load_event": true,
       "title": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-      "ms": 1922,
+      "ms": 1813,
       "error": false
     },
     {
@@ -780,7 +892,21 @@
       "detail": [],
       "load_event": true,
       "title": "Page not found — BigEnergyCo",
-      "ms": 1773,
+      "ms": 1769,
+      "error": false
+    },
+    {
+      "id": "webkit/320/city",
+      "engine": "webkit",
+      "width": 320,
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "console_errors": 0,
+      "csp_violations": 0,
+      "detail": [],
+      "load_event": true,
+      "title": "Accra Solar & Battery Calculator — Free Sizing",
+      "ms": 1822,
       "error": false
     },
     {
@@ -793,7 +919,7 @@
       "csp_violations": 0,
       "detail": [],
       "load_event": true,
-      "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
+      "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
       "ms": 1954,
       "error": false
     },
@@ -808,7 +934,7 @@
       "detail": [],
       "load_event": true,
       "title": "Global Solar Payback Heatmap — Where Does It Pay Off?",
-      "ms": 2257,
+      "ms": 2078,
       "error": false
     },
     {
@@ -822,7 +948,7 @@
       "detail": [],
       "load_event": true,
       "title": "About BigEnergyCo — Free Solar Method (2026)",
-      "ms": 1813,
+      "ms": 1820,
       "error": false
     },
     {
@@ -836,7 +962,7 @@
       "detail": [],
       "load_event": true,
       "title": "BigEnergyCo Blog — Free Solar & Battery Storage Knowledge",
-      "ms": 1786,
+      "ms": 1780,
       "error": false
     },
     {
@@ -850,7 +976,7 @@
       "detail": [],
       "load_event": true,
       "title": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-      "ms": 1767,
+      "ms": 1837,
       "error": false
     },
     {
@@ -864,7 +990,21 @@
       "detail": [],
       "load_event": true,
       "title": "Page not found — BigEnergyCo",
-      "ms": 1804,
+      "ms": 1799,
+      "error": false
+    },
+    {
+      "id": "webkit/390/city",
+      "engine": "webkit",
+      "width": 390,
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "console_errors": 0,
+      "csp_violations": 0,
+      "detail": [],
+      "load_event": true,
+      "title": "Accra Solar & Battery Calculator — Free Sizing",
+      "ms": 1752,
       "error": false
     },
     {
@@ -877,8 +1017,8 @@
       "csp_violations": 0,
       "detail": [],
       "load_event": true,
-      "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
-      "ms": 2062,
+      "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
+      "ms": 1897,
       "error": false
     },
     {
@@ -892,7 +1032,7 @@
       "detail": [],
       "load_event": true,
       "title": "Global Solar Payback Heatmap — Where Does It Pay Off?",
-      "ms": 3492,
+      "ms": 2099,
       "error": false
     },
     {
@@ -906,7 +1046,7 @@
       "detail": [],
       "load_event": true,
       "title": "About BigEnergyCo — Free Solar Method (2026)",
-      "ms": 1847,
+      "ms": 1800,
       "error": false
     },
     {
@@ -920,7 +1060,7 @@
       "detail": [],
       "load_event": true,
       "title": "BigEnergyCo Blog — Free Solar & Battery Storage Knowledge",
-      "ms": 1850,
+      "ms": 1809,
       "error": false
     },
     {
@@ -934,7 +1074,7 @@
       "detail": [],
       "load_event": true,
       "title": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-      "ms": 1856,
+      "ms": 1778,
       "error": false
     },
     {
@@ -948,7 +1088,21 @@
       "detail": [],
       "load_event": true,
       "title": "Page not found — BigEnergyCo",
-      "ms": 1816,
+      "ms": 1730,
+      "error": false
+    },
+    {
+      "id": "webkit/768/city",
+      "engine": "webkit",
+      "width": 768,
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "console_errors": 0,
+      "csp_violations": 0,
+      "detail": [],
+      "load_event": true,
+      "title": "Accra Solar & Battery Calculator — Free Sizing",
+      "ms": 1730,
       "error": false
     },
     {
@@ -961,8 +1115,8 @@
       "csp_violations": 0,
       "detail": [],
       "load_event": true,
-      "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
-      "ms": 2050,
+      "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
+      "ms": 1894,
       "error": false
     },
     {
@@ -976,7 +1130,7 @@
       "detail": [],
       "load_event": true,
       "title": "Global Solar Payback Heatmap — Where Does It Pay Off?",
-      "ms": 2733,
+      "ms": 2039,
       "error": false
     },
     {
@@ -990,7 +1144,7 @@
       "detail": [],
       "load_event": true,
       "title": "About BigEnergyCo — Free Solar Method (2026)",
-      "ms": 1877,
+      "ms": 1801,
       "error": false
     },
     {
@@ -1004,7 +1158,7 @@
       "detail": [],
       "load_event": true,
       "title": "BigEnergyCo Blog — Free Solar & Battery Storage Knowledge",
-      "ms": 1853,
+      "ms": 1851,
       "error": false
     },
     {
@@ -1018,7 +1172,7 @@
       "detail": [],
       "load_event": true,
       "title": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-      "ms": 1815,
+      "ms": 1894,
       "error": false
     },
     {
@@ -1032,7 +1186,21 @@
       "detail": [],
       "load_event": true,
       "title": "Page not found — BigEnergyCo",
-      "ms": 1807,
+      "ms": 1805,
+      "error": false
+    },
+    {
+      "id": "webkit/1440/city",
+      "engine": "webkit",
+      "width": 1440,
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "console_errors": 0,
+      "csp_violations": 0,
+      "detail": [],
+      "load_event": true,
+      "title": "Accra Solar & Battery Calculator — Free Sizing",
+      "ms": 1818,
       "error": false
     }
   ],

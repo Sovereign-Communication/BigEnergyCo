@@ -2,9 +2,9 @@
   "plan_item": "P0.4",
   "plan_ref": "docs/plan/MASTER_PLAN.md §8 P0.4, Q-09",
   "metric": "visual",
-  "stage": "_pages_xb",
-  "generated_at": "2026-09-28T08:09:40.237Z",
-  "code_sha": "bd5f7038d35e66bd3d44637989799cae543f127e",
+  "stage": "_pages_visual",
+  "generated_at": "2026-10-14T09:00:13.481Z",
+  "code_sha": "219ccc1e679b7c4e6a6058d46782d9ee602a0747",
   "enforcement": "absolute from P0 for diffs above the threshold (plan Q-09: > 0.1% of pixels); the FIRST run has no baseline to differ from, so every cell reads 'new' and the bar binds from the second run",
   "engine": "chromium",
   "engine_version": null,
@@ -24,7 +24,8 @@
         "about",
         "blog-index",
         "blog-post",
-        "404"
+        "404",
+        "city"
       ]
     },
     {
@@ -170,6 +171,30 @@
       "width": 1440,
       "direction": "rtl",
       "reason": "404.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "city",
+      "width": 320,
+      "direction": "rtl",
+      "reason": "solar-calculator/accra/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "city",
+      "width": 390,
+      "direction": "rtl",
+      "reason": "solar-calculator/accra/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "city",
+      "width": 768,
+      "direction": "rtl",
+      "reason": "solar-calculator/accra/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "city",
+      "width": 1440,
+      "direction": "rtl",
+      "reason": "solar-calculator/accra/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
     }
   ],
   "cells": [
@@ -183,9 +208,9 @@
       "has_i18n": true,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/3333440 px = 0.0000%",
+      "detail": "0/3518080 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "4285a575070971e77ed4ae1bef2e1f8c97af660f2ea0db7f155961292c44dd2f"
+      "baseline_sha256": "be6fabd849f24e8ea1460bc9d853ac9fe576d17bccd7239e6d5bde7fe0c7d35c"
     },
     {
       "id": "home/320/none/rtl",
@@ -197,9 +222,9 @@
       "has_i18n": true,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/3326720 px = 0.0000%",
+      "detail": "0/3445120 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "02d252593e8afdb95d6d900c9c2c0e90421cd2688b323e66339ddd5b8ec51cfd"
+      "baseline_sha256": "37e9d1aab0c6f0538046c0c4e5b0742b643fdbe422807bb367e8ffee62977494"
     },
     {
       "id": "home/390/none/ltr",
@@ -211,9 +236,9 @@
       "has_i18n": true,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/3607890 px = 0.0000%",
+      "detail": "0/3802500 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "d0fbea86581a6be7dd06a826df29e1102606be28fea97a38c94a13f912ca66c0"
+      "baseline_sha256": "5e649aed46ac5ab609967d432e8299df7801521a07c89347114f4268c8445547"
     },
     {
       "id": "home/390/none/rtl",
@@ -225,9 +250,9 @@
       "has_i18n": true,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/3584100 px = 0.0000%",
+      "detail": "0/3725280 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "41d1ec0a4c4301447acb8e2d2389ede011c6a7fde647344a284ffb1602c20e5f"
+      "baseline_sha256": "ab7c99544ec2cc2621f18cc1c4014ceef019dd51783973fa047d16b350cfd5c1"
     },
     {
       "id": "home/768/none/ltr",
@@ -239,9 +264,9 @@
       "has_i18n": true,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/5113344 px = 0.0000%",
+      "detail": "0/5214720 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "ab8c0be4e7b08879a4f086789333ff5e01e6e88e7c4355b2efb74999e88f4a6d"
+      "baseline_sha256": "aaf99094428470396c468d7b8c374a9f70699e0a9d43adb85b4d75b2fadfb7be"
     },
     {
       "id": "home/768/none/rtl",
@@ -253,9 +278,9 @@
       "has_i18n": true,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/5113344 px = 0.0000%",
+      "detail": "0/5194752 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "465e9f07b9a80428f841a6257f7724041702b1ec2056bd5fd00b59860cc0e2f9"
+      "baseline_sha256": "3ab02ce2ff2bb2c4f2e38734503f3be983188bb8748dad89c73638a0b7031bbd"
     },
     {
       "id": "home/1440/none/ltr",
@@ -267,9 +292,9 @@
       "has_i18n": true,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/7695360 px = 0.0000%",
+      "detail": "0/8046720 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "1ae766c289c0b215e5909d00e173c3ae71a9ee74e98674b60623e60d76464e4a"
+      "baseline_sha256": "6bc4b0330a64631fd5bb90e3239b31f01f3d3a98272942fdef6c23a4709c111f"
     },
     {
       "id": "home/1440/none/rtl",
@@ -281,9 +306,9 @@
       "has_i18n": true,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/7695360 px = 0.0000%",
+      "detail": "0/8046720 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "07bb1db9fb9cb1081c495ba3edd18c8a51a992eb5063f35cf39108082a5bf011"
+      "baseline_sha256": "db4fa51c0be5c539aceda79abbd0af2b85e80e4d52ed40927cac1e540a906eb9"
     },
     {
       "id": "heatmap/320/none/ltr",
@@ -294,10 +319,10 @@
       "direction": "ltr",
       "has_i18n": false,
       "status": "unstable",
-      "ratio": 0.052141075388026606,
-      "detail": "75250/1443200 px = 5.2141% — MEASURED, not gated: heatmap is declared unreproducible",
+      "ratio": 0.051615160753880264,
+      "detail": "74491/1443200 px = 5.1615% — MEASURED, not gated: heatmap is declared unreproducible",
       "gated": false,
-      "baseline_sha256": "df5b5065c358ff1ecd345280b3783bad51d8e42a642d65226101ce50db020a65"
+      "baseline_sha256": "fd75a51e46256b2cfa6a41916411337477cd2b651b1d4559b674b3a1bcdb694f"
     },
     {
       "id": "heatmap/390/none/ltr",
@@ -407,9 +432,9 @@
       "has_i18n": false,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/1884800 px = 0.0000%",
+      "detail": "0/2050560 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "05a71f18077f2fb96fd97f1158202b4a2529c5912c61a47fde91f6cfab4858f7"
+      "baseline_sha256": "3e71e3a6e29e1f71d0872f500b5504ce8fc3c3d01833d9e16927e8f14ae735e0"
     },
     {
       "id": "blog-index/390/none/ltr",
@@ -421,9 +446,9 @@
       "has_i18n": false,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/2012400 px = 0.0000%",
+      "detail": "0/2175030 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "ec9be67fb0548bb91ce1e5a8ec18e10479bd0c0503d7541cf6a9c556c073f35c"
+      "baseline_sha256": "c3747c873339f516dc16e4edab576995da1e10efa263c47e8ce07800461722d8"
     },
     {
       "id": "blog-index/768/none/ltr",
@@ -435,9 +460,9 @@
       "has_i18n": false,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/2409216 px = 0.0000%",
+      "detail": "0/2675712 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "c17235c2df01aec93ac3cc411a2b7038596053af1bc7387ca42919ffff2092cd"
+      "baseline_sha256": "9e0222800388b073383563ee7f0b87bda04f085902a0d84941390781b3fab09b"
     },
     {
       "id": "blog-index/1440/none/ltr",
@@ -451,7 +476,7 @@
       "ratio": 0,
       "detail": "0/4079520 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "ed613bd8366abfe11f6c55e5684ac65c530e25d5d511fb6bff2ddbee292b2c4a"
+      "baseline_sha256": "1c003b06b73f86a91281017d7099935113ad3c97d28818dcafb08dff5dc1af50"
     },
     {
       "id": "blog-post/320/none/ltr",
@@ -463,9 +488,9 @@
       "has_i18n": false,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/7905600 px = 0.0000%",
+      "detail": "0/7920640 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "e9b7f383543f0ba96102719460de41a8d36952e6dbc3807e8ca075f3d4693f18"
+      "baseline_sha256": "7c8ab886c7c2d7a380707307a10df6ac4ae30b38d2b8dc310ad394c57b9670b0"
     },
     {
       "id": "blog-post/390/none/ltr",
@@ -477,9 +502,9 @@
       "has_i18n": false,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/7858500 px = 0.0000%",
+      "detail": "0/7876830 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "d5a593c399cb684f51744264096a676db6616fb7b69c917d4eef5ef2439b259e"
+      "baseline_sha256": "4bbd8985377d028a51a7b45bf54f66ef93896e4f9b68150e990c410449b5d0f7"
     },
     {
       "id": "blog-post/768/none/ltr",
@@ -493,7 +518,7 @@
       "ratio": 0,
       "detail": "0/9399552 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "587491b952ffd513681f455fd8ce70a37c7f354fed194780278b1fa0afd86d49"
+      "baseline_sha256": "4b38fd68d65af8fb7a7300edca9d4d0cd69335a6fda71c573a69d15c2721ce2f"
     },
     {
       "id": "blog-post/1440/none/ltr",
@@ -505,9 +530,9 @@
       "has_i18n": false,
       "status": "ok",
       "ratio": 0,
-      "detail": "0/16166880 px = 0.0000%",
+      "detail": "0/16195680 px = 0.0000%",
       "gated": true,
-      "baseline_sha256": "199a18fab5a810cb4c597ae7b387966b27886bc4f2dedbe7bcd99216e7634608"
+      "baseline_sha256": "37c32b7645e68e32d1eb5eb60652210b9726d4e8368d6c5a827f457d5aa90671"
     },
     {
       "id": "404/320/none/ltr",
@@ -564,6 +589,62 @@
       "detail": "0/1342080 px = 0.0000%",
       "gated": true,
       "baseline_sha256": "63e98d2f3873d0dada05d6d80ed15f3edaf699835b62437e4129fa5c38e5c078"
+    },
+    {
+      "id": "city/320/none/ltr",
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "width": 320,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/1578240 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "bf19c5f2103d682999df9bd7601c27b05100282ecb4f837953d56d579af40be0"
+    },
+    {
+      "id": "city/390/none/ltr",
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "width": 390,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/1639170 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "bcb134f75fd39703f785ab1919dbeca9d08e70d6e6bc1e2616954e249a1fb341"
+    },
+    {
+      "id": "city/768/none/ltr",
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "width": 768,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/2329344 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "e1cabb23f21306c63e50c2668f43b6df937c7b2f24d9f752b86030f12dd5d80a"
+    },
+    {
+      "id": "city/1440/none/ltr",
+      "template": "city",
+      "path": "solar-calculator/accra/index.html",
+      "width": 1440,
+      "theme": "none",
+      "direction": "ltr",
+      "has_i18n": false,
+      "status": "ok",
+      "ratio": 0,
+      "detail": "0/4253760 px = 0.0000%",
+      "gated": true,
+      "baseline_sha256": "9a2c9014664ff09fb1a772b58a2cb01a7505d872ddc1dcddbb899cbbb2003730"
     }
   ],
   "new_snapshots": 0,
@@ -573,7 +654,7 @@
   "worst_diffs": [
     {
       "id": "heatmap/320/none/ltr",
-      "ratio": 0.052141075388026606
+      "ratio": 0.051615160753880264
     },
     {
       "id": "home/320/none/ltr",

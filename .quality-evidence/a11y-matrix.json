@@ -3,8 +3,8 @@
   "plan_ref": "docs/plan/MASTER_PLAN.md §8 P0.4, §3.2, Q-07",
   "metric": "a11y_matrix",
   "stage": "_pages_a11y",
-  "generated_at": "2026-09-28T08:08:06.281Z",
-  "code_sha": "bd5f7038d35e66bd3d44637989799cae543f127e",
+  "generated_at": "2026-10-14T08:54:51.500Z",
+  "code_sha": "219ccc1e679b7c4e6a6058d46782d9ee602a0747",
   "ledger": "docs\\plan\\LEDGER.jsonl",
   "baseline_ref": "P0.4",
   "enforcement": "regression-blocking from P0 (plan §3.2); absolute (0 violations) from P5 for templates in the new shell and P8 for everything",
@@ -51,7 +51,7 @@
         {
           "id": "blog-post",
           "path": "blog/battery-longevity-and-dod-reference/index.html",
-          "pages": 10,
+          "pages": 11,
           "has_i18n": false,
           "has_run_control": false
         },
@@ -59,6 +59,13 @@
           "id": "404",
           "path": "404.html",
           "pages": 1,
+          "has_i18n": false,
+          "has_run_control": false
+        },
+        {
+          "id": "city",
+          "path": "solar-calculator/accra/index.html",
+          "pages": 66,
           "has_i18n": false,
           "has_run_control": false
         }
@@ -87,7 +94,7 @@
         {
           "id": "none",
           "present": false,
-          "evidence": "no staged stylesheet, page or script mentions prefers-color-scheme or data-theme across 124 files, so the product has no theme to vary"
+          "evidence": "no staged stylesheet, page or script mentions prefers-color-scheme or data-theme across 131 files, so the product has no theme to vary"
         }
       ]
     },
@@ -183,6 +190,22 @@
       "template": "404",
       "state": "manual",
       "reason": "404.html has no run control, so it has no manual state to audit"
+    },
+    {
+      "template": "city",
+      "state": "arrival",
+      "dimension": "direction",
+      "reason": "solar-calculator/accra/index.html never loads shared/i18n.js, so it never sets dir and has one text direction"
+    },
+    {
+      "template": "city",
+      "state": "result",
+      "reason": "solar-calculator/accra/index.html has no run control, so it has no result state to audit"
+    },
+    {
+      "template": "city",
+      "state": "manual",
+      "reason": "solar-calculator/accra/index.html has no run control, so it has no manual state to audit"
     }
   ],
   "cells": [
@@ -195,12 +218,12 @@
       "observed": {
         "dir": "ltr",
         "lang": "en",
-        "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
+        "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
         "readyState": "complete",
         "load_event": true
       },
       "violations": [],
-      "ms": 1364
+      "ms": 952
     },
     {
       "id": "home/arrival/none/rtl",
@@ -211,12 +234,12 @@
       "observed": {
         "dir": "rtl",
         "lang": "ar",
-        "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
+        "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
         "readyState": "complete",
         "load_event": true
       },
       "violations": [],
-      "ms": 1058
+      "ms": 1042
     },
     {
       "id": "home/result/none/ltr",
@@ -227,12 +250,12 @@
       "observed": {
         "dir": "ltr",
         "lang": "en",
-        "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
+        "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
         "readyState": "complete",
         "load_event": true
       },
       "violations": [],
-      "ms": 8807
+      "ms": 7377
     },
     {
       "id": "home/result/none/rtl",
@@ -243,12 +266,12 @@
       "observed": {
         "dir": "rtl",
         "lang": "ar",
-        "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
+        "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
         "readyState": "complete",
         "load_event": true
       },
       "violations": [],
-      "ms": 9611
+      "ms": 7207
     },
     {
       "id": "home/manual/none/ltr",
@@ -259,12 +282,12 @@
       "observed": {
         "dir": "ltr",
         "lang": "en",
-        "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
+        "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
         "readyState": "complete",
         "load_event": true
       },
       "violations": [],
-      "ms": 936
+      "ms": 1169
     },
     {
       "id": "home/manual/none/rtl",
@@ -275,12 +298,12 @@
       "observed": {
         "dir": "rtl",
         "lang": "ar",
-        "title": "Free Off-Grid Calculator — Solar & Battery Sizer",
+        "title": "Cut Your Electricity Bill — Free Solar & Battery Calculator",
         "readyState": "complete",
         "load_event": true
       },
       "violations": [],
-      "ms": 946
+      "ms": 1011
     },
     {
       "id": "heatmap/arrival/none/ltr",
@@ -296,7 +319,7 @@
         "load_event": true
       },
       "violations": [],
-      "ms": 1001
+      "ms": 1084
     },
     {
       "id": "about/arrival/none/ltr",
@@ -312,7 +335,7 @@
         "load_event": true
       },
       "violations": [],
-      "ms": 423
+      "ms": 473
     },
     {
       "id": "blog-index/arrival/none/ltr",
@@ -328,7 +351,7 @@
         "load_event": true
       },
       "violations": [],
-      "ms": 507
+      "ms": 525
     },
     {
       "id": "blog-post/arrival/none/ltr",
@@ -344,7 +367,7 @@
         "load_event": true
       },
       "violations": [],
-      "ms": 672
+      "ms": 682
     },
     {
       "id": "404/arrival/none/ltr",
@@ -360,12 +383,33 @@
         "load_event": true
       },
       "violations": [],
-      "ms": 328
+      "ms": 313
+    },
+    {
+      "id": "city/arrival/none/ltr",
+      "path": "solar-calculator/accra/index.html",
+      "state": "arrival",
+      "theme": "none",
+      "direction": "ltr",
+      "observed": {
+        "dir": "ltr",
+        "lang": "en",
+        "title": "Accra Solar & Battery Calculator — Free Sizing",
+        "readyState": "complete",
+        "load_event": true
+      },
+      "violations": [],
+      "ms": 517
     }
   ],
   "regressions": [],
   "improvements": [],
-  "unmeasured": [],
+  "unmeasured": [
+    {
+      "id": "city/arrival/none/ltr",
+      "violations": 0
+    }
+  ],
   "breaches": [],
   "audit_errors": [],
   "ledger_notes": []
