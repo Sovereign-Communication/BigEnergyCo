@@ -77,13 +77,14 @@ test("GATE: every glossary entry has a short and long plain-language explanation
   }
 });
 
-test("Simple mode defaults OFF and survives storage changes", () => {
+test("Simple mode defaults ON and survives storage changes", () => {
   const storage = new MemoryStorage();
-  assert.equal(readSimpleMode(storage), false);
+  assert.equal(readSimpleMode(storage), true);
   setSimpleMode(true, storage);
   assert.equal(storage.getItem(SIMPLE_MODE_KEY), "simple");
   assert.equal(readSimpleMode(storage), true);
   setSimpleMode(false, storage);
+  assert.equal(storage.getItem(SIMPLE_MODE_KEY), "technical");
   assert.equal(readSimpleMode(storage), false);
 });
 

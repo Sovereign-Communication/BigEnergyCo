@@ -1,6 +1,22 @@
 (function () {
   "use strict";
 
+  // P1-1 (2026-10-13 UX audit): WebGL detection for heatmap fallback.
+  // If WebGL is unavailable, show the fallback notice; the rankings
+  // tables below already contain the same data as text.
+  try {
+    var _c = document.createElement("canvas");
+    var _gl = _c.getContext("webgl") || _c.getContext("experimental-webgl");
+    if (!_gl) {
+      var _fb = document.getElementById("webgl-fallback");
+      if (_fb) _fb.style.display = "";
+      var _ld = document.getElementById("loading");
+      if (_ld) _ld.style.display = "none";
+    }
+  } catch (e) {
+    // Detection failure: leave default loading state.
+  }
+
   // ── State ──────────────────────────────────────────────────────────────
   let gridData = null;
   let map = null;
@@ -46,9 +62,14 @@
     return "#ff6b6b";
   }
 
+  // Compressed format (2026-10-13): keys shortened, identical 4-arrays
+  // collapsed to scalars. pick() handles both forms.
+  function pick(v) {
+    return Array.isArray(v) ? v[usageIdx] : v;
+  }
   function getPointCost(pt) {
     if (basis === "real") {
-      return pt.tr !== undefined ? pt.tr : pt.t;
+      return pt.r !== undefined ? pt.r : pt.t;
     }
     return pt.t;
   }
@@ -56,11 +77,11 @@
   function getPointYears(pt, m) {
     const isReal = basis === "real";
     if (m === "p") {
-      const series = isReal && pt.pr ? pt.pr : pt.p;
-      return series ? series[usageIdx] : null;
+      const series = isReal && pt.q !== undefined ? pt.q : pt.p;
+      return series !== undefined ? pick(series) : null;
     } else if (m === "b") {
-      const series = isReal && pt.br ? pt.br : pt.b;
-      return series ? series[usageIdx] : null;
+      const series = isReal && pt.s !== undefined ? pt.s : pt.b;
+      return series !== undefined ? pick(series) : null;
     }
     return null;
   }
@@ -275,7 +296,7 @@
         color = yearColor(yrs);
       }
 
-      const marker = L.circleMarker([pt.lat, pt.lon], {
+      const marker = L.circleMarker([pt.a, pt.o], {
         radius: 3.5,
         weight: 0,
         fillColor: color,
@@ -302,8 +323,8 @@
         const usage = gridData.usageTiersKwhDay[usageIdx];
         const hasDeficit = pt.tr && pt.tr !== pt.t;
 
-        const unservedPct = pt.unserved || 0;
-        const coverageBadge = pt.unserved
+        const unservedPct = pt.u || 0;
+        const coverageBadge = pt.u
           ? `<div style="background:rgba(255,170,0,0.15);border:1px solid rgba(255,170,0,0.3);border-radius:4px;padding:4px 7px;font-size:.75rem;color:#ffaa00;margin-bottom:.5rem;line-height:1.4;">
               ⚠️ <strong>Area Grid Split:</strong> ~${100 - unservedPct}% grid / ~${unservedPct}% unserved (generators)
             </div>`
@@ -342,7 +363,7 @@
         const popup = `
           <div style="min-width:220px;">
             <div style="font-weight:700;font-size:1rem;color:#fff;margin-bottom:.2rem;">${esc(pt.n)}</div>
-            <div style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem;">${esc(countryName(pt.c))} · ${pt.lat}°, ${pt.lon}°</div>
+            <div style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem;">${esc(countryName(pt.c))} · ${pt.a}°, ${pt.o}°</div>
             ${coverageBadge}
             <table style="width:100%;font-size:.85rem;border-collapse:collapse;">
               ${tariffRows}
@@ -414,9 +435,7 @@
       document.getElementById("best-list").innerHTML = highestByCountry
         .map((pt) => {
           const cost = getPointCost(pt);
-          const splitText = pt.unserved
-            ? `~${pt.unserved}% unserved`
-            : "100% grid";
+          const splitText = pt.u ? `~${pt.u}% unserved` : "100% grid";
           return `<li><span class="years" style="color:${costTextColor(cost)}">${costLabel(cost)}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${splitText}, paper $${pt.t}/kWh)</span></li>`;
         })
         .join("");
@@ -556,7 +575,9 @@
   // ── Init ───────────────────────────────────────────────────────────────
   async function init() {
     try {
-      const res = await fetch("../assets/data/heatmap-grid.json?v=20261005h");
+      const res = await fetch(
+        "../assets/data/heatmap-grid.min.json?v=20261014a",
+      );
       if (!res.ok) throw new Error("Failed to load heatmap data");
       gridData = await res.json();
     } catch (err) {
@@ -594,5 +615,36 @@
     renderDots();
   }
 
-  init();
+  // PERF (2026-10-13): Lazy-load the 4.7MB dataset only when the map
+  // scrolls near the viewport. The page has rankings and explainer content
+  // above the map; fetching on load blocked first paint for everyone.
+  function initLazy() {
+    const mapEl = document.getElementById("map");
+    if (!mapEl) {
+      init();
+      return;
+    }
+    if (!("IntersectionObserver" in window)) {
+      init();
+      return;
+    }
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            obs.disconnect();
+            init();
+            break;
+          }
+        }
+      },
+      { rootMargin: "400px" },
+    );
+    obs.observe(mapEl);
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initLazy);
+  } else {
+    initLazy();
+  }
 })();
