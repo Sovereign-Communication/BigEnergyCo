@@ -3,14 +3,17 @@
 // each is pinned here in both directions.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { execSync } from "node:child_process";
-import { readFileSync, rmSync } from "node:fs";
+import { execFileSync, execSync } from "node:child_process";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 
 import {
   deployedFiles,
   deployedFilesFrom,
+  pageLastTouched,
   sameOriginPath,
+  sitemapEntries,
   sitemapGaps,
+  staleLastmods,
 } from "../scripts/lib/gates.mjs";
 import { withMutationLock } from "../scripts/lib/mutation-lock.mjs";
 import { normalizeBase } from "../scripts/lib/base-url.mjs";
@@ -119,6 +122,177 @@ test("SITEMAP GAPS: the real tree is complete and has no stale entries", () => {
   );
 });
 
+// ── sitemap <lastmod> freshness (check-seo) ─────────────────────────────────
+
+test("SITEMAP FRESHNESS: each <loc> keeps its own <lastmod>", () => {
+  const xml = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    "<url><loc>https://example.com/</loc><lastmod>2026-01-01</lastmod></url>",
+    "<url><loc>https://example.com/missing/</loc></url>",
+    "<url><loc>https://example.com/b/</loc><lastmod>2026-02-02</lastmod></url>",
+    "</urlset>",
+  ].join("\n");
+  assert.deepEqual(sitemapEntries(xml), [
+    { loc: "https://example.com/", lastmod: "2026-01-01" },
+    // Zipping two flat lists positionally is what made this per-entry pairing
+    // necessary: entry 2 would have been handed entry 3's date.
+    { loc: "https://example.com/missing/", lastmod: null },
+    { loc: "https://example.com/b/", lastmod: "2026-02-02" },
+  ]);
+  // Three entries, not four: `<urlset>` is not a `<url>`.
+  assert.equal(sitemapEntries(xml).length, 3);
+});
+
+test("SITEMAP FRESHNESS: a date older than the page's last change is refused", () => {
+  const entries = [
+    { loc: "https://example.com/", lastmod: "2026-01-01" },
+    { loc: "https://example.com/newer/", lastmod: "2026-02-02" },
+    { loc: "https://example.com/equal/", lastmod: "2026-03-03" },
+  ];
+  const files = {
+    "https://example.com/": "index.html",
+    "https://example.com/newer/": "newer/index.html",
+    "https://example.com/equal/": "equal/index.html",
+  };
+  const touched = {
+    "index.html": "2026-01-31", // the page was rewritten after the shipped date
+    "newer/index.html": "2026-01-01", // the sitemap runs ahead of the page
+    "equal/index.html": "2026-03-03",
+  };
+  const { stale, checked } = staleLastmods(
+    entries,
+    (url) => files[url] ?? null,
+    (file) => touched[file] ?? null,
+  );
+  assert.deepEqual(stale, [
+    {
+      url: "https://example.com/",
+      file: "index.html",
+      lastmod: "2026-01-01",
+      touched: "2026-01-31",
+    },
+  ]);
+  assert.equal(checked, 3, "a newer date and an equal one are both fresh");
+});
+
+test("SITEMAP FRESHNESS: an entry it cannot judge is skipped, never failed", () => {
+  const entries = [
+    { loc: null, lastmod: "2026-01-01" },
+    { loc: "https://example.com/nodate/", lastmod: null },
+    { loc: "https://example.com/gone/", lastmod: "2026-01-01" },
+    { loc: "https://example.com/nonsense/", lastmod: "yesterday" },
+    { loc: "https://example.com/uncommitted/", lastmod: "2026-01-01" },
+  ];
+  const files = {
+    "https://example.com/nonsense/": "nonsense/index.html",
+    "https://example.com/uncommitted/": "uncommitted/index.html",
+  };
+  const { stale, checked } = staleLastmods(
+    entries,
+    (url) => files[url] ?? null,
+    () => null, // nothing is derivable here
+  );
+  assert.deepEqual(stale, []);
+  assert.equal(
+    checked,
+    0,
+    "presence, resolution and derivation are other checks' subjects — one defect must not be reported twice under two names",
+  );
+});
+
+test("SITEMAP FRESHNESS: a shallow checkout is refused by name, never answered", () => {
+  // What `git log -1 -- <file>` actually does on a grafted root: it does not
+  // fail, it reports the tip for every file — so a date comparison against it
+  // is a comparison against the wrong commit on all 82 entries at once.
+  const run = (args) => (args[0] === "rev-parse" ? "true\n" : "2026-10-13\n");
+  const result = pageLastTouched(["index.html", "blog/index.html"], run);
+  assert.ok(result.error, "a shallow checkout has no answer to give");
+  assert.match(result.error, /shallow/);
+  assert.match(result.error, /git fetch --unshallow/);
+  assert.equal(result.dates.size, 0, "no date survives the refusal");
+});
+
+test("SITEMAP FRESHNESS: a checkout with no git at all is refused too", () => {
+  const result = pageLastTouched(["index.html"], () => {
+    throw new Error("git: command not found");
+  });
+  assert.match(result.error, /cannot read git history/);
+  assert.equal(result.dates.size, 0);
+});
+
+test("SITEMAP FRESHNESS: a full history derives each file's own last commit", () => {
+  const dates = {
+    "index.html": "2026-10-05",
+    "blog/index.html": "2026-10-13",
+  };
+  const asked = [];
+  const run = (args) => {
+    if (args[0] === "rev-parse") return "false\n";
+    const file = args[args.length - 1];
+    asked.push(file);
+    return `${dates[file] ?? ""}\n`;
+  };
+  const result = pageLastTouched(
+    ["index.html", "blog/index.html", "new/index.html"],
+    run,
+  );
+  assert.equal(result.error, null);
+  assert.equal(result.dates.get("index.html"), "2026-10-05");
+  assert.equal(result.dates.get("blog/index.html"), "2026-10-13");
+  assert.deepEqual(
+    result.missing,
+    ["new/index.html"],
+    "a page with no commit is unverifiable, which is not the same as stale",
+  );
+  assert.deepEqual(asked, ["index.html", "blog/index.html", "new/index.html"]);
+});
+
+test("SITEMAP FRESHNESS: the shipped dates match their pages, and the stale hub is caught", (t) => {
+  const entries = sitemapEntries(readFileSync("sitemap.xml", "utf8"));
+  assert.ok(entries.length > 50, "sitemap must not go empty");
+  const origin = "https://freeoffgridcalculator.com/";
+  const fileFor = (url) => {
+    const path = String(url).replace(origin, "").replace(/\/$/, "");
+    if (path === "") return "index.html";
+    if (existsSync(`${path}/index.html`)) return `${path}/index.html`;
+    if (existsSync(path)) return path;
+    return null;
+  };
+  const derived = pageLastTouched(
+    [...new Set(entries.map((e) => fileFor(e.loc)).filter(Boolean))],
+    (args) =>
+      execFileSync("git", args, {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }),
+  );
+  if (derived.error) {
+    // A shallow checkout cannot answer this, and the gate refuses loudly there
+    // rather than guessing. Report that instead of inventing the pass it cannot
+    // earn — a green that verified nothing is the defect this check exists for.
+    t.skip(`no full history to derive from: ${derived.error}`);
+    return;
+  }
+  const dateFor = (file) => derived.dates.get(file) ?? null;
+  const { stale, checked } = staleLastmods(entries, fileFor, dateFor);
+  assert.equal(stale.length, 0, `stale entries: ${JSON.stringify(stale)}`);
+  assert.ok(checked > 50, `checked ${checked} of ${entries.length} entries`);
+
+  // MUTATION: the audit's headline case, restored. The blog hub shipped
+  // 2026-08-30 while its last commit was 2026-10-13; with that date back the
+  // check must fail, which is what makes the green above mean something.
+  const hub = `${origin}blog/`;
+  const mutated = entries.map((e) =>
+    e.loc === hub ? { ...e, lastmod: "2026-08-30" } : e,
+  );
+  const result = staleLastmods(mutated, fileFor, dateFor);
+  assert.equal(result.stale.length, 1);
+  assert.equal(result.stale[0].url, hub);
+  assert.equal(result.stale[0].lastmod, "2026-08-30");
+  assert.equal(result.stale[0].touched, dateFor("blog/index.html"));
+});
+
 test("ALLOWLIST PARSE: dotless platform files and nested paths survive the parser", () => {
   // `_headers` and `_redirects` have no dot and the platform files sit beside
   // nested assets, so a naive "looks like a filename" rule silently drops real
@@ -177,6 +351,11 @@ test("ALLOWLIST QUERY: --list reports exactly what a staged build contains", asy
 test("SCRIPTS: the hardened helpers are the ones actually used", () => {
   const seo = readFileSync("scripts/check-seo.mjs", "utf8");
   assert.match(seo, /sitemapGaps\(/);
+  // The freshness verdict is the shared helper, not a private copy of it: a
+  // second implementation is one that can drift from the tested one.
+  assert.match(seo, /sitemapEntries\(/);
+  assert.match(seo, /pageLastTouched\(/);
+  assert.match(seo, /staleLastmods\(/);
   assert.doesNotMatch(seo, /u\.includes\(urlPath/);
   assert.doesNotMatch(seo, /\.replace\("blog\/", "blog\/"\)/);
 

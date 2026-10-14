@@ -481,6 +481,128 @@ export function sitemapGaps(pages, urls, site) {
   };
 }
 
+// ── sitemap <lastmod> freshness ─────────────────────────────────────────────
+// A date that is PRESENT and within a year is still wrong if it predates the
+// page's last rewrite, and that is not a hypothetical: measured on this repo,
+// the blog hub declared 2026-08-30 while its last commit was 2026-10-13. A
+// sitemap that under-reports change tells a crawler a rewritten page is
+// untouched, which is the one thing the file exists to prevent. So each date is
+// compared against the commit that last touched the page it describes.
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * One entry per <url>, each <loc> kept with its OWN <lastmod>.
+ *
+ * The freshness verdict is per-entry, and a verdict zipped together from two
+ * flat lists is only per-entry while every <url> carries exactly one of each.
+ * A single entry with two <lastmod> lines, or none, shifts every later pair and
+ * the check then reports a date as stale for a page it never described.
+ *
+ * @returns {{loc: string|null, lastmod: string|null}[]}
+ */
+export function sitemapEntries(xml) {
+  const out = [];
+  for (const block of String(xml ?? "").matchAll(/<url\b[\s\S]*?<\/url>/gi)) {
+    const loc = /<loc\b[^>]*>([\s\S]*?)<\/loc>/i.exec(block[0]);
+    const lastmod = /<lastmod\b[^>]*>([\s\S]*?)<\/lastmod>/i.exec(block[0]);
+    out.push({
+      loc: loc ? loc[1].trim() : null,
+      lastmod: lastmod ? lastmod[1].trim() : null,
+    });
+  }
+  return out;
+}
+
+/**
+ * The last commit date of each file, or the reason this checkout cannot say.
+ *
+ * A shallow clone answers WRONGLY rather than failing, so reachability is
+ * checked FIRST, before a single date is trusted: `git log -1 -- <file>` on a
+ * grafted root finds only the tip, so every file reports the tip's date.
+ * Measured on a `git clone --depth 1` of this repo: all 82 sitemap files
+ * derived 2026-10-13 (the tip) and 70 of the 82 entries then looked stale for
+ * no reason at all. Both facts are why the answer here is a named refusal.
+ *
+ * `run` is the git runner (`args` -> stdout), injected so the shallow and
+ * git-less paths are reachable from a test without building such a checkout.
+ * A file with no commit at all (an uncommitted page, which CI never sees) is
+ * `missing`: unverifiable, and reported as such rather than passed.
+ *
+ * @returns {{dates: Map<string,string>, missing: string[], error: string|null}}
+ */
+export function pageLastTouched(files, run) {
+  let shallow;
+  try {
+    shallow = String(run(["rev-parse", "--is-shallow-repository"])).trim();
+  } catch (e) {
+    return {
+      dates: new Map(),
+      missing: [],
+      error:
+        "cannot read git history, so no <lastmod> can be checked against the " +
+        "page it points at (a source tarball has none to read). Refusing to " +
+        `report these dates green. (${String((e && e.message) || e).slice(0, 120)})`,
+    };
+  }
+  if (shallow === "true")
+    return {
+      dates: new Map(),
+      missing: [],
+      error:
+        "this checkout is shallow, so the last commit that touched each page " +
+        "is not reachable and <lastmod> freshness cannot be determined. Run " +
+        "`git fetch --unshallow` and re-run. Refusing to report green.",
+    };
+  const dates = new Map();
+  const missing = [];
+  for (const file of files) {
+    let out = "";
+    try {
+      out = String(run(["log", "-1", "--format=%cs", "--", file])).trim();
+    } catch {
+      out = ""; // no commit touches this path: unverifiable, not stale
+    }
+    if (ISO_DATE.test(out)) dates.set(file, out);
+    else missing.push(file);
+  }
+  return { dates, missing, error: null };
+}
+
+/**
+ * Entries whose <lastmod> is older than the last commit that touched the page
+ * the <loc> points at.
+ *
+ * ISO dates sort lexicographically, so no Date parsing — and therefore no
+ * timezone — sits between the two values being compared.
+ *
+ * An entry is SKIPPED, never judged, when it has no <loc>/<lastmod>, when no
+ * page resolves behind the <loc>, when no date can be derived, or when the
+ * <lastmod> is not an ISO date. Presence, count and resolution are already
+ * other checks' subjects, and folding them in here would report one defect
+ * twice under two names.
+ *
+ * @param {{loc: string|null, lastmod: string|null}[]} entries
+ * @param {(url: string) => (string|null)} resolveFile page a <loc> serves
+ * @param {(file: string) => (string|null)} touchedOn last-commit date, or null
+ * @returns {{stale: {url: string, file: string, lastmod: string, touched: string}[], checked: number}}
+ */
+export function staleLastmods(entries, resolveFile, touchedOn) {
+  const stale = [];
+  let checked = 0;
+  for (const entry of entries) {
+    if (!entry.loc || !ISO_DATE.test(entry.lastmod || "")) continue;
+    const file = resolveFile(entry.loc);
+    if (!file) continue;
+    const touched = touchedOn(file);
+    if (!ISO_DATE.test(touched || "")) continue;
+    checked++;
+    if (entry.lastmod < touched)
+      stale.push({ url: entry.loc, file, lastmod: entry.lastmod, touched });
+  }
+  return { stale, checked };
+}
+
 // ── unkeyed prose on a translated page ───────────────────────────────────────
 // Every other i18n rule reads the DICTIONARY. Copy that was never put into it is
 // invisible to all of them: index.html's hero paragraph and the legal-card

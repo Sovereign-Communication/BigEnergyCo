@@ -2,8 +2,15 @@
 // Fails (exit 1) on: missing/dupe h1, missing canonical, missing OG tags,
 // unparseable JSON-LD, sitemap URLs that don't match real files, robots issues.
 import { readFileSync, existsSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 
-import { deployedFiles, sitemapGaps } from "./lib/gates.mjs";
+import {
+  deployedFiles,
+  pageLastTouched,
+  sitemapEntries,
+  sitemapGaps,
+  staleLastmods,
+} from "./lib/gates.mjs";
 import { metadataIssues } from "./lib/seo.mjs";
 
 let failures = 0;
@@ -12,6 +19,9 @@ const fail = (msg) => {
   failures++;
 };
 const ok = (msg) => console.log(`OK   ${msg}`);
+// Neither a pass nor a failure: something the check could not judge, printed so
+// it stays visible instead of being silently green.
+const note = (msg) => console.log(`NOTE ${msg}`);
 
 // Discover public HTML pages from the deploy manifest (single source of truth,
 // shared with the verifier and every other gate). The old per-script CLI spawn
@@ -123,7 +133,18 @@ for (const page of pages) {
 }
 for (const issue of metadataIssues(seoPages)) fail(issue);
 
-// Sitemap URLs must correspond to real files
+// Sitemap URLs must correspond to real files. `sitemapFile` is the single
+// definition of which page a <loc> serves, shared by the existence check below
+// and by the freshness check after it, so the file a date is compared against is
+// provably the same file this resolved.
+const ORIGIN = "https://freeoffgridcalculator.com/";
+const sitemapFile = (url) => {
+  const path = String(url).replace(ORIGIN, "").replace(/\/$/, "");
+  if (path === "") return "index.html";
+  if (existsSync(`${path}/index.html`)) return `${path}/index.html`;
+  if (existsSync(path)) return path;
+  return null;
+};
 const sitemap = readFileSync("sitemap.xml", "utf8");
 const urls = [
   ...sitemap.matchAll(
@@ -151,19 +172,65 @@ else ok("sitemap.xml: every URL has <lastmod>");
   else ok("sitemap.xml: all lastmod dates within 366 days");
 }
 for (const url of urls) {
-  const path = url
-    .replace("https://freeoffgridcalculator.com/", "")
-    .replace(/\/$/, "");
-  const file =
-    path === ""
-      ? "index.html"
-      : existsSync(`${path}/index.html`)
-        ? `${path}/index.html`
-        : existsSync(path)
-          ? path
-          : null;
+  const file = sitemapFile(url);
   if (file) ok(`sitemap: ${url} -> ${file}`);
   else fail(`sitemap: ${url} has no matching file`);
+}
+
+// ── a <lastmod> must not be older than the page it describes ────────────────
+// Presence and a <=366-day window are both satisfied by a date stamped months
+// before the page was rewritten: the blog hub declared 2026-08-30 while its
+// last commit was 2026-10-13. A sitemap that under-reports change tells a
+// crawler that a rewritten page is untouched, the opposite of what the file is
+// for. So every date is compared against the commit that last touched the page
+// the <loc> points at, derived from this checkout's own history.
+{
+  const entries = sitemapEntries(sitemap);
+  const derived = pageLastTouched(
+    [...new Set(entries.map((e) => sitemapFile(e.loc)).filter(Boolean))],
+    (args) =>
+      execFileSync("git", args, {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }),
+  );
+  if (derived.error) {
+    // A gate that could not check must never report a clean result.
+    fail(`sitemap.xml: ${derived.error}`);
+  } else {
+    for (const file of derived.missing.slice(0, 4))
+      note(
+        `sitemap.xml: ${file} has no commit yet, so its <lastmod> is ` +
+          "unverifiable until it is committed (CI only ever sees committed pages)",
+      );
+    if (derived.missing.length > 4)
+      note(
+        `sitemap.xml: ${derived.missing.length - 4} more page(s) with no commit yet`,
+      );
+    const { stale, checked } = staleLastmods(
+      entries,
+      sitemapFile,
+      (file) => derived.dates.get(file) ?? null,
+    );
+    if (stale.length) {
+      for (const s of stale.slice(0, 8))
+        fail(
+          `sitemap.xml: ${s.url} says ${s.lastmod} but ${s.file} last changed ${s.touched}`,
+        );
+      if (stale.length > 8)
+        fail(
+          `sitemap.xml: ${stale.length - 8} more <lastmod> older than its page`,
+        );
+    } else if (!checked) {
+      fail(
+        "sitemap.xml: no <lastmod> was verified against any page — the freshness check answered nothing",
+      );
+    } else {
+      ok(
+        `sitemap.xml: ${checked} <lastmod> date(s) at least as new as the page each describes`,
+      );
+    }
+  }
 }
 
 // Every public content page needs its OWN sitemap entry, and every entry needs
