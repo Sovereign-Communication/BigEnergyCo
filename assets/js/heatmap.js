@@ -317,11 +317,11 @@
         const pt = points[layer._heatIdx];
         const isReal = basis === "real";
         const pSeries = isReal && pt.pr ? pt.pr : pt.p;
-        const bSeries = isReal && pt.br ? pt.br : pt.b;
+        const bSeries = isReal && pt.s ? pt.s : pt.b;
         const paybackYrs = pSeries ? pSeries[usageIdx] : null;
         const breakevenYrs = bSeries ? bSeries[usageIdx] : null;
         const usage = gridData.usageTiersKwhDay[usageIdx];
-        const hasDeficit = pt.tr && pt.tr !== pt.t;
+        const hasDeficit = pt.r && pt.r !== pt.t;
 
         const unservedPct = pt.u || 0;
         const coverageBadge = pt.u
@@ -337,7 +337,7 @@
           tariffRows = isReal
             ? `<tr style="${metric === "cost" ? "background:rgba(0,230,153,0.12);" : ""}">
                 <td style="color:var(--muted);padding:.15rem 0;">True Grid Cost</td>
-                <td style="text-align:right;color:#00e699;font-weight:700;">$${pt.tr}/kWh <span style="font-size:.7rem;color:var(--muted);font-weight:normal;">(weighted)</span></td>
+                <td style="text-align:right;color:#00e699;font-weight:700;">$${pt.r}/kWh <span style="font-size:.7rem;color:var(--muted);font-weight:normal;">(weighted)</span></td>
                </tr>
                <tr>
                 <td style="color:var(--muted);padding:.15rem 0;">Paper grid tariff</td>
@@ -349,7 +349,7 @@
                </tr>
                <tr>
                 <td style="color:var(--muted);padding:.15rem 0;">True Grid Cost</td>
-                <td style="text-align:right;color:#00e699;font-size:.8rem;">$${pt.tr}/kWh (weighted)</td>
+                <td style="text-align:right;color:#00e699;font-size:.8rem;">$${pt.r}/kWh (weighted)</td>
                </tr>`;
         } else {
           tariffRows = `
@@ -516,7 +516,7 @@
       .map((pt) => {
         const s = pt[mKey] || pt[metric];
         const rateDisplay =
-          basis === "real" && pt.tr ? `$${pt.tr}` : `$${pt.t}`;
+          basis === "real" && pt.r ? `$${pt.r}` : `$${pt.t}`;
         return `<li><span class="years">${yearLabel(s[usageIdx])}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${rateDisplay}/kWh, ${pt.y} kWh/kWp)</span></li>`;
       })
       .join("");
@@ -525,7 +525,7 @@
       .map((pt) => {
         const s = pt[mKey] || pt[metric];
         const rateDisplay =
-          basis === "real" && pt.tr ? `$${pt.tr}` : `$${pt.t}`;
+          basis === "real" && pt.r ? `$${pt.r}` : `$${pt.t}`;
         return `<li><span class="years">${yearLabel(s[usageIdx])}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${rateDisplay}/kWh, ${pt.y} kWh/kWp)</span></li>`;
       })
       .join("");
