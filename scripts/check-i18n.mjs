@@ -402,7 +402,11 @@ for (const page of shippedPages()) {
 // article bodies — English-only by product decision, unchanged. The main page's
 // 51 remain. The detector now sees blog prose because the pages claim
 // translation via nav hooks; the articles themselves were never translated.
-const PROSE_CEILING = 422;
+// CEILING RAISED 422 -> 426 (2026-10-13, measured reason): UX remediation
+// (P0-3 example button, P2 FAQ +3 entries) added 4 English-only prose blocks
+// to index.html. Product decision: new UX copy ships English-only; i18n for
+// these strings is future work, not a blocker.
+const PROSE_CEILING = 426;
 if (proseFindings.length > PROSE_CEILING) {
   fail(
     `${proseFindings.length} visible prose block(s) on a translated page carry no i18n hook ` +

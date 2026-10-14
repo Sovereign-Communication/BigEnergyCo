@@ -527,6 +527,42 @@
         font-weight: 600;
       }
 
+      .card-level {
+        display: inline-block;
+        padding: 0.2rem 0.7rem;
+        border-radius: 4px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .article-card-pinned {
+        border: 2px solid rgba(0, 230, 153, 0.5);
+      }
+
+      .card-level-wrap {
+        margin-top: 0.4rem;
+      }
+
+      .card-level-start-here {
+        background: rgba(0, 230, 153, 0.18);
+        color: #00e699;
+        border: 1px solid rgba(0, 230, 153, 0.4);
+      }
+
+      .card-level-planning {
+        background: rgba(96, 165, 250, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(96, 165, 250, 0.35);
+      }
+
+      .card-level-deep-dive {
+        background: rgba(167, 139, 250, 0.15);
+        color: #a78bfa;
+        border: 1px solid rgba(167, 139, 250, 0.35);
+      }
+
       .card-title {
         font-size: 1.4rem;
         font-weight: 800;
@@ -852,6 +888,36 @@
       </p>
 
       <div class="articles-grid">
+        <!-- Pinned: Start here -->
+        <article class="article-card article-card-pinned">
+          <div>
+            <div class="card-tags">
+              <span class="card-tag">Beginner</span>
+            </div>
+            <div class="card-level-wrap">
+              <span class="card-level card-level-start-here">Start here</span>
+            </div>
+            <h2 class="card-title">
+              <a href="./how-to-cut-electricity-bill-with-solar/"
+                >New to solar? Start here &rarr;</a
+              >
+            </h2>
+            <p class="card-excerpt">
+              The single best introduction: how solar cuts your electric bill,
+              honest payback math, and what size system you actually need. Read
+              this first, then explore the guides below.
+            </p>
+          </div>
+          <div class="card-footer">
+            <span>📌 Pinned · 10 min read</span>
+            <a
+              href="./how-to-cut-electricity-bill-with-solar/"
+              class="read-more"
+              >Start Reading &rarr;</a
+            >
+          </div>
+        </article>
+
         <!-- Article 11 -->
         <article class="article-card">
           <div>
@@ -859,6 +925,9 @@
               <span class="card-tag">Outage Backup</span>
               <span class="card-tag">Hawaii</span>
               <span class="card-tag">Battery</span>
+            </div>
+            <div class="card-level-wrap">
+              <span class="card-level card-level-deep-dive">Deep dive</span>
             </div>
             <h2 class="card-title">
               <a href="./hawaii-2026-hurricane-season-backup-power/"
@@ -890,6 +959,9 @@
               <span class="card-tag">DoD Physics</span>
               <span class="card-tag">Zero-Swap</span>
             </div>
+            <div class="card-level-wrap">
+              <span class="card-level card-level-deep-dive">Deep dive</span>
+            </div>
             <h2 class="card-title">
               <a href="./battery-longevity-and-dod-reference/"
                 >Battery Longevity, Oversizing &amp; DoD: The Zero-Swap Guide
@@ -918,6 +990,9 @@
               <span class="card-tag">Backup</span>
               <span class="card-tag">Off-Grid</span>
             </div>
+            <div class="card-level-wrap">
+              <span class="card-level card-level-planning">Planning</span>
+            </div>
             <h2 class="card-title">
               <a href="./escape-load-shedding/"
                 >Escape Load Shedding With Solar: Backup Sizes (2026)</a
@@ -943,6 +1018,9 @@
               <span class="card-tag">Generator</span>
               <span class="card-tag">Fuel Cost</span>
               <span class="card-tag">LCOE</span>
+            </div>
+            <div class="card-level-wrap">
+              <span class="card-level card-level-planning">Planning</span>
             </div>
             <h2 class="card-title">
               <a href="./solar-vs-generator-cost/"
@@ -970,6 +1048,9 @@
               <span class="card-tag">48V</span>
               <span class="card-tag">Off-Grid</span>
             </div>
+            <div class="card-level-wrap">
+              <span class="card-level card-level-planning">Planning</span>
+            </div>
             <h2 class="card-title">
               <a href="./off-grid-battery-bank-sizing/"
                 >Battery Bank Sizing Calculator: Off-Grid Guide (2026)</a
@@ -995,6 +1076,9 @@
               <span class="card-tag">Off-Grid</span>
               <span class="card-tag">Sizing</span>
               <span class="card-tag">PV Size</span>
+            </div>
+            <div class="card-level-wrap">
+              <span class="card-level card-level-planning">Planning</span>
             </div>
             <h2 class="card-title">
               <a href="./what-size-solar-system-for-off-grid/"
@@ -1022,6 +1106,9 @@
               <span class="card-tag">Peak Prices</span>
               <span class="card-tag">Battery</span>
             </div>
+            <div class="card-level-wrap">
+              <span class="card-level card-level-planning">Planning</span>
+            </div>
             <h2 class="card-title">
               <a href="./time-of-use-tariffs-battery/"
                 >Time-of-Use Battery Savings: Dodge Peak Prices (2026)</a
@@ -1048,6 +1135,9 @@
               <span class="card-tag">Payback</span>
               <span class="card-tag">LFP</span>
             </div>
+            <div class="card-level-wrap">
+              <span class="card-level card-level-start-here">Start here</span>
+            </div>
             <h2 class="card-title">
               <a href="./is-a-home-battery-worth-it/"
                 >Is a Home Battery Worth It? Honest Payback Math (2026)</a
@@ -1073,6 +1163,9 @@
               <span class="card-tag">Bill Cutting</span>
               <span class="card-tag">Payback</span>
               <span class="card-tag">Grid-Tie</span>
+            </div>
+            <div class="card-level-wrap">
+              <span class="card-level card-level-start-here">Start here</span>
             </div>
             <h2 class="card-title">
               <a href="./how-to-cut-electricity-bill-with-solar/"
@@ -1104,6 +1197,9 @@
               <span class="card-tag">Off-Grid</span>
               <span class="card-tag">Grid-Tie</span>
             </div>
+            <div class="card-level-wrap">
+              <span class="card-level card-level-deep-dive">Deep dive</span>
+            </div>
             <h2 class="card-title">
               <a href="./off-grid-vs-grid-tie-payback/"
                 >Off-Grid vs Grid-Tied Solar: Which Pays Back Faster in 2026?</a
@@ -1131,6 +1227,9 @@
               <span class="card-tag">LiFePO4</span>
               <span class="card-tag">Sodium-Ion</span>
               <span class="card-tag">DIY Builds</span>
+            </div>
+            <div class="card-level-wrap">
+              <span class="card-level card-level-deep-dive">Deep dive</span>
             </div>
             <h2 class="card-title">
               <a href="./diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/"

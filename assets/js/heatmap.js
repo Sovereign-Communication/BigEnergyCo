@@ -1,6 +1,22 @@
 (function () {
   "use strict";
 
+  // P1-1 (2026-10-13 UX audit): WebGL detection for heatmap fallback.
+  // If WebGL is unavailable, show the fallback notice; the rankings
+  // tables below already contain the same data as text.
+  try {
+    var _c = document.createElement("canvas");
+    var _gl = _c.getContext("webgl") || _c.getContext("experimental-webgl");
+    if (!_gl) {
+      var _fb = document.getElementById("webgl-fallback");
+      if (_fb) _fb.style.display = "";
+      var _ld = document.getElementById("loading");
+      if (_ld) _ld.style.display = "none";
+    }
+  } catch (e) {
+    // Detection failure: leave default loading state.
+  }
+
   // ── State ──────────────────────────────────────────────────────────────
   let gridData = null;
   let map = null;
@@ -556,7 +572,7 @@
   // ── Init ───────────────────────────────────────────────────────────────
   async function init() {
     try {
-      const res = await fetch("../assets/data/heatmap-grid.json?v=20261005h");
+      const res = await fetch("../assets/data/heatmap-grid.json?v=20261014a");
       if (!res.ok) throw new Error("Failed to load heatmap data");
       gridData = await res.json();
     } catch (err) {

@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: 'Deploy target (staging or production)'
+        description: "Deploy target (staging or production)"
         required: true
-        default: 'staging'
+        default: "staging"
         type: choice
         options:
           - staging

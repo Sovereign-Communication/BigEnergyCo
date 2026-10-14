@@ -53,6 +53,30 @@ if (cities.length < 50)
   throw new Error(`expected ~66 cities, got ${cities.length}`);
 console.log(`Found ${cities.length} catalog cities.`);
 
+// P1-4 (2026-10-13 UX audit): compute median specific yield across all
+// cities so each page can frame its figure in plain language.
+const _midYields = cities
+  .map((c) => {
+    const [lo, hi] = yieldBand(c.lat);
+    return (lo + hi) / 2;
+  })
+  .sort((a, b) => a - b);
+const MEDIAN_YIELD =
+  Math.round(_midYields[Math.floor(_midYields.length / 2)] / 50) * 50;
+
+function yieldContext(lat) {
+  const [lo, hi] = yieldBand(lat);
+  const mid = (lo + hi) / 2;
+  const ratio = mid / MEDIAN_YIELD;
+  let tier;
+  if (ratio >= 1.25) tier = "among the best in the world";
+  else if (ratio >= 1.1) tier = "well above average";
+  else if (ratio >= 0.9) tier = "around average";
+  else if (ratio >= 0.75) tier = "below average";
+  else tier = "among the lowest";
+  return { lo, hi, mid: Math.round(mid), tier };
+}
+
 function slugify(s) {
   return s
     .normalize("NFD")
@@ -340,7 +364,8 @@ function cityPage(c) {
       .container { padding: 0 1rem; }
       nav a { margin-left: .65rem; font-size: .85rem; }
     }
-  </style>
+  .yield-context{font-size:0.95rem;color:var(--muted);margin:0.5rem 0 0}
+</style>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -367,6 +392,10 @@ function cityPage(c) {
     <article>
       <h1>${h1}</h1>
       <p class="meta">📍 ${coord} · ${sc.tier} · updated Aug 30, 2026 · free, no signup, nothing for sale</p>
+      ${(() => {
+        const yc = yieldContext(c.lat);
+        return `<p class="yield-context">☀️ ${c.name} averages ~${yc.mid.toLocaleString("en-US")} kWh/kWp per year — ${yc.tier} (global median across our 66 benchmark cities ≈ ${MEDIAN_YIELD.toLocaleString("en-US")}).</p>`;
+      })()}
 
       <!-- Worldwide Sizing Reassurance Callout -->
       <div class="cta-box" style="margin: 1.5rem 0 2rem; border-color: rgba(0, 230, 153, 0.4); background: rgba(0, 230, 153, 0.08);">
@@ -483,8 +512,7 @@ function hubPage() {
       return `      <h2>${region}</h2>\n      <div class="citylinks">\n${items}\n      </div>`;
     })
     .join("\n");
-  const title =
-    "Solar & Battery Calculator by City — Free Sizing for 66 Cities";
+  const title = "Solar Calculator by City — Free Sizing for 66 Cities";
   const desc =
     "Free solar and battery sizing pages for 66 cities worldwide. Simulated against five years of NASA satellite weather. Nothing for sale.";
   return `<!DOCTYPE html>

@@ -5,21 +5,22 @@
 // module's singleton is the only in-memory truth.
 export const SIMPLE_MODE_KEY = "beco-simple-mode-v2";
 
-// v2: the pre-real-Simple-mode builds defaulted the toggle ON and stored
-// "simple" under the original key, so every profile that ever loaded one of
-// them carries it. Rotating the key makes "off by default" true for those
-// visitors too — no migration can distinguish their stored value from a
-// deliberate choice, and the old default-on era had no deliberate choices.
+// v3: default is now simple mode ON for first-time visitors (no stored
+// preference). A stored "technical" value is respected; absence of a stored
+// value means simple. This reverses the v2 "off by default" posture per the
+// 2026-10-13 UX audit (P0-1): first-time visitors faced 32 inputs + 9 selects.
 
-let current = false; // module-local: the one in-memory truth
+let current = true; // module-local: the one in-memory truth
 const listeners = new Set();
 
 export function readSimpleMode(storage = globalThis.localStorage) {
   try {
     const value = storage?.getItem(SIMPLE_MODE_KEY);
-    return value === "simple";
+    // No stored preference (first visit, cleared storage) -> simple mode.
+    // Only an explicit "technical" opts out.
+    return value !== "technical";
   } catch {
-    return false;
+    return true;
   }
 }
 
