@@ -402,7 +402,10 @@ for (const page of shippedPages()) {
 // article bodies — English-only by product decision, unchanged. The main page's
 // 51 remain. The detector now sees blog prose because the pages claim
 // translation via nav hooks; the articles themselves were never translated.
-const PROSE_CEILING = 422;
+// CEILING RAISED 422 -> 423 (2026-10-15, measured reason): new blog index card
+// for hawaii-solar-scams-2026-warning adds 1 visible prose block (card excerpt;
+// tags/title/date are similarly English-only by product decision).
+const PROSE_CEILING = 423;
 if (proseFindings.length > PROSE_CEILING) {
   fail(
     `${proseFindings.length} visible prose block(s) on a translated page carry no i18n hook ` +
