@@ -483,8 +483,7 @@ function hubPage() {
       return `      <h2>${region}</h2>\n      <div class="citylinks">\n${items}\n      </div>`;
     })
     .join("\n");
-  const title =
-    "Solar & Battery Calculator by City — Free Sizing for 66 Cities";
+  const title = "Solar Calculator by City — Free Sizing for 66 Cities";
   const desc =
     "Free solar and battery sizing pages for 66 cities worldwide. Simulated against five years of NASA satellite weather. Nothing for sale.";
   return `<!DOCTYPE html>
@@ -687,6 +686,49 @@ if (CHECK) {
   }
   console.log(
     `--check: ${cities.length} city pages + hub validate OK. Not writing files.`,
+  );
+  // …and the files on disk must BE that output. The generator is the single
+  // source of truth for solar-calculator/**, so a page that differs from what
+  // the generator produces is drift, and it is invisible to every other gate:
+  // check-seo reads the committed page (which stays correct) and this script
+  // validated its own strings (which stay self-consistent), so a title edited
+  // in one and not the other reddened nothing. That happened — the hub title
+  // was capped here at 62 characters while the shipped page said 52, so
+  // regenerating was the only way to fail check-seo, and only by hand.
+  //
+  // Line endings are not content drift: the committed blobs are LF while a
+  // Windows checkout is CRLF, and the template literal inherits whatever this
+  // file has, so both sides are normalized to LF before comparing.
+  const normalizeEol = (text) => text.replace(/\r\n/g, "\n");
+  const drift = [];
+  const compare = (label, file, generated) => {
+    if (!existsSync(file))
+      drift.push(`${label}: missing (run: node scripts/build-city-pages.mjs)`);
+    else if (
+      normalizeEol(readFileSync(file, "utf8")) !== normalizeEol(generated)
+    )
+      drift.push(
+        `${label}: differs from the generator output (run: node scripts/build-city-pages.mjs)`,
+      );
+  };
+  for (const c of cities)
+    compare(
+      `solar-calculator/${slugify(c.name)}/index.html`,
+      join(OUT, slugify(c.name), "index.html"),
+      cityPage(c),
+    );
+  compare("solar-calculator/index.html", join(OUT, "index.html"), hubPage());
+  if (drift.length) {
+    for (const d of drift.slice(0, 12)) console.error(`FAIL ${d}`);
+    if (drift.length > 12)
+      console.error(`FAIL … and ${drift.length - 12} more generated page(s)`);
+    console.error(
+      `FAIL ${drift.length} generated page(s) out of date with scripts/build-city-pages.mjs`,
+    );
+    process.exit(1);
+  }
+  console.log(
+    `--check: ${cities.length} city pages + hub match their generator output.`,
   );
   process.exit(0);
 }
