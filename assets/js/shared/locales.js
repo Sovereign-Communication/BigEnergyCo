@@ -347,11 +347,11 @@ export const LOCALES = {
     statusWorks: "Works",
     statusPartial: "Partly",
     statusNotHere: "Does not work here",
-    useCaseOutcomeTitle: "Your {useCase} result",
+    useCaseOutcomeTitle: "Your result: {useCase}",
     useCaseVerdictFooter:
-      "Measured for {useCase} against {metric}, using this location's own hourly weather.",
+      "{useCase} — measured from this location's own hourly weather, not an estimate.",
     useCaseNotMeasured:
-      "Not measured: this combination cannot be sized at all, so there is no {metric} to report.",
+      "Not measured: this combination cannot be sized at all, so there is no number to report here.",
     metricReserveTradeoffValue: "{lost}% of savings, {hours} h of cover",
     reserveOff: "off",
     touPeakLabel: "Your peak price (per kWh)",
@@ -565,11 +565,11 @@ export const LOCALES = {
     statusWorks: "Funciona",
     statusPartial: "En parte",
     statusNotHere: "Aquí no funciona",
-    useCaseOutcomeTitle: "Tu resultado de {useCase}",
+    useCaseOutcomeTitle: "Tu resultado: {useCase}",
     useCaseVerdictFooter:
-      "Medido para {useCase} frente a {metric}, con el clima horario de esta ubicación.",
+      "{useCase}: medido con el clima horario de esta ubicación, no es una estimación.",
     useCaseNotMeasured:
-      "Sin medir: esta combinación no se puede dimensionar, así que no hay {metric} que informar.",
+      "Sin medir: esta combinación no se puede dimensionar, así que no hay ningún número que informar.",
     metricReserveTradeoffValue: "{lost}% de ahorro, {hours} h de cobertura",
     reserveOff: "desactivada",
     touPeakLabel: "Tu precio en punta (por kWh)",
@@ -1009,11 +1009,11 @@ export const LOCALES = {
     statusWorks: "Funciona",
     statusPartial: "Em parte",
     statusNotHere: "Aqui não funciona",
-    useCaseOutcomeTitle: "Seu resultado de {useCase}",
+    useCaseOutcomeTitle: "Seu resultado: {useCase}",
     useCaseVerdictFooter:
-      "Medido para {useCase} em relação a {metric}, com o clima horário deste local.",
+      "{useCase}: medido com o clima horário deste local — não é uma estimativa.",
     useCaseNotMeasured:
-      "Sem medir: esta combinação não pode ser dimensionada, então não há {metric} a informar.",
+      "Sem medir: esta combinação não pode ser dimensionada, então não há número a informar.",
     metricReserveTradeoffValue: "{lost}% de economia, {hours} h de cobertura",
     reserveOff: "desativada",
     touPeakLabel: "Seu preço de pico (por kWh)",
@@ -1481,9 +1481,9 @@ export const LOCALES = {
     statusNotHere: "Ne fonctionne pas ici",
     useCaseOutcomeTitle: "Votre résultat : {useCase}",
     useCaseVerdictFooter:
-      "Mesuré pour {useCase} au regard de {metric}, avec la météo horaire de ce lieu.",
+      "{useCase} : mesuré avec la météo horaire de ce lieu — pas une estimation.",
     useCaseNotMeasured:
-      "Non mesuré : cette combinaison ne peut pas être dimensionnée, il n'y a donc pas de {metric} à annoncer.",
+      "Non mesuré : cette combinaison ne peut pas être dimensionnée, il n'y a donc aucun chiffre à annoncer.",
     metricReserveTradeoffValue: "{lost}% d'économies, {hours} h de couverture",
     reserveOff: "désactivée",
     touPeakLabel: "Votre prix en heures pleines (par kWh)",
@@ -2014,9 +2014,9 @@ export const LOCALES = {
     statusNotHere: "Funktioniert hier nicht",
     useCaseOutcomeTitle: "Dein Ergebnis: {useCase}",
     useCaseVerdictFooter:
-      "Gemessen für {useCase} anhand von {metric}, mit dem stündlichen Wetter dieses Ortes.",
+      "{useCase}: gemessen mit dem stündlichen Wetter dieses Ortes — keine Schätzung.",
     useCaseNotMeasured:
-      "Nicht gemessen: Diese Kombination lässt sich überhaupt nicht auslegen, es gibt also kein {metric} zu nennen.",
+      "Nicht gemessen: Diese Kombination lässt sich überhaupt nicht auslegen, es gibt also keine Zahl zu nennen.",
     metricReserveTradeoffValue: "{lost}% Ersparnis, {hours} h Reserve",
     reserveOff: "aus",
     touPeakLabel: "Dein Preis in den Spitzenstunden (pro kWh)",
@@ -2441,9 +2441,9 @@ export const LOCALES = {
     statusNotHere: "لا ينجح هنا",
     useCaseOutcomeTitle: "نتيجتك: {useCase}",
     useCaseVerdictFooter:
-      "قِيست لـ {useCase} مقابل {metric}، باستخدام بيانات الطقس الساعية لهذا الموقع.",
+      "{useCase}: قِيست باستخدام الطقس الساعي لهذا الموقع، وليست تقديرًا.",
     useCaseNotMeasured:
-      "غير مقيس: هذا التركيب لا يمكن تحجيمه أصلًا، فلا يوجد {metric} للإبلاغ عنه.",
+      "غير مقيس: هذا التركيب لا يمكن تحجيمه أصلًا، فلا يوجد رقم للإبلاغ عنه.",
     metricReserveTradeoffValue: "{lost}% من الوفر، {hours} ساعة تغطية",
     reserveOff: "موقوف",
     touPeakLabel: "سعر الذروة عندك (لكل ك.و.س)",
