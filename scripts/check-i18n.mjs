@@ -405,7 +405,12 @@ for (const page of shippedPages()) {
 // CEILING RAISED 422 -> 423 (2026-10-15, measured reason): new blog index card
 // for hawaii-solar-scams-2026-warning adds 1 visible prose block (card excerpt;
 // tags/title/date are similarly English-only by product decision).
-const PROSE_CEILING = 423;
+// CEILING RAISED 423 -> 445 (2026-10-15, measured reason): blog format uniformity
+// gave hawaii-solar-scams-2026-warning the canonical header, whose data-i18n
+// nav hooks make the detector count the post's 22 English-only prose blocks.
+// Same mechanism as the 51 -> 422 raise: articles are English-only by product
+// decision; only the nav claims translation.
+const PROSE_CEILING = 445;
 if (proseFindings.length > PROSE_CEILING) {
   fail(
     `${proseFindings.length} visible prose block(s) on a translated page carry no i18n hook ` +
