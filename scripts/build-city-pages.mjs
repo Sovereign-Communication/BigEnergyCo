@@ -388,7 +388,7 @@ function cityPage(c) {
       </ul>
 
       <h2>Worked example: a 10 kWh/day household</h2>
-      <p>Using the ${c.name} latitude band (${lo}–${hi} kWh/kWp/yr), a household using 10 kWh per day typically lands in this range — a rough illustration from the band (with a dark-week margin), not a simulation; your exact figures come from running it:</p>
+      <p>Using the ${c.name} latitude band (${lo}–${hi} kWh/kWp/yr), a household using 10 kWh per day typically lands in this range — a rough illustration from the band (with a dark-week margin), not a simulation. The panel column follows that band; the battery column is the one the simulator re-sizes, because it sizes the bank against your own darkest week — so its number usually comes out higher. Your exact figures come from running it:</p>
       <div class="table-container">
       <table>
         <caption>Worked sizing bands for a 10 kWh/day household in ${c.name}</caption>
@@ -400,7 +400,7 @@ function cityPage(c) {
         </tbody>
       </table>
       </div>
-      <p>${wx.paybackLine}</p>
+      <p><em>Every money figure here is in US dollars; the calculator converts to your own currency.</em> ${wx.paybackLine}</p>
 
       <h2>Why simulate instead of estimate?</h2>
       <p>Sun-hours maps and "average" figures hide the week that decides your battery size. In ${sc.tier.toLowerCase()} conditions, ${sc.note} A five-year hourly simulation catches that dark week, the cloudy month, and the seasonal swing — which is the difference between a system that works and one that leaves you in the dark in February.</p>

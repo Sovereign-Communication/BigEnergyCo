@@ -313,3 +313,39 @@ test("no locale carries a key that no shipped code renders", () => {
     `keys no shipped code renders, in ANY locale: ${dead.join(", ")}`,
   );
 });
+// ── the use-case card's sentences cannot take the metric fragment ──────────
+// Measured on the deployed calculator, 2026-10-14, in every market of the
+// worldwide sample (New York, London, Berlin, Tokyo, Lagos, Delhi, Santiago,
+// Ho Chi Minh City, Suva, Papeete, Kathmandu): the outcome card a visitor got
+// read "Your Cut my electricity bill result", and its footer read "Measured for
+// Cut my electricity bill against of your bill removed over 20 years, using
+// this location's own hourly weather". Two shapes caused it, and both are
+// structural rather than typographic:
+//
+//   * useCaseVerdictFooter and useCaseNotMeasured interpolated {metric}, whose
+//     value is a label-relative fragment ("of your bill removed over 20 years",
+//     "what holding a reserve costs, in savings and hours"). A fragment that
+//     reads correctly under the number it labels cannot also follow a
+//     preposition or a negation, which is the only slot those sentences have;
+//   * useCaseOutcomeTitle put the case label — an imperative sentence
+//     ("Cut my electricity bill") — into a possessive slot, which no wording of
+//     the frame can save.
+//
+// So the fragment stays where it reads (under the number), and the label stays
+// in a slot where it reads as its own sentence (after a colon).
+test("use-case card sentences do not interpolate the metric fragment", () => {
+  const bad = [];
+  for (const [lang, dict] of Object.entries(LOCALES)) {
+    for (const key of ["useCaseVerdictFooter", "useCaseNotMeasured"]) {
+      if (!dict[key]) bad.push(`${lang}.${key} (missing)`);
+      else if (/\{metric\}/.test(dict[key])) bad.push(`${lang}.${key}`);
+    }
+    if (!/\:\s*\{useCase\}/.test(dict.useCaseOutcomeTitle || ""))
+      bad.push(`${lang}.useCaseOutcomeTitle (the case must follow a colon)`);
+  }
+  assert.deepEqual(
+    bad,
+    [],
+    `sentences that interpolate a label or a fragment into a slot that cannot take one: ${bad.join(", ")}`,
+  );
+});
