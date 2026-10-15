@@ -227,6 +227,13 @@ export const LOCALES = {
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "recommended",
     cumCostSelected: "selected",
+    cumSavingsHeadline: "+~{amount} saved over 20 years",
+    cumSavingsServed: " · ~{kwh} kWh/yr served by the sun instead of the grid",
+    cumSavingsBreakEven:
+      "Break-even in year {year} — every year after puts money back in your pocket{kwhBits}",
+    cumSavingsNeverBreaksEven: "Never breaks even within 20 years",
+    cumSavingsShortfall:
+      "Battery replacements outpace bill savings at this site — the honest shortfall is ~{amount}.",
     cumCostCaptionHead:
       "Running 20-year cost for the {which} system ({label}): the amber line is what you pay the utility if you stay on the grid ({gridTotal}).",
     cumCostCaptionOwnCost:
@@ -775,6 +782,13 @@ export const LOCALES = {
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "recomendado",
     cumCostSelected: "seleccionado",
+    cumSavingsHeadline: "+~{amount} ahorrados en 20 años",
+    cumSavingsServed: " · ~{kwh} kWh/año servidos por el sol en vez de la red",
+    cumSavingsBreakEven:
+      "Se amortiza en el año {year}; cada año posterior ahorra dinero{kwhBits}.",
+    cumSavingsNeverBreaksEven: "No se amortiza en 20 años",
+    cumSavingsShortfall:
+      "En este lugar, los reemplazos de batería superan el ahorro en la factura: el déficit honesto es ~{amount}.",
     cumCostCaptionHead:
       "Coste acumulado a 20 años del sistema {which} ({label}): la línea ámbar es lo que pagas a la compañía si sigues conectado a la red ({gridTotal}).",
     cumCostCaptionOwnCost:
@@ -1253,6 +1267,13 @@ export const LOCALES = {
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "recomendado",
     cumCostSelected: "selecionado",
+    cumSavingsHeadline: "+~{amount} economizados em 20 anos",
+    cumSavingsServed: " · ~{kwh} kWh/ano atendidos pelo sol em vez da rede",
+    cumSavingsBreakEven:
+      "O investimento se paga no ano {year}; cada ano seguinte põe dinheiro de volta no seu bolso{kwhBits}.",
+    cumSavingsNeverBreaksEven: "Não se paga em 20 anos",
+    cumSavingsShortfall:
+      "Neste local, as trocas da bateria superam a economia na conta — o déficit honesto é ~{amount}.",
     cumCostCaptionHead:
       "Custo acumulado em 20 anos do sistema {which} ({label}): a linha âmbar é o que você paga à distribuidora se continuar na rede ({gridTotal}).",
     cumCostCaptionOwnCost:
@@ -1731,6 +1752,14 @@ export const LOCALES = {
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "recommandé",
     cumCostSelected: "sélectionné",
+    cumSavingsHeadline: "+~{amount} économisés sur 20 ans",
+    cumSavingsServed:
+      " · ~{kwh} kWh/an fournis par le solaire plutôt que par le réseau",
+    cumSavingsBreakEven:
+      "Rentabilité atteinte en année {year} — chaque année suivante vous fait économiser{kwhBits}.",
+    cumSavingsNeverBreaksEven: "Pas de rentabilité sur 20 ans",
+    cumSavingsShortfall:
+      "Ici, le remplacement des batteries dépasse les économies sur la facture — le déficit réel est de ~{amount}.",
     cumCostCaptionHead:
       "Coût cumulé sur 20 ans du système {which} ({label}) : la ligne ambre est ce que vous payez au réseau si vous restez raccordé ({gridTotal}).",
     cumCostCaptionOwnCost:
@@ -2218,6 +2247,14 @@ export const LOCALES = {
     // thing only a real non-English pass turns up.
     cumCostRecommended: "empfohlene",
     cumCostSelected: "ausgewählte",
+    cumSavingsHeadline: "+~{amount} über 20 Jahre gespart",
+    cumSavingsServed:
+      " · ~{kwh} kWh/Jahr kommen von der Sonne statt aus dem Netz",
+    cumSavingsBreakEven:
+      "Amortisiert sich in Jahr {year} — jedes weitere Jahr spart Geld{kwhBits}.",
+    cumSavingsNeverBreaksEven: "Innerhalb von 20 Jahren keine Amortisation",
+    cumSavingsShortfall:
+      "Hier übersteigen die Batteriewechsel die Ersparnis auf der Rechnung — das ehrliche Defizit beträgt ~{amount}.",
     cumCostCaptionHead:
       "Kumulierte Kosten über 20 Jahre für das {which} System ({label}): Die amberfarbene Linie ist das, was Sie an den Versorger zahlen, wenn Sie am Netz bleiben ({gridTotal}).",
     cumCostCaptionOwnCost:
@@ -2673,6 +2710,13 @@ export const LOCALES = {
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "الموصى به",
     cumCostSelected: "المحدد",
+    cumSavingsHeadline: "+~{amount} توفيرًا على مدى 20 عامًا",
+    cumSavingsServed: " · ~{kwh} كيلوواط ساعة/سنة من الشمس بدلًا من الشبكة",
+    cumSavingsBreakEven:
+      "يُسترد الاستثمار في السنة {year} — وكل سنة بعدها توفر المال{kwhBits}.",
+    cumSavingsNeverBreaksEven: "لا يُسترد خلال 20 عامًا",
+    cumSavingsShortfall:
+      "في هذا الموقع، تتجاوز استبدالات البطارية التوفير في الفاتورة — والعجز الصريح هو ~{amount}.",
     cumCostCaptionHead:
       "التكلفة التراكمية على 20 عامًا للنظام {which} ({label}): الخط الكهرماني هو ما تدفعه للشركة إذا بقيت على الشبكة ({gridTotal}).",
     cumCostCaptionOwnCost:

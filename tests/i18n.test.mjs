@@ -10,7 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LOCALES } from "../assets/js/shared/locales.js";
-import { pickString } from "../assets/js/shared/interpolate.js";
+import { interpolate, pickString } from "../assets/js/shared/interpolate.js";
 import { deployList } from "../scripts/lib/deploy-manifest.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -333,6 +333,129 @@ test("no locale carries a key that no shipped code renders", () => {
 //
 // So the fragment stays where it reads (under the number), and the label stays
 // in a slot where it reads as its own sentence (after a colon).
+test("cumulative-savings headline and chart callout use translated locale copy", () => {
+  const copy = {
+    en: {
+      headline: "saved over 20 years",
+      served: "served by the sun",
+      breakEven: "Break-even in year",
+      never: "Never breaks even within 20 years",
+      shortfall: "Battery replacements outpace bill savings",
+    },
+    es: {
+      headline: "ahorrados en 20 años",
+      served: "servidos por el sol",
+      breakEven: "Se amortiza en el año",
+      never: "No se amortiza en 20 años",
+      shortfall: "reemplazos de batería superan el ahorro",
+    },
+    pt: {
+      headline: "economizados em 20 anos",
+      served: "atendidos pelo sol",
+      breakEven: "O investimento se paga no ano",
+      never: "Não se paga em 20 anos",
+      shortfall: "trocas da bateria superam a economia",
+    },
+    fr: {
+      headline: "économisés sur 20 ans",
+      served: "fournis par le solaire",
+      breakEven: "Rentabilité atteinte en année",
+      never: "Pas de rentabilité sur 20 ans",
+      shortfall: "remplacement des batteries dépasse les économies",
+    },
+    de: {
+      headline: "über 20 Jahre gespart",
+      served: "kommen von der Sonne statt aus dem Netz",
+      breakEven: "Amortisiert sich in Jahr",
+      never: "keine Amortisation",
+      shortfall: "Batteriewechsel die Ersparnis",
+    },
+    ar: {
+      headline: "توفيرًا على مدى 20 عامًا",
+      served: "من الشمس بدلًا من الشبكة",
+      breakEven: "يُسترد الاستثمار في السنة",
+      never: "لا يُسترد خلال 20 عامًا",
+      shortfall: "تتجاوز استبدالات البطارية التوفير في الفاتورة",
+    },
+  };
+  const charts = fs.readFileSync(
+    path.join(__dirname, "..", "assets/js/sizing/charts.js"),
+    "utf8",
+  );
+  const keys = [
+    "cumSavingsHeadline",
+    "cumSavingsServed",
+    "cumSavingsBreakEven",
+    "cumSavingsNeverBreaksEven",
+    "cumSavingsShortfall",
+  ];
+  for (const key of keys) {
+    assert.ok(charts.includes(`t("${key}"`), `${key} is rendered from locales`);
+  }
+  assert.doesNotMatch(
+    charts,
+    /saved over 20 years|Break-even in year|Never breaks even within 20 years|Battery replacements outpace bill savings/,
+    "the chart must not reintroduce hard-coded English callout copy",
+  );
+
+  for (const [locale, dict] of Object.entries(LOCALES)) {
+    for (const key of keys) {
+      assert.equal(typeof dict[key], "string", `${locale}.${key} missing`);
+    }
+    assert.ok(
+      dict.cumSavingsHeadline.includes("{amount}"),
+      `${locale}.cumSavingsHeadline amount placeholder`,
+    );
+    assert.ok(
+      dict.cumSavingsServed.includes("{kwh}"),
+      `${locale}.cumSavingsServed kWh placeholder`,
+    );
+    assert.ok(
+      dict.cumSavingsBreakEven.includes("{year}") &&
+        dict.cumSavingsBreakEven.includes("{kwhBits}"),
+      `${locale}.cumSavingsBreakEven placeholders`,
+    );
+    assert.ok(
+      dict.cumSavingsShortfall.includes("{amount}"),
+      `${locale}.cumSavingsShortfall amount placeholder`,
+    );
+    const expected = copy[locale];
+    const renderedHeadline = interpolate(dict.cumSavingsHeadline, {
+      amount: "CFPF 1,182,240",
+    });
+    const renderedServed = interpolate(dict.cumSavingsServed, {
+      kwh: "1,687",
+    });
+    const renderedBreakEven = interpolate(dict.cumSavingsBreakEven, {
+      year: 3,
+      kwhBits: renderedServed,
+    });
+    const renderedShortfall = interpolate(dict.cumSavingsShortfall, {
+      amount: "CFPF 123,456",
+    });
+    assert.ok(
+      renderedHeadline.includes(expected.headline),
+      `${locale} headline should be localized: ${renderedHeadline}`,
+    );
+    assert.ok(
+      renderedBreakEven.includes(expected.breakEven),
+      `${locale} break-even should be localized: ${renderedBreakEven}`,
+    );
+    assert.ok(
+      renderedBreakEven.includes(expected.served),
+      `${locale} served-energy clause should be localized: ${renderedBreakEven}`,
+    );
+    assert.ok(
+      dict.cumSavingsNeverBreaksEven.includes(expected.never),
+      `${locale} no-payback copy should be localized`,
+    );
+    assert.ok(
+      renderedShortfall.includes(expected.shortfall),
+      `${locale} shortfall should be localized: ${renderedShortfall}`,
+    );
+  }
+});
+
 test("use-case card sentences do not interpolate the metric fragment", () => {
   const bad = [];
   for (const [lang, dict] of Object.entries(LOCALES)) {

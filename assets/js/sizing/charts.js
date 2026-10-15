@@ -5,7 +5,7 @@
 // `$` (DOM lookup), `el` (element factory), `t` (i18n), `fmt` (number format),
 // `money` (currency formatter). Chart state (socZoomRange, cachedChartState)
 // lives here as the single owner.
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261015a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261015b";
 
 // ── injected boundary (set once by ui.js via initCharts) ──────────────────
 let _$;
@@ -717,18 +717,21 @@ export function drawCumCostChart(p, chosenEntry = null) {
   if (box && num && sub) {
     box.style.display = "block";
     if (totalSaved > 0) {
-      num.textContent = `+~${money(totalSaved)} saved over 20 years`;
+      num.textContent = t("cumSavingsHeadline", { amount: money(totalSaved) });
       num.style.color = "var(--primary-accent)";
       const kwhBits =
-        servedKwh > 0
-          ? ` · ~${fmt(servedKwh)} kWh/yr served by the sun instead of the grid`
-          : "";
-      sub.textContent = `Break-even in year ${beIdx + 1} \u2014 every year after puts money back in your pocket${kwhBits}`;
+        servedKwh > 0 ? t("cumSavingsServed", { kwh: fmt(servedKwh) }) : "";
+      sub.textContent = t("cumSavingsBreakEven", {
+        year: beIdx + 1,
+        kwhBits,
+      });
       sub.style.color = "var(--text-muted)";
     } else {
-      num.textContent = "Never breaks even within 20 years";
+      num.textContent = t("cumSavingsNeverBreaksEven");
       num.style.color = "var(--danger-red)";
-      sub.textContent = `Battery replacements outpace bill savings at this site — the honest shortfall is ~${money(Math.abs(totalSaved))}.`;
+      sub.textContent = t("cumSavingsShortfall", {
+        amount: money(Math.abs(totalSaved)),
+      });
       sub.style.color = "var(--text-muted)";
     }
   }
