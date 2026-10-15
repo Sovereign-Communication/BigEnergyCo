@@ -33,4 +33,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy _pages --project-name=bigenergyco --branch=main
+          # staging -> preview branch (staging.bigenergyco.pages.dev);
+          # production -> main branch (bigenergyco.pages.dev + freeoffgridcalculator.com)
+          command: pages deploy _pages --project-name=bigenergyco --branch=${{ inputs.target == 'production' && 'main' || 'staging' }}
