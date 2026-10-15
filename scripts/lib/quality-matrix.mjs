@@ -312,3 +312,66 @@ export function readA11yBaseline(ledgerText) {
   }
   return { ...found, skipped };
 }
+
+/**
+ * The one axis this run of the matrix speaks for, beside the controls walk's
+ * own declaration of the same axis in scripts/lib/a11y-controls.mjs: two
+ * instruments, one facet, and a test asserts the two declarations agree so
+ * they can never drift into two axes or none.
+ */
+export const A11Y_MATRIX_FACET_AXES = ["accessibility"];
+
+/**
+ * The most characters this clause may take inside the joined accessibility
+ * line. The controls half declares its own bound (A11Y_CONTROLS_CLAUSE_MAX in
+ * scripts/lib/a11y-controls.mjs, 240) and 240 + 1 + 39 = the 280-char clip
+ * exactly, so the pair is bounded from both ends: a half over its own bound is
+ * a NAMED problem in the evidence builder, never a silent trim — a trim would
+ * eat whichever sentence limits the claim.
+ */
+export const A11Y_MATRIX_CLAUSE_MAX = 39;
+
+/**
+ * Compose this run's clause of the `accessibility` facet line from the report
+ * itself: the instrument, the coverage, and the count, in 39 characters.
+ *
+ * One shape, chosen by the WORST thing this run found — never two: an audit
+ * error is never a pass, a regression blocks, an unmeasured cell is a hole,
+ * and only a run with none of those reports its violation count. The shapes
+ * fit the half-bound by the DECLARED matrix's own envelope (six templates x
+ * three states x one theme x two directions = 36 cells; a no-regression run
+ * can only count violations its baseline declared) — and a counter that ever
+ * outgrows the half does not get trimmed: the gate's backstop and the
+ * builder's join both name it and fail the run.
+ *
+ * It deliberately does NOT repeat the controls walk's claims (keyboard,
+ * names, contrast, motion): that half words them, and this half answers the
+ * limit sentence it ends on — `no theme/RTL matrix` — with the run that
+ * measured exactly that matrix.
+ */
+export function composeA11yMatrixClause(report) {
+  const cells = Array.isArray(report?.cells) ? report.cells.length : 0;
+  const unmeasured = Array.isArray(report?.unmeasured)
+    ? report.unmeasured.length
+    : 0;
+  const errors = Array.isArray(report?.audit_errors)
+    ? report.audit_errors.length
+    : 0;
+  const regressions = Array.isArray(report?.regressions)
+    ? report.regressions.length
+    : 0;
+  const violations = Array.isArray(report?.cells)
+    ? report.cells.reduce(
+        (n, c) => n + (Array.isArray(c?.violations) ? c.violations.length : 0),
+        0,
+      )
+    : 0;
+  const total = cells + unmeasured;
+  if (errors)
+    return `axe matrix: ${errors} cell${errors === 1 ? "" : "s"} unaudited`;
+  if (regressions)
+    return `axe matrix: ${regressions} of ${cells} cells regressed`;
+  if (unmeasured)
+    return `axe matrix: ${cells}/${total} cells, ${unmeasured} unmeasured`;
+  return `axe matrix: ${cells}/${total} cells, ${violations} violations`;
+}

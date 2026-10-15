@@ -32,6 +32,15 @@ import {
   COMPLETE_STATE_BASE_CHARS,
   COMPLETE_STATE_PER_AXIS_CHARS,
 } from "../scripts/lib/jev-complete.mjs";
+import {
+  BYTE_BUDGET_FACET_AXES,
+  BYTE_BUDGET_LIMITS,
+  composeQualityFacetLine,
+} from "../scripts/lib/byte-budgets.mjs";
+import {
+  composeQualityContractClause,
+  QUALITY_CONTRACT_FIELDS,
+} from "../scripts/lib/jev-evidence.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PLAN = readFileSync(join(ROOT, "docs/plan/MASTER_PLAN.md"), "utf8");
@@ -56,6 +65,33 @@ const AUTO = {
   dirtyPaths: [],
   testCount: 66,
 };
+
+/**
+ * The `quality` line the run composes for the judge, shaped like this tree:
+ * every §3.1 budget measured, two improved, three long-standing breaches — the
+ * SIZE clause from the gate that took the reading, joined to the CLARITY clause
+ * the required test job's own records support, exactly as
+ * scripts/build-jev-evidence.mjs joins them. Built through the real composers
+ * rather than copied from them, so this measures the length that actually
+ * reaches the judge.
+ */
+function derivedQualityLine() {
+  const names = Object.keys(BYTE_BUDGET_LIMITS);
+  const size = composeQualityFacetLine({
+    metrics: Object.fromEntries(
+      names.map((n) => [n, { value: 1, limit: 1024, unit: "bytes" }]),
+    ),
+    regressions: [],
+    improvements: names.slice(0, 2).map((metric) => ({ metric })),
+    unmeasured: [],
+    breaches: names.slice(0, 3).map((metric) => ({ metric })),
+    tolerance_bytes: 256,
+  });
+  const contracts = composeQualityContractClause(
+    Object.fromEntries(QUALITY_CONTRACT_FIELDS.map((f) => [f, true])),
+  );
+  return contracts ? `${size} ${contracts}` : size;
+}
 
 test("PACK: the plan's five P0.3(d) facets exist, each with its own bucket", () => {
   for (const axis of NEW_FACETS) {
@@ -142,6 +178,8 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
   // than assuming every line is typed.
   const { LIGHTHOUSE_FACET_AXES, composeFacetLine } =
     await import("../scripts/lib/lighthouse-budgets.mjs");
+  const { A11Y_FACET_AXES, composeA11yFacetLine } =
+    await import("../scripts/lib/a11y-controls.mjs");
   const ev = JSON.parse(
     readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
   );
@@ -260,6 +298,34 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
       });
   }
 
+  // The accessibility line is derived the same way, from the smoke run that
+  // measures the calculator's own controls; the stop counts here are the ones a
+  // real local run measured.
+  if (A11Y_FACET_AXES.includes("accessibility")) {
+    derived.accessibility = composeA11yFacetLine({
+      ran: true,
+      gates: [{ name: "a11y gate", ok: true }],
+      walks: [
+        { surface: "sliders", stops: 64, wrapped: true, missing: [] },
+        { surface: "quick", stops: 64, wrapped: true, missing: [] },
+        { surface: "manual", stops: 82, wrapped: true, missing: [] },
+        { surface: "kWh", stops: 48, wrapped: true, missing: [] },
+      ],
+      names: { checked: true, failures: 0 },
+      contrast: { checked: true, failures: 0 },
+      reduced_motion: { checked: true },
+    });
+  }
+
+  // The quality line comes from the byte-budget gate for the same reason: the
+  // axis is about the smallest version that keeps the proven behavior, and the
+  // shipped payload ratcheted against a declared baseline is the one place this
+  // repository measures it. The typed sentence that used to stand here could not
+  // be contradicted by any run.
+  if (BYTE_BUDGET_FACET_AXES.includes("quality")) {
+    derived.quality = derivedQualityLine();
+  }
+
   for (const axis of axes) {
     const line = ev.facet_evidence?.[axis] ?? derived[axis];
     assert.equal(
@@ -367,12 +433,34 @@ test("TRANSPORT: the real 21-axis record survives whole — every line and note"
     LIGHTHOUSE_RATCHET_CATEGORIES,
     LIGHTHOUSE_TARGETS,
   } = await import("../scripts/lib/lighthouse-budgets.mjs");
+  const { A11Y_FACET_AXES, composeA11yFacetLine } =
+    await import("../scripts/lib/a11y-controls.mjs");
   const ev = JSON.parse(
     readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
   );
   // Built as the builder builds it: prose, plus the lines gates compose from a
-  // run. The derived line is the real composed one (from the recorded first
-  // measurement), so this measures the length that actually reaches the judge.
+  // run. Both derived lines are the REAL composed ones (the first-paint numbers
+  // from the recorded measurement, the control-level ones from the stop counts a
+  // real local run measured), so this measures the length that actually reaches
+  // the judge rather than a comfortable approximation of it.
+  if (A11Y_FACET_AXES.includes("accessibility")) {
+    ev.facet_evidence.accessibility = composeA11yFacetLine({
+      ran: true,
+      gates: Array.from({ length: 19 }, (_, i) => ({
+        name: `a11y gate ${i}`,
+        ok: true,
+      })),
+      walks: [
+        { surface: "sliders", stops: 64, wrapped: true, missing: [] },
+        { surface: "quick", stops: 64, wrapped: true, missing: [] },
+        { surface: "manual", stops: 82, wrapped: true, missing: [] },
+        { surface: "kWh", stops: 48, wrapped: true, missing: [] },
+      ],
+      names: { checked: true, failures: 0 },
+      contrast: { checked: true, failures: 0 },
+      reduced_motion: { checked: true },
+    });
+  }
   if (LIGHTHOUSE_FACET_AXES.includes("performance")) {
     ev.facet_evidence.performance = composeFacetLine({
       lighthouse_version: "13.5.0",
@@ -473,6 +561,12 @@ test("TRANSPORT: the real 21-axis record survives whole — every line and note"
       ev.facet_evidence.translation = composeTranslationFacetLine({
         experience_reading: reading,
       });
+  }
+  // And the quality line, composed by the byte-budget gate. This is the length
+  // check that matters for it: the typed line it replaced was short, so the
+  // budget is only proven on the line a run actually produces.
+  if (BYTE_BUDGET_FACET_AXES.includes("quality")) {
+    ev.facet_evidence.quality = derivedQualityLine();
   }
   const merged = mergeEvidence(ev, AUTO);
   const text = buildStateText(merged, AUTO, axes);

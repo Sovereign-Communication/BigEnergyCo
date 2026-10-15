@@ -266,10 +266,10 @@ Two files, one direction of travel. `scripts/lib/byte-budgets.mjs` never touches
 a filesystem: it takes a staged build described as data (a file list and a
 reader) and returns one reading per §3.1 budget. The CLI supplies the disk.
 
-| module                           | owns                                                                                                                                            | touches the network/disk?    |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| `scripts/lib/byte-budgets.mjs`   | the §3.1 limits (verbatim), what each budget's **scope** is, the brotli measurement, the per-metric bar from the ledger, the ratchet comparison | no — takes `{files, read}`   |
-| `scripts/check-byte-budgets.mjs` | walking a stage dir, the printed table, the exit code                                                                                           | reads the stage + the ledger |
+| module                           | owns                                                                                                                                                                                                        | touches the network/disk?    |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| `scripts/lib/byte-budgets.mjs`   | the §3.1 limits as amended by A-002 (the table's figures plus the three interim lines), what each budget's **scope** is, the brotli measurement, the per-metric bar from the ledger, the ratchet comparison | no — takes `{files, read}`   |
+| `scripts/check-byte-budgets.mjs` | walking a stage dir, the printed table, the exit code                                                                                                                                                       | reads the stage + the ledger |
 
 Three things worth knowing before changing any of it:
 
@@ -293,12 +293,14 @@ Three things worth knowing before changing any of it:
 
 §3.2 makes these gates **regression-blocking from P0** and absolute only from P6
 (`/next/`) and P8 (all), so an over-limit reading is printed as a breach and only
-getting _worse_ against the declared baseline fails. Three limits are breached at
-the P0.4 baseline and stay visible rather than relaxed; §3.1 allows a relaxation
-only by measured evidence plus an owner-approved amendment, and the amendment
-lives in the plan.
+getting _worse_ against the declared baseline fails. Three limits were breached at
+the P0.4 baseline. A-002 (owner-approved 2026-09-29) moved the reported line for
+those three to shipped +10 % — measured evidence plus an owner-approved
+amendment, exactly the relaxation §3.1 allows — and the amendment lives in the
+plan, where the table's original figures still bind absolutely from P6/P8.
 
-Guarded by `tests/byte-budgets.test.mjs` — the verbatim limits, every scope, the
+Guarded by `tests/byte-budgets.test.mjs` — the limits against the plan's own text
+(A-002's numbers are read back out of MASTER_PLAN.md), every scope, the
 ratchet semantics, the absent-subject rule, the per-metric bar, and the CLI's
 exit codes. Every assertion here has a proven mutation: relaxing a limit,
 counting only the entry scripts, enforcing absolutely, letting an older row win,
