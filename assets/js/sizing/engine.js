@@ -2,8 +2,8 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261005h";
-import { oversizeCallout } from "./rescale.js?v=20261005h";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261008a";
+import { oversizeCallout } from "./rescale.js?v=20261008a";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -921,6 +921,10 @@ export function billCutFraction({
 export function infeasibleReason({ mode, hardwareConfig, minFraction = null }) {
   if (mode === "offgrid" && hardwareConfig === "solar") return "needs-battery";
   if (mode === "offgrid" && hardwareConfig === "battery") return "needs-panels";
+  if (mode === "reserve" && hardwareConfig === "solar") return "needs-battery";
+  if (mode === "tou" && hardwareConfig === "solar") return "needs-battery";
+  if (mode === "backup" && hardwareConfig === "solar") return "needs-battery";
+  if (mode === "portable" && hardwareConfig === "solar") return "needs-battery";
   if (
     mode === "gridtie" &&
     hardwareConfig === "battery" &&
