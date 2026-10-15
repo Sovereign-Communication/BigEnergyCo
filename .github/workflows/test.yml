@@ -23,7 +23,15 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Pilot: run the heaviest, most queue-sensitive gate on a Blacksmith runner
+    # (drop-in runs-on label, org GitHub App). Free tier = 3,000 x64 2-vCPU-equivalent
+    # minutes/month/organization; a 2-vCPU runner burns 1 allowance minute per clock
+    # minute, so this job costs at most 30 allowance-min per run. Larger sizes
+    # (4/8/16/32 vCPU) burn the free allowance proportionally faster and are not
+    # needed here -- pick the smallest runner that fits and right-size later.
+    # If the org does not yet have the Blacksmith GitHub App installed (and installed
+    # onto this repo), this job will queue instead of run; install at app.blacksmith.sh first.
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     # Bounded so a hung step cannot hold a runner for GitHub's 6-hour default —
     # runner occupancy is what makes a queue backlog worse. Measured on 2026-09-19:
     # this job completes in ~5m30s, so 30 is headroom, not a deadline to race.

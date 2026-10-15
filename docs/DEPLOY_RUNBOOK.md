@@ -109,6 +109,7 @@ above its measured duration with room for a runner-cold start, and
 `tests/ci-resilience.test.mjs` fails the suite if any workflow job ever drops
 its cap again.
 
+**Two runners, one budget policy.** The `Tests` workflow already runs on two kinds of runner: the default GitHub-hosted runners and, for the `test` job only, the Blacksmith runner (`runs-on: blacksmith-2vcpu-ubuntu-2404`). Blacksmith is a drop-in replacement for `ubuntu-latest` on Ubuntu 24.04 — same base image, no workflow action required — so the change is one `runs-on` label per job, and the free tier is 3000 x64 2-vCPU-equivalent minutes per month per org. A 2-vCPU Blacksmith runner burns 1 allowance minute per clock minute; the `test` job is capped at `timeout-minutes: 30`, so a single `test` run costs at most **30** allowance minutes on Blacksmith and at most **30** minutes on GitHub-hosted. Other jobs stay on GitHub-hosted until the pilot shows the actual burn and speedup; larger Blacksmith sizes (4/8/16/32 vCPU) cost proportionally more of the free allowance and are not needed for this job. If the org does not have the Blacksmith GitHub App installed with access to this repository, the `test` job will queue forever — confirm that first at app.blacksmith.sh.
 **Supersede, do not stack.** `Tests`, `CodeQL`, `Main audit` and `Deploy` all
 carry concurrency groups that cancel a superseded run for the same ref, so a
 fast merge train keeps only the newest. `Verify staging` deliberately does _not_

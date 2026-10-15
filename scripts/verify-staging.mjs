@@ -41,7 +41,13 @@
 // Exit: 0 = verified, 1 = verification failed, 2 = could not verify.
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+// The promote/verify gate spawns this script from a test working dir that is
+// *not* the repo root, so any path-relative file reads must be rooted here.
+// In ES modules, __dirname is not available; use import.meta.url instead.
+const ROOT = resolve(fileURLToPath(import.meta.url), "..");
 
 import {
   FETCH_TIMEOUT_MS,
@@ -227,7 +233,16 @@ if (!files.length) {
         : `CLI ${d.cli} vs manifest ${d.manifest}; missing from CLI: ${(d.missingFromCli || []).join(", ")}`,
     );
 }
-const expected = artifactStamp(readFileSync("index.html", "utf8"));
+// The stamp must be derived from the committed blob, not the working tree.
+// The promote/verify gate spawns this script from a test working dir that is
+// *not* the repo root, so reading index.html from disk would hit the wrong
+// tree. Read git show :index.html from the repo root instead.
+const committedIndexHtml = execFileSync("git", ["show", ":index.html"], {
+  cwd: ROOT,
+  encoding: "utf8",
+  maxBuffer: 10 * 1024 * 1024,
+});
+const expected = artifactStamp(committedIndexHtml);
 if (!expected.ok) {
   record(
     "checkout declares exactly one asset stamp",
@@ -311,14 +326,22 @@ const parity = await mapPool(parityTargets, CONCURRENCY, async (file) => {
   // The deploy manifest enumerates from the git INDEX, so a file can genuinely
   // be named-but-absent on disk - a concurrent test's mutation tooth, or a
   // half-copied checkout. That is a finding, so it is reported as one.
+  // Read the COMMITTED blob for this path, not the working tree. The deploy
+  // manifest enumerates from the git index, so every parityTarget is tracked;
+  // reading the index blob means a dirty or half-checked-out working tree can
+  // never make a faithful artifact look wrong (or a broken one look clean).
   let localBuf;
   try {
-    localBuf = readFileSync(file);
+    localBuf = execFileSync("git", ["show", ":" + file], {
+      cwd: ROOT,
+      maxBuffer: 32 * 1024 * 1024,
+      encoding: "buffer",
+    });
   } catch (e) {
     return {
       file,
       state: "unreadable",
-      detail: `local read failed: ${e.code || e.message}`,
+      detail: `committed read failed: ${e.message}`,
     };
   }
   let res;
