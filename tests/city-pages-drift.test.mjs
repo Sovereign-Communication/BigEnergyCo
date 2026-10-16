@@ -14,6 +14,7 @@ import {
   cpSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -108,5 +109,71 @@ test("GATE: the hub title stays inside the SEO cap the shipped page passes", () 
   assert.deepEqual(
     metadataIssues([{ page: "solar-calculator/index.html", html }]),
     [],
+  );
+});
+// ── what the worked example must not claim ────────────────────────────────
+// Measured 2026-10-14 by driving the deployed calculator for eleven markets
+// (New York, London, Berlin, Tokyo, Lagos, Delhi, Santiago, Ho Chi Minh City,
+// Suva, Papeete, Kathmandu) at a 10 kWh/day load with a 60% bill-cut goal, then
+// reading the same inputs off that market's committed page:
+//
+//   * every page quoted US-dollar benchmarks under a bare "$" while the
+//     calculator converts every amount into the visitor's own currency (the
+//     sample got £, €, ￥, ₦, ₹, CLP, ₫, FJD, FCFP and NPR back);
+//   * the battery column came from a flat band heuristic, and the engine —
+//     which sizes the bank against the location's own darkest week — landed
+//     above the page's band top in eight of the eleven markets (6–7 kWh against
+//     a 3–5 kWh band) and at its floor in the other three.
+//
+// The generator cannot run the hourly engine, so no band it computes can
+// promise the simulator's number. What it can do is stop implying otherwise,
+// which is what these two clauses are — and this is what keeps them.
+test("GATE: every city page names the unit of its money and labels the battery column", () => {
+  const slugs = readdirSync(join(ROOT, "solar-calculator"), {
+    withFileTypes: true,
+  })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name);
+  assert.equal(slugs.length, 66, "expected the full catalog of city pages");
+
+  const moneyUnlabelled = [];
+  const batteryUnlabelled = [];
+  const misshapen = [];
+  for (const slug of slugs) {
+    const html = readFileSync(
+      join(ROOT, "solar-calculator", slug, "index.html"),
+      "utf8",
+    );
+    const intro = html.match(
+      /<h2>Worked example[^<]*<\/h2>\s*<p>([\s\S]*?)<\/p>/,
+    );
+    const payback = html.match(/<\/table>\s*<\/div>\s*<p>([\s\S]*?)<\/p>/);
+    if (!intro || !payback) {
+      misshapen.push(slug);
+      continue;
+    }
+    // The unit has to sit on the paragraph that quotes the money, and that
+    // paragraph has to quote money, so the clause cannot be hoisted into a
+    // sentence with no figures in it.
+    if (!/US dollars/.test(payback[1]) || !/\$\d/.test(payback[1]))
+      moneyUnlabelled.push(slug);
+    // ... and the battery column has to be named as the one the simulator
+    // re-sizes, rather than left reading as the bank to build.
+    if (!/darkest week/.test(intro[1])) batteryUnlabelled.push(slug);
+  }
+  assert.deepEqual(
+    misshapen,
+    [],
+    `city pages whose worked example is not shaped as the generator writes it: ${misshapen.join(", ")}`,
+  );
+  assert.deepEqual(
+    moneyUnlabelled,
+    [],
+    `city pages quoting money without naming its currency: ${moneyUnlabelled.join(", ")}`,
+  );
+  assert.deepEqual(
+    batteryUnlabelled,
+    [],
+    `city pages presenting the band-only battery figure as the size to build: ${batteryUnlabelled.join(", ")}`,
   );
 });
