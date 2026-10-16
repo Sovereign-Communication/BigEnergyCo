@@ -179,7 +179,8 @@ import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261015b";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
-  rectangleAreaM2,
+  rotatedRectangleAreaM2,
+  rotatedRectangleCorners,
   manualRoofHint,
 } from "./map-provider.js?v=20261015b";
 import {
@@ -270,6 +271,7 @@ let roofMapRegistry = null;
 let roofMapUnsubscribe = null;
 let roofMapRectangle = null;
 let roofMapFirstCorner = null;
+let roofMapSecondCorner = null;
 
 // The monthly-bill slider stores the user's real input as consumed ENERGY
 // (kWh/day, default 20) and re-expresses that as local currency whenever the
@@ -2439,6 +2441,7 @@ function setupRoofMap() {
     roofMapRectangle?.remove?.();
     roofMapRectangle = null;
     roofMapFirstCorner = null;
+    roofMapSecondCorner = null;
     panel.hidden = true;
     status.textContent = "";
   };
@@ -2459,38 +2462,52 @@ function setupRoofMap() {
           element: mapElement,
           latitude,
           longitude,
-          zoom: 19,
+          zoom: 20,
         });
         if (!map) throw new Error("No optional map provider is available");
         status.textContent =
-          "Tap one corner, then the opposite corner of your roof or yard.";
+          "Tap the first corner of your roof, then the next corner along the same edge.";
         roofMapUnsubscribe = roofMapRegistry.onClick((lat, lon) => {
           if (!roofMapFirstCorner) {
             roofMapFirstCorner = [lat, lon];
-            status.textContent = "Now tap the opposite corner.";
+            status.textContent =
+              "Now tap the next corner along the same roof edge.";
             return;
           }
-          const second = [lat, lon];
-          const area = rectangleAreaM2(roofMapFirstCorner, second);
+          if (!roofMapSecondCorner) {
+            roofMapSecondCorner = [lat, lon];
+            status.textContent =
+              "Now tap anywhere on the opposite roof edge to set the width.";
+            return;
+          }
+          const corners = rotatedRectangleCorners(
+            roofMapFirstCorner,
+            roofMapSecondCorner,
+            [lat, lon],
+          );
+          if (!corners) {
+            status.textContent =
+              "Those taps don't form a rectangle — tap three corners again, starting along one roof edge.";
+            roofMapFirstCorner = null;
+            roofMapSecondCorner = null;
+            return;
+          }
+          const area = rotatedRectangleAreaM2(
+            roofMapFirstCorner,
+            roofMapSecondCorner,
+            [lat, lon],
+          );
           roofMapRectangle?.remove?.();
-          roofMapRectangle = roofMapRegistry.drawRectangle([
-            [
-              Math.min(roofMapFirstCorner[0], second[0]),
-              Math.min(roofMapFirstCorner[1], second[1]),
-            ],
-            [
-              Math.max(roofMapFirstCorner[0], second[0]),
-              Math.max(roofMapFirstCorner[1], second[1]),
-            ],
-          ]);
+          roofMapRectangle = roofMapRegistry.drawPolygon(corners);
           roofMapFirstCorner = null;
+          roofMapSecondCorner = null;
           if (areaInput) {
             areaInput.value = String(Math.round(area * 10) / 10);
             areaInput.dispatchEvent(new Event("input", { bubbles: true }));
           }
           if (areaHint)
             areaHint.textContent = `${manualRoofHint(area)} This caps the searched PV size; it does not certify structural or shading suitability.`;
-          status.textContent = `${Math.round(area * 10) / 10} m² selected. You can close the map or tap two new corners.`;
+          status.textContent = `${Math.round(area * 10) / 10} m² selected. You can close the map or tap three new corners.`;
         });
       } catch (error) {
         status.textContent = `${error?.message || "The optional map could not load."} Use the manual area box below instead.`;
