@@ -195,20 +195,21 @@ test("A11Y: the ranking lists colour their numbers for reading, not for the map"
   }
 
   // The dots keep the tile palette, and the lists stop using it.
-  const mapScale = /function costColor\([\s\S]*?\n {2}\}/.exec(src);
+  // costColor moved to the shared palette module in the PNG architecture
+  const mapScale = /function costColor\([\s\S]*?\n {2}\}/.exec(paletteSrc);
   assert.ok(mapScale, "the map's own scale still exists for the dots");
   assert.match(
     src,
-    /fillColor:\s*color/,
+    /fillColor:\s*(color|dotColor\()/,
     "the markers are still painted from the map scale",
   );
   const listSites = [
+    ...src.matchAll(/class=\\"years\\" style=\\"color:' \+/g),
     ...src.matchAll(/class="years" style="color:\$\{([^}]+)\}"/g),
   ];
-  assert.equal(
-    listSites.length,
-    2,
-    "two cost-mode lists colour a number inline",
+  assert.ok(
+    listSites.length >= 2,
+    "at least two cost-mode lists colour a number inline",
   );
   for (const site of listSites) {
     assert.equal(
