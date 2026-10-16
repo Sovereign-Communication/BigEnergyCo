@@ -102,7 +102,7 @@
               "@type": "WebPage",
               "@id": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
             },
-            "headline": "Battery Longevity, Oversizing & Depth of Discharge (DoD) Reference Guide (2026)",
+            "headline": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
             "name": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
             "description": "Degradation physics, Wöhler cycle models and sizing strategies for LFP, sodium-ion and lead-acid — how oversizing and DoD control cut battery replacements.",
             "datePublished": "2026-09-11T00:00:00Z",
@@ -209,448 +209,239 @@
         -webkit-text-size-adjust: 100%;
         text-size-adjust: 100%;
         scrollbar-width: thin;
-        scrollbar-color: rgba(255, 255, 255, 0.28) rgba(9, 13, 22, 0.85);
-
-        --bg-dark: #090d16;
-        --bg-card: rgba(18, 26, 44, 0.85);
-        --bg-card-hover: rgba(28, 40, 66, 0.95);
-        --border-glow: rgba(0, 230, 153, 0.35);
-        --border-card: rgba(255, 255, 255, 0.12);
-
-        --primary-accent: #00e699;
-        --primary-glow: rgba(0, 230, 153, 0.5);
-        --secondary-accent: #3b82f6;
-        --warning-orange: #f59e0b;
-        --danger-red: #ef4444;
-
-        --text-main: #f3f4f6;
-        --text-muted: #9ca3af;
-        --text-bright: #ffffff;
-
-        --font-main:
-          system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Helvetica, Arial, sans-serif;
-        --font-mono:
-          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        scrollbar-color: rgba(255, 255, 255, 0.28) rgba(11, 15, 23, 0.85);
+        --accent: #00e699;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --bg: #0b0f17;
+        --card: rgba(255, 255, 255, 0.04);
+        --border: rgba(255, 255, 255, 0.12);
       }
-
       * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
       }
-
       body {
-        background-color: var(--bg-dark);
-        color: var(--text-main);
-        font-family: var(--font-main);
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
         line-height: 1.7;
-        font-size: 1.05rem;
-        background-image:
-          radial-gradient(
-            circle at 50% 0%,
-            rgba(0, 230, 153, 0.08) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            circle at 80% 20%,
-            rgba(59, 130, 246, 0.05) 0%,
-            transparent 40%
-          );
-        background-attachment: fixed;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
-
       .container {
-        max-width: 900px;
+        max-width: 820px;
         margin: 0 auto;
-        padding: 0 1.5rem;
+        padding: 0 1.25rem;
       }
-
       header {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        background: rgba(9, 13, 22, 0.92);
-        border-bottom: 1px solid var(--border-card);
+        border-bottom: 1px solid var(--border);
         padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
+        background: rgba(11, 15, 23, 0.92);
+        position: sticky;
+        top: 0;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 5;
       }
-
-      .nav-flex {
+      header .container {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
       }
-
       .logo {
-        font-size: 1.5rem;
         font-weight: 800;
+        font-size: 1.25rem;
         letter-spacing: -0.5px;
-        background: linear-gradient(
-          135deg,
-          #ffffff 0%,
-          var(--primary-accent) 100%
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
         text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: #fff;
       }
-
       .logo .highlight {
-        color: var(--primary-accent);
-        -webkit-text-fill-color: var(--primary-accent);
+        color: var(--accent);
       }
-
-      .nav-links {
+      nav {
         display: flex;
-        gap: 1.75rem;
         align-items: center;
+        gap: 1.25rem;
+        flex-wrap: wrap;
       }
-
-      .nav-links a {
-        color: var(--text-muted);
-        font-size: 0.95rem;
-        font-weight: 500;
+      nav a {
+        color: var(--muted);
         text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
         transition: color 0.2s;
       }
-
-      .nav-links a:hover,
-      .nav-links a.active {
-        color: var(--text-bright);
+      nav a:hover,
+      nav a.active {
+        color: #fff;
       }
-
+      .header-cta {
+        display: flex;
+        align-items: center;
+      }
       .btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.5rem;
-        padding: 0.65rem 1.4rem;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
         border-radius: 8px;
-        font-weight: 600;
-        font-size: 0.95rem;
+        font-weight: 700;
+        font-size: 0.88rem;
         cursor: pointer;
-        transition: all 0.25s ease;
-        border: none;
         text-decoration: none !important;
+        transition: all 0.2s ease;
+        border: none;
       }
-
       .btn-primary {
         background: linear-gradient(135deg, #00e699 0%, #00b377 100%);
         color: #04120c;
-        font-weight: 700;
-        box-shadow: 0 0 15px rgba(0, 230, 153, 0.3);
+        box-shadow: 0 0 12px rgba(0, 230, 153, 0.25);
       }
-
       .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 0 25px rgba(0, 230, 153, 0.5);
+        transform: translateY(-1px);
+        box-shadow: 0 0 18px rgba(0, 230, 153, 0.4);
         color: #04120c;
       }
-
-      .breadcrumb {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        margin-bottom: 1.5rem;
-        margin-top: 2rem;
+      article {
+        padding: 2.5rem 0 1rem;
       }
-
-      .breadcrumb a {
-        color: var(--text-muted);
-        text-decoration: none;
-      }
-
-      .breadcrumb a:hover {
-        color: var(--primary-accent);
-      }
-
-      .article-header {
-        margin-bottom: 2.5rem;
-      }
-
-      .article-tag {
-        display: inline-block;
-        background: rgba(0, 230, 153, 0.12);
-        color: var(--primary-accent);
-        border: 1px solid var(--primary-glow);
-        padding: 0.3rem 0.9rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-      }
-
       h1 {
-        font-size: clamp(2rem, 5vw, 2.75rem);
-        font-weight: 900;
+        color: #fff;
+        font-size: 2.1rem;
         line-height: 1.25;
-        margin-bottom: 1rem;
         letter-spacing: -0.5px;
-        color: #ffffff;
+        margin-bottom: 0.75rem;
       }
-
-      .article-meta {
-        display: flex;
-        gap: 1.5rem;
-        align-items: center;
-        color: var(--text-muted);
-        font-size: 0.9rem;
-        border-bottom: 1px solid var(--border-card);
-        padding-bottom: 1.5rem;
+      .meta {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-bottom: 2rem;
       }
-
-      .article-content {
-        padding-bottom: 4rem;
-      }
-
-      .article-content h2 {
-        font-size: 1.8rem;
-        font-weight: 800;
-        margin: 2.75rem 0 1rem;
-        color: #ffffff;
-        letter-spacing: -0.3px;
-        position: relative;
-        padding-top: 0.5rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-      }
-
-      .article-content h3 {
+      h2 {
+        color: #fff;
         font-size: 1.35rem;
-        font-weight: 700;
-        margin: 1.75rem 0 0.75rem;
-        color: #f3f4f6;
+        margin: 2.2rem 0 0.8rem;
       }
-
-      .article-content p {
-        margin-bottom: 1.35rem;
-        color: #d1d5db;
+      p {
+        margin-bottom: 1rem;
       }
-
-      .article-content ul,
-      .article-content ol {
-        margin-bottom: 1.5rem;
-        padding-left: 1.5rem;
-        color: #d1d5db;
+      ul {
+        margin: 0 0 1rem 1.25rem;
       }
-
-      .article-content li {
-        margin-bottom: 0.5rem;
+      ol {
+        margin: 0 0 1rem 1.25rem;
       }
-
-      .article-content strong {
-        color: #ffffff;
+      li {
+        margin-bottom: 0.45rem;
       }
-
-      .callout {
-        border-radius: 10px;
-        padding: 1.25rem 1.5rem;
-        margin: 1.75rem 0;
-        background: rgba(18, 26, 44, 0.9);
-        border: 1px solid var(--border-card);
-      }
-
-      .callout-info {
-        border-left: 4px solid var(--secondary-accent);
-        background: rgba(59, 130, 246, 0.08);
-        border-color: rgba(59, 130, 246, 0.3);
-      }
-
-      .callout-success {
-        border-left: 4px solid var(--primary-accent);
-        background: rgba(0, 230, 153, 0.08);
-        border-color: rgba(0, 230, 153, 0.3);
-      }
-
-      .callout-warning {
-        border-left: 4px solid var(--warning-orange);
-        background: rgba(245, 158, 11, 0.08);
-        border-color: rgba(245, 158, 11, 0.3);
-      }
-
-      .callout-danger {
-        border-left: 4px solid var(--danger-red);
-        background: rgba(239, 68, 68, 0.08);
-        border-color: rgba(239, 68, 68, 0.3);
-      }
-
-      .callout-title {
-        font-weight: 700;
-        font-size: 1.05rem;
-        margin-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #ffffff;
-      }
-
-      .math-box {
-        background: rgba(15, 23, 42, 0.95);
-        border: 1px solid rgba(59, 130, 246, 0.3);
-        border-radius: 8px;
-        padding: 1.2rem 1.5rem;
-        margin: 1.5rem 0;
-        font-family: var(--font-mono);
-        font-size: 0.95rem;
-        color: #93c5fd;
+      .table-container {
+        width: 100%;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 1.2rem 0;
       }
-
-      .table-wrapper {
-        overflow-x: auto;
-        margin: 2rem 0;
-        border: 1px solid var(--border-card);
-        border-radius: 10px;
-        background: var(--bg-card);
-      }
-
       table {
         width: 100%;
         border-collapse: collapse;
-        text-align: left;
-        font-size: 0.92rem;
+        font-size: 0.93rem;
       }
-
       th,
       td {
-        padding: 0.9rem 1.1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--border);
+        padding: 0.55rem 0.7rem;
+        text-align: left;
       }
-
       th {
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(0, 230, 153, 0.08);
+        color: #fff;
+      }
+      td.num,
+      th.num {
+        text-align: right;
+        font-family: ui-monospace, Menlo, monospace;
+      }
+      strong {
+        color: #fff;
+      }
+      em.kicker {
+        color: var(--accent);
+        font-style: normal;
         font-weight: 700;
-        color: #ffffff;
       }
-
-      tr:last-child td {
-        border-bottom: none;
-      }
-
-      tr:hover td {
-        background: rgba(255, 255, 255, 0.02);
-      }
-
-      .badge {
-        display: inline-block;
-        padding: 0.2rem 0.6rem;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-      }
-
-      .badge-green {
-        background: rgba(0, 230, 153, 0.15);
-        color: var(--primary-accent);
-        border: 1px solid rgba(0, 230, 153, 0.3);
-      }
-
-      .badge-blue {
-        background: rgba(59, 130, 246, 0.15);
-        color: #60a5fa;
-        border: 1px solid rgba(59, 130, 246, 0.3);
-      }
-
-      .badge-red {
-        background: rgba(239, 68, 68, 0.15);
-        color: #f87171;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-      }
-
-      .cta-card {
-        background: linear-gradient(
-          135deg,
-          rgba(18, 26, 44, 0.95) 0%,
-          rgba(10, 30, 45, 0.9) 100%
-        );
-        border: 1px solid var(--border-glow);
+      .cta-box {
+        border: 1px solid rgba(0, 230, 153, 0.4);
+        background: rgba(0, 230, 153, 0.06);
         border-radius: 12px;
-        padding: 2.25rem 2rem;
-        text-align: center;
-        margin: 3.5rem 0 2rem;
-        box-shadow: 0 10px 30px rgba(0, 230, 153, 0.1);
+        padding: 1.2rem 1.4rem;
+        margin: 2rem 0;
       }
-
-      .cta-card h3 {
-        font-size: 1.6rem;
-        margin-bottom: 0.75rem;
-        color: #ffffff;
+      .cta-box p:last-child {
+        margin: 0;
       }
-
-      .cta-card p {
-        color: var(--text-muted);
-        max-width: 600px;
-        margin: 0 auto 1.5rem;
-      }
-
-      .faq-item {
-        background: var(--bg-card);
-        border: 1px solid var(--border-card);
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        padding: 1.25rem;
-      }
-
-      .faq-question {
+      .btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #00e699, #00b377);
+        color: #04120c;
         font-weight: 700;
-        color: #ffffff;
-        font-size: 1.1rem;
-        margin-bottom: 0.5rem;
+        text-decoration: none;
+        padding: 0.65rem 1.3rem;
+        border-radius: 8px;
+        margin-top: 0.6rem;
       }
-
-      .faq-answer {
-        color: #d1d5db;
-        font-size: 0.98rem;
-        line-height: 1.6;
+      details {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.9rem 1.1rem;
+        margin-bottom: 0.8rem;
+        background: var(--card);
       }
-
-      .citation-list {
-        list-style: none;
-        padding-left: 0;
+      summary {
+        cursor: pointer;
+        color: var(--accent);
+        font-weight: 600;
       }
-
-      .citation-list li {
-        font-size: 0.9rem;
-        color: var(--text-muted);
-        margin-bottom: 0.85rem;
-        padding-left: 1.25rem;
-        text-indent: -1.25rem;
+      details p {
+        margin: 0.6rem 0 0;
       }
-
       footer {
-        border-top: 1px solid var(--border-card);
-        padding: 3rem 0 max(3rem, env(safe-area-inset-bottom));
+        border-top: 1px solid var(--border);
+        padding: 2.5rem 0 max(3rem, env(safe-area-inset-bottom));
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
+        margin-top: 3rem;
+        color: var(--muted);
+        font-size: 0.85rem;
         text-align: center;
-        color: var(--text-muted);
-        font-size: 0.9rem;
-        background: rgba(9, 13, 22, 0.95);
       }
-
       footer a {
-        color: var(--text-muted);
+        color: var(--accent);
         text-decoration: none;
       }
-
-      footer a:hover {
-        color: var(--primary-accent);
-      }
-
-      @media (max-width: 768px) {
-        .nav-links {
-          display: none;
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1.65rem;
+        }
+        .container {
+          padding: 0 1rem;
+        }
+        nav a {
+          margin-left: 0.65rem;
+          font-size: 0.85rem;
         }
       }
       .skip-link {
@@ -770,8 +561,7 @@
             🔬 Engineering Reference &amp; Scientific Data
           </div>
           <h1>
-            Battery Longevity, Oversizing &amp; Depth of Discharge (DoD): The
-            Zero-Swap Engineering Guide
+            Battery Longevity, Oversizing &amp; DoD Reference Guide (2026)
           </h1>
           <div class="article-meta">
             <span
@@ -1573,33 +1363,15 @@
     <!-- Footer -->
     <footer>
       <div class="container">
-        <p style="margin-bottom: 1rem; color: #fff; font-weight: 700">
-          ⚡ BigEnergyCo &mdash; Free Worldwide Solar &amp; Battery Storage
-          Estimator
+        <p>
+          Provided free, as-is, with no warranty. Educational estimates only —
+          verify everything with a licensed professional before building.
+          Working with batteries and mains wiring can cause fire, injury, and
+          death.
         </p>
-        <p
-          style="
-            max-width: 800px;
-            margin: 0 auto 1.5rem;
-            font-size: 0.85rem;
-            line-height: 1.5;
-          "
-        >
-          Provided free and
-          <strong>as-is, with no warranty of any kind</strong>, express or
-          implied. Estimates are educational only and may be inaccurate. Working
-          with high-voltage DC, battery banks, and mains electrical wiring poses
-          severe fire, explosion, and electrocution hazards. Always consult a
-          licensed electrician and comply with your local electrical
-          jurisdiction (NEC/CEC/IEC).
-        </p>
-        <p style="font-size: 0.85rem">
-          <a href="../../">Estimator</a> &nbsp;&middot;&nbsp;
-          <a href="../">Blog</a> &nbsp;&middot;&nbsp;
-          <a href="../../#bom">Hardware Reference</a> &nbsp;&middot;&nbsp;
-          <a href="../../#legal">Terms</a> &nbsp;&middot;&nbsp;
-          <a href="../../#support">Support</a> &nbsp;&middot;&nbsp;
-          <a href="mailto:lucasballek@gmail.com">lucasballek@gmail.com</a>
+        <p style="margin-top: 0.75rem">
+          <a href="../../">Size Your System</a> · <a href="../">All Guides</a> ·
+          <a href="mailto:lucasballek@gmail.com">Contact</a>
         </p>
       </div>
     </footer>

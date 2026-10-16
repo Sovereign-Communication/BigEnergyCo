@@ -93,8 +93,8 @@
               "@type": "WebPage",
               "@id": "https://freeoffgridcalculator.com/blog/hawaii-solar-scams-2026-warning/"
             },
-            "headline": "Hawaii Solar Scams: What the State's 2026 Warning Means for You",
-            "name": "Hawaii Solar Scams: What the State's 2026 Warning Means for You",
+            "headline": "Hawaii Solar Scams: State's 2026 Warning Explained",
+            "name": "Hawaii Solar Scams: State's 2026 Warning Explained",
             "description": "Hawaii's DCCA warns about deceptive door-to-door solar sales in 2026: false claims about contractors going out of business and fake state free-solar programs. Know your rights and verification checklist.",
             "datePublished": "2026-10-15T00:00:00Z",
             "dateModified": "2026-10-15T00:00:00Z",
@@ -137,7 +137,7 @@
               {
                 "@type": "ListItem",
                 "position": 3,
-                "name": "Hawaii Solar Scams: What the State's 2026 Warning Means for You",
+                "name": "Hawaii Solar Scams: State's 2026 Warning Explained",
                 "item": "https://freeoffgridcalculator.com/blog/hawaii-solar-scams-2026-warning/"
               }
             ]
@@ -472,14 +472,72 @@
   </head>
   <body>
     <header>
-      <nav>
-        <a href="../../" class="logo">BigEnergyCo</a>
-        <a href="../../#sizing" class="cta">Free Calculator</a>
-      </nav>
+      <div class="container nav-flex">
+        <a
+          href="../../"
+          class="logo"
+          style="text-decoration: none"
+          aria-label="BigEnergyCo Home"
+        >
+          <span aria-hidden="true">&#9889;</span>
+
+          <span>BigEnergy<span class="highlight">Co</span></span>
+        </a>
+
+        <nav class="nav-links">
+          <a href="../../solar-heatmap/">Heatmap</a>
+
+          <a href="../../#bom" data-i18n="navBom">Hardware Reference</a>
+
+          <a href="../" class="active" data-i18n="navBlog">Guides &amp; Blog</a>
+
+          <a href="../../about/">About</a>
+
+          <a href="../../#legal" data-i18n="navLegal">Terms &amp; Disclaimer</a>
+        </nav>
+
+        <div class="header-cta">
+          <span
+            id="offlineBadge"
+            class="offline-badge"
+            style="display: none"
+            title="Working offline using cached app data &amp; local weather simulation"
+            aria-label="Offline status"
+          >
+            <span class="offline-dot"></span> Offline
+          </span>
+
+          <button
+            id="btnInstallApp"
+            class="btn btn-outline btn-xs"
+            type="button"
+            aria-label="Install BigEnergyCo Web App"
+            style="display: none; cursor: pointer"
+          >
+            &#128242; Install App
+          </button>
+
+          <a
+            href="../../#support"
+            class="btn btn-secondary"
+            style="cursor: pointer; text-decoration: none"
+            data-i18n="navSupport"
+            >Support</a
+          >
+
+          <a
+            href="../../#sizing"
+            class="btn btn-primary"
+            style="cursor: pointer; text-decoration: none"
+            data-i18n="navSizing"
+            >Size Your System</a
+          >
+        </div>
+      </div>
     </header>
     <main>
       <article>
-        <h1>Hawaii Solar Scams: What the State's 2026 Warning Means for You</h1>
+        <h1>Hawaii Solar Scams: State's 2026 Warning Explained</h1>
         <p class="meta">October 15, 2026 · 6 min read</p>
 
         <p>
@@ -612,11 +670,14 @@
           will actually produce with independent data, not the salesperson's
           spreadsheet.
         </p>
-        <p>
-          <a href="../../#sizing" class="cta"
-            >→ Verify your roof's real solar potential (free)</a
-          >
-        </p>
+        <div class="cta-box">
+          <p>
+            <strong>Verify before you sign.</strong> Model your roof's real
+            solar potential against five years of NASA weather data —
+            independent of any salesperson's spreadsheet.
+          </p>
+          <a class="btn" href="../../#sizing">⚡ Verify your roof free</a>
+        </div>
 
         <h2>Sources</h2>
         <ul>
@@ -647,7 +708,18 @@
       </article>
     </main>
     <footer>
-      <p>© 2026 BigEnergyCo · <a href="../../">Free Off-Grid Calculator</a></p>
+      <div class="container">
+        <p>
+          Provided free, as-is, with no warranty. Educational estimates only —
+          verify everything with a licensed professional before building.
+          Working with batteries and mains wiring can cause fire, injury, and
+          death.
+        </p>
+        <p style="margin-top: 0.75rem">
+          <a href="../../">Size Your System</a> · <a href="../">All Guides</a> ·
+          <a href="mailto:lucasballek@gmail.com">Contact</a>
+        </p>
+      </div>
     </footer>
   </body>
 </html>
