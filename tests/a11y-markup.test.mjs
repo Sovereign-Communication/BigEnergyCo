@@ -125,6 +125,8 @@ test("A11Y: the ranking lists colour their numbers for reading, not for the map"
   // and repainting them would be a different change.
   const page = read(HEATMAP_PAGE);
   const src = read(HEATMAP);
+  // costTextColor moved to the shared palette module in the PNG architecture
+  const paletteSrc = read("assets/js/heatmap-palette.js");
 
   // The palette is read from the page, so the test follows a palette change
   // instead of carrying a copy of it.
@@ -164,7 +166,7 @@ test("A11Y: the ranking lists colour their numbers for reading, not for the map"
     return (hi + 0.05) / (lo + 0.05);
   };
 
-  const textScale = /function costTextColor\([\s\S]*?\n {2}\}/.exec(src);
+  const textScale = /function costTextColor\([\s\S]*?\n {2}\}/.exec(paletteSrc);
   assert.ok(
     textScale,
     "the lists need a TEXT scale: the map's tile palette cannot be reused as a " +
