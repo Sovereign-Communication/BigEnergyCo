@@ -48,6 +48,59 @@ export function pvCapKwFromArea(
   return (count * Number(panelWatts)) / 1000;
 }
 
+// Three-tap rotated rectangle: taps A and B are adjacent corners along one
+// roof edge; tap P lands on (or near) the opposite edge. Returns the four
+// corners [A, B, C, D] of the true rectangle, or null when the taps are
+// degenerate (A == B, or P on the AB line). Works in a local equirectangular
+// projection so roofs rotated off north-south align instead of forcing an
+// axis-aligned box that over-measures.
+export function rotatedRectangleCorners(a, b, p) {
+  const pa = Array.isArray(a) ? a : [a?.lat, a?.lng];
+  const pb = Array.isArray(b) ? b : [b?.lat, b?.lng];
+  const pp = Array.isArray(p) ? p : [p?.lat, p?.lng];
+  const nums = [pa[0], pa[1], pb[0], pb[1], pp[0], pp[1]].map(Number);
+  if (!nums.every(Number.isFinite)) return null;
+  const [latA, lonA, latB, lonB, latP, lonP] = nums;
+  const metresPerDegree = 111_320;
+  const meanLat = ((latA + latB + latP) / 3) * (Math.PI / 180);
+  const kx = metresPerDegree * Math.cos(meanLat);
+  const toXY = (lat, lon) => [lon * kx, lat * metresPerDegree];
+  const fromXY = (x, y) => [y / metresPerDegree, x / kx];
+  const [ax, ay] = toXY(latA, lonA);
+  const [bx, by] = toXY(latB, lonB);
+  const [px, py] = toXY(latP, lonP);
+  const abx = bx - ax;
+  const aby = by - ay;
+  const edgeLen = Math.hypot(abx, aby);
+  if (!(edgeLen > 0)) return null;
+  // Unit normal to the AB edge; width is the signed perpendicular distance
+  // from P to the AB line, so tapping either side of the edge works.
+  const nx = -aby / edgeLen;
+  const ny = abx / edgeLen;
+  const width = (px - ax) * nx + (py - ay) * ny;
+  if (!(Math.abs(width) > 0)) return null;
+  const cx = bx + width * nx;
+  const cy = by + width * ny;
+  const dx = ax + width * nx;
+  const dy = ay + width * ny;
+  return [fromXY(ax, ay), fromXY(bx, by), fromXY(cx, cy), fromXY(dx, dy)];
+}
+
+export function rotatedRectangleAreaM2(a, b, p) {
+  const corners = rotatedRectangleCorners(a, b, p);
+  if (!corners) return 0;
+  // Adjacent edges in the equirectangular plane: |AB| * |BC|.
+  const metresPerDegree = 111_320;
+  const meanLat = ((corners[0][0] + corners[2][0]) / 2) * (Math.PI / 180);
+  const kx = metresPerDegree * Math.cos(meanLat);
+  const edge = (q, r) =>
+    Math.hypot((r[1] - q[1]) * kx, (r[0] - q[0]) * metresPerDegree);
+  return Math.max(
+    0,
+    edge(corners[0], corners[1]) * edge(corners[1], corners[2]),
+  );
+}
+
 export function rectangleAreaM2(first, second) {
   const a = Array.isArray(first) ? first : [first?.lat, first?.lng];
   const b = Array.isArray(second) ? second : [second?.lat, second?.lng];
@@ -85,6 +138,9 @@ export function createMapProviderRegistry(providers = []) {
     },
     drawRectangle(bounds) {
       return active?.drawRectangle?.(bounds) || null;
+    },
+    drawPolygon(corners) {
+      return active?.drawPolygon?.(corners) || null;
     },
     cleanup() {
       const result = active?.cleanup?.();
@@ -180,7 +236,10 @@ export function createLeafletProvider({
       // View), with the CARTO street map as the named fallback so the picker
       // still works if Esri tiles are unreachable.
       windowRef.L.tileLayer(ESRI_SATELLITE_TILE_URL, {
-        maxZoom: 19,
+        // Esri World Imagery ships native tiles to z19; allow zooming to
+        // z21 (upscaled) so users get the closest possible look at their roof.
+        maxNativeZoom: 19,
+        maxZoom: 21,
         attribution: ESRI_ATTRIBUTION,
       }).addTo(map);
       windowRef.L.tileLayer(CARTO_TILE_URL, {
@@ -199,6 +258,16 @@ export function createLeafletProvider({
     drawRectangle(bounds) {
       if (!map || !windowRef.L || !bounds) return null;
       return windowRef.L.rectangle(bounds, {
+        color: "#00e699",
+        weight: 2,
+        fillColor: "#00e699",
+        fillOpacity: 0.16,
+      }).addTo(map);
+    },
+    drawPolygon(corners) {
+      if (!map || !windowRef.L || !Array.isArray(corners) || corners.length < 3)
+        return null;
+      return windowRef.L.polygon(corners, {
         color: "#00e699",
         weight: 2,
         fillColor: "#00e699",

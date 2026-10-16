@@ -13,6 +13,8 @@ import {
   panelCapFromArea,
   pvCapKwFromArea,
   rectangleAreaM2,
+  rotatedRectangleAreaM2,
+  rotatedRectangleCorners,
 } from "../assets/js/sizing/map-provider.js";
 
 test("roof area converts to a conservative panel and PV cap", () => {
@@ -21,6 +23,50 @@ test("roof area converts to a conservative panel and PV cap", () => {
   assert.ok(rectangleAreaM2([0, 0], [0.001, 0.001]) > 0);
   assert.equal(rectangleAreaM2([0, 0], [0, 0]), 0);
   assert.match(manualRoofHint(30), /5 panels/);
+});
+
+test("three-tap rotated rectangle aligns with rotated roofs", () => {
+  // Axis-aligned taps reproduce the old two-corner box area.
+  const axis = rotatedRectangleCorners([0, 0], [0.001, 0], [0.001, 0.001]);
+  assert.ok(axis, "axis-aligned taps form a rectangle");
+  assert.equal(axis.length, 4);
+  const axisArea = rotatedRectangleAreaM2([0, 0], [0.001, 0], [0.001, 0.001]);
+  const boxArea = rectangleAreaM2([0, 0], [0.001, 0.001]);
+  assert.ok(
+    Math.abs(axisArea - boxArea) / boxArea < 0.01,
+    `rotated area ${axisArea} ≈ axis box ${boxArea}`,
+  );
+
+  // 45°-rotated roof: three taps along the rotated edges give the true area,
+  // which is smaller than the axis-aligned box that would over-measure.
+  const s = 0.001 / Math.SQRT2; // ~111 m edge at 45°
+  const a = [0, 0];
+  const b = [s, s]; // adjacent corner along the rotated edge
+  const p = [0, 2 * s]; // point on the opposite edge
+  const corners = rotatedRectangleCorners(a, b, p);
+  assert.ok(corners, "rotated taps form a rectangle");
+  // All four interior angles are right angles: adjacent edges perpendicular.
+  const dist = (q, r) => Math.hypot(r[0] - q[0], r[1] - q[1]);
+  const ab = dist(corners[0], corners[1]);
+  const bc = dist(corners[1], corners[2]);
+  const cd = dist(corners[2], corners[3]);
+  const da = dist(corners[3], corners[0]);
+  assert.ok(Math.abs(ab - cd) / ab < 1e-9, "opposite edges equal");
+  assert.ok(Math.abs(bc - da) / bc < 1e-9, "opposite edges equal");
+  const area = rotatedRectangleAreaM2(a, b, p);
+  assert.ok(area > 0, "positive area");
+  // Tapping the other side of the edge gives the same area (signed width).
+  const areaFlip = rotatedRectangleAreaM2(a, b, [2 * s, 0]);
+  assert.ok(
+    Math.abs(area - areaFlip) / area < 1e-9,
+    "either side of the edge works",
+  );
+
+  // Degenerate taps return null / 0 instead of garbage.
+  assert.equal(rotatedRectangleCorners([1, 1], [1, 1], [2, 2]), null);
+  assert.equal(rotatedRectangleCorners([0, 0], [1, 1], [2, 2]), null);
+  assert.equal(rotatedRectangleAreaM2([1, 1], [1, 1], [2, 2]), 0);
+  assert.equal(rotatedRectangleCorners(null, [0, 0], [1, 1]), null);
 });
 
 test("optional provider registry delegates and cleans up", async () => {
@@ -36,6 +82,7 @@ test("optional provider registry delegates and cleans up", async () => {
       };
     },
     drawRectangle: (bounds) => ({ bounds }),
+    drawPolygon: (corners) => ({ corners }),
     cleanup: () => {
       cleanupCount += 1;
     },
@@ -56,10 +103,28 @@ test("optional provider registry delegates and cleans up", async () => {
       ],
     },
   );
+  assert.deepEqual(
+    registry.drawPolygon([
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ]),
+    {
+      corners: [
+        [0, 0],
+        [1, 0],
+        [1, 1],
+        [0, 1],
+      ],
+    },
+  );
   unsubscribe();
   registry.cleanup();
   assert.equal(cleanupCount, 1);
   assert.equal(registry.drawRectangle(null), null);
+  assert.equal(registry.drawPolygon(null), null);
+  assert.equal(registry.drawPolygon([[0, 0]]), null);
 });
 
 test("map provider remains lazy and uses only approved hosts", () => {
