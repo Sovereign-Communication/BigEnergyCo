@@ -25,7 +25,7 @@ import {
   FRONTIER_MARKER_BATT_TOL_KWH,
 } from "../assets/js/sizing/frontier-chart.js";
 import { COUNTRY_FETCH_TIMEOUT_MS } from "../assets/js/sizing/cities.js";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");

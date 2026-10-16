@@ -51,7 +51,7 @@ import {
   incentivesFor,
 } from "../assets/js/sizing/paths.js";
 import { comparisonIntegrity } from "../scripts/lib/paths-integrity.mjs";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
 import {
   OFFLINE_PROFILES,

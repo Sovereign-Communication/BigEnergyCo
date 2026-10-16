@@ -14,6 +14,8 @@
 // engine run.
 
 const round2 = (v) => Math.round(v * 100) / 100;
+const formatCalloutNumber = (value) =>
+  new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
 
 /**
  * Single source of truth for the oversize scenario prose. The battery kWh
@@ -32,14 +34,14 @@ export function oversizeCallout(
     Number.isFinite(battKwh) &&
     Number.isFinite(savingsUsd)
   ) {
-    return `This system uses an oversized battery (${battKwh} kWh) to avoid replacements, giving you the lowest 20-year cost — saving ~$${Math.round(savingsUsd).toLocaleString()} vs. smaller banks with swaps.`;
+    return `This system uses an oversized battery (${battKwh} kWh) to avoid replacements, giving you the lowest 20-year cost — saving ~$${formatCalloutNumber(Math.round(savingsUsd))} vs. smaller banks with swaps.`;
   }
   if (
     scenario === "swaps_cheaper" &&
     Number.isFinite(replacements) &&
     Number.isFinite(savingsUsd)
   ) {
-    return `Best 20-year price: standard sizing with ${replacements} replacement(s) is ~$${Math.round(savingsUsd).toLocaleString()} cheaper over 20 years than paying upfront to oversize.`;
+    return `Best 20-year price: standard sizing with ${replacements} replacement(s) is ~$${formatCalloutNumber(Math.round(savingsUsd))} cheaper over 20 years than paying upfront to oversize.`;
   }
   return null;
 }

@@ -36,7 +36,7 @@ import {
   withNextStep,
 } from "../scripts/smoke/experience.mjs";
 import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 
 // ── a fully healthy reading, built from the tables so it cannot drift ─────────
 

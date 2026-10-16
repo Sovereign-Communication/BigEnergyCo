@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { turnkeyQuoteText, pricedFor, entryFor } from "./quote-text-bridge.mjs";
 import { partsListRows } from "../assets/js/sizing/parts-csv.js";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 
 const ui = readFileSync(
   new URL("../assets/js/sizing/ui.js", import.meta.url),

@@ -16,7 +16,7 @@
 // degradation the visitor can see is honest; a blank box is not.
 //
 // ── LANGUAGE, and the honest limit of this module ──────────────────────────
-// A Worker has no access to assets/js/shared/locales.js — that is client-side
+// A Worker has no access to assets/i18n/*.json — that is client-side
 // chrome, it is never shipped to the edge, and importing it here would put a
 // 1,900-line dictionary in the worker's bundle for no server-side benefit.
 //
@@ -25,7 +25,7 @@
 //
 //   reply  the canonical English text. Always present. What a curl, a script,
 //          or any non-browser client reads, and what the client falls back to.
-//   i18n   the key set the CLIENT resolves through assets/js/shared/locales.js
+//   i18n   the key set the CLIENT resolves through assets/i18n/{locale}.json
 //          in the visitor's own language. Absent on nothing — it is on every
 //          degraded response.
 //

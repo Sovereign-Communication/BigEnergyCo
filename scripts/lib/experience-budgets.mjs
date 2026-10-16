@@ -52,7 +52,7 @@ import {
   LOCALE_SURFACES,
   hasNextStep,
 } from "../smoke/experience.mjs";
-import { LOCALES } from "../../assets/js/shared/locales.js";
+import { LOCALES } from "./locale-data.mjs";
 
 // Re-exported so a reader of this file sees the whole contract, and so the gate
 // and the tests reach the tables from one module rather than two. A bare

@@ -276,8 +276,9 @@ Three things worth knowing before changing any of it:
 - **The scope of a budget is a decision, not an implementation detail.**
   "JavaScript before step 1 is interactive" is the transitive module graph the
   document's scripts reach; the registry line is the **worst** country, not an
-  average; the locale line is the per-locale share, with the whole file reported
-  beside it. Each of those choices has a named test, because a budget measured
+  average; the locale line is the largest independently fetched locale JSON,
+  with every locale's compressed size and the largest raw file reported beside
+  it. Each of those choices has a named test, because a budget measured
   over the wrong set is a number nobody can act on.
 - **A subject that is not in the build reads `null`, never `0`.** A missing
   stylesheet, strings file, country file or heatmap page is `status: "not_found"`

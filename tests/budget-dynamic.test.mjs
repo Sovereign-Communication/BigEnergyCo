@@ -36,7 +36,7 @@ import {
   PROFILE_YEAR,
 } from "../assets/js/sizing/profiles.js";
 import { paretoFront } from "../assets/js/sizing/frontier.js";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 
 const hon = OFFLINE_PROFILES.find((p) => p.name.includes("Honolulu"));
 const fakeWeather = async () => ({
@@ -370,7 +370,7 @@ test("an unsolvable target with NO area input is envelope-limited, never area-li
 });
 
 test("hints: the area message exists only under area-limited", () => {
-  // The copy lives in locales.js (so the banner is translated) and the
+  // The copy lives in per-locale JSON (so the banner is translated) and the
   // reason-to-key mapping lives in infeasible-copy.js, which is a value this
   // can call. Both halves stay pinned, because either rename alone would
   // silently swap "your area cap did this" for "the tool's search limit did

@@ -1377,7 +1377,7 @@ import {
   LOCALE_SURFACES,
   evaluateExperience,
 } from "../scripts/lib/experience-budgets.mjs";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 
 // The healthy reading, built from the tables and the shipped dictionary so it
 // cannot drift from either. Identical in spirit to the facet suite's fixture,

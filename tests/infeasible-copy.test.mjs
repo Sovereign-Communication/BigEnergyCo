@@ -1,7 +1,7 @@
 // Why nothing solved: which code maps to which copy, in one pure owner.
 //
 // The mapping used to be a table inside the DOM controller, reachable only by
-// regexing that file's source, and the copy lives in locales.js. Nothing
+// regexing that file's source, and the copy lives in locale JSON. Nothing
 // connected the two, so a code with no mapping — or a mapping with no
 // translation — would surface as a generic message nobody had reviewed. This
 // closes the loop in both directions.
@@ -15,7 +15,7 @@ import {
   infeasibleReasonCodes,
 } from "../assets/js/sizing/infeasible-copy.js";
 import { infeasibleReason } from "../assets/js/sizing/engine.js";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 
 const MODES = ["offgrid", "gridtie"];
 const HARDWARE = ["solar", "battery", "both"];

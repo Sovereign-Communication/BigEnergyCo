@@ -16,7 +16,8 @@ import {
   searchCities,
   shouldAutoResolve,
   typedCityCandidates,
-} from "./cities.js?v=20261015b";
+} from "./cities.js?v=20261015d";
+import { formatNumber } from "../shared/i18n.js?v=20261015d";
 
 function byId(id) {
   return document.getElementById(id);
@@ -59,7 +60,7 @@ export function setupCitySearch({
     results.forEach((c, i) => {
       const population =
         Number.isFinite(c.population) && c.population > 0
-          ? ` · population ${c.population.toLocaleString()}`
+          ? ` · population ${formatNumber(c.population)}`
           : "";
       const button = el(
         "button",

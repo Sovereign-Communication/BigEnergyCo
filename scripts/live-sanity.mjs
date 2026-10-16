@@ -13,7 +13,7 @@ const html = await (
 // 1. Characters render correctly.
 // NOTE: emoji were deliberately stripped from the static HTML in commit
 // 41933fc ("strip all emojis that cause mojibake"); the ?? hero tag lives in
-// locales.js now, so the HTML checks below assert plain-ASCII copy instead.
+// locale JSON files now, so the HTML checks below assert plain-ASCII copy instead.
 check("hero CTA present", html.includes("Start a Free Estimate"));
 check("hero tag i18n hook", html.includes('data-i18n="heroTag"'));
 check("em-dashes present", html.includes("\u2014"));
@@ -92,7 +92,7 @@ const mods = [
   ["assets/js/sizing/ui.js", "drawAutoChart"],
   ["assets/js/sizing/money.js", "cumulativeCostSeries"],
   ["assets/js/shared/i18n.js", "\u0627\u0644\u0639\u0631\u0628\u064a\u0629"],
-  ["assets/js/shared/locales.js", "\u0627\u0644\u0644\u063a\u0629"],
+  ["assets/i18n/ar.json", "\u0627\u0644\u0644\u063a\u0629"],
 ];
 for (const [path, needle] of mods) {
   const r = await fetch(BASE + path + "?v=" + (uiToken || Date.now()), {

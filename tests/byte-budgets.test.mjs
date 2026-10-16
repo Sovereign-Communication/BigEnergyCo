@@ -71,15 +71,21 @@ function fixture(overrides = {}) {
     'import { money } from "./money.js";\nexport const cities = money;',
   );
   add("assets/js/sizing/money.js", "export const money = 1;");
+  add("assets/i18n/en.json", JSON.stringify({ greeting: "hello" }));
+  add("assets/i18n/de.json", JSON.stringify({ greeting: "guten Morgen" }));
+  add(
+    "assets/i18n/script-directions.json",
+    JSON.stringify({
+      Latn: "ltr",
+      Arab: "rtl",
+      metadata: "not-a-locale".repeat(400),
+    }),
+  );
   // The three shapes a staged module can pull in, each of which the graph walk
   // has to see — and one it must not see.
   add("assets/js/shared/interpolate.js", "export const interpolate = 1;");
   add("assets/js/shared/side-effect.js", "export const sideEffect = 1;");
   add("assets/js/shared/commented-out.js", "export const neverLoaded = 1;");
-  add(
-    "assets/js/shared/locales.js",
-    "export const locales = { en: {}, es: {}, pt: {} };",
-  );
   add("assets/js/sizing/city-data/DE.json", JSON.stringify({ cities: [] }));
   add("assets/js/sizing/city-data/US.json", JSON.stringify({ cities: [] }));
   add(
@@ -150,6 +156,20 @@ test("BUDGET: a staged build is measured on every plan budget", () => {
   }
   // The document itself is one of the requests before first interaction.
   assert.ok(metrics.requests_before_interaction.value >= 6);
+});
+
+test("BUDGET: locale JSON is measured per file and the largest locale sets the bar", () => {
+  const { metrics } = measureStagedBuild(fixture());
+  const reading = metrics.locale_strings;
+  const en = Buffer.from(JSON.stringify({ greeting: "hello" }));
+  const de = Buffer.from(JSON.stringify({ greeting: "guten Morgen" }));
+  assert.deepEqual(reading.by_locale, {
+    de: brotliBytes(de),
+    en: brotliBytes(en),
+  });
+  assert.equal(reading.locales, 2);
+  assert.equal(reading.value, Math.max(...Object.values(reading.by_locale)));
+  assert.equal(reading.file_bytes, Math.max(en.length, de.length));
 });
 
 test("BUDGET: JS before interaction is the transitive module graph", () => {
@@ -411,7 +431,8 @@ test("BUDGET: a budget whose subject is absent is unmeasured, never zero", () =>
     "assets/data/heatmap-grid.json": null,
     "assets/js/sizing/city-data/DE.json": null,
     "assets/js/sizing/city-data/US.json": null,
-    "assets/js/shared/locales.js": null,
+    "assets/i18n/en.json": null,
+    "assets/i18n/de.json": null,
     "assets/site.css": null,
   });
   const { metrics } = measureStagedBuild(bare);

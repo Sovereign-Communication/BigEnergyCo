@@ -22,15 +22,21 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync, mkdtempSync, cpSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { LOCALES } from "../assets/js/shared/locales.js";
-import { claimsTranslation, unkeyedProse } from "../scripts/lib/gates.mjs";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
+import {
+  claimsTranslation,
+  unkeyedCopyAttributes,
+  unkeyedProse,
+  untranslatedLocaleValues,
+} from "../scripts/lib/gates.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const LOCALES_PATH = join(ROOT, "assets", "js", "shared", "locales.js");
+const LOCALES_DIR = join(ROOT, "assets", "i18n");
 const CHECK = join(ROOT, "scripts", "check-i18n.mjs");
 
 test("BANNED: the known-bad Arabic values are gone", () => {
@@ -84,18 +90,85 @@ test("BANNED: the known-bad Arabic values are gone", () => {
   );
 });
 
+test("BACK-TRANSLATION: reviewed fixes retain the source meaning", () => {
+  assert.match(
+    LOCALES.de.touDefaultNote,
+    /Ändere einen der beiden Werte/,
+    "touDefaultNote must allow changing either one value, not require changing both",
+  );
+  assert.match(
+    LOCALES.fr.pathsDiyRestricted,
+    /installation du système par vos soins est restreinte/,
+    "pathsDiyRestricted must refer to DIY system installation, not self-consumption",
+  );
+  assert.match(
+    LOCALES.fr.frontierMarkerOffCurve,
+    /parc de batteries moins cher qui doit être remplacé/,
+    "frontierMarkerOffCurve must say that the cheaper battery bank needs replacement",
+  );
+  assert.match(
+    LOCALES.de.advisorDegradedSystem,
+    /zugelassenen Elektriker/,
+    "advisorDegradedSystem must retain the licensed electrician qualification",
+  );
+  assert.match(
+    LOCALES.de.frontierIntro,
+    /Alle Systeme, die wir an deinem Standort bauen können, vom günstigsten aufwärts.*das beste Ergebnis, das sich mit jedem Budget erzielen lässt.*leicht zu erreichen, teuer oder außer Reichweite/s,
+    "frontierIntro must preserve the ordered systems, budget frontier, and goal feasibility explanation",
+  );
+  assert.match(
+    LOCALES.de.frontierMethod,
+    /jede Kombination aus Solarmodulen und Batterien.*groben Raster.*stündlichen Wetterdaten.*von keinem günstigeren System übertroffen.*DIY-Preis inklusive Lieferung/s,
+    "frontierMethod must preserve the sweep, comparison, and landed DIY price basis",
+  );
+});
+
+test("BACK-TRANSLATION: sizing guidance stays complete in Arabic and German", () => {
+  const ar = LOCALES.ar;
+  for (const key of [
+    "quickBillStarts",
+    "gridSizingDescription",
+    "offgridSizingHeading",
+    "offgridSizingDescription",
+    "monthlyBillInputOption",
+    "presetWeekendCabin",
+  ]) {
+    assert.match(ar[key], /[\u0600-\u06ff]/u, `ar.${key} must contain Arabic text`);
+    assert.doesNotMatch(ar[key], /\?{2,}/, `ar.${key} contains corrupted question marks`);
+  }
+
+  assert.match(ar.quickBillStarts, /\{bill\}.*\{kwh\}/);
+  assert.match(ar.quickBillStarts, /احسب نظامي/);
+  assert.match(ar.runBtnReady, /احسب نظامي/);
+  assert.match(ar.quickBillStarts, /منزلق خفض الفاتورة.*النتائج/);
+  assert.match(ar.gridSizingDescription, /فاتورتك الشهرية للكهرباء.*موقعك.*احسب نظامي/);
+  assert.match(ar.gridSizingDescription, /الطاقة الشمسية والبطاريات.*كيميائيات البطاريات.*20 عامًا.*شراء المعدات بالجملة/);
+  assert.match(ar.offgridSizingHeading, /نظامك الشمسي.*بطاريتك.*خارج الشبكة/);
+  assert.match(ar.offgridSizingDescription, /كوخ.*شاحنة تخييم.*طاقة احتياطي.*منزل ريفي/);
+  assert.match(ar.offgridSizingDescription, /استهلاكك اليومي.*الأجهزة.*بيانات الطقس بالساعة.*احتياجاتك/);
+  assert.match(ar.monthlyBillInputOption, /أعرف فاتورتي الكهربائية الشهرية/);
+  assert.match(ar.presetWeekendCabin, /كوخ.*عطلة نهاية الأسبوع/);
+  assert.notEqual(ar.presetWeekendCabin, LOCALES.pt.presetWeekendCabin);
+
+  assert.match(LOCALES.de.firstRunNote, /Beim ersten Start.*2 MB.*Satelliten-Wetterdaten heruntergeladen.*im Browser zwischengespeichert/);
+});
+
 test("BANNED: reintroducing any known-bad value makes the gate fail", () => {
   // Run the gate against a THROWAWAY COPY of the repo, never the real working
   // tree: this test deliberately writes a broken dictionary, and a test that
   // mutates the checkout it runs in is the race that cost three CI cycles on
   // this branch before (see scripts/lib/mutation-lock.mjs).
   const sandbox = mkdtempSync(join(tmpdir(), "beco-i18n-banned-"));
-  // The gate resolves the dictionary by import, so the copy needs both files
-  // and the lib it imports.
-  cpSync(LOCALES_PATH, join(sandbox, "locales.js"));
+  // Copy the locale JSON into a throwaway tree before mutating any values.
+  mkdirSync(join(sandbox, "assets"), { recursive: true });
+  cpSync(LOCALES_DIR, join(sandbox, "assets", "i18n"), { recursive: true });
   const script = `
-    import { LOCALES } from "./locales.js";
-    const langs = Object.keys(LOCALES);
+    import { readdirSync, readFileSync } from "node:fs";
+    import { fileURLToPath } from "node:url";
+    import { join } from "node:path";
+    const localeDir = fileURLToPath(new URL("./assets/i18n/", import.meta.url));
+    const langs = readdirSync(localeDir).filter((name) => name.endsWith(".json") && name !== "script-directions.json").map((name) => name.slice(0, -5));
+    const LOCALES = Object.fromEntries(langs.map((lang) => [lang, JSON.parse(readFileSync(join(localeDir, lang + ".json"), "utf8"))]));
     const BANNED = ${JSON.stringify([
       "دون اتصال · ليس الذكاء الطناعيا مباشرة",
       "لا مفتاح مدية، فالمشير منطقً عند الاتصال",
@@ -147,10 +220,12 @@ test("BANNED: reintroducing any known-bad value makes the gate fail", () => {
     ],
     [" · 🌐 وضع السنة النموذجية دون اتصال", " · 🌐 وضع عدم الاتصال التقليدي"],
   ];
-  const good = readFileSync(LOCALES_PATH, "utf8");
+  const goodPath = join(LOCALES_DIR, "ar.json");
+  const sandboxArabicPath = join(sandbox, "assets", "i18n", "ar.json");
+  const good = readFileSync(goodPath, "utf8");
   for (const [ok, bad] of MUTATIONS) {
     if (!good.includes(ok)) continue;
-    writeFileSync(join(sandbox, "locales.js"), good.replace(ok, bad), "utf8");
+    writeFileSync(sandboxArabicPath, good.replace(ok, bad), "utf8");
     const r = run();
     assert.equal(
       r.status,
@@ -163,7 +238,7 @@ test("BANNED: reintroducing any known-bad value makes the gate fail", () => {
       "the failure must NAME the bad value, not just exit non-zero",
     );
   }
-  writeFileSync(join(sandbox, "locales.js"), good, "utf8");
+  writeFileSync(sandboxArabicPath, good, "utf8");
 });
 
 test("HERO + FOOTER: the page's most prominent copy is keyed, not hardcoded", () => {
@@ -200,7 +275,7 @@ test("HERO + FOOTER: the page's most prominent copy is keyed, not hardcoded", ()
   // and would otherwise delete the element holding the author's name.
   assert.match(
     html,
-    /data-i18n="footerAboutPre"[^>]*>[\s\S]{0,200}?<strong>Lucas Ballek<\/strong>[\s\S]{0,200}?data-i18n="footerAboutPost"/,
+    /data-i18n="footerAboutPre"[^>]*>[\s\S]{0,200}?<strong(?=[^>]*data-i18n="operatorName")[^>]*>Lucas Ballek<\/strong>[\s\S]{0,200}?data-i18n="footerAboutPost"/,
     "the footer must key the text AROUND the <strong>, not the paragraph containing it",
   );
 });
@@ -257,12 +332,12 @@ test("PROSE: the two remaining paragraphs are keyed, hooks on inner elements", (
   // hook on the <p> itself would delete the element holding the author's name.
   assert.match(
     html,
-    /data-i18n="heroIntro"[\s\S]{0,900}?<\/span\s*>\s*<strong>Lucas Ballek<\/strong>/,
+    /data-i18n="heroIntro"[\s\S]{0,900}?<\/span\s*>\s*<strong(?=[^>]*data-i18n="operatorName")[^>]*>Lucas Ballek<\/strong>/,
     "heroIntro must end before the <strong>, not wrap it",
   );
 });
 
-test("PROSE: the unkeyed-prose detector fires on unhooked prose, and only on prose", () => {
+test("PROSE: the detector catches every unkeyed phrase on a locale surface", () => {
   // A gate nobody has seen red is not a gate. This proves the DETECTOR — the
   // function rule 9 is built on — recognises the exact markup shape that caused
   // the defect, without mutating the working tree.
@@ -278,14 +353,13 @@ test("PROSE: the unkeyed-prose detector fires on unhooked prose, and only on pro
     0,
     "a hook on the element exempts it",
   );
-  // The real shape of the hero fix: the hook is on an inner span so the
-  // <strong> survives applyI18n's textContent. That must NOT read as unkeyed.
+  // A hook covers its own subtree only; adjacent unkeyed copy remains visible.
   assert.equal(
     unkeyedProse(
-      `<p><span data-i18n="heroIntro">${PROSE}</span> <strong>Lucas</strong>.</p>`,
+      `<p><span data-i18n="heroIntro">Already translated.</span> ${PROSE}</p>`,
     ).length,
-    0,
-    "a hook on a descendant exempts the paragraph",
+    1,
+    "a translated child cannot exempt an unkeyed sibling phrase",
   );
   // The exemptions: not prose, and too short to be prose.
   assert.equal(
@@ -294,9 +368,67 @@ test("PROSE: the unkeyed-prose detector fires on unhooked prose, and only on pro
     "units are not prose",
   );
   assert.equal(
-    unkeyedProse("<p>Send</p>").length,
+    unkeyedProse("<p>3 A</p>").length,
     0,
-    "a one-word label is not prose",
+    "a numeric value and amperes are unit-only",
+  );
+  assert.equal(
+    unkeyedProse("<p>A day</p>").length,
+    1,
+    "ordinary English cannot pass as two unit symbols",
+  );
+  assert.equal(
+    unkeyedProse("<p>Send</p>").length,
+    1,
+    "short labels are copy and must carry a hook",
+  );
+  assert.equal(unkeyedProse("<h2>Leaked heading</h2>").length, 1);
+  assert.equal(
+    unkeyedProse("<span>Leaked inline prose</span>").length,
+    1,
+    "inline prose in spans must be checked too",
+  );
+  assert.equal(unkeyedProse("<a>Read more</a>").length, 1);
+  assert.equal(unkeyedProse("<button>Install app</button>").length, 1);
+  assert.equal(unkeyedProse("<div>Location step</div>").length, 1);
+  assert.equal(unkeyedProse("<option>Choose a location</option>").length, 1);
+  assert.equal(unkeyedProse("").length, 0, "empty markup has no prose");
+  assert.ok(
+    unkeyedProse("<main>Leak directly under main remains English.</main>").some(
+      (block) => block.tag === "main",
+    ),
+    "bare main text must be checked",
+  );
+  assert.ok(
+    unkeyedProse("<body>Leak directly under body remains English.</body>").some(
+      (block) => block.tag === "body",
+    ),
+    "bare body text must be checked",
+  );
+  assert.ok(
+    unkeyedProse(
+      '<main><span data-i18n=label>Traduit</span>Adjacent English copy leaks.</main>',
+    ).some((block) => block.text === "Adjacent English copy leaks."),
+    "a translated inline child must not hide following main text",
+  );
+  assert.ok(
+    unkeyedProse(
+      '<main><p data-i18n=caption>Traduit<section>Leaked fallback after the implied paragraph close.</section></main>',
+    ).some((block) => block.text.includes("Leaked fallback")),
+    "an implied paragraph close must expose following structural text",
+  );
+  assert.deepEqual(
+    unkeyedProse(
+      '<main><p data-i18n=caption>Texte traduit</p><section>BigEnergyCo</section><aside>3 kWh</aside></main>',
+    ),
+    [],
+    "translated subtrees, standalone brands, and unit-only content are allowed",
+  );
+  assert.equal(
+    unkeyedProse(`<button data-i18n-aria-label="close">${PROSE}</button>`)
+      .length,
+    1,
+    "an aria-label translation does not cover the visible button text",
   );
   assert.equal(
     unkeyedProse("<p></p>").length,
@@ -385,33 +517,156 @@ test("PROSE: hook detection agrees with the browser about attribute case", () =>
   );
   assert.equal(
     claimsTranslation('<span DATA-I18N="x"></span>'),
-    true,
-    "a page using only uppercase hooks still claims translation",
+    false,
+    "a hook alone does not declare the whole page as a translated surface",
   );
 });
 
-test("PROSE: only pages that claim translation are checked", () => {
-  // 81 of 82 shipped pages carry no hook at all and are untranslated by
-  // decision. A gate that fired on all of them would be a gate nobody runs.
-  assert.equal(claimsTranslation('<span data-i18n="x"></span>'), true);
-  assert.equal(claimsTranslation('<input data-i18n-placeholder="x">'), true);
+test("PROSE: only explicit locale-runtime surfaces are checked", () => {
+  assert.equal(
+    claimsTranslation('<main data-i18n-surface="home"></main>'),
+    true,
+  );
+  assert.equal(claimsTranslation('<select id="langSelect"></select>'), true);
+  assert.equal(claimsTranslation('<span data-i18n="x"></span>'), false);
+  assert.equal(claimsTranslation('<input data-i18n-placeholder="x">'), false);
   assert.equal(
     claimsTranslation("<p>Plain English prose, with no hook at all.</p>"),
     false,
   );
 });
 
-test("PROSE: the ceiling is a committed constant, not an env override", () => {
-  // An env-overridable ceiling is a gate anyone can loosen without a diff.
+test("LOCALE GATE: equal English prose is rejected; units and site brands are allowed", () => {
+  const locales = {
+    en: {
+      leakedHomeCopy: "Works worldwide",
+      powerUnit: "~{w} W",
+      siteBrand: "BigEnergyCo",
+      priceTemplate: "~{amount} / {unit}",
+      sectionNumber: "5",
+      operatorName: "Lucas Ballek",
+      contactEmail: "lucas@example.com",
+    },
+    es: {
+      leakedHomeCopy: "Works worldwide",
+      powerUnit: "~{w} W",
+      siteBrand: "BigEnergyCo",
+      priceTemplate: "~{amount} / {unit}",
+      sectionNumber: "5",
+      operatorName: "Lucas Ballek",
+      contactEmail: "lucas@example.com",
+    },
+  };
+  assert.deepEqual(untranslatedLocaleValues(locales), ["es.leakedHomeCopy"]);
+  locales.es.leakedHomeCopy = "Funciona en todo el mundo";
+  assert.deepEqual(untranslatedLocaleValues(locales), []);
+});
+
+test("PROSE: leaked home-page copy makes the strict gate red", () => {
   const src = readFileSync(join(ROOT, "scripts", "check-i18n.mjs"), "utf8");
   assert.doesNotMatch(
     src,
-    /process\.env\.[A-Z_]*PROSE[A-Z_]*/,
-    "the unkeyed-prose ceiling must not be environment-overridable",
+    /PROSE_CEILING/,
+    "the gate must not accept a numeric leak budget",
   );
   assert.match(
     src,
-    /const PROSE_CEILING = \d+;/,
-    "the ceiling must be a committed constant",
+    /if \(proseFindings\.length \|\| attributeFindings\.length\)/,
+    "any finding must fail the gate",
+  );
+
+  const html = readFileSync(join(ROOT, "index.html"), "utf8");
+  assert.equal(
+    claimsTranslation(html),
+    true,
+    "the calculator is an explicit locale surface",
+  );
+  assert.match(
+    html,
+    /data-i18n-slot="control"/,
+    "translated mode labels must preserve their live controls",
+  );
+  assert.match(
+    html,
+    /data-i18n-slot="noticeLead"/,
+    "multi-part translated notices must preserve hooked rich-text slots",
+  );
+  assert.deepEqual(
+    unkeyedProse(html),
+    [],
+    "localized home copy must have no uncovered prose",
+  );
+  assert.deepEqual(
+    unkeyedCopyAttributes(html),
+    [],
+    "localized home accessibility copy must have no uncovered prose attributes",
+  );
+
+  const leaked = html.replace('data-i18n="sizingSectionIntro"', "");
+  assert.ok(
+    unkeyedProse(leaked).some((block) =>
+      block.text.startsWith("Enter your location"),
+    ),
+    "removing the home intro hook must be detected as an English leak",
+  );
+  const leakedButton = html.replace('data-i18n-title="socZoomFullTitle"', "");
+  assert.ok(
+    unkeyedCopyAttributes(leakedButton).some(
+      (attribute) => attribute.text === "Full 5-year simulation",
+    ),
+    "removing a title hook must be detected as an untranslated home copy leak",
+  );
+  const leakedInline = html.replace('data-i18n="simpleModeNumbers"', "");
+  assert.ok(
+    unkeyedProse(leakedInline).some((block) =>
+      block.text.startsWith("just the key numbers"),
+    ),
+    "removing an inline hook must expose the formerly missed home-page span",
+  );
+  const leakedMain = html.replace(
+    "</main>",
+    "<section>Home page fallback copy has no locale key.</section></main>",
+  );
+  assert.ok(
+    unkeyedProse(leakedMain).some((block) =>
+      block.text.includes("Home page fallback copy"),
+    ),
+    "new unkeyed prose under a structural home-page container must be detected",
+  );
+});
+
+test("PROSE: visible copy and accessible attributes require their own translation hooks", () => {
+  assert.deepEqual(
+    unkeyedCopyAttributes(
+      '<button title="More details" aria-label="Open details"></button>',
+    ),
+    [
+      { tag: "button", attribute: "title", text: "More details", start: 0 },
+      {
+        tag: "button",
+        attribute: "aria-label",
+        text: "Open details",
+        start: 0,
+      },
+    ],
+  );
+  assert.deepEqual(
+    unkeyedCopyAttributes(
+      '<input placeholder="Enter a city" data-i18n-aria-label="cityLabel">',
+    ),
+    [
+      {
+        tag: "input",
+        attribute: "placeholder",
+        text: "Enter a city",
+        start: 0,
+      },
+    ],
+  );
+  assert.deepEqual(
+    unkeyedCopyAttributes(
+      '<button title="Details" data-i18n-title="details" aria-label="Open" data-i18n-aria-label="open"></button>',
+    ),
+    [],
   );
 });

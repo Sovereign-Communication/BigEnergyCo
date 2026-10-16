@@ -6,7 +6,7 @@ import {
   renderFrontierTable,
 } from "../assets/js/sizing/frontier-chart.js";
 import { buildFrontier } from "../assets/js/sizing/frontier.js";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 import { OFFLINE_PROFILES } from "../assets/js/sizing/profiles.js";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
 import {

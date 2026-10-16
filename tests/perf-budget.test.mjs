@@ -20,8 +20,6 @@ import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { dirname, join, relative, resolve } from "node:path";
 
-import { committedBytes } from "../scripts/lib/deploy-blobs.mjs";
-
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 // ── 1. Size budgets ─────────────────────────────────────────────────────────────────
@@ -31,12 +29,9 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // The first version of this gate carried a hand-curated array of filenames,
 // and it was wrong in both directions within about three weeks of existing:
 //
-//   - it COUNTED assets/js/shared/locales.js (167,850 B) as first-load bytes.
-//     Nothing imports it statically. It is reached through exactly one
-//     dynamic edge, i18n.js -> import("./locales.js"), so the browser fetches
-//     and parses it AFTER first paint. The same file's own header comment
-//     already excused profiles.js from the budget for precisely this reason,
-//     and locales.js is the larger of the two.
+//   - it COUNTED all six locale dictionaries as first-load bytes. The runtime
+//     now imports only the selected JSON file dynamically, while each file has
+//     a separate compressed-size limit in check-i18n.mjs.
 //
 //   - it OMITTED fourteen modules that really are on the first-load path,
 //     charts.js (47,341 B) and location-picker.js among them. A brand-new
@@ -51,9 +46,9 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // genuinely blocks nothing — which is now a fact about the graph instead of
 // an editorial decision someone has to remember to make.
 //
-// Nothing is lost by this. The gate is strictly harder to satisfy than the
-// hand list was: charts.js and thirteen other real first-load modules now
-// count, while only the genuinely-lazy locales.js stops counting.
+// The gate is strictly harder to satisfy than the hand list was: charts.js and
+// thirteen other real first-load modules now count, while locale JSON remains
+// outside the blocking JavaScript graph.
 
 // Static edges only. A dynamic import() is deliberately NOT matched here.
 const staticEdges = (src) => [
@@ -149,16 +144,19 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
       `${must} is first-load but the derived graph missed it — fix the walker`,
     );
   }
-  // The two modules this budget excludes, named so the exclusion is a claim
+  // Lazy locale JSON and profiles are named so the exclusion is a claim
   // somebody can check rather than a hole somebody can grow into.
   for (const lazy of [
-    ["assets/js/shared/locales.js", "i18n.js imports it dynamically"],
+    ...["en", "es", "pt", "fr", "de", "ar"].map((lang) => [
+      `assets/i18n/${lang}.json`,
+      "i18n.js loads only the selected locale dynamically",
+    ]),
     ["assets/js/sizing/profiles.js", "run.js imports it dynamically"],
   ]) {
     assert.ok(
       !eagerNames.has(lazy[0]),
       `${lazy[0]} became statically reachable, so it IS first-load now (${lazy[1]} — the import changed). Its ${
-        committedBytes(root, lazy[0]).length
+        readFileSync(join(root, lazy[0])).length
       } bytes belong back in this budget; decide that deliberately.`,
     );
   }

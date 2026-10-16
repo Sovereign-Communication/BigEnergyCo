@@ -487,27 +487,13 @@ export function sitemapGaps(pages, urls, site) {
 // advisor disclaimer shipped in English to every non-English visitor while
 // check-i18n was green, because both carried no data-i18n hook.
 //
-// Only pages that DECLARE themselves translated are checked. Measured across the
-// 82 shipped pages: exactly one has a hook, and it carries 51 unkeyed prose
-// blocks; the other 81 have none and are untranslated by decision. Demanding
-// hooks on those would be 2,046 decisions nobody made, and a gate that fires on
-// 2,046 known items is one that gets ignored.
+// A route opts into this gate with data-i18n-surface on its root element. This
+// is deliberately narrower than finding any data-i18n attribute: English-only
+// pages may share markup conventions without loading the locale runtime.
 //
-// Exempt on purpose: text that is not prose (units, numbers, punctuation),
-// blocks under `minWords` (labels and captions), and pages with no hook at all.
-// Split out as a pure function so a test can prove the detector FIRES on the
-// markup that caused the defect, without mutating the working tree.
-// A real hook ATTRIBUTE, not the substring. Testing for "data-i18n" alone
-// exempts a paragraph whose hook was renamed to data-i18n-x — which is how the
-// first proof of this rule came back green, because the mutation I made was the
-// one string this check could not tell apart from a hook.
-//
-// Case-insensitive on purpose: HTML attribute NAMES are case-insensitive, and
-// the browser resolves `[data-i18n="x"]` against DATA-I18N just as happily.
-// A case-sensitive check here would report a hooked block as unkeyed while the
-// page translated it correctly at runtime — the gate and the renderer disagreeing
-// about the same markup.
-const PROSE_HOOK_ATTR = /\sdata-i18n(?:-placeholder|-aria-label)?\s*=/i;
+// Only the canonical R-I18N-05 exceptions are accepted: unit-only content and
+// standalone brand names. Short labels are copy too and must carry a hook.
+const PROSE_HOOK_ATTR = /\sdata-i18n\s*=/i;
 // Regions no visitor ever sees. A regex over raw HTML reads all of them, and
 // index.html's JSON-LD alone contributed 6 of the first 33 findings — the
 // FAQPage `mainEntity` answer texts, which are structured data, not prose, and
@@ -516,7 +502,11 @@ const PROSE_HOOK_ATTR = /\sdata-i18n(?:-placeholder|-aria-label)?\s*=/i;
 // comment that happened to contain a long <p> example.
 const BLIND_REGIONS =
   /<!--[\s\S]*?-->|<script\b[\s\S]*?<\/script(?:\s[^>]*)?\s*>|<style\b[\s\S]*?<\/style(?:\s[^>]*)?\s*>/gi;
-const PROSE_TAGS = "p|li|blockquote|figcaption|dd|label";
+const PROSE_TAGS =
+  "title|h1|h2|h3|h4|h5|h6|p|div|span|small|strong|em|i|b|time|cite|code|li|option|blockquote|figcaption|dd|dt|label|button|summary|legend|caption|th|td|a";
+const PROSE_TAG_SET = new Set(PROSE_TAGS.split("|"));
+const PARAGRAPH_CLOSERS =
+  /^(?:address|article|aside|blockquote|details|dialog|div|dl|fieldset|figcaption|figure|footer|form|h[1-6]|header|hgroup|hr|main|menu|nav|ol|p|pre|search|section|table|ul)$/;
 // Containers whose close tag also ends a prose block. `</p>` is optional in
 // practice (browsers close it) and `</li>` is optional in VALID HTML5 — the
 // parser ends the item at the next `<li>` or at `</ul>`. Requiring the literal
@@ -534,21 +524,170 @@ const BLOCK_RE = new RegExp(
 const NOT_PROSE =
   /^[\s\d.,%+\-–—/×·:;()[\]{}<>=^*#@!?§°$€£¥|&'"‘’“” -⁯←-⇿☀-➿]*$/u;
 
-// The unit exemption NOT_PROSE cannot express on its own: "5 m² · 12 kWh · 3.5 %"
-// is six whitespace-separated words — so the length floor alone does not exempt
-// it, and "kWh" is three letters, so a letter-run test alone does not either —
-// yet it holds no sentence to translate. Real prose is dense with four-letter-or-
-// longer words; a unit line has none. Two of them is the threshold: below that a
-// block is a spec line, not a sentence.
-const PROSE_WORD = /[^\W\d_]{4,}/gu;
-const MIN_PROSE_WORDS = 2;
+const UNIT_TOKENS = new Set([
+  "a",
+  "ah",
+  "c",
+  "day",
+  "days",
+  "h",
+  "hz",
+  "kg",
+  "km",
+  "km2",
+  "m\u00b2",
+  "km\u00b2",
+  "\u00b0c",
+  "kwh",
+  "kwh/day",
+  "km/h",
+  "kw",
+  "kwp",
+  "l",
+  "l/kwh",
+  "m",
+  "m/s",
+  "m2",
+  "ma",
+  "mah",
+  "min",
+  "mm",
+  "mw",
+  "s",
+  "v",
+  "w",
+  "wh",
+]);
+const BRAND_NAMES = new Set([
+  "bigenergy co",
+  "bigenergyco",
+  "groq",
+  "nasa",
+  "nrel",
+  "paypal",
+]);
+const VISIBLE_WORD =
+  /[\p{L}\p{N}\u00b5\u03bc\u00b0]+(?:[/-][\p{L}\p{N}\u00b5\u03bc\u00b0]+)*/gu;
+const VOID_TAGS = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
+]);
+
+export function isAllowedUnitOrBrand(text) {
+  const visible = String(text).replace(/\{[A-Za-z][\w-]*\}/g, " ");
+  const tokens = [...visible.matchAll(VISIBLE_WORD)];
+  // A placeholder-only template contributes no English copy; its rendered
+  // values are checked at the surface that formats them.
+  if (!tokens.length) return true;
+  // Bare numeric values are values, not English text.
+  if (!/[\p{L}\u00b5\u03bc\u00b0]/u.test(visible)) return true;
+  const units = tokens.filter(([word]) =>
+    /[\p{L}\u00b5\u03bc\u00b0]/u.test(word),
+  );
+  const bareUnitSymbols = new Set(["a", "c", "h", "m", "s"]);
+  if (
+    units.length &&
+    units.every(([word]) => UNIT_TOKENS.has(word.toLowerCase()))
+  ) {
+    const ambiguousBareSymbol = units.some(([word, , index]) => {
+      if (!bareUnitSymbols.has(word.toLowerCase()) || tokens.length === 1)
+        return false;
+      const beforeIsNumber = /\d(?:[.,]\d+)?\s*$/u.test(
+        visible.slice(0, index),
+      );
+      const afterIsNumber = /^\s*\d/u.test(visible.slice(index + word.length));
+      return !beforeIsNumber && !afterIsNumber;
+    });
+    if (!ambiguousBareSymbol) return true;
+  }
+  const brand = visible
+    .replace(/[^\p{L}\p{N} -]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+  return BRAND_NAMES.has(brand);
+}
+
+// Equal-to-English values on rendered locale keys are leaks unless the visible
+// value is a canonical unit/brand or a non-linguistic identity field (the
+// operator's name and contact address).
+export function untranslatedLocaleValues(locales, sourceLocale = "en") {
+  const source = locales[sourceLocale] || {};
+  const identityKeys = new Set(["operatorName", "contactEmail"]);
+  const findings = [];
+  for (const [locale, dictionary] of Object.entries(locales)) {
+    if (locale === sourceLocale) continue;
+    for (const [key, value] of Object.entries(dictionary || {})) {
+      if (
+        typeof value === "string" &&
+        value === source[key] &&
+        !identityKeys.has(key) &&
+        !isAllowedUnitOrBrand(value)
+      )
+        findings.push(`${locale}.${key}`);
+    }
+  }
+  return findings;
+}
+
+// Remove only text inside descendant translation hooks. A hook on one child
+// cannot hide adjacent unkeyed prose in the same paragraph.
+function textOutsideHooks(fragment) {
+  const token = /<!--[\s\S]*?-->|<\/?([a-z][\w:-]*)\b([^>]*)>/gi;
+  const hidden = [];
+  let cursor = 0;
+  let text = "";
+  for (const match of fragment.matchAll(token)) {
+    if (!hidden.length) text += fragment.slice(cursor, match.index);
+    cursor = match.index + match[0].length;
+    const name = match[1]?.toLowerCase();
+    if (!name) continue;
+    if (/^<\//.test(match[0])) {
+      const index = hidden.lastIndexOf(name);
+      if (index !== -1) hidden.length = index;
+      continue;
+    }
+    if (
+      hidden.length ||
+      (PROSE_HOOK_ATTR.test(match[0]) && !VOID_TAGS.has(name))
+    ) {
+      if (!VOID_TAGS.has(name) && !/\/\s*>$/.test(match[0])) hidden.push(name);
+    }
+  }
+  if (!hidden.length) text += fragment.slice(cursor);
+  return text;
+}
 
 /** Does this page claim to be translated? */
 export function claimsTranslation(html) {
-  // Case-insensitive for the same reason PROSE_HOOK_ATTR is: the browser's
-  // attribute matching is, so a page carrying only DATA-I18N is translated in
-  // the browser and must not be skipped here as untranslated.
-  return /\sdata-i18n(?:-placeholder|-aria-label)?\s*=/i.test(html);
+  const source = String(html);
+  return (
+    /\sdata-i18n-surface(?:\s|=)/i.test(source) ||
+    /<select\b(?=[^>]*\bid=["\']langSelect["\'])[^>]*>/i.test(source)
+  );
+}
+
+function proseFinding(tag, source, start, length, minWords) {
+  const text = source
+    .replace(/&mdash;/g, "?")
+    .replace(/&[a-z]+;|&#\d+;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text || NOT_PROSE.test(text) || isAllowedUnitOrBrand(text)) return null;
+  const words = text.split(/\s+/).length;
+  return words < minWords ? null : { tag, text, words, start, length };
 }
 
 /**
@@ -559,25 +698,113 @@ export function claimsTranslation(html) {
  *
  * @returns {{tag: string, text: string, words: number}[]}
  */
-export function unkeyedProse(html, { minWords = 6 } = {}) {
+export function unkeyedProse(html, { minWords = 1 } = {}) {
   const found = [];
-  // Blank the invisible regions first so their contents cannot be reported as
-  // prose a visitor would have to be able to read.
-  const scannable = String(html).replace(BLIND_REGIONS, " ");
+  const scannable = String(html).replace(BLIND_REGIONS, (region) =>
+    " ".repeat(region.length),
+  );
   for (const m of scannable.matchAll(BLOCK_RE)) {
     const [, tag, attrs, inner] = m;
-    if (PROSE_HOOK_ATTR.test(attrs) || PROSE_HOOK_ATTR.test(inner)) continue;
-    const text = inner
-      .replace(/<[^>]*>/g, " ")
-      .replace(/&mdash;/g, "—")
-      .replace(/&[a-z]+;|&#\d+;/gi, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (!text || NOT_PROSE.test(text)) continue;
-    const words = text.split(/\s+/).length;
-    if (words < minWords) continue;
-    if ((text.match(PROSE_WORD) || []).length < MIN_PROSE_WORDS) continue;
-    found.push({ tag, text, words });
+    if (PROSE_HOOK_ATTR.test(attrs)) continue;
+    const finding = proseFinding(
+      tag,
+      textOutsideHooks(inner),
+      m.index,
+      m[0].length,
+      minWords,
+    );
+    if (finding) found.push(finding);
+  }
+
+  // BLOCK_RE deliberately focuses on prose-bearing elements. It cannot see
+  // bare text inside structural containers such as <main>, <section>, or
+  // <canvas> fallback content. Walk the markup once for those text nodes;
+  // prose-bearing ancestors remain owned by BLOCK_RE, avoiding duplicate
+  // reports for ordinary paragraphs and labels.
+  const tags = [];
+  const token = /<\/?([a-z][\w:-]*)\b[^>"']*(?:"[^"]*"[^>"']*|'[^']*'[^>"']*)*>/gi;
+  let cursor = 0;
+  const inspectTextNode = (raw, start) => {
+    if (
+      !raw.trim() ||
+      !tags.some(
+        (entry) =>
+          entry.surface || entry.tag === "body" || entry.tag === "main",
+      ) ||
+      tags.some(
+        (entry) => entry.hooked || PROSE_TAG_SET.has(entry.tag),
+      )
+    )
+      return;
+    const finding = proseFinding(
+      tags.at(-1)?.tag || "text",
+      raw,
+      start,
+      raw.length,
+      minWords,
+    );
+    if (finding) found.push(finding);
+  };
+  for (const match of scannable.matchAll(token)) {
+    inspectTextNode(scannable.slice(cursor, match.index), cursor);
+    cursor = match.index + match[0].length;
+    const [, rawName] = match;
+    const name = rawName.toLowerCase();
+    if (/^<\//.test(match[0])) {
+      let index = tags.length - 1;
+      while (index >= 0 && tags[index].tag !== name) index--;
+      if (index >= 0) tags.length = index;
+      continue;
+    }
+    if (PARAGRAPH_CLOSERS.test(name)) {
+      let paragraph = tags.length - 1;
+      while (paragraph >= 0 && tags[paragraph].tag !== "p") paragraph--;
+      if (paragraph >= 0) tags.length = paragraph;
+    }
+    if (!VOID_TAGS.has(name) && !/\/\s*>$/.test(match[0])) {
+      tags.push({
+        tag: name,
+        hooked: PROSE_HOOK_ATTR.test(match[0]),
+        surface: /\sdata-i18n-surface(?:\s|=)/i.test(match[0]),
+      });
+    }
+  }
+  inspectTextNode(scannable.slice(cursor), cursor);
+  return found;
+}
+
+/** Static accessible copy that must be translated on a locale-runtime page. */
+export function unkeyedCopyAttributes(html) {
+  const found = [];
+  const scannable = String(html).replace(BLIND_REGIONS, (region) =>
+    " ".repeat(region.length),
+  );
+  const hookFor = {
+    title: "data-i18n-title",
+    "aria-label": "data-i18n-aria-label",
+    placeholder: "data-i18n-placeholder",
+  };
+  const openingTag =
+    /<([a-z][\w:-]*)\b[^>"']*(?:"[^"]*"[^>"']*|'[^']*'[^>"']*)*>/gi;
+  for (const match of scannable.matchAll(openingTag)) {
+    const [, tag] = match;
+    const markup = match[0];
+    for (const [attribute, hook] of Object.entries(hookFor)) {
+      const value = attr(markup, attribute);
+      if (value === null || !/[\p{L}\p{N}]/u.test(value)) continue;
+      if (
+        attr(markup, hook) !== null ||
+        NOT_PROSE.test(value) ||
+        isAllowedUnitOrBrand(decodeEntities(value))
+      )
+        continue;
+      found.push({
+        tag: tag.toLowerCase(),
+        attribute,
+        text: decodeEntities(value),
+        start: match.index,
+      });
+    }
   }
   return found;
 }

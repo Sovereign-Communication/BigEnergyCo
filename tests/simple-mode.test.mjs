@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { buildSimpleView } from "../assets/js/shared/simple-view.js";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 
 // One grid-tie auto entry, shaped exactly like run.js emits it.
 const ENTRY = {

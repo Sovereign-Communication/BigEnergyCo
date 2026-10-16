@@ -32,7 +32,7 @@ import {
   sanityState,
   SANITY_THRESHOLDS,
 } from "../assets/js/sizing/validate.js";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 
 const ORIGIN = "https://freeoffgridcalculator.com";
 

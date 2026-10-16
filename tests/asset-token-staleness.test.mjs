@@ -172,14 +172,13 @@ test("results are sorted, so the message is stable run to run", () => {
 
 // ── against the real repository ──────────────────────────────────────────
 
-test("the gate detects the four stale assets this change was written for", () => {
+test("the gate detects stale browser modules after the locale runtime migration", () => {
   // Anchored on the stamp that was live when the staleness was found.
   const setter = "64a6d664e13ca727e2f872590aa413fad2ec49eb";
   const { stale, unresolvable } = findStaleAssets(
     [
       "assets/js/chat.js",
       "assets/js/shared/i18n.js",
-      "assets/js/shared/locales.js",
       "assets/js/sizing/ui.js",
       "assets/js/sizing/validate.js",
       "assets/js/turnstile-client.js",
@@ -187,12 +186,11 @@ test("the gate detects the four stale assets this change was written for", () =>
     setter,
     (rev, p) => gitBlob(ROOT, rev, p),
   );
-  // chat/i18n/locales/ui changed under an unchanged stamp. validate.js did not,
+  // chat/i18n/ui changed under an unchanged stamp. validate.js did not,
   // and turnstile-client.js is new since the setter, so both are exempt.
   assert.deepEqual(stale, [
     "assets/js/chat.js",
     "assets/js/shared/i18n.js",
-    "assets/js/shared/locales.js",
     "assets/js/sizing/ui.js",
   ]);
   assert.deepEqual(

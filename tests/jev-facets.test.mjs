@@ -193,7 +193,7 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
       LOCALE_PHASES,
       LOCALE_SURFACES,
     } = await import("../scripts/smoke/experience.mjs");
-    const { LOCALES } = await import("../assets/js/shared/locales.js");
+    const { LOCALES } = await import("../scripts/lib/locale-data.mjs");
     const reading = {
       ok: true,
       actions: EXPERIENCE_ACTIONS.map((a) => ({
@@ -410,7 +410,7 @@ test("TRANSPORT: the real 21-axis record survives whole — every line and note"
       LOCALE_PHASES,
       LOCALE_SURFACES,
     } = await import("../scripts/smoke/experience.mjs");
-    const { LOCALES } = await import("../assets/js/shared/locales.js");
+    const { LOCALES } = await import("../scripts/lib/locale-data.mjs");
     const reading = {
       ok: true,
       actions: EXPERIENCE_ACTIONS.map((a) => ({

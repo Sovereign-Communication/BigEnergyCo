@@ -249,23 +249,26 @@ export function measureStagedBuild({ files, read }) {
   const css = list.filter((f) => f.endsWith(".css"));
   const fonts = list.filter((f) => FONT_EXT.some((e) => f.endsWith(e)));
 
-  // Strings: the plan's line is per locale, so the reading is the per-locale
-  // share. The shipped unit is reported alongside it, because a browser pays
-  // the whole file and that number should not be invisible.
-  const localeFile = list.find((f) => /(^|\/)locales\.js$/.test(f));
-  let localeValue = null;
-  let localeFileBytes = null;
-  let localeCount = 0;
-  if (localeFile) {
-    localeFileBytes = size(localeFile);
-    const src = read(localeFile).toString("utf8");
-    localeCount = [
-      ...src.matchAll(/(?:^|[\s,{])"?([a-z]{2}(?:-[A-Z]{2})?)"?\s*:\s*\{/g),
-    ].length;
-    localeValue = localeCount
-      ? Math.round(localeFileBytes / localeCount)
-      : localeFileBytes;
-  }
+  // The plan's 25 KB limit applies to each lazy-loaded locale, not an average
+  // across files. Report the largest locale as the budget reading and retain
+  // every locale's value so an oversized non-maximum can still be inspected.
+  const localeFiles = list
+    .filter((f) =>
+      /^assets\/i18n\/[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*\.json$/.test(f),
+    )
+    .sort();
+  const localeSizes = Object.fromEntries(
+    localeFiles.map((f) => [
+      f.slice("assets/i18n/".length, -".json".length),
+      size(f),
+    ]),
+  );
+  const localeValue = localeFiles.length
+    ? Math.max(...Object.values(localeSizes))
+    : null;
+  const localeFileBytes = localeFiles.length
+    ? Math.max(...localeFiles.map((f) => read(f).length))
+    : null;
 
   // Registry data, per country. The reading is the worst country: a budget a
   // visitor can breach by choosing a country is not met by an average.
@@ -336,9 +339,10 @@ export function measureStagedBuild({ files, read }) {
         note: "the same graph today, because no code path defers work between step 1 and the first result. Measured as its own line so the two diverge the moment something does.",
       }),
       locale_strings: metric("locale_strings", localeValue, {
-        locales: localeCount,
+        locales: localeFiles.length,
         file_bytes: localeFileBytes,
-        note: "per-locale share of the strings file, which is the plan's line; file_bytes is what the browser actually downloads",
+        by_locale: localeSizes,
+        note: "largest independently lazy-loaded locale JSON; by_locale reports every locale and file_bytes is the largest raw file",
       }),
       registry_country: metric("registry_country", worstEntry[1], {
         worst_country: worstEntry[0],

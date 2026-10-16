@@ -370,7 +370,7 @@ button.btn {
 
   border: 1px solid var(--border-card);
 
-  text-align: left;
+  text-align: start;
 
   vertical-align: top;
 
@@ -486,7 +486,7 @@ button.btn {
 
   border-radius: 12px;
 
-  text-align: left;
+  text-align: start;
 
   transition: all 0.3s ease;
 }
@@ -698,8 +698,7 @@ input[type="number"]::-webkit-inner-spin-button {
   display: none;
   position: absolute;
   top: 100%;
-  left: 0;
-  right: 0;
+  inset-inline: 0;
   background: rgba(9, 13, 22, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -871,7 +870,7 @@ input[type="number"]::-webkit-inner-spin-button {
 .guided-progress {
   margin: 0.75rem 0;
   padding: 0.55rem 0.75rem;
-  border-left: 3px solid var(--primary-accent);
+  border-inline-start: 3px solid var(--primary-accent);
   color: var(--text-muted);
   font-size: 0.82rem;
   font-weight: 700;
@@ -920,7 +919,7 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .skip-link {
   position: absolute;
-  left: -9999px;
+  inset-inline-start: -9999px;
   top: 0.5rem;
   z-index: 2000;
   padding: 0.7rem 1rem;
@@ -930,21 +929,10 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .skip-link:focus {
-  left: 0.75rem;
+  inset-inline-start: 0.75rem;
 }
 
-/* RTL (Arabic): flexbox and grid follow `direction` automatically, so most
-   of the layout mirrors for free. Only the absolutely-positioned pieces
-   need explicit mirrors. Full logical-property migration (margin-inline
-   etc.) is tracked separately; nothing here changes LTR rendering. */
-[dir="rtl"] .skip-link {
-  left: auto;
-  right: -9999px;
-}
-
-[dir="rtl"] .skip-link:focus {
-  right: 0.75rem;
-}
+/* Flexbox, grid and logical properties follow the active script direction. */
 
 /* Screen-reader-only labels: visible to assistive tech, never painted. */
 .sr-only {
@@ -997,7 +985,7 @@ input[type="number"]::-webkit-inner-spin-button {
   display: block;
   margin-top: 0.35rem;
   padding: 0.55rem 0.7rem;
-  border-left: 2px solid var(--primary-accent);
+  border-inline-start: 2px solid var(--primary-accent);
   color: var(--text-muted);
   font-size: 0.82rem;
   font-weight: 400;
@@ -1102,7 +1090,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .sanity-badge .sanity-ask {
-  margin-left: 0.35rem;
+  margin-inline-start: 0.35rem;
   padding: 0.1rem 0.5rem;
   font-size: 0.8rem;
 }
@@ -1439,7 +1427,7 @@ textarea:focus-visible {
 
   top: 0;
 
-  left: 0;
+  inset-inline-start: 0;
 
   width: 100%;
 
@@ -1785,6 +1773,7 @@ footer {
 }
 .chem-temp-bar-wrap {
   position: relative;
+  direction: ltr;
   height: 18px;
   background: linear-gradient(
     90deg,
@@ -1818,11 +1807,16 @@ footer {
   color: var(--primary-accent);
   white-space: nowrap;
 }
+.chem-temp-pin[data-label-edge="start"] .chem-temp-pin-label {
+  transform: translateX(50%);
+}
+.chem-temp-pin[data-label-edge="end"] .chem-temp-pin-label {
+  transform: translateX(-50%);
+}
 .chem-temp-pin-arrow {
   width: 0;
   height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
+  border-inline: 4px solid transparent;
   border-top: 5px solid var(--primary-accent);
 }
 .chem-temp-legend {
@@ -2006,7 +2000,7 @@ footer {
   color: var(--text-muted);
   line-height: 1.4;
   margin: 0;
-  padding-left: 1.05rem;
+  padding-inline-start: 1.05rem;
 }
 .paths-why,
 .paths-off {
@@ -2024,7 +2018,7 @@ footer {
 
 /* Balance-of-System Checklist */
 .bos-checklist-card {
-  border-left: 3px solid var(--warning-orange) !important;
+  border-inline-start: 3px solid var(--warning-orange) !important;
 }
 
 /* ── Staged loading pipeline (data-loading legibility) ─────────────────── */

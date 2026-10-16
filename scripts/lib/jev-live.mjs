@@ -113,3 +113,58 @@ export async function liveJevCall(stateText, questions, keys) {
 
   return { answers: null, usage: null, provider: null, model: null, notes };
 }
+
+/**
+ * Q-12's manual reader probe sends the rendered accessibility tree verbatim as
+ * TypeSafe's complete state. Keep this direct, single-attempt wire beside the
+ * existing Jev transport so the probe cannot accidentally add hidden app state
+ * or use a second provider.
+ */
+export async function liveJevComprehensionCall(accessibilityTreeText, questions, keys) {
+  const notes = [];
+  if (typeof accessibilityTreeText !== "string" || !accessibilityTreeText.trim()) {
+    return {
+      answers: null,
+      usage: null,
+      provider: null,
+      model: null,
+      notes: ["direct: accessibility-tree text is empty"],
+    };
+  }
+  if (!keys?.typesafeKey) {
+    return {
+      answers: null,
+      usage: null,
+      provider: null,
+      model: null,
+      notes: ["direct: no key (TYPESAFE_API_KEY / HARNESS_JEV_KEY)"],
+    };
+  }
+
+  const r = await attemptFetch(TYPESAFE_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${keys.typesafeKey}`,
+      "Content-Type": "application/json",
+    },
+    signal: AbortSignal.timeout(JEV_TIMEOUT_MS),
+    body: JSON.stringify({
+      model: JEV_MODEL_ALIAS,
+      state: accessibilityTreeText,
+      questions,
+    }),
+  });
+  if (r.ok && r.body) {
+    return {
+      answers: r.body.answers || r.body,
+      usage: r.body.usage || null,
+      provider: "typesafe",
+      model: r.body.model,
+      notes,
+    };
+  }
+  notes.push(
+    `direct: ${r.error ? `network error: ${r.error}` : `HTTP ${r.status}`}`,
+  );
+  return { answers: null, usage: null, provider: null, model: null, notes };
+}

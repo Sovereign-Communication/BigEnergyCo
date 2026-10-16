@@ -13,8 +13,15 @@
 // 760-wide viewBox is scaled down to fit it, and every label shrinks with it -
 // 13px type arrives as 5px, which is not a chart, it is a smudge. So the
 // viewBox is built to match the element, and text renders at its stated size.
+import { formatCurrency } from "../shared/i18n.js?v=20261015d";
+
 const VB_MIN = 300;
 const VB_MAX = 900;
+
+const defaultMoney = (value) =>
+  formatCurrency(Math.round(Number(value) || 0), "USD", {
+    maximumFractionDigits: 0,
+  });
 
 function clamp(v, lo, hi) {
   return Math.max(lo, Math.min(hi, v));
@@ -159,7 +166,7 @@ function isBatteryOnly(frontier) {
 export function renderFrontier(host, frontier, opts = {}) {
   if (!host) return;
   const t = opts.t || ((k, p) => (p && p.fallback) || k);
-  const money = opts.money || ((v) => "$" + Math.round(v).toLocaleString());
+  const money = opts.money || defaultMoney;
   const pts = (frontier && frontier.points) || [];
 
   if (pts.length < 2) {
@@ -467,13 +474,13 @@ export function renderFrontier(host, frontier, opts = {}) {
   const legendItems = [
     [
       swatch(
-        `<span style="position:absolute;top:4px;left:0;width:22px;height:2.5px;background:${C.curve};border-radius:2px;"></span>`,
+        `<span style="position:absolute;top:4px;inset-inline-start:0;width:22px;height:2.5px;background:${C.curve};border-radius:2px;"></span>`,
       ),
       t("frontierLegendCurve"),
     ],
     [
       swatch(
-        `<span style="position:absolute;top:1px;left:0;width:22px;height:8px;background:${C.band};border-radius:2px;"></span>`,
+        `<span style="position:absolute;top:1px;inset-inline-start:0;width:22px;height:8px;background:${C.band};border-radius:2px;"></span>`,
       ),
       t("frontierLegendBand"),
     ],
@@ -481,21 +488,21 @@ export function renderFrontier(host, frontier, opts = {}) {
   if (range)
     legendItems.push([
       swatch(
-        `<span style="position:absolute;top:1px;left:0;width:22px;height:8px;background:rgba(0, 230, 153, 0.09);border-left:1px dashed ${C.curve};border-right:1px dashed ${C.curve};border-radius:2px;"></span>`,
+        `<span style="position:absolute;top:1px;inset-inline-start:0;width:22px;height:8px;background:rgba(0, 230, 153, 0.09);border-inline:1px dashed ${C.curve};border-radius:2px;"></span>`,
       ),
       t("frontierLegendRange"),
     ]);
   if (sel)
     legendItems.push([
       swatch(
-        `<span style="position:absolute;top:1px;left:6px;width:9px;height:9px;border-radius:50%;background:${C.marker};"></span>`,
+        `<span style="position:absolute;top:1px;inset-inline-start:6px;width:9px;height:9px;border-radius:50%;background:${C.marker};"></span>`,
       ),
       t("frontierLegendSel"),
     ]);
   if (sweepLimited)
     legendItems.push([
       swatch(
-        `<span style="position:absolute;top:4px;left:0;width:22px;height:0;border-top:2px dashed ${C.ceiling};"></span>`,
+        `<span style="position:absolute;top:4px;inset-inline-start:0;width:22px;height:0;border-top:2px dashed ${C.ceiling};"></span>`,
       ),
       t("frontierLegendCeiling"),
     ]);
@@ -640,7 +647,7 @@ export function markerMatchesPoint(marker, point, frontierChemistry) {
 export function renderFrontierTable(host, frontier, opts = {}) {
   if (!host) return;
   const t = opts.t || ((k) => k);
-  const money = opts.money || ((v) => "$" + Math.round(v).toLocaleString());
+  const money = opts.money || defaultMoney;
   const pts = (frontier && frontier.points) || [];
   if (!pts.length) {
     host.innerHTML = "";
@@ -678,7 +685,7 @@ export function renderFrontierTable(host, frontier, opts = {}) {
       tags.push(esc(t("frontierRangeTag")));
     if (i === selTable) tags.push(`<b>${esc(t("frontierTagSel"))}</b>`);
     return (
-      `<tr><th scope="row" style="text-align:left;font-weight:600;">${esc(money(p.capexUsd))}</th>` +
+      `<tr><th scope="row" style="text-align:start;font-weight:600;">${esc(money(p.capexUsd))}</th>` +
       `<td>${esc(money(p.capexLoUsd))} &ndash; ${esc(money(p.capexHiUsd))}</td>` +
       `<td>${p.outcomePct}%</td>` +
       `<td>${p.pvKw} kW</td>` +
@@ -689,14 +696,14 @@ export function renderFrontierTable(host, frontier, opts = {}) {
 
   host.innerHTML =
     `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">` +
-    `<caption style="text-align:left;color:var(--text-muted);padding-bottom:0.4rem;">${esc(t("frontierTableCaption"))}</caption>` +
+    `<caption style="text-align:start;color:var(--text-muted);padding-bottom:0.4rem;">${esc(t("frontierTableCaption"))}</caption>` +
     `<thead><tr>` +
-    `<th scope="col" style="text-align:left;">${esc(t("frontierColCost"))}</th>` +
-    `<th scope="col" style="text-align:left;">${esc(t("frontierColRange"))}</th>` +
-    `<th scope="col" style="text-align:left;">${esc(batteryOnly ? t("frontierColCutBattery") : gridTie ? t("frontierColCut") : t("frontierColCover"))}</th>` +
-    `<th scope="col" style="text-align:left;">${esc(t("frontierColPv"))}</th>` +
-    `<th scope="col" style="text-align:left;">${esc(t("frontierColBatt"))}</th>` +
-    `<th scope="col" style="text-align:left;">&nbsp;</th>` +
+    `<th scope="col" style="text-align:start;">${esc(t("frontierColCost"))}</th>` +
+    `<th scope="col" style="text-align:start;">${esc(t("frontierColRange"))}</th>` +
+    `<th scope="col" style="text-align:start;">${esc(batteryOnly ? t("frontierColCutBattery") : gridTie ? t("frontierColCut") : t("frontierColCover"))}</th>` +
+    `<th scope="col" style="text-align:start;">${esc(t("frontierColPv"))}</th>` +
+    `<th scope="col" style="text-align:start;">${esc(t("frontierColBatt"))}</th>` +
+    `<th scope="col" style="text-align:start;">&nbsp;</th>` +
     `</tr></thead><tbody>${rows.join("")}</tbody></table>`;
 }
 
@@ -706,7 +713,7 @@ export function renderFrontierTable(host, frontier, opts = {}) {
  */
 export function frontierVerdict(frontier, opts = {}) {
   const t = opts.t || ((k) => k);
-  const money = opts.money || ((v) => "$" + Math.round(v).toLocaleString());
+  const money = opts.money || defaultMoney;
   const r = (frontier && frontier.reach) || {};
   const gridTie = frontier && frontier.mode === "gridtie";
   const params = {

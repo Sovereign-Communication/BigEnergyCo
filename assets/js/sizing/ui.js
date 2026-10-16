@@ -13,7 +13,11 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261015b";
+import {
+  APPLIANCES,
+  APPLIANCE_GROUP_KEYS,
+  APPLIANCE_ITEM_KEYS,
+} from "./appliances.js?v=20261015d";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -24,14 +28,14 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261015b";
+} from "./usecases.js?v=20261015d";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261015b";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261015b";
+} from "./run-coordinator.js?v=20261015d";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261015d";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -40,12 +44,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261015b";
+} from "./charts.js?v=20261015d";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261015b";
+} from "./location-picker.js?v=20261015d";
 
 import {
   estimateTariff,
@@ -53,14 +57,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261015b";
+} from "./pricing.js?v=20261015d";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261015b";
+import { currencyForCountry } from "./country-currency.js?v=20261015d";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261015b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261015d";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -92,7 +96,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261015b").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261015d").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -103,35 +107,40 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261015b";
+} from "./lead-acid.js?v=20261015d";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261015b";
+} from "./bom.js?v=20261015d";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261015b";
+import { BOM_ITEMS, PRICES_CHECKED_AT } from "../shared/content.js?v=20261015d";
 
 import {
   applyI18n,
   initLangPicker,
+  formatCurrency,
+  formatNumber,
+  formatPercent,
+  formatUnitCount,
+  formatDate,
   // Runtime-rendered copy goes through the same translate() the markup pass
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261015b";
+} from "../shared/i18n.js?v=20261015d";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261015b";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261015b";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261015d";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261015d";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261015b";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261015b";
+} from "../shared/simple-mode.js?v=20261015d";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261015d";
 import {
   advisorJevContext,
   interpretSanity,
@@ -139,56 +148,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261015b";
+} from "./validate.js?v=20261015d";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261015b";
+} from "../shared/cut-targets.js?v=20261015d";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261015b";
+} from "./share-codec.js?v=20261015d";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261015b";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261015b";
+} from "./infeasible-copy.js?v=20261015d";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261015d";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261015b";
+} from "./fuel-units.js?v=20261015d";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261015b";
+} from "./frontier-chart.js?v=20261015d";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261015b";
+} from "./rescale.js?v=20261015d";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261015b";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261015d";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20261015b";
+} from "./map-provider.js?v=20261015d";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261015b";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261015b";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261015b";
+} from "./wizard.js?v=20261015d";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261015d";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261015d";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -237,9 +246,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261015b";
+} from "./money.js?v=20261015d";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261015b";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261015d";
 
 let worker = null;
 
@@ -397,6 +406,7 @@ let pendingSlice = null; // { focusPvKw, focusBattKwh, focusChemistry }
 
 // PWA install prompt holder
 let deferredInstallPrompt = null;
+let repaintNetworkStatus = () => {};
 
 // ── Unified curve selection state ─────────────────────────────────────────
 // One curve, one selection. curvePreview is the slider drag-preview (amber
@@ -747,29 +757,29 @@ function setupSimpleMode() {
 // and typical daily hours — the same conventions appliances.js already
 // documents for cycling loads, stated here so the sum is auditable.
 const ESSENTIAL_LOADS = [
-  { id: "fridge", w: 100, hours: 10, label: "Fridge" },
-  { id: "freezer", w: 100, hours: 8, label: "Freezer" },
-  { id: "lights", w: 60, hours: 6, label: "Lights" },
-  { id: "router", w: 15, hours: 24, label: "Router / internet" },
-  { id: "phones", w: 10, hours: 3, label: "Phone charging" },
-  { id: "cpap", w: 40, hours: 8, label: "CPAP / medical" },
-  { id: "laptop", w: 45, hours: 4, label: "Laptop" },
-  { id: "tv", w: 100, hours: 3, label: "Television" },
-  { id: "wellpump", w: 400, hours: 1, label: "Water pump" },
+  { id: "fridge", w: 100, hours: 10, labelKey: "deviceFridge" },
+  { id: "freezer", w: 100, hours: 8, labelKey: "deviceFreezer" },
+  { id: "lights", w: 60, hours: 6, labelKey: "deviceLights" },
+  { id: "router", w: 15, hours: 24, labelKey: "deviceRouterInternet" },
+  { id: "phones", w: 10, hours: 3, labelKey: "devicePhoneCharging" },
+  { id: "cpap", w: 40, hours: 8, labelKey: "deviceCpap" },
+  { id: "laptop", w: 45, hours: 4, labelKey: "deviceLaptop" },
+  { id: "tv", w: 100, hours: 3, labelKey: "deviceTelevision" },
+  { id: "wellpump", w: 400, hours: 1, labelKey: "deviceWaterPump" },
 ];
 
 // F-16: the portable device catalogue. Same shape, and deliberately small:
 // this is what a van or a boat actually runs, not a second household.
 const PORTABLE_DEVICES = [
-  { id: "phone", w: 12, hours: 3, label: "Phones" },
-  { id: "laptop", w: 45, hours: 4, label: "Laptop" },
-  { id: "lights", w: 25, hours: 5, label: "Lights" },
-  { id: "fridge", w: 60, hours: 10, label: "Fridge" },
-  { id: "router", w: 12, hours: 24, label: "Router" },
-  { id: "coffee", w: 900, hours: 1, label: "Coffee maker" },
-  { id: "blender", w: 400, hours: 0.5, label: "Blender" },
-  { id: "tv", w: 80, hours: 2, label: "Television" },
-  { id: "tools", w: 500, hours: 1, label: "Power tools" },
+  { id: "phone", w: 12, hours: 3, labelKey: "devicePhones" },
+  { id: "laptop", w: 45, hours: 4, labelKey: "deviceLaptop" },
+  { id: "lights", w: 25, hours: 5, labelKey: "deviceLights" },
+  { id: "fridge", w: 60, hours: 10, labelKey: "deviceFridge" },
+  { id: "router", w: 12, hours: 24, labelKey: "deviceRouter" },
+  { id: "coffee", w: 900, hours: 1, labelKey: "deviceCoffeeMaker" },
+  { id: "blender", w: 400, hours: 0.5, labelKey: "deviceBlender" },
+  { id: "tv", w: 80, hours: 2, labelKey: "deviceTelevision" },
+  { id: "tools", w: 500, hours: 1, labelKey: "devicePowerTools" },
 ];
 
 function selectedUseCase() {
@@ -806,10 +816,11 @@ function renderCatalogue(list, hostId, prefix) {
     box.addEventListener("change", () => markPrecalcDirty());
     label.appendChild(box);
     label.appendChild(
-      el(
-        "span",
-        {},
-        `${row.label} (${row.w} W${row.hours < 24 ? ` × ${row.hours} h` : ""})`,
+      el("span", { "data-i18n": row.labelKey }, t(row.labelKey)),
+    );
+    label.appendChild(
+      document.createTextNode(
+        ` (${row.w} W${row.hours < 24 ? ` × ${row.hours} h` : ""})`,
       ),
     );
     host.appendChild(label);
@@ -896,7 +907,7 @@ function syncReserveLabel() {
   const slider = $("reserveSlider");
   if (!out || !slider) return;
   const pct = normaliseReservePct(parseFloat(slider.value) / 100);
-  out.textContent = pct > 0 ? `${Math.round(pct * 100)}%` : t("reserveOff");
+  out.textContent = pct > 0 ? formatPercent(pct) : t("reserveOff");
 }
 
 /** Every use-case input the run message needs, read from the live controls. */
@@ -959,7 +970,7 @@ function renderUseCaseOutcome(p) {
           lost: Math.round(o.value?.savingsLostPct ?? 0),
           hours: Math.round(o.value?.coverHours ?? 0),
         })
-      : `${Math.round(Number(o.value) || 0)}%`;
+      : formatPercent(Math.round(Number(o.value) || 0) / 100);
   card.appendChild(
     el(
       "div",
@@ -1225,7 +1236,7 @@ function renderSimpleResults(p) {
 // change. Hides itself the moment a payload without a reason arrives (i.e.
 // a normal run) so it never lingers across the page.
 // The code-to-copy mapping is owned by infeasible-copy.js (pure, testable in
-// isolation); the copy itself is owned by locales.js in all six languages.
+// isolation); the copy itself is owned by each locale's JSON dictionary.
 // What is left here is only the rendering.
 function renderInfeasibleBanner(reason) {
   let banner = $("infeasibleBanner");
@@ -1375,19 +1386,19 @@ function billForKwh(kwh, rate) {
 
 function fmtBill(v) {
   const fx = fxActive();
-  if (!fx) return "$" + Math.round(v).toLocaleString() + t("billPerMonth");
+  if (!fx)
+    return (
+      formatCurrency(v, "USD", { maximumFractionDigits: 0 }) + t("billPerMonth")
+    );
   try {
     return (
-      new Intl.NumberFormat(undefined, {
-        style: "currency",
-        currency: fx.code,
-        maximumFractionDigits: 0,
-      }).format(v) + t("billPerMonth")
+      formatCurrency(v, fx.code, { maximumFractionDigits: 0 }) +
+      t("billPerMonth")
     );
   } catch {
     return (
       (CURRENCIES[fx.code]?.symbol || "") +
-      Math.round(v).toLocaleString() +
+      formatNumber(Math.round(v)) +
       t("billPerMonth")
     );
   }
@@ -1476,8 +1487,17 @@ function displayRate() {
  * drift out of sync with the code that knows how to fill it.
  */
 function repaintRuntimeCopy() {
+  renderBom();
+  repaintNetworkStatus();
+  // These summary strings are rendered before the deferred locale file lands;
+  // recompute their value from the current controls after activation/switch.
+  syncBillSlider();
+  syncCutLabel();
+  renderAppliances();
+  renderChemTempVisualizer(parseFloat($("latInput")?.value) || 21.31);
   updateFuelUnits();
   updateGenHelper();
+  updateGuidedProgress();
   // The load readout and the use-case blurb are the two surfaces painted by JS
   // during setup. Both read the DOM for their own state, so re-running them is
   // idempotent and costs nothing.
@@ -1519,7 +1539,7 @@ function updateLoadReadout() {
           {},
           t("readoutAppliancesSummary", {
             kwh: fmtKwh(kwh),
-            peakW: peakW.toLocaleString(),
+            peakW: formatNumber(peakW),
           }),
         ),
       );
@@ -1553,6 +1573,18 @@ function updateLoadReadout() {
 
 function renderAppliances() {
   const list = $("applianceList");
+  if (!list) return;
+
+  const previous = new Map(
+    [...list.querySelectorAll(".ap-row")].map((row) => [
+      row.dataset.itemName,
+      {
+        checked: row.querySelector('input[type="checkbox"]')?.checked,
+        qty: row.dataset.qty,
+        hours: row.dataset.h,
+      },
+    ]),
+  );
 
   list.innerHTML = "";
 
@@ -1560,10 +1592,11 @@ function renderAppliances() {
     const gEl = el(
       "div",
       {
+        "data-i18n-key": APPLIANCE_GROUP_KEYS[grp.g],
         style:
           "font-size:0.8rem;font-weight:700;color:var(--primary-accent);letter-spacing:0.4px;margin:0.9rem 0 0.35rem;text-transform:uppercase;",
       },
-      grp.g,
+      t(APPLIANCE_GROUP_KEYS[grp.g]),
     );
 
     list.appendChild(gEl);
@@ -1578,6 +1611,7 @@ function renderAppliances() {
         "data-h": it.h,
         "data-duty": it.duty ? "1" : "",
         "data-item-name": it.n,
+        "data-item-key": APPLIANCE_ITEM_KEYS[it.n],
         "data-surge-w": it.surgeW || it.w,
         "data-split-phase": it.splitPhase ? "true" : "false",
       });
@@ -1590,21 +1624,24 @@ function renderAppliances() {
         style: "width:auto;margin:0;transform:scale(1.2);cursor:pointer;",
       });
 
-      const labelText = it.splitPhase ? `${it.n} ⚡240V` : it.n;
-      const name = el(
-        "label",
-        {
-          style:
-            "flex:1 1 200px;cursor:pointer;font-size:0.92rem;font-weight:500;margin:0;",
-        },
-        labelText,
+      const name = el("label", {
+        style:
+          "flex:1 1 200px;cursor:pointer;font-size:0.92rem;font-weight:500;margin:0;",
+      });
+      const nameCopy = el(
+        "span",
+        { "data-i18n": APPLIANCE_ITEM_KEYS[it.n] },
+        t(APPLIANCE_ITEM_KEYS[it.n]),
       );
-
-      name.prepend(cb);
+      name.append(cb, nameCopy);
+      if (it.splitPhase) name.appendChild(document.createTextNode(" ⚡240V"));
 
       const watts = el(
         "span",
         {
+          "data-i18n": it.duty ? "apWattsRunning" : "apWatts",
+          "data-watts": String(it.w),
+          "data-duty": it.duty ? "1" : "",
           style:
             "font-size:0.75rem;color:var(--text-muted);font-family:var(--font-mono);background:rgba(255,255,255,0.05);padding:0.1rem 0.45rem;border-radius:10px;",
         },
@@ -1670,9 +1707,9 @@ function renderAppliances() {
         "span",
         {
           style:
-            "font-size:0.8rem;color:var(--text-muted);font-family:var(--font-mono);min-width:6.5rem;text-align:right;",
+            "font-size:0.8rem;color:var(--text-muted);font-family:var(--font-mono);min-width:6.5rem;text-align:end;",
         },
-        (it.duty ? "runs " : "") + fmtH(it.h),
+        it.duty ? t("apHoursRunning", { hours: fmtH(it.h) }) : fmtH(it.h),
       );
 
       hrsWrap.append(hrs, hrsLabel);
@@ -1681,14 +1718,14 @@ function renderAppliances() {
         "span",
         {
           style:
-            "font-size:0.8rem;font-family:var(--font-mono);color:var(--text-muted);min-width:7.8rem;text-align:right;",
+            "font-size:0.8rem;font-family:var(--font-mono);color:var(--text-muted);min-width:7.8rem;text-align:end;",
         },
         "",
       );
 
       row.append(name, watts, qtyWrap, hrsWrap, sub);
 
-      function refresh() {
+      function refresh({ markDirty = true } = {}) {
         const on = cb.checked;
 
         row.classList.toggle("on", on);
@@ -1720,7 +1757,7 @@ function renderAppliances() {
         }
 
         updateLoadReadout();
-        if (lastPayload) markPrecalcDirty();
+        if (markDirty && lastPayload) markPrecalcDirty();
       }
 
       cb.addEventListener("change", refresh);
@@ -1744,13 +1781,24 @@ function renderAppliances() {
       hrs.addEventListener("input", () => {
         row.dataset.h = hrs.value;
 
-        hrsLabel.textContent =
-          (it.duty ? "runs " : "") + fmtH(parseFloat(hrs.value));
+        hrsLabel.textContent = it.duty
+          ? t("apHoursRunning", { hours: fmtH(parseFloat(hrs.value)) })
+          : fmtH(parseFloat(hrs.value));
 
         refresh();
       });
 
+      const saved = previous.get(it.n);
+      if (saved) {
+        cb.checked = saved.checked;
+        row.dataset.qty = saved.qty || "1";
+        row.dataset.h = saved.hours || String(it.h);
+        qtyVal.textContent = row.dataset.qty;
+        hrs.value = row.dataset.h;
+      }
+
       list.appendChild(row);
+      refresh({ markDirty: false });
     }
   }
 }
@@ -2082,56 +2130,65 @@ function renderChemTempVisualizer(lat) {
 
   if (chem === "lfp") {
     const isFreezingRisk = estWinterLowC <= 0;
+    const key = isFreezingRisk ? "chemLfpFreezeWarning" : "chemLfpSafeRange";
     statusHtml = `
       <div class="chem-temp-status-box" style="background:${isFreezingRisk ? "rgba(239,68,68,0.12)" : "rgba(16,185,129,0.1)"};border:1px solid ${isFreezingRisk ? "rgba(239,68,68,0.35)" : "rgba(16,185,129,0.35)"};">
-        <strong style="color:${isFreezingRisk ? "#fca5a5" : "var(--primary-accent)"};">${isFreezingRisk ? "Winter Freezing Notice:" : "Safe Operating Climate:"}</strong>
-        ${
-          isFreezingRisk
-            ? `Local winter temps reach ~${estWinterLowC}\u00B0C (below 0\u00B0C / 32\u00B0F). LiFePO4 BMS cuts off charging below freezing to prevent permanent lithium plating. Install batteries indoors, in an insulated battery enclosure, or choose models with internal heating pads.`
-            : `LiFePO4 charges safely above 0\u00B0C (32\u00B0F) and operates at 95%+ round-trip efficiency. Discharging is supported down to -20\u00B0C.`
-        }
+        <strong style="color:${isFreezingRisk ? "#fca5a5" : "var(--primary-accent)"};">${escapeHtml(t(isFreezingRisk ? "chemTempWinterNotice" : "chemTempSafeClimate"))}</strong>
+        ${escapeHtml(t(key, { winterLowC: estWinterLowC }))}
       </div>`;
   } else if (chem === "naion") {
     statusHtml = `
       <div class="chem-temp-status-box" style="background:rgba(14,165,233,0.12);border:1px solid rgba(14,165,233,0.35);">
-        <strong style="color:#7dd3fc;">Sub-Zero Resilient:</strong>
-        Sodium-ion charges and discharges reliably from -20\u00B0C to +45\u00B0C without dendrite risk or thermal runaway. Retains 85%+ usable capacity in freezing weather without requiring heating pads.
+        <strong style="color:#7dd3fc;">${escapeHtml(t("chemTempSubzeroResilient"))}</strong>
+        ${escapeHtml(t("chemSodiumRange"))}
       </div>`;
   } else if (chem === "agm") {
     statusHtml = `
       <div class="chem-temp-status-box" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.35);">
-        <strong style="color:#fcd34d;">Cold Derating Warning:</strong>
-        Lead-Acid (AGM) usable capacity drops severely below freezing (~50% at -10\u00B0C). Discharged electrolyte can freeze and crack the battery casing.
+        <strong style="color:#fcd34d;">${escapeHtml(t("chemTempColdDerating"))}</strong>
+        ${escapeHtml(t("chemLeadAcidCold"))}
       </div>`;
   } else {
     const isFreezing = estWinterLowC <= 0;
+    const notes = isFreezing
+      ? [
+          ["chemNameSodium", "chemBulletSodiumFreeze", "#7dd3fc"],
+          ["chemNameLfp", "chemBulletLfpFreeze", "#fbbf24"],
+          ["chemNameLeadAcid", "chemBulletLeadAcidFreeze", "#f87171"],
+        ]
+      : [
+          ["chemNameLfp", "chemBulletLfpWarm", "var(--primary-accent)"],
+          ["chemNameSodium", "chemBulletSodiumWarm", "#7dd3fc"],
+          ["chemNameLeadAcid", "chemBulletLeadAcidWarm", "#f87171"],
+        ];
     statusHtml = `
       <div class="chem-temp-status-box" style="background:rgba(255,255,255,0.04);border:1px solid var(--border-card);">
-        <strong style="color:var(--text-main);">Climate Comparison at ~${estWinterLowC}\u00B0C Winter Low:</strong>
-        ${
-          isFreezing
-            ? `<br>&bull; <span style="color:#7dd3fc;font-weight:700;">Sodium-Ion</span> charges directly in freezing weather down to -20\u00B0C.<br>&bull; <span style="color:#fbbf24;font-weight:700;">LiFePO4</span> needs indoor placement or heating pads below 0\u00B0C.<br>&bull; <span style="color:#f87171;font-weight:700;">Lead-Acid</span> suffers ~50% capacity loss in winter.`
-            : `<br>&bull; <span style="color:var(--primary-accent);font-weight:700;">LiFePO4</span> provides the lowest 20-year lifetime cost in mild/warm climates.<br>&bull; <span style="color:#7dd3fc;font-weight:700;">Sodium-Ion</span> offers non-flammable chemistry and thermal headroom.<br>&bull; <span style="color:#f87171;font-weight:700;">Lead-Acid</span> has low upfront cost but shortest cycle life.`
-        }
+        <strong style="color:var(--text-main);">${escapeHtml(t("chemTempComparisonHeading", { winterLowC: estWinterLowC }))}</strong>
+        ${notes
+          .map(
+            ([chemKey, descriptionKey, color]) =>
+              `<div class="chem-temp-comparison-row"><span style="color:${color};font-weight:700;">${escapeHtml(t(chemKey))}</span> ${escapeHtml(t(descriptionKey))}</div>`,
+          )
+          .join("")}
       </div>`;
   }
 
   wrap.innerHTML = `
     <div class="chem-temp-title">
-      <span>Ambient Temperature &amp; Battery Chemistry Limits</span>
-      <span style="font-size:0.75rem;font-weight:500;color:var(--text-muted);font-family:var(--font-mono);">-30\u00B0C to +45\u00B0C</span>
+      <span>${escapeHtml(t("chemTempTitle"))}</span>
+      <span style="font-size:0.75rem;font-weight:500;color:var(--text-muted);font-family:var(--font-mono);">${escapeHtml(t("chemTempRange"))}</span>
     </div>
     <div class="chem-temp-bar-wrap">
-      <div class="chem-temp-pin" style="left:${pinPct}%;">
-        <div class="chem-temp-pin-label">Site Low ~${estWinterLowC}\u00B0C</div>
+      <div class="chem-temp-pin" data-label-edge="${pinPct <= 50 ? "start" : "end"}" style="left:${pinPct}%">
+        <div class="chem-temp-pin-label">${escapeHtml(t("chemTempSiteLow", { winterLowC: estWinterLowC }))}</div>
         <div class="chem-temp-pin-arrow"></div>
       </div>
     </div>
     <div class="chem-temp-legend">
-      <span>-30\u00B0C (Deep Freeze)</span>
-      <span style="color:#38bdf8;">0\u00B0C (LFP Cutoff)</span>
-      <span style="color:var(--primary-accent);">20\u00B0C (Ideal)</span>
-      <span style="color:#ef4444;">45\u00B0C (Heat)</span>
+      <span>${escapeHtml(t("chemTempDeepFreeze"))}</span>
+      <span style="color:#38bdf8;">${escapeHtml(t("chemTempLfpCutoff"))}</span>
+      <span style="color:var(--primary-accent);">${escapeHtml(t("chemTempIdeal"))}</span>
+      <span style="color:#ef4444;">${escapeHtml(t("chemTempHeat"))}</span>
     </div>
     ${statusHtml}
   `;
@@ -2401,10 +2458,10 @@ function updateGuidedProgress(step = wizard.state.step) {
   const progress = $("guidedProgress");
   if (!progress) return;
   const labels = {
-    location: "1. Location",
-    load: "2. What you power",
-    tariff: "3. Electricity price",
-    result: "4. Your result",
+    location: t("guidedStepLocation"),
+    load: t("guidedStepLoad"),
+    tariff: t("guidedStepTariff"),
+    result: t("guidedStepResult"),
   };
   progress.textContent = labels[step] || labels.location;
   progress.dataset.step = step;
@@ -2891,8 +2948,8 @@ function syncCutLabel() {
     out.textContent = batteryOnly
       ? t("cutValueBattery", { pct: v })
       : v > 100
-        ? `Produce ~${v}% of your bill — bill gone, sellable surplus sizeable above`
-        : `Cut ~${v}% of your bill`;
+        ? t("cutValueSurplus", { pct: formatPercent(v / 100) })
+        : t("cutValueGrid", { pct: formatPercent(v / 100) });
 }
 
 // ONE place that writes the bill-cut target, so the slider, the form's
@@ -3108,9 +3165,9 @@ function mergeReSlice(result) {
   }
   // Keep the custom column header in lockstep with the slider.
   const label = result.customCut
-    ? `Your ~${Math.round(result.customCut.fraction * 100)}% target`
+    ? `Your ~${formatPercent(result.customCut.fraction)} target`
     : result.customTarget
-      ? `Your ~${Math.round(p.customCut ? p.customCut.fraction * 100 : 0)}% target`
+      ? `Your ~${formatPercent(p.customCut ? p.customCut.fraction : 0)} target`
       : null;
   if (label && p.matrix) {
     const col = p.matrix.cols && p.matrix.cols.find((c) => c.id === "custom");
@@ -3237,23 +3294,19 @@ function setupGoalControls() {
       btnOff.classList.remove("active");
       if (sysGoal) sysGoal.value = "gridtie";
       const title = document.querySelector(".section-title");
-      if (title) title.textContent = "Find your cheapest path to lower bills";
+      if (title) title.textContent = t("systemPathHeading");
       const desc = document.querySelector(".section-desc");
-      if (desc)
-        desc.textContent =
-          "Set your monthly electric bill and location, then click Size My System to compare the optimal solar and battery paths. The results cover chemistries, 20-year true costs, and wholesale hardware savings.";
+      if (desc) desc.textContent = t("gridSizingDescription");
       const optBill = $("optLoadBill");
-      if (optBill) optBill.textContent = "I know my monthly electric bill";
+      if (optBill) optBill.textContent = t("monthlyBillInputOption");
     } else {
       btnOff.classList.add("active");
       btnGt.classList.remove("active");
       if (sysGoal) sysGoal.value = "offgrid";
       const title = document.querySelector(".section-title");
-      if (title) title.textContent = "Size your off-grid solar & battery bank";
+      if (title) title.textContent = t("offgridSizingHeading");
       const desc = document.querySelector(".section-desc");
-      if (desc)
-        desc.textContent =
-          "Size a self-reliant solar and battery storage system for your cabin, camper van, backup, or homestead. Enter your daily kWh or pick your appliances — hourly weather simulations ensure you never run out of power.";
+      if (desc) desc.textContent = t("offgridSizingDescription");
       const optBill = $("optLoadBill");
       if (optBill) optBill.textContent = t("dailyEnergyNeed");
     }
@@ -3517,8 +3570,8 @@ function renderPlayReadout(q) {
   out.textContent =
     `🔎 ☀️ ${q.pvKw} kW + 🔋 ${fmt(q.battKwh)} kWh ${chemShort(q)} ≈ ${money(Math.round(q.x))} → ` +
     (lastPayload && lastPayload.mode === "gridtie"
-      ? `⚡ −${Math.round(q.y)}% bill`
-      : `☁️ ${Math.round(q.y)}% covered`);
+      ? `⚡ −${formatPercent(q.y / 100)} bill`
+      : `☁️ ${formatPercent(q.y / 100)} covered`);
 }
 
 function clearPlayReadout() {
@@ -3584,8 +3637,9 @@ function renderFocusPanel(p, entry, isPreview) {
   // takes no minus sign. Labelling it a bill cut put a savings claim directly
   // above the panel's own "never" break-even line.
   if (isGT && Number.isFinite(entry.cutPct)) {
-    if (entry.pvKw > 0) chip("⚡", `−${entry.cutPct}%`, "bill cut");
-    else chip("⚡", `${entry.cutPct}%`, "peak offset");
+    if (entry.pvKw > 0)
+      chip("⚡", `−${formatPercent(entry.cutPct / 100)}`, "bill cut");
+    else chip("⚡", formatPercent(entry.cutPct / 100), "peak offset");
   }
   if (
     entry.billAfterMonthlyUsd !== null &&
@@ -3738,7 +3792,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261015b",
+      "./assets/js/sizing/sizing-worker.js?v=20261015d",
       {
         type: "module",
       },
@@ -3905,25 +3959,29 @@ function fmt(n) {
   // Any unsolved cell (undefined/null tariff, empty option) renders as an
   // em dash, never the literal strings "NaN"/"undefined" in the results.
   if (!Number.isFinite(Number(n))) return "–";
-  return Number(n).toLocaleString();
+  return formatNumber(Number(n));
+}
+
+function formatTimeCount(count, unit) {
+  return formatUnitCount(count, unit);
 }
 
 function fmtLife(years) {
   if (!Number.isFinite(years) || years <= 0) return "-";
 
-  if (years >= 2) return "~" + Math.round(years) + " yrs";
+  if (years >= 2) return formatTimeCount(Math.round(years), "Year");
 
   const months = Math.max(1, Math.round(years * 12));
 
-  return "~" + months + " mo";
+  return formatTimeCount(months, "Month");
 }
 
 function fmtPaybackOne(y) {
   if (!Number.isFinite(y)) return null;
 
-  if (y < 1) return `~${Math.max(1, Math.round(y * 12))} mo`;
+  if (y < 1) return formatTimeCount(Math.max(1, Math.round(y * 12)), "Month");
 
-  return `~${Math.round(y)} yr`;
+  return formatTimeCount(Math.round(y), "Year");
 }
 
 function fmtPaybackRange(lo, hi) {
@@ -3960,19 +4018,16 @@ function money(usd) {
   if (!Number.isFinite(Number(usd))) return "–";
   const fx = fxActive();
 
-  if (!fx) return "$" + Number(usd).toLocaleString();
+  if (!fx) return formatCurrency(Number(usd), "USD");
 
   const local = usd * fx.rate;
 
   try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: fx.code,
-    }).format(local);
+    return formatCurrency(local, fx.code);
   } catch {
     const sym = CURRENCIES[fx.code]?.symbol || "";
 
-    return sym + Math.round(local).toLocaleString() + " " + fx.code;
+    return sym + formatNumber(Math.round(local)) + " " + fx.code;
   }
 }
 
@@ -3985,12 +4040,10 @@ function localRate(usdPerKwh) {
   const amount = usdPerKwh * (fx ? fx.rate : 1);
   const code = fx?.code || "USD";
   try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: code,
+    return formatCurrency(amount, code, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(amount);
+    });
   } catch {
     return `${amount.toFixed(2)} ${code}`;
   }
@@ -4034,11 +4087,8 @@ function moneyRange(lo, hi) {
 }
 
 // Oversize notes are generated in USD by the engine; re-render the savings
-// figure through money() so non-USD readers see their own currency. USD
-// readers (or no-FX) get the original prose byte-identical.
+// figure through money() so the active locale and currency own the display.
 function bestPriceNote(text) {
-  const fx = fxActive();
-  if (!fx || fx.code === "USD") return text;
   return relocalizeOversizeCallout(text, money);
 }
 
@@ -4150,7 +4200,7 @@ function renderBatteryComparison(p, selectedSystem) {
       dod: 0.5,
       coldScale: agmColdScale,
       coldNotes: isCold
-        ? `❄️ Severe cold drop: loses ~${Math.round((1 - agmColdScale) * 100)}% capacity in winter. Freezes if discharged in sub-zero temps.`
+        ? `❄️ Severe cold drop: loses ~${formatPercent(1 - agmColdScale)} capacity in winter. Freezes if discharged in sub-zero temps.`
         : "Loses 20% to 35% capacity in cold snaps; requires ventilation for hydrogen.",
       safety:
         "Acid spill risk, sulfation degradation, explosive hydrogen off-gassing.",
@@ -4231,12 +4281,12 @@ function renderBatteryComparison(p, selectedSystem) {
 
     appendRows(card, [
       ["Usable target", `${fmt(targetBattKwh)} kWh`],
-      ["Usable DoD", `${Math.round(r.dod * 100)}%`],
+      ["Usable DoD", formatPercent(r.dod)],
       ["DoD details", r.dodNote],
       [
         "Cold derate",
         r.coldScale < 1
-          ? `−${Math.round((1 - r.coldScale) * 100)}% in winter`
+          ? `−${formatPercent(1 - r.coldScale)} in winter`
           : "None",
       ],
       ["Nameplate needed", `${r.nameplateKwh} kWh`],
@@ -4492,8 +4542,8 @@ function renderRelativeOptions(p, selectedSystem) {
   const fmtDelta = (val, prefix = "$") => {
     if (Math.abs(val) < 1) return "Baseline";
     return val > 0
-      ? `+${prefix}${Math.round(val).toLocaleString()}`
-      : `\u2212${prefix}${Math.abs(Math.round(val)).toLocaleString()}`;
+      ? `+${prefix}${formatNumber(Math.round(val))}`
+      : `\u2212${prefix}${formatNumber(Math.abs(Math.round(val)))}`;
   };
 
   const tiers = [
@@ -7970,7 +8020,7 @@ function populatePrintSheet(p, inp) {
 
 // The advisor explains whatever mode the visitor is in. The technical brief
 // is the single source of real numbers; Simple mode only appends a style
-// instruction (locale-owned: "simpleAdvisorStyle" in locales.js) so the
+// instruction (locale-owned: "simpleAdvisorStyle" in assets/i18n/*.json) so the
 // answer matches the mode's plain language in every supported language.
 
 function askAdvisor() {
@@ -8078,20 +8128,42 @@ function renderBom() {
   for (const item of BOM_ITEMS) {
     const card = el("div", { class: "bom-card" });
 
-    card.appendChild(el("div", { class: "bom-badge" }, item.badge));
+    card.appendChild(el("div", { class: "bom-badge" }, t(item.badgeKey)));
 
-    card.appendChild(el("h3", {}, item.name));
+    card.appendChild(el("h3", {}, t(item.nameKey)));
 
-    card.appendChild(el("p", {}, item.desc));
+    card.appendChild(el("p", {}, t(item.descKey)));
 
-    const price = el("div", { class: "bom-price" }, item.price + " ");
-
-    price.appendChild(
-      el(
-        "span",
-        { style: "font-weight:400;font-size:0.8em;color:var(--text-muted);" },
-        `(${item.scope})`,
-      ),
+    const date = formatDate(new Date(`${PRICES_CHECKED_AT}T12:00:00Z`), {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    const details = t(item.scopeKey, { date });
+    const values = {
+      amount: formatCurrency(item.priceUsd, "USD", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+      unit: t(item.unitKey),
+      details: "__BOM_DETAILS_SLOT__",
+    };
+    const [beforeDetails, afterDetails = ""] = t(item.priceKey, values).split(
+      values.details,
+    );
+    const price = el("div", { class: "bom-price" });
+    const detail = el(
+      "span",
+      {
+        class: "bom-price-details",
+        style: "font-weight:400;font-size:0.8em;color:var(--text-muted);",
+      },
+      details,
+    );
+    price.append(
+      document.createTextNode(beforeDetails),
+      detail,
+      document.createTextNode(afterDetails),
     );
 
     card.appendChild(price);
@@ -8137,19 +8209,26 @@ function setupPwaControls() {
 
   function updateNetworkStatus() {
     if (!badge) return;
+    if (!window.becoT) return;
     if (!navigator.onLine) {
       badge.className = "offline-badge";
-      badge.innerHTML = `<span class="offline-dot"></span> Offline Ready`;
+      badge.replaceChildren(
+        el("span", { class: "offline-dot", "aria-hidden": "true" }),
+        document.createTextNode(` ${t("offlineReadyLabel")}`),
+      );
       badge.style.display = "inline-flex";
-      badge.title =
-        "Working offline using cached app data & local weather simulation";
+      badge.title = t("offlineBadgeTitle");
     } else {
       if (
         badge.style.display !== "none" &&
         !badge.classList.contains("online-flash")
       ) {
         badge.className = "offline-badge online-flash";
-        badge.innerHTML = `<span class="offline-dot"></span> Back Online`;
+        badge.replaceChildren(
+          el("span", { class: "offline-dot", "aria-hidden": "true" }),
+          document.createTextNode(` ${t("backOnlineLabel")}`),
+        );
+        badge.title = t("backOnlineLabel");
         setTimeout(() => {
           badge.style.display = "none";
         }, 3000);
@@ -8163,6 +8242,7 @@ function setupPwaControls() {
 
   window.addEventListener("offline", updateNetworkStatus);
 
+  repaintNetworkStatus = updateNetworkStatus;
   updateNetworkStatus();
 }
 
@@ -8228,8 +8308,6 @@ export async function initSizingUI() {
           markPrecalcDirty();
         });
     }
-
-    renderBom();
 
     // tariff input is a single $/kWh field (auto-estimated from location until the user overrides)
 

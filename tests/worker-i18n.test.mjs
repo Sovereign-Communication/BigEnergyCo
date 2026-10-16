@@ -2,7 +2,7 @@
 // user-visible string the worker or the client can hand a visitor.
 //
 // The defect this exists for: the degraded label shipped as English-only prose.
-// `assets/js/shared/locales.js` carried `advisorBusy` in all six dictionaries
+// `assets/i18n/{locale}.json` carries the advisor copy in all six dictionaries
 // while the new failure label existed in none of them, so a German or Arabic
 // visitor saw an English-only message on exactly the surface that signals
 // something went wrong. The i18n parity gate passed VACUOUSLY, because it
@@ -37,8 +37,8 @@ import {
   FALLBACK_MODEL,
   FALLBACK_REASON_KEY,
 } from "../worker/advisor-fallback.mjs";
-import { LOCALES } from "../assets/js/shared/locales.js";
-import { translate } from "../assets/js/shared/i18n.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
+import { loadLocale, translate } from "../assets/js/shared/i18n.js";
 import { makeDom, loadChatJs } from "../scripts/smoke/advisor-fallbacks.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -191,7 +191,7 @@ test("AUDIT: the machine marker is not the human label", () => {
 
 // ══ 2. the explicit, tested fallback ══════════════════════════════════════
 //
-// The honest limit: a Worker cannot see assets/js/shared/locales.js, so the
+// The honest limit: a Worker cannot see the browser's assets/i18n/*.json, so the
 // English `reply` field is the floor. That floor is DELIBERATE and asserted,
 // not accidental. These tests are what make it a decision rather than an
 // omission.
@@ -247,6 +247,7 @@ test("FALLBACK: a payload with no i18n block is handled, not crashed on", () => 
 
 /** Drive the real sendChatMsg() with a degraded response in a given locale. */
 async function renderDegradedIn(lang) {
+  await loadLocale(lang);
   const { doc, chatWindow, chatInput } = makeDom();
   const server = buildDegradedReply(
     "groq_unavailable",
@@ -355,6 +356,7 @@ test("EXECUTED: with no dictionary loaded, the client falls back to English", as
 });
 
 test("EXECUTED: a malformed i18n block falls back instead of rendering a key", async () => {
+  await loadLocale("de");
   const { doc, chatWindow, chatInput } = makeDom();
   const server = {
     ...buildDegradedReply("groq_error", {}, ensureDisclaimer),

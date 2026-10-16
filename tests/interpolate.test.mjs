@@ -15,7 +15,7 @@ import {
   PLACEHOLDER_NAME,
 } from "../assets/js/shared/interpolate.js";
 import { translate, localesReady } from "../assets/js/shared/i18n.js";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 
 test("interpolate: a formatted money value survives substitution intact", () => {
   // Through a STRING replacer, "$2" reads as a capture pattern: "$200" loses
@@ -131,10 +131,10 @@ test("the controller no longer carries a second interpolation loop", () => {
 });
 
 test("every placeholder name shipped in a locale is well formed", () => {
-  const source = readFileSync(
-    new URL("../assets/js/shared/locales.js", import.meta.url),
-    "utf8",
-  );
+  const source = Object.values(LOCALES)
+    .flatMap((dictionary) => Object.values(dictionary))
+    .filter((value) => typeof value === "string")
+    .join("\n");
   const names = new Set(
     [...source.matchAll(/\{([A-Za-z0-9_]+)\}/g)].map((m) => m[1]),
   );

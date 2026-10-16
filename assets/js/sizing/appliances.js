@@ -126,3 +126,46 @@ export const APPLIANCES = [
 
 export const APPLIANCE_ITEMS = APPLIANCES.flatMap((group) => group.items);
 export const APPLIANCE_NAMES = new Set(APPLIANCE_ITEMS.map((item) => item.n));
+
+// Display labels are locale keys; the English names above remain stable IDs
+// for presets, saved state and the offline harness.
+export const APPLIANCE_GROUP_KEYS = Object.freeze({
+  "Keep food cold": "apGroupFoodCold",
+  "Cooling & Climate": "apGroupCoolingClimate",
+  "Kitchen & cooking": "apGroupKitchenCooking",
+  "Lights & electronics": "apGroupLightsElectronics",
+  "Cleaning & water": "apGroupCleaningWater",
+  "Big power users": "apGroupHighPower",
+});
+
+export const APPLIANCE_ITEM_KEYS = Object.freeze({
+  "Refrigerator (modern, mid-size)": "apNameFridgeModern",
+  "Refrigerator (old or large)": "apNameFridgeLarge",
+  "Chest freezer": "apNameChestFreezer",
+  "Ceiling or desk fan": "apNameFan",
+  "Window air conditioner (one room)": "apNameWindowAc",
+  "Split air conditioner (whole floor)": "apNameSplitAc",
+  "Mini-split heat pump (heating mode)": "apNameMiniSplit",
+  Microwave: "apNameMicrowave",
+  "Electric kettle": "apNameKettle",
+  "Coffee maker": "apNameCoffeeMaker",
+  "Rice cooker": "apNameRiceCooker",
+  "Induction cooktop (1 burner)": "apNameInductionCooktop",
+  "Air fryer": "apNameAirFryer",
+  "LED light bulb": "apNameLedBulb",
+  "LED TV": "apNameLedTv",
+  "Laptop or desktop computer": "apNameComputer",
+  "Phone charger": "apNamePhoneCharger",
+  "Internet router (always on)": "apNameRouter",
+  "Starlink / Satellite Internet": "apNameSatelliteInternet",
+  "Washing machine": "apNameWashingMachine",
+  "Water pump (shallow/pressure tank 120V)": "apNameShallowPump",
+  "Deep well pump (submersible, 240V)": "apNameDeepWellPump",
+  "Vacuum cleaner": "apNameVacuum",
+  "Clothes iron": "apNameClothesIron",
+  "Space heater (small)": "apNameSpaceHeater",
+  "Electric water heater (240V)": "apNameWaterHeater",
+  "Pool pump": "apNamePoolPump",
+  "EV charger (Level 1 trickle, 120V 12A)": "apNameEvCharger",
+  "Workshop tools (table saw / compressor)": "apNameWorkshopTools",
+});

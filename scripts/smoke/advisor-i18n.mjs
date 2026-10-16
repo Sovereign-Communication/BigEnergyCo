@@ -15,7 +15,7 @@ import { makeDom, loadChatJs } from "./advisor-fallbacks.mjs";
 import { buildDegradedReply } from "../../worker/advisor-fallback.mjs";
 import { ensureDisclaimer } from "../../worker/index.js";
 import { translate } from "../../assets/js/shared/i18n.js";
-import { LOCALES } from "../../assets/js/shared/locales.js";
+import { LOCALES } from "../lib/locale-data.mjs";
 
 const LANGS = ["en", "es", "pt", "fr", "de", "ar"];
 

@@ -32,7 +32,7 @@
 // silently absent. A journey that quietly did not run three of its five steps
 // reads exactly like a journey that passed.
 import { RUN_TIMEOUT_MS } from "./actions.mjs";
-import { LOCALES } from "../../assets/js/shared/locales.js";
+import { LOCALES } from "../lib/locale-data.mjs";
 import { runAtPass } from "./at-pass.mjs";
 
 /**

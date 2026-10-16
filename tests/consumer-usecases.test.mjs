@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { pickSystemVoltage } from "../assets/js/sizing/bom.js";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 
 test("pickSystemVoltage: van/RV scale loads (<=1.5kW, <=3kWh) select 12V", () => {
   assert.equal(pickSystemVoltage(2.5, 1.2), 12);

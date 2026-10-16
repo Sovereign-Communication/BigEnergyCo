@@ -13,7 +13,7 @@ import {
   cumulativeCostSeries,
   seriesBreakdown,
 } from "../assets/js/sizing/money.js";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 import { interpolate, pickString } from "../assets/js/shared/interpolate.js";
 
 // The caption reads the same injected boundary ui.js installs. English is the

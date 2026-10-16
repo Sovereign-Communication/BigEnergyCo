@@ -2,7 +2,7 @@
 //
 // Deciding WHICH code applies belongs to the sizing engine (engine.js
 // infeasibleReason, plus the two search-limit codes run.js adds). The copy
-// belongs to locales.js, in all six languages. The mapping between them had no
+// belongs to the six per-locale JSON dictionaries. The mapping between them had no
 // owner: it lived as a table inside the DOM controller, so the only way to
 // check it was to regex that file's source, and a code with no mapping would
 // surface as a generic message nobody had reviewed. It is a value now, in a

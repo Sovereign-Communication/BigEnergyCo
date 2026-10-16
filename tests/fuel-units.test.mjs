@@ -25,7 +25,7 @@ import {
   fuelTypeName,
   isImperialLocation,
 } from "../assets/js/sizing/fuel-units.js";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 import { LANGS } from "../assets/js/shared/i18n.js";
 
 const ui = readFileSync(

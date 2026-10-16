@@ -16,7 +16,7 @@
 //                  a typo'd {count} renders literally to the user.
 //   4. NO LEAKS    no value equals its own key name (the tell-tale of a
 //                  half-finished translation shipped by accident).
-//   5. RTL FLAGS   only `ar` flips direction.
+//   5. DIRECTION   likely script selects direction from the CLDR table.
 //   6. FAMILIES    strings composed at runtime (base + "Grid"/"Offgrid") must
 //                  exist in every locale, not only in the one that got them.
 //   7. RENDERED   every English key is named by shipped code or markup, so a
@@ -39,7 +39,9 @@
 // checked against what shipped markup and code actually reference.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { brotliCompressSync } from "node:zlib";
+import { LOCALE_IDS, LOCALES } from "./lib/locale-data.mjs";
+import { directionForLocale } from "../assets/js/shared/direction.js";
 import { LANGS } from "../assets/js/shared/i18n.js";
 import {
   claimsTranslation,
@@ -47,7 +49,9 @@ import {
   familyGaps,
   hookCoverage,
   placeholders,
+  unkeyedCopyAttributes,
   unkeyedProse,
+  untranslatedLocaleValues,
 } from "./lib/gates.mjs";
 
 let failures = 0;
@@ -57,10 +61,33 @@ const fail = (msg) => {
 };
 const ok = (msg) => console.log(`OK   ${msg}`);
 
-const langs = Object.keys(LOCALES);
+const langs = LOCALE_IDS;
 const en = LOCALES.en;
-if (!en) fail("locales.js has no `en` dictionary");
-if (!langs.length) fail("locales.js exports no locales");
+if (!en) fail("assets/i18n/en.json is missing");
+if (!langs.length) fail("no locale dictionaries are registered");
+
+const localeDirectory = "assets/i18n";
+const localeFiles = readdirSync(localeDirectory)
+  .filter((name) => name.endsWith(".json") && name !== "script-directions.json")
+  .map((name) => name.slice(0, -5))
+  .sort();
+const expectedLocaleFiles = [...langs].sort();
+if (JSON.stringify(localeFiles) !== JSON.stringify(expectedLocaleFiles))
+  fail(`locale files do not match the picker: [${localeFiles.join(", ")}]`);
+else ok(`${localeFiles.length} locale JSON files match the picker`);
+
+if (existsSync("assets/js/shared/locales.js"))
+  fail("the retired all-locale JavaScript dictionary still exists");
+else ok("the all-locale JavaScript dictionary is retired");
+
+for (const locale of langs) {
+  const bytes = brotliCompressSync(
+    readFileSync(join(localeDirectory, `${locale}.json`)),
+  ).length;
+  if (bytes > 25 * 1024)
+    fail(`${locale}.json is ${bytes} Brotli bytes (maximum 25 KB)`);
+  else ok(`${locale}.json is ${bytes} Brotli bytes (maximum 25 KB)`);
+}
 
 // ── 1. parity with English ──────────────────────────────────────────────────
 const missing = [];
@@ -104,6 +131,16 @@ if (orphans.length)
 else
   ok("every translated string also exists in English (parity holds both ways)");
 
+const englishEqualValues = untranslatedLocaleValues(LOCALES);
+if (englishEqualValues.length)
+  fail(
+    `${englishEqualValues.length} untranslated locale value(s) equal English outside the unit/brand allowlist: ${englishEqualValues.slice(0, 10).join(", ")}`,
+  );
+else
+  ok(
+    "no translated locale value equals English outside the unit/brand allowlist",
+  );
+
 // ── 2. HTML hooks resolve everywhere ────────────────────────────────────────
 function shippedPages() {
   return deployedFiles().filter((l) => l.endsWith(".html"));
@@ -112,24 +149,28 @@ function shippedPages() {
 const hooks = new Set();
 for (const page of shippedPages()) {
   const html = readFileSync(page, "utf8");
-  for (const m of html.matchAll(/data-i18n="([^"]+)"/g)) hooks.add(m[1]);
+  for (const m of html.matchAll(
+    /data-i18n(?:-(?:placeholder|aria-label|title))?="([^"]+)"/g,
+  ))
+    hooks.add(m[1]);
 }
-if (!hooks.size) fail("no data-i18n hooks found in shipped pages");
+if (!hooks.size) fail("no translation hooks found in shipped pages");
 
 const { gaps: hookGaps, unresolved } = hookCoverage(LOCALES, hooks);
 
 if (unresolved.length)
   fail(
-    `${unresolved.length} data-i18n hook(s) resolve in no locale (markup typo): ${unresolved.slice(0, 6).join(", ")}`,
+    `${unresolved.length} translation hook(s) resolve in no locale (markup typo): ${unresolved.slice(0, 6).join(", ")}`,
   );
-else ok(`all ${hooks.size} markup hooks resolve in at least one locale`);
+else
+  ok(`all ${hooks.size} markup/attribute hooks resolve in at least one locale`);
 
 for (const [lang, gaps] of Object.entries(hookGaps)) {
   if (gaps.length)
     fail(
-      `${lang}: ${gaps.length}/${hooks.size} HTML hook(s) untranslated: ${gaps.slice(0, 6).join(", ")}`,
+      `${lang}: ${gaps.length}/${hooks.size} HTML/attribute hook(s) untranslated: ${gaps.slice(0, 6).join(", ")}`,
     );
-  else ok(`${lang}: all ${hooks.size} HTML hooks translated`);
+  else ok(`${lang}: all ${hooks.size} HTML/attribute hooks translated`);
 }
 
 // ── 3. placeholder parity ───────────────────────────────────────────────────
@@ -164,9 +205,87 @@ if (leaks.length)
 else ok("no locale ships a key name as its own text");
 
 // ── 5. RTL + picker wiring ──────────────────────────────────────────────────
-const rtl = langs.filter((l) => LOCALES[l].rtl);
-if (rtl.length === 1 && rtl[0] === "ar") ok("only `ar` flips direction");
-else fail(`expected exactly [ar] to be RTL, found [${rtl.join(", ")}]`);
+const directionCases = {
+  en: "ltr",
+  es: "ltr",
+  pt: "ltr",
+  fr: "ltr",
+  de: "ltr",
+  ar: "rtl",
+  he: "rtl",
+  fa: "rtl",
+  ur: "rtl",
+  ps: "rtl",
+  sd: "rtl",
+  dv: "rtl",
+  yi: "rtl",
+  ug: "rtl",
+  ckb: "rtl",
+};
+for (const [locale, expected] of Object.entries(directionCases)) {
+  const actual = directionForLocale(locale);
+  if (actual !== expected)
+    fail(`${locale} direction is ${actual}; expected ${expected}`);
+}
+ok(
+  `script-direction table resolves ${Object.keys(directionCases).length} locale tags`,
+);
+
+// Active calculator surfaces must format through an explicit locale helper and
+// use logical layout properties so script direction mirrors the whole UI.
+const formattingSources = [];
+function collectJavaScript(dir) {
+  for (const name of readdirSync(dir)) {
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) {
+      if (name !== "city-data") collectJavaScript(path);
+    } else if (name.endsWith(".js")) formattingSources.push(path);
+  }
+}
+collectJavaScript("assets/js");
+const implicitNumberFormats = [];
+const implicitFormatPattern =
+  /\.toLocaleString\s*\(\s*\)|new\s+Intl\.NumberFormat\s*\(\s*undefined\b/g;
+for (const file of formattingSources) {
+  const text = readFileSync(file, "utf8");
+  for (const match of text.matchAll(implicitFormatPattern))
+    implicitNumberFormats.push(`${file}: ${match[0]}`);
+}
+if (implicitNumberFormats.length)
+  fail(
+    `number formatting without an explicit locale: ${implicitNumberFormats.slice(0, 5).join(", ")}`,
+  );
+else
+  ok(
+    `no implicit-locale number formatting in ${formattingSources.length} browser modules`,
+  );
+
+const logicalLayoutFiles = [
+  "assets/site.css",
+  "index.html",
+  "assets/js/sizing/ui.js",
+  "assets/js/sizing/charts.js",
+  "assets/js/sizing/frontier-chart.js",
+];
+const physicalLogicalProperties =
+  /(?:text-align\s*:\s*(?:left|right)\b|(?:margin|padding|border)-(?:left|right)(?:-[\w-]+)?\s*:)/gi;
+const physicalLayout = [];
+for (const file of logicalLayoutFiles) {
+  const text = readFileSync(file, "utf8");
+  for (const match of text.matchAll(physicalLogicalProperties))
+    physicalLayout.push(`${file}: ${match[0]}`);
+}
+const physicalPositionPattern = /(?:^|[;{])\s*(?:left|right)\s*:/gim;
+for (const file of ["assets/site.css", "index.html"]) {
+  const text = readFileSync(file, "utf8");
+  for (const match of text.matchAll(physicalPositionPattern))
+    physicalLayout.push(`${file}: ${match[0].trim()}`);
+}
+if (physicalLayout.length)
+  fail(
+    `physical direction-dependent layout properties remain: ${physicalLayout.slice(0, 5).join(", ")}`,
+  );
+else ok(`calculator CSS and runtime styles use logical properties`);
 
 const pickerIds = LANGS.map((l) => l.id).filter(
   (id) => id !== "auto" && id !== "en",
@@ -227,7 +346,7 @@ function renderedKeys() {
   collect("worker");
   let text = "";
   for (const file of sources) {
-    if (file.endsWith("locales.js") || !existsSync(file)) continue;
+    if (file.startsWith("assets/i18n/") || !existsSync(file)) continue;
     text += readFileSync(file, "utf8");
   }
   const seen = new Set();
@@ -255,12 +374,16 @@ const rendered = renderedKeys();
 const everyLocaleKey = [
   ...new Set(langs.flatMap((l) => Object.keys(LOCALES[l]))),
 ];
+const pluralKeyFamilies = ["timeUnitYear_", "timeUnitMonth_"];
 // `frontierVerdict()` composes base + a suffix at runtime, so those member names
 // never appear literally — rule 6 already proves each family is complete in
 // every locale. The list is shared with rule 6 so the two can never disagree
 // about which suffixes exist.
 const unrendered = everyLocaleKey.filter(
-  (k) => !rendered.has(k) && !composedSuffixes.some((s) => k.endsWith(s)),
+  (k) =>
+    !rendered.has(k) &&
+    !composedSuffixes.some((s) => k.endsWith(s)) &&
+    !pluralKeyFamilies.some((prefix) => k.startsWith(prefix)),
 );
 if (unrendered.length)
   fail(
@@ -336,82 +459,47 @@ if (bannedHits.length)
   );
 else ok(`none of the ${BANNED_VALUES.length} known-bad values are present`);
 
-// ── 9. unkeyed prose on a translated page ───────────────────────────────────
-// The class of defect, not an instance of it.
-//
-// Measured before this rule was written: index.html carried 41 visible prose
-// blocks with no hook, including the hero headline and the footer disclaimer —
-// the two most prominent strings on the page, in English, for every visitor
-// whose browser is not English. Rule 2 cannot see that, because rule 2 asks
-// "does every hook resolve?", never "does every string have a hook?". The
-// dictionary was complete; the markup simply never asked for it.
-//
-// SCOPE, and why it is drawn here. Only 1 of 82 shipped pages declares itself
-// translated (it has at least one hook); the other 81 have none and are
-// untranslated by decision, not by oversight. Demanding hooks on those would be
-// 2,046 decisions nobody made, and a gate that fires on 2,046 known items is a
-// gate that gets ignored — which is how this branch started. So the rule
-// applies to pages that claim translation, which is the claim the product makes
-// about itself.
-//
-// EXEMPT, deliberately:
-//   - text that is not prose (units, bare numbers, symbols, punctuation);
-//   - blocks shorter than six words, which are labels and captions;
-//   - pages with no hook at all, which are not claimed to be translated.
-// The floor and the ceiling are both reported, so the number is visible and can
-// only fall.
+// ?? 9. strict unkeyed prose gate ?????????????????????????????????????????????
+// R-I18N-05 permits only units and brand names to remain unkeyed. The root
+// marker names actual locale-runtime surfaces; inert attributes on English-only
+// pages do not expand the translated surface.
 const proseFindings = [];
+const attributeFindings = [];
+let translatedPageCount = 0;
 for (const page of shippedPages()) {
   const html = readFileSync(page, "utf8");
-  // The detector lives in scripts/lib/gates.mjs as a pure function, so a test
-  // can prove it FIRES on the markup that caused this defect without mutating
-  // the working tree — the race that cost three CI cycles on this branch.
-  if (!claimsTranslation(html)) continue; // page does not claim translation
+  if (!claimsTranslation(html)) continue;
+  translatedPageCount++;
   for (const block of unkeyedProse(html))
     proseFindings.push(
-      `${page}: <${block.tag}> ${JSON.stringify(block.text.slice(0, 60))}…`,
+      page + ": <" + block.tag + "> " + JSON.stringify(block.text.slice(0, 60)),
+    );
+  for (const attribute of unkeyedCopyAttributes(html))
+    attributeFindings.push(
+      page +
+        ": <" +
+        attribute.tag +
+        "> " +
+        attribute.attribute +
+        "=" +
+        JSON.stringify(attribute.text.slice(0, 60)),
     );
 }
-// The remaining 51 are REAL and KNOWN: the FAQ answers, the bill-of-materials
-// spec text, the legal copy, and the wizard/field help on the one translated
-// page. Keying them is P5 work (R-I18N-07 waves), not this branch. This ceiling
-// is a committed constant on purpose — it started as an env override, which is a
-// gate anyone can loosen without touching the file, which is the failure mode
-// this repo treats as worse than a red build. Lower it as blocks get keyed;
-// never raise it without a measured reason in the commit that raises it.
-//
-// THIS NUMBER WENT UP, 39 -> 51, AND IT MUST BE READ AS A FIX, NOT A LOOSENING.
-// The 39 was not a count of unkeyed prose; it was a count of what the detector
-// was able to SEE. The old block regex required a literal `</tag>`, so a prose
-// paragraph nested inside a `<label>` or a `<li>` was swallowed whole by its
-// parent match and never examined. Measured in a real browser at Accept-Language
-// de-DE against document.body.textContent: of the 51 blocks below, 48 are
-// English in the rendered German DOM (the other 3 fragments straddle a `<br>`,
-// where textContent inserts no whitespace, so the search misses them — they are
-// English too). The 12 the fix added are the 12 the old gate was blind to.
-// A ceiling of 39 would have been satisfiable while 12 real leaks shipped.
-//
-// The blind-region and case-insensitivity fixes in the detector did NOT move
-// this number: index.html contains no <p> inside any of its four script blocks,
-// so the JSON-LD FAQ text was never a false positive. Recorded here because I
-// first believed it was, and the belief was wrong.
-//
-// CEILING RAISED 51 -> 422 (2026-10-12, measured reason): header unification
-// added data-i18n hooks to the nav on 12 blog pages (product requirement:
-// uniform header with i18n nav across the site). The 371 new blocks are blog
-// article bodies — English-only by product decision, unchanged. The main page's
-// 51 remain. The detector now sees blog prose because the pages claim
-// translation via nav hooks; the articles themselves were never translated.
-const PROSE_CEILING = 422;
-if (proseFindings.length > PROSE_CEILING) {
+if (proseFindings.length || attributeFindings.length) {
   fail(
-    `${proseFindings.length} visible prose block(s) on a translated page carry no i18n hook ` +
-      `(ceiling ${PROSE_CEILING}): ${proseFindings.slice(0, 4).join(" | ")}`,
+    proseFindings.length +
+      " unapproved unkeyed prose block(s) and " +
+      attributeFindings.length +
+      " untranslated copy attribute(s) on " +
+      translatedPageCount +
+      " localized page(s): " +
+      [...proseFindings, ...attributeFindings].slice(0, 6).join(" | "),
   );
 } else {
-  console.log(
-    `     unkeyed prose on translated pages: ${proseFindings.length}/${PROSE_CEILING} ceiling ` +
-      `(known, tracked, must fall)`,
+  ok(
+    "0 unapproved unkeyed prose blocks or untranslated copy attributes across " +
+      translatedPageCount +
+      " localized page(s)",
   );
 }
 

@@ -9,32 +9,25 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { LOCALES } from "../assets/js/shared/locales.js";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 import { interpolate, pickString } from "../assets/js/shared/interpolate.js";
 import { deployList } from "../scripts/lib/deploy-manifest.mjs";
+import {
+  formatCurrency,
+  formatDate,
+  formatNumber,
+  formatPercent,
+  formatUnitCount,
+  loadLocale,
+  pluralCategory,
+} from "../assets/js/shared/i18n.js";
+import { directionForLocale } from "../assets/js/shared/direction.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 
 function readEnKeys() {
-  const src = fs.readFileSync(
-    path.join(ROOT, "assets/js/shared/locales.js"),
-    "utf8",
-  );
-  const keys = new Set();
-  let depth = 0;
-  let inEn = false;
-  for (const line of src.split(/\r?\n/)) {
-    if (/^  en: \{$/.test(line)) inEn = true;
-    else if (/^  \w+: \{$/.test(line) && depth === 1) inEn = false;
-    depth +=
-      (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
-    if (inEn && depth >= 2) {
-      const k = line.match(/^    (\w+):/);
-      if (k) keys.add(k[1]);
-    }
-  }
-  return keys;
+  return new Set(Object.keys(LOCALES.en));
 }
 
 function jsFiles(dir, out = []) {
@@ -194,7 +187,7 @@ test("interpolation never re-reads a value as a replacement pattern", async () =
   );
   assert.match(
     i18n,
-    /return interpolate\(pickString\(dict, key, LOCALES\.en\), vars\);/,
+    /return interpolate\(pickString\(dict, key, english\), vars\);/,
     "i18n.js must delegate instead of substituting on its own",
   );
 });
@@ -204,14 +197,76 @@ test("German is exposed and has a translated core result vocabulary", () => {
     path.join(ROOT, "assets/js/shared/i18n.js"),
     "utf8",
   );
-  assert.match(src, /id: "de", label: "Deutsch"/);
-  const locale = fs.readFileSync(
-    path.join(ROOT, "assets/js/shared/locales.js"),
-    "utf8",
+  assert.match(src, /id: "de", labelKey: "languageGerman"/);
+  assert.ok(fs.existsSync(path.join(ROOT, "assets/i18n/de.json")));
+  assert.equal(LOCALES.de.navSizing, "System dimensionieren");
+  assert.equal(typeof LOCALES.de.frontierTitle, "string");
+});
+
+test("Intl formatting and direction follow the requested locale and script", () => {
+  assert.equal(
+    formatNumber(12345.5, { maximumFractionDigits: 1 }, "de-DE"),
+    "12.345,5",
   );
-  assert.match(locale, /de: \{/);
-  assert.match(locale, /navSizing: "System dimensionieren"/);
-  assert.match(locale, /frontierTitle:/);
+  assert.equal(
+    formatPercent(0.125, { maximumFractionDigits: 1 }, "de-DE"),
+    new Intl.NumberFormat("de-DE", {
+      style: "percent",
+      maximumFractionDigits: 1,
+    }).format(0.125),
+  );
+  assert.match(formatCurrency(1234.5, "EUR", {}, "fr-FR"), /€|EUR/);
+  assert.notEqual(
+    formatDate(
+      new Date("2026-10-15T00:00:00Z"),
+      { dateStyle: "short" },
+      "de-DE",
+    ),
+    "10/15/26",
+  );
+  assert.equal(pluralCategory(3, "ar"), "few");
+  for (const locale of [
+    "ar",
+    "he",
+    "fa",
+    "ur",
+    "ps",
+    "sd",
+    "dv",
+    "yi",
+    "ug",
+    "ckb",
+  ])
+    assert.equal(
+      directionForLocale(locale),
+      "rtl",
+      `${locale} script direction`,
+    );
+  assert.equal(directionForLocale("ar-Latn"), "ltr");
+});
+
+test("plural unit output uses each locale's Intl category and number format", async () => {
+  const examples = {
+    en: ["~1 yr", "~3 yrs"],
+    es: ["~1 a\u00f1o", "~3 a\u00f1os"],
+    pt: ["~1 ano", "~3 anos"],
+    fr: ["~1 an", "~3 ans"],
+    de: ["ca. 1 Jahr", "ca. 3 Jahre"],
+  };
+  for (const [locale, [one, many]] of Object.entries(examples)) {
+    await loadLocale(locale);
+    assert.equal(formatUnitCount(1, "Year", locale), one, `${locale} singular`);
+    assert.equal(formatUnitCount(3, "Year", locale), many, `${locale} plural`);
+  }
+  await loadLocale("ar");
+  assert.equal(
+    formatUnitCount(2, "Year", "ar"),
+    `\u0646\u062d\u0648 ${formatNumber(2, {}, "ar")} \u0633\u0646\u062a\u0627\u0646`,
+  );
+  assert.equal(
+    formatUnitCount(3, "Year", "ar"),
+    `\u0646\u062d\u0648 ${formatNumber(3, {}, "ar")} \u0633\u0646\u0648\u0627\u062a`,
+  );
 });
 
 test("the locale lookup falls back to English before the raw key", () => {
@@ -288,7 +343,7 @@ test("no locale carries a key that no shipped code renders", () => {
 
   let text = "";
   for (const rel of sources) {
-    if (rel.endsWith("locales.js")) continue;
+    if (rel.startsWith("assets/i18n/")) continue;
     const full = path.join(ROOT, rel);
     if (!fs.existsSync(full)) continue;
     text += fs.readFileSync(full, "utf8");
@@ -300,12 +355,16 @@ test("no locale carries a key that no shipped code renders", () => {
   // frontierVerdict() composes base + a suffix at runtime, so those member
   // names never appear literally; rule 6 proves each family is complete.
   const composed = ["Grid", "Offgrid", "Battery"];
+  const pluralFamilies = ["timeUnitYear_", "timeUnitMonth_"];
   const everyKey = new Set();
   for (const dict of Object.values(LOCALES))
     for (const key of Object.keys(dict)) everyKey.add(key);
 
   const dead = [...everyKey].filter(
-    (k) => !rendered.has(k) && !composed.some((s) => k.endsWith(s)),
+    (k) =>
+      !rendered.has(k) &&
+      !composed.some((s) => k.endsWith(s)) &&
+      !pluralFamilies.some((prefix) => k.startsWith(prefix)),
   );
   assert.deepEqual(
     dead,

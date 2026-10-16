@@ -37,6 +37,12 @@ export const MANUAL_VALIDATORS = new Map([
       "committed, so the no-browser CI validator asserts the report's schema and " +
       "its unapproved-diffs count",
   ],
+  [
+    "scripts/check-i18n-visual.mjs",
+    "P5.4 glyph coverage and 320px overflow across Chromium and WebKit; it " +
+      "needs the locally installed Playwright browsers, so it runs by hand " +
+      "with `npm run gate:i18n-visual` rather than spending the CI browser budget",
+  ],
 ]);
 
 export const RETIRED = new Map([

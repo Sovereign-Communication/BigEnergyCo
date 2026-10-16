@@ -181,7 +181,7 @@ test("EVIDENCE: the translation facet line cannot contradict a green i18n gate",
     LOCALE_SURFACES,
     composeTranslationFacetLine,
   } = await load("scripts/lib/experience-budgets.mjs");
-  const { LOCALES } = await load("assets/js/shared/locales.js");
+  const { LOCALES } = await import("../scripts/lib/locale-data.mjs");
   const line = composeTranslationFacetLine({
     experience_reading: {
       actions: [{ id: "land", acknowledged: true }],

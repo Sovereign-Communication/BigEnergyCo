@@ -5,6 +5,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const GATE = join(ROOT, "scripts", "check-provenance.mjs");
@@ -170,17 +171,17 @@ test("a shipped page links the registry, so a visitor can open it", () => {
 });
 
 test("the sources card is translated in every locale", () => {
-  const src = readFileSync(
-    join(ROOT, "assets", "js", "shared", "locales.js"),
-    "utf8",
-  );
   for (const key of [
     "sourcesCardTitle",
     "sourcesCardBody",
     "sourcesCardLink",
   ]) {
-    const n = (src.match(new RegExp(`${key}:`, "g")) || []).length;
-    assert.equal(n, 6, `${key} must exist in all six locales, found ${n}`);
+    for (const locale of Object.keys(LOCALES))
+      assert.equal(
+        typeof LOCALES[locale][key],
+        "string",
+        `${locale}.${key} must exist in its locale JSON`,
+      );
   }
 });
 

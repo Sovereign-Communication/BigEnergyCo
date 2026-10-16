@@ -539,7 +539,7 @@ function sendChatMsg() {
       if (data && data.reply) {
         // A degraded reply arrives with BOTH the worker's canonical English
         // text and a set of i18n keys. A browser resolves the keys through
-        // assets/js/shared/locales.js so the failure message is in the
+        // assets/i18n/{locale}.json so the failure message is in the
         // visitor's own language; a client with no dictionary (or a language
         // the dictionary lacks) falls back to the English text the worker
         // already sent. The fallback is explicit and asserted, not accidental.
@@ -826,7 +826,14 @@ function updateCalc() {
   if (!scopes) return;
 
   function money(v) {
-    return "$" + Math.round(v).toLocaleString();
+    if (window.becoFormatCurrency)
+      return window.becoFormatCurrency(Math.round(v), "USD", {
+        maximumFractionDigits: 0,
+      });
+    return new Intl.NumberFormat(
+      document.documentElement.lang || navigator.language || "en",
+      { style: "currency", currency: "USD", maximumFractionDigits: 0 },
+    ).format(Math.round(v));
   }
 
   function range(s) {

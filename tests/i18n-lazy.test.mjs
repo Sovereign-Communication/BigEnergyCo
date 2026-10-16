@@ -8,12 +8,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { LOCALES } from "../scripts/lib/locale-data.mjs";
 
 // Repo-relative, never absolute: these tests run on the Linux CI runner too,
 // where a Windows checkout path does not exist. That failure mode cost a CI
 // cycle on this file.
 const I18N_URL = new URL("../assets/js/shared/i18n.js", import.meta.url);
-const LOCALES_URL = new URL("../assets/js/shared/locales.js", import.meta.url);
 const UI_PATH = fileURLToPath(
   new URL("../assets/js/sizing/ui.js", import.meta.url),
 );
@@ -45,10 +45,29 @@ test("LAZY: translate echoes the key before the dictionary lands, never English"
   );
 });
 
+test("LAZY: locale JSON uses the current immutable asset version", () => {
+  const source = readFileSync(I18N_PATH, "utf8");
+  const localeVersion = /const LOCALE_VERSION = "([\w-]+)"/.exec(source)?.[1];
+  const moduleVersion = /from "\.\/direction\.js\?v=([\w-]+)"/.exec(
+    source,
+  )?.[1];
+  assert.ok(localeVersion, "the lazy locale URL must carry a cache version");
+  assert.equal(
+    localeVersion,
+    moduleVersion,
+    "the immutable JSON URL must roll with its referencing module graph",
+  );
+  assert.match(
+    source,
+    /`\.\.\/\.\.\/i18n\/\$\{locale\}\.json\?v=\$\{LOCALE_VERSION\}\$\{retryQuery\}`/,
+    "every lazy locale import uses the shared cache version and adds a retry token only after failure",
+  );
+});
+
 test("LAZY: every locale renders native copy once loaded — including RTL", async () => {
   const mod = await import(I18N_URL.href);
-  const { LOCALES } = await import(LOCALES_URL.href);
   await mod.localesReady;
+  await Promise.all(["en", "es", "pt", "fr", "de", "ar"].map(mod.loadLocale));
   const probe = "advisorDegradedReassure";
   const seen = new Map();
   for (const lang of ["en", "es", "pt", "fr", "de", "ar"]) {
@@ -81,6 +100,35 @@ test("LAZY: every locale renders native copy once loaded — including RTL", asy
   );
 });
 
+test("LAZY: applying Arabic installs RTL direction on the document", async () => {
+  const mod = await import(I18N_URL.href);
+  const previous = {
+    localStorage: globalThis.localStorage,
+    document: globalThis.document,
+    window: globalThis.window,
+  };
+  const root = { lang: "en", dir: "ltr" };
+  globalThis.localStorage = { getItem: () => "ar", setItem: () => {} };
+  globalThis.document = { documentElement: root, querySelectorAll: () => [] };
+  globalThis.window = {};
+  try {
+    await mod.applyI18n();
+    assert.equal(root.lang, "ar");
+    assert.equal(root.dir, "rtl");
+    assert.equal(typeof globalThis.window.becoFormatNumber, "function");
+    assert.equal(
+      mod.formatNumber(1234.5),
+      new Intl.NumberFormat("ar").format(1234.5),
+      "default number formatting follows the selected locale",
+    );
+  } finally {
+    for (const key of Object.keys(previous)) {
+      if (previous[key] === undefined) delete globalThis[key];
+      else globalThis[key] = previous[key];
+    }
+  }
+});
+
 test("LAZY: the boot path awaits the dictionary, so first paint is never English", async () => {
   // The property is enforced in ui.js by awaiting applyI18n() before the first
   // paint. Pinned at the source, because the failure it prevents — a flash of
@@ -92,17 +140,18 @@ test("LAZY: the boot path awaits the dictionary, so first paint is never English
     "the boot path must await applyI18n, or a deferred dictionary paints English first",
   );
   // A dynamic import, not a static one: a static `import` at the top of
-  // i18n.js would put locales.js straight back into the eager graph and undo
-  // the whole point.
+  // A static import of all locale data would put every dictionary back in the
+  // eager graph and undo the per-locale transfer boundary.
   const i18n = readFileSync(I18N_PATH, "utf8");
   assert.doesNotMatch(
     i18n,
-    /^import \{ LOCALES \}/m,
-    "a static import of the dictionary puts it back in the first-paint graph",
+    /^import .*locales\.js/m,
+    "the runtime must not statically import the retired all-locale module",
   );
   assert.match(
     i18n,
-    /import\("\.\/locales\.js/,
-    "the dictionary must be fetched with a dynamic import",
+    /import\(url, \{ with: \{ type: "json" \} \}\)/,
+    "the selected locale must be loaded as a JSON module",
   );
+  assert.match(i18n, /\.\.\/\.\.\/i18n\/\$\{locale\}\.json/);
 });
