@@ -204,7 +204,7 @@ test("A11Y: the ranking lists colour their numbers for reading, not for the map"
     "the markers are still painted from the map scale",
   );
   const listSites = [
-    ...src.matchAll(/class=\\"years\\" style=\\"color:' \+/g),
+    ...src.matchAll(/class="years" style="color:' \+/g),
     ...src.matchAll(/class="years" style="color:\$\{([^}]+)\}"/g),
   ];
   assert.ok(
