@@ -531,7 +531,7 @@ test("EVIDENCE: one gate may compose a DIFFERENT line per axis", () => {
       facet_lines: {
         experience: "WALKED, 1 Chrome, 1 city: 9/9 steps acknowledge.",
         translation:
-          "RUNTIME, 6 locales x 3 re-entry points: 0 raw keys on 19 pages.",
+          "RUNTIME, 7 locales x 3 re-entry points: 0 raw keys on 19 pages.",
       },
     },
   });
@@ -543,7 +543,7 @@ test("EVIDENCE: one gate may compose a DIFFERENT line per axis", () => {
   );
   assert.equal(
     out?.facet_evidence?.translation,
-    "RUNTIME, 6 locales x 3 re-entry points: 0 raw keys on 19 pages.",
+    "RUNTIME, 7 locales x 3 re-entry points: 0 raw keys on 19 pages.",
     "each axis must get the line composed FOR it, not the first one that exists",
   );
 });
