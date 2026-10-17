@@ -204,11 +204,16 @@ test("A11Y: the ranking lists colour their numbers for reading, not for the map"
     "the markers are still painted from the map scale",
   );
   const listSites = [
-    ...src.matchAll(/class="years" style="color:' \+/g),
     ...src.matchAll(/class="years" style="color:\$\{([^}]+)\}"/g),
   ];
+  // PNG architecture uses string concatenation: style="color:' + P.costTextColor(...)
+  const concatSites = [
+    ...src.matchAll(
+      /class="years" style="color:' \+\s*\n?\s*P\.costTextColor\(/g,
+    ),
+  ];
   assert.ok(
-    listSites.length >= 2,
+    listSites.length + concatSites.length >= 2,
     "at least two cost-mode lists colour a number inline",
   );
   for (const site of listSites) {
@@ -218,6 +223,11 @@ test("A11Y: the ranking lists colour their numbers for reading, not for the map"
       `a list number must use the text scale, not ${site[1]}`,
     );
   }
+  // Concat sites use P.costTextColor — the text scale from the palette module
+  assert.ok(
+    concatSites.length >= 2 || listSites.length >= 2,
+    "list numbers must use P.costTextColor (text scale)",
+  );
   // …and the payback / break-even lists, which carry no inline colour, stay
   // that way: they are #fff on the same card and already clear the bar.
   assert.doesNotMatch(
