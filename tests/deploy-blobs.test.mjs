@@ -207,7 +207,10 @@ test("stageFromIndex writes committed bytes and excludes a local edit", () => {
     // And it is genuinely absent from the staged artifact.
     const staged = readFileSync(join(stage, victim), "utf8");
     assert.ok(!staged.includes("uncommitted"), "local edit must not be staged");
-    assert.equal(staged, backup, "staged bytes must equal the committed blob");
+    assert.ok(
+      Buffer.from(staged).equals(committedBytes(ROOT, victim)),
+      "staged bytes must equal the committed blob",
+    );
 
     const stagedHtml = readFileSync(join(stage, "index.html"));
     assert.ok(stagedHtml.equals(committedBytes(ROOT, "index.html")));
