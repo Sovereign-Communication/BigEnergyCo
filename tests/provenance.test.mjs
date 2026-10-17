@@ -213,7 +213,7 @@ test("the sources card is translated in every locale", () => {
     "sourcesCardLink",
   ]) {
     const n = (src.match(new RegExp(`${key}:`, "g")) || []).length;
-    assert.equal(n, 6, `${key} must exist in all six locales, found ${n}`);
+    assert.equal(n, 7, `${key} must exist in all seven locales, found ${n}`);
   }
 });
 
