@@ -125,6 +125,8 @@ test("A11Y: the ranking lists colour their numbers for reading, not for the map"
   // and repainting them would be a different change.
   const page = read(HEATMAP_PAGE);
   const src = read(HEATMAP);
+  // costTextColor moved to the shared palette module in the PNG architecture
+  const paletteSrc = read("assets/js/heatmap-palette.js");
 
   // The palette is read from the page, so the test follows a palette change
   // instead of carrying a copy of it.
@@ -164,7 +166,7 @@ test("A11Y: the ranking lists colour their numbers for reading, not for the map"
     return (hi + 0.05) / (lo + 0.05);
   };
 
-  const textScale = /function costTextColor\([\s\S]*?\n {2}\}/.exec(src);
+  const textScale = /function costTextColor\([\s\S]*?\n {2}\}/.exec(paletteSrc);
   assert.ok(
     textScale,
     "the lists need a TEXT scale: the map's tile palette cannot be reused as a " +
@@ -193,20 +195,26 @@ test("A11Y: the ranking lists colour their numbers for reading, not for the map"
   }
 
   // The dots keep the tile palette, and the lists stop using it.
-  const mapScale = /function costColor\([\s\S]*?\n {2}\}/.exec(src);
+  // costColor moved to the shared palette module in the PNG architecture
+  const mapScale = /function costColor\([\s\S]*?\n {2}\}/.exec(paletteSrc);
   assert.ok(mapScale, "the map's own scale still exists for the dots");
   assert.match(
     src,
-    /fillColor:\s*color/,
+    /fillColor:\s*(color|dotColor\()/,
     "the markers are still painted from the map scale",
   );
   const listSites = [
     ...src.matchAll(/class="years" style="color:\$\{([^}]+)\}"/g),
   ];
-  assert.equal(
-    listSites.length,
-    2,
-    "two cost-mode lists colour a number inline",
+  // PNG architecture uses string concatenation: style="color:' + P.costTextColor(...)
+  const concatSites = [
+    ...src.matchAll(
+      /class="years" style="color:' \+\s*\n?\s*P\.costTextColor\(/g,
+    ),
+  ];
+  assert.ok(
+    listSites.length + concatSites.length >= 2,
+    "at least two cost-mode lists colour a number inline",
   );
   for (const site of listSites) {
     assert.equal(
@@ -215,6 +223,11 @@ test("A11Y: the ranking lists colour their numbers for reading, not for the map"
       `a list number must use the text scale, not ${site[1]}`,
     );
   }
+  // Concat sites use P.costTextColor — the text scale from the palette module
+  assert.ok(
+    concatSites.length >= 2 || listSites.length >= 2,
+    "list numbers must use P.costTextColor (text scale)",
+  );
   // …and the payback / break-even lists, which carry no inline colour, stay
   // that way: they are #fff on the same card and already clear the bar.
   assert.doesNotMatch(

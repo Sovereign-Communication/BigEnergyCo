@@ -350,7 +350,12 @@ test("GATE: the heatmap app runs from a versioned module, not the markup", () =>
     /L\.map\(/,
     "the extracted module must still build the map",
   );
-  assert.match(app, /heatmap-grid\.json\?v=/);
+  // Pre-rendered PNG architecture: versioned PNG manifest or on-demand data
+  assert.ok(
+    /heatmap-grid\.min\.json\?v=/.test(app) ||
+      /assets\/img\/heatmap\/manifest\.json/.test(app),
+    "the heatmap module must reference versioned data (min.json) or PNG manifest",
+  );
 });
 
 // ── static server: the policy the smoke test runs under ─────────────────────
