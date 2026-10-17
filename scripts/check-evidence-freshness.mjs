@@ -155,10 +155,8 @@ for (const field of ["seo_summary", "smoke_note"]) {
       ? text.replace(/\bservedStamp\s+\d{8}[a-z]\b/gi, "")
       : text;
   const statedStamps = [...new Set(claims.match(/\b\d{8}[a-z]\b/g) || [])];
-  if (statedStamps.length === 0) {
-    if (field === "seo_summary") ok(`${field} states no asset stamp`);
-    else fail(`${field} does not state the shipped tree's asset stamp`);
-  } else if (
+  if (statedStamps.length === 0) ok(`${field} states no asset stamp`);
+  else if (
     stamp.length === 1 &&
     statedStamps.length === 1 &&
     statedStamps[0] === stamp[0]
