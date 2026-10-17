@@ -72,11 +72,14 @@ export const STATES = [
   { id: "arrival", needs: null, steps: [] },
   { id: "result", needs: "run control", steps: RUN_INPUTS },
   {
-    // The advanced panel, revealed by the radio a visitor actually presses.
-    // A panel nobody can open is a panel nobody has audited.
+    // First-time visits start in Simple mode, so reveal the regular form before
+    // pressing the manual radio a visitor can actually see.
     id: "manual",
     needs: "mode radio",
-    steps: [{ action: "click", selector: "#modeManual" }],
+    steps: [
+      { action: "click", selector: "#simpleModeToggle" },
+      { action: "click", selector: "#modeManual" },
+    ],
   },
 ];
 
