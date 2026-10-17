@@ -242,6 +242,14 @@ import {
 
 import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261017a";
 
+// Shared by the calculator and deferred chat controls. The calculator owns
+// this policy because its first sizing result can scroll before chat.js loads.
+window.scrollBehavior = function scrollBehavior() {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ? "auto"
+    : "smooth";
+};
+
 let worker = null;
 
 let lastPayload = null; // kept for share links + the printable summary

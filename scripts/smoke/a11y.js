@@ -312,12 +312,7 @@ async function tabWalk(ctx, label, expectIds) {
 // click is shadow-counted first so the control's real side effect (scroll,
 // modal, geolocation prompt) never fires — this gate asserts the keystroke
 // path, not the effect.
-const DIV_BUTTONS = [
-  "btnHeroSizing",
-  "btnNavSizeArray",
-  "btnGeoLocate",
-  "btnLegalTerms1",
-];
+const DIV_BUTTONS = ["btnNavSizeArray", "btnGeoLocate", "btnLegalTerms1"];
 
 async function assertDivButtonsOperable(ctx) {
   const { evaluate, send } = ctx;
@@ -405,8 +400,80 @@ async function measureSite(ctx, { label, sel, instant }) {
   }
 }
 
+async function measureResultAutoScroll(ctx, { label, instant }) {
+  const { evaluate, poll } = ctx;
+  const setup = await evaluate(`(() => {
+    const target = document.getElementById("tierResults");
+    if (!target || !document.getElementById("btnRunSizing")) return false;
+    window.scrollTo({ top: 0, behavior: "instant" });
+    window.__resultScrollY0 = window.scrollY;
+    window.__resultScrollCalls = [];
+    window.__resultScrollOriginal = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = function (options) {
+      const result = window.__resultScrollOriginal.apply(this, arguments);
+      if (this.id === "tierResults") {
+        window.__resultScrollCalls.push({
+          behavior: options?.behavior || "auto",
+          yImmediate: window.scrollY,
+        });
+      }
+      return result;
+    };
+    return true;
+  })()`);
+  gate(`scroll site ${label}: result trigger exists`, setup, String(setup));
+  if (!setup) return;
+  try {
+    await evaluate(`document.getElementById("btnRunSizing").click()`);
+    const captured = await poll(
+      () => evaluate(`window.__resultScrollCalls?.length > 0`),
+      45000,
+      250,
+    );
+    gate(
+      `scroll site ${label}: result scroll reaches the browser`,
+      captured,
+      captured ? "tierResults.scrollIntoView observed" : "no result scroll",
+    );
+    if (!captured) return;
+    await sleep(700);
+    const sample = await evaluate(`(() => ({
+      y0: window.__resultScrollY0,
+      yImmediate: window.__resultScrollCalls[0].yImmediate,
+      behavior: window.__resultScrollCalls[0].behavior,
+      yFinal: window.scrollY,
+    }))()`);
+    const moved = Math.abs(sample.yFinal - sample.y0);
+    const immediate = Math.abs(sample.yImmediate - sample.y0);
+    const traveled = moved > 100;
+    if (instant) {
+      gate(
+        `scroll site ${label}: jumps instantly under reduced motion`,
+        sample.behavior === "auto" && traveled && immediate > moved * 0.75,
+        `behavior=${sample.behavior}, moved ${moved}px, ${immediate}px at call`,
+      );
+    } else {
+      gate(
+        `scroll site ${label}: stays animated when motion is allowed`,
+        sample.behavior === "smooth" && traveled && immediate < 10,
+        `behavior=${sample.behavior}, moved ${moved}px, ${immediate}px at call`,
+      );
+    }
+  } finally {
+    await evaluate(`(() => {
+      if (window.__resultScrollOriginal)
+        Element.prototype.scrollIntoView = window.__resultScrollOriginal;
+      delete window.__resultScrollOriginal;
+      delete window.__resultScrollCalls;
+      delete window.__resultScrollY0;
+      return true;
+    })()`);
+  }
+}
+
 // Always-visible structural controls (independent of mode/load state).
 const STRUCTURAL = [
+  "btnHeroSizing",
   "citySearch",
   "btnRunSizing",
   "simpleModeToggle",
@@ -508,6 +575,9 @@ export async function runA11yFlow(ctx) {
         normalReduce === false,
         String(normalReduce),
       );
+      await measureResultAutoScroll(ctx, {
+        label: "sizing/run-results",
+      });
       await measureSite(ctx, {
         label: "sizing/simple-mode",
         sel: SIZING_PATH,
@@ -517,7 +587,10 @@ export async function runA11yFlow(ctx) {
         label: "sizing/see-details",
         sel: SIZING_DETAILS_PATH,
       });
-      await measureSite(ctx, { label: "chat/hero-sizing", sel: CHAT_PATH });
+      await measureSite(ctx, {
+        label: "chat/hero-to-calculator",
+        sel: CHAT_PATH,
+      });
       await measureSite(ctx, { label: "chat/nav-sizing", sel: CHAT_NAV_PATH });
 
       await emulated("reduce");
@@ -527,6 +600,10 @@ export async function runA11yFlow(ctx) {
         emulatedReduce === true,
         String(emulatedReduce),
       );
+      await measureResultAutoScroll(ctx, {
+        label: "sizing/run-results",
+        instant: true,
+      });
       await measureSite(ctx, {
         label: "sizing/simple-mode",
         sel: SIZING_PATH,
@@ -538,7 +615,7 @@ export async function runA11yFlow(ctx) {
         instant: true,
       });
       await measureSite(ctx, {
-        label: "chat/hero-sizing",
+        label: "chat/hero-to-calculator",
         sel: CHAT_PATH,
         instant: true,
       });

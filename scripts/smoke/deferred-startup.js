@@ -1,0 +1,160 @@
+import { gate, sleep } from "./runtime.mjs";
+
+export async function runDeferredChatStartupFlow(ctx, motion = "normal") {
+  const { base, send, evaluate, poll, ws } = ctx;
+  const reducedMotion = motion === "reduced";
+  const label = `deferred startup (${motion})`;
+  let pausedRequest = null;
+  let resolvePaused;
+  const paused = new Promise((resolve) => {
+    resolvePaused = resolve;
+  });
+  const previousMessageHandler = ws.onmessage;
+  ws.onmessage = (event) => {
+    previousMessageHandler?.(event);
+    try {
+      const message = JSON.parse(event.data);
+      const request = message.params?.request;
+      if (
+        message.method === "Fetch.requestPaused" &&
+        /\/assets\/js\/chat\.js(?:\?|$)/.test(request?.url || "")
+      ) {
+        pausedRequest = message.params;
+        resolvePaused(pausedRequest);
+      }
+    } catch {
+      /* unrelated CDP event */
+    }
+  };
+
+  await send("Emulation.setEmulatedMedia", {
+    features: [
+      {
+        name: "prefers-reduced-motion",
+        value: reducedMotion ? "reduce" : "no-preference",
+      },
+    ],
+  });
+  await send("Network.enable");
+  await send("Network.setCacheDisabled", { cacheDisabled: true });
+  await send("Network.setBypassServiceWorker", { bypass: true });
+  await send("Fetch.enable", {
+    patterns: [{ urlPattern: "*assets/js/chat.js*", requestStage: "Request" }],
+  });
+  try {
+    const navigation = await send("Page.navigate", {
+      url: `${base}?smoke=deferred-chat-${Date.now()}`,
+    });
+    gate(
+      `${label}: navigates to the real page`,
+      !navigation?.errorText,
+      navigation?.errorText || "navigation started",
+    );
+    const held = await Promise.race([paused, sleep(15000).then(() => null)]);
+    gate(
+      `${label}: chat.js is held before it executes`,
+      Boolean(held),
+      held?.request?.url || "request was not intercepted",
+    );
+    if (!held) return;
+
+    const interactive = await poll(
+      () =>
+        evaluate(`document.readyState === "interactive" &&
+          !!document.getElementById("btnHeroSizing") &&
+          typeof window.sendChatMsg !== "function"`),
+      15000,
+      100,
+    );
+    gate(
+      `${label}: page exposes its calculator CTA while chat.js is pending`,
+      interactive,
+      interactive
+        ? "document interactive; chat bridge not executed"
+        : "not ready",
+    );
+    if (!interactive) return;
+
+    const policyReady = await poll(
+      () => evaluate(`typeof window.scrollBehavior === "function"`),
+      10000,
+      100,
+    );
+    gate(
+      `${label}: scroll policy is ready before deferred chat.js`,
+      policyReady,
+      String(policyReady),
+    );
+    const policy = await evaluate(`window.scrollBehavior?.()`);
+    gate(
+      `${label}: scroll policy matches the motion preference`,
+      policy === (reducedMotion ? "auto" : "smooth"),
+      String(policy),
+    );
+
+    const point = await evaluate(`(() => {
+      const node = document.getElementById("btnHeroSizing");
+      if (!node) return null;
+      const r = node.getBoundingClientRect();
+      return {
+        x: r.left + r.width / 2,
+        y: r.top + r.height / 2,
+        visible: r.width > 0 && r.height > 0,
+      };
+    })()`);
+    if (!point?.visible) {
+      gate(
+        `${label}: hero CTA is clickable during deferred startup`,
+        false,
+        "not visible",
+      );
+      return;
+    }
+    await evaluate(`document.getElementById("btnHeroSizing").click()`);
+    await sleep(700);
+    const result = await evaluate(`(() => ({
+      tag: document.getElementById("btnHeroSizing")?.tagName || "missing",
+      href: document.getElementById("btnHeroSizing")?.getAttribute("href") || "",
+      hash: location.hash,
+      y: window.scrollY,
+    }))()`);
+    gate(
+      `${label}: hero chat-to-calculator route works before chat.js`,
+      result.tag === "A" &&
+        result.href === "#sizing" &&
+        result.hash === "#sizing" &&
+        result.y > 100,
+      JSON.stringify(result),
+    );
+  } finally {
+    if (pausedRequest?.requestId) {
+      await send("Fetch.continueRequest", {
+        requestId: pausedRequest.requestId,
+      }).catch(() => {});
+    }
+    await send("Fetch.disable").catch(() => {});
+    await send("Network.setCacheDisabled", { cacheDisabled: false }).catch(
+      () => {},
+    );
+    await send("Network.setBypassServiceWorker", { bypass: false }).catch(
+      () => {},
+    );
+    await send("Emulation.setEmulatedMedia", {
+      features: [{ name: "prefers-reduced-motion", value: "" }],
+    }).catch(() => {});
+    ws.onmessage = previousMessageHandler;
+  }
+
+  const finished = await poll(
+    () =>
+      evaluate(`document.readyState === "complete" &&
+        typeof window.sendChatMsg === "function"`),
+    15000,
+    100,
+  );
+  gate(
+    `${label}: chat.js resumes after the early interaction`,
+    finished,
+    String(finished),
+  );
+}

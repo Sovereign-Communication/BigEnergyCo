@@ -15,8 +15,16 @@ import { join, resolve } from "node:path";
 import { ROOT, serveStatic } from "./serve-static.mjs";
 
 const KEEP = process.argv.includes("--keep");
+const MOTION_ONLY = process.argv.includes("--motion-only");
 const STAGE = join(ROOT, "_pages_smoke");
-const SMOKE = join(ROOT, "scripts", "browser-smoke.mjs");
+const SMOKE = join(
+  ROOT,
+  "scripts",
+  MOTION_ONLY ? "smoke-motion.mjs" : "browser-smoke.mjs",
+);
+const SMOKE_ARGS = process.argv
+  .slice(2)
+  .filter((arg) => arg !== "--keep" && arg !== "--motion-only");
 
 function run(cmd, args, opts = {}) {
   return new Promise((ok) => {
@@ -48,7 +56,7 @@ console.log(
 
 let code = 1;
 try {
-  code = await run(process.execPath, [SMOKE, srv.url]);
+  code = await run(process.execPath, [SMOKE, srv.url, ...SMOKE_ARGS]);
 } finally {
   await srv.close();
   if (!KEEP) rmSync(resolve(STAGE), { recursive: true, force: true });
