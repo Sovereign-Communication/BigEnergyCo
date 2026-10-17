@@ -407,7 +407,8 @@ for (const page of shippedPages()) {
 // 22; article bodies remain English-only by product decision.
 // CEILING RAISED 445 -> 449 (2026-10-13 PR #215): the visible example and FAQ
 // add four English-only prose blocks to index.html; i18n is future work.
-const PROSE_CEILING = 449;if (proseFindings.length > PROSE_CEILING) {
+const PROSE_CEILING = 449;
+if (proseFindings.length > PROSE_CEILING) {
   fail(
     `${proseFindings.length} visible prose block(s) on a translated page carry no i18n hook ` +
       `(ceiling ${PROSE_CEILING}): ${proseFindings.slice(0, 4).join(" | ")}`,
