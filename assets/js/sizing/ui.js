@@ -3308,6 +3308,11 @@ function setupOffgridControls() {
 
   const syncToBill = (kwh) => {
     billAnchorKwh = kwh;
+    // An off-grid preset is a kWh choice. Keep it as the anchor so a later
+    // location or currency update does not reinterpret its derived bill as a
+    // user-entered bill and change the selected load.
+    billTouched = false;
+    billUserNominal = null;
     const rate = displayRate();
     const minBill = parseFloat($("billSlider")?.min) || 1;
     const maxBill = parseFloat($("billSlider")?.max) || 2000;
@@ -3315,20 +3320,22 @@ function setupOffgridControls() {
       maxBill,
       Math.max(minBill, Math.round(billForKwh(kwh, rate))),
     );
-    billUserNominal = bill;
-    billTouched = true;
     const billSlider = $("billSlider");
     if (billSlider) billSlider.value = String(bill);
+    const syncedBill = parseFloat(billSlider?.value);
     const billOut = $("billSliderVal");
-    if (billOut) billOut.textContent = "~" + fmtBill(bill);
+    if (billOut)
+      billOut.textContent =
+        "~" + fmtBill(Number.isFinite(syncedBill) ? syncedBill : bill);
     updateLoadReadout();
   };
 
   const syncToVal = (val) => {
     slider.value = String(val);
-    if (out) out.textContent = t("offgridKwhReadout", { kwh: val });
-    if (kwhInput) kwhInput.value = String(val);
-    syncToBill(val);
+    const syncedVal = parseFloat(slider.value);
+    if (out) out.textContent = t("offgridKwhReadout", { kwh: syncedVal });
+    if (kwhInput) kwhInput.value = String(syncedVal);
+    syncToBill(syncedVal);
   };
 
   slider.addEventListener("input", () => {
@@ -3347,8 +3354,10 @@ function setupOffgridControls() {
       const val = parseFloat(kwhInput.value);
       if (Number.isFinite(val) && val >= 1 && val <= 60) {
         slider.value = String(val);
-        if (out) out.textContent = t("offgridKwhReadout", { kwh: val });
-        syncToBill(val);
+        const syncedVal = parseFloat(slider.value);
+        if (out) out.textContent = t("offgridKwhReadout", { kwh: syncedVal });
+        kwhInput.value = String(syncedVal);
+        syncToBill(syncedVal);
       }
     });
     kwhInput.addEventListener("change", () => {

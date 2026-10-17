@@ -369,6 +369,66 @@ export async function runLocationFlow(ctx, actions) {
     JSON.stringify({ settled: parisSettled, ...parisFuel }),
   );
 
+  // The Camper Van preset is fractional, so prove the range, both labels and
+  // the actual sizing-worker payload preserve its advertised 2.5 kWh/day.
+  await evaluate(`document.getElementById("btnSeeExample").click()`);
+  const exampleRestored = await ctx.poll(
+    async () =>
+      evaluate(`(() => {
+        const lat = Number(document.getElementById("latInput")?.value);
+        const lon = Number(document.getElementById("lonInput")?.value);
+        return Math.abs(lat - 21.31) < 0.03 && Math.abs(lon + 157.86) < 0.03;
+      })()`),
+    6000,
+    100,
+  );
+  await evaluate(`(() => {
+    document.getElementById("btnGoalOffgrid").click();
+    document.querySelector('.offgrid-preset-btn[data-kwh="2.5"]').click();
+  })()`);
+  const camperPreset = await evaluate(`(() => {
+    const numberIn = (text) => Number((text || "").replace(/[^0-9.]/g, ""));
+    const range = document.getElementById("offgridKwhSlider");
+    const bill = document.getElementById("billSlider");
+    return {
+      goal: document.getElementById("systemGoal")?.value,
+      range: Number(range?.value),
+      kwhLabel: numberIn(document.getElementById("offgridKwhVal")?.textContent),
+      kwhInput: Number(document.getElementById("dailyKwhInput")?.value),
+      bill: Number(bill?.value),
+      billLabel: numberIn(document.getElementById("billSliderVal")?.textContent),
+    };
+  })()`);
+  gate(
+    "Camper Van preset keeps its advertised load across the controls",
+    exampleRestored &&
+      camperPreset.goal === "offgrid" &&
+      camperPreset.range === 2.5 &&
+      camperPreset.kwhLabel === 2.5 &&
+      camperPreset.kwhInput === 2.5 &&
+      camperPreset.billLabel === camperPreset.bill,
+    JSON.stringify({ exampleRestored, camperPreset }),
+  );
+  const beforeCamperRun = await evaluate(`window.__locationPosts.length`);
+  await evaluate(`document.getElementById("btnRunSizing").click()`);
+  const camperRunCompleted = await ctx.poll(
+    async () =>
+      evaluate(`!document.getElementById("resultsRegion")?.hidden &&
+        !document.getElementById("btnRunSizing")?.disabled &&
+        window.__locationPosts.length > ${beforeCamperRun}`),
+    RUN_TIMEOUT_MS,
+    500,
+  );
+  const camperRun = await evaluate(`window.__locationPosts.at(-1)`);
+  gate(
+    "Camper Van sizing worker receives the selected 2.5 kWh/day",
+    camperRunCompleted &&
+      camperRun?.type === "run" &&
+      camperRun?.dailyKwh === 2.5 &&
+      camperRun?.mode === "offgrid",
+    JSON.stringify({ completed: camperRunCompleted, run: camperRun }),
+  );
+
   await evaluate(`(() => {
     Worker.prototype.postMessage = window.__locationOriginalPost;
     delete window.__locationOriginalPost;
