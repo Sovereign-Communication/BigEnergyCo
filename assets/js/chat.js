@@ -1,8 +1,9 @@
 // Advisor chat bridge + modal helpers, extracted verbatim from index.html.
-// Loads as a CLASSIC script (no type=module, no async/defer): classic scripts
-// always run before deferred modules, so top-level function declarations here
-// intentionally become window globals (sendChatMsg, openSizingModal, ...)
-// before ui.js executes. Keep it classic or the advisor UI breaks.
+// Loads as a deferred CLASSIC script after the sizing module in index.html.
+// Its top-level function declarations intentionally become window globals
+// (sendChatMsg, openSizingModal, ...); ui.js registers interaction handlers
+// through whenDOMReady, so this script has installed shared behavior before
+// those handlers can run. Keep it classic or the advisor UI breaks.
 
 // -- Cloudflare API Bridge URL (updated automatically by patch_and_publish.py) --
 
@@ -210,7 +211,7 @@ if (typeof MutationObserver !== "undefined" && document.body) {
 window.scrollToCalc = function () {
   var calcElem = document.getElementById("calculator");
 
-  if (calcElem) calcElem.scrollIntoView({ behavior: scrollBehavior() });
+  if (calcElem) calcElem.scrollIntoView({ behavior: window.scrollBehavior() });
 };
 
 // Render AI text as plain text, never as markup  -  the model's output is untrusted input.
@@ -873,8 +874,12 @@ function updateCalc() {
 function scrollToSection(id) {
   var target = document.getElementById(id);
 
-  if (target)
-    target.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
+  if (target) {
+    target.scrollIntoView({
+      behavior: window.scrollBehavior(),
+      block: "start",
+    });
+  }
 }
 
 function setupEventListeners() {
@@ -1050,12 +1055,12 @@ document.addEventListener("keydown", function (e) {
 
 // Reduced-motion users get instant scrolling instead of JS smooth scroll.
 
-function scrollBehavior() {
+window.scrollBehavior = function scrollBehavior() {
   return window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ? "auto"
     : "smooth";
-}
+};
 
 if (document.readyState === "loading") {
   document.addEventListener(
