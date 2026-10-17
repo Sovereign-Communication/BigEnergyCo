@@ -127,6 +127,70 @@ export async function runLocationFlow(ctx, actions) {
     JSON.stringify(lastPost),
   );
 
+  // The public example action must resolve from the bundled seed data. Its
+  // former "Honolulu, HI" query did not match that catalog and stayed pending
+  // on the online geocoder. Starting from New York also proves the example
+  // replaces stale coordinates/results instead of merely changing its text.
+  await evaluate(`document.getElementById("btnSeeExample").click()`);
+  const exampleInput = await evaluate(`(() => {
+    const slider = document.getElementById("billSlider");
+    const value = Number(slider?.value);
+    const step = Number(slider?.step);
+    const min = Number(slider?.min);
+    const shown = Number((document.getElementById("billSliderVal")?.textContent || "").replace(/[^0-9.]/g, ""));
+    return {
+      city: document.getElementById("citySearch")?.value || "",
+      value,
+      step,
+      min,
+      stepAligned: step > 0 && Math.abs((value - min) / step - Math.round((value - min) / step)) < 1e-7,
+      labelMatches: Number.isFinite(shown) && shown === value,
+      resultsHidden: document.getElementById("resultsRegion")?.hidden,
+      posts: window.__locationPosts.length,
+    };
+  })()`);
+  gate(
+    "See an example sets an approximate bill without starting a run",
+    exampleInput.city === "Honolulu" &&
+      exampleInput.stepAligned &&
+      exampleInput.labelMatches &&
+      exampleInput.resultsHidden &&
+      exampleInput.posts === 2 &&
+      Math.abs(exampleInput.value - 250) <= exampleInput.step / 2 + 0.01,
+    JSON.stringify(exampleInput),
+  );
+  const exampleResolved = await ctx.poll(
+    async () =>
+      evaluate(`(() => {
+        const lat = Number(document.getElementById("latInput")?.value);
+        const lon = Number(document.getElementById("lonInput")?.value);
+        return /Honolulu/i.test(document.getElementById("citySearch")?.value || "") &&
+          /Honolulu/i.test(document.getElementById("locNote")?.textContent || "") &&
+          Math.abs(lat - 21.31) < 0.03 && Math.abs(lon + 157.86) < 0.03;
+      })()`),
+    6000,
+    100,
+  );
+  const exampleState = await evaluate(`({
+    city: document.getElementById("citySearch")?.value || "",
+    note: document.getElementById("locNote")?.textContent || "",
+    latitude: Number(document.getElementById("latInput")?.value),
+    longitude: Number(document.getElementById("lonInput")?.value),
+    bill: Number(document.getElementById("billSlider")?.value),
+    billLabel: document.getElementById("billSliderVal")?.textContent || "",
+    billLabelMatches: Number((document.getElementById("billSliderVal")?.textContent || "").replace(/[^0-9.]/g, "")) === Number(document.getElementById("billSlider")?.value),
+    resultsHidden: document.getElementById("resultsRegion")?.hidden,
+    posts: window.__locationPosts.length,
+  })`);
+  gate(
+    "See an example resolves Honolulu locally and retires the old result",
+    exampleResolved &&
+      exampleState.billLabelMatches &&
+      exampleState.resultsHidden &&
+      exampleState.posts === 2,
+    JSON.stringify(exampleState),
+  );
+
   await evaluate(`(() => {
     document.getElementById("coordDetails").open = true;
     const lat = document.getElementById("latInput");
