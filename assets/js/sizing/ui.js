@@ -1428,8 +1428,16 @@ function syncBillSlider() {
   const norm = rawStep / mag;
   slider.step = String((norm >= 5 ? 5 : norm >= 2 ? 2 : 1) * mag);
   slider.value = String(value);
+  // Range inputs sanitize programmatic values against the new min/step too.
+  // Read the value back so the label and the bill-derived kWh anchor match
+  // the amount the browser will actually submit.
+  const syncedValue = parseFloat(slider.value);
+  if (billTouched && Number.isFinite(syncedValue)) {
+    billUserNominal = syncedValue;
+    billAnchorKwh = kwhFromBill(syncedValue, rate);
+  }
   const out = $("billSliderVal");
-  if (out) out.textContent = "~" + fmtBill(value);
+  if (out) out.textContent = "~" + fmtBill(syncedValue);
 
   // Keep offgridKwhSlider tied in parity with the bill's kWh anchor
   const offSlider = $("offgridKwhSlider");
@@ -8522,13 +8530,15 @@ export async function initSizingUI() {
     setupPwaControls();
     setupChartInteractions();
 
-    // P0-3 (2026-10-13 UX audit): "See an example" pre-fills Honolulu $250/mo.
+    // P0-3 (2026-10-13 UX audit): "See an example" pre-fills local Honolulu
+    // and roughly $250/mo. Use the seed-catalog query so offline resolution
+    // does not depend on the online geocoder understanding "Honolulu, HI".
     const btnExample = $("btnSeeExample");
     if (btnExample) {
       btnExample.addEventListener("click", () => {
         const city = $("citySearch");
         if (city) {
-          city.value = "Honolulu, HI";
+          city.value = "Honolulu";
           city.dispatchEvent(new Event("input", { bubbles: true }));
         }
         const bill = $("billSlider");
