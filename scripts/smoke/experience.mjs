@@ -210,6 +210,8 @@ export const EXPERIENCE_EMPTY_STATES = [
     // visitor actions that brings the surface on screen, so what is read is what
     // a visitor who went looking for it would actually see.
     reveal: `(() => {
+      const simple = document.getElementById("simpleModeToggle");
+      if (simple?.checked) simple.click();
       const m = document.getElementById("modeManual");
       if (m) { m.checked = true; m.dispatchEvent(new Event("change", { bubbles: true })); }
       const s = document.getElementById("loadMode");
@@ -223,6 +225,8 @@ export const EXPERIENCE_EMPTY_STATES = [
     label: "the kWh readout before anything is entered",
     invite: /\b(enter|tick|type|choose|pick|select|add|set)\b/i,
     reveal: `(() => {
+      const simple = document.getElementById("simpleModeToggle");
+      if (simple?.checked) simple.click();
       const m = document.getElementById("modeManual");
       if (m) { m.checked = true; m.dispatchEvent(new Event("change", { bubbles: true })); }
       const s = document.getElementById("loadMode");
@@ -242,6 +246,8 @@ export const EXPERIENCE_EMPTY_STATES = [
     // state on the page, and the walk has to read it to notice.
     invite: /\b(enter|tick|type|choose|pick|select|add|set)\b/i,
     reveal: `(() => {
+      const simple = document.getElementById("simpleModeToggle");
+      if (simple?.checked) simple.click();
       const m = document.getElementById("modeManual");
       if (m) { m.checked = true; m.dispatchEvent(new Event("change", { bubbles: true })); }
       const s = document.getElementById("loadMode");
@@ -383,6 +389,7 @@ const STATE_PROBE = `(() => {
   const btn = $("btnRunSizing");
   const sugg = document.querySelectorAll('#citySuggestions [role="option"]').length;
   const readout = $("playReadout");
+  const simpleMode = $("simpleModeToggle");
   return {
     status: (($("sizingStatus")?.textContent) || "").trim().slice(0, 200),
     button_disabled: btn ? btn.disabled === true : null,
@@ -392,6 +399,7 @@ const STATE_PROBE = `(() => {
     latlon: [($("latInput")?.value) || "", ($("lonInput")?.value) || ""].join(","),
     suggestions: sugg,
     readout: readout ? (readout.textContent || "").trim().slice(0, 200) : "",
+    simple_mode: simpleMode ? simpleMode.checked === true : null,
     kwh: ($("dailyKwhInput")?.value) || "",
     paths_visible: panel ? panel.style.display !== "none" : null,
     paths_text: panel ? (panel.textContent || "").trim().slice(0, 200) : "",
@@ -549,6 +557,8 @@ export async function runExperienceWalk(ctx, options = {}) {
        if (m) { m.checked = true; m.dispatchEvent(new Event("change", { bubbles: true })); }
        const s = document.getElementById("loadMode");
        if (s) { s.value = "bill"; s.dispatchEvent(new Event("change", { bubbles: true })); }
+       const simple = document.getElementById("simpleModeToggle");
+       if (simple && simple.checked !== ${initial.simple_mode}) simple.click();
        return true;
      })()`,
   );

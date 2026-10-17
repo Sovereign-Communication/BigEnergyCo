@@ -178,6 +178,12 @@ test("TABLES: every empty state has a selector and an invite pattern", () => {
       `${e.id} has no reveal sequence, so it can only ever be probed while ` +
         "hidden — and a hidden element always passes",
     );
+    const simpleMode = e.reveal.indexOf('getElementById("simpleModeToggle")');
+    const manualMode = e.reveal.indexOf('getElementById("modeManual")');
+    assert.ok(
+      simpleMode >= 0 && manualMode > simpleMode,
+      `${e.id} must leave first-load Simple mode before selecting hidden Manual controls`,
+    );
   }
 });
 
