@@ -1568,7 +1568,7 @@ test("AUDIT/locale-sweep: the gate drives all six locales, not a list of one", (
   // A sweep hard-coded to `en` would satisfy every other test in this file while
   // measuring one locale. The table is read from the shipped dictionary, so a
   // seventh locale joins the sweep the day it is added.
-  assert.equal(EXPERIENCE_LOCALES.length, 6);
+  assert.equal(EXPERIENCE_LOCALES.length, 7);
   assert.deepEqual(
     EXPERIENCE_LOCALES,
     Object.keys(LOCALES),
