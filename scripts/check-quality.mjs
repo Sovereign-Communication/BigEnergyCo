@@ -47,7 +47,7 @@ import {
  *                              unifying blog headers with the main-page header
  *                              copied its inline styles to 11 blog pages, and
  *                              the ratchet follows the measurement.)
- *   inlineStyleAttributes     634 — blog format uniformity (2026-10-15):
+ *   inlineStyleAttributes     640 — blog format uniformity (2026-10-15):
  *                              hawaii-solar-scams-2026-warning got the canonical
  *                              header (+5) and footer (+1); diy footer 3→1 and
  *                              CTA button style removed (−3); battery-longevity
@@ -57,7 +57,8 @@ import {
  *                              (2026-10-20, −268 measured attributes).
  *   inlineStyleAttributes     318 — removed duplicate anchor text-decoration
  *                              and .btn cursor declarations
- *                              (2026-10-20, −48 measured attributes).
+ *                              (2026-10-20, −48 measured attributes). The Dutch
+ *                              article remains below this cap (308 measured).
  */
 const RATCHET = {
   inlineStyleAttributes: 318,
