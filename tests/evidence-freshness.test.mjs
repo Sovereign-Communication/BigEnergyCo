@@ -17,6 +17,15 @@ const PROSE = join(ROOT, "evidence", "advisor-and-release.json");
 const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
 const prose = JSON.parse(readFileSync(PROSE, "utf8"));
 
+function currentTreeStamp() {
+  const html = readFileSync(join(ROOT, "index.html"), "utf8");
+  const stamps = [
+    ...new Set([...html.matchAll(/[?&]v=(\d{8}[a-z])/g)].map((m) => m[1])),
+  ];
+  assert.equal(stamps.length, 1, "index.html must ship one asset stamp");
+  return stamps[0];
+}
+
 /** Run the gate against a mutated copy of the record, in a temp dir. */
 function gateAgainst(mutate) {
   const dir = mkdtempSync(join(tmpdir(), "beco-evidence-freshness-"));
@@ -110,11 +119,7 @@ test("an asset stamp the tree contradicts fails the gate", () => {
 });
 
 test("a smoke-note tree stamp that disagrees with shipped pages fails", () => {
-  const html = readFileSync(join(ROOT, "index.html"), "utf8");
-  const [shippedStamp] = new Set(
-    [...html.matchAll(/[?&]v=(\d{8}[a-z])/g)].map((m) => m[1]),
-  );
-  assert.ok(shippedStamp, "index.html must have a shipped asset stamp");
+  const shippedStamp = currentTreeStamp();
   const staleStamp = shippedStamp === "20260925c" ? "20260926c" : "20260925c";
   const r = gateAgainst((p) => {
     p.smoke_note = `The smoke run references asset stamp ${staleStamp}.`;
@@ -123,6 +128,29 @@ test("a smoke-note tree stamp that disagrees with shipped pages fails", () => {
   assert.match(
     r.out,
     /smoke_note states asset stamp .* but the shipped pages reference/,
+  );
+});
+
+test("a smoke note without a tree stamp fails even when it names servedStamp", () => {
+  const r = gateAgainst((p) => {
+    p.smoke_note = "Production remains at servedStamp 20260925c.";
+  });
+  assert.notEqual(r.code, 0, "servedStamp alone must not describe the tree");
+  assert.match(
+    r.out,
+    /smoke_note must state the shipped asset stamp from index\.html/,
+  );
+});
+
+test("a matching tree stamp passes alongside a separate production servedStamp", () => {
+  const treeStamp = currentTreeStamp();
+  const r = gateAgainst((p) => {
+    p.smoke_note = `Smoke checked tree asset stamp ${treeStamp}; production remains at servedStamp 20260925c.`;
+  });
+  assert.equal(r.code, 0, r.out);
+  assert.match(
+    r.out,
+    new RegExp(`smoke_note's asset stamp matches the tree \\(${treeStamp}\\)`),
   );
 });
 

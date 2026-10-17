@@ -87,6 +87,13 @@ function runFreshnessGate(prose) {
 const REAL_PROSE = JSON.parse(
   readFileSync("evidence/advisor-and-release.json", "utf8"),
 );
+const TREE_STAMP = [
+  ...new Set(
+    [...readFileSync("index.html", "utf8").matchAll(/[?&]v=(\d{8}[a-z])/g)].map(
+      (match) => match[1],
+    ),
+  ),
+][0];
 /** A copy of the real record, safe to mutate per test. */
 const proseCopy = () => JSON.parse(JSON.stringify(REAL_PROSE));
 
@@ -165,8 +172,7 @@ test("AUDIT/freshness: a composed record with real placeholders still passes", (
   // The mutation must not be satisfiable by deleting every count: a record that
   // quotes the run rather than typing it is the shape the gate is FOR.
   const p = proseCopy();
-  p.smoke_note =
-    "the smoke runs {{smoke_gates_total}} gates; measured this run: {{smoke_gates_passed}} pass, {{smoke_gates_failed}} fail";
+  p.smoke_note = `the smoke runs {{smoke_gates_total}} gates on tree asset stamp ${TREE_STAMP}; measured this run: {{smoke_gates_passed}} pass, {{smoke_gates_failed}} fail`;
   const { code, out } = runFreshnessGate(p);
   assert.equal(code, 0, out);
 });
