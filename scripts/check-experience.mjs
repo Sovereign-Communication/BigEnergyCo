@@ -174,7 +174,12 @@ for (const h of verdict.holes) fail(`hole: ${h.what}: ${h.why}`);
 for (const r of verdict.regressions) fail(`regression: ${r.message}`);
 if (reading?.driver_error)
   fail(`the browser could not be driven: ${reading.driver_error}`);
-else if (reading?.ok) ok("the first-run flow was walked end to end");
+else {
+  if (reading?.empty_state_mode_restored === true)
+    ok("the empty-state pass restored the initial display mode");
+  else fail("the empty-state pass did not restore the initial display mode");
+  if (reading?.ok) ok("the first-run flow was walked end to end");
+}
 
 // ── 3. the report, with the facet line composed from THIS run ───────────────
 const report = {
