@@ -324,17 +324,19 @@ test("homepage hreflang is exactly en + x-default", () => {
 
 test("homepage div-CTAs expose static button semantics", () => {
   const html = read("index.html");
-  for (const id of [
-    "btnNavSizeArray",
-    "btnHeroSizing",
-    "btnGeoLocate",
-    "btnSendChat",
-  ]) {
+  for (const id of ["btnNavSizeArray", "btnGeoLocate", "btnSendChat"]) {
     const tag = html.match(new RegExp(`<div[^>]*id="${id}"[^>]*>`, "s"))?.[0];
     assert.ok(tag, `${id} present`);
     assert.match(tag, /role="button"/, `${id} role`);
     assert.match(tag, /tabindex="0"/, `${id} focusable`);
   }
+});
+
+test("homepage hero sizing CTA is a native calculator link", () => {
+  const html = read("index.html");
+  const link = html.match(/<a[^>]*id="btnHeroSizing"[^>]*>/s)?.[0];
+  assert.ok(link, "btnHeroSizing link present");
+  assert.match(link, /href="#sizing"/, "calculator fragment target");
 });
 
 test("homepage chat input has a real label", () => {
