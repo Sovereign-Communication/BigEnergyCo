@@ -227,9 +227,10 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // without one byte of the feature having shrunk. The budget is now harder to
   // satisfy than it was, not easier: it simply measures its own subject
   // instead of a stale guess at it.
+  // The 2 KB increase covers the new visible example and FAQ content.
   assert.ok(
-    htmlBytes <= 130_000,
-    `index.html ${htmlBytes} bytes exceeds 130,000 budget`,
+    htmlBytes <= 132_000,
+    `index.html ${htmlBytes} bytes exceeds 132,000 budget`,
   );
   assert.ok(
     cssBytes <= 40_000,
