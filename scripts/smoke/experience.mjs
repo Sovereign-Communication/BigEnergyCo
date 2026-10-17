@@ -563,6 +563,7 @@ export async function runExperienceWalk(ctx, options = {}) {
      })()`,
   );
   await sleep(250);
+  const restoredMode = await evaluate(STATE_PROBE);
 
   // ── land ──────────────────────────────────────────────────────────────
   // Scored by invitation, not by change: on arrival there is no earlier state
@@ -900,6 +901,7 @@ export async function runExperienceWalk(ctx, options = {}) {
     page,
     city,
     pinned_locale: pinned,
+    empty_state_mode_restored: restoredMode.simple_mode === initial.simple_mode,
     actions,
     errors,
     empty_states: emptyStates,
