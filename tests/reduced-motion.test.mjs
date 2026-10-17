@@ -10,6 +10,9 @@ const FILES = ["../assets/js/sizing/ui.js", "../assets/js/chat.js"];
 
 for (const rel of FILES) {
   const src = readFileSync(new URL(rel, import.meta.url), "utf8");
+  const helper = src.match(
+    /function scrollBehavior\(\)\s*\{([\s\S]*?)\n\}/,
+  )?.[1];
 
   test(`${rel.slice(3)}: no raw smooth-scroll literal — every scroll site uses scrollBehavior()`, () => {
     assert.equal(
@@ -17,10 +20,13 @@ for (const rel of FILES) {
       false,
       'raw behavior:"smooth" bypasses prefers-reduced-motion',
     );
+    assert.ok(helper, "helper must exist locally");
+    assert.match(helper, /window\.matchMedia/);
+    assert.match(helper, /prefers-reduced-motion:\s*reduce/);
     assert.match(
-      src,
-      /function scrollBehavior\(\)/,
-      "helper must exist locally",
+      helper,
+      /\?\s*"auto"\s*:\s*"smooth"/,
+      "reduced-motion users must get instant scrolling",
     );
 
     const sites = [...src.matchAll(/scrollIntoView\(/g)].length;
