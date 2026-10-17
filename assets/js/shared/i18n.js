@@ -16,7 +16,7 @@
 // chrome. A German or Arabic visitor sees native copy from the first frame,
 // including the advisor's degraded-failure surface — proven per-locale through
 // the real client path in tests/i18n-lazy.test.mjs.
-import { interpolate, pickString } from "./interpolate.js?v=20261016l";
+import { interpolate, pickString } from "./interpolate.js?v=20261017a";
 
 // Populated by the dynamic import below. Null until it resolves; every
 // consumer either awaits `localesReady` or degrades explicitly.
@@ -31,7 +31,7 @@ let LOCALES = null;
  * rejecting, because an untranslated-but-working page beats a blank one — and
  * `translate` already falls back to English for a missing key.
  */
-export const localesReady = import("./locales.js?v=20261016l")
+export const localesReady = import("./locales.js?v=20261017a")
   .then((m) => {
     LOCALES = m.LOCALES;
     return LOCALES;
@@ -51,6 +51,7 @@ export const LANGS = [
   { id: "pt", label: "Português" },
   { id: "fr", label: "Français" },
   { id: "de", label: "Deutsch" },
+  { id: "nl", label: "Nederlands" },
   { id: "ar", label: "العربية" },
 ];
 

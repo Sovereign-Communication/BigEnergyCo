@@ -749,7 +749,7 @@ test("SWEEP: the healthy reading is clean", () => {
 });
 
 test("SWEEP: the tables cover every shipped locale at every moment", () => {
-  assert.equal(EXPERIENCE_LOCALES.length, 6);
+  assert.equal(EXPERIENCE_LOCALES.length, 7);
   assert.deepEqual(EXPERIENCE_LOCALES, Object.keys(LOCALES));
   for (const locale of EXPERIENCE_LOCALES)
     for (const spec of LOCALE_SURFACES)
@@ -781,7 +781,7 @@ test("SWEEP: at least one surface is judged in every locale at every moment", ()
   // a denominator smaller than the locale count would mean the sweep looked at
   // fewer places than it claims.
   assert.equal(s.matched, s.judged);
-  assert.equal(s.locales, 6);
+  assert.equal(s.locales, 7);
   assert.equal(s.phases, 3);
   assert.ok(s.judged >= EXPERIENCE_LOCALES.length * LOCALE_PHASES.length);
 });
@@ -1026,7 +1026,7 @@ test("SWEEP: the facet line claims the coverage the evaluator judged", () => {
     line.length <= COMPLETE_FACET_CLIP,
     `the line is ${line.length} chars and would be cut in transit`,
   );
-  assert.match(line, /6 locales x 3 moments/);
+  assert.match(line, /7 locales x 3 moments/);
   const judged = summariseLocaleSweep(HEALTHY());
   assert.ok(
     line.includes(`${judged.matched}/${judged.judged} surfaces`),
@@ -1038,7 +1038,7 @@ test("SCOPE: the scope limit no longer claims copy is checked in English only", 
   // The old sentence said the other five locales were "asserted to exist rather
   // than read". That is now false, and a scope limit that lies is worse than
   // one that is missing.
-  assert.match(EXPERIENCE_SCOPE_LIMIT, /all six locales/);
+  assert.match(EXPERIENCE_SCOPE_LIMIT, /all seven locales/);
   assert.doesNotMatch(
     EXPERIENCE_SCOPE_LIMIT,
     /asserted to exist rather than read/,
