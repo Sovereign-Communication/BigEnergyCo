@@ -665,6 +665,7 @@ P6 (all) + P7 ──> P8 (swap to /, 6-locale parity) ──> P9 (reach) ──>
 | P9.4 | Titles, H1s and meta (R-SEO-01), structured data (R-SEO-02) and E-E-A-T surfaces (R-SEO-05).         |
 | P9.5 | Blog audit (R-CONT-05).                                                                              |
 | P9.6 | Search Console and Cloudflare Web Analytics live, with the monthly reach rows (R-SEO-06, R-PRIV-05). |
+| P9.7 | Content quality gate (R-CONT-01..05, Google quality bar). Every blog post and content page meets: (a) canonical formatting — shared inline style block byte-identical across posts, uniform headers/footers/CTA structure, metadata/JSON-LD parity, H1/title alignment; (b) SEO — real search demand, unique intent per URL, sitemap + structured data valid, no cannibalization; (c) sourcing — verifiable claims with cited sources, official sources only for news hooks; (d) voice — R-CONT-01..04 (plain, second person, ≤ grade 8 reading level, no hype/fear/sales language). Jev judges content PRs against this bar at ≥ 99 with full confidence at plan stage; post-merge, the implementation is browser-verified against these criteria. |
 
 ### P10: Program exit gate, "v1.0 world-class"
 

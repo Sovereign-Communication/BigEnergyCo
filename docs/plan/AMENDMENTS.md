@@ -33,3 +33,12 @@ No amendments yet: the plan is at its genesis hash.
 - Plan-SHA256-after: 6f9c8c7e7d33140fb6ec5ef36848f27d0387a5ab0501985df71dba77b20279cf
 - Sections: §9 rule 6 (P0.6 evidence ruling)
 - Rationale: PR #193 (docs/jev-completion/, scoped P0.6) got the scope fix but the live gate still failed: 95.5 < 99, docs facet at ordinal 85 ("solid with minor gaps") with Jev confidence 0.57. The scoped score is 0.7*mechanical + 0.3*docs, so reaching 99 needs the docs facet near 97 and proven — unreachable at Jev's confidence calibration. The owner ruled in chat on 2026-10-06, following the P0.3 bootstrap precedent (§9 rule 6, 2026-09-26): P0.6 evidence PRs merge on green CI plus an attached scoped report with no ratchet regression, even below 99. The hard gates and the ratchet bind throughout and are never relaxed. scripts/lib/jev-verdict.mjs implements the exemption (P0.6 bypasses the exit rule only).
+
+## A-004: P9.7 — Content quality gate (Google quality bar)
+
+- Date: 2026-10-16
+- Approved-by: @Treystu
+- Plan-SHA256-before: 6f9c8c7e7d33140fb6ec5ef36848f27d0387a5ab0501985df71dba77b20279cf
+- Plan-SHA256-after: e1bbb4673e294a7788f56af121f801b521538d91f82dc25da191ba66bd1a33e1
+- Sections: P9 (new item P9.7)
+- Rationale: The jev-complete gate fails closed on blog/content PRs because no plan item covers content quality — the gate cannot scope a PR titled "blog(nl): ..." to any P-item, so it errors on "no plan item id in the title" (seen on #212, #224, #227, #231). The owner ruled in chat on 2026-10-16 for the heavy path: a standing content plan item with the Jev bar set to Google quality. P9.7 pins four content requirements: (a) canonical formatting (byte-identical style blocks, uniform chrome, metadata/JSON-LD parity); (b) SEO (real demand, unique intent, valid sitemap/structured data); (c) sourcing (verifiable claims, official sources for news hooks); (d) voice (R-CONT-01..04). Jev judges content PRs at ≥ 99 with full confidence at plan stage; the implementation is browser-verified post-merge. Blog PRs now name "(P9.7)" in their titles to scope the gate.
