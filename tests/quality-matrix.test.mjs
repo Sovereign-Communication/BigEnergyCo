@@ -39,6 +39,7 @@ function fixture(overrides = {}) {
       "<!doctype html><html><body>",
       '<input id="citySearch">',
       '<ul id="citySuggestions"></ul>',
+      '<input type="checkbox" id="simpleModeToggle" checked>',
       '<input type="radio" id="modeQuick" name="modeToggle" checked>',
       '<input type="radio" id="modeManual" name="modeToggle">',
       '<div id="fullControls" hidden>',
