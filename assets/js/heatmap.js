@@ -1,82 +1,98 @@
-// Heatmap: pre-rendered image + on-demand data architecture.
-//
-// DESIGN (2026-10-14, issue #216):
-//   - Build time renders 18 dot PNGs (metric × basis × usage) via
-//     scripts/build-heatmap-images.mjs. Each ~130KB, content-hashed.
-//   - Page load shows a single PNG via L.imageOverlay. No JSON fetch, no
-//     markers. Initial payload ~500KB vs ~8MB before (plan budget ≤300KB
-//     for the heatmap payload itself; the PNG is 133KB).
-//   - The dark background is baked into the PNG: no tile layer needed for
-//     the default view (also resolves #218 CARTO watermark for that view).
-//   - First map click lazy-fetches the compressed dataset once, finds the
-//     nearest point, and shows the popup. Data downloads only on demand.
-//   - Metric/basis/usage controls swap the pre-rendered image URL.
-//   - Rankings come from pre-rendered assets/data/heatmap-rankings.json.
-//   - After data loads, a canvas dot layer enables sharp zoomed interaction
-//     (single L.canvas() renderer, never 39k DOM markers).
-//
-// Colors come from assets/js/heatmap-palette.js (UMD, window.HeatmapPalette)
-// — the same module the build script uses, so PNG and canvas colors match.
-
 (function () {
   "use strict";
 
-  var P = window.HeatmapPalette;
-  if (!P) {
-    document.getElementById("loading").innerHTML =
-      '<div style="text-align:center;color:#e64545;">Heatmap palette failed to load. <a href="" style="color:var(--accent);">Reload</a></div>';
-    return;
-  }
-
-  // Asset version: read from our own <script src="?v="> so the manifest and
-  // data URLs bust the immutable cache in lockstep with the code. Works with
-  // deferred scripts (document.currentScript is set during execution).
-  function assetVersion() {
-    try {
-      var s = document.currentScript;
-      if (s && s.src) {
-        var m = s.src.match(/[?&]v=([^&]+)/);
-        if (m) return m[1];
-      }
-    } catch (e) {
-      /* ignore */
-    }
-    return "dev";
-  }
-  var ASSET_V = assetVersion();
-
   // ── State ──────────────────────────────────────────────────────────────
-  var map = null;
-  var imageLayer = null;
-  var dotLayer = null;
-  var dotRenderer = null;
-  var gridData = null; // fetched on demand (first click / zoom threshold)
-  var dataLoading = null; // in-flight fetch promise
-  var manifest = null;
-  var rankings = null;
+  let gridData = null;
+  let map = null;
+  let dotLayer = null;
+  let dotRenderer = null;
+  let usageIdx = 1; // 0=5kWh, 1=10kWh, 2=20kWh, 3=30kWh
+  let metric = "cost"; // "cost" = True Grid Cost, "p" = payback, "b" = break-even
+  let basis = "real"; // "real" = generator/unserved-aware, "grid" = nominal grid tariff only
 
-  var usageIdx = 1; // 0=5kWh, 1=10kWh, 2=20kWh, 3=30kWh
-  var metric = "cost"; // "cost" | "p" | "b"
-  var basis = "real"; // "real" | "grid"
+  // Get active metric key depending on basis for payback/break-even
+  function getMetricKey() {
+    if (basis === "real") {
+      return metric === "p" ? "pr" : "br";
+    }
+    return metric; // "p" or "b"
+  }
 
-  var WORLD_BOUNDS = [
-    [-90, -180],
-    [90, 180],
-  ];
+  // ── Color scales & helpers ─────────────────────────────────────────────
+  function costColor(cost) {
+    if (cost === null || cost === undefined || cost <= 0) return "#555";
+    if (cost <= 0.1) return "#00e699";
+    if (cost <= 0.18) return "#7ec850";
+    if (cost <= 0.28) return "#c8b400";
+    if (cost <= 0.4) return "#e68a00";
+    if (cost <= 0.55) return "#e64545";
+    return "#991b1b";
+  }
 
-  // ── Helpers (delegating to the shared palette) ───────────────────────────
+  function costLabel(cost) {
+    if (cost === null || cost === undefined) return "N/A";
+    return "$" + Number(cost).toFixed(2) + "/kWh";
+  }
+
+  // The tile scale read as TEXT: same buckets, colours that clear 4.5:1 on
+  // this page's card, where the tile palette's dark end measures 2.12:1.
+  function costTextColor(cost) {
+    if (cost === null || cost === undefined || cost <= 0) return "#9aa4b2";
+    if (cost <= 0.1) return "#4ade9b";
+    if (cost <= 0.18) return "#a8e05f";
+    if (cost <= 0.28) return "#f2d024";
+    if (cost <= 0.4) return "#ffb14d";
+    if (cost <= 0.55) return "#ff8f8f";
+    return "#ff6b6b";
+  }
+
   function getPointCost(pt) {
-    return P.getPointCost(pt, basis);
-  }
-  function getPointYears(pt, m) {
-    return P.getPointYears(pt, m || metric, basis, usageIdx);
-  }
-  function dotColor(pt) {
-    return P.dotColor(pt, metric, basis, usageIdx);
+    if (basis === "real") {
+      return pt.tr !== undefined ? pt.tr : pt.t;
+    }
+    return pt.t;
   }
 
-  // Country names (compact) — unchanged from previous implementation.
-  var CC = {
+  function getPointYears(pt, m) {
+    const isReal = basis === "real";
+    if (m === "p") {
+      const series = isReal && pt.pr ? pt.pr : pt.p;
+      return series ? series[usageIdx] : null;
+    } else if (m === "b") {
+      const series = isReal && pt.br ? pt.br : pt.b;
+      return series ? series[usageIdx] : null;
+    }
+    return null;
+  }
+
+  function yearColor(years) {
+    if (years === null || years === undefined || years <= 0) return "#555";
+    if (years <= 2) return "#00e699";
+    if (years <= 3) return "#7ec850";
+    if (years <= 5) return "#c8b400";
+    if (years <= 7) return "#e68a00";
+    if (years <= 12) return "#e64545";
+    return "#888";
+  }
+
+  function yearLabel(years) {
+    if (years === null || years === undefined) return "N/A";
+    if (years > 50) return ">50 yr";
+    return Number(years).toFixed(1) + " yr";
+  }
+
+  function ratingText(years) {
+    if (years === null) return "No data";
+    if (years <= 2) return "Excellent";
+    if (years <= 3) return "Very Good";
+    if (years <= 5) return "Good";
+    if (years <= 7) return "Moderate";
+    if (years <= 12) return "Long";
+    return "Very Long";
+  }
+
+  // ── Country code → name (compact) ──────────────────────────────────────
+  const CC = {
     IT: "Italy",
     AT: "Austria",
     DE: "Germany",
@@ -167,519 +183,416 @@
     LR: "Liberia",
     MG: "Madagascar",
   };
+
   function countryName(code) {
     return CC[code] || code;
   }
-  var esc = function (v) {
-    return String(v == null ? "" : v)
+
+  // ── City slug for calculator link ──────────────────────────────────────
+  function citySlug(name) {
+    return name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  const esc = (v) =>
+    String(v ?? "")
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
-  };
 
-  // ── Image manifest ───────────────────────────────────────────────────────
-  function manifestKey() {
-    if (metric === "cost") return "cost-" + basis;
-    return metric + "-" + basis + "-u" + usageIdx;
-  }
-
-  function imageUrl(key) {
-    if (!manifest || !manifest[key]) return null;
-    return "../assets/img/heatmap/" + manifest[key];
-  }
-
-  function swapImage() {
-    if (!map || !manifest) return;
-    var url = imageUrl(manifestKey());
-    if (!url) return;
-    if (imageLayer) map.removeLayer(imageLayer);
-    imageLayer = L.imageOverlay(url, WORLD_BOUNDS, { opacity: 1 }).addTo(map);
-    // Keep the dot layer on top if it exists.
-    if (dotLayer) dotLayer.bringToFront();
-  }
-
-  // ── Legend ───────────────────────────────────────────────────────────────
+  // ── Legend ─────────────────────────────────────────────────────────────
   function updateLegend() {
-    var titleEl = document.getElementById("legend-title");
-    var labelsEl = document.getElementById("legend-labels");
-    var lastBarEl = document.getElementById("legend-bar-last");
-    var usageWrap = document.getElementById("usage-control-wrap");
+    const titleEl = document.getElementById("legend-title");
+    const labelsEl = document.getElementById("legend-labels");
+    const lastBarEl = document.getElementById("legend-bar-last");
+    const usageWrap = document.getElementById("usage-control-wrap");
+
     if (metric === "cost") {
       if (usageWrap) usageWrap.style.display = "none";
-      if (titleEl)
+      if (titleEl) {
         titleEl.textContent =
           basis === "real"
             ? "True Grid Cost ($/kWh, weighted)"
             : "Official Grid Tariff ($/kWh)";
+      }
       if (lastBarEl) lastBarEl.style.background = "#991b1b";
-      if (labelsEl)
-        labelsEl.innerHTML =
-          "<span>&le;$0.10</span><span>$0.18</span><span>$0.28</span>" +
-          "<span>$0.40</span><span>$0.55</span><span>&gt;$0.55</span>";
+      if (labelsEl) {
+        labelsEl.innerHTML = `
+          <span>&le;$0.10</span>
+          <span>$0.18</span>
+          <span>$0.28</span>
+          <span>$0.40</span>
+          <span>$0.55</span>
+          <span>&gt;$0.55</span>
+        `;
+      }
     } else {
       if (usageWrap) usageWrap.style.display = "block";
-      if (titleEl)
+      if (titleEl) {
         titleEl.textContent =
           metric === "p"
             ? "Years to pay for itself"
             : "Years to true break-even";
-      if (lastBarEl) lastBarEl.style.background = "#888888";
-      if (labelsEl)
-        labelsEl.innerHTML =
-          "<span>&lt;2yr</span><span>3</span><span>5</span><span>7</span><span>12+</span>";
+      }
+      if (lastBarEl) lastBarEl.style.background = "#888";
+      if (labelsEl) {
+        labelsEl.innerHTML = `
+          <span>&lt;2yr</span>
+          <span>3</span>
+          <span>5</span>
+          <span>7</span>
+          <span>12+</span>
+        `;
+      }
     }
   }
 
-  // ── Rankings (pre-rendered, no dataset needed) ───────────────────────────
+  // ── Render dots ────────────────────────────────────────────────────────
+  function renderDots() {
+    if (!map || !gridData) return;
+    if (dotLayer) map.removeLayer(dotLayer);
+
+    const points = gridData.points;
+    const markers = [];
+
+    // 39,707 points as SVG paths is 39,707 DOM nodes; on a canvas it is one.
+    if (!dotRenderer) dotRenderer = L.canvas({ padding: 0.5 });
+
+    for (let i = 0; i < points.length; i++) {
+      const pt = points[i];
+      let color;
+      if (metric === "cost") {
+        const cost = getPointCost(pt);
+        color = costColor(cost);
+      } else {
+        const yrs = getPointYears(pt, metric);
+        color = yearColor(yrs);
+      }
+
+      const marker = L.circleMarker([pt.lat, pt.lon], {
+        radius: 3.5,
+        weight: 0,
+        fillColor: color,
+        fillOpacity: 0.75,
+        interactive: true,
+        renderer: dotRenderer,
+      });
+
+      marker._heatIdx = i;
+      markers.push(marker);
+    }
+
+    dotLayer = L.layerGroup(markers).addTo(map);
+
+    // Use event delegation on the layer group
+    dotLayer.eachLayer(function (layer) {
+      layer.on("click", function () {
+        const pt = points[layer._heatIdx];
+        const isReal = basis === "real";
+        const pSeries = isReal && pt.pr ? pt.pr : pt.p;
+        const bSeries = isReal && pt.br ? pt.br : pt.b;
+        const paybackYrs = pSeries ? pSeries[usageIdx] : null;
+        const breakevenYrs = bSeries ? bSeries[usageIdx] : null;
+        const usage = gridData.usageTiersKwhDay[usageIdx];
+        const hasDeficit = pt.tr && pt.tr !== pt.t;
+
+        const unservedPct = pt.unserved || 0;
+        const coverageBadge = pt.unserved
+          ? `<div style="background:rgba(255,170,0,0.15);border:1px solid rgba(255,170,0,0.3);border-radius:4px;padding:4px 7px;font-size:.75rem;color:#ffaa00;margin-bottom:.5rem;line-height:1.4;">
+              ⚠️ <strong>Area Grid Split:</strong> ~${100 - unservedPct}% grid / ~${unservedPct}% unserved (generators)
+            </div>`
+          : `<div style="background:rgba(0,230,153,0.08);border:1px solid rgba(0,230,153,0.2);border-radius:4px;padding:3px 6px;font-size:.75rem;color:var(--accent);margin-bottom:.5rem;">
+              ✓ ~100% grid-connected population
+            </div>`;
+
+        let tariffRows = "";
+        if (hasDeficit) {
+          tariffRows = isReal
+            ? `<tr style="${metric === "cost" ? "background:rgba(0,230,153,0.12);" : ""}">
+                <td style="color:var(--muted);padding:.15rem 0;">True Grid Cost</td>
+                <td style="text-align:right;color:#00e699;font-weight:700;">$${pt.tr}/kWh <span style="font-size:.7rem;color:var(--muted);font-weight:normal;">(weighted)</span></td>
+               </tr>
+               <tr>
+                <td style="color:var(--muted);padding:.15rem 0;">Paper grid tariff</td>
+                <td style="text-align:right;color:var(--muted);font-size:.8rem;">$${pt.t}/kWh (when on)</td>
+               </tr>`
+            : `<tr style="${metric === "cost" ? "background:rgba(0,230,153,0.12);" : ""}">
+                <td style="color:var(--muted);padding:.15rem 0;">Paper grid tariff</td>
+                <td style="text-align:right;color:#fff;font-weight:600;">$${pt.t}/kWh</td>
+               </tr>
+               <tr>
+                <td style="color:var(--muted);padding:.15rem 0;">True Grid Cost</td>
+                <td style="text-align:right;color:#00e699;font-size:.8rem;">$${pt.tr}/kWh (weighted)</td>
+               </tr>`;
+        } else {
+          tariffRows = `
+            <tr style="${metric === "cost" ? "background:rgba(0,230,153,0.12);" : ""}">
+              <td style="color:var(--muted);padding:.15rem 0;">Grid tariff</td>
+              <td style="text-align:right;color:#fff;font-weight:600;">$${pt.t}/kWh</td>
+            </tr>
+          `;
+        }
+
+        const popup = `
+          <div style="min-width:220px;">
+            <div style="font-weight:700;font-size:1rem;color:#fff;margin-bottom:.2rem;">${esc(pt.n)}</div>
+            <div style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem;">${esc(countryName(pt.c))} · ${pt.lat}°, ${pt.lon}°</div>
+            ${coverageBadge}
+            <table style="width:100%;font-size:.85rem;border-collapse:collapse;">
+              ${tariffRows}
+              <tr><td style="color:var(--muted);padding:.15rem 0;">Solar yield</td><td style="text-align:right;color:#fff;font-weight:600;">${pt.y} kWh/kWp/yr</td></tr>
+              <tr style="${metric === "p" ? "background:rgba(0,230,153,0.12);" : ""}">
+                <td style="color:var(--muted);padding:.15rem 0;">Payback (${basis === "real" ? "weighted" : "grid"})</td>
+                <td style="text-align:right;color:${yearColor(paybackYrs)};font-weight:700;">${yearLabel(paybackYrs)}</td>
+              </tr>
+              <tr style="${metric === "b" ? "background:rgba(0,230,153,0.12);" : ""}">
+                <td style="color:var(--muted);padding:.15rem 0;">True break-even</td>
+                <td style="text-align:right;color:${yearColor(breakevenYrs)};font-weight:700;">${yearLabel(breakevenYrs)}</td>
+              </tr>
+              <tr><td style="color:var(--muted);padding:.15rem 0;">Usage assumed</td><td style="text-align:right;color:#fff;">${usage} kWh/day</td></tr>
+            </table>
+            <div style="margin-top:.6rem;text-align:center;">
+              <a href="../#sizing" style="display:inline-block;background:linear-gradient(135deg,#00e699,#00b377);color:#04120c;font-weight:700;padding:.4rem .9rem;border-radius:6px;font-size:.85rem;">⚡ Run full simulation</a>
+            </div>
+          </div>
+        `;
+        layer.bindPopup(popup, { maxWidth: 300 }).openPopup();
+      });
+    });
+
+    updateLegend();
+    updateRankings();
+  }
+
+  // ── Rankings ────────────────────────────────────────────────────────────
   function updateRankings() {
-    if (!rankings) return;
-    var r = rankings[manifestKey()];
-    if (!r) return;
-    var bestList = document.getElementById("best-list");
-    var worstList = document.getElementById("worst-list");
-    var bestCard = document.getElementById("best-card");
-    var worstCard = document.getElementById("worst-card");
-    if (!bestList || !worstList) return;
+    if (!gridData) return;
+    const points = gridData.points;
+    const usage = gridData.usageTiersKwhDay[usageIdx];
+    const basisLabel = basis === "real" ? "weighted" : "grid-only";
+
+    const bestCard = document.getElementById("best-card");
+    const worstCard = document.getElementById("worst-card");
 
     if (metric === "cost") {
-      var basisLabel = basis === "real" ? "weighted" : "grid-only";
-      bestList.innerHTML = r.high
-        .map(function (pt) {
-          var splitText = pt.u ? "~" + pt.u + "% unserved" : "100% grid";
-          return (
-            '<li><span class="years" style="color:' +
-            P.costTextColor(pt.v) +
-            '">' +
-            P.costLabel(pt.v) +
-            "</span> — " +
-            esc(pt.n) +
-            ", " +
-            esc(countryName(pt.c)) +
-            ' <span class="detail">(' +
-            splitText +
-            ", paper $" +
-            pt.t +
-            "/kWh)</span></li>"
-          );
+      const countryHighest = new Map();
+      const countryLowest = new Map();
+
+      for (const pt of points) {
+        const cost = getPointCost(pt);
+        if (cost === null || cost === undefined || cost <= 0) continue;
+
+        const curHigh = countryHighest.has(pt.c)
+          ? getPointCost(countryHighest.get(pt.c))
+          : -Infinity;
+        if (!countryHighest.has(pt.c) || cost > curHigh) {
+          countryHighest.set(pt.c, pt);
+        }
+
+        const curLow = countryLowest.has(pt.c)
+          ? getPointCost(countryLowest.get(pt.c))
+          : Infinity;
+        if (!countryLowest.has(pt.c) || cost < curLow) {
+          countryLowest.set(pt.c, pt);
+        }
+      }
+
+      const highestByCountry = [...countryHighest.values()]
+        .sort((a, b) => getPointCost(b) - getPointCost(a))
+        .slice(0, 10);
+
+      const lowestByCountry = [...countryLowest.values()]
+        .sort((a, b) => getPointCost(a) - getPointCost(b))
+        .slice(0, 10);
+
+      document.getElementById("best-list").innerHTML = highestByCountry
+        .map((pt) => {
+          const cost = getPointCost(pt);
+          const splitText = pt.unserved
+            ? `~${pt.unserved}% unserved`
+            : "100% grid";
+          return `<li><span class="years" style="color:${costTextColor(cost)}">${costLabel(cost)}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${splitText}, paper $${pt.t}/kWh)</span></li>`;
         })
         .join("");
-      worstList.innerHTML = r.low
-        .map(function (pt) {
-          return (
-            '<li><span class="years" style="color:' +
-            P.costTextColor(pt.v) +
-            '">' +
-            P.costLabel(pt.v) +
-            "</span> — " +
-            esc(pt.n) +
-            ", " +
-            esc(countryName(pt.c)) +
-            ' <span class="detail">(' +
-            pt.y +
-            " kWh/kWp/yr)</span></li>"
-          );
+
+      document.getElementById("worst-list").innerHTML = lowestByCountry
+        .map((pt) => {
+          const cost = getPointCost(pt);
+          return `<li><span class="years" style="color:${costTextColor(cost)}">${costLabel(cost)}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${pt.y} kWh/kWp/yr)</span></li>`;
         })
         .join("");
+
       if (bestCard) bestCard.className = "rank-card worst";
       if (worstCard) worstCard.className = "rank-card";
-      var bh = document.querySelector("#best-card h3");
-      var wh = document.querySelector("#worst-card h3");
-      if (bh)
-        bh.textContent = "🔴 Highest Electricity Cost (" + basisLabel + ")";
-      if (wh)
-        wh.textContent = "⚡ Lowest Electricity Cost (" + basisLabel + ")";
+
+      document.querySelector("#best-card h3").textContent =
+        `🔴 Highest Electricity Cost (${basisLabel})`;
+      document.querySelector("#worst-card h3").textContent =
+        `⚡ Lowest Electricity Cost (${basisLabel})`;
       return;
     }
 
     if (bestCard) bestCard.className = "rank-card";
     if (worstCard) worstCard.className = "rank-card worst";
-    var metricLabel = metric === "p" ? "payback" : "break-even";
-    var usage = r.usage;
-    bestList.innerHTML = r.best
-      .map(function (pt) {
-        return (
-          '<li><span class="years">' +
-          P.yearLabel(pt.v) +
-          "</span> — " +
-          esc(pt.n) +
-          ", " +
-          esc(countryName(pt.c)) +
-          ' <span class="detail">($' +
-          pt.t +
-          "/kWh, " +
-          pt.y +
-          " kWh/kWp)</span></li>"
-        );
-      })
-      .join("");
-    worstList.innerHTML = r.worst
-      .map(function (pt) {
-        return (
-          '<li><span class="years">' +
-          P.yearLabel(pt.v) +
-          "</span> — " +
-          esc(pt.n) +
-          ", " +
-          esc(countryName(pt.c)) +
-          ' <span class="detail">($' +
-          pt.t +
-          "/kWh, " +
-          pt.y +
-          " kWh/kWp)</span></li>"
-        );
-      })
-      .join("");
-    var bh2 = document.querySelector("#best-card h3");
-    var wh2 = document.querySelector("#worst-card h3");
-    if (bh2)
-      bh2.textContent = "⚡ Fastest " + metricLabel + " (" + usage + " kWh/d)";
-    if (wh2)
-      wh2.textContent = "🔴 Slowest " + metricLabel + " (" + usage + " kWh/d)";
-  }
 
-  // ── On-demand data ───────────────────────────────────────────────────────
-  function ensureData() {
-    if (gridData) return Promise.resolve(gridData);
-    if (dataLoading) return dataLoading;
-    dataLoading = fetch("../assets/data/heatmap-grid.min.json?v=20261016l")
-      .then(function (res) {
-        if (!res.ok) throw new Error("Failed to load heatmap data");
-        return res.json();
-      })
-      .then(function (data) {
-        gridData = data;
-        enableCanvasDots();
-        return data;
-      })
-      .catch(function (err) {
-        dataLoading = null;
-        throw err;
-      });
-    return dataLoading;
-  }
+    const mKey = getMetricKey();
+    const countryBest = new Map();
+    const countryWorst = new Map();
 
-  function nearestPoint(lat, lng) {
-    if (!gridData) return null;
-    var best = null;
-    var bestD = Infinity;
-    var pts = gridData.points;
-    for (var i = 0; i < pts.length; i++) {
-      var pt = pts[i];
-      var dLat = P.pointLat(pt) - lat;
-      var dLng = P.pointLon(pt) - lng;
-      // Wrap longitude distance.
-      if (dLng > 180) dLng -= 360;
-      if (dLng < -180) dLng += 360;
-      var d = dLat * dLat + dLng * dLng;
-      if (d < bestD) {
-        bestD = d;
-        best = pt;
+    for (const pt of points) {
+      const series = pt[mKey] || pt[metric];
+      const yrs = series ? series[usageIdx] : null;
+      if (yrs === null || yrs <= 0) continue;
+
+      const bestSeries = countryBest.has(pt.c)
+        ? countryBest.get(pt.c)[mKey] || countryBest.get(pt.c)[metric]
+        : null;
+      if (
+        !countryBest.has(pt.c) ||
+        (bestSeries && yrs < bestSeries[usageIdx])
+      ) {
+        countryBest.set(pt.c, pt);
+      }
+
+      const worstSeries = countryWorst.has(pt.c)
+        ? countryWorst.get(pt.c)[mKey] || countryWorst.get(pt.c)[metric]
+        : null;
+      if (
+        !countryWorst.has(pt.c) ||
+        (worstSeries && yrs > worstSeries[usageIdx])
+      ) {
+        countryWorst.set(pt.c, pt);
       }
     }
-    return best;
+
+    const bestByCountry = [...countryBest.values()]
+      .sort((a, b) => {
+        const sA = a[mKey] || a[metric],
+          sB = b[mKey] || b[metric];
+        return sA[usageIdx] - sB[usageIdx];
+      })
+      .slice(0, 10);
+
+    const worstByCountry = [...countryWorst.values()]
+      .filter((pt) => {
+        const s = pt[mKey] || pt[metric];
+        return s && s[usageIdx] !== null;
+      })
+      .sort((a, b) => {
+        const sA = a[mKey] || a[metric],
+          sB = b[mKey] || b[metric];
+        return sB[usageIdx] - sA[usageIdx];
+      })
+      .slice(0, 10);
+
+    const metricLabel = metric === "p" ? "payback" : "break-even";
+
+    document.getElementById("best-list").innerHTML = bestByCountry
+      .map((pt) => {
+        const s = pt[mKey] || pt[metric];
+        const rateDisplay =
+          basis === "real" && pt.tr ? `$${pt.tr}` : `$${pt.t}`;
+        return `<li><span class="years">${yearLabel(s[usageIdx])}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${rateDisplay}/kWh, ${pt.y} kWh/kWp)</span></li>`;
+      })
+      .join("");
+
+    document.getElementById("worst-list").innerHTML = worstByCountry
+      .map((pt) => {
+        const s = pt[mKey] || pt[metric];
+        const rateDisplay =
+          basis === "real" && pt.tr ? `$${pt.tr}` : `$${pt.t}`;
+        return `<li><span class="years">${yearLabel(s[usageIdx])}</span> — ${esc(pt.n)}, ${esc(countryName(pt.c))} <span class="detail">(${rateDisplay}/kWh, ${pt.y} kWh/kWp)</span></li>`;
+      })
+      .join("");
+
+    document.querySelector("#best-card h3").textContent =
+      `⚡ Fastest ${metricLabel} (${basisLabel}, ${usage} kWh/d)`;
+    document.querySelector("#worst-card h3").textContent =
+      `🔴 Slowest ${metricLabel} (${basisLabel}, ${usage} kWh/d)`;
   }
 
-  function showPopup(pt, latlng) {
-    var isReal = basis === "real";
-    var pYrs = getPointYears(pt, "p");
-    var bYrs = getPointYears(pt, "b");
-    var tiers = gridData.usageTiersKwhDay || gridData.tiers;
-    var usage = tiers[usageIdx];
-    var t = pt.t;
-    var tr = pt.r !== undefined ? pt.r : pt.tr;
-    var hasDeficit = tr && tr !== t;
-    var unservedPct = pt.u || 0;
-    var lat = P.pointLat(pt);
-    var lon = P.pointLon(pt);
+  // ── Controls ───────────────────────────────────────────────────────────
+  document.getElementById("basis-btns").addEventListener("click", function (e) {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    document
+      .querySelectorAll("#basis-btns button")
+      .forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    basis = btn.dataset.basis;
+    renderDots();
+  });
 
-    var coverageBadge = pt.u
-      ? '<div style="background:rgba(255,170,0,0.15);border:1px solid rgba(255,170,0,0.3);border-radius:4px;padding:4px 7px;font-size:.75rem;color:#ffaa00;margin-bottom:.5rem;line-height:1.4;">' +
-        "⚠️ <strong>Area Grid Split:</strong> ~" +
-        (100 - unservedPct) +
-        "% grid / ~" +
-        unservedPct +
-        "% unserved (generators)</div>"
-      : '<div style="background:rgba(0,230,153,0.08);border:1px solid rgba(0,230,153,0.2);border-radius:4px;padding:3px 6px;font-size:.75rem;color:var(--accent);margin-bottom:.5rem;">✓ ~100% grid-connected population</div>';
+  document.getElementById("usage-btns").addEventListener("click", function (e) {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    document
+      .querySelectorAll("#usage-btns button")
+      .forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    usageIdx = parseInt(btn.dataset.idx, 10);
+    renderDots();
+  });
 
-    var tariffRows;
-    if (hasDeficit) {
-      tariffRows = isReal
-        ? '<tr style="' +
-          (metric === "cost" ? "background:rgba(0,230,153,0.12);" : "") +
-          '">' +
-          '<td style="color:var(--muted);padding:.15rem 0;">True Grid Cost</td>' +
-          '<td style="text-align:right;color:#00e699;font-weight:700;">$' +
-          tr +
-          '/kWh <span style="font-size:.7rem;color:var(--muted);font-weight:normal;">(weighted)</span></td></tr>' +
-          '<tr><td style="color:var(--muted);padding:.15rem 0;">Paper grid tariff</td>' +
-          '<td style="text-align:right;color:var(--muted);font-size:.8rem;">$' +
-          t +
-          "/kWh (when on)</td></tr>"
-        : '<tr style="' +
-          (metric === "cost" ? "background:rgba(0,230,153,0.12);" : "") +
-          '">' +
-          '<td style="color:var(--muted);padding:.15rem 0;">Paper grid tariff</td>' +
-          '<td style="text-align:right;color:#fff;font-weight:600;">$' +
-          t +
-          "/kWh</td></tr>" +
-          '<tr><td style="color:var(--muted);padding:.15rem 0;">True Grid Cost</td>' +
-          '<td style="text-align:right;color:#00e699;font-size:.8rem;">$' +
-          tr +
-          "/kWh (weighted)</td></tr>";
-    } else {
-      tariffRows =
-        '<tr style="' +
-        (metric === "cost" ? "background:rgba(0,230,153,0.12);" : "") +
-        '">' +
-        '<td style="color:var(--muted);padding:.15rem 0;">Grid tariff</td>' +
-        '<td style="text-align:right;color:#fff;font-weight:600;">$' +
-        t +
-        "/kWh</td></tr>";
-    }
-
-    var popup =
-      '<div style="min-width:220px;">' +
-      '<div style="font-weight:700;font-size:1rem;color:#fff;margin-bottom:.2rem;">' +
-      esc(pt.n) +
-      "</div>" +
-      '<div style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem;">' +
-      esc(countryName(pt.c)) +
-      " · " +
-      lat +
-      "°, " +
-      lon +
-      "°</div>" +
-      coverageBadge +
-      '<table style="width:100%;font-size:.85rem;border-collapse:collapse;">' +
-      tariffRows +
-      '<tr><td style="color:var(--muted);padding:.15rem 0;">Solar yield</td><td style="text-align:right;color:#fff;font-weight:600;">' +
-      pt.y +
-      " kWh/kWp/yr</td></tr>" +
-      '<tr style="' +
-      (metric === "p" ? "background:rgba(0,230,153,0.12);" : "") +
-      '">' +
-      '<td style="color:var(--muted);padding:.15rem 0;">Payback (' +
-      (isReal ? "weighted" : "grid") +
-      ")</td>" +
-      '<td style="text-align:right;color:' +
-      P.yearColor(pYrs) +
-      ';font-weight:700;">' +
-      P.yearLabel(pYrs) +
-      "</td></tr>" +
-      '<tr style="' +
-      (metric === "b" ? "background:rgba(0,230,153,0.12);" : "") +
-      '">' +
-      '<td style="color:var(--muted);padding:.15rem 0;">True break-even</td>' +
-      '<td style="text-align:right;color:' +
-      P.yearColor(bYrs) +
-      ';font-weight:700;">' +
-      P.yearLabel(bYrs) +
-      "</td></tr>" +
-      '<tr><td style="color:var(--muted);padding:.15rem 0;">Usage assumed</td><td style="text-align:right;color:#fff;">' +
-      usage +
-      " kWh/day</td></tr>" +
-      "</table>" +
-      '<div style="margin-top:.6rem;text-align:center;">' +
-      '<a href="../#sizing" style="display:inline-block;background:linear-gradient(135deg,#00e699,#00b377);color:#04120c;font-weight:700;padding:.4rem .9rem;border-radius:6px;font-size:.85rem;">⚡ Run full simulation</a>' +
-      "</div></div>";
-
-    L.popup({ maxWidth: 300 }).setLatLng(latlng).setContent(popup).openOn(map);
-  }
-
-  // ── Canvas dots (hybrid mode, after data loads) ──────────────────────────
-  function enableCanvasDots() {
-    if (!map || !gridData || dotLayer) return;
-    if (!dotRenderer) dotRenderer = L.canvas({ padding: 0.5 });
-    var markers = [];
-    var points = gridData.points;
-    for (var i = 0; i < points.length; i++) {
-      (function (pt) {
-        var m = L.circleMarker([P.pointLat(pt), P.pointLon(pt)], {
-          radius: 3.5,
-          weight: 0,
-          fillColor: dotColor(pt),
-          fillOpacity: 0.0, // invisible until zoomed; PNG shows the dots
-          interactive: true,
-          renderer: dotRenderer,
-        });
-        m.on("click", function (e) {
-          showPopup(pt, e.latlng);
-        });
-        markers.push(m);
-      })(points[i]);
-    }
-    dotLayer = L.layerGroup(markers).addTo(map);
-
-    // Past zoom 5 the PNG pixels stretch; fade canvas dots in for sharpness.
-    map.on("zoomend", function () {
-      if (!dotLayer) return;
-      var sharp = map.getZoom() >= 5;
-      dotLayer.eachLayer(function (layer) {
-        layer.setStyle({ fillOpacity: sharp ? 0.85 : 0.0 });
-      });
+  document
+    .getElementById("metric-btns")
+    .addEventListener("click", function (e) {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      document
+        .querySelectorAll("#metric-btns button")
+        .forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      metric = btn.dataset.metric;
+      renderDots();
     });
-  }
 
-  // ── Controls ─────────────────────────────────────────────────────────────
-  function setupControls() {
-    var basisBtns = document.getElementById("basis-btns");
-    if (basisBtns)
-      basisBtns.addEventListener("click", function (e) {
-        var btn = e.target.closest("button");
-        if (!btn) return;
-        basisBtns.querySelectorAll("button").forEach(function (b) {
-          b.classList.remove("active");
-        });
-        btn.classList.add("active");
-        basis = btn.dataset.basis;
-        swapImage();
-        updateLegend();
-        updateRankings();
-        refreshCanvasColors();
-      });
-
-    var usageBtns = document.getElementById("usage-btns");
-    if (usageBtns)
-      usageBtns.addEventListener("click", function (e) {
-        var btn = e.target.closest("button");
-        if (!btn) return;
-        usageBtns.querySelectorAll("button").forEach(function (b) {
-          b.classList.remove("active");
-        });
-        btn.classList.add("active");
-        usageIdx = parseInt(btn.dataset.idx, 10);
-        swapImage();
-        updateLegend();
-        updateRankings();
-        refreshCanvasColors();
-      });
-
-    var metricBtns = document.getElementById("metric-btns");
-    if (metricBtns)
-      metricBtns.addEventListener("click", function (e) {
-        var btn = e.target.closest("button");
-        if (!btn) return;
-        metricBtns.querySelectorAll("button").forEach(function (b) {
-          b.classList.remove("active");
-        });
-        btn.classList.add("active");
-        metric = btn.dataset.metric;
-        swapImage();
-        updateLegend();
-        updateRankings();
-        refreshCanvasColors();
-      });
-  }
-
-  function refreshCanvasColors() {
-    if (!dotLayer || !gridData) return;
-    var points = gridData.points;
-    var i = 0;
-    dotLayer.eachLayer(function (layer) {
-      layer.setStyle({ fillColor: dotColor(points[i++]) });
-    });
-  }
-
-  // ── Init ─────────────────────────────────────────────────────────────────
-  function init() {
-    // WebGL detection for the fallback notice (P1-1).
+  // ── Init ───────────────────────────────────────────────────────────────
+  async function init() {
     try {
-      var _c = document.createElement("canvas");
-      var _gl = _c.getContext("webgl") || _c.getContext("experimental-webgl");
-      if (!_gl) {
-        var _fb = document.getElementById("webgl-fallback");
-        if (_fb) _fb.style.display = "";
-        var _ld = document.getElementById("loading");
-        if (_ld) _ld.style.display = "none";
-      }
-    } catch (e) {
-      /* leave default loading state */
+      const res = await fetch("../assets/data/heatmap-grid.json?v=20261017a");
+      if (!res.ok) throw new Error("Failed to load heatmap data");
+      gridData = await res.json();
+    } catch (err) {
+      document.getElementById("loading").innerHTML =
+        `<div style="text-align:center;color:#e64545;">Failed to load heatmap data. <a href="" style="color:var(--accent);">Reload</a></div>`;
+      console.error(err);
+      return;
     }
 
-    var boot = Promise.all([
-      fetch("../assets/img/heatmap/manifest.json?v=20261016l").then(
-        function (r) {
-          if (!r.ok) throw new Error("manifest");
-          return r.json();
-        },
-      ),
-      fetch("../assets/data/heatmap-rankings.json?v=20261016l").then(
-        function (r) {
-          if (!r.ok) throw new Error("rankings");
-          return r.json();
-        },
-      ),
-    ]);
+    // Show map, hide loading
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("map").style.display = "block";
+    document.getElementById("controls").style.display = "block";
 
-    boot
-      .then(function (parts) {
-        manifest = parts[0];
-        rankings = parts[1];
+    // Init Leaflet
+    map = L.map("map", {
+      center: [20, 0],
+      zoom: 2,
+      minZoom: 2,
+      maxZoom: 12,
+      zoomControl: true,
+      attributionControl: false,
+      worldCopyJump: true,
+    });
 
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("map").style.display = "block";
-        document.getElementById("controls").style.display = "block";
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      {
+        subdomains: "abcd",
+        maxZoom: 19,
+      },
+    ).addTo(map);
 
-        // Equirectangular CRS: matches the PNG projection exactly, so the
-        // imageOverlay aligns pixel-perfect with no tile layer needed.
-        map = L.map("map", {
-          crs: L.CRS.EPSG4326,
-          center: [20, 0],
-          zoom: 2,
-          minZoom: 2,
-          maxZoom: 12,
-          zoomControl: true,
-          attributionControl: false,
-          worldCopyJump: true,
-        });
-
-        var url = imageUrl(manifestKey());
-        if (!url) throw new Error("missing default image");
-        imageLayer = L.imageOverlay(url, WORLD_BOUNDS).addTo(map);
-
-        // Click-to-load: first click fetches the dataset, then shows the
-        // nearest point's popup. Zoom past 5 also triggers the fetch so
-        // canvas dots are ready for sharp interaction.
-        var hintShown = false;
-        map.on("click", function (e) {
-          ensureData()
-            .then(function () {
-              var pt = nearestPoint(e.latlng.lat, e.latlng.lng);
-              if (pt) showPopup(pt, e.latlng);
-            })
-            .catch(function () {
-              if (!hintShown) {
-                hintShown = true;
-                L.popup()
-                  .setLatLng(e.latlng)
-                  .setContent(
-                    "Couldn't load point data. Check your connection and try again.",
-                  )
-                  .openOn(map);
-              }
-            });
-        });
-        map.on("zoomend", function () {
-          if (map.getZoom() >= 5) ensureData().catch(function () {});
-        });
-
-        setupControls();
-        updateLegend();
-        updateRankings();
-      })
-      .catch(function (err) {
-        document.getElementById("loading").innerHTML =
-          '<div style="text-align:center;color:#e64545;">Failed to load heatmap images. <a href="" style="color:var(--accent);">Reload</a></div>';
-        // eslint-disable-next-line no-console
-        console.error(err);
-      });
+    // Use CartoDB Dark Matter for matching dark theme (no API key needed)
+    renderDots();
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
+  init();
 })();
