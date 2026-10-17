@@ -76,11 +76,12 @@ test("the freshness gate is wired into npm run seo and has its own script", () =
 
 // ── the committed record must pass its own gate ────────────────────────────
 test("the committed record passes the freshness gate", () => {
-  execFileSync(
+  const out = execFileSync(
     process.execPath,
     [join(ROOT, "scripts", "check-evidence-freshness.mjs")],
-    { cwd: ROOT, stdio: "pipe" },
+    { cwd: ROOT, encoding: "utf8", stdio: "pipe" },
   );
+  assert.match(out, /smoke_note's asset stamp matches the tree/);
 });
 
 // ── each rule, mutation-checked: the gate must bite ─────────────────────────
@@ -106,6 +107,23 @@ test("an asset stamp the tree contradicts fails the gate", () => {
   });
   assert.notEqual(r.code, 0, "a stamp that is not the shipped one must fail");
   assert.match(r.out, /asset stamp .* but the shipped pages reference/);
+});
+
+test("a smoke-note tree stamp that disagrees with shipped pages fails", () => {
+  const html = readFileSync(join(ROOT, "index.html"), "utf8");
+  const [shippedStamp] = new Set(
+    [...html.matchAll(/[?&]v=(\d{8}[a-z])/g)].map((m) => m[1]),
+  );
+  assert.ok(shippedStamp, "index.html must have a shipped asset stamp");
+  const staleStamp = shippedStamp === "20260925c" ? "20260926c" : "20260925c";
+  const r = gateAgainst((p) => {
+    p.smoke_note = `The smoke run references asset stamp ${staleStamp}.`;
+  });
+  assert.notEqual(r.code, 0, "a stale smoke-note tree stamp must fail");
+  assert.match(
+    r.out,
+    /smoke_note states asset stamp .* but the shipped pages reference/,
+  );
 });
 
 test("an SW cache version the tree contradicts fails the gate", () => {

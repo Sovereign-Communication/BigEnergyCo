@@ -145,22 +145,33 @@ for (const field of COMPOSABLE_FIELDS) {
 
 // ── Rule 2: stated facts must match the tree ───────────────────────────────
 const stamp = shippedStamp();
-const stampClaims = (prose.seo_summary || "").match(/\b\d{8}[a-z]\b/g) || [];
-const statedStamps = [...new Set(stampClaims)];
-if (statedStamps.length === 0) ok("seo_summary states no asset stamp");
-else if (
-  stamp.length === 1 &&
-  statedStamps.length === 1 &&
-  statedStamps[0] === stamp[0]
-)
-  ok(`seo_summary's asset stamp matches the tree (${stamp[0]})`);
-else
-  fail(
-    `seo_summary states asset stamp ${statedStamps.join("/")}, but the shipped ` +
-      `pages reference ${stamp.join("/")}. A visitor's cached copy is keyed on ` +
-      "this string; a record that names the wrong one describes a build that " +
-      "is not the one being shipped.",
-  );
+for (const field of ["seo_summary", "smoke_note"]) {
+  const text = String(prose[field] || "");
+  // smoke_note may report the deployed production stamp separately from the
+  // current tree. That servedStamp is useful release evidence, but only the
+  // stamp describing this tree must match index.html.
+  const claims =
+    field === "smoke_note"
+      ? text.replace(/\bservedStamp\s+\d{8}[a-z]\b/gi, "")
+      : text;
+  const statedStamps = [...new Set(claims.match(/\b\d{8}[a-z]\b/g) || [])];
+  if (statedStamps.length === 0) {
+    if (field === "seo_summary") ok(`${field} states no asset stamp`);
+    else fail(`${field} does not state the shipped tree's asset stamp`);
+  } else if (
+    stamp.length === 1 &&
+    statedStamps.length === 1 &&
+    statedStamps[0] === stamp[0]
+  )
+    ok(`${field}'s asset stamp matches the tree (${stamp[0]})`);
+  else
+    fail(
+      `${field} states asset stamp ${statedStamps.join("/")}, but the shipped ` +
+        `pages reference ${stamp.join("/")}. A visitor's cached copy is keyed on ` +
+        "this string; a record that names the wrong one describes a build that " +
+        "is not the one being shipped.",
+    );
+}
 
 const cache = shippedCacheVersion();
 const cacheClaim = (prose.seo_summary || "").match(/beco-v\d+/);
