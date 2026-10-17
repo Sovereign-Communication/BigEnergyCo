@@ -410,7 +410,12 @@ for (const page of shippedPages()) {
 // nav hooks make the detector count the post's 22 English-only prose blocks.
 // Same mechanism as the 51 -> 422 raise: articles are English-only by product
 // decision; only the nav claims translation.
-const PROSE_CEILING = 445;
+// 445 -> 446 (2026-10-16): the salderingsregeling-stopt-2027 Dutch card adds one
+// Dutch prose block to blog/index.html — a deliberate strategic exception for
+// the Netherlands audience (top-5 traffic country), not unkeyed English.
+// 446 -> 485 (2026-10-16): the salderingsregeling-stopt-2027 post body itself
+// carries 39 Dutch prose blocks — same deliberate exception, first Dutch post.
+const PROSE_CEILING = 485;
 if (proseFindings.length > PROSE_CEILING) {
   fail(
     `${proseFindings.length} visible prose block(s) on a translated page carry no i18n hook ` +

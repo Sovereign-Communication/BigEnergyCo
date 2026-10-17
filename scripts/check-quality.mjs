@@ -47,14 +47,17 @@ import {
  *                              unifying blog headers with the main-page header
  *                              copied its inline styles to 11 blog pages, and
  *                              the ratchet follows the measurement.)
- *   inlineStyleAttributes     634 — blog format uniformity (2026-10-15):
+ *   inlineStyleAttributes     640 — blog format uniformity (2026-10-15):
  *                              hawaii-solar-scams-2026-warning got the canonical
  *                              header (+5) and footer (+1); diy footer 3→1 and
  *                              CTA button style removed (−3); battery-longevity
  *                              footer 3→1 (−2). Net +1, measured.
+ *                            634 → 640 (2026-10-16): salderingsregeling-stopt-2027
+ *                              follows the canonical template (+6 inline styles:
+ *                              nav links, mobile toggle, footer margin).
  */
 const RATCHET = {
-  inlineStyleAttributes: 634,
+  inlineStyleAttributes: 640,
 };
 
 let failures = 0;
