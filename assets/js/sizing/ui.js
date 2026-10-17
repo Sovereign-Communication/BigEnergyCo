@@ -482,15 +482,6 @@ function el(tag, attrs = {}, text) {
   return e;
 }
 
-// Reduced-motion users get instant scrolling instead of JS smooth scroll.
-// Same contract as chat.js's helper (a classic script can't share imports).
-function scrollBehavior() {
-  return window.matchMedia &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ? "auto"
-    : "smooth";
-}
-
 function setStatus(text) {
   const s = $("sizingStatus");
 
@@ -736,7 +727,7 @@ function setupSimpleMode() {
     if (simple && lastPayload) {
       document
         .getElementById("sizing")
-        .scrollIntoView({ behavior: scrollBehavior() });
+        .scrollIntoView({ behavior: window.scrollBehavior() });
     }
   });
   applySimpleMode();
@@ -1241,7 +1232,7 @@ function renderSimpleResults(p) {
   details.addEventListener("click", () => {
     // One state setter; the mode subscription re-renders the whole surface.
     setSimpleMode(false);
-    $("resultsRegion").scrollIntoView({ behavior: scrollBehavior() });
+    $("resultsRegion").scrollIntoView({ behavior: window.scrollBehavior() });
   });
   actions.appendChild(details);
   // The advisor is arguably MOST valuable in Simple mode — the visitor chose
@@ -3896,7 +3887,7 @@ function ensureWorker() {
           res.setAttribute("tabindex", "-1");
 
           res.scrollIntoView({
-            behavior: scrollBehavior(),
+            behavior: window.scrollBehavior(),
             block: "start",
           });
         }
