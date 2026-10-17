@@ -17,10 +17,16 @@ for (const rel of FILES) {
       false,
       'raw behavior:"smooth" bypasses prefers-reduced-motion',
     );
+    const helper = src.match(
+      /function scrollBehavior\(\)\s*\{([\s\S]*?)\n\}/,
+    )?.[1];
+    assert.ok(helper, "helper must exist locally");
+    assert.match(helper, /window\.matchMedia/);
+    assert.match(helper, /prefers-reduced-motion:\s*reduce/);
     assert.match(
-      src,
-      /function scrollBehavior\(\)/,
-      "helper must exist locally",
+      helper,
+      /\?\s*"auto"\s*:\s*"smooth"/,
+      "reduced-motion users must get instant scrolling",
     );
 
     const sites = [...src.matchAll(/scrollIntoView\(/g)].length;
