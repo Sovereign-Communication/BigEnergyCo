@@ -211,7 +211,7 @@ test("missing or truncated page evidence is marked incomplete", () => {
     {
       files: ["index.html"],
       contentSnapshots: [
-        { path: "index.html", revision: "head", content: "x".repeat(50000) },
+        { path: "index.html", revision: "head", content: "x".repeat(100000) },
       ],
     },
     plan,
@@ -221,6 +221,23 @@ test("missing or truncated page evidence is marked incomplete", () => {
   assert.ok(
     truncated.facet_line.includes("do not grant a passing P9.7 judgment"),
   );
+});
+test("a complete infrastructure diff up to the scoped context budget is retained", () => {
+  const patch = "+" + "x".repeat(80000);
+  const evidence = buildScopeQualityEvidence(
+    "P9.7",
+    {
+      files: ["scripts/quality-gate.mjs"],
+      additions: 1,
+      deletions: 0,
+      patch,
+    },
+    plan,
+  );
+
+  assert.equal(evidence.context_truncated, false);
+  assert.equal(evidence.content_evidence_complete, true);
+  assert.ok(evidence.context.includes(patch));
 });
 test("an infrastructure-only candidate uses its fixture and does not trigger content grading", () => {
   const evidence = buildScopeQualityEvidence(

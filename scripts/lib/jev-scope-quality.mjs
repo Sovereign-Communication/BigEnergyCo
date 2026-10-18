@@ -4,7 +4,7 @@
 import { spawnSync } from "node:child_process";
 
 const FULL_SHA = /^[0-9a-f]{40}$/i;
-const MAX_CONTEXT_CHARS = 40000;
+const MAX_CONTEXT_CHARS = 90000;
 const PLAN_PATH = "docs/plan/MASTER_PLAN.md";
 const INTERNAL_ROOTS = new Set([
   ".github",
