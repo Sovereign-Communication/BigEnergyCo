@@ -843,7 +843,12 @@ export function stateTextBudget(axisNames) {
   );
 }
 
-export function buildStateText(evidence, auto = {}, axisNames = null) {
+export function buildStateText(
+  evidence,
+  auto = {},
+  axisNames = null,
+  scopeQualityContext = null,
+) {
   const ev = typeof evidence === "object" && evidence !== null ? evidence : {};
   const parts = [
     `target=${auto.target || "local"} ref=${auto.sha || "?"}`,
@@ -867,6 +872,9 @@ export function buildStateText(evidence, auto = {}, axisNames = null) {
   for (const axis of Object.keys(facetEvidence).sort()) {
     const line = clip(facetEvidence[axis], COMPLETE_FACET_CLIP).trim();
     if (line) parts.push(`${axis}: ${line}`);
+  }
+  if (typeof scopeQualityContext === "string" && scopeQualityContext.trim()) {
+    parts.push(`scope_quality_evidence: ${scopeQualityContext.trim()}`);
   }
   // Recorded notes ride last and whole (the TRANSPORT contract): facet
   // lines own the per-axis budget, so an oversized note tail is the only

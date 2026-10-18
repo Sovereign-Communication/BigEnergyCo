@@ -8,6 +8,7 @@
 //                                          [--explain-out explain.md]
 //                                          [--json] [--local-only]
 //                                          [--scope P<n>.<m>] [--require-live]
+//                                          [--change-base SHA --change-head SHA]
 //
 // This file is the PIPELINE, and nothing else. Every concern it touches has an
 // owner elsewhere, and the data flows one way:
@@ -73,6 +74,7 @@ import {
   renderExplanationMarkdown,
 } from "./lib/jev-report-print.mjs";
 import { explainLowScore } from "./lib/jev-explain.mjs";
+import { collectScopeQualityEvidence } from "./lib/jev-scope-quality.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 
 function usageError(msg) {
@@ -80,7 +82,8 @@ function usageError(msg) {
   process.stderr.write(
     "usage: node scripts/validate-jev-complete.mjs [--scope P<n>.<m>] " +
       "[--evidence FILE] [--out FILE] [--explain-out FILE] [--json] " +
-      "[--local-only] [--require-live]\n",
+      "[--local-only] [--require-live] " +
+      "[--change-base SHA --change-head SHA]\n",
   );
   process.exit(2);
 }
@@ -94,6 +97,8 @@ function parseArgs(argv) {
     localOnly: false,
     requireLive: false,
     scope: null,
+    changeBase: null,
+    changeHead: null,
   };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -102,10 +107,17 @@ function parseArgs(argv) {
     else if (arg === "--explain-out")
       opts.explainOut = argv[++i] ?? usageError("x");
     else if (arg === "--scope") opts.scope = argv[++i] ?? usageError("x");
+    else if (arg === "--change-base")
+      opts.changeBase = argv[++i] ?? usageError("x");
+    else if (arg === "--change-head")
+      opts.changeHead = argv[++i] ?? usageError("x");
     else if (arg === "--json") opts.json = true;
     else if (arg === "--local-only") opts.localOnly = true;
     else if (arg === "--require-live") opts.requireLive = true;
     else usageError(`unknown argument: ${arg}`);
+  }
+  if (Boolean(opts.changeBase) !== Boolean(opts.changeHead)) {
+    usageError("--change-base and --change-head must be provided together");
   }
   return opts;
 }
@@ -137,10 +149,30 @@ export async function main(argv = process.argv.slice(2)) {
   const evidence = mergeEvidence(runRecords, auto);
   evidence._dirtyPaths = auto.dirtyPaths;
 
+  let scopeQualityEvidence = null;
+  if (opts.scope === "P9.7" && opts.changeBase && opts.changeHead) {
+    scopeQualityEvidence = collectScopeQualityEvidence(
+      repoRoot,
+      opts.scope,
+      opts.changeBase,
+      opts.changeHead,
+    );
+    evidence.facet_evidence.quality = scopeQualityEvidence.facet_line;
+  } else if (opts.scope === "P9.7" && opts.requireLive) {
+    usageError(
+      "a live P9.7 judgment requires --change-base and --change-head so it can assess the actual PR diff",
+    );
+  }
+
   // The transport budget is derived from the pack (P0.3(d)), so the gate hands
   // the state builder the axes it will actually ask about.
   const axisNames = Object.keys(pack.axes);
-  const stateText = buildStateText(evidence, auto, axisNames);
+  const stateText = buildStateText(
+    evidence,
+    auto,
+    axisNames,
+    scopeQualityEvidence?.context,
+  );
 
   // One call, if the run calls for one. The wire has no opinion about the
   // report; lib/jev-run.mjs owns what the answer means.
@@ -187,6 +219,9 @@ export async function main(argv = process.argv.slice(2)) {
   }
   report.target = auto.target;
   report.scope = opts.scope || null;
+  if (scopeQualityEvidence) {
+    report.scope_quality_evidence = scopeQualityEvidence;
+  }
   report.auto_facts = {
     tree_clean: auto.treeClean,
     secrets_clean: auto.secretsClean,
