@@ -73,7 +73,7 @@ export function extractP97QualityRubric(planText) {
     requirementLine(planText, id),
   );
   return [
-    `Authoritative requirements from ${PLAN_PATH} (read from the PR base; plan hash remains governed by plan:check):`,
+    `Authoritative requirements from ${PLAN_PATH} (read from the candidate; plan hash remains governed by plan:check):`,
     ...requirements,
     "Apply R-CONT-01..05 to changed governed content. For blog posts, also verify the P9.7 formatting, SEO, sourcing, and voice criteria; check dated claims against current sources and require a visible review date.",
   ].join("\n");
@@ -287,10 +287,10 @@ export function collectScopeQualityEvidence(repoRoot, scope, baseSha, headSha) {
   ]);
   let planText;
   try {
-    planText = git(repoRoot, ["show", `${baseSha}:${PLAN_PATH}`]);
+    planText = git(repoRoot, ["show", `${headSha}:${PLAN_PATH}`]);
   } catch (error) {
     throw new Error(
-      `cannot read authoritative plan at PR base: ${error.message}`,
+      `cannot read authoritative plan at candidate head: ${error.message}`,
     );
   }
   return buildScopeQualityEvidence(

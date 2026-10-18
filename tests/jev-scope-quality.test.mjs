@@ -343,7 +343,7 @@ test("scope-specific diff evidence expands only its own transport budget", () =>
   assert.ok(ordinary.length < 6000);
 });
 
-test("the collector loads the base plan and full snapshots for page changes, but scopes infra separately", () => {
+test("the collector loads the candidate plan and full snapshots for page changes, but scopes infra separately", () => {
   const repo = mkdtempSync(join(tmpdir(), "jev-p97-diff-"));
   try {
     git(repo, "init", "-q");
@@ -411,6 +411,38 @@ test("the collector loads the base plan and full snapshots for page changes, but
   }
 });
 
+test("a P9.7 item introduced by this PR is loaded from the candidate plan", () => {
+  const repo = mkdtempSync(join(tmpdir(), "jev-p97-plan-intro-"));
+  try {
+    git(repo, "init", "-q");
+    git(repo, "config", "user.name", "Jev scope test");
+    git(repo, "config", "user.email", "jev-scope-test@example.invalid");
+    mkdirSync(join(repo, "docs", "plan"), { recursive: true });
+    const priorPlan = plan.replace(/^\| P9\.7 \|.*(?:\r?\n)?/m, "");
+    assert.doesNotMatch(priorPlan, /^\| P9\.7 \|/m);
+    writeFileSync(join(repo, "docs", "plan", "MASTER_PLAN.md"), priorPlan);
+    git(repo, "add", ".");
+    git(repo, "commit", "-qm", "base without P9.7");
+    const base = git(repo, "rev-parse", "HEAD");
+
+    writeFileSync(join(repo, "docs", "plan", "MASTER_PLAN.md"), plan);
+    mkdirSync(join(repo, "scripts"), { recursive: true });
+    writeFileSync(
+      join(repo, "scripts", "quality-gate.mjs"),
+      "export const gate = true;\n",
+    );
+    git(repo, "add", ".");
+    git(repo, "commit", "-qm", "introduce P9.7 and its gate");
+    const head = git(repo, "rev-parse", "HEAD");
+
+    const evidence = collectScopeQualityEvidence(repo, "P9.7", base, head);
+    assert.equal(evidence.content_criteria_applicable, false);
+    assert.match(evidence.context, /\| P9\.7 \| Content quality gate/);
+    assert.match(evidence.context, /R-CONT-05/);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
 test("P9.7 diff evidence refuses missing or malformed commit identities", () => {
   assert.throws(
     () => collectScopeQualityEvidence(process.cwd(), "P9.7", "", "x"),
