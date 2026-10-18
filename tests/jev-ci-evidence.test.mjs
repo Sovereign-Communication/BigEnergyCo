@@ -1224,6 +1224,21 @@ test("WORKFLOW: the jev-complete job needs every required gate, judges live, and
     /ref:\s*refs\/pull\/\$\{\{\s*github\.event\.pull_request\.number\s*\}\}\/merge/,
     "the job must judge the same merge ref its dependencies ran on",
   );
+  assert.match(
+    job,
+    /fetch-depth:\s*0/,
+    "the P9.7 evidence must be able to compare both PR commits",
+  );
+  assert.match(
+    job,
+    /--change-base\s+"\$\{\{\s*github\.event\.pull_request\.base\.sha\s*\}\}"/,
+    "P9.7 quality evidence must use the PR's actual base SHA",
+  );
+  assert.match(
+    job,
+    /--change-head\s+"\$\{\{\s*github\.event\.pull_request\.head\.sha\s*\}\}"/,
+    "P9.7 quality evidence must use the PR's actual head SHA",
+  );
   // A push to main has no PR title to name a scope from and no merge ref, so
   // the job is a PR gate only. The full run belongs to P10 and P11.3.
   assert.match(

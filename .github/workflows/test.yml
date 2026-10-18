@@ -610,6 +610,9 @@ jobs:
           # commit that would actually land. Naming it explicitly keeps the
           # evidence and the judgment about one commit instead of two.
           ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          # Scope-aware P9.7 quality evidence compares the exact PR base and
+          # head trees, so both commits must be available to git diff.
+          fetch-depth: 0
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
@@ -681,6 +684,8 @@ jobs:
           node scripts/validate-jev-complete.mjs \
             --scope "${{ steps.scope.outputs.scope }}" \
             --require-live \
+            --change-base "${{ github.event.pull_request.base.sha }}" \
+            --change-head "${{ github.event.pull_request.head.sha }}" \
             --evidence "$RUNNER_TEMP/jev-evidence.json" \
             --out "$RUNNER_TEMP/jev-report.json"
 

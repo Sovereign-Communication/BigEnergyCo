@@ -843,7 +843,12 @@ export function stateTextBudget(axisNames) {
   );
 }
 
-export function buildStateText(evidence, auto = {}, axisNames = null) {
+export function buildStateText(
+  evidence,
+  auto = {},
+  axisNames = null,
+  scopeQualityContext = null,
+) {
   const ev = typeof evidence === "object" && evidence !== null ? evidence : {};
   const parts = [
     `target=${auto.target || "local"} ref=${auto.sha || "?"}`,
@@ -864,9 +869,36 @@ export function buildStateText(evidence, auto = {}, axisNames = null) {
     typeof ev.facet_evidence === "object" && ev.facet_evidence !== null
       ? ev.facet_evidence
       : {};
+  const hasScopeQualityContext =
+    typeof scopeQualityContext === "string" && scopeQualityContext.trim();
+  let scopeQualityContextChars = 0;
+  let qualityContextWritten = false;
   for (const axis of Object.keys(facetEvidence).sort()) {
-    const line = clip(facetEvidence[axis], COMPLETE_FACET_CLIP).trim();
+    const isScopedQuality = axis === "quality" && hasScopeQualityContext;
+    const line = isScopedQuality
+      ? scopeQualityContext.trim()
+      : clip(facetEvidence[axis], COMPLETE_FACET_CLIP).trim();
     if (line) parts.push(`${axis}: ${line}`);
+    if (isScopedQuality) {
+      qualityContextWritten = true;
+      // The regular quality facet already reserves 280 chars in the pack
+      // budget. Only the scope-specific diff beyond that line adds capacity.
+      scopeQualityContextChars = Math.max(
+        0,
+        `quality: ${line}`.length - COMPLETE_FACET_CLIP,
+      );
+    }
+  }
+  if (hasScopeQualityContext && !qualityContextWritten) {
+    const line = scopeQualityContext.trim();
+    parts.push(`quality: ${line}`);
+    // P9.7 carries the actual bounded PR diff as evidence. Its scope-specific
+    // space is added to the same pack-derived budget, leaving every existing
+    // facet line intact; all other scopes retain the unchanged cap.
+    scopeQualityContextChars = Math.max(
+      0,
+      `quality: ${line}`.length - COMPLETE_FACET_CLIP,
+    );
   }
   // Recorded notes ride last and whole (the TRANSPORT contract): facet
   // lines own the per-axis budget, so an oversized note tail is the only
@@ -891,7 +923,10 @@ export function buildStateText(evidence, auto = {}, axisNames = null) {
     Array.isArray(axisNames) && axisNames.length
       ? axisNames
       : Object.keys(facetEvidence);
-  return parts.filter(Boolean).join("\n").slice(0, stateTextBudget(declared));
+  return parts
+    .filter(Boolean)
+    .join("\n")
+    .slice(0, stateTextBudget(declared) + scopeQualityContextChars);
 }
 
 /**
