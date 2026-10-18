@@ -1,11 +1,8 @@
-// P9.7 evidence is derived from the immutable plan and applies only to
-// changed public pages or user-facing content sources. Infrastructure changes
-// are judged against their implementation and representative fixtures instead.
-import { spawnSync } from "node:child_process";
+// P9.7 evidence policy and prompt-state construction. This module is pure;
+// candidate Git reads live in jev-scope-quality-git.mjs.
 
-const FULL_SHA = /^[0-9a-f]{40}$/i;
 const MAX_CONTEXT_CHARS = 90000;
-const PLAN_PATH = "docs/plan/MASTER_PLAN.md";
+export const PLAN_PATH = "docs/plan/MASTER_PLAN.md";
 const INTERNAL_ROOTS = new Set([
   ".github",
   ".quality-evidence",
@@ -38,20 +35,6 @@ const REQUIRED_PLAN_IDS = [
   "R-RES-07",
   "R-SEO-05",
 ];
-
-function git(repoRoot, args) {
-  const result = spawnSync("git", ["-C", repoRoot, ...args], {
-    encoding: "utf8",
-    timeout: 15000,
-    maxBuffer: 8 * 1024 * 1024,
-  });
-  if (result.error)
-    throw new Error(`git ${args[0]} failed: ${result.error.message}`);
-  if (result.status !== 0) {
-    throw new Error(`git ${args[0]} failed: ${(result.stderr || "").trim()}`);
-  }
-  return result.stdout || "";
-}
 
 function requirementLine(planText, id) {
   const lines = String(planText).split(/\r?\n/);
@@ -166,16 +149,15 @@ export function buildScopeQualityEvidence(scope, change, planText = "") {
   const blogPostFiles = files.filter(isBlogPostFile);
   const safePatch = redactDiff(change.patch || "");
   const fileSummary = files.length ? files.join(", ") : "no changed files";
+  const rubric = extractP97QualityRubric(planText);
   const parts = [
-    `${
-      contentApplicable
-        ? extractP97QualityRubric(planText)
-        : [
-            "P9.7 content criteria are not applicable as a copy judgment: this change modifies no governed page or content source.",
-            extractP97QualityRubric(planText),
-            "For this infrastructure-only change, judge the gate, tests, fixtures, and content-only scope detection; do not grade infrastructure files as published copy.",
-          ].join("\n")
-    }`,
+    contentApplicable
+      ? rubric
+      : [
+          "P9.7 content criteria are not applicable as a copy judgment: this change modifies no governed page or content source.",
+          rubric,
+          "For this infrastructure-only change, judge the gate, tests, fixtures, and content-only scope detection; do not grade infrastructure files as published copy.",
+        ].join("\n"),
     `Actual PR diff: ${files.length} files, +${additions}/-${deletions}; ${fileSummary}.`,
     `Changed blog posts: ${blogPostFiles.length ? blogPostFiles.join(", ") : "none"}.`,
   ];
@@ -225,83 +207,4 @@ export function buildScopeQualityEvidence(scope, change, planText = "") {
     additions,
     deletions,
   };
-}
-
-function parseNameStatus(raw) {
-  const fields = raw.split("\0").filter(Boolean);
-  const changes = [];
-  for (let i = 0; i < fields.length;) {
-    const status = fields[i++];
-    const count = status.startsWith("R") || status.startsWith("C") ? 2 : 1;
-    const paths = fields.slice(i, i + count);
-    i += count;
-    if (paths.length !== count)
-      throw new Error("git returned incomplete changed-file metadata");
-    changes.push({ status: status[0], path: paths.at(-1) });
-  }
-  return changes;
-}
-
-export function collectScopeQualityEvidence(repoRoot, scope, baseSha, headSha) {
-  if (scope !== "P9.7") return null;
-  if (!FULL_SHA.test(baseSha || "") || !FULL_SHA.test(headSha || "")) {
-    throw new Error(
-      "P9.7 quality evidence requires full base and head commit SHAs",
-    );
-  }
-  const range = `${baseSha}...${headSha}`;
-  const changes = parseNameStatus(
-    git(repoRoot, ["diff", "--name-status", "-z", "--no-renames", range]),
-  );
-  const files = changes.map((change) => change.path);
-  const numstat = git(repoRoot, ["diff", "--numstat", "--no-renames", range]);
-  let additions = 0;
-  let deletions = 0;
-  for (const line of numstat.split(/\r?\n/).filter(Boolean)) {
-    const [added, removed] = line.split("\t");
-    if (/^\d+$/.test(added)) additions += Number(added);
-    if (/^\d+$/.test(removed)) deletions += Number(removed);
-  }
-  const contentPages = files.filter(isGovernedContentPage);
-  const contentSnapshots = contentPages.map((file) => {
-    const status = changes.find((entry) => entry.path === file)?.status;
-    const revision = status === "D" ? "base" : "head";
-    const sha = revision === "base" ? baseSha : headSha;
-    try {
-      return {
-        path: file,
-        revision,
-        content: git(repoRoot, ["show", `${sha}:${file}`]),
-      };
-    } catch {
-      return { path: file, revision, content: null };
-    }
-  });
-  const patch = git(repoRoot, [
-    "diff",
-    "--no-ext-diff",
-    "--no-color",
-    "--no-renames",
-    "--unified=5",
-    range,
-  ]);
-  let planText;
-  try {
-    planText = git(repoRoot, ["show", `${headSha}:${PLAN_PATH}`]);
-  } catch (error) {
-    throw new Error(
-      `cannot read authoritative plan at candidate head: ${error.message}`,
-    );
-  }
-  return buildScopeQualityEvidence(
-    scope,
-    {
-      files,
-      additions,
-      deletions,
-      patch,
-      contentSnapshots,
-    },
-    planText,
-  );
 }
