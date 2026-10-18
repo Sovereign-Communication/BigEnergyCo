@@ -843,7 +843,12 @@ export function stateTextBudget(axisNames) {
   );
 }
 
-export function buildStateText(evidence, auto = {}, axisNames = null) {
+export function buildStateText(
+  evidence,
+  auto = {},
+  axisNames = null,
+  scopeQualityContext = null,
+) {
   const ev = typeof evidence === "object" && evidence !== null ? evidence : {};
   const parts = [
     `target=${auto.target || "local"} ref=${auto.sha || "?"}`,
@@ -868,6 +873,15 @@ export function buildStateText(evidence, auto = {}, axisNames = null) {
     const line = clip(facetEvidence[axis], COMPLETE_FACET_CLIP).trim();
     if (line) parts.push(`${axis}: ${line}`);
   }
+  let scopeQualityContextChars = 0;
+  if (typeof scopeQualityContext === "string" && scopeQualityContext.trim()) {
+    const contextPart = `scope_quality_evidence:\n${scopeQualityContext.trim()}`;
+    parts.push(contextPart);
+    // P9.7 carries the actual bounded PR diff as evidence. Its scope-specific
+    // space is added to the same pack-derived budget, leaving every existing
+    // facet line intact; all other scopes retain the unchanged cap.
+    scopeQualityContextChars = contextPart.length + 1;
+  }
   // Recorded notes ride last and whole (the TRANSPORT contract): facet
   // lines own the per-axis budget, so an oversized note tail is the only
   // thing a full record can lose — never a facet's own proof.
@@ -891,7 +905,10 @@ export function buildStateText(evidence, auto = {}, axisNames = null) {
     Array.isArray(axisNames) && axisNames.length
       ? axisNames
       : Object.keys(facetEvidence);
-  return parts.filter(Boolean).join("\n").slice(0, stateTextBudget(declared));
+  return parts
+    .filter(Boolean)
+    .join("\n")
+    .slice(0, stateTextBudget(declared) + scopeQualityContextChars);
 }
 
 /**
