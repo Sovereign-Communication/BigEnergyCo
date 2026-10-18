@@ -1,0 +1,9 @@
+diff --git a/scripts/jev-gate.mjs b/scripts/jev-gate.mjs
+index 0000000..1111111 100644
+--- a/scripts/jev-gate.mjs
++++ b/scripts/jev-gate.mjs
+@@ -1,2 +1,3 @@
+ export function contentApplies(path) {
+-  return path.endsWith(".md");
++  return path.endsWith(".html") && isPublicContentPath(path);
+ }
