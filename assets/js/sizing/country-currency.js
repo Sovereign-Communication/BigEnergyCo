@@ -29,7 +29,7 @@ export const COUNTRY_CURRENCY = Object.freeze({
   AD: "EUR",
   AE: "AED",
   AF: "AFN",
-  AG: "USD",
+  AG: "XCD",
   AL: "ALL",
   AM: "AMD",
   AO: "AOA",
@@ -73,7 +73,7 @@ export const COUNTRY_CURRENCY = Object.freeze({
   CR: "CRC",
   CU: "CUP",
   CV: "CVE",
-  CW: "ANG",
+  CW: "XCG",
   CY: "EUR",
   CZ: "CZK",
   DE: "EUR",
@@ -246,7 +246,7 @@ export const COUNTRY_CURRENCY = Object.freeze({
   YT: "EUR",
   ZA: "ZAR",
   ZM: "ZMW",
-  ZW: "ZWL",
+  ZW: "ZWG",
 });
 
 /**
