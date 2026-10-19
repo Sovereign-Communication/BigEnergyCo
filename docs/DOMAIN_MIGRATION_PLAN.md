@@ -1,5 +1,7 @@
 # Domain migration: bigenergyco.pages.dev → freeoffgridcalculator.com
 
+> **Historical operational draft (2026-10-19):** The nameserver cutover is already complete (`nola.ns.cloudflare.com`, `dean.ns.cloudflare.com`) and the custom domain is live. Do not execute Phase 0 or treat the September DNS snapshot below as current. Remaining production challenge/verified-crawler work is tracked by canonical O-09 in `docs/plan/MASTER_PLAN.md`; Search Console access is O-04. Recheck live state before any DNS, mail, or Pages changes.
+
 **Status:** Plan only — do not execute without walking the phases in order.
 **New domain:** `freeoffgridcalculator.com` (owned)
 **Current brand host:** `https://bigenergyco.pages.dev` (Cloudflare Pages project `bigenergyco`)
