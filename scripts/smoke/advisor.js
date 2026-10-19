@@ -14,7 +14,7 @@
 //
 // What it does NOT prove, stated rather than hidden: the real Groq model. CI
 // has no `GROQ_API_KEY` and must not acquire one (see AGENTS.md's zero-
-// dependency rule and the D-21 carve-out), so the worker serves its DEGRADED
+// dependency rule and the no-paid-upstream test rule), so the worker serves its DEGRADED
 // reply. That is deliberate — it is the exact payload the contest demo's
 // failure surface returns, it exercises the real routing, validation,
 // serialization and i18n key set, and it is deterministic. What it cannot

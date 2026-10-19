@@ -1,18 +1,15 @@
-# A-003 — drafted, ready to append to `docs/plan/AMENDMENTS.md`
+# Superseded draft: Cloudflare showcase proposal (formerly mislabeled A-003)
 
-**This file is a staging area, not the ledger of record.** A-003 belongs in
-`docs/plan/AMENDMENTS.md`, and it is written here first because appending it
-today would break `npm run plan:check` — deliberately.
+**Status: superseded proposal; not adopted and not authoritative.** The canonical `docs/plan/AMENDMENTS.md` already uses A-003 for the P0.6 Jev evidence ruling. Do not append this draft under A-003. PR #232 currently proposes A-004; any revived proposal needs owner direction and the next valid sequential amendment ID.
 
-## Why it is not in AMENDMENTS.md yet
+## Historical drafting rationale (state at 2026-09-26; retained for provenance)
 
 The pin validator (`scripts/lib/plan-pin.mjs`) enforces a strictly sequential
 chain: every entry must start where the previous one ended, every entry needs
 64-hex before/after hashes, and the last entry must end at the hash
 `PLAN.lock.json` pins. This branch is at `c8271d11…` (A-001 applied).
 
-**A-002 is taken and is still open in PR #171**, which re-pins the plan to
-`8c47fc79…`. So:
+**Historical context:** When this draft was written, A-002 was pending in PR #171. That snapshot is obsolete: A-002 is adopted, and canonical A-003 records the P0.6 evidence ruling.
 
 - There is no legal slot for A-003 until A-002 lands. Adding A-003 now would
   make it start from `c8271d11…` and collide with A-002's claim on the next
@@ -47,7 +44,7 @@ merging. It is governance for work already done, not a gate on it.
 ## The entry to append
 
 ```markdown
-## A-003: Cloudflare platform surface, isolated (D-21, R-CF-01..10, Q-19, P0.6, V-12, V-13, O-10)
+## Proposed content of the superseded Cloudflare showcase amendment (unadopted; former A-003 label)
 
 - Date: <YYYY-MM-DD>
 - Approved-by: @Treystu

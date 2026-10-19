@@ -5,7 +5,7 @@ plan). Each entry chains the plan's SHA-256 from the adopted genesis hash to
 the hash pinned in `docs/plan/PLAN.lock.json`; `npm run plan:check` rejects a
 broken chain, a missing approver, or any rewrite of an earlier entry.
 
-No amendments yet: the plan is at its genesis hash.
+Canonical amendment records A-001 through A-003 follow. Append future owner-approved entries without rewriting earlier entries.
 
 ## A-001: Carry-forward from the P0.2 review, and current-state gaps
 
