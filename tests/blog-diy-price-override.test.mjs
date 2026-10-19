@@ -21,6 +21,10 @@ const articleText = article
 
 test("DIY battery article keeps the manual $80–$120/kWh materials range", () => {
   assert.match(articleText, /\$80–\$120 per usable kWh/);
+  assert.match(
+    articleText,
+    /2026 Pricing Snapshot: DIY Estimate and Current References[\s\S]*?DIY battery materials planning estimate \(before delivery and tax\)[\s\S]*?\$80–\$120 \(planning estimate\)[\s\S]*?\$800–\$1,200 \(planning estimate\)/,
+  );
   assert.match(articleText, /the \$80–\$120\/kWh manual planning range/);
   assert.match(
     articleText,
