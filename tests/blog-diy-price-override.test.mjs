@@ -41,9 +41,14 @@ test("DIY price example links and calculates a source-priced 16S build", () => {
     article,
     /https:\/\/www\.docanpower\.com\/s3-diy-box-jk-bms-v19/,
   );
-  assert.match(articleText, /both ex tax: 16 cells plus the kit total \$1,261/);
-  assert.match(articleText, /11\.47 usable kWh at 80% depth of discharge/);
-  assert.match(articleText, /not a landed quote/);
+  assert.match(articleText, /both ex tax/);
+  assert.match(articleText, /Sixteen cells plus the kit total \$1,261/);
+  assert.match(
+    articleText,
+    /at 80% depth of discharge provides 11\.47 usable kWh/,
+  );
+  assert.match(articleText, /DDP shipping is quoted by destination/);
+  assert.match(articleText, /not a delivered price/);
 
   const listedSubtotal = 16 * 56 + 365;
   const usableKwh = (16 * 280 * 3.2 * 0.8) / 1000;
