@@ -702,10 +702,9 @@ test("GATE: P9.5 requires a score and each in-scope confidence of at least 95", 
   report.facets.quality.confidence = 0.949;
   const lowConfidence = judge(report, baselineFor(report), "P9.5");
   assert.equal(lowConfidence.pass, false);
-  assert.deepEqual(
-    lowConfidence.scoped.facets_below_min_confidence,
-    ["quality"],
-  );
+  assert.deepEqual(lowConfidence.scoped.facets_below_min_confidence, [
+    "quality",
+  ]);
 
   report.facets.quality = {
     ordinal: 60,

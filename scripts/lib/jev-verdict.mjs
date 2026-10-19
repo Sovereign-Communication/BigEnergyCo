@@ -76,8 +76,7 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
     ratchet.status === "met" &&
     (p9_5EvidenceRule
       ? scopedCombined >= minScore && facetsBelowMinConfidence.length === 0
-      : !exitRuleBinds ||
-        (scopedCombined >= minScore && short.length === 0));
+      : !exitRuleBinds || (scopedCombined >= minScore && short.length === 0));
   return {
     pass,
     scoped: {
@@ -92,10 +91,9 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
         ? "P9.5: score >= 95, every in-scope Jev confidence >= 0.95, hard gates and ratchet green"
         : null,
       bootstrap_applies: !exitRuleBinds && !p9_5EvidenceRule,
-      bootstrap_rule:
-        p9_5EvidenceRule
-          ? "P9.5 owner-approved exception: score >= 95 and every in-scope Jev confidence >= 0.95"
-          : scope === "P0.6"
+      bootstrap_rule: p9_5EvidenceRule
+        ? "P9.5 owner-approved exception: score >= 95 and every in-scope Jev confidence >= 0.95"
+        : scope === "P0.6"
           ? "plan §9 rule 6: P0.6 evidence PRs merge on green CI plus no ratchet regression, even below 99 (owner ruling 2026-10-06)"
           : "plan §9 rule 6: P0.3 sub-PRs merge on green CI plus no ratchet regression, even below 99",
       facets_short_of_proven: short,
