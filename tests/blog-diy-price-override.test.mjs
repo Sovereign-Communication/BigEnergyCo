@@ -129,15 +129,12 @@ test("chemistry comparison and CTA show only the available pricing evidence", ()
 
 test("Jev quality evidence fits its clip and preserves the remaining evidence gaps", () => {
   assert.ok(qualityEvidence.length <= COMPLETE_FACET_CLIP);
-  assert.match(qualityEvidence, /no Na-ion example\/endpoints/i);
-  assert.match(qualityEvidence, /\$80–\$120 planning estimate/);
+  assert.match(qualityEvidence, /Docan LFP: \$1,325 materials/);
+  assert.match(qualityEvidence, /14\.34 kWh × 80% = 11\.47 usable kWh/);
+  assert.match(qualityEvidence, /\$80–\$120\/kWh is a planning estimate only/);
+  assert.match(qualityEvidence, /no sodium-ion example supports it/);
   assert.match(
     qualityEvidence,
-    /cell\+kit freight excluded, destination-quoted/,
+    /Cell and kit freight are destination-quoted and excluded/,
   );
-  assert.match(
-    qualityEvidence,
-    /NLR 2025 LFP 5kW\/12\.5kWh: \$885\/nameplate=\$1,106\/usable/,
-  );
-  assert.match(qualityEvidence, /Pruned chemistry specs\/FAQ/);
 });

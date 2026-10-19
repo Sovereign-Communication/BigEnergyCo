@@ -23,7 +23,11 @@ import {
   planItemAtLeast,
   COMPLETE_EXIT_RULE_FROM,
 } from "../scripts/lib/jev-complete.mjs";
-import { scopedVerdict } from "../scripts/lib/jev-verdict.mjs";
+import {
+  P9_5_MIN_CONFIDENCE,
+  P9_5_MIN_SCORE,
+  scopedVerdict,
+} from "../scripts/lib/jev-verdict.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PLAN = readFileSync(join(ROOT, "docs/plan/MASTER_PLAN.md"), "utf8");
@@ -396,7 +400,8 @@ test("GATE: the CLI wires --scope through to the exit code", () => {
 // ── §9 rule 6: the P0.3 bootstrap, and what it must never relax ─────────────
 // P0.3 builds the gate that judges it, so a P0.3 sub-PR merges on green CI
 // plus no ratchet regression, even below 99. From P0.4 the ≥ 99 threshold and
-// the all-proven rule bind. The hard gates and the ratchet bind throughout.
+// the all-proven rule bind, except for P9.5's scoped 95/95 rule. Hard gates
+// and the ratchet bind throughout.
 test("GATE: the P0.3 bootstrap relaxes the score, never the ratchet or hard gates", () => {
   // The bootstrap rule is policy, and policy now has its own owner: the rules
   // are pinned in scripts/lib/jev-verdict.mjs, by the same expressions.
@@ -405,10 +410,11 @@ test("GATE: the P0.3 bootstrap relaxes the score, never the ratchet or hard gate
     "utf8",
   );
   const block = verdict.slice(verdict.indexOf("const pass ="));
-  // The score and all-proven checks must sit INSIDE the !exitRuleBinds guard.
+  // The score and all-proven checks must sit INSIDE the !exitRuleBinds guard
+  // for ordinary scopes. P9.5 has its separately tested 95/95 rule.
   assert.match(
     block,
-    /!exitRuleBinds \|\|\s*\(scopedCombined >= report\.min_score && short\.length === 0\)/,
+    /!exitRuleBinds \|\|\s*\(scopedCombined >= minScore && short\.length === 0\)/,
     "score and all-proven must only bind at or after the binding point",
   );
   // These two must be unconditional: a bootstrap that let a facet regress, or
@@ -425,7 +431,7 @@ test("GATE: the P0.3 bootstrap relaxes the score, never the ratchet or hard gate
   );
   assert.match(
     verdict,
-    /bootstrap_applies: !exitRuleBinds/,
+    /bootstrap_applies: !exitRuleBinds && !p9_5EvidenceRule/,
     "the report must state that the bootstrap applied, so a below-99 pass is never silent",
   );
 });
@@ -551,7 +557,7 @@ test("GATE: a scoped run at or after the binding point fails on any facet short 
   // The rule must actually gate the scoped exit, not merely be reported.
   assert.match(
     verdict,
-    /!exitRuleBinds \|\|\s*\(scopedCombined >= report\.min_score && short\.length === 0\)/,
+    /!exitRuleBinds \|\|\s*\(scopedCombined >= minScore && short\.length === 0\)/,
     "from the binding point a scoped run must require the score AND every in-scope facet proven",
   );
   assert.match(
@@ -672,6 +678,45 @@ const baselineFor = (report, overrides = {}) =>
 
 const judge = (report, ledgerText, scope = "P0.4") =>
   scopedVerdict({ report, scope, pack, ledgerText });
+
+test("GATE: P9.5 requires a score and each in-scope confidence of at least 95", () => {
+  assert.equal(P9_5_MIN_SCORE, 95);
+  assert.equal(P9_5_MIN_CONFIDENCE, 0.95);
+
+  const report = scopedReport(0);
+  report.facets.quality = {
+    ordinal: 85,
+    index: 3,
+    level: "confident",
+    confidence: 0.95,
+  };
+  report.facets.seo = { ...provenFacet, confidence: 0.95 };
+
+  const passing = judge(report, baselineFor(report), "P9.5");
+  assert.equal(passing.scoped.score, 97.75);
+  assert.equal(passing.scoped.min_score, 95);
+  assert.equal(passing.scoped.min_confidence, 0.95);
+  assert.equal(passing.pass, true);
+  assert.deepEqual(passing.scoped.facets_short_of_proven, ["quality"]);
+
+  report.facets.quality.confidence = 0.949;
+  const lowConfidence = judge(report, baselineFor(report), "P9.5");
+  assert.equal(lowConfidence.pass, false);
+  assert.deepEqual(
+    lowConfidence.scoped.facets_below_min_confidence,
+    ["quality"],
+  );
+
+  report.facets.quality = {
+    ordinal: 60,
+    index: 2,
+    level: "mixed",
+    confidence: 0.95,
+  };
+  const lowScore = judge(report, baselineFor(report), "P9.5");
+  assert.equal(lowScore.scoped.score, 94);
+  assert.equal(lowScore.pass, false);
+});
 
 test("GATE: out-of-scope facets cannot decide a scoped verdict", () => {
   // Seventeen facets at zero, and the four P0.4 facets all proven. If scope

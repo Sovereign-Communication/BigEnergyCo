@@ -37,3 +37,12 @@ No amendments yet: the plan is at its genesis hash.
 ## Status correction — 2026-10-19
 
 The introductory description above predates the entries that follow it: canonical amendments A-001 through A-003 are present in this log. This appended note corrects that status description only; it does not amend `MASTER_PLAN.md`, and its pinned SHA remains `6f9c8c7e7d33140fb6ec5ef36848f27d0387a5ab0501985df71dba77b20279cf`.
+
+## A-004: P9.5 scoped pricing-evidence confidence threshold
+
+- Date: 2026-10-19
+- Approved-by: @Treystu
+- Plan-SHA256-before: 6f9c8c7e7d33140fb6ec5ef36848f27d0387a5ab0501985df71dba77b20279cf
+- Plan-SHA256-after: 269423b9d14d327fecf4ade03bec5d3098646269c346b3e390de2a1d3c7e6345
+- Sections: Q-01; §9 rule 6; §13.3
+- Rationale: The owner directed that the P9.5 pricing-evidence gate use both a scoped score threshold of 95/100 and at least 95% confidence on every in-scope Jev judgment. This replaces the scoped all-proven requirement for P9.5 only; hard gates and the all-facet ratchet remain required. Other phase thresholds and the 99/100 all-proven program-exit rule do not change.

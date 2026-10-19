@@ -14,6 +14,9 @@ import {
   COMPLETE_EXIT_RULE_FROM,
 } from "./jev-complete.mjs";
 
+export const P9_5_MIN_SCORE = 95;
+export const P9_5_MIN_CONFIDENCE = 0.95;
+
 /**
  * Judge a named plan item's facets (P0.3(c) / §13.3).
  *
@@ -23,6 +26,9 @@ import {
  * last recorded — in or out of scope.
  */
 export function scopedVerdict({ report, scope, pack, ledgerText }) {
+  const p9_5EvidenceRule = scope === "P9.5";
+  const minScore = p9_5EvidenceRule ? P9_5_MIN_SCORE : report.min_score;
+  const minConfidence = p9_5EvidenceRule ? P9_5_MIN_CONFIDENCE : null;
   const scopeFacets = resolveScopeFacets(scope, pack);
   const inScope = {};
   for (const axis of scopeFacets) inScope[axis] = report.facets[axis];
@@ -37,17 +43,29 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
     readRatchetBaseline(ledgerText, pack),
   );
   const short = scopeFacets.filter((a) => report.facets[a].index < 4);
+  const facetsBelowMinConfidence = p9_5EvidenceRule
+    ? scopeFacets.filter((axis) => {
+        const confidence = report.facets[axis].confidence;
+        return (
+          typeof confidence !== "number" ||
+          !Number.isFinite(confidence) ||
+          confidence < minConfidence
+        );
+      })
+    : [];
   // The all-proven exit rule binds from COMPLETE_EXIT_RULE_FROM. P0.3(c)
   // defined the rule and is the one item it cannot judge (see the constant).
-  // P0.6 is owner-ruled (§9 rule 6, 2026-10-06) into the same bootstrap: the
-  // gate's confidence calibration cannot reach `proven` on audit evidence.
+  // P0.6 has an owner-approved bootstrap, and P9.5 uses its own 95/95 rule.
   const exitRuleBinds =
-    planItemAtLeast(scope, COMPLETE_EXIT_RULE_FROM) && scope !== "P0.6";
+    planItemAtLeast(scope, COMPLETE_EXIT_RULE_FROM) &&
+    scope !== "P0.6" &&
+    !p9_5EvidenceRule;
   // P0.3 bootstrap (plan §9 rule 6, owner ruling 2026-09-26): a P0.3
   // sub-PR builds the gate that judges it, so it merges on green CI plus an
   // attached scoped report with NO RATCHET REGRESSION, even below 99. The
-  // ≥ 99 threshold and the all-proven rule bind from P0.4. The hard gates
-  // and the ratchet bind throughout and are never relaxed.
+  // ≥ 99 threshold and all-proven rule bind from P0.4 except P9.5's
+  // owner-approved score/confidence threshold. Hard gates and the ratchet
+  // always bind.
   //
   // The ratchet test is `=== "met"`, not `!== "violation"`. An inactive
   // ratchet means nothing was checked, and "no regression" must mean
@@ -56,8 +74,10 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
   const pass =
     report.hard_gates_passed &&
     ratchet.status === "met" &&
-    (!exitRuleBinds ||
-      (scopedCombined >= report.min_score && short.length === 0));
+    (p9_5EvidenceRule
+      ? scopedCombined >= minScore && facetsBelowMinConfidence.length === 0
+      : !exitRuleBinds ||
+        (scopedCombined >= minScore && short.length === 0));
   return {
     pass,
     scoped: {
@@ -65,10 +85,17 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
       facets: scopeFacets,
       semantic_score: Math.round(semantic * 100) / 100,
       score: Math.round(scopedCombined * 100) / 100,
-      min_score: report.min_score,
-      bootstrap_applies: !exitRuleBinds,
+      min_score: minScore,
+      min_confidence: minConfidence,
+      facets_below_min_confidence: facetsBelowMinConfidence,
+      scoped_rule: p9_5EvidenceRule
+        ? "P9.5: score >= 95, every in-scope Jev confidence >= 0.95, hard gates and ratchet green"
+        : null,
+      bootstrap_applies: !exitRuleBinds && !p9_5EvidenceRule,
       bootstrap_rule:
-        scope === "P0.6"
+        p9_5EvidenceRule
+          ? "P9.5 owner-approved exception: score >= 95 and every in-scope Jev confidence >= 0.95"
+          : scope === "P0.6"
           ? "plan §9 rule 6: P0.6 evidence PRs merge on green CI plus no ratchet regression, even below 99 (owner ruling 2026-10-06)"
           : "plan §9 rule 6: P0.3 sub-PRs merge on green CI plus no ratchet regression, even below 99",
       facets_short_of_proven: short,
