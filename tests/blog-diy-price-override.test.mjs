@@ -42,33 +42,37 @@ test("DIY price example links and calculates a source-priced 16S build", () => {
     article,
     /https:\/\/www\.docanpower\.com\/s3-diy-box-jk-bms-v19/,
   );
-  assert.match(articleText, /at \$60 each ex tax/);
-  assert.match(articleText, /at \$365 ex tax/);
-  assert.match(articleText, /specified for 16 cells of 280–330Ah/);
-  assert.match(articleText, /Sixteen cells plus the kit total \$1,325/);
+  assert.match(articleText, /at \$60 each and its[\s\S]*at \$365, both ex tax/);
+  assert.match(articleText, /kit fits 16 cells of 280–330Ah/);
   assert.match(
     articleText,
-    /14\.34 kWh nominal capacity and provides 11\.47 usable kWh at 80% depth of discharge/,
+    /14\.34 kWh nameplate, 11\.47 kWh usable at 80% DoD/,
   );
   assert.match(
     articleText,
-    /about \$116\/usable kWh before tax and destination freight/,
+    /\$1,325, or about \$116\/usable kWh before tax\/freight/,
   );
   assert.match(
     articleText,
-    /online-order listing to the continental United States/,
+    /continental U\.S\. online orders; kit DDP freight is destination-quoted/,
   );
-  assert.match(articleText, /DDP shipping cost is quoted by destination/);
-  assert.match(articleText, /not a delivered price/);
-  assert.match(articleText, /does not substantiate the range endpoints/);
+  assert.match(
+    articleText,
+    /not proof of the \$80–\$120\/kWh manual planning range's endpoints or a delivered price/,
+  );
 
   const listedSubtotal = 16 * 60 + 365;
   const nominalKwh = (16 * 280 * 3.2) / 1000;
   const usableKwh = nominalKwh * 0.8;
-  assert.equal(listedSubtotal, 1325);
-  assert.equal(Math.round(nominalKwh * 100) / 100, 14.34);
-  assert.equal(Math.round(usableKwh * 100) / 100, 11.47);
-  assert.equal(Math.round(listedSubtotal / usableKwh), 116);
+  assert.deepEqual(
+    [
+      listedSubtotal,
+      Math.round(nominalKwh * 100) / 100,
+      Math.round(usableKwh * 100) / 100,
+      Math.round(listedSubtotal / usableKwh),
+    ],
+    [1325, 14.34, 11.47, 116],
+  );
 });
 
 test("10× statement distinguishes DIY materials from installed project costs", () => {
@@ -94,15 +98,15 @@ test("price article has source links and a current visible review date", () => {
   );
   assert.match(
     articleText,
-    /2024 5-kW\/12\.5-kWh LFP system at \$885\/nameplate kWh in 2023 dollars/,
+    /2024 residential LFP system \(5 kW\/12\.5 kWh\) at \$885\/nameplate kWh in 2023 dollars/,
   );
-  assert.match(articleText, /about \$1,106\/usable kWh/);
-  assert.match(articleText, /sales tax/);
-  assert.match(articleText, /shipping is not separately itemized/);
   assert.match(
     articleText,
-    /band remains a planning estimate rather than source-quoted endpoints/,
+    /\$37\/kWh sales tax, labor, inverter, balance of system, permitting and interconnection/,
   );
+  assert.match(articleText, /about \$1,106\/usable kWh/);
+  assert.match(articleText, /model, not a quote; shipping is not itemized/);
+  assert.match(articleText, /planning-band endpoints/);
 
   const modeledPerRatedKwh = 885;
   const modeledUsableFraction = 0.8;
