@@ -3,8 +3,12 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const qualityEvidence = JSON.parse(
+  readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
+).facet_evidence.quality;
 const articlePath = join(
   ROOT,
   "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html",
@@ -72,6 +76,16 @@ test("DIY price example links and calculates a source-priced 16S build", () => {
       Math.round(listedSubtotal / usableKwh),
     ],
     [1325, 14.34, 11.47, 116],
+  );
+});
+
+test("Jev quality evidence fits its clip and keeps the endpoint gap explicit", () => {
+  assert.ok(qualityEvidence.length <= COMPLETE_FACET_CLIP);
+  assert.match(qualityEvidence, /No quotes for \$80\/\$120 endpoints/);
+  assert.match(qualityEvidence, /\$80–\$120 as manual estimate/);
+  assert.match(
+    qualityEvidence,
+    /NLR 2025 ATB: \$885\/nameplate kWh.*\$1,106\/usable/,
   );
 });
 
