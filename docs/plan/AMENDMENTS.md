@@ -51,3 +51,6 @@ No amendments yet: the plan is at its genesis hash.
 - Plan-SHA256-after: 09f4a8379da73b95c97e9a3930565516d106ce61443569036488b3e1d16d3ee7
 - Sections: D-03, Q-01, Section 13.2, Section 13.3
 - Rationale: The owner approved amending sequencing after the pre-merge Jev judgment deadlocked on confidence. Main is the staging surface; scoped PR Jev reports remain attached and use the existing 95/95/95 bar, but are advisory. A full run on the exact merged main SHA is the blocking production-promotion gate and must pass the same score, per-facet ordinal, per-facet confidence, all-facet ratchet, and hard-gate requirements. Staging remains available for review while the release gate is red; no threshold is lowered.
+## Status correction — 2026-10-19
+
+The introductory description above predates the entries that follow it: canonical amendments A-001 through A-003 are present in this log. This appended note corrects that status description only; it does not amend `MASTER_PLAN.md`, and its pinned SHA remains `6f9c8c7e7d33140fb6ec5ef36848f27d0387a5ab0501985df71dba77b20279cf`.
