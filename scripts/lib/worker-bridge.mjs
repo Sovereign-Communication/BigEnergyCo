@@ -56,7 +56,7 @@ export async function loadWorker() {
  * degraded reply, which is the path a visitor hits when upstream is down and
  * the one the contest demo's failure surface depends on. Injecting a fake key
  * would make the smoke call a real paid upstream from CI, which is exactly the
- * kind of surprise this repo's D-21 carve-out exists to prevent.
+ * kind of surprise the local no-paid-upstream test policy exists to prevent.
  */
 export function localWorkerEnv(overrides = {}) {
   return { ...overrides };
