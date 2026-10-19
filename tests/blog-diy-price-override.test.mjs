@@ -58,7 +58,7 @@ test("DIY price example links and calculates a source-priced 16S build", () => {
   );
   assert.match(
     articleText,
-    /continental U\.S\. online orders; kit DDP freight is destination-quoted/,
+    /The \$60 cell listing is China-stock\. Cell DDP\/CIF and kit DDP freight are excluded and quoted by destination/,
   );
   assert.match(
     articleText,
@@ -81,11 +81,15 @@ test("DIY price example links and calculates a source-priced 16S build", () => {
 
 test("Jev quality evidence fits its clip and keeps the endpoint gap explicit", () => {
   assert.ok(qualityEvidence.length <= COMPLETE_FACET_CLIP);
-  assert.match(qualityEvidence, /No quotes for \$80\/\$120 endpoints/);
-  assert.match(qualityEvidence, /\$80–\$120 as manual estimate/);
+  assert.match(qualityEvidence, /No Na-ion example or endpoint quotes/);
+  assert.match(qualityEvidence, /\$80–\$120 is a planning estimate/);
   assert.match(
     qualityEvidence,
-    /NLR 2025 ATB: \$885\/nameplate kWh.*\$1,106\/usable/,
+    /Cell\+kit freight excluded; destination-quoted/,
+  );
+  assert.match(
+    qualityEvidence,
+    /NLR 2025: 5kW\/12\.5kWh, \$885\/nameplate kWh.*\$1,106\/usable/,
   );
 });
 
@@ -100,6 +104,19 @@ test("10× statement distinguishes DIY materials from installed project costs", 
     articleText,
     /budget retail battery packs remain a separate \$110–\$165\/kWh reference/i,
   );
+});
+
+test("chemistry comparison does not imply unsupported sodium-ion prices", () => {
+  assert.match(
+    articleText,
+    /DIY materials planning estimate \(\$\/usable kWh\)[\s\S]*?\$80–\$120 \(estimate\)[\s\S]*?No sourced example; quote needed/,
+  );
+  assert.match(
+    articleText,
+    /pricing example below is LFP; get a current supplier quote for sodium-ion/,
+  );
+  assert.doesNotMatch(articleText, /lowest \$\/kWh/);
+  assert.doesNotMatch(articleText, /real 2026 component pricing, not guesses/i);
 });
 
 test("price article has source links and a current visible review date", () => {
