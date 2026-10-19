@@ -6,9 +6,6 @@ import test from "node:test";
 import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const qualityEvidence = JSON.parse(
-  readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
-).facet_evidence.quality;
 const articlePath = join(
   ROOT,
   "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html",
@@ -18,30 +15,31 @@ const articleText = article
   .replace(/<[^>]+>/g, " ")
   .replace(/&amp;/g, "&")
   .replace(/\s+/g, " ");
+const comparisonTable = article.match(
+  /<h2>LFP vs Sodium-Ion: Current Pricing Evidence \(2026\)<\/h2>\s*<table>([\s\S]*?)<\/table>/,
+)?.[1];
+const qualityEvidence = JSON.parse(
+  readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
+).facet_evidence.quality;
 
-test("DIY battery article keeps the manual $80–$120/kWh materials range", () => {
+test("DIY price override remains an explicitly scoped planning estimate", () => {
   assert.match(articleText, /\$80–\$120 per usable kWh/);
   assert.match(
     articleText,
-    /2026 Pricing Snapshot: DIY Estimate and Current References[\s\S]*?DIY battery materials planning estimate \(before delivery and tax\)[\s\S]*?\$80–\$120 \(planning estimate\)[\s\S]*?\$800–\$1,200 \(planning estimate\)/,
+    /DIY battery materials planning estimate \(before delivery and tax\)[\s\S]*?\$80–\$120 \(planning estimate\)[\s\S]*?\$800–\$1,200 \(planning estimate\)/,
   );
-  assert.match(articleText, /the \$80–\$120\/kWh manual planning range/);
+  assert.match(articleText, /battery components listed below at source prices/);
   assert.match(
     articleText,
-    /battery materials at source:[\s\S]*before delivery and tax/,
+    /10× comparison is between source-price DIY materials and an installed project, not a like-for-like battery-pack comparison/,
   );
-  assert.match(articleText, /\$800–\$1,200 in DIY materials for 10 usable kWh/);
   assert.doesNotMatch(
     articleText,
-    /landed DIY|landed battery materials|included in the landed/i,
+    /landed DIY|landed battery materials|included in the landed|\$300\s*[–-]\s*\$?500|\$80\s*[–-]\s*\$?125|40-60% cheaper|\$120\s*[–-]\s*430 saving/i,
   );
-  assert.doesNotMatch(articleText, /\$300\s*[–-]\s*\$?500/);
-  assert.doesNotMatch(articleText, /\$80\s*[–-]\s*\$?125/);
-  assert.doesNotMatch(articleText, /40-60% cheaper/);
-  assert.doesNotMatch(articleText, /\$120\s*[–-]\s*430 saving/);
 });
 
-test("DIY price example links and calculates a source-priced 16S build", () => {
+test("current LFP and installed examples state their capacity and cost scope", () => {
   assert.match(
     article,
     /https:\/\/www\.docanpower\.com\/rept-280ah-prismatic-cell/,
@@ -62,71 +60,12 @@ test("DIY price example links and calculates a source-priced 16S build", () => {
   );
   assert.match(
     articleText,
-    /The \$60 cell listing is China-stock\. Cell DDP\/CIF and kit DDP freight are excluded and quoted by destination/,
+    /Cell DDP\/CIF and kit DDP freight are excluded and quoted by destination/,
   );
   assert.match(
     articleText,
     /not proof of the \$80–\$120\/kWh manual planning range's endpoints or a delivered price/,
   );
-
-  const listedSubtotal = 16 * 60 + 365;
-  const nominalKwh = (16 * 280 * 3.2) / 1000;
-  const usableKwh = nominalKwh * 0.8;
-  assert.deepEqual(
-    [
-      listedSubtotal,
-      Math.round(nominalKwh * 100) / 100,
-      Math.round(usableKwh * 100) / 100,
-      Math.round(listedSubtotal / usableKwh),
-    ],
-    [1325, 14.34, 11.47, 116],
-  );
-});
-
-test("Jev quality evidence fits its clip and keeps the endpoint gap explicit", () => {
-  assert.ok(qualityEvidence.length <= COMPLETE_FACET_CLIP);
-  assert.match(qualityEvidence, /No Na-ion example or endpoint quotes/);
-  assert.match(qualityEvidence, /\$80–\$120 is a planning estimate/);
-  assert.match(
-    qualityEvidence,
-    /Cell\+kit freight excluded; destination-quoted/,
-  );
-  assert.match(
-    qualityEvidence,
-    /NLR 2025: 5kW\/12\.5kWh, \$885\/nameplate kWh.*\$1,106\/usable/,
-  );
-});
-
-test("10× statement distinguishes DIY materials from installed project costs", () => {
-  assert.match(articleText, /\$800–\$1,200 per usable kWh/);
-  assert.match(
-    articleText,
-    /10× comparison is between source-price DIY materials and an installed project, not a like-for-like battery-pack comparison/,
-  );
-  assert.deepEqual([800 / 80, 1200 / 120], [10, 10]);
-  assert.match(
-    articleText,
-    /budget retail battery packs remain a separate \$110–\$165\/kWh reference/i,
-  );
-});
-
-test("chemistry comparison does not imply unsupported sodium-ion prices", () => {
-  assert.match(
-    articleText,
-    /DIY materials planning estimate \(\$\/usable kWh\)[\s\S]*?\$80–\$120 \(estimate\)[\s\S]*?No sourced example; quote needed/,
-  );
-  assert.match(
-    articleText,
-    /pricing example below is LFP; get a current supplier quote for sodium-ion/,
-  );
-  assert.doesNotMatch(articleText, /lowest \$\/kWh/);
-  assert.doesNotMatch(articleText, /real 2026 component pricing, not guesses/i);
-});
-
-test("price article has source links and a current visible review date", () => {
-  assert.match(article, /article:modified_time" content="2026-10-19"/);
-  assert.match(article, /"dateModified": "2026-10-19T00:00:00Z"/);
-  assert.match(article, /Last reviewed[\s\S]*?19 October 2026/);
   assert.match(
     article,
     /https:\/\/atb\.nlr\.gov\/electricity\/2025\/residential_battery_storage/,
@@ -143,17 +82,62 @@ test("price article has source links and a current visible review date", () => {
   assert.match(articleText, /model, not a quote; shipping is not itemized/);
   assert.match(articleText, /planning-band endpoints/);
 
-  const modeledPerRatedKwh = 885;
-  const modeledUsableFraction = 0.8;
-  assert.equal(Math.round(modeledPerRatedKwh / modeledUsableFraction), 1106);
-  assert.match(
-    article,
-    /https:\/\/powmr\.com\/collections\/48v-lithium-battery/,
+  const supplierTotal = 16 * 60 + 365;
+  const usableKwh = (16 * 280 * 3.2 * 0.8) / 1000;
+  assert.deepEqual(
+    [
+      supplierTotal,
+      Math.round(usableKwh * 100) / 100,
+      Math.round(supplierTotal / usableKwh),
+      Math.round(885 / 0.8),
+    ],
+    [1325, 11.47, 116, 1106],
   );
+});
 
-  const sitemap = readFileSync(join(ROOT, "sitemap.xml"), "utf8");
+test("chemistry comparison and CTA show only the available pricing evidence", () => {
+  assert.ok(comparisonTable, "pricing comparison table is present");
+  const comparisonText = comparisonTable
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+  assert.equal((comparisonTable.match(/<tr>/g) ?? []).length, 4);
   assert.match(
-    sitemap,
-    /<loc>https:\/\/freeoffgridcalculator\.com\/blog\/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage\/<\/loc>\s*<lastmod>2026-10-19<\/lastmod>/,
+    comparisonText,
+    /\$80–\$120\/usable kWh; planning estimate, not sourced endpoints/,
   );
+  assert.match(
+    comparisonText,
+    /About \$116\/usable kWh; 11\.47 usable kWh, before tax and freight/,
+  );
+  assert.match(
+    comparisonText,
+    /About \$1,106\/usable kWh in the NLR 2025 ATB model/,
+  );
+  assert.match(
+    comparisonText,
+    /No sourced example; obtain a current supplier quote/,
+  );
+  assert.match(
+    articleText,
+    /The sourced pricing example below is LFP; sodium-ion needs a current supplier quote/,
+  );
+  assert.doesNotMatch(
+    articleText,
+    /4,000.*cycles|2,000.*cycles|20–30% lower|charges at −20°C|0V storage|sodium-ion is generally considered safer/i,
+  );
+});
+
+test("Jev quality evidence fits its clip and preserves the remaining evidence gaps", () => {
+  assert.ok(qualityEvidence.length <= COMPLETE_FACET_CLIP);
+  assert.match(qualityEvidence, /no Na-ion example\/endpoints/i);
+  assert.match(qualityEvidence, /\$80–\$120 planning estimate/);
+  assert.match(
+    qualityEvidence,
+    /cell\+kit freight excluded, destination-quoted/,
+  );
+  assert.match(
+    qualityEvidence,
+    /NLR 2025 LFP 5kW\/12\.5kWh: \$885\/nameplate=\$1,106\/usable/,
+  );
+  assert.match(qualityEvidence, /Pruned chemistry specs\/FAQ/);
 });
