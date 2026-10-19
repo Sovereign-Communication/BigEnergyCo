@@ -17,6 +17,7 @@ const articleText = article
 
 test("DIY battery article keeps the manual $80–$120/kWh materials range", () => {
   assert.match(articleText, /\$80–\$120 per usable kWh/);
+  assert.match(articleText, /the \$80–\$120\/kWh manual planning range/);
   assert.match(
     articleText,
     /battery materials at source:[\s\S]*before delivery and tax/,
@@ -35,25 +36,39 @@ test("DIY battery article keeps the manual $80–$120/kWh materials range", () =
 test("DIY price example links and calculates a source-priced 16S build", () => {
   assert.match(
     article,
-    /https:\/\/www\.docanpower\.com\/china-stock\/catl-280ah-prismatic-cell/,
+    /https:\/\/www\.docanpower\.com\/rept-280ah-prismatic-cell/,
   );
   assert.match(
     article,
     /https:\/\/www\.docanpower\.com\/s3-diy-box-jk-bms-v19/,
   );
-  assert.match(articleText, /both ex tax/);
-  assert.match(articleText, /Sixteen cells plus the kit total \$1,261/);
+  assert.match(articleText, /at \$60 each ex tax/);
+  assert.match(articleText, /at \$365 ex tax/);
+  assert.match(articleText, /specified for 16 cells of 280–330Ah/);
+  assert.match(articleText, /Sixteen cells plus the kit total \$1,325/);
   assert.match(
     articleText,
-    /at 80% depth of discharge provides 11\.47 usable kWh/,
+    /14\.34 kWh nominal capacity and provides 11\.47 usable kWh at 80% depth of discharge/,
   );
-  assert.match(articleText, /DDP shipping is quoted by destination/);
+  assert.match(
+    articleText,
+    /about \$116\/usable kWh before tax and destination freight/,
+  );
+  assert.match(
+    articleText,
+    /online-order listing to the continental United States/,
+  );
+  assert.match(articleText, /DDP shipping cost is quoted by destination/);
   assert.match(articleText, /not a delivered price/);
+  assert.match(articleText, /does not substantiate the range endpoints/);
 
-  const listedSubtotal = 16 * 56 + 365;
-  const usableKwh = (16 * 280 * 3.2 * 0.8) / 1000;
-  assert.equal(listedSubtotal, 1261);
-  assert.equal(Math.round(listedSubtotal / usableKwh), 110);
+  const listedSubtotal = 16 * 60 + 365;
+  const nominalKwh = (16 * 280 * 3.2) / 1000;
+  const usableKwh = nominalKwh * 0.8;
+  assert.equal(listedSubtotal, 1325);
+  assert.equal(Math.round(nominalKwh * 100) / 100, 14.34);
+  assert.equal(Math.round(usableKwh * 100) / 100, 11.47);
+  assert.equal(Math.round(listedSubtotal / usableKwh), 116);
 });
 
 test("10× statement distinguishes DIY materials from installed project costs", () => {
@@ -75,8 +90,23 @@ test("price article has source links and a current visible review date", () => {
   assert.match(article, /Last reviewed[\s\S]*?19 October 2026/);
   assert.match(
     article,
-    /https:\/\/atb\.nrel\.gov\/electricity\/2024\/residential_battery_storage/,
+    /https:\/\/atb\.nlr\.gov\/electricity\/2025\/residential_battery_storage/,
   );
+  assert.match(
+    articleText,
+    /2024 5-kW\/12\.5-kWh LFP system at \$885\/nameplate kWh in 2023 dollars/,
+  );
+  assert.match(articleText, /about \$1,106\/usable kWh/);
+  assert.match(articleText, /sales tax/);
+  assert.match(articleText, /shipping is not separately itemized/);
+  assert.match(
+    articleText,
+    /band remains a planning estimate rather than source-quoted endpoints/,
+  );
+
+  const modeledPerRatedKwh = 885;
+  const modeledUsableFraction = 0.8;
+  assert.equal(Math.round(modeledPerRatedKwh / modeledUsableFraction), 1106);
   assert.match(
     article,
     /https:\/\/powmr\.com\/collections\/48v-lithium-battery/,
