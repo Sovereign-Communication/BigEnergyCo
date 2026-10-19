@@ -50,13 +50,19 @@ All eleven verification facts V-01…V-11 remain open in the ledger: turnkey ben
 
 ## Fresh CI, Jev, and production parity evidence
 
-For workflow run [39309395683](https://github.com/Sovereign-Communication/BigEnergyCo/actions/runs/39309395683) on head `8d349ef`:
+Workflow run [39309395683](https://github.com/Sovereign-Communication/BigEnergyCo/actions/runs/39309395683) on head `8d349ef` produced the live Jev score below. It predates the updated P9.5 proof line in the report commit:
 
 - Passed: `test` (1,693/1,693), `web-smoke` (169/169 browser gates), `coverage`, `quality-lab`, `quality-evidence`, `lighthouse`, and CodeQL `analyze`.
 - Jev hard gates and ratchet passed. Scoped P9.5 facets: `quality` 85 (not proven) and `seo` 100 (proven); score 97.75, target 99, so the Jev job failed. The whole-program report scored 95.79 (mechanical 100, semantic 85.95); not-proven facets: advisor, comparison, correctness, design, i18n, performance, physics, provenance, quality, release, resilience, spec, translation. Primary follow-ups were translation quality, real-surface performance playtest, and provenance audit.
 - The report commit updates the stale hand-maintained P9.5 quality proof to describe the exact price/scope tests. A new live Jev run on that head is required; see the [current PR checks](https://github.com/Sovereign-Communication/BigEnergyCo/pull/212/checks) for its result. This report does not assume it passes.
 
-Production parity observations (read-only, no deploy):
+The report-head workflow [39312649157](https://github.com/Sovereign-Communication/BigEnergyCo/actions/runs/39312649157) ran on `d78307f`:
+
+- `test` (1,693/1,693), `web-smoke` (169/169), `coverage`, `quality-lab`, and `quality-evidence` passed; CodeQL run [39312649022](https://github.com/Sovereign-Communication/BigEnergyCo/actions/runs/39312649022) passed.
+- Lighthouse failed before producing its report with `ECONNREFUSED 127.0.0.1:43813`. The validator failed closed on the missing Lighthouse job result and skipped the live Jev call. This is a local browser/debug-port connection failure in the runner, not a measured Lighthouse threshold breach; a complete Jev result for this head is unavailable.
+- This attempt provides no full Jev score. Any subsequent live result must be read from the [current PR checks](https://github.com/Sovereign-Communication/BigEnergyCo/pull/212/checks), not inferred from this failed evidence build.
+
+Production parity was re-run read-only after the report commit (`d78307f`); no deploy was made:
 
 - `https://bigenergyco.pages.dev/` against clean `origin/main` (`27cd860`): **389/389 matched**, verified true.
 - The candidate against the same Pages origin: **384/389 matched**. The five differences are `sitemap.xml`, the DIY battery article, `off-grid-vs-grid-tie-payback`, `how-to-cut-electricity-bill-with-solar`, and `battery-longevity-and-dod-reference`—the candidate PR's sitemap/content changes.
@@ -78,7 +84,7 @@ Production parity observations (read-only, no deploy):
 - **Roof-map conflict:** merged PR #228 shipped a three-tap rotated roof rectangle. Canonical A-001/P6.7 says the roof map was retired. Keep the map and amend the plan, or remove it to match the plan; awaiting owner direction.
 - **Code Owner review:** O-05 says enable required Code Owner review; current ruleset has zero required approvals and `require_code_owner_review: false` for self-merge. Awaiting owner direction.
 - **PR #232 / A-004:** P9.7 content-quality gate is proposed in an open PR, not canonical. Current canonical A-003 is already used, so any later amendment must be sequential and owner-approved; do not treat #232 as adopted.
-- **Cloudflare showcase scope:** its implementation and contest checklists still contain D-21/R-CF identifiers and 0/10 work proposals not in `MASTER_PLAN.md`. This work has not been adopted; the showcase key was not provisioned and nothing was deployed.
+- **Cloudflare showcase scope:** its implementation and contest checklists still contain the ten D-21/R-CF proposals, which are not in `MASTER_PLAN.md`. This work has not been adopted; the showcase key was not provisioned and nothing was deployed.
 
 ## Repository task markers outside the canonical plan
 
