@@ -453,20 +453,66 @@
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <header>
-      <div class="container">
-        <a class="logo" href="../../" aria-label="BigEnergyCo Home">
-          <span>⚡</span>
+      <div class="container nav-flex">
+        <a
+          href="../../"
+          class="logo"
+          style="text-decoration: none"
+          aria-label="BigEnergyCo Home"
+        >
+          <span aria-hidden="true">&#9889;</span>
+
           <span>BigEnergy<span class="highlight">Co</span></span>
         </a>
-        <nav>
+
+        <nav class="nav-links">
           <a href="../../solar-heatmap/">Heatmap</a>
-          <a href="../../#bom">Hardware Reference</a>
-          <a href="../" class="active">Guides &amp; Blog</a>
+
+          <a href="../../#bom" data-i18n="navBom">Hardware Reference</a>
+
+          <a href="../" class="active" data-i18n="navBlog">Guides &amp; Blog</a>
+
           <a href="../../about/">About</a>
-          <a href="../../#legal">Terms &amp; Disclaimer</a>
+
+          <a href="../../#legal" data-i18n="navLegal">Terms &amp; Disclaimer</a>
         </nav>
+
         <div class="header-cta">
-          <a href="../../#sizing" class="btn btn-primary">Size Your System</a>
+          <span
+            id="offlineBadge"
+            class="offline-badge"
+            style="display: none"
+            title="Working offline using cached app data &amp; local weather simulation"
+            aria-label="Offline status"
+          >
+            <span class="offline-dot"></span> Offline
+          </span>
+
+          <button
+            id="btnInstallApp"
+            class="btn btn-outline btn-xs"
+            type="button"
+            aria-label="Install BigEnergyCo Web App"
+            style="display: none; cursor: pointer"
+          >
+            &#128242; Install App
+          </button>
+
+          <a
+            href="../../#support"
+            class="btn btn-secondary"
+            style="cursor: pointer; text-decoration: none"
+            data-i18n="navSupport"
+            >Support</a
+          >
+
+          <a
+            href="../../#sizing"
+            class="btn btn-primary"
+            style="cursor: pointer; text-decoration: none"
+            data-i18n="navSizing"
+            >Size Your System</a
+          >
         </div>
       </div>
     </header>

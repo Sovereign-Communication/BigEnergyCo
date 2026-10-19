@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261005h";
+import { APPLIANCES } from "./appliances.js?v=20261016l";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -24,14 +24,14 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261005h";
+} from "./usecases.js?v=20261016l";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261005h";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261005h";
+} from "./run-coordinator.js?v=20261016l";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261016l";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -40,12 +40,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261005h";
+} from "./charts.js?v=20261016l";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261005h";
+} from "./location-picker.js?v=20261016l";
 
 import {
   estimateTariff,
@@ -53,14 +53,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261005h";
+} from "./pricing.js?v=20261016l";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261005h";
+import { currencyForCountry } from "./country-currency.js?v=20261016l";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261005h";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261016l";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -92,7 +92,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261005h").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261016l").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -103,15 +103,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261005h";
+} from "./lead-acid.js?v=20261016l";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261005h";
+} from "./bom.js?v=20261016l";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261005h";
+import { BOM_ITEMS } from "../shared/content.js?v=20261016l";
 
 import {
   applyI18n,
@@ -120,18 +120,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261005h";
+} from "../shared/i18n.js?v=20261016l";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261005h";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261005h";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261016l";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261016l";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261005h";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261005h";
+} from "../shared/simple-mode.js?v=20261016l";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261016l";
 import {
   advisorJevContext,
   interpretSanity,
@@ -139,56 +139,57 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261005h";
+} from "./validate.js?v=20261016l";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261005h";
+} from "../shared/cut-targets.js?v=20261016l";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261005h";
+} from "./share-codec.js?v=20261016l";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261005h";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261005h";
+} from "./infeasible-copy.js?v=20261016l";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261016l";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261005h";
+} from "./fuel-units.js?v=20261016l";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261005h";
+} from "./frontier-chart.js?v=20261016l";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261005h";
+} from "./rescale.js?v=20261016l";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261005h";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261016l";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
-  rectangleAreaM2,
+  rotatedRectangleAreaM2,
+  rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261005h";
+} from "./map-provider.js?v=20261016l";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261005h";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261005h";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261005h";
+} from "./wizard.js?v=20261016l";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261016l";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261016l";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -237,9 +238,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261005h";
+} from "./money.js?v=20261016l";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261005h";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261016l";
 
 let worker = null;
 
@@ -270,6 +271,7 @@ let roofMapRegistry = null;
 let roofMapUnsubscribe = null;
 let roofMapRectangle = null;
 let roofMapFirstCorner = null;
+let roofMapSecondCorner = null;
 
 // The monthly-bill slider stores the user's real input as consumed ENERGY
 // (kWh/day, default 20) and re-expresses that as local currency whenever the
@@ -988,7 +990,7 @@ function renderUseCaseOutcome(p) {
           style:
             "font-size:0.9rem;font-weight:700;color:var(--text-muted);margin:0 0 0.4rem",
         },
-        t("useCaseNotMeasured", { metric: t(o.labelKey) }),
+        t("useCaseNotMeasured"),
       ),
     );
     wrap.style.display = "block";
@@ -1017,10 +1019,7 @@ function renderUseCaseOutcome(p) {
         style:
           "font-size:0.8rem;color:var(--text-muted);margin:0;line-height:1.5",
       },
-      t("useCaseVerdictFooter", {
-        useCase: t(c.labelKey),
-        metric: t(o.labelKey),
-      }),
+      t("useCaseVerdictFooter", { useCase: t(c.labelKey) }),
     ),
   );
   wrap.style.display = "block";
@@ -1046,9 +1045,12 @@ function verdictParams(o) {
     hours: round(m.backupHoursP50 ?? m.reserveCoverHours),
     targetHours: round(m.backupTargetHours ?? m.outageTargetHours),
     coverHours: round(m.reserveCoverHours),
-    saving: round(m.touSavingUsd20y),
-    cost: round(m.touBatteryCostUsd20y),
-    spread: (Number(m.touSpreadPerKwh) || 0).toFixed(2),
+    // Cash slots go through money() like every other amount on the page: the
+    // engine stores them in USD, and a bare integer reads as no currency at
+    // all to a reader whose money is in another one.
+    saving: money(m.touSavingUsd20y),
+    cost: money(m.touBatteryCostUsd20y),
+    spread: money(m.touSpreadPerKwh),
     unmetHours: round(m.unmetHoursWorstYear),
     autonomy: (Number(m.autonomyDays) || 0).toFixed(1),
     runtime: round(m.portableAutonomyHours),
@@ -2439,6 +2441,7 @@ function setupRoofMap() {
     roofMapRectangle?.remove?.();
     roofMapRectangle = null;
     roofMapFirstCorner = null;
+    roofMapSecondCorner = null;
     panel.hidden = true;
     status.textContent = "";
   };
@@ -2459,38 +2462,52 @@ function setupRoofMap() {
           element: mapElement,
           latitude,
           longitude,
-          zoom: 19,
+          zoom: 20,
         });
         if (!map) throw new Error("No optional map provider is available");
         status.textContent =
-          "Tap one corner, then the opposite corner of your roof or yard.";
+          "Tap 3 corners: first one roof corner, then the next corner along the same edge, then the opposite edge.";
         roofMapUnsubscribe = roofMapRegistry.onClick((lat, lon) => {
           if (!roofMapFirstCorner) {
             roofMapFirstCorner = [lat, lon];
-            status.textContent = "Now tap the opposite corner.";
+            status.textContent =
+              "Now tap the next corner along the same roof edge.";
             return;
           }
-          const second = [lat, lon];
-          const area = rectangleAreaM2(roofMapFirstCorner, second);
+          if (!roofMapSecondCorner) {
+            roofMapSecondCorner = [lat, lon];
+            status.textContent =
+              "Now tap anywhere on the opposite roof edge to set the width.";
+            return;
+          }
+          const corners = rotatedRectangleCorners(
+            roofMapFirstCorner,
+            roofMapSecondCorner,
+            [lat, lon],
+          );
+          if (!corners) {
+            status.textContent =
+              "Those taps don't form a rectangle — tap three corners again, starting along one roof edge.";
+            roofMapFirstCorner = null;
+            roofMapSecondCorner = null;
+            return;
+          }
+          const area = rotatedRectangleAreaM2(
+            roofMapFirstCorner,
+            roofMapSecondCorner,
+            [lat, lon],
+          );
           roofMapRectangle?.remove?.();
-          roofMapRectangle = roofMapRegistry.drawRectangle([
-            [
-              Math.min(roofMapFirstCorner[0], second[0]),
-              Math.min(roofMapFirstCorner[1], second[1]),
-            ],
-            [
-              Math.max(roofMapFirstCorner[0], second[0]),
-              Math.max(roofMapFirstCorner[1], second[1]),
-            ],
-          ]);
+          roofMapRectangle = roofMapRegistry.drawPolygon(corners);
           roofMapFirstCorner = null;
+          roofMapSecondCorner = null;
           if (areaInput) {
             areaInput.value = String(Math.round(area * 10) / 10);
             areaInput.dispatchEvent(new Event("input", { bubbles: true }));
           }
           if (areaHint)
             areaHint.textContent = `${manualRoofHint(area)} This caps the searched PV size; it does not certify structural or shading suitability.`;
-          status.textContent = `${Math.round(area * 10) / 10} m² selected. You can close the map or tap two new corners.`;
+          status.textContent = `${Math.round(area * 10) / 10} m² selected. You can close the map or tap three new corners.`;
         });
       } catch (error) {
         status.textContent = `${error?.message || "The optional map could not load."} Use the manual area box below instead.`;
@@ -3738,7 +3755,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261005h",
+      "./assets/js/sizing/sizing-worker.js?v=20261016l",
       {
         type: "module",
       },

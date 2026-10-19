@@ -4,11 +4,26 @@
 //   node scripts/direct-push-audit.mjs --before <sha> --after <sha>
 //   node scripts/direct-push-audit.mjs            # audit the tip commit
 //
-// Exits non-zero when a commit that is not a PR merge/squash touched files
+// Exits non-zero when a commit reached main outside a PR and touched files
 // outside the documentation set — the one flavor of direct push to main the
 // project forbids. Every commit in the pushed range is inspected, because a
-// force-push or a multi-commit push could otherwise hide one.
-import { commitMessage, directPushVerdict } from "./lib/release.mjs";
+// force-push or a multi-commit push could otherwise hide one, and "outside a
+// PR" is asked of each commit on its own evidence:
+//
+//   * a merge or squash commit names its PR in the subject, and
+//   * a commit with no trailer of its own is judged by the merge that brought
+//     it in. A PR merged with a merge commit puts its own branch commits in the
+//     pushed range, and those commits are not direct pushes. A range that
+//     contains a merge does NOT launder an unrelated commit pushed on top of
+//     it: only the commits on the merge's own side of the graph are delivered.
+//
+// The limit of that evidence — a locally fabricated merge message — is written
+// down in `prDeliveredShas`, where the decision is made.
+import {
+  commitMessage,
+  directPushVerdict,
+  prDeliveredShas,
+} from "./lib/release.mjs";
 import { execFileSync } from "node:child_process";
 
 const ZERO = "0000000000000000000000000000000000000000";
@@ -46,11 +61,19 @@ if (!commits.length) {
   process.exit(0);
 }
 
+const delivered = prDeliveredShas(commits);
+
 const violations = [];
 let docsOnly = 0;
 let fromPr = 0;
 
 for (const sha of commits) {
+  // Brought in by a merge in this same range: the merge is the PR that landed
+  // it, so this commit is not a direct push.
+  if (delivered.has(sha)) {
+    fromPr++;
+    continue;
+  }
   const message = commitMessage(sha);
   const single = `${sha}^..${sha}`;
   let verdict;

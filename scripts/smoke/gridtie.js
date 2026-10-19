@@ -411,6 +411,33 @@ export async function runGridTieFlow(ctx, actions) {
     "battery-only frontier verdict describes shifting peak hours",
     /peak hours|shift/i.test(frontierText),
   );
+  // The use-case card, read as a visitor reads it. Measured 2026-10-14 across
+  // eleven markets: the card's title read "Your Cut my electricity bill
+  // result", its footer interpolated the metric fragment ("against of your bill
+  // removed over 20 years"), and the time-of-use verdict printed its cash
+  // amounts as bare USD integers — "worth about 9720 over 20 years against a
+  // 4100 battery" — with no currency in any market. The words are pinned in
+  // tests/i18n.test.mjs; the amounts can only be seen here, where the card is
+  // actually rendered.
+  const outcome = await evaluate(`(() => {
+      const e = document.getElementById("useCaseOutcomeWrap");
+      return e ? e.innerText.replace(/\\s+/g, " ").trim() : "";
+    })()`);
+  gate(
+    "use-case card renders without an unresolved placeholder",
+    outcome.length > 0 && !outcome.includes("{"),
+    outcome.slice(0, 200),
+  );
+  gate(
+    "time-of-use verdict shows its amounts as money",
+    /worth about /.test(outcome) && !/worth about \d/.test(outcome),
+    outcome.slice(0, 200),
+  );
+  gate(
+    "peak-to-off-peak spread is shown as money per kWh",
+    /spread here is /.test(outcome) && !/spread here is \d/.test(outcome),
+    outcome.slice(0, 200),
+  );
 
   // Two more surfaces phrase the same offset as a bill cut in this mode: the
   // frontier chart's Y axis, and the target control that drives the run.

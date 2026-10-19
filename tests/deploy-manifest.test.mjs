@@ -39,9 +39,10 @@ function cliList() {
 
 test("MANIFEST SIZE: the deploy contract stays within its known envelope", () => {
   const n = deployList().length;
-  // 352 at time of writing. A drop means the enumeration broke; a big jump
-  // means something unreviewed entered the allowlist dirs.
-  assert.ok(n >= 340 && n <= 380, `deploy list = ${n}, expected ~352`);
+  // 391 at time of writing (352 + 18 heatmap PNGs + 8 new heatmap/data files + 13 others).
+  // A drop means the enumeration broke; a big jump means something unreviewed
+  // entered the allowlist dirs.
+  assert.ok(n >= 380 && n <= 420, `deploy list = ${n}, expected ~391`);
 });
 test("MANIFEST CONTENT: every file it names is git-tracked", () => {
   const tracked = trackedFiles();

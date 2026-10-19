@@ -246,12 +246,13 @@ test("Solar Heatmap defaults to True Grid Cost view and preserves Payback and Br
 
   // Default metric in script state must be "cost"
   assert.ok(
-    app.includes('let metric = "cost";'),
-    'assets/js/heatmap.js must initialize state with let metric = "cost"',
+    app.includes('let metric = "cost";') ||
+      app.includes('var metric = "cost";'),
+    'assets/js/heatmap.js must initialize state with metric = "cost"',
   );
   assert.ok(
-    app.includes('let basis = "real";'),
-    'assets/js/heatmap.js must initialize state with let basis = "real"',
+    app.includes('let basis = "real";') || app.includes('var basis = "real";'),
+    'assets/js/heatmap.js must initialize state with basis = "real"',
   );
 
   // Default active button markup

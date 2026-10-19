@@ -99,6 +99,34 @@
         "blogPost": [
           {
             "@type": "BlogPosting",
+            "headline": "Hawaii Solar Scams: What the State's 2026 Warning Means for You",
+            "name": "Hawaii Solar Scams: What the State's 2026 Warning Means for You",
+            "description": "Hawaii's DCCA warns about deceptive door-to-door solar sales: false claims about contractors going out of business and fake state free-solar programs. Know your 3-day cancellation right and verification checklist.",
+            "datePublished": "2026-10-15T00:00:00Z",
+            "dateModified": "2026-10-15T00:00:00Z",
+            "url": "https://freeoffgridcalculator.com/blog/hawaii-solar-scams-2026-warning/",
+            "author": {
+              "@type": "Person",
+              "name": "Lucas Ballek"
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
+          },
+          {
+            "@type": "BlogPosting",
+            "headline": "What Hawaii's 2026 Hurricane Season Taught Us About Backup Power",
+            "name": "What Hawaii's 2026 Hurricane Season Taught Us About Backup Power",
+            "description": "Lala, Lowell, and Nolo: what Hawaii's 2026 hurricane season taught us about backup power, critical-load sizing, and the HECO incentive that pays you to need the grid less.",
+            "datePublished": "2026-10-12T00:00:00Z",
+            "dateModified": "2026-10-12T00:00:00Z",
+            "url": "https://freeoffgridcalculator.com/blog/hawaii-2026-hurricane-season-backup-power/",
+            "author": {
+              "@type": "Person",
+              "name": "Lucas Ballek"
+            },
+            "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"]
+          },
+          {
+            "@type": "BlogPosting",
             "headline": "Battery Longevity, Oversizing & Depth of Discharge (DoD) Reference Guide (2026)",
             "name": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
             "description": "Empirical degradation physics, Wöhler power-law cycle models, and sizing strategies for LFP, Sodium-Ion, and Lead-Acid (AGM). Learn how oversizing and Depth of Discharge (DoD) control eliminate battery replacements.",
@@ -673,18 +701,59 @@
           style="text-decoration: none"
           aria-label="BigEnergyCo Home"
         >
-          <span>⚡</span>
+          <span aria-hidden="true">&#9889;</span>
+
           <span>BigEnergy<span class="highlight">Co</span></span>
         </a>
+
         <nav class="nav-links">
           <a href="../solar-heatmap/">Heatmap</a>
-          <a href="../#bom">Hardware Reference</a>
-          <a href="./" class="active">Guides &amp; Blog</a>
+
+          <a href="../#bom" data-i18n="navBom">Hardware Reference</a>
+
+          <a href="./" class="active" data-i18n="navBlog">Guides &amp; Blog</a>
+
           <a href="../about/">About</a>
-          <a href="../#legal">Terms &amp; Disclaimer</a>
+
+          <a href="../#legal" data-i18n="navLegal">Terms &amp; Disclaimer</a>
         </nav>
+
         <div class="header-cta">
-          <a href="../#sizing" class="btn btn-primary">Size Your System</a>
+          <span
+            id="offlineBadge"
+            class="offline-badge"
+            style="display: none"
+            title="Working offline using cached app data &amp; local weather simulation"
+            aria-label="Offline status"
+          >
+            <span class="offline-dot"></span> Offline
+          </span>
+
+          <button
+            id="btnInstallApp"
+            class="btn btn-outline btn-xs"
+            type="button"
+            aria-label="Install BigEnergyCo Web App"
+            style="display: none; cursor: pointer"
+          >
+            &#128242; Install App
+          </button>
+
+          <a
+            href="../#support"
+            class="btn btn-secondary"
+            style="cursor: pointer; text-decoration: none"
+            data-i18n="navSupport"
+            >Support</a
+          >
+
+          <a
+            href="../#sizing"
+            class="btn btn-primary"
+            style="cursor: pointer; text-decoration: none"
+            data-i18n="navSizing"
+            >Size Your System</a
+          >
         </div>
       </div>
     </header>
@@ -797,6 +866,65 @@
       </p>
 
       <div class="articles-grid">
+        <!-- Article 12 -->
+        <article class="article-card">
+          <div>
+            <div class="card-tags">
+              <span class="card-tag">Solar Scams</span>
+              <span class="card-tag">Hawaii</span>
+              <span class="card-tag">Consumer Protection</span>
+            </div>
+            <h2 class="card-title">
+              <a href="./hawaii-solar-scams-2026-warning/"
+                >Hawaii Solar Scams: What the State's 2026 Warning Means for
+                You</a
+              >
+            </h2>
+            <p class="card-excerpt">
+              Hawaii's DCCA warns about deceptive door-to-door solar sales:
+              false claims about contractors going out of business and fake
+              state free-solar programs. Know your 3-day cancellation right and
+              verification checklist.
+            </p>
+          </div>
+          <div class="card-footer">
+            <span>📅 Oct 15, 2026 · 6 min read</span>
+            <a href="./hawaii-solar-scams-2026-warning/" class="read-more"
+              >Read Guide &rarr;</a
+            >
+          </div>
+        </article>
+
+        <!-- Article 11 -->
+        <article class="article-card">
+          <div>
+            <div class="card-tags">
+              <span class="card-tag">Outage Backup</span>
+              <span class="card-tag">Hawaii</span>
+              <span class="card-tag">Battery</span>
+            </div>
+            <h2 class="card-title">
+              <a href="./hawaii-2026-hurricane-season-backup-power/"
+                >What Hawaii's 2026 Hurricane Season Taught Us About Backup
+                Power</a
+              >
+            </h2>
+            <p class="card-excerpt">
+              Lala, Lowell, and Nolo: what Hawaii's 2026 hurricane season taught
+              us about backup power, critical-load sizing, and the HECO
+              incentive that pays you to need the grid less.
+            </p>
+          </div>
+          <div class="card-footer">
+            <span>📅 Oct 12, 2026 · 8 min read</span>
+            <a
+              href="./hawaii-2026-hurricane-season-backup-power/"
+              class="read-more"
+              >Read Guide &rarr;</a
+            >
+          </div>
+        </article>
+
         <!-- Article 10 -->
         <article class="article-card">
           <div>
