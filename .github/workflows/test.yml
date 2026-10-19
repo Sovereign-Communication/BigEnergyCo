@@ -649,17 +649,25 @@ jobs:
       - name: Which plan item is this PR about?
         id: scope
         env:
-          # §9 rule 1: a PR names its plan items. That name is the only thing
-          # that tells the gate which facets to judge, so a PR that names none
-          # fails here rather than silently judging the whole program.
+          # Flexible scope resolution: the gate infers scope semantically from
+          # the title AND changed files, tolerating wording variations.
+          # Explicit P-item in title wins; otherwise infer from paths/keywords.
+          # Governance precedence: a PR modifying docs/plan/ is judged as P0.1,
+          # not against the item it creates (breaks the chicken-and-egg).
           PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_FILES: ${{ toJSON(github.event.pull_request.changed_files) }}
         run: |
           SCOPE="$(node -e '
             const { resolveCiScope } = await import("./scripts/lib/jev-scope.mjs");
-            const r = resolveCiScope(process.env.PR_TITLE || "");
+            let files = [];
+            try { files = JSON.parse(process.env.PR_FILES || "[]").map(f => f.filename || f); } catch {}
+            const r = resolveCiScope({ title: process.env.PR_TITLE || "", files });
             if (!r.scope) {
               process.stderr.write(r.error + "\n");
               process.exit(1);
+            }
+            if (r.how !== "explicit") {
+              process.stderr.write(`scope inferred (${r.how}): ${r.inferenceReason}\n`);
             }
             process.stdout.write(r.scope);
           ' --input-type=module)"
