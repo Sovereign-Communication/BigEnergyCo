@@ -169,6 +169,7 @@ export const SCOPE_FACETS = {
   "P9.4": ["seo"],
   "P9.5": ["seo", "quality"],
   "P9.6": ["release", "seo", "privacy"],
+  "P9.7": ["seo", "quality", "docs"],
   // P10 — program exit gate
   "P10.1": ["correctness", "spec"],
   "P10.2": [
