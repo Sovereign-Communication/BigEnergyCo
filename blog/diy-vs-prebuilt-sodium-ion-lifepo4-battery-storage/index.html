@@ -10,7 +10,7 @@
     <title>DIY Battery Storage: LFP vs Sodium-Ion Guide 2026</title>
     <meta
       name="description"
-      content="Compare DIY battery storage options for LiFePO4 and sodium-ion. Learn cost, safety, and modularity benefits of building your own off-grid or backup system."
+      content="Compare the $80–$120/kWh DIY planning estimate with one current LFP example and an installed-system reference; sodium-ion still needs a quote."
     />
     <meta
       name="keywords"
@@ -58,7 +58,7 @@
     />
     <meta
       property="og:description"
-      content="Compare DIY battery storage options for LiFePO4 and sodium-ion. Learn cost, safety, and modularity benefits of building your own off-grid or backup system."
+      content="Compare the $80–$120/kWh DIY planning estimate with one current LFP example and an installed-system reference; sodium-ion still needs a quote."
     />
     <meta
       property="og:url"
@@ -78,7 +78,7 @@
     />
     <meta
       name="twitter:description"
-      content="Compare DIY battery storage options for LiFePO4 and sodium-ion. Learn cost, safety, and modularity benefits of building your own off-grid or backup system."
+      content="Compare the $80–$120/kWh DIY planning estimate with one current LFP example and an installed-system reference; sodium-ion still needs a quote."
     />
     <meta
       property="og:image"
@@ -105,7 +105,7 @@
             },
             "headline": "DIY Battery Storage: LFP vs Sodium-Ion Guide 2026",
             "name": "DIY Battery Storage: LFP vs Sodium-Ion Guide 2026",
-            "description": "Compare DIY battery storage options for LiFePO4 and sodium-ion. Learn cost, safety, and modularity benefits of building your own off-grid or backup system.",
+            "description": "Compare the $80–$120/kWh DIY planning estimate with one current LFP example and an installed-system reference; sodium-ion still needs a quote.",
             "datePublished": "2026-08-20T00:00:00Z",
             "dateModified": "2026-10-19T00:00:00Z",
             "mainEntityOfPage": "https://freeoffgridcalculator.com/blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/",
@@ -162,31 +162,7 @@
                 "name": "Is it cheaper to build your own LiFePO4 battery?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "This guide uses $80-$120 per usable kWh as a planning range for DIY battery components before delivery and tax, and $110-$165/kWh for budget retail battery packs. Its $800-$1,200/kWh full-installed planning band is broader scope; the 10x comparison is not like-for-like."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Can I mix sodium-ion and LFP cells?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "No, you should never mix sodium-ion and LFP cells in the same battery pack. They have different nominal voltages (3.0V vs 3.2V), different charge/discharge curves, and different internal resistances. Mixing them will cause severe imbalance, leading to rapid degradation, cell damage, and potential safety hazards. Each chemistry requires its own dedicated BMS and configuration."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "How many cycles does a DIY LFP battery last?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "A high-quality DIY LFP battery built with Grade A cells can last 4,000 to 6,000+ cycles at 80% depth of discharge. This translates to roughly 10-15 years of daily use. Cycle life decreases if you frequently discharge to 100% or operate in extreme temperatures. Proper BMS management is key to maximizing lifespan."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "What is the best BMS for DIY sodium-ion builds?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "There is no single \"best\" BMS, as sodium-ion is newer. Look for BMS units that allow configurable voltage thresholds (typically 1.5V to 3.65V per cell) and support the specific charge/discharge current limits of your chosen cells. Popular open-source BMS platforms like Daly or JBD can often be configured for Na-ion, but verify compatibility with your cell manufacturer's datasheet first."
+                  "text": "$80-$120 per usable kWh is a DIY materials planning estimate before delivery and tax, not a sourced endpoint range. The current LFP example is about $116/usable kWh before tax and freight. The 10x comparison is against an installed-system estimate, not a like-for-like pack price."
                 }
               },
               {
@@ -195,14 +171,6 @@
                 "acceptedAnswer": {
                   "@type": "Answer",
                   "text": "Generally, no. If your system is completely off-grid and not connected to the utility grid, you do not need a license to build it. However, you must still follow electrical safety codes to prevent fire and shock hazards. If you plan to connect to the grid later, or if you live in a jurisdiction with specific renewable energy regulations, check local laws."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Is sodium-ion safer than LiFePO4?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Sodium-ion is generally considered safer due to its lower flammability and stability under abuse conditions. It can be discharged to 0% without damage and charges better in cold weather. However, LFP is already very safe compared to other lithium chemistries. Both are excellent choices, but Na-ion offers a slight edge in intrinsic safety and temperature tolerance."
                 }
               },
               {
@@ -799,100 +767,39 @@
           as a budget for a particular home.
         </p>
 
-        <h2>LiFePO4 Deep Dive: The Proven DIY Favorite</h2>
-        <p>
-          Lithium Iron Phosphate (LiFePO4/LFP) remains the gold standard for DIY
-          in 2026: safe chemistry (no cobalt/nickel), 4,000–6,000+ cycles at 80%
-          DoD (10–15 years of daily cycling), and a mature global supply chain
-          with millions of cells produced annually.
-        </p>
-        <p>
-          A single LFP cell is 3.2V nominal. Sixteen in series gives 51.2V
-          nominal (48V system). Popular prismatic sizes: 100Ah (5.1 kWh per 16S
-          pack), 280Ah (14.3 kWh), 314Ah (16.1 kWh). Larger cells mean fewer
-          connections. Compare current delivered quotes after adjusting for
-          usable capacity, cell grade, freight, and duty.
-        </p>
-        <p>
-          Practical note: prismatic cells need consistent mechanical
-          compression. Budget $20–40 for threaded rod, end plates, and
-          insulation sheeting, or buy a compression-mount enclosure.
-        </p>
-
-        <h2>Sodium-Ion Deep Dive: The Emerging Contender</h2>
-        <p>
-          Sodium-ion (Na-ion) is an emerging alternative to LFP. Sodium is
-          widely available, but a DIY pack's total price also depends on cell
-          supply, BMS compatibility, freight, and enclosure costs. Use a
-          chemistry-specific delivered quote rather than assuming a fixed
-          percentage discount over LFP.
-        </p>
-        <p>
-          The trade-offs are real: energy density is 20–30% lower (a 10 kWh
-          Na-ion bank is physically larger), cycle life is currently 2,000–4,000
-          cycles (improving), and the BMS ecosystem is less mature — you need
-          configurable voltage thresholds (typically 1.5–3.65V per cell vs LFP's
-          tighter 2.5–3.65V window).
-        </p>
-        <p>
-          Where Na-ion wins outright: cold-weather performance (charges at −20°C
-          where LFP needs heating), 0V storage tolerance (ship and store fully
-          discharged), and no lithium/cobalt supply-chain exposure. For
-          stationary storage in cold climates, it is already the rational pick.
-        </p>
-
-        <h2>LFP vs Sodium-Ion: Head-to-Head (2026)</h2>
+        <h2>LFP vs Sodium-Ion: Current Pricing Evidence (2026)</h2>
         <table>
           <caption>
-            LiFePO4 vs sodium-ion cell comparison (2026)
+            Current DIY and installed pricing references by chemistry
           </caption>
           <thead>
             <tr>
-              <th scope="col"></th>
+              <th scope="col">Pricing evidence</th>
               <th scope="col">LiFePO4</th>
               <th scope="col">Sodium-ion</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Cell cost ($/Wh)</td>
-              <td>Quote-dependent</td>
-              <td>Quote-dependent</td>
+              <td>DIY materials estimate (before delivery and tax)</td>
+              <td class="num">
+                $80–$120/usable kWh; planning estimate, not sourced endpoints
+              </td>
+              <td>No sourced example; obtain a current supplier quote</td>
             </tr>
             <tr>
-              <td>DIY materials planning estimate ($/usable kWh)</td>
-              <td class="num">$80–$120 (estimate)</td>
-              <td>No sourced example; quote needed</td>
+              <td>Current supplier example</td>
+              <td class="num">
+                About $116/usable kWh; 11.47 usable kWh, before tax and freight
+              </td>
+              <td>No current example cited</td>
             </tr>
             <tr>
-              <td>Nominal cell voltage</td>
-              <td class="num">3.2V</td>
-              <td class="num">3.0V</td>
-            </tr>
-            <tr>
-              <td>Cycle life (80% DoD)</td>
-              <td class="num">4,000–6,000+</td>
-              <td class="num">2,000–4,000</td>
-            </tr>
-            <tr>
-              <td>Energy density</td>
-              <td class="num">Baseline</td>
-              <td class="num">−20–30%</td>
-            </tr>
-            <tr>
-              <td>Cold charging</td>
-              <td class="num">Needs heating &lt;0°C</td>
-              <td class="num">OK to −20°C</td>
-            </tr>
-            <tr>
-              <td>BMS ecosystem</td>
-              <td class="num">Mature</td>
-              <td class="num">Emerging</td>
-            </tr>
-            <tr>
-              <td>Best for</td>
-              <td>Max lifespan, proven builds</td>
-              <td>Cold-weather use; price quote needed</td>
+              <td>Installed-system reference</td>
+              <td class="num">
+                About $1,106/usable kWh in the NLR 2025 ATB model
+              </td>
+              <td>No sodium-ion comparison in the cited source</td>
             </tr>
           </tbody>
         </table>
@@ -900,9 +807,8 @@
         <div class="cta-card">
           <h3>🔋 Compare Chemistries for Your Loads</h3>
           <p>
-            Enter your daily usage to compare bank sizing by chemistry. The
-            pricing example below is LFP; get a current supplier quote for
-            sodium-ion.
+            Compare bank sizing by chemistry. The sourced pricing example below
+            is LFP; sodium-ion needs a current supplier quote.
           </p>
           <a href="../../#sizing" class="btn btn-primary">
             Compare My Options →
@@ -920,9 +826,9 @@
         </p>
         <p>
           Verify suppliers: ask for test reports, check for swelling on arrival,
-          and top-balance before first assembly. For Na-ion, the secondary
-          market barely exists yet — buy new from manufacturers with published
-          datasheets and independent test data.
+          and top-balance before first assembly. For Na-ion, check the exact
+          cell and compatible BMS against current manufacturer data before
+          comparing supplier quotes.
         </p>
 
         <h2>Modularity, Repairability, and No Firmware Lock-In</h2>
@@ -1002,7 +908,6 @@
         </div>
 
         <h2>Related guides</h2>
-        <h2>Related guides</h2>
         <ul>
           <li>
             <a href="../off-grid-battery-bank-sizing/"
@@ -1036,52 +941,11 @@
               Is it cheaper to build your own LiFePO4 battery?
             </div>
             <div class="faq-answer">
-              The guide's DIY materials planning range is $80-$120 per usable
-              kWh before delivery and tax. A budget retail pack is estimated at
-              $110-$165/kWh, while a full installed battery-system planning band
-              is $800-$1,200/kWh. The 10x comparison is between DIY materials
-              and an installed project, so it is not a like-for-like pack-price
-              comparison.
-            </div>
-          </div>
-
-          <div class="faq-item">
-            <div class="faq-question">Can I mix sodium-ion and LFP cells?</div>
-            <div class="faq-answer">
-              No, you should never mix sodium-ion and LFP cells in the same
-              battery pack. They have different nominal voltages (3.0V vs 3.2V),
-              different charge/discharge curves, and different internal
-              resistances. Mixing them will cause severe imbalance, leading to
-              rapid degradation, cell damage, and potential safety hazards. Each
-              chemistry requires its own dedicated BMS and configuration.
-            </div>
-          </div>
-
-          <div class="faq-item">
-            <div class="faq-question">
-              How many cycles does a DIY LFP battery last?
-            </div>
-            <div class="faq-answer">
-              A high-quality DIY LFP battery built with Grade A cells can last
-              4,000 to 6,000+ cycles at 80% depth of discharge. This translates
-              to roughly 10-15 years of daily use. Cycle life decreases if you
-              frequently discharge to 100% or operate in extreme temperatures.
-              Proper BMS management is key to maximizing lifespan.
-            </div>
-          </div>
-
-          <div class="faq-item">
-            <div class="faq-question">
-              What is the best BMS for DIY sodium-ion builds?
-            </div>
-            <div class="faq-answer">
-              There is no single "best" BMS, as sodium-ion is newer. Look for
-              BMS units that allow configurable voltage thresholds (typically
-              1.5V to 3.65V per cell) and support the specific charge/discharge
-              current limits of your chosen cells. Popular open-source BMS
-              platforms like Daly or JBD can often be configured for Na-ion, but
-              verify compatibility with your cell manufacturer’s datasheet
-              first.
+              $80-$120 per usable kWh is a DIY materials planning estimate
+              before delivery and tax, not a sourced endpoint range. The current
+              LFP example is about $116/usable kWh before tax and freight. The
+              10x comparison is against an installed-system estimate, not a
+              like-for-like pack price.
             </div>
           </div>
 
@@ -1096,18 +960,6 @@
               prevent fire and shock hazards. If you plan to connect to the grid
               later, or if you live in a jurisdiction with specific renewable
               energy regulations, check local laws.
-            </div>
-          </div>
-
-          <div class="faq-item">
-            <div class="faq-question">Is sodium-ion safer than LiFePO4?</div>
-            <div class="faq-answer">
-              Sodium-ion is generally considered safer due to its lower
-              flammability and stability under abuse conditions. It can be
-              discharged to 0% without damage and charges better in cold
-              weather. However, LFP is already very safe compared to other
-              lithium chemistries. Both are excellent choices, but Na-ion offers
-              a slight edge in intrinsic safety and temperature tolerance.
             </div>
           </div>
 
@@ -1179,9 +1031,8 @@
           technical aptitude to manage the build, DIY is a rewarding path. The
           ability to tailor your system to exact needs, repair individual
           components, and avoid proprietary lock-in offers long-term benefits
-          that pre-built systems cannot match. Whether you choose the proven
-          reliability of LiFePO4 or the emerging promise of sodium-ion, a DIY
-          build puts you in control of your energy future.
+          that pre-built systems cannot match. Compare each chemistry against
+          its current cell data, compatible BMS, and destination-specific quote.
         </p>
         <p>
           However, if you prioritize convenience, warranty coverage, and
