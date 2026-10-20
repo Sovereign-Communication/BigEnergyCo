@@ -318,6 +318,32 @@ const BANNED_VALUES = [
     value: " · 🌐 وضع عدم الاتصال التقليدي",
     why: "ar.offlineNote said 'the traditional offline mode'; it must say 'typical-year', which is what all five siblings mean and what the badge asserts",
   },
+  {
+    value: "Einen Notfall-Reservestand in der Batteri halten",
+    why: "de.useCaseReserve misspelled Batterie",
+  },
+  {
+    value:
+      "Lass einen Teil der Batteri für Stromausfälle zurück und sieh genau, was dich das an Ersparnis kostet.",
+    why: "de.useCaseReserveBlurb misspelled Batterie",
+  },
+  {
+    value:
+      "اترك جزءًا من البطارية جانبًا لحالات الانقطاع، وانظر بدقة ما يكلفه ذلك من fourni.",
+    why: "ar.useCaseReserveBlurb left the French word fourni untranslated",
+  },
+  {
+    value: "الاعتماد الكامل على عدم وجود شبكة",
+    why: "ar.useCaseOffGrid described absence of a network instead of independence from the electric grid",
+  },
+  {
+    value: "Quedarte totalmente sin red",
+    why: "es.useCaseOffGrid did not specify the electric grid",
+  },
+  {
+    value: "Ficar totalmente sem rede",
+    why: "pt.useCaseOffGrid did not specify the electric grid",
+  },
 ];
 const bannedHits = [];
 for (const lang of langs) {
