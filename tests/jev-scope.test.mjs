@@ -13,6 +13,8 @@ import { fileURLToPath } from "node:url";
 
 import {
   COMPLETE_MIN_SCORE,
+  COMPLETE_FACET_MIN_ORDINAL,
+  COMPLETE_MIN_CONFIDENCE,
   COMPLETE_EXIT_FACET_INDEX,
   SCOPE_FACETS,
   resolveScopeFacets,
@@ -31,9 +33,10 @@ const pack = loadCompletePack(ROOT);
 
 const facet = (ordinal) => ({ ordinal, index: ordinal, level: `l${ordinal}` });
 
-test("GATE: the target is 99, not 95 (D-03, finding F-37)", () => {
-  assert.equal(COMPLETE_MIN_SCORE, 99.0);
-  assert.notEqual(COMPLETE_MIN_SCORE, 95.0);
+test("GATE: the bar is 95/95/95 (A-004, owner ruling 2026-10-19; supersedes D-03's 99)", () => {
+  assert.equal(COMPLETE_MIN_SCORE, 95.0);
+  assert.equal(COMPLETE_FACET_MIN_ORDINAL, 95);
+  assert.equal(COMPLETE_MIN_CONFIDENCE, 0.95);
 });
 
 test("GATE: program exit is defined as every facet at the top level", () => {
@@ -408,8 +411,8 @@ test("GATE: the P0.3 bootstrap relaxes the score, never the ratchet or hard gate
   // The score and all-proven checks must sit INSIDE the !exitRuleBinds guard.
   assert.match(
     block,
-    /!exitRuleBinds \|\|\s*\(scopedCombined >= report\.min_score && short\.length === 0\)/,
-    "score and all-proven must only bind at or after the binding point",
+    /!exitRuleBinds \|\|\s*\(scopedCombined >= report\.min_score &&\s*short\.length === 0 &&\s*lowConfidence\.length === 0\)/,
+    "score, all-proven and confidence must only bind at or after the binding point",
   );
   // These two must be unconditional: a bootstrap that let a facet regress, or
   // let a red hard gate through, would be a weakened gate wearing a name.
@@ -551,8 +554,8 @@ test("GATE: a scoped run at or after the binding point fails on any facet short 
   // The rule must actually gate the scoped exit, not merely be reported.
   assert.match(
     verdict,
-    /!exitRuleBinds \|\|\s*\(scopedCombined >= report\.min_score && short\.length === 0\)/,
-    "from the binding point a scoped run must require the score AND every in-scope facet proven",
+    /!exitRuleBinds \|\|\s*\(scopedCombined >= report\.min_score &&\s*short\.length === 0 &&\s*lowConfidence\.length === 0\)/,
+    "from the binding point a scoped run must require the score, every in-scope facet proven, and every facet at 0.95 confidence",
   );
   assert.match(
     verdict,
@@ -624,7 +627,7 @@ test("GATE: the ledger's declared baseline resolves, and covers every axis", () 
 //
 // Built from the real pack and the real verdict function — no stub of either.
 const AXES = Object.keys(pack.axes);
-const provenFacet = { ordinal: 100, index: 4, level: "l4" };
+const provenFacet = { ordinal: 100, index: 4, level: "l4", confidence: 0.97 };
 
 /**
  * A report whose in-scope facets are all proven and whose others carry
@@ -770,4 +773,30 @@ test("GATE: an in-scope facet short of proven fails, and only that", () => {
   // (100+100+85+100)/4 = 96.25, so 0.7*100 + 0.3*96.25 = 98.875. One facet a
   // step down costs 0.3*15/4 = 1.125 — which is why "confident" is not the bar.
   assert.equal(v.scoped.score, 98.88);
+});
+
+test("GATE: an in-scope facet below 0.95 confidence fails even when proven", () => {
+  // A-004 (owner ruling 2026-10-19): the score bar dropped to 95, and in
+  // exchange every facet must be judged with at least 0.95 confidence. A
+  // proven facet the judge was unsure about is not a pass.
+  const report = scopedReport(0);
+  report.facets.quality = {
+    ordinal: 100,
+    index: 4,
+    level: "l4",
+    confidence: 0.62,
+  };
+  const v = judge(report, baselineFor(scopedReport(0)));
+  assert.equal(v.pass, false, "low confidence must block the pass");
+  assert.deepEqual(v.scoped.facets_below_confidence, ["quality"]);
+  assert.equal(v.scoped.facets_short_of_proven.length, 0);
+  assert.equal(v.scoped.score, 100, "the score itself is untouched");
+});
+
+test("GATE: a missing confidence is below the bar, never a pass", () => {
+  const report = scopedReport(0);
+  delete report.facets.quality.confidence;
+  const v = judge(report, baselineFor(scopedReport(0)));
+  assert.equal(v.pass, false, "absent confidence must not pass");
+  assert.deepEqual(v.scoped.facets_below_confidence, ["quality"]);
 });
