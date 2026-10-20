@@ -14,4 +14,5 @@
 - [ ] Scoped live Jev report attached (score ≥ 99.0, no facet regression)
 - [ ] `docs/plan/LEDGER.jsonl` row appended (`item-done`, PR, SHA, gates, Jev)
 - [ ] Release rules followed if shipping (SW `CACHE_VERSION` + asset tokens)
+- [ ] Preview deployment visually verified (Cloudflare Pages preview URL) before manual production dispatch
 - [ ] Tracking issue ticked
