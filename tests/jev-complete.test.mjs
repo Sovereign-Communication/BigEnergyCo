@@ -25,6 +25,7 @@ import {
   buildStateText,
   scoreCompleteGate,
 } from "../scripts/lib/jev-complete.mjs";
+import { reportMinScoreForScope } from "../scripts/lib/jev-verdict.mjs";
 
 const CLI = fileURLToPath(
   new URL("../scripts/validate-jev-complete.mjs", import.meta.url),
@@ -621,6 +622,21 @@ test("SCORE: everything green with a proven live judgment passes at 95", () => {
   assert.equal(report.min_score, COMPLETE_MIN_SCORE);
 });
 
+test("SCORE: P9.5 report target is 95 while full-program target stays 99", () => {
+  const ev = mergeEvidence(ALL_GREEN, AUTO_CLEAN);
+  const liveJudgment = liveAll(4);
+  liveJudgment.live_levels.quality = 3;
+  const report = scoreCompleteGate(ev, {
+    minScore: reportMinScoreForScope("P9.5"),
+    liveJudgment,
+  });
+
+  assert.equal(COMPLETE_MIN_SCORE, 99);
+  assert.equal(report.min_score, 95);
+  assert.equal(report.pass, false);
+  assert.ok(report.facets_not_proven.includes("quality"));
+});
+
 test("SCORE: a red hard gate pins the score below target no matter how good the prose", () => {
   const pointsWithout = Object.entries(HARD_GATE_POINTS)
     .filter(([key]) => key !== "smoke_green")
@@ -802,6 +818,7 @@ test("CLI: offline runs report honestly — green evidence still cannot pass wit
       assert.equal(json.status, 1, "an offline run must not claim a pass");
       const report = JSON.parse(json.stdout);
       assert.equal(report.pass, false);
+      assert.equal(report.min_score, COMPLETE_MIN_SCORE);
       assert.equal(
         report.score < COMPLETE_MIN_SCORE,
         true,
@@ -817,6 +834,30 @@ test("CLI: offline runs report honestly — green evidence still cannot pass wit
         100,
         "all code-owned facts were green",
       );
+
+      const scopedJson = spawnSync(
+        process.execPath,
+        [
+          CLI,
+          "--local-only",
+          "--json",
+          "--scope",
+          "P9.5",
+          "--evidence",
+          evidencePath,
+        ],
+        { cwd: repo, encoding: "utf8" },
+      );
+      assert.equal(scopedJson.status, 1);
+      const scopedReport = JSON.parse(scopedJson.stdout);
+      assert.equal(scopedReport.min_score, 95);
+      assert.equal(scopedReport.scoped.min_score, 95);
+      assert.equal(scopedReport.scoped.min_confidence, 0.95);
+      assert.deepEqual(scopedReport.scoped.facets_below_min_confidence, [
+        "quality",
+        "seo",
+      ]);
+
       // The heuristic never guesses semantic quality: every Jev-owned facet
       // sits below the improve line, so all of its work is demanded — visible,
       // not silently accepted.

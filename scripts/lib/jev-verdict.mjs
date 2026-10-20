@@ -17,6 +17,10 @@ import {
 export const P9_5_MIN_SCORE = 95;
 export const P9_5_MIN_CONFIDENCE = 0.95;
 
+export function reportMinScoreForScope(scope) {
+  return scope === "P9.5" ? P9_5_MIN_SCORE : undefined;
+}
+
 /**
  * Judge a named plan item's facets (P0.3(c) / §13.3).
  *

@@ -26,6 +26,7 @@ import {
 import {
   P9_5_MIN_CONFIDENCE,
   P9_5_MIN_SCORE,
+  reportMinScoreForScope,
   scopedVerdict,
 } from "../scripts/lib/jev-verdict.mjs";
 
@@ -35,9 +36,12 @@ const pack = loadCompletePack(ROOT);
 
 const facet = (ordinal) => ({ ordinal, index: ordinal, level: `l${ordinal}` });
 
-test("GATE: the target is 99, not 95 (D-03, finding F-37)", () => {
+test("GATE: P9.5 report target is 95; other scopes retain 99", () => {
   assert.equal(COMPLETE_MIN_SCORE, 99.0);
   assert.notEqual(COMPLETE_MIN_SCORE, 95.0);
+  assert.equal(reportMinScoreForScope("P9.5"), 95);
+  assert.equal(reportMinScoreForScope("P9.4"), undefined);
+  assert.equal(reportMinScoreForScope(null), undefined);
 });
 
 test("GATE: program exit is defined as every facet at the top level", () => {
@@ -697,6 +701,7 @@ test("GATE: P9.5 requires a score and each in-scope confidence of at least 95", 
   assert.equal(passing.scoped.min_score, 95);
   assert.equal(passing.scoped.min_confidence, 0.95);
   assert.equal(passing.pass, true);
+  assert.deepEqual(passing.scoped.facets_below_min_confidence, []);
   assert.deepEqual(passing.scoped.facets_short_of_proven, ["quality"]);
 
   report.facets.quality.confidence = 0.949;
@@ -706,6 +711,15 @@ test("GATE: P9.5 requires a score and each in-scope confidence of at least 95", 
     "quality",
   ]);
 
+  report.facets.quality.confidence = 0.95;
+  report.facets.seo.confidence = 0.949;
+  const lowSeoConfidence = judge(report, baselineFor(report), "P9.5");
+  assert.equal(lowSeoConfidence.pass, false);
+  assert.deepEqual(lowSeoConfidence.scoped.facets_below_min_confidence, [
+    "seo",
+  ]);
+
+  report.facets.seo.confidence = 0.95;
   report.facets.quality = {
     ordinal: 60,
     index: 2,

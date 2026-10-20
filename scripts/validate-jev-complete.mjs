@@ -66,7 +66,7 @@ import {
 } from "./lib/jev-run.mjs";
 import { collectAutoFacts } from "./lib/jev-auto-facts.mjs";
 import { liveJevCall, resolveKeys } from "./lib/jev-live.mjs";
-import { scopedVerdict } from "./lib/jev-verdict.mjs";
+import { reportMinScoreForScope, scopedVerdict } from "./lib/jev-verdict.mjs";
 import {
   printExplanation,
   printReport,
@@ -172,6 +172,7 @@ export async function main(argv = process.argv.slice(2)) {
 
   const report = scoreCompleteGate(evidence, {
     pack,
+    minScore: reportMinScoreForScope(opts.scope),
     liveJudgment: judgment,
     keywordGap: judgment ? null : matchCompleteKeywords(stateText, pack),
   });
