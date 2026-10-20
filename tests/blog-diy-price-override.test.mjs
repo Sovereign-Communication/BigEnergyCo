@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,10 +7,9 @@ import test from "node:test";
 import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const articlePath = join(
-  ROOT,
-  "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html",
-);
+const articleRepoPath =
+  "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html";
+const articlePath = join(ROOT, articleRepoPath);
 const article = readFileSync(articlePath, "utf8");
 const articleBody = article.match(
   /<article\b[^>]*>([\s\S]*?)<\/article>/i,
@@ -24,11 +24,45 @@ function visibleText(html) {
       " ",
     )
     .replace(/<[^>]*>/g, " ")
+    .replace(/&#(?:x([\da-f]+)|(\d+));/gi, (_, hex, decimal) => {
+      const codePoint = Number.parseInt(hex ?? decimal, hex ? 16 : 10);
+      return codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : " ";
+    })
     .replace(/&amp;/g, "&")
     .replace(/\s+/g, " ")
     .trim();
 }
 
+function gitText(args) {
+  return execFileSync("git", args, { cwd: ROOT, encoding: "utf8" });
+}
+
+function readerVisibleWordCount(html) {
+  const body = html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1];
+  assert.ok(
+    body,
+    "reader-visible article body is present in compared revision",
+  );
+  return (
+    visibleText(body).match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu) ?? []
+  ).length;
+}
+
+const event = process.env.GITHUB_EVENT_PATH
+  ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"))
+  : {};
+const baseSha =
+  event.pull_request?.base?.sha ??
+  process.env.PR_BASE_SHA ??
+  gitText(["rev-parse", "origin/HEAD"]).trim();
+const headSha =
+  event.pull_request?.head?.sha ??
+  process.env.PR_HEAD_SHA ??
+  gitText(["rev-parse", "HEAD"]).trim();
+const baseArticle = gitText(["show", `${baseSha}:${articleRepoPath}`]);
+const headArticle = gitText(["show", `${headSha}:${articleRepoPath}`]);
+const baseArticleWordCount = readerVisibleWordCount(baseArticle);
+const headArticleWordCount = readerVisibleWordCount(headArticle);
 const readerVisibleArticleText = visibleText(articleBody);
 const jsonLd = [
   ...article.matchAll(
@@ -71,6 +105,20 @@ test("DIY price override remains an explicitly scoped planning estimate", () => 
   assert.doesNotMatch(
     readerVisibleArticleText,
     /landed DIY|landed battery materials|included in the landed|\$300\s*[–-]\s*\$?500|\$80\s*[–-]\s*\$?125|40-60% cheaper|\$120\s*[–-]\s*430 saving/i,
+  );
+});
+
+test(`PR base-to-head reader-visible article words decrease (${baseArticleWordCount} to ${headArticleWordCount})`, () => {
+  assert.ok(
+    baseArticleWordCount > headArticleWordCount,
+    `expected fewer reader-visible article words at ${headSha} than ${baseSha}`,
+  );
+  assert.equal(
+    readerVisibleWordCount(
+      '<article><p>Reader’s visible words: $60–$120/kWh &#128242;.</p><script type="application/ld+json">{"description":"hidden schema words"}</script></article>',
+    ),
+    6,
+    "word count excludes hidden schema text and does not count a rendered emoji entity",
   );
 });
 
@@ -180,7 +228,7 @@ test("Jev evidence, SEO proof and JSON-LD assertions stay separately scoped", ()
   assert.ok(qualityEvidence.length <= COMPLETE_FACET_CLIP);
   assert.match(
     qualityEvidence,
-    /^P9\.5 article: removed 13-line conclusion estimator recap \("Regardless of your choice…"\); body 471→457 lines\. Focused tests\/blog-diy-price-override\.test\.mjs: 4\/4 protects visible pricing\/scope, supplier limits, and final CTA; JSON-LD separate\.$/,
+    /^P9\.5 article: removed closing estimator recap \("Regardless of your choice"\); regression derives visible-word counts from PR base\/head; 5\/5 protects retained pricing, caveats and CTA; JSON-LD separate\.$/,
   );
   assert.doesNotMatch(qualityEvidence, /Docan|freight|\$\d/);
 
