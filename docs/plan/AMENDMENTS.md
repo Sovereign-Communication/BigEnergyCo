@@ -39,6 +39,6 @@ No amendments yet: the plan is at its genesis hash.
 - Date: 2026-10-16
 - Approved-by: @Treystu
 - Plan-SHA256-before: 6f9c8c7e7d33140fb6ec5ef36848f27d0387a5ab0501985df71dba77b20279cf
-- Plan-SHA256-after: 2c22b2b275fb030039865abfe1d03c3af398e514c6f1ee9009eec625f89a7090
+- Plan-SHA256-after: 6b64c66eb7096c4c9c2cd3b90b41027ecc4e40120a6230f84969680a9a46be4c
 - Sections: P9 (new item P9.7)
 - Rationale: The jev-complete gate fails closed on blog/content PRs because no plan item covers content quality — the gate cannot scope a PR titled "blog(nl): ..." to any P-item, so it errors on "no plan item id in the title" (seen on #212, #224, #227, #231). The owner ruled in chat on 2026-10-16 for the heavy path: a standing content plan item with the Jev bar set to Google quality. P9.7 pins four content requirements: (a) canonical formatting (byte-identical style blocks, uniform chrome, metadata/JSON-LD parity); (b) SEO (real demand, unique intent, valid sitemap/structured data); (c) sourcing (verifiable claims, official sources for news hooks); (d) voice (R-CONT-01..04). Jev judges content PRs at ≥ 99 with full confidence at plan stage; the implementation is browser-verified post-merge. Blog PRs now name "(P9.7)" in their titles to scope the gate.
