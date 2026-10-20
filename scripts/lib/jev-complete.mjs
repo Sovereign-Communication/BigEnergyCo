@@ -24,9 +24,14 @@ import { readFileSync } from "node:fs";
 
 export const COMPLETE_PACK_PATH = "scripts/lib/jev-complete.pack.json";
 export const COMPLETE_SITE = "jev_complete";
-// P0.3(c) / D-03: the owner asked for 99/100 on every aspect. The gate
-// previously accepted 95, which is finding F-37's "targets 95, not 99".
-export const COMPLETE_MIN_SCORE = 99.0;
+// Owner ruling 2026-10-19 (amendment A-004), superseding D-03's 99: the
+// combined bar is 95, and in exchange the bar tightens everywhere else —
+// EVERY facet must individually reach ordinal 95, and every facet's Jev
+// confidence must be at least 0.95. A high average bought with one weak or
+// one uncertain facet is not a pass.
+export const COMPLETE_MIN_SCORE = 95.0;
+export const COMPLETE_FACET_MIN_ORDINAL = 95;
+export const COMPLETE_MIN_CONFIDENCE = 0.95;
 export const COMPLETE_SCORE_MAX = 100.0;
 
 // Program exit (P10.1) additionally requires EVERY facet at the top level,
@@ -1036,10 +1041,22 @@ export function scoreCompleteGate(
     .map(([axis]) => axis)
     .sort();
 
-  // P0.3(c): the program-exit rule. A whole-program run must reach the target
-  // AND leave no facet below `proven`. The average is not enough.
+  // P0.3(c), as amended by A-004 (owner ruling 2026-10-19): the program-exit
+  // rule. A whole-program run must reach the 95 target AND leave no facet
+  // below ordinal 95 AND no facet below 0.95 Jev confidence. The average is
+  // not enough, and neither is an uncertain judgment.
   const notProven = Object.entries(facets)
     .filter(([, f]) => f.index < COMPLETE_EXIT_FACET_INDEX)
+    .map(([axis]) => axis)
+    .sort();
+  const lowConfidence = Object.entries(facets)
+    .filter(
+      ([, f]) =>
+        !(
+          typeof f.confidence === "number" &&
+          f.confidence >= COMPLETE_MIN_CONFIDENCE
+        ),
+    )
     .map(([axis]) => axis)
     .sort();
 
@@ -1047,7 +1064,8 @@ export function scoreCompleteGate(
     allHard &&
     combined >= target &&
     blocking.length === 0 &&
-    notProven.length === 0;
+    notProven.length === 0 &&
+    lowConfidence.length === 0;
 
   // ── required work ────────────────────────────────────────────────────────
   const improvementByBucket = {};
@@ -1171,6 +1189,8 @@ export function scoreCompleteGate(
     pass,
     hard_gates_passed: allHard,
     facets_not_proven: notProven,
+    facets_low_confidence: lowConfidence,
+    min_confidence: COMPLETE_MIN_CONFIDENCE,
     hard_gates: gates,
     mechanical_score: mechanical,
     semantic_score: Math.round(semantic * 100) / 100,

@@ -12,6 +12,8 @@ import {
   readRatchetBaseline,
   resolveScopeFacets,
   COMPLETE_EXIT_RULE_FROM,
+  COMPLETE_FACET_MIN_ORDINAL,
+  COMPLETE_MIN_CONFIDENCE,
 } from "./jev-complete.mjs";
 
 /**
@@ -36,7 +38,17 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
     report.facets,
     readRatchetBaseline(ledgerText, pack),
   );
-  const short = scopeFacets.filter((a) => report.facets[a].index < 4);
+  const short = scopeFacets.filter(
+    (a) => report.facets[a].ordinal < COMPLETE_FACET_MIN_ORDINAL,
+  );
+  // A-004 (owner ruling 2026-10-19): every in-scope facet must ALSO carry a
+  // Jev confidence of at least COMPLETE_MIN_CONFIDENCE. A facet the judge
+  // scored without confidence — or with none recorded — has not met the bar;
+  // absence is not a pass.
+  const lowConfidence = scopeFacets.filter((a) => {
+    const c = report.facets[a].confidence;
+    return !(typeof c === "number" && c >= COMPLETE_MIN_CONFIDENCE);
+  });
   // The all-proven exit rule binds from COMPLETE_EXIT_RULE_FROM. P0.3(c)
   // defined the rule and is the one item it cannot judge (see the constant).
   // P0.6 is owner-ruled (§9 rule 6, 2026-10-06) into the same bootstrap: the
@@ -45,8 +57,9 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
     planItemAtLeast(scope, COMPLETE_EXIT_RULE_FROM) && scope !== "P0.6";
   // P0.3 bootstrap (plan §9 rule 6, owner ruling 2026-09-26): a P0.3
   // sub-PR builds the gate that judges it, so it merges on green CI plus an
-  // attached scoped report with NO RATCHET REGRESSION, even below 99. The
-  // ≥ 99 threshold and the all-proven rule bind from P0.4. The hard gates
+  // attached scoped report with NO RATCHET REGRESSION, even below the bar.
+  // The ≥ 95 threshold, the all-facets-at-95 rule and the ≥ 0.95 confidence
+  // rule (A-004, owner ruling 2026-10-19) bind from P0.4. The hard gates
   // and the ratchet bind throughout and are never relaxed.
   //
   // The ratchet test is `=== "met"`, not `!== "violation"`. An inactive
@@ -57,7 +70,9 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
     report.hard_gates_passed &&
     ratchet.status === "met" &&
     (!exitRuleBinds ||
-      (scopedCombined >= report.min_score && short.length === 0));
+      (scopedCombined >= report.min_score &&
+        short.length === 0 &&
+        lowConfidence.length === 0));
   return {
     pass,
     scoped: {
@@ -72,6 +87,9 @@ export function scopedVerdict({ report, scope, pack, ledgerText }) {
           ? "plan §9 rule 6: P0.6 evidence PRs merge on green CI plus no ratchet regression, even below 99 (owner ruling 2026-10-06)"
           : "plan §9 rule 6: P0.3 sub-PRs merge on green CI plus no ratchet regression, even below 99",
       facets_short_of_proven: short,
+      facets_below_confidence: lowConfidence,
+      min_confidence: COMPLETE_MIN_CONFIDENCE,
+      facet_min_ordinal: COMPLETE_FACET_MIN_ORDINAL,
       exit_rule_binds_from: COMPLETE_EXIT_RULE_FROM,
       exit_rule_binding: exitRuleBinds,
       // An inactive ratchet is stated, never implied. It is not a pass.
