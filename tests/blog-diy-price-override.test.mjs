@@ -167,7 +167,7 @@ test("Jev evidence, SEO proof and JSON-LD assertions stay separately scoped", ()
   assert.ok(qualityEvidence.length <= COMPLETE_FACET_CLIP);
   assert.match(
     qualityEvidence,
-    /^P9\.5 article \(blog\/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage\/index\.html\): 327 lines added, 659 removed \(332 net fewer\); focused test tests\/blog-diy-price-override\.test\.mjs: 4\/4 pass\.$/,
+    /^P9\.5 article \(blog\/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage\/index\.html\): 327 lines added, 659 removed \(332 net fewer\); focused test tests\/blog-diy-price-override\.test\.mjs: 4\/4 pass \(pricing\/scope from <article>; JSON-LD separate\)\.$/,
   );
   assert.doesNotMatch(qualityEvidence, /Docan|freight|\$\d/);
 
