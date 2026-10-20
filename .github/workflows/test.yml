@@ -646,6 +646,14 @@ jobs:
             --event "${{ github.event_name }}" \
             --repository "${{ github.repository }}"
 
+      - name: List changed files for scope inference
+        id: prfiles
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FILES="$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" --paginate -q '.[].filename' | jq -R . | jq -cs .)"
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+
       - name: Which plan item is this PR about?
         id: scope
         env:
@@ -654,8 +662,10 @@ jobs:
           # Explicit P-item in title wins; otherwise infer from paths/keywords.
           # Governance precedence: a PR modifying docs/plan/ is judged as P0.1,
           # not against the item it creates (breaks the chicken-and-egg).
+          # NOTE: pull_request.changed_files is only the COUNT of files; the
+          # real list comes from the compare step just below.
           PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_FILES: ${{ toJSON(github.event.pull_request.changed_files) }}
+          PR_FILES: ${{ steps.prfiles.outputs.files }}
         run: |
           SCOPE="$(node -e '
             const { resolveCiScope } = await import("./scripts/lib/jev-scope.mjs");
