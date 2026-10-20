@@ -462,12 +462,25 @@ test("LIVE: highest-probability valid legend anchor wins; invented levels are ig
   assert.ok(parsed, "partial valid answers must still parse");
   assert.equal(parsed.live_levels.spec, 4, "0.8 on the proven anchor wins");
   assert.equal(parsed.live_confidence.spec, 0.7);
+  assert.deepEqual(parsed.live_probability_distributions.spec, [
+    { level: LEVELS[0], probability: 0.2 },
+    { level: LEVELS[1], probability: null },
+    { level: LEVELS[2], probability: null },
+    { level: LEVELS[3], probability: null },
+    { level: LEVELS[4], probability: 0.8 },
+  ]);
   assert.equal(
     parsed.live_levels.design,
     null,
     "an invented level string never maps to an index",
   );
   assert.equal(parsed.live_confidence.design, 0.8);
+  assert.ok(
+    parsed.live_probability_distributions.design.every(
+      ({ probability }) => probability === null,
+    ),
+    "an invented level contributes no probability to a declared level",
+  );
   // Every declared axis is reported — answered or unmatched, never omitted.
   assert.equal(Object.keys(parsed.live_levels).length, AXIS_IDS.length);
   assert.equal(
@@ -475,6 +488,32 @@ test("LIVE: highest-probability valid legend anchor wins; invented levels are ig
     AXIS_IDS.length + 1,
     "one note per axis + the gap choice",
   );
+});
+
+test("LIVE: invalid probability and confidence values cannot influence the report", () => {
+  const parsed = parseLiveAnswers(
+    {
+      spec: {
+        probabilities: { low: -0.1, middle: 0.6, high: 1.1 },
+        legend: {
+          low: LEVELS[0],
+          middle: LEVELS[2],
+          high: LEVELS[4],
+        },
+        confidence: Infinity,
+      },
+    },
+    DEFAULT_COMPLETE_PACK,
+  );
+  assert.equal(parsed.live_levels.spec, 2);
+  assert.equal(parsed.live_confidence.spec, null);
+  assert.deepEqual(parsed.live_probability_distributions.spec, [
+    { level: LEVELS[0], probability: null },
+    { level: LEVELS[1], probability: null },
+    { level: LEVELS[2], probability: 0.6 },
+    { level: LEVELS[3], probability: null },
+    { level: LEVELS[4], probability: null },
+  ]);
 });
 
 test("LIVE: primary_gap accepts 'none' and declared buckets, refuses invented ones", () => {
@@ -612,10 +651,25 @@ test("TRANSPORT: every recorded evidence channel reaches the live judge", () => 
 
 test("SCORE: everything green with a proven live judgment passes at 95", () => {
   const ev = mergeEvidence(ALL_GREEN, AUTO_CLEAN);
-  const report = scoreCompleteGate(ev, { liveJudgment: liveAll(4) });
+  const qualityDistribution = [
+    { level: LEVELS[0], probability: 0 },
+    { level: LEVELS[1], probability: 0 },
+    { level: LEVELS[2], probability: 0 },
+    { level: LEVELS[3], probability: 0 },
+    { level: LEVELS[4], probability: 1 },
+  ];
+  const report = scoreCompleteGate(ev, {
+    liveJudgment: liveAll(4, {
+      live_probability_distributions: { quality: qualityDistribution },
+    }),
+  });
   assert.equal(report.mechanical_score, 100);
   assert.equal(report.score, 100);
   assert.equal(report.pass, true);
+  assert.deepEqual(
+    report.facets.quality.jev_probability_distribution,
+    qualityDistribution,
+  );
   assert.deepEqual(report.blocking_facets, []);
   assert.deepEqual(report.required_work, [], "a proven tree needs no work");
   assert.deepEqual(report.blockers, []);
