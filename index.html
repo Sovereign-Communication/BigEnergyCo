@@ -259,10 +259,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20261016l" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261016l" />
+    <link rel="preload" href="./assets/site.css?v=20261020b" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261020b" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20261016l" />
+    <link rel="stylesheet" href="./assets/site.css?v=20261020b" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -1627,12 +1627,26 @@
 
                 <div id="offgridInputs" hidden>
                   <div class="form-group">
-                    <label for="generatorAllowed" class="uc-check">
-                      <input type="checkbox" id="generatorAllowed" checked />
-                      <span data-i18n="generatorLabel"
-                        >A generator is available for the worst weeks</span
+                    <label
+                      for="generatorRuntime"
+                      data-i18n="generatorRuntimeLabel"
+                      >How often may a generator run?</label
+                    >
+                    <select id="generatorRuntime" class="form-control">
+                      <option value="gen0" data-i18n="generatorRuntime0">
+                        0% — never
+                      </option>
+                      <option
+                        value="gen1"
+                        selected
+                        data-i18n="generatorRuntime1"
                       >
-                    </label>
+                        1% — a few days a year
+                      </option>
+                      <option value="gen2" data-i18n="generatorRuntime2">
+                        2%+ — fine when needed
+                      </option>
+                    </select>
                   </div>
                 </div>
 
@@ -3625,15 +3639,15 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20261016l"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20261020b"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
       type="module"
-      src="./assets/js/turnstile-client.js?v=20261016l"
+      src="./assets/js/turnstile-client.js?v=20261020b"
     ></script>
-    <script defer src="./assets/js/chat.js?v=20261016l"></script>
+    <script defer src="./assets/js/chat.js?v=20261020b"></script>
   </body>
 </html>
 

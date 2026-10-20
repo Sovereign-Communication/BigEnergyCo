@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261016l";
+import { APPLIANCES } from "./appliances.js?v=20261020b";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -24,14 +24,20 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261016l";
+} from "./usecases.js?v=20261020b";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261016l";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261016l";
+} from "./run-coordinator.js?v=20261020b";
+import {
+  cutRowVisible,
+  tierForGeneratorRuntime,
+  generatorRuntimeForTier,
+  generatorAllowedForRuntime,
+} from "./mode-chrome.js?v=20261020b";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261020b";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -40,12 +46,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261016l";
+} from "./charts.js?v=20261020b";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261016l";
+} from "./location-picker.js?v=20261020b";
 
 import {
   estimateTariff,
@@ -53,14 +59,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261016l";
+} from "./pricing.js?v=20261020b";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261016l";
+import { currencyForCountry } from "./country-currency.js?v=20261020b";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261016l";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261020b";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -92,7 +98,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261016l").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261020b").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -103,15 +109,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261016l";
+} from "./lead-acid.js?v=20261020b";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261016l";
+} from "./bom.js?v=20261020b";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261016l";
+import { BOM_ITEMS } from "../shared/content.js?v=20261020b";
 
 import {
   applyI18n,
@@ -120,18 +126,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261016l";
+} from "../shared/i18n.js?v=20261020b";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261016l";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261016l";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261020b";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261020b";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261016l";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261016l";
+} from "../shared/simple-mode.js?v=20261020b";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261020b";
 import {
   advisorJevContext,
   interpretSanity,
@@ -139,57 +145,57 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261016l";
+} from "./validate.js?v=20261020b";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261016l";
+} from "../shared/cut-targets.js?v=20261020b";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261016l";
+} from "./share-codec.js?v=20261020b";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261016l";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261016l";
+} from "./infeasible-copy.js?v=20261020b";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261020b";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261016l";
+} from "./fuel-units.js?v=20261020b";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261016l";
+} from "./frontier-chart.js?v=20261020b";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261016l";
+} from "./rescale.js?v=20261020b";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261016l";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261020b";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261016l";
+} from "./map-provider.js?v=20261020b";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261016l";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261016l";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261016l";
+} from "./wizard.js?v=20261020b";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261020b";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261020b";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -238,9 +244,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261016l";
+} from "./money.js?v=20261020b";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261016l";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261020b";
 
 let worker = null;
 
@@ -780,6 +786,31 @@ function selectedUseCase() {
   return useCase(id) ? id : "billcut";
 }
 
+/** The mode of the result currently on screen, or null before any run. */
+let lastResultMode = null;
+
+/**
+ * The ONE writer of the bill-cut row's visibility. The decision itself is
+ * pure (mode-chrome.js) and reads CURRENT state — goal, on-screen result,
+ * use case — so no caller can leave a stale write behind: every state
+ * change (goal switch, use-case switch, results render) re-syncs, and the
+ * row simply follows. Before this function existed, the render wrote the
+ * row from the last result's mode and nothing re-hid it on a goal switch,
+ * which is how off-grid users kept a "Cut ~80% of your bill" slider.
+ */
+function syncCutRowVisibility() {
+  const cutRow = $("cutSliderRow");
+  if (!cutRow) return;
+  const goal = $("systemGoal") ? $("systemGoal").value : "gridtie";
+  const show = cutRowVisible({
+    goal,
+    resultMode: lastResultMode,
+    useCaseId: selectedUseCase(),
+  });
+  cutRow.style.display = show ? "block" : "none";
+  if (show) syncCutLabel();
+}
+
 /** The kWh/day a checked set of catalogue rows asks for. */
 function catalogueKwh(list, prefix) {
   let wh = 0;
@@ -865,9 +896,9 @@ function applyUseCase(id, { silent = false } = {}) {
   }
 
   // Bill-cut's own inputs (the cut target) are meaningless for a case that
-  // does not report a bill cut.
-  const cutRow = $("cutSliderRow");
-  if (cutRow) cutRow.style.display = uc === "billcut" ? "" : "none";
+  // does not report a bill cut. The row's visibility has one writer now;
+  // this just tells it the state changed.
+  syncCutRowVisibility();
 
   const c = useCase(uc);
   const blurb = $("useCaseBlurb");
@@ -921,7 +952,10 @@ function useCaseInputs() {
     portableShorePower: $("portableShorePower")?.checked === true,
     touPeakRate: parseFloat($("touPeakRate")?.value) || null,
     touOffPeakRate: parseFloat($("touOffPeakRate")?.value) || null,
-    generatorAllowed: $("generatorAllowed")?.checked !== false,
+    generatorAllowed: generatorAllowedForRuntime(
+      $("generatorRuntime")?.value || "gen1",
+    ),
+    generatorRuntime: $("generatorRuntime")?.value || "gen1",
   };
 }
 
@@ -1075,6 +1109,17 @@ function setupUseCaseChooser() {
   const row = $("useCaseRow");
   if (row) row.hidden = false;
 
+  // The generator answer IS an independence tier in plainer words: keep the
+  // engine's tier select in step so every downstream reader (sizing,
+  // share links) sees the one answer the visitor gave.
+  const genRuntime = $("generatorRuntime");
+  if (genRuntime) {
+    genRuntime.addEventListener("change", () => {
+      const tier = $("autoTier");
+      if (tier) tier.value = tierForGeneratorRuntime(genRuntime.value);
+    });
+  }
+
   for (const id of ["touPeakRate", "touOffPeakRate"]) {
     const input = $(id);
     if (input) {
@@ -1090,7 +1135,7 @@ function setupUseCaseChooser() {
     "reserveSlider",
     "backupSolarRecharge",
     "portableShorePower",
-    "generatorAllowed",
+    "generatorRuntime",
   ]) {
     const input = $(id);
     if (input)
@@ -3277,6 +3322,9 @@ function setupGoalControls() {
     updateAutoRows();
     setQuickMode(quickMode);
     syncBillSlider();
+    // A goal switch changes what the results chrome may show (an off-grid
+    // goal has no bill to cut) even when no new result has rendered yet.
+    syncCutRowVisibility();
     // A goal change is a pre-calc change only after a successful result; the
     // first calculation still belongs to the explicit sizing button.
     markPrecalcDirty();
@@ -3755,7 +3803,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261016l",
+      "./assets/js/sizing/sizing-worker.js?v=20261020b",
       {
         type: "module",
       },
@@ -6994,10 +7042,12 @@ function renderResults(p) {
     );
   }
 
-  // The cut slider (grid-tie only) lives in the results panel.
-  const cutRow = $("cutSliderRow");
-  if (cutRow) cutRow.style.display = isGT ? "block" : "none";
-  syncCutLabel();
+  // The cut slider (grid-tie only) lives in the results panel. Record this
+  // result's mode, then let the one visibility writer decide from current
+  // state — a grid-tie result rendered while the goal has moved on must
+  // not resurrect the row.
+  lastResultMode = isGT ? "gridtie" : "offgrid";
+  syncCutRowVisibility();
   // Keep the roof-area cap note truthful after every render (share-link
   // restores and map fills can change the input without an input event).
   updateRoofAreaCapNote();
@@ -7615,8 +7665,13 @@ function restoreFromShare() {
   if (o.a === 1) $("chemSelect").value = "auto";
   else if (o.ch && CHEM_KEYS.has(o.ch)) $("chemSelect").value = o.ch;
 
-  if (o.at && ["tier100", "tier99", "tier95"].includes(o.at) && $("autoTier"))
+  if (o.at && ["tier100", "tier99", "tier95"].includes(o.at) && $("autoTier")) {
     $("autoTier").value = o.at;
+    // The generator question is the tier in plainer words; restore it too,
+    // so the off-grid panel shows the answer the link carries.
+    const genRuntime = $("generatorRuntime");
+    if (genRuntime) genRuntime.value = generatorRuntimeForTier(o.at);
+  }
 
   if (o.ag && typeof o.ag === "string" && $("autoTarget")) {
     // Same single source as the markup drift guard: only real engine targets.
@@ -8431,6 +8486,11 @@ export async function initSizingUI() {
     const autoTierNode = $("autoTier");
     if (autoTierNode)
       autoTierNode.addEventListener("change", () => {
+        // Two-way with the off-grid generator question: it is this tier in
+        // plainer words, so a tier change here restates the answer there.
+        const genRuntime = $("generatorRuntime");
+        if (genRuntime)
+          genRuntime.value = generatorRuntimeForTier(autoTierNode.value);
         markPrecalcDirty();
       });
 
