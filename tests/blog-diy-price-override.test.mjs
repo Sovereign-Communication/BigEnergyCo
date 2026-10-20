@@ -11,13 +11,18 @@ const articlePath = join(
   "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html",
 );
 const article = readFileSync(articlePath, "utf8");
-const articleBody = article.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1];
+const articleBody = article.match(
+  /<article\b[^>]*>([\s\S]*?)<\/article>/i,
+)?.[1];
 assert.ok(articleBody, "reader-visible article body is present");
 
 function visibleText(html) {
   return html
     .replace(/<!--[\s\S]*?-->/g, " ")
-    .replace(/<(script|style|template|noscript)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, " ")
+    .replace(
+      /<(script|style|template|noscript)\b[^>]*>[\s\S]*?<\/\1\s*>/gi,
+      " ",
+    )
     .replace(/<[^>]*>/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/\s+/g, " ")
@@ -25,9 +30,11 @@ function visibleText(html) {
 }
 
 const readerVisibleArticleText = visibleText(articleBody);
-const jsonLd = [...article.matchAll(
-  /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script\s*>/gi,
-)].map(([, source]) => JSON.parse(source));
+const jsonLd = [
+  ...article.matchAll(
+    /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script\s*>/gi,
+  ),
+].map(([, source]) => JSON.parse(source));
 const comparisonTable = article.match(
   /<h2>LFP vs Sodium-Ion: Current Pricing Evidence \(2026\)<\/h2>\s*<table>([\s\S]*?)<\/table>/,
 )?.[1];
@@ -50,7 +57,10 @@ test("DIY price override remains an explicitly scoped planning estimate", () => 
     readerVisibleArticleText,
     /DIY battery materials planning estimate \(before delivery and tax\)[\s\S]*?\$80–\$120 \(planning estimate\)[\s\S]*?\$800–\$1,200 \(planning estimate\)/,
   );
-  assert.match(readerVisibleArticleText, /battery components listed below at source prices/);
+  assert.match(
+    readerVisibleArticleText,
+    /battery components listed below at source prices/,
+  );
   assert.match(
     readerVisibleArticleText,
     /10× comparison is between source-price DIY materials and an installed project, not a like-for-like battery-pack comparison/,
@@ -70,7 +80,10 @@ test("current LFP and installed examples state their capacity and cost scope", (
     article,
     /https:\/\/www\.docanpower\.com\/s3-diy-box-jk-bms-v19/,
   );
-  assert.match(readerVisibleArticleText, /at \$60 each and its[\s\S]*at \$365, both ex tax/);
+  assert.match(
+    readerVisibleArticleText,
+    /at \$60 each and its[\s\S]*at \$365, both ex tax/,
+  );
   assert.match(readerVisibleArticleText, /kit fits 16 cells of 280–330Ah/);
   assert.match(
     readerVisibleArticleText,
@@ -101,7 +114,10 @@ test("current LFP and installed examples state their capacity and cost scope", (
     /\$37\/kWh sales tax, labor, inverter, balance of system, permitting and interconnection/,
   );
   assert.match(readerVisibleArticleText, /about \$1,106\/usable kWh/);
-  assert.match(readerVisibleArticleText, /model, not a quote; shipping is not itemized/);
+  assert.match(
+    readerVisibleArticleText,
+    /model, not a quote; shipping is not itemized/,
+  );
   assert.match(readerVisibleArticleText, /planning-band endpoints/);
 
   const supplierTotal = 16 * 60 + 365;
