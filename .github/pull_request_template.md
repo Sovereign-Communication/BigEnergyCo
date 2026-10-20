@@ -15,4 +15,5 @@
 - [ ] `docs/plan/LEDGER.jsonl` row appended (`item-done`, PR, SHA, gates, Jev)
 - [ ] Release rules followed if shipping (SW `CACHE_VERSION` + asset tokens)
 - [ ] Preview deployment visually verified (Cloudflare Pages preview URL) before manual production dispatch
+- [ ] Rollback plan noted: previous Cloudflare Pages deployment can be promoted instantly (no rebuild) if issues arise post-dispatch
 - [ ] Tracking issue ticked
