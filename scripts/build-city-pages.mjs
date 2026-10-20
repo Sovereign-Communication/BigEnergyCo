@@ -314,6 +314,10 @@ function cityPage(c) {
     em.kicker { color: var(--accent); font-style: normal; font-weight: 700; }
     .cta-box { border: 1px solid rgba(0, 230, 153, .4); background: rgba(0, 230, 153, .06); border-radius: 12px; padding: 1.2rem 1.4rem; margin: 2rem 0; }
     .cta-box p:last-child { margin: 0; }
+    .city-sizing-cta { margin: 1.5rem 0 2rem; border-color: rgba(0, 230, 153, .4); background: rgba(0, 230, 153, .08); }
+    .city-sizing-cta__title { font-weight: 700; color: #fff; margin-bottom: .4rem; }
+    .city-sizing-cta__copy { color: var(--muted); font-size: .92rem; margin-bottom: .75rem; }
+    .city-footer-links { margin-top: .75rem; }
     .btn { display: inline-block; background: linear-gradient(135deg, #00e699, #00b377); color: #04120c; font-weight: 700; text-decoration: none; padding: .65rem 1.3rem; border-radius: 8px; margin-top: .6rem; }
     details { border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1.1rem; margin-bottom: .8rem; background: var(--card); }
     summary { cursor: pointer; color: var(--accent); font-weight: 600; }
@@ -369,9 +373,9 @@ function cityPage(c) {
       <p class="meta">📍 ${coord} · ${sc.tier} · updated Aug 30, 2026 · free, no signup, nothing for sale</p>
 
       <!-- Worldwide Sizing Reassurance Callout -->
-      <div class="cta-box" style="margin: 1.5rem 0 2rem; border-color: rgba(0, 230, 153, 0.4); background: rgba(0, 230, 153, 0.08);">
-        <p style="font-weight:700;color:#fff;margin-bottom:0.4rem;">⚡ Sizing for a different location?</p>
-        <p style="color:var(--muted);font-size:0.92rem;margin-bottom:0.75rem;">This page is a benchmark reference for ${c.name}. The BigEnergyCo calculator works for <strong>any location worldwide</strong> using your exact coordinates.</p>
+      <div class="cta-box city-sizing-cta">
+        <p class="city-sizing-cta__title">⚡ Sizing for a different location?</p>
+        <p class="city-sizing-cta__copy">This page is a benchmark reference for ${c.name}. The BigEnergyCo calculator works for <strong>any location worldwide</strong> using your exact coordinates.</p>
         <a class="btn" href="../../#sizing">⚡ Size Any Location Worldwide &rarr;</a>
       </div>
 
@@ -448,7 +452,7 @@ ${cities
   <footer>
     <div class="container">
       <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building. Working with batteries and mains wiring can cause fire, injury, and death.</p>
-      <p style="margin-top:.75rem;">
+      <p class="city-footer-links">
         <a href="../../#sizing">Size Your System</a> · <a href="../">66 City Benchmarks</a> · <a href="../../solar-heatmap/">Heatmap</a> · <a href="../../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
       </p>
     </div>
@@ -592,6 +596,9 @@ function hubPage() {
     p { margin-bottom: 1rem; }
     .citylinks { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 1.5rem; }
     .citylinks a { color: var(--accent); text-decoration: none; font-size: .85rem; border: 1px solid var(--border); border-radius: 20px; padding: .2rem .7rem; display: inline-flex; align-items: center; min-height: 44px; }
+    .worldwide-notice { margin: 1.25rem 0 2rem; background: rgba(0, 230, 153, .08); border: 1px solid rgba(0, 230, 153, .35); border-radius: 12px; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .worldwide-notice__title { font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: .3rem; }
+    .worldwide-notice__copy { margin: 0; color: var(--muted); font-size: .92rem; line-height: 1.5; max-width: 620px; }
     a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .skip-link { position: absolute; left: -9999px; top: .5rem; z-index: 20; padding: .7rem 1rem; background: var(--accent); color: #04120c; font-weight: 800; border-radius: 8px; }
     .skip-link:focus { left: .75rem; }
@@ -640,10 +647,10 @@ function hubPage() {
     <article>
       <h1>Solar &amp; Battery Calculator by City</h1>
       <!-- Worldwide Sizing Reassurance Callout -->
-      <div class="worldwide-notice" style="margin: 1.25rem 0 2rem; background: rgba(0, 230, 153, 0.08); border: 1px solid rgba(0, 230, 153, 0.35); border-radius: 12px; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div class="worldwide-notice">
         <div>
-          <div style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 0.3rem;">⚡ Don't see your city? We size systems anywhere on Earth!</div>
-          <p style="margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.5; max-width: 620px;">
+          <div class="worldwide-notice__title">⚡ Don't see your city? We size systems anywhere on Earth!</div>
+          <p class="worldwide-notice__copy">
             The BigEnergyCo calculator works for <strong>any city, town, or GPS coordinates worldwide</strong> using 5 years of hourly NASA satellite weather. The 66 benchmark cities below provide reference solar profiles and worked sizing examples.
           </p>
         </div>
@@ -665,7 +672,7 @@ ${regionBlocks}
   <footer>
     <div class="container">
       <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building.</p>
-      <p style="margin-top:.75rem;">
+      <p class="city-footer-links">
         <a href="../#sizing">Size Your System</a> · <a href="../solar-heatmap/">Heatmap</a> · <a href="../blog/">All Guides</a> · <a href="../about/">About</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
       </p>
     </div>
