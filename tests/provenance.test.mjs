@@ -74,6 +74,15 @@ test("a value with no publisher must be graded unknown and say why", () => {
   assert.match(r.out, /has no source but is graded/);
 });
 
+test("an unknown source cannot claim a published grade in its visitor disclosure", () => {
+  const r = gateAgainst((c) => {
+    const a = c.assumptions.find((x) => x.id === "installed_costs");
+    a.disclosure = a.disclosure.replace("grade unknown", "graded B");
+  });
+  assert.notEqual(r.code, 0, "an unknown value cannot claim grade B");
+  assert.match(r.out, /disclosure claims a published grade/);
+});
+
 test("an unsourced value with no explanation fails", () => {
   const r = gateAgainst((c) => {
     const a = c.assumptions.find((x) => x.source === null);

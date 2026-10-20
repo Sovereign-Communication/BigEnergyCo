@@ -165,7 +165,7 @@
       "used_by": ["assets/js/sizing/paths.js:REGION_ROWS"],
       "source": null,
       "grade": "unknown",
-      "disclosure": "OUR ESTIMATE, graded B per region because the ranges are wide and regional rather than per-quote. They come from installed-price surveys we read, but no single survey is published free at this resolution, so no URL is claimed. Every gap between the four routes is a difference between OUR two estimates, not between two measured prices, and the page says so."
+      "disclosure": "OUR ESTIMATE, grade unknown: regional ranges informed by surveys that are not free at this resolution, so no source URL is claimed. The comparison is between our estimates, not measured market prices; the page says so."
     },
     {
       "id": "incentives",

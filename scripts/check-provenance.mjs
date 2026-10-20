@@ -121,6 +121,10 @@ for (const a of reg.assumptions || []) {
           'with no publisher behind it is graded "unknown" — anything else claims ' +
           "a provenance the entry does not have.",
       );
+    if (/\bgraded?\s+[A-D]\b/i.test(a.disclosure || ""))
+      fail(
+        `${a.id} is graded unknown but its disclosure claims a published grade`,
+      );
     if (!a.disclosure || a.disclosure.length < 40)
       fail(
         `${a.id} has no source, so its disclosure must say what it is instead and ` +
