@@ -35,7 +35,7 @@
     "physics": "verify:live PASSED: live NASA POWER at Honolulu, 10 kWh/day, $0.42/kWh, lfp returned 43,824 hourly records (2021-2025) in 1.4s; off-grid tiers and grid-tie 60/80/95 all sized; SOC gate 6/6, every system reaching 100%",
     "provenance": "16 assumption families use 7 sources: 8 cite a publisher with grade/date and 8 are explicitly unknown. Installed-cost ranges remain estimates; the disclosure now says grade unknown and compares estimates, not measured market prices.",
     "comparison": "check-comparison.mjs prices turnkey, lease, selfpurchase and diy for one system and shared definitions across a 20-year horizon; it audits permits, incentives, O&M, replacements and lease end terms, and withholds illegal or unverified DIY.",
-    "usecases": "check-usecases.mjs validates and walks all six selectable cases (billcut, tou, backup, reserve, offgrid, portable) through distinct metrics and engine-backed verdicts. Chrome renders all six with their own metric, value and verdict and 15/15 declared controls visible. Bill cut/off-grid are partial; TOU/portable decline; backup/reserve work. Equal-rate TOU honestly reports no battery benefit.",
+    "usecases": "check-usecases.mjs walks billcut/tou/backup/reserve/offgrid/portable through distinct metrics/engine verdicts; Chrome renders each metric/value/verdict with 15/15 controls. Billcut/offgrid partial; TOU/portable decline; backup/reserve work; equal-rate TOU shows zero benefit.",
     "privacy": "Fallback: check-privacy.mjs statically checks privacy; check-privacy-browser.mjs owns runtime proof (0 cookies, 0 HttpOnly, 0.01 deg rounding; egress: nominatim.openstreetmap.org, open.er-api.com). Without its report, runtime is unverified."
   }
 }
