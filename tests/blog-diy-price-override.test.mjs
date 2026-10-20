@@ -38,6 +38,9 @@ const jsonLd = [
 const comparisonTable = article.match(
   /<h2>LFP vs Sodium-Ion: Current Pricing Evidence \(2026\)<\/h2>\s*<table>([\s\S]*?)<\/table>/,
 )?.[1];
+const finalCta = articleBody.match(
+  /<div class="cta-box">([\s\S]*?)<\/div>/,
+)?.[1];
 const facetEvidence = JSON.parse(
   readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
 ).facet_evidence;
@@ -160,6 +163,16 @@ test("chemistry comparison and CTA show only the available pricing evidence", ()
   assert.doesNotMatch(
     readerVisibleArticleText,
     /4,000.*cycles|2,000.*cycles|20–30% lower|charges at −20°C|0V storage|sodium-ion is generally considered safer/i,
+  );
+  assert.ok(finalCta, "closing estimator CTA is present");
+  assert.match(
+    visibleText(finalCta),
+    /storage capacity, solar array sizing, and raw hardware component costs/,
+  );
+  assert.match(visibleText(finalCta), /100% free, no signup, nothing for sale/);
+  assert.doesNotMatch(
+    readerVisibleArticleText,
+    /Regardless of your choice, accurate planning is essential/,
   );
 });
 
