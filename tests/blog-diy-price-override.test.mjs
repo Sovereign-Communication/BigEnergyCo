@@ -18,9 +18,12 @@ const articleText = article
 const comparisonTable = article.match(
   /<h2>LFP vs Sodium-Ion: Current Pricing Evidence \(2026\)<\/h2>\s*<table>([\s\S]*?)<\/table>/,
 )?.[1];
-const qualityEvidence = JSON.parse(
+const facetEvidence = JSON.parse(
   readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
-).facet_evidence.quality;
+).facet_evidence;
+const qualityEvidence = facetEvidence.quality;
+const provenanceEvidence = facetEvidence.provenance;
+const seoEvidence = facetEvidence.seo;
 
 test("DIY price override remains an explicitly scoped planning estimate", () => {
   assert.match(articleText, /\$80–\$120 per usable kWh/);
@@ -127,19 +130,23 @@ test("chemistry comparison and CTA show only the available pricing evidence", ()
   );
 });
 
-test("Jev quality evidence fits its clip and preserves the remaining evidence gaps", () => {
+test("Jev quality, provenance and SEO evidence match their measured scopes", () => {
   assert.ok(qualityEvidence.length <= COMPLETE_FACET_CLIP);
-  assert.match(qualityEvidence, /Docan LFP: \$1,325 pre-tax materials/);
-  assert.match(qualityEvidence, /14\.34 kWh×80%=11\.47 usable kWh/);
-  assert.match(qualityEvidence, /Planning estimate: \$80–\$120\/kWh/);
-  assert.match(qualityEvidence, /no sodium-ion example/);
   assert.match(
     qualityEvidence,
-    /Cell and kit freight is destination-quoted and excluded/,
+    /^DIY article diff: 327 added, 659 removed \(net 332 fewer lines\); focused pricing regression: 4\/4 pass\.$/,
+  );
+  assert.doesNotMatch(qualityEvidence, /Docan|sodium-ion|freight/);
+
+  assert.ok(provenanceEvidence.length <= COMPLETE_FACET_CLIP);
+  assert.match(
+    provenanceEvidence,
+    /^Docan: 16×\$60 cells\+\$365 kit=\$1,325 pre-tax; 14\.34 kWh×80%=11\.47 usable kWh\. \$80–\$120\/kWh: estimate only; no sodium-ion example; cell\/kit freight excluded, destination-quoted\./,
   );
   assert.match(
-    qualityEvidence,
-    /https:\/\/docanpower\.com\/rept-280ah-prismatic-cell/,
+    provenanceEvidence,
+    /https:\/\/www\.docanpower\.com\/rept-280ah-prismatic-cell; https:\/\/www\.docanpower\.com\/s3-diy-box-jk-bms-v19$/,
   );
-  assert.match(qualityEvidence, /\/s3-diy-box-jk-bms-v19/);
+
+  assert.match(seoEvidence, /asset stamp 20261016l and SW cache beco-v120/);
 });
