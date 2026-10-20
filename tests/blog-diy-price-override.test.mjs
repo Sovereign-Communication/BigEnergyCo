@@ -134,9 +134,9 @@ test("Jev quality, provenance and SEO evidence match their measured scopes", () 
   assert.ok(qualityEvidence.length <= COMPLETE_FACET_CLIP);
   assert.match(
     qualityEvidence,
-    /^DIY article diff: 327 added, 659 removed \(net 332 fewer lines\); focused pricing regression: 4\/4 pass\.$/,
+    /^P9\.5 article \(blog\/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage\/index\.html\): 327 lines added, 659 removed \(332 net fewer\); focused test tests\/blog-diy-price-override\.test\.mjs: 4\/4 pass\.$/,
   );
-  assert.doesNotMatch(qualityEvidence, /Docan|sodium-ion|freight/);
+  assert.doesNotMatch(qualityEvidence, /Docan|freight|\$\d/);
 
   assert.ok(provenanceEvidence.length <= COMPLETE_FACET_CLIP);
   assert.match(
