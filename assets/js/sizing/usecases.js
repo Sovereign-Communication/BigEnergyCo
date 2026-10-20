@@ -90,7 +90,7 @@ const INPUTS = {
   reserve: [{ control: "reserveSlider", kind: "visitor" }],
   offgrid: [
     { control: "dailyKwhInput", kind: "visitor" },
-    { control: "generatorAllowed", kind: "visitor" },
+    { control: "generatorRuntime", kind: "visitor" },
   ],
   portable: [
     { control: "portableDeviceList", kind: "visitor" },

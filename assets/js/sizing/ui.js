@@ -31,6 +31,12 @@ import {
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
 } from "./run-coordinator.js?v=20261021d";
+import {
+  cutRowVisible,
+  tierForGeneratorRuntime,
+  generatorRuntimeForTier,
+  generatorAllowedForRuntime,
+} from "./mode-chrome.js?v=20261021d";
 import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261021d";
 import {
   drawAutoChart,
@@ -781,6 +787,31 @@ function selectedUseCase() {
   return useCase(id) ? id : "billcut";
 }
 
+/** The mode of the result currently on screen, or null before any run. */
+let lastResultMode = null;
+
+/**
+ * The ONE writer of the bill-cut row's visibility. The decision itself is
+ * pure (mode-chrome.js) and reads CURRENT state — goal, on-screen result,
+ * use case — so no caller can leave a stale write behind: every state
+ * change (goal switch, use-case switch, results render) re-syncs, and the
+ * row simply follows. Before this function existed, the render wrote the
+ * row from the last result's mode and nothing re-hid it on a goal switch,
+ * which is how off-grid users kept a "Cut ~80% of your bill" slider.
+ */
+function syncCutRowVisibility() {
+  const cutRow = $("cutSliderRow");
+  if (!cutRow) return;
+  const goal = $("systemGoal") ? $("systemGoal").value : "gridtie";
+  const show = cutRowVisible({
+    goal,
+    resultMode: lastResultMode,
+    useCaseId: selectedUseCase(),
+  });
+  cutRow.style.display = show ? "block" : "none";
+  if (show) syncCutLabel();
+}
+
 /** The kWh/day a checked set of catalogue rows asks for. */
 function catalogueKwh(list, prefix) {
   let wh = 0;
@@ -866,9 +897,9 @@ function applyUseCase(id, { silent = false } = {}) {
   }
 
   // Bill-cut's own inputs (the cut target) are meaningless for a case that
-  // does not report a bill cut.
-  const cutRow = $("cutSliderRow");
-  if (cutRow) cutRow.style.display = uc === "billcut" ? "" : "none";
+  // does not report a bill cut. The row's visibility has one writer now;
+  // this just tells it the state changed.
+  syncCutRowVisibility();
 
   const c = useCase(uc);
   const blurb = $("useCaseBlurb");
@@ -922,7 +953,10 @@ function useCaseInputs() {
     portableShorePower: $("portableShorePower")?.checked === true,
     touPeakRate: parseFloat($("touPeakRate")?.value) || null,
     touOffPeakRate: parseFloat($("touOffPeakRate")?.value) || null,
-    generatorAllowed: $("generatorAllowed")?.checked !== false,
+    generatorAllowed: generatorAllowedForRuntime(
+      $("generatorRuntime")?.value || "gen1",
+    ),
+    generatorRuntime: $("generatorRuntime")?.value || "gen1",
   };
 }
 
@@ -1076,6 +1110,17 @@ function setupUseCaseChooser() {
   const row = $("useCaseRow");
   if (row) row.hidden = false;
 
+  // The generator answer IS an independence tier in plainer words: keep the
+  // engine's tier select in step so every downstream reader (sizing,
+  // share links) sees the one answer the visitor gave.
+  const genRuntime = $("generatorRuntime");
+  if (genRuntime) {
+    genRuntime.addEventListener("change", () => {
+      const tier = $("autoTier");
+      if (tier) tier.value = tierForGeneratorRuntime(genRuntime.value);
+    });
+  }
+
   for (const id of ["touPeakRate", "touOffPeakRate"]) {
     const input = $(id);
     if (input) {
@@ -1091,7 +1136,7 @@ function setupUseCaseChooser() {
     "reserveSlider",
     "backupSolarRecharge",
     "portableShorePower",
-    "generatorAllowed",
+    "generatorRuntime",
   ]) {
     const input = $(id);
     if (input)
@@ -3295,6 +3340,9 @@ function setupGoalControls() {
     updateAutoRows();
     setQuickMode(quickMode);
     syncBillSlider();
+    // A goal switch changes what the results chrome may show (an off-grid
+    // goal has no bill to cut) even when no new result has rendered yet.
+    syncCutRowVisibility();
     // A goal change is a pre-calc change only after a successful result; the
     // first calculation still belongs to the explicit sizing button.
     markPrecalcDirty();
@@ -7011,10 +7059,12 @@ function renderResults(p) {
     );
   }
 
-  // The cut slider (grid-tie only) lives in the results panel.
-  const cutRow = $("cutSliderRow");
-  if (cutRow) cutRow.style.display = isGT ? "block" : "none";
-  syncCutLabel();
+  // The cut slider (grid-tie only) lives in the results panel. Record this
+  // result's mode, then let the one visibility writer decide from current
+  // state — a grid-tie result rendered while the goal has moved on must
+  // not resurrect the row.
+  lastResultMode = isGT ? "gridtie" : "offgrid";
+  syncCutRowVisibility();
   // Keep the roof-area cap note truthful after every render (share-link
   // restores and map fills can change the input without an input event).
   updateRoofAreaCapNote();
@@ -7632,8 +7682,13 @@ function restoreFromShare() {
   if (o.a === 1) $("chemSelect").value = "auto";
   else if (o.ch && CHEM_KEYS.has(o.ch)) $("chemSelect").value = o.ch;
 
-  if (o.at && ["tier100", "tier99", "tier95"].includes(o.at) && $("autoTier"))
+  if (o.at && ["tier100", "tier99", "tier95"].includes(o.at) && $("autoTier")) {
     $("autoTier").value = o.at;
+    // The generator question is the tier in plainer words; restore it too,
+    // so the off-grid panel shows the answer the link carries.
+    const genRuntime = $("generatorRuntime");
+    if (genRuntime) genRuntime.value = generatorRuntimeForTier(o.at);
+  }
 
   if (o.ag && typeof o.ag === "string" && $("autoTarget")) {
     // Same single source as the markup drift guard: only real engine targets.
@@ -8448,6 +8503,11 @@ export async function initSizingUI() {
     const autoTierNode = $("autoTier");
     if (autoTierNode)
       autoTierNode.addEventListener("change", () => {
+        // Two-way with the off-grid generator question: it is this tier in
+        // plainer words, so a tier change here restates the answer there.
+        const genRuntime = $("generatorRuntime");
+        if (genRuntime)
+          genRuntime.value = generatorRuntimeForTier(autoTierNode.value);
         markPrecalcDirty();
       });
 

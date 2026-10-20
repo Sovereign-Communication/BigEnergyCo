@@ -1627,12 +1627,26 @@
 
                 <div id="offgridInputs" hidden>
                   <div class="form-group">
-                    <label for="generatorAllowed" class="uc-check">
-                      <input type="checkbox" id="generatorAllowed" checked />
-                      <span data-i18n="generatorLabel"
-                        >A generator is available for the worst weeks</span
+                    <label
+                      for="generatorRuntime"
+                      data-i18n="generatorRuntimeLabel"
+                      >How often may a generator run?</label
+                    >
+                    <select id="generatorRuntime" class="form-control">
+                      <option value="gen0" data-i18n="generatorRuntime0">
+                        0% — never
+                      </option>
+                      <option
+                        value="gen1"
+                        selected
+                        data-i18n="generatorRuntime1"
                       >
-                    </label>
+                        1% — a few days a year
+                      </option>
+                      <option value="gen2" data-i18n="generatorRuntime2">
+                        2%+ — fine when needed
+                      </option>
+                    </select>
                   </div>
                 </div>
 

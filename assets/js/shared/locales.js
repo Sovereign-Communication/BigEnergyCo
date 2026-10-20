@@ -432,7 +432,10 @@ export const LOCALES = {
     portableDeviceLabel: "What are you powering? (pick any)",
     portableBankLabel: "Power station usable size (kWh)",
     portableShoreLabel: "I can recharge from mains or a vehicle",
-    generatorLabel: "A generator is available for the worst weeks",
+    generatorRuntimeLabel: "How often may a generator run?",
+    generatorRuntime0: "0% \u2014 never",
+    generatorRuntime1: "1% \u2014 a few days a year",
+    generatorRuntime2: "2%+ \u2014 fine when needed",
     verdictBillCut:
       "{status}: this system removes {pct}% of your bill over 20 years.",
     verdictTou:
@@ -650,7 +653,11 @@ export const LOCALES = {
     portableDeviceLabel: "¿Qué vas a alimentar? (elige lo que quieras)",
     portableBankLabel: "Capacidad útil de la estación (kWh)",
     portableShoreLabel: "Puedo recargar desde la red o desde el vehículo",
-    generatorLabel: "Hay un generador disponible para las peores semanas",
+    generatorRuntimeLabel:
+      "\u00bfCon qu\u00e9 frecuencia puede funcionar un generador?",
+    generatorRuntime0: "0% \u2014 nunca",
+    generatorRuntime1: "1% \u2014 unos d\u00edas al a\u00f1o",
+    generatorRuntime2: "2%+ \u2014 sin problema cuando haga falta",
     verdictBillCut:
       "{status}: este sistema elimina el {pct}% de tu factura en 20 años.",
     verdictTou:
@@ -1165,7 +1172,10 @@ export const LOCALES = {
     portableDeviceLabel: "O que você vai alimentar? (marque o que quiser)",
     portableBankLabel: "Capacidade útil da estação (kWh)",
     portableShoreLabel: "Posso recarregar pela rede ou pelo veículo",
-    generatorLabel: "Há um gerador disponível para as piores semanas",
+    generatorRuntimeLabel: "Com que frequência um gerador pode funcionar?",
+    generatorRuntime0: "0% — nunca",
+    generatorRuntime1: "1% — alguns dias por ano",
+    generatorRuntime2: "2%+ — sem problema quando necessário",
     verdictBillCut:
       "{status}: este sistema elimina {pct}% da sua conta em 20 anos.",
     verdictTou:
@@ -1706,8 +1716,11 @@ export const LOCALES = {
     portableBankLabel: "Capacité utile de la station (kWh)",
     portableShoreLabel:
       "Je peux recharger sur le secteur ou depuis le véhicule",
-    generatorLabel:
-      "Un groupe électrogène est disponible pour les pires semaines",
+    generatorRuntimeLabel:
+      "À quelle fréquence un groupe électrogène peut-il fonctionner ?",
+    generatorRuntime0: "0% — jamais",
+    generatorRuntime1: "1% — quelques jours par an",
+    generatorRuntime2: "2%+ — sans problème si besoin",
     verdictBillCut:
       "{status} : ce système supprime {pct}% de votre facture sur 20 ans.",
     verdictTou:
@@ -2308,8 +2321,10 @@ export const LOCALES = {
     portableDeviceLabel: "Was versorgst du? (Auswählen, was passt)",
     portableBankLabel: "Nutzbare Größe der Stromstation (kWh)",
     portableShoreLabel: "Ich kann am Netz oder am Fahrzeug nachladen",
-    generatorLabel:
-      "Ein Generator steht für die schlimmsten Wochen zur Verfügung",
+    generatorRuntimeLabel: "Wie oft darf ein Generator laufen?",
+    generatorRuntime0: "0% — nie",
+    generatorRuntime1: "1% — wenige Tage im Jahr",
+    generatorRuntime2: "2%+ — bei Bedarf kein Problem",
     verdictBillCut:
       "{status}: Dieses System spart {pct}% deiner Rechnung über 20 Jahre.",
     verdictTou:
@@ -2805,7 +2820,10 @@ export const LOCALES = {
     portableDeviceLabel: "ما الذي ستغذّيه؟ (اختر ما تشاء)",
     portableBankLabel: "السعة الفعلية للمحطة (ك.و.س)",
     portableShoreLabel: "أستطيع الشحن من الشبكة أو من المركبة",
-    generatorLabel: "تتوفر مولدة للأسابيع الأسوأ",
+    generatorRuntimeLabel: "كم مرة يمكن تشغيل المولد؟",
+    generatorRuntime0: "0% \u2014 أبداً",
+    generatorRuntime1: "1% \u2014 بضعة أيام في السنة",
+    generatorRuntime2: "2%+ \u2014 لا مشكلة عند الحاجة",
     verdictBillCut:
       "{status}: يزيل هذا النظام {pct}% من فاتورتك على مدى 20 عامًا.",
     verdictTou:
