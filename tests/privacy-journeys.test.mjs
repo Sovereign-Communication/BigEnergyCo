@@ -1,8 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -148,13 +147,4 @@ test("the privacy browser gate is runnable and reports its verdict", () => {
       /PRIVACY-BROWSER FAIL|PRIVACY-BROWSER OK|no Chrome|Chrome\/Edge/,
     );
   }
-});
-
-// A temp dir is used by nothing here yet, but rmSync is imported deliberately
-// so a future fixture helper has it; referencing it keeps lint honest.
-test("the fixture helper cleans up after itself", () => {
-  const dir = mkdtempSync(join(tmpdir(), "beco-privacy-"));
-  writeFileSync(join(dir, "x.json"), "{}");
-  rmSync(dir, { recursive: true, force: true });
-  assert.throws(() => readFileSync(join(dir, "x.json"), "utf8"));
 });
