@@ -129,12 +129,17 @@ test("chemistry comparison and CTA show only the available pricing evidence", ()
 
 test("Jev quality evidence fits its clip and preserves the remaining evidence gaps", () => {
   assert.ok(qualityEvidence.length <= COMPLETE_FACET_CLIP);
-  assert.match(qualityEvidence, /Docan LFP: \$1,325 materials/);
-  assert.match(qualityEvidence, /14\.34 kWh × 80% = 11\.47 usable kWh/);
-  assert.match(qualityEvidence, /\$80–\$120\/kWh is a planning estimate only/);
-  assert.match(qualityEvidence, /no sodium-ion example supports it/);
+  assert.match(qualityEvidence, /Docan LFP: \$1,325 pre-tax materials/);
+  assert.match(qualityEvidence, /14\.34 kWh×80%=11\.47 usable kWh/);
+  assert.match(qualityEvidence, /Planning estimate: \$80–\$120\/kWh/);
+  assert.match(qualityEvidence, /no sodium-ion example/);
   assert.match(
     qualityEvidence,
-    /Cell and kit freight are destination-quoted and excluded/,
+    /Cell and kit freight is destination-quoted and excluded/,
   );
+  assert.match(
+    qualityEvidence,
+    /https:\/\/docanpower\.com\/rept-280ah-prismatic-cell/,
+  );
+  assert.match(qualityEvidence, /\/s3-diy-box-jk-bms-v19/);
 });
