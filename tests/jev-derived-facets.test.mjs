@@ -123,6 +123,18 @@ test("EVIDENCE: a derived facet line must fit the transport clip", () => {
   );
 });
 
+test("EVIDENCE: every hand-authored facet line fits the transport clip", () => {
+  const lines = Object.entries(PROSE.facet_evidence || {});
+  assert.ok(lines.length > 0, "the prose file keeps its declared facet lines");
+  for (const [axis, line] of lines) {
+    assert.equal(typeof line, "string", `${axis} evidence must be text`);
+    assert.ok(
+      line.length <= COMPLETE_FACET_CLIP,
+      `${axis} evidence is ${line.length} chars, over the ${COMPLETE_FACET_CLIP}-char clip`,
+    );
+  }
+});
+
 test("EVIDENCE: the composed performance line carries the spread, not one number", async () => {
   // The real content check. A line that reads like "performance 84" is false
   // here: the same unchanged tree measured 61-73 on home/mobile and 40-76 on
