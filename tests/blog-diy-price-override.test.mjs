@@ -38,6 +38,9 @@ const jsonLd = [
 const comparisonTable = article.match(
   /<h2>LFP vs Sodium-Ion: Current Pricing Evidence \(2026\)<\/h2>\s*<table>([\s\S]*?)<\/table>/,
 )?.[1];
+const finalCta = articleBody.match(
+  /<div class="cta-box">([\s\S]*?)<\/div>/,
+)?.[1];
 const facetEvidence = JSON.parse(
   readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
 ).facet_evidence;
@@ -161,13 +164,23 @@ test("chemistry comparison and CTA show only the available pricing evidence", ()
     readerVisibleArticleText,
     /4,000.*cycles|2,000.*cycles|20–30% lower|charges at −20°C|0V storage|sodium-ion is generally considered safer/i,
   );
+  assert.ok(finalCta, "closing estimator CTA is present");
+  assert.match(
+    visibleText(finalCta),
+    /storage capacity, solar array sizing, and raw hardware component costs/,
+  );
+  assert.match(visibleText(finalCta), /100% free, no signup, nothing for sale/);
+  assert.doesNotMatch(
+    readerVisibleArticleText,
+    /Regardless of your choice, accurate planning is essential/,
+  );
 });
 
 test("Jev evidence, SEO proof and JSON-LD assertions stay separately scoped", () => {
   assert.ok(qualityEvidence.length <= COMPLETE_FACET_CLIP);
   assert.match(
     qualityEvidence,
-    /^P9\.5 article \(blog\/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage\/index\.html\): 327 lines added, 659 removed \(332 net fewer\); focused test tests\/blog-diy-price-override\.test\.mjs: 4\/4 pass \(pricing\/scope from <article>; JSON-LD separate\)\.$/,
+    /^P9\.5 article: removed 13-line conclusion estimator recap \("Regardless of your choice…"\); body 471→457 lines\. Focused tests\/blog-diy-price-override\.test\.mjs: 4\/4 protects visible pricing\/scope, supplier limits, and final CTA; JSON-LD separate\.$/,
   );
   assert.doesNotMatch(qualityEvidence, /Docan|freight|\$\d/);
 
