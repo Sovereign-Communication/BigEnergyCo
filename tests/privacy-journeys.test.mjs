@@ -120,6 +120,10 @@ test("the committed privacy artifact records journeys, not just a first load", (
     return;
   }
   const m = JSON.parse(raw);
+  // The ignored local artifact may be left by a run that could not start a
+  // browser. That is no measurement; the browser gate reports the failure in
+  // its own test below and CI, so do not treat it as a stale measured result.
+  if (m.measured === false) return;
   assert.ok(
     Array.isArray(m.journeysDriven) && m.journeysDriven.length >= 3,
     "the measurement must cover the egress journeys, not only arrival",
@@ -141,7 +145,7 @@ test("the privacy browser gate is runnable and reports its verdict", () => {
     // A failure here is the gate working, not a broken test: it needs Chrome.
     assert.match(
       `${e.stdout || ""}${e.stderr || ""}`,
-      /PRIVACY-BROWSER FAILURE|PRIVACY-BROWSER OK|no Chrome|Chrome\/Edge/,
+      /PRIVACY-BROWSER FAIL|PRIVACY-BROWSER OK|no Chrome|Chrome\/Edge/,
     );
   }
 });
