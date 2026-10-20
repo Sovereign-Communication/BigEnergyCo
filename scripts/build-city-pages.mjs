@@ -62,33 +62,14 @@ function slugify(s) {
     .replace(/^-+|-+$/g, "");
 }
 
-// Rough latitude-based sun context (educational, honest — no fake precision).
+// Latitude labels provide context only; they do not estimate roof-level output.
 function sunContext(lat) {
   const a = Math.abs(lat);
-  if (a < 15)
-    return {
-      tier: "Tropical sun",
-      note: "near-constant day length and strong year-round sun; the least seasonal solar resource on Earth.",
-    };
-  if (a < 30)
-    return {
-      tier: "Subtropical sun",
-      note: "strong sun most of the year with a mild winter dip.",
-    };
-  if (a < 45)
-    return {
-      tier: "Temperate sun",
-      note: "good summer sun, a real winter dip, and month-to-month variation worth simulating.",
-    };
-  if (a < 60)
-    return {
-      tier: "High-latitude sun",
-      note: "long summer days, short winter ones — the seasonal spread is exactly what the simulator measures.",
-    };
-  return {
-    tier: "Polar-margin sun",
-    note: "extreme seasonal swing; winter sizing is decided by the darkest week, not the average.",
-  };
+  if (a < 15) return { tier: "Tropical latitude" };
+  if (a < 30) return { tier: "Subtropical latitude" };
+  if (a < 45) return { tier: "Temperate latitude" };
+  if (a < 60) return { tier: "High latitude" };
+  return { tier: "Polar latitude" };
 }
 
 // Simple worked example from latitude: rough specific yield kWh/kWp/yr band.
@@ -226,7 +207,7 @@ function cityPage(c) {
             "name": "How much solar do I need in ${c.name}?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "It depends on your daily kWh use. As a rough band, ${c.name} sits in the ${sc.tier.toLowerCase()} zone with roughly ${lo}–${hi} kWh produced per kW of panels per year. A 10 kWh/day household typically lands between 3 and 6 kW of panels depending on the bill-cut target. The free calculator computes your exact numbers from five years of NASA satellite weather at your coordinates."
+              "text": "It depends on your daily kWh use and roof conditions. The static latitude band on this page has unknown source grade and is not a local production forecast. The free calculator estimates production from five years of hourly NASA POWER weather at your coordinates."
             }
           },
           {
@@ -234,7 +215,7 @@ function cityPage(c) {
             "name": "Does solar work in ${c.country}?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes — ${sc.tier} at ${coord}. ${sc.note.charAt(0).toUpperCase() + sc.note.slice(1)} The simulator sizes against your worst week, not the average, so the result is honest about winter."
+              "text": "Latitude alone cannot predict output at a specific roof. Local weather, shade, orientation, and installation matter; the calculator uses hourly weather data to estimate location-specific sizing."
             }
           },
           {
@@ -379,7 +360,7 @@ function cityPage(c) {
         <a class="btn" href="../../#sizing">⚡ Size Any Location Worldwide &rarr;</a>
       </div>
 
-      <p><em class="kicker">The short answer:</em> ${c.name} sits at ${coord} — ${sc.tier.toLowerCase()}. ${sc.note.charAt(0).toUpperCase() + sc.note.slice(1)} Roughly <strong>${lo}–${hi} kWh per kW of panels per year</strong> is a fair expectation band, and the exact number for your roof is what the simulator computes.</p>
+      <p><em class="kicker">The short answer:</em> ${c.name} sits at ${coord} — ${sc.tier.toLowerCase()}. This page's ${lo}–${hi} kWh per kWp per year band is a rough latitude-only estimate with unknown source grade, not a local measurement or forecast. For location-specific weather input, the calculator uses five years of hourly NASA POWER data. <a href="../../assets/data/provenance.json">See the estimate's provenance</a>.</p>
 
       <h2>What the calculator does for ${c.name}</h2>
       <p>Type "${c.name}" (or use your exact GPS coordinates) into the estimator and it will:</p>
@@ -392,7 +373,7 @@ function cityPage(c) {
       </ul>
 
       <h2>Worked example: a 10 kWh/day household</h2>
-      <p>Using the ${c.name} latitude band (${lo}–${hi} kWh/kWp/yr), a household using 10 kWh per day typically lands in this range — a rough illustration from the band (with a dark-week margin), not a simulation. The panel column follows that band; the battery column is the one the simulator re-sizes, because it sizes the bank against your own darkest week — so its number usually comes out higher. Your exact figures come from running it:</p>
+      <p>This static example uses the unsourced latitude-only yield band above and a fixed 1.5× dark-week margin. Treat the panel range as an illustration, not a forecast or sizing recommendation. The battery column is re-sized by the simulator against your location's darkest week, so its result can differ from this static band:</p>
       <div class="table-container">
       <table>
         <caption>Worked sizing bands for a 10 kWh/day household in ${c.name}</caption>
@@ -407,7 +388,7 @@ function cityPage(c) {
       <p><em>Every money figure here is in US dollars; the calculator converts to your own currency.</em> ${wx.paybackLine}</p>
 
       <h2>Why simulate instead of estimate?</h2>
-      <p>Sun-hours maps and "average" figures hide the week that decides your battery size. In ${sc.tier.toLowerCase()} conditions, ${sc.note} A five-year hourly simulation catches that dark week, the cloudy month, and the seasonal swing — which is the difference between a system that works and one that leaves you in the dark in February.</p>
+      <p>Latitude bands cannot capture local clouds, roof shade, or orientation. The five-year hourly weather simulation models seasonal conditions and the darkest week, but it is still an estimate rather than a roof survey.</p>
 
       <div class="cta-box">
         <p><strong>Run the ${c.name} simulation now.</strong> Free, no signup, nothing for sale. Every number computed in your browser from real satellite weather.</p>
@@ -436,11 +417,11 @@ ${cities
       <h2>Frequently asked</h2>
       <details>
         <summary>How much solar do I need in ${c.name}?</summary>
-        <p>It depends on your daily kWh use. As a rough band, ${c.name} sits in the ${sc.tier.toLowerCase()} zone with roughly ${lo}–${hi} kWh produced per kW of panels per year. A 10 kWh/day household typically lands between 3 and 6 kW of panels depending on the bill-cut target. The free calculator computes your exact numbers from five years of NASA satellite weather at your coordinates.</p>
+        <p>It depends on your daily kWh use and roof conditions. The static latitude band on this page has unknown source grade and is not a local production forecast. The free calculator estimates production from five years of hourly NASA POWER weather at your coordinates.</p>
       </details>
       <details>
         <summary>Does solar work in ${c.country}?</summary>
-        <p>Yes — ${sc.tier} at ${coord}. ${sc.note.charAt(0).toUpperCase() + sc.note.slice(1)} The simulator sizes against your worst week, not the average, so the result is honest about winter.</p>
+        <p>Latitude alone cannot predict output at a specific roof. Local weather, shade, orientation, and installation matter; the calculator uses hourly weather data to estimate location-specific sizing.</p>
       </details>
       <details>
         <summary>Is the ${c.name} solar calculator free?</summary>
