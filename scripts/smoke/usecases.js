@@ -21,6 +21,49 @@ const visible = (el) =>
     el.getClientRects().length,
   );
 
+const STATUS_LABELS = {
+  works: "works",
+  partial: "partial",
+  notHere: "not-here",
+};
+
+function compactOutcomeValue(item) {
+  const percentages = [
+    ...String(item.value).matchAll(/(\d+(?:[.,]\d+)?)\s*%/g),
+  ];
+  if (!percentages.length) return "value-shown";
+  const first = percentages[0][1].replace(",", ".");
+  if (item.id !== "reserve") return `${first}%`;
+  const hours = String(item.value).match(/(\d+(?:[.,]\d+)?)\s*h\b/i)?.[1];
+  return `${first}% savings${hours ? `/${hours.replace(",", ".")}h cover` : ""}`;
+}
+
+export function composeUseCaseFacetLine({
+  cases,
+  city,
+  uniqueMetrics,
+  visibleControls,
+  expectedControls,
+  flatRateTou,
+  equalRate,
+  passedGates,
+  totalGates,
+}) {
+  const outcomes = cases
+    .map(
+      (item) =>
+        `${item.id} ${compactOutcomeValue(item)} ${STATUS_LABELS[item.status] || "unclassified"}`,
+    )
+    .join("; ");
+  const touBoundary = equalRate
+    ? `ToU at equal $${equalRate.toFixed(2)}/kWh gives ${flatRateTou ? "not-here" : "a benefit"}`
+    : `ToU flat-rate check ${flatRateTou ? "passed" : "failed"}`;
+  return (
+    `Chrome ${city}: ${outcomes}; ${uniqueMetrics ? "six distinct metrics" : "duplicate metrics"}, ` +
+    `${visibleControls}/${expectedControls} inputs visible; ${touBoundary}; ${passedGates}/${totalGates} gates.`
+  );
+}
+
 export async function runUseCasesFlow(ctx, actions) {
   const checkpoint = gateCheckpoint();
   const { evaluate } = ctx;
@@ -232,10 +275,20 @@ export async function runUseCasesFlow(ctx, actions) {
     `${cases.length}/6 rendered; ${visibleControls}/${expectedControls} declared controls visible; flat-rate ToU=${flatRateTou}`,
   );
   const finalMeasurements = gatesSince(checkpoint);
-  const line =
-    `Chrome UI: ${cases.length}/6 cases rendered; ${cases.filter((item) => item.outcome_valid).length}/6 own translated metric/value/verdict; ` +
-    `${visibleControls}/${expectedControls} declared controls visible; flat-rate ToU=${flatRateTou ? "not-here" : "failed"}. ` +
-    `Smoke gates ${finalMeasurements.filter((item) => item.passed).length}/${finalMeasurements.length}.`;
+  const line = composeUseCaseFacetLine({
+    cases,
+    city: "Honolulu",
+    uniqueMetrics,
+    visibleControls,
+    expectedControls,
+    flatRateTou,
+    equalRate:
+      tou?.tou_rates?.peak === tou?.tou_rates?.offPeak
+        ? tou.tou_rates.peak
+        : null,
+    passedGates: finalMeasurements.filter((item) => item.passed).length,
+    totalGates: finalMeasurements.length,
+  });
   writeFacetReport("usecases", line, {
     browser: "Chrome",
     locale: language,

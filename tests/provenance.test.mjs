@@ -64,6 +64,30 @@ test("the committed registry passes the provenance gate", () => {
   assert.match(out, /provenance: OK/);
 });
 
+test("city-page latitude yield bands are disclosed as unknown estimates", () => {
+  const entry = reg.assumptions.find((item) => item.id === "city_yield_band");
+  assert.ok(entry, "the generated city-page estimate belongs in the registry");
+  assert.equal(entry.source, null);
+  assert.equal(entry.grade, "unknown");
+  assert.ok(entry.used_by.includes("scripts/build-city-pages.mjs:yieldBand"));
+  assert.match(
+    entry.disclosure,
+    /not measured solar data or a local forecast/i,
+  );
+  assert.match(entry.disclosure, /fixed 1\.5x dark-week margin/i);
+
+  const cityPage = readFileSync(
+    join(ROOT, "solar-calculator", "honolulu", "index.html"),
+    "utf8",
+  );
+  assert.match(
+    cityPage,
+    /unknown source grade, not a local measurement or forecast/i,
+  );
+  assert.match(cityPage, /assets\/data\/provenance\.json/);
+  assert.doesNotMatch(cityPage, /least seasonal solar resource on Earth/i);
+});
+
 // ── the facet's own clauses, mutation-checked ──────────────────────────────
 test("a value with no publisher must be graded unknown and say why", () => {
   const r = gateAgainst((c) => {

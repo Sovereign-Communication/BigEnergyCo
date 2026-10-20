@@ -26,8 +26,53 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
+import { composeUseCaseFacetLine } from "../scripts/smoke/usecases.js";
 
 const WORKFLOW_YAML = readFileSync(".github/workflows/test.yml", "utf8");
+
+test("use-case facet evidence names each measured outcome and the flat-rate boundary", () => {
+  const line = composeUseCaseFacetLine({
+    cases: [
+      { id: "billcut", value: "76%", status: "partial" },
+      { id: "tou", value: "74%", status: "notHere" },
+      { id: "backup", value: "100%", status: "works" },
+      {
+        id: "reserve",
+        value: "0% of savings, 31 h of cover",
+        status: "works",
+      },
+      { id: "offgrid", value: "99%", status: "partial" },
+      { id: "portable", value: "0%", status: "notHere" },
+    ],
+    city: "Honolulu",
+    uniqueMetrics: true,
+    visibleControls: 15,
+    expectedControls: 15,
+    flatRateTou: true,
+    equalRate: 0.42,
+    passedGates: 31,
+    totalGates: 31,
+  });
+
+  for (const expected of [
+    "billcut 76% partial",
+    "tou 74% not-here",
+    "backup 100% works",
+    "reserve 0% savings/31h cover works",
+    "offgrid 99% partial",
+    "portable 0% not-here",
+    "six distinct metrics",
+    "15/15 inputs visible",
+    "ToU at equal $0.42/kWh gives not-here",
+    "31/31 gates",
+  ]) {
+    assert.ok(line.includes(expected), `${expected} missing from: ${line}`);
+  }
+  assert.ok(
+    line.length <= COMPLETE_FACET_CLIP,
+    `the composed evidence is ${line.length} characters, over ${COMPLETE_FACET_CLIP}`,
+  );
+});
 const PROSE = JSON.parse(
   readFileSync("evidence/advisor-and-release.json", "utf8"),
 );
