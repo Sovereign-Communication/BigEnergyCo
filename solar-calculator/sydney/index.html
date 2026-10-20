@@ -155,6 +155,10 @@
     em.kicker { color: var(--accent); font-style: normal; font-weight: 700; }
     .cta-box { border: 1px solid rgba(0, 230, 153, .4); background: rgba(0, 230, 153, .06); border-radius: 12px; padding: 1.2rem 1.4rem; margin: 2rem 0; }
     .cta-box p:last-child { margin: 0; }
+    .city-sizing-cta { margin: 1.5rem 0 2rem; border-color: rgba(0, 230, 153, .4); background: rgba(0, 230, 153, .08); }
+    .city-sizing-cta__title { font-weight: 700; color: #fff; margin-bottom: .4rem; }
+    .city-sizing-cta__copy { color: var(--muted); font-size: .92rem; margin-bottom: .75rem; }
+    .city-footer-links { margin-top: .75rem; }
     .btn { display: inline-block; background: linear-gradient(135deg, #00e699, #00b377); color: #04120c; font-weight: 700; text-decoration: none; padding: .65rem 1.3rem; border-radius: 8px; margin-top: .6rem; }
     details { border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1.1rem; margin-bottom: .8rem; background: var(--card); }
     summary { cursor: pointer; color: var(--accent); font-weight: 600; }
@@ -210,9 +214,9 @@
       <p class="meta">📍 33.87° S, 151.21° E · Temperate sun · updated Aug 30, 2026 · free, no signup, nothing for sale</p>
 
       <!-- Worldwide Sizing Reassurance Callout -->
-      <div class="cta-box" style="margin: 1.5rem 0 2rem; border-color: rgba(0, 230, 153, 0.4); background: rgba(0, 230, 153, 0.08);">
-        <p style="font-weight:700;color:#fff;margin-bottom:0.4rem;">⚡ Sizing for a different location?</p>
-        <p style="color:var(--muted);font-size:0.92rem;margin-bottom:0.75rem;">This page is a benchmark reference for Sydney. The BigEnergyCo calculator works for <strong>any location worldwide</strong> using your exact coordinates.</p>
+      <div class="cta-box city-sizing-cta">
+        <p class="city-sizing-cta__title">⚡ Sizing for a different location?</p>
+        <p class="city-sizing-cta__copy">This page is a benchmark reference for Sydney. The BigEnergyCo calculator works for <strong>any location worldwide</strong> using your exact coordinates.</p>
         <a class="btn" href="../../#sizing">⚡ Size Any Location Worldwide &rarr;</a>
       </div>
 
@@ -309,7 +313,7 @@
   <footer>
     <div class="container">
       <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building. Working with batteries and mains wiring can cause fire, injury, and death.</p>
-      <p style="margin-top:.75rem;">
+      <p class="city-footer-links">
         <a href="../../#sizing">Size Your System</a> · <a href="../">66 City Benchmarks</a> · <a href="../../solar-heatmap/">Heatmap</a> · <a href="../../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
       </p>
     </div>

@@ -66,6 +66,50 @@ test("GATE: the committed city pages are what their generator produces", () => {
   assert.match(r.stdout, /66 city pages \+ hub match their generator output/);
 });
 
+test("GATE: city callouts and footers keep presentation in named classes", () => {
+  const city = readFileSync(
+    join(ROOT, "solar-calculator", "honolulu", "index.html"),
+    "utf8",
+  );
+  const hub = readFileSync(
+    join(ROOT, "solar-calculator", "index.html"),
+    "utf8",
+  );
+  assert.doesNotMatch(`${city}\n${hub}`, /\sstyle=/i);
+  assert.match(city, /class="cta-box city-sizing-cta"/);
+  assert.match(city, /class="city-sizing-cta__title"/);
+  assert.match(city, /class="city-sizing-cta__copy"/);
+  assert.match(city, /class="city-footer-links"/);
+  assert.match(
+    city,
+    /\.city-sizing-cta\s*\{[^}]*margin:\s*1\.5rem 0 2rem;[^}]*background:\s*rgba\(0, 230, 153, \.08\);/s,
+  );
+  assert.match(
+    city,
+    /\.city-sizing-cta__title\s*\{[^}]*font-weight:\s*700;[^}]*color:\s*#fff;[^}]*margin-bottom:\s*\.4rem;/s,
+  );
+  assert.match(
+    city,
+    /\.city-sizing-cta__copy\s*\{[^}]*color:\s*var\(--muted\);[^}]*font-size:\s*\.92rem;[^}]*margin-bottom:\s*\.75rem;/s,
+  );
+  assert.match(city, /\.city-footer-links\s*\{\s*margin-top:\s*\.75rem;\s*\}/);
+  assert.match(hub, /class="worldwide-notice"/);
+  assert.match(hub, /class="worldwide-notice__title"/);
+  assert.match(hub, /class="worldwide-notice__copy"/);
+  assert.match(
+    hub,
+    /\.worldwide-notice\s*\{[^}]*margin:\s*1\.25rem 0 2rem;[^}]*display:\s*flex;[^}]*gap:\s*1rem;/s,
+  );
+  assert.match(
+    hub,
+    /\.worldwide-notice__title\s*\{[^}]*font-weight:\s*800;[^}]*font-size:\s*1\.1rem;[^}]*color:\s*#fff;[^}]*margin-bottom:\s*\.3rem;/s,
+  );
+  assert.match(
+    hub,
+    /\.worldwide-notice__copy\s*\{[^}]*margin:\s*0;[^}]*line-height:\s*1\.5;[^}]*max-width:\s*620px;/s,
+  );
+});
+
 test("GATE: a page edited away from the generator output is caught and named", (t) => {
   const dir = scratchRepo(t);
   const hub = join(dir, "solar-calculator", "index.html");
