@@ -42,3 +42,12 @@ No amendments yet: the plan is at its genesis hash.
 - Plan-SHA256-after: 745332cc842baafce64b5793a4be65c728c220de7d2905f014b683a2a36efe96
 - Sections: §0 rule 2, Q-01, P10.1, §13.3
 - Rationale: D-03 set the bar at a combined 99 with every facet proven, and the P0.6 history (A-003) showed the binding constraint was never the average — it was Jev's confidence calibration: PR #193 scored 95.5 with the docs facet at 0.57 confidence, a shape no amount of workmanship could push to 99-proven. The owner ruled in chat on 2026-10-19: "Go 95 but require confidence and all aspects to be 95. So loosen complete to 95 but tighten the confidence to 95." The combined bar is therefore 95.0 (COMPLETE_MIN_SCORE), every facet must individually reach ordinal 95 — proven (COMPLETE_FACET_MIN_ORDINAL) — and every facet's Jev confidence must be at least 0.95 (COMPLETE_MIN_CONFIDENCE); a missing confidence counts as below the bar. The hard gates and the ratchet bind throughout and are never relaxed. The P0.3/P0.6 bootstrap exemptions are untouched. This amendment takes number A-004 because it lands before the P9.7 content-quality amendment (drafted as A-004 on its branch); that amendment renumbers to A-005 when it lands.
+
+## A-005: Post-merge Jev release gate with main as staging
+
+- Date: 2026-10-20
+- Approved-by: @Treystu
+- Plan-SHA256-before: 745332cc842baafce64b5793a4be65c728c220de7d2905f014b683a2a36efe96
+- Plan-SHA256-after: 09f4a8379da73b95c97e9a3930565516d106ce61443569036488b3e1d16d3ee7
+- Sections: D-03, Q-01, Section 13.2, Section 13.3
+- Rationale: The owner approved amending sequencing after the pre-merge Jev judgment deadlocked on confidence. Main is the staging surface; scoped PR Jev reports remain attached and use the existing 95/95/95 bar, but are advisory. A full run on the exact merged main SHA is the blocking production-promotion gate and must pass the same score, per-facet ordinal, per-facet confidence, all-facet ratchet, and hard-gate requirements. Staging remains available for review while the release gate is red; no threshold is lowered.

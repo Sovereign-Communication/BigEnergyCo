@@ -224,6 +224,62 @@ export const LOCALES = {
       "The curve comes from simulating every panel-and-battery combination on a coarse grid against the same hourly weather as the cards above, then keeping only the systems nothing cheaper beats. Prices use the same landed do-it-yourself middle as every other figure on this page.",
     frontierMethodBattery:
       "The curve comes from simulating every battery size on a coarse grid against the same hourly weather and tariff windows as the cards above, then keeping only the systems nothing cheaper beats. Panels are not part of this run, so the curve varies the bank alone. Prices use the same landed do-it-yourself middle as every other figure on this page.",
+    chartDailySun: "Daily solar output: {peak} kWh per kW of panel",
+    costNoSeriesTitle: "Savings data unavailable for this result",
+    costNoSeriesBody:
+      "The sizing completed, but this result did not include a comparable 20-year cost series.",
+    costMissingTariffTitle: "Enter your grid price to see estimated savings",
+    costMissingTariffBody:
+      "The calculator can size the system without a tariff, but needs your electricity price to compare 20-year grid cost with solar cost.",
+    chartBankEmpty: "Bank empty",
+    chartEmpty: "Empty",
+    socTier100: "100% - no generator needed",
+    socTier99: "99% - generator only as rare backup",
+    socTier95: "95% - generator now and then",
+    socCut60: "~60% bill cut - the grid covers the rest",
+    socCut80: "~80% bill cut - small grid top-ups",
+    socCut95: "~95% bill cut - nearly off-grid",
+    socTierAutoNaion: "Sodium-ion bank across five real-weather years",
+    socTierAutoLfp: "LFP bank across five real-weather years",
+    socVerdictGrid:
+      "Lowest: {low}%. Fully charged on {charged} of {total} days; the grid covered {empty} empty-bank days.",
+    socVerdictOffgrid:
+      "Lowest: {low}%. Fully charged on {charged} of {total} days; the generator covered {empty} empty-bank days.",
+    chartDay: "Day {day}",
+    socCaptionGrid:
+      "Each band is one day: its top is the highest charge and its bottom the deepest discharge, based on satellite weather from {startYear} to {endYear}. The red line marks an empty battery; the grid supplies power there, so it is not a blackout.",
+    socCaptionOffgrid:
+      "Each band is one day: its top is the highest charge and its bottom the deepest discharge, based on satellite weather from {startYear} to {endYear} ({chemistry}). A healthy system returns to 100% on sunny days; dips show how far bad weather drains the bank. At the red line, a generator supplies power.",
+    socCaptionGridPattern:
+      "Flat, high bands mean solar and the battery are carrying the load.",
+    socCaptionSunStrip:
+      "The amber strip above shows daily solar output (kWh per kW of panel); its dips align with the banks' lowest charge.",
+    cumCostTitleSolar:
+      "What does solar really save you? (cumulative 20-year cost)",
+    cumCostTitleBattery:
+      "What does the battery change about your 20-year cost? (cumulative cost)",
+    cumCostBreakEven: "Break-even: year {year}",
+    cumCostLegendGrid: "Grid without solar: {amount}",
+    cumCostLegendSolar: "Solar system: {amount}",
+    cumCostLegendBattery: "Battery-only system: {amount}",
+    cumCostLegendResidual: "Residual grid cost after feed-in: {amount}",
+    cumCostLegendResidualCredit:
+      "Net-metering credit beyond the remaining grid bill: {amount}",
+    cumCostPocket: "Your savings, year by year",
+    autoSocAxis: "Battery charge (% of rated capacity)",
+    autoLegendWithSwaps:
+      "{chem} - {kwh} kWh rated capacity - about {swaps} replacements over 20 years",
+    autoLegendNoSwaps: "{chem} - {kwh} kWh rated capacity - no replacements",
+    autoCeiling: "{chem} full mark: {pct}%",
+    autoChemNaion: "Sodium-ion",
+    autoChemLfp: "LFP",
+    autoChemAgm: "Lead-acid (AGM)",
+    autoSocIntro:
+      "Read the plot: the shaded band shows each bank's daily charge range, the bold top edge its fullest charge, and the thin lower edge its deepest discharge. The dashed line marks the full-charge point ({ceilings}); each bank has a similar rated capacity for the same job.",
+    autoSocCaption:
+      "Modeled usable capacity is 80% for LFP (20-100% of rated capacity), 85% for sodium-ion (15-100%), and 50% for lead-acid (50-100%). In this model, LFP and sodium-ion need fewer replacements over 20 years than lead-acid. Standard LFP voltage settings limit sodium-ion to about 85% of nameplate; its shallower discharge supports longer cycle life. Lead-acid is limited to its upper half and is also derated under heavy discharge. Dips in the weather record from {startYear} to {endYear} show when a generator or the grid would supply power.",
+    autoSocSunStrip:
+      "The amber strip above shows daily solar output (kWh per kW of panel); its dips follow each bank's recharge rhythm.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "recommended",
     cumCostSelected: "selected",
@@ -779,6 +835,65 @@ export const LOCALES = {
       "La curva sale de simular cada combinación de paneles y batería en una malla gruesa con el mismo clima horario que las tarjetas de arriba, y quedarse solo con los sistemas que nada más barato supera. Los precios usan el mismo punto medio DIY con flete que el resto de la página.",
     frontierMethodBattery:
       "La curva sale de simular cada tamaño de batería en una malla gruesa con el mismo clima horario y las mismas franjas tarifarias que las tarjetas de arriba, y quedarse solo con los sistemas que nada más barato supera. Aquí no hay paneles, así que la curva solo varía el banco de baterías. Los precios usan el mismo punto medio DIY con flete que el resto de la página.",
+    chartDailySun: "Producción solar diaria: {peak} kWh por kW de panel",
+    costNoSeriesTitle: "No hay datos de ahorro para este resultado",
+    costNoSeriesBody:
+      "El cálculo terminó, pero este resultado no incluye una serie de costos comparable a 20 años.",
+    costMissingTariffTitle:
+      "Introduce el precio de la electricidad de la red para ver el ahorro estimado",
+    costMissingTariffBody:
+      "La calculadora puede dimensionar el sistema sin una tarifa, pero necesita el precio de la electricidad para comparar el costo de la red con el de la energía solar durante 20 años.",
+    chartBankEmpty: "Batería vacía",
+    chartEmpty: "Vacía",
+    socTier100: "100% - no necesita generador",
+    socTier99: "99% - generador solo como respaldo poco frecuente",
+    socTier95: "95% - generador de vez en cuando",
+    socCut60: "~60% menos en la factura - la red cubre el resto",
+    socCut80: "~80% menos en la factura - pequeños aportes de la red",
+    socCut95: "~95% menos en la factura - casi independiente de la red",
+    socTierAutoNaion: "Batería de sodio durante cinco años de clima real",
+    socTierAutoLfp: "Batería LFP durante cinco años de clima real",
+    socVerdictGrid:
+      "Mínimo: {low}%. Carga completa en {charged} de {total} días; la red cubrió {empty} días con la batería vacía.",
+    socVerdictOffgrid:
+      "Mínimo: {low}%. Carga completa en {charged} de {total} días; el generador cubrió {empty} días con la batería vacía.",
+    chartDay: "Día {day}",
+    socCaptionGrid:
+      "Cada franja representa un día: arriba muestra la carga máxima y abajo la descarga más profunda, según datos satelitales de {startYear} a {endYear}. La línea roja marca una batería vacía; allí la red suministra energía, así que no hay apagón.",
+    socCaptionOffgrid:
+      "Cada franja representa un día: arriba muestra la carga máxima y abajo la descarga más profunda, según datos satelitales de {startYear} a {endYear} ({chemistry}). Un sistema en buen estado vuelve al 100% en días soleados; las bajadas muestran cuánto descarga la batería el mal tiempo. En la línea roja, un generador suministra energía.",
+    socCaptionGridPattern:
+      "Las franjas altas y uniformes indican que la energía solar y la batería están cubriendo el consumo.",
+    socCaptionSunStrip:
+      "La franja ámbar muestra la producción solar diaria (kWh por kW de panel); sus bajadas coinciden con los mínimos de carga de las baterías.",
+    cumCostTitleSolar:
+      "¿Cuánto te ahorra realmente la energía solar? (coste acumulado en 20 años)",
+    cumCostTitleBattery:
+      "¿Cómo cambia la batería tu coste a 20 años? (coste acumulado)",
+    cumCostBreakEven: "Punto de equilibrio: año {year}",
+    cumCostLegendGrid: "Red sin energía solar: {amount}",
+    cumCostLegendSolar: "Sistema solar: {amount}",
+    cumCostLegendBattery: "Sistema solo con batería: {amount}",
+    cumCostLegendResidual:
+      "Coste restante de la red tras la compensación: {amount}",
+    cumCostLegendResidualCredit:
+      "Crédito de balance neto que supera la factura restante de la red: {amount}",
+    cumCostPocket: "Tus ahorros, año a año",
+    autoSocAxis: "Carga de la batería (% de capacidad nominal)",
+    autoLegendWithSwaps:
+      "{chem} - {kwh} kWh de capacidad nominal - unos {swaps} reemplazos en 20 años",
+    autoLegendNoSwaps:
+      "{chem} - {kwh} kWh de capacidad nominal - sin reemplazos",
+    autoCeiling: "Marca de carga completa de {chem}: {pct}%",
+    autoChemNaion: "Ion de sodio",
+    autoChemLfp: "LFP",
+    autoChemAgm: "Plomo-ácido (AGM)",
+    autoSocIntro:
+      "Cómo leer el gráfico: la franja sombreada muestra el rango diario de carga de cada batería; el borde superior grueso, su carga máxima; y el borde inferior fino, la descarga más profunda. La línea discontinua marca el nivel de carga completa ({ceilings}); cada batería tiene una capacidad nominal similar para realizar la misma tarea.",
+    autoSocCaption:
+      "Capacidad utilizable seg?n el modelo: 80% para LFP (20-100% de la capacidad nominal), 85% para ion de sodio (15-100%) y 50% para plomo-?cido (50-100%). En este modelo, LFP y el ion de sodio necesitan menos reemplazos en 20 a?os que el plomo-?cido. Los ajustes de voltaje LFP est?ndar limitan el ion de sodio a cerca del 85% de la capacidad nominal; esa descarga menos profunda prolonga su vida ?til. El plomo-?cido se limita a la mitad superior y tambi?n pierde capacidad con descargas intensas. Las bajadas de carga entre {startYear} y {endYear} indican cu?ndo suministrar?an energ?a la red o un generador.",
+    autoSocSunStrip:
+      "La franja ámbar muestra la producción solar diaria (kWh por kW de panel); sus bajadas siguen el ritmo de recarga de cada batería.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "recomendado",
     cumCostSelected: "seleccionado",
@@ -1264,6 +1379,65 @@ export const LOCALES = {
       "A curva vem de simular cada combinação de painéis e bateria numa malha grossa com o mesmo clima horário dos cartões acima, mantendo só os sistemas que nada mais barato supera. Os preços usam o mesmo meio-termo DIY desembaraçado do resto da página.",
     frontierMethodBattery:
       "A curva vem de simular cada tamanho de bateria numa malha grossa com o mesmo clima horário e as mesmas janelas tarifárias dos cartões acima, mantendo só os sistemas que nada mais barato supera. Não há painéis nesta execução, então a curva varia apenas o banco. Os preços usam o mesmo meio-termo DIY desembaraçado do resto da página.",
+    chartDailySun: "Produção solar diária: {peak} kWh por kW de painel",
+    costNoSeriesTitle: "Dados de economia indisponíveis para este resultado",
+    costNoSeriesBody:
+      "O dimensionamento foi concluído, mas este resultado não inclui uma série de custos comparável de 20 anos.",
+    costMissingTariffTitle:
+      "Informe o preço da energia da rede para ver a economia estimada",
+    costMissingTariffBody:
+      "A calculadora pode dimensionar o sistema sem uma tarifa, mas precisa do preço da eletricidade para comparar os custos da rede e da energia solar ao longo de 20 anos.",
+    chartBankEmpty: "Bateria vazia",
+    chartEmpty: "Vazia",
+    socTier100: "100% - não precisa de gerador",
+    socTier99: "99% - gerador só como reserva rara",
+    socTier95: "95% - gerador de vez em quando",
+    socCut60: "~60% de redução na conta - a rede cobre o restante",
+    socCut80: "~80% de redução na conta - pequenos complementos da rede",
+    socCut95: "~95% de redução na conta - quase fora da rede",
+    socTierAutoNaion: "Bateria de sódio em cinco anos de clima real",
+    socTierAutoLfp: "Bateria LFP em cinco anos de clima real",
+    socVerdictGrid:
+      "Mínimo: {low}%. Carga completa em {charged} de {total} dias; a rede cobriu {empty} dias com a bateria vazia.",
+    socVerdictOffgrid:
+      "Mínimo: {low}%. Carga completa em {charged} de {total} dias; o gerador cobriu {empty} dias com a bateria vazia.",
+    chartDay: "Dia {day}",
+    socCaptionGrid:
+      "Cada faixa representa um dia: o topo mostra a carga máxima e a base, a descarga mais profunda, com base no clima de satélite de {startYear} a {endYear}. A linha vermelha marca uma bateria vazia; ali a rede fornece energia, portanto não há apagão.",
+    socCaptionOffgrid:
+      "Cada faixa representa um dia: o topo mostra a carga máxima e a base, a descarga mais profunda, com base no clima de satélite de {startYear} a {endYear} ({chemistry}). Um sistema saudável volta a 100% em dias ensolarados; as quedas mostram quanto o mau tempo descarrega a bateria. Na linha vermelha, um gerador fornece energia.",
+    socCaptionGridPattern:
+      "Faixas altas e estáveis indicam que a energia solar e a bateria estão atendendo ao consumo.",
+    socCaptionSunStrip:
+      "A faixa âmbar mostra a produção solar diária (kWh por kW de painel); suas quedas coincidem com as cargas mínimas das baterias.",
+    cumCostTitleSolar:
+      "Quanto a energia solar realmente economiza? (custo acumulado em 20 anos)",
+    cumCostTitleBattery:
+      "Como a bateria muda seu custo em 20 anos? (custo acumulado)",
+    cumCostBreakEven: "Ponto de equilíbrio: ano {year}",
+    cumCostLegendGrid: "Rede sem energia solar: {amount}",
+    cumCostLegendSolar: "Sistema solar: {amount}",
+    cumCostLegendBattery: "Sistema só com bateria: {amount}",
+    cumCostLegendResidual:
+      "Custo restante da rede após a compensação: {amount}",
+    cumCostLegendResidualCredit:
+      "Crédito de compensação que supera a conta restante da rede: {amount}",
+    cumCostPocket: "Sua economia, ano a ano",
+    autoSocAxis: "Carga da bateria (% da capacidade nominal)",
+    autoLegendWithSwaps:
+      "{chem} - {kwh} kWh de capacidade nominal - cerca de {swaps} substituições em 20 anos",
+    autoLegendNoSwaps:
+      "{chem} - {kwh} kWh de capacidade nominal - sem substituições",
+    autoCeiling: "Marca de carga completa de {chem}: {pct}%",
+    autoChemNaion: "Íon de sódio",
+    autoChemLfp: "LFP",
+    autoChemAgm: "Chumbo-ácido (AGM)",
+    autoSocIntro:
+      "Como ler o gráfico: a faixa sombreada mostra a variação diária de carga de cada bateria; a borda superior grossa indica a carga máxima, e a borda inferior fina, a descarga mais profunda. A linha tracejada marca a carga completa ({ceilings}); todas têm capacidade nominal semelhante para a mesma tarefa.",
+    autoSocCaption:
+      "Capacidade utiliz?vel no modelo: 80% para LFP (20-100% da capacidade nominal), 85% para ?on de s?dio (15-100%) e 50% para chumbo-?cido (50-100%). Neste modelo, LFP e ?on de s?dio precisam de menos substitui??es em 20 anos que chumbo-?cido. As configura??es de tens?o padr?o de LFP limitam o ?on de s?dio a cerca de 85% da capacidade nominal; a descarga menos profunda prolonga sua vida ?til. O chumbo-?cido fica limitado ? metade superior e tamb?m perde capacidade em descargas intensas. As quedas de carga entre {startYear} e {endYear} indicam quando a rede ou um gerador forneceria energia.",
+    autoSocSunStrip:
+      "A faixa âmbar mostra a produção solar diária (kWh por kW de painel); as quedas acompanham o ritmo de recarga de cada bateria.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "recomendado",
     cumCostSelected: "selecionado",
@@ -1749,6 +1923,65 @@ export const LOCALES = {
       "La courbe vient de la simulation de chaque combinaison panneaux-batterie sur une grille grossière avec la même météo horaire que les cartes ci-dessus, en ne gardant que les systèmes qu'aucun moins cher ne bat. Les prix utilisent le même milieu DIY rendu que tous les autres chiffres de la page.",
     frontierMethodBattery:
       "La courbe vient de la simulation de chaque taille de batterie sur une grille grossière avec la même météo horaire et les mêmes plages tarifaires que les cartes ci-dessus, en ne gardant que les systèmes qu'aucun moins cher ne bat. Aucun panneau n'entre dans ce calcul : la courbe ne fait varier que le parc de batteries. Les prix utilisent le même milieu DIY rendu que tous les autres chiffres de la page.",
+    chartDailySun:
+      "Production solaire quotidienne : {peak} kWh par kW de panneau",
+    costNoSeriesTitle: "Données d’économies indisponibles pour ce résultat",
+    costNoSeriesBody:
+      "Le dimensionnement est terminé, mais ce résultat ne comprend pas de série de coûts comparable sur 20 ans.",
+    costMissingTariffTitle:
+      "Saisissez le prix de l’électricité du réseau pour voir les économies estimées",
+    costMissingTariffBody:
+      "Le calculateur peut dimensionner le système sans tarif, mais il lui faut votre prix de l’électricité pour comparer les coûts du réseau et du solaire sur 20 ans.",
+    chartBankEmpty: "Batterie vide",
+    chartEmpty: "Vide",
+    socTier100: "100 % - aucun générateur nécessaire",
+    socTier99: "99 % - générateur en secours très occasionnel",
+    socTier95: "95 % - générateur de temps en temps",
+    socCut60: "environ 60 % de facture en moins - le réseau couvre le reste",
+    socCut80: "environ 80 % de facture en moins - petits compléments du réseau",
+    socCut95: "environ 95 % de facture en moins - presque autonome",
+    socTierAutoNaion: "Batterie sodium-ion sur cinq années météo réelles",
+    socTierAutoLfp: "Batterie LFP sur cinq années météo réelles",
+    socVerdictGrid:
+      "Minimum : {low} %. Charge complète pendant {charged} jours sur {total} ; le réseau a couvert les {empty} jours où la batterie était vide.",
+    socVerdictOffgrid:
+      "Minimum : {low} %. Charge complète pendant {charged} jours sur {total} ; le générateur a couvert les {empty} jours où la batterie était vide.",
+    chartDay: "Jour {day}",
+    socCaptionGrid:
+      "Chaque bande représente un jour : son bord supérieur indique la charge maximale et son bord inférieur la décharge la plus profonde, d'après les données météo satellitaires de {startYear} à {endYear}. La ligne rouge marque une batterie vide ; le réseau fournit alors l'électricité, il ne s'agit donc pas d'une panne.",
+    socCaptionOffgrid:
+      "Chaque bande représente un jour : son bord supérieur indique la charge maximale et son bord inférieur la décharge la plus profonde, d'après les données météo satellitaires de {startYear} à {endYear} ({chemistry}). Un système sain revient à 100 % lors des journées ensoleillées ; les creux montrent l'effet du mauvais temps sur la batterie. À la ligne rouge, un générateur fournit l'électricité.",
+    socCaptionGridPattern:
+      "Des bandes hautes et stables indiquent que le solaire et la batterie assurent l'alimentation.",
+    socCaptionSunStrip:
+      "La bande ambrée indique la production solaire quotidienne (kWh par kW de panneau) ; ses creux coïncident avec les niveaux de charge les plus bas.",
+    cumCostTitleSolar:
+      "Combien le solaire vous fait-il vraiment économiser ? (coût cumulé sur 20 ans)",
+    cumCostTitleBattery:
+      "Quel effet la batterie a-t-elle sur le coût sur 20 ans ? (coût cumulé)",
+    cumCostBreakEven: "Seuil de rentabilité : année {year}",
+    cumCostLegendGrid: "Réseau sans solaire : {amount}",
+    cumCostLegendSolar: "Système solaire : {amount}",
+    cumCostLegendBattery: "Système avec batterie seule : {amount}",
+    cumCostLegendResidual: "Coût résiduel du réseau après injection : {amount}",
+    cumCostLegendResidualCredit:
+      "Crédit de comptage net au-delà de la facture réseau restante : {amount}",
+    cumCostPocket: "Vos économies, année après année",
+    autoSocAxis: "Charge de la batterie (% de capacité nominale)",
+    autoLegendWithSwaps:
+      "{chem} - {kwh} kWh de capacité nominale - environ {swaps} remplacements sur 20 ans",
+    autoLegendNoSwaps:
+      "{chem} - {kwh} kWh de capacité nominale - aucun remplacement",
+    autoCeiling: "Repère de pleine charge {chem} : {pct} %",
+    autoChemNaion: "Sodium-ion",
+    autoChemLfp: "LFP",
+    autoChemAgm: "Plomb-acide (AGM)",
+    autoSocIntro:
+      "Lecture du graphique : la zone ombrée montre la plage quotidienne de charge de chaque batterie ; le bord supérieur épais indique sa charge maximale et le bord inférieur fin sa décharge la plus profonde. La ligne pointillée indique le niveau de pleine charge ({ceilings}) ; chaque batterie a une capacité nominale similaire pour le même usage.",
+    autoSocCaption:
+      "Capacit? utile mod?lis?e : 80 % pour le LFP (20-100 % de la capacit? nominale), 85 % pour le sodium-ion (15-100 %) et 50 % pour le plomb-acide (50-100 %). Dans ce mod?le, le LFP et le sodium-ion n?cessitent moins de remplacements sur 20 ans que le plomb-acide. Les r?glages de tension LFP standard limitent le sodium-ion ? environ 85 % de la capacit? nominale ; une d?charge moins profonde prolonge sa dur?e de vie. Le plomb-acide est limit? ? sa moiti? sup?rieure et perd aussi de la capacit? lors de d?charges importantes. Les creux de charge entre {startYear} et {endYear} indiquent quand le r?seau ou un g?n?rateur fournirait l??lectricit?.",
+    autoSocSunStrip:
+      "La bande ambrée indique la production solaire quotidienne (kWh par kW de panneau) ; ses creux suivent le rythme de recharge des batteries.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "recommandé",
     cumCostSelected: "sélectionné",
@@ -2240,6 +2473,64 @@ export const LOCALES = {
       "Die Kurve nutzt dieselbe stündliche Wetter-Simulation und dieselben Preisannahmen wie die Ergebnisse oben.",
     frontierMethodBattery:
       "Die Kurve simuliert jede Batteriegröße auf einem groben Raster mit demselben stündlichen Wetter und denselben Tarifzeiten wie die Ergebnisse oben und behält nur die Systeme, die nichts Günstigeres schlägt. In diesem Lauf gibt es keine Module, die Kurve variiert also nur den Speicher. Die Preise verwenden dieselben Mittelwerte wie alle anderen Zahlen auf dieser Seite.",
+    chartDailySun: "Täglicher Solarertrag: {peak} kWh je kW Modulleistung",
+    costNoSeriesTitle:
+      "Für dieses Ergebnis sind keine Einsparungsdaten verfügbar",
+    costNoSeriesBody:
+      "Die Systemauslegung ist abgeschlossen, aber dieses Ergebnis enthält keine vergleichbare Kostenreihe über 20 Jahre.",
+    costMissingTariffTitle:
+      "Gib deinen Netzstrompreis ein, um die geschätzten Einsparungen zu sehen",
+    costMissingTariffBody:
+      "Der Rechner kann das System auch ohne Tarif auslegen. Für den Kostenvergleich über 20 Jahre mit und ohne Solarstrom braucht er jedoch deinen Strompreis.",
+    chartBankEmpty: "Speicher leer",
+    chartEmpty: "Leer",
+    socTier100: "100 % - kein Generator nötig",
+    socTier99: "99 % - Generator nur selten als Reserve",
+    socTier95: "95 % - Generator gelegentlich nötig",
+    socCut60: "etwa 60 % weniger Stromkosten - das Netz deckt den Rest",
+    socCut80: "etwa 80 % weniger Stromkosten - nur kleine Netzbezüge",
+    socCut95: "etwa 95 % weniger Stromkosten - fast netzunabhängig",
+    socTierAutoNaion: "Natrium-Ionen-Speicher über fünf echte Wetterjahre",
+    socTierAutoLfp: "LFP-Speicher über fünf echte Wetterjahre",
+    socVerdictGrid:
+      "Tiefster Stand: {low} %. An {charged} von {total} Tagen voll geladen; an {empty} Tagen mit leerem Speicher sprang das Netz ein.",
+    socVerdictOffgrid:
+      "Tiefster Stand: {low} %. An {charged} von {total} Tagen voll geladen; an {empty} Tagen mit leerem Speicher sprang der Generator ein.",
+    chartDay: "Tag {day}",
+    socCaptionGrid:
+      "Jeder Streifen zeigt einen Tag: oben den höchsten Ladestand und unten die tiefste Entladung, basierend auf Satellitenwetterdaten von {startYear} bis {endYear}. Die rote Linie markiert einen leeren Speicher; dort liefert das Netz Strom, es gibt also keinen Stromausfall.",
+    socCaptionOffgrid:
+      "Jeder Streifen zeigt einen Tag: oben den höchsten Ladestand und unten die tiefste Entladung, basierend auf Satellitenwetterdaten von {startYear} bis {endYear} ({chemistry}). Ein intaktes System lädt an sonnigen Tagen wieder auf 100 %; Tiefpunkte zeigen, wie stark schlechtes Wetter den Speicher entlädt. An der roten Linie liefert ein Generator Strom.",
+    socCaptionGridPattern:
+      "Hohe, gleichmäßige Bänder zeigen, dass Solaranlage und Batterie die Versorgung übernehmen.",
+    socCaptionSunStrip:
+      "Der bernsteinfarbene Streifen oben zeigt den täglichen Solarertrag (kWh je kW Modulleistung); seine Tiefpunkte fallen mit den niedrigsten Ladeständen der Speicher zusammen.",
+    cumCostTitleSolar:
+      "Wie viel spart Solar wirklich? (kumulierte Kosten über 20 Jahre)",
+    cumCostTitleBattery:
+      "Wie verändert die Batterie deine Kosten über 20 Jahre? (kumulierte Kosten)",
+    cumCostBreakEven: "Amortisation: Jahr {year}",
+    cumCostLegendGrid: "Netzstrom ohne Solar: {amount}",
+    cumCostLegendSolar: "Solaranlage: {amount}",
+    cumCostLegendBattery: "Batteriesystem ohne Solar: {amount}",
+    cumCostLegendResidual: "Verbleibende Netzkosten nach Einspeisung: {amount}",
+    cumCostLegendResidualCredit:
+      "Net-Metering-Gutschrift über die verbleibende Netzrechnung hinaus: {amount}",
+    cumCostPocket: "Deine Ersparnis, Jahr für Jahr",
+    autoSocAxis: "Batterieladung (% der Nennkapazität)",
+    autoLegendWithSwaps:
+      "{chem} - {kwh} kWh Nennkapazität - etwa {swaps} Austausche in 20 Jahren",
+    autoLegendNoSwaps: "{chem} - {kwh} kWh Nennkapazität - kein Austausch",
+    autoCeiling: "Volllademarke {chem}: {pct} %",
+    autoChemNaion: "Natrium-Ionen",
+    autoChemLfp: "LFP",
+    autoChemAgm: "Blei-Säure (AGM)",
+    autoSocIntro:
+      "So lesen Sie das Diagramm: Der schattierte Bereich zeigt den täglichen Ladebereich jeder Batterie; die fette obere Kante den höchsten Ladestand und die dünne untere Kante die tiefste Entladung. Die gestrichelte Linie markiert den Vollladepunkt ({ceilings}); alle Batterien haben für dieselbe Aufgabe eine ähnliche Nennkapazität.",
+    autoSocCaption:
+      "Modellierte nutzbare Kapazit?t: 80 % bei LFP (20-100 % der Nennkapazit?t), 85 % bei Natrium-Ionen (15-100 %) und 50 % bei Blei-S?ure (50-100 %). In diesem Modell brauchen LFP und Natrium-Ionen ?ber 20 Jahre weniger Austausche als Blei-S?ure. ?bliche LFP-Spannungseinstellungen begrenzen Natrium-Ionen auf etwa 85 % der Nennkapazit?t; die geringere Entladetiefe verl?ngert die Lebensdauer. Blei-S?ure ist auf die obere H?lfte begrenzt und verliert bei starker Entladung zus?tzlich nutzbare Kapazit?t. Tiefpunkte im Ladeverlauf von {startYear} bis {endYear} zeigen, wann Generator oder Netz Strom liefern w?rden.",
+    autoSocSunStrip:
+      "Der bernsteinfarbene Streifen oben zeigt den täglichen Solarertrag (kWh je kW Modulleistung); die Tiefpunkte folgen dem Ladezyklus der Speicher.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     // The caption head is "Kumulierte Kosten … für das {which} System": after a
     // definite neuter article the weak adjective takes -e, so the caption read
@@ -2707,6 +2998,63 @@ export const LOCALES = {
       "يأتي المنحنى من محاكاة كل توليفة ألواح وبطاريات على شبكة خشنة بنفس الطقس الساعي المستخدم في البطاقات أعلاه، ثم الإبقاء فقط على ما لا يتفوق عليه أي نظام أرخص. وتستخدم الأسعار نفس الوسط للتنفيذ الذاتي المستخدم في بقية الصفحة.",
     frontierMethodBattery:
       "يأتي المنحنى من محاكاة كل حجم بطارية على شبكة خشنة بنفس الطقس الساعي ونوافذ التعرفة المستخدمة في البطاقات أعلاه، ثم الإبقاء فقط على ما لا يتفوق عليه أي نظام أرخص. لا توجد ألواح في هذه الحالة، لذا يغيّر المنحنى حجم البطارية وحده. وتستخدم الأسعار نفس الوسط للتنفيذ الذاتي المستخدم في بقية الصفحة.",
+    chartDailySun:
+      "الإنتاج الشمسي اليومي: {peak} كيلوواط ساعة لكل كيلوواط من الألواح",
+    costNoSeriesTitle: "بيانات التوفير غير متاحة لهذه النتيجة",
+    costNoSeriesBody:
+      "اكتمل تحديد حجم النظام، لكن هذه النتيجة لا تتضمن سلسلة تكاليف قابلة للمقارنة على مدى 20 عامًا.",
+    costMissingTariffTitle: "أدخل سعر كهرباء الشبكة لمعرفة التوفير التقديري",
+    costMissingTariffBody:
+      "يمكن للحاسبة تحديد حجم النظام دون تعرفة، لكنها تحتاج إلى سعر الكهرباء لمقارنة تكلفة الشبكة بتكلفة الطاقة الشمسية على مدى 20 عامًا.",
+    chartBankEmpty: "البطارية فارغة",
+    chartEmpty: "فارغة",
+    socTier100: "100% - لا حاجة إلى مولد",
+    socTier99: "99% - المولد احتياطي نادر فقط",
+    socTier95: "95% - الحاجة إلى المولد من حين لآخر",
+    socCut60: "خفض الفاتورة بنحو 60% - الشبكة تغطي الباقي",
+    socCut80: "خفض الفاتورة بنحو 80% - سحب قليل من الشبكة",
+    socCut95: "خفض الفاتورة بنحو 95% - شبه مستقل عن الشبكة",
+    socTierAutoNaion: "بطارية أيونات الصوديوم عبر خمس سنوات من الطقس الفعلي",
+    socTierAutoLfp: "بطارية LFP عبر خمس سنوات من الطقس الفعلي",
+    socVerdictGrid:
+      "أدنى مستوى: {low}%. شُحنت بالكامل في {charged} من {total} يومًا؛ غطت الشبكة {empty} يومًا فرغت فيها البطارية.",
+    socVerdictOffgrid:
+      "أدنى مستوى: {low}%. شُحنت بالكامل في {charged} من {total} يومًا؛ غطى المولد {empty} يومًا فرغت فيها البطارية.",
+    chartDay: "اليوم {day}",
+    socCaptionGrid:
+      "يمثل كل شريط يومًا واحدًا: يوضح أعلاه أعلى مستوى للشحن وأسفله أعمق تفريغ، وفق بيانات الطقس عبر الأقمار الصناعية من {startYear} إلى {endYear}. يشير الخط الأحمر إلى فراغ البطارية؛ عنده توفر الشبكة الطاقة، لذا لا يعني ذلك انقطاعًا للكهرباء.",
+    socCaptionOffgrid:
+      "يمثل كل شريط يومًا واحدًا: يوضح أعلاه أعلى مستوى للشحن وأسفله أعمق تفريغ، وفق بيانات الطقس عبر الأقمار الصناعية من {startYear} إلى {endYear} ({chemistry}). يعود النظام السليم إلى شحن 100% في الأيام المشمسة؛ وتوضح الانخفاضات مدى استنزاف الطقس السيئ للبطارية. عند الخط الأحمر يوفر المولد الطاقة.",
+    socCaptionGridPattern:
+      "تشير النطاقات المرتفعة والمستقرة إلى أن الطاقة الشمسية والبطارية توفران احتياجات الاستهلاك.",
+    socCaptionSunStrip:
+      "يوضح الشريط الكهرماني أعلاه الإنتاج الشمسي اليومي (كيلوواط ساعة لكل كيلوواط من الألواح)؛ وتتزامن انخفاضاته مع أدنى شحن للبطاريات.",
+    cumCostTitleSolar:
+      "كم توفر الطاقة الشمسية فعلًا؟ (التكلفة التراكمية على مدى 20 عامًا)",
+    cumCostTitleBattery:
+      "كيف تغير البطارية تكلفتك على مدى 20 عامًا؟ (التكلفة التراكمية)",
+    cumCostBreakEven: "التعادل: السنة {year}",
+    cumCostLegendGrid: "الشبكة دون طاقة شمسية: {amount}",
+    cumCostLegendSolar: "النظام الشمسي: {amount}",
+    cumCostLegendBattery: "نظام البطارية فقط: {amount}",
+    cumCostLegendResidual: "تكلفة الشبكة المتبقية بعد التصدير: {amount}",
+    cumCostLegendResidualCredit:
+      "رصيد صافي القياس الذي يتجاوز فاتورة الشبكة المتبقية: {amount}",
+    cumCostPocket: "وفوراتك عامًا بعد عام",
+    autoSocAxis: "شحن البطارية (% من السعة الاسمية)",
+    autoLegendWithSwaps:
+      "{chem} - سعة اسمية {kwh} كيلوواط ساعة - نحو {swaps} عمليات استبدال خلال 20 عامًا",
+    autoLegendNoSwaps: "{chem} - سعة اسمية {kwh} كيلوواط ساعة - دون استبدال",
+    autoCeiling: "حد الشحن الكامل لـ{chem}: {pct}%",
+    autoChemNaion: "أيونات الصوديوم",
+    autoChemLfp: "LFP",
+    autoChemAgm: "رصاص-حمض (AGM)",
+    autoSocIntro:
+      "طريقة قراءة الرسم: يوضح النطاق المظلل مدى الشحن اليومي لكل بطارية؛ ويمثل الحد العلوي السميك أعلى مستوى شحن، والحد السفلي الرفيع أعمق تفريغ. يشير الخط المتقطع إلى مستوى الشحن الكامل ({ceilings})؛ وتتمتع البطاريات بسعات اسمية متقاربة لأداء المهمة نفسها.",
+    autoSocCaption:
+      "????? ??????? ????????? ??? ???????: 80% ???????? LFP (20-100% ?? ????? ???????)? ?85% ??????? ???????? (15-100%)? ?50% ???????? ?????? ??????? (50-100%). ?? ??? ???????? ????? ??????? LFP ??????? ???????? ??? ????????? ??? ???? 20 ????? ?? ??????? ?????? ???????. ??? ??????? ????? ???????? ?? LFP ?? ??? ?????? ???????? ??? ??? 85% ?? ????? ???????? ?????? ??????? ????? ????? ??? ????? ?????. ????? ??????? ?????? ??????? ??? ????? ??????? ??? ???? ??? ????? ????????? ??? ??????? ??????. ???? ?????????? ?? ????? ????? ??? {startYear} ?{endYear} ??? ????? ????? ?????? ?? ?????? ??????.",
+    autoSocSunStrip:
+      "يوضح الشريط الكهرماني أعلاه الإنتاج الشمسي اليومي (كيلوواط ساعة لكل كيلوواط من الألواح)؛ وتتبع انخفاضاته إيقاع إعادة شحن البطاريات.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "الموصى به",
     cumCostSelected: "المحدد",

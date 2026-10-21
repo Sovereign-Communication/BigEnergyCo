@@ -1186,8 +1186,8 @@ test("WORKFLOW: the jev-complete job needs every required gate, judges live, and
   // gate skips the judge, so the run that most needs a record produces none.
   assert.match(
     job,
-    /if:\s*always\(\)\s*&&\s*github\.event_name\s*==\s*'pull_request'/,
-    "the judge must run after a red gate so the red run is recorded, not skipped",
+    /if:\s*always\(\)\s*&&\s*\(github\.event_name\s*==\s*'pull_request'\s*\|\|\s*\(github\.event_name\s*==\s*'push'\s*&&\s*github\.ref\s*==\s*'refs\/heads\/main'\)\)/,
+    "the judge must record red PRs and full main pushes, while skipping unrelated events",
   );
   // The key comes from the repo's own secret wiring, and is never echoed.
   assert.match(
@@ -1219,17 +1219,31 @@ test("WORKFLOW: the jev-complete job needs every required gate, judges live, and
   // job, so both must be about the same commit. actions/checkout defaults to the
   // merge ref on a pull_request; naming it explicitly is what keeps the record
   // and the judgment from being about two different trees.
-  assert.match(
-    job,
-    /ref:\s*refs\/pull\/\$\{\{\s*github\.event\.pull_request\.number\s*\}\}\/merge/,
-    "the job must judge the same merge ref its dependencies ran on",
+  assert.ok(
+    job.includes(
+      "ref: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.sha }}",
+    ),
+    "PRs judge the merge ref, and main judges the exact merged SHA",
   );
-  // A push to main has no PR title to name a scope from and no merge ref, so
-  // the job is a PR gate only. The full run belongs to P10 and P11.3.
   assert.match(
     job,
-    /github\.event_name\s*==\s*'pull_request'/,
-    "the job must be scoped to pull_request, or a push has nothing to judge",
+    /id: prfiles\s+if: github\.event_name == 'pull_request'/,
+    "changed-file scope inference is PR-only",
+  );
+  assert.match(
+    job,
+    /id: scope\s+if: github\.event_name == 'pull_request'/,
+    "main's full report must not depend on PR scope inference",
+  );
+  assert.match(
+    job,
+    /continue-on-error: \$\{\{ github\.event_name == 'pull_request' \}\}/,
+    "a scoped PR report is advisory while the post-merge report remains blocking",
+  );
+  assert.match(
+    job,
+    /Running the full Jev release gate for main SHA \$GITHUB_SHA/,
+    "main runs the full release gate against its merged SHA",
   );
   // Everything the job WRITES belongs outside the checkout. The gate's
   // `tree_clean` hard gate is `git status --porcelain`, so an evidence or report

@@ -5,7 +5,7 @@
 // `$` (DOM lookup), `el` (element factory), `t` (i18n), `fmt` (number format),
 // `money` (currency formatter). Chart state (socZoomRange, cachedChartState)
 // lives here as the single owner.
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261016l";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261021a";
 
 // ── injected boundary (set once by ui.js via initCharts) ──────────────────
 let _$;
@@ -37,6 +37,13 @@ function fmt(n) {
 function money(usd) {
   return _money(usd);
 }
+function localizedChemistry(label) {
+  const value = String(label || "");
+  if (/AGM/i.test(value)) return t("autoChemAgm");
+  if (/sodium|na.?ion/i.test(value)) return t("autoChemNaion");
+  if (/LFP|lithium/i.test(value)) return t("autoChemLfp");
+  return value;
+}
 
 // ── chart state: single owner (moved from ui.js verbatim) ──────────────────
 
@@ -61,21 +68,14 @@ export const TIER_COLORS = {
 };
 
 export const TIER_NAMES = {
-  tier100: "100% - never needs a generator",
-
-  tier99: "99% - generator as rare backup",
-
-  tier95: "95% - generator now and then",
-
-  cut60: "~60% bill cut - grid covers the rest",
-
-  cut80: "~80% bill cut - small grid top-ups",
-
-  cut95: "~95% bill cut - near off-grid",
-
-  "auto-naion": "Sodium-Ion bank over five real years",
-
-  "auto-lfp": "LFP bank over five real years",
+  tier100: "socTier100",
+  tier99: "socTier99",
+  tier95: "socTier95",
+  cut60: "socCut60",
+  cut80: "socCut80",
+  cut95: "socCut95",
+  "auto-naion": "socTierAutoNaion",
+  "auto-lfp": "socTierAutoLfp",
 };
 
 function drawSunStrip(ctx, pv, X, W, padL, padR, stripH) {
@@ -122,11 +122,7 @@ function drawSunStrip(ctx, pv, X, W, padL, padR, stripH) {
   ctx.fillStyle = "#fcd34d";
   ctx.textAlign = "left";
 
-  ctx.fillText(
-    `daily sun - kWh per kW of panel - peak day ${pvMax.toFixed(1)}`,
-    padL + 2,
-    11,
-  );
+  ctx.fillText(t("chartDailySun", { peak: fmt(pvMax) }), padL + 2, 11);
 }
 
 export function drawSocChart(history, chemLabel, hasPv = true) {
@@ -256,7 +252,7 @@ export function drawSocChart(history, chemLabel, hasPv = true) {
       ctx.fillStyle = "#6b7280";
       ctx.textAlign = "right";
 
-      ctx.fillText(v + "%", padL - 5, Y(v) + 3);
+      ctx.fillText(fmt(v) + "%", padL - 5, Y(v) + 3);
     }
 
     const floorSOC = chemLabel.includes("AGM") ? 50 : 20;
@@ -280,7 +276,7 @@ export function drawSocChart(history, chemLabel, hasPv = true) {
     ctx.textAlign = "left";
 
     ctx.fillText(
-      gt ? "bank empty" : "empty",
+      _t(gt ? "chartBankEmpty" : "chartEmpty"),
       W - padR - (gt ? 74 : 38),
       Y(0) - 4,
     );
@@ -358,23 +354,24 @@ export function drawSocChart(history, chemLabel, hasPv = true) {
 
     ctx.font = "bold 12px system-ui, sans-serif";
 
-    ctx.fillText(TIER_NAMES[t.id] || t.chemLabel || t.id, padL + 2, top + 13);
+    const tierName = TIER_NAMES[t.id];
+    ctx.fillText(
+      tierName ? _t(tierName) : localizedChemistry(t.chemLabel) || t.id,
+      padL + 2,
+      top + 13,
+    );
 
     ctx.font = "11px system-ui, sans-serif";
 
     ctx.fillStyle = t.emptyDays > 0 ? "rgba(245,158,11,0.95)" : color;
 
-    const charged = `charged to 100% on ${fmt(t.fullDays)} of ${fmt(t.totalDays)} days`;
-
-    const verdict =
-      t.emptyDays > 0
-        ? gt
-          ? `${charged} - but drained flat on ${t.emptyDays} day${t.emptyDays === 1 ? "" : "s"} - the grid covered those`
-          : `${charged} - but hit empty on ${t.emptyDays} day${t.emptyDays === 1 ? "" : "s"}`
-        : `${charged} - never went empty`;
-
     ctx.fillText(
-      `lowest point ${Math.max(0, Math.round(t.minPct))}% - ${verdict}`,
+      _t(gt ? "socVerdictGrid" : "socVerdictOffgrid", {
+        low: fmt(Math.max(0, Math.round(t.minPct))),
+        charged: fmt(t.fullDays),
+        total: fmt(t.totalDays),
+        empty: fmt(t.emptyDays),
+      }),
       padL + 2,
       top + padT + 14,
     );
@@ -399,7 +396,7 @@ export function drawSocChart(history, chemLabel, hasPv = true) {
       const x = X(d);
 
       ctx.fillText(
-        `Day ${d + 1}`,
+        t("chartDay", { day: fmt(d + 1) }),
         Math.min(W - padR - 16, Math.max(padL + 16, x)),
         H - 2,
       );
@@ -416,7 +413,7 @@ export function drawSocChart(history, chemLabel, hasPv = true) {
         const x = X(dayIdx);
 
         ctx.fillText(
-          String(history.startYear + yy),
+          fmt(history.startYear + yy),
           Math.min(W - padR, Math.max(padL, x)),
           H - 2,
         );
@@ -424,18 +421,16 @@ export function drawSocChart(history, chemLabel, hasPv = true) {
     }
   }
 
-  $("socCaption").textContent = gt
-    ? `Each band spans one day: top edge = fullest the battery got, bottom edge = deepest discharge, ` +
-      `${history.startYear}-${history.endYear} of real satellite weather. In grid-tie mode the red line isn't a blackout - ` +
-      `when the band dives to it, the grid covered those hours instead (that's your remaining bill). Flat, high bands mean solar and battery are doing the work.`
-    : `Each band spans one day: top edge = fullest the battery got, bottom edge = deepest discharge, ` +
-      `${history.startYear}-${history.endYear} of real satellite weather (${chemLabel}). Every healthy system ` +
-      `charges all the way back to 100% on sunny days - the difference between systems is how far the bottom ` +
-      `edge dives toward empty during bad weather. Touch the red line and a generator is covering you.`;
-
-  if (pv)
-    $("socCaption").textContent +=
-      " The amber strip on top is the daily solar harvest (kWh per kW of panel) - its long dips line up with the battery's lowest floors.";
+  const caption = $("socCaption");
+  if (caption) {
+    caption.textContent = t(gt ? "socCaptionGrid" : "socCaptionOffgrid", {
+      startYear: fmt(history.startYear),
+      endYear: fmt(history.endYear),
+      chemistry: localizedChemistry(chemLabel),
+    });
+    if (gt) caption.textContent += " " + t("socCaptionGridPattern");
+    if (pv) caption.textContent += " " + t("socCaptionSunStrip");
+  }
 }
 
 /**
@@ -554,9 +549,9 @@ export function drawCumCostChart(p, chosenEntry = null) {
   const hasPvRun = p.hardwareConfig !== "battery";
   const title = $("cumCostTitle");
   if (title) {
-    title.textContent = hasPvRun
-      ? "What does solar really save you? (cumulative 20-year cost)"
-      : "What does the battery do to your 20-year cost? (cumulative 20-year cost)";
+    title.textContent = t(
+      hasPvRun ? "cumCostTitleSolar" : "cumCostTitleBattery",
+    );
   }
 
   // Pick the system the chart talks about: the selected one, else the
@@ -632,9 +627,14 @@ export function drawCumCostChart(p, chosenEntry = null) {
     }
     if (box && num && sub) {
       box.style.display = "block";
-      num.textContent = panel.title;
+      const missingSeries = panel.reason === "missing-series";
+      num.textContent = t(
+        missingSeries ? "costNoSeriesTitle" : "costMissingTariffTitle",
+      );
       num.style.color = "var(--text-main)";
-      sub.textContent = panel.sub;
+      sub.textContent = t(
+        missingSeries ? "costNoSeriesBody" : "costMissingTariffBody",
+      );
       sub.style.color = "var(--text-muted)";
     }
     return;
@@ -801,7 +801,11 @@ export function drawCumCostChart(p, chosenEntry = null) {
     ctx.font = "10px ui-monospace, monospace";
     ctx.textAlign = "left";
     const beLblX = Math.min(X(beIdx) + 6, W - padR - 84);
-    ctx.fillText(`break-even yr ${beIdx + 1}`, beLblX, padT + plotH * 0.3);
+    ctx.fillText(
+      t("cumCostBreakEven", { year: fmt(beIdx + 1) }),
+      beLblX,
+      padT + plotH * 0.3,
+    );
     ctx.beginPath();
     ctx.arc(X(beIdx), Y(beVal), 4, 0, Math.PI * 2);
     ctx.fillStyle = "#f9fafb";
@@ -869,7 +873,10 @@ export function drawCumCostChart(p, chosenEntry = null) {
       return box;
     };
     const rows = [
-      ["#fbbf24", `Grid without solar: ${money(series.grid[nY - 1])}`],
+      [
+        "#fbbf24",
+        t("cumCostLegendGrid", { amount: money(series.grid[nY - 1]) }),
+      ],
     ];
     // The emerald line is this system's own cost, and for a panel-free run this
     // system is not a solar one — the same chart's caption says "the system's
@@ -879,14 +886,18 @@ export function drawCumCostChart(p, chosenEntry = null) {
     if (hasSystem)
       rows.push([
         "#34d399",
-        `${hasPv ? "Solar system" : "Battery only"}: ${money(series.system[nY - 1])}`,
+        t(hasPv ? "cumCostLegendSolar" : "cumCostLegendBattery", {
+          amount: money(series.system[nY - 1]),
+        }),
       ]);
     if (residShown && residEnd !== null) {
       rows.push([
         "#94a3b8",
         residEnd >= 0
-          ? `Residual grid cost after feed-in: ${money(residEnd)}`
-          : `Residual grid cost after feed-in: \u2212${money(-residEnd)} (net-metering credit)`,
+          ? t("cumCostLegendResidual", { amount: money(residEnd) })
+          : t("cumCostLegendResidualCredit", {
+              amount: String.fromCharCode(8722) + money(-residEnd),
+            }),
       ]);
     }
     legend.textContent = "";
@@ -928,7 +939,7 @@ export function drawCumCostChart(p, chosenEntry = null) {
   ctx.fillStyle = "#6b7280";
   ctx.font = "10px ui-monospace, monospace";
   ctx.textAlign = "right";
-  ctx.fillText("$0", padL - 6, zeroY + 3);
+  ctx.fillText(money(0), padL - 6, zeroY + 3);
 
   // bars: red while unpaid, green once the system is ahead
   const bw2 = (plotW / nY) * 0.66;
@@ -951,7 +962,7 @@ export function drawCumCostChart(p, chosenEntry = null) {
   ctx.fillStyle = "#9ca3af";
   ctx.font = "10px ui-monospace, monospace";
   ctx.textAlign = "left";
-  ctx.fillText("your pocket, year by year", padL + 2, sTop + 9);
+  ctx.fillText(t("cumCostPocket"), padL + 2, sTop + 9);
   ctx.textAlign = "right";
   ctx.fillStyle = "#34d399";
   ctx.font = "bold 11px ui-monospace, monospace";
@@ -964,7 +975,7 @@ export function drawCumCostChart(p, chosenEntry = null) {
     ctx.font = "10px ui-monospace, monospace";
     ctx.textAlign = "center";
     ctx.fillText(
-      `\u25B2 yr ${beIdx + 1}`,
+      `▲ ${t("cumCostBreakEven", { year: fmt(beIdx + 1) })}`,
       Math.max(padL + 16, X(beIdx)),
       zeroY - 8,
     );
@@ -975,7 +986,7 @@ export function drawCumCostChart(p, chosenEntry = null) {
   ctx.font = "10px ui-monospace, monospace";
   ctx.textAlign = "center";
   for (let y = 0; y < nY; y += 2) {
-    ctx.fillText(String(y + 1), X(y), H - 4);
+    ctx.fillText(fmt(y + 1), X(y), H - 4);
   }
 
   // caption
@@ -1155,7 +1166,7 @@ export function drawAutoChart(p) {
     ctx.fillStyle = "#6b7280";
     ctx.textAlign = "right";
 
-    ctx.fillText(v + "%", padL - 6, Y(v) + 3);
+    ctx.fillText(fmt(v) + "%", padL - 6, Y(v) + 3);
   }
 
   // Reserve shading to make LFP/Na advantage obvious
@@ -1171,7 +1182,7 @@ export function drawAutoChart(p) {
   ctx.textAlign = "center";
   ctx.fillStyle = "#9ca3af";
 
-  ctx.fillText("charge as % of that bank's nameplate", 0, 0);
+  ctx.fillText(t("autoSocAxis"), 0, 0);
 
   ctx.restore();
 
@@ -1273,7 +1284,7 @@ export function drawAutoChart(p) {
       const x = X(d);
 
       ctx.fillText(
-        `Day ${d + 1}`,
+        t("chartDay", { day: fmt(d + 1) }),
         Math.min(W - padR - 16, Math.max(padL + 16, x)),
         H - 4,
       );
@@ -1288,7 +1299,7 @@ export function drawAutoChart(p) {
         const x = X(dayIdx);
 
         ctx.fillText(
-          String(p.history.startYear + yy),
+          fmt(p.history.startYear + yy),
           Math.min(W - padR, Math.max(padL, x)),
           H - 4,
         );
@@ -1324,10 +1335,16 @@ export function drawAutoChart(p) {
           "span",
           {},
 
-          `${a.chemLabel.replace(/ \(.*\)/, "")} - ${fmt(a.battNameplateKwh)} kWh nameplate` +
-            (a.replacementsHorizon > 0
-              ? ` - ~${a.replacementsHorizon} swaps/20yr`
-              : " - no swaps"),
+          t(
+            a.replacementsHorizon > 0
+              ? "autoLegendWithSwaps"
+              : "autoLegendNoSwaps",
+            {
+              chem: localizedChemistry(a.chemLabel || a.chemistry),
+              kwh: fmt(a.battNameplateKwh),
+              swaps: fmt(a.replacementsHorizon),
+            },
+          ),
         ),
       );
 
@@ -1336,23 +1353,25 @@ export function drawAutoChart(p) {
   }
 
   const ceilings = entries
-
-    .map(
-      (a) =>
-        `${a.chemLabel.replace(/ \(.*\)/, "")} ${Math.round(Math.max(...a.socNameplatePct.max))}%`,
+    .map((a) =>
+      t("autoCeiling", {
+        chem: localizedChemistry(a.chemLabel || a.chemistry),
+        pct: fmt(Math.round(Math.max(...a.socNameplatePct.max))),
+      }),
     )
+    .join(", ");
 
-    .join(" - ");
-
-  $("socCaption").textContent =
-    `How to read it: the shaded area is each bank's daily range - the bold top edge is the fullest it got, the thin lower edge the deepest it sank, and the dashed line is that bank's FULL mark (${ceilings} of nameplate). ` +
-    `Every chemistry carries similar nameplate for the same job; the real difference is usable energy - LFP and Sodium give you 80% usable (20-100%), Lead-Acid only 50% (50-100%), so LFP/Sodium deliver far more kWh per kWh of nameplate and need fewer swaps - lithium and sodium may use ~90% of theirs, lead-acid only its bottom half (the 50% rule, times its discharge-rate derate). ` +
-    `Sodium rides standard LFP voltage settings: slightly less capacity, gentler discharge, longer life. ` +
-    `Dips to the floor during ${p.history.startYear}-${p.history.endYear}'s worst weather are the moments a generator or the grid would cover you.`;
-
-  if (pv)
-    $("socCaption").textContent +=
-      " The amber strip on top is the daily solar harvest (kWh per kW of panel) - its dips line up with every bank's recharge rhythm.";
+  const caption = $("socCaption");
+  if (caption) {
+    caption.textContent =
+      t("autoSocIntro", { ceilings }) +
+      " " +
+      t("autoSocCaption", {
+        startYear: fmt(p.history.startYear),
+        endYear: fmt(p.history.endYear),
+      });
+    if (pv) caption.textContent += " " + t("autoSocSunStrip");
+  }
 }
 
 function getActiveChartLength() {

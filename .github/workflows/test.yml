@@ -575,28 +575,19 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # The live Jev gate as a CI job (plan §8 P0.3(e), §13.2, §13.3). It judges the
-  # plan item the PR names, against evidence built from the gate jobs above —
-  # every job this workflow runs but this one, derived from this file rather
-  # than listed anywhere in the evidence code, so a gate added here is covered
-  # the day it is added.
+  # PRs publish the scoped Jev report for review. The same job runs the full
+  # 95/95/95 release gate on the exact main push, after that commit is staging.
+  # A red PR judgment is advisory to avoid asking Jev to approve its own merge;
+  # a red post-merge judgment blocks production promotion in scripts/promote.mjs.
   #
-  # pull_request only, deliberately. The scoped Jev report is a PR obligation
-  # (§9 rule 6); the full run belongs to P10 and to P11.3's weekly sweep, which
-  # is a different job with a different bar. A push to main carries neither a PR
-  # title to name a scope from nor a merge ref to judge, and inventing a scope
-  # for it would judge the P10 exit bar on every merge.
-  #
-  # NOT a required check yet: it needs the `TYPESAFE_API_KEY` repository secret,
-  # which is owner action O-01. Until that secret exists this job FAILS, loudly
-  # and by design — --require-live means a run with no pinned live judgment is
-  # not a gate result. That red is the standing, visible reminder of exactly one
-  # owner action, and it disappears the moment the secret exists.
+  # It needs the TYPESAFE_API_KEY repository secret (owner action O-01). A PR
+  # report failure remains visible in its artifact; the same failure on main is
+  # blocking and prevents production promotion.
   jev-complete:
     # `always()` because a red gate is precisely the run that needs a record:
     # without it GitHub skips this job on a red dependency, and the run where
     # `ci_green` reads false would produce no evidence at all.
-    if: always() && github.event_name == 'pull_request'
+    if: always() && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
     needs:
       [test, web-smoke, quality-lab, lighthouse, coverage, quality-evidence]
     runs-on: ubuntu-latest
@@ -605,11 +596,10 @@ jobs:
       - uses: actions/checkout@v7
         with:
           # The gate reads the working tree AND consumes the required jobs' own
-          # results, so it must judge the same tree they ran on. On a
-          # pull_request, actions/checkout's default is the merge ref — the
-          # commit that would actually land. Naming it explicitly keeps the
-          # evidence and the judgment about one commit instead of two.
-          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          # results, so it must judge the same tree they ran on. PRs judge the
+          # proposed merge ref; main pushes judge the exact
+          # merged commit now served by staging.
+          ref: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.sha }}
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
@@ -639,7 +629,7 @@ jobs:
             --artifacts "$RUNNER_TEMP/jev-artifacts" \
             --prose evidence/advisor-and-release.json \
             --out "$RUNNER_TEMP/jev-evidence.json" \
-            --sha "${{ github.event.pull_request.head.sha }}" \
+            --sha "${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}" \
             --run-id "${{ github.run_id }}" \
             --run-attempt "${{ github.run_attempt }}" \
             --ref "${{ github.ref }}" \
@@ -648,6 +638,7 @@ jobs:
 
       - name: List changed files for scope inference
         id: prfiles
+        if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -656,6 +647,7 @@ jobs:
 
       - name: Which plan item is this PR about?
         id: scope
+        if: github.event_name == 'pull_request'
         env:
           # Flexible scope resolution: the gate infers scope semantically from
           # the title AND changed files, tolerating wording variations.
@@ -685,14 +677,20 @@ jobs:
           echo "judging the facets of $SCOPE"
 
       - name: Jev complete gate (live, model-pinned)
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
         env:
           # The repository secret, never a literal. O-01 adds it; the job fails
           # closed until then rather than scoring a run with no judgment.
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
         run: |
-          node scripts/validate-jev-complete.mjs \
-            --scope "${{ steps.scope.outputs.scope }}" \
-            --require-live \
+          args=()
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            args+=(--scope "${{ steps.scope.outputs.scope }}")
+            echo "PR scoped report is advisory; production uses the post-merge full report."
+          else
+            echo "Running the full Jev release gate for main SHA $GITHUB_SHA."
+          fi
+          node scripts/validate-jev-complete.mjs "${args[@]}" --require-live \
             --evidence "$RUNNER_TEMP/jev-evidence.json" \
             --out "$RUNNER_TEMP/jev-report.json"
 

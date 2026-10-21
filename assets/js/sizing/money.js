@@ -323,12 +323,10 @@ export function savingsPanelState(
   return tariffPerKwh
     ? {
         kind: "unavailable",
-        title: "Savings data unavailable for this result",
-        sub: "The sizing completed, but this result did not include a comparable 20-year cost series.",
+        reason: "missing-series",
       }
     : {
         kind: "unavailable",
-        title: "Enter your grid price to see estimated savings",
-        sub: "The calculator can size the system without a tariff, but needs your electricity price to compare 20-year grid cost with solar cost.",
+        reason: "missing-tariff",
       };
 }
