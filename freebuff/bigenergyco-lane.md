@@ -1,9 +1,3 @@
-## Launch config
-
-- **Backend:** GPT
-- **Model:** GPT-6 Luna
-- If this tab is running on a different backend/model, note it in your first status report.
-
 # BigEnergyCo — Lane (paste-ready mission prompt)
 
 **Repo:** Sovereign-Communication/bigenergyco. **Scope: BigEnergyCo ONLY.** Cross-repo matters go to main chat, never this lane.
