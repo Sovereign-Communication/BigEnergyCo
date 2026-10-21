@@ -3,8 +3,11 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
+import { HOME_COPY } from "./home-copy.js?v=20261021a";
+
 export const LOCALES = {
   en: {
+    ...HOME_COPY.en,
     navSizing: "Size Your System",
     navSupport: "Support",
     cutLabel: "Your bill-cut target",
@@ -481,6 +484,7 @@ export const LOCALES = {
     pathsIncludesToolsAndSafety: "Tools and safety gear",
   },
   es: {
+    ...HOME_COPY.es,
     navSizing: "Dimensiona tu sistema",
     navSupport: "Soporte",
     cutLabel: "Tu objetivo de reducción de factura",
@@ -966,6 +970,7 @@ export const LOCALES = {
     pathsIncludesToolsAndSafety: "Herramientas y equipo de seguridad",
   },
   pt: {
+    ...HOME_COPY.pt,
     navSizing: "Dimensione seu sistema",
     navSupport: "Suporte",
     cutLabel: "Sua meta de redução da conta",
@@ -1444,6 +1449,7 @@ export const LOCALES = {
     pathsIncludesToolsAndSafety: "Ferramentas e equipamento de segurança",
   },
   fr: {
+    ...HOME_COPY.fr,
     navSizing: "Dimensionner mon système",
     navSupport: "Assistance",
     cutLabel: "Votre objectif de réduction de facture",
@@ -1934,6 +1940,7 @@ export const LOCALES = {
     pathsIncludesToolsAndSafety: "Outillage et équipement de sécurité",
   },
   de: {
+    ...HOME_COPY.de,
     navSizing: "System dimensionieren",
     navSupport: "Hilfe",
     cutLabel: "Ziel für die Rechnungssenkung",
@@ -2422,6 +2429,7 @@ export const LOCALES = {
     pathsIncludesToolsAndSafety: "Werkzeug und Schutzausrüstung",
   },
   ar: {
+    ...HOME_COPY.ar,
     rtl: true,
     navSizing: "صمّم نظامك",
     navSupport: "الدعم",

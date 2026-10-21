@@ -12,9 +12,65 @@ import { fileURLToPath } from "node:url";
 import { LOCALES } from "../assets/js/shared/locales.js";
 import { interpolate, pickString } from "../assets/js/shared/interpolate.js";
 import { deployList } from "../scripts/lib/deploy-manifest.mjs";
+import { unkeyedProse } from "../scripts/lib/gates.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
+
+test("localized homepage hooks preserve reader-visible claims and live values", () => {
+  const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+  assert.deepEqual(
+    unkeyedProse(html),
+    [],
+    "every prose block on the translated homepage must have a locale hook",
+  );
+  assert.match(html, /id="billSliderCur"/, "bill label keeps its live amount");
+  assert.match(
+    html,
+    /id="genPetrolBurn"/,
+    "generator label keeps its petrol value",
+  );
+  assert.match(
+    html,
+    /id="genDieselBurn"/,
+    "generator label keeps its diesel value",
+  );
+  assert.match(
+    html,
+    /href="mailto:lucasballek@gmail\.com"/,
+    "email link remains actionable",
+  );
+  assert.match(
+    html,
+    /href="\.\/solar-calculator\/"/,
+    "benchmark link remains actionable",
+  );
+
+  for (const [locale, copy] of Object.entries(LOCALES)) {
+    assert.match(copy.homeIntro, /5/u, `${locale}: NASA weather window`);
+    assert.match(copy.homeIntro, /20/u, `${locale}: payback horizon`);
+    assert.ok(
+      ["80", "125", "110", "165", "0.16", "0.38"].every((number) =>
+        copy.batteryCostClaim.includes(number),
+      ),
+      `${locale}: DIY, retail, and panel price ranges remain present`,
+    );
+    for (const key of [
+      "bomSafetyNote",
+      "paybackClaim",
+      "batterySafety",
+      "donationTerms",
+      "resultEstimateDisclaimer",
+      "electricalSafetyDisclaimer",
+      "liabilityLimitation",
+    ]) {
+      assert.ok(
+        copy[key].split(/\s+/u).length >= 8,
+        `${locale}.${key} remains complete`,
+      );
+    }
+  }
+});
 
 function readEnKeys() {
   const src = fs.readFileSync(

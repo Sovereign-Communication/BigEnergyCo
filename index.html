@@ -259,10 +259,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20261020a" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261020a" />
+    <link rel="preload" href="./assets/site.css?v=20261021a" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261021a" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20261020a" />
+    <link rel="stylesheet" href="./assets/site.css?v=20261021a" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -492,7 +492,7 @@
               Find your cheapest path to lower bills
             </h2>
 
-            <p class="section-desc">
+            <p class="section-desc" data-i18n="homeIntro">
               Enter your location and average electric bill. We simulate 5 years
               of hourly NASA satellite weather to size the exact solar panel
               array and battery storage you need — with honest 20-year payback,
@@ -606,13 +606,14 @@
                         cursor: pointer;
                       "
                     />
-                    ⚡ Quick setup
+                    <span data-i18n="quickSetupTitle">⚡ Quick setup</span>
                     <span
                       style="
                         font-weight: 400;
                         color: var(--text-muted);
                         font-size: 0.82rem;
                       "
+                      data-i18n="quickSetupHint"
                       >— choose inputs, then click Size My System</span
                     >
                   </label>
@@ -788,6 +789,7 @@
                     margin: 0.5rem 0 0;
                     line-height: 1.5;
                   "
+                  data-i18n="preciseLocationHelp"
                 >
                   The precise-location button fills your exact coordinates and
                   pulls area prices from the nearest reference region. For
@@ -830,7 +832,7 @@
                       Close
                     </button>
                   </div>
-                  <p class="roof-map-disclosure">
+                  <p class="roof-map-disclosure" data-i18n="imageryPrivacy">
                     Satellite imagery (no account needed) loads only after you
                     ask for it. Coordinates go to the map tiles and NASA
                     weather; nothing is saved.
@@ -870,6 +872,7 @@
                       margin: 0.6rem 0;
                       line-height: 1.45;
                     "
+                    data-i18n="locationPrecision"
                   >
                     A city lookup is convenient, but your exact location gives
                     the most precise weather and solar estimate. Enter custom
@@ -943,12 +946,17 @@
                       font-size: 0.95rem;
                       margin: 0;
                     "
-                    >Your monthly electric bill
+                    ><span data-i18n="monthlyBillLabel"
+                      >Your monthly electric bill</span
+                    >
                     <span
                       id="billSliderCur"
                       style="color: var(--primary-accent)"
                     ></span
-                    ><span style="font-weight: 400; color: var(--text-muted)">
+                    ><span
+                      style="font-weight: 400; color: var(--text-muted)"
+                      data-i18n="monthlyBillHint"
+                    >
                       — rough is fine, it auto-adjusts to your location's
                       prices</span
                     ></label
@@ -1104,7 +1112,10 @@
                 </div>
 
                 <div class="form-group">
-                  <label for="customRateVal" data-jargon="tariff"
+                  <label
+                    for="customRateVal"
+                    data-jargon="tariff"
+                    data-i18n="electricityRateLabel"
                     >Electricity price where you live
                     <span style="font-weight: 400; color: var(--text-muted)"
                       >(drives your bill estimate and payback)</span
@@ -1198,19 +1209,28 @@
                         line-height: 1.5;
                       "
                     >
-                      Assumes a small genset at typical partial load: petrol
+                      <span data-i18n="generatorAssumption">
+                        Assumes a small genset at typical partial load:
+                        petrol</span
+                      >
                       &asymp; <span id="genPetrolBurn">0.5</span>
-                      <span id="genBurnUnit">L</span>/kWh, diesel &asymp;
+                      <span id="genBurnUnit">L</span
+                      ><span data-i18n="generatorAssumptionMiddle"
+                        >/kWh, diesel</span
+                      >
+                      &asymp;
                       <span id="genDieselBurn">0.35</span>
-                      <span id="genBurnUnit2">L</span>/kWh (fuel only &mdash;
-                      oil, filters, and engine wear push the true number
-                      higher). If you know your real $/kWh, type it directly
-                      instead.
+                      <span id="genBurnUnit2">L</span
+                      ><span data-i18n="generatorAssumptionSuffix"
+                        >/kWh (fuel only &mdash; oil, filters, and engine wear
+                        push the true number higher). If you know your real
+                        $/kWh, type it directly instead.
+                      </span>
                     </p>
                   </details>
 
                   <div style="margin-top: 0.6rem">
-                    <label for="exportRate"
+                    <label for="exportRate" data-i18n="feedInCreditLabel"
                       >Feed-in credit for surplus you can sell
                       <span style="font-weight: 400; color: var(--text-muted)"
                         >($/kWh, optional &mdash; grid-tie only)</span
@@ -1228,7 +1248,9 @@
                   </div>
 
                   <div style="margin-top: 0.6rem">
-                    <label for="fixedChargeVal"
+                    <label
+                      for="fixedChargeVal"
+                      data-i18n="fixedMonthlyChargeLabel"
                       >Fixed monthly charge on your bill
                       <span style="font-weight: 400; color: var(--text-muted)"
                         >($/mo, optional &mdash; solar can't cut it)</span
@@ -1335,7 +1357,7 @@
                     "
                   ></div>
 
-                  <p class="uc-note">
+                  <p class="uc-note" data-i18n="applianceWattages">
                     Wattages are typical values &mdash; yours may differ.
                     Cycling appliances (fridges, freezers, air conditioners,
                     pumps) only draw power while running: their slider is
@@ -1366,6 +1388,7 @@
                       color: var(--text-muted);
                       margin-top: 0.5rem;
                     "
+                    data-i18n="fixedChargeTaxEstimate"
                   >
                     Bills include fixed charges and taxes, so this slightly
                     overestimates real use &mdash; which is a safe direction to
@@ -1674,7 +1697,10 @@
                     border-radius: 8px;
                   "
                 >
-                  <label for="roofAreaM2" style="margin-bottom: 0.35rem"
+                  <label
+                    for="roofAreaM2"
+                    style="margin-bottom: 0.35rem"
+                    data-i18n="roofAreaLabel"
                     >Optional roof or yard area (m²)</label
                   >
                   <input
@@ -1694,6 +1720,7 @@
                       margin: 0.35rem 0 0;
                       line-height: 1.45;
                     "
+                    data-i18n="roofAreaHelp"
                   >
                     A rough manual estimate is enough: about 6 m² per 400 W
                     panel. This only caps the searched solar size; leave it
@@ -1822,7 +1849,7 @@
                   id="autoTierRow"
                   style="display: none; margin-bottom: 0"
                 >
-                  <label for="autoTier"
+                  <label for="autoTier" data-i18n="independenceTarget"
                     >Independence target
                     <span style="font-weight: 400; color: var(--text-muted)"
                       >(applied to all three chemistries)</span
@@ -1849,7 +1876,7 @@
                   id="autoTargetRow"
                   style="display: none"
                 >
-                  <label for="autoTarget"
+                  <label for="autoTarget" data-i18n="billCutTarget"
                     >Bill-cut target<span
                       style="font-weight: 400; color: var(--text-muted)"
                       >&nbsp;&mdash; sets the results slider too</span
@@ -1911,6 +1938,7 @@
                         margin: 0.3rem 0 0;
                         line-height: 1.4;
                       "
+                      data-i18n="fxRateHelp"
                     >
                       How many of your currency equal 1 US dollar. Auto-filled
                       for your location; change only if you know a different
@@ -2096,6 +2124,7 @@
                     margin: 0.4rem 0 0;
                     line-height: 1.5;
                   "
+                  data-i18n="surplusTargetHelp"
                 >
                   Above 100% the system is sized to produce sellable surplus —
                   without a feed-in credit entered above, that surplus has no
@@ -2287,6 +2316,7 @@
                       font-size: 0.9rem;
                       grid-column: 1/-1;
                     "
+                    data-i18n="resultsIntro"
                   >
                     Results appear here: a recommended path first, with battery
                     comparisons and all options available below. For grid-tied
@@ -2649,6 +2679,7 @@
                       margin-top: 0.8rem;
                       line-height: 1.55;
                     "
+                    data-i18n="bomSafetyNote"
                   >
                     Educational estimate from your sizing result &mdash; not an
                     engineering design, not a shopping order. Fuse and cable
@@ -2675,6 +2706,7 @@
                   <p
                     id="assumpText"
                     style="margin-top: 0.5rem; line-height: 1.6"
+                    data-i18n="assumptionsIntro"
                   >
                     Run a sizing first - every constant used (derates,
                     temperature model, efficiencies, weather data years and
@@ -2731,7 +2763,7 @@
           <div class="section-header">
             <h2 class="section-title">What a ~100 kWh Build Is Made Of</h2>
 
-            <p class="section-desc">
+            <p class="section-desc" data-i18n="partsListIntro">
               A reference parts list so you know what the pieces are and roughly
               what they cost. Nothing here is sold by this site &mdash; prices
               are indicative figures seen on the open market and change
@@ -2745,7 +2777,7 @@
 
               <h3>EVE MB31 3.2V 314Ah Cells</h3>
 
-              <p>
+              <p data-i18n="lfpCells">
                 Brand new Grade-A prismatic LFP cells. 16S configuration per
                 pack (51.2V nominal).
               </p>
@@ -2768,7 +2800,7 @@
 
               <h3>JK 200A Active Balance BMS</h3>
 
-              <p>
+              <p data-i18n="batteryManagementSpec">
                 Smart active balancing (2A balance current), dual temperature
                 probes, RS485/CANbus comms with Sol-Ark & Victron.
               </p>
@@ -2791,7 +2823,7 @@
 
               <h3>Eaton Class-T 200A Fuses</h3>
 
-              <p>
+              <p data-i18n="breakerSpec">
                 20kA AIC interrupt rating @ 160V DC. Clears very high
                 short-circuit DC currents in milliseconds &mdash; sized to
                 protect the BMS and wiring.
@@ -2815,7 +2847,7 @@
 
               <h3>300 kgf Compression Racks</h3>
 
-              <p>
+              <p data-i18n="endplateSpec">
                 Belleville spring washer endplates hold uniform compression
                 (about 3,000 N). Manufacturers cite cycle-life benefits; treat
                 specific gains as unverified.
@@ -2844,7 +2876,7 @@
           <div class="section-header">
             <h2 class="section-title">Common Questions</h2>
 
-            <p class="section-desc">
+            <p class="section-desc" data-i18n="faqIntro">
               Short answers to what people ask most. The AI advisor can go
               deeper on any of these.
             </p>
@@ -2854,7 +2886,7 @@
             <div class="legal-card">
               <h3>How accurate are the estimates?</h3>
 
-              <p>
+              <p data-i18n="estimateMethodDisclaimer">
                 Every number comes from testable code simulating your exact
                 location against five years of NASA satellite weather - not an
                 AI guessing. Real-world results still vary with shading,
@@ -2866,7 +2898,7 @@
             <div class="legal-card">
               <h3>Will a system pay for itself?</h3>
 
-              <p>
+              <p data-i18n="paybackClaim">
                 Where grid power is expensive - Hawaii, islands, much of Europe,
                 Africa, South Asia - properly built solar plus storage commonly
                 repays its component cost in one to four years, then runs nearly
@@ -2878,7 +2910,7 @@
             <div class="legal-card">
               <h3>What does a system actually cost?</h3>
 
-              <p>
+              <p data-i18n="batteryCostClaim">
                 Battery banks self-built from prismatic cells typically land
                 around $80–125 per usable kWh shipped and duty-paid; budget
                 retail packs run roughly $110–165. Panels add about $0.16–0.38
@@ -2891,7 +2923,7 @@
             <div class="legal-card">
               <h3>Do I need a generator?</h3>
 
-              <p>
+              <p data-i18n="offgridTradeoff">
                 Only if you want near-total independence through weeks of bad
                 weather. The three off-grid options show exactly that trade-off:
                 one never needs a generator, one needs it about a day a year,
@@ -2902,7 +2934,7 @@
             <div class="legal-card">
               <h3>Does it work without internet?</h3>
 
-              <p>
+              <p data-i18n="offlineFallback">
                 Yes. After your first visit the tool installs itself as an
                 offline app: sizing math runs entirely in your browser, and if
                 the network is down it falls back to bundled typical-year
@@ -2913,7 +2945,7 @@
             <div class="legal-card">
               <h3>Is building my own battery safe?</h3>
 
-              <p>
+              <p data-i18n="batterySafety">
                 It demands respect: lithium cells store enough energy to start
                 fires, and DC arcs don't switch off. The guides here insist on
                 proper fusing, BMS use, and code compliance - and on having a
@@ -2931,7 +2963,7 @@
           <div class="section-header">
             <h2 class="section-title">Support This Tool</h2>
 
-            <p class="section-desc">
+            <p class="section-desc" data-i18n="donationIntro">
               This is free and always will be. If it helped you and you want to
               chip in toward the AI and hosting costs, here's where.
             </p>
@@ -2940,8 +2972,11 @@
           <div style="max-width: 640px; margin: 0 auto">
             <div class="legal-card" style="text-align: center">
               <p style="margin-bottom: 1.25rem">
-                Contributions go directly to
-                <strong>Lucas Ballek</strong> personally.
+                <span data-i18n="donationRecipientPrefix"
+                  >Contributions go directly to</span
+                >
+                <strong>Lucas Ballek</strong>
+                <span data-i18n="donationRecipientSuffix">personally.</span>
               </p>
 
               <div
@@ -2985,6 +3020,7 @@
                   line-height: 1.6;
                   text-align: left;
                 "
+                data-i18n="donationTerms"
               >
                 <strong>Please read before sending anything.</strong>
                 Contributions are voluntary gifts to an individual, not payment
@@ -3011,7 +3047,7 @@
           <div class="section-header">
             <h2 class="section-title">Terms &amp; Disclaimer</h2>
 
-            <p class="section-desc">
+            <p class="section-desc" data-i18n="freeToolDisclaimer">
               Short version: this is a free educational toy that produces rough
               estimates, run by one person, with no warranty of any kind.
             </p>
@@ -3040,7 +3076,7 @@
             <div class="legal-card">
               <h3>Estimates, not engineering</h3>
 
-              <p>
+              <p data-i18n="resultEstimateDisclaimer">
                 Output is an automated educational estimate. It is not
                 engineering, not a stamped design, not a quote, and not a safety
                 certification. It may be wrong. Have any real system reviewed by
@@ -3091,7 +3127,7 @@
             <div class="legal-card">
               <h3>No accounts, no tracking</h3>
 
-              <p>
+              <p data-i18n="chatPrivacySummary">
                 No signup, no cookies for advertising, no analytics profile.
                 Your chat text is sent to the AI provider to generate a reply
                 and is not stored here. Don't type anything sensitive into it.
@@ -3120,7 +3156,9 @@
               <h3>Questions the AI couldn't answer?</h3>
 
               <p style="margin-bottom: 1rem">
-                You're welcome to email me:
+                <span data-i18n="emailWelcome"
+                  >You're welcome to email me:</span
+                >
 
                 <a
                   href="mailto:lucasballek@gmail.com"
@@ -3135,6 +3173,7 @@
                   color: var(--text-muted);
                   line-height: 1.6;
                 "
+                data-i18n="emailSupportExpectations"
               >
                 This is one person answering email in his own time, as a favor
                 &mdash; not a support desk. I read what I can and reply when I'm
@@ -3187,34 +3226,62 @@
             line-height: 1.6;
           "
         >
-          Provided free and
-          <strong>as-is, with no warranty of any kind</strong>, express or
-          implied. Estimates are educational only and may be inaccurate. Working
-          with batteries, high DC current, and mains wiring can cause fire,
-          serious injury, and death &mdash; you are responsible for your own
-          safety, your own decisions, and compliance with your local electrical
-          code. Verify everything with a licensed professional before building.
-          &nbsp;-&nbsp;
-          <a href="./blog/" style="color: var(--primary-accent)">Blog</a>
+          <span data-i18n="footerWarranty">
+            Provided free and
+            <strong>as-is, with no warranty of any kind</strong>, express or
+            implied. Estimates are educational only and may be inaccurate.
+            Working with batteries, high DC current, and mains wiring can cause
+            fire, serious injury, and death &mdash; you are responsible for your
+            own safety, your own decisions, and compliance with your local
+            electrical code. Verify everything with a licensed professional
+            before building. </span
+          >&nbsp;-&nbsp;
+          <a
+            href="./blog/"
+            style="color: var(--primary-accent)"
+            data-i18n="navBlog"
+            >Blog</a
+          >
 
           &nbsp;-&nbsp;
-          <a href="./solar-calculator/" style="color: var(--primary-accent)"
+          <a
+            href="./solar-calculator/"
+            style="color: var(--primary-accent)"
+            data-i18n="footerBenchmarks"
             >Worldwide Benchmarks</a
           >
 
           &nbsp;-&nbsp;
-          <a href="./solar-heatmap/" style="color: var(--primary-accent)"
+          <a
+            href="./solar-heatmap/"
+            style="color: var(--primary-accent)"
+            data-i18n="footerHeatmap"
             >Heatmap</a
           >
 
           &nbsp;-&nbsp;
-          <a href="./about/" style="color: var(--primary-accent)">About</a>
+          <a
+            href="./about/"
+            style="color: var(--primary-accent)"
+            data-i18n="footerAbout"
+            >About</a
+          >
 
           &nbsp;-&nbsp;
-          <a href="#legal" style="color: var(--primary-accent)">Terms</a>
+          <a
+            href="#legal"
+            style="color: var(--primary-accent)"
+            data-i18n="footerTerms"
+            >Terms</a
+          >
 
           &nbsp;-&nbsp;
-          <a href="#support" style="color: var(--primary-accent)">Support</a>
+          <a
+            href="#support"
+            style="color: var(--primary-accent)"
+            data-i18n="navSupport"
+            >Support</a
+          >
 
           &nbsp;-&nbsp;
           <a
@@ -3374,7 +3441,7 @@
         >
           <h4 style="color: #fff; margin-bottom: 0.5rem">1. What this is</h4>
 
-          <p style="margin-bottom: 1rem">
+          <p style="margin-bottom: 1rem" data-i18n="operatorDescription">
             This is a free, personal, non-commercial educational tool operated
             by an individual, Lucas Ballek. It is not a company, not
             incorporated, and not a licensed engineering, electrical
@@ -3386,7 +3453,7 @@
             2. Estimates only &mdash; no reliance
           </h4>
 
-          <p style="margin-bottom: 1rem">
+          <p style="margin-bottom: 1rem" data-i18n="independentVerification">
             All output is an automated educational estimate produced from
             assumptions you supply. It is not a design, not a stamped drawing,
             not a quote, not a safety assessment, and not a code-compliance
@@ -3402,7 +3469,7 @@
             3. AI-generated content
           </h4>
 
-          <p style="margin-bottom: 1rem">
+          <p style="margin-bottom: 1rem" data-i18n="llmDisclaimer">
             You are interacting with a large language model. It produces fluent,
             confident text that can be factually wrong, including specific
             numbers, prices, product specifications, and regulations. Treat
@@ -3411,7 +3478,7 @@
 
           <h4 style="color: #fff; margin-bottom: 0.5rem">4. Safety</h4>
 
-          <p style="margin-bottom: 1rem">
+          <p style="margin-bottom: 1rem" data-i18n="electricalSafetyDisclaimer">
             Battery banks, high DC currents, and mains wiring can cause arc
             flash, electric shock, fire, toxic gas release, serious injury, and
             death. Lithium cells can enter thermal runaway. You are solely
@@ -3423,7 +3490,7 @@
 
           <h4 style="color: #fff; margin-bottom: 0.5rem">5. No warranty</h4>
 
-          <p style="margin-bottom: 1rem">
+          <p style="margin-bottom: 1rem" data-i18n="siteAsIs">
             THIS SITE AND ITS OUTPUT ARE PROVIDED "AS IS" AND "AS AVAILABLE",
             WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
             LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -3436,7 +3503,7 @@
             6. Limitation of liability
           </h4>
 
-          <p style="margin-bottom: 1rem">
+          <p style="margin-bottom: 1rem" data-i18n="liabilityLimitation">
             To the fullest extent permitted by applicable law, the operator
             shall not be liable for any direct, indirect, incidental,
             consequential, special, or punitive damages &mdash; including
@@ -3452,16 +3519,22 @@
           <h4 style="color: #fff; margin-bottom: 0.5rem">7. Contributions</h4>
 
           <p style="margin-bottom: 1rem">
-            Any contribution you choose to send is a voluntary gift to an
-            individual. It is <strong>not tax-deductible</strong>, is not
-            payment for goods or services, creates no contract, entitles you to
-            nothing, and is not refundable in exchange for any obligation.
-            Contributing does not change the service you receive in any way.
+            <span data-i18n="donationTermsPrefix">
+              Any contribution you choose to send is a voluntary gift to an
+              individual. It is </span
+            ><strong data-i18n="donationNotTaxDeductible"
+              >not tax-deductible</strong
+            ><span data-i18n="donationTermsSuffix"
+              >, is not payment for goods or services, creates no contract,
+              entitles you to nothing, and is not refundable in exchange for any
+              obligation. Contributing does not change the service you receive
+              in any way.
+            </span>
           </p>
 
           <h4 style="color: #fff; margin-bottom: 0.5rem">8. Privacy</h4>
 
-          <p style="margin-bottom: 1rem">
+          <p style="margin-bottom: 1rem" data-i18n="advisorPrivacyDisclosure">
             No account is required and no personal details are requested. Text
             you type into the advisor is transmitted to a third-party AI
             provider (Groq) in order to generate a reply, subject to their
@@ -3473,7 +3546,7 @@
 
           <h4 style="color: #fff; margin-bottom: 0.5rem">9. Acceptable use</h4>
 
-          <p>
+          <p data-i18n="rateLimitDisclaimer">
             Please don't automate, scrape, or hammer this tool &mdash; it is one
             person paying for the AI calls. Rate limits apply and abuse will be
             blocked.
@@ -3549,15 +3622,15 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20261020a"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20261021a"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
       type="module"
-      src="./assets/js/turnstile-client.js?v=20261020a"
+      src="./assets/js/turnstile-client.js?v=20261021a"
     ></script>
-    <script defer src="./assets/js/chat.js?v=20261020a"></script>
+    <script defer src="./assets/js/chat.js?v=20261021a"></script>
   </body>
 </html>
 
