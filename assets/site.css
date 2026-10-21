@@ -1865,6 +1865,40 @@ footer {
   box-shadow: 0 0 14px rgba(0, 230, 153, 0.2);
 }
 
+.label-value-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.input-readout {
+  margin-top: 0.8rem;
+  padding: 0.8rem 1rem;
+  background: rgba(0, 230, 153, 0.06);
+  border: 1px solid var(--border-glow);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.muted-note {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.btn-segmented.goal-mode-control {
+  padding: 0.65rem 0.5rem;
+  font-weight: 800;
+  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 8px;
+}
+
 /* Plain-English ELI5 Translation Card */
 .eli5-card {
   background: rgba(18, 26, 44, 0.95);
