@@ -209,6 +209,15 @@ test("rendered chart copy uses each locale for SOC, auto, and cost charts", () =
       },
     ],
   };
+  const oneEmptyDayHistory = {
+    ...history,
+    tiers: history.tiers.map((tier) => ({
+      ...tier,
+      dailyMin: [0, ...tier.dailyMin.slice(1)],
+      minPct: 0,
+      emptyDays: 1,
+    })),
+  };
   const series = {
     years: 3,
     grid: [0, 100, 200],
@@ -269,6 +278,17 @@ test("rendered chart copy uses each locale for SOC, auto, and cost charts", () =
       );
       assert.ok(texts.includes(render(locale, "socTier95")));
 
+      charts.drawSocChart(oneEmptyDayHistory, "LFP", true);
+      assert.ok(
+        texts.includes(
+          render(locale, "socVerdictGridOne", {
+            low: "0",
+            charged: "300",
+            total: "365",
+          }),
+        ),
+      );
+
       charts.drawSocChart({ ...history, kind: "offgrid" }, "LFP", true);
       assert.equal(
         getNode("socCaption").textContent,
@@ -287,6 +307,20 @@ test("rendered chart copy uses each locale for SOC, auto, and cost charts", () =
             charged: "300",
             total: "365",
             empty: "2",
+          }),
+        ),
+      );
+      charts.drawSocChart(
+        { ...oneEmptyDayHistory, kind: "offgrid" },
+        "LFP",
+        true,
+      );
+      assert.ok(
+        texts.includes(
+          render(locale, "socVerdictOffgridOne", {
+            low: "0",
+            charged: "300",
+            total: "365",
           }),
         ),
       );

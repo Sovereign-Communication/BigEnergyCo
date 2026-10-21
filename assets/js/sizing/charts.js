@@ -5,7 +5,7 @@
 // `$` (DOM lookup), `el` (element factory), `t` (i18n), `fmt` (number format),
 // `money` (currency formatter). Chart state (socZoomRange, cachedChartState)
 // lives here as the single owner.
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261021b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261021c";
 
 // ── injected boundary (set once by ui.js via initCharts) ──────────────────
 let _$;
@@ -365,8 +365,15 @@ export function drawSocChart(history, chemLabel, hasPv = true) {
 
     ctx.fillStyle = t.emptyDays > 0 ? "rgba(245,158,11,0.95)" : color;
 
+    const verdictKey = gt
+      ? t.emptyDays === 1
+        ? "socVerdictGridOne"
+        : "socVerdictGrid"
+      : t.emptyDays === 1
+        ? "socVerdictOffgridOne"
+        : "socVerdictOffgrid";
     ctx.fillText(
-      _t(gt ? "socVerdictGrid" : "socVerdictOffgrid", {
+      _t(verdictKey, {
         low: fmt(Math.max(0, Math.round(t.minPct))),
         charged: fmt(t.fullDays),
         total: fmt(t.totalDays),

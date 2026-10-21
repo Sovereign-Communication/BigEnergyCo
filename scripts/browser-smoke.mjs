@@ -82,6 +82,27 @@ async function main() {
         `document.body.textContent.includes("Start a Free Estimate")`,
       ),
     );
+    const i18nReady = await ctx.poll(
+      async () =>
+        ctx.evaluate(
+          `typeof window.becoT === "function" && window.becoT("billPerMonth") !== "billPerMonth"`,
+        ),
+      10000,
+      100,
+    );
+    const initialBillLabel = await ctx.evaluate(`(() => {
+      const output = document.getElementById("billSliderVal");
+      const suffix = window.becoT?.("billPerMonth") || "";
+      return { text: output?.textContent.trim() || "", suffix };
+    })()`);
+    gate(
+      "deferred localization leaves no raw bill slider suffix on first load",
+      i18nReady &&
+        Boolean(initialBillLabel.suffix) &&
+        initialBillLabel.text.endsWith(initialBillLabel.suffix) &&
+        !initialBillLabel.text.includes("billPerMonth"),
+      JSON.stringify(initialBillLabel),
+    );
     // Jev is optional and rate-limited by design. The dedicated Jev gates
     // stub its response, so repeated smoke runs test the UI contract rather
     // than consuming the shared provider quota; the real endpoint is checked

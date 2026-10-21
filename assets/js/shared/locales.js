@@ -243,8 +243,12 @@ export const LOCALES = {
     socTierAutoLfp: "LFP bank across five real-weather years",
     socVerdictGrid:
       "Lowest: {low}%. Fully charged on {charged} of {total} days; the grid covered {empty} empty-bank days.",
+    socVerdictGridOne:
+      "Lowest: {low}%. Fully charged on {charged} of {total} days; the grid covered one empty-bank day.",
     socVerdictOffgrid:
       "Lowest: {low}%. Fully charged on {charged} of {total} days; the generator covered {empty} empty-bank days.",
+    socVerdictOffgridOne:
+      "Lowest: {low}%. Fully charged on {charged} of {total} days; the generator covered one empty-bank day.",
     chartDay: "Day {day}",
     socCaptionGrid:
       "Each band is one day: its top is the highest charge and its bottom the deepest discharge, based on satellite weather from {startYear} to {endYear}. The red line marks an empty battery; the grid supplies power there, so it is not a blackout.",
@@ -855,8 +859,12 @@ export const LOCALES = {
     socTierAutoLfp: "Batería LFP durante cinco años de clima real",
     socVerdictGrid:
       "Mínimo: {low}%. Carga completa en {charged} de {total} días; la red cubrió {empty} días con la batería vacía.",
+    socVerdictGridOne:
+      "Mínimo: {low}%. Carga completa en {charged} de {total} días; la red cubrió un día con la batería vacía.",
     socVerdictOffgrid:
       "Mínimo: {low}%. Carga completa en {charged} de {total} días; el generador cubrió {empty} días con la batería vacía.",
+    socVerdictOffgridOne:
+      "Mínimo: {low}%. Carga completa en {charged} de {total} días; el generador cubrió un día con la batería vacía.",
     chartDay: "Día {day}",
     socCaptionGrid:
       "Cada franja representa un día: arriba muestra la carga máxima y abajo la descarga más profunda, según datos satelitales de {startYear} a {endYear}. La línea roja marca una batería vacía; allí la red suministra energía, así que no hay apagón.",
@@ -1399,8 +1407,12 @@ export const LOCALES = {
     socTierAutoLfp: "Bateria LFP em cinco anos de clima real",
     socVerdictGrid:
       "Mínimo: {low}%. Carga completa em {charged} de {total} dias; a rede cobriu {empty} dias com a bateria vazia.",
+    socVerdictGridOne:
+      "Mínimo: {low}%. Carga completa em {charged} de {total} dias; a rede cobriu um dia com a bateria vazia.",
     socVerdictOffgrid:
       "Mínimo: {low}%. Carga completa em {charged} de {total} dias; o gerador cobriu {empty} dias com a bateria vazia.",
+    socVerdictOffgridOne:
+      "Mínimo: {low}%. Carga completa em {charged} de {total} dias; o gerador cobriu um dia com a bateria vazia.",
     chartDay: "Dia {day}",
     socCaptionGrid:
       "Cada faixa representa um dia: o topo mostra a carga máxima e a base, a descarga mais profunda, com base no clima de satélite de {startYear} a {endYear}. A linha vermelha marca uma bateria vazia; ali a rede fornece energia, portanto não há apagão.",
@@ -1944,8 +1956,12 @@ export const LOCALES = {
     socTierAutoLfp: "Batterie LFP sur cinq années météo réelles",
     socVerdictGrid:
       "Minimum : {low} %. Charge complète pendant {charged} jours sur {total} ; le réseau a couvert les {empty} jours où la batterie était vide.",
+    socVerdictGridOne:
+      "Minimum : {low} %. Charge complète pendant {charged} jours sur {total} ; le réseau a couvert un jour où la batterie était vide.",
     socVerdictOffgrid:
       "Minimum : {low} %. Charge complète pendant {charged} jours sur {total} ; le générateur a couvert les {empty} jours où la batterie était vide.",
+    socVerdictOffgridOne:
+      "Minimum : {low} %. Charge complète pendant {charged} jours sur {total} ; le générateur a couvert un jour où la batterie était vide.",
     chartDay: "Jour {day}",
     socCaptionGrid:
       "Chaque bande représente un jour : son bord supérieur indique la charge maximale et son bord inférieur la décharge la plus profonde, d'après les données météo satellitaires de {startYear} à {endYear}. La ligne rouge marque une batterie vide ; le réseau fournit alors l'électricité, il ne s'agit donc pas d'une panne.",
@@ -2494,8 +2510,12 @@ export const LOCALES = {
     socTierAutoLfp: "LFP-Speicher über fünf echte Wetterjahre",
     socVerdictGrid:
       "Tiefster Stand: {low} %. An {charged} von {total} Tagen voll geladen; an {empty} Tagen mit leerem Speicher sprang das Netz ein.",
+    socVerdictGridOne:
+      "Tiefster Stand: {low} %. An {charged} von {total} Tagen voll geladen; an einem Tag mit leerem Speicher sprang das Netz ein.",
     socVerdictOffgrid:
       "Tiefster Stand: {low} %. An {charged} von {total} Tagen voll geladen; an {empty} Tagen mit leerem Speicher sprang der Generator ein.",
+    socVerdictOffgridOne:
+      "Tiefster Stand: {low} %. An {charged} von {total} Tagen voll geladen; an einem Tag mit leerem Speicher sprang der Generator ein.",
     chartDay: "Tag {day}",
     socCaptionGrid:
       "Jeder Streifen zeigt einen Tag: oben den höchsten Ladestand und unten die tiefste Entladung, basierend auf Satellitenwetterdaten von {startYear} bis {endYear}. Die rote Linie markiert einen leeren Speicher; dort liefert das Netz Strom, es gibt also keinen Stromausfall.",
@@ -3018,8 +3038,12 @@ export const LOCALES = {
     socTierAutoLfp: "بطارية LFP عبر خمس سنوات من الطقس الفعلي",
     socVerdictGrid:
       "أدنى مستوى: {low}%. شُحنت بالكامل في {charged} من {total} يومًا؛ غطت الشبكة {empty} يومًا فرغت فيها البطارية.",
+    socVerdictGridOne:
+      "أدنى مستوى: {low}%. شُحنت بالكامل في {charged} من {total} يومًا؛ غطت الشبكة يومًا واحدًا فرغت فيه البطارية.",
     socVerdictOffgrid:
       "أدنى مستوى: {low}%. شُحنت بالكامل في {charged} من {total} يومًا؛ غطى المولد {empty} يومًا فرغت فيها البطارية.",
+    socVerdictOffgridOne:
+      "أدنى مستوى: {low}%. شُحنت بالكامل في {charged} من {total} يومًا؛ غطى المولد يومًا واحدًا فرغت فيه البطارية.",
     chartDay: "اليوم {day}",
     socCaptionGrid:
       "يمثل كل شريط يومًا واحدًا: يوضح أعلاه أعلى مستوى للشحن وأسفله أعمق تفريغ، وفق بيانات الطقس عبر الأقمار الصناعية من {startYear} إلى {endYear}. يشير الخط الأحمر إلى فراغ البطارية؛ عنده توفر الشبكة الطاقة، لذا لا يعني ذلك انقطاعًا للكهرباء.",

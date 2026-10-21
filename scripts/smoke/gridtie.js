@@ -195,6 +195,66 @@ export async function runGridTieFlow(ctx, actions) {
     Number.isFinite(tariff) && tariff > 0,
     `$${tariff}/kWh`,
   );
+  const readBillSlider = () =>
+    evaluate(`(() => {
+      const wrap = document.getElementById("billSliderWrap");
+      const slider = document.getElementById("billSlider");
+      const label = document.getElementById("billSliderVal");
+      const suffix = window.becoT?.("billPerMonth") || "";
+      const text = label?.textContent.trim() || "";
+      return {
+        lang: document.documentElement.lang,
+        value: slider?.value ?? "",
+        text,
+        suffix,
+        amount: suffix && text.endsWith(suffix) ? text.slice(0, -suffix.length) : "",
+        visible: Boolean(wrap && wrap.getClientRects().length && getComputedStyle(wrap).display !== "none"),
+      };
+    })()`);
+  const billBeforeLocaleSwitch = await readBillSlider();
+  let previousBillSuffix = billBeforeLocaleSwitch.suffix;
+  for (const language of ["de", "en"]) {
+    await evaluate(`(() => {
+      const s = document.getElementById("langSelect");
+      s.value = "${language}";
+      s.dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    })()`);
+    const localeReady = await ctx.poll(
+      async () => {
+        const state = await readBillSlider();
+        return (
+          state.lang === language &&
+          Boolean(state.suffix) &&
+          state.suffix !== previousBillSuffix &&
+          state.text.endsWith(state.suffix) &&
+          !state.text.includes("billPerMonth")
+        );
+      },
+      5000,
+      100,
+    );
+    const billAfterLocaleSwitch = await readBillSlider();
+    gate(
+      language === "de"
+        ? "visible bill slider follows German copy without changing its amount"
+        : "visible bill slider returns to English with its amount intact",
+      billBeforeLocaleSwitch.visible &&
+        localeReady &&
+        billAfterLocaleSwitch.value === billBeforeLocaleSwitch.value &&
+        billAfterLocaleSwitch.amount === billBeforeLocaleSwitch.amount &&
+        billAfterLocaleSwitch.suffix !== previousBillSuffix &&
+        (language !== "en" ||
+          billAfterLocaleSwitch.suffix === billBeforeLocaleSwitch.suffix) &&
+        billAfterLocaleSwitch.text.endsWith(billAfterLocaleSwitch.suffix) &&
+        !billAfterLocaleSwitch.text.includes("billPerMonth"),
+      JSON.stringify({
+        before: billBeforeLocaleSwitch,
+        after: billAfterLocaleSwitch,
+      }),
+    );
+    previousBillSuffix = billAfterLocaleSwitch.suffix;
+  }
   gate("result card has Total 20-year cost", await actions.runAndWaitCard());
   // This session showed a real infeasible banner above, so a stale one would
   // still be sitting here. The reason explains the payload on screen, and the
