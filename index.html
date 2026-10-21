@@ -259,10 +259,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20261021a" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261021a" />
+    <link rel="preload" href="./assets/site.css?v=20261021b" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261021b" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20261021a" />
+    <link rel="stylesheet" href="./assets/site.css?v=20261021b" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -529,34 +529,14 @@
                   <button
                     type="button"
                     id="btnGoalGridtie"
-                    class="btn btn-segmented active"
-                    style="
-                      padding: 0.65rem 0.5rem;
-                      font-weight: 800;
-                      font-size: 0.92rem;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      gap: 0.4rem;
-                      border-radius: 8px;
-                    "
+                    class="btn btn-segmented active goal-mode-control"
                   >
                     <span>🏠</span> Cut My Electric Bill
                   </button>
                   <button
                     type="button"
                     id="btnGoalOffgrid"
-                    class="btn btn-segmented"
-                    style="
-                      padding: 0.65rem 0.5rem;
-                      font-weight: 800;
-                      font-size: 0.92rem;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      gap: 0.4rem;
-                      border-radius: 8px;
-                    "
+                    class="btn btn-segmented goal-mode-control"
                   >
                     <span>🌲</span> Off-grid / Backup
                   </button>
@@ -929,15 +909,7 @@
                   border-radius: 10px;
                 "
               >
-                <div
-                  style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    gap: 1rem;
-                    flex-wrap: wrap;
-                  "
-                >
+                <div class="label-value-row">
                   <label
                     for="billSlider"
                     style="
@@ -953,10 +925,7 @@
                       id="billSliderCur"
                       style="color: var(--primary-accent)"
                     ></span
-                    ><span
-                      style="font-weight: 400; color: var(--text-muted)"
-                      data-i18n="monthlyBillHint"
-                    >
+                    ><span class="muted-note" data-i18n="monthlyBillHint">
                       — rough is fine, it auto-adjusts to your location's
                       prices</span
                     ></label
@@ -996,15 +965,7 @@
                   border-radius: 10px;
                 "
               >
-                <div
-                  style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    gap: 1rem;
-                    flex-wrap: wrap;
-                  "
-                >
+                <div class="label-value-row">
                   <label
                     for="offgridKwhSlider"
                     style="
@@ -1117,7 +1078,7 @@
                     data-jargon="tariff"
                     data-i18n="electricityRateLabel"
                     >Electricity price where you live
-                    <span style="font-weight: 400; color: var(--text-muted)"
+                    <span class="muted-note"
                       >(drives your bill estimate and payback)</span
                     >
                     - your price per kWh ($):</label
@@ -1232,7 +1193,7 @@
                   <div style="margin-top: 0.6rem">
                     <label for="exportRate" data-i18n="feedInCreditLabel"
                       >Feed-in credit for surplus you can sell
-                      <span style="font-weight: 400; color: var(--text-muted)"
+                      <span class="muted-note"
                         >($/kWh, optional &mdash; grid-tie only)</span
                       >:</label
                     >
@@ -1252,7 +1213,7 @@
                       for="fixedChargeVal"
                       data-i18n="fixedMonthlyChargeLabel"
                       >Fixed monthly charge on your bill
-                      <span style="font-weight: 400; color: var(--text-muted)"
+                      <span class="muted-note"
                         >($/mo, optional &mdash; solar can't cut it)</span
                       >:</label
                     >
@@ -1344,18 +1305,7 @@
 
                   <div id="applianceList"></div>
 
-                  <div
-                    id="readoutAppliances"
-                    style="
-                      margin-top: 0.8rem;
-                      padding: 0.8rem 1rem;
-                      background: rgba(0, 230, 153, 0.06);
-                      border: 1px solid var(--border-glow);
-                      border-radius: 8px;
-                      font-size: 0.95rem;
-                      font-weight: 700;
-                    "
-                  ></div>
+                  <div id="readoutAppliances" class="input-readout"></div>
 
                   <p class="uc-note" data-i18n="applianceWattages">
                     Wattages are typical values &mdash; yours may differ.
@@ -1369,18 +1319,7 @@
                 </div>
 
                 <div id="panelBill" style="display: block">
-                  <div
-                    id="readoutBill"
-                    style="
-                      margin-top: 0.8rem;
-                      padding: 0.8rem 1rem;
-                      background: rgba(0, 230, 153, 0.06);
-                      border: 1px solid var(--border-glow);
-                      border-radius: 8px;
-                      font-size: 0.95rem;
-                      font-weight: 700;
-                    "
-                  ></div>
+                  <div id="readoutBill" class="input-readout"></div>
 
                   <p
                     style="
@@ -1413,18 +1352,7 @@
                     />
                   </div>
 
-                  <div
-                    id="readoutKwh"
-                    style="
-                      margin-top: 0.8rem;
-                      padding: 0.8rem 1rem;
-                      background: rgba(0, 230, 153, 0.06);
-                      border: 1px solid var(--border-glow);
-                      border-radius: 8px;
-                      font-size: 0.95rem;
-                      font-weight: 700;
-                    "
-                  ></div>
+                  <div id="readoutKwh" class="input-readout"></div>
                 </div>
 
                 <!-- ONE vocabulary for "what do you want to do" (D-16).
@@ -1851,7 +1779,7 @@
                 >
                   <label for="autoTier" data-i18n="independenceTarget"
                     >Independence target
-                    <span style="font-weight: 400; color: var(--text-muted)"
+                    <span class="muted-note"
                       >(applied to all three chemistries)</span
                     >:</label
                   >
@@ -1877,8 +1805,7 @@
                   style="display: none"
                 >
                   <label for="autoTarget" data-i18n="billCutTarget"
-                    >Bill-cut target<span
-                      style="font-weight: 400; color: var(--text-muted)"
+                    >Bill-cut target<span class="muted-note"
                       >&nbsp;&mdash; sets the results slider too</span
                     >:</label
                   >
@@ -1916,9 +1843,7 @@
                   <div class="form-group">
                     <label for="fxRate"
                       >Your currency
-                      <span style="font-weight: 400; color: var(--text-muted)"
-                        >(optional)</span
-                      >:</label
+                      <span class="muted-note">(optional)</span>:</label
                     >
 
                     <input
@@ -2075,15 +2000,7 @@
                   border-radius: 10px;
                 "
               >
-                <div
-                  style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    gap: 1rem;
-                    flex-wrap: wrap;
-                  "
-                >
+                <div class="label-value-row">
                   <label
                     for="cutSlider"
                     data-i18n="cutLabel"
@@ -2146,15 +2063,7 @@
                   border-radius: 10px;
                 "
               >
-                <div
-                  style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    gap: 1rem;
-                    flex-wrap: wrap;
-                  "
-                >
+                <div class="label-value-row">
                   <label
                     for="budgetSlider"
                     data-i18n="budgetLabel"
@@ -3622,15 +3531,15 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20261021a"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20261021b"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
       type="module"
-      src="./assets/js/turnstile-client.js?v=20261021a"
+      src="./assets/js/turnstile-client.js?v=20261021b"
     ></script>
-    <script defer src="./assets/js/chat.js?v=20261021a"></script>
+    <script defer src="./assets/js/chat.js?v=20261021b"></script>
   </body>
 </html>
 
