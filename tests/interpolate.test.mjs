@@ -131,23 +131,37 @@ test("the controller no longer carries a second interpolation loop", () => {
 });
 
 test("every placeholder name shipped in a locale is well formed", () => {
-  const source = readFileSync(
-    new URL("../assets/js/shared/locales.js", import.meta.url),
-    "utf8",
+  const slots = Object.entries(LOCALES).flatMap(([locale, dictionary]) =>
+    Object.entries(dictionary).flatMap(([key, value]) =>
+      typeof value === "string"
+        ? [...value.matchAll(/\{(.*?)\}/gs)].map(([raw, name]) => ({
+            locale,
+            key,
+            raw,
+            name,
+          }))
+        : [],
+    ),
   );
-  const names = new Set(
-    [...source.matchAll(/\{([A-Za-z0-9_]+)\}/g)].map((m) => m[1]),
-  );
+  const names = new Set(slots.map(({ name }) => name));
   assert.ok(
     names.size > 40,
     `expected a broad placeholder surface, got ${names.size}`,
   );
-  for (const name of names) {
-    assert.match(name, PLACEHOLDER_NAME, `placeholder name: ${name}`);
-  }
+  for (const { locale, key, name } of slots)
+    assert.match(
+      name,
+      PLACEHOLDER_NAME,
+      `placeholder name: ${locale}.${key} {${name}}`,
+    );
   // Names are matched literally, so a name with punctuation would only ever be
   // substituted by exact match — always a typo in the locale string.
-  const raw = [...source.matchAll(/\{(.*?)\}/g)].map((m) => m[1]);
-  const malformed = raw.filter((n) => n && !PLACEHOLDER_NAME.test(n));
-  assert.deepEqual(malformed, [], "no locale string carries a malformed slot");
+  const malformed = slots.filter(
+    ({ name }) => name && !PLACEHOLDER_NAME.test(name),
+  );
+  assert.deepEqual(
+    malformed.map(({ locale, key, raw }) => `${locale}.${key} ${raw}`),
+    [],
+    "no locale string carries a malformed slot",
+  );
 });

@@ -99,6 +99,10 @@ test("BANNED: reintroducing any known-bad value makes the gate fail", () => {
   // The gate resolves the dictionary by import, so the copy needs both files
   // and the lib it imports.
   cpSync(LOCALES_PATH, join(sandbox, "locales.js"));
+  cpSync(
+    join(ROOT, "assets", "js", "shared", "home-copy.js"),
+    join(sandbox, "home-copy.js"),
+  );
   const script = `
     import { LOCALES } from "./locales.js";
     const langs = Object.keys(LOCALES);
