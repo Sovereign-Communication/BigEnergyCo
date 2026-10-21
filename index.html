@@ -259,10 +259,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20261021b" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261021b" />
+    <link rel="preload" href="./assets/site.css?v=20261021c" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261021c" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20261021b" />
+    <link rel="stylesheet" href="./assets/site.css?v=20261021c" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -1044,8 +1044,6 @@
                 />
               </div>
 
-              <!-- Everything below the location row is the "full form": hidden in
-               Quick setup, revealed when the visitor switches to Manual. -->
               <div id="fullControls">
                 <div class="form-group">
                   <label for="loadMode" data-i18n="loadLabel"
@@ -1355,12 +1353,6 @@
                   <div id="readoutKwh" class="input-readout"></div>
                 </div>
 
-                <!-- ONE vocabulary for "what do you want to do" (D-16).
-                     The six tiles of §6.2 Step 3. The legacy systemGoal /
-                     hardwareConfig pair still exists BELOW, hidden, because
-                     every existing sizing path reads it: it is DERIVED from
-                     this select by ui.js and never shown, which is what closes
-                     F-17 (three overlapping vocabularies for one choice). -->
                 <div class="form-group" id="useCaseRow" hidden>
                   <label for="useCase" data-i18n="useCaseLabel"
                     >What do you want to do?</label
@@ -1434,9 +1426,6 @@
                   </select>
                 </div>
 
-                <!-- ── Use-case inputs. Each block is shown for exactly the
-                     use cases that declare it (usecases.js INPUTS); none is
-                     visible to a visitor whose goal does not ask for it. ── -->
                 <div id="touInputs" hidden>
                   <div class="form-group">
                     <label for="touPeakRate" data-i18n="touPeakLabel"
@@ -1906,11 +1895,6 @@
                 <span>Show my options</span>
               </button>
 
-              <!-- Why nothing solved, announced. The visual banner below is
-                   built on demand and toggled with display:none, which is
-                   exactly the shape a screen reader will not announce; this
-                   region is declared once, stays rendered (sr-only), and is
-                   filled with the same reason. -->
               <div
                 id="infeasibleLive"
                 class="sr-only"
@@ -1934,9 +1918,6 @@
                 it in your browser.
               </div>
 
-              <!-- Staged loading pipeline: makes every data-loading phase
-                   legible (determinate where counts are known). Populated by
-                   ui.js pipelineStart/pipelineStage/pipelineStop. -->
               <div id="loadingPipeline" aria-busy="false" style="display: none">
                 <ol class="pipe-steps">
                   <li id="pipeCity" data-state="todo">
@@ -2108,10 +2089,6 @@
                 ></p>
               </div>
               <div id="resultsRegion" hidden>
-                <!-- The use case's OWN outcome, above everything else: its own
-                     metric, its own honest verdict, and what it was measured
-                     on. Rendered from payload.useCaseOutcome, which only
-                     assets/js/sizing/usecases.js can shape. -->
                 <div id="useCaseOutcomeWrap" aria-live="polite"></div>
 
                 <div id="simpleResultsWrap" aria-live="polite"></div>
@@ -3531,15 +3508,15 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20261021b"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20261021c"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
       type="module"
-      src="./assets/js/turnstile-client.js?v=20261021b"
+      src="./assets/js/turnstile-client.js?v=20261021c"
     ></script>
-    <script defer src="./assets/js/chat.js?v=20261021b"></script>
+    <script defer src="./assets/js/chat.js?v=20261021c"></script>
   </body>
 </html>
 
