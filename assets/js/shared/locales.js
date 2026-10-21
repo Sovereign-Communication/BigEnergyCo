@@ -277,7 +277,7 @@ export const LOCALES = {
     autoSocIntro:
       "Read the plot: the shaded band shows each bank's daily charge range, the bold top edge its fullest charge, and the thin lower edge its deepest discharge. The dashed line marks the full-charge point ({ceilings}); each bank has a similar rated capacity for the same job.",
     autoSocCaption:
-      "Modeled usable capacity is 80% for LFP (20-100% of rated capacity), 85% for sodium-ion (15-100%), and 50% for lead-acid (50-100%). In this model, LFP and sodium-ion need fewer replacements over 20 years than lead-acid. Standard LFP voltage settings limit sodium-ion to about 85% of nameplate; its shallower discharge supports longer cycle life. Lead-acid is limited to its upper half and is also derated under heavy discharge. Dips in the weather record from {startYear} to {endYear} show when a generator or the grid would supply power.",
+      "Modeled usable capacity is 80% for LFP (20-100%), 85% for sodium-ion (15-100%), and 50% for lead-acid (50-100%). In this model, LFP and sodium-ion need fewer replacements than lead-acid over 20 years. Standard LFP voltage settings cap sodium-ion at about 85% of rated capacity; its shallower discharge supports longer cycle life. Lead-acid is limited to its upper half and is derated under heavy discharge. Weather dips from {startYear} to {endYear} show when grid or generator power would be needed.",
     autoSocSunStrip:
       "The amber strip above shows daily solar output (kWh per kW of panel); its dips follow each bank's recharge rhythm.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
@@ -891,7 +891,7 @@ export const LOCALES = {
     autoSocIntro:
       "Cómo leer el gráfico: la franja sombreada muestra el rango diario de carga de cada batería; el borde superior grueso, su carga máxima; y el borde inferior fino, la descarga más profunda. La línea discontinua marca el nivel de carga completa ({ceilings}); cada batería tiene una capacidad nominal similar para realizar la misma tarea.",
     autoSocCaption:
-      "Capacidad utilizable seg?n el modelo: 80% para LFP (20-100% de la capacidad nominal), 85% para ion de sodio (15-100%) y 50% para plomo-?cido (50-100%). En este modelo, LFP y el ion de sodio necesitan menos reemplazos en 20 a?os que el plomo-?cido. Los ajustes de voltaje LFP est?ndar limitan el ion de sodio a cerca del 85% de la capacidad nominal; esa descarga menos profunda prolonga su vida ?til. El plomo-?cido se limita a la mitad superior y tambi?n pierde capacidad con descargas intensas. Las bajadas de carga entre {startYear} y {endYear} indican cu?ndo suministrar?an energ?a la red o un generador.",
+      "La capacidad utilizable modelada es del 80% para LFP (20-100%), del 85% para los iones de sodio (15-100%) y del 50% para el plomo-ácido (50-100%). En este modelo, LFP y los iones de sodio requieren menos reemplazos que el plomo-ácido en 20 años. Los ajustes estándar de voltaje para LFP limitan los iones de sodio a cerca del 85% de la capacidad nominal; su menor profundidad de descarga prolonga la vida útil en ciclos. El plomo-ácido se limita a la mitad superior y pierde capacidad útil con descargas intensas. Las caídas del clima registrado de {startYear} a {endYear} muestran cuándo haría falta energía de la red o de un generador.",
     autoSocSunStrip:
       "La franja ámbar muestra la producción solar diaria (kWh por kW de panel); sus bajadas siguen el ritmo de recarga de cada batería.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
@@ -1409,7 +1409,7 @@ export const LOCALES = {
     socCaptionGridPattern:
       "Faixas altas e estáveis indicam que a energia solar e a bateria estão atendendo ao consumo.",
     socCaptionSunStrip:
-      "A faixa âmbar mostra a produção solar diária (kWh por kW de painel); suas quedas coincidem com as cargas mínimas das baterias.",
+      "A faixa âmbar mostra a produção solar diária (kWh por kW de painel); suas quedas coincidem com os níveis de carga mais baixos das baterias.",
     cumCostTitleSolar:
       "Quanto a energia solar realmente economiza? (custo acumulado em 20 anos)",
     cumCostTitleBattery:
@@ -1435,7 +1435,7 @@ export const LOCALES = {
     autoSocIntro:
       "Como ler o gráfico: a faixa sombreada mostra a variação diária de carga de cada bateria; a borda superior grossa indica a carga máxima, e a borda inferior fina, a descarga mais profunda. A linha tracejada marca a carga completa ({ceilings}); todas têm capacidade nominal semelhante para a mesma tarefa.",
     autoSocCaption:
-      "Capacidade utiliz?vel no modelo: 80% para LFP (20-100% da capacidade nominal), 85% para ?on de s?dio (15-100%) e 50% para chumbo-?cido (50-100%). Neste modelo, LFP e ?on de s?dio precisam de menos substitui??es em 20 anos que chumbo-?cido. As configura??es de tens?o padr?o de LFP limitam o ?on de s?dio a cerca de 85% da capacidade nominal; a descarga menos profunda prolonga sua vida ?til. O chumbo-?cido fica limitado ? metade superior e tamb?m perde capacidade em descargas intensas. As quedas de carga entre {startYear} e {endYear} indicam quando a rede ou um gerador forneceria energia.",
+      "A capacidade utilizável modelada é 80% para LFP (20-100%), 85% para íons de sódio (15-100%) e 50% para chumbo-ácido (50-100%). Neste modelo, LFP e íons de sódio exigem menos trocas que chumbo-ácido em 20 anos. As tensões padrão de LFP limitam os íons de sódio a cerca de 85% da capacidade nominal; a descarga menos profunda favorece uma vida útil maior em ciclos. Chumbo-ácido fica limitado à metade superior e perde capacidade útil sob descarga intensa. As quedas no clima observado de {startYear} a {endYear} mostram quando seria necessária energia da rede ou do gerador.",
     autoSocSunStrip:
       "A faixa âmbar mostra a produção solar diária (kWh por kW de painel); as quedas acompanham o ritmo de recarga de cada bateria.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
@@ -1979,7 +1979,7 @@ export const LOCALES = {
     autoSocIntro:
       "Lecture du graphique : la zone ombrée montre la plage quotidienne de charge de chaque batterie ; le bord supérieur épais indique sa charge maximale et le bord inférieur fin sa décharge la plus profonde. La ligne pointillée indique le niveau de pleine charge ({ceilings}) ; chaque batterie a une capacité nominale similaire pour le même usage.",
     autoSocCaption:
-      "Capacit? utile mod?lis?e : 80 % pour le LFP (20-100 % de la capacit? nominale), 85 % pour le sodium-ion (15-100 %) et 50 % pour le plomb-acide (50-100 %). Dans ce mod?le, le LFP et le sodium-ion n?cessitent moins de remplacements sur 20 ans que le plomb-acide. Les r?glages de tension LFP standard limitent le sodium-ion ? environ 85 % de la capacit? nominale ; une d?charge moins profonde prolonge sa dur?e de vie. Le plomb-acide est limit? ? sa moiti? sup?rieure et perd aussi de la capacit? lors de d?charges importantes. Les creux de charge entre {startYear} et {endYear} indiquent quand le r?seau ou un g?n?rateur fournirait l??lectricit?.",
+      "La capacité utile modélisée est de 80 % pour le LFP (20-100 %), de 85 % pour le sodium-ion (15-100 %) et de 50 % pour le plomb-acide (50-100 %). Dans ce modèle, le LFP et le sodium-ion nécessitent moins de remplacements que le plomb-acide sur 20 ans. Les réglages de tension LFP standard limitent le sodium-ion à environ 85 % de la capacité nominale ; sa décharge moins profonde favorise une durée de vie en cycles plus longue. Le plomb-acide est limité à sa moitié supérieure et perd de la capacité utile lors des fortes décharges. Les creux météo de {startYear} à {endYear} montrent quand le réseau ou un générateur fournirait l'énergie.",
     autoSocSunStrip:
       "La bande ambrée indique la production solaire quotidienne (kWh par kW de panneau) ; ses creux suivent le rythme de recharge des batteries.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
@@ -2528,7 +2528,7 @@ export const LOCALES = {
     autoSocIntro:
       "So lesen Sie das Diagramm: Der schattierte Bereich zeigt den täglichen Ladebereich jeder Batterie; die fette obere Kante den höchsten Ladestand und die dünne untere Kante die tiefste Entladung. Die gestrichelte Linie markiert den Vollladepunkt ({ceilings}); alle Batterien haben für dieselbe Aufgabe eine ähnliche Nennkapazität.",
     autoSocCaption:
-      "Modellierte nutzbare Kapazit?t: 80 % bei LFP (20-100 % der Nennkapazit?t), 85 % bei Natrium-Ionen (15-100 %) und 50 % bei Blei-S?ure (50-100 %). In diesem Modell brauchen LFP und Natrium-Ionen ?ber 20 Jahre weniger Austausche als Blei-S?ure. ?bliche LFP-Spannungseinstellungen begrenzen Natrium-Ionen auf etwa 85 % der Nennkapazit?t; die geringere Entladetiefe verl?ngert die Lebensdauer. Blei-S?ure ist auf die obere H?lfte begrenzt und verliert bei starker Entladung zus?tzlich nutzbare Kapazit?t. Tiefpunkte im Ladeverlauf von {startYear} bis {endYear} zeigen, wann Generator oder Netz Strom liefern w?rden.",
+      "Modellierter Nutzbereich: LFP 20-100 % (80 %), Natrium-Ionen 15-100 % (85 %), Blei-Säure 50-100 % (50 %). Im Modell benötigen LFP und Natrium-Ionen über 20 Jahre weniger Austausche als Blei-Säure. Übliche LFP-Spannungseinstellungen begrenzen Natrium-Ionen auf etwa 85 % der Nennkapazität; die geringere Entladetiefe erhöht die Zyklenlebensdauer. Blei-Säure nutzt nur die obere Hälfte und verliert bei starker Entladung zusätzlich Kapazität. Wettertiefs von {startYear} bis {endYear} zeigen, wann Netz oder Generator nötig wären.",
     autoSocSunStrip:
       "Der bernsteinfarbene Streifen oben zeigt den täglichen Solarertrag (kWh je kW Modulleistung); die Tiefpunkte folgen dem Ladezyklus der Speicher.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
@@ -3052,7 +3052,7 @@ export const LOCALES = {
     autoSocIntro:
       "طريقة قراءة الرسم: يوضح النطاق المظلل مدى الشحن اليومي لكل بطارية؛ ويمثل الحد العلوي السميك أعلى مستوى شحن، والحد السفلي الرفيع أعمق تفريغ. يشير الخط المتقطع إلى مستوى الشحن الكامل ({ceilings})؛ وتتمتع البطاريات بسعات اسمية متقاربة لأداء المهمة نفسها.",
     autoSocCaption:
-      "????? ??????? ????????? ??? ???????: 80% ???????? LFP (20-100% ?? ????? ???????)? ?85% ??????? ???????? (15-100%)? ?50% ???????? ?????? ??????? (50-100%). ?? ??? ???????? ????? ??????? LFP ??????? ???????? ??? ????????? ??? ???? 20 ????? ?? ??????? ?????? ???????. ??? ??????? ????? ???????? ?? LFP ?? ??? ?????? ???????? ??? ??? 85% ?? ????? ???????? ?????? ??????? ????? ????? ??? ????? ?????. ????? ??????? ?????? ??????? ??? ????? ??????? ??? ???? ??? ????? ????????? ??? ??????? ??????. ???? ?????????? ?? ????? ????? ??? {startYear} ?{endYear} ??? ????? ????? ?????? ?? ?????? ??????.",
+      "السعة القابلة للاستخدام في النموذج هي 80% لـLFP (20-100%)، و85% لأيونات الصوديوم (15-100%)، و50% لبطاريات الرصاص الحمضية (50-100%). في هذا النموذج، تحتاج بطاريات LFP وأيونات الصوديوم إلى عمليات استبدال أقل من بطاريات الرصاص خلال 20 عامًا. تحد إعدادات الجهد القياسية لـLFP استخدام بطاريات أيونات الصوديوم عند نحو 85% من السعة الاسمية؛ ويساعد التفريغ الأقل عمقًا على إطالة عمرها بالدورات. يقتصر استخدام بطاريات الرصاص على النصف الأعلى، وتنخفض سعتها القابلة للاستخدام مع التفريغ الشديد. وتوضح الانخفاضات في سجل الطقس من {startYear} إلى {endYear} متى يلزم استخدام الشبكة أو المولد.",
     autoSocSunStrip:
       "يوضح الشريط الكهرماني أعلاه الإنتاج الشمسي اليومي (كيلوواط ساعة لكل كيلوواط من الألواح)؛ وتتبع انخفاضاته إيقاع إعادة شحن البطاريات.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --

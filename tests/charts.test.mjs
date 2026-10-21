@@ -409,7 +409,13 @@ test("rendered chart copy uses each locale for SOC, auto, and cost charts", () =
 test("auto SOC copy matches the modeled usable window in every locale", () => {
   const copy = ["en", "es", "pt", "fr", "de", "ar"];
   for (const locale of copy) {
-    const caption = LOCALES[locale].autoSocCaption.replace(
+    const rawCaption = LOCALES[locale].autoSocCaption;
+    assert.doesNotMatch(
+      rawCaption,
+      /[?\uFFFD]/,
+      `${locale} caption must not contain replacement or transliteration marks`,
+    );
+    const caption = rawCaption.replace(
       /[\s\u200e\u200f\u202a-\u202e\u2066-\u2069]/g,
       "",
     );
