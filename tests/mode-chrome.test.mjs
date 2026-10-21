@@ -133,3 +133,25 @@ test("GENERATOR: ui.js derives engine state from the one answer", () => {
   assert.match(UI, /generatorRuntimeForTier\(o\.at\)/);
   assert.match(UI, /generatorRuntimeForTier\(autoTierNode\.value\)/);
 });
+
+test("RESULTS: no bill-cut chrome renders for an off-grid result", () => {
+  // The results composition is mode-aware: an off-grid result must never
+  // show bill-cut framing. Each guard below is load-bearing — a removed
+  // guard is how the "% of bill cut" framing returns to off-grid cards.
+  // Result chips: the bill-cut chip only renders for grid-tie.
+  assert.match(UI, /if \(isGT && Number\.isFinite\(entry\.cutPct\)\)/);
+  // Card title: off-grid results get "Full system analysis", never bill-cut.
+  assert.match(
+    UI,
+    /p\.mode === "gridtie" \? "Full bill-cut analysis" : "Full system analysis"/,
+  );
+  // Results brief lines: the off-grid branch never mentions bill cuts.
+  const briefOffgrid = UI.slice(
+    UI.indexOf("} else {", UI.indexOf("briefLines = p.targets")),
+  );
+  assert.doesNotMatch(briefOffgrid.slice(0, 600), /bill\s*-/i);
+  // The cut label only re-renders when the row is shown (which off-grid
+  // never is): syncCutLabel is called from syncCutRowVisibility only under
+  // `if (show)`.
+  assert.match(UI, /if \(show\) syncCutLabel\(\);/);
+});
