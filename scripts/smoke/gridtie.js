@@ -263,6 +263,10 @@ export async function runGridTieFlow(ctx, actions) {
       };
       return {
         legend: clean("cumCostLegend"),
+        legendRows: Array.from(
+          document.querySelectorAll('#cumCostLegend [role="listitem"]'),
+          (row) => row.lastElementChild?.textContent || "",
+        ),
         method: clean("frontierMethodNote"),
         methodHook: document.getElementById("frontierMethodNote")
           ? document.getElementById("frontierMethodNote").getAttribute("data-i18n")
@@ -273,9 +277,20 @@ export async function runGridTieFlow(ctx, actions) {
           : "missing",
       };
     })()`);
+  const legendDictionary = await evaluate(`(() => ({
+      battery: window.becoT?.("cumCostLegendBattery", { amount: "__AMOUNT__" }) || "",
+      solar: window.becoT?.("cumCostLegendSolar", { amount: "__AMOUNT__" }) || "",
+    }))()`);
+  const legendPrefix = (label) => label.split("__AMOUNT__")[0].trimEnd();
   gate(
-    "with-panels cumulative legend still names the solar system",
-    /Solar system:/.test(panelSurface.legend),
+    "with-panels cumulative legend uses the active locale solar label",
+    Boolean(legendPrefix(legendDictionary.solar)) &&
+      panelSurface.legendRows.some((row) =>
+        row.startsWith(legendPrefix(legendDictionary.solar)),
+      ) &&
+      !panelSurface.legendRows.some((row) =>
+        row.startsWith(legendPrefix(legendDictionary.battery)),
+      ),
     panelSurface.legend.slice(0, 170),
   );
   gate(
@@ -504,6 +519,10 @@ export async function runGridTieFlow(ctx, actions) {
       return {
         title: clean("cumCostTitle"),
         legend: clean("cumCostLegend"),
+        legendRows: Array.from(
+          document.querySelectorAll('#cumCostLegend [role="listitem"]'),
+          (row) => row.lastElementChild?.textContent || "",
+        ),
         method: clean("frontierMethodNote"),
         region: clean("resultsRegion"),
         sheet: clean("printSheet"),
@@ -520,9 +539,14 @@ export async function runGridTieFlow(ctx, actions) {
     noPanelSurface.title.slice(0, 140),
   );
   gate(
-    "battery-only cumulative legend does not call the run a solar system",
-    /Battery only:/.test(noPanelSurface.legend) &&
-      !/Solar system:/.test(noPanelSurface.legend),
+    "battery-only cumulative legend uses the active locale label, not its solar label",
+    Boolean(legendPrefix(legendDictionary.battery)) &&
+      noPanelSurface.legendRows.some((row) =>
+        row.startsWith(legendPrefix(legendDictionary.battery)),
+      ) &&
+      !noPanelSurface.legendRows.some((row) =>
+        row.startsWith(legendPrefix(legendDictionary.solar)),
+      ),
     noPanelSurface.legend.slice(0, 170),
   );
   gate(
