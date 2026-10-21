@@ -211,6 +211,47 @@ export async function runGridTieFlow(ctx, actions) {
         visible: Boolean(wrap && wrap.getClientRects().length && getComputedStyle(wrap).display !== "none"),
       };
     })()`);
+  const billSliderBounds = await evaluate(`(() => {
+      const slider = document.getElementById("billSlider");
+      const label = document.getElementById("billSliderVal");
+      const suffix = window.becoT?.("billPerMonth") || "";
+      const initialValue = slider.value;
+      const initialLabel = label.textContent.trim();
+      const sample = (endpoint) => {
+        slider.value = endpoint;
+        return {
+          expected: endpoint,
+          actual: slider.value,
+        };
+      };
+      const min = slider.min;
+      const max = slider.max;
+      const low = sample(min);
+      const high = sample(max);
+      slider.value = initialValue;
+      return {
+        min,
+        max,
+        step: slider.step,
+        low,
+        high,
+        suffix,
+        restoredValue: slider.value,
+        initialValue,
+        restoredLabel: label.textContent.trim(),
+        initialLabel,
+      };
+    })()`);
+  gate(
+    "bill slider endpoints are reachable without changing displayed state",
+    billSliderBounds.low.actual === billSliderBounds.low.expected &&
+      billSliderBounds.high.actual === billSliderBounds.high.expected &&
+      billSliderBounds.restoredValue === billSliderBounds.initialValue &&
+      billSliderBounds.restoredLabel === billSliderBounds.initialLabel &&
+      Boolean(billSliderBounds.suffix) &&
+      billSliderBounds.initialLabel.endsWith(billSliderBounds.suffix),
+    JSON.stringify(billSliderBounds),
+  );
   const billBeforeLocaleSwitch = await readBillSlider();
   let previousBillSuffix = billBeforeLocaleSwitch.suffix;
   for (const language of ["de", "en"]) {
