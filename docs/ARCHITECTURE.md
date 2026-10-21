@@ -160,9 +160,11 @@ through the injected `setStatus`. No location state lives here.
 
 ## Internationalization (translation ownership)
 
-- `assets/js/shared/locales.js` — **single owner** of every user-visible
-  string, in all six locales (`en`, `es`, `pt`, `fr`, `de`, `ar` with RTL).
-  There is no second copy. Three readers share one implementation of the
+- `assets/js/shared/locales.js` — **single owner** of the composed user-visible
+  locale dictionaries, in all six locales (`en`, `es`, `pt`, `fr`, `de`, `ar`
+  with RTL). It includes the long-form home copy from `home-copy.js`; these are
+  source modules for one dictionary, not competing runtime owners. Three
+  readers share one implementation of the
   contract: `i18n.js`'s `translate()`/`applyI18n()` (the `data-i18n`,
   `data-i18n-placeholder`, `data-i18n-aria-label` hooks), the sizing
   controller (which binds `translate as t`), and the classic `chat.js` bridge
@@ -184,19 +186,21 @@ through the injected `setStatus`. No location state lives here.
   speed notes, infeasibility banners, appliance and slider readouts, the
   share-restore label, the init-failure status, and the advisor modal's
   loading/error/retry text.
-- **Boundary (deliberate, and narrower than it looks):** the long-form static
-  sections — hero, FAQ, parts list, support, legal — are English-only
-  documentation, and that is visible as the absence of a `data-i18n` hook on
-  those elements. The translated surface is the calculator's CONTROLS, its
-  history and frontier charts, its result caption and its advisor. The
-  calculator's result CARDS are not: the focus chips, the best-pick and matrix
-  card rows, the hardware list, the ELI5 breakdown, the orientation guide, the
-  BOS checklist, the method notes and the print sheet are literals in `ui.js`
-  and `charts.js`. A non-English run therefore switches language between the
-  tabs and the numbers under them. Translating that tier is an editorial pass
-  (six locales of prose), not a code change; the switch itself must stay
-  honest in the meantime, which is why a language change re-renders the result
-  panel rather than only re-applying the markup hooks.
+- **Boundary (deliberate):** static homepage prose (hero, FAQ, parts, support,
+  and legal) is localized through `home-copy.js` and merged into `locales.js`.
+  Calculator controls, charts, the result caption, and advisor also use the
+  locale dictionary. Result-card prose remains English-only: focus chips,
+  best-pick and matrix rows, hardware list, ELI5 breakdown, orientation guide,
+  BOS checklist, method notes, and print sheet are literals in `ui.js` and
+  `charts.js`. A language change re-renders the result panel so the translated
+  controls and caption stay aligned with the selected locale.
+- **Homepage markup invariants:** the manual form starts hidden and is revealed
+  by Manual mode; the D-16 goal select is authoritative and derives the hidden
+  legacy `systemGoal`/`hardwareConfig` pair; `usecases.js` `INPUTS` controls
+  which inputs are shown; the screen-reader explanation stays rendered in its
+  `.sr-only` region while the visual banner is hidden; `ui.js` populates the
+  loading pipeline; and `usecases.js` shapes `payload.useCaseOutcome`. These
+  notes live here rather than in delivered HTML comments.
 - **A panel-free run is not a solar run.** `hardwareConfig: "battery"` builds
   no array, and four surfaces have been caught describing one anyway (the
   frontier verdict, the auto note, the capacity-spectrum baseline, the
@@ -419,10 +423,6 @@ tolerance, and no budget was relaxed to accommodate it.
   `money` / `localRate` / `energyRate` / `gridRate` / `moneyRange` all read the
   same two inputs and the same rate table, and the tariff, export and fuel
   fields each convert with it by hand.
-- The hero, FAQ, parts list, support and legal sections are still
-  English-only static markup. Translating them is an editorial pass (six
-  locales of long-form prose), not a code change, and nothing in the
-  calculator depends on it.
 - The live Jev path runs directly against TypeSafe and is the **only** Jev
   provider (`provider=typesafe fallback=false`, recorded across the complete-gate
   runs). The former second provider was removed in P0.3(b) under decision D-13,
