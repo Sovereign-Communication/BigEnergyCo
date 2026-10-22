@@ -13,8 +13,14 @@ const faqQuestion = "Is it cheaper to build your own LiFePO4 battery?";
 
 test("DIY price snapshot is sourced, scoped, and arithmetically correct", () => {
   assert.match(article, /owner-supplied \$80–\$120 per usable/);
-  assert.match(article, /https:\/\/www\.docanpower\.com\/rept-280ah-prismatic-cell/);
-  assert.match(article, /https:\/\/www\.docanpower\.com\/s3-diy-box-jk-bms-v19/);
+  assert.match(
+    article,
+    /https:\/\/www\.docanpower\.com\/rept-280ah-prismatic-cell/,
+  );
+  assert.match(
+    article,
+    /https:\/\/www\.docanpower\.com\/s3-diy-box-jk-bms-v19/,
+  );
   assert.match(article, /kit listing is inquiry-only/);
   assert.match(article, /about \$116 per usable kWh/);
   assert.doesNotMatch(
@@ -31,9 +37,11 @@ test("DIY price snapshot is sourced, scoped, and arithmetically correct", () => 
 });
 
 test("visible DIY price FAQ and Article/FAQ structured data agree", () => {
-  const documents = [...article.matchAll(
-    /<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi,
-  )].map((match) => JSON.parse(match[1]));
+  const documents = [
+    ...article.matchAll(
+      /<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi,
+    ),
+  ].map((match) => JSON.parse(match[1]));
   const nodes = documents.flatMap((document) =>
     Array.isArray(document["@graph"]) ? document["@graph"] : [document],
   );
@@ -46,7 +54,10 @@ test("visible DIY price FAQ and Article/FAQ structured data agree", () => {
   const answerOpen = article.indexOf('<div class="faq-answer">', questionIndex);
   const answerStart = article.indexOf(">", answerOpen) + 1;
   const answerEnd = article.indexOf("</div>", answerStart);
-  const visible = article.slice(answerStart, answerEnd).replace(/\s+/g, " ").trim();
+  const visible = article
+    .slice(answerStart, answerEnd)
+    .replace(/\s+/g, " ")
+    .trim();
   assert.equal(visible, structured.acceptedAnswer.text);
   assert.match(article, /article:modified_time" content="2026-10-22"/);
   assert.match(article, /"dateModified": "2026-10-22T00:00:00Z"/);
