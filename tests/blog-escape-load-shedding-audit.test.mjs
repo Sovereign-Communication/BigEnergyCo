@@ -20,10 +20,34 @@ const walk = function* (value) {
     for (const child of Object.values(value)) yield* walk(child);
   }
 };
-const normalize = (text) =>
-  text
-    .replace(/<[^>]*>/g, "")
-    .replace(/&(?:amp|nbsp|ndash|mdash|lt|gt|quot);/g, " ")
+const TEXT_ENTITIES = {
+  "&amp;": "&",
+  "&quot;": '"',
+  "&#39;": "'",
+  "&apos;": "'",
+};
+const collectTextNodes = (value) => {
+  const nodes = [];
+  let inTag = false;
+  let textStart = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    if (!inTag && value[index] === "<") {
+      nodes.push(value.slice(textStart, index));
+      inTag = true;
+    } else if (inTag && value[index] === ">") {
+      inTag = false;
+      textStart = index + 1;
+    }
+  }
+  if (!inTag) nodes.push(value.slice(textStart));
+  return nodes.join("");
+};
+const normalize = (value) =>
+  collectTextNodes(value)
+    .replace(
+      /&(amp|quot|#39|apos);/g,
+      (entity) => TEXT_ENTITIES[entity] ?? entity,
+    )
     .replace(/\s+/g, " ")
     .trim();
 const articleSchema = readSchema(article);
