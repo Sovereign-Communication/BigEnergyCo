@@ -527,3 +527,28 @@ test("findWorstStreak: boundaries return 0 and the window defaults to 30 days", 
   assert.equal(charts.findWorstStreak(days), 6);
   assert.equal(charts.findWorstStreak(days), charts.findWorstStreak(days, 30));
 });
+
+test("localized SOC legends say the model uses five years of weather data", () => {
+  const expected = {
+    en: /modeled with five years of observed weather data/i,
+    es: /modelada con cinco años de datos meteorológicos reales/i,
+    pt: /modelada com cinco anos de dados meteorológicos reais/i,
+    fr: /modélisée à partir de cinq ans de données météo réelles/i,
+    de: /modelliert mit fünf Jahren realer Wetterdaten/i,
+    nl: /doorgerekend met vijf jaar aan werkelijke weergegevens/i,
+    ar: /حُسب أداؤها باستخدام بيانات الطقس الفعلية لخمس سنوات/,
+  };
+  for (const [locale, meaning] of Object.entries(expected)) {
+    assert.match(LOCALES[locale].socTierAutoLfp, meaning, `${locale} LFP`);
+    assert.match(
+      LOCALES[locale].socTierAutoNaion,
+      meaning,
+      `${locale} sodium-ion`,
+    );
+  }
+  assert.match(
+    LOCALES.nl.autoSocCaption,
+    /bij zware ontlading neemt de bruikbare capaciteit verder af/i,
+  );
+  assert.doesNotMatch(LOCALES.nl.autoSocCaption, /\bderated\b/i);
+});
