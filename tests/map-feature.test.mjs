@@ -128,7 +128,9 @@ test("optional provider registry delegates and cleans up", async () => {
 });
 
 test("map provider remains lazy and uses only approved hosts", () => {
-  assert.match(LEAFLET_SCRIPT_URL, /^https:\/\/unpkg\.com\//);
+  const leafletUrl = new URL(LEAFLET_SCRIPT_URL);
+  assert.equal(leafletUrl.origin, new URL(import.meta.url).origin);
+  assert.match(leafletUrl.pathname, /\/assets\/vendor\/leaflet\/leaflet\.js$/);
   assert.match(CARTO_TILE_URL, /basemaps\.cartocdn\.com/);
   const html = fs.readFileSync(
     new URL("../index.html", import.meta.url),
