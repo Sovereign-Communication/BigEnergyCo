@@ -24,6 +24,7 @@ import { createActions } from "./smoke/actions.mjs";
 import { runLocationFlow } from "./smoke/location.js";
 import { runWeatherFlow } from "./smoke/weather.js";
 import { runGridTieFlow } from "./smoke/gridtie.js";
+import { runOffgridChromeFlow } from "./smoke/offgrid-chrome.js";
 import { runLifecycleFlow } from "./smoke/lifecycle.js";
 import { runResultsFlow } from "./smoke/results.js";
 import { runA11yFlow } from "./smoke/a11y.js";
@@ -111,6 +112,9 @@ async function main() {
     await runLocationFlow(ctx, actions);
     await runWeatherFlow(ctx, actions);
     await runGridTieFlow(ctx, actions);
+    // Off-grid chrome regression (PR #244): the reported repro needs the
+    // grid-tie result on screen, so this runs immediately after it.
+    await runOffgridChromeFlow(ctx, actions);
     await runLifecycleFlow(ctx, actions);
     await runJevFlow(ctx);
     await runShareFlow(ctx, actions);
