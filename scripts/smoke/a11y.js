@@ -18,9 +18,9 @@
 //   3. contrast — product text meets WCAG AA (4.5:1, or 3:1 for large text)
 //      against the composited background chain; gradient/image backgrounds
 //      are skipped as unknowable rather than guessed.
-//   4. reduced motion — the two user-triggered scroll sites jump instantly
-//      under prefers-reduced-motion and stay animated without it, measured
-//      synchronously through the real scrollIntoView call sites.
+//   4. reduced motion — all four user-triggered sizing/chat scroll sites jump
+//      instantly under prefers-reduced-motion and stay animated without it,
+//      measured synchronously through the real scrollIntoView call sites.
 // Requires a completed sizing run for the result-stage, contrast, and scroll
 // checks (site A guards on lastPayload, site B only renders with results);
 // callers place it after a results flow. Ordering note: the load-mode
@@ -236,15 +236,32 @@ function reduceMatches() {
 
 // One synchronous evaluate: reset to top, read y0, click the site's own
 // trigger, read again before any animation frame — an instant jump is
-// visible here while a smooth scroll still reads y0. Self-contained: the
-// selector arrives as a parameter, never as a page-visible closure.
+// visible here while a smooth scroll still reads y0. Also record that the
+// shared policy owner exists at the real interaction point.
 function fireAndSample(sel) {
   window.scrollTo({ top: 0, behavior: "instant" });
   const y0 = window.scrollY;
   const node = document.querySelector(sel);
-  if (!node) return { fired: false, y0, yImmediate: y0 };
+  const found = Boolean(node);
+  const ownerAvailableAtInteraction =
+    typeof window.scrollBehavior === "function";
+  if (!found || !ownerAvailableAtInteraction) {
+    return {
+      found,
+      fired: false,
+      ownerAvailableAtInteraction,
+      y0,
+      yImmediate: y0,
+    };
+  }
   node.click();
-  return { fired: true, y0, yImmediate: window.scrollY };
+  return {
+    found,
+    fired: true,
+    ownerAvailableAtInteraction,
+    y0,
+    yImmediate: window.scrollY,
+  };
 }
 
 async function tabWalk(ctx, label, expectIds) {
@@ -361,13 +378,19 @@ async function assertDivButtonsOperable(ctx) {
 
 async function measureSite(ctx, { label, sel, instant }) {
   const { evaluate } = ctx;
-  const { fired, y0, yImmediate } = await evaluate(
-    `(${fireAndSample})(${JSON.stringify(sel)})`,
+  const { found, fired, ownerAvailableAtInteraction, y0, yImmediate } =
+    await evaluate(`(${fireAndSample})(${JSON.stringify(sel)})`);
+  gate(
+    `scroll site ${label}: shared scroll policy is available at interaction`,
+    ownerAvailableAtInteraction,
+    String(ownerAvailableAtInteraction),
   );
-  if (!fired) {
+  if (!found) {
     gate(`scroll site ${label}: trigger control exists`, false, "not found");
     return;
   }
+  gate(`scroll site ${label}: trigger control exists`, true, "found");
+  if (!fired) return;
   await sleep(700); // settle a smooth animation if one was started
   const yFinal = await evaluate(`window.scrollY`);
   const moved = Math.abs(yFinal - y0);
@@ -472,27 +495,37 @@ export async function runA11yFlow(ctx) {
     gate("scroll sites: result card present", false, "skipped — no card");
   }
 
-  // Reduced-motion contract at the two user-triggered scroll sites.
-  //    Site A: enabling Simple mode scrolls to #sizing (ui.js subscription).
-  //    Site B: "See full details" scrolls to #resultsRegion (ui.js click).
-  //    Each click flips the mode, so the pair self-balances back to Regular.
+  // Exercise both module paths through actual controls in normal and reduced
+  // motion. The first two are in ui.js and self-balance Simple mode;
+  // the hero CTA reaches chat.js's scrollToSection handler.
   if (cardVisible) {
-    const SITE_A = "#simpleModeToggle";
-    const SITE_B = "#btnSimpleDetails";
+    const SIZING_PATH = "#simpleModeToggle";
+    const SIZING_DETAILS_PATH = "#btnSimpleDetails";
+    const CHAT_PATH = "#btnHeroSizing";
+    const CHAT_NAV_PATH = "#btnNavSizeArray";
     const emulated = (value) =>
       send("Emulation.setEmulatedMedia", {
         features: [{ name: "prefers-reduced-motion", value }],
       });
     try {
+      await emulated("no-preference");
       const normalReduce = await evaluate(`(${reduceMatches})()`);
       gate(
-        "matchMedia reports no reduced motion by default",
+        "matchMedia honors emulated no-preference",
         normalReduce === false,
         String(normalReduce),
       );
-      await measureSite(ctx, { label: "simple-mode", sel: SITE_A });
-      // Site A left us in Simple mode; site B is only rendered there.
-      await measureSite(ctx, { label: "see-details", sel: SITE_B });
+      await measureSite(ctx, {
+        label: "sizing/simple-mode",
+        sel: SIZING_PATH,
+      });
+      // Enabling Simple mode renders the details path.
+      await measureSite(ctx, {
+        label: "sizing/see-details",
+        sel: SIZING_DETAILS_PATH,
+      });
+      await measureSite(ctx, { label: "chat/hero-sizing", sel: CHAT_PATH });
+      await measureSite(ctx, { label: "chat/nav-sizing", sel: CHAT_NAV_PATH });
 
       await emulated("reduce");
       const emulatedReduce = await evaluate(`(${reduceMatches})()`);
@@ -502,13 +535,23 @@ export async function runA11yFlow(ctx) {
         String(emulatedReduce),
       );
       await measureSite(ctx, {
-        label: "simple-mode",
-        sel: SITE_A,
+        label: "sizing/simple-mode",
+        sel: SIZING_PATH,
         instant: true,
       });
       await measureSite(ctx, {
-        label: "see-details",
-        sel: SITE_B,
+        label: "sizing/see-details",
+        sel: SIZING_DETAILS_PATH,
+        instant: true,
+      });
+      await measureSite(ctx, {
+        label: "chat/hero-sizing",
+        sel: CHAT_PATH,
+        instant: true,
+      });
+      await measureSite(ctx, {
+        label: "chat/nav-sizing",
+        sel: CHAT_NAV_PATH,
         instant: true,
       });
     } finally {
@@ -609,9 +652,9 @@ export async function runA11yFlow(ctx) {
     buttonKeys?.passed &&
     names?.passed &&
     contrast?.passed &&
-    normalMotion.length === 2 &&
+    normalMotion.length === 4 &&
     normalMotion.every((g) => g.passed) &&
-    reducedMotion.length === 2 &&
+    reducedMotion.length === 4 &&
     reducedMotion.every((g) => g.passed) &&
     mediaReset?.passed &&
     motionDefaults.length === 2 &&
@@ -620,7 +663,7 @@ export async function runA11yFlow(ctx) {
   gate(
     "accessibility facet evidence covers keyboard, names, contrast and motion",
     Boolean(complete),
-    `${keyboard.length}/8 keyboard checks, ${normalMotion.length}/2 normal and ${reducedMotion.length}/2 reduced-motion scroll checks`,
+    `${keyboard.length}/8 keyboard checks, ${normalMotion.length}/4 normal and ${reducedMotion.length}/4 reduced-motion scroll checks`,
   );
   const checks = gatesSince(reportCheckpoint);
   const passed = checks.filter((g) => g.passed).length;
@@ -629,8 +672,8 @@ export async function runA11yFlow(ctx) {
     `${keyboard.filter((g) => g.passed).length}/${keyboard.length}; ` +
     `${buttonKeys?.detail || "Enter/Space buttons failed"}; names ${names?.passed ? "pass" : "fail"}; ` +
     `WCAG AA result text ${contrast?.passed ? "pass" : "fail"}; ` +
-    `${normalMotion.filter((g) => g.passed).length}/2 normal and ` +
-    `${reducedMotion.filter((g) => g.passed).length}/2 reduced-motion scrolls; ` +
+    `${normalMotion.filter((g) => g.passed).length}/4 normal and ` +
+    `${reducedMotion.filter((g) => g.passed).length}/4 reduced-motion scrolls; ` +
     `emulation reset ${mediaReset?.passed ? "pass" : "fail"}.`;
   writeFacetReport("accessibility", line, {
     browser: "Chrome",
