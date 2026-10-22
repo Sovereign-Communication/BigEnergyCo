@@ -1,7 +1,5 @@
 # Cloudflare Showcase — provisioning & configuration guide
 
-> **Governance status (2026-10-19):** This is an implementation guide. The D-21/R-CF identifiers below come from an unadopted proposal, not the canonical `docs/plan/MASTER_PLAN.md`, and are not approved plan requirements.
-
 Branch: `showcase/cold-start` (fork `Treystu/BigEnergyCo`).
 Purpose: make the Cloudflare developer platform a first-class, demonstrable
 part of the stack for the Cold Start pitch competition. Every integration

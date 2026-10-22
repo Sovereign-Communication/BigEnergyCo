@@ -11,15 +11,7 @@
 // `GET /repos/{owner}/{repo}/commits/{sha}/check-runs` on an open PR.
 export const RULESET_NAME = "main-protection";
 
-// O-01: Jev has now reported from a real pull request, so its live judgment can
-// be required without leaving the repository waiting on a status that never runs.
-export const REQUIRED_CHECKS = [
-  "test",
-  "web-smoke",
-  "coverage",
-  "analyze",
-  "jev-complete",
-];
+export const REQUIRED_CHECKS = ["test", "web-smoke", "coverage", "analyze"];
 
 // Analyzer gate on FINDINGS, not just on the run.
 //

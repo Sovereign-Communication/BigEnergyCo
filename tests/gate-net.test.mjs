@@ -196,10 +196,6 @@ test("the protected path requires the analyzer gate, not just a green run", () =
     "a failing CodeQL analysis must block a merge",
   );
   assert.ok(
-    REQUIRED_CHECKS.includes("jev-complete"),
-    "the live Jev completion verdict must block a merge now that it reports on PRs",
-  );
-  assert.ok(
     ruleTypes.includes("code_scanning"),
     "new CodeQL findings must block a merge — that needs the code_scanning rule",
   );

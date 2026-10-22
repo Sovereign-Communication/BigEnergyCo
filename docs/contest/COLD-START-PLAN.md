@@ -1,7 +1,5 @@
 # Cloudflare Cold Start — entry plan
 
-> Historical contest plan only. `docs/plan/MASTER_PLAN.md` is the canonical repo plan. D-21/R-CF references in this document are from an unadopted proposal and do not amend current scope.
-
 Repo-wide plan for entering [The Cold Start](https://www.cloudflare.com/connect/cold-start),
 Cloudflare's live startup pitch competition, using the `contest/cold-start` branch.
 
