@@ -301,12 +301,13 @@ const ALLOWED_STORAGE_KEYS = new Set([
   const unowned = geolCalls.filter(
     (f) => f !== leafletVendor && !/location-picker\.js/.test(f),
   );
+  const appGeolCalls = geolCalls.filter((f) => f !== leafletVendor);
   if (unowned.length)
     for (const f of unowned)
       fail(`consent: geolocation API called outside location-picker.js — ${f}`);
   else
     ok(
-      `consent: app geolocation is owned by location-picker.js; locateMe invoked from ${locateCalls.length} site(s)`,
+      `consent: getCurrentPosition called from one module only (${appGeolCalls.length} app-owned call(s)); locateMe invoked from ${locateCalls.length} site(s)`,
     );
   if (appLocateCalls.length)
     for (const f of appLocateCalls)
