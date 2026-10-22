@@ -30,9 +30,8 @@ for (const rel of FILES) {
       'raw behavior:"smooth" bypasses prefers-reduced-motion',
     );
     const sites = [...src.matchAll(/scrollIntoView\(/g)].length;
-    const routed = [
-      ...src.matchAll(/behavior:\s*window\.scrollBehavior\(\)/g),
-    ].length;
+    const routed = [...src.matchAll(/behavior:\s*window\.scrollBehavior\(\)/g)]
+      .length;
     assert.ok(sites > 0, "expected at least one scroll site");
     assert.equal(
       routed,
