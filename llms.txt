@@ -28,6 +28,7 @@
 - Battery longevity & DoD: https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/
 - Hawaii 2026 hurricane season backup power: https://freeoffgridcalculator.com/blog/hawaii-2026-hurricane-season-backup-power/
 - Hawaii solar scams 2026 warning: https://freeoffgridcalculator.com/blog/hawaii-solar-scams-2026-warning/
+- The Netherlands ends net metering in 2027: https://freeoffgridcalculator.com/blog/salderingsregeling-stopt-2027/
 
 ## Cite honestly
 - Costs are ranges (landed-DIY vs budget-retail), never single prices.
