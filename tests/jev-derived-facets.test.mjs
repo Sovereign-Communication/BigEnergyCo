@@ -481,7 +481,7 @@ test("EVIDENCE: the translation facet line is derived from the run, not typed by
     false,
     "evidence/advisor-and-release.json must not carry a hand-typed " +
       "`translation` line. scripts/check-experience.mjs composes that axis " +
-      "from the run that walked six locales, so a typed line here is a second, " +
+      "from the run that walked seven locales, so a typed line here is a second, " +
       "unfalsifiable source for a facet that can now be measured.",
   );
   const note = (PROSE.notes || []).find((n) =>
@@ -531,7 +531,7 @@ test("EVIDENCE: one gate may compose a DIFFERENT line per axis", () => {
       facet_lines: {
         experience: "WALKED, 1 Chrome, 1 city: 9/9 steps acknowledge.",
         translation:
-          "RUNTIME, 7 locales x 3 re-entry points: 0 raw keys on 19 pages.",
+          "RUNTIME, 7 locales x 3 re-entry points: 0 raw keys on 22 pages.",
       },
     },
   });
@@ -543,7 +543,7 @@ test("EVIDENCE: one gate may compose a DIFFERENT line per axis", () => {
   );
   assert.equal(
     out?.facet_evidence?.translation,
-    "RUNTIME, 7 locales x 3 re-entry points: 0 raw keys on 19 pages.",
+    "RUNTIME, 7 locales x 3 re-entry points: 0 raw keys on 22 pages.",
     "each axis must get the line composed FOR it, not the first one that exists",
   );
 });

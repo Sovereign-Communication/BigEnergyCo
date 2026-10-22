@@ -533,14 +533,14 @@ test("break-even is measured against the bill the visitor actually pays", () => 
     assert.equal(p.breakEvenYear, null, p.id);
 });
 
-test("every string the panel can render exists in all six locales", () => {
+test("every string the panel can render exists in all seven locales", () => {
   // The gate that refuses runtime-assembled keys (check-i18n.mjs) is why
   // LABEL_KEYS and DRIVER_KEYS are maps and not template literals. This test is
   // the other half, and it exists because that gate found the OTHER half
   // useless: it verifies every shipped key is rendered, but nothing verifies
   // that a key named inside a DATA STRUCTURE is translated. The lease card
   // shipped with `pathsIncludesIncentivesToProvider` untranslated \u2014 the raw
-  // key name, to a visitor, in six languages.
+  // key name, to a visitor, in seven languages.
   const keys = new Set();
   for (const [region, entries] of Object.entries(INCENTIVES))
     for (const e of entries) keys.add(e.labelKey);

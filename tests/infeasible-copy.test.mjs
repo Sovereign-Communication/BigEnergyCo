@@ -94,7 +94,7 @@ test("hasInfeasibleCopy separates reviewed codes from the generic fallback", () 
   }
 });
 
-test("every mappable code resolves to real copy in all six locales", () => {
+test("every mappable code resolves to real copy in all seven locales", () => {
   const codes = [...infeasibleReasonCodes(), "__generic__"];
   for (const code of codes) {
     const keys =

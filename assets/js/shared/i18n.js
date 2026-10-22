@@ -51,6 +51,7 @@ export const LANGS = [
   { id: "pt", label: "Português" },
   { id: "fr", label: "Français" },
   { id: "de", label: "Deutsch" },
+  { id: "nl", label: "Nederlands" },
   { id: "ar", label: "العربية" },
 ];
 

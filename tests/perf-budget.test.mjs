@@ -178,7 +178,7 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // (~+3 KB) were reviewed as worth it. 746,000 (+1 KB, same day): honest
   // split of area-limited vs envelope-limited infeasibility reasons.
   // 758,000 (+12 KB): real Simple mode — the pure view model (simple-view.js),
-  // its render path in ui.js, simple-mode strings in all six locales, and the
+  // its render path in ui.js, simple-mode strings in all seven locales, and the
   // hide-scoping CSS. User-facing feature, reviewed deliberately.
   // 761,000 (+3 KB): cut-targets.js single-owner extraction (dedup of three
   // inline maps); net new bytes ≈ one module shell.
@@ -186,11 +186,11 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // It was an English-only string built in charts.js; enforcing "this system's
   // own cost" (not the SOLAR system's) on a panel-free run, and replacing the
   // claim that a NEGATIVE 20-year gap is money "back in your pocket", meant
-  // routing its sentences through the dictionary — 14 keys in all six locales,
+  // routing its sentences through the dictionary — 14 keys in all seven locales,
   // no code beyond a pure composer. Same trade as the German parity raise:
   // user-facing strings, reviewed deliberately.
   // 790,000 (+12 KB measured 786,390): the whole-surface sweep. Three more
-  // dictionary keys x six locales (a panel-free Simple-mode explainer, a
+  // dictionary keys x seven locales (a panel-free Simple-mode explainer, a
   // battery-only curve method note, and the best-value range tail that was
   // glued onto translated verdicts as an English literal), plus one small
   // owner for the levelized-cost row and the reasoning that goes with each
@@ -198,7 +198,7 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // 803,000 (+13 KB measured 802,202): the degraded advisor reply became
   // translated copy. It was English-only prose shipped from the worker on the
   // exact surface that signals something went wrong, so a German or Arabic
-  // visitor read the failure in the wrong language. Ten keys x six locales,
+  // visitor read the failure in the wrong language. Ten keys x seven locales,
   // +123 lines in locales.js and -0: the same trade as every raise above, for
   // the same reason — a string a user can read, no new code path.
   // 815,000 (+12 KB measured 804,402): every country gets its own currency.
@@ -212,7 +212,7 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // deadline.
   // 895,000 (+80 KB): all six D-16 use cases became six real offers, and three
   // of them needed engines that did not exist — an outage simulator, a
-  // reserve floor and a portable day model — plus 45 new keys x six locales
+  // reserve floor and a portable day model — plus 45 new keys x seven locales
   // in locales.js and the measurement pass in run.js that turns a sized system
   // into one outcome per use case. The trade was recorded as "lazy-load it"
   // declined, because the portable and backup panels ARE the fields that make
