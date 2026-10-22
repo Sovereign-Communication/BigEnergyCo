@@ -36,6 +36,8 @@ This document provides concrete examples and detailed guidance for the P9.7 cont
 
 ## Enforcement
 
-- **Plan stage:** Jev judges content PRs against P9.7 at ≥99 with full confidence. The PR must state the target keyword, search demand evidence, and confirm all four criteria.
+- Jev assesses these criteria with the five aspects in [Jev Gate Policy v1](JEV_GATE_POLICY_V1.md): completeness, confidence, correctness, no-regression, and evidence quality. Mark an aspect irrelevant only with a reason.
+- A below-bar verdict starts an investigation and claim-level verification. When four aspects are at least 90 and the fifth is 85–89, the work passes only if investigation finds no actual risk. An aspect below 85 blocks until fixed.
+- The repository's native full-main CI gate remains separate and unchanged: 95 overall, every facet at ordinal 95, and every facet at confidence 0.95.
+- PR #232 bootstraps this gate under amendment A-006. The exception applies to this gate-authoring PR only; later P9.7 content changes are assessed under Jev Gate Policy v1.
 - **Post-merge:** Implementation is browser-verified against these criteria before production deploy.
-- **On failure:** PR is blocked. Author addresses the specific failing criterion and re-submits.

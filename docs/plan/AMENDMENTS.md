@@ -57,6 +57,6 @@ No amendments yet: the plan is at its genesis hash.
 - Date: 2026-10-21
 - Approved-by: @Treystu
 - Plan-SHA256-before: 09f4a8379da73b95c97e9a3930565516d106ce61443569036488b3e1d16d3ee7
-- Plan-SHA256-after: cfd4af76b4c4a29305a2c6d3ceae91e83ce43d22e4fa8c52f1e115a67847f59a
+- Plan-SHA256-after: c6799a475a42cf33b91d22269b901dddd9c466c37d39630f0bccb3fb31c0d6bd
 - Sections: P9 (new item P9.7)
-- Rationale: The owner’s 2026-10-21 canonical completion directive authorizes the P9.7 content-quality gate and its bootstrap exception. PR #232 establishes the scope and quality criteria that would otherwise judge the same scaffolding change. Under Jev Gate Policy v1, #232 proceeds after claim-level investigation finds no actual risk; this exception applies to the gate-authoring PR only. All required CI, hard gates, and ratchets remain binding, and later P9.7 content changes remain subject to the new bar. The native full-main 95/95/95 release gate is unchanged. A-004 and A-005 are already present in the current amendment log, so this entry is A-006.
+- Rationale: The owner directive of 2026-10-21 authorizes P9.7 and a one-PR bootstrap exception for #232, which creates the scope and quality criteria it would otherwise need to satisfy. Under Jev Gate Policy v1, any below-bar scoped judgment is investigated at claim level; the owner has authorized proceeding when that investigation finds no actual risk. The exception applies only to #232's P9.7 assessment. Other required CI results, hard gates, and ratchets remain binding; the full-main 95/95/95 release gate is unchanged. A-004 and A-005 already appear in the current log, so this is A-006.
