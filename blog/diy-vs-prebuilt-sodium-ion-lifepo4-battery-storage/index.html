@@ -238,6 +238,20 @@
         margin: 0;
         padding: 0;
       }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(11, 15, 23, 0.85);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.22);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.38);
+      }
       body {
         background: var(--bg);
         color: var(--text);
@@ -352,6 +366,11 @@
         color: #fff;
         font-size: 1.35rem;
         margin: 2.2rem 0 0.8rem;
+      }
+      h3 {
+        color: #fff;
+        font-size: 1.05rem;
+        margin: 1.4rem 0 0.5rem;
       }
       p {
         margin-bottom: 1rem;
