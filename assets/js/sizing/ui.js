@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261022g";
+import { APPLIANCES } from "./appliances.js?v=20261022h";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -24,34 +24,25 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261022g";
+} from "./usecases.js?v=20261022h";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261022g";
+} from "./run-coordinator.js?v=20261022h";
 import {
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261022g";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261022g";
-import {
-  drawAutoChart,
-  drawCumCostChart,
-  drawSocChart,
-  drawSocChartForEntry,
-  initCharts,
-  setupChartInteractions,
-  setupZoomButtons,
-} from "./charts.js?v=20261022g";
+} from "./mode-chrome.js?v=20261022h";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261022h";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261022g";
+} from "./location-picker.js?v=20261022h";
 
 import {
   estimateTariff,
@@ -59,14 +50,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261022g";
+} from "./pricing.js?v=20261022h";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261022g";
+import { currencyForCountry } from "./country-currency.js?v=20261022h";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261022g";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261022h";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -98,7 +89,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261022g").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261022h").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -109,15 +100,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261022g";
+} from "./lead-acid.js?v=20261022h";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261022g";
+} from "./bom.js?v=20261022h";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261022g";
+import { BOM_ITEMS } from "../shared/content.js?v=20261022h";
 
 import {
   applyI18n,
@@ -126,18 +117,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261022g";
+} from "../shared/i18n.js?v=20261022h";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261022g";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261022g";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261022h";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261022h";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261022g";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261022g";
+} from "../shared/simple-mode.js?v=20261022h";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261022h";
 import {
   advisorJevContext,
   interpretSanity,
@@ -145,61 +136,79 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261022g";
+} from "./validate.js?v=20261022h";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261022g";
+} from "../shared/cut-targets.js?v=20261022h";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261022g";
+} from "./share-codec.js?v=20261022h";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261022g";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261022g";
+} from "./infeasible-copy.js?v=20261022h";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261022h";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261022g";
+} from "./fuel-units.js?v=20261022h";
 
-import {
-  renderFrontier,
-  frontierVerdict,
-  markerOffCurveNote,
-} from "./frontier-chart.js?v=20261022g";
-
-import {
-  rescalePayload,
-  scaleRecord,
-  sameSiteOptions,
-  relocalizeOversizeCallout,
-} from "./rescale.js?v=20261022g";
-
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261022g";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261022g";
+} from "./map-provider.js?v=20261022h";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261022g";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261022g";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261022g";
+} from "./wizard.js?v=20261022h";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261022h";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261022h";
+// Heavy modules used only after a sizing result stay outside the initial UI graph.
+let _engine = null;
+let _charts = null;
+let _frontierChart = null;
+let _rescale = null;
+let _runModulesPromise = null;
+let _chartsInitialized = false;
 
-// Charts own their own state (zoom range, cached series); the controller
-// injects only the DOM/format/i18n/currency boundary.
-initCharts({ $, el, t, fmt, money });
+function preloadRunModules() {
+  if (!_runModulesPromise) {
+    _runModulesPromise = Promise.all([
+      import("./engine.js?v=20261022h"),
+      import("./charts.js?v=20261022h"),
+      import("./frontier-chart.js?v=20261022h"),
+      import("./rescale.js?v=20261022h"),
+    ])
+      .then(([engine, charts, frontierChart, rescale]) => {
+        _engine = engine;
+        _charts = charts;
+        _frontierChart = frontierChart;
+        _rescale = rescale;
+        if (!_chartsInitialized) {
+          _chartsInitialized = true;
+          _charts.initCharts({ $, el, t, fmt, money });
+          _charts.setupChartInteractions();
+          _charts.setupZoomButtons();
+        }
+      })
+      .catch((error) => {
+        _runModulesPromise = null;
+        throw error;
+      });
+  }
+  return _runModulesPromise;
+}
+
 // Live, quiet feedback for the optional roof/yard area box: what it actually
 // caps, and one-click disregard. Kept deliberately subtle — small muted text
 // under the input — until the visitor has verified it behaves perfectly.
@@ -244,9 +253,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261022g";
+} from "./money.js?v=20261022h";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261022g";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261022h";
 
 let worker = null;
 
@@ -2845,7 +2854,7 @@ function run(quiet = false, explicit = false) {
   // A site/option change invalidates an adopted curve point (its hardware was
   // simulated for the old site and load); a bill-only change keeps it — the
   // rescale path already re-based it and the quiet refine re-simulates it.
-  if (lastRunInput && !sameSiteOptions(lastRunInput, inp)) {
+  if (lastRunInput && !_rescale.sameSiteOptions(lastRunInput, inp)) {
     adoptedEntry = null;
     if (selectedKey === "adopted") selectedKey = "best";
     frontierSelected = null;
@@ -3211,7 +3220,7 @@ function mergeReSlice(result) {
     adoptedEntry.socNameplatePct.min &&
     adoptedEntry.socNameplatePct.min.length
   ) {
-    drawSocChartForEntry(p, adoptedEntry);
+    _charts.drawSocChartForEntry(p, adoptedEntry);
   }
   syncCutLabel();
   // The cut changed, so any link copied right now must carry it.
@@ -3811,7 +3820,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261022g",
+      "./assets/js/sizing/sizing-worker.js?v=20261022h",
       {
         type: "module",
       },
@@ -4112,7 +4121,7 @@ function moneyRange(lo, hi) {
 function bestPriceNote(text) {
   const fx = fxActive();
   if (!fx || fx.code === "USD") return text;
-  return relocalizeOversizeCallout(text, money);
+  return _rescale.relocalizeOversizeCallout(text, money);
 }
 
 function fxNote() {
@@ -4187,7 +4196,7 @@ function renderBatteryComparison(p, selectedSystem) {
   `;
   grid.appendChild(header);
 
-  const agmColdScale = coldCapacityScale("agm", meanTempC);
+  const agmColdScale = _engine.coldCapacityScale("agm", meanTempC);
   const chemConfigs = [
     {
       id: "lfp",
@@ -4243,7 +4252,7 @@ function renderBatteryComparison(p, selectedSystem) {
     const cost = fullRange(pvKw, nameplateKwh, c.id, landedF);
     const battMid = landedMidBattKwhFor(c.id, landedF);
     // From the model, not a literal: #156 moved it and this said 500.
-    const life80 = cycleLifeForDoD(c.id, c.dod);
+    const life80 = _engine.cycleLifeForDoD(c.id, c.dod);
     const swaps = batteryReplacements(estCyclesPerYr, life80, 20);
     const life = lifetimeCostUsd({
       capexMidUsd: cost.objectiveMid,
@@ -4484,7 +4493,7 @@ function renderRelativeOptions(p, selectedSystem) {
     ratedDoD,
     Math.max(0.1, (baseDailyKwh / baseBattKwh) * ratedDoD),
   );
-  const baseRatedCycles = cycleLifeForDoD(chem, baseEffectiveDod);
+  const baseRatedCycles = _engine.cycleLifeForDoD(chem, baseEffectiveDod);
 
   const baseCost = tierPrice(tierPvKw(1), baseBattKwh);
   const baseBattMid = landedMidBattKwhFor(chem, landedF);
@@ -4621,7 +4630,7 @@ function renderRelativeOptions(p, selectedSystem) {
       ratedDoD,
       Math.max(0.1, (baseDailyKwh / battKwh) * ratedDoD),
     );
-    const ratedCycles = cycleLifeForDoD(chem, effectiveDod);
+    const ratedCycles = _engine.cycleLifeForDoD(chem, effectiveDod);
     const swaps = batteryReplacements(cycles, ratedCycles, 20);
     const life = t.isBaseline
       ? baseLife
@@ -6867,7 +6876,7 @@ function renderFrontierPanel(p) {
     },
   };
 
-  const drew = renderFrontier($("frontierChart"), f, opts);
+  const drew = _frontierChart.renderFrontier($("frontierChart"), f, opts);
 
   if (!drew && !covered) {
     wrap.style.display = "none";
@@ -6884,7 +6893,7 @@ function renderFrontierPanel(p) {
   const verdict = $("frontierVerdict");
 
   if (verdict) {
-    verdict.textContent = frontierVerdict(f, opts);
+    verdict.textContent = _frontierChart.frontierVerdict(f, opts);
     // Best-value range, both bounds, in the visitor's currency — the band on
     // the chart, spelled out for screen readers and skimmers.
     const range = f.reach && f.reach.kneeRange;
@@ -6898,7 +6907,7 @@ function renderFrontierPanel(p) {
       // Through the dictionary: appended as a literal this sentence changed
       // language halfway through ("… rund 2.6-mal so viel wie zuvor.
       // Best-value range: ~$255.00–$543.00 (41.9–100%).") on every non-English
-      // run, because frontierVerdict() is composed from keys and this tail
+      // run, because _frontierChart.frontierVerdict() is composed from keys and this tail
       // was not. English output is byte-identical to before.
       verdict.textContent +=
         " " +
@@ -6920,7 +6929,7 @@ function renderFrontierPanel(p) {
   const note = $("frontierNote");
 
   if (note) {
-    const text = drew ? markerOffCurveNote(f, opts) : "";
+    const text = drew ? _frontierChart.markerOffCurveNote(f, opts) : "";
 
     note.textContent = text;
 
@@ -7036,7 +7045,8 @@ function renderWorstMonthCaveat(p) {
   box.style.display = "block";
 }
 
-function renderResults(p) {
+async function renderResults(p) {
+  await preloadRunModules();
   setResultsHidden(false);
   const inp = readInputs();
 
@@ -7476,8 +7486,9 @@ function renderSelectedBanner(p, sel) {
 // Called from renderResults on a full run and straight from curve-point/
 // matrix-cell clicks so a selection change is instant — all of this data is
 // already sitting in the cached payload.
-function refreshSelectionOutputs(p) {
+async function refreshSelectionOutputs(p) {
   if (!p) return;
+  await preloadRunModules();
   const isGT = p.mode === "gridtie";
   const hasAuto = !!(p.auto && p.auto.length);
   const sel = resolveSelected(p);
@@ -7500,22 +7511,22 @@ function refreshSelectionOutputs(p) {
     sel.socNameplatePct.min &&
     sel.socNameplatePct.min.length
   ) {
-    drawSocChartForEntry(p, sel);
+    _charts.drawSocChartForEntry(p, sel);
   } else if (hasAuto && !isGT) {
-    drawAutoChart(p);
+    _charts.drawAutoChart(p);
   } else if (
     !hasAuto &&
     p.history &&
     p.history.tiers &&
     p.history.tiers.length
   ) {
-    drawSocChart(p.history, p.chemLabel || "battery");
+    _charts.drawSocChart(p.history, p.chemLabel || "battery");
   } else {
     const w = $("socChartWrap");
     if (w) w.style.display = "none";
   }
 
-  drawCumCostChart(p, sel);
+  _charts.drawCumCostChart(p, sel);
 
   // NOTE: no renderFrontierPanel here — every caller renders the curve
   // itself first (renderResults, adoptFrontierPoint, mergeReSlice), so one
@@ -8034,7 +8045,7 @@ function populatePrintSheet(p, inp) {
 
     ${
       p.frontier && p.frontier.points && p.frontier.points.length > 1
-        ? `<p style="font-size:9.5pt;margin:0 0 4pt;"><strong>How far money gets you:</strong> ${frontierVerdict(p.frontier, { t, money })}</p>`
+        ? `<p style="font-size:9.5pt;margin:0 0 4pt;"><strong>How far money gets you:</strong> ${_frontierChart.frontierVerdict(p.frontier, { t, money })}</p>`
         : ""
     }
 
@@ -8556,7 +8567,6 @@ export async function initSizingUI() {
     setupMatrixSelection();
 
     setupPwaControls();
-    setupChartInteractions();
 
     // Wire up preset buttons
     document.querySelectorAll(".preset-btn").forEach((btn) => {
@@ -8565,9 +8575,6 @@ export async function initSizingUI() {
         if (preset) applyAppliancePreset(preset);
       });
     });
-
-    // Chart zoom buttons: wiring moved to charts.js (single owner).
-    setupZoomButtons();
 
     // Initialize Sun-path and Chemistry Temperature visualizers
     const initLat = parseFloat($("latInput")?.value) || 21.31;
