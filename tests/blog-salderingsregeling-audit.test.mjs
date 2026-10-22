@@ -15,7 +15,6 @@ const jsonLd = (html) =>
 const normalize = (text) =>
   text
     .replace(/<[^>]*>/g, " ")
-    .replace(/&amp;/g, "&")
     .replace(/&nbsp;/g, " ")
     .replace(/\s+/g, " ")
     .trim();
