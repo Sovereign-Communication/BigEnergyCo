@@ -15,6 +15,6 @@
 # in this directory remain binary and are intentionally not covered here.
 assets/vendor/leaflet/LICENSE text eol=lf
 assets/vendor/leaflet/README.md -text
-assets/vendor/leaflet/leaflet.css -text
-assets/vendor/leaflet/leaflet.js -text
+assets/vendor/leaflet/leaflet.css text eol=lf
+assets/vendor/leaflet/leaflet.js text eol=lf
 assets/vendor/leaflet/leaflet.js.map -text
