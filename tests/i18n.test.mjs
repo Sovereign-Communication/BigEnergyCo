@@ -49,8 +49,12 @@ test("localized homepage hooks preserve reader-visible claims and live values", 
   for (const [locale, copy] of Object.entries(LOCALES)) {
     assert.match(copy.homeIntro, /5/u, `${locale}: NASA weather window`);
     assert.match(copy.homeIntro, /20/u, `${locale}: payback horizon`);
+    const batteryCostNumbers =
+      locale === "nl"
+        ? ["80", "125", "110", "165", "0,16", "0,38"]
+        : ["80", "125", "110", "165", "0.16", "0.38"];
     assert.ok(
-      ["80", "125", "110", "165", "0.16", "0.38"].every((number) =>
+      batteryCostNumbers.every((number) =>
         copy.batteryCostClaim.includes(number),
       ),
       `${locale}: DIY, retail, and panel price ranges remain present`,
