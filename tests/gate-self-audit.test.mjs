@@ -89,6 +89,15 @@ const REAL_PROSE = JSON.parse(
 );
 /** A copy of the real record, safe to mutate per test. */
 const proseCopy = () => JSON.parse(JSON.stringify(REAL_PROSE));
+function currentAssetStamp() {
+  const html = readFileSync(join(ROOT, "index.html"), "utf8");
+  return html.match(/[?&]v=(\d{8}[a-z])/)[1];
+}
+
+function currentCacheVersion() {
+  const sw = readFileSync(join(ROOT, "sw.js"), "utf8");
+  return sw.match(/beco-v\d+/)[0];
+}
 
 test("AUDIT/freshness: the gate passes the repository's own record", () => {
   // The control. Without it, a gate that failed everything would satisfy every
@@ -123,6 +132,7 @@ test("AUDIT/freshness: a typed gate count in any shape is refused", () => {
 
 test("AUDIT/freshness: a stale asset stamp is refused", () => {
   const p = proseCopy();
+  p.seo_summary = `asset stamp ${currentAssetStamp()}`;
   p.seo_summary = p.seo_summary.replace(/\b\d{8}[a-z]\b/, "20260101a");
   const { code, out } = runFreshnessGate(p);
   assert.equal(
@@ -135,6 +145,7 @@ test("AUDIT/freshness: a stale asset stamp is refused", () => {
 
 test("AUDIT/freshness: a stale service-worker cache version is refused", () => {
   const p = proseCopy();
+  p.seo_summary = `SW cache ${currentCacheVersion()}`;
   p.seo_summary = p.seo_summary.replace(/beco-v\d+/, "beco-v1");
   const { code, out } = runFreshnessGate(p);
   assert.equal(code, 1);
