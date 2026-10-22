@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261015b";
+import { APPLIANCES } from "./appliances.js?v=20261015m";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -24,14 +24,14 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261015b";
+} from "./usecases.js?v=20261015m";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261015b";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261015b";
+} from "./run-coordinator.js?v=20261015m";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261015m";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -40,12 +40,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261015b";
+} from "./charts.js?v=20261015m";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261015b";
+} from "./location-picker.js?v=20261015m";
 
 import {
   estimateTariff,
@@ -53,14 +53,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261015b";
+} from "./pricing.js?v=20261015m";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261015b";
+import { currencyForCountry } from "./country-currency.js?v=20261015m";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261015b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261015m";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -92,7 +92,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261015b").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261015m").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -103,15 +103,17 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261015b";
+} from "./lead-acid.js?v=20261015m";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261015b";
+  OFFGRID_INVERTER_MIN_KW,
+  OFFGRID_PEAK_LOAD_MARGIN,
+} from "./bom.js?v=20261015m";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261015b";
+import { BOM_ITEMS } from "../shared/content.js?v=20261015m";
 
 import {
   applyI18n,
@@ -120,18 +122,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261015b";
+} from "../shared/i18n.js?v=20261015m";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261015b";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261015b";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261015m";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261015m";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261015b";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261015b";
+} from "../shared/simple-mode.js?v=20261015m";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261015m";
 import {
   advisorJevContext,
   interpretSanity,
@@ -139,56 +141,56 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261015b";
+} from "./validate.js?v=20261015m";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261015b";
+} from "../shared/cut-targets.js?v=20261015m";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261015b";
+} from "./share-codec.js?v=20261015m";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261015b";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261015b";
+} from "./infeasible-copy.js?v=20261015m";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261015m";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261015b";
+} from "./fuel-units.js?v=20261015m";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261015b";
+} from "./frontier-chart.js?v=20261015m";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261015b";
+} from "./rescale.js?v=20261015m";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261015b";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261015m";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rectangleAreaM2,
   manualRoofHint,
-} from "./map-provider.js?v=20261015b";
+} from "./map-provider.js?v=20261015m";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261015b";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261015b";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261015b";
+} from "./wizard.js?v=20261015m";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261015m";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261015m";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -237,9 +239,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261015b";
+} from "./money.js?v=20261015m";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261015b";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261015m";
 
 let worker = null;
 
@@ -1094,6 +1096,7 @@ function setupUseCaseChooser() {
     if (input)
       input.addEventListener("change", () => {
         syncReserveLabel();
+        if (id === "generatorAllowed") updateAutoRows();
         markPrecalcDirty();
       });
   }
@@ -1292,6 +1295,14 @@ function updateAutoRows() {
   const isAuto = $("chemSelect").value === "auto";
 
   const gt = $("systemGoal") ? $("systemGoal").value === "gridtie" : false;
+  const noOffgridGenerator = !gt && $("generatorAllowed")?.checked === false;
+  const autoTier = $("autoTier");
+  if (autoTier) {
+    for (const option of autoTier.options) {
+      option.disabled = noOffgridGenerator && option.value !== "tier100";
+    }
+    if (noOffgridGenerator) autoTier.value = "tier100";
+  }
 
   const tierRow = $("autoTierRow"),
     targetRow = $("autoTargetRow");
@@ -1451,9 +1462,14 @@ function syncBillSlider() {
       bill: fmtBill(value),
       kwh: Math.round(billAnchorKwh),
     };
-    note.textContent = quickMode
-      ? t("quickBillStarts", params)
-      : t("quickBillManual", params);
+    note.textContent =
+      selectedUseCase() === "offgrid"
+        ? t("quickOffgridSetup", {
+            kwh: Math.round(parseFloat(offSlider?.value) || billAnchorKwh),
+          })
+        : quickMode
+          ? t("quickBillStarts", params)
+          : t("quickBillManual", params);
   }
   updateLoadReadout();
 }
@@ -2668,7 +2684,11 @@ function readInputs() {
       return fx ? v / fx.rate : v;
     })(),
 
-    autoTier: $("autoTier")?.value || "tier99",
+    autoTier:
+      $("systemGoal")?.value === "offgrid" &&
+      $("generatorAllowed")?.checked === false
+        ? "tier100"
+        : $("autoTier")?.value || "tier99",
 
     autoTargetId: $("autoTarget")?.value || "cut80",
 
@@ -3230,8 +3250,12 @@ function setupGoalControls() {
   const sysGoal = $("systemGoal");
   if (!btnGt || !btnOff) return;
 
-  const setGoal = (goal) => {
+  const setGoal = (goal, selectDefaultUseCase = false) => {
     const isGt = goal === "gridtie";
+
+    // The visible grid/off-grid choice is also a use-case choice. Keep its
+    // registry id in sync or run.js will correctly honor the stale hidden id.
+    if (selectDefaultUseCase) applyUseCase(isGt ? "billcut" : "offgrid");
     if (isGt) {
       btnGt.classList.add("active");
       btnOff.classList.remove("active");
@@ -3265,8 +3289,8 @@ function setupGoalControls() {
     markPrecalcDirty();
   };
 
-  btnGt.addEventListener("click", () => setGoal("gridtie"));
-  btnOff.addEventListener("click", () => setGoal("offgrid"));
+  btnGt.addEventListener("click", () => setGoal("gridtie", true));
+  btnOff.addEventListener("click", () => setGoal("offgrid", true));
 
   if (sysGoal) {
     sysGoal.addEventListener("change", () => {
@@ -3297,6 +3321,9 @@ function setupOffgridControls() {
     const billOut = $("billSliderVal");
     if (billOut) billOut.textContent = "~" + fmtBill(bill);
     updateLoadReadout();
+    const note = $("quickBillNote");
+    if (note && selectedUseCase() === "offgrid")
+      note.textContent = t("quickOffgridSetup", { kwh: Math.round(kwh) });
   };
 
   const syncToVal = (val) => {
@@ -3588,6 +3615,7 @@ function renderFocusPanel(p, entry, isPreview) {
     else chip("⚡", `${entry.cutPct}%`, "peak offset");
   }
   if (
+    isGT &&
     entry.billAfterMonthlyUsd !== null &&
     entry.billAfterMonthlyUsd !== undefined
   ) {
@@ -3595,14 +3623,18 @@ function renderFocusPanel(p, entry, isPreview) {
     chip("🧾", baText, entry.billAfterMonthlyUsd < 0 ? "" : "bill after");
   }
   if (!isGT && Number.isFinite(entry.unmetHoursPerYear))
-    chip("🔌", `${fmt(entry.unmetHoursPerYear)} h/yr`, "generator cover");
-  if (entry.paybackYearsLo !== null && entry.paybackYearsHi !== null)
+    chip(
+      "🔌",
+      `${fmt(entry.unmetHoursPerYear)} h/yr`,
+      p.generatorAllowed === false ? "unserved load" : "generator cover",
+    );
+  if (isGT && entry.paybackYearsLo !== null && entry.paybackYearsHi !== null)
     chip(
       "⏳",
       fmtPaybackRange(entry.paybackYearsLo, entry.paybackYearsHi),
       "payback",
     );
-  else if (typeof entry.trueBreakEvenYear === "number")
+  else if (isGT && typeof entry.trueBreakEvenYear === "number")
     chip("⏳", `yr ${entry.trueBreakEvenYear}`, "breaks even");
   if (entry.replacementsHorizon > 0)
     chip("🔁", `~${entry.replacementsHorizon}×`, "bank swaps");
@@ -3738,7 +3770,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261015b",
+      "./assets/js/sizing/sizing-worker.js?v=20261015m",
       {
         type: "module",
       },
@@ -4016,8 +4048,9 @@ function gridRate(usdPerKwh) {
  * that says the system never breaks even and beside a money bar that says a
  * battery does not cut what you pay. The number is right; the name was not.
  */
-function powerCostRow(entry, tariff) {
+function powerCostRow(entry, tariff, mode = "gridtie") {
   const lcoe = energyRate(entry.lcoeUsdPerKwh);
+  if (mode === "offgrid") return ["Modeled system energy cost", lcoe];
   if (Number(entry.pvKw) > 0)
     return ["Your power cost", lcoe + gridRate(tariff)];
   return [
@@ -4873,7 +4906,7 @@ function renderBestPick(p) {
   ];
   const foot = b.pvKw > 0 ? footprintText(b.pvKw) : null;
   if (foot) rows.push(["Footprint", foot]);
-  rows.push(["Cost to buy", `~${moneyRange(b.costLo, b.costHi)}`]);
+  rows.push([t("pathsPartsOnlyLabel"), `~${moneyRange(b.costLo, b.costHi)}`]);
   rows.push([
     "Battery swaps",
     b.replacementsHorizon > 0
@@ -4906,7 +4939,7 @@ function renderBestPick(p) {
     if (baBest !== null)
       rows.push([b.pvKw > 0 ? "Bill after solar" : "Bill after", baBest]);
   }
-  if (p.tariff && typeof b.trueBreakEvenYear === "number") {
+  if (isGT && p.tariff && typeof b.trueBreakEvenYear === "number") {
     rows.push(["Pays for itself", `Year ${b.trueBreakEvenYear}`]);
     if (b.replacementsHorizon > 0 && b.paybackYearsLo !== null) {
       rows.push([
@@ -4915,6 +4948,7 @@ function renderBestPick(p) {
       ]);
     }
   } else if (
+    isGT &&
     p.tariff &&
     b.trueBreakEvenYear === null &&
     b.replacementsHorizon > 0
@@ -4923,16 +4957,17 @@ function renderBestPick(p) {
       "True 20-yr break-even",
       "never \u2014 replacements outpace savings",
     ]);
-  } else if (!p.tariff && b.paybackYearsLo !== null) {
+  } else if (isGT && !p.tariff && b.paybackYearsLo !== null) {
     rows.push([
       "Pays for itself in",
       fmtPaybackRange(b.paybackYearsLo, b.paybackYearsHi),
     ]);
   }
   if (Number.isFinite(b.lcoeUsdPerKwh)) {
-    rows.push(powerCostRow(b, p.tariff));
+    rows.push(powerCostRow(b, p.tariff, p.mode));
   }
   appendRows(card, rows);
+  card.appendChild(el("p", {}, t("pathsPriceBasisNote")));
   if (p.bestReason) {
     card.appendChild(
       el(
@@ -4982,30 +5017,8 @@ function renderEli5Section(p, sys, paths = null) {
 }
 
 /**
- * THE INSTALLER-vs-DIRECT SENTENCE, priced instead of guessed.
- *
- * This used to price "a typical installer quote" as a MULTIPLE of the hardware
- * estimate — 10x the cheapest build, 5x the dearest — and then add a flat
- * $1,500-$3,000 for the electrician's final hookup. Both numbers were invented
- * at the point of display, so the gap between "hire an installer" and "buy the
- * parts yourself" was a difference in what each side counted rather than a
- * difference in price. That is precisely the claim D-01 §6.4 forbids
- * (R-PATH-03), and it is why the two paths now come out of ONE priced model
- * over ONE system: the turnkey path's all-in band (parts, labour, permits and
- * the installer's margin already inside it) against the self-purchase path's
- * all-in band (the SAME parts, plus paid labour, permits and interconnection).
- *
- * A useful side effect: the old text compared a midpoint against a midpoint and
- * could print "roughly -$300 below a typical quote" — a negative number
- * described as a saving. Two registry prices cannot produce that, so the
- * sign-follows-the-number defect is gone structurally rather than patched.
- *
- * With no priced comparison available the sentence degrades to the hardware
- * cost and points at the panel, instead of inventing a band.
- */
-
-/**
- * The four paths for ONE system, or null when there is nothing to price.
+ * Price all four paths for one selected system, or return null when there is
+ * nothing to price.
  *
  * ONE owner. The ELI5 sentence and the comparison panel must not price the
  * same system twice, or the two can disagree on the turnkey band — the defect
@@ -5019,6 +5032,7 @@ function purchasePaths(p, sys) {
   // undefined baseline silently turns every break-even into "not within 20
   // years" — a whole column of honest-looking wrong answers.
   const baseline = p.annualGridSpendUsd;
+  const pathInstrument = p.mode === "offgrid" ? "lease" : pathsInstrument;
   const key = [
     sys.pvKw,
     sys.battKwh,
@@ -5027,53 +5041,75 @@ function purchasePaths(p, sys) {
     sys.batteryLifeYears,
     baseline,
     p.tariff,
+    p.mode,
     resolvedCountry,
-    pathsInstrument,
+    pathInstrument,
   ].join("|");
   if (pathsCache.key === key) return pathsCache.result;
   const result = pathsApi.priceAllPaths(
     pathsApi.systemForPaths(sys, {
       annualBaselineBillsUsd: baseline,
       tariff: p.tariff,
+      mode: p.mode,
     }),
-    { country: resolvedCountry, instrument: pathsInstrument },
+    {
+      country: resolvedCountry,
+      instrument: pathInstrument,
+      mode: p.mode,
+    },
   );
   pathsCache = { key, result };
   return result;
 }
 
 export function turnkeyQuoteText(
-  sys,
+  paths,
   moneyFn = money,
   rangeFn = moneyRange,
-  paths = null,
+  tFn = (key) => key,
 ) {
-  const directCost =
-    Number.isFinite(sys?.costLo) && Number.isFinite(sys?.costHi)
-      ? rangeFn(sys.costLo, sys.costHi)
-      : Number.isFinite(sys?.costMid)
-        ? moneyFn(sys.costMid)
-        : "wholesale";
   const turnkey = paths?.by?.turnkey;
-  const direct = paths?.by?.selfpurchase;
+  const diy = paths?.by?.diy;
+  if (!turnkey?.available || !diy?.available)
+    return tFn("pathsEstimateUnavailable");
+
   const band = (p) =>
     p.year0Low === p.year0High
       ? moneyFn(p.year0)
       : rangeFn(p.year0Low, p.year0High);
-  if (!turnkey?.available || !direct?.available) {
-    return `DIY or direct hardware cost is ~${directCost}. A full-service installer builds that same system for one all-in price covering the parts, the labour, the permits and their margin — the four ways to pay are priced side by side below.`;
-  }
-  const gap = turnkey.year0 - direct.year0;
-  // The gap is installer MINUS self-purchase, so the sentence compares the
-  // route it has just described against the installer's price. The word
-  // follows the sign: two registry prices cannot produce a negative number
-  // described as a saving, which is how the old midpoint arithmetic printed
-  // "-$300 below a typical quote" for a system that cost MORE.
-  const vs =
-    gap >= 0
-      ? `${moneyFn(gap)} cheaper than the installer's price`
-      : `${moneyFn(-gap)} dearer than the installer's price`;
-  return `Hardware for this system is ~${directCost}. A full-service installer quotes ${band(turnkey)} all-in for exactly this array. Buying the same parts yourself and paying a licensed electrician for the connection lands near ${band(direct)} — ${vs}. Over ${PATHS_HORIZON_YEARS} years, permits, incentives and every bank replacement included, all four routes are priced together below.`;
+  const bandMidpoint = (path) =>
+    Number.isFinite(path.year0Low) && Number.isFinite(path.year0High)
+      ? (path.year0Low + path.year0High) / 2
+      : path.year0;
+  const gap = bandMidpoint(turnkey) - bandMidpoint(diy);
+  const key =
+    gap > 0
+      ? "pathsEstimateDiyLower"
+      : gap < 0
+        ? "pathsEstimateDiyHigher"
+        : "pathsEstimateDiyTie";
+  const comparisonParts = [
+    tFn(key, {
+      turnkey: band(turnkey),
+      diy: band(diy),
+      gap: moneyFn(Math.abs(gap)),
+      hardware: moneyFn(diy.hardware),
+      labor: moneyFn(diy.labour),
+      fees: moneyFn(diy.fees),
+      tools: moneyFn(diy.tools),
+    }),
+  ];
+  if (gap < 0) comparisonParts.push(tFn("pathsEstimateDiyHigherReason"));
+  const comparison = comparisonParts.join(" ");
+  const overlap =
+    diy.year0Low <= turnkey.year0High && turnkey.year0Low <= diy.year0High;
+  const notes = [
+    comparison,
+    tFn(overlap ? "pathsEstimateBandsOverlap" : "pathsEstimateBandsSeparate"),
+    tFn("pathsEstimateHorizon", { years: PATHS_HORIZON_YEARS }),
+  ];
+  if (paths.mode === "offgrid") notes.push(tFn("pathsOffgridEstimateScope"));
+  return notes.join(" ");
 }
 
 /**
@@ -5116,9 +5152,11 @@ function renderPathsSection(p, sys) {
         `<p class="paths-total">${escapeHtml(t("pathsSpend20"))} <strong>${escapeHtml(c.spend20Text)}</strong></p>` +
         `<dl class="paths-rows">` +
         `<dt>${escapeHtml(t("pathsRowIncentives"))}</dt><dd>${escapeHtml(c.incentivesText)}</dd>` +
-        `<dt>${escapeHtml(t("pathsRowBillCut"))}</dt><dd>${escapeHtml(c.billCutText)}</dd>` +
-        `<dt>${escapeHtml(t("pathsRowBreakEven"))}</dt><dd>${escapeHtml(c.breakEvenText)}</dd>` +
-        `<dt>${escapeHtml(t("pathsRowNet"))}</dt><dd>${escapeHtml(c.netText)}</dd>` +
+        (paths.mode === "offgrid"
+          ? ""
+          : `<dt>${escapeHtml(t("pathsRowBillCut"))}</dt><dd>${escapeHtml(c.billCutText)}</dd>` +
+            `<dt>${escapeHtml(t("pathsRowBreakEven"))}</dt><dd>${escapeHtml(c.breakEvenText)}</dd>` +
+            `<dt>${escapeHtml(t("pathsRowNet"))}</dt><dd>${escapeHtml(c.netText)}</dd>`) +
         `<dt>${escapeHtml(t("pathsRowOwnership"))}</dt><dd>${escapeHtml(t(c.ownershipKey))}</dd>` +
         (c.endOfTerm
           ? `<dt>${escapeHtml(t("pathsRowEndOfTerm"))}</dt><dd>${escapeHtml(t(c.endOfTerm.noteKey, { years: c.endOfTerm.termYears, buyoutPct: Math.round(c.endOfTerm.buyoutPct * 100) }))}</dd>`
@@ -5126,22 +5164,29 @@ function renderPathsSection(p, sys) {
         `</dl>` +
         `<p class="paths-counts">${escapeHtml(t("pathsCountsHeading"))}</p><ul>${rows(c.included)}</ul>` +
         (driver
-          ? `<p class="paths-why">${escapeHtml(whyText(driver))}</p>`
+          ? `<p class="paths-why">${escapeHtml(whyText(driver, paths.mode))}</p>`
           : "") +
         `</div>`
       );
     })
     .join("");
 
+  const instrumentControl =
+    paths.mode === "offgrid"
+      ? ""
+      : `<div class="paths-instr">` +
+        `<label for="pathsInstrument">${escapeHtml(t("pathsInstrumentLabel"))}</label> ` +
+        `<select id="pathsInstrument">` +
+        `<option value="ppa"${pathsInstrument === "ppa" ? " selected" : ""}>${escapeHtml(t("pathsInstrumentPpa"))}</option>` +
+        `<option value="lease"${pathsInstrument === "lease" ? " selected" : ""}>${escapeHtml(t("pathsInstrumentLease"))}</option>` +
+        `</select></div>`;
+  const titleKey =
+    paths.mode === "offgrid" ? "pathsTitleOffgrid" : "pathsTitle";
+  const subKey = paths.mode === "offgrid" ? "pathsSubOffgrid" : "pathsSub";
   wrap.innerHTML =
-    `<h3 data-i18n="pathsTitle">${escapeHtml(t("pathsTitle"))}</h3>` +
-    `<p class="paths-sub" data-i18n="pathsSub">${escapeHtml(t("pathsSub"))}</p>` +
-    `<div class="paths-instr">` +
-    `<label for="pathsInstrument">${escapeHtml(t("pathsInstrumentLabel"))}</label> ` +
-    `<select id="pathsInstrument">` +
-    `<option value="ppa"${pathsInstrument === "ppa" ? " selected" : ""}>${escapeHtml(t("pathsInstrumentPpa"))}</option>` +
-    `<option value="lease"${pathsInstrument === "lease" ? " selected" : ""}>${escapeHtml(t("pathsInstrumentLease"))}</option>` +
-    `</select></div>` +
+    `<h3 data-i18n="${titleKey}">${escapeHtml(t(titleKey))}</h3>` +
+    `<p class="paths-sub" data-i18n="${subKey}">${escapeHtml(t(subKey))}</p>` +
+    instrumentControl +
     `<div class="paths-grid">${body}</div>` +
     `<p class="paths-grade">${escapeHtml(t("pathsGradeNote"))}</p>`;
   wrap.style.display = "block";
@@ -5212,14 +5257,20 @@ async function renderPathSurfaces(p) {
 }
 
 /** One line of the ranking's account: which component, and by how much. */
-function whyText(row) {
+function whyText(row, mode = "gridtie") {
   const amount =
     row.driver === "none" ? "" : ` ${money(Math.abs(row.driverAmount))}`;
   const tail = row.dominance === "combined" ? t("pathsWhyCombined") : "";
+  const pathLabel = (id) =>
+    t(
+      id === "lease" && mode === "offgrid"
+        ? "pathsLabel_offgridLease"
+        : pathsApi.LABEL_KEYS[id] || "pathsUnavailable",
+    );
   return (
     t("pathsWhy", {
-      cheaper: t(pathsApi.LABEL_KEYS[row.cheaper] || "pathsUnavailable"),
-      dearer: t(pathsApi.LABEL_KEYS[row.dearer] || "pathsUnavailable"),
+      cheaper: pathLabel(row.cheaper),
+      dearer: pathLabel(row.dearer),
       gap: money(Math.abs(row.gap)),
       driver:
         t(pathsApi.DRIVER_KEYS[row.driver] || "pathsDriver_none") + amount,
@@ -5246,7 +5297,9 @@ function renderEli5Card(p, sys, paths = null) {
   const lay = sys.pvKw > 0 ? panelLayout(sys.pvKw, watts) : null;
   const panelDesc = lay
     ? `~${lay.count} standard rooftop or ground panels (${lay.panelWatts} W each). Needs about ${lay.areaM2} m\u00B2 (~${Math.round(lay.areaM2 * 10.764)} sq ft) of unshaded space. On a clear sunny day, this harvests around ${fmt(sys.pvKw * 4.5)} kWh of free electricity.`
-    : "No solar panels are included in this battery-only configuration (charges during cheap off-peak hours to avoid expensive peak electricity).";
+    : p.mode === "offgrid"
+      ? "No solar array is included. An off-grid design needs another energy source sized to carry the load and recharge storage."
+      : "No solar panels are included in this battery-only configuration (charges during cheap off-peak hours to avoid expensive peak electricity).";
 
   const itemPanels = el("div", { class: "eli5-item" });
   itemPanels.appendChild(
@@ -5257,7 +5310,9 @@ function renderEli5Card(p, sys, paths = null) {
 
   // 2. Battery Storage
   let battDesc =
-    "No battery bank selected. Power generated during the day is consumed immediately or sent to the grid.";
+    p.mode === "offgrid"
+      ? "No battery bank is selected. Without storage or another dispatchable source, this setup cannot cover nighttime or low-sun loads."
+      : "No battery bank selected. Power generated during the day is consumed immediately or sent to the grid.";
   if (sys.battKwh > 0) {
     const rackUnits = Math.max(
       1,
@@ -5280,13 +5335,21 @@ function renderEli5Card(p, sys, paths = null) {
     : " Supplies standard 120V household power.";
   const peakW =
     window.lastInputs?.peakLoadW || Math.round(((p.dailyKwh || 0) * 1000) / 24);
-  const invContinuous = Math.max(3, Math.ceil((peakW * 1.25) / 1000));
+  const offgrid = p.mode === "offgrid";
+  const inverterMargin = offgrid ? OFFGRID_PEAK_LOAD_MARGIN : 1.25;
+  const inverterMinimum = offgrid ? OFFGRID_INVERTER_MIN_KW : 3;
+  const invContinuous = Math.max(
+    inverterMinimum,
+    Math.ceil((peakW * inverterMargin) / 1000),
+  );
   const invDesc =
-    sys.battKwh === 0
-      ? `A grid-tied string inverter (~${Math.max(3, Math.ceil(sys.pvKw))} kW). It converts daytime solar DC electricity directly into 120V/240V AC power for your home appliances and sends excess to the grid.`
-      : sys.pvKw === 0
-        ? `A bidirectional battery inverter / charger (~${invContinuous} kW). It quietly charges your batteries during cheap off-peak hours and discharges during peak-rate periods to eliminate expensive utility power.`
-        : `A wall-mounted hybrid inverter / charger (~${invContinuous} to ${Math.max(invContinuous, 6)} kW continuous). It quietly converts DC power from solar and batteries into clean AC power for your outlets.${splitWarning}`;
+    p.mode === "offgrid"
+      ? `A standalone, off-grid inverter/charger (~${invContinuous} kW continuous minimum) matched to the battery voltage and array. It must form household AC without a utility grid; confirm surge rating and built-in MPPT limits with the installer.`
+      : sys.battKwh === 0
+        ? `A grid-tied string inverter (~${Math.max(3, Math.ceil(sys.pvKw))} kW). It converts daytime solar DC electricity directly into 120V/240V AC power for your home appliances and sends excess to the grid.`
+        : sys.pvKw === 0
+          ? `A bidirectional battery inverter / charger (~${invContinuous} kW). It quietly charges your batteries during cheap off-peak hours and discharges during peak-rate periods to eliminate expensive utility power.`
+          : `A wall-mounted hybrid inverter / charger (~${invContinuous} to ${Math.max(invContinuous, 6)} kW continuous). It quietly converts DC power from solar and batteries into clean AC power for your outlets.${splitWarning}`;
 
   const itemInv = el("div", { class: "eli5-item" });
   itemInv.appendChild(
@@ -5296,16 +5359,10 @@ function renderEli5Card(p, sys, paths = null) {
   eli5Grid.appendChild(itemInv);
 
   // 4. Sourcing & Cost Reality
-  const directCost =
-    Number.isFinite(sys.costLo) && Number.isFinite(sys.costHi)
-      ? moneyRange(sys.costLo, sys.costHi)
-      : Number.isFinite(sys.costMid)
-        ? money(sys.costMid)
-        : "wholesale";
-  const costDesc = turnkeyQuoteText(sys, money, moneyRange, paths);
+  const costDesc = turnkeyQuoteText(paths, money, moneyRange, t);
   const itemCost = el("div", { class: "eli5-item" });
   itemCost.appendChild(
-    el("div", { class: "eli5-item-label" }, "💰 Wholesale vs Turnkey Quotes"),
+    el("div", { class: "eli5-item-label" }, t("pathsEstimateTitle")),
   );
   itemCost.appendChild(el("div", { class: "eli5-item-desc" }, costDesc));
   eli5Grid.appendChild(itemCost);
@@ -5331,6 +5388,10 @@ function matrixColShort(p, col) {
           : col.label
             ? col.label.split("\u2014")[0].trim()
             : `\u2212${col.id.replace("cut", "")}% bill`;
+  }
+  if (p.generatorAllowed === false) {
+    const pct = col.id === "tier100" ? 100 : col.id === "tier99" ? 99 : 95;
+    return t("offgridTierServed", { pct });
   }
   return col.label.split("\u2014")[0].trim();
 }
@@ -5432,7 +5493,11 @@ function matrixHtml(p) {
   const hint =
     p.mode === "gridtie"
       ? "Green outline = lowest true 20-year cost in that column. Click any cell to make it the system shown in every chart, the hardware list, and the export figures below. The \u201Cyour target\u201D column follows the slider."
-      : 'Green outline = lowest true 20-year cost in that column (every bank swap counted). "Unmet" hours are covered by a generator or the grid.';
+      : t(
+          p.generatorAllowed === false
+            ? "offgridMatrixNoGenerator"
+            : "offgridMatrixGeneratorAllowed",
+        );
   return (
     `<div class="matrix-wrap"><table class="matrix-table"><thead><tr><th>Battery \u2193 \u00B7 Goal \u2192</th>${head}</tr></thead><tbody>${body}</tbody></table></div>` +
     `<p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;line-height:1.55;">${hint}</p>`
@@ -5682,31 +5747,45 @@ function entryDetailRows(p, e) {
   }
   rows.push(["Component cost", `~${moneyRange(e.costLo, e.costHi)}`]);
   const baEntry = fmtBillAfter(e.billAfterMonthlyUsd);
-  if (baEntry !== null) {
+  if (p.mode === "gridtie" && baEntry !== null) {
     rows.push([e.pvKw > 0 ? "Bill after solar" : "Bill after", baEntry]);
   }
-  if (e.importedKwhPerYear !== undefined && e.importedKwhPerYear !== null) {
+  if (
+    p.mode === "gridtie" &&
+    e.importedKwhPerYear !== undefined &&
+    e.importedKwhPerYear !== null
+  ) {
     rows.push(["Imported from grid", `${fmt(e.importedKwhPerYear)} kWh/yr`]);
   }
   if (e.clippedKwhPerYear !== undefined && e.clippedKwhPerYear !== null) {
     const feed =
-      e.exportValueAnnualUsd > 0
-        ? ` · feed-in +${money(e.exportValueAnnualUsd)}/yr`
-        : " · enter a feed-in credit to value it";
+      p.mode !== "gridtie"
+        ? " · not stored or used"
+        : e.exportValueAnnualUsd > 0
+          ? ` · feed-in +${money(e.exportValueAnnualUsd)}/yr`
+          : " · enter a feed-in credit to value it";
     rows.push([
-      p.mode === "gridtie" ? "Surplus clipped" : "Sun clipped",
+      p.mode === "gridtie" ? "Surplus clipped" : "Unused solar",
       `${fmt(e.clippedKwhPerYear)} kWh/yr${feed}`,
     ]);
   }
-  if (e.paybackYearsLo !== null && e.paybackYearsLo !== undefined) {
+  if (
+    p.mode === "gridtie" &&
+    e.paybackYearsLo !== null &&
+    e.paybackYearsLo !== undefined
+  ) {
     rows.push([
       "Pays back its first cost in",
       fmtPaybackRange(e.paybackYearsLo, e.paybackYearsHi),
     ]);
   }
-  if (typeof e.trueBreakEvenYear === "number") {
+  if (p.mode === "gridtie" && typeof e.trueBreakEvenYear === "number") {
     rows.push(["True 20-yr break-even", `Year ${e.trueBreakEvenYear}`]);
-  } else if (e.trueBreakEvenYear === null && e.replacementsHorizon > 0) {
+  } else if (
+    p.mode === "gridtie" &&
+    e.trueBreakEvenYear === null &&
+    e.replacementsHorizon > 0
+  ) {
     rows.push(["True 20-yr break-even", "never — swaps outpace savings"]);
   }
   if (e.replacementsHorizon > 0 && e.battKwh > 0) {
@@ -5720,7 +5799,7 @@ function entryDetailRows(p, e) {
   }
   pushSeriesBreakdown(rows, e);
   if (Number.isFinite(e.lcoeUsdPerKwh)) {
-    rows.push(powerCostRow(e, p.tariff));
+    rows.push(powerCostRow(e, p.tariff, p.mode));
   }
   if (e.unmetHoursPerYear !== undefined && e.unmetHoursPerYear !== null) {
     rows.push([
@@ -5778,9 +5857,11 @@ function showSystemModal(p, entry, adopt) {
             "font-size:0.78rem;color:var(--text-muted);margin-top:0.7rem;line-height:1.5;",
         },
         "Every figure is computed from the same hourly weather simulation as the cards — nothing here is estimated by eye." +
-          (p.tariff
+          (p.mode !== "gridtie"
             ? ""
-            : " Enter your grid price above to see payback vs. your bill."),
+            : p.tariff
+              ? ""
+              : " Enter your grid price above to see payback vs. your bill."),
       ),
     );
   }
@@ -5834,6 +5915,7 @@ function buildFocusBom() {
   // came from the daily average, not a measured peak.
   const peakIsAverage = p.peakIsAverage !== false;
   return buildBom({
+    mode: p.mode,
     pvKw: f.pvKw,
     battNameplateKwh: f.battNameplateKwh,
     chemistry: f.chemistry,
@@ -5871,6 +5953,7 @@ function renderBomPanel() {
   };
 
   const f = resolveSelected(lastPayload) || lastPayload.focus;
+  const isOffgrid = lastPayload.mode === "offgrid";
   if (f && f.bestPriceCallout) {
     const callout = el(
       "div",
@@ -5937,11 +6020,38 @@ function renderBomPanel() {
     ]);
   }
   section("Inverter", [
-    ["Your peak demand", `~${fmt(bom.inverter.peakLoadKw)} kW at once`],
-    ["Suggested class", `${bom.inverter.recommendedKw} kW continuous minimum`],
+    [
+      bom.inverter.peakIsAverage
+        ? "Daily-load profile (not measured peak)"
+        : "Entered appliance peak",
+      bom.inverter.peakIsAverage
+        ? `~${fmt(bom.inverter.peakLoadKw)} kW profile value; simultaneous peak unknown`
+        : `~${fmt(bom.inverter.peakLoadKw)} kW at once`,
+    ],
+    [
+      "Suggested class",
+      `${bom.inverter.recommendedKw} kW continuous minimum${isOffgrid ? " — standalone/off-grid inverter/charger matched to the battery voltage" : ""}`,
+    ],
+    ["Sizing basis", bom.inverter.sizingNote],
     ["Reference unit (only an example)", bom.inverter.referenceUnit],
     ["Surge rule", bom.inverter.surgeNote],
   ]);
+  if (isOffgrid) {
+    const unmet = Number(f.unmetHoursPerYear) || 0;
+    const backup =
+      unmet > 0 && lastPayload.generatorAllowed !== false
+        ? `Optional generator must cover the unmet ${fmt(unmet)} h/year and match measured peak/surge demand and the inverter's AC input. Generator, transfer equipment and fuel are not priced.`
+        : unmet > 0
+          ? `No generator is included or allowed; about ${fmt(unmet)} load hours/year remain unserved.`
+          : "The selected system meets the modeled load without generator backup.";
+    section("Standalone off-grid installation", [
+      [
+        "Utility connection",
+        "None assumed; this system must operate without the grid.",
+      ],
+      ["Backup status", backup],
+    ]);
+  }
   if (bom.controller) {
     section("Charge controller & protection", [
       [
@@ -6023,6 +6133,16 @@ function renderBomPanel() {
       "Battery Shunt / Monitor",
       "Precision 500 A shunt on main battery negative for exact State-of-Charge (SoC) tracking (voltage alone is inaccurate on lithium).",
     ],
+    ...(isOffgrid &&
+    lastPayload.generatorAllowed !== false &&
+    Number(f.unmetHoursPerYear) > 0
+      ? [
+          [
+            "Generator AC input / transfer equipment",
+            "Have a licensed electrician select inverter-compatible changeover equipment, prevent utility backfeed, and verify neutral/ground bonding for the standalone system.",
+          ],
+        ]
+      : []),
     [
       "Copper Busbars & Cables",
       "Solid copper busbars for multi-battery paralleling; hydraulic hex crimps with dual-wall adhesive heatshrink on all battery cable lugs.",
@@ -6186,7 +6306,7 @@ function renderMoneyBar(p) {
 
   if (!moneyBar) return;
 
-  if (!p.annualGridSpendUsd || !p.tariff) {
+  if (p.mode === "offgrid" || !p.annualGridSpendUsd || !p.tariff) {
     moneyBar.style.display = "none";
 
     return;
@@ -6315,7 +6435,11 @@ function renderTierCards(p) {
 
     if (footTier) rows.splice(2, 0, ["Footprint", footTier]);
 
-    if (t.paybackYearsLo !== null && t.paybackYearsHi !== null) {
+    if (
+      p.mode === "gridtie" &&
+      t.paybackYearsLo !== null &&
+      t.paybackYearsHi !== null
+    ) {
       rows.push([
         "Pays back its first cost in",
         fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi),
@@ -6323,8 +6447,9 @@ function renderTierCards(p) {
     }
 
     if (
-      typeof t.trueBreakEvenYear === "number" ||
-      (t.trueBreakEvenYear === null && t.replacementsHorizon > 0)
+      p.mode === "gridtie" &&
+      (typeof t.trueBreakEvenYear === "number" ||
+        (t.trueBreakEvenYear === null && t.replacementsHorizon > 0))
     ) {
       rows.push([
         "Breaks even on true 20-yr cost",
@@ -6335,7 +6460,7 @@ function renderTierCards(p) {
     }
 
     if (Number.isFinite(t.lcoeUsdPerKwh)) {
-      rows.push(powerCostRow(t, p.tariff));
+      rows.push(powerCostRow(t, p.tariff, p.mode));
     }
 
     if (t.replacementsHorizon > 0) {
@@ -7188,9 +7313,11 @@ function renderResults(p) {
         p.meta.offlineCity +
         " - a close approximation, not your exact site. Re-run online for five years of point-specific weather. "
       : "") +
-    (p.tariff
-      ? `Grid spend assumes ${energyRate(p.tariff)} at ${fmtKwh(p.dailyKwh ?? inp.dailyKwh)} kWh/day.`
-      : "No tariff entered, so payback is not shown.");
+    (p.mode === "offgrid"
+      ? "Standalone estimate; no utility-grid bill is used."
+      : p.tariff
+        ? `Grid spend assumes ${energyRate(p.tariff)} at ${fmtKwh(p.dailyKwh ?? inp.dailyKwh)} kWh/day.`
+        : "No tariff entered, so payback is not shown.");
 
   let briefLines;
 
@@ -7781,7 +7908,7 @@ function populatePrintSheet(p, inp) {
     title = "Off-Grid System Estimate";
 
     head =
-      "<tr><th>System</th><th>Solar</th><th>Battery (usable)</th><th>Component cost</th><th>Payback vs. grid</th><th>Energy cost</th></tr>";
+      "<tr><th>System</th><th>Solar</th><th>Battery (usable)</th><th>Component cost</th><th>Unmet hours/yr</th><th>Longest gap</th><th>Battery autonomy</th></tr>";
 
     rows = p.tiers
       .filter((t) => t.solvable)
@@ -7797,12 +7924,12 @@ function populatePrintSheet(p, inp) {
 
             moneyRange(t.costLo, t.costHi),
 
-            t.paybackYearsLo !== null
-              ? fmtPaybackRange(t.paybackYearsLo, t.paybackYearsHi)
-              : "n/a",
+            `${fmt(t.unmetHoursPerYear ?? 0)} h`,
 
-            Number.isFinite(t.lcoeUsdPerKwh)
-              ? `~${energyRate(t.lcoeUsdPerKwh)}`
+            `${fmt(t.longestGapHours ?? 0)} h`,
+
+            p.dailyKwh > 0
+              ? `~${(t.battKwh / p.dailyKwh).toFixed(1)} days`
               : "n/a",
           ].join("</td><td>") +
           "</td></tr>",
@@ -7821,6 +7948,7 @@ function populatePrintSheet(p, inp) {
   const footLine = foot ? foot + " - " : "";
   if (hwEntry) {
     const bom = buildBom({
+      mode: p.mode,
       pvKw: hwEntry.pvKw,
       battNameplateKwh: hwEntry.battNameplateKwh,
       chemistry: hwEntry.chemistry,
@@ -7863,7 +7991,7 @@ function populatePrintSheet(p, inp) {
       "Inverter",
       `${bom.inverter.recommendedKw} kW class`,
       "1",
-      "sized to peak load incl. surge margin",
+      bom.inverter.sizingNote,
     ]);
     if (bom.controller) {
       hwRows.push(
@@ -7931,7 +8059,7 @@ function populatePrintSheet(p, inp) {
 
       ${hwEntry && hwEntry.chemLabel ? hwEntry.chemLabel : p.chemistry.toUpperCase()} battery - location ${p.meta.latitude.toFixed(2)}, ${p.meta.longitude.toFixed(2)} -
 
-      ${footLine}${p.tariff ? `grid price ${energyRate(p.tariff)} (~${money(p.annualGridSpendUsd)}/yr)` : "no grid price entered"}</p>
+      ${footLine}${isGT && p.tariff ? `grid price ${energyRate(p.tariff)} (~${money(p.annualGridSpendUsd)}/yr)` : isGT ? "no grid price entered" : "no utility-grid connection assumed"}</p>
 
     ${hwHtml}
 

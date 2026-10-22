@@ -1152,6 +1152,10 @@ textarea:focus-visible {
   margin-bottom: 1.5rem;
 }
 
+.form-group.offgrid-generator-control {
+  margin-bottom: 0;
+}
+
 /* ── Use-case form utilities ────────────────────────────────────────────────
    Added with the six-case chooser (D-16) so the new markup spends ZERO inline
    style attributes: check-quality.mjs freezes that count as a ratchet, and a

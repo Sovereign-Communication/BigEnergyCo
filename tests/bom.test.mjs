@@ -7,6 +7,8 @@ import {
   FUSE_STANDARD_AMPS,
   WIRE_TABLE,
   RETAIL_MODULE_KWH,
+  OFFGRID_INVERTER_MIN_KW,
+  OFFGRID_PEAK_LOAD_MARGIN,
   nextInverterSize,
   nextFuseSize,
   pickSystemVoltage,
@@ -115,6 +117,41 @@ test("buildBom produces a coherent house-scale LFP system", () => {
   // 4 kW inverter on 48 V draws ~83 A → ×1.25 → 125 A fuse
   assert.equal(b.protection.mainFuseAmps, 125);
   assert.ok(b.feasibility.areaM2 >= 35 && b.feasibility.areaM2 <= 45);
+});
+
+test("off-grid BOM uses the same residential inverter floor and peak margin as the recommendation", () => {
+  const averageLoad = buildBom({
+    mode: "offgrid",
+    pvKw: 9.5,
+    battNameplateKwh: 56.3,
+    chemistry: "lfp",
+    peakLoadW: 833,
+    peakIsAverage: true,
+  });
+  assert.equal(OFFGRID_INVERTER_MIN_KW, 3);
+  assert.equal(averageLoad.inverter.peakLoadKw, 0.83);
+  assert.equal(averageLoad.inverter.sizingPeakKw, 1.04);
+  assert.equal(averageLoad.inverter.recommendedKw, 3);
+  assert.match(
+    averageLoad.inverter.sizingNote,
+    /3 kW continuous.*planning floor/i,
+  );
+  assert.equal(averageLoad.protection.mainFuseAmps, 80);
+  assert.ok(
+    averageLoad.notes.some((note) => /not a measured peak/i.test(note)),
+  );
+
+  const measuredPeak = buildBom({
+    mode: "offgrid",
+    pvKw: 9.5,
+    battNameplateKwh: 56.3,
+    chemistry: "lfp",
+    peakLoadW: 4200,
+    peakIsAverage: false,
+  });
+  assert.equal(OFFGRID_PEAK_LOAD_MARGIN, 1.25);
+  assert.equal(measuredPeak.inverter.sizingPeakKw, 5.25);
+  assert.equal(measuredPeak.inverter.recommendedKw, 6);
 });
 
 test("buildBom switches chemistry layouts correctly", () => {

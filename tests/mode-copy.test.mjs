@@ -29,8 +29,37 @@ const markup = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
 const money = (u) => "$" + Math.round(u).toLocaleString();
 const moneyRange = (lo, hi) => money(lo) + "–" + money(hi);
+const pathBand = (p) =>
+  p.year0Low === p.year0High
+    ? money(p.year0)
+    : moneyRange(p.year0Low, p.year0High);
 
 const LANGS = ["en", "es", "pt", "fr", "de", "ar"];
+
+test("the system-cost range is clearly separated from installed DIY and turnkey estimates", () => {
+  assert.match(ui, /t\("pathsPartsOnlyLabel"\)/);
+  assert.match(ui, /t\("pathsPriceBasisNote"\)/);
+  assert.match(ui, /pathsEstimateDiyHigherReason/);
+  for (const lang of LANGS) {
+    assert.ok(LOCALES[lang].pathsPartsOnlyLabel, `${lang} parts-only label`);
+    assert.ok(LOCALES[lang].pathsPriceBasisNote, `${lang} price-basis note`);
+    assert.ok(
+      LOCALES[lang].pathsEstimateDiyHigherReason,
+      `${lang} higher-DIY explanation`,
+    );
+    assert.match(
+      LOCALES[lang].pathsNoVerifiedIncentive,
+      /incentiv|program|subven|aide|förder|حوافز/i,
+      `${lang} tells visitors to check local incentive programs`,
+    );
+  }
+});
+
+test("the off-grid BOM labels a daily-load profile as an unknown peak", () => {
+  assert.match(ui, /Daily-load profile \(not measured peak\)/);
+  assert.match(ui, /profile value; simultaneous peak unknown/);
+  assert.match(ui, /OFFGRID_INVERTER_MIN_KW/);
+});
 
 // ── the sign has to follow the number ───────────────────────────────────────
 //
@@ -48,50 +77,127 @@ test("the installer comparison never reads a negative gap as a saving", () => {
     entryFor({ pvKw: 0, battKwh: 2.5, servedKwhPerYear: 1400 }),
     { annualBaselineBillsUsd: 900, tariff: 0.3 },
   );
-  const text = turnkeyQuoteText(
-    { costLo: 165, costHi: 591 },
-    money,
-    moneyRange,
-    paths,
-  );
+  const text = turnkeyQuoteText(paths, money, moneyRange);
   assert.doesNotMatch(
     text,
     /-\$[\d,]+/,
     `a negative figure must never appear: ${text}`,
   );
-  // Exactly one of the two words, and it must be the one the model's sign
-  // implies. Both at once would be a sentence arguing with itself.
-  const gap = paths.by.turnkey.year0 - paths.by.selfpurchase.year0;
-  const word =
-    gap >= 0
-      ? /cheaper than the installer's price/
-      : /dearer than the installer's price/;
-  const other =
-    gap >= 0
-      ? /dearer than the installer's price/
-      : /cheaper than the installer's price/;
-  assert.match(text, word, `the word must follow the model's sign: ${text}`);
-  assert.doesNotMatch(text, other);
+  assert.ok(paths.by.diy.available, "the DIY route is priced");
+  assert.ok(
+    text.includes(pathBand(paths.by.diy)),
+    `the sentence uses the DIY path's own price ${pathBand(paths.by.diy)}: ${text}`,
+  );
+  assert.ok(
+    !text.includes(
+      moneyRange(
+        paths.by.selfpurchase.year0Low,
+        paths.by.selfpurchase.year0High,
+      ),
+    ),
+    "the sentence does not substitute the full-electrician self-purchase route",
+  );
+  const gap =
+    (paths.by.turnkey.year0Low + paths.by.turnkey.year0High) / 2 -
+    (paths.by.diy.year0Low + paths.by.diy.year0High) / 2;
+  if (gap > 0) assert.ok(text.includes(`${money(gap)} lower`));
+  else if (gap < 0)
+    assert.ok(text.includes(`${money(-gap)} higher than turnkey`));
+  else assert.match(text, /same modeled midpoint/);
+  assert.match(text, /planning estimates, not quotes/i);
 });
 
-test("a whole-home system still reports the installer as the dearer route", () => {
+test("a whole-home comparison uses the DIY install route", () => {
   const paths = pricedFor(entryFor(), {
     annualBaselineBillsUsd: 2400,
     tariff: 0.3,
   });
-  const text = turnkeyQuoteText(
-    { costLo: 917, costHi: 3241 },
-    money,
-    moneyRange,
-    paths,
-  );
+  const text = turnkeyQuoteText(paths, money, moneyRange);
+  assert.ok(paths.by.diy.available, "the DIY route is priced");
   assert.ok(
-    paths.by.turnkey.year0 > paths.by.selfpurchase.year0,
-    "the installer route must cost more up front than parts plus paid labour",
+    text.includes(pathBand(paths.by.diy)),
+    "the explanation quotes the DIY route's price band",
   );
-  assert.match(text, /cheaper than the installer's price/);
-  assert.doesNotMatch(text, /dearer than the installer's price/);
+  const gap =
+    (paths.by.turnkey.year0Low + paths.by.turnkey.year0High) / 2 -
+    (paths.by.diy.year0Low + paths.by.diy.year0High) / 2;
+  if (gap > 0) assert.ok(text.includes(`${money(gap)} lower`));
+  else if (gap < 0) {
+    assert.ok(text.includes(`${money(-gap)} higher than turnkey`));
+    assert.match(text, /parts, .*electrician connection, .*permits/i);
+  } else assert.match(text, /same modeled midpoint/);
   assert.doesNotMatch(text, /-\$[\d,]+/);
+});
+
+test("a DIY midpoint above turnkey is explained with its included cost components", () => {
+  const paths = {
+    mode: "gridtie",
+    by: {
+      turnkey: {
+        available: true,
+        year0: 1000,
+        year0Low: 900,
+        year0High: 1100,
+      },
+      diy: {
+        available: true,
+        year0: 1600,
+        year0Low: 1500,
+        year0High: 1700,
+        hardware: 900,
+        labour: 300,
+        fees: 250,
+        tools: 150,
+      },
+    },
+  };
+  const text = turnkeyQuoteText(paths, money, moneyRange);
+  assert.match(text, /DIY midpoint is \$600 higher than turnkey/i);
+  assert.match(text, /\$900 in parts/);
+  assert.match(text, /\$300 for the electrician connection/);
+  assert.match(text, /\$250 in permits/);
+  assert.match(text, /\$150 for tools and safety/);
+});
+
+test("upfront quote comparison uses the visible ranges' arithmetic midpoints", () => {
+  const paths = {
+    mode: "gridtie",
+    by: {
+      turnkey: { available: true, year0: 1000, year0Low: 500, year0High: 1500 },
+      diy: {
+        available: true,
+        year0: 1100,
+        year0Low: 600,
+        year0High: 1200,
+        hardware: 500,
+        labour: 300,
+        fees: 200,
+        tools: 100,
+      },
+    },
+  };
+  const text = turnkeyQuoteText(paths, money, moneyRange);
+  assert.match(text, /DIY midpoint is \$100 lower/i);
+});
+
+test("off-grid estimate copy names the excluded generator costs and system lease", () => {
+  const paths = pricedFor(entryFor(), {
+    mode: "offgrid",
+    annualBaselineBillsUsd: 2400,
+    tariff: 0.3,
+  });
+  const text = turnkeyQuoteText(paths, money, moneyRange);
+  assert.equal(paths.by.lease.available, true);
+  assert.equal(paths.by.lease.endOfTerm.instrument, "lease");
+  assert.match(
+    text,
+    /Off-grid figures cover the selected PV, battery, and inverter/i,
+  );
+  assert.match(
+    text,
+    /Generator hardware, transfer equipment, and fuel are excluded/i,
+  );
+  assert.match(text, /not quotes/i);
 });
 
 test("no purchase-path sentence may name a fixed dollar amount it did not price", () => {
@@ -101,14 +207,11 @@ test("no purchase-path sentence may name a fixed dollar amount it did not price"
     annualBaselineBillsUsd: 2400,
     tariff: 0.3,
   });
-  const text = turnkeyQuoteText(
-    { costLo: 917, costHi: 3241 },
-    money,
-    moneyRange,
-    paths,
-  );
+  const text = turnkeyQuoteText(paths, money, moneyRange);
   assert.doesNotMatch(text, /\$1,500/);
   assert.doesNotMatch(text, /\$3,000/);
+  assert.match(text, /planning estimates, not quotes/i);
+  assert.match(text, /same system over 20 years/i);
 });
 
 // ── the parts list must not shop for an array the build has none of ─────────
@@ -239,7 +342,7 @@ test("the in-sentence best-value range is translated, with the same placeholders
 // ── the render wiring (pinned again from a real browser by the smoke gates) ──
 
 test("the levelized-cost row is named for what it measures in each mode", () => {
-  assert.match(ui, /function powerCostRow\(entry, tariff\)/);
+  assert.match(ui, /function powerCostRow\(entry, tariff, mode = "gridtie"\)/);
   assert.match(ui, /\[\"Your power cost\", lcoe \+ gridRate\(tariff\)\]/);
   assert.match(ui, /\"Cost per shifted kWh\"/);
   // One owner: no call site may go back to printing the LCOE as "your power
@@ -361,4 +464,36 @@ test("the simple card's explainer follows the system it just described", () => {
     ui,
     /t\(entry\.pvKw > 0 \? \"simpleWhatItMeans\" : \"simpleWhatItMeansBattery\"\)/,
   );
+});
+
+test("off-grid setup and result surfaces use reliability instead of grid-bill claims", () => {
+  assert.match(
+    ui,
+    /selectedUseCase\(\) === "offgrid"[\s\S]{0,120}quickOffgridSetup/,
+  );
+  assert.match(ui, /paths\.mode === "offgrid"[\s\S]{0,100}pathsRowBillCut/);
+  assert.match(
+    ui,
+    /mode === "offgrid"\) return \["Modeled system energy cost", lcoe\]/,
+  );
+  assert.match(ui, /p\.mode === "offgrid" \|\| !p\.annualGridSpendUsd/);
+  assert.match(
+    ui,
+    /p\.mode === "offgrid"[\s\S]{0,80}Standalone estimate; no utility-grid bill is used/,
+  );
+  assert.match(
+    charts,
+    /if \(p\.mode === "offgrid"\) \{[\s\S]{0,220}wrap\.style\.display = "none";/,
+  );
+  for (const id of LANGS) {
+    assert.match(
+      LOCALES[id].quickOffgridSetup,
+      /\{kwh\}/,
+      `${id}: quickOffgridSetup`,
+    );
+    assert.ok(
+      LOCALES[id].quickOffgridSetup.length > 80,
+      `${id}: missing translation`,
+    );
+  }
 });

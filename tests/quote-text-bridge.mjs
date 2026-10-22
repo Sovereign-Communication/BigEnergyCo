@@ -16,6 +16,8 @@ import {
   systemForPaths,
   HORIZON_YEARS,
 } from "../assets/js/sizing/paths.js";
+import { LOCALES } from "../assets/js/shared/locales.js";
+import { interpolate, pickString } from "../assets/js/shared/interpolate.js";
 
 const src = readFileSync(
   new URL("../assets/js/sizing/ui.js", import.meta.url),
@@ -33,7 +35,10 @@ const bridge = new Function(
   "PATHS_HORIZON_YEARS",
   `${code}; return turnkeyQuoteText;`,
 );
-export const turnkeyQuoteText = bridge(HORIZON_YEARS);
+const t = (key, vars) => interpolate(pickString(LOCALES.en, key), vars);
+const extractedQuoteText = bridge(HORIZON_YEARS);
+export const turnkeyQuoteText = (paths, moneyFn, rangeFn) =>
+  extractedQuoteText(paths, moneyFn, rangeFn, t);
 
 export const money = (u) => "$" + Math.round(u).toLocaleString();
 export const moneyRange = (lo, hi) => money(lo) + "–" + money(hi);
@@ -44,12 +49,18 @@ export const moneyRange = (lo, hi) => money(lo) + "–" + money(hi);
  * tariff); everything else comes from the engine's own entry fields.
  */
 export function pricedFor(entry, over = {}) {
+  const mode = over.mode ?? null;
   return priceAllPaths(
     systemForPaths(entry, {
       annualBaselineBillsUsd: over.annualBaselineBillsUsd ?? null,
       tariff: over.tariff ?? null,
+      mode,
     }),
-    { country: over.country ?? "US", instrument: over.instrument ?? "ppa" },
+    {
+      country: over.country ?? "US",
+      instrument: over.instrument ?? (mode === "offgrid" ? "lease" : "ppa"),
+      mode,
+    },
   );
 }
 
