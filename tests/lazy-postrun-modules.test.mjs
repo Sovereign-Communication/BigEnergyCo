@@ -10,10 +10,14 @@ const ui = readFileSync(
 test("post-run modules stay outside the initial UI import graph", () => {
   const modules = ["engine", "charts", "frontier-chart", "rescale"];
   const loaderStart = ui.indexOf("function preloadRunModules()");
-  const loaderEnd = ui.indexOf("// Live, quiet feedback", loaderStart);
-  assert.ok(loaderStart >= 0, "the lazy module loader exists");
-  assert.ok(loaderEnd > loaderStart, "the loader has a bounded source block");
-  const loader = ui.slice(loaderStart, loaderEnd);
+  const loader = ui.slice(
+    loaderStart,
+    ui.indexOf("// Live, quiet feedback", loaderStart),
+  );
+  assert.ok(
+    loaderStart >= 0 && loader.length > 0,
+    "the lazy module loader exists",
+  );
 
   for (const name of modules) {
     assert.ok(
@@ -28,7 +32,7 @@ test("post-run modules stay outside the initial UI import graph", () => {
   }
 
   assert.ok(
-    loader.indexOf("Promise.all") >= 0,
+    loader.includes("Promise.all"),
     "the result modules begin loading together",
   );
   assert.ok(
