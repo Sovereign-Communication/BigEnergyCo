@@ -17,16 +17,15 @@ const uiSrc = readFileSync(
   new URL("../assets/js/sizing/ui.js", import.meta.url),
   "utf8",
 );
-const block = uiSrc.match(
-  /import \{([^}]*)\} from "\.\/charts\.js\?v=([^"]+)";/,
-);
-assert.ok(block, "ui.js must import the stamped charts module");
-const uiImports = block[1]
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
+const block = uiSrc.match(/import\("\.\/charts\.js\?v=([^"]+)"\)/);
+assert.ok(block, "ui.js must dynamically import the stamped charts module");
+const uiImports = [
+  ...new Set(
+    [...uiSrc.matchAll(/_charts\.([A-Za-z_$][\w$]*)/g)].map((m) => m[1]),
+  ),
+];
 const charts = await import(
-  new URL(`../assets/js/sizing/charts.js?v=${block[2]}`, import.meta.url).href
+  new URL(`../assets/js/sizing/charts.js?v=${block[1]}`, import.meta.url).href
 );
 
 // Documented surface beyond ui.js's needs: the pure seams this file tests,

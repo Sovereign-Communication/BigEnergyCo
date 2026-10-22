@@ -211,6 +211,26 @@ export function moduleGraph(entries, read, staged) {
   return seen;
 }
 
+// Add modules explicitly loaded by preloadRunModules before renderResults
+// paints the first result. Other dynamic imports remain lazy and do not count.
+function firstResultGraph(entries, read, staged) {
+  const graph = new Set(moduleGraph(entries, read, staged));
+  const uiEntry = [...graph].find((file) => /(^|\/)sizing\/ui\.js$/.test(file));
+  if (!uiEntry) return graph;
+
+  const source = read(uiEntry).toString("utf8");
+  const start = source.indexOf("function preloadRunModules()");
+  const end = source.indexOf("// Live, quiet feedback", start);
+  if (start < 0 || end < 0) return graph;
+  const loader = source.slice(start, end);
+  const roots = [...loader.matchAll(/\bimport\s*\(\s*["']([^"']+)["']\s*\)/g)]
+    .map((match) => resolveRelative(uiEntry, match[1]))
+    .filter((file) => file && staged.has(file));
+  for (const root of roots) {
+    for (const file of moduleGraph([root], read, staged)) graph.add(file);
+  }
+  return graph;
+}
 export function scriptEntries(html, staged, from = "index.html") {
   const out = [];
   for (const m of html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/gi)) {
@@ -244,6 +264,8 @@ export function measureStagedBuild({ files, read }) {
   const entries = scriptEntries(html, has);
   const graph = [...moduleGraph(entries, read, has)];
   const graphBytes = sumOrNull(graph);
+  const firstResultGraphPaths = [...firstResultGraph(entries, read, has)];
+  const firstResultBytes = sumOrNull(firstResultGraphPaths);
   const graphSizes = Object.fromEntries(graph.map((f) => [f, size(f)]));
 
   const css = list.filter((f) => f.endsWith(".css"));
@@ -331,9 +353,9 @@ export function measureStagedBuild({ files, read }) {
         by_file: graphSizes,
         note: "every module the document's scripts statically reach, which the browser must fetch and evaluate before the entry module's code runs. The plan's 35 KB line; nothing lazy-loads in this build yet, so it is the whole graph.",
       }),
-      js_to_first_result: metric("js_to_first_result", graphBytes, {
-        files: graph.length,
-        note: "the same graph today, because no code path defers work between step 1 and the first result. Measured as its own line so the two diverge the moment something does.",
+      js_to_first_result: metric("js_to_first_result", firstResultBytes, {
+        files: firstResultGraphPaths.length,
+        note: "the initial static graph plus the modules preloadRunModules loads before renderResults paints; other dynamic imports stay deferred.",
       }),
       locale_strings: metric("locale_strings", localeValue, {
         locales: localeCount,

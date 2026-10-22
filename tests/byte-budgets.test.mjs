@@ -178,6 +178,31 @@ test("BUDGET: JS before interaction is the transitive module graph", () => {
   );
 });
 
+test("BUDGET: first-result JS includes modules awaited by the result loader", () => {
+  const { metrics } = measureStagedBuild(
+    fixture({
+      "assets/js/sizing/ui.js": [
+        'import { engine } from "./engine.js";',
+        'function preloadRunModules() { return Promise.all([import("./charts.js?v=20261022h"), import("./frontier-chart.js?v=20261022h")]); }',
+        "async function renderResults() { await preloadRunModules(); }",
+        "// Live, quiet feedback",
+      ].join("\n"),
+      "assets/js/sizing/charts.js":
+        'import { helper } from "../shared/helper.js"; export const charts = helper;',
+      "assets/js/sizing/frontier-chart.js": "export const frontier = 1;",
+      "assets/js/shared/helper.js": "export const helper = 1;",
+    }),
+  );
+  assert.ok(
+    metrics.js_to_first_result.files > metrics.js_before_interactive.files,
+    "modules that render the first result are counted even when loaded dynamically",
+  );
+  assert.ok(
+    metrics.js_to_first_result.value > metrics.js_before_interactive.value,
+    "the first-result reading includes the bytes of awaited result modules",
+  );
+});
+
 test("BUDGET: the registry budget is per country, so the worst country is reported", () => {
   const { metrics } = measureStagedBuild(
     fixture({
