@@ -21,6 +21,7 @@ run it after, and report the delta. This prevents moving the goalposts.
 If the rubric changes between runs, the delta is meaningless. A "before: 1.5,
 after: 3.2" claim is only valid if both used identical questions and criteria.
 Freezing prevents:
+
 - Tightening the rubric after to make the improvement look bigger
 - Loosening the rubric before to make the baseline look worse
 - Asking different questions that aren't comparable
@@ -28,6 +29,7 @@ Freezing prevents:
 ## Example: Netherlands readiness audit
 
 `~/workspace/bigenergyco-blog/jev-readiness-audit.py` implements this pattern:
+
 - `jev-readiness-audit-before-2026-10-16.json`: baseline (NL 1.49/4, world 1.99/4)
 - Run `python3 jev-readiness-audit.py after` once Dutch is live in prod
 - The delta measures the actual impact of shipping the Dutch locale
