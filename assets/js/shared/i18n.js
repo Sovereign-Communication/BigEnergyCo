@@ -16,7 +16,7 @@
 // chrome. A German or Arabic visitor sees native copy from the first frame,
 // including the advisor's degraded-failure surface — proven per-locale through
 // the real client path in tests/i18n-lazy.test.mjs.
-import { interpolate, pickString } from "./interpolate.js?v=20261022h";
+import { interpolate, pickString } from "./interpolate.js?v=20261022i";
 
 // Populated by the dynamic import below. Null until it resolves; every
 // consumer either awaits `localesReady` or degrades explicitly.
@@ -31,7 +31,7 @@ let LOCALES = null;
  * rejecting, because an untranslated-but-working page beats a blank one — and
  * `translate` already falls back to English for a missing key.
  */
-export const localesReady = import("./locales.js?v=20261022h")
+export const localesReady = import("./locales.js?v=20261022i")
   .then((m) => {
     LOCALES = m.LOCALES;
     return LOCALES;
@@ -123,16 +123,25 @@ export async function applyI18n() {
   window.becoT = translate;
   document.querySelectorAll("[data-i18n]").forEach((elNode) => {
     const key = elNode.getAttribute("data-i18n");
-    if (typeof dict?.[key] === "string") elNode.textContent = dict[key];
+    const value = dict?.[key];
+    if (typeof value === "string" && elNode.textContent !== value)
+      elNode.textContent = value;
   });
   document.querySelectorAll("[data-i18n-placeholder]").forEach((elNode) => {
     const key = elNode.getAttribute("data-i18n-placeholder");
-    if (typeof dict?.[key] === "string") elNode.placeholder = dict[key];
+    const value = dict?.[key];
+    if (typeof value === "string" && elNode.placeholder !== value)
+      elNode.placeholder = value;
   });
   document.querySelectorAll("[data-i18n-aria-label]").forEach((elNode) => {
     const key = elNode.getAttribute("data-i18n-aria-label");
-    if (typeof dict?.[key] === "string")
-      elNode.setAttribute("aria-label", dict[key]);
+    const value = dict?.[key];
+    if (
+      typeof value === "string" &&
+      elNode.getAttribute("aria-label") !== value
+    ) {
+      elNode.setAttribute("aria-label", value);
+    }
   });
 }
 
