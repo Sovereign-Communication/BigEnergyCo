@@ -245,6 +245,7 @@ let worker = null;
 
 let lastPayload = null; // kept for share links + the printable summary
 let prevFxSnapshot = null; // for tariff display conversion on currency switch
+let fxRateTouched = false;
 
 // Result detail level: "best" | "compare" | "matrix" (auto-chemistry runs only).
 let resultLevel = "best";
@@ -904,6 +905,11 @@ function useCaseInputs() {
   const id = selectedUseCase();
   const ess = catalogueKwh(ESSENTIAL_LOADS, "Ess");
   const dev = catalogueKwh(PORTABLE_DEVICES, "Port");
+  const fxRate = fxActive()?.rate;
+  const rateInUsd = (fieldId) => {
+    const value = parseFloat($(fieldId)?.value);
+    return Number.isFinite(value) ? (fxRate ? value / fxRate : value) : null;
+  };
   return {
     useCase: id,
     reservePct: normaliseReservePct(
@@ -917,8 +923,8 @@ function useCaseInputs() {
     portableDeviceKwh: dev > 0 ? dev : null,
     portableBankKwh: parseFloat($("portableBankKwh")?.value) || null,
     portableShorePower: $("portableShorePower")?.checked === true,
-    touPeakRate: parseFloat($("touPeakRate")?.value) || null,
-    touOffPeakRate: parseFloat($("touOffPeakRate")?.value) || null,
+    touPeakRate: rateInUsd("touPeakRate"),
+    touOffPeakRate: rateInUsd("touOffPeakRate"),
     generatorAllowed: $("generatorAllowed")?.checked !== false,
   };
 }
@@ -1019,7 +1025,6 @@ function renderUseCaseOutcome(p) {
       },
       t("useCaseVerdictFooter", {
         useCase: t(c.labelKey),
-        metric: t(o.labelKey),
       }),
     ),
   );
@@ -1031,24 +1036,33 @@ function renderUseCaseOutcome(p) {
 function verdictParams(o) {
   const m = o.measurement || {};
   const round = (v) => Math.round(Number(v) || 0);
+  const touCostKnown =
+    Number.isFinite(m.touBatteryCostUsd20y) && m.touBatteryCostUsd20y > 0;
   return {
     // The status word is a parameter, so one sentence per case reads correctly
     // whether it is saying yes, half, or no. Three words, six languages.
-    status: t(
-      o.status === "works"
-        ? "statusWorks"
-        : o.status === "partial"
-          ? "statusPartial"
-          : "statusNotHere",
-    ),
+    status:
+      o.useCase === "tou" && !touCostKnown
+        ? t("statusNotHere")
+        : t(
+            o.status === "works"
+              ? "statusWorks"
+              : o.status === "partial"
+                ? "statusPartial"
+                : "statusNotHere",
+          ),
     metric: t(o.labelKey),
     pct: round(o.unit === "tradeoff" ? m.reserveSavingsLostPct : o.value),
     hours: round(m.backupHoursP50 ?? m.reserveCoverHours),
     targetHours: round(m.backupTargetHours ?? m.outageTargetHours),
     coverHours: round(m.reserveCoverHours),
-    saving: round(m.touSavingUsd20y),
-    cost: round(m.touBatteryCostUsd20y),
-    spread: (Number(m.touSpreadPerKwh) || 0).toFixed(2),
+    saving: money(m.touSavingUsd20y),
+    cost: touCostKnown ? money(m.touBatteryCostUsd20y) : t("pathsUnknown"),
+    costStatement: t(
+      touCostKnown ? "verdictTouCostKnown" : "verdictTouCostUnknown",
+      touCostKnown ? { cost: money(m.touBatteryCostUsd20y) } : {},
+    ),
+    spread: localRate(Number(m.touSpreadPerKwh) || 0),
     unmetHours: round(m.unmetHoursWorstYear),
     autonomy: (Number(m.autonomyDays) || 0).toFixed(1),
     runtime: round(m.portableAutonomyHours),
@@ -2214,6 +2228,7 @@ function setCoords(lat, lon, label, region, country, skipShareUpdate = false) {
   tariffTouched = false;
 
   currencyTouched = false;
+  fxRateTouched = false;
 
   // Location selection only fills the pre-calc inputs. Weather is fetched
   // after the visitor explicitly clicks the sizing button.
@@ -2254,6 +2269,17 @@ let tariffTouched = false;
 
 let currencyTouched = false;
 
+function convertDisplayCurrencyFields(ids, oldFx, nextFx) {
+  const oldRate = oldFx?.rate || 1;
+  const nextRate = nextFx?.rate || 1;
+  for (const id of ids) {
+    const node = $(id);
+    const value = parseFloat(node?.value);
+    if (!node || !Number.isFinite(value)) continue;
+    node.value = String(+((value / oldRate) * nextRate).toFixed(4));
+  }
+}
+
 function setCurrency(code) {
   const cur = CURRENCIES[code];
 
@@ -2266,6 +2292,11 @@ function setCurrency(code) {
 
   const oldFx = prevFxSnapshot;
   prevFxSnapshot = fxActive();
+  convertDisplayCurrencyFields(
+    ["touPeakRate", "touOffPeakRate"],
+    oldFx,
+    prevFxSnapshot,
+  );
 
   // If the user explicitly set their monthly bill and currency
   // auto-switched to a new currency (e.g. USD -> CAD), convert the nominal bill amount
@@ -6056,7 +6087,8 @@ function renderBomPanel() {
   }
   // Provenance: every price the visitor decides on gets a source.
   const pricingSource =
-    lastPayload?.pricing?.source || "cell market indications through PowMr catalog, Aug 2026";
+    lastPayload?.pricing?.source ||
+    "cell market indications through PowMr catalog, Aug 2026";
   body.appendChild(
     el(
       "p",
@@ -6712,7 +6744,8 @@ function adoptFrontierPoint(i, opts = {}) {
   if (frontierSource) {
     const weatherSrc = p.meta?.source || "NASA POWER";
     const priceSrc =
-      p.pricing?.source || "cell market indications through PowMr catalog, Aug 2026";
+      p.pricing?.source ||
+      "cell market indications through PowMr catalog, Aug 2026";
     frontierSource.textContent = `Data: weather ${weatherSrc}; prices ${priceSrc}.`;
   }
 }
@@ -7201,7 +7234,8 @@ function renderResults(p) {
     `Charging blocked below chemistry's cold limit (LFP 0°C). Load basis: ${inp.basis}. ` +
     `Costs span ${pr.basisLabel || "ex-factory China to PowMr-class budget retail"} (${pr.source || "cell market indications through PowMr catalog, Aug 2026"}) - ` +
     `the low end is components before freight/duty/BMS, the high end is shipped retail with BMS and enclosure included. ` +
-    t("financeOwnNote") + " " +
+    t("financeOwnNote") +
+    " " +
     (a.money ? a.money + " " : "") +
     (a.capacityNote ? a.capacityNote + " " : "") +
     (fxNote() ? fxNote() + " " : "") +
@@ -8344,38 +8378,34 @@ export async function initSizingUI() {
 
       if (elNode)
         elNode.addEventListener("input", () => {
-          // Preserve USD value of tariff when currency switches: convert display
-          // value from old rate to new so $0.42 doesn't become 0.46$ after toggle.
-          // The export rate and generator fuel price are entered in the same
-          // display currency, so they convert identically — otherwise switching
-          // currency silently changes their effective USD value.
-          const convertField = (id) => {
-            const node = $(id);
-            const curVal = parseFloat(node?.value);
-            if (
-              !node ||
-              !Number.isFinite(curVal) ||
-              !prevFxSnapshot ||
-              !prevFxSnapshot.rate
-            )
-              return;
-            const usd = curVal / prevFxSnapshot.rate;
-            const nextFx = fxActive();
-            if (nextFx && nextFx.rate) {
-              node.value = String(+(usd * nextFx.rate).toFixed(4));
-            } else if (!nextFx) {
-              node.value = String(+usd.toFixed(4));
-            }
-          };
-          convertField("customRateVal");
-          convertField("exportRate");
-          convertField("fixedChargeVal");
-          convertField("genFuelPrice");
+          // Preserve the USD meaning of every entered energy price when its
+          // display currency changes. TOU prices share the tariff's currency;
+          // leaving them numerically unchanged would silently change the
+          // simulated arbitrage economics.
+          const nextFx = fxActive();
+          // A temporarily invalid rate displays base-USD values; retain that
+          // baseline so a pending live refresh can convert them into the
+          // selected currency without changing their USD meaning.
+          const displayFx =
+            id === "fxRate" && !nextFx ? { code: "USD", rate: 1 } : nextFx;
+          convertDisplayCurrencyFields(
+            [
+              "customRateVal",
+              "exportRate",
+              "fixedChargeVal",
+              "genFuelPrice",
+              "touPeakRate",
+              "touOffPeakRate",
+            ],
+            prevFxSnapshot,
+            displayFx,
+          );
 
           currencyTouched = true;
+          if (id === "fxRate") fxRateTouched = true;
 
           updateCurrencyUnitLabel();
-          prevFxSnapshot = fxActive();
+          prevFxSnapshot = displayFx;
           syncBillSlider();
 
           if (lastPayload) {
@@ -8681,24 +8711,29 @@ async function refreshFxRates() {
     // fields convert with it so their USD meaning is preserved.
     const fxInput = $("fxRate");
     const code = ($("fxCode")?.value || "").trim().toUpperCase();
-    if (fxInput && code && Number.isFinite(CURRENCIES[code]?.perUSD)) {
-      const oldRate = parseFloat(fxInput.value);
-      const newRate = CURRENCIES[code].perUSD;
-      if (Number.isFinite(oldRate) && oldRate > 0 && oldRate !== newRate) {
-        for (const id of [
+    if (
+      fxInput &&
+      code &&
+      Number.isFinite(CURRENCIES[code]?.perUSD) &&
+      (!fxRateTouched || !fxActive())
+    ) {
+      const oldFx = prevFxSnapshot;
+      fxInput.value = String(CURRENCIES[code].perUSD);
+      const nextFx = fxActive();
+      convertDisplayCurrencyFields(
+        [
           "customRateVal",
           "exportRate",
           "fixedChargeVal",
           "genFuelPrice",
-        ]) {
-          const node = $(id);
-          const v = parseFloat(node?.value);
-          if (node && Number.isFinite(v))
-            node.value = String(+((v / oldRate) * newRate).toFixed(4));
-        }
-      }
-      fxInput.value = String(newRate);
-      prevFxSnapshot = fxActive();
+          "touPeakRate",
+          "touOffPeakRate",
+        ],
+        oldFx,
+        nextFx,
+      );
+      prevFxSnapshot = nextFx;
+      fxRateTouched = false;
     }
 
     if (lastPayload) renderResults(lastPayload);

@@ -1,0 +1,63 @@
+{
+  "baseline": "07f51ea4712acbd5d8688470be5b9889001e4b59",
+  "ownedPaths": [
+    "assets/js/shared/locales.js",
+    "assets/js/sizing/run.js",
+    "assets/js/sizing/ui.js",
+    "assets/js/sizing/usecases.js",
+    "scripts/smoke/runtime.mjs",
+    "tests/usecase-backup.test.mjs",
+    "tests/usecase-reserve.test.mjs",
+    "tests/usecase-tou.test.mjs",
+    "tests/usecase-portable.test.mjs",
+    "tests/usecase-fixture.mjs"
+  ],
+  "excludedPaths": ["robots.txt"],
+  "npmTest": {
+    "command": "npm test",
+    "runs": 1,
+    "node": "v24.18.0",
+    "exitCode": 1,
+    "passed": 1135,
+    "failed": 82,
+    "total": 1217,
+    "skipped": 0,
+    "log": "repro-current-full-suite.log",
+    "exit": "repro-current-full-suite.exit",
+    "failureInventory": "current-full-suite-failures.json",
+    "releaseReady": false
+  },
+  "patch": {
+    "file": "repair.patch",
+    "baseline": "07f51ea4712acbd5d8688470be5b9889001e4b59",
+    "paths": 10,
+    "containsRobotsTxt": false,
+    "applyCheck": true,
+    "apply": true,
+    "allPathsMatchWipAfterCrlfNormalization": true,
+    "reverseApplyCheck": true,
+    "reverseApply": true,
+    "restoredDisposableWorktreeClean": true,
+    "disposableWorktreeRemoved": true,
+    "warnings": "git apply reported two whitespace warnings on blank lines in changed hunks"
+  },
+  "originalCheckout": {
+    "branch": "docs/ledger-p1-3",
+    "head": "0546265d2345a8bb17cb7918e11f24747195e165",
+    "preservationRecord": "checkout-preservation.json",
+    "reverifiedThisRun": {
+      "hashesChecked": 150,
+      "changed": [],
+      "missing": []
+    },
+    "otherPreexistingUntrackedItemsRemain": true,
+    "wipDirectoryAdded": true,
+    "realIndexUnstaged": true
+  },
+  "notes": [
+    "No commit, publish, merge, deploy, or real-index staging performed.",
+    "The user explicitly asked not to fix unrelated SEO, HTML-budget, or staging-parity gates.",
+    "The full suite failed; no release-readiness claim is made.",
+    "Pre-existing unrelated WIP changes, especially robots.txt, were preserved and excluded from repair.patch."
+  ]
+}

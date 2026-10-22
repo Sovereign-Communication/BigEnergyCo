@@ -1,0 +1,18 @@
+[
+  {
+    "path": "assets/js/sizing/ui.js",
+    "unchangedFromBaseline": true
+  },
+  {
+    "path": "index.html",
+    "unchangedFromBaseline": true
+  },
+  {
+    "path": "evidence/advisor-and-release.json",
+    "unchangedFromBaseline": true
+  },
+  {
+    "path": "sw.js",
+    "unchangedFromBaseline": true
+  }
+]

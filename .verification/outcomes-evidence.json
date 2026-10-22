@@ -1,0 +1,66 @@
+{
+  "tou": [
+    {
+      "years": 1,
+      "status": "works",
+      "measurement": {
+        "touPeakOffsetPct": 36.83198609903927,
+        "touSpreadPerKwh": 0.5,
+        "touSavingUsd20y": 2751.1821857327413,
+        "touBatteryCostUsd20y": 465,
+        "battKwh": 1
+      }
+    },
+    {
+      "years": 5,
+      "status": "works",
+      "measurement": {
+        "touPeakOffsetPct": 36.83198609903252,
+        "touSpreadPerKwh": 0.5,
+        "touSavingUsd20y": 2751.8817511376783,
+        "touBatteryCostUsd20y": 465,
+        "battKwh": 1
+      }
+    }
+  ],
+  "auto": {
+    "status": "works",
+    "measurement": {
+      "touPeakOffsetPct": 73.66397219808312,
+      "touSpreadPerKwh": 0.5,
+      "touSavingUsd20y": 5502.364371465861,
+      "touBatteryCostUsd20y": 827,
+      "battKwh": 2
+    }
+  },
+  "adopted": {
+    "status": "works",
+    "measurement": {
+      "touPeakOffsetPct": 100,
+      "touSpreadPerKwh": 0.5,
+      "touSavingUsd20y": 7463.579713292443,
+      "touBatteryCostUsd20y": 1552,
+      "battKwh": 8
+    }
+  },
+  "reserve": {
+    "status": "works",
+    "measurement": {
+      "reserveSavingsLostPct": 4.3947062596754884,
+      "reserveCoverHours": 24.000000000000004,
+      "battKwh": 6
+    }
+  },
+  "fixture": {
+    "site": "Honolulu, USA",
+    "source": "bundled typical-year profile",
+    "yearsCompared": [1, 5],
+    "timeHorizonYears": 20
+  },
+  "provenance": {
+    "baselineHead": "07f51ea4712acbd5d8688470be5b9889001e4b59",
+    "originalHashCount": 150,
+    "originalDrift": [],
+    "realGitIndexLeftUnstaged": true
+  }
+}

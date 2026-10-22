@@ -1,0 +1,105 @@
+{
+  "base": "http://127.0.0.1:51155/",
+  "userFlow": {
+    "location": "Honolulu, Hawaii, USA",
+    "chemistry": "auto",
+    "rates": {
+      "peak": 0.6,
+      "offPeak": 0.1
+    },
+    "resultText": "Your Save with a battery on time-of-use rates result\n100%\nof your peak-window energy run by the battery\n\nWorks: the battery covers 100% of your peak-window energy, worth about 15167 over 20 years against a 2198 battery. Your peak-to-off-peak spread here is 0.50 per kWh.\n\nMeasured for Save with a battery on time-of-use rates against of your peak-window energy run by the battery, using this location's own hourly weather.",
+    "status": "✅ 5 yr of hourly data (2021–2025) · 1,803 kWh/yr per kW of panel."
+  },
+  "worker": {
+    "type": "ok",
+    "seq": 911,
+    "epoch": 12,
+    "useCase": "tou",
+    "metricId": "tou_peak_offset_pct",
+    "verdict": "works",
+    "measurement": {
+      "useCase": "tou",
+      "reservePct": 0.2,
+      "measured": true,
+      "unreachableReason": null,
+      "essentialKwhDefaulted": false,
+      "touPeakOffsetPct": 100,
+      "touSpreadPerKwh": 0.5,
+      "touSavingUsd20y": 15167.132063076337,
+      "touBatteryCostUsd20y": 2198,
+      "battKwh": 11
+    },
+    "assumptions": {
+      "derates": {
+        "soiling": 0.97,
+        "wiring": 0.98,
+        "mismatch": 0.99,
+        "mppt": 0.98,
+        "snow": 1
+      },
+      "climateAware": false,
+      "climate": "tropical",
+      "soilingFactor": 0.97,
+      "worstMonth": {
+        "startDay": 1824,
+        "endDay": 1826,
+        "ghi": 6744.8099575042725,
+        "averageDailyGhi": 3.372404978752136
+      },
+      "thermal": {
+        "lfp": {
+          "capacityFactor": 1,
+          "chargeMinC": 0,
+          "minC": 18.959999084472656,
+          "meanC": 25.098217410256105,
+          "warning": null
+        },
+        "naion": {
+          "capacityFactor": 1,
+          "chargeMinC": -20,
+          "minC": 18.959999084472656,
+          "meanC": 25.098217410256105,
+          "warning": null
+        },
+        "agm": {
+          "capacityFactor": 1,
+          "chargeMinC": -20,
+          "minC": 18.959999084472656,
+          "meanC": 25.098217410256105,
+          "warning": null
+        }
+      },
+      "gammaPerC": -0.0034,
+      "noctC": 45,
+      "etaInverter": 0.94,
+      "dataYears": "2021–2025",
+      "source": "NASA POWER MERRA2/SYN1DEG via power.larc.nasa.gov",
+      "offline": false,
+      "capacityScale": {
+        "naion": 0.85,
+        "lfp": 1,
+        "agm": 0.85
+      },
+      "meanTempC": 25,
+      "capacityNote": "Capacity model at this site's mean 25°C: LFP 100%, sodium-ion 85% (LFP voltage settings), lead-acid (AGM) about 85% (cold derating where applicable).",
+      "cycleLifeTo80": {
+        "naion": 5500,
+        "lfp": 6000,
+        "agm": 500
+      },
+      "money": "Auto mode sizes sodium-ion and LFP to deliver the same bill cut within its depth-of-discharge window (sodium modeled on LFP voltage settings — slightly less capacity, gentler discharge). The 10/15/20% peak-offset matrix columns are fixed reference points; the \"your target\" column follows the 1–150% slider and is sized by an exact engine run. Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended. Payback compares first cost against bill savings; fixed connection fees not counted."
+    },
+    "contextLeaked": false
+  },
+  "errors": [
+    "Failed to load resource: the server responded with a status of 501 (Not Implemented)"
+  ],
+  "responses": [
+    {
+      "url": "http://127.0.0.1:51155/api/health",
+      "status": 501
+    }
+  ],
+  "http": 200,
+  "verified": true
+}
