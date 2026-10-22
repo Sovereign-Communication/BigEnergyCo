@@ -8,7 +8,10 @@ const html = readFileSync(
 );
 const listing = readFileSync("blog/index.html", "utf8");
 const start = html.indexOf("<!-- Executive Summary Callout -->");
-const end = html.indexOf("3. LiFePO<sub>4</sub>", start);
+const end = html.indexOf(
+  "<h2>3. Chemistry does not guarantee a service life</h2>",
+  start,
+);
 
 test("cycle-life guidance cites test conditions and avoids a universal curve", () => {
   assert.ok(start >= 0 && end > start);
@@ -21,6 +24,24 @@ test("cycle-life guidance cites test conditions and avoids a universal curve", (
   assert.doesNotMatch(reviewedSection, /Wöhler|10,000 cycles|zero-swap/i);
 });
 
+test("chemistry guidance avoids universal cycle-life and discharge claims", () => {
+  const start = html.indexOf(
+    "<h2>3. Chemistry does not guarantee a service life</h2>",
+  );
+  const end = html.indexOf("<h2>6. 20-Year Worked Financial Example", start);
+  assert.ok(start >= 0 && end > start);
+  const chemistry = html.slice(start, end);
+  assert.match(chemistry, /https:\/\/www\.osti\.gov\/biblio\/1650174/);
+  assert.match(
+    chemistry,
+    /https:\/\/assets\.discoverbattery\.com\/documents\/07_sla\/885_product_literature\/standard-agm-battery-performance\.pdf/,
+  );
+  assert.match(chemistry, /Do not infer a pack's usable range/);
+  assert.doesNotMatch(
+    chemistry,
+    /safely discharges to 0\.0V|zero capacity loss|5,500 to 6,500 cycles|6,000 to 8,000 cycles|6 to 8 years/i,
+  );
+});
 test("the first battery FAQ schema matches its revised visible answer", () => {
   const json = html.match(
     /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
