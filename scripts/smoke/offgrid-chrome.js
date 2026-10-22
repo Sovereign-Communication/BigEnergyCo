@@ -87,6 +87,23 @@ export async function runOffgridChromeFlow(ctx, actions) {
     `shown=${panelShown}`,
   );
   const genState = await evaluate(genStateOf);
+  // TEMP-DIAG (round 5): capture the exact DOM state for the CI-only failure.
+  const diag = await evaluate(`(() => {
+    const panel = document.getElementById("offgridInputs");
+    const s = document.getElementById("generatorRuntime");
+    const uc = document.getElementById("useCase");
+    return {
+      ucValue: uc ? uc.value : "NO_UC",
+      ucOptions: uc ? [...uc.options].map((o) => o.value).join(",") : "NO_UC",
+      panelExists: !!panel,
+      panelHiddenProp: panel ? panel.hidden : "NO_PANEL",
+      panelDisplay: panel ? getComputedStyle(panel).display : "NO_PANEL",
+      selectDisplay: s ? getComputedStyle(s).display : "NO_SELECT",
+      selectOffsetParentNull: s ? s.offsetParent === null : "NO_SELECT",
+      selectInPanel: panel && s ? panel.contains(s) : "N/A",
+    };
+  })()`);
+  console.log(`SMOKE DIAG  offgrid-panel-state: ${JSON.stringify(diag)}`);
   gate(
     "off-grid chrome: generator question visible on the off-grid use case",
     genState.visible === true,
