@@ -6,6 +6,7 @@ const html = readFileSync(
   "blog/battery-longevity-and-dod-reference/index.html",
   "utf8",
 );
+const listing = readFileSync("blog/index.html", "utf8");
 const start = html.indexOf("<!-- Executive Summary Callout -->");
 const end = html.indexOf("3. LiFePO<sub>4</sub>", start);
 
@@ -28,7 +29,7 @@ test("the first battery FAQ schema matches its revised visible answer", () => {
   const graph = JSON.parse(json[1]);
   const article = graph["@graph"].find((item) => item["@type"] === "Article");
   const faq = graph["@graph"].find((item) => item["@type"] === "FAQPage");
-  assert.equal(article.dateModified, "2026-10-22T00:00:00Z");
+  assert.equal(article.dateModified, "2026-09-11T00:00:00Z");
   assert.equal(
     faq.mainEntity[0].name,
     "How should I compare cycle-life ratings at different DoD values?",
@@ -40,5 +41,14 @@ test("the first battery FAQ schema matches its revised visible answer", () => {
   assert.doesNotMatch(
     faq.mainEntity[0].acceptedAnswer.text,
     /Wöhler|10,000 cycles/i,
+  );
+});
+
+test("the blog card and structured data use the revised battery guide title", () => {
+  const title = "Battery cycle life and depth of discharge: a practical guide";
+  assert.equal(listing.match(new RegExp(title, "g"))?.length, 3);
+  assert.doesNotMatch(
+    listing,
+    /Zero-Swap Guide|eliminate battery replacements/i,
   );
 });
