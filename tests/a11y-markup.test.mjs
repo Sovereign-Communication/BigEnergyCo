@@ -389,3 +389,31 @@ test("A11Y: 404 has one main landmark and keeps its content inside it", () => {
     "and the nav keeps its own name, which is what distinguishes it from other navs",
   );
 });
+
+test("A11Y: selectable matrix-cell names include their visible summary", () => {
+  const source = read("assets/js/sizing/ui.js");
+  const start = source.indexOf("function matrixHtml(p) {");
+  assert.notEqual(start, -1, "the comparison matrix renderer exists");
+  const matrix = source.slice(start);
+  const labelStart = matrix.indexOf("aria-label=");
+  assert.notEqual(labelStart, -1, "selectable cells have an accessible name");
+  assert.ok(
+    matrix.indexOf("${visibleText}", labelStart) > labelStart,
+    "the accessible name includes the cell visible summary",
+  );
+  for (const visiblePart of [
+    "const visibleText = [",
+    "pvText,",
+    "batteryText,",
+    "costText,",
+    "lifetimeText,",
+    "rel,",
+    "lcoeText,",
+    "${pvText}<br>${batteryText}<br>${costText}",
+  ]) {
+    assert.ok(
+      matrix.includes(visiblePart),
+      "matrix rendering includes " + visiblePart,
+    );
+  }
+});
