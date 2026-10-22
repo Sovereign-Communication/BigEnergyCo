@@ -623,247 +623,61 @@
           and inverter documentation. Treat the result as a planning input; it
           is not a warranty or a battery-life prediction.
         </p>
-        <h2>
-          3. LiFePO<sub>4</sub> (LFP) Deep Dive: The 80% Benchmark vs. The 60%
-          Zero-Swap Sweet Spot
-        </h2>
+        <h2>3. Chemistry does not guarantee a service life</h2>
         <p>
-          Lithium Iron Phosphate (LFP) has rightfully become the global gold
-          standard for stationary off-grid energy storage. However, consumer
-          marketing often conflates cell limits with optimal engineering
-          practice.
-        </p>
-        <h3>Why the Standard Rating is 80% DoD</h3>
-        <p>
-          Tier-1 power-cell manufacturers (such as CATL and EVE Energy in their
-          LF280K and LF314K prismatic datasheets) evaluate cells at:
-        </p>
-        <ul>
-          <li><strong>Temperature:</strong> 25&deg;C &plusmn; 2&deg;C.</li>
-          <li>
-            <strong>Charge/Discharge Rate:</strong> 0.5C constant current charge
-            to 3.65V, 0.5C discharge to 2.50V.
-          </li>
-          <li>
-            <strong>Depth of Discharge:</strong> 80% DoD (cycling between 10%
-            and 90% SoC).
-          </li>
-          <li>
-            <strong>End of Life (EOL) Criterion:</strong> 80% capacity retention
-            (State of Health).
-          </li>
-        </ul>
-        <p>
-          Under these standardized conditions, Grade-A prismatic LFP cells
-          consistently achieve <strong>6,000 to 8,000 cycles</strong>. In a
-          daily cycling off-grid home (365 cycles per year), 6,000 cycles
-          equates to <strong>16.4 years of service</strong>. While impressive,
-          an 80% DoD sizing strategy means that around year 14 to 16, the
-          homeowner must purchase a replacement bank, hire an electrician, and
-          dismantle their power wall.
+          Cycle-life figures describe a particular cell or pack under a stated
+          test. Chemistry alone does not establish usable capacity, cycle life,
+          calendar life, cold-weather performance, or replacement timing. Read
+          the exact product documentation and compare the conditions behind each
+          rating.
         </p>
 
-        <div class="callout callout-warning">
-          <div class="callout-title">
-            ⚠️ The Hazard of Daily 90%–100% Deep Discharges
-          </div>
-          <p style="margin-bottom: 0">
-            Some installers size battery banks right at the edge of the load
-            curve (relying on 90% to 95% DoD daily). Discharging LFP below
-            3.0V/cell daily drives cell voltage into the steep discharge cliff.
-            In this regime, graphite anode delamination accelerates, and lithium
-            plating occurs during morning solar recharge before cell
-            temperatures normalize. Operating at 95%+ daily DoD degrades LFP
-            cycle life to <strong>3,500–4,200 cycles (under 11 years)</strong>.
-          </p>
-        </div>
-
-        <h3>The Math of Zero-Swap Oversizing</h3>
+        <h3>Lithium iron phosphate (LFP)</h3>
         <p>
-          By oversizing the LFP bank by just <strong>30%</strong> (for example,
-          installing 16.5 kWh instead of 12.5 kWh for a 10 kWh/day home), daily
-          depth of discharge drops from 80% to <strong>60.6%</strong>. Plugging
-          DoD = 0.606 into our Wöhler model:
-        </p>
-        <div class="math-box">
-          N = 6,000 × (0.80 / 0.606)^1.65 = 6,000 × (1.32)^1.65 = 6,000 × 1.58 =
-          9,480 cycles
-        </div>
-        <p>
-          At 365 cycles per year, 9,480 cycles translates to
-          <strong>26 years of continuous daily operation</strong>. Because the
-          bank never operates under high lattice strain, calendar aging becomes
-          the primary degradation mechanism, and the bank easily crosses the
-          20-year threshold with <strong>zero battery replacements</strong>.
-        </p>
-
-        <h2>
-          4. Sodium-Ion (Na-Ion) Deep Dive: The 0V Cell Window vs. Inverter
-          Clipping Reality
-        </h2>
-        <p>
-          Sodium-ion batteries represent the most significant chemistry
-          breakthrough for stationary storage in two decades. Their
-          electrochemical profile introduces unique characteristics that
-          directly influence longevity calculations:
-        </p>
-
-        <h3>Why Sodium-Ion Safely Discharges to 0.0V</h3>
-        <p>
-          In lithium-ion cells (including LFP and NMC), the positive cathode
-          current collector is aluminum foil, while the negative anode collector
-          must be copper foil. Lithium alloys destructively with aluminum at low
-          potentials, necessitating copper. However, if a lithium cell
-          discharges below ~1.5V,
-          <strong
-            >the copper current collector dissolves into the liquid
-            electrolyte</strong
-          >
-          as Cu<sup>2+</sup> ions. Upon recharging, copper plates uncontrollably
-          into microscopic metallic needles (dendrites) that puncture the
-          separator, causing instantaneous internal shorts and fire hazards.
+          A cycle count is meaningful only with its test conditions and
+          end-of-life definition. Preger et al. tested commercial lithium-ion
+          cells under different cycling conditions and found substantial
+          variation in the time and cycle count to 80% capacity. That study
+          describes its tested cells; it is not a universal curve for every LFP
+          product. See
+          <a href="https://www.osti.gov/biblio/1650174">the study record</a>.
         </p>
         <p>
-          <strong
-            >Sodium does not alloy with aluminum at low potentials.</strong
-          >
-          Consequently, sodium-ion cells use
-          <strong
-            >inexpensive, lightweight aluminum current collectors on both
-            positive and negative electrodes</strong
-          >. Aluminum does not dissolve at zero volts. A sodium-ion pack can be
-          discharged completely to 0.0V, short-circuited with a copper busbar
-          for shipping, and stored for years with zero capacity loss or safety
-          degradation.
+          For a product comparison, check the maker's stated charge and
+          discharge limits, temperature, rate, depth of discharge, and capacity
+          threshold. Do not convert a lab cycle count directly into a calendar
+          service-life promise.
         </p>
 
-        <h3>
-          The Inverter Voltage Window Reality: &ldquo;Using Less of It&rdquo;
-        </h3>
+        <h3>Sodium-ion</h3>
         <p>
-          While the sodium-ion cell has a true 95%+ usable electrochemical
-          window, residential off-grid inverters (SRNE, PowMr, Deye, Sol-Ark,
-          Schneider) were engineered around the flat voltage profile of LFP (48V
-          nominal, operating between 54V and 42V).
+          Do not infer a pack's usable range, voltage limits, storage behavior,
+          cold-weather limits, or inverter compatibility from the chemistry
+          name. Follow the exact battery manufacturer's operating limits,
+          battery-management-system cutoffs, and the inverter maker's
+          compatibility guidance. Treat any cycle-life figure as specific to the
+          product and test conditions that produced it.
         </p>
-        <ul>
-          <li>
-            <strong>LFP Voltage Characteristic:</strong> Extremely flat curve.
-            80% of capacity is delivered between 3.25V and 3.15V per cell.
-          </li>
-          <li>
-            <strong>Sodium-Ion Voltage Characteristic:</strong> Continuously
-            sloping discharge curve from 4.0V down to 1.5V per cell.
-          </li>
-        </ul>
+
+        <h3>Lead-acid and AGM</h3>
         <p>
-          When a 16S Sodium-ion battery pack is connected to a standard 48V
-          inverter, the inverter&rsquo;s Low Voltage Disconnect (LVD) triggers
-          at 40.0V to 42.0V (~2.5V to 2.6V per cell). This means the inverter
-          disconnects while the sodium cells still contain 10% to 15% of their
-          stored chemical energy.
+          Cycle life also depends on the particular model and its use. For
+          example, Discover's AGM performance sheet says cyclic life depends on
+          capacity taken, discharge rate, temperature, and charging method. Its
+          cycle-life chart gives the test current, final voltage, charge
+          current, and temperature. Those results describe the listed test, not
+          every AGM battery. See the
+          <a
+            href="https://assets.discoverbattery.com/documents/07_sla/885_product_literature/standard-agm-battery-performance.pdf"
+            >manufacturer's performance sheet</a
+          >.
         </p>
-
-        <div class="callout callout-success">
-          <div class="callout-title">
-            💡 Why Inverter Clipping Is an Accidental Longevity Superpower
-          </div>
-          <p style="margin-bottom: 0">
-            Because the inverter naturally stops drawing power at ~2.5V/cell,
-            <strong
-              >the sodium-ion pack operates in an ~85% DoD window in daily field
-              use</strong
-            >. This prevents cells from ever entering the high-polarization,
-            high-temperature regime at the extreme bottom of discharge. As a
-            result, modern commercial sodium-ion packs (such as HiNa, CATL
-            Na-ion, and Faradion) effortlessly deliver
-            <strong>5,500 to 6,500 cycles</strong>. With a modest 1.2&times;
-            sizing oversize, a sodium-ion bank easily achieves 20+ years with
-            zero swaps &mdash; while providing complete immunity to sub-zero
-            freeze damage down to &minus;20&deg;C (&minus;4&deg;F).
-          </p>
-        </div>
-
-        <h2>
-          5. Lead-Acid (AGM) Deep Dive: Why Oversizing Cannot Save It (The
-          Calendar Ceiling)
-        </h2>
         <p>
-          Sealed Absorbed Glass Mat (AGM) and flooded lead-acid batteries remain
-          tempting to entry-level builders due to their low initial retail price
-          tag. However, from an empirical lifecycle perspective, lead-acid
-          suffers from fatal physical limitations.
+          Across chemistries, use the exact model's warranty and maintenance
+          instructions, and plan around the loads, environment, and service
+          conditions you expect. A cycle count alone cannot establish how many
+          years a home battery will last.
         </p>
-
-        <h3>Peukert&rsquo;s Law and the 50% Sulfation Limit</h3>
-        <p>
-          Discharging lead-acid beyond 50% DoD causes the lead sulfate
-          (PbSO<sub>4</sub>) that forms on both positive and negative plates
-          during discharge to coalesce into large, dense, non-conductive
-          crystalline structures. These hard sulfate crystals cannot be broken
-          down during normal solar charging, permanently destroying battery
-          capacity. At 100% DoD, an AGM battery is physically destroyed in
-          <strong
-            >150 to 200 cycles (less than 6 months of daily cycling)</strong
-          >. Even at the recommended 50% DoD ceiling, cycle life is limited to
-          <strong>500 to 600 cycles (roughly 1.5 years)</strong>.
-        </p>
-
-        <h3>The Zero-Swap Impossibility: Chemical Calendar Limits</h3>
-        <p>
-          Some designers suggest that oversizing an AGM bank by 4&times; or
-          5&times; so that daily cycling is restricted to 15%–20% DoD could
-          yield a 20-year zero-swap battery.
-          <strong
-            >Electrochemical science proves this physically impossible.</strong
-          >
-        </p>
-
-        <div class="callout callout-danger">
-          <div class="callout-title">
-            🛑 The Hard Calendar Aging Ceiling of Lead-Acid Chemistry
-          </div>
-          <p>
-            Even in float service with zero cycling, lead-acid batteries degrade
-            via irreversible internal chemical mechanisms:
-          </p>
-          <ul style="margin-bottom: 0.5rem">
-            <li>
-              <strong>Positive Lead Grid Corrosion:</strong> The lead alloy grid
-              of the positive plate is perpetually oxidized into brittle lead
-              dioxide:
-              <code style="color: #fca5a5"
-                >Pb + 2H<sub>2</sub>O &rarr; PbO<sub>2</sub> + 4H<sup>+</sup> +
-                4e<sup>&minus;</sup></code
-              >. This reaction causes volumetric expansion, grid elongation,
-              structural warping, and eventual internal short circuits.
-            </li>
-            <li>
-              <strong>Electrolyte Dry-Out:</strong> Recombinant VRLA/AGM valves
-              release minute quantities of water vapor during charge
-              overpotentials, gradually drying out the glass mat separator.
-            </li>
-            <li>
-              <strong>Active Material Shedding:</strong> Spongy lead paste
-              detaches from the grids under mechanical vibration and thermal
-              cycling.
-            </li>
-          </ul>
-          <p style="margin-bottom: 0">
-            According to Battery Council International (BCI) and IEEE 1188
-            standards,
-            <strong
-              >the maximum physical calendar life of deep-cycle AGM batteries is
-              6 to 8 years</strong
-            >
-            under optimal ambient temperatures (20&deg;C / 68&deg;F). Therefore,
-            <strong
-              >AGM requires a minimum of 3 to 5 complete bank replacements
-              across a 20-year period</strong
-            >, regardless of how drastically the bank is oversized.
-          </p>
-        </div>
-
         <h2>6. 20-Year Worked Financial Example: 10 kWh/Day Off-Grid Home</h2>
         <p>
           To understand why bank oversizing is the most profitable financial
