@@ -126,7 +126,6 @@ test("the first battery FAQ schema matches its revised visible answer", () => {
   const graph = JSON.parse(json[1]);
   const article = graph["@graph"].find((item) => item["@type"] === "Article");
   const faq = graph["@graph"].find((item) => item["@type"] === "FAQPage");
-  assert.equal(article.dateModified, "2026-09-11T00:00:00Z");
   assert.equal(
     faq.mainEntity[0].name,
     "How should I compare cycle-life ratings at different DoD values?",
@@ -139,6 +138,36 @@ test("the first battery FAQ schema matches its revised visible answer", () => {
     faq.mainEntity[0].acceptedAnswer.text,
     /Wöhler|10,000 cycles/i,
   );
+});
+
+test("battery last-reviewed date matches Article and BlogPosting metadata", () => {
+  const articleJson = html.match(
+    /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+  );
+  assert.ok(articleJson);
+  const articleGraph = JSON.parse(articleJson[1]);
+  const article = articleGraph["@graph"].find(
+    (item) => item["@type"] === "Article",
+  );
+  assert.equal(article.dateModified, "2026-10-22T00:00:00Z");
+  assert.match(
+    html,
+    /<time datetime="2026-10-22">Last reviewed: October 22, 2026<\/time>/,
+  );
+
+  const listingJson = listing.match(
+    /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+  );
+  assert.ok(listingJson);
+  const listingSchema = JSON.parse(listingJson[1]);
+  const post = listingSchema.blogPost.find(
+    (item) =>
+      item["@type"] === "BlogPosting" &&
+      item.url ===
+        "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/",
+  );
+  assert.ok(post);
+  assert.equal(post.dateModified, article.dateModified);
 });
 
 test("battery FAQ schema mirrors the visible answers without universal claims", () => {
