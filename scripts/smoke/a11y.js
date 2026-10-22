@@ -18,9 +18,9 @@
 //   3. contrast — product text meets WCAG AA (4.5:1, or 3:1 for large text)
 //      against the composited background chain; gradient/image backgrounds
 //      are skipped as unknowable rather than guessed.
-//   4. reduced motion — the two user-triggered scroll sites jump instantly
-//      under prefers-reduced-motion and stay animated without it, measured
-//      synchronously through the real scrollIntoView call sites.
+//   4. reduced motion — all four user-triggered sizing/chat scroll sites jump
+//      instantly under prefers-reduced-motion and stay animated without it,
+//      measured synchronously through the real scrollIntoView call sites.
 // Requires a completed sizing run for the result-stage, contrast, and scroll
 // checks (site A guards on lastPayload, site B only renders with results);
 // callers place it after a results flow. Ordering note: the load-mode
@@ -652,9 +652,9 @@ export async function runA11yFlow(ctx) {
     buttonKeys?.passed &&
     names?.passed &&
     contrast?.passed &&
-    normalMotion.length === 2 &&
+    normalMotion.length === 4 &&
     normalMotion.every((g) => g.passed) &&
-    reducedMotion.length === 2 &&
+    reducedMotion.length === 4 &&
     reducedMotion.every((g) => g.passed) &&
     mediaReset?.passed &&
     motionDefaults.length === 2 &&
@@ -663,7 +663,7 @@ export async function runA11yFlow(ctx) {
   gate(
     "accessibility facet evidence covers keyboard, names, contrast and motion",
     Boolean(complete),
-    `${keyboard.length}/8 keyboard checks, ${normalMotion.length}/2 normal and ${reducedMotion.length}/2 reduced-motion scroll checks`,
+    `${keyboard.length}/8 keyboard checks, ${normalMotion.length}/4 normal and ${reducedMotion.length}/4 reduced-motion scroll checks`,
   );
   const checks = gatesSince(reportCheckpoint);
   const passed = checks.filter((g) => g.passed).length;
@@ -672,8 +672,8 @@ export async function runA11yFlow(ctx) {
     `${keyboard.filter((g) => g.passed).length}/${keyboard.length}; ` +
     `${buttonKeys?.detail || "Enter/Space buttons failed"}; names ${names?.passed ? "pass" : "fail"}; ` +
     `WCAG AA result text ${contrast?.passed ? "pass" : "fail"}; ` +
-    `${normalMotion.filter((g) => g.passed).length}/2 normal and ` +
-    `${reducedMotion.filter((g) => g.passed).length}/2 reduced-motion scrolls; ` +
+    `${normalMotion.filter((g) => g.passed).length}/4 normal and ` +
+    `${reducedMotion.filter((g) => g.passed).length}/4 reduced-motion scrolls; ` +
     `emulation reset ${mediaReset?.passed ? "pass" : "fail"}.`;
   writeFacetReport("accessibility", line, {
     browser: "Chrome",
