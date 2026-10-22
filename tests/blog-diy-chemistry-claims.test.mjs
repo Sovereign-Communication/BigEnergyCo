@@ -90,9 +90,15 @@ test("DIY safety guidance avoids universal assembly and fire-response instructio
 
   assert.match(safety, /licensed electrician/);
   assert.match(safety, /local emergency services/);
-  assert.match(safety, /off-grid status alone does not establish an exemption/i);
+  assert.match(
+    safety,
+    /off-grid status alone does not establish an exemption/i,
+  );
   assert.match(safety, /https:\/\/fsri\.org\//);
   assert.match(safety, /https:\/\/www\.nfpa\.org\/codes-and-standards\//);
   assert.match(safety, /https:\/\/www\.usfa\.fema\.gov\//);
-  assert.doesNotMatch(safety, /class d|5.?7\s*nm|fused appropriately|never work alone/i);
+  assert.doesNotMatch(
+    safety,
+    /class d|5.?7\s*nm|fused appropriately|never work alone/i,
+  );
 });
