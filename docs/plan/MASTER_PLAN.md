@@ -657,14 +657,15 @@ P6 (all) + P7 ──> P8 (swap to /, 6-locale parity) ──> P9 (reach) ──>
 
 ### P9: Reach
 
-| Item | Work                                                                                                 |
-| ---- | ---------------------------------------------------------------------------------------------------- |
-| P9.1 | Localised URLs and hreflang for the 6 locales (R-I18N-08, R-SEO-04).                                 |
-| P9.2 | Per-country cost pages from the registry (R-SEO-03).                                                 |
-| P9.3 | City pages regenerated on the new economics and shell.                                               |
-| P9.4 | Titles, H1s and meta (R-SEO-01), structured data (R-SEO-02) and E-E-A-T surfaces (R-SEO-05).         |
-| P9.5 | Blog audit (R-CONT-05).                                                                              |
-| P9.6 | Search Console and Cloudflare Web Analytics live, with the monthly reach rows (R-SEO-06, R-PRIV-05). |
+| Item | Work                                                                                                            |
+| ---- | --------------------------------------------------------------------------------------------------------------- |
+| P9.1 | Localised URLs and hreflang for the 6 locales (R-I18N-08, R-SEO-04).                                            |
+| P9.2 | Per-country cost pages from the registry (R-SEO-03).                                                            |
+| P9.3 | City pages regenerated on the new economics and shell.                                                          |
+| P9.4 | Titles, H1s and meta (R-SEO-01), structured data (R-SEO-02) and E-E-A-T surfaces (R-SEO-05).                    |
+| P9.5 | Blog audit (R-CONT-05).                                                                                         |
+| P9.6 | Search Console and Cloudflare Web Analytics live, with the monthly reach rows (R-SEO-06, R-PRIV-05).            |
+| P9.7 | Content-quality gate (R-CONT-01..05), assessed under Jev Gate Policy v1. See [criteria](../content-quality.md). |
 
 ### P10: Program exit gate, "v1.0 world-class"
 
