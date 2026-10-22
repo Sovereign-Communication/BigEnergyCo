@@ -1,5 +1,9 @@
 name: Deploy to Cloudflare Pages
 
+# Canonical deployment model (owner directive 2026-10-21):
+# - https://bigenergyco.pages.dev/ is STAGING — verify here first.
+# - https://freeoffgridcalculator.com/ is PRODUCTION (the full production site).
+
 on:
   workflow_dispatch:
     inputs:
@@ -33,6 +37,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # staging -> preview branch (staging.bigenergyco.pages.dev);
-          # production -> main branch (bigenergyco.pages.dev + freeoffgridcalculator.com)
+          # staging -> bigenergyco.pages.dev (verify here first);
+          # production -> freeoffgridcalculator.com (the full production site)
           command: pages deploy _pages --project-name=bigenergyco --branch=${{ inputs.target == 'production' && 'main' || 'staging' }}
