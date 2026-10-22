@@ -133,24 +133,47 @@ test("BACK-TRANSLATION: sizing guidance stays complete in Arabic and German", ()
     "monthlyBillInputOption",
     "presetWeekendCabin",
   ]) {
-    assert.match(ar[key], /[\u0600-\u06ff]/u, `ar.${key} must contain Arabic text`);
-    assert.doesNotMatch(ar[key], /\?{2,}/, `ar.${key} contains corrupted question marks`);
+    assert.match(
+      ar[key],
+      /[\u0600-\u06ff]/u,
+      `ar.${key} must contain Arabic text`,
+    );
+    assert.doesNotMatch(
+      ar[key],
+      /\?{2,}/,
+      `ar.${key} contains corrupted question marks`,
+    );
   }
 
   assert.match(ar.quickBillStarts, /\{bill\}.*\{kwh\}/);
   assert.match(ar.quickBillStarts, /احسب نظامي/);
   assert.match(ar.runBtnReady, /احسب نظامي/);
   assert.match(ar.quickBillStarts, /منزلق خفض الفاتورة.*النتائج/);
-  assert.match(ar.gridSizingDescription, /فاتورتك الشهرية للكهرباء.*موقعك.*احسب نظامي/);
-  assert.match(ar.gridSizingDescription, /الطاقة الشمسية والبطاريات.*كيميائيات البطاريات.*20 عامًا.*شراء المعدات بالجملة/);
+  assert.match(
+    ar.gridSizingDescription,
+    /فاتورتك الشهرية للكهرباء.*موقعك.*احسب نظامي/,
+  );
+  assert.match(
+    ar.gridSizingDescription,
+    /الطاقة الشمسية والبطاريات.*كيميائيات البطاريات.*20 عامًا.*شراء المعدات بالجملة/,
+  );
   assert.match(ar.offgridSizingHeading, /نظامك الشمسي.*بطاريتك.*خارج الشبكة/);
-  assert.match(ar.offgridSizingDescription, /كوخ.*شاحنة تخييم.*طاقة احتياطي.*منزل ريفي/);
-  assert.match(ar.offgridSizingDescription, /استهلاكك اليومي.*الأجهزة.*بيانات الطقس بالساعة.*احتياجاتك/);
+  assert.match(
+    ar.offgridSizingDescription,
+    /كوخ.*شاحنة تخييم.*طاقة احتياطي.*منزل ريفي/,
+  );
+  assert.match(
+    ar.offgridSizingDescription,
+    /استهلاكك اليومي.*الأجهزة.*بيانات الطقس بالساعة.*احتياجاتك/,
+  );
   assert.match(ar.monthlyBillInputOption, /أعرف فاتورتي الكهربائية الشهرية/);
   assert.match(ar.presetWeekendCabin, /كوخ.*عطلة نهاية الأسبوع/);
   assert.notEqual(ar.presetWeekendCabin, LOCALES.pt.presetWeekendCabin);
 
-  assert.match(LOCALES.de.firstRunNote, /Beim ersten Start.*2 MB.*Satelliten-Wetterdaten heruntergeladen.*im Browser zwischengespeichert/);
+  assert.match(
+    LOCALES.de.firstRunNote,
+    /Beim ersten Start.*2 MB.*Satelliten-Wetterdaten heruntergeladen.*im Browser zwischengespeichert/,
+  );
 });
 
 test("BANNED: reintroducing any known-bad value makes the gate fail", () => {
@@ -407,19 +430,19 @@ test("PROSE: the detector catches every unkeyed phrase on a locale surface", () 
   );
   assert.ok(
     unkeyedProse(
-      '<main><span data-i18n=label>Traduit</span>Adjacent English copy leaks.</main>',
+      "<main><span data-i18n=label>Traduit</span>Adjacent English copy leaks.</main>",
     ).some((block) => block.text === "Adjacent English copy leaks."),
     "a translated inline child must not hide following main text",
   );
   assert.ok(
     unkeyedProse(
-      '<main><p data-i18n=caption>Traduit<section>Leaked fallback after the implied paragraph close.</section></main>',
+      "<main><p data-i18n=caption>Traduit<section>Leaked fallback after the implied paragraph close.</section></main>",
     ).some((block) => block.text.includes("Leaked fallback")),
     "an implied paragraph close must expose following structural text",
   );
   assert.deepEqual(
     unkeyedProse(
-      '<main><p data-i18n=caption>Texte traduit</p><section>BigEnergyCo</section><aside>3 kWh</aside></main>',
+      "<main><p data-i18n=caption>Texte traduit</p><section>BigEnergyCo</section><aside>3 kWh</aside></main>",
     ),
     [],
     "translated subtrees, standalone brands, and unit-only content are allowed",

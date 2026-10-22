@@ -38,7 +38,8 @@ test("Q-12 grades only exact Jev choices and requires all three", () => {
 });
 
 test("Q-12 sends the accessibility snapshot verbatim as the entire TypeSafe state", async (t) => {
-  const snapshot = '- heading "Résultat : 84 %"\n- paragraph: "Écart sur 20 ans : 5 968 $"';
+  const snapshot =
+    '- heading "Résultat : 84 %"\n- paragraph: "Écart sur 20 ans : 5 968 $"';
   let request;
   let calls = 0;
   const originalFetch = globalThis.fetch;
@@ -63,7 +64,11 @@ test("Q-12 sends the accessibility snapshot verbatim as the entire TypeSafe stat
   });
   assert.equal(request.url, "https://api.typesafe.ai/v1/systemone");
   assert.equal(calls, 1, "the direct probe must not retry or fail over");
-  assert.deepEqual(Object.keys(request.body).sort(), ["model", "questions", "state"]);
+  assert.deepEqual(Object.keys(request.body).sort(), [
+    "model",
+    "questions",
+    "state",
+  ]);
   assert.equal(request.body.state, snapshot);
   assert.deepEqual(request.body.questions, Q12_QUESTIONS);
   assert.equal(result.provider, "typesafe");

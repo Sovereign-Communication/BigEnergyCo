@@ -61,5 +61,10 @@ export function gradeQ12Answers(answers) {
     };
   });
   const correct = checks.filter((check) => check.correct).length;
-  return { checks, correct, total: checks.length, passed: correct === checks.length };
+  return {
+    checks,
+    correct,
+    total: checks.length,
+    passed: correct === checks.length,
+  };
 }
