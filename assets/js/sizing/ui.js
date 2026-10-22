@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261022o";
+import { APPLIANCES } from "./appliances.js?v=20261022m";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -24,25 +24,26 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261022o";
+} from "./usecases.js?v=20261022m";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261022o";
+} from "./run-coordinator.js?v=20261022m";
 import {
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261022o";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261022o";
+} from "./mode-chrome.js?v=20261022m";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261022m";
+import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261022m";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261022o";
+} from "./location-picker.js?v=20261022m";
 
 import {
   estimateTariff,
@@ -50,14 +51,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261022o";
+} from "./pricing.js?v=20261022m";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261022o";
+import { currencyForCountry } from "./country-currency.js?v=20261022m";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261022o";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261022m";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -89,7 +90,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261022o").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261022m").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -100,15 +101,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261022o";
+} from "./lead-acid.js?v=20261022m";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261022o";
+} from "./bom.js?v=20261022m";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261022o";
+import { BOM_ITEMS } from "../shared/content.js?v=20261022m";
 
 import {
   applyI18n,
@@ -117,19 +118,19 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261022o";
+} from "../shared/i18n.js?v=20261022m";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261022o";
-import { byId as $, el } from "../shared/dom.js?v=20261022o";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261022o";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261022m";
+import { byId as $, el } from "../shared/dom.js?v=20261022m";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261022m";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261022o";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261022o";
+} from "../shared/simple-mode.js?v=20261022m";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261022m";
 import {
   advisorJevContext,
   interpretSanity,
@@ -137,28 +138,28 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261022o";
+} from "./validate.js?v=20261022m";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261022o";
+} from "../shared/cut-targets.js?v=20261022m";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261022o";
+} from "./share-codec.js?v=20261022m";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261022o";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261022o";
+} from "./infeasible-copy.js?v=20261022m";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261022m";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261022o";
+} from "./fuel-units.js?v=20261022m";
 
 import {
   createLeafletProvider,
@@ -166,14 +167,14 @@ import {
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261022o";
+} from "./map-provider.js?v=20261022m";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261022o";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261022o";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261022o";
+} from "./wizard.js?v=20261022m";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261022m";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261022m";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -185,10 +186,10 @@ let _chartsInitialized = false;
 function preloadRunModules() {
   if (!_runModulesPromise) {
     _runModulesPromise = Promise.all([
-      import("./engine.js?v=20261022o"),
-      import("./charts.js?v=20261022o"),
-      import("./frontier-chart.js?v=20261022o"),
-      import("./rescale.js?v=20261022o"),
+      import("./engine.js?v=20261022m"),
+      import("./charts.js?v=20261022m"),
+      import("./frontier-chart.js?v=20261022m"),
+      import("./rescale.js?v=20261022m"),
     ])
       .then(([engine, charts, frontierChart, rescale]) => {
         _engine = engine;
@@ -254,9 +255,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261022o";
+} from "./money.js?v=20261022m";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261022o";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261022m";
 
 let worker = null;
 
@@ -427,21 +428,10 @@ let focusFirst = false;
 let curvePreview = null;
 
 // ── Slider cooperation ──────────────────────────────────────────────────────
-// The bill-cut slider and the up-front budget slider are two views of ONE
-// choice, and a live report described them "over-writing each other": the
-// budget slider was re-seated onto the recommendation by every re-render, so a
-// cut edit silently threw away the budget the visitor had just dialed in, and
-// picking a budget point left the cut control (slider + form select) stale.
-//
-// Rule: whichever control the visitor just touched owns the truth, the other
-// follows it, and only a genuinely new scenario resets both.
-//   * budgetPinnedUsd — set while (and after) the visitor uses the budget
-//     slider: re-renders keep that position instead of re-seating on the
-//     marker. Cleared by a fresh run (new inputs/location/mode).
+// The bill-cut target and up-front budget are independent constraints.
+// Keeping a chosen budget position pinned lets a cut edit update its own
+// results without rewriting the visitor's separate budget choice.
 let budgetPinnedUsd = null;
-// Set when the bill-cut slider is the control the visitor just moved: the
-// recommendation is about to move, so the budget thumb follows it once.
-let followMarkerOnce = false;
 
 // Bill slider bounds, expressed in kWh/day and converted to local currency.
 // Wide enough to fantasize (estate-scale loads); the engine, not the slider,
@@ -2989,7 +2979,7 @@ function setupCutSlider() {
     customCutFraction = (parseInt(slider.value, 10) || 1) / 100;
     syncCutLabel();
     if (lastPayload && lastPayload.mode === "gridtie") {
-      frontierSelected = null;
+      if (!Number.isFinite(budgetPinnedUsd)) frontierSelected = null;
       // Cached-only drag preview: the nearest curve system at this %.
       previewCurvePoint(
         nearestCurvePoint(parseInt(slider.value, 10) || 1, "y"),
@@ -3002,10 +2992,7 @@ function setupCutSlider() {
     // three places: syncCutControls writes all of them so a fresh run can't
     // disagree with what is on screen.
     syncCutControls(parseInt(slider.value, 10) || 1);
-    // A cut edit is the visitor choosing the target, so the budget slider is
-    // released from any pin and follows the resulting recommendation once.
-    budgetPinnedUsd = null;
-    followMarkerOnce = true;
+    // The bill-cut target is independent from the up-front budget choice.
     // No results yet: fall back to a full run so the cut is honored instead
     // of silently dropped.
     if (!lastPayload) {
@@ -3020,7 +3007,8 @@ function setupCutSlider() {
       // A cut edit only touches the slider's own column — reconcile it in the
       // background instead of re-running the fixed columns and frontier. In a
       // fixed-chemistry session the custom target IS the selected system.
-      if (!lastPayload.auto) selectedKey = "custom";
+      if (!lastPayload.auto && !Number.isFinite(budgetPinnedUsd))
+        selectedKey = "custom";
       requestIncrementalCut();
     }
   });
@@ -3153,7 +3141,7 @@ function mergeReSlice(result) {
       } else {
         p.frontier.marker = null;
       }
-      frontierSelected = null;
+      if (!Number.isFinite(budgetPinnedUsd)) frontierSelected = null;
     }
     renderBestPick(p);
     renderMoneyBar(p);
@@ -3742,21 +3730,17 @@ function syncBudgetRange(seat = false) {
   slider.step = String(Math.max(1, Math.round((hi - lo) / 200)));
   // Who owns the truth right now?
   //   * a fresh scenario (seat) → the recommendation, and the pin is released;
-  //   * the visitor's own budget choice → THEIR position, clamped into the new
-  //     span if a cut edit moved it (never silently re-seated on the marker);
-  //   * otherwise → keep the current value while it still fits.
+  //   * the visitor's own budget choice -> THEIR position, clamped only if the
+  //     available curve span changed; otherwise keep the current value.
   const pinned = budgetPinnedUsd;
-  const cur = parseFloat(slider.value);
   let next = null;
   if (seat) {
     budgetPinnedUsd = null;
     next = m && Number.isFinite(m.capexUsd) ? m.capexUsd : (lo + hi) / 2;
-  } else if (followMarkerOnce) {
-    followMarkerOnce = false;
-    next = m && Number.isFinite(m.capexUsd) ? m.capexUsd : (lo + hi) / 2;
   } else if (Number.isFinite(pinned)) {
     next = pinned;
-  } else if (!Number.isFinite(cur) || cur < lo || cur > hi) {
+  } else {
+    // With no optional budget choice, keep the default on the target marker.
     next = m && Number.isFinite(m.capexUsd) ? m.capexUsd : (lo + hi) / 2;
   }
   if (next !== null)
@@ -3781,12 +3765,16 @@ function setupBudgetSlider() {
     // thumb out from under the pointer.
     budgetPinnedUsd = parseFloat(slider.value);
     syncBudgetLabel();
-    previewCurvePoint(nearestCurvePoint(parseFloat(slider.value), "x"));
+    previewCurvePoint(
+      bestAffordableCurvePoint(curvePool(), parseFloat(slider.value)),
+    );
   });
   slider.addEventListener("change", () => {
     if (!curveReady()) return;
     budgetPinnedUsd = parseFloat(slider.value);
-    commitCurvePreview(nearestCurvePoint(parseFloat(slider.value), "x"));
+    commitCurvePreview(
+      bestAffordableCurvePoint(curvePool(), parseFloat(slider.value)),
+    );
   });
 }
 
@@ -3803,7 +3791,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261022o",
+      "./assets/js/sizing/sizing-worker.js?v=20261022m",
       {
         type: "module",
       },
@@ -6754,15 +6742,11 @@ function adoptFrontierPoint(i, opts = {}) {
       syncBudgetLabel();
     }
   }
-  // Unify with the bill-cut slider FIRST (before the selection snapshot):
-  // choosing a point on the curve IS choosing your cut %, so the share
-  // link and the matrix "your target" label must record the snapped value,
-  // not the pre-click one. syncCutControls also moves the form's select, so
-  // the next run cannot disagree with the slider on screen.
-  if (p.mode === "gridtie" && Number.isFinite(pt.outcomePct))
-    syncCutControls(pt.outcomePct);
+  // The chosen affordable system is independent from the visitor's bill-cut
+  // target. Keep both in the rendered result and share link.
   renderFrontierPanel(p);
   refreshSelectionOutputs(p);
+  updateShareHash(p, readInputs());
   if (opts.showModal) {
     showSystemModal(p, adoptedEntry, true);
   }
