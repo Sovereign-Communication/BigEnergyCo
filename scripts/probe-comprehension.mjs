@@ -20,7 +20,8 @@ async function completeSizing(page) {
   const home = await page.goto(new URL("/", page.url()).href, {
     waitUntil: "domcontentloaded",
   });
-  if (home?.status() !== 200) throw new Error(`home page HTTP ${home?.status()}`);
+  if (home?.status() !== 200)
+    throw new Error(`home page HTTP ${home?.status()}`);
 
   // Enter through the page's CTA and select the same visible controls as a
   // visitor. Honolulu + 10 kWh/day is the fixed Q-12 scenario.
@@ -91,7 +92,9 @@ async function renderLocale(page, locale) {
 async function main() {
   const keys = resolveKeys(ROOT);
   if (!keys.typesafeKey) {
-    throw new Error("TypeSafe key unavailable; set the existing Jev key source");
+    throw new Error(
+      "TypeSafe key unavailable; set the existing Jev key source",
+    );
   }
 
   const server = await serveStatic({ dir: ROOT });
@@ -141,7 +144,10 @@ async function main() {
       });
     }
 
-    const totalCorrect = results.reduce((sum, result) => sum + (result.correct || 0), 0);
+    const totalCorrect = results.reduce(
+      (sum, result) => sum + (result.correct || 0),
+      0,
+    );
     const totalQuestions = snapshots.length * 3;
     const passed =
       results.length === Q12_LOCALES.length &&
@@ -152,12 +158,17 @@ async function main() {
         {
           probe: "Q-12 comprehension",
           scenario: "Honolulu, Hawaii; 10 kWh/day; completed grid-tied sizing",
-          input: "only each locale's rendered #resultsRegion accessibility snapshot",
+          input:
+            "only each locale's rendered #resultsRegion accessibility snapshot",
           locales: results,
           score: `${totalCorrect}/${totalQuestions}`,
           required: "18/18 (100%)",
           passed,
-          usage: { inputTokens, outputTokens, costUsd: Number(totalCost.toFixed(10)) },
+          usage: {
+            inputTokens,
+            outputTokens,
+            costUsd: Number(totalCost.toFixed(10)),
+          },
         },
         null,
         2,
@@ -170,6 +181,10 @@ async function main() {
   }
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file:///${process.argv[1].replaceAll("\\", "/")}`).href) {
+if (
+  process.argv[1] &&
+  import.meta.url ===
+    new URL(`file:///${process.argv[1].replaceAll("\\", "/")}`).href
+) {
   await main();
 }
