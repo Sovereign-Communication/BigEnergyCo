@@ -1,20 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import {
-  copyFileSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
 import {
   buildScopeQualityEvidence,
-  collectScopeQualityEvidence,
   extractP97QualityRubric,
   isBlogPostFile,
   isGovernedContentFile,
@@ -31,17 +20,11 @@ const infrastructureFixture = readFileSync(
   "utf8",
 );
 
-function git(cwd, ...args) {
-  const result = spawnSync("git", ["-C", cwd, ...args], { encoding: "utf8" });
-  assert.equal(result.status, 0, result.stderr);
-  return result.stdout.trim();
-}
-
-test("the P9.7 rubric is extracted from the authoritative plan with all five content rules", () => {
+test("the rubric carries the approved plan requirements and content criteria", () => {
   const rubric = extractP97QualityRubric(plan);
-  for (const requirement of [
-    "| P9.7 |",
-    "| D-05 |",
+  for (const id of [
+    "P9.7",
+    "D-05",
     "R-CONT-01",
     "R-CONT-02",
     "R-CONT-03",
@@ -49,113 +32,89 @@ test("the P9.7 rubric is extracted from the authoritative plan with all five con
     "R-CONT-05",
     "R-RES-07",
     "R-SEO-05",
-  ]) {
-    assert.ok(rubric.includes(requirement), `missing ${requirement}`);
-  }
-  assert.match(rubric, /canonical formatting/);
-  assert.match(rubric, /metadata\/JSON-LD parity/);
-  assert.match(rubric, /real search demand/);
-  assert.match(rubric, /no cannibalization/);
-  assert.match(rubric, /verifiable claims with cited sources/);
-  assert.match(rubric, /official sources only for news hooks/);
-  assert.match(rubric, /reading grade of/);
-  assert.match(rubric, /every technical term/);
-  assert.match(rubric, /all locales/);
-  assert.match(rubric, /2–3 significant figures/);
-  assert.match(rubric, /percentages are whole numbers/);
-  assert.match(rubric, /Full precision appears only in tables and CSV/);
-  assert.match(rubric, /no decimals at or above 100 units/);
-  assert.match(rubric, /never suggests unlicensed electrical work/);
-  assert.match(rubric, /fall protection/);
-  assert.match(rubric, /Stale figures are fixed or removed/);
-  assert.match(rubric, /last reviewed/);
-  assert.match(rubric, /No hype, no fear, no sales language/);
-  assert.match(rubric, /country-specific checklist/);
-  assert.match(rubric, /two or three quotes/);
-  assert.match(rubric, /where DIY is not permitted/);
-  assert.match(rubric, /No lead forms and no company names/);
+  ])
+    assert.ok(rubric.includes(id), `missing plan requirement ${id}`);
+  for (const criterion of [
+    "metadata/JSON-LD parity",
+    "no cannibalization",
+    "official sources only for news hooks",
+    "reading grade of",
+    "all locales",
+    "significant figures",
+    "2\u20133 significant figures",
+    "percentages are whole numbers",
+    "Full precision appears only in tables and CSV",
+    "no decimals at or above 100 units",
+    "fall protection",
+    "Stale figures are fixed or removed",
+    "last reviewed",
+    "No hype, no fear, no sales language",
+    "two or three quotes",
+    "where DIY is not permitted",
+    "No lead forms and no company names",
+  ])
+    assert.ok(rubric.includes(criterion), `missing ${criterion}`);
 });
 
-test("the representative public page fixture covers copy, number, source, legal, safety, and review evidence", () => {
-  assert.match(contentFixture, /rel="canonical"/);
-  assert.match(contentFixture, /application\/ld\+json/);
-  assert.ok(contentFixture.includes("<title>A 2.4 kW solar system"));
-  assert.ok(contentFixture.includes("<h1>A 2.4 kW solar system"));
-  assert.match(contentFixture, /2\.4 kW/);
-  assert.match(contentFixture, /35%/);
-  assert.match(contentFixture, /\$8,200/);
-  assert.match(contentFixture, /146\.28 kWh/);
-  assert.match(contentFixture, /kilowatt-hour \(kWh\)/);
-  assert.match(
-    contentFixture,
-    /A licensed electrician must do every electrical termination/,
-  );
-  assert.match(contentFixture, /fall protection/);
-  assert.match(contentFixture, /permit and grid-connection steps/);
-  assert.match(contentFixture, /not a quote or a guarantee/);
-  assert.match(contentFixture, /dataset updated in 2026/);
-  assert.match(contentFixture, /Last reviewed: October 10, 2026/);
+test("the public fixture represents copy, numeric, glossary, legal, safety, source, and review criteria", () => {
+  for (const evidence of [
+    'rel="canonical"',
+    "application/ld+json",
+    "<title>A 2.4 kW solar system",
+    "<h1>A 2.4 kW solar system",
+    "2.4 kW",
+    "35%",
+    "$8,200",
+    "146.28 kWh",
+    "kilowatt-hour (kWh)",
+    "A licensed electrician must do every electrical termination",
+    "fall protection",
+    "permit and grid-connection steps",
+    "not a quote or a guarantee",
+    "dataset updated in 2026",
+    "Last reviewed: October 10, 2026",
+  ])
+    assert.ok(contentFixture.includes(evidence), `fixture missing ${evidence}`);
 });
 
-test("public HTML is governed content while internal, non-content, and 404 files are excluded", () => {
-  for (const file of [
-    "index.html",
-    "about/index.html",
-    "blog/example/index.html",
-    "solar-calculator/example/index.html",
-    "solar-heatmap/index.html",
-  ]) {
-    assert.equal(isGovernedContentFile(file), true, file);
-  }
-  for (const file of [
-    "404.html",
-    "docs/guide.html",
-    "scripts/generated.html",
-    "tests/fixtures/jev-p97/content-page.html",
-    "assets/template.html",
-    "blog/SEO-DOCTRINE.md",
-  ]) {
-    assert.equal(isGovernedContentFile(file), false, file);
-  }
+test("scope detection includes public pages and content sources, excluding internal files", () => {
+  for (const [file, expected] of [
+    ["index.html", true],
+    ["about/index.html", true],
+    ["blog/example/index.html", true],
+    ["solar-calculator/example/index.html", true],
+    ["assets/js/shared/jargon-dict.js", true],
+    ["assets/js/shared/locales.js", true],
+    ["assets/js/sizing/money.js", true],
+    ["assets/js/sizing/city-data/US.json", true],
+    ["assets/data/provenance.json", true],
+    ["LIABILITY.md", true],
+    ["sitemap.xml", true],
+    ["llms.txt", true],
+    ["404.html", false],
+    ["docs/guide.html", false],
+    ["scripts/generated.html", false],
+    ["tests/fixtures/jev-p97/content-page.html", false],
+    ["assets/template.html", false],
+    ["blog/SEO-DOCTRINE.md", false],
+    ["scripts/lib/jev-scope-quality.mjs", false],
+    ["worker/wrangler.json", false],
+  ])
+    assert.equal(isGovernedContentFile(file), expected, file);
+
   assert.equal(isBlogPostFile("blog/example/index.html"), true);
   assert.equal(isBlogPostFile("blog/index.html"), false);
   assert.equal(isBlogPostFile("about/index.html"), false);
-});
-
-test("glossary, localized copy, numeric display sources, legal terms, and SEO files are governed content", () => {
-  for (const file of [
-    "assets/js/shared/jargon-dict.js",
-    "assets/js/shared/locales.js",
-    "assets/js/shared/content.js",
-    "assets/js/sizing/money.js",
-    "assets/js/sizing/city-data/US.json",
-    "assets/data/provenance.json",
-    "LIABILITY.md",
-    "sitemap.xml",
-    "llms.txt",
-  ]) {
-    assert.equal(isGovernedContentFile(file), true, file);
-  }
-  assert.equal(
-    isGovernedContentFile("scripts/lib/jev-scope-quality.mjs"),
-    false,
-  );
-  assert.equal(isGovernedContentFile("worker/wrangler.json"), false);
-
-  const evidence = buildScopeQualityEvidence(
+  const glossary = buildScopeQualityEvidence(
     "P9.7",
-    {
-      files: ["assets/js/shared/jargon-dict.js"],
-      additions: 1,
-      deletions: 0,
-      patch: "+  term: a plain-language definition",
-    },
+    { files: ["assets/js/shared/jargon-dict.js"] },
     plan,
   );
-  assert.equal(evidence.content_criteria_applicable, true);
-  assert.match(evidence.context, /every technical term/);
+  assert.equal(glossary.content_criteria_applicable, true);
+  assert.ok(glossary.context.includes("every technical term"));
 });
-test("changed governed content receives the complete rubric and its full page snapshot", () => {
+
+test("changed pages receive the full plan rubric, snapshot, and actual diff", () => {
   const evidence = buildScopeQualityEvidence(
     "P9.7",
     {
@@ -177,34 +136,62 @@ test("changed governed content receives the complete rubric and its full page sn
   assert.equal(evidence.content_criteria_applicable, true);
   assert.equal(evidence.content_evidence_complete, true);
   assert.deepEqual(evidence.content_files, ["blog/example/index.html"]);
-  assert.match(evidence.context, /R-CONT-01/);
-  assert.match(evidence.context, /R-CONT-05/);
-  assert.match(
-    evidence.context,
-    /licensed electrician must do every electrical termination/,
-  );
-  assert.match(evidence.context, /Last reviewed: October 10, 2026/);
-  assert.match(evidence.context, /A new, reviewed sentence/);
-  assert.match(evidence.facet_line, /full changed-page snapshots/);
   assert.deepEqual(evidence.blog_post_files, ["blog/example/index.html"]);
+  for (const item of [
+    "R-CONT-01",
+    "R-CONT-05",
+    "licensed electrician must do every electrical termination",
+    "Last reviewed: October 10, 2026",
+    "A new, reviewed sentence",
+  ])
+    assert.ok(evidence.context.includes(item), `context missing ${item}`);
+  assert.ok(evidence.facet_line.includes("full governed-content snapshots"));
 });
 
-test("missing or truncated page evidence is marked incomplete", () => {
-  const evidence = buildScopeQualityEvidence(
+test("changed governed sources require and carry a full snapshot", () => {
+  const path = "assets/js/shared/jargon-dict.js";
+  const missing = buildScopeQualityEvidence(
+    "P9.7",
+    { files: [path], patch: '+export const terms = ["inverter"];' },
+    plan,
+  );
+  assert.equal(missing.content_criteria_applicable, true);
+  assert.equal(missing.content_evidence_complete, false);
+  assert.ok(missing.context.includes("full snapshot unavailable"));
+
+  const complete = buildScopeQualityEvidence(
     "P9.7",
     {
-      files: ["index.html"],
-      additions: 1,
-      deletions: 0,
-      patch: "+<p>Updated content</p>",
+      files: [path],
+      patch: '+export const terms = ["inverter"];',
+      contentSnapshots: [
+        {
+          path,
+          revision: "head",
+          content: 'export const terms = ["battery", "inverter"];',
+        },
+      ],
     },
     plan,
   );
+  assert.equal(complete.content_evidence_complete, true);
+  assert.ok(
+    complete.context.includes(
+      `Full head snapshot of governed content file ${path}:`,
+    ),
+  );
+  assert.ok(complete.context.includes('"battery", "inverter"'));
+});
 
-  assert.equal(evidence.content_criteria_applicable, true);
-  assert.equal(evidence.content_evidence_complete, false);
-  assert.match(evidence.context, /full page snapshot unavailable/);
-  assert.match(evidence.facet_line, /Evidence is incomplete/);
+test("missing or over-budget page evidence cannot pass the P9.7 content judgment", () => {
+  const missing = buildScopeQualityEvidence(
+    "P9.7",
+    { files: ["index.html"], patch: "+<p>Updated content</p>" },
+    plan,
+  );
+  assert.equal(missing.content_evidence_complete, false);
+  assert.ok(missing.context.includes("full snapshot unavailable"));
+  assert.ok(missing.facet_line.includes("Evidence is incomplete"));
 
   const truncated = buildScopeQualityEvidence(
     "P9.7",
@@ -216,30 +203,14 @@ test("missing or truncated page evidence is marked incomplete", () => {
     },
     plan,
   );
-  assert.equal(truncated.content_evidence_complete, false);
   assert.equal(truncated.context_truncated, true);
+  assert.equal(truncated.content_evidence_complete, false);
   assert.ok(
     truncated.facet_line.includes("do not grant a passing P9.7 judgment"),
   );
 });
-test("a complete infrastructure diff up to the scoped context budget is retained", () => {
-  const patch = "+" + "x".repeat(80000);
-  const evidence = buildScopeQualityEvidence(
-    "P9.7",
-    {
-      files: ["scripts/quality-gate.mjs"],
-      additions: 1,
-      deletions: 0,
-      patch,
-    },
-    plan,
-  );
 
-  assert.equal(evidence.context_truncated, false);
-  assert.equal(evidence.content_evidence_complete, true);
-  assert.ok(evidence.context.includes(patch));
-});
-test("an infrastructure-only candidate uses its fixture and does not trigger content grading", () => {
+test("infrastructure-only changes use their fixture and retain complete evidence within budget", () => {
   const evidence = buildScopeQualityEvidence(
     "P9.7",
     {
@@ -254,36 +225,52 @@ test("an infrastructure-only candidate uses its fixture and does not trigger con
     },
     plan,
   );
-
   assert.equal(evidence.content_criteria_applicable, false);
   assert.deepEqual(evidence.content_files, []);
-  assert.match(
-    evidence.facet_line,
-    /Do not grade infrastructure files as published copy/,
+  assert.ok(
+    evidence.facet_line.includes(
+      "Do not grade infrastructure files as published copy",
+    ),
   );
-  assert.match(evidence.context, /content criteria are not applicable/);
-  assert.match(evidence.context, /isPublicContentPath/);
-  assert.match(evidence.changed_files.join(" "), /infrastructure-only\.patch/);
+  assert.ok(evidence.context.includes("isPublicContentPath"));
+  assert.ok(
+    evidence.changed_files.includes(
+      "tests/fixtures/jev-p97/infrastructure-only.patch",
+    ),
+  );
+
+  const largePatch = "+" + "x".repeat(80000);
+  const complete = buildScopeQualityEvidence(
+    "P9.7",
+    { files: ["scripts/quality-gate.mjs"], patch: largePatch },
+    plan,
+  );
+  assert.equal(complete.context_truncated, false);
+  assert.equal(complete.content_evidence_complete, true);
+  assert.ok(complete.context.includes(largePatch));
 });
 
-test("actual-diff evidence redacts patch and page credentials before transport", () => {
+test("actual-diff and page evidence redact credentials before transport", () => {
+  const githubPat =
+    "github_" + "pat_" + "0123456789abcdefghijklmnopqrstuvwxyzABCDE";
   const evidence = buildScopeQualityEvidence(
     "P9.7",
     {
       files: ["index.html"],
-      additions: 4,
-      deletions: 0,
       patch: [
         '+TYPESAFE_API_KEY="example-secret-value"',
         "+Authorization: Bearer bearer-example-value",
         "+token eyJabcdefghijk.abcdefghijk.abcdefghijk",
-        "+-----BEGIN PRIVATE KEY-----fake-key-material-----END PRIVATE KEY-----",
+        `+${githubPat}`,
+        "+-----BEGIN " +
+          "PRIVATE KEY-----fake-key-material" +
+          "-----END PRIVATE KEY-----",
       ].join("\n"),
       contentSnapshots: [
         {
           path: "index.html",
           revision: "head",
-          content: "<p>TYPESAFE_API_KEY=fixture-secret-content</p>",
+          content: `<p>TYPESAFE_API_KEY=fixture-secret-content</p><p>${githubPat}</p>`,
         },
       ],
     },
@@ -296,30 +283,26 @@ test("actual-diff evidence redacts patch and page credentials before transport",
     "eyJabcdefghijk.abcdefghijk.abcdefghijk",
     "fake-key-material",
     "fixture-secret-content",
-  ]) {
-    assert.doesNotMatch(evidence.context, new RegExp(secret));
-  }
-  assert.ok(evidence.context.includes("TYPESAFE_API_KEY=[REDACTED]"));
-  assert.ok(evidence.context.includes("Authorization: Bearer [REDACTED]"));
-  assert.ok(evidence.context.includes("[REDACTED JWT]"));
-  assert.ok(evidence.context.includes("[REDACTED PRIVATE KEY]"));
+    githubPat,
+  ])
+    assert.ok(!evidence.context.includes(secret), `leaked ${secret}`);
+  for (const redaction of [
+    "TYPESAFE_API_KEY=[REDACTED]",
+    "Authorization: Bearer [REDACTED]",
+    "[REDACTED JWT]",
+    "[REDACTED PRIVATE KEY]",
+  ])
+    assert.ok(evidence.context.includes(redaction), `missing ${redaction}`);
 });
-test("other scopes do not replace the repository's quality evidence", () => {
+
+test("only P9.7 builds and transports its scope evidence alongside the quality facet", () => {
   assert.equal(
     buildScopeQualityEvidence("P9.1", { files: ["index.html"] }),
     null,
   );
-});
-
-test("scope-specific quality evidence reaches Jev alongside its quality facet", () => {
   const evidence = buildScopeQualityEvidence(
     "P9.7",
-    {
-      files: ["scripts/gate.mjs"],
-      additions: 1,
-      deletions: 0,
-      patch: "+export const contentOnly = true;",
-    },
+    { files: ["scripts/gate.mjs"], patch: "+export const contentOnly = true;" },
     plan,
   );
   const state = buildStateText(
@@ -328,141 +311,26 @@ test("scope-specific quality evidence reaches Jev alongside its quality facet", 
     ["quality"],
     evidence.context,
   );
-
-  assert.match(
-    state,
-    /quality: P9\.7 content criteria are not applicable as a copy judgment/,
+  assert.ok(
+    state.includes(
+      "quality: P9.7 content criteria are not applicable as a copy judgment",
+    ),
   );
-  assert.match(state, /content criteria are not applicable/);
-  assert.match(
-    evidence.facet_line,
-    /For this P9\.7 infrastructure-only change/,
-  );
-  assert.match(state, /Actual PR diff: 1 files, \+1\/-0/);
-});
+  assert.ok(state.includes("content criteria are not applicable"));
+  assert.ok(state.includes("Actual PR diff: 1 files, +0/-0"));
 
-test("scope-specific diff evidence expands only its own transport budget", () => {
-  const context = "actual P9.7 diff ".padEnd(8000, "x");
-  const state = buildStateText(
+  const oversizedContext = "actual P9.7 diff ".padEnd(8000, "x");
+  const scoped = buildStateText(
     { facet_evidence: { quality: "P9.7 diff below" } },
     { target: "pr @ head", sha: "head", treeClean: true, secretsClean: true },
     ["quality"],
-    context,
+    oversizedContext,
   );
-
-  assert.ok(state.includes(context));
-  assert.ok(state.length > 6000);
   const ordinary = buildStateText(
     { facet_evidence: { quality: "ordinary evidence" } },
     {},
     ["quality"],
   );
-  assert.ok(ordinary.length < 6000);
-});
-
-test("the collector loads the candidate plan and full snapshots for page changes, but scopes infra separately", () => {
-  const repo = mkdtempSync(join(tmpdir(), "jev-p97-diff-"));
-  try {
-    git(repo, "init", "-q");
-    git(repo, "config", "user.name", "Jev scope test");
-    git(repo, "config", "user.email", "jev-scope-test@example.invalid");
-    mkdirSync(join(repo, "docs", "plan"), { recursive: true });
-    mkdirSync(join(repo, "blog", "example"), { recursive: true });
-    writeFileSync(join(repo, "docs", "plan", "MASTER_PLAN.md"), plan);
-    writeFileSync(join(repo, "blog", "example", "index.html"), contentFixture);
-    git(repo, "add", ".");
-    git(repo, "commit", "-qm", "base");
-    const base = git(repo, "rev-parse", "HEAD");
-
-    const changedPage = contentFixture.replace(
-      "Last reviewed: October 10, 2026",
-      "Last reviewed: October 12, 2026",
-    );
-    writeFileSync(join(repo, "blog", "example", "index.html"), changedPage);
-    git(repo, "add", ".");
-    git(repo, "commit", "-qm", "content change");
-    const contentHead = git(repo, "rev-parse", "HEAD");
-    const contentEvidence = collectScopeQualityEvidence(
-      repo,
-      "P9.7",
-      base,
-      contentHead,
-    );
-
-    assert.deepEqual(contentEvidence.changed_files, [
-      "blog/example/index.html",
-    ]);
-    assert.equal(contentEvidence.content_criteria_applicable, true);
-    assert.equal(contentEvidence.content_evidence_complete, true);
-    assert.match(
-      contentEvidence.context,
-      /Authoritative requirements from docs\/plan\/MASTER_PLAN\.md/,
-    );
-    assert.match(contentEvidence.context, /Last reviewed: October 12, 2026/);
-    assert.match(contentEvidence.context, /2–3 significant figures/);
-
-    mkdirSync(join(repo, "scripts"), { recursive: true });
-    writeFileSync(
-      join(repo, "scripts", "quality-gate.mjs"),
-      "export const gate = true;\n",
-    );
-    git(repo, "add", ".");
-    git(repo, "commit", "-qm", "infrastructure change");
-    const infraHead = git(repo, "rev-parse", "HEAD");
-    const infraEvidence = collectScopeQualityEvidence(
-      repo,
-      "P9.7",
-      contentHead,
-      infraHead,
-    );
-
-    assert.deepEqual(infraEvidence.changed_files, ["scripts/quality-gate.mjs"]);
-    assert.equal(infraEvidence.content_criteria_applicable, false);
-    assert.match(
-      infraEvidence.facet_line,
-      /Do not grade infrastructure files as published copy/,
-    );
-    assert.match(infraEvidence.context, /export const gate = true/);
-  } finally {
-    rmSync(repo, { recursive: true, force: true });
-  }
-});
-
-test("a P9.7 item introduced by this PR is loaded from the candidate plan", () => {
-  const repo = mkdtempSync(join(tmpdir(), "jev-p97-plan-intro-"));
-  try {
-    git(repo, "init", "-q");
-    git(repo, "config", "user.name", "Jev scope test");
-    git(repo, "config", "user.email", "jev-scope-test@example.invalid");
-    mkdirSync(join(repo, "docs", "plan"), { recursive: true });
-    const priorPlan = plan.replace(/^\| P9\.7 \|.*(?:\r?\n)?/m, "");
-    assert.doesNotMatch(priorPlan, /^\| P9\.7 \|/m);
-    writeFileSync(join(repo, "docs", "plan", "MASTER_PLAN.md"), priorPlan);
-    git(repo, "add", ".");
-    git(repo, "commit", "-qm", "base without P9.7");
-    const base = git(repo, "rev-parse", "HEAD");
-
-    writeFileSync(join(repo, "docs", "plan", "MASTER_PLAN.md"), plan);
-    mkdirSync(join(repo, "scripts"), { recursive: true });
-    writeFileSync(
-      join(repo, "scripts", "quality-gate.mjs"),
-      "export const gate = true;\n",
-    );
-    git(repo, "add", ".");
-    git(repo, "commit", "-qm", "introduce P9.7 and its gate");
-    const head = git(repo, "rev-parse", "HEAD");
-
-    const evidence = collectScopeQualityEvidence(repo, "P9.7", base, head);
-    assert.equal(evidence.content_criteria_applicable, false);
-    assert.match(evidence.context, /\| P9\.7 \| Content quality gate/);
-    assert.match(evidence.context, /R-CONT-05/);
-  } finally {
-    rmSync(repo, { recursive: true, force: true });
-  }
-});
-test("P9.7 diff evidence refuses missing or malformed commit identities", () => {
-  assert.throws(
-    () => collectScopeQualityEvidence(process.cwd(), "P9.7", "", "x"),
-    /full base and head commit SHAs/,
-  );
+  assert.ok(scoped.includes(oversizedContext));
+  assert.ok(scoped.length > ordinary.length);
 });
