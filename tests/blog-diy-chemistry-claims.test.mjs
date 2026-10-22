@@ -78,6 +78,7 @@ test("chemistry-related DIY FAQs match their visible and structured answers", ()
     "What is the best BMS for DIY sodium-ion builds?",
     "Is sodium-ion safer than LiFePO4?",
     "How do I calculate the size of my DIY battery?",
+    "Do I need a license to build a DIY battery for off-grid use?",
   ];
 
   for (const question of questions) {
@@ -99,4 +100,25 @@ test("chemistry-related DIY FAQs match their visible and structured answers", ()
   }
 
   assert.match(article, /https:\/\/www\.catl\.com\/en\/news\/665\.html/);
+});
+
+test("DIY safety guidance avoids universal assembly and fire-response instructions", () => {
+  const safety = range(
+    "<h2>Safety, installation and emergency planning</h2>",
+    "<h2>Related guides</h2>",
+  );
+
+  assert.match(safety, /licensed electrician/);
+  assert.match(safety, /local emergency services/);
+  assert.match(
+    safety,
+    /off-grid status alone does not establish an exemption/i,
+  );
+  assert.match(safety, /https:\/\/fsri\.org\//);
+  assert.match(safety, /https:\/\/www\.nfpa\.org\/codes-and-standards\//);
+  assert.match(safety, /https:\/\/www\.usfa\.fema\.gov\//);
+  assert.doesNotMatch(
+    safety,
+    /class d|5.?7\s*nm|fused appropriately|never work alone/i,
+  );
 });
