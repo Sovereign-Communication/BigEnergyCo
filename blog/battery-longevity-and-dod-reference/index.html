@@ -7,16 +7,14 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <meta name="color-scheme" content="dark" />
-    <title>
-      Battery Longevity, Oversizing &amp; DoD Reference Guide (2026)
-    </title>
+    <title>Battery cycle life and depth of discharge: a practical guide</title>
     <meta
       name="description"
-      content="Degradation physics, Wöhler cycle models and sizing strategies for LFP, sodium-ion and lead-acid — how oversizing and DoD control cut battery replacements."
+      content="How to read battery cycle-life ratings, compare test conditions, and plan usable capacity without assuming a guaranteed service life."
     />
     <meta
       name="keywords"
-      content="battery longevity, depth of discharge, DoD cycle life, LiFePO4 lifespan, sodium-ion battery cycles, battery oversizing zero swap, off-grid battery degradation"
+      content="battery cycle life, depth of discharge, battery sizing, energy storage ratings"
     />
     <link
       rel="canonical"
@@ -55,11 +53,11 @@
     <meta property="og:site_name" content="BigEnergyCo" />
     <meta
       property="og:title"
-      content="Battery Longevity, Oversizing &amp; DoD Reference Guide (2026)"
+      content="Battery cycle life and depth of discharge: a practical guide"
     />
     <meta
       property="og:description"
-      content="Degradation physics, Wöhler cycle models and sizing strategies for LFP, sodium-ion and lead-acid — how oversizing and DoD control cut battery replacements."
+      content="How to read battery cycle-life ratings, compare test conditions, and plan usable capacity without assuming a guaranteed service life."
     />
     <meta
       property="og:url"
@@ -73,11 +71,11 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
-      content="Battery Longevity, Oversizing &amp; DoD Reference Guide (2026)"
+      content="Battery cycle life and depth of discharge: a practical guide"
     />
     <meta
       name="twitter:description"
-      content="Degradation physics, Wöhler cycle models and sizing strategies for LFP, sodium-ion and lead-acid — how oversizing and DoD control cut battery replacements."
+      content="How to read battery cycle-life ratings, compare test conditions, and plan usable capacity without assuming a guaranteed service life."
     />
     <meta
       property="og:image"
@@ -102,9 +100,9 @@
               "@type": "WebPage",
               "@id": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/"
             },
-            "headline": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-            "name": "Battery Longevity, Oversizing & DoD Reference Guide (2026)",
-            "description": "Degradation physics, Wöhler cycle models and sizing strategies for LFP, sodium-ion and lead-acid — how oversizing and DoD control cut battery replacements.",
+            "headline": "Battery cycle life and depth of discharge: a practical guide",
+            "name": "Battery cycle life and depth of discharge: a practical guide",
+            "description": "How to read battery cycle-life ratings, compare test conditions, and plan usable capacity without assuming a guaranteed service life.",
             "datePublished": "2026-09-11T00:00:00Z",
             "dateModified": "2026-09-11T00:00:00Z",
             "mainEntityOfPage": "https://freeoffgridcalculator.com/blog/battery-longevity-and-dod-reference/",
@@ -159,10 +157,10 @@
             "mainEntity": [
               {
                 "@type": "Question",
-                "name": "Why does cycling LiFePO4 to only 80% or 60% DoD dramatically increase cycle life?",
+                "name": "How should I compare cycle-life ratings at different DoD values?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Battery cycle degradation follows a generalized Wöhler fatigue power law. Deep cycles (90-100% DoD) subject the graphite anode and cathode crystal lattices to extreme volumetric expansion and mechanical stress, cracking particles and consuming active lithium through rapid Solid Electrolyte Interphase (SEI) reformation. Limiting daily cycling to 60-80% DoD reduces micro-strain, extending cell life from ~3,500 cycles to over 10,000 cycles."
+                  "text": "Compare ratings only when their test conditions and end-of-life criteria are stated. Depth of discharge is one variable; cell design, temperature, charge and discharge rate, and voltage limits also matter. Research on commercial cells reports variation across cycling conditions, so a generic cycle count is not a life guarantee."
                 }
               },
               {
@@ -555,20 +553,14 @@
         <span>&rsaquo;</span>
         <a href="../">Blog</a>
         <span>&rsaquo;</span>
-        <span style="color: var(--text-main)"
-          >Battery Longevity &amp; DoD Guide</span
-        >
+        <span style="color: var(--text-main)">Battery Cycle-Life Guide</span>
       </nav>
 
       <!-- Article Header -->
       <article class="article-content">
         <header class="article-header">
-          <div class="article-tag">
-            🔬 Engineering Reference &amp; Scientific Data
-          </div>
-          <h1>
-            Battery Longevity, Oversizing &amp; DoD Reference Guide (2026)
-          </h1>
+          <div class="article-tag">Battery cycle-life guide</div>
+          <h1>Battery cycle life and depth of discharge: a practical guide</h1>
           <div class="article-meta">
             <span
               >By <strong>Lucas Ballek</strong> &middot; BigEnergyCo
@@ -580,222 +572,57 @@
         </header>
 
         <!-- Executive Summary Callout -->
-        <div class="callout callout-success">
-          <div class="callout-title">⚡ The Core Engineering Finding</div>
-          <p style="margin-bottom: 0">
-            Battery cycle degradation does not scale linearly with usage; it
-            follows a <strong>Wöhler fatigue power law</strong> where depth of
-            discharge (DoD) dictates mechanical cell wear. By sizing an LFP or
-            Sodium-ion bank <strong>25% to 35% larger</strong> than minimum
-            daily demand, operating DoD drops from 85%–90% down to 60%–65%. This
-            single sizing decision extends battery cycle life from ~6,000 cycles
-            (16 years) to <strong>over 10,000 cycles (&gt;27 years)</strong>,
-            completely eliminating mid-life battery replacements, hazardous
-            disposal, and thousands of dollars in replacement electrician labor.
-          </p>
-        </div>
-
-        <h2>
-          1. The Physics of Battery Degradation: Why Depth of Discharge Dictates
-          Lifespan
-        </h2>
-        <p>
-          In off-grid and backup power systems, battery longevity is commonly
-          misunderstood as a static calendar warranty (e.g., &ldquo;a 10-year
-          battery&rdquo;). In reality, rechargeable electrochemical cells
-          experience two independent, simultaneous aging processes:
-        </p>
-        <ul>
-          <li>
-            <strong>Calendar Aging:</strong> Parasitic chemical side reactions
-            between the electrolyte and electrodes that occur continuously over
-            time, driven predominantly by ambient temperature and average State
-            of Charge (SoC).
-          </li>
-          <li>
-            <strong>Cyclic Fatigue Degradation:</strong> Mechanical and
-            electrochemical wear caused by the physical expansion and
-            contraction of electrode host materials as ions (Li<sup>+</sup> or
-            Na<sup>+</sup>) insert into and de-intercalate from the crystal
-            lattice during daily charge and discharge cycles.
-          </li>
-        </ul>
-        <p>
-          Just as structural metal components endure mechanical fatigue under
-          repeated stress cycles, battery electrodes undergo lattice strain
-          during deep cycling. When an LFP cell is discharged to 100% DoD (0%
-          SoC), its graphite anode undergoes approximately
-          <strong>10% to 13% volumetric contraction</strong>, while the cathode
-          expands. This repetitive mechanical breathing induces micro-cracking
-          in electrode particles, exposing fresh active material that consumes
-          available ions to reform the
-          <strong>Solid Electrolyte Interphase (SEI)</strong> layer.
-        </p>
-
         <div class="callout callout-info">
-          <div class="callout-title">
-            📐 The Generalized Wöhler Power-Law Degradation Model
-          </div>
-          <p>
-            Across academic battery degradation literature (Preger et al.,
-            Sandia National Laboratories; Smith et al., NREL), cyclic capacity
-            retention to 80% State of Health (SOH) is accurately modeled using
-            an inverse power law:
-          </p>
-          <div class="math-box">N_cycles(DoD) = N_0 × (DoD_0 / DoD)^β</div>
-          <p style="margin-top: 0.5rem; margin-bottom: 0">
-            Where <em>N_0</em> is the baseline manufacturer cycle life rated at
-            depth <em>DoD_0</em> (e.g., 6,000 cycles at 80% DoD), and
-            <strong>β</strong> is the degradation sensitivity exponent. For
-            modern prismatic LFP power cells, empirical curve fitting
-            establishes <strong>β &approx; 1.65 to 1.85</strong>. Because β is
-            significantly greater than 1.0, shallow cycling yields a non-linear
-            dividend in cumulative lifetime energy throughput.
+          <div class="callout-title">What the evidence supports</div>
+          <p style="margin-bottom: 0">
+            No single cycle count or service life applies to every battery sold
+            under the same chemistry label. Cell design and test conditions
+            matter. Use the product data sheet and the limits stated by the
+            battery maker and battery-management system when planning a bank.
           </p>
         </div>
 
-        <h3>The Cumulative Throughput Paradox</h3>
+        <h2>1. Cycle-life ratings belong to a test protocol</h2>
         <p>
-          A common builder misconception is that &ldquo;two 50% cycles equal one
-          100% cycle.&rdquo; The physics of intercalation strain prove this
-          false. The cumulative lifetime energy delivered by a battery bank
-          before reaching 80% capacity retention is given by:
+          Depth of discharge (DoD) describes how much of a battery's rated
+          capacity is removed during a discharge. It is one input to aging, not
+          a stand-alone lifetime predictor. A Sandia study tested commercial
+          LFP, NCA, and NMC cells at different discharge rates, depths of
+          discharge, and temperatures. It found substantial variation in time
+          and cycle counts to 80% capacity, including variation among cells of
+          the same chemistry. The result describes those cells and protocols; it
+          does not establish a universal cycle-life curve for every product. See
+          <a href="https://www.osti.gov/biblio/1650174">Preger et al. (2020)</a
+          >.
         </p>
-        <div class="math-box">
-          E_lifetime = N_cycles × DoD × E_nameplate &prop; DoD^(1 - β)
-        </div>
         <p>
-          Because β &approx; 1.65, the exponent (1 &minus; β) is negative
-          (&minus;0.65). Therefore,
-          <strong
-            >as operating Depth of Discharge decreases, cumulative lifetime
-            throughput increases substantially</strong
-          >. Operating a 15 kWh LFP bank at 60% daily DoD delivers nearly
-          <strong>65% more total kilowatt-hours</strong> over its operational
-          life than hammering the same bank to 100% DoD every evening.
-        </p>
-
-        <h2>
-          2. Empirical Degradation &amp; Sizing Matrix by Battery Chemistry
-        </h2>
-        <p>
-          The table below compares the three primary off-grid battery
-          chemistries using empirical cell manufacturer datasheets (CATL, EVE
-          Energy, HiNa Battery, Faradion, Trojan/Rolls BCI standards) and
-          peer-reviewed cycling data:
+          A cycle-life number is useful only alongside the conditions under
+          which it was measured. When comparing products, record the DoD or
+          state-of-charge window, temperature, charge and discharge rate,
+          voltage limits, cycle profile, and the maker's end-of-life criterion.
+          NREL's
+          <a href="https://docs.nrel.gov/docs/fy19osti/73822.pdf"
+            >operation and maintenance guide</a
+          >
+          emphasizes documenting operating conditions when evaluating
+          energy-storage systems.
         </p>
 
-        <div
-          class="table-wrapper"
-          tabindex="0"
-          role="region"
-          aria-label="Battery chemistry degradation and sizing matrix, scrollable table"
-        >
-          <table>
-            <caption>
-              2. Empirical Degradation & Sizing Matrix by Battery Chemistry
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Specification</th>
-                <th scope="col">LFP (LiFePO<sub>4</sub>)</th>
-                <th scope="col">Sodium-Ion (Na-Ion)</th>
-                <th scope="col">Lead-Acid (AGM)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>Nominal Cell Voltage</strong></td>
-                <td>3.2 V (2.50V &ndash; 3.65V)</td>
-                <td>3.0 V &ndash; 3.1 V (1.50V &ndash; 4.00V)</td>
-                <td>2.0 V (1.75V &ndash; 2.45V)</td>
-              </tr>
-              <tr>
-                <td><strong>Inherent Cell Window</strong></td>
-                <td>80% &ndash; 90% DoD</td>
-                <td><strong>95%+ (Safe to 0.0V)</strong></td>
-                <td>50% DoD strict limit</td>
-              </tr>
-              <tr>
-                <td><strong>Inverter Utilization Window</strong></td>
-                <td>80% &ndash; 90% (flat voltage curve)</td>
-                <td><strong>~85%</strong> (clipped by 40-42V LVD)</td>
-                <td>50% (rapid voltage drop)</td>
-              </tr>
-              <tr>
-                <td><strong>Cycle Life @ 100% DoD</strong></td>
-                <td>3,500 &ndash; 4,200 cycles</td>
-                <td>3,800 &ndash; 4,500 cycles</td>
-                <td>150 &ndash; 250 cycles (&lt;8 months)</td>
-              </tr>
-              <tr>
-                <td><strong>Cycle Life @ 80% DoD</strong></td>
-                <td>
-                  <strong>6,000 &ndash; 8,000 cycles</strong> (Rating Benchmark)
-                </td>
-                <td><strong>5,500 &ndash; 6,500 cycles</strong></td>
-                <td>250 &ndash; 350 cycles (~10 months)</td>
-              </tr>
-              <tr>
-                <td><strong>Cycle Life @ 60% DoD</strong></td>
-                <td><strong>10,000 &ndash; 12,000 cycles</strong></td>
-                <td><strong>9,000 &ndash; 10,500 cycles</strong></td>
-                <td>400 &ndash; 500 cycles (~1.2 years)</td>
-              </tr>
-              <tr>
-                <td><strong>Cycle Life @ 50% DoD</strong></td>
-                <td>14,000+ cycles</td>
-                <td>11,500+ cycles</td>
-                <td><strong>500 &ndash; 600 cycles</strong> (~1.5 years)</td>
-              </tr>
-              <tr>
-                <td>
-                  <strong>20-Year Demand (1 cycle/day = 7,300 cycles)</strong>
-                </td>
-                <td>
-                  <span class="badge badge-green"
-                    >0 Swaps (with 25% oversize)</span
-                  >
-                </td>
-                <td>
-                  <span class="badge badge-green"
-                    >0 Swaps (with 20% oversize)</span
-                  >
-                </td>
-                <td>
-                  <span class="badge badge-red"
-                    >3 to 5 Full Swaps Required</span
-                  >
-                </td>
-              </tr>
-              <tr>
-                <td><strong>Hard Calendar Life Ceiling</strong></td>
-                <td>18 &ndash; 25+ years</td>
-                <td>18 &ndash; 25+ years</td>
-                <td><strong>6 &ndash; 8 years maximum</strong></td>
-              </tr>
-              <tr>
-                <td>
-                  <strong>Cold Weather Limit (&lt;0&deg;C / 32&deg;F)</strong>
-                </td>
-                <td>Charge blocked; needs heaters</td>
-                <td>
-                  <span class="badge badge-blue"
-                    >Charges down to &minus;20&deg;C (&minus;4&deg;F)</span
-                  >
-                </td>
-                <td>Loses 30%&ndash;50% capacity; freeze risk</td>
-              </tr>
-              <tr>
-                <td><strong>Thermal Runaway Temperature</strong></td>
-                <td>~270&deg;C (very stable)</td>
-                <td>&gt;350&deg;C (virtually non-combustible)</td>
-                <td>Hydrogen off-gassing hazard</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
+        <h2>2. What a larger battery can and cannot tell you</h2>
+        <p>
+          If the energy taken from a bank stays the same, increasing its usable
+          capacity reduces the share used on a typical day. That is capacity
+          arithmetic, not a promise of a particular cycle count, calendar life,
+          or replacement date. Temperature, charge settings, system controls,
+          and time in service still matter.
+        </p>
+        <p>
+          For an initial sizing estimate, divide the energy that must come from
+          the battery by the usable fraction selected for the scenario. Then
+          account for conversion losses, reserve, and the limits in the battery
+          and inverter documentation. Treat the result as a planning input; it
+          is not a warranty or a battery-life prediction.
+        </p>
         <h2>
           3. LiFePO<sub>4</sub> (LFP) Deep Dive: The 80% Benchmark vs. The 60%
           Zero-Swap Sweet Spot
@@ -1212,17 +1039,15 @@
         <h2>8. Frequently Asked Questions</h2>
         <div class="faq-item">
           <div class="faq-question">
-            Why does cycling LiFePO4 to only 80% or 60% DoD dramatically
-            increase cycle life?
+            How should I compare cycle-life ratings at different DoD values?
           </div>
           <div class="faq-answer">
-            Battery cycle degradation follows a generalized Wöhler fatigue power
-            law. Deep cycles (90-100% DoD) subject the graphite anode and
-            cathode crystal lattices to extreme volumetric expansion and
-            mechanical stress, cracking particles and consuming active lithium
-            through rapid Solid Electrolyte Interphase (SEI) reformation.
-            Limiting daily cycling to 60-80% DoD reduces micro-strain, extending
-            cell life from ~3,500 cycles to over 10,000 cycles.
+            Compare ratings only when their test conditions and end-of-life
+            criteria are stated. Depth of discharge is one variable; cell
+            design, temperature, charge and discharge rate, and voltage limits
+            also matter. Research on commercial cells reports variation across
+            cycling conditions, so a generic cycle count is not a life
+            guarantee.
           </div>
         </div>
 
