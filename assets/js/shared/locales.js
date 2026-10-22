@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261022j";
+import { HOME_COPY } from "./home-copy.js?v=20261022k";
 
 export const LOCALES = {
   en: {
@@ -242,8 +242,9 @@ export const LOCALES = {
     socCut60: "~60% bill cut - the grid covers the rest",
     socCut80: "~80% bill cut - small grid top-ups",
     socCut95: "~95% bill cut - nearly off-grid",
-    socTierAutoNaion: "Sodium-ion bank across five real-weather years",
-    socTierAutoLfp: "LFP bank across five real-weather years",
+    socTierAutoNaion:
+      "Sodium-ion bank modeled with five years of observed weather data",
+    socTierAutoLfp: "LFP bank modeled with five years of observed weather data",
     socVerdictGrid:
       "Lowest: {low}%. Fully charged on {charged} of {total} days; the grid covered {empty} empty-bank days.",
     socVerdictGridOne:
@@ -866,8 +867,10 @@ export const LOCALES = {
     socCut60: "~60% menos en la factura - la red cubre el resto",
     socCut80: "~80% menos en la factura - pequeños aportes de la red",
     socCut95: "~95% menos en la factura - casi independiente de la red",
-    socTierAutoNaion: "Batería de sodio durante cinco años de clima real",
-    socTierAutoLfp: "Batería LFP durante cinco años de clima real",
+    socTierAutoNaion:
+      "Batería de sodio modelada con cinco años de datos meteorológicos reales",
+    socTierAutoLfp:
+      "Batería LFP modelada con cinco años de datos meteorológicos reales",
     socVerdictGrid:
       "Mínimo: {low}%. Carga completa en {charged} de {total} días; la red cubrió {empty} días con la batería vacía.",
     socVerdictGridOne:
@@ -1418,8 +1421,10 @@ export const LOCALES = {
     socCut60: "~60% de redução na conta - a rede cobre o restante",
     socCut80: "~80% de redução na conta - pequenos complementos da rede",
     socCut95: "~95% de redução na conta - quase fora da rede",
-    socTierAutoNaion: "Bateria de sódio em cinco anos de clima real",
-    socTierAutoLfp: "Bateria LFP em cinco anos de clima real",
+    socTierAutoNaion:
+      "Bateria de sódio modelada com cinco anos de dados meteorológicos reais",
+    socTierAutoLfp:
+      "Bateria LFP modelada com cinco anos de dados meteorológicos reais",
     socVerdictGrid:
       "Mínimo: {low}%. Carga completa em {charged} de {total} dias; a rede cobriu {empty} dias com a bateria vazia.",
     socVerdictGridOne:
@@ -1971,8 +1976,10 @@ export const LOCALES = {
     socCut60: "environ 60 % de facture en moins - le réseau couvre le reste",
     socCut80: "environ 80 % de facture en moins - petits compléments du réseau",
     socCut95: "environ 95 % de facture en moins - presque autonome",
-    socTierAutoNaion: "Batterie sodium-ion sur cinq années météo réelles",
-    socTierAutoLfp: "Batterie LFP sur cinq années météo réelles",
+    socTierAutoNaion:
+      "Batterie sodium-ion modélisée à partir de cinq ans de données météo réelles",
+    socTierAutoLfp:
+      "Batterie LFP modélisée à partir de cinq ans de données météo réelles",
     socVerdictGrid:
       "Minimum : {low} %. Charge complète pendant {charged} jours sur {total} ; le réseau a couvert les {empty} jours où la batterie était vide.",
     socVerdictGridOne:
@@ -2528,8 +2535,10 @@ export const LOCALES = {
     socCut60: "etwa 60 % weniger Stromkosten - das Netz deckt den Rest",
     socCut80: "etwa 80 % weniger Stromkosten - nur kleine Netzbezüge",
     socCut95: "etwa 95 % weniger Stromkosten - fast netzunabhängig",
-    socTierAutoNaion: "Natrium-Ionen-Speicher über fünf echte Wetterjahre",
-    socTierAutoLfp: "LFP-Speicher über fünf echte Wetterjahre",
+    socTierAutoNaion:
+      "Natrium-Ionen-Speicher, modelliert mit fünf Jahren realer Wetterdaten",
+    socTierAutoLfp:
+      "LFP-Speicher, modelliert mit fünf Jahren realer Wetterdaten",
     socVerdictGrid:
       "Tiefster Stand: {low} %. An {charged} von {total} Tagen voll geladen; an {empty} Tagen mit leerem Speicher sprang das Netz ein.",
     socVerdictGridOne:
@@ -3251,7 +3260,7 @@ export const LOCALES = {
       "{chem} - nominale capaciteit {kwh} kWh - ongeveer {swaps} vervangingen in 20 jaar",
     autoSocAxis: "Acculading (% van nominale capaciteit)",
     autoSocCaption:
-      "De gemodelleerde bruikbare capaciteit is 80% voor LFP (20-100%), 85% voor natrium-ion (15-100%) en 50% voor loodzuur (50-100%). In dit model hebben LFP en natrium-ion in 20 jaar minder vervangingen nodig dan loodzuur. Standaardspanningsinstellingen voor LFP beperken natrium-ion tot ongeveer 85% van de nominale capaciteit; de geringere ontladingsdiepte ondersteunt een langere levensduur in cycli. Loodzuur wordt beperkt tot de bovenste helft en bij hoge ontlading derated. Weerdalingen van {startYear} tot {endYear} laten zien wanneer stroom van het net of een generator nodig zou zijn.",
+      "De gemodelleerde bruikbare capaciteit is 80% voor LFP (20-100%), 85% voor natrium-ion (15-100%) en 50% voor loodzuur (50-100%). In dit model hebben LFP en natrium-ion in 20 jaar minder vervangingen nodig dan loodzuur. Standaardspanningsinstellingen voor LFP beperken natrium-ion tot ongeveer 85% van de nominale capaciteit; de geringere ontladingsdiepte ondersteunt een langere levensduur in cycli. Loodzuur wordt beperkt tot de bovenste helft; bij zware ontlading neemt de bruikbare capaciteit verder af. Weerdalingen van {startYear} tot {endYear} laten zien wanneer stroom van het net of een generator nodig zou zijn.",
     autoSocIntro:
       "Zo leest u de grafiek: de gearceerde band toont het dagelijkse laadbereik van elke accu, de dikke bovenrand de hoogste lading en de dunne onderrand de diepste ontlading. De stippellijn markeert het punt voor volle lading ({ceilings}); elke accu heeft voor dezelfde taak een vergelijkbare nominale capaciteit.",
     autoSocSunStrip:
@@ -3400,8 +3409,10 @@ export const LOCALES = {
     socTier100: "100% — geen generator nodig",
     socTier95: "95% — af en toe een generator",
     socTier99: "99% — generator alleen als zeldzame back-up",
-    socTierAutoLfp: "LFP-accu over vijf jaar met werkelijk weer",
-    socTierAutoNaion: "Natrium-ion-accu over vijf jaar met werkelijk weer",
+    socTierAutoLfp:
+      "LFP-accu, doorgerekend met vijf jaar aan werkelijke weergegevens",
+    socTierAutoNaion:
+      "Natrium-ion-accu, doorgerekend met vijf jaar aan werkelijke weergegevens",
     socVerdictGrid:
       "Laagste: {low}%. Volledig opgeladen op {charged} van {total} dagen; het net leverde stroom op {empty} dagen met lege accu.",
     socVerdictGridOne:
@@ -3719,8 +3730,10 @@ export const LOCALES = {
     socCut60: "خفض الفاتورة بنحو 60% - الشبكة تغطي الباقي",
     socCut80: "خفض الفاتورة بنحو 80% - سحب قليل من الشبكة",
     socCut95: "خفض الفاتورة بنحو 95% - شبه مستقل عن الشبكة",
-    socTierAutoNaion: "بطارية أيونات الصوديوم عبر خمس سنوات من الطقس الفعلي",
-    socTierAutoLfp: "بطارية LFP عبر خمس سنوات من الطقس الفعلي",
+    socTierAutoNaion:
+      "بطارية أيونات الصوديوم، حُسب أداؤها باستخدام بيانات الطقس الفعلية لخمس سنوات",
+    socTierAutoLfp:
+      "بطارية LFP، حُسب أداؤها باستخدام بيانات الطقس الفعلية لخمس سنوات",
     socVerdictGrid:
       "أدنى مستوى: {low}%. شُحنت بالكامل في {charged} من {total} يومًا؛ غطت الشبكة {empty} يومًا فرغت فيها البطارية.",
     socVerdictGridOne:
