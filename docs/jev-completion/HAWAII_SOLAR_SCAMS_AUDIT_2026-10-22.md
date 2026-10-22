@@ -25,3 +25,9 @@ The claim-level review identified actual overstatements and a visibility mismatc
 ## Remaining scope
 
 This audit is one article in P9.5. It does not establish keyword-demand metrics or complete the remaining blog audits. The separate P9.6 Search Console and Web Analytics access remains a live-account task.
+
+## Jev v1 investigation
+
+- On exact source SHA 82657bd, the pull-request workflow reported all required checks successful. Its `jev-complete` job is advisory for pull requests; the attached P9.5 report is not a score pass: scoped score 97.75 (semantic 92.5), with quality 85 at confidence 0.27 and SEO 100 at confidence 0.88. The report's scoped `pass` is false against the plan's 99/proven bar.
+- The full report is also below the production exit bar (96.57; `pass` false). It records an experience ratchet change from 85 to 35 at confidence 0.00 and translation 60 at confidence 0.62. The PR changes only article content, card/schema metadata, and a focused test; it does not change the calculator UI or translated UI strings.
+- Exact-run measurements show 232/232 browser-smoke gates, 9/9 acknowledgement steps, 3/3 actionable errors, 3 inviting empty states, zero raw keys on 22 pages, 42/42 dictionary surfaces, and zero axe violations. Source-backed article claims and all 1,748 tests pass. Under Jev Gate Policy v1, investigation found no actual risk from this article change, so the scoped PR proceeds with this note. This does not declare P9.5 complete or the production exit gate passed.
