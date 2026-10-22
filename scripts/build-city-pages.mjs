@@ -62,33 +62,14 @@ function slugify(s) {
     .replace(/^-+|-+$/g, "");
 }
 
-// Rough latitude-based sun context (educational, honest — no fake precision).
+// Latitude labels provide context only; they do not estimate roof-level output.
 function sunContext(lat) {
   const a = Math.abs(lat);
-  if (a < 15)
-    return {
-      tier: "Tropical sun",
-      note: "near-constant day length and strong year-round sun; the least seasonal solar resource on Earth.",
-    };
-  if (a < 30)
-    return {
-      tier: "Subtropical sun",
-      note: "strong sun most of the year with a mild winter dip.",
-    };
-  if (a < 45)
-    return {
-      tier: "Temperate sun",
-      note: "good summer sun, a real winter dip, and month-to-month variation worth simulating.",
-    };
-  if (a < 60)
-    return {
-      tier: "High-latitude sun",
-      note: "long summer days, short winter ones — the seasonal spread is exactly what the simulator measures.",
-    };
-  return {
-    tier: "Polar-margin sun",
-    note: "extreme seasonal swing; winter sizing is decided by the darkest week, not the average.",
-  };
+  if (a < 15) return { tier: "Tropical latitude" };
+  if (a < 30) return { tier: "Subtropical latitude" };
+  if (a < 45) return { tier: "Temperate latitude" };
+  if (a < 60) return { tier: "High latitude" };
+  return { tier: "Polar latitude" };
 }
 
 // Simple worked example from latitude: rough specific yield kWh/kWp/yr band.
@@ -226,7 +207,7 @@ function cityPage(c) {
             "name": "How much solar do I need in ${c.name}?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "It depends on your daily kWh use. As a rough band, ${c.name} sits in the ${sc.tier.toLowerCase()} zone with roughly ${lo}–${hi} kWh produced per kW of panels per year. A 10 kWh/day household typically lands between 3 and 6 kW of panels depending on the bill-cut target. The free calculator computes your exact numbers from five years of NASA satellite weather at your coordinates."
+              "text": "It depends on your daily kWh use and roof conditions. The static latitude band on this page has unknown source grade and is not a local production forecast. The free calculator estimates production from five years of hourly NASA POWER weather at your coordinates."
             }
           },
           {
@@ -234,7 +215,7 @@ function cityPage(c) {
             "name": "Does solar work in ${c.country}?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes — ${sc.tier} at ${coord}. ${sc.note.charAt(0).toUpperCase() + sc.note.slice(1)} The simulator sizes against your worst week, not the average, so the result is honest about winter."
+              "text": "Latitude alone cannot predict output at a specific roof. Local weather, shade, orientation, and installation matter; the calculator uses hourly weather data to estimate location-specific sizing."
             }
           },
           {
@@ -314,6 +295,10 @@ function cityPage(c) {
     em.kicker { color: var(--accent); font-style: normal; font-weight: 700; }
     .cta-box { border: 1px solid rgba(0, 230, 153, .4); background: rgba(0, 230, 153, .06); border-radius: 12px; padding: 1.2rem 1.4rem; margin: 2rem 0; }
     .cta-box p:last-child { margin: 0; }
+    .city-sizing-cta { margin: 1.5rem 0 2rem; border-color: rgba(0, 230, 153, .4); background: rgba(0, 230, 153, .08); }
+    .city-sizing-cta__title { font-weight: 700; color: #fff; margin-bottom: .4rem; }
+    .city-sizing-cta__copy { color: var(--muted); font-size: .92rem; margin-bottom: .75rem; }
+    .city-footer-links { margin-top: .75rem; }
     .btn { display: inline-block; background: linear-gradient(135deg, #00e699, #00b377); color: #04120c; font-weight: 700; text-decoration: none; padding: .65rem 1.3rem; border-radius: 8px; margin-top: .6rem; }
     details { border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1.1rem; margin-bottom: .8rem; background: var(--card); }
     summary { cursor: pointer; color: var(--accent); font-weight: 600; }
@@ -369,13 +354,13 @@ function cityPage(c) {
       <p class="meta">📍 ${coord} · ${sc.tier} · updated Aug 30, 2026 · free, no signup, nothing for sale</p>
 
       <!-- Worldwide Sizing Reassurance Callout -->
-      <div class="cta-box" style="margin: 1.5rem 0 2rem; border-color: rgba(0, 230, 153, 0.4); background: rgba(0, 230, 153, 0.08);">
-        <p style="font-weight:700;color:#fff;margin-bottom:0.4rem;">⚡ Sizing for a different location?</p>
-        <p style="color:var(--muted);font-size:0.92rem;margin-bottom:0.75rem;">This page is a benchmark reference for ${c.name}. The BigEnergyCo calculator works for <strong>any location worldwide</strong> using your exact coordinates.</p>
+      <div class="cta-box city-sizing-cta">
+        <p class="city-sizing-cta__title">⚡ Sizing for a different location?</p>
+        <p class="city-sizing-cta__copy">This page is a benchmark reference for ${c.name}. The BigEnergyCo calculator works for <strong>any location worldwide</strong> using your exact coordinates.</p>
         <a class="btn" href="../../#sizing">⚡ Size Any Location Worldwide &rarr;</a>
       </div>
 
-      <p><em class="kicker">The short answer:</em> ${c.name} sits at ${coord} — ${sc.tier.toLowerCase()}. ${sc.note.charAt(0).toUpperCase() + sc.note.slice(1)} Roughly <strong>${lo}–${hi} kWh per kW of panels per year</strong> is a fair expectation band, and the exact number for your roof is what the simulator computes.</p>
+      <p><em class="kicker">The short answer:</em> ${c.name} sits at ${coord} — ${sc.tier.toLowerCase()}. This page's ${lo}–${hi} kWh per kWp per year band is a rough latitude-only estimate with unknown source grade, not a local measurement or forecast. For location-specific weather input, the calculator uses five years of hourly NASA POWER data. <a href="../../assets/data/provenance.json">See the estimate's provenance</a>.</p>
 
       <h2>What the calculator does for ${c.name}</h2>
       <p>Type "${c.name}" (or use your exact GPS coordinates) into the estimator and it will:</p>
@@ -388,7 +373,7 @@ function cityPage(c) {
       </ul>
 
       <h2>Worked example: a 10 kWh/day household</h2>
-      <p>Using the ${c.name} latitude band (${lo}–${hi} kWh/kWp/yr), a household using 10 kWh per day typically lands in this range — a rough illustration from the band (with a dark-week margin), not a simulation. The panel column follows that band; the battery column is the one the simulator re-sizes, because it sizes the bank against your own darkest week — so its number usually comes out higher. Your exact figures come from running it:</p>
+      <p>This static example uses the unsourced latitude-only yield band above and a fixed 1.5× dark-week margin. Treat the panel range as an illustration, not a forecast or sizing recommendation. The battery column is re-sized by the simulator against your location's darkest week, so its result can differ from this static band:</p>
       <div class="table-container">
       <table>
         <caption>Worked sizing bands for a 10 kWh/day household in ${c.name}</caption>
@@ -403,7 +388,7 @@ function cityPage(c) {
       <p><em>Every money figure here is in US dollars; the calculator converts to your own currency.</em> ${wx.paybackLine}</p>
 
       <h2>Why simulate instead of estimate?</h2>
-      <p>Sun-hours maps and "average" figures hide the week that decides your battery size. In ${sc.tier.toLowerCase()} conditions, ${sc.note} A five-year hourly simulation catches that dark week, the cloudy month, and the seasonal swing — which is the difference between a system that works and one that leaves you in the dark in February.</p>
+      <p>Latitude bands cannot capture local clouds, roof shade, or orientation. The five-year hourly weather simulation models seasonal conditions and the darkest week, but it is still an estimate rather than a roof survey.</p>
 
       <div class="cta-box">
         <p><strong>Run the ${c.name} simulation now.</strong> Free, no signup, nothing for sale. Every number computed in your browser from real satellite weather.</p>
@@ -432,11 +417,11 @@ ${cities
       <h2>Frequently asked</h2>
       <details>
         <summary>How much solar do I need in ${c.name}?</summary>
-        <p>It depends on your daily kWh use. As a rough band, ${c.name} sits in the ${sc.tier.toLowerCase()} zone with roughly ${lo}–${hi} kWh produced per kW of panels per year. A 10 kWh/day household typically lands between 3 and 6 kW of panels depending on the bill-cut target. The free calculator computes your exact numbers from five years of NASA satellite weather at your coordinates.</p>
+        <p>It depends on your daily kWh use and roof conditions. The static latitude band on this page has unknown source grade and is not a local production forecast. The free calculator estimates production from five years of hourly NASA POWER weather at your coordinates.</p>
       </details>
       <details>
         <summary>Does solar work in ${c.country}?</summary>
-        <p>Yes — ${sc.tier} at ${coord}. ${sc.note.charAt(0).toUpperCase() + sc.note.slice(1)} The simulator sizes against your worst week, not the average, so the result is honest about winter.</p>
+        <p>Latitude alone cannot predict output at a specific roof. Local weather, shade, orientation, and installation matter; the calculator uses hourly weather data to estimate location-specific sizing.</p>
       </details>
       <details>
         <summary>Is the ${c.name} solar calculator free?</summary>
@@ -448,7 +433,7 @@ ${cities
   <footer>
     <div class="container">
       <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building. Working with batteries and mains wiring can cause fire, injury, and death.</p>
-      <p style="margin-top:.75rem;">
+      <p class="city-footer-links">
         <a href="../../#sizing">Size Your System</a> · <a href="../">66 City Benchmarks</a> · <a href="../../solar-heatmap/">Heatmap</a> · <a href="../../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
       </p>
     </div>
@@ -592,6 +577,9 @@ function hubPage() {
     p { margin-bottom: 1rem; }
     .citylinks { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 1.5rem; }
     .citylinks a { color: var(--accent); text-decoration: none; font-size: .85rem; border: 1px solid var(--border); border-radius: 20px; padding: .2rem .7rem; display: inline-flex; align-items: center; min-height: 44px; }
+    .worldwide-notice { margin: 1.25rem 0 2rem; background: rgba(0, 230, 153, .08); border: 1px solid rgba(0, 230, 153, .35); border-radius: 12px; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .worldwide-notice__title { font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: .3rem; }
+    .worldwide-notice__copy { margin: 0; color: var(--muted); font-size: .92rem; line-height: 1.5; max-width: 620px; }
     a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .skip-link { position: absolute; left: -9999px; top: .5rem; z-index: 20; padding: .7rem 1rem; background: var(--accent); color: #04120c; font-weight: 800; border-radius: 8px; }
     .skip-link:focus { left: .75rem; }
@@ -640,10 +628,10 @@ function hubPage() {
     <article>
       <h1>Solar &amp; Battery Calculator by City</h1>
       <!-- Worldwide Sizing Reassurance Callout -->
-      <div class="worldwide-notice" style="margin: 1.25rem 0 2rem; background: rgba(0, 230, 153, 0.08); border: 1px solid rgba(0, 230, 153, 0.35); border-radius: 12px; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div class="worldwide-notice">
         <div>
-          <div style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 0.3rem;">⚡ Don't see your city? We size systems anywhere on Earth!</div>
-          <p style="margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.5; max-width: 620px;">
+          <div class="worldwide-notice__title">⚡ Don't see your city? We size systems anywhere on Earth!</div>
+          <p class="worldwide-notice__copy">
             The BigEnergyCo calculator works for <strong>any city, town, or GPS coordinates worldwide</strong> using 5 years of hourly NASA satellite weather. The 66 benchmark cities below provide reference solar profiles and worked sizing examples.
           </p>
         </div>
@@ -665,7 +653,7 @@ ${regionBlocks}
   <footer>
     <div class="container">
       <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building.</p>
-      <p style="margin-top:.75rem;">
+      <p class="city-footer-links">
         <a href="../#sizing">Size Your System</a> · <a href="../solar-heatmap/">Heatmap</a> · <a href="../blog/">All Guides</a> · <a href="../about/">About</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
       </p>
     </div>

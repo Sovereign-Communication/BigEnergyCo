@@ -60,6 +60,15 @@
   },
   "assumptions": [
     {
+      "id": "city_yield_band",
+      "family": "Latitude-band solar-yield estimates on generated city pages",
+      "shown_as": "the rough kWh per kWp per year band and static panel ranges",
+      "used_by": ["scripts/build-city-pages.mjs:yieldBand", "scripts/build-city-pages.mjs:workedExample"],
+      "source": null,
+      "grade": "unknown",
+      "disclosure": "OUR ILLUSTRATIVE ESTIMATE. The broad latitude bands are not measured solar data or a local forecast, and the static panel example applies a fixed 1.5x dark-week margin. The calculator's separate five-year NASA POWER simulation estimates location-specific weather input; it does not survey roof shade, orientation, or installation."
+    },
+    {
       "id": "weather_irradiance",
       "family": "Hourly solar irradiance and ambient temperature",
       "shown_as": "sunshine hours, annual kWh per kW, weather year range",
@@ -165,7 +174,7 @@
       "used_by": ["assets/js/sizing/paths.js:REGION_ROWS"],
       "source": null,
       "grade": "unknown",
-      "disclosure": "OUR ESTIMATE, graded B per region because the ranges are wide and regional rather than per-quote. They come from installed-price surveys we read, but no single survey is published free at this resolution, so no URL is claimed. Every gap between the four routes is a difference between OUR two estimates, not between two measured prices, and the page says so."
+      "disclosure": "OUR ESTIMATE, grade unknown: regional ranges informed by surveys that are not free at this resolution, so no source URL is claimed. The comparison is between our estimates, not measured market prices; the page says so."
     },
     {
       "id": "incentives",

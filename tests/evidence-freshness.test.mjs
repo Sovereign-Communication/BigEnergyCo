@@ -16,6 +16,15 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PROSE = join(ROOT, "evidence", "advisor-and-release.json");
 const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
 const prose = JSON.parse(readFileSync(PROSE, "utf8"));
+function currentAssetStamp() {
+  const html = readFileSync(join(ROOT, "index.html"), "utf8");
+  return html.match(/[?&]v=(\d{8}[a-z])/)[1];
+}
+
+function currentCacheVersion() {
+  const sw = readFileSync(join(ROOT, "sw.js"), "utf8");
+  return sw.match(/beco-v\d+/)[0];
+}
 
 /** Run the gate against a mutated copy of the record, in a temp dir. */
 function gateAgainst(mutate) {
@@ -102,6 +111,7 @@ test("a typed gate count fails the gate", () => {
 
 test("an asset stamp the tree contradicts fails the gate", () => {
   const r = gateAgainst((p) => {
+    p.seo_summary = `asset stamp ${currentAssetStamp()}`;
     p.seo_summary = p.seo_summary.replace(/2026\d{4}[a-z]/, "20260925c");
   });
   assert.notEqual(r.code, 0, "a stamp that is not the shipped one must fail");
@@ -110,6 +120,7 @@ test("an asset stamp the tree contradicts fails the gate", () => {
 
 test("an SW cache version the tree contradicts fails the gate", () => {
   const r = gateAgainst((p) => {
+    p.seo_summary = `SW cache ${currentCacheVersion()}`;
     p.seo_summary = p.seo_summary.replace(/beco-v\d+/, "beco-v1");
   });
   assert.notEqual(r.code, 0);

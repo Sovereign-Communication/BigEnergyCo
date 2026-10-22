@@ -82,6 +82,12 @@ test("BANNED: the known-bad Arabic values are gone", () => {
     /النموذجية/,
     "ar.offlineNote should say 'typical year', not 'traditional'",
   );
+  assert.doesNotMatch(LOCALES.de.useCaseReserve, /Batteri\b/);
+  assert.doesNotMatch(LOCALES.de.useCaseReserveBlurb, /Batteri\b/);
+  assert.doesNotMatch(LOCALES.ar.useCaseReserveBlurb, /\bfourni\b/);
+  assert.match(LOCALES.ar.useCaseOffGrid, /شبكة الكهرباء/);
+  assert.match(LOCALES.es.useCaseOffGrid, /red eléctrica/);
+  assert.match(LOCALES.pt.useCaseOffGrid, /rede elétrica/);
 });
 
 test("BANNED: reintroducing any known-bad value makes the gate fail", () => {
@@ -93,6 +99,10 @@ test("BANNED: reintroducing any known-bad value makes the gate fail", () => {
   // The gate resolves the dictionary by import, so the copy needs both files
   // and the lib it imports.
   cpSync(LOCALES_PATH, join(sandbox, "locales.js"));
+  cpSync(
+    join(ROOT, "assets", "js", "shared", "home-copy.js"),
+    join(sandbox, "home-copy.js"),
+  );
   const script = `
     import { LOCALES } from "./locales.js";
     const langs = Object.keys(LOCALES);
@@ -102,6 +112,12 @@ test("BANNED: reintroducing any known-bad value makes the gate fail", () => {
       "دون اتصال · ليس الذكاء الطبيعي مباشرة",
       "تم التحقق بشكل مستقل ✓ — plausible من الناحية الفيزيائية",
       " · 🌐 وضع عدم الاتصال التقليدي",
+      "Einen Notfall-Reservestand in der Batteri halten",
+      "Lass einen Teil der Batteri für Stromausfälle zurück und sieh genau, was dich das an Ersparnis kostet.",
+      "اترك جزءًا من البطارية جانبًا لحالات الانقطاع، وانظر بدقة ما يكلفه ذلك من fourni.",
+      "الاعتماد الكامل على عدم وجود شبكة",
+      "Quedarte totalmente sin red",
+      "Ficar totalmente sem rede",
     ])};
     let hits = 0;
     for (const lang of langs)
@@ -146,6 +162,24 @@ test("BANNED: reintroducing any known-bad value makes the gate fail", () => {
       "تم التحقق بشكل مستقل ✓ — plausible من الناحية الفيزيائية",
     ],
     [" · 🌐 وضع السنة النموذجية دون اتصال", " · 🌐 وضع عدم الاتصال التقليدي"],
+    [
+      "Einen Notfall-Reservestand in der Batterie halten",
+      "Einen Notfall-Reservestand in der Batteri halten",
+    ],
+    [
+      "Lass einen Teil der Batterie für Stromausfälle zurück und sieh genau, was dich das an Ersparnis kostet.",
+      "Lass einen Teil der Batteri für Stromausfälle zurück und sieh genau, was dich das an Ersparnis kostet.",
+    ],
+    [
+      "اترك جزءًا من البطارية جانبًا لحالات الانقطاع، لتعرف بالضبط مقدار ما سيكلفك ذلك من التوفير.",
+      "اترك جزءًا من البطارية جانبًا لحالات الانقطاع، وانظر بدقة ما يكلفه ذلك من fourni.",
+    ],
+    ["الاستقلال التام عن شبكة الكهرباء", "الاعتماد الكامل على عدم وجود شبكة"],
+    [
+      "Desconectarte por completo de la red eléctrica",
+      "Quedarte totalmente sin red",
+    ],
+    ["Ficar totalmente fora da rede elétrica", "Ficar totalmente sem rede"],
   ];
   const good = readFileSync(LOCALES_PATH, "utf8");
   for (const [ok, bad] of MUTATIONS) {

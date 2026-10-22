@@ -730,6 +730,7 @@ export function parseLiveAnswers(answers, pack) {
   const bucketIds = new Set(Object.keys(doc.buckets));
   const liveLevels = {};
   const liveConfidence = {};
+  const liveProbabilityDistributions = {};
   const notes = [];
   let anyValid = false;
   for (const axis of Object.keys(doc.axes)) {
@@ -737,6 +738,7 @@ export function parseLiveAnswers(answers, pack) {
     let level = null;
     let value = null;
     let conf = null;
+    const probabilitiesByLevel = new Map();
     if (typeof answer === "object" && answer !== null) {
       const probs = answer.probabilities;
       const legend = answer.legend;
@@ -749,14 +751,38 @@ export function parseLiveAnswers(answers, pack) {
         for (const [anchor, lvl] of Object.entries(legend)) {
           if (typeof lvl !== "string" || !levelIds.includes(lvl)) continue;
           const prob = probs[String(anchor)];
-          if (typeof prob === "number" && (value === null || prob > value)) {
+          if (
+            typeof prob !== "number" ||
+            !Number.isFinite(prob) ||
+            prob < 0 ||
+            prob > 1
+          ) {
+            continue;
+          }
+          probabilitiesByLevel.set(lvl, prob);
+          if (value === null || prob > value) {
             level = lvl;
             value = prob;
           }
         }
+        liveProbabilityDistributions[axis] = levelIds.map((candidate) => ({
+          level: candidate,
+          probability: probabilitiesByLevel.get(candidate) ?? null,
+        }));
+      } else {
+        liveProbabilityDistributions[axis] = null;
       }
       const rawConf = answer.confidence;
-      if (typeof rawConf === "number" && !Number.isNaN(rawConf)) conf = rawConf;
+      if (
+        typeof rawConf === "number" &&
+        Number.isFinite(rawConf) &&
+        rawConf >= 0 &&
+        rawConf <= 1
+      ) {
+        conf = rawConf;
+      }
+    } else {
+      liveProbabilityDistributions[axis] = null;
     }
     if (level !== null) {
       anyValid = true;
@@ -788,6 +814,7 @@ export function parseLiveAnswers(answers, pack) {
   return {
     live_levels: liveLevels,
     live_confidence: liveConfidence,
+    live_probability_distributions: liveProbabilityDistributions,
     primary_gap: primaryGap,
     notes,
   };
@@ -1013,6 +1040,10 @@ export function scoreCompleteGate(
       live && live.live_confidence
         ? (live.live_confidence[axis] ?? null)
         : null;
+    const probabilityDistribution =
+      live && live.live_probability_distributions
+        ? (live.live_probability_distributions[axis] ?? null)
+        : null;
     facets[axis] = {
       bucket: spec.bucket,
       authority: spec.authority,
@@ -1021,6 +1052,7 @@ export function scoreCompleteGate(
       ordinal: doc.sentiment.ordinals[effective],
       source,
       confidence,
+      jev_probability_distribution: probabilityDistribution,
     };
   }
 

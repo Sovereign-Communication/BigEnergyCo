@@ -8,7 +8,7 @@
 | `docs/plan/LEDGER.jsonl`               | Append-only evidence: what shipped, with its proving PR, SHA, gate outcomes and Jev score                                                                                |
 | `README.md`                            | Project status, deploy runbook summary, ground rules                                                                                                                     |
 | `docs/DEPLOY_RUNBOOK.md`               | **Canonical** release path (only supported way to ship)                                                                                                                  |
-| `docs/ARCHITECTURE.md`                 | Module map and the i18n boundary                                                                                                                                         |
+| `docs/ARCHITECTURE.md`                 | Module map, i18n ownership, and homepage markup invariants                                                                                                               |
 | `docs/DOMAIN_MIGRATION_PLAN.md`        | Domain cutover mechanics; still active and consistent with D-19                                                                                                          |
 | `docs/contest/COLD-START-PLAN.md`      | Plan for the Cloudflare Cold Start entry (contest branch). A campaign plan, not the governing project plan — the master plan still wins on anything they disagree about. |
 | `docs/contest/MISSION.md`              | How the Cold Start plan is executed and what is never done while running it                                                                                              |

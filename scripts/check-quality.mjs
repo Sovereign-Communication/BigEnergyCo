@@ -52,9 +52,15 @@ import {
  *                              header (+5) and footer (+1); diy footer 3→1 and
  *                              CTA button style removed (−3); battery-longevity
  *                              footer 3→1 (−2). Net +1, measured.
+ *   inlineStyleAttributes     366 — extracted the city callout, hub notice and
+ *                              footer styles to named classes
+ *                              (2026-10-20, −268 measured attributes).
+ *   inlineStyleAttributes     318 — removed duplicate anchor text-decoration
+ *                              and .btn cursor declarations
+ *                              (2026-10-20, −48 measured attributes).
  */
 const RATCHET = {
-  inlineStyleAttributes: 634,
+  inlineStyleAttributes: 318,
 };
 
 let failures = 0;

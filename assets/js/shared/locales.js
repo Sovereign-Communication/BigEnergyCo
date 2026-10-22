@@ -3,8 +3,11 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
+import { HOME_COPY } from "./home-copy.js?v=20261022b";
+
 export const LOCALES = {
   en: {
+    ...HOME_COPY.en,
     navSizing: "Size Your System",
     navSupport: "Support",
     cutLabel: "Your bill-cut target",
@@ -544,6 +547,7 @@ export const LOCALES = {
     pathsIncludesToolsAndSafety: "Tools and safety gear",
   },
   es: {
+    ...HOME_COPY.es,
     navSizing: "Dimensiona tu sistema",
     navSupport: "Soporte",
     cutLabel: "Tu objetivo de reducción de factura",
@@ -610,7 +614,7 @@ export const LOCALES = {
     useCaseTou: "Ahorrar con una batería en tarifas horarias",
     useCaseBackup: "Mantener los básicos funcionando durante un apagón",
     useCaseReserve: "Guardar una reserva de emergencia en la batería",
-    useCaseOffGrid: "Quedarte totalmente sin red",
+    useCaseOffGrid: "Desconectarte por completo de la red eléctrica",
     useCasePortable: "Energía portátil (furgoneta, barco, camping)",
     useCaseBillCutBlurb:
       "Solar conectado a la red, con batería solo si compensa. Se mide como la parte de tu factura que el sistema elimina en 20 años.",
@@ -1096,6 +1100,7 @@ export const LOCALES = {
     pathsIncludesToolsAndSafety: "Herramientas y equipo de seguridad",
   },
   pt: {
+    ...HOME_COPY.pt,
     navSizing: "Dimensione seu sistema",
     navSupport: "Suporte",
     cutLabel: "Sua meta de redução da conta",
@@ -1128,7 +1133,7 @@ export const LOCALES = {
     useCaseBackup:
       "Manter o essencial funcionando durante uma queda de energia",
     useCaseReserve: "Guardar uma reserva de emergência na bateria",
-    useCaseOffGrid: "Ficar totalmente sem rede",
+    useCaseOffGrid: "Ficar totalmente fora da rede elétrica",
     useCasePortable: "Energia portátil (van, barco, camping)",
     useCaseBillCutBlurb:
       "Solar ligado à rede, com bateria só quando ela se paga. Medido como a parcela da sua conta que o sistema elimina em 20 anos.",
@@ -1640,6 +1645,7 @@ export const LOCALES = {
     pathsIncludesToolsAndSafety: "Ferramentas e equipamento de segurança",
   },
   fr: {
+    ...HOME_COPY.fr,
     navSizing: "Dimensionner mon système",
     navSupport: "Assistance",
     cutLabel: "Votre objectif de réduction de facture",
@@ -2196,6 +2202,7 @@ export const LOCALES = {
     pathsIncludesToolsAndSafety: "Outillage et équipement de sécurité",
   },
   de: {
+    ...HOME_COPY.de,
     navSizing: "System dimensionieren",
     navSupport: "Hilfe",
     cutLabel: "Ziel für die Rechnungssenkung",
@@ -2276,7 +2283,7 @@ export const LOCALES = {
     useCaseBillCut: "Meine Stromrechnung senken",
     useCaseTou: "Mit einer Batterie bei Zeittarifen sparen",
     useCaseBackup: "Das Nötigste läuft bei einem Stromausfall weiter",
-    useCaseReserve: "Einen Notfall-Reservestand in der Batteri halten",
+    useCaseReserve: "Einen Notfall-Reservestand in der Batterie halten",
     useCaseOffGrid: "Vollständig unabhängig vom Netz",
     useCasePortable: "Tragbare Stromversorgung (Wohnmobil, Boot, Camping)",
     useCaseBillCutBlurb:
@@ -2286,7 +2293,7 @@ export const LOCALES = {
     useCaseBackupBlurb:
       "Ausgelegt auf den Geräten, die du ankreuzt, nicht auf dein ganzes Haus. Gemessen als Anteil der Stromausfälle, die das Nötigste übersteht.",
     useCaseReserveBlurb:
-      "Lass einen Teil der Batteri für Stromausfälle zurück und sieh genau, was dich das an Ersparnis kostet.",
+      "Lass einen Teil der Batterie für Stromausfälle zurück und sieh genau, was dich das an Ersparnis kostet.",
     useCaseOffGridBlurb:
       "Solar und Batterie für dein ganzes Haus ausgelegt. Gemessen als Anteil der Stunden, die ganz ohne Netz laufen.",
     useCasePortableBlurb:
@@ -2748,6 +2755,7 @@ export const LOCALES = {
     pathsIncludesToolsAndSafety: "Werkzeug und Schutzausrüstung",
   },
   ar: {
+    ...HOME_COPY.ar,
     rtl: true,
     navSizing: "صمّم نظامك",
     navSupport: "الدعم",
@@ -2778,7 +2786,7 @@ export const LOCALES = {
     useCaseTou: "الاقتصاد ببطارية مع تعرفة الساعات",
     useCaseBackup: "إبقاء الأساسيات تعمل أثناء انقطاع الكهرباء",
     useCaseReserve: "الاحتفاظ بهامش طوارئ في البطارية",
-    useCaseOffGrid: "الاعتماد الكامل على عدم وجود شبكة",
+    useCaseOffGrid: "الاستقلال التام عن شبكة الكهرباء",
     useCasePortable: "طاقة محمولة (شاحنة، قارب، تخييم)",
     useCaseBillCutBlurb:
       "طاقة شمسية مرتبطة بالشبكة، مع بطارية فقط إذا استحقت. يُقاس كنسبة فاتورتك التي يزيلها النظام على مدى 20 عامًا.",
@@ -2787,7 +2795,7 @@ export const LOCALES = {
     useCaseBackupBlurb:
       "يُحجَّم حسب الأجهزة التي تختارها، لا حسب المنزل كله. يُقاس كنسبة انقطاعات الكهرباء التي تصمد الأساسيات خلالها.",
     useCaseReserveBlurb:
-      "اترك جزءًا من البطارية جانبًا لحالات الانقطاع، وانظر بدقة ما يكلفه ذلك من fourni.",
+      "اترك جزءًا من البطارية جانبًا لحالات الانقطاع، لتعرف بالضبط مقدار ما سيكلفك ذلك من التوفير.",
     useCaseOffGridBlurb:
       "طاقة شمسية وبطارية محجَّمة لمنزلك كله. يُقاس كنسبة الساعات التي تعمل بلا شبكة إطلاقًا.",
     useCasePortableBlurb:

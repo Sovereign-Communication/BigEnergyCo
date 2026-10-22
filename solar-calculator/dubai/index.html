@@ -67,7 +67,7 @@
             "name": "How much solar do I need in Dubai?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "It depends on your daily kWh use. As a rough band, Dubai sits in the subtropical sun zone with roughly 1400–1800 kWh produced per kW of panels per year. A 10 kWh/day household typically lands between 3 and 6 kW of panels depending on the bill-cut target. The free calculator computes your exact numbers from five years of NASA satellite weather at your coordinates."
+              "text": "It depends on your daily kWh use and roof conditions. The static latitude band on this page has unknown source grade and is not a local production forecast. The free calculator estimates production from five years of hourly NASA POWER weather at your coordinates."
             }
           },
           {
@@ -75,7 +75,7 @@
             "name": "Does solar work in United Arab Emirates?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes — Subtropical sun at 25.20° N, 55.27° E. Strong sun most of the year with a mild winter dip. The simulator sizes against your worst week, not the average, so the result is honest about winter."
+              "text": "Latitude alone cannot predict output at a specific roof. Local weather, shade, orientation, and installation matter; the calculator uses hourly weather data to estimate location-specific sizing."
             }
           },
           {
@@ -155,6 +155,10 @@
     em.kicker { color: var(--accent); font-style: normal; font-weight: 700; }
     .cta-box { border: 1px solid rgba(0, 230, 153, .4); background: rgba(0, 230, 153, .06); border-radius: 12px; padding: 1.2rem 1.4rem; margin: 2rem 0; }
     .cta-box p:last-child { margin: 0; }
+    .city-sizing-cta { margin: 1.5rem 0 2rem; border-color: rgba(0, 230, 153, .4); background: rgba(0, 230, 153, .08); }
+    .city-sizing-cta__title { font-weight: 700; color: #fff; margin-bottom: .4rem; }
+    .city-sizing-cta__copy { color: var(--muted); font-size: .92rem; margin-bottom: .75rem; }
+    .city-footer-links { margin-top: .75rem; }
     .btn { display: inline-block; background: linear-gradient(135deg, #00e699, #00b377); color: #04120c; font-weight: 700; text-decoration: none; padding: .65rem 1.3rem; border-radius: 8px; margin-top: .6rem; }
     details { border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1.1rem; margin-bottom: .8rem; background: var(--card); }
     summary { cursor: pointer; color: var(--accent); font-weight: 600; }
@@ -207,16 +211,16 @@
   <main id="main" class="container">
     <article>
       <h1>Solar & Battery Sizing for Dubai, United Arab Emirates</h1>
-      <p class="meta">📍 25.20° N, 55.27° E · Subtropical sun · updated Aug 30, 2026 · free, no signup, nothing for sale</p>
+      <p class="meta">📍 25.20° N, 55.27° E · Subtropical latitude · updated Aug 30, 2026 · free, no signup, nothing for sale</p>
 
       <!-- Worldwide Sizing Reassurance Callout -->
-      <div class="cta-box" style="margin: 1.5rem 0 2rem; border-color: rgba(0, 230, 153, 0.4); background: rgba(0, 230, 153, 0.08);">
-        <p style="font-weight:700;color:#fff;margin-bottom:0.4rem;">⚡ Sizing for a different location?</p>
-        <p style="color:var(--muted);font-size:0.92rem;margin-bottom:0.75rem;">This page is a benchmark reference for Dubai. The BigEnergyCo calculator works for <strong>any location worldwide</strong> using your exact coordinates.</p>
+      <div class="cta-box city-sizing-cta">
+        <p class="city-sizing-cta__title">⚡ Sizing for a different location?</p>
+        <p class="city-sizing-cta__copy">This page is a benchmark reference for Dubai. The BigEnergyCo calculator works for <strong>any location worldwide</strong> using your exact coordinates.</p>
         <a class="btn" href="../../#sizing">⚡ Size Any Location Worldwide &rarr;</a>
       </div>
 
-      <p><em class="kicker">The short answer:</em> Dubai sits at 25.20° N, 55.27° E — subtropical sun. Strong sun most of the year with a mild winter dip. Roughly <strong>1400–1800 kWh per kW of panels per year</strong> is a fair expectation band, and the exact number for your roof is what the simulator computes.</p>
+      <p><em class="kicker">The short answer:</em> Dubai sits at 25.20° N, 55.27° E — subtropical latitude. This page's 1400–1800 kWh per kWp per year band is a rough latitude-only estimate with unknown source grade, not a local measurement or forecast. For location-specific weather input, the calculator uses five years of hourly NASA POWER data. <a href="../../assets/data/provenance.json">See the estimate's provenance</a>.</p>
 
       <h2>What the calculator does for Dubai</h2>
       <p>Type "Dubai" (or use your exact GPS coordinates) into the estimator and it will:</p>
@@ -229,7 +233,7 @@
       </ul>
 
       <h2>Worked example: a 10 kWh/day household</h2>
-      <p>Using the Dubai latitude band (1400–1800 kWh/kWp/yr), a household using 10 kWh per day typically lands in this range — a rough illustration from the band (with a dark-week margin), not a simulation. The panel column follows that band; the battery column is the one the simulator re-sizes, because it sizes the bank against your own darkest week — so its number usually comes out higher. Your exact figures come from running it:</p>
+      <p>This static example uses the unsourced latitude-only yield band above and a fixed 1.5× dark-week margin. Treat the panel range as an illustration, not a forecast or sizing recommendation. The battery column is re-sized by the simulator against your location's darkest week, so its result can differ from this static band:</p>
       <div class="table-container">
       <table>
         <caption>Worked sizing bands for a 10 kWh/day household in Dubai</caption>
@@ -246,7 +250,7 @@
       <p><em>Every money figure here is in US dollars; the calculator converts to your own currency.</em> Payback depends on your local tariff: at ~$0.09/kWh a 60% cut on this load saves roughly $197/year, which repays landed-DIY component costs (about $1,366) in about 6.9 years. Where power is cheap, payback stretches — the tool shows your personal number from your own rate.</p>
 
       <h2>Why simulate instead of estimate?</h2>
-      <p>Sun-hours maps and "average" figures hide the week that decides your battery size. In subtropical sun conditions, strong sun most of the year with a mild winter dip. A five-year hourly simulation catches that dark week, the cloudy month, and the seasonal swing — which is the difference between a system that works and one that leaves you in the dark in February.</p>
+      <p>Latitude bands cannot capture local clouds, roof shade, or orientation. The five-year hourly weather simulation models seasonal conditions and the darkest week, but it is still an estimate rather than a roof survey.</p>
 
       <div class="cta-box">
         <p><strong>Run the Dubai simulation now.</strong> Free, no signup, nothing for sale. Every number computed in your browser from real satellite weather.</p>
@@ -293,11 +297,11 @@
       <h2>Frequently asked</h2>
       <details>
         <summary>How much solar do I need in Dubai?</summary>
-        <p>It depends on your daily kWh use. As a rough band, Dubai sits in the subtropical sun zone with roughly 1400–1800 kWh produced per kW of panels per year. A 10 kWh/day household typically lands between 3 and 6 kW of panels depending on the bill-cut target. The free calculator computes your exact numbers from five years of NASA satellite weather at your coordinates.</p>
+        <p>It depends on your daily kWh use and roof conditions. The static latitude band on this page has unknown source grade and is not a local production forecast. The free calculator estimates production from five years of hourly NASA POWER weather at your coordinates.</p>
       </details>
       <details>
         <summary>Does solar work in United Arab Emirates?</summary>
-        <p>Yes — Subtropical sun at 25.20° N, 55.27° E. Strong sun most of the year with a mild winter dip. The simulator sizes against your worst week, not the average, so the result is honest about winter.</p>
+        <p>Latitude alone cannot predict output at a specific roof. Local weather, shade, orientation, and installation matter; the calculator uses hourly weather data to estimate location-specific sizing.</p>
       </details>
       <details>
         <summary>Is the Dubai solar calculator free?</summary>
@@ -309,7 +313,7 @@
   <footer>
     <div class="container">
       <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building. Working with batteries and mains wiring can cause fire, injury, and death.</p>
-      <p style="margin-top:.75rem;">
+      <p class="city-footer-links">
         <a href="../../#sizing">Size Your System</a> · <a href="../">66 City Benchmarks</a> · <a href="../../solar-heatmap/">Heatmap</a> · <a href="../../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
       </p>
     </div>

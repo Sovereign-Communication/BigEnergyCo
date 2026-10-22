@@ -33,13 +33,42 @@ export const isCsp = (e) =>
 
 let failures = 0;
 let total = 0;
+const gateResults = [];
 
 export function gate(name, ok, extra = "") {
+  gateResults.push({ name, passed: Boolean(ok), detail: String(extra || "") });
   console.log(
     `${ok ? "SMOKE OK    " : "SMOKE FAIL  "}${name}${extra ? " — " + extra : ""}`,
   );
   total++;
   if (!ok) failures++;
+}
+
+export const gateCheckpoint = () => gateResults.length;
+export const gatesSince = (checkpoint) => gateResults.slice(checkpoint);
+
+export function writeFacetReport(axis, line, metric) {
+  if (!/^[a-z]+$/.test(axis)) throw new Error(`invalid facet axis: ${axis}`);
+  if (typeof line !== "string" || line.length > 280)
+    throw new Error(`${axis} facet line must be at most 280 characters`);
+  const dir = join(process.cwd(), "jev-artifacts");
+  mkdirSync(dir, { recursive: true });
+  const path = join(dir, `${axis}-smoke-report.json`);
+  writeFileSync(
+    path,
+    JSON.stringify(
+      {
+        measured_by: "scripts/browser-smoke.mjs",
+        facet_axes: [axis],
+        facet_lines: { [axis]: line },
+        metric,
+      },
+      null,
+      2,
+    ) + "\n",
+    "utf8",
+  );
+  return path;
 }
 
 /**

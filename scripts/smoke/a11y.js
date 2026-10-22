@@ -30,7 +30,13 @@
 // loadMode value restored, regular (non-simple) display, no emulation; the
 // card is intentionally left invalidated ("Inputs changed" status), which
 // closing-flow gates do not assert on.
-import { gate, sleep } from "./runtime.mjs";
+import {
+  gate,
+  gateCheckpoint,
+  gatesSince,
+  sleep,
+  writeFacetReport,
+} from "./runtime.mjs";
 
 // Serialized into the page: every function passed to page() must be
 // self-contained or composed in dependency order — a module-scope reference
@@ -408,6 +414,7 @@ const KWH_PANEL = ["dailyKwhInput"];
 const RESULTS = ["cutSlider", "budgetSlider"];
 
 export async function runA11yFlow(ctx) {
+  const reportCheckpoint = gateCheckpoint();
   const { evaluate, send } = ctx;
   const setMode = (id) =>
     evaluate(`(() => { const r = document.getElementById(${JSON.stringify(id)});
@@ -561,4 +568,76 @@ export async function runA11yFlow(ctx) {
     nameFails.length === 0,
     nameFails.length ? nameFails.slice(0, 8).join(", ") : "all named",
   );
+
+  const measured = gatesSince(reportCheckpoint);
+  const keyboard = measured.filter((g) => g.name.startsWith("keyboard "));
+  const keyboardStates = new Set(
+    keyboard.map((g) => g.name.match(/^keyboard (.*):/)?.[1]).filter(Boolean),
+  );
+  const buttonKeys = measured.find(
+    (g) => g.name === "role=button divs respond to Enter and Space",
+  );
+  const names = measured.find(
+    (g) => g.name === "every visible control has an accessible name",
+  );
+  const contrast = measured.find(
+    (g) => g.name === "product text meets WCAG AA contrast",
+  );
+  const normalMotion = measured.filter(
+    (g) =>
+      g.name.startsWith("scroll site ") &&
+      g.name.endsWith("stays animated when motion is allowed"),
+  );
+  const reducedMotion = measured.filter(
+    (g) =>
+      g.name.startsWith("scroll site ") &&
+      g.name.endsWith("jumps instantly under reduced motion"),
+  );
+  const mediaReset = measured.find(
+    (g) => g.name === "reduced-motion emulation clears cleanly",
+  );
+  const motionDefaults = measured.filter((g) =>
+    g.name.startsWith("matchMedia "),
+  );
+  const cardPresent = measured.find(
+    (g) => g.name === "result card present for result-stage checks",
+  );
+  const complete =
+    keyboard.length === 8 &&
+    keyboardStates.size === 4 &&
+    keyboard.every((g) => g.passed) &&
+    buttonKeys?.passed &&
+    names?.passed &&
+    contrast?.passed &&
+    normalMotion.length === 2 &&
+    normalMotion.every((g) => g.passed) &&
+    reducedMotion.length === 2 &&
+    reducedMotion.every((g) => g.passed) &&
+    mediaReset?.passed &&
+    motionDefaults.length === 2 &&
+    motionDefaults.every((g) => g.passed) &&
+    cardPresent?.passed;
+  gate(
+    "accessibility facet evidence covers keyboard, names, contrast and motion",
+    Boolean(complete),
+    `${keyboard.length}/8 keyboard checks, ${normalMotion.length}/2 normal and ${reducedMotion.length}/2 reduced-motion scroll checks`,
+  );
+  const checks = gatesSince(reportCheckpoint);
+  const passed = checks.filter((g) => g.passed).length;
+  const line =
+    `Chrome a11y ${passed}/${checks.length}: keyboard result/quick/manual/kWh ` +
+    `${keyboard.filter((g) => g.passed).length}/${keyboard.length}; ` +
+    `${buttonKeys?.detail || "Enter/Space buttons failed"}; names ${names?.passed ? "pass" : "fail"}; ` +
+    `WCAG AA result text ${contrast?.passed ? "pass" : "fail"}; ` +
+    `${normalMotion.filter((g) => g.passed).length}/2 normal and ` +
+    `${reducedMotion.filter((g) => g.passed).length}/2 reduced-motion scrolls; ` +
+    `emulation reset ${mediaReset?.passed ? "pass" : "fail"}.`;
+  writeFacetReport("accessibility", line, {
+    browser: "Chrome",
+    checks,
+    keyboard_states: [...keyboardStates],
+    normal_motion_scroll_sites: normalMotion.length,
+    reduced_motion_scroll_sites: reducedMotion.length,
+    complete: Boolean(complete),
+  });
 }
