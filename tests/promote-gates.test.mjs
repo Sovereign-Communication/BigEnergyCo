@@ -121,7 +121,7 @@ async function withServer(fn) {
   }
 }
 
-buildStage();
+await withMutationLock(() => buildStage());
 
 // ── the pure helpers the whole path trusts ──────────────────────────────────
 
