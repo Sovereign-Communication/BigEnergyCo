@@ -13,6 +13,8 @@
 //
 // Pure: no network, no filesystem, no pack import. It reads a scored report
 // the way scripts/lib/jev-verdict.mjs does — the caller supplies everything.
+import { COMPLETE_MIN_CONFIDENCE } from "./jev-complete.mjs";
+
 function asRecord(value) {
   return typeof value === "object" && value !== null ? value : {};
 }
@@ -59,6 +61,14 @@ export function facetScoreReasons(axis, facet, proofLine, blockingFacets) {
   ) {
     reasons.push(
       `judge confidence was low (${f.confidence}) — the evidence was thin or ambiguous`,
+    );
+  } else if (
+    typeof f.confidence === "number" &&
+    !Number.isNaN(f.confidence) &&
+    f.confidence < COMPLETE_MIN_CONFIDENCE
+  ) {
+    reasons.push(
+      `judge confidence (${f.confidence}) is below the required ${COMPLETE_MIN_CONFIDENCE} confidence bar; the judgment is not certain enough to pass`,
     );
   }
   if (typeof proofLine !== "string" || !proofLine.trim()) {
