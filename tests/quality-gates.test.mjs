@@ -161,10 +161,10 @@ test("GATE: hrefs climbing above the site root are flagged as external", () => {
 
 test("GATE: parseCsp splits directives into source lists", () => {
   const csp = parseCsp(
-    "default-src 'self'; script-src 'self' https://unpkg.com; object-src 'none'",
+    "default-src 'self'; script-src 'self' https://example.test; object-src 'none'",
   );
   assert.deepEqual(csp["default-src"], ["'self'"]);
-  assert.deepEqual(csp["script-src"], ["'self'", "https://unpkg.com"]);
+  assert.deepEqual(csp["script-src"], ["'self'", "https://example.test"]);
   assert.deepEqual(csp["object-src"], ["'none'"]);
   assert.deepEqual(parseCsp(""), {});
 });

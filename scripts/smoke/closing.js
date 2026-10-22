@@ -91,7 +91,7 @@ export async function runClosingFlow(ctx, actions) {
     !(await evaluate(`document.body.textContent.includes("OFFLINE MODE")`)),
   );
 
-  // ── Heatmap page (Leaflet CDN + tile CSP) ─────────────────────────
+  // ── Heatmap page (self-hosted Leaflet + tile CSP) ─────────────────
   console.log("SMOKE      ── heatmap page ──");
   await actions.navigate(`${ctx.base}solar-heatmap/?smoke=${Date.now()}`);
   const leaflet = await poll(

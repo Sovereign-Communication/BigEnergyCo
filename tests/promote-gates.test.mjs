@@ -505,8 +505,8 @@ test("EXIT: a verdict survives the network, on every platform", async () => {
 const PRODUCTION_HEADERS = new Map(
   Object.entries({
     "content-security-policy":
-      "default-src 'self'; script-src 'self' https://unpkg.com https://static.cloudflareinsights.com; " +
-      "style-src 'self' 'unsafe-inline' https://unpkg.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+      "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; " +
+      "style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
     "x-content-type-options": "nosniff",
     "x-frame-options": "DENY",
     "referrer-policy": "strict-origin-when-cross-origin",

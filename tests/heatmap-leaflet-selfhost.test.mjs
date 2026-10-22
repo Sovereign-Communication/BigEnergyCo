@@ -9,6 +9,14 @@ test("the heatmap loads Leaflet from versioned same-origin assets", () => {
   assert.match(html, /\.\.\/assets\/vendor\/leaflet\/leaflet\.css\?v=/);
   assert.match(html, /\.\.\/assets\/vendor\/leaflet\/leaflet\.js\?v=/);
   assert.doesNotMatch(html, /https:\/\/unpkg\.com\/leaflet/);
+  assert.match(
+    html,
+    /integrity="sha256-p4NxAoJBhIIN\+hmNHrzRCf9tD\/miZyoHS5obTRR9BMY="/,
+  );
+  assert.match(
+    html,
+    /integrity="sha256-20nQCchB9co0qIjJZRGuk2\/Z9VM\+kNiyxNV1lvTlZBo="/,
+  );
   assert.ok(
     html.indexOf("assets/vendor/leaflet/leaflet.js") <
       html.indexOf("assets/js/heatmap.js"),
