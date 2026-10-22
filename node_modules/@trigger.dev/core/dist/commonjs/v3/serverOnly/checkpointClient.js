@@ -1,0 +1,113 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CheckpointClient = void 0;
+const checkpoints_js_1 = require("../schemas/checkpoints.js");
+const structuredLogger_js_1 = require("../utils/structuredLogger.js");
+const CANCEL_TIMEOUT_MS = 5_000;
+class CheckpointClient {
+    opts;
+    logger = new structuredLogger_js_1.SimpleStructuredLogger("checkpoint-client");
+    constructor(opts) {
+        this.opts = opts;
+    }
+    async suspendRun({ runFriendlyId, snapshotFriendlyId, body, }) {
+        const res = await fetch(new URL(`/api/v1/runs/${runFriendlyId}/snapshots/${snapshotFriendlyId}/suspend`, this.opts.apiUrl), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                type: this.opts.orchestrator,
+                ...body,
+            }),
+        });
+        if (!res.ok) {
+            this.logger.error("[CheckpointClient] Suspend request failed", {
+                runFriendlyId,
+                snapshotFriendlyId,
+                body,
+            });
+            return false;
+        }
+        this.logger.debug("[CheckpointClient] Suspend request success", {
+            runFriendlyId,
+            snapshotFriendlyId,
+            body,
+            status: res.status,
+            contentType: res.headers.get("content-type"),
+        });
+        try {
+            const data = await res.json();
+            const parsedData = checkpoints_js_1.CheckpointServiceSuspendResponseBody.safeParse(data);
+            if (!parsedData.success) {
+                this.logger.error("[CheckpointClient] Suspend response invalid", {
+                    runFriendlyId,
+                    snapshotFriendlyId,
+                    body,
+                    data,
+                });
+                return false;
+            }
+        }
+        catch (error) {
+            this.logger.error("[CheckpointClient] Suspend response error", {
+                error,
+                text: await res.text(),
+            });
+            return false;
+        }
+        return true;
+    }
+    async restoreRun({ runFriendlyId, snapshotFriendlyId, body, }) {
+        const res = await fetch(new URL(`/api/v1/runs/${runFriendlyId}/snapshots/${snapshotFriendlyId}/restore`, this.opts.apiUrl), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+            this.logger.error("[CheckpointClient] Restore request failed", {
+                runFriendlyId,
+                snapshotFriendlyId,
+                body,
+            });
+            return false;
+        }
+        return true;
+    }
+    /**
+     * Ask the checkpoint service to reclaim a finished run's checkpoint storage. Best-effort: the
+     * service enqueues and returns 202, so a `true` here means accepted, not deleted.
+     */
+    async deleteCheckpoints({ runFriendlyId, body, }) {
+        const res = await fetch(new URL(`/api/v1/runs/${runFriendlyId}/checkpoints/delete`, this.opts.apiUrl), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+            this.logger.error("[CheckpointClient] Delete checkpoints request failed", {
+                runFriendlyId,
+                status: res.status,
+            });
+            return false;
+        }
+        return true;
+    }
+    async cancelCheckpoints({ runFriendlyId }) {
+        const res = await fetch(new URL(`/api/v1/runs/${runFriendlyId}/checkpoints/cancel`, this.opts.apiUrl), { method: "POST", signal: AbortSignal.timeout(CANCEL_TIMEOUT_MS) });
+        if (!res.ok) {
+            this.logger.error("[CheckpointClient] Cancel checkpoints request failed", {
+                runFriendlyId,
+                status: res.status,
+            });
+            return false;
+        }
+        return true;
+    }
+}
+exports.CheckpointClient = CheckpointClient;
+//# sourceMappingURL=checkpointClient.js.map

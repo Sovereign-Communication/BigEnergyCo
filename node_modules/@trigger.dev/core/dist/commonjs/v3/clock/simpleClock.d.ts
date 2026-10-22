@@ -1,0 +1,5 @@
+import type { Clock } from "./clock.js";
+export declare class SimpleClock implements Clock {
+    preciseNow(): [number, number];
+    reset(): void;
+}

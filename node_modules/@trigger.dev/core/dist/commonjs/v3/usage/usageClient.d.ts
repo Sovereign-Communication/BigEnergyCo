@@ -1,0 +1,9 @@
+export type UsageEvent = {
+    durationMs: number;
+};
+export declare class UsageClient {
+    private readonly url;
+    private jwt;
+    constructor(url: string, jwt: string);
+    sendUsageEvent(event: UsageEvent): Promise<void>;
+}

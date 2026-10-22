@@ -1,0 +1,71 @@
+import type { S2RequestOptions } from "../../../../common.js";
+import { type Client } from "../../../../generated/client/index.js";
+import type * as API from "../../../../generated/index.js";
+import type * as Types from "../../../../types.js";
+import type { AppendResult, CloseResult } from "../../../result.js";
+import type { AppendSession, AppendSessionOptions, ReadArgs, ReadSession, SessionTransport, TransportAppendSession, TransportConfig, TransportReadEvent, TransportReadSession } from "../../types.js";
+export declare class FetchReadSession<Format extends "string" | "bytes" = "string"> extends ReadableStream<TransportReadEvent<Format>> implements TransportReadSession<Format> {
+    static create<Format extends "string" | "bytes" = "string">(client: Client, name: string, args?: ReadArgs<Format>, options?: S2RequestOptions): Promise<FetchReadSession<Format>>;
+    /** @internal */
+    static _createForTesting<Format extends "string" | "bytes" = "string">(stream: ReadableStream<Uint8Array>, format: Format): FetchReadSession<Format>;
+    private _lastObservedTail;
+    private constructor();
+    lastObservedTail(): API.StreamPosition | undefined;
+    [Symbol.asyncIterator](): AsyncIterableIterator<TransportReadEvent<Format>>;
+    [Symbol.asyncDispose](): Promise<void>;
+}
+/**
+ * Fetch-based transport session for appending records via HTTP/1.1.
+ * Queues append requests and ensures only one is in-flight at a time (single-flight).
+ * No backpressure, no retry logic, no streams - just submit/close with value-encoded errors.
+ */
+export declare class FetchAppendSession implements TransportAppendSession {
+    private queue;
+    private pendingResolvers;
+    private inFlight;
+    private _effectSignalled;
+    private readonly options?;
+    private readonly stream;
+    private closed;
+    private processingPromise;
+    private readonly client;
+    static create(stream: string, transportConfig: TransportConfig, sessionOptions?: AppendSessionOptions, requestOptions?: S2RequestOptions): Promise<FetchAppendSession>;
+    private constructor();
+    /**
+     * Returns true if data may have been sent to the server since the
+     * last time the session was dormant (queue fully drained with no errors).
+     * Only resets after the processing loop completes successfully.
+     */
+    effectSignalled(): boolean;
+    /**
+     * Close the append session.
+     * Waits for all pending appends to complete before resolving.
+     * Never throws - returns CloseResult.
+     */
+    close(): Promise<CloseResult>;
+    /**
+     * Submit an append request to the session.
+     * The request will be queued and sent when no other request is in-flight.
+     * Never throws - returns AppendResult discriminated union.
+     */
+    submit(input: Types.AppendInput): Promise<AppendResult>;
+    /**
+     * Main processing loop that sends queued requests one at a time.
+     * Single-flight: only one request in progress at a time.
+     */
+    private processLoop;
+    private waitForDrain;
+}
+/**
+ * Fetch-based transport using HTTP/1.1 + JSON
+ * Works in all JavaScript environments (browser, Node.js, Deno, etc.)
+ */
+export declare class FetchTransport implements SessionTransport {
+    private readonly client;
+    private readonly transportConfig;
+    constructor(config: TransportConfig);
+    makeAppendSession(stream: string, sessionOptions?: AppendSessionOptions, requestOptions?: S2RequestOptions): Promise<AppendSession>;
+    makeReadSession<Format extends "string" | "bytes" = "string">(stream: string, args?: ReadArgs<Format>, options?: S2RequestOptions): Promise<ReadSession<Format>>;
+    close(): Promise<void>;
+}
+//# sourceMappingURL=index.d.ts.map

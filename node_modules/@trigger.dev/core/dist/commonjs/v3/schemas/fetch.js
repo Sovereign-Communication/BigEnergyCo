@@ -1,0 +1,58 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FetchRetryOptions = exports.FetchTimeoutOptions = exports.FetchRetryByStatusOptions = exports.FetchRetryStrategy = exports.FetchRetryBackoffStrategy = exports.FetchRetryHeadersStrategy = void 0;
+const v4_1 = require("zod/v4");
+const zod_js_1 = require("../utils/zod.js");
+const schemas_js_1 = require("./schemas.js");
+const eventFilter_js_1 = require("./eventFilter.js");
+exports.FetchRetryHeadersStrategy = v4_1.z.object({
+    /** The `headers` strategy retries the request using info from the response headers. */
+    strategy: v4_1.z.literal("headers"),
+    /** The header to use to determine the maximum number of times to retry the request. */
+    limitHeader: v4_1.z.string(),
+    /** The header to use to determine the number of remaining retries. */
+    remainingHeader: v4_1.z.string(),
+    /** The header to use to determine the time when the number of remaining retries will be reset. */
+    resetHeader: v4_1.z.string(),
+    /** The event filter to use to determine if the request should be retried. */
+    bodyFilter: eventFilter_js_1.EventFilter.optional(),
+    /** The format of the `resetHeader` value. */
+    resetFormat: v4_1.z
+        .enum([
+        "unix_timestamp",
+        "unix_timestamp_in_ms",
+        "iso_8601",
+        "iso_8601_duration_openai_variant",
+    ])
+        .default("unix_timestamp")
+        .optional()
+        // Early Zod 4 permalinks skip defaults inside optional schemas.
+        .overwrite((value) => value ?? "unix_timestamp"),
+});
+exports.FetchRetryBackoffStrategy = schemas_js_1.RetryOptions.extend({
+    /** The `backoff` strategy retries the request with an exponential backoff. */
+    strategy: v4_1.z.literal("backoff"),
+    /** The event filter to use to determine if the request should be retried. */
+    bodyFilter: eventFilter_js_1.EventFilter.optional(),
+});
+exports.FetchRetryStrategy = (0, zod_js_1.discriminatedUnion)("strategy", [
+    exports.FetchRetryHeadersStrategy,
+    exports.FetchRetryBackoffStrategy,
+]);
+exports.FetchRetryByStatusOptions = v4_1.z.record(v4_1.z.string(), exports.FetchRetryStrategy);
+exports.FetchTimeoutOptions = v4_1.z.object({
+    /** The maximum time to wait for the request to complete. */
+    durationInMs: v4_1.z.number().optional(),
+    retry: schemas_js_1.RetryOptions.optional(),
+});
+exports.FetchRetryOptions = v4_1.z.object({
+    /** The retrying strategy for specific status codes. */
+    byStatus: exports.FetchRetryByStatusOptions.optional(),
+    /** The timeout options for the request. */
+    timeout: schemas_js_1.RetryOptions.optional(),
+    /**
+     * The retrying strategy for connection errors.
+     */
+    connectionError: schemas_js_1.RetryOptions.optional(),
+});
+//# sourceMappingURL=fetch.js.map

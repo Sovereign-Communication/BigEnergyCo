@@ -1,0 +1,1 @@
+{"version":3,"file":"session-streams-api.js","sourceRoot":"","sources":["../../../src/v3/session-streams-api.ts"],"names":[],"mappings":"AAAA,sEAAsE;AACtE,qCAAqC;AACrC,OAAO,EAAE,iBAAiB,EAAE,MAAM,2BAA2B,CAAC;AAE9D,MAAM,CAAC,MAAM,cAAc,GAAG,iBAAiB,CAAC,WAAW,EAAE,CAAC;AAE9D,cAAc,2BAA2B,CAAC;AAC1C,cAAc,8BAA8B,CAAC;AAC7C,cAAc,kCAAkC,CAAC;AACjD,cAAc,kCAAkC,CAAC;AACjD,cAAc,4BAA4B,CAAC"}

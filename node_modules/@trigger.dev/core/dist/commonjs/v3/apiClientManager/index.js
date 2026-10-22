@@ -1,0 +1,159 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.APIClientManagerAPI = void 0;
+const index_js_1 = require("../apiClient/index.js");
+const globals_js_1 = require("../utils/globals.js");
+const getEnv_js_1 = require("../utils/getEnv.js");
+const gitBranch_js_1 = require("../utils/gitBranch.js");
+const index_js_2 = require("../sdkScope/index.js");
+const API_NAME = "api-client";
+/**
+ * Read the dev-side branch carrier env var, collapsing the `"default"` sentinel
+ * to `undefined` so it never leaks into the `x-trigger-branch` header (the
+ * sentinel refers to the root dev env, which carries no branch).
+ */
+function getDevBranchEnvVar() {
+    const value = (0, getEnv_js_1.getEnvVar)("TRIGGER_DEV_BRANCH");
+    return value && !(0, gitBranch_js_1.isDefaultDevBranch)(value) ? value : undefined;
+}
+class ApiClientMissingError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "ApiClientMissingError";
+    }
+}
+class APIClientManagerAPI {
+    static _instance;
+    constructor() { }
+    static getInstance() {
+        if (!this._instance) {
+            this._instance = new APIClientManagerAPI();
+        }
+        return this._instance;
+    }
+    disable() {
+        (0, globals_js_1.unregisterGlobal)(API_NAME);
+    }
+    get baseURL() {
+        const scoped = index_js_2.sdkScope.getStore();
+        if (scoped) {
+            return scoped.apiClientConfig.baseURL ?? "https://api.trigger.dev";
+        }
+        const config = this.#getConfig();
+        return config?.baseURL ?? (0, getEnv_js_1.getEnvVar)("TRIGGER_API_URL") ?? "https://api.trigger.dev";
+    }
+    get accessToken() {
+        const scoped = index_js_2.sdkScope.getStore();
+        if (scoped) {
+            return scoped.apiClientConfig.accessToken ?? scoped.apiClientConfig.secretKey;
+        }
+        const config = this.#getConfig();
+        return (config?.secretKey ??
+            config?.accessToken ??
+            (0, getEnv_js_1.getEnvVar)("TRIGGER_SECRET_KEY") ??
+            (0, getEnv_js_1.getEnvVar)("TRIGGER_ACCESS_TOKEN"));
+    }
+    get branchName() {
+        const scoped = index_js_2.sdkScope.getStore();
+        if (scoped) {
+            // previewBranch carries the branch for any branchable env (preview or dev) —
+            // they share the x-trigger-branch header. resolveApiClientConfig folds in the
+            // dev-side TRIGGER_DEV_BRANCH carrier when building the scoped config.
+            const value = scoped.apiClientConfig.previewBranch;
+            return value ? value : undefined;
+        }
+        const config = this.#getConfig();
+        const value = config?.previewBranch ??
+            (0, getEnv_js_1.getEnvVar)("TRIGGER_PREVIEW_BRANCH") ??
+            (0, getEnv_js_1.getEnvVar)("VERCEL_GIT_COMMIT_REF") ??
+            // Dev branches share the x-trigger-branch header; TRIGGER_DEV_BRANCH is the
+            // dev-side carrier. Never read the "default" sentinel.
+            getDevBranchEnvVar() ??
+            undefined;
+        return value ? value : undefined;
+    }
+    get externalDeploymentId() {
+        const scoped = index_js_2.sdkScope.getStore();
+        if (scoped) {
+            return scoped.apiClientConfig.externalDeploymentId;
+        }
+        return this.#getConfig()?.externalDeploymentId;
+    }
+    resolveApiClientConfig(partial = {}) {
+        return {
+            baseURL: partial.baseURL ?? (0, getEnv_js_1.getEnvVar)("TRIGGER_API_URL"),
+            accessToken: partial.accessToken ??
+                partial.secretKey ??
+                (0, getEnv_js_1.getEnvVar)("TRIGGER_SECRET_KEY") ??
+                (0, getEnv_js_1.getEnvVar)("TRIGGER_ACCESS_TOKEN"),
+            secretKey: partial.secretKey,
+            refreshAccessToken: partial.refreshAccessToken,
+            previewBranch: partial.previewBranch ??
+                (0, getEnv_js_1.getEnvVar)("TRIGGER_PREVIEW_BRANCH") ??
+                (0, getEnv_js_1.getEnvVar)("VERCEL_GIT_COMMIT_REF") ??
+                getDevBranchEnvVar(),
+            externalDeploymentId: partial.externalDeploymentId,
+            requestOptions: partial.requestOptions,
+            future: partial.future,
+        };
+    }
+    get client() {
+        if (!this.baseURL || !this.accessToken) {
+            return undefined;
+        }
+        const scoped = index_js_2.sdkScope.getStore();
+        const source = scoped?.apiClientConfig ?? this.#getConfig();
+        const requestOptions = source?.requestOptions;
+        const futureFlags = source?.future;
+        return new index_js_1.ApiClient(this.baseURL, this.accessToken, this.branchName, requestOptions, futureFlags, source?.refreshAccessToken);
+    }
+    clientOrThrow(config) {
+        const baseURL = config?.baseURL ?? this.baseURL;
+        const accessToken = config?.accessToken ?? config?.secretKey ?? this.accessToken;
+        if (!baseURL || !accessToken) {
+            throw new ApiClientMissingError(this.apiClientMissingError());
+        }
+        const branchName = config?.previewBranch ?? this.branchName;
+        const scoped = index_js_2.sdkScope.getStore();
+        const source = scoped?.apiClientConfig ?? this.#getConfig();
+        const requestOptions = config?.requestOptions ?? source?.requestOptions;
+        const futureFlags = config?.future ?? source?.future;
+        return new index_js_1.ApiClient(baseURL, accessToken, branchName, requestOptions, futureFlags, config?.refreshAccessToken ?? source?.refreshAccessToken);
+    }
+    runWithConfig(config, fn) {
+        const current = index_js_2.sdkScope.getStore()?.apiClientConfig ?? this.#getConfig();
+        const merged = this.resolveApiClientConfig({ ...current, ...config });
+        if (index_js_2.sdkScope.hasStorage()) {
+            return index_js_2.sdkScope.withScope({ apiClientConfig: merged, inheritContext: true }, fn);
+        }
+        // No ALS available (browser, edge, workers). Fall back to in-place
+        // mutation — same as pre-existing behavior, not concurrency-safe.
+        const original = this.#getConfig();
+        (0, globals_js_1.registerGlobal)(API_NAME, merged, true);
+        return fn().finally(() => {
+            (0, globals_js_1.registerGlobal)(API_NAME, original, true);
+        });
+    }
+    setGlobalAPIClientConfiguration(config) {
+        return (0, globals_js_1.registerGlobal)(API_NAME, config, true);
+    }
+    #getConfig() {
+        return (0, globals_js_1.getGlobal)(API_NAME);
+    }
+    apiClientMissingError() {
+        const hasBaseUrl = !!this.baseURL;
+        const hasAccessToken = !!this.accessToken;
+        if (!hasBaseUrl && !hasAccessToken) {
+            return `You need to set the TRIGGER_API_URL and TRIGGER_SECRET_KEY environment variables. See https://trigger.dev/docs/management/overview#authentication`;
+        }
+        else if (!hasBaseUrl) {
+            return `You need to set the TRIGGER_API_URL environment variable. See https://trigger.dev/docs/management/overview#authentication`;
+        }
+        else if (!hasAccessToken) {
+            return `You need to set the TRIGGER_SECRET_KEY environment variable. See https://trigger.dev/docs/management/overview#authentication`;
+        }
+        return `Unknown error`;
+    }
+}
+exports.APIClientManagerAPI = APIClientManagerAPI;
+//# sourceMappingURL=index.js.map

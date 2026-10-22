@@ -1,0 +1,180 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.resolvePrompt = resolvePrompt;
+exports.listPrompts = listPrompts;
+exports.listPromptVersions = listPromptVersions;
+exports.promotePromptVersion = promotePromptVersion;
+exports.createPromptOverride = createPromptOverride;
+exports.updatePromptOverride = updatePromptOverride;
+exports.removePromptOverride = removePromptOverride;
+exports.reactivatePromptOverride = reactivatePromptOverride;
+const v3_1 = require("@trigger.dev/core/v3");
+const tracer_js_1 = require("./tracer.js");
+function promptSpanOptions(name, slug) {
+    return {
+        tracer: tracer_js_1.tracer,
+        name,
+        icon: "tabler-file-text-ai",
+        attributes: {
+            [v3_1.SemanticInternalAttributes.STYLE_ICON]: "tabler-file-text-ai",
+            ...(0, v3_1.accessoryAttributes)({
+                items: [{ text: slug, variant: "normal" }],
+                style: "codepath",
+            }),
+        },
+    };
+}
+function makeToAISDKTelemetry(slug, promptId, version, labels, model, input) {
+    return function toAISDKTelemetry(additionalMetadata) {
+        return {
+            experimental_telemetry: {
+                isEnabled: true,
+                metadata: {
+                    "prompt.slug": slug,
+                    "prompt.id": promptId,
+                    "prompt.version": String(version),
+                    "prompt.labels": labels.join(", "),
+                    ...(model ? { "prompt.model": model } : {}),
+                    ...(input ? { "prompt.input": input } : {}),
+                    ...additionalMetadata,
+                },
+            },
+        };
+    };
+}
+/**
+ * Resolve a prompt by slug, calling the API to get the current version's
+ * compiled text. Works both inside and outside of a task context — requires
+ * an API client to be configured (via `configure()` or task runtime).
+ */
+async function resolvePrompt(slug, variables, options) {
+    const apiClient = v3_1.apiClientManager.clientOrThrow();
+    const vars = variables ?? {};
+    const response = await apiClient.resolvePrompt(slug, {
+        variables: vars,
+        label: options?.label,
+        version: options?.version,
+    }, {
+        ...promptSpanOptions("prompts.resolve()", slug),
+        attributes: {
+            [v3_1.SemanticInternalAttributes.STYLE_ICON]: "tabler-file-text-ai",
+            [v3_1.SemanticInternalAttributes.ENTITY_TYPE]: "prompt",
+            [v3_1.SemanticInternalAttributes.ENTITY_ID]: slug,
+            ...(0, v3_1.accessoryAttributes)({
+                items: [{ text: slug, variant: "normal" }],
+                style: "codepath",
+            }),
+        },
+        onResponseBody: (body, span) => {
+            span.setAttribute("prompt.version", body.data.version);
+            span.setAttribute("prompt.slug", body.data.slug);
+            span.setAttribute("prompt.labels", body.data.labels.join(", "));
+            if (body.data.model)
+                span.setAttribute("prompt.model", body.data.model);
+            if (body.data.text)
+                span.setAttribute("prompt.text", body.data.text);
+            if (vars && Object.keys(vars).length > 0) {
+                span.setAttribute("prompt.input", JSON.stringify(vars));
+            }
+        },
+    });
+    const data = response.data;
+    const inputJson = Object.keys(vars).length > 0 ? JSON.stringify(vars) : undefined;
+    return {
+        promptId: data.promptId,
+        version: data.version,
+        labels: data.labels,
+        text: data.text ?? "",
+        model: data.model ?? undefined,
+        config: data.config ?? undefined,
+        toAISDKTelemetry: makeToAISDKTelemetry(data.slug, data.promptId, data.version, data.labels, data.model ?? undefined, inputJson),
+    };
+}
+/** List all prompts in the current environment. */
+function listPrompts(requestOptions) {
+    const apiClient = v3_1.apiClientManager.clientOrThrow();
+    return apiClient.listPrompts({
+        tracer: tracer_js_1.tracer,
+        name: "prompts.list()",
+        icon: "tabler-file-text-ai",
+        attributes: {
+            [v3_1.SemanticInternalAttributes.STYLE_ICON]: "tabler-file-text-ai",
+        },
+        onResponseBody: (body, span) => {
+            span.setAttribute("prompt.count", body.data.length);
+        },
+    });
+}
+/** List all versions for a prompt. */
+function listPromptVersions(slug, requestOptions) {
+    const apiClient = v3_1.apiClientManager.clientOrThrow();
+    return apiClient.listPromptVersions(slug, {
+        ...promptSpanOptions("prompts.versions()", slug),
+        onResponseBody: (body, span) => {
+            span.setAttribute("prompt.slug", slug);
+            span.setAttribute("prompt.versions.count", body.data.length);
+        },
+    });
+}
+/** Promote a code-deployed version to be the current version. */
+async function promotePromptVersion(slug, version, requestOptions) {
+    const apiClient = v3_1.apiClientManager.clientOrThrow();
+    return apiClient.promotePromptVersion(slug, { version }, {
+        ...promptSpanOptions("prompts.promote()", slug),
+        attributes: {
+            ...promptSpanOptions("prompts.promote()", slug).attributes,
+            "prompt.slug": slug,
+            "prompt.version": version,
+        },
+    });
+}
+/** Create an override — a dashboard/API edit that takes priority over the deployed version. */
+async function createPromptOverride(slug, body, requestOptions) {
+    const apiClient = v3_1.apiClientManager.clientOrThrow();
+    return apiClient.createPromptOverride(slug, body, {
+        ...promptSpanOptions("prompts.createOverride()", slug),
+        attributes: {
+            ...promptSpanOptions("prompts.createOverride()", slug).attributes,
+            "prompt.slug": slug,
+            ...(body.model ? { "prompt.model": body.model } : {}),
+        },
+        onResponseBody: (body, span) => {
+            span.setAttribute("prompt.override.version", body.version);
+        },
+    });
+}
+/** Update the active override's content or model. */
+async function updatePromptOverride(slug, body, requestOptions) {
+    const apiClient = v3_1.apiClientManager.clientOrThrow();
+    return apiClient.updatePromptOverride(slug, body, {
+        ...promptSpanOptions("prompts.updateOverride()", slug),
+        attributes: {
+            ...promptSpanOptions("prompts.updateOverride()", slug).attributes,
+            "prompt.slug": slug,
+        },
+    });
+}
+/** Remove the active override, reverting to the current deployed version. */
+async function removePromptOverride(slug, requestOptions) {
+    const apiClient = v3_1.apiClientManager.clientOrThrow();
+    return apiClient.removePromptOverride(slug, {
+        ...promptSpanOptions("prompts.removeOverride()", slug),
+        attributes: {
+            ...promptSpanOptions("prompts.removeOverride()", slug).attributes,
+            "prompt.slug": slug,
+        },
+    });
+}
+/** Reactivate a previously removed override version. */
+async function reactivatePromptOverride(slug, version, requestOptions) {
+    const apiClient = v3_1.apiClientManager.clientOrThrow();
+    return apiClient.reactivatePromptOverride(slug, { version }, {
+        ...promptSpanOptions("prompts.reactivateOverride()", slug),
+        attributes: {
+            ...promptSpanOptions("prompts.reactivateOverride()", slug).attributes,
+            "prompt.slug": slug,
+            "prompt.version": version,
+        },
+    });
+}
+//# sourceMappingURL=promptManagement.js.map

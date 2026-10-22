@@ -1,0 +1,1550 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ApiClient = exports.encodeTaskIdForPath = exports.isRequestOptions = exports.STREAM_START_HEADER = exports.SSEStreamSubscription = void 0;
+exports.mergeRequestOptions = mergeRequestOptions;
+const nanoid_1 = require("nanoid");
+const v4_1 = require("zod/v4");
+const version_js_1 = require("../../version.js");
+const apiKeys_js_1 = require("../apiKeys.js");
+const jwt_js_1 = require("../jwt.js");
+const index_js_1 = require("../schemas/index.js");
+const wireProtocol_js_1 = require("../sessionStreams/wireProtocol.js");
+const task_context_api_js_1 = require("../task-context-api.js");
+const getEnv_js_1 = require("../utils/getEnv.js");
+const retries_js_1 = require("../utils/retries.js");
+const core_js_1 = require("./core.js");
+Object.defineProperty(exports, "isRequestOptions", { enumerable: true, get: function () { return core_js_1.isRequestOptions; } });
+const encodeTaskIdForPath_js_1 = require("./encodeTaskIdForPath.js");
+const errors_js_1 = require("./errors.js");
+const refreshAccessToken_js_1 = require("./refreshAccessToken.js");
+const runStream_js_1 = require("./runStream.js");
+Object.defineProperty(exports, "SSEStreamSubscription", { enumerable: true, get: function () { return runStream_js_1.SSEStreamSubscription; } });
+Object.defineProperty(exports, "STREAM_START_HEADER", { enumerable: true, get: function () { return runStream_js_1.STREAM_START_HEADER; } });
+const version_js_2 = require("./version.js");
+const DEFAULT_ZOD_FETCH_OPTIONS = {
+    retry: {
+        maxAttempts: 5,
+        minTimeoutInMs: 1000,
+        maxTimeoutInMs: 30_000,
+        factor: 1.6,
+        randomize: false,
+    },
+};
+__exportStar(require("./getBranch.js"), exports);
+var encodeTaskIdForPath_js_2 = require("./encodeTaskIdForPath.js");
+Object.defineProperty(exports, "encodeTaskIdForPath", { enumerable: true, get: function () { return encodeTaskIdForPath_js_2.encodeTaskIdForPath; } });
+const CreatePublicTokenResponseBody = v4_1.z.object({ token: v4_1.z.string() });
+/**
+ * Trigger.dev v3 API client
+ */
+class ApiClient {
+    baseUrl;
+    accessToken;
+    previewBranch;
+    futureFlags;
+    additionalHeaders;
+    defaultRequestOptions;
+    refreshAccessToken;
+    constructor(baseUrl, accessToken, 
+    // Carries the branch for any branchable env (preview or dev) — both ride the
+    // x-trigger-branch header, and the server disambiguates by the token's env.
+    previewBranch, requestOptions = {}, futureFlags = {}, refreshAccessToken) {
+        this.accessToken = accessToken;
+        this.refreshAccessToken = refreshAccessToken;
+        this.baseUrl = baseUrl.replace(/\/$/, "");
+        this.previewBranch = previewBranch;
+        const { additionalHeaders, ...restRequestOptions } = requestOptions;
+        this.additionalHeaders = additionalHeaders;
+        this.defaultRequestOptions = mergeRequestOptions(DEFAULT_ZOD_FETCH_OPTIONS, restRequestOptions);
+        this.futureFlags = futureFlags;
+    }
+    /**
+     * Key for signing a public access token locally. Only root keys can do this —
+     * an additional key isn't the environment's signing material, so a token
+     * signed with one would never verify. Throw rather than return a dead token.
+     */
+    get #selfSigningKey() {
+        if ((0, apiKeys_js_1.isAdditionalApiKey)(this.accessToken)) {
+            throw new Error("This additional API key cannot self-sign public tokens, and the server did not return one. Upgrade the server or use the root API key.");
+        }
+        return this.accessToken;
+    }
+    get fetchClient() {
+        const headers = this.#getHeaders(false);
+        const fetchClient = (input, requestInit) => {
+            const $requestInit = {
+                ...requestInit,
+                headers: {
+                    ...requestInit?.headers,
+                    ...headers,
+                },
+            };
+            return fetch(input, $requestInit);
+        };
+        return fetchClient;
+    }
+    getHeaders() {
+        return this.#getHeaders(false);
+    }
+    /**
+     * Header resolver handed to stream subscriptions so a connection rejected with
+     * a 401/403 can reconnect with a freshly minted token. `undefined` when no
+     * `refreshAccessToken` was configured, which keeps auth errors terminal.
+     */
+    #resolveStreamHeaders() {
+        const refreshAccessToken = this.refreshAccessToken;
+        if (!refreshAccessToken)
+            return undefined;
+        return async () => {
+            const accessToken = await (0, refreshAccessToken_js_1.refreshAccessTokenOnce)(refreshAccessToken);
+            return this.#getHeaders(false, { Authorization: `Bearer ${accessToken}` });
+        };
+    }
+    /** As {@link ApiClient.#resolveStreamHeaders}, for the leaner realtime header set. */
+    #resolveRealtimeHeaders() {
+        const refreshAccessToken = this.refreshAccessToken;
+        if (!refreshAccessToken)
+            return undefined;
+        return async () => {
+            const accessToken = await (0, refreshAccessToken_js_1.refreshAccessTokenOnce)(refreshAccessToken);
+            return { ...this.#getRealtimeHeaders(), Authorization: `Bearer ${accessToken}` };
+        };
+    }
+    async getRunResult(runId, requestOptions) {
+        try {
+            return await (0, core_js_1.zodfetch)(index_js_1.TaskRunExecutionResult, `${this.baseUrl}/api/v1/runs/${runId}/result`, {
+                method: "GET",
+                headers: this.#getHeaders(false),
+            }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+        }
+        catch (error) {
+            if (error instanceof errors_js_1.ApiError) {
+                if (error.status === 404) {
+                    return undefined;
+                }
+            }
+            throw error;
+        }
+    }
+    async getBatchResults(batchId, requestOptions) {
+        return await (0, core_js_1.zodfetch)(index_js_1.BatchTaskRunExecutionResult, `${this.baseUrl}/api/v1/batches/${batchId}/results`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    triggerTask(taskId, body, clientOptions, requestOptions) {
+        const encodedTaskId = (0, encodeTaskIdForPath_js_1.encodeTaskIdForPath)(taskId);
+        return (0, core_js_1.zodfetch)(index_js_1.TriggerTaskResponse, `${this.baseUrl}/api/v1/tasks/${encodedTaskId}/trigger`, {
+            method: "POST",
+            headers: this.#getHeaders(clientOptions?.spanParentAsLink ?? false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions))
+            .withResponse()
+            .then(async ({ data, response }) => {
+            const jwtHeader = response.headers.get("x-trigger-jwt");
+            if (typeof jwtHeader === "string") {
+                return {
+                    ...data,
+                    publicAccessToken: jwtHeader,
+                };
+            }
+            const claimsHeader = response.headers.get("x-trigger-jwt-claims");
+            const claims = claimsHeader ? JSON.parse(claimsHeader) : undefined;
+            const jwt = await (0, jwt_js_1.generateJWT)({
+                secretKey: this.#selfSigningKey,
+                payload: {
+                    ...claims,
+                    scopes: [`read:runs:${data.id}`],
+                },
+                expirationTime: requestOptions?.publicAccessToken?.expirationTime ?? "1h",
+            });
+            return {
+                ...data,
+                publicAccessToken: jwt,
+            };
+        });
+    }
+    batchTriggerV3(body, clientOptions, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.BatchTriggerTaskV3Response, `${this.baseUrl}/api/v2/tasks/batch`, {
+            method: "POST",
+            headers: this.#getHeaders(clientOptions?.spanParentAsLink ?? false, {
+                "batch-processing-strategy": clientOptions?.processingStrategy,
+            }),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions))
+            .withResponse()
+            .then(async ({ data, response }) => {
+            const jwtHeader = response.headers.get("x-trigger-jwt");
+            if (typeof jwtHeader === "string") {
+                return {
+                    ...data,
+                    publicAccessToken: jwtHeader,
+                };
+            }
+            const claimsHeader = response.headers.get("x-trigger-jwt-claims");
+            const claims = claimsHeader ? JSON.parse(claimsHeader) : undefined;
+            const jwt = await (0, jwt_js_1.generateJWT)({
+                secretKey: this.#selfSigningKey,
+                payload: {
+                    ...claims,
+                    scopes: [`read:batch:${data.id}`],
+                },
+                expirationTime: requestOptions?.publicAccessToken?.expirationTime ?? "1h",
+            });
+            return {
+                ...data,
+                publicAccessToken: jwt,
+            };
+        });
+    }
+    /**
+     * Phase 1 of 2-phase batch API: Create a batch
+     *
+     * Creates a new batch and returns its ID. For batchTriggerAndWait,
+     * the parent run is blocked immediately on batch creation.
+     *
+     * @param body - The batch creation parameters
+     * @param clientOptions - Options for trace context handling
+     * @param clientOptions.spanParentAsLink - If true, child runs will have separate trace IDs with a link to parent
+     * @param requestOptions - Optional request options
+     * @returns The created batch with ID and metadata
+     */
+    createBatch(body, clientOptions, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.CreateBatchResponse, `${this.baseUrl}/api/v3/batches`, {
+            method: "POST",
+            headers: this.#getHeaders(clientOptions?.spanParentAsLink ?? false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions))
+            .withResponse()
+            .then(async ({ data, response }) => {
+            const jwtHeader = response.headers.get("x-trigger-jwt");
+            if (typeof jwtHeader === "string") {
+                return {
+                    ...data,
+                    publicAccessToken: jwtHeader,
+                };
+            }
+            const claimsHeader = response.headers.get("x-trigger-jwt-claims");
+            const claims = claimsHeader ? JSON.parse(claimsHeader) : undefined;
+            const jwt = await (0, jwt_js_1.generateJWT)({
+                secretKey: this.#selfSigningKey,
+                payload: {
+                    ...claims,
+                    scopes: [`read:batch:${data.id}`],
+                },
+                expirationTime: requestOptions?.publicAccessToken?.expirationTime ?? "1h",
+            });
+            return {
+                ...data,
+                publicAccessToken: jwt,
+            };
+        });
+    }
+    /**
+     * Phase 2 of 2-phase batch API: Stream batch items
+     *
+     * Streams batch items as NDJSON to the server. Each item is enqueued
+     * as it arrives. The batch is automatically sealed when the stream completes.
+     *
+     * Includes automatic retry with exponential backoff. Since items are deduplicated
+     * by index on the server, retrying the entire stream is safe.
+     *
+     * Uses ReadableStream.tee() for retry capability without buffering all items
+     * upfront - only items consumed before a failure are buffered for retry.
+     *
+     * @param batchId - The batch ID from createBatch
+     * @param items - Array or async iterable of batch items
+     * @param requestOptions - Optional request options
+     * @returns Summary of items accepted and deduplicated
+     */
+    async streamBatchItems(batchId, items, requestOptions) {
+        // Convert input to ReadableStream for uniform handling and tee() support
+        const stream = createNdjsonStream(items);
+        const retryOptions = {
+            ...DEFAULT_STREAM_BATCH_RETRY_OPTIONS,
+            ...requestOptions?.retry,
+        };
+        return this.#streamBatchItemsWithRetry(batchId, stream, retryOptions);
+    }
+    async #streamBatchItemsWithRetry(batchId, stream, retryOptions, attempt = 1) {
+        const headers = this.#getHeaders(false);
+        headers["Content-Type"] = "application/x-ndjson";
+        // Tee the stream: one branch for this attempt, one for potential retry
+        // tee() internally buffers data consumed from one branch for the other,
+        // so we only buffer what's been sent before a failure occurs
+        const [forRequest, forRetry] = stream.tee();
+        try {
+            const response = await fetch(`${this.baseUrl}/api/v3/batches/${batchId}/items`, {
+                method: "POST",
+                headers,
+                body: forRequest,
+                // @ts-expect-error - duplex is required for streaming body but not in types
+                duplex: "half",
+            });
+            if (!response.ok) {
+                const retryResult = shouldRetryStreamBatchItems(response, attempt, retryOptions);
+                if (retryResult.retry) {
+                    // Cancel the request stream before retry to prevent tee() from buffering
+                    await safeStreamCancel(forRequest);
+                    await sleep(retryResult.delay);
+                    // Use the backup stream for retry
+                    return this.#streamBatchItemsWithRetry(batchId, forRetry, retryOptions, attempt + 1);
+                }
+                // Not retrying - cancel the backup stream
+                await safeStreamCancel(forRetry);
+                const errText = await response.text().catch((e) => e.message);
+                let errJSON;
+                try {
+                    errJSON = JSON.parse(errText);
+                }
+                catch {
+                    // ignore
+                }
+                const errMessage = errJSON ? undefined : errText;
+                const responseHeaders = Object.fromEntries(response.headers.entries());
+                throw errors_js_1.ApiError.generate(response.status, errJSON, errMessage, responseHeaders);
+            }
+            const result = await response.json();
+            const parsed = index_js_1.StreamBatchItemsResponse.safeParse(result);
+            if (!parsed.success) {
+                // Cancel backup stream since we're throwing
+                await safeStreamCancel(forRetry);
+                throw new Error(`Invalid response from server for batch ${batchId}: ${parsed.error.message}`);
+            }
+            // Check if the batch was sealed
+            if (!parsed.data.sealed) {
+                // Not all items were received - treat as retryable condition
+                const delay = (0, retries_js_1.calculateNextRetryDelay)(retryOptions, attempt);
+                if (delay) {
+                    // Cancel the request stream before retry to prevent tee() from buffering
+                    await safeStreamCancel(forRequest);
+                    // Retry with the backup stream
+                    await sleep(delay);
+                    return this.#streamBatchItemsWithRetry(batchId, forRetry, retryOptions, attempt + 1);
+                }
+                // No more retries - cancel backup stream and throw descriptive error
+                await safeStreamCancel(forRetry);
+                throw new errors_js_1.BatchNotSealedError({
+                    batchId,
+                    enqueuedCount: parsed.data.enqueuedCount ?? 0,
+                    expectedCount: parsed.data.expectedCount ?? 0,
+                    itemsAccepted: parsed.data.itemsAccepted,
+                    itemsDeduplicated: parsed.data.itemsDeduplicated,
+                });
+            }
+            // Success - cancel the backup stream to release resources
+            await safeStreamCancel(forRetry);
+            return parsed.data;
+        }
+        catch (error) {
+            // Don't retry BatchNotSealedError (retries already exhausted)
+            if (error instanceof errors_js_1.BatchNotSealedError) {
+                throw error;
+            }
+            // Don't retry ApiErrors (already handled above with backup stream cancelled)
+            if (error instanceof errors_js_1.ApiError) {
+                throw error;
+            }
+            // Retry connection errors using the backup stream
+            const delay = (0, retries_js_1.calculateNextRetryDelay)(retryOptions, attempt);
+            if (delay) {
+                // Cancel the request stream before retry to prevent tee() from buffering
+                await safeStreamCancel(forRequest);
+                await sleep(delay);
+                return this.#streamBatchItemsWithRetry(batchId, forRetry, retryOptions, attempt + 1);
+            }
+            // No more retries - cancel the backup stream
+            await safeStreamCancel(forRetry);
+            // Wrap in a more descriptive error
+            const cause = error instanceof Error ? error : new Error(String(error));
+            throw new errors_js_1.ApiConnectionError({
+                cause,
+                message: `Failed to stream batch items for batch ${batchId}: ${cause.message}`,
+            });
+        }
+    }
+    createUploadPayloadUrl(filename, requestOptions) {
+        const encoded = encodeURIComponent(filename);
+        return (0, core_js_1.zodfetch)(index_js_1.CreateUploadPayloadUrlResponseBody, `${this.baseUrl}/api/v2/packets/${encoded}`, {
+            method: "PUT",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    getPayloadUrl(filename, requestOptions) {
+        const encoded = encodeURIComponent(filename);
+        return (0, core_js_1.zodfetch)(index_js_1.CreateUploadPayloadUrlResponseBody, `${this.baseUrl}/api/v1/packets/${encoded}`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    /**
+     * Presigned GET URL for a run's stored payload or output, authorized against the run.
+     * Falls back to the legacy packet route on servers that predate this endpoint.
+     */
+    async getRunPacketUrl(runId, field, path, requestOptions) {
+        try {
+            return await (0, core_js_1.zodfetch)(index_js_1.CreateUploadPayloadUrlResponseBody, `${this.baseUrl}/api/v1/runs/${encodeURIComponent(runId)}/packets/${field}`, {
+                method: "GET",
+                headers: this.#getHeaders(false),
+            }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+        }
+        catch (error) {
+            if (error instanceof errors_js_1.ApiError && error.status === 404) {
+                return await this.getPayloadUrl(path, requestOptions);
+            }
+            throw error;
+        }
+    }
+    /** Presigned PUT URL for a `chat.agent` session snapshot. */
+    createChatSnapshotUploadUrl(sessionId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.CreateUploadPayloadUrlResponseBody, `${this.baseUrl}/api/v1/sessions/${encodeURIComponent(sessionId)}/snapshot-url`, {
+            method: "PUT",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    /** Presigned GET URL for a `chat.agent` session snapshot. */
+    getChatSnapshotUrl(sessionId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.CreateUploadPayloadUrlResponseBody, `${this.baseUrl}/api/v1/sessions/${encodeURIComponent(sessionId)}/snapshot-url`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    /**
+     * One page of a `chat.agent` session's persisted transcript, most recent
+     * messages first when `limit` is set. Secret key only.
+     */
+    getSessionTranscript(sessionId, options, requestOptions) {
+        const query = new URLSearchParams();
+        if (options?.limit !== undefined)
+            query.set("limit", String(options.limit));
+        if (options?.before !== undefined)
+            query.set("before", options.before);
+        const suffix = query.size > 0 ? `?${query.toString()}` : "";
+        return (0, core_js_1.zodfetch)(index_js_1.SessionTranscriptResponseBody, `${this.baseUrl}/api/v1/sessions/${encodeURIComponent(sessionId)}/transcript${suffix}`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    retrieveRun(runId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.RetrieveRunResponse, `${this.baseUrl}/api/v3/runs/${runId}`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    retrieveRunTrace(runId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.RetrieveRunTraceResponseBody, `${this.baseUrl}/api/v1/runs/${runId}/trace`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    retrieveSpan(runId, spanId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.RetrieveSpanDetailResponseBody, `${this.baseUrl}/api/v1/runs/${runId}/spans/${spanId}`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    listRuns(query, requestOptions) {
+        const searchParams = createSearchQueryForListRuns(query);
+        return (0, core_js_1.zodfetchCursorPage)(index_js_1.ListRunResponseItem, `${this.baseUrl}/api/v1/runs`, {
+            query: searchParams,
+            limit: query?.limit,
+            after: query?.after,
+            before: query?.before,
+        }, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    listProjectRuns(projectRef, query, requestOptions) {
+        const searchParams = createSearchQueryForListRuns(query);
+        if (query?.env) {
+            searchParams.append("filter[env]", Array.isArray(query.env) ? query.env.join(",") : query.env);
+        }
+        return (0, core_js_1.zodfetchCursorPage)(index_js_1.ListRunResponseItem, `${this.baseUrl}/api/v1/projects/${projectRef}/runs`, {
+            query: searchParams,
+            limit: query?.limit,
+            after: query?.after,
+            before: query?.before,
+        }, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    replayRun(runId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.ReplayRunResponse, `${this.baseUrl}/api/v1/runs/${runId}/replay`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    cancelRun(runId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.CanceledRunResponse, `${this.baseUrl}/api/v2/runs/${runId}/cancel`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    createBulkAction(options, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.CreateBulkActionResponseBody, `${this.baseUrl}/api/v1/bulk-actions`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(options),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    listBulkActions(query, requestOptions) {
+        return (0, core_js_1.zodfetchCursorPage)(index_js_1.BulkActionObject, `${this.baseUrl}/api/v1/bulk-actions`, {
+            query: new URLSearchParams(),
+            limit: query?.limit,
+            after: query?.after,
+            before: query?.before,
+        }, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    retrieveBulkAction(bulkActionId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.BulkActionObject, `${this.baseUrl}/api/v1/bulk-actions/${bulkActionId}`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    abortBulkAction(bulkActionId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.AbortBulkActionResponseBody, `${this.baseUrl}/api/v1/bulk-actions/${bulkActionId}/abort`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    resetIdempotencyKey(taskIdentifier, idempotencyKey, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.ResetIdempotencyKeyResponse, `${this.baseUrl}/api/v1/idempotencyKeys/${encodeURIComponent(idempotencyKey)}/reset`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify({ taskIdentifier }),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    rescheduleRun(runId, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.RetrieveRunResponse, `${this.baseUrl}/api/v1/runs/${runId}/reschedule`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    listRunEvents(runId, requestOptions) {
+        return (0, core_js_1.zodfetch)(v4_1.z.any(), // TODO: define a proper schema for this
+        `${this.baseUrl}/api/v1/runs/${runId}/events`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    addTags(runId, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(v4_1.z.object({ message: v4_1.z.string() }), `${this.baseUrl}/api/v1/runs/${runId}/tags`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    createSchedule(options, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.ScheduleObject, `${this.baseUrl}/api/v1/schedules`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(options),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    listSchedules(options, requestOptions) {
+        const searchParams = new URLSearchParams();
+        if (options?.page) {
+            searchParams.append("page", options.page.toString());
+        }
+        if (options?.perPage) {
+            searchParams.append("perPage", options.perPage.toString());
+        }
+        return (0, core_js_1.zodfetchOffsetLimitPage)(index_js_1.ScheduleObject, `${this.baseUrl}/api/v1/schedules`, {
+            page: options?.page,
+            limit: options?.perPage,
+        }, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    retrieveSchedule(scheduleId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.ScheduleObject, `${this.baseUrl}/api/v1/schedules/${scheduleId}`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    updateSchedule(scheduleId, options, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.ScheduleObject, `${this.baseUrl}/api/v1/schedules/${scheduleId}`, {
+            method: "PUT",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(options),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    deactivateSchedule(scheduleId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.ScheduleObject, `${this.baseUrl}/api/v1/schedules/${scheduleId}/deactivate`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    activateSchedule(scheduleId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.ScheduleObject, `${this.baseUrl}/api/v1/schedules/${scheduleId}/activate`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    deleteSchedule(scheduleId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.DeletedScheduleObject, `${this.baseUrl}/api/v1/schedules/${scheduleId}`, {
+            method: "DELETE",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    listEnvVars(projectRef, slug, requestOptions) {
+        return (0, core_js_1.zodfetch)(v4_1.z.array(index_js_1.EnvironmentVariableWithSecret), `${this.baseUrl}/api/v1/projects/${projectRef}/envvars/${slug}`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    importEnvVars(projectRef, slug, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.EnvironmentVariableResponseBody, `${this.baseUrl}/api/v1/projects/${projectRef}/envvars/${slug}/import`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    retrieveEnvVar(projectRef, slug, key, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.EnvironmentVariableWithSecret, `${this.baseUrl}/api/v1/projects/${projectRef}/envvars/${slug}/${key}`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    createEnvVar(projectRef, slug, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.EnvironmentVariableResponseBody, `${this.baseUrl}/api/v1/projects/${projectRef}/envvars/${slug}`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    updateEnvVar(projectRef, slug, key, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.EnvironmentVariableResponseBody, `${this.baseUrl}/api/v1/projects/${projectRef}/envvars/${slug}/${key}`, {
+            method: "PUT",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    deleteEnvVar(projectRef, slug, key, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.EnvironmentVariableResponseBody, `${this.baseUrl}/api/v1/projects/${projectRef}/envvars/${slug}/${key}`, {
+            method: "DELETE",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    updateRunMetadata(runId, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.UpdateMetadataResponseBody, `${this.baseUrl}/api/v1/runs/${runId}/metadata`, {
+            method: "PUT",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    getRunMetadata(runId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.UpdateMetadataResponseBody, `${this.baseUrl}/api/v1/runs/${runId}/metadata`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    createWaitpointToken(options, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.CreateWaitpointTokenResponseBody, `${this.baseUrl}/api/v1/waitpoints/tokens`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(options),
+        }, {
+            ...mergeRequestOptions(this.defaultRequestOptions, requestOptions),
+            prepareData: async (data, response) => {
+                const jwtHeader = response.headers.get("x-trigger-jwt");
+                if (typeof jwtHeader === "string") {
+                    return {
+                        ...data,
+                        publicAccessToken: jwtHeader,
+                    };
+                }
+                const claimsHeader = response.headers.get("x-trigger-jwt-claims");
+                const claims = claimsHeader ? JSON.parse(claimsHeader) : undefined;
+                const jwt = await (0, jwt_js_1.generateJWT)({
+                    secretKey: this.#selfSigningKey,
+                    payload: {
+                        ...claims,
+                        scopes: [`write:waitpoints:${data.id}`],
+                    },
+                    expirationTime: "24h",
+                });
+                return {
+                    ...data,
+                    publicAccessToken: jwt,
+                };
+            },
+        });
+    }
+    listWaitpointTokens(params, requestOptions) {
+        const searchParams = createSearchQueryForListWaitpointTokens(params);
+        return (0, core_js_1.zodfetchCursorPage)(index_js_1.WaitpointTokenItem, `${this.baseUrl}/api/v1/waitpoints/tokens`, {
+            query: searchParams,
+            limit: params?.limit,
+            after: params?.after,
+            before: params?.before,
+        }, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    retrieveWaitpointToken(friendlyId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.WaitpointRetrieveTokenResponse, `${this.baseUrl}/api/v1/waitpoints/tokens/${friendlyId}`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    completeWaitpointToken(friendlyId, options, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.CompleteWaitpointTokenResponseBody, `${this.baseUrl}/api/v1/waitpoints/tokens/${friendlyId}/complete`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(options),
+        }, {
+            ...mergeRequestOptions(this.defaultRequestOptions, requestOptions),
+        });
+    }
+    waitForWaitpointToken({ runFriendlyId, waitpointFriendlyId, }, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.WaitForWaitpointTokenResponseBody, `${this.baseUrl}/engine/v1/runs/${runFriendlyId}/waitpoints/tokens/${waitpointFriendlyId}/wait`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    // ========================================================================
+    // Sessions
+    // ========================================================================
+    createSession(body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.CreatedSessionResponseBody, `${this.baseUrl}/api/v1/sessions`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    retrieveSession(sessionIdOrExternalId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.RetrieveSessionResponseBody, `${this.baseUrl}/api/v1/sessions/${encodeURIComponent(sessionIdOrExternalId)}`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    updateSession(sessionIdOrExternalId, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.RetrieveSessionResponseBody, `${this.baseUrl}/api/v1/sessions/${encodeURIComponent(sessionIdOrExternalId)}`, {
+            method: "PATCH",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    closeSession(sessionIdOrExternalId, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.RetrieveSessionResponseBody, `${this.baseUrl}/api/v1/sessions/${encodeURIComponent(sessionIdOrExternalId)}/close`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body ?? {}),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    endAndContinueSession(sessionIdOrExternalId, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.EndAndContinueSessionResponseBody, `${this.baseUrl}/api/v1/sessions/${encodeURIComponent(sessionIdOrExternalId)}/end-and-continue`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    listSessions(options, requestOptions) {
+        const searchParams = createSearchQueryForListSessions(options);
+        return (0, core_js_1.zodfetchCursorPage)(index_js_1.ListedSessionItem, `${this.baseUrl}/api/v1/sessions`, {
+            query: searchParams,
+            limit: options?.limit,
+            after: options?.after,
+            before: options?.before,
+        }, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    // ========================================================================
+    // Session realtime channels
+    // ========================================================================
+    async initializeSessionStream(sessionIdOrExternalId, io, requestOptions, channel) {
+        // The server returns S2 credentials in response headers alongside a tiny
+        // JSON body with the realtime version. Follow the same shape as
+        // `createStream` so downstream clients can feed them into
+        // `StreamsWriterV2`.
+        const base = `${this.baseUrl}/realtime/v1/sessions/${encodeURIComponent(sessionIdOrExternalId)}`;
+        const url = channel ? `${base}/channels/${encodeURIComponent(channel)}/${io}` : `${base}/${io}`;
+        return (0, core_js_1.zodfetch)(index_js_1.CreateStreamResponseBody, url, {
+            method: "PUT",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions))
+            .withResponse()
+            .then(({ data, response }) => ({
+            ...data,
+            headers: Object.fromEntries(response.headers.entries()),
+        }));
+    }
+    async appendToSessionStream(sessionIdOrExternalId, io, part, requestOptions, channel) {
+        // Generated once per logical append, outside zodfetch, so its internal
+        // retries reuse the same part id and the server-side dedupe collapses a
+        // retried POST whose first attempt actually committed. Full-length nanoid
+        // (~126 bits) to match the browser transport's randomUUID entropy.
+        const partId = (0, nanoid_1.nanoid)();
+        const base = `${this.baseUrl}/realtime/v1/sessions/${encodeURIComponent(sessionIdOrExternalId)}`;
+        const appendUrl = channel
+            ? `${base}/channels/${encodeURIComponent(channel)}/${io}/append`
+            : `${base}/${io}/append`;
+        return (0, core_js_1.zodfetch)(index_js_1.AppendToStreamResponseBody, appendUrl, {
+            method: "POST",
+            headers: { ...this.#getHeaders(false), "X-Part-Id": partId },
+            body: part,
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    /**
+     * Non-SSE drain of a Session channel's tail. Returns whatever records
+     * exist after `afterEventId` (or from the head of the stream) and closes
+     * — `wait=0` semantics, no long-poll. Used by `replaySessionOutTail` at
+     * run boot, where the SSE long-poll's ~1s tax on empty streams is the
+     * dominant cost on every fresh chat.
+     *
+     * `afterEventId` is the same cursor format as the SSE Last-Event-ID
+     * (the S2 sequence number, stringified) — pass `lastOutEventId` from a
+     * persisted snapshot to resume.
+     */
+    async readSessionStreamRecords(sessionIdOrExternalId, io, options) {
+        const qs = new URLSearchParams();
+        if (options?.afterEventId !== undefined) {
+            qs.set("afterEventId", options.afterEventId);
+        }
+        const recordsBase = `${options?.baseUrl ?? this.baseUrl}/realtime/v1/sessions/${encodeURIComponent(sessionIdOrExternalId)}`;
+        const recordsPath = options?.channel
+            ? `${recordsBase}/channels/${encodeURIComponent(options.channel)}/${io}/records`
+            : `${recordsBase}/${io}/records`;
+        const url = `${recordsPath}${qs.toString() ? `?${qs.toString()}` : ""}`;
+        return (0, core_js_1.zodfetch)(index_js_1.ReadSessionStreamRecordsResponseBody, url, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, undefined));
+    }
+    /**
+     * Subscribe to SSE records on a Session channel. Reuses the same
+     * {@link SSEStreamSubscription} plumbing as `readStream` for run-scoped
+     * realtime streams — auto-retry, Last-Event-ID resume, abort-on-cancel.
+     */
+    async subscribeToSessionStream(sessionIdOrExternalId, io, options) {
+        const sessionSegment = `${options?.baseUrl ?? this.baseUrl}/realtime/v1/sessions/${encodeURIComponent(sessionIdOrExternalId)}`;
+        const url = options?.channel
+            ? `${sessionSegment}/channels/${encodeURIComponent(options.channel)}/${io}`
+            : `${sessionSegment}/${io}`;
+        const subscription = new runStream_js_1.SSEStreamSubscription(url, {
+            headers: this.getHeaders(),
+            resolveHeaders: this.#resolveStreamHeaders(),
+            signal: options?.signal,
+            onComplete: options?.onComplete,
+            onError: options?.onError,
+            timeoutInSeconds: options?.timeoutInSeconds,
+            lastEventId: options?.lastEventId,
+            from: options?.from,
+        });
+        const stream = await subscription.subscribe();
+        const onPart = options?.onPart;
+        const onControl = options?.onControl;
+        return stream.pipeThrough(new TransformStream({
+            transform(part, controller) {
+                // Always surface the raw part via onPart so cursor tracking
+                // (lastSeqNum, lastEventId) stays correct for both data and
+                // control records.
+                onPart?.(part);
+                // Trigger control record — route to onControl, never enqueue.
+                const subtype = (0, wireProtocol_js_1.controlSubtype)(part.headers);
+                if (subtype) {
+                    // `part.id` is the S2 seq_num in decimal string form.
+                    // `parseInt` returns NaN if S2 ever surfaces a non-numeric
+                    // id (shouldn't happen, but `|| 0` would mask it as a real
+                    // seq 0). Drop the malformed event rather than fire
+                    // `onControl` with a misleading cursor — callers like
+                    // `findLatestSessionInCursor` and the dashboard rely on the
+                    // seqNum being meaningful for resume.
+                    const parsedSeqNum = Number.parseInt(part.id, 10);
+                    if (!Number.isFinite(parsedSeqNum)) {
+                        return;
+                    }
+                    onControl?.({
+                        subtype,
+                        headers: part.headers ?? [],
+                        seqNum: parsedSeqNum,
+                        timestamp: part.timestamp,
+                    });
+                    return;
+                }
+                controller.enqueue(part.chunk);
+            },
+        }));
+    }
+    async waitForDuration(runId, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.WaitForDurationResponseBody, `${this.baseUrl}/engine/v1/runs/${runId}/wait/duration`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    listQueues(options, requestOptions) {
+        const searchParams = new URLSearchParams();
+        if (options?.page) {
+            searchParams.append("page", options.page.toString());
+        }
+        if (options?.perPage) {
+            searchParams.append("perPage", options.perPage.toString());
+        }
+        return (0, core_js_1.zodfetchOffsetLimitPage)(index_js_1.QueueItem, `${this.baseUrl}/api/v1/queues`, {
+            page: options?.page,
+            limit: options?.perPage,
+        }, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    retrieveQueue(queue, requestOptions) {
+        const type = typeof queue === "string" ? "id" : queue.type;
+        const value = typeof queue === "string" ? queue : queue.name;
+        // Explicitly encode slashes before encoding the rest of the string
+        const encodedValue = encodeURIComponent(value.replace(/\//g, "%2F"));
+        return (0, core_js_1.zodfetch)(index_js_1.QueueItem, `${this.baseUrl}/api/v1/queues/${encodedValue}?type=${type}`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    pauseQueue(queue, action, requestOptions) {
+        const type = typeof queue === "string" ? "id" : queue.type;
+        const value = typeof queue === "string" ? queue : queue.name;
+        // Explicitly encode slashes before encoding the rest of the string
+        const encodedValue = encodeURIComponent(value.replace(/\//g, "%2F"));
+        return (0, core_js_1.zodfetch)(index_js_1.QueueItem, `${this.baseUrl}/api/v1/queues/${encodedValue}/pause`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify({
+                type,
+                action,
+            }),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    overrideQueueConcurrencyLimit(queue, concurrencyLimit, requestOptions) {
+        const type = typeof queue === "string" ? "id" : queue.type;
+        const value = typeof queue === "string" ? queue : queue.name;
+        // Explicitly encode slashes before encoding the rest of the string
+        const encodedValue = encodeURIComponent(value.replace(/\//g, "%2F"));
+        return (0, core_js_1.zodfetch)(index_js_1.QueueItem, `${this.baseUrl}/api/v1/queues/${encodedValue}/concurrency/override`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify({
+                type,
+                concurrencyLimit,
+            }),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    resetQueueConcurrencyLimit(queue, requestOptions) {
+        const type = typeof queue === "string" ? "id" : queue.type;
+        const value = typeof queue === "string" ? queue : queue.name;
+        // Explicitly encode slashes before encoding the rest of the string
+        const encodedValue = encodeURIComponent(value.replace(/\//g, "%2F"));
+        return (0, core_js_1.zodfetch)(index_js_1.QueueItem, `${this.baseUrl}/api/v1/queues/${encodedValue}/concurrency/reset`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify({
+                type,
+            }),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    subscribeToRun(runId, options) {
+        const queryParams = new URLSearchParams();
+        if (options?.skipColumns) {
+            queryParams.append("skipColumns", options.skipColumns.join(","));
+        }
+        return (0, runStream_js_1.runShapeStream)(`${this.baseUrl}/realtime/v1/runs/${runId}${queryParams ? `?${queryParams}` : ""}`, {
+            closeOnComplete: typeof options?.closeOnComplete === "boolean" ? options.closeOnComplete : true,
+            headers: this.#getRealtimeHeaders(),
+            resolveHeaders: this.#resolveRealtimeHeaders(),
+            client: this,
+            signal: options?.signal,
+            onFetchError: options?.onFetchError,
+        });
+    }
+    subscribeToRunsWithTag(tag, filters, options) {
+        const searchParams = createSearchQueryForSubscribeToRuns({
+            tags: tag,
+            ...(filters ? { createdAt: filters.createdAt } : {}),
+            ...(filters?.skipColumns ? { skipColumns: filters.skipColumns } : {}),
+        });
+        return (0, runStream_js_1.runShapeStream)(`${this.baseUrl}/realtime/v1/runs${searchParams ? `?${searchParams}` : ""}`, {
+            closeOnComplete: false,
+            headers: this.#getRealtimeHeaders(),
+            resolveHeaders: this.#resolveRealtimeHeaders(),
+            client: this,
+            signal: options?.signal,
+            onFetchError: options?.onFetchError,
+        });
+    }
+    subscribeToBatch(batchId, options) {
+        const queryParams = new URLSearchParams();
+        if (options?.skipColumns) {
+            queryParams.append("skipColumns", options.skipColumns.join(","));
+        }
+        return (0, runStream_js_1.runShapeStream)(`${this.baseUrl}/realtime/v1/batches/${batchId}${queryParams ? `?${queryParams}` : ""}`, {
+            closeOnComplete: false,
+            headers: this.#getRealtimeHeaders(),
+            resolveHeaders: this.#resolveRealtimeHeaders(),
+            client: this,
+            signal: options?.signal,
+            onFetchError: options?.onFetchError,
+        });
+    }
+    listDeployments(options, requestOptions) {
+        const searchParams = new URLSearchParams();
+        if (options?.status) {
+            searchParams.append("status", options.status);
+        }
+        if (options?.period) {
+            searchParams.append("period", options.period);
+        }
+        if (options?.from) {
+            searchParams.append("from", options.from);
+        }
+        if (options?.to) {
+            searchParams.append("to", options.to);
+        }
+        return (0, core_js_1.zodfetchCursorPage)(index_js_1.ApiDeploymentListResponseItem, `${this.baseUrl}/api/v1/deployments`, {
+            query: searchParams,
+            after: options?.cursor,
+            limit: options?.limit,
+        }, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    retrieveCurrentDeployment(requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.RetrieveCurrentDeploymentResponseBody, `${this.baseUrl}/api/v1/deployments/current`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    async fetchStream(runId, streamKey, options) {
+        const streamFactory = new runStream_js_1.SSEStreamSubscriptionFactory(options?.baseUrl ?? this.baseUrl, {
+            headers: this.getHeaders(),
+            signal: options?.signal,
+            resolveHeaders: this.#resolveStreamHeaders(),
+        });
+        const subscription = streamFactory.createSubscription(runId, streamKey, {
+            onComplete: options?.onComplete,
+            onError: options?.onError,
+            timeoutInSeconds: options?.timeoutInSeconds,
+            lastEventId: options?.lastEventId,
+            from: options?.from,
+        });
+        const stream = await subscription.subscribe();
+        const onPart = options?.onPart;
+        return stream.pipeThrough(new TransformStream({
+            transform(chunk, controller) {
+                const data = chunk.chunk;
+                onPart?.(chunk);
+                controller.enqueue(data);
+            },
+        }));
+    }
+    async createStream(runId, target, streamId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.CreateStreamResponseBody, `${this.baseUrl}/realtime/v1/streams/${runId}/${target}/${streamId}`, {
+            method: "PUT",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions))
+            .withResponse()
+            .then(async ({ data, response }) => {
+            return {
+                ...data,
+                headers: Object.fromEntries(response.headers.entries()),
+            };
+        });
+    }
+    async appendToStream(runId, target, streamId, part, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.AppendToStreamResponseBody, `${this.baseUrl}/realtime/v1/streams/${runId}/${target}/${streamId}/append`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: part,
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    async sendInputStream(runId, streamId, data, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.SendInputStreamResponseBody, `${this.baseUrl}/realtime/v1/streams/${runId}/input/${streamId}`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify({ data }),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    async createInputStreamWaitpoint(runFriendlyId, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.CreateInputStreamWaitpointResponseBody, `${this.baseUrl}/api/v1/runs/${runFriendlyId}/input-streams/wait`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    async createSessionStreamWaitpoint(runFriendlyId, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.CreateSessionStreamWaitpointResponseBody, `${this.baseUrl}/api/v1/runs/${runFriendlyId}/session-streams/wait`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    async generateJWTClaims(requestOptions) {
+        return (0, core_js_1.zodfetch)(v4_1.z.record(v4_1.z.string(), v4_1.z.any()), `${this.baseUrl}/api/v1/auth/jwt/claims`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    async createPublicToken(body, requestOptions) {
+        return (0, core_js_1.zodfetch)(CreatePublicTokenResponseBody, `${this.baseUrl}/api/v1/auth/public-tokens`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    retrieveBatch(batchId, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.RetrieveBatchV2Response, `${this.baseUrl}/api/v2/batches/${batchId}`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    async executeQuery(query, options, requestOptions) {
+        const body = {
+            query,
+            scope: options?.scope ?? "environment",
+            period: options?.period,
+            from: options?.from,
+            to: options?.to,
+            format: options?.format ?? "json",
+        };
+        return (0, core_js_1.zodfetch)(index_js_1.QueryExecuteResponseBody, `${this.baseUrl}/api/v1/query`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    async getQuerySchema(requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.QuerySchemaResponseBody, `${this.baseUrl}/api/v1/query/schema`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    async listDashboards(requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.ListDashboardsResponseBody, `${this.baseUrl}/api/v1/query/dashboards`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    async getReport(key, options) {
+        const searchParams = new URLSearchParams({ format: options?.format ?? "markdown" });
+        if (options?.period) {
+            searchParams.set("period", options.period);
+        }
+        const response = await fetch(`${this.baseUrl}/api/v1/reports/${encodeURIComponent(key)}?${searchParams.toString()}`, {
+            method: "GET",
+            headers: this.#getHeaders(false),
+        });
+        if (!response.ok) {
+            const bodySnippet = await readBodySnippet(response);
+            throw new Error(`Failed to fetch report "${key}": ${response.status} ${response.statusText}${bodySnippet ? ` — ${bodySnippet}` : ""}`);
+        }
+        if (options?.format === "json") {
+            return index_js_1.ReportViewModelSchema.parse(await response.json());
+        }
+        return response.text();
+    }
+    #getHeaders(spanParentAsLink, additionalHeaders) {
+        const headers = {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.accessToken}`,
+            "trigger-version": version_js_1.VERSION,
+            ...Object.entries(additionalHeaders ?? {}).reduce((acc, [key, value]) => {
+                if (value !== undefined) {
+                    acc[key] = value;
+                }
+                return acc;
+            }, {}),
+        };
+        if (this.additionalHeaders) {
+            for (const [key, value] of Object.entries(this.additionalHeaders)) {
+                if (!(key in headers)) {
+                    headers[key] = value;
+                }
+            }
+        }
+        if (!headers["x-trigger-source"]) {
+            headers["x-trigger-source"] = "sdk";
+        }
+        if (this.previewBranch) {
+            headers["x-trigger-branch"] = this.previewBranch;
+        }
+        // Only inject the context if we are inside a task
+        if (task_context_api_js_1.taskContext.isInsideTask) {
+            headers["x-trigger-worker"] = "true";
+            // Only pass the engine version if we are inside a task
+            headers["x-trigger-engine-version"] = "V2";
+            if (spanParentAsLink) {
+                headers["x-trigger-span-parent-as-link"] = "1";
+            }
+        }
+        if (typeof window !== "undefined" && typeof window.document !== "undefined") {
+            headers["x-trigger-client"] = "browser";
+        }
+        headers[version_js_2.API_VERSION_HEADER_NAME] = version_js_2.API_VERSION;
+        const streamFlag = this.futureFlags.v2RealtimeStreams ?? true;
+        if (streamFlag === false ||
+            (0, getEnv_js_1.getEnvVar)("TRIGGER_V2_REALTIME_STREAMS") === "0" ||
+            (0, getEnv_js_1.getEnvVar)("TRIGGER_V2_REALTIME_STREAMS") === "false" ||
+            (0, getEnv_js_1.getEnvVar)("TRIGGER_REALTIME_STREAMS_V2") === "0" ||
+            (0, getEnv_js_1.getEnvVar)("TRIGGER_REALTIME_STREAMS_V2") === "false") {
+            headers["x-trigger-realtime-streams-version"] = "v1";
+        }
+        else {
+            headers["x-trigger-realtime-streams-version"] = "v2";
+        }
+        return headers;
+    }
+    resolvePrompt(slug, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.ResolvePromptResponseBody, `${this.baseUrl}/api/v1/prompts/${slug}`, {
+            method: "POST",
+            headers: this.#getHeaders(false),
+            body: JSON.stringify(body),
+        }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    listPrompts(requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.ListPromptsResponseBody, `${this.baseUrl}/api/v1/prompts`, { method: "GET", headers: this.#getHeaders(false) }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    listPromptVersions(slug, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.ListPromptVersionsResponseBody, `${this.baseUrl}/api/v1/prompts/${slug}/versions`, { method: "GET", headers: this.#getHeaders(false) }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    promotePromptVersion(slug, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.PromptOkResponseBody, `${this.baseUrl}/api/v1/prompts/${slug}/promote`, { method: "POST", headers: this.#getHeaders(false), body: JSON.stringify(body) }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    createPromptOverride(slug, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.PromptOverrideCreatedResponseBody, `${this.baseUrl}/api/v1/prompts/${slug}/override`, { method: "POST", headers: this.#getHeaders(false), body: JSON.stringify(body) }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    updatePromptOverride(slug, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.PromptOkResponseBody, `${this.baseUrl}/api/v1/prompts/${slug}/override`, { method: "PUT", headers: this.#getHeaders(false), body: JSON.stringify(body) }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    removePromptOverride(slug, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.PromptOkResponseBody, `${this.baseUrl}/api/v1/prompts/${slug}/override`, { method: "DELETE", headers: this.#getHeaders(false) }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    reactivatePromptOverride(slug, body, requestOptions) {
+        return (0, core_js_1.zodfetch)(index_js_1.PromptOkResponseBody, `${this.baseUrl}/api/v1/prompts/${slug}/override/reactivate`, { method: "POST", headers: this.#getHeaders(false), body: JSON.stringify(body) }, mergeRequestOptions(this.defaultRequestOptions, requestOptions));
+    }
+    #getRealtimeHeaders() {
+        let headers = {
+            Authorization: `Bearer ${this.accessToken}`,
+            "trigger-version": version_js_1.VERSION,
+        };
+        if (this.previewBranch) {
+            headers["x-trigger-branch"] = this.previewBranch;
+        }
+        return headers;
+    }
+}
+exports.ApiClient = ApiClient;
+function createSearchQueryForSubscribeToRuns(query) {
+    const searchParams = new URLSearchParams();
+    if (query) {
+        if (query.tasks) {
+            searchParams.append("tasks", Array.isArray(query.tasks) ? query.tasks.join(",") : query.tasks);
+        }
+        if (query.tags) {
+            searchParams.append("tags", Array.isArray(query.tags) ? query.tags.join(",") : query.tags);
+        }
+        if (query.createdAt) {
+            searchParams.append("createdAt", query.createdAt);
+        }
+        if (query.skipColumns) {
+            searchParams.append("skipColumns", query.skipColumns.join(","));
+        }
+    }
+    return searchParams;
+}
+function createSearchQueryForListRuns(query) {
+    const searchParams = new URLSearchParams();
+    if (query) {
+        if (query.status) {
+            searchParams.append("filter[status]", Array.isArray(query.status) ? query.status.join(",") : query.status);
+        }
+        if (query.taskIdentifier) {
+            searchParams.append("filter[taskIdentifier]", Array.isArray(query.taskIdentifier) ? query.taskIdentifier.join(",") : query.taskIdentifier);
+        }
+        if (query.version) {
+            searchParams.append("filter[version]", Array.isArray(query.version) ? query.version.join(",") : query.version);
+        }
+        if (query.bulkAction) {
+            searchParams.append("filter[bulkAction]", query.bulkAction);
+        }
+        if (query.tag) {
+            searchParams.append("filter[tag]", Array.isArray(query.tag) ? query.tag.join(",") : query.tag);
+        }
+        if (query.schedule) {
+            searchParams.append("filter[schedule]", query.schedule);
+        }
+        if (typeof query.isTest === "boolean") {
+            searchParams.append("filter[isTest]", String(query.isTest));
+        }
+        if (query.from) {
+            searchParams.append("filter[createdAt][from]", query.from instanceof Date ? query.from.getTime().toString() : query.from.toString());
+        }
+        if (query.to) {
+            searchParams.append("filter[createdAt][to]", query.to instanceof Date ? query.to.getTime().toString() : query.to.toString());
+        }
+        if (query.period) {
+            searchParams.append("filter[createdAt][period]", query.period);
+        }
+        if (query.batch) {
+            searchParams.append("filter[batch]", query.batch);
+        }
+        if (query.queue) {
+            searchParams.append("filter[queue]", Array.isArray(query.queue)
+                ? query.queue.map((q) => queueNameFromQueueTypeName(q)).join(",")
+                : queueNameFromQueueTypeName(query.queue));
+        }
+        if (query.machine) {
+            searchParams.append("filter[machine]", Array.isArray(query.machine) ? query.machine.join(",") : query.machine);
+        }
+        if (query.region) {
+            searchParams.append("filter[region]", Array.isArray(query.region) ? query.region.join(",") : query.region);
+        }
+    }
+    return searchParams;
+}
+function queueNameFromQueueTypeName(queue) {
+    if (queue.type === "task") {
+        return `task/${queue.name}`;
+    }
+    return queue.name;
+}
+function createSearchQueryForListSessions(options) {
+    const searchParams = new URLSearchParams();
+    if (!options)
+        return searchParams;
+    const appendMany = (name, value) => {
+        if (value === undefined)
+            return;
+        searchParams.append(name, Array.isArray(value) ? value.join(",") : value);
+    };
+    appendMany("filter[type]", options.type);
+    appendMany("filter[tags]", options.tag);
+    appendMany("filter[taskIdentifier]", options.taskIdentifier);
+    if (options.externalId) {
+        searchParams.append("filter[externalId]", options.externalId);
+    }
+    appendMany("filter[status]", options.status);
+    if (options.period) {
+        searchParams.append("filter[createdAt][period]", options.period);
+    }
+    if (options.from !== undefined) {
+        searchParams.append("filter[createdAt][from]", options.from instanceof Date ? options.from.getTime().toString() : options.from.toString());
+    }
+    if (options.to !== undefined) {
+        searchParams.append("filter[createdAt][to]", options.to instanceof Date ? options.to.getTime().toString() : options.to.toString());
+    }
+    return searchParams;
+}
+function createSearchQueryForListWaitpointTokens(query) {
+    const searchParams = new URLSearchParams();
+    if (query) {
+        if (query.status) {
+            searchParams.append("filter[status]", Array.isArray(query.status) ? query.status.join(",") : query.status);
+        }
+        if (query.idempotencyKey) {
+            searchParams.append("filter[idempotencyKey]", query.idempotencyKey);
+        }
+        if (query.tags) {
+            searchParams.append("filter[tags]", Array.isArray(query.tags) ? query.tags.join(",") : query.tags);
+        }
+        if (query.period) {
+            searchParams.append("filter[createdAt][period]", query.period);
+        }
+        if (query.from) {
+            searchParams.append("filter[createdAt][from]", query.from instanceof Date ? query.from.getTime().toString() : query.from.toString());
+        }
+        if (query.to) {
+            searchParams.append("filter[createdAt][to]", query.to instanceof Date ? query.to.getTime().toString() : query.to.toString());
+        }
+    }
+    return searchParams;
+}
+// ============================================================================
+// Stream Batch Items Retry Helpers
+// ============================================================================
+/**
+ * Default retry options for streaming batch items.
+ * Uses higher values than the default zodfetch retry since batch operations
+ * are more expensive to repeat from scratch.
+ */
+const DEFAULT_STREAM_BATCH_RETRY_OPTIONS = {
+    maxAttempts: 5,
+    factor: 2,
+    minTimeoutInMs: 1000,
+    maxTimeoutInMs: 30_000,
+    randomize: true,
+};
+/**
+ * Determines if a failed stream batch items request should be retried.
+ * Follows similar logic to zodfetch's shouldRetry but specific to batch streaming.
+ */
+function shouldRetryStreamBatchItems(response, attempt, retryOptions) {
+    function shouldRetryForOptions() {
+        const delay = (0, retries_js_1.calculateNextRetryDelay)(retryOptions, attempt);
+        if (delay) {
+            return { retry: true, delay };
+        }
+        return { retry: false };
+    }
+    // Check x-should-retry header - server can explicitly control retry behavior
+    const shouldRetryHeader = response.headers.get("x-should-retry");
+    if (shouldRetryHeader === "true")
+        return shouldRetryForOptions();
+    if (shouldRetryHeader === "false")
+        return { retry: false };
+    // Retry on request timeouts
+    if (response.status === 408)
+        return shouldRetryForOptions();
+    // Retry on lock timeouts
+    if (response.status === 409)
+        return shouldRetryForOptions();
+    // Retry on rate limits with special handling for Retry-After
+    if (response.status === 429) {
+        if (attempt >= retryOptions.maxAttempts) {
+            return { retry: false };
+        }
+        // x-ratelimit-reset is the unix timestamp in milliseconds when the rate limit will reset
+        const resetAtUnixEpochMs = response.headers.get("x-ratelimit-reset");
+        if (resetAtUnixEpochMs) {
+            const resetAtUnixEpoch = parseInt(resetAtUnixEpochMs, 10);
+            const delay = resetAtUnixEpoch - Date.now() + Math.floor(Math.random() * 1000);
+            if (delay > 0) {
+                return { retry: true, delay };
+            }
+        }
+        // Fall back to Retry-After header (seconds)
+        const retryAfter = response.headers.get("retry-after");
+        if (retryAfter) {
+            const retryAfterSeconds = parseInt(retryAfter, 10);
+            if (!isNaN(retryAfterSeconds)) {
+                return { retry: true, delay: retryAfterSeconds * 1000 };
+            }
+        }
+        return shouldRetryForOptions();
+    }
+    // Retry on server errors (5xx)
+    if (response.status >= 500)
+        return shouldRetryForOptions();
+    // Don't retry client errors (4xx) except those handled above
+    return { retry: false };
+}
+/**
+ * Simple sleep utility for retry delays.
+ */
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+/**
+ * Best-effort read of a (likely error) response body for inclusion in a thrown Error.
+ * Never throws, and truncates so we don't dump a huge HTML page into an error message.
+ */
+async function readBodySnippet(response, maxLength = 500) {
+    try {
+        const text = (await response.text()).trim();
+        if (!text) {
+            return "";
+        }
+        return text.length > maxLength ? `${text.slice(0, maxLength)}…` : text;
+    }
+    catch {
+        return "";
+    }
+}
+/**
+ * Safely cancels a ReadableStream, handling the case where it might be locked.
+ *
+ * When fetch uses a ReadableStream as a request body and an error occurs mid-transfer
+ * (connection reset, timeout, etc.), the stream may remain locked by fetch's internal reader.
+ * Attempting to cancel a locked stream throws "Invalid state: ReadableStream is locked".
+ *
+ * This function gracefully handles that case by catching the error and doing nothing -
+ * the stream will be cleaned up by garbage collection when the reader is released.
+ */
+async function safeStreamCancel(stream) {
+    try {
+        await stream.cancel();
+    }
+    catch (error) {
+        // Ignore "locked" errors - the stream will be cleaned up when the reader is released.
+        // This happens when fetch crashes mid-read and doesn't release the reader lock.
+        if (error instanceof TypeError && String(error).includes("locked")) {
+            return;
+        }
+        // Re-throw unexpected errors
+        throw error;
+    }
+}
+// ============================================================================
+// NDJSON Stream Helpers
+// ============================================================================
+/**
+ * Creates a ReadableStream that emits NDJSON (newline-delimited JSON) from items.
+ * Handles both arrays and async iterables for streaming large batches.
+ */
+function createNdjsonStream(items) {
+    const encoder = new TextEncoder();
+    // Check if items is an array
+    if (Array.isArray(items)) {
+        let index = 0;
+        return new ReadableStream({
+            pull(controller) {
+                if (index >= items.length) {
+                    controller.close();
+                    return;
+                }
+                const item = items[index++];
+                const line = JSON.stringify(item) + "\n";
+                controller.enqueue(encoder.encode(line));
+            },
+        });
+    }
+    // Handle async iterable
+    const iterator = items[Symbol.asyncIterator]();
+    return new ReadableStream({
+        async pull(controller) {
+            const { value, done } = await iterator.next();
+            if (done) {
+                controller.close();
+                return;
+            }
+            const line = JSON.stringify(value) + "\n";
+            controller.enqueue(encoder.encode(line));
+        },
+    });
+}
+function mergeRequestOptions(defaultOptions, options) {
+    if (!options) {
+        return defaultOptions;
+    }
+    return {
+        ...defaultOptions,
+        ...options,
+        retry: {
+            ...defaultOptions.retry,
+            ...options.retry,
+        },
+    };
+}
+//# sourceMappingURL=index.js.map

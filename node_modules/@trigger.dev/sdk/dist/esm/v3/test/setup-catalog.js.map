@@ -1,0 +1,1 @@
+{"version":3,"file":"setup-catalog.js","sourceRoot":"","sources":["../../../../src/v3/test/setup-catalog.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,MAAM,sBAAsB,CAAC;AACvD,OAAO,EAAE,uBAAuB,EAAE,MAAM,8BAA8B,CAAC;AAEvE;;;;;;;;;GASG;AACH,MAAM,OAAO,GAAG,IAAI,uBAAuB,EAAE,CAAC;AAC9C,eAAe,CAAC,wBAAwB,CAAC,OAAO,CAAC,CAAC;AAClD,eAAe,CAAC,qBAAqB,CAAC,aAAa,EAAE,UAAU,CAAC,CAAC"}
