@@ -13,9 +13,24 @@ const TEXT_ENTITIES = {
   "&#39;": "'",
   "&apos;": "'",
 };
+const collectTextNodes = (value) => {
+  const nodes = [];
+  let inTag = false;
+  let textStart = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    if (!inTag && value[index] === "<") {
+      nodes.push(value.slice(textStart, index));
+      inTag = true;
+    } else if (inTag && value[index] === ">") {
+      inTag = false;
+      textStart = index + 1;
+    }
+  }
+  if (!inTag) nodes.push(value.slice(textStart));
+  return nodes.join("");
+};
 const normalize = (value) =>
-  value
-    .replace(/<[^>]+>/g, "")
+  collectTextNodes(value)
     .replace(
       /&(amp|quot|#39|apos);/g,
       (entity) => TEXT_ENTITIES[entity] ?? entity,
