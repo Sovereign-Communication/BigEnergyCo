@@ -165,34 +165,34 @@
               },
               {
                 "@type": "Question",
-                "name": "Can Sodium-ion batteries safely discharge to 0% DoD without damage?",
+                "name": "Can a sodium-ion battery be discharged to 0 V?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Yes. Unlike lithium-ion cells which require copper foil on the negative anode, sodium-ion cells utilize aluminum current collectors on both the positive cathode and negative anode. Copper dissolves irreversibly into the electrolyte below 1.5V, causing catastrophic short circuits upon recharge. Aluminum does not alloy with sodium at low potentials, allowing sodium-ion cells to safely discharge to 0.0V without structural degradation."
+                  "text": "There is no chemistry-wide cell-voltage cutoff that can be treated as a normal discharge target. The permitted lower voltage and instructions after over-discharge depend on the exact cell or pack. Follow that product’s data sheet and battery-management-system limits; do not infer a safe endpoint from the chemistry name."
                 }
               },
               {
                 "@type": "Question",
-                "name": "Why do standard off-grid inverters only use ~85% of a Sodium-ion battery bank?",
+                "name": "How much of a sodium-ion battery can a standard inverter use?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Sodium-ion cells have a sloping discharge curve spanning from 4.0V down to ~1.5V. Standard 48V off-grid inverters have fixed low-voltage cutoffs designed for LFP (~40V to 42V, or ~2.5V per cell in a 16S bank). Operating on these inverters cuts off discharge before the lowest 15% of cell capacity is drained. This shallow cycling naturally protects the cells from extreme phase-stress, extending cycle life beyond 5,500 cycles."
+                  "text": "There is no chemistry-wide usable percentage. Usable energy depends on the exact cell or pack voltage range, inverter low-voltage settings, and battery-management system. CATL describes dedicated voltage regulation and a sodium-specific battery-management system for its TENER Sodium system; that product-specific design does not establish a cutoff or usable fraction for other packs. Check the manuals and compatibility information for the exact battery and inverter before pairing them."
                 }
               },
               {
                 "@type": "Question",
-                "name": "Can Lead-Acid (AGM) batteries achieve a 20-year lifespan if oversized?",
+                "name": "Can an oversized AGM battery bank be expected to last 20 years?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "No. While shallow cycling (such as 20% DoD) slows down cyclic sulfation, lead-acid batteries face an unavoidable chemical calendar aging limit of 6 to 8 years caused by positive grid lead corrosion (oxidation to lead dioxide), active material shedding, and electrolyte dry-out. Regardless of bank oversizing, an AGM bank will physically degrade and require replacement 3 to 5 times over a 20-year horizon."
+                  "text": "Do not infer a 20-year service life or fixed replacement count from bank size alone. Service depends on the exact model and duty cycle. Discover’s AGM Battery Performance data sheet says stand-by life depends on frequency and depth of discharge, charge voltage, and ambient temperature; cyclic life also depends on capacity taken, discharge rate, operating temperature, and charging method. Use the exact product data sheet and label any projection as an estimate."
                 }
               },
               {
                 "@type": "Question",
-                "name": "How does oversizing a battery bank save money over a 20-year horizon?",
+                "name": "Does oversizing a battery bank always save money?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Oversizing by 25% to 35% reduces daily Depth of Discharge from ~85% to ~60%. Because Wöhler exponent β > 1.5, this shallower depth extends cycle life from ~6,000 cycles (16 years) to over 10,000 cycles (27+ years). This entirely eliminates the need for a mid-life battery bank purchase, disposal logistics, and expensive electrician labor, yielding a lower 20-year levelized cost of storage."
+                  "text": "No. A larger bank may change operating depth of discharge for a given load, but that alone does not establish cycle life, service life, or lifetime cost. Compare the exact battery model, usable capacity, installed price, warranty, operating conditions, replacement assumptions, and analysis period using the inputs listed above. Do not claim a saving or replacement schedule without sourced assumptions."
                 }
               }
             ]
@@ -751,71 +751,53 @@
           present a scenario as a guaranteed saving or a universal battery
           replacement schedule.
         </p>
-        <h2>
-          7. Builder&rsquo;s Field Guide: Sizing &amp; Inverter Configuration
-          Checklist
-        </h2>
+        <h2>7. Use product-specific setup information</h2>
         <p>
-          To implement a true zero-swap storage strategy in your own
-          installation:
+          Before choosing or configuring a battery, gather the load, battery,
+          inverter, and installation information for the exact system:
         </p>
         <ol>
           <li>
-            <strong>Calculate True Daily Nighttime Consumption:</strong>
-            Determine your average consumption between solar sunset and sunrise.
-            Add 15% inverter standby and conversion overhead.
+            <strong>Characterize the load:</strong> Estimate the energy and peak
+            power the battery must supply over the intended backup period. Use
+            measured or documented loads and include inverter standby and
+            conversion losses only when supported by the equipment information.
           </li>
           <li>
-            <strong>Apply the Zero-Swap Oversize Factor:</strong>
-            <ul>
-              <li>
-                For <strong>LFP</strong>: Target an installed nameplate capacity
-                equal to <code>Daily Usable kWh &divide; 0.65</code>.
-              </li>
-              <li>
-                For <strong>Sodium-Ion</strong>: Target an installed nameplate
-                capacity equal to <code>Daily Usable kWh &divide; 0.70</code>.
-              </li>
-            </ul>
+            <strong>Size from usable capacity:</strong> Account for the
+            battery&rsquo;s stated usable energy, discharge limits, temperature
+            range, power rating, and any reserve you need. Do not use a fixed
+            depth-of-discharge multiplier as a universal sizing rule.
           </li>
           <li>
-            <strong>Program Inverter Voltage Cutoffs Precisely:</strong>
-            <ul>
-              <li>
-                For <strong>16S LFP (48V nominal)</strong>: Set Float to 54.0V
-                (3.375V/cell), Bulk/Absorption to 56.0V (3.50V/cell), and Low
-                Voltage Cutoff (LVD) to 48.0V (3.00V/cell). Avoiding 3.65V
-                top-charging eliminates high-voltage electrolyte oxidation.
-              </li>
-              <li>
-                For <strong>16S Na-ion (48V nominal)</strong>: Set Bulk to 57.6V
-                (3.60V/cell), Float to 54.4V (3.40V/cell), and Low Voltage
-                Cutoff to 40.0V (2.50V/cell).
-              </li>
-            </ul>
+            <strong>Check battery and inverter compatibility:</strong> Confirm
+            that the exact products support each other. Configure charging,
+            voltage cutoffs, current limits, battery-management-system
+            communications, and firmware only as their manufacturers specify. Do
+            not copy setpoints from another model or chemistry.
           </li>
           <li>
-            <strong>Honor Cold Temperature Thresholds:</strong> If ambient
-            winter temperatures drop below 0&deg;C (32&deg;F), select Sodium-ion
-            to eliminate the need for parasitic heating pads, or house LFP
-            inside the conditioned thermal envelope of the building.
+            <strong>Plan protection and installation:</strong> Follow the
+            product instructions for overcurrent protection, disconnects,
+            conductor sizing, location, clearances, and temperature limits.
+            Check applicable local electrical requirements and use a qualified
+            installer when required.
           </li>
         </ol>
 
-        <!-- Sizing Calculator CTA Card -->
         <div class="cta-card">
-          <h3>⚡ Calculate Your Exact Zero-Swap Battery Size</h3>
+          <h3>Explore an estimated battery size</h3>
           <p>
-            Use our free worldwide solar &amp; battery estimator to simulate
-            your home's exact hourly solar curve, climate temperatures, and
-            zero-swap battery capacity. 100% free, no signup, open source.
+            Use the solar and battery estimator to explore a result for your
+            location and selected assumptions. Treat it as an estimate and
+            confirm equipment settings against the exact product documentation.
           </p>
           <a
             href="../../#sizing"
             class="btn btn-primary"
             style="font-size: 1.05rem; padding: 0.85rem 2rem"
           >
-            🤖 Launch Free Off-Grid Sizing Calculator
+            Launch the off-grid sizing calculator
           </a>
         </div>
 
@@ -836,139 +818,107 @@
 
         <div class="faq-item">
           <div class="faq-question">
-            Can Sodium-ion batteries safely discharge to 0% DoD without damage?
+            Can a sodium-ion battery be discharged to 0 V?
           </div>
           <div class="faq-answer">
-            Yes. Unlike lithium-ion cells which require copper foil on the
-            negative anode, sodium-ion cells utilize aluminum current collectors
-            on both the positive cathode and negative anode. Copper dissolves
-            irreversibly into the electrolyte below 1.5V, causing catastrophic
-            short circuits upon recharge. Aluminum does not alloy with sodium at
-            low potentials, allowing sodium-ion cells to safely discharge to
-            0.0V without structural degradation.
+            There is no chemistry-wide cell-voltage cutoff that can be treated
+            as a normal discharge target. The permitted lower voltage and
+            instructions after over-discharge depend on the exact cell or pack.
+            Follow that product’s data sheet and battery-management-system
+            limits; do not infer a safe endpoint from the chemistry name.
           </div>
         </div>
 
         <div class="faq-item">
           <div class="faq-question">
-            Why do standard off-grid inverters only use ~85% of a Sodium-ion
-            battery bank?
+            How much of a sodium-ion battery can a standard inverter use?
           </div>
           <div class="faq-answer">
-            Sodium-ion cells have a sloping discharge curve spanning from 4.0V
-            down to ~1.5V. Standard 48V off-grid inverters have fixed
-            low-voltage cutoffs designed for LFP (~40V to 42V, or ~2.5V per cell
-            in a 16S bank). Operating on these inverters cuts off discharge
-            before the lowest 15% of cell capacity is drained. This shallow
-            cycling naturally protects the cells from extreme phase-stress,
-            extending cycle life beyond 5,500 cycles.
+            There is no chemistry-wide usable percentage. Usable energy depends
+            on the exact cell or pack voltage range, inverter low-voltage
+            settings, and battery-management system.
+            <a
+              href="https://www.catl.com/en/news/6861.html"
+              target="_blank"
+              rel="noopener"
+              >CATL describes dedicated voltage regulation and a sodium-specific
+              battery-management system for its TENER Sodium system</a
+            >; that product-specific design does not establish a cutoff or
+            usable fraction for other packs. Check the manuals and compatibility
+            information for the exact battery and inverter before pairing them.
           </div>
         </div>
 
         <div class="faq-item">
           <div class="faq-question">
-            Can Lead-Acid (AGM) batteries achieve a 20-year lifespan if
-            oversized?
+            Can an oversized AGM battery bank be expected to last 20 years?
           </div>
           <div class="faq-answer">
-            No. While shallow cycling (such as 20% DoD) slows down cyclic
-            sulfation, lead-acid batteries face an unavoidable chemical calendar
-            aging limit of 6 to 8 years caused by positive grid lead corrosion
-            (oxidation to lead dioxide), active material shedding, and
-            electrolyte dry-out. Regardless of bank oversizing, an AGM bank will
-            physically degrade and require replacement 3 to 5 times over a
-            20-year horizon.
+            Do not infer a 20-year service life or fixed replacement count from
+            bank size alone. Service depends on the exact model and duty cycle.
+            <a
+              href="https://assets.discoverbattery.com/documents/07_sla/885_product_literature/standard-agm-battery-performance.pdf"
+              target="_blank"
+              rel="noopener"
+              >Discover’s AGM Battery Performance data sheet</a
+            >
+            says stand-by life depends on frequency and depth of discharge,
+            charge voltage, and ambient temperature; cyclic life also depends on
+            capacity taken, discharge rate, operating temperature, and charging
+            method. Use the exact product data sheet and label any projection as
+            an estimate.
           </div>
         </div>
 
         <div class="faq-item">
           <div class="faq-question">
-            How does oversizing a battery bank save money over a 20-year
-            horizon?
+            Does oversizing a battery bank always save money?
           </div>
           <div class="faq-answer">
-            Oversizing by 25% to 35% reduces daily Depth of Discharge from ~85%
-            to ~60%. Because Wöhler exponent β &gt; 1.5, this shallower depth
-            extends cycle life from ~6,000 cycles (16 years) to over 10,000
-            cycles (27+ years). This entirely eliminates the need for a mid-life
-            battery bank purchase, disposal logistics, and expensive electrician
-            labor, yielding a lower 20-year levelized cost of storage.
+            No. A larger bank may change operating depth of discharge for a
+            given load, but that alone does not establish cycle life, service
+            life, or lifetime cost. Compare the exact battery model, usable
+            capacity, installed price, warranty, operating conditions,
+            replacement assumptions, and analysis period using the inputs listed
+            above. Do not claim a saving or replacement schedule without sourced
+            assumptions.
           </div>
         </div>
 
-        <h2>9. Scientific References &amp; Technical Literature</h2>
+        <h2>9. References</h2>
         <ul class="citation-list">
           <li>
-            <strong
-              >Preger, Y., Barkholtz, H. M., Fresquez, A., Campbell, D. L.,
-              Juba, B., Romàn-Kustas, J., Ferreira, S. R., &amp; Chalamala, B.
-              (2020).</strong
+            <a href="https://www.osti.gov/biblio/1650174"
+              >Preger, Y., et al. (2020). “Degradation of Commercial Lithium-Ion
+              Cells as a Function of Chemistry and Cycling Conditions.”</a
             >
-            &ldquo;Degradation of Commercial Lithium-Ion Cells as a Function of
-            Chemistry and Cycling Conditions.&rdquo;
             <em>Journal of The Electrochemical Society</em>, 167(12), 120532.
             DOI: 10.1149/1945-7111/abae37.
           </li>
           <li>
-            <strong
-              >Smith, K., Saxon, A., Keyser, M., Lundstrom, B., Cao, Z., &amp;
-              Roc, A. (2017&ndash;2023).</strong
+            <a href="https://docs.nrel.gov/docs/fy19osti/73822.pdf"
+              >PV O&amp;M Best Practices Working Group. (2018).
+              <em
+                >Best Practices for Operation and Maintenance of Photovoltaic
+                and Energy Storage Systems</em
+              >
+              (3rd ed., NREL/TP-7A40-73822).</a
             >
-            &ldquo;Life Prediction Model for Grid-Connected Li-ion Battery
-            Energy Storage Systems.&rdquo;
-            <em>National Renewable Energy Laboratory (NREL)</em>, Technical
-            Report NREL/TP-5400-67102.
+            National Renewable Energy Laboratory.
           </li>
           <li>
-            <strong>EVE Energy Co., Ltd. (2024).</strong>
-            <em
-              >Product Specification: LF280K and LF314K Prismatic Lithium Iron
-              Phosphate Battery Cells for Energy Storage Systems</em
-            >. EVE Technical Manual REV 2.4.
-          </li>
-          <li>
-            <strong
-              >Contemporary Amperex Technology Co., Ltd. (CATL).
-              (2023&ndash;2025).</strong
+            <a
+              href="https://assets.discoverbattery.com/documents/07_sla/885_product_literature/standard-agm-battery-performance.pdf"
+              >Discover Battery. (n.d.). <em>AGM Battery Performance</em> data
+              sheet.</a
             >
-            <em
-              >CATL Commercial ESS White Paper: High-Safety Long-Cycle LFP
-              Technology for 20-Year Stationary Power</em
-            >. Ningde, China.
           </li>
           <li>
-            <strong>Tarascon, J. M. (2020).</strong>
-            &ldquo;Na-ion technology: from curiosity to reality.&rdquo;
-            <em>Nature Materials</em>, 19(6), 619&ndash;635. DOI:
-            10.1038/s41563-020-0713-1.
-          </li>
-          <li>
-            <strong>HiNa Battery Technology Co., Ltd. (2024).</strong>
-            <em
-              >Sodium-ion Prismatic Battery Cells: Low-Temperature Performance
-              and 0V Deep-Discharge Safety Certification</em
-            >. Beijing, China.
-          </li>
-          <li>
-            <strong>Faradion Limited. (2023).</strong>
-            <em
-              >Non-Flammable, Zero-Volt Transport-Safe Sodium-Ion Energy Storage
-              Systems</em
-            >. Sheffield, UK.
-          </li>
-          <li>
-            <strong>Battery Council International (BCI).</strong>
-            <em
-              >BCI Technical Manual: Battery Test Procedures, Cycle Life
-              Standards and Peukert Coefficient Determinations</em
-            >. Washington, D.C.
-          </li>
-          <li>
-            <strong>Berndt, D. (2001).</strong>
-            <em
-              >Maintenance-Free Batteries: Lead-Acid, Nickel/Cadmium,
-              Nickel/Metal Hydride</em
-            >. Research Studies Press / John Wiley &amp; Sons.
+            <a href="https://www.catl.com/en/news/6861.html"
+              >CATL. (2026, June 22). “CATL Debuts World's First Field-Validated
+              Sodium-Ion BESS, Bringing Sodium Storage to Commercial
+              Reality.”</a
+            >
           </li>
         </ul>
       </article>
