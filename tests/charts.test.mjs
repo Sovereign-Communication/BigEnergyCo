@@ -31,7 +31,12 @@ const charts = await import(
 // the cumulative-caption composer (tests/cum-cost-caption.test.mjs reads the
 // words a visitor gets, which needs no canvas and no DOM), and the palette
 // (one home; chart legends are its only consumers).
-const SEAMS = ["computeZoomSpan", "findWorstStreak", "cumCostCaptionText"];
+const SEAMS = [
+  "computeZoomSpan",
+  "findWorstStreak",
+  "cumCostCaptionText",
+  "updateCanvasCopy",
+];
 const PALETTE = ["TIER_COLORS", "TIER_NAMES"];
 
 test("MODULE GRAPH: every name ui.js imports exists in charts.js", () => {
@@ -48,6 +53,45 @@ test("MODULE GRAPH: the export surface is exactly its consumers", () => {
     Object.keys(charts).sort(),
     [...new Set([...uiImports, ...SEAMS, ...PALETTE])].sort(),
   );
+});
+
+test("CHART COPY: initial and rendered descriptions match each canvas state", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const markup = html.replace(/\s+/g, " ");
+  for (const copy of [
+    'id="socCanvas" role="img" aria-label="Battery charge chart. Run a sizing to render it."',
+    "Battery charge over the year renders here after you run a sizing.",
+    'id="cumCostCanvas" role="img" aria-label="Cumulative 20-year cost chart. Run a sizing to render it."',
+    "Cumulative 20-year cost comparison renders here after you run a sizing.",
+  ]) {
+    assert.ok(markup.includes(copy), copy);
+  }
+
+  const canvas = {
+    attributes: {},
+    setAttribute(name, value) {
+      this.attributes[name] = value;
+    },
+    textContent: "",
+  };
+  const rendered = [
+    [
+      "soc",
+      { chemistries: ["LFP", "Sodium-Ion"], startYear: 2021, endYear: 2025 },
+      "Battery charge chart showing daily charge ranges for LFP and Sodium-Ion from 2021 to 2025.",
+    ],
+    [
+      "cumCost",
+      { systemLabel: "Sodium-Ion" },
+      "Cumulative 20-year cost chart comparing grid costs with the Sodium-Ion cost and net savings.",
+    ],
+  ];
+  for (const [kind, details, description] of rendered) {
+    charts.updateCanvasCopy(canvas, kind, details);
+    assert.equal(canvas.attributes["aria-label"], description);
+    assert.equal(canvas.textContent, description);
+    assert.doesNotMatch(canvas.textContent, /run a sizing/i);
+  }
 });
 
 test("OWNERSHIP: the tier palette has one home — ui.js may consume it but never redeclares it", () => {

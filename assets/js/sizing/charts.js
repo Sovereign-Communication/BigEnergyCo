@@ -38,6 +38,15 @@ function money(usd) {
   return _money(usd);
 }
 
+export function updateCanvasCopy(canvas, kind, details) {
+  const description =
+    kind === "soc"
+      ? `Battery charge chart showing daily charge ranges for ${details.chemistries.join(" and ")} from ${details.startYear} to ${details.endYear}.`
+      : `Cumulative 20-year cost chart comparing grid costs with the ${details.systemLabel || "selected system"} cost and net savings.`;
+  canvas.setAttribute("aria-label", description);
+  canvas.textContent = description;
+}
+
 // ── chart state: single owner (moved from ui.js verbatim) ──────────────────
 
 // SOC chart zoom state: null = full view; { start: number, end: number } = sliced
@@ -145,6 +154,13 @@ export function drawSocChart(history, chemLabel, hasPv = true) {
   }
 
   cachedChartState = { type: "soc", history, chemLabel };
+  updateCanvasCopy(canvas, "soc", {
+    chemistries: solvable.map(
+      (tier) => tier.chemLabel || tier.chemistry || tier.id,
+    ),
+    startYear: history.startYear,
+    endYear: history.endYear,
+  });
 
   wrap.style.display = "block";
 
@@ -642,6 +658,9 @@ export function drawCumCostChart(p, chosenEntry = null) {
 
   wrap.style.display = "block";
   canvas.style.display = "";
+  updateCanvasCopy(canvas, "cumCost", {
+    systemLabel: seriesEntry.chemLabel,
+  });
   const dpr = window.devicePixelRatio || 1;
   const W = Math.max(
     200,
@@ -1068,6 +1087,11 @@ export function drawAutoChart(p) {
   }
 
   cachedChartState = { type: "auto", p };
+  updateCanvasCopy(canvas, "soc", {
+    chemistries: entries.map((entry) => entry.chemLabel || entry.chemistry),
+    startYear: p.history.startYear,
+    endYear: p.history.endYear,
+  });
 
   wrap.style.display = "block";
 
