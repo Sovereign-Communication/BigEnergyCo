@@ -11,29 +11,25 @@ const article = readFileSync(
 );
 const faqQuestion = "Is it cheaper to build your own LiFePO4 battery?";
 
-test("DIY price snapshot is sourced, scoped, and arithmetically correct", () => {
-  assert.match(article, /owner-supplied \$80–\$120 per usable/);
-  assert.match(
-    article,
-    /https:\/\/www\.docanpower\.com\/rept-280ah-prismatic-cell/,
+test("DIY cost guidance compares full scope without a retailer price snapshot", () => {
+  assert.ok(
+    /Compare written quotes using the same capacity and output/.test(article),
   );
-  assert.match(
-    article,
-    /https:\/\/www\.docanpower\.com\/s3-diy-box-jk-bms-v19/,
+  assert.ok(
+    /electrical protection, licensed electrical work, permits, inspection/.test(
+      article,
+    ),
   );
-  assert.match(article, /kit listing is inquiry-only/);
-  assert.match(article, /about \$116 per usable kWh/);
-  assert.doesNotMatch(
-    article,
-    /40-60% cheaper|prices ranging from \$800 to \$1,200 per kWh|cost per kWh of \$300 to \$500|50% to 70%/,
+  assert.ok(
+    /claim a universal DIY saving or current per-kWh price/.test(article),
   );
-
-  const nameplateKwh = (16 * 3.2 * 280) / 1000;
-  const usableKwh = nameplateKwh * 0.8;
-  const materialPrice = 16 * 60 + 365;
-  assert.equal(nameplateKwh.toFixed(2), "14.34");
-  assert.equal(usableKwh.toFixed(2), "11.47");
-  assert.equal(Math.round(materialPrice / usableKwh), 116);
+  assert.equal(
+    /Docan|REPT|Apex 280|JK BMS|docanpower\.com|\$80(?:\u2013|-)\$120|\$1,325|\$116 per usable kWh/.test(
+      article,
+    ),
+    false,
+    "retailer names and unsupported price snapshots are absent",
+  );
 });
 
 test("visible DIY price FAQ and Article/FAQ structured data agree", () => {
@@ -59,6 +55,8 @@ test("visible DIY price FAQ and Article/FAQ structured data agree", () => {
     .replace(/\s+/g, " ")
     .trim();
   assert.equal(visible, structured.acceptedAnswer.text);
+  assert.match(visible, /no universal per-kWh price or savings guarantee/);
+  assert.equal(/\$|Docan|REPT|docanpower/.test(visible), false);
   assert.match(article, /article:modified_time" content="2026-10-22"/);
   assert.match(article, /"dateModified": "2026-10-22T00:00:00Z"/);
 });
