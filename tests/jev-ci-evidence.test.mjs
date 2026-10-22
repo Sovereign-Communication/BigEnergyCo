@@ -502,6 +502,25 @@ test("SCOPE: the job judges the plan item the PR names, and fails when it cannot
   assert.ok(two.error, "an ambiguous PR must not be silently narrowed");
 });
 
+test("SCOPE: a ledger row follows its named item; canonical plan edits stay governance", () => {
+  const ledger = resolveCiScope({
+    title: "content(P9.5): correct the DIY battery article",
+    files: [
+      "blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html",
+      "docs/plan/LEDGER.jsonl",
+    ],
+  });
+  assert.equal(ledger.scope, "P9.5");
+  assert.equal(ledger.how, "explicit");
+
+  const amendment = resolveCiScope({
+    title: "content(P9.5): correct the DIY battery article",
+    files: ["docs/plan/MASTER_PLAN.md", "docs/plan/LEDGER.jsonl"],
+  });
+  assert.equal(amendment.scope, "P0.1");
+  assert.equal(amendment.how, "governance");
+});
+
 // ── the live judgment: pinned model, and an honest run class ────────────────
 
 test("LIVE: a judgment is accepted only when the provider names a concrete model", () => {

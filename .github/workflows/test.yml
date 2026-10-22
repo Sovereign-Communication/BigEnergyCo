@@ -668,8 +668,9 @@ jobs:
           # Flexible scope resolution: the gate infers scope semantically from
           # the title AND changed files, tolerating wording variations.
           # Explicit P-item in title wins; otherwise infer from paths/keywords.
-          # Governance precedence: a PR modifying docs/plan/ is judged as P0.1,
-          # not against the item it creates (breaks the chicken-and-egg).
+          # Governance precedence: canonical plan files (MASTER_PLAN.md,
+          # AMENDMENTS.md, PLAN.lock.json) are judged as P0.1. An append-only
+          # LEDGER.jsonl row is progress evidence and follows the named item.
           # NOTE: pull_request.changed_files is only the COUNT of files; the
           # real list comes from the compare step just below.
           PR_TITLE: ${{ github.event.pull_request.title }}

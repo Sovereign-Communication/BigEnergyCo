@@ -4,7 +4,8 @@
 // in the title ("blog post" vs "(P9.7)" vs "P9.7 content") must not trip it up.
 // The resolver tries, in order:
 //   1. Explicit P-item ID in the title (tolerant: "P9.7", "(P9.7)", "p9.7" all work)
-//   2. File-path inference (blog/** → P9.7, docs/plan/** → governance, etc.)
+//   2. File-path inference (blog/** → P9.7, locales → P9.1, etc.). A ledger
+//      row is progress evidence; it does not override the named plan item.
 //   3. Title keyword inference ("blog", "locale", "i18n", etc.)
 // Only when all three fail does it return null — and even then, the caller
 // decides whether that's fatal, not this module.
@@ -43,15 +44,24 @@ const TITLE_KEYWORD_RULES = [
   },
 ];
 
+// Only canonical plan documents use governance precedence. LEDGER.jsonl is a
+// progress record required by §9, so its path must not hide the phase being
+// proved by the same PR.
+const GOVERNANCE_PLAN_FILES = new Set([
+  "docs/plan/MASTER_PLAN.md",
+  "docs/plan/AMENDMENTS.md",
+  "docs/plan/PLAN.lock.json",
+]);
+
 /**
  * Resolve the CI scope for a PR, tolerantly.
  *
- * Precedence (owner, 2026-10-18): path beats title when the paths clearly
- * indicate governance. A PR that MODIFIES docs/plan/MASTER_PLAN.md is doing
- * governance work — even if its title names the P-item it's creating. Judging
- * a plan-amendment PR against the new item's own facets is circular; judge it
- * as governance instead. This breaks the chicken-and-egg where a PR creating
- * P9.7 would be judged against P9.7.
+ * Precedence (owner, 2026-10-18): canonical plan documents beat the title.
+ * A PR that modifies MASTER_PLAN.md, AMENDMENTS.md, or PLAN.lock.json is doing
+ * governance work, even if its title names the item it creates. Judging a
+ * plan-amendment PR against the new item's own facets is circular. LEDGER.jsonl
+ * is the append-only progress record required by §9, not a plan amendment, so
+ * it follows the title's phase scope.
  *
  * @param {object} input - { title: string, files?: string[] }
  * @returns {{ scope: string|null, how: string, considered: string[], error: string|null, coverageNote?: string }}
@@ -68,9 +78,7 @@ export function resolveCiScope(input) {
 
   // 0. Governance precedence: a PR that modifies the plan itself is governance
   // work, regardless of what P-item its title names.
-  const touchesPlan = files.some(
-    (f) => f === "docs/plan/MASTER_PLAN.md" || f.startsWith("docs/plan/"),
-  );
+  const touchesPlan = files.some((f) => GOVERNANCE_PLAN_FILES.has(f));
   if (touchesPlan) {
     for (const match of title.matchAll(PLAN_ITEM)) {
       const id = normalisePlanItem(match);
