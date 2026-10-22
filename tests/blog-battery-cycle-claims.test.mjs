@@ -28,7 +28,10 @@ test("chemistry guidance avoids universal cycle-life and discharge claims", () =
   const start = html.indexOf(
     "<h2>3. Chemistry does not guarantee a service life</h2>",
   );
-  const end = html.indexOf("<h2>6. 20-Year Worked Financial Example", start);
+  const end = html.indexOf(
+    "<h2>6. Build a cost comparison from stated inputs",
+    start,
+  );
   assert.ok(start >= 0 && end > start);
   const chemistry = html.slice(start, end);
   assert.match(chemistry, /https:\/\/www\.osti\.gov\/biblio\/1650174/);
@@ -40,6 +43,27 @@ test("chemistry guidance avoids universal cycle-life and discharge claims", () =
   assert.doesNotMatch(
     chemistry,
     /safely discharges to 0\.0V|zero capacity loss|5,500 to 6,500 cycles|6,000 to 8,000 cycles|6 to 8 years/i,
+  );
+});
+test("the cost comparison exposes assumptions instead of promised savings", () => {
+  const start = html.indexOf(
+    "<h2>6. Build a cost comparison from stated inputs</h2>",
+  );
+  const heading = html.indexOf("7. Builder", start);
+  const end = html.lastIndexOf("<h2>", heading);
+  assert.ok(start >= 0 && end > start);
+  const cost = html.slice(start, end);
+  assert.match(
+    cost,
+    /Source and date,\s+currency, tax, shipping, and installation/,
+  );
+  assert.match(
+    cost,
+    /Source for cycle-life or calendar-life assumptions,\s+plus\s+labor, freight, and recycling/,
+  );
+  assert.doesNotMatch(
+    cost,
+    /\$2,375|\$3,135|\$17,000|saves \$1,990|5\.4&times;/i,
   );
 });
 test("the first battery FAQ schema matches its revised visible answer", () => {
