@@ -348,10 +348,13 @@ export const CURRENCIES = {
   WST: { symbol: "T", perUSD: 2.7, name: "Samoan tala" },
   XAF: { symbol: "FCFA", perUSD: 600, name: "Central African CFA franc" },
   XCD: { symbol: "EC$", perUSD: 2.7, name: "East Caribbean dollar" },
+  XCG: { symbol: "Cg", perUSD: 1.79, name: "Caribbean guilder" },
   XOF: { symbol: "CFA", perUSD: 600, name: "West African CFA franc" },
   XPF: { symbol: "₣", perUSD: 110, name: "CFP franc" },
   YER: { symbol: "YER", perUSD: 250, name: "Yemeni rial" },
   ZMW: { symbol: "ZK", perUSD: 27, name: "Zambian kwacha" },
+  // Offline fallback: RBZ mid-rate was 26.5975 ZWG per USD on 2026-10-21.
+  ZWG: { symbol: "ZiG", perUSD: 26.6, name: "Zimbabwe Gold (ZiG)" },
   ZWL: { symbol: "Z$", perUSD: 13000, name: "Zimbabwean dollar" },
 };
 
