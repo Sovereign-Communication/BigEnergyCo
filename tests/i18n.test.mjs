@@ -426,6 +426,13 @@ test("cumulative-savings headline and chart callout use translated locale copy",
       never: "keine Amortisation",
       shortfall: "Batteriewechsel die Ersparnis",
     },
+    nl: {
+      headline: "bespaard over 20 jaar",
+      served: "door de zon geleverd",
+      breakEven: "Terugverdiend in jaar",
+      never: "Verdient zichzelf nooit terug",
+      shortfall: "Accuvervangingen gaan sneller dan de rekeningsbesparing",
+    },
     ar: {
       headline: "توفيرًا على مدى 20 عامًا",
       served: "من الشمس بدلًا من الشبكة",

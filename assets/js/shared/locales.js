@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261022e";
+import { HOME_COPY } from "./home-copy.js?v=20261022f";
 
 export const LOCALES = {
   en: {
@@ -3343,7 +3343,7 @@ export const LOCALES = {
     generatorRuntime2: "2%+ — inzetbaar wanneer nodig",
     generatorRuntimeLabel: "Hoe vaak mag een generator draaien?",
     homeIntro:
-      "Voer uw locatie en gemiddelde elektriciteitsrekening in. We simuleren vijf jaar aan NASA-satellietweer per uur om precies te bepalen welke zonnepanelen en accu-opslag u nodig hebt — met een eerlijke terugverdientijd over 20 jaar, vervangingsritme van accu's en uitrustingskosten in uw lokale valuta.",
+      "Voer uw locatie en gemiddelde elektriciteitsrekening in. We simuleren 5 jaar aan NASA-satellietweer per uur om precies te bepalen welke zonnepanelen en accu-opslag u nodig hebt — met een eerlijke terugverdientijd over 20 jaar, vervangingsritme van accu's en uitrustingskosten in uw lokale valuta.",
     imageryPrivacy:
       "Satellietbeelden (geen account nodig) worden pas geladen nadat u daarom vraagt. Coördinaten gaan naar de kaarttegels en NASA-weerservice; er wordt niets opgeslagen.",
     independenceTarget:
