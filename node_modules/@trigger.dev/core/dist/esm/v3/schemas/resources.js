@@ -1,0 +1,72 @@
+import { z } from "zod/v4";
+import { QueueManifest, RetryOptions, ScheduleMetadata } from "./schemas.js";
+import { MachineConfig } from "./common.js";
+import { WebhookVerifierArtifact, WebhookRoutingTarget, WebhookSecretProvisioning, } from "./webhookConfig.js";
+export const AgentConfig = z.object({
+    type: z.string(), // "ai-sdk-chat" initially, extensible for future agent types
+});
+export const TaskResource = z.object({
+    id: z.string(),
+    description: z.string().optional(),
+    filePath: z.string(),
+    exportName: z.string().optional(),
+    queue: QueueManifest.extend({ name: z.string().optional() }).optional(),
+    retry: RetryOptions.optional(),
+    machine: MachineConfig.optional(),
+    triggerSource: z.string().optional(),
+    agentConfig: AgentConfig.optional(),
+    schedule: ScheduleMetadata.optional(),
+    maxDuration: z.number().optional(),
+    ttl: z.string().or(z.number().nonnegative().int()).optional(),
+    // JSONSchema type - using z.unknown() for runtime validation to accept JSONSchema7
+    payloadSchema: z.unknown().optional(),
+});
+export const BackgroundWorkerSourceFileMetadata = z.object({
+    filePath: z.string(),
+    contents: z.string(),
+    contentHash: z.string(),
+    taskIds: z.array(z.string()),
+});
+export const PromptResource = z.object({
+    id: z.string(),
+    description: z.string().optional(),
+    filePath: z.string(),
+    exportName: z.string().optional(),
+    /** The default template content */
+    content: z.string().optional(),
+    /** Default model identifier */
+    model: z.string().optional(),
+    /** Default model config (temperature, maxTokens, etc.) */
+    config: z.record(z.string(), z.unknown()).optional(),
+    /** JSONSchema7 for template variables */
+    variableSchema: z.unknown().optional(),
+});
+export const WebhookResource = z.object({
+    id: z.string(),
+    description: z.string().optional(),
+    filePath: z.string(),
+    exportName: z.string().optional(),
+    source: z.string(),
+    verifierArtifact: WebhookVerifierArtifact,
+    routingTarget: WebhookRoutingTarget,
+    secretProvisioning: WebhookSecretProvisioning.optional(),
+    filter: z.string().optional(), // delivery filter DSL string; compiled to a FilterAst at deploy-sync
+    metadata: z.record(z.string(), z.unknown()).optional(),
+});
+export const BackgroundWorkerMetadata = z.object({
+    packageVersion: z.string(),
+    contentHash: z.string(),
+    cliPackageVersion: z.string().optional(),
+    tasks: z.array(TaskResource),
+    prompts: z.array(PromptResource).optional(),
+    webhooks: z.array(WebhookResource).optional(), // NEW
+    queues: z.array(QueueManifest).optional(),
+    sourceFiles: z.array(BackgroundWorkerSourceFileMetadata).optional(),
+    runtime: z.string().optional(),
+    runtimeVersion: z.string().optional(),
+});
+export const ImageDetailsMetadata = z.object({
+    contentHash: z.string(),
+    imageTag: z.string(),
+});
+//# sourceMappingURL=resources.js.map

@@ -1,0 +1,1 @@
+{"version":3,"file":"types.js","sourceRoot":"","sources":["../../../../src/v3/timeout/types.ts"],"names":[],"mappings":";;;AASA,gCAAwC,SAAQ,KAAK;IAEjC,gBAAgB;IAChB,cAAc;IAFhC,YACkB,gBAAwB,EACxB,cAAsB;QAEtC,KAAK,CAAC,+BAA+B,gBAAgB,UAAU,CAAC,CAAC;gCAHjD,gBAAgB;8BAChB,cAAc;QAG9B,IAAI,CAAC,IAAI,GAAG,4BAA4B,CAAC;IAC3C,CAAC;CACF"}

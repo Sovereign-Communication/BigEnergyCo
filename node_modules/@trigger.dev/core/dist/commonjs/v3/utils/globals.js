@@ -1,0 +1,32 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.registerGlobal = registerGlobal;
+exports.getGlobal = getGlobal;
+exports.unregisterGlobal = unregisterGlobal;
+const platform_js_1 = require("./platform.js");
+const GLOBAL_TRIGGER_DOT_DEV_KEY = Symbol.for(`dev.trigger.ts.api`);
+const _global = platform_js_1._globalThis;
+function registerGlobal(type, instance, allowOverride = false) {
+    let api = _global[GLOBAL_TRIGGER_DOT_DEV_KEY];
+    if (!api) {
+        api = {};
+        _global[GLOBAL_TRIGGER_DOT_DEV_KEY] = api;
+    }
+    if (!allowOverride && api[type]) {
+        // already registered an API of this type
+        const _err = new Error(`trigger.dev: Attempted duplicate registration of API: ${type}`);
+        return false;
+    }
+    api[type] = instance;
+    return true;
+}
+function getGlobal(type) {
+    return _global[GLOBAL_TRIGGER_DOT_DEV_KEY]?.[type];
+}
+function unregisterGlobal(type) {
+    const api = _global[GLOBAL_TRIGGER_DOT_DEV_KEY];
+    if (api) {
+        delete api[type];
+    }
+}
+//# sourceMappingURL=globals.js.map

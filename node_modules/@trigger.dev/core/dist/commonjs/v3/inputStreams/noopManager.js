@@ -1,0 +1,32 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NoopInputStreamManager = void 0;
+const types_js_1 = require("./types.js");
+class NoopInputStreamManager {
+    setRunId(_runId, _streamsVersion) { }
+    on(_streamId, _handler) {
+        return { off: () => { } };
+    }
+    once(_streamId, _options) {
+        return new types_js_1.InputStreamOncePromise(() => {
+            // Never resolves in noop mode
+        });
+    }
+    peek(_streamId) {
+        return undefined;
+    }
+    lastSeqNum(_streamId) {
+        return undefined;
+    }
+    setLastSeqNum(_streamId, _seqNum) { }
+    shiftBuffer(_streamId) {
+        return false;
+    }
+    disconnectStream(_streamId) { }
+    clearHandlers() { }
+    reset() { }
+    disconnect() { }
+    connectTail(_runId, _fromSeq) { }
+}
+exports.NoopInputStreamManager = NoopInputStreamManager;
+//# sourceMappingURL=noopManager.js.map

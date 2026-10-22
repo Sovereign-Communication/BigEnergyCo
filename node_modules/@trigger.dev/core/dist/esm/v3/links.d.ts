@@ -1,0 +1,32 @@
+export declare const links: {
+    docs: {
+        config: {
+            home: string;
+            additionalPackages: string;
+            extensions: string;
+            prisma: string;
+        };
+        machines: {
+            home: string;
+        };
+        upgrade: {
+            beta: string;
+        };
+        troubleshooting: {
+            concurrentWaits: string;
+            stalledExecution: string;
+            uncaughtException: string;
+        };
+        concurrency: {
+            recursiveDeadlock: string;
+            deadlock: string;
+        };
+        gitHubActions: {
+            personalAccessToken: string;
+        };
+    };
+    site: {
+        home: string;
+        contact: string;
+    };
+};

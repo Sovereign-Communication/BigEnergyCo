@@ -1,0 +1,98 @@
+"use strict";
+/**
+ * Wire-format constants for records on `session.out` / `session.in`.
+ *
+ * Three kinds of records can appear on a Session stream:
+ *
+ * 1. **Data records** — JSON body shaped as `{data: <UIMessageChunk>, id:
+ *    <partId>}`, no special headers. The substance of the conversation.
+ *
+ * 2. **Trigger control records** — empty body, `headers` carry `[
+ *    ["trigger-control", <subtype>], ...]` plus any subtype-specific sibling
+ *    headers (e.g. `public-access-token` on `turn-complete`). Routed to a
+ *    consumer's `onControl` callback; never surfaced as data chunks.
+ *
+ * 3. **S2 command records** — opaque body, `headers` first entry has an
+ *    empty name (only valid for S2-interpreted directives like `trim` and
+ *    `fence`). Filtered out at the SSE parser; consumers never see them.
+ *
+ * See `docs/ai-chat/client-protocol.mdx#records-on-session-out` for the
+ * customer-facing contract.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TRIGGER_CONTROL_SUBTYPE = exports.SESSION_CLOSED_REASON_HEADER = exports.SESSION_CLOSED_HEADER = exports.SESSION_IN_CONSUMED_ID_HEADER = exports.SESSION_IN_EVENT_ID_HEADER = exports.SESSION_STATE_LAST_EVENT_ID_HEADER = exports.PUBLIC_ACCESS_TOKEN_HEADER = exports.TRIGGER_CONTROL_HEADER = void 0;
+exports.headerValue = headerValue;
+exports.controlSubtype = controlSubtype;
+exports.isS2CommandRecord = isS2CommandRecord;
+/** Header name carrying the Trigger control subtype on control records. */
+exports.TRIGGER_CONTROL_HEADER = "trigger-control";
+/** Header name carrying the refreshed `publicAccessToken` on `turn-complete`. */
+exports.PUBLIC_ACCESS_TOKEN_HEADER = "public-access-token";
+/** Header name carrying the agent's last S2 event id on a handover bridge. */
+exports.SESSION_STATE_LAST_EVENT_ID_HEADER = "last-event-id";
+/**
+ * Header on `turn-complete` records carrying the highest `session.in`
+ * seq_num the agent committed to processing during this turn. Read on
+ * the next worker boot to seed `.in`'s resume cursor — anything past
+ * this seq is new and gets delivered; anything at-or-before was already
+ * processed and is skipped. Decimal-string form of the seq_num.
+ *
+ * Omitted when no `.in` records have been consumed yet (first turn of a
+ * fresh chat triggered via the wire payload).
+ */
+exports.SESSION_IN_EVENT_ID_HEADER = "session-in-event-id";
+/**
+ * Sibling of {@link SESSION_IN_EVENT_ID_HEADER}: the highest `.in` sequence this
+ * run had actually consumed at the turn boundary, unclamped.
+ *
+ * The resume cursor is held back behind records still waiting to be handled, so
+ * resuming from it necessarily re-delivers records that WERE handled. A message
+ * re-delivered that way is the point. A control record re-delivered that way is
+ * a bug: it applies a second time to whatever turn is live on the new run. On
+ * boot this bound tells the run which control records it has already seen.
+ */
+exports.SESSION_IN_CONSUMED_ID_HEADER = "session-in-consumed-id";
+/**
+ * Header marking a session as closed. Carried by the `session-closed` control
+ * record, and also stamped on a `turn-complete` record when the close was
+ * decided before that turn ended — readers terminate their stream on
+ * turn-complete, so that is the last moment a live client can be told.
+ */
+exports.SESSION_CLOSED_HEADER = "session-closed";
+/**
+ * Header on `session-closed` records carrying the reason the session was
+ * closed, as supplied to `chat.close({ reason })` / `sessions.close()`.
+ * Omitted when no reason was given.
+ */
+exports.SESSION_CLOSED_REASON_HEADER = "session-closed-reason";
+exports.TRIGGER_CONTROL_SUBTYPE = {
+    TURN_COMPLETE: "turn-complete",
+    UPGRADE_REQUIRED: "upgrade-required",
+    SESSION_CLOSED: "session-closed",
+    PENDING_VERSION: "pending-version",
+};
+/** Read a single header value by name. Returns the first match. */
+function headerValue(headers, name) {
+    if (!headers)
+        return undefined;
+    for (const entry of headers) {
+        if (entry?.[0] === name)
+            return entry[1];
+    }
+    return undefined;
+}
+/**
+ * Return the Trigger control subtype carried by a record's headers, if any.
+ * Returns `undefined` for data records and S2 command records.
+ */
+function controlSubtype(headers) {
+    return headerValue(headers, exports.TRIGGER_CONTROL_HEADER);
+}
+/**
+ * Is this record an S2 command record? Detected via the empty-name first
+ * header, which S2 permits only for command records (trim/fence).
+ */
+function isS2CommandRecord(headers) {
+    return headers?.[0]?.[0] === "";
+}
+//# sourceMappingURL=wireProtocol.js.map

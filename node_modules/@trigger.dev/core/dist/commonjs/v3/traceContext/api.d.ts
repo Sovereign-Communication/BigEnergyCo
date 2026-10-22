@@ -1,0 +1,20 @@
+import type { Context } from "@opentelemetry/api";
+import type { TraceContextManager } from "./types.js";
+export declare class TraceContextAPI implements TraceContextManager {
+    #private;
+    private static _instance?;
+    private constructor();
+    static getInstance(): TraceContextAPI;
+    setGlobalManager(manager: TraceContextManager): boolean;
+    disable(): void;
+    reset(): void;
+    getTraceContext(): Record<string, unknown>;
+    getExternalTraceContext(): {
+        traceId: string;
+        spanId: string;
+        traceFlags: number;
+        tracestate?: string;
+    } | undefined;
+    extractContext(): Context;
+    withExternalTrace<T>(fn: () => T): T;
+}
