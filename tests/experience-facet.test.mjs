@@ -633,9 +633,9 @@ test("FACET LINE: composed from a healthy run, and says what it did", () => {
   assert.match(line, /3 empty states invite/);
   // The raw-key claim now carries its own scope — how many pages it covers —
   // because "0 raw keys" means one very different thing over one English boot
-  // than it does over nineteen pages in six languages.
-  assert.match(line, /0 raw keys on 19 pages/);
-  assert.match(line, /72\/72 surfaces match the dictionary/);
+  // than it does over twenty-two pages in seven locales.
+  assert.match(line, /0 raw keys on 22 pages/);
+  assert.match(line, /84\/84 surfaces match the dictionary/);
   // The AT pass ran on the healthy fixture and found nothing: the line says
   // so, instead of the old admission that no AT run had ever happened.
   assert.match(
@@ -669,7 +669,7 @@ test("FACET LINE: a visible key is reported in the line, not hidden by it", () =
     },
   ];
   const line = composeExperienceFacetLine({ experience_reading: r });
-  assert.match(line, /1 raw keys on 19 pages/);
+  assert.match(line, /1 raw keys on 22 pages/);
 });
 
 test("FACET LINE: it fits the transport's clip", () => {
@@ -777,7 +777,7 @@ test("SWEEP: every surface names a key, a selector and a way to paint it", () =>
 
 test("SWEEP: at least one surface is judged in every locale at every moment", () => {
   const s = summariseLocaleSweep(HEALTHY());
-  // Six locales x three moments, and every judged reading must have matched —
+  // Seven locales x three moments, and every judged reading must have matched —
   // a denominator smaller than the locale count would mean the sweep looked at
   // fewer places than it claims.
   assert.equal(s.matched, s.judged);
@@ -1078,7 +1078,7 @@ test("FACETS: one gate speaking for two axes emits a DIFFERENT line for each", (
 });
 
 test("FACETS: the translation line refuses to compose from an unwalked run", () => {
-  // A line about six locales composed from a walk that never happened is the
+  // A line about seven locales composed from a walk that never happened is the
   // most expensive sentence available on this axis, and it is exactly what the
   // typed line it replaced was doing. Null has to stay null.
   for (const reading of [
