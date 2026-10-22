@@ -7,8 +7,8 @@
 // Every number here is an EDUCATIONAL estimate with documented assumptions.
 // Real designs must be verified by a licensed electrician or engineer.
 
-import { CHEMISTRIES } from "./engine.js?v=20261015b";
-import { POWMR_CATALOG } from "./pricing.js?v=20261015b";
+import { CHEMISTRIES } from "./engine.js?v=20261015m";
+import { POWMR_CATALOG } from "./pricing.js?v=20261015m";
 
 // ── Constants (shown in the UI's arithmetic panel) ──────────────────────────
 
@@ -18,6 +18,11 @@ export const PANEL_WATTS_DEFAULT = 550;
 export const PANEL_AREA_W_PER_M2 = 200;
 
 export const INVERTER_STANDARD_KW = [1, 1.5, 2, 3, 4, 5, 6, 8, 10, 12, 15];
+// With daily energy but no measured appliance peak, do not recommend a
+// sub-household inverter for a standalone home. The value is a planning floor;
+// an entered peak can require a larger class.
+export const OFFGRID_INVERTER_MIN_KW = 3;
+export const OFFGRID_PEAK_LOAD_MARGIN = 1.25;
 
 export const FUSE_STANDARD_AMPS = [
   60, 80, 100, 125, 150, 175, 200, 250, 300, 400,
@@ -245,6 +250,7 @@ export function cableGauge(amps, vBatt, meters, meanTempC = null) {
  * @param {number} p.battNameplateKwh Nameplate bank size (usable / DoD)
  * @param {string} p.chemistry       "naion" | "lfp" | "agm"
  * @param {number} p.peakLoadW       Highest AC demand hour (from the load profile)
+ * @param {string} [p.mode]          "offgrid" applies the home inverter floor
  * @param {string[]} [p.notes]       Extra context lines collected along the way
  * @returns object with panels, voltage, battery (diy + retail), inverter,
  *                  controller, protection, cable, feasibility, notes
@@ -255,15 +261,28 @@ export function buildBom(p) {
   const chemistry = p.chemistry in CHEMISTRIES ? p.chemistry : "lfp";
 
   const peakKw = (p.peakLoadW || 0) / 1000;
-  const invClassKw = nextInverterSize(Math.max(0.5, peakKw));
-  if (p.peakIsAverage) {
+  const peakMargin =
+    p.peakLoadMargin ?? (p.mode === "offgrid" ? OFFGRID_PEAK_LOAD_MARGIN : 1);
+  const sizingPeakKw = peakKw * peakMargin;
+  const minimumContinuousKw =
+    p.minimumContinuousKw ??
+    (p.mode === "offgrid" ? OFFGRID_INVERTER_MIN_KW : 0);
+  const inverterBasisKw = Math.max(sizingPeakKw, minimumContinuousKw);
+  const minimumFloorApplied = minimumContinuousKw > sizingPeakKw;
+  const invClassKw = nextInverterSize(Math.max(0.5, inverterBasisKw));
+  if (minimumFloorApplied) {
     notes.push(
-      "Inverter sized from AVERAGE load (no appliance peak entered) — real spikes (kettle, fridge start, pump surge) can be several times higher. Enter appliances for an exact peak.",
+      `${minimumContinuousKw} kW continuous is an off-grid residential planning floor, not a measured peak. Verify simultaneous appliance loads, motor-start surge, and the inverter's PV input limits before purchase.`,
     );
   }
-  if (inverterOverflows(peakKw)) {
+  if (p.peakIsAverage) {
     notes.push(
-      `Peak ${peakKw.toFixed(1)} kW exceeds the largest standard ${INVERTER_STANDARD_KW[INVERTER_STANDARD_KW.length - 1]} kW class — plan multiple stacked units, not one ${invClassKw} kW box.`,
+      "The load profile comes from daily energy, not a measured simultaneous appliance peak. Verify appliance demand and motor-start surge before purchase.",
+    );
+  }
+  if (inverterOverflows(inverterBasisKw)) {
+    notes.push(
+      `Peak sizing basis ${inverterBasisKw.toFixed(1)} kW exceeds the largest standard ${INVERTER_STANDARD_KW[INVERTER_STANDARD_KW.length - 1]} kW class — plan multiple stacked units, not one ${invClassKw} kW box.`,
     );
   }
 
@@ -329,7 +348,12 @@ export function buildBom(p) {
     battery,
     inverter: {
       peakLoadKw: +peakKw.toFixed(2),
+      sizingPeakKw: +sizingPeakKw.toFixed(2),
+      peakIsAverage: p.peakIsAverage === true,
       recommendedKw: invClassKw,
+      sizingNote: minimumFloorApplied
+        ? `${minimumContinuousKw} kW continuous is an off-grid residential planning floor, not a measured peak. Verify simultaneous appliance loads and motor-start surge.`
+        : `Based on ${p.peakIsAverage ? "the daily-load profile" : "the entered peak"} with a ${Math.round((peakMargin - 1) * 100)}% allowance; verify motor-start surge.`,
       surgeNote:
         "Pick a low-frequency unit with ~3× surge if the load includes fridges, pumps, or tools — motor start current hits hard for half a second. Size fuses slow-blow (Class-T) so that same surge does not nuisance-trip them.",
       referenceUnit:
