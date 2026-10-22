@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261022i";
+import { APPLIANCES } from "./appliances.js?v=20261022j";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -24,25 +24,25 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261022i";
+} from "./usecases.js?v=20261022j";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261022i";
+} from "./run-coordinator.js?v=20261022j";
 import {
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261022i";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261022i";
+} from "./mode-chrome.js?v=20261022j";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261022j";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261022i";
+} from "./location-picker.js?v=20261022j";
 
 import {
   estimateTariff,
@@ -50,14 +50,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261022i";
+} from "./pricing.js?v=20261022j";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261022i";
+import { currencyForCountry } from "./country-currency.js?v=20261022j";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261022i";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261022j";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -89,7 +89,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261022i").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261022j").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -100,15 +100,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261022i";
+} from "./lead-acid.js?v=20261022j";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261022i";
+} from "./bom.js?v=20261022j";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261022i";
+import { BOM_ITEMS } from "../shared/content.js?v=20261022j";
 
 import {
   applyI18n,
@@ -117,18 +117,19 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261022i";
+} from "../shared/i18n.js?v=20261022j";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261022i";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261022i";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261022j";
+import { byId as $, el } from "../shared/dom.js?v=20261022j";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261022j";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261022i";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261022i";
+} from "../shared/simple-mode.js?v=20261022j";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261022j";
 import {
   advisorJevContext,
   interpretSanity,
@@ -136,28 +137,28 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261022i";
+} from "./validate.js?v=20261022j";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261022i";
+} from "../shared/cut-targets.js?v=20261022j";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261022i";
+} from "./share-codec.js?v=20261022j";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261022i";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261022i";
+} from "./infeasible-copy.js?v=20261022j";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261022j";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261022i";
+} from "./fuel-units.js?v=20261022j";
 
 import {
   createLeafletProvider,
@@ -165,14 +166,14 @@ import {
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261022i";
+} from "./map-provider.js?v=20261022j";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261022i";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261022i";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261022i";
+} from "./wizard.js?v=20261022j";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261022j";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261022j";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -184,10 +185,10 @@ let _chartsInitialized = false;
 function preloadRunModules() {
   if (!_runModulesPromise) {
     _runModulesPromise = Promise.all([
-      import("./engine.js?v=20261022i"),
-      import("./charts.js?v=20261022i"),
-      import("./frontier-chart.js?v=20261022i"),
-      import("./rescale.js?v=20261022i"),
+      import("./engine.js?v=20261022j"),
+      import("./charts.js?v=20261022j"),
+      import("./frontier-chart.js?v=20261022j"),
+      import("./rescale.js?v=20261022j"),
     ])
       .then(([engine, charts, frontierChart, rescale]) => {
         _engine = engine;
@@ -253,9 +254,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261022i";
+} from "./money.js?v=20261022j";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261022i";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261022j";
 
 let worker = null;
 
@@ -472,24 +473,6 @@ let generatorBasis = false;
 // to realistic compressor time, and the row shows the resulting average draw.
 
 const CHEM_KEYS = new Set(["auto", "naion", "lfp", "agm"]);
-
-function $(id) {
-  return document.getElementById(id);
-}
-
-function el(tag, attrs = {}, text) {
-  const e = document.createElement(tag);
-
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === "style") e.style.cssText = v;
-    else if (k === "class") e.className = v;
-    else e.setAttribute(k, v);
-  }
-
-  if (text !== undefined) e.textContent = text;
-
-  return e;
-}
 
 function setStatus(text) {
   const s = $("sizingStatus");
@@ -3820,7 +3803,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261022i",
+      "./assets/js/sizing/sizing-worker.js?v=20261022j",
       {
         type: "module",
       },

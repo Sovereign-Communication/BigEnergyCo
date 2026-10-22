@@ -28,7 +28,7 @@ import {
   billCutFraction,
   simulateOutage,
   simulatePortable,
-} from "./engine.js?v=20261022i";
+} from "./engine.js?v=20261022j";
 
 import {
   isUseCaseId,
@@ -39,22 +39,22 @@ import {
   normaliseReservePct,
   normaliseOutageTarget,
   outcomeFor,
-} from "./usecases.js?v=20261022i";
+} from "./usecases.js?v=20261022j";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20261022i";
-import { buildFrontier } from "./frontier.js?v=20261022i";
-import { oversizeCallout } from "./rescale.js?v=20261022i";
-import { climateSummary } from "./climate.js?v=20261022i";
+} from "./nasa.js?v=20261022j";
+import { buildFrontier } from "./frontier.js?v=20261022j";
+import { oversizeCallout } from "./rescale.js?v=20261022j";
+import { climateSummary } from "./climate.js?v=20261022j";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20261022i";
+} from "./pricing.js?v=20261022j";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -65,7 +65,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20261022i";
+} from "./money.js?v=20261022j";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -307,7 +307,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20261022i");
+      await import("./profiles.js?v=20261022j");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
