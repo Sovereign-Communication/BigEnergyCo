@@ -44,17 +44,10 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 //     which is exactly how usecases.js shipped at 17.5 KB outside this gate
 //     until a reviewer noticed by hand.
 //
-// A budget whose subject set is maintained by hand measures nothing. So the
-// set is computed: start from the module entry points index.html declares,
-// add the module worker the page constructs, follow STATIC import edges only,
-// and sum the committed bytes. A module behind import() is excluded because it
-// genuinely blocks nothing — which is now a fact about the graph instead of
-// an editorial decision someone has to remember to make.
-//
-// Nothing is lost by this. The gate is strictly harder to satisfy than the
-// hand list was: charts.js and thirteen other real first-load modules now
-// count, while only the genuinely-lazy locales.js stops counting.
-
+// A budget whose subject set is maintained by hand measures nothing. The
+// eager graph is derived from index.html script roots and the module worker,
+// following static imports only. Modules required just before the first
+// result are measured separately by the js_to_first_result budget.
 // Static edges only. A dynamic import() is deliberately NOT matched here.
 const staticEdges = (src) => [
   // import x from "./y.js" and export * from "./y.js"
@@ -140,7 +133,6 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
     "assets/js/sizing/ui.js",
     "assets/js/sizing/run.js",
     "assets/js/sizing/engine.js",
-    "assets/js/sizing/charts.js",
     "assets/js/sizing/sizing-worker.js",
     "assets/js/shared/i18n.js",
   ]) {
@@ -154,16 +146,21 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   for (const lazy of [
     ["assets/js/shared/locales.js", "i18n.js imports it dynamically"],
     ["assets/js/sizing/profiles.js", "run.js imports it dynamically"],
+    ["assets/js/sizing/charts.js", "preloadRunModules loads it for a result"],
+    [
+      "assets/js/sizing/frontier-chart.js",
+      "preloadRunModules loads it for a result",
+    ],
   ]) {
     assert.ok(
       !eagerNames.has(lazy[0]),
       `${lazy[0]} became statically reachable, so it IS first-load now (${lazy[1]} — the import changed). Its ${
         committedBytes(root, lazy[0]).length
-      } bytes belong back in this budget; decide that deliberately.`,
+      } bytes belong in the first-result budget; decide that deliberately.`,
     );
   }
   assert.ok(
-    eagerNames.size >= 39,
+    eagerNames.size >= 35,
     `derived eager graph shrank to ${eagerNames.size} files; the walker regressed`,
   );
 
@@ -218,15 +215,10 @@ test("PERF-BUDGET: eager first-load payload stays within budget", () => {
   // declined, because the portable and backup panels ARE the fields that make
   // those two cases real.
   //
-  // What changed on the same pass, with the number left at 895,000: the eager
-  // set stopped being a hand-written list and became the graph. The old list
-  // CLAIMED 893,785. The real first-load payload, measured off the committed
-  // bytes with charts.js and thirteen other genuine first-load modules counted
-  // and locales.js (167,850 B, dynamically imported by i18n.js) taken out, is
-  // 837,156 across 39 files — 56,629 B BELOW what the hand list asserted,
-  // without one byte of the feature having shrunk. The budget is now harder to
-  // satisfy than it was, not easier: it simply measures its own subject
-  // instead of a stale guess at it.
+  // The eager graph and the first-result graph intentionally have different
+  // scopes. The former measures code needed before the page responds; the
+  // latter also follows the result modules preloadRunModules awaits before
+  // renderResults paints. Both readings are derived from staged files.
   // The owner-approved +2 KB allowance (130,000 to 132,000 bytes) covers the
   // generator-runtime question added per the 2026-10-19 direction.
   assert.ok(
