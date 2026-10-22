@@ -13,6 +13,7 @@ investigation, not automatic escalation.
 ## Decision Gate (should we take this action?)
 
 Rules in order:
+
 1. No Jev signal (fallback) → **escalate**. Fail closed.
 2. Missing or malformed answers → **escalate**. Fail closed.
 3. `is_destructive` ≥ 0.5 → **escalate**. Destructive always escalates, at any confidence.
@@ -24,6 +25,7 @@ Rules in order:
    - If investigation finds real risk → **escalate**.
 7. Disposition == "needs_improvement" → **revise** (caller fixes and re-gates, max 2 revisions).
 8. Otherwise → **proceed**.
+
 - The disposition's `confidence` is reported as telemetry but does NOT gate.
 
 ## Assessment Gate (5-aspect suite on work product)
@@ -41,6 +43,7 @@ Rules in order:
 ## Below-Bar Auto-Investigation (standing)
 
 When any score comes back below bar:
+
 1. Identify the uncertainty drivers (which aspect? what evidence is missing?).
 2. Gather the missing evidence (read the diff, check CI, verify claims).
 3. Re-assess with claim-level verification where possible.
@@ -49,6 +52,7 @@ When any score comes back below bar:
 ## Local Verification (2026-10-21)
 
 Tested on harness PR #312:
+
 - Destructive: 0.19 (pass, < 0.5)
 - Disposition: proceed, lead 0.98 (pass, > 0.20 margin)
 - Advances_goal: 0.87 (below 0.95 → investigate)
