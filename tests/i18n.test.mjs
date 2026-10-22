@@ -49,8 +49,12 @@ test("localized homepage hooks preserve reader-visible claims and live values", 
   for (const [locale, copy] of Object.entries(LOCALES)) {
     assert.match(copy.homeIntro, /5/u, `${locale}: NASA weather window`);
     assert.match(copy.homeIntro, /20/u, `${locale}: payback horizon`);
+    const batteryCostNumbers =
+      locale === "nl"
+        ? ["80", "125", "110", "165", "0,16", "0,38"]
+        : ["80", "125", "110", "165", "0.16", "0.38"];
     assert.ok(
-      ["80", "125", "110", "165", "0.16", "0.38"].every((number) =>
+      batteryCostNumbers.every((number) =>
         copy.batteryCostClaim.includes(number),
       ),
       `${locale}: DIY, retail, and panel price ranges remain present`,
@@ -425,6 +429,13 @@ test("cumulative-savings headline and chart callout use translated locale copy",
       breakEven: "Amortisiert sich in Jahr",
       never: "keine Amortisation",
       shortfall: "Batteriewechsel die Ersparnis",
+    },
+    nl: {
+      headline: "bespaard over 20 jaar",
+      served: "door de zon geleverd",
+      breakEven: "Terugverdiend in jaar",
+      never: "Verdient zichzelf nooit terug",
+      shortfall: "Accuvervangingen gaan sneller dan de rekeningsbesparing",
     },
     ar: {
       headline: "توفيرًا على مدى 20 عامًا",

@@ -413,7 +413,7 @@ test("the pre-JS markup agrees with the metric figures the controller writes", (
 test("both label keys exist in every locale, so the unit word can never fall back", () => {
   // "auto" is the picker's sentinel, not a dictionary of its own.
   const ids = LANGS.map((l) => l.id).filter((id) => id !== "auto");
-  assert.deepEqual(ids, ["en", "es", "pt", "fr", "de", "ar"]);
+  assert.deepEqual(ids, ["en", "es", "pt", "fr", "de", "nl", "ar"]);
   for (const id of ids) {
     const dict = LOCALES[id];
     assert.ok(dict, `${id} has a dictionary`);

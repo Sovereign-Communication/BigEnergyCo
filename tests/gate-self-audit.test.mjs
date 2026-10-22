@@ -1462,7 +1462,7 @@ function HEALTHY_READING() {
 //
 //   deleting the boot repaint      → exit 1, 12 named regressions,
 //                                    `locale:<l>:boot:{bill_readout,
-//                                    use_case_blurb}` for all six locales
+//                                    use_case_blurb}` for all seven locales
 //   deleting the beco:lang repaint → exit 1, 10 named regressions, every one
 //                                    of them a surface still showing the
 //                                    PREVIOUS language
@@ -1575,11 +1575,11 @@ test("AUDIT/locale-sweep: the repaint owner is reached on BOTH re-entry paths", 
   );
 });
 
-test("AUDIT/locale-sweep: the gate drives all six locales, not a list of one", () => {
+test("AUDIT/locale-sweep: the gate drives all seven locales, not a list of one", () => {
   // A sweep hard-coded to `en` would satisfy every other test in this file while
   // measuring one locale. The table is read from the shipped dictionary, so a
   // seventh locale joins the sweep the day it is added.
-  assert.equal(EXPERIENCE_LOCALES.length, 6);
+  assert.equal(EXPERIENCE_LOCALES.length, 7);
   assert.deepEqual(
     EXPERIENCE_LOCALES,
     Object.keys(LOCALES),

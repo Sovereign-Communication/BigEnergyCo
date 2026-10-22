@@ -171,7 +171,7 @@ test("EVIDENCE: the privacy facet line cannot contradict a green privacy gate", 
 
 test("EVIDENCE: the translation facet line cannot contradict a green i18n gate", async () => {
   // The line is COMPOSED now, not typed: `translation` moved to the gate that
-  // walks six locales, because the judge's demand for the axis is a question
+  // walks seven locales, because the judge's demand for the axis is a question
   // about a rendered surface. The claim being checked here is unchanged and the
   // teeth are not: whatever reaches the judge must name the gate that measures
   // parity, and must not describe a defect that gate now prevents.

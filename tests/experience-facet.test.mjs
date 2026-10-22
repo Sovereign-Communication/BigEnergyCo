@@ -633,9 +633,9 @@ test("FACET LINE: composed from a healthy run, and says what it did", () => {
   assert.match(line, /3 empty states invite/);
   // The raw-key claim now carries its own scope — how many pages it covers —
   // because "0 raw keys" means one very different thing over one English boot
-  // than it does over nineteen pages in six languages.
-  assert.match(line, /0 raw keys on 19 pages/);
-  assert.match(line, /72\/72 surfaces match the dictionary/);
+  // than it does over twenty-two pages in seven locales.
+  assert.match(line, /0 raw keys on 22 pages/);
+  assert.match(line, /84\/84 surfaces match the dictionary/);
   // The AT pass ran on the healthy fixture and found nothing: the line says
   // so, instead of the old admission that no AT run had ever happened.
   assert.match(
@@ -669,7 +669,7 @@ test("FACET LINE: a visible key is reported in the line, not hidden by it", () =
     },
   ];
   const line = composeExperienceFacetLine({ experience_reading: r });
-  assert.match(line, /1 raw keys on 19 pages/);
+  assert.match(line, /1 raw keys on 22 pages/);
 });
 
 test("FACET LINE: it fits the transport's clip", () => {
@@ -749,7 +749,7 @@ test("SWEEP: the healthy reading is clean", () => {
 });
 
 test("SWEEP: the tables cover every shipped locale at every moment", () => {
-  assert.equal(EXPERIENCE_LOCALES.length, 6);
+  assert.equal(EXPERIENCE_LOCALES.length, 7);
   assert.deepEqual(EXPERIENCE_LOCALES, Object.keys(LOCALES));
   for (const locale of EXPERIENCE_LOCALES)
     for (const spec of LOCALE_SURFACES)
@@ -777,11 +777,11 @@ test("SWEEP: every surface names a key, a selector and a way to paint it", () =>
 
 test("SWEEP: at least one surface is judged in every locale at every moment", () => {
   const s = summariseLocaleSweep(HEALTHY());
-  // Six locales x three moments, and every judged reading must have matched —
+  // Seven locales x three moments, and every judged reading must have matched —
   // a denominator smaller than the locale count would mean the sweep looked at
   // fewer places than it claims.
   assert.equal(s.matched, s.judged);
-  assert.equal(s.locales, 6);
+  assert.equal(s.locales, 7);
   assert.equal(s.phases, 3);
   assert.ok(s.judged >= EXPERIENCE_LOCALES.length * LOCALE_PHASES.length);
 });
@@ -1026,7 +1026,7 @@ test("SWEEP: the facet line claims the coverage the evaluator judged", () => {
     line.length <= COMPLETE_FACET_CLIP,
     `the line is ${line.length} chars and would be cut in transit`,
   );
-  assert.match(line, /6 locales x 3 moments/);
+  assert.match(line, /7 locales x 3 moments/);
   const judged = summariseLocaleSweep(HEALTHY());
   assert.ok(
     line.includes(`${judged.matched}/${judged.judged} surfaces`),
@@ -1038,7 +1038,7 @@ test("SCOPE: the scope limit no longer claims copy is checked in English only", 
   // The old sentence said the other five locales were "asserted to exist rather
   // than read". That is now false, and a scope limit that lies is worse than
   // one that is missing.
-  assert.match(EXPERIENCE_SCOPE_LIMIT, /all six locales/);
+  assert.match(EXPERIENCE_SCOPE_LIMIT, /all seven locales/);
   assert.doesNotMatch(
     EXPERIENCE_SCOPE_LIMIT,
     /asserted to exist rather than read/,
@@ -1078,7 +1078,7 @@ test("FACETS: one gate speaking for two axes emits a DIFFERENT line for each", (
 });
 
 test("FACETS: the translation line refuses to compose from an unwalked run", () => {
-  // A line about six locales composed from a walk that never happened is the
+  // A line about seven locales composed from a walk that never happened is the
   // most expensive sentence available on this axis, and it is exactly what the
   // typed line it replaced was doing. Null has to stay null.
   for (const reading of [

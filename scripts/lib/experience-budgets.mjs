@@ -864,7 +864,7 @@ export function composeTranslationFacetLine(report) {
 /** What this gate does NOT cover, stated where a reader cannot miss it. */
 export const EXPERIENCE_SCOPE_LIMIT =
   "one unthrottled Chrome, one city, nine first-run steps, three provoked " +
-  "errors, three empty surfaces, and all six locales at three re-entry points " +
+  "errors, three empty surfaces, and all seven locales at three re-entry points " +
   "(first paint, after a re-run, after a language switch). What the locale " +
   "sweep covers is the four JS-painted surfaces and every dictionary key on " +
   "the page — not the prose: an ERROR'S next step is still judged in English " +

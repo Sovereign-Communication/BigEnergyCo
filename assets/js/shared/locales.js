@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261022d";
+import { HOME_COPY } from "./home-copy.js?v=20261022f";
 
 export const LOCALES = {
   en: {
@@ -2753,6 +2753,665 @@ export const LOCALES = {
     pathsIncludesYouMountTheArray: "Sie montieren die Anlage selbst",
     pathsIncludesElectricianConnects: "Ein Elektriker nimmt den Anschluss vor",
     pathsIncludesToolsAndSafety: "Werkzeug und Schutzausrüstung",
+  },
+  nl: {
+    navSizing: "Systeem dimensioneren",
+    navSupport: "Ondersteuning",
+    cutLabel: "Uw besparingsdoel voor de energierekening",
+    cutLabelBattery: "Uw doel voor het verschuiven van piekuren",
+    cutValueBattery: "Doel: ~{pct}% van uw piekuren naar de accu verplaatsen",
+    fxCodeLabel: "Valutacode:",
+    firstRunNote:
+      "Kies uw locatie en energieverbruik en klik daarna op Systeem dimensioneren. De eerste berekening downloadt ~2 MB aan satellietweergegevens en slaat deze op in uw browser.",
+    navBom: "Hardware-referentie",
+    navBlog: "Blog",
+    navLegal: "Voorwaarden & disclaimer",
+    sourcesCardTitle: "Waar deze cijfers vandaan komen",
+    sourcesCardBody:
+      "Bij elke aanname achter een cijfer staan hier de bron, de controledatum en hoe goed deze overeenkomt met wat wij aanbieden. Wat we niet kunnen onderbouwen, vermelden we ook.",
+    sourcesCardLink: "Bekijk alle bronnen →",
+    heroTag:
+      "🌍 Gratis voor iedereen, overal • Geen registratie • Niets te koop",
+    heroTitle1: "Verlaag uw energierekening.",
+    heroTitle2: "Zie precies wat daarvoor nodig is.",
+    footerAboutPre: "Gebouwd en weggegeven door",
+    heroIntro:
+      "Begin met uw locatie — uw telefoon kent die — en wij dimensioneren elke optie die uw rekening kan verlagen, van 1% tot verkoopbaar overschot. De prijs-verlagingscurve laat zien wat elk budget oplevert, in uw eigen valuta. Alleen educatieve schattingen, niets te koop. Gebouwd en weggegeven door",
+    footerAboutPost: "Geen bedrijf, geen rechtspersoon, niets te koop.",
+    ctaStart: "Start een gratis berekening",
+    pickCity:
+      "Kies een stad (of gebruik 📍 Mijn locatie) zodat we uw zonneschijn kennen.",
+    shareLoaded:
+      "Gedeelde configuratie geladen. Controleer de invoer en klik op Systeem dimensioneren om te berekenen.",
+    invalidShare:
+      "Deze deellink kon niet worden gelezen — mogelijk is hij ingekort bij het kopiëren. Negeer hem en stel hieronder uw eigen berekening samen.",
+    customCoordsLocation: "Aangepaste coördinaten in gebruik ({lat}, {lon}).",
+    resolvingCity:
+      "Uw stad wordt opgezocht — kies een overeenkomst of wacht op het opzoeken.",
+    chooseCityMatch:
+      "Kies een stadssuggestie of wacht tot het opzoeken klaar is.",
+    resolvingCoords: "Deze coördinaten worden gecontroleerd…",
+    invalidCoordinates:
+      "De breedtegraad moet tussen −90 en 90 liggen en de lengtegraad tussen −180 en 180.",
+    invalidDailyKwh:
+      "Het dagelijkse energieverbruik moet tussen 0,5 en 500 kWh per dag liggen — voer een getal binnen dat bereik in, of vink de apparaten aan die u wilt voeden.",
+    inputsChanged:
+      "Invoer gewijzigd — klik op Systeem dimensioneren om de berekening bij te werken.",
+    errorTimeout:
+      "De berekeningsmodule reageerde niet op tijd — controleer uw verbinding en klik op Systeem dimensioneren om het opnieuw te proberen.",
+    tellPowerUse:
+      "Vertel ons uw stroomverbruik — vink enkele apparaten aan, of voer een rekening- of kWh-getal in.",
+    statusGridtie:
+      "⏳ Vijf jaar aan satellietweergegevens wordt opgehaald en rekeningsverlagende systeemgroottes worden gezocht…",
+    statusOffgrid:
+      "⏳ 5 jaar aan uurlijkse satellietweergegevens wordt opgehaald en systeemgroottes worden gezocht…",
+    runningBtn: "⏳ 5-jaarssimulatie loopt…",
+    runBtnReady: "☀️ Systeem dimensioneren (5-jaarssimulatie)",
+    runBtn: "☀️ Systeem dimensioneren (5-jaarssimulatie)",
+    errorSim:
+      "⚠️ De berekeningsmodule kon niet worden geladen. Vernieuw de pagina (Ctrl+F5) en probeer het opnieuw.",
+    statusSuccess:
+      "✅ {years} jaar aan uurlijkse gegevens ({dataYears}) · {yield} kWh/jaar per kW aan paneel.{offline}",
+    offlineNote: " · 🌐 offline typisch-jaar-modus",
+    tariffSpendLine:
+      "Bij {tariff}/kWh kost uw stroom vandaag ongeveer {annual} per jaar. Elke optie hieronder toont de rekening na zonne-energie en hoe snel het systeem zichzelf terugverdient uit de besparing.",
+    tariffSpendBattery:
+      "Bij {tariff}/kWh kost uw stroom vandaag ongeveer {annual} per jaar. Een accu zonder panelen verschuift wanneer u stroom verbruikt; hij verlaagt niet wat u betaalt.",
+    tariffSpendOffgrid:
+      "Bij {tariff}/kWh kost dit verbruik ongeveer {annual} per jaar aan netstroom. De terugverdiencijfers hieronder vergelijken de systeemkosten met die uitgave.",
+    tariffSpendFixed:
+      " Daarvan is {fixed}/mnd aan vaste kosten die zonne-energie niet kan verlagen.",
+    readoutAppliancesEmpty:
+      "Vink aan wat u wilt voeden en uw dagelijkse energieverbruik verschijnt hier.",
+    readoutAppliancesSummary:
+      "Geschat verbruik: ongeveer {kwh} kWh/dag · alles tegelijk aan ≈ {peakW} W (uw omvormer moet groter zijn dan dit)",
+    readoutBill:
+      "Dat komt neer op ongeveer {kwhDay} kWh/dag gemiddeld verbruik.",
+    readoutBillIncomplete:
+      "Voer uw maandelijkse rekeningbedrag in om de dagelijkse energieschatting te zien.",
+    readoutKwhEmpty: "Voer een dagelijks kWh-getal in.",
+    readoutKwhReady: "{kwh} kWh/dag wordt direct gebruikt.",
+    lvlBest: "Beste keuze",
+    lvlCompare: "Accu's vergelijken",
+    lvlMatrix: "Alle opties",
+    bomPanelTitle: "Uw hardwarelijst — waaruit dit systeem bestaat",
+    genSummary: "Ik heb een generator — wat kost zijn stroom echt?",
+    genApply: "Gebruik dit als mijn stroomprijs",
+
+    // -- Plausibility frontier (spend -> coverage curve) --
+    socChartTitle:
+      "Acculadingniveaus & betrouwbaarheid het hele jaar door (5 jaar echt weer)",
+    frontierTitle: "Hoe ver komt u met uw geld?",
+    frontierIntro:
+      "Elk systeem dat we op uw locatie konden bouwen, goedkoopste eerst. De lijn is het beste resultaat dat elk budget kan kopen — zo ziet u in één oogopslag of uw doel hier haalbaar, duur of onbereikbaar is.",
+    frontierX: "Aanschafkosten van het systeem",
+    frontierYGrid: "Aandeel van uw energierekening dat vervalt",
+    frontierYGridBattery: "Aandeel van uw piekuren dat wordt verschoven",
+    frontierYOffgrid: "Aandeel van uw energie gedekt, zonder generator",
+    frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
+    frontierSelNoBatt: "{pv} kW, geen accu · {pct}% · {cost}",
+    frontierLegendSel:
+      "Geselecteerde optie — klik op een willekeurig punt om het te kiezen",
+    frontierNoSystem:
+      "Geen enkel systeem binnen de groottes die deze tool doorzoekt kan dit doel op deze locatie bereiken. De curve hieronder laat zien hoe ver deze locatie praktisch kan komen — probeer een lager doel, of plan een generator of netaansluiting om te dekken wat zonne-energie niet kan.",
+    simpleInfeasible:
+      "Op deze locatie bereikt geen enkel systeem dat we kunnen bouwen dat doel. Probeer een lager besparingsdoel — of lees de volledige details om te zien hoe dicht zonne-energie echt kan komen.",
+    simpleWhatItMeans:
+      "Panelen wekken stroom op als de zon schijnt; de accu brengt die de avond en bewolkte dagen in. Het systeem is gedimensioneerd op basis van vijf jaar aan uurlijkse satellietweergegevens op uw exacte locatie.",
+    simpleWhatItMeansBattery:
+      "Een accu wekt zelf geen stroom op — hij laadt op in de goedkope uren en bewaart die energie voor de dure uren. Het systeem is gedimensioneerd op basis van vijf jaar aan uurlijkse satellietweergegevens op uw exacte locatie.",
+    simpleCaveat:
+      "Dit is een schatting, geen belofte — de volledige cijfers achter elk getal zijn één klik verwijderd.",
+    simpleSeeDetails: "Bekijk alle details",
+    simpleDownloadBom: "Onderdelenlijst downloaden (CSV)",
+    simpleAskAdvisor: "Vraag de AI-adviseur (in gewone woorden)",
+    sanityOk: "Onafhankelijk gecontroleerd ✓ — fysisch plausibel",
+    sanityFlag:
+      "⚠ Een onafhankelijke AI-controle markeert dit resultaat als fysisch onwaarschijnlijk —",
+    sanityAskAdvisor: "vraag de adviseur waarom",
+    sanityUncertain:
+      "Controle zonder duidelijke uitslag — de onafhankelijke AI-controle kon bij deze invoer geen zeker oordeel vellen",
+    sanityTooltip:
+      "Een onafhankelijke AI-classificator (Jev) heeft alleen de dimensioneringscijfers beoordeeld — er verlaten geen locatie-, tekst- of persoonsgegevens uw browser behalve deze cijfers. Hij wijzigt het berekende resultaat nooit.",
+    simpleAdvisorStyle:
+      "[ADVISEUR-INSTRUCTIE: De bezoeker is in de Eenvoudige modus. Antwoord als een expert die tegen een slim 12-jarig kind praat: eenvoudige alledaagse woorden, geen jargon (leg elke technische term tussen haakjes uit), maximaal 4 korte zinnen, en eindig met HET ene getal dat er het meest toe doet.]",
+    advisorTitle: "Gratis AI-energieadviseur",
+    advisorSubtitle:
+      "U praat met een AI (Groq AI Engine) — alleen educatieve schattingen, geen technisch advies",
+    advisorIntro:
+      "Ik leg de resultaten van de hoofdberekening uit — accuchemie, bedrading en zekeringen, of vragen om mee te nemen naar een plaatselijke elektricien. Voer eerst uw berekening uit, stel dan een vraag over dit resultaat, of vraag me wat u wilt.",
+    advisorBotNote:
+      "AI-gegenereerde schatting — kan onjuist zijn, ook prijzen en specificaties. Geen technisch advies. Controleer bij een erkende elektricien of ingenieur voordat u iets koopt of bouwt.",
+    advisorThinking: "⏳ Even denken...",
+    advisorLabel: "Vraag de AI-adviseur over uw systeem",
+    advisorPlaceholder:
+      "Vraag over celspecificaties, natrium-ion vs LFP, transportkosten...",
+    advisorSend: "Verzenden",
+    advisorClose: "AI-adviseur sluiten",
+    advisorBusyRetry:
+      " De gratis AI-engine is bezet — opnieuw proberen over {secs}s…",
+    advisorNoReply: " Geen antwoord ontvangen. Probeer het opnieuw.",
+    advisorBusy:
+      " De gratis AI-engine is momenteel overbelast (HTTP {status} — hij draait op een gedeeld gratis quotum).\n\nWacht ongeveer een minuut en verstuur het opnieuw.",
+    // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
+    advisorDegradedLabel: "Offline · niet de live AI",
+    advisorDegradedLine: "Ik kan nu niet antwoorden — {why}.",
+    advisorDegradedWhyUnavailable:
+      "de dienst die antwoordt heeft niet gereageerd",
+    advisorDegradedWhyNoKey:
+      "er is geen modelsleutel ingesteld, dus de adviseur is bewust offline",
+    advisorDegradedReassure:
+      "Er is hierboven niets mis en uw berekening is onaangetast.",
+    advisorDegradedSystem:
+      "Neem die cijfers mee naar een erkende elektricien voordat u gaat bouwen.",
+    advisorIsAi:
+      "De adviseur is een groot taalmodel. Hij schrijft aannemelijke tekst en kan verkeerde cijfers vol overtuiging presenteren. Controleer elk getal — beschouw het nooit als feit.",
+    advisorDegradedGeneral:
+      "Gebruik voor hulp bij dimensioneren de calculator hierboven — geen account nodig.",
+    advisorDegradedRetry:
+      "Probeer het over een minuut opnieuw; het gratis quotum wordt gedeeld.",
+    advisorUnreachable:
+      " De AI-adviseur is momenteel onbereikbaar{status}.\n\nControleer uw verbinding en probeer het zo opnieuw.",
+    frontierCeilingTag: "Beste binnen de doorzochte groottes: {pct}%",
+    frontierSvgTitle: "Hoe ver uw geld u brengt",
+    frontierSvgDesc:
+      "Een curve van {n} systemen, van {lowCost} met {lowPct}% dekking tot {highCost} met {highPct}% dekking. De volledige cijfers staan in de tabel onder de grafiek.",
+    frontierPointTip:
+      "{cost}: {pct}% — {pv} kW aan panelen + {batt} kWh aan accu",
+    // -- Budget slider (unified curve walk) --
+    budgetLabel: "Uw budget (eenmalig vooraf)",
+    frontierTableCaption:
+      "Elk punt op de curve. Typische kosten zijn het midden van de doe-het-zelf-prijzen inclusief levering; het bereik loopt van losse cellen tot verzonden winkelprijzen.",
+    frontierColCost: "Typische kosten",
+    frontierColRange: "Doe-het-zelf tot winkel",
+    frontierColCut: "Rekeningsverlaging",
+    frontierColCutBattery: "Piekuren verschoven",
+    frontierColCover: "Gedekt",
+    frontierColPv: "Panelen",
+    frontierColBatt: "Accu",
+    frontierNoBattery: "geen",
+    frontierTableToggle: "Toon elk punt als tabel",
+    frontierLegendCurve: "Goedkoopste systeem dat elk niveau haalt",
+    frontierLegendBand:
+      "Dezelfde systemen, van doe-het-zelf-inkoop tot verzonden winkelprijs",
+    frontierLegendRange:
+      "Beste-waarde-bereik — elk extra procent nog steeds goedkoop",
+    frontierBestValueRange:
+      "Beste-waarde-bereik: ~{lo}–{hi} ({loPct}–{hiPct}%).",
+    frontierRangeTag: "beste waarde",
+    frontierTagSel: "geselecteerd",
+    fuelLitLabel: "Prijs per liter",
+    fuelGalLabel: "Prijs per gallon",
+    fuelReadoutRate:
+      "{type} komt bij deze prijs neer op ongeveer {rate} per kWh",
+    fuelReadoutBurn:
+      "({entry} ÷ {burn} {unit}/kWh — alleen brandstof; olie, filters en motorslijtage duwen het echte getal hoger)",
+    fuelReadoutGrid: "Typische netstroom kost tussen {lo} en {hi} per kWh.",
+    fuelApplyOk:
+      "Uw generatorbrandstof komt neer op ongeveer {rate}/kWh — ingevoerd als uw stroomprijs, dus elk terugverdiencijfer hieronder vergelijkt met wat u vandaag verstookt.",
+    frontierLegendCeiling:
+      "Beste dat de doorzochte groottes halen — geen natuurkundige grens",
+    frontierMarkerOffCurve:
+      "Uw optie staat rechts van de curve omdat de aanbeveling is gekozen op basis van de werkelijke kosten over 20 jaar, niet de prijs van vandaag — een goedkopere accubank die vervangen moet worden kost nu minder en later meer.",
+    frontierVerdictSteepGrid:
+      "Ongeveer {kneePct}% van uw rekening verlagen kost rond {kneeCost}. Daarna wordt het snel duur: ongeveer {tailCost} per extra procent, tegen {headCost} daarvoor.",
+    frontierVerdictTaperingGrid:
+      "Ongeveer {kneePct}% van uw rekening verlagen kost rond {kneeCost}. Daarna kost elk extra procent ongeveer {tailCost} — ongeveer {ratio} keer het eerdere tarief.",
+    frontierVerdictCoveredBattery:
+      "Dimensionering is hier niet uw beperking. De kleinste praktische accu — {batt} kWh, ongeveer {cost} — verschuift al vrijwel alle piekuren van dit verbruik. Alles groter koopt reservecapaciteit, geen grotere verschuiving.",
+    frontierVerdictBeyondSweepBattery:
+      "Binnen de accugroottes die deze tool doorzoekt — tot {battMax} kWh — kunt u hier maximaal ongeveer {ceilingPct}% verschuiven, voor rond {ceilingCost}. Goede waarde houdt al veel eerder op, bij {kneePct}% voor ongeveer {kneeCost}; meer verschuiven vereist een grotere bank dan alles wat hier is gedimensioneerd.",
+    frontierVerdictSteepBattery:
+      "Ongeveer {kneePct}% van uw piekuren naar de accu verplaatsen kost rond {kneeCost}. Daarna wordt het snel duur: ongeveer {tailCost} per extra procent, tegen {headCost} daarvoor.",
+    frontierVerdictTaperingBattery:
+      "Ongeveer {kneePct}% van uw piekuren naar de accu verplaatsen kost rond {kneeCost}. Daarna kost elk extra procent ongeveer {tailCost} — ongeveer {ratio} keer het eerdere tarief.",
+    frontierVerdictLinearBattery:
+      "De verschuiving volgt de uitgaven hier vrij gelijkmatig — ongeveer {headCost} per procent piekuren, helemaal tot {ceilingPct}%.",
+    frontierVerdictLinearGrid:
+      "De besparing volgt de uitgaven hier vrij gelijkmatig — ongeveer {headCost} per procent van uw rekening, helemaal tot {ceilingPct}%.",
+    frontierVerdictBeyondSweepGrid:
+      "Binnen de groottes die deze tool doorzoekt — tot {pvMax} kW aan panelen en {battMax} kWh aan accu — kunt u hier maximaal ongeveer {ceilingPct}% besparen, voor rond {ceilingCost}. Goede waarde houdt al veel eerder op, bij {kneePct}% voor ongeveer {kneeCost}. Meer besparen is niet onmogelijk; het vereist alleen een groter systeem dan alles wat hier is gedimensioneerd.",
+    frontierVerdictSteepOffgrid:
+      "Ongeveer {kneePct}% van uw energie dekken kost rond {kneeCost}. Het laatste stuk naar volledige onafhankelijkheid is waar het geld naartoe gaat: ongeveer {tailCost} per extra procent, tegen {headCost} daarvoor.",
+    frontierVerdictTaperingOffgrid:
+      "Ongeveer {kneePct}% van uw energie dekken kost rond {kneeCost}. Daarna kost elk extra procent ongeveer {tailCost} — ongeveer {ratio} keer het eerdere tarief.",
+    frontierVerdictLinearOffgrid:
+      "De dekking volgt de uitgaven hier vrij gelijkmatig — ongeveer {headCost} per procent, helemaal tot {ceilingPct}%.",
+    frontierVerdictBeyondSweepOffgrid:
+      "Binnen de groottes die deze tool doorzoekt — tot {pvMax} kW aan panelen en {battMax} kWh aan accu — kunt u hier maximaal ongeveer {ceilingPct}% dekken, voor rond {ceilingCost}. Goede waarde houdt op bij {kneePct}% voor ongeveer {kneeCost}. Volledige onafhankelijkheid is hier niet onmogelijk, maar vereist een systeem dat veel groter is dan dit, en een generator of een netaansluiting is vrijwel zeker de goedkopere manier om de rest te dekken.",
+    frontierMethod:
+      "De curve komt voort uit het simuleren van elke paneel-en-accu-combinatie op een grof raster tegen hetzelfde uurlijkse weer als de kaarten hierboven, waarbij alleen de systemen overblijven die niets goedkopers verslaat. Prijzen gebruiken hetzelfde midden van doe-het-zelf-prijzen inclusief levering als elk ander cijfer op deze pagina.",
+    frontierMethodBattery:
+      "De curve komt voort uit het simuleren van elke accugrootte op een grof raster tegen hetzelfde uurlijkse weer en tariefvensters als de kaarten hierboven, waarbij alleen de systemen overblijven die niets goedkopers verslaat. Panelen maken geen deel uit van deze berekening, dus de curve varieert alleen de bank. Prijzen gebruiken hetzelfde midden van doe-het-zelf-prijzen inclusief levering als elk ander cijfer op deze pagina.",
+    // -- Cumulative 20-year cost caption (under the chart canvas) --
+    cumCostRecommended: "aanbevolen",
+    cumCostSelected: "geselecteerd",
+    cumSavingsHeadline: "+~{amount} bespaard over 20 jaar",
+    cumSavingsServed:
+      " · ~{kwh} kWh/jaar door de zon geleverd in plaats van het net",
+    cumSavingsBreakEven:
+      "Terugverdiend in jaar {year} — elk jaar daarna stopt geld terug in uw zak{kwhBits}",
+    cumSavingsNeverBreaksEven: "Verdient zichzelf nooit terug binnen 20 jaar",
+    cumSavingsShortfall:
+      "Accuvervangingen gaan sneller dan de rekeningsbesparing op deze locatie — het eerlijke tekort is ~{amount}.",
+    cumCostCaptionHead:
+      "Lopende 20-jaarskosten voor het {which}-systeem ({label}): de amberkleurige lijn is wat u aan het energiebedrijf betaalt als u op het net blijft ({gridTotal}).",
+    cumCostCaptionOwnCost:
+      "De smaragdgroene lijn is de eigen kostprijs van het zonnesysteem (~{systemTotal}), overeenkomend met de rij “Totale kosten over 20 jaar” voor dit systeem.",
+    cumCostCaptionOwnCostNoPanels:
+      "De smaragdgroene lijn is de eigen kostprijs van het systeem (~{systemTotal}), overeenkomend met de rij “Totale kosten over 20 jaar” voor dit systeem.",
+    cumCostCaptionStack:
+      "Het amberkleurige cijfer is een stapel — het systeem, dan de kleinere rekeningen die na zonne-energie overblijven (~{residualBills}), dan uw besparing — dus dit systeem stopt {saved} terug in uw zak over de 20 jaar.",
+    cumCostCaptionStackNoPanels:
+      "Het amberkleurige cijfer is een stapel — het systeem, dan de kleinere rekeningen die overblijven (~{residualBills}), dan uw besparing — dus dit systeem stopt {saved} terug in uw zak over de 20 jaar.",
+    cumCostCaptionNetNegative:
+      "De stapel loopt hier andersom: die resterende rekeningen (~{residualBills}) krimpen nooit genoeg, dus over 20 jaar kost dit systeem ongeveer {loss} MEER dan op het net blijven — geld uitgegeven, niet bespaard.",
+    cumCostCaptionRepaid:
+      "Het systeem heeft zijn kosten terugverdiend in jaar {year} — elk jaar daarna stopt ~{perYear} terug in uw zak. Totale besparing over 20 jaar: ~{saved}. De lagere balken zijn uw lopende nettostand: rood tot het terugverdienpunt, daarna stijgend.",
+    cumCostCaptionNeverRepays:
+      "Binnen 20 jaar verdient het systeem zijn kosten nooit terug — accuvervangingen gaan sneller dan de rekeningsbesparing, dus het eerlijke antwoord is: het betaalt zichzelf hier niet terug.",
+    cumCostCaptionResidual:
+      "De leigrijze lijn is de resterende netkosten zelf — ongeveer {annual}/jaar voor de {kwh} kWh/jaar die nog van het net wordt betrokken (na aftrek van uw terugleververgoeding), {end} over de volledige 20 jaar.",
+    cumCostCaptionResidualCreditDraw:
+      "De leigrijze lijn loopt onder $0 — salderen: de terugleverwaarde van uw overschot overstijgt zelfs de kleine {kwh} kWh/jaar die u nog afneemt, dus u verdient ~{earned} over de volledige 20 jaar.",
+    cumCostCaptionResidualCreditBill:
+      "De leigrijze lijn loopt onder $0 — salderen: de terugleverwaarde van uw overschot overstijgt de kleine rekening die u nog betaalt, dus u verdient ~{earned} over de volledige 20 jaar.",
+    cumCostCaptionSurplusCredit:
+      "Het totaal met zonne-energie (~{withSolar}) ligt ONDER de eigen kostprijs van het systeem: uw terugleververgoeding op overschot overtreft de kleine rekening die overblijft, dus de stapel loopt negatief en het energiebedrijf is u ~{owed} schuldig in het 20-jarenbeeld.",
+    frontierVerdictCoveredOffgrid:
+      "Dimensionering is hier niet uw beperking. Het kleinste praktische systeem — {pv} kW aan panelen en {batt} kWh aan accu, ongeveer {cost} — dekt dit volledige verbruik al, het hele jaar door. Alles groter koopt reservecapaciteit, geen meer onafhankelijkheid.",
+    frontierVerdictCoveredGrid:
+      "Dimensionering is hier niet uw beperking. Het kleinste praktische systeem — {pv} kW aan panelen en {batt} kWh aan accu, ongeveer {cost} — dekt vrijwel dit hele verbruik al. Alles groter koopt reservecapaciteit, geen grotere besparing.",
+    pipelineLocation: "Locatie",
+    pipelineWeather: "Weer",
+    pipelineSimulating: "Simuleren",
+    pipelineRendering: "Renderen",
+    pipelineElapsed: "{s}s verstreken",
+    pipelineCached: "in cache",
+    pipelineReaching: "satelliet wordt bereikt…",
+    pipelineChunks: "{done}/{total} satellietbrokken",
+    speedNoteRepeat:
+      "⚡ Direct — herhaling van deze exacte configuratie (zojuist berekend)",
+    speedNoteCached: "⚡ Direct — satellietweer in cache",
+    speedNoteCachedWhere: "⚡ Direct — satellietweer in cache voor {where}",
+    speedNoteOffline: "⚡ Direct — offline typisch jaar",
+    speedNoteOfflineWhere: "⚡ Direct — offline typisch jaar voor {where}",
+    fmtAllDay: "de hele dag (24 u)",
+    fmtHoursDay: "{h} u/dag",
+    fmtMinutesDay: "{m} min/dag",
+    apWattsRunning: "~{w} W tijdens gebruik",
+    apWatts: "~{w} W",
+    apKwhDay: "{kwh} kWh/dag",
+    apAvgW: " (~{w} W gem.)",
+    offgridKwhReadout: "~{kwh} kWh/dag",
+    quickBillStarts:
+      "Begint bij ~{bill} (≈{kwh} kWh/dag). Stel hier uw echte rekening in, kies een locatie en klik op Systeem dimensioneren. De besparingsschuif verschijnt bij de resultaten.",
+    quickBillManual:
+      "Snelle schatting: ~{bill} (begint bij ~{kwh} kWh/dag) — schakel over naar Handmatig om uw rekening, apparaten of tarief te wijzigen.",
+    dailyEnergyNeed: "Dagelijkse energiebehoefte (kWh/dag-schuif)",
+    billPerMonth: "/mnd",
+    simpleHeadline: "Op uw locatie levert dit systeem u {goal}:",
+    simpleGoalGrid: "om ongeveer {pct}% van uw rekening te besparen",
+    simpleGoalBattery:
+      "om ongeveer {pct}% van uw piekuren naar de accu te verplaatsen",
+    simpleGoalOffgrid: "om uw huis het hele jaar door te dekken",
+    sharedLocationLoaded:
+      "Gedeeld resultaat geladen - zongegevens voor deze locatie",
+    uiInitFailed:
+      "Waarschuwing: Interface kon niet worden geladen - vernieuw de pagina (Ctrl+F5).",
+    infeasibleAreaTitle: "Te weinig dak-/tuinoppervlak voor dit doel",
+    infeasibleAreaBody:
+      "De gezochte zonnegrootte werd begrensd door de optionele oppervlakte-invoer (zie “Hardware-instellingen”). Maak dat vak leeg — of teken een groter gebied op de kaart — en voer opnieuw uit: de locatie zelf kan dit doel bereiken.",
+    infeasibleEnvelopeTitle:
+      "Buiten het zoekbereik van deze tool voor dit doel",
+    infeasibleEnvelopeBody:
+      "Bij dit verbruik vereist het bereiken van dat doel een groter zonneveld of een grotere accubank dan deze calculator doorzoekt (zie Hardware-instellingen voor de grenzen). Probeer een lager besparingsdoel, of bekijk of een deel van het verbruik kan worden verminderd.",
+    infeasibleNeedsBatteryTitle:
+      "Alleen zonne-energie kan 100% off-grid niet halen",
+    infeasibleNeedsBatteryBody:
+      "Een off-grid-huis heeft opslag nodig voor nachten en bewolkte dagen. Voeg een accu toe aan de hardwarekeuze, of schakel het doel over naar 'Mijn rekening verlagen, aangesloten blijven' (netgekoppeld).",
+    infeasibleNeedsPanelsTitle: "Alleen een accu kan niet off-grid draaien",
+    infeasibleNeedsPanelsBody:
+      "Niets laadt de bank op deze locatie op. Voeg panelen toe aan de hardwarekeuze, of schakel het doel over naar 'Mijn rekening verlagen, aangesloten blijven' (netgekoppeld).",
+    infeasibleNeedsSurplusTitle:
+      "Een accubank alleen kan geen overschot produceren",
+    infeasibleNeedsSurplusBody:
+      "Overschot vereist panelen om meer op te wekken dan uw verbruik. Zet het doel onder 100% op de besparingsschuif, of schakel de hardware-instelling over naar 'Zonne-energie + accu'.",
+    infeasibleGenericTitle:
+      "Deze combinatie van hardware en doel kan niet worden opgelost",
+    infeasibleGenericBody:
+      "Wijzig het doel of de hardware en voer opnieuw uit.",
+    goalLabel: "Welk resultaat onderzoekt u?",
+    useCaseLabel: "Wat wilt u doen?",
+    useCaseBillCut: "Mijn energierekening verlagen",
+    useCaseTou: "Besparen met een accu bij piek/dal-tarieven",
+    useCaseBackup: "Essentiële apparaten draaiende houden bij stroomuitval",
+    useCaseReserve: "Een back-upreserve in mijn accu aanhouden",
+    useCaseOffGrid: "Volledig off-grid gaan",
+    useCasePortable: "Draagbare stroom (camper, bus, boot, kamperen)",
+    useCaseBillCutBlurb:
+      "Netgekoppelde zonne-energie, met een accu alleen als die zichzelf terugverdient. Gemeten als het aandeel van uw rekening dat het systeem over 20 jaar wegneemt.",
+    useCaseTouBlurb:
+      "Een accu op zichzelf: hij laadt op in de goedkope uren en dekt de dure uren. Geen panelen.",
+    useCaseBackupBlurb:
+      "Gedimensioneerd op de apparaten die u aanvinkt, niet op uw hele huis. Gemeten als het aandeel van de stroomuitvallen dat uw essentiële apparaten doorstaan.",
+    useCaseReserveBlurb:
+      "Houd een deel van de accu achter voor uitval en zie precies wat u dat aan besparing kost.",
+    useCaseOffGridBlurb:
+      "Zonne-energie en accu gedimensioneerd voor uw hele huis. Gemeten als het aandeel van de uren dat volledig zonder net draait.",
+    useCasePortableBlurb:
+      "Een powerstation voor een bus, een boot of een kampeerplek. Geen dak, geen net, geen tarief.",
+    metricBillCut: "van uw rekening weggenomen over 20 jaar",
+    metricTouOffset: "van uw piekuren-energie door de accu geleverd",
+    metricOutageCoverage:
+      "van de stroomuitvallen die uw essentiële apparaten volledig doorstaan",
+    metricReserveTradeoff:
+      "wat het aanhouden van een reserve kost, in besparing en uren",
+    metricGridIndependence: "van het jaar volledig zonder net gedraaid",
+    metricPortableRuntime:
+      "van de dagen dat het station uw apparaten de hele dag laat draaien",
+    statusWorks: "Werkt",
+    statusPartial: "Gedeeltelijk",
+    statusNotHere: "Werkt hier niet",
+    useCaseOutcomeTitle: "Uw resultaat: {useCase}",
+    useCaseVerdictFooter:
+      "{useCase} — gemeten aan het eigen uurlijkse weer van deze locatie, geen schatting.",
+    useCaseNotMeasured:
+      "Niet gemeten: deze combinatie kan helemaal niet worden gedimensioneerd, dus er is hier geen getal te rapporteren.",
+    metricReserveTradeoffValue: "{lost}% van de besparing, {hours} u dekking",
+    reserveOff: "uit",
+    touPeakLabel: "Uw piekprijs (per kWh)",
+    touOffPeakLabel: "Uw dalprijs (per kWh)",
+    touDefaultNote:
+      "We hebben geen gepubliceerd piek/dal-tariefschema voor uw regio, dus hebben we een piekprijs 60% boven en een dalprijs 45% onder uw vlakke tarief ingevuld. Wijzig een van beide getallen als uw rekening anders aangeeft — het oordeel hieronder gebruikt wat u invoert.",
+    essentialLabel: "Wat moet blijven draaien? (kies alles)",
+    outageLabel: "Hoe lang moet het duren?",
+    backupRechargeLabel: "De panelen het tijdens de uitval laten opladen",
+    reserveLabel: "Noodreserve aangehouden in de accu",
+    portableDeviceLabel: "Wat voedt u? (kies alles)",
+    portableBankLabel: "Bruikbare grootte van het powerstation (kWh)",
+    portableShoreLabel: "Ik kan opladen via het net of een voertuig",
+    verdictBillCut:
+      "{status}: dit systeem neemt {pct}% van uw rekening weg over 20 jaar.",
+    verdictTou:
+      "{status}: de accu dekt {pct}% van uw piekuren-energie, ongeveer {saving} waard over 20 jaar tegen een accu van {cost}. Uw piek-dalverschil is hier {spread} per kWh.",
+    verdictBackup:
+      "{status}: uw essentiële apparaten draaien de volle {targetHours} uur in {pct}% van de gesimuleerde stroomuitvallen (typische nacht: {hours} uur).",
+    verdictReserve:
+      "{status}: het aanhouden van die reserve kost {pct}% van uw rekeningsbesparing en levert {coverHours} uur dekking op.",
+    verdictReserveNoBattery:
+      "Er is niets om een reserve in aan te houden: het goedkoopste systeem voor dit doel heeft helemaal geen accu.",
+    verdictOffGrid:
+      "{status}: {pct}% van het jaar draait zonder net — {unmetHours} uur tekort in het slechtste jaar, {autonomy} dagen autonomie.",
+    verdictPortable:
+      "{status}: uw station draait een volle dag op {days} van {trips} dagen hier, en één lading gaat {runtime} uur mee.",
+    cityLabel: "Waar komt dit systeem?",
+    loadLabel: "Hoeveel stroom verbruikt u?",
+    loadAppliances: "Ik kies mijn apparaten",
+    loadBill: "Ik ken mijn maandelijkse elektriciteitsrekening",
+    loadKwh: "Ik ken mijn kWh/dag (geavanceerd)",
+    chemLabel: "Accuchemie:",
+    langLabel: "Taal",
+    locBtn: "📍 Mijn exacte locatie gebruiken",
+    tariffNote:
+      "Stroomprijs geschat voor {label} — wijzig deze hierboven als u uw tarief kent.",
+    pathsLabel_turnkey: "Installateur, sleutelklaar",
+    pathsLabel_lease: "Lease of PPA",
+    pathsLabel_selfpurchase: "U koopt de onderdelen",
+    pathsLabel_diy: "U monteert, een elektricien sluit aan",
+    pathsTitle: "Vier manieren om voor ditzelfde systeem te betalen",
+    pathsSub:
+      "Eén systeem, één set definities, twintig jaar. Het verschil tussen deze kaarten is een prijsverschil, geen verschil in wat elk meetelt.",
+    pathsCheapest: "Goedkoopste",
+    pathsSpend20: "Kosten over 20 jaar",
+    pathsRowIncentives: "Subsidies",
+    pathsRowBillCut: "Rekeningsverlaging",
+    pathsRowBreakEven: "Terugverdienpunt",
+    pathsRowNet: "Netto over 20 jaar",
+    pathsRowOwnership: "Eigendom",
+    pathsRowEndOfTerm: "Aan het einde",
+    pathsCountsHeading: "Wat deze prijs omvat",
+    pathsInstrumentLabel: "Route via derden:",
+    pathsGradeNote:
+      "Elk cijfer hierboven komt uit één regionaal prijsregister met een genoemde bron en een betrouwbaarheidsgraad. Hardware is uw eigen bouwschatting; arbeid, vergunningen, subsidies en vervangingen zijn registercijfers. Niets hier is een leveranciersofferte.",
+    pathsWhy:
+      "{cheaper} is {gap} goedkoper dan {dearer} over 20 jaar, voornamelijk gedreven door {driver}.",
+    pathsWhyCombined: " Geen enkel item verklaart het hele verschil.",
+    pathsDriver_year0: "de aanschafprijs",
+    pathsDriver_incentives: "wie de subsidies krijgt",
+    pathsDriver_om: "onderhoud",
+    pathsDriver_replacements: "accu- en omvormervervangingen",
+    pathsDriver_leasePayments: "de betalingen die u doet",
+    pathsDriver_none: "geen enkel item",
+    pathsInstrumentPpa: "PPA (u koopt de energie)",
+    pathsInstrumentLease: "Lease (u huurt het systeem)",
+    pathsEndOfTermBuyout:
+      "Jaar {years}: u kunt het afkopen voor {buyoutPct}% van de installatieprijs, en die afkoop zit in dit cijfer.",
+    pathsEndOfTermStillLeasing:
+      "In jaar {years} loopt de termijn nog, dus er is geen afkoop ingeprijsd. Na 20 jaar zou u nog steeds betalingen verschuldigd zijn.",
+    pathsOwnershipTurnkey: "U bent vanaf dag één eigenaar.",
+    pathsOwnershipPpa: "De aanbieder is eigenaar en houdt het onderhouden.",
+    pathsOwnershipLease:
+      "U huurt het tot het einde van de termijn, dan koopt u het af of levert u het in.",
+    pathsOwnershipSelf: "U bent eigenaar zodra het is geïnstalleerd.",
+    pathsIncentiveTaxCredit: "Federale belastingkorting",
+    pathsIncentiveRebate: "Energiebedrijf-korting",
+    pathsIncentivesToProvider: "Subsidies gaan naar de aanbieder, niet naar u.",
+    pathsIncentivesGoToProvider: "De aanbieder houdt ze — u bezit niets.",
+    pathsNoIncentive: "Geen van toepassing op deze route.",
+    pathsNoVerifiedIncentive:
+      "We hebben geen geverifieerde subsidie voor uw regio.",
+    pathsUnknown: "Onbekend",
+    pathsNotWithinHorizon: "Niet binnen 20 jaar",
+    pathsBreakEvenYear: "Jaar {year}",
+    pathsUnavailable: "Niet beschikbaar",
+    pathsNoSystem: "Er is geen systeem om te prijzen.",
+    pathsNoTariff:
+      "Een PPA heeft een tarief nodig om tegen te prijzen, dus wordt deze hier niet getoond.",
+    pathsDiyNotPermitted:
+      "Hier niet aangeboden: waar u bent, moet een erkende installateur het elektrische werk doen.",
+    pathsDiyRestricted:
+      "Hier niet aangeboden: zelf monteren is beperkt waar u bent.",
+    pathsDiyUnknown:
+      "Hier niet aangeboden: we konden niet verifiëren of u uw eigen veld mag monteren.",
+    pathsNoteTurnkeyAllIn:
+      "Eén all-in-prijs: dezelfde hardware, plus arbeid, vergunningen en de marge van de installateur.",
+    pathsIncludesInstalledAllIn:
+      "Onderdelen, arbeid en vergunningen, al geïnstalleerd",
+    pathsIncludesProviderSwaps:
+      "De aanbieder onderhoudt en vervangt de accu en omvormer",
+    pathsIncludesIncentivesToProvider:
+      "Subsidies gaan naar de aanbieder, niet naar u",
+    pathsIncludesIncentivesIfEligible:
+      "Subsidies, als u ervoor in aanmerking komt",
+    pathsIncludesNoYear0Hardware: "Geen hardware-aankoop vooraf",
+    pathsIncludesEndOfTerm:
+      "De keuze aan het einde van de termijn is ingeprijsd",
+    pathsIncludesHardwareYouBuy: "De hardware die u zelf koopt",
+    pathsIncludesElectricianInstalls: "Een erkende elektricien installeert het",
+    pathsIncludesPermitsAndInterconnection:
+      "Vergunningen, inspectie en netaansluiting",
+    pathsIncludesYouDoSwaps: "U regelt en betaalt accuvervangingen",
+    pathsIncludesYouMountTheArray: "U monteert het veld zelf",
+    pathsIncludesElectricianConnects: "Een elektricien doet de aansluiting",
+    pathsIncludesToolsAndSafety: "Gereedschap en veiligheidsuitrusting",
+    advisorPrivacyDisclosure:
+      "U heeft geen account nodig en er wordt niet om persoonlijke gegevens gevraagd. Tekst die u in de adviseur typt, wordt naar een externe AI-provider (Groq) verzonden om een antwoord te genereren, onder diens voorwaarden. Deze site bewaart gesprekken niet. Voer geen persoonlijke, financiële of andere gevoelige informatie in. Eenvoudige aantallen verzoeken kunnen worden vastgelegd om de dienst draaiende te houden en misbruik te voorkomen.",
+    applianceWattages:
+      "Vermogens zijn gebruikelijke waarden; die van u kunnen afwijken. Apparaten die in cycli werken (koelkasten, diepvriezers, airconditioners, pompen) gebruiken alleen stroom wanneer ze draaien: de schuifregelaar gaat over de uren per dag dat ze echt draaien, begrensd op realistische compressortijd. Elke regel toont het resulterende gemiddelde over 24 uur. Een moderne koelkast gebruikt bij de standaardinstelling (100 W tijdens bedrijf, ongeveer 10 uur per dag) werkelijk circa 1 kWh per dag.",
+    assumptionsIntro:
+      "Voer eerst een dimensionering uit. Alle gebruikte constanten (deratings, temperatuurmodel, rendementen, weerjaren en bron) staan hier vermeld.",
+    autoCeiling: "Maximale lading {chem}: {pct}%",
+    autoChemAgm: "Loodzuur (AGM)",
+    autoChemLfp: "LFP",
+    autoChemNaion: "Natrium-ion",
+    autoLegendNoSwaps:
+      "{chem} - nominale capaciteit {kwh} kWh - zonder vervangingen",
+    autoLegendWithSwaps:
+      "{chem} - nominale capaciteit {kwh} kWh - ongeveer {swaps} vervangingen in 20 jaar",
+    autoSocAxis: "Acculading (% van nominale capaciteit)",
+    autoSocCaption:
+      "De gemodelleerde bruikbare capaciteit is 80% voor LFP (20-100%), 85% voor natrium-ion (15-100%) en 50% voor loodzuur (50-100%). In dit model hebben LFP en natrium-ion in 20 jaar minder vervangingen nodig dan loodzuur. Standaardspanningsinstellingen voor LFP beperken natrium-ion tot ongeveer 85% van de nominale capaciteit; de geringere ontladingsdiepte ondersteunt een langere levensduur in cycli. Loodzuur wordt beperkt tot de bovenste helft en bij hoge ontlading derated. Weerdalingen van {startYear} tot {endYear} laten zien wanneer stroom van het net of een generator nodig zou zijn.",
+    autoSocIntro:
+      "Zo leest u de grafiek: de gearceerde band toont het dagelijkse laadbereik van elke accu, de dikke bovenrand de hoogste lading en de dunne onderrand de diepste ontlading. De stippellijn markeert het punt voor volle lading ({ceilings}); elke accu heeft voor dezelfde taak een vergelijkbare nominale capaciteit.",
+    autoSocSunStrip:
+      "De amberkleurige strook erboven toont de dagelijkse zonneopbrengst (kWh per kW paneel); de dalen volgen het oplaadritme van elke accu.",
+    batteryCostClaim:
+      "Accubanken die zelf uit prismatische cellen worden gebouwd, komen doorgaans uit op ongeveer $80–125 per bruikbare kWh, inclusief verzending en invoerrechten; budgetpakketten in de detailhandel kosten ongeveer $110–165. Panelen voegen circa $0,16–0,38 per watt toe. Elk resultaat vermeldt de prijsscope.",
+    batteryManagementSpec:
+      "Slimme actieve balancering (balanceerstroom 2 A), twee temperatuursensoren en RS485/CANbus-communicatie met Sol-Ark en Victron.",
+    batterySafety:
+      "Dit vereist respect voor de risico's: lithiumcellen slaan genoeg energie op om brand te veroorzaken en een DC-vlamboog dooft niet vanzelf. De handleidingen hier benadrukken correcte zekeringen, gebruik van een BMS en naleving van voorschriften. Laat alles vóór het inschakelen controleren door een erkend elektricien.",
+    billCutTarget:
+      "Doel voor verlaging van de rekening — stelt ook de resultatenregelaar in:",
+    bomSafetyNote:
+      "Educatieve schatting op basis van uw dimensioneringsresultaat — geen technisch ontwerp en geen bestellijst. Zekering- en kabelwaarden gaan uit van koper, conservatieve stroomcapaciteit en een korte kabel tussen accu en omvormer. Controleer alles vóór aankoop of inschakeling met een erkende vakman aan de hand van uw lokale elektrische voorschriften.",
+    breakerSpec:
+      "Onderbrekingsvermogen 20 kA AIC bij 160 V DC. Onderbreekt zeer hoge DC-kortsluitstromen in milliseconden — ontworpen om BMS en bedrading te beschermen.",
+    chartBankEmpty: "Accu leeg",
+    chartDailySun: "Dagelijkse zonneopbrengst: {peak} kWh per kW paneel",
+    chartDay: "Dag {day}",
+    chartEmpty: "Leeg",
+    chatPrivacySummary:
+      "Geen registratie, geen advertentiecookies en geen analyseprofiel. Uw chattekst wordt naar de AI-provider gestuurd om een antwoord te genereren en wordt hier niet opgeslagen. Typ er geen gevoelige informatie in.",
+    costMissingTariffBody:
+      "De calculator kan het systeem dimensioneren zonder tarief, maar heeft uw elektriciteitsprijs nodig om de netkosten over 20 jaar met de kosten van zonne-energie te vergelijken.",
+    costMissingTariffTitle:
+      "Voer uw netstroomprijs in om de geschatte besparing te zien",
+    costNoSeriesBody:
+      "De dimensionering is voltooid, maar dit resultaat bevat geen vergelijkbare kostenreeks over 20 jaar.",
+    costNoSeriesTitle: "Besparingsgegevens niet beschikbaar voor dit resultaat",
+    cumCostBreakEven: "Terugverdientijd: jaar {year}",
+    cumCostLegendBattery: "Alleen-accusysteem: {amount}",
+    cumCostLegendGrid: "Net zonder zonnepanelen: {amount}",
+    cumCostLegendResidual: "Resterende netkosten na teruglevering: {amount}",
+    cumCostLegendResidualCredit:
+      "Terugleververgoeding boven de resterende netrekening: {amount}",
+    cumCostLegendSolar: "Zonne-energiesysteem: {amount}",
+    cumCostPocket: "Uw besparing, jaar na jaar",
+    cumCostTitleBattery:
+      "Wat verandert de accu aan uw kosten over 20 jaar? (cumulatieve kosten)",
+    cumCostTitleSolar:
+      "Wat bespaart zonne-energie werkelijk? (cumulatieve kosten over 20 jaar)",
+    donationIntro:
+      "Deze dienst is en blijft gratis. Als u er baat bij had en wilt bijdragen aan de kosten van AI en hosting, vindt u hier hoe.",
+    donationNotTaxDeductible: "niet aftrekbaar van de belasting",
+    donationRecipientPrefix: "Bijdragen gaan rechtstreeks naar",
+    donationRecipientSuffix: "persoonlijk.",
+    donationTerms:
+      "Lees dit voordat u iets overmaakt. Bijdragen zijn vrijwillige giften aan een persoon, geen betaling voor een dienst. Ze zijn niet aftrekbaar van de belasting — dit is geen liefdadigheidsinstelling of geregistreerde non-profitorganisatie. Ze kopen niets: geen voorrang, functies, persoonlijk advies, supportverplichting of gegarandeerde beschikbaarheid van deze site. Iedereen krijgt precies hetzelfde gratis hulpmiddel, ongeacht of men bijdraagt. Stuur geen geld dat u nodig heeft. Als u professionele technische hulp wilde betalen, besteed het dan aan een erkende lokale engineer of elektricien; dat is een betere besteding.",
+    donationTermsPrefix:
+      "Elke bijdrage die u kiest te sturen, is een vrijwillige gift aan een persoon. Het is",
+    donationTermsSuffix:
+      ", geen betaling voor goederen of diensten, schept geen overeenkomst, geeft u nergens recht op en is niet terugbetaalbaar in ruil voor enige verplichting. Een bijdrage verandert niets aan de dienst die u ontvangt.",
+    electricalSafetyDisclaimer:
+      "Accubanken, hoge DC-stromen en netspanningsbedrading kunnen vlamboog, elektrische schokken, brand, giftige gasvorming, ernstig letsel en overlijden veroorzaken. Lithiumcellen kunnen in thermische runaway raken. U bent volledig verantwoordelijk voor uw eigen veiligheid en die van iedereen die door uw bouwproject wordt geraakt. U bent volledig verantwoordelijk voor vergunningen, inspecties en naleving van lokale elektrische en brandvoorschriften.",
+    electricityRateLabel:
+      "Elektriciteitsprijs bij u thuis (bepaalt uw rekening- en terugverdientijdschatting) - uw prijs per kWh ($):",
+    emailSupportExpectations:
+      "Dit is één persoon die e-mail in zijn eigen tijd beantwoordt, als gunst — geen helpdesk. Ik lees wat ik kan en antwoord wanneer ik daartoe in staat ben, maar ik kan geen antwoord of termijn beloven. Alles wat ik terugstuur is een vriendelijke mening voor uw eigen verdere onderzoek, geen professioneel technisch, elektrisch of financieel advies, en schept geen professionele relatie of verplichting. Praat voor alles wat u echt wilt bouwen, inschakelen of waar u echt geld aan wilt uitgeven met een erkende elektricien of engineer in uw omgeving.",
+    emailWelcome: "U kunt me mailen:",
+    endplateSpec:
+      "Eindplaten met schotelveren zorgen voor gelijkmatige compressie (ongeveer 3.000 N). Fabrikanten noemen voordelen voor de levensduur; specifieke winst moet als niet-geverifieerd worden beschouwd.",
+    estimateMethodDisclaimer:
+      "Elk getal komt uit testbare code die uw exacte locatie doorrekent met vijf jaar satellietweer van NASA — het is geen AI-gok. Resultaten in de praktijk variëren nog steeds door schaduw, installatiekwaliteit en hardware. Laat alles wat u bouwt door een erkende vakman controleren.",
+    faqIntro:
+      "Korte antwoorden op veelgestelde vragen. De AI-adviseur kan hierover verder uitleg geven.",
+    feedInCreditLabel:
+      "Terugleververgoeding voor stroomoverschot dat u kunt verkopen ($/kWh, optioneel — alleen netgekoppeld):",
+    fixedChargeTaxEstimate:
+      "Rekeningen bevatten vaste kosten en belastingen, dus dit overschat het werkelijke verbruik enigszins — dat is een veilige kant om aan te houden.",
+    fixedMonthlyChargeLabel:
+      "Vaste maandkosten op uw rekening ($/maand, optioneel — hierop kunt u met zonnepanelen niet besparen):",
+    footerAbout: "Over",
+    footerBenchmarks: "Wereldwijde benchmarks",
+    footerHeatmap: "Wereldkaart",
+    footerTerms: "Voorwaarden",
+    footerWarranty:
+      "Deze site wordt gratis en zonder enige garantie verstrekt, expliciet noch impliciet. Schattingen zijn uitsluitend educatief en kunnen onjuist zijn. Werken met accu's, hoge DC-stromen en netbedrading kan brand, ernstig letsel of overlijden veroorzaken — u bent verantwoordelijk voor uw veiligheid, uw keuzes en naleving van lokale elektrische voorschriften. Laat alles vóór de bouw controleren door een erkende vakman. - Blog - Wereldwijde benchmarks - Wereldkaart - Over - Voorwaarden - Support - lucasballek@gmail.com",
+    freeToolDisclaimer:
+      "Kort gezegd: dit is een gratis educatief hulpmiddel dat grove schattingen maakt, door één persoon wordt beheerd en zonder enige garantie wordt aangeboden.",
+    fxRateHelp:
+      "Hoeveel eenheden van uw valuta gelijk zijn aan 1 Amerikaanse dollar. Automatisch ingevuld op basis van uw locatie; wijzig dit alleen als u een andere koers kent.",
+    generatorAssumption:
+      "Gaat uit van een kleine generator bij typische deellast: benzine",
+    generatorAssumptionMiddle: "/kWh, diesel",
+    generatorAssumptionSuffix:
+      "/kWh (alleen brandstof — olie, filters en motorslijtage verhogen de werkelijke kosten). Als u uw echte prijs per kWh kent, voer die dan rechtstreeks in.",
+    generatorRuntime0: "0% — nooit",
+    generatorRuntime1: "1% — enkele dagen per jaar",
+    generatorRuntime2: "2%+ — inzetbaar wanneer nodig",
+    generatorRuntimeLabel: "Hoe vaak mag een generator draaien?",
+    homeIntro:
+      "Voer uw locatie en gemiddelde elektriciteitsrekening in. We simuleren 5 jaar aan NASA-satellietweer per uur om precies te bepalen welke zonnepanelen en accu-opslag u nodig hebt — met een eerlijke terugverdientijd over 20 jaar, vervangingsritme van accu's en uitrustingskosten in uw lokale valuta.",
+    imageryPrivacy:
+      "Satellietbeelden (geen account nodig) worden pas geladen nadat u daarom vraagt. Coördinaten gaan naar de kaarttegels en NASA-weerservice; er wordt niets opgeslagen.",
+    independenceTarget:
+      "Doel voor onafhankelijkheid (toegepast op alle drie chemieën):",
+    independentVerification:
+      "Alle uitvoer is een geautomatiseerde educatieve schatting op basis van de aannames die u opgeeft. Het is geen ontwerp, geen gewaarmerkte tekening, geen offerte, geen veiligheidsbeoordeling en geen toets aan voorschriften. Er kunnen fouten in staan. Vertrouw er niet op. Laat elk cijfer — capaciteit, draaddikte, zekeringwaarden en compatibiliteit van apparatuur — onafhankelijk controleren door een erkende elektricien of professioneel ingenieur in uw rechtsgebied voordat u iets koopt, bouwt of inschakelt.",
+    lfpCells:
+      "Gloednieuwe prismatische LFP-cellen van kwaliteitsklasse A. 16S-configuratie per pakket (nominaal 51,2 V).",
+    liabilityLimitation:
+      "Voor zover toepasselijk recht dit toestaat, is de beheerder niet aansprakelijk voor directe, indirecte, incidentele, gevolg-, bijzondere of punitieve schade — waaronder zaakschade, brand, persoonlijk letsel, misgelopen besparingen of bedrijfsonderbreking — voortvloeiend uit uw gebruik van of vertrouwen op dit gratis hulpmiddel. Sommige rechtsgebieden staan bepaalde uitsluitingen niet toe; in dat geval gelden ze alleen voor zover toegestaan. Niets sluit aansprakelijkheid uit die wettelijk niet kan worden uitgesloten, waaronder aansprakelijkheid voor overlijden of persoonlijk letsel door nalatigheid of voor fraude.",
+    llmDisclaimer:
+      "U communiceert met een groot taalmodel. Het produceert vloeiende, zelfverzekerde tekst die feitelijk onjuist kan zijn, ook met specifieke getallen, prijzen, productspecificaties en voorschriften. Behandel elk antwoord als een niet-geverifieerd startpunt.",
+    locationPrecision:
+      "Een plaatsopzoeking is handig, maar met uw exacte locatie krijgt u de nauwkeurigste weer- en zonneschatting. Voer handmatig aangepaste breedte- en lengtegraad in of kies Mijn huidige locatie gebruiken voor GPS in de browser.",
+    monthlyBillHint:
+      "— een grove schatting is prima; de waarde wordt automatisch aangepast aan de prijzen op uw locatie",
+    monthlyBillLabel: "Uw maandelijkse elektriciteitsrekening",
+    offgridTradeoff:
+      "Alleen als u vrijwel volledige onafhankelijkheid wilt tijdens weken met slecht weer. De drie off-gridopties tonen die afweging: één heeft nooit een generator nodig, één ongeveer één dag per jaar en één slechts af en toe. Netgekoppelde gebruikers slaan dit helemaal over.",
+    offlineFallback:
+      "Ja. Na uw eerste bezoek installeert het hulpmiddel zichzelf als offline-app: de dimensioneringsberekening draait volledig in uw browser. Als het netwerk uitvalt, gebruikt het de meegeleverde weersgegevens voor een normaal jaar van de dichtstbijzijnde van 66 referentiesteden.",
+    operatorDescription:
+      "Dit is een gratis, persoonlijk, niet-commercieel educatief hulpmiddel dat wordt beheerd door een particulier, Lucas Ballek. Het is geen bedrijf, niet opgericht als rechtspersoon en geen erkende ingenieurs-, elektrotechnische of financieel adviespraktijk. Niets op deze site is te koop en er wordt geen dienst aan u aangeboden of beloofd.",
+    partsListIntro:
+      "Een referentielijst met onderdelen zodat u weet welke stukken nodig zijn en ongeveer wat ze kosten. Deze site verkoopt niets; het zijn indicatieve prijzen van de open markt die voortdurend veranderen.",
+    paybackClaim:
+      "Waar netstroom duur is — Hawaï, eilanden, grote delen van Europa, Afrika en Zuid-Azië — verdient goed gebouwde zonne-energie met opslag de kosten van de onderdelen vaak in één tot vier jaar terug en draait daarna tientallen jaren bijna gratis. De calculator berekent uw persoonlijke terugverdientijd op basis van uw eigen tarief.",
+    preciseLocationHelp:
+      "De knop voor precieze locatie vult uw exacte coördinaten in en haalt stroomprijzen op uit de dichtstbijzijnde referentieregio. Typ voor een andere plaats een stad of dorp en druk op Enter of Tab om deze te bepalen. Klik daarna op Systeem dimensioneren.",
+    quickSetupHint: "— kies de invoer en klik daarna op Systeem dimensioneren",
+    quickSetupTitle: "Snelle installatie",
+    rateLimitDisclaimer:
+      "Automatiseer of schraap dit hulpmiddel niet en overbelast het niet; één persoon betaalt voor de AI-aanroepen. Er gelden verzoeklimieten en misbruik wordt geblokkeerd.",
+    resultEstimateDisclaimer:
+      "De uitvoer is een geautomatiseerde educatieve schatting. Het is geen technisch ontwerp, geen gewaarmerkt plan, geen offerte en geen veiligheidscertificaat. De uitkomst kan onjuist zijn. Laat elk echt systeem vóór de bouw of ingebruikname controleren door een erkende elektricien of engineer.",
+    resultsIntro:
+      "De resultaten verschijnen hier: eerst een aanbevolen aanpak, met daaronder accuvergelijkingen en alle opties. Bij netgekoppelde plannen wordt ook het verschil getoond tussen verlaging van de rekening en noodstroom bij uitval.",
+    roofAreaHelp:
+      "Een grove schatting is voldoende: ongeveer 6 m² per paneel van 400 W. Dit begrenst alleen de gezochte zonnepaneelgrootte; laat het leeg voor de gewone schatting. Uw coördinaten worden nooit opgeslagen.",
+    roofAreaLabel: "Optioneel dak- of tuinoppervlak (m²)",
+    siteAsIs:
+      "DEZE SITE EN DE UITVOER WORDEN GELEVERD 'ZOALS ZE ZIJN' EN 'ZOALS ZE BESCHIKBAAR ZIJN', ZONDER ENIGE EXPLICIETE OF IMPLICIETE GARANTIE, INCLUSIEF MAAR NIET BEPERKT TOT GARANTIES VAN VERKOOPBAARHEID, GESCHIKTHEID VOOR EEN BEPAALD DOEL, NAUWKEURIGHEID EN NIET-INBREUK. Er is geen garantie op beschikbaarheid, juistheid of voortzetting; de site kan op elk moment zonder kennisgeving veranderen of verdwijnen.",
+    socCaptionGrid:
+      "Elke band staat voor één dag: de bovenkant is de hoogste lading en de onderkant de diepste ontlading, gebaseerd op satellietweer van {startYear} tot {endYear}. De rode lijn markeert een lege accu; het net levert daar stroom, dus er is geen stroomuitval.",
+    socCaptionGridPattern:
+      "Vlakke, hoge banden betekenen dat zonnepanelen en accu de belasting dragen.",
+    socCaptionOffgrid:
+      "Elke band staat voor één dag: de bovenkant is de hoogste lading en de onderkant de diepste ontlading, gebaseerd op satellietweer van {startYear} tot {endYear} ({chemistry}). Een gezond systeem wordt op zonnige dagen weer tot 100% opgeladen; de dalen tonen hoeveel slecht weer de accu leegtrekt. Op de rode lijn levert een generator stroom.",
+    socCaptionSunStrip:
+      "De amberkleurige strook erboven toont de dagelijkse zonneopbrengst (kWh per kW paneel); de dalen vallen samen met de laagste acculading.",
+    socCut60: "~60% lagere rekening — het net levert de rest",
+    socCut80: "~80% lagere rekening — kleine aanvullingen van het net",
+    socCut95: "~95% lagere rekening — bijna onafhankelijk van het net",
+    socTier100: "100% — geen generator nodig",
+    socTier95: "95% — af en toe een generator",
+    socTier99: "99% — generator alleen als zeldzame back-up",
+    socTierAutoLfp: "LFP-accu over vijf jaar met werkelijk weer",
+    socTierAutoNaion: "Natrium-ion-accu over vijf jaar met werkelijk weer",
+    socVerdictGrid:
+      "Laagste: {low}%. Volledig opgeladen op {charged} van {total} dagen; het net leverde stroom op {empty} dagen met lege accu.",
+    socVerdictGridOne:
+      "Laagste: {low}%. Volledig opgeladen op {charged} van {total} dagen; het net leverde stroom op één dag met lege accu.",
+    socVerdictOffgrid:
+      "Laagste: {low}%. Volledig opgeladen op {charged} van {total} dagen; de generator leverde stroom op {empty} dagen met lege accu.",
+    socVerdictOffgridOne:
+      "Laagste: {low}%. Volledig opgeladen op {charged} van {total} dagen; de generator leverde stroom op één dag met lege accu.",
+    surplusTargetHelp:
+      "Boven 100% wordt het systeem ontworpen om verkoopbaar overschot te produceren. Zonder een hierboven ingevoerd teruglevertarief heeft dat overschot geen geldwaarde en wordt het gemarkeerd als afgevoerd overschot. De kolom 'uw doel' in de matrix en de prijsreductiecurve volgen deze schuifregelaar.",
   },
   ar: {
     ...HOME_COPY.ar,

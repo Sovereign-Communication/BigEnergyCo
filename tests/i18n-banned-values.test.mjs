@@ -4,7 +4,7 @@
 // الطناعيا مباشرة", in which "الطناعيا" is not a word, and
 // `ar.advisorDegradedWhyNoKey` ended on a dangling tanwin leaving the clause
 // unfinished. Both passed every rule that existed: the key was present in all
-// six locales, carried the right placeholders, was named by shipped code, and
+// seven locales, carried the right placeholders, was named by shipped code, and
 // was not its own key name. All 20 worker-i18n tests passed. The advisory smoke
 // printed "6 locale(s) rendered, no English left in the body" — over text a
 // native reader rejects.
@@ -258,7 +258,7 @@ test("HERO + FOOTER: the h1 gradient survives translation", () => {
 test("PROSE: the two remaining paragraphs are keyed, hooks on inner elements", () => {
   // These two shipped as English to every non-English visitor: 61 words in the
   // hero and 31 in the legal card, neither carrying a hook, so no rule in
-  // check-i18n could see them. Both now have a key in all six locales.
+  // check-i18n could see them. Both now have a key in all seven locales.
   const html = readFileSync(join(ROOT, "index.html"), "utf8");
   assert.match(
     html,
