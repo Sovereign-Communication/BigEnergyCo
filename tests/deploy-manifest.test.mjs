@@ -183,10 +183,10 @@ test("MUTATION TOOTH: a deleted-but-tracked file fails loudly, not silently", ()
   // this deletion and report `parity robots.txt — unreadable: local read
   // failed: ENOENT`, failing a budget-verdict test for an unrelated reason.
   const victim = "robots.txt";
-  const backup = execSync(`git cat-file blob HEAD:${victim}`, {
-    cwd: ROOT,
-    encoding: "utf8",
-  });
+  // Preserve the checkout bytes as well as the Git blob. On Windows,
+  // core.autocrlf may have checked this text file out as CRLF; restoring the
+  // LF blob would leave the tree dirty after the test.
+  const backup = readFileSync(join(ROOT, victim));
   return withMutationLock(async () => {
     rmSync(join(ROOT, victim), { force: true });
     try {

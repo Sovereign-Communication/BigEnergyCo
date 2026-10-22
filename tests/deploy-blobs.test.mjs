@@ -28,6 +28,7 @@ import {
   stageFromIndex,
   workingTreeDivergences,
 } from "../scripts/lib/deploy-blobs.mjs";
+import { withMutationLock } from "../scripts/lib/mutation-lock.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -189,35 +190,44 @@ test("divergences normalise a Windows-style path before matching", (t) => {
 
 // ── staging behaviour ────────────────────────────────────────────────────
 
-test("stageFromIndex writes committed bytes and excludes a local edit", () => {
-  const stage = "_pages_blob_test";
-  const victim = "robots.txt";
-  const backup = readFileSync(join(ROOT, victim), "utf8");
-  rmSync(stage, { recursive: true, force: true });
-  try {
-    writeFileSync(join(ROOT, victim), backup + "\n<!-- uncommitted -->\n");
-    const divergences = stageFromIndex(ROOT, stage, [
-      "robots.txt",
-      "index.html",
-    ]);
-
-    // The edit is named, loudly, not silently dropped.
-    assert.deepEqual(divergences, [victim]);
-
-    // And it is genuinely absent from the staged artifact.
-    const staged = readFileSync(join(stage, victim), "utf8");
-    assert.ok(!staged.includes("uncommitted"), "local edit must not be staged");
-    assert.equal(staged, backup, "staged bytes must equal the committed blob");
-
-    const stagedHtml = readFileSync(join(stage, "index.html"));
-    assert.ok(stagedHtml.equals(committedBytes(ROOT, "index.html")));
-    assert.equal(
-      [...stagedHtml].filter((b) => b === 13).length,
-      0,
-      "staged html must be LF",
-    );
-  } finally {
+// Like the manifest's deletion tooth, this temporarily changes root
+// robots.txt. Share its cross-process lock so the two test files cannot race.
+test("stageFromIndex writes committed bytes and excludes a local edit", () =>
+  withMutationLock(() => {
+    const stage = "_pages_blob_test";
+    const victim = "robots.txt";
+    const backup = readFileSync(join(ROOT, victim), "utf8");
     rmSync(stage, { recursive: true, force: true });
-    writeFileSync(join(ROOT, victim), backup);
-  }
-});
+    try {
+      writeFileSync(join(ROOT, victim), backup + "\n<!-- uncommitted -->\n");
+      const divergences = stageFromIndex(ROOT, stage, [
+        "robots.txt",
+        "index.html",
+      ]);
+
+      // The edit is named, loudly, not silently dropped.
+      assert.deepEqual(divergences, [victim]);
+
+      // And it is genuinely absent from the staged artifact.
+      const staged = readFileSync(join(stage, victim));
+      assert.ok(
+        !staged.includes(Buffer.from("uncommitted")),
+        "local edit must not be staged",
+      );
+      assert.ok(
+        staged.equals(committedBytes(ROOT, victim)),
+        "staged bytes must equal the committed blob",
+      );
+
+      const stagedHtml = readFileSync(join(stage, "index.html"));
+      assert.ok(stagedHtml.equals(committedBytes(ROOT, "index.html")));
+      assert.equal(
+        [...stagedHtml].filter((b) => b === 13).length,
+        0,
+        "staged html must be LF",
+      );
+    } finally {
+      rmSync(stage, { recursive: true, force: true });
+      writeFileSync(join(ROOT, victim), backup);
+    }
+  }, ROOT));
