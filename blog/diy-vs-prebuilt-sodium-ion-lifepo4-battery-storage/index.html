@@ -170,7 +170,7 @@
                 "name": "Can I mix sodium-ion and LFP cells?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "No, you should never mix sodium-ion and LFP cells in the same battery pack. They have different nominal voltages (3.0V vs 3.2V), different charge/discharge curves, and different internal resistances. Mixing them will cause severe imbalance, leading to rapid degradation, cell damage, and potential safety hazards. Each chemistry requires its own dedicated BMS and configuration."
+                  "text": "A DIY pack should not combine sodium-ion and LFP cells unless the complete pack is designed and tested for that combination. CATL's launch note describes an AB battery-pack solution integrating sodium-ion and lithium-ion cells; that manufacturer-specific system is not a DIY wiring template. Use written compatibility information for the exact cells and controls."
                 }
               },
               {
@@ -178,7 +178,7 @@
                 "name": "How many cycles does a DIY LFP battery last?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "A high-quality DIY LFP battery built with Grade A cells can last 4,000 to 6,000+ cycles at 80% depth of discharge. This translates to roughly 10-15 years of daily use. Cycle life decreases if you frequently discharge to 100% or operate in extreme temperatures. Proper BMS management is key to maximizing lifespan."
+                  "text": "There is no universal cycle count for LFP. Use the exact cell model's cycle-life test, including depth of discharge, temperature, charge/discharge rate, and end-of-life threshold. A cell-level result is not a service-life guarantee for an assembled battery or a different model."
                 }
               },
               {
@@ -186,7 +186,7 @@
                 "name": "What is the best BMS for DIY sodium-ion builds?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "There is no single \"best\" BMS, as sodium-ion is newer. Look for BMS units that allow configurable voltage thresholds (typically 1.5V to 3.65V per cell) and support the specific charge/discharge current limits of your chosen cells. Popular open-source BMS platforms like Daly or JBD can often be configured for Na-ion, but verify compatibility with your cell manufacturer's datasheet first."
+                  "text": "There is no universal sodium-ion voltage range or standard BMS preset. Match BMS voltage, current, temperature, and balancing limits to the exact cell maker's data sheet and obtain written compatibility for the pack and inverter. Do not use a generic LFP preset as a substitute."
                 }
               },
               {
@@ -202,7 +202,7 @@
                 "name": "Is sodium-ion safer than LiFePO4?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Sodium-ion is generally considered safer due to its lower flammability and stability under abuse conditions. It can be discharged to 0% without damage and charges better in cold weather. However, LFP is already very safe compared to other lithium chemistries. Both are excellent choices, but Na-ion offers a slight edge in intrinsic safety and temperature tolerance."
+                  "text": "Chemistry alone does not rank complete-system safety. Compare data and test results for the exact cell and pack, the BMS and protection design, enclosure, and installation requirements. Follow the system manufacturer's instructions and the rules for your location; do not assume either chemistry makes a pack non-flammable or suitable for indoor use."
                 }
               },
               {
@@ -210,7 +210,7 @@
                 "name": "How do I calculate the size of my DIY battery?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Multiply your daily energy consumption (in watt-hours) by your desired days of autonomy. Then divide by the depth of discharge (DoD) allowed for your chemistry. For example, if you use 10,000 Wh/day and want 2 days of backup with LFP (80% DoD), you need 10,000 * 2 / 0.8 = 25,000 Wh (25 kWh) of capacity. Use a tool like the BigEnergyCo estimator to simplify this calculation."
+                  "text": "Estimate required delivered energy from daily use and days of autonomy, then adjust for system losses and use the selected system's documented usable energy. If sizing from nameplate capacity, use the exact model's manufacturer-stated usable fraction and limits instead of assuming a chemistry-wide depth of discharge."
                 }
               }
             ]
@@ -842,218 +842,109 @@
           performance of your DIY battery storage system.
         </p>
 
-        <h2>LiFePO4 Deep Dive: The Proven DIY Favorite</h2>
+        <h2>LiFePO4: read the model-specific data</h2>
         <p>
-          Lithium Iron Phosphate, commonly known as LiFePO4 or LFP, remains the
-          gold standard for DIY battery storage in 2026. Its popularity stems
-          from a combination of safety, longevity, and a mature global supply
-          chain. Unlike earlier lithium-ion chemistries that use cobalt and
-          nickel, LFP cells utilize iron and phosphate, which are abundant,
-          inexpensive, and environmentally benign. This composition makes them
-          inherently safer, with a much lower risk of thermal runaway compared
-          to NMC (Nickel Manganese Cobalt) batteries. For DIY builders, this
-          safety margin is invaluable, reducing the complexity of fire
-          protection measures required during assembly.
+          LiFePO4 (LFP) is one lithium-ion chemistry. The chemistry name alone
+          does not set a cell's usable capacity, voltage limits, operating
+          temperature, storage instructions, cycle-life rating, BMS
+          compatibility, or safety classification. A study of commercial LFP,
+          NCA, and NMC cells found that depth of discharge, discharge rate, and
+          temperature affected degradation, including across cells within a
+          chemistry. The study describes its tested cells; it is not a rating
+          for other cells or an assembled DIY battery. See
+          <a href="https://www.osti.gov/biblio/1650174">Preger et al. (2020)</a
+          >.
         </p>
         <p>
-          A typical LFP cell operates at a nominal voltage of approximately 3.2
-          volts per cell. This voltage profile is highly compatible with 12V,
-          24V, and 48V system architectures. One full charge/discharge cycle of
-          a 3.2V cell maps neatly to the nominal voltages of common automotive
-          and RV systems, simplifying integration. Furthermore, LFP batteries
-          exhibit exceptional cycle life. Under normal operating conditions, a
-          high-quality LFP cell can deliver between 4,000 and 6,000+ cycles at
-          80% depth of discharge (DoD). This translates to a lifespan of 10-15
-          years or more in a daily cycling application, making the total cost of
-          ownership extremely favorable despite potentially higher initial cell
-          costs compared to older technologies.
-        </p>
-        <p>
-          The supply chain for LFP cells is robust and diversified. Major
-          manufacturers in China and elsewhere produce millions of cells
-          annually for both automotive and stationary storage markets. This
-          volume ensures availability and competitive pricing. Additionally, the
-          ecosystem supporting LFP DIY builds is vast. There is a wide array of
-          BMS options specifically tuned for LFP voltage profiles, from simple
-          passive balancing boards to advanced active balancing systems.
-          Community forums, YouTube tutorials, and technical guides dedicated to
-          LFP builds are plentiful, providing ample support for beginners and
-          experts alike.
-        </p>
-        <p>
-          Practical considerations for LFP builds include proper compression and
-          mounting. Prismatic LFP cells, which are popular in DIY builds due to
-          their high capacity (e.g., 100Ah to 314Ah variants), require
-          consistent mechanical pressure to maintain structural integrity and
-          optimal electrical contact. Manufacturers often specify torque values
-          for cell stacking plates, and deviations can lead to reduced
-          performance or cell damage. Builders must ensure that their enclosures
-          and busbar designs accommodate these requirements, using appropriate
-          spacers and clamping mechanisms. Despite these minor complexities, the
-          proven track record, safety profile, and ease of integration make
-          LiFePO4 the default choice for the majority of DIY battery storage
-          projects.
+          Before buying cells, identify the exact model and obtain its current
+          manufacturer data sheet. Record voltage and current limits, allowed
+          charge/discharge/storage temperatures, capacity test conditions,
+          cycle-life protocol and end-of-life threshold, and required mounting
+          or terminal instructions. Select a BMS and inverter from documented
+          compatibility with those limits. Nominal voltage is not a substitute
+          for charge and cutoff values.
         </p>
 
-        <h2>Sodium-Ion Deep Dive: The Emerging Contender</h2>
+        <h2>Sodium-ion: use model-specific instructions</h2>
         <p>
-          Sodium-ion (Na-ion) battery technology has emerged as a promising
-          alternative to lithium-based systems, offering distinct advantages in
-          specific operational environments. While still gaining traction in the
-          consumer market, Na-ion has reached a stage of maturity where it is
-          viable for DIY enthusiasts willing to explore newer frontiers. The
-          fundamental chemistry relies on sodium ions moving between electrodes,
-          utilizing materials like hard carbon for the anode and layered oxides
-          or polyanions for the cathode. Sodium is incredibly abundant,
-          extracted from salt water or brine, which promises lower long-term raw
-          material costs and reduced geopolitical supply chain risks associated
-          with lithium mining.
+          Do not infer charge, discharge, or storage rules from the sodium-ion
+          name. CATL describes its TENER Sodium storage system with dedicated
+          voltage regulation and a sodium-specific BMS for that product. Those
+          system features do not specify safe voltage, cold-charging, or 0%
+          state-of-charge storage rules for unrelated DIY cells. See
+          <a href="https://www.catl.com/en/news/6861.html"
+            >CATL's TENER Sodium system announcement</a
+          >.
         </p>
         <p>
-          A key characteristic of Na-ion cells is their nominal voltage, which
-          is typically around 3.0 volts per cell. This is slightly lower than
-          the 3.2V of LFP, but the difference is manageable in system design.
-          One of the most significant advantages of sodium-ion technology is its
-          tolerance for extreme temperatures. Unlike LFP, which suffers from
-          reduced charging efficiency and potential plating issues at sub-zero
-          temperatures, many Na-ion cells can be charged safely at temperatures
-          below freezing. This opens up possibilities for deployment in cold
-          climates where traditional lithium batteries would require complex
-          heating systems or suffer degradation. Additionally, Na-ion cells can
-          be stored at a fully discharged state (0% SOC) without the risk of
-          degradation that plagues lithium batteries, making them ideal for
-          seasonal storage or emergency reserves that may sit idle for long
-          periods.
-        </p>
-        <p>
-          Safety is another major pillar for Na-ion. The electrolytes used in
-          sodium-ion batteries are often less flammable than those in lithium
-          systems, and the cells themselves are more stable under abuse
-          conditions. This non-flammable positioning appeals to builders
-          prioritizing safety in densely populated areas or indoor
-          installations. However, it is important to note that sodium-ion
-          currently has a lower energy density than LFP. This means that for the
-          same capacity, a Na-ion battery will be larger and heavier. For
-          applications where space and weight are not primary constraints, such
-          as stationary home storage, this trade-off is often acceptable.
-        </p>
-        <p>
-          As of 2026, the DIY ecosystem for sodium-ion is still developing. The
-          second-hand market is thin, meaning builders must source new cells
-          from emerging manufacturers. BMS options specifically calibrated for
-          Na-ion voltage curves are fewer than for LFP, though many universal
-          BMS units can be configured to handle the 3.0V profile with careful
-          parameter setting. Builders venturing into Na-ion must be prepared to
-          do more homework on cell compatibility and BMS configuration.
-          Nevertheless, for those seeking a future-proof, temperature-resilient,
-          and potentially cheaper alternative to lithium, sodium-ion represents
-          an exciting frontier in DIY battery storage.
+          Before considering sodium-ion cells for a DIY pack, obtain the cell
+          manufacturer's data sheet and a BMS compatibility statement. Confirm
+          voltage, current, temperature, storage, balancing, and
+          fault-protection requirements for the exact model. If the maker has
+          not published a limit or an over-discharge procedure, request written
+          guidance instead of guessing from the chemistry label.
         </p>
 
-        <h2>LFP vs Sodium-Ion: Head-to-Head Comparison</h2>
+        <h2>LFP vs Sodium-Ion: compare exact products</h2>
         <p>
-          To make an informed decision, it is helpful to compare LiFePO4 and
-          Sodium-Ion side-by-side across key performance metrics. Both
-          chemistries offer distinct strengths, and the "best" choice depends
-          heavily on your specific application, climate, and priorities. The
-          following table outlines the primary differences between these two
-          leading options for DIY battery storage in 2026, providing a clear
-          snapshot of their technical characteristics.
+          Compare model-specific documents rather than using a chemistry-wide
+          score. Record the source and conditions for each item:
         </p>
-
-        <!-- Table 1: LFP vs Sodium-Ion Comparison -->
         <div class="table-container">
           <table>
             <caption>
-              LFP vs Sodium-Ion: Head-to-Head Comparison
+              Evidence checklist for comparing battery models
             </caption>
             <thead>
               <tr>
-                <th scope="col">Characteristic</th>
-                <th scope="col">LiFePO4 (Lithium Iron Phosphate)</th>
-                <th scope="col">Sodium-Ion (Na-ion)</th>
+                <th scope="col">Item</th>
+                <th scope="col">What to record</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><strong>Nominal Voltage</strong></td>
-                <td>~3.2V per cell</td>
-                <td>~3.0V per cell</td>
+                <td><strong>Usable energy</strong></td>
+                <td>
+                  Exact model, capacity test conditions, voltage window, and
+                  stated usable energy
+                </td>
               </tr>
               <tr>
-                <td><strong>Cycle Life</strong></td>
-                <td>4,000 - 6,000+ cycles (at 80% DoD)</td>
-                <td>2,000 - 4,000 cycles (estimates vary by gen)</td>
+                <td><strong>Cycle-life rating</strong></td>
+                <td>
+                  Depth of discharge, temperature, charge/discharge rate, and
+                  end-of-life criterion
+                </td>
               </tr>
               <tr>
-                <td><strong>Temperature Behavior</strong></td>
-                <td>Poor charging below 0°C; sensitive to cold</td>
-                <td>Excellent charging/sub-zero tolerance; robust in heat</td>
+                <td><strong>Operating and storage limits</strong></td>
+                <td>
+                  Manufacturer's allowed charge, discharge, and storage
+                  temperatures and voltages
+                </td>
               </tr>
               <tr>
-                <td><strong>Safety Profile</strong></td>
-                <td>High (non-flammable electrolyte, stable)</td>
-                <td>Very High (non-flammable, lower thermal runaway risk)</td>
+                <td><strong>Controls and compatibility</strong></td>
+                <td>
+                  Written compatibility for the exact cells, BMS, inverter, and
+                  system configuration
+                </td>
               </tr>
               <tr>
-                <td><strong>Energy Density</strong></td>
-                <td>Moderate (~160 Wh/kg cell level)</td>
-                <td>Lower (~100-130 Wh/kg cell level)</td>
-              </tr>
-              <tr>
-                <td><strong>Cost Trend</strong></td>
-                <td>Stable, mature pricing</td>
-                <td>Decreasing, driven by abundant sodium resources</td>
-              </tr>
-              <tr>
-                <td><strong>DIY Ecosystem Maturity</strong></td>
-                <td>Highly Mature (wide BMS/cell availability)</td>
-                <td>Emerging (limited BMS, mostly new cells)</td>
-              </tr>
-              <tr>
-                <td><strong>Storage at 0% SOC</strong></td>
-                <td>Risk of degradation if left discharged</td>
-                <td>Safe to store fully discharged</td>
+                <td><strong>Installation and cost</strong></td>
+                <td>
+                  Applicable system listing and local requirements; dated quotes
+                  for cells, delivery, controls, and installation
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
-
         <p>
-          This comparison highlights that LFP is the safer bet for most
-          general-purpose applications due to its proven longevity and extensive
-          support network. It is ideal for daily cycling, hot climates, and
-          situations where space efficiency matters. For example, in a sunny
-          region with high daytime generation, LFP’s higher energy density
-          allows for a more compact installation, fitting easily into small
-          utility rooms or closets. Its consistent performance over thousands of
-          cycles makes it predictable for budgeting long-term savings.
-        </p>
-        <p>
-          Sodium-ion, on the other hand, shines in niche applications involving
-          extreme cold, long-term static storage, or where absolute safety and
-          non-flammability are paramount. In northern latitudes where winter
-          temperatures drop well below freezing, Na-ion’s ability to charge
-          efficiently without pre-heating systems offers a significant advantage
-          over LFP, which can suffer from lithium plating and permanent capacity
-          loss if charged too cold. Additionally, its tolerance for
-          full-discharge storage makes it excellent for seasonal cabins or
-          backup units that may sit unused for months. However, builders must
-          accept the trade-offs: larger physical footprint due to lower energy
-          density and potentially shorter lifespan compared to top-tier LFP
-          cells.
-        </p>
-        <p>
-          For stationary home backup, the size penalty of sodium-ion is often
-          negligible, provided you have adequate floor space. The decision
-          ultimately hinges on your local climate and usage patterns. If you
-          live in a temperate zone with moderate temperature swings and
-          prioritize cycle life, LFP remains the superior choice. If you face
-          harsh winters or prioritize intrinsic safety and cost-per-gram of raw
-          material, sodium-ion presents a compelling, albeit less mature,
-          alternative. Builders must weigh these factors carefully, considering
-          not just initial costs but also long-term reliability and
-          environmental conditions.
+          If a manufacturer does not publish a value, mark it unknown rather
+          than filling it in from another model or a chemistry label. A price or
+          cycle count without its source and test conditions is not an
+          apples-to-apples comparison.
         </p>
 
         <h2>The Honest Disadvantages of DIY Builds</h2>
@@ -1296,12 +1187,15 @@
           <div class="faq-item">
             <div class="faq-question">Can I mix sodium-ion and LFP cells?</div>
             <div class="faq-answer">
-              No, you should never mix sodium-ion and LFP cells in the same
-              battery pack. They have different nominal voltages (3.0V vs 3.2V),
-              different charge/discharge curves, and different internal
-              resistances. Mixing them will cause severe imbalance, leading to
-              rapid degradation, cell damage, and potential safety hazards. Each
-              chemistry requires its own dedicated BMS and configuration.
+              A DIY pack should not combine sodium-ion and LFP cells unless the
+              complete pack is designed and tested for that combination.
+              <a href="https://www.catl.com/en/news/665.html"
+                >CATL's launch note</a
+              >
+              describes an AB battery-pack solution integrating sodium-ion and
+              lithium-ion cells; that manufacturer-specific system is not a DIY
+              wiring template. Use written compatibility information for the
+              exact cells and controls.
             </div>
           </div>
 
@@ -1310,11 +1204,11 @@
               How many cycles does a DIY LFP battery last?
             </div>
             <div class="faq-answer">
-              A high-quality DIY LFP battery built with Grade A cells can last
-              4,000 to 6,000+ cycles at 80% depth of discharge. This translates
-              to roughly 10-15 years of daily use. Cycle life decreases if you
-              frequently discharge to 100% or operate in extreme temperatures.
-              Proper BMS management is key to maximizing lifespan.
+              There is no universal cycle count for LFP. Use the exact cell
+              model's cycle-life test, including depth of discharge,
+              temperature, charge/discharge rate, and end-of-life threshold. A
+              cell-level result is not a service-life guarantee for an assembled
+              battery or a different model.
             </div>
           </div>
 
@@ -1323,13 +1217,11 @@
               What is the best BMS for DIY sodium-ion builds?
             </div>
             <div class="faq-answer">
-              There is no single "best" BMS, as sodium-ion is newer. Look for
-              BMS units that allow configurable voltage thresholds (typically
-              1.5V to 3.65V per cell) and support the specific charge/discharge
-              current limits of your chosen cells. Popular open-source BMS
-              platforms like Daly or JBD can often be configured for Na-ion, but
-              verify compatibility with your cell manufacturer’s datasheet
-              first.
+              There is no universal sodium-ion voltage range or standard BMS
+              preset. Match BMS voltage, current, temperature, and balancing
+              limits to the exact cell maker's data sheet and obtain written
+              compatibility for the pack and inverter. Do not use a generic LFP
+              preset as a substitute.
             </div>
           </div>
 
@@ -1350,12 +1242,12 @@
           <div class="faq-item">
             <div class="faq-question">Is sodium-ion safer than LiFePO4?</div>
             <div class="faq-answer">
-              Sodium-ion is generally considered safer due to its lower
-              flammability and stability under abuse conditions. It can be
-              discharged to 0% without damage and charges better in cold
-              weather. However, LFP is already very safe compared to other
-              lithium chemistries. Both are excellent choices, but Na-ion offers
-              a slight edge in intrinsic safety and temperature tolerance.
+              Chemistry alone does not rank complete-system safety. Compare data
+              and test results for the exact cell and pack, the BMS and
+              protection design, enclosure, and installation requirements.
+              Follow the system manufacturer's instructions and the rules for
+              your location; do not assume either chemistry makes a pack
+              non-flammable or suitable for indoor use.
             </div>
           </div>
 
@@ -1364,12 +1256,12 @@
               How do I calculate the size of my DIY battery?
             </div>
             <div class="faq-answer">
-              Multiply your daily energy consumption (in watt-hours) by your
-              desired days of autonomy. Then divide by the depth of discharge
-              (DoD) allowed for your chemistry. For example, if you use 10,000
-              Wh/day and want 2 days of backup with LFP (80% DoD), you need
-              10,000 * 2 / 0.8 = 25,000 Wh (25 kWh) of capacity. Use a tool like
-              the BigEnergyCo estimator to simplify this calculation.
+              Estimate required delivered energy from daily use and days of
+              autonomy, then adjust for system losses and use the selected
+              system's documented usable energy. If sizing from nameplate
+              capacity, use the exact model's manufacturer-stated usable
+              fraction and limits instead of assuming a chemistry-wide depth of
+              discharge.
             </div>
           </div>
         </div>
