@@ -59,7 +59,10 @@ test("the cost comparison exposes assumptions instead of promised savings", () =
   const start = html.indexOf(
     "<h2>6. Build a cost comparison from stated inputs</h2>",
   );
-  const heading = html.indexOf("7. Builder", start);
+  const heading = html.indexOf(
+    "<h2>7. Use product-specific setup information</h2>",
+    start,
+  );
   const end = html.lastIndexOf("<h2>", heading);
   assert.ok(start >= 0 && end > start);
   const cost = html.slice(start, end);
@@ -76,6 +79,24 @@ test("the cost comparison exposes assumptions instead of promised savings", () =
     /\$2,375|\$3,135|\$17,000|saves \$1,990|5\.4&times;/i,
   );
 });
+
+test("battery setup guidance avoids universal sizing and voltage presets", () => {
+  const start = html.indexOf(
+    "<h2>7. Use product-specific setup information</h2>",
+  );
+  const end = html.indexOf("<h2>8. Frequently Asked Questions</h2>", start);
+  assert.ok(start >= 0 && end > start);
+  const setup = html.slice(start, end);
+  assert.match(setup, /stated usable energy/);
+  assert.match(setup, /exact products support each other/);
+  assert.match(setup, /manufacturers specify/);
+  assert.match(setup, /Treat it as an estimate/);
+  assert.doesNotMatch(
+    setup,
+    /15% inverter|&divide; 0\.(65|70)|54\.0V|56\.0V|57\.6V|54\.4V|40\.0V|zero.swap|parasitic heating pads|⚡|🤖/i,
+  );
+});
+
 test("the first battery FAQ schema matches its revised visible answer", () => {
   const json = html.match(
     /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
