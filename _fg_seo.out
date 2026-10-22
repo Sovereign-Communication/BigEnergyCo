@@ -1,0 +1,97 @@
+
+> bigenergyco@1.0.0 seo
+> node scripts/validate-jsonld.mjs && node scripts/check-chars.mjs && node scripts/check-seo.mjs && node scripts/check-quality.mjs && node scripts/check-i18n.mjs && node scripts/check-headers.mjs && node scripts/check-privacy.mjs && node scripts/check-usecases.mjs && node scripts/check-comparison.mjs && node scripts/check-evidence-freshness.mjs && node scripts/check-provenance.mjs && node scripts/sync-country-files.mjs --check && node scripts/bump-asset-tokens.mjs --check
+
+index.html: NO JSON-LD (ok only for utility pages)
+OK   solar-heatmap/index.html [block 1]: WebPage, BreadcrumbList
+OK   blog/index.html [block 1]: Blog
+OK   blog/how-to-cut-electricity-bill-with-solar/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   blog/off-grid-vs-grid-tie-payback/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   blog/diy-vs-prebuilt-sodium-ion-lifepo4-battery-storage/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/index.html [block 1]: CollectionPage, BreadcrumbList
+OK   solar-calculator/honolulu/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/los-angeles/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/phoenix/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/denver/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/chicago/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/miami/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/new-york/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/toronto/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/mexico-city/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/san-juan/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/santo-domingo/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/guatemala-city/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/panama-city/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/havana/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/port-au-prince/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/bogota/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/lima/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/cusco/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/santiago/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/sao-paulo/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/buenos-aires/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/quito/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/la-paz/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/london/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/paris/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/madrid/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/rome/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/berlin/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/warsaw/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/athens/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/oslo/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/istanbul/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/casablanca/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/cairo/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/accra/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/lagos/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/nairobi/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/johannesburg/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/dakar/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/addis-ababa/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/kinshasa/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/antananarivo/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/dubai/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/riyadh/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/karachi/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/delhi/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/mumbai/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/colombo/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/dhaka/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/kathmandu/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/bangkok/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/ho-chi-minh-city/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/jakarta/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/phnom-penh/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/manila/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/hong-kong/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/taipei/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/seoul/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/tokyo/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/beijing/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/singapore/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/suva/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/papeete/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/perth/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/sydney/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   solar-calculator/auckland/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   blog/is-a-home-battery-worth-it/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   blog/time-of-use-tariffs-battery/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   blog/what-size-solar-system-for-off-grid/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   blog/off-grid-battery-bank-sizing/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   blog/solar-vs-generator-cost/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   blog/escape-load-shedding/index.html [block 1]: Article, BreadcrumbList, FAQPage
+OK   about/index.html [block 1]: AboutPage, BreadcrumbList
+OK   blog/battery-longevity-and-dod-reference/index.html [block 1]: Article, BreadcrumbList, FAQPage
+assets/js/sizing/ui.js CLEAN
+index.html CLEAN
+assets/js/sizing/sizing-worker.js CLEAN
+assets/js/sizing/run.js CLEAN
+assets/js/shared/locales.js CLEAN
+assets/js/shared/i18n.js CLEAN
+assets/js/chat.js CLEAN
+worker/index.js CLEAN
+moneyRange separator: "–" U+2013
+graph ?v= stamps: 20261008a
+page loads ui at: undefined
+hero CTA intact: false
