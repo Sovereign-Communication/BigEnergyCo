@@ -106,3 +106,14 @@ test("LAZY: the boot path awaits the dictionary, so first paint is never English
     "the dictionary must be fetched with a dynamic import",
   );
 });
+
+test("LAZY: runtime repaint refreshes the bill slider suffix after localization", () => {
+  const ui = readFileSync(UI_PATH, "utf8");
+  const repaint = ui.match(/function repaintRuntimeCopy\(\) \{([\s\S]*?)\n\}/);
+  assert.ok(repaint, "runtime copy must have one repaint owner");
+  assert.match(
+    repaint[1],
+    /paintBillSliderLabel\(billSliderDisplayValue \?\? Number\(billSlider\.value\)\)/,
+    "locale repaint must preserve the bill label amount instead of snapping it to the range thumb",
+  );
+});

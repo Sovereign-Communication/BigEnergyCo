@@ -10,6 +10,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { LOCALES } from "../assets/js/shared/locales.js";
+import { CHEMISTRIES } from "../assets/js/sizing/engine.js";
 
 const uiSrc = readFileSync(
   new URL("../assets/js/sizing/ui.js", import.meta.url),
@@ -144,6 +146,327 @@ test("BOUNDARY R3: ui.js passes exactly the boundary charts.js destructures", ()
     names(destr[1]),
     "ui.js must pass exactly the boundary charts.js destructures",
   );
+});
+
+test("rendered chart copy uses each locale for SOC, auto, and cost charts", () => {
+  const previousWindow = globalThis.window;
+  const texts = [];
+  const context = new Proxy(
+    {
+      fillText: (value) => texts.push(String(value)),
+      createLinearGradient: () => ({ addColorStop() {} }),
+    },
+    {
+      get(target, key) {
+        return key in target ? target[key] : () => {};
+      },
+      set(target, key, value) {
+        target[key] = value;
+        return true;
+      },
+    },
+  );
+  const nodes = new Map();
+  const makeElement = (tag = "div", attrs = {}, text = "") => ({
+    tag,
+    attrs,
+    style: {},
+    childNodes: [],
+    textContent: text,
+    innerHTML: "",
+    clientWidth: 360,
+    appendChild(child) {
+      this.childNodes.push(child);
+      return child;
+    },
+    getContext: () => context,
+  });
+  const getNode = (id) => {
+    if (!nodes.has(id)) nodes.set(id, makeElement());
+    return nodes.get(id);
+  };
+  const render = (locale, key, params = {}) => {
+    const value = LOCALES[locale][key];
+    assert.equal(typeof value, "string", `${locale}.${key} must exist`);
+    return value.replace(/\{(\w+)\}/g, (_, name) => String(params[name] ?? ""));
+  };
+  const history = {
+    kind: "gridtie",
+    startYear: 2025,
+    endYear: 2025,
+    days: 365,
+    pvDaily: new Array(365).fill(4),
+    tiers: [
+      {
+        id: "tier95",
+        chemLabel: "LFP",
+        dailyMin: new Array(365).fill(20),
+        dailyMax: new Array(365).fill(100),
+        minPct: 20,
+        fullDays: 300,
+        totalDays: 365,
+        emptyDays: 2,
+      },
+    ],
+  };
+  const oneEmptyDayHistory = {
+    ...history,
+    tiers: history.tiers.map((tier) => ({
+      ...tier,
+      dailyMin: [0, ...tier.dailyMin.slice(1)],
+      minPct: 0,
+      emptyDays: 1,
+    })),
+  };
+  const series = {
+    years: 3,
+    grid: [0, 100, 200],
+    solar: [0, 80, 150],
+    system: [0, 50, 100],
+  };
+  const entry = {
+    solvable: true,
+    chemistry: "lfp",
+    chemLabel: "LFP",
+    pvKw: 2,
+    battKwh: 10,
+    battNameplateKwh: 10,
+    importedKwhPerYear: 100,
+    servedKwhPerYear: 1200,
+    replacementsHorizon: 2,
+    cumCostSeries: series,
+    socNameplatePct: {
+      min: new Array(365).fill(20),
+      max: new Array(365).fill(100),
+    },
+  };
+
+  globalThis.window = { devicePixelRatio: 1, innerWidth: 400 };
+  try {
+    for (const locale of Object.keys(LOCALES)) {
+      texts.length = 0;
+      nodes.clear();
+      charts.initCharts({
+        $: getNode,
+        el: (tag, attrs, text) => makeElement(tag, attrs, text),
+        t: (key, params) => render(locale, key, params),
+        fmt: String,
+        money: (amount) => `$${amount}`,
+      });
+
+      charts.drawSocChart(history, "LFP", true);
+      const socCaption =
+        render(locale, "socCaptionGrid", {
+          startYear: "2025",
+          endYear: "2025",
+        }) +
+        " " +
+        render(locale, "socCaptionGridPattern") +
+        " " +
+        render(locale, "socCaptionSunStrip");
+      assert.equal(getNode("socCaption").textContent, socCaption);
+      assert.ok(texts.includes(render(locale, "chartDailySun", { peak: "4" })));
+      assert.ok(
+        texts.includes(
+          render(locale, "socVerdictGrid", {
+            low: "20",
+            charged: "300",
+            total: "365",
+            empty: "2",
+          }),
+        ),
+      );
+      assert.ok(texts.includes(render(locale, "socTier95")));
+
+      charts.drawSocChart(oneEmptyDayHistory, "LFP", true);
+      assert.ok(
+        texts.includes(
+          render(locale, "socVerdictGridOne", {
+            low: "0",
+            charged: "300",
+            total: "365",
+          }),
+        ),
+      );
+
+      charts.drawSocChart({ ...history, kind: "offgrid" }, "LFP", true);
+      assert.equal(
+        getNode("socCaption").textContent,
+        render(locale, "socCaptionOffgrid", {
+          startYear: "2025",
+          endYear: "2025",
+          chemistry: render(locale, "autoChemLfp"),
+        }) +
+          " " +
+          render(locale, "socCaptionSunStrip"),
+      );
+      assert.ok(
+        texts.includes(
+          render(locale, "socVerdictOffgrid", {
+            low: "20",
+            charged: "300",
+            total: "365",
+            empty: "2",
+          }),
+        ),
+      );
+      charts.drawSocChart(
+        { ...oneEmptyDayHistory, kind: "offgrid" },
+        "LFP",
+        true,
+      );
+      assert.ok(
+        texts.includes(
+          render(locale, "socVerdictOffgridOne", {
+            low: "0",
+            charged: "300",
+            total: "365",
+          }),
+        ),
+      );
+
+      charts.drawAutoChart({
+        auto: [entry],
+        history,
+        hardwareConfig: "solar+battery",
+      });
+      assert.equal(
+        getNode("socLegend").childNodes[0].childNodes[1].textContent,
+        render(locale, "autoLegendWithSwaps", {
+          chem: render(locale, "autoChemLfp"),
+          kwh: "10",
+          swaps: "2",
+        }),
+      );
+      const ceiling = render(locale, "autoCeiling", {
+        chem: render(locale, "autoChemLfp"),
+        pct: "100",
+      });
+      assert.equal(
+        getNode("socCaption").textContent,
+        render(locale, "autoSocIntro", { ceilings: ceiling }) +
+          " " +
+          render(locale, "autoSocCaption", {
+            startYear: "2025",
+            endYear: "2025",
+          }) +
+          " " +
+          render(locale, "autoSocSunStrip"),
+      );
+      assert.ok(texts.includes(render(locale, "autoSocAxis")));
+
+      charts.drawCumCostChart(
+        {
+          auto: [entry],
+          best: entry,
+          hardwareConfig: "solar+battery",
+          tariff: 0.2,
+        },
+        entry,
+      );
+      assert.equal(
+        getNode("cumCostTitle").textContent,
+        render(locale, "cumCostTitleSolar"),
+      );
+      const legendCopy = getNode("cumCostLegend")
+        .childNodes.map((row) => row.childNodes.at(-1)?.textContent)
+        .join(" ");
+      assert.ok(
+        legendCopy.includes(
+          render(locale, "cumCostLegendGrid", { amount: "$200" }),
+        ),
+      );
+      assert.ok(
+        legendCopy.includes(
+          render(locale, "cumCostLegendSolar", { amount: "$100" }),
+        ),
+      );
+      assert.ok(
+        legendCopy.includes(
+          render(locale, "cumCostLegendResidual", { amount: "$50" }),
+        ),
+      );
+      assert.ok(texts.includes(render(locale, "cumCostPocket")));
+      assert.ok(
+        texts.includes(render(locale, "cumCostBreakEven", { year: "1" })),
+      );
+
+      const batteryEntry = { ...entry, pvKw: 0 };
+      charts.drawCumCostChart(
+        {
+          auto: [batteryEntry],
+          best: batteryEntry,
+          hardwareConfig: "battery",
+          tariff: 0.2,
+        },
+        batteryEntry,
+      );
+      assert.equal(
+        getNode("cumCostTitle").textContent,
+        render(locale, "cumCostTitleBattery"),
+      );
+      const batteryLegend = getNode("cumCostLegend")
+        .childNodes.map((row) => row.childNodes.at(-1)?.textContent)
+        .join(" ");
+      assert.ok(
+        batteryLegend.includes(
+          render(locale, "cumCostLegendBattery", { amount: "$100" }),
+        ),
+      );
+
+      for (const [tariff, titleKey, bodyKey] of [
+        [null, "costMissingTariffTitle", "costMissingTariffBody"],
+        [0.2, "costNoSeriesTitle", "costNoSeriesBody"],
+      ]) {
+        charts.drawCumCostChart({
+          auto: [{ solvable: true }],
+          best: { solvable: true },
+          hardwareConfig: "solar+battery",
+          tariff,
+        });
+        assert.equal(
+          getNode("cumSavingsTotal").textContent,
+          render(locale, titleKey),
+        );
+        assert.equal(
+          getNode("cumSavingsSub").textContent,
+          render(locale, bodyKey),
+        );
+      }
+    }
+  } finally {
+    if (previousWindow === undefined) delete globalThis.window;
+    else globalThis.window = previousWindow;
+  }
+});
+
+test("auto SOC copy matches the modeled usable window in every locale", () => {
+  const copy = ["en", "es", "pt", "fr", "de", "ar"];
+  for (const locale of copy) {
+    const rawCaption = LOCALES[locale].autoSocCaption;
+    assert.doesNotMatch(
+      rawCaption,
+      /[?\uFFFD]/,
+      `${locale} caption must not contain replacement or transliteration marks`,
+    );
+    const caption = rawCaption.replace(
+      /[\s\u200e\u200f\u202a-\u202e\u2066-\u2069]/g,
+      "",
+    );
+    for (const chemistry of ["lfp", "naion", "agm"]) {
+      const usablePct = Math.round(CHEMISTRIES[chemistry].usableDod * 100);
+      const floorPct = 100 - usablePct;
+      assert.ok(
+        caption.includes(`${usablePct}%`) &&
+          caption.includes(`${floorPct}-100%`),
+        `${locale} must describe ${chemistry}'s modeled ${floorPct}-100% window`,
+      );
+    }
+    assert.ok(
+      !caption.includes("90%"),
+      `${locale} must not retain the inaccurate generic 90% claim`,
+    );
+  }
 });
 
 // ── computeZoomSpan: the exact zoom computation ────────────────────────────

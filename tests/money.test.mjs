@@ -40,33 +40,23 @@ test("paybackYears: null when there is no bill to displace", () => {
   assert.equal(paybackYears(NaN, 1000), null);
 });
 
-test("savingsPanelState: usable series shows the chart; otherwise a tariff-aware message", () => {
+test("savingsPanelState: usable series shows the chart; otherwise a tariff-aware reason", () => {
   const usable = {
     grid: new Array(20).fill(1000),
     solar: new Array(20).fill(500),
   };
   const cases = [
-    // [series, tariff, expected kind, expected title]
+    // [series, tariff, expected kind, expected reason]
     [usable, 0.42, "chart", null],
-    [null, 0.42, "unavailable", "Savings data unavailable for this result"],
-    [
-      null,
-      null,
-      "unavailable",
-      "Enter your grid price to see estimated savings",
-    ],
-    [null, 0, "unavailable", "Enter your grid price to see estimated savings"],
-    [
-      { grid: [], solar: [] },
-      0.42,
-      "unavailable",
-      "Savings data unavailable for this result",
-    ],
+    [null, 0.42, "unavailable", "missing-series"],
+    [null, null, "unavailable", "missing-tariff"],
+    [null, 0, "unavailable", "missing-tariff"],
+    [{ grid: [], solar: [] }, 0.42, "unavailable", "missing-series"],
   ];
-  for (const [series, tariff, kind, title] of cases) {
+  for (const [series, tariff, kind, reason] of cases) {
     const state = savingsPanelState(series, tariff);
     assert.equal(state.kind, kind);
-    if (title) assert.equal(state.title, title);
+    if (reason) assert.equal(state.reason, reason);
   }
 });
 

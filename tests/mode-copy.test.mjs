@@ -302,10 +302,14 @@ test("the cumulative panel asks the question the run can answer", () => {
     /const hasPvRun = p\.hardwareConfig !== \"battery\";/,
     "the title must follow the run, not the chart's fallback entry",
   );
-  assert.match(charts, /What does the battery do to your 20-year cost\?/);
+  assert.match(charts, /cumCostTitleBattery/);
+  assert.match(charts, /cumCostTitleSolar/);
   // The legend's emerald key is the system's own line, which on a panel-free
   // run is not a solar one.
-  assert.match(charts, /hasPv \? \"Solar system\" : \"Battery only\"/);
+  assert.match(
+    charts,
+    /t\(hasPv \? \"cumCostLegendSolar\" : \"cumCostLegendBattery\"/,
+  );
 });
 
 test("the sun strip is not drawn for a run with no array", () => {

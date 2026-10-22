@@ -67,6 +67,11 @@ import {
   rollbackBaseline,
 } from "./lib/stamps.mjs";
 import { attachWorktree } from "./lib/worktree.mjs";
+import {
+  githubRepositorySlug,
+  latestMainPushRun,
+  mainJevReleaseVerdict,
+} from "./lib/main-jev-release.mjs";
 
 const arg = (name, fallback = null) => {
   const i = process.argv.indexOf(name);
@@ -191,6 +196,64 @@ const git = (args) =>
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   }).trim();
+
+function requireMainJevRelease(sha) {
+  let repository;
+  try {
+    repository =
+      process.env.GITHUB_REPOSITORY ||
+      githubRepositorySlug(git(["remote", "get-url", "origin"]));
+  } catch (e) {
+    fatal(
+      2,
+      "cannot identify the GitHub repository for the Jev release gate",
+      e.message,
+    );
+  }
+
+  const api = (path) =>
+    JSON.parse(
+      execFileSync("gh", ["api", path], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: 30000,
+      }),
+    );
+  let runs;
+  try {
+    runs = api(
+      `repos/${repository}/actions/workflows/test.yml/runs?branch=main&head_sha=${sha}&event=push&per_page=100`,
+    ).workflow_runs;
+  } catch (e) {
+    fatal(
+      2,
+      "cannot verify the full Jev release gate on GitHub",
+      "Authenticate GitHub CLI and retry; production promotion is fail-closed. " +
+        String(e.stderr || e.message).slice(0, 240),
+    );
+  }
+  const run = latestMainPushRun(runs, sha);
+  if (!run) fatal(2, "no post-merge main Jev run exists for this SHA", sha);
+
+  let jobs;
+  try {
+    jobs = api(
+      `repos/${repository}/actions/runs/${run.id}/jobs?per_page=100`,
+    ).jobs;
+  } catch (e) {
+    fatal(
+      2,
+      "cannot verify the jev-complete job for the main staging run",
+      String(e.stderr || e.message).slice(0, 240),
+    );
+  }
+  const verdict = mainJevReleaseVerdict({ sha, run, jobs });
+  if (!verdict.ok)
+    fatal(2, "main Jev release gate has not passed", verdict.reason);
+  say(
+    `PROMOTE      full Jev release gate passed on ${sha.slice(0, 7)} (run ${verdict.runId})`,
+  );
+}
 
 const stampOf = async (base) => {
   try {
@@ -550,6 +613,10 @@ async function main() {
       "Set CLOUDFLARE_API_TOKEN (and CLOUDFLARE_ACCOUNT_ID), or run `npx wrangler login` once and pass --assume-auth. " +
         `Then run: node scripts/promote.mjs --apply${TO_SHA ? ` --to ${sourceSha.slice(0, 7)}` : ""}`,
     );
+
+  // A rollback restores a previously released version. Forward promotions
+  // require the full post-merge Jev gate on this exact main staging SHA.
+  if (!TO_SHA) requireMainJevRelease(head);
 
   // ── 6. build + deploy the artifact ───────────────────────────────────────
   if (!TO_SHA) {
