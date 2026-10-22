@@ -123,16 +123,25 @@ export async function applyI18n() {
   window.becoT = translate;
   document.querySelectorAll("[data-i18n]").forEach((elNode) => {
     const key = elNode.getAttribute("data-i18n");
-    if (typeof dict?.[key] === "string") elNode.textContent = dict[key];
+    const value = dict?.[key];
+    if (typeof value === "string" && elNode.textContent !== value)
+      elNode.textContent = value;
   });
   document.querySelectorAll("[data-i18n-placeholder]").forEach((elNode) => {
     const key = elNode.getAttribute("data-i18n-placeholder");
-    if (typeof dict?.[key] === "string") elNode.placeholder = dict[key];
+    const value = dict?.[key];
+    if (typeof value === "string" && elNode.placeholder !== value)
+      elNode.placeholder = value;
   });
   document.querySelectorAll("[data-i18n-aria-label]").forEach((elNode) => {
     const key = elNode.getAttribute("data-i18n-aria-label");
-    if (typeof dict?.[key] === "string")
-      elNode.setAttribute("aria-label", dict[key]);
+    const value = dict?.[key];
+    if (
+      typeof value === "string" &&
+      elNode.getAttribute("aria-label") !== value
+    ) {
+      elNode.setAttribute("aria-label", value);
+    }
   });
 }
 
