@@ -89,4 +89,5 @@ test("unconstrained budget position follows the current target marker", () => {
   );
   assert.match(range, /else \{\s*\/\/ With no optional budget choice/);
   assert.match(range, /next = m && Number\.isFinite\(m\.capexUsd\)/);
+  assert.match(range, /slider\.min = String\(Math\.ceil\(lo\)\)/);
 });

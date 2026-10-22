@@ -3725,7 +3725,9 @@ function syncBudgetRange(seat = false) {
   if (!xs.length) return;
   const lo = Math.min(...xs),
     hi = budgetSpanMax(pts, m ? m.capexUsd : null, anchor);
-  slider.min = String(Math.floor(lo));
+  // Keep the smallest selectable budget at or above the cheapest exact cost;
+  // flooring a fractional cost would let the slider select no system.
+  slider.min = String(Math.ceil(lo));
   slider.max = String(Math.ceil(hi));
   slider.step = String(Math.max(1, Math.round((hi - lo) / 200)));
   // Who owns the truth right now?
