@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#090d16" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <title>
+      Cut Your Electricity Bill — Free Solar &amp; Battery Calculator
+    </title>
+    <!-- Google Search Console: active property for freeoffgridcalculator.com.
+         Domain properties verify via DNS TXT in Cloudflare; this HTML tag is
+         the verification method for URL-prefix properties (and a fallback). -->
+    <meta
+      name="google-site-verification"
+      content="zVFiMH4WnfvhMHtnivIgDm_-5XtelVgcL709oHh3pWk"
+    />
+    <!-- Legacy: verification token of the old pages.dev URL-prefix property.
+         Keep until that property is retired, then remove.
+         Revisit: if the pages.dev property is still verified after
+         2027-01-01, either retire it there or extend this note. -->
+    <meta
+      name="google-site-verification"
+      content="iXiF6PQy5IhjMtll2YzS3-amK6BtApSkpdlKM73dSEc"
+    />
+    <meta
+      name="description"
+      content="See how solar and batteries can cut your electricity bill using NASA weather and honest payback math. Free, no signup, nothing for sale."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Free Off-Grid Calculator" />
+    <meta property="og:locale" content="en_US" />
+    <meta
+      property="og:title"
+      content="Cut Your Electricity Bill — Free Solar &amp; Battery Calculator"
+    />
+    <meta
+      property="og:description"
+      content="See how solar and batteries can cut your electricity bill using NASA weather and honest payback math. Free, no signup, nothing for sale."
+    />
+    <meta property="og:url" content="https://freeoffgridcalculator.com/" />
+    <meta
+      property="og:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Cut Your Electricity Bill — Free Solar &amp; Battery Calculator"
+    />
+    <meta
+      name="twitter:description"
+      content="See how solar and batteries can cut your electricity bill using NASA weather and honest payback math. Free, no signup, nothing for sale."
+    />
+    <meta
+      name="twitter:image"
+      content="https://freeoffgridcalculator.com/assets/og-card.jpg"
+    />
+    <!-- hreflang is intentionally en + x-default only. The ?lang= variants
+         are client-side translations that canonical to this URL, so Google
+         would discard them as non-indexable hreflang targets. Add a locale
+         hreflang only together with a real indexable, self-canonical URL. -->
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://freeoffgridcalculator.com/"
+    />
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href="https://freeoffgridcalculator.com/"
+    />
+    <link rel="canonical" href="https://freeoffgridcalculator.com/" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Free Off-Grid Calculator Blog"
+      href="https://freeoffgridcalculator.com/rss.xml"
+    />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./assets/icon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="48x48"
+      href="./assets/favicon-48.png"
+    />
+    <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebApplication",
+            "@id": "https://freeoffgridcalculator.com/#app",
+            "name": "Free Off-Grid Calculator",
+            "url": "https://freeoffgridcalculator.com/",
+            "applicationCategory": "UtilitiesApplication",
+            "operatingSystem": "Any (web browser)",
+            "browserRequirements": "Requires JavaScript",
+            "description": "Free solar and battery sizing for anywhere on Earth. Simulates your location against five years of NASA satellite weather: fully off-grid systems at three reliability levels, or grid-connected bill cutting. Nothing for sale.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "BigEnergyCo",
+              "url": "https://freeoffgridcalculator.com/"
+            },
+            "image": {
+              "@type": "ImageObject",
+              "url": "https://freeoffgridcalculator.com/assets/og-card.jpg",
+              "width": 1200,
+              "height": 630
+            },
+            "featureList": [
+              "Off-grid sizing with 5-year hourly weather simulation",
+              "Grid-tie bill-cutting targets",
+              "Battery lifetime cost comparison (LFP, sodium-ion, lead-acid)",
+              "Payback and levelized cost of energy",
+              "Works offline after first visit"
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://freeoffgridcalculator.com/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "How accurate are the estimates?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Every number comes from testable code simulating your exact location against five years of NASA satellite weather  -  not an AI guessing. Real-world results still vary with shading, installation quality, and hardware, so have a licensed professional verify anything you build."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Will a solar and battery system pay for itself?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Where grid power is expensive  -  Hawaii, islands, much of Europe, Africa, South Asia  -  properly built solar plus storage commonly repays its component cost in one to four years, then runs nearly free for decades. The calculator shows your personal payback from your own tariff."
+                }
+              },
