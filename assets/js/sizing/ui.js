@@ -13,7 +13,7 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261022f";
+import { APPLIANCES } from "./appliances.js?v=20261022g";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -24,20 +24,20 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261022f";
+} from "./usecases.js?v=20261022g";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261022f";
+} from "./run-coordinator.js?v=20261022g";
 import {
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261022f";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261022f";
+} from "./mode-chrome.js?v=20261022g";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261022g";
 import {
   drawAutoChart,
   drawCumCostChart,
@@ -46,12 +46,12 @@ import {
   initCharts,
   setupChartInteractions,
   setupZoomButtons,
-} from "./charts.js?v=20261022f";
+} from "./charts.js?v=20261022g";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261022f";
+} from "./location-picker.js?v=20261022g";
 
 import {
   estimateTariff,
@@ -59,14 +59,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261022f";
+} from "./pricing.js?v=20261022g";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261022f";
+import { currencyForCountry } from "./country-currency.js?v=20261022g";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261022f";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261022g";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -98,7 +98,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261022f").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261022g").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -109,15 +109,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261022f";
+} from "./lead-acid.js?v=20261022g";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261022f";
+} from "./bom.js?v=20261022g";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261022f";
+import { BOM_ITEMS } from "../shared/content.js?v=20261022g";
 
 import {
   applyI18n,
@@ -126,18 +126,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261022f";
+} from "../shared/i18n.js?v=20261022g";
 
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261022f";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261022f";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261022g";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261022g";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261022f";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261022f";
+} from "../shared/simple-mode.js?v=20261022g";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261022g";
 import {
   advisorJevContext,
   interpretSanity,
@@ -145,57 +145,57 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261022f";
+} from "./validate.js?v=20261022g";
 import {
   CUT_TARGET_PCT,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261022f";
+} from "../shared/cut-targets.js?v=20261022g";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261022f";
+} from "./share-codec.js?v=20261022g";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261022f";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261022f";
+} from "./infeasible-copy.js?v=20261022g";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261022g";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261022f";
+} from "./fuel-units.js?v=20261022g";
 
 import {
   renderFrontier,
   frontierVerdict,
   markerOffCurveNote,
-} from "./frontier-chart.js?v=20261022f";
+} from "./frontier-chart.js?v=20261022g";
 
 import {
   rescalePayload,
   scaleRecord,
   sameSiteOptions,
   relocalizeOversizeCallout,
-} from "./rescale.js?v=20261022f";
+} from "./rescale.js?v=20261022g";
 
-import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261022f";
+import { coldCapacityScale, cycleLifeForDoD } from "./engine.js?v=20261022g";
 import {
   createLeafletProvider,
   createMapProviderRegistry,
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261022f";
+} from "./map-provider.js?v=20261022g";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261022f";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261022f";
-import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261022f";
+} from "./wizard.js?v=20261022g";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261022g";
+import { surplusAnchor, budgetSpanMax } from "./budget-span.js?v=20261022g";
 
 // Charts own their own state (zoom range, cached series); the controller
 // injects only the DOM/format/i18n/currency boundary.
@@ -244,9 +244,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261022f";
+} from "./money.js?v=20261022g";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261022f";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261022g";
 
 let worker = null;
 
@@ -3811,7 +3811,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261022f",
+      "./assets/js/sizing/sizing-worker.js?v=20261022g",
       {
         type: "module",
       },
@@ -5455,9 +5455,6 @@ function matrixHtml(p) {
             selectable && selKey === "matrix:" + key ? " matrix-sel" : "";
           const cls =
             bestCls || selCls ? ` class="${(bestCls + selCls).trim()}"` : "";
-          const clickable = selectable
-            ? ` data-sel="${key}" role="button" tabindex="0" aria-label="Select ${escapeAttr(row.label)} at ${escapeAttr(col.label)}" style="cursor:pointer;"`
-            : "";
           if (!cell || !cell.solvable) {
             // Resolve the copy through the same owner the banner uses. This
             // cell used to read .title/.body off the key table, so a cell with
@@ -5490,13 +5487,31 @@ function matrixHtml(p) {
               cell.pvKw > 0
                 ? `-${cell.cutPct}% bill`
                 : `${cell.cutPct}% peak offset`;
-          const lcoe = Number.isFinite(cell.lcoeUsdPerKwh)
-            ? `<span style="color:var(--text-muted);">\u00B7 ${energyRate(cell.lcoeUsdPerKwh)}</span>`
+          const pvText = `${cell.pvKw} kW PV`;
+          const batteryText =
+            cell.battKwh > 0 ? `${fmt(cell.battKwh)} kWh batt` : "no battery";
+          const costText = `~${moneyRange(cell.costLo, cell.costHi)}`;
+          const lifetimeText = `20-yr ~${money(cell.lifetimeCostMid)}`;
+          const lcoeText = Number.isFinite(cell.lcoeUsdPerKwh)
+            ? `\u00B7 ${energyRate(cell.lcoeUsdPerKwh)}`
             : "";
-          return (
-            `<td${cls}${clickable}>${cell.pvKw} kW PV<br>${cell.battKwh > 0 ? fmt(cell.battKwh) + " kWh batt" : "no battery"}` +
-            `<br>~${moneyRange(cell.costLo, cell.costHi)}<br><strong>20-yr ~${money(cell.lifetimeCostMid)}</strong><br>${rel} ${lcoe}</td>`
-          );
+          const visibleText = [
+            pvText,
+            batteryText,
+            costText,
+            lifetimeText,
+            rel,
+            lcoeText,
+          ]
+            .filter(Boolean)
+            .join(" ");
+          const clickable = selectable
+            ? ` data-sel="${key}" role="button" tabindex="0" aria-label="${escapeAttr(`Select ${row.label} at ${col.label}: ${visibleText}`)}" style="cursor:pointer;"`
+            : "";
+          const lcoe = lcoeText
+            ? `<span style="color:var(--text-muted);">${lcoeText}</span>`
+            : "";
+          return `<td${cls}${clickable}>${pvText}<br>${batteryText}<br>${costText}<br><strong>${lifetimeText}</strong><br>${rel} ${lcoe}</td>`;
         })
         .join("");
       return `<tr><th>${escapeHtml(row.label)}</th>${cells}</tr>`;
