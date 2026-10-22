@@ -429,7 +429,12 @@ if (homeProse.length)
   );
 else ok("index.html: every reader-visible prose block has a locale hook");
 
-const PROSE_CEILING = 445;
+// 445 -> 446 (2026-10-16): the salderingsregeling-stopt-2027 Dutch card adds one
+// Dutch prose block to blog/index.html — a deliberate strategic exception for
+// the Netherlands audience (top-5 traffic country), not unkeyed English.
+// 446 -> 485 (2026-10-16): the salderingsregeling-stopt-2027 post body itself
+// carries 39 Dutch prose blocks — same deliberate exception, first Dutch post.
+const PROSE_CEILING = 485;
 if (proseFindings.length > PROSE_CEILING) {
   fail(
     `${proseFindings.length} visible prose block(s) on a translated page carry no i18n hook ` +
