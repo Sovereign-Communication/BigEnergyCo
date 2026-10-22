@@ -1,0 +1,31 @@
+{
+  "preview": "http://127.0.0.1:4175/",
+  "location": "Honolulu, Hawaii, USA",
+  "flow": "Visible ToU form, then Size My System; real page worker path",
+  "runs": [
+    {
+      "peakRateUsdPerKwh": 0.6,
+      "offPeakRateUsdPerKwh": 0.1,
+      "displayedPeakOffsetPct": 100,
+      "displayedSavingUsd20y": 14901,
+      "displayedBatteryCostUsd": 2198,
+      "displayedVerdict": "Works"
+    },
+    {
+      "peakRateUsdPerKwh": 0.61,
+      "offPeakRateUsdPerKwh": 0.1,
+      "displayedPeakOffsetPct": 100,
+      "displayedSavingUsd20y": 15204,
+      "displayedBatteryCostUsd": 2198,
+      "displayedVerdict": "Works"
+    }
+  ],
+  "observed": {
+    "apiHealthHttpStatus": 200,
+    "pageAndAssetsHttpStatus": 200,
+    "browserConsoleErrors": [],
+    "viewportWidthCssPx": 610,
+    "horizontalOverflowCssPx": 0
+  },
+  "scopeNote": "Confirms displayed UI/worker flow and sensitivity to the entered rate only; does not certify tariff schedule realism or financial-model accuracy."
+}

@@ -1,0 +1,41 @@
+{
+  "baseline": "07f51ea4712acbd5d8688470be5b9889001e4b59",
+  "fixtureHours": 8760,
+  "results": [
+    {
+      "requested": "reserve",
+      "engineMode": "gridtie",
+      "metric": "reserve_tradeoff",
+      "value": {
+        "savingsLostPct": 4.3947062596754884,
+        "coverHours": 24.000000000000004
+      },
+      "status": "not-here",
+      "canonicalPayloadIdentical": true
+    },
+    {
+      "requested": "tou",
+      "engineMode": "gridtie",
+      "metric": "tou_peak_offset_pct",
+      "value": 36.83198609903927,
+      "status": "not-here",
+      "canonicalPayloadIdentical": true
+    },
+    {
+      "requested": "backup",
+      "engineMode": "offgrid",
+      "metric": "outage_coverage_pct",
+      "value": 84.337899543379,
+      "status": "partial",
+      "canonicalPayloadIdentical": true
+    },
+    {
+      "requested": "portable",
+      "engineMode": "gridtie",
+      "metric": "portable_runtime_coverage_pct",
+      "value": 0.273972602739726,
+      "status": "not-here",
+      "canonicalPayloadIdentical": true
+    }
+  ]
+}

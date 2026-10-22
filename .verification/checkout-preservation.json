@@ -1,0 +1,10 @@
+{
+  "branch": "docs/ledger-p1-3",
+  "head": "0546265d2345a8bb17cb7918e11f24747195e165",
+  "changedOriginalFiles": [],
+  "removedOriginalStatusEntries": [],
+  "addedStatusEntries": [
+    "?? wip/pr203-canonical-repair/"
+  ],
+  "hashesChecked": 150
+}

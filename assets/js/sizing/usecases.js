@@ -162,7 +162,8 @@ export const USE_CASES = {
       // pay for the kWh you would store, a battery alone does not pay back.
       if (
         !Number.isFinite(m.touSavingUsd20y) ||
-        !Number.isFinite(m.touBatteryCostUsd20y)
+        !Number.isFinite(m.touBatteryCostUsd20y) ||
+        m.touBatteryCostUsd20y <= 0
       )
         return { status: "not-here", reasonKey: "verdictTou" };
       if (m.touSavingUsd20y <= 0)
@@ -245,11 +246,11 @@ export const USE_CASES = {
         return { status: "not-here", reasonKey: "verdictReserve" };
       // Half your bill savings is the line: past it the reserve has stopped
       // being insurance and started being the price of the system.
-      if (m.reserveSavingsLostPct > 0.5)
+      if (m.reserveSavingsLostPct > 50)
         return { status: "not-here", reasonKey: "verdictReserve" };
       if (!Number.isFinite(m.reserveCoverHours) || m.reserveCoverHours <= 0)
         return { status: "partial", reasonKey: "verdictReserve" };
-      if (m.reserveSavingsLostPct > 0.2)
+      if (m.reserveSavingsLostPct > 20)
         return { status: "partial", reasonKey: "verdictReserve" };
       return { status: "works", reasonKey: "verdictReserve" };
     },
@@ -371,8 +372,14 @@ export function deriveLegacy(id) {
  * bill-cut), so the pair resolves to the case that owns it and the caller
  * carries the explicit id in the link.
  */
+export function isUseCaseMode(mode) {
+  return ["reserve", "tou", "backup", "portable"].includes(mode);
+}
+
 export function useCaseForLegacy({ mode, hardwareConfig }) {
-  if (mode === "offgrid") return "offgrid";
+  // The PR's new mode names refer to these same cases; resolve them here so
+  // runSizing never sends an unknown mode into the two-mode sizing core.
+  if (mode === "offgrid" || isUseCaseMode(mode)) return mode;
   if (hardwareConfig === "battery") return "tou";
   return "billcut";
 }
