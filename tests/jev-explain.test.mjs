@@ -170,6 +170,42 @@ test("heuristic, low-confidence, and missing-proof reasons", () => {
   assert.ok(byAxis.privacy, "privacy facet present");
 });
 
+test("confidence from 0.5 up to the pass bar gets an explicit gate explanation", () => {
+  for (const confidence of [0.5, 0.7, 0.949]) {
+    const reasons = facetScoreReasons(
+      "comparison",
+      { confidence },
+      "Measured source proof.",
+      [],
+    );
+    assert.ok(
+      reasons.some((reason) =>
+        reason.includes("below the required 0.95 confidence bar"),
+      ),
+      `confidence ${confidence} should explain why the facet cannot pass`,
+    );
+    assert.ok(
+      reasons.some((reason) => reason.includes("not certain enough to pass")),
+      `confidence ${confidence} should explain the judgment's uncertainty`,
+    );
+    assert.ok(
+      reasons.every((reason) => !reason.includes("was low")),
+      `confidence ${confidence} is below the gate bar but not the low-confidence cutoff`,
+    );
+  }
+
+  assert.deepEqual(
+    facetScoreReasons(
+      "comparison",
+      { confidence: 0.95 },
+      "Measured proof.",
+      [],
+    ),
+    [],
+    "confidence at the pass bar needs no shortfall explanation",
+  );
+});
+
 test("scoped shortfall names the facets and the gap", () => {
   const expl = explainLowScore(makeReport(), makeEvidence());
   assert.ok(expl.scoped);
