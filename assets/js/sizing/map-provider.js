@@ -20,7 +20,7 @@ export const LEAFLET_STYLE_URL = versionedLocalAsset(
   "../../vendor/leaflet/leaflet.css",
 );
 export const LEAFLET_STYLE_SRI =
-  "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
+  "sha256-M3v8pcq9A7OYFbJwD+vis7ft9VkhxZzUn4jssyghIwM=";
 export const CARTO_TILE_URL =
   "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
 // Keyless satellite basemap — same public ArcGIS Online World Imagery service

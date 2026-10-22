@@ -211,7 +211,10 @@ const ALLOWED_STORAGE_KEYS = new Set([
       // vendor identifiers and scan all other bytes normally.
       const code =
         f === "assets/vendor/leaflet/leaflet.js" && a === "doubleclick"
-          ? source.replace(/(?:doubleClickZoom|onDoubleClick)/gi, "")
+          ? source
+              .replaceAll("doubleClickZoom", "")
+              .replaceAll("DoubleClickZoom", "")
+              .replaceAll("onDoubleClick", "")
           : source;
       if (code.toLowerCase().includes(a.toLowerCase())) hits.push(`${f}: ${a}`);
     }
