@@ -751,71 +751,53 @@
           present a scenario as a guaranteed saving or a universal battery
           replacement schedule.
         </p>
-        <h2>
-          7. Builder&rsquo;s Field Guide: Sizing &amp; Inverter Configuration
-          Checklist
-        </h2>
+        <h2>7. Use product-specific setup information</h2>
         <p>
-          To implement a true zero-swap storage strategy in your own
-          installation:
+          Before choosing or configuring a battery, gather the load, battery,
+          inverter, and installation information for the exact system:
         </p>
         <ol>
           <li>
-            <strong>Calculate True Daily Nighttime Consumption:</strong>
-            Determine your average consumption between solar sunset and sunrise.
-            Add 15% inverter standby and conversion overhead.
+            <strong>Characterize the load:</strong> Estimate the energy and peak
+            power the battery must supply over the intended backup period. Use
+            measured or documented loads and include inverter standby and
+            conversion losses only when supported by the equipment information.
           </li>
           <li>
-            <strong>Apply the Zero-Swap Oversize Factor:</strong>
-            <ul>
-              <li>
-                For <strong>LFP</strong>: Target an installed nameplate capacity
-                equal to <code>Daily Usable kWh &divide; 0.65</code>.
-              </li>
-              <li>
-                For <strong>Sodium-Ion</strong>: Target an installed nameplate
-                capacity equal to <code>Daily Usable kWh &divide; 0.70</code>.
-              </li>
-            </ul>
+            <strong>Size from usable capacity:</strong> Account for the
+            battery&rsquo;s stated usable energy, discharge limits, temperature
+            range, power rating, and any reserve you need. Do not use a fixed
+            depth-of-discharge multiplier as a universal sizing rule.
           </li>
           <li>
-            <strong>Program Inverter Voltage Cutoffs Precisely:</strong>
-            <ul>
-              <li>
-                For <strong>16S LFP (48V nominal)</strong>: Set Float to 54.0V
-                (3.375V/cell), Bulk/Absorption to 56.0V (3.50V/cell), and Low
-                Voltage Cutoff (LVD) to 48.0V (3.00V/cell). Avoiding 3.65V
-                top-charging eliminates high-voltage electrolyte oxidation.
-              </li>
-              <li>
-                For <strong>16S Na-ion (48V nominal)</strong>: Set Bulk to 57.6V
-                (3.60V/cell), Float to 54.4V (3.40V/cell), and Low Voltage
-                Cutoff to 40.0V (2.50V/cell).
-              </li>
-            </ul>
+            <strong>Check battery and inverter compatibility:</strong> Confirm
+            that the exact products support each other. Configure charging,
+            voltage cutoffs, current limits, battery-management-system
+            communications, and firmware only as their manufacturers specify. Do
+            not copy setpoints from another model or chemistry.
           </li>
           <li>
-            <strong>Honor Cold Temperature Thresholds:</strong> If ambient
-            winter temperatures drop below 0&deg;C (32&deg;F), select Sodium-ion
-            to eliminate the need for parasitic heating pads, or house LFP
-            inside the conditioned thermal envelope of the building.
+            <strong>Plan protection and installation:</strong> Follow the
+            product instructions for overcurrent protection, disconnects,
+            conductor sizing, location, clearances, and temperature limits.
+            Check applicable local electrical requirements and use a qualified
+            installer when required.
           </li>
         </ol>
 
-        <!-- Sizing Calculator CTA Card -->
         <div class="cta-card">
-          <h3>⚡ Calculate Your Exact Zero-Swap Battery Size</h3>
+          <h3>Explore an estimated battery size</h3>
           <p>
-            Use our free worldwide solar &amp; battery estimator to simulate
-            your home's exact hourly solar curve, climate temperatures, and
-            zero-swap battery capacity. 100% free, no signup, open source.
+            Use the solar and battery estimator to explore a result for your
+            location and selected assumptions. Treat it as an estimate and
+            confirm equipment settings against the exact product documentation.
           </p>
           <a
             href="../../#sizing"
             class="btn btn-primary"
             style="font-size: 1.05rem; padding: 0.85rem 2rem"
           >
-            🤖 Launch Free Off-Grid Sizing Calculator
+            Launch the off-grid sizing calculator
           </a>
         </div>
 
