@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 
 const html = readFileSync("solar-heatmap/index.html", "utf8");
@@ -9,13 +10,19 @@ test("the heatmap loads Leaflet from versioned same-origin assets", () => {
   assert.match(html, /\.\.\/assets\/vendor\/leaflet\/leaflet\.css\?v=/);
   assert.match(html, /\.\.\/assets\/vendor\/leaflet\/leaflet\.js\?v=/);
   assert.doesNotMatch(html, /https:\/\/unpkg\.com\/leaflet/);
-  assert.match(
-    html,
-    /integrity="sha256-p4NxAoJBhIIN\+hmNHrzRCf9tD\/miZyoHS5obTRR9BMY="/,
+  const integrity = (path) =>
+    `sha256-${createHash("sha256").update(readFileSync(path)).digest("base64")}`;
+  assert.ok(
+    html.includes(
+      `integrity="${integrity("assets/vendor/leaflet/leaflet.css")}"`,
+    ),
+    "Leaflet stylesheet integrity must match the vendored file",
   );
-  assert.match(
-    html,
-    /integrity="sha256-20nQCchB9co0qIjJZRGuk2\/Z9VM\+kNiyxNV1lvTlZBo="/,
+  assert.ok(
+    html.includes(
+      `integrity="${integrity("assets/vendor/leaflet/leaflet.js")}"`,
+    ),
+    "Leaflet script integrity must match the vendored file",
   );
   assert.ok(
     html.indexOf("assets/vendor/leaflet/leaflet.js") <
