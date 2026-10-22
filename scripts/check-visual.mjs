@@ -294,7 +294,7 @@ export async function main(argv = process.argv.slice(2)) {
           status = v.status;
           ratio = v.ratio;
           detail = r.mismatch
-            ? "snapshot size varies run to run (external Leaflet load)"
+            ? "snapshot size varies run to run (heatmap data load timing)"
             : `${r.diff}/${r.total} px = ${(v.ratio * 100).toFixed(4)}% — MEASURED, not gated: ${cell.template} is declared unreproducible`;
         } else if (r.mismatch) {
           status = "diff";

@@ -114,7 +114,7 @@ test("warm-wet sites read tropical, cool-dim sites read maritime", () => {
 
 // ── map: host allowlist is enforced ─────────────────────────────────────────
 
-test("bundled map URLs pass the policy, strangers fail", () => {
+test("same-origin Leaflet and approved tile URLs pass the policy", () => {
   assert.equal(mapUrlsAllowed(), true);
   assert.equal(
     mapUrlsAllowed(LEAFLET_SCRIPT_URL, [
@@ -125,6 +125,12 @@ test("bundled map URLs pass the policy, strangers fail", () => {
   );
   assert.equal(
     mapUrlsAllowed("https://evil.example/leaflet.js", [CARTO_TILE_URL]),
+    false,
+  );
+  assert.equal(
+    mapUrlsAllowed(new URL("/other.js", LEAFLET_SCRIPT_URL).href, [
+      CARTO_TILE_URL,
+    ]),
     false,
   );
   assert.equal(
