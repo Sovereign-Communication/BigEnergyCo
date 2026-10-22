@@ -7,6 +7,37 @@ const html = readFileSync(
   "utf8",
 );
 const listing = readFileSync("blog/index.html", "utf8");
+const TEXT_ENTITIES = {
+  "&amp;": "&",
+  "&quot;": '"',
+  "&#39;": "'",
+  "&apos;": "'",
+};
+const collectTextNodes = (value) => {
+  const nodes = [];
+  let inTag = false;
+  let textStart = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    if (!inTag && value[index] === "<") {
+      nodes.push(value.slice(textStart, index));
+      inTag = true;
+    } else if (inTag && value[index] === ">") {
+      inTag = false;
+      textStart = index + 1;
+    }
+  }
+  if (!inTag) nodes.push(value.slice(textStart));
+  return nodes.join("");
+};
+const normalizeText = (value) =>
+  collectTextNodes(value)
+    .replace(
+      /&(amp|quot|#39|apos);/g,
+      (entity) => TEXT_ENTITIES[entity] ?? entity,
+    )
+    .replace(/\s+/g, " ")
+    .trim();
+
 const start = html.indexOf("<!-- Executive Summary Callout -->");
 const end = html.indexOf(
   "<h2>3. Chemistry does not guarantee a service life</h2>",
@@ -86,6 +117,40 @@ test("the first battery FAQ schema matches its revised visible answer", () => {
   assert.doesNotMatch(
     faq.mainEntity[0].acceptedAnswer.text,
     /Wöhler|10,000 cycles/i,
+  );
+});
+
+test("battery FAQ schema mirrors the visible answers without universal claims", () => {
+  const json = html.match(
+    /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+  );
+  assert.ok(json);
+  const graph = JSON.parse(json[1]);
+  const faq = graph["@graph"].find((item) => item["@type"] === "FAQPage");
+  const visible = [
+    ...html.matchAll(
+      /<div class="faq-item">\s*<div class="faq-question">([\s\S]*?)<\/div>\s*<div class="faq-answer">([\s\S]*?)<\/div>\s*<\/div>/g,
+    ),
+  ].map(([, question, answer]) => ({
+    name: normalizeText(question),
+    text: normalizeText(answer),
+  }));
+  const structured = faq.mainEntity.map((entry) => ({
+    name: normalizeText(entry.name),
+    text: normalizeText(entry.acceptedAnswer.text),
+  }));
+  assert.equal(visible.length, 5);
+  assert.deepEqual(structured, visible);
+  assert.match(html, /https:\/\/www\.catl\.com\/en\/news\/6861\.html/);
+  assert.match(
+    html,
+    /https:\/\/assets\.discoverbattery\.com\/documents\/07_sla\/885_product_literature\/standard-agm-battery-performance\.pdf/,
+  );
+  assert.doesNotMatch(
+    [...visible, ...structured]
+      .map((entry) => `${entry.name} ${entry.text}`)
+      .join(" "),
+    /copper dissolves irreversibly|0\.0V without structural degradation|5,500 cycles|6 to 8 years|3 to 5 times|Wöhler exponent|10,000 cycles|saves \$1,990/i,
   );
 });
 
