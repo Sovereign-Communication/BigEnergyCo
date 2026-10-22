@@ -652,23 +652,14 @@ jobs:
       - name: Which plan item is this PR about?
         id: scope
         env:
-          # Flexible scope resolution: the gate infers scope semantically from
-          # the title AND changed files, tolerating wording variations.
-          # Explicit P-item in title wins; otherwise infer from paths/keywords.
           PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_FILES: ${{ toJSON(github.event.pull_request.changed_files) }}
         run: |
           SCOPE="$(node -e '
             const { resolveCiScope } = await import("./scripts/lib/jev-scope.mjs");
-            let files = [];
-            try { files = JSON.parse(process.env.PR_FILES || "[]").map(f => f.filename || f); } catch {}
-            const r = resolveCiScope({ title: process.env.PR_TITLE || "", files });
+            const r = resolveCiScope(process.env.PR_TITLE || "");
             if (!r.scope) {
               process.stderr.write(r.error + "\n");
               process.exit(1);
-            }
-            if (r.how !== "explicit") {
-              process.stderr.write(`scope inferred (${r.how}): ${r.inferenceReason}\n`);
             }
             process.stdout.write(r.scope);
           ' --input-type=module)"

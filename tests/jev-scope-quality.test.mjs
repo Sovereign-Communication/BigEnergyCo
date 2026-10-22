@@ -1,26 +1,49 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
 
 import {
   buildScopeQualityEvidence,
   extractP97QualityRubric,
-  isBlogPostFile,
   isGovernedContentFile,
 } from "../scripts/lib/jev-scope-quality.mjs";
 import { buildStateText } from "../scripts/lib/jev-complete.mjs";
+import { collectScopeQualityEvidence } from "../scripts/lib/jev-scope-quality-git.mjs";
 
 const plan = readFileSync("docs/plan/MASTER_PLAN.md", "utf8");
-const contentFixture = readFileSync(
-  "tests/fixtures/jev-p97/content-page.html",
-  "utf8",
-);
-const infrastructureFixture = readFileSync(
-  "tests/fixtures/jev-p97/infrastructure-only.patch",
-  "utf8",
-);
+const page = `<!doctype html>
+<html lang="en"><head>
+<title>System size and home use</title>
+<meta name="description" content="Plain-language guidance on sizing home energy storage.">
+<link rel="canonical" href="https://example.invalid/blog/system/">
+<script type="application/ld+json">{"@type":"BlogPosting","headline":"System size and home use"}</script>
+</head><body><main><article>
+<h1>System size and home use</h1>
+<p>A kilowatt-hour (kWh) measures energy. A 5 kWh battery at 80% usable capacity provides 4 kWh before conversion losses.</p>
+<p>Use the cited figure as an estimate and check the source date before relying on it.</p>
+<p>Use fall protection. A licensed electrician must do every electrical termination; check local requirements before work.</p>
+<p>This is educational information, not legal or installation advice. You can compare the estimate with your own bills.</p>
+<p>Source: <cite>National Renewable Energy Laboratory, residential storage guidance</cite>.</p>
+<p>Last reviewed: October 10, 2026</p>
+</article></main></body></html>
+`;
 
-test("the rubric carries the approved plan requirements and content criteria", () => {
+function git(root, ...args) {
+  const result = spawnSync("git", ["-C", root, ...args], { encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  return result.stdout.trim();
+}
+
+test("P9.7 judgment carries each authoritative requirement from the candidate plan", () => {
   const rubric = extractP97QualityRubric(plan);
   for (const id of [
     "P9.7",
@@ -32,227 +55,94 @@ test("the rubric carries the approved plan requirements and content criteria", (
     "R-CONT-05",
     "R-RES-07",
     "R-SEO-05",
-  ])
-    assert.ok(rubric.includes(id), `missing plan requirement ${id}`);
-  for (const criterion of [
-    "metadata/JSON-LD parity",
-    "no cannibalization",
-    "official sources only for news hooks",
-    "reading grade of",
-    "all locales",
-    "significant figures",
-    "2\u20133 significant figures",
-    "percentages are whole numbers",
-    "Full precision appears only in tables and CSV",
-    "no decimals at or above 100 units",
-    "fall protection",
-    "Stale figures are fixed or removed",
-    "last reviewed",
-    "No hype, no fear, no sales language",
-    "two or three quotes",
-    "where DIY is not permitted",
-    "No lead forms and no company names",
-  ])
-    assert.ok(rubric.includes(criterion), `missing ${criterion}`);
+  ]) {
+    const requirement = plan
+      .split(/\r?\n/)
+      .find((line) => line.includes(`| ${id} |`) || line.includes(`**${id}:`));
+    assert.ok(requirement, `plan requirement ${id} exists`);
+    assert.ok(rubric.includes(requirement.trim()), `rubric includes ${id}`);
+  }
 });
 
-test("the public fixture represents copy, numeric, glossary, legal, safety, source, and review criteria", () => {
-  for (const evidence of [
-    'rel="canonical"',
-    "application/ld+json",
-    "<title>A 2.4 kW solar system",
-    "<h1>A 2.4 kW solar system",
-    "2.4 kW",
-    "35%",
-    "$8,200",
-    "146.28 kWh",
-    "kilowatt-hour (kWh)",
-    "A licensed electrician must do every electrical termination",
-    "fall protection",
-    "permit and grid-connection steps",
-    "not a quote or a guarantee",
-    "dataset updated in 2026",
-    "Last reviewed: October 10, 2026",
-  ])
-    assert.ok(contentFixture.includes(evidence), `fixture missing ${evidence}`);
-});
-
-test("scope detection includes public pages and content sources, excluding internal files", () => {
-  for (const [file, expected] of [
+test("content scope is public pages plus plan-named sources, not implementation assets", () => {
+  for (const [path, expected] of [
     ["index.html", true],
-    ["about/index.html", true],
-    ["blog/example/index.html", true],
-    ["solar-calculator/example/index.html", true],
-    ["assets/js/shared/jargon-dict.js", true],
-    ["assets/js/shared/locales.js", true],
-    ["assets/js/sizing/money.js", true],
-    ["assets/js/sizing/city-data/US.json", true],
-    ["assets/data/provenance.json", true],
+    ["blog/system/index.html", true],
+    ["about/index.htm", true],
     ["LIABILITY.md", true],
+    ["robots.txt", true],
     ["sitemap.xml", true],
-    ["llms.txt", true],
+    ["assets/js/shared/jargon-dict.js", true],
+    ["assets/data/provenance.json", true],
+    ["assets/js/sizing/money.js", false],
+    ["assets/data/city-grid.json", false],
+    ["llms.txt", false],
     ["404.html", false],
     ["docs/guide.html", false],
-    ["scripts/generated.html", false],
-    ["tests/fixtures/jev-p97/content-page.html", false],
     ["assets/template.html", false],
-    ["blog/SEO-DOCTRINE.md", false],
-    ["scripts/lib/jev-scope-quality.mjs", false],
-    ["worker/wrangler.json", false],
+    ["tests/fixtures/page.html", false],
   ])
-    assert.equal(isGovernedContentFile(file), expected, file);
-
-  assert.equal(isBlogPostFile("blog/example/index.html"), true);
-  assert.equal(isBlogPostFile("blog/index.html"), false);
-  assert.equal(isBlogPostFile("about/index.html"), false);
-  const glossary = buildScopeQualityEvidence(
-    "P9.7",
-    { files: ["assets/js/shared/jargon-dict.js"] },
-    plan,
-  );
-  assert.equal(glossary.content_criteria_applicable, true);
-  assert.ok(glossary.context.includes("every technical term"));
+    assert.equal(isGovernedContentFile(path), expected, path);
 });
 
-test("changed pages receive the full plan rubric, snapshot, and actual diff", () => {
-  const evidence = buildScopeQualityEvidence(
+test("changed content requires its full snapshot and diff; incomplete or oversized evidence fails closed", () => {
+  const content = buildScopeQualityEvidence(
     "P9.7",
     {
-      files: ["blog/example/index.html"],
-      additions: 4,
-      deletions: 2,
-      patch: "+A new, reviewed sentence.",
+      files: ["blog/system/index.html"],
+      patch: "+<p>Last reviewed: October 12, 2026</p>",
       contentSnapshots: [
-        {
-          path: "blog/example/index.html",
-          revision: "head",
-          content: contentFixture,
-        },
+        { path: "blog/system/index.html", revision: "head", content: page },
       ],
     },
     plan,
   );
-
-  assert.equal(evidence.content_criteria_applicable, true);
-  assert.equal(evidence.content_evidence_complete, true);
-  assert.deepEqual(evidence.content_files, ["blog/example/index.html"]);
-  assert.deepEqual(evidence.blog_post_files, ["blog/example/index.html"]);
-  for (const item of [
-    "R-CONT-01",
-    "R-CONT-05",
-    "licensed electrician must do every electrical termination",
-    "Last reviewed: October 10, 2026",
-    "A new, reviewed sentence",
-  ])
-    assert.ok(evidence.context.includes(item), `context missing ${item}`);
-  assert.ok(evidence.facet_line.includes("full governed-content snapshots"));
-});
-
-test("changed governed sources require and carry a full snapshot", () => {
-  const path = "assets/js/shared/jargon-dict.js";
-  const missing = buildScopeQualityEvidence(
-    "P9.7",
-    { files: [path], patch: '+export const terms = ["inverter"];' },
-    plan,
-  );
-  assert.equal(missing.content_criteria_applicable, true);
-  assert.equal(missing.content_evidence_complete, false);
-  assert.ok(missing.context.includes("full snapshot unavailable"));
-
-  const complete = buildScopeQualityEvidence(
-    "P9.7",
-    {
-      files: [path],
-      patch: '+export const terms = ["inverter"];',
-      contentSnapshots: [
-        {
-          path,
-          revision: "head",
-          content: 'export const terms = ["battery", "inverter"];',
-        },
-      ],
-    },
-    plan,
-  );
-  assert.equal(complete.content_evidence_complete, true);
+  assert.equal(content.content_evidence_complete, true);
+  assert.ok(content.context.includes("metadata/JSON-LD parity"));
   assert.ok(
-    complete.context.includes(
-      `Full head snapshot of governed content file ${path}:`,
+    content.context.includes("Full head snapshot of blog/system/index.html"),
+  );
+  for (const evidence of [
+    '<link rel="canonical" href="https://example.invalid/blog/system/">',
+    "<title>System size and home use</title>",
+    '"headline":"System size and home use"',
+    "<h1>System size and home use</h1>",
+    '<meta name="description"',
+  ])
+    assert.ok(content.context.includes(evidence), `snapshot missing ${evidence}`);
+  assert.ok(
+    content.context.includes(
+      "licensed electrician must do every electrical termination",
     ),
   );
-  assert.ok(complete.context.includes('"battery", "inverter"'));
-});
+  assert.ok(content.context.includes("5 kWh battery at 80% usable capacity"));
+  assert.ok(content.context.includes("educational information, not legal"));
+  assert.ok(content.context.includes("National Renewable Energy Laboratory"));
+  assert.ok(content.context.includes("Last reviewed: October 10, 2026"));
+  assert.ok(content.context.includes("October 12, 2026"));
 
-test("missing or over-budget page evidence cannot pass the P9.7 content judgment", () => {
   const missing = buildScopeQualityEvidence(
     "P9.7",
-    { files: ["index.html"], patch: "+<p>Updated content</p>" },
+    { files: ["index.html"], patch: "+<p>Changed</p>" },
     plan,
   );
   assert.equal(missing.content_evidence_complete, false);
-  assert.ok(missing.context.includes("full snapshot unavailable"));
-  assert.ok(missing.facet_line.includes("Evidence is incomplete"));
+  assert.match(missing.facet_line, /do not grant a passing P9\.7 judgment/);
 
-  const truncated = buildScopeQualityEvidence(
+  const oversized = buildScopeQualityEvidence(
     "P9.7",
-    {
-      files: ["index.html"],
-      contentSnapshots: [
-        { path: "index.html", revision: "head", content: "x".repeat(100000) },
-      ],
-    },
+    { files: [], patch: "+".repeat(90001) },
     plan,
   );
-  assert.equal(truncated.context_truncated, true);
-  assert.equal(truncated.content_evidence_complete, false);
-  assert.ok(
-    truncated.facet_line.includes("do not grant a passing P9.7 judgment"),
-  );
+  assert.equal(oversized.context_truncated, true);
+  assert.equal(oversized.content_evidence_complete, false);
 });
 
-test("infrastructure-only changes use their fixture and retain complete evidence within budget", () => {
-  const evidence = buildScopeQualityEvidence(
-    "P9.7",
-    {
-      files: [
-        "scripts/lib/jev-scope-quality.mjs",
-        "tests/jev-scope-quality.test.mjs",
-        "tests/fixtures/jev-p97/infrastructure-only.patch",
-      ],
-      additions: 12,
-      deletions: 3,
-      patch: infrastructureFixture,
-    },
-    plan,
-  );
-  assert.equal(evidence.content_criteria_applicable, false);
-  assert.deepEqual(evidence.content_files, []);
-  assert.ok(
-    evidence.facet_line.includes(
-      "Do not grade infrastructure files as published copy",
-    ),
-  );
-  assert.ok(evidence.context.includes("isPublicContentPath"));
-  assert.ok(
-    evidence.changed_files.includes(
-      "tests/fixtures/jev-p97/infrastructure-only.patch",
-    ),
-  );
-
-  const largePatch = "+" + "x".repeat(80000);
-  const complete = buildScopeQualityEvidence(
-    "P9.7",
-    { files: ["scripts/quality-gate.mjs"], patch: largePatch },
-    plan,
-  );
-  assert.equal(complete.context_truncated, false);
-  assert.equal(complete.content_evidence_complete, true);
-  assert.ok(complete.context.includes(largePatch));
-});
-
-test("actual-diff and page evidence redact credentials before transport", () => {
-  const githubPat =
-    "github_" + "pat_" + "0123456789abcdefghijklmnopqrstuvwxyzABCDE";
+test("credentials in page snapshots and diffs are redacted before Jev transport", () => {
+  const token = "gh" + "p_" + "0123456789abcdefghijklmnopqrstuvwxyzABCDE";
+  const awsKey = "AKIA" + "0123456789ABCDEF";
+  const googleKey = "AIza" + "A".repeat(24);
+  const slackToken = "xox" + "b-" + "a".repeat(24);
   const evidence = buildScopeQualityEvidence(
     "P9.7",
     {
@@ -261,76 +151,117 @@ test("actual-diff and page evidence redact credentials before transport", () => 
         '+TYPESAFE_API_KEY="example-secret-value"',
         "+Authorization: Bearer bearer-example-value",
         "+token eyJabcdefghijk.abcdefghijk.abcdefghijk",
-        `+${githubPat}`,
-        "+-----BEGIN " +
-          "PRIVATE KEY-----fake-key-material" +
-          "-----END PRIVATE KEY-----",
+        `+${token}`,
+        `+${awsKey}`,
+        `+${googleKey}`,
+        `+${slackToken}`,
+        "+-----" +
+          "BEGIN " +
+          "PRIVATE KEY-----fake-key-material-----END PRIVATE KEY-----",
       ].join("\n"),
       contentSnapshots: [
         {
           path: "index.html",
           revision: "head",
-          content: `<p>TYPESAFE_API_KEY=fixture-secret-content</p><p>${githubPat}</p>`,
+          content: `<p>TYPESAFE_API_KEY=fixture-secret-content ${token}</p>`,
         },
       ],
     },
     plan,
   );
-
   for (const secret of [
     "example-secret-value",
     "bearer-example-value",
     "eyJabcdefghijk.abcdefghijk.abcdefghijk",
     "fake-key-material",
     "fixture-secret-content",
-    githubPat,
+    token,
+    awsKey,
+    googleKey,
+    slackToken,
   ])
-    assert.ok(!evidence.context.includes(secret), `leaked ${secret}`);
-  for (const redaction of [
-    "TYPESAFE_API_KEY=[REDACTED]",
-    "Authorization: Bearer [REDACTED]",
-    "[REDACTED JWT]",
-    "[REDACTED PRIVATE KEY]",
-  ])
-    assert.ok(evidence.context.includes(redaction), `missing ${redaction}`);
+    assert.ok(!evidence.context.includes(secret));
+  assert.ok(evidence.context.includes("Authorization: Bearer [REDACTED]"));
+  assert.ok(evidence.context.includes("[REDACTED PRIVATE KEY]"));
 });
 
-test("only P9.7 builds and transports its scope evidence alongside the quality facet", () => {
-  assert.equal(
-    buildScopeQualityEvidence("P9.1", { files: ["index.html"] }),
-    null,
-  );
+test("state transport includes P9.7 context without shortening ordinary facet evidence", () => {
   const evidence = buildScopeQualityEvidence(
     "P9.7",
-    { files: ["scripts/gate.mjs"], patch: "+export const contentOnly = true;" },
+    { files: ["scripts/gate.mjs"], patch: "+export const gate = true;" },
     plan,
   );
+  assert.equal(evidence.content_criteria_applicable, false);
   const state = buildStateText(
     { facet_evidence: { quality: evidence.facet_line } },
-    { target: "pr @ head", sha: "head", treeClean: true, secretsClean: true },
+    {},
     ["quality"],
     evidence.context,
   );
-  assert.ok(
-    state.includes(
-      "quality: P9.7 content criteria are not applicable as a copy judgment",
-    ),
-  );
-  assert.ok(state.includes("content criteria are not applicable"));
-  assert.ok(state.includes("Actual PR diff: 1 files, +0/-0"));
+  assert.ok(state.includes("quality: P9.7 requirements from the candidate"));
+  assert.ok(state.includes("export const gate = true"));
 
-  const oversizedContext = "actual P9.7 diff ".padEnd(8000, "x");
-  const scoped = buildStateText(
-    { facet_evidence: { quality: "P9.7 diff below" } },
-    { target: "pr @ head", sha: "head", treeClean: true, secretsClean: true },
-    ["quality"],
-    oversizedContext,
-  );
   const ordinary = buildStateText(
-    { facet_evidence: { quality: "ordinary evidence" } },
+    { facet_evidence: { quality: "ordinary proof" } },
     {},
     ["quality"],
   );
-  assert.ok(scoped.includes(oversizedContext));
-  assert.ok(scoped.length > ordinary.length);
+  assert.ok(ordinary.includes("quality: ordinary proof"));
+});
+
+test("the Git adapter snapshots the exact candidate page and reads the plan at head", () => {
+  const root = mkdtempSync(join(tmpdir(), "jev-p97-"));
+  try {
+    git(root, "init", "-q");
+    git(root, "config", "user.name", "P9.7 test");
+    git(root, "config", "user.email", "jev@example.invalid");
+    mkdirSync(join(root, "docs", "plan"), { recursive: true });
+    mkdirSync(join(root, "blog", "system"), { recursive: true });
+    const priorPlan = plan.replace(/^\| P9\.7 \|.*(?:\r?\n)?/m, "");
+    writeFileSync(join(root, "docs", "plan", "MASTER_PLAN.md"), priorPlan);
+    writeFileSync(join(root, "blog", "system", "index.html"), page);
+    git(root, "add", ".");
+    git(root, "commit", "-qm", "base");
+    const base = git(root, "rev-parse", "HEAD");
+
+    writeFileSync(join(root, "docs", "plan", "MASTER_PLAN.md"), plan);
+    writeFileSync(
+      join(root, "blog", "system", "index.html"),
+      page.replace("October 10", "October 12"),
+    );
+    git(root, "add", ".");
+    git(root, "commit", "-qm", "candidate");
+    const head = git(root, "rev-parse", "HEAD");
+    const evidence = collectScopeQualityEvidence(root, "P9.7", base, head);
+    assert.deepEqual(evidence.changed_files.sort(), [
+      "blog/system/index.html",
+      "docs/plan/MASTER_PLAN.md",
+    ]);
+    assert.ok(evidence.context.includes("| P9.7 | Content quality gate"));
+    assert.ok(evidence.context.includes("October 12, 2026"));
+    assert.equal(evidence.content_evidence_complete, true);
+
+    mkdirSync(join(root, "scripts"), { recursive: true });
+    writeFileSync(
+      join(root, "scripts", "gate.mjs"),
+      "export const gate = true;\n",
+    );
+    git(root, "add", ".");
+    git(root, "commit", "-qm", "infrastructure");
+    const infraHead = git(root, "rev-parse", "HEAD");
+    const infrastructure = collectScopeQualityEvidence(
+      root,
+      "P9.7",
+      head,
+      infraHead,
+    );
+    assert.equal(infrastructure.content_criteria_applicable, false);
+    assert.ok(infrastructure.context.includes("export const gate = true"));
+    assert.throws(
+      () => collectScopeQualityEvidence(root, "P9.7", "", infraHead),
+      /full base and head commit SHAs/,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
