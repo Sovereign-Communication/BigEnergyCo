@@ -87,6 +87,9 @@ const WAS_WRONG = [
   ["JM", "JMD", "USD", "the Caribbean box carried no currency"],
   ["TT", "TTD", "USD", "the Caribbean box carried no currency"],
   ["FJ", "FJD", "USD", "the Pacific box carried no currency"],
+  ["AG", "XCD", "USD", "Antigua and Barbuda uses the East Caribbean dollar"],
+  ["CW", "XCG", "ANG", "Curaçao adopted the Caribbean guilder in 2025"],
+  ["ZW", "ZWG", "ZWL", "Zimbabwe replaced ZWL with ZiG in 2024"],
 ];
 
 for (const [country, expected, wasWrong, why] of WAS_WRONG) {
