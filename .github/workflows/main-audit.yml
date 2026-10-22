@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -44,13 +45,16 @@ jobs:
         env:
           BEFORE: ${{ github.event.before }}
           AFTER: ${{ github.event.after }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_API_URL: ${{ github.api_url }}
         run: |
           ZERO=0000000000000000000000000000000000000000
           if [ -z "$AFTER" ] || [ "$AFTER" = "$ZERO" ]; then
             echo "no push payload (manual run) — auditing the tip commit"
-            node scripts/direct-push-audit.mjs
+            node scripts/direct-push-audit.mjs --require-api
           else
-            node scripts/direct-push-audit.mjs --before "$BEFORE" --after "$AFTER"
+            node scripts/direct-push-audit.mjs --require-api --before "$BEFORE" --after "$AFTER"
           fi
 
       - name: Reminder that main is staging
