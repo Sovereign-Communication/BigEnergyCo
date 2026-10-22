@@ -7,14 +7,19 @@ const article = readFileSync(
   "utf8",
 );
 
+const TEXT_ENTITIES = {
+  "&amp;": "&",
+  "&quot;": '"',
+  "&#39;": "'",
+  "&apos;": "'",
+};
 const normalize = (value) =>
   value
     .replace(/<[^>]+>/g, "")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
+    .replace(
+      /&(amp|quot|#39|apos);/g,
+      (entity) => TEXT_ENTITIES[entity] ?? entity,
+    )
     .replace(/\s+/g, " ")
     .trim();
 
