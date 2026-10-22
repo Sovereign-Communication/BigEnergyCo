@@ -4,6 +4,7 @@
 // only make the site cleaner, never dirtier.
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -141,12 +142,18 @@ test("lookupCityOnline returns null instead of hanging forever", async () => {
 
 test("dynamic Leaflet SRI matches the static heatmap pins", () => {
   const heatmap = read("solar-heatmap/index.html");
+  const stylesheetSRI = `sha256-${createHash("sha256")
+    .update(
+      fs.readFileSync(path.join(ROOT, "assets/vendor/leaflet/leaflet.css")),
+    )
+    .digest("base64")}`;
+  assert.equal(LEAFLET_STYLE_SRI, stylesheetSRI);
   assert.ok(
     heatmap.includes(LEAFLET_SCRIPT_SRI),
     "script SRI identical to heatmap pin",
   );
   assert.ok(
-    heatmap.includes(LEAFLET_STYLE_SRI),
+    heatmap.includes(stylesheetSRI),
     "stylesheet SRI identical to heatmap pin",
   );
 });

@@ -10,3 +10,11 @@
 # Workflow YAML is parsed by Actions runners; keep it byte-identical everywhere
 # so a local `act`/lint run matches CI.
 .github/workflows/* text eol=lf
+
+# Preserve the upstream Leaflet release bytes on every platform. The PNG files
+# in this directory remain binary and are intentionally not covered here.
+assets/vendor/leaflet/LICENSE text eol=lf
+assets/vendor/leaflet/README.md -text
+assets/vendor/leaflet/leaflet.css text eol=lf
+assets/vendor/leaflet/leaflet.js text eol=lf
+assets/vendor/leaflet/leaflet.js.map -text

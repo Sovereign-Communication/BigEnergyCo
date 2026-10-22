@@ -343,7 +343,7 @@
   function ensureData() {
     if (gridData) return Promise.resolve(gridData);
     if (dataLoading) return dataLoading;
-    dataLoading = fetch("../assets/data/heatmap-grid.min.json?v=20261022k")
+    dataLoading = fetch("../assets/data/heatmap-grid.min.json?v=20261022o")
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to load heatmap data");
         return res.json();
@@ -584,6 +584,15 @@
 
   // ── Init ─────────────────────────────────────────────────────────────────
   function init() {
+    if (!window.L || typeof window.L.map !== "function") {
+      var loading = document.getElementById("loading");
+      if (loading) {
+        loading.textContent =
+          "The interactive map library failed to load. Reload this page to try again.";
+        loading.setAttribute("role", "alert");
+      }
+      return;
+    }
     // WebGL detection for the fallback notice (P1-1).
     try {
       var _c = document.createElement("canvas");
@@ -599,13 +608,13 @@
     }
 
     var boot = Promise.all([
-      fetch("../assets/img/heatmap/manifest.json?v=20261022k").then(
+      fetch("../assets/img/heatmap/manifest.json?v=20261022o").then(
         function (r) {
           if (!r.ok) throw new Error("manifest");
           return r.json();
         },
       ),
-      fetch("../assets/data/heatmap-rankings.json?v=20261022k").then(
+      fetch("../assets/data/heatmap-rankings.json?v=20261022o").then(
         function (r) {
           if (!r.ok) throw new Error("rankings");
           return r.json();

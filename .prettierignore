@@ -19,6 +19,7 @@ assets/js/sizing/profiles.js
 _pages_*/
 # Third-party bundles.
 *.min.js
+assets/vendor/leaflet/
 # Local tooling state (untracked): never part of the shipped site.
 .abacusai/
 # Env templates: no parser (no extension), nothing to format.

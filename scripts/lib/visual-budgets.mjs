@@ -69,19 +69,19 @@ export const SNAPSHOT_ENGINE = "chromium";
  * variance is not the capture, the comparator, or the engine — it is this one
  * page.
  *
- * THE CAUSE, and it is the same cause as the open Q-07 hole. The heatmap pulls
- * Leaflet from `https://unpkg.com/leaflet` — an EXTERNAL CDN — and then holds a
- * grid fetch open. How much of the map has painted when the screenshot is taken
- * depends on when a third party answered. The same unreliability is why the
+ * THE CAUSE, and it is the same cause as the open Q-07 hole. The heatmap holds
+ * a monolithic grid fetch open while preparing its interactive layer. How much
+ * of the map has painted when the screenshot is taken depends on when the large
+ * response and processing finish. The same unreliability is why the
  * a11y matrix cannot audit `heatmap/arrival/none/ltr`: the arrival state is
  * measured while that load is still in flight. One root cause, two open items.
  *
  * WHAT THIS DOES NOT DO. It does not lower the bar, and it does not mean the
  * page is exempt forever: the remaining 27 cells are gated at Q-09's full
  * threshold right now. It records that one template's pixels are not a
- * function of the product, and names what would make them one (a
- * self-hosted Leaflet — which is already a separate plan item, P1.5) so the
- * exclusion can be removed on evidence rather than on a feeling.
+ * function of the product, and names what would make them one (viewport-based
+ * regional grid chunks under P1.5/R-PERF-04) so the exclusion can be removed on
+ * evidence rather than on a feeling.
  *
  * The list is asserted by tests/visual-budgets.test.mjs against this
  * measurement, so widening it is a deliberate act that has to be edited in
@@ -94,10 +94,10 @@ export const MEASURED_UNSTABLE_TEMPLATES = [
     measured_ratios: [0.052141, 0.052141, 0.048546],
     stable_cells_for_comparison: 27,
     cause:
-      "loads Leaflet from the external CDN https://unpkg.com/leaflet and holds a grid fetch open, so the painted map depends on third-party response timing",
+      "holds a monolithic grid fetch open while preparing the interactive layer, so the painted map depends on large-response timing",
     same_root_cause_as: "Q-07 heatmap/arrival/none/ltr",
     removable_when:
-      "Leaflet is self-hosted (plan item P1.5), after which the snapshot is a function of the product and this exclusion is deleted",
+      "viewport-based regional grid chunks (plan item P1.5/R-PERF-04) load on demand and repeated snapshots pass",
   },
 ];
 

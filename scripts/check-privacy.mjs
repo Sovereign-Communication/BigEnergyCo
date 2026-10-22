@@ -204,8 +204,18 @@ const ALLOWED_STORAGE_KEYS = new Set([
   ];
   const hits = [];
   for (const f of shipped) {
-    const code = codeOnly(readShipped(f));
+    const source = codeOnly(readShipped(f));
     for (const a of ADS) {
+      // Leaflet 1.9.4 names its built-in double-click zoom option and event
+      // handler `doubleClickZoom` and `onDoubleClick`; remove only those exact
+      // vendor identifiers and scan all other bytes normally.
+      const code =
+        f === "assets/vendor/leaflet/leaflet.js" && a === "doubleclick"
+          ? source
+              .replaceAll("doubleClickZoom", "")
+              .replaceAll("DoubleClickZoom", "")
+              .replaceAll("onDoubleClick", "")
+          : source;
       if (code.toLowerCase().includes(a.toLowerCase())) hits.push(`${f}: ${a}`);
     }
   }
@@ -278,22 +288,34 @@ const ALLOWED_STORAGE_KEYS = new Set([
 {
   const geolCalls = [];
   const locateCalls = [];
+  const appLocateCalls = [];
+  const leafletVendor = "assets/vendor/leaflet/leaflet.js";
   for (const f of shipped) {
     const src = codeOnly(readShipped(f));
     for (const _ of src.matchAll(/\.getCurrentPosition\s*\(/g))
       geolCalls.push(f);
     for (const _ of src.matchAll(/\blocateMe\s*\(/g)) locateCalls.push(f);
+    if (!f.startsWith("assets/vendor/")) {
+      for (const _ of src.matchAll(/\.locate\s*\(/g)) appLocateCalls.push(f);
+    }
   }
   // The browser API itself must be reachable from one module only. That is the
   // part a new feature could quietly break by calling the API directly.
-  const unowned = geolCalls.filter((f) => !/location-picker\.js/.test(f));
+  const unowned = geolCalls.filter(
+    (f) => f !== leafletVendor && !/location-picker\.js/.test(f),
+  );
+  const appGeolCalls = geolCalls.filter((f) => f !== leafletVendor);
   if (unowned.length)
     for (const f of unowned)
       fail(`consent: geolocation API called outside location-picker.js — ${f}`);
   else
     ok(
-      `consent: getCurrentPosition called from one module only (${geolCalls.length} call(s)); locateMe invoked from ${locateCalls.length} site(s)`,
+      `consent: getCurrentPosition called from one module only (${appGeolCalls.length} app-owned call(s)); locateMe invoked from ${locateCalls.length} site(s)`,
     );
+  if (appLocateCalls.length)
+    for (const f of appLocateCalls)
+      fail(`consent: first-party code invokes Leaflet geolocation: ${f}`);
+  else ok("consent: first-party code never invokes Leaflet Map.locate()");
 
   // The gesture has to be a real, wired one. An unreferenced button is not
   // consent, it is a decoy.
