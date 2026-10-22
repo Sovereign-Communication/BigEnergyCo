@@ -53,9 +53,9 @@ jobs:
             node scripts/direct-push-audit.mjs --before "$BEFORE" --after "$AFTER"
           fi
 
-      - name: Reminder that main is staging
+      - name: Reminder that main is production
         if: always()
         run: |
-          echo "main publishes the staging mirror; the brand domain is promoted"
-          echo "separately and only after the staging verification job is green."
+          echo "main publishes the production mirror; the brand domain is deployed"
+          echo "separately and only after the production verification job is green."
           echo "See docs/DEPLOY_RUNBOOK.md."

@@ -5,7 +5,7 @@
 // browser smoke therefore drove a surface where the advisor endpoint did not
 // exist, so every chat call 404'd. That made two gates permanently red on
 // every PR — a gate that can never pass stops being read as a signal, which is
-// the same defect `scripts/verify-staging.mjs` had (a retry loop that could be
+// the same defect `scripts/verify-production.mjs` had (a retry loop that could be
 // killed instead of returning a verdict).
 //
 // Why not `wrangler dev`: the `web-smoke` job deliberately runs on ZERO
@@ -26,7 +26,7 @@
 // NOT a substitute for a deployed-surface check: this proves the worker's
 // routing, validation, and degraded-reply contract, not Cloudflare's bindings
 // (KV/R2/D1/rate limiting), which do not exist here. Those stay the job of the
-// staging verifier.
+// production verifier.
 /** Paths the worker owns. Anything else on this server is static. */
 export const API_PREFIX = "/api/";
 

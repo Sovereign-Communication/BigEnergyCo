@@ -64,7 +64,7 @@ async function main() {
     // LOCAL STAGE ONLY. The local server is a workerless emulator whose
     // /api/health says the Jev route is off and whose /api/jev 503s, so the
     // stub is what makes the Jev gates meaningful there. On a real surface
-    // (staging, pages.dev, the brand domain) the probe must reach the real
+    // (pages.dev, the brand domain) the probe must reach the real
     // worker and a real /api/jev must answer: faking either would turn
     // "API health reachable" and the server-side activation state into lies.
     if (isLocalBase) {
@@ -85,7 +85,7 @@ async function main() {
     // Jev is optional and rate-limited by design. The dedicated Jev gates
     // stub its response, so repeated smoke runs test the UI contract rather
     // than consuming the shared provider quota; the real endpoint is checked
-    // separately by the staging API probe.
+    // separately by the production API probe.
 
     await runLocationFlow(ctx, actions);
     await runWeatherFlow(ctx, actions);

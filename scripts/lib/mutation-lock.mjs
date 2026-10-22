@@ -3,7 +3,7 @@
 // Why this exists: `tests/deploy-manifest.test.mjs` proves "a deleted-but-
 // tracked file fails loudly, not silently" by really deleting `robots.txt`
 // from the repo root. `tests/ci-resilience.test.mjs` spawns
-// `scripts/verify-staging.mjs`, which reads every allowlisted file — including
+// `scripts/verify-production.mjs`, which reads every allowlisted file — including
 // `robots.txt`. node --test runs test FILES in parallel, so on some runs the
 // verifier observed the tooth's deletion and reported
 // `parity robots.txt — unreadable: local read failed: ENOENT`, failing a test
@@ -45,7 +45,7 @@ export function mutationLockPath(root = process.cwd()) {
  * check-then-act. Two processes could both observe "no lock present" in the
  * gap between the poll and the write, both proceed, and both believe they hold
  * it. Nothing downstream enforces it: there is no queue, no ticket, no refcount.
- * Measured consequence, under load with three concurrent staging builds, one run
+ * Measured consequence, under load with three concurrent production builds, one run
  * in six: `tests/deploy-manifest.test.mjs` deleted robots.txt while
  * `scripts/deploy-pages-local.mjs` was copying the 362-file allowlist, and the
  * copy died with `ENOENT ... lstat robots.txt` — reddening an unrelated

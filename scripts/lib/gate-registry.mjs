@@ -44,7 +44,7 @@ export const RETIRED = new Map([
     "scripts/verify-polish.mjs",
     "crashed (its mirror list missed climate.js) with a stale contract pin; " +
       "covered by tests/run.test.mjs, tests/contract.test.mjs, tests/rescale.test.mjs, " +
-      "tests/breakeven.test.mjs, tests/consistency.test.mjs and npm run verify:staging",
+      "tests/breakeven.test.mjs, tests/consistency.test.mjs and npm run verify:production",
   ],
   [
     "scripts/verify-chart-contract.mjs",

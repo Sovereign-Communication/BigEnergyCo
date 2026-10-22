@@ -1,7 +1,7 @@
 // CI resilience: telling a platform flake apart from a regression.
 //
 // Both halves here exist because of a real incident on 2026-09-19: a post-merge
-// `Verify staging` run died on ERR_CERT_VERIFIER_CHANGED (a runner transport
+// `Verify production` run died on ERR_CERT_VERIFIER_CHANGED (a runner transport
 // flake that passed on rerun and passes locally), and two runs sat `queued`
 // for ~45 minutes until they were manually cancelled and rerun.
 //
@@ -88,7 +88,7 @@ test("a real regression is never retryable", () => {
     // A dropped CSP directive must fail immediately, not look like noise.
     "Refused to connect to 'https://power.larc.nasa.gov' because it violates the following Content Security Policy directive: \"connect-src 'self'\"",
     // A stale stamp / wrong artifact.
-    "VERIFY FAIL staging serves the checkout's stamp — staging 20260917a vs checkout 20260919d",
+    "VERIFY FAIL production serves the checkout's stamp — production 20260917a vs checkout 20260919d",
     "VERIFY FAIL surface cloudflare: _headers is absent",
   ])
     assert.equal(isTransientFailure(text), false, `must not retry: ${text}`);
@@ -103,7 +103,7 @@ test("a real regression is never retryable", () => {
 test("Chrome's transient wording is classified", () => {
   for (const text of [
     // A navigation whose response was 5xx. This is the one that turned a flake
-    // into a red `Verify staging` while parity absorbed it and passed.
+    // into a red `Verify production` while parity absorbed it and passed.
     "log.error: Failed to load resource: the server responded with a status of 503 (Service Unavailable) [http://127.0.0.1:18442/nav-503]",
     // The same status on a subresource.
     "log.error: Failed to load resource: the server responded with a status of 503 (Service Unavailable) [http://127.0.0.1:18442/boom.js]",
@@ -310,11 +310,11 @@ test("an unparseable createdAt is ignored rather than assumed stuck", () => {
 // ── the wiring ──────────────────────────────────────────────────────────────
 
 test("the verifier retries transient failures and reports them", () => {
-  const src = read("scripts/verify-staging.mjs");
+  const src = read("scripts/verify-production.mjs");
   assert.match(
     src,
     /retryTransient\(/,
-    "the staging verifier must use the bounded retry",
+    "the production verifier must use the bounded retry",
   );
   assert.match(
     src,
@@ -545,7 +545,7 @@ test("the budget knob can only make the gate stricter", () => {
 });
 
 test("the CI job's timeout is the number the budget module declares", () => {
-  const yml = read(".github/workflows/verify-staging.yml");
+  const yml = read(".github/workflows/verify-production.yml");
   const declared = yml.match(/timeout-minutes:\s*(\d+)/);
   assert.ok(declared, "the verify job must declare a timeout");
   assert.equal(
@@ -671,7 +671,7 @@ test("promote wraps the verifier in the shared cap, not a hardcoded one", () => 
   // Scoped to the block that launches the verifier: other subprocesses in this
   // file legitimately carry their own, unrelated timeouts.
   const block = src
-    .slice(src.indexOf('"scripts/verify-staging.mjs"'))
+    .slice(src.indexOf('"scripts/verify-production.mjs"'))
     .slice(0, 800);
   assert.ok(block.length > 100, "expected to find the verifier invocation");
   assert.match(
@@ -761,7 +761,7 @@ test("each attempt is told how much budget is left, so it can clamp itself", asy
 });
 
 test("every retried step in the verifier carries the deadline", () => {
-  const src = read("scripts/verify-staging.mjs");
+  const src = read("scripts/verify-production.mjs");
   const retried = (src.match(/retryTransient\(/g) || []).length;
   const bounded = (src.match(/deadline: DEADLINE,/g) || []).length;
   assert.ok(retried >= 3, `expected the retried steps, saw ${retried}`);
@@ -844,7 +844,7 @@ const runVerifier = async (server, env) => {
     const child = spawn(
       process.execPath,
       [
-        "scripts/verify-staging.mjs",
+        "scripts/verify-production.mjs",
         "--base",
         `http://127.0.0.1:${port}/`,
         "--json",

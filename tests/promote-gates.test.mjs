@@ -44,7 +44,7 @@ function buildStage() {
 /**
  * Async on purpose: the stand-in surface is an in-process HTTP server, so a
  * synchronous spawn would block this event loop and the child's requests would
- * time out. Awaiting keeps the fake staging reachable while the real scripts run.
+ * time out. Awaiting keeps the fake production reachable while the real scripts run.
  */
 async function runNode(args, opts = {}) {
   try {
@@ -76,7 +76,7 @@ const run = (script, args, opts) => runNode([script, ...args], opts);
 // nothing to do with stamps. Measured at 1 run in 6 before the lock.
 const verify = (base, extra = []) =>
   withMutationLock(() =>
-    run("scripts/verify-staging.mjs", [
+    run("scripts/verify-production.mjs", [
       "--base",
       base,
       "--no-browser",
@@ -214,7 +214,7 @@ test("VERIFY: a stale asset stamp fails, and says both stamps", async () => {
     await withServer(async (base) => {
       const r = await verify(base);
       assert.equal(r.code, 1, "a wrong stamp must fail verification");
-      assert.match(r.out, /staging serves the checkout's stamp/);
+      assert.match(r.out, /production serves the checkout's stamp/);
       assert.match(r.out, /20250101a/);
       assert.match(r.out, /stale or the wrong artifact/);
     });
@@ -459,12 +459,12 @@ test("ROLLBACK: a rollback to HEAD is refused in both modes, and an unknown sha 
 
 test("PROMOTE: the promote path is wired into the toolchain and the workflow", () => {
   const pkg = JSON.parse(readFileSync("package.json", "utf8"));
-  for (const name of ["verify:staging", "promote", "promote:apply", "rollback"])
+  for (const name of ["verify:production", "promote", "promote:apply", "rollback"])
     assert.ok(pkg.scripts[name], `package.json must expose ${name}`);
 
-  const workflow = readFileSync(".github/workflows/verify-staging.yml", "utf8");
+  const workflow = readFileSync(".github/workflows/verify-production.yml", "utf8");
   assert.match(workflow, /workflows: \["Deploy to GitHub Pages"\]/);
-  assert.match(workflow, /scripts\/verify-staging\.mjs/);
+  assert.match(workflow, /scripts\/verify-production\.mjs/);
   assert.doesNotMatch(
     workflow,
     /--no-browser/,

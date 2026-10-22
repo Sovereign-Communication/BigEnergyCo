@@ -14,7 +14,7 @@
 // Two guards matter:
 //
 //   1. A run queued behind a SIBLING of the same workflow is waiting, not
-//      stuck. `concurrency:` groups make that normal (verify-staging queues
+//      stuck. `concurrency:` groups make that normal (verify-production queues
 //      with cancel-in-progress: false), and cancelling it would destroy a
 //      legitimate run.
 //   2. A mass of stuck runs means the platform is having an incident, not that

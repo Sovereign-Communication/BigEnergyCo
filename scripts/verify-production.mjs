@@ -1,14 +1,14 @@
-// Verify the DEPLOYED staging artifact — through the surface users actually
+// Verify the DEPLOYED production artifact — through the surface users actually
 // hit, not a localhost copy.
 //
 // Why this exists: `smoke:local` proves the build in the repo works, and the
-// staging-drift probes prove five files match. Neither answers the question a
-// promote depends on: "is what staging serves exactly what main built, and does
+// production-drift probes prove five files match. Neither answers the question a
+// promote depends on: "is what production serves exactly what main built, and does
 // it work in a real browser?" So this verifier:
 //
 //   1. STAMP  — the served HTML declares one asset stamp, and it is the stamp
 //               the checkout produces. A missing or mixed stamp fails here.
-//   2. PARITY — every file in the deploy allowlist is fetched from staging and
+//   2. PARITY — every file in the deploy allowlist is fetched from production and
 //               byte-compared (line-ending normalized) with the local build.
 //               A 404 (missing asset) or any difference fails, so a partial or
 //               stale deploy cannot look green. HTML on a surface that is known
@@ -21,14 +21,14 @@
 //               Cloudflare the security headers are required for real
 //               (including script-src without 'unsafe-inline'); on GitHub Pages
 //               they are reported as unavailable BY DESIGN, never as a pass.
-//   4. BROWSER— the approved real-browser smoke runs against the staging URL
+//   4. BROWSER— the approved real-browser smoke runs against the production URL
 //               (a full sizing flow, the heatmap, the service worker, and a
 //               no-CSP-violations gate).
 //
 // Usage:
-//   node scripts/verify-staging.mjs [--base <url>] [--no-browser] [--json]
+//   node scripts/verify-production.mjs [--base <url>] [--no-browser] [--json]
 //                                   [--wait <seconds>] [--surface <name>]
-// Environment: STAGING_BASE overrides the default base.
+// Environment: PRODUCTION_BASE overrides the default base.
 //              VERIFY_BUDGET_MS compresses the total wall-clock budget (see
 //              lib/budgets.mjs). Compression only: it makes the gate fail
 //              sooner, never run longer.
@@ -73,7 +73,7 @@ const arg = (name, fallback = null) => {
 const JSON_MODE = process.argv.includes("--json");
 const SKIP_BROWSER = process.argv.includes("--no-browser");
 const WAIT_SECONDS = Number(arg("--wait", "0")) || 0;
-const BASE = (arg("--base") || process.env.STAGING_BASE || "").trim();
+const BASE = (arg("--base") || process.env.PRODUCTION_BASE || "").trim();
 const BASE_URL =
   BASE || "https://sovereign-communication.github.io/BigEnergyCo/";
 const base = BASE_URL.endsWith("/") ? BASE_URL : BASE_URL + "/";
@@ -270,21 +270,21 @@ if (expected.ok) {
   } while (Date.now() < deadline);
 
   if (!served.ok) {
-    record("staging serves a page", false, served.reason);
+    record("production serves a page", false, served.reason);
   } else if (!served.stamp.ok) {
     record(
-      "staging serves a single asset stamp",
+      "production serves a single asset stamp",
       false,
       served.stamp.all.length ? served.stamp.all.join(", ") : "none",
     );
   } else if (served.stamp.stamp !== expected.stamp) {
     record(
-      "staging serves the checkout's stamp",
+      "production serves the checkout's stamp",
       false,
-      `staging ${served.stamp.stamp} vs checkout ${expected.stamp} — staging is stale or the wrong artifact was deployed`,
+      `production ${served.stamp.stamp} vs checkout ${expected.stamp} — production is stale or the wrong artifact was deployed`,
     );
   } else {
-    record("staging serves the checkout's stamp", true, expected.stamp);
+    record("production serves the checkout's stamp", true, expected.stamp);
   }
 }
 
@@ -306,7 +306,7 @@ const parity = await mapPool(parityTargets, CONCURRENCY, async (file) => {
   // try, so a file that vanished between enumeration and read (ENOUT/ENOENT)
   // escaped as an uncaught exception, the top-level await rejected, and the
   // gate exited on a stack trace with NO verdict at all. That is the one thing
-  // a gate must never do: the caller learns nothing about whether staging
+  // a gate must never do: the caller learns nothing about whether production
   // matched, and "crashed" is indistinguishable from "silently skipped".
   // The deploy manifest enumerates from the git INDEX, so a file can genuinely
   // be named-but-absent on disk - a concurrent test's mutation tooth, or a
@@ -527,7 +527,7 @@ if (SKIP_BROWSER) {
         onRetry: (info) => recordRetry("browser smoke", info),
       },
     );
-    record("real-browser smoke passes on staging", true, tail(out));
+    record("real-browser smoke passes on production", true, tail(out));
   } catch (e) {
     const out = `${e.stdout || ""}${e.stderr || ""}`;
     const failed = out
@@ -535,7 +535,7 @@ if (SKIP_BROWSER) {
       .filter((l) => l.includes("SMOKE FAIL"))
       .map((l) => l.replace(/^.*SMOKE FAIL\s*/, "").trim());
     record(
-      "real-browser smoke passes on staging",
+      "real-browser smoke passes on production",
       false,
       (failed.length
         ? failed.slice(0, 6).join(" | ")
@@ -576,11 +576,11 @@ if (JSON_MODE) console.log(JSON.stringify(payload, null, 2));
 else {
   console.log(
     failures.length
-      ? `\nSTAGING VERIFICATION FAILED (${failures.length}): ${failures.slice(0, 5).join(" ; ")}` +
+      ? `\nPRODUCTION VERIFICATION FAILED (${failures.length}): ${failures.slice(0, 5).join(" ; ")}` +
           (retries.length
             ? ` (after ${retries.length} transient retry(ies))`
             : "")
-      : `\nSTAGING VERIFIED — ${base} serves stamp ${payload.servedStamp}, ${payload.matched}/${payload.filesChecked} files match` +
+      : `\nPRODUCTION VERIFIED — ${base} serves stamp ${payload.servedStamp}, ${payload.matched}/${payload.filesChecked} files match` +
           (retries.length
             ? ` (after ${retries.length} transient retry(ies))`
             : "") +

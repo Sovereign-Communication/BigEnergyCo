@@ -1,15 +1,15 @@
-// Gated promote: staging → Cloudflare Pages (bigenergyco.pages.dev + the brand
+// Gated promote: production → Cloudflare Pages (bigenergyco.pages.dev + the brand
 // domain). Replaces the runbook's manual `wrangler pages deploy` step.
 //
 // It is deliberately hard to misuse:
 //   * DRY-RUN BY DEFAULT. Nothing is deployed, nothing is written, no
 //     credentials are needed; it prints the plan, the stamps and the record.
 //   * NO WAY TO SKIP VERIFICATION. There is no bypass flag, on purpose: the
-//     promote runs scripts/verify-staging.mjs against the DEPLOYED staging
+//     promote runs scripts/verify-production.mjs against the DEPLOYED production
 //     artifact (stamp + full byte parity + surface rules + real-browser smoke)
 //     and refuses to continue if any of it fails.
 //   * PRECONDITIONS. Apply mode requires a clean tree, HEAD equal to
-//     origin/main, and that the artifact being promoted is the one staging
+//     origin/main, and that the artifact being promoted is the one production
 //     serves.
 //   * AUDITABLE + REVERSIBLE. Every release is appended to a JSONL ledger with
 //     the pre- and post-promote stamps of each production surface, the previous
@@ -24,7 +24,7 @@
 //   node scripts/promote.mjs                       # dry run (safe, default)
 //   node scripts/promote.mjs --apply               # actually deploy
 //   node scripts/promote.mjs --to <sha> --apply    # roll back to a release
-// Flags: --base <stagingUrl> --brand <url> --pages <url> --project <name>
+// Flags: --base <productionUrl> --brand <url> --pages <url> --project <name>
 //        --stage <dir> --no-browser --json --ledger <path> --wait <seconds>
 //        --no-cloudflare-history (do not ask Cloudflare for the live SHA)
 //        --assume-auth (only when wrangler is already authenticated outside env)
@@ -79,9 +79,9 @@ const SKIP_BROWSER = flag("--no-browser");
 const ASSUME_AUTH = flag("--assume-auth");
 const SKIP_HISTORY = flag("--no-cloudflare-history");
 
-const STAGING_BASE = (
+const PRODUCTION_BASE = (
   arg("--base") ||
-  process.env.STAGING_BASE ||
+  process.env.PRODUCTION_BASE ||
   "https://sovereign-communication.github.io/BigEnergyCo/"
 ).replace(/\/?$/, "/");
 const BRAND_BASE = (
@@ -217,7 +217,7 @@ async function main() {
   if (!budgetFitsInside(VERIFY_BUDGET_MS, PROMOTE_TIMEOUT_MS))
     fatal(
       2,
-      "the staging-verification budget does not fit inside promote's subprocess cap",
+      "the production-verification budget does not fit inside promote's subprocess cap",
       `budget ${VERIFY_BUDGET_MS / 60000}min + slack ${BUDGET_SLACK_MS / 60000}min > cap ${PROMOTE_TIMEOUT_MS / 60000}min`,
     );
 
@@ -339,10 +339,10 @@ async function main() {
   }
 
   // ── 3. the gate ───────────────────────────────────────────────────────────
-  // Promote mode checks the artifact staging actually SERVES: stamp, byte parity
+  // Promote mode checks the artifact production actually SERVES: stamp, byte parity
   // and a real browser. Rollback mode checks the artifact it just BUILT — byte
-  // parity of staging against main's checkout says nothing about an older
-  // commit, and blocking disaster recovery on an unrelated stale staging would
+  // parity of production against main's checkout says nothing about an older
+  // commit, and blocking disaster recovery on an unrelated stale production would
   // be a false gate, which is its own kind of failure.
   let verification = null;
   if (TO_SHA) {
@@ -366,9 +366,9 @@ async function main() {
     );
   } else {
     const verifyArgs = [
-      "scripts/verify-staging.mjs",
+      "scripts/verify-production.mjs",
       "--base",
-      STAGING_BASE,
+      PRODUCTION_BASE,
       "--json",
     ];
     if (SKIP_BROWSER) verifyArgs.push("--no-browser");
@@ -404,15 +404,15 @@ async function main() {
       fatal(
         1,
         verify.killed
-          ? `the staging verifier was killed at its ${PROMOTE_TIMEOUT_MS / 60000}min cap without returning a verdict — refusing to promote ${head.slice(0, 7)}`
-          : `staging did not verify — refusing to promote ${head.slice(0, 7)}`,
-        `staging ${verification.servedStamp || "?"} vs checkout ${verification.expectedStamp || "?"}; failures: ${(verification.failures || []).slice(0, 4).join(" ; ")}`,
+          ? `the production verifier was killed at its ${PROMOTE_TIMEOUT_MS / 60000}min cap without returning a verdict — refusing to promote ${head.slice(0, 7)}`
+          : `production did not verify — refusing to promote ${head.slice(0, 7)}`,
+        `production ${verification.servedStamp || "?"} vs checkout ${verification.expectedStamp || "?"}; failures: ${(verification.failures || []).slice(0, 4).join(" ; ")}`,
       );
     say(
-      `PROMOTE      staging verified: stamp ${verification.servedStamp}, ${verification.matched}/${verification.filesChecked} files identical`,
+      `PROMOTE      production verified: stamp ${verification.servedStamp}, ${verification.matched}/${verification.filesChecked} files identical`,
     );
 
-    // The artifact and the verified staging build must be the SAME release.
+    // The artifact and the verified production build must be the SAME release.
     if (
       verification.expectedStamp &&
       stamp &&
@@ -420,8 +420,8 @@ async function main() {
     )
       fatal(
         1,
-        "the verified staging artifact and the local checkout carry different stamps",
-        `staging ${verification.expectedStamp} vs checkout ${stamp}`,
+        "the verified production artifact and the local checkout carry different stamps",
+        `production ${verification.expectedStamp} vs checkout ${stamp}`,
       );
   }
 
@@ -482,7 +482,7 @@ async function main() {
     action,
     sha: TO_SHA ? sourceSha : head,
     stamp,
-    stagingBase: STAGING_BASE,
+    productionBase: PRODUCTION_BASE,
     productionBases: [BRAND_BASE, PAGES_BASE],
     preStamps: pre,
     previousSha: baseline.sha,
@@ -495,7 +495,7 @@ async function main() {
     action: plan.action,
     sha: plan.sha,
     stamp,
-    stagingBase: STAGING_BASE,
+    productionBase: PRODUCTION_BASE,
     productionBases: plan.productionBases,
     preStamps: pre,
     postStamps,

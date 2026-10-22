@@ -1,8 +1,8 @@
 // The release path's time budget — one owner, enforced in code.
 //
-// Why this exists: `scripts/verify-staging.mjs` retries transport failures, and
+// Why this exists: `scripts/verify-production.mjs` retries transport failures, and
 // retries that merely multiply a per-attempt timeout can outlive whatever wraps
-// them — the CI job (`timeout-minutes` in .github/workflows/verify-staging.yml)
+// them — the CI job (`timeout-minutes` in .github/workflows/verify-production.yml)
 // or promote's subprocess cap. When that happens the verifier is KILLED
 // mid-retry and returns a timeout/cancel instead of a verdict, which is exactly
 // the outcome the retry exists to prevent: "the gate could not run" is
@@ -39,10 +39,10 @@ export const VERIFY_BUDGET_MS = 15 * 60_000;
 /** Room for a wrapper's own startup/teardown around the verifier. */
 export const BUDGET_SLACK_MS = 2 * 60_000;
 
-/** promote.mjs kills its verify-staging.mjs child after this. */
+/** promote.mjs kills its verify-production.mjs child after this. */
 export const PROMOTE_TIMEOUT_MS = 20 * 60_000;
 
-/** .github/workflows/verify-staging.yml `timeout-minutes`. */
+/** .github/workflows/verify-production.yml `timeout-minutes`. */
 export const JOB_TIMEOUT_MINUTES = 25;
 
 /** Does `budgetMs` plus startup slack provably fit inside `outerMs`? */

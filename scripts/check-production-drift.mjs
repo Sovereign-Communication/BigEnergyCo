@@ -1,16 +1,16 @@
-// Staging-drift detector: does GitHub Pages serve what main actually builds?
+// Production-drift detector: does GitHub Pages serve what main actually builds?
 //
 // The Pages deploy is a queued workflow; when hosted runners saturate it can
-// lag behind main indefinitely — and a smoke of staging would then silently
+// lag behind main indefinitely — and a smoke of production would then silently
 // verify a STALE build (nothing else notices). This script stages the deploy
 // allowlist from the local checkout (same single source of truth as CI's
 // deploy job), hashes a probe set of site files, and byte-compares them
 // against the live Pages URL. Any difference — or a 404 — means main and
-// staging have diverged.
+// production have diverged.
 //
 // Usage:
-//   node scripts/check-staging-drift.mjs            # check, exit 0/1
-//   node scripts/check-staging-drift.mjs --json     # machine-readable
+//   node scripts/check-production-drift.mjs            # check, exit 0/1
+//   node scripts/check-production-drift.mjs --json     # machine-readable
 //
 // Exit codes: 0 = in sync (or unavoidable-network failure in --json mode),
 // 1 = drift detected (or hard failure).
@@ -20,7 +20,7 @@ import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join, posix, resolve } from "node:path";
 
 const PAGES_BASE =
-  process.env.STAGING_BASE ||
+  process.env.PRODUCTION_BASE ||
   "https://sovereign-communication.github.io/BigEnergyCo/";
 const JSON_MODE = process.argv.includes("--json");
 
@@ -116,7 +116,7 @@ for (const probe of probes) {
     continue;
   }
   // Normalize line endings before hashing: a Windows checkout is CRLF while
-  // CI's staging build (ubuntu) is LF — the BYTES Pages serves are what
+  // CI's production build (ubuntu) is LF — the BYTES Pages serves are what
   // matter, not the checkout's autocrlf setting.
   const norm = (s) => s.replace(/\r\n/g, "\n");
   const localHash = createHash("sha256").update(norm(local)).digest("hex");
@@ -148,13 +148,13 @@ if (JSON_MODE) {
   );
 } else if (failures === 0) {
   console.log(
-    "\nSTAGING IN SYNC with local main (" + probes.length + " probes)",
+    "\nPRODUCTION IN SYNC with local main (" + probes.length + " probes)",
   );
 } else {
   console.log(
-    "\nSTAGING LAGS main: " +
+    "\nPRODUCTION LAGS main: " +
       failures +
-      " probe(s) differ. The Pages deploy is queued or stale — do not smoke-verify staging until it catches up.",
+      " probe(s) differ. The Pages deploy is queued or stale — do not smoke-verify production until it catches up.",
   );
 }
 process.exit(failures === 0 ? 0 : 1);

@@ -1,6 +1,6 @@
 // Telling a platform flake apart from a regression, for the release gates.
 //
-// Why this exists: on 2026-09-19 the post-merge `Verify staging` run failed on
+// Why this exists: on 2026-09-19 the post-merge `Verify production` run failed on
 // `ERR_CERT_VERIFIER_CHANGED` while loading chat.js from GitHub Pages. The
 // identical verification passed locally seconds later, and passed when the job
 // was rerun — a runner-side transport flake, not a regression. A gate that
@@ -64,7 +64,7 @@ const TRANSIENT_PATTERNS = [
   // Chrome's `status of 404 (Not Found)` line is byte-identical apart from the
   // number, so 4xx must never match here — a missing asset is a regression.
   /\bstatus of 5\d\d\b/,
-  // verify-staging's own network-failure detail prefix.
+  // verify-production's own network-failure detail prefix.
   /^network: /m,
 ];
 

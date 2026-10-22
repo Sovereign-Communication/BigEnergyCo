@@ -8,7 +8,7 @@ on:
   push:
     branches: [main]
     # A push that cannot change the published artifact should not spend a
-    # deploy — and because `Verify staging` fires on this workflow completing,
+    # deploy — and because `Verify production` fires on this workflow completing,
     # skipping here also skips verifying an artifact that is provably
     # unchanged. One docs-only ledger commit used to cost a build, a publish
     # and a full browser smoke for byte-identical output.
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     # Measured on 2026-09-19: ~13s (build + upload + publish). Bounded like
     # every other job so a hung step cannot hold a runner for the 6-hour
-    # default; `Verify staging` waits on this workflow, so a hang here would
+    # default; `Verify production` waits on this workflow, so a hang here would
     # stall the gate behind it too.
     timeout-minutes: 15
     environment:

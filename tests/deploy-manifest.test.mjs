@@ -1,5 +1,5 @@
 // The deploy manifest is the release path's ground truth: gates verify what
-// `deployList()` returns, staging ships what it stages. Its enumeration must
+// `deployList()` returns, production ships what it stages. Its enumeration must
 // therefore be immune to transient working-tree state — the exact mechanism
 // behind the 259-vs-353 CI flake, where a filesystem walk silently dropped
 // ~92 city pages. These tests pin that immunity with mutation teeth: a stray
@@ -170,7 +170,7 @@ test("MUTATION TOOTH: an untracked file inside a nested dir cannot enter either"
 
 test("MUTATION TOOTH: a deleted-but-tracked file fails loudly, not silently", () => {
   // The index still names the file, so the contract keeps it — and since the
-  // staging builder now copies from the INDEX (`scripts/lib/deploy-blobs.mjs`),
+  // production builder now copies from the INDEX (`scripts/lib/deploy-blobs.mjs`),
   // the copy step no longer ENOENTs either: it stages the committed bytes. That
   // is the better failure mode. A working-tree deletion cannot shrink the site,
   // and it cannot crash the build either; the bytes under review are the bytes
@@ -178,7 +178,7 @@ test("MUTATION TOOTH: a deleted-but-tracked file fails loudly, not silently", ()
   //
   // Held under the cross-process mutation lock. This tooth deletes a file at the
   // repo root while `tests/ci-resilience.test.mjs` concurrently spawns
-  // `scripts/verify-staging.mjs`, which reads every allowlisted file. Without
+  // `scripts/verify-production.mjs`, which reads every allowlisted file. Without
   // the lock, node --test's parallel file execution let the verifier observe
   // this deletion and report `parity robots.txt — unreadable: local read
   // failed: ENOENT`, failing a budget-verdict test for an unrelated reason.

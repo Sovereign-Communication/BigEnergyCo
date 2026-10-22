@@ -1,9 +1,16 @@
-name: Verify staging
+name: Verify production
 
-# The gate between main and production: it verifies the artifact that is
-# actually DEPLOYED on staging — stamp, byte parity for every deployed file,
-# platform surface rules and a real-browser smoke against that URL — instead of
-# a localhost copy. `scripts/promote.mjs` runs this same verifier and refuses to
+# Canonical deployment model (owner directive 2026-10-21):
+# - https://freeoffgridcalculator.com/ is the full production site.
+# - https://bigenergyco.pages.dev/ is the production site (NOT staging).
+# - https://sovereign-communication.github.io/BigEnergyCo/ is the production
+#   mirror, auto-deployed from main by the Deploy to GitHub Pages workflow.
+# - There is no staging deployment.
+#
+# This workflow is the gate on the production artifact: it verifies what is
+# actually DEPLOYED — stamp, byte parity for every deployed file, platform
+# surface rules and a real-browser smoke against that URL — instead of a
+# localhost copy. `scripts/promote.mjs` runs this same verifier and refuses to
 # deploy unless it passes, so a green run here is the evidence a release rests
 # on.
 on:
@@ -15,12 +22,12 @@ on:
   workflow_dispatch:
     inputs:
       base:
-        description: Staging base URL to verify
+        description: Production base URL to verify
         required: false
         default: https://sovereign-communication.github.io/BigEnergyCo/
 
 concurrency:
-  group: verify-staging
+  group: verify-production
   cancel-in-progress: false
 
 permissions:
@@ -45,9 +52,9 @@ jobs:
 
       # Chrome ships on the runner (same assumption as the web-smoke job), so the
       # functional half of the verification runs here too.
-      - name: Verify the deployed staging artifact
+      - name: Verify the deployed production artifact
         run: |
-          node scripts/verify-staging.mjs \
+          node scripts/verify-production.mjs \
             --base "${{ github.event.inputs.base || 'https://sovereign-communication.github.io/BigEnergyCo/' }}" \
             --wait 240
 
@@ -55,7 +62,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: staging-verification
+          name: production-verification
           path: |
             _pages_smoke/
             *.png
