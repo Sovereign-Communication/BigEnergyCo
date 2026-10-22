@@ -13,7 +13,7 @@
 
 # Preserve the upstream Leaflet release bytes on every platform. The PNG files
 # in this directory remain binary and are intentionally not covered here.
-assets/vendor/leaflet/LICENSE -text
+assets/vendor/leaflet/LICENSE text eol=lf
 assets/vendor/leaflet/README.md -text
 assets/vendor/leaflet/leaflet.css -text
 assets/vendor/leaflet/leaflet.js -text
