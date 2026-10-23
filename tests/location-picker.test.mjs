@@ -61,6 +61,11 @@ function makeEl(tag) {
     addEventListener(type, fn) {
       (this.listeners[type] ??= []).push(fn);
     },
+    removeEventListener(type, fn) {
+      this.listeners[type] = (this.listeners[type] ?? []).filter(
+        (listener) => listener !== fn,
+      );
+    },
     dispatch(type, ev = {}) {
       for (const fn of this.listeners[type] ?? []) fn(ev);
     },
@@ -179,6 +184,73 @@ test("city combobox: picking a suggestion funnels the full contract through onPi
       assert.equal(list.hidden, true);
       assert.equal(search.attrs["aria-expanded"], "false");
       assert.equal(search.value, formatCityLabel(want));
+    },
+  );
+});
+
+test("city combobox: reinitializing and disposing removes old search listeners", () => {
+  withDom(
+    { citySearch: makeEl("input"), citySuggestions: makeEl("div") },
+    () => {
+      const oldPicks = [];
+      const currentPicks = [];
+      const search = globalThis.document.getElementById("citySearch");
+      const oldSetup = setupCitySearch({
+        onPick: (...args) => oldPicks.push(args),
+        setStatus: () => {},
+      });
+      const currentSetup = setupCitySearch({
+        onPick: (...args) => currentPicks.push(args),
+        setStatus: () => {},
+      });
+
+      assert.equal(
+        search.listeners.input.length,
+        3,
+        "one input listener set remains",
+      );
+      assert.equal(
+        search.listeners.keydown.length,
+        2,
+        "one keydown listener set remains",
+      );
+      assert.equal(
+        search.listeners.blur.length,
+        1,
+        "one blur listener remains",
+      );
+
+      search.value = "Honolulu";
+      search.dispatch("keydown", { key: "Enter", preventDefault() {} });
+      assert.equal(
+        oldPicks.length,
+        0,
+        "the replaced setup cannot handle input",
+      );
+      assert.equal(currentPicks.length, 1, "the current setup handles it once");
+
+      oldSetup.dispose();
+      assert.equal(
+        search.listeners.input.length,
+        3,
+        "stale disposal leaves current listeners alone",
+      );
+      currentSetup.dispose();
+      assert.equal(
+        search.listeners.input.length,
+        0,
+        "dispose removes input listeners",
+      );
+      assert.equal(
+        search.listeners.keydown.length,
+        0,
+        "dispose removes keydown listeners",
+      );
+      assert.equal(
+        search.listeners.blur.length,
+        0,
+        "dispose removes the blur listener",
+      );
     },
   );
 });
