@@ -832,7 +832,25 @@ async function handleChat(request, env, origin) {
       );
     }
 
-    const data = await groqRes.json();
+    // A 200 whose body is not a reply — a truncated generation, a proxy or
+    // captive-portal page — makes `json()` throw. That throw escapes this
+    // handler as a Worker exception: a 500 with no CORS headers, which the
+    // browser reports as an opaque network failure with the chat box stuck on
+    // "Thinking…". It is the same failure the `.catch(() => null)` guards above
+    // exist for, one line further in: those guard the transport, this guards
+    // the body. Ship the complete text we already hold, else degrade.
+    let data;
+    try {
+      data = await groqRes.json();
+    } catch {
+      if (fullReply.length > 0) break;
+      console.warn("chat: groq body was not JSON; serving the degraded reply");
+      return jsonResponse(
+        buildDegradedReply("groq_error", degradedOpts, ensureDisclaimer),
+        200,
+        origin,
+      );
+    }
     const choice = data.choices?.[0];
     const chunk = choice?.message?.content || "";
     const finishReason = choice?.finish_reason;
