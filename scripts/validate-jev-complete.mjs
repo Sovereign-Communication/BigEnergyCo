@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // The Jev complete gate CLI — scores THIS repo's current state 0-100 against
-// the 99 google-quality bar across all 21 facets, emits the pack-declared
-// required-work buckets, and groups recommended actions by work type (the pass
-// repertoire this repo actually runs).
+// the 95 main-staging bar across all 21 facets, emits the pack-declared
+// required-work buckets, and groups recommended actions by work type. Main
+// staging requires ordinal 85 per facet, a hard floor of 60, and score 95;
+// P10/scoped exit verdicts retain the separate 95/95/95 policy.
 //
 //   node scripts/validate-jev-complete.mjs [--evidence ev.json] [--out r.json]
 //                                          [--explain-out explain.md]
@@ -80,7 +81,7 @@ function usageError(msg) {
   process.stderr.write(
     "usage: node scripts/validate-jev-complete.mjs [--scope P<n>.<m>] " +
       "[--evidence FILE] [--out FILE] [--explain-out FILE] [--json] " +
-      "[--local-only] [--require-live]\n",
+      "[--local-only] [--require-live] [--program-exit]\n",
   );
   process.exit(2);
 }
@@ -93,6 +94,7 @@ function parseArgs(argv) {
     json: false,
     localOnly: false,
     requireLive: false,
+    programExit: false,
     scope: null,
   };
   for (let i = 0; i < argv.length; i++) {
@@ -105,7 +107,11 @@ function parseArgs(argv) {
     else if (arg === "--json") opts.json = true;
     else if (arg === "--local-only") opts.localOnly = true;
     else if (arg === "--require-live") opts.requireLive = true;
+    else if (arg === "--program-exit") opts.programExit = true;
     else usageError(`unknown argument: ${arg}`);
+  }
+  if (opts.programExit && opts.scope) {
+    usageError("--program-exit cannot be combined with --scope");
   }
   return opts;
 }
@@ -187,6 +193,16 @@ export async function main(argv = process.argv.slice(2)) {
   }
   report.target = auto.target;
   report.scope = opts.scope || null;
+  report.verdict_mode = opts.scope
+    ? "scoped"
+    : opts.programExit
+      ? "program_exit"
+      : "staging";
+  if (opts.programExit) {
+    report.staging_pass = report.pass;
+    report.pass = report.program_exit_pass;
+    report.blockers = report.program_exit_blockers;
+  }
   report.auto_facts = {
     tree_clean: auto.treeClean,
     secrets_clean: auto.secretsClean,

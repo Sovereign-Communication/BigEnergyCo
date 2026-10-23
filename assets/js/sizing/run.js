@@ -2971,6 +2971,12 @@ function measureUseCase(id, payload, ctx) {
  *      so it can never leave this module.
  */
 export async function runSizing(msg, deps = {}) {
+  // This is the public boundary used by the worker and tests. Reject malformed
+  // messages before object spread can silently turn primitives into empty
+  // sizing inputs.
+  if (!msg || typeof msg !== "object" || Array.isArray(msg)) {
+    throw new Error("runSizing: msg must be an object");
+  }
   const explicit = isUseCaseId(msg && msg.useCase);
   const useCaseId = explicit
     ? msg.useCase

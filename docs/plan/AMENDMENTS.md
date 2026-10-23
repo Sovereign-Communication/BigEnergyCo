@@ -60,3 +60,12 @@ No amendments yet: the plan is at its genesis hash.
 - Plan-SHA256-after: c6799a475a42cf33b91d22269b901dddd9c466c37d39630f0bccb3fb31c0d6bd
 - Sections: P9 (new item P9.7)
 - Rationale: The owner directive of 2026-10-21 authorizes P9.7 and a one-PR bootstrap exception for #232, which creates the scope and quality criteria it would otherwise need to satisfy. Under Jev Gate Policy v1, any below-bar scoped judgment is investigated at claim level; the owner has authorized proceeding when that investigation finds no actual risk. The exception applies only to #232's P9.7 assessment. Other required CI results, hard gates, and ratchets remain binding; the full-main 95/95/95 release gate is unchanged. A-004 and A-005 already appear in the current log, so this is A-006.
+
+## A-007: B1 main-staging Jev gate policy
+
+- Date: 2026-10-23
+- Approved-by: @Treystu
+- Plan-SHA256-before: c6799a475a42cf33b91d22269b901dddd9c466c37d39630f0bccb3fb31c0d6bd
+- Plan-SHA256-after: e89ebe0bbbe99cefbc3b547902457e2d196f71d81b27ce0e36ce00ea023b6609
+- Sections: Q-01, Section 13.3
+- Rationale: The owner approved B1 on 2026-10-23. Main staging requires a 95.0 combined score, every facet ordinal >= 85, no facet below ordinal 60, the existing all-facet ratchet, and green hard gates. Confidence below 0.95 is telemetry and triggers claim-level investigation under Jev Gate Policy v1 but does not block staging. P10 program exit and weekly P11 retain 95/95/95 through --program-exit; scoped PR thresholds are unchanged. PR #292 supplied the proposal draft; this amendment records the approved implementation policy.

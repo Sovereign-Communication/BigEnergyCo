@@ -1362,21 +1362,57 @@ function applianceState() {
   let kwh = 0,
     peakW = 0,
     peakSurgeW = 0,
-    requiresSplitPhase = false;
+    requiresSplitPhase = false,
+    count = 0;
 
   rows.forEach((row) => {
-    const w = parseFloat(row.dataset.w);
-    const qty = parseInt(row.dataset.qty, 10);
-    const h = parseFloat(row.dataset.h);
-    const surge = parseFloat(row.dataset.surgeW) || w;
+    const w = Number(row.dataset.w);
+    const qty = Number(row.dataset.qty);
+    const h = Number(row.dataset.h);
+    const rawSurge = row.dataset.surgeW;
+    const surge =
+      rawSurge === undefined || rawSurge === "" ? w : Number(rawSurge);
+    if (
+      !Number.isFinite(w) ||
+      w <= 0 ||
+      !Number.isSafeInteger(qty) ||
+      qty < 1 ||
+      qty > 30 ||
+      !Number.isFinite(h) ||
+      h < 0.25 ||
+      h > 24 ||
+      !Number.isFinite(surge) ||
+      surge <= 0
+    )
+      return;
+
+    const rowKwh = (w * qty * h) / 1000;
+    const rowPeakW = w * qty;
+    const rowPeakSurgeW = surge * qty;
+    const nextKwh = kwh + rowKwh;
+    const nextPeakW = peakW + rowPeakW;
+    const nextPeakSurgeW = peakSurgeW + rowPeakSurgeW;
+    if (
+      ![
+        rowKwh,
+        rowPeakW,
+        rowPeakSurgeW,
+        nextKwh,
+        nextPeakW,
+        nextPeakSurgeW,
+      ].every(Number.isFinite)
+    )
+      return;
+
+    count++;
     if (row.dataset.splitPhase === "true") requiresSplitPhase = true;
 
-    kwh += (w * qty * h) / 1000;
-    peakW += w * qty;
-    peakSurgeW += surge * qty;
+    kwh = nextKwh;
+    peakW = nextPeakW;
+    peakSurgeW = nextPeakSurgeW;
   });
 
-  return { kwh, peakW, peakSurgeW, requiresSplitPhase, count: rows.length };
+  return { kwh, peakW, peakSurgeW, requiresSplitPhase, count };
 }
 
 function getTariff() {
@@ -6321,10 +6357,13 @@ function updateGenHelper() {
 
 function applyGenRate() {
   const rate = genRateUsd();
-  if (rate === null || !$("customRateVal")) return;
+  if (!Number.isFinite(rate) || rate <= 0 || !$("customRateVal")) return;
   const fx = fxActive();
-  const display =
-    fx && fx.rate ? +(rate * fx.rate).toFixed(4) : +rate.toFixed(4);
+  const converted =
+    fx && Number.isFinite(fx.rate) && fx.rate > 0 ? rate * fx.rate : rate;
+  if (!Number.isFinite(converted) || converted <= 0) return;
+  const display = +converted.toFixed(4);
+  if (!Number.isFinite(display) || display <= 0) return;
   $("customRateVal").value = String(display);
   generatorBasis = true;
   tariffTouched = true;
