@@ -87,7 +87,7 @@ export {
  *  280 — so the judge was reading a sentence about parity, cut off mid-clause,
  *  while six locales of measured copy sat unread under the `experience` heading.
  *  Two stories about one facet, and the weaker one was the one being read. */
-export const EXPERIENCE_FACET_AXES = ["experience", "translation"];
+export const EXPERIENCE_FACET_AXES = ["experience", "i18n", "translation"];
 
 /**
  * What the walk is expected to show, declared rather than implied by the gate's
@@ -475,14 +475,69 @@ export function evaluateExperience(
  * counts when a visitor can see it, and a raw key counts wherever it is. A boot
  * reading of a dormant, correctly-empty readout counts for neither.
  */
+function snapshotIdentity(field, index) {
+  return `${field?.field || "?"}:${field?.key || "?"}:${index}`;
+}
+
+/**
+ * Resolve each English DOM field to its active dictionary key. A field may keep
+ * a static data-i18n key after runtime status code replaces its text; in that
+ * case its English value must identify exactly one other dictionary entry.
+ * Ambiguous or non-dictionary copy returns null and is a gate hole.
+ */
+function resolveEnglishSnapshotKeys(passes) {
+  const resolved = new Map();
+  const english = LOCALES.en || {};
+  for (const pass of passes) {
+    if (pass?.locale !== "en" || !Array.isArray(pass?.i18n_snapshot)) continue;
+    const phaseKeys = new Map();
+    for (const [index, field] of pass.i18n_snapshot.entries()) {
+      const identity = snapshotIdentity(field, index);
+      const declared = field?.key;
+      const expected = english[declared];
+      let candidates = [];
+      if (typeof expected === "string" && field?.value === expected) {
+        candidates = [declared];
+      } else if (typeof field?.value === "string") {
+        candidates = Object.entries(english)
+          .filter(([, value]) => value === field.value)
+          .map(([key]) => key);
+      }
+      phaseKeys.set(identity, candidates.length === 1 ? candidates[0] : null);
+    }
+    resolved.set(pass.phase, phaseKeys);
+  }
+  return resolved;
+}
+
 export function summariseLocaleSweep(reading) {
   const passes = Array.isArray(reading?.locales) ? reading.locales : [];
   let judged = 0;
   let matched = 0;
   let visibleLeaks = 0;
+  const englishSnapshotKeys = resolveEnglishSnapshotKeys(passes);
+  let domJudged = 0;
+  let domMatched = 0;
   for (const pass of passes) {
     if (Array.isArray(pass?.leaks))
       visibleLeaks += pass.leaks.filter((l) => l && l.visible !== false).length;
+    if (Array.isArray(pass?.i18n_snapshot)) {
+      for (const [index, field] of pass.i18n_snapshot.entries()) {
+        if (
+          !["text", "placeholder", "aria-label"].includes(field?.field) ||
+          typeof field?.key !== "string"
+        )
+          continue;
+        const key = englishSnapshotKeys
+          .get(pass.phase)
+          ?.get(snapshotIdentity(field, index));
+        if (!key) continue;
+        const expected = (LOCALES[pass.locale] || {})[key];
+        if (typeof expected !== "string") continue;
+        domJudged += 1;
+        if (field.value === expected) domMatched += 1;
+      }
+    }
     for (const spec of LOCALE_SURFACES) {
       const row = (pass?.surfaces || []).find((s) => s?.id === spec.id);
       if (!row) continue;
@@ -500,6 +555,8 @@ export function summariseLocaleSweep(reading) {
     phases: new Set(passes.map((p) => p?.phase)).size,
     judged,
     matched,
+    domJudged,
+    domMatched,
     visibleLeaks,
   };
 }
@@ -533,6 +590,7 @@ export function judgeLocaleSweep(
   const regression = (id, message) => regressions.push({ id, message });
 
   const passes = Array.isArray(reading?.locales) ? reading.locales : [];
+  const englishSnapshotKeys = resolveEnglishSnapshotKeys(passes);
   if (!passes.length) {
     hole(
       "locales",
@@ -560,7 +618,11 @@ export function judgeLocaleSweep(
 
   let surfaceReadings = 0;
   let matched = 0;
+  let domFieldReadings = 0;
+  let domFieldMatches = 0;
+  let runtimeDictionaryOverrides = 0;
   let leaksByLocale = 0;
+  const domSignatures = new Map();
 
   for (const locale of EXPERIENCE_LOCALES) {
     for (const phase of LOCALE_PHASES) {
@@ -615,6 +677,78 @@ export function judgeLocaleSweep(
       }
 
       // ── the four runtime-painted surfaces ──────────────────────────────
+      const snapshot = Array.isArray(pass.i18n_snapshot)
+        ? pass.i18n_snapshot
+        : undefined;
+      if (!snapshot) {
+        hole(
+          `locale:${locale}:${phase}:i18n_snapshot`,
+          "the translated DOM text/attribute snapshot is missing for this locale and moment",
+        );
+      } else if (!snapshot.length) {
+        hole(
+          `locale:${locale}:${phase}:i18n_snapshot`,
+          "the translated DOM snapshot found no text or translated attributes",
+        );
+      } else {
+        const signature = snapshot
+          .map((field) => `${field?.field || "?"}:${field?.key || "?"}`)
+          .sort()
+          .join("|");
+        if (!domSignatures.has(phase)) domSignatures.set(phase, new Map());
+        domSignatures.get(phase).set(locale, signature);
+        snapshot.forEach((field, index) => {
+          const what = `locale:${locale}:${phase}:dom:${field?.field || "?"}:${field?.key || "?"}:${index}`;
+          if (
+            !["text", "placeholder", "aria-label"].includes(field?.field) ||
+            typeof field?.key !== "string" ||
+            !field.key
+          ) {
+            hole(
+              what,
+              "the DOM snapshot field has no supported translated key",
+            );
+            return;
+          }
+          const activeKey = englishSnapshotKeys
+            .get(phase)
+            ?.get(snapshotIdentity(field, index));
+          if (!activeKey) {
+            hole(
+              what,
+              `the English DOM value for ${field.key} does not resolve to one unique dictionary key`,
+            );
+            return;
+          }
+          if (locale === "en" && activeKey !== field.key)
+            runtimeDictionaryOverrides += 1;
+          const expected = (LOCALES[locale] || {})[activeKey];
+          if (typeof expected !== "string") {
+            hole(
+              what,
+              `${locale} has no dictionary value for active key ${activeKey}, so the DOM field cannot be checked`,
+            );
+            return;
+          }
+          domFieldReadings += 1;
+          const value = typeof field.value === "string" ? field.value : "";
+          if (value === expected) {
+            domFieldMatches += 1;
+            return;
+          }
+          const english = LOCALES.en?.[activeKey];
+          const why =
+            value === english && expected !== english
+              ? "is still in English"
+              : "does not match the locale dictionary";
+          regression(
+            what,
+            `${locale} ${field.field} hook ${field.key} (active ${activeKey}) ${why}: ` +
+              `${JSON.stringify(value.slice(0, 80))}; expected ` +
+              JSON.stringify(expected.slice(0, 80)),
+          );
+        });
+      }
       const rows = Array.isArray(pass.surfaces) ? pass.surfaces : [];
       if (!rows.length) {
         hole(
@@ -730,6 +864,28 @@ export function judgeLocaleSweep(
     }
   }
 
+  for (const phase of LOCALE_PHASES) {
+    const byLocale = domSignatures.get(phase);
+    const referenceLocale = EXPERIENCE_LOCALES[0];
+    const reference = byLocale?.get(referenceLocale);
+    if (!reference) continue;
+    for (const locale of EXPERIENCE_LOCALES.slice(1)) {
+      const signature = byLocale.get(locale);
+      if (signature && signature !== reference)
+        hole(
+          `locale:${locale}:${phase}:i18n_structure`,
+          `${locale} exposes a different set of translated DOM fields than ${referenceLocale}`,
+        );
+    }
+  }
+  if (runtimeDictionaryOverrides)
+    notes.push(
+      `${runtimeDictionaryOverrides} DOM field(s) with stale data-i18n keys resolved to unique runtime dictionary entries`,
+    );
+  if (domFieldReadings)
+    notes.push(
+      `${domFieldMatches}/${domFieldReadings} DOM text/translated-attribute fields match their locale dictionary`,
+    );
   if (surfaceReadings)
     notes.push(
       `${matched}/${surfaceReadings} runtime-painted surface readings match ` +
@@ -852,12 +1008,25 @@ export function composeTranslationFacetLine(report) {
   ).length;
   const rawKeys = sweep.visibleLeaks + finalLeaks;
   return (
-    `RUNTIME, ${sweep.locales} locales x ${sweep.phases} re-entry points: ` +
-    `${rawKeys} raw keys on ${sweep.passes + 1} pages, ` +
-    `${sweep.matched}/${sweep.judged} JS-painted surfaces show their own ` +
-    `locale's dictionary value. Parity both ways + placeholders: ` +
-    `scripts/check-i18n.mjs. Not done: back-reading translated strings for ` +
+    `RUNTIME, ${sweep.locales} locales x ${sweep.phases} re-entry: ` +
+    `${rawKeys} raw keys/${sweep.passes + 1} reads; ` +
+    `${sweep.matched}/${sweep.judged} JS surfaces + ` +
+    `${sweep.domMatched}/${sweep.domJudged} DOM text/attribute fields match locale dictionaries. ` +
+    `scripts/check-i18n.mjs enforces parity/placeholders. Not done: back-reading translated strings for ` +
     `meaning (native judgement).`
+  );
+}
+
+/** Compose the `i18n` facet from the same run's rendered DOM snapshots. */
+export function composeI18nFacetLine(report) {
+  const reading = report?.experience_reading;
+  if (!reading) return null;
+  const sweep = summariseLocaleSweep(reading);
+  if (!sweep.passes || !sweep.domJudged) return null;
+  return (
+    `DOM I18N, ${sweep.locales} locales x ${sweep.phases} moments: ` +
+    `${sweep.domMatched}/${sweep.domJudged} rendered text/placeholder/aria fields match locale dictionaries; ` +
+    `scripts/check-i18n.mjs enforces bidirectional key and placeholder parity.`
   );
 }
 
@@ -865,10 +1034,11 @@ export function composeTranslationFacetLine(report) {
 export const EXPERIENCE_SCOPE_LIMIT =
   "one unthrottled Chrome, one city, nine first-run steps, three provoked " +
   "errors, three empty surfaces, and all seven locales at three re-entry points " +
-  "(first paint, after a re-run, after a language switch). What the locale " +
-  "sweep covers is the four JS-painted surfaces and every dictionary key on " +
-  "the page — not the prose: an ERROR'S next step is still judged in English " +
-  "verbs only, and no translated sentence is back-read for meaning here. " +
-  "Screen-reader and keyboard-only journeys are NOT walked: this gate drives " +
-  "the DOM through CDP and can only observe what a sighted mouse user would " +
-  "see. No device matrix, no throttling, no placeholder-interpolation check.";
+  "(first paint, after a re-run, after a language switch). The locale sweep " +
+  "covers every data-i18n text, placeholder and aria-label field in the DOM, " +
+  "the four JS-painted surfaces, and dictionary keys across the page. It does " +
+  "not judge translation meaning or back-read copy. Error next steps remain " +
+  "English-only; screen-reader and keyboard-only journeys are not walked. " +
+  "This gate drives the DOM through CDP and only observes what a sighted mouse " +
+  "user would see. It does not cover a device matrix, throttling or placeholder " +
+  "interpolation.";

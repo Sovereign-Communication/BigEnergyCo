@@ -179,6 +179,7 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
   const {
     EXPERIENCE_FACET_AXES,
     composeExperienceFacetLine,
+    composeI18nFacetLine,
     composeTranslationFacetLine,
   } = await import("../scripts/lib/experience-budgets.mjs");
   if (EXPERIENCE_FACET_AXES.includes("experience")) {
@@ -244,6 +245,23 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
             visible: true,
             raw_key: false,
           })),
+          i18n_snapshot: [
+            {
+              field: "text",
+              key: LOCALE_SURFACES[0].key,
+              value: LOCALES[locale][LOCALE_SURFACES[0].key],
+            },
+            {
+              field: "placeholder",
+              key: "advisorPlaceholder",
+              value: LOCALES[locale].advisorPlaceholder,
+            },
+            {
+              field: "aria-label",
+              key: "advisorTitle",
+              value: LOCALES[locale].advisorTitle,
+            },
+          ],
           leaks: [],
         })),
       ),
@@ -251,6 +269,10 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
     derived.experience = composeExperienceFacetLine({
       experience_reading: reading,
     });
+    if (EXPERIENCE_FACET_AXES.includes("i18n"))
+      derived.i18n = composeI18nFacetLine({
+        experience_reading: reading,
+      });
     if (EXPERIENCE_FACET_AXES.includes("translation"))
       derived.translation = composeTranslationFacetLine({
         experience_reading: reading,
@@ -397,6 +419,7 @@ test("TRANSPORT: the real 21-axis record survives whole — every line and note"
   const {
     EXPERIENCE_FACET_AXES,
     composeExperienceFacetLine,
+    composeI18nFacetLine,
     composeTranslationFacetLine,
   } = await import("../scripts/lib/experience-budgets.mjs");
   if (EXPERIENCE_FACET_AXES.includes("experience")) {
@@ -456,6 +479,23 @@ test("TRANSPORT: the real 21-axis record survives whole — every line and note"
             visible: true,
             raw_key: false,
           })),
+          i18n_snapshot: [
+            {
+              field: "text",
+              key: LOCALE_SURFACES[0].key,
+              value: LOCALES[locale][LOCALE_SURFACES[0].key],
+            },
+            {
+              field: "placeholder",
+              key: "advisorPlaceholder",
+              value: LOCALES[locale].advisorPlaceholder,
+            },
+            {
+              field: "aria-label",
+              key: "advisorTitle",
+              value: LOCALES[locale].advisorTitle,
+            },
+          ],
           leaks: [],
         })),
       ),
@@ -463,6 +503,14 @@ test("TRANSPORT: the real 21-axis record survives whole — every line and note"
     ev.facet_evidence.experience = composeExperienceFacetLine({
       experience_reading: reading,
     });
+    if (EXPERIENCE_FACET_AXES.includes("i18n"))
+      ev.facet_evidence.i18n = composeI18nFacetLine({
+        experience_reading: reading,
+      });
+    if (EXPERIENCE_FACET_AXES.includes("i18n"))
+      ev.facet_evidence.i18n = composeI18nFacetLine({
+        experience_reading: reading,
+      });
     // …and the translation line, which is no longer typed at all. If this block
     // does not compose it, the record measured here is missing an axis the judge
     // WILL receive, and the transport budget would be asserted against a record

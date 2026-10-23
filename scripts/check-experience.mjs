@@ -46,6 +46,7 @@ import {
   EXPERIENCE_FACET_AXES,
   EXPERIENCE_SCOPE_LIMIT,
   composeExperienceFacetLine,
+  composeI18nFacetLine,
   composeTranslationFacetLine,
   evaluateExperience,
 } from "./lib/experience-budgets.mjs";
@@ -214,6 +215,7 @@ const report = {
 report.facet_line = composeExperienceFacetLine(report) || "";
 report.facet_lines = {
   experience: report.facet_line,
+  i18n: composeI18nFacetLine(report) || "",
   translation: composeTranslationFacetLine(report) || "",
 };
 for (const [axis, line] of Object.entries(report.facet_lines)) {
