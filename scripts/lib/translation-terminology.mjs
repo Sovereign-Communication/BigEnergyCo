@@ -52,7 +52,9 @@ const digitise = (text) =>
 const hasQuantity = (text, numeral, locale, numerals) => {
   if (new RegExp(`(^|[^0-9])${numeral}([^0-9]|$)`).test(digitise(text)))
     return true;
-  return (numerals[locale]?.[numeral] || []).some((word) => text.includes(word));
+  return (numerals[locale]?.[numeral] || []).some((word) =>
+    text.includes(word),
+  );
 };
 
 export function checkMaterialQuantities(
@@ -77,7 +79,9 @@ export function checkMaterialQuantities(
         (n) => !hasQuantity(to, n, locale, numerals),
       );
       if (missing.length)
-        errors.push(`${locale}.${key}: missing material quantity ${missing.join(", ")}`);
+        errors.push(
+          `${locale}.${key}: missing material quantity ${missing.join(", ")}`,
+        );
       else passed++;
     }
   }

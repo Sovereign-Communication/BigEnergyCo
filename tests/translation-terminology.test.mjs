@@ -58,8 +58,14 @@ test("a dropped download size and a dropped simulation length are both rejected"
     "Wählen Sie Standort und Verbrauch. Beim ersten Start werden Satelliten-Wetterdaten geladen.";
   changed.de.runBtn = "☀️ System dimensionieren";
   const errors = checkMaterialQuantities(changed).errors;
-  assert.ok(errors.some((e) => e.startsWith("de.firstRunNote: missing material quantity 2")));
-  assert.ok(errors.some((e) => e.startsWith("de.runBtn: missing material quantity 5")));
+  assert.ok(
+    errors.some((e) =>
+      e.startsWith("de.firstRunNote: missing material quantity 2"),
+    ),
+  );
+  assert.ok(
+    errors.some((e) => e.startsWith("de.runBtn: missing material quantity 5")),
+  );
 });
 
 test("spelled-out and Eastern Arabic numerals are accepted, not treated as dropped", () => {

@@ -33,10 +33,10 @@ numeral to survive as a digit or as the locale's spelled-out form.
 
 It found two shipped German omissions, both now fixed:
 
-| key | English | German before | German after |
-| --- | --- | --- | --- |
-| `firstRunNote` | "downloads ~2 MB of satellite weather data" | size omitted | "~2 MB Satelliten-Wetterdaten" |
-| `runBtn` | "Size My System (5-yr simulation)" | parenthetical omitted | "(5-Jahres-Simulation)" |
+| key            | English                                     | German before         | German after                   |
+| -------------- | ------------------------------------------- | --------------------- | ------------------------------ |
+| `firstRunNote` | "downloads ~2 MB of satellite weather data" | size omitted          | "~2 MB Satelliten-Wetterdaten" |
+| `runBtn`       | "Size My System (5-yr simulation)"          | parenthetical omitted | "(5-Jahres-Simulation)"        |
 
 Eastern Arabic digits and the Arabic spelling "خمس" are accepted rather than
 being reported as dropped, so the check does not mistake a legitimate numeral
@@ -49,10 +49,10 @@ Two variants, both against the pinned model `jev-1.14.0`, both scored on the
 same 36 samples and 18 controls (a known-good pair, a wrong-year pair, and a
 swapped-component pair per locale).
 
-| variant | controls | samples ≥ 0.95 |
-| --- | --- | --- |
-| questionnaire (labels + back-translation) | 1/18 | 4/36 |
-| direct pair (source and translation quoted in the question) | 16/18 | 9/36 |
+| variant                                                     | controls | samples ≥ 0.95 |
+| ----------------------------------------------------------- | -------- | -------------- |
+| questionnaire (labels + back-translation)                   | 1/18     | 4/36           |
+| direct pair (source and translation quoted in the question) | 16/18    | 9/36           |
 
 Control cutoffs were 0.95 for a known-good pair and 0.05 for a corrupted one. A
 measuring instrument that misses its own controls cannot certify translations,

@@ -52,7 +52,10 @@ import {
 } from "./lib/experience-budgets.mjs";
 import { COMPLETE_FACET_CLIP } from "./lib/jev-complete.mjs";
 import { LOCALES } from "../assets/js/shared/locales.js";
-import { checkTerminology } from "./lib/translation-terminology.mjs";
+import {
+  checkMaterialQuantities,
+  checkTerminology,
+} from "./lib/translation-terminology.mjs";
 
 const argv = process.argv.slice(2);
 const opts = { stage: "_pages_experience", out: null };
@@ -178,6 +181,12 @@ if (!terminology.errors.length)
   ok(
     `${terminology.passed}/${terminology.checked} glossary label anchors; lexical checks only`,
   );
+const quantities = checkMaterialQuantities(LOCALES);
+for (const error of quantities.errors) fail(`quantities: ${error}`);
+if (!quantities.errors.length)
+  ok(
+    `${quantities.passed}/${quantities.checked} material-quantity checks; figures preserved, not proof of meaning`,
+  );
 for (const n of verdict.notes) console.log(`     ${n}`);
 for (const h of verdict.holes) fail(`hole: ${h.what}: ${h.why}`);
 for (const r of verdict.regressions) fail(`regression: ${r.message}`);
@@ -207,6 +216,7 @@ const report = {
   expectations: EXPERIENCE_EXPECTATIONS,
   experience_reading: reading,
   translation_terminology: terminology,
+  translation_quantities: quantities,
   regressions: verdict.regressions,
   holes: verdict.holes,
   notes: verdict.notes,
