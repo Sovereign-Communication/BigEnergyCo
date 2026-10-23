@@ -10,7 +10,7 @@
     <title>What Size Solar System for Off-Grid? Honest Guide (2026)</title>
     <meta
       name="description"
-      content="What size solar system for off-grid? Reliability tiers, latitude yield bands, and PV plus battery ranges for 10 kWh per day. Run a free simulation."
+      content="Estimate off-grid solar and battery needs from measured loads, local weather, and your backup plan. Compare site-specific options."
     />
     <meta
       name="keywords"
@@ -55,14 +55,14 @@
     />
     <meta
       property="og:description"
-      content="Reliability tiers, latitude yield bands, and honest PV plus battery ranges for a 10 kWh/day home."
+      content="Estimate off-grid solar and battery needs from measured loads, local weather, and your backup plan. Compare site-specific options."
     />
     <meta
       property="og:url"
       content="https://freeoffgridcalculator.com/blog/what-size-solar-system-for-off-grid/"
     />
     <meta property="article:published_time" content="2026-09-07" />
-    <meta property="article:modified_time" content="2026-09-07" />
+    <meta property="article:modified_time" content="2026-10-22" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
@@ -70,7 +70,7 @@
     />
     <meta
       name="twitter:description"
-      content="Reliability tiers, latitude yield bands, and honest PV plus battery ranges for a 10 kWh/day home."
+      content="Estimate off-grid solar and battery needs from measured loads, local weather, and your backup plan. Compare site-specific options."
     />
     <meta
       property="og:image"
@@ -95,9 +95,9 @@
             },
             "headline": "What Size Solar System for Off-Grid? Honest Guide (2026)",
             "name": "What Size Solar System for Off-Grid? Honest Guide (2026)",
-            "description": "Reliability tiers, latitude yield bands, and PV plus battery ranges for 10 kWh per day.",
+            "description": "Estimate off-grid solar and battery needs from measured loads, local weather, and your backup plan. Compare site-specific options.",
             "datePublished": "2026-09-07T00:00:00Z",
-            "dateModified": "2026-09-07T00:00:00Z",
+            "dateModified": "2026-10-22T00:00:00Z",
             "mainEntityOfPage": "https://freeoffgridcalculator.com/blog/what-size-solar-system-for-off-grid/",
             "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"],
             "author": {
@@ -147,34 +147,34 @@
             "mainEntity": [
               {
                 "@type": "Question",
-                "name": "What size solar system do I need off grid for 10 kWh per day?",
+                "name": "How do I choose an off-grid solar array size?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "As a starting range: 3-5 kW PV with 10-15 kWh usable in subtropical and tropical sites, 5-8 kW with 15-25 kWh usable in temperate sites for Tier B coverage. Enter your coordinates and tier to refine."
+                  "text": "Build an hourly load profile, estimate PV output for the actual site and difficult season, then test the chosen backup policy in a system model. No latitude band or daily average guarantees a particular array size."
                 }
               },
               {
                 "@type": "Question",
-                "name": "How many batteries do I need to go off grid?",
+                "name": "How do I estimate battery capacity?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Count usable kWh: daily kWh times days of autonomy times 1.5x dark-week margin, divided by usable depth. A 10 kWh/day Tier B home often tests 12-20 kWh usable."
+                  "text": "Start with essential loads and the autonomy you want. Account for conversion losses, usable-energy limits, temperature, power limits, and realistic recharge opportunities. Test low-production sequences instead of a universal multiplier."
                 }
               },
               {
                 "@type": "Question",
-                "name": "Can I go off grid with no generator?",
+                "name": "Can I design an off-grid system without a generator?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Yes, Tier A, but plan 30-60% more PV and battery than Tier B and test the worst week in five years of weather. Many homes start Tier B and expand later."
+                  "text": "Possibly, if modeled low-sun periods, essential loads, storage, and load shedding meet your reliability needs. Use local time-series weather and professional review; annual average production does not prove autonomy."
                 }
               },
               {
                 "@type": "Question",
-                "name": "Does latitude really matter that much?",
+                "name": "Does latitude determine solar system size?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Yes. Annual yields run 1500-1900 kWh/kWp tropics, 1400-1800 subtropical, 1100-1500 temperate, 850-1200 high-latitude. Winter weeks matter more than annual totals off-grid."
+                  "text": "No. Seasonal clouds, shading, roof orientation, temperature, snow or dust, load timing, and backup expectations also matter. PVWatts estimates grid-connected production, not off-grid coverage."
                 }
               }
             ]
@@ -529,189 +529,193 @@
       <article>
         <h1>What Size Solar System for Off-Grid? Honest Guide (2026)</h1>
         <p class="meta">
-          📅 Sep 7, 2026 · Lucas Ballek · 11 min read · every number below comes
-          from this site's deterministic simulator, not guesswork
+          Published September 7, 2026 · Last reviewed October 22, 2026 · Lucas
+          Ballek
         </p>
         <p>
-          <em class="kicker">The short answer:</em> for a home using around
-          <strong>10 kWh per day</strong>, most temperate sites land around
-          <strong>4–6 kW of PV with 10–16 kWh of usable battery</strong> for
-          high coverage — less in the tropics, substantially more at high
-          latitude. Pick reliability first, latitude second, hardware third.
-          Educational estimates only — verify with a licensed professional.
+          <em class="kicker">Short answer:</em> there is no universal one-number
+          system size. Start with measured loads, local weather, the circuits
+          you need to keep running, and your backup policy. Model those choices
+          for your site before buying equipment.
         </p>
         <h2>Off-grid size is a reliability choice</h2>
         <p>
-          Grid-tied sizing asks "how much of my bill do I erase?" Off-grid asks:
-          "how many dull days in a row must I ride through?" Two homes with
-          identical 10 kWh/day averages can need systems differing by 2x if one
-          accepts generator hours and the other does not. That is why this guide
-          gives <strong>ranges, not single numbers</strong>, and why the
-          estimator simulates five years of hourly weather instead of dividing
-          one average day by one sun-hour figure.
+          An off-grid design must say which loads stay available during low
+          solar production, how long storage should support them, and when
+          another source or load shedding is acceptable. Daily or annual energy
+          totals alone cannot describe that reliability choice.
         </p>
-        <h2>Tier A, B, C: pick your outage tolerance first</h2>
+        <h2>Choose a backup policy first</h2>
         <ul>
           <li>
-            <strong>Tier A — never-generator:</strong> ride the worst week in
-            five years on solar plus battery alone. Expect 30–60% more PV and
-            battery than Tier B.
+            <strong>Minimize generator use:</strong> model difficult local
+            weather, preserve an energy reserve, and identify loads that can be
+            shifted or shed. This requires careful design and still cannot
+            guarantee independence in every event.
           </li>
           <li>
-            <strong>Tier B — about 1 day/year shortfall:</strong> covers 98–99%
-            of hours; a few hours per year of load-shedding or small backup. The
-            sweet spot for most full-time homes.
+            <strong>Allow occasional backup:</strong> design for expected
+            seasonal operation and document which loads or periods may use a
+            safe backup source.
           </li>
           <li>
-            <strong>Tier C — occasional backup accepted:</strong>
-            deliberately undersize 20–40% vs Tier B and cover 5–20 dull days
-            with generator or load shifting.
+            <strong>Use backup routinely:</strong> prioritize essential
+            circuits, fuel availability, maintenance, transfer equipment, and
+            clear operating procedures alongside PV and storage.
           </li>
         </ul>
         <p>
-          Moving Tier C → B typically adds 20–40% more battery. B → A adds
-          another 30–60%, almost all to survive rare multi-day dull spells.
+          These are planning choices, not guaranteed annual coverage tiers.
+          Results depend on loads, the weather record, shading, equipment, and
+          control settings.
         </p>
-        <h2>Latitude yield bands</h2>
-        <ul>
-          <li>
-            <strong>Tropical (0–15°):</strong> 1500–1900 kWh/kWp/yr — Quito,
-            Lagos, Jakarta. Strong sun, clouds matter more than season.
-          </li>
-          <li>
-            <strong>Subtropical (15–30°):</strong> 1400–1800 kWh/kWp/yr —
-            Honolulu, Delhi, Cairo. Mild winter dip.
-          </li>
-          <li>
-            <strong>Temperate (30–50°):</strong> 1100–1500 kWh/kWp/yr — Madrid,
-            Sydney, Los Angeles. Real winter dip.
-          </li>
-          <li>
-            <strong>High-latitude (50°+):</strong> 850–1200 kWh/kWp/yr — Berlin,
-            London, Oslo. December weeks decide the system.
-          </li>
-        </ul>
-        <h2>Worked example: 10 kWh/day at 60, 80, 95% coverage</h2>
+        <h2>Use local solar and weather data</h2>
+        <p>
+          Latitude is only a rough clue. Check seasonal daylight, clouds, roof
+          orientation, shading, temperature, snow or dust, and consecutive
+          low-production days at the actual site. Test the difficult season
+          across more than one plausible weather period.
+        </p>
+        <p>
+          <a href="https://pvwatts.nrel.gov/">NREL PVWatts</a> estimates
+          grid-connected PV production at locations worldwide. It is a useful
+          first estimate, but does not prove off-grid load coverage or battery
+          autonomy.
+        </p>
+        <h2>Build the estimate from measured loads</h2>
         <div class="table-container">
           <table>
             <caption>
-              Worked example: 10 kWh/day at 60, 80, 95% coverage
+              Questions a site-specific model should answer
             </caption>
             <thead>
               <tr>
-                <th scope="col">Coverage target</th>
-                <th scope="col">PV range</th>
-                <th scope="col">Usable battery</th>
-                <th scope="col">What it feels like</th>
+                <th scope="col">Evidence</th>
+                <th scope="col">Input to model</th>
+                <th scope="col">What it tells you</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>~60%</td>
-                <td class="num">2–4 kW</td>
-                <td class="num">5–9 kWh</td>
-                <td>Frequent backup in winter weeks</td>
+                <td>Load profile</td>
+                <td>Measured timing and appliance demand</td>
+                <td>Energy use, peaks, and flexible loads</td>
               </tr>
               <tr>
-                <td>~80%</td>
-                <td class="num">3–5 kW</td>
-                <td class="num">8–14 kWh</td>
-                <td>Comfortable most of year</td>
+                <td>Solar resource</td>
+                <td>Coordinates, roof layout, shading, seasonal weather</td>
+                <td>PV production when loads occur</td>
               </tr>
               <tr>
-                <td>~95%</td>
-                <td class="num">5–8 kW</td>
-                <td class="num">15–25 kWh</td>
-                <td>Tier B full-time, ~1 day/yr shortfall</td>
+                <td>Storage and backup</td>
+                <td>Usable battery limits and backup policy</td>
+                <td>Periods that need reserve, backup, or load shedding</td>
               </tr>
             </tbody>
           </table>
         </div>
         <p>
-          For Tier A never-generator on the same load in a temperate zone, plan
-          roughly 7–10 kW PV with 25–40 kWh usable as a starting range. For Tier
-          C with backup accepted, 2–4 kW with 6–10 kWh is often enough to test
-          first.
+          Keep the weather period, loads, battery limits, and backup rules the
+          same when comparing designs. The calculator is an estimate, not a site
+          survey or electrical design; have the final configuration checked for
+          equipment compatibility and local code.
         </p>
-        <h2>Why the last 10% costs the most</h2>
+        <h2>Why difficult seasons govern reliability</h2>
         <p>
-          Going 60% → 80% is cheap; 90% → 98% is expensive — you buy hardware
-          idle for months to cover one bad February week. Many households build
-          Tier B now on a 48 V modular bank and extend later.
+          Annual-average production can hide long periods when generation is
+          below demand. A system designed around the hardest season may need
+          more PV, storage, load flexibility, or planned backup than an annual
+          total suggests. The balance depends on local weather and the cost of
+          an interruption for the household.
         </p>
-        <h2>Dark-week margin: why x1.5</h2>
+        <h2>Model low-sun sequences</h2>
         <p>
-          Three overcast days at 15–25% of clear-sky output is normal. After
-          computing one day of autonomy, multiply usable capacity by about 1.5x
-          to ride 2–3 day clusters. Example: 10 kWh/day × 1.0 day = 10 kWh
-          baseline → 15 kWh planning figure Tier B. Tier A often tests 2.0–2.5x;
-          Tier C 1.0–1.2x.
+          Storage bridges times when production is below demand; it does not
+          create energy. Estimate the essential loads during consecutive low
+          solar periods, include conversion losses and the battery maker's
+          permitted operating range, then test when recharge is available. Avoid
+          a fixed autonomy multiplier that ignores the site and battery.
         </p>
-        <h2>Same load, three latitudes</h2>
+        <p>
+          NREL's
+          <a href="https://sam.nrel.gov/battery-storage/"
+            >System Advisor Model battery documentation</a
+          >
+          describes storage dispatch and degradation modeling.
+        </p>
+        <h2>Compare designs with the same assumptions</h2>
         <ul>
           <li>
-            <strong>Honolulu (~21°N):</strong> test 3–5 kW PV, 10–15 kWh usable
-            first.
+            <strong>Essential-load design:</strong> serves named circuits and
+            allows noncritical loads to wait.
           </li>
           <li>
-            <strong>Lagos (~6°N):</strong> test 3–5 kW PV, 12–18 kWh usable
-            first — battery matters more than extra panel past 5 kW.
+            <strong>Whole-home design:</strong> includes heating, cooling,
+            cooking, and motor loads and their peak power.
           </li>
           <li>
-            <strong>Berlin (~52°N):</strong> test 5–8 kW PV, 18–28 kWh usable
-            first for the same Tier B promise.
+            <strong>Backup-supported design:</strong> documents when another
+            source starts and what it can serve.
           </li>
         </ul>
-        <h2>What the hardware ranges mean</h2>
+        <h2>Compare the full equipment scope</h2>
         <div class="table-container">
           <table>
             <caption>
-              What the hardware ranges mean
+              Details to compare in written local quotes
             </caption>
             <thead>
               <tr>
-                <th scope="col">Component</th>
-                <th scope="col">Indicative range</th>
-                <th scope="col">Scope</th>
+                <th scope="col">Equipment</th>
+                <th scope="col">Compare</th>
+                <th scope="col">Include in scope</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>Battery, usable</td>
-                <td class="num">$80–125/kWh</td>
-                <td>Landed DIY</td>
+                <td>PV array</td>
+                <td>Models, ratings, layout, and loss assumptions</td>
+                <td>Racking, wiring, and roof work</td>
               </tr>
               <tr>
-                <td>Battery, usable</td>
-                <td class="num">$110–165/kWh</td>
-                <td>Budget retail pack</td>
+                <td>Battery</td>
+                <td>Nominal and usable energy, power, limits, warranty</td>
+                <td>Controls, enclosure, and replacement path</td>
               </tr>
               <tr>
-                <td>Panels</td>
-                <td class="num">$0.16–0.38/W</td>
-                <td>Landed DIY through retail</td>
+                <td>Inverter</td>
+                <td>Continuous and surge power, operating modes</td>
+                <td>Protection, transfer equipment, commissioning</td>
               </tr>
               <tr>
-                <td>Hybrid inverter</td>
-                <td class="num">$85–260/kW</td>
-                <td>Budget-retail, peak-sized</td>
+                <td>Installation</td>
+                <td>Permits, labor, inspection, maintenance</td>
+                <td>Local code and site conditions</td>
               </tr>
             </tbody>
           </table>
         </div>
         <p>
-          Component ranges only — exclude mounting, wiring, protection, permits,
-          labor. Educational estimates only; verify with a licensed
-          professional. Batteries and mains wiring can cause fire, injury, and
-          death.
+          Prices vary by place, date, design, labor, freight, taxes, and what is
+          included. Compare itemized local quotes on the same scope; a global
+          price-per-watt or battery-price range is not a project estimate. See
+          the
+          <a href="https://www.energy.gov/cmei/systems/homeowners-guide-solar"
+            >DOE Homeowner's Guide to Solar</a
+          >
+          for site and local-policy questions to review with an installer.
+        </p>
+        <p>
+          Batteries and mains wiring can cause fire, injury, and death. Use
+          qualified professionals and follow local electrical and fire codes.
         </p>
         <div class="cta-box">
           <p>
-            <strong>Your sun is not the average sun.</strong> Run a free
-            simulation for your coordinates and see Tier A vs B vs C ranges for
-            your load.
+            <strong>Your site and backup policy determine the design.</strong>
+            Run the free simulation with your coordinates and measured loads,
+            then review the assumptions with a qualified installer.
           </p>
-          <a class="btn" href="../../#sizing">⚡ Run free simulation</a>
+          <a class="btn" href="../../#sizing">Run free simulation</a>
         </div>
         <h2>Related guides</h2>
         <ul>
@@ -733,34 +737,40 @@
         </ul>
         <h2>Frequently asked</h2>
         <details>
+          <summary>How do I choose an off-grid solar array size?</summary>
+          <p>
+            Build an hourly load profile, estimate PV output for the actual site
+            and difficult season, then test the chosen backup policy in a system
+            model. No latitude band or daily average guarantees a particular
+            array size.
+          </p>
+        </details>
+        <details>
+          <summary>How do I estimate battery capacity?</summary>
+          <p>
+            Start with essential loads and the autonomy you want. Account for
+            conversion losses, usable-energy limits, temperature, power limits,
+            and realistic recharge opportunities. Test low-production sequences
+            instead of a universal multiplier.
+          </p>
+        </details>
+        <details>
           <summary>
-            What size solar system do I need off grid for 10 kWh per day?
+            Can I design an off-grid system without a generator?
           </summary>
           <p>
-            Starting range: 3–5 kW PV with 10–15 kWh usable subtropical, 5–8 kW
-            with 15–25 kWh temperate Tier B. Refine with your coordinates and
-            tier.
+            Possibly, if modeled low-sun periods, essential loads, storage, and
+            load shedding meet your reliability needs. Use local time-series
+            weather and professional review; annual average production does not
+            prove autonomy.
           </p>
         </details>
         <details>
-          <summary>How many batteries do I need to go off grid?</summary>
+          <summary>Does latitude determine solar system size?</summary>
           <p>
-            Daily kWh × autonomy days × 1.5 dark-week margin ÷ usable depth. A
-            10 kWh/day Tier B home often tests 12–20 kWh usable.
-          </p>
-        </details>
-        <details>
-          <summary>Can I go off grid with no generator?</summary>
-          <p>
-            Yes (Tier A), planning 30–60% more than Tier B. Many start Tier B
-            and expand the bank later.
-          </p>
-        </details>
-        <details>
-          <summary>Does latitude really matter that much?</summary>
-          <p>
-            Yes — winter weeks matter more than annual totals off-grid, which
-            widens the gap further.
+            No. Seasonal clouds, shading, roof orientation, temperature, snow or
+            dust, load timing, and backup expectations also matter. PVWatts
+            estimates grid-connected production, not off-grid coverage.
           </p>
         </details>
       </article>
