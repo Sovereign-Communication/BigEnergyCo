@@ -30,7 +30,7 @@
 // loadMode value restored, regular (non-simple) display, no emulation; the
 // card is intentionally left invalidated ("Inputs changed" status), which
 // closing-flow gates do not assert on.
-import { gate as smokeGate, sleep } from "./runtime.mjs";
+import { gate as smokeGate, gatesSince, sleep } from "./runtime.mjs";
 
 let summary = null;
 function gate(name, ok, detail = "") {
