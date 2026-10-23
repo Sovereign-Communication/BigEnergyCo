@@ -1,4 +1,9 @@
-// Shared DOM builders for sizing modules.
+// The two DOM builders every widget module needs — ONE owner for what was
+// twice-private copy. ui.js kept `$` and `el`, location-picker.js kept `byId`
+// and `el`, and the two `el` bodies were byte-identical (the code-hygiene gate
+// found them as a shared 8-line window; extract, don't retype). Classic
+// scripts that cannot import — chat.js — keep their own helper by necessity;
+// modules share this one.
 export function byId(id) {
   return document.getElementById(id);
 }

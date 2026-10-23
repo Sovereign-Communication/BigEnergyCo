@@ -20,11 +20,19 @@ import assert from "node:assert/strict";
 
 import {
   AXE_TAGS,
+  A11Y_MATRIX_CLAUSE_MAX,
+  A11Y_MATRIX_FACET_AXES,
   compareCells,
+  composeA11yMatrixClause,
   matrixCells,
   readA11yBaseline,
   templateMatrix,
 } from "../scripts/lib/quality-matrix.mjs";
+import {
+  A11Y_CONTROLS_CLAUSE_MAX,
+  A11Y_FACET_AXES,
+} from "../scripts/lib/a11y-controls.mjs";
+import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
 
 const KB = 1024;
 
@@ -447,4 +455,126 @@ test("Q-07: the bar is read from the newest declared baseline, per cell", () => 
   );
   assert.equal(none.source, null);
   assert.ok(KB > 0);
+});
+
+// ── the matrix's clause of the `accessibility` facet line ────────────────────
+//
+// The controls walk ends its line on the limit this run answers: "1 Chrome, no
+// screen reader, no theme/RTL matrix". This clause is the second instrument
+// of that facet, joined by the evidence builder — so it must be ONE bounded
+// shape per outcome, it must speak the SAME axis as the controls walk, and the
+// two halves together must fit the transport clip from both ends.
+
+test("Q-07: the matrix clause words one shape per run outcome, bounded", () => {
+  const cells = (n, violations = 0) =>
+    Array.from({ length: n }, () => ({
+      id: "cell",
+      violations: Array.from({ length: violations }, () => ({ id: "v" })),
+    }));
+  // Green: the coverage, the instrument, and the count — nothing else.
+  const green = composeA11yMatrixClause({
+    cells: cells(11),
+    unmeasured: [],
+    audit_errors: [],
+    regressions: [],
+  });
+  assert.equal(green, "axe matrix: 11/11 cells, 0 violations", green);
+  assert.equal(green.length <= A11Y_MATRIX_CLAUSE_MAX, true, green);
+  // Violations are counted, not hidden: a red reading reaches the judge red.
+  assert.match(
+    composeA11yMatrixClause({
+      cells: cells(11, 2),
+      unmeasured: [],
+      audit_errors: [],
+      regressions: [],
+    }),
+    /22 violations/,
+  );
+  // The worst finding names itself and outranks everything below it: an
+  // unaudited cell is never a pass, and a regression is never a violation
+  // count.
+  assert.match(
+    composeA11yMatrixClause({
+      cells: cells(11),
+      unmeasured: [],
+      audit_errors: ["home/arrival/none/ltr"],
+      regressions: [],
+    }),
+    /1 cell unaudited/,
+  );
+  assert.match(
+    composeA11yMatrixClause({
+      cells: cells(11),
+      unmeasured: [],
+      audit_errors: [],
+      regressions: [{ id: "x" }, { id: "y" }],
+    }),
+    /2 of 11 cells regressed/,
+  );
+  // A hole is a hole: the denominator is the declared matrix, not the cells
+  // that happened to run.
+  assert.match(
+    composeA11yMatrixClause({
+      cells: cells(9),
+      unmeasured: [{ id: "a" }, { id: "b" }],
+      audit_errors: [],
+      regressions: [],
+    }),
+    /9\/11 cells, 2 unmeasured/,
+  );
+  // Every shape the DECLARED matrix can produce stays inside its half of the
+  // clip. The envelope is the product's, not the composer's guess: six page
+  // templates x three states x one theme x two directions is 36 cells, and a
+  // run with no regressions can only count violations its own baseline
+  // declared — so 99 cells / 999 violations is already far past what this
+  // repository's matrix can declare. Anything OUTSIDE that envelope (a counter
+  // that grew past the half) is not trimmed: the gate's backstop and the
+  // builder's join both name it and fail the run.
+  const worst = [
+    composeA11yMatrixClause({
+      cells: [...cells(98), ...cells(1, 999)],
+      unmeasured: [],
+      audit_errors: [],
+      regressions: [],
+    }),
+    composeA11yMatrixClause({
+      cells: cells(99),
+      unmeasured: [],
+      audit_errors: Array(99).fill("e"),
+      regressions: [],
+    }),
+    composeA11yMatrixClause({
+      cells: [],
+      unmeasured: Array(99).fill({}),
+      audit_errors: [],
+      regressions: [],
+    }),
+    composeA11yMatrixClause({
+      cells: cells(99),
+      unmeasured: [],
+      audit_errors: [],
+      regressions: Array(99).fill({}),
+    }),
+  ];
+  for (const line of worst) {
+    assert.ok(
+      line.length <= A11Y_MATRIX_CLAUSE_MAX,
+      `\"${line}\" is ${line.length} chars, over the ${A11Y_MATRIX_CLAUSE_MAX}-char half`,
+    );
+  }
+});
+
+test("Q-07: two instruments, one axis, and the pair fits the clip", () => {
+  // The axis is declared once per instrument; a disagreement would produce two
+  // facet lines for one judge question — or, if the names drifted apart,
+  // silence.
+  assert.deepEqual(A11Y_MATRIX_FACET_AXES, A11Y_FACET_AXES);
+  // Bounded from both ends: 240 + 1 + 39 = the clip exactly. The join in the
+  // evidence builder names the half that grew rather than trimming it.
+  assert.equal(
+    A11Y_CONTROLS_CLAUSE_MAX + 1 + A11Y_MATRIX_CLAUSE_MAX <=
+      COMPLETE_FACET_CLIP,
+    true,
+    `${A11Y_CONTROLS_CLAUSE_MAX} + 1 + ${A11Y_MATRIX_CLAUSE_MAX} must fit ${COMPLETE_FACET_CLIP}`,
+  );
 });

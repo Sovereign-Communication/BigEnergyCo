@@ -7,8 +7,6 @@ export const FACET_EVIDENCE = Object.freeze({
     "One owner per state verified: run-coordinator, share-codec, infeasible-copy, parts-csv, interpolate, fuel-units, jev-price; Jev price has single owner imported by both consumers; gated against second copy; no state duplication in CI.",
   correctness:
     "Grid-tie shows bill-cut row; Off-grid hides it and shows 0%/1%/2%+ generator runtime (default 1%). Chrome smoke verified end-to-end: 212/212 gates pass on asset 20261022b and SW beco-v126; mode-chrome truth table has single writer.",
-  quality:
-    "85 pages: 235/318 inline style attributes. Homepage: 63 repeated homepage style attributes use 11 tested named rules (zero inline exceptions for those patterns; count 223→160). Three close-button cursor attrs share the existing rule; 232 smoke gates green.",
   security:
     "CI secrets/header gates pass; privacy browser: 0 cookies/HttpOnly/storage/identified requests, 0 coordinates over 0.01Â°. Static privacy gate finds no ad/tracker/affiliate/lead path; CSP blocks unsafe-inline/eval, geolocation is click-gated, egress disclosed.",
   accessibility:

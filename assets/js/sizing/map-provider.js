@@ -1,6 +1,6 @@
 // Optional map integration boundary. Importing this module never loads a map
 // library, requests coordinates, or changes core sizing behavior.
-export const PANEL_AREA_M2 = 6;
+const PANEL_AREA_M2 = 6;
 function versionedLocalAsset(path) {
   const url = new URL(path, import.meta.url);
   const version = new URL(import.meta.url).searchParams.get("v");
@@ -16,7 +16,7 @@ export const LEAFLET_SCRIPT_URL = versionedLocalAsset(
 // Keep the library, stylesheet, and static page pins on one release.
 export const LEAFLET_SCRIPT_SRI =
   "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
-export const LEAFLET_STYLE_URL = versionedLocalAsset(
+const LEAFLET_STYLE_URL = versionedLocalAsset(
   "../../vendor/leaflet/leaflet.css",
 );
 export const LEAFLET_STYLE_SRI =

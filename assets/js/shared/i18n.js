@@ -16,7 +16,7 @@
 // chrome. A German or Arabic visitor sees native copy from the first frame,
 // including the advisor's degraded-failure surface — proven per-locale through
 // the real client path in tests/i18n-lazy.test.mjs.
-import { interpolate, pickString } from "./interpolate.js?v=20261023d";
+import { interpolate, pickString } from "./interpolate.js?v=20261023e";
 
 // Populated by the dynamic import below. Null until it resolves; every
 // consumer either awaits `localesReady` or degrades explicitly.
@@ -31,7 +31,7 @@ let LOCALES = null;
  * rejecting, because an untranslated-but-working page beats a blank one — and
  * `translate` already falls back to English for a missing key.
  */
-export const localesReady = import("./locales.js?v=20261023d")
+export const localesReady = import("./locales.js?v=20261023e")
   .then((m) => {
     LOCALES = m.LOCALES;
     return LOCALES;
@@ -74,7 +74,7 @@ function chosen() {
   return "auto";
 }
 
-export function resolveLang() {
+function resolveLang() {
   const pick = chosen();
   if (pick !== "auto") return pick;
   const nav = (navigator.language || "en").slice(0, 2).toLowerCase();
@@ -121,6 +121,24 @@ export async function applyI18n() {
   // read-only translation contract to runtime-rendered advisor strings.
   window.becoLang = lang;
   window.becoT = translate;
+  // Write ONLY what differs. On the default locale — which is every visit
+  // unless someone picks a language — every string below already equals what
+  // the server sent, so the unconditional assignment was destroying and
+  // recreating every translated text node for nothing.
+  //
+  // That is not a tidy-up. Assigning `textContent` replaces the node's
+  // children, which dirties layout for the whole subtree: measured on the
+  // staged build, it forced a style/layout/paint pass of `section.hero`
+  // roughly a second AFTER first paint, and the hero is the largest
+  // contentful element, so the write produced a SECOND LCP candidate and
+  // pushed LCP out by the cost of repainting a page that had not changed. A
+  // visitor who chose no language was paying to be re-measured.
+  //
+  // Reading `textContent` is cheap and the guard is exact: when a language IS
+  // chosen the values differ and every write still happens.
+  const setText = (node, value) => {
+    if (node.textContent !== value) node.textContent = value;
+  };
   document.querySelectorAll("[data-i18n]").forEach((elNode) => {
     const key = elNode.getAttribute("data-i18n");
     const value = dict?.[key];

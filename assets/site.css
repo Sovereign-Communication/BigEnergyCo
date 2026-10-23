@@ -150,10 +150,8 @@ header {
 
   z-index: 100;
 
-  backdrop-filter: blur(16px);
-
-  -webkit-backdrop-filter: blur(16px);
-
+  /* No backdrop-filter: the header is 90% opaque, so the 16px blur is
+     invisible, but the LCP snapshot it forces on every composite is not. */
   background: rgba(9, 13, 22, 0.9);
 
   border-bottom: 1px solid var(--border-card);

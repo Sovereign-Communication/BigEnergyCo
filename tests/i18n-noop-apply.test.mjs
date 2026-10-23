@@ -7,6 +7,7 @@ function makeElement(attributeName, key, property, initialValue = "") {
   let currentValue = initialValue;
   let writes = 0;
   const attributes = { [attributeName]: key };
+  if (property === "aria-label") attributes["aria-label"] = initialValue;
   return {
     get writes() {
       return writes;
@@ -49,16 +50,23 @@ test("applyI18n skips unchanged DOM writes and still updates changed translation
   const mod = await import(I18N_URL.href + "?no-op=" + Date.now());
   await mod.localesReady;
   let selectedLanguage = "en";
-  const text = makeElement("data-i18n", "advisorTitle", "textContent");
+  const text = makeElement(
+    "data-i18n",
+    "advisorTitle",
+    "textContent",
+    mod.translate("advisorTitle", {}, "en"),
+  );
   const placeholder = makeElement(
     "data-i18n-placeholder",
     "advisorPlaceholder",
     "placeholder",
+    mod.translate("advisorPlaceholder", {}, "en"),
   );
   const aria = makeElement(
     "data-i18n-aria-label",
     "advisorClose",
     "aria-label",
+    mod.translate("advisorClose", {}, "en"),
   );
   const globals = {
     localStorage: { getItem: () => selectedLanguage },
@@ -85,7 +93,7 @@ test("applyI18n skips unchanged DOM writes and still updates changed translation
     }
 
     await mod.applyI18n();
-    assert.deepEqual([text.writes, placeholder.writes, aria.writes], [1, 1, 1]);
+    assert.deepEqual([text.writes, placeholder.writes, aria.writes], [0, 0, 0]);
     assert.equal(text.read(), mod.translate("advisorTitle", {}, "en"));
     assert.equal(
       placeholder.read(),
@@ -96,13 +104,13 @@ test("applyI18n skips unchanged DOM writes and still updates changed translation
     await mod.applyI18n();
     assert.deepEqual(
       [text.writes, placeholder.writes, aria.writes],
-      [1, 1, 1],
+      [0, 0, 0],
       "applying the same locale must not write unchanged DOM values",
     );
 
     selectedLanguage = "es";
     await mod.applyI18n();
-    assert.deepEqual([text.writes, placeholder.writes, aria.writes], [2, 2, 2]);
+    assert.deepEqual([text.writes, placeholder.writes, aria.writes], [1, 1, 1]);
     assert.equal(text.read(), mod.translate("advisorTitle", {}, "es"));
     assert.equal(
       placeholder.read(),
