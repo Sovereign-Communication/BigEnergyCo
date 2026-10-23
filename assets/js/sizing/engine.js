@@ -108,6 +108,9 @@ export function flatProfile(kwhPerDay) {
     throw new RangeError("kwhPerDay must be non-negative");
   }
   const per = (kwhPerDay * 1000) / 24;
+  if (!Number.isFinite(per)) {
+    throw new RangeError("kwhPerDay must produce a finite hourly load");
+  }
   return Float64Array.from({ length: 24 }, () => per);
 }
 

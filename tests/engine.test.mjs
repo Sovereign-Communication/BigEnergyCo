@@ -123,6 +123,7 @@ test("flatProfile rejects invalid daily kWh before producing a bad load", () => 
     assert.throws(() => flatProfile(value), TypeError);
   }
   assert.throws(() => flatProfile(-1), RangeError);
+  assert.throws(() => flatProfile(Number.MAX_VALUE), RangeError);
   assert.deepEqual([...flatProfile(0)], Array(24).fill(0));
 });
 
