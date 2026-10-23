@@ -139,8 +139,16 @@ export function createMapProviderRegistry(providers = []) {
         (candidate) => candidate.available?.() !== false,
       );
       if (!provider) return null;
+      // Install only AFTER a successful init. Assigning first meant a
+      // provider whose init rejected stayed reachable: onClick,
+      // drawRectangle and drawPolygon would call into a map that was never
+      // created, and the registry would look ready to every later caller.
+      // ui.js happens to cleanup() in its catch, so no shipped path breaks
+      // today - but that compensation sits a module away from the invariant
+      // and the next caller would not know to repeat it.
+      const result = await provider.init(options);
       active = provider;
-      return provider.init(options);
+      return result;
     },
     onClick(handler) {
       return active?.onClick?.(handler) || (() => {});
