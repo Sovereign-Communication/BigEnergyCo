@@ -30,7 +30,12 @@
 // loadMode value restored, regular (non-simple) display, no emulation; the
 // card is intentionally left invalidated ("Inputs changed" status), which
 // closing-flow gates do not assert on.
-import { gate as smokeGate, gatesSince, sleep } from "./runtime.mjs";
+import {
+  gate as smokeGate,
+  gateCheckpoint,
+  gatesSince,
+  sleep,
+} from "./runtime.mjs";
 
 let summary = null;
 function gate(name, ok, detail = "") {
@@ -456,6 +461,9 @@ const RESULTS = ["cutSlider", "budgetSlider"];
 export async function runA11yFlow(ctx) {
   const { evaluate, send } = ctx;
   summary = { ran: false, gates: [], walks: [] };
+  // Everything this flow gates is measured from this mark, so the derived
+  // facet line can never pick up a gate another flow wrote.
+  const reportCheckpoint = gateCheckpoint();
   const setMode = (id) =>
     evaluate(`(() => { const r = document.getElementById(${JSON.stringify(id)});
       if (!r) return false;
