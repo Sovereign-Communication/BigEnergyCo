@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261023c";
+import { HOME_COPY } from "./home-copy.js?v=20261023d";
 
 export const LOCALES = {
   en: {
@@ -2218,7 +2218,7 @@ export const LOCALES = {
       "Ziel: ~{pct}% Ihrer Spitzenlaststunden auf den Akku verschieben",
     fxCodeLabel: "Währungscode:",
     firstRunNote:
-      "Wählen Sie Standort und Verbrauch und klicken Sie auf System dimensionieren. Beim ersten Start werden Satelliten-Wetterdaten geladen und im Browser gespeichert.",
+      "Wählen Sie Standort und Verbrauch und klicken Sie auf System dimensionieren. Beim ersten Start werden ~2 MB Satelliten-Wetterdaten geladen und im Browser gespeichert.",
     navBom: "Hardware-Referenz",
     navBlog: "Blog",
     navLegal: "Bedingungen & Haftungsausschluss",
@@ -2331,7 +2331,7 @@ export const LOCALES = {
     essentialLabel: "Was muss weiterlaufen? (Auswählen, was passt)",
     outageLabel: "Wie lange muss es durchhalten?",
     backupRechargeLabel: "Die Module dürfen sie während des Ausfalls nachladen",
-    reserveLabel: "Notfall-Reservestand in der Batteri",
+    reserveLabel: "Notfall-Reservestand in der Batterie",
     portableDeviceLabel: "Was versorgst du? (Auswählen, was passt)",
     portableBankLabel: "Nutzbare Größe der Stromstation (kWh)",
     portableShoreLabel: "Ich kann am Netz oder am Fahrzeug nachladen",
@@ -2366,7 +2366,7 @@ export const LOCALES = {
     loadBill: "Monatliche Rechnung",
     loadKwh: "Ich kenne kWh/Tag (fortgeschritten)",
     locBtn: "📍 Präzisen Standort verwenden",
-    runBtn: "☀️ System dimensionieren",
+    runBtn: "☀️ System dimensionieren (5-Jahres-Simulation)",
     langLabel: "Sprache",
     lvlBest: "Beste Wahl",
     lvlCompare: "Batterien vergleichen",
