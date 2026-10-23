@@ -91,3 +91,14 @@ test("unconstrained budget position follows the current target marker", () => {
   assert.match(range, /next = m && Number\.isFinite\(m\.capexUsd\)/);
   assert.match(range, /slider\.min = String\(Math\.ceil\(lo\)\)/);
 });
+
+const smoke = fs.readFileSync("scripts/smoke/results.js", "utf8");
+
+test("real-browser smoke asserts independent budget and cut selections", () => {
+  assert.match(smoke, /budget change keeps the independent bill-cut target/);
+  assert.match(smoke, /cut change keeps the chosen budget pinned/);
+  assert.doesNotMatch(
+    smoke,
+    /budgetFollowedCut|budget pick moves the bill-cut target/,
+  );
+});
