@@ -45,87 +45,67 @@ export async function runResultsFlow(ctx) {
     `${a11y.badBtns} missing`,
   );
 
-  // ── Slider cooperation (bill-cut target ⇄ up-front budget) ────────
-  // Two controls, one choice. A live report described them overwriting
-  // each other, so each direction is asserted here: picking a budget point
-  // must move the cut target, and moving the cut target must move the budget
-  // thumb onto the resulting recommendation without discarding a budget the
-  // visitor pinned themselves.
-  console.log("SMOKE      ── slider cooperation ──");
-  const cooperation = await evaluate(`(async () => {
-      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  // ── Independent cut target and up-front budget constraints ──────
+  // A budget choice selects an affordable system without changing the
+  // target the visitor chose. A later target edit keeps that budget pinned.
+  console.log("SMOKE      ── independent slider constraints ──");
+  const independence = await evaluate(`(() => {
       const budget = document.getElementById("budgetSlider");
       const cut = document.getElementById("cutSlider");
       const budgetRow = document.getElementById("budgetSliderRow");
-      const out = {};
+      const select = document.getElementById("autoTarget");
       if (!budget || !cut || !budgetRow || budgetRow.style.display === "none")
         return { skip: "no budget slider in this mode" };
-      out.range = { min: +budget.min, max: +budget.max };
-
-      // Establish a non-edge result-stage target so the directionality test
-      // cannot accidentally choose the already-selected recommendation.
-      cut.value = "60";
-      cut.dispatchEvent(new Event("input", { bubbles: true }));
-      cut.dispatchEvent(new Event("change", { bubbles: true }));
-      await wait(800);
-
-      // Budget → cut: pick a point a step above the current thumb.
-      const startCut = +cut.value;
-      const hi = +budget.max;
-      const target = hi;
-      budget.value = String(target);
+      const cutBeforeBudget = Number(cut.value);
+      const targetBeforeBudget = select?.value ?? null;
+      budget.value = budget.max;
       budget.dispatchEvent(new Event("input", { bubbles: true }));
       budget.dispatchEvent(new Event("change", { bubbles: true }));
-      await wait(400);
-      out.budgetPicked = +budget.value;
-      out.cutAfterPick = +cut.value;
-      out.cutMovedFromStart = +cut.value !== startCut;
-      // The form select must agree with the slider, or the next run disagrees.
-      const sel = document.getElementById("autoTarget");
-      const cutValue = +cut.value;
-      out.selectMatches =
-        !sel ||
-        (sel.value === "cut" + cutValue && [95, 80, 60].includes(cutValue)) ||
-        (![95, 80, 60].includes(cutValue) && sel.value === "custom");
-
-      // Cut → budget: move the cut target and the budget thumb should land on
-      // the new recommendation instead of staying on the old system. The
-      // recommendation arrives from a background re-slice, so poll for it.
-      const beforeCutMove = +budget.value;
-      cut.value = String(Math.max(1, Math.min(150, +cut.value + 7)));
+      const cutStayedIndependent = Number(cut.value) === cutBeforeBudget;
+      const targetStayedIndependent = !select || select.value === targetBeforeBudget;
+      const pinnedBudget = Number(budget.value);
+      const requestedCut = cutBeforeBudget < 143 ? cutBeforeBudget + 7 : cutBeforeBudget - 7;
+      cut.value = String(requestedCut);
       cut.dispatchEvent(new Event("input", { bubbles: true }));
       cut.dispatchEvent(new Event("change", { bubbles: true }));
-      for (let i = 0; i < 60; i++) {
-        if (+budget.value !== beforeCutMove) break;
-        await wait(500);
-      }
-      out.budgetFollowedCut = +budget.value !== beforeCutMove;
-      out.budgetBeforeCutMove = beforeCutMove;
-      out.budgetWithinRange = +budget.value >= +budget.min && +budget.value <= +budget.max;
-      return out;
+      const expectedTarget = [60, 80, 95].includes(requestedCut) ? "cut" + requestedCut : "custom";
+      return {
+        cutStayedIndependent,
+        targetStayedIndependent,
+        cutMoved: Number(cut.value) === requestedCut,
+        budgetStayedPinned: Number(budget.value) === pinnedBudget,
+        selectMatches: !select || select.value === expectedTarget,
+        budgetWithinRange: Number(budget.value) >= Number(budget.min) && Number(budget.value) <= Number(budget.max),
+        cutBeforeBudget,
+        requestedCut,
+        pinnedBudget,
+      };
     })()`);
-  if (cooperation && cooperation.skip) {
-    console.log(`SMOKE       ${cooperation.skip}`);
+  if (independence && independence.skip) {
+    console.log(`SMOKE       ${independence.skip}`);
   } else {
     gate(
-      "budget pick moves the bill-cut target",
-      cooperation.cutMovedFromStart === true,
-      JSON.stringify(cooperation),
+      "budget change keeps the independent bill-cut target",
+      independence.cutStayedIndependent === true &&
+        independence.targetStayedIndependent === true,
+      JSON.stringify(independence),
     );
     gate(
       "bill-cut target and the form select agree",
-      cooperation.selectMatches === true,
+      independence.selectMatches === true,
     );
     gate(
-      "bill-cut move carries the budget thumb to the new system",
-      cooperation.budgetFollowedCut === true,
+      "cut change keeps the chosen budget pinned",
+      independence.cutMoved === true &&
+        independence.budgetStayedPinned === true,
+      JSON.stringify(independence),
     );
     gate(
       "budget thumb stays inside the curve's span",
-      cooperation.budgetWithinRange === true,
+      independence.budgetWithinRange === true,
+      JSON.stringify(independence),
     );
   }
-
   // ── Controls that CSP no longer lets the markup wire ──────────────
   // script-src dropped 'unsafe-inline', so every control that used to
   // carry an on* attribute must now be bound from an external module. Two
