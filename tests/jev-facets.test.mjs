@@ -34,6 +34,9 @@ import {
 } from "../scripts/lib/jev-complete.mjs";
 import { FACET_EVIDENCE } from "../scripts/lib/jev-facet-evidence.mjs";
 
+const I18N_LINE =
+  "DOM I18N, 7 locales x 3 moments: 21/21 text fields match dictionaries.";
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PLAN = readFileSync(join(ROOT, "docs/plan/MASTER_PLAN.md"), "utf8");
 const pack = loadCompletePack(ROOT);
@@ -251,6 +254,7 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
     derived.experience = composeExperienceFacetLine({
       experience_reading: reading,
     });
+    if (EXPERIENCE_FACET_AXES.includes("i18n")) derived.i18n = I18N_LINE;
     if (EXPERIENCE_FACET_AXES.includes("translation"))
       derived.translation = composeTranslationFacetLine({
         experience_reading: reading,
@@ -463,6 +467,8 @@ test("TRANSPORT: the real 21-axis record survives whole — every line and note"
     ev.facet_evidence.experience = composeExperienceFacetLine({
       experience_reading: reading,
     });
+    if (EXPERIENCE_FACET_AXES.includes("i18n"))
+      ev.facet_evidence.i18n = I18N_LINE;
     // …and the translation line, which is no longer typed at all. If this block
     // does not compose it, the record measured here is missing an axis the judge
     // WILL receive, and the transport budget would be asserted against a record

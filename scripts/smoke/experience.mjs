@@ -366,6 +366,31 @@ const SURFACE_PROBE = `(() => {
       visible: !!r && r.width > 0 && r.height > 0,
     };
   });
+  const i18n_snapshot = [
+    ...document.querySelectorAll(
+      "[data-i18n], [data-i18n-placeholder], [data-i18n-aria-label]",
+    ),
+  ].flatMap((el) => {
+    const fields = [];
+    const textKey = el.getAttribute("data-i18n");
+    const placeholderKey = el.getAttribute("data-i18n-placeholder");
+    const ariaLabelKey = el.getAttribute("data-i18n-aria-label");
+    if (textKey)
+      fields.push({ field: "text", key: textKey, value: el.textContent || "" });
+    if (placeholderKey)
+      fields.push({
+        field: "placeholder",
+        key: placeholderKey,
+        value: el.getAttribute("placeholder") || "",
+      });
+    if (ariaLabelKey)
+      fields.push({
+        field: "aria-label",
+        key: ariaLabelKey,
+        value: el.getAttribute("aria-label") || "",
+      });
+    return fields;
+  });
   const sel = document.getElementById("langSelect");
   return {
     lang: document.documentElement.lang || "",
@@ -373,6 +398,7 @@ const SURFACE_PROBE = `(() => {
     beco_lang: typeof window.becoLang === "string" ? window.becoLang : "",
     picker: sel ? sel.value : "",
     surfaces,
+    i18n_snapshot,
   };
 })()`;
 
@@ -939,7 +965,8 @@ async function rawKeyLeaks(ctx, keys) {
 }
 
 /**
- * Read the four runtime-painted surfaces in ONE locale at ONE moment.
+ * Read translated DOM fields and the four runtime-painted surfaces in ONE locale
+ * at ONE moment.
  *
  * Everything the visitor can see on this page is read through this probe, and
  * nothing about it is asserted here: the gate re-judges every value against the
@@ -962,6 +989,9 @@ export async function readLocalePass(
     dir: node.dir || "",
     beco_lang: node.beco_lang || "",
     picker: node.picker || "",
+    i18n_snapshot: Array.isArray(node.i18n_snapshot)
+      ? node.i18n_snapshot
+      : undefined,
     // `rows` lets a caller hand in readings it took one at a time, each while
     // its own surface was the ACTIVE load mode. That matters: `updateLoadReadout`
     // paints only the active readout, so a single probe taken after the last

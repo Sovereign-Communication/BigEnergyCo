@@ -13,7 +13,6 @@ export const FACET_EVIDENCE = Object.freeze({
     "CI secrets/header gates pass; privacy browser: 0 cookies/HttpOnly/storage/identified requests, 0 coordinates over 0.01°. Static privacy gate finds no ad/tracker/affiliate/lead path; CSP blocks unsafe-inline/eval, geolocation is click-gated, egress disclosed.",
   accessibility:
     "Chrome smoke verified: keyboard reaches and wraps result, quick/manual/kWh controls; all visible controls have accessible names, AA contrast passes, normal/reduced-motion verified; axe 0 violations (0 critical, 0 serious) on full walk.",
-  i18n: "i18n: 436 keys/7 locales, 135 hooks, placeholder parity; 0 raw keys/22 pages. Back-read 43 #248 chart keys in six locales; fixed SOC weather-data and Dutch derating wording; audit: CHART_TRANSLATION_BACKREAD_2026-10-22.md. 434/485 prose unkeyed; native-speaker review open.",
   seo: "npm run seo and check-chars pass sitemap, JSON-LD, metadata, i18n, CSP/headers and country pages. Asset 20261022b and SW beco-v126 match shipped bytes.",
   resilience:
     "Verified end-to-end: silent-worker deadline surfaces honest actionable error, releases button, recovers on fresh click; invalid kWh and malformed share coordinates rejected pre-worker; 232 web-smoke gates green including error paths.",
