@@ -68,6 +68,7 @@ function makeEl(tag) {
     },
     dispatch(type, ev = {}) {
       for (const fn of this.listeners[type] ?? []) fn(ev);
+      this[`on${type}`]?.(ev);
     },
     focus() {},
     querySelectorAll() {
@@ -188,7 +189,7 @@ test("city combobox: picking a suggestion funnels the full contract through onPi
   );
 });
 
-test("city combobox: reinitializing and disposing removes old search listeners", () => {
+test("city combobox: reinitializing and disposing removes old search handlers", () => {
   withDom(
     { citySearch: makeEl("input"), citySuggestions: makeEl("div") },
     () => {
@@ -205,19 +206,19 @@ test("city combobox: reinitializing and disposing removes old search listeners",
       });
 
       assert.equal(
-        search.listeners.input.length,
-        3,
-        "one input listener set remains",
+        typeof search.oninput,
+        "function",
+        "one input handler remains",
       );
       assert.equal(
-        search.listeners.keydown.length,
-        2,
-        "one keydown listener set remains",
+        typeof search.onkeydown,
+        "function",
+        "one keydown handler remains",
       );
       assert.equal(
-        search.listeners.blur.length,
-        1,
-        "one blur listener remains",
+        typeof search.onblur,
+        "function",
+        "one blur handler remains",
       );
 
       search.value = "Honolulu";
@@ -231,26 +232,18 @@ test("city combobox: reinitializing and disposing removes old search listeners",
 
       oldSetup.dispose();
       assert.equal(
-        search.listeners.input.length,
-        3,
+        typeof search.oninput,
+        "function",
         "stale disposal leaves current listeners alone",
       );
       currentSetup.dispose();
+      assert.equal(search.oninput, null, "dispose removes the input handler");
       assert.equal(
-        search.listeners.input.length,
-        0,
-        "dispose removes input listeners",
+        search.onkeydown,
+        null,
+        "dispose removes the keydown handler",
       );
-      assert.equal(
-        search.listeners.keydown.length,
-        0,
-        "dispose removes keydown listeners",
-      );
-      assert.equal(
-        search.listeners.blur.length,
-        0,
-        "dispose removes the blur listener",
-      );
+      assert.equal(search.onblur, null, "dispose removes the blur handler");
     },
   );
 });

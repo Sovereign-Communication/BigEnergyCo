@@ -16,8 +16,8 @@ import {
   searchCities,
   shouldAutoResolve,
   typedCityCandidates,
-} from "./cities.js?v=20261023l";
-import { byId, el } from "../shared/dom.js?v=20261023l";
+} from "./cities.js?v=20261023o";
+import { byId, el } from "../shared/dom.js?v=20261023o";
 
 const citySearchDisposers = new WeakMap();
 
@@ -34,17 +34,11 @@ export function setupCitySearch({
     return null;
   }
 
-  // The UI can be initialized again after its controls are restored. Replace
-  // the prior binding before attaching another set to the same input.
+  // A restored UI may reuse this input; dispose its previous binding.
   citySearchDisposers.get(search)?.();
 
   let active = -1;
   let lookupGeneration = 0;
-  const listeners = [];
-  const listen = (type, listener) => {
-    search.addEventListener(type, listener);
-    listeners.push([type, listener]);
-  };
   // Fresh input → seed results instantly; any country partitions the query
   // names arrive in the background and re-open the list with the union.
   const draw = (results = searchCities(search.value, CITY_CATALOG)) => {
@@ -96,7 +90,6 @@ export function setupCitySearch({
     }
   };
   const reset = () => {
-    if (disposed) return;
     lookupGeneration += 1;
     cancelAutoResolve();
     lastResolvedQuery = "";
@@ -106,25 +99,19 @@ export function setupCitySearch({
     list.hidden = true;
     search.setAttribute("aria-expanded", "false");
   };
-  let disposed = false;
   const dispose = () => {
-    if (disposed) return;
-    disposed = true;
+    if (citySearchDisposers.get(search) !== dispose) return;
+    citySearchDisposers.delete(search);
     lookupGeneration += 1;
     cancelAutoResolve();
-    for (const [type, listener] of listeners)
-      search.removeEventListener(type, listener);
+    search.oninput = search.onkeydown = search.onblur = null;
     list.innerHTML = "";
     list.hidden = true;
     search.setAttribute("aria-expanded", "false");
-    if (citySearchDisposers.get(search) === dispose)
-      citySearchDisposers.delete(search);
   };
-  listen("input", () => {
+  search.oninput = (event) => {
     lookupGeneration += 1;
     draw();
-  });
-  listen("input", () => {
     // Lazy country loading: a typed query tags its own countries ("Aust"
     // → Austin/US + Australia/AU). Never fires for a query the seed
     // already answers exactly, so the common path costs zero requests.
@@ -138,23 +125,19 @@ export function setupCitySearch({
       if (generation === lookupGeneration && search.value.trim() === query)
         draw();
     });
-  });
-  // Auto-lookup: 2s after the typing cadence stops, resolve the typed text
-  // to coordinates without requiring Enter/Tab. Fires the same code path
-  // Enter/Tab use, so behavior is identical — just hands-free.
-  listen("input", (event) => {
+    // Auto-lookup follows the same resolve path as Enter and Tab.
     cancelAutoResolve();
-    const query = search.value.trim();
-    if (query === lastResolvedLabel) return;
+    const autoQuery = search.value.trim();
+    if (autoQuery === lastResolvedLabel) return;
     // Editing away from the selected label means the coordinates no longer
     // match the visible query. Require a suggestion/lookup to resolve it.
     lastResolvedQuery = "";
     lastResolvedLabel = "";
-    onQueryChange(query);
+    onQueryChange(autoQuery);
     // IME composition (CJK input): keystrokes mid-composition are not the
     // final text — let composition finish before scheduling the lookup.
     if (event.isComposing) return;
-    if (!shouldAutoResolve(query, lastResolvedQuery)) return;
+    if (!shouldAutoResolve(autoQuery, lastResolvedQuery)) return;
     autoResolveTimer = setTimeout(() => {
       autoResolveTimer = null;
       const query = search.value.trim();
@@ -164,7 +147,7 @@ export function setupCitySearch({
       if (!list.hidden && active >= 0) return;
       resolveTypedCity();
     }, 2000);
-  });
+  };
   const resolveTypedCity = async () => {
     cancelAutoResolve();
     const query = search.value.trim();
@@ -251,7 +234,7 @@ export function setupCitySearch({
     list.hidden = true;
     search.setAttribute("aria-expanded", "false");
   };
-  listen("keydown", (event) => {
+  search.onkeydown = (event) => {
     if (event.key === "Tab") {
       // Let focus move naturally, but resolve the typed city first.
       // The explicit paths cancel the pending auto-lookup so it cannot
@@ -269,8 +252,7 @@ export function setupCitySearch({
         resolveTypedCity();
       }
     }
-  });
-  listen("keydown", (event) => {
+
     const options = [...list.querySelectorAll("[role=option]")];
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
@@ -291,14 +273,14 @@ export function setupCitySearch({
       options[active].click();
       search.focus();
     }
-  });
-  listen("blur", () => {
+  };
+  search.onblur = () => {
     cancelAutoResolve();
     setTimeout(() => {
       list.hidden = true;
       search.setAttribute("aria-expanded", "false");
     }, 150);
-  });
+  };
   reset.dispose = dispose;
   citySearchDisposers.set(search, dispose);
   return reset;
