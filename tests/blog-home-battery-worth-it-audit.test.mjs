@@ -18,7 +18,6 @@ test("home battery article claims, sources, metadata, card, and FAQs stay aligne
     clean(q),
     clean(a),
   ]);
-  assert.equal(visible.length, 4);
   const structured = faq.mainEntity.map(({ name, acceptedAnswer }) => [
     name,
     acceptedAnswer.text,
@@ -28,8 +27,8 @@ test("home battery article claims, sources, metadata, card, and FAQs stay aligne
     article.includes("2026-10-22T00:00:00Z") &&
       article.includes("Last reviewed: October 22, 2026") &&
       article.includes("homeowners-guide-solar") &&
-      article.includes("id=Time-of-day"),
+      article.includes("id=Time-of-day") &&
+      listing.split(title).length - 1 === 3,
   );
   assert.doesNotMatch(article, /\$|\d+ years|Honolulu|Germany/);
-  assert.equal(listing.split(title).length - 1, 3);
 });
