@@ -26,6 +26,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
+import { FACET_EVIDENCE } from "../scripts/lib/jev-facet-evidence.mjs";
 import { composeUseCaseFacetLine } from "../scripts/smoke/usecases.js";
 
 const WORKFLOW_YAML = readFileSync(".github/workflows/test.yml", "utf8");
@@ -92,8 +93,13 @@ test("EVIDENCE: the performance facet line is derived from the run, not typed by
   // …and the other axes stay typed, because nothing measures them yet. This is
   // the scope boundary: this cluster wires Lighthouse, not everything.
   assert.ok(
-    Object.keys(PROSE.facet_evidence || {}).length > 10,
-    "the remaining axes keep their prose lines; only the measured one is derived",
+    Object.keys(FACET_EVIDENCE).length > 10,
+    "the remaining axes keep their code-owned lines; only measured axes are derived",
+  );
+  assert.equal(
+    Object.hasOwn(PROSE, "facet_evidence"),
+    false,
+    "the prose file must not keep a second copy of code-owned facet lines",
   );
 });
 
@@ -169,8 +175,8 @@ test("EVIDENCE: a derived facet line must fit the transport clip", () => {
 });
 
 test("EVIDENCE: every hand-authored facet line fits the transport clip", () => {
-  const lines = Object.entries(PROSE.facet_evidence || {});
-  assert.ok(lines.length > 0, "the prose file keeps its declared facet lines");
+  const lines = Object.entries(FACET_EVIDENCE);
+  assert.ok(lines.length > 0, "the code module keeps its declared facet lines");
   for (const [axis, line] of lines) {
     assert.equal(typeof line, "string", `${axis} evidence must be text`);
     assert.ok(
@@ -387,6 +393,11 @@ test("EVIDENCE: the builder puts the run's numbers on the judge's record", () =>
     true,
     "the judge's performance line must be the one composed from this run's report",
   );
+  assert.equal(
+    out.facet_evidence.spec,
+    FACET_EVIDENCE.spec,
+    "a prose JSON copy must not replace the code-owned facet definition",
+  );
   assert.doesNotMatch(
     out.facet_evidence.performance,
     /HAND-TYPED/,
@@ -509,12 +520,12 @@ test("EVIDENCE: parity is not lost with the translation line — it has an axis"
   // another, so the parity claim must still be reachable: the `i18n` axis
   // carries it, and it must still be there.
   assert.equal(
-    Object.hasOwn(PROSE.facet_evidence || {}, "i18n"),
+    Object.hasOwn(FACET_EVIDENCE, "i18n"),
     true,
     "the i18n axis carries the parity and placeholder claims and must survive",
   );
   assert.match(
-    PROSE.facet_evidence.i18n,
+    FACET_EVIDENCE.i18n,
     /parity/i,
     "and it must still actually say so",
   );

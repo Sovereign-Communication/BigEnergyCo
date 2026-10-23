@@ -21,6 +21,7 @@ import { fileURLToPath } from "node:url";
 
 import { cookieGateDecision } from "../scripts/cold-start-preflight.mjs";
 import { composePrivacyFacetLine } from "../scripts/lib/privacy-facet-line.mjs";
+import { FACET_EVIDENCE } from "../scripts/lib/jev-facet-evidence.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(path.join(ROOT, rel), "utf8");
@@ -176,8 +177,7 @@ test("cookieGateDecision treats an unmeasured run as a refusal", () => {
 // ── the evidence line ───────────────────────────────────────────────────────
 
 test("EVIDENCE: the privacy facet line names both gates and the measurement", () => {
-  const ev = JSON.parse(read("evidence/advisor-and-release.json"));
-  const line = ev.facet_evidence.privacy;
+  const line = FACET_EVIDENCE.privacy;
   assert.ok(line && line.length > 40, "the facet line is a measurement");
   // Both halves: the source claims and the runtime measurement.
   assert.match(line, /check-privacy\.mjs/);

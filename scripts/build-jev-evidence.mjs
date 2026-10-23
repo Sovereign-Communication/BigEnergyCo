@@ -41,6 +41,7 @@ import {
   RUN_RECORD_FIELDS,
 } from "./lib/jev-evidence.mjs";
 import { COMPLETE_FACET_CLIP } from "./lib/jev-complete.mjs";
+import { FACET_EVIDENCE } from "./lib/jev-facet-evidence.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 
 // The workflow these artifacts came from, resolved against this script rather
@@ -300,22 +301,31 @@ export function main(argv = process.argv.slice(2)) {
   // the judge scores every facet from nothing, and "mixed — partial or
   // unverified evidence" would read like a product defect rather than an empty
   // record.
-  let prose = {};
+  let prose = { facet_evidence: { ...FACET_EVIDENCE } };
   if (opts.prose) {
     if (!existsSync(opts.prose))
       usageError(`prose file not found: ${opts.prose}`);
+    let supplied;
     try {
-      prose = JSON.parse(readFileSync(opts.prose, "utf8"));
+      supplied = JSON.parse(readFileSync(opts.prose, "utf8"));
     } catch (err) {
       usageError(`prose file is not valid JSON: ${err.message}`);
     }
-    if (typeof prose !== "object" || prose === null || Array.isArray(prose)) {
+    if (
+      typeof supplied !== "object" ||
+      supplied === null ||
+      Array.isArray(supplied)
+    ) {
       usageError("prose file must contain a JSON object");
     }
+    // The JSON file may carry narrative, but facet proof lines are code-owned.
+    // This overwrite keeps an old or stale JSON copy from becoming a second
+    // source of truth while the CI guard reports any such copy for removal.
+    prose = { ...supplied, facet_evidence: { ...FACET_EVIDENCE } };
   } else {
     process.stderr.write(
-      "build-jev-evidence: no --prose given, so the evidence carries no facet " +
-        "proof lines and every facet will be judged unverified\n",
+      "build-jev-evidence: no --prose given; narrative fields are empty, " +
+        "but code-owned facet proof lines are included\n",
     );
   }
 
