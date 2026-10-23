@@ -363,7 +363,7 @@ test("wiring: the cut drag preview projects the slider's %, never the nearest en
     ui,
     /interpolateCurveTarget\(p\.frontier\.points, pct, surplusAnchor\(p\)\)/,
   );
-  // The budget thumb rides the same projection (pair coherence).
+  // An unpinned budget thumb rides the same projection (pair coherence).
   assert.match(
     ui,
     /function previewTargetAt\(pct\)[\s\S]*?bs\.value = String\(Math\.min\(max, Math\.max\(min, Math\.round\(proj\.capexUsd\)\)\)\)/,
