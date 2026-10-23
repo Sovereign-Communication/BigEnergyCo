@@ -2,6 +2,9 @@
 // them are settled here, and the third is settled on the thread because the
 // function it named no longer exists.
 //
+// Scope: P0.6, the completion-program evidence item — audit evidence and its
+// verdicts, judged on the `docs` facets. No product threshold moves here.
+//
 // Like the B-series in cold-start-defects, the point is that a prescription is
 // a suspect, not a work order: each item below is answered against the shipped
 // code, and where the answer is "already guarded" the guard gets a test that
