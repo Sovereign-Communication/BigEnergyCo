@@ -476,6 +476,12 @@ test("SCOPE: the job judges the plan item the PR names, and fails when it cannot
   // the whole program — that would silently judge the P10 bar.
   assert.equal(resolveCiScope("feat(jev): scope 99 (P0.3)").scope, "P0.3");
   assert.equal(
+    resolveCiScope(
+      "fix(jev): add explicit per-facet diagnostic to gate output (P0.3)",
+    ).scope,
+    "P0.3",
+  );
+  assert.equal(
     resolveCiScope("fix(sizing): round coordinates (P1.3) [closes F-36]").scope,
     "P1.3",
   );
