@@ -41,6 +41,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { LOCALES } from "../assets/js/shared/locales.js";
 import { LANGS } from "../assets/js/shared/i18n.js";
+import { checkTerminology } from "./lib/translation-terminology.mjs";
 import {
   claimsTranslation,
   deployedFiles,
@@ -59,6 +60,12 @@ const ok = (msg) => console.log(`OK   ${msg}`);
 
 const langs = Object.keys(LOCALES);
 const en = LOCALES.en;
+const terminology = checkTerminology(LOCALES);
+for (const error of terminology.errors) fail(`terminology: ${error}`);
+if (!terminology.errors.length)
+  ok(
+    `${terminology.passed}/${terminology.checked} selected label-term checks across ${terminology.locales} locales; lexical consistency only`,
+  );
 if (!en) fail("locales.js has no `en` dictionary");
 if (!langs.length) fail("locales.js exports no locales");
 

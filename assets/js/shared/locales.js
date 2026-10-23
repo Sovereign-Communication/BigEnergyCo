@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261022p";
+import { HOME_COPY } from "./home-copy.js?v=20261023c";
 
 export const LOCALES = {
   en: {
@@ -2331,7 +2331,7 @@ export const LOCALES = {
     essentialLabel: "Was muss weiterlaufen? (Auswählen, was passt)",
     outageLabel: "Wie lange muss es durchhalten?",
     backupRechargeLabel: "Die Module dürfen sie während des Ausfalls nachladen",
-    reserveLabel: "Notfall-Reservestand in der Batteri",
+    reserveLabel: "Notfall-Reservestand in der Batterie",
     portableDeviceLabel: "Was versorgst du? (Auswählen, was passt)",
     portableBankLabel: "Nutzbare Größe der Stromstation (kWh)",
     portableShoreLabel: "Ich kann am Netz oder am Fahrzeug nachladen",
