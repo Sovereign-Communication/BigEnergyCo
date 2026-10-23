@@ -26,6 +26,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
+import { EXPERIENCE_FACET_AXES } from "../scripts/lib/experience-budgets.mjs";
 import { FACET_EVIDENCE } from "../scripts/lib/jev-facet-evidence.mjs";
 import { composeUseCaseFacetLine } from "../scripts/smoke/usecases.js";
 
@@ -514,20 +515,15 @@ test("EVIDENCE: the translation facet line is derived from the run, not typed by
   assert.match(note, /P5\.5/, "and the plan item that does not exist yet");
 });
 
-test("EVIDENCE: parity is not lost with the translation line — it has an axis", () => {
-  // The typed translation line was the only prose the judge read about key
-  // parity. Removing it without somewhere else to stand would trade one gap for
-  // another, so the parity claim must still be reachable: the `i18n` axis
-  // carries it, and it must still be there.
+test("EVIDENCE: i18n is owned by the runtime DOM snapshot", () => {
   assert.equal(
     Object.hasOwn(FACET_EVIDENCE, "i18n"),
-    true,
-    "the i18n axis carries the parity and placeholder claims and must survive",
+    false,
+    "the run-derived i18n line must not be shadowed by static prose",
   );
-  assert.match(
-    FACET_EVIDENCE.i18n,
-    /parity/i,
-    "and it must still actually say so",
+  assert.ok(
+    EXPERIENCE_FACET_AXES.includes("i18n"),
+    "the browser sweep must declare ownership of the i18n facet",
   );
 });
 test("EVIDENCE: one gate may compose a DIFFERENT line per axis", () => {
