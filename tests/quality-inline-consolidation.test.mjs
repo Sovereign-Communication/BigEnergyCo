@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { FACET_EVIDENCE } from "../scripts/lib/jev-facet-evidence.mjs";
+import { BYTE_BUDGET_FACET_AXES } from "../scripts/lib/byte-budgets.mjs";
 
 const home = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const siteCss = readFileSync(
@@ -73,15 +74,11 @@ test("close buttons reuse the existing cursor rule", () => {
   assert.match(siteCss, /\.close-btn\s*\{[^}]*cursor:\s*pointer\s*;/s);
 });
 
-test("quality facet evidence records the measured consolidation", () => {
-  assert.match(
-    FACET_EVIDENCE.quality,
-    /85 pages: 235\/318 inline style attributes/,
-  );
-  assert.match(FACET_EVIDENCE.quality, /63 repeated homepage style attributes/);
-  assert.match(FACET_EVIDENCE.quality, /11 tested named rules/);
-  assert.match(
-    FACET_EVIDENCE.quality,
-    /zero inline exceptions for those patterns/,
+test("quality facet evidence is derived from the byte-budget run", () => {
+  assert.deepEqual(BYTE_BUDGET_FACET_AXES, ["quality"]);
+  assert.equal(
+    Object.hasOwn(FACET_EVIDENCE, "quality"),
+    false,
+    "quality is a run-derived facet, not a hand-authored line",
   );
 });

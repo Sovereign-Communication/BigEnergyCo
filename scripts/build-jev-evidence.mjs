@@ -495,7 +495,7 @@ export function main(argv = process.argv.slice(2)) {
   const a11yAxis = A11Y_FACET_AXES[0];
   const controls = derived.find(
     (d) => d.axis === a11yAxis && d.metric === "a11y_controls",
-        );
+  );
   const matrix = derived.find(
     (d) => d.axis === a11yAxis && d.metric === "a11y_matrix",
   );

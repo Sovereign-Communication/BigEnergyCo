@@ -94,7 +94,13 @@ test("drawSunStrip: null ctx returns early without throwing", () => {
 });
 
 test("drawSunStrip: valid input draws the strip", () => {
-  initCharts({ $: () => null, el: () => null, t: (key) => key, fmt: String, money: String });
+  initCharts({
+    $: () => null,
+    el: () => null,
+    t: (key) => key,
+    fmt: String,
+    money: String,
+  });
   const ctx = mockCtx();
   drawSunStrip(ctx, [1, 2, 3, 4], X, 100, 5, 5, 40);
   assert.ok(ctx.calls.includes("save"));

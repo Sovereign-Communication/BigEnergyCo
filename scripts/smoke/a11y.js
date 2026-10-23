@@ -30,13 +30,22 @@
 // loadMode value restored, regular (non-simple) display, no emulation; the
 // card is intentionally left invalidated ("Inputs changed" status), which
 // closing-flow gates do not assert on.
-import {
-  gate,
-  gateCheckpoint,
-  gatesSince,
-  sleep,
-  writeFacetReport,
-} from "./runtime.mjs";
+import { gate as smokeGate, sleep } from "./runtime.mjs";
+
+let summary = null;
+function gate(name, ok, detail = "") {
+  if (summary)
+    summary.gates.push({
+      name: String(name),
+      ok: ok === true,
+      detail: String(detail),
+    });
+  return smokeGate(name, ok, detail);
+}
+
+function walkRecord(walk) {
+  if (summary) summary.walks.push(walk);
+}
 
 // Serialized into the page: every function passed to page() must be
 // self-contained or composed in dependency order — a module-scope reference
@@ -445,7 +454,6 @@ const KWH_PANEL = ["dailyKwhInput"];
 const RESULTS = ["cutSlider", "budgetSlider"];
 
 export async function runA11yFlow(ctx) {
-  const reportCheckpoint = gateCheckpoint();
   const { evaluate, send } = ctx;
   summary = { ran: false, gates: [], walks: [] };
   const setMode = (id) =>
@@ -678,22 +686,18 @@ export async function runA11yFlow(ctx) {
     Boolean(complete),
     `${keyboard.length}/8 keyboard checks, ${normalMotion.length}/4 normal and ${reducedMotion.length}/4 reduced-motion scroll checks`,
   );
-  const checks = gatesSince(reportCheckpoint);
-  const passed = checks.filter((g) => g.passed).length;
-  const line =
-    `Chrome a11y ${passed}/${checks.length}: keyboard result/quick/manual/kWh ` +
-    `${keyboard.filter((g) => g.passed).length}/${keyboard.length}; ` +
-    `${buttonKeys?.detail || "Enter/Space buttons failed"}; names ${names?.passed ? "pass" : "fail"}; ` +
-    `WCAG AA result text ${contrast?.passed ? "pass" : "fail"}; ` +
-    `${normalMotion.filter((g) => g.passed).length}/4 normal and ` +
-    `${reducedMotion.filter((g) => g.passed).length}/4 reduced-motion scrolls; ` +
-    `emulation reset ${mediaReset?.passed ? "pass" : "fail"}.`;
-  writeFacetReport("accessibility", line, {
-    browser: "Chrome",
-    checks,
-    keyboard_states: [...keyboardStates],
-    normal_motion_scroll_sites: normalMotion.length,
-    reduced_motion_scroll_sites: reducedMotion.length,
-    complete: Boolean(complete),
-  });
+  if (summary) {
+    summary.names = {
+      checked: nameSets.length > 0,
+      failures: nameFails.length,
+    };
+    summary.contrast = {
+      checked: contrastFails !== null,
+      failures: contrastFails ? contrastFails.length : 0,
+    };
+    if (!summary.reduced_motion) summary.reduced_motion = { checked: false };
+    summary.card = cardVisible === true;
+    summary.ran = true;
+  }
+  return summary;
 }

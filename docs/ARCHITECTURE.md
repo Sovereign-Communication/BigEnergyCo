@@ -270,10 +270,10 @@ Two files, one direction of travel. `scripts/lib/byte-budgets.mjs` never touches
 a filesystem: it takes a staged build described as data (a file list and a
 reader) and returns one reading per §3.1 budget. The CLI supplies the disk.
 
-| module                           | owns                                                                                                                                            | touches the network/disk?    |
+| module                           | owns                                                                                                                                                                                                        | touches the network/disk?    |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
 | `scripts/lib/byte-budgets.mjs`   | the §3.1 limits as amended by A-002 (the table's figures plus the three interim lines), what each budget's **scope** is, the brotli measurement, the per-metric bar from the ledger, the ratchet comparison | no — takes `{files, read}`   |
-| `scripts/check-byte-budgets.mjs` | walking a stage dir, the printed table, the exit code                                                                                           | reads the stage + the ledger |
+| `scripts/check-byte-budgets.mjs` | walking a stage dir, the printed table, the exit code                                                                                                                                                       | reads the stage + the ledger |
 
 Three things worth knowing before changing any of it:
 

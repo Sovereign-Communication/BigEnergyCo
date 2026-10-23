@@ -360,14 +360,6 @@ jobs:
           path: a11y-controls-report.json
           if-no-files-found: error
           retention-days: 7
-      - name: Upload the accessibility browser measurements
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: jev-results-accessibility-smoke-report
-          path: jev-artifacts/accessibility-smoke-report.json
-          if-no-files-found: error
-          retention-days: 7
       - name: Upload the six-case browser measurements
         if: always()
         uses: actions/upload-artifact@v7
