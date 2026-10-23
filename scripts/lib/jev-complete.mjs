@@ -24,14 +24,15 @@ import { readFileSync } from "node:fs";
 
 export const COMPLETE_PACK_PATH = "scripts/lib/jev-complete.pack.json";
 export const COMPLETE_SITE = "jev_complete";
-// Owner ruling 2026-10-19 (amendment A-004), superseding D-03's 99: the
-// combined bar is 95, and in exchange the bar tightens everywhere else —
-// EVERY facet must individually reach ordinal 95, and every facet's Jev
-// confidence must be at least 0.95. A high average bought with one weak or
-// one uncertain facet is not a pass.
+// P10/scoped exit thresholds from amendment A-004 remain 95/95/95.
+// B1 (owner ruling 2026-10-23) sets the main staging gate to 95 overall,
+// ordinal 85 per facet, with a hard floor of 60. Confidence below 0.95 is
+// reported for investigation but does not block the main staging verdict.
 export const COMPLETE_MIN_SCORE = 95.0;
 export const COMPLETE_FACET_MIN_ORDINAL = 95;
 export const COMPLETE_MIN_CONFIDENCE = 0.95;
+export const COMPLETE_STAGING_FACET_MIN_ORDINAL = 85;
+export const COMPLETE_STAGING_FACET_FLOOR_ORDINAL = 60;
 export const COMPLETE_SCORE_MAX = 100.0;
 
 // Program exit (P10.1) additionally requires EVERY facet at the top level,
@@ -1074,10 +1075,8 @@ export function scoreCompleteGate(
     .map(([axis]) => axis)
     .sort();
 
-  // P0.3(c), as amended by A-004 (owner ruling 2026-10-19): the program-exit
-  // rule. A whole-program run must reach the 95 target AND leave no facet
-  // below ordinal 95 AND no facet below 0.95 Jev confidence. The average is
-  // not enough, and neither is an uncertain judgment.
+  // P10 remains the 95/95/95 program-exit rule. Keep these whole-program
+  // diagnostics so the report still exposes distance from that exit target.
   const notProven = Object.entries(facets)
     .filter(([, f]) => f.index < COMPLETE_EXIT_FACET_INDEX)
     .map(([axis]) => axis)
@@ -1121,7 +1120,24 @@ export function scoreCompleteGate(
     .map(([axis]) => axis)
     .sort();
 
+  const belowStagingMinimum = Object.entries(facets)
+    .filter(([, f]) => f.ordinal < COMPLETE_STAGING_FACET_MIN_ORDINAL)
+    .map(([axis]) => axis)
+    .sort();
+  const belowStagingFloor = Object.entries(facets)
+    .filter(([, f]) => f.ordinal < COMPLETE_STAGING_FACET_FLOOR_ORDINAL)
+    .map(([axis]) => axis)
+    .sort();
+
   const pass =
+    allHard &&
+    combined >= target &&
+    blocking.length === 0 &&
+    belowStagingMinimum.length === 0 &&
+    belowStagingFloor.length === 0;
+  // Preserve the original full program-exit judgment as a separate verdict.
+  // Main staging selects the B1 result; P10/weekly P11 select this 95/95/95 result.
+  const programExitPass =
     allHard &&
     combined >= target &&
     blocking.length === 0 &&
@@ -1236,6 +1252,22 @@ export function scoreCompleteGate(
     if (!gates[gateKey]) blockers.push(`hard gate failed: ${gateKey}`);
   }
   for (const axis of blocking) blockers.push(`blocking facet: ${axis}`);
+  for (const axis of belowStagingMinimum) {
+    blockers.push(
+      "staging facet below ordinal " +
+        COMPLETE_STAGING_FACET_MIN_ORDINAL +
+        ": " +
+        axis,
+    );
+  }
+  for (const axis of belowStagingFloor) {
+    blockers.push(
+      "staging facet below hard floor " +
+        COMPLETE_STAGING_FACET_FLOOR_ORDINAL +
+        ": " +
+        axis,
+    );
+  }
   if (combined < target) {
     blockers.push(
       `score ${combined.toFixed(2)} below target ${target.toFixed(2)}`,
@@ -1248,11 +1280,27 @@ export function scoreCompleteGate(
     min_score: target,
     score: Math.round(combined * 100) / 100,
     pass,
+    program_exit_pass: programExitPass,
     hard_gates_passed: allHard,
     facets_not_proven: notProven,
     facets_not_proven_detail: notProvenDetail,
     facets_low_confidence: lowConfidence,
     min_confidence: COMPLETE_MIN_CONFIDENCE,
+    staging_policy: {
+      min_score: target,
+      facet_min_ordinal: COMPLETE_STAGING_FACET_MIN_ORDINAL,
+      facet_floor_ordinal: COMPLETE_STAGING_FACET_FLOOR_ORDINAL,
+      confidence_threshold: COMPLETE_MIN_CONFIDENCE,
+      confidence_blocks: false,
+    },
+    facets_below_staging_minimum: belowStagingMinimum,
+    facets_below_staging_floor: belowStagingFloor,
+    confidence_telemetry: {
+      threshold: COMPLETE_MIN_CONFIDENCE,
+      facets_below_threshold: lowConfidence,
+      investigation_required: lowConfidence.length > 0,
+      blocks: false,
+    },
     hard_gates: gates,
     mechanical_score: mechanical,
     semantic_score: Math.round(semantic * 100) / 100,

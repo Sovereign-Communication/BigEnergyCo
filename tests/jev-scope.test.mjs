@@ -48,8 +48,9 @@ test("GATE: program exit is defined as every facet at the top level", () => {
   );
 });
 
-test("GATE: a whole-program run fails while any facet is short of proven", () => {
-  // One facet at 85 keeps the mean high but must still fail the exit rule.
+test("GATE: P10 program exit fails while any facet is short of proven", () => {
+  // One facet at 85 keeps the mean high and passes main staging, but it must
+  // still fail the unchanged P10 program-exit rule.
   // Hard gates read straight off the evidence object, so they must all be set
   // for the mechanical half to be 100 — otherwise this would pass for the
   // wrong reason and prove nothing.
@@ -83,7 +84,12 @@ test("GATE: a whole-program run fails while any facet is short of proven", () =>
     true,
     "the mean is high enough to clear 99 on its own",
   );
-  assert.equal(r.pass, false, "but the exit rule still fails the run");
+  assert.equal(r.pass, true, "main staging accepts every facet at ordinal 85");
+  assert.equal(
+    r.program_exit_pass,
+    false,
+    "but the P10 program-exit rule still fails",
+  );
   assert.deepEqual(
     r.facets_not_proven,
     ["release"],
