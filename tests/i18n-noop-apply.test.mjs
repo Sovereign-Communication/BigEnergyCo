@@ -52,7 +52,12 @@ test("applyI18n skips unchanged DOM writes and still updates changed translation
   const mod = await import(I18N_URL.href + "?no-op=" + Date.now());
   await mod.localesReady;
   let selectedLanguage = "en";
-  const text = makeElement("data-i18n", "advisorTitle", "textContent", mod.translate("advisorTitle", {}, "en"));
+  const text = makeElement(
+    "data-i18n",
+    "advisorTitle",
+    "textContent",
+    mod.translate("advisorTitle", {}, "en"),
+  );
   const placeholder = makeElement(
     "data-i18n-placeholder",
     "advisorPlaceholder",
@@ -115,7 +120,10 @@ test("applyI18n skips unchanged DOM writes and still updates changed translation
     );
     assert.equal(aria.read(), mod.translate("advisorClose", {}, "es"));
 
-    assert.match(SRC, /if \(node\.textContent !== value\) node\.textContent = value/);
+    assert.match(
+      SRC,
+      /if \(node\.textContent !== value\) node\.textContent = value/,
+    );
     assert.match(SRC, /elNode\.placeholder !== value/);
     assert.match(SRC, /getAttribute\("aria-label"\) !== value/);
   } finally {

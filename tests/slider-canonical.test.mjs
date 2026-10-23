@@ -366,7 +366,7 @@ test("wiring: the cut drag preview projects the slider's %, never the nearest en
   // The budget thumb rides the same projection (pair coherence).
   assert.match(
     ui,
-    /function previewTargetAt\(pct\)[\s\S]*?bs\.value = String\(Math\.min\(max, Math\.max\(min, Math\.round\(proj\.capexUsd\)\)\)\)/,
+    /function previewTargetAt\(pct\)[\s\S]*?bs\.value\s*=\s*String\(\s*Math\.min\(max,\s*Math\.max\(min,\s*Math\.round\(proj\.capexUsd\)\)\),?\s*\);/,
   );
 });
 

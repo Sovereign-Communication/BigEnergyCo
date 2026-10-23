@@ -6,15 +6,15 @@ import {
   decodeGrid,
   decodeYears,
   YEAR_VALUES_PER_POINT,
-} from "./sizing/heatmap-grid.js?v=20261022p";
+} from "./sizing/heatmap-grid.js?v=20261023a";
 import {
   dotTransform,
   projectDots,
   buildHitIndex,
   hitTest,
   HIT_CELL_PX,
-} from "./sizing/heatmap-dots.js?v=20261022p";
-import { applyLeafletStyles } from "./sizing/leaflet-styles.js?v=20261022p";
+} from "./sizing/heatmap-dots.js?v=20261023a";
+import { applyLeafletStyles } from "./sizing/leaflet-styles.js?v=20261023a";
 
 // Heatmap: pre-rendered image + on-demand data architecture.
 //
@@ -45,8 +45,6 @@ import { applyLeafletStyles } from "./sizing/leaflet-styles.js?v=20261022p";
       '<div style="text-align:center;color:#e64545;">Heatmap palette failed to load. <a href="" style="color:var(--accent);">Reload</a></div>';
     return;
   }
-
-  var ASSET_V = new URL(import.meta.url).searchParams.get("v") || "dev";
 
   // ── State ──────────────────────────────────────────────────────────────
   var map = null;
@@ -352,9 +350,7 @@ import { applyLeafletStyles } from "./sizing/leaflet-styles.js?v=20261022p";
   function ensureData() {
     if (gridData) return Promise.resolve(gridData);
     if (dataLoading) return dataLoading;
-    dataLoading = fetch(
-      "../assets/data/heatmap-grid.bin?v=" + encodeURIComponent(ASSET_V),
-    )
+    dataLoading = fetch("/assets/data/heatmap-grid.bin?v=20261023a")
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to load heatmap data");
         return res.arrayBuffer();
@@ -382,9 +378,7 @@ import { applyLeafletStyles } from "./sizing/leaflet-styles.js?v=20261022p";
   function ensureNames() {
     if (namesData) return Promise.resolve(namesData);
     if (namesLoading) return namesLoading;
-    namesLoading = fetch(
-      "../assets/data/heatmap-names.json?v=" + encodeURIComponent(ASSET_V),
-    )
+    namesLoading = fetch("/assets/data/heatmap-names.json?v=20261023a")
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to load heatmap point details");
         return res.json();
@@ -412,9 +406,7 @@ import { applyLeafletStyles } from "./sizing/leaflet-styles.js?v=20261022p";
   function ensureYears() {
     if (yearsData) return Promise.resolve(yearsData);
     if (yearsLoading) return yearsLoading;
-    yearsLoading = fetch(
-      "../assets/data/heatmap-years.bin?v=" + encodeURIComponent(ASSET_V),
-    )
+    yearsLoading = fetch("/assets/data/heatmap-years.bin?v=20261023a")
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to load heatmap year data");
         return res.arrayBuffer();
@@ -858,13 +850,13 @@ import { applyLeafletStyles } from "./sizing/leaflet-styles.js?v=20261022p";
 
     var stylesReady = applyLeafletStyles();
     var boot = Promise.all([
-      fetch("../assets/img/heatmap/manifest.json?v=20261022p").then(
+      fetch("../assets/img/heatmap/manifest.json?v=20261023a").then(
         function (r) {
           if (!r.ok) throw new Error("manifest");
           return r.json();
         },
       ),
-      fetch("../assets/data/heatmap-rankings.json?v=20261022p").then(
+      fetch("../assets/data/heatmap-rankings.json?v=20261023a").then(
         function (r) {
           if (!r.ok) throw new Error("rankings");
           return r.json();

@@ -115,7 +115,7 @@ const MODULE_RES = [
 ];
 // Runtime data fetches under /assets (city partitions, heatmap grid).
 const FETCH_RES = [
-  /fetch(?:Impl)?\(\s*[`'"]([^`'"]*?assets\/[^`'"]*?\.json)(\?v=([\w]+))?/g,
+  /fetch(?:Impl)?\(\s*[`'"]([^`'"]*?assets\/[^`'"]*?\.(?:json|bin))(\?v=([\w]+))?/g,
 ];
 const isFirstParty = (u) =>
   u.startsWith("./") ||
@@ -352,7 +352,7 @@ for (const f of GRAPH_FILES) {
   for (const re of modRes) text = text.replace(re, `$1?v=${stamp}$2`);
   // 3. token-less /assets data fetches (plain + ${template} URLs)
   text = text.replace(
-    /(fetch(?:Impl)?\(\s*[`'"][^`'"]*?assets\/[^`'"]*?\.json)([`'"])/g,
+    /(fetch(?:Impl)?\(\s*[`'"][^`'"]*?assets\/[^`'"]*?\.(?:json|bin))([`'"])/g,
     `$1?v=${stamp}$2`,
   );
   if (text !== before) {

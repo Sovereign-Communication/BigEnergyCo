@@ -39,7 +39,9 @@ test("A11Y: the heatmap draws its dots on a canvas, not one DOM node per grid po
   // The data stays accessible in the ranking lists, while dots render on one
   // canvas instead of creating one interactive Leaflet object per location.
   const bytes = readFileSync(join(ROOT, HEATMAP_GRID));
-  const grid = decodeGrid(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+  const grid = decodeGrid(
+    bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+  );
   const points = grid.count;
   assert.ok(points > 5000, "the full heatmap data set remains available");
   assert.equal(grid.lat.length, points, "every point has a latitude");

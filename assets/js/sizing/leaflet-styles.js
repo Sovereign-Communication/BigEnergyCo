@@ -33,7 +33,7 @@
 import {
   LEAFLET_STYLE_URL,
   LEAFLET_STYLE_SRI,
-} from "./map-provider.js?v=20261022p";
+} from "./map-provider.js?v=20261023a";
 
 // The element id, owned here for the same reason the URL is. Nothing outside
 // this module needs it; nothing outside this module should have to know it.

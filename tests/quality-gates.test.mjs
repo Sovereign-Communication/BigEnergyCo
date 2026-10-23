@@ -351,8 +351,16 @@ test("GATE: the heatmap app runs from a versioned module, not the markup", () =>
     "the extracted module must still build the map",
   );
   assert.match(app, /heatmap-grid\.bin\?v=/);
-  assert.match(app, /\.arrayBuffer\(\)/, "packed heatmap data is read as bytes");
-  assert.match(app, /assets\/img\/heatmap\/manifest\.json/, "the image-overlay first paint remains");
+  assert.match(
+    app,
+    /\.arrayBuffer\(\)/,
+    "packed heatmap data is read as bytes",
+  );
+  assert.match(
+    app,
+    /assets\/img\/heatmap\/manifest\.json/,
+    "the image-overlay first paint remains",
+  );
 });
 
 // ── static server: the policy the smoke test runs under ─────────────────────

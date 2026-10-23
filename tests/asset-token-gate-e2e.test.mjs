@@ -61,7 +61,7 @@ const commit = (cwd, msg) => {
  * A minimal repository that passes checks (a), (b) and (c): one token, present
  * everywhere it is referenced, and a sw.js whose SHELL entries exist.
  */
-function makeRepo() {
+function makeRepo({ includeRuntimeData = false } = {}) {
   const dir = mkdtempSync(join(tmpdir(), "bec-gate-"));
   mkdirSync(join(dir, "assets", "js"), { recursive: true });
   mkdirSync(join(dir, "solar-heatmap"), { recursive: true });
@@ -81,7 +81,24 @@ function makeRepo() {
     join(dir, "index.html"),
     `<!doctype html><script type="module" src="./assets/js/a.js?v=${STAMP}"></script>\n`,
   );
-  writeFileSync(join(dir, "assets", "js", "a.js"), "// v1\n");
+  if (includeRuntimeData) {
+    mkdirSync(join(dir, "assets", "data"), { recursive: true });
+    writeFileSync(
+      join(dir, "assets", "js", "a.js"),
+      'fetch("/assets/data/cities.json?v=' +
+        STAMP +
+        '");' +
+        "\n" +
+        'fetch("/assets/data/heatmap-grid.bin?v=' +
+        STAMP +
+        '");' +
+        "\n",
+    );
+    writeFileSync(join(dir, "assets", "data", "cities.json"), "[]");
+    writeFileSync(join(dir, "assets", "data", "heatmap-grid.bin"), "packed-v1");
+  } else {
+    writeFileSync(join(dir, "assets", "js", "a.js"), "// v1\n");
+  }
   // The graph is a fixed list, and solar-heatmap/index.html is on it
   // unconditionally, so the fixture has to have it or the gate ENOENTs before it
   // ever reaches the check under test.
@@ -117,6 +134,28 @@ test("GATE: a freshly stamped repository passes, and says what it verified", (t)
   assert.match(r.stdout, /asset-token check OK/);
   // The tally is the thing a reader trusts, so it must count a real asset.
   assert.match(r.stdout, /1 referenced assets verified/);
+});
+
+test("GATE: runtime JSON and packed binary fetches share and enforce the stamp", (t) => {
+  const dir = makeRepo({ includeRuntimeData: true });
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+
+  const fresh = runCheck(dir);
+  assert.equal(fresh.status, 0, fresh.stdout + fresh.stderr);
+  assert.match(fresh.stdout, /3 referenced assets verified/);
+
+  writeFileSync(join(dir, "assets", "data", "heatmap-grid.bin"), "packed-v2");
+  commit(dir, "change the packed heatmap data");
+  const stale = runCheck(dir);
+  assert.equal(
+    stale.status,
+    1,
+    "changed binary data must fail under a stale token:" +
+      "`n" +
+      stale.stdout +
+      stale.stderr,
+  );
+  assert.match(stale.stderr, /assets\/data\/heatmap-grid\.bin/);
 });
 
 test("GATE: a committed asset edit under an unchanged stamp is refused", (t) => {

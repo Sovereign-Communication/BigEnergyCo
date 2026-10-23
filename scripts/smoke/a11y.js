@@ -725,5 +725,4 @@ export async function runA11yFlow(ctx) {
     summary.ran = true;
   }
   return summary;
-
 }

@@ -40,7 +40,6 @@ import {
 } from "../scripts/lib/jev-evidence.mjs";
 import { A11Y_CONTROLS_CLAUSE_MAX } from "../scripts/lib/a11y-controls.mjs";
 
-
 const WORKFLOW_YAML = readFileSync(".github/workflows/test.yml", "utf8");
 
 test("use-case facet evidence names each measured outcome and the flat-rate boundary", () => {
