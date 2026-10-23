@@ -53,3 +53,34 @@ test("shared DOM helpers preserve id lookup and element construction", () => {
     assert.equal(created.length, 1);
   });
 });
+
+test("shared DOM helpers treat text as text, never as markup", () => {
+  // `el` is the one element factory every widget uses, and the Jev audit flagged
+  // it as an escape-output sink twice (location-picker.js:25, then the shared
+  // copy). It is not one: the text argument goes to `textContent`, so a hostile
+  // string is data. This test is the reason that reading can stay true — the
+  // tempting "fix" for a missing bold word is `innerHTML +=`, and one such edit
+  // anywhere in this helper turns every caller into a sink.
+  withDocument((created) => {
+    const hostile = "<img src=x onerror=alert(1)><script>alert(2)</script>";
+    const element = el("p", { class: "note" }, hostile);
+
+    assert.equal(
+      element.textContent,
+      hostile,
+      "the string is preserved verbatim",
+    );
+    assert.equal(
+      element.innerHTML,
+      undefined,
+      "`el` must not write innerHTML, not even to an empty string",
+    );
+    assert.equal(created.length, 1, "no markup is parsed into child elements");
+    assert.equal(element.className, "note", "`class` still goes to className");
+    assert.deepEqual(
+      Object.keys(element.attributes),
+      [],
+      "nothing in the hostile string became an attribute",
+    );
+  });
+});
