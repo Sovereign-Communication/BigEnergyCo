@@ -28,7 +28,7 @@ import {
   billCutFraction,
   simulateOutage,
   simulatePortable,
-} from "./engine.js?v=20261023k";
+} from "./engine.js?v=20261023m";
 
 import {
   isUseCaseId,
@@ -39,23 +39,23 @@ import {
   normaliseReservePct,
   normaliseOutageTarget,
   outcomeFor,
-} from "./usecases.js?v=20261023k";
-import { memoizeSimulate } from "./sim-cache.js?v=20261023k";
+} from "./usecases.js?v=20261023m";
+import { memoizeSimulate } from "./sim-cache.js?v=20261023m";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20261023k";
-import { buildFrontier } from "./frontier.js?v=20261023k";
-import { oversizeCallout } from "./rescale.js?v=20261023k";
-import { climateSummary } from "./climate.js?v=20261023k";
+} from "./nasa.js?v=20261023m";
+import { buildFrontier } from "./frontier.js?v=20261023m";
+import { oversizeCallout } from "./rescale.js?v=20261023m";
+import { climateSummary } from "./climate.js?v=20261023m";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20261023k";
+} from "./pricing.js?v=20261023m";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -66,7 +66,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20261023k";
+} from "./money.js?v=20261023m";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -308,7 +308,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20261023k");
+      await import("./profiles.js?v=20261023m");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -2971,6 +2971,12 @@ function measureUseCase(id, payload, ctx) {
  *      so it can never leave this module.
  */
 export async function runSizing(msg, deps = {}) {
+  // This is the public boundary used by the worker and tests. Reject malformed
+  // messages before object spread can silently turn primitives into empty
+  // sizing inputs.
+  if (!msg || typeof msg !== "object" || Array.isArray(msg)) {
+    throw new Error("runSizing: msg must be an object");
+  }
   const explicit = isUseCaseId(msg && msg.useCase);
   const useCaseId = explicit
     ? msg.useCase
