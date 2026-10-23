@@ -3533,7 +3533,11 @@ function previewTargetAt(pct) {
   const proj = interpolateCurveTarget(p.frontier.points, pct, surplusAnchor(p));
   if (!proj) return null;
   const bs = $("budgetSlider");
-  if (bs && !Number.isFinite(budgetPinnedUsd) && Number.isFinite(proj.capexUsd)) {
+  if (
+    bs &&
+    !Number.isFinite(budgetPinnedUsd) &&
+    Number.isFinite(proj.capexUsd)
+  ) {
     const min = parseFloat(bs.min);
     const max = parseFloat(bs.max);
     bs.value = String(Math.min(max, Math.max(min, Math.round(proj.capexUsd))));
