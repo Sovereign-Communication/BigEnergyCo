@@ -111,7 +111,7 @@ test("WIRING: the gate claims the axes it composes a line for, and only those", 
   const budgets = readFileSync("scripts/lib/experience-budgets.mjs", "utf8");
   assert.match(
     budgets,
-    /EXPERIENCE_FACET_AXES = \["experience", "translation"\]/,
+    /EXPERIENCE_FACET_AXES = \["experience", "i18n", "translation"\]/,
   );
   const gate = readFileSync("scripts/check-experience.mjs", "utf8");
   assert.match(
@@ -121,7 +121,7 @@ test("WIRING: the gate claims the axes it composes a line for, and only those", 
   );
   assert.match(
     gate,
-    /facet_lines/,
+    /i18n: composeI18nFacetLine/,
     "and must carry a line per axis, or the builder serves one sentence twice",
   );
   assert.match(
