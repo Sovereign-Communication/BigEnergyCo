@@ -42,7 +42,12 @@ import {
   parseCsp,
   parseHeadersFile,
 } from "../scripts/lib/gates.mjs";
-import { runScenario, scenarios } from "../scripts/smoke/advisor-fallbacks.mjs";
+import {
+  loadChatJs,
+  makeDom,
+  runScenario,
+  scenarios,
+} from "../scripts/smoke/advisor-fallbacks.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
@@ -728,6 +733,94 @@ test("EXECUTED: every advisor scenario behaves as specified", async () => {
       assert.ok(ok, `${s.name}: ${why}`);
     }
   }
+});
+
+test("EXECUTED: a second send while a reply is pending does not interleave", async () => {
+  // The audit found two concurrent sends sharing one #loadingMsg node: the
+  // first reply removed the second's spinner and the two answers could render
+  // in either order. This runs the shipped send path twice, with the first
+  // request held open, and watches what actually happens.
+  const { doc, chatWindow, chatInput } = makeDom();
+  const sent = [];
+  let release;
+  const held = new Promise((r) => {
+    release = r;
+  });
+
+  const win = {
+    location: { hostname: "example.test", protocol: "https:" },
+    becoLang: "en",
+    addEventListener() {},
+    removeEventListener() {},
+    matchMedia: undefined,
+    scrollTo() {},
+    fetch: async (url, opts) => {
+      sent.push(JSON.parse(opts.body));
+      await held;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ reply: "First answer." }),
+        headers: new Headers(),
+      };
+    },
+  };
+
+  const sandbox = loadChatJs({ doc, win });
+
+  chatInput.value = "first question";
+  sandbox.sendChatMsg();
+  // The POST leaves on a promise chain, so let it reach the fake network before
+  // asserting anything about it.
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(sent.length, 1, "the first send goes out");
+
+  chatInput.value = "second question";
+  sandbox.sendChatMsg();
+
+  assert.equal(
+    sent.length,
+    1,
+    "a second request must not be launched while the first is in flight",
+  );
+  assert.equal(
+    chatInput.value,
+    "second question",
+    "the refused text stays in the box instead of being swallowed",
+  );
+  assert.equal(
+    chatWindow.children.filter((c) => c.id === "loadingMsg").length,
+    1,
+    "only one Thinking spinner may exist, or the first reply clears the second's",
+  );
+  assert.equal(
+    sandbox.chatHistory.length,
+    1,
+    "no half-sent user turn may be pushed into the conversation history",
+  );
+
+  release();
+  await new Promise((r) => setTimeout(r, 20));
+
+  // The guard must RELEASE: a chat that can only be used once is worse than the
+  // race it replaces.
+  await sandbox.sendChatMsg();
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(
+    sent.length,
+    2,
+    "once the reply lands the visitor can send again",
+  );
+  assert.equal(
+    sent[1].message,
+    "second question",
+    "and the queued message is the one that goes out",
+  );
+  assert.equal(
+    chatWindow.children.filter((c) => c.id === "loadingMsg").length,
+    0,
+    "the spinner is cleared after the last reply",
+  );
 });
 
 // ══ B1 under the site's real CSP ══════════════════════════════════════════
