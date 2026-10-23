@@ -41,7 +41,10 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { LOCALES } from "../assets/js/shared/locales.js";
 import { LANGS } from "../assets/js/shared/i18n.js";
-import { checkTerminology } from "./lib/translation-terminology.mjs";
+import {
+  checkMaterialQuantities,
+  checkTerminology,
+} from "./lib/translation-terminology.mjs";
 import {
   claimsTranslation,
   deployedFiles,
@@ -65,6 +68,12 @@ for (const error of terminology.errors) fail(`terminology: ${error}`);
 if (!terminology.errors.length)
   ok(
     `${terminology.passed}/${terminology.checked} selected label-term checks across ${terminology.locales} locales; lexical consistency only`,
+  );
+const quantities = checkMaterialQuantities(LOCALES);
+for (const error of quantities.errors) fail(`quantities: ${error}`);
+if (!quantities.errors.length)
+  ok(
+    `${quantities.passed}/${quantities.checked} material-quantity checks across ${quantities.keys} quantity-bearing keys; figures are preserved, not proof of meaning`,
   );
 if (!en) fail("locales.js has no `en` dictionary");
 if (!langs.length) fail("locales.js exports no locales");
