@@ -13,14 +13,20 @@ import { SCOPE_FACETS } from "./jev-complete.mjs";
 
 // Plan item ids, tolerant: P9.7, (P9.7), p9.7, P9.7a all normalise.
 const PLAN_ITEM = /\bP(\d+)(?:\.(\d+))?([a-z])?\b/gi;
-function normalisePlanItem(match) {
+function normalisePlanId(raw) {
+  const match = /^P(\d+)(?:\.(\d+))?([a-z])?$/i.exec(String(raw || ""));
+  if (!match) return null;
   const [, major, minor] = match;
   return minor === undefined ? `P${major}` : `P${major}.${minor}`;
 }
+function normalisePlanItem(match) {
+  return normalisePlanId(match && match[0]);
+}
 
 // File-path → scope inference. Order matters: more specific first.
-// Note: docs/plan/ is handled by governance precedence in resolveCiScope,
-// not here — a PR modifying the plan is governance regardless of title.
+// Note: the three canonical plan files are handled by governance precedence
+// in resolveCiScope, not here. A proposal document resolves from the plan
+// item its filename names (see PROPOSAL_DOC below).
 const PATH_SCOPE_RULES = [
   { pattern: /^blog\//, scope: "P9.7", reason: "touches blog/" },
   { pattern: /locales?\.js$/, scope: "P9.1", reason: "touches locale files" },
@@ -53,6 +59,18 @@ const GOVERNANCE_PLAN_FILES = new Set([
   "docs/plan/PLAN.lock.json",
 ]);
 
+// Proposal documents. A proposal amends exactly one plan item and changes no
+// plan text, so the item it would amend is part of its name:
+//
+//   docs/plan/PROPOSED-AMENDMENT-<plan item>-<slug>.md
+//
+// The resolver stays pure (title + changed paths) and never reads prose to
+// guess a scope. A proposal resolves only when the PR carries nothing outside
+// docs/plan/, so a document can never widen a code change's scope.
+const PROPOSAL_DOC =
+  /^docs\/plan\/PROPOSED-AMENDMENT-(P\d+(?:\.\d+)?[a-z]?)-[^/]+\.md$/i;
+const PLAN_DIR = /^docs\/plan\//;
+
 /**
  * Resolve the CI scope for a PR, tolerantly.
  *
@@ -65,7 +83,7 @@ const GOVERNANCE_PLAN_FILES = new Set([
  *
  * @param {object} input - { title: string, files?: string[] }
  * @returns {{ scope: string|null, how: string, considered: string[], error: string|null, coverageNote?: string }}
- *   how: "governance" | "explicit" | "path-inferred" | "keyword-inferred" | null
+ *   how: "governance" | "proposal" | "explicit" | "path-inferred" | "keyword-inferred" | null
  *   coverageNote: when scope was inferred (not explicit), notes that the plan
  *     may not fully encompass the PR's requirements — a finding for the
  *     judgment to consider, not a hard failure.
@@ -94,6 +112,83 @@ export function resolveCiScope(input) {
         "This PR modifies the plan itself. Judged as governance (P0.1 facets), " +
         "not against the plan item it creates. The new item's facets apply to " +
         "future PRs, not this one.",
+    };
+  }
+
+  // 0b. Proposal documents: the amended item is in the filename, not inferred.
+  const proposals = [];
+  for (const file of files) {
+    const match = PROPOSAL_DOC.exec(file);
+    if (!match) continue;
+    const id = normalisePlanId(match[1]);
+    if (id && !proposals.includes(id)) proposals.push(id);
+  }
+  if (proposals.length > 0) {
+    const outside = files.filter((f) => !PLAN_DIR.test(f));
+    if (outside.length > 0) {
+      return {
+        scope: null,
+        how: null,
+        considered: proposals,
+        error:
+          "a proposal document amends a plan item and cannot be judged " +
+          `alongside changes outside docs/plan/ (${outside.join(", ")}). ` +
+          "Split the proposal from the change it would authorise.",
+      };
+    }
+    const titledScopes = [];
+    for (const match of title.matchAll(PLAN_ITEM)) {
+      const id = normalisePlanItem(match);
+      if (
+        id &&
+        Object.prototype.hasOwnProperty.call(SCOPE_FACETS, id) &&
+        !titledScopes.includes(id)
+      ) {
+        titledScopes.push(id);
+      }
+    }
+    const considered = [...new Set([...titledScopes, ...proposals])];
+    if (proposals.length > 1) {
+      return {
+        scope: null,
+        how: null,
+        considered,
+        error:
+          `the proposal documents name more than one plan item (${proposals.join(", ")}). ` +
+          "A scoped run judges one item's facets.",
+      };
+    }
+    const [proposalScope] = proposals;
+    if (!Object.prototype.hasOwnProperty.call(SCOPE_FACETS, proposalScope)) {
+      return {
+        scope: null,
+        how: null,
+        considered,
+        error:
+          `the proposal filename names "${proposalScope}", which is not a plan item the gate knows. ` +
+          "Name the item it amends: docs/plan/PROPOSED-AMENDMENT-<item>-<slug>.md.",
+      };
+    }
+    if (titledScopes.length > 0 && !titledScopes.includes(proposalScope)) {
+      return {
+        scope: null,
+        how: null,
+        considered,
+        error:
+          `the title names ${titledScopes.join(", ")} but the proposal amends ${proposalScope}. ` +
+          "They must agree; a proposal PR judges the item it amends.",
+      };
+    }
+    return {
+      scope: proposalScope,
+      how: "proposal",
+      considered,
+      error: null,
+      inferenceReason: `proposal document amends ${proposalScope}`,
+      coverageNote:
+        "Scope comes from the plan item the proposal's filename names. The " +
+        "proposal changes no plan text, so this judges the proposal, not the " +
+        "policy it argues for.",
     };
   }
 
@@ -167,7 +262,8 @@ export function resolveCiScope(input) {
     considered,
     error:
       "could not determine scope from title or changed files. " +
-      'Add a plan item ID to the title (e.g. "(P9.7)"), or ensure the PR touches ' +
-      "recognizable paths (blog/, docs/plan/).",
+      'Add a plan item ID to the title (e.g. "(P9.7)"), or use a plan ' +
+      "document route: a canonical plan file, or a proposal named " +
+      "docs/plan/PROPOSED-AMENDMENT-<plan item>-<slug>.md.",
   };
 }

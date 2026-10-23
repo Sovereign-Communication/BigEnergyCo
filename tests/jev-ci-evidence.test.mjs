@@ -537,6 +537,95 @@ test("SCOPE: a ledger row follows its named item; canonical plan edits stay gove
   assert.equal(amendment.how, "governance");
 });
 
+// A proposal document changes no plan text, so the item it would amend has to
+// be in its name: docs/plan/PROPOSED-AMENDMENT-<plan item>-<slug>.md. Before
+// that route existed the resolver had no way to place a proposal at all, and
+// the CI job failed before it could judge anything.
+test("SCOPE: a proposal document resolves to the plan item its filename amends", () => {
+  const doc = "docs/plan/PROPOSED-AMENDMENT-P0.3-JEV-STAGING-GATE.md";
+  const r = resolveCiScope({
+    title: "docs(jev): propose B1 staging gate",
+    files: [doc],
+  });
+  assert.equal(r.scope, "P0.3");
+  assert.equal(r.how, "proposal");
+  assert.match(r.inferenceReason, /amends P0\.3/);
+  assert.match(r.coverageNote, /changes no plan text/);
+
+  // A sub-letter names the item, not a new scope.
+  assert.equal(
+    resolveCiScope({
+      title: "docs: proposal",
+      files: ["docs/plan/PROPOSED-AMENDMENT-P0.3c-gate.md"],
+    }).scope,
+    "P0.3",
+  );
+  // A ledger row beside a proposal is progress evidence for the same item.
+  assert.equal(
+    resolveCiScope({
+      title: "docs: proposal",
+      files: [doc, "docs/plan/LEDGER.jsonl"],
+    }).scope,
+    "P0.3",
+  );
+});
+
+test("SCOPE: a proposal can never widen or invent a scope", () => {
+  const doc = "docs/plan/PROPOSED-AMENDMENT-P0.3-JEV-STAGING-GATE.md";
+  // Code beside a proposal would let a document lend its scope to a change it
+  // does not describe.
+  const mixed = resolveCiScope({
+    title: "docs: proposal",
+    files: [doc, "assets/js/sizing/ui.js"],
+  });
+  assert.equal(mixed.scope, null);
+  assert.match(mixed.error, /outside docs\/plan\//);
+
+  // The item must exist in the plan, not merely look like one.
+  const unknown = resolveCiScope({
+    title: "docs: proposal",
+    files: ["docs/plan/PROPOSED-AMENDMENT-P9.9-x.md"],
+  });
+  assert.equal(unknown.scope, null);
+  assert.match(unknown.error, /P9\.9/);
+
+  // A filename that names no item is not a route: "B1" is the amendment's own
+  // name, not a plan item.
+  assert.equal(
+    resolveCiScope({
+      title: "docs: proposal",
+      files: ["docs/plan/PROPOSED-AMENDMENT-B1-JEV-STAGING-GATE.md"],
+    }).scope,
+    null,
+  );
+
+  // Two different targets is a scope decision, not a guess.
+  assert.equal(
+    resolveCiScope({
+      title: "docs: proposals",
+      files: [
+        "docs/plan/PROPOSED-AMENDMENT-P0.3-a.md",
+        "docs/plan/PROPOSED-AMENDMENT-P2.1-b.md",
+      ],
+    }).scope,
+    null,
+  );
+
+  // A title naming a different item must not be silently overridden.
+  const clash = resolveCiScope({
+    title: "docs: proposal (P2.1)",
+    files: [doc],
+  });
+  assert.equal(clash.scope, null);
+  assert.match(clash.error, /must agree/);
+
+  // …and when they agree, the title and the filename confirm each other.
+  assert.equal(
+    resolveCiScope({ title: "docs: proposal (P0.3)", files: [doc] }).scope,
+    "P0.3",
+  );
+});
+
 // ── the live judgment: pinned model, and an honest run class ────────────────
 
 test("LIVE: a judgment is accepted only when the provider names a concrete model", () => {
