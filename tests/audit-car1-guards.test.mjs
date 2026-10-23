@@ -11,7 +11,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
-import { parseShareHash, b64urlEncode } from "../assets/js/sizing/share-codec.js";
+import {
+  parseShareHash,
+  b64urlEncode,
+} from "../assets/js/sizing/share-codec.js";
 
 const ui = readFileSync("assets/js/sizing/ui.js", "utf8");
 
@@ -32,7 +35,10 @@ function between(start, end) {
 // re-opened by a refactor. It is EXECUTED here, not pattern-matched: the
 // function is sliced out of ui.js and run against a real payload.
 
-const MERGE_SRC = between("function mergeReSlice(result)", "function setupBillSlider()");
+const MERGE_SRC = between(
+  "function mergeReSlice(result)",
+  "function setupBillSlider()",
+);
 
 /** Run the shipped mergeReSlice in a context whose only real state is the payload. */
 function runMerge(payload, result) {
@@ -93,9 +99,16 @@ test("mergeReSlice refuses a non-object slice instead of throwing at the `in` ch
 
 test("mergeReSlice still merges a real slice (the guard is not a mute button)", () => {
   const payload = { matrix: { cells: { a: 1 } } };
-  const state = runMerge(payload, { cells: { b: 2 }, customCut: { fraction: 0.8 } });
+  const state = runMerge(payload, {
+    cells: { b: 2 },
+    customCut: { fraction: 0.8 },
+  });
   assert.deepEqual(payload.matrix.cells, { a: 1, b: 2 }, "cells merge");
-  assert.deepEqual(payload.customCut, { fraction: 0.8 }, "the cut is merged too");
+  assert.deepEqual(
+    payload.customCut,
+    { fraction: 0.8 },
+    "the cut is merged too",
+  );
   assert.equal(
     state.selectedKey,
     undefined,
@@ -152,7 +165,11 @@ test("every hash string field is whitelisted before it can reach the form", () =
     ["selection key", /\(best\|focus\|custom\|adopted\|matrix/],
   ];
   for (const [what, pattern] of guards) {
-    assert.match(restore, pattern, `the ${what} field must be checked, not trusted`);
+    assert.match(
+      restore,
+      pattern,
+      `the ${what} field must be checked, not trusted`,
+    );
   }
   // And the whitelist is what the hostile value meets: CHEM_KEYS is a set of
   // four engine chemistries, so the payload above cannot pass it.
@@ -162,12 +179,21 @@ test("every hash string field is whitelisted before it can reach the form", () =
 });
 
 test("the print sheet interpolates no untrusted text: basis is computed, not read", () => {
-  const sheet = between("function populatePrintSheet(p, inp)", "function askAdvisor()");
+  const sheet = between(
+    "function populatePrintSheet(p, inp)",
+    "function askAdvisor()",
+  );
   // `basis` is the one string field interpolated into the sheet, and readInputs
   // assigns it only literals — never a form value, never the hash.
-  const readInputs = between("function readInputs()", "function readPercentInput");
+  const readInputs = between(
+    "function readInputs()",
+    "function readPercentInput",
+  );
   const basisAssignments = readInputs.match(/basis =[^;]+;/g) || [];
-  assert.ok(basisAssignments.length > 0, "basis must be assigned in readInputs");
+  assert.ok(
+    basisAssignments.length > 0,
+    "basis must be assigned in readInputs",
+  );
   for (const line of basisAssignments) {
     assert.match(
       line,
