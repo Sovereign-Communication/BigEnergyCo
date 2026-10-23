@@ -637,17 +637,21 @@ function joinPath(root, rel) {
  * buckets + "none". Facet proof text specializes the top level without
  * changing any ordinal or numeric gate. Typed primitives only; nothing invented.
  */
+function facetCriteria(doc, spec) {
+  const criteria = [...doc.sentiment.levels];
+  if (spec.proven_criteria)
+    criteria[criteria.length - 1] += `. ${spec.proven_criteria}`;
+  return criteria;
+}
+
 export function completeQuestionPack(pack) {
   const doc = validateCompletePack(pack);
   const questions = {};
   for (const [axis, spec] of Object.entries(doc.axes)) {
-    const criteria = [...doc.sentiment.levels];
-    if (spec.proven_criteria)
-      criteria[criteria.length - 1] += `. ${spec.proven_criteria}`;
     questions[axis] = {
       type: "score",
       instructions: spec.instructions,
-      criteria,
+      criteria: facetCriteria(doc, spec),
     };
   }
   const criteria = {};
@@ -750,6 +754,7 @@ export function parseLiveAnswers(answers, pack) {
   const notes = [];
   let anyValid = false;
   for (const axis of Object.keys(doc.axes)) {
+    const wireLevels = facetCriteria(doc, doc.axes[axis]);
     const answer = answers[axis];
     let level = null;
     let value = null;
@@ -765,7 +770,9 @@ export function parseLiveAnswers(answers, pack) {
         legend !== null
       ) {
         for (const [anchor, lvl] of Object.entries(legend)) {
-          if (typeof lvl !== "string" || !levelIds.includes(lvl)) continue;
+          const index = typeof lvl === "string" ? wireLevels.indexOf(lvl) : -1;
+          if (index < 0) continue;
+          const canonicalLevel = levelIds[index];
           const prob = probs[String(anchor)];
           if (
             typeof prob !== "number" ||
@@ -775,9 +782,9 @@ export function parseLiveAnswers(answers, pack) {
           ) {
             continue;
           }
-          probabilitiesByLevel.set(lvl, prob);
+          probabilitiesByLevel.set(canonicalLevel, prob);
           if (value === null || prob > value) {
-            level = lvl;
+            level = canonicalLevel;
             value = prob;
           }
         }

@@ -472,11 +472,37 @@ test("KEYWORDS: most hits wins, ties go lexicographic, zero hits invents nothing
 
 // ── live parse (0-hallucination) ─────────────────────────────────────────────
 
+test("LIVE: provider legends from every facet question map back to canonical ordinals", () => {
+  const questions = completeQuestionPack(DEFAULT_COMPLETE_PACK);
+  const answers = Object.fromEntries(
+    AXIS_IDS.map((axis) => [
+      axis,
+      {
+        legend: Object.fromEntries(
+          questions[axis].criteria.map((level, i) => [i, level]),
+        ),
+        probabilities: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 1 },
+        confidence: 1,
+      },
+    ]),
+  );
+  const parsed = parseLiveAnswers(answers, DEFAULT_COMPLETE_PACK);
+  for (const axis of AXIS_IDS) assert.equal(parsed.live_levels[axis], 4, axis);
+  assert.equal(
+    parseLiveAnswers({ spec: axisAnswer(LEVELS[4]) }, DEFAULT_COMPLETE_PACK),
+    null,
+    "a stale generic proof label cannot satisfy the specialized question",
+  );
+});
+
 test("LIVE: highest-probability valid legend anchor wins; invented levels are ignored", () => {
   const answers = {
     spec: {
       probabilities: { low: 0.2, high: 0.8 },
-      legend: { low: LEVELS[0], high: LEVELS[4] },
+      legend: {
+        low: LEVELS[0],
+        high: completeQuestionPack(DEFAULT_COMPLETE_PACK).spec.criteria[4],
+      },
       confidence: 0.7,
     },
     design: {
@@ -525,7 +551,7 @@ test("LIVE: invalid probability and confidence values cannot influence the repor
         legend: {
           low: LEVELS[0],
           middle: LEVELS[2],
-          high: LEVELS[4],
+          high: completeQuestionPack(DEFAULT_COMPLETE_PACK).spec.criteria[4],
         },
         confidence: Infinity,
       },
@@ -544,7 +570,11 @@ test("LIVE: invalid probability and confidence values cannot influence the repor
 });
 
 test("LIVE: primary_gap accepts 'none' and declared buckets, refuses invented ones", () => {
-  const base = { spec: axisAnswer(LEVELS[4]) };
+  const base = {
+    spec: axisAnswer(
+      completeQuestionPack(DEFAULT_COMPLETE_PACK).spec.criteria[4],
+    ),
+  };
   const none = parseLiveAnswers(
     { ...base, primary_gap: { choice: "none" } },
     DEFAULT_COMPLETE_PACK,
