@@ -66,6 +66,40 @@ test("applianceState keeps the catalog surge fallback for valid rows", () => {
   assert.equal(state.count, 1);
 });
 
+test("applianceState skips rows whose derived totals overflow", () => {
+  const state = runApplianceState([
+    {
+      dataset: {
+        w: String(Number.MAX_VALUE),
+        qty: "2",
+        h: "24",
+        surgeW: "500",
+      },
+    },
+    { dataset: { w: "100", qty: "2", h: "4", surgeW: "500" } },
+  ]);
+
+  assert.equal(state.count, 1, "rejects the overflowing row");
+  assert.ok(Number.isFinite(state.kwh));
+  assert.ok(Number.isFinite(state.peakW));
+  assert.ok(Number.isFinite(state.peakSurgeW));
+  assert.equal(state.kwh, 0.8);
+
+  const aggregate = runApplianceState([
+    {
+      dataset: { w: "1e308", qty: "1", h: "0.25", surgeW: "1e308" },
+    },
+    {
+      dataset: { w: "1e308", qty: "1", h: "0.25", surgeW: "1e308" },
+    },
+  ]);
+
+  assert.equal(aggregate.count, 1, "rejects aggregate overflow");
+  assert.ok(Number.isFinite(aggregate.kwh));
+  assert.ok(Number.isFinite(aggregate.peakW));
+  assert.ok(Number.isFinite(aggregate.peakSurgeW));
+});
+
 test("applyGenRate rejects non-finite or overflowing prices", () => {
   const source = between("function applyGenRate()", "function renderMoneyBar(");
   for (const rate of [null, Number.NaN, Number.POSITIVE_INFINITY, 0, -1]) {

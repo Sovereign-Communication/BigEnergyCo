@@ -1386,12 +1386,30 @@ function applianceState() {
     )
       return;
 
+    const rowKwh = (w * qty * h) / 1000;
+    const rowPeakW = w * qty;
+    const rowPeakSurgeW = surge * qty;
+    const nextKwh = kwh + rowKwh;
+    const nextPeakW = peakW + rowPeakW;
+    const nextPeakSurgeW = peakSurgeW + rowPeakSurgeW;
+    if (
+      ![
+        rowKwh,
+        rowPeakW,
+        rowPeakSurgeW,
+        nextKwh,
+        nextPeakW,
+        nextPeakSurgeW,
+      ].every(Number.isFinite)
+    )
+      return;
+
     count++;
     if (row.dataset.splitPhase === "true") requiresSplitPhase = true;
 
-    kwh += (w * qty * h) / 1000;
-    peakW += w * qty;
-    peakSurgeW += surge * qty;
+    kwh = nextKwh;
+    peakW = nextPeakW;
+    peakSurgeW = nextPeakSurgeW;
   });
 
   return { kwh, peakW, peakSurgeW, requiresSplitPhase, count };
