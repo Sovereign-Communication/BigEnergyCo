@@ -575,10 +575,21 @@ export function validateCompletePack(pack) {
         `axis ${JSON.stringify(axis)} requires non-empty instructions`,
       );
     }
+    if (
+      spec.proven_criteria !== undefined &&
+      (typeof spec.proven_criteria !== "string" || !spec.proven_criteria.trim())
+    ) {
+      throw new Error(
+        `axis ${JSON.stringify(axis)} proven_criteria must be non-empty text`,
+      );
+    }
     outAxes[axis] = {
       authority: spec.authority,
       bucket: spec.bucket,
       instructions: spec.instructions,
+      ...(spec.proven_criteria === undefined
+        ? {}
+        : { proven_criteria: spec.proven_criteria }),
     };
   }
 
@@ -623,16 +634,20 @@ function joinPath(root, rel) {
 /**
  * The TypeSafe question pack: one `score` per declared axis (criteria = the
  * declared levels, in order) plus one `primary_gap` choice over the declared
- * buckets + "none". Typed primitives only; nothing invented.
+ * buckets + "none". Facet proof text specializes the top level without
+ * changing any ordinal or numeric gate. Typed primitives only; nothing invented.
  */
 export function completeQuestionPack(pack) {
   const doc = validateCompletePack(pack);
   const questions = {};
   for (const [axis, spec] of Object.entries(doc.axes)) {
+    const criteria = [...doc.sentiment.levels];
+    if (spec.proven_criteria)
+      criteria[criteria.length - 1] += `. ${spec.proven_criteria}`;
     questions[axis] = {
       type: "score",
       instructions: spec.instructions,
-      criteria: [...doc.sentiment.levels],
+      criteria,
     };
   }
   const criteria = {};

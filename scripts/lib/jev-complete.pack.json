@@ -16,107 +16,128 @@
     "spec": {
       "authority": "jev",
       "bucket": "spec_gap",
-      "instructions": "Rate SPEC conformance: does the evidence show the product delivers exactly what was requested — every requested outcome present and working, and no unrequested features, UI, or rewrites added?"
+      "instructions": "Rate SPEC conformance: does the evidence show the product delivers exactly what was requested — every requested outcome present and working, and no unrequested features, UI, or rewrites added?",
+      "proven_criteria": "Acceptance outcomes map to current implementation and exercised behavior, with no requested outcome missing or unexplained scope added."
     },
     "design": {
       "authority": "jev",
       "bucket": "design_gap",
-      "instructions": "Rate DESIGN: one owner per piece of state, concerns in separate modules, a change to one behavior landing in one obvious place — or a grown app still living in one or two giant files?"
+      "instructions": "Rate DESIGN: one owner per piece of state, concerns in separate modules, a change to one behavior landing in one obvious place — or a grown app still living in one or two giant files?",
+      "proven_criteria": "Module boundaries, state ownership and dependency checks demonstrate one owner per responsibility; no unresolved coupling or ownership defect remains."
     },
     "correctness": {
       "authority": "jev",
       "bucket": "correctness_gap",
-      "instructions": "Rate CORRECTNESS: was behavior exercised through the real surface (browser/CLI/service) rather than re-read — boundary, empty-input, ordering, async, cleanup and state-sync failures hunted and fixed?"
+      "instructions": "Rate CORRECTNESS: was behavior exercised through the real surface (browser/CLI/service) rather than re-read — boundary, empty-input, ordering, async, cleanup and state-sync failures hunted and fixed?",
+      "proven_criteria": "The current full suite and real-surface journeys exercise critical boundaries, asynchronous ordering, cleanup and state synchronization; no recorded failure is waived by prose."
     },
     "quality": {
       "authority": "jev",
       "bucket": "quality_gap",
-      "instructions": "Rate QUALITY/concision: no unnecessary lines, branches, abstractions, dead scaffolding, or duplicated logic; formatting clean; the smallest version that keeps the proven behavior."
+      "instructions": "Rate QUALITY/concision: no unnecessary lines, branches, abstractions, dead scaffolding, or duplicated logic; formatting clean; the smallest version that keeps the proven behavior.",
+      "proven_criteria": "Current full-tree formatting, duplication, dead-code and style checks enforce their stated rules with zero unresolved exceptions. Counts alone do not prove concision; known unnecessary code or duplication remains a gap."
     },
     "security": {
       "authority": "jev",
       "bucket": "security_gap",
-      "instructions": "Rate SECURITY/privacy against the free-public mission: no secrets in the tree, CSP/headers sane, sensitive actions (geolocation, auto-runs) only on explicit user consent, no lead-collection or paywall creep. Evidence facts state what was checked."
+      "instructions": "Rate SECURITY/privacy against the free-public mission: no secrets in the tree, CSP/headers sane, sensitive actions (geolocation, auto-runs) only on explicit user consent, no lead-collection or paywall creep. Evidence facts state what was checked.",
+      "proven_criteria": "Current secret, header, CSP, consent and untrusted-input checks cover the exposed paths and pass; no known unresolved security or free-public-mission violation remains."
     },
     "performance": {
       "authority": "jev",
       "bucket": "perf_gap",
-      "instructions": "Rate PERFORMANCE: warm same-location interactions are instant, no redundant network re-pulls (weather/NASA memoized), and the first paint stays light. Cite only what the evidence describes."
+      "instructions": "Rate PERFORMANCE: warm same-location interactions are instant, no redundant network re-pulls (weather/NASA memoized), and the first paint stays light. Cite only what the evidence describes.",
+      "proven_criteria": "Measured first paint, warm interactions and network reuse satisfy enforced numeric CI ceilings. State the tested device and network scope; do not infer performance on untested surfaces."
     },
     "accessibility": {
       "authority": "jev",
       "bucket": "a11y_gap",
-      "instructions": "Rate ACCESSIBILITY: keyboard reachability, labels/ARIA on the calculator controls, contrast, and reduced-motion respect across the main flows described in the evidence."
+      "instructions": "Rate ACCESSIBILITY: keyboard reachability, labels/ARIA on the calculator controls, contrast, and reduced-motion respect across the main flows described in the evidence.",
+      "proven_criteria": "Keyboard paths, accessible names, contrast, motion preferences and the required assistive-technology coverage are exercised across the stated main flows with no unresolved violations; missing required coverage remains a gap."
     },
     "i18n": {
       "authority": "jev",
       "bucket": "i18n_gap",
-      "instructions": "Rate I18N: locale parity for user-visible strings (all locales carry the same keys), no hardcoded English leaking into non-English locales, and locale switching covering the main flows."
+      "instructions": "Rate I18N: locale parity for user-visible strings (all locales carry the same keys), no hardcoded English leaking into non-English locales, and locale switching covering the main flows.",
+      "proven_criteria": "Every shipped locale passes key and placeholder parity and rendered main-flow checks, with no raw keys or unexplained English leakage; locale switching and Intl formatting are exercised."
     },
     "seo": {
       "authority": "code",
       "bucket": "seo_gap",
-      "instructions": "Rate SEO from the code-owned gate evidence only: sitemap, JSON-LD, metadata and character checks green means proven; a red gate means failing; no run recorded means unverified."
+      "instructions": "Rate SEO from the code-owned gate evidence only: sitemap, JSON-LD, metadata and character checks green means proven; a red gate means failing; no run recorded means unverified.",
+      "proven_criteria": "The current code-owned sitemap, JSON-LD, metadata and character gates are recorded green; absent or red results cannot be replaced by narrative."
     },
     "resilience": {
       "authority": "jev",
       "bucket": "resilience_gap",
-      "instructions": "Rate RESILIENCE of the delivery path: transient-failure retry classification, nested timeout budgets that provably fit, and stuck-run recovery — as evidenced, not aspired."
+      "instructions": "Rate RESILIENCE of the delivery path: transient-failure retry classification, nested timeout budgets that provably fit, and stuck-run recovery — as evidenced, not aspired.",
+      "proven_criteria": "Injected failures and stuck-run checks demonstrate recovery on the tested paths, and nested timeout budgets fit. Explicitly distinguish exercised recovery from source-only timer arithmetic."
     },
     "experience": {
       "authority": "jev",
       "bucket": "experience_gap",
-      "instructions": "Rate EXPERIENCE: first-run clarity within moments, actions acknowledging themselves, errors saying what to do next, empty states inviting rather than confusing, coherent spacing/hierarchy."
+      "instructions": "Rate EXPERIENCE: first-run clarity within moments, actions acknowledging themselves, errors saying what to do next, empty states inviting rather than confusing, coherent spacing/hierarchy.",
+      "proven_criteria": "Recorded first-run and returning-user journeys demonstrate understandable actions, acknowledgement, useful errors and empty states, and coherent result hierarchy; unresolved observed usability defects remain gaps."
     },
     "docs": {
       "authority": "jev",
       "bucket": "docs_gap",
-      "instructions": "Rate DOCS: architecture and runbook match the code as it now stands (module ownership, gate inventory, deploy steps) — not stale descriptions of removed behavior."
+      "instructions": "Rate DOCS: architecture and runbook match the code as it now stands (module ownership, gate inventory, deploy steps) — not stale descriptions of removed behavior.",
+      "proven_criteria": "Architecture, gate inventory and deployment/runbook instructions are checked against current code and commands, with no known stale ownership, removed behavior or unverified release step."
     },
     "testing": {
       "authority": "code",
       "bucket": "tests_gap",
-      "instructions": "Rate TESTING from the code-owned evidence only: a green full unit suite means proven, a red suite means failing, no recorded run means unverified."
+      "instructions": "Rate TESTING from the code-owned evidence only: a green full unit suite means proven, a red suite means failing, no recorded run means unverified.",
+      "proven_criteria": "A complete unit-suite run for the current tree is recorded green. A partial suite, missing result or recorded failure is not a complete passing run."
     },
     "release": {
       "authority": "code",
       "bucket": "release_gap",
-      "instructions": "Rate RELEASE readiness from code-owned facts only: CI green, browser smoke green, and a clean tree mean proven; any recorded red means at risk; unknowns mean unverified."
+      "instructions": "Rate RELEASE readiness from code-owned facts only: CI green, browser smoke green, and a clean tree mean proven; any recorded red means at risk; unknowns mean unverified.",
+      "proven_criteria": "Current code-owned CI, browser smoke and clean-tree facts are all green for the assessed revision; distinguish local readiness from any separately required live deployment verification."
     },
     "advisor": {
       "authority": "jev",
       "bucket": "advisor_gap",
-      "instructions": "Rate the AI ADVISOR implementation and its evidence: does the implementation keep deterministic calculator figures authoritative, pair the same selected result with Jev, avoid stereotypes and unsupported current claims, disclose uncertainty and safety limits, protect privacy, support multilingual use and the selected interface language, and fail safely when a provider is unavailable? Judge only what the evidence demonstrates; an unrun adversarial or live check is not proven."
+      "instructions": "Rate the AI ADVISOR implementation and its evidence: does the implementation keep deterministic calculator figures authoritative, pair the same selected result with Jev, avoid stereotypes and unsupported current claims, disclose uncertainty and safety limits, protect privacy, support multilingual use and the selected interface language, and fail safely when a provider is unavailable? Judge only what the evidence demonstrates; an unrun adversarial or live check is not proven.",
+      "proven_criteria": "Current adversarial and failure-path checks demonstrate calculator-result authority, result pairing, safe uncertainty, locale behavior and privacy disclosure. Unrun required live checks remain unverified."
     },
     "physics": {
       "authority": "jev",
       "bucket": "physics_gap",
-      "instructions": "Rate PHYSICS/determinism of the sizing engine: hourly irradiance derivations deterministic, thresholds intact (none weakened), and live-model validation status as stated in the evidence."
+      "instructions": "Rate PHYSICS/determinism of the sizing engine: hourly irradiance derivations deterministic, thresholds intact (none weakened), and live-model validation status as stated in the evidence.",
+      "proven_criteria": "Deterministic hourly calculations, physical boundary invariants and the required reference-validation cases pass without weakened thresholds or substituted assumptions."
     },
     "provenance": {
       "authority": "jev",
       "bucket": "provenance_gap",
-      "instructions": "Rate PROVENANCE of the numbers a visitor reads: does every displayed assumption, price, tariff and benchmark resolve to a cited source with a publisher, a grade and a date that the visitor can open, is an unknown shown as an unknown rather than guessed, and is every multiplier or rule of thumb either sourced or replaced? Judge only what the evidence demonstrates; a value whose source lives in a code comment is not a source a visitor can check."
+      "instructions": "Rate PROVENANCE of the numbers a visitor reads: does every displayed assumption, price, tariff and benchmark resolve to a cited source with a publisher, a grade and a date that the visitor can open, is an unknown shown as an unknown rather than guessed, and is every multiplier or rule of thumb either sourced or replaced? Judge only what the evidence demonstrates; a value whose source lives in a code comment is not a source a visitor can check.",
+      "proven_criteria": "Every displayed number has a visitor-visible dated source and grade, or is explicitly unknown; current freshness and citation checks cover the assumptions actually displayed."
     },
     "comparison": {
       "authority": "jev",
       "bucket": "comparison_gap",
-      "instructions": "Rate COMPARISON of the purchase paths: can a visitor see the turnkey installer, the lease or PPA, self-purchase with a licensed electrician, and DIY mounting with an electrician connection, priced for the SAME sized system over the same 20 years with the same definitions, including permits, incentives, replacements and the end-of-term choice, so the gap between them is a real gap and not a difference in what each path counts?"
+      "instructions": "Rate COMPARISON of the purchase paths: can a visitor see the turnkey installer, the lease or PPA, self-purchase with a licensed electrician, and DIY mounting with an electrician connection, priced for the SAME sized system over the same 20 years with the same definitions, including permits, incentives, replacements and the end-of-term choice, so the gap between them is a real gap and not a difference in what each path counts?",
+      "proven_criteria": "Tests demonstrate all four purchase paths use the same system and 20-year definitions, including permits, incentives, replacements and end-of-term choices; no unmatched cost omission remains."
     },
     "usecases": {
       "authority": "jev",
       "bucket": "usecases_gap",
-      "instructions": "Rate USE-CASE COVERAGE: does one unified flow offer cutting the bill, time-of-use battery-only savings, essential-load backup in an outage, an emergency reserve held inside the battery, full off-grid independence and portable or mobile power, each with its own outcome metric and its own honest verdict when the numbers do not work? A use case named only in copy is not offered; one that shares another use case's metric is not separately evidenced."
+      "instructions": "Rate USE-CASE COVERAGE: does one unified flow offer cutting the bill, time-of-use battery-only savings, essential-load backup in an outage, an emergency reserve held inside the battery, full off-grid independence and portable or mobile power, each with its own outcome metric and its own honest verdict when the numbers do not work? A use case named only in copy is not offered; one that shares another use case's metric is not separately evidenced.",
+      "proven_criteria": "All six use cases are exercised through the unified flow with distinct outcome metrics and honest success or infeasibility verdicts; copy or a shared metric alone does not demonstrate a use case."
     },
     "privacy": {
       "authority": "jev",
       "bucket": "privacy_gap",
-      "instructions": "Rate PRIVACY against the free-public mission: zero cookies, no identifier stored or logged, coordinates rounded to 0.01 degrees on the device before any request leaves it, no ad, tracker, affiliate link or lead capture, advisor questions and facts disclosed as leaving the device, and nothing collected that the visitor did not choose to send."
+      "instructions": "Rate PRIVACY against the free-public mission: zero cookies, no identifier stored or logged, coordinates rounded to 0.01 degrees on the device before any request leaves it, no ad, tracker, affiliate link or lead capture, advisor questions and facts disclosed as leaving the device, and nothing collected that the visitor did not choose to send.",
+      "proven_criteria": "Browser network and storage checks demonstrate disclosed, chosen data transfers, coordinate rounding before transmission, and no cookies, identifiers or tracking on the tested paths."
     },
     "translation": {
       "authority": "jev",
       "bucket": "translation_gap",
-      "instructions": "Rate TRANSLATION quality per shipped locale: key and placeholder parity with English in BOTH directions, no English leakage and no raw key name ever shown to a visitor, numbers, currency, dates and plurals formatted through Intl, natural phrasing rather than machine literals, correct text direction and glyph coverage, and a path for a visitor to suggest a fix without data collection."
+      "instructions": "Rate TRANSLATION quality per shipped locale: key and placeholder parity with English in BOTH directions, no English leakage and no raw key name ever shown to a visitor, numbers, currency, dates and plurals formatted through Intl, natural phrasing rather than machine literals, correct text direction and glyph coverage, and a path for a visitor to suggest a fix without data collection.",
+      "proven_criteria": "Each shipped locale has parity, formatting, direction and glyph checks plus meaning and natural-phrasing verification for user decisions and safety/error copy. Disclose sampling and reviewer scope; terminology parity or unvalidated model agreement alone cannot prove semantic quality."
     }
   },
   "buckets": {

@@ -261,7 +261,14 @@ test("QUESTIONS: one score per axis over the declared levels, one choice over th
   assert.deepEqual(Object.keys(q).sort(), [...AXIS_IDS, "primary_gap"].sort());
   for (const axis of AXIS_IDS) {
     assert.equal(q[axis].type, "score", axis);
-    assert.deepEqual(q[axis].criteria, LEVELS, axis);
+    const proof = DEFAULT_COMPLETE_PACK.axes[axis].proven_criteria;
+    assert.ok(
+      typeof proof === "string" && proof.length > 40,
+      `${axis} proof bar`,
+    );
+    assert.equal(q[axis].criteria.length, LEVELS.length, axis);
+    assert.deepEqual(q[axis].criteria.slice(0, -1), LEVELS.slice(0, -1), axis);
+    assert.equal(q[axis].criteria.at(-1), `${LEVELS.at(-1)}. ${proof}`, axis);
   }
   assert.equal(q.primary_gap.type, "choice");
   assert.deepEqual(
@@ -275,6 +282,26 @@ test("QUESTIONS: one score per axis over the declared levels, one choice over th
       `${id} typed primitive only`,
     );
   }
+});
+
+test("PACK: facet proof bars survive validation without changing ordinal anchors", () => {
+  const doc = validateCompletePack(DEFAULT_COMPLETE_PACK);
+  assert.equal(
+    new Set(Object.values(doc.axes).map((s) => s.proven_criteria)).size,
+    AXIS_IDS.length,
+  );
+  assert.deepEqual(doc.sentiment.ordinals, [0, 35, 60, 85, 100]);
+  for (const invalid of [null, "", "  ", 85, {}]) {
+    const pack = structuredClone(DEFAULT_COMPLETE_PACK);
+    pack.axes.quality.proven_criteria = invalid;
+    assert.throws(() => validateCompletePack(pack), /quality.*proven_criteria/);
+  }
+});
+
+test("QUESTIONS: an operator pack without a facet proof bar retains its declared levels", () => {
+  const pack = structuredClone(DEFAULT_COMPLETE_PACK);
+  delete pack.axes.quality.proven_criteria;
+  assert.deepEqual(completeQuestionPack(pack).quality.criteria, LEVELS);
 });
 
 // ── code-owned heuristic ─────────────────────────────────────────────────────
