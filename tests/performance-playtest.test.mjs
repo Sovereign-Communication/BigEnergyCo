@@ -364,12 +364,12 @@ test("PLAYTEST: the measured numbers reach the judge's line", () => {
   assert.match(line, /drag 8ms/, `drag preview missing: ${line}`);
   assert.match(
     line,
-    /1\.8s confirm/,
+    /confirm 1\.8s<=20s/,
     `the slow confirm re-slice must not be dropped because the drag was fast: ${line}`,
   );
   assert.match(
     line,
-    /0 NASA warm\/reload/,
+    /NASA warm\/reload 0\/0/,
     `the memoization claim is missing: ${line}`,
   );
   assert.match(
@@ -382,6 +382,29 @@ test("PLAYTEST: the measured numbers reach the judge's line", () => {
     `the composed line is ${line.length} chars, over the ${COMPLETE_FACET_CLIP}-char ` +
       "clip: it would be cut in transit and the axis would arrive without its numbers",
   );
+});
+
+test("PLAYTEST: the judge-facing line carries each measured timing and its hard ceiling", () => {
+  const line = composeFacetLine(
+    lighthouseReport({ warm_interaction: playtestReading() }),
+  );
+  for (const pair of [
+    "cold 5.0s<=15s",
+    "repeat 41ms<=2s",
+    "drag 8ms<=200ms",
+    "confirm 1.8s<=20s",
+  ])
+    assert.ok(line.includes(pair), `${pair} missing from ${line}`);
+  assert.match(line, /3 adjustments/);
+});
+
+test("PLAYTEST: confirm timing remains visible when it equals the drag median", () => {
+  const reading = playtestReading();
+  reading.warm_adjustments.confirm_median_ms =
+    reading.warm_adjustments.preview_median_ms;
+  const clause = playtestClause(reading);
+  assert.match(clause, /drag 8ms<=200ms/);
+  assert.match(clause, /confirm 8ms<=20s/);
 });
 
 test("PLAYTEST: the line states the limit of its own numbers", () => {
@@ -401,7 +424,7 @@ test("PLAYTEST: a warm measurement does not launder the noisy first-paint score"
   assert.match(line, /not ratcheted/i, line);
   assert.match(
     line,
-    /over 21 runs/,
+    /calibration 40-76\/21/,
     `the calibration envelope is gone: ${line}`,
   );
 });
@@ -583,7 +606,7 @@ test("PLAYTEST: the clause is composed from the run, never typed", () => {
   );
   const clause = playtestClause(playtestReading());
   assert.match(clause, /cold 5\.0s/);
-  assert.match(clause, /0 NASA warm\/reload/);
+  assert.match(clause, /NASA warm\/reload 0\/0/);
   assert.doesNotMatch(
     clause,
     /warm_requests/,
