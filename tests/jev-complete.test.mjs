@@ -676,6 +676,40 @@ test("SCORE: everything green with a proven live judgment passes at 95", () => {
   assert.equal(report.min_score, COMPLETE_MIN_SCORE);
 });
 
+test("SCORE: per-facet diagnostics report ordinal and confidence failures", () => {
+  const baseline = liveAll(4);
+  const report = scoreCompleteGate(mergeEvidence(ALL_GREEN, AUTO_CLEAN), {
+    liveJudgment: liveAll(4, {
+      live_levels: { ...baseline.live_levels, translation: 2 },
+      live_confidence: {
+        ...baseline.live_confidence,
+        correctness: 0.7,
+        translation: 0.65,
+      },
+    }),
+  });
+  const details = report.facets_not_proven_detail;
+  assert.deepEqual(
+    details.map((detail) => detail.facet),
+    ["correctness", "translation"],
+    "diagnostics include ordinal and confidence failures in stable order",
+  );
+  assert.deepEqual(
+    details.map((detail) => [
+      detail.ordinal_got,
+      detail.ordinal_need,
+      detail.ordinal_met,
+      detail.confidence_got,
+      detail.confidence_need,
+      detail.confidence_met,
+    ]),
+    [
+      [100, 100, true, 0.7, 0.95, false],
+      [60, 100, false, 0.65, 0.95, false],
+    ],
+  );
+});
+
 test("SCORE: a red hard gate pins the score below target no matter how good the prose", () => {
   const pointsWithout = Object.entries(HARD_GATE_POINTS)
     .filter(([key]) => key !== "smoke_green")
