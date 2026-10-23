@@ -1244,7 +1244,7 @@ test("FACETS: the translation line counts the locales and moments it swept", () 
   assert.match(tra, new RegExp(`${s.locales} locales`));
   assert.match(tra, new RegExp(`${s.phases} re-entry`));
   assert.ok(
-    tra.includes(`${s.domMatched}/${s.domJudged} DOM text/attribute fields`),
+    tra.includes(`DOM ${s.domMatched}/${s.domJudged} match dictionaries`),
   );
   assert.ok(
     tra.length <= COMPLETE_FACET_CLIP,
@@ -1258,4 +1258,19 @@ test("FACETS: the translation line counts the locales and moments it swept", () 
     experience_reading: oneLocale,
   });
   assert.match(short, /1 locales/, "a sweep of one locale must say one locale");
+});
+
+test("TRANSLATION: glossary evidence comes from this run and cannot imply a meaning review", () => {
+  const report = {
+    experience_reading: HEALTHY(),
+    translation_terminology: { checked: 56, passed: 56 },
+  };
+  const line = composeTranslationFacetLine(report);
+  assert.match(line, /Glossary 56\/56 label anchors; lexical only/);
+  assert.match(line, /Not done: meaning\/naturalness/);
+  assert.ok(line.length <= COMPLETE_FACET_CLIP);
+  report.translation_terminology.passed = 55;
+  assert.match(composeTranslationFacetLine(report), /Glossary 55\/56/);
+  delete report.translation_terminology;
+  assert.match(composeTranslationFacetLine(report), /Glossary unmeasured/);
 });

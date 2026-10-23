@@ -1002,13 +1002,30 @@ export function composeTranslationFacetLine(report) {
     (l) => l && l.visible !== false,
   ).length;
   const rawKeys = sweep.visibleLeaks + finalLeaks;
+  const terms = report.translation_terminology;
+  const glossary =
+    Number.isInteger(terms?.checked) &&
+    terms.checked > 0 &&
+    Number.isInteger(terms?.passed) &&
+    terms.passed >= 0 &&
+    terms.passed <= terms.checked
+      ? `Glossary ${terms.passed}/${terms.checked} label anchors; lexical only. `
+      : "Glossary unmeasured. ";
+  const quantities = report.translation_quantities;
+  const figures =
+    Number.isInteger(quantities?.checked) &&
+    quantities.checked > 0 &&
+    Number.isInteger(quantities?.passed) &&
+    quantities.passed >= 0 &&
+    quantities.passed <= quantities.checked
+      ? `Figures ${quantities.passed}/${quantities.checked} preserved. `
+      : "Figures unmeasured. ";
   return (
     `RUNTIME, ${sweep.locales} locales x ${sweep.phases} re-entry: ` +
     `${rawKeys} raw keys/${sweep.passes + 1} reads; ` +
-    `${sweep.matched}/${sweep.judged} JS surfaces + ` +
-    `${sweep.domMatched}/${sweep.domJudged} DOM text/attribute fields match locale dictionaries. ` +
-    `scripts/check-i18n.mjs enforces parity/placeholders. Not done: back-reading translated strings for ` +
-    `meaning (native judgement).`
+    `JS ${sweep.matched}/${sweep.judged}; DOM ${sweep.domMatched}/${sweep.domJudged} match dictionaries. ` +
+    `Parity/placeholders: scripts/check-i18n.mjs. ${glossary}${figures}` +
+    `Not done: meaning/naturalness (native judgement).`
   );
 }
 
