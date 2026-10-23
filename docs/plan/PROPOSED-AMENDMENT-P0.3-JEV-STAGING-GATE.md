@@ -2,6 +2,9 @@
 
 **Status:** Draft for review. Not approved or adopted.
 
+**Amends:** P0.3 (Jev gate to spec, bullet (c): the pass predicate) -- the plan
+item this proposal would change, and the item its filename names.
+
 This is a proposal only. It does not amend `MASTER_PLAN.md`, append to the approved amendment chain, or change any gate code or CI threshold. Explicit owner approval is required before implementation.
 
 ## What changed in this revision
