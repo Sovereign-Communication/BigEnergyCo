@@ -25,6 +25,7 @@ import {
   LOCALE_PHASES,
   LOCALE_SURFACES,
   composeExperienceFacetLine,
+  composeI18nFacetLine,
   composeTranslationFacetLine,
   evaluateExperience,
   judgeLocaleSweep,
@@ -33,6 +34,7 @@ import {
 import {
   LOCALE_KEYS,
   hasNextStep,
+  readLocalePass,
   withNextStep,
 } from "../scripts/smoke/experience.mjs";
 import { COMPLETE_FACET_CLIP } from "../scripts/lib/jev-complete.mjs";
@@ -97,6 +99,7 @@ function goodLocalePass(locale, phase) {
     beco_lang: locale,
     picker: locale,
     ready: true,
+    i18n_snapshot: i18nSnapshot(locale),
     surfaces: LOCALE_SURFACES.map((s) => ({
       id: s.id,
       key: s.key,
@@ -128,6 +131,13 @@ const HEALTHY = () => ({
     incomplete: 0,
   },
 });
+
+const i18nSnapshot = (locale) =>
+  [
+    ["text", LOCALE_SURFACES[0].key],
+    ["placeholder", "advisorPlaceholder"],
+    ["aria-label", "advisorTitle"],
+  ].map(([field, key]) => ({ field, key, value: LOCALES[locale][key] }));
 
 // ── the shape of the tables themselves ───────────────────────────────────────
 
@@ -189,7 +199,11 @@ test("TABLES: the facet has exactly one owner", () => {
   // must never happen is the same axis being claimed twice: the builder
   // overwrites per axis, so a second claimant deletes the first line rather than
   // adding a second.
-  assert.deepEqual(EXPERIENCE_FACET_AXES, ["experience", "translation"]);
+  assert.deepEqual(EXPERIENCE_FACET_AXES, [
+    "experience",
+    "i18n",
+    "translation",
+  ]);
   assert.equal(
     new Set(EXPERIENCE_FACET_AXES).size,
     EXPERIENCE_FACET_AXES.length,
@@ -296,6 +310,9 @@ test("HEALTHY: a clean walk produces no failures at all", () => {
   const v = evaluateExperience(HEALTHY());
   assert.deepEqual(v.regressions, [], "regressions on a clean reading");
   assert.deepEqual(v.holes, [], "holes on a clean reading");
+  const sweep = summariseLocaleSweep(HEALTHY());
+  assert.equal(sweep.domMatched, sweep.domJudged);
+  assert.equal(sweep.domJudged, 7 * 3 * 3);
   assert.ok(
     v.notes.length > 0,
     "a clean run must still report what it measured",
@@ -748,6 +765,115 @@ test("SWEEP: the healthy reading is clean", () => {
   assert.deepEqual(v.holes, [], JSON.stringify(v.holes, null, 1));
 });
 
+test("PROBE: readLocalePass captures every translated DOM field kind", async () => {
+  const snapshot = i18nSnapshot("de");
+  let calls = 0;
+  const pass = await readLocalePass(
+    {
+      async evaluate(source) {
+        calls += 1;
+        if (calls === 1) {
+          assert.match(
+            source,
+            /\[data-i18n\][\s\S]*data-i18n-placeholder[\s\S]*data-i18n-aria-label/,
+          );
+          return {
+            lang: "de",
+            dir: "ltr",
+            beco_lang: "de",
+            picker: "de",
+            surfaces: [],
+            i18n_snapshot: snapshot,
+          };
+        }
+        return [];
+      },
+    },
+    { locale: "de", phase: "boot", keys: [] },
+  );
+  assert.deepEqual(pass.i18n_snapshot, snapshot);
+  assert.equal(calls, 2);
+});
+
+test("MUTATION: stale DOM text and translated attributes are regressions", () => {
+  for (const [locale, phase, field] of [
+    ["de", "after_switch", "text"],
+    ["es", "after_rerun", "placeholder"],
+  ]) {
+    const reading = HEALTHY();
+    const row = reading.locales
+      .find((pass) => pass.locale === locale && pass.phase === phase)
+      .i18n_snapshot.find((item) => item.field === field);
+    assert.notEqual(LOCALES.en[row.key], LOCALES[locale][row.key]);
+    row.value = LOCALES.en[row.key];
+    assert.ok(
+      evaluateExperience(reading).regressions.some((failure) =>
+        failure.id.startsWith(`locale:${locale}:${phase}:dom:${field}:`),
+      ),
+    );
+  }
+});
+
+test("MUTATION: a missing DOM snapshot or hook is a hole", () => {
+  const missing = HEALTHY();
+  delete missing.locales.find((p) => p.locale === "pt" && p.phase === "boot")
+    .i18n_snapshot;
+  const missingVerdict = evaluateExperience(missing);
+  assert.ok(
+    missingVerdict.holes.some(
+      (hole) => hole.what === "locale:pt:boot:i18n_snapshot",
+    ),
+  );
+
+  const hook = HEALTHY();
+  hook.locales
+    .find((p) => p.locale === "fr" && p.phase === "after_switch")
+    .i18n_snapshot.pop();
+  const hookVerdict = evaluateExperience(hook);
+  assert.ok(
+    hookVerdict.holes.some(
+      (hole) => hole.what === "locale:fr:after_switch:i18n_structure",
+    ),
+    "a DOM snapshot missing one translated hook must not pass",
+  );
+});
+
+test("RUNTIME OVERRIDE: translated DOM values resolve the active dictionary key", () => {
+  const reading = HEALTHY();
+  for (const pass of reading.locales) {
+    const status = pass.i18n_snapshot.find((field) => field.field === "text");
+    status.key = "firstRunNote";
+    status.value = LOCALES[pass.locale].inputsChanged;
+  }
+
+  const verdict = evaluateExperience(reading);
+  const summary = summariseLocaleSweep(reading);
+  assert.deepEqual(verdict.regressions, []);
+  assert.deepEqual(verdict.holes, []);
+  assert.equal(summary.domMatched, summary.domJudged);
+  assert.ok(
+    verdict.notes.some((note) => /runtime dictionary entries/.test(note)),
+    "the stale static hook should be reported as a dictionary override",
+  );
+});
+
+test("RUNTIME OVERRIDE: English copy outside the dictionary is a hole", () => {
+  const reading = HEALTHY();
+  const status = reading.locales
+    .find((pass) => pass.locale === "en" && pass.phase === "after_rerun")
+    .i18n_snapshot.find((field) => field.field === "text");
+  status.key = "firstRunNote";
+  status.value = "Unmapped status copy";
+
+  const verdict = evaluateExperience(reading);
+  assert.ok(
+    verdict.holes.some((hole) =>
+      hole.what.startsWith("locale:en:after_rerun:dom:text:"),
+    ),
+    "an unknown runtime value must not be trusted as localized evidence",
+  );
+});
+
 test("SWEEP: the tables cover every shipped locale at every moment", () => {
   assert.equal(EXPERIENCE_LOCALES.length, 7);
   assert.deepEqual(EXPERIENCE_LOCALES, Object.keys(LOCALES));
@@ -1045,11 +1171,14 @@ test("SCOPE: the scope limit no longer claims copy is checked in English only", 
   );
   // …and it must still say what the sweep does NOT cover, or the new sentence
   // reads as a licence to stop measuring.
-  assert.match(EXPERIENCE_SCOPE_LIMIT, /NOT walked/);
   assert.match(EXPERIENCE_SCOPE_LIMIT, /not the prose/);
+  assert.match(
+    EXPERIENCE_SCOPE_LIMIT,
+    /data-i18n text, placeholder and aria-label/,
+  );
 });
 
-test("FACETS: one gate speaking for two axes emits a DIFFERENT line for each", () => {
+test("FACETS: one gate emits a distinct line for each axis", () => {
   // The builder applies a single string to every axis in facet_axes. Reusing
   // the journey line as the translation line would file a first-run walk under
   // a heading that never mentions a locale, so `facet_lines` is the mechanism
@@ -1096,6 +1225,20 @@ test("FACETS: the translation line refuses to compose from an unwalked run", () 
   }
 });
 
+test("FACETS: i18n line is composed from rendered DOM field matches", () => {
+  const reading = HEALTHY();
+  const report = { experience_reading: reading };
+  const summary = summariseLocaleSweep(reading);
+  const line = composeI18nFacetLine(report);
+  assert.ok(
+    line.includes(`${summary.domMatched}/${summary.domJudged}`) &&
+      line.includes("text/placeholder/aria fields") &&
+      line.length <= COMPLETE_FACET_CLIP,
+  );
+  for (const pass of reading.locales) delete pass.i18n_snapshot;
+  assert.equal(composeI18nFacetLine(report), null);
+});
+
 test("FACETS: the translation line counts the locales and moments it swept", () => {
   const tra = composeTranslationFacetLine({ experience_reading: HEALTHY() });
   const s = summariseLocaleSweep(HEALTHY());
@@ -1104,7 +1247,14 @@ test("FACETS: the translation line counts the locales and moments it swept", () 
     "the denominator must be the evaluator's, not a number typed beside it",
   );
   assert.match(tra, new RegExp(`${s.locales} locales`));
-  assert.match(tra, new RegExp(`${s.phases} re-entry points`));
+  assert.match(tra, new RegExp(`${s.phases} re-entry`));
+  assert.ok(
+    tra.includes(`${s.domMatched}/${s.domJudged} DOM text/attribute fields`),
+  );
+  assert.ok(
+    tra.length <= COMPLETE_FACET_CLIP,
+    "the translated line must fit its transport clip",
+  );
   // …and it must NOT claim a locale it did not walk, which is the whole reason
   // the count comes from the sweep rather than from the constant six.
   const oneLocale = HEALTHY();
