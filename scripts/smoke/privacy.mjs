@@ -18,6 +18,7 @@
 // privacy measurement that echoes a visitor's inputs into CI logs is its own
 // incident.
 import { sleep } from "./runtime.mjs";
+import { COORD_DECIMALS } from "../../assets/js/shared/coords.js";
 
 /** Origins we ignore: they carry nothing off the machine by definition. */
 const isOwnNoise = (url, origin) =>
@@ -51,8 +52,41 @@ const originOf = (url) => {
 const IDENTIFIER =
   /[?&#](email|e_mail|mail|phone|tel|mobile|user|userid|user_id|uid|token|access_token|auth|session|sid|jwt|password|passwd)=|\/(users?|accounts?|profiles?)\/|\b(Bearer|Basic)\s+[A-Za-z0-9._-]{8,}/i;
 
-/** A coordinate is only allowed to leave the device at the rounding we ship. */
-const COORD = /lat(?:itude)?[=:]?(-?\d{1,3}(?:\.\d+)?)/gi;
+/**
+ * A coordinate parameter and its value, in any of the spellings this project
+ * has used. Both axes: the first version matched `lat(?:itude)?` only, so a
+ * four-decimal LONGITUDE beside a correctly rounded latitude was invisible to
+ * the precision check. `[?&]` anchors it to a real query parameter so a
+ * `translate=` or `flat=` cannot be read as a coordinate.
+ */
+const COORD = /[?&](?:latitude|longitude|lat|lon|lng)=(-?\d{1,3}(?:\.\d+)?)/gi;
+
+/**
+ * Every third-party URL that carried a coordinate with more decimal places
+ * than the product ships, as `"<value> in <url>"`.
+ *
+ * Precision is the measure, not magnitude. The first version of this compared
+ * `Math.abs(value) > 0.01 * 100` — that is 1, not one hundredth of a degree —
+ * so it flagged every correct request outside ±1° of the equator ("51.51" is
+ * two decimal places, which is exactly what ships) and stayed silent for a
+ * metre-accurate fix in Ecuador, Kenya or Indonesia, where the value after
+ * rounding is below 1. The gate's own `check-privacy-browser.mjs` regular
+ * expression already counts decimals (`\.\d{3,}`); this now counts them against
+ * the same constant the browser rounds with, so the two cannot disagree.
+ */
+export function coordinateFindingsFor(urls) {
+  const findings = [];
+  for (const u of urls) {
+    for (const m of String(u).matchAll(COORD)) {
+      const decimals = (m[1].split(".")[1] || "").length;
+      if (decimals > COORD_DECIMALS) {
+        findings.push(`${m[1]} in ${u}`);
+        break;
+      }
+    }
+  }
+  return findings;
+}
 
 export async function runPrivacyFlow(b, base) {
   const origin = new URL(base).origin;
@@ -161,16 +195,7 @@ export async function runPrivacyFlow(b, base) {
   // Any coordinate on the wire, at whatever precision it was sent. 0.01 deg is
   // ~1.1 km; a visitor's exact position is not what this product needs to size a
   // roof, so anything finer than the rounding we ship is a finding.
-  const coordinateFindings = [];
-  for (const u of thirdPartyUrls) {
-    for (const m of u.matchAll(COORD)) {
-      const value = Number(m[1]);
-      if (Number.isFinite(value) && Math.abs(value) > 0.01 * 100) {
-        coordinateFindings.push(`${m[1]} in ${u}`);
-        break;
-      }
-    }
-  }
+  const coordinateFindings = coordinateFindingsFor(thirdPartyUrls);
 
   return {
     cookieCount: stored.length,
