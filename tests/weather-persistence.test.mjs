@@ -45,6 +45,12 @@ function fakeNetwork(stale = false) {
 
 function makeIdbMock({ storelessUpgrade = false } = {}) {
   const store = new Map();
+  // Every connection the code under test opens and closes. A compact write that
+  // never closes leaks one open connection per cold fetch, and a browser
+  // eventually refuses the next upgrade — so opens-minus-closes is the leak's
+  // only witness, and `idbOpen()` opens a fresh request every call.
+  let opens = 0;
+  let closes = 0;
   const api = {
     open(_name, version = 1) {
       const req = { result: null, error: null };
@@ -63,7 +69,14 @@ function makeIdbMock({ storelessUpgrade = false } = {}) {
             if (!store.has(n)) store.set(n, new Map());
           },
           transaction(name, _mode) {
-            const tx = { complete: Promise.resolve() };
+            // A real IDBTransaction is not a request and has no `complete`
+            // property: it reports completion through `oncomplete`. This double
+            // used to expose `complete: Promise.resolve()`, which agreed with a
+            // production bug that awaited it with idbReq and therefore never
+            // settled — the write path's close() never ran in a browser and
+            // could not fail here either. The double must be as strict as the
+            // platform, or it certifies the bug.
+            const tx = {};
             tx.objectStore = () => ({
               get: (k) => {
                 const r = { result: store.get(name)?.get(k) ?? undefined };
@@ -73,17 +86,22 @@ function makeIdbMock({ storelessUpgrade = false } = {}) {
               put: (v, k) => {
                 if (!store.has(name)) store.set(name, new Map());
                 store.get(name).set(k, structuredClone(v));
+                queueMicrotask(() => tx.oncomplete?.());
                 return {};
               },
               delete: (k) => {
                 store.get(name)?.delete(k);
+                queueMicrotask(() => tx.oncomplete?.());
                 return {};
               },
             });
             return tx;
           },
-          close() {},
+          close() {
+            closes += 1;
+          },
         };
+        opens += 1;
         req.result = db;
         if (version >= 2) req.onupgradeneeded?.({ target: req });
         queueMicrotask(() => req.onsuccess?.());
@@ -91,7 +109,7 @@ function makeIdbMock({ storelessUpgrade = false } = {}) {
       return req;
     },
   };
-  return { api, store };
+  return { api, store, opens: () => opens, closes: () => closes };
 }
 
 function makeCachesMock({ withEntry = null } = {}) {
@@ -197,6 +215,39 @@ test("MUTATION TOOTH: an upgrade that creates no store persists nothing", async 
   );
 });
 
+// The compact-cache writers awaited the transaction as if it were a request.
+// `IDBTransaction` never fires `onsuccess`, so in a browser that promise stayed
+// pending forever: the record was written, but the `db.close()` after the await
+// never ran and every cold fetch leaked one open connection. The old double hid
+// it by exposing `complete: Promise.resolve()`, which idbReq waits on just as
+// fruitlessly. These three tests count connections, so the leak cannot return.
+
+/** Let the fire-and-forget compact write/delete settle before counting. */
+const settleWrites = () => new Promise((r) => setTimeout(r, 20));
+
+test("a compact write closes the connection it opened", async () => {
+  const idb = makeIdbMock();
+  await runFetch({ idb: idb.api, network: fakeNetwork() });
+  await settleWrites();
+  assert.ok(idb.opens() > 0, "the write path must actually open a connection");
+  assert.equal(
+    idb.closes(),
+    idb.opens(),
+    "every opened connection must be closed, or the browser leaks one per fetch",
+  );
+});
+
+test("a storeless database is closed, not abandoned on the early return", async () => {
+  const idb = makeIdbMock({ storelessUpgrade: true });
+  await runFetch({ idb: idb.api, network: fakeNetwork() });
+  await settleWrites();
+  assert.equal(
+    idb.closes(),
+    idb.opens(),
+    "the `store is missing\u2019 return must still close the connection it opened",
+  );
+});
+
 test("IDB hit older than the current NASA year window refetches fresh data", async () => {
   const idb = makeIdbMock();
   const stale = weatherRecord({
@@ -224,6 +275,12 @@ test("IDB hit older than the current NASA year window refetches fresh data", asy
     out.meta.endYear,
     yearWindow().endYear,
     "the restored series must carry the CURRENT year window",
+  );
+  await settleWrites();
+  assert.equal(
+    idb.closes(),
+    idb.opens(),
+    "the stale-window delete must close its connection too",
   );
 });
 
