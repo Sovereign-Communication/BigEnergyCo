@@ -1088,14 +1088,20 @@ export function scoreCompleteGate(
   // its confidence, the required confidence, and the threshold missed.
   // This lands before any logic changes so the failure is visible.
   const notProvenDetail = Object.entries(facets)
-    .filter(([, f]) => f.index < COMPLETE_EXIT_FACET_INDEX)
+    .filter(
+      ([, f]) =>
+        f.index < COMPLETE_EXIT_FACET_INDEX ||
+        !(
+          typeof f.confidence === "number" &&
+          f.confidence >= COMPLETE_MIN_CONFIDENCE
+        ),
+    )
     .map(([axis, f]) => ({
       facet: axis,
       ordinal_got: f.ordinal,
       ordinal_need: 100,
       ordinal_met: f.ordinal >= 100,
-      confidence_got:
-        typeof f.confidence === "number" ? f.confidence : null,
+      confidence_got: typeof f.confidence === "number" ? f.confidence : null,
       confidence_need: COMPLETE_MIN_CONFIDENCE,
       confidence_met:
         typeof f.confidence === "number" &&
