@@ -14,6 +14,7 @@ import {
 } from "../scripts/lib/gates.mjs";
 import { withMutationLock } from "../scripts/lib/mutation-lock.mjs";
 import { normalizeBase } from "../scripts/lib/base-url.mjs";
+import { rejectPending } from "../scripts/smoke/runtime.mjs";
 
 // ── normalizeBase (browser smoke) ───────────────────────────────────────────
 
@@ -203,6 +204,73 @@ test("SCRIPTS: the hardened helpers are the ones actually used", () => {
     smoke,
     /pathname\.replace\(/,
     "base-URL handling stays in normalizeBase",
+  );
+});
+
+// ── the CDP wire settles at teardown ───────────────────────────────
+//
+// The runtime used to leave in-flight `send()` promises pending when the run
+// closed. Each one waited its full 30s and only then rejected, long after the
+// caller had moved on, which Node reports as an unhandled rejection: the smoke
+// process died with a bare stack instead of naming the stage it was on.
+
+test("CDP WIRE: teardown rejects every in-flight request exactly once", async () => {
+  const pending = new Map();
+  const settled = [];
+  const cleared = [];
+  const realSetTimeout = globalThis.setTimeout;
+  const realClearTimeout = globalThis.clearTimeout;
+  // Fake timers, so clearing is observable rather than assumed: an uncleared
+  // 30s timer is what kept the smoke process alive after it had finished.
+  globalThis.setTimeout = (fn, ms) => ({ fn, ms });
+  globalThis.clearTimeout = (t) => {
+    cleared.push(t);
+  };
+  try {
+    for (const id of [1, 2, 3]) {
+      pending.set(id, {
+        res() {},
+        rej: (e) => settled.push([id, e.message]),
+        timer: { id },
+      });
+    }
+    const n = rejectPending(pending, new Error("smoke run is closing"));
+    assert.equal(n, 3, "every pending request is settled");
+    assert.equal(pending.size, 0, "and none is left to time out later");
+    assert.deepEqual(
+      settled.map((s) => s[1]),
+      ["smoke run is closing", "smoke run is closing", "smoke run is closing"],
+      "each one is rejected with the teardown reason",
+    );
+    assert.equal(cleared.length, 3, "each timer is cleared, not left armed");
+    assert.equal(
+      rejectPending(pending, "again"),
+      0,
+      "a second close is a no-op rather than a second rejection",
+    );
+  } finally {
+    globalThis.setTimeout = realSetTimeout;
+    globalThis.clearTimeout = realClearTimeout;
+  }
+});
+
+test("CDP WIRE: close() and a dropped socket both drain the wire", () => {
+  const src = readFileSync("scripts/smoke/runtime.mjs", "utf8");
+  assert.match(
+    src,
+    /ws\.onclose = \(\) => \{\s*rejectPending\(pending,/,
+    "a socket that closes mid-run must settle what is in flight",
+  );
+  const closeFn = src.slice(src.indexOf("const close = async"));
+  assert.match(
+    closeFn,
+    /rejectPending\(pending,[^)]*\)[\s\S]{0,200}ws\?\.close\(\)/,
+    "close() must drain BEFORE the socket goes away, not after",
+  );
+  assert.match(
+    src,
+    /clearTimeout\(timer\)/,
+    "a settled request must not leave its 30s timer armed",
   );
 });
 

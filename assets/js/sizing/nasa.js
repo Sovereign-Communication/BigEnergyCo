@@ -16,7 +16,7 @@ const POWER_HOURLY_URL =
   "https://power.larc.nasa.gov/api/temporal/hourly/point";
 
 // One owner of the coordinate precision, shared with every other egress.
-import { roundCoords } from "../shared/coords.js?v=20261023e";
+import { roundCoords } from "../shared/coords.js?v=20261023k";
 
 // A satellite request that hangs must never hold the sizing hostage: after
 // this long with no answer, abort and let the caller fall back to bundled
@@ -189,6 +189,22 @@ function idbReq(request) {
   });
 }
 
+// A transaction is NOT a request. `IDBTransaction` has no `complete` property and
+// never fires `onsuccess`; it reports completion through `oncomplete` (and
+// `onerror` / `onabort`). The compact-cache writers used to await it with
+// `idbReq`, so the promise never settled in a browser: the write still landed
+// (put is queued synchronously) but `db.close()` after the await never ran, and
+// every cold fetch leaked one open connection. The tests could not see it
+// because the IndexedDB double exposed `complete: Promise.resolve()`, which
+// `idbReq` treats exactly the same way — a promise it waits on forever.
+function txDone(tx) {
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error("transaction failed"));
+    tx.onabort = () => reject(tx.error || new Error("transaction aborted"));
+  });
+}
+
 async function idbGet(key) {
   const openReq = idbOpen();
   if (!openReq) return null;
@@ -200,7 +216,6 @@ async function idbGet(key) {
     if (!db.objectStoreNames.contains(IDB_STORE)) return null;
     const tx = db.transaction(IDB_STORE, "readonly");
     const rec = await idbReq(tx.objectStore(IDB_STORE).get(key));
-    db.close();
     if (
       !rec ||
       !(rec.ghi instanceof Float32Array) ||
@@ -215,10 +230,13 @@ async function idbGet(key) {
     }
     return { hours, meta: rec.meta };
   } catch {
+    return null;
+  } finally {
+    // One close for every exit, including the early return above: leaving it on
+    // the happy path leaked a connection on every storeless or malformed read.
     try {
       db.close();
     } catch {}
-    return null;
   }
 }
 
@@ -243,9 +261,10 @@ async function idbPut(key, data) {
     const meta = { ...data.meta, fromCache: true };
     const tx = db.transaction(IDB_STORE, "readwrite");
     tx.objectStore(IDB_STORE).put({ ghi, tAmb, meta }, key);
-    await idbReq(tx.complete !== undefined ? tx.complete : tx);
-    db.close();
+    await txDone(tx);
   } catch {
+    /* the compact layer is best-effort; the caller already has its data */
+  } finally {
     try {
       db.close();
     } catch {}
@@ -255,19 +274,23 @@ async function idbPut(key, data) {
 async function idbDelete(key) {
   const openReq = idbOpen();
   if (!openReq) return;
+  // Declared outside the try so the finally below can close it: a `const` scoped
+  // to the try is not visible there, and the close would silently not happen.
+  let db = null;
   try {
-    const db = await new Promise((resolve, reject) => {
+    db = await new Promise((resolve, reject) => {
       openReq.onsuccess = () => resolve(openReq.result);
       openReq.onerror = () => reject(openReq.error);
     });
     if (!db.objectStoreNames.contains(IDB_STORE)) return;
     const tx = db.transaction(IDB_STORE, "readwrite");
     tx.objectStore(IDB_STORE).delete(key);
-    await idbReq(tx.complete !== undefined ? tx.complete : tx);
-    db.close();
+    await txDone(tx);
   } catch {
+    /* best-effort: a failed delete only costs one refetch at New Year */
+  } finally {
     try {
-      db.close();
+      db?.close();
     } catch {}
   }
 }

@@ -17,7 +17,6 @@
 //
 // Zero dependencies: drives the installed Chrome/Edge over CDP, like every
 // other flow in scripts/smoke/.
-import { spawn } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
@@ -27,6 +26,7 @@ import {
 } from "node:fs";
 import { join, resolve } from "node:path";
 
+import { runChild } from "./lib/run-child.mjs";
 import { ROOT, serveStatic } from "./serve-static.mjs";
 import { start } from "./smoke/runtime.mjs";
 import { runPrivacyFlow } from "./smoke/privacy.mjs";
@@ -49,12 +49,7 @@ const fail = (m) => {
   console.error(`FAIL ${m}`);
 };
 
-function run(cmd, args) {
-  return new Promise((done) => {
-    const child = spawn(cmd, args, { cwd: ROOT, stdio: "inherit" });
-    child.on("exit", (code) => done(code ?? 1));
-  });
-}
+const run = (cmd, args) => runChild(cmd, args, { cwd: ROOT, stdio: "inherit" });
 
 const staged = await run(process.execPath, [
   join(ROOT, "scripts", "deploy-pages-local.mjs"),

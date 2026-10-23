@@ -9,21 +9,17 @@
 // Usage:
 //   npm run smoke:local                  # build + serve + smoke, exit 0/1
 //   node scripts/smoke-local.mjs --keep  # leave _pages_smoke/ behind
-import { spawn } from "node:child_process";
 import { existsSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { runChild } from "./lib/run-child.mjs";
 import { ROOT, serveStatic } from "./serve-static.mjs";
 
 const KEEP = process.argv.includes("--keep");
 const STAGE = join(ROOT, "_pages_smoke");
 const SMOKE = join(ROOT, "scripts", "browser-smoke.mjs");
 
-function run(cmd, args, opts = {}) {
-  return new Promise((ok) => {
-    const child = spawn(cmd, args, { cwd: ROOT, stdio: "inherit", ...opts });
-    child.on("exit", (code) => ok(code ?? 1));
-  });
-}
+const run = (cmd, args, opts = {}) =>
+  runChild(cmd, args, { cwd: ROOT, stdio: "inherit", ...opts });
 
 const stageCode = await run(process.execPath, [
   join(ROOT, "scripts", "deploy-pages-local.mjs"),

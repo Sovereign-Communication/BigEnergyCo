@@ -20,8 +20,8 @@ import {
   CHEMISTRIES,
   evaluateOversizeOptimization,
   billCutFraction,
-} from "./engine.js?v=20261023e";
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261023e";
+} from "./engine.js?v=20261023k";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261023k";
 
 // Points below this coverage are real but not decision-useful; plotting them
 // squashes the interesting part of the curve into the top corner.
@@ -217,7 +217,17 @@ export function sweepSystems({
  * rides along on each surviving point for the cards to use.
  */
 export function paretoFront(points) {
-  const sorted = [...points].sort(
+  // Only a point with a known cost AND a known outcome can sit on a
+  // cost-vs-benefit frontier. A null, a missing field or a NaN from a failed
+  // simulation used to throw (`[...points]` on undefined, `.capexUsd` on null)
+  // or sort unplaceable points among priced ones. Dropping them is honest: an
+  // unknown price is not a cheap price.
+  const usable = Array.isArray(points)
+    ? points.filter(
+        (p) => p && Number.isFinite(p.capexUsd) && Number.isFinite(p.outcome),
+      )
+    : [];
+  const sorted = [...usable].sort(
     (a, b) => a.capexUsd - b.capexUsd || b.outcome - a.outcome,
   );
   const front = [];

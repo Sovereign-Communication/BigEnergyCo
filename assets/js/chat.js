@@ -345,6 +345,13 @@ function renderBotReply(replyText, degraded, data) {
   chatHistory.push({ role: "bot", content: body.textContent });
 }
 
+// One request in flight at a time. Two concurrent sends used to share the
+// single #loadingMsg node, so the first reply removed the second's spinner and
+// the answers could land out of order or two-at-once. The guard sits BEFORE
+// the input is read and cleared: a message typed while a reply is pending stays
+// in the box for the next send instead of being swallowed.
+var chatSendBusy = false;
+
 function sendChatMsg() {
   var chatInput = document.getElementById("chatInput");
 
@@ -352,9 +359,13 @@ function sendChatMsg() {
 
   if (!chatInput || !chatWindow) return;
 
+  if (chatSendBusy) return;
+
   var userMsg = chatInput.value.trim();
 
   if (!userMsg) return;
+
+  chatSendBusy = true;
 
   var userDiv = document.createElement("div");
 
@@ -532,6 +543,8 @@ function sendChatMsg() {
 
   attemptSend(2)
     .then(function (data) {
+      chatSendBusy = false;
+
       var loading = document.getElementById("loadingMsg");
 
       if (loading && loading.parentNode)
@@ -557,6 +570,8 @@ function sendChatMsg() {
     })
 
     .catch(function (err) {
+      chatSendBusy = false;
+
       // Log the status only: the error object can carry user message text.
       console.error("Chat API error:", err && err.status);
 

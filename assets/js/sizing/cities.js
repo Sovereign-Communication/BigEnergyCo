@@ -2,9 +2,9 @@
 // offline; country partitions provide millions of additional place/coordinate
 // pairs and are lazy-loaded on demand — only the countries a query or a GPS
 // fix names are ever fetched, never the whole world at once.
-import { usStateCode, US_STATES } from "./pricing.js?v=20261023e";
+import { usStateCode, US_STATES } from "./pricing.js?v=20261023k";
 // One owner of the coordinate precision, shared with the weather egress.
-import { roundCoords } from "../shared/coords.js?v=20261023e";
+import { roundCoords } from "../shared/coords.js?v=20261023k";
 
 export const CITY_CATALOG = [
   ["Honolulu", "United States", "Hawaii", 21.31, -157.86],
@@ -174,6 +174,22 @@ export function mergeCities(base, extra) {
     }),
   );
 }
+/**
+ * The value of a coordinate cell, or NaN when the cell carries none.
+ *
+ * `Number("")`, `Number(" ")` and `Number(null)` are all 0, and 0,0 is a finite,
+ * in-range coordinate — so a partition row with a blank lat used to arrive as a
+ * perfectly plausible place in the Gulf of Guinea and pass the range check
+ * below. The result was a city whose weather, tariff and sun path all described
+ * coordinates nobody chose. Blank and absent cells are marked NaN here and the
+ * caller's `Number(...)` turns that into a value it rejects; a genuine 0
+ * survives, because the equator and the prime meridian are real places.
+ */
+function coordCell(value) {
+  if (typeof value === "string") return value.trim() || NaN;
+  return value === null || value === undefined ? NaN : value;
+}
+
 export function parseCityRows(rows) {
   return (Array.isArray(rows) ? rows : [])
     .map((row) => ({
@@ -186,8 +202,8 @@ export function parseCityRows(rows) {
         row.country ||
         row.countryName ||
         "Worldwide",
-      lat: Number(row.lat ?? row.latitude),
-      lon: Number(row.lon ?? row.lng ?? row.longitude),
+      lat: Number(coordCell(row.lat ?? row.latitude)),
+      lon: Number(coordCell(row.lon ?? row.lng ?? row.longitude)),
       population: Number(row.population || 0),
     }))
     .filter(
@@ -279,6 +295,21 @@ export async function lookupCityOnline(query, fetchImpl) {
     if (!response.ok) return null;
     const row = (await response.json())?.[0];
     if (!row) return null;
+    // A geocoder that names a place but cannot locate it must not resolve. The
+    // picker writes these straight into the coordinate boxes and persists them
+    // in the wizard, and a blank keeps `Number("")` at 0,0 while an absent one
+    // is NaN — one sizes a system for the Gulf of Guinea, the other shows
+    // "NaN" boxes and a location the run then refuses. Same bounds the offline
+    // partition check applies, so both sources agree on what a coordinate is.
+    const lat = Number(coordCell(row.lat));
+    const lon = Number(coordCell(row.lon));
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lon) ||
+      Math.abs(lat) > 90 ||
+      Math.abs(lon) > 180
+    )
+      return null;
     return {
       name: row.name || row.display_name.split(",")[0],
       country:
@@ -288,8 +319,8 @@ export async function lookupCityOnline(query, fetchImpl) {
         row.address?.region ||
         row.address?.country ||
         "Worldwide",
-      lat: Number(row.lat),
-      lon: Number(row.lon),
+      lat,
+      lon,
     };
   } catch {
     return null;
@@ -452,7 +483,7 @@ export async function loadCountryCities(
       : null;
     try {
       const response = await fetchImpl(
-        `./assets/js/sizing/city-data/${cc}.json?v=20261023e`,
+        `./assets/js/sizing/city-data/${cc}.json?v=20261023k`,
         { cache: "force-cache", ...(ctrl ? { signal: ctrl.signal } : {}) },
       );
       if (!response.ok) return [];

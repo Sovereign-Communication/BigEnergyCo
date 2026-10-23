@@ -25,6 +25,25 @@ const EDGE_PATHS = [
   "/usr/bin/microsoft-edge",
 ];
 
+/**
+ * Reject every in-flight CDP request with one reason and stop its timer.
+ *
+ * Exported because it is the whole teardown guarantee and it is testable
+ * without a browser: after a close, no `send()` may still be waiting for a
+ * frame that will never arrive, and no 30s timer may outlive the run.
+ */
+export function rejectPending(pending, reason) {
+  const err = reason instanceof Error ? reason : new Error(String(reason));
+  let settled = 0;
+  for (const [id, entry] of [...pending.entries()]) {
+    pending.delete(id);
+    clearTimeout(entry.timer);
+    settled += 1;
+    entry.rej(err);
+  }
+  return settled;
+}
+
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const isCsp = (e) =>
   /Content Security Policy|Refused to (connect|load)|violates .* directive/i.test(
@@ -146,6 +165,12 @@ export async function start() {
   const requests = [];
   let ws = null;
   let send, evaluate;
+  // In-flight CDP requests, hoisted out of the connect block so `close()` can
+  // settle them. Leaving them pending was the bug this exists to prevent: after
+  // teardown each one sat for its full 30s and then rejected with nobody left
+  // awaiting it, which Node reports as an unhandled rejection — a run that
+  // failed with a bare stack instead of the stage it was on.
+  const pending = new Map();
   const poll = async (fn, timeoutMs, stepMs = 2000) => {
     const start = Date.now();
     for (;;) {
@@ -179,7 +204,9 @@ export async function start() {
       ws.onerror = rej;
     });
     let nextId = 1;
-    const pending = new Map();
+    ws.onclose = () => {
+      rejectPending(pending, new Error("CDP socket closed"));
+    };
     ws.onmessage = (ev) => {
       let msg;
       try {
@@ -188,8 +215,9 @@ export async function start() {
         return;
       }
       if (msg.id && pending.has(msg.id)) {
-        const { res, rej } = pending.get(msg.id);
+        const { res, rej, timer } = pending.get(msg.id);
         pending.delete(msg.id);
+        clearTimeout(timer);
         if (msg.error) rej(new Error(JSON.stringify(msg.error)));
         else res(msg.result);
       } else if (msg.method === "Network.requestWillBeSent") {
@@ -228,18 +256,21 @@ export async function start() {
     send = (method, params = {}, sessionId = null) =>
       new Promise((res, rej) => {
         const id = nextId++;
-        pending.set(id, { res, rej });
-        // flatten-mode sessions (worker targets) carry a sessionId on every
-        // frame; null keeps plain page-session behavior.
-        const frame = { id, method, params };
-        if (sessionId) frame.sessionId = sessionId;
-        ws.send(JSON.stringify(frame));
-        setTimeout(() => {
+        // One timer per request, cleared when it settles: an uncleared 30s timer
+        // kept the smoke process alive after teardown even though every answer
+        // had arrived.
+        const timer = setTimeout(() => {
           if (pending.has(id)) {
             pending.delete(id);
             rej(new Error(`CDP timeout: ${method}`));
           }
         }, 30000);
+        pending.set(id, { res, rej, timer });
+        // flatten-mode sessions (worker targets) carry a sessionId on every
+        // frame; null keeps plain page-session behavior.
+        const frame = { id, method, params };
+        if (sessionId) frame.sessionId = sessionId;
+        ws.send(JSON.stringify(frame));
       });
     evaluate = async (expression) => {
       const r = await send("Runtime.evaluate", {
@@ -281,6 +312,10 @@ export async function start() {
   }
 
   const close = async () => {
+    // Settle anything still in flight BEFORE the socket goes away, so the
+    // awaiting caller sees "teardown" now rather than a 30s timeout later with
+    // no handler attached.
+    rejectPending(pending, new Error("smoke run is closing"));
     try {
       ws?.close();
     } catch {
