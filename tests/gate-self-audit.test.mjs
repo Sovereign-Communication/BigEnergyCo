@@ -459,21 +459,25 @@ test("AUDIT/performance: the playtest clause names the SLOWER confirm wait", () 
   const clause = playtestClause(healthyPlay());
   assert.ok(clause.startsWith("PLAYTEST, 1 Chrome, 1 city:"), clause);
   assert.match(clause, /confirm/, "the confirm wait must be stated");
-  assert.match(clause, /median of 3/, "the sample size must travel with it");
-  assert.match(clause, /0 NASA warm\/reload/, "both warm paths in one claim");
+  assert.match(clause, /3 adjustments/, "the sample size must travel with it");
+  assert.match(
+    clause,
+    /NASA warm\/reload 0\/0/,
+    "both warm paths in one claim",
+  );
 });
 
 test("AUDIT/performance: the clause reports a NON-zero pull rather than hiding it", () => {
   const clause = playtestClause(
     healthyPlay({ warm_network: { total: 2, nasa: 2, urls: ["a", "b"] } }),
   );
-  assert.match(clause, /2 NASA on the warm path/);
+  assert.match(clause, /NASA warm\/reload 2\/0/);
   // The zero here belongs to the RELOAD half, which genuinely was zero, so the
   // assertion is that the warm half is not zero — not that the word "0" is
   // absent. The first draft asserted the latter and failed on a correct clause.
   assert.doesNotMatch(
     clause,
-    /0 NASA warm\/reload/,
+    /NASA warm\/reload 0\/0/,
     "the combined zero clause must not print when either warm path pulled",
   );
 });
@@ -689,12 +693,12 @@ test("AUDIT/composer: a playtest failure does not produce a clean-looking line",
   );
   const clause = playtestClause(play);
   assert.ok(
-    clause === null || /4 NASA/.test(clause),
+    clause === null || /NASA warm\/reload 4\/0/.test(clause),
     `the clause must report the four pulls, not read clean: ${clause}`,
   );
   assert.doesNotMatch(
     clause || "",
-    /0 NASA warm\/reload/,
+    /NASA warm\/reload 0\/0/,
     "a broken warm path must never print the combined zero clause",
   );
 });

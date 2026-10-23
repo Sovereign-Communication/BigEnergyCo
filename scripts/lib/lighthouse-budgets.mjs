@@ -491,9 +491,9 @@ export function composeFacetLine(report) {
   );
   if (warm) sentences.push(warm);
 
-  const perfClause = ["perf NOT ratcheted"];
-  if (perf) perfClause.push(`${perf} this run`);
-  if (envelope) perfClause.push(`${envelope} over ${calN} runs`);
+  const perfClause = ["perf not ratcheted"];
+  if (perf) perfClause.push(`${perf} run`);
+  if (envelope) perfClause.push(`calibration ${envelope}/${calN}`);
   if (report?.regressions?.length) perfClause.push("see regressions above");
 
   // ORDER IS PRIORITY, and the order is the argument.
@@ -505,9 +505,7 @@ export function composeFacetLine(report) {
   // The per-category ratcheted list is last because it is genuinely the most
   // redundant thing on the line — all three of those categories are written out
   // in full in the report, and on the line they are a summary.
-  sentences.push(
-    `Lighthouse, ${measured.length} target${measured.length === 1 ? "" : "s"}, median of 3`,
-  );
+  sentences.push(`Lighthouse ${measured.length} targets x3`);
   if (perf || envelope) sentences.push(perfClause.join(", "));
   if (ratcheted.length) sentences.push(`ratcheted ${ratcheted.join(", ")}`);
   if (report?.regressions?.length)
@@ -558,7 +556,7 @@ function fitFacetLine(sentences, meta = {}) {
     }
     // It did not fit whole. Try the one documented short form.
     if (SHORTENABLE.test(sentence) && meta.ratcheted) {
-      const short = `${meta.ratcheted} categories ratcheted (in report)`;
+      const short = `${meta.ratcheted} categories ratcheted`;
       const withShort = [...kept, short].join(". ") + ".";
       if (withShort.length <= COMPLETE_FACET_CLIP) {
         kept.push(short);
