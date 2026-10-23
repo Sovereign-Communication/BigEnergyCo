@@ -111,6 +111,22 @@ test("flatProfile totals the daily kWh", () => {
   assert.ok(Math.abs(sum - 10000) < EPS);
 });
 
+test("flatProfile rejects invalid daily kWh before producing a bad load", () => {
+  for (const value of [
+    undefined,
+    null,
+    "10",
+    Number.NaN,
+    Infinity,
+    -Infinity,
+  ]) {
+    assert.throws(() => flatProfile(value), TypeError);
+  }
+  assert.throws(() => flatProfile(-1), RangeError);
+  assert.throws(() => flatProfile(Number.MAX_VALUE), RangeError);
+  assert.deepEqual([...flatProfile(0)], Array(24).fill(0));
+});
+
 test("shapedProfile rejects bad shapes and honors weights", () => {
   assert.throws(() => shapedProfile(10, [1, 2, 3]));
   const raw = Array(24).fill(0.02);
