@@ -277,6 +277,61 @@
       href="https://nominatim.openstreetmap.org"
       crossorigin
     />
+    <style>
+      .text-accent {
+        color: var(--primary-accent);
+      }
+      .paragraph-spacing {
+        margin-bottom: 1rem;
+      }
+      .legal-card p.paragraph-spacing {
+        margin-bottom: 1rem;
+      }
+      .legal-section-heading {
+        color: #fff;
+        margin-bottom: 0.5rem;
+      }
+      .no-bottom-spacing {
+        margin-bottom: 0;
+      }
+      .form-group.no-bottom-spacing,
+      .form-group label.no-bottom-spacing {
+        margin-bottom: 0;
+      }
+      .preset-button {
+        padding: 0.3rem 0.65rem;
+        font-size: 0.78rem;
+      }
+      .offgrid-preset-button {
+        padding: 0.25rem 0.55rem;
+        font-size: 0.75rem;
+      }
+      .soc-zoom-button {
+        padding: 0.22rem 0.55rem;
+        font-size: 0.75rem;
+      }
+      .muted-small {
+        font-weight: 400;
+        font-size: 0.8em;
+        color: var(--text-muted);
+      }
+      .legal-trigger {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+        display: inline-block;
+      }
+      .range-control {
+        width: 100%;
+        margin-top: 0.4rem;
+        cursor: pointer;
+      }
+      .result-caption {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+        line-height: 1.55;
+      }
+    </style>
   </head>
 
   <body>
@@ -663,7 +718,7 @@
                 ></div>
               </div>
 
-              <div class="form-group" style="margin-bottom: 0">
+              <div class="form-group no-bottom-spacing">
                 <div
                   style="
                     display: flex;
@@ -675,9 +730,9 @@
                   "
                 >
                   <label
+                    class="no-bottom-spacing"
                     for="citySearch"
                     data-i18n="cityLabel"
-                    style="margin-bottom: 0"
                     >Where is this system going?</label
                   >
                   <span
@@ -868,7 +923,7 @@
                       margin-top: 0.6rem;
                     "
                   >
-                    <div class="form-group" style="margin-bottom: 0">
+                    <div class="form-group no-bottom-spacing">
                       <label for="latInput">Latitude (&minus;90 to 90):</label>
 
                       <input
@@ -880,7 +935,7 @@
                       />
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 0">
+                    <div class="form-group no-bottom-spacing">
                       <label for="lonInput"
                         >Longitude (&minus;180 to 180):</label
                       >
@@ -921,10 +976,7 @@
                     ><span data-i18n="monthlyBillLabel"
                       >Your monthly electric bill</span
                     >
-                    <span
-                      id="billSliderCur"
-                      style="color: var(--primary-accent)"
-                    ></span
+                    <span class="text-accent" id="billSliderCur"></span
                     ><span class="muted-note" data-i18n="monthlyBillHint">
                       — rough is fine, it auto-adjusts to your location's
                       prices</span
@@ -943,13 +995,13 @@
                 </div>
 
                 <input
+                  class="range-control"
                   type="range"
                   id="billSlider"
                   min="1"
                   max="2000"
                   step="1"
                   value="100"
-                  style="width: 100%; margin-top: 0.4rem; cursor: pointer"
                 />
               </div>
 
@@ -1001,33 +1053,29 @@
                 >
                   <button
                     type="button"
-                    class="btn btn-outline btn-xs offgrid-preset-btn"
+                    class="btn btn-outline btn-xs offgrid-preset-btn offgrid-preset-button"
                     data-kwh="2.5"
-                    style="padding: 0.25rem 0.55rem; font-size: 0.75rem"
                   >
                     🚐 Camper Van (2.5 kWh/day)
                   </button>
                   <button
                     type="button"
-                    class="btn btn-outline btn-xs offgrid-preset-btn"
+                    class="btn btn-outline btn-xs offgrid-preset-btn offgrid-preset-button"
                     data-kwh="5"
-                    style="padding: 0.25rem 0.55rem; font-size: 0.75rem"
                   >
                     🏕️ Cabin (5 kWh/day)
                   </button>
                   <button
                     type="button"
-                    class="btn btn-outline btn-xs offgrid-preset-btn"
+                    class="btn btn-outline btn-xs offgrid-preset-btn offgrid-preset-button"
                     data-kwh="8"
-                    style="padding: 0.25rem 0.55rem; font-size: 0.75rem"
                   >
                     🔌 Critical Backup (8 kWh/day)
                   </button>
                   <button
                     type="button"
-                    class="btn btn-outline btn-xs offgrid-preset-btn"
+                    class="btn btn-outline btn-xs offgrid-preset-btn offgrid-preset-button"
                     data-kwh="15"
-                    style="padding: 0.25rem 0.55rem; font-size: 0.75rem"
                   >
                     🏡 Homestead (15 kWh/day)
                   </button>
@@ -1110,7 +1158,7 @@
                         margin-top: 0.7rem;
                       "
                     >
-                      <div class="form-group" style="margin-bottom: 0">
+                      <div class="form-group no-bottom-spacing">
                         <label for="genFuelType">Fuel:</label>
 
                         <select id="genFuelType" class="form-control">
@@ -1122,7 +1170,7 @@
                         </select>
                       </div>
 
-                      <div class="form-group" style="margin-bottom: 0">
+                      <div class="form-group no-bottom-spacing">
                         <label for="genFuelPrice">Price per liter ($):</label>
 
                         <input
@@ -1249,41 +1297,36 @@
                     >
                     <button
                       type="button"
-                      class="btn btn-outline btn-xs preset-btn"
+                      class="btn btn-outline btn-xs preset-btn preset-button"
                       data-preset="cabin"
-                      style="padding: 0.3rem 0.65rem; font-size: 0.78rem"
                     >
                       &#127957;&#65039; Weekend Cabin
                     </button>
                     <button
                       type="button"
-                      class="btn btn-outline btn-xs preset-btn"
+                      class="btn btn-outline btn-xs preset-btn preset-button"
                       data-preset="van"
-                      style="padding: 0.3rem 0.65rem; font-size: 0.78rem"
                     >
                       &#128656; Camper Van
                     </button>
                     <button
                       type="button"
-                      class="btn btn-outline btn-xs preset-btn"
+                      class="btn btn-outline btn-xs preset-btn preset-button"
                       data-preset="home"
-                      style="padding: 0.3rem 0.65rem; font-size: 0.78rem"
                     >
                       &#127969; Standard Home
                     </button>
                     <button
                       type="button"
-                      class="btn btn-outline btn-xs preset-btn"
+                      class="btn btn-outline btn-xs preset-btn preset-button"
                       data-preset="homestead"
-                      style="padding: 0.3rem 0.65rem; font-size: 0.78rem"
                     >
                       &#128668; Homestead
                     </button>
                     <button
                       type="button"
-                      class="btn btn-outline btn-xs preset-btn"
+                      class="btn btn-outline btn-xs preset-btn preset-button"
                       data-preset="backup"
-                      style="padding: 0.3rem 0.65rem; font-size: 0.78rem"
                     >
                       &#128268; Critical Backup
                     </button>
@@ -1741,7 +1784,7 @@
                   </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 0">
+                <div class="form-group no-bottom-spacing">
                   <label
                     for="chemSelect"
                     data-i18n="chemLabel"
@@ -2020,13 +2063,13 @@
                 </div>
 
                 <input
+                  class="range-control"
                   type="range"
                   id="cutSlider"
                   min="1"
                   max="150"
                   step="1"
                   value="80"
-                  style="width: 100%; margin-top: 0.4rem; cursor: pointer"
                 />
 
                 <p
@@ -2083,13 +2126,13 @@
                 </div>
 
                 <input
+                  class="range-control"
                   type="range"
                   id="budgetSlider"
                   min="0"
                   max="100"
                   step="1"
                   value="50"
-                  style="width: 100%; margin-top: 0.4rem; cursor: pointer"
                 />
 
                 <p
@@ -2373,8 +2416,7 @@
                       <button
                         type="button"
                         id="btnSocZoomReset"
-                        class="btn btn-outline btn-xs"
-                        style="padding: 0.22rem 0.55rem; font-size: 0.75rem"
+                        class="btn btn-outline btn-xs soc-zoom-button"
                         title="Full 5-year simulation"
                       >
                         Full 5-Yr
@@ -2382,8 +2424,7 @@
                       <button
                         type="button"
                         id="btnSocZoomWorst"
-                        class="btn btn-outline btn-xs"
-                        style="padding: 0.22rem 0.55rem; font-size: 0.75rem"
+                        class="btn btn-outline btn-xs soc-zoom-button"
                         title="Zoom into the worst 30-day streak"
                       >
                         Worst Month
@@ -2391,8 +2432,7 @@
                       <button
                         type="button"
                         id="btnSocZoomIn"
-                        class="btn btn-outline btn-xs"
-                        style="padding: 0.22rem 0.55rem; font-size: 0.75rem"
+                        class="btn btn-outline btn-xs soc-zoom-button"
                         title="Zoom In"
                         aria-label="Zoom chart in"
                       >
@@ -2401,8 +2441,7 @@
                       <button
                         type="button"
                         id="btnSocZoomOut"
-                        class="btn btn-outline btn-xs"
-                        style="padding: 0.22rem 0.55rem; font-size: 0.75rem"
+                        class="btn btn-outline btn-xs soc-zoom-button"
                         title="Zoom Out"
                         aria-label="Zoom chart out"
                       >
@@ -2429,15 +2468,7 @@
                     sizing.
                   </canvas>
 
-                  <p
-                    id="socCaption"
-                    style="
-                      font-size: 0.8rem;
-                      color: var(--text-muted);
-                      margin-top: 0.5rem;
-                      line-height: 1.55;
-                    "
-                  ></p>
+                  <p class="result-caption" id="socCaption"></p>
                 </div>
 
                 <div
@@ -2505,15 +2536,7 @@
                     "
                   ></div>
 
-                  <p
-                    id="cumCostCaption"
-                    style="
-                      font-size: 0.8rem;
-                      color: var(--text-muted);
-                      margin-top: 0.5rem;
-                      line-height: 1.55;
-                    "
-                  ></p>
+                  <p class="result-caption" id="cumCostCaption"></p>
                 </div>
 
                 <details
@@ -2684,12 +2707,7 @@
 
               <div class="bom-price">
                 ~$43.50 / cell
-                <span
-                  style="
-                    font-weight: 400;
-                    font-size: 0.8em;
-                    color: var(--text-muted);
-                  "
+                <span class="muted-small"
                   >(indicative ex-works China, Aug 2026)</span
                 >
               </div>
@@ -2707,12 +2725,7 @@
 
               <div class="bom-price">
                 ~$92.00 / unit
-                <span
-                  style="
-                    font-weight: 400;
-                    font-size: 0.8em;
-                    color: var(--text-muted);
-                  "
+                <span class="muted-small"
                   >(indicative ex-works China, Aug 2026)</span
                 >
               </div>
@@ -2731,14 +2744,7 @@
 
               <div class="bom-price">
                 ~$14.50 / unit
-                <span
-                  style="
-                    font-weight: 400;
-                    font-size: 0.8em;
-                    color: var(--text-muted);
-                  "
-                  >(indicative, Aug 2026)</span
-                >
+                <span class="muted-small">(indicative, Aug 2026)</span>
               </div>
             </div>
 
@@ -2755,14 +2761,7 @@
 
               <div class="bom-price">
                 ~$28.00 / rack
-                <span
-                  style="
-                    font-weight: 400;
-                    font-size: 0.8em;
-                    color: var(--text-muted);
-                  "
-                  >(indicative, Aug 2026)</span
-                >
+                <span class="muted-small">(indicative, Aug 2026)</span>
               </div>
             </div>
           </div>
@@ -2986,14 +2985,9 @@
 
               <div
                 id="btnLegalTerms1"
-                class="btn btn-outline"
+                class="btn btn-outline legal-trigger"
                 role="button"
                 tabindex="0"
-                style="
-                  font-size: 0.85rem;
-                  padding: 0.4rem 0.8rem;
-                  display: inline-block;
-                "
               >
                 Read full terms &rarr;
               </div>
@@ -3011,14 +3005,9 @@
 
               <div
                 id="btnLegalTerms2"
-                class="btn btn-outline"
+                class="btn btn-outline legal-trigger"
                 role="button"
                 tabindex="0"
-                style="
-                  font-size: 0.85rem;
-                  padding: 0.4rem 0.8rem;
-                  display: inline-block;
-                "
               >
                 Read AI disclaimer &rarr;
               </div>
@@ -3035,14 +3024,9 @@
 
               <div
                 id="btnLegalTerms3"
-                class="btn btn-outline"
+                class="btn btn-outline legal-trigger"
                 role="button"
                 tabindex="0"
-                style="
-                  font-size: 0.85rem;
-                  padding: 0.4rem 0.8rem;
-                  display: inline-block;
-                "
               >
                 Read privacy note &rarr;
               </div>
@@ -3055,14 +3039,12 @@
             <div class="legal-card">
               <h3>Questions the AI couldn't answer?</h3>
 
-              <p style="margin-bottom: 1rem">
+              <p class="paragraph-spacing">
                 <span data-i18n="emailWelcome"
                   >You're welcome to email me:</span
                 >
 
-                <a
-                  href="mailto:lucasballek@gmail.com"
-                  style="color: var(--primary-accent)"
+                <a class="text-accent" href="mailto:lucasballek@gmail.com"
                   >lucasballek@gmail.com</a
                 >
               </p>
@@ -3105,7 +3087,7 @@
             color: #fff;
           "
         >
-          &#9889; BigEnergy<span style="color: var(--primary-accent)">Co</span>
+          &#9889; BigEnergy<span class="text-accent">Co</span>
         </div>
 
         <p style="margin-bottom: 0.75rem">
@@ -3136,57 +3118,39 @@
             electrical code. Verify everything with a licensed professional
             before building. </span
           >&nbsp;-&nbsp;
-          <a
-            href="./blog/"
-            style="color: var(--primary-accent)"
-            data-i18n="navBlog"
-            >Blog</a
-          >
+          <a class="text-accent" href="./blog/" data-i18n="navBlog">Blog</a>
 
           &nbsp;-&nbsp;
           <a
+            class="text-accent"
             href="./solar-calculator/"
-            style="color: var(--primary-accent)"
             data-i18n="footerBenchmarks"
             >Worldwide Benchmarks</a
           >
 
           &nbsp;-&nbsp;
           <a
+            class="text-accent"
             href="./solar-heatmap/"
-            style="color: var(--primary-accent)"
             data-i18n="footerHeatmap"
             >Heatmap</a
           >
 
           &nbsp;-&nbsp;
-          <a
-            href="./about/"
-            style="color: var(--primary-accent)"
-            data-i18n="footerAbout"
+          <a class="text-accent" href="./about/" data-i18n="footerAbout"
             >About</a
           >
 
           &nbsp;-&nbsp;
-          <a
-            href="#legal"
-            style="color: var(--primary-accent)"
-            data-i18n="footerTerms"
-            >Terms</a
-          >
+          <a class="text-accent" href="#legal" data-i18n="footerTerms">Terms</a>
 
           &nbsp;-&nbsp;
-          <a
-            href="#support"
-            style="color: var(--primary-accent)"
-            data-i18n="navSupport"
+          <a class="text-accent" href="#support" data-i18n="navSupport"
             >Support</a
           >
 
           &nbsp;-&nbsp;
-          <a
-            href="mailto:lucasballek@gmail.com"
-            style="color: var(--primary-accent)"
+          <a class="text-accent" href="mailto:lucasballek@gmail.com"
             >lucasballek@gmail.com</a
           >
         </p>
@@ -3242,7 +3206,6 @@
             tabindex="0"
             data-i18n-aria-label="advisorClose"
             aria-label="Close AI advisor"
-            style="cursor: pointer"
           >
             &times;
           </div>
@@ -3324,7 +3287,6 @@
             role="button"
             tabindex="0"
             aria-label="Close terms and disclaimer"
-            style="cursor: pointer"
           >
             &times;
           </div>
@@ -3339,9 +3301,9 @@
             font-size: 0.95rem;
           "
         >
-          <h4 style="color: #fff; margin-bottom: 0.5rem">1. What this is</h4>
+          <h4 class="legal-section-heading">1. What this is</h4>
 
-          <p style="margin-bottom: 1rem" data-i18n="operatorDescription">
+          <p class="paragraph-spacing" data-i18n="operatorDescription">
             This is a free, personal, non-commercial educational tool operated
             by an individual, Lucas Ballek. It is not a company, not
             incorporated, and not a licensed engineering, electrical
@@ -3349,11 +3311,11 @@
             for sale and no service is being offered or promised to you.
           </p>
 
-          <h4 style="color: #fff; margin-bottom: 0.5rem">
+          <h4 class="legal-section-heading">
             2. Estimates only &mdash; no reliance
           </h4>
 
-          <p style="margin-bottom: 1rem" data-i18n="independentVerification">
+          <p class="paragraph-spacing" data-i18n="independentVerification">
             All output is an automated educational estimate produced from
             assumptions you supply. It is not a design, not a stamped drawing,
             not a quote, not a safety assessment, and not a code-compliance
@@ -3365,20 +3327,18 @@
             energizing anything.
           </p>
 
-          <h4 style="color: #fff; margin-bottom: 0.5rem">
-            3. AI-generated content
-          </h4>
+          <h4 class="legal-section-heading">3. AI-generated content</h4>
 
-          <p style="margin-bottom: 1rem" data-i18n="llmDisclaimer">
+          <p class="paragraph-spacing" data-i18n="llmDisclaimer">
             You are interacting with a large language model. It produces fluent,
             confident text that can be factually wrong, including specific
             numbers, prices, product specifications, and regulations. Treat
             every output as an unverified starting point.
           </p>
 
-          <h4 style="color: #fff; margin-bottom: 0.5rem">4. Safety</h4>
+          <h4 class="legal-section-heading">4. Safety</h4>
 
-          <p style="margin-bottom: 1rem" data-i18n="electricalSafetyDisclaimer">
+          <p class="paragraph-spacing" data-i18n="electricalSafetyDisclaimer">
             Battery banks, high DC currents, and mains wiring can cause arc
             flash, electric shock, fire, toxic gas release, serious injury, and
             death. Lithium cells can enter thermal runaway. You are solely
@@ -3388,9 +3348,9 @@
             codes.
           </p>
 
-          <h4 style="color: #fff; margin-bottom: 0.5rem">5. No warranty</h4>
+          <h4 class="legal-section-heading">5. No warranty</h4>
 
-          <p style="margin-bottom: 1rem" data-i18n="siteAsIs">
+          <p class="paragraph-spacing" data-i18n="siteAsIs">
             THIS SITE AND ITS OUTPUT ARE PROVIDED "AS IS" AND "AS AVAILABLE",
             WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
             LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -3399,11 +3359,9 @@
             change or disappear at any time without notice.
           </p>
 
-          <h4 style="color: #fff; margin-bottom: 0.5rem">
-            6. Limitation of liability
-          </h4>
+          <h4 class="legal-section-heading">6. Limitation of liability</h4>
 
-          <p style="margin-bottom: 1rem" data-i18n="liabilityLimitation">
+          <p class="paragraph-spacing" data-i18n="liabilityLimitation">
             To the fullest extent permitted by applicable law, the operator
             shall not be liable for any direct, indirect, incidental,
             consequential, special, or punitive damages &mdash; including
@@ -3416,9 +3374,9 @@
             fraud.
           </p>
 
-          <h4 style="color: #fff; margin-bottom: 0.5rem">7. Contributions</h4>
+          <h4 class="legal-section-heading">7. Contributions</h4>
 
-          <p style="margin-bottom: 1rem">
+          <p class="paragraph-spacing">
             <span data-i18n="donationTermsPrefix">
               Any contribution you choose to send is a voluntary gift to an
               individual. It is </span
@@ -3432,9 +3390,9 @@
             </span>
           </p>
 
-          <h4 style="color: #fff; margin-bottom: 0.5rem">8. Privacy</h4>
+          <h4 class="legal-section-heading">8. Privacy</h4>
 
-          <p style="margin-bottom: 1rem" data-i18n="advisorPrivacyDisclosure">
+          <p class="paragraph-spacing" data-i18n="advisorPrivacyDisclosure">
             No account is required and no personal details are requested. Text
             you type into the advisor is transmitted to a third-party AI
             provider (Groq) in order to generate a reply, subject to their
@@ -3444,7 +3402,7 @@
             prevent abuse.
           </p>
 
-          <h4 style="color: #fff; margin-bottom: 0.5rem">9. Acceptable use</h4>
+          <h4 class="legal-section-heading">9. Acceptable use</h4>
 
           <p data-i18n="rateLimitDisclaimer">
             Please don't automate, scrape, or hammer this tool &mdash; it is one
@@ -3479,7 +3437,6 @@
             role="button"
             tabindex="0"
             aria-label="Close system analysis"
-            style="cursor: pointer"
           >
             &times;
           </div>
