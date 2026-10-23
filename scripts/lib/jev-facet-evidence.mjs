@@ -8,9 +8,9 @@ export const FACET_EVIDENCE = Object.freeze({
   correctness:
     "Grid-tie shows bill-cut row; Off-grid hides it and shows 0%/1%/2%+ generator runtime (default 1%). Chrome smoke verified end-to-end: 212/212 gates pass on asset 20261022b and SW beco-v126; mode-chrome truth table has single writer.",
   quality:
-    "npm run quality verified on 84 pages: 302/318 inline styles, zero inline scripts/handlers, all labels/buttons/links/headings validate; CSS/markup consolidation keeps homepage below byte ceiling; 232 smoke gates green.",
+    "85 pages: 235/318 inline style attributes. Homepage: 63 repeated homepage style attributes use 11 tested named rules (zero inline exceptions for those patterns; count 223→160). Three close-button cursor attrs share the existing rule; 232 smoke gates green.",
   security:
-    "CI secrets/header gates pass; privacy browser: 0 cookies/HttpOnly/storage/identified requests, 0 coordinates over 0.01°. Static privacy gate finds no ad/tracker/affiliate/lead path; CSP blocks unsafe-inline/eval, geolocation is click-gated, egress disclosed.",
+    "CI secrets/header gates pass; privacy browser: 0 cookies/HttpOnly/storage/identified requests, 0 coordinates over 0.01Â°. Static privacy gate finds no ad/tracker/affiliate/lead path; CSP blocks unsafe-inline/eval, geolocation is click-gated, egress disclosed.",
   accessibility:
     "Chrome smoke verified: keyboard reaches and wraps result, quick/manual/kWh controls; all visible controls have accessible names, AA contrast passes, normal/reduced-motion verified; axe 0 violations (0 critical, 0 serious) on full walk.",
   i18n: "i18n: 436 keys/7 locales, 135 hooks, placeholder parity; 0 raw keys/22 pages. Back-read 43 #248 chart keys in six locales; fixed SOC weather-data and Dutch derating wording; audit: CHART_TRANSLATION_BACKREAD_2026-10-22.md. 434/485 prose unkeyed; native-speaker review open.",
