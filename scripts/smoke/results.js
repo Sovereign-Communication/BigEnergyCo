@@ -59,6 +59,7 @@ export async function runResultsFlow(ctx) {
       const cutBeforeBudget = Number(cut.value);
       const targetBeforeBudget = select?.value ?? null;
       budget.value = budget.max;
+      const requestedBudget = Number(budget.value);
       budget.dispatchEvent(new Event("input", { bubbles: true }));
       budget.dispatchEvent(new Event("change", { bubbles: true }));
       const cutStayedIndependent = Number(cut.value) === cutBeforeBudget;
@@ -79,6 +80,11 @@ export async function runResultsFlow(ctx) {
         cutBeforeBudget,
         requestedCut,
         pinnedBudget,
+        budgetCapRetained: pinnedBudget === requestedBudget,
+        budgetAfterCut: Number(budget.value),
+        budgetMin: Number(budget.min),
+        budgetMax: Number(budget.max),
+        budgetStep: Number(budget.step),
       };
     })()`);
   if (independence && independence.skip) {
@@ -93,6 +99,11 @@ export async function runResultsFlow(ctx) {
     gate(
       "bill-cut target and the form select agree",
       independence.selectMatches === true,
+    );
+    gate(
+      "budget commit retains the requested cap",
+      independence.budgetCapRetained === true,
+      JSON.stringify(independence),
     );
     gate(
       "cut change keeps the chosen budget pinned",
@@ -205,7 +216,7 @@ export async function runResultsFlow(ctx) {
   );
   if (sliderShown) {
     await evaluate(
-      `(() => { const s = document.getElementById("cutSlider"); s.value = "82"; s.dispatchEvent(new Event("input", { bubbles: true })); s.dispatchEvent(new Event("change", { bubbles: true })); return true; })()`,
+      `(() => { const s = document.getElementById("cutSlider"); s.value = "121"; s.dispatchEvent(new Event("input", { bubbles: true })); s.dispatchEvent(new Event("change", { bubbles: true })); return true; })()`,
     );
     const relabeled = await poll(
       async () =>
@@ -213,11 +224,30 @@ export async function runResultsFlow(ctx) {
           await evaluate(
             `document.getElementById("cutSliderVal")?.textContent || ""`,
           )
-        ).includes("82"),
+        ).includes("121"),
       30000,
       1000,
     );
-    gate("slider re-labels to 82%", relabeled);
+    gate("slider re-labels to a 121% surplus target", relabeled);
+    const sliceSettled = await poll(
+      async () =>
+        (await evaluate(`document.body.textContent`)).includes(
+          "Your ~121% target",
+        ),
+      120000,
+      1000,
+    );
+    gate("surplus cut slice is confirmed by the worker", sliceSettled);
+    if (!independence.skip) {
+      const pinnedAfterSlice = await evaluate(
+        `Number(document.getElementById("budgetSlider").value)`,
+      );
+      gate(
+        "confirmed surplus slice keeps the independent budget pinned",
+        sliceSettled && pinnedAfterSlice === independence.pinnedBudget,
+        `${independence.pinnedBudget} before, ${pinnedAfterSlice} after`,
+      );
+    }
     const stillCard = await poll(
       async () =>
         (await evaluate(`document.body.textContent`)).includes(

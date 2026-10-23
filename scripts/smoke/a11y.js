@@ -30,7 +30,12 @@
 // loadMode value restored, regular (non-simple) display, no emulation; the
 // card is intentionally left invalidated ("Inputs changed" status), which
 // closing-flow gates do not assert on.
-import { gate as smokeGate, sleep } from "./runtime.mjs";
+import {
+  gate as smokeGate,
+  gateCheckpoint,
+  gatesSince,
+  sleep,
+} from "./runtime.mjs";
 
 let summary = null;
 function gate(name, ok, detail = "") {
@@ -454,6 +459,7 @@ const KWH_PANEL = ["dailyKwhInput"];
 const RESULTS = ["cutSlider", "budgetSlider"];
 
 export async function runA11yFlow(ctx) {
+  const reportCheckpoint = gateCheckpoint();
   const { evaluate, send } = ctx;
   summary = { ran: false, gates: [], walks: [] };
   const setMode = (id) =>
