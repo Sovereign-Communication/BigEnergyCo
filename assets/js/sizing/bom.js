@@ -7,8 +7,8 @@
 // Every number here is an EDUCATIONAL estimate with documented assumptions.
 // Real designs must be verified by a licensed electrician or engineer.
 
-import { CHEMISTRIES } from "./chem-model.js?v=20261023o";
-import { POWMR_CATALOG } from "./pricing.js?v=20261023o";
+import { CHEMISTRIES } from "./chem-model.js?v=20261023p";
+import { POWMR_CATALOG } from "./pricing.js?v=20261023p";
 
 // ── Constants (shown in the UI's arithmetic panel) ──────────────────────────
 

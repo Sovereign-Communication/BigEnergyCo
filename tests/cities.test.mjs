@@ -492,6 +492,7 @@ test("typing a city resolves hands-free after the 2s auto-resolve cadence", asyn
       },
       dispatch(t, ev = {}) {
         for (const f of this.listeners[t] ?? []) f(ev);
+        this[`on${t}`]?.(ev);
       },
       focus() {},
       querySelectorAll() {

@@ -16,8 +16,8 @@ import {
   searchCities,
   shouldAutoResolve,
   typedCityCandidates,
-} from "./cities.js?v=20261023o";
-import { byId, el } from "../shared/dom.js?v=20261023o";
+} from "./cities.js?v=20261023p";
+import { byId, el } from "../shared/dom.js?v=20261023p";
 
 const citySearchDisposers = new WeakMap();
 
@@ -117,14 +117,15 @@ export function setupCitySearch({
     // already answers exactly, so the common path costs zero requests.
     const query = search.value.trim();
     const generation = lookupGeneration;
-    if (!query || searchCities(query, CITY_CATALOG, 1).length) return;
-    typedCityCandidates(query).then((rows) => {
-      if (rows.length <= CITY_CATALOG.length) return;
-      CITY_CATALOG.splice(0, CITY_CATALOG.length, ...rows);
-      // Superseded input: the user moved on; never redraw over their text.
-      if (generation === lookupGeneration && search.value.trim() === query)
-        draw();
-    });
+    if (query && !searchCities(query, CITY_CATALOG, 1).length) {
+      typedCityCandidates(query).then((rows) => {
+        if (rows.length <= CITY_CATALOG.length) return;
+        CITY_CATALOG.splice(0, CITY_CATALOG.length, ...rows);
+        // Superseded input: the user moved on; never redraw over their text.
+        if (generation === lookupGeneration && search.value.trim() === query)
+          draw();
+      });
+    }
     // Auto-lookup follows the same resolve path as Enter and Tab.
     cancelAutoResolve();
     const autoQuery = search.value.trim();
