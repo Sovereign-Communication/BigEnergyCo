@@ -1082,6 +1082,28 @@ export function scoreCompleteGate(
     .filter(([, f]) => f.index < COMPLETE_EXIT_FACET_INDEX)
     .map(([axis]) => axis)
     .sort();
+
+  // ── Step 1 diagnostic (dispatch 2026-10-22): explicit per-facet breakdown ──
+  // Prints exactly which facet failed, its ordinal, the required ordinal,
+  // its confidence, the required confidence, and the threshold missed.
+  // This lands before any logic changes so the failure is visible.
+  const notProvenDetail = Object.entries(facets)
+    .filter(([, f]) => f.index < COMPLETE_EXIT_FACET_INDEX)
+    .map(([axis, f]) => ({
+      facet: axis,
+      ordinal_got: f.ordinal,
+      ordinal_need: 100,
+      ordinal_met: f.ordinal >= 100,
+      confidence_got:
+        typeof f.confidence === "number" ? f.confidence : null,
+      confidence_need: COMPLETE_MIN_CONFIDENCE,
+      confidence_met:
+        typeof f.confidence === "number" &&
+        f.confidence >= COMPLETE_MIN_CONFIDENCE,
+      level: f.level,
+      source: f.source,
+    }))
+    .sort((a, b) => a.facet.localeCompare(b.facet));
   const lowConfidence = Object.entries(facets)
     .filter(
       ([, f]) =>
@@ -1222,6 +1244,7 @@ export function scoreCompleteGate(
     pass,
     hard_gates_passed: allHard,
     facets_not_proven: notProven,
+    facets_not_proven_detail: notProvenDetail,
     facets_low_confidence: lowConfidence,
     min_confidence: COMPLETE_MIN_CONFIDENCE,
     hard_gates: gates,
