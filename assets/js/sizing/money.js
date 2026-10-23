@@ -68,7 +68,17 @@ export function lcoeUsdPerKwh({
 export const INSTALL_LABOR_PER_KWH_USABLE = [12, 30];
 
 export function laborMidPerKwh(laborPerKwh = INSTALL_LABOR_PER_KWH_USABLE) {
-  return (laborPerKwh[0] + laborPerKwh[1]) / 2;
+  // A default parameter only covers `undefined`. A payload that says
+  // `laborPerKwh: null` (an older worker, a hand-edited share link) reached
+  // `null[0]` and threw a TypeError inside the cost model, taking the money
+  // panel with it. An unusable range is a missing range: use the installed one.
+  const usable =
+    laborPerKwh &&
+    Number.isFinite(Number(laborPerKwh[0])) &&
+    Number.isFinite(Number(laborPerKwh[1]))
+      ? laborPerKwh
+      : INSTALL_LABOR_PER_KWH_USABLE;
+  return (Number(usable[0]) + Number(usable[1])) / 2;
 }
 
 /**
