@@ -15,6 +15,7 @@ import { readFileSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
+import { FACET_EVIDENCE } from "../scripts/lib/jev-facet-evidence.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const load = (rel) => import(pathToFileURL(join(ROOT, rel)).href);
@@ -145,10 +146,7 @@ test("GATE: the privacy gate is wired into the preflight, not merely present", (
 // about a gate that runs in CI is exactly the "check that reports success"
 // failure this repo keeps legislating against, so the claim is pinned to the
 // gate instead of trusted.
-const facetLine = (facet) =>
-  JSON.parse(
-    readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
-  ).facet_evidence[facet];
+const facetLine = (facet) => FACET_EVIDENCE[facet];
 
 const gateExit = (script) =>
   spawnSync(process.execPath, [script], { cwd: ROOT, encoding: "utf8" }).status;

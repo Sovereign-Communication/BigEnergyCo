@@ -50,6 +50,7 @@ import {
   registryFor,
   incentivesFor,
 } from "../assets/js/sizing/paths.js";
+import { FACET_EVIDENCE } from "../scripts/lib/jev-facet-evidence.mjs";
 import { comparisonIntegrity } from "../scripts/lib/paths-integrity.mjs";
 import { LOCALES } from "../assets/js/shared/locales.js";
 import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
@@ -649,13 +650,7 @@ test("GATE: the comparison gate is wired into the preflight, not merely present"
 });
 
 test("EVIDENCE: the comparison facet line cannot contradict the gate", () => {
-  const ev = JSON.parse(
-    fs.readFileSync(
-      path.join(ROOT, "evidence/advisor-and-release.json"),
-      "utf8",
-    ),
-  );
-  const line = ev.facet_evidence.comparison;
+  const line = FACET_EVIDENCE.comparison;
   assert.ok(line && line.length > 40, "the facet line is a measurement");
   // It must name the gate that proves it, and the four routes it priced.
   assert.match(line, /check-comparison\.mjs/);

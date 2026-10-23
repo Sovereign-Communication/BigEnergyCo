@@ -45,6 +45,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Guard Jev facet evidence coverage
+        run: npm run gate:facet-evidence
+
       - name: Syntax-check all JS
         run: node scripts/check-syntax.mjs
 

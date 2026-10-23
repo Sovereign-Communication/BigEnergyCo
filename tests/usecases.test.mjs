@@ -25,6 +25,7 @@ import {
   normaliseOutageTarget,
   outcomeFor,
 } from "../assets/js/sizing/usecases.js";
+import { FACET_EVIDENCE } from "../scripts/lib/jev-facet-evidence.mjs";
 import {
   buildE1kw,
   flatProfile,
@@ -731,13 +732,7 @@ test("GATE: the use-case gate is wired into the preflight, not merely present", 
 });
 
 test("EVIDENCE: the usecases facet line cannot contradict the gate", () => {
-  const ev = JSON.parse(
-    fs.readFileSync(
-      path.join(ROOT, "evidence/advisor-and-release.json"),
-      "utf8",
-    ),
-  );
-  const line = ev.facet_evidence.usecases;
+  const line = FACET_EVIDENCE.usecases;
   assert.ok(line && line.length > 40, "the facet line is a measurement");
   // It must name the gate that proves it, and the six cases it walked.
   assert.match(line, /check-usecases\.mjs/);

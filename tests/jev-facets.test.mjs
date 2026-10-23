@@ -32,6 +32,7 @@ import {
   COMPLETE_STATE_BASE_CHARS,
   COMPLETE_STATE_PER_AXIS_CHARS,
 } from "../scripts/lib/jev-complete.mjs";
+import { FACET_EVIDENCE } from "../scripts/lib/jev-facet-evidence.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PLAN = readFileSync(join(ROOT, "docs/plan/MASTER_PLAN.md"), "utf8");
@@ -136,16 +137,12 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
   // An axis's line may now come from either place, and the test is about the
   // axis being ACCOUNTED FOR, not about where the words are typed. A gate that
   // measures an axis composes its line from the run (see
-  // tests/jev-derived-facets.test.mjs); everything else is prose. What must
+  // tests/jev-derived-facets.test.mjs); everything else is code-owned. What must
   // never happen is an axis in neither — that is the empty record this test
   // exists to prevent, and the reason it reads the gates' declared axes rather
   // than assuming every line is typed.
   const { LIGHTHOUSE_FACET_AXES, composeFacetLine } =
     await import("../scripts/lib/lighthouse-budgets.mjs");
-  const ev = JSON.parse(
-    readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
-  );
-
   // The derived lines a run of the Lighthouse gate would compose, built from the
   // RECORDED first measurement so this test needs no browser and no network.
   const derived = {};
@@ -261,7 +258,7 @@ test("EVIDENCE: every declared axis carries a proof line in the run record", asy
   }
 
   for (const axis of axes) {
-    const line = ev.facet_evidence?.[axis] ?? derived[axis];
+    const line = FACET_EVIDENCE[axis] ?? derived[axis];
     assert.equal(
       typeof line,
       "string",
@@ -370,6 +367,7 @@ test("TRANSPORT: the real 21-axis record survives whole — every line and note"
   const ev = JSON.parse(
     readFileSync(join(ROOT, "evidence/advisor-and-release.json"), "utf8"),
   );
+  ev.facet_evidence = { ...FACET_EVIDENCE };
   // Built as the builder builds it: prose, plus the lines gates compose from a
   // run. The derived line is the real composed one (from the recorded first
   // measurement), so this measures the length that actually reaches the judge.
