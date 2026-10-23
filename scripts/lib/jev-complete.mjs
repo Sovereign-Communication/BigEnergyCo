@@ -1137,12 +1137,29 @@ export function scoreCompleteGate(
     belowStagingFloor.length === 0;
   // Preserve the original full program-exit judgment as a separate verdict.
   // Main staging selects the B1 result; P10/weekly P11 select this 95/95/95 result.
-  const programExitPass =
-    allHard &&
-    combined >= target &&
-    blocking.length === 0 &&
-    notProven.length === 0 &&
-    lowConfidence.length === 0;
+  const programExitBlockers = [];
+  for (const gateKey of Object.keys(HARD_GATE_POINTS)) {
+    if (!gates[gateKey]) {
+      programExitBlockers.push(`hard gate failed: ${gateKey}`);
+    }
+  }
+  for (const axis of blocking) {
+    programExitBlockers.push(`blocking facet: ${axis}`);
+  }
+  for (const axis of notProven) {
+    programExitBlockers.push(`program exit facet not proven: ${axis}`);
+  }
+  for (const axis of lowConfidence) {
+    programExitBlockers.push(
+      `program exit confidence below ${COMPLETE_MIN_CONFIDENCE}: ${axis}`,
+    );
+  }
+  if (combined < target) {
+    programExitBlockers.push(
+      `score ${combined.toFixed(2)} below target ${target.toFixed(2)}`,
+    );
+  }
+  const programExitPass = programExitBlockers.length === 0;
 
   // ── required work ────────────────────────────────────────────────────────
   const improvementByBucket = {};
@@ -1281,6 +1298,7 @@ export function scoreCompleteGate(
     score: Math.round(combined * 100) / 100,
     pass,
     program_exit_pass: programExitPass,
+    program_exit_blockers: programExitBlockers,
     hard_gates_passed: allHard,
     facets_not_proven: notProven,
     facets_not_proven_detail: notProvenDetail,

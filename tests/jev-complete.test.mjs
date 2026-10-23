@@ -684,6 +684,9 @@ test("SCORE: P10 program exit keeps the all-proven and confidence thresholds", (
   });
   assert.equal(report.pass, true, "main staging passes under B1");
   assert.equal(report.program_exit_pass, false, "P10 remains confidence-gated");
+  assert.deepEqual(report.program_exit_blockers, [
+    "program exit confidence below 0.95: advisor",
+  ]);
 });
 
 test("CLI: --program-exit selects the preserved full-program verdict", () => {
@@ -704,6 +707,11 @@ test("CLI: --program-exit selects the preserved full-program verdict", () => {
     assert.equal(report.verdict_mode, "program_exit");
     assert.equal(report.pass, report.program_exit_pass);
     assert.equal(report.staging_pass, false);
+    assert.ok(
+      report.blockers.some((blocker) =>
+        blocker.startsWith("program exit confidence below 0.95:"),
+      ),
+    );
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }

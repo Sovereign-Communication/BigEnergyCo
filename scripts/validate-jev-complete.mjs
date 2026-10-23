@@ -201,6 +201,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (opts.programExit) {
     report.staging_pass = report.pass;
     report.pass = report.program_exit_pass;
+    report.blockers = report.program_exit_blockers;
   }
   report.auto_facts = {
     tree_clean: auto.treeClean,

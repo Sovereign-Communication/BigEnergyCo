@@ -260,6 +260,8 @@ test("PRINT: P10 mode labels the preserved program-exit verdict", () => {
     ...baseReport(),
     verdict_mode: "program_exit",
     staging_pass: true,
+    required_work: [],
+    blockers: ["program exit confidence below 0.95: advisor"],
   });
   assert.match(text, /program exit: 87\.36 \/ 100/);
   assert.match(
@@ -267,6 +269,11 @@ test("PRINT: P10 mode labels the preserved program-exit verdict", () => {
     /program exit policy: score >= 95; every facet proven; confidence >= 0\.95; hard gates green/,
   );
   assert.match(text, /staging verdict: \[PASS\]/);
+  assert.match(text, /required work: see program exit blockers below/);
+  assert.match(
+    text,
+    /program exit blockers:\n  - program exit confidence below 0\.95: advisor/,
+  );
 });
 
 test("PRINT: main staging labels confidence as non-blocking telemetry", () => {

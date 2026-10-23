@@ -205,13 +205,19 @@ export function printReport(report, out = process.stdout) {
       for (const it of items) write(`    - ${it.suggested_next_action}\n`);
     }
   } else {
-    write(`required work: none — every facet at or above the bar\n`);
+    if (report.verdict_mode === "program_exit" && report.blockers.length) {
+      write(`required work: see program exit blockers below\n`);
+    } else {
+      write(`required work: none — every facet at or above the bar\n`);
+    }
   }
   if (report.blockers.length) {
     write(
-      scoped
-        ? `blockers (whole program — the scoped verdict above is what decided this run):\n`
-        : `blockers:\n`,
+      report.verdict_mode === "program_exit"
+        ? `program exit blockers:\n`
+        : scoped
+          ? `blockers (whole program — the scoped verdict above is what decided this run):\n`
+          : `blockers:\n`,
     );
     for (const b of report.blockers) write(`  - ${b}\n`);
   }
