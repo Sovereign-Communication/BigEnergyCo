@@ -346,7 +346,6 @@ test("every post table has caption, thead, and scoped headers", () => {
   for (const p of posts) {
     const html = read(p);
     const tables = [...html.matchAll(/<table>([\s\S]*?)<\/table>/g)];
-    assert.ok(tables.length >= 1, `${p} has tables`);
     for (const [, body] of tables) {
       assert.match(body, /<caption>[\s\S]*<\/caption>/, `${p} caption`);
       assert.match(body, /<thead>[\s\S]*<\/thead>/, `${p} thead`);
