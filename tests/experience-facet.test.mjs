@@ -1266,11 +1266,28 @@ test("TRANSLATION: glossary evidence comes from this run and cannot imply a mean
     translation_terminology: { checked: 56, passed: 56 },
   };
   const line = composeTranslationFacetLine(report);
-  assert.match(line, /Glossary 56\/56 label anchors; lexical only/);
+  assert.match(line, /Glossary 56\/56 lexical/);
   assert.match(line, /Not done: meaning\/naturalness/);
   assert.ok(line.length <= COMPLETE_FACET_CLIP);
   report.translation_terminology.passed = 55;
   assert.match(composeTranslationFacetLine(report), /Glossary 55\/56/);
   delete report.translation_terminology;
   assert.match(composeTranslationFacetLine(report), /Glossary unmeasured/);
+});
+
+test("TRANSLATION: suggestion-link proof comes only from the browser probe", () => {
+  const report = {
+    experience_reading: HEALTHY(),
+    translation_suggestion: { passed: true },
+  };
+  const measured = composeTranslationFacetLine(report);
+  assert.match(
+    measured,
+    /Fix link: locale\/page\/key draft, browser-tested; no send/,
+  );
+  assert.match(measured, /Not done: meaning\/naturalness/);
+  assert.ok(measured.length <= COMPLETE_FACET_CLIP);
+
+  report.translation_suggestion.passed = false;
+  assert.match(composeTranslationFacetLine(report), /Fix link unverified/);
 });

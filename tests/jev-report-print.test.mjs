@@ -255,6 +255,54 @@ test("PRINT: out-of-scope blockers are kept, and labelled out of scope", () => {
   );
 });
 
+test("PRINT: P10 mode labels the preserved program-exit verdict", () => {
+  const text = render({
+    ...baseReport(),
+    verdict_mode: "program_exit",
+    staging_pass: true,
+    required_work: [],
+    blockers: ["program exit confidence below 0.95: advisor"],
+  });
+  assert.match(text, /program exit: 87\.36 \/ 100/);
+  assert.match(
+    text,
+    /program exit policy: score >= 95; every facet proven; confidence >= 0\.95; hard gates green/,
+  );
+  assert.match(text, /staging verdict: \[PASS\]/);
+  assert.match(text, /required work: see program exit blockers below/);
+  assert.match(
+    text,
+    /program exit blockers:\n  - program exit confidence below 0\.95: advisor/,
+  );
+});
+
+test("PRINT: main staging labels confidence as non-blocking telemetry", () => {
+  const report = {
+    ...baseReport(),
+    staging_policy: {
+      min_score: 95,
+      facet_min_ordinal: 85,
+      facet_floor_ordinal: 60,
+    },
+    confidence_telemetry: {
+      threshold: 0.95,
+      facets_below_threshold: ["translation", "advisor"],
+      investigation_required: true,
+      blocks: false,
+    },
+  };
+  const text = render(report);
+  assert.match(
+    text,
+    /staging policy: score >= 95; every facet >= ordinal 85; none below 60/,
+  );
+  assert.match(
+    text,
+    /confidence telemetry: 2\/21 below 0\.95; investigation required; non-blocking/,
+  );
+  assert.match(text, /below threshold: translation, advisor/);
+});
+
 test("PRINT: the whole-program numbers survive, labelled as not judged", () => {
   const text = scopedRender();
   assert.match(

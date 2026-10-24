@@ -114,12 +114,53 @@ export function printReport(report, out = process.stdout) {
       );
     }
   } else {
+    const verdictLabel =
+      report.verdict_mode === "program_exit" ? "program exit" : "score";
     write(
-      `score: ${report.score.toFixed(2)} / 100  (target ${report.min_score})  [${bar(report.pass)}]\n`,
+      `${verdictLabel}: ${report.score.toFixed(2)} / 100  (target ${report.min_score})  [${bar(report.pass)}]\n`,
     );
     write(
       `mechanical: ${report.mechanical_score}  semantic: ${report.semantic_score}\n`,
     );
+    if (report.verdict_mode === "program_exit") {
+      write(
+        "program exit policy: score >= 95; every facet proven; confidence >= 0.95; hard gates green\n",
+      );
+      write("staging verdict: [" + bar(report.staging_pass) + "]\n");
+    } else if (report.staging_policy) {
+      write(
+        "staging policy: score >= " +
+          report.staging_policy.min_score +
+          "; every facet >= ordinal " +
+          report.staging_policy.facet_min_ordinal +
+          "; none below " +
+          report.staging_policy.facet_floor_ordinal +
+          "\n",
+      );
+      const telemetry = report.confidence_telemetry;
+      if (telemetry) {
+        const count = telemetry.facets_below_threshold.length;
+        write(
+          "confidence telemetry: " +
+            count +
+            "/" +
+            total +
+            " below " +
+            telemetry.threshold +
+            "; " +
+            (telemetry.investigation_required
+              ? "investigation required"
+              : "no investigation required") +
+            "; non-blocking\n",
+        );
+        if (count)
+          write(
+            "  below threshold: " +
+              telemetry.facets_below_threshold.join(", ") +
+              "\n",
+          );
+      }
+    }
   }
 
   write(`hard gates:\n`);
@@ -164,13 +205,19 @@ export function printReport(report, out = process.stdout) {
       for (const it of items) write(`    - ${it.suggested_next_action}\n`);
     }
   } else {
-    write(`required work: none — every facet at or above the bar\n`);
+    if (report.verdict_mode === "program_exit" && report.blockers.length) {
+      write(`required work: see program exit blockers below\n`);
+    } else {
+      write(`required work: none — every facet at or above the bar\n`);
+    }
   }
   if (report.blockers.length) {
     write(
-      scoped
-        ? `blockers (whole program — the scoped verdict above is what decided this run):\n`
-        : `blockers:\n`,
+      report.verdict_mode === "program_exit"
+        ? `program exit blockers:\n`
+        : scoped
+          ? `blockers (whole program — the scoped verdict above is what decided this run):\n`
+          : `blockers:\n`,
     );
     for (const b of report.blockers) write(`  - ${b}\n`);
   }

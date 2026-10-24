@@ -906,10 +906,25 @@ test("EVIDENCE: the translation facet line is derived from the run, not typed by
   assert.match(note, /check-i18n/, "the note must say where parity went");
   assert.match(
     note,
-    /back-translat/i,
-    "and that back-translation is still open",
+    /back-reading all rendered strings for meaning remains incomplete/i,
+    "the open meaning-review scope must remain explicit",
   );
-  assert.match(note, /P5\.5/, "and the plan item that does not exist yet");
+  assert.doesNotMatch(
+    note,
+    /P5\.5[\s\S]*does not exist/,
+    "the evidence must not call the shipped translation-fix link absent",
+  );
+  assert.match(
+    note,
+    /P5\.5\/R-I18N-06 now ships[\s\S]*check-experience\.mjs measures its staged locale\/page\/key draft path/,
+    "current link evidence must describe the measured staged browser path",
+  );
+  const backread = (PROSE.notes || []).find((n) =>
+    /Back-read the PR #309 suggestion CTA/.test(n),
+  );
+  assert.match(backread || "", /all seven locales/);
+  assert.match(backread || "", /CTA only/);
+  assert.match(backread || "", /native-speaker review/);
 });
 
 test("EVIDENCE: i18n is owned by the runtime DOM snapshot", () => {

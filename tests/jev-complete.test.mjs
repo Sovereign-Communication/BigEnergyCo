@@ -676,6 +676,97 @@ test("SCORE: everything green with a proven live judgment passes at 95", () => {
   assert.equal(report.min_score, COMPLETE_MIN_SCORE);
 });
 
+test("SCORE: P10 program exit keeps the all-proven and confidence thresholds", () => {
+  const baseline = liveAll(4);
+  const lowConfidence = { ...baseline.live_confidence, advisor: 0.94 };
+  const report = scoreCompleteGate(mergeEvidence(ALL_GREEN, AUTO_CLEAN), {
+    liveJudgment: liveAll(4, { live_confidence: lowConfidence }),
+  });
+  assert.equal(report.pass, true, "main staging passes under B1");
+  assert.equal(report.program_exit_pass, false, "P10 remains confidence-gated");
+  assert.deepEqual(report.program_exit_blockers, [
+    "program exit confidence below 0.95: advisor",
+  ]);
+});
+
+test("CLI: --program-exit selects the preserved full-program verdict", () => {
+  const repo = mkdtempSync(join(tmpdir(), "jev-program-exit-"));
+  try {
+    const init = spawnSync("git", ["init", "-q"], {
+      cwd: repo,
+      encoding: "utf8",
+    });
+    assert.equal(init.status, 0, init.stderr);
+    const result = spawnSync(
+      process.execPath,
+      [CLI, "--local-only", "--json", "--program-exit"],
+      { cwd: repo, encoding: "utf8" },
+    );
+    assert.equal(result.status, 1, "an offline P10 run cannot claim a pass");
+    const report = JSON.parse(result.stdout);
+    assert.equal(report.verdict_mode, "program_exit");
+    assert.equal(report.pass, report.program_exit_pass);
+    assert.equal(report.staging_pass, false);
+    assert.ok(
+      report.blockers.some((blocker) =>
+        blocker.startsWith("program exit confidence below 0.95:"),
+      ),
+    );
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test("SCORE: main staging accepts ordinal 85 facets and treats low confidence as telemetry", () => {
+  const baseline = liveAll(3);
+  const lowConfidence = Object.fromEntries(
+    Object.keys(baseline.live_levels).map((axis) => [axis, 0.6]),
+  );
+  const report = scoreCompleteGate(mergeEvidence(ALL_GREEN, AUTO_CLEAN), {
+    liveJudgment: liveAll(3, { live_confidence: lowConfidence }),
+  });
+  assert.ok(report.score >= COMPLETE_MIN_SCORE);
+  assert.equal(report.pass, true);
+  assert.deepEqual(report.facets_below_staging_minimum, []);
+  assert.deepEqual(report.facets_below_staging_floor, []);
+  assert.equal(report.confidence_telemetry.facets_below_threshold.length, 21);
+  assert.equal(report.confidence_telemetry.investigation_required, true);
+  assert.equal(report.confidence_telemetry.blocks, false);
+  assert.deepEqual(report.blockers, []);
+});
+
+test("SCORE: main staging rejects any facet below ordinal 85", () => {
+  const baseline = liveAll(4);
+  const report = scoreCompleteGate(mergeEvidence(ALL_GREEN, AUTO_CLEAN), {
+    liveJudgment: liveAll(4, {
+      live_levels: { ...baseline.live_levels, quality: 2 },
+    }),
+  });
+  assert.ok(report.score >= COMPLETE_MIN_SCORE);
+  assert.equal(report.pass, false);
+  assert.deepEqual(report.facets_below_staging_minimum, ["quality"]);
+  assert.deepEqual(report.facets_below_staging_floor, []);
+  assert.ok(
+    report.blockers.includes("staging facet below ordinal 85: quality"),
+  );
+});
+
+test("SCORE: main staging rejects a facet below the hard floor of 60", () => {
+  const baseline = liveAll(4);
+  const report = scoreCompleteGate(mergeEvidence(ALL_GREEN, AUTO_CLEAN), {
+    liveJudgment: liveAll(4, {
+      live_levels: { ...baseline.live_levels, translation: 1 },
+    }),
+  });
+  assert.ok(report.score >= COMPLETE_MIN_SCORE);
+  assert.equal(report.pass, false);
+  assert.deepEqual(report.facets_below_staging_minimum, ["translation"]);
+  assert.deepEqual(report.facets_below_staging_floor, ["translation"]);
+  assert.ok(
+    report.blockers.includes("staging facet below hard floor 60: translation"),
+  );
+});
+
 test("SCORE: per-facet diagnostics report ordinal and confidence failures", () => {
   const baseline = liveAll(4);
   const report = scoreCompleteGate(mergeEvidence(ALL_GREEN, AUTO_CLEAN), {

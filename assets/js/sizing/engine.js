@@ -2,15 +2,15 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261023p";
-import { oversizeCallout } from "./rescale.js?v=20261023p";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261024l";
+import { oversizeCallout } from "./rescale.js?v=20261024l";
 import {
   CHEMISTRIES,
   coldCapacityScale,
   capacityScaleFor,
   CYCLE_LIFE_CURVES,
   cycleLifeForDoD,
-} from "./chem-model.js?v=20261023p";
+} from "./chem-model.js?v=20261024l";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -101,7 +101,16 @@ export function buildE1kw(hours, derates = DERATES_DEFAULT) {
 
 /** Flat 24 h profile in Wh/hour summing to kWhPerDay. */
 export function flatProfile(kwhPerDay) {
+  if (!Number.isFinite(kwhPerDay)) {
+    throw new TypeError("kwhPerDay must be a finite number");
+  }
+  if (kwhPerDay < 0) {
+    throw new RangeError("kwhPerDay must be non-negative");
+  }
   const per = (kwhPerDay * 1000) / 24;
+  if (!Number.isFinite(per)) {
+    throw new RangeError("kwhPerDay must produce a finite hourly load");
+  }
   return Float64Array.from({ length: 24 }, () => per);
 }
 

@@ -13,11 +13,11 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261023p";
+import { APPLIANCES } from "./appliances.js?v=20261024l";
 import {
   INSTALL_NAV_BREAKPOINT_PX,
   installReveal,
-} from "./pwa-install.js?v=20261023p";
+} from "./pwa-install.js?v=20261024l";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -28,26 +28,26 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261023p";
+} from "./usecases.js?v=20261024l";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261023p";
+} from "./run-coordinator.js?v=20261024l";
 import {
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261023p";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261023p";
-import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261023p";
+} from "./mode-chrome.js?v=20261024l";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261024l";
+import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261024l";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261023p";
+} from "./location-picker.js?v=20261024l";
 
 import {
   estimateTariff,
@@ -55,14 +55,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261023p";
+} from "./pricing.js?v=20261024l";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261023p";
+import { currencyForCountry } from "./country-currency.js?v=20261024l";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261023p";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261024l";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -94,7 +94,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261023p").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261024l").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -105,15 +105,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261023p";
+} from "./lead-acid.js?v=20261024l";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261023p";
+} from "./bom.js?v=20261024l";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261023p";
+import { BOM_ITEMS } from "../shared/content.js?v=20261024l";
 
 import {
   applyI18n,
@@ -122,19 +122,19 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261023p";
-
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261023p";
-import { byId as $, el } from "../shared/dom.js?v=20261023p";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261023p";
+} from "../shared/i18n.js?v=20261024l";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261024l";
+import { byId as $, el } from "../shared/dom.js?v=20261024l";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261024l";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261023p";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261023p";
+} from "../shared/simple-mode.js?v=20261024l";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261024l";
+import { installTranslationSuggestionLoader } from "../shared/translation-suggestion-loader.js?v=20261024l";
 import {
   advisorJevContext,
   interpretSanity,
@@ -142,29 +142,29 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261023p";
+} from "./validate.js?v=20261024l";
 import {
   CUT_TARGET_PCT,
   sliderStateDrifted,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261023p";
+} from "../shared/cut-targets.js?v=20261024l";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261023p";
+} from "./share-codec.js?v=20261024l";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261023p";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261023p";
+} from "./infeasible-copy.js?v=20261024l";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261024l";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261023p";
+} from "./fuel-units.js?v=20261024l";
 
 import {
   createLeafletProvider,
@@ -172,18 +172,18 @@ import {
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261023p";
+} from "./map-provider.js?v=20261024l";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261023p";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261023p";
+} from "./wizard.js?v=20261024l";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261024l";
 import {
   interpolateCurveTarget,
   surplusAnchor,
   budgetSpanMax,
-} from "./budget-span.js?v=20261023p";
+} from "./budget-span.js?v=20261024l";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -195,10 +195,10 @@ let _chartsInitialized = false;
 function preloadRunModules() {
   if (!_runModulesPromise) {
     _runModulesPromise = Promise.all([
-      import("./engine.js?v=20261023p"),
-      import("./charts.js?v=20261023p"),
-      import("./frontier-chart.js?v=20261023p"),
-      import("./rescale.js?v=20261023p"),
+      import("./engine.js?v=20261024l"),
+      import("./charts.js?v=20261024l"),
+      import("./frontier-chart.js?v=20261024l"),
+      import("./rescale.js?v=20261024l"),
     ])
       .then(([engine, charts, frontierChart, rescale]) => {
         _engine = engine;
@@ -264,9 +264,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261023p";
+} from "./money.js?v=20261024l";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261023p";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261024l";
 
 let worker = null;
 
@@ -1362,21 +1362,57 @@ function applianceState() {
   let kwh = 0,
     peakW = 0,
     peakSurgeW = 0,
-    requiresSplitPhase = false;
+    requiresSplitPhase = false,
+    count = 0;
 
   rows.forEach((row) => {
-    const w = parseFloat(row.dataset.w);
-    const qty = parseInt(row.dataset.qty, 10);
-    const h = parseFloat(row.dataset.h);
-    const surge = parseFloat(row.dataset.surgeW) || w;
+    const w = Number(row.dataset.w);
+    const qty = Number(row.dataset.qty);
+    const h = Number(row.dataset.h);
+    const rawSurge = row.dataset.surgeW;
+    const surge =
+      rawSurge === undefined || rawSurge === "" ? w : Number(rawSurge);
+    if (
+      !Number.isFinite(w) ||
+      w <= 0 ||
+      !Number.isSafeInteger(qty) ||
+      qty < 1 ||
+      qty > 30 ||
+      !Number.isFinite(h) ||
+      h < 0.25 ||
+      h > 24 ||
+      !Number.isFinite(surge) ||
+      surge <= 0
+    )
+      return;
+
+    const rowKwh = (w * qty * h) / 1000;
+    const rowPeakW = w * qty;
+    const rowPeakSurgeW = surge * qty;
+    const nextKwh = kwh + rowKwh;
+    const nextPeakW = peakW + rowPeakW;
+    const nextPeakSurgeW = peakSurgeW + rowPeakSurgeW;
+    if (
+      ![
+        rowKwh,
+        rowPeakW,
+        rowPeakSurgeW,
+        nextKwh,
+        nextPeakW,
+        nextPeakSurgeW,
+      ].every(Number.isFinite)
+    )
+      return;
+
+    count++;
     if (row.dataset.splitPhase === "true") requiresSplitPhase = true;
 
-    kwh += (w * qty * h) / 1000;
-    peakW += w * qty;
-    peakSurgeW += surge * qty;
+    kwh = nextKwh;
+    peakW = nextPeakW;
+    peakSurgeW = nextPeakSurgeW;
   });
 
-  return { kwh, peakW, peakSurgeW, requiresSplitPhase, count: rows.length };
+  return { kwh, peakW, peakSurgeW, requiresSplitPhase, count };
 }
 
 function getTariff() {
@@ -3865,7 +3901,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261023p",
+      "./assets/js/sizing/sizing-worker.js?v=20261024l",
       {
         type: "module",
       },
@@ -6321,10 +6357,13 @@ function updateGenHelper() {
 
 function applyGenRate() {
   const rate = genRateUsd();
-  if (rate === null || !$("customRateVal")) return;
+  if (!Number.isFinite(rate) || rate <= 0 || !$("customRateVal")) return;
   const fx = fxActive();
-  const display =
-    fx && fx.rate ? +(rate * fx.rate).toFixed(4) : +rate.toFixed(4);
+  const converted =
+    fx && Number.isFinite(fx.rate) && fx.rate > 0 ? rate * fx.rate : rate;
+  if (!Number.isFinite(converted) || converted <= 0) return;
+  const display = +converted.toFixed(4);
+  if (!Number.isFinite(display) || display <= 0) return;
   $("customRateVal").value = String(display);
   generatorBasis = true;
   tariffTouched = true;
@@ -8781,6 +8820,11 @@ async function initSizingUI() {
     // finished — and it puts every runtime-painted surface in one owner, so the
     // next one added is repainted by the same line rather than by luck.
     repaintRuntimeCopy();
+
+    installTranslationSuggestionLoader(
+      document.querySelector("[data-translation-suggestion]"),
+      () => import("../translation-suggestion.js?v=20261024l"),
+    );
 
     updateFuelUnits();
 

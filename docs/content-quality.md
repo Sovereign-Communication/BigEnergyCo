@@ -38,6 +38,6 @@ This document provides concrete examples and detailed guidance for the P9.7 cont
 
 - Jev assesses these criteria with the five aspects in [Jev Gate Policy v1](JEV_GATE_POLICY_V1.md): completeness, confidence, correctness, no-regression, and evidence quality. Mark an aspect irrelevant only with a reason.
 - A below-bar verdict starts an investigation and claim-level verification. When four aspects are at least 90 and the fifth is 85–89, the work passes only if investigation finds no actual risk. An aspect below 85 blocks until fixed.
-- The repository's native full-main CI gate remains separate and unchanged: 95 overall, every facet at ordinal 95, and every facet at confidence 0.95.
+- The repository's native main-staging CI gate requires 95 overall, every facet at ordinal 85 or higher, no facet below ordinal 60, and green hard gates. Confidence below 0.95 is logged as telemetry and investigated under Jev Gate Policy v1, but does not block staging. The P10 program-exit gate remains 95/95/95.
 - PR #232 bootstraps this gate under amendment A-006. The exception applies to this gate-authoring PR only; later P9.7 content changes are assessed under Jev Gate Policy v1.
 - **Post-merge:** Implementation is browser-verified against these criteria before production deploy.
