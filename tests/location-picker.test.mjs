@@ -411,6 +411,59 @@ test("city combobox: a newer query resolves while an older lookup is pending", a
   );
 });
 
+test("city combobox: reset invalidates a lookup already in flight", async () => {
+  const pending = deferred();
+  await withDomAsync(
+    { citySearch: makeEl("input"), citySuggestions: makeEl("div") },
+    () => pending.promise,
+    async () => {
+      const picks = [];
+      const { seen, setStatus } = status();
+      const reset = setupCitySearch({
+        onPick: (...args) => picks.push(args),
+        setStatus,
+      });
+      const search = globalThis.document.getElementById("citySearch");
+      const list = globalThis.document.getElementById("citySuggestions");
+
+      search.value = "Reset-pending-place";
+      search.dispatch("keydown", { key: "Enter", preventDefault() {} });
+      await new Promise((resolve) => setImmediate(resolve));
+
+      // #197 top-10 `reset`: the generation bump is the fail-closed half —
+      // a resolution that was already waiting must not repaint a box that
+      // has since been reset.
+      reset();
+      assert.equal(search.value, "", "reset clears the box");
+      assert.equal(list.hidden, true, "reset closes the list");
+      assert.equal(search.attrs["aria-expanded"], "false");
+
+      const statusBefore = seen.length;
+      pending.resolve(
+        geocoderResponse({
+          name: "Late Place",
+          address: { country_code: "ZZ" },
+          lat: "5",
+          lon: "6",
+        }),
+      );
+      await new Promise((resolve) => setImmediate(resolve));
+
+      assert.equal(
+        picks.length,
+        0,
+        "the superseded lookup must not pick after a reset",
+      );
+      assert.equal(search.value, "", "nor write its label back into the box");
+      assert.equal(
+        seen.length,
+        statusBefore,
+        "nor narrate a status for a box that was reset",
+      );
+    },
+  );
+});
+
 // ── Legacy cache purge ─────────────────────────────────────────────────────
 
 test("purgeLegacyCityCache removes the legacy blob key and tolerates absent storage", () => {

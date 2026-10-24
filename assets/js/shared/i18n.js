@@ -115,8 +115,14 @@ export async function applyI18n() {
   await localesReady;
   const lang = resolveLang();
   const dict = LOCALES[lang];
-  document.documentElement.lang = lang;
-  document.documentElement.dir = dict && dict.rtl ? "rtl" : "ltr";
+  // No dictionary for the resolved language means the import failed and
+  // LOCALES is the English-only stub: claim nothing. `lang="es"` on English
+  // text sends screen readers down Spanish rules for English words, so the
+  // honest attribute is the one the rendered content actually is.
+  if (dict) {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = dict.rtl ? "rtl" : "ltr";
+  }
   // Classic chat.js cannot import this module, so expose the same small,
   // read-only translation contract to runtime-rendered advisor strings.
   window.becoLang = lang;
