@@ -741,7 +741,7 @@ export const LOCALES = {
     sanityTooltip:
       "Un clasificador de IA independiente (Jev) revisó solo las cifras del dimensionamiento — ninguna ubicación, texto o dato personal sale de tu navegador más allá de estas cifras. Nunca cambia el resultado calculado.",
     simpleAdvisorStyle:
-      "[INSTRUCCIÓN PARA EL ASISTENTE: el visitante está en modo Simple. Responde como un experto hablando con un niño de 12 años inteligente: palabras cotidianas sencillas, sin tecnicismos (explica cualquier término técnico entre paréntesis), máximo 4 frases cortas, y termina con el UNO número que más importa.]",
+      "[INSTRUCCIÓN PARA EL ASISTENTE: el visitante está en modo Simple. Responde como un experto hablando con un niño de 12 años inteligente: palabras cotidianas sencillas, sin tecnicismos (explica cualquier término técnico entre paréntesis), máximo 4 frases cortas, y termina con un único número: el más importante.]",
     advisorTitle: "Asesor gratuito de energía con IA",
     advisorSubtitle:
       "Hablas con una IA (motor Groq) — solo estimaciones educativas, no asesoramiento de ingeniería",
@@ -763,7 +763,7 @@ export const LOCALES = {
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
     advisorDegradedLabel: "Sin conexión · no la IA en directo",
     advisorDegradedLine: "No puedo responder ahora — {why}.",
-    advisorDegradedWhyUnavailable: "el servicio que responde no ha contestado",
+    advisorDegradedWhyUnavailable: "el servicio no ha respondido",
     advisorDegradedWhyNoKey:
       "no hay clave de modelo: el asesor está apagado por diseño",
     advisorDegradedReassure:
@@ -786,9 +786,9 @@ export const LOCALES = {
       "{cost}: {pct}% — {pv} kW de paneles + {batt} kWh de batería",
     budgetLabel: "Tu presupuesto (inicial)",
     frontierTableCaption:
-      "Cada punto de la curva. El coste típico es el punto medio DIY con flete incluido; el rango va de celdas sueltas a retail enviado.",
+      "Cada punto de la curva. El coste típico es el punto medio del coste de un montaje propio, con envío y aranceles de importación incluidos; el rango va de celdas sueltas a sistemas completos comprados al por menor y entregados.",
     frontierColCost: "Coste típico",
-    frontierColRange: "DIY a retail",
+    frontierColRange: "De montaje propio a venta minorista",
     frontierColCut: "Factura reducida",
     frontierColCutBattery: "Horas punta desplazadas",
     frontierColCover: "Cubierto",
@@ -797,7 +797,8 @@ export const LOCALES = {
     frontierNoBattery: "ninguna",
     frontierTableToggle: "Ver todos los puntos en una tabla",
     frontierLegendCurve: "El sistema más barato que alcanza cada nivel",
-    frontierLegendBand: "Los mismos sistemas, de compra DIY a retail enviado",
+    frontierLegendBand:
+      "Los mismos sistemas, desde piezas para montaje propio hasta sistemas completos vendidos al por menor y entregados.",
     frontierLegendRange: "Rango óptimo — cada punto extra sigue barato",
     frontierBestValueRange: "Rango óptimo: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "mejor valor",
@@ -848,9 +849,9 @@ export const LOCALES = {
     frontierVerdictBeyondSweepOffgrid:
       "Dentro de los tamaños que busca esta herramienta —hasta {pvMax} kW de paneles y {battMax} kWh de batería— lo máximo que puedes cubrir aquí es cerca del {ceilingPct}%, por unos {ceilingCost}. La buena relación se acaba en el {kneePct}% por unos {kneeCost}. La independencia total no es imposible aquí, pero exige un sistema mucho mayor; un generador o la red casi seguro son la forma más barata de cubrir el resto.",
     frontierMethod:
-      "La curva sale de simular cada combinación de paneles y batería en una malla gruesa con el mismo clima horario que las tarjetas de arriba, y quedarse solo con los sistemas que nada más barato supera. Los precios usan el mismo punto medio DIY con flete que el resto de la página.",
+      "La curva sale de simular cada combinación de paneles y batería en una malla gruesa con el mismo clima horario que las tarjetas de arriba, y quedarse solo con los sistemas que nada más barato supera. Los precios usan el mismo punto medio del coste de un sistema montado por cuenta propia, con envío y aranceles de importación incluidos, que el resto de la página.",
     frontierMethodBattery:
-      "La curva sale de simular cada tamaño de batería en una malla gruesa con el mismo clima horario y las mismas franjas tarifarias que las tarjetas de arriba, y quedarse solo con los sistemas que nada más barato supera. Aquí no hay paneles, así que la curva solo varía el banco de baterías. Los precios usan el mismo punto medio DIY con flete que el resto de la página.",
+      "La curva sale de simular cada tamaño de batería en una malla gruesa con el mismo clima horario y las mismas franjas tarifarias que las tarjetas de arriba, y quedarse solo con los sistemas que nada más barato supera. Aquí no hay paneles, así que la curva solo varía el banco de baterías. Los precios usan el mismo punto medio del coste de un sistema montado por cuenta propia, con envío y aranceles de importación incluidos, que el resto de la página.",
     chartDailySun: "Producción solar diaria: {peak} kWh por kW de panel",
     costNoSeriesTitle: "No hay datos de ahorro para este resultado",
     costNoSeriesBody:
@@ -1323,9 +1324,9 @@ export const LOCALES = {
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
     advisorDegradedLabel: "Sem ligação · não a IA em direto",
     advisorDegradedLine: "Não consigo responder agora — {why}.",
-    advisorDegradedWhyUnavailable: "o serviço que responde não replied",
+    advisorDegradedWhyUnavailable: "o serviço não respondeu",
     advisorDegradedWhyNoKey:
-      "não há chave de modelo: o consultor está off por desenho",
+      "não há uma chave de modelo configurada, então o consultor fica desativado intencionalmente",
     advisorDegradedReassure:
       "Nada acima está errado e o seu dimensionamento não é afetado.",
     advisorDegradedSystem:
@@ -1346,9 +1347,9 @@ export const LOCALES = {
       "{cost}: {pct}% — {pv} kW de painéis + {batt} kWh de bateria",
     budgetLabel: "Seu orçamento (inicial)",
     frontierTableCaption:
-      "Cada ponto da curva. O custo típico é o meio-termo DIY já desembaraçado; a faixa vai de células avulsas a varejo entregue.",
+      "Cada ponto da curva. O custo típico é o ponto médio do custo de um sistema montado por conta própria, com frete e impostos de importação incluídos; a faixa vai de células avulsas a sistemas completos comprados no varejo e entregues.",
     frontierColCost: "Custo típico",
-    frontierColRange: "DIY a varejo",
+    frontierColRange: "De montagem própria ao preço de varejo",
     frontierColCut: "Conta cortada",
     frontierColCutBattery: "Horas de ponta deslocadas",
     frontierColCover: "Coberto",
@@ -1357,7 +1358,8 @@ export const LOCALES = {
     frontierNoBattery: "nenhuma",
     frontierTableToggle: "Ver todos os pontos em tabela",
     frontierLegendCurve: "O sistema mais barato que atinge cada nível",
-    frontierLegendBand: "Os mesmos sistemas, de compra DIY a varejo entregue",
+    frontierLegendBand:
+      "Os mesmos sistemas, de peças para montagem própria a sistemas completos vendidos no varejo e entregues.",
     frontierLegendRange: "Faixa ideal — cada ponto extra continua barato",
     frontierBestValueRange: "Faixa ideal: ~{lo}–{hi} ({loPct}–{hiPct}%).",
     frontierRangeTag: "melhor valor",
@@ -1402,9 +1404,9 @@ export const LOCALES = {
     frontierVerdictBeyondSweepOffgrid:
       "Dentro dos tamanhos que esta ferramenta busca — até {pvMax} kW de painéis e {battMax} kWh de bateria — o máximo que você cobre aqui é cerca de {ceilingPct}%, por uns {ceilingCost}. O bom custo-benefício acaba em {kneePct}% por uns {kneeCost}. A independência total não é impossível aqui, mas exige um sistema bem maior; um gerador ou a rede quase certamente são o jeito mais barato de cobrir o resto.",
     frontierMethod:
-      "A curva vem de simular cada combinação de painéis e bateria numa malha grossa com o mesmo clima horário dos cartões acima, mantendo só os sistemas que nada mais barato supera. Os preços usam o mesmo meio-termo DIY desembaraçado do resto da página.",
+      "A curva vem de simular cada combinação de painéis e bateria numa malha grossa com o mesmo clima horário dos cartões acima, mantendo só os sistemas que nada mais barato supera. Os preços usam o mesmo ponto médio do custo de um sistema montado por conta própria, com frete e impostos de importação incluídos, que os demais valores desta página.",
     frontierMethodBattery:
-      "A curva vem de simular cada tamanho de bateria numa malha grossa com o mesmo clima horário e as mesmas janelas tarifárias dos cartões acima, mantendo só os sistemas que nada mais barato supera. Não há painéis nesta execução, então a curva varia apenas o banco. Os preços usam o mesmo meio-termo DIY desembaraçado do resto da página.",
+      "A curva vem de simular cada tamanho de bateria numa malha grossa com o mesmo clima horário e as mesmas janelas tarifárias dos cartões acima, mantendo só os sistemas que nada mais barato supera. Não há painéis nesta execução, então a curva varia apenas o banco. Os preços usam o mesmo ponto médio do custo de um sistema montado por conta própria, com frete e impostos de importação incluídos, que os demais valores desta página.",
     chartDailySun: "Produção solar diária: {peak} kWh por kW de painel",
     costNoSeriesTitle: "Dados de economia indisponíveis para este resultado",
     costNoSeriesBody:
@@ -1876,7 +1878,7 @@ export const LOCALES = {
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
     advisorDegradedLabel: "Hors ligne · pas l’IA en direct",
     advisorDegradedLine: "Je ne peux pas répondre — {why}.",
-    advisorDegradedWhyUnavailable: "le service qui répond n’a pas répondu",
+    advisorDegradedWhyUnavailable: "le service n’a pas répondu",
     advisorDegradedWhyNoKey:
       "aucune clé modèle : le conseiller est hors ligne par conception",
     advisorDegradedReassure:
@@ -1899,9 +1901,9 @@ export const LOCALES = {
       "{cost} : {pct}% — {pv} kW de panneaux + {batt} kWh de batterie",
     budgetLabel: "Votre budget (initial)",
     frontierTableCaption:
-      "Chaque point de la courbe. Le coût typique est le milieu DIY rendu droits acquittés ; la fourchette va des cellules nues au détail livré.",
+      "Chaque point de la courbe. Le coût habituel correspond au milieu de la fourchette pour un système à monter soi-même, livraison et droits de douane compris ; la fourchette va des cellules seules aux systèmes complets livrés au prix du commerce de détail.",
     frontierColCost: "Coût typique",
-    frontierColRange: "DIY à détail",
+    frontierColRange: "Montage par soi-même à prix de détail",
     frontierColCut: "Facture réduite",
     frontierColCutBattery: "Heures pleines décalées",
     frontierColCover: "Couvert",
@@ -1910,7 +1912,8 @@ export const LOCALES = {
     frontierNoBattery: "aucune",
     frontierTableToggle: "Voir tous les points en tableau",
     frontierLegendCurve: "Le système le moins cher atteignant chaque niveau",
-    frontierLegendBand: "Les mêmes systèmes, de l'achat DIY au détail livré",
+    frontierLegendBand:
+      "Les mêmes systèmes, des pièces à monter soi-même aux systèmes complets vendus au détail et livrés.",
     frontierLegendRange:
       "Plage optimale — chaque point en plus reste bon marché",
     frontierBestValueRange: "Plage optimale : ~{lo}–{hi} ({loPct}–{hiPct}%).",
@@ -1956,9 +1959,9 @@ export const LOCALES = {
     frontierVerdictBeyondSweepOffgrid:
       "Dans les tailles explorées par cet outil — jusqu'à {pvMax} kW de panneaux et {battMax} kWh de batterie — le maximum que vous pouvez couvrir ici est d'environ {ceilingPct}%, pour environ {ceilingCost}. Le bon rapport s'arrête à {kneePct}% pour environ {kneeCost}. L'indépendance totale n'est pas impossible ici, mais elle demande un système bien plus grand ; un groupe électrogène ou le réseau est presque certainement le moyen le moins cher de couvrir le reste.",
     frontierMethod:
-      "La courbe vient de la simulation de chaque combinaison panneaux-batterie sur une grille grossière avec la même météo horaire que les cartes ci-dessus, en ne gardant que les systèmes qu'aucun moins cher ne bat. Les prix utilisent le même milieu DIY rendu que tous les autres chiffres de la page.",
+      "La courbe est obtenue en simulant chaque combinaison de panneaux et de batterie sur une grille grossière avec les mêmes données météo horaires que les cartes ci-dessus, puis en ne conservant que les systèmes qu'aucun système moins cher ne surpasse. Les prix utilisent le même coût au milieu de la fourchette pour un système à monter soi-même, livraison et droits de douane compris, que tous les autres chiffres de cette page.",
     frontierMethodBattery:
-      "La courbe vient de la simulation de chaque taille de batterie sur une grille grossière avec la même météo horaire et les mêmes plages tarifaires que les cartes ci-dessus, en ne gardant que les systèmes qu'aucun moins cher ne bat. Aucun panneau n'entre dans ce calcul : la courbe ne fait varier que le parc de batteries. Les prix utilisent le même milieu DIY rendu que tous les autres chiffres de la page.",
+      "La courbe est obtenue en simulant chaque taille de batterie sur une grille grossière avec les mêmes données météo horaires et les mêmes plages tarifaires que les cartes ci-dessus, puis en ne conservant que les systèmes qu'aucun système moins cher ne surpasse. Les panneaux ne font pas partie de ce calcul : seule la capacité de la batterie varie. Les prix utilisent le même coût au milieu de la fourchette pour un système à monter soi-même, livraison et droits de douane compris, que tous les autres chiffres de cette page.",
     chartDailySun:
       "Production solaire quotidienne : {peak} kWh par kW de panneau",
     costNoSeriesTitle: "Données d’économies indisponibles pour ce résultat",
@@ -2251,7 +2254,7 @@ export const LOCALES = {
     invalidCoordinates:
       "Der Breitengrad muss zwischen −90 und 90 und der Längengrad zwischen −180 und 180 liegen.",
     invalidDailyKwh:
-      "Der tägliche Energieverbrauch muss zwischen 0,5 und 500 kWh liegen — gib einen Wert in diesem Bereich ein oder häk die Geräte an, die du versorgen willst.",
+      "Der tägliche Energieverbrauch muss zwischen 0,5 und 500 kWh liegen — gib einen Wert in diesem Bereich ein oder kreuze die Geräte an, die du versorgen willst.",
     inputsChanged:
       "Eingaben geändert — klicken Sie auf System dimensionieren, um die Schätzung zu aktualisieren.",
     errorTimeout:
@@ -2431,8 +2434,7 @@ export const LOCALES = {
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
     advisorDegradedLabel: "Offline · nicht die Live-KI",
     advisorDegradedLine: "Das kann ich gerade nicht beantworten — {why}.",
-    advisorDegradedWhyUnavailable:
-      "der Dienst, der antwortet, hat nicht geantwortet",
+    advisorDegradedWhyUnavailable: "der Dienst reagiert nicht",
     advisorDegradedWhyNoKey:
       "kein Modellschlüssel: der Berater ist planmäßig offline",
     advisorDegradedReassure:
@@ -2454,7 +2456,7 @@ export const LOCALES = {
     frontierPointTip: "{cost}: {pct} % — {pv} kW Panels + {batt} kWh Batterie",
     budgetLabel: "Dein Budget (zu Beginn)",
     frontierTableCaption:
-      "Jeder Punkt der Kurve. Typische Kosten sind die Mitte für Selbstbau mit Versand; die Spanne reicht von nackten Zellen bis Versandhandel.",
+      "Jeder Punkt der Kurve. Typische Kosten entsprechen der Mitte der Preisspanne für einen Selbstbau, inklusive Versand und Einfuhrabgaben; die Spanne reicht von einzelnen Zellen bis zu fertig gelieferten Handelsprodukten.",
     frontierColCost: "Typische Kosten",
     frontierColRange: "Selbstbau bis Handel",
     frontierColCut: "Rechnung gesenkt",
@@ -2515,9 +2517,9 @@ export const LOCALES = {
     frontierVerdictCoveredGrid:
       "Dimensionierung ist hier nicht deine Grenze. Das kleinste praktische System — {pv} kW Panels und {batt} kWh Batterie, etwa {cost} — deckt diesen Verbrauch bereits praktisch vollständig ab. Alles Größere kauft Reserve, keine größere Ersparnis.",
     frontierMethod:
-      "Die Kurve nutzt dieselbe stündliche Wetter-Simulation und dieselben Preisannahmen wie die Ergebnisse oben.",
+      "Die Kurve entsteht, indem jede Kombination aus Modulen und Batterie auf einem groben Raster mit denselben stündlichen Wetterdaten wie die Karten oben simuliert wird. Anschließend bleiben nur die Systeme übrig, die von keinem günstigeren System übertroffen werden. Die Preise basieren, wie alle anderen Zahlen auf dieser Seite, auf derselben mittleren Kostenschätzung für einen Selbstbau inklusive Versand und Einfuhrabgaben.",
     frontierMethodBattery:
-      "Die Kurve simuliert jede Batteriegröße auf einem groben Raster mit demselben stündlichen Wetter und denselben Tarifzeiten wie die Ergebnisse oben und behält nur die Systeme, die nichts Günstigeres schlägt. In diesem Lauf gibt es keine Module, die Kurve variiert also nur den Speicher. Die Preise verwenden dieselben Mittelwerte wie alle anderen Zahlen auf dieser Seite.",
+      "Die Kurve simuliert jede Batteriegröße auf einem groben Raster mit demselben stündlichen Wetter und denselben Tarifzeiten wie die Ergebnisse oben und behält nur die Systeme, die nichts Günstigeres schlägt. In diesem Lauf gibt es keine Module, die Kurve variiert also nur den Speicher. Die Preise verwenden dieselbe mittlere Kostenschätzung für einen Selbstbau inklusive Versand und Einfuhrabgaben wie alle anderen Zahlen auf dieser Seite.",
     chartDailySun: "Täglicher Solarertrag: {peak} kWh je kW Modulleistung",
     costNoSeriesTitle:
       "Für dieses Ergebnis sind keine Einsparungsdaten verfügbar",
@@ -2905,8 +2907,7 @@ export const LOCALES = {
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
     advisorDegradedLabel: "Offline · niet de live AI",
     advisorDegradedLine: "Ik kan nu niet antwoorden — {why}.",
-    advisorDegradedWhyUnavailable:
-      "de dienst die antwoordt heeft niet gereageerd",
+    advisorDegradedWhyUnavailable: "de dienst reageert niet",
     advisorDegradedWhyNoKey:
       "er is geen modelsleutel ingesteld, dus de adviseur is bewust offline",
     advisorDegradedReassure:
@@ -2930,7 +2931,7 @@ export const LOCALES = {
     // -- Budget slider (unified curve walk) --
     budgetLabel: "Uw budget (eenmalig vooraf)",
     frontierTableCaption:
-      "Elk punt op de curve. Typische kosten zijn het midden van de doe-het-zelf-prijzen inclusief levering; het bereik loopt van losse cellen tot verzonden winkelprijzen.",
+      "Elk punt op de curve. De typische kosten zijn het midden van de prijsklasse voor zelfbouw, inclusief verzending en invoerrechten; de bandbreedte loopt van losse cellen tot complete producten die door de detailhandel worden geleverd.",
     frontierColCost: "Typische kosten",
     frontierColRange: "Doe-het-zelf tot winkel",
     frontierColCut: "Rekeningsverlaging",
@@ -2989,9 +2990,9 @@ export const LOCALES = {
     frontierVerdictBeyondSweepOffgrid:
       "Binnen de groottes die deze tool doorzoekt — tot {pvMax} kW aan panelen en {battMax} kWh aan accu — kunt u hier maximaal ongeveer {ceilingPct}% dekken, voor rond {ceilingCost}. Goede waarde houdt op bij {kneePct}% voor ongeveer {kneeCost}. Volledige onafhankelijkheid is hier niet onmogelijk, maar vereist een systeem dat veel groter is dan dit, en een generator of een netaansluiting is vrijwel zeker de goedkopere manier om de rest te dekken.",
     frontierMethod:
-      "De curve komt voort uit het simuleren van elke paneel-en-accu-combinatie op een grof raster tegen hetzelfde uurlijkse weer als de kaarten hierboven, waarbij alleen de systemen overblijven die niets goedkopers verslaat. Prijzen gebruiken hetzelfde midden van doe-het-zelf-prijzen inclusief levering als elk ander cijfer op deze pagina.",
+      "De curve komt voort uit het simuleren van elke paneel-en-accu-combinatie op een grof raster tegen hetzelfde uurlijkse weer als de kaarten hierboven, waarbij alleen de systemen overblijven die niets goedkopers verslaat. De prijzen gebruiken hetzelfde middelpunt van de prijsklasse voor zelfbouw, inclusief verzending en invoerrechten, als alle andere cijfers op deze pagina.",
     frontierMethodBattery:
-      "De curve komt voort uit het simuleren van elke accugrootte op een grof raster tegen hetzelfde uurlijkse weer en tariefvensters als de kaarten hierboven, waarbij alleen de systemen overblijven die niets goedkopers verslaat. Panelen maken geen deel uit van deze berekening, dus de curve varieert alleen de bank. Prijzen gebruiken hetzelfde midden van doe-het-zelf-prijzen inclusief levering als elk ander cijfer op deze pagina.",
+      "De curve komt voort uit het simuleren van elke accugrootte op een grof raster tegen hetzelfde uurlijkse weer en tariefvensters als de kaarten hierboven, waarbij alleen de systemen overblijven die niets goedkopers verslaat. Panelen maken geen deel uit van deze berekening, dus de curve varieert alleen de bank. De prijzen gebruiken hetzelfde middelpunt van de prijsklasse voor zelfbouw, inclusief verzending en invoerrechten, als alle andere cijfers op deze pagina.",
     // -- Cumulative 20-year cost caption (under the chart canvas) --
     cumCostRecommended: "aanbevolen",
     cumCostSelected: "geselecteerd",
@@ -3028,7 +3029,7 @@ export const LOCALES = {
     cumCostCaptionSurplusCredit:
       "Het totaal met zonne-energie (~{withSolar}) ligt ONDER de eigen kostprijs van het systeem: uw terugleververgoeding op overschot overtreft de kleine rekening die overblijft, dus de stapel loopt negatief en het energiebedrijf is u ~{owed} schuldig in het 20-jarenbeeld.",
     frontierVerdictCoveredOffgrid:
-      "Dimensionering is hier niet uw beperking. Het kleinste praktische systeem — {pv} kW aan panelen en {batt} kWh aan accu, ongeveer {cost} — dekt dit volledige verbruik al, het hele jaar door. Alles groter koopt reservecapaciteit, geen meer onafhankelijkheid.",
+      "Dimensionering is hier niet uw beperking. Het kleinste praktische systeem — {pv} kW aan panelen en {batt} kWh aan accu, ongeveer {cost} — dekt dit volledige verbruik al, het hele jaar door. Alles groter koopt reservecapaciteit, maar levert geen extra onafhankelijkheid op.",
     frontierVerdictCoveredGrid:
       "Dimensionering is hier niet uw beperking. Het kleinste praktische systeem — {pv} kW aan panelen en {batt} kWh aan accu, ongeveer {cost} — dekt vrijwel dit hele verbruik al. Alles groter koopt reservecapaciteit, geen grotere besparing.",
     pipelineLocation: "Locatie",
@@ -3593,7 +3594,7 @@ export const LOCALES = {
     frontierSelNoBatt: "{pv} كيلوواط دون بطارية · {pct}% · {cost}",
     frontierLegendSel: "الخيار المحدد — انقر أي نقطة للاختيار",
     frontierNoSystem:
-      "لا يمكن لأي نظام ضمن الأحجام التي تبحث عنها هذه الأداة الوصول إلى هذا الهدف في هذا الموقع. يُظهر المنحنى أدناه أبعد ما يصل إليه هذا الموقع عمليًا — جرّب هدفًا أدنى، أو خطّط لمولد أو اتصال بالشبكة لتغطية ما لا يصل إليه الشمس.",
+      "لا يمكن لأي نظام ضمن الأحجام التي تبحث عنها هذه الأداة الوصول إلى هذا الهدف في هذا الموقع. يُظهر المنحنى أدناه أبعد ما يصل إليه هذا الموقع عمليًا — جرّب هدفًا أدنى، أو خطّط لمولد أو اتصال بالشبكة لتغطية ما لا تصل إليه الشمس.",
     simpleInfeasible:
       "في هذا الموقع، لا يوجد نظام يمكن بناؤه يصل إلى هذا الهدف. جرّب نسبة توفير أدنى، أو اطّلع على التفاصيل الكاملة لترى مدى ما يمكن للطاقة الشمسية الوصول إليه فعليًا.",
     simpleWhatItMeans:
@@ -3619,7 +3620,7 @@ export const LOCALES = {
     advisorSubtitle:
       "أنت تتحدث إلى ذكاء اصطناعي (محرك Groq) — تقديرات تعليمية فقط وليست استشارة هندسية",
     advisorIntro:
-      "أشرح نتائج الحاسبة: نوع بطارية المصدر، الأسلاك والحماية، أو أسئلة تطرحها على فني كهرباء محلي. شغّل التحجيم أولاً ثم اسألني عن هذه النتيجة، أو اسألني أي شيء.",
+      "أشرح نتائج الحاسبة: كيمياء البطارية، والأسلاك والحماية، أو أسئلة تطرحها على فني كهرباء محلي. شغّل التحجيم أولاً ثم اسألني عن هذه النتيجة، أو اسألني أي شيء.",
     advisorBotNote:
       "تقدير من الذكاء الاصطناعي — قد يكون غير دقيق، بما في ذلك الأسعار والمواصفات. ليست هذه نصيحة هندسية. تحقق مع كهربائي أو مهندس مرخص قبل الشراء أو البناء.",
     advisorThinking: "⏳ أفكر...",
@@ -3636,8 +3637,9 @@ export const LOCALES = {
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
     advisorDegradedLabel: "دون اتصال · ليس الذكاء الحيّ مباشرة",
     advisorDegradedLine: "لا أستطيع الإجابة الآن — {why}.",
-    advisorDegradedWhyUnavailable: "الخدمة التي يجيب لم يستجب",
-    advisorDegradedWhyNoKey: "لا مفتاح نموذج، فالمشير غير متصل عمدًا",
+    advisorDegradedWhyUnavailable: "الخدمة لم تستجب",
+    advisorDegradedWhyNoKey:
+      "لم يتم إعداد مفتاح للنموذج، لذا فالمستشار غير متصل عمدًا",
     advisorDegradedReassure: "لا خطأ في ما سبق وحسابك لم يتأثر.",
     advisorDegradedSystem: "خذ هذه الأرقام إلى كهربائي مرخَّص قبل البناء.",
     advisorIsAi:
@@ -3654,7 +3656,7 @@ export const LOCALES = {
       "{cost}: {pct}% — {pv} كيلوواط ألواح + {batt} كيلوواط ساعة بطارية",
     budgetLabel: "ميزانيتك (مقدّمًا)",
     frontierTableCaption:
-      "كل نقطة على المنحنى. التكلفة النموذجية هي الوسط للتنفيذ الذاتي بعد الشحن؛ والمدى يمتد من الخلايا المجردة إلى التجزئة المشحونة.",
+      "كل نقطة على المنحنى. التكلفة المعتادة هي منتصف نطاق أسعار نظام يُجمّع ذاتيًا، مع احتساب الشحن والرسوم الجمركية؛ ويمتد النطاق من الخلايا المنفردة إلى الأنظمة الكاملة المباعة بالتجزئة مع التوصيل.",
     frontierColCost: "التكلفة النموذجية",
     frontierColRange: "من الذاتي إلى التجزئة",
     frontierColCut: "خفض الفاتورة",
@@ -3711,9 +3713,9 @@ export const LOCALES = {
     frontierVerdictBeyondSweepOffgrid:
       "ضمن الأحجام التي تبحثها هذه الأداة — حتى {pvMax} كيلوواط ألواح و{battMax} كيلوواط ساعة بطارية — أقصى ما يمكن تغطيته هنا نحو {ceilingPct}%، بتكلفة قرابة {ceilingCost}. وتنتهي القيمة الجيدة عند {kneePct}% بنحو {kneeCost}. والاستقلال الكامل ليس مستحيلًا هنا، لكنه يحتاج نظامًا أكبر بكثير، وغالبًا يكون مولّد أو اتصال بالشبكة أرخص وسيلة لتغطية الباقي.",
     frontierMethod:
-      "يأتي المنحنى من محاكاة كل توليفة ألواح وبطاريات على شبكة خشنة بنفس الطقس الساعي المستخدم في البطاقات أعلاه، ثم الإبقاء فقط على ما لا يتفوق عليه أي نظام أرخص. وتستخدم الأسعار نفس الوسط للتنفيذ الذاتي المستخدم في بقية الصفحة.",
+      "يُنتج المنحنى بمحاكاة كل توليفة من الألواح والبطاريات على شبكة خشنة باستخدام بيانات الطقس الساعية نفسها الموجودة في البطاقات أعلاه، ثم لا يُحتفظ إلا بالأنظمة التي لا يتفوق عليها نظام أقل تكلفة. وتستخدم الأسعار منتصف النطاق نفسه لتكلفة نظام يُجمّع ذاتيًا، مع احتساب الشحن والرسوم الجمركية، كما في جميع أرقام هذه الصفحة.",
     frontierMethodBattery:
-      "يأتي المنحنى من محاكاة كل حجم بطارية على شبكة خشنة بنفس الطقس الساعي ونوافذ التعرفة المستخدمة في البطاقات أعلاه، ثم الإبقاء فقط على ما لا يتفوق عليه أي نظام أرخص. لا توجد ألواح في هذه الحالة، لذا يغيّر المنحنى حجم البطارية وحده. وتستخدم الأسعار نفس الوسط للتنفيذ الذاتي المستخدم في بقية الصفحة.",
+      "يُنتج المنحنى بمحاكاة كل حجم من أحجام البطاريات على شبكة خشنة باستخدام بيانات الطقس الساعية ونوافذ التعرفة نفسها في البطاقات أعلاه، ثم لا يُحتفظ إلا بالأنظمة التي لا يتفوق عليها نظام أقل تكلفة. لا تدخل الألواح في هذه المحاكاة، لذا يتغير حجم البطارية وحده. وتستخدم الأسعار منتصف النطاق نفسه لتكلفة نظام يُجمّع ذاتيًا، مع احتساب الشحن والرسوم الجمركية، كما في جميع أرقام هذه الصفحة.",
     chartDailySun:
       "الإنتاج الشمسي اليومي: {peak} كيلوواط ساعة لكل كيلوواط من الألواح",
     costNoSeriesTitle: "بيانات التوفير غير متاحة لهذه النتيجة",
@@ -3812,7 +3814,7 @@ export const LOCALES = {
     cumCostCaptionSurplusCredit:
       "الإجمالي مع الطاقة الشمسية (~{withSolar}) يقع تحت التكلفة الخاصة بالنظام: رصيد تغذية فائضك يتجاوز الفاتورة الصغيرة المتبقية، فتسير الكومة بالسالب وتكون الشركة مدينة لك بنحو ~{owed} في حساب 20 عامًا.",
     frontierVerdictCoveredOffgrid:
-      "الحجم ليس قيدك هنا. أصغر نظام عملي — {pv} كيلوواط ألواح و{batt} كيلوواط ساعة بطارية، بنحو {cost} — يغطي هذا الحمل بالكامل طوال العام. وأي شيء أكبر يشتري سعة احتياطية، لا مزيدًا من الاستقلال.",
+      "الحجم ليس قيدك هنا. أصغر نظام عملي — {pv} كيلوواط ألواح و{batt} كيلوواط ساعة بطارية، بنحو {cost} — يغطي هذا الحمل بالكامل طوال العام. وأي نظام أكبر يضيف سعة احتياطية، لكنه لا يمنحك استقلالًا أكبر.",
     frontierVerdictCoveredGrid:
       "الحجم ليس قيدك هنا. أصغر نظام عملي — {pv} كيلوواط ألواح و{batt} كيلوواط ساعة بطارية، بنحو {cost} — يغطي عمليًا كل هذا الحمل. وأي شيء أكبر يشتري سعة احتياطية، لا مزيدًا من التوفير.",
     pipelineLocation: "الموقع",
