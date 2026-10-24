@@ -411,6 +411,66 @@ test("city combobox: a newer query resolves while an older lookup is pending", a
   );
 });
 
+test("city combobox: reset invalidates a lookup already in flight", async () => {
+  const pending = deferred();
+  await withDomAsync(
+    { citySearch: makeEl("input"), citySuggestions: makeEl("div") },
+    () => pending.promise,
+    async () => {
+      const picks = [];
+      const { seen, setStatus } = status();
+      const reset = setupCitySearch({
+        onPick: (...args) => picks.push(args),
+        setStatus,
+      });
+      const search = globalThis.document.getElementById("citySearch");
+      const list = globalThis.document.getElementById("citySuggestions");
+
+      search.value = "Reset-pending-place";
+      search.dispatch("keydown", { key: "Enter", preventDefault() {} });
+      await new Promise((resolve) => setImmediate(resolve));
+
+      // #197 top-10 `reset`: a resolution that was already waiting must not
+      // repaint a box that has since been reset. The box is then refilled
+      // with the SAME query WITHOUT an input event — a keystroke would bump
+      // the generation itself, so this is the conservative case where only
+      // reset's own generation bump can hold the line.
+      reset();
+      assert.equal(search.value, "", "reset clears the box");
+      assert.equal(list.hidden, true, "reset closes the list");
+      assert.equal(search.attrs["aria-expanded"], "false");
+      search.value = "Reset-pending-place";
+
+      const statusBefore = seen.length;
+      pending.resolve(
+        geocoderResponse({
+          name: "Late Place",
+          address: { country_code: "ZZ" },
+          lat: "5",
+          lon: "6",
+        }),
+      );
+      await new Promise((resolve) => setImmediate(resolve));
+
+      assert.equal(
+        picks.length,
+        0,
+        "the superseded lookup must not pick after a reset",
+      );
+      assert.equal(
+        search.value,
+        "Reset-pending-place",
+        "nor write its label over the box",
+      );
+      assert.equal(
+        seen.length,
+        statusBefore,
+        "nor narrate a status for a box that was reset",
+      );
+    },
+  );
+});
+
 // ── Legacy cache purge ─────────────────────────────────────────────────────
 
 test("purgeLegacyCityCache removes the legacy blob key and tolerates absent storage", () => {

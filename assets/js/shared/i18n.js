@@ -16,7 +16,7 @@
 // chrome. A German or Arabic visitor sees native copy from the first frame,
 // including the advisor's degraded-failure surface — proven per-locale through
 // the real client path in tests/i18n-lazy.test.mjs.
-import { interpolate, pickString } from "./interpolate.js?v=20261024o";
+import { interpolate, pickString } from "./interpolate.js?v=20261024p";
 
 // Populated by the dynamic import below. Null until it resolves; every
 // consumer either awaits `localesReady` or degrades explicitly.
@@ -31,7 +31,7 @@ let LOCALES = null;
  * rejecting, because an untranslated-but-working page beats a blank one — and
  * `translate` already falls back to English for a missing key.
  */
-export const localesReady = import("./locales.js?v=20261024o")
+export const localesReady = import("./locales.js?v=20261024p")
   .then((m) => {
     LOCALES = m.LOCALES;
     return LOCALES;
@@ -115,8 +115,14 @@ export async function applyI18n() {
   await localesReady;
   const lang = resolveLang();
   const dict = LOCALES[lang];
-  document.documentElement.lang = lang;
-  document.documentElement.dir = dict && dict.rtl ? "rtl" : "ltr";
+  // No dictionary for the resolved language means the import failed and
+  // LOCALES is the English-only stub: claim nothing. `lang="es"` on English
+  // text sends screen readers down Spanish rules for English words, so the
+  // honest attribute is the one the rendered content actually is.
+  if (dict) {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = dict.rtl ? "rtl" : "ltr";
+  }
   // Classic chat.js cannot import this module, so expose the same small,
   // read-only translation contract to runtime-rendered advisor strings.
   window.becoLang = lang;
