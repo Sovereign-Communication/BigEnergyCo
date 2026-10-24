@@ -1,63 +1,36 @@
-import { sleep } from "./runtime.mjs";
-
 const ISSUE_ORIGIN = "https://github.com";
 const ISSUE_PATH = "/Sovereign-Communication/BigEnergyCo/issues/new";
 
 async function clickSuggestionLink(ctx) {
   const point = await ctx.evaluate(`(() => {
     const link = document.querySelector("[data-translation-suggestion]");
-    if (!link) return { missing: true };
+    if (!link) return { error: "suggestion link is missing" };
     link.scrollIntoView({ block: "center" });
     window.__translationSuggestionHref = "";
-    const trace = {
-      events: [],
-      loaderReady: link.dataset.translationSuggestionLoaderReady === "true",
-      featureReady: link.dataset.translationSuggestionReady === "true",
-      hit: null,
-    };
-    window.__translationSuggestionClickTrace = trace;
-    const belongsToLink = (event) => event.composedPath().includes(link);
-    document.addEventListener("click", (event) => {
-      if (belongsToLink(event)) {
-        trace.events.push({
-          phase: "capture",
-          trusted: event.isTrusted,
-          featureReady: link.dataset.translationSuggestionReady === "true",
-          prevented: event.defaultPrevented,
-        });
-      }
-    }, true);
-    document.addEventListener("click", (event) => {
-      if (belongsToLink(event)) {
-        trace.events.push({
-          phase: "bubble",
-          trusted: event.isTrusted,
-          featureReady: link.dataset.translationSuggestionReady === "true",
-          prevented: event.defaultPrevented,
-        });
-      }
-    });
     const observe = (event) => {
-      trace.observerEvents = (trace.observerEvents || 0) + 1;
       if (event.isTrusted && link.dataset.translationSuggestionReady !== "true") return;
       event.preventDefault();
       link.removeEventListener("click", observe);
       window.__translationSuggestionHref = link.href;
     };
     link.addEventListener("click", observe);
-    const rect = link.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-    const hit = document.elementFromPoint(x, y);
-    trace.hit = {
-      insideViewport: x >= 0 && x < innerWidth && y >= 0 && y < innerHeight,
-      isLink: hit === link || link.contains(hit),
-      tag: hit?.tagName || "",
-      id: hit?.id || "",
-    };
-    return { x, y };
+    const range = document.createRange();
+    range.selectNodeContents(link);
+    for (const rect of range.getClientRects()) {
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      const hit = document.elementFromPoint(x, y);
+      if (
+        x >= 0 &&
+        x < innerWidth &&
+        y >= 0 &&
+        y < innerHeight &&
+        (hit === link || link.contains(hit))
+      ) return { x, y };
+    }
+    return { error: "suggestion text has no visible hit-tested rectangle" };
   })()`);
-  if (point?.missing) return { href: null, diagnostic: { missing: true } };
+  if (point?.error) return { href: null, reason: point.error };
   await ctx.send("Input.dispatchMouseEvent", {
     type: "mouseMoved",
     x: point.x,
@@ -82,32 +55,9 @@ async function clickSuggestionLink(ctx) {
     5000,
     50,
   );
-  if (observed)
-    return {
-      href: await ctx.evaluate("window.__translationSuggestionHref"),
-      diagnostic: null,
-    };
-  const diagnostic = await ctx
-    .evaluate(
-      `(() => {
-      const link = document.querySelector("[data-translation-suggestion]");
-      const trace = window.__translationSuggestionClickTrace || {};
-      const href = link ? new URL(link.href) : null;
-      return {
-        path: location.pathname,
-        loaderReady: link?.dataset.translationSuggestionLoaderReady === "true",
-        featureReady: link?.dataset.translationSuggestionReady === "true",
-        hrefHasBody: href?.searchParams.has("body") || false,
-        featureRequested: performance.getEntriesByType("resource")
-          .some((entry) => entry.name.includes("/assets/js/translation-suggestion.js")),
-        hit: trace.hit || null,
-        events: trace.events || [],
-        observerEvents: trace.observerEvents || 0,
-      };
-    })()`,
-    )
-    .catch((error) => ({ evaluationError: String(error?.message || error) }));
-  return { href: null, diagnostic };
+  return observed
+    ? { href: await ctx.evaluate("window.__translationSuggestionHref") }
+    : { href: null, reason: "browser click produced no draft" };
 }
 
 export async function probeTranslationSuggestion(ctx, expectedTexts) {
@@ -133,8 +83,6 @@ export async function probeTranslationSuggestion(ctx, expectedTexts) {
       passed: false,
       reason: "lazy suggestion click handler did not install",
     };
-  await sleep(50);
-
   const observed = await ctx.evaluate(`(async () => {
     const expectedTexts = ${JSON.stringify(expectedTexts)};
     const link = document.querySelector("[data-translation-suggestion]");
@@ -172,7 +120,7 @@ export async function probeTranslationSuggestion(ctx, expectedTexts) {
   if (!emptyClick.href)
     return {
       passed: false,
-      reason: `empty draft click did not complete: ${JSON.stringify(emptyClick.diagnostic)}`,
+      reason: `empty draft click did not complete: ${emptyClick.reason}`,
     };
   const localized = await ctx.evaluate(`(async () => {
     const expectedTexts = ${JSON.stringify(expectedTexts)};
@@ -205,7 +153,7 @@ export async function probeTranslationSuggestion(ctx, expectedTexts) {
   if (!selectedClick.href)
     return {
       passed: false,
-      reason: `selected-text draft click did not complete: ${JSON.stringify(selectedClick.diagnostic)}`,
+      reason: `selected-text draft click did not complete: ${selectedClick.reason}`,
     };
   const final = await ctx.evaluate(`(() => {
     const link = document.querySelector("[data-translation-suggestion]");
