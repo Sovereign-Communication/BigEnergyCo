@@ -1091,10 +1091,33 @@ test("GRAPH: the pre-interactive slider graph carries the projection, never the 
 // budget-span.js provides while importing it from cut-targets.js, and only
 // the browser smoke noticed the app was dead. This walks every shipped
 // module in assets/js and proves each named import resolves.
+// The walk races deploy-manifest's MUTATION TOOTH tests, which create and
+// delete strays in assets/js from another process (STRAY-MUTATION-CHECK.tmp,
+// STRAY-MUTATION-DIR) — the observed failure was statSync ENOENT on an entry
+// readdir had just listed. An entry, or a whole subdirectory, that vanishes
+// mid-walk ships nothing, so there is nothing for this walk to prove: skip it.
+// Tolerance is ENOENT only (any other errno still throws), and a module that
+// EXISTS without the named export still fails the assertions below — only
+// disappearance itself is forgiven, never a missing export or a resolvable-
+// import miss.
 function shippedModules(dir, out = []) {
-  for (const name of readdirSync(dir)) {
+  let names;
+  try {
+    names = readdirSync(dir);
+  } catch (err) {
+    if (err.code === "ENOENT") return out;
+    throw err;
+  }
+  for (const name of names) {
     const p = join(dir, name);
-    if (statSync(p).isDirectory()) shippedModules(p, out);
+    let stat;
+    try {
+      stat = statSync(p);
+    } catch (err) {
+      if (err.code === "ENOENT") continue;
+      throw err;
+    }
+    if (stat.isDirectory()) shippedModules(p, out);
     else if (name.endsWith(".js")) out.push(p);
   }
   return out;
@@ -1151,4 +1174,16 @@ test("GRAPH: every named import in the shipped modules resolves to a real export
     }
   }
   assert.deepEqual(missing, [], missing.join("; "));
+});
+
+test("GRAPH walk: a directory that vanished mid-walk yields no entries, not a crash", () => {
+  // Deterministic teeth for the ENOENT tolerance: without the guards, the
+  // readdir/stat ENOENT escapes the walk and fails the whole GRAPH test for
+  // an unrelated reason (seen in CI-shaped runs as 1951/1952 with ENOENT on
+  // STRAY-MUTATION-CHECK.tmp). The vanished-entry half cannot be scheduled
+  // synchronously; its proof is repeated full-suite runs (4/4 green).
+  assert.deepEqual(
+    shippedModules(join(ROOT, "assets", "js", "VANISHED-MID-WALK-NOT-REAL")),
+    [],
+  );
 });
