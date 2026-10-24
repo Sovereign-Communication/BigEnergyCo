@@ -6,10 +6,39 @@ const ISSUE_PATH = "/Sovereign-Communication/BigEnergyCo/issues/new";
 async function clickSuggestionLink(ctx) {
   const point = await ctx.evaluate(`(() => {
     const link = document.querySelector("[data-translation-suggestion]");
-    if (!link) return null;
+    if (!link) return { missing: true };
     link.scrollIntoView({ block: "center" });
     window.__translationSuggestionHref = "";
+    const trace = {
+      events: [],
+      loaderReady: link.dataset.translationSuggestionLoaderReady === "true",
+      featureReady: link.dataset.translationSuggestionReady === "true",
+      hit: null,
+    };
+    window.__translationSuggestionClickTrace = trace;
+    const belongsToLink = (event) => event.composedPath().includes(link);
+    document.addEventListener("click", (event) => {
+      if (belongsToLink(event)) {
+        trace.events.push({
+          phase: "capture",
+          trusted: event.isTrusted,
+          featureReady: link.dataset.translationSuggestionReady === "true",
+          prevented: event.defaultPrevented,
+        });
+      }
+    }, true);
+    document.addEventListener("click", (event) => {
+      if (belongsToLink(event)) {
+        trace.events.push({
+          phase: "bubble",
+          trusted: event.isTrusted,
+          featureReady: link.dataset.translationSuggestionReady === "true",
+          prevented: event.defaultPrevented,
+        });
+      }
+    });
     const observe = (event) => {
+      trace.observerEvents = (trace.observerEvents || 0) + 1;
       if (event.isTrusted && link.dataset.translationSuggestionReady !== "true") return;
       event.preventDefault();
       link.removeEventListener("click", observe);
@@ -17,9 +46,18 @@ async function clickSuggestionLink(ctx) {
     };
     link.addEventListener("click", observe);
     const rect = link.getBoundingClientRect();
-    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const hit = document.elementFromPoint(x, y);
+    trace.hit = {
+      insideViewport: x >= 0 && x < innerWidth && y >= 0 && y < innerHeight,
+      isLink: hit === link || link.contains(hit),
+      tag: hit?.tagName || "",
+      id: hit?.id || "",
+    };
+    return { x, y };
   })()`);
-  if (!point) return null;
+  if (point?.missing) return { href: null, diagnostic: { missing: true } };
   await ctx.send("Input.dispatchMouseEvent", {
     type: "mouseMoved",
     x: point.x,
@@ -44,7 +82,32 @@ async function clickSuggestionLink(ctx) {
     5000,
     50,
   );
-  return observed ? ctx.evaluate("window.__translationSuggestionHref") : null;
+  if (observed)
+    return {
+      href: await ctx.evaluate("window.__translationSuggestionHref"),
+      diagnostic: null,
+    };
+  const diagnostic = await ctx
+    .evaluate(
+      `(() => {
+      const link = document.querySelector("[data-translation-suggestion]");
+      const trace = window.__translationSuggestionClickTrace || {};
+      const href = link ? new URL(link.href) : null;
+      return {
+        path: location.pathname,
+        loaderReady: link?.dataset.translationSuggestionLoaderReady === "true",
+        featureReady: link?.dataset.translationSuggestionReady === "true",
+        hrefHasBody: href?.searchParams.has("body") || false,
+        featureRequested: performance.getEntriesByType("resource")
+          .some((entry) => entry.name.includes("/assets/js/translation-suggestion.js")),
+        hit: trace.hit || null,
+        events: trace.events || [],
+        observerEvents: trace.observerEvents || 0,
+      };
+    })()`,
+    )
+    .catch((error) => ({ evaluationError: String(error?.message || error) }));
+  return { href: null, diagnostic };
 }
 
 export async function probeTranslationSuggestion(ctx, expectedTexts) {
@@ -105,9 +168,12 @@ export async function probeTranslationSuggestion(ctx, expectedTexts) {
       passed: false,
       reason: observed?.error || "English translation did not render",
     };
-  const emptyHref = await clickSuggestionLink(ctx);
-  if (!emptyHref)
-    return { passed: false, reason: "empty draft click did not complete" };
+  const emptyClick = await clickSuggestionLink(ctx);
+  if (!emptyClick.href)
+    return {
+      passed: false,
+      reason: `empty draft click did not complete: ${JSON.stringify(emptyClick.diagnostic)}`,
+    };
   const localized = await ctx.evaluate(`(async () => {
     const expectedTexts = ${JSON.stringify(expectedTexts)};
     const select = document.querySelector("#langSelect");
@@ -135,11 +201,11 @@ export async function probeTranslationSuggestion(ctx, expectedTexts) {
     selection.addRange(range);
     return selection.toString();
   })()`);
-  const selectedHref = await clickSuggestionLink(ctx);
-  if (!selectedHref)
+  const selectedClick = await clickSuggestionLink(ctx);
+  if (!selectedClick.href)
     return {
       passed: false,
-      reason: "selected-text draft click did not complete",
+      reason: `selected-text draft click did not complete: ${JSON.stringify(selectedClick.diagnostic)}`,
     };
   const final = await ctx.evaluate(`(() => {
     const link = document.querySelector("[data-translation-suggestion]");
@@ -168,8 +234,8 @@ export async function probeTranslationSuggestion(ctx, expectedTexts) {
     return false;
   })()`);
 
-  const empty = new URL(emptyHref);
-  const selected = new URL(selectedHref);
+  const empty = new URL(emptyClick.href);
+  const selected = new URL(selectedClick.href);
   const emptyBody = empty.searchParams.get("body") || "";
   const selectedBody = selected.searchParams.get("body") || "";
   const expectedPage = new URL(ctx.base).pathname;
