@@ -34,6 +34,8 @@ test("reviewed error and advisor copy preserves the English meaning", () => {
   );
   assert.match(LOCALES.ar.advisorIntro, /كيمياء البطارية/);
   assert.match(LOCALES.ar.frontierNoSystem, /ما لا تصل إليه الشمس/);
+  assert.match(LOCALES.ar.frontierColRange, /تجميع ذاتي/);
+  assert.match(LOCALES.ar.frontierLegendBand, /نظام كامل/);
   assert.match(LOCALES.de.invalidDailyKwh, /kreuze die Geräte an/);
   assert.match(
     LOCALES.nl.frontierVerdictCoveredOffgrid,
@@ -49,7 +51,7 @@ test("localized frontier copy retains the delivered DIY midpoint and method", ()
   // English names a midpoint for DIY components after shipping and duty.
   // The same local term must survive in the caption and both pricing notes.
   const terms = {
-    es: "aranceles de importación",
+    es: "aranceles",
     pt: "impostos de importação",
     fr: "droits de douane",
     de: "Einfuhrabgaben",
@@ -72,25 +74,25 @@ test("localized frontier copy retains the delivered DIY midpoint and method", ()
     LOCALES.de.frontierMethod,
     /jede Kombination aus Modulen und Batterie/,
   );
-  assert.match(LOCALES.de.frontierMethod, /von keinem günstigeren System/);
+  assert.match(LOCALES.de.frontierMethod, /kein günstigeres System übertrifft/);
 });
 
 test("frontier range labels do not leak English DIY or retail terms", () => {
   const markers = {
     es: {
-      range: "montaje propio",
-      legend: "montaje propio",
+      range: "Montaje propio",
+      legend: "montar por cuenta propia",
       retail: "por menor",
     },
     pt: {
-      range: "montagem própria",
+      range: "Montagem própria",
       legend: "montagem própria",
       retail: "varejo",
     },
     fr: {
-      range: "Montage par soi-même",
+      range: "Montage soi-même",
       legend: "monter soi-même",
-      retail: "vendus au détail",
+      retail: "livrés au détail",
     },
   };
   for (const [locale, terms] of Object.entries(markers)) {
