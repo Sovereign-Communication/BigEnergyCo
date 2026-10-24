@@ -41,6 +41,7 @@ import {
   allowedTop,
   deployList,
 } from "./lib/deploy-manifest.mjs";
+import { addTranslationSuggestionToPage } from "./lib/translation-suggestion.mjs";
 
 const stageIdx = process.argv.indexOf("--stage");
 const STAGE = join(
@@ -188,6 +189,31 @@ if (LIST) {
     );
   }
 
+  // R-I18N-06 applies to every published HTML route. Transform only the staged
+  // artifact so generated pages and hand-maintained pages share one owner.
+  const versionSource = readFileSync(join(ROOT, "index.html"), "utf8");
+  const version = /assets\/js\/sizing\/ui\.js\?v=([A-Za-z0-9_-]+)/.exec(
+    versionSource,
+  )?.[1];
+  if (!version) throw new Error("Cannot find the staged asset version");
+  const htmlPages = deployList().filter((f) => /\.html$/i.test(f));
+  let changedPages = 0;
+  for (const f of htmlPages) {
+    const dest = join(STAGE, f);
+    const before = readFileSync(dest, "utf8");
+    const after = addTranslationSuggestionToPage(f, before, version);
+    if (after !== before) {
+      writeFileSync(dest, after);
+      changedPages += 1;
+    }
+  }
+  console.log(
+    "Translation suggestion link staged on " +
+      htmlPages.length +
+      " HTML pages (" +
+      changedPages +
+      " modified).",
+  );
   // Safety net: the staged tree must contain only what the allowlist put there.
   for (const name of readdirSync(STAGE)) {
     if (!allowedTop.has(name))

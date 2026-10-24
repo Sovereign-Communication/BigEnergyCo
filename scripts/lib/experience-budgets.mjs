@@ -1009,7 +1009,7 @@ export function composeTranslationFacetLine(report) {
     Number.isInteger(terms?.passed) &&
     terms.passed >= 0 &&
     terms.passed <= terms.checked
-      ? `Glossary ${terms.passed}/${terms.checked} label anchors; lexical only. `
+      ? "Glossary " + terms.passed + "/" + terms.checked + " lexical. "
       : "Glossary unmeasured. ";
   const quantities = report.translation_quantities;
   const figures =
@@ -1018,14 +1018,33 @@ export function composeTranslationFacetLine(report) {
     Number.isInteger(quantities?.passed) &&
     quantities.passed >= 0 &&
     quantities.passed <= quantities.checked
-      ? `Figures ${quantities.passed}/${quantities.checked} preserved. `
+      ? "Figures " + quantities.passed + "/" + quantities.checked + ". "
       : "Figures unmeasured. ";
+  const suggestion = report.translation_suggestion?.passed
+    ? "Fix link: locale/page/key draft, browser-tested; no send. "
+    : "Fix link unverified. ";
   return (
-    `RUNTIME, ${sweep.locales} locales x ${sweep.phases} re-entry: ` +
-    `${rawKeys} raw keys/${sweep.passes + 1} reads; ` +
-    `JS ${sweep.matched}/${sweep.judged}; DOM ${sweep.domMatched}/${sweep.domJudged} match dictionaries. ` +
-    `Parity/placeholders: scripts/check-i18n.mjs. ${glossary}${figures}` +
-    `Not done: meaning/naturalness (native judgement).`
+    "RUNTIME " +
+    sweep.locales +
+    " locales x " +
+    sweep.phases +
+    " re-entry: " +
+    rawKeys +
+    " visible keys/" +
+    (sweep.passes + 1) +
+    " reads; JS " +
+    sweep.matched +
+    "/" +
+    sweep.judged +
+    "; DOM " +
+    sweep.domMatched +
+    "/" +
+    sweep.domJudged +
+    " match dictionaries. Parity: check-i18n. " +
+    glossary +
+    figures +
+    suggestion +
+    "Not done: meaning/naturalness; native review still open."
   );
 }
 

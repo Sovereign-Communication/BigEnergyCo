@@ -40,6 +40,7 @@ import { deployList } from "./lib/deploy-manifest.mjs";
 import { splitDivergences } from "./lib/deploy-blobs.mjs";
 import { start } from "./smoke/runtime.mjs";
 import { runExperienceWalk } from "./smoke/experience.mjs";
+import { probeTranslationSuggestion } from "./smoke/translation-suggestion.mjs";
 import { jevHealthAtDocumentStart } from "./smoke/jev.js";
 import {
   EXPERIENCE_EXPECTATIONS,
@@ -133,6 +134,10 @@ console.log(
 
 let ctx = null;
 let reading = null;
+let translationSuggestion = {
+  passed: false,
+  reason: "browser probe did not run",
+};
 try {
   ctx = await start();
   await ctx.send("Page.enable");
@@ -163,6 +168,10 @@ try {
   await ctx.send("Page.navigate", { url: srv.url });
   await new Promise((r) => setTimeout(r, 6000));
   reading = await runExperienceWalk(ctx, { page: "index.html" });
+  translationSuggestion = await probeTranslationSuggestion(ctx, {
+    en: LOCALES.en.heroTitle1,
+    es: LOCALES.es.heroTitle1,
+  });
 } catch (err) {
   // A browser that could not be driven is a hole, not a pass. It is recorded as
   // a reading so the evaluator below rules on its absence and the gate says so
@@ -193,6 +202,11 @@ for (const r of verdict.regressions) fail(`regression: ${r.message}`);
 if (reading?.driver_error)
   fail(`the browser could not be driven: ${reading.driver_error}`);
 else if (reading?.ok) ok("the first-run flow was walked end to end");
+if (translationSuggestion.passed)
+  ok(
+    "the translation suggestion draft reflects the rendered locale and selection without sending a request",
+  );
+else fail(`translation suggestion probe: ${translationSuggestion.reason}`);
 
 // ── 3. the report, with the facet line composed from THIS run ───────────────
 const report = {
@@ -217,6 +231,7 @@ const report = {
   experience_reading: reading,
   translation_terminology: terminology,
   translation_quantities: quantities,
+  translation_suggestion: translationSuggestion,
   regressions: verdict.regressions,
   holes: verdict.holes,
   notes: verdict.notes,
