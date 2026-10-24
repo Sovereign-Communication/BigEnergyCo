@@ -57,6 +57,7 @@ import {
 import { ALLOWLIST } from "./lib/deploy-manifest.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 import { canonicalizeHtml } from "./lib/platform-rewrites.mjs";
+import { addTranslationSuggestionToPage } from "./lib/translation-suggestion.mjs";
 import {
   artifactStamp,
   normalizeText,
@@ -320,6 +321,23 @@ const parity = await mapPool(parityTargets, CONCURRENCY, async (file) => {
       state: "unreadable",
       detail: `local read failed: ${e.code || e.message}`,
     };
+  }
+  if (HTML_FILE.test(file)) {
+    try {
+      localBuf = Buffer.from(
+        addTranslationSuggestionToPage(
+          file,
+          localBuf.toString("utf8"),
+          expected.ok ? expected.stamp : null,
+        ),
+      );
+    } catch (e) {
+      return {
+        file,
+        state: "unreadable",
+        detail: `local deploy transform failed: ${e.message}`,
+      };
+    }
   }
   let res;
   try {

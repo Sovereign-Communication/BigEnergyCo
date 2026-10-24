@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261024e";
+import { HOME_COPY } from "./home-copy.js?v=20261024k";
 
 export const LOCALES = {
   en: {
@@ -466,6 +466,7 @@ export const LOCALES = {
     // dictionaries carried the key. tariffNote is the one that actually LEAKED
     // English: its five translations existed and nothing ever read them.
     langLabel: "Language",
+    suggestTranslationFix: "Suggest a translation fix",
     locBtn: "📍 Use my precise location",
     tariffNote:
       "Electricity price estimated for {label} — change it above if you know your rate.",
@@ -683,6 +684,7 @@ export const LOCALES = {
     loadBill: "Conozco mi factura mensual de luz",
     loadKwh: "Conozco mis kWh/día (avanzado)",
     langLabel: "Idioma",
+    suggestTranslationFix: "Sugerir una corrección de traducción",
     readoutAppliancesEmpty:
       "Marca los electrodomésticos que quieres alimentar y tu energía diaria aparecerá aquí.",
     readoutAppliancesSummary:
@@ -1205,6 +1207,7 @@ export const LOCALES = {
     loadBill: "Sei minha conta mensal de luz",
     loadKwh: "Sei meu consumo em kWh/dia (avançado)",
     langLabel: "Idioma",
+    suggestTranslationFix: "Sugerir uma correção de tradução",
     readoutAppliancesEmpty:
       "Marque os eletrodomésticos que deseja alimentar e sua energia diária aparecerá aqui.",
     readoutAppliancesSummary:
@@ -1754,6 +1757,7 @@ export const LOCALES = {
     loadBill: "Je connais ma facture mensuelle",
     loadKwh: "Je connais mes kWh/jour (avancé)",
     langLabel: "Langue",
+    suggestTranslationFix: "Suggérer une correction de traduction",
     readoutAppliancesEmpty:
       "Cochez les appareils que vous voulez alimenter et votre énergie quotidienne apparaîtra ici.",
     readoutAppliancesSummary:
@@ -2371,6 +2375,7 @@ export const LOCALES = {
     locBtn: "📍 Präzisen Standort verwenden",
     runBtn: "☀️ System dimensionieren (5-Jahres-Simulation)",
     langLabel: "Sprache",
+    suggestTranslationFix: "Übersetzungskorrektur vorschlagen",
     lvlBest: "Beste Wahl",
     lvlCompare: "Batterien vergleichen",
     lvlMatrix: "Alle Optionen",
@@ -3162,6 +3167,7 @@ export const LOCALES = {
     loadKwh: "Ik ken mijn kWh/dag (geavanceerd)",
     chemLabel: "Accuchemie:",
     langLabel: "Taal",
+    suggestTranslationFix: "Een vertaalcorrectie voorstellen",
     locBtn: "📍 Mijn exacte locatie gebruiken",
     tariffNote:
       "Stroomprijs geschat voor {label} — wijzig deze hierboven als u uw tarief kent.",
@@ -3523,6 +3529,7 @@ export const LOCALES = {
     loadBill: "أعرف فاتورتي الشهرية",
     loadKwh: "أعرف استهلاكي بالكيلوواط ساعة يوميًا (متقدم)",
     langLabel: "اللغة",
+    suggestTranslationFix: "اقتراح تحسين الترجمة",
     readoutAppliancesEmpty:
       "اختر الأجهزة التي تريد تشغيلها وستظهر طاقتك اليومية هنا.",
     readoutAppliancesSummary:
