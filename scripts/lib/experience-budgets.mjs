@@ -1040,7 +1040,7 @@ export function composeTranslationFacetLine(report) {
     sweep.domMatched +
     "/" +
     sweep.domJudged +
-    " match dictionaries. Parity: check-i18n. " +
+    " match dictionaries. Parity: check-i18n.mjs. " +
     glossary +
     figures +
     suggestion +
