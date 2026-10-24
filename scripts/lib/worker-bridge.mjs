@@ -133,8 +133,14 @@ export async function handleWorkerRequest(worker, req, res, opts = {}) {
   // ExecutionContext stub. Nothing in the current worker calls waitUntil, but
   // an absent ctx would throw the moment a future route uses it — and a smoke
   // that dies on a missing stub teaches nothing.
+  //
+  // waitUntil keeps the RUNTIME's contract, not a mute no-op: it takes the
+  // promise it is given, returns an awaitable one so a harness can wait on the
+  // same work the runtime would keep alive, and swallows a rejection because a
+  // failed background task is logged by the runtime — it never fails the
+  // request that scheduled it. The old `() => {}` dropped both halves.
   const ctx = {
-    waitUntil: () => {},
+    waitUntil: (promise) => Promise.resolve(promise).catch(() => {}),
     passThroughOnException: () => {},
   };
 
