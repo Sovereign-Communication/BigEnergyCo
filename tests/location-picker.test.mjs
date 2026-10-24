@@ -430,13 +430,16 @@ test("city combobox: reset invalidates a lookup already in flight", async () => 
       search.dispatch("keydown", { key: "Enter", preventDefault() {} });
       await new Promise((resolve) => setImmediate(resolve));
 
-      // #197 top-10 `reset`: the generation bump is the fail-closed half —
-      // a resolution that was already waiting must not repaint a box that
-      // has since been reset.
+      // #197 top-10 `reset`: a resolution that was already waiting must not
+      // repaint a box that has since been reset. The box is then refilled
+      // with the SAME query WITHOUT an input event — a keystroke would bump
+      // the generation itself, so this is the conservative case where only
+      // reset's own generation bump can hold the line.
       reset();
       assert.equal(search.value, "", "reset clears the box");
       assert.equal(list.hidden, true, "reset closes the list");
       assert.equal(search.attrs["aria-expanded"], "false");
+      search.value = "Reset-pending-place";
 
       const statusBefore = seen.length;
       pending.resolve(
@@ -454,7 +457,11 @@ test("city combobox: reset invalidates a lookup already in flight", async () => 
         0,
         "the superseded lookup must not pick after a reset",
       );
-      assert.equal(search.value, "", "nor write its label back into the box");
+      assert.equal(
+        search.value,
+        "Reset-pending-place",
+        "nor write its label over the box",
+      );
       assert.equal(
         seen.length,
         statusBefore,
