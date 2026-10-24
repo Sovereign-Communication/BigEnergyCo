@@ -57,7 +57,20 @@ export async function probeTranslationSuggestion(ctx, expectedTexts) {
     100,
   );
   if (!loaded) return { passed: false, reason: "page load timed out" };
-  await sleep(250);
+  const loaderReady = await ctx.poll(
+    () =>
+      ctx.evaluate(
+        'document.querySelector("[data-translation-suggestion]")?.dataset.translationSuggestionLoaderReady === "true"',
+      ),
+    10000,
+    50,
+  );
+  if (!loaderReady)
+    return {
+      passed: false,
+      reason: "lazy suggestion click handler did not install",
+    };
+  await sleep(50);
 
   const observed = await ctx.evaluate(`(async () => {
     const expectedTexts = ${JSON.stringify(expectedTexts)};

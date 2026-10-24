@@ -20,6 +20,7 @@ export async function openTranslationSuggestion(
 
 export function installTranslationSuggestionLoader(link, loadFeature) {
   if (!link || typeof loadFeature !== "function") return;
+  link.dataset.translationSuggestionLoaderReady = "true";
   let selectedRange = null;
   let loading = null;
   let forwarding = false;

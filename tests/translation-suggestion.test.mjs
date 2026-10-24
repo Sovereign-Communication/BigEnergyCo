@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { translationSuggestionUrl } from "../assets/js/shared/translation-suggestion-url.js";
-import { openTranslationSuggestion } from "../assets/js/shared/translation-suggestion-loader.js";
+import {
+  installTranslationSuggestionLoader,
+  openTranslationSuggestion,
+} from "../assets/js/shared/translation-suggestion-loader.js";
 import { addTranslationSuggestionToPage } from "../scripts/lib/translation-suggestion.mjs";
 
 test("issue draft contains only locale, pathname, key, and quoted translation", () => {
@@ -76,6 +79,21 @@ test("lazy suggestion opening restores selection before forwarding the click", a
     else globalThis.window = priorWindow;
   }
   assert.deepEqual(calls, ["feature", "clear", range, "click"]);
+});
+
+test("the lazy click handler exposes when it is installed without loading its feature", () => {
+  const listeners = new Map();
+  const link = {
+    dataset: {},
+    addEventListener: (name, listener) => listeners.set(name, listener),
+  };
+
+  installTranslationSuggestionLoader(link, async () => {});
+
+  assert.equal(link.dataset.translationSuggestionLoaderReady, "true");
+  assert.equal(link.dataset.translationSuggestionReady, undefined);
+  assert.ok(listeners.has("pointerdown"));
+  assert.ok(listeners.has("click"));
 });
 
 test("every staged page gets one localized footer link and a relative script", () => {
