@@ -180,3 +180,21 @@ test("hot entry pages defer the full suggestion module", () => {
     /src="\.\.\/\.\.\/assets\/js\/translation-suggestion\.js/,
   );
 });
+
+import { LOCALES } from "../assets/js/shared/locales.js";
+
+test("translation suggestion CTA copy preserves its reviewed source meaning in every locale", () => {
+  const reviewedLabels = {
+    en: "Suggest a translation fix",
+    es: "Sugerir una corrección de traducción",
+    pt: "Sugerir uma correção de tradução",
+    fr: "Suggérer une correction de traduction",
+    de: "Übersetzungskorrektur vorschlagen",
+    nl: "Een vertaalcorrectie voorstellen",
+    ar: "اقتراح تحسين الترجمة",
+  };
+
+  for (const [locale, label] of Object.entries(reviewedLabels)) {
+    assert.equal(LOCALES[locale]?.suggestTranslationFix, label, locale);
+  }
+});

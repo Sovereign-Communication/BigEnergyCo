@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261024j";
+import { HOME_COPY } from "./home-copy.js?v=20261024k";
 
 export const LOCALES = {
   en: {
@@ -3167,7 +3167,7 @@ export const LOCALES = {
     loadKwh: "Ik ken mijn kWh/dag (geavanceerd)",
     chemLabel: "Accuchemie:",
     langLabel: "Taal",
-    suggestTranslationFix: "Vertaling verbeteren",
+    suggestTranslationFix: "Een vertaalcorrectie voorstellen",
     locBtn: "📍 Mijn exacte locatie gebruiken",
     tariffNote:
       "Stroomprijs geschat voor {label} — wijzig deze hierboven als u uw tarief kent.",
