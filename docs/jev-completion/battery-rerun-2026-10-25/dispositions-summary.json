@@ -1,0 +1,14 @@
+{
+  "failopen_total": 726,
+  "failopen_buckets": {
+    "fail-open-by-design": 725,
+    "hardened-with-test": 1
+  },
+  "failopen_needs_human": [],
+  "testplan_total": 400,
+  "testplan_buckets": {
+    "covered-transitively": 227,
+    "dispositioned": 158,
+    "tested": 15
+  }
+}

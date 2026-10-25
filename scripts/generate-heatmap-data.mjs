@@ -95,7 +95,7 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * toRad) * Math.cos(lat2 * toRad) * Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
+  return 2 * R * Math.asin(Math.sqrt(Math.min(1, a))); // clamp: antipodal fp overshoot would NaN the search
 }
 
 function nearestProfile(lat, lon) {
