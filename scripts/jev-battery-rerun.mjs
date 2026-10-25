@@ -108,7 +108,8 @@ export function extractFunctions(source, file) {
         line: i + 1,
         name,
         kind,
-        body: body.length > 4000 ? body.slice(0, 4000) + "\n/* truncated */" : body,
+        body:
+          body.length > 4000 ? body.slice(0, 4000) + "\n/* truncated */" : body,
       });
       break;
     }
@@ -184,7 +185,8 @@ function testIndex() {
   for (const f of trackedSources()) {
     if (!f.startsWith("tests/")) continue;
     const text = readFileSync(f, "utf8");
-    for (const m of text.matchAll(/\b([A-Za-z_$][\w$]{2,})\b/g)) names.add(m[1]);
+    for (const m of text.matchAll(/\b([A-Za-z_$][\w$]{2,})\b/g))
+      names.add(m[1]);
   }
   return names;
 }
@@ -219,10 +221,14 @@ function questionsFor(batch) {
       type: "choice",
       instructions: `If ${at} failed, the most user-visible failure class would be:`,
       criteria: {
-        "silent-wrong-output": "a wrong number or wrong sizing answer shown with no error",
-        "ui-crash-freeze": "the UI crashes, freezes, or an operation never completes",
-        "security-bypass": "a check meant to keep something out or private is skipped",
-        "lost-user-action": "the user's input or action is dropped without being saved",
+        "silent-wrong-output":
+          "a wrong number or wrong sizing answer shown with no error",
+        "ui-crash-freeze":
+          "the UI crashes, freezes, or an operation never completes",
+        "security-bypass":
+          "a check meant to keep something out or private is skipped",
+        "lost-user-action":
+          "the user's input or action is dropped without being saved",
         "stale-data-shown": "old data is shown as if it were current",
       },
     };
@@ -288,7 +294,10 @@ function stateText(batch) {
   return (
     head +
     batch
-      .map((fn, i) => `F${i}: ${fn.name} (${fn.file}:${fn.line}) [${fn.kind}]\n\`\`\`js\n${fn.body}\n\`\`\`\n`)
+      .map(
+        (fn, i) =>
+          `F${i}: ${fn.name} (${fn.file}:${fn.line}) [${fn.kind}]\n\`\`\`js\n${fn.body}\n\`\`\`\n`,
+      )
       .join("\n")
   );
 }
@@ -369,7 +378,13 @@ async function callJudge(state, questions, keys, model) {
       lastError = `network: ${err.message}`;
     }
   }
-  return { answers: null, usage: null, model: null, attempts, error: lastError };
+  return {
+    answers: null,
+    usage: null,
+    model: null,
+    attempts,
+    error: lastError,
+  };
 }
 
 // ── driver ─────────────────────────────────────────────────────────────────
@@ -426,7 +441,11 @@ function csvCell(v) {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 function csvRows(header, rows) {
-  return [header.join(","), ...rows.map((r) => r.map(csvCell).join(","))].join("\n") + "\n";
+  return (
+    [header.join(","), ...rows.map((r) => r.map(csvCell).join(","))].join(
+      "\n",
+    ) + "\n"
+  );
 }
 
 async function main() {
@@ -447,7 +466,9 @@ async function main() {
     );
     process.exit(2);
   }
-  process.stdout.write(`key: resolved (${String(keys.typesafeKey).length} chars)\n`);
+  process.stdout.write(
+    `key: resolved (${String(keys.typesafeKey).length} chars)\n`,
+  );
 
   mkdirSync(outDir, { recursive: true });
   const files = trackedSources();
@@ -458,7 +479,9 @@ async function main() {
   }
   for (const fn of fns) fn.name_in_tests = tested.has(fn.name);
   if (opts.smoke || opts.limit) fns = fns.slice(0, opts.smoke || opts.limit);
-  process.stdout.write(`population: ${fns.length} functions from ${files.length} files\n`);
+  process.stdout.write(
+    `population: ${fns.length} functions from ${files.length} files\n`,
+  );
 
   let model = opts.model;
   let spent = 0;
@@ -479,13 +502,21 @@ async function main() {
       const state = stateText(batch);
       const questions = questionsFor(batch);
       let r = await callJudge(state, questions, keys, model);
-      if (r.error && r.error.startsWith("HTTP 4") && model !== FALLBACK_MODEL && !modelRefused) {
+      if (
+        r.error &&
+        r.error.startsWith("HTTP 4") &&
+        model !== FALLBACK_MODEL &&
+        !modelRefused
+      ) {
         // the pin was refused: record it and ask the alias once
         modelRefused = true;
         model = FALLBACK_MODEL;
         r = await callJudge(state, questions, keys, model);
       }
-      const tokens = meter(r.usage, state.length + JSON.stringify(questions).length);
+      const tokens = meter(
+        r.usage,
+        state.length + JSON.stringify(questions).length,
+      );
       const row = {
         pass: 1,
         batch: b,
@@ -520,7 +551,9 @@ async function main() {
       if (a.kind === "score" && a.score / 3 < 0.5) flagged.push(fn);
     });
   }
-  process.stdout.write(`pass2: ${flagged.length} fail-open functions to disposition\n`);
+  process.stdout.write(
+    `pass2: ${flagged.length} fail-open functions to disposition\n`,
+  );
   const batches2 = chunk(flagged, BATCH);
   await pool(
     batches2.map((batch, b) => async () => {
@@ -528,7 +561,10 @@ async function main() {
       const state = stateText(batch);
       const questions = verdictQuestionFor(batch);
       const r = await callJudge(state, questions, keys, model);
-      const tokens = meter(r.usage, state.length + JSON.stringify(questions).length);
+      const tokens = meter(
+        r.usage,
+        state.length + JSON.stringify(questions).length,
+      );
       appendFileSync(
         rawPath,
         JSON.stringify({
@@ -569,7 +605,10 @@ async function main() {
     cost_cap_usd: opts.costCap,
     out: opts.out,
   };
-  writeFileSync(join(outDir, "summary.json"), JSON.stringify(summary, null, 2) + "\n");
+  writeFileSync(
+    join(outDir, "summary.json"),
+    JSON.stringify(summary, null, 2) + "\n",
+  );
   buildCsvs(outDir, rawPath);
   process.stdout.write(`done. spent $${spent.toFixed(6)}, out: ${opts.out}\n`);
 }
@@ -604,7 +643,8 @@ function buildCsvs(outDir, rawPath) {
       all.push({
         ...fn,
         fail_closed_score: fc.kind === "score" ? fc.score : null,
-        fail_closed: fc.kind === "score" ? Number((fc.score / 3).toFixed(3)) : null,
+        fail_closed:
+          fc.kind === "score" ? Number((fc.score / 3).toFixed(3)) : null,
         blast_radius: bl.kind === "score" ? bl.score : null,
         failure_mode: md.kind === "choice" ? md.choice : md.kind,
         test_coverage: cv.kind === "choice" ? cv.choice : cv.kind,
@@ -646,7 +686,16 @@ function buildCsvs(outDir, rawPath) {
   writeFileSync(
     join(outDir, "battery-testplan.csv"),
     csvRows(
-      ["file", "line", "name", "test_priority", "strategy", "test_coverage", "name_in_tests", "judge_model"],
+      [
+        "file",
+        "line",
+        "name",
+        "test_priority",
+        "strategy",
+        "test_coverage",
+        "name_in_tests",
+        "judge_model",
+      ],
       all
         .filter((r) => !r.name_in_tests)
         .sort((a, b) => (b.test_priority ?? -1) - (a.test_priority ?? -1))
@@ -665,7 +714,17 @@ function buildCsvs(outDir, rawPath) {
   writeFileSync(
     join(outDir, "battery-dispositions.csv"),
     csvRows(
-      ["file", "line", "name", "fail_closed", "blast_radius", "failure_mode", "verdict", "verdict_confidence", "judge_model"],
+      [
+        "file",
+        "line",
+        "name",
+        "fail_closed",
+        "blast_radius",
+        "failure_mode",
+        "verdict",
+        "verdict_confidence",
+        "judge_model",
+      ],
       all
         .filter((r) => r.verdict)
         .sort((a, b) => (b.blast_radius ?? -1) - (a.blast_radius ?? -1))
@@ -682,10 +741,15 @@ function buildCsvs(outDir, rawPath) {
         ]),
     ),
   );
-  process.stdout.write(`csvs rebuilt in ${outDir} (${all.length} judged functions)\n`);
+  process.stdout.write(
+    `csvs rebuilt in ${outDir} (${all.length} judged functions)\n`,
+  );
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href
+) {
   main().catch((err) => {
     process.stderr.write(`jev-battery-rerun: ${err.stack || err}\n`);
     process.exit(1);

@@ -289,8 +289,8 @@ test("rerun: parseHourly sorts stamps, derives hours and maps -999 to NaN", () =
   const parsed = parseHourly({
     properties: {
       parameter: {
-        ALLSKY_SFC_SW_DWN: { "2020010101": 50, "2020010100": 100 },
-        T2M: { "2020010101": 20, "2020010100": 25 },
+        ALLSKY_SFC_SW_DWN: { 2020010101: 50, 2020010100: 100 },
+        T2M: { 2020010101: 20, 2020010100: 25 },
       },
     },
   });
@@ -304,8 +304,8 @@ test("rerun: parseHourly sorts stamps, derives hours and maps -999 to NaN", () =
   const sentinel = parseHourly({
     properties: {
       parameter: {
-        ALLSKY_SFC_SW_DWN: { "2020010100": -999 },
-        T2M: { "2020010100": -999 },
+        ALLSKY_SFC_SW_DWN: { 2020010100: -999 },
+        T2M: { 2020010100: -999 },
       },
     },
   });
@@ -322,7 +322,7 @@ test("rerun: parseHourly throws on any other payload shape", () => {
   assert.throws(
     () =>
       parseHourly({
-        properties: { parameter: { ALLSKY_SFC_SW_DWN: { "2020010100": 1 } } },
+        properties: { parameter: { ALLSKY_SFC_SW_DWN: { 2020010100: 1 } } },
       }),
     /unexpected NASA POWER payload shape/,
   );
@@ -363,10 +363,7 @@ test("rerun: workedExample builds three escalating rows and a tariff-true paybac
   const wx = workedExample(c, 900, 1100);
   assert.equal(wx.rows.length, 3);
   // Spread: the slice runs in a vm realm, so .map returns a foreign Array.
-  assert.deepEqual(
-    [...wx.rows.map((r) => r[0])],
-    ["~60%", "~80%", "~95%"],
-  );
+  assert.deepEqual([...wx.rows.map((r) => r[0])], ["~60%", "~80%", "~95%"]);
   const pvLo = (r) => parseFloat(r[1]);
   assert.ok(pvLo(wx.rows[0]) < pvLo(wx.rows[1]));
   assert.ok(pvLo(wx.rows[1]) < pvLo(wx.rows[2]));

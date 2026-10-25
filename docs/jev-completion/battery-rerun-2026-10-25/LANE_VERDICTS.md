@@ -31,7 +31,7 @@ This file is the narrative record. The per-function record is machine-readable:
    bounded failure modes — each exonerates with a cited fact.
 5. **Lane review** (this pass) — every site the mechanical rule could not
    settle was read in context and decided against the CARs' single question:
-   *can this fallback present a wrong result as fact?* Decisions and their
+   _can this fallback present a wrong result as fact?_ Decisions and their
    evidence live in the `LANE` table in `scripts/jev-dispositions.mjs` and
    travel with each CSV row.
 
@@ -40,25 +40,25 @@ This file is the narrative record. The per-function record is machine-readable:
 `assets/js/shared/escape.js:6` `escapeHtml` (conf 0.23; probabilities 0.49
 must-fix / 0.46 needs-human-look — a coin flip). **Verdict: exonerated.**
 Every return path passes through the full escape chain; missing input renders
-empty — the fail-*closed* direction. `tests/escape.test.mjs` pins
+empty — the fail-_closed_ direction. `tests/escape.test.mjs` pins
 `escapeHtml(null) === ""`. No hardening possible without making the escaper
 throw on missing data, which would be strictly worse.
 
 ## CAR #197 named production must-fix (11) — verdicts
 
-| Site | Verdict | Evidence |
-| --- | --- | --- |
-| `ui.js::purchasePaths` | hardened (prior pass), guard-tested now | fail-closed guards + fix comments at site; `tests/audit-rerun-dispositions.test.mjs` pins the refusal to price a non-finite baseline |
-| `location-picker.js::el` | covered | `tests/audit-car5-wiring.test.mjs`, `tests/audit-top10-failclosed.test.mjs` |
-| `worker/index.js::callGroq` | covered | `tests/worker-upstream-failures.test.mjs`; `doFetch` parameter is the documented production seam (comment at site) |
-| `run.js::runSizingUncached` | covered | fail-fast `msg` guard at site; `tests/audit-rerun-dispositions.test.mjs` pins the boundary through `runSizing` |
-| `nasa.js::buildUrl` | covered | `tests/privacy.test.mjs` (the round-at-egress fix); `tests/audit-rerun-dispositions.test.mjs` pins the parser contract + `roundCoord`'s fail-closed non-finite → null |
-| `ui.js::setCoords` | covered | `tests/consumer-usecases.test.mjs`, `tests/playtest-guards.test.mjs`; stale-payload teardown at site (>0.05° drift) |
-| `ui.js::mergeReSlice` | hardened (prior pass), covered | non-object result guard + fix comment at site; `tests/audit-car1-guards.test.mjs`, `tests/audit-top10-failclosed.test.mjs` |
-| `ui.js::renderRelativeOptions` | hardened (prior pass), covered | the battery-only honesty fix documented at site; `tests/relative-options.test.mjs` |
-| `ui.js::applyGenRate` | covered | `tests/issue196-input-validation.test.mjs`; invalid input leaves the previous tariff applied — nothing is overwritten and the typed value stays in the field |
-| `ui.js::markPrecalcDirty` | covered | `tests/issue196-input-validation.test.mjs`; the function IS the staleness teardown (invalidates in-flight runs, clears the payload) |
-| `run.js::fetchWeatherWithFallback` | fail-open-by-design, correct | the fallback is labeled in the data the UI renders (`meta.offline: true`, `source: "… (OFFLINE MODE)"`); `tests/audit-top10-failclosed.test.mjs` |
+| Site                               | Verdict                                 | Evidence                                                                                                                                                              |
+| ---------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ui.js::purchasePaths`             | hardened (prior pass), guard-tested now | fail-closed guards + fix comments at site; `tests/audit-rerun-dispositions.test.mjs` pins the refusal to price a non-finite baseline                                  |
+| `location-picker.js::el`           | covered                                 | `tests/audit-car5-wiring.test.mjs`, `tests/audit-top10-failclosed.test.mjs`                                                                                           |
+| `worker/index.js::callGroq`        | covered                                 | `tests/worker-upstream-failures.test.mjs`; `doFetch` parameter is the documented production seam (comment at site)                                                    |
+| `run.js::runSizingUncached`        | covered                                 | fail-fast `msg` guard at site; `tests/audit-rerun-dispositions.test.mjs` pins the boundary through `runSizing`                                                        |
+| `nasa.js::buildUrl`                | covered                                 | `tests/privacy.test.mjs` (the round-at-egress fix); `tests/audit-rerun-dispositions.test.mjs` pins the parser contract + `roundCoord`'s fail-closed non-finite → null |
+| `ui.js::setCoords`                 | covered                                 | `tests/consumer-usecases.test.mjs`, `tests/playtest-guards.test.mjs`; stale-payload teardown at site (>0.05° drift)                                                   |
+| `ui.js::mergeReSlice`              | hardened (prior pass), covered          | non-object result guard + fix comment at site; `tests/audit-car1-guards.test.mjs`, `tests/audit-top10-failclosed.test.mjs`                                            |
+| `ui.js::renderRelativeOptions`     | hardened (prior pass), covered          | the battery-only honesty fix documented at site; `tests/relative-options.test.mjs`                                                                                    |
+| `ui.js::applyGenRate`              | covered                                 | `tests/issue196-input-validation.test.mjs`; invalid input leaves the previous tariff applied — nothing is overwritten and the typed value stays in the field          |
+| `ui.js::markPrecalcDirty`          | covered                                 | `tests/issue196-input-validation.test.mjs`; the function IS the staleness teardown (invalidates in-flight runs, clears the payload)                                   |
+| `run.js::fetchWeatherWithFallback` | fail-open-by-design, correct            | the fallback is labeled in the data the UI renders (`meta.offline: true`, `source: "… (OFFLINE MODE)"`); `tests/audit-top10-failclosed.test.mjs`                      |
 
 ## CAR #197 named needs-human-look (production) — decisions
 
@@ -68,10 +68,10 @@ throw on missing data, which would be strictly worse.
   `tests/audit-rerun-dispositions.test.mjs` (which also pins the one coercion,
   `money(null) → "$0"`).
 - **`ui.js::applianceState`** — exonerated. Double-gated per row (validity gate
-  + accumulation finiteness gate): invalid rows are skipped, never summed.
-  Surge defaults to running watts only for rows with no surge spec (the
-  physical minimum). Pinned by `tests/audit-car6-integration.test.mjs` and
-  `tests/issue196-input-validation.test.mjs`.
+  - accumulation finiteness gate): invalid rows are skipped, never summed.
+    Surge defaults to running watts only for rows with no surge spec (the
+    physical minimum). Pinned by `tests/audit-car6-integration.test.mjs` and
+    `tests/issue196-input-validation.test.mjs`.
 - **`run.js::runSizingCore`** — exonerated. The only invented values are the
   cache's copies, and both cache bugs are fixed with comments at site
   (`__useCaseContext` re-attachment); failures propagate to `runSizing`'s
@@ -106,10 +106,10 @@ the nearest-profile search. Clamped; pinned by the new suite.
 
 ## Disposition counts (final)
 
-| Queue | Total | Disposition |
-| --- | --- | --- |
-| Fail-open (fail-closed < 0.5) | 726 | 725 fail-open-by-design with reason + evidence, 1 hardened-with-test (`haversineKm`) |
-| Test gaps | 400 | 15 tested this pass, 227 covered-transitively (project precedent: the tested entry points re-enter them), 158 dispositioned with reason |
+| Queue                         | Total | Disposition                                                                                                                             |
+| ----------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Fail-open (fail-closed < 0.5) | 726   | 725 fail-open-by-design with reason + evidence, 1 hardened-with-test (`haversineKm`)                                                    |
+| Test gaps                     | 400   | 15 tested this pass, 227 covered-transitively (project precedent: the tested entry points re-enter them), 158 dispositioned with reason |
 
 Every one of the 71 sites the mechanical rule escalated to needs-human-look was
 lane-reviewed and decided; the reasons are per-row in
