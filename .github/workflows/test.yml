@@ -731,11 +731,15 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_FILES: ${{ steps.prfiles.outputs.files }}
         run: |
-          SCOPE="$(node -e '
+          RESULT="$(node -e '
             const { resolveCiScope } = await import("./scripts/lib/jev-scope.mjs");
             let files = [];
             try { files = JSON.parse(process.env.PR_FILES || "[]").map(f => f.filename || f); } catch {}
             const r = resolveCiScope({ title: process.env.PR_TITLE || "", files });
+            if (r.maintenance) {
+              process.stdout.write("maintenance");
+              process.exit(0);
+            }
             if (!r.scope) {
               process.stderr.write(r.error + "\n");
               process.exit(1);
@@ -745,8 +749,15 @@ jobs:
             }
             process.stdout.write(r.scope);
           ' --input-type=module)"
-          echo "scope=$SCOPE" >> "$GITHUB_OUTPUT"
-          echo "judging the facets of $SCOPE"
+          if [[ "$RESULT" == "maintenance" ]]; then
+            echo "maintenance=true" >> "$GITHUB_OUTPUT"
+            echo "scope=" >> "$GITHUB_OUTPUT"
+            echo "release chore (dependency/CI maintenance only): no plan item, so no scoped judgment applies; the full advisory report runs instead."
+          else
+            echo "maintenance=false" >> "$GITHUB_OUTPUT"
+            echo "scope=$RESULT" >> "$GITHUB_OUTPUT"
+            echo "judging the facets of $RESULT"
+          fi
 
       - name: Jev complete gate (live, model-pinned)
         continue-on-error: ${{ github.event_name == 'pull_request' }}
@@ -756,9 +767,11 @@ jobs:
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
         run: |
           args=()
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.scope.outputs.maintenance }}" != "true" ]]; then
             args+=(--scope "${{ steps.scope.outputs.scope }}")
             echo "PR scoped report is advisory; production uses the post-merge full report."
+          elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            echo "Release-chore PR: no plan item to scope to - running the FULL report as advisory; the post-merge full run on main is the gate."
           else
             echo "Running the full Jev release gate for main SHA $GITHUB_SHA."
           fi

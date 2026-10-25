@@ -626,6 +626,59 @@ test("SCOPE: a proposal can never widen or invent a scope", () => {
   );
 });
 
+// A dependency/CI release chore carries no plan item — there is nothing to
+// scope a judgment TO. Before this route existed the npm-group PR #314 died at
+// the scope step and held the required jev-complete check red forever. The
+// route must resolve honestly (no scope, no error) and never invent one; the
+// workflow then runs the full advisory report and the post-merge run on main
+// stays the gate (D-03).
+test("SCOPE: dependency/CI maintenance resolves with no scope, no error, and invents no plan item", () => {
+  const npm = resolveCiScope({
+    title: "build(deps): bump the npm group with 4 updates",
+    files: ["package.json", "package-lock.json"],
+  });
+  assert.equal(npm.scope, null);
+  assert.equal(npm.maintenance, true);
+  assert.equal(npm.how, "maintenance");
+  assert.equal(npm.error, null);
+  assert.match(npm.coverageNote, /No plan item owns this change/);
+
+  const actions = resolveCiScope({
+    title: "chore(deps): bump the github-actions group with 2 updates",
+    files: [".github/workflows/test.yml", ".github/workflows/deploy.yml"],
+  });
+  assert.equal(actions.maintenance, true);
+  assert.equal(actions.scope, null);
+  assert.equal(actions.error, null);
+
+  // An explicit plan item in the title still wins: the PR named its phase.
+  const named = resolveCiScope({
+    title: "build(deps): bump the npm group with 4 updates (P0.4)",
+    files: ["package.json", "package-lock.json"],
+  });
+  assert.equal(named.scope, "P0.4");
+  assert.equal(named.how, "explicit");
+
+  // Source beside a manifest is not maintenance: that PR is code work and
+  // must name its plan item like any other — the route may not swallow it.
+  const mixed = resolveCiScope({
+    title: "build(deps): bump the npm group with 4 updates",
+    files: ["package.json", "package-lock.json", "assets/js/sizing/ui.js"],
+  });
+  assert.equal(mixed.maintenance, undefined);
+  assert.equal(mixed.scope, null);
+  assert.ok(mixed.error, "a code change with no plan item must still fail");
+
+  // A title-only call (no files) is not maintenance either: the route needs
+  // the file list to know the surface really is manifests and lockfiles.
+  const titleOnly = resolveCiScope(
+    "build(deps): bump the npm group with 4 updates",
+  );
+  assert.equal(titleOnly.maintenance, undefined);
+  assert.equal(titleOnly.scope, null);
+  assert.ok(titleOnly.error);
+});
+
 // ── the live judgment: pinned model, and an honest run class ────────────────
 
 test("LIVE: a judgment is accepted only when the provider names a concrete model", () => {
