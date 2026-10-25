@@ -901,12 +901,23 @@ test("EVIDENCE: the translation facet line is derived from the run, not typed by
     "the removal must be recorded in notes[], or the axis reads as never measured",
   );
   // The note has to preserve what the deletion would otherwise lose: that
-  // parity still lives somewhere, and that the back-translation clause is still
+  // parity still lives somewhere, that the completed back-read is recorded
+  // with its reviewer and its limit, and that native-speaker review is still
   // open. A removal note that only says "removed" is a lost fact.
   assert.match(note, /check-i18n/, "the note must say where parity went");
   assert.match(
     note,
-    /back-reading all rendered strings for meaning remains incomplete/i,
+    /Back-reading all rendered strings for meaning was completed/i,
+    "the completed back-read must be recorded, with its reviewer named",
+  );
+  assert.match(
+    note,
+    /not native-speaker validation/i,
+    "the review limit must stay explicit: an AI back-read is not native review",
+  );
+  assert.match(
+    note,
+    /native-speaker review remains open/i,
     "the open meaning-review scope must remain explicit",
   );
   assert.doesNotMatch(

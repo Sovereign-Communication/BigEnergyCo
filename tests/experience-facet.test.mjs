@@ -1190,7 +1190,7 @@ test("FACETS: one gate emits a distinct line for each axis", () => {
   );
   assert.match(tra, /locales/, "the translation line must name the locales");
   assert.match(tra, /check-i18n/, "and say where parity is gated");
-  assert.match(tra, /Not done/, "and what it did not do");
+  assert.match(tra, /Gaps:/, "and what remains open");
   for (const [axis, line] of [
     ["experience", exp],
     ["translation", tra],
@@ -1243,9 +1243,7 @@ test("FACETS: the translation line counts the locales and moments it swept", () 
   );
   assert.match(tra, new RegExp(`${s.locales} locales`));
   assert.match(tra, new RegExp(`${s.phases} re-entry`));
-  assert.ok(
-    tra.includes(`DOM ${s.domMatched}/${s.domJudged} match dictionaries`),
-  );
+  assert.ok(tra.includes(`DOM ${s.domMatched}/${s.domJudged}=dict`));
   assert.ok(
     tra.length <= COMPLETE_FACET_CLIP,
     "the translated line must fit its transport clip",
@@ -1266,13 +1264,28 @@ test("TRANSLATION: glossary evidence comes from this run and cannot imply a mean
     translation_terminology: { checked: 56, passed: 56 },
   };
   const line = composeTranslationFacetLine(report);
-  assert.match(line, /Glossary 56\/56 lexical/);
-  assert.match(line, /Not done: meaning\/naturalness/);
+  assert.match(line, /Gloss 56\/56/);
+  // The completed back-read is cited as the documented offline review it is
+  // (AI, not this gate), and the open clause it does NOT close — native-speaker
+  // review — stays named in the gaps clause. Both halves are the honesty
+  // contract: a line that claims only the fixes, or drops the gap clause, is
+  // the overclaim.
+  assert.match(line, /Back-read 436x6 \(AI\): 23 fixes/);
+  assert.match(line, /Gaps: native review/);
+  // The runtime-injected engine callout prose (engine.js/rescale.js) is
+  // English in every locale and stays so — the worker cannot carry the
+  // dictionary, and closing it is the codes->keys engine migration, not a
+  // line edit. The gaps clause must name that class (shortest honest name:
+  // `engine`), or the line's dictionary-match counts read as a promise no
+  // locale can keep.
+  assert.match(line, /F-42, engine\./);
   assert.ok(line.length <= COMPLETE_FACET_CLIP);
   report.translation_terminology.passed = 55;
-  assert.match(composeTranslationFacetLine(report), /Glossary 55\/56/);
+  assert.match(composeTranslationFacetLine(report), /Gloss 55\/56/);
   delete report.translation_terminology;
-  assert.match(composeTranslationFacetLine(report), /Glossary unmeasured/);
+  // Both anchors unmeasured is named as one merged clause, so a reader
+  // cannot see "unmeasured" and think only one of the two was skipped.
+  assert.match(composeTranslationFacetLine(report), /Gloss\/Figs unmeasured/);
 });
 
 test("TRANSLATION: suggestion-link proof comes only from the browser probe", () => {
@@ -1281,11 +1294,8 @@ test("TRANSLATION: suggestion-link proof comes only from the browser probe", () 
     translation_suggestion: { passed: true },
   };
   const measured = composeTranslationFacetLine(report);
-  assert.match(
-    measured,
-    /Fix link: locale\/page\/key draft, browser-tested; no send/,
-  );
-  assert.match(measured, /Not done: meaning\/naturalness/);
+  assert.match(measured, /Fix link: no send/);
+  assert.match(measured, /Gaps: native review/);
   assert.ok(measured.length <= COMPLETE_FACET_CLIP);
 
   report.translation_suggestion.passed = false;

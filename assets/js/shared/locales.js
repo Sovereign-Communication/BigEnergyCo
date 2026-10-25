@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261024p";
+import { HOME_COPY } from "./home-copy.js?v=20261025b";
 
 export const LOCALES = {
   en: {
@@ -547,6 +547,51 @@ export const LOCALES = {
     pathsIncludesYouMountTheArray: "You mount the array yourself",
     pathsIncludesElectricianConnects: "An electrician does the connection",
     pathsIncludesToolsAndSafety: "Tools and safety gear",
+    roofCapNote:
+      "Caps the search at {count} × {watts} W panels ≈ {kw} kW of solar (≈6 m² per panel with access space). Clear the box to remove the cap.",
+    roofMapNeedCity: "Choose a city or use your location first.",
+    roofMapLoading: "Loading the optional map…",
+    roofMapTapFirst:
+      "Tap 3 corners: first one roof corner, then the next corner along the same edge, then the opposite edge.",
+    roofMapTapSecond: "Now tap the next corner along the same roof edge.",
+    roofMapTapThird:
+      "Now tap anywhere on the opposite roof edge to set the width.",
+    roofMapNotRectangle:
+      "Those taps don't form a rectangle — tap three corners again, starting along one roof edge.",
+    roofPanelEstimate:
+      "{area} m² is about {panels} panels at ~{panelArea} m² each.",
+    roofMapAreaHint:
+      "{hint} This caps the searched PV size; it does not certify structural or shading suitability.",
+    roofMapSelected:
+      "{area} m² selected. You can close the map or tap three new corners.",
+    roofMapLoadFailed: "The optional map could not load.",
+    roofMapUseManual: "{message} Use the manual area box below instead.",
+    modeTitleGt: "Find your cheapest path to lower bills",
+    modeDescGt:
+      "Set your monthly electric bill and location, then click Size My System to compare the optimal solar and battery paths. The results cover chemistries, 20-year true costs, and wholesale hardware savings.",
+    modeTitleOff: "Size your off-grid solar & battery bank",
+    modeDescOff:
+      "Size a self-reliant solar and battery storage system for your cabin, camper van, backup, or homestead. Enter your daily kWh or pick your appliances — hourly weather simulations ensure you never run out of power.",
+    focusNoteRec:
+      "Recommendation stays {chem} {pv} kW + {batt} kWh (~{cost} over 20 years).",
+    billCutImpossible:
+      "Even a large array can't cut the bill this far at this location - check the off-grid sizer instead.",
+    eli5Heading:
+      "📖 What This System Actually Looks Like in Real Life (Plain English)",
+    eli5SolarHeading: "🌞 The Solar Array",
+    eli5BatteryHeading: "🔋 The Battery Bank",
+    eli5EstimateNote:
+      "The result is an estimate, not a promise. Battery storage is the bucket that carries energy from sunny hours into dark hours.",
+    eli5ClimateNote:
+      " Weather suggests {climate} conditions, so dust losses are included.",
+    worstMonthNote:
+      "Darkest month: {month} — about {avg} kWh/m²/day of average sun. Size for this month, not the yearly average, or the system will fall short on gray weeks.",
+    bomSelectedSystem: "Selected system",
+    fxAsOfNote: "Live rates as of {asOf}.",
+    advisorIntakeBillLabel: "Monthly Electric Bill ($ USD):",
+    advisorIntakeKwhLabel: "Daily Energy Consumption (kWh / day):",
+    advisorIntakeBillPh: "e.g. 400",
+    advisorIntakeKwhPh: "e.g. 35",
   },
   es: {
     ...HOME_COPY.es,
@@ -567,7 +612,7 @@ export const LOCALES = {
       "Cada supuesto detrás de una cifra indica aquí su editor, la fecha de verificación y hasta qué punto coincide con lo que aplicamos. Los que no podemos documentar lo dicen.",
     sourcesCardLink: "Ver todas las fuentes →",
     heroTag:
-      "Gratis para todos, en todo el mundo · Sin registro · Nada en venta",
+      "🌍 Gratis para todos, en todo el mundo · Sin registro · Nada en venta",
     heroTitle1: "Reduce tu factura de luz.",
     heroTitle2: "Vea exactamente lo que haría falta.",
     footerAboutPre: "Creada y entregada por",
@@ -605,7 +650,7 @@ export const LOCALES = {
       "⚠️ El motor de cálculo no pudo cargarse. Actualiza la página (Ctrl+F5) e inténtalo de nuevo.",
     statusSuccess:
       "✅ {years} años de datos horarios ({dataYears}) · {yield} kWh/año por kW de panel.{offline}",
-    offlineNote: " · 🌐 modo offline típico",
+    offlineNote: " · 🌐 año típico sin conexión",
     tariffSpendLine:
       "A {tariff}/kWh, tu electricidad te cuesta unos {annual} al año hoy. Cada opción de abajo muestra la factura tras la solar y cuánto tarda en pagarse con los ahorros.",
     tariffSpendBattery:
@@ -693,10 +738,10 @@ export const LOCALES = {
     readoutBillIncomplete:
       "Introduce tu factura mensual para ver la estimación diaria.",
     readoutKwhReady: "Usando {kwh} kWh/día directamente.",
-    runBtn: "Dimensionar mi sistema (simulación de 5 años)",
+    runBtn: "☀️ Dimensionar mi sistema (simulación de 5 años)",
     runningBtn: "⏳ Simulando 5 años...",
-    runBtnReady: "Dimensionar mi sistema (simulación 5 años)",
-    locBtn: "Usar mi ubicación actual",
+    runBtnReady: "☀️ Dimensionar mi sistema (simulación de 5 años)",
+    locBtn: "📍 Usar mi ubicación actual",
     chemLabel: "Química de la batería:",
     tariffNote:
       "Precio estimado para {label} — cámbialo arriba si conoces tu tarifa.",
@@ -761,7 +806,7 @@ export const LOCALES = {
       " El motor gratuito de IA está ocupado; reintentando en {secs}s…",
     advisorNoReply: " No se recibió respuesta. Inténtalo de nuevo.",
     advisorBusy:
-      " El motor gratuito de IA está satur ahora (HTTP {status} — usa una cuota compartida).\n\nEspera aproximadamente un minuto y vuelve a enviarlo.",
+      " El motor gratuito de IA está saturado ahora (HTTP {status} — usa una cuota compartida).\n\nEspera aproximadamente un minuto y vuelve a enviarlo.",
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
     advisorDegradedLabel: "Sin conexión · no la IA en directo",
     advisorDegradedLine: "No puedo responder ahora — {why}.",
@@ -1059,7 +1104,7 @@ export const LOCALES = {
     pathsOwnershipTurnkey: "Eres propietario desde el primer día.",
     pathsOwnershipPpa: "El proveedor es el propietario y lo mantiene.",
     pathsOwnershipLease:
-      "Lo alquileres hasta que termine el contrato y luego lo compras o lo devuelves.",
+      "Lo alquilas hasta que termine el contrato y luego lo compras o lo devuelves.",
     pathsOwnershipSelf: "Eres propietario una vez instalado.",
     pathsIncentiveTaxCredit: "Crédito fiscal federal",
     pathsIncentiveRebate: "Subvención de la compañía eléctrica",
@@ -1104,6 +1149,53 @@ export const LOCALES = {
     pathsIncludesYouMountTheArray: "Tú montas el panel",
     pathsIncludesElectricianConnects: "Un electricista hace la conexión",
     pathsIncludesToolsAndSafety: "Herramientas y equipo de seguridad",
+    roofCapNote:
+      "Limita la búsqueda a {count} paneles de {watts} W ≈ {kw} kW de solar (≈6 m² por panel con espacio de acceso). Borra la casilla para quitar el límite.",
+    roofMapNeedCity: "Elige una ciudad o usa tu ubicación primero.",
+    roofMapLoading: "Cargando el mapa opcional…",
+    roofMapTapFirst:
+      "Toca 3 esquinas: primero una esquina del tejado, luego la siguiente esquina del mismo borde y después el borde opuesto.",
+    roofMapTapSecond:
+      "Ahora toca la siguiente esquina del mismo borde del tejado.",
+    roofMapTapThird:
+      "Ahora toca cualquier punto del borde opuesto del tejado para fijar el ancho.",
+    roofMapNotRectangle:
+      "Esas tocas no forman un rectángulo — toca tres esquinas de nuevo, empezando por un borde del tejado.",
+    roofPanelEstimate:
+      "{area} m² son unos {panels} paneles de ~{panelArea} m² cada uno.",
+    roofMapAreaHint:
+      "{hint} Esto limita el tamaño FV buscado; no certifica la idoneidad estructural ni la de sombras.",
+    roofMapSelected:
+      "{area} m² seleccionados. Puedes cerrar el mapa o tocar tres esquinas nuevas.",
+    roofMapLoadFailed: "El mapa opcional no pudo cargar.",
+    roofMapUseManual:
+      "{message} Usa el cuadro de área manual de abajo en su lugar.",
+    modeTitleGt: "Encuentra tu camino más barato para bajar la factura",
+    modeDescGt:
+      "Indica tu factura eléctrica mensual y tu ubicación y haz clic en Dimensionar mi sistema para comparar las vías óptimas de solar y batería. Los resultados cubren químicas, costes reales a 20 años y ahorro en hardware al por mayor.",
+    modeTitleOff: "Dimensiona tu solar y banco de baterías fuera de la red",
+    modeDescOff:
+      "Dimensiona un sistema solar y de almacenamiento en batería autosuficiente para tu cabaña, furgoneta, respaldo o granja. Introduce tu kWh diario o elige tus electrodomésticos — las simulaciones meteorológicas horarias garantizan que nunca te quedes sin energía.",
+    focusNoteRec:
+      "La recomendación sigue siendo {chem} {pv} kW + {batt} kWh (~{cost} en 20 años).",
+    billCutImpossible:
+      "Ni un gran array puede recortar la factura hasta ahí en esta ubicación: prueba el dimensionador fuera de la red.",
+    eli5Heading:
+      "📖 Cómo es realmente este sistema en la vida real (en lenguaje sencillo)",
+    eli5SolarHeading: "🌞 El campo solar",
+    eli5BatteryHeading: "🔋 El banco de baterías",
+    eli5EstimateNote:
+      "El resultado es una estimación, no una promesa. El almacenamiento en batería es el cubo que lleva energía de las horas soleadas a las horas oscuras.",
+    eli5ClimateNote:
+      " El clima sugiere condiciones de {climate}, así que se incluyen pérdidas por polvo.",
+    worstMonthNote:
+      "Mes más oscuro: {month} — unos {avg} kWh/m²/día de sol medio. Dimensiona para este mes, no para la media anual, o el sistema se quedará corto en semanas grises.",
+    bomSelectedSystem: "Sistema seleccionado",
+    fxAsOfNote: "Tipos en vivo a fecha de {asOf}.",
+    advisorIntakeBillLabel: "Factura eléctrica mensual ($ USD):",
+    advisorIntakeKwhLabel: "Consumo energético diario (kWh / día):",
+    advisorIntakeBillPh: "p. ej. 400",
+    advisorIntakeKwhPh: "p. ej. 35",
   },
   pt: {
     ...HOME_COPY.pt,
@@ -1124,7 +1216,7 @@ export const LOCALES = {
       "Cada premissa por trás de um número indica aqui o responsável, a data da verificação e o quanto corresponde ao que aplicamos. As que não conseguimos documentar dizem isso.",
     sourcesCardLink: "Ver todas as fontes →",
     heroTag:
-      "Grátis para todos, no mundo inteiro · Sem cadastro · Nada à venda",
+      "🌍 Grátis para todos, no mundo inteiro · Sem cadastro · Nada à venda",
     heroTitle1: "Corte a sua conta de luz.",
     heroTitle2: "Veja exatamente o que seria preciso.",
     footerAboutPre: "Criada e oferecida por",
@@ -1217,8 +1309,8 @@ export const LOCALES = {
       "Informe sua conta mensal para ver a estimativa diária.",
     readoutKwhEmpty: "Informe seu consumo diário em kWh para ver a estimativa.",
     readoutKwhReady: "Usando {kwh} kWh/dia diretamente.",
-    runBtn: "Dimensionar meu sistema (simulação de 5 anos)",
-    locBtn: "Usar minha localização atual",
+    runBtn: "☀️ Dimensionar meu sistema (simulação de 5 anos)",
+    locBtn: "📍 Usar minha localização atual",
     chemLabel: "Química da bateria:",
     tariffNote:
       "Preço estimado para {label} — mude acima se souber sua tarifa.",
@@ -1248,12 +1340,12 @@ export const LOCALES = {
     statusOffgrid:
       "⏳ Obtendo 5 anos de clima horário por satélite e buscando tamanhos de sistema…",
     runningBtn: "⏳ Simulando 5 anos...",
-    runBtnReady: "☀️ Dimensionar meu sistema (simulação 5 anos)",
+    runBtnReady: "☀️ Dimensionar meu sistema (simulação de 5 anos)",
     errorSim:
       "⚠️ O motor de dimensionamento não pôde carregar. Atualize a página (Ctrl+F5) e tente novamente.",
     statusSuccess:
       "✅ {years} anos de dados horários ({dataYears}) · {yield} kWh/ano por kW de painel.{offline}",
-    offlineNote: " · 🌐 modo offline típico",
+    offlineNote: " · 🌐 ano típico offline",
     tariffSpendLine:
       "A {tariff}/kWh, a sua eletricidade custa cerca de {annual} por ano hoje. Cada opção abaixo mostra a conta após a solar e em quanto tempo ela se paga com as economias.",
     tariffSpendBattery:
@@ -1653,6 +1745,53 @@ export const LOCALES = {
     pathsIncludesYouMountTheArray: "Você monta o painel",
     pathsIncludesElectricianConnects: "Um eletricista faz a conexão",
     pathsIncludesToolsAndSafety: "Ferramentas e equipamento de segurança",
+    roofCapNote:
+      "Limita a busca a {count} painéis de {watts} W ≈ {kw} kW de solar (≈6 m² por painel com espaço de acesso). Apague a caixa para remover o limite.",
+    roofMapNeedCity: "Escolha uma cidade ou use a sua localização primeiro.",
+    roofMapLoading: "Carregando o mapa opcional…",
+    roofMapTapFirst:
+      "Toque em 3 cantos: primeiro um canto do telhado, depois o próximo canto ao longo da mesma borda e então a borda oposta.",
+    roofMapTapSecond:
+      "Agora toque no próximo canto ao longo da mesma borda do telhado.",
+    roofMapTapThird:
+      "Agora toque em qualquer ponto da borda oposta do telhado para definir a largura.",
+    roofMapNotRectangle:
+      "Esses toques não formam um retângulo — toque em três cantos de novo, começando ao longo de uma borda do telhado.",
+    roofPanelEstimate:
+      "{area} m² equivalem a cerca de {panels} painéis de ~{panelArea} m² cada.",
+    roofMapAreaHint:
+      "{hint} Isso limita o tamanho FV pesquisado; não certifica adequação estrutural ou de sombreamento.",
+    roofMapSelected:
+      "{area} m² selecionados. Você pode fechar o mapa ou tocar em três novos cantos.",
+    roofMapLoadFailed: "O mapa opcional não pôde carregar.",
+    roofMapUseManual:
+      "{message} Use a caixa de área manual abaixo como alternativa.",
+    modeTitleGt: "Encontre o caminho mais barato para reduzir a conta",
+    modeDescGt:
+      "Informe sua conta mensal de energia e sua localização e clique em Dimensionar meu sistema para comparar os caminhos solares e de bateria ideais. Os resultados cobrem químicas, custos reais de 20 anos e economia em hardware por atacado.",
+    modeTitleOff: "Dimensione seu solar e banco de baterias fora da rede",
+    modeDescOff:
+      "Dimensione um sistema solar e de armazenamento em bateria autossuficiente para sua cabana, van, reserva ou sítio. Informe seu kWh diário ou escolha seus aparelhos — as simulações meteorológicas por hora garantem que você nunca fique sem energia.",
+    focusNoteRec:
+      "A recomendação continua {chem} {pv} kW + {batt} kWh (~{cost} em 20 anos).",
+    billCutImpossible:
+      "Nem um grande arranho consegue cortar a conta até aí nesta localização — experimente o dimensionador fora da rede.",
+    eli5Heading:
+      "📖 Como este sistema realmente é na vida real (em linguagem simples)",
+    eli5SolarHeading: "🌞 O arranjo solar",
+    eli5BatteryHeading: "🔋 O banco de baterias",
+    eli5EstimateNote:
+      "O resultado é uma estimativa, não uma promessa. O armazenamento em bateria é o balde que leva energia das horas ensolaradas para as horas escuras.",
+    eli5ClimateNote:
+      " O clima sugere condições de {climate}, então as perdas por poeira estão incluídas.",
+    worstMonthNote:
+      "Mês mais escuro: {month} — cerca de {avg} kWh/m²/dia de sol médio. Dimensione para este mês, não para a média anual, ou o sistema ficará aquém em semanas cinzentas.",
+    bomSelectedSystem: "Sistema selecionado",
+    fxAsOfNote: "Câmbio ao vivo em {asOf}.",
+    advisorIntakeBillLabel: "Conta mensal de energia ($ USD):",
+    advisorIntakeKwhLabel: "Consumo diário de energia (kWh / dia):",
+    advisorIntakeBillPh: "ex. 400",
+    advisorIntakeKwhPh: "ex. 35",
   },
   fr: {
     ...HOME_COPY.fr,
@@ -1672,7 +1811,7 @@ export const LOCALES = {
     sourcesCardBody:
       "Chaque hypothèse derrière un chiffre indique ici son éditeur, la date de vérification et sa proximité avec la valeur appliquée. Celles que nous ne pouvons pas sourcer le disent.",
     sourcesCardLink: "Voir toutes les sources →",
-    heroTag: "Gratuit pour tous, partout · Sans inscription · Rien à vendre",
+    heroTag: "🌍 Gratuit pour tous, partout · Sans inscription · Rien à vendre",
     heroTitle1: "Réduisez votre facture d'électricité.",
     heroTitle2: "Voyez exactement ce qu'il faudrait.",
     footerAboutPre: "Conçu et offert par",
@@ -1769,8 +1908,8 @@ export const LOCALES = {
     readoutKwhEmpty:
       "Entrez votre consommation quotidienne en kWh pour voir l'estimation.",
     readoutKwhReady: "Utilisation de {kwh} kWh/jour directement.",
-    runBtn: "Dimensionner (simulation sur 5 ans)",
-    locBtn: "Utiliser ma position actuelle",
+    runBtn: "☀️ Dimensionner (simulation sur 5 ans)",
+    locBtn: "📍 Utiliser ma position actuelle",
     chemLabel: "Chimie de la batterie :",
     tariffNote:
       "Prix estimé pour {label} — changez-le ci-dessus si vous connaissez votre tarif.",
@@ -1802,12 +1941,12 @@ export const LOCALES = {
     statusOffgrid:
       "⏳ Récupération de 5 ans de météo horaire par satellite et recherche de tailles de système…",
     runningBtn: "⏳ Simulation de 5 ans...",
-    runBtnReady: "☀️ Dimensionner (simulation 5 ans)",
+    runBtnReady: "☀️ Dimensionner (simulation sur 5 ans)",
     errorSim:
       "⚠️ Le moteur de dimensionnement n'a pas pu se charger. Actualisez la page (Ctrl+F5) et réessayez.",
     statusSuccess:
       "✅ {years} ans de données horaires ({dataYears}) · {yield} kWh/an par kW de panneau.{offline}",
-    offlineNote: " · 🌐 mode hors ligne typique",
+    offlineNote: " · 🌐 mode hors ligne de l’année type",
     tariffSpendLine:
       "À {tariff}/kWh, votre électricité coûte environ {annual} par an aujourd'hui. Chaque option ci-dessous montre la facture après le solaire et combien de temps elle se rembourse grâce aux économies.",
     tariffSpendBattery:
@@ -2190,7 +2329,7 @@ export const LOCALES = {
     pathsDiyNotPermitted:
       "Non proposée ici : dans votre région, l'installation électrique exige un installateur agréé.",
     pathsDiyRestricted:
-      "Non proposée ici : l'autoconsommation DIY est restreinte dans votre région.",
+      "Non proposée ici : le montage du système par vos soins est restreinte dans votre région.",
     pathsDiyUnknown:
       "Non proposée ici : nous n'avons pas pu vérifier si vous pouvez monter votre propre centrale.",
     pathsNoteTurnkeyAllIn:
@@ -2214,6 +2353,53 @@ export const LOCALES = {
     pathsIncludesYouMountTheArray: "Vous montez la centrale",
     pathsIncludesElectricianConnects: "Un électricien fait le raccordement",
     pathsIncludesToolsAndSafety: "Outillage et équipement de sécurité",
+    roofCapNote:
+      "Limite la recherche à {count} panneaux de {watts} W ≈ {kw} kW de solaire (≈6 m² par panneau avec espace d'accès). Effacez la case pour retirer la limite.",
+    roofMapNeedCity: "Choisissez d'abord une ville ou utilisez votre position.",
+    roofMapLoading: "Chargement de la carte facultative…",
+    roofMapTapFirst:
+      "Touchez 3 coins : d'abord un coin du toit, puis le coin suivant sur le même bord, enfin le bord opposé.",
+    roofMapTapSecond:
+      "Touchez maintenant le coin suivant sur le même bord du toit.",
+    roofMapTapThird:
+      "Touchez maintenant n'importe où sur le bord opposé du toit pour définir la largeur.",
+    roofMapNotRectangle:
+      "Ces touches ne forment pas un rectangle — touchez trois coins à nouveau, en commençant le long d'un bord du toit.",
+    roofPanelEstimate:
+      "{area} m² représentent environ {panels} panneaux de ~{panelArea} m² chacun.",
+    roofMapAreaHint:
+      "{hint} Cela limite la taille PV recherchée ; cela ne certifie ni la solidité structurelle ni l'ombrage.",
+    roofMapSelected:
+      "{area} m² sélectionnés. Vous pouvez fermer la carte ou toucher trois nouveaux coins.",
+    roofMapLoadFailed: "La carte facultative n'a pas pu se charger.",
+    roofMapUseManual:
+      "{message} Utilisez plutôt le champ de surface manuel ci-dessous.",
+    modeTitleGt: "Trouvez le chemin le moins cher pour réduire votre facture",
+    modeDescGt:
+      "Indiquez votre facture d'électricité mensuelle et votre position, puis cliquez sur Dimensionner pour comparer les voies solaires et batterie optimales. Les résultats couvrent les chimies, les coûts réels sur 20 ans et l'économie de matériel en gros.",
+    modeTitleOff: "Dimensionnez votre solaire et parc de batteries hors réseau",
+    modeDescOff:
+      "Dimensionnez un système solaire et de stockage sur batterie autonome pour votre cabane, van, secours ou ferme. Indiquez vos kWh quotidiens ou choisissez vos appareils — les simulations météo horaires garantissent que vous ne manquerez jamais d'énergie.",
+    focusNoteRec:
+      "La recommandation reste {chem} {pv} kW + {batt} kWh (~{cost} sur 20 ans).",
+    billCutImpossible:
+      "Même une grande installation ne peut pas réduire la facture autant à cette adresse — essayez plutôt le dimensionnement hors réseau.",
+    eli5Heading:
+      "📖 À quoi ressemble vraiment ce système dans la vie réel (en clair)",
+    eli5SolarHeading: "🌞 L'installation solaire",
+    eli5BatteryHeading: "🔋 Le parc de batteries",
+    eli5EstimateNote:
+      "Le résultat est une estimation, pas une promesse. Le stockage sur batterie est le seau qui transporte l'énergie des heures ensoleillées vers les heures sombres.",
+    eli5ClimateNote:
+      " La météo suggère des conditions {climate}, les pertes par poussière sont donc incluses.",
+    worstMonthNote:
+      "Mois le plus sombre : {month} — environ {avg} kWh/m²/jour de soleil moyen. Dimensionnez pour ce mois, pas pour la moyenne annuelle, sinon le système manquera lors des semaines grises.",
+    bomSelectedSystem: "Système sélectionné",
+    fxAsOfNote: "Taux en cours au {asOf}.",
+    advisorIntakeBillLabel: "Facture d'électricité mensuelle ($ USD) :",
+    advisorIntakeKwhLabel: "Consommation d'énergie quotidienne (kWh / jour) :",
+    advisorIntakeBillPh: "p. ex. 400",
+    advisorIntakeKwhPh: "p. ex. 35",
   },
   de: {
     ...HOME_COPY.de,
@@ -2386,7 +2572,7 @@ export const LOCALES = {
       "Batterieladung & Zuverlässigkeit übers Jahr (5 Jahre echtes Wetter)",
     frontierTitle: "Wie weit reicht dein Budget?",
     frontierIntro:
-      "Wir zeigen die günstigsten Systeme für deinen Standort, damit du Kosten und erreichbare Versorgung vergleichen kannst.",
+      "Alle Systeme, die wir an deinem Standort bauen könnten, vom günstigsten an. Die Linie ist das beste Ergebnis, das jedes Budget kaufen kann — so siehst du auf einen Blick, ob dein Ziel hier einfach, teuer oder außer Reichweite ist.",
     frontierX: "Systemkosten zu Beginn",
     frontierYGrid: "Anteil der Rechnung gesenkt",
     frontierYGridBattery: "Anteil der verschobenen Spitzenlaststunden",
@@ -2415,12 +2601,12 @@ export const LOCALES = {
     sanityUncertain:
       "Prüfung unentschieden — die unabhängige KI-Prüfung erreichte für diese Eingaben kein eindeutiges Urteil",
     sanityTooltip:
-      "Ein unabhängiger KI-Klassifikator (Jev) hat nur die Dimensionierungszahlen geprüft — kein Standort, Text oder personenbezogener Daten verlässt Ihren Browser über diese Zahlen hinaus. Er ändert niemals das berechnete Ergebnis.",
+      "Ein unabhängiger KI-Klassifikator (Jev) hat nur die Dimensionierungszahlen geprüft — keine Standort-, Text- oder personenbezogenen Daten verlassen Ihren Browser über diese Zahlen hinaus. Er ändert niemals das berechnete Ergebnis.",
     simpleAdvisorStyle:
       "[ANWEISUNG FÜR DEN BERATER: Der Besucher ist im einfachen Modus. Antworten Sie wie ein Experte, der mit einem klugen 12-Jährigen spricht: einfache Alltagsworte, kein Fachjargon (erklären Sie jeden Fachbegriff in einer kurzen Klammer), höchstens 4 kurze Sätze, und enden Sie mit DER Zahl, die am meisten zählt.]",
     advisorTitle: "Kostenloser KI-Energieberater",
     advisorSubtitle:
-      "Sie sprechen mit einer KI (Groq-Motor) — nur Bildungswerte, keine Ingenieursberatung",
+      "Sie sprechen mit einer KI (Groq-Motor) — nur Lernschätzungen, keine Ingenieursberatung",
     advisorIntro:
       "Ich erkläre die Ergebnisse des Rechners: Batteriechemie, Verkabelung und Schutz oder Fragen für einen lokalen Elektriker. Führen Sie zuerst die Dimensionierung aus und fragen Sie dann zu diesem Ergebnis — oder stellen Sie mir eine beliebige Frage.",
     advisorBotNote:
@@ -2769,6 +2955,52 @@ export const LOCALES = {
     pathsIncludesYouMountTheArray: "Sie montieren die Anlage selbst",
     pathsIncludesElectricianConnects: "Ein Elektriker nimmt den Anschluss vor",
     pathsIncludesToolsAndSafety: "Werkzeug und Schutzausrüstung",
+    roofCapNote:
+      "Begrenzt die Suche auf {count} Panels mit {watts} W ≈ {kw} kW Solarleistung (≈6 m² pro Panel mit Zugangsfläche). Lösche das Feld, um die Grenze aufzuheben.",
+    roofMapNeedCity: "Wähle zuerst eine Stadt oder nutze deinen Standort.",
+    roofMapLoading: "Optionale Karte wird geladen…",
+    roofMapTapFirst:
+      "Tippe auf 3 Ecken: zuerst eine Dachecke, dann die nächste Ecke am selben Rand, danach die gegenüberliegende Kante.",
+    roofMapTapSecond: "Tippe jetzt auf die nächste Ecke am selben Dachrand.",
+    roofMapTapThird:
+      "Tippe jetzt irgendwo auf die gegenüberliegende Dachkante, um die Breite festzulegen.",
+    roofMapNotRectangle:
+      "Diese Tipps ergeben kein Rechteck — tippe erneut auf drei Ecken, beginnend an einer Dachkante.",
+    roofPanelEstimate:
+      "{area} m² sind etwa {panels} Panels mit je ~{panelArea} m².",
+    roofMapAreaHint:
+      "{hint} Das begrenzt die gesuchte PV-Größe; es bestätigt weder die statische Eignung noch Verschattung.",
+    roofMapSelected:
+      "{area} m² ausgewählt. Du kannst die Karte schließen oder drei neue Ecken antippen.",
+    roofMapLoadFailed: "Die optionale Karte konnte nicht geladen werden.",
+    roofMapUseManual:
+      "{message} Nutze stattdessen das manuelle Flächenfeld unten.",
+    modeTitleGt: "Finde den günstigsten Weg zu niedrigeren Rechnungen",
+    modeDescGt:
+      "Gib deine monatliche Stromrechnung und deinen Standort ein und klicke auf „System dimensionieren“, um die optimalen Solar- und Batteriewege zu vergleichen. Die Ergebnisse zeigen Chemien, echte 20-Jahres-Kosten und Großhandelsersparnis bei der Hardware.",
+    modeTitleOff: "Netzunabhängige Solaranlage und Batteriebank auslegen",
+    modeDescOff:
+      "Lege eine autarke Solar- und Batteriespeicheranlage für deine Hütte, deinen Camper, die Notstromversorgung oder deinen Hof aus. Gib deinen täglichen kWh-Wert an oder wähle deine Geräte — stündliche Wettersimulationen sorgen dafür, dass dir nie der Strom ausgeht.",
+    focusNoteRec:
+      "Die Empfehlung bleibt {chem} {pv} kW + {batt} kWh (~{cost} über 20 Jahre).",
+    billCutImpossible:
+      "Selbst eine große Anlage kann die Rechnung an diesem Standort nicht so weit senken — probiere stattdessen den netzunabhängigen Ausleger.",
+    eli5Heading:
+      "📖 Wie dieses System im wirklichen Leben aussieht (in Klartext)",
+    eli5SolarHeading: "🌞 Das Solarfeld",
+    eli5BatteryHeading: "🔋 Die Batteriebank",
+    eli5EstimateNote:
+      "Das Ergebnis ist eine Schätzung, kein Versprechen. Der Batteriespeicher ist der Eimer, der Energie von sonnigen Stunden in dunkle Stunden trägt.",
+    eli5ClimateNote:
+      " Das Wetter deutet auf {climate}-Bedingungen hin, daher sind Staubverluste enthalten.",
+    worstMonthNote:
+      "Dunkelster Monat: {month} — etwa {avg} kWh/m²/Tag durchschnittliche Sonne. Plane für diesen Monat, nicht für den Jahresdurchschnitt, sonst reicht das System in grauen Wochen nicht.",
+    bomSelectedSystem: "Ausgewähltes System",
+    fxAsOfNote: "Live-Kurse Stand {asOf}.",
+    advisorIntakeBillLabel: "Monatliche Stromrechnung ($ USD):",
+    advisorIntakeKwhLabel: "Täglicher Energieverbrauch (kWh / Tag):",
+    advisorIntakeBillPh: "z. B. 400",
+    advisorIntakeKwhPh: "z. B. 35",
   },
   nl: {
     navSizing: "Systeem dimensioneren",
@@ -3373,7 +3605,7 @@ export const LOCALES = {
     llmDisclaimer:
       "U communiceert met een groot taalmodel. Het produceert vloeiende, zelfverzekerde tekst die feitelijk onjuist kan zijn, ook met specifieke getallen, prijzen, productspecificaties en voorschriften. Behandel elk antwoord als een niet-geverifieerd startpunt.",
     locationPrecision:
-      "Een plaatsopzoeking is handig, maar met uw exacte locatie krijgt u de nauwkeurigste weer- en zonneschatting. Voer handmatig aangepaste breedte- en lengtegraad in of kies Mijn huidige locatie gebruiken voor GPS in de browser.",
+      "Een plaatsopzoeking is handig, maar met uw exacte locatie krijgt u de nauwkeurigste weer- en zonneschatting. Voer handmatig aangepaste breedte- en lengtegraad in of kies Mijn exacte locatie gebruiken voor GPS in de browser.",
     monthlyBillHint:
       "— een grove schatting is prima; de waarde wordt automatisch aangepast aan de prijzen op uw locatie",
     monthlyBillLabel: "Uw maandelijkse elektriciteitsrekening",
@@ -3390,7 +3622,7 @@ export const LOCALES = {
     preciseLocationHelp:
       "De knop voor precieze locatie vult uw exacte coördinaten in en haalt stroomprijzen op uit de dichtstbijzijnde referentieregio. Typ voor een andere plaats een stad of dorp en druk op Enter of Tab om deze te bepalen. Klik daarna op Systeem dimensioneren.",
     quickSetupHint: "— kies de invoer en klik daarna op Systeem dimensioneren",
-    quickSetupTitle: "Snelle installatie",
+    quickSetupTitle: "⚡ Snelle installatie",
     rateLimitDisclaimer:
       "Automatiseer of schraap dit hulpmiddel niet en overbelast het niet; één persoon betaalt voor de AI-aanroepen. Er gelden verzoeklimieten en misbruik wordt geblokkeerd.",
     resultEstimateDisclaimer:
@@ -3430,6 +3662,51 @@ export const LOCALES = {
       "Laagste: {low}%. Volledig opgeladen op {charged} van {total} dagen; de generator leverde stroom op één dag met lege accu.",
     surplusTargetHelp:
       "Boven 100% wordt het systeem ontworpen om verkoopbaar overschot te produceren. Zonder een hierboven ingevoerd teruglevertarief heeft dat overschot geen geldwaarde en wordt het gemarkeerd als afgevoerd overschot. De kolom 'uw doel' in de matrix en de prijsreductiecurve volgen deze schuifregelaar.",
+    roofCapNote:
+      "Beperkt de zoektocht tot {count} panelen van {watts} W ≈ {kw} kW zonnevermogen (≈6 m² per paneel met toegangsruimte). Wis het vak om de limiet op te heffen.",
+    roofMapNeedCity: "Kies eerst een stad of gebruik uw locatie.",
+    roofMapLoading: "Optionele kaart laden…",
+    roofMapTapFirst:
+      "Tik 3 hoeken: eerst een hoek van het dak, dan de volgende hoek langs dezelfde rand, en daarna de tegenoverliggende rand.",
+    roofMapTapSecond: "Tik nu op de volgende hoek langs dezelfde dakrand.",
+    roofMapTapThird:
+      "Tik nu ergens op de tegenoverliggende dakrand om de breedte in te stellen.",
+    roofMapNotRectangle:
+      "Die tikken vormen geen rechthoek — tik opnieuw op drie hoeken, beginnend langs een dakrand.",
+    roofPanelEstimate:
+      "{area} m² is ongeveer {panels} panelen van elk ~{panelArea} m².",
+    roofMapAreaHint:
+      "{hint} Dit beperkt de gezochte PV-omvang; het certificeert geen constructieve of schaduweigenschappen.",
+    roofMapSelected:
+      "{area} m² geselecteerd. U kunt de kaart sluiten of drie nieuwe hoeken tikken.",
+    roofMapLoadFailed: "De optionele kaart kon niet laden.",
+    roofMapUseManual:
+      "{message} Gebruik in plaats daarvan het handmatige oppervlakteveld hieronder.",
+    modeTitleGt: "Vind uw goedkoopste weg naar een lagere rekening",
+    modeDescGt:
+      "Vul uw maandelijkse rekening en locatie in en klik op Systeem dimensioneren om de optimale zonne- en accupaden te vergelijken. De resultaten behandelen accuchemie, echte 20-jaarskosten en groothandelsbesparing op hardware.",
+    modeTitleOff: "Dimensioneer uw off-grid zonne- en accubank",
+    modeDescOff:
+      "Dimensioneer een zelfvoorzienend zonne- en accu-opslagsysteem voor uw hut, camper, noodstalizing of boerderij. Vul uw dagelijkse kWh in of kies uw apparaten — uursimulaties van het weer zorgen ervoor dat u nooit zonder stroom komt te zitten.",
+    focusNoteRec:
+      "De aanbeveling blijft {chem} {pv} kW + {batt} kWh (~{cost} over 20 jaar).",
+    billCutImpossible:
+      "Zelfs een groot veld kan de rekening op deze locatie niet zover verlagen — probeer de off-grid dimensionering.",
+    eli5Heading: "📖 Hoe dit systeem er in het echt uitziet (in gewone taal)",
+    eli5SolarHeading: "🌞 Het zonneveld",
+    eli5BatteryHeading: "🔋 De accubank",
+    eli5EstimateNote:
+      "Het resultaat is een schatting, geen belofte. Accuopslag is de emmer die energie van zonnige uren naar donkere uren draagt.",
+    eli5ClimateNote:
+      " Het weer suggereert {climate} omstandigheden, dus stofverliezen zijn inbegrepen.",
+    worstMonthNote:
+      "Donkerste maand: {month} — ongeveer {avg} kWh/m²/dag gemiddelde zon. Dimensioneer voor deze maand, niet voor het jaargemiddelde, anders schiet het systeem tekort in grijze weken.",
+    bomSelectedSystem: "Geselecteerd systeem",
+    fxAsOfNote: "Live koersen per {asOf}.",
+    advisorIntakeBillLabel: "Maandelijkse energierekening ($ USD):",
+    advisorIntakeKwhLabel: "Dagelijks energieverbruik (kWh / dag):",
+    advisorIntakeBillPh: "bijv. 400",
+    advisorIntakeKwhPh: "bijv. 35",
   },
   ar: {
     ...HOME_COPY.ar,
@@ -3449,7 +3726,7 @@ export const LOCALES = {
     sourcesCardBody:
       "كل افتراض وراء أي رقم يذكر هنا الناشر وتاريخ التحقق ومدى مطابقته للقيمة المستخدمة. وما تعذّر توثيقه يقول ذلك صراحةً.",
     sourcesCardLink: "عرض كل المصادر ←",
-    heroTag: "مجاني للجميع، في كل مكان · بدون تسجيل · لا شيء للبيع",
+    heroTag: "🌍 مجاني للجميع، في كل مكان · بدون تسجيل · لا شيء للبيع",
     heroTitle1: "قلّل فاتورة الكهرباء.",
     heroTitle2: "شاهد بالضبط ما يتطلبه الأمر.",
     footerAboutPre: "أنشأها وقدّمها",
@@ -3481,7 +3758,7 @@ export const LOCALES = {
     metricTouOffset: "من طاقتك في ساعات الذروة تغطيها البطارية",
     metricOutageCoverage:
       "من انقطاعات الكهرباء التي تصمد الأساسيات خلالها طوال المدة المطلوبة",
-    metricReserveTradeoff: "تكلفة الاحتفاظ بالهامش، بالوفوفير والساعات",
+    metricReserveTradeoff: "تكلفة الاحتفاظ بالهامش، بالوفورات والساعات",
     metricGridIndependence: "من السنة تعمل بلا شبكة إطلاقًا",
     metricPortableRuntime: "من الأيام التي تغذّي فيها المحطة أجهزتك طوال اليوم",
     statusWorks: "ينجح",
@@ -3539,8 +3816,8 @@ export const LOCALES = {
     readoutBillIncomplete: "أدخل فاتورتك الشهرية لرؤية التقدير اليومي.",
     readoutKwhEmpty: "أدخل استهلاكك اليومي بالكيلوواط ساعة لرؤية التقدير.",
     readoutKwhReady: "استخدام {kwh} كيلوواط ساعة/يوم مباشرة.",
-    runBtn: "احسب نظامي (محاكاة خمس سنوات)",
-    locBtn: "استخدم موقعي الحالي",
+    runBtn: "☀️ احسب نظامي (محاكاة 5 سنوات)",
+    locBtn: "📍 استخدم موقعي الحالي",
     chemLabel: "نوع البطارية:",
     tariffNote: "سعر تقديري لـ {label} — غيّره أعلاه إذا كنت تعرف تعريفتك.",
     pickCity: "اختر مدينة (أو استخدم 📍 موقعي) لمعرفة إشعاعك الشمسي.",
@@ -3570,7 +3847,7 @@ export const LOCALES = {
     errorSim:
       "⚠️ تعذّر تحميل محرك التقدير. حدّث الصفحة (Ctrl+F5) وحاول مرة أخرى.",
     statusSuccess:
-      "✅ {years} سنوات من البيانات الساعة ({dataYears}) · {yield} كيلوواط ساعة/سنة لكل كيلوواط من اللوحة.{offline}",
+      "✅ {years} سنوات من البيانات الساعية ({dataYears}) · {yield} كيلوواط ساعة/سنة لكل كيلوواط من اللوحة.{offline}",
     offlineNote: " · 🌐 وضع السنة النموذجية دون اتصال",
     tariffSpendLine:
       "بسعر {tariff}/كيلوواط/ساعة، تكلفك كهرباؤك حوالي {annual} سنويًا اليوم. كل خيار أدناه يوضح الفاتورة بعد الشمسي ومدى سرعة استرداد التكلفة من الادخار.",
@@ -3906,7 +4183,7 @@ export const LOCALES = {
     pathsDriver_replacements: "استبدال البطاريات والعاكسات",
     pathsDriver_leasePayments: "الأقساط التي تدفعها",
     pathsDriver_none: "لا عنصر بعينه",
-    pathsInstrumentPpa: "عقد شراء الطاقة",
+    pathsInstrumentPpa: "عقد شراء الطاقة (أنت تشتري الطاقة)",
     pathsInstrumentLease: "إيجار (تستأجر النظام)",
     pathsEndOfTermBuyout:
       "السنة {years}: يمكنك شراؤه مقابل {buyoutPct}% من سعر التركيب، وهذا الشراء مُحتسب أصلًا في هذا الرقم.",
@@ -3949,5 +4226,50 @@ export const LOCALES = {
     pathsIncludesYouMountTheArray: "أنت تركّب الألواح بنفسك",
     pathsIncludesElectricianConnects: "كهربائي يتولى عملية الربط",
     pathsIncludesToolsAndSafety: "الأدوات ومعدات السلامة",
+    roofCapNote:
+      "يحدّ البحث بـ {count} ألواح بقدرة {watts} واط ≈ {kw} كيلوواط شمسية (≈6 م² لكل لوح مع مساحة الوصول). امسح الحقل لإزالة الحد.",
+    roofMapNeedCity: "اختر مدينة أو استخدم موقعك أولًا.",
+    roofMapLoading: "جارٍ تحميل الخريطة الاختيارية…",
+    roofMapTapFirst:
+      "اضغط على 3 زوايا: أولًا زاوية من السقف، ثم الزاوية التالية على نفس الحافة، ثم الحافة المقابلة.",
+    roofMapTapSecond: "الآن اضغط على الزاوية التالية على نفس حافة السقف.",
+    roofMapTapThird:
+      "الآن اضغط في أي مكان على حافة السقف المقابلة لتحديد العرض.",
+    roofMapNotRectangle:
+      "هذه الضغطات لا تُشكّل مستطيلًا — اضغط على ثلاث زوايا مجددًا، بدءًا من حافة السقف.",
+    roofPanelEstimate:
+      "{area} م² تعادل نحو {panels} لوحًا بمساحة ~{panelArea} م² لكل منها.",
+    roofMapAreaHint:
+      "{hint} هذا يحدّ من حجم الطاقة الكهروضوئية المبحوث عنها؛ ولا يثبت الملاءمة الإنشائية أو الظلّية.",
+    roofMapSelected:
+      "تم تحديد {area} م². يمكنك إغلاق الخريطة أو الضغط على ثلاث زوايا جديدة.",
+    roofMapLoadFailed: "تعذّر تحميل الخريطة الاختيارية.",
+    roofMapUseManual:
+      "{message} استخدم مربع المساحة اليدوي أدناه بدلاً من ذلك.",
+    modeTitleGt: "اعثر على أرخص طريق لخفض فاتورتك",
+    modeDescGt:
+      "أدخل فاتورة الكهرباء الشهرية وموقعك ثم انقر على «احسب نظامي» لمقارنة مسارات الطاقة الشمسية والبطاريات المثالية. تغطي النتائج أنواع البطاريات والتكاليف الحقيقية على 20 عامًا والتوفير بالجملة على المعدات.",
+    modeTitleOff: "قيّم نظامك الشمسي وبنك البطاريات خارج الشبكة",
+    modeDescOff:
+      "قيّم نظامًا شمسيًا ومخزنًا للطاقة بالبطاريات مستقلًا لكوخك أو سيارتك أو احتياطك أو مزرعتك. أدخل استهلاكك اليومي بالكيلوواط ساعة أو اختر أجهزتك — تضمن محاكاة الطقس الساعية ألا تنفد طاقتك أبدًا.",
+    focusNoteRec:
+      "تبقى التوصية {chem} {pv} كيلوواط + {batt} كيلوواط ساعة (~{cost} على 20 عامًا).",
+    billCutImpossible:
+      "حتى مصفوفة كبيرة لا تستطيع خفض الفاتورة إلى هذا الحد في هذا الموقع — جرّب أداة القياس خارج الشبكة بدلاً من ذلك.",
+    eli5Heading:
+      "📖 كيف يبدو هذا النظام فعليًا في الحياة الحقيقية (بلغة مبسطة)",
+    eli5SolarHeading: "🌞 المصفوفة الشمسية",
+    eli5BatteryHeading: "🔋 بنك البطاريات",
+    eli5EstimateNote:
+      "النتيجة تقدير، ليس وعدًا. تخزين الطاقة بالبطاريات هو الدلو الذي ينقل الطاقة من ساعات المشمسة إلى ساعات الظلام.",
+    eli5ClimateNote: " يشير الطقس إلى ظروف {climate}، لذا تُحتسب خسائر الغبار.",
+    worstMonthNote:
+      "الأشهر الأكثر عتمة: {month} — نحو {avg} كيلوواط ساعة/م²/يوم من الشمس المتوسطة. صمّم لهذا الشهر، لا للمتوسط السنوي، وإلا لن يكفِ النظام في الأسابيع الغائمة.",
+    bomSelectedSystem: "النظام المحدد",
+    fxAsOfNote: "أسعار مباشرة حتى {asOf}.",
+    advisorIntakeBillLabel: "فاتورة الكهرباء الشهرية ($ دولار أمريكي):",
+    advisorIntakeKwhLabel: "استهلاك الطاقة اليومي (كيلوواط ساعة / اليوم):",
+    advisorIntakeBillPh: "مثال: 400",
+    advisorIntakeKwhPh: "مثال: 35",
   },
 };

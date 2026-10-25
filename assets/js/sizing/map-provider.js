@@ -1,5 +1,7 @@
 // Optional map integration boundary. Importing this module never loads a map
 // library, requests coordinates, or changes core sizing behavior.
+import { translate as t } from "../shared/i18n.js?v=20261025b";
+
 const PANEL_AREA_M2 = 6;
 function versionedLocalAsset(path) {
   const url = new URL(path, import.meta.url);
@@ -167,9 +169,21 @@ export function createMapProviderRegistry(providers = []) {
   });
 }
 
+// Dictionary-first with an English fallback (the chat.js chatText contract):
+// translate echoes the KEY until the deferred dictionary lands, and this copy
+// is composed synchronously — a key echo must never reach a visitor or a
+// caller. tests/map-feature.test.mjs holds the unbooted path to the English.
 export function manualRoofHint(areaM2) {
+  const area = Math.round(Number(areaM2) || 0);
   const panels = panelCapFromArea(areaM2);
-  return `${Math.round(Number(areaM2) || 0)} m² is about ${panels} panels at ~${PANEL_AREA_M2} m² each.`;
+  const value = t("roofPanelEstimate", {
+    area,
+    panels,
+    panelArea: PANEL_AREA_M2,
+  });
+  return value !== "roofPanelEstimate"
+    ? value
+    : `${area} m² is about ${panels} panels at ~${PANEL_AREA_M2} m² each.`;
 }
 
 // Policy enforcement: the constants above are the ONLY network destinations

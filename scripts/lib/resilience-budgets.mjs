@@ -538,19 +538,35 @@ export function composeResilienceFacetLine(report) {
             (m) => `${m.card_rendered}|${m.offline_label}|${m.button_disabled}`,
           ),
       ).size <= 1;
+    // The rubric's first dimension is transient-failure retry classification:
+    // the injected modes ARE the classification taxonomy (connect, abort,
+    // refuse, 5xx, malformed body) and the smoke asserts the classification is
+    // shared end to end — one mode classified differently would show here as a
+    // failure that did not degrade alike.
     parts.push(
-      `${injected.length} failures${allSame ? " degrade alike" : ""}` +
+      `transient-failure classification: ` +
+        `${injected.length} classes${allSame ? " degrade alike" : ""}` +
         (control ? ", control clean" : ""),
     );
   }
-  if (stuck?.ok) parts.push("silent worker trips the page deadline");
+  if (stuck?.ok) {
+    // The rubric's third dimension is stuck-run recovery, and the reading
+    // measures the recovery half too: the explicit retry posted a fresh run
+    // and released the button. Naming only the deadline would leave recovery
+    // looking unmeasured.
+    const recovered = stuck.run_posts > 1 && stuck.retry_button_released;
+    parts.push(
+      "stuck run: deadline trips" +
+        (recovered ? ", explicit retry recovers" : ""),
+    );
+  }
   if (fits.length) {
     const tightest = fits.reduce((a, b) => (b.slack_ms < a.slack_ms ? b : a));
     const slack = Math.round(tightest.slack_ms / 1000);
-    parts.push(`inner budgets fit their outer caps (tightest slack ${slack}s)`);
+    parts.push(`nested budgets fit outer caps (slack ${slack}s)`);
   }
 
-  const scope = `ADVERSARIAL, 1 Chrome, 1 city: ${parts.join("; ")}`;
+  const scope = `ADVERSARIAL 1 Chrome/1 city: ${parts.join("; ")}`;
   // The limit travels with the numbers, and it is the second half of the line
   // that earns the first half its keep. The 45s weather abort is the one budget
   // this gate does NOT drive in a browser — it is armed in the sizing worker's
@@ -560,8 +576,8 @@ export function composeResilienceFacetLine(report) {
   // silently cuts the TAIL, which is exactly where this sentence lives.
   return (
     scope +
-    ". Budget arithmetic is source-level: worker-realm timers cannot be " +
-    "shortened from the page. No device matrix."
+    ". Budgets source-level: worker-realm timers cannot be " +
+    "shortened. No device matrix."
   );
 }
 

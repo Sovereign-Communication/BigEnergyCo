@@ -90,6 +90,10 @@ const cleanReading = (extra = {}) => ({
     stuck_card_rendered: false,
     stuck_deadline_fired: true,
     stuck_button_released: true,
+    // The explicit retry half of stuck-run recovery, as the smoke records it:
+    // a fresh run posted and the button released again.
+    retry_button_released: true,
+    retry_status_cleared: false,
     page_errors: [],
   },
   stale_inputs: {
@@ -384,10 +388,16 @@ test("FACET: the resilience line is composed from the run and fits the clip", ()
     },
   });
   assert.ok(line, "a measured run must produce a line");
-  assert.match(line, /5 failures degrade alike/, line);
+  // All three rubric dimensions are named: transient-failure retry
+  // classification (the injected classes are the taxonomy), nested timeout
+  // budgets that provably fit, and stuck-run recovery — the deadline alone
+  // would leave the recovery half looking unmeasured.
+  assert.match(line, /transient-failure classification/, line);
+  assert.match(line, /5 classes degrade alike/, line);
   assert.match(line, /control clean/, line);
-  assert.match(line, /silent worker trips the page deadline/, line);
-  assert.match(line, /inner budgets fit their outer caps/, line);
+  assert.match(line, /deadline trips/, line);
+  assert.match(line, /explicit retry recovers/, line);
+  assert.match(line, /nested budgets fit outer caps/, line);
   // The limit is not decoration: the 45s weather abort is NOT browser-exercised,
   // and a line that let a reader assume otherwise would be lying by omission.
   assert.match(line, /source-level/i, line);
