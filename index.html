@@ -259,10 +259,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20261024p" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261024p" />
+    <link rel="preload" href="./assets/site.css?v=20261025a" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261025a" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20261024p" />
+    <link rel="stylesheet" href="./assets/site.css?v=20261025a" />
 
     <!-- Preconnect to weather, tariff, and geocoding APIs during parsing. -->
     <link rel="preconnect" href="https://power.larc.nasa.gov" crossorigin />
@@ -907,7 +907,7 @@
                     A city lookup is convenient, but your exact location gives
                     the most precise weather and solar estimate. Enter custom
                     latitude and longitude manually, or use
-                    <strong>Use my current location</strong> for browser GPS.
+                    <strong>Use my precise location</strong> for browser GPS.
                   </p>
                   <div
                     class="form-grid-2col"
@@ -3481,15 +3481,15 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20261024p"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20261025a"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
       type="module"
-      src="./assets/js/turnstile-client.js?v=20261024p"
+      src="./assets/js/turnstile-client.js?v=20261025a"
     ></script>
-    <script defer src="./assets/js/chat.js?v=20261024p"></script>
+    <script defer src="./assets/js/chat.js?v=20261025a"></script>
   </body>
 </html>
 

@@ -11,7 +11,7 @@ export const HOME_COPY = {
     imageryPrivacy:
       "Satellite imagery (no account needed) loads only after you ask for it. Coordinates go to the map tiles and NASA weather; nothing is saved.",
     locationPrecision:
-      "A city lookup is convenient, but your exact location gives the most precise weather and solar estimate. Enter custom latitude and longitude manually, or use Use my current location for browser GPS.",
+      "A city lookup is convenient, but your exact location gives the most precise weather and solar estimate. Enter custom latitude and longitude manually, or use Use my precise location for browser GPS.",
     monthlyBillLabel:
       "Your monthly electric bill — rough is fine, it auto-adjusts to your location's prices",
     electricityRateLabel:
@@ -19,19 +19,19 @@ export const HOME_COPY = {
     generatorAssumption:
       "Assumes a small genset at typical partial load: petrol 0.5 L /kWh, diesel 0.35 L /kWh (fuel only — oil, filters, and engine wear push the true number higher). If you know your real $/kWh, type it directly instead.",
     feedInCreditLabel:
-      "Feed-in credit for surplus you can sell ($/kWh, optional — grid-tie only) :",
+      "Feed-in credit for surplus you can sell ($/kWh, optional — grid-tie only):",
     fixedMonthlyChargeLabel:
-      "Fixed monthly charge on your bill ($/mo, optional — solar can't cut it) :",
+      "Fixed monthly charge on your bill ($/mo, optional — solar can't cut it):",
     applianceWattages:
-      "Wattages are typical values — yours may differ. Cycling appliances (fridges, freezers, air conditioners, pumps) only draw power while running: their slider is hours actually running per day , capped to realistic compressor time, and each row shows the resulting 24-hour average. A modern fridge at the default (100 W running, ~10 h/day) really does use about 1 kWh/day.",
+      "Wattages are typical values — yours may differ. Cycling appliances (fridges, freezers, air conditioners, pumps) only draw power while running: their slider is hours actually running per day, capped to realistic compressor time, and each row shows the resulting 24-hour average. A modern fridge at the default (100 W running, ~10 h/day) really does use about 1 kWh/day.",
     fixedChargeTaxEstimate:
       "Bills include fixed charges and taxes, so this slightly overestimates real use — which is a safe direction to err.",
     roofAreaLabel: "Optional roof or yard area (m²)",
     roofAreaHelp:
       "A rough manual estimate is enough: about 6 m² per 400 W panel. This only caps the searched solar size; leave it blank for the normal estimate. Your coordinates are never stored.",
     independenceTarget:
-      "Independence target (applied to all three chemistries) :",
-    billCutTarget: "Bill-cut target — sets the results slider too :",
+      "Independence target (applied to all three chemistries):",
+    billCutTarget: "Bill-cut target — sets the results slider too:",
     fxRateHelp:
       "How many of your currency equal 1 US dollar. Auto-filled for your location; change only if you know a different rate.",
     surplusTargetHelp:
@@ -80,9 +80,9 @@ export const HOME_COPY = {
       "No signup, no cookies for advertising, no analytics profile. Your chat text is sent to the AI provider to generate a reply and is not stored here. Don't type anything sensitive into it.",
     emailWelcome: "You're welcome to email me:",
     emailSupportExpectations:
-      "This is one person answering email in his own time, as a favor — not a support desk. I read what I can and reply when I'm able, but I can't promise a response or a timeframe. Anything I send back is a friendly opinion for your own further research, not professional engineering, electrical, or financial advice , and it doesn't create any professional relationship or obligation. For anything you're going to actually build, energize, or spend real money on, please talk to a licensed electrician or engineer in your area.",
+      "This is one person answering email in his own time, as a favor — not a support desk. I read what I can and reply when I'm able, but I can't promise a response or a timeframe. Anything I send back is a friendly opinion for your own further research, not professional engineering, electrical, or financial advice, and it doesn't create any professional relationship or obligation. For anything you're going to actually build, energize, or spend real money on, please talk to a licensed electrician or engineer in your area.",
     footerWarranty:
-      "Provided free and as-is, with no warranty of any kind , express or implied. Estimates are educational only and may be inaccurate. Working with batteries, high DC current, and mains wiring can cause fire, serious injury, and death — you are responsible for your own safety, your own decisions, and compliance with your local electrical code. Verify everything with a licensed professional before building. - Blog - Worldwide Benchmarks - Heatmap - About - Terms - Support - lucasballek@gmail.com",
+      "Provided free and as-is, with no warranty of any kind, express or implied. Estimates are educational only and may be inaccurate. Working with batteries, high DC current, and mains wiring can cause fire, serious injury, and death — you are responsible for your own safety, your own decisions, and compliance with your local electrical code. Verify everything with a licensed professional before building. - Blog - Worldwide Benchmarks - Heatmap - About - Terms - Support - lucasballek@gmail.com",
     operatorDescription:
       "This is a free, personal, non-commercial educational tool operated by an individual, Lucas Ballek. It is not a company, not incorporated, and not a licensed engineering, electrical contracting, or financial advisory practice. Nothing on this site is for sale and no service is being offered or promised to you.",
     independentVerification:
@@ -431,7 +431,7 @@ export const HOME_COPY = {
     imageryPrivacy:
       "Satellitenbilder (ohne Konto) werden erst geladen, wenn Sie sie anfordern. Koordinaten werden an die Kartenkacheln und die NASA-Wetterdaten übermittelt; gespeichert wird nichts.",
     locationPrecision:
-      "Eine Stadtsuche ist bequem, aber Ihr genauer Standort liefert die präziseste Wetter- und Solarschätzung. Geben Sie Breiten- und Längengrad manuell ein oder verwenden Sie Meinen aktuellen Standort für das GPS des Browsers.",
+      "Eine Stadtsuche ist bequem, aber Ihr genauer Standort liefert die präziseste Wetter- und Solarschätzung. Geben Sie Breiten- und Längengrad manuell ein oder nutzen Sie „Präzisen Standort verwenden“ für das GPS des Browsers.",
     monthlyBillLabel:
       "Ihre monatliche Stromrechnung — ein grober Wert genügt; er passt sich den Preisen an Ihrem Standort an",
     electricityRateLabel:
@@ -529,9 +529,9 @@ export const HOME_COPY = {
     homeIntro:
       "أدخل موقعك ومتوسط فاتورة الكهرباء. نحاكي 5 سنوات من بيانات الطقس الساعية عبر الأقمار الصناعية التابعة لناسا لتحديد الحجم الدقيق للألواح الشمسية وتخزين البطارية الذي تحتاج إليه، مع فترة استرداد واقعية على مدى 20 عامًا، وتواتر استبدال البطارية، وتكاليف المعدات بعملتك المحلية.",
     quickSetupTitle: "⚡ إعداد سريع",
-    quickSetupHint: "— اختر المدخلات، ثم انقر على تحديد حجم النظام",
+    quickSetupHint: "— اختر المدخلات، ثم انقر على «احسب نظامي»",
     preciseLocationHelp:
-      "يملأ زر تحديد الموقع الدقيق إحداثياتك الفعلية ويجلب أسعار المنطقة من أقرب منطقة مرجعية. لمكان آخر، اكتب اسم مدينة أو بلدة واضغط Enter أو Tab لاختيارها، ثم انقر على تحديد حجم النظام لإجراء الحساب.",
+      "يملأ زر تحديد الموقع الدقيق إحداثياتك الفعلية ويجلب أسعار المنطقة من أقرب منطقة مرجعية. لمكان آخر، اكتب اسم مدينة أو بلدة واضغط Enter أو Tab لاختيارها، ثم انقر على «احسب نظامي» لإجراء الحساب.",
     imageryPrivacy:
       "لا تُحمّل صور الأقمار الصناعية (ولا تحتاج إلى حساب) إلا بعد طلبها. تُرسل الإحداثيات إلى مربعات الخريطة وبيانات الطقس التابعة لناسا؛ ولا يُحفظ أي شيء.",
     locationPrecision:

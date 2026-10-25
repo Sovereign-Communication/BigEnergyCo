@@ -111,3 +111,93 @@ test("frontier range labels do not leak English DIY or retail terms", () => {
     assert.ok(LOCALES[locale].frontierLegendBand.includes(terms.retail));
   }
 });
+test("the 2026-10-24 full meaning back-read fixes stay fixed", () => {
+  // One pin per defect fixed in the full back-read of all 436 keys x 6 locales
+  // (docs/jev-completion/TRANSLATION_MEANING_BACKREAD_2026-10-24.md). Each
+  // assertion fails if the specific unreadable or wrong string it names comes
+  // back — the same contract the reviewed-value pins above carry.
+  assert.equal(LOCALES.nl.quickSetupTitle, "⚡ Snelle installatie");
+  for (const [locale, value] of Object.entries({
+    es: "☀️ Dimensionar mi sistema (simulación de 5 años)",
+    pt: "☀️ Dimensionar meu sistema (simulação de 5 anos)",
+    fr: "☀️ Dimensionner (simulation sur 5 ans)",
+    de: "☀️ System dimensionieren (5-Jahres-Simulation)",
+    nl: "☀️ Systeem dimensioneren (5-jaarssimulatie)",
+    ar: "☀️ احسب نظامي (محاكاة 5 سنوات)",
+  })) {
+    // The CTA must not lose its marker or change wording between its two
+    // states: runBtn is painted before a run, runBtnReady while it runs.
+    assert.equal(LOCALES[locale].runBtn, value, `${locale}.runBtn`);
+    assert.equal(LOCALES[locale].runBtnReady, value, `${locale}.runBtnReady`);
+  }
+  for (const locale of ["es", "pt", "fr", "ar"]) {
+    assert.ok(
+      LOCALES[locale].heroTag.startsWith("🌍 "),
+      `${locale}.heroTag lost the marker the other locales carry`,
+    );
+    assert.ok(
+      LOCALES[locale].locBtn.includes("📍"),
+      `${locale}.locBtn lost the marker the other locales carry`,
+    );
+  }
+  assert.match(LOCALES.ar.statusSuccess, /البيانات الساعية/);
+  assert.doesNotMatch(LOCALES.ar.statusSuccess, /البيانات الساعة[^ي]/);
+  assert.match(LOCALES.es.offlineNote, /año típico/);
+  assert.match(LOCALES.pt.offlineNote, /ano típico/);
+  assert.match(LOCALES.fr.offlineNote, /année type/);
+  // The German frontier intro dropped the whole second sentence of the chart
+  // explanation; it must carry the budget-reading meaning again.
+  assert.match(
+    LOCALES.de.frontierIntro,
+    /das beste Ergebnis, das jedes Budget kaufen kann/,
+  );
+  assert.doesNotMatch(LOCALES.es.advisorBusy, /satur ahora/);
+  assert.match(LOCALES.de.advisorSubtitle, /Lernschätzungen/);
+  assert.doesNotMatch(
+    LOCALES.de.sanityTooltip,
+    /personenbezogener Daten verlässt/,
+  );
+  assert.doesNotMatch(LOCALES.ar.metricReserveTradeoff, /بالوفوفير/);
+  assert.match(LOCALES.ar.metricReserveTradeoff, /بالوفورات/);
+  assert.match(LOCALES.es.pathsOwnershipLease, /^Lo alquilas /);
+  assert.doesNotMatch(LOCALES.fr.pathsDiyRestricted, /autoconsommation/);
+  assert.match(LOCALES.fr.pathsDiyRestricted, /montage/);
+  assert.match(LOCALES.ar.pathsInstrumentPpa, /أنت تشتري الطاقة/);
+  // The help texts must quote the button the visitor actually sees.
+  for (const [locale, label] of Object.entries({
+    en: "Use my precise location",
+    de: "Präzisen Standort verwenden",
+    nl: "Mijn exacte locatie gebruiken",
+  })) {
+    assert.ok(
+      LOCALES[locale].locationPrecision.includes(label),
+      `${locale}.locationPrecision must quote the button label "${label}"`,
+    );
+    assert.ok(LOCALES[locale].locBtn.includes(label));
+  }
+  assert.ok(
+    LOCALES.ar.quickSetupHint.includes("احسب نظامي"),
+    "ar.quickSetupHint must quote the button label",
+  );
+  assert.ok(
+    LOCALES.ar.preciseLocationHelp.includes("احسب نظامي"),
+    "ar.preciseLocationHelp must quote the button label",
+  );
+  // The English source must not carry the spacing artifacts the review fixed.
+  for (const key of [
+    "applianceWattages",
+    "emailSupportExpectations",
+    "footerWarranty",
+  ]) {
+    assert.doesNotMatch(LOCALES.en[key], / ,/, `en.${key} has " ,"`);
+  }
+  for (const key of [
+    "feedInCreditLabel",
+    "fixedMonthlyChargeLabel",
+    "independenceTarget",
+    "billCutTarget",
+  ]) {
+    assert.ok(LOCALES.en[key].endsWith(":"), `en.${key} must end at the colon`);
+    assert.doesNotMatch(LOCALES.en[key], / :$/, `en.${key} has " :"`);
+  }
+});

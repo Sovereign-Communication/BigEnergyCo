@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261024p";
+import { HOME_COPY } from "./home-copy.js?v=20261025a";
 
 export const LOCALES = {
   en: {
@@ -567,7 +567,7 @@ export const LOCALES = {
       "Cada supuesto detrás de una cifra indica aquí su editor, la fecha de verificación y hasta qué punto coincide con lo que aplicamos. Los que no podemos documentar lo dicen.",
     sourcesCardLink: "Ver todas las fuentes →",
     heroTag:
-      "Gratis para todos, en todo el mundo · Sin registro · Nada en venta",
+      "🌍 Gratis para todos, en todo el mundo · Sin registro · Nada en venta",
     heroTitle1: "Reduce tu factura de luz.",
     heroTitle2: "Vea exactamente lo que haría falta.",
     footerAboutPre: "Creada y entregada por",
@@ -605,7 +605,7 @@ export const LOCALES = {
       "⚠️ El motor de cálculo no pudo cargarse. Actualiza la página (Ctrl+F5) e inténtalo de nuevo.",
     statusSuccess:
       "✅ {years} años de datos horarios ({dataYears}) · {yield} kWh/año por kW de panel.{offline}",
-    offlineNote: " · 🌐 modo offline típico",
+    offlineNote: " · 🌐 año típico sin conexión",
     tariffSpendLine:
       "A {tariff}/kWh, tu electricidad te cuesta unos {annual} al año hoy. Cada opción de abajo muestra la factura tras la solar y cuánto tarda en pagarse con los ahorros.",
     tariffSpendBattery:
@@ -693,10 +693,10 @@ export const LOCALES = {
     readoutBillIncomplete:
       "Introduce tu factura mensual para ver la estimación diaria.",
     readoutKwhReady: "Usando {kwh} kWh/día directamente.",
-    runBtn: "Dimensionar mi sistema (simulación de 5 años)",
+    runBtn: "☀️ Dimensionar mi sistema (simulación de 5 años)",
     runningBtn: "⏳ Simulando 5 años...",
-    runBtnReady: "Dimensionar mi sistema (simulación 5 años)",
-    locBtn: "Usar mi ubicación actual",
+    runBtnReady: "☀️ Dimensionar mi sistema (simulación de 5 años)",
+    locBtn: "📍 Usar mi ubicación actual",
     chemLabel: "Química de la batería:",
     tariffNote:
       "Precio estimado para {label} — cámbialo arriba si conoces tu tarifa.",
@@ -761,7 +761,7 @@ export const LOCALES = {
       " El motor gratuito de IA está ocupado; reintentando en {secs}s…",
     advisorNoReply: " No se recibió respuesta. Inténtalo de nuevo.",
     advisorBusy:
-      " El motor gratuito de IA está satur ahora (HTTP {status} — usa una cuota compartida).\n\nEspera aproximadamente un minuto y vuelve a enviarlo.",
+      " El motor gratuito de IA está saturado ahora (HTTP {status} — usa una cuota compartida).\n\nEspera aproximadamente un minuto y vuelve a enviarlo.",
     // ── Degraded advisor reply (B2 / R-CF-10) ──────────────────────────
     advisorDegradedLabel: "Sin conexión · no la IA en directo",
     advisorDegradedLine: "No puedo responder ahora — {why}.",
@@ -1059,7 +1059,7 @@ export const LOCALES = {
     pathsOwnershipTurnkey: "Eres propietario desde el primer día.",
     pathsOwnershipPpa: "El proveedor es el propietario y lo mantiene.",
     pathsOwnershipLease:
-      "Lo alquileres hasta que termine el contrato y luego lo compras o lo devuelves.",
+      "Lo alquilas hasta que termine el contrato y luego lo compras o lo devuelves.",
     pathsOwnershipSelf: "Eres propietario una vez instalado.",
     pathsIncentiveTaxCredit: "Crédito fiscal federal",
     pathsIncentiveRebate: "Subvención de la compañía eléctrica",
@@ -1124,7 +1124,7 @@ export const LOCALES = {
       "Cada premissa por trás de um número indica aqui o responsável, a data da verificação e o quanto corresponde ao que aplicamos. As que não conseguimos documentar dizem isso.",
     sourcesCardLink: "Ver todas as fontes →",
     heroTag:
-      "Grátis para todos, no mundo inteiro · Sem cadastro · Nada à venda",
+      "🌍 Grátis para todos, no mundo inteiro · Sem cadastro · Nada à venda",
     heroTitle1: "Corte a sua conta de luz.",
     heroTitle2: "Veja exatamente o que seria preciso.",
     footerAboutPre: "Criada e oferecida por",
@@ -1217,8 +1217,8 @@ export const LOCALES = {
       "Informe sua conta mensal para ver a estimativa diária.",
     readoutKwhEmpty: "Informe seu consumo diário em kWh para ver a estimativa.",
     readoutKwhReady: "Usando {kwh} kWh/dia diretamente.",
-    runBtn: "Dimensionar meu sistema (simulação de 5 anos)",
-    locBtn: "Usar minha localização atual",
+    runBtn: "☀️ Dimensionar meu sistema (simulação de 5 anos)",
+    locBtn: "📍 Usar minha localização atual",
     chemLabel: "Química da bateria:",
     tariffNote:
       "Preço estimado para {label} — mude acima se souber sua tarifa.",
@@ -1248,12 +1248,12 @@ export const LOCALES = {
     statusOffgrid:
       "⏳ Obtendo 5 anos de clima horário por satélite e buscando tamanhos de sistema…",
     runningBtn: "⏳ Simulando 5 anos...",
-    runBtnReady: "☀️ Dimensionar meu sistema (simulação 5 anos)",
+    runBtnReady: "☀️ Dimensionar meu sistema (simulação de 5 anos)",
     errorSim:
       "⚠️ O motor de dimensionamento não pôde carregar. Atualize a página (Ctrl+F5) e tente novamente.",
     statusSuccess:
       "✅ {years} anos de dados horários ({dataYears}) · {yield} kWh/ano por kW de painel.{offline}",
-    offlineNote: " · 🌐 modo offline típico",
+    offlineNote: " · 🌐 ano típico offline",
     tariffSpendLine:
       "A {tariff}/kWh, a sua eletricidade custa cerca de {annual} por ano hoje. Cada opção abaixo mostra a conta após a solar e em quanto tempo ela se paga com as economias.",
     tariffSpendBattery:
@@ -1672,7 +1672,7 @@ export const LOCALES = {
     sourcesCardBody:
       "Chaque hypothèse derrière un chiffre indique ici son éditeur, la date de vérification et sa proximité avec la valeur appliquée. Celles que nous ne pouvons pas sourcer le disent.",
     sourcesCardLink: "Voir toutes les sources →",
-    heroTag: "Gratuit pour tous, partout · Sans inscription · Rien à vendre",
+    heroTag: "🌍 Gratuit pour tous, partout · Sans inscription · Rien à vendre",
     heroTitle1: "Réduisez votre facture d'électricité.",
     heroTitle2: "Voyez exactement ce qu'il faudrait.",
     footerAboutPre: "Conçu et offert par",
@@ -1769,8 +1769,8 @@ export const LOCALES = {
     readoutKwhEmpty:
       "Entrez votre consommation quotidienne en kWh pour voir l'estimation.",
     readoutKwhReady: "Utilisation de {kwh} kWh/jour directement.",
-    runBtn: "Dimensionner (simulation sur 5 ans)",
-    locBtn: "Utiliser ma position actuelle",
+    runBtn: "☀️ Dimensionner (simulation sur 5 ans)",
+    locBtn: "📍 Utiliser ma position actuelle",
     chemLabel: "Chimie de la batterie :",
     tariffNote:
       "Prix estimé pour {label} — changez-le ci-dessus si vous connaissez votre tarif.",
@@ -1802,12 +1802,12 @@ export const LOCALES = {
     statusOffgrid:
       "⏳ Récupération de 5 ans de météo horaire par satellite et recherche de tailles de système…",
     runningBtn: "⏳ Simulation de 5 ans...",
-    runBtnReady: "☀️ Dimensionner (simulation 5 ans)",
+    runBtnReady: "☀️ Dimensionner (simulation sur 5 ans)",
     errorSim:
       "⚠️ Le moteur de dimensionnement n'a pas pu se charger. Actualisez la page (Ctrl+F5) et réessayez.",
     statusSuccess:
       "✅ {years} ans de données horaires ({dataYears}) · {yield} kWh/an par kW de panneau.{offline}",
-    offlineNote: " · 🌐 mode hors ligne typique",
+    offlineNote: " · 🌐 mode hors ligne de l’année type",
     tariffSpendLine:
       "À {tariff}/kWh, votre électricité coûte environ {annual} par an aujourd'hui. Chaque option ci-dessous montre la facture après le solaire et combien de temps elle se rembourse grâce aux économies.",
     tariffSpendBattery:
@@ -2190,7 +2190,7 @@ export const LOCALES = {
     pathsDiyNotPermitted:
       "Non proposée ici : dans votre région, l'installation électrique exige un installateur agréé.",
     pathsDiyRestricted:
-      "Non proposée ici : l'autoconsommation DIY est restreinte dans votre région.",
+      "Non proposée ici : le montage du système par vos soins est restreinte dans votre région.",
     pathsDiyUnknown:
       "Non proposée ici : nous n'avons pas pu vérifier si vous pouvez monter votre propre centrale.",
     pathsNoteTurnkeyAllIn:
@@ -2386,7 +2386,7 @@ export const LOCALES = {
       "Batterieladung & Zuverlässigkeit übers Jahr (5 Jahre echtes Wetter)",
     frontierTitle: "Wie weit reicht dein Budget?",
     frontierIntro:
-      "Wir zeigen die günstigsten Systeme für deinen Standort, damit du Kosten und erreichbare Versorgung vergleichen kannst.",
+      "Alle Systeme, die wir an deinem Standort bauen könnten, vom günstigsten an. Die Linie ist das beste Ergebnis, das jedes Budget kaufen kann — so siehst du auf einen Blick, ob dein Ziel hier einfach, teuer oder außer Reichweite ist.",
     frontierX: "Systemkosten zu Beginn",
     frontierYGrid: "Anteil der Rechnung gesenkt",
     frontierYGridBattery: "Anteil der verschobenen Spitzenlaststunden",
@@ -2415,12 +2415,12 @@ export const LOCALES = {
     sanityUncertain:
       "Prüfung unentschieden — die unabhängige KI-Prüfung erreichte für diese Eingaben kein eindeutiges Urteil",
     sanityTooltip:
-      "Ein unabhängiger KI-Klassifikator (Jev) hat nur die Dimensionierungszahlen geprüft — kein Standort, Text oder personenbezogener Daten verlässt Ihren Browser über diese Zahlen hinaus. Er ändert niemals das berechnete Ergebnis.",
+      "Ein unabhängiger KI-Klassifikator (Jev) hat nur die Dimensionierungszahlen geprüft — keine Standort-, Text- oder personenbezogenen Daten verlassen Ihren Browser über diese Zahlen hinaus. Er ändert niemals das berechnete Ergebnis.",
     simpleAdvisorStyle:
       "[ANWEISUNG FÜR DEN BERATER: Der Besucher ist im einfachen Modus. Antworten Sie wie ein Experte, der mit einem klugen 12-Jährigen spricht: einfache Alltagsworte, kein Fachjargon (erklären Sie jeden Fachbegriff in einer kurzen Klammer), höchstens 4 kurze Sätze, und enden Sie mit DER Zahl, die am meisten zählt.]",
     advisorTitle: "Kostenloser KI-Energieberater",
     advisorSubtitle:
-      "Sie sprechen mit einer KI (Groq-Motor) — nur Bildungswerte, keine Ingenieursberatung",
+      "Sie sprechen mit einer KI (Groq-Motor) — nur Lernschätzungen, keine Ingenieursberatung",
     advisorIntro:
       "Ich erkläre die Ergebnisse des Rechners: Batteriechemie, Verkabelung und Schutz oder Fragen für einen lokalen Elektriker. Führen Sie zuerst die Dimensionierung aus und fragen Sie dann zu diesem Ergebnis — oder stellen Sie mir eine beliebige Frage.",
     advisorBotNote:
@@ -3373,7 +3373,7 @@ export const LOCALES = {
     llmDisclaimer:
       "U communiceert met een groot taalmodel. Het produceert vloeiende, zelfverzekerde tekst die feitelijk onjuist kan zijn, ook met specifieke getallen, prijzen, productspecificaties en voorschriften. Behandel elk antwoord als een niet-geverifieerd startpunt.",
     locationPrecision:
-      "Een plaatsopzoeking is handig, maar met uw exacte locatie krijgt u de nauwkeurigste weer- en zonneschatting. Voer handmatig aangepaste breedte- en lengtegraad in of kies Mijn huidige locatie gebruiken voor GPS in de browser.",
+      "Een plaatsopzoeking is handig, maar met uw exacte locatie krijgt u de nauwkeurigste weer- en zonneschatting. Voer handmatig aangepaste breedte- en lengtegraad in of kies Mijn exacte locatie gebruiken voor GPS in de browser.",
     monthlyBillHint:
       "— een grove schatting is prima; de waarde wordt automatisch aangepast aan de prijzen op uw locatie",
     monthlyBillLabel: "Uw maandelijkse elektriciteitsrekening",
@@ -3390,7 +3390,7 @@ export const LOCALES = {
     preciseLocationHelp:
       "De knop voor precieze locatie vult uw exacte coördinaten in en haalt stroomprijzen op uit de dichtstbijzijnde referentieregio. Typ voor een andere plaats een stad of dorp en druk op Enter of Tab om deze te bepalen. Klik daarna op Systeem dimensioneren.",
     quickSetupHint: "— kies de invoer en klik daarna op Systeem dimensioneren",
-    quickSetupTitle: "Snelle installatie",
+    quickSetupTitle: "⚡ Snelle installatie",
     rateLimitDisclaimer:
       "Automatiseer of schraap dit hulpmiddel niet en overbelast het niet; één persoon betaalt voor de AI-aanroepen. Er gelden verzoeklimieten en misbruik wordt geblokkeerd.",
     resultEstimateDisclaimer:
@@ -3449,7 +3449,7 @@ export const LOCALES = {
     sourcesCardBody:
       "كل افتراض وراء أي رقم يذكر هنا الناشر وتاريخ التحقق ومدى مطابقته للقيمة المستخدمة. وما تعذّر توثيقه يقول ذلك صراحةً.",
     sourcesCardLink: "عرض كل المصادر ←",
-    heroTag: "مجاني للجميع، في كل مكان · بدون تسجيل · لا شيء للبيع",
+    heroTag: "🌍 مجاني للجميع، في كل مكان · بدون تسجيل · لا شيء للبيع",
     heroTitle1: "قلّل فاتورة الكهرباء.",
     heroTitle2: "شاهد بالضبط ما يتطلبه الأمر.",
     footerAboutPre: "أنشأها وقدّمها",
@@ -3481,7 +3481,7 @@ export const LOCALES = {
     metricTouOffset: "من طاقتك في ساعات الذروة تغطيها البطارية",
     metricOutageCoverage:
       "من انقطاعات الكهرباء التي تصمد الأساسيات خلالها طوال المدة المطلوبة",
-    metricReserveTradeoff: "تكلفة الاحتفاظ بالهامش، بالوفوفير والساعات",
+    metricReserveTradeoff: "تكلفة الاحتفاظ بالهامش، بالوفورات والساعات",
     metricGridIndependence: "من السنة تعمل بلا شبكة إطلاقًا",
     metricPortableRuntime: "من الأيام التي تغذّي فيها المحطة أجهزتك طوال اليوم",
     statusWorks: "ينجح",
@@ -3539,8 +3539,8 @@ export const LOCALES = {
     readoutBillIncomplete: "أدخل فاتورتك الشهرية لرؤية التقدير اليومي.",
     readoutKwhEmpty: "أدخل استهلاكك اليومي بالكيلوواط ساعة لرؤية التقدير.",
     readoutKwhReady: "استخدام {kwh} كيلوواط ساعة/يوم مباشرة.",
-    runBtn: "احسب نظامي (محاكاة خمس سنوات)",
-    locBtn: "استخدم موقعي الحالي",
+    runBtn: "☀️ احسب نظامي (محاكاة 5 سنوات)",
+    locBtn: "📍 استخدم موقعي الحالي",
     chemLabel: "نوع البطارية:",
     tariffNote: "سعر تقديري لـ {label} — غيّره أعلاه إذا كنت تعرف تعريفتك.",
     pickCity: "اختر مدينة (أو استخدم 📍 موقعي) لمعرفة إشعاعك الشمسي.",
@@ -3570,7 +3570,7 @@ export const LOCALES = {
     errorSim:
       "⚠️ تعذّر تحميل محرك التقدير. حدّث الصفحة (Ctrl+F5) وحاول مرة أخرى.",
     statusSuccess:
-      "✅ {years} سنوات من البيانات الساعة ({dataYears}) · {yield} كيلوواط ساعة/سنة لكل كيلوواط من اللوحة.{offline}",
+      "✅ {years} سنوات من البيانات الساعية ({dataYears}) · {yield} كيلوواط ساعة/سنة لكل كيلوواط من اللوحة.{offline}",
     offlineNote: " · 🌐 وضع السنة النموذجية دون اتصال",
     tariffSpendLine:
       "بسعر {tariff}/كيلوواط/ساعة، تكلفك كهرباؤك حوالي {annual} سنويًا اليوم. كل خيار أدناه يوضح الفاتورة بعد الشمسي ومدى سرعة استرداد التكلفة من الادخار.",
@@ -3906,7 +3906,7 @@ export const LOCALES = {
     pathsDriver_replacements: "استبدال البطاريات والعاكسات",
     pathsDriver_leasePayments: "الأقساط التي تدفعها",
     pathsDriver_none: "لا عنصر بعينه",
-    pathsInstrumentPpa: "عقد شراء الطاقة",
+    pathsInstrumentPpa: "عقد شراء الطاقة (أنت تشتري الطاقة)",
     pathsInstrumentLease: "إيجار (تستأجر النظام)",
     pathsEndOfTermBuyout:
       "السنة {years}: يمكنك شراؤه مقابل {buyoutPct}% من سعر التركيب، وهذا الشراء مُحتسب أصلًا في هذا الرقم.",
