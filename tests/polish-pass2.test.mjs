@@ -255,8 +255,20 @@ test("speed badge formats coordinates with fixed decimals", () => {
 });
 
 test("roof-cap note names its 6 m²-per-panel assumption", () => {
+  // The note is localized copy now (roofCapNote in the shipped dictionary), so
+  // the transparency commitment is pinned where every locale keeps it: each
+  // shipped locale names the ~6 m² installed-space assumption (ar in its own
+  // script), and ui.js renders that key rather than a hand-built sentence that
+  // could silently drop the assumption from some locale.
   const src = read("assets/js/sizing/ui.js");
-  assert.match(src, /≈6 m² per panel with access space/);
+  assert.match(src, /t\("roofCapNote"/, "the note renders the dictionary key");
+  for (const [locale, dict] of Object.entries(LOCALES)) {
+    assert.match(
+      dict.roofCapNote || "",
+      /6\s*(m²|م²)/,
+      `${locale} roofCapNote must name the 6 m²-per-panel assumption`,
+    );
+  }
 });
 
 test("map init refuses off-policy hosts", () => {
