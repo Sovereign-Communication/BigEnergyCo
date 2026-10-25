@@ -20,7 +20,7 @@ export const FACET_EVIDENCE = Object.freeze({
   release:
     "No remote deployment is claimed. The local staged build uses asset 20261022b and SW beco-v126; release remains gated on full-head CI and the 95/95/95 promotion gate.",
   advisor:
-    "End-to-end: 3 Jev gates green on live chat/worker paths; neutral badge proves request fires (calls:1); no refetch on Simple-mode toggle; worker inputs rejected pre-start with actionable errors; brief carries run hardware config; mode-blindness fixed and verified in CI.",
+    "figures authoritative, spoof refused (live); same state to Jev+prose (brief gates); no stereotypes/stale claims (dated); uncertainty+safety disclaimed; zero-location payload (privacy); multilingual+UI language (live es+pins); labelled fallback (B2); injection+stale pins green",
   physics:
     "verify:live PASSED end-to-end: live NASA POWER Honolulu, 10 kWh/day, \\$0.42/kWh, lfp returned 43,824 hourly records (2021-2025) in 1.4s; off-grid tiers and grid-tie 60/80/95 all sized and verified; SOC gate 6/6, every system reaching 100%.",
   provenance:
