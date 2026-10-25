@@ -50,6 +50,28 @@ const TITLE_KEYWORD_RULES = [
   },
 ];
 
+// Dependency / CI maintenance. A dependabot or release-chore PR carries no plan
+// item — package manifests, lockfiles and workflow files are the whole of its
+// surface — so a scoped judgment has nothing to scope TO. Before this route
+// existed those PRs died at the scope step and held the required `jev-complete`
+// check red forever (the npm-group PR #314 was the first casualty). The route
+// resolves with NO scope and no error; the caller decides what that means. The
+// workflow runs the full advisory report instead of a scoped one, and the
+// post-merge full run on main stays the gate (D-03: each PR report is attached
+// but advisory because its merge SHA is not the final staging commit).
+const MAINTENANCE_FILES = [
+  /^package\.json$/,
+  /^package-lock\.json$/,
+  /^npm-shrinkwrap\.json$/,
+  /(^|\/)yarn\.lock$/,
+  /(^|\/)pnpm-lock\.yaml$/,
+  /(^|\/)bun\.lockb?$/,
+  /^\.github\//,
+];
+function isMaintenanceFile(file) {
+  return MAINTENANCE_FILES.some((pattern) => pattern.test(file));
+}
+
 // Only canonical plan documents use governance precedence. LEDGER.jsonl is a
 // progress record required by §9, so its path must not hide the phase being
 // proved by the same PR.
@@ -82,11 +104,13 @@ const PLAN_DIR = /^docs\/plan\//;
  * it follows the title's phase scope.
  *
  * @param {object} input - { title: string, files?: string[] }
- * @returns {{ scope: string|null, how: string, considered: string[], error: string|null, coverageNote?: string }}
- *   how: "governance" | "proposal" | "explicit" | "path-inferred" | "keyword-inferred" | null
+ * @returns {{ scope: string|null, how: string, considered: string[], error: string|null, coverageNote?: string, maintenance?: boolean }}
+ *   how: "governance" | "proposal" | "explicit" | "path-inferred" | "keyword-inferred" | "maintenance" | null
  *   coverageNote: when scope was inferred (not explicit), notes that the plan
  *     may not fully encompass the PR's requirements — a finding for the
  *     judgment to consider, not a hard failure.
+ *   maintenance: true for dependency/CI release chores — scope null, error
+ *     null. The caller decides the non-fatal path; see MAINTENANCE_FILES.
  */
 export function resolveCiScope(input) {
   const title = typeof input === "string" ? input : (input?.title ?? "");
@@ -253,6 +277,25 @@ export function resolveCiScope(input) {
         };
       }
     }
+  }
+
+  // 4. Dependency / CI maintenance: every changed file is a manifest, lockfile
+  // or workflow file and no rule above claimed the PR. This is a release chore,
+  // not a plan item — no scope is invented for it, and nothing is judged as if
+  // it were. The caller chooses the non-fatal path.
+  if (files.length > 0 && files.every(isMaintenanceFile)) {
+    return {
+      scope: null,
+      how: "maintenance",
+      maintenance: true,
+      considered,
+      error: null,
+      coverageNote:
+        "Dependency/CI maintenance only — manifests, lockfiles and workflow " +
+        "files. No plan item owns this change, so no scoped judgment applies. " +
+        "The full advisory report covers it, and the post-merge full run on " +
+        "main is the gate.",
+    };
   }
 
   // Truly cannot determine scope.
