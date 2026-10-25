@@ -1267,7 +1267,12 @@ test("TRANSLATION: glossary evidence comes from this run and cannot imply a mean
   };
   const line = composeTranslationFacetLine(report);
   assert.match(line, /Glossary 56\/56 lexical/);
-  assert.match(line, /Not done: meaning\/naturalness/);
+  // The completed back-read is cited as the documented offline review it is
+  // (AI, not this gate), and the open clause it does NOT close — native-speaker
+  // review — stays named. Both halves are the honesty contract: a line that
+  // claims only the fixes, or drops the open clause, is the overclaim.
+  assert.match(line, /Back-read 436x6 \(AI\)/);
+  assert.match(line, /Not done: native-speaker review/);
   assert.ok(line.length <= COMPLETE_FACET_CLIP);
   report.translation_terminology.passed = 55;
   assert.match(composeTranslationFacetLine(report), /Glossary 55\/56/);
@@ -1285,7 +1290,7 @@ test("TRANSLATION: suggestion-link proof comes only from the browser probe", () 
     measured,
     /Fix link: locale\/page\/key draft, browser-tested; no send/,
   );
-  assert.match(measured, /Not done: meaning\/naturalness/);
+  assert.match(measured, /Not done: native-speaker review/);
   assert.ok(measured.length <= COMPLETE_FACET_CLIP);
 
   report.translation_suggestion.passed = false;

@@ -990,8 +990,11 @@ export function composeExperienceFacetLine(report) {
  * "checked there", because a browser cannot see a key that is missing from a
  * dictionary until someone renders it — which is precisely why this line also
  * says what was NOT done. The judge asked for rendered strings back-translated
- * and read for meaning; no gate here does that, and a line that implied it
- * would be the same overclaim in a new font.
+ * and read for meaning. No gate here does that; the 2026-10-24 back-read of
+ * 436 keys x 6 locales is a documented offline review (AI fluent, its fixes
+ * pinned in tests/translation-review.test.mjs), cited here as what it is, and
+ * native-speaker review stays named as the open clause. A line that implied
+ * the gate measured meaning would be the same overclaim in a new font.
  */
 export function composeTranslationFacetLine(report) {
   const reading = report?.experience_reading;
@@ -1030,7 +1033,7 @@ export function composeTranslationFacetLine(report) {
     sweep.phases +
     " re-entry: " +
     rawKeys +
-    " visible keys/" +
+    " keys/" +
     (sweep.passes + 1) +
     " reads; JS " +
     sweep.matched +
@@ -1044,7 +1047,7 @@ export function composeTranslationFacetLine(report) {
     glossary +
     figures +
     suggestion +
-    "Not done: meaning/naturalness; native review still open."
+    "Not done: native-speaker review. Back-read 436x6 (AI): 23 fixes."
   );
 }
 
