@@ -13,11 +13,11 @@
 // NOTE: nasa.js also exports CITY_PRESETS, but location search here uses the
 // CITY_CATALOG in cities.js — importing the preset list would only bloat the
 // bundle, so it is deliberately not imported.
-import { APPLIANCES } from "./appliances.js?v=20261025a";
+import { APPLIANCES } from "./appliances.js?v=20261025b";
 import {
   INSTALL_NAV_BREAKPOINT_PX,
   installReveal,
-} from "./pwa-install.js?v=20261025a";
+} from "./pwa-install.js?v=20261025b";
 import {
   USE_CASES,
   USE_CASE_IDS,
@@ -28,26 +28,26 @@ import {
   normaliseOutageTarget,
   DEFAULT_RESERVE_PCT,
   DEFAULT_TOU,
-} from "./usecases.js?v=20261025a";
+} from "./usecases.js?v=20261025b";
 import {
   createRunChannel,
   staleRunAction,
   errorReleasesRunChannel,
   RUN_REPLY_DEADLINE_MS,
-} from "./run-coordinator.js?v=20261025a";
+} from "./run-coordinator.js?v=20261025b";
 import {
   cutRowVisible,
   tierForGeneratorRuntime,
   generatorRuntimeForTier,
   generatorAllowedForRuntime,
-} from "./mode-chrome.js?v=20261025a";
-import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261025a";
-import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261025a";
+} from "./mode-chrome.js?v=20261025b";
+import { CITY_CATALOG, nearestCity } from "./cities.js?v=20261025b";
+import { bestAffordableCurvePoint } from "../shared/budget-targets.js?v=20261025b";
 import {
   locateMe,
   purgeLegacyCityCache,
   setupCitySearch,
-} from "./location-picker.js?v=20261025a";
+} from "./location-picker.js?v=20261025b";
 
 import {
   estimateTariff,
@@ -55,14 +55,14 @@ import {
   fxMeta,
   DAYS_PER_MONTH,
   battOnlyCost,
-} from "./pricing.js?v=20261025a";
+} from "./pricing.js?v=20261025b";
 // The country -> currency table. Static, not lazy: it is consulted the moment
 // a location resolves, so a dynamic import would only add a round trip to the
 // one path that must not wait. Its 11.5 KB is data, and the first-load budget
 // below records the deliberate trade.
-import { currencyForCountry } from "./country-currency.js?v=20261025a";
+import { currencyForCountry } from "./country-currency.js?v=20261025b";
 
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261025a";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261025b";
 
 // THE FOUR WAYS TO PAY FOR ONE SYSTEM (master plan D-01 §6.4, R-PATH-01..10).
 //
@@ -94,7 +94,7 @@ let pathsLoading = null;
 function loadPaths() {
   if (pathsApi) return Promise.resolve(pathsApi);
   if (!pathsLoading)
-    pathsLoading = import("./paths.js?v=20261025a").then((mod) => {
+    pathsLoading = import("./paths.js?v=20261025b").then((mod) => {
       pathsApi = mod;
       PATHS_HORIZON_YEARS = mod.HORIZON_YEARS;
       return mod;
@@ -105,15 +105,15 @@ import {
   leadAcidChipCopy,
   leadAcidComparison,
   leadAcidReferenceCopy,
-} from "./lead-acid.js?v=20261025a";
+} from "./lead-acid.js?v=20261025b";
 
 import {
   buildBom,
   panelLayout,
   PANEL_WATTS_DEFAULT,
-} from "./bom.js?v=20261025a";
+} from "./bom.js?v=20261025b";
 
-import { BOM_ITEMS } from "../shared/content.js?v=20261025a";
+import { BOM_ITEMS } from "../shared/content.js?v=20261025b";
 
 import {
   applyI18n,
@@ -122,18 +122,18 @@ import {
   // uses, so `t` is a binding to the one implementation rather than a second
   // copy of the placeholder contract.
   translate as t,
-} from "../shared/i18n.js?v=20261025a";
-import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261025a";
-import { byId as $, el } from "../shared/dom.js?v=20261025a";
-import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261025a";
+} from "../shared/i18n.js?v=20261025b";
+import { escapeHtml, escapeAttr } from "../shared/escape.js?v=20261025b";
+import { byId as $, el } from "../shared/dom.js?v=20261025b";
+import { JARGON, explainElement } from "../shared/jargon-dict.js?v=20261025b";
 import {
   isSimpleMode,
   initSimpleMode,
   setSimpleMode,
   onSimpleModeChange,
   modeLabel,
-} from "../shared/simple-mode.js?v=20261025a";
-import { buildSimpleView } from "../shared/simple-view.js?v=20261025a";
+} from "../shared/simple-mode.js?v=20261025b";
+import { buildSimpleView } from "../shared/simple-view.js?v=20261025b";
 import {
   advisorJevContext,
   interpretSanity,
@@ -141,29 +141,29 @@ import {
   renderSanityBadge,
   requestSanity,
   sanityState,
-} from "./validate.js?v=20261025a";
+} from "./validate.js?v=20261025b";
 import {
   CUT_TARGET_PCT,
   sliderStateDrifted,
   targetForPct,
-} from "../shared/cut-targets.js?v=20261025a";
+} from "../shared/cut-targets.js?v=20261025b";
 import {
   SHARE_PREFIX,
   b64urlEncode,
   parseShareHash,
-} from "./share-codec.js?v=20261025a";
+} from "./share-codec.js?v=20261025b";
 import {
   hasInfeasibleCopy,
   infeasibleCopyKeys,
-} from "./infeasible-copy.js?v=20261025a";
-import { csvDocument, partsListRows } from "./parts-csv.js?v=20261025a";
+} from "./infeasible-copy.js?v=20261025b";
+import { csvDocument, partsListRows } from "./parts-csv.js?v=20261025b";
 import {
   fuelBurnPerKwh,
   fuelDisplay,
   fuelRateUsd,
   fuelTypeName,
   isImperialLocation,
-} from "./fuel-units.js?v=20261025a";
+} from "./fuel-units.js?v=20261025b";
 
 import {
   createLeafletProvider,
@@ -171,18 +171,18 @@ import {
   rotatedRectangleAreaM2,
   rotatedRectangleCorners,
   manualRoofHint,
-} from "./map-provider.js?v=20261025a";
+} from "./map-provider.js?v=20261025b";
 import {
   createWizard,
   persistWizard,
   restoreWizard,
-} from "./wizard.js?v=20261025a";
-import { tiltValueSummary } from "./tilt-harvest.js?v=20261025a";
+} from "./wizard.js?v=20261025b";
+import { tiltValueSummary } from "./tilt-harvest.js?v=20261025b";
 import {
   interpolateCurveTarget,
   surplusAnchor,
   budgetSpanMax,
-} from "./budget-span.js?v=20261025a";
+} from "./budget-span.js?v=20261025b";
 // Heavy modules used only after a sizing result stay outside the initial UI graph.
 let _engine = null;
 let _charts = null;
@@ -194,10 +194,10 @@ let _chartsInitialized = false;
 function preloadRunModules() {
   if (!_runModulesPromise) {
     _runModulesPromise = Promise.all([
-      import("./engine.js?v=20261025a"),
-      import("./charts.js?v=20261025a"),
-      import("./frontier-chart.js?v=20261025a"),
-      import("./rescale.js?v=20261025a"),
+      import("./engine.js?v=20261025b"),
+      import("./charts.js?v=20261025b"),
+      import("./frontier-chart.js?v=20261025b"),
+      import("./rescale.js?v=20261025b"),
     ])
       .then(([engine, charts, frontierChart, rescale]) => {
         _engine = engine;
@@ -238,9 +238,11 @@ function updateRoofAreaCapNote() {
   // The cap assumes ~6 m² per panel (tilt rows plus walkways on a real
   // roof); the parts list quotes the tighter bare-panel footprint. Both are
   // honest — installed space vs hardware space — so the note says which.
-  note.textContent =
-    `Caps the search at ${count} × ${PANEL_WATTS_DEFAULT} W panels ≈ ${capKw.toFixed(1)} kW of solar (≈6 m² per panel with access space). ` +
-    `Clear the box to remove the cap.`;
+  note.textContent = t("roofCapNote", {
+    count,
+    watts: PANEL_WATTS_DEFAULT,
+    kw: capKw.toFixed(1),
+  });
 }
 
 // Roof/yard area (m²): an optional input that silently caps the searched PV
@@ -263,9 +265,9 @@ import {
   batteryReplacements,
   lifetimeCostUsd,
   cumulativeCostSeries,
-} from "./money.js?v=20261025a";
+} from "./money.js?v=20261025b";
 
-import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261025a";
+import { fullRange, landedMidBattKwhFor } from "./pricing.js?v=20261025b";
 
 let worker = null;
 
@@ -2540,11 +2542,11 @@ function setupRoofMap() {
     const latitude = parseFloat($("latInput")?.value);
     const longitude = parseFloat($("lonInput")?.value);
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-      status.textContent = "Choose a city or use your location first.";
+      status.textContent = t("roofMapNeedCity");
       return;
     }
     panel.hidden = false;
-    status.textContent = "Loading the optional map…";
+    status.textContent = t("roofMapLoading");
     if (!roofMapRegistry) {
       roofMapRegistry = createMapProviderRegistry([createLeafletProvider()]);
       try {
@@ -2555,19 +2557,16 @@ function setupRoofMap() {
           zoom: 20,
         });
         if (!map) throw new Error("No optional map provider is available");
-        status.textContent =
-          "Tap 3 corners: first one roof corner, then the next corner along the same edge, then the opposite edge.";
+        status.textContent = t("roofMapTapFirst");
         roofMapUnsubscribe = roofMapRegistry.onClick((lat, lon) => {
           if (!roofMapFirstCorner) {
             roofMapFirstCorner = [lat, lon];
-            status.textContent =
-              "Now tap the next corner along the same roof edge.";
+            status.textContent = t("roofMapTapSecond");
             return;
           }
           if (!roofMapSecondCorner) {
             roofMapSecondCorner = [lat, lon];
-            status.textContent =
-              "Now tap anywhere on the opposite roof edge to set the width.";
+            status.textContent = t("roofMapTapThird");
             return;
           }
           const corners = rotatedRectangleCorners(
@@ -2576,8 +2575,7 @@ function setupRoofMap() {
             [lat, lon],
           );
           if (!corners) {
-            status.textContent =
-              "Those taps don't form a rectangle — tap three corners again, starting along one roof edge.";
+            status.textContent = t("roofMapNotRectangle");
             roofMapFirstCorner = null;
             roofMapSecondCorner = null;
             return;
@@ -2596,11 +2594,17 @@ function setupRoofMap() {
             areaInput.dispatchEvent(new Event("input", { bubbles: true }));
           }
           if (areaHint)
-            areaHint.textContent = `${manualRoofHint(area)} This caps the searched PV size; it does not certify structural or shading suitability.`;
-          status.textContent = `${Math.round(area * 10) / 10} m² selected. You can close the map or tap three new corners.`;
+            areaHint.textContent = t("roofMapAreaHint", {
+              hint: manualRoofHint(area),
+            });
+          status.textContent = t("roofMapSelected", {
+            area: Math.round(area * 10) / 10,
+          });
         });
       } catch (error) {
-        status.textContent = `${error?.message || "The optional map could not load."} Use the manual area box below instead.`;
+        status.textContent = t("roofMapUseManual", {
+          message: error?.message || t("roofMapLoadFailed"),
+        });
         roofMapRegistry?.cleanup();
         roofMapRegistry = null;
       }
@@ -3344,23 +3348,19 @@ function setupGoalControls() {
       btnOff.classList.remove("active");
       if (sysGoal) sysGoal.value = "gridtie";
       const title = document.querySelector(".section-title");
-      if (title) title.textContent = "Find your cheapest path to lower bills";
+      if (title) title.textContent = t("modeTitleGt");
       const desc = document.querySelector(".section-desc");
-      if (desc)
-        desc.textContent =
-          "Set your monthly electric bill and location, then click Size My System to compare the optimal solar and battery paths. The results cover chemistries, 20-year true costs, and wholesale hardware savings.";
+      if (desc) desc.textContent = t("modeDescGt");
       const optBill = $("optLoadBill");
-      if (optBill) optBill.textContent = "I know my monthly electric bill";
+      if (optBill) optBill.textContent = t("loadBill");
     } else {
       btnOff.classList.add("active");
       btnGt.classList.remove("active");
       if (sysGoal) sysGoal.value = "offgrid";
       const title = document.querySelector(".section-title");
-      if (title) title.textContent = "Size your off-grid solar & battery bank";
+      if (title) title.textContent = t("modeTitleOff");
       const desc = document.querySelector(".section-desc");
-      if (desc)
-        desc.textContent =
-          "Size a self-reliant solar and battery storage system for your cabin, camper van, backup, or homestead. Enter your daily kWh or pick your appliances — hourly weather simulations ensure you never run out of power.";
+      if (desc) desc.textContent = t("modeDescOff");
       const optBill = $("optLoadBill");
       if (optBill) optBill.textContent = t("dailyEnergyNeed");
     }
@@ -3780,10 +3780,12 @@ function renderFocusPanel(p, entry, isPreview) {
   const note = $("focusNote");
   if (note) {
     if (!isPreview && !isRec && p.best)
-      note.textContent =
-        `Recommendation stays ${chemShort(p.best) || p.best.chemistry} ` +
-        `${p.best.pvKw} kW + ${fmt(p.best.battKwh)} kWh ` +
-        `(~${money(p.best.lifetimeCostMid)} over 20 years).`;
+      note.textContent = t("focusNoteRec", {
+        chem: chemShort(p.best) || p.best.chemistry,
+        pv: p.best.pvKw,
+        batt: fmt(p.best.battKwh),
+        cost: money(p.best.lifetimeCostMid),
+      });
     else if (!isPreview && isRec && p.bestReason)
       note.textContent = p.bestReason;
     else note.textContent = "";
@@ -3900,7 +3902,7 @@ function restoreRunButton() {
 function ensureWorker() {
   if (!worker) {
     const runWorker = new Worker(
-      "./assets/js/sizing/sizing-worker.js?v=20261025a",
+      "./assets/js/sizing/sizing-worker.js?v=20261025b",
       {
         type: "module",
       },
@@ -5403,13 +5405,7 @@ function whyText(row) {
 function renderEli5Card(p, sys, paths = null) {
   if (!sys) return null;
   const eli5 = el("div", { class: "eli5-card" });
-  eli5.appendChild(
-    el(
-      "div",
-      { class: "eli5-title" },
-      "📖 What This System Actually Looks Like in Real Life (Plain English)",
-    ),
-  );
+  eli5.appendChild(el("div", { class: "eli5-title" }, t("eli5Heading")));
 
   const eli5Grid = el("div", { class: "eli5-grid" });
 
@@ -5422,7 +5418,7 @@ function renderEli5Card(p, sys, paths = null) {
 
   const itemPanels = el("div", { class: "eli5-item" });
   itemPanels.appendChild(
-    el("div", { class: "eli5-item-label" }, "🌞 The Solar Array"),
+    el("div", { class: "eli5-item-label" }, t("eli5SolarHeading")),
   );
   itemPanels.appendChild(el("div", { class: "eli5-item-desc" }, panelDesc));
   eli5Grid.appendChild(itemPanels);
@@ -5441,7 +5437,7 @@ function renderEli5Card(p, sys, paths = null) {
   }
   const itemBatt = el("div", { class: "eli5-item" });
   itemBatt.appendChild(
-    el("div", { class: "eli5-item-label" }, "🔋 The Battery Bank"),
+    el("div", { class: "eli5-item-label" }, t("eli5BatteryHeading")),
   );
   itemBatt.appendChild(el("div", { class: "eli5-item-desc" }, battDesc));
   eli5Grid.appendChild(itemBatt);
@@ -6634,13 +6630,7 @@ function renderTargetCards(p, extraTargets = []) {
     );
 
     if (!t.solvable) {
-      card.appendChild(
-        el(
-          "p",
-          {},
-          "Even a large array can't cut the bill this far at this location - check the off-grid sizer instead.",
-        ),
-      );
+      card.appendChild(el("p", {}, t("billCutImpossible")));
 
       grid.appendChild(card);
 
@@ -7064,7 +7054,7 @@ function renderEli5Summary(p) {
     return;
   }
   const climate = p.assumptions?.climateAware
-    ? ` Weather suggests ${p.assumptions.climate} conditions, so dust losses are included.`
+    ? t("eli5ClimateNote", { climate: p.assumptions.climate })
     : "";
   const rows = [
     [
@@ -7103,7 +7093,7 @@ function renderEli5Summary(p) {
   const note = el(
     "p",
     { style: "margin-top:0.8rem;font-size:0.82rem;color:var(--text-muted);" },
-    `The result is an estimate, not a promise. Battery storage is the bucket that carries energy from sunny hours into dark hours.${climate}`,
+    t("eli5EstimateNote") + climate,
   );
   wrap.append(grid, note);
 }
@@ -7123,14 +7113,17 @@ function renderWorstMonthCaveat(p) {
   const avg = Number(wm.averageDailyGhi) || 0;
   const startDay = Math.max(0, Math.round(wm.startDay));
   const monthName = (d) =>
-    new Date(Date.UTC(2001, 0, 1 + d)).toLocaleDateString("en-US", {
-      month: "long",
-      timeZone: "UTC",
-    });
-  box.textContent =
-    `Darkest month: ${monthName(startDay)} — about ${avg.toFixed(1)} kWh/m²/day ` +
-    `of average sun. Size for this month, not the yearly average, or the ` +
-    `system will fall short on gray weeks.`;
+    new Date(Date.UTC(2001, 0, 1 + d)).toLocaleDateString(
+      document.documentElement.lang || "en",
+      {
+        month: "long",
+        timeZone: "UTC",
+      },
+    );
+  box.textContent = t("worstMonthNote", {
+    month: monthName(startDay),
+    avg: avg.toFixed(1),
+  });
   box.style.display = "block";
 }
 
@@ -7514,7 +7507,7 @@ function renderSelectedBanner(p, sel) {
       : sel.battKwh === 0
         ? `${sel.chemLabel || sel.chemistry}: ${sel.pvKw} kW solar (no battery)`
         : `${sel.chemLabel || sel.chemistry}: ${sel.pvKw} kW solar + ${fmt(sel.battKwh)} kWh battery`;
-  card.appendChild(el("div", { class: "bom-badge" }, "Selected system"));
+  card.appendChild(el("div", { class: "bom-badge" }, t("bomSelectedSystem")));
   card.appendChild(el("h3", {}, title));
   appendRows(card, entryDetailRows(p, sel));
   if (p.best) {
@@ -8827,11 +8820,11 @@ async function initSizingUI() {
     // can click, and the browser smoke gate polls for the ready flag
     // rather than assuming it. Without the loader the CTA is a plain
     // link — the same fallback the loader's own catch takes.
-    import("../shared/translation-suggestion-loader.js?v=20261025a")
+    import("../shared/translation-suggestion-loader.js?v=20261025b")
       .then(({ installTranslationSuggestionLoader }) => {
         installTranslationSuggestionLoader(
           document.querySelector("[data-translation-suggestion]"),
-          () => import("../translation-suggestion.js?v=20261025a"),
+          () => import("../translation-suggestion.js?v=20261025b"),
         );
       })
       .catch(() => {});
@@ -8889,7 +8882,7 @@ async function refreshFxRates() {
 
     const elN = $("fxAsOf");
 
-    if (elN) elN.textContent = `Live rates as of ${fxMeta.asOf}.`;
+    if (elN) elN.textContent = t("fxAsOfNote", { asOf: fxMeta.asOf });
 
     // fxActive() reads the fxRate INPUT, not the CURRENCIES table — without
     // syncing it, the live fetch changes nothing on screen. Display-currency

@@ -627,15 +627,21 @@ function toggleIntakeMode() {
   intakeLastMode = mode;
 
   if (mode === "bill") {
-    label.innerText = "Monthly Electric Bill ($ USD):";
+    label.innerText = chatText(
+      "advisorIntakeBillLabel",
+      "Monthly Electric Bill ($ USD):",
+    );
 
-    input.placeholder = "e.g. 400";
+    input.placeholder = chatText("advisorIntakeBillPh", "e.g. 400");
 
     if (!input.value) input.value = intakeMemory.bill || "400";
   } else {
-    label.innerText = "Daily Energy Consumption (kWh / day):";
+    label.innerText = chatText(
+      "advisorIntakeKwhLabel",
+      "Daily Energy Consumption (kWh / day):",
+    );
 
-    input.placeholder = "e.g. 35";
+    input.placeholder = chatText("advisorIntakeKwhPh", "e.g. 35");
 
     if (!input.value) input.value = intakeMemory.kwh || "35";
   }
