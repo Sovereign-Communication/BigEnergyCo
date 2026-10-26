@@ -66,3 +66,45 @@ test("a child process borrows its parent's lock without releasing it", async () 
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("unrelated calls in one process stay mutually exclusive", async () => {
+  const root = mkdtempSync(join(tmpdir(), "beco-mutation-lock-concurrent-"));
+  let signalFirstEntered;
+  const firstEntered = new Promise((resolve) => {
+    signalFirstEntered = resolve;
+  });
+  let releaseFirst;
+  const firstMayExit = new Promise((resolve) => {
+    releaseFirst = resolve;
+  });
+  let secondEntered = false;
+  let first;
+  let second;
+
+  try {
+    first = withMutationLock(async () => {
+      signalFirstEntered();
+      await firstMayExit;
+    }, root);
+    await firstEntered;
+
+    second = withMutationLock(
+      async () => {
+        secondEntered = true;
+      },
+      root,
+      { timeoutMs: 1000, stepMs: 1 },
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    assert.equal(secondEntered, false, "second call must wait for the lock");
+
+    releaseFirst();
+    await Promise.all([first, second]);
+    assert.equal(secondEntered, true, "second call runs after release");
+  } finally {
+    releaseFirst();
+    await Promise.allSettled([first, second].filter(Boolean));
+    rmSync(root, { recursive: true, force: true });
+  }
+});

@@ -16,19 +16,33 @@
 // so a lock file inside the checkout would show up in those gates. The name is
 // derived from the repo path so two checkouts cannot block each other.
 import { createHash } from "node:crypto";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { existsSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const MUTATION_LOCK_CONTEXT = "BECO_MUTATION_LOCK_CONTEXT";
+const activeMutationLocks = new AsyncLocalStorage();
 
 function inheritsMutationLock(path) {
+  if (activeMutationLocks.getStore()?.has(path)) {
+    try {
+      return readFileSync(path, "utf8").trim() === String(process.pid);
+    } catch {
+      return false;
+    }
+  }
+
   try {
     const contexts = JSON.parse(process.env[MUTATION_LOCK_CONTEXT] || "[]");
     return contexts.some(
       (context) =>
         context?.path === path &&
         Number.isSafeInteger(context.pid) &&
+        // The environment is process-wide in the owner. Only a different
+        // process may use that marker; same-process re-entry must be carried
+        // by the async operation context above.
+        context.pid !== process.pid &&
         readFileSync(path, "utf8").trim() === String(context.pid),
     );
   } catch {
@@ -80,7 +94,9 @@ export async function withMutationLock(
   const path = mutationLockPath(root);
   // A protected operation can spawn a child script that also stages or reads
   // the tree. It inherits this marker and borrows the parent's lock instead of
-  // deadlocking while the parent waits for that child to finish.
+  // deadlocking while the parent waits for that child to finish. The marker is
+  // process-wide, so the owning process must not treat it as permission for
+  // unrelated concurrent calls to borrow.
   if (inheritsMutationLock(path)) return await fn();
 
   if (!(await acquireMutationLock(path, lockOptions))) {
@@ -102,7 +118,10 @@ export async function withMutationLock(
     { path, pid: process.pid },
   ]);
   try {
-    return await fn();
+    const inheritedLocks = activeMutationLocks.getStore() || new Set();
+    const heldLocks = new Set(inheritedLocks);
+    heldLocks.add(path);
+    return await activeMutationLocks.run(heldLocks, fn);
   } finally {
     if (previousContext === undefined)
       delete process.env[MUTATION_LOCK_CONTEXT];
@@ -131,7 +150,9 @@ export async function acquireMutationLock(
       });
       return true;
     } catch (err) {
-      if (err?.code !== "EEXIST") throw err;
+      const lockExists =
+        (err?.code === "EPERM" || err?.code === "EACCES") && existsSync(path);
+      if (err?.code !== "EEXIST" && !lockExists) throw err;
       if (Date.now() - start > timeoutMs) {
         return false;
       }
