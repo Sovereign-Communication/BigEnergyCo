@@ -1,0 +1,12 @@
+{
+  "max_cost_usd": 2.0,
+  "mission_id": "m-20261017-site-release-audit",
+  "phase": "attempt",
+  "phase_ceiling": 1.8,
+  "phase_remaining": 1.8,
+  "spent": 0.0,
+  "terminal_available": 2.0,
+  "terminal_reserve_cost_usd": 0.2,
+  "updated_at": "2026-10-18T04:09:26+00:00",
+  "working_remaining": 1.8
+}

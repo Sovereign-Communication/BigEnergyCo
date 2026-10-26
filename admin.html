@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BigEnergyCo — Internal Founder Growth & Simulation Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    .admin-badge {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+    .month-table-container {
+      max-height: 450px;
+      overflow-y: auto;
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      margin-top: 1.5rem;
+    }
+    .month-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .month-table th {
+      position: sticky;
+      top: 0;
+      background: #0d1322;
+      color: var(--primary-accent);
+      padding: 0.85rem 1rem;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid var(--border-glow);
+    }
+    .month-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-card);
+      font-size: 0.9rem;
+      font-family: var(--font-mono);
+    }
+    .month-table tr:hover {
+      background: rgba(0, 230, 153, 0.04);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header>
+    <div class="container nav-flex">
+      <div class="logo">
+        ⚡ BigEnergyCo <span class="admin-badge">FOUNDER DASHBOARD</span>
+      </div>
+      <nav class="nav-links">
+        <a href="index.html" target="_blank">🌐 View Public Site</a>
+        <a href="#simulation">24-Month Simulation</a>
+        <a href="#table-section">Month-by-Month Ledger</a>
+        <a href="#unit-economics">Capital & Units</a>
+        <a href="#capital">Dream Home Fund</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Dashboard Hero Header -->
+  <section class="hero" style="padding: 3.5rem 0 2rem;">
+    <div class="container">
+      <div class="hero-tag" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3);">
+        🔒 Confidential Founder Operational Portal
+      </div>
+      <h1>1-Year Bootstrapped Growth Model<br><span>$100 Starting Capital $\rightarrow$ Global Scale</span></h1>
+      <p>Simulating BigEnergyCo's 24-month financial trajectory, cashflow waterfalls, and human involvement tradeoffs.</p>
+    </div>
+  </section>
+
+  <!-- 24-Month Financial Growth Simulation Section -->
+  <section id="simulation" style="padding: 2rem 0 4rem;">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">📊 24-Month Human Involvement Simulation Engine</h2>
+        <p class="section-desc">Select an operational model below to view Month 1 through Month 24 revenue, net profit, and founder time commitment.</p>
+      </div>
+
+      <!-- Simulation Toggle Tabs -->
+      <div class="sim-toggle-group">
+        <button class="tab-btn" onclick="selectSimScenario('0pct')">Scenario A: 100% Full AI Automation (0% Human)</button>
+        <button class="tab-btn active" onclick="selectSimScenario('1pct')">Scenario B: 1% Human ($999 VIP Calls)</button>
+        <button class="tab-btn" onclick="selectSimScenario('10pct')">Scenario C: 10% Human ($499 Consults)</button>
+      </div>
+
+      <!-- Simulation Metrics Grid -->
+      <div class="sim-grid">
+        <div class="stat-card" style="border-color: var(--primary-glow);">
+          <div class="stat-val" id="simMrrVal">$23,915 / mo</div>
+          <div class="stat-label">Month 12 MRR</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="simMrr24Val">$58,900 / mo</div>
+          <div class="stat-label">Month 24 MRR Target</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="simMarginVal">93.45%</div>
+          <div class="stat-label">Net Operating Margin</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="simHoursVal">~1 hr / wk</div>
+          <div class="stat-label">Founder Weekly Time Investment</div>
+        </div>
+      </div>
+
+      <!-- Detailed Scenario Overview Card -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 16px; padding: 2rem; margin-top: 2rem;">
+        <h3 id="simTitle" style="color: var(--primary-accent); margin-bottom: 0.75rem;">Scenario B: 1% Human Involvement (Recommended Baseline)</h3>
+        <p id="simDesc" style="color: var(--text-muted); font-size: 1rem; margin-bottom: 1.5rem;">
+          AI handles 99% of customer intake, sizing calculations, PDF quotes, and clickwrap execution. The founder spends ~1 hour per week taking 2–4 high-ticket VIP human escalation calls ($999/session) for complex commercial microgrids or farms.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; background: rgba(9,13,22,0.8); padding: 1.5rem; border-radius: 12px;">
+          <div>
+            <div style="color: var(--text-muted); font-size: 0.85rem;">24-Mo Gross Revenue</div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-bright); font-family: var(--font-mono);" id="simGross24Val">$485,200</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); font-size: 0.85rem;">24-Mo Cumulative Net Profit</div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-accent); font-family: var(--font-mono);" id="simNet24Val">$453,468</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); font-size: 0.85rem;">Hawaii Dream Home Fund</div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: #60a5fa; font-family: var(--font-mono);" id="simFundVal">$248,650</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); font-size: 0.85rem;">Blended CAC</div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); font-family: var(--font-mono);" id="simCacVal">$11.80</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 24-Month Detailed Month-by-Month Table -->
+  <section id="table-section" style="padding: 2rem 0 4rem; background: rgba(9, 13, 22, 0.7); border-top: 1px solid var(--border-glow);">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">📅 Month 1 through Month 24 Growth Ledger</h2>
+        <p class="section-desc">Detailed month-by-month financial projection for the selected scenario.</p>
+      </div>
+
+      <div class="month-table-container">
+        <table class="month-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Monthly Leads</th>
+              <th>Gross Revenue</th>
+              <th>API & Operating Costs</th>
+              <th>Net Operating Profit</th>
+              <th>Cumulative Net Cashflow</th>
+              <th>Dream Home Fund (60%)</th>
+            </tr>
+          </thead>
+          <tbody id="monthTableBody">
+            <!-- Dynamically populated by admin.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Initial $100 Capital Deployment & Unit Economics -->
+  <section id="unit-economics" style="padding: 4rem 0;">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">💸 Initial $100 Capital Deployment & Unit Economics</h2>
+        <p class="section-desc">Bootstrapped capital efficiency roadmap starting with $100 total initial cash.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🏷️</div>
+          <h3>$12.00 Custom Domain</h3>
+          <p>Registered via Cloudflare Registrar at wholesale cost (0% markup) for 1 year. Unlocks full Google Search Console indexing and custom HTTPS SSL.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <h3>$20.00 AI API Credit Pool</h3>
+          <p>DeepSeek R1 & Gemini 1.5 Flash API token credits ($0.001188 per session), providing over 16,000 automated customer sizing intake sessions.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <h3>$68.00 Cash Buffer</h3>
+          <p>Operational emergency liquidity held in business account to absorb transaction fees or domain extensions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hawaii Off-Grid Dream Home Waterfall -->
+  <section id="capital" style="padding: 4rem 0; background: rgba(9, 13, 22, 0.5);">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">🏝️ Hawaii Off-Grid Dream Home Waterfall Allocation</h2>
+        <p class="section-desc">How platform profits fund your off-grid Hawaiian land and homestead build.</p>
+      </div>
+
+      <div class="feature-card" style="max-width: 900px; margin: 0 auto;">
+        <h3 style="color:var(--primary-accent); margin-bottom: 1rem;">24-Month Capital Waterfall ($248,650 Total Fund)</h3>
+        
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Homestead Milestone</th>
+              <th>Allocated Budget</th>
+              <th>Target Completion</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Ag-Zoned Land Purchase (Big Island)</td>
+              <td>$75,000</td>
+              <td>Month 9</td>
+            </tr>
+            <tr>
+              <td>30kW Solar PV + 100kWh LFP Microgrid</td>
+              <td>$24,000</td>
+              <td>Month 14</td>
+            </tr>
+            <tr>
+              <td>20,000 Gal Water Catchment & Filtration</td>
+              <td>$14,000</td>
+              <td>Month 16</td>
+            </tr>
+            <tr>
+              <td>Timber-Frame Modular Residence & Workshop</td>
+              <td>$135,650</td>
+              <td>Month 24</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>© 2026 BigEnergyCo • Internal Founder Operational Dashboard</p>
+    </div>
+  </footer>
+
+  <script src="admin.js"></script>
+</body>
+</html>

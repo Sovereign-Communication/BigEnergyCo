@@ -1,0 +1,6 @@
+Edited deliverable
+Source: short_audio_me.m4a
+Editorial source range: 00:01.450 to 00:42.950 (first read)
+Audio treatment: remove pauses >= 0.75 s, trim dead air, loudness normalize
+Final voice/video duration: 33.10 seconds
+The original recording remains available as short_audio_me.m4a.
