@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261026b";
+import { HOME_COPY } from "./home-copy.js?v=20261026c";
 
 export const LOCALES = {
   en: {
@@ -593,9 +593,9 @@ export const LOCALES = {
     advisorIntakeBillPh: "e.g. 400",
     advisorIntakeKwhPh: "e.g. 35",
     engineOversizedCheaper:
-      "An oversized battery ({battKwh} kWh) avoids replacements and costs about {savings} less over 20 years.",
+      "An oversized {battKwh} kWh battery avoids replacements and costs {savings} less over 20 years.",
     engineSwapsCheaper:
-      "Standard sizing with {replacements} battery replacement(s) costs about {savings} less over 20 years than paying upfront to oversize.",
+      "Standard sizing with {replacements} replacements costs {savings} less over 20 years than oversizing.",
   },
   es: {
     ...HOME_COPY.es,
@@ -1201,9 +1201,9 @@ export const LOCALES = {
     advisorIntakeBillPh: "p. ej. 400",
     advisorIntakeKwhPh: "p. ej. 35",
     engineOversizedCheaper:
-      "Una batería de mayor tamaño ({battKwh} kWh) evita reemplazos y cuesta unos {savings} menos en 20 años.",
+      "Una batería de {battKwh} kWh evita reemplazos y cuesta {savings} menos en 20 años.",
     engineSwapsCheaper:
-      "El tamaño estándar con {replacements} reemplazo(s) de batería cuesta unos {savings} menos en 20 años que pagar por adelantado para sobredimensionar.",
+      "El tamaño estándar con {replacements} reemplazos cuesta {savings} menos en 20 años que uno mayor.",
   },
   pt: {
     ...HOME_COPY.pt,
@@ -1801,9 +1801,9 @@ export const LOCALES = {
     advisorIntakeBillPh: "ex. 400",
     advisorIntakeKwhPh: "ex. 35",
     engineOversizedCheaper:
-      "Uma bateria maior ({battKwh} kWh) evita substituições e custa cerca de {savings} menos em 20 anos.",
+      "Uma bateria de {battKwh} kWh evita trocas e custa {savings} menos em 20 anos.",
     engineSwapsCheaper:
-      "O dimensionamento padrão com {replacements} substituição(ões) da bateria custa cerca de {savings} menos em 20 anos do que pagar adiantado por um sistema maior.",
+      "O tamanho padrão com {replacements} trocas custa {savings} menos em 20 anos que um maior.",
   },
   fr: {
     ...HOME_COPY.fr,
@@ -2413,9 +2413,9 @@ export const LOCALES = {
     advisorIntakeBillPh: "p. ex. 400",
     advisorIntakeKwhPh: "p. ex. 35",
     engineOversizedCheaper:
-      "Une batterie plus grande ({battKwh} kWh) évite les remplacements et coûte environ {savings} de moins sur 20 ans.",
+      "Une batterie de {battKwh} kWh évite les remplacements et coûte {savings} de moins sur 20 ans.",
     engineSwapsCheaper:
-      "Le dimensionnement standard avec {replacements} remplacement(s) de batterie coûte environ {savings} de moins sur 20 ans qu'un surdimensionnement payé d'avance.",
+      "Le format standard avec {replacements} remplacements coûte {savings} de moins sur 20 ans qu'un format supérieur.",
   },
   de: {
     ...HOME_COPY.de,
@@ -3018,9 +3018,9 @@ export const LOCALES = {
     advisorIntakeBillPh: "z. B. 400",
     advisorIntakeKwhPh: "z. B. 35",
     engineOversizedCheaper:
-      "Ein größerer Akku ({battKwh} kWh) vermeidet Ersatz und kostet über 20 Jahre etwa {savings} weniger.",
+      "Ein {battKwh}-kWh-Akku vermeidet Ersatz und kostet in 20 Jahren {savings} weniger.",
     engineSwapsCheaper:
-      "Die Standardgröße mit {replacements} Akku-Ersatz(en) kostet über 20 Jahre etwa {savings} weniger als eine größere Anlage im Voraus.",
+      "Die Standardgröße mit {replacements} Akkuwechseln kostet in 20 Jahren {savings} weniger als Übergröße.",
   },
   nl: {
     navSizing: "Systeem dimensioneren",
@@ -3728,9 +3728,9 @@ export const LOCALES = {
     advisorIntakeBillPh: "bijv. 400",
     advisorIntakeKwhPh: "bijv. 35",
     engineOversizedCheaper:
-      "Een grotere accu ({battKwh} kWh) voorkomt vervanging en kost over 20 jaar ongeveer {savings} minder.",
+      "Een accu van {battKwh} kWh voorkomt vervanging en kost {savings} minder in 20 jaar.",
     engineSwapsCheaper:
-      "De standaardgrootte met {replacements} accuvervanging(en) kost over 20 jaar ongeveer {savings} minder dan vooraf een groter systeem betalen.",
+      "Standaard met {replacements} accuwissels kost {savings} minder in 20 jaar dan groter.",
   },
   ar: {
     ...HOME_COPY.ar,
@@ -4296,8 +4296,8 @@ export const LOCALES = {
     advisorIntakeBillPh: "مثال: 400",
     advisorIntakeKwhPh: "مثال: 35",
     engineOversizedCheaper:
-      "بطارية أكبر ({battKwh} كيلوواط ساعة) تجنبك الاستبدال وتكلف أقل بنحو {savings} خلال 20 عامًا.",
+      "بطارية {battKwh} ك.و.س تتجنب الاستبدال وتكلف {savings} أقل خلال 20 عامًا.",
     engineSwapsCheaper:
-      "الحجم القياسي مع {replacements} عملية استبدال للبطارية يكلف أقل بنحو {savings} خلال 20 عامًا من شراء نظام أكبر مقدمًا.",
+      "الحجم القياسي مع {replacements} استبدال يكلف {savings} أقل خلال 20 عامًا من الحجم الأكبر.",
   },
 };
