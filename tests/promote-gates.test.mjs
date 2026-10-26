@@ -113,12 +113,14 @@ const parseVerify = (out) => extractVerdict(out, ["verified", "filesChecked"]);
 const parsePromote = (out) => extractVerdict(out, ["plan", "record"]);
 
 async function withServer(fn) {
-  const srv = await serveStatic({ dir: STAGE });
-  try {
-    return await fn(srv.url);
-  } finally {
-    await srv.close();
-  }
+  return withMutationLock(async () => {
+    const srv = await serveStatic({ dir: STAGE });
+    try {
+      return await fn(srv.url);
+    } finally {
+      await srv.close();
+    }
+  });
 }
 
 await withMutationLock(() => buildStage());
