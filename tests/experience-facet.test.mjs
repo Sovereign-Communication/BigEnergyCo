@@ -1265,13 +1265,19 @@ test("TRANSLATION: glossary evidence comes from this run and cannot imply a mean
   };
   const line = composeTranslationFacetLine(report);
   assert.match(line, /Gloss 56\/56/);
-  // The completed back-read is cited as the documented offline review it is
-  // (AI, not this gate), and the open clause it does NOT close — native-speaker
-  // review — stays named in the gaps clause. Both halves are the honesty
-  // contract: a line that claims only the fixes, or drops the gap clause, is
-  // the overclaim.
-  assert.match(line, /Back-read 436x6 \(AI\): 23 fixes/);
-  assert.match(line, /Gaps: native review/);
+  // The completed remediation is cited as the documented offline work it is —
+  // both meaning passes (the 2026-10-24 AI fluent read and the 2026-10-25
+  // control-validated machine back-translation) with their fix count — and
+  // what neither instrument can close — native-speaker review — stays named,
+  // in the LIMIT clause, not the gaps clause: the work order's remediation is
+  // complete, and the residual is an attribution limit. Both halves are the
+  // honesty contract: a line that claims only the fixes, or drops the limit
+  // (or the gaps), is the overclaim.
+  assert.match(
+    line,
+    /read 436x6 \+ back-tr\. 466x6 \(MT ctl 36\/36\): 23 fixes\./,
+  );
+  assert.match(line, /Gaps: F-42, engine\. Limit: no native review\./);
   // The runtime-injected engine callout prose (engine.js/rescale.js) is
   // English in every locale and stays so — the worker cannot carry the
   // dictionary, and closing it is the codes->keys engine migration, not a
@@ -1295,7 +1301,7 @@ test("TRANSLATION: suggestion-link proof comes only from the browser probe", () 
   };
   const measured = composeTranslationFacetLine(report);
   assert.match(measured, /Fix link: no send/);
-  assert.match(measured, /Gaps: native review/);
+  assert.match(measured, /Gaps: F-42, engine\. Limit: no native review\./);
   assert.ok(measured.length <= COMPLETE_FACET_CLIP);
 
   report.translation_suggestion.passed = false;

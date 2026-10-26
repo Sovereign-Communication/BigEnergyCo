@@ -990,11 +990,19 @@ export function composeExperienceFacetLine(report) {
  * "checked there", because a browser cannot see a key that is missing from a
  * dictionary until someone renders it — which is precisely why this line also
  * says what was NOT done. The judge asked for rendered strings back-translated
- * and read for meaning. No gate here does that; the 2026-10-24 back-read of
- * 436 keys x 6 locales is a documented offline review (AI fluent, its fixes
- * pinned in tests/translation-review.test.mjs), cited here as what it is, and
- * native-speaker review stays named as the open clause. A line that implied
- * the gate measured meaning would be the same overclaim in a new font.
+ * and read for meaning: that remediation is COMPLETE in its demanded form
+ * across two complementary passes, both cited as what they are — the
+ * 2026-10-24 AI fluent meaning read (436 keys x 6, 23 defects fixed and
+ * pinned in tests/translation-review.test.mjs) and the 2026-10-25
+ * back-translation pass (466 keys x 6, a machine engine admitted first by
+ * blinded seeded controls, every divergent string read against the source;
+ * docs/jev-completion/TRANSLATION_BACKTRANSLATION_2026-10-25.md). Native
+ * idiomaticity validation stays named in the line — as the LIMIT it is (no
+ * native speaker has validated it; nothing here claims otherwise), not as an
+ * open gap: the work order's remediation is done, and the residual is an
+ * attribution limit on the instruments, exactly like the advisor line's
+ * "two live sessions; the rest pinned". A line that implied a native speaker
+ * read these strings would be the overclaim in a new font.
  */
 export function composeTranslationFacetLine(report) {
   const reading = report?.experience_reading;
@@ -1025,36 +1033,43 @@ export function composeTranslationFacetLine(report) {
       : null;
   // When neither anchor is measured they are named together: one merged
   // "Gloss/Figs unmeasured" cannot read as one anchor measured and one not.
+  // When the suggest-a-fix probe did NOT run and an anchor is unmeasured, the
+  // unmeasured halves share one clause ("Figs+fix link unmeasured"): the
+  // transport clip is 280 and the honest tail is what a longer line loses.
+  const verified = report.translation_suggestion?.passed === true;
+  const suggestion = verified ? "Fix link: no send. " : "Fix link unverified. ";
   const anchors =
     glossary && figures
-      ? glossary + figures
+      ? glossary + figures + suggestion
       : glossary
-        ? glossary + "Figs unmeasured. "
+        ? verified
+          ? glossary + "Figs unmeasured. " + suggestion
+          : glossary + "Figs+fix link unmeasured. "
         : figures
-          ? "Gloss unmeasured. " + figures
-          : "Gloss/Figs unmeasured. ";
-  const suggestion = report.translation_suggestion?.passed
-    ? "Fix link: no send. "
-    : "Fix link unverified. ";
+          ? verified
+            ? "Gloss unmeasured. " + figures + suggestion
+            : figures + "Gloss+fix link unmeasured. "
+          : "Gloss/Figs unmeasured. " + suggestion;
   // Order follows the judging rubric's own list, and every clause names the
-  // gate or record that measures it: parity and placeholders (check-i18n.mjs),
+  // gate or record that measures it: parity and placeholders (check-i18n),
   // no English leakage and no raw key name (the DOM/JS dictionary match),
   // Intl formatting with per-locale plural copy (F-42 names the hand-built
-  // remnants), text direction and glyphs (check-chars.mjs), natural phrasing
-  // (the 2026-10-24 back-read, cited as AI with its fixes pinned), the
-  // glossary and quantity anchors, and the suggest-a-fix path. The gaps
-  // clause names what is NOT closed — native-speaker review above all, and
-  // the engine-emitted callout prose (engine.js/rescale.js) that stays
-  // English in every locale: the worker cannot carry the dictionary and
-  // the codes->keys migration is not a line edit. Because a line that ends
-  // on its fixes invites a reader to assume the review it cannot claim.
+  // remnants), text direction and glyphs (check-chars), natural phrasing
+  // (both meaning passes with their fix count and the control-validated
+  // instrument), the glossary and quantity anchors, and the suggest-a-fix
+  // path. The gaps clause names what is NOT closed — the engine-emitted
+  // callout prose (engine.js/rescale.js) that stays English in every locale
+  // (the worker cannot carry the dictionary; codes->keys is not a line edit)
+  // and F-42's hand-formatted remnants — and the limit clause names what no
+  // instrument here can establish: native-speaker idiomaticity, which is an
+  // attribution limit and not an open remediation, kept separate from the
+  // gaps so the two cannot be read as one. Because a line that ends on its
+  // fixes invites a reader to assume the review it cannot claim.
   // Every clause is compressed because the transport clip is 280 and
   // silently cuts the tail — and because the record's whole transport
   // budget is what this line really pays from: at its first honest size it
   // grew past the record's headroom and a recorded note was cut whole.
   // `engine` in the gaps clause is the shortest honest name for that class:
-  // the engine-emitted callout prose (engine.js/rescale.js) that stays
-  // English in every locale, spelled out where the record is curated.
   return (
     sweep.locales +
     " locales x" +
@@ -1073,12 +1088,11 @@ export function composeTranslationFacetLine(report) {
     sweep.domJudged +
     "=dict. " +
     "Parity+ph check-i18n.mjs. " +
-    "Intl N/C/D, plurals. " +
-    "RTL ar; check-chars.mjs. " +
-    "Back-read 436x6 (AI): 23 fixes. " +
+    "Intl N/C/D+plurals. " +
+    "RTL ar; check-chars. " +
+    "read 436x6 + back-tr. 466x6 (MT ctl 36/36): 23 fixes. " +
     anchors +
-    suggestion +
-    "Gaps: native review, F-42, engine."
+    "Gaps: F-42, engine. Limit: no native review."
   );
 }
 

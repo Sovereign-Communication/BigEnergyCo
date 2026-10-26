@@ -201,3 +201,65 @@ test("the 2026-10-24 full meaning back-read fixes stay fixed", () => {
     assert.doesNotMatch(LOCALES.en[key], / :$/, `en.${key} has " :"`);
   }
 });
+
+test("the 2026-10-25 back-translation pass's control targets stay meaning-complete", () => {
+  // The 2026-10-25 back-translation pass
+  // (docs/jev-completion/TRANSLATION_BACKTRANSLATION_2026-10-25.md) seeded
+  // three corruptions per locale into a blinded worksheet — a figure drop, a
+  // sentence truncation and an English passthrough — and the blind review
+  // caught all 18 while clearing all 18 verbatim pairs. The seeds corrupted
+  // COPIES; these pins hold the SHIPPED strings those copies were made from,
+  // so the same three corruption classes cannot reach a visitor unnoticed.
+  // Figure-drop targets: each label keeps the figure the seeds stripped.
+  assert.match(
+    LOCALES.es.cumCostCaptionOwnCostNoPanels,
+    /“Coste total a 20 años”/,
+  );
+  assert.match(LOCALES.pt.cumCostCaptionOwnCost, /“Custo total em 20 anos”/);
+  assert.match(
+    LOCALES.nl.cumCostCaptionOwnCost,
+    /“Totale kosten over 20 jaar”/,
+  );
+  assert.match(LOCALES.ar.cumSavingsHeadline, /20 عامًا/);
+  assert.match(LOCALES.de.uiInitFailed, /Strg\+F5/);
+  // fr.runBtn is pinned above with the other locales' CTA values.
+  // Meaning-drop targets: the sentence the truncation seed cut is present.
+  assert.match(
+    LOCALES.es.frontierVerdictTaperingBattery,
+    /\{tailCost\}[\s\S]*\{ratio\}/,
+  );
+  assert.equal(LOCALES.pt.advisorIntakeBillPh, "ex. 400");
+  assert.match(LOCALES.fr.sourcesCardBody, /ne pouvons pas sourcer le disent/);
+  assert.match(
+    LOCALES.de.resultsIntro,
+    /Rechnungssenkung und Notstromversorgung/,
+  );
+  assert.match(LOCALES.nl.locationPrecision, /breedte- en lengtegraad/);
+  assert.match(LOCALES.ar.pathsGradeNote, /ولا شيء هنا عرض سعر من بائع/);
+  // English-passthrough targets: the locale column carries a translation.
+  assert.match(LOCALES.es.infeasibleNeedsPanelsBody, /^Nada recarga/);
+  assert.match(LOCALES.pt.quickBillManual, /^Estimativa rápida/);
+  assert.match(LOCALES.fr.advisorDegradedRetry, /^Réessayez/);
+  assert.equal(LOCALES.de.pathsUnknown, "Unbekannt");
+  assert.equal(LOCALES.nl.fxCodeLabel, "Valutacode:");
+  assert.doesNotMatch(LOCALES.ar.batterySafety, /It demands respect/);
+  // The donation disclaimer is split across two keys at a different word per
+  // locale, so each key alone can read inverted. The negation must survive the
+  // split point on one side or the other — this is the artifact class the
+  // review dismissed 10 times, kept honest here by pinning the concatenation.
+  for (const [locale, negation] of Object.entries({
+    es: /No es/,
+    pt: /não é/,
+    fr: /n.est pas/,
+    de: /nicht/,
+    nl: /niet/,
+    ar: /ليست/,
+  })) {
+    assert.match(
+      LOCALES[locale].donationTermsPrefix +
+        LOCALES[locale].donationNotTaxDeductible,
+      negation,
+      `${locale}: the donation disclaimer lost its negation across the split point`,
+    );
+  }
+});
