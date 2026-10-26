@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import {
+  appendFileSync,
   existsSync,
   mkdtempSync,
   readFileSync,
@@ -105,6 +106,64 @@ test("unrelated calls in one process stay mutually exclusive", async () => {
   } finally {
     releaseFirst();
     await Promise.allSettled([first, second].filter(Boolean));
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+test("sibling child processes serialize while borrowing their parent lock", async () => {
+  const root = mkdtempSync(join(tmpdir(), "beco-mutation-lock-siblings-"));
+  const lockModule = new URL(
+    "../scripts/lib/mutation-lock.mjs",
+    import.meta.url,
+  ).href;
+  const eventsPath = join(root, "events.log");
+
+  try {
+    await withMutationLock(async () => {
+      const runBorrower = (name) => {
+        const code = [
+          'import { appendFileSync } from "node:fs";',
+          `import { withMutationLock } from ${JSON.stringify(lockModule)};`,
+          "await withMutationLock(async () => {",
+          `  appendFileSync(${JSON.stringify(eventsPath)}, ${JSON.stringify(name + ":start\n")});`,
+          "  await new Promise((resolve) => setTimeout(resolve, 100));",
+          `  appendFileSync(${JSON.stringify(eventsPath)}, ${JSON.stringify(name + ":end\n")});`,
+          `}, ${JSON.stringify(root)}, { timeoutMs: 3000, stepMs: 2 });`,
+        ].join("\n");
+        return new Promise((resolve, reject) => {
+          const child = spawn(
+            process.execPath,
+            ["--input-type=module", "-e", code],
+            {
+              stdio: ["ignore", "ignore", "pipe"],
+            },
+          );
+          let stderr = "";
+          child.stderr.setEncoding("utf8");
+          child.stderr.on("data", (chunk) => (stderr += chunk));
+          child.once("error", reject);
+          child.once("close", (code) => {
+            if (code === 0) resolve();
+            else
+              reject(new Error(`borrower ${name} exited ${code}: ${stderr}`));
+          });
+        });
+      };
+
+      await Promise.all([runBorrower("a"), runBorrower("b")]);
+    }, root);
+
+    const events = readFileSync(eventsPath, "utf8").trim().split("\n");
+    const serialOrders = [
+      ["a:start", "a:end", "b:start", "b:end"],
+      ["b:start", "b:end", "a:start", "a:end"],
+    ];
+    assert.ok(
+      serialOrders.some(
+        (order) => JSON.stringify(order) === JSON.stringify(events),
+      ),
+      `borrowed callbacks must not overlap: ${events.join(" -> ")}`,
+    );
+  } finally {
     rmSync(root, { recursive: true, force: true });
   }
 });

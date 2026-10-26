@@ -22,10 +22,10 @@ import { join, resolve } from "node:path";
 
 const MUTATION_LOCK_CONTEXT = "BECO_MUTATION_LOCK_CONTEXT";
 
-function inheritsMutationLock(path) {
+function inheritedMutationLock(path) {
   try {
     const contexts = JSON.parse(process.env[MUTATION_LOCK_CONTEXT] || "[]");
-    return contexts.some(
+    return contexts.find(
       (context) =>
         context?.path === path &&
         Number.isSafeInteger(context.pid) &&
@@ -33,11 +33,16 @@ function inheritsMutationLock(path) {
         // process may use that marker; same-process re-entry must be carried
         // by the async operation context above.
         context.pid !== process.pid &&
+        (context.delegatePid ?? context.pid) !== process.pid &&
         readFileSync(path, "utf8").trim() === String(context.pid),
     );
   } catch {
-    return false;
+    return undefined;
   }
+}
+
+function mutationBorrowerLockPath(path, delegatePid) {
+  return path + ".borrower-" + delegatePid;
 }
 
 /** Stable per-checkout lock path. */
@@ -82,12 +87,41 @@ export async function withMutationLock(
   lockOptions = {},
 ) {
   const path = mutationLockPath(root);
-  // A protected operation can spawn a child script that also stages or reads
-  // the tree. It inherits this marker and borrows the parent's lock instead of
-  // deadlocking while the parent waits for that child to finish. The marker is
-  // process-wide, so only a different process may use it; calls in the owning
-  // process must acquire the lock independently.
-  if (inheritsMutationLock(path)) return await fn();
+  // A protected operation can spawn child scripts that also stage or read the
+  // tree. They inherit this marker, but sibling children need their own atomic
+  // gate: without it, both can borrow the parent's lock and mutate together.
+  // The gate is scoped to the process that delegated the work, so siblings
+  // serialize while a child can still delegate to its own children.
+  const inherited = inheritedMutationLock(path);
+  if (inherited) {
+    const delegatePid = inherited.delegatePid ?? inherited.pid;
+    const borrowerPath = mutationBorrowerLockPath(path, delegatePid);
+    if (!(await acquireMutationLock(borrowerPath, lockOptions))) {
+      throw new Error(
+        "Timed out waiting for the shared mutation lock; did not run the protected operation (" +
+          path +
+          ")",
+      );
+    }
+
+    const previousContext = process.env[MUTATION_LOCK_CONTEXT];
+    const contexts = JSON.parse(previousContext || "[]");
+    process.env[MUTATION_LOCK_CONTEXT] = JSON.stringify(
+      contexts.map((context) =>
+        context?.path === path && context.pid === inherited.pid
+          ? { ...context, delegatePid: process.pid }
+          : context,
+      ),
+    );
+    try {
+      return await fn();
+    } finally {
+      if (previousContext === undefined)
+        delete process.env[MUTATION_LOCK_CONTEXT];
+      else process.env[MUTATION_LOCK_CONTEXT] = previousContext;
+      rmSync(borrowerPath, { force: true });
+    }
+  }
 
   if (!(await acquireMutationLock(path, lockOptions))) {
     throw new Error(
@@ -105,7 +139,7 @@ export async function withMutationLock(
   }
   process.env[MUTATION_LOCK_CONTEXT] = JSON.stringify([
     ...contexts,
-    { path, pid: process.pid },
+    { path, pid: process.pid, delegatePid: process.pid },
   ]);
   try {
     return await fn();
