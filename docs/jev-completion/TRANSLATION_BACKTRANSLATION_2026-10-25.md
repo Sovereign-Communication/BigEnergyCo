@@ -1,8 +1,8 @@
 # 2026-10-25 back-translation pass — full-corpus meaning read
 
 **Owner-directed 2026-10-25, Issue #287 Phase 4 path.** The work order's
-remediation is: *back-translate the rendered strings, read them for meaning,
-fix what is not actually readable.* This record is that pass, done in its own
+remediation is: _back-translate the rendered strings, read them for meaning,
+fix what is not actually readable._ This record is that pass, done in its own
 form. It disposes the meaning clause and the native-speaker clause of the
 translation axis; it does not touch any other facet.
 
@@ -79,12 +79,12 @@ The divergence funnel (§5) was calibrated on **synthetic injections**, made
 before the corpus was read so the sensitivity numbers cannot be fitted to the
 findings, and the seeded controls were graded only after the review (§2):
 
-| corruption injected into the simulated back-translation | caught |
-| ------------------------------------------------------- | ------ |
-| figure-drop (numbers removed)                           | 29/29  |
-| untranslated-English (back = source)                    | 153/153|
-| meaning-drop (sentence/clause removed)                  | 39/41  |
-| clean strings falsely flagged                           | 9%     |
+| corruption injected into the simulated back-translation | caught  |
+| ------------------------------------------------------- | ------- |
+| figure-drop (numbers removed)                           | 29/29   |
+| untranslated-English (back = source)                    | 153/153 |
+| meaning-drop (sentence/clause removed)                  | 39/41   |
+| clean strings falsely flagged                           | 9%      |
 
 The two meaning-drop misses are documented, not hidden: both were single
 subordinate clauses whose removal left a fluent sentence with a barely moved
@@ -114,11 +114,11 @@ numeral spell-out, or a documented false positive). The review was completed
 **185 flagged rows, 185 dispositions, written blind.** The sealed answers were
 opened only after the disposition file was complete. Graded result:
 
-| control class            | count | outcome                                                       |
-| ------------------------ | ----- | ------------------------------------------------------------- |
-| seeded corruptions       | 18    | **18/18 caught** — every one dispositioned `defect`            |
-| seeded known-good pairs  | 18    | **18/18 cleared** — none dispositioned `defect`                |
-| non-seeded `defect` rows | 0     | **no shipped string needed a fix**                             |
+| control class            | count | outcome                                             |
+| ------------------------ | ----- | --------------------------------------------------- |
+| seeded corruptions       | 18    | **18/18 caught** — every one dispositioned `defect` |
+| seeded known-good pairs  | 18    | **18/18 cleared** — none dispositioned `defect`     |
+| non-seeded `defect` rows | 0     | **no shipped string needed a fix**                  |
 
 Every one of the 185 flags was therefore either a seeded control or a
 dismissed noise row. The shipped corpus read **clean** through the
@@ -155,7 +155,7 @@ measured on real rows rather than synthetic ones):
   `unavailable` → `No hay` / `Indisponível` / `niet beschikbaar`, etc. — the
   same claim carried by different words.
 - **token strings (13 rows):** `~{w} W`, `{pv} kW + {batt} kWh · {pct}% ·
-  {cost}`, `/kWh, diesel` — identical by construction.
+{cost}`, `/kWh, diesel` — identical by construction.
 - **claim-complete rows the funnel's coarser signals still flagged (108
   rows):** sentence-style splits (EN 2 sentences → 3 in the locale), label
   compressions and expanded renderings — e.g. `frontierLegendBand` expands
@@ -176,11 +176,11 @@ misses roughly 5% of injected meaning drops (2/41) — the documented class of
   **LIMIT** — no native speaker has validated how any locale reads. Nothing
   here claims otherwise. Per A-007's B1 staging it is a named limit, not an
   unperformed remediation; P10's bar is unchanged. This is a limit on
-  *attribution* (what this evidence may claim), not an open repair.
+  _attribution_ (what this evidence may claim), not an open repair.
 - **The gaps the facet line names, bounded** so the line's short names cannot
   read as open holes:
-  - **`engine`** — the ~6 callout variants the sizing engine composes *inside
-    the Web Worker* (`engine.js`/`rescale.js`/`charts.js`, including
+  - **`engine`** — the ~6 callout variants the sizing engine composes _inside
+    the Web Worker_ (`engine.js`/`rescale.js`/`charts.js`, including
     `oversizeCallout`'s prose-parsing pair and the cumulative-savings
     callout). These stay English in all seven locales **by construction**: the
     worker cannot carry the seven-locale dictionary. Closing this is the
