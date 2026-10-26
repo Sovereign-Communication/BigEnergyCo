@@ -44,6 +44,36 @@ export function oversizeCallout(
   return null;
 }
 
+// The Worker cannot import the browser locale dictionary. Carry the semantic
+// key and numeric arguments beside the legacy diagnostic sentence so the UI
+// can render the visitor-facing copy through t().
+export function oversizeCalloutI18n(
+  scenario,
+  { battKwh = null, savingsUsd = null, replacements = null } = {},
+) {
+  if (
+    scenario === "oversized_cheaper" &&
+    Number.isFinite(battKwh) &&
+    Number.isFinite(savingsUsd)
+  ) {
+    return {
+      key: "engineOversizedCheaper",
+      args: { battKwh, savingsUsd },
+    };
+  }
+  if (
+    scenario === "swaps_cheaper" &&
+    Number.isFinite(replacements) &&
+    Number.isFinite(savingsUsd)
+  ) {
+    return {
+      key: "engineSwapsCheaper",
+      args: { replacements, savingsUsd },
+    };
+  }
+  return null;
+}
+
 /**
  * Reads the USD savings figure back out of oversizeCallout prose so the UI
  * can re-render it in the visitor's display currency. Paired with the
@@ -161,7 +191,13 @@ export function scaleRecord(o, k, fixedMonthly = 0) {
       battKwh: n.oversizedBattKwh,
       savingsUsd: n.oversizeSavingsUsd,
     });
-    if (regen) n.bestPriceCallout = regen;
+    if (regen) {
+      n.bestPriceCallout = regen;
+      n.bestPriceCalloutI18n = oversizeCalloutI18n("oversized_cheaper", {
+        battKwh: n.oversizedBattKwh,
+        savingsUsd: n.oversizeSavingsUsd,
+      });
+    }
   } else if (
     n.oversizeScenario === "swaps_cheaper" &&
     typeof n.bestPriceCallout === "string" &&
@@ -173,7 +209,13 @@ export function scaleRecord(o, k, fixedMonthly = 0) {
       replacements: n.replacementsHorizon,
       savingsUsd: n.oversizeSavingsUsd,
     });
-    if (regen) n.bestPriceCallout = regen;
+    if (regen) {
+      n.bestPriceCallout = regen;
+      n.bestPriceCalloutI18n = oversizeCalloutI18n("swaps_cheaper", {
+        replacements: n.replacementsHorizon,
+        savingsUsd: n.oversizeSavingsUsd,
+      });
+    }
   }
   return n;
 }

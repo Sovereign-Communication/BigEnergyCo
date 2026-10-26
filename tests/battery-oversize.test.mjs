@@ -87,6 +87,13 @@ test("evaluateOversizeOptimization compares oversized vs swaps when replacements
       /oversized battery \(\d+ kWh\) to avoid replacements/,
     );
     assert.match(opt.bestPriceCallout, /lowest 20-year cost/);
+    assert.deepEqual(opt.bestPriceCalloutI18n, {
+      key: "engineOversizedCheaper",
+      args: {
+        battKwh: opt.oversizedBattKwh,
+        savingsUsd: opt.oversizeSavingsUsd,
+      },
+    });
   } else {
     assert.equal(opt.oversizeScenario, "swaps_cheaper");
     assert.match(opt.bestPriceCallout, /Best 20-year price:/);
@@ -94,6 +101,13 @@ test("evaluateOversizeOptimization compares oversized vs swaps when replacements
       opt.bestPriceCallout,
       /standard sizing with \d+ replacement\(s\) is/,
     );
+    const replacements = Number(
+      opt.bestPriceCallout.match(/with (\d+) replacement/)[1],
+    );
+    assert.deepEqual(opt.bestPriceCalloutI18n, {
+      key: "engineSwapsCheaper",
+      args: { replacements, savingsUsd: opt.oversizeSavingsUsd },
+    });
   }
 });
 

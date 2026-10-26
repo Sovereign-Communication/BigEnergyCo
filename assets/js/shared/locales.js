@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261025b";
+import { HOME_COPY } from "./home-copy.js?v=20261026b";
 
 export const LOCALES = {
   en: {
@@ -592,6 +592,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Daily Energy Consumption (kWh / day):",
     advisorIntakeBillPh: "e.g. 400",
     advisorIntakeKwhPh: "e.g. 35",
+    engineOversizedCheaper:
+      "An oversized battery ({battKwh} kWh) avoids replacements and costs about {savings} less over 20 years.",
+    engineSwapsCheaper:
+      "Standard sizing with {replacements} battery replacement(s) costs about {savings} less over 20 years than paying upfront to oversize.",
   },
   es: {
     ...HOME_COPY.es,
@@ -1196,6 +1200,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Consumo energético diario (kWh / día):",
     advisorIntakeBillPh: "p. ej. 400",
     advisorIntakeKwhPh: "p. ej. 35",
+    engineOversizedCheaper:
+      "Una batería de mayor tamaño ({battKwh} kWh) evita reemplazos y cuesta unos {savings} menos en 20 años.",
+    engineSwapsCheaper:
+      "El tamaño estándar con {replacements} reemplazo(s) de batería cuesta unos {savings} menos en 20 años que pagar por adelantado para sobredimensionar.",
   },
   pt: {
     ...HOME_COPY.pt,
@@ -1792,6 +1800,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Consumo diário de energia (kWh / dia):",
     advisorIntakeBillPh: "ex. 400",
     advisorIntakeKwhPh: "ex. 35",
+    engineOversizedCheaper:
+      "Uma bateria maior ({battKwh} kWh) evita substituições e custa cerca de {savings} menos em 20 anos.",
+    engineSwapsCheaper:
+      "O dimensionamento padrão com {replacements} substituição(ões) da bateria custa cerca de {savings} menos em 20 anos do que pagar adiantado por um sistema maior.",
   },
   fr: {
     ...HOME_COPY.fr,
@@ -2400,6 +2412,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Consommation d'énergie quotidienne (kWh / jour) :",
     advisorIntakeBillPh: "p. ex. 400",
     advisorIntakeKwhPh: "p. ex. 35",
+    engineOversizedCheaper:
+      "Une batterie plus grande ({battKwh} kWh) évite les remplacements et coûte environ {savings} de moins sur 20 ans.",
+    engineSwapsCheaper:
+      "Le dimensionnement standard avec {replacements} remplacement(s) de batterie coûte environ {savings} de moins sur 20 ans qu'un surdimensionnement payé d'avance.",
   },
   de: {
     ...HOME_COPY.de,
@@ -3001,6 +3017,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Täglicher Energieverbrauch (kWh / Tag):",
     advisorIntakeBillPh: "z. B. 400",
     advisorIntakeKwhPh: "z. B. 35",
+    engineOversizedCheaper:
+      "Ein größerer Akku ({battKwh} kWh) vermeidet Ersatz und kostet über 20 Jahre etwa {savings} weniger.",
+    engineSwapsCheaper:
+      "Die Standardgröße mit {replacements} Akku-Ersatz(en) kostet über 20 Jahre etwa {savings} weniger als eine größere Anlage im Voraus.",
   },
   nl: {
     navSizing: "Systeem dimensioneren",
@@ -3707,6 +3727,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Dagelijks energieverbruik (kWh / dag):",
     advisorIntakeBillPh: "bijv. 400",
     advisorIntakeKwhPh: "bijv. 35",
+    engineOversizedCheaper:
+      "Een grotere accu ({battKwh} kWh) voorkomt vervanging en kost over 20 jaar ongeveer {savings} minder.",
+    engineSwapsCheaper:
+      "De standaardgrootte met {replacements} accuvervanging(en) kost over 20 jaar ongeveer {savings} minder dan vooraf een groter systeem betalen.",
   },
   ar: {
     ...HOME_COPY.ar,
@@ -4271,5 +4295,9 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "استهلاك الطاقة اليومي (كيلوواط ساعة / اليوم):",
     advisorIntakeBillPh: "مثال: 400",
     advisorIntakeKwhPh: "مثال: 35",
+    engineOversizedCheaper:
+      "بطارية أكبر ({battKwh} كيلوواط ساعة) تجنبك الاستبدال وتكلف أقل بنحو {savings} خلال 20 عامًا.",
+    engineSwapsCheaper:
+      "الحجم القياسي مع {replacements} عملية استبدال للبطارية يكلف أقل بنحو {savings} خلال 20 عامًا من شراء نظام أكبر مقدمًا.",
   },
 };

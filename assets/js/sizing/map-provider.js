@@ -1,6 +1,6 @@
 // Optional map integration boundary. Importing this module never loads a map
 // library, requests coordinates, or changes core sizing behavior.
-import { translate as t } from "../shared/i18n.js?v=20261025b";
+import { translate as t } from "../shared/i18n.js?v=20261026b";
 
 const PANEL_AREA_M2 = 6;
 function versionedLocalAsset(path) {

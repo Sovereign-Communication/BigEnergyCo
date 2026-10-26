@@ -1058,8 +1058,9 @@ export function composeTranslationFacetLine(report) {
   // (both meaning passes with their fix count and the control-validated
   // instrument), the glossary and quantity anchors, and the suggest-a-fix
   // path. The gaps clause names what is NOT closed — the engine-emitted
-  // callout prose (engine.js/rescale.js) that stays English in every locale
-  // (the worker cannot carry the dictionary; codes->keys is not a line edit)
+  // remaining callout variants (engine.js/rescale.js/charts.js); two
+  // cost-comparison messages now carry locale keys, while the others remain
+  // English because the worker cannot carry the dictionary.
   // and F-42's hand-formatted remnants — and the limit clause names what no
   // instrument here can establish: native-speaker idiomaticity, which is an
   // attribution limit and not an open remediation, kept separate from the

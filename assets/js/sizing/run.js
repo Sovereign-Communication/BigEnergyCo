@@ -28,7 +28,7 @@ import {
   billCutFraction,
   simulateOutage,
   simulatePortable,
-} from "./engine.js?v=20261025b";
+} from "./engine.js?v=20261026b";
 
 import {
   isUseCaseId,
@@ -39,23 +39,23 @@ import {
   normaliseReservePct,
   normaliseOutageTarget,
   outcomeFor,
-} from "./usecases.js?v=20261025b";
-import { memoizeSimulate } from "./sim-cache.js?v=20261025b";
+} from "./usecases.js?v=20261026b";
+import { memoizeSimulate } from "./sim-cache.js?v=20261026b";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20261025b";
-import { buildFrontier } from "./frontier.js?v=20261025b";
-import { oversizeCallout } from "./rescale.js?v=20261025b";
-import { climateSummary } from "./climate.js?v=20261025b";
+} from "./nasa.js?v=20261026b";
+import { buildFrontier } from "./frontier.js?v=20261026b";
+import { oversizeCallout, oversizeCalloutI18n } from "./rescale.js?v=20261026b";
+import { climateSummary } from "./climate.js?v=20261026b";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20261025b";
+} from "./pricing.js?v=20261026b";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -66,7 +66,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20261025b";
+} from "./money.js?v=20261026b";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -308,7 +308,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20261025b");
+      await import("./profiles.js?v=20261026b");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -738,6 +738,7 @@ async function runSizingUncached(msg, deps = {}) {
       ? {
           oversizeScenario: sizing.oversizeScenario,
           bestPriceCallout: sizing.bestPriceCallout,
+          bestPriceCalloutI18n: sizing.bestPriceCalloutI18n,
           oversizeSavingsUsd: sizing.oversizeSavingsUsd,
           oversizedBattKwh:
             sizing.oversizedBattKwh !== undefined
@@ -764,6 +765,7 @@ async function runSizingUncached(msg, deps = {}) {
     let {
       oversizeScenario,
       bestPriceCallout,
+      bestPriceCalloutI18n,
       oversizeSavingsUsd,
       oversizedBattKwh,
     } = opt;
@@ -772,6 +774,7 @@ async function runSizingUncached(msg, deps = {}) {
       bestPriceCallout =
         `Best 20-year price for this exact hardware: standard sizing with ` +
         `${replacementsHorizon} replacement(s) over 20 years (counted above).`;
+      bestPriceCalloutI18n = null;
       oversizeSavingsUsd = null;
       oversizedBattKwh = sizing.battKwh;
     }
@@ -790,6 +793,7 @@ async function runSizingUncached(msg, deps = {}) {
       battNameplateKwh: +(sizing.battKwh / chemObj.usableDod).toFixed(1),
       oversizeScenario,
       bestPriceCallout,
+      bestPriceCalloutI18n,
       oversizeSavingsUsd,
       oversizedBattKwh,
     };
@@ -913,6 +917,7 @@ async function runSizingUncached(msg, deps = {}) {
       trueBreakEvenYear: breakEvenFor(m, gridSpend),
       cumCostSeries: gridSpend !== null ? cumCostFor(m, gridSpend) : null,
       bestPriceCallout: m.bestPriceCallout,
+      bestPriceCalloutI18n: m.bestPriceCalloutI18n,
       oversizeScenario: m.oversizeScenario,
       oversizeSavingsUsd: m.oversizeSavingsUsd,
       oversizedBattKwh: m.oversizedBattKwh,
@@ -970,6 +975,7 @@ async function runSizingUncached(msg, deps = {}) {
       battNameplateKwh: m.battNameplateKwh,
       usableDod: m.chemObj.usableDod,
       bestPriceCallout: m.bestPriceCallout,
+      bestPriceCalloutI18n: m.bestPriceCalloutI18n,
       oversizeScenario: m.oversizeScenario,
       oversizeSavingsUsd: m.oversizeSavingsUsd,
       oversizedBattKwh: m.oversizedBattKwh,
@@ -1112,6 +1118,7 @@ async function runSizingUncached(msg, deps = {}) {
       peakLoadW: Math.round(peakLoadW),
       meanTempC: Math.round(meanTempC),
       bestPriceCallout: m.bestPriceCallout,
+      bestPriceCalloutI18n: m.bestPriceCalloutI18n,
       oversizeScenario: m.oversizeScenario,
       oversizeSavingsUsd: m.oversizeSavingsUsd,
       oversizedBattKwh: m.oversizedBattKwh,
@@ -1168,6 +1175,7 @@ async function runSizingUncached(msg, deps = {}) {
     cell.peakLoadW = Math.round(peakLoadW);
     cell.meanTempC = Math.round(meanTempC);
     cell.bestPriceCallout = m.bestPriceCallout;
+    cell.bestPriceCalloutI18n = m.bestPriceCalloutI18n;
     cell.oversizeScenario = m.oversizeScenario;
     cell.oversizeSavingsUsd = m.oversizeSavingsUsd;
     cell.oversizedBattKwh = m.oversizedBattKwh;
@@ -1389,6 +1397,7 @@ async function runSizingUncached(msg, deps = {}) {
       batteryLifeYears: m.batteryLifeYears,
       lcoeUsdPerKwh: lcoe === null ? null : +lcoe.toFixed(4),
       bestPriceCallout: m.bestPriceCallout,
+      bestPriceCalloutI18n: m.bestPriceCalloutI18n,
       oversizeScenario: m.oversizeScenario,
       oversizeSavingsUsd: m.oversizeSavingsUsd,
       oversizedBattKwh: m.oversizedBattKwh,
@@ -1549,6 +1558,10 @@ async function runSizingUncached(msg, deps = {}) {
               battKwh: pt.battKwh,
               savingsUsd: pt.adopted.savingsUsd,
             }),
+            bestPriceCalloutI18n: oversizeCalloutI18n("oversized_cheaper", {
+              battKwh: pt.battKwh,
+              savingsUsd: pt.adopted.savingsUsd,
+            }),
             oversizeSavingsUsd: pt.adopted.savingsUsd,
             oversizedBattKwh: pt.battKwh,
           }
@@ -1588,6 +1601,7 @@ async function runSizingUncached(msg, deps = {}) {
         trueBreakEvenYear: null,
         cumCostSeries: null,
         bestPriceCallout: m.bestPriceCallout,
+        bestPriceCalloutI18n: m.bestPriceCalloutI18n,
         oversizeScenario: m.oversizeScenario,
         oversizeSavingsUsd: m.oversizeSavingsUsd,
         oversizedBattKwh: m.oversizedBattKwh,
@@ -2516,6 +2530,7 @@ async function runSizingUncached(msg, deps = {}) {
           swapsAndLaborUsd: mAgm.swapsAndLaborUsd,
           oversizeScenario: mAgm.oversizeScenario,
           bestPriceCallout: mAgm.bestPriceCallout,
+          bestPriceCalloutI18n: mAgm.bestPriceCalloutI18n,
           oversizeSavingsUsd: mAgm.oversizeSavingsUsd,
           oversizedBattKwh: mAgm.oversizedBattKwh,
           unmetHoursPerYear: +(

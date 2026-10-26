@@ -2,15 +2,15 @@
 // Pure functions only: no DOM, no network, no globals. Every constant is
 // exported so the UI can render a complete "show the arithmetic" panel.
 
-import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261025b";
-import { oversizeCallout } from "./rescale.js?v=20261025b";
+import { batteryReplacements, lifetimeCostUsd } from "./money.js?v=20261026b";
+import { oversizeCallout, oversizeCalloutI18n } from "./rescale.js?v=20261026b";
 import {
   CHEMISTRIES,
   coldCapacityScale,
   capacityScaleFor,
   CYCLE_LIFE_CURVES,
   cycleLifeForDoD,
-} from "./chem-model.js?v=20261025b";
+} from "./chem-model.js?v=20261026b";
 //
 // Units:
 //   irradiance  GHI(h) in W/m²  (NASA POWER hourly ALLSKY_SFC_SW_DWN, local solar time)
@@ -512,6 +512,10 @@ export function evaluateOversizeOptimization({
         battKwh: targetBattKwh,
         savingsUsd: savings,
       }),
+      bestPriceCalloutI18n: oversizeCalloutI18n("oversized_cheaper", {
+        battKwh: targetBattKwh,
+        savingsUsd: savings,
+      }),
     };
   } else {
     const savings = lifeOversized.total - lifeStandard.total;
@@ -521,6 +525,10 @@ export function evaluateOversizeOptimization({
       oversizedBattKwh: targetBattKwh,
       oversizeSavingsUsd: savings,
       bestPriceCallout: oversizeCallout("swaps_cheaper", {
+        replacements,
+        savingsUsd: savings,
+      }),
+      bestPriceCalloutI18n: oversizeCalloutI18n("swaps_cheaper", {
         replacements,
         savingsUsd: savings,
       }),
@@ -739,6 +747,10 @@ export function sizeForTier({
           battKwh: adopted.t,
           savingsUsd: prevObj - obj,
         });
+        opt.bestPriceCalloutI18n = oversizeCalloutI18n("oversized_cheaper", {
+          battKwh: adopted.t,
+          savingsUsd: prevObj - obj,
+        });
       } else {
         // Verified on a fresh simulation, the oversized bank is NOT cheaper
         // (throughput shifts with bank size, so the pre-verification estimate
@@ -759,8 +771,12 @@ export function sizeForTier({
       opt.bestPriceCallout = `Best 20-year price: standard sizing with battery replacements is the practical pick — a zero-swap bank is beyond the sizes this tool searches.`;
     }
   }
+  if (!String(opt.bestPriceCallout || "").includes("~$")) {
+    opt.bestPriceCalloutI18n = null;
+  }
   best.oversizeScenario = opt.oversizeScenario;
   best.bestPriceCallout = opt.bestPriceCallout;
+  best.bestPriceCalloutI18n = opt.bestPriceCalloutI18n;
   best.oversizeSavingsUsd = opt.oversizeSavingsUsd;
   best.oversizedBattKwh = opt.oversizedBattKwh;
 
@@ -1222,6 +1238,10 @@ export function sizeForBillCut({
             battKwh: b,
             savingsUsd: prevObj - obj,
           });
+          opt.bestPriceCalloutI18n = oversizeCalloutI18n("oversized_cheaper", {
+            battKwh: b,
+            savingsUsd: prevObj - obj,
+          });
         } else {
           opt.useOversized = false;
           opt.oversizeScenario = "swaps_cheaper";
@@ -1270,8 +1290,12 @@ export function sizeForBillCut({
       }
     }
   }
+  if (!String(opt.bestPriceCallout || "").includes("~$")) {
+    opt.bestPriceCalloutI18n = null;
+  }
   best.oversizeScenario = opt.oversizeScenario;
   best.bestPriceCallout = opt.bestPriceCallout;
+  best.bestPriceCalloutI18n = opt.bestPriceCalloutI18n;
   best.oversizeSavingsUsd = opt.oversizeSavingsUsd;
   best.oversizedBattKwh = opt.oversizedBattKwh;
 

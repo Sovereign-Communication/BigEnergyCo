@@ -76,6 +76,25 @@ test("localized homepage hooks preserve reader-visible claims and live values", 
   }
 });
 
+test("engine callout keys render in every supported locale with live values", () => {
+  for (const [locale, dict] of Object.entries(LOCALES)) {
+    for (const [key, vars] of [
+      ["engineOversizedCheaper", { battKwh: "12", savings: "$544" }],
+      ["engineSwapsCheaper", { replacements: "2", savings: "$1,813" }],
+    ]) {
+      const template = dict[key];
+      assert.equal(typeof template, "string", `${locale}.${key} is present`);
+      const rendered = interpolate(template, vars);
+      assert.ok(rendered.length > 0, `${locale}.${key} renders`);
+      assert.doesNotMatch(rendered, /\{(?:battKwh|replacements|savings)\}/);
+      assert.ok(
+        rendered.includes(vars.savings),
+        `${locale}.${key} keeps money`,
+      );
+    }
+  }
+});
+
 function readEnKeys() {
   const src = fs.readFileSync(
     path.join(ROOT, "assets/js/shared/locales.js"),

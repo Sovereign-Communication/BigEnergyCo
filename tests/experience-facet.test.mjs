@@ -1278,10 +1278,10 @@ test("TRANSLATION: glossary evidence comes from this run and cannot imply a mean
     /read 436x6 \+ back-tr\. 466x6 \(MT ctl 36\/36\): 23 fixes\./,
   );
   assert.match(line, /Gaps: F-42, engine\. Limit: no native review\./);
-  // The runtime-injected engine callout prose (engine.js/rescale.js) is
-  // English in every locale and stays so — the worker cannot carry the
-  // dictionary, and closing it is the codes->keys engine migration, not a
-  // line edit. The gaps clause must name that class (shortest honest name:
+  // The remaining runtime-injected engine callout variants are
+  // still partly English after two — the worker cannot carry the
+  // dictionary, and the codes->keys migration remains open for the other variants and
+  // charts.js. The gaps clause still names that class (shortest honest name:
   // `engine`), or the line's dictionary-match counts read as a promise no
   // locale can keep.
   assert.match(line, /F-42, engine\./);
