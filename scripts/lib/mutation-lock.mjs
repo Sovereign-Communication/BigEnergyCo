@@ -16,23 +16,13 @@
 // so a lock file inside the checkout would show up in those gates. The name is
 // derived from the repo path so two checkouts cannot block each other.
 import { createHash } from "node:crypto";
-import { AsyncLocalStorage } from "node:async_hooks";
 import { existsSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const MUTATION_LOCK_CONTEXT = "BECO_MUTATION_LOCK_CONTEXT";
-const activeMutationLocks = new AsyncLocalStorage();
 
 function inheritsMutationLock(path) {
-  if (activeMutationLocks.getStore()?.has(path)) {
-    try {
-      return readFileSync(path, "utf8").trim() === String(process.pid);
-    } catch {
-      return false;
-    }
-  }
-
   try {
     const contexts = JSON.parse(process.env[MUTATION_LOCK_CONTEXT] || "[]");
     return contexts.some(
@@ -95,8 +85,8 @@ export async function withMutationLock(
   // A protected operation can spawn a child script that also stages or reads
   // the tree. It inherits this marker and borrows the parent's lock instead of
   // deadlocking while the parent waits for that child to finish. The marker is
-  // process-wide, so the owning process must not treat it as permission for
-  // unrelated concurrent calls to borrow.
+  // process-wide, so only a different process may use it; calls in the owning
+  // process must acquire the lock independently.
   if (inheritsMutationLock(path)) return await fn();
 
   if (!(await acquireMutationLock(path, lockOptions))) {
@@ -118,10 +108,7 @@ export async function withMutationLock(
     { path, pid: process.pid },
   ]);
   try {
-    const inheritedLocks = activeMutationLocks.getStore() || new Set();
-    const heldLocks = new Set(inheritedLocks);
-    heldLocks.add(path);
-    return await activeMutationLocks.run(heldLocks, fn);
+    return await fn();
   } finally {
     if (previousContext === undefined)
       delete process.env[MUTATION_LOCK_CONTEXT];
