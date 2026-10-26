@@ -16,9 +16,25 @@
 // so a lock file inside the checkout would show up in those gates. The name is
 // derived from the repo path so two checkouts cannot block each other.
 import { createHash } from "node:crypto";
-import { existsSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+
+const MUTATION_LOCK_CONTEXT = "BECO_MUTATION_LOCK_CONTEXT";
+
+function inheritsMutationLock(path) {
+  try {
+    const contexts = JSON.parse(process.env[MUTATION_LOCK_CONTEXT] || "[]");
+    return contexts.some(
+      (context) =>
+        context?.path === path &&
+        Number.isSafeInteger(context.pid) &&
+        readFileSync(path, "utf8").trim() === String(context.pid),
+    );
+  } catch {
+    return false;
+  }
+}
 
 /** Stable per-checkout lock path. */
 export function mutationLockPath(root = process.cwd()) {
@@ -38,7 +54,8 @@ export function mutationLockPath(root = process.cwd()) {
  *
  * The file holds the owning pid so a crash mid-tooth is diagnosable rather than
  * leaving a mystery block. Acquisition is bounded, so a crashed holder delays a
- * test rather than wedging the suite.
+ * test rather than wedging the suite. The ten-minute bound leaves room for slow
+ * CI readers to run serially, while still putting a firm ceiling on stale locks.
  *
  * ACQUISITION IS ATOMIC, and it has to be. The first version polled
  * `waitForMutationLockFree` and then created the lock file — a textbook
@@ -55,12 +72,41 @@ export function mutationLockPath(root = process.cwd()) {
  * file exists, which is the only test-and-set here that two processes cannot
  * both win.
  */
-export async function withMutationLock(fn, root = process.cwd()) {
+export async function withMutationLock(
+  fn,
+  root = process.cwd(),
+  lockOptions = {},
+) {
   const path = mutationLockPath(root);
-  await acquireMutationLock(path);
+  // A protected operation can spawn a child script that also stages or reads
+  // the tree. It inherits this marker and borrows the parent's lock instead of
+  // deadlocking while the parent waits for that child to finish.
+  if (inheritsMutationLock(path)) return await fn();
+
+  if (!(await acquireMutationLock(path, lockOptions))) {
+    throw new Error(
+      `Timed out waiting for the shared mutation lock; did not run the protected operation (${path})`,
+    );
+  }
+  const previousContext = process.env[MUTATION_LOCK_CONTEXT];
+  let contexts = [];
+  try {
+    const parsed = JSON.parse(previousContext || "[]");
+    if (Array.isArray(parsed)) contexts = parsed;
+  } catch {
+    // A malformed inherited marker cannot grant borrowing, but it also cannot
+    // strand the lock we just acquired.
+  }
+  process.env[MUTATION_LOCK_CONTEXT] = JSON.stringify([
+    ...contexts,
+    { path, pid: process.pid },
+  ]);
   try {
     return await fn();
   } finally {
+    if (previousContext === undefined)
+      delete process.env[MUTATION_LOCK_CONTEXT];
+    else process.env[MUTATION_LOCK_CONTEXT] = previousContext;
     rmSync(path, { force: true });
   }
 }
@@ -68,14 +114,13 @@ export async function withMutationLock(fn, root = process.cwd()) {
 /**
  * Take the lock, or wait for whoever holds it.
  *
- * Returns true when the lock was acquired. On timeout it proceeds anyway and
- * returns false, preserving the original "a crashed holder must not wedge the
- * suite" contract: the cost of giving up is a flake, the cost of not giving up
- * is a hung CI run.
+ * Returns true when acquired. On timeout it returns false without changing the
+ * existing owner's file. `withMutationLock` treats that as a failure and never
+ * runs an operation that assumes mutual exclusion without holding the lock.
  */
 export async function acquireMutationLock(
   path,
-  { timeoutMs = 30000, stepMs = 50 } = {},
+  { timeoutMs = 600000, stepMs = 50 } = {},
 ) {
   const start = Date.now();
   for (;;) {
@@ -88,7 +133,6 @@ export async function acquireMutationLock(
     } catch (err) {
       if (err?.code !== "EEXIST") throw err;
       if (Date.now() - start > timeoutMs) {
-        writeFileSync(path, String(process.pid), "utf8");
         return false;
       }
       await new Promise((r) => setTimeout(r, stepMs));
