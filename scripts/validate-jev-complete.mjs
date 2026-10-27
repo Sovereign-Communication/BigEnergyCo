@@ -74,7 +74,7 @@ import {
   renderExplanationMarkdown,
 } from "./lib/jev-report-print.mjs";
 import { explainLowScore } from "./lib/jev-explain.mjs";
-import { collectScopeQualityEvidence } from "./lib/jev-scope-quality.mjs";
+import { collectScopeQualityEvidence } from "./lib/jev-scope-quality-git.mjs";
 import { exitWhenDrained } from "./lib/graceful-exit.mjs";
 
 function usageError(msg) {
