@@ -1,0 +1,494 @@
+### monthlyBillHint
+EN: — rough is fine, it auto-adjusts to your location's prices
+ES: — basta con una cifra aproximada; se ajusta a los precios de tu zona
+PT: — uma estimativa serve; o valor se ajusta aos preços da sua região
+FR: — une estimation suffit, elle s’adapte aux tarifs de votre région
+DE: — ein grober Wert genügt; er passt sich den Preisen an Ihrem Standort an
+NL: — een grove schatting is prima; de waarde wordt automatisch aangepast aan de prijzen op uw locatie
+AR: — يكفي رقم تقريبي، وسيُعدّل تلقائيًا حسب أسعار منطقتك
+
+### generatorAssumptionMiddle
+EN: /kWh, diesel
+ES: /kWh y diésel
+PT: /kWh, diesel
+FR: /kWh, diesel
+DE: /kWh, Diesel
+NL: /kWh, diesel
+AR: /kWh وديزل
+
+### generatorAssumptionSuffix
+EN: /kWh (fuel only — oil, filters, and engine wear push the true number higher). If you know your real $/kWh, type it directly instead.
+ES: /kWh (solo combustible; el aceite, los filtros y el desgaste del motor elevan el costo real). Si conoces tu costo real en $/kWh, escríbelo directamente.
+PT: /kWh (somente combustível — óleo, filtros e desgaste do motor aumentam o custo real). Se você souber seu custo real em $/kWh, informe-o diretamente.
+FR: /kWh (carburant uniquement ; huile, filtres et usure du moteur augmentent le coût réel). Si vous connaissez votre coût réel en $/kWh, saisissez-le directement.
+DE: /kWh (nur Kraftstoff; Öl, Filter und Motorverschleiß erhöhen die tatsächlichen Kosten). Wenn Sie Ihre tatsächlichen Kosten in $/kWh kennen, geben Sie sie direkt ein.
+NL: /kWh (alleen brandstof — olie, filters en motorslijtage verhogen de werkelijke kosten). Als u uw echte prijs per kWh kent, voer die dan rechtstreeks in.
+AR: /kWh (الوقود فقط؛ فالزيت والفلاتر وتآكل المحرك ترفع التكلفة الحقيقية). إذا كنت تعرف تكلفتك الفعلية لكل $/kWh فأدخلها مباشرة.
+
+### footerBenchmarks
+EN: Worldwide Benchmarks
+ES: Referencias mundiales
+PT: Referências mundiais
+FR: Références mondiales
+DE: Weltweite Vergleichswerte
+NL: Wereldwijde benchmarks
+AR: المعايير العالمية
+
+### footerHeatmap
+EN: Heatmap
+ES: Mapa de calor
+PT: Mapa de calor
+FR: Carte thermique
+DE: Wärmekarte
+NL: Wereldkaart
+AR: خريطة الحرارة
+
+### footerAbout
+EN: About
+ES: Acerca de
+PT: Sobre
+FR: À propos
+DE: Über uns
+NL: Over
+AR: من نحن
+
+### footerTerms
+EN: Terms
+ES: Términos
+PT: Termos
+FR: Conditions
+DE: Nutzungsbedingungen
+NL: Voorwaarden
+AR: الشروط
+
+### navSizing
+EN: Size Your System
+ES: Dimensiona tu sistema
+PT: Dimensione seu sistema
+FR: Dimensionner mon système
+DE: System dimensionieren
+NL: Systeem dimensioneren
+AR: صمّم نظامك
+
+### navSupport
+EN: Support
+ES: Soporte
+PT: Suporte
+FR: Assistance
+DE: Hilfe
+NL: Ondersteuning
+AR: الدعم
+
+### cutLabel
+EN: Your bill-cut target
+ES: Tu objetivo de reducción de factura
+PT: Sua meta de redução da conta
+FR: Votre objectif de réduction de facture
+DE: Ziel für die Rechnungssenkung
+NL: Uw besparingsdoel voor de energierekening
+AR: هدف خفض الفاتورة
+
+### cutLabelBattery
+EN: Your peak-offset target
+ES: Tu objetivo de desplazamiento de horas punta
+PT: Sua meta de deslocamento de horas de ponta
+FR: Votre objectif de décalage des heures pleines
+DE: Ziel für die Verschiebung der Spitzenlaststunden
+NL: Uw doel voor het verschuiven van piekuren
+AR: هدف نقل ساعات الذروة
+
+### cutValueBattery
+EN: Target: shift ~{pct}% of your peak hours onto the battery
+ES: Objetivo: desplazar ~{pct}% de tus horas punta a la batería
+PT: Meta: deslocar ~{pct}% das suas horas de ponta para a bateria
+FR: Objectif : décaler ~{pct}% de vos heures pleines vers la batterie
+DE: Ziel: ~{pct}% Ihrer Spitzenlaststunden auf den Akku verschieben
+NL: Doel: ~{pct}% van uw piekuren naar de accu verplaatsen
+AR: الهدف: نقل ~{pct}% من ساعات الذروة إلى البطارية
+
+### fxCodeLabel
+EN: Currency code:
+ES: Código de moneda:
+PT: Código da moeda:
+FR: Code de devise :
+DE: Währungscode:
+NL: Valutacode:
+AR: رمز العملة:
+
+### firstRunNote
+EN: Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.
+ES: Elige tu ubicación y tu consumo, y pulsa Dimensionar mi sistema. La primera ejecución descarga ~2 MB de datos satelitales y luego los guarda en tu navegador.
+PT: Escolha sua localização e seu consumo e clique em Dimensionar meu sistema. A primeira execução baixa ~2 MB de dados de clima por satélite e depois os guarda no navegador.
+FR: Choisissez votre lieu et votre consommation, puis cliquez sur Dimensionner. Le premier lancement télécharge ~2 Mo de données météo satellite et les met ensuite en cache.
+DE: Wählen Sie Standort und Verbrauch und klicken Sie auf System dimensionieren. Beim ersten Start werden ~2 MB Satelliten-Wetterdaten geladen und im Browser gespeichert.
+NL: Kies uw locatie en energieverbruik en klik daarna op Systeem dimensioneren. De eerste berekening downloadt ~2 MB aan satellietweergegevens en slaat deze op in uw browser.
+AR: اختر موقعك واستهلاكك ثم اضغط صمّم نظامك. أول تشغيل يُنزّل حوالي 2 ميغابايت من بيانات الطقس الساتلية ثم يخزّنها في متصفحك.
+
+### navBom
+EN: Hardware Reference
+ES: Referencia de hardware
+PT: Referência de hardware
+FR: Référence matériel
+DE: Hardware-Referenz
+NL: Hardware-referentie
+AR: مرجع المكونات
+
+### navBlog
+EN: Blog
+ES: Blog
+PT: Blog
+FR: Blog
+DE: Blog
+NL: Blog
+AR: المدونة
+
+### navLegal
+EN: Terms & Disclaimer
+ES: Términos y aviso legal
+PT: Termos e aviso legal
+FR: Conditions et avertissement
+DE: Bedingungen & Haftungsausschluss
+NL: Voorwaarden & disclaimer
+AR: الشروط وإخلاء المسؤولية
+
+### sourcesCardTitle
+EN: Where these numbers come from
+ES: De dónde salen estos números
+PT: De onde vêm estes números
+FR: D'où viennent ces chiffres
+DE: Woher diese Zahlen kommen
+NL: Waar deze cijfers vandaan komen
+AR: من أين تأتي هذه الأرقام
+
+### sourcesCardBody
+EN: Each assumption behind a number here lists its publisher, the date checked, and how well it matches what we ship. Ones we cannot source say so.
+ES: Cada supuesto detrás de una cifra indica aquí su editor, la fecha de verificación y hasta qué punto coincide con lo que aplicamos. Los que no podemos documentar lo dicen.
+PT: Cada premissa por trás de um número indica aqui o responsável, a data da verificação e o quanto corresponde ao que aplicamos. As que não conseguimos documentar dizem isso.
+FR: Chaque hypothèse derrière un chiffre indique ici son éditeur, la date de vérification et sa proximité avec la valeur appliquée. Celles que nous ne pouvons pas sourcer le disent.
+DE: Jede Annahme hinter einer Zahl nennt hier Herausgeber, Prüfdatum und die Übereinstimmung mit dem Angewendeten. Was wir nicht belegen können, sagt das.
+NL: Bij elke aanname achter een cijfer staan hier de bron, de controledatum en hoe goed deze overeenkomt met wat wij aanbieden. Wat we niet kunnen onderbouwen, vermelden we ook.
+AR: كل افتراض وراء أي رقم يذكر هنا الناشر وتاريخ التحقق ومدى مطابقته للقيمة المستخدمة. وما تعذّر توثيقه يقول ذلك صراحةً.
+
+### sourcesCardLink
+EN: See all sources →
+ES: Ver todas las fuentes →
+PT: Ver todas as fontes →
+FR: Voir toutes les sources →
+DE: Alle Quellen ansehen →
+NL: Bekijk alle bronnen →
+AR: عرض كل المصادر ←
+
+### heroTag
+EN: 🌍 Free for everyone, everywhere • No signup • Nothing for sale
+ES: Gratis para todos, en todo el mundo · Sin registro · Nada en venta
+PT: Grátis para todos, no mundo inteiro · Sem cadastro · Nada à venda
+FR: Gratuit pour tous, partout · Sans inscription · Rien à vendre
+DE: 🌍 Kostenlos für alle, überall · Keine Anmeldung · Nichts zu verkaufen
+NL: 🌍 Gratis voor iedereen, overal • Geen registratie • Niets te koop
+AR: مجاني للجميع، في كل مكان · بدون تسجيل · لا شيء للبيع
+
+### heroTitle1
+EN: Cut your electricity bill.
+ES: Reduce tu factura de luz.
+PT: Corte a sua conta de luz.
+FR: Réduisez votre facture d'électricité.
+DE: Senken Sie Ihre Stromrechnung.
+NL: Verlaag uw energierekening.
+AR: قلّل فاتورة الكهرباء.
+
+### heroTitle2
+EN: See exactly what it would take.
+ES: Vea exactamente lo que haría falta.
+PT: Veja exatamente o que seria preciso.
+FR: Voyez exactement ce qu'il faudrait.
+DE: Sehen Sie genau, was dafür nötig wäre.
+NL: Zie precies wat daarvoor nodig is.
+AR: شاهد بالضبط ما يتطلبه الأمر.
+
+### footerAboutPre
+EN: Built and given away by
+ES: Creada y entregada por
+PT: Criada e oferecida por
+FR: Conçu et offert par
+DE: Erstellt und bereitgestellt von
+NL: Gebouwd en weggegeven door
+AR: أنشأها وقدّمها
+
+### heroIntro
+EN: Start with your location — your phone knows it — and we size every option that could cut your bill, from 1% to sellable surplus. The price-cut curve shows what any budget buys, in your currency. Educational estimates only, nothing for sale. Built and given away by
+ES: Empieza con tu ubicación — tu móvil la sabe — y calculamos cada opción que puede reducir tu factura, del 1% al excedente vendible. La curva de precio muestra qué compra cada presupuesto, en tu moneda. Solo estimaciones educativas, nada en venta. Creada y entregada por
+PT: Comece pela sua localização — o telemóvel sabe — e calculamos cada opção que corta a sua conta, de 1% ao excedente vendável. A curva de preço mostra o que cada orçamento compra, na sua moeda. Apenas estimativas educativas, nada à venda. Criada e oferecida por
+FR: Commencez par votre localisation — votre téléphone la connaît — et nous calculons chaque option qui réduit votre facture, de 1 % à l'excédent vendable. La courbe de prix montre ce que chaque budget achète, dans votre devise. Estimations éducatives, rien à vendre. Conçu et offert par
+DE: Beginnen Sie mit Ihrem Standort — Ihr Telefon kennt ihn — und wir rechnen jede Option durch, die Ihre Rechnung senkt, von 1 % bis zum verkaufbaren Überschuss. Die Preiskurve zeigt, was jedes Budget kauft, in Ihrer Währung. Nur Schätzungen, nichts zu verkaufen. Erstellt und bereitgestellt von
+NL: Begin met uw locatie — uw telefoon kent die — en wij dimensioneren elke optie die uw rekening kan verlagen, van 1% tot verkoopbaar overschot. De prijs-verlagingscurve laat zien wat elk budget oplevert, in uw eigen valuta. Alleen educatieve schattingen, niets te koop. Gebouwd en weggegeven door
+AR: ابدأ بموقعك — هاتفك يعرفه — ونحسب كل خيار يخفض فاتورتك، من 1% إلى فائض قابل للبيع. منحنى السعر يوضح ما يشتريه كل مبلغ، بعملتك. تقديرات تعليمية فقط، ولا شيء للبيع. أنشأها وقدّمها
+
+### footerAboutPost
+EN: Not a company, not incorporated, nothing for sale.
+ES: No es una empresa, no está constituida, nada en venta.
+PT: Não é uma empresa, não é constituída, nada à venda.
+FR: Pas une société, pas immatriculée, rien à vendre.
+DE: Kein Unternehmen, nicht eingetragen, nichts zu verkaufen.
+NL: Geen bedrijf, geen rechtspersoon, niets te koop.
+AR: ليست شركة، ولا مُسجّلة، ولا شيء للبيع.
+
+### ctaStart
+EN: Start a Free Estimate
+ES: Empieza tu estimación gratis
+PT: Comece sua estimativa grátis
+FR: Lancer une estimation gratuite
+DE: Kostenlose Schätzung starten
+NL: Start een gratis berekening
+AR: ابدأ تقديرًا مجانيًا
+
+### pickCity
+EN: Pick a city (or use 📍 My location) so we know your sunshine.
+ES: Elige una ciudad (o usa 📍 Mi ubicación) para que sepamos tu insolación.
+PT: Escolha uma cidade (ou use 📍 Minha localização) para sabermos sua insolação.
+FR: Choisissez une ville (ou utilisez 📍 Ma position) pour connaître votre ensoleillement.
+DE: Wähle eine Stadt oder nutze 📍 deinen Standort für die Sonnendaten.
+NL: Kies een stad (of gebruik 📍 Mijn locatie) zodat we uw zonneschijn kennen.
+AR: اختر مدينة (أو استخدم 📍 موقعي) لمعرفة إشعاعك الشمسي.
+
+### shareLoaded
+EN: Shared setup loaded. Review the inputs, then click Size My System to calculate.
+ES: Configuración compartida cargada. Revisa los datos y pulsa Dimensionar mi sistema para calcular.
+PT: Configuração compartilhada carregada. Confira os dados e clique em Dimensionar meu sistema para calcular.
+FR: Configuration partagée chargée. Vérifiez les entrées, puis cliquez sur Dimensionner pour calculer.
+DE: Geteilte Einstellungen geladen. Prüfe die Eingaben und klicke dann auf System dimensionieren.
+NL: Gedeelde configuratie geladen. Controleer de invoer en klik op Systeem dimensioneren om te berekenen.
+AR: تم تحميل الإعدادات المشتركة. راجع المدخلات ثم اضغط احسب نظامي لبدء الحساب.
+
+### invalidShare
+EN: This share link could not be read — it may have been cut short when it was copied. Ignore it and set up your own estimate below.
+ES: No se pudo leer este enlace compartido: puede que se haya cortado al copiarlo. Ignóralo y prepara tu propia estimación más abajo.
+PT: Não foi possível ler este link compartilhado — ele pode ter sido cortado na cópia. Ignore-o e monte sua própria estimativa abaixo.
+FR: Ce lien partagé n’a pas pu être lu — il a peut-être été tronqué en le copiant. Ignorez-le et faites votre propre estimation ci-dessous.
+DE: Dieser geteilte Link ließ sich nicht lesen — beim Kopieren wurde er vielleicht abgeschnitten. Ignoriere ihn und stell unten deine eigene Schätzung auf.
+NL: Deze deellink kon niet worden gelezen — mogelijk is hij ingekort bij het kopiëren. Negeer hem en stel hieronder uw eigen berekening samen.
+AR: تعذّرت قراءة رابط المشاركة — ربما قُطع عند نسخه. تجاهله واضبط تقديرك الخاص أدناه.
+
+### customCoordsLocation
+EN: Using custom coordinates ({lat}, {lon}).
+ES: Usando coordenadas personalizadas ({lat}, {lon}).
+PT: Usando coordenadas personalizadas ({lat}, {lon}).
+FR: Coordonnées personnalisées utilisées ({lat}, {lon}).
+DE: Eigene Koordinaten verwendet ({lat}, {lon}).
+NL: Aangepaste coördinaten in gebruik ({lat}, {lon}).
+AR: يجري استخدام الإحداثيات المخصصة ({lat}, {lon}).
+
+### resolvingCity
+EN: Resolving your city — choose a match or wait for lookup.
+ES: Buscando tu ciudad: elige una opción o espera el resultado.
+PT: Buscando sua cidade: escolha uma opção ou aguarde o resultado.
+FR: Recherche de votre ville : choisissez une suggestion ou attendez le résultat.
+DE: Ort wird gesucht — wählen Sie einen Treffer oder warten Sie kurz.
+NL: Uw stad wordt opgezocht — kies een overeenkomst of wacht op het opzoeken.
+AR: جارٍ البحث عن مدينتك — اختر نتيجة أو انتظر قليلاً.
+
+### chooseCityMatch
+EN: Choose a city suggestion or wait for lookup to finish.
+ES: Elige una ciudad sugerida o espera a que termine la búsqueda.
+PT: Escolha uma cidade sugerida ou aguarde a busca terminar.
+FR: Choisissez une suggestion ou attendez la fin de la recherche.
+DE: Wählen Sie einen Stadtvorschlag oder warten Sie das Suchergebnis ab.
+NL: Kies een stadssuggestie of wacht tot het opzoeken klaar is.
+AR: اختر مدينة من الاقتراحات أو انتظر انتهاء البحث.
+
+### resolvingCoords
+EN: Checking those coordinates…
+ES: Comprobando esas coordenadas…
+PT: Verificando essas coordenadas…
+FR: Vérification de ces coordonnées…
+DE: Koordinaten werden geprüft…
+NL: Deze coördinaten worden gecontroleerd…
+AR: جارٍ التحقق من الإحداثيات…
+
+### invalidCoordinates
+EN: Latitude must be between −90 and 90 and longitude between −180 and 180.
+ES: La latitud debe estar entre −90 y 90 y la longitud entre −180 y 180.
+PT: A latitude deve estar entre −90 e 90 e a longitude entre −180 e 180.
+FR: La latitude doit être comprise entre −90 et 90 et la longitude entre −180 et 180.
+DE: Der Breitengrad muss zwischen −90 und 90 und der Längengrad zwischen −180 und 180 liegen.
+NL: De breedtegraad moet tussen −90 en 90 liggen en de lengtegraad tussen −180 en 180.
+AR: يجب أن يتراوح خط العرض بين −90 و90 وخط الطول بين −180 و180.
+
+### invalidDailyKwh
+EN: Daily energy use must be between 0.5 and 500 kWh per day — enter a figure in that range, or tick the appliances you want to power instead.
+ES: El consumo diario debe estar entre 0,5 y 500 kWh al día: introduce una cifra en ese rango o marca los electrodomésticos que quieras alimentar.
+PT: O consumo diário deve ficar entre 0,5 e 500 kWh por dia: informe um valor nessa faixa ou marque os eletrodomésticos que quer alimentar.
+FR: La consommation quotidienne doit être comprise entre 0,5 et 500 kWh par jour : saisissez un chiffre dans cette plage ou cochez les appareils à alimenter.
+DE: Der tägliche Energieverbrauch muss zwischen 0,5 und 500 kWh liegen — gib einen Wert in diesem Bereich ein oder kreuze die Geräte an, die du versorgen willst.
+NL: Het dagelijkse energieverbruik moet tussen 0,5 en 500 kWh per dag liggen — voer een getal binnen dat bereik in, of vink de apparaten aan die u wilt voeden.
+AR: يجب أن يتراوح استهلاك الطاقة اليومي بين 0.5 و500 كيلوواط ساعة — أدخل رقماً في هذا المدى أو حدّد الأجهزة التي تريد تغذيتها.
+
+### inputsChanged
+EN: Inputs changed — click Size My System to update the estimate.
+ES: Los datos cambiaron: pulsa Dimensionar mi sistema para actualizar.
+PT: Os dados mudaram — clique em Dimensionar meu sistema para atualizar.
+FR: Les entrées ont changé — cliquez sur Dimensionner pour actualiser l’estimation.
+DE: Eingaben geändert — klicken Sie auf System dimensionieren, um die Schätzung zu aktualisieren.
+NL: Invoer gewijzigd — klik op Systeem dimensioneren om de berekening bij te werken.
+AR: تغيرت المدخلات — اضغط احسب نظامي لتحديث التقدير.
+
+### errorTimeout
+EN: The sizing engine did not reply in time — check your connection and click Size My System to try again.
+ES: El motor de cálculo no respondió a tiempo — revisa tu conexión y vuelve a intentarlo.
+PT: O motor de dimensionamento não respondeu a tempo — verifique sua conexão e tente novamente.
+FR: Le moteur de dimensionnement n'a pas répondu à temps — vérifiez votre connexion et réessayez.
+DE: Die Auslegungssoftware hat nicht rechtzeitig geantwortet — prüfen Sie Ihre Verbindung und versuchen Sie es erneut.
+NL: De berekeningsmodule reageerde niet op tijd — controleer uw verbinding en klik op Systeem dimensioneren om het opnieuw te proberen.
+AR: لم يرد محرك الحساب في الوقت المحدد — تحقق من اتصالك وحاول مرة أخرى.
+
+### tellPowerUse
+EN: Tell us your power use — tick some appliances, or enter a bill or kWh figure.
+ES: Indica tu consumo de energía: marca algunos electrodomésticos, o introduce una factura o una cifra en kWh.
+PT: Informe seu consumo de energia: marque alguns eletrodomésticos, ou informe uma conta ou um valor em kWh.
+FR: Indiquez votre consommation d'énergie : cochez quelques appareils, ou entrez une facture ou une valeur en kWh.
+DE: Gib deinen Verbrauch an — Geräte, Rechnung oder kWh.
+NL: Vertel ons uw stroomverbruik — vink enkele apparaten aan, of voer een rekening- of kWh-getal in.
+AR: أدخل استهلاكك للطاقة: حدد بعض الأجهزة، أو أدخل فاتورة أو قيمة بالكيلوواط ساعة.
+
+### statusGridtie
+EN: ⏳ Fetching five years of satellite weather and searching bill-cutting system sizes…
+ES: ⏳ Obteniendo cinco años de clima satélite y buscando tamaños de sistema para recortar facturas…
+PT: ⏳ Obtendo cinco anos de clima por satélite e buscando tamanhos de sistema para cortar a conta…
+FR: ⏳ Récupération de cinq ans de météo satellitaire et recherche de tailles de système pour réduire la facture…
+DE: ⏳ Fünf Jahre Satellitenwetter werden geladen, Systeme zur Rechnungssenkung gesucht…
+NL: ⏳ Vijf jaar aan satellietweergegevens wordt opgehaald en rekeningsverlagende systeemgroottes worden gezocht…
+AR: ⏳ جاري الحصول على خمس سنوات من طقس الأقمار الصناعية والبحث عن أحجام الأنظمة لتقليل الفاتورة…
+
+### statusOffgrid
+EN: ⏳ Fetching 5 years of hourly satellite weather and searching system sizes…
+ES: ⏳ Obteniendo 5 años de clima horario por satélite y buscando tamaños de sistema…
+PT: ⏳ Obtendo 5 anos de clima horário por satélite e buscando tamanhos de sistema…
+FR: ⏳ Récupération de 5 ans de météo horaire par satellite et recherche de tailles de système…
+DE: ⏳ 5 Jahre stündliches Satellitenwetter werden geladen, Systemgrößen gesucht…
+NL: ⏳ 5 jaar aan uurlijkse satellietweergegevens wordt opgehaald en systeemgroottes worden gezocht…
+AR: ⏳ جاري الحصول على 5 سنوات من طقس الأقمار الصناعية ساعة بساعة والبحث عن أحجام الأنظمة…
+
+### runningBtn
+EN: ⏳ Running 5-year simulation…
+ES: ⏳ Simulando 5 años...
+PT: ⏳ Simulando 5 anos...
+FR: ⏳ Simulation de 5 ans...
+DE: ⏳ 5-Jahres-Simulation läuft…
+NL: ⏳ 5-jaarssimulatie loopt…
+AR: ⏳ جاري المحاكاة لمدة 5 سنوات...
+
+### runBtnReady
+EN: ☀️ Size My System (5-yr simulation)
+ES: Dimensionar mi sistema (simulación 5 años)
+PT: ☀️ Dimensionar meu sistema (simulação 5 anos)
+FR: ☀️ Dimensionner (simulation 5 ans)
+DE: ☀️ System dimensionieren (5-Jahres-Simulation)
+NL: ☀️ Systeem dimensioneren (5-jaarssimulatie)
+AR: ☀️ احسب نظامي (محاكاة 5 سنوات)
+
+### runBtn
+EN: ☀️ Size My System (5-yr simulation)
+ES: Dimensionar mi sistema (simulación de 5 años)
+PT: Dimensionar meu sistema (simulação de 5 anos)
+FR: Dimensionner (simulation sur 5 ans)
+DE: ☀️ System dimensionieren (5-Jahres-Simulation)
+NL: ☀️ Systeem dimensioneren (5-jaarssimulatie)
+AR: احسب نظامي (محاكاة خمس سنوات)
+
+### errorSim
+EN: ⚠️ Sizing engine failed to load. Refresh the page (Ctrl+F5) and try again.
+ES: ⚠️ El motor de cálculo no pudo cargarse. Actualiza la página (Ctrl+F5) e inténtalo de nuevo.
+PT: ⚠️ O motor de dimensionamento não pôde carregar. Atualize a página (Ctrl+F5) e tente novamente.
+FR: ⚠️ Le moteur de dimensionnement n'a pas pu se charger. Actualisez la page (Ctrl+F5) et réessayez.
+DE: ⚠️ Die Dimensionierungs-Engine konnte nicht geladen werden. Aktualisieren Sie die Seite (Ctrl+F5) und versuchen Sie es erneut.
+NL: ⚠️ De berekeningsmodule kon niet worden geladen. Vernieuw de pagina (Ctrl+F5) en probeer het opnieuw.
+AR: ⚠️ تعذّر تحميل محرك التقدير. حدّث الصفحة (Ctrl+F5) وحاول مرة أخرى.
+
+### statusSuccess
+EN: ✅ {years} yr of hourly data ({dataYears}) · {yield} kWh/yr per kW of panel.{offline}
+ES: ✅ {years} años de datos horarios ({dataYears}) · {yield} kWh/año por kW de panel.{offline}
+PT: ✅ {years} anos de dados horários ({dataYears}) · {yield} kWh/ano por kW de painel.{offline}
+FR: ✅ {years} ans de données horaires ({dataYears}) · {yield} kWh/an par kW de panneau.{offline}
+DE: ✅ {years} Jahre stündliche Daten ({dataYears}) · {yield} kWh/Jahr pro kW Panel.{offline}
+NL: ✅ {years} jaar aan uurlijkse gegevens ({dataYears}) · {yield} kWh/jaar per kW aan paneel.{offline}
+AR: ✅ {years} سنوات من البيانات الساعة ({dataYears}) · {yield} كيلوواط ساعة/سنة لكل كيلوواط من اللوحة.{offline}
+
+### offlineNote
+EN:  · 🌐 offline typical-year mode
+ES:  · 🌐 modo offline típico
+PT:  · 🌐 modo offline típico
+FR:  · 🌐 mode hors ligne typique
+DE:  · 🌐 typisches Offline-Jahr
+NL:  · 🌐 offline typisch-jaar-modus
+AR:  · 🌐 وضع السنة النموذجية دون اتصال
+
+### tariffSpendLine
+EN: At {tariff}/kWh, your power costs about {annual} per year today. Each option below shows the bill after solar and how fast it repays itself out of the savings.
+ES: A {tariff}/kWh, tu electricidad te cuesta unos {annual} al año hoy. Cada opción de abajo muestra la factura tras la solar y cuánto tarda en pagarse con los ahorros.
+PT: A {tariff}/kWh, a sua eletricidade custa cerca de {annual} por ano hoje. Cada opção abaixo mostra a conta após a solar e em quanto tempo ela se paga com as economias.
+FR: À {tariff}/kWh, votre électricité coûte environ {annual} par an aujourd'hui. Chaque option ci-dessous montre la facture après le solaire et combien de temps elle se rembourse grâce aux économies.
+DE: Bei {tariff}/kWh kostet dein Strom heute etwa {annual} pro Jahr. Jede Option unten zeigt die Rechnung nach Solar und wie schnell sie sich aus den Ersparnissen bezahlt.
+NL: Bij {tariff}/kWh kost uw stroom vandaag ongeveer {annual} per jaar. Elke optie hieronder toont de rekening na zonne-energie en hoe snel het systeem zichzelf terugverdient uit de besparing.
+AR: بسعر {tariff}/كيلوواط/ساعة، تكلفك كهرباؤك حوالي {annual} سنويًا اليوم. كل خيار أدناه يوضح الفاتورة بعد الشمسي ومدى سرعة استرداد التكلفة من الادخار.
+
+### tariffSpendBattery
+EN: At {tariff}/kWh, your power costs about {annual} per year today. A battery with no panels moves when you draw power; it does not cut what you pay.
+ES: A {tariff}/kWh, tu electricidad te cuesta unos {annual} al año hoy. Una batería sin paneles cambia cuándo consumes; no reduce lo que pagas.
+PT: A {tariff}/kWh, a sua eletricidade custa cerca de {annual} por ano hoje. Uma bateria sem painéis muda quando consome; não reduz o que paga.
+FR: À {tariff}/kWh, votre électricité coûte environ {annual} par an aujourd'hui. Une batterie sans panneaux décale le moment où vous consommez ; elle ne réduit pas ce que vous payez.
+DE: Bei {tariff}/kWh kostet dein Strom heute etwa {annual} pro Jahr. Eine Batterie ohne Module verschiebt, wann du Strom ziehst; sie senkt nicht, was du zahlst.
+NL: Bij {tariff}/kWh kost uw stroom vandaag ongeveer {annual} per jaar. Een accu zonder panelen verschuift wanneer u stroom verbruikt; hij verlaagt niet wat u betaalt.
+AR: بسعر {tariff}/كيلوواط/ساعة، تكلفك كهرباؤك حوالي {annual} سنويًا اليوم. البطارية بدون ألواح تغيّر وقت الاستهلاك؛ ولا تخفّض ما تدفعه.
+
+### tariffSpendOffgrid
+EN: At {tariff}/kWh, this use costs about {annual} per year in grid power. Payback figures below compare system cost against that spend.
+ES: A {tariff}/kWh, este consumo cuesta unos {annual} al año en electricidad de red. Las cifras de amortización abajo comparan el coste del sistema contra ese gasto.
+PT: A {tariff}/kWh, este uso custa cerca de {annual} por ano em energia da rede. Os valores de retorno abaixo comparam o custo do sistema com esse gasto.
+FR: À {tariff}/kWh, cet usage coûte environ {annual} par an en électricité du réseau. Les délais de retour ci-dessous comparent le coût du système à cette dépense.
+DE: Bei {tariff}/kWh kostet dieser Verbrauch etwa {annual} pro Jahr an Netzstrom. Die Amortisationswerte unten vergleichen die Systemkosten mit diesen Ausgaben.
+NL: Bij {tariff}/kWh kost dit verbruik ongeveer {annual} per jaar aan netstroom. De terugverdiencijfers hieronder vergelijken de systeemkosten met die uitgave.
+AR: بسعر {tariff}/كيلوواط/ساعة، يكلفك هذا الاستخدام حوالي {annual} سنويًا من كهرباء الشبكة. أرقام الاسترداد أدناه تقارن تكلفة النظام بهذا الإنفاق.
+
+### tariffSpendFixed
+EN:  That includes {fixed}/mo in fixed charges solar can't cut.
+ES:  Eso incluye {fixed}/mes en cargos fijos que el solar no reduce.
+PT:  Isso inclui {fixed}/mês em encargos fixos que o solar não reduz.
+FR:  Dont {fixed}/mois de charges fixes que le solaire ne réduit pas.
+DE:  Darin sind {fixed}/Monat an Fixkosten enthalten, die Solar nicht senken kann.
+NL:  Daarvan is {fixed}/mnd aan vaste kosten die zonne-energie niet kan verlagen.
+AR:  ويشمل ذلك {fixed}/شهريًا في رسوم ثابتة لا تخفضها الطاقة الشمسية.
+
+### readoutAppliancesEmpty
+EN: Tick the things you want to power, and your daily energy shows up here.
+ES: Marca los electrodomésticos que quieres alimentar y tu energía diaria aparecerá aquí.
+PT: Marque os eletrodomésticos que deseja alimentar e sua energia diária aparecerá aqui.
+FR: Cochez les appareils que vous voulez alimenter et votre énergie quotidienne apparaîtra ici.
+DE: Wähle die Geräte, die du versorgen willst — dein Tagesverbrauch erscheint hier.
+NL: Vink aan wat u wilt voeden en uw dagelijkse energieverbruik verschijnt hier.
+AR: اختر الأجهزة التي تريد تشغيلها وستظهر طاقتك اليومية هنا.
+
+### readoutAppliancesSummary
+EN: Estimated use: about {kwh} kWh/day · everything running at once ≈ {peakW} W (your inverter should be bigger than this)
+ES: Uso estimado: unos {kwh} kWh/día · todo a la vez ≈ {peakW} W (tu inversor debería ser mayor)
+PT: Uso estimado: uns {kwh} kWh/dia · tudo ligado ao mesmo tempo ≈ {peakW} W (seu inversor deve ser maior)
+FR: Utilisation estimée : environ {kwh} kWh/jour · tout en même temps ≈ {peakW} W (votre onduleur devrait être plus gros)
+DE: Geschätzter Verbrauch: etwa {kwh} kWh/Tag · alles gleichzeitig ≈ {peakW} W (dein Wechselrichter sollte größer sein)
+NL: Geschat verbruik: ongeveer {kwh} kWh/dag · alles tegelijk aan ≈ {peakW} W (uw omvormer moet groter zijn dan dit)
+AR: الاستخدام المقدر: حوالي {kwh} كيلوواط ساعة/يوم · كل شيء يعمل في وقت واحد ≈ {peakW} واط (يجب أن يكون العاكس أكبر)
+
+### readoutBill
+EN: That works out to about {kwhDay} kWh/day of average use.
+ES: Eso equivale a unos {kwhDay} kWh/día de uso medio.
+PT: Isso equivale a uns {kwhDay} kWh/dia de uso médio.
+FR: Cela équivaut à environ {kwhDay} kWh/jour d'utilisation moyenne.
+DE: Das sind etwa {kwhDay} kWh/Tag im Schnitt.
+NL: Dat komt neer op ongeveer {kwhDay} kWh/dag gemiddeld verbruik.
+AR: هذا يعادل حوالي {kwhDay} كيلوواط ساعة/يوم من الاستخدام المتوسط.
+
+### readoutBillIncomplete
+EN: Enter your monthly bill amount to see the daily energy estimate.
+ES: Introduce tu factura mensual para ver la estimación diaria.
+PT: Informe sua conta mensal para ver a estimativa diária.
+FR: Entrez votre facture mensuelle pour voir l'estimation quotidienne.
+DE: Gib deine Monatsrechnung ein, um die Tages-Schätzung zu sehen.
+NL: Voer uw maandelijkse rekeningbedrag in om de dagelijkse energieschatting te zien.
+AR: أدخل فاتورتك الشهرية لرؤية التقدير اليومي.

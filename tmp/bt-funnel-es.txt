@@ -1,0 +1,133 @@
+R001	bomSafetyNote	[sentences; r=1.12; j=0.61]
+  EN : Educational estimate from your sizing result — not an engineering design, not a shopping order. Fuse and cable figures assume copper, conservative ampacity, and a short battery-to-inverter run; verify everything against your local electrical code with a licensed professional before buying or energizing anything.
+  es : Estimación educativa basada en tu dimensionamiento; no es un diseño de ingeniería ni una lista de compra. Los valores de fusibles y cables suponen cobre, una capacidad de corriente conservadora y un tramo corto entre la batería y el inversor. Antes de comprar o energizar nada, verifica todo con un profesional autorizado conforme al código eléctrico local.
+  BT : Educational estimate based on your sizing; it is not an engineering design or a shopping list. The fuse and cable values assume copper, a conservative current capacity, and a short run between the battery and the inverter. Before purchasing or energizing anything, check everything with a licensed professional according to the local electrical code.
+
+R065	monthlyBillHint	[overlap; r=1.19; j=0.15]
+  EN : — rough is fine, it auto-adjusts to your location's prices
+  es : — basta con una cifra aproximada; se ajusta a los precios de tu zona
+  BT : — an approximate figure is enough; it matches the prices in your area
+
+R073	navBlog	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : Blog
+  es : Blog
+  BT : Blog
+
+R077	offlineFallback	[negation; r=1.05; j=0.54]
+  EN : Yes. After your first visit the tool installs itself as an offline app: sizing math runs entirely in your browser, and if the network is down it falls back to bundled typical-year weather for the nearest of 66 reference cities.
+  es : Sí. Después de tu primera visita, la herramienta se instala como una aplicación sin conexión: los cálculos se ejecutan por completo en tu navegador y, si no hay red, usa datos meteorológicos típicos de un año incluidos para la más cercana de 66 ciudades de referencia.
+  BT : Yes. After your first visit, the tool installs as an offline application: the calculations run entirely in your browser and, if there is no network, it uses typical weather data from a year included for the nearest of 66 reference cities.
+
+R110	advisorUnreachable	[negation,sentences; r=0.92; j=0.63]
+  EN :  The AI advisor is unreachable right now{status}.\n\nCheck your connection and try again in a moment.
+  es :  El asesor de IA no está disponible ahora{status}.
+
+Comprueba tu conexión y vuelve a intentarlo en un momento.
+  BT : The AI advisor is not available now{status}. Check your connection and try again in a moment.
+
+R164	cumCostCaptionOwnCostNoPanels	[figure; r=1.05; j=0.69]
+  EN : The emerald line is the system's own cost (~{systemTotal}), matching the “Total 20-year cost” row for this system.
+  es : La línea esmeralda es el coste propio del sistema (~{systemTotal}), y coincide con la fila “Coste total a años” de este sistema.
+  BT : The emerald line is the system's own cost (~{systemTotal}), and it matches the row 'Total cost per year' of this system.
+
+R253	frontierVerdictTaperingBattery	[length,sentences; r=0.46; j=0.48]
+  EN : Shifting about {kneePct}% of your peak hours onto the battery costs around {kneeCost}. Past that, each further percent costs roughly {tailCost} — about {ratio} times the earlier rate.
+  es : Desplazar cerca del {kneePct}% de tus horas punta a la batería cuesta unos {kneeCost}.
+  BT : Shifting around {kneePct}% of your peak hours to the battery costs about {kneeCost}.
+
+R254	costNoSeriesTitle	[negation; r=1.00; j=0.71]
+  EN : Savings data unavailable for this result
+  es : No hay datos de ahorro para este resultado
+  BT : There is no savings data for this result
+
+R277	llmDisclaimer	[negation; r=1.07; j=0.58]
+  EN : You are interacting with a large language model. It produces fluent, confident text that can be factually wrong, including specific numbers, prices, product specifications, and regulations. Treat every output as an unverified starting point.
+  es : Estás interactuando con un modelo de lenguaje grande. Produce textos fluidos y seguros de sí mismos que pueden contener errores factuales, incluidos números concretos, precios, especificaciones de productos y normativas. Trata cada respuesta como un punto de partida sin verificar.
+  BT : You are interacting with a large language model. It produces fluent and confident texts that may contain factual errors, including specific numbers, prices, product specifications, and regulations. Treat each response as a starting point without verification.
+
+R301	uiInitFailed	[negation; r=0.94; j=0.50]
+  EN : Warning: Interface failed to load - please refresh the page (Ctrl+F5).
+  es : Aviso: la interfaz no pudo cargarse — actualiza la página (Ctrl+F5).
+  BT : Notice: the interface could not load — refresh the page (Ctrl+F5).
+
+R303	metricOutageCoverage	[overlap; r=1.00; j=0.13]
+  EN : of power cuts your essentials ride out for the full target
+  es : de los apagones que lo esencial aguanta el tiempo completo
+  BT : from the blackouts that the essential withstands full time
+
+R316	infeasibleNeedsPanelsBody	[negation,untranslated,overlap; r=1.16; j=0.06]
+  EN : Nothing recharges the bank at this site. Add panels to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).
+  es : Nothing recharges the bank at this site. Add panels to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).
+  BT : Nada recarga el banco en este sitio. Agrega paneles al selector de hardware, o cambia el objetivo a 'Reducir mi factura, permanecer conectado' (conexión a la red).
+
+R346	donationTermsPrefix	[negation; r=0.99; j=0.55]
+  EN : Any contribution you choose to send is a voluntary gift to an individual. It is
+  es : Cualquier contribución que decidas enviar es un regalo voluntario a una persona. No es
+  BT : Any contribution you decide to send is a voluntary gift to a person. It is not
+
+R367	advisorBusy	[sentences; r=0.81; j=0.67]
+  EN :  The free AI engine is swamped right now (HTTP {status} — it runs on a shared free quota).\n\nPlease wait about a minute and send that again.
+  es :  El motor gratuito de IA está saturado ahora (HTTP {status} — usa una cuota compartida).
+
+Espera aproximadamente un minuto y vuelve a enviarlo.
+  BT : The free AI engine is saturated now (HTTP {status} — using a shared quota). Wait about a minute and send it again.
+
+R373	speedNoteOfflineWhere	[negation; r=1.25; j=0.63]
+  EN : ⚡ Instant — offline typical-year for {where}
+  es : ⚡ Instantáneo — año típico sin conexión para {where}
+  BT : ⚡ Instant — typical year without connection for {where}
+
+R376	donationNotTaxDeductible	[negation; r=0.78; j=0.67]
+  EN : not tax-deductible
+  es : deducible de impuestos
+  BT : tax-deductible
+
+R378	surplusTargetHelp	[sentences; r=1.20; j=0.43]
+  EN : Above 100% the system is sized to produce sellable surplus — without a feed-in credit entered above, that surplus has no cash value and is flagged as clipped waste. The “your target” matrix column and the price-cut curve follow this slider.
+  es : Por encima del 100%, el sistema se dimensiona para producir excedentes vendibles. Si no introduces arriba un crédito por energía inyectada a la red, ese excedente no tiene valor monetario y se marca como energía desperdiciada. La columna «tu objetivo» de la matriz y la curva de reducción de precio siguen este control.
+  BT : Above 100%, the system is sized to produce sellable surpluses. If you do not enter a credit for energy injected into the grid above, that surplus has no monetary value and is marked as wasted energy. The 'your goal' column of the matrix and the price reduction curve follow this control.
+
+R393	frontierSelTag	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : {pv} kW + {batt} kWh · {pct}% · {cost}
+  es : {pv} kW + {batt} kWh · {pct}% · {cost}
+  BT : {pv} kW + {batt} kWh · {pct}% · {cost}
+
+R397	generatorRuntime2	[negation; r=1.27; j=0.50]
+  EN : 2%+ — fine when needed
+  es : 2%+ — sin problema cuando haga falta
+  BT : 2%+ — no problem when needed
+
+R398	apWatts	[untranslated,engine-noop; r=1.00; j=0.00]
+  EN : ~{w} W
+  es : ~{w} W
+  BT : ~{w} W
+
+R412	cumSavingsBreakEven	[sentences,overlap; r=0.92; j=0.18]
+  EN : Break-even in year {year} — every year after puts money back in your pocket{kwhBits}
+  es : Se amortiza en el año {year}; cada año posterior ahorra dinero{kwhBits}.
+  BT : It is paid off in the year {year}; each subsequent year saves money{kwhBits}.
+
+R442	frontierMethodBattery	[overlap; r=0.96; j=0.19]
+  EN : The curve comes from simulating every battery size on a coarse grid against the same hourly weather and tariff windows as the cards above, then keeping only the systems nothing cheaper beats. Panels are not part of this run, so the curve varies the bank alone. Prices use the same landed do-it-yourself middle as every other figure on this page.
+  es : La curva simula cada tamaño de batería con el mismo clima horario y las mismas franjas tarifarias de las tarjetas; conserva solo las opciones que ninguna más barata supera. Sin paneles, la curva solo varía la batería. El coste usa el punto medio de un sistema montado por cuenta propia, con envío y aranceles, igual que el resto de la página.
+  BT : The curve simulates each battery size with the same hourly climate and the same rate slots of the cards; it only keeps the options that no cheaper one surpasses. Without panels, the curve only varies the battery. The cost uses the midpoint of a self-installed system, including shipping and tariffs, just like the rest of the page.
+
+R450	errorSim	[negation; r=1.19; j=0.53]
+  EN : ⚠️ Sizing engine failed to load. Refresh the page (Ctrl+F5) and try again.
+  es : ⚠️ El motor de cálculo no pudo cargarse. Actualiza la página (Ctrl+F5) e inténtalo de nuevo.
+  BT : ⚠️ The calculation engine could not be loaded. Refresh the page (Ctrl+F5) and try again.
+
+R453	pathsGradeNote	[negation; r=1.02; j=0.37]
+  EN : Every figure above comes from one regional price registry with a named source and a confidence grade. Hardware is your own build estimate; labour, permits, incentives and replacements are registry figures. Nothing here is a vendor's quote.
+  es : Todas las cifras provienen de un único registro de precios regional con fuente indicada y grado de confianza. El hardware es tu propia estimación; la mano de obra, los permisos, los incentivos y las sustituciones son datos del registro. Nada de esto es una oferta de un vendedor.
+  BT : All figures come from a single regional price record with the indicated source and degree of confidence. The hardware is your own estimate; labor, permits, incentives, and substitutions are data from the record. None of this is a vendor offer.
+
+R465	autoChemLfp	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : LFP
+  es : LFP
+  BT : LFP
+
+R470	frontierLegendBand	[length,sentences; r=2.02; j=0.23]
+  EN : Same systems, DIY sourcing to shipped retail
+  es : Mismos sistemas: de piezas para montar por cuenta propia a sistemas completos entregados al por menor.
+  BT : Same systems: from parts to assemble on your own to complete systems delivered at retail.

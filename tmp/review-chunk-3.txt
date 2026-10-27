@@ -1,0 +1,522 @@
+### readoutKwhEmpty
+EN: Enter a daily kWh figure.
+ES: Introduce tu consumo diario en kWh para ver la estimación.
+PT: Informe seu consumo diário em kWh para ver a estimativa.
+FR: Entrez votre consommation quotidienne en kWh pour voir l'estimation.
+DE: Gib einen Tagesverbrauch in kWh ein.
+NL: Voer een dagelijks kWh-getal in.
+AR: أدخل استهلاكك اليومي بالكيلوواط ساعة لرؤية التقدير.
+
+### readoutKwhReady
+EN: Using {kwh} kWh/day directly.
+ES: Usando {kwh} kWh/día directamente.
+PT: Usando {kwh} kWh/dia diretamente.
+FR: Utilisation de {kwh} kWh/jour directement.
+DE: {kwh} kWh/Tag werden direkt verwendet.
+NL: {kwh} kWh/dag wordt direct gebruikt.
+AR: استخدام {kwh} كيلوواط ساعة/يوم مباشرة.
+
+### lvlBest
+EN: Best pick
+ES: Mejor opción
+PT: Melhor escolha
+FR: Meilleur choix
+DE: Beste Wahl
+NL: Beste keuze
+AR: الاختيار الأفضل
+
+### lvlCompare
+EN: Compare batteries
+ES: Comparar baterías
+PT: Comparar baterias
+FR: Comparer les batteries
+DE: Batterien vergleichen
+NL: Accu's vergelijken
+AR: مقارنة البطاريات
+
+### lvlMatrix
+EN: All options
+ES: Todas las opciones
+PT: Todas as opções
+FR: Toutes les options
+DE: Alle Optionen
+NL: Alle opties
+AR: كل الخيارات
+
+### bomPanelTitle
+EN: Your hardware list — what this system is made of
+ES: Tu lista de hardware — de qué está hecho este sistema
+PT: Sua lista de hardware — do que este sistema é feito
+FR: Votre liste de matériel — de quoi ce système est composé
+DE: Deine Hardware-Liste — woraus dieses System besteht
+NL: Uw hardwarelijst — waaruit dit systeem bestaat
+AR: قائمة المعدات الخاصة بك — مم يتكون هذا النظام
+
+### genSummary
+EN: I run a generator — what does its power really cost?
+ES: Uso un generador — ¿cuánto cuesta realmente su energía?
+PT: Uso um gerador — quanto custa de verdade a energia dele?
+FR: J'utilise un générateur — combien coûte vraiment son électricité ?
+DE: Ich habe einen Generator — was kostet sein Strom wirklich?
+NL: Ik heb een generator — wat kost zijn stroom echt?
+AR: أستخدم مولدا — كم تبلغ التكلفة الحقيقية للكهرباء منه؟
+
+### genApply
+EN: Use this as my electricity price
+ES: Usar esto como mi precio de electricidad
+PT: Usar isto como meu preço de eletricidade
+FR: Utiliser ceci comme mon prix de l'électricité
+DE: Als meinen Strompreis übernehmen
+NL: Gebruik dit als mijn stroomprijs
+AR: استخدم هذا كسعر الكهرباء لدي
+
+### socChartTitle
+EN: Battery Charge Levels & Year-Round Reliability (5-Year Real Weather)
+ES: Niveles de carga de batería y confiabilidad anual (5 años de clima real)
+PT: Níveis de carga da bateria e confiabilidade anual (5 anos de clima real)
+FR: Niveaux de charge de la batterie et fiabilité annuelle (5 ans de météo réelle)
+DE: Batterieladung & Zuverlässigkeit übers Jahr (5 Jahre echtes Wetter)
+NL: Acculadingniveaus & betrouwbaarheid het hele jaar door (5 jaar echt weer)
+AR: مستويات شحن البطارية والموثوقية السنوية (محاكاة 5 سنوات من الطقس الحقيقي)
+
+### frontierTitle
+EN: How far does your money get you?
+ES: ¿Hasta dónde llega tu dinero?
+PT: Até onde vai o seu dinheiro?
+FR: Jusqu'où va votre argent ?
+DE: Wie weit reicht dein Budget?
+NL: Hoe ver komt u met uw geld?
+AR: إلى أين يصل مالك؟
+
+### frontierIntro
+EN: Every system we could build at your location, cheapest first. The line is the best result any budget can buy — so you can see at a glance whether your goal here is easy, expensive, or out of reach.
+ES: Todos los sistemas posibles en tu ubicación, del más barato al más caro. La línea es el mejor resultado que puede comprar cada presupuesto, para que veas de un vistazo si tu objetivo aquí es fácil, caro o inalcanzable.
+PT: Todos os sistemas possíveis na sua localização, do mais barato ao mais caro. A linha é o melhor resultado que cada orçamento consegue comprar — para você ver de relance se o seu objetivo aqui é fácil, caro ou inalcançável.
+FR: Tous les systèmes possibles chez vous, du moins cher au plus cher. La courbe montre le meilleur résultat que chaque budget peut acheter — pour voir d'un coup d'œil si votre objectif est ici facile, coûteux ou hors d'atteinte.
+DE: Wir zeigen die günstigsten Systeme für deinen Standort, damit du Kosten und erreichbare Versorgung vergleichen kannst.
+NL: Elk systeem dat we op uw locatie konden bouwen, goedkoopste eerst. De lijn is het beste resultaat dat elk budget kan kopen — zo ziet u in één oogopslag of uw doel hier haalbaar, duur of onbereikbaar is.
+AR: كل نظام يمكن بناؤه في موقعك، من الأرخص إلى الأغلى. يمثل الخط أفضل نتيجة يمكن لأي ميزانية شراؤها، لترى بلمحة واحدة هل هدفك هنا سهل أم مكلف أم بعيد المنال.
+
+### frontierX
+EN: Up-front system cost
+ES: Coste inicial del sistema
+PT: Custo inicial do sistema
+FR: Coût initial du système
+DE: Systemkosten zu Beginn
+NL: Aanschafkosten van het systeem
+AR: التكلفة الأولية للنظام
+
+### frontierYGrid
+EN: Share of your power bill cut
+ES: Parte de tu factura eliminada
+PT: Parte da sua conta de luz cortada
+FR: Part de votre facture supprimée
+DE: Anteil der Rechnung gesenkt
+NL: Aandeel van uw energierekening dat vervalt
+AR: نسبة فاتورتك المخفّضة
+
+### frontierYGridBattery
+EN: Share of your peak hours shifted
+ES: Parte de tus horas punta desplazadas
+PT: Parte das suas horas de ponta deslocadas
+FR: Part de vos heures pleines décalées
+DE: Anteil der verschobenen Spitzenlaststunden
+NL: Aandeel van uw piekuren dat wordt verschoven
+AR: نسبة ساعات الذروة المنقولة
+
+### frontierYOffgrid
+EN: Share of your energy covered, no generator
+ES: Parte de tu energía cubierta, sin generador
+PT: Parte da sua energia coberta, sem gerador
+FR: Part de votre énergie couverte, sans groupe électrogène
+DE: Anteil der Energie ohne Generator
+NL: Aandeel van uw energie gedekt, zonder generator
+AR: نسبة طاقتك المغطّاة دون مولّد
+
+### frontierSelTag
+EN: {pv} kW + {batt} kWh · {pct}% · {cost}
+ES: {pv} kW + {batt} kWh · {pct}% · {cost}
+PT: {pv} kW + {batt} kWh · {pct}% · {cost}
+FR: {pv} kW + {batt} kWh · {pct}% · {cost}
+DE: {pv} kW + {batt} kWh · {pct} % · {cost}
+NL: {pv} kW + {batt} kWh · {pct}% · {cost}
+AR: {pv} كيلوواط + {batt} كيلوواط ساعة · {pct}% · {cost}
+
+### frontierSelNoBatt
+EN: {pv} kW, no battery · {pct}% · {cost}
+ES: {pv} kW, sin batería · {pct}% · {cost}
+PT: {pv} kW, sem bateria · {pct}% · {cost}
+FR: {pv} kW, sans batterie · {pct}% · {cost}
+DE: {pv} kW, ohne Batterie · {pct} % · {cost}
+NL: {pv} kW, geen accu · {pct}% · {cost}
+AR: {pv} كيلوواط دون بطارية · {pct}% · {cost}
+
+### frontierLegendSel
+EN: Selected option — click any point to choose it
+ES: Opción seleccionada — haz clic en cualquier punto para elegirla
+PT: Opção selecionada — clique em qualquer ponto para escolher
+FR: Option sélectionnée — cliquez sur un point pour choisir
+DE: Ausgewählte Option — klicke einen Punkt, um ihn zu wählen
+NL: Geselecteerde optie — klik op een willekeurig punt om het te kiezen
+AR: الخيار المحدد — انقر أي نقطة للاختيار
+
+### frontierNoSystem
+EN: No system inside the sizes this tool searches can reach this target at this location. The curve below shows the furthest this site can practically get — try a lower target, or plan a generator or grid connection to cover what solar can't.
+ES: Ningún sistema dentro de los tamaños que busca esta herramienta puede alcanzar este objetivo en esta ubicación. La curva de abajo muestra hasta dónde llega este sitio en la práctica: prueba con un objetivo menor, o prevé un generador o conexión a la red para cubrir lo que el sol no puede.
+PT: Nenhum sistema dentro dos tamanhos que esta ferramenta procura consegue atingir esse objetivo neste local. A curva abaixo mostra até onde este local consegue chegar na prática — tente uma meta menor, ou planeje um gerador ou conexão à rede para cobrir o que o sol não cobre.
+FR: Aucun système, dans les tailles que cet outil explore, ne peut atteindre cet objectif à cet endroit. La courbe ci-dessous montre jusqu'où ce site peut réellement aller — visez plus bas, ou prévoyez un générateur ou une connexion au réseau pour couvrir ce que le solaire ne peut pas.
+DE: Kein System in den hier durchsuchten Größen erreicht dieses Ziel an diesem Standort. Die Kurve unten zeigt, wie weit dieser Standort praktisch kommt — versuch ein niedrigeres Ziel oder plane einen Generator oder Netzanschluss für den Rest.
+NL: Geen enkel systeem binnen de groottes die deze tool doorzoekt kan dit doel op deze locatie bereiken. De curve hieronder laat zien hoe ver deze locatie praktisch kan komen — probeer een lager doel, of plan een generator of netaansluiting om te dekken wat zonne-energie niet kan.
+AR: لا يمكن لأي نظام ضمن الأحجام التي تبحث عنها هذه الأداة الوصول إلى هذا الهدف في هذا الموقع. يُظهر المنحنى أدناه أبعد ما يصل إليه هذا الموقع عمليًا — جرّب هدفًا أدنى، أو خطّط لمولد أو اتصال بالشبكة لتغطية ما لا تصل إليه الشمس.
+
+### simpleInfeasible
+EN: At this location, no system we can build reaches that goal. Try a lower bill-cut target — or read the full details for how close solar can actually get.
+ES: En esta ubicación, ningún sistema que podamos construir alcanza ese objetivo. Prueba con un porcentaje de ahorro menor, o consulta los detalles completos para ver hasta dónde puede llegar la energía solar.
+PT: Neste local, nenhum sistema que possamos construir atinge essa meta. Tente uma meta de economia menor, ou veja os detalhes completos para saber até onde a energia solar consegue chegar.
+FR: À cet endroit, aucun système constructible n'atteint cet objectif. Essayez un objectif d'économie plus bas, ou consultez les détails complets pour voir jusqu'où le solaire peut réellement aller.
+DE: An diesem Standort erreicht kein baubares System dieses Ziel. Versuch ein niedrigeres Einspar-Ziel — oder lies die vollständigen Details, um zu sehen, wie weit Solar hier tatsächlich kommt.
+NL: Op deze locatie bereikt geen enkel systeem dat we kunnen bouwen dat doel. Probeer een lager besparingsdoel — of lees de volledige details om te zien hoe dicht zonne-energie echt kan komen.
+AR: في هذا الموقع، لا يوجد نظام يمكن بناؤه يصل إلى هذا الهدف. جرّب نسبة توفير أدنى، أو اطّلع على التفاصيل الكاملة لترى مدى ما يمكن للطاقة الشمسية الوصول إليه فعليًا.
+
+### simpleWhatItMeans
+EN: Panels make power when the sun is out; the battery carries it into the evening and cloudy days. The system is sized from five years of hourly satellite weather at your exact location.
+ES: Los paneles generan electricidad cuando hay sol; la batería la guarda para la noche y los días nublados. El sistema se dimensiona con cinco años de datos meteorológicos horarios por satélite de tu ubicación exacta.
+PT: Os painéis geram energia enquanto há sol; a bateria a guarda para a noite e os dias nublados. O sistema é dimensionado com cinco anos de dados meteorológicos horários por satélite do seu local exato.
+FR: Les panneaux produisent quand le soleil brille ; la batterie porte cette énergie jusqu'au soir et aux jours gris. Le système est dimensionné à partir de cinq ans de données météo horaires par satellite à votre position exacte.
+DE: Paneele liefern Strom, wenn die Sonne scheint; der Akku trägt ihn in den Abend und die Grautage. Bemessen wird das System aus fünf Jahren stündlicher Satelliten-Wetterdaten an deinem genauen Standort.
+NL: Panelen wekken stroom op als de zon schijnt; de accu brengt die de avond en bewolkte dagen in. Het systeem is gedimensioneerd op basis van vijf jaar aan uurlijkse satellietweergegevens op uw exacte locatie.
+AR: تُنتج الألواح الكهرباء وقت وجود الشمس؛ وتحملها البطارية إلى المساء والأيام الغائمة. يُحجَّم النظام اعتمادًا على خمس سنوات من بيانات الطقس الساعية بالأقمار الصناعية لموقعك الدقيق.
+
+### simpleWhatItMeansBattery
+EN: A battery makes no power of its own — it charges in the cheap hours and holds that energy for the expensive ones. The system is sized from five years of hourly satellite weather at your exact location.
+ES: Una batería no genera nada por sí sola: se carga en las horas baratas y guarda esa energía para las caras. El sistema se dimensiona con cinco años de datos meteorológicos horarios por satélite de tu ubicación exacta.
+PT: Uma bateria não gera nada por si só: carrega nas horas baratas e guarda essa energia para as caras. O sistema é dimensionado com cinco anos de dados meteorológicos horários por satélite do seu local exato.
+FR: Une batterie ne produit rien par elle-même : elle se charge aux heures creuses et garde cette énergie pour les heures chères. Le système est dimensionné à partir de cinq ans de données météo horaires par satellite à votre position exacte.
+DE: Ein Akku erzeugt selbst keinen Strom: Er lädt in den günstigen Stunden und hält die Energie für die teuren bereit. Bemessen wird das System aus fünf Jahren stündlicher Satelliten-Wetterdaten an deinem genauen Standort.
+NL: Een accu wekt zelf geen stroom op — hij laadt op in de goedkope uren en bewaart die energie voor de dure uren. Het systeem is gedimensioneerd op basis van vijf jaar aan uurlijkse satellietweergegevens op uw exacte locatie.
+AR: لا تولّد البطارية كهرباء بنفسها: تشحن في الساعات الرخيصة وتحفظ تلك الطاقة للساعات الغالية. ويُحجَّم النظام اعتمادًا على خمس سنوات من بيانات الطقس الساعية بالأقمار الصناعية لموقعك الدقيق.
+
+### simpleCaveat
+EN: This is an estimate, not a promise — the full figures behind every number are one click away.
+ES: Es una estimación, no una promesa; todas las cifras completas están a un clic.
+PT: É uma estimativa, não uma promessa — todos os números completos estão a um clique.
+FR: C'est une estimation, pas une promesse — tous les chiffres détaillés sont à un clic.
+DE: Das ist eine Schätzung, kein Versprechen — alle vollständigen Zahlen sind einen Klick entfernt.
+NL: Dit is een schatting, geen belofte — de volledige cijfers achter elk getal zijn één klik verwijderd.
+AR: هذا تقدير وليس وعدًا — جميع الأرقام الكاملة على بُعد نقرة واحدة.
+
+### simpleSeeDetails
+EN: See all the details
+ES: Ver todos los detalles
+PT: Ver todos os detalhes
+FR: Voir tous les détails
+DE: Alle Details anzeigen
+NL: Bekijk alle details
+AR: عرض كل التفاصيل
+
+### simpleDownloadBom
+EN: Download parts list (CSV)
+ES: Descargar lista de piezas (CSV)
+PT: Baixar lista de peças (CSV)
+FR: Télécharger la liste des pièces (CSV)
+DE: Teileliste herunterladen (CSV)
+NL: Onderdelenlijst downloaden (CSV)
+AR: تنزيل قائمة القطع (CSV)
+
+### simpleAskAdvisor
+EN: Ask the AI advisor (plain words)
+ES: Pregunta al asistente de IA (en palabras simples)
+PT: Pergunte ao assistente de IA (em palavras simples)
+FR: Demandez au conseiller IA (en mots simples)
+DE: Fragen Sie den KI-Berater (in einfachen Worten)
+NL: Vraag de AI-adviseur (in gewone woorden)
+AR: اسأل مستشار الذكاء الاصطناعي (بكلمات بسيطة)
+
+### sanityOk
+EN: Independently sanity-checked ✓ — physics plausible
+ES: Verificado de forma independiente ✓ — físicamente plausible
+PT: Verificado de forma independente ✓ — fisicamente plausível
+FR: Vérifié de façon indépendante ✓ — physiquement plausible
+DE: Unabhängig geprüft ✓ — physikalisch plausibel
+NL: Onafhankelijk gecontroleerd ✓ — fysisch plausibel
+AR: تم التحقق بشكل مستقل ✓ — معقول فيزيائيًا
+
+### sanityFlag
+EN: ⚠ An independent AI check flags this result as physically implausible —
+ES: ⚠ Una verificación de IA independiente marca este resultado como físicamente implausible —
+PT: ⚠ Uma verificação de IA independente marca este resultado como fisicamente implausível —
+FR: ⚠ Une vérification IA indépendante signale ce résultat comme physiquement implausible —
+DE: ⚠ Eine unabhängige KI-Prüfung markiert dieses Ergebnis als physikalisch unplausibel —
+NL: ⚠ Een onafhankelijke AI-controle markeert dit resultaat als fysisch onwaarschijnlijk —
+AR: ⚠ تشير مراجعة ذكاء اصطناعي مستقلة إلى أن هذه النتيجة غير معقولة فيزيائيًا —
+
+### sanityAskAdvisor
+EN: ask the advisor why
+ES: pregunta al asistente por qué
+PT: pergunte ao assistente por quê
+FR: demandez au conseiller pourquoi
+DE: fragen Sie den Berater warum
+NL: vraag de adviseur waarom
+AR: اسأل المستشار لماذا
+
+### sanityUncertain
+EN: Sanity check inconclusive — the independent AI check could not reach a confident verdict on these inputs
+ES: Verificación no concluyente — la comprobación independiente de IA no alcanzó un veredicto seguro sobre estas entradas
+PT: Verificação inconclusiva — a verificação independente de IA não alcançou um veredito confiável sobre estas entradas
+FR: Vérification non concluante — le contrôle indépendant par IA n'a pas atteint de verdict fiable sur ces entrées
+DE: Prüfung unentschieden — die unabhängige KI-Prüfung erreichte für diese Eingaben kein eindeutiges Urteil
+NL: Controle zonder duidelijke uitslag — de onafhankelijke AI-controle kon bij deze invoer geen zeker oordeel vellen
+AR: التحقق غير حاسم — لم يتمكن الفحص المستقل بالذكاء الاصطناعي من الوصول إلى حكم واثق بشأن هذه المدخلات
+
+### sanityTooltip
+EN: An independent AI classifier (Jev) reviewed the sizing numbers only — no location, text, or personal data leaves your browser beyond these figures. It never changes the computed result.
+ES: Un clasificador de IA independiente (Jev) revisó solo las cifras del dimensionamiento — ninguna ubicación, texto o dato personal sale de tu navegador más allá de estas cifras. Nunca cambia el resultado calculado.
+PT: Um classificador de IA independente (Jev) analisou apenas os números do dimensionamento — nenhum local, texto ou dado pessoal sai do seu navegador além desses números. Ele nunca altera o resultado calculado.
+FR: Un classificateur IA indépendant (Jev) n'a examiné que les chiffres du dimensionnement — aucun lieu, texte ou donnée personnelle ne quitte votre navigateur en dehors de ces chiffres. Il ne modifie jamais le résultat calculé.
+DE: Ein unabhängiger KI-Klassifikator (Jev) hat nur die Dimensionierungszahlen geprüft — kein Standort, Text oder personenbezogener Daten verlässt Ihren Browser über diese Zahlen hinaus. Er ändert niemals das berechnete Ergebnis.
+NL: Een onafhankelijke AI-classificator (Jev) heeft alleen de dimensioneringscijfers beoordeeld — er verlaten geen locatie-, tekst- of persoonsgegevens uw browser behalve deze cijfers. Hij wijzigt het berekende resultaat nooit.
+AR: راجع مصنف ذكاء اصطناعي مستقل (Jev) أرقام التحجيم فقط — لا يخرج من متصفحك أي موقع أو نص أو بيانات شخصية غير هذه الأرقام. لا يغير أبدًا النتيجة المحسوبة.
+
+### simpleAdvisorStyle
+EN: [ADVISOR INSTRUCTION: The visitor is in Simple mode. Answer like an expert talking to a smart 12-year-old: plain everyday words, no jargon (explain any technical term in a short parenthesis), 4 short sentences maximum, and end with the ONE number that matters most.]
+ES: [INSTRUCCIÓN PARA EL ASISTENTE: el visitante está en modo Simple. Responde como un experto hablando con un niño de 12 años inteligente: palabras cotidianas sencillas, sin tecnicismos (explica cualquier término técnico entre paréntesis), máximo 4 frases cortas, y termina con un único número: el más importante.]
+PT: [INSTRUÇÃO PARA O ASSISTENTE: o visitante está no modo Simples. Responda como um especialista a falar com uma criança de 12 anos inteligente: palavras do dia a dia, sem jargão (explica qualquer termo técnico num parêntese curto), no máximo 4 frases curtas, e termine com O número que mais importa.]
+FR: [INSTRUCTION AU CONSEILLER : le visiteur est en mode Simple. Répondez comme un expert parlant à un enfant de 12 ans intelligent : mots simples du quotidien, pas de jargon (expliquez tout terme technique entre parenthèses), 4 phrases courtes maximum, et terminez par LE chiffre qui compte le plus.]
+DE: [ANWEISUNG FÜR DEN BERATER: Der Besucher ist im einfachen Modus. Antworten Sie wie ein Experte, der mit einem klugen 12-Jährigen spricht: einfache Alltagsworte, kein Fachjargon (erklären Sie jeden Fachbegriff in einer kurzen Klammer), höchstens 4 kurze Sätze, und enden Sie mit DER Zahl, die am meisten zählt.]
+NL: [ADVISEUR-INSTRUCTIE: De bezoeker is in de Eenvoudige modus. Antwoord als een expert die tegen een slim 12-jarig kind praat: eenvoudige alledaagse woorden, geen jargon (leg elke technische term tussen haakjes uit), maximaal 4 korte zinnen, en eindig met HET ene getal dat er het meest toe doet.]
+AR: [تعليمات للمستشار: الزائر في الوضع المبسّط. أجب كخبير يتحدث إلى طفل ذكي في الثانية عشرة: كلمات يومية بسيطة، بلا مصطلحات تقنية (اشرح أي مصطلح تقني بين قوسين قصيرين)، أربع جمل قصيرة كحد أقصى، واختم بالرقم الأهم.]
+
+### advisorTitle
+EN: Free AI Energy Advisor
+ES: Asesor gratuito de energía con IA
+PT: Consultor gratuito de energia com IA
+FR: Conseiller énergie IA gratuit
+DE: Kostenloser KI-Energieberater
+NL: Gratis AI-energieadviseur
+AR: مستشار الطاقة المجاني بالذكاء الاصطناعي
+
+### advisorSubtitle
+EN: You are talking to an AI (Groq AI Engine) — educational estimates only, not engineering advice
+ES: Hablas con una IA (motor Groq) — solo estimaciones educativas, no asesoramiento de ingeniería
+PT: Está a falar com uma IA (motor Groq) — apenas estimativas educativas, não aconselhamento de engenharia
+FR: Vous parlez à une IA (moteur Groq) — estimations éducatives uniquement, pas un conseil d'ingénierie
+DE: Sie sprechen mit einer KI (Groq-Motor) — nur Bildungswerte, keine Ingenieursberatung
+NL: U praat met een AI (Groq AI Engine) — alleen educatieve schattingen, geen technisch advies
+AR: أنت تتحدث إلى ذكاء اصطناعي (محرك Groq) — تقديرات تعليمية فقط وليست استشارة هندسية
+
+### advisorIntro
+EN: I explain the results from the main sizing tool — battery chemistry, wiring and fusing, or questions to bring to a local electrician. Run your sizing first, then ask about this result, or ask me anything.
+ES: Explico los resultados de la calculadora: química de baterías, cableado y protecciones, o preguntas para un electricista local. Ejecuta primero el dimensionamiento y luego pregúntame sobre este resultado, o hazme cualquier pregunta.
+PT: Explico os resultados da calculadora: química das baterias, cablagem e proteção, ou perguntas para um eletricista local. Faça primeiro o dimensionamento e depois pergunte sobre este resultado, ou faça-me qualquer pergunta.
+FR: J'explique les résultats du calculateur : chimie des batteries, câblage et protection, ou questions à poser à un électricien local. Lancez d'abord le dimensionnement, puis posez votre question sur ce résultat, ou demandez-moi quoi que ce soit.
+DE: Ich erkläre die Ergebnisse des Rechners: Batteriechemie, Verkabelung und Schutz oder Fragen für einen lokalen Elektriker. Führen Sie zuerst die Dimensionierung aus und fragen Sie dann zu diesem Ergebnis — oder stellen Sie mir eine beliebige Frage.
+NL: Ik leg de resultaten van de hoofdberekening uit — accuchemie, bedrading en zekeringen, of vragen om mee te nemen naar een plaatselijke elektricien. Voer eerst uw berekening uit, stel dan een vraag over dit resultaat, of vraag me wat u wilt.
+AR: أشرح نتائج الحاسبة: كيمياء البطارية، والأسلاك والحماية، أو أسئلة تطرحها على فني كهرباء محلي. شغّل التحجيم أولاً ثم اسألني عن هذه النتيجة، أو اسألني أي شيء.
+
+### advisorBotNote
+EN: AI-generated estimate — may be inaccurate, including prices and specifications. Not engineering advice. Verify with a licensed electrician or engineer before buying or building anything.
+ES: Estimación generada por IA: puede ser inexacta, incluidos precios y especificaciones. No es asesoramiento de ingeniería. Verifícala con un electricista o ingeniero autorizado antes de comprar o construir.
+PT: Estimativa gerada por IA — pode ser imprecisa, incluindo preços e especificações. Não é aconselhamento de engenharia. Verifique com um eletricista ou engenheiro licenciado antes de comprar ou construir.
+FR: Estimation générée par IA — elle peut être inexacte, y compris les prix et les spécifications. Ce n'est pas un conseil d'ingénierie. Faites vérifier par un électricien ou ingénieur agréé avant d'acheter ou de construire.
+DE: Von KI erzeugte Schätzung — möglicherweise ungenau, einschließlich Preisen und Spezifikationen. Keine Ingenieursberatung. Lassen Sie sie vor dem Kauf oder Bau von einem zugelassenen Elektriker oder Ingenieur prüfen.
+NL: AI-gegenereerde schatting — kan onjuist zijn, ook prijzen en specificaties. Geen technisch advies. Controleer bij een erkende elektricien of ingenieur voordat u iets koopt of bouwt.
+AR: تقدير من الذكاء الاصطناعي — قد يكون غير دقيق، بما في ذلك الأسعار والمواصفات. ليست هذه نصيحة هندسية. تحقق مع كهربائي أو مهندس مرخص قبل الشراء أو البناء.
+
+### advisorThinking
+EN: ⏳ Thinking...
+ES: ⏳ Pensando...
+PT: ⏳ A pensar...
+FR: ⏳ Réflexion...
+DE: ⏳ Denkt nach...
+NL: ⏳ Even denken...
+AR: ⏳ أفكر...
+
+### advisorLabel
+EN: Ask the AI advisor about your system
+ES: Pregunta al asesor de IA sobre tu sistema
+PT: Pergunte ao consultor de IA sobre o seu sistema
+FR: Posez une question au conseiller IA sur votre système
+DE: Fragen Sie den KI-Berater zu Ihrem System
+NL: Vraag de AI-adviseur over uw systeem
+AR: اسأل مستشار الذكاء الاصطناعي عن نظامك
+
+### advisorPlaceholder
+EN: Ask about cell specs, Sodium-ion vs LFP, freight costs...
+ES: Pregunta sobre celdas, sodio-ion frente a LFP, costes de transporte...
+PT: Pergunte sobre células, sódio-ion versus LFP, custos de frete...
+FR: Questions sur les cellules, sodium-ion vs LFP, fret...
+DE: Fragen zu Zellen, Natrium-Ion vs. LFP, Frachtkosten...
+NL: Vraag over celspecificaties, natrium-ion vs LFP, transportkosten...
+AR: اسأل عن الخلايا، أيوني الصوديوم مقابل LFP، تكلفة الشحن...
+
+### advisorSend
+EN: Send
+ES: Enviar
+PT: Enviar
+FR: Envoyer
+DE: Senden
+NL: Verzenden
+AR: إرسال
+
+### advisorClose
+EN: Close AI advisor
+ES: Cerrar asesor de IA
+PT: Fechar consultor de IA
+FR: Fermer le conseiller IA
+DE: KI-Berater schließen
+NL: AI-adviseur sluiten
+AR: إغلاق مستشار الذكاء الاصطناعي
+
+### advisorBusyRetry
+EN:  The free AI engine is busy — retrying in {secs}s…
+ES:  El motor gratuito de IA está ocupado; reintentando en {secs}s…
+PT:  O motor gratuito de IA está ocupado — a tentar novamente em {secs}s…
+FR:  Le moteur IA gratuit est occupé — nouvelle tentative dans {secs}s…
+DE:  Die kostenlose KI ist ausgelastet — erneuter Versuch in {secs}s…
+NL:  De gratis AI-engine is bezet — opnieuw proberen over {secs}s…
+AR:  محرك الذكاء الاصطناعي المجاني مشغول — إعادة المحاولة خلال {secs}s…
+
+### advisorNoReply
+EN:  No reply received. Please try again.
+ES:  No se recibió respuesta. Inténtalo de nuevo.
+PT:  Não foi recebida resposta. Tente novamente.
+FR:  Aucune réponse reçue. Veuillez réessayer.
+DE:  Keine Antwort erhalten. Bitte versuchen Sie es erneut.
+NL:  Geen antwoord ontvangen. Probeer het opnieuw.
+AR:  لم يصل رد. حاول مرة أخرى.
+
+### advisorBusy
+EN:  The free AI engine is swamped right now (HTTP {status} — it runs on a shared free quota).
+
+Please wait about a minute and send that again.
+ES:  El motor gratuito de IA está satur ahora (HTTP {status} — usa una cuota compartida).
+
+Espera aproximadamente un minuto y vuelve a enviarlo.
+PT:  O motor gratuito de IA está sobrecarregado agora (HTTP {status} — usa uma quota partilhada).
+
+Espere cerca de um minuto e envie novamente.
+FR:  Le moteur IA gratuit est saturé (HTTP {status} — quota partagé).
+
+Attendez environ une minute, puis renvoyez votre question.
+DE:  Die kostenlose KI ist gerade überlastet (HTTP {status} — gemeinsames Kontingent).
+
+Warten Sie etwa eine Minute und senden Sie die Frage erneut.
+NL:  De gratis AI-engine is momenteel overbelast (HTTP {status} — hij draait op een gedeeld gratis quotum).
+
+Wacht ongeveer een minuut en verstuur het opnieuw.
+AR:  محرك الذكاء الاصطناعي المجاني مزدحم الآن (HTTP {status} — حصة مشتركة).
+
+انتظر نحو دقيقة ثم أرسل الطلب مجدداً.
+
+### advisorDegradedLabel
+EN: Offline · not the live AI
+ES: Sin conexión · no la IA en directo
+PT: Sem ligação · não a IA em direto
+FR: Hors ligne · pas l’IA en direct
+DE: Offline · nicht die Live-KI
+NL: Offline · niet de live AI
+AR: دون اتصال · ليس الذكاء الحيّ مباشرة
+
+### advisorDegradedLine
+EN: I can't answer right now — {why}.
+ES: No puedo responder ahora — {why}.
+PT: Não consigo responder agora — {why}.
+FR: Je ne peux pas répondre — {why}.
+DE: Das kann ich gerade nicht beantworten — {why}.
+NL: Ik kan nu niet antwoorden — {why}.
+AR: لا أستطيع الإجابة الآن — {why}.
+
+### advisorDegradedWhyUnavailable
+EN: the service that answers did not reply
+ES: el servicio no ha respondido
+PT: o serviço não respondeu
+FR: le service n’a pas répondu
+DE: der Dienst reagiert nicht
+NL: de dienst reageert niet
+AR: الخدمة لم تستجب
+
+### advisorDegradedWhyNoKey
+EN: no model key is configured, so the advisor is offline by design
+ES: no hay clave de modelo: el asesor está apagado por diseño
+PT: não há uma chave de modelo configurada, então o consultor fica desativado intencionalmente
+FR: aucune clé modèle : le conseiller est hors ligne par conception
+DE: kein Modellschlüssel: der Berater ist planmäßig offline
+NL: er is geen modelsleutel ingesteld, dus de adviseur is bewust offline
+AR: لم يتم إعداد مفتاح للنموذج، لذا فالمستشار غير متصل عمدًا
+
+### advisorDegradedReassure
+EN: Nothing above is wrong, and your sizing is unaffected.
+ES: Nada de lo anterior está mal y tus cálculos no se ven afectados.
+PT: Nada acima está errado e o seu dimensionamento não é afetado.
+FR: Rien de ce qui précède n’est faux, et votre dimensionnement n’est pas affecté.
+DE: An dem oben Gesagten ist nichts falsch und Ihre Berechnung ist nicht betroffen.
+NL: Er is hierboven niets mis en uw berekening is onaangetast.
+AR: لا خطأ في ما سبق وحسابك لم يتأثر.
+
+### advisorDegradedSystem
+EN: Take those numbers to a licensed electrician before you build.
+ES: Lleva esas cifras a un electricista habilitado antes de construir.
+PT: Leve esses valores a um eletricista credenciado antes de construir.
+FR: Portez ces chiffres à un électricien agréé avant de construire.
+DE: Lassen Sie diese Zahlen vor dem Bau von einem Elektriker prüfen.
+NL: Neem die cijfers mee naar een erkende elektricien voordat u gaat bouwen.
+AR: خذ هذه الأرقام إلى كهربائي مرخَّص قبل البناء.
+
+### advisorIsAi
+EN: The advisor is a large language model. It writes plausible text and can state wrong numbers confidently. Check every figure — never take it as fact.
+ES: El asesor es un modelo de lenguaje. Escribe texto plausible y puede dar cifras incorrectas con confianza. Comprueba cada número: nunca lo tomes como hecho.
+PT: O consultor é um modelo de linguagem. Escreve texto plausível e pode dar números errados com confiança. Verifique cada número: nunca o leve como facto.
+FR: Le conseiller est un modèle de langage. Il écrit un texte plausible et peut donner de faux chiffres avec assurance. Vérifiez chaque chiffre : ne le prenez jamais pour un fait.
+DE: Der Berater ist ein Sprachmodell. Er schreibt plausiblen Text und kann falsche Zahlen sicher nennen. Prüfen Sie jede Zahl — nehmen Sie sie nie als Tatsache.
+NL: De adviseur is een groot taalmodel. Hij schrijft aannemelijke tekst en kan verkeerde cijfers vol overtuiging presenteren. Controleer elk getal — beschouw het nooit als feit.
+AR: المستشار نموذج لغوي. يكتب نصًا مقنعًا وقد يذكر أرقامًا خاطئة بثقة. تحقّق من كل رقم — لا تأخذه كحقيقة.
+
+### advisorDegradedGeneral
+EN: For sizing help, use the calculator above — no account needed.
+ES: Para dimensionar, usa la calculadora de arriba; sin cuenta.
+PT: Para dimensionar, use a calculadora acima; sem conta.
+FR: Pour dimensionner, utilisez le calculateur ci-dessus ; sans compte.
+DE: Für die Dimensionierung: der Rechner oben, ohne Konto.
+NL: Gebruik voor hulp bij dimensioneren de calculator hierboven — geen account nodig.
+AR: للتحجيم: استخدم الحاسبة أعلاه؛ بلا حساب.
+
+### advisorDegradedRetry
+EN: Try again in a minute; the free quota is shared.
+ES: Inténtalo en un minuto; la cuota gratuita es compartida.
+PT: Tente dentro de um minuto; a quota gratuita é partilhada.
+FR: Réessayez dans une minute ; le quota gratuit est partagé.
+DE: In einer Minute erneut versuchen; das Kontingent ist geteilt.
+NL: Probeer het over een minuut opnieuw; het gratis quotum wordt gedeeld.
+AR: أعد المحاولة بعد دقيقة؛ الحصة مشتركة.
+
+### advisorUnreachable
+EN:  The AI advisor is unreachable right now{status}.
+
+Check your connection and try again in a moment.
+ES:  El asesor de IA no está disponible ahora{status}.
+
+Comprueba tu conexión y vuelve a intentarlo en un momento.
+PT:  O consultor de IA está indisponível neste momento{status}.
+
+Verifique a ligação e tente novamente dentro de instantes.
+FR:  Le conseiller IA est momentanément inaccessible{status}.
+
+Vérifiez votre connexion et réessayez dans un instant.
+DE:  Der KI-Berater ist gerade nicht erreichbar{status}.
+
+Prüfen Sie Ihre Verbindung und versuchen Sie es gleich noch einmal.
+NL:  De AI-adviseur is momenteel onbereikbaar{status}.
+
+Controleer uw verbinding en probeer het zo opnieuw.
+AR:  مستشار الذكاء الاصطناعي غير متاح حالياً{status}.
+
+تحقق من اتصالك وحاول مرة أخرى بعد قليل.
+
+### frontierCeilingTag
+EN: Best within the sizes searched: {pct}%
+ES: Lo máximo dentro de lo buscado: {pct}%
+PT: O máximo dentro do que foi buscado: {pct}%
+FR: Maximum dans les tailles explorées : {pct}%
+DE: Bestes in den durchsuchten Größen: {pct} %
+NL: Beste binnen de doorzochte groottes: {pct}%
+AR: الأقصى ضمن الأحجام المبحوثة: {pct}%

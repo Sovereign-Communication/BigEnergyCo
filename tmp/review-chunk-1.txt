@@ -1,0 +1,494 @@
+### homeIntro
+EN: Enter your location and average electric bill. We simulate 5 years of hourly NASA satellite weather to size the exact solar panel array and battery storage you need — with honest 20-year payback, battery replacement cadence, and equipment costs in your local currency.
+ES: Introduce tu ubicación y tu factura eléctrica media. Simulamos 5 años de datos horarios de satélite de NASA para dimensionar exactamente los paneles solares y la batería que necesitas, con una amortización honesta a 20 años, la frecuencia de reemplazo de la batería y el costo de los equipos en tu moneda local.
+PT: Informe sua localização e sua conta média de eletricidade. Simulamos 5 anos de dados horários de satélite da NASA para dimensionar exatamente os painéis solares e a bateria de que você precisa, com retorno honesto em 20 anos, frequência de substituição da bateria e custos dos equipamentos na sua moeda local.
+FR: Indiquez votre emplacement et votre facture d’électricité moyenne. Nous simulons 5 ans de données météorologiques horaires par satellite de la NASA pour dimensionner précisément les panneaux solaires et la batterie nécessaires, avec un retour sur investissement honnête sur 20 ans, la fréquence de remplacement de la batterie et le coût du matériel dans votre devise locale.
+DE: Geben Sie Ihren Standort und Ihre durchschnittliche Stromrechnung ein. Wir simulieren 5 Jahre stündlicher NASA-Satellitenwetterdaten, um die passende Größe Ihrer Solarmodule und Batteriespeicher zu berechnen – einschließlich realistischer Amortisation über 20 Jahre, Austauschintervall der Batterie und Gerätekosten in Ihrer Landeswährung.
+NL: Voer uw locatie en gemiddelde elektriciteitsrekening in. We simuleren 5 jaar aan NASA-satellietweer per uur om precies te bepalen welke zonnepanelen en accu-opslag u nodig hebt — met een eerlijke terugverdientijd over 20 jaar, vervangingsritme van accu's en uitrustingskosten in uw lokale valuta.
+AR: أدخل موقعك ومتوسط فاتورة الكهرباء. نحاكي 5 سنوات من بيانات الطقس الساعية عبر الأقمار الصناعية التابعة لناسا لتحديد الحجم الدقيق للألواح الشمسية وتخزين البطارية الذي تحتاج إليه، مع فترة استرداد واقعية على مدى 20 عامًا، وتواتر استبدال البطارية، وتكاليف المعدات بعملتك المحلية.
+
+### quickSetupTitle
+EN: ⚡ Quick setup
+ES: ⚡ Configuración rápida
+PT: ⚡ Configuração rápida
+FR: ⚡ Configuration rapide
+DE: ⚡ Schnellstart
+NL: Snelle installatie
+AR: ⚡ إعداد سريع
+
+### quickSetupHint
+EN: — choose inputs, then click Size My System
+ES: — elige los datos y luego pulsa Dimensionar mi sistema
+PT: — escolha os dados e clique em Dimensionar meu sistema
+FR: — choisissez les données, puis cliquez sur Dimensionner mon système
+DE: — Eingaben auswählen und dann System dimensionieren anklicken
+NL: — kies de invoer en klik daarna op Systeem dimensioneren
+AR: — اختر المدخلات، ثم انقر على تحديد حجم النظام
+
+### preciseLocationHelp
+EN: The precise-location button fills your exact coordinates and pulls area prices from the nearest reference region. For another place, type a city or town and press Enter or Tab to resolve it. Then click Size My System to calculate.
+ES: El botón de ubicación precisa completa tus coordenadas exactas y obtiene los precios de la zona de la región de referencia más cercana. Para otro lugar, escribe una ciudad o localidad y pulsa Intro o Tab para seleccionarla. Después, pulsa Dimensionar mi sistema para calcular.
+PT: O botão de localização precisa preenche suas coordenadas exatas e consulta os preços da região de referência mais próxima. Para outro lugar, digite uma cidade ou município e pressione Enter ou Tab para selecionar. Depois, clique em Dimensionar meu sistema para calcular.
+FR: Le bouton de localisation précise renseigne vos coordonnées exactes et récupère les prix de la région de référence la plus proche. Pour un autre endroit, saisissez une ville ou un village, puis appuyez sur Entrée ou Tab pour le sélectionner. Cliquez ensuite sur Dimensionner mon système pour lancer le calcul.
+DE: Die Schaltfläche für den genauen Standort trägt Ihre Koordinaten ein und ruft die Preise der nächstgelegenen Referenzregion ab. Für einen anderen Ort geben Sie eine Stadt oder einen Ort ein und drücken Enter oder Tab, um den Treffer auszuwählen. Klicken Sie anschließend auf System dimensionieren.
+NL: De knop voor precieze locatie vult uw exacte coördinaten in en haalt stroomprijzen op uit de dichtstbijzijnde referentieregio. Typ voor een andere plaats een stad of dorp en druk op Enter of Tab om deze te bepalen. Klik daarna op Systeem dimensioneren.
+AR: يملأ زر تحديد الموقع الدقيق إحداثياتك الفعلية ويجلب أسعار المنطقة من أقرب منطقة مرجعية. لمكان آخر، اكتب اسم مدينة أو بلدة واضغط Enter أو Tab لاختيارها، ثم انقر على تحديد حجم النظام لإجراء الحساب.
+
+### imageryPrivacy
+EN: Satellite imagery (no account needed) loads only after you ask for it. Coordinates go to the map tiles and NASA weather; nothing is saved.
+ES: Las imágenes satelitales (sin necesidad de cuenta) solo se cargan cuando las solicitas. Las coordenadas se envían a los mosaicos del mapa y a los datos meteorológicos de NASA; no se guarda nada.
+PT: As imagens de satélite (sem necessidade de conta) só são carregadas quando você solicita. As coordenadas são enviadas para os blocos do mapa e para o clima da NASA; nada é salvo.
+FR: Les images satellite (sans compte) ne se chargent que si vous le demandez. Les coordonnées sont transmises aux tuiles cartographiques et aux données météo de la NASA ; rien n’est enregistré.
+DE: Satellitenbilder (ohne Konto) werden erst geladen, wenn Sie sie anfordern. Koordinaten werden an die Kartenkacheln und die NASA-Wetterdaten übermittelt; gespeichert wird nichts.
+NL: Satellietbeelden (geen account nodig) worden pas geladen nadat u daarom vraagt. Coördinaten gaan naar de kaarttegels en NASA-weerservice; er wordt niets opgeslagen.
+AR: لا تُحمّل صور الأقمار الصناعية (ولا تحتاج إلى حساب) إلا بعد طلبها. تُرسل الإحداثيات إلى مربعات الخريطة وبيانات الطقس التابعة لناسا؛ ولا يُحفظ أي شيء.
+
+### locationPrecision
+EN: A city lookup is convenient, but your exact location gives the most precise weather and solar estimate. Enter custom latitude and longitude manually, or use Use my current location for browser GPS.
+ES: Buscar una ciudad es cómodo, pero tu ubicación exacta ofrece la estimación meteorológica y solar más precisa. Introduce manualmente la latitud y la longitud, o usa Usar mi ubicación actual para el GPS del navegador.
+PT: Buscar uma cidade é prático, mas sua localização exata fornece a estimativa solar e meteorológica mais precisa. Digite manualmente a latitude e a longitude ou use Usar minha localização atual para o GPS do navegador.
+FR: La recherche par ville est pratique, mais votre emplacement exact fournit l’estimation solaire et météo la plus précise. Saisissez manuellement la latitude et la longitude, ou utilisez Utiliser ma position actuelle pour le GPS du navigateur.
+DE: Eine Stadtsuche ist bequem, aber Ihr genauer Standort liefert die präziseste Wetter- und Solarschätzung. Geben Sie Breiten- und Längengrad manuell ein oder verwenden Sie Meinen aktuellen Standort für das GPS des Browsers.
+NL: Een plaatsopzoeking is handig, maar met uw exacte locatie krijgt u de nauwkeurigste weer- en zonneschatting. Voer handmatig aangepaste breedte- en lengtegraad in of kies Mijn huidige locatie gebruiken voor GPS in de browser.
+AR: البحث عن مدينة مريح، لكن موقعك الدقيق يعطي التقدير الأكثر دقة للطقس والطاقة الشمسية. أدخل خط العرض والطول يدويًا، أو استخدم «استخدام موقعي الحالي» للاستفادة من GPS في المتصفح.
+
+### monthlyBillLabel
+EN: Your monthly electric bill
+ES: Tu factura mensual de electricidad
+PT: Sua conta mensal de eletricidade
+FR: Votre facture d’électricité mensuelle
+DE: Ihre monatliche Stromrechnung
+NL: Uw maandelijkse elektriciteitsrekening
+AR: فاتورة الكهرباء الشهرية
+
+### electricityRateLabel
+EN: Electricity price where you live (drives your bill estimate and payback) - your price per kWh ($):
+ES: Precio de la electricidad en tu zona (determina la factura estimada y la amortización) — tu precio por kWh ($):
+PT: Preço da eletricidade onde você mora (define a estimativa da conta e o retorno) — seu preço por kWh ($):
+FR: Prix de l’électricité chez vous (il détermine la facture estimée et le retour) — votre prix par kWh ($) :
+DE: Strompreis an Ihrem Wohnort (bestimmt Rechnungsschätzung und Amortisation) — Ihr Preis pro kWh ($):
+NL: Elektriciteitsprijs bij u thuis (bepaalt uw rekening- en terugverdientijdschatting) - uw prijs per kWh ($):
+AR: سعر الكهرباء في مكان سكنك (يحدد تقدير الفاتورة وفترة الاسترداد) — سعرك لكل kWh ($):
+
+### generatorAssumption
+EN: Assumes a small genset at typical partial load: petrol
+ES: Supone un generador pequeño con una carga parcial típica: gasolina
+PT: Considera um gerador pequeno em carga parcial típica: gasolina
+FR: Le calcul suppose un petit groupe électrogène à charge partielle typique : essence
+DE: Angenommen wird ein kleiner Generator bei typischer Teillast: Benzin
+NL: Gaat uit van een kleine generator bij typische deellast: benzine
+AR: يفترض مولدًا صغيرًا عند حمل جزئي معتاد: بنزين
+
+### feedInCreditLabel
+EN: Feed-in credit for surplus you can sell ($/kWh, optional — grid-tie only) :
+ES: Crédito por la energía excedente que puedes vender ($/kWh, opcional — solo conexión a la red):
+PT: Crédito pela energia excedente que você pode vender ($/kWh, opcional — somente conectado à rede):
+FR: Crédit pour le surplus que vous pouvez vendre ($/kWh, facultatif — réseau uniquement) :
+DE: Vergütung für verkaufbaren Überschuss ($/kWh, optional — nur bei Netzanschluss):
+NL: Terugleververgoeding voor stroomoverschot dat u kunt verkopen ($/kWh, optioneel — alleen netgekoppeld):
+AR: رصيد بيع فائض الكهرباء ($/kWh، اختياري — للاتصال بالشبكة فقط):
+
+### fixedMonthlyChargeLabel
+EN: Fixed monthly charge on your bill ($/mo, optional — solar can't cut it) :
+ES: Cargo fijo mensual de la factura ($/mes, opcional — la energía solar no puede reducirlo):
+PT: Cobrança mensal fixa na conta ($/mês, opcional — a energia solar não pode reduzi-la):
+FR: Frais fixes mensuels sur votre facture ($/mois, facultatifs — le solaire ne peut pas les réduire) :
+DE: Feste monatliche Gebühr auf Ihrer Rechnung ($/Monat, optional — Solar kann sie nicht senken):
+NL: Vaste maandkosten op uw rekening ($/maand, optioneel — hierop kunt u met zonnepanelen niet besparen):
+AR: الرسوم الشهرية الثابتة في الفاتورة ($/شهر، اختيارية — لا يمكن للطاقة الشمسية خفضها):
+
+### applianceWattages
+EN: Wattages are typical values — yours may differ. Cycling appliances (fridges, freezers, air conditioners, pumps) only draw power while running: their slider is hours actually running per day , capped to realistic compressor time, and each row shows the resulting 24-hour average. A modern fridge at the default (100 W running, ~10 h/day) really does use about 1 kWh/day.
+ES: Las potencias son valores típicos; las tuyas pueden variar. Los aparatos cíclicos (refrigeradores, congeladores, aires acondicionados y bombas) solo consumen energía mientras funcionan: el control deslizante indica las horas reales de funcionamiento al día, limitadas a un tiempo realista del compresor, y cada fila muestra el promedio resultante en 24 horas. Un refrigerador moderno con el valor predeterminado (100 W en funcionamiento, unas 10 h/día) realmente consume alrededor de 1 kWh/día.
+PT: As potências são valores típicos; as suas podem variar. Aparelhos cíclicos (geladeiras, freezers, ar-condicionado e bombas) só consomem energia enquanto estão funcionando: o controle indica as horas reais de funcionamento por dia, limitadas a um tempo realista do compressor, e cada linha mostra a média resultante em 24 horas. Uma geladeira moderna no valor padrão (100 W em funcionamento, cerca de 10 h/dia) realmente consome aproximadamente 1 kWh/dia.
+FR: Les puissances sont des valeurs typiques ; les vôtres peuvent différer. Les appareils cycliques (réfrigérateurs, congélateurs, climatiseurs et pompes) ne consomment que lorsqu’ils fonctionnent : le curseur indique les heures de fonctionnement réelles par jour, plafonnées à une durée réaliste pour le compresseur, et chaque ligne affiche la moyenne obtenue sur 24 heures. Un réfrigérateur moderne avec la valeur par défaut (100 W en marche, environ 10 h/jour) consomme bien près de 1 kWh/jour.
+DE: Die Leistungen sind typische Werte; Ihre können abweichen. Geräte mit Taktbetrieb (Kühlschränke, Gefriergeräte, Klimaanlagen und Pumpen) verbrauchen nur während des Betriebs Strom: Der Regler zeigt die tatsächlichen Betriebsstunden pro Tag, begrenzt auf eine realistische Kompressorlaufzeit; jede Zeile zeigt den daraus berechneten 24-Stunden-Durchschnitt. Ein moderner Kühlschrank verbraucht beim Standardwert (100 W im Betrieb, etwa 10 h/Tag) tatsächlich rund 1 kWh/Tag.
+NL: Vermogens zijn gebruikelijke waarden; die van u kunnen afwijken. Apparaten die in cycli werken (koelkasten, diepvriezers, airconditioners, pompen) gebruiken alleen stroom wanneer ze draaien: de schuifregelaar gaat over de uren per dag dat ze echt draaien, begrensd op realistische compressortijd. Elke regel toont het resulterende gemiddelde over 24 uur. Een moderne koelkast gebruikt bij de standaardinstelling (100 W tijdens bedrijf, ongeveer 10 uur per dag) werkelijk circa 1 kWh per dag.
+AR: القدرات قيم نموذجية وقد تختلف لديك. الأجهزة التي تعمل بالدورات (الثلاجات والمجمدات ومكيفات الهواء والمضخات) لا تستهلك الطاقة إلا أثناء التشغيل: يحدد شريط التمرير ساعات التشغيل الفعلية يوميًا، مع حد أقصى واقعي لوقت عمل الضاغط، ويعرض كل صف متوسط الاستهلاك الناتج خلال 24 ساعة. تستهلك الثلاجة الحديثة عند القيمة الافتراضية (100 W أثناء التشغيل، نحو 10 ساعات يوميًا) حوالي 1 kWh يوميًا فعلًا.
+
+### fixedChargeTaxEstimate
+EN: Bills include fixed charges and taxes, so this slightly overestimates real use — which is a safe direction to err.
+ES: Las facturas incluyen cargos fijos e impuestos, así que esta cifra sobreestima ligeramente el consumo real; es más seguro equivocarse en esa dirección.
+PT: As contas incluem cobranças fixas e impostos, então esta estimativa fica um pouco acima do consumo real — uma margem de erro mais segura.
+FR: Les factures comprennent des frais fixes et des taxes ; cette estimation surestime donc légèrement la consommation réelle, ce qui constitue une marge de sécurité.
+DE: Rechnungen enthalten feste Gebühren und Steuern. Daher überschätzt diese Zahl den tatsächlichen Verbrauch leicht — ein sicherer Fehler in diese Richtung.
+NL: Rekeningen bevatten vaste kosten en belastingen, dus dit overschat het werkelijke verbruik enigszins — dat is een veilige kant om aan te houden.
+AR: تشمل الفواتير رسومًا ثابتة وضرائب، لذلك يبالغ هذا قليلًا في تقدير الاستهلاك الحقيقي — وهو اتجاه أكثر أمانًا للخطأ.
+
+### roofAreaLabel
+EN: Optional roof or yard area (m²)
+ES: Superficie opcional del techo o terreno (m²)
+PT: Área opcional do telhado ou terreno (m²)
+FR: Surface facultative du toit ou du terrain (m²)
+DE: Optionale Dach- oder Grundstücksfläche (m²)
+NL: Optioneel dak- of tuinoppervlak (m²)
+AR: مساحة اختيارية للسقف أو الأرض (m²)
+
+### roofAreaHelp
+EN: A rough manual estimate is enough: about 6 m² per 400 W panel. This only caps the searched solar size; leave it blank for the normal estimate. Your coordinates are never stored.
+ES: Basta con una estimación manual aproximada: unos 6 m² por panel de 400 W. Esto solo limita el tamaño solar que se busca; déjalo en blanco para la estimación normal. Tus coordenadas nunca se guardan.
+PT: Uma estimativa manual aproximada basta: cerca de 6 m² por painel de 400 W. Isso apenas limita o tamanho solar pesquisado; deixe em branco para a estimativa normal. Suas coordenadas nunca são armazenadas.
+FR: Une estimation manuelle approximative suffit : environ 6 m² par panneau de 400 W. Cela limite uniquement la taille solaire recherchée ; laissez le champ vide pour l’estimation normale. Vos coordonnées ne sont jamais enregistrées.
+DE: Eine grobe manuelle Schätzung genügt: etwa 6 m² je 400-W-Panel. Damit wird nur die gesuchte Solargröße begrenzt; für die normale Schätzung lassen Sie das Feld leer. Ihre Koordinaten werden nie gespeichert.
+NL: Een grove schatting is voldoende: ongeveer 6 m² per paneel van 400 W. Dit begrenst alleen de gezochte zonnepaneelgrootte; laat het leeg voor de gewone schatting. Uw coördinaten worden nooit opgeslagen.
+AR: يكفي تقدير يدوي تقريبي: نحو 6 m² لكل لوح بقدرة 400 W. هذا يضع حدًا لحجم الطاقة الشمسية الذي يجري البحث عنه فقط؛ اتركه فارغًا للتقدير العادي. لا تُخزّن إحداثياتك مطلقًا.
+
+### independenceTarget
+EN: Independence target (applied to all three chemistries) :
+ES: Objetivo de independencia (aplicado a las tres químicas):
+PT: Meta de independência (aplicada às três químicas):
+FR: Objectif d’indépendance (appliqué aux trois chimies) :
+DE: Unabhängigkeitsziel (gilt für alle drei Zellchemien):
+NL: Doel voor onafhankelijkheid (toegepast op alle drie chemieën):
+AR: هدف الاستقلال عن الشبكة (يُطبّق على أنواع البطاريات الثلاثة):
+
+### billCutTarget
+EN: Bill-cut target — sets the results slider too :
+ES: Objetivo de reducción de la factura — también ajusta el control deslizante de resultados:
+PT: Meta de redução da conta — também define o controle deslizante dos resultados:
+FR: Objectif de réduction de facture — il règle aussi le curseur des résultats :
+DE: Ziel für die Rechnungssenkung — steuert auch den Ergebnisregler:
+NL: Doel voor verlaging van de rekening — stelt ook de resultatenregelaar in:
+AR: هدف خفض الفاتورة — ويضبط أيضًا شريط تمرير النتائج:
+
+### fxRateHelp
+EN: How many of your currency equal 1 US dollar. Auto-filled for your location; change only if you know a different rate.
+ES: Cuántas unidades de tu moneda equivalen a 1 dólar estadounidense. Se completa automáticamente para tu ubicación; cámbialo solo si conoces otra tasa.
+PT: Quantas unidades da sua moeda equivalem a 1 dólar americano. O valor é preenchido automaticamente para sua localização; altere-o somente se souber outra taxa.
+FR: Nombre d’unités de votre devise pour 1 dollar américain. La valeur est remplie automatiquement selon votre emplacement ; modifiez-la seulement si vous connaissez un autre taux.
+DE: Wie viele Einheiten Ihrer Währung 1 US-Dollar entsprechen. Der Wert wird für Ihren Standort automatisch eingetragen; ändern Sie ihn nur, wenn Sie einen anderen Kurs kennen.
+NL: Hoeveel eenheden van uw valuta gelijk zijn aan 1 Amerikaanse dollar. Automatisch ingevuld op basis van uw locatie; wijzig dit alleen als u een andere koers kent.
+AR: عدد وحدات عملتك التي تساوي 1 دولار أمريكي. يُملأ تلقائيًا حسب موقعك؛ غيّره فقط إذا كنت تعرف سعرًا مختلفًا.
+
+### surplusTargetHelp
+EN: Above 100% the system is sized to produce sellable surplus — without a feed-in credit entered above, that surplus has no cash value and is flagged as clipped waste. The “your target” matrix column and the price-cut curve follow this slider.
+ES: Por encima del 100%, el sistema se dimensiona para producir excedentes vendibles. Si no introduces arriba un crédito por energía inyectada a la red, ese excedente no tiene valor monetario y se marca como energía desperdiciada. La columna «tu objetivo» de la matriz y la curva de reducción de precio siguen este control.
+PT: Acima de 100%, o sistema é dimensionado para produzir excedente vendável. Sem informar acima um crédito pela energia injetada na rede, esse excedente não tem valor monetário e aparece como desperdício limitado. A coluna «sua meta» da matriz e a curva de redução de preço acompanham este controle.
+FR: Au-delà de 100 %, le système est dimensionné pour produire un surplus vendable. Sans crédit d’injection saisi ci-dessus, ce surplus n’a aucune valeur monétaire et est signalé comme gaspillage écrêté. La colonne « votre objectif » de la matrice et la courbe de réduction des prix suivent ce curseur.
+DE: Über 100 % wird das System so dimensioniert, dass es verkaufbaren Überschuss erzeugt. Ohne oben eingetragene Einspeisevergütung hat dieser Überschuss keinen Geldwert und wird als abgeregelte Verschwendung markiert. Die Matrixspalte „Ihr Ziel“ und die Preissenkungskurve folgen diesem Regler.
+NL: Boven 100% wordt het systeem ontworpen om verkoopbaar overschot te produceren. Zonder een hierboven ingevoerd teruglevertarief heeft dat overschot geen geldwaarde en wordt het gemarkeerd als afgevoerd overschot. De kolom 'uw doel' in de matrix en de prijsreductiecurve volgen deze schuifregelaar.
+AR: فوق 100%، يُحدّد حجم النظام لإنتاج فائض قابل للبيع. من دون إدخال رصيد بيع فائض الكهرباء أعلاه، لا تكون لهذا الفائض قيمة نقدية ويُشار إليه على أنه هدر مُقيّد. يتبع عمود «هدفك» في المصفوفة ومنحنى خفض السعر شريط التمرير هذا.
+
+### resultsIntro
+EN: Results appear here: a recommended path first, with battery comparisons and all options available below. For grid-tied plans, the result also separates bill reduction from outage backup.
+ES: Aquí aparecen los resultados: primero una opción recomendada, seguida de comparaciones de baterías y todas las alternativas. En los planes conectados a la red, el resultado también separa la reducción de la factura del respaldo durante apagones.
+PT: Os resultados aparecem aqui: primeiro, um caminho recomendado; abaixo, comparações de baterias e todas as opções. Em projetos conectados à rede, o resultado também separa a redução da conta do respaldo durante apagões.
+FR: Les résultats s’affichent ici : d’abord une solution recommandée, puis des comparaisons de batteries et toutes les options disponibles ci-dessous. Pour les systèmes raccordés au réseau, le résultat distingue aussi la baisse de facture du secours en cas de panne.
+DE: Hier erscheinen die Ergebnisse: zuerst ein empfohlener Weg, darunter Batterievergleiche und alle Optionen. Bei netzgekoppelten Plänen unterscheidet das Ergebnis außerdem zwischen Rechnungssenkung und Notstromversorgung.
+NL: De resultaten verschijnen hier: eerst een aanbevolen aanpak, met daaronder accuvergelijkingen en alle opties. Bij netgekoppelde plannen wordt ook het verschil getoond tussen verlaging van de rekening en noodstroom bij uitval.
+AR: تظهر النتائج هنا: مسار موصى به أولًا، ثم مقارنات البطاريات وجميع الخيارات أدناه. وفي الخطط المتصلة بالشبكة، تفصل النتيجة أيضًا بين خفض الفاتورة وتوفير الطاقة أثناء الانقطاع.
+
+### bomSafetyNote
+EN: Educational estimate from your sizing result — not an engineering design, not a shopping order. Fuse and cable figures assume copper, conservative ampacity, and a short battery-to-inverter run; verify everything against your local electrical code with a licensed professional before buying or energizing anything.
+ES: Estimación educativa basada en tu dimensionamiento; no es un diseño de ingeniería ni una lista de compra. Los valores de fusibles y cables suponen cobre, una capacidad de corriente conservadora y un tramo corto entre la batería y el inversor. Antes de comprar o energizar nada, verifica todo con un profesional autorizado conforme al código eléctrico local.
+PT: Estimativa educativa baseada no dimensionamento — não é um projeto de engenharia nem uma lista de compras. Os valores de fusíveis e cabos pressupõem cobre, capacidade de corrente conservadora e um trecho curto entre a bateria e o inversor. Antes de comprar ou energizar qualquer coisa, verifique tudo com um profissional habilitado conforme o código elétrico local.
+FR: Estimation pédagogique issue de votre dimensionnement ; ce n’est ni une conception d’ingénieur ni une liste d’achat. Les valeurs de fusibles et de câbles supposent du cuivre, une intensité admissible prudente et une courte liaison entre la batterie et l’onduleur. Avant tout achat ou toute mise sous tension, faites tout vérifier par un professionnel agréé selon le code électrique local.
+DE: Pädagogische Schätzung aus Ihrer Dimensionierung — kein Ingenieurplan und keine Einkaufsliste. Die Werte für Sicherungen und Kabel setzen Kupfer, eine konservative Strombelastbarkeit und eine kurze Strecke zwischen Batterie und Wechselrichter voraus. Lassen Sie alles vor dem Kauf oder Einschalten von einer zugelassenen Fachkraft anhand der örtlichen Elektrovorschriften prüfen.
+NL: Educatieve schatting op basis van uw dimensioneringsresultaat — geen technisch ontwerp en geen bestellijst. Zekering- en kabelwaarden gaan uit van koper, conservatieve stroomcapaciteit en een korte kabel tussen accu en omvormer. Controleer alles vóór aankoop of inschakeling met een erkende vakman aan de hand van uw lokale elektrische voorschriften.
+AR: تقدير تعليمي مبني على نتيجة تحديد الحجم — وليس تصميمًا هندسيًا ولا قائمة مشتريات. تفترض قيم المصهر والكابل استخدام النحاس، وسعة تيار محافظة، ومسافة قصيرة بين البطارية والعاكس. تحقّق من كل شيء وفق الكود الكهربائي المحلي مع مختص مرخّص قبل شراء أي شيء أو تشغيله.
+
+### assumptionsIntro
+EN: Run a sizing first - every constant used (derates, temperature model, efficiencies, weather data years and source) is listed here.
+ES: Primero ejecuta un dimensionamiento: aquí se enumeran todas las constantes usadas (reducciones, modelo de temperatura, eficiencias, años de datos meteorológicos y fuente).
+PT: Faça primeiro um dimensionamento: todas as constantes usadas (fatores de redução, modelo de temperatura, eficiências, anos e fonte dos dados meteorológicos) estão listadas aqui.
+FR: Lancez d’abord un dimensionnement : toutes les constantes utilisées (déclassements, modèle de température, rendements, années et source des données météo) sont indiquées ici.
+DE: Führen Sie zuerst eine Dimensionierung aus. Alle verwendeten Konstanten (Abminderungen, Temperaturmodell, Wirkungsgrade, Wetterdatenjahre und Quelle) sind hier aufgeführt.
+NL: Voer eerst een dimensionering uit. Alle gebruikte constanten (deratings, temperatuurmodel, rendementen, weerjaren en bron) staan hier vermeld.
+AR: أجرِ حساب تحديد الحجم أولًا — جميع الثوابت المستخدمة (معاملات الخفض، نموذج الحرارة، الكفاءات، سنوات بيانات الطقس ومصدرها) مدرجة هنا.
+
+### partsListIntro
+EN: A reference parts list so you know what the pieces are and roughly what they cost. Nothing here is sold by this site — prices are indicative figures seen on the open market and change constantly.
+ES: Una lista de referencia para que sepas qué piezas componen el sistema y cuánto cuestan aproximadamente. Este sitio no vende nada de lo que aparece aquí; son precios orientativos observados en el mercado abierto y cambian constantemente.
+PT: Uma lista de referência para você conhecer as peças e ter uma ideia de seus custos. Este site não vende nada do que aparece aqui — são preços indicativos observados no mercado aberto e mudam o tempo todo.
+FR: Une liste de référence pour connaître les éléments du système et leur coût approximatif. Rien de ce qui figure ici n’est vendu par ce site ; les prix sont indicatifs, observés sur le marché libre et changent constamment.
+DE: Eine Referenzliste, damit Sie wissen, aus welchen Teilen das System besteht und was sie ungefähr kosten. Nichts davon wird auf dieser Website verkauft — die Richtpreise stammen aus dem freien Markt und ändern sich laufend.
+NL: Een referentielijst met onderdelen zodat u weet welke stukken nodig zijn en ongeveer wat ze kosten. Deze site verkoopt niets; het zijn indicatieve prijzen van de open markt die voortdurend veranderen.
+AR: قائمة مرجعية توضّح مكوّنات النظام وتكلفتها التقريبية. لا يبيع هذا الموقع أيًا مما ورد هنا؛ فالأسعار استرشادية مأخوذة من السوق المفتوحة وتتغير باستمرار.
+
+### lfpCells
+EN: Brand new Grade-A prismatic LFP cells. 16S configuration per pack (51.2V nominal).
+ES: Celdas prismáticas LFP nuevas, grado A. Configuración 16S por paquete (51.2 V nominales).
+PT: Células prismáticas LFP novas, grau A. Configuração 16S por conjunto (51.2 V nominais).
+FR: Cellules LFP prismatiques neuves de grade A. Configuration 16S par bloc (51.2 V nominaux).
+DE: Fabrikneue prismatische LFP-Zellen der Güteklasse A. Konfiguration 16S je Pack (51.2 V nominal).
+NL: Gloednieuwe prismatische LFP-cellen van kwaliteitsklasse A. 16S-configuratie per pakket (nominaal 51,2 V).
+AR: خلايا LFP منشورية جديدة من الدرجة A. تكوين 16S لكل حزمة (51.2 V اسميًا).
+
+### batteryManagementSpec
+EN: Smart active balancing (2A balance current), dual temperature probes, RS485/CANbus comms with Sol-Ark & Victron.
+ES: Balanceo activo inteligente (corriente de balanceo de 2 A), dos sondas de temperatura y comunicaciones RS485/CANbus con Sol-Ark y Victron.
+PT: Balanceamento ativo inteligente (corrente de balanceamento de 2 A), duas sondas de temperatura e comunicação RS485/CANbus com Sol-Ark e Victron.
+FR: Équilibrage actif intelligent (courant d’équilibrage de 2 A), deux sondes de température et communications RS485/CANbus avec Sol-Ark et Victron.
+DE: Intelligenter aktiver Zellenausgleich (Ausgleichsstrom 2 A), zwei Temperaturfühler und RS485/CANbus-Kommunikation mit Sol-Ark und Victron.
+NL: Slimme actieve balancering (balanceerstroom 2 A), twee temperatuursensoren en RS485/CANbus-communicatie met Sol-Ark en Victron.
+AR: موازنة نشطة ذكية (تيار موازنة 2 A)، ومجسّا حرارة، واتصالات RS485/CANbus مع Sol-Ark وVictron.
+
+### breakerSpec
+EN: 20kA AIC interrupt rating @ 160V DC. Clears very high short-circuit DC currents in milliseconds — sized to protect the BMS and wiring.
+ES: Capacidad de interrupción AIC de 20 kA a 160 V CC. Interrumpe corrientes de cortocircuito CC muy altas en milisegundos; está dimensionado para proteger el BMS y el cableado.
+PT: Capacidade de interrupção AIC de 20 kA a 160 V CC. Interrompe correntes de curto-circuito CC muito altas em milissegundos — dimensionado para proteger o BMS e a fiação.
+FR: Pouvoir de coupure AIC de 20 kA à 160 V CC. Coupe en quelques millisecondes les très forts courants de court-circuit CC ; dimensionné pour protéger le BMS et le câblage.
+DE: AIC-Ausschaltvermögen 20 kA bei 160 V DC. Unterbricht sehr hohe DC-Kurzschlussströme in Millisekunden — zum Schutz von BMS und Verkabelung dimensioniert.
+NL: Onderbrekingsvermogen 20 kA AIC bij 160 V DC. Onderbreekt zeer hoge DC-kortsluitstromen in milliseconden — ontworpen om BMS en bedrading te beschermen.
+AR: قدرة فصل AIC تبلغ 20 kA عند 160 V DC. يفصل تيارات قصر DC العالية جدًا خلال أجزاء من الثانية — ومصمم لحماية BMS والأسلاك.
+
+### endplateSpec
+EN: Belleville spring washer endplates hold uniform compression (about 3,000 N). Manufacturers cite cycle-life benefits; treat specific gains as unverified.
+ES: Las placas terminales con arandelas elásticas Belleville mantienen una compresión uniforme (unos 3,000 N). Los fabricantes citan beneficios para la vida útil en ciclos; considera no verificadas las mejoras concretas.
+PT: Placas terminais com arruelas Belleville mantêm uma compressão uniforme (cerca de 3,000 N). Fabricantes citam benefícios para a vida útil em ciclos; trate ganhos específicos como não verificados.
+FR: Les plaques d’extrémité avec rondelles Belleville maintiennent une compression uniforme (environ 3,000 N). Les fabricants citent des gains de durée de vie en cycles ; considérez les gains précis comme non vérifiés.
+DE: Endplatten mit Belleville-Federscheiben halten eine gleichmäßige Kompression aufrecht (etwa 3,000 N). Hersteller nennen Vorteile für die Zyklenlebensdauer; konkrete Verbesserungen gelten als nicht verifiziert.
+NL: Eindplaten met schotelveren zorgen voor gelijkmatige compressie (ongeveer 3.000 N). Fabrikanten noemen voordelen voor de levensduur; specifieke winst moet als niet-geverifieerd worden beschouwd.
+AR: تحافظ الألواح الطرفية ذات الغسالات الزنبركية Belleville على ضغط متساوٍ (نحو 3,000 N). يذكر المصنعون فوائد لعمر الدورات؛ وتعامل مع أي مكاسب محددة على أنها غير موثقة.
+
+### faqIntro
+EN: Short answers to what people ask most. The AI advisor can go deeper on any of these.
+ES: Respuestas breves a las preguntas más frecuentes. El asesor de IA puede profundizar en cualquiera de ellas.
+PT: Respostas breves às perguntas mais comuns. O consultor de IA pode explicar qualquer uma delas em mais detalhes.
+FR: Des réponses courtes aux questions les plus fréquentes. Le conseiller IA peut approfondir chacune d’elles.
+DE: Kurze Antworten auf häufige Fragen. Der KI-Berater kann jede davon ausführlicher erklären.
+NL: Korte antwoorden op veelgestelde vragen. De AI-adviseur kan hierover verder uitleg geven.
+AR: إجابات قصيرة عن أكثر الأسئلة شيوعًا. ويمكن لمستشار الذكاء الاصطناعي التوسع في أي منها.
+
+### estimateMethodDisclaimer
+EN: Every number comes from testable code simulating your exact location against five years of NASA satellite weather - not an AI guessing. Real-world results still vary with shading, installation quality, and hardware, so have a licensed professional verify anything you build.
+ES: Cada cifra procede de código comprobable que simula tu ubicación exacta con cinco años de datos meteorológicos satelitales de NASA; no es una conjetura de IA. Los resultados reales también varían según la sombra, la calidad de la instalación y los equipos; pide a un profesional autorizado que verifique cualquier sistema que construyas.
+PT: Cada número vem de código testável que simula sua localização exata com cinco anos de dados meteorológicos de satélite da NASA — não de um palpite de IA. Os resultados reais também variam conforme sombra, qualidade da instalação e equipamentos; peça a um profissional habilitado que verifique qualquer sistema que você construir.
+FR: Chaque chiffre provient d’un code vérifiable qui simule votre emplacement exact à partir de cinq ans de données météo satellitaires de la NASA — ce n’est pas une supposition de l’IA. Les résultats réels varient aussi selon l’ombrage, la qualité de l’installation et le matériel ; faites vérifier tout système que vous construisez par un professionnel agréé.
+DE: Jede Zahl stammt aus prüfbarem Code, der Ihren genauen Standort mit fünf Jahren NASA-Satellitenwetterdaten simuliert — sie ist keine KI-Schätzung. Reale Ergebnisse hängen auch von Verschattung, Installationsqualität und Geräten ab. Lassen Sie jedes gebaute System von einer zugelassenen Fachkraft prüfen.
+NL: Elk getal komt uit testbare code die uw exacte locatie doorrekent met vijf jaar satellietweer van NASA — het is geen AI-gok. Resultaten in de praktijk variëren nog steeds door schaduw, installatiekwaliteit en hardware. Laat alles wat u bouwt door een erkende vakman controleren.
+AR: يأتي كل رقم من كود قابل للاختبار يحاكي موقعك الدقيق باستخدام خمس سنوات من بيانات الطقس عبر أقمار ناسا — وليس من تخمين الذكاء الاصطناعي. تختلف النتائج الواقعية أيضًا حسب الظلال وجودة التركيب والمعدات؛ لذا اطلب من مختص مرخّص التحقق من أي نظام تبنيه.
+
+### paybackClaim
+EN: Where grid power is expensive - Hawaii, islands, much of Europe, Africa, South Asia - properly built solar plus storage commonly repays its component cost in one to four years, then runs nearly free for decades. The calculator shows your personal payback from your own tariff.
+ES: Donde la electricidad de la red es cara —Hawái, las islas y gran parte de Europa, África y el sur de Asia—, una instalación solar con almacenamiento bien construida suele recuperar el costo de sus componentes en uno a cuatro años y luego funcionar casi gratis durante décadas. La calculadora muestra tu amortización personal según tu propia tarifa.
+PT: Onde a energia da rede é cara — Havaí, ilhas e grande parte da Europa, África e Sul da Ásia — um sistema solar com armazenamento bem construído costuma recuperar o custo dos componentes em um a quatro anos e depois funcionar quase de graça por décadas. A calculadora mostra seu retorno pessoal com base na sua tarifa.
+FR: Là où l’électricité du réseau coûte cher — à Hawaï, dans les îles et dans une grande partie de l’Europe, de l’Afrique et de l’Asie du Sud — une installation solaire avec stockage correctement construite rembourse souvent le coût de ses composants en un à quatre ans, puis fonctionne presque gratuitement pendant des décennies. Le calculateur indique votre propre délai selon votre tarif.
+DE: Wo Netzstrom teuer ist — etwa auf Hawaii und anderen Inseln sowie in großen Teilen Europas, Afrikas und Südasiens — amortisiert eine fachgerecht gebaute Solaranlage mit Speicher ihre Komponenten häufig in ein bis vier Jahren und läuft danach jahrzehntelang fast kostenlos. Der Rechner zeigt Ihre persönliche Amortisation auf Grundlage Ihres Tarifs.
+NL: Waar netstroom duur is — Hawaï, eilanden, grote delen van Europa, Afrika en Zuid-Azië — verdient goed gebouwde zonne-energie met opslag de kosten van de onderdelen vaak in één tot vier jaar terug en draait daarna tientallen jaren bijna gratis. De calculator berekent uw persoonlijke terugverdientijd op basis van uw eigen tarief.
+AR: في الأماكن التي ترتفع فيها تكلفة كهرباء الشبكة — هاواي والجزر وأجزاء واسعة من أوروبا وأفريقيا وجنوب آسيا — غالبًا ما يسترد نظام شمسي مع تخزين، مبني بشكل صحيح، تكلفة مكوّناته خلال سنة إلى أربع سنوات، ثم يعمل بتكلفة شبه معدومة لعقود. تعرض الحاسبة فترة الاسترداد الخاصة بك وفق تعرفة الكهرباء لديك.
+
+### batteryCostClaim
+EN: Battery banks self-built from prismatic cells typically land around $80–125 per usable kWh shipped and duty-paid; budget retail packs run roughly $110–165. Panels add about $0.16–0.38 per watt. Every result states its price scope honestly.
+ES: Los bancos de baterías construidos por cuenta propia con celdas prismáticas suelen costar entre $80 y $125 por kWh útil, con envío y aranceles pagados; los paquetes económicos de venta minorista cuestan aproximadamente entre $110 y $165. Los paneles añaden unos $0.16–0.38 por vatio. Cada resultado indica con honestidad qué incluye el precio.
+PT: Bancos de baterias montados por conta própria com células prismáticas costumam custar de $80 a $125 por kWh utilizável, já com frete e impostos de importação; conjuntos econômicos de varejo ficam em torno de $110–165. Os painéis acrescentam cerca de $0.16–0.38 por watt. Cada resultado informa com honestidade o que o preço inclui.
+FR: Les batteries assemblées soi-même à partir de cellules prismatiques coûtent généralement $80–125 par kWh utilisable, livraison et droits acquittés ; les packs de détail économiques coûtent environ $110–165. Les panneaux ajoutent environ $0.16–0.38 par watt. Chaque résultat précise honnêtement le périmètre du prix.
+DE: Selbst gebaute Batteriespeicher aus prismatischen Zellen kosten meist etwa $80–125 je nutzbarer kWh einschließlich Versand und entrichteter Einfuhrabgaben; günstige Handelspacks liegen ungefähr bei $110–165. Module kommen mit etwa $0.16–0.38 je Watt hinzu. Jedes Ergebnis weist den Preisumfang transparent aus.
+NL: Accubanken die zelf uit prismatische cellen worden gebouwd, komen doorgaans uit op ongeveer $80–125 per bruikbare kWh, inclusief verzending en invoerrechten; budgetpakketten in de detailhandel kosten ongeveer $110–165. Panelen voegen circa $0,16–0,38 per watt toe. Elk resultaat vermeldt de prijsscope.
+AR: تبلغ تكلفة حزم البطاريات التي تُجمع ذاتيًا من خلايا منشورية عادةً $80–125 لكل kWh قابل للاستخدام، شاملة الشحن والرسوم الجمركية المدفوعة؛ أما الحزم التجارية الاقتصادية فتبلغ نحو $110–165. وتضيف الألواح نحو $0.16–0.38 لكل واط. توضح كل نتيجة نطاق السعر بصدق.
+
+### offgridTradeoff
+EN: Only if you want near-total independence through weeks of bad weather. The three off-grid options show exactly that trade-off: one never needs a generator, one needs it about a day a year, one only now and then. Grid-connected users skip this entirely.
+ES: Solo si quieres una independencia casi total durante semanas de mal tiempo. Las tres opciones aisladas de la red muestran exactamente esa compensación: una nunca necesita generador, otra lo necesita aproximadamente un día al año y la tercera solo de vez en cuando. Si sigues conectado a la red, puedes omitir esto.
+PT: Somente se você quiser quase total independência durante semanas de mau tempo. As três opções fora da rede mostram exatamente essa troca: uma nunca precisa de gerador, outra precisa dele cerca de um dia por ano e a terceira apenas de vez em quando. Quem continua conectado à rede pode ignorar isso.
+FR: Uniquement si vous recherchez une quasi-autonomie pendant plusieurs semaines de mauvais temps. Les trois options hors réseau montrent précisément ce compromis : l’une n’a jamais besoin d’un groupe électrogène, l’autre en a besoin environ un jour par an, la dernière seulement de temps à autre. Les utilisateurs raccordés au réseau peuvent ignorer cette option.
+DE: Nur wenn Sie während wochenlangen Schlechtwetters nahezu vollständig unabhängig sein möchten. Die drei netzfernen Optionen zeigen genau diesen Zielkonflikt: Eine benötigt nie einen Generator, eine braucht ihn ungefähr einen Tag pro Jahr, die dritte nur gelegentlich. Wer am Stromnetz bleibt, kann dies überspringen.
+NL: Alleen als u vrijwel volledige onafhankelijkheid wilt tijdens weken met slecht weer. De drie off-gridopties tonen die afweging: één heeft nooit een generator nodig, één ongeveer één dag per jaar en één slechts af en toe. Netgekoppelde gebruikers slaan dit helemaal over.
+AR: فقط إذا كنت تريد استقلالًا شبه كامل خلال أسابيع الطقس السيئ. تعرض الخيارات الثلاثة خارج الشبكة هذه المقايضة بوضوح: أحدها لا يحتاج إلى مولد مطلقًا، والثاني يحتاج إليه نحو يوم في السنة، والثالث من حين إلى آخر فقط. يمكن لمن يبقى متصلًا بالشبكة تخطي ذلك.
+
+### offlineFallback
+EN: Yes. After your first visit the tool installs itself as an offline app: sizing math runs entirely in your browser, and if the network is down it falls back to bundled typical-year weather for the nearest of 66 reference cities.
+ES: Sí. Después de tu primera visita, la herramienta se instala como una aplicación sin conexión: los cálculos se ejecutan por completo en tu navegador y, si no hay red, usa datos meteorológicos típicos de un año incluidos para la más cercana de 66 ciudades de referencia.
+PT: Sim. Depois da primeira visita, a ferramenta se instala como um aplicativo offline: os cálculos de dimensionamento rodam inteiramente no navegador e, se a rede cair, usam dados meteorológicos típicos de um ano incluídos para a mais próxima das 66 cidades de referência.
+FR: Oui. Après votre première visite, l’outil s’installe comme application hors ligne : les calculs de dimensionnement s’exécutent entièrement dans votre navigateur et, si le réseau tombe, utilisent les données météo typiques d’une année incluses pour la plus proche des 66 villes de référence.
+DE: Ja. Nach Ihrem ersten Besuch installiert sich das Werkzeug als Offline-App: Die Berechnungen laufen vollständig im Browser. Bei einem Netzausfall werden mitgelieferte typische Wetterdaten für die nächstgelegene von 66 Referenzstädten verwendet.
+NL: Ja. Na uw eerste bezoek installeert het hulpmiddel zichzelf als offline-app: de dimensioneringsberekening draait volledig in uw browser. Als het netwerk uitvalt, gebruikt het de meegeleverde weersgegevens voor een normaal jaar van de dichtstbijzijnde van 66 referentiesteden.
+AR: نعم. بعد زيارتك الأولى، تثبّت الأداة نفسها كتطبيق يعمل دون اتصال: تُجرى حسابات تحديد الحجم بالكامل في المتصفح، وعند انقطاع الشبكة تستخدم بيانات طقس نموذجية لسنة واحدة المضمّنة لأقرب مدينة من 66 مدينة مرجعية.
+
+### batterySafety
+EN: It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. The guides here insist on proper fusing, BMS use, and code compliance - and on having a licensed electrician check anything before you energize it.
+ES: Hay que tratarlo con respeto: las celdas de litio almacenan energía suficiente para iniciar incendios y los arcos de CC no se apagan solos. Estas guías insisten en instalar fusibles adecuados, usar un BMS y cumplir el código, y en que un electricista autorizado revise todo antes de energizarlo.
+PT: É preciso ter respeito: células de lítio armazenam energia suficiente para iniciar incêndios, e arcos CC não se desligam sozinhos. Estas orientações exigem fusíveis adequados, uso de BMS e cumprimento do código, além de uma inspeção por eletricista habilitado antes de energizar o sistema.
+FR: La prudence s’impose : les cellules au lithium stockent assez d’énergie pour déclencher un incendie et les arcs CC ne s’éteignent pas seuls. Ces guides exigent des fusibles adaptés, un BMS et le respect des normes, ainsi qu’un contrôle par un électricien agréé avant toute mise sous tension.
+DE: Das erfordert Respekt: Lithiumzellen speichern genug Energie, um Brände auszulösen, und DC-Lichtbögen schalten sich nicht von selbst ab. Die Anleitungen bestehen auf geeigneten Sicherungen, einem BMS und der Einhaltung der Vorschriften. Vor dem Einschalten soll eine zugelassene Elektrofachkraft alles prüfen.
+NL: Dit vereist respect voor de risico's: lithiumcellen slaan genoeg energie op om brand te veroorzaken en een DC-vlamboog dooft niet vanzelf. De handleidingen hier benadrukken correcte zekeringen, gebruik van een BMS en naleving van voorschriften. Laat alles vóór het inschakelen controleren door een erkend elektricien.
+AR: يتطلب الأمر احترامًا وحذرًا: تخزّن خلايا الليثيوم طاقة كافية لبدء حريق، ولا تنطفئ أقواس التيار المستمر تلقائيًا. تشدد الأدلة هنا على استخدام المصاهر المناسبة وBMS والامتثال للكود، وعلى فحص كهربائي مرخّص لكل شيء قبل تشغيله.
+
+### donationIntro
+EN: This is free and always will be. If it helped you and you want to chip in toward the AI and hosting costs, here's where.
+ES: Es gratis y siempre lo será. Si te ayudó y quieres aportar algo a los costos de IA y alojamiento, aquí puedes hacerlo.
+PT: É gratuito e sempre será. Se ajudou você e quiser contribuir com os custos de IA e hospedagem, pode fazer isso aqui.
+FR: C’est gratuit et cela le restera. Si cet outil vous a aidé et que vous souhaitez contribuer aux frais d’IA et d’hébergement, vous pouvez le faire ici.
+DE: Das Werkzeug ist kostenlos und bleibt es auch. Wenn es Ihnen geholfen hat und Sie etwas zu den KI- und Hostingkosten beitragen möchten, können Sie das hier tun.
+NL: Deze dienst is en blijft gratis. Als u er baat bij had en wilt bijdragen aan de kosten van AI en hosting, vindt u hier hoe.
+AR: هذه الأداة مجانية وستبقى كذلك. إذا أفادتك وأردت المساهمة في تكاليف الذكاء الاصطناعي والاستضافة، فإليك الطريقة.
+
+### donationRecipientPrefix
+EN: Contributions go directly to
+ES: Las contribuciones se entregan directamente a
+PT: As contribuições vão diretamente para
+FR: Les contributions vont directement à
+DE: Beiträge gehen direkt an
+NL: Bijdragen gaan rechtstreeks naar
+AR: تذهب المساهمات مباشرة إلى
+
+### donationRecipientSuffix
+EN: personally.
+ES: en persona.
+PT: pessoalmente.
+FR: en personne.
+DE: persönlich.
+NL: persoonlijk.
+AR: شخصيًا.
+
+### donationTerms
+EN: Please read before sending anything. Contributions are voluntary gifts to an individual, not payment for a service. They are not tax-deductible — this is not a charity or a registered nonprofit. They buy nothing: no priority, no features, no personal advice, no support obligation, and no continued availability of this site. Everyone gets exactly the same free tool whether they contribute or not. Please don't send money you need. If you were hoping to pay for professional engineering help, spend it on a licensed local engineer or electrician instead — that is genuinely the better use of it.
+ES: Lee esto antes de enviar nada. Las contribuciones son regalos voluntarios a una persona, no el pago de un servicio. No son deducibles de impuestos; esto no es una organización benéfica ni una entidad sin fines de lucro registrada. No compran nada: ni prioridad, ni funciones, ni asesoría personal, ni obligación de soporte, ni la disponibilidad futura de este sitio. Todas las personas reciben exactamente la misma herramienta gratuita, contribuyan o no. No envíes dinero que necesites. Si querías pagar por ayuda de ingeniería profesional, es mejor gastarlo en un ingeniero o electricista local autorizado.
+PT: Leia antes de enviar qualquer valor. As contribuições são doações voluntárias a uma pessoa, não pagamento por um serviço. Não são dedutíveis do imposto; isto não é uma instituição de caridade nem uma organização sem fins lucrativos registrada. Elas não compram nada: prioridade, recursos, aconselhamento pessoal, obrigação de suporte ou disponibilidade contínua deste site. Todos recebem exatamente a mesma ferramenta gratuita, contribuam ou não. Não envie dinheiro de que você precise. Se queria pagar por ajuda profissional de engenharia, é melhor contratar um engenheiro ou eletricista local habilitado.
+FR: Veuillez lire avant tout envoi. Les contributions sont des dons volontaires à une personne, et non le paiement d’un service. Elles ne sont pas déductibles des impôts ; il ne s’agit ni d’une œuvre caritative ni d’un organisme sans but lucratif enregistré. Elles n’achètent rien : ni priorité, ni fonctionnalité, ni conseil personnalisé, ni obligation d’assistance, ni disponibilité continue de ce site. Tout le monde reçoit exactement le même outil gratuit, avec ou sans contribution. N’envoyez pas d’argent dont vous avez besoin. Si vous vouliez payer une aide professionnelle en ingénierie, adressez-vous plutôt à un ingénieur ou à un électricien agréé près de chez vous.
+DE: Bitte lesen Sie dies, bevor Sie etwas senden. Beiträge sind freiwillige Geschenke an eine Privatperson und keine Zahlung für eine Dienstleistung. Sie sind nicht steuerlich absetzbar — dies ist weder eine Wohltätigkeitsorganisation noch eine eingetragene gemeinnützige Organisation. Sie kaufen nichts: keine Priorität, Funktionen, persönliche Beratung, Supportpflicht oder fortgesetzte Verfügbarkeit dieser Website. Alle erhalten genau dasselbe kostenlose Werkzeug, unabhängig von einem Beitrag. Senden Sie kein Geld, das Sie benötigen. Für professionelle Ingenieurhilfe wenden Sie sich stattdessen an einen zugelassenen Ingenieur oder Elektriker vor Ort.
+NL: Lees dit voordat u iets overmaakt. Bijdragen zijn vrijwillige giften aan een persoon, geen betaling voor een dienst. Ze zijn niet aftrekbaar van de belasting — dit is geen liefdadigheidsinstelling of geregistreerde non-profitorganisatie. Ze kopen niets: geen voorrang, functies, persoonlijk advies, supportverplichting of gegarandeerde beschikbaarheid van deze site. Iedereen krijgt precies hetzelfde gratis hulpmiddel, ongeacht of men bijdraagt. Stuur geen geld dat u nodig heeft. Als u professionele technische hulp wilde betalen, besteed het dan aan een erkende lokale engineer of elektricien; dat is een betere besteding.
+AR: يرجى القراءة قبل إرسال أي مبلغ. المساهمات هدايا طوعية لفرد وليست مقابل خدمة. وهي غير قابلة للخصم الضريبي؛ فهذا ليس عملًا خيريًا ولا مؤسسة غير ربحية مسجلة. لا تشتري أي شيء: لا أولوية ولا ميزات ولا نصيحة شخصية ولا التزام دعم ولا ضمان استمرار هذا الموقع. يحصل الجميع على الأداة المجانية نفسها تمامًا سواء ساهموا أم لا. لا ترسل مالًا تحتاج إليه. وإذا كنت تريد دفع تكلفة مساعدة هندسية مهنية، فالأفضل إنفاقه لدى مهندس أو كهربائي محلي مرخّص.
+
+### freeToolDisclaimer
+EN: Short version: this is a free educational toy that produces rough estimates, run by one person, with no warranty of any kind.
+ES: En resumen: es una herramienta educativa gratuita que ofrece estimaciones aproximadas, gestionada por una persona y sin garantía de ningún tipo.
+PT: Em resumo: é uma ferramenta educativa gratuita que fornece estimativas aproximadas, administrada por uma pessoa e sem garantia de qualquer tipo.
+FR: En bref : c’est un outil pédagogique gratuit qui fournit des estimations approximatives, géré par une personne et sans aucune garantie.
+DE: Kurz gesagt: Dies ist ein kostenloses Lernwerkzeug einer einzelnen Person, das grobe Schätzungen liefert und keinerlei Gewährleistung bietet.
+NL: Kort gezegd: dit is een gratis educatief hulpmiddel dat grove schattingen maakt, door één persoon wordt beheerd en zonder enige garantie wordt aangeboden.
+AR: باختصار: هذه أداة تعليمية مجانية يقدمها شخص واحد، وتنتج تقديرات تقريبية من دون أي ضمان من أي نوع.
+
+### resultEstimateDisclaimer
+EN: Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.
+ES: El resultado es una estimación educativa automatizada. No es un trabajo de ingeniería, un diseño visado, un presupuesto ni una certificación de seguridad. Puede ser incorrecto. Antes de construir o energizar un sistema real, pide a un electricista o ingeniero autorizado que lo revise.
+PT: O resultado é uma estimativa educativa automatizada. Não é engenharia, projeto assinado, orçamento nem certificação de segurança. Pode estar errado. Antes de construir ou energizar um sistema real, peça a um eletricista ou engenheiro habilitado que o revise.
+FR: Le résultat est une estimation pédagogique automatisée. Ce n’est ni une étude d’ingénierie, ni un plan signé, ni un devis, ni une certification de sécurité. Il peut être erroné. Avant de construire ou de mettre sous tension un système réel, faites-le vérifier par un ingénieur ou un électricien agréé.
+DE: Die Ausgabe ist eine automatisierte Lernschätzung. Sie ist weder Ingenieurarbeit noch ein genehmigter Entwurf, ein Angebot oder eine Sicherheitszertifizierung. Sie kann falsch sein. Lassen Sie ein reales System vor dem Bau oder Einschalten von einem zugelassenen Elektriker oder Ingenieur prüfen.
+NL: De uitvoer is een geautomatiseerde educatieve schatting. Het is geen technisch ontwerp, geen gewaarmerkt plan, geen offerte en geen veiligheidscertificaat. De uitkomst kan onjuist zijn. Laat elk echt systeem vóór de bouw of ingebruikname controleren door een erkende elektricien of engineer.
+AR: المخرجات تقدير تعليمي آلي. وهي ليست عملًا هندسيًا ولا تصميمًا مختومًا ولا عرض سعر ولا شهادة سلامة. وقد تكون خاطئة. اطلب من كهربائي أو مهندس مرخّص مراجعة أي نظام فعلي قبل بنائه أو تشغيله.
+
+### chatPrivacySummary
+EN: No signup, no cookies for advertising, no analytics profile. Your chat text is sent to the AI provider to generate a reply and is not stored here. Don't type anything sensitive into it.
+ES: No hace falta registrarse; no hay cookies publicitarias ni perfil analítico. El texto de tu conversación se envía al proveedor de IA para generar una respuesta y este sitio no lo almacena. No escribas información sensible.
+PT: Não é preciso se cadastrar; não há cookies de publicidade nem perfil analítico. O texto da conversa é enviado ao provedor de IA para gerar uma resposta e não é armazenado aqui. Não digite informações sensíveis.
+FR: Aucune inscription, aucun cookie publicitaire ni profil analytique. Le texte de votre conversation est envoyé au fournisseur d’IA pour générer une réponse et n’est pas conservé ici. N’y saisissez aucune information sensible.
+DE: Keine Anmeldung, keine Werbe-Cookies und kein Analyseprofil. Ihr Chattext wird zur Antwortgenerierung an den KI-Anbieter gesendet und hier nicht gespeichert. Geben Sie keine vertraulichen Informationen ein.
+NL: Geen registratie, geen advertentiecookies en geen analyseprofiel. Uw chattekst wordt naar de AI-provider gestuurd om een antwoord te genereren en wordt hier niet opgeslagen. Typ er geen gevoelige informatie in.
+AR: لا يلزم التسجيل، ولا توجد ملفات تعريف ارتباط إعلانية أو ملفات تحليلية. يُرسل نص محادثتك إلى مزود الذكاء الاصطناعي لإعداد الرد ولا يُخزّن هنا. لا تكتب معلومات حساسة.
+
+### emailWelcome
+EN: You're welcome to email me:
+ES: Puedes escribirme por correo electrónico:
+PT: Fique à vontade para me enviar um e-mail:
+FR: Vous pouvez m’écrire par e-mail :
+DE: Sie können mir gern eine E-Mail schreiben:
+NL: U kunt me mailen:
+AR: يسعدني أن تراسلني عبر البريد الإلكتروني:
+
+### emailSupportExpectations
+EN: This is one person answering email in his own time, as a favor — not a support desk. I read what I can and reply when I'm able, but I can't promise a response or a timeframe. Anything I send back is a friendly opinion for your own further research, not professional engineering, electrical, or financial advice , and it doesn't create any professional relationship or obligation. For anything you're going to actually build, energize, or spend real money on, please talk to a licensed electrician or engineer in your area.
+ES: Soy una sola persona que responde correos en su tiempo libre, como favor; no es un servicio de soporte. Leo lo que puedo y respondo cuando me es posible, pero no puedo prometer una respuesta ni un plazo. Lo que te envíe será una opinión cordial para que sigas investigando, no asesoría profesional de ingeniería, electricidad o finanzas, y no crea una relación ni obligación profesional. Para cualquier cosa que vayas a construir, energizar o pagar con dinero real, consulta a un electricista o ingeniero autorizado de tu zona.
+PT: Sou uma pessoa respondendo e-mails no meu próprio tempo, como um favor — não é uma central de suporte. Leio o que posso e respondo quando consigo, mas não posso prometer resposta nem prazo. O que eu enviar será uma opinião amigável para sua própria pesquisa, não aconselhamento profissional de engenharia, eletricidade ou finanças, e não cria relação nem obrigação profissional. Para qualquer coisa que você realmente vá construir, energizar ou pagar com dinheiro de verdade, converse com um eletricista ou engenheiro habilitado na sua região.
+FR: Je suis une seule personne qui répond aux e-mails sur son temps libre, par gentillesse — ce n’est pas un service d’assistance. Je lis ce que je peux et réponds quand je le peux, sans pouvoir garantir une réponse ni un délai. Mes messages sont des avis amicaux destinés à vos recherches, pas des conseils professionnels en ingénierie, électricité ou finance, et ne créent aucune relation ni obligation professionnelle. Pour tout ce que vous comptez réellement construire, mettre sous tension ou payer, consultez un ingénieur ou un électricien agréé de votre région.
+DE: Ich bin eine einzelne Person, die in der Freizeit und aus Gefälligkeit E-Mails beantwortet — kein Supportteam. Ich lese, was ich kann, und antworte, wenn es möglich ist; eine Antwort oder einen Zeitrahmen kann ich nicht versprechen. Meine Rückmeldung ist eine freundliche Meinung für Ihre weitere Recherche, keine professionelle Beratung zu Ingenieurwesen, Elektrik oder Finanzen und begründet weder ein berufliches Verhältnis noch eine Verpflichtung. Wenn Sie etwas tatsächlich bauen, einschalten oder mit viel Geld bezahlen wollen, wenden Sie sich an einen zugelassenen Elektriker oder Ingenieur in Ihrer Nähe.
+NL: Dit is één persoon die e-mail in zijn eigen tijd beantwoordt, als gunst — geen helpdesk. Ik lees wat ik kan en antwoord wanneer ik daartoe in staat ben, maar ik kan geen antwoord of termijn beloven. Alles wat ik terugstuur is een vriendelijke mening voor uw eigen verdere onderzoek, geen professioneel technisch, elektrisch of financieel advies, en schept geen professionele relatie of verplichting. Praat voor alles wat u echt wilt bouwen, inschakelen of waar u echt geld aan wilt uitgeven met een erkende elektricien of engineer in uw omgeving.
+AR: أنا شخص واحد أجيب عن البريد في وقتي الخاص كمجاملة — ولست مكتب دعم. أقرأ ما أستطيع وأرد عندما يتاح لي ذلك، لكن لا أستطيع ضمان الرد أو موعده. ما أرسله رأي ودي لمساعدتك في بحثك، وليس نصيحة هندسية أو كهربائية أو مالية مهنية، ولا ينشئ علاقة أو التزامًا مهنيًا. لأي شيء تنوي بناءه أو تشغيله أو دفع مال حقيقي مقابله، تحدّث إلى كهربائي أو مهندس مرخّص في منطقتك.
+
+### footerWarranty
+EN: Provided free and as-is, with no warranty of any kind , express or implied. Estimates are educational only and may be inaccurate. Working with batteries, high DC current, and mains wiring can cause fire, serious injury, and death — you are responsible for your own safety, your own decisions, and compliance with your local electrical code. Verify everything with a licensed professional before building. - Blog - Worldwide Benchmarks - Heatmap - About - Terms - Support - lucasballek@gmail.com
+ES: Se ofrece gratis y tal cual, sin garantía de ningún tipo, expresa ni implícita. Las estimaciones son solo educativas y pueden ser inexactas. Trabajar con baterías, alta corriente CC y cableado de red eléctrica puede causar incendios, lesiones graves y la muerte; eres responsable de tu seguridad, tus decisiones y el cumplimiento del código eléctrico local. Verifica todo con un profesional autorizado antes de construir. - Blog - Referencias mundiales - Mapa de calor - Acerca de - Términos - Soporte - lucasballek@gmail.com
+PT: Fornecido gratuitamente e no estado em que se encontra, sem garantia de qualquer tipo, expressa ou implícita. As estimativas são apenas educativas e podem estar incorretas. Trabalhar com baterias, alta corrente CC e fiação da rede elétrica pode causar incêndio, lesões graves e morte — você é responsável pela sua segurança, pelas suas decisões e pelo cumprimento do código elétrico local. Verifique tudo com um profissional habilitado antes de construir. - Blog - Referências mundiais - Mapa de calor - Sobre - Termos - Suporte - lucasballek@gmail.com
+FR: Fourni gratuitement en l’état, sans garantie d’aucune sorte, expresse ou implicite. Les estimations sont uniquement pédagogiques et peuvent être inexactes. Le travail sur des batteries, de forts courants CC et le câblage secteur peut provoquer un incendie, des blessures graves ou la mort — vous êtes responsable de votre sécurité, de vos décisions et du respect du code électrique local. Faites tout vérifier par un professionnel agréé avant de construire. - Blog - Références mondiales - Carte thermique - À propos - Conditions - Assistance - lucasballek@gmail.com
+DE: Kostenlos und wie besehen bereitgestellt, ohne Gewährleistung jeglicher Art, weder ausdrücklich noch stillschweigend. Die Schätzungen dienen nur der Information und können ungenau sein. Arbeiten an Batterien, hohen DC-Strömen und Netzleitungen können Brände, schwere Verletzungen und Tod verursachen — Sie sind für Ihre Sicherheit, Ihre Entscheidungen und die Einhaltung der örtlichen Elektrovorschriften verantwortlich. Lassen Sie vor dem Bau alles von einer zugelassenen Fachkraft prüfen. - Blog - Weltweite Referenzwerte - Heatmap - Über uns - Bedingungen - Support - lucasballek@gmail.com
+NL: Deze site wordt gratis en zonder enige garantie verstrekt, expliciet noch impliciet. Schattingen zijn uitsluitend educatief en kunnen onjuist zijn. Werken met accu's, hoge DC-stromen en netbedrading kan brand, ernstig letsel of overlijden veroorzaken — u bent verantwoordelijk voor uw veiligheid, uw keuzes en naleving van lokale elektrische voorschriften. Laat alles vóór de bouw controleren door een erkende vakman. - Blog - Wereldwijde benchmarks - Wereldkaart - Over - Voorwaarden - Support - lucasballek@gmail.com
+AR: تُقدّم الأداة مجانًا كما هي، من دون أي ضمان صريح أو ضمني. التقديرات تعليمية فقط وقد تكون غير دقيقة. قد يؤدي العمل بالبطاريات والتيارات العالية المستمرة وأسلاك الكهرباء الرئيسية إلى حريق أو إصابة خطيرة أو وفاة — وأنت مسؤول عن سلامتك وقراراتك والامتثال للكود الكهربائي المحلي. تحقّق من كل شيء مع مختص مرخّص قبل البناء. - المدونة - مراجع عالمية - خريطة حرارية - من نحن - الشروط - الدعم - lucasballek@gmail.com
+
+### operatorDescription
+EN: This is a free, personal, non-commercial educational tool operated by an individual, Lucas Ballek. It is not a company, not incorporated, and not a licensed engineering, electrical contracting, or financial advisory practice. Nothing on this site is for sale and no service is being offered or promised to you.
+ES: Esta es una herramienta educativa gratuita, personal y sin fines comerciales, gestionada por una persona, Lucas Ballek. No es una empresa ni una sociedad constituida, ni un despacho autorizado de ingeniería, instalaciones eléctricas o asesoría financiera. Nada de este sitio está a la venta y no se te ofrece ni promete ningún servicio.
+PT: Esta é uma ferramenta educativa gratuita, pessoal e sem fins comerciais, administrada por uma pessoa, Lucas Ballek. Não é uma empresa nem uma sociedade constituída, nem um escritório habilitado de engenharia, instalações elétricas ou consultoria financeira. Nada neste site está à venda e nenhum serviço é oferecido ou prometido a você.
+FR: Cet outil pédagogique est gratuit, personnel et non commercial ; il est exploité par une personne, Lucas Ballek. Ce n’est ni une société ni une entreprise constituée, ni un cabinet agréé d’ingénierie, d’installation électrique ou de conseil financier. Rien sur ce site n’est à vendre et aucun service ne vous est proposé ni promis.
+DE: Dies ist ein kostenloses, persönliches und nicht kommerzielles Lernwerkzeug, betrieben von einer Einzelperson, Lucas Ballek. Es ist weder ein Unternehmen noch eine Kapitalgesellschaft oder ein zugelassenes Ingenieur-, Elektroinstallations- oder Finanzberatungsbüro. Auf dieser Website wird nichts verkauft und Ihnen wird keine Dienstleistung angeboten oder versprochen.
+NL: Dit is een gratis, persoonlijk, niet-commercieel educatief hulpmiddel dat wordt beheerd door een particulier, Lucas Ballek. Het is geen bedrijf, niet opgericht als rechtspersoon en geen erkende ingenieurs-, elektrotechnische of financieel adviespraktijk. Niets op deze site is te koop en er wordt geen dienst aan u aangeboden of beloofd.
+AR: هذه أداة تعليمية مجانية وشخصية وغير تجارية يديرها فرد هو Lucas Ballek. ليست شركة أو كيانًا مسجلًا، ولا ممارسة مرخّصة للهندسة أو المقاولات الكهربائية أو الاستشارات المالية. لا يُباع أي شيء على هذا الموقع، ولا يُعرض عليك أيٌّ من الخدمات أو يُوعَد به.
+
+### independentVerification
+EN: All output is an automated educational estimate produced from assumptions you supply. It is not a design, not a stamped drawing, not a quote, not a safety assessment, and not a code-compliance review. It may contain errors. Do not rely on it. Independently verify every figure — capacity, wire sizing, fuse ratings, and equipment compatibility — with a licensed electrician or professional engineer in your jurisdiction before purchasing, building, or energizing anything.
+ES: Todos los resultados son estimaciones educativas automatizadas basadas en los supuestos que proporcionas. No son un diseño, un plano visado, un presupuesto, una evaluación de seguridad ni una revisión del cumplimiento del código. Pueden contener errores. No te bases en ellos. Antes de comprar, construir o energizar nada, verifica cada cifra por separado —capacidad, dimensionamiento de cables, valores de fusibles y compatibilidad de equipos— con un electricista autorizado o un ingeniero profesional de tu jurisdicción.
+PT: Todos os resultados são estimativas educativas automatizadas, produzidas com base nas premissas que você informa. Não são um projeto, desenho assinado, orçamento, avaliação de segurança nem análise de conformidade com normas. Podem conter erros. Não confie neles. Antes de comprar, construir ou energizar qualquer coisa, verifique cada valor de forma independente — capacidade, dimensionamento dos cabos, classificação dos fusíveis e compatibilidade dos equipamentos — com um eletricista habilitado ou engenheiro profissional da sua jurisdição.
+FR: Tous les résultats sont des estimations pédagogiques automatisées produites à partir des hypothèses que vous fournissez. Ce ne sont ni une conception, ni un plan signé, ni un devis, ni une évaluation de sécurité, ni un contrôle de conformité aux normes. Ils peuvent comporter des erreurs. Ne vous y fiez pas. Avant tout achat, toute construction ou mise sous tension, faites vérifier indépendamment chaque valeur — capacité, dimensionnement des câbles, calibre des fusibles et compatibilité des équipements — par un ingénieur professionnel ou un électricien agréé dans votre juridiction.
+DE: Alle Ausgaben sind automatisierte Lernschätzungen auf Grundlage Ihrer Angaben. Sie sind weder ein Entwurf noch eine genehmigte Zeichnung, ein Angebot, eine Sicherheitsbewertung oder eine Prüfung der Normenkonformität. Sie können Fehler enthalten. Verlassen Sie sich nicht darauf. Prüfen Sie vor Kauf, Bau oder Inbetriebnahme jede Zahl unabhängig — Kapazität, Kabeldimensionierung, Sicherungswerte und Gerätekompatibilität — mit einem zugelassenen Elektriker oder Ingenieur in Ihrem Rechtsgebiet.
+NL: Alle uitvoer is een geautomatiseerde educatieve schatting op basis van de aannames die u opgeeft. Het is geen ontwerp, geen gewaarmerkte tekening, geen offerte, geen veiligheidsbeoordeling en geen toets aan voorschriften. Er kunnen fouten in staan. Vertrouw er niet op. Laat elk cijfer — capaciteit, draaddikte, zekeringwaarden en compatibiliteit van apparatuur — onafhankelijk controleren door een erkende elektricien of professioneel ingenieur in uw rechtsgebied voordat u iets koopt, bouwt of inschakelt.
+AR: جميع المخرجات تقديرات تعليمية آلية مبنية على الافتراضات التي تقدمها. وليست تصميمًا ولا رسمًا مختومًا ولا عرض سعر ولا تقييمًا للسلامة ولا مراجعة للامتثال للكود. وقد تتضمن أخطاء. لا تعتمد عليها. تحقّق بشكل مستقل من كل رقم — السعة ومقاسات الأسلاك وقيم المصاهر وتوافق المعدات — لدى كهربائي مرخّص أو مهندس محترف في نطاقك القضائي قبل الشراء أو البناء أو التشغيل.
+
+### llmDisclaimer
+EN: You are interacting with a large language model. It produces fluent, confident text that can be factually wrong, including specific numbers, prices, product specifications, and regulations. Treat every output as an unverified starting point.
+ES: Estás interactuando con un modelo de lenguaje grande. Produce textos fluidos y seguros de sí mismos que pueden contener errores factuales, incluidos números concretos, precios, especificaciones de productos y normativas. Trata cada respuesta como un punto de partida sin verificar.
+PT: Você está interagindo com um modelo de linguagem grande. Ele produz textos fluentes e confiantes que podem conter erros factuais, inclusive números específicos, preços, especificações de produtos e regulamentos. Trate cada resposta como um ponto de partida não verificado.
+FR: Vous échangez avec un grand modèle de langage. Il produit des textes fluides et assurés qui peuvent être factuellement erronés, y compris sur des nombres précis, des prix, des caractéristiques de produits et des réglementations. Considérez chaque réponse comme un point de départ non vérifié.
+DE: Sie interagieren mit einem großen Sprachmodell. Es erzeugt flüssige, überzeugend klingende Texte, die sachlich falsch sein können, auch bei konkreten Zahlen, Preisen, Produktspezifikationen und Vorschriften. Behandeln Sie jede Antwort als ungeprüften Ausgangspunkt.
+NL: U communiceert met een groot taalmodel. Het produceert vloeiende, zelfverzekerde tekst die feitelijk onjuist kan zijn, ook met specifieke getallen, prijzen, productspecificaties en voorschriften. Behandel elk antwoord als een niet-geverifieerd startpunt.
+AR: أنت تتفاعل مع نموذج لغوي كبير. ينتج نصوصًا سلسة وواثقة قد تكون خاطئة من الناحية الواقعية، بما في ذلك الأرقام المحددة والأسعار ومواصفات المنتجات واللوائح. تعامل مع كل مخرجاته كنقطة بداية غير موثّقة.
+
+### electricalSafetyDisclaimer
+EN: Battery banks, high DC currents, and mains wiring can cause arc flash, electric shock, fire, toxic gas release, serious injury, and death. Lithium cells can enter thermal runaway. You are solely responsible for your own safety and for the safety of anyone affected by what you build. You are solely responsible for permits, inspections, and compliance with your local electrical and fire codes.
+ES: Los bancos de baterías, las corrientes CC altas y el cableado de red pueden causar arco eléctrico, descarga, incendio, liberación de gases tóxicos, lesiones graves y muerte. Las celdas de litio pueden sufrir fuga térmica. Eres el único responsable de tu seguridad y la de cualquier persona afectada por lo que construyas. También eres el único responsable de los permisos, inspecciones y cumplimiento de los códigos eléctricos y contra incendios locales.
+PT: Bancos de baterias, altas correntes CC e fiação da rede elétrica podem causar arco elétrico, choque, incêndio, liberação de gases tóxicos, lesões graves e morte. Células de lítio podem entrar em fuga térmica. Você é o único responsável pela sua segurança e pela segurança de qualquer pessoa afetada pelo que construir. Também é o único responsável por licenças, inspeções e cumprimento dos códigos elétricos e contra incêndio locais.
+FR: Les batteries, les forts courants CC et le câblage secteur peuvent provoquer un arc électrique, une électrocution, un incendie, un dégagement de gaz toxiques, des blessures graves et la mort. Les cellules au lithium peuvent subir un emballement thermique. Vous êtes seul responsable de votre sécurité et de celle des personnes touchées par vos travaux. Vous êtes aussi seul responsable des permis, inspections et du respect des codes électriques et incendie locaux.
+DE: Batteriespeicher, hohe DC-Ströme und Netzleitungen können Lichtbögen, Stromschläge, Brände, giftige Gase, schwere Verletzungen und Tod verursachen. Lithiumzellen können thermisch durchgehen. Sie sind allein für Ihre Sicherheit und die Sicherheit aller von Ihrem Bau betroffenen Personen verantwortlich. Sie sind ebenfalls allein für Genehmigungen, Prüfungen und die örtlichen Elektro- und Brandschutzvorschriften verantwortlich.
+NL: Accubanken, hoge DC-stromen en netspanningsbedrading kunnen vlamboog, elektrische schokken, brand, giftige gasvorming, ernstig letsel en overlijden veroorzaken. Lithiumcellen kunnen in thermische runaway raken. U bent volledig verantwoordelijk voor uw eigen veiligheid en die van iedereen die door uw bouwproject wordt geraakt. U bent volledig verantwoordelijk voor vergunningen, inspecties en naleving van lokale elektrische en brandvoorschriften.
+AR: قد تتسبب حزم البطاريات والتيارات المستمرة العالية وأسلاك الكهرباء الرئيسية في وميض قوسي وصعق كهربائي وحريق وانبعاث غازات سامة وإصابة خطيرة ووفاة. وقد تدخل خلايا الليثيوم في حالة هروب حراري. أنت وحدك مسؤول عن سلامتك وسلامة كل من يتأثر بما تبنيه. وأنت وحدك مسؤول أيضًا عن التصاريح والفحوص والامتثال للأكواد الكهربائية وأكواد الحريق المحلية.
+
+### siteAsIs
+EN: THIS SITE AND ITS OUTPUT ARE PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, AND NON-INFRINGEMENT. There is no guarantee of availability, correctness, or continued operation, and the site may change or disappear at any time without notice.
+ES: ESTE SITIO Y SUS RESULTADOS SE OFRECEN «TAL CUAL» Y «SEGÚN DISPONIBILIDAD», SIN GARANTÍA DE NINGÚN TIPO, EXPRESA NI IMPLÍCITA, INCLUIDAS, ENTRE OTRAS, LAS GARANTÍAS DE COMERCIABILIDAD, IDONEIDAD PARA UN FIN PARTICULAR, EXACTITUD Y NO INFRACCIÓN. No se garantiza la disponibilidad, exactitud ni continuidad del servicio; el sitio puede cambiar o desaparecer en cualquier momento y sin aviso.
+PT: ESTE SITE E SEUS RESULTADOS SÃO FORNECIDOS "NO ESTADO EM QUE SE ENCONTRAM" E "CONFORME DISPONÍVEIS", SEM GARANTIA DE QUALQUER TIPO, EXPRESSA OU IMPLÍCITA, INCLUINDO, ENTRE OUTRAS, GARANTIAS DE COMERCIABILIDADE, ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA, EXATIDÃO E NÃO VIOLAÇÃO. Não há garantia de disponibilidade, correção ou funcionamento contínuo; o site pode mudar ou desaparecer a qualquer momento, sem aviso.
+FR: CE SITE ET SES RÉSULTATS SONT FOURNIS « EN L’ÉTAT » ET « SELON DISPONIBILITÉ », SANS GARANTIE D’AUCUNE SORTE, EXPRESSE OU IMPLICITE, Y COMPRIS, SANS S’Y LIMITER, LES GARANTIES DE QUALITÉ MARCHANDE, D’ADÉQUATION À UN USAGE PARTICULIER, D’EXACTITUDE ET D’ABSENCE DE CONTREFAÇON. Leur disponibilité, leur exactitude ou leur fonctionnement continu ne sont pas garantis ; le site peut changer ou disparaître à tout moment sans préavis.
+DE: DIESE WEBSITE UND IHRE AUSGABEN WERDEN „WIE BESEHEN“ UND „NACH VERFÜGBARKEIT“ OHNE GEWÄHRLEISTUNG JEGLICHER ART BEREITGESTELLT, WEDER AUSDRÜCKLICH NOCH STILLSCHWEIGEND. DAS UMFASST UNTER ANDEREM GEWÄHRLEISTUNGEN DER MARKTGÄNGIGKEIT, EIGNUNG FÜR EINEN BESTIMMTEN ZWECK, RICHTIGKEIT UND NICHTVERLETZUNG. Verfügbarkeit, Richtigkeit und fortgesetzter Betrieb werden nicht garantiert; die Website kann sich jederzeit ohne Ankündigung ändern oder verschwinden.
+NL: DEZE SITE EN DE UITVOER WORDEN GELEVERD 'ZOALS ZE ZIJN' EN 'ZOALS ZE BESCHIKBAAR ZIJN', ZONDER ENIGE EXPLICIETE OF IMPLICIETE GARANTIE, INCLUSIEF MAAR NIET BEPERKT TOT GARANTIES VAN VERKOOPBAARHEID, GESCHIKTHEID VOOR EEN BEPAALD DOEL, NAUWKEURIGHEID EN NIET-INBREUK. Er is geen garantie op beschikbaarheid, juistheid of voortzetting; de site kan op elk moment zonder kennisgeving veranderen of verdwijnen.
+AR: يُقدَّم هذا الموقع ومخرجاته «كما هي» و«حسب التوفر»، من دون أي ضمان صريح أو ضمني، بما في ذلك على سبيل المثال لا الحصر ضمانات قابلية التسويق والملاءمة لغرض معين والدقة وعدم التعدي. ولا يوجد ضمان للتوفر أو الصحة أو استمرار التشغيل؛ وقد يتغير الموقع أو يختفي في أي وقت دون إشعار.
+
+### liabilityLimitation
+EN: To the fullest extent permitted by applicable law, the operator shall not be liable for any direct, indirect, incidental, consequential, special, or punitive damages — including property damage, fire, personal injury, lost savings, or business interruption — arising from your use of or reliance on this free tool. Some jurisdictions do not allow certain exclusions, in which case they apply only to the extent permitted. Nothing here excludes liability that cannot lawfully be excluded, including liability for death or personal injury caused by negligence, or for fraud.
+ES: En la máxima medida permitida por la ley aplicable, el operador no será responsable de daños directos, indirectos, incidentales, consecuentes, especiales ni punitivos —incluidos daños materiales, incendios, lesiones personales, ahorros perdidos o interrupción del negocio— derivados del uso de esta herramienta gratuita o de la confianza depositada en ella. Algunas jurisdicciones no permiten ciertas exclusiones; en esos casos, solo se aplican en la medida permitida. Nada de lo aquí dispuesto excluye responsabilidades que legalmente no puedan excluirse, incluida la responsabilidad por muerte o lesiones personales causadas por negligencia, o por fraude.
+PT: Na máxima extensão permitida pela lei aplicável, o operador não será responsável por danos diretos, indiretos, incidentais, consequenciais, especiais ou punitivos — incluindo danos materiais, incêndio, lesões pessoais, perda de economias ou interrupção de negócios — decorrentes do uso desta ferramenta gratuita ou da confiança depositada nela. Algumas jurisdições não permitem certas exclusões; nesses casos, elas se aplicam somente na medida permitida. Nada aqui exclui responsabilidade que não possa ser legalmente excluída, incluindo morte ou lesão pessoal causada por negligência, ou fraude.
+FR: Dans toute la mesure permise par le droit applicable, l’exploitant ne pourra être tenu responsable des dommages directs, indirects, accessoires, consécutifs, spéciaux ou punitifs — notamment des dommages matériels, incendies, blessures, économies perdues ou interruptions d’activité — résultant de l’utilisation de cet outil gratuit ou de la confiance qui lui est accordée. Certaines juridictions n’autorisent pas certaines exclusions ; elles ne s’appliquent alors que dans la mesure permise. Rien ici n’exclut une responsabilité qui ne peut légalement l’être, notamment en cas de décès ou de blessure causés par négligence, ou de fraude.
+DE: Soweit nach geltendem Recht zulässig, haftet der Betreiber nicht für direkte, indirekte, beiläufige, Folge-, besondere oder Strafschäden — darunter Sachschäden, Brände, Personenschäden, entgangene Ersparnisse oder Betriebsunterbrechungen — die aus der Nutzung oder dem Vertrauen auf dieses kostenlose Werkzeug entstehen. Manche Rechtsordnungen erlauben bestimmte Ausschlüsse nicht; dort gelten sie nur im zulässigen Umfang. Nichts hierin schließt eine gesetzlich nicht ausschließbare Haftung aus, insbesondere bei Tod oder Körperverletzung durch Fahrlässigkeit oder bei Betrug.
+NL: Voor zover toepasselijk recht dit toestaat, is de beheerder niet aansprakelijk voor directe, indirecte, incidentele, gevolg-, bijzondere of punitieve schade — waaronder zaakschade, brand, persoonlijk letsel, misgelopen besparingen of bedrijfsonderbreking — voortvloeiend uit uw gebruik van of vertrouwen op dit gratis hulpmiddel. Sommige rechtsgebieden staan bepaalde uitsluitingen niet toe; in dat geval gelden ze alleen voor zover toegestaan. Niets sluit aansprakelijkheid uit die wettelijk niet kan worden uitgesloten, waaronder aansprakelijkheid voor overlijden of persoonlijk letsel door nalatigheid of voor fraude.
+AR: إلى أقصى حد يسمح به القانون المعمول به، لا يكون المشغّل مسؤولًا عن أي أضرار مباشرة أو غير مباشرة أو عرضية أو تبعية أو خاصة أو عقابية — بما فيها تلف الممتلكات والحريق والإصابة الشخصية وفقدان المدخرات أو توقف الأعمال — الناشئة عن استخدامك لهذه الأداة المجانية أو اعتمادك عليها. لا تسمح بعض الولايات القضائية باستثناءات معينة، وعندئذ لا تسري إلا بالقدر المسموح به. لا يستثني أي شيء هنا مسؤولية لا يجوز استثناؤها قانونًا، بما في ذلك الوفاة أو الإصابة الشخصية الناتجة عن الإهمال أو الاحتيال.
+
+### donationTermsPrefix
+EN: Any contribution you choose to send is a voluntary gift to an individual. It is
+ES: Cualquier contribución que decidas enviar es un regalo voluntario a una persona. No es
+PT: Qualquer contribuição que você decidir enviar é uma doação voluntária a uma pessoa. Ela não é
+FR: Toute contribution que vous choisissez d’envoyer est un don volontaire à une personne. Elle n’est pas
+DE: Jeder Beitrag, den Sie senden möchten, ist ein freiwilliges Geschenk an eine Privatperson. Er ist nicht
+NL: Elke bijdrage die u kiest te sturen, is een vrijwillige gift aan een persoon. Het is
+AR: أي مساهمة تختار إرسالها هي هدية طوعية لفرد. وهي ليست
+
+### donationNotTaxDeductible
+EN: not tax-deductible
+ES: deducible de impuestos
+PT: dedutível do imposto
+FR: déductible des impôts
+DE: steuerlich absetzbar
+NL: niet aftrekbaar van de belasting
+AR: قابلة للخصم الضريبي
+
+### donationTermsSuffix
+EN: , is not payment for goods or services, creates no contract, entitles you to nothing, and is not refundable in exchange for any obligation. Contributing does not change the service you receive in any way.
+ES: , no es un pago por bienes ni servicios, no crea ningún contrato, no te da derecho a nada y no es reembolsable a cambio de obligación alguna. Contribuir no cambia en absoluto el servicio que recibes.
+PT: , não é pagamento por bens ou serviços, não cria contrato, não dá direito a nada e não é reembolsável em troca de qualquer obrigação. Contribuir não altera de modo algum o serviço que você recebe.
+FR: , ne constitue pas le paiement de biens ou services, ne crée aucun contrat, ne vous donne droit à rien et n’est remboursable en échange d’aucune obligation. Votre contribution ne change en rien le service que vous recevez.
+DE: , keine Zahlung für Waren oder Dienstleistungen, begründet keinen Vertrag, gewährt keinen Anspruch und ist nicht im Austausch gegen irgendeine Verpflichtung erstattbar. Ein Beitrag ändert die erhaltene Leistung in keiner Weise.
+NL: , geen betaling voor goederen of diensten, schept geen overeenkomst, geeft u nergens recht op en is niet terugbetaalbaar in ruil voor enige verplichting. Een bijdrage verandert niets aan de dienst die u ontvangt.
+AR: ، وليست دفعًا مقابل سلع أو خدمات، ولا تنشئ عقدًا أو تمنحك حقًا، ولا تُسترد مقابل أي التزام. ولا تغيّر مساهمتك الخدمة التي تحصل عليها بأي شكل.
+
+### advisorPrivacyDisclosure
+EN: No account is required and no personal details are requested. Text you type into the advisor is transmitted to a third-party AI provider (Groq) in order to generate a reply, subject to their terms. Conversations are not stored by this site. Please do not enter personal, financial, or otherwise sensitive information. Basic request counts may be recorded to keep the service running and prevent abuse.
+ES: No hace falta tener una cuenta ni se solicitan datos personales. El texto que escribes al asesor se transmite a un proveedor de IA externo (Groq) para generar una respuesta, conforme a sus condiciones. Este sitio no almacena las conversaciones. No introduzcas información personal, financiera ni de otro tipo que sea sensible. Es posible que se registren recuentos básicos de solicitudes para mantener el servicio y prevenir abusos.
+PT: Não é necessário ter uma conta e nenhum dado pessoal é solicitado. O texto que você digita para o consultor é transmitido a um provedor de IA terceirizado (Groq) para gerar uma resposta, sujeito aos termos dele. Este site não armazena as conversas. Não informe dados pessoais, financeiros ou qualquer outra informação sensível. Contagens básicas de solicitações podem ser registradas para manter o serviço funcionando e evitar abusos.
+FR: Aucun compte n’est requis et aucune donnée personnelle n’est demandée. Le texte saisi dans le conseiller est transmis à un fournisseur d’IA tiers (Groq) pour générer une réponse, selon ses conditions. Ce site ne conserve pas les conversations. N’y saisissez aucune information personnelle, financière ou autrement sensible. Des compteurs de requêtes de base peuvent être enregistrés pour maintenir le service et prévenir les abus.
+DE: Ein Konto ist nicht erforderlich und persönliche Angaben werden nicht verlangt. Der Text, den Sie dem Berater senden, wird zur Antwortgenerierung gemäß deren Bedingungen an einen externen KI-Anbieter (Groq) übertragen. Diese Website speichert Gespräche nicht. Geben Sie keine persönlichen, finanziellen oder sonstigen vertraulichen Informationen ein. Einfache Anfragezähler können erfasst werden, um den Dienst zu betreiben und Missbrauch zu verhindern.
+NL: U heeft geen account nodig en er wordt niet om persoonlijke gegevens gevraagd. Tekst die u in de adviseur typt, wordt naar een externe AI-provider (Groq) verzonden om een antwoord te genereren, onder diens voorwaarden. Deze site bewaart gesprekken niet. Voer geen persoonlijke, financiële of andere gevoelige informatie in. Eenvoudige aantallen verzoeken kunnen worden vastgelegd om de dienst draaiende te houden en misbruik te voorkomen.
+AR: لا يلزم وجود حساب ولا تُطلب بيانات شخصية. يُنقل النص الذي تكتبه للمستشار إلى مزود ذكاء اصطناعي خارجي (Groq) لإعداد رد، وفقًا لشروطه. لا يخزن هذا الموقع المحادثات. يُرجى عدم إدخال معلومات شخصية أو مالية أو أي معلومات حساسة أخرى. قد تُسجّل أعداد الطلبات الأساسية لتشغيل الخدمة ومنع إساءة الاستخدام.
+
+### rateLimitDisclaimer
+EN: Please don't automate, scrape, or hammer this tool — it is one person paying for the AI calls. Rate limits apply and abuse will be blocked.
+ES: No automatices, raspes ni sobrecargues esta herramienta: una sola persona paga las llamadas a la IA. Hay límites de uso y se bloqueará el abuso.
+PT: Não automatize, raspe nem sobrecarregue esta ferramenta — uma pessoa paga pelas chamadas de IA. Há limites de uso e abusos serão bloqueados.
+FR: N’automatisez pas, ne récupérez pas massivement et ne surchargez pas cet outil — une seule personne paie les appels à l’IA. Des limites de débit s’appliquent et les abus seront bloqués.
+DE: Automatisieren, scrapen oder überlasten Sie dieses Werkzeug nicht — eine einzelne Person bezahlt die KI-Aufrufe. Es gelten Nutzungslimits; Missbrauch wird blockiert.
+NL: Automatiseer of schraap dit hulpmiddel niet en overbelast het niet; één persoon betaalt voor de AI-aanroepen. Er gelden verzoeklimieten en misbruik wordt geblokkeerd.
+AR: لا تؤتمت هذه الأداة أو تكشطها أو تثقلها بالطلبات — فهناك شخص واحد يدفع تكلفة استدعاءات الذكاء الاصطناعي. تُطبّق حدود للاستخدام وسيُحظر إساءة الاستخدام.

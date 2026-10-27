@@ -1,0 +1,361 @@
+{
+ "control": [
+  {
+   "loc": "es",
+   "id": "R164",
+   "key": "cumCostCaptionOwnCostNoPanels",
+   "seed": "figure-drop",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "figure-drop",
+    "note": "cumCostCaptionOwnCostNoPanels: the quoted row label lost its figure -- EN \"Total 20-year cost\" vs es \"Coste total a años\" (also ungrammatical)."
+   }
+  },
+  {
+   "loc": "es",
+   "id": "R253",
+   "key": "frontierVerdictTaperingBattery",
+   "seed": "meaning-drop",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "meaning-drop",
+    "note": "frontierVerdictTaperingBattery: second sentence missing (tail cost {tailCost} and {ratio}x rate never shown)."
+   }
+  },
+  {
+   "loc": "es",
+   "id": "R310",
+   "key": "frontierVerdictTaperingOffgrid",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "es",
+   "id": "R316",
+   "key": "infeasibleNeedsPanelsBody",
+   "seed": "untranslated-english",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "untranslated-english",
+    "note": "infeasibleNeedsPanelsBody: the entire body ships as English in the es column."
+   }
+  },
+  {
+   "loc": "es",
+   "id": "R362",
+   "key": "fuelGalLabel",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "es",
+   "id": "R387",
+   "key": "generatorRuntime0",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "pt",
+   "id": "R036",
+   "key": "roofAreaLabel",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "pt",
+   "id": "R244",
+   "key": "advisorIntakeBillPh",
+   "seed": "meaning-drop",
+   "ok": false,
+   "got": {
+    "verdict": "defect",
+    "class": "figure-drop",
+    "note": "advisorIntakeBillPh: the example figure is gone -- EN 'e.g. 400' vs pt 'ex.'."
+   }
+  },
+  {
+   "loc": "pt",
+   "id": "R255",
+   "key": "frontierLegendCeiling",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "pt",
+   "id": "R307",
+   "key": "cumCostLegendResidual",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "pt",
+   "id": "R352",
+   "key": "quickBillManual",
+   "seed": "untranslated-english",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "untranslated-english",
+    "note": "quickBillManual: the entire string ships as English in the pt column."
+   }
+  },
+  {
+   "loc": "pt",
+   "id": "R471",
+   "key": "cumCostCaptionOwnCost",
+   "seed": "figure-drop",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "figure-drop",
+    "note": "cumCostCaptionOwnCost: the quoted row label lost its figure -- EN \"Total 20-year cost\" vs pt \"Custo total em anos\"."
+   }
+  },
+  {
+   "loc": "fr",
+   "id": "R149",
+   "key": "advisorDegradedRetry",
+   "seed": "untranslated-english",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "untranslated-english",
+    "note": "advisorDegradedRetry: the entire string ships as English in the fr column."
+   }
+  },
+  {
+   "loc": "fr",
+   "id": "R190",
+   "key": "sourcesCardBody",
+   "seed": "meaning-drop",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "meaning-drop",
+    "note": "sourcesCardBody: second sentence missing -- 'Ones we cannot source say so.' never shown."
+   }
+  },
+  {
+   "loc": "fr",
+   "id": "R200",
+   "key": "apKwhDay",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "fr",
+   "id": "R332",
+   "key": "runBtn",
+   "seed": "figure-drop",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "figure-drop",
+    "note": "runBtn: the simulation length lost its figure -- EN '(5-yr simulation)' vs fr '(simulation sur ans)' (also ungrammatical)."
+   }
+  },
+  {
+   "loc": "fr",
+   "id": "R342",
+   "key": "bomSelectedSystem",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "fr",
+   "id": "R414",
+   "key": "estimateMethodDisclaimer",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "de",
+   "id": "R052",
+   "key": "resultsIntro",
+   "seed": "meaning-drop",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "meaning-drop",
+    "note": "resultsIntro: second sentence missing -- the grid-tied bill-reduction vs outage-backup separation is never said."
+   }
+  },
+  {
+   "loc": "de",
+   "id": "R053",
+   "key": "fxAsOfNote",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "de",
+   "id": "R054",
+   "key": "liabilityLimitation",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "de",
+   "id": "R211",
+   "key": "heroIntro",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "de",
+   "id": "R348",
+   "key": "pathsUnknown",
+   "seed": "untranslated-english",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "untranslated-english",
+    "note": "pathsUnknown: 'Unknown' is not a German word -- the de column ships English where 'Unbekannt' belongs."
+   }
+  },
+  {
+   "loc": "de",
+   "id": "R389",
+   "key": "uiInitFailed",
+   "seed": "figure-drop",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "figure-drop",
+    "note": "uiInitFailed: the key-chord lost its figure -- EN '(Ctrl+F5)' vs de '(Strg+F)'."
+   }
+  },
+  {
+   "loc": "nl",
+   "id": "R055",
+   "key": "fxCodeLabel",
+   "seed": "untranslated-english",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "untranslated-english",
+    "note": "fxCodeLabel: the nl column ships English 'Currency code:' where 'Valutacode:' belongs."
+   }
+  },
+  {
+   "loc": "nl",
+   "id": "R195",
+   "key": "locationPrecision",
+   "seed": "meaning-drop",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "meaning-drop",
+    "note": "locationPrecision: final sentence missing -- the custom lat/long and 'Use my precise location' instructions never shown."
+   }
+  },
+  {
+   "loc": "nl",
+   "id": "R227",
+   "key": "simpleHeadline",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "nl",
+   "id": "R252",
+   "key": "frontierVerdictBeyondSweepBattery",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "nl",
+   "id": "R352",
+   "key": "pipelineReaching",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "nl",
+   "id": "R431",
+   "key": "cumCostCaptionOwnCost",
+   "seed": "figure-drop",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "figure-drop",
+    "note": "cumCostCaptionOwnCost: the quoted row label lost its figure -- EN \"Total 20-year cost\" vs nl \"Totale kosten over jaar\" (also unidiomatic)."
+   }
+  },
+  {
+   "loc": "ar",
+   "id": "R034",
+   "key": "pipelineSimulating",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "ar",
+   "id": "R153",
+   "key": "cumSavingsHeadline",
+   "seed": "figure-drop",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "figure-drop",
+    "note": "cumSavingsHeadline: the horizon lost its figure -- EN 'saved over 20 years' vs ar 'توفيرًا على مدى عامًا' (savings over a year), a different claim."
+   }
+  },
+  {
+   "loc": "ar",
+   "id": "R174",
+   "key": "runBtn",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "ar",
+   "id": "R266",
+   "key": "errorSim",
+   "seed": "known-good",
+   "got": null
+  },
+  {
+   "loc": "ar",
+   "id": "R405",
+   "key": "batterySafety",
+   "seed": "untranslated-english",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "untranslated-english",
+    "note": "batterySafety: the entire safety paragraph ships as English in the ar column."
+   }
+  },
+  {
+   "loc": "ar",
+   "id": "R439",
+   "key": "pathsGradeNote",
+   "seed": "meaning-drop",
+   "ok": true,
+   "got": {
+    "verdict": "defect",
+    "class": "meaning-drop",
+    "note": "pathsGradeNote: everything after the first sentence missing -- the hardware/labour/permits split and 'Nothing here is a vendor's quote' never shown."
+   }
+  }
+ ],
+ "real_defects": [],
+ "missed": [
+  {
+   "loc": "pt",
+   "id": "R244",
+   "key": "advisorIntakeBillPh",
+   "seed": "meaning-drop",
+   "got": {
+    "verdict": "defect",
+    "class": "figure-drop",
+    "note": "advisorIntakeBillPh: the example figure is gone -- EN 'e.g. 400' vs pt 'ex.'."
+   }
+  }
+ ],
+ "false_catch": []
+}

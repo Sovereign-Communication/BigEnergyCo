@@ -1,0 +1,494 @@
+### metricTouOffset
+EN: of your peak-window energy run by the battery
+ES: de tu energía en horas punta cubierta por la batería
+PT: da sua energia nas horas de pico coberta pela bateria
+FR: de votre énergie en heures pleines couverte par la batterie
+DE: deiner Energie in den Spitzenstunden, die die Batterie deckt
+NL: van uw piekuren-energie door de accu geleverd
+AR: من طاقتك في ساعات الذروة تغطيها البطارية
+
+### metricOutageCoverage
+EN: of power cuts your essentials ride out for the full target
+ES: de los apagones que lo esencial aguanta el tiempo completo
+PT: dos apagões que o essencial atravessa pelo tempo todo
+FR: des coupures que l'essentiel traverse pendant toute la durée visée
+DE: der Stromausfälle, die dein Nötigstes über die volle Dauer übersteht
+NL: van de stroomuitvallen die uw essentiële apparaten volledig doorstaan
+AR: من انقطاعات الكهرباء التي تصمد الأساسيات خلالها طوال المدة المطلوبة
+
+### metricReserveTradeoff
+EN: what holding a reserve costs, in savings and hours
+ES: lo que cuesta la reserva, en ahorro y horas
+PT: o que custar a reserva, em economia e horas
+FR: ce que coûte la réserve, en économies et en heures
+DE: was die Reserve kostet, in Ersparnis und Stunden
+NL: wat het aanhouden van een reserve kost, in besparing en uren
+AR: تكلفة الاحتفاظ بالهامش، بالوفوفير والساعات
+
+### metricGridIndependence
+EN: of the year running with no grid at all
+ES: del año funcionando sin red
+PT: do ano funcionando sem rede nenhuma
+FR: de l'année fonctionnant sans aucun réseau
+DE: des Jahres ganz ohne Netz
+NL: van het jaar volledig zonder net gedraaid
+AR: من السنة تعمل بلا شبكة إطلاقًا
+
+### metricPortableRuntime
+EN: of days the station runs your devices all day
+ES: de los días que la estación alimenta tus dispositivos todo el día
+PT: dos dias em que a estação alimenta seus aparelhos o dia todo
+FR: des jours où la station alimente vos appareils toute la journée
+DE: der Tage, an denen die Station deine Geräte den ganzen Tag versorgt
+NL: van de dagen dat het station uw apparaten de hele dag laat draaien
+AR: من الأيام التي تغذّي فيها المحطة أجهزتك طوال اليوم
+
+### statusWorks
+EN: Works
+ES: Funciona
+PT: Funciona
+FR: Fonctionne
+DE: Funktioniert
+NL: Werkt
+AR: ينجح
+
+### statusPartial
+EN: Partly
+ES: En parte
+PT: Em parte
+FR: En partie
+DE: Teilweise
+NL: Gedeeltelijk
+AR: جزئيًا
+
+### statusNotHere
+EN: Does not work here
+ES: Aquí no funciona
+PT: Aqui não funciona
+FR: Ne fonctionne pas ici
+DE: Funktioniert hier nicht
+NL: Werkt hier niet
+AR: لا ينجح هنا
+
+### useCaseOutcomeTitle
+EN: Your result: {useCase}
+ES: Tu resultado: {useCase}
+PT: Seu resultado: {useCase}
+FR: Votre résultat : {useCase}
+DE: Dein Ergebnis: {useCase}
+NL: Uw resultaat: {useCase}
+AR: نتيجتك: {useCase}
+
+### useCaseVerdictFooter
+EN: {useCase} — measured from this location's own hourly weather, not an estimate.
+ES: {useCase}: medido con el clima horario de esta ubicación, no es una estimación.
+PT: {useCase}: medido com o clima horário deste local — não é uma estimativa.
+FR: {useCase} : mesuré avec la météo horaire de ce lieu — pas une estimation.
+DE: {useCase}: gemessen mit dem stündlichen Wetter dieses Ortes — keine Schätzung.
+NL: {useCase} — gemeten aan het eigen uurlijkse weer van deze locatie, geen schatting.
+AR: {useCase}: قِيست باستخدام الطقس الساعي لهذا الموقع، وليست تقديرًا.
+
+### useCaseNotMeasured
+EN: Not measured: this combination cannot be sized at all, so there is no number to report here.
+ES: Sin medir: esta combinación no se puede dimensionar, así que no hay ningún número que informar.
+PT: Sem medir: esta combinação não pode ser dimensionada, então não há número a informar.
+FR: Non mesuré : cette combinaison ne peut pas être dimensionnée, il n'y a donc aucun chiffre à annoncer.
+DE: Nicht gemessen: Diese Kombination lässt sich überhaupt nicht auslegen, es gibt also keine Zahl zu nennen.
+NL: Niet gemeten: deze combinatie kan helemaal niet worden gedimensioneerd, dus er is hier geen getal te rapporteren.
+AR: غير مقيس: هذا التركيب لا يمكن تحجيمه أصلًا، فلا يوجد رقم للإبلاغ عنه.
+
+### metricReserveTradeoffValue
+EN: {lost}% of savings, {hours} h of cover
+ES: {lost}% de ahorro, {hours} h de cobertura
+PT: {lost}% de economia, {hours} h de cobertura
+FR: {lost}% d'économies, {hours} h de couverture
+DE: {lost}% Ersparnis, {hours} h Reserve
+NL: {lost}% van de besparing, {hours} u dekking
+AR: {lost}% من الوفر، {hours} ساعة تغطية
+
+### reserveOff
+EN: off
+ES: desactivada
+PT: desativada
+FR: désactivée
+DE: aus
+NL: uit
+AR: موقوف
+
+### touPeakLabel
+EN: Your peak price (per kWh)
+ES: Tu precio en punta (por kWh)
+PT: Seu preço de pico (por kWh)
+FR: Votre prix en heures pleines (par kWh)
+DE: Dein Preis in den Spitzenstunden (pro kWh)
+NL: Uw piekprijs (per kWh)
+AR: سعر الذروة عندك (لكل ك.و.س)
+
+### touOffPeakLabel
+EN: Your off-peak price (per kWh)
+ES: Tu precio fuera de punta (por kWh)
+PT: Seu preço fora do pico (por kWh)
+FR: Votre prix en heures creuses (par kWh)
+DE: Dein Preis außerhalb der Spitzenzeiten (pro kWh)
+NL: Uw dalprijs (per kWh)
+AR: سعر خارج الذروة عندك (لكل ك.و.س)
+
+### touDefaultNote
+EN: We have no published time-of-use schedule for your area, so we prefilled a peak price 60% above and an off-peak price 45% below your flat rate. Change either number if your bill says otherwise — the verdict below uses whatever you enter.
+ES: No tenemos una tarifa horaria publicada para tu zona, así que hemos puesto un precio en punta un 60 % más alto y uno fuera de punta un 45 % más bajo que tu tarifa plana. Cambia cualquiera de los dos si tu factura dice otra cosa: el veredicto usa lo que escribas.
+PT: Não temos uma tarifa horária publicada para sua região, então deixamos um preço de pico 60% maior e um preço fora do pico 45% menor que sua tarifa plana. Mude qualquer um dos dois se a sua conta disser outra coisa: o veredicto usa o que você digitar.
+FR: Nous n'avons pas de grille tarifaire horaire publiée pour votre secteur : nous avons prérempli un prix de pointe supérieur de 60 % et un prix creux inférieur de 45 % à votre tarif forfaitaire. Modifiez l'un ou l'autre si votre facture dit le contraire — le verdict ci-dessous utilise ce que vous saisissez.
+DE: Für deine Region haben wir keine veröffentlichte Zeittarif-Tabelle. Deshalb haben wir einen Spitzenpreis von 60 % über und einen Preis außerhalb der Spitze von 45 % unter deinem Pauschalpreis eingetragen. Ändere beide Werte, wenn deine Rechnung etwas anderes sagt — das Urteil unten nutzt, was du eingibst.
+NL: We hebben geen gepubliceerd piek/dal-tariefschema voor uw regio, dus hebben we een piekprijs 60% boven en een dalprijs 45% onder uw vlakke tarief ingevuld. Wijzig een van beide getallen als uw rekening anders aangeeft — het oordeel hieronder gebruikt wat u invoert.
+AR: لا نملك جدول تعرفة ساعية منشورًا لمنطقتك، لذلك وضعنا سعر ذروة أعلى بنسبة 60٪ وسعرًا خارج الذروة أدنى بنسبة 45٪ من تسعيرتك الثابتة. غيّر أيًّا منهما إن كانت فاتورتك تقول غير ذلك — والحكم أدناه يستخدم ما تكتبه.
+
+### essentialLabel
+EN: What must keep running? (pick any)
+ES: ¿Qué debe seguir funcionando? (elige lo que quieras)
+PT: O que precisa continuar funcionando? (marque o que quiser)
+FR: Qu'est-ce qui doit continuer à fonctionner ? (cochez ce que vous voulez)
+DE: Was muss weiterlaufen? (Auswählen, was passt)
+NL: Wat moet blijven draaien? (kies alles)
+AR: ما الذي يجب أن يبقى يعمل؟ (اختر ما تشاء)
+
+### outageLabel
+EN: How long must it last?
+ES: ¿Cuánto tiempo debe durar?
+PT: Por quanto tempo precisa durar?
+FR: Combien de temps doit tenir ?
+DE: Wie lange muss es durchhalten?
+NL: Hoe lang moet het duren?
+AR: كم يجب أن يصمد؟
+
+### backupRechargeLabel
+EN: Let the panels recharge it during the outage
+ES: Deja que los paneles la recarguen durante el apagón
+PT: Deixe os painéis recarregá-la durante o apagão
+FR: Laissez les panneaux la recharger pendant la coupure
+DE: Die Module dürfen sie während des Ausfalls nachladen
+NL: De panelen het tijdens de uitval laten opladen
+AR: دع الألواح تعيد الشحن أثناء الانقطاع
+
+### reserveLabel
+EN: Emergency reserve held in the battery
+ES: Reserva de emergencia guardada en la batería
+PT: Reserva de emergência guardada na bateria
+FR: Réserve d'urgence conservée dans la batterie
+DE: Notfall-Reservestand in der Batterie
+NL: Noodreserve aangehouden in de accu
+AR: هامش طوارئ محفوظ في البطارية
+
+### portableDeviceLabel
+EN: What are you powering? (pick any)
+ES: ¿Qué vas a alimentar? (elige lo que quieras)
+PT: O que você vai alimentar? (marque o que quiser)
+FR: Qu'alimentez-vous ? (cochez ce que vous voulez)
+DE: Was versorgst du? (Auswählen, was passt)
+NL: Wat voedt u? (kies alles)
+AR: ما الذي ستغذّيه؟ (اختر ما تشاء)
+
+### portableBankLabel
+EN: Power station usable size (kWh)
+ES: Capacidad útil de la estación (kWh)
+PT: Capacidade útil da estação (kWh)
+FR: Capacité utile de la station (kWh)
+DE: Nutzbare Größe der Stromstation (kWh)
+NL: Bruikbare grootte van het powerstation (kWh)
+AR: السعة الفعلية للمحطة (ك.و.س)
+
+### portableShoreLabel
+EN: I can recharge from mains or a vehicle
+ES: Puedo recargar desde la red o desde el vehículo
+PT: Posso recarregar pela rede ou pelo veículo
+FR: Je peux recharger sur le secteur ou depuis le véhicule
+DE: Ich kann am Netz oder am Fahrzeug nachladen
+NL: Ik kan opladen via het net of een voertuig
+AR: أستطيع الشحن من الشبكة أو من المركبة
+
+### generatorRuntimeLabel
+EN: How often may a generator run?
+ES: ¿Con qué frecuencia puede funcionar un generador?
+PT: Com que frequência um gerador pode funcionar?
+FR: À quelle fréquence un groupe électrogène peut-il fonctionner ?
+DE: Wie oft darf ein Generator laufen?
+NL: Hoe vaak mag een generator draaien?
+AR: كم مرة يمكن تشغيل المولد؟
+
+### generatorRuntime0
+EN: 0% — never
+ES: 0% — nunca
+PT: 0% — nunca
+FR: 0% — jamais
+DE: 0% — nie
+NL: 0% — nooit
+AR: 0% — أبداً
+
+### generatorRuntime1
+EN: 1% — a few days a year
+ES: 1% — unos días al año
+PT: 1% — alguns dias por ano
+FR: 1% — quelques jours par an
+DE: 1% — wenige Tage im Jahr
+NL: 1% — enkele dagen per jaar
+AR: 1% — بضعة أيام في السنة
+
+### generatorRuntime2
+EN: 2%+ — fine when needed
+ES: 2%+ — sin problema cuando haga falta
+PT: 2%+ — sem problema quando necessário
+FR: 2%+ — sans problème si besoin
+DE: 2%+ — bei Bedarf kein Problem
+NL: 2%+ — inzetbaar wanneer nodig
+AR: 2%+ — لا مشكلة عند الحاجة
+
+### verdictBillCut
+EN: {status}: this system removes {pct}% of your bill over 20 years.
+ES: {status}: este sistema elimina el {pct}% de tu factura en 20 años.
+PT: {status}: este sistema elimina {pct}% da sua conta em 20 anos.
+FR: {status} : ce système supprime {pct}% de votre facture sur 20 ans.
+DE: {status}: Dieses System spart {pct}% deiner Rechnung über 20 Jahre.
+NL: {status}: dit systeem neemt {pct}% van uw rekening weg over 20 jaar.
+AR: {status}: يزيل هذا النظام {pct}% من فاتورتك على مدى 20 عامًا.
+
+### verdictTou
+EN: {status}: the battery covers {pct}% of your peak-window energy, worth about {saving} over 20 years against a {cost} battery. Your peak-to-off-peak spread here is {spread} per kWh.
+ES: {status}: la batería cubre el {pct}% de tu energía en horas punta, unos {saving} en 20 años frente a una batería de {cost}. Aquí la diferencia entre punta y valle es de {spread} por kWh.
+PT: {status}: a bateria cobre {pct}% da sua energia nas horas de pico, valendo cerca de {saving} em 20 anos contra uma bateria de {cost}. A diferença entre pico e fora do pico aqui é de {spread} por kWh.
+FR: {status} : la batterie couvre {pct}% de votre énergie en heures pleines, soit environ {saving} sur 20 ans face à une batterie de {cost}. L'écart entre pointe et creux ici est de {spread} par kWh.
+DE: {status}: Die Batterie deckt {pct}% deiner Energie in den Spitzenstunden, rund {saving} über 20 Jahre gegen eine {cost}-Batterie. Der Abstand zwischen Spitze und Tal beträgt hier {spread} pro kWh.
+NL: {status}: de accu dekt {pct}% van uw piekuren-energie, ongeveer {saving} waard over 20 jaar tegen een accu van {cost}. Uw piek-dalverschil is hier {spread} per kWh.
+AR: {status}: تغطي البطارية {pct}% من طاقتك في ساعات الذروة، بقيمة نحو {saving} على مدى 20 عامًا مقابل بطارية تكلف {cost}. الفارق بين الذروة وخارج الذروة هنا {spread} لكل ك.و.س.
+
+### verdictBackup
+EN: {status}: your essentials run for the full {targetHours} hours in {pct}% of the power cuts we simulated (typical night: {hours} hours).
+ES: {status}: lo esencial aguanta las {targetHours} horas completas en el {pct}% de los apagones que simulamos (noche típica: {hours} horas).
+PT: {status}: o essencial funciona as {targetHours} horas completas em {pct}% dos apagões que simulamos (noite típica: {hours} horas).
+FR: {status} : l'essentiel tient les {targetHours} heures complètes dans {pct}% des coupures que nous avons simulées (nuit typique : {hours} heures).
+DE: {status}: Dein Nötigstes läuft die vollen {targetHours} Stunden in {pct}% der simulierten Stromausfälle (typische Nacht: {hours} Stunden).
+NL: {status}: uw essentiële apparaten draaien de volle {targetHours} uur in {pct}% van de gesimuleerde stroomuitvallen (typische nacht: {hours} uur).
+AR: {status}: تعمل أساسياتك كاملة الساعات {targetHours} في {pct}% من انقطاعات الكهرباء التي حاكيناها (ليلة نموذجية: {hours} ساعات).
+
+### verdictReserve
+EN: {status}: holding that reserve costs {pct}% of your bill savings and buys {coverHours} hours of cover.
+ES: {status}: guardar esa reserva cuesta el {pct}% de tu ahorro y compra {coverHours} horas de cobertura.
+PT: {status}: guardar essa reserva custa {pct}% da sua economia e compra {coverHours} horas de cobertura.
+FR: {status} : garder cette réserve coûte {pct}% de vos économies et achète {coverHours} heures de couverture.
+DE: {status}: Dieser Reserve kostet dich {pct}% deiner Ersparnis und bringt {coverHours} Stunden Deckung.
+NL: {status}: het aanhouden van die reserve kost {pct}% van uw rekeningsbesparing en levert {coverHours} uur dekking op.
+AR: {status}: الاحتفاظ بهذا الهامش يكلفك {pct}% من وفورك ويشتري {coverHours} ساعة من التغطية.
+
+### verdictReserveNoBattery
+EN: There is nothing to hold a reserve in: the cheapest system for this goal carries no battery at all.
+ES: No hay nada donde guardar una reserva: el sistema más barato para este objetivo no lleva batería.
+PT: Não há onde guardar uma reserva: o sistema mais barato para esse objetivo não tem bateria nenhuma.
+FR: Il n'y a rien où garder une réserve : le système le moins cher pour cet objectif ne comporte aucune batterie.
+DE: Es gibt nichts, worin eine Reserve stecken könnte: das billigste System für dieses Ziel hat gar keine Batterie.
+NL: Er is niets om een reserve in aan te houden: het goedkoopste systeem voor dit doel heeft helemaal geen accu.
+AR: لا يوجد مكان للاحتفاظ بهامش: أرخص نظام لهذا الهدف لا يحمل بطارية إطلاقًا.
+
+### verdictOffGrid
+EN: {status}: {pct}% of the year runs with no grid — {unmetHours} hours short in the worst year, {autonomy} days of autonomy.
+ES: {status}: el {pct}% del año funciona sin red, con {unmetHours} horas de déficit en el peor año y {autonomy} días de autonomía.
+PT: {status}: {pct}% do ano funciona sem rede — faltam {unmetHours} horas no pior ano, com {autonomy} dias de autonomia.
+FR: {status} : {pct}% de l'année fonctionne sans réseau — {unmetHours} heures manquantes la pire année, {autonomy} jours d'autonomie.
+DE: {status}: {pct}% des Jahres laufen ganz ohne Netz — {unmetHours} Stunden fehlen im schlechtesten Jahr, {autonomy} Tage Autonomie.
+NL: {status}: {pct}% van het jaar draait zonder net — {unmetHours} uur tekort in het slechtste jaar, {autonomy} dagen autonomie.
+AR: {status}: {pct}% من السنة تعمل بلا شبكة — تنقص {unmetHours} ساعة في أسوأ عام، مع {autonomy} يومًا من الاستقلالية.
+
+### verdictPortable
+EN: {status}: your station runs a full day on {days} of {trips} days here, and one charge lasts {runtime} hours.
+ES: {status}: tu estación alimenta tus dispositivos todo el día en {days} de {trips} días aquí, y una carga dura {runtime} horas.
+PT: {status}: sua estação alimenta seus aparelhos o dia todo em {days} de {trips} dias aqui, e uma carga dura {runtime} horas.
+FR: {status} : votre station alimente vos appareils toute la journée sur {days} jours sur {trips} ici, et une charge dure {runtime} heures.
+DE: {status}: Deine Station versorgt deine Geräte hier an {days} von {trips} Tagen den ganzen Tag, und eine Ladung reicht {runtime} Stunden.
+NL: {status}: uw station draait een volle dag op {days} van {trips} dagen hier, en één lading gaat {runtime} uur mee.
+AR: {status}: تغذّي محطتك أجهزتك طوال اليوم في {days} يومًا من {trips} يومًا هنا، وشحنة واحدة تدوم {runtime} ساعة.
+
+### cityLabel
+EN: Where is this system going?
+ES: ¿Dónde se instalará el sistema?
+PT: Onde o sistema será instalado?
+FR: Où sera installé le système ?
+DE: Wo wird das System installiert?
+NL: Waar komt dit systeem?
+AR: أين سيُركَّب النظام؟
+
+### loadLabel
+EN: How much power do you use?
+ES: ¿Cuánta energía consumes?
+PT: Quanta energia você consome?
+FR: Quelle est votre consommation ?
+DE: Wie viel Strom verbrauchst du?
+NL: Hoeveel stroom verbruikt u?
+AR: كم تستهلك من الطاقة؟
+
+### loadAppliances
+EN: Let me pick my appliances
+ES: Elijo mis electrodomésticos
+PT: Escolho meus eletrodomésticos
+FR: Je choisis mes appareils
+DE: Geräte auswählen
+NL: Ik kies mijn apparaten
+AR: أختار أجهزتي الكهربائية
+
+### loadBill
+EN: I know my monthly electric bill
+ES: Conozco mi factura mensual de luz
+PT: Sei minha conta mensal de luz
+FR: Je connais ma facture mensuelle
+DE: Monatliche Rechnung
+NL: Ik ken mijn maandelijkse elektriciteitsrekening
+AR: أعرف فاتورتي الشهرية
+
+### loadKwh
+EN: I know my kWh/day (advanced)
+ES: Conozco mis kWh/día (avanzado)
+PT: Sei meu consumo em kWh/dia (avançado)
+FR: Je connais mes kWh/jour (avancé)
+DE: Ich kenne kWh/Tag (fortgeschritten)
+NL: Ik ken mijn kWh/dag (geavanceerd)
+AR: أعرف استهلاكي بالكيلوواط ساعة يوميًا (متقدم)
+
+### chemLabel
+EN: Battery chemistry:
+ES: Química de la batería:
+PT: Química da bateria:
+FR: Chimie de la batterie :
+DE: Batteriechemie:
+NL: Accuchemie:
+AR: نوع البطارية:
+
+### langLabel
+EN: Language
+ES: Idioma
+PT: Idioma
+FR: Langue
+DE: Sprache
+NL: Taal
+AR: اللغة
+
+### suggestTranslationFix
+EN: Suggest a translation fix
+ES: Sugerir una corrección de traducción
+PT: Sugerir uma correção de tradução
+FR: Suggérer une correction de traduction
+DE: Übersetzungskorrektur vorschlagen
+NL: Een vertaalcorrectie voorstellen
+AR: اقتراح تحسين الترجمة
+
+### locBtn
+EN: 📍 Use my precise location
+ES: Usar mi ubicación actual
+PT: Usar minha localização atual
+FR: Utiliser ma position actuelle
+DE: 📍 Präzisen Standort verwenden
+NL: 📍 Mijn exacte locatie gebruiken
+AR: استخدم موقعي الحالي
+
+### tariffNote
+EN: Electricity price estimated for {label} — change it above if you know your rate.
+ES: Precio estimado para {label} — cámbialo arriba si conoces tu tarifa.
+PT: Preço estimado para {label} — mude acima se souber sua tarifa.
+FR: Prix estimé pour {label} — changez-le ci-dessus si vous connaissez votre tarif.
+DE: Geschätzter Strompreis für {label} – ändere ihn oben, wenn du deinen Tarif kennst.
+NL: Stroomprijs geschat voor {label} — wijzig deze hierboven als u uw tarief kent.
+AR: سعر تقديري لـ {label} — غيّره أعلاه إذا كنت تعرف تعريفتك.
+
+### pathsLabel_turnkey
+EN: Installer, turnkey
+ES: Instalador, llave en mano
+PT: Instalador, chave na mão
+FR: Installateur, clé en main
+DE: Installateur, schlüsselfertig
+NL: Installateur, sleutelklaar
+AR: مُثبِّت، تسليم كامل
+
+### pathsLabel_lease
+EN: Lease or PPA
+ES: Alquiler o PPA
+PT: Locação ou PPA
+FR: Location ou PPA
+DE: Leasing oder PPA
+NL: Lease of PPA
+AR: إيجار أو عقد شراء
+
+### pathsLabel_selfpurchase
+EN: You buy the parts
+ES: Tú compras las piezas
+PT: Você compra as peças
+FR: Vous achetez les pièces
+DE: Sie kaufen die Teile selbst
+NL: U koopt de onderdelen
+AR: أنت تشتري القطع
+
+### pathsLabel_diy
+EN: You mount it, an electrician connects
+ES: Tú lo montas, un electricista lo conecta
+PT: Você monta, um eletricista conecta
+FR: Vous montez, un électricien raccorde
+DE: Sie montieren, ein Elektriker schließt an
+NL: U monteert, een elektricien sluit aan
+AR: أنت تركّب، وكهربائي يوصّل
+
+### pathsTitle
+EN: Four ways to pay for this same system
+ES: Cuatro formas de pagar este mismo sistema
+PT: Quatro formas de pagar este mesmo sistema
+FR: Quatre façons de payer ce même système
+DE: Vier Wege, dieses selbe System zu bezahlen
+NL: Vier manieren om voor ditzelfde systeem te betalen
+AR: أربع طرق لدفع ثمن النظام نفسه
+
+### pathsSub
+EN: One system, one set of definitions, twenty years. The gap between these cards is a gap in price, not a difference in what each one counts.
+ES: Un sistema, una sola definición, veinte años. La diferencia entre estas tarjetas es de precio, no de qué incluye cada una.
+PT: Um sistema, uma única definição, vinte anos. A diferença entre estes cartões é de preço, não do que cada um inclui.
+FR: Un système, une seule définition, vingt ans. L'écart entre ces cartes est un écart de prix, pas une différence de ce que chacune compte.
+DE: Ein System, eine Definition, zwanzig Jahre. Der Abstand zwischen diesen Karten ist ein Preisunterschied, kein Unterschied dessen, was jeweils mitgezählt wird.
+NL: Eén systeem, één set definities, twintig jaar. Het verschil tussen deze kaarten is een prijsverschil, geen verschil in wat elk meetelt.
+AR: نظام واحد، وتعريف واحد، وعشرون سنة. الفرق بين هذه البطاقات فرق في السعر، لا اختلاف في ما تحسبه كل واحدة.
+
+### pathsCheapest
+EN: Cheapest
+ES: Más barato
+PT: Mais barato
+FR: Le moins cher
+DE: Am günstigsten
+NL: Goedkoopste
+AR: الأرخص
+
+### pathsSpend20
+EN: 20-year cost
+ES: Coste a 20 años
+PT: Custo em 20 anos
+FR: Coût sur 20 ans
+DE: 20-jährige Kosten
+NL: Kosten over 20 jaar
+AR: تكلفة 20 عامًا
+
+### pathsRowIncentives
+EN: Incentives
+ES: Incentivos
+PT: Incentivos
+FR: Subventions
+DE: Förderungen
+NL: Subsidies
+AR: حوافز
+
+### pathsRowBillCut
+EN: Bill cut
+ES: Ahorro en la factura
+PT: Corte na conta
+FR: Réduction de facture
+DE: Rechnungssenkung
+NL: Rekeningsverlaging
+AR: خفض الفاتورة
+
+### pathsRowBreakEven
+EN: Break-even
+ES: Equilibrio
+PT: Equilíbrio
+FR: Rentabilité
+DE: Amortisation
+NL: Terugverdienpunt
+AR: نقطة التعادل

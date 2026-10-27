@@ -1,0 +1,13 @@
+{
+  "run_class": "battery-rerun",
+  "authorized": "owner, 2026-10-25 (~US$0.01)",
+  "rubric": "frozen in scripts/jev-battery-rerun.mjs before the first call",
+  "requested_model": "jev-1.13.0",
+  "model_refused_fell_back": false,
+  "extraction": "brace/regex heuristic over tracked .js/.mjs in assets/js, worker, scripts, tests — counts differ from the historical tree-sitter extraction and are this run's own",
+  "population": 2,
+  "fail_open_flagged": 1,
+  "cost_usd": 0.0000012,
+  "cost_cap_usd": 0.05,
+  "out": "tmp/battery-smoke"
+}

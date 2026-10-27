@@ -1,0 +1,42 @@
+## Plan items
+
+- #287 (evidence stability, remaining phases) — the translation facet's demanded remediation
+- R-TRN-11, P8.3 — P0.3 meaning back-read of rendered strings
+
+## What changed and why
+
+The jev translation facet has been held at ordinal 60 because the judge's demanded remediation — back-translate the rendered strings and read them for meaning, fix any string that is technically present and not actually readable — was never executed. The facet line's own honesty clause ("the other 435 keys x 6 locales are unreviewed") was the largest truth gap the scoped runs kept re-flagging.
+
+This PR executes that pass:
+
+- **Full back-read**: all 436 dictionary keys in each of es/pt/fr/de/nl/ar (2,616 strings) plus the 436 English source strings, read against the source in one review pass — recorded in `docs/jev-completion/TRANSLATION_MEANING_BACKREAD_2026-10-24.md` (method, reviewer identity and its limits, defect table, scope boundary).
+- **23 defects fixed** across `assets/js/shared/locales.js`, `assets/js/shared/home-copy.js`, `index.html`, `solar-heatmap/index.html`, `assets/js/translation-suggestion*.js`. Material ones: `de.frontierIntro` was not a translation (second sentence of the chart explanation dropped); `es.pathsOwnershipLease` shipped a broken verb ("Lo alquileres"); `fr.pathsDiyRestricted` said self-consumption for self-installation; `es.advisorBusy` a truncated word; `ar` carried a nonsense mash ("بالوفوفير"), an ungrammatical "البيانات الساعة", a dropped gloss in `pathsInstrumentPpa`, and two different names for the Size My System button; the run CTA lost its ☀️ in four locales and changed wording between states; `offlineNote` dropped the "year" in es/pt/fr; `en` carried " ," / " :" spacing artifacts and quoted a location-button label the button does not carry (also de/nl/index.html).
+- **23 regression pins** in `tests/translation-review.test.mjs` — one per fixed string, same contract as the pre-existing reviewed-value pins.
+- **Honest composed line**: the translation facet now ends "Not done: native-speaker review. Back-read 436x6 (AI): 23 fixes." — the completed work is cited as what it is (AI fluent back-read), and the open clause stays named. The evidence note's pinned honesty wording moves with it (`tests/jev-derived-facets.test.mjs`, `tests/experience-facet.test.mjs`). A line implying the gate measures meaning would be the same overclaim in a new font.
+- Asset stamp `20261025a` / SW `beco-v165` so returning visitors receive the locale changes.
+
+No gate, threshold, ratchet or plan change; the 95/95/95 bar is untouched.
+
+## DoD
+
+- [x] Tests added/updated (23 pins + composer pin updates)
+- [x] Local preflight green: `npm test` 1954/1954, `check-chars`, `npm run seo` battery (plan:check, ledger:check, check-experience, check-translation, check-glossary, check-i18n, pack-compare, check-sitemap, check-tokens, check-redd), `format:check`
+- [x] No metric regressed (composition passes; composed line within its clip)
+- [x] Scoped live Jev report attached (A-003 comment below): scoped 97.75 [PASS] at the gate's P0.3 target, ratchet 0 regressions. The template's >= 99.0 reference does not bind here: plan §9 rule 6 binds scoped >= 99 from P0.4 onward, and the owner's P0.3 bootstrap ruling (2026-09-26) merges P0.3 PRs on green CI + attached report + clean ratchet even below 99 (precedent #313 at 96.63)
+- [x] LEDGER.jsonl row appended post-merge per ledger convention (rows record the merged PR number + merge SHA, as every prior item-done row does)
+
+## Gate evidence (local)
+
+- jev-translation-facet: PASS (42/42), parity 436/436 across 6 locales
+- translation-review: PASS incl. the 23 new pins
+- jev-experience-compose / experience / privacy / deploy-baseline / formatting: PASS
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+<!-- codesmith:footer -->
+---
+<a href="https://app.blacksmith.sh/Sovereign-Communication/codesmith/BigEnergyCo/pr/315?autoLogin=true&ref=codesmith_pr_footer"><picture><source media="(prefers-color-scheme: dark)" srcset="https://pr-comments-assets.blacksmith.sh/codesmith/view-with-codesmith-dark-v3.svg"><source media="(prefers-color-scheme: light)" srcset="https://pr-comments-assets.blacksmith.sh/codesmith/view-with-codesmith-light-v3.svg"><img alt="View with [code]smith" src="https://pr-comments-assets.blacksmith.sh/codesmith/view-with-codesmith-dark-v3-3x.png" width="162" height="28"></picture></a> <a href="https://backend.blacksmith.sh/track/enable-autofix?expires=1795508469&installation_model_id=441926&pr_number=315&ref=codesmith_pr_footer&repository=Sovereign-Communication%2FBigEnergyCo&return_to=https%3A%2F%2Fgithub.com%2FSovereign-Communication%2FBigEnergyCo%2Fpull%2F315&signature=13dbb57408ce60f5f8a2fda8975a3aa256341c1cdc8ef738aa8d9be361ba829f"><picture><source media="(prefers-color-scheme: dark)" srcset="https://pr-comments-assets.blacksmith.sh/codesmith/autofix-with-codesmith-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://pr-comments-assets.blacksmith.sh/codesmith/autofix-with-codesmith-light.svg"><img alt="Autofix with [code]smith" src="https://pr-comments-assets.blacksmith.sh/codesmith/autofix-with-codesmith-dark-3x.png" width="190" height="28"></picture></a>
+<sup>Need help on this PR? Tag <code>@codesmith-bot</code> with what you need.</sup>
+
+<!-- codesmith:autofix:disabled -->
+<!-- /codesmith:footer -->

@@ -1,0 +1,494 @@
+### frontierSvgTitle
+EN: How far your money gets you
+ES: Hasta dónde llega tu dinero
+PT: Até onde vai o seu dinheiro
+FR: Jusqu'où va votre argent
+DE: Wie weit dein Geld reicht
+NL: Hoe ver uw geld u brengt
+AR: إلى أين يصل مالك
+
+### frontierSvgDesc
+EN: A curve of {n} systems, from {lowCost} covering {lowPct}% to {highCost} covering {highPct}%. The full figures are in the table below the chart.
+ES: Una curva de {n} sistemas, desde {lowCost} que cubre {lowPct}% hasta {highCost} que cubre {highPct}%. Las cifras completas están en la tabla bajo el gráfico.
+PT: Uma curva de {n} sistemas, de {lowCost} cobrindo {lowPct}% até {highCost} cobrindo {highPct}%. Os números completos estão na tabela abaixo do gráfico.
+FR: Une courbe de {n} systèmes, de {lowCost} couvrant {lowPct}% à {highCost} couvrant {highPct}%. Les chiffres complets sont dans le tableau sous le graphique.
+DE: Eine Kurve aus {n} Systemen, von {lowCost} mit {lowPct} % bis {highCost} mit {highPct} %. Alle Zahlen stehen in der Tabelle unter dem Diagramm.
+NL: Een curve van {n} systemen, van {lowCost} met {lowPct}% dekking tot {highCost} met {highPct}% dekking. De volledige cijfers staan in de tabel onder de grafiek.
+AR: منحنى من {n} نظامًا، من {lowCost} يغطي {lowPct}% إلى {highCost} يغطي {highPct}%. الأرقام الكاملة في الجدول أسفل الرسم.
+
+### frontierPointTip
+EN: {cost}: {pct}% — {pv} kW of panels + {batt} kWh of battery
+ES: {cost}: {pct}% — {pv} kW de paneles + {batt} kWh de batería
+PT: {cost}: {pct}% — {pv} kW de painéis + {batt} kWh de bateria
+FR: {cost} : {pct}% — {pv} kW de panneaux + {batt} kWh de batterie
+DE: {cost}: {pct} % — {pv} kW Panels + {batt} kWh Batterie
+NL: {cost}: {pct}% — {pv} kW aan panelen + {batt} kWh aan accu
+AR: {cost}: {pct}% — {pv} كيلوواط ألواح + {batt} كيلوواط ساعة بطارية
+
+### budgetLabel
+EN: Your budget (up-front)
+ES: Tu presupuesto (inicial)
+PT: Seu orçamento (inicial)
+FR: Votre budget (initial)
+DE: Dein Budget (zu Beginn)
+NL: Uw budget (eenmalig vooraf)
+AR: ميزانيتك (مقدّمًا)
+
+### frontierTableCaption
+EN: Every point on the curve. Typical cost is the landed do-it-yourself middle; the range spans bare cells to shipped retail.
+ES: Cada punto de la curva. Coste típico: punto medio del montaje propio, con envío y aranceles; rango: de celdas sueltas a sistemas completos entregados al por menor.
+PT: Cada ponto da curva. Custo típico: ponto médio de um sistema montado por conta própria, com frete e impostos de importação; faixa de células avulsas a sistemas completos entregues no varejo.
+FR: Chaque point de la courbe. Coût type : milieu de la fourchette d’un système à monter soi-même, livraison et droits de douane compris ; des cellules seules aux systèmes complets livrés au détail.
+DE: Jeder Kurvenpunkt. Typische Kosten: Mitte der Preisspanne für Selbstbau inklusive Versand und Einfuhrabgaben; von einzelnen Zellen bis zu komplett gelieferten Handelsprodukten.
+NL: Elk punt op de curve. Typische kosten: midden van de prijsklasse voor zelfbouw met verzending en invoerrechten; van losse cellen tot complete producten aan huis.
+AR: كل نقطة على المنحنى. التكلفة المعتادة منتصف سعر نظام يُجمّع ذاتيًا مع الشحن والرسوم الجمركية؛ من الخلايا المنفردة إلى الأنظمة الكاملة الموصلة من المتجر.
+
+### frontierColCost
+EN: Typical cost
+ES: Coste típico
+PT: Custo típico
+FR: Coût typique
+DE: Typische Kosten
+NL: Typische kosten
+AR: التكلفة النموذجية
+
+### frontierColRange
+EN: DIY to retail
+ES: Montaje propio → venta minorista
+PT: Montagem própria → varejo
+FR: Montage soi-même → prix de détail
+DE: Selbstbau bis Handel
+NL: Doe-het-zelf tot winkel
+AR: تجميع ذاتي إلى سعر التجزئة
+
+### frontierColCut
+EN: Bill cut
+ES: Factura reducida
+PT: Conta cortada
+FR: Facture réduite
+DE: Rechnung gesenkt
+NL: Rekeningsverlaging
+AR: خفض الفاتورة
+
+### frontierColCutBattery
+EN: Peak hours shifted
+ES: Horas punta desplazadas
+PT: Horas de ponta deslocadas
+FR: Heures pleines décalées
+DE: Verschobene Spitzenlaststunden
+NL: Piekuren verschoven
+AR: ساعات الذروة المنقولة
+
+### frontierColCover
+EN: Covered
+ES: Cubierto
+PT: Coberto
+FR: Couvert
+DE: Abgedeckt
+NL: Gedekt
+AR: التغطية
+
+### frontierColPv
+EN: Panels
+ES: Paneles
+PT: Painéis
+FR: Panneaux
+DE: Panels
+NL: Panelen
+AR: الألواح
+
+### frontierColBatt
+EN: Battery
+ES: Batería
+PT: Bateria
+FR: Batterie
+DE: Batterie
+NL: Accu
+AR: البطارية
+
+### frontierNoBattery
+EN: none
+ES: ninguna
+PT: nenhuma
+FR: aucune
+DE: keine
+NL: geen
+AR: لا شيء
+
+### frontierTableToggle
+EN: Show every point as a table
+ES: Ver todos los puntos en una tabla
+PT: Ver todos os pontos em tabela
+FR: Voir tous les points en tableau
+DE: Alle Punkte als Tabelle anzeigen
+NL: Toon elk punt als tabel
+AR: عرض كل النقاط في جدول
+
+### frontierLegendCurve
+EN: Cheapest system that reaches each level
+ES: El sistema más barato que alcanza cada nivel
+PT: O sistema mais barato que atinge cada nível
+FR: Le système le moins cher atteignant chaque niveau
+DE: Günstigstes System für jede Stufe
+NL: Goedkoopste systeem dat elk niveau haalt
+AR: أرخص نظام يبلغ كل مستوى
+
+### frontierLegendBand
+EN: Same systems, DIY sourcing to shipped retail
+ES: Mismos sistemas: de piezas para montar por cuenta propia a sistemas completos entregados al por menor.
+PT: Os mesmos sistemas: de peças para montagem própria a sistemas completos entregues no varejo.
+FR: Mêmes systèmes : pièces à monter soi-même ou systèmes complets livrés au détail.
+DE: Dieselben Systeme, von Selbstbau bis Versandhandel
+NL: Dezelfde systemen, van doe-het-zelf-inkoop tot verzonden winkelprijs
+AR: الأنظمة نفسها: من مكونات التجميع الذاتي إلى نظام كامل موصل من المتجر.
+
+### frontierLegendRange
+EN: Best-value range — every extra percent still cheap
+ES: Rango óptimo — cada punto extra sigue barato
+PT: Faixa ideal — cada ponto extra continua barato
+FR: Plage optimale — chaque point en plus reste bon marché
+DE: Bestwert-Spanne — jedes weitere Prozent bleibt günstig
+NL: Beste-waarde-bereik — elk extra procent nog steeds goedkoop
+AR: النطاق الأفضل قيمة — كل نقطة إضافية ما زالت رخيصة
+
+### frontierBestValueRange
+EN: Best-value range: ~{lo}–{hi} ({loPct}–{hiPct}%).
+ES: Rango óptimo: ~{lo}–{hi} ({loPct}–{hiPct}%).
+PT: Faixa ideal: ~{lo}–{hi} ({loPct}–{hiPct}%).
+FR: Plage optimale : ~{lo}–{hi} ({loPct}–{hiPct}%).
+DE: Bestwert-Spanne: ~{lo}–{hi} ({loPct}–{hiPct}%).
+NL: Beste-waarde-bereik: ~{lo}–{hi} ({loPct}–{hiPct}%).
+AR: النطاق الأفضل قيمة: ~{lo}–{hi} ({loPct}–{hiPct}%).
+
+### frontierRangeTag
+EN: best value
+ES: mejor valor
+PT: melhor valor
+FR: meilleur rapport
+DE: Bestwert
+NL: beste waarde
+AR: أفضل قيمة
+
+### frontierTagSel
+EN: selected
+ES: seleccionado
+PT: selecionado
+FR: sélectionné
+DE: ausgewählt
+NL: geselecteerd
+AR: النقطة المحددة
+
+### fuelLitLabel
+EN: Price per liter
+ES: Precio por litro
+PT: Preço por litro
+FR: Prix au litre
+DE: Preis pro Liter
+NL: Prijs per liter
+AR: السعر لكل لتر
+
+### fuelGalLabel
+EN: Price per gallon
+ES: Precio por galón
+PT: Preço por galão
+FR: Prix au gallon
+DE: Preis pro Gallone
+NL: Prijs per gallon
+AR: السعر لكل غالون
+
+### fuelReadoutRate
+EN: {type} at this price works out to about {rate} per kWh
+ES: {type} a este precio sale a unos {rate} por kWh
+PT: {type} a esse preço dá cerca de {rate} por kWh
+FR: {type} à ce prix revient à environ {rate} par kWh
+DE: {type} kostet bei diesem Preis etwa {rate} pro kWh
+NL: {type} komt bij deze prijs neer op ongeveer {rate} per kWh
+AR: {type} بهذا السعر يخرج بحوالي {rate} لكل كيلوواط/ساعة
+
+### fuelReadoutBurn
+EN: ({entry} ÷ {burn} {unit}/kWh — fuel alone; oil, filters and engine wear push the real number higher)
+ES: ({entry} ÷ {burn} {unit}/kWh — solo el combustible; el aceite, los filtros y el desgaste del motor elevan el coste real)
+PT: ({entry} ÷ {burn} {unit}/kWh — só o combustível; óleo, filtros e desgaste do motor elevam o custo real)
+FR: ({entry} ÷ {burn} {unit}/kWh — carburant seul ; huile, filtres et usure du moteur font monter le coût réel)
+DE: ({entry} ÷ {burn} {unit}/kWh — nur Kraftstoff; Öl, Filter und Motorverschleiß treiben den echten Wert höher)
+NL: ({entry} ÷ {burn} {unit}/kWh — alleen brandstof; olie, filters en motorslijtage duwen het echte getal hoger)
+AR: ({entry} ÷ {burn} {unit}/كيلوواط/ساعة — الوقود فقط؛ الزيت والفلاتر وتآكل المحرك ترفع التكلفة الحقيقية)
+
+### fuelReadoutGrid
+EN: Typical grid power runs between {lo} and {hi} per kWh.
+ES: La electricidad de red típica ronda entre {lo} y {hi} por kWh.
+PT: A eletricidade da rede normalmente fica entre {lo} e {hi} por kWh.
+FR: L'électricité du réseau coûte en général entre {lo} et {hi} par kWh.
+DE: Typischer Netzstrom kostet zwischen {lo} und {hi} pro kWh.
+NL: Typische netstroom kost tussen {lo} en {hi} per kWh.
+AR: كهرباء الشبكة النموذجية تتراوح بين {lo} و{hi} لكل كيلوواط/ساعة.
+
+### fuelApplyOk
+EN: Your generator fuel works out to about {rate}/kWh — entered as your electricity price, so every payback figure below compares against what you burn today.
+ES: Tu combustible de generador sale a unos {rate}/kWh — se ha introducido como tu precio de la electricidad, así que cada cifra de amortización abajo compara con lo que quemas hoy.
+PT: Seu combustível de gerador sai a cerca de {rate}/kWh — definido como seu preço de eletricidade, então cada valor de retorno abaixo compara com o que você gasta hoje.
+FR: Votre carburant de groupe électrogène revient à environ {rate}/kWh — saisi comme prix de l'électricité, de sorte que chaque calcul de rentabilité ci-dessous compare avec ce que vous brûlez aujourd'hui.
+DE: Dein Generator-Kraftstoff kostet etwa {rate}/kWh — als dein Strompreis übernommen, sodass jede Amortisation unten mit dem vergleicht, was du heute verfeuerst.
+NL: Uw generatorbrandstof komt neer op ongeveer {rate}/kWh — ingevoerd als uw stroomprijs, dus elk terugverdiencijfer hieronder vergelijkt met wat u vandaag verstookt.
+AR: وقود مولّدك يخرج بحوالي {rate}/كيلوواط/ساعة — أُدخل كسعر كهربائك، بحيث يُقارن كل حساب استرداد أدناه بما تدفعه اليوم.
+
+### frontierLegendCeiling
+EN: Best the searched sizes reach — not a limit of physics
+ES: Lo máximo que alcanzan los tamaños buscados, no un límite físico
+PT: O máximo que os tamanhos buscados atingem, não um limite físico
+FR: Le maximum atteint par les tailles explorées, pas une limite physique
+DE: Bestes in den durchsuchten Größen — keine physikalische Grenze
+NL: Beste dat de doorzochte groottes halen — geen natuurkundige grens
+AR: أقصى ما تبلغه الأحجام المبحوثة، وليس حدًا فيزيائيًا
+
+### frontierMarkerOffCurve
+EN: Your option sits right of the curve because the recommendation is picked on true 20-year cost, not today's price — a cheaper bank that needs replacing costs less now and more later.
+ES: Tu opción queda a la derecha de la curva porque la recomendación se elige por el coste real a 20 años, no por el precio de hoy: un banco más barato que hay que reemplazar cuesta menos ahora y más después.
+PT: Sua opção fica à direita da curva porque a recomendação é escolhida pelo custo real em 20 anos, não pelo preço de hoje: um banco mais barato que precisa ser trocado custa menos agora e mais depois.
+FR: Votre option se situe à droite de la courbe car la recommandation est choisie sur le coût réel à 20 ans, pas sur le prix d'aujourd'hui : un parc moins cher à remplacer coûte moins maintenant et plus ensuite.
+DE: Deine Option liegt rechts der Kurve, weil die Empfehlung nach echten 20-Jahres-Kosten gewählt wird, nicht nach dem Preis heute: Eine billigere Bank mit Austausch kostet jetzt weniger und später mehr.
+NL: Uw optie staat rechts van de curve omdat de aanbeveling is gekozen op basis van de werkelijke kosten over 20 jaar, niet de prijs van vandaag — een goedkopere accubank die vervangen moet worden kost nu minder en later meer.
+AR: خيارك يقع يمين المنحنى لأن التوصية تُختار على أساس التكلفة الحقيقية على عشرين عامًا، لا سعر اليوم: مجموعة أرخص تحتاج إلى استبدال تكلف أقل الآن وأكثر لاحقًا.
+
+### frontierVerdictSteepGrid
+EN: Cutting about {kneePct}% of your bill costs around {kneeCost}. After that it gets expensive fast: roughly {tailCost} for each further percent, against {headCost} before.
+ES: Recortar cerca del {kneePct}% de tu factura cuesta unos {kneeCost}. A partir de ahí se encarece rápido: unos {tailCost} por cada punto adicional, frente a {headCost} antes.
+PT: Cortar cerca de {kneePct}% da sua conta custa uns {kneeCost}. Depois disso fica caro rápido: cerca de {tailCost} por ponto adicional, contra {headCost} antes.
+FR: Supprimer environ {kneePct}% de votre facture coûte autour de {kneeCost}. Ensuite ça grimpe vite : environ {tailCost} par point supplémentaire, contre {headCost} avant.
+DE: Etwa {kneePct} % deiner Rechnung zu senken kostet rund {kneeCost}. Danach wird es schnell teuer: etwa {tailCost} pro weiterem Prozent, gegenüber {headCost} davor.
+NL: Ongeveer {kneePct}% van uw rekening verlagen kost rond {kneeCost}. Daarna wordt het snel duur: ongeveer {tailCost} per extra procent, tegen {headCost} daarvoor.
+AR: خفض نحو {kneePct}% من فاتورتك يكلف قرابة {kneeCost}. بعد ذلك ترتفع التكلفة سريعًا: نحو {tailCost} لكل نقطة إضافية، مقابل {headCost} قبلها.
+
+### frontierVerdictTaperingGrid
+EN: Cutting about {kneePct}% of your bill costs around {kneeCost}. Past that, each further percent costs roughly {tailCost} — about {ratio} times the earlier rate.
+ES: Recortar cerca del {kneePct}% de tu factura cuesta unos {kneeCost}. Después, cada punto adicional cuesta unos {tailCost}, alrededor de {ratio} veces el ritmo anterior.
+PT: Cortar cerca de {kneePct}% da sua conta custa uns {kneeCost}. Depois, cada ponto adicional custa cerca de {tailCost}, umas {ratio} vezes o ritmo anterior.
+FR: Supprimer environ {kneePct}% de votre facture coûte autour de {kneeCost}. Ensuite, chaque point supplémentaire coûte environ {tailCost}, soit {ratio} fois le rythme précédent.
+DE: Etwa {kneePct} % deiner Rechnung zu senken kostet rund {kneeCost}. Danach kostet jedes weitere Prozent etwa {tailCost} — rund {ratio}-mal so viel wie zuvor.
+NL: Ongeveer {kneePct}% van uw rekening verlagen kost rond {kneeCost}. Daarna kost elk extra procent ongeveer {tailCost} — ongeveer {ratio} keer het eerdere tarief.
+AR: خفض نحو {kneePct}% من فاتورتك يكلف قرابة {kneeCost}. بعد ذلك تكلف كل نقطة إضافية نحو {tailCost}، أي نحو {ratio} ضعف المعدل السابق.
+
+### frontierVerdictCoveredBattery
+EN: Sizing is not your constraint here. The smallest practical battery — {batt} kWh, about {cost} — already shifts essentially all of this load's peak hours. Anything larger buys spare capacity, not a bigger offset.
+ES: El tamaño no es tu límite aquí. La batería práctica más pequeña — {batt} kWh, unos {cost} — ya desplaza casi todas las horas punta de este consumo. Algo mayor compra capacidad de reserva, no más desplazamiento.
+PT: O tamanho não é o seu limite aqui. A bateria prática mais pequena — {batt} kWh, cerca de {cost} — já desloca quase todas as horas de pico deste consumo. Algo maior compra capacidade de reserva, não mais deslocamento.
+FR: La taille n'est pas votre contrainte ici. La plus petite batterie réaliste — {batt} kWh, environ {cost} — décale déjà la quasi-totalité des heures de pointe de cette consommation. Plus gros achète de la capacité de réserve, pas plus de décalage.
+DE: Die Größe ist hier nicht deine Grenze. Die kleinste praktische Batterie — {batt} kWh, etwa {cost} — verschiebt bereits praktisch alle Spitzenlaststunden dieser Last. Größer kauft Reservekapazität, nicht mehr Verschiebung.
+NL: Dimensionering is hier niet uw beperking. De kleinste praktische accu — {batt} kWh, ongeveer {cost} — verschuift al vrijwel alle piekuren van dit verbruik. Alles groter koopt reservecapaciteit, geen grotere verschuiving.
+AR: الحجم ليس قيدك هنا. أصغر بطارية عملية — {batt} كيلوواط/ساعة، بنحو {cost} — تنقل بالفعل جميع ساعات الذروة لهذا الاستهلاك تقريبًا. أي شيء أكبر يشتري سعة احتياطية، لا نقلًا أكثر.
+
+### frontierVerdictBeyondSweepBattery
+EN: Within the battery sizes this tool searches — up to {battMax} kWh — the most you can shift here is about {ceilingPct}%, for around {ceilingCost}. Good value runs out well before that, at {kneePct}% for about {kneeCost}; shifting more needs a bigger bank than anything sized here.
+ES: Dentro de los tamaños de batería que busca esta herramienta — hasta {battMax} kWh — lo máximo que puedes desplazar aquí es cerca del {ceilingPct}%, por unos {ceilingCost}. El buen valor se acaba mucho antes, en el {kneePct}% por unos {kneeCost}; desplazar más exige un banco mayor que cualquier cosa dimensionada aquí.
+PT: Dentro dos tamanhos de bateria que esta ferramenta procura — até {battMax} kWh — o máximo que consegue deslocar aqui é cerca de {ceilingPct}%, por uns {ceilingCost}. O bom valor acaba muito antes, nos {kneePct}% por cerca de {kneeCost}; deslocar mais exige um banco maior do que tudo o que aqui é dimensionado.
+FR: Dans les tailles de batterie que cet outil explore — jusqu'à {battMax} kWh — le maximum que vous pouvez décaler ici est d'environ {ceilingPct}%, pour environ {ceilingCost}. Le bon rapport s'arrête bien avant, à {kneePct}% pour environ {kneeCost} ; décaler davantage exige un parc plus grand que tout ce qui est dimensionné ici.
+DE: Innerhalb der Batteriegrößen, die dieses Werkzeug sucht — bis {battMax} kWh — kannst du hier höchstens etwa {ceilingPct}% verschieben, für rund {ceilingCost}. Der gute Gegenwert endet viel früher, bei {kneePct}% für etwa {kneeCost}; mehr Verschiebung braucht einen größeren Speicher als alles, was hier dimensioniert wird.
+NL: Binnen de accugroottes die deze tool doorzoekt — tot {battMax} kWh — kunt u hier maximaal ongeveer {ceilingPct}% verschuiven, voor rond {ceilingCost}. Goede waarde houdt al veel eerder op, bij {kneePct}% voor ongeveer {kneeCost}; meer verschuiven vereist een grotere bank dan alles wat hier is gedimensioneerd.
+AR: ضمن أحجام البطاريات التي يبحث عنها هذا البرنامج — حتى {battMax} كيلوواط/ساعة — أقصى ما يمكن نقله هنا نحو {ceilingPct}%، بنحو {ceilingCost}. القيمة الجيدة تنتهي قبل ذلك بكثير، عند {kneePct}% بنحو {kneeCost}؛ ونقل المزيد يتطلب مخزونًا أكبر من أي شيء يُقاس هنا.
+
+### frontierVerdictSteepBattery
+EN: Shifting about {kneePct}% of your peak hours onto the battery costs around {kneeCost}. After that it gets expensive fast: roughly {tailCost} for each further percent, against {headCost} before.
+ES: Desplazar cerca del {kneePct}% de tus horas punta a la batería cuesta unos {kneeCost}. Después se encarece rápido: unos {tailCost} por cada punto adicional, frente a {headCost} antes.
+PT: Deslocar cerca de {kneePct}% das suas horas de pico para a bateria custa uns {kneeCost}. Depois fica caro depressa: cerca de {tailCost} por cada ponto adicional, contra {headCost} antes.
+FR: Décaler environ {kneePct}% de vos heures de pointe vers la batterie coûte environ {kneeCost}. Ensuite cela devient vite cher : environ {tailCost} par point supplémentaire, contre {headCost} avant.
+DE: Etwa {kneePct}% deiner Spitzenlaststunden in die Batterie zu verlagern kostet rund {kneeCost}. Danach wird es schnell teuer: rund {tailCost} je weiterem Prozent, gegenüber {headCost} zuvor.
+NL: Ongeveer {kneePct}% van uw piekuren naar de accu verplaatsen kost rond {kneeCost}. Daarna wordt het snel duur: ongeveer {tailCost} per extra procent, tegen {headCost} daarvoor.
+AR: نقل نحو {kneePct}% من ساعات الذروة إلى البطارية يكلف قرابة {kneeCost}. بعد ذلك يصبح مكلفًا بسرعة: نحو {tailCost} لكل نقطة إضافية، مقابل {headCost} قبلها.
+
+### frontierVerdictTaperingBattery
+EN: Shifting about {kneePct}% of your peak hours onto the battery costs around {kneeCost}. Past that, each further percent costs roughly {tailCost} — about {ratio} times the earlier rate.
+ES: Desplazar cerca del {kneePct}% de tus horas punta a la batería cuesta unos {kneeCost}. A partir de ahí, cada punto adicional cuesta unos {tailCost}, alrededor de {ratio} veces el ritmo anterior.
+PT: Deslocar cerca de {kneePct}% das suas horas de pico para a bateria custa uns {kneeCost}. A partir daí, cada ponto adicional custa cerca de {tailCost} — umas {ratio} vezes o ritmo anterior.
+FR: Décaler environ {kneePct}% de vos heures de pointe vers la batterie coûte environ {kneeCost}. Au-delà, chaque point supplémentaire coûte environ {tailCost} — environ {ratio} fois le rythme précédent.
+DE: Etwa {kneePct}% deiner Spitzenlaststunden in die Batterie zu verlagern kostet rund {kneeCost}. Darüber hinaus kostet jedes weitere Prozent etwa {tailCost} — rund {ratio}-mal so viel wie zuvor.
+NL: Ongeveer {kneePct}% van uw piekuren naar de accu verplaatsen kost rond {kneeCost}. Daarna kost elk extra procent ongeveer {tailCost} — ongeveer {ratio} keer het eerdere tarief.
+AR: نقل نحو {kneePct}% من ساعات الذروة إلى البطارية يكلف قرابة {kneeCost}. بعد ذلك تكلف كل نقطة إضافية نحو {tailCost} — أي نحو {ratio} ضعف المعدل السابق.
+
+### frontierVerdictLinearBattery
+EN: Offset tracks spending fairly evenly here — about {headCost} for each percent of peak hours, all the way to {ceilingPct}%.
+ES: El desplazamiento acompaña el gasto de forma bastante uniforme aquí — unos {headCost} por cada punto de horas punta, hasta el {ceilingPct}%.
+PT: O deslocamento acompanha o gasto de forma bastante uniforme aqui — cerca de {headCost} por cada ponto de horas de pico, até aos {ceilingPct}%.
+FR: Le décalage suit la dépense de façon assez régulière ici — environ {headCost} par point d'heures de pointe, jusqu'à {ceilingPct}%.
+DE: Die Verschiebung folgt den Kosten hier recht gleichmäßig — etwa {headCost} je Prozent Spitzenlaststunden, bis {ceilingPct}%.
+NL: De verschuiving volgt de uitgaven hier vrij gelijkmatig — ongeveer {headCost} per procent piekuren, helemaal tot {ceilingPct}%.
+AR: النقل يواكب الإنفاق بانتظام نسبي هنا — نحو {headCost} لكل نقطة من ساعات الذروة، حتى {ceilingPct}%.
+
+### frontierVerdictLinearGrid
+EN: Savings track spending fairly evenly here — about {headCost} for each percent of your bill, all the way to {ceilingPct}%.
+ES: Aquí el ahorro sigue al gasto de forma bastante pareja: unos {headCost} por cada punto de tu factura, hasta el {ceilingPct}%.
+PT: Aqui a economia acompanha o gasto de forma bem regular: cerca de {headCost} por ponto da sua conta, até {ceilingPct}%.
+FR: Ici les économies suivent la dépense assez régulièrement : environ {headCost} par point de facture, jusqu'à {ceilingPct}%.
+DE: Ersparnis folgt den Ausgaben hier ziemlich gleichmäßig — etwa {headCost} pro Prozent deiner Rechnung, bis {ceilingPct} %.
+NL: De besparing volgt de uitgaven hier vrij gelijkmatig — ongeveer {headCost} per procent van uw rekening, helemaal tot {ceilingPct}%.
+AR: هنا يسير التوفير مع الإنفاق بانتظام: نحو {headCost} لكل نقطة من فاتورتك، حتى {ceilingPct}%.
+
+### frontierVerdictBeyondSweepGrid
+EN: Within the sizes this tool searches — up to {pvMax} kW of panels and {battMax} kWh of battery — the most you can cut here is about {ceilingPct}%, for around {ceilingCost}. Good value runs out well before that, at {kneePct}% for about {kneeCost}. Cutting more is not impossible; it just needs a system bigger than anything sized here.
+ES: Dentro de los tamaños que busca esta herramienta —hasta {pvMax} kW de paneles y {battMax} kWh de batería— lo máximo que puedes recortar aquí es cerca del {ceilingPct}%, por unos {ceilingCost}. La buena relación se acaba mucho antes, en el {kneePct}% por unos {kneeCost}. Recortar más no es imposible: simplemente exige un sistema mayor que cualquiera dimensionado aquí.
+PT: Dentro dos tamanhos que esta ferramenta busca — até {pvMax} kW de painéis e {battMax} kWh de bateria — o máximo que você corta aqui é cerca de {ceilingPct}%, por uns {ceilingCost}. O bom custo-benefício acaba bem antes, em {kneePct}% por uns {kneeCost}. Cortar mais não é impossível: só exige um sistema maior do que qualquer um dimensionado aqui.
+FR: Dans les tailles explorées par cet outil — jusqu'à {pvMax} kW de panneaux et {battMax} kWh de batterie — le maximum que vous pouvez supprimer ici est d'environ {ceilingPct}%, pour environ {ceilingCost}. Le bon rapport s'arrête bien avant, à {kneePct}% pour environ {kneeCost}. Aller plus loin n'est pas impossible : cela demande simplement un système plus grand que tous ceux dimensionnés ici.
+DE: In den hier durchsuchten Größen — bis {pvMax} kW Panels und {battMax} kWh Batterie — lassen sich hier höchstens etwa {ceilingPct} % senken, für rund {ceilingCost}. Das gute Preis-Leistungs-Verhältnis endet deutlich früher, bei {kneePct} % für etwa {kneeCost}. Mehr zu senken ist nicht unmöglich, braucht aber ein größeres System als alles hier Dimensionierte.
+NL: Binnen de groottes die deze tool doorzoekt — tot {pvMax} kW aan panelen en {battMax} kWh aan accu — kunt u hier maximaal ongeveer {ceilingPct}% besparen, voor rond {ceilingCost}. Goede waarde houdt al veel eerder op, bij {kneePct}% voor ongeveer {kneeCost}. Meer besparen is niet onmogelijk; het vereist alleen een groter systeem dan alles wat hier is gedimensioneerd.
+AR: ضمن الأحجام التي تبحثها هذه الأداة — حتى {pvMax} كيلوواط ألواح و{battMax} كيلوواط ساعة بطارية — أقصى ما يمكن خفضه هنا نحو {ceilingPct}%، بتكلفة قرابة {ceilingCost}. وتنتهي القيمة الجيدة قبل ذلك بكثير، عند {kneePct}% بنحو {kneeCost}. والخفض أكثر ليس مستحيلًا، لكنه يحتاج نظامًا أكبر من كل ما جرى تحجيمه هنا.
+
+### frontierVerdictSteepOffgrid
+EN: Covering about {kneePct}% of your energy costs around {kneeCost}. The last stretch to full independence is where the money goes: roughly {tailCost} per further percent, against {headCost} before.
+ES: Cubrir cerca del {kneePct}% de tu energía cuesta unos {kneeCost}. El último tramo hasta la independencia total es donde se va el dinero: unos {tailCost} por cada punto adicional, frente a {headCost} antes.
+PT: Cobrir cerca de {kneePct}% da sua energia custa uns {kneeCost}. O último trecho até a independência total é onde o dinheiro vai: cerca de {tailCost} por ponto adicional, contra {headCost} antes.
+FR: Couvrir environ {kneePct}% de votre énergie coûte autour de {kneeCost}. Le dernier tronçon vers l'indépendance totale est là où part l'argent : environ {tailCost} par point supplémentaire, contre {headCost} avant.
+DE: Etwa {kneePct} % deiner Energie abzudecken kostet rund {kneeCost}. Die letzte Strecke zur vollen Unabhängigkeit kostet das Geld: etwa {tailCost} pro weiterem Prozent, gegenüber {headCost} davor.
+NL: Ongeveer {kneePct}% van uw energie dekken kost rond {kneeCost}. Het laatste stuk naar volledige onafhankelijkheid is waar het geld naartoe gaat: ongeveer {tailCost} per extra procent, tegen {headCost} daarvoor.
+AR: تغطية نحو {kneePct}% من طاقتك تكلف قرابة {kneeCost}. المرحلة الأخيرة نحو الاستقلال الكامل هي حيث يذهب المال: نحو {tailCost} لكل نقطة إضافية، مقابل {headCost} قبلها.
+
+### frontierVerdictTaperingOffgrid
+EN: Covering about {kneePct}% of your energy costs around {kneeCost}. Past that, each further percent costs roughly {tailCost} — about {ratio} times the earlier rate.
+ES: Cubrir cerca del {kneePct}% de tu energía cuesta unos {kneeCost}. Después, cada punto adicional cuesta unos {tailCost}, alrededor de {ratio} veces el ritmo anterior.
+PT: Cobrir cerca de {kneePct}% da sua energia custa uns {kneeCost}. Depois, cada ponto adicional custa cerca de {tailCost}, umas {ratio} vezes o ritmo anterior.
+FR: Couvrir environ {kneePct}% de votre énergie coûte autour de {kneeCost}. Ensuite, chaque point supplémentaire coûte environ {tailCost}, soit {ratio} fois le rythme précédent.
+DE: Etwa {kneePct} % deiner Energie abzudecken kostet rund {kneeCost}. Danach kostet jedes weitere Prozent etwa {tailCost} — rund {ratio}-mal so viel wie zuvor.
+NL: Ongeveer {kneePct}% van uw energie dekken kost rond {kneeCost}. Daarna kost elk extra procent ongeveer {tailCost} — ongeveer {ratio} keer het eerdere tarief.
+AR: تغطية نحو {kneePct}% من طاقتك تكلف قرابة {kneeCost}. بعد ذلك تكلف كل نقطة إضافية نحو {tailCost}، أي نحو {ratio} ضعف المعدل السابق.
+
+### frontierVerdictLinearOffgrid
+EN: Coverage tracks spending fairly evenly here — about {headCost} per percent, all the way to {ceilingPct}%.
+ES: Aquí la cobertura sigue al gasto de forma bastante pareja: unos {headCost} por punto, hasta el {ceilingPct}%.
+PT: Aqui a cobertura acompanha o gasto de forma bem regular: cerca de {headCost} por ponto, até {ceilingPct}%.
+FR: Ici la couverture suit la dépense assez régulièrement : environ {headCost} par point, jusqu'à {ceilingPct}%.
+DE: Abdeckung folgt den Ausgaben hier ziemlich gleichmäßig — etwa {headCost} pro Prozent, bis {ceilingPct} %.
+NL: De dekking volgt de uitgaven hier vrij gelijkmatig — ongeveer {headCost} per procent, helemaal tot {ceilingPct}%.
+AR: هنا تسير التغطية مع الإنفاق بانتظام: نحو {headCost} لكل نقطة، حتى {ceilingPct}%.
+
+### frontierVerdictBeyondSweepOffgrid
+EN: Within the sizes this tool searches — up to {pvMax} kW of panels and {battMax} kWh of battery — the most you can cover here is about {ceilingPct}%, for around {ceilingCost}. Good value runs out at {kneePct}% for about {kneeCost}. Full independence is not impossible here, but it needs a system far larger than this, and a generator or a grid connection is almost certainly the cheaper way to cover the rest.
+ES: Dentro de los tamaños que busca esta herramienta —hasta {pvMax} kW de paneles y {battMax} kWh de batería— lo máximo que puedes cubrir aquí es cerca del {ceilingPct}%, por unos {ceilingCost}. La buena relación se acaba en el {kneePct}% por unos {kneeCost}. La independencia total no es imposible aquí, pero exige un sistema mucho mayor; un generador o la red casi seguro son la forma más barata de cubrir el resto.
+PT: Dentro dos tamanhos que esta ferramenta busca — até {pvMax} kW de painéis e {battMax} kWh de bateria — o máximo que você cobre aqui é cerca de {ceilingPct}%, por uns {ceilingCost}. O bom custo-benefício acaba em {kneePct}% por uns {kneeCost}. A independência total não é impossível aqui, mas exige um sistema bem maior; um gerador ou a rede quase certamente são o jeito mais barato de cobrir o resto.
+FR: Dans les tailles explorées par cet outil — jusqu'à {pvMax} kW de panneaux et {battMax} kWh de batterie — le maximum que vous pouvez couvrir ici est d'environ {ceilingPct}%, pour environ {ceilingCost}. Le bon rapport s'arrête à {kneePct}% pour environ {kneeCost}. L'indépendance totale n'est pas impossible ici, mais elle demande un système bien plus grand ; un groupe électrogène ou le réseau est presque certainement le moyen le moins cher de couvrir le reste.
+DE: In den hier durchsuchten Größen — bis {pvMax} kW Panels und {battMax} kWh Batterie — lassen sich hier höchstens etwa {ceilingPct} % abdecken, für rund {ceilingCost}. Das gute Preis-Leistungs-Verhältnis endet bei {kneePct} % für etwa {kneeCost}. Volle Unabhängigkeit ist hier nicht unmöglich, braucht aber ein weit größeres System — und ein Generator oder Netzanschluss ist fast sicher der billigere Weg für den Rest.
+NL: Binnen de groottes die deze tool doorzoekt — tot {pvMax} kW aan panelen en {battMax} kWh aan accu — kunt u hier maximaal ongeveer {ceilingPct}% dekken, voor rond {ceilingCost}. Goede waarde houdt op bij {kneePct}% voor ongeveer {kneeCost}. Volledige onafhankelijkheid is hier niet onmogelijk, maar vereist een systeem dat veel groter is dan dit, en een generator of een netaansluiting is vrijwel zeker de goedkopere manier om de rest te dekken.
+AR: ضمن الأحجام التي تبحثها هذه الأداة — حتى {pvMax} كيلوواط ألواح و{battMax} كيلوواط ساعة بطارية — أقصى ما يمكن تغطيته هنا نحو {ceilingPct}%، بتكلفة قرابة {ceilingCost}. وتنتهي القيمة الجيدة عند {kneePct}% بنحو {kneeCost}. والاستقلال الكامل ليس مستحيلًا هنا، لكنه يحتاج نظامًا أكبر بكثير، وغالبًا يكون مولّد أو اتصال بالشبكة أرخص وسيلة لتغطية الباقي.
+
+### frontierMethod
+EN: The curve comes from simulating every panel-and-battery combination on a coarse grid against the same hourly weather as the cards above, then keeping only the systems nothing cheaper beats. Prices use the same landed do-it-yourself middle as every other figure on this page.
+ES: La curva simula cada combinación de paneles y batería en una malla gruesa con el mismo clima horario de las tarjetas; conserva solo las opciones que ninguna más barata supera. El coste usa el punto medio de un sistema montado por cuenta propia, con envío y aranceles, como el resto de la página.
+PT: A curva simula cada combinação de painéis e bateria numa malha grossa, com o mesmo clima horário dos cartões; mantém só as opções não superadas por outras mais baratas. O custo é o ponto médio de um sistema montado por conta própria, com frete e impostos de importação, como nos demais valores da página.
+FR: La courbe simule chaque combinaison de panneaux et de batterie sur une grille grossière, avec la météo horaire des cartes, puis ne garde que les options non dépassées par une moins chère. Comme ailleurs sur la page, le prix est au milieu de la fourchette d’un système à monter soi-même, livraison et droits de douane compris.
+DE: Die Kurve simuliert jede Kombination aus Modulen und Batterie auf einem groben Raster mit denselben stündlichen Wetterdaten wie oben. Sie zeigt nur Systeme, die kein günstigeres System übertrifft. Wie alle Seitenwerte nutzt der Preis die Mitte der Selbstbaukosten inklusive Versand und Einfuhrabgaben.
+NL: De curve simuleert elke combinatie van panelen en accu op een grof raster met hetzelfde uurweer als de kaarten. Alleen systemen die geen goedkoper systeem overtreft blijven staan. De prijs is, net als elders, het midden voor zelfbouw inclusief verzending en invoerrechten.
+AR: يحاكي المنحنى كل توليفة من الألواح والبطاريات على شبكة خشنة ببيانات الطقس الساعية نفسها أعلاه، ولا يُبقي إلا الأنظمة التي لا يتفوق عليها نظام أرخص. السعر منتصف تكلفة نظام يُجمّع ذاتيًا مع الشحن والرسوم الجمركية، كما في بقية الصفحة.
+
+### frontierMethodBattery
+EN: The curve comes from simulating every battery size on a coarse grid against the same hourly weather and tariff windows as the cards above, then keeping only the systems nothing cheaper beats. Panels are not part of this run, so the curve varies the bank alone. Prices use the same landed do-it-yourself middle as every other figure on this page.
+ES: La curva simula cada tamaño de batería con el mismo clima horario y las mismas franjas tarifarias de las tarjetas; conserva solo las opciones que ninguna más barata supera. Sin paneles, la curva solo varía la batería. El coste usa el punto medio de un sistema montado por cuenta propia, con envío y aranceles, igual que el resto de la página.
+PT: A curva simula cada tamanho de bateria com o mesmo clima horário e as mesmas janelas tarifárias dos cartões; mantém só as opções não superadas por outras mais baratas. Sem painéis, só varia a bateria. O custo é o ponto médio de um sistema montado por conta própria, com frete e impostos de importação, como nos demais valores da página.
+FR: La courbe simule chaque taille de batterie avec la météo horaire et les plages tarifaires des cartes ; elle ne garde que les options non dépassées par une moins chère. Sans panneaux, seule la capacité varie. Prix : milieu de la fourchette d’un système à monter soi-même, livraison et droits de douane compris, comme ailleurs sur la page.
+DE: Die Kurve simuliert jede Batteriegröße mit denselben stündlichen Wetterdaten und Tarifzeiten wie oben. Ohne Module variiert nur der Speicher; gezeigt werden Systeme, die kein günstigeres System übertrifft. Der Preis nutzt wie die übrigen Werte die Mitte der Selbstbaukosten inklusive Versand und Einfuhrabgaben.
+NL: De curve simuleert elke accugrootte met hetzelfde uurweer en dezelfde tariefvensters als de kaarten. Zonder panelen varieert alleen de accu; alleen systemen die geen goedkoper systeem overtreft blijven staan. De prijs is, net als elders, het midden voor zelfbouw inclusief verzending en invoerrechten.
+AR: يحاكي المنحنى أحجام البطاريات ببيانات الطقس الساعية ونوافذ التعرفة نفسها أعلاه. لا تدخل الألواح هنا، لذا يتغير حجم البطارية وحده؛ ولا يُبقي إلا الأنظمة التي لا يتفوق عليها نظام أرخص. السعر منتصف تكلفة نظام يُجمّع ذاتيًا مع الشحن والرسوم الجمركية، كما في بقية الصفحة.
+
+### chartDailySun
+EN: Daily solar output: {peak} kWh per kW of panel
+ES: Producción solar diaria: {peak} kWh por kW de panel
+PT: Produção solar diária: {peak} kWh por kW de painel
+FR: Production solaire quotidienne : {peak} kWh par kW de panneau
+DE: Täglicher Solarertrag: {peak} kWh je kW Modulleistung
+NL: Dagelijkse zonneopbrengst: {peak} kWh per kW paneel
+AR: الإنتاج الشمسي اليومي: {peak} كيلوواط ساعة لكل كيلوواط من الألواح
+
+### costNoSeriesTitle
+EN: Savings data unavailable for this result
+ES: No hay datos de ahorro para este resultado
+PT: Dados de economia indisponíveis para este resultado
+FR: Données d’économies indisponibles pour ce résultat
+DE: Für dieses Ergebnis sind keine Einsparungsdaten verfügbar
+NL: Besparingsgegevens niet beschikbaar voor dit resultaat
+AR: بيانات التوفير غير متاحة لهذه النتيجة
+
+### costNoSeriesBody
+EN: The sizing completed, but this result did not include a comparable 20-year cost series.
+ES: El cálculo terminó, pero este resultado no incluye una serie de costos comparable a 20 años.
+PT: O dimensionamento foi concluído, mas este resultado não inclui uma série de custos comparável de 20 anos.
+FR: Le dimensionnement est terminé, mais ce résultat ne comprend pas de série de coûts comparable sur 20 ans.
+DE: Die Systemauslegung ist abgeschlossen, aber dieses Ergebnis enthält keine vergleichbare Kostenreihe über 20 Jahre.
+NL: De dimensionering is voltooid, maar dit resultaat bevat geen vergelijkbare kostenreeks over 20 jaar.
+AR: اكتمل تحديد حجم النظام، لكن هذه النتيجة لا تتضمن سلسلة تكاليف قابلة للمقارنة على مدى 20 عامًا.
+
+### costMissingTariffTitle
+EN: Enter your grid price to see estimated savings
+ES: Introduce el precio de la electricidad de la red para ver el ahorro estimado
+PT: Informe o preço da energia da rede para ver a economia estimada
+FR: Saisissez le prix de l’électricité du réseau pour voir les économies estimées
+DE: Gib deinen Netzstrompreis ein, um die geschätzten Einsparungen zu sehen
+NL: Voer uw netstroomprijs in om de geschatte besparing te zien
+AR: أدخل سعر كهرباء الشبكة لمعرفة التوفير التقديري
+
+### costMissingTariffBody
+EN: The calculator can size the system without a tariff, but needs your electricity price to compare 20-year grid cost with solar cost.
+ES: La calculadora puede dimensionar el sistema sin una tarifa, pero necesita el precio de la electricidad para comparar el costo de la red con el de la energía solar durante 20 años.
+PT: A calculadora pode dimensionar o sistema sem uma tarifa, mas precisa do preço da eletricidade para comparar os custos da rede e da energia solar ao longo de 20 anos.
+FR: Le calculateur peut dimensionner le système sans tarif, mais il lui faut votre prix de l’électricité pour comparer les coûts du réseau et du solaire sur 20 ans.
+DE: Der Rechner kann das System auch ohne Tarif auslegen. Für den Kostenvergleich über 20 Jahre mit und ohne Solarstrom braucht er jedoch deinen Strompreis.
+NL: De calculator kan het systeem dimensioneren zonder tarief, maar heeft uw elektriciteitsprijs nodig om de netkosten over 20 jaar met de kosten van zonne-energie te vergelijken.
+AR: يمكن للحاسبة تحديد حجم النظام دون تعرفة، لكنها تحتاج إلى سعر الكهرباء لمقارنة تكلفة الشبكة بتكلفة الطاقة الشمسية على مدى 20 عامًا.
+
+### chartBankEmpty
+EN: Bank empty
+ES: Batería vacía
+PT: Bateria vazia
+FR: Batterie vide
+DE: Speicher leer
+NL: Accu leeg
+AR: البطارية فارغة
+
+### chartEmpty
+EN: Empty
+ES: Vacía
+PT: Vazia
+FR: Vide
+DE: Leer
+NL: Leeg
+AR: فارغة
+
+### socTier100
+EN: 100% - no generator needed
+ES: 100% - no necesita generador
+PT: 100% - não precisa de gerador
+FR: 100 % - aucun générateur nécessaire
+DE: 100 % - kein Generator nötig
+NL: 100% — geen generator nodig
+AR: 100% - لا حاجة إلى مولد
+
+### socTier99
+EN: 99% - generator only as rare backup
+ES: 99% - generador solo como respaldo poco frecuente
+PT: 99% - gerador só como reserva rara
+FR: 99 % - générateur en secours très occasionnel
+DE: 99 % - Generator nur selten als Reserve
+NL: 99% — generator alleen als zeldzame back-up
+AR: 99% - المولد احتياطي نادر فقط
+
+### socTier95
+EN: 95% - generator now and then
+ES: 95% - generador de vez en cuando
+PT: 95% - gerador de vez em quando
+FR: 95 % - générateur de temps en temps
+DE: 95 % - Generator gelegentlich nötig
+NL: 95% — af en toe een generator
+AR: 95% - الحاجة إلى المولد من حين لآخر
+
+### socCut60
+EN: ~60% bill cut - the grid covers the rest
+ES: ~60% menos en la factura - la red cubre el resto
+PT: ~60% de redução na conta - a rede cobre o restante
+FR: environ 60 % de facture en moins - le réseau couvre le reste
+DE: etwa 60 % weniger Stromkosten - das Netz deckt den Rest
+NL: ~60% lagere rekening — het net levert de rest
+AR: خفض الفاتورة بنحو 60% - الشبكة تغطي الباقي
+
+### socCut80
+EN: ~80% bill cut - small grid top-ups
+ES: ~80% menos en la factura - pequeños aportes de la red
+PT: ~80% de redução na conta - pequenos complementos da rede
+FR: environ 80 % de facture en moins - petits compléments du réseau
+DE: etwa 80 % weniger Stromkosten - nur kleine Netzbezüge
+NL: ~80% lagere rekening — kleine aanvullingen van het net
+AR: خفض الفاتورة بنحو 80% - سحب قليل من الشبكة

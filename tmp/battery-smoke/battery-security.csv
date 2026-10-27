@@ -1,0 +1,3 @@
+file,line,name,kind,fail_closed_score,fail_closed,blast_radius,failure_mode,test_coverage,strategy,test_priority,name_in_tests,verdict,verdict_confidence,judge_model
+assets/js/cf-beacon.js,22,resolveBeaconToken,function,2.57,0.857,2.49,silent-wrong-output,none,unit,0.56,true,,,jev-1.13.0
+assets/js/cf-beacon.js,38,injectBeacon,function,1.2,0.4,2.39,silent-wrong-output,none,unit,0.48,true,needs-human-look,0.85,jev-1.13.0

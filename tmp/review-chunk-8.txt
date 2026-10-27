@@ -1,0 +1,458 @@
+### pathsRowNet
+EN: Net over 20 years
+ES: Neto a 20 años
+PT: Líquido em 20 anos
+FR: Net sur 20 ans
+DE: Netto über 20 Jahre
+NL: Netto over 20 jaar
+AR: صافي 20 عامًا
+
+### pathsRowOwnership
+EN: Ownership
+ES: Titularidad
+PT: Propriedade
+FR: Propriété
+DE: Eigentum
+NL: Eigendom
+AR: الملكية
+
+### pathsRowEndOfTerm
+EN: At the end
+ES: Al final
+PT: No final
+FR: Au terme
+DE: Am Ende
+NL: Aan het einde
+AR: في النهاية
+
+### pathsCountsHeading
+EN: What this price counts
+ES: Qué incluye este precio
+PT: O que este preço inclui
+FR: Ce que ce prix inclut
+DE: Was dieser Preis umfasst
+NL: Wat deze prijs omvat
+AR: ما يشمله هذا السعر
+
+### pathsInstrumentLabel
+EN: Third-party route:
+ES: Vía de terceros:
+PT: Via de terceiros:
+FR: Voie tierce :
+DE: Drittanbieter-Weg:
+NL: Route via derden:
+AR: طريق الغير:
+
+### pathsGradeNote
+EN: Every figure above comes from one regional price registry with a named source and a confidence grade. Hardware is your own build estimate; labour, permits, incentives and replacements are registry figures. Nothing here is a vendor's quote.
+ES: Todas las cifras provienen de un único registro de precios regional con fuente indicada y grado de confianza. El hardware es tu propia estimación; la mano de obra, los permisos, los incentivos y las sustituciones son datos del registro. Nada de esto es una oferta de un vendedor.
+PT: Todos os números vêm de um único registro regional de preços com fonte declarada e grau de confiança. O hardware é a sua própria estimativa; mão de obra, licenças, incentivos e substituições são dados do registro. Nada aqui é a oferta de um fornecedor.
+FR: Tous les chiffres proviennent d'un même registre régional de prix avec source nommée et niveau de confiance. Le matériel est votre propre estimation ; la main-d'œuvre, les permis, les subventions et les remplacements viennent du registre. Rien ici n'est un devis de fournisseur.
+DE: Alle Zahlen stammen aus einem regionalen Preisregister mit genannter Quelle und Vertrauensstufe. Die Hardware ist Ihre eigene Schätzung; Arbeitszeit, Genehmigungen, Förderungen und Austausch kommen aus dem Register. Nichts davon ist ein Angebot eines Anbieters.
+NL: Elk cijfer hierboven komt uit één regionaal prijsregister met een genoemde bron en een betrouwbaarheidsgraad. Hardware is uw eigen bouwschatting; arbeid, vergunningen, subsidies en vervangingen zijn registercijfers. Niets hier is een leveranciersofferte.
+AR: كل رقم أعلاه يأتي من سجل أسعار إقليمي واحد بمصدر مذكور ودرجة ثقة. العتاد هو تقديرك أنت؛ أما العمل والتراخيص والحوافز والاستبدال فهي أرقام السجل. ولا شيء هنا عرض سعر من بائع.
+
+### pathsWhy
+EN: {cheaper} is {gap} cheaper than {dearer} over 20 years, driven mostly by {driver}.
+ES: {cheaper} sale {gap} menos que {dearer} en 20 años, sobre todo por {driver}.
+PT: {cheaper} sai {gap} menos que {dearer} em 20 anos, principalmente por causa de {driver}.
+FR: {cheaper} coûte {gap} de moins que {dearer} sur 20 ans, surtout à cause de {driver}.
+DE: {cheaper} ist über 20 Jahre {gap} günstiger als {dearer}, vor allem wegen {driver}.
+NL: {cheaper} is {gap} goedkoper dan {dearer} over 20 jaar, voornamelijk gedreven door {driver}.
+AR: {cheaper} أرخص بمقدار {gap} من {dearer} على 20 عامًا، والسبب الأهم هو {driver}.
+
+### pathsWhyCombined
+EN:  No single item explains the whole gap.
+ES:  Ningún elemento explica por sí solo toda la diferencia.
+PT:  Nenhum item isolado explica toda a diferença.
+FR:  Aucun poste n'explique à lui seul tout l'écart.
+DE:  Kein Einzelposten erklärt die ganze Differenz.
+NL:  Geen enkel item verklaart het hele verschil.
+AR:  لا يفسّر عنصر واحد وحده الفرق كاملًا.
+
+### pathsDriver_year0
+EN: the up-front price
+ES: el precio inicial
+PT: o preço inicial
+FR: le coût initial
+DE: der Vorauszahlungspreis
+NL: de aanschafprijs
+AR: سعر البداية
+
+### pathsDriver_incentives
+EN: who the incentives go to
+ES: a quién van los incentivos
+PT: para quem vão os incentivos
+FR: à qui vont les subventions
+DE: an wen die Förderungen gehen
+NL: wie de subsidies krijgt
+AR: الجهة التي تذهب إليها الحوافز
+
+### pathsDriver_om
+EN: maintenance
+ES: el mantenimiento
+PT: a manutenção
+FR: la maintenance
+DE: die Wartung
+NL: onderhoud
+AR: الصيانة
+
+### pathsDriver_replacements
+EN: battery and inverter replacements
+ES: las sustituciones de batería e inversor
+PT: as substituições de bateria e inversor
+FR: les remplacements de batterie et d'onduleur
+DE: die Batterie- und Wechselrichtertausche
+NL: accu- en omvormervervangingen
+AR: استبدال البطاريات والعاكسات
+
+### pathsDriver_leasePayments
+EN: the payments you make
+ES: los pagos que haces
+PT: os pagamentos que você faz
+FR: les versements que vous effectuez
+DE: die Zahlungen, die Sie leisten
+NL: de betalingen die u doet
+AR: الأقساط التي تدفعها
+
+### pathsDriver_none
+EN: no single item
+ES: ningún elemento concreto
+PT: nenhum item isolado
+FR: aucun poste précis
+DE: kein Einzelposten
+NL: geen enkel item
+AR: لا عنصر بعينه
+
+### pathsInstrumentPpa
+EN: PPA (you buy the energy)
+ES: PPA (compras la energía)
+PT: PPA (você compra a energia)
+FR: PPA (vous achetez l'énergie)
+DE: PPA (Sie kaufen den Strom)
+NL: PPA (u koopt de energie)
+AR: عقد شراء الطاقة
+
+### pathsInstrumentLease
+EN: Lease (you rent the system)
+ES: Alquiler (alquilas el sistema)
+PT: Locação (você aluga o sistema)
+FR: Location (vous louez le système)
+DE: Leasing (Sie mieten das System)
+NL: Lease (u huurt het systeem)
+AR: إيجار (تستأجر النظام)
+
+### pathsEndOfTermBuyout
+EN: Year {years}: you can buy it out for {buyoutPct}% of the installed price, and that buyout is inside this figure.
+ES: Año {years}: puedes comprarlo por el {buyoutPct}% del precio instalado, y esa compra ya está incluida en esta cifra.
+PT: Ano {years}: você pode quitarlo por {buyoutPct}% do preço instalado, e essa compra já está neste valor.
+FR: Année {years} : vous pouvez le racheter à {buyoutPct}% du prix installé, et ce rachat est inclus dans ce montant.
+DE: Jahr {years}: Sie können es für {buyoutPct}% des Installationspreises übernehmen, und diese Übernahme steckt in dieser Zahl.
+NL: Jaar {years}: u kunt het afkopen voor {buyoutPct}% van de installatieprijs, en die afkoop zit in dit cijfer.
+AR: السنة {years}: يمكنك شراؤه مقابل {buyoutPct}% من سعر التركيب، وهذا الشراء مُحتسب أصلًا في هذا الرقم.
+
+### pathsEndOfTermStillLeasing
+EN: In year {years} the term is still running, so no buyout is priced. Beyond 20 years you would still owe payments.
+ES: En el año {years} el contrato sigue vigente, así que no se incluye ninguna compra. Pasados los 20 años seguirías debiendo pagos.
+PT: No ano {years} o contrato ainda está em vigor, então nenhuma compra é incluída. Depois de 20 anos você ainda teria pagamentos a fazer.
+FR: En année {years} le contrat court encore : aucun rachat n'est inclus. Au-delà de 20 ans, vous resteriez redevable.
+DE: Im Jahr {years} läuft der Vertrag noch, eine Übernahme ist also nicht eingerechnet. Nach 20 Jahren wären weiterhin Zahlungen fällig.
+NL: In jaar {years} loopt de termijn nog, dus er is geen afkoop ingeprijsd. Na 20 jaar zou u nog steeds betalingen verschuldigd zijn.
+AR: في السنة {years} لا يزال العقد ساريًا، لذا لا يُحتسب أي شراء. وبعد 20 عامًا ستظل مدينًا بأقساط.
+
+### pathsOwnershipTurnkey
+EN: You own it from day one.
+ES: Eres propietario desde el primer día.
+PT: Você é dono desde o primeiro dia.
+FR: Il est à vous dès le premier jour.
+DE: Es gehört Ihnen vom ersten Tag an.
+NL: U bent vanaf dag één eigenaar.
+AR: أنت تملكه من اليوم الأول.
+
+### pathsOwnershipPpa
+EN: The provider owns it and keeps it maintained.
+ES: El proveedor es el propietario y lo mantiene.
+PT: O provedor é o dono e faz a manutenção.
+FR: Le fournisseur en reste propriétaire et l'entretient.
+DE: Der Anbieter bleibt Eigentümer und wartet es.
+NL: De aanbieder is eigenaar en houdt het onderhouden.
+AR: المزوّد هو المالك ويتولى الصيانة.
+
+### pathsOwnershipLease
+EN: You rent it until the term ends, then you buy it out or hand it back.
+ES: Lo alquileres hasta que termine el contrato y luego lo compras o lo devuelves.
+PT: Você aluga até o fim do contrato e então compra ou devolve.
+FR: Vous le louez jusqu'au terme, puis vous le rachetez ou le rendez.
+DE: Sie mieten es bis zum Vertragsende und übernehmen es dann oder geben es zurück.
+NL: U huurt het tot het einde van de termijn, dan koopt u het af of levert u het in.
+AR: تستأجره حتى نهاية العقد ثم تشتريه أو تعيده.
+
+### pathsOwnershipSelf
+EN: You own it once it is installed.
+ES: Eres propietario una vez instalado.
+PT: Você é dono assim que está instalado.
+FR: Il est à vous une fois installé.
+DE: Es gehört Ihnen, sobald es installiert ist.
+NL: U bent eigenaar zodra het is geïnstalleerd.
+AR: تملكه بعد تركيبه.
+
+### pathsIncentiveTaxCredit
+EN: Federal tax credit
+ES: Crédito fiscal federal
+PT: Crédito de imposto federal
+FR: Crédit d'impôt fédéral
+DE: Bundessteuergutschrift
+NL: Federale belastingkorting
+AR: ائتمان ضريبي فيدرالي
+
+### pathsIncentiveRebate
+EN: Utility rebate
+ES: Subvención de la compañía eléctrica
+PT: Desconto da concessionária
+FR: Subvention du distributeur
+DE: Zuschuss des Netzbetreibers
+NL: Energiebedrijf-korting
+AR: خصم من شركة الكهرباء
+
+### pathsIncentivesToProvider
+EN: Incentives go to the provider, not to you.
+ES: Los incentivos van al proveedor, no a ti.
+PT: Os incentivos vão para o provedor, não para você.
+FR: Les subventions vont au fournisseur, pas à vous.
+DE: Förderungen gehen an den Anbieter, nicht an Sie.
+NL: Subsidies gaan naar de aanbieder, niet naar u.
+AR: الحوافز تذهب إلى المزوّد لا إليك.
+
+### pathsIncentivesGoToProvider
+EN: The provider keeps them — you own nothing.
+ES: El proveedor se los queda: no eres propietario de nada.
+PT: O provedor fica com eles — você não é dono de nada.
+FR: Le fournisseur les conserve — vous ne possédez rien.
+DE: Der Anbieter behält sie — Sie besitzen nichts.
+NL: De aanbieder houdt ze — u bezit niets.
+AR: المزوّد يحتفظ بها — وأنت لا تملك شيئًا.
+
+### pathsNoIncentive
+EN: None applies to this route.
+ES: Ninguno se aplica a esta vía.
+PT: Nenhum se aplica a esta via.
+FR: Aucune ne s'applique à cette voie.
+DE: Für diesen Weg gilt keiner.
+NL: Geen van toepassing op deze route.
+AR: لا ينطبق أي منها على هذه الطريقة.
+
+### pathsNoVerifiedIncentive
+EN: We have no verified incentive for your region.
+ES: No tenemos un incentivo verificado para tu región.
+PT: Não temos incentivo verificado para sua região.
+FR: Nous n'avons pas de subvention vérifiée pour votre région.
+DE: Für Ihre Region haben wir keinen geprüften Anreiz.
+NL: We hebben geen geverifieerde subsidie voor uw regio.
+AR: لا يوجد لدينا حافز موثّق لمنطقتك.
+
+### pathsUnknown
+EN: Unknown
+ES: Desconocido
+PT: Desconhecido
+FR: Inconnu
+DE: Unbekannt
+NL: Onbekend
+AR: غير معروف
+
+### pathsNotWithinHorizon
+EN: Not within 20 years
+ES: No dentro de 20 años
+PT: Não em 20 anos
+FR: Pas sous 20 ans
+DE: Nicht in 20 Jahren
+NL: Niet binnen 20 jaar
+AR: ليس خلال 20 عامًا
+
+### pathsBreakEvenYear
+EN: Year {year}
+ES: Año {year}
+PT: Ano {year}
+FR: Année {year}
+DE: Jahr {year}
+NL: Jaar {year}
+AR: السنة {year}
+
+### pathsUnavailable
+EN: Not available
+ES: No disponible
+PT: Indisponível
+FR: Non disponible
+DE: Nicht verfügbar
+NL: Niet beschikbaar
+AR: غير متاح
+
+### pathsNoSystem
+EN: There is no system to price.
+ES: No hay ningún sistema que presupuestar.
+PT: Não há sistema a precificar.
+FR: Aucun système à chiffrer.
+DE: Es gibt kein System zu bepreisen.
+NL: Er is geen systeem om te prijzen.
+AR: لا يوجد نظام لتسعيره.
+
+### pathsNoTariff
+EN: A PPA needs a tariff to price against, so it is not shown here.
+ES: Un PPA necesita una tarifa con la que comparar, así que no se muestra aquí.
+PT: Um PPA precisa de uma tarifa para servir de referência, então não aparece aqui.
+FR: Un PPA a besoin d'un tarif de référence ; il n'est donc pas affiché ici.
+DE: Ein PPA braucht einen Tarif als Bezugsgröße und wird hier deshalb nicht gezeigt.
+NL: Een PPA heeft een tarief nodig om tegen te prijzen, dus wordt deze hier niet getoond.
+AR: يحتاج عقد الشراء إلى سعر كهرباء ليُسعَّر بمقابله، لذلك لا يظهر هنا.
+
+### pathsDiyNotPermitted
+EN: Not offered here: where you are, a licensed installer has to do the electrical work.
+ES: No se ofrece aquí: en tu zona, la instalación eléctrica la debe hacer un instalador con licencia.
+PT: Não oferecida aqui: na sua região, um instalador licenciado precisa fazer a parte elétrica.
+FR: Non proposée ici : dans votre région, l'installation électrique exige un installateur agréé.
+DE: Hier nicht angeboten: Bei Ihnen muss die Elektroinstallation von einem zugelassenen Fachbetrieb ausgeführt werden.
+NL: Hier niet aangeboden: waar u bent, moet een erkende installateur het elektrische werk doen.
+AR: غير معروضة هنا: في منطقتك يجب أن ينفّذ العمل الكهربائي مُثبِّت مرخّص.
+
+### pathsDiyRestricted
+EN: Not offered here: DIY mounting is restricted where you are.
+ES: No se ofrece aquí: el montaje DIY está restringido en tu zona.
+PT: Não oferecida aqui: a instalação DIY é restrita na sua região.
+FR: Non proposée ici : l'autoconsommation DIY est restreinte dans votre région.
+DE: Hier nicht angeboten: Die Eigenmontage ist bei Ihnen eingeschränkt.
+NL: Hier niet aangeboden: zelf monteren is beperkt waar u bent.
+AR: غير معروضة هنا: التركيب الذاتي مقيّد في منطقتك.
+
+### pathsDiyUnknown
+EN: Not offered here: we could not verify whether you may mount your own array.
+ES: No se ofrece aquí: no pudimos verificar si puedes montar tu propio panel.
+PT: Não oferecida aqui: não conseguimos verificar se você pode montar seu próprio painel.
+FR: Non proposée ici : nous n'avons pas pu vérifier si vous pouvez monter votre propre centrale.
+DE: Hier nicht angeboten: Wir konnten nicht prüfen, ob Sie Ihre Anlage selbst montieren dürfen.
+NL: Hier niet aangeboden: we konden niet verifiëren of u uw eigen veld mag monteren.
+AR: غير معروضة هنا: تعذّر التحقق مما إذا كان بإمكانك تركيب ألواحك بنفسك.
+
+### pathsNoteTurnkeyAllIn
+EN: One all-in price: the same hardware, plus labour, permits and the installer's margin.
+ES: Un único precio que incluye todo: el mismo hardware, más mano de obra, permisos y el margen del instalador.
+PT: Um preço único que inclui tudo: o mesmo hardware, mais mão de obra, licenças e a margem do instalador.
+FR: Un prix tout compris : le même matériel, plus la main-d'œuvre, les permis et la marge de l'installateur.
+DE: Ein Pauschalpreis: dieselbe Hardware, plus Arbeitszeit, Genehmigungen und die Marge des Installateurs.
+NL: Eén all-in-prijs: dezelfde hardware, plus arbeid, vergunningen en de marge van de installateur.
+AR: سعر واحد شامل: نفس العتاد، إضافة إلى العمل والتراخيص وهامش المُثبِّت.
+
+### pathsIncludesInstalledAllIn
+EN: Parts, labour and permits, already installed
+ES: Piezas, mano de obra y permisos, ya instalados
+PT: Peças, mão de obra e licenças, já instalados
+FR: Pièces, main-d'œuvre et permis, déjà installés
+DE: Teile, Arbeitszeit und Genehmigungen, bereits installiert
+NL: Onderdelen, arbeid en vergunningen, al geïnstalleerd
+AR: القطع والعمل والتراخيص، بعد التركيب
+
+### pathsIncludesProviderSwaps
+EN: The provider maintains and replaces the battery and inverter
+ES: El proveedor mantiene y sustituye batería e inversor
+PT: O provedor faz a manutenção e substitui bateria e inversor
+FR: Le fournisseur entretient et remplace batterie et onduleur
+DE: Der Anbieter wartet und tauscht Batterie und Wechselrichter
+NL: De aanbieder onderhoudt en vervangt de accu en omvormer
+AR: المزوّد يصون ويستبدل البطارية والعاكس
+
+### pathsIncludesIncentivesToProvider
+EN: Incentives go to the provider, not to you
+ES: Los incentivos van al proveedor, no a ti
+PT: Os incentivos vão para o provedor, não para você
+FR: Les subventions vont au fournisseur, pas à vous
+DE: Förderungen gehen an den Anbieter, nicht an Sie
+NL: Subsidies gaan naar de aanbieder, niet naar u
+AR: الحوافز تذهب إلى المزوّد لا إليك
+
+### pathsIncludesIncentivesIfEligible
+EN: Incentives, if you qualify for them
+ES: Incentivos, si te corresponden
+PT: Incentivos, se você se qualificar
+FR: Subventions, si vous y avez droit
+DE: Förderungen, sofern Sie Anspruch haben
+NL: Subsidies, als u ervoor in aanmerking komt
+AR: الحوافز، إن كنت مؤهلًا لها
+
+### pathsIncludesNoYear0Hardware
+EN: No hardware purchase up front
+ES: Sin compra de hardware al inicio
+PT: Sem compra de hardware no início
+FR: Aucun achat de matériel au départ
+DE: Keine Anschaffung von Hardware vorab
+NL: Geen hardware-aankoop vooraf
+AR: دون شراء عتاد مقدمًا
+
+### pathsIncludesEndOfTerm
+EN: The end-of-term choice is priced in
+ES: La decisión al final del contrato está incluida en el precio
+PT: A escolha no fim do contrato já está no preço
+FR: L'option de fin de contrat est intégrée au prix
+DE: Die Option am Vertragsende ist eingepreist
+NL: De keuze aan het einde van de termijn is ingeprijsd
+AR: خيار نهاية العقد مُحتسب في السعر
+
+### pathsIncludesHardwareYouBuy
+EN: The hardware you buy yourself
+ES: El hardware que compras tú
+PT: O hardware que você compra
+FR: Le matériel que vous achetez
+DE: die Hardware, die Sie selbst kaufen
+NL: De hardware die u zelf koopt
+AR: العتاد الذي تشتريه بنفسك
+
+### pathsIncludesElectricianInstalls
+EN: A licensed electrician installs it
+ES: Un electricista con licencia hace la instalación
+PT: Um eletricista licenciado faz a instalação
+FR: Un électricien agréé réalise l'installation
+DE: Ein zugelassener Elektriker montiert es
+NL: Een erkende elektricien installeert het
+AR: كهربائي مرخّص يتولى التركيب
+
+### pathsIncludesPermitsAndInterconnection
+EN: Permits, inspection and interconnection
+ES: Permisos, inspección y conexión a la red
+PT: Licenças, inspeção e conexão à rede
+FR: Permis, inspection et raccordement au réseau
+DE: Genehmigungen, Abnahme und Netzanschluss
+NL: Vergunningen, inspectie en netaansluiting
+AR: التراخيص، الفحص، والربط بالشبكة
+
+### pathsIncludesYouDoSwaps
+EN: You arrange and pay for bank swaps
+ES: Tú gestionas y pagas las sustituciones de baterías
+PT: Você providencia e paga as substituições de baterias
+FR: C'est vous qui organisez et payez les remplacements
+DE: Sie organisieren und bezahlen die Batteriewechsel selbst
+NL: U regelt en betaalt accuvervangingen
+AR: أنت تنظّم وتدفع استبدال البطاريات
+
+### pathsIncludesYouMountTheArray
+EN: You mount the array yourself
+ES: Tú montas el panel
+PT: Você monta o painel
+FR: Vous montez la centrale
+DE: Sie montieren die Anlage selbst
+NL: U monteert het veld zelf
+AR: أنت تركّب الألواح بنفسك
+
+### pathsIncludesElectricianConnects
+EN: An electrician does the connection
+ES: Un electricista hace la conexión
+PT: Um eletricista faz a conexão
+FR: Un électricien fait le raccordement
+DE: Ein Elektriker nimmt den Anschluss vor
+NL: Een elektricien doet de aansluiting
+AR: كهربائي يتولى عملية الربط
+
+### pathsIncludesToolsAndSafety
+EN: Tools and safety gear
+ES: Herramientas y equipo de seguridad
+PT: Ferramentas e equipamento de segurança
+FR: Outillage et équipement de sécurité
+DE: Werkzeug und Schutzausrüstung
+NL: Gereedschap en veiligheidsuitrusting
+AR: الأدوات ومعدات السلامة

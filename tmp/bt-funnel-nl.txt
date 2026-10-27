@@ -1,0 +1,153 @@
+R014	useCaseOffGridBlurb	[negation; r=1.12; j=0.59]
+  EN : Solar and battery sized for your whole home. Measured as the share of hours that run with no grid at all.
+  nl : Zonne-energie en accu gedimensioneerd voor uw hele huis. Gemeten als het aandeel van de uren dat volledig zonder net draait.
+  BT : Solar energy and battery sized for your entire house. Measured as the share of hours that run completely off the grid.
+
+R027	generatorAssumptionSuffix	[symbol; r=0.99; j=0.54]
+  EN : /kWh (fuel only — oil, filters, and engine wear push the true number higher). If you know your real $/kWh, type it directly instead.
+  nl : /kWh (alleen brandstof — olie, filters en motorslijtage verhogen de werkelijke kosten). Als u uw echte prijs per kWh kent, voer die dan rechtstreeks in.
+  BT : /kWh (fuel only — oil, filters, and engine wear increase the actual costs). If you know your real price per kWh, enter it directly.
+
+R055	fxCodeLabel	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : Currency code:
+  nl : Currency code:
+  BT : Currency code:
+
+R065	offlineFallback	[sentences; r=1.08; j=0.64]
+  EN : Yes. After your first visit the tool installs itself as an offline app: sizing math runs entirely in your browser, and if the network is down it falls back to bundled typical-year weather for the nearest of 66 reference cities.
+  nl : Ja. Na uw eerste bezoek installeert het hulpmiddel zichzelf als offline-app: de dimensioneringsberekening draait volledig in uw browser. Als het netwerk uitvalt, gebruikt het de meegeleverde weersgegevens voor een normaal jaar van de dichtstbijzijnde van 66 referentiesteden.
+  BT : Yes. After your first visit, the tool installs itself as an offline app: the sizing calculation runs entirely in your browser. If the network goes down, it uses the supplied weather data for a normal year from the nearest of 66 reference cities.
+
+R067	generatorAssumptionMiddle	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : /kWh, diesel
+  nl : /kWh, diesel
+  BT : /kWh, diesel
+
+R088	navBlog	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : Blog
+  nl : Blog
+  BT : Blog
+
+R097	pathsRowIncentives	[engine-noop; r=0.90; j=0.00]
+  EN : Incentives
+  nl : Subsidies
+  BT : Subsidies
+
+R134	assumptionsIntro	[sentences; r=1.02; j=0.52]
+  EN : Run a sizing first - every constant used (derates, temperature model, efficiencies, weather data years and source) is listed here.
+  nl : Voer eerst een dimensionering uit. Alle gebruikte constanten (deratings, temperatuurmodel, rendementen, weerjaren en bron) staan hier vermeld.
+  BT : First carry out a sizing. All used constants (deratings, temperature model, efficiencies, weather years, and source) are listed here.
+
+R139	autoChemLfp	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : LFP
+  nl : LFP
+  BT : LFP
+
+R141	uiInitFailed	[negation; r=0.97; j=0.50]
+  EN : Warning: Interface failed to load - please refresh the page (Ctrl+F5).
+  nl : Waarschuwing: Interface kon niet worden geladen - vernieuw de pagina (Ctrl+F5).
+  BT : Warning: Interface could not be loaded - refresh the page (Ctrl+F5).
+
+R146	batterySafety	[sentences; r=1.18; j=0.26]
+  EN : It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. The guides here insist on proper fusing, BMS use, and code compliance - and on having a licensed electrician check anything before you energize it.
+  nl : Dit vereist respect voor de risico's: lithiumcellen slaan genoeg energie op om brand te veroorzaken en een DC-vlamboog dooft niet vanzelf. De handleidingen hier benadrukken correcte zekeringen, gebruik van een BMS en naleving van voorschriften. Laat alles vóór het inschakelen controleren door een erkend elektricien.
+  BT : This requires respect for the risks: lithium cells store enough energy to cause a fire, and a DC arc does not extinguish itself. The manuals here emphasize correct fuses, use of a BMS, and compliance with regulations. Have everything checked by a certified electrician before switching it on.
+
+R151	bomSafetyNote	[sentences; r=1.09; j=0.41]
+  EN : Educational estimate from your sizing result — not an engineering design, not a shopping order. Fuse and cable figures assume copper, conservative ampacity, and a short battery-to-inverter run; verify everything against your local electrical code with a licensed professional before buying or energizing anything.
+  nl : Educatieve schatting op basis van uw dimensioneringsresultaat — geen technisch ontwerp en geen bestellijst. Zekering- en kabelwaarden gaan uit van koper, conservatieve stroomcapaciteit en een korte kabel tussen accu en omvormer. Controleer alles vóór aankoop of inschakeling met een erkende vakman aan de hand van uw lokale elektrische voorschriften.
+  BT : Educational estimate based on your sizing result — not a technical design and not a parts list. Fuse and cable values are based on copper, conservative current capacity, and a short cable between battery and inverter. Check everything before purchase or activation with a certified professional according to your local electrical regulations.
+
+R170	surplusTargetHelp	[sentences; r=1.09; j=0.58]
+  EN : Above 100% the system is sized to produce sellable surplus — without a feed-in credit entered above, that surplus has no cash value and is flagged as clipped waste. The “your target” matrix column and the price-cut curve follow this slider.
+  nl : Boven 100% wordt het systeem ontworpen om verkoopbaar overschot te produceren. Zonder een hierboven ingevoerd teruglevertarief heeft dat overschot geen geldwaarde en wordt het gemarkeerd als afgevoerd overschot. De kolom 'uw doel' in de matrix en de prijsreductiecurve volgen deze schuifregelaar.
+  BT : Above 100%, the system is designed to produce salable surplus. Without a feed-in tariff entered above, that surplus has no monetary value and is marked as disposed surplus. The column 'your target' in the matrix and the price reduction curve follow this slider.
+
+R171	speedNoteRepeat	[overlap; r=1.10; j=0.15]
+  EN : ⚡ Instant — repeat of this exact setup (computed moments ago)
+  nl : ⚡ Direct — herhaling van deze exacte configuratie (zojuist berekend)
+  BT : ⚡ Direct — repetition of this exact configuration (just calculated)
+
+R195	locationPrecision	[length,sentences; r=0.57; j=0.38]
+  EN : A city lookup is convenient, but your exact location gives the most precise weather and solar estimate. Enter custom latitude and longitude manually, or use Use my precise location for browser GPS.
+  nl : Een plaatsopzoeking is handig, maar met uw exacte locatie krijgt u de nauwkeurigste weer- en zonneschatting.
+  BT : A location lookup is convenient, but with your exact location you get the most accurate weather and sun estimate.
+
+R220	advisorUnreachable	[sentences; r=0.84; j=0.50]
+  EN :  The AI advisor is unreachable right now{status}.\n\nCheck your connection and try again in a moment.
+  nl :  De AI-adviseur is momenteel onbereikbaar{status}.
+
+Controleer uw verbinding en probeer het zo opnieuw.
+  BT : The AI advisor is currently unavailable{status}. Check your connection and try again.
+
+R243	metricOutageCoverage	[overlap; r=1.10; j=0.19]
+  EN : of power cuts your essentials ride out for the full target
+  nl : van de stroomuitvallen die uw essentiële apparaten volledig doorstaan
+  BT : of the power outages that your essential devices fully withstand
+
+R260	chemLabel	[engine-noop; r=0.61; j=0.00]
+  EN : Battery chemistry:
+  nl : Accuchemie:
+  BT : Accuchemie:
+
+R262	apWatts	[untranslated,engine-noop; r=1.00; j=0.00]
+  EN : ~{w} W
+  nl : ~{w} W
+  BT : ~{w} W
+
+R283	frontierMethod	[sentences; r=1.00; j=0.26]
+  EN : The curve comes from simulating every panel-and-battery combination on a coarse grid against the same hourly weather as the cards above, then keeping only the systems nothing cheaper beats. Prices use the same landed do-it-yourself middle as every other figure on this page.
+  nl : De curve simuleert elke combinatie van panelen en accu op een grof raster met hetzelfde uurweer als de kaarten. Alleen systemen die geen goedkoper systeem overtreft blijven staan. De prijs is, net als elders, het midden voor zelfbouw inclusief verzending en invoerrechten.
+  BT : The curve simulates every combination of panels and battery on a coarse grid with the same hourly weather as the maps. Only systems that do not outperform a cheaper system remain. The price is, as elsewhere, the average for self-building including shipping and import duties.
+
+R290	advisorBusy	[sentences; r=0.97; j=0.59]
+  EN :  The free AI engine is swamped right now (HTTP {status} — it runs on a shared free quota).\n\nPlease wait about a minute and send that again.
+  nl :  De gratis AI-engine is momenteel overbelast (HTTP {status} — hij draait op een gedeeld gratis quotum).
+
+Wacht ongeveer een minuut en verstuur het opnieuw.
+  BT : The free AI engine is currently overloaded (HTTP {status} — it is running on a shared free quota). Wait about a minute and send it again.
+
+R315	pathsLabel_lease	[engine-noop; r=1.00; j=1.00]
+  EN : Lease or PPA
+  nl : Lease of PPA
+  BT : Lease of PPA
+
+R377	frontierSelTag	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : {pv} kW + {batt} kWh · {pct}% · {cost}
+  nl : {pv} kW + {batt} kWh · {pct}% · {cost}
+  BT : {pv} kW + {batt} kWh · {pct}% · {cost}
+
+R407	pipelineCached	[engine-noop; r=1.33; j=0.00]
+  EN : cached
+  nl : in cache
+  BT : in cache
+
+R409	costNoSeriesTitle	[negation; r=1.05; j=0.63]
+  EN : Savings data unavailable for this result
+  nl : Besparingsgegevens niet beschikbaar voor dit resultaat
+  BT : Savings data not available for this result
+
+R431	cumCostCaptionOwnCost	[figure; r=1.24; j=0.60]
+  EN : The emerald line is the solar system's own cost (~{systemTotal}), matching the “Total 20-year cost” row for this system.
+  nl : De smaragdgroene lijn is de eigen kostprijs van het zonnesysteem (~{systemTotal}), overeenkomend met de rij “Totale kosten over jaar” voor dit systeem.
+  BT : The emerald green line is the own cost price of the solar system (~{systemTotal}), corresponding to the row “Total costs over years” for this system.
+
+R436	estimateMethodDisclaimer	[sentences; r=1.04; j=0.64]
+  EN : Every number comes from testable code simulating your exact location against five years of NASA satellite weather - not an AI guessing. Real-world results still vary with shading, installation quality, and hardware, so have a licensed professional verify anything you build.
+  nl : Elk getal komt uit testbare code die uw exacte locatie doorrekent met vijf jaar satellietweer van NASA — het is geen AI-gok. Resultaten in de praktijk variëren nog steeds door schaduw, installatiekwaliteit en hardware. Laat alles wat u bouwt door een erkende vakman controleren.
+  BT : Every number comes from testable code that calculates your exact location with five years of NASA satellite weather — it is not an AI guess. Results in practice still vary due to shading, installation quality, and hardware. Have everything you build checked by a certified professional.
+
+R443	pathsNoIncentive	[negation; r=1.07; j=0.33]
+  EN : None applies to this route.
+  nl : Geen van toepassing op deze route.
+  BT : Not applicable to this route.
+
+R445	errorSim	[negation; r=1.19; j=0.44]
+  EN : ⚠️ Sizing engine failed to load. Refresh the page (Ctrl+F5) and try again.
+  nl : ⚠️ De berekeningsmodule kon niet worden geladen. Vernieuw de pagina (Ctrl+F5) en probeer het opnieuw.
+  BT : ⚠️ The calculation module could not be loaded. Refresh the page (Ctrl+F5) and try again.
+
+R467	applianceWattages	[unit,sentences; r=1.23; j=0.51]
+  EN : Wattages are typical values — yours may differ. Cycling appliances (fridges, freezers, air conditioners, pumps) only draw power while running: their slider is hours actually running per day, capped to realistic compressor time, and each row shows the resulting 24-hour average. A modern fridge at the default (100 W running, ~10 h/day) really does use about 1 kWh/day.
+  nl : Vermogens zijn gebruikelijke waarden; die van u kunnen afwijken. Apparaten die in cycli werken (koelkasten, diepvriezers, airconditioners, pompen) gebruiken alleen stroom wanneer ze draaien: de schuifregelaar gaat over de uren per dag dat ze echt draaien, begrensd op realistische compressortijd. Elke regel toont het resulterende gemiddelde over 24 uur. Een moderne koelkast gebruikt bij de standaardinstelling (100 W tijdens bedrijf, ongeveer 10 uur per dag) werkelijk circa 1 kWh per dag.
+  BT : Powers are typical values; yours may differ. Devices that operate in cycles (refrigerators, freezers, air conditioners, pumps) only use electricity when they are running: the slider refers to the hours per day that they are actually running, limited to realistic compressor time. Each line shows the resulting 24-hour average. A modern refrigerator at the standard setting (100 W while running, about 10 hours per day) actually uses about 1 kWh per day.

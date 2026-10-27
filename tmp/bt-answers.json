@@ -1,0 +1,194 @@
+{
+ "es": [
+  {
+   "id": "R164",
+   "key": "cumCostCaptionOwnCostNoPanels",
+   "seed": "figure-drop"
+  },
+  {
+   "id": "R253",
+   "key": "frontierVerdictTaperingBattery",
+   "seed": "meaning-drop"
+  },
+  {
+   "id": "R310",
+   "key": "frontierVerdictTaperingOffgrid",
+   "seed": "known-good"
+  },
+  {
+   "id": "R316",
+   "key": "infeasibleNeedsPanelsBody",
+   "seed": "untranslated-english"
+  },
+  {
+   "id": "R362",
+   "key": "fuelGalLabel",
+   "seed": "known-good"
+  },
+  {
+   "id": "R387",
+   "key": "generatorRuntime0",
+   "seed": "known-good"
+  }
+ ],
+ "pt": [
+  {
+   "id": "R036",
+   "key": "roofAreaLabel",
+   "seed": "known-good"
+  },
+  {
+   "id": "R244",
+   "key": "advisorIntakeBillPh",
+   "seed": "meaning-drop"
+  },
+  {
+   "id": "R255",
+   "key": "frontierLegendCeiling",
+   "seed": "known-good"
+  },
+  {
+   "id": "R307",
+   "key": "cumCostLegendResidual",
+   "seed": "known-good"
+  },
+  {
+   "id": "R352",
+   "key": "quickBillManual",
+   "seed": "untranslated-english"
+  },
+  {
+   "id": "R471",
+   "key": "cumCostCaptionOwnCost",
+   "seed": "figure-drop"
+  }
+ ],
+ "fr": [
+  {
+   "id": "R149",
+   "key": "advisorDegradedRetry",
+   "seed": "untranslated-english"
+  },
+  {
+   "id": "R190",
+   "key": "sourcesCardBody",
+   "seed": "meaning-drop"
+  },
+  {
+   "id": "R200",
+   "key": "apKwhDay",
+   "seed": "known-good"
+  },
+  {
+   "id": "R332",
+   "key": "runBtn",
+   "seed": "figure-drop"
+  },
+  {
+   "id": "R342",
+   "key": "bomSelectedSystem",
+   "seed": "known-good"
+  },
+  {
+   "id": "R414",
+   "key": "estimateMethodDisclaimer",
+   "seed": "known-good"
+  }
+ ],
+ "de": [
+  {
+   "id": "R052",
+   "key": "resultsIntro",
+   "seed": "meaning-drop"
+  },
+  {
+   "id": "R053",
+   "key": "fxAsOfNote",
+   "seed": "known-good"
+  },
+  {
+   "id": "R054",
+   "key": "liabilityLimitation",
+   "seed": "known-good"
+  },
+  {
+   "id": "R211",
+   "key": "heroIntro",
+   "seed": "known-good"
+  },
+  {
+   "id": "R348",
+   "key": "pathsUnknown",
+   "seed": "untranslated-english"
+  },
+  {
+   "id": "R389",
+   "key": "uiInitFailed",
+   "seed": "figure-drop"
+  }
+ ],
+ "nl": [
+  {
+   "id": "R055",
+   "key": "fxCodeLabel",
+   "seed": "untranslated-english"
+  },
+  {
+   "id": "R195",
+   "key": "locationPrecision",
+   "seed": "meaning-drop"
+  },
+  {
+   "id": "R227",
+   "key": "simpleHeadline",
+   "seed": "known-good"
+  },
+  {
+   "id": "R252",
+   "key": "frontierVerdictBeyondSweepBattery",
+   "seed": "known-good"
+  },
+  {
+   "id": "R352",
+   "key": "pipelineReaching",
+   "seed": "known-good"
+  },
+  {
+   "id": "R431",
+   "key": "cumCostCaptionOwnCost",
+   "seed": "figure-drop"
+  }
+ ],
+ "ar": [
+  {
+   "id": "R034",
+   "key": "pipelineSimulating",
+   "seed": "known-good"
+  },
+  {
+   "id": "R153",
+   "key": "cumSavingsHeadline",
+   "seed": "figure-drop"
+  },
+  {
+   "id": "R174",
+   "key": "runBtn",
+   "seed": "known-good"
+  },
+  {
+   "id": "R266",
+   "key": "errorSim",
+   "seed": "known-good"
+  },
+  {
+   "id": "R405",
+   "key": "batterySafety",
+   "seed": "untranslated-english"
+  },
+  {
+   "id": "R439",
+   "key": "pathsGradeNote",
+   "seed": "meaning-drop"
+  }
+ ]
+}

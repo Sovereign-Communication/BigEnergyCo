@@ -1,0 +1,118 @@
+R062	bomSafetyNote	[sentences; r=1.09; j=0.52]
+  EN : Educational estimate from your sizing result — not an engineering design, not a shopping order. Fuse and cable figures assume copper, conservative ampacity, and a short battery-to-inverter run; verify everything against your local electrical code with a licensed professional before buying or energizing anything.
+  pt : Estimativa educativa baseada no dimensionamento — não é um projeto de engenharia nem uma lista de compras. Os valores de fusíveis e cabos pressupõem cobre, capacidade de corrente conservadora e um trecho curto entre a bateria e o inversor. Antes de comprar ou energizar qualquer coisa, verifique tudo com um profissional habilitado conforme o código elétrico local.
+  BT : Educational estimate based on sizing — it is not an engineering project or a shopping list. The fuse and cable values assume copper, a conservative current capacity, and a short run between the battery and the inverter. Before buying or powering anything, check everything with a qualified professional according to the local electrical code.
+
+R091	advisorIntakeBillPh	[engine-noop; r=0.88; j=0.00]
+  EN : e.g. 400
+  pt : ex. 400
+  BT : ex. 400
+
+R093	frontierLegendBand	[length,sentences,overlap; r=1.98; j=0.21]
+  EN : Same systems, DIY sourcing to shipped retail
+  pt : Os mesmos sistemas: de peças para montagem própria a sistemas completos entregues no varejo.
+  BT : The same systems: from parts for self-assembly to complete systems delivered at retail.
+
+R102	pathsUnavailable	[negation; r=0.85; j=0.00]
+  EN : Not available
+  pt : Indisponível
+  BT : Unavailable
+
+R138	generatorAssumptionMiddle	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : /kWh, diesel
+  pt : /kWh, diesel
+  BT : /kWh, diesel
+
+R150	errorSim	[negation; r=1.05; j=0.77]
+  EN : ⚠️ Sizing engine failed to load. Refresh the page (Ctrl+F5) and try again.
+  pt : ⚠️ O motor de dimensionamento não pôde carregar. Atualize a página (Ctrl+F5) e tente novamente.
+  BT : ⚠️ The sizing engine could not load. Refresh the page (Ctrl+F5) and try again.
+
+R158	donationTermsPrefix	[negation; r=1.04; j=0.42]
+  EN : Any contribution you choose to send is a voluntary gift to an individual. It is
+  pt : Qualquer contribuição que você decidir enviar é uma doação voluntária a uma pessoa. Ela não é
+  BT : Any contribution you decide to send is a voluntary donation to a person. It is not
+
+R191	apWatts	[untranslated,engine-noop; r=1.00; j=0.00]
+  EN : ~{w} W
+  pt : ~{w} W
+  BT : ~{w} W
+
+R207	generatorRuntime2	[negation; r=1.41; j=0.20]
+  EN : 2%+ — fine when needed
+  pt : 2%+ — sem problema quando necessário
+  BT : 2%+ — no problem when necessary
+
+R209	autoChemLfp	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : LFP
+  pt : LFP
+  BT : LFP
+
+R221	navBlog	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : Blog
+  pt : Blog
+  BT : Blog
+
+R239	uiInitFailed	[negation; r=0.96; j=0.64]
+  EN : Warning: Interface failed to load - please refresh the page (Ctrl+F5).
+  pt : Aviso: a interface não pôde carregar — atualize a página (Ctrl+F5).
+  BT : Warning: the interface could not load — refresh the page (Ctrl+F5).
+
+R244	advisorIntakeBillPh	[figure,engine-noop; r=0.38; j=0.00]
+  EN : e.g. 400
+  pt : ex.
+  BT : ex.
+
+R273	advisorIntakeKwhPh	[engine-noop; r=0.86; j=0.00]
+  EN : e.g. 35
+  pt : ex. 35
+  BT : ex. 35
+
+R275	metricOutageCoverage	[overlap; r=1.05; j=0.06]
+  EN : of power cuts your essentials ride out for the full target
+  pt : dos apagões que o essencial atravessa pelo tempo todo
+  BT : of the blackouts that the essential goes through all the time
+
+R322	advisorBusy	[sentences; r=0.88; j=0.61]
+  EN :  The free AI engine is swamped right now (HTTP {status} — it runs on a shared free quota).\n\nPlease wait about a minute and send that again.
+  pt :  O motor gratuito de IA está sobrecarregado agora (HTTP {status} — usa uma quota partilhada).
+
+Espere cerca de um minuto e envie novamente.
+  BT : The free AI engine is overloaded right now (HTTP {status} — using a shared quota). Please wait about a minute and try again.
+
+R352	quickBillManual	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : Quick estimate: ~{bill} (starts from ~{kwh} kWh/day) — switch to Manual to change your bill, appliances, or rate.
+  pt : Quick estimate: ~{bill} (starts from ~{kwh} kWh/day) — switch to Manual to change your bill, appliances, or rate.
+  BT : Quick estimate: ~{bill} (starts from ~{kwh} kWh/day) — switch to Manual to change your bill, appliances, or rate.
+
+R358	donationNotTaxDeductible	[negation; r=0.78; j=0.67]
+  EN : not tax-deductible
+  pt : dedutível do imposto
+  BT : tax-deductible
+
+R366	cumSavingsBreakEven	[sentences; r=1.24; j=0.41]
+  EN : Break-even in year {year} — every year after puts money back in your pocket{kwhBits}
+  pt : O investimento se paga no ano {year}; cada ano seguinte põe dinheiro de volta no seu bolso{kwhBits}.
+  BT : The investment pays off in the year {year}; each following year puts money back in your pocket{kwhBits}.
+
+R377	surplusTargetHelp	[sentences; r=1.19; j=0.49]
+  EN : Above 100% the system is sized to produce sellable surplus — without a feed-in credit entered above, that surplus has no cash value and is flagged as clipped waste. The “your target” matrix column and the price-cut curve follow this slider.
+  pt : Acima de 100%, o sistema é dimensionado para produzir excedente vendável. Sem informar acima um crédito pela energia injetada na rede, esse excedente não tem valor monetário e aparece como desperdício limitado. A coluna «sua meta» da matriz e a curva de redução de preço acompanham este controle.
+  BT : Above 100%, the system is sized to produce sellable excess. Without informing a credit for the energy injected into the grid above, this excess has no monetary value and appears as limited waste. The column "your target" of the matrix and the price reduction curve follow this control.
+
+R384	frontierSelTag	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : {pv} kW + {batt} kWh · {pct}% · {cost}
+  pt : {pv} kW + {batt} kWh · {pct}% · {cost}
+  BT : {pv} kW + {batt} kWh · {pct}% · {cost}
+
+R419	advisorUnreachable	[sentences; r=1.08; j=0.37]
+  EN :  The AI advisor is unreachable right now{status}.\n\nCheck your connection and try again in a moment.
+  pt :  O consultor de IA está indisponível neste momento{status}.
+
+Verifique a ligação e tente novamente dentro de instantes.
+  BT : The AI consultant is unavailable at this moment{status}. Check the connection and try again in a few moments.
+
+R471	cumCostCaptionOwnCost	[figure; r=0.99; j=0.63]
+  EN : The emerald line is the solar system's own cost (~{systemTotal}), matching the “Total 20-year cost” row for this system.
+  pt : A linha esmeralda é o custo próprio do sistema solar (~{systemTotal}), igual à linha “Custo total em anos” deste sistema.
+  BT : The emerald line is the system's own cost (~{systemTotal}), the same as the 'Total cost in years' line for this system.

@@ -1,0 +1,494 @@
+### pipelineRendering
+EN: Rendering
+ES: Renderizando
+PT: Renderizando
+FR: Rendu
+DE: Rendern
+NL: Renderen
+AR: العرض
+
+### pipelineElapsed
+EN: {s}s elapsed
+ES: {s} s transcurridos
+PT: {s} s decorridos
+FR: {s} s écoulées
+DE: {s} s vergangen
+NL: {s}s verstreken
+AR: مرّت {s} ثانية
+
+### pipelineCached
+EN: cached
+ES: en caché
+PT: em cache
+FR: en cache
+DE: im Cache
+NL: in cache
+AR: مخزّن
+
+### pipelineReaching
+EN: reaching satellite…
+ES: contactando el satélite…
+PT: contatando o satélite…
+FR: contact du satellite…
+DE: Satellit wird erreicht…
+NL: satelliet wordt bereikt…
+AR: جارٍ الاتصال بالقمر الصناعي…
+
+### pipelineChunks
+EN: {done}/{total} satellite chunks
+ES: {done}/{total} fragmentos satelitales
+PT: {done}/{total} blocos de satélite
+FR: {done}/{total} tranches satellite
+DE: {done}/{total} Satelliten-Abschnitte
+NL: {done}/{total} satellietbrokken
+AR: {done}/{total} مقاطع فضائية
+
+### speedNoteRepeat
+EN: ⚡ Instant — repeat of this exact setup (computed moments ago)
+ES: ⚡ Instantáneo — repetición exacta de esta configuración (calculada hace un momento)
+PT: ⚡ Instantâneo — repetição exata desta configuração (calculada há instantes)
+FR: ⚡ Instantané — répétition exacte de cette configuration (calculée à l'instant)
+DE: ⚡ Sofort — exakte Wiederholung dieses Setups (gerade berechnet)
+NL: ⚡ Direct — herhaling van deze exacte configuratie (zojuist berekend)
+AR: ⚡ فوري — تكرار دقيق لهذا الإعداد (حُسب الآن)
+
+### speedNoteCached
+EN: ⚡ Instant — cached satellite weather
+ES: ⚡ Instantáneo — clima satelital en caché
+PT: ⚡ Instantâneo — clima de satélite em cache
+FR: ⚡ Instantané — météo satellite en cache
+DE: ⚡ Sofort — gespeichertes Satellitenwetter
+NL: ⚡ Direct — satellietweer in cache
+AR: ⚡ فوري — طقس الأقمار الصناعية مخزّن
+
+### speedNoteCachedWhere
+EN: ⚡ Instant — cached satellite weather for {where}
+ES: ⚡ Instantáneo — clima satelital en caché para {where}
+PT: ⚡ Instantâneo — clima de satélite em cache para {where}
+FR: ⚡ Instantané — météo satellite en cache pour {where}
+DE: ⚡ Sofort — gespeichertes Satellitenwetter für {where}
+NL: ⚡ Direct — satellietweer in cache voor {where}
+AR: ⚡ فوري — طقس الأقمار الصناعية مخزّن لـ {where}
+
+### speedNoteOffline
+EN: ⚡ Instant — offline typical-year
+ES: ⚡ Instantáneo — año típico sin conexión
+PT: ⚡ Instantâneo — ano típico offline
+FR: ⚡ Instantané — année type hors ligne
+DE: ⚡ Sofort — typisches Offline-Jahr
+NL: ⚡ Direct — offline typisch jaar
+AR: ⚡ فوري — سنة نموذجية دون اتصال
+
+### speedNoteOfflineWhere
+EN: ⚡ Instant — offline typical-year for {where}
+ES: ⚡ Instantáneo — año típico sin conexión para {where}
+PT: ⚡ Instantâneo — ano típico offline para {where}
+FR: ⚡ Instantané — année type hors ligne pour {where}
+DE: ⚡ Sofort — typisches Offline-Jahr für {where}
+NL: ⚡ Direct — offline typisch jaar voor {where}
+AR: ⚡ فوري — سنة نموذجية دون اتصال لـ {where}
+
+### fmtAllDay
+EN: all day (24 h)
+ES: todo el día (24 h)
+PT: o dia todo (24 h)
+FR: journée entière (24 h)
+DE: ganztägig (24 h)
+NL: de hele dag (24 u)
+AR: طوال اليوم (24 ساعة)
+
+### fmtHoursDay
+EN: {h} h/day
+ES: {h} h/día
+PT: {h} h/dia
+FR: {h} h/jour
+DE: {h} h/Tag
+NL: {h} u/dag
+AR: {h} ساعة/يوم
+
+### fmtMinutesDay
+EN: {m} min/day
+ES: {m} min/día
+PT: {m} min/dia
+FR: {m} min/jour
+DE: {m} min/Tag
+NL: {m} min/dag
+AR: {m} دقيقة/يوم
+
+### apWattsRunning
+EN: ~{w} W while running
+ES: ~{w} W en funcionamiento
+PT: ~{w} W em funcionamento
+FR: ~{w} W en fonctionnement
+DE: ~{w} W im Betrieb
+NL: ~{w} W tijdens gebruik
+AR: ~{w} واط أثناء التشغيل
+
+### apWatts
+EN: ~{w} W
+ES: ~{w} W
+PT: ~{w} W
+FR: ~{w} W
+DE: ~{w} W
+NL: ~{w} W
+AR: ~{w} واط
+
+### apKwhDay
+EN: {kwh} kWh/day
+ES: {kwh} kWh/día
+PT: {kwh} kWh/dia
+FR: {kwh} kWh/jour
+DE: {kwh} kWh/Tag
+NL: {kwh} kWh/dag
+AR: {kwh} كيلوواط·ساعة/يوم
+
+### apAvgW
+EN:  (~{w} W avg)
+ES:  (~{w} W de media)
+PT:  (~{w} W méd.)
+FR:  (~{w} W moy.)
+DE:  (~{w} W Ø)
+NL:  (~{w} W gem.)
+AR:  (~{w} واط في المتوسط)
+
+### offgridKwhReadout
+EN: ~{kwh} kWh/day
+ES: ~{kwh} kWh/día
+PT: ~{kwh} kWh/dia
+FR: ~{kwh} kWh/jour
+DE: ~{kwh} kWh/Tag
+NL: ~{kwh} kWh/dag
+AR: ~{kwh} كيلوواط·ساعة/يوم
+
+### quickBillStarts
+EN: Starts from ~{bill} (≈{kwh} kWh/day). Set your real bill here, choose a location, then click Size My System. The bill-cut slider appears with results.
+ES: Empieza desde ~{bill} (≈{kwh} kWh/día). Pon aquí tu factura real, elige una ubicación y pulsa Dimensionar mi sistema. El control de recorte aparece con los resultados.
+PT: Começa em ~{bill} (≈{kwh} kWh/dia). Coloque aqui sua conta real, escolha uma localização e clique em Dimensionar meu sistema. O controle de corte aparece com os resultados.
+FR: Démarre à ~{bill} (≈{kwh} kWh/jour). Indiquez ici votre vraie facture, choisissez un lieu, puis cliquez sur Dimensionner mon système. Le curseur de réduction apparaît avec les résultats.
+DE: Beginnt bei ~{bill} (≈{kwh} kWh/Tag). Tragen Sie hier Ihre echte Rechnung ein, wählen Sie einen Standort und klicken Sie auf Mein System dimensionieren. Der Spar-Schieber erscheint mit den Ergebnissen.
+NL: Begint bij ~{bill} (≈{kwh} kWh/dag). Stel hier uw echte rekening in, kies een locatie en klik op Systeem dimensioneren. De besparingsschuif verschijnt bij de resultaten.
+AR: يبدأ من ~{bill} (≈{kwh} كيلوواط·ساعة/يوم). ضع فاتورتك الحقيقية هنا، واختر موقعًا، ثم انقر على «حجم نظامي». يظهر منزلق خفض الفاتورة مع النتائج.
+
+### quickBillManual
+EN: Quick estimate: ~{bill} (starts from ~{kwh} kWh/day) — switch to Manual to change your bill, appliances, or rate.
+ES: Estimación rápida: ~{bill} (empieza desde ~{kwh} kWh/día) — cambia a Manual para ajustar tu factura, electrodomésticos o tarifa.
+PT: Estimativa rápida: ~{bill} (começa em ~{kwh} kWh/dia) — mude para Manual para alterar sua conta, eletrodomésticos ou tarifa.
+FR: Estimation rapide : ~{bill} (démarre à ~{kwh} kWh/jour) — passez en Manuel pour changer votre facture, vos appareils ou votre tarif.
+DE: Schnellschätzung: ~{bill} (beginnt bei ~{kwh} kWh/Tag) — wechseln Sie zu Manuell, um Rechnung, Geräte oder Tarif zu ändern.
+NL: Snelle schatting: ~{bill} (begint bij ~{kwh} kWh/dag) — schakel over naar Handmatig om uw rekening, apparaten of tarief te wijzigen.
+AR: تقدير سريع: ~{bill} (يبدأ من ~{kwh} كيلوواط·ساعة/يوم) — بدّل إلى اليدوي لتغيير فاتورتك أو أجهزتك أو التعرفة.
+
+### dailyEnergyNeed
+EN: Daily energy need (kWh/day slider)
+ES: Necesidad diaria de energía (control kWh/día)
+PT: Necessidade diária de energia (controle kWh/dia)
+FR: Besoin énergétique quotidien (curseur kWh/jour)
+DE: Täglicher Energiebedarf (kWh/Tag-Schieber)
+NL: Dagelijkse energiebehoefte (kWh/dag-schuif)
+AR: الحاجة اليومية من الطاقة (منزلق كيلوواط·ساعة/يوم)
+
+### billPerMonth
+EN: /mo
+ES: /mes
+PT: /mês
+FR: /mois
+DE: /Mon.
+NL: /mnd
+AR: /شهريًا
+
+### simpleHeadline
+EN: At your location, this system gets you {goal}:
+ES: En tu ubicación, este sistema consigue {goal}:
+PT: Na sua localização, este sistema consegue {goal}:
+FR: À votre lieu, ce système vous permet de {goal} :
+DE: An Ihrem Standort bringt Ihnen dieses System {goal}:
+NL: Op uw locatie levert dit systeem u {goal}:
+AR: في موقعك، يمنحك هذا النظام {goal}:
+
+### simpleGoalGrid
+EN: to cut about {pct}% off your bill
+ES: recortar cerca de un {pct}% de tu factura
+PT: cortar cerca de {pct}% da sua conta
+FR: réduire d'environ {pct}% votre facture
+DE: etwa {pct}% Ihrer Rechnung einsparen
+NL: om ongeveer {pct}% van uw rekening te besparen
+AR: خفض نحو {pct}% من فاتورتك
+
+### simpleGoalBattery
+EN: to shift about {pct}% of your peak hours onto the battery
+ES: desplazar cerca del {pct}% de tus horas punta a la batería
+PT: deslocar cerca de {pct}% das suas horas de pico para a bateria
+FR: décaler environ {pct}% de vos heures de pointe vers la batterie
+DE: etwa {pct}% deiner Spitzenlaststunden in die Batterie zu verlagern
+NL: om ongeveer {pct}% van uw piekuren naar de accu te verplaatsen
+AR: نقل نحو {pct}% من ساعات الذروة إلى البطارية
+
+### simpleGoalOffgrid
+EN: to cover your home through the year
+ES: cubrir tu hogar durante todo el año
+PT: cobrir sua casa ao longo do ano
+FR: couvrir votre maison toute l'année
+DE: Ihr Haus übers Jahr versorgen
+NL: om uw huis het hele jaar door te dekken
+AR: تغطية منزلك على مدار السنة
+
+### sharedLocationLoaded
+EN: Shared result loaded - sunshine data for this location
+ES: Resultado compartido cargado — datos de sol para esta ubicación
+PT: Resultado compartilhado carregado — dados de sol para esta localização
+FR: Résultat partagé chargé — données d'ensoleillement pour ce lieu
+DE: Geteiltes Ergebnis geladen — Sonnendaten für diesen Standort
+NL: Gedeeld resultaat geladen - zongegevens voor deze locatie
+AR: تم تحميل النتيجة المشتركة — بيانات أشعة الشمس لهذا الموقع
+
+### uiInitFailed
+EN: Warning: Interface failed to load - please refresh the page (Ctrl+F5).
+ES: Aviso: la interfaz no pudo cargarse — actualiza la página (Ctrl+F5).
+PT: Aviso: a interface não pôde carregar — atualize a página (Ctrl+F5).
+FR: Avertissement : l'interface n'a pas pu se charger — actualisez la page (Ctrl+F5).
+DE: Warnung: Die Oberfläche konnte nicht laden — bitte Seite neu laden (Strg+F5).
+NL: Waarschuwing: Interface kon niet worden geladen - vernieuw de pagina (Ctrl+F5).
+AR: تنبيه: تعذّر تحميل الواجهة — يرجى تحديث الصفحة (Ctrl+F5).
+
+### infeasibleAreaTitle
+EN: Too little roof/yard area for this target
+ES: Demasiada poca área de techo/terreno para este objetivo
+PT: Área de telhado/terreno pequena demais para este objetivo
+FR: Surface de toit/terrain trop petite pour cet objectif
+DE: Zu wenig Dach-/Grundfläche für dieses Ziel
+NL: Te weinig dak-/tuinoppervlak voor dit doel
+AR: مساحة السطح/الأرض صغيرة جدًا لهذا الهدف
+
+### infeasibleAreaBody
+EN: The searched solar size was capped by the optional area input (see “Hardware setup”). Clear that box — or draw a bigger area on the map — and re-run: the site itself can reach this target.
+ES: El tamaño solar buscado quedó limitado por el campo opcional de área (ver “Configuración de hardware”). Borra ese campo — o dibuja un área mayor en el mapa — y vuelve a ejecutar: el sitio en sí puede alcanzar este objetivo.
+PT: O tamanho solar buscado foi limitado pelo campo opcional de área (ver “Configuração de hardware”). Limpe esse campo — ou desenhe uma área maior no mapa — e execute de novo: o local em si pode alcançar este objetivo.
+FR: La taille solaire explorée a été limitée par le champ de surface optionnel (voir « Configuration matériel »). Effacez ce champ — ou dessinez une zone plus grande sur la carte — et relancez : le site lui-même peut atteindre cet objectif.
+DE: Die gesuchte Solargröße wurde durch das optionale Flächenfeld begrenzt (siehe „Hardware-Konfiguration“). Leeren Sie dieses Feld — oder zeichnen Sie eine größere Fläche auf der Karte — und rechnen Sie erneut: der Standort selbst kann dieses Ziel erreichen.
+NL: De gezochte zonnegrootte werd begrensd door de optionele oppervlakte-invoer (zie “Hardware-instellingen”). Maak dat vak leeg — of teken een groter gebied op de kaart — en voer opnieuw uit: de locatie zelf kan dit doel bereiken.
+AR: حُدّ حجم الطاقة الشمسية المبحوث عنه بحقل المساحة الاختياري (راجع «إعدادات العتاد»). امسح هذا الحقل — أو ارسم مساحة أكبر على الخريطة — ثم أعد التشغيل: الموقع نفسه يمكنه بلوغ هذا الهدف.
+
+### infeasibleEnvelopeTitle
+EN: Beyond this tool's search range for this target
+ES: Fuera del rango de búsqueda de esta herramienta para este objetivo
+PT: Além da faixa de busca desta ferramenta para este objetivo
+FR: Au-delà de la plage de recherche de cet outil pour cet objectif
+DE: Außerhalb des Suchbereichs dieses Tools für dieses Ziel
+NL: Buiten het zoekbereik van deze tool voor dit doel
+AR: خارج نطاق بحث هذه الأداة لهذا الهدف
+
+### infeasibleEnvelopeBody
+EN: At this load, reaching that target needs a solar array or battery bank larger than this calculator searches (see Hardware setup for the limits). Try a lower bill-cut target, or check whether part of the load can be reduced.
+ES: Con este consumo, alcanzar el objetivo necesita un array solar o banco de baterías mayor que el que busca esta calculadora (ver Configuración de hardware para los límites). Prueba un objetivo de recorte menor, o mira si parte del consumo puede reducirse.
+PT: Com este consumo, alcançar o objetivo exige um arranjo solar ou banco de baterias maior do que esta calculadora busca (ver Configuração de hardware para os limites). Tente um objetivo de corte menor, ou veja se parte do consumo pode ser reduzida.
+FR: À cette consommation, atteindre l'objectif exige une installation solaire ou une batterie plus grande que ce que cette calculette explore (voir Configuration matériel pour les limites). Essayez un objectif de réduction plus bas, ou voyez si une partie de la consommation peut être réduite.
+DE: Bei diesem Verbrauch braucht das Ziel eine Solaranlage oder Batteriebank, die größer ist als der Suchbereich dieses Rechners (siehe Hardware-Konfiguration für die Grenzen). Versuchen Sie ein niedrigeres Sparziel, oder prüfen Sie, ob sich der Verbrauch senken lässt.
+NL: Bij dit verbruik vereist het bereiken van dat doel een groter zonneveld of een grotere accubank dan deze calculator doorzoekt (zie Hardware-instellingen voor de grenzen). Probeer een lager besparingsdoel, of bekijk of een deel van het verbruik kan worden verminderd.
+AR: عند هذا الاستهلاك، بلوغ الهدف يتطلب مصفوفًا شمسيًا أو بنك بطاريات أكبر مما تبحث عنه هذه الآلة الحاسبة (راجع إعدادات العتاد للحدود). جرّب هدف خفض أقل، أو تحقق من إمكانية تقليل جزء من الاستهلاك.
+
+### infeasibleNeedsBatteryTitle
+EN: Solar-only can't reach 100% off-grid
+ES: Solo solar no puede alcanzar el 100% fuera de la red
+PT: Só solar não alcança 100% fora da rede
+FR: Le solaire seul ne peut pas atteindre 100% hors réseau
+DE: Nur Solar erreicht 100% netzunabhängig nicht
+NL: Alleen zonne-energie kan 100% off-grid niet halen
+AR: الطاقة الشمسية وحدها لا تبلغ 100% خارج الشبكة
+
+### infeasibleNeedsBatteryBody
+EN: An off-grid home needs storage for nights and cloudy days. Add a battery to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).
+ES: Un hogar fuera de la red necesita almacenamiento para las noches y los días nublados. Añade una batería al selector de hardware, o cambia el objetivo a 'Recortar mi factura, seguir conectado' (conectado a la red).
+PT: Uma casa fora da rede precisa de armazenamento para as noites e dias nublados. Adicione uma bateria ao seletor de hardware, ou mude o objetivo para 'Cortar minha conta, continuar conectado' (conectado à rede).
+FR: Une maison hors réseau a besoin de stockage pour la nuit et les jours nuageux. Ajoutez une batterie au sélecteur matériel, ou changez l'objectif en 'Réduire ma facture, rester connecté' (au réseau).
+DE: Ein netzunabhängiges Haus braucht Speicher für Nächte und bewölkte Tage. Fügen Sie eine Batterie zur Hardware-Auswahl hinzu, oder wechseln Sie das Ziel zu „Meine Rechnung senken, verbunden bleiben“ (Netzanbindung).
+NL: Een off-grid-huis heeft opslag nodig voor nachten en bewolkte dagen. Voeg een accu toe aan de hardwarekeuze, of schakel het doel over naar 'Mijn rekening verlagen, aangesloten blijven' (netgekoppeld).
+AR: المنزل خارج الشبكة يحتاج تخزينًا للّيل والأيام الغائمة. أضف بطارية إلى اختيار العتاد، أو بدّل الهدف إلى «خفض فاتورتي، ابقَ موصولًا» (موصول بالشبكة).
+
+### infeasibleNeedsPanelsTitle
+EN: Battery-only can't run off-grid
+ES: Solo batería no puede funcionar fuera de la red
+PT: Só bateria não pode funcionar fora da rede
+FR: La batterie seule ne peut pas fonctionner hors réseau
+DE: Nur Batterie kann netzunabhängig nicht laufen
+NL: Alleen een accu kan niet off-grid draaien
+AR: البطارية وحدها لا تعمل خارج الشبكة
+
+### infeasibleNeedsPanelsBody
+EN: Nothing recharges the bank at this site. Add panels to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).
+ES: Nada recarga el banco en este sitio. Añade paneles al selector de hardware, o cambia el objetivo a 'Recortar mi factura, seguir conectado' (conectado a la red).
+PT: Nada recarrega o banco neste local. Adicione painéis ao seletor de hardware, ou mude o objetivo para 'Cortar minha conta, continuar conectado' (conectado à rede).
+FR: Rien ne recharge la batterie sur ce site. Ajoutez des panneaux au sélecteur matériel, ou changez l'objectif en 'Réduire ma facture, rester connecté' (au réseau).
+DE: An diesem Standort lädt nichts die Bank auf. Fügen Sie Module zur Hardware-Auswahl hinzu, oder wechseln Sie das Ziel zu „Meine Rechnung senken, verbunden bleiben“ (Netzanbindung).
+NL: Niets laadt de bank op deze locatie op. Voeg panelen toe aan de hardwarekeuze, of schakel het doel over naar 'Mijn rekening verlagen, aangesloten blijven' (netgekoppeld).
+AR: لا شيء يعيد شحن البنك في هذا الموقع. أضف ألواحًا إلى اختيار العتاد، أو بدّل الهدف إلى «خفض فاتورتي، ابقَ موصولًا» (موصول بالشبكة).
+
+### infeasibleNeedsSurplusTitle
+EN: A battery-only bank can't produce surplus
+ES: Un banco solo de baterías no puede producir excedente
+PT: Um banco só de baterias não pode produzir excedente
+FR: Une batterie seule ne peut pas produire de surplus
+DE: Eine reine Batteriebank kann keinen Überschuss erzeugen
+NL: Een accubank alleen kan geen overschot produceren
+AR: بنك البطاريات وحده لا ينتج فائضًا
+
+### infeasibleNeedsSurplusBody
+EN: Surplus needs panels to generate more than your load. Drop the target below 100% on the bill-cut slider, or switch the hardware setup to 'Solar + Battery'.
+ES: El excedente necesita paneles que generen más que tu consumo. Baja el objetivo por debajo del 100% en el control de recorte, o cambia la configuración a 'Solar + Batería'.
+PT: Excedente precisa de painéis que gerem mais que seu consumo. Baixe o objetivo abaixo de 100% no controle de corte, ou mude a configuração para 'Solar + Bateria'.
+FR: Le surplus exige des panneaux produisant plus que votre consommation. Baissez l'objectif sous 100% sur le curseur de réduction, ou passez la configuration en 'Solaire + Batterie'.
+DE: Überschuss braucht Module, die mehr erzeugen als Ihr Verbrauch. Senken Sie das Ziel unter 100% am Spar-Schieber, oder wechseln Sie die Hardware zu „Solar + Batterie“.
+NL: Overschot vereist panelen om meer op te wekken dan uw verbruik. Zet het doel onder 100% op de besparingsschuif, of schakel de hardware-instelling over naar 'Zonne-energie + accu'.
+AR: الفائض يحتاج ألواحًا تولّد أكثر من استهلاكك. اخفض الهدف دون 100% في منزلق خفض الفاتورة، أو بدّل إعداد العتاد إلى «شمسي + بطارية».
+
+### infeasibleGenericTitle
+EN: This hardware and goal combination can't solve
+ES: Esta combinación de hardware y objetivo no tiene solución
+PT: Esta combinação de hardware e objetivo não tem solução
+FR: Cette combinaison matériel/objectif n'a pas de solution
+DE: Diese Kombination aus Hardware und Ziel ist nicht lösbar
+NL: Deze combinatie van hardware en doel kan niet worden opgelost
+AR: هذا المزيج من العتاد والهدف لا حلّ له
+
+### infeasibleGenericBody
+EN: Change the goal or hardware, then re-run.
+ES: Cambia el objetivo o el hardware y vuelve a ejecutar.
+PT: Mude o objetivo ou o hardware e execute de novo.
+FR: Changez l'objectif ou le matériel, puis relancez.
+DE: Ändern Sie das Ziel oder die Hardware und rechnen Sie erneut.
+NL: Wijzig het doel of de hardware en voer opnieuw uit.
+AR: غيّر الهدف أو العتاد، ثم أعد التشغيل.
+
+### goalLabel
+EN: What outcome are you exploring?
+ES: ¿Qué quieres que haga este sistema?
+PT: O que você quer que este sistema faça?
+FR: Que doit faire ce système ?
+DE: Welches Ergebnis möchtest du untersuchen?
+NL: Welk resultaat onderzoekt u?
+AR: ماذا تريد من هذا النظام؟
+
+### useCaseLabel
+EN: What do you want to do?
+ES: ¿Qué quieres conseguir?
+PT: O que você quer fazer?
+FR: Que voulez-vous faire ?
+DE: Was willst du erreichen?
+NL: Wat wilt u doen?
+AR: ماذا تريد أن تنجز؟
+
+### useCaseBillCut
+EN: Cut my electricity bill
+ES: Reducir tu factura de electricidad
+PT: Reduzir minha conta de luz
+FR: Réduire votre facture d'électricité
+DE: Meine Stromrechnung senken
+NL: Mijn energierekening verlagen
+AR: خفض فاتورة الكهرباء
+
+### useCaseTou
+EN: Save with a battery on time-of-use rates
+ES: Ahorrar con una batería en tarifas horarias
+PT: Economizar com uma bateria em tarifas horárias
+FR: Économiser avec une batterie en tarification horaire
+DE: Mit einer Batterie bei Zeittarifen sparen
+NL: Besparen met een accu bij piek/dal-tarieven
+AR: الاقتصاد ببطارية مع تعرفة الساعات
+
+### useCaseBackup
+EN: Keep essentials running in a power cut
+ES: Mantener los básicos funcionando durante un apagón
+PT: Manter o essencial funcionando durante uma queda de energia
+FR: Garder l'essentiel en marche pendant une coupure
+DE: Das Nötigste läuft bei einem Stromausfall weiter
+NL: Essentiële apparaten draaiende houden bij stroomuitval
+AR: إبقاء الأساسيات تعمل أثناء انقطاع الكهرباء
+
+### useCaseReserve
+EN: Keep a backup reserve in my battery
+ES: Guardar una reserva de emergencia en la batería
+PT: Guardar uma reserva de emergência na bateria
+FR: Garder une réserve d'urgence dans la batterie
+DE: Einen Notfall-Reservestand in der Batterie halten
+NL: Een back-upreserve in mijn accu aanhouden
+AR: الاحتفاظ بهامش طوارئ في البطارية
+
+### useCaseOffGrid
+EN: Go fully off-grid
+ES: Desconectarte por completo de la red eléctrica
+PT: Ficar totalmente fora da rede elétrica
+FR: Devenir totalement indépendant du réseau
+DE: Vollständig unabhängig vom Netz
+NL: Volledig off-grid gaan
+AR: الاستقلال التام عن شبكة الكهرباء
+
+### useCasePortable
+EN: Portable power (RV, van, boat, camping)
+ES: Energía portátil (furgoneta, barco, camping)
+PT: Energia portátil (van, barco, camping)
+FR: Énergie portable (camping-car, bateau, camping)
+DE: Tragbare Stromversorgung (Wohnmobil, Boot, Camping)
+NL: Draagbare stroom (camper, bus, boot, kamperen)
+AR: طاقة محمولة (شاحنة، قارب، تخييم)
+
+### useCaseBillCutBlurb
+EN: Grid-tied solar, with a battery only if it earns its place. Measured as the share of your bill the system removes over 20 years.
+ES: Solar conectado a la red, con batería solo si compensa. Se mide como la parte de tu factura que el sistema elimina en 20 años.
+PT: Solar ligado à rede, com bateria só quando ela se paga. Medido como a parcela da sua conta que o sistema elimina em 20 anos.
+FR: Solaire raccordé au réseau, avec une batterie seulement si elle le mérite. Mesuré comme la part de votre facture que le système supprime sur 20 ans.
+DE: Netzgebundene Solaranlage, mit Batterie nur, wenn sie sich lohnt. Gemessen als Anteil deiner Rechnung, den das System über 20 Jahre einspart.
+NL: Netgekoppelde zonne-energie, met een accu alleen als die zichzelf terugverdient. Gemeten als het aandeel van uw rekening dat het systeem over 20 jaar wegneemt.
+AR: طاقة شمسية مرتبطة بالشبكة، مع بطارية فقط إذا استحقت. يُقاس كنسبة فاتورتك التي يزيلها النظام على مدى 20 عامًا.
+
+### useCaseTouBlurb
+EN: A battery on its own: it charges in the cheap hours and covers the expensive ones. No panels.
+ES: Solo batería: carga en las horas baratas y cubre las caras. Sin paneles.
+PT: Só bateria: carrega nas horas baratas e cobre as caras. Sem painéis.
+FR: Une batterie seule : elle charge aux heures creuses et couvre les heures pleines. Aucun panneau.
+DE: Nur eine Batterie: Sie lädt in den günstigen Stunden und deckt die teuren. Keine Module.
+NL: Een accu op zichzelf: hij laadt op in de goedkope uren en dekt de dure uren. Geen panelen.
+AR: بطارية وحدها: تشحن في الساعات الرخيصة وتغطي الغالية. بدون ألواح.
+
+### useCaseBackupBlurb
+EN: Sized on the appliances you tick, not on your whole home. Measured as the share of power cuts your essentials ride out.
+ES: Se dimensiona con los aparatos que marques, no con toda tu casa. Se mide como la parte de los apagones que lo esencial aguanta.
+PT: Dimensionado pelos eletrodomésticos que você marcar, não pela casa toda. Medido como a parcela dos apagões que o essencial atravessa.
+FR: Dimensionné sur les appareils que vous cochez, pas sur toute la maison. Mesuré comme la part des coupures que l'essentiel traverse.
+DE: Ausgelegt auf den Geräten, die du ankreuzt, nicht auf dein ganzes Haus. Gemessen als Anteil der Stromausfälle, die das Nötigste übersteht.
+NL: Gedimensioneerd op de apparaten die u aanvinkt, niet op uw hele huis. Gemeten als het aandeel van de stroomuitvallen dat uw essentiële apparaten doorstaan.
+AR: يُحجَّم حسب الأجهزة التي تختارها، لا حسب المنزل كله. يُقاس كنسبة انقطاعات الكهرباء التي تصمد الأساسيات خلالها.
+
+### useCaseReserveBlurb
+EN: Hold part of the battery back for outages, and see exactly what that costs you in savings.
+ES: Deja guardada una parte de la batería para los apagones y mira lo que eso te cuesta en ahorro.
+PT: Deixe uma parte da bateria guardada para os apagões e veja exatamente quanto isso custa em economia.
+FR: Gardez une partie de la batterie en réserve pour les coupures, et voyez exactement ce que cela vous coûte en économies.
+DE: Lass einen Teil der Batterie für Stromausfälle zurück und sieh genau, was dich das an Ersparnis kostet.
+NL: Houd een deel van de accu achter voor uitval en zie precies wat u dat aan besparing kost.
+AR: اترك جزءًا من البطارية جانبًا لحالات الانقطاع، لتعرف بالضبط مقدار ما سيكلفك ذلك من التوفير.
+
+### useCaseOffGridBlurb
+EN: Solar and battery sized for your whole home. Measured as the share of hours that run with no grid at all.
+ES: Solar y batería dimensionados para toda tu casa. Se mide como la parte de las horas que funcionan sin red.
+PT: Solar e bateria dimensionados para a casa inteira. Medido como a parcela das horas que funcionam sem rede nenhuma.
+FR: Solaire et batterie dimensionnés pour toute la maison. Mesuré comme la part des heures qui fonctionnent sans aucun réseau.
+DE: Solar und Batterie für dein ganzes Haus ausgelegt. Gemessen als Anteil der Stunden, die ganz ohne Netz laufen.
+NL: Zonne-energie en accu gedimensioneerd voor uw hele huis. Gemeten als het aandeel van de uren dat volledig zonder net draait.
+AR: طاقة شمسية وبطارية محجَّمة لمنزلك كله. يُقاس كنسبة الساعات التي تعمل بلا شبكة إطلاقًا.
+
+### useCasePortableBlurb
+EN: A power station for a van, a boat or a campsite. No roof, no grid, no tariff.
+ES: Una estación de energía para furgoneta, barco o campamento. Sin tejado, sin red, sin tarifa.
+PT: Uma estação de energia para van, barco ou acampamento. Sem telhado, sem rede, sem tarifa.
+FR: Une station d'énergie pour un van, un bateau ou un camp-site. Pas de toit, pas de réseau, pas de tarif.
+DE: Eine Stromstation für Wohnmobil, Boot oder Campingplatz. Kein Dach, kein Netz, kein Tarif.
+NL: Een powerstation voor een bus, een boot of een kampeerplek. Geen dak, geen net, geen tarief.
+AR: محطة طاقة لشاحنة أو قارب أو مخيم. بلا سطح، بلا شبكة، بلا تعرفة.
+
+### metricBillCut
+EN: of your bill removed over 20 years
+ES: de tu factura eliminada en 20 años
+PT: da sua conta eliminada em 20 anos
+FR: de votre facture supprimée sur 20 ans
+DE: deiner Rechnung, über 20 Jahre eingespart
+NL: van uw rekening weggenomen over 20 jaar
+AR: من فاتورتك يزيلها النظام على مدى 20 عامًا

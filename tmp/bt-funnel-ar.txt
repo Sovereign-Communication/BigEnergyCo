@@ -1,0 +1,193 @@
+R007	applianceWattages	[unit; r=1.32; j=0.47]
+  EN : Wattages are typical values — yours may differ. Cycling appliances (fridges, freezers, air conditioners, pumps) only draw power while running: their slider is hours actually running per day, capped to realistic compressor time, and each row shows the resulting 24-hour average. A modern fridge at the default (100 W running, ~10 h/day) really does use about 1 kWh/day.
+  ar : القدرات قيم نموذجية وقد تختلف لديك. الأجهزة التي تعمل بالدورات (الثلاجات والمجمدات ومكيفات الهواء والمضخات) لا تستهلك الطاقة إلا أثناء التشغيل: يحدد شريط التمرير ساعات التشغيل الفعلية يوميًا، مع حد أقصى واقعي لوقت عمل الضاغط، ويعرض كل صف متوسط الاستهلاك الناتج خلال 24 ساعة. تستهلك الثلاجة الحديثة عند القيمة الافتراضية (100 W أثناء التشغيل، نحو 10 ساعات يوميًا) حوالي 1 kWh يوميًا فعلًا.
+  BT : Capacities are typical values and may vary for you. Appliances that operate in cycles (refrigerators, freezers, air conditioners, and pumps) only consume energy while running: the slider determines the actual hours of operation per day, with a realistic maximum for compressor run time, and each row shows the average resulting consumption over 24 hours. A modern refrigerator at the default setting (100 W while running, about 10 hours per day) actually consumes about 1 kWh per day.
+
+R020	heroIntro	[sentences; r=1.06; j=0.60]
+  EN : Start with your location — your phone knows it — and we size every option that could cut your bill, from 1% to sellable surplus. The price-cut curve shows what any budget buys, in your currency. Educational estimates only, nothing for sale. Built and given away by
+  ar : ابدأ بموقعك — هاتفك يعرفه — ونحسب كل خيار يخفض فاتورتك، من 1% إلى فائض قابل للبيع. منحنى السعر يوضح ما يشتريه كل مبلغ، بعملتك. تقديرات تعليمية فقط، ولا شيء للبيع. أنشأها وقدّمها
+  BT : Start with your location — your phone knows it — and we calculate every option that reduces your bill, from 1% to a surplus that can be sold. The price curve shows what each amount buys, in your currency. Educational estimates only, and nothing for sale. Create it and present it.
+
+R027	invalidDailyKwh	[unit; r=1.08; j=0.34]
+  EN : Daily energy use must be between 0.5 and 500 kWh per day — enter a figure in that range, or tick the appliances you want to power instead.
+  ar : يجب أن يتراوح استهلاك الطاقة اليومي بين 0.5 و500 كيلوواط ساعة — أدخل رقماً في هذا المدى أو حدّد الأجهزة التي تريد تغذيتها.
+  BT : Daily energy consumption should range between 0.5 and 500 kilowatt-hours — enter a number within this range or specify the devices you want to power.
+
+R037	surplusTargetHelp	[sentences; r=1.23; j=0.47]
+  EN : Above 100% the system is sized to produce sellable surplus — without a feed-in credit entered above, that surplus has no cash value and is flagged as clipped waste. The “your target” matrix column and the price-cut curve follow this slider.
+  ar : فوق 100%، يُحدّد حجم النظام لإنتاج فائض قابل للبيع. من دون إدخال رصيد بيع فائض الكهرباء أعلاه، لا تكون لهذا الفائض قيمة نقدية ويُشار إليه على أنه هدر مُقيّد. يتبع عمود «هدفك» في المصفوفة ومنحنى خفض السعر شريط التمرير هذا.
+  BT : Above 100%, the system size is determined to produce a sellable surplus. Without entering the above electricity surplus sale balance, this surplus has no monetary value and is referred to as controlled waste. The 'Your Goal' column in the matrix and the price reduction curve follow this slider.
+
+R042	monthlyBillHint	[overlap; r=1.71; j=0.20]
+  EN : — rough is fine, it auto-adjusts to your location's prices
+  ar : — يكفي رقم تقريبي، وسيُعدّل تلقائيًا حسب أسعار منطقتك
+  BT : — A rough estimate is enough, and it will be adjusted automatically according to your area's prices
+
+R050	autoChemLfp	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : LFP
+  ar : LFP
+  BT : LFP
+
+R075	invalidShare	[negation; r=0.88; j=0.56]
+  EN : This share link could not be read — it may have been cut short when it was copied. Ignore it and set up your own estimate below.
+  ar : تعذّرت قراءة رابط المشاركة — ربما قُطع عند نسخه. تجاهله واضبط تقديرك الخاص أدناه.
+  BT : Unable to read the sharing link — it may have been broken when copied. Ignore it and set your own estimate below.
+
+R088	donationNotTaxDeductible	[negation; r=0.78; j=0.67]
+  EN : not tax-deductible
+  ar : قابلة للخصم الضريبي
+  BT : Tax-deductible
+
+R097	firstRunNote	[unit; r=1.15; j=0.63]
+  EN : Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.
+  ar : اختر موقعك واستهلاكك ثم اضغط صمّم نظامك. أول تشغيل يُنزّل حوالي 2 ميغابايت من بيانات الطقس الساتلية ثم يخزّنها في متصفحك.
+  BT : Choose your location and consumption, then click Design Your System. The first run downloads about 2 megabytes of satellite weather data and then stores it in your browser.
+
+R117	frontierTableCaption	[overlap; r=1.52; j=0.19]
+  EN : Every point on the curve. Typical cost is the landed do-it-yourself middle; the range spans bare cells to shipped retail.
+  ar : كل نقطة على المنحنى. التكلفة المعتادة منتصف سعر نظام يُجمّع ذاتيًا مع الشحن والرسوم الجمركية؛ من الخلايا المنفردة إلى الأنظمة الكاملة الموصلة من المتجر.
+  BT : Every point on the curve. The usual cost is the average price of a self-assembled system with shipping and customs fees; from single cells to complete systems connected from the store.
+
+R118	sanityUncertain	[negation,overlap; r=1.00; j=0.21]
+  EN : Sanity check inconclusive — the independent AI check could not reach a confident verdict on these inputs
+  ar : التحقق غير حاسم — لم يتمكن الفحص المستقل بالذكاء الاصطناعي من الوصول إلى حكم واثق بشأن هذه المدخلات
+  BT : Verification inconclusive — independent AI review was unable to reach a confident judgment on this input
+
+R130	advisorDegradedReassure	[overlap; r=1.43; j=0.13]
+  EN : Nothing above is wrong, and your sizing is unaffected.
+  ar : لا خطأ في ما سبق وحسابك لم يتأثر.
+  BT : There is no mistake in what preceded, and your account has not been affected.
+
+R153	cumSavingsHeadline	[figure,unit; r=1.00; j=0.33]
+  EN : +~{amount} saved over 20 years
+  ar : +~{amount} توفيرًا على مدى عامًا
+  BT : +~{amount} savings over a year
+
+R183	frontierMarkerOffCurve	[figure; r=1.14; j=0.43]
+  EN : Your option sits right of the curve because the recommendation is picked on true 20-year cost, not today's price — a cheaper bank that needs replacing costs less now and more later.
+  ar : خيارك يقع يمين المنحنى لأن التوصية تُختار على أساس التكلفة الحقيقية على عشرين عامًا، لا سعر اليوم: مجموعة أرخص تحتاج إلى استبدال تكلف أقل الآن وأكثر لاحقًا.
+  BT : Your choice falls to the right of the curve because the recommendation is chosen based on the real cost over twenty years, not today's price: a cheaper set requires less replacement cost now and more later.
+
+R187	donationTermsPrefix	[negation; r=1.10; j=0.80]
+  EN : Any contribution you choose to send is a voluntary gift to an individual. It is
+  ar : أي مساهمة تختار إرسالها هي هدية طوعية لفرد. وهي ليست
+  BT : Any contribution you choose to send is a voluntary gift to an individual. And it is not
+
+R203	useCaseTou	[overlap; r=0.95; j=0.20]
+  EN : Save with a battery on time-of-use rates
+  ar : الاقتصاد ببطارية مع تعرفة الساعات
+  BT : Economy with battery and hourly tariff
+
+R205	uiInitFailed	[negation; r=1.13; j=0.58]
+  EN : Warning: Interface failed to load - please refresh the page (Ctrl+F5).
+  ar : تنبيه: تعذّر تحميل الواجهة — يرجى تحديث الصفحة (Ctrl+F5).
+  BT : Warning: The interface could not be loaded — please refresh the page (Ctrl+F5).
+
+R212	preciseLocationHelp	[sentences; r=1.20; j=0.64]
+  EN : The precise-location button fills your exact coordinates and pulls area prices from the nearest reference region. For another place, type a city or town and press Enter or Tab to resolve it. Then click Size My System to calculate.
+  ar : يملأ زر تحديد الموقع الدقيق إحداثياتك الفعلية ويجلب أسعار المنطقة من أقرب منطقة مرجعية. لمكان آخر، اكتب اسم مدينة أو بلدة واضغط Enter أو Tab لاختيارها، ثم انقر على «احسب نظامي» لإجراء الحساب.
+  BT : The 'Set Exact Location' button fills in your actual coordinates and retrieves local prices from the nearest reference area. For another location, type the name of a city or town and press Enter or Tab to select it, then click 'Calculate My System' to perform the calculation.
+
+R244	roofMapLoadFailed	[negation; r=1.00; j=0.57]
+  EN : The optional map could not load.
+  ar : تعذّر تحميل الخريطة الاختيارية.
+  BT : Failed to load the optional map.
+
+R260	advisorBusy	[sentences; r=0.91; j=0.54]
+  EN :  The free AI engine is swamped right now (HTTP {status} — it runs on a shared free quota).\n\nPlease wait about a minute and send that again.
+  ar :  محرك الذكاء الاصطناعي المجاني مزدحم الآن (HTTP {status} — حصة مشتركة).
+
+انتظر نحو دقيقة ثم أرسل الطلب مجدداً.
+  BT : The free AI engine is currently busy (HTTP {status} — shared quota). Please wait about a minute and then send the request again.
+
+R270	frontierLegendBand	[length,sentences,overlap; r=2.16; j=0.06]
+  EN : Same systems, DIY sourcing to shipped retail
+  ar : الأنظمة نفسها: من مكونات التجميع الذاتي إلى نظام كامل موصل من المتجر.
+  BT : The systems themselves: from self-assembly components to a fully connected store-bought system.
+
+R288	generatorRuntime2	[negation; r=1.27; j=0.50]
+  EN : 2%+ — fine when needed
+  ar : 2%+ — لا مشكلة عند الحاجة
+  BT : 2%+ — No problem when needed
+
+R289	metricOutageCoverage	[overlap; r=1.28; j=0.11]
+  EN : of power cuts your essentials ride out for the full target
+  ar : من انقطاعات الكهرباء التي تصمد الأساسيات خلالها طوال المدة المطلوبة
+  BT : From power outages that the basics endure throughout the required duration
+
+R304	bomSafetyNote	[sentences; r=1.18; j=0.56]
+  EN : Educational estimate from your sizing result — not an engineering design, not a shopping order. Fuse and cable figures assume copper, conservative ampacity, and a short battery-to-inverter run; verify everything against your local electrical code with a licensed professional before buying or energizing anything.
+  ar : تقدير تعليمي مبني على نتيجة تحديد الحجم — وليس تصميمًا هندسيًا ولا قائمة مشتريات. تفترض قيم المصهر والكابل استخدام النحاس، وسعة تيار محافظة، ومسافة قصيرة بين البطارية والعاكس. تحقّق من كل شيء وفق الكود الكهربائي المحلي مع مختص مرخّص قبل شراء أي شيء أو تشغيله.
+  BT : An educational estimate based on the sizing result — not an engineering design or a shopping list. The fuse and cable values assume the use of copper, a conservative current capacity, and a short distance between the battery and the inverter. Verify everything according to the local electrical code with a licensed professional before purchasing or operating anything.
+
+R328	cumSavingsBreakEven	[sentences; r=1.14; j=0.24]
+  EN : Break-even in year {year} — every year after puts money back in your pocket{kwhBits}
+  ar : يُسترد الاستثمار في السنة {year} — وكل سنة بعدها توفر المال{kwhBits}.
+  BT : The investment is recovered in the year {year} — and every year afterwards saves money{kwhBits}.
+
+R329	pathsIncludesIncentivesToProvider	[sentences; r=1.12; j=0.67]
+  EN : Incentives go to the provider, not to you
+  ar : الحوافز تذهب إلى المزوّد لا إليك
+  BT : The incentives go to the supplier, not to you.
+
+R341	pathsIncludesInstalledAllIn	[overlap; r=1.05; j=0.20]
+  EN : Parts, labour and permits, already installed
+  ar : القطع والعمل والتراخيص، بعد التركيب
+  BT : Cutting, work, and permits, after installation
+
+R345	invalidCoordinates	[figure; r=1.17; j=0.71]
+  EN : Latitude must be between −90 and 90 and longitude between −180 and 180.
+  ar : يجب أن يتراوح خط العرض بين −90 و90 وخط الطول بين −180 و180.
+  BT : The latitude must range between −90 and 90, and the longitude between −180 and 180.
+
+R382	costNoSeriesTitle	[negation; r=1.10; j=0.44]
+  EN : Savings data unavailable for this result
+  ar : بيانات التوفير غير متاحة لهذه النتيجة
+  BT : Saving data is not available for this result
+
+R391	advisorUnreachable	[sentences; r=1.02; j=0.44]
+  EN :  The AI advisor is unreachable right now{status}.\n\nCheck your connection and try again in a moment.
+  ar :  مستشار الذكاء الاصطناعي غير متاح حالياً{status}.
+
+تحقق من اتصالك وحاول مرة أخرى بعد قليل.
+  BT : The AI advisor is currently unavailable{status}. Check your connection and try again in a little while.
+
+R392	independenceTarget	[overlap; r=1.25; j=0.15]
+  EN : Independence target (applied to all three chemistries):
+  ar : هدف الاستقلال عن الشبكة (يُطبّق على أنواع البطاريات الثلاثة):
+  BT : Goal of off-grid operation (applies to all three types of batteries):
+
+R405	batterySafety	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. The guides here insist on proper fusing, BMS use, and code compliance - and on having a licensed electrician check anything before you energize it.
+  ar : It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. The guides here insist on proper fusing, BMS use, and code compliance - and on having a licensed electrician check anything before you energize it.
+  BT : It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. The guides here insist on proper fusing, BMS use, and code compliance - and on having a licensed electrician check anything before you energize it.
+
+R412	pathsDiyRestricted	[overlap; r=1.03; j=0.21]
+  EN : Not offered here: DIY mounting is restricted where you are.
+  ar : غير معروضة هنا: التركيب الذاتي مقيّد في منطقتك.
+  BT : Not available here: Self-assembly is restricted in your area.
+
+R416	infeasibleNeedsSurplusTitle	[sentences; r=1.22; j=0.40]
+  EN : A battery-only bank can't produce surplus
+  ar : بنك البطاريات وحده لا ينتج فائضًا
+  BT : The battery bank alone does not produce a surplus.
+
+R433	simpleAdvisorStyle	[figure; r=1.08; j=0.53]
+  EN : [ADVISOR INSTRUCTION: The visitor is in Simple mode. Answer like an expert talking to a smart 12-year-old: plain everyday words, no jargon (explain any technical term in a short parenthesis), 4 short sentences maximum, and end with the ONE number that matters most.]
+  ar : [تعليمات للمستشار: الزائر في الوضع المبسّط. أجب كخبير يتحدث إلى طفل ذكي في الثانية عشرة: كلمات يومية بسيطة، بلا مصطلحات تقنية (اشرح أي مصطلح تقني بين قوسين قصيرين)، أربع جمل قصيرة كحد أقصى، واختم بالرقم الأهم.]
+  BT : [Instructions for the advisor: The visitor is in simplified mode. Answer as an expert speaking to a smart twelve-year-old: use simple everyday words, no technical terms (explain any technical term in a short bracket), up to four short sentences, and end with the most important number.]
+
+R439	pathsGradeNote	[negation,length,sentences; r=0.44; j=0.25]
+  EN : Every figure above comes from one regional price registry with a named source and a confidence grade. Hardware is your own build estimate; labour, permits, incentives and replacements are registry figures. Nothing here is a vendor's quote.
+  ar : كل رقم أعلاه يأتي من سجل أسعار إقليمي واحد بمصدر مذكور ودرجة ثقة.
+  BT : Each number above comes from a single regional price record with a mentioned source and confidence level.
+
+R463	speedNoteRepeat	[overlap; r=1.03; j=0.15]
+  EN : ⚡ Instant — repeat of this exact setup (computed moments ago)
+  ar : ⚡ فوري — تكرار دقيق لهذا الإعداد (حُسب الآن)
+  BT : ⚡ Instant — precise repetition of this setting (calculated now)
+
+R470	frontierNoBattery	[negation; r=1.75; j=0.00]
+  EN : none
+  ar : لا شيء
+  BT : Nothing

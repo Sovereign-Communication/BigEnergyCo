@@ -1,0 +1,143 @@
+R015	bomSafetyNote	[sentences; r=1.17; j=0.33]
+  EN : Educational estimate from your sizing result — not an engineering design, not a shopping order. Fuse and cable figures assume copper, conservative ampacity, and a short battery-to-inverter run; verify everything against your local electrical code with a licensed professional before buying or energizing anything.
+  fr : Estimation pédagogique issue de votre dimensionnement ; ce n’est ni une conception d’ingénieur ni une liste d’achat. Les valeurs de fusibles et de câbles supposent du cuivre, une intensité admissible prudente et une courte liaison entre la batterie et l’onduleur. Avant tout achat ou toute mise sous tension, faites tout vérifier par un professionnel agréé selon le code électrique local.
+  BT : Pedagogical estimate resulting from your sizing; it is neither an engineer's design nor a shopping list. The values of fuses and cables assume copper, a prudent allowable current, and a short connection between the battery and the inverter. Before any purchase or energizing, have everything checked by a professional approved according to the local electrical code.
+
+R022	applianceWattages	[unit; r=1.23; j=0.47]
+  EN : Wattages are typical values — yours may differ. Cycling appliances (fridges, freezers, air conditioners, pumps) only draw power while running: their slider is hours actually running per day, capped to realistic compressor time, and each row shows the resulting 24-hour average. A modern fridge at the default (100 W running, ~10 h/day) really does use about 1 kWh/day.
+  fr : Les puissances sont des valeurs typiques ; les vôtres peuvent différer. Les appareils cycliques (réfrigérateurs, congélateurs, climatiseurs et pompes) ne consomment que lorsqu’ils fonctionnent : le curseur indique les heures de fonctionnement réelles par jour, plafonnées à une durée réaliste pour le compresseur, et chaque ligne affiche la moyenne obtenue sur 24 heures. Un réfrigérateur moderne avec la valeur par défaut (100 W en marche, environ 10 h/jour) consomme bien près de 1 kWh/jour.
+  BT : The power ratings are typical values; yours may differ. Cyclical appliances (refrigerators, freezers, air conditioners, and pumps) only consume electricity when they are running: the slider shows the actual hours of operation per day, capped at a realistic duration for the compressor, and each line shows the average obtained over 24 hours. A modern refrigerator with the default value (100 W when running, about 10 hours/day) consumes nearly 1 kWh/day.
+
+R038	frontierLegendRange	[overlap; r=1.02; j=0.15]
+  EN : Best-value range — every extra percent still cheap
+  fr : Plage optimale — chaque point en plus reste bon marché
+  BT : Optimal range — each additional point remains cheap
+
+R043	advisorBusy	[sentences; r=0.84; j=0.40]
+  EN :  The free AI engine is swamped right now (HTTP {status} — it runs on a shared free quota).\n\nPlease wait about a minute and send that again.
+  fr :  Le moteur IA gratuit est saturé (HTTP {status} — quota partagé).
+
+Attendez environ une minute, puis renvoyez votre question.
+  BT : The free AI engine is saturated (HTTP {status} — shared quota). Please wait about a minute, then resend your question.
+
+R047	frontierSelTag	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : {pv} kW + {batt} kWh · {pct}% · {cost}
+  fr : {pv} kW + {batt} kWh · {pct}% · {cost}
+  BT : {pv} kW + {batt} kWh · {pct}% · {cost}
+
+R051	uiInitFailed	[negation; r=0.96; j=0.64]
+  EN : Warning: Interface failed to load - please refresh the page (Ctrl+F5).
+  fr : Avertissement : l'interface n'a pas pu se charger — actualisez la page (Ctrl+F5).
+  BT : Warning: the interface could not load — refresh the page (Ctrl+F5).
+
+R061	surplusTargetHelp	[sentences; r=1.13; j=0.61]
+  EN : Above 100% the system is sized to produce sellable surplus — without a feed-in credit entered above, that surplus has no cash value and is flagged as clipped waste. The “your target” matrix column and the price-cut curve follow this slider.
+  fr : Au-delà de 100 %, le système est dimensionné pour produire un surplus vendable. Sans crédit d’injection saisi ci-dessus, ce surplus n’a aucune valeur monétaire et est signalé comme gaspillage écrêté. La colonne « votre objectif » de la matrice et la courbe de réduction des prix suivent ce curseur.
+  BT : Beyond 100%, the system is designed to produce a sellable surplus. Without the injection credit entered above, this surplus has no monetary value and is reported as curtailed waste. The "your target" column of the matrix and the price reduction curve follow this slider.
+
+R078	autoChemLfp	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : LFP
+  fr : LFP
+  BT : LFP
+
+R082	cumSavingsBreakEven	[sentences,overlap; r=0.94; j=0.12]
+  EN : Break-even in year {year} — every year after puts money back in your pocket{kwhBits}
+  fr : Rentabilité atteinte en année {year} — chaque année suivante vous fait économiser{kwhBits}.
+  BT : Profitability reached in year {year} — each following year saves you {kwhBits}.
+
+R112	generatorRuntime2	[negation; r=1.18; j=0.25]
+  EN : 2%+ — fine when needed
+  fr : 2%+ — sans problème si besoin
+  BT : 2%+ — no problem if needed
+
+R149	advisorDegradedRetry	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : Try again in a minute; the free quota is shared.
+  fr : Try again in a minute; the free quota is shared.
+  BT : Try again in a minute; the free quota is shared.
+
+R167	autoChemNaion	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : Sodium-ion
+  fr : Sodium-ion
+  BT : Sodium-ion
+
+R190	sourcesCardBody	[negation,sentences; r=0.85; j=0.29]
+  EN : Each assumption behind a number here lists its publisher, the date checked, and how well it matches what we ship. Ones we cannot source say so.
+  fr : Chaque hypothèse derrière un chiffre indique ici son éditeur, la date de vérification et sa proximité avec la valeur appliquée.
+  BT : Each assumption behind a figure here indicates its editor, the verification date, and its proximity to the applied value.
+
+R203	errorSim	[negation; r=1.05; j=0.77]
+  EN : ⚠️ Sizing engine failed to load. Refresh the page (Ctrl+F5) and try again.
+  fr : ⚠️ Le moteur de dimensionnement n'a pas pu se charger. Actualisez la page (Ctrl+F5) et réessayez.
+  BT : ⚠️ The sizing engine could not load. Refresh the page (Ctrl+F5) and try again.
+
+R231	metricOutageCoverage	[overlap; r=1.28; j=0.05]
+  EN : of power cuts your essentials ride out for the full target
+  fr : des coupures que l'essentiel traverse pendant toute la durée visée
+  BT : breaks that the essential goes through during the entire targeted duration
+
+R247	generatorAssumptionMiddle	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : /kWh, diesel
+  fr : /kWh, diesel
+  BT : /kWh, diesel
+
+R282	frontierLegendBand	[length,sentences,overlap; r=1.91; j=0.17]
+  EN : Same systems, DIY sourcing to shipped retail
+  fr : Mêmes systèmes : pièces à monter soi-même ou systèmes complets livrés au détail.
+  BT : Same systems: parts to assemble yourself or complete systems delivered individually.
+
+R285	footerTerms	[engine-noop; r=2.00; j=0.00]
+  EN : Terms
+  fr : Conditions
+  BT : Conditions
+
+R304	advisorUnreachable	[sentences; r=0.98; j=0.56]
+  EN :  The AI advisor is unreachable right now{status}.\n\nCheck your connection and try again in a moment.
+  fr :  Le conseiller IA est momentanément inaccessible{status}.
+
+Vérifiez votre connexion et réessayez dans un instant.
+  BT : The AI advisor is temporarily unavailable{status}. Check your connection and try again in a moment.
+
+R311	monthlyBillHint	[overlap; r=1.03; j=0.08]
+  EN : — rough is fine, it auto-adjusts to your location's prices
+  fr : — une estimation suffit, elle s’adapte aux tarifs de votre région
+  BT : — an estimate is enough, it adapts to the rates in your area
+
+R324	navBlog	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : Blog
+  fr : Blog
+  BT : Blog
+
+R332	runBtn	[figure; r=0.94; j=0.17]
+  EN : ☀️ Size My System (5-yr simulation)
+  fr : ☀️ Dimensionner (simulation sur ans)
+  BT : ☀️ Sizing (simulation over years)
+
+R340	apWatts	[untranslated,engine-noop; r=1.00; j=0.00]
+  EN : ~{w} W
+  fr : ~{w} W
+  BT : ~{w} W
+
+R341	navSupport	[engine-noop; r=1.43; j=0.00]
+  EN : Support
+  fr : Assistance
+  BT : Assistance
+
+R393	donationTermsPrefix	[negation; r=1.04; j=0.55]
+  EN : Any contribution you choose to send is a voluntary gift to an individual. It is
+  fr : Toute contribution que vous choisissez d’envoyer est un don volontaire à une personne. Elle n’est pas
+  BT : Any contribution you choose to send is a voluntary donation to a person. It is not
+
+R394	pipelineSimulating	[engine-noop; r=1.00; j=0.00]
+  EN : Simulating
+  fr : Simulation
+  BT : Simulation
+
+R431	donationNotTaxDeductible	[negation; r=0.78; j=0.67]
+  EN : not tax-deductible
+  fr : déductible des impôts
+  BT : tax-deductible
+
+R469	pathsOwnershipPpa	[overlap; r=1.07; j=0.20]
+  EN : The provider owns it and keeps it maintained.
+  fr : Le fournisseur en reste propriétaire et l'entretient.
+  BT : The supplier remains the owner and maintains it.

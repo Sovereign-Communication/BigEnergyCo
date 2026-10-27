@@ -1,0 +1,472 @@
+R001	dailyEnergyNeed	Daily energy need (kWh/day slider)	الحاجة اليومية من الطاقة (منزلق كيلوواط·ساعة/يوم)
+R002	modeTitleOff	Size your off-grid solar & battery bank	قيّم نظامك الشمسي وبنك البطاريات خارج الشبكة
+R003	advisorIntro	I explain the results from the main sizing tool — battery chemistry, wiring and fusing, or questions to bring to a local electrician. Run your sizing first, then ask about this result, or ask me anything.	أشرح نتائج الحاسبة: كيمياء البطارية، والأسلاك والحماية، أو أسئلة تطرحها على فني كهرباء محلي. شغّل التحجيم أولاً ثم اسألني عن هذه النتيجة، أو اسألني أي شيء.
+R004	modeTitleGt	Find your cheapest path to lower bills	اعثر على أرخص طريق لخفض فاتورتك
+R005	navSupport	Support	الدعم
+R006	cumCostSelected	selected	المحدد
+R007	applianceWattages	Wattages are typical values — yours may differ. Cycling appliances (fridges, freezers, air conditioners, pumps) only draw power while running: their slider is hours actually running per day, capped to realistic compressor time, and each row shows the resulting 24-hour average. A modern fridge at the default (100 W running, ~10 h/day) really does use about 1 kWh/day.	القدرات قيم نموذجية وقد تختلف لديك. الأجهزة التي تعمل بالدورات (الثلاجات والمجمدات ومكيفات الهواء والمضخات) لا تستهلك الطاقة إلا أثناء التشغيل: يحدد شريط التمرير ساعات التشغيل الفعلية يوميًا، مع حد أقصى واقعي لوقت عمل الضاغط، ويعرض كل صف متوسط الاستهلاك الناتج خلال 24 ساعة. تستهلك الثلاجة الحديثة عند القيمة الافتراضية (100 W أثناء التشغيل، نحو 10 ساعات يوميًا) حوالي 1 kWh يوميًا فعلًا.
+R008	useCaseNotMeasured	Not measured: this combination cannot be sized at all, so there is no number to report here.	غير مقيس: هذا التركيب لا يمكن تحجيمه أصلًا، فلا يوجد رقم للإبلاغ عنه.
+R009	autoChemNaion	Sodium-ion	أيونات الصوديوم
+R010	metricTouOffset	of your peak-window energy run by the battery	من طاقتك في ساعات الذروة تغطيها البطارية
+R011	socTierAutoLfp	LFP bank modeled with five years of observed weather data	بطارية LFP، حُسب أداؤها باستخدام بيانات الطقس الفعلية لخمس سنوات
+R012	pipelineElapsed	{s}s elapsed	مرّت {s} ثانية
+R013	fuelApplyOk	Your generator fuel works out to about {rate}/kWh — entered as your electricity price, so every payback figure below compares against what you burn today.	وقود مولّدك يخرج بحوالي {rate}/كيلوواط/ساعة — أُدخل كسعر كهربائك، بحيث يُقارن كل حساب استرداد أدناه بما تدفعه اليوم.
+R014	pathsIncludesElectricianConnects	An electrician does the connection	كهربائي يتولى عملية الربط
+R015	statusGridtie	⏳ Fetching five years of satellite weather and searching bill-cutting system sizes…	⏳ جاري الحصول على خمس سنوات من طقس الأقمار الصناعية والبحث عن أحجام الأنظمة لتقليل الفاتورة…
+R016	frontierTagSel	selected	النقطة المحددة
+R017	pipelineWeather	Weather	الطقس
+R018	frontierVerdictSteepOffgrid	Covering about {kneePct}% of your energy costs around {kneeCost}. The last stretch to full independence is where the money goes: roughly {tailCost} per further percent, against {headCost} before.	تغطية نحو {kneePct}% من طاقتك تكلف قرابة {kneeCost}. المرحلة الأخيرة نحو الاستقلال الكامل هي حيث يذهب المال: نحو {tailCost} لكل نقطة إضافية، مقابل {headCost} قبلها.
+R019	touOffPeakLabel	Your off-peak price (per kWh)	سعر خارج الذروة عندك (لكل ك.و.س)
+R020	heroIntro	Start with your location — your phone knows it — and we size every option that could cut your bill, from 1% to sellable surplus. The price-cut curve shows what any budget buys, in your currency. Educational estimates only, nothing for sale. Built and given away by	ابدأ بموقعك — هاتفك يعرفه — ونحسب كل خيار يخفض فاتورتك، من 1% إلى فائض قابل للبيع. منحنى السعر يوضح ما يشتريه كل مبلغ، بعملتك. تقديرات تعليمية فقط، ولا شيء للبيع. أنشأها وقدّمها
+R021	sourcesCardBody	Each assumption behind a number here lists its publisher, the date checked, and how well it matches what we ship. Ones we cannot source say so.	كل افتراض وراء أي رقم يذكر هنا الناشر وتاريخ التحقق ومدى مطابقته للقيمة المستخدمة. وما تعذّر توثيقه يقول ذلك صراحةً.
+R022	loadBill	I know my monthly electric bill	أعرف فاتورتي الشهرية
+R023	useCaseBillCut	Cut my electricity bill	خفض فاتورة الكهرباء
+R024	pathsEndOfTermBuyout	Year {years}: you can buy it out for {buyoutPct}% of the installed price, and that buyout is inside this figure.	السنة {years}: يمكنك شراؤه مقابل {buyoutPct}% من سعر التركيب، وهذا الشراء مُحتسب أصلًا في هذا الرقم.
+R025	genApply	Use this as my electricity price	استخدم هذا كسعر الكهرباء لدي
+R026	estimateMethodDisclaimer	Every number comes from testable code simulating your exact location against five years of NASA satellite weather - not an AI guessing. Real-world results still vary with shading, installation quality, and hardware, so have a licensed professional verify anything you build.	يأتي كل رقم من كود قابل للاختبار يحاكي موقعك الدقيق باستخدام خمس سنوات من بيانات الطقس عبر أقمار ناسا — وليس من تخمين الذكاء الاصطناعي. تختلف النتائج الواقعية أيضًا حسب الظلال وجودة التركيب والمعدات؛ لذا اطلب من مختص مرخّص التحقق من أي نظام تبنيه.
+R027	invalidDailyKwh	Daily energy use must be between 0.5 and 500 kWh per day — enter a figure in that range, or tick the appliances you want to power instead.	يجب أن يتراوح استهلاك الطاقة اليومي بين 0.5 و500 كيلوواط ساعة — أدخل رقماً في هذا المدى أو حدّد الأجهزة التي تريد تغذيتها.
+R028	pathsNoteTurnkeyAllIn	One all-in price: the same hardware, plus labour, permits and the installer's margin.	سعر واحد شامل: نفس العتاد، إضافة إلى العمل والتراخيص وهامش المُثبِّت.
+R029	pathsNoVerifiedIncentive	We have no verified incentive for your region.	لا يوجد لدينا حافز موثّق لمنطقتك.
+R030	runBtn	☀️ Size My System (5-yr simulation)	☀️ احسب نظامي (محاكاة 5 سنوات)
+R031	offlineNote	 · 🌐 offline typical-year mode	 · 🌐 وضع السنة النموذجية دون اتصال
+R032	verdictBillCut	{status}: this system removes {pct}% of your bill over 20 years.	{status}: يزيل هذا النظام {pct}% من فاتورتك على مدى 20 عامًا.
+R033	advisorPrivacyDisclosure	No account is required and no personal details are requested. Text you type into the advisor is transmitted to a third-party AI provider (Groq) in order to generate a reply, subject to their terms. Conversations are not stored by this site. Please do not enter personal, financial, or otherwise sensitive information. Basic request counts may be recorded to keep the service running and prevent abuse.	لا يلزم وجود حساب ولا تُطلب بيانات شخصية. يُنقل النص الذي تكتبه للمستشار إلى مزود ذكاء اصطناعي خارجي (Groq) لإعداد رد، وفقًا لشروطه. لا يخزن هذا الموقع المحادثات. يُرجى عدم إدخال معلومات شخصية أو مالية أو أي معلومات حساسة أخرى. قد تُسجّل أعداد الطلبات الأساسية لتشغيل الخدمة ومنع إساءة الاستخدام.
+R034	pipelineSimulating	Simulating	المحاكاة
+R035	footerAboutPre	Built and given away by	أنشأها وقدّمها
+R036	speedNoteCachedWhere	⚡ Instant — cached satellite weather for {where}	⚡ فوري — طقس الأقمار الصناعية مخزّن لـ {where}
+R037	surplusTargetHelp	Above 100% the system is sized to produce sellable surplus — without a feed-in credit entered above, that surplus has no cash value and is flagged as clipped waste. The “your target” matrix column and the price-cut curve follow this slider.	فوق 100%، يُحدّد حجم النظام لإنتاج فائض قابل للبيع. من دون إدخال رصيد بيع فائض الكهرباء أعلاه، لا تكون لهذا الفائض قيمة نقدية ويُشار إليه على أنه هدر مُقيّد. يتبع عمود «هدفك» في المصفوفة ومنحنى خفض السعر شريط التمرير هذا.
+R038	loadAppliances	Let me pick my appliances	أختار أجهزتي الكهربائية
+R039	infeasibleNeedsBatteryBody	An off-grid home needs storage for nights and cloudy days. Add a battery to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).	المنزل خارج الشبكة يحتاج تخزينًا للّيل والأيام الغائمة. أضف بطارية إلى اختيار العتاد، أو بدّل الهدف إلى «خفض فاتورتي، ابقَ موصولًا» (موصول بالشبكة).
+R040	frontierLegendRange	Best-value range — every extra percent still cheap	النطاق الأفضل قيمة — كل نقطة إضافية ما زالت رخيصة
+R041	socCaptionGrid	Each band is one day: its top is the highest charge and its bottom the deepest discharge, based on satellite weather from {startYear} to {endYear}. The red line marks an empty battery; the grid supplies power there, so it is not a blackout.	يمثل كل شريط يومًا واحدًا: يوضح أعلاه أعلى مستوى للشحن وأسفله أعمق تفريغ، وفق بيانات الطقس عبر الأقمار الصناعية من {startYear} إلى {endYear}. يشير الخط الأحمر إلى فراغ البطارية؛ عنده توفر الشبكة الطاقة، لذا لا يعني ذلك انقطاعًا للكهرباء.
+R042	monthlyBillHint	— rough is fine, it auto-adjusts to your location's prices	— يكفي رقم تقريبي، وسيُعدّل تلقائيًا حسب أسعار منطقتك
+R043	cumSavingsShortfall	Battery replacements outpace bill savings at this site — the honest shortfall is ~{amount}.	في هذا الموقع، تتجاوز استبدالات البطارية التوفير في الفاتورة — والعجز الصريح هو ~{amount}.
+R044	offlineFallback	Yes. After your first visit the tool installs itself as an offline app: sizing math runs entirely in your browser, and if the network is down it falls back to bundled typical-year weather for the nearest of 66 reference cities.	نعم. بعد زيارتك الأولى، تثبّت الأداة نفسها كتطبيق يعمل دون اتصال: تُجرى حسابات تحديد الحجم بالكامل في المتصفح، وعند انقطاع الشبكة تستخدم بيانات طقس نموذجية لسنة واحدة المضمّنة لأقرب مدينة من 66 مدينة مرجعية.
+R045	portableShoreLabel	I can recharge from mains or a vehicle	أستطيع الشحن من الشبكة أو من المركبة
+R046	socVerdictOffgridOne	Lowest: {low}%. Fully charged on {charged} of {total} days; the generator covered one empty-bank day.	أدنى مستوى: {low}%. شُحنت بالكامل في {charged} من {total} يومًا؛ غطى المولد يومًا واحدًا فرغت فيه البطارية.
+R047	frontierCeilingTag	Best within the sizes searched: {pct}%	الأقصى ضمن الأحجام المبحوثة: {pct}%
+R048	infeasibleNeedsPanelsTitle	Battery-only can't run off-grid	البطارية وحدها لا تعمل خارج الشبكة
+R049	portableBankLabel	Power station usable size (kWh)	السعة الفعلية للمحطة (ك.و.س)
+R050	autoChemLfp	LFP	LFP
+R051	pickCity	Pick a city (or use 📍 My location) so we know your sunshine.	اختر مدينة (أو استخدم 📍 موقعي) لمعرفة إشعاعك الشمسي.
+R052	pathsDriver_incentives	who the incentives go to	الجهة التي تذهب إليها الحوافز
+R053	sourcesCardTitle	Where these numbers come from	من أين تأتي هذه الأرقام
+R054	outageLabel	How long must it last?	كم يجب أن يصمد؟
+R055	cutLabelBattery	Your peak-offset target	هدف نقل ساعات الذروة
+R056	frontierSelTag	{pv} kW + {batt} kWh · {pct}% · {cost}	{pv} كيلوواط + {batt} كيلوواط ساعة · {pct}% · {cost}
+R057	chartDay	Day {day}	اليوم {day}
+R058	frontierVerdictBeyondSweepOffgrid	Within the sizes this tool searches — up to {pvMax} kW of panels and {battMax} kWh of battery — the most you can cover here is about {ceilingPct}%, for around {ceilingCost}. Good value runs out at {kneePct}% for about {kneeCost}. Full independence is not impossible here, but it needs a system far larger than this, and a generator or a grid connection is almost certainly the cheaper way to cover the rest.	ضمن الأحجام التي تبحثها هذه الأداة — حتى {pvMax} كيلوواط ألواح و{battMax} كيلوواط ساعة بطارية — أقصى ما يمكن تغطيته هنا نحو {ceilingPct}%، بتكلفة قرابة {ceilingCost}. وتنتهي القيمة الجيدة عند {kneePct}% بنحو {kneeCost}. والاستقلال الكامل ليس مستحيلًا هنا، لكنه يحتاج نظامًا أكبر بكثير، وغالبًا يكون مولّد أو اتصال بالشبكة أرخص وسيلة لتغطية الباقي.
+R059	generatorRuntime0	0% — never	0% — أبداً
+R060	advisorThinking	⏳ Thinking...	⏳ أفكر...
+R061	socTierAutoNaion	Sodium-ion bank modeled with five years of observed weather data	بطارية أيونات الصوديوم، حُسب أداؤها باستخدام بيانات الطقس الفعلية لخمس سنوات
+R062	cumCostCaptionResidualCreditDraw	The slate line runs below $0 — net metering: the feed-in value of your surplus exceeds even the small {kwh} kWh/yr you still draw, so you earn ~{earned} over the full 20 years.	الخط الرمادي الداكن ينزل تحت 0 دولار — صافي القياس: قيمة تغذية فائضك تتجاوز حتى الكمية الصغيرة {kwh} كيلوواط ساعة سنويًا التي لا تزال تستهلكها، فتكسب ~{earned} على مدى 20 عامًا كاملة.
+R063	frontierBestValueRange	Best-value range: ~{lo}–{hi} ({loPct}–{hiPct}%).	النطاق الأفضل قيمة: ~{lo}–{hi} ({loPct}–{hiPct}%).
+R064	emailWelcome	You're welcome to email me:	يسعدني أن تراسلني عبر البريد الإلكتروني:
+R065	chooseCityMatch	Choose a city suggestion or wait for lookup to finish.	اختر مدينة من الاقتراحات أو انتظر انتهاء البحث.
+R066	cumCostCaptionOwnCost	The emerald line is the solar system's own cost (~{systemTotal}), matching the “Total 20-year cost” row for this system.	الخط الزمردي هو التكلفة الخاصة بالنظام الشمسي (~{systemTotal})، ويطابق صف “إجمالي التكلفة على 20 عامًا” لهذا النظام.
+R067	statusSuccess	✅ {years} yr of hourly data ({dataYears}) · {yield} kWh/yr per kW of panel.{offline}	✅ {years} سنوات من البيانات الساعية ({dataYears}) · {yield} كيلوواط ساعة/سنة لكل كيلوواط من اللوحة.{offline}
+R068	portableDeviceLabel	What are you powering? (pick any)	ما الذي ستغذّيه؟ (اختر ما تشاء)
+R069	footerAboutPost	Not a company, not incorporated, nothing for sale.	ليست شركة، ولا مُسجّلة، ولا شيء للبيع.
+R070	chartEmpty	Empty	فارغة
+R071	frontierMethodBattery	The curve comes from simulating every battery size on a coarse grid against the same hourly weather and tariff windows as the cards above, then keeping only the systems nothing cheaper beats. Panels are not part of this run, so the curve varies the bank alone. Prices use the same landed do-it-yourself middle as every other figure on this page.	يحاكي المنحنى أحجام البطاريات ببيانات الطقس الساعية ونوافذ التعرفة نفسها أعلاه. لا تدخل الألواح هنا، لذا يتغير حجم البطارية وحده؛ ولا يُبقي إلا الأنظمة التي لا يتفوق عليها نظام أرخص. السعر منتصف تكلفة نظام يُجمّع ذاتيًا مع الشحن والرسوم الجمركية، كما في بقية الصفحة.
+R072	cumCostPocket	Your savings, year by year	وفوراتك عامًا بعد عام
+R073	statusWorks	Works	ينجح
+R074	runningBtn	⏳ Running 5-year simulation…	⏳ جاري المحاكاة لمدة 5 سنوات...
+R075	invalidShare	This share link could not be read — it may have been cut short when it was copied. Ignore it and set up your own estimate below.	تعذّرت قراءة رابط المشاركة — ربما قُطع عند نسخه. تجاهله واضبط تقديرك الخاص أدناه.
+R076	pathsInstrumentLease	Lease (you rent the system)	إيجار (تستأجر النظام)
+R077	fxCodeLabel	Currency code:	رمز العملة:
+R078	frontierColCutBattery	Peak hours shifted	ساعات الذروة المنقولة
+R079	chemLabel	Battery chemistry:	نوع البطارية:
+R080	worstMonthNote	Darkest month: {month} — about {avg} kWh/m²/day of average sun. Size for this month, not the yearly average, or the system will fall short on gray weeks.	الأشهر الأكثر عتمة: {month} — نحو {avg} كيلوواط ساعة/م²/يوم من الشمس المتوسطة. صمّم لهذا الشهر، لا للمتوسط السنوي، وإلا لن يكفِ النظام في الأسابيع الغائمة.
+R081	readoutKwhReady	Using {kwh} kWh/day directly.	استخدام {kwh} كيلوواط ساعة/يوم مباشرة.
+R082	siteAsIs	THIS SITE AND ITS OUTPUT ARE PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, AND NON-INFRINGEMENT. There is no guarantee of availability, correctness, or continued operation, and the site may change or disappear at any time without notice.	يُقدَّم هذا الموقع ومخرجاته «كما هي» و«حسب التوفر»، من دون أي ضمان صريح أو ضمني، بما في ذلك على سبيل المثال لا الحصر ضمانات قابلية التسويق والملاءمة لغرض معين والدقة وعدم التعدي. ولا يوجد ضمان للتوفر أو الصحة أو استمرار التشغيل؛ وقد يتغير الموقع أو يختفي في أي وقت دون إشعار.
+R083	feedInCreditLabel	Feed-in credit for surplus you can sell ($/kWh, optional — grid-tie only):	رصيد بيع فائض الكهرباء ($/kWh، اختياري — للاتصال بالشبكة فقط):
+R084	advisorDegradedLabel	Offline · not the live AI	دون اتصال · ليس الذكاء الحيّ مباشرة
+R085	rateLimitDisclaimer	Please don't automate, scrape, or hammer this tool — it is one person paying for the AI calls. Rate limits apply and abuse will be blocked.	لا تؤتمت هذه الأداة أو تكشطها أو تثقلها بالطلبات — فهناك شخص واحد يدفع تكلفة استدعاءات الذكاء الاصطناعي. تُطبّق حدود للاستخدام وسيُحظر إساءة الاستخدام.
+R086	advisorSend	Send	إرسال
+R087	chartDailySun	Daily solar output: {peak} kWh per kW of panel	الإنتاج الشمسي اليومي: {peak} كيلوواط ساعة لكل كيلوواط من الألواح
+R088	donationNotTaxDeductible	not tax-deductible	قابلة للخصم الضريبي
+R089	fixedMonthlyChargeLabel	Fixed monthly charge on your bill ($/mo, optional — solar can't cut it):	الرسوم الشهرية الثابتة في الفاتورة ($/شهر، اختيارية — لا يمكن للطاقة الشمسية خفضها):
+R090	fuelReadoutGrid	Typical grid power runs between {lo} and {hi} per kWh.	كهرباء الشبكة النموذجية تتراوح بين {lo} و{hi} لكل كيلوواط/ساعة.
+R091	roofAreaLabel	Optional roof or yard area (m²)	مساحة اختيارية للسقف أو الأرض (m²)
+R092	footerTerms	Terms	الشروط
+R093	pathsDriver_replacements	battery and inverter replacements	استبدال البطاريات والعاكسات
+R094	pathsRowBillCut	Bill cut	خفض الفاتورة
+R095	socCut95	~95% bill cut - nearly off-grid	خفض الفاتورة بنحو 95% - شبه مستقل عن الشبكة
+R096	useCaseLabel	What do you want to do?	ماذا تريد أن تنجز؟
+R097	firstRunNote	Choose your location and energy use, then click Size My System. The first run downloads ~2 MB of satellite weather data and caches it in your browser.	اختر موقعك واستهلاكك ثم اضغط صمّم نظامك. أول تشغيل يُنزّل حوالي 2 ميغابايت من بيانات الطقس الساتلية ثم يخزّنها في متصفحك.
+R098	cumCostLegendBattery	Battery-only system: {amount}	نظام البطارية فقط: {amount}
+R099	socCaptionGridPattern	Flat, high bands mean solar and the battery are carrying the load.	تشير النطاقات المرتفعة والمستقرة إلى أن الطاقة الشمسية والبطارية توفران احتياجات الاستهلاك.
+R100	generatorRuntime1	1% — a few days a year	1% — بضعة أيام في السنة
+R101	verdictBackup	{status}: your essentials run for the full {targetHours} hours in {pct}% of the power cuts we simulated (typical night: {hours} hours).	{status}: تعمل أساسياتك كاملة الساعات {targetHours} في {pct}% من انقطاعات الكهرباء التي حاكيناها (ليلة نموذجية: {hours} ساعات).
+R102	cumCostCaptionResidualCreditBill	The slate line runs below $0 — net metering: the feed-in value of your surplus exceeds the tiny bill you still pay, so you earn ~{earned} over the full 20 years.	الخط الرمادي الداكن ينزل تحت 0 دولار — صافي القياس: قيمة تغذية فائضك تتجاوز الفاتورة الصغيرة التي لا تزال تدفعها، فتكسب ~{earned} على مدى 20 عامًا كاملة.
+R103	pathsNoIncentive	None applies to this route.	لا ينطبق أي منها على هذه الطريقة.
+R104	socCut60	~60% bill cut - the grid covers the rest	خفض الفاتورة بنحو 60% - الشبكة تغطي الباقي
+R105	frontierVerdictBeyondSweepBattery	Within the battery sizes this tool searches — up to {battMax} kWh — the most you can shift here is about {ceilingPct}%, for around {ceilingCost}. Good value runs out well before that, at {kneePct}% for about {kneeCost}; shifting more needs a bigger bank than anything sized here.	ضمن أحجام البطاريات التي يبحث عنها هذا البرنامج — حتى {battMax} كيلوواط/ساعة — أقصى ما يمكن نقله هنا نحو {ceilingPct}%، بنحو {ceilingCost}. القيمة الجيدة تنتهي قبل ذلك بكثير، عند {kneePct}% بنحو {kneeCost}؛ ونقل المزيد يتطلب مخزونًا أكبر من أي شيء يُقاس هنا.
+R106	useCaseBackupBlurb	Sized on the appliances you tick, not on your whole home. Measured as the share of power cuts your essentials ride out.	يُحجَّم حسب الأجهزة التي تختارها، لا حسب المنزل كله. يُقاس كنسبة انقطاعات الكهرباء التي تصمد الأساسيات خلالها.
+R107	frontierTableToggle	Show every point as a table	عرض كل النقاط في جدول
+R108	modeDescOff	Size a self-reliant solar and battery storage system for your cabin, camper van, backup, or homestead. Enter your daily kWh or pick your appliances — hourly weather simulations ensure you never run out of power.	قيّم نظامًا شمسيًا ومخزنًا للطاقة بالبطاريات مستقلًا لكوخك أو سيارتك أو احتياطك أو مزرعتك. أدخل استهلاكك اليومي بالكيلوواط ساعة أو اختر أجهزتك — تضمن محاكاة الطقس الساعية ألا تنفد طاقتك أبدًا.
+R109	statusNotHere	Does not work here	لا ينجح هنا
+R110	pathsLabel_turnkey	Installer, turnkey	مُثبِّت، تسليم كامل
+R111	sanityTooltip	An independent AI classifier (Jev) reviewed the sizing numbers only — no location, text, or personal data leaves your browser beyond these figures. It never changes the computed result.	راجع مصنف ذكاء اصطناعي مستقل (Jev) أرقام التحجيم فقط — لا يخرج من متصفحك أي موقع أو نص أو بيانات شخصية غير هذه الأرقام. لا يغير أبدًا النتيجة المحسوبة.
+R112	statusPartial	Partly	جزئيًا
+R113	pathsIncludesElectricianInstalls	A licensed electrician installs it	كهربائي مرخّص يتولى التركيب
+R114	donationIntro	This is free and always will be. If it helped you and you want to chip in toward the AI and hosting costs, here's where.	هذه الأداة مجانية وستبقى كذلك. إذا أفادتك وأردت المساهمة في تكاليف الذكاء الاصطناعي والاستضافة، فإليك الطريقة.
+R115	reserveOff	off	موقوف
+R116	useCaseReserveBlurb	Hold part of the battery back for outages, and see exactly what that costs you in savings.	اترك جزءًا من البطارية جانبًا لحالات الانقطاع، لتعرف بالضبط مقدار ما سيكلفك ذلك من التوفير.
+R117	frontierTableCaption	Every point on the curve. Typical cost is the landed do-it-yourself middle; the range spans bare cells to shipped retail.	كل نقطة على المنحنى. التكلفة المعتادة منتصف سعر نظام يُجمّع ذاتيًا مع الشحن والرسوم الجمركية؛ من الخلايا المنفردة إلى الأنظمة الكاملة الموصلة من المتجر.
+R118	sanityUncertain	Sanity check inconclusive — the independent AI check could not reach a confident verdict on these inputs	التحقق غير حاسم — لم يتمكن الفحص المستقل بالذكاء الاصطناعي من الوصول إلى حكم واثق بشأن هذه المدخلات
+R119	socCut80	~80% bill cut - small grid top-ups	خفض الفاتورة بنحو 80% - سحب قليل من الشبكة
+R120	simpleSeeDetails	See all the details	عرض كل التفاصيل
+R121	eli5Heading	📖 What This System Actually Looks Like in Real Life (Plain English)	📖 كيف يبدو هذا النظام فعليًا في الحياة الحقيقية (بلغة مبسطة)
+R122	roofMapTapSecond	Now tap the next corner along the same roof edge.	الآن اضغط على الزاوية التالية على نفس حافة السقف.
+R123	reserveLabel	Emergency reserve held in the battery	هامش طوارئ محفوظ في البطارية
+R124	pathsLabel_lease	Lease or PPA	إيجار أو عقد شراء
+R125	simpleWhatItMeans	Panels make power when the sun is out; the battery carries it into the evening and cloudy days. The system is sized from five years of hourly satellite weather at your exact location.	تُنتج الألواح الكهرباء وقت وجود الشمس؛ وتحملها البطارية إلى المساء والأيام الغائمة. يُحجَّم النظام اعتمادًا على خمس سنوات من بيانات الطقس الساعية بالأقمار الصناعية لموقعك الدقيق.
+R126	roofPanelEstimate	{area} m² is about {panels} panels at ~{panelArea} m² each.	{area} م² تعادل نحو {panels} لوحًا بمساحة ~{panelArea} م² لكل منها.
+R127	pathsIncentiveRebate	Utility rebate	خصم من شركة الكهرباء
+R128	autoSocSunStrip	The amber strip above shows daily solar output (kWh per kW of panel); its dips follow each bank's recharge rhythm.	يوضح الشريط الكهرماني أعلاه الإنتاج الشمسي اليومي (كيلوواط ساعة لكل كيلوواط من الألواح)؛ وتتبع انخفاضاته إيقاع إعادة شحن البطاريات.
+R129	metricBillCut	of your bill removed over 20 years	من فاتورتك يزيلها النظام على مدى 20 عامًا
+R130	advisorDegradedReassure	Nothing above is wrong, and your sizing is unaffected.	لا خطأ في ما سبق وحسابك لم يتأثر.
+R131	footerAbout	About	من نحن
+R132	footerBenchmarks	Worldwide Benchmarks	المعايير العالمية
+R133	quickBillManual	Quick estimate: ~{bill} (starts from ~{kwh} kWh/day) — switch to Manual to change your bill, appliances, or rate.	تقدير سريع: ~{bill} (يبدأ من ~{kwh} كيلوواط·ساعة/يوم) — بدّل إلى اليدوي لتغيير فاتورتك أو أجهزتك أو التعرفة.
+R134	roofMapTapFirst	Tap 3 corners: first one roof corner, then the next corner along the same edge, then the opposite edge.	اضغط على 3 زوايا: أولًا زاوية من السقف، ثم الزاوية التالية على نفس الحافة، ثم الحافة المقابلة.
+R135	verdictPortable	{status}: your station runs a full day on {days} of {trips} days here, and one charge lasts {runtime} hours.	{status}: تغذّي محطتك أجهزتك طوال اليوم في {days} يومًا من {trips} يومًا هنا، وشحنة واحدة تدوم {runtime} ساعة.
+R136	frontierLegendCurve	Cheapest system that reaches each level	أرخص نظام يبلغ كل مستوى
+R137	loadLabel	How much power do you use?	كم تستهلك من الطاقة؟
+R138	operatorDescription	This is a free, personal, non-commercial educational tool operated by an individual, Lucas Ballek. It is not a company, not incorporated, and not a licensed engineering, electrical contracting, or financial advisory practice. Nothing on this site is for sale and no service is being offered or promised to you.	هذه أداة تعليمية مجانية وشخصية وغير تجارية يديرها فرد هو Lucas Ballek. ليست شركة أو كيانًا مسجلًا، ولا ممارسة مرخّصة للهندسة أو المقاولات الكهربائية أو الاستشارات المالية. لا يُباع أي شيء على هذا الموقع، ولا يُعرض عليك أيٌّ من الخدمات أو يُوعَد به.
+R139	advisorIntakeBillPh	e.g. 400	مثال: 400
+R140	resolvingCoords	Checking those coordinates…	جارٍ التحقق من الإحداثيات…
+R141	pathsIncentivesGoToProvider	The provider keeps them — you own nothing.	المزوّد يحتفظ بها — وأنت لا تملك شيئًا.
+R142	breakerSpec	20kA AIC interrupt rating @ 160V DC. Clears very high short-circuit DC currents in milliseconds — sized to protect the BMS and wiring.	قدرة فصل AIC تبلغ 20 kA عند 160 V DC. يفصل تيارات قصر DC العالية جدًا خلال أجزاء من الثانية — ومصمم لحماية BMS والأسلاك.
+R143	navBom	Hardware Reference	مرجع المكونات
+R144	heroTitle2	See exactly what it would take.	شاهد بالضبط ما يتطلبه الأمر.
+R145	eli5BatteryHeading	🔋 The Battery Bank	🔋 بنك البطاريات
+R146	lvlMatrix	All options	كل الخيارات
+R147	generatorAssumption	Assumes a small genset at typical partial load: petrol	يفترض مولدًا صغيرًا عند حمل جزئي معتاد: بنزين
+R148	emailSupportExpectations	This is one person answering email in his own time, as a favor — not a support desk. I read what I can and reply when I'm able, but I can't promise a response or a timeframe. Anything I send back is a friendly opinion for your own further research, not professional engineering, electrical, or financial advice, and it doesn't create any professional relationship or obligation. For anything you're going to actually build, energize, or spend real money on, please talk to a licensed electrician or engineer in your area.	أنا شخص واحد أجيب عن البريد في وقتي الخاص كمجاملة — ولست مكتب دعم. أقرأ ما أستطيع وأرد عندما يتاح لي ذلك، لكن لا أستطيع ضمان الرد أو موعده. ما أرسله رأي ودي لمساعدتك في بحثك، وليس نصيحة هندسية أو كهربائية أو مالية مهنية، ولا ينشئ علاقة أو التزامًا مهنيًا. لأي شيء تنوي بناءه أو تشغيله أو دفع مال حقيقي مقابله، تحدّث إلى كهربائي أو مهندس مرخّص في منطقتك.
+R149	advisorBotNote	AI-generated estimate — may be inaccurate, including prices and specifications. Not engineering advice. Verify with a licensed electrician or engineer before buying or building anything.	تقدير من الذكاء الاصطناعي — قد يكون غير دقيق، بما في ذلك الأسعار والمواصفات. ليست هذه نصيحة هندسية. تحقق مع كهربائي أو مهندس مرخص قبل الشراء أو البناء.
+R150	pathsRowBreakEven	Break-even	نقطة التعادل
+R151	electricityRateLabel	Electricity price where you live (drives your bill estimate and payback) - your price per kWh ($):	سعر الكهرباء في مكان سكنك (يحدد تقدير الفاتورة وفترة الاسترداد) — سعرك لكل kWh ($):
+R152	errorTimeout	The sizing engine did not reply in time — check your connection and click Size My System to try again.	لم يرد محرك الحساب في الوقت المحدد — تحقق من اتصالك وحاول مرة أخرى.
+R153	cumSavingsHeadline	+~{amount} saved over 20 years	+~{amount} توفيرًا على مدى عامًا
+R154	tariffSpendOffgrid	At {tariff}/kWh, this use costs about {annual} per year in grid power. Payback figures below compare system cost against that spend.	بسعر {tariff}/كيلوواط/ساعة، يكلفك هذا الاستخدام حوالي {annual} سنويًا من كهرباء الشبكة. أرقام الاسترداد أدناه تقارن تكلفة النظام بهذا الإنفاق.
+R155	cumSavingsNeverBreaksEven	Never breaks even within 20 years	لا يُسترد خلال 20 عامًا
+R156	cumCostLegendResidual	Residual grid cost after feed-in: {amount}	تكلفة الشبكة المتبقية بعد التصدير: {amount}
+R157	llmDisclaimer	You are interacting with a large language model. It produces fluent, confident text that can be factually wrong, including specific numbers, prices, product specifications, and regulations. Treat every output as an unverified starting point.	أنت تتفاعل مع نموذج لغوي كبير. ينتج نصوصًا سلسة وواثقة قد تكون خاطئة من الناحية الواقعية، بما في ذلك الأرقام المحددة والأسعار ومواصفات المنتجات واللوائح. تعامل مع كل مخرجاته كنقطة بداية غير موثّقة.
+R158	cumCostCaptionOwnCostNoPanels	The emerald line is the system's own cost (~{systemTotal}), matching the “Total 20-year cost” row for this system.	الخط الزمردي هو التكلفة الخاصة بالنظام (~{systemTotal})، ويطابق صف “إجمالي التكلفة على 20 عامًا” لهذا النظام.
+R159	pipelineSimulating	Simulating	المحاكاة
+R160	frontierIntro	Every system we could build at your location, cheapest first. The line is the best result any budget can buy — so you can see at a glance whether your goal here is easy, expensive, or out of reach.	كل نظام يمكن بناؤه في موقعك، من الأرخص إلى الأغلى. يمثل الخط أفضل نتيجة يمكن لأي ميزانية شراؤها، لترى بلمحة واحدة هل هدفك هنا سهل أم مكلف أم بعيد المنال.
+R161	generatorRuntimeLabel	How often may a generator run?	كم مرة يمكن تشغيل المولد؟
+R162	infeasibleEnvelopeBody	At this load, reaching that target needs a solar array or battery bank larger than this calculator searches (see Hardware setup for the limits). Try a lower bill-cut target, or check whether part of the load can be reduced.	عند هذا الاستهلاك، بلوغ الهدف يتطلب مصفوفًا شمسيًا أو بنك بطاريات أكبر مما تبحث عنه هذه الآلة الحاسبة (راجع إعدادات العتاد للحدود). جرّب هدف خفض أقل، أو تحقق من إمكانية تقليل جزء من الاستهلاك.
+R163	roofCapNote	Caps the search at {count} × {watts} W panels ≈ {kw} kW of solar (≈6 m² per panel with access space). Clear the box to remove the cap.	يحدّ البحث بـ {count} ألواح بقدرة {watts} واط ≈ {kw} كيلوواط شمسية (≈6 م² لكل لوح مع مساحة الوصول). امسح الحقل لإزالة الحد.
+R164	verdictOffGrid	{status}: {pct}% of the year runs with no grid — {unmetHours} hours short in the worst year, {autonomy} days of autonomy.	{status}: {pct}% من السنة تعمل بلا شبكة — تنقص {unmetHours} ساعة في أسوأ عام، مع {autonomy} يومًا من الاستقلالية.
+R165	useCaseTouBlurb	A battery on its own: it charges in the cheap hours and covers the expensive ones. No panels.	بطارية وحدها: تشحن في الساعات الرخيصة وتغطي الغالية. بدون ألواح.
+R166	advisorSubtitle	You are talking to an AI (Groq AI Engine) — educational estimates only, not engineering advice	أنت تتحدث إلى ذكاء اصطناعي (محرك Groq) — تقديرات تعليمية فقط وليست استشارة هندسية
+R167	advisorDegradedRetry	Try again in a minute; the free quota is shared.	أعد المحاولة بعد دقيقة؛ الحصة مشتركة.
+R168	resultsIntro	Results appear here: a recommended path first, with battery comparisons and all options available below. For grid-tied plans, the result also separates bill reduction from outage backup.	تظهر النتائج هنا: مسار موصى به أولًا، ثم مقارنات البطاريات وجميع الخيارات أدناه. وفي الخطط المتصلة بالشبكة، تفصل النتيجة أيضًا بين خفض الفاتورة وتوفير الطاقة أثناء الانقطاع.
+R169	tariffSpendBattery	At {tariff}/kWh, your power costs about {annual} per year today. A battery with no panels moves when you draw power; it does not cut what you pay.	بسعر {tariff}/كيلوواط/ساعة، تكلفك كهرباؤك حوالي {annual} سنويًا اليوم. البطارية بدون ألواح تغيّر وقت الاستهلاك؛ ولا تخفّض ما تدفعه.
+R170	socCaptionOffgrid	Each band is one day: its top is the highest charge and its bottom the deepest discharge, based on satellite weather from {startYear} to {endYear} ({chemistry}). A healthy system returns to 100% on sunny days; dips show how far bad weather drains the bank. At the red line, a generator supplies power.	يمثل كل شريط يومًا واحدًا: يوضح أعلاه أعلى مستوى للشحن وأسفله أعمق تفريغ، وفق بيانات الطقس عبر الأقمار الصناعية من {startYear} إلى {endYear} ({chemistry}). يعود النظام السليم إلى شحن 100% في الأيام المشمسة؛ وتوضح الانخفاضات مدى استنزاف الطقس السيئ للبطارية. عند الخط الأحمر يوفر المولد الطاقة.
+R171	frontierVerdictTaperingBattery	Shifting about {kneePct}% of your peak hours onto the battery costs around {kneeCost}. Past that, each further percent costs roughly {tailCost} — about {ratio} times the earlier rate.	نقل نحو {kneePct}% من ساعات الذروة إلى البطارية يكلف قرابة {kneeCost}. بعد ذلك تكلف كل نقطة إضافية نحو {tailCost} — أي نحو {ratio} ضعف المعدل السابق.
+R172	roofMapSelected	{area} m² selected. You can close the map or tap three new corners.	تم تحديد {area} م². يمكنك إغلاق الخريطة أو الضغط على ثلاث زوايا جديدة.
+R173	inputsChanged	Inputs changed — click Size My System to update the estimate.	تغيرت المدخلات — اضغط احسب نظامي لتحديث التقدير.
+R174	runBtn	☀️ Size My System (5-yr simulation)	☀️ احسب نظامي (محاكاة 5 سنوات)
+R175	modeDescGt	Set your monthly electric bill and location, then click Size My System to compare the optimal solar and battery paths. The results cover chemistries, 20-year true costs, and wholesale hardware savings.	أدخل فاتورة الكهرباء الشهرية وموقعك ثم انقر على «احسب نظامي» لمقارنة مسارات الطاقة الشمسية والبطاريات المثالية. تغطي النتائج أنواع البطاريات والتكاليف الحقيقية على 20 عامًا والتوفير بالجملة على المعدات.
+R176	pathsSub	One system, one set of definitions, twenty years. The gap between these cards is a gap in price, not a difference in what each one counts.	نظام واحد، وتعريف واحد، وعشرون سنة. الفرق بين هذه البطاقات فرق في السعر، لا اختلاف في ما تحسبه كل واحدة.
+R177	useCaseBillCutBlurb	Grid-tied solar, with a battery only if it earns its place. Measured as the share of your bill the system removes over 20 years.	طاقة شمسية مرتبطة بالشبكة، مع بطارية فقط إذا استحقت. يُقاس كنسبة فاتورتك التي يزيلها النظام على مدى 20 عامًا.
+R178	pathsIncentiveTaxCredit	Federal tax credit	ائتمان ضريبي فيدرالي
+R179	cumCostCaptionStackNoPanels	The amber figure is a stack — the system, then the smaller bills that remain (~{residualBills}), then your saving — so this system puts {saved} back in your pocket over the 20 years.	الشكل الكهرماني كومة — النظام، ثم الفواتير الأصغر التي تبقى (~{residualBills})، ثم توفيرك — أي أن هذا النظام يعيد إليك {saved} على مدى 20 عامًا.
+R180	footerHeatmap	Heatmap	خريطة الحرارة
+R181	cumCostTitleBattery	What does the battery change about your 20-year cost? (cumulative cost)	كيف تغير البطارية تكلفتك على مدى 20 عامًا؟ (التكلفة التراكمية)
+R182	frontierX	Up-front system cost	التكلفة الأولية للنظام
+R183	frontierMarkerOffCurve	Your option sits right of the curve because the recommendation is picked on true 20-year cost, not today's price — a cheaper bank that needs replacing costs less now and more later.	خيارك يقع يمين المنحنى لأن التوصية تُختار على أساس التكلفة الحقيقية على عشرين عامًا، لا سعر اليوم: مجموعة أرخص تحتاج إلى استبدال تكلف أقل الآن وأكثر لاحقًا.
+R184	tellPowerUse	Tell us your power use — tick some appliances, or enter a bill or kWh figure.	أدخل استهلاكك للطاقة: حدد بعض الأجهزة، أو أدخل فاتورة أو قيمة بالكيلوواط ساعة.
+R185	pathsIncludesNoYear0Hardware	No hardware purchase up front	دون شراء عتاد مقدمًا
+R186	fmtAllDay	all day (24 h)	طوال اليوم (24 ساعة)
+R187	donationTermsPrefix	Any contribution you choose to send is a voluntary gift to an individual. It is	أي مساهمة تختار إرسالها هي هدية طوعية لفرد. وهي ليست
+R188	infeasibleNeedsPanelsBody	Nothing recharges the bank at this site. Add panels to the hardware selector, or switch the goal to 'Cut my bill, stay connected' (grid-tie).	لا شيء يعيد شحن البنك في هذا الموقع. أضف ألواحًا إلى اختيار العتاد، أو بدّل الهدف إلى «خفض فاتورتي، ابقَ موصولًا» (موصول بالشبكة).
+R189	infeasibleAreaTitle	Too little roof/yard area for this target	مساحة السطح/الأرض صغيرة جدًا لهذا الهدف
+R190	loadKwh	I know my kWh/day (advanced)	أعرف استهلاكي بالكيلوواط ساعة يوميًا (متقدم)
+R191	verdictTou	{status}: the battery covers {pct}% of your peak-window energy, worth about {saving} over 20 years against a {cost} battery. Your peak-to-off-peak spread here is {spread} per kWh.	{status}: تغطي البطارية {pct}% من طاقتك في ساعات الذروة، بقيمة نحو {saving} على مدى 20 عامًا مقابل بطارية تكلف {cost}. الفارق بين الذروة وخارج الذروة هنا {spread} لكل ك.و.س.
+R192	advisorNoReply	 No reply received. Please try again.	 لم يصل رد. حاول مرة أخرى.
+R193	simpleCaveat	This is an estimate, not a promise — the full figures behind every number are one click away.	هذا تقدير وليس وعدًا — جميع الأرقام الكاملة على بُعد نقرة واحدة.
+R194	bomSelectedSystem	Selected system	النظام المحدد
+R195	assumptionsIntro	Run a sizing first - every constant used (derates, temperature model, efficiencies, weather data years and source) is listed here.	أجرِ حساب تحديد الحجم أولًا — جميع الثوابت المستخدمة (معاملات الخفض، نموذج الحرارة، الكفاءات، سنوات بيانات الطقس ومصدرها) مدرجة هنا.
+R196	frontierColPv	Panels	الألواح
+R197	pipelineLocation	Location	الموقع
+R198	cumCostCaptionNetNegative	The stack runs the other way here: those remaining bills (~{residualBills}) never shrink enough, so over 20 years this system costs about {loss} MORE than staying on the grid — money spent, not money saved.	هنا تسير الكومة في الاتجاه المعاكس: تلك الفواتير المتبقية (~{residualBills}) لا تنخفض بما يكفي أبدًا، لذا يكلفك هذا النظام على مدى 20 عامًا نحو {loss} أكثر من البقاء على الشبكة — مال مُنفَق، لا مال مُوفَّر.
+R199	pathsOwnershipPpa	The provider owns it and keeps it maintained.	المزوّد هو المالك ويتولى الصيانة.
+R200	lvlBest	Best pick	الاختيار الأفضل
+R201	useCasePortable	Portable power (RV, van, boat, camping)	طاقة محمولة (شاحنة، قارب، تخييم)
+R202	socChartTitle	Battery Charge Levels & Year-Round Reliability (5-Year Real Weather)	مستويات شحن البطارية والموثوقية السنوية (محاكاة 5 سنوات من الطقس الحقيقي)
+R203	useCaseTou	Save with a battery on time-of-use rates	الاقتصاد ببطارية مع تعرفة الساعات
+R204	cumCostCaptionResidual	The slate line is the residual grid cost itself — about {annual}/yr for the {kwh} kWh/yr still drawn from the grid (net of your feed-in credit), {end} over the full 20 years.	الخط الرمادي الداكن هو تكلفة الشبكة المتبقية نفسها — نحو {annual} سنويًا مقابل {kwh} كيلوواط ساعة سنويًا لا تزال مسحوبة من الشبكة (بعد خصم رصيد التغذية)، أي {end} على مدى 20 عامًا كاملة.
+R205	uiInitFailed	Warning: Interface failed to load - please refresh the page (Ctrl+F5).	تنبيه: تعذّر تحميل الواجهة — يرجى تحديث الصفحة (Ctrl+F5).
+R206	pathsGradeNote	Every figure above comes from one regional price registry with a named source and a confidence grade. Hardware is your own build estimate; labour, permits, incentives and replacements are registry figures. Nothing here is a vendor's quote.	كل رقم أعلاه يأتي من سجل أسعار إقليمي واحد بمصدر مذكور ودرجة ثقة. العتاد هو تقديرك أنت؛ أما العمل والتراخيص والحوافز والاستبدال فهي أرقام السجل. ولا شيء هنا عرض سعر من بائع.
+R207	pathsBreakEvenYear	Year {year}	السنة {year}
+R208	fxRateHelp	How many of your currency equal 1 US dollar. Auto-filled for your location; change only if you know a different rate.	عدد وحدات عملتك التي تساوي 1 دولار أمريكي. يُملأ تلقائيًا حسب موقعك؛ غيّره فقط إذا كنت تعرف سعرًا مختلفًا.
+R209	useCaseOffGridBlurb	Solar and battery sized for your whole home. Measured as the share of hours that run with no grid at all.	طاقة شمسية وبطارية محجَّمة لمنزلك كله. يُقاس كنسبة الساعات التي تعمل بلا شبكة إطلاقًا.
+R210	locBtn	📍 Use my precise location	📍 استخدم موقعي الحالي
+R211	roofMapNeedCity	Choose a city or use your location first.	اختر مدينة أو استخدم موقعك أولًا.
+R212	preciseLocationHelp	The precise-location button fills your exact coordinates and pulls area prices from the nearest reference region. For another place, type a city or town and press Enter or Tab to resolve it. Then click Size My System to calculate.	يملأ زر تحديد الموقع الدقيق إحداثياتك الفعلية ويجلب أسعار المنطقة من أقرب منطقة مرجعية. لمكان آخر، اكتب اسم مدينة أو بلدة واضغط Enter أو Tab لاختيارها، ثم انقر على «احسب نظامي» لإجراء الحساب.
+R213	cumCostRecommended	recommended	الموصى به
+R214	runBtnReady	☀️ Size My System (5-yr simulation)	☀️ احسب نظامي (محاكاة 5 سنوات)
+R215	autoChemAgm	Lead-acid (AGM)	رصاص-حمض (AGM)
+R216	cumSavingsServed	 · ~{kwh} kWh/yr served by the sun instead of the grid	 · ~{kwh} كيلوواط ساعة/سنة من الشمس بدلًا من الشبكة
+R217	pathsUnknown	Unknown	غير معروف
+R218	genSummary	I run a generator — what does its power really cost?	أستخدم مولدا — كم تبلغ التكلفة الحقيقية للكهرباء منه؟
+R219	readoutKwhEmpty	Enter a daily kWh figure.	أدخل استهلاكك اليومي بالكيلوواط ساعة لرؤية التقدير.
+R220	apWatts	~{w} W	~{w} واط
+R221	infeasibleNeedsBatteryTitle	Solar-only can't reach 100% off-grid	الطاقة الشمسية وحدها لا تبلغ 100% خارج الشبكة
+R222	cityLabel	Where is this system going?	أين سيُركَّب النظام؟
+R223	pathsCountsHeading	What this price counts	ما يشمله هذا السعر
+R224	billPerMonth	/mo	/شهريًا
+R225	langLabel	Language	اللغة
+R226	independentVerification	All output is an automated educational estimate produced from assumptions you supply. It is not a design, not a stamped drawing, not a quote, not a safety assessment, and not a code-compliance review. It may contain errors. Do not rely on it. Independently verify every figure — capacity, wire sizing, fuse ratings, and equipment compatibility — with a licensed electrician or professional engineer in your jurisdiction before purchasing, building, or energizing anything.	جميع المخرجات تقديرات تعليمية آلية مبنية على الافتراضات التي تقدمها. وليست تصميمًا ولا رسمًا مختومًا ولا عرض سعر ولا تقييمًا للسلامة ولا مراجعة للامتثال للكود. وقد تتضمن أخطاء. لا تعتمد عليها. تحقّق بشكل مستقل من كل رقم — السعة ومقاسات الأسلاك وقيم المصاهر وتوافق المعدات — لدى كهربائي مرخّص أو مهندس محترف في نطاقك القضائي قبل الشراء أو البناء أو التشغيل.
+R227	fuelReadoutBurn	({entry} ÷ {burn} {unit}/kWh — fuel alone; oil, filters and engine wear push the real number higher)	({entry} ÷ {burn} {unit}/كيلوواط/ساعة — الوقود فقط؛ الزيت والفلاتر وتآكل المحرك ترفع التكلفة الحقيقية)
+R228	cumCostCaptionNeverRepays	Within 20 years the system never repays its cost — battery replacements outpace bill savings, so the honest answer is: it does not pay for itself here.	خلال 20 عامًا لا يسترد النظام تكلفته أبدًا — استبدال البطاريات يتجاوز التوفير في الفاتورة، لذا فالجواب الصادق: هنا لا يدفع النظام تكلفته.
+R229	tariffSpendLine	At {tariff}/kWh, your power costs about {annual} per year today. Each option below shows the bill after solar and how fast it repays itself out of the savings.	بسعر {tariff}/كيلوواط/ساعة، تكلفك كهرباؤك حوالي {annual} سنويًا اليوم. كل خيار أدناه يوضح الفاتورة بعد الشمسي ومدى سرعة استرداد التكلفة من الادخار.
+R230	frontierVerdictCoveredGrid	Sizing is not your constraint here. The smallest practical system — {pv} kW of panels and {batt} kWh of battery, about {cost} — already covers essentially all of this load. Anything larger buys spare capacity, not a bigger saving.	الحجم ليس قيدك هنا. أصغر نظام عملي — {pv} كيلوواط ألواح و{batt} كيلوواط ساعة بطارية، بنحو {cost} — يغطي عمليًا كل هذا الحمل. وأي شيء أكبر يشتري سعة احتياطية، لا مزيدًا من التوفير.
+R231	pathsIncludesPermitsAndInterconnection	Permits, inspection and interconnection	التراخيص، الفحص، والربط بالشبكة
+R232	pathsIncludesYouDoSwaps	You arrange and pay for bank swaps	أنت تنظّم وتدفع استبدال البطاريات
+R233	liabilityLimitation	To the fullest extent permitted by applicable law, the operator shall not be liable for any direct, indirect, incidental, consequential, special, or punitive damages — including property damage, fire, personal injury, lost savings, or business interruption — arising from your use of or reliance on this free tool. Some jurisdictions do not allow certain exclusions, in which case they apply only to the extent permitted. Nothing here excludes liability that cannot lawfully be excluded, including liability for death or personal injury caused by negligence, or for fraud.	إلى أقصى حد يسمح به القانون المعمول به، لا يكون المشغّل مسؤولًا عن أي أضرار مباشرة أو غير مباشرة أو عرضية أو تبعية أو خاصة أو عقابية — بما فيها تلف الممتلكات والحريق والإصابة الشخصية وفقدان المدخرات أو توقف الأعمال — الناشئة عن استخدامك لهذه الأداة المجانية أو اعتمادك عليها. لا تسمح بعض الولايات القضائية باستثناءات معينة، وعندئذ لا تسري إلا بالقدر المسموح به. لا يستثني أي شيء هنا مسؤولية لا يجوز استثناؤها قانونًا، بما في ذلك الوفاة أو الإصابة الشخصية الناتجة عن الإهمال أو الاحتيال.
+R234	fxAsOfNote	Live rates as of {asOf}.	أسعار مباشرة حتى {asOf}.
+R235	imageryPrivacy	Satellite imagery (no account needed) loads only after you ask for it. Coordinates go to the map tiles and NASA weather; nothing is saved.	لا تُحمّل صور الأقمار الصناعية (ولا تحتاج إلى حساب) إلا بعد طلبها. تُرسل الإحداثيات إلى مربعات الخريطة وبيانات الطقس التابعة لناسا؛ ولا يُحفظ أي شيء.
+R236	pathsInstrumentPpa	PPA (you buy the energy)	عقد شراء الطاقة (أنت تشتري الطاقة)
+R237	autoCeiling	{chem} full mark: {pct}%	حد الشحن الكامل لـ{chem}: {pct}%
+R238	pipelineCached	cached	مخزّن
+R239	infeasibleEnvelopeTitle	Beyond this tool's search range for this target	خارج نطاق بحث هذه الأداة لهذا الهدف
+R240	frontierColBatt	Battery	البطارية
+R241	fuelLitLabel	Price per liter	السعر لكل لتر
+R242	roofMapTapThird	Now tap anywhere on the opposite roof edge to set the width.	الآن اضغط في أي مكان على حافة السقف المقابلة لتحديد العرض.
+R243	focusNoteRec	Recommendation stays {chem} {pv} kW + {batt} kWh (~{cost} over 20 years).	تبقى التوصية {chem} {pv} كيلوواط + {batt} كيلوواط ساعة (~{cost} على 20 عامًا).
+R244	roofMapLoadFailed	The optional map could not load.	تعذّر تحميل الخريطة الاختيارية.
+R245	useCaseVerdictFooter	{useCase} — measured from this location's own hourly weather, not an estimate.	{useCase}: قِيست باستخدام الطقس الساعي لهذا الموقع، وليست تقديرًا.
+R246	generatorAssumptionMiddle	/kWh, diesel	/kWh وديزل
+R247	cutLabel	Your bill-cut target	هدف خفض الفاتورة
+R248	apAvgW	 (~{w} W avg)	 (~{w} واط في المتوسط)
+R249	customCoordsLocation	Using custom coordinates ({lat}, {lon}).	يجري استخدام الإحداثيات المخصصة ({lat}, {lon}).
+R250	errorSim	⚠️ Sizing engine failed to load. Refresh the page (Ctrl+F5) and try again.	⚠️ تعذّر تحميل محرك التقدير. حدّث الصفحة (Ctrl+F5) وحاول مرة أخرى.
+R251	costMissingTariffBody	The calculator can size the system without a tariff, but needs your electricity price to compare 20-year grid cost with solar cost.	يمكن للحاسبة تحديد حجم النظام دون تعرفة، لكنها تحتاج إلى سعر الكهرباء لمقارنة تكلفة الشبكة بتكلفة الطاقة الشمسية على مدى 20 عامًا.
+R252	partsListIntro	A reference parts list so you know what the pieces are and roughly what they cost. Nothing here is sold by this site — prices are indicative figures seen on the open market and change constantly.	قائمة مرجعية توضّح مكوّنات النظام وتكلفتها التقريبية. لا يبيع هذا الموقع أيًا مما ورد هنا؛ فالأسعار استرشادية مأخوذة من السوق المفتوحة وتتغير باستمرار.
+R253	advisorIntakeBillLabel	Monthly Electric Bill ($ USD):	فاتورة الكهرباء الشهرية ($ دولار أمريكي):
+R254	homeIntro	Enter your location and average electric bill. We simulate 5 years of hourly NASA satellite weather to size the exact solar panel array and battery storage you need — with honest 20-year payback, battery replacement cadence, and equipment costs in your local currency.	أدخل موقعك ومتوسط فاتورة الكهرباء. نحاكي 5 سنوات من بيانات الطقس الساعية عبر الأقمار الصناعية التابعة لناسا لتحديد الحجم الدقيق للألواح الشمسية وتخزين البطارية الذي تحتاج إليه، مع فترة استرداد واقعية على مدى 20 عامًا، وتواتر استبدال البطارية، وتكاليف المعدات بعملتك المحلية.
+R255	budgetLabel	Your budget (up-front)	ميزانيتك (مقدّمًا)
+R256	pathsUnavailable	Not available	غير متاح
+R257	tariffNote	Electricity price estimated for {label} — change it above if you know your rate.	سعر تقديري لـ {label} — غيّره أعلاه إذا كنت تعرف تعريفتك.
+R258	frontierVerdictCoveredOffgrid	Sizing is not your constraint here. The smallest practical system — {pv} kW of panels and {batt} kWh of battery, about {cost} — already covers this entire load, year-round. Anything larger buys spare capacity, not more independence.	الحجم ليس قيدك هنا. أصغر نظام عملي — {pv} كيلوواط ألواح و{batt} كيلوواط ساعة بطارية، بنحو {cost} — يغطي هذا الحمل بالكامل طوال العام. وأي نظام أكبر يضيف سعة احتياطية، لكنه لا يمنحك استقلالًا أكبر.
+R259	socVerdictOffgrid	Lowest: {low}%. Fully charged on {charged} of {total} days; the generator covered {empty} empty-bank days.	أدنى مستوى: {low}%. شُحنت بالكامل في {charged} من {total} يومًا؛ غطى المولد {empty} يومًا فرغت فيها البطارية.
+R260	advisorBusy	 The free AI engine is swamped right now (HTTP {status} — it runs on a shared free quota).\n\nPlease wait about a minute and send that again.	 محرك الذكاء الاصطناعي المجاني مزدحم الآن (HTTP {status} — حصة مشتركة).\n\nانتظر نحو دقيقة ثم أرسل الطلب مجدداً.
+R261	pathsEndOfTermStillLeasing	In year {years} the term is still running, so no buyout is priced. Beyond 20 years you would still owe payments.	في السنة {years} لا يزال العقد ساريًا، لذا لا يُحتسب أي شراء. وبعد 20 عامًا ستظل مدينًا بأقساط.
+R262	metricReserveTradeoff	what holding a reserve costs, in savings and hours	تكلفة الاحتفاظ بالهامش، بالوفورات والساعات
+R263	faqIntro	Short answers to what people ask most. The AI advisor can go deeper on any of these.	إجابات قصيرة عن أكثر الأسئلة شيوعًا. ويمكن لمستشار الذكاء الاصطناعي التوسع في أي منها.
+R264	monthlyBillLabel	Your monthly electric bill	فاتورة الكهرباء الشهرية
+R265	simpleAskAdvisor	Ask the AI advisor (plain words)	اسأل مستشار الذكاء الاصطناعي (بكلمات بسيطة)
+R266	errorSim	⚠️ Sizing engine failed to load. Refresh the page (Ctrl+F5) and try again.	⚠️ تعذّر تحميل محرك التقدير. حدّث الصفحة (Ctrl+F5) وحاول مرة أخرى.
+R267	pathsLabel_selfpurchase	You buy the parts	أنت تشتري القطع
+R268	pipelineRendering	Rendering	العرض
+R269	frontierVerdictTaperingGrid	Cutting about {kneePct}% of your bill costs around {kneeCost}. Past that, each further percent costs roughly {tailCost} — about {ratio} times the earlier rate.	خفض نحو {kneePct}% من فاتورتك يكلف قرابة {kneeCost}. بعد ذلك تكلف كل نقطة إضافية نحو {tailCost}، أي نحو {ratio} ضعف المعدل السابق.
+R270	frontierLegendBand	Same systems, DIY sourcing to shipped retail	الأنظمة نفسها: من مكونات التجميع الذاتي إلى نظام كامل موصل من المتجر.
+R271	simpleGoalBattery	to shift about {pct}% of your peak hours onto the battery	نقل نحو {pct}% من ساعات الذروة إلى البطارية
+R272	frontierMethod	The curve comes from simulating every panel-and-battery combination on a coarse grid against the same hourly weather as the cards above, then keeping only the systems nothing cheaper beats. Prices use the same landed do-it-yourself middle as every other figure on this page.	يحاكي المنحنى كل توليفة من الألواح والبطاريات على شبكة خشنة ببيانات الطقس الساعية نفسها أعلاه، ولا يُبقي إلا الأنظمة التي لا يتفوق عليها نظام أرخص. السعر منتصف تكلفة نظام يُجمّع ذاتيًا مع الشحن والرسوم الجمركية، كما في بقية الصفحة.
+R273	cumSavingsHeadline	+~{amount} saved over 20 years	+~{amount} توفيرًا على مدى 20 عامًا
+R274	verdictReserveNoBattery	There is nothing to hold a reserve in: the cheapest system for this goal carries no battery at all.	لا يوجد مكان للاحتفاظ بهامش: أرخص نظام لهذا الهدف لا يحمل بطارية إطلاقًا.
+R275	pathsRowIncentives	Incentives	حوافز
+R276	resolvingCity	Resolving your city — choose a match or wait for lookup.	جارٍ البحث عن مدينتك — اختر نتيجة أو انتظر قليلاً.
+R277	pathsNoSystem	There is no system to price.	لا يوجد نظام لتسعيره.
+R278	paybackClaim	Where grid power is expensive - Hawaii, islands, much of Europe, Africa, South Asia - properly built solar plus storage commonly repays its component cost in one to four years, then runs nearly free for decades. The calculator shows your personal payback from your own tariff.	في الأماكن التي ترتفع فيها تكلفة كهرباء الشبكة — هاواي والجزر وأجزاء واسعة من أوروبا وأفريقيا وجنوب آسيا — غالبًا ما يسترد نظام شمسي مع تخزين، مبني بشكل صحيح، تكلفة مكوّناته خلال سنة إلى أربع سنوات، ثم يعمل بتكلفة شبه معدومة لعقود. تعرض الحاسبة فترة الاسترداد الخاصة بك وفق تعرفة الكهرباء لديك.
+R279	readoutAppliancesSummary	Estimated use: about {kwh} kWh/day · everything running at once ≈ {peakW} W (your inverter should be bigger than this)	الاستخدام المقدر: حوالي {kwh} كيلوواط ساعة/يوم · كل شيء يعمل في وقت واحد ≈ {peakW} واط (يجب أن يكون العاكس أكبر)
+R280	cumCostCaptionSurplusCredit	The with-solar total (~{withSolar}) sits BELOW the system's own cost: your feed-in credit on surplus out-earns the small bill that remains, so the stack runs negative and the utility owes you ~{owed} in the 20-year picture.	الإجمالي مع الطاقة الشمسية (~{withSolar}) يقع تحت التكلفة الخاصة بالنظام: رصيد تغذية فائضك يتجاوز الفاتورة الصغيرة المتبقية، فتسير الكومة بالسالب وتكون الشركة مدينة لك بنحو ~{owed} في حساب 20 عامًا.
+R281	infeasibleGenericTitle	This hardware and goal combination can't solve	هذا المزيج من العتاد والهدف لا حلّ له
+R282	cumCostBreakEven	Break-even: year {year}	التعادل: السنة {year}
+R283	offgridKwhReadout	~{kwh} kWh/day	~{kwh} كيلوواط·ساعة/يوم
+R284	frontierSvgTitle	How far your money gets you	إلى أين يصل مالك
+R285	advisorDegradedWhyUnavailable	the service that answers did not reply	الخدمة لم تستجب
+R286	pathsIncentivesToProvider	Incentives go to the provider, not to you.	الحوافز تذهب إلى المزوّد لا إليك.
+R287	roofMapNotRectangle	Those taps don't form a rectangle — tap three corners again, starting along one roof edge.	هذه الضغطات لا تُشكّل مستطيلًا — اضغط على ثلاث زوايا مجددًا، بدءًا من حافة السقف.
+R288	generatorRuntime2	2%+ — fine when needed	2%+ — لا مشكلة عند الحاجة
+R289	metricOutageCoverage	of power cuts your essentials ride out for the full target	من انقطاعات الكهرباء التي تصمد الأساسيات خلالها طوال المدة المطلوبة
+R290	electricalSafetyDisclaimer	Battery banks, high DC currents, and mains wiring can cause arc flash, electric shock, fire, toxic gas release, serious injury, and death. Lithium cells can enter thermal runaway. You are solely responsible for your own safety and for the safety of anyone affected by what you build. You are solely responsible for permits, inspections, and compliance with your local electrical and fire codes.	قد تتسبب حزم البطاريات والتيارات المستمرة العالية وأسلاك الكهرباء الرئيسية في وميض قوسي وصعق كهربائي وحريق وانبعاث غازات سامة وإصابة خطيرة ووفاة. وقد تدخل خلايا الليثيوم في حالة هروب حراري. أنت وحدك مسؤول عن سلامتك وسلامة كل من يتأثر بما تبنيه. وأنت وحدك مسؤول أيضًا عن التصاريح والفحوص والامتثال للأكواد الكهربائية وأكواد الحريق المحلية.
+R291	offgridTradeoff	Only if you want near-total independence through weeks of bad weather. The three off-grid options show exactly that trade-off: one never needs a generator, one needs it about a day a year, one only now and then. Grid-connected users skip this entirely.	فقط إذا كنت تريد استقلالًا شبه كامل خلال أسابيع الطقس السيئ. تعرض الخيارات الثلاثة خارج الشبكة هذه المقايضة بوضوح: أحدها لا يحتاج إلى مولد مطلقًا، والثاني يحتاج إليه نحو يوم في السنة، والثالث من حين إلى آخر فقط. يمكن لمن يبقى متصلًا بالشبكة تخطي ذلك.
+R292	roofAreaHelp	A rough manual estimate is enough: about 6 m² per 400 W panel. This only caps the searched solar size; leave it blank for the normal estimate. Your coordinates are never stored.	يكفي تقدير يدوي تقريبي: نحو 6 m² لكل لوح بقدرة 400 W. هذا يضع حدًا لحجم الطاقة الشمسية الذي يجري البحث عنه فقط؛ اتركه فارغًا للتقدير العادي. لا تُخزّن إحداثياتك مطلقًا.
+R293	advisorTitle	Free AI Energy Advisor	مستشار الطاقة المجاني بالذكاء الاصطناعي
+R294	frontierColRange	DIY to retail	تجميع ذاتي إلى سعر التجزئة
+R295	cumCostCaptionStack	The amber figure is a stack — the system, then the smaller bills that remain after solar (~{residualBills}), then your saving — so this system puts {saved} back in your pocket over the 20 years.	الشكل الكهرماني كومة — النظام، ثم الفواتير الأصغر التي تبقى بعد الطاقة الشمسية (~{residualBills})، ثم توفيرك — أي أن هذا النظام يعيد إليك {saved} على مدى 20 عامًا.
+R296	donationRecipientPrefix	Contributions go directly to	تذهب المساهمات مباشرة إلى
+R297	cutValueBattery	Target: shift ~{pct}% of your peak hours onto the battery	الهدف: نقل ~{pct}% من ساعات الذروة إلى البطارية
+R298	bomPanelTitle	Your hardware list — what this system is made of	قائمة المعدات الخاصة بك — مم يتكون هذا النظام
+R299	pipelineChunks	{done}/{total} satellite chunks	{done}/{total} مقاطع فضائية
+R300	infeasibleAreaBody	The searched solar size was capped by the optional area input (see “Hardware setup”). Clear that box — or draw a bigger area on the map — and re-run: the site itself can reach this target.	حُدّ حجم الطاقة الشمسية المبحوث عنه بحقل المساحة الاختياري (راجع «إعدادات العتاد»). امسح هذا الحقل — أو ارسم مساحة أكبر على الخريطة — ثم أعد التشغيل: الموقع نفسه يمكنه بلوغ هذا الهدف.
+R301	frontierYGridBattery	Share of your peak hours shifted	نسبة ساعات الذروة المنقولة
+R302	frontierVerdictSteepBattery	Shifting about {kneePct}% of your peak hours onto the battery costs around {kneeCost}. After that it gets expensive fast: roughly {tailCost} for each further percent, against {headCost} before.	نقل نحو {kneePct}% من ساعات الذروة إلى البطارية يكلف قرابة {kneeCost}. بعد ذلك يصبح مكلفًا بسرعة: نحو {tailCost} لكل نقطة إضافية، مقابل {headCost} قبلها.
+R303	useCasePortableBlurb	A power station for a van, a boat or a campsite. No roof, no grid, no tariff.	محطة طاقة لشاحنة أو قارب أو مخيم. بلا سطح، بلا شبكة، بلا تعرفة.
+R304	bomSafetyNote	Educational estimate from your sizing result — not an engineering design, not a shopping order. Fuse and cable figures assume copper, conservative ampacity, and a short battery-to-inverter run; verify everything against your local electrical code with a licensed professional before buying or energizing anything.	تقدير تعليمي مبني على نتيجة تحديد الحجم — وليس تصميمًا هندسيًا ولا قائمة مشتريات. تفترض قيم المصهر والكابل استخدام النحاس، وسعة تيار محافظة، ومسافة قصيرة بين البطارية والعاكس. تحقّق من كل شيء وفق الكود الكهربائي المحلي مع مختص مرخّص قبل شراء أي شيء أو تشغيله.
+R305	apKwhDay	{kwh} kWh/day	{kwh} كيلوواط·ساعة/يوم
+R306	useCaseBackup	Keep essentials running in a power cut	إبقاء الأساسيات تعمل أثناء انقطاع الكهرباء
+R307	useCaseOffGrid	Go fully off-grid	الاستقلال التام عن شبكة الكهرباء
+R308	infeasibleNeedsSurplusBody	Surplus needs panels to generate more than your load. Drop the target below 100% on the bill-cut slider, or switch the hardware setup to 'Solar + Battery'.	الفائض يحتاج ألواحًا تولّد أكثر من استهلاكك. اخفض الهدف دون 100% في منزلق خفض الفاتورة، أو بدّل إعداد العتاد إلى «شمسي + بطارية».
+R309	socVerdictGridOne	Lowest: {low}%. Fully charged on {charged} of {total} days; the grid covered one empty-bank day.	أدنى مستوى: {low}%. شُحنت بالكامل في {charged} من {total} يومًا؛ غطت الشبكة يومًا واحدًا فرغت فيه البطارية.
+R310	frontierVerdictCoveredBattery	Sizing is not your constraint here. The smallest practical battery — {batt} kWh, about {cost} — already shifts essentially all of this load's peak hours. Anything larger buys spare capacity, not a bigger offset.	الحجم ليس قيدك هنا. أصغر بطارية عملية — {batt} كيلوواط/ساعة، بنحو {cost} — تنقل بالفعل جميع ساعات الذروة لهذا الاستهلاك تقريبًا. أي شيء أكبر يشتري سعة احتياطية، لا نقلًا أكثر.
+R311	heroTag	🌍 Free for everyone, everywhere • No signup • Nothing for sale	🌍 مجاني للجميع، في كل مكان · بدون تسجيل · لا شيء للبيع
+R312	socCaptionSunStrip	The amber strip above shows daily solar output (kWh per kW of panel); its dips align with the banks' lowest charge.	يوضح الشريط الكهرماني أعلاه الإنتاج الشمسي اليومي (كيلوواط ساعة لكل كيلوواط من الألواح)؛ وتتزامن انخفاضاته مع أدنى شحن للبطاريات.
+R313	advisorDegradedWhyNoKey	no model key is configured, so the advisor is offline by design	لم يتم إعداد مفتاح للنموذج، لذا فالمستشار غير متصل عمدًا
+R314	frontierSelNoBatt	{pv} kW, no battery · {pct}% · {cost}	{pv} كيلوواط دون بطارية · {pct}% · {cost}
+R315	advisorClose	Close AI advisor	إغلاق مستشار الذكاء الاصطناعي
+R316	pathsNoTariff	A PPA needs a tariff to price against, so it is not shown here.	يحتاج عقد الشراء إلى سعر كهرباء ليُسعَّر بمقابله، لذلك لا يظهر هنا.
+R317	frontierSvgDesc	A curve of {n} systems, from {lowCost} covering {lowPct}% to {highCost} covering {highPct}%. The full figures are in the table below the chart.	منحنى من {n} نظامًا، من {lowCost} يغطي {lowPct}% إلى {highCost} يغطي {highPct}%. الأرقام الكاملة في الجدول أسفل الرسم.
+R318	batterySafety	It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. The guides here insist on proper fusing, BMS use, and code compliance - and on having a licensed electrician check anything before you energize it.	يتطلب الأمر احترامًا وحذرًا: تخزّن خلايا الليثيوم طاقة كافية لبدء حريق، ولا تنطفئ أقواس التيار المستمر تلقائيًا. تشدد الأدلة هنا على استخدام المصاهر المناسبة وBMS والامتثال للكود، وعلى فحص كهربائي مرخّص لكل شيء قبل تشغيله.
+R319	resultEstimateDisclaimer	Output is an automated educational estimate. It is not engineering, not a stamped design, not a quote, and not a safety certification. It may be wrong. Have any real system reviewed by a licensed electrician or engineer before you build or energize it.	المخرجات تقدير تعليمي آلي. وهي ليست عملًا هندسيًا ولا تصميمًا مختومًا ولا عرض سعر ولا شهادة سلامة. وقد تكون خاطئة. اطلب من كهربائي أو مهندس مرخّص مراجعة أي نظام فعلي قبل بنائه أو تشغيله.
+R320	essentialLabel	What must keep running? (pick any)	ما الذي يجب أن يبقى يعمل؟ (اختر ما تشاء)
+R321	verdictReserve	{status}: holding that reserve costs {pct}% of your bill savings and buys {coverHours} hours of cover.	{status}: الاحتفاظ بهذا الهامش يكلفك {pct}% من وفورك ويشتري {coverHours} ساعة من التغطية.
+R322	quickSetupTitle	⚡ Quick setup	⚡ إعداد سريع
+R323	pipelineReaching	reaching satellite…	جارٍ الاتصال بالقمر الصناعي…
+R324	navLegal	Terms & Disclaimer	الشروط وإخلاء المسؤولية
+R325	pathsIncludesHardwareYouBuy	The hardware you buy yourself	العتاد الذي تشتريه بنفسك
+R326	cumCostLegendResidualCredit	Net-metering credit beyond the remaining grid bill: {amount}	رصيد صافي القياس الذي يتجاوز فاتورة الشبكة المتبقية: {amount}
+R327	pathsSpend20	20-year cost	تكلفة 20 عامًا
+R328	cumSavingsBreakEven	Break-even in year {year} — every year after puts money back in your pocket{kwhBits}	يُسترد الاستثمار في السنة {year} — وكل سنة بعدها توفر المال{kwhBits}.
+R329	pathsIncludesIncentivesToProvider	Incentives go to the provider, not to you	الحوافز تذهب إلى المزوّد لا إليك
+R330	roofMapUseManual	{message} Use the manual area box below instead.	{message} استخدم مربع المساحة اليدوي أدناه بدلاً من ذلك.
+R331	advisorDegradedLine	I can't answer right now — {why}.	لا أستطيع الإجابة الآن — {why}.
+R332	pathsIncludesIncentivesIfEligible	Incentives, if you qualify for them	الحوافز، إن كنت مؤهلًا لها
+R333	pathsLabel_diy	You mount it, an electrician connects	أنت تركّب، وكهربائي يوصّل
+R334	batteryCostClaim	Battery banks self-built from prismatic cells typically land around $80–125 per usable kWh shipped and duty-paid; budget retail packs run roughly $110–165. Panels add about $0.16–0.38 per watt. Every result states its price scope honestly.	تبلغ تكلفة حزم البطاريات التي تُجمع ذاتيًا من خلايا منشورية عادةً $80–125 لكل kWh قابل للاستخدام، شاملة الشحن والرسوم الجمركية المدفوعة؛ أما الحزم التجارية الاقتصادية فتبلغ نحو $110–165. وتضيف الألواح نحو $0.16–0.38 لكل واط. توضح كل نتيجة نطاق السعر بصدق.
+R335	quickBillStarts	Starts from ~{bill} (≈{kwh} kWh/day). Set your real bill here, choose a location, then click Size My System. The bill-cut slider appears with results.	يبدأ من ~{bill} (≈{kwh} كيلوواط·ساعة/يوم). ضع فاتورتك الحقيقية هنا، واختر موقعًا، ثم انقر على «حجم نظامي». يظهر منزلق خفض الفاتورة مع النتائج.
+R336	pathsIncludesToolsAndSafety	Tools and safety gear	الأدوات ومعدات السلامة
+R337	speedNoteOffline	⚡ Instant — offline typical-year	⚡ فوري — سنة نموذجية دون اتصال
+R338	navSizing	Size Your System	صمّم نظامك
+R339	footerWarranty	Provided free and as-is, with no warranty of any kind, express or implied. Estimates are educational only and may be inaccurate. Working with batteries, high DC current, and mains wiring can cause fire, serious injury, and death — you are responsible for your own safety, your own decisions, and compliance with your local electrical code. Verify everything with a licensed professional before building. - Blog - Worldwide Benchmarks - Heatmap - About - Terms - Support - lucasballek@gmail.com	تُقدّم الأداة مجانًا كما هي، من دون أي ضمان صريح أو ضمني. التقديرات تعليمية فقط وقد تكون غير دقيقة. قد يؤدي العمل بالبطاريات والتيارات العالية المستمرة وأسلاك الكهرباء الرئيسية إلى حريق أو إصابة خطيرة أو وفاة — وأنت مسؤول عن سلامتك وقراراتك والامتثال للكود الكهربائي المحلي. تحقّق من كل شيء مع مختص مرخّص قبل البناء. - المدونة - مراجع عالمية - خريطة حرارية - من نحن - الشروط - الدعم - lucasballek@gmail.com
+R340	fuelGalLabel	Price per gallon	السعر لكل غالون
+R341	pathsIncludesInstalledAllIn	Parts, labour and permits, already installed	القطع والعمل والتراخيص، بعد التركيب
+R342	pathsDiyNotPermitted	Not offered here: where you are, a licensed installer has to do the electrical work.	غير معروضة هنا: في منطقتك يجب أن ينفّذ العمل الكهربائي مُثبِّت مرخّص.
+R343	autoSocAxis	Battery charge (% of rated capacity)	شحن البطارية (% من السعة الاسمية)
+R344	pathsOwnershipTurnkey	You own it from day one.	أنت تملكه من اليوم الأول.
+R345	invalidCoordinates	Latitude must be between −90 and 90 and longitude between −180 and 180.	يجب أن يتراوح خط العرض بين −90 و90 وخط الطول بين −180 و180.
+R346	advisorDegradedSystem	Take those numbers to a licensed electrician before you build.	خذ هذه الأرقام إلى كهربائي مرخَّص قبل البناء.
+R347	speedNoteOfflineWhere	⚡ Instant — offline typical-year for {where}	⚡ فوري — سنة نموذجية دون اتصال لـ {where}
+R348	fmtHoursDay	{h} h/day	{h} ساعة/يوم
+R349	pathsDriver_leasePayments	the payments you make	الأقساط التي تدفعها
+R350	socTier95	95% - generator now and then	95% - الحاجة إلى المولد من حين لآخر
+R351	pathsNotWithinHorizon	Not within 20 years	ليس خلال 20 عامًا
+R352	advisorDegradedGeneral	For sizing help, use the calculator above — no account needed.	للتحجيم: استخدم الحاسبة أعلاه؛ بلا حساب.
+R353	readoutAppliancesEmpty	Tick the things you want to power, and your daily energy shows up here.	اختر الأجهزة التي تريد تشغيلها وستظهر طاقتك اليومية هنا.
+R354	endplateSpec	Belleville spring washer endplates hold uniform compression (about 3,000 N). Manufacturers cite cycle-life benefits; treat specific gains as unverified.	تحافظ الألواح الطرفية ذات الغسالات الزنبركية Belleville على ضغط متساوٍ (نحو 3,000 N). يذكر المصنعون فوائد لعمر الدورات؛ وتعامل مع أي مكاسب محددة على أنها غير موثقة.
+R355	advisorLabel	Ask the AI advisor about your system	اسأل مستشار الذكاء الاصطناعي عن نظامك
+R356	fixedChargeTaxEstimate	Bills include fixed charges and taxes, so this slightly overestimates real use — which is a safe direction to err.	تشمل الفواتير رسومًا ثابتة وضرائب، لذلك يبالغ هذا قليلًا في تقدير الاستهلاك الحقيقي — وهو اتجاه أكثر أمانًا للخطأ.
+R357	roofMapAreaHint	{hint} This caps the searched PV size; it does not certify structural or shading suitability.	{hint} هذا يحدّ من حجم الطاقة الكهروضوئية المبحوث عنها؛ ولا يثبت الملاءمة الإنشائية أو الظلّية.
+R358	cumCostTitleSolar	What does solar really save you? (cumulative 20-year cost)	كم توفر الطاقة الشمسية فعلًا؟ (التكلفة التراكمية على مدى 20 عامًا)
+R359	frontierYOffgrid	Share of your energy covered, no generator	نسبة طاقتك المغطّاة دون مولّد
+R360	touDefaultNote	We have no published time-of-use schedule for your area, so we prefilled a peak price 60% above and an off-peak price 45% below your flat rate. Change either number if your bill says otherwise — the verdict below uses whatever you enter.	لا نملك جدول تعرفة ساعية منشورًا لمنطقتك، لذلك وضعنا سعر ذروة أعلى بنسبة 60٪ وسعرًا خارج الذروة أدنى بنسبة 45٪ من تسعيرتك الثابتة. غيّر أيًّا منهما إن كانت فاتورتك تقول غير ذلك — والحكم أدناه يستخدم ما تكتبه.
+R361	pathsWhy	{cheaper} is {gap} cheaper than {dearer} over 20 years, driven mostly by {driver}.	{cheaper} أرخص بمقدار {gap} من {dearer} على 20 عامًا، والسبب الأهم هو {driver}.
+R362	frontierPointTip	{cost}: {pct}% — {pv} kW of panels + {batt} kWh of battery	{cost}: {pct}% — {pv} كيلوواط ألواح + {batt} كيلوواط ساعة بطارية
+R363	roofMapLoading	Loading the optional map…	جارٍ تحميل الخريطة الاختيارية…
+R364	cumCostCaptionRepaid	The system has repaid its cost by year {year} — every year after puts ~{perYear} back in your pocket. Total saving over 20 years: ~{saved}. The lower bars are your running net position: red until break-even, then climbing.	استرد النظام تكلفته بحلول السنة {year} — وكل سنة بعدها تعيد ~{perYear} إلى جيبك. إجمالي التوفير على 20 عامًا: ~{saved}. الأعمدة السفلية هي صافي مركزك: حمراء حتى نقطة التعادل ثم صاعدة.
+R365	autoLegendWithSwaps	{chem} - {kwh} kWh rated capacity - about {swaps} replacements over 20 years	{chem} - سعة اسمية {kwh} كيلوواط ساعة - نحو {swaps} عمليات استبدال خلال 20 عامًا
+R366	frontierYGrid	Share of your power bill cut	نسبة فاتورتك المخفّضة
+R367	simpleInfeasible	At this location, no system we can build reaches that goal. Try a lower bill-cut target — or read the full details for how close solar can actually get.	في هذا الموقع، لا يوجد نظام يمكن بناؤه يصل إلى هذا الهدف. جرّب نسبة توفير أدنى، أو اطّلع على التفاصيل الكاملة لترى مدى ما يمكن للطاقة الشمسية الوصول إليه فعليًا.
+R368	useCaseOutcomeTitle	Your result: {useCase}	نتيجتك: {useCase}
+R369	frontierColCover	Covered	التغطية
+R370	generatorAssumptionSuffix	/kWh (fuel only — oil, filters, and engine wear push the true number higher). If you know your real $/kWh, type it directly instead.	/kWh (الوقود فقط؛ فالزيت والفلاتر وتآكل المحرك ترفع التكلفة الحقيقية). إذا كنت تعرف تكلفتك الفعلية لكل $/kWh فأدخلها مباشرة.
+R371	frontierVerdictLinearBattery	Offset tracks spending fairly evenly here — about {headCost} for each percent of peak hours, all the way to {ceilingPct}%.	النقل يواكب الإنفاق بانتظام نسبي هنا — نحو {headCost} لكل نقطة من ساعات الذروة، حتى {ceilingPct}%.
+R372	frontierLegendSel	Selected option — click any point to choose it	الخيار المحدد — انقر أي نقطة للاختيار
+R373	pathsDiyUnknown	Not offered here: we could not verify whether you may mount your own array.	غير معروضة هنا: تعذّر التحقق مما إذا كان بإمكانك تركيب ألواحك بنفسك.
+R374	metricGridIndependence	of the year running with no grid at all	من السنة تعمل بلا شبكة إطلاقًا
+R375	pathsRowNet	Net over 20 years	صافي 20 عامًا
+R376	billCutTarget	Bill-cut target — sets the results slider too:	هدف خفض الفاتورة — ويضبط أيضًا شريط تمرير النتائج:
+R377	quickSetupHint	— choose inputs, then click Size My System	— اختر المدخلات، ثم انقر على «احسب نظامي»
+R378	socTier99	99% - generator only as rare backup	99% - المولد احتياطي نادر فقط
+R379	statusOffgrid	⏳ Fetching 5 years of hourly satellite weather and searching system sizes…	⏳ جاري الحصول على 5 سنوات من طقس الأقمار الصناعية ساعة بساعة والبحث عن أحجام الأنظمة…
+R380	donationRecipientSuffix	personally.	شخصيًا.
+R381	pathsIncludesYouMountTheArray	You mount the array yourself	أنت تركّب الألواح بنفسك
+R382	costNoSeriesTitle	Savings data unavailable for this result	بيانات التوفير غير متاحة لهذه النتيجة
+R383	pathsCheapest	Cheapest	الأرخص
+R384	eli5EstimateNote	The result is an estimate, not a promise. Battery storage is the bucket that carries energy from sunny hours into dark hours.	النتيجة تقدير، ليس وعدًا. تخزين الطاقة بالبطاريات هو الدلو الذي ينقل الطاقة من ساعات المشمسة إلى ساعات الظلام.
+R385	touPeakLabel	Your peak price (per kWh)	سعر الذروة عندك (لكل ك.و.س)
+R386	tariffSpendFixed	 That includes {fixed}/mo in fixed charges solar can't cut.	 ويشمل ذلك {fixed}/شهريًا في رسوم ثابتة لا تخفضها الطاقة الشمسية.
+R387	frontierVerdictSteepGrid	Cutting about {kneePct}% of your bill costs around {kneeCost}. After that it gets expensive fast: roughly {tailCost} for each further percent, against {headCost} before.	خفض نحو {kneePct}% من فاتورتك يكلف قرابة {kneeCost}. بعد ذلك ترتفع التكلفة سريعًا: نحو {tailCost} لكل نقطة إضافية، مقابل {headCost} قبلها.
+R388	pathsIncludesEndOfTerm	The end-of-term choice is priced in	خيار نهاية العقد مُحتسب في السعر
+R389	fuelReadoutRate	{type} at this price works out to about {rate} per kWh	{type} بهذا السعر يخرج بحوالي {rate} لكل كيلوواط/ساعة
+R390	advisorIntakeKwhPh	e.g. 35	مثال: 35
+R391	advisorUnreachable	 The AI advisor is unreachable right now{status}.\n\nCheck your connection and try again in a moment.	 مستشار الذكاء الاصطناعي غير متاح حالياً{status}.\n\nتحقق من اتصالك وحاول مرة أخرى بعد قليل.
+R392	independenceTarget	Independence target (applied to all three chemistries):	هدف الاستقلال عن الشبكة (يُطبّق على أنواع البطاريات الثلاثة):
+R393	heroTitle1	Cut your electricity bill.	قلّل فاتورة الكهرباء.
+R394	pathsRowOwnership	Ownership	الملكية
+R395	backupRechargeLabel	Let the panels recharge it during the outage	دع الألواح تعيد الشحن أثناء الانقطاع
+R396	frontierVerdictTaperingOffgrid	Covering about {kneePct}% of your energy costs around {kneeCost}. Past that, each further percent costs roughly {tailCost} — about {ratio} times the earlier rate.	تغطية نحو {kneePct}% من طاقتك تكلف قرابة {kneeCost}. بعد ذلك تكلف كل نقطة إضافية نحو {tailCost}، أي نحو {ratio} ضعف المعدل السابق.
+R397	fmtMinutesDay	{m} min/day	{m} دقيقة/يوم
+R398	frontierColCut	Bill cut	خفض الفاتورة
+R399	pathsOwnershipSelf	You own it once it is installed.	تملكه بعد تركيبه.
+R400	lvlCompare	Compare batteries	مقارنة البطاريات
+R401	readoutBillIncomplete	Enter your monthly bill amount to see the daily energy estimate.	أدخل فاتورتك الشهرية لرؤية التقدير اليومي.
+R402	cumCostLegendSolar	Solar system: {amount}	النظام الشمسي: {amount}
+R403	infeasibleGenericBody	Change the goal or hardware, then re-run.	غيّر الهدف أو العتاد، ثم أعد التشغيل.
+R404	pathsWhyCombined	 No single item explains the whole gap.	 لا يفسّر عنصر واحد وحده الفرق كاملًا.
+R405	batterySafety	It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. The guides here insist on proper fusing, BMS use, and code compliance - and on having a licensed electrician check anything before you energize it.	It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. The guides here insist on proper fusing, BMS use, and code compliance - and on having a licensed electrician check anything before you energize it.
+R406	cumCostLegendGrid	Grid without solar: {amount}	الشبكة دون طاقة شمسية: {amount}
+R407	pathsDriver_year0	the up-front price	سعر البداية
+R408	lfpCells	Brand new Grade-A prismatic LFP cells. 16S configuration per pack (51.2V nominal).	خلايا LFP منشورية جديدة من الدرجة A. تكوين 16S لكل حزمة (51.2 V اسميًا).
+R409	simpleWhatItMeansBattery	A battery makes no power of its own — it charges in the cheap hours and holds that energy for the expensive ones. The system is sized from five years of hourly satellite weather at your exact location.	لا تولّد البطارية كهرباء بنفسها: تشحن في الساعات الرخيصة وتحفظ تلك الطاقة للساعات الغالية. ويُحجَّم النظام اعتمادًا على خمس سنوات من بيانات الطقس الساعية بالأقمار الصناعية لموقعك الدقيق.
+R410	autoLegendNoSwaps	{chem} - {kwh} kWh rated capacity - no replacements	{chem} - سعة اسمية {kwh} كيلوواط ساعة - دون استبدال
+R411	ctaStart	Start a Free Estimate	ابدأ تقديرًا مجانيًا
+R412	pathsDiyRestricted	Not offered here: DIY mounting is restricted where you are.	غير معروضة هنا: التركيب الذاتي مقيّد في منطقتك.
+R413	simpleGoalOffgrid	to cover your home through the year	تغطية منزلك على مدار السنة
+R414	autoSocCaption	Modeled usable capacity is 80% for LFP (20-100%), 85% for sodium-ion (15-100%), and 50% for lead-acid (50-100%). In this model, LFP and sodium-ion need fewer replacements than lead-acid over 20 years. Standard LFP voltage settings cap sodium-ion at about 85% of rated capacity; its shallower discharge supports longer cycle life. Lead-acid is limited to its upper half and is derated under heavy discharge. Weather dips from {startYear} to {endYear} show when grid or generator power would be needed.	السعة القابلة للاستخدام في النموذج هي 80% لـLFP (20-100%)، و85% لأيونات الصوديوم (15-100%)، و50% لبطاريات الرصاص الحمضية (50-100%). في هذا النموذج، تحتاج بطاريات LFP وأيونات الصوديوم إلى عمليات استبدال أقل من بطاريات الرصاص خلال 20 عامًا. تحد إعدادات الجهد القياسية لـLFP استخدام بطاريات أيونات الصوديوم عند نحو 85% من السعة الاسمية؛ ويساعد التفريغ الأقل عمقًا على إطالة عمرها بالدورات. يقتصر استخدام بطاريات الرصاص على النصف الأعلى، وتنخفض سعتها القابلة للاستخدام مع التفريغ الشديد. وتوضح الانخفاضات في سجل الطقس من {startYear} إلى {endYear} متى يلزم استخدام الشبكة أو المولد.
+R415	sanityAskAdvisor	ask the advisor why	اسأل المستشار لماذا
+R416	infeasibleNeedsSurplusTitle	A battery-only bank can't produce surplus	بنك البطاريات وحده لا ينتج فائضًا
+R417	pathsOwnershipLease	You rent it until the term ends, then you buy it out or hand it back.	تستأجره حتى نهاية العقد ثم تشتريه أو تعيده.
+R418	sourcesCardLink	See all sources →	عرض كل المصادر ←
+R419	eli5SolarHeading	🌞 The Solar Array	🌞 المصفوفة الشمسية
+R420	locationPrecision	A city lookup is convenient, but your exact location gives the most precise weather and solar estimate. Enter custom latitude and longitude manually, or use Use my precise location for browser GPS.	البحث عن مدينة مريح، لكن موقعك الدقيق يعطي التقدير الأكثر دقة للطقس والطاقة الشمسية. أدخل خط العرض والطول يدويًا، أو استخدم «استخدام موقعي الحالي» للاستفادة من GPS في المتصفح.
+R421	advisorIntakeKwhLabel	Daily Energy Consumption (kWh / day):	استهلاك الطاقة اليومي (كيلوواط ساعة / اليوم):
+R422	chatPrivacySummary	No signup, no cookies for advertising, no analytics profile. Your chat text is sent to the AI provider to generate a reply and is not stored here. Don't type anything sensitive into it.	لا يلزم التسجيل، ولا توجد ملفات تعريف ارتباط إعلانية أو ملفات تحليلية. يُرسل نص محادثتك إلى مزود الذكاء الاصطناعي لإعداد الرد ولا يُخزّن هنا. لا تكتب معلومات حساسة.
+R423	pathsRowEndOfTerm	At the end	في النهاية
+R424	frontierNoSystem	No system inside the sizes this tool searches can reach this target at this location. The curve below shows the furthest this site can practically get — try a lower target, or plan a generator or grid connection to cover what solar can't.	لا يمكن لأي نظام ضمن الأحجام التي تبحث عنها هذه الأداة الوصول إلى هذا الهدف في هذا الموقع. يُظهر المنحنى أدناه أبعد ما يصل إليه هذا الموقع عمليًا — جرّب هدفًا أدنى، أو خطّط لمولد أو اتصال بالشبكة لتغطية ما لا تصل إليه الشمس.
+R425	pathsTitle	Four ways to pay for this same system	أربع طرق لدفع ثمن النظام نفسه
+R426	eli5ClimateNote	 Weather suggests {climate} conditions, so dust losses are included.	 يشير الطقس إلى ظروف {climate}، لذا تُحتسب خسائر الغبار.
+R427	simpleDownloadBom	Download parts list (CSV)	تنزيل قائمة القطع (CSV)
+R428	metricPortableRuntime	of days the station runs your devices all day	من الأيام التي تغذّي فيها المحطة أجهزتك طوال اليوم
+R429	goalLabel	What outcome are you exploring?	ماذا تريد من هذا النظام؟
+R430	donationTermsSuffix	, is not payment for goods or services, creates no contract, entitles you to nothing, and is not refundable in exchange for any obligation. Contributing does not change the service you receive in any way.	، وليست دفعًا مقابل سلع أو خدمات، ولا تنشئ عقدًا أو تمنحك حقًا، ولا تُسترد مقابل أي التزام. ولا تغيّر مساهمتك الخدمة التي تحصل عليها بأي شكل.
+R431	metricReserveTradeoffValue	{lost}% of savings, {hours} h of cover	{lost}% من الوفر، {hours} ساعة تغطية
+R432	chartBankEmpty	Bank empty	البطارية فارغة
+R433	simpleAdvisorStyle	[ADVISOR INSTRUCTION: The visitor is in Simple mode. Answer like an expert talking to a smart 12-year-old: plain everyday words, no jargon (explain any technical term in a short parenthesis), 4 short sentences maximum, and end with the ONE number that matters most.]	[تعليمات للمستشار: الزائر في الوضع المبسّط. أجب كخبير يتحدث إلى طفل ذكي في الثانية عشرة: كلمات يومية بسيطة، بلا مصطلحات تقنية (اشرح أي مصطلح تقني بين قوسين قصيرين)، أربع جمل قصيرة كحد أقصى، واختم بالرقم الأهم.]
+R434	pathsDriver_none	no single item	لا عنصر بعينه
+R435	advisorPlaceholder	Ask about cell specs, Sodium-ion vs LFP, freight costs...	اسأل عن الخلايا، أيوني الصوديوم مقابل LFP، تكلفة الشحن...
+R436	simpleHeadline	At your location, this system gets you {goal}:	في موقعك، يمنحك هذا النظام {goal}:
+R437	freeToolDisclaimer	Short version: this is a free educational toy that produces rough estimates, run by one person, with no warranty of any kind.	باختصار: هذه أداة تعليمية مجانية يقدمها شخص واحد، وتنتج تقديرات تقريبية من دون أي ضمان من أي نوع.
+R438	costMissingTariffTitle	Enter your grid price to see estimated savings	أدخل سعر كهرباء الشبكة لمعرفة التوفير التقديري
+R439	pathsGradeNote	Every figure above comes from one regional price registry with a named source and a confidence grade. Hardware is your own build estimate; labour, permits, incentives and replacements are registry figures. Nothing here is a vendor's quote.	كل رقم أعلاه يأتي من سجل أسعار إقليمي واحد بمصدر مذكور ودرجة ثقة.
+R440	apWattsRunning	~{w} W while running	~{w} واط أثناء التشغيل
+R441	frontierTitle	How far does your money get you?	إلى أين يصل مالك؟
+R442	useCaseReserve	Keep a backup reserve in my battery	الاحتفاظ بهامش طوارئ في البطارية
+R443	pathsInstrumentLabel	Third-party route:	طريق الغير:
+R444	frontierVerdictBeyondSweepGrid	Within the sizes this tool searches — up to {pvMax} kW of panels and {battMax} kWh of battery — the most you can cut here is about {ceilingPct}%, for around {ceilingCost}. Good value runs out well before that, at {kneePct}% for about {kneeCost}. Cutting more is not impossible; it just needs a system bigger than anything sized here.	ضمن الأحجام التي تبحثها هذه الأداة — حتى {pvMax} كيلوواط ألواح و{battMax} كيلوواط ساعة بطارية — أقصى ما يمكن خفضه هنا نحو {ceilingPct}%، بتكلفة قرابة {ceilingCost}. وتنتهي القيمة الجيدة قبل ذلك بكثير، عند {kneePct}% بنحو {kneeCost}. والخفض أكثر ليس مستحيلًا، لكنه يحتاج نظامًا أكبر من كل ما جرى تحجيمه هنا.
+R445	costNoSeriesBody	The sizing completed, but this result did not include a comparable 20-year cost series.	اكتمل تحديد حجم النظام، لكن هذه النتيجة لا تتضمن سلسلة تكاليف قابلة للمقارنة على مدى 20 عامًا.
+R446	sharedLocationLoaded	Shared result loaded - sunshine data for this location	تم تحميل النتيجة المشتركة — بيانات أشعة الشمس لهذا الموقع
+R447	frontierVerdictLinearGrid	Savings track spending fairly evenly here — about {headCost} for each percent of your bill, all the way to {ceilingPct}%.	هنا يسير التوفير مع الإنفاق بانتظام: نحو {headCost} لكل نقطة من فاتورتك، حتى {ceilingPct}%.
+R448	suggestTranslationFix	Suggest a translation fix	اقتراح تحسين الترجمة
+R449	pathsDriver_om	maintenance	الصيانة
+R450	speedNoteCached	⚡ Instant — cached satellite weather	⚡ فوري — طقس الأقمار الصناعية مخزّن
+R451	frontierLegendCeiling	Best the searched sizes reach — not a limit of physics	أقصى ما تبلغه الأحجام المبحوثة، وليس حدًا فيزيائيًا
+R452	frontierRangeTag	best value	أفضل قيمة
+R453	batteryManagementSpec	Smart active balancing (2A balance current), dual temperature probes, RS485/CANbus comms with Sol-Ark & Victron.	موازنة نشطة ذكية (تيار موازنة 2 A)، ومجسّا حرارة، واتصالات RS485/CANbus مع Sol-Ark وVictron.
+R454	cumCostCaptionHead	Running 20-year cost for the {which} system ({label}): the amber line is what you pay the utility if you stay on the grid ({gridTotal}).	التكلفة التراكمية على 20 عامًا للنظام {which} ({label}): الخط الكهرماني هو ما تدفعه للشركة إذا بقيت على الشبكة ({gridTotal}).
+R455	readoutBill	That works out to about {kwhDay} kWh/day of average use.	هذا يعادل حوالي {kwhDay} كيلوواط ساعة/يوم من الاستخدام المتوسط.
+R456	sanityOk	Independently sanity-checked ✓ — physics plausible	تم التحقق بشكل مستقل ✓ — معقول فيزيائيًا
+R457	autoSocIntro	Read the plot: the shaded band shows each bank's daily charge range, the bold top edge its fullest charge, and the thin lower edge its deepest discharge. The dashed line marks the full-charge point ({ceilings}); each bank has a similar rated capacity for the same job.	طريقة قراءة الرسم: يوضح النطاق المظلل مدى الشحن اليومي لكل بطارية؛ ويمثل الحد العلوي السميك أعلى مستوى شحن، والحد السفلي الرفيع أعمق تفريغ. يشير الخط المتقطع إلى مستوى الشحن الكامل ({ceilings})؛ وتتمتع البطاريات بسعات اسمية متقاربة لأداء المهمة نفسها.
+R458	donationTerms	Please read before sending anything. Contributions are voluntary gifts to an individual, not payment for a service. They are not tax-deductible — this is not a charity or a registered nonprofit. They buy nothing: no priority, no features, no personal advice, no support obligation, and no continued availability of this site. Everyone gets exactly the same free tool whether they contribute or not. Please don't send money you need. If you were hoping to pay for professional engineering help, spend it on a licensed local engineer or electrician instead — that is genuinely the better use of it.	يرجى القراءة قبل إرسال أي مبلغ. المساهمات هدايا طوعية لفرد وليست مقابل خدمة. وهي غير قابلة للخصم الضريبي؛ فهذا ليس عملًا خيريًا ولا مؤسسة غير ربحية مسجلة. لا تشتري أي شيء: لا أولوية ولا ميزات ولا نصيحة شخصية ولا التزام دعم ولا ضمان استمرار هذا الموقع. يحصل الجميع على الأداة المجانية نفسها تمامًا سواء ساهموا أم لا. لا ترسل مالًا تحتاج إليه. وإذا كنت تريد دفع تكلفة مساعدة هندسية مهنية، فالأفضل إنفاقه لدى مهندس أو كهربائي محلي مرخّص.
+R459	navBlog	Blog	المدونة
+R460	pathsIncludesProviderSwaps	The provider maintains and replaces the battery and inverter	المزوّد يصون ويستبدل البطارية والعاكس
+R461	shareLoaded	Shared setup loaded. Review the inputs, then click Size My System to calculate.	تم تحميل الإعدادات المشتركة. راجع المدخلات ثم اضغط احسب نظامي لبدء الحساب.
+R462	frontierColCost	Typical cost	التكلفة النموذجية
+R463	speedNoteRepeat	⚡ Instant — repeat of this exact setup (computed moments ago)	⚡ فوري — تكرار دقيق لهذا الإعداد (حُسب الآن)
+R464	advisorBusyRetry	 The free AI engine is busy — retrying in {secs}s…	 محرك الذكاء الاصطناعي المجاني مشغول — إعادة المحاولة خلال {secs}s…
+R465	simpleGoalGrid	to cut about {pct}% off your bill	خفض نحو {pct}% من فاتورتك
+R466	advisorIsAi	The advisor is a large language model. It writes plausible text and can state wrong numbers confidently. Check every figure — never take it as fact.	المستشار نموذج لغوي. يكتب نصًا مقنعًا وقد يذكر أرقامًا خاطئة بثقة. تحقّق من كل رقم — لا تأخذه كحقيقة.
+R467	sanityFlag	⚠ An independent AI check flags this result as physically implausible —	⚠ تشير مراجعة ذكاء اصطناعي مستقلة إلى أن هذه النتيجة غير معقولة فيزيائيًا —
+R468	billCutImpossible	Even a large array can't cut the bill this far at this location - check the off-grid sizer instead.	حتى مصفوفة كبيرة لا تستطيع خفض الفاتورة إلى هذا الحد في هذا الموقع — جرّب أداة القياس خارج الشبكة بدلاً من ذلك.
+R469	socVerdictGrid	Lowest: {low}%. Fully charged on {charged} of {total} days; the grid covered {empty} empty-bank days.	أدنى مستوى: {low}%. شُحنت بالكامل في {charged} من {total} يومًا؛ غطت الشبكة {empty} يومًا فرغت فيها البطارية.
+R470	frontierNoBattery	none	لا شيء
+R471	frontierVerdictLinearOffgrid	Coverage tracks spending fairly evenly here — about {headCost} per percent, all the way to {ceilingPct}%.	هنا تسير التغطية مع الإنفاق بانتظام: نحو {headCost} لكل نقطة، حتى {ceilingPct}%.
+R472	socTier100	100% - no generator needed	100% - لا حاجة إلى مولد

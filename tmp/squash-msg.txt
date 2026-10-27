@@ -1,0 +1,35 @@
+fix(i18n): full translation meaning back-read — 23 defects fixed and pinned (P0.3, #287)
+
+The jev translation facet has been held at ordinal 60 because the judge's
+demanded remediation — back-translate the rendered strings and read them for
+meaning, fix any string that is technically present and not actually readable —
+was never executed. This is that pass: all 436 dictionary keys in each of
+es/pt/fr/de/nl/ar (2,616 strings) read against the English source in one
+review, 23 defects fixed and pinned in tests/translation-review.test.mjs.
+
+The material ones: de.frontierIntro was not a translation (the whole second
+sentence of the chart explanation was dropped); es.pathsOwnershipLease shipped
+a broken verb ("Lo alquileres"); fr.pathsDiyRestricted said self-consumption
+for self-installation; es.advisorBusy shipped a truncated word; ar carried a
+nonsense mash ("بالوفوفير"), an ungrammatical "البيانات الساعة", a dropped
+gloss in pathsInstrumentPpa, and two different names for the Size My System
+button; the CTA lost its ☀️ in four locales and changed wording between its two
+states; heroTag/locBtn/quickSetupTitle lost markers; offlineNote dropped the
+"year" of typical-year in es/pt/fr; en carried " ," and " :" spacing artifacts
+and quoted a location-button label the button does not carry (also in de/nl
+and index.html).
+
+The composed translation facet line now cites the completed back-read and
+keeps the open clause named — native-speaker review remains open, and the
+review record (docs/jev-completion/TRANSLATION_MEANING_BACKREAD_2026-10-24.md)
+says in its limit section that this is an AI fluent back-read, not
+native-speaker validation. The evidence note's pinned honesty wording moves
+with it: tests/jev-derived-facets.test.mjs now pins the completed back-read
+plus the open native clause instead of "remains incomplete". No gate, threshold
+or ratchet changes.
+
+Asset stamp 20261025a / SW beco-v165 so returning visitors receive the locale
+changes.
+
+🤖 Generated with Codebuff
+Co-Authored-By: Codebuff <noreply@codebuff.com>

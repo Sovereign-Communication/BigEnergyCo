@@ -1,0 +1,2 @@
+file,line,name,fail_closed,blast_radius,failure_mode,verdict,verdict_confidence,judge_model
+assets/js/cf-beacon.js,38,injectBeacon,0.4,2.39,silent-wrong-output,needs-human-look,0.85,jev-1.13.0

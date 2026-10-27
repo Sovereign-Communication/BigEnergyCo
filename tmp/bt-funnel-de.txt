@@ -1,0 +1,203 @@
+R001	frontierMethod	[sentences; r=1.08; j=0.29]
+  EN : The curve comes from simulating every panel-and-battery combination on a coarse grid against the same hourly weather as the cards above, then keeping only the systems nothing cheaper beats. Prices use the same landed do-it-yourself middle as every other figure on this page.
+  de : Die Kurve simuliert jede Kombination aus Modulen und Batterie auf einem groben Raster mit denselben stündlichen Wetterdaten wie oben. Sie zeigt nur Systeme, die kein günstigeres System übertrifft. Wie alle Seitenwerte nutzt der Preis die Mitte der Selbstbaukosten inklusive Versand und Einfuhrabgaben.
+  BT : The curve simulates every combination of modules and battery on a coarse grid using the same hourly weather data as above. It only shows systems that are not outperformed by a cheaper system. Like all page values, the price uses the midpoint of the DIY costs including shipping and import duties.
+
+R003	navBlog	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : Blog
+  de : Blog
+  BT : Blog
+
+R005	cumCostLegendBattery	[negation; r=1.31; j=0.50]
+  EN : Battery-only system: {amount}
+  de : Batteriesystem ohne Solar: {amount}
+  BT : Battery system without solar: {amount}
+
+R015	bomSafetyNote	[sentences; r=1.15; j=0.32]
+  EN : Educational estimate from your sizing result — not an engineering design, not a shopping order. Fuse and cable figures assume copper, conservative ampacity, and a short battery-to-inverter run; verify everything against your local electrical code with a licensed professional before buying or energizing anything.
+  de : Pädagogische Schätzung aus Ihrer Dimensionierung — kein Ingenieurplan und keine Einkaufsliste. Die Werte für Sicherungen und Kabel setzen Kupfer, eine konservative Strombelastbarkeit und eine kurze Strecke zwischen Batterie und Wechselrichter voraus. Lassen Sie alles vor dem Kauf oder Einschalten von einer zugelassenen Fachkraft anhand der örtlichen Elektrovorschriften prüfen.
+  BT : Pedagogical estimate based on your sizing — not an engineering plan and not a shopping list. The values for fuses and cables assume copper, a conservative current carrying capacity, and a short distance between battery and inverter. Have everything checked by a certified professional according to local electrical regulations before purchase or switching on.
+
+R019	frontierSelTag	[engine-noop; r=1.03; j=1.00]
+  EN : {pv} kW + {batt} kWh · {pct}% · {cost}
+  de : {pv} kW + {batt} kWh · {pct} % · {cost}
+  BT : {pv} kW + {batt} kWh · {pct} % · {cost}
+
+R022	autoChemLfp	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : LFP
+  de : LFP
+  BT : LFP
+
+R046	uiInitFailed	[negation; r=1.04; j=0.58]
+  EN : Warning: Interface failed to load - please refresh the page (Ctrl+F5).
+  de : Warnung: Die Oberfläche konnte nicht laden — bitte Seite neu laden (Strg+F5).
+  BT : Warning: The interface could not load — please reload the page (Ctrl+F5).
+
+R050	assumptionsIntro	[sentences; r=1.05; j=0.59]
+  EN : Run a sizing first - every constant used (derates, temperature model, efficiencies, weather data years and source) is listed here.
+  de : Führen Sie zuerst eine Dimensionierung aus. Alle verwendeten Konstanten (Abminderungen, Temperaturmodell, Wirkungsgrade, Wetterdatenjahre und Quelle) sind hier aufgeführt.
+  BT : First, perform a sizing. All constants used (deratings, temperature model, efficiencies, weather data years, and source) are listed here.
+
+R052	resultsIntro	[length,sentences; r=0.52; j=0.41]
+  EN : Results appear here: a recommended path first, with battery comparisons and all options available below. For grid-tied plans, the result also separates bill reduction from outage backup.
+  de : Hier erscheinen die Ergebnisse: zuerst ein empfohlener Weg, darunter Batterievergleiche und alle Optionen.
+  BT : The results appear here: first a recommended way, below that battery comparisons and all options.
+
+R055	touDefaultNote	[sentences; r=1.11; j=0.61]
+  EN : We have no published time-of-use schedule for your area, so we prefilled a peak price 60% above and an off-peak price 45% below your flat rate. Change either number if your bill says otherwise — the verdict below uses whatever you enter.
+  de : Für deine Region haben wir keine veröffentlichte Zeittarif-Tabelle. Deshalb haben wir einen Spitzenpreis von 60 % über und einen Preis außerhalb der Spitze von 45 % unter deinem Pauschalpreis eingetragen. Ändere beide Werte, wenn deine Rechnung etwas anderes sagt — das Urteil unten nutzt, was du eingibst.
+  BT : For your region, we do not have a published time-of-use tariff table. Therefore, we have entered a peak price 60% above and an off-peak price 45% below your flat rate. Change both values if your bill says otherwise — the calculation below uses whatever you enter.
+
+R056	partsListIntro	[negation; r=1.11; j=0.42]
+  EN : A reference parts list so you know what the pieces are and roughly what they cost. Nothing here is sold by this site — prices are indicative figures seen on the open market and change constantly.
+  de : Eine Referenzliste, damit Sie wissen, aus welchen Teilen das System besteht und was sie ungefähr kosten. Nichts davon wird auf dieser Website verkauft — die Richtpreise stammen aus dem freien Markt und ändern sich laufend.
+  BT : A reference list so that you know what parts the system consists of and approximately how much they cost. None of this is sold on this website — the guideline prices come from the open market and change continuously.
+
+R075	siteAsIs	[sentences; r=1.02; j=0.65]
+  EN : THIS SITE AND ITS OUTPUT ARE PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, AND NON-INFRINGEMENT. There is no guarantee of availability, correctness, or continued operation, and the site may change or disappear at any time without notice.
+  de : DIESE WEBSITE UND IHRE AUSGABEN WERDEN „WIE BESEHEN“ UND „NACH VERFÜGBARKEIT“ OHNE GEWÄHRLEISTUNG JEGLICHER ART BEREITGESTELLT, WEDER AUSDRÜCKLICH NOCH STILLSCHWEIGEND. DAS UMFASST UNTER ANDEREM GEWÄHRLEISTUNGEN DER MARKTGÄNGIGKEIT, EIGNUNG FÜR EINEN BESTIMMTEN ZWECK, RICHTIGKEIT UND NICHTVERLETZUNG. Verfügbarkeit, Richtigkeit und fortgesetzter Betrieb werden nicht garantiert; die Website kann sich jederzeit ohne Ankündigung ändern oder verschwinden.
+  BT : THIS WEBSITE AND ITS OUTPUTS ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT ANY WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. THIS INCLUDES, AMONG OTHER THINGS, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, AND NON-INFRINGEMENT. Availability, accuracy, and continued operation are not guaranteed; the website may change or disappear at any time without notice.
+
+R100	apWatts	[untranslated,engine-noop; r=1.00; j=0.00]
+  EN : ~{w} W
+  de : ~{w} W
+  BT : ~{w} W
+
+R127	tellPowerUse	[length; r=0.61; j=0.31]
+  EN : Tell us your power use — tick some appliances, or enter a bill or kWh figure.
+  de : Gib deinen Verbrauch an — Geräte, Rechnung oder kWh.
+  BT : Enter your consumption — devices, bill, or kWh.
+
+R131	batterySafety	[sentences; r=1.11; j=0.39]
+  EN : It demands respect: lithium cells store enough energy to start fires, and DC arcs don't switch off. The guides here insist on proper fusing, BMS use, and code compliance - and on having a licensed electrician check anything before you energize it.
+  de : Das erfordert Respekt: Lithiumzellen speichern genug Energie, um Brände auszulösen, und DC-Lichtbögen schalten sich nicht von selbst ab. Die Anleitungen bestehen auf geeigneten Sicherungen, einem BMS und der Einhaltung der Vorschriften. Vor dem Einschalten soll eine zugelassene Elektrofachkraft alles prüfen.
+  BT : That requires respect: Lithium cells store enough energy to cause fires, and DC arcs do not switch off by themselves. The instructions insist on appropriate fuses, a BMS, and compliance with regulations. Before turning it on, a certified electrician should check everything.
+
+R139	resolvingCity	[overlap; r=1.11; j=0.07]
+  EN : Resolving your city — choose a match or wait for lookup.
+  de : Ort wird gesucht — wählen Sie einen Treffer oder warten Sie kurz.
+  BT : Location is being searched — select a result or wait a moment.
+
+R149	offlineFallback	[sentences; r=1.02; j=0.54]
+  EN : Yes. After your first visit the tool installs itself as an offline app: sizing math runs entirely in your browser, and if the network is down it falls back to bundled typical-year weather for the nearest of 66 reference cities.
+  de : Ja. Nach Ihrem ersten Besuch installiert sich das Werkzeug als Offline-App: Die Berechnungen laufen vollständig im Browser. Bei einem Netzausfall werden mitgelieferte typische Wetterdaten für die nächstgelegene von 66 Referenzstädten verwendet.
+  BT : Yes. After your first visit, the tool installs itself as an offline app: all calculations run entirely in the browser. In the event of a network failure, provided typical weather data for the nearest of 66 reference cities is used.
+
+R157	generatorRuntime2	[negation; r=1.18; j=0.25]
+  EN : 2%+ — fine when needed
+  de : 2%+ — bei Bedarf kein Problem
+  BT : 2%+ — no problem if needed
+
+R187	statusGridtie	[overlap; r=1.16; j=0.21]
+  EN : ⏳ Fetching five years of satellite weather and searching bill-cutting system sizes…
+  de : ⏳ Fünf Jahre Satellitenwetter werden geladen, Systeme zur Rechnungssenkung gesucht…
+  BT : ⏳ Five years of satellite weather are being loaded, systems for cost reduction are being sought…
+
+R189	cumSavingsBreakEven	[sentences,overlap; r=0.81; j=0.19]
+  EN : Break-even in year {year} — every year after puts money back in your pocket{kwhBits}
+  de : Amortisiert sich in Jahr {year} — jedes weitere Jahr spart Geld{kwhBits}.
+  BT : Pays off in year {year} — each additional year saves money{kwhBits}.
+
+R208	verdictOffGrid	[negation; r=1.10; j=0.56]
+  EN : {status}: {pct}% of the year runs with no grid — {unmetHours} hours short in the worst year, {autonomy} days of autonomy.
+  de : {status}: {pct}% des Jahres laufen ganz ohne Netz — {unmetHours} Stunden fehlen im schlechtesten Jahr, {autonomy} Tage Autonomie.
+  BT : {status}: {pct}% of the year run completely off-grid — {unmetHours} hours are missing in the worst year, {autonomy} days of autonomy.
+
+R210	pathsGradeNote	[negation; r=1.00; j=0.30]
+  EN : Every figure above comes from one regional price registry with a named source and a confidence grade. Hardware is your own build estimate; labour, permits, incentives and replacements are registry figures. Nothing here is a vendor's quote.
+  de : Alle Zahlen stammen aus einem regionalen Preisregister mit genannter Quelle und Vertrauensstufe. Die Hardware ist Ihre eigene Schätzung; Arbeitszeit, Genehmigungen, Förderungen und Austausch kommen aus dem Register. Nichts davon ist ein Angebot eines Anbieters.
+  BT : All figures come from a regional price register with the mentioned source and confidence level. The hardware is your own estimate; labor, permits, subsidies, and replacement come from the register. None of this is an offer from a provider.
+
+R215	advisorBusy	[sentences; r=0.87; j=0.52]
+  EN :  The free AI engine is swamped right now (HTTP {status} — it runs on a shared free quota).\n\nPlease wait about a minute and send that again.
+  de :  Die kostenlose KI ist gerade überlastet (HTTP {status} — gemeinsames Kontingent).
+
+Warten Sie etwa eine Minute und senden Sie die Frage erneut.
+  BT : The free AI is currently overloaded (HTTP {status} — shared quota). Please wait about a minute and send the question again.
+
+R221	frontierColPv	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : Panels
+  de : Panels
+  BT : Panels
+
+R226	billCutTarget	[overlap; r=1.41; j=0.13]
+  EN : Bill-cut target — sets the results slider too:
+  de : Ziel für die Rechnungssenkung — steuert auch den Ergebnisregler:
+  BT : Goal for the bill reduction — also controls the result regulator:
+
+R259	billPerMonth	[engine-noop; r=1.67; j=0.00]
+  EN : /mo
+  de : /Mon.
+  BT : /Mon.
+
+R271	applianceWattages	[unit; r=1.23; j=0.39]
+  EN : Wattages are typical values — yours may differ. Cycling appliances (fridges, freezers, air conditioners, pumps) only draw power while running: their slider is hours actually running per day, capped to realistic compressor time, and each row shows the resulting 24-hour average. A modern fridge at the default (100 W running, ~10 h/day) really does use about 1 kWh/day.
+  de : Die Leistungen sind typische Werte; Ihre können abweichen. Geräte mit Taktbetrieb (Kühlschränke, Gefriergeräte, Klimaanlagen und Pumpen) verbrauchen nur während des Betriebs Strom: Der Regler zeigt die tatsächlichen Betriebsstunden pro Tag, begrenzt auf eine realistische Kompressorlaufzeit; jede Zeile zeigt den daraus berechneten 24-Stunden-Durchschnitt. Ein moderner Kühlschrank verbraucht beim Standardwert (100 W im Betrieb, etwa 10 h/Tag) tatsächlich rund 1 kWh/Tag.
+  BT : The performance values are typical; yours may vary. Devices with cyclical operation (refrigerators, freezers, air conditioners, and pumps) only consume electricity while operating: the controller shows the actual operating hours per day, limited to a realistic compressor runtime; each line shows the calculated 24-hour average. A modern refrigerator actually consumes around 1 kWh/day at the standard value (100 W during operation, about 10 hours/day).
+
+R277	donationNotTaxDeductible	[negation; r=0.78; j=0.67]
+  EN : not tax-deductible
+  de : steuerlich absetzbar
+  BT : tax-deductible
+
+R284	costMissingTariffBody	[sentences; r=1.29; j=0.48]
+  EN : The calculator can size the system without a tariff, but needs your electricity price to compare 20-year grid cost with solar cost.
+  de : Der Rechner kann das System auch ohne Tarif auslegen. Für den Kostenvergleich über 20 Jahre mit und ohne Solarstrom braucht er jedoch deinen Strompreis.
+  BT : The calculator can also design the system without a tariff. However, for the cost comparison over 20 years with and without solar power, it needs your electricity price.
+
+R348	pathsUnknown	[untranslated,engine-noop; r=1.00; j=1.00]
+  EN : Unknown
+  de : Unknown
+  BT : Unknown
+
+R351	useCaseOffGridBlurb	[negation; r=1.12; j=0.38]
+  EN : Solar and battery sized for your whole home. Measured as the share of hours that run with no grid at all.
+  de : Solar und Batterie für dein ganzes Haus ausgelegt. Gemessen als Anteil der Stunden, die ganz ohne Netz laufen.
+  BT : Solar and battery designed for your entire house. Measured as the proportion of hours running completely off the grid.
+
+R356	surplusTargetHelp	[sentences; r=1.14; j=0.55]
+  EN : Above 100% the system is sized to produce sellable surplus — without a feed-in credit entered above, that surplus has no cash value and is flagged as clipped waste. The “your target” matrix column and the price-cut curve follow this slider.
+  de : Über 100 % wird das System so dimensioniert, dass es verkaufbaren Überschuss erzeugt. Ohne oben eingetragene Einspeisevergütung hat dieser Überschuss keinen Geldwert und wird als abgeregelte Verschwendung markiert. Die Matrixspalte „Ihr Ziel“ und die Preissenkungskurve folgen diesem Regler.
+  BT : Over 100%, the system is dimensioned so that it produces a sellable surplus. Without the feed-in tariff entered above, this surplus has no monetary value and is marked as curtailed waste. The matrix column 'Your Target' and the price reduction curve follow this controller.
+
+R358	advisorUnreachable	[sentences; r=1.02; j=0.37]
+  EN :  The AI advisor is unreachable right now{status}.\n\nCheck your connection and try again in a moment.
+  de :  Der KI-Berater ist gerade nicht erreichbar{status}.
+
+Prüfen Sie Ihre Verbindung und versuchen Sie es gleich noch einmal.
+  BT : The AI consultant is currently unavailable{status}. Please check your connection and try again shortly.
+
+R370	errorSim	[negation; r=1.12; j=0.64]
+  EN : ⚠️ Sizing engine failed to load. Refresh the page (Ctrl+F5) and try again.
+  de : ⚠️ Die Dimensionierungs-Engine konnte nicht geladen werden. Aktualisieren Sie die Seite (Ctrl+F5) und versuchen Sie es erneut.
+  BT : ⚠️ The sizing engine could not be loaded. Refresh the page (Ctrl+F5) and try again.
+
+R389	uiInitFailed	[figure,negation; r=1.00; j=0.46]
+  EN : Warning: Interface failed to load - please refresh the page (Ctrl+F5).
+  de : Warnung: Die Oberfläche konnte nicht laden — bitte Seite neu laden (Strg+F).
+  BT : Warning: The surface could not load — please reload the page (Ctrl+F).
+
+R420	estimateMethodDisclaimer	[sentences; r=1.04; j=0.44]
+  EN : Every number comes from testable code simulating your exact location against five years of NASA satellite weather - not an AI guessing. Real-world results still vary with shading, installation quality, and hardware, so have a licensed professional verify anything you build.
+  de : Jede Zahl stammt aus prüfbarem Code, der Ihren genauen Standort mit fünf Jahren NASA-Satellitenwetterdaten simuliert — sie ist keine KI-Schätzung. Reale Ergebnisse hängen auch von Verschattung, Installationsqualität und Geräten ab. Lassen Sie jedes gebaute System von einer zugelassenen Fachkraft prüfen.
+  BT : Each number comes from verifiable code that simulates your exact location using five years of NASA satellite weather data — it is not an AI estimate. Real results also depend on shading, installation quality, and equipment. Have every built system checked by a certified professional.
+
+R434	donationTermsPrefix	[negation; r=1.14; j=0.50]
+  EN : Any contribution you choose to send is a voluntary gift to an individual. It is
+  de : Jeder Beitrag, den Sie senden möchten, ist ein freiwilliges Geschenk an eine Privatperson. Er ist nicht
+  BT : Every contribution you wish to send is a voluntary gift to a private individual. It is not
+
+R440	costNoSeriesTitle	[negation; r=1.10; j=0.71]
+  EN : Savings data unavailable for this result
+  de : Für dieses Ergebnis sind keine Einsparungsdaten verfügbar
+  BT : No savings data is available for this result
+
+R442	fixedChargeTaxEstimate	[sentences; r=1.18; j=0.41]
+  EN : Bills include fixed charges and taxes, so this slightly overestimates real use — which is a safe direction to err.
+  de : Rechnungen enthalten feste Gebühren und Steuern. Daher überschätzt diese Zahl den tatsächlichen Verbrauch leicht — ein sicherer Fehler in diese Richtung.
+  BT : Invoices include fixed fees and taxes. Therefore, this number slightly overestimates actual consumption—a safe error in this direction.
+
+R447	advisorPlaceholder	[sentences; r=1.05; j=0.42]
+  EN : Ask about cell specs, Sodium-ion vs LFP, freight costs...
+  de : Fragen zu Zellen, Natrium-Ion vs. LFP, Frachtkosten...
+  BT : Questions about cells, sodium-ion vs. LFP, shipping costs...
