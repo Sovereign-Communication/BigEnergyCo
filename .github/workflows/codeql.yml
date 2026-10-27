@@ -1,0 +1,44 @@
+name: CodeQL
+
+on:
+  # main only on push, plus every PR (and the weekly sweep). A push trigger on
+  # feature branches produced a second run for the same commit, and cancelling
+  # the older one leaves a CANCELLED check run named `analyze` on the head SHA —
+  # which blocks the merge even though the surviving run succeeded, because
+  # `analyze` is a required status check.
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 9 * * 4"
+
+# One group per branch, newest run wins — superseded runs stop piling onto
+# saturated hosted runners.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    # Measured on 2026-09-19: ~1m07s on this repo. Bounded so a hung init or
+    # analysis cannot hold a runner for GitHub's 6-hour default — runner
+    # occupancy is what makes a queue backlog worse.
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
