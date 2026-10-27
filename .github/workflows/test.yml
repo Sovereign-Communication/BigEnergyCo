@@ -1,0 +1,794 @@
+name: Tests
+
+on:
+  # main only on push, plus every PR. Running on feature-branch pushes as well
+  # produced two runs for the same commit (push + pull_request); with
+  # cancel-in-progress the older one ends CANCELLED, and a cancelled check run
+  # on the head SHA shadows the passing one for required-status purposes — the
+  # PR then sits BLOCKED with every check green. Branch pushes are covered by
+  # their PR, so the duplicate event bought nothing but blocked merges.
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# One group per branch, newest run wins — superseded runs stop eating runners.
+# With the triggers above there is no same-commit duplicate to cancel.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # Bounded so a hung step cannot hold a runner for GitHub's 6-hour default —
+    # runner occupancy is what makes a queue backlog worse. Measured on 2026-09-19:
+    # this job completes in ~5m30s, so 30 is headroom, not a deadline to race.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Full history, deliberately. `npm run seo` ends in
+          # bump-asset-tokens.mjs --check, which now asks git for the commit that
+          # minted the current ?v= stamp so it can compare each referenced
+          # asset's bytes against it. A shallow checkout cannot answer that, and
+          # the check refuses to report green when it cannot — so a depth-1
+          # clone here would fail every run for the wrong reason. The repo is
+          # small; this costs a few seconds.
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Guard Jev facet evidence coverage
+        run: npm run gate:facet-evidence
+
+      - name: Syntax-check all JS
+        run: node scripts/check-syntax.mjs
+
+      # One command, so CI and contributors cannot drift: JSON-LD, character
+      # encoding, SEO shape, static quality (a11y/links/titles), i18n
+      # completeness, security headers + CSP endpoint registry, asset tokens.
+      # docs/plan/MASTER_PLAN.md is hash-pinned: it changes only with an
+      # owner-approved amendment, and the amendment log + ledger are
+      # append-only against the PR's base branch.
+      - name: Master plan pin (immutable plan, append-only history)
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            # NO --depth here, ever. `git fetch --depth=N` does not fetch "this
+            # ref shallowly", it converts the WHOLE repository to shallow and
+            # writes .git/shallow. The checkout above is full precisely so the
+            # asset-stamp staleness gate can reach the commit that minted the
+            # current ?v= token; this step used to undo that one line before
+            # `npm run seo` ran, and the gate correctly refused to report green
+            # on a history it could not walk. Caught by the e2e gate tests in
+            # tests/asset-token-gate-e2e.test.mjs, which prove the refusal.
+            # The repo is already complete, so this fetch downloads nothing.
+            git fetch --no-tags origin "$BASE_REF"
+            node scripts/check-plan-pin.mjs --base FETCH_HEAD
+          else
+            node scripts/check-plan-pin.mjs
+          fi
+
+      - name: Site integrity gates (SEO, quality, i18n, headers, tokens)
+        id: seo
+        run: npm run seo
+
+      - name: Prettier check
+        id: prettier
+        # The same script the local preflight runs (npm run format:check). It
+        # checks the TRACKED tree with git's line endings, which is what a
+        # runner sees - and treats any non-zero exit as a failure, whatever
+        # prettier says. Running prettier here directly was a second code path
+        # that could disagree with the local one, which is how an unformatted
+        # file reached CI behind a locally green check (#166).
+        run: npm run format:check
+
+      - name: Secret-scan tracked files
+        run: |
+          ! git grep -nE "oauth_toke[n]|BEGIN [A-Z ]*PRIVATE KEY|AIza[0-9A-Za-z_-]{20,}|sk-live-[0-9A-Za-z]{10,}|ghp_[0-9A-Za-z]{20,}|github_pat_[0-9A-Za-z_-]{10,}|xox[bap]-[0-9A-Za-z-]+|GROQ_API_KEY\s*=\s*[\"']?gsk_[0-9A-Za-z]+" -- . ':!*.lock' || (echo "Possible secret in tracked files" && exit 1)
+
+      - name: Check deploy allowlist
+        run: node scripts/deploy-pages-local.mjs --check
+
+      - name: Cumulative-series engine flow gate
+        # Offline and deterministic: drives runSizing() through its real entry
+        # point and asserts every solvable target carries a complete 20-year
+        # cumulative series (and that a missing tariff invents none).
+        run: npm run verify:flow
+
+      - name: Unit tests (offline)
+        id: unit_tests
+        run: npm test
+
+      # Quality axis, second half: DEAD CODE AND DUPLICATION, MEASURED. The
+      # quality facet line used to end with "dead code or duplication is
+      # unmeasured" because nothing measured them; this step is the instrument.
+      # It under-reports by design (a name counts as used if ANY tracked source
+      # mentions it), so a red here is a finding, never noise. Its outcome
+      # travels on this job's record below as the `hygiene` step, which is what
+      # the quality facet's clarity clause is worded from.
+      - name: Hygiene (dead code and duplication, plan quality axis)
+        id: hygiene
+        run: node scripts/check-code-hygiene.mjs --out hygiene-report.json
+
+      # ── P0.3(e) / F-45: this job's REAL outcomes, for the Jev gate ─────────
+      # The gate used to read a hand-maintained evidence file that could claim
+      # green while this suite was red. It now reads what the runner actually
+      # observed, written from `steps.*.outcome` — the runner's own record, not
+      # anything a person typed. `if: always()` so a FAILED job still reports
+      # why; a missing artifact is itself a named, fatal problem downstream.
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/test.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "test",
+              conclusion: "${{ job.status }}",
+              steps: {
+                seo: "${{ steps.seo.outcome }}",
+                prettier: "${{ steps.prettier.outcome }}",
+                unit_tests: "${{ steps.unit_tests.outcome }}",
+                hygiene: "${{ steps.hygiene.outcome }}",
+              },
+            };
+            // What the suite MEASURED, from the file its own runner wrote. A
+            // conclusion says the step passed; it says nothing about how many
+            // tests ran, and the record used to type that number and carry it
+            // forward until it was false. Composed here, it cannot be.
+            const m = fs.existsSync("jev-artifacts/test-measurement.json")
+              ? JSON.parse(fs.readFileSync("jev-artifacts/test-measurement.json", "utf8"))
+              : null;
+            if (m) {
+              job.measurements = {
+                tests_total: m.tests,
+                tests_passed: m.pass,
+                tests_failed: m.fail,
+                tests_skipped: m.skipped,
+              };
+            }
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps) + " measurements " + JSON.stringify(job.measurements || {}));
+          '
+
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-test
+          path: jev-artifacts/test.json
+          if-no-files-found: error
+          retention-days: 7
+
+      # The hygiene reading itself, beside the record: named findings when red,
+      # the counts when green. Uploaded under the jev-results-* pattern so the
+      # evidence builder's artifact directory carries it; it declares no
+      # facet_axes (the clarity clause words this axis from the job record), so
+      # it is evidence, not a second line.
+      - name: Upload the hygiene report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-hygiene
+          path: hygiene-report.json
+          if-no-files-found: error
+          retention-days: 7
+
+      # Live-API validation is manual (network): node scripts/validate-live.mjs
+      # The live NASA-data model checks (validate-modes, validate-soc-pipeline)
+      # run in the weekly scheduled sweep — `npm run verify:live`.
+
+  # The gate that stops UI/worker/asset regressions from reaching main: builds
+  # the allowlisted artifact, serves it under the real `_headers` policy and
+  # drives the approved browser smoke over a full sizing flow (plus the heatmap,
+  # service worker and a no-CSP-violations gate). Chrome ships on the runner.
+  web-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Real-browser smoke on the staged build
+        id: smoke
+        run: npm run smoke:local
+      # P0.4: the plan's §3.1 compressed byte and request budgets, measured on
+      # a staged build and ratcheted against the last `baseline` ledger row.
+      # It lives here because this job already produces a real staged artifact;
+      # `smoke:local` deletes its own stage, and a second staging pass costs
+      # ~2s, so this measures the same allowlisted bytes the browser just saw.
+      # Plan §3.2 makes these gates regression-blocking from P0, so a failure
+      # here reds the job and the Jev gate's evidence builder fails closed on
+      # it. It moves to the `quality-lab` job when P0.4's browser gates land.
+      - name: Compressed byte and request budgets (plan §3.1)
+        id: byte-budgets
+        run: |
+          node scripts/deploy-pages-local.mjs --check --stage _pages_budget
+          node scripts/check-byte-budgets.mjs --stage _pages_budget --out byte-budgets-report.json
+      # P0.3(e): the smoke outcome the gate reports is this runner's, not a
+      # claim in a committed file.
+      #
+      # The privacy facet is the one claim a static scan cannot make: an
+      # HttpOnly cookie is invisible to `document.cookie` AND to any grep, a
+      # third-party request from injected markup or a CSS url() never appears
+      # in a JavaScript string, and storage written by a worker never appears
+      # at all. So it is measured in a real browser, on the same allowlisted
+      # staged artifact this job already builds, and it fails the run rather
+      # than reporting a number for someone else to interpret. It runs
+      # `if: always()` so an unmeasured privacy facet is recorded as
+      # unmeasured — which is not a pass.
+      - name: Browser privacy measurement (real cookies, storage, egress)
+        id: privacy-browser
+        if: always()
+        run: node scripts/check-privacy-browser.mjs
+      # The resilience facet, adversarially. Everything this gate claims used to
+      # be a sentence about intent — retries, timeouts, fallbacks, a deadline —
+      # with not one of those mechanisms ever made to fail on purpose. So it is
+      # measured here: transport failures injected at the network layer, a
+      # silent worker, stale inputs, and a share restore, all against the same
+      # staged artifact this job already builds. It runs `if: always()` so an
+      # unexercised facet is recorded as unmeasured, which is not a pass — and
+      # it publishes `facet_axes: [resilience]` so the judge reads a line
+      # composed from this run rather than the typed one in the prose record.
+      - name: Adversarial delivery measurement (transport failures, stuck runs)
+        id: resilience-browser
+        if: always()
+        run: |
+          node scripts/deploy-pages-local.mjs --check --stage _pages_resilience
+          node scripts/check-resilience.mjs --stage _pages_resilience --out jev-artifacts/resilience-report.json
+      # The experience facet, walked as a visitor. Its proof line used to describe
+      # how many smoke gates cover result surfaces — a fact about test coverage,
+      # and a statement about nothing a visitor touches. The judge's demand named
+      # four observable things, so the gate walks the nine-step first-run flow,
+      # provokes the reachable errors, reads the empty surfaces, and sweeps for
+      # dictionary keys painted into the page. It runs `if: always()` so an
+      # unwalked facet is recorded as unmeasured, which is not a pass — and it
+      # publishes `facet_axes: [experience]` so the judge reads a line composed
+      # from this run rather than the typed one in the prose record.
+      - name: First-run journey walk (acknowledgement, errors, empty states)
+        id: experience-browser
+        if: always()
+        run: |
+          node scripts/deploy-pages-local.mjs --check --stage _pages_experience
+          node scripts/check-experience.mjs --stage _pages_experience --out jev-artifacts/experience-report.json
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/web-smoke.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "web-smoke",
+              conclusion: "${{ job.status }}",
+              steps: {
+                smoke: "${{ steps.smoke.outcome }}",
+                privacyBrowser: "${{ steps.privacy-browser.outcome }}",
+                resilienceBrowser: "${{ steps.resilience-browser.outcome }}",
+                experienceBrowser: "${{ steps.experience-browser.outcome }}",
+              },
+            };
+            // The gate count the smoke runner counted, not one anybody wrote
+            // down. Same reason as the test job above: this record is read by a
+            // judge before it reads any facet, so a number in it that the tree
+            // contradicts costs every facet at once.
+            const m = fs.existsSync("jev-artifacts/smoke-measurement.json")
+              ? JSON.parse(fs.readFileSync("jev-artifacts/smoke-measurement.json", "utf8"))
+              : null;
+            if (m) {
+              job.measurements = {
+                smoke_gates_total: m.gates_total,
+                smoke_gates_passed: m.gates_passed,
+                smoke_gates_failed: m.gates_failed,
+              };
+            }
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps) + " measurements " + JSON.stringify(job.measurements || {}));
+          '
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-web-smoke
+          path: jev-artifacts/web-smoke.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload the browser privacy measurement
+        # The NAME is the wire, and this one was wrong. `jev-complete`
+        # downloads `jev-results-*`, so an artifact called
+        # `jev-privacy-browser` was uploaded by every run and downloaded by
+        # none: a real browser measurement that no record could read, which is
+        # the exact defect the resilience and experience uploads were renamed
+        # to prevent. Renamed here so the privacy facet is judged on this run
+        # rather than on a typed sentence that names a fraction of it.
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-privacy-browser
+          path: jev-artifacts/privacy-browser.json
+          if-no-files-found: error
+          retention-days: 7
+      # The NAME is the wire: `jev-complete` downloads `jev-results-*`, and the
+      # evidence builder reads facet_axes + facet_line out of whatever lands
+      # there. This is how a resilience proof line composed from THIS run reaches
+      # the judge instead of the hand-typed one in the prose record.
+      - name: Upload the adversarial resilience measurement
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-resilience-report
+          path: jev-artifacts/resilience-report.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload the first-run journey walk
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-experience-report
+          path: jev-artifacts/experience-report.json
+          if-no-files-found: error
+      # P0.4 / Q-07: the `accessibility` facet line is composed by the run that
+      # measured the calculator's own controls (scripts/lib/a11y-controls.mjs,
+      # written by scripts/browser-smoke.mjs) and rides in this report. The NAME
+      # is the wire — jev-complete downloads `jev-results-*` and the evidence
+      # builder discovers `facet_axes` inside whatever it finds, so a report
+      # under any other name is read by nobody. Deliberately not the same FILE
+      # as quality-lab's axe matrix: that is a different measurement (axe over
+      # the template x state x theme x direction matrix) with its own clause —
+      # and, since the two-instrument join, its own `jev-results-a11y-matrix`
+      # artifact on this same wire. Two files, two clauses, one joined line.
+      - name: Upload the a11y controls report for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-a11y-controls
+          path: a11y-controls-report.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload the six-case browser measurements
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-usecases-smoke-report
+          path: jev-artifacts/usecases-smoke-report.json
+      # P0.4 / §3.1: the `quality` facet line is composed by the run that
+      # measured the shipped bytes (scripts/lib/byte-budgets.mjs,
+      # `composeQualityFacetLine`, written by the byte-budgets step above) and
+      # rides in this report, the same wire the a11y controls report uses. The
+      # step fails closed on a regression, so the report is written on the way
+      # out and uploaded `always()`: a REGRESSED payload must reach the judge as
+      # a regression, never as an absent axis.
+      - name: Upload the byte-budgets report for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-byte-budgets
+          path: byte-budgets-report.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload smoke artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke-screenshots
+          path: |
+            _pages_smoke/
+            *.png
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # P0.4's measurement gates. Named by the plan, and the first job in this
+  # workflow that needs `npm ci` — everything else here runs on zero
+  # dependencies, because the smoke suite drives the runner's own Chrome over
+  # raw CDP. axe-core and Playwright are pinned devDependencies (plan §8 P0.4),
+  # and the gate uses Playwright's `channel: "chrome"` to drive the Chrome the
+  # runner already has, so this job needs no Playwright browser download. The
+  # Firefox and WebKit downloads belong to Q-08's cross-browser cluster, which
+  # is the one that genuinely requires them.
+  quality-lab:
+    runs-on: ubuntu-latest
+    # Measured locally at ~3 minutes for the 11-cell matrix, of which the
+    # heatmap cell is most. 25 leaves room for a cold npm ci without racing.
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install the pinned devDependencies
+        run: npm ci --no-audit --no-fund
+      - name: Stage the build the matrix audits
+        run: node scripts/deploy-pages-local.mjs --check --stage _pages_a11y
+      - name: axe-core over the template x state x theme x direction matrix (Q-07)
+        id: a11y-matrix
+        run: node scripts/check-a11y-matrix.mjs --stage _pages_a11y --out a11y-report.json
+      # The report is the evidence: which cells ran, what each one found, and
+      # which combinations do not apply and why. Uploaded even on failure,
+      # because a red cell is the thing someone has to read. The NAME is the
+      # same wire every other facet instrument rides: the report now carries
+      # `facet_axes`/`facet_line` (this run's clause of the accessibility line,
+      # composed by scripts/lib/quality-matrix.mjs), and a report the evidence
+      # builder never downloads is a line the judge never reads.
+      - name: Upload the matrix report for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-a11y-matrix
+          path: a11y-report.json
+          if-no-files-found: error
+          retention-days: 7
+      # P0.4(c): this job is a required gate, and a required gate's real
+      # outcome is part of what `ci_green` means. The evidence builder derives
+      # the required set from this workflow, so this job records its result for
+      # the gate exactly as the other three do — without this, a red
+      # `quality-lab` left `ci_green` reading TRUE in the record the judge
+      # reads directly.
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/quality-lab.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "quality-lab",
+              conclusion: "${{ job.status }}",
+              steps: { "a11y-matrix": "${{ steps.a11y-matrix.outcome }}" },
+            };
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+          '
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-quality-lab
+          path: jev-artifacts/quality-lab.json
+          if-no-files-found: error
+          retention-days: 7
+
+  # Q-02 / Q-03: Lighthouse over every page template, mobile and desktop, median
+  # of 3 runs on the staged build. A separate job from quality-lab because the
+  # two gates have different failure modes and different runtimes: the matrix
+  # is axe over 11 cells, this is 42 Lighthouse passes, and a regression in
+  # either should name itself rather than appear as the other one failing.
+  #
+  # CONSEQUENCE, STATED RATHER THAN DISCOVERED: scripts/lib/jev-evidence.mjs
+  # derives `ci_green`'s required set from this workflow's own job list, so
+  # adding this job makes it a required gate AUTOMATICALLY, with no code change
+  # anywhere. A red `lighthouse` therefore takes `ci_green` red with it, and the
+  # 15-point ci_green hard gate goes red in the judge's record. That is the
+  # design working. Nothing here carves out an exemption to soften a score, and
+  # a future change that wants one should have to argue for it in the open.
+  lighthouse:
+    runs-on: ubuntu-latest
+    # 14 targets x 3 runs at ~7-12s each, measured locally at ~6 minutes, plus
+    # a cold npm ci (lighthouse + chrome-launcher) and the stage build. 30 leaves
+    # headroom for a slower runner without racing the free-tier queue.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install the pinned devDependencies
+        run: npm ci --no-audit --no-fund
+      - name: Stage the build Lighthouse audits
+        run: node scripts/deploy-pages-local.mjs --check --stage _pages_lighthouse
+      - name: Lighthouse over every page template, mobile and desktop (Q-02)
+        id: lighthouse
+        run: node scripts/check-lighthouse.mjs --stage _pages_lighthouse --out lighthouse-report.json
+      # The report is the proof: the raw per-run scores, the median, the floors,
+      # the Q-02 breaches and the variance calibration behind the ratchet split.
+      # Uploaded even on failure, because a red score is the thing to read.
+      #
+      # The NAME is the wire. `jev-complete` already downloads `jev-results-*`
+      # into its artifacts directory, and the builder reads gate reports from
+      # there — so a report under any other name is downloaded by nobody and the
+      # judge never sees it. That is exactly the state this upload was in: a
+      # real browser measurement that no record could read. Under the existing
+      # convention, a new gate report needs no change to the download step.
+      - name: Upload the Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-lighthouse-report
+          path: lighthouse-report.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/lighthouse.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "lighthouse",
+              conclusion: "${{ job.status }}",
+              steps: { lighthouse: "${{ steps.lighthouse.outcome }}" },
+            };
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+          '
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-lighthouse
+          path: jev-artifacts/lighthouse.json
+          if-no-files-found: error
+          retention-days: 7
+
+  # P0.4 / F-38: the quality pass's one gate that still runs in CI.
+  #
+  # The browser gates (Lighthouse, axe-core over the Q-07 matrix,
+  # cross-browser, visual) run locally, on the agent machine, because CI on a
+  # free account should not pay that wall-clock. Moving them out of CI has one
+  # cost — nothing stops the committed evidence going stale — and this job is
+  # the answer. It opens no browser: it reads the evidence files the repository
+  # committed and asserts their schema, their thresholds and their freshness.
+  #
+  # NOT a blocking gate today, deliberately, and the distinction matters. The
+  # validator's own exit code blocks on REGRESSIONS — evidence that was fine
+  # and stopped being fine, or a committed file that stopped being readable as
+  # evidence. It reports, without blocking, the GAPS: the four P0.4 gates that
+  # have no committed evidence yet, and the one known hole in the a11y matrix
+  # (`heatmap/arrival/none/ltr`), which P0.4b already declared as its baseline
+  # row "with the hole in it". Blocking on those would make this job red on
+  # every PR in the repository, including the ones in the middle of closing
+  # them, which is the P0.3 deadlock the ledger already records once. What
+  # closes them is P0.4's exit evidence — the baseline ledger row carrying
+  # every Q-metric — not this job.
+  quality-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Assert the committed quality evidence is current and in its bar
+        id: quality-evidence
+        run: npm run gate:quality-evidence
+      # The evidence builder derives the required set from this workflow, so a
+      # job that did not record its own result would leave `ci_green` reading
+      # TRUE in the record the judge reads. It is the same wiring the other
+      # four jobs carry, for the same reason.
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/quality-evidence.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "quality-evidence",
+              conclusion: "${{ job.status }}",
+              steps: { "quality-evidence": "${{ steps.quality-evidence.outcome }}" },
+            };
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+          '
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-quality-evidence
+          path: jev-artifacts/quality-evidence.json
+          if-no-files-found: error
+          retention-days: 7
+
+  # Coverage floor on the deterministic core. Scope is deliberate: the sizer's
+  # math modules are the ones a wrong edit silently misprices, and the full
+  # suite under instrumentation outruns a reasonable job timeout. Thresholds
+  # were measured (68.8% lines / 78.4% branches / 62.2% funcs) and frozen ~2
+  # points below, so new code must be exercised to land.
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Coverage floor (engine, money, rescale, nasa, climate)
+        id: coverage
+        run: npm run coverage
+      # P0.3(e): recorded for the same reason as the other two jobs. The gate
+      # reads it as part of proving CI ran; a missing artifact is fatal.
+      - name: Record this job's results for the Jev gate
+        if: always()
+        env:
+          RESULT_PATH: jev-artifacts/coverage.json
+        run: |
+          mkdir -p "$(dirname "$RESULT_PATH")"
+          node -e '
+            const fs = require("fs");
+            const job = {
+              job: "coverage",
+              conclusion: "${{ job.status }}",
+              steps: { coverage: "${{ steps.coverage.outcome }}" },
+            };
+            fs.writeFileSync(process.env.RESULT_PATH, JSON.stringify(job, null, 2) + "\n");
+            console.log("recorded " + process.env.RESULT_PATH + ": " + JSON.stringify(job.steps));
+          '
+      - name: Upload this job's results for the Jev gate
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-results-coverage
+          path: jev-artifacts/coverage.json
+          if-no-files-found: error
+          retention-days: 7
+
+  # PRs publish the scoped Jev report for review. The same job runs the full
+  # 95/95/95 release gate on the exact main push, after that commit is staging.
+  # A red PR judgment is advisory to avoid asking Jev to approve its own merge;
+  # a red post-merge judgment blocks production promotion in scripts/promote.mjs.
+  #
+  # It needs the TYPESAFE_API_KEY repository secret (owner action O-01). A PR
+  # report failure remains visible in its artifact; the same failure on main is
+  # blocking and prevents production promotion.
+  jev-complete:
+    # `always()` because a red gate is precisely the run that needs a record:
+    # without it GitHub skips this job on a red dependency, and the run where
+    # `ci_green` reads false would produce no evidence at all.
+    if: always() && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+    needs:
+      [test, web-smoke, quality-lab, lighthouse, coverage, quality-evidence]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The gate reads the working tree AND consumes the required jobs' own
+          # results, so it must judge the same tree they ran on. PRs judge the
+          # proposed merge ref; main pushes judge the exact
+          # merged commit now served by staging.
+          ref: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.sha }}
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Download the jobs' real results
+        # Everything this job WRITES goes under RUNNER_TEMP, never into the
+        # checkout. The gate reads `git status --porcelain` for its `tree_clean`
+        # hard gate, so an evidence or report file left in the working tree
+        # would make the tree dirty and turn that gate red for a reason that has
+        # nothing to do with the code under review. Keeping the checkout
+        # pristine is what lets the judgment be about the commit and not about
+        # the job's own paperwork.
+        uses: actions/download-artifact@v8
+        with:
+          pattern: jev-results-*
+          path: ${{ runner.temp }}/jev-artifacts
+          merge-multiple: true
+
+      - name: Build the evidence from those results (fails closed)
+        # A missing artifact, a job that did not finish, or a step that never
+        # ran stops this step, so the gate below never spends a judgment on a
+        # run it cannot trust. The evidence file is still written, with those
+        # fields red, so the failure is diagnosable from the artifact.
+        run: |
+          node scripts/build-jev-evidence.mjs \
+            --artifacts "$RUNNER_TEMP/jev-artifacts" \
+            --prose evidence/advisor-and-release.json \
+            --out "$RUNNER_TEMP/jev-evidence.json" \
+            --sha "${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}" \
+            --run-id "${{ github.run_id }}" \
+            --run-attempt "${{ github.run_attempt }}" \
+            --ref "${{ github.ref }}" \
+            --event "${{ github.event_name }}" \
+            --repository "${{ github.repository }}"
+
+      - name: List changed files for scope inference
+        id: prfiles
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FILES="$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" --paginate -q '.[].filename' | jq -R . | jq -cs .)"
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+
+      - name: Which plan item is this PR about?
+        id: scope
+        if: github.event_name == 'pull_request'
+        env:
+          # Flexible scope resolution: the gate infers scope semantically from
+          # the title AND changed files, tolerating wording variations.
+          # Explicit P-item in title wins; otherwise infer from paths/keywords.
+          # Governance precedence: canonical plan files (MASTER_PLAN.md,
+          # AMENDMENTS.md, PLAN.lock.json) are judged as P0.1. An append-only
+          # LEDGER.jsonl row is progress evidence and follows the named item.
+          # NOTE: pull_request.changed_files is only the COUNT of files; the
+          # real list comes from the compare step just below.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_FILES: ${{ steps.prfiles.outputs.files }}
+        run: |
+          RESULT="$(node -e '
+            const { resolveCiScope } = await import("./scripts/lib/jev-scope.mjs");
+            let files = [];
+            try { files = JSON.parse(process.env.PR_FILES || "[]").map(f => f.filename || f); } catch {}
+            const r = resolveCiScope({ title: process.env.PR_TITLE || "", files });
+            if (r.maintenance) {
+              process.stdout.write("maintenance");
+              process.exit(0);
+            }
+            if (!r.scope) {
+              process.stderr.write(r.error + "\n");
+              process.exit(1);
+            }
+            if (r.how !== "explicit") {
+              process.stderr.write(`scope inferred (${r.how}): ${r.inferenceReason}\n`);
+            }
+            process.stdout.write(r.scope);
+          ' --input-type=module)"
+          if [[ "$RESULT" == "maintenance" ]]; then
+            echo "maintenance=true" >> "$GITHUB_OUTPUT"
+            echo "scope=" >> "$GITHUB_OUTPUT"
+            echo "release chore (dependency/CI maintenance only): no plan item, so no scoped judgment applies; the full advisory report runs instead."
+          else
+            echo "maintenance=false" >> "$GITHUB_OUTPUT"
+            echo "scope=$RESULT" >> "$GITHUB_OUTPUT"
+            echo "judging the facets of $RESULT"
+          fi
+
+      - name: Jev complete gate (live, model-pinned)
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+        env:
+          # The repository secret, never a literal. O-01 adds it; the job fails
+          # closed until then rather than scoring a run with no judgment.
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+        run: |
+          args=()
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.scope.outputs.maintenance }}" != "true" ]]; then
+            args+=(--scope "${{ steps.scope.outputs.scope }}")
+            echo "PR scoped report is advisory; production uses the post-merge full report."
+          elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            echo "Release-chore PR: no plan item to scope to - running the FULL report as advisory; the post-merge full run on main is the gate."
+          else
+            echo "Running the full Jev release gate for main SHA $GITHUB_SHA."
+          fi
+          node scripts/validate-jev-complete.mjs "${args[@]}" --require-live \
+            --evidence "$RUNNER_TEMP/jev-evidence.json" \
+            --out "$RUNNER_TEMP/jev-report.json"
+
+      - name: Upload the Jev report and its evidence
+        # Always, so a failing run still leaves the report behind: the score,
+        # the per-facet ordinals, the pinned model, the run class and the
+        # evidence provenance are all in it.
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jev-complete-report
+          path: |
+            ${{ runner.temp }}/jev-report.json
+            ${{ runner.temp }}/jev-evidence.json
+          if-no-files-found: warn
+          retention-days: 30

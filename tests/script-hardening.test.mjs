@@ -1,0 +1,369 @@
+// Three dev-script helpers used to answer "does this string mention that
+// host?" instead of "is this OURS?". Each accepted something it should not, so
+// each is pinned here in both directions.
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { execSync } from "node:child_process";
+import { readFileSync, rmSync } from "node:fs";
+
+import {
+  deployedFiles,
+  deployedFilesFrom,
+  sameOriginPath,
+  sitemapGaps,
+} from "../scripts/lib/gates.mjs";
+import { withMutationLock } from "../scripts/lib/mutation-lock.mjs";
+import { normalizeBase } from "../scripts/lib/base-url.mjs";
+import { rejectPending } from "../scripts/smoke/runtime.mjs";
+
+// ── normalizeBase (browser smoke) ───────────────────────────────────────────
+
+test("SMOKE BASE: every form ends in exactly one trailing slash", () => {
+  // The heatmap URL is `${BASE}solar-heatmap/`, so a missing slash builds the
+  // host `example.comsolar-heatmap` and the heatmap gates fail on a Chrome
+  // error page instead of on the app.
+  assert.equal(normalizeBase("https://example.com"), "https://example.com/");
+  assert.equal(normalizeBase("https://example.com/"), "https://example.com/");
+  assert.equal(
+    normalizeBase("https://example.com/mirror"),
+    "https://example.com/mirror/",
+    "a path-bearing base needs the slash too",
+  );
+  assert.equal(
+    normalizeBase("https://example.com/mirror/"),
+    "https://example.com/mirror/",
+  );
+  assert.equal(
+    normalizeBase("https://example.com/mirror/?x=1#hash"),
+    "https://example.com/mirror/",
+    "a base is an origin+path; query and hash must not leak into sub-page URLs",
+  );
+  // Non-URL input still gets a slash (the caller may pass something exotic).
+  assert.equal(normalizeBase("example.com"), "example.com/");
+  assert.equal(normalizeBase("example.com/"), "example.com/");
+  // And the string composition actually works for a sub-page.
+  assert.equal(
+    `${normalizeBase("https://example.com/mirror")}solar-heatmap/`,
+    "https://example.com/mirror/solar-heatmap/",
+  );
+});
+
+// ── sameOriginPath (JSON-LD validator) ──────────────────────────────────────
+
+test("SITEMAP ORIGIN: a lookalike host is not our own page", () => {
+  const origin = "https://freeoffgridcalculator.com";
+  assert.equal(sameOriginPath(`${origin}/blog/`, origin), "/blog/");
+  assert.equal(sameOriginPath(`${origin}/`, origin), "/");
+  assert.equal(
+    sameOriginPath(
+      "https://freeoffgridcalculator.com.evil.example/blog/",
+      origin,
+    ),
+    null,
+    "a prefix match would have accepted this",
+  );
+  assert.equal(
+    sameOriginPath("https://www.freeoffgridcalculator.com/", origin),
+    null,
+    "a different host is a different site",
+  );
+  assert.equal(
+    sameOriginPath("http://freeoffgridcalculator.com/", origin),
+    null,
+  );
+  assert.equal(sameOriginPath("not a url", origin), null);
+});
+
+// ── sitemapGaps (check-seo) ─────────────────────────────────────────────────
+
+const SITE = "https://example.com/";
+
+test("SITEMAP GAPS: only an exact entry counts", () => {
+  const pages = ["index.html", "blog/index.html", "blog/post/index.html"];
+  const urls = [SITE, SITE + "blog/", SITE + "blog/post/"];
+  assert.deepEqual(sitemapGaps(pages, urls, SITE), { missing: [], extra: [] });
+
+  // A neighbouring path must NOT satisfy the entry for `/blog/post/`.
+  const neighbour = [SITE, SITE + "blog/", SITE + "blog/post-2/"];
+  const gaps = sitemapGaps(pages, neighbour, SITE);
+  assert.deepEqual(
+    gaps.missing,
+    [SITE + "blog/post/"],
+    "a substring test would have accepted /blog/post-2/",
+  );
+  assert.deepEqual(gaps.extra, [SITE + "blog/post-2/"]);
+
+  // A sitemap entry with no page behind it is a 404 served to crawlers.
+  assert.deepEqual(sitemapGaps(pages, [...urls, SITE + "gone/"], SITE).extra, [
+    SITE + "gone/",
+  ]);
+});
+
+test("SITEMAP GAPS: the real tree is complete and has no stale entries", () => {
+  // Guards the gate itself: this must stay a real assertion, so it reads the
+  // deployed page list and the shipped sitemap, not a fixture.
+  const pages = [
+    ...readFileSync("sitemap.xml", "utf8").matchAll(/<loc>([^<]+)<\/loc>/g),
+  ].map((m) => m[1]);
+  assert.ok(pages.length > 50, "sitemap must not go empty");
+  // deployedFiles() is the shared, read-only allowlist query (it used to call
+  // --check, which BUILDS the staging dir — several gates asking at once raced
+  // on it).
+  const deployed = deployedFiles().filter(
+    (f) => f.endsWith(".html") && f !== "404.html",
+  );
+  assert.ok(deployed.length > 50, "deploy allowlist must not go empty");
+  assert.deepEqual(
+    sitemapGaps(deployed, pages, "https://freeoffgridcalculator.com/"),
+    { missing: [], extra: [] },
+    "every deployed page is listed, and every listing has a page behind it",
+  );
+});
+
+test("ALLOWLIST PARSE: dotless platform files and nested paths survive the parser", () => {
+  // `_headers` and `_redirects` have no dot and the platform files sit beside
+  // nested assets, so a naive "looks like a filename" rule silently drops real
+  // deployed files — and every gate that reads this list would then validate a
+  // smaller site than the one that ships.
+  const stdout = [
+    "Deployable files:",
+    "  index.html",
+    "  _headers",
+    "  _redirects",
+    "  assets/site.css",
+    "",
+    "--list: 4 file(s), nothing built.",
+  ].join("\n");
+  assert.deepEqual(deployedFilesFrom(stdout), [
+    "index.html",
+    "_headers",
+    "_redirects",
+    "assets/site.css",
+  ]);
+  assert.deepEqual(deployedFilesFrom(""), []);
+});
+
+test("ALLOWLIST QUERY: --list reports exactly what a staged build contains", async () => {
+  // The gates validate what --list returns, so it must be the same SET a real
+  // deploy ships. One staged build (into a throwaway dir) proves it.
+  // --stage is resolved relative to the repo root by design (deploy.yml passes
+  // `_pages`), so the throwaway staging dir has to live inside the repo.
+  const stage = "_pages_allowlist_check";
+  rmSync(stage, { recursive: true, force: true });
+  try {
+    const staged = execSync(
+      `node scripts/deploy-pages-local.mjs --check --stage ${stage}`,
+      { encoding: "utf8" },
+    )
+      .split("Deployable files:")[1]
+      .split("--check:")[0]
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .sort();
+    const listed = deployedFiles().sort();
+    assert.ok(staged.length > 50, "the staged build must not be empty");
+    assert.deepEqual(
+      listed,
+      staged,
+      "--list must equal the staged file set, or the gates validate a different site",
+    );
+  } finally {
+    rmSync(stage, { recursive: true, force: true });
+  }
+});
+
+// ── the scripts use the helpers (no private copy left behind) ───────────────
+
+test("SCRIPTS: the hardened helpers are the ones actually used", () => {
+  const seo = readFileSync("scripts/check-seo.mjs", "utf8");
+  assert.match(seo, /sitemapGaps\(/);
+  assert.doesNotMatch(seo, /u\.includes\(urlPath/);
+  assert.doesNotMatch(seo, /\.replace\("blog\/", "blog\/"\)/);
+
+  const jsonld = readFileSync("scripts/validate-jsonld.mjs", "utf8");
+  assert.match(jsonld, /sameOriginPath\(url, ORIGIN\)/);
+  assert.doesNotMatch(jsonld, /url\.startsWith\(ORIGIN\)/);
+
+  // normalizeBase stays the single owner of argv canonicalization: the
+  // orchestrator imports it; the runtime it drives must not re-derive paths.
+  const orchestrator = readFileSync("scripts/browser-smoke.mjs", "utf8");
+  assert.match(
+    orchestrator,
+    /import \{ normalizeBase \} from "\.\/lib\/base-url\.mjs"/,
+  );
+  const smoke = readFileSync("scripts/smoke/runtime.mjs", "utf8");
+  // The browser runtime, not the thin orchestrator, owns process launch and
+  // every page evaluation entry point — so the hardening contract lives here.
+  assert.match(
+    smoke,
+    /Runtime\.evaluate/,
+    "the runtime drives the page through Runtime.evaluate",
+  );
+  assert.doesNotMatch(
+    smoke,
+    /pathname\.replace\(/,
+    "base-URL handling stays in normalizeBase",
+  );
+});
+
+// ── the CDP wire settles at teardown ───────────────────────────────
+//
+// The runtime used to leave in-flight `send()` promises pending when the run
+// closed. Each one waited its full 30s and only then rejected, long after the
+// caller had moved on, which Node reports as an unhandled rejection: the smoke
+// process died with a bare stack instead of naming the stage it was on.
+
+test("CDP WIRE: teardown rejects every in-flight request exactly once", async () => {
+  const pending = new Map();
+  const settled = [];
+  const cleared = [];
+  const realSetTimeout = globalThis.setTimeout;
+  const realClearTimeout = globalThis.clearTimeout;
+  // Fake timers, so clearing is observable rather than assumed: an uncleared
+  // 30s timer is what kept the smoke process alive after it had finished.
+  globalThis.setTimeout = (fn, ms) => ({ fn, ms });
+  globalThis.clearTimeout = (t) => {
+    cleared.push(t);
+  };
+  try {
+    for (const id of [1, 2, 3]) {
+      pending.set(id, {
+        res() {},
+        rej: (e) => settled.push([id, e.message]),
+        timer: { id },
+      });
+    }
+    const n = rejectPending(pending, new Error("smoke run is closing"));
+    assert.equal(n, 3, "every pending request is settled");
+    assert.equal(pending.size, 0, "and none is left to time out later");
+    assert.deepEqual(
+      settled.map((s) => s[1]),
+      ["smoke run is closing", "smoke run is closing", "smoke run is closing"],
+      "each one is rejected with the teardown reason",
+    );
+    assert.equal(cleared.length, 3, "each timer is cleared, not left armed");
+    assert.equal(
+      rejectPending(pending, "again"),
+      0,
+      "a second close is a no-op rather than a second rejection",
+    );
+  } finally {
+    globalThis.setTimeout = realSetTimeout;
+    globalThis.clearTimeout = realClearTimeout;
+  }
+});
+
+test("CDP WIRE: close() and a dropped socket both drain the wire", () => {
+  const src = readFileSync("scripts/smoke/runtime.mjs", "utf8");
+  assert.match(
+    src,
+    /ws\.onclose = \(\) => \{\s*rejectPending\(pending,/,
+    "a socket that closes mid-run must settle what is in flight",
+  );
+  const closeFn = src.slice(src.indexOf("const close = async"));
+  assert.match(
+    closeFn,
+    /rejectPending\(pending,[^)]*\)[\s\S]{0,200}ws\?\.close\(\)/,
+    "close() must drain BEFORE the socket goes away, not after",
+  );
+  assert.match(
+    src,
+    /clearTimeout\(timer\)/,
+    "a settled request must not leave its 30s timer armed",
+  );
+});
+
+test("local smoke GATES the API health probe instead of skipping it", () => {
+  const closing = readFileSync("scripts/smoke/closing.js", "utf8");
+  assert.match(
+    closing,
+    /const workerProbe = ctx\.isLocalBase\s*\? ""\s*:/,
+    "localhost must not send a CORS-blocked API health request",
+  );
+  assert.match(closing, /\$\{workerProbe\}/);
+  // This used to be pinned as a REQUIRED SKIP ("the production-only check must
+  // be visibly skipped"). That skip is what let `web-smoke` sit red for weeks:
+  // the local server had no /api/chat route, the console-error gate failed on
+  // the resulting 404, and the health check itself reported nothing. The local
+  // server now mounts the real worker, so the probe is a real gate.
+  //
+  // The intent is preserved and tightened: a local run must not quietly report
+  // success for a check it did not perform.
+  assert.doesNotMatch(
+    closing,
+    /SMOKE SKIP\s+API health/,
+    "the local API health check must be a gate, not a skip — a skip is a check that cannot fail",
+  );
+  assert.match(
+    closing,
+    /gate\(\s*"API health reachable \(local: real worker, same origin\)"/,
+    "the local run must gate on the real worker answering on its own origin",
+  );
+  assert.match(
+    closing,
+    /"API health is served by the real worker, not a stub"/,
+    "and must prove the answer came from the worker, not a hand-written stand-in",
+  );
+  assert.match(
+    closing,
+    /"API health reachable",\s*\/(?:\^HTTP 200)\/\.test\(probes\.worker \|\| ""\)/,
+    "on production origins the health probe must still require HTTP 200",
+  );
+});
+
+test("the local static server mounts the real API worker", () => {
+  // The root cause of the permanently-red smoke: /api/* was hand-written
+  // stand-ins for two routes and nothing at all for /api/chat. Pinned here so
+  // the mount cannot be quietly removed, and so the unmounted path is required
+  // to fail loudly rather than 404 like a broken product.
+  const serve = readFileSync("scripts/serve-static.mjs", "utf8");
+  assert.match(
+    serve,
+    /mountWorker = true/,
+    "the worker must be mounted by default, like the deployed one-origin surface",
+  );
+  assert.match(
+    serve,
+    /handleWorkerRequest\(worker, req, res/,
+    "/api/* must be routed to the real worker, not to a local stand-in",
+  );
+  assert.match(
+    serve,
+    /501[\s\S]{0,200}API worker not mounted/,
+    "an unmounted worker must answer 501 naming why, not 404 like a missing endpoint",
+  );
+  assert.doesNotMatch(
+    serve,
+    /local static mirror \(no API worker here\)/,
+    "the hand-written /api/health stand-in must be gone",
+  );
+});
+
+test("the document-start worker stub covers the local stage only", () => {
+  // The stub fakes /api/health (jevSanity:true) and /api/jev (available:false)
+  // so the Jev gates are meaningful against a workerless local emulator. If it
+  // ever ran against a real surface it would fake the worker's own answers —
+  // "API health reachable" and the server-side activation state would read as
+  // passes for requests that never left the machine.
+  const orchestrator = readFileSync("scripts/browser-smoke.mjs", "utf8");
+  assert.match(
+    orchestrator,
+    /if \(isLocalBase\) \{\s*await ctx\.send\("Page\.addScriptToEvaluateOnNewDocument", \{\s*source: jevHealthAtDocumentStart,/,
+    "the fake worker layer must be installed only when the smoke targets a local stage",
+  );
+  assert.equal(
+    orchestrator.split("Page.addScriptToEvaluateOnNewDocument").length,
+    2,
+    "the stub must have exactly one registration site — the guarded one",
+  );
+
+  // The layer owns BOTH routes: answering only /api/health would enable the
+  // Jev path against a no-key server whose /api/jev then 503s on every
+  // out-of-gate render and fails the strict console-error gate.
+  const jev = readFileSync("scripts/smoke/jev.js", "utf8");
+  const layer = jev.slice(jev.indexOf("jevHealthAtDocumentStart"));
+  assert.match(layer, /\/api\/health/);
+  assert.match(layer, /\/api\/jev/);
+  assert.match(layer, /available: false/);
+});
