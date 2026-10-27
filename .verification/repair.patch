@@ -1,0 +1,2109 @@
+diff --git a/assets/js/shared/locales.js b/assets/js/shared/locales.js
+index f9b2c46..48d64ab 100644
+--- a/assets/js/shared/locales.js
++++ b/assets/js/shared/locales.js
+@@ -351,7 +351,7 @@ export const LOCALES = {
+     statusNotHere: "Does not work here",
+     useCaseOutcomeTitle: "Your {useCase} result",
+     useCaseVerdictFooter:
+-      "Measured for {useCase} against {metric}, using this location's own hourly weather.",
++      "Measured for {useCase} using this location's own hourly weather.",
+     useCaseNotMeasured:
+       "Not measured: this combination cannot be sized at all, so there is no {metric} to report.",
+     metricReserveTradeoffValue: "{lost}% of savings, {hours} h of cover",
+@@ -371,7 +371,9 @@ export const LOCALES = {
+     verdictBillCut:
+       "{status}: this system removes {pct}% of your bill over 20 years.",
+     verdictTou:
+-      "{status}: the battery covers {pct}% of your peak-window energy, worth about {saving} over 20 years against a {cost} battery. Your peak-to-off-peak spread here is {spread} per kWh.",
++      "{status}: the battery covers {pct}% of your peak-window energy, worth about {saving} over 20 years {costStatement}. Your peak-to-off-peak spread here is {spread} per kWh.",
++    verdictTouCostKnown: "against a {cost} battery",
++    verdictTouCostUnknown: "the battery's cost is unknown",
+     verdictBackup:
+       "{status}: your essentials run for the full {targetHours} hours in {pct}% of the power cuts we simulated (typical night: {hours} hours).",
+     verdictReserve:
+@@ -569,7 +571,7 @@ export const LOCALES = {
+     statusNotHere: "Aquí no funciona",
+     useCaseOutcomeTitle: "Tu resultado de {useCase}",
+     useCaseVerdictFooter:
+-      "Medido para {useCase} frente a {metric}, con el clima horario de esta ubicación.",
++      "Medido para {useCase} con el clima horario de esta ubicación.",
+     useCaseNotMeasured:
+       "Sin medir: esta combinación no se puede dimensionar, así que no hay {metric} que informar.",
+     metricReserveTradeoffValue: "{lost}% de ahorro, {hours} h de cobertura",
+@@ -589,7 +591,9 @@ export const LOCALES = {
+     verdictBillCut:
+       "{status}: este sistema elimina el {pct}% de tu factura en 20 años.",
+     verdictTou:
+-      "{status}: la batería cubre el {pct}% de tu energía en horas punta, unos {saving} en 20 años frente a una batería de {cost}. Aquí la diferencia entre punta y valle es de {spread} por kWh.",
++      "{status}: la batería cubre el {pct}% de tu energía en horas punta, unos {saving} en 20 años {costStatement}. Aquí la diferencia entre punta y valle es de {spread} por kWh.",
++    verdictTouCostKnown: "frente a una batería de {cost}",
++    verdictTouCostUnknown: "pero se desconoce el coste de la batería",
+     verdictBackup:
+       "{status}: lo esencial aguanta las {targetHours} horas completas en el {pct}% de los apagones que simulamos (noche típica: {hours} horas).",
+     verdictReserve:
+@@ -1015,7 +1019,7 @@ export const LOCALES = {
+     statusNotHere: "Aqui não funciona",
+     useCaseOutcomeTitle: "Seu resultado de {useCase}",
+     useCaseVerdictFooter:
+-      "Medido para {useCase} em relação a {metric}, com o clima horário deste local.",
++      "Medido para {useCase} com o clima horário deste local.",
+     useCaseNotMeasured:
+       "Sem medir: esta combinação não pode ser dimensionada, então não há {metric} a informar.",
+     metricReserveTradeoffValue: "{lost}% de economia, {hours} h de cobertura",
+@@ -1036,7 +1040,9 @@ export const LOCALES = {
+     verdictBillCut:
+       "{status}: este sistema elimina {pct}% da sua conta em 20 anos.",
+     verdictTou:
+-      "{status}: a bateria cobre {pct}% da sua energia nas horas de pico, valendo cerca de {saving} em 20 anos contra uma bateria de {cost}. A diferença entre pico e fora do pico aqui é de {spread} por kWh.",
++      "{status}: a bateria cobre {pct}% da sua energia nas horas de pico, valendo cerca de {saving} em 20 anos {costStatement}. A diferença entre pico e fora do pico aqui é de {spread} por kWh.",
++    verdictTouCostKnown: "contra uma bateria de {cost}",
++    verdictTouCostUnknown: "mas o custo da bateria é desconhecido",
+     verdictBackup:
+       "{status}: o essencial funciona as {targetHours} horas completas em {pct}% dos apagões que simulamos (noite típica: {hours} horas).",
+     verdictReserve:
+@@ -1476,6 +1482,7 @@ export const LOCALES = {
+     metricBillCut: "de votre facture supprimée sur 20 ans",
+     metricTouOffset:
+       "de votre énergie en heures pleines couverte par la batterie",
++
+     metricOutageCoverage:
+       "des coupures que l'essentiel traverse pendant toute la durée visée",
+     metricReserveTradeoff: "ce que coûte la réserve, en économies et en heures",
+@@ -1487,7 +1494,7 @@ export const LOCALES = {
+     statusNotHere: "Ne fonctionne pas ici",
+     useCaseOutcomeTitle: "Votre résultat : {useCase}",
+     useCaseVerdictFooter:
+-      "Mesuré pour {useCase} au regard de {metric}, avec la météo horaire de ce lieu.",
++      "Mesuré pour {useCase} avec la météo horaire de ce lieu.",
+     useCaseNotMeasured:
+       "Non mesuré : cette combinaison ne peut pas être dimensionnée, il n'y a donc pas de {metric} à annoncer.",
+     metricReserveTradeoffValue: "{lost}% d'économies, {hours} h de couverture",
+@@ -1510,7 +1517,9 @@ export const LOCALES = {
+     verdictBillCut:
+       "{status} : ce système supprime {pct}% de votre facture sur 20 ans.",
+     verdictTou:
+-      "{status} : la batterie couvre {pct}% de votre énergie en heures pleines, soit environ {saving} sur 20 ans face à une batterie de {cost}. L'écart entre pointe et creux ici est de {spread} par kWh.",
++      "{status} : la batterie couvre {pct}% de votre énergie en heures pleines, soit environ {saving} sur 20 ans {costStatement}. L'écart entre pointe et creux ici est de {spread} par kWh.",
++    verdictTouCostKnown: "face à une batterie de {cost}",
++    verdictTouCostUnknown: "mais le coût de la batterie est inconnu",
+     verdictBackup:
+       "{status} : l'essentiel tient les {targetHours} heures complètes dans {pct}% des coupures que nous avons simulées (nuit typique : {hours} heures).",
+     verdictReserve:
+@@ -2011,6 +2020,7 @@ export const LOCALES = {
+     metricBillCut: "deiner Rechnung, über 20 Jahre eingespart",
+     metricTouOffset:
+       "deiner Energie in den Spitzenstunden, die die Batterie deckt",
++
+     metricOutageCoverage:
+       "der Stromausfälle, die dein Nötigstes über die volle Dauer übersteht",
+     metricReserveTradeoff: "was die Reserve kostet, in Ersparnis und Stunden",
+@@ -2022,7 +2032,7 @@ export const LOCALES = {
+     statusNotHere: "Funktioniert hier nicht",
+     useCaseOutcomeTitle: "Dein Ergebnis: {useCase}",
+     useCaseVerdictFooter:
+-      "Gemessen für {useCase} anhand von {metric}, mit dem stündlichen Wetter dieses Ortes.",
++      "Gemessen für {useCase} mit dem stündlichen Wetter dieses Ortes.",
+     useCaseNotMeasured:
+       "Nicht gemessen: Diese Kombination lässt sich überhaupt nicht auslegen, es gibt also kein {metric} zu nennen.",
+     metricReserveTradeoffValue: "{lost}% Ersparnis, {hours} h Reserve",
+@@ -2043,7 +2053,9 @@ export const LOCALES = {
+     verdictBillCut:
+       "{status}: Dieses System spart {pct}% deiner Rechnung über 20 Jahre.",
+     verdictTou:
+-      "{status}: Die Batterie deckt {pct}% deiner Energie in den Spitzenstunden, rund {saving} über 20 Jahre gegen eine {cost}-Batterie. Der Abstand zwischen Spitze und Tal beträgt hier {spread} pro kWh.",
++      "{status}: Die Batterie deckt {pct}% deiner Energie in den Spitzenstunden, rund {saving} über 20 Jahre {costStatement}. Der Abstand zwischen Spitze und Tal beträgt hier {spread} pro kWh.",
++    verdictTouCostKnown: "gegen eine {cost}-Batterie",
++    verdictTouCostUnknown: "die Batteriekosten sind jedoch unbekannt",
+     verdictBackup:
+       "{status}: Dein Nötigstes läuft die vollen {targetHours} Stunden in {pct}% der simulierten Stromausfälle (typische Nacht: {hours} Stunden).",
+     verdictReserve:
+@@ -2451,7 +2463,7 @@ export const LOCALES = {
+     statusNotHere: "لا ينجح هنا",
+     useCaseOutcomeTitle: "نتيجتك: {useCase}",
+     useCaseVerdictFooter:
+-      "قِيست لـ {useCase} مقابل {metric}، باستخدام بيانات الطقس الساعية لهذا الموقع.",
++      "قِيست لـ {useCase} باستخدام بيانات الطقس الساعية لهذا الموقع.",
+     useCaseNotMeasured:
+       "غير مقيس: هذا التركيب لا يمكن تحجيمه أصلًا، فلا يوجد {metric} للإبلاغ عنه.",
+     metricReserveTradeoffValue: "{lost}% من الوفر، {hours} ساعة تغطية",
+@@ -2471,7 +2483,9 @@ export const LOCALES = {
+     verdictBillCut:
+       "{status}: يزيل هذا النظام {pct}% من فاتورتك على مدى 20 عامًا.",
+     verdictTou:
+-      "{status}: تغطي البطارية {pct}% من طاقتك في ساعات الذروة، بقيمة نحو {saving} على مدى 20 عامًا مقابل بطارية تكلف {cost}. الفارق بين الذروة وخارج الذروة هنا {spread} لكل ك.و.س.",
++      "{status}: تغطي البطارية {pct}% من طاقتك في ساعات الذروة، بقيمة نحو {saving} على مدى 20 عامًا {costStatement}. الفارق بين الذروة وخارج الذروة هنا {spread} لكل ك.و.س.",
++    verdictTouCostKnown: "مقابل بطارية تكلف {cost}",
++    verdictTouCostUnknown: "لكن تكلفة البطارية غير معروفة",
+     verdictBackup:
+       "{status}: تعمل أساسياتك كاملة الساعات {targetHours} في {pct}% من انقطاعات الكهرباء التي حاكيناها (ليلة نموذجية: {hours} ساعات).",
+     verdictReserve:
+diff --git a/assets/js/sizing/run.js b/assets/js/sizing/run.js
+index b13c8be..cf2b344 100644
+--- a/assets/js/sizing/run.js
++++ b/assets/js/sizing/run.js
+@@ -32,6 +32,7 @@ import {
+ 
+ import {
+   isUseCaseId,
++  isUseCaseMode,
+   deriveLegacy,
+   useCaseForLegacy,
+   loadsFor,
+@@ -65,6 +66,7 @@ import {
+   trueBreakEvenYear,
+   cumulativeCostSeries,
+   INSTALL_LABOR_PER_KWH_USABLE,
++  HORIZON_YEARS,
+ } from "./money.js?v=20261008a";
+ 
+ const TIER_BASIS = {
+@@ -441,13 +443,6 @@ async function runSizingUncached(msg, deps = {}) {
+     // #155: no-swap UI option. Default false = the oversize/swap strategy
+     // stays on (existing behavior); true disables it engine-wide.
+     noSwapMode = false,
+-    reservePct = 0,
+-    touPeakRate = 0,
+-    touOffPeakRate = 0,
+-    outageTargetHours = 0,
+-    essentialLoadKwh = 0,
+-    portableBankKwh = 0,
+-    portableDailyKwh = 0,
+     // ── Use-case inputs (D-16). Every one of these is asked of the visitor
+     // for exactly one use case and read by exactly one measurement below.
+     // They default to null so a caller that has never heard of a use case
+@@ -1177,7 +1172,7 @@ async function runSizingUncached(msg, deps = {}) {
+     const fChem =
+       fChemOverride && CHEMISTRIES[fChemOverride] ? fChemOverride : defaultChem;
+     const fScale = effectiveCapacityScale(fChem, meanTempC);
+-    if (mode === "gridtie" || mode === "reserve" || mode === "tou") {
++    if (mode === "gridtie") {
+       const fSized = {
+         pvKw: fPv,
+         battKwh: fBatt,
+@@ -1714,6 +1709,8 @@ async function runSizingUncached(msg, deps = {}) {
+           (effectiveTargets.find((t) => t.id === repTargetId) || {})
+             .minFraction ?? null,
+         effectiveCapacityScale,
++        lifetimeCostFor: (chemId, sizing) =>
++          moneyFor(chemId, sizing).lifetimeCostMid,
+       },
+       enumerable: false,
+       writable: true,
+@@ -2052,7 +2049,7 @@ async function runSizingUncached(msg, deps = {}) {
+         }
+       }
+       const payload = basePayload();
+-      payload.mode = mode; // "gridtie" or "reserve"
++      payload.mode = "gridtie";
+       payload.auto = auto;
+       payload.autoFallback = autoFallback;
+       payload.effectiveTargetId = effectiveTarget;
+@@ -2293,83 +2290,6 @@ async function runSizingUncached(msg, deps = {}) {
+     };
+     payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
+     payload.assumptions.money = `Bill reduction simulated hour-by-hour across five years of weather: solar serves the load first, surplus charges the battery, the grid covers the rest, nothing is exported unless you enter a feed-in credit (then clipped surplus is valued at that rate). Lifetime cost includes bank swaps plus install labor each time. ${fixedMonthly > 0 ? `A fixed monthly charge is included in every bill figure (it cannot be cut).` : `Fixed connection fees not counted.`}`;
+-    // Reserve mode: calculate emergency reserve analysis
+-    if (mode === "reserve") {
+-      const battKwh = payload.focus?.battKwh || 0;
+-      if (battKwh <= 0) {
+-        payload.reserve = { viable: false, reason: "verdictReserveNoBattery" };
+-      } else {
+-        const reserveKwh = battKwh * reservePct;
+-        const usableKwh = battKwh - reserveKwh;
+-        // Simple tradeoff: reserve provides emergency hours, costs cycling value
+-        // Higher reserve = more emergency preparedness, less daily arbitrage
+-        const reserveTradeoff = reservePct > 0 ? (1 - reservePct) / reservePct : Infinity;
+-        payload.reserve = {
+-          viable: true,
+-          reservePct,
+-          reserveKwh: Math.round(reserveKwh * 10) / 10,
+-          usableKwh: Math.round(usableKwh * 10) / 10,
+-          reserveTradeoff: Math.round(reserveTradeoff * 100) / 100,
+-        };
+-      }
+-    }
+-    // TOU mode: calculate time-of-use arbitrage
+-    if (mode === "tou") {
+-      const battKwh = payload.focus?.battKwh || 0;
+-      if (battKwh <= 0) {
+-        payload.tou = { viable: false, reason: "verdictTouNoBattery" };
+-      } else if (!(touPeakRate > touOffPeakRate)) {
+-        payload.tou = { viable: false, reason: "verdictTou" };
+-      } else {
+-        const spread = touPeakRate - touOffPeakRate;
+-        // Simplified: assume 30% of daily load shifted
+-        const dailyKwh = payload.focus?.dailyKwh || 10;
+-        const shiftedKwh = dailyKwh * 0.3;
+-        const dailySaving = shiftedKwh * spread;
+-        payload.tou = {
+-          viable: true,
+-          peakRate: touPeakRate,
+-          offPeakRate: touOffPeakRate,
+-          dailySavingUsd: Math.round(dailySaving * 100) / 100,
+-          annualSavingUsd: Math.round(dailySaving * 365 * 100) / 100,
+-        };
+-      }
+-    }
+-
+-
+-    // Backup mode: calculate outage coverage
+-    if (mode === "backup") {
+-      const battKwh = payload.focus?.battKwh || 0;
+-      if (battKwh <= 0) {
+-        payload.backup = { viable: false, reason: "verdictBackup" };
+-      } else {
+-        const avgKw = essentialLoadKwh / 24;
+-        const hoursOfBackup = avgKw > 0 ? (battKwh * 0.9) / avgKw : 0;
+-        const coveragePct = outageTargetHours > 0 ? Math.min(100, (hoursOfBackup / outageTargetHours) * 100) : 0;
+-        payload.backup = {
+-          viable: coveragePct > 0,
+-          hoursOfBackup: Math.round(hoursOfBackup * 10) / 10,
+-          coveragePct: Math.round(coveragePct),
+-          reason: coveragePct <= 0 ? "verdictBackup" : undefined,
+-        };
+-      }
+-    }
+-
+-    // Portable mode: calculate runtime days
+-    if (mode === "portable") {
+-      if (!(portableBankKwh > 0) || !(portableDailyKwh > 0)) {
+-        payload.portable = { viable: false, reason: "verdictPortable" };
+-      } else {
+-        const runtimeDays = (portableBankKwh * 0.9) / portableDailyKwh;
+-        payload.portable = {
+-          viable: true,
+-          bankKwh: portableBankKwh,
+-          dailyKwh: portableDailyKwh,
+-          runtimeDays: Math.round(runtimeDays * 10) / 10,
+-        };
+-      }
+-    }
+-
+     return attachFrontier(payload);
+   }
+ 
+@@ -2773,7 +2693,7 @@ function measureUseCase(id, payload, ctx) {
+   } = ctx;
+   const n = e1kw.length;
+   const years = Math.max(1, ctx.years);
+-  const focus = payload.focus || null;
++  const focus = (id === "tou" && payload.focusSystem) || payload.focus || null;
+   const chemId = (focus && focus.chemistry) || payload.chemistry || "lfp";
+   const capScale = effectiveCapacityScale(chemId, meanTempC);
+   const pvKw = (focus && focus.pvKw) || 0;
+@@ -2846,31 +2766,44 @@ function measureUseCase(id, payload, ctx) {
+           : null;
+     }
+     m.touPeakOffsetPct = sim.peakOffsetFraction * 100;
+-    // peakLoadWh / peakImportedWh are already totals over the whole record,
+-    // so the displaced energy needs no extra year multiplier. Multiplying here
+-    // would have inflated a 5-year saving by 5x — the single easiest way to
+-    // make a battery look profitable, so the comment stays.
++    // Totals span the weather record, not the financial horizon. Annualize
++    // before projecting to the same 20 years used by the lifetime cost.
+     const displacedKwh = Math.max(
+       0,
+       (sim.peakLoadWh - sim.peakImportedWh) / 1000,
+     );
+     const peak = ctx.touPeakRate;
+     const offPeak = ctx.touOffPeakRate;
+-    const spread =
+-      Number.isFinite(peak) && Number.isFinite(offPeak) && peak > offPeak
+-        ? peak - offPeak
++    const validRates =
++      Number.isFinite(peak) &&
++      Number.isFinite(offPeak) &&
++      peak >= 0 &&
++      offPeak >= 0 &&
++      peak > offPeak;
++    const spread = validRates ? peak - offPeak : 0;
++    // Shifting one kWh costs more than the off-peak rate when round-trip
++    // losses require extra grid energy. Subtract the simulator's additional
++    // off-peak imports (household use excluded) at the rate actually paid;
++    // using only the spread silently treats the battery as lossless.
++    const offPeakChargeKwh = Math.max(
++      0,
++      (sim.importedWh - sim.peakImportedWh - (totalLoadWh - sim.peakLoadWh)) /
++        1000,
++    );
++    const savings =
++      validRates && Number.isFinite(spread)
++        ? ((displacedKwh * peak - offPeakChargeKwh * offPeak) / years) *
++          HORIZON_YEARS
+         : 0;
+-    m.touSpreadPerKwh = spread;
+-    m.touSavingUsd20y = spread > 0 ? displacedKwh * spread : 0;
+-    const cell =
+-      (payload.targets || []).find((t) => t.solvable && t.minFraction) || null;
+-    m.touBatteryCostUsd20y = cell
+-      ? Number.isFinite(cell.lifetimeCostMid) && cell.lifetimeCostMid > 0
+-        ? cell.lifetimeCostMid
+-        : Number.isFinite(cell.costLo)
+-          ? cell.costLo
+-          : null
++    const representable = validRates && Number.isFinite(savings);
++    m.touSpreadPerKwh = representable ? spread : 0;
++    m.touSavingUsd20y = representable ? savings : 0;
++    // Price exactly the hardware and cycling just measured, including Auto
++    // chemistry and adopted systems. Never borrow another target's capex.
++    const cost = hasBank
++      ? ctx.lifetimeCostFor(chemId, { pvKw, battKwh, result: sim })
+       : null;
++    m.touBatteryCostUsd20y = Number.isFinite(cost) && cost > 0 ? cost : null;
+     m.battKwh = battKwh;
+   }
+ 
+@@ -3004,22 +2937,29 @@ function measureUseCase(id, payload, ctx) {
+  *      resolved backwards, and in that case the pair is left ALONE — solar-only
+  *      is a bill-cut configuration, and re-deriving it from "billcut" would
+  *      silently add a battery to every solar-only run ever shipped.
+- *   2. When a use case IS named, derive the legacy enum pair FROM IT. This is
++ *   2. When a use case IS named (useCase or a new mode alias), derive the
++ *      legacy enum pair FROM IT. This is
+  *      the F-17 collapse: one vocabulary in, one enum pair out.
+  *   3. Measure the case and attach its outcome, then delete the hourly context
+  *      so it can never leave this module.
+  */
+ export async function runSizing(msg, deps = {}) {
+   const explicit = isUseCaseId(msg && msg.useCase);
++  if (!explicit && msg?.mode === "billcut")
++    throw new Error('Use useCase: "billcut", not mode: "billcut".');
+   const useCaseId = explicit
+     ? msg.useCase
+     : useCaseForLegacy({
+         mode: msg && msg.mode,
+         hardwareConfig: msg && msg.hardwareConfig,
+       });
++  // New mode names are aliases for registry IDs, not extra engine modes.
++  // `offgrid` is also a legacy mode: keep its caller-selected hardware unless
++  // useCase was explicitly supplied, just as for legacy gridtie callers.
++  const modeAlias = isUseCaseMode(msg && msg.mode);
+   const legacy = deriveLegacy(useCaseId);
+   const forwarded = { ...msg };
+-  if (explicit) {
++  if (explicit || modeAlias) {
+     // Portable has no grid and no array (R-UC-06). The core still needs a
+     // mode it understands to size the small system that fills the payload
+     // shape the renderer expects; battery-only is the cheapest honest one,
+diff --git a/assets/js/sizing/ui.js b/assets/js/sizing/ui.js
+index 05a4b63..3d59378 100644
+--- a/assets/js/sizing/ui.js
++++ b/assets/js/sizing/ui.js
+@@ -245,6 +245,7 @@ let worker = null;
+ 
+ let lastPayload = null; // kept for share links + the printable summary
+ let prevFxSnapshot = null; // for tariff display conversion on currency switch
++let fxRateTouched = false;
+ 
+ // Result detail level: "best" | "compare" | "matrix" (auto-chemistry runs only).
+ let resultLevel = "best";
+@@ -904,6 +905,11 @@ function useCaseInputs() {
+   const id = selectedUseCase();
+   const ess = catalogueKwh(ESSENTIAL_LOADS, "Ess");
+   const dev = catalogueKwh(PORTABLE_DEVICES, "Port");
++  const fxRate = fxActive()?.rate;
++  const rateInUsd = (fieldId) => {
++    const value = parseFloat($(fieldId)?.value);
++    return Number.isFinite(value) ? (fxRate ? value / fxRate : value) : null;
++  };
+   return {
+     useCase: id,
+     reservePct: normaliseReservePct(
+@@ -917,8 +923,8 @@ function useCaseInputs() {
+     portableDeviceKwh: dev > 0 ? dev : null,
+     portableBankKwh: parseFloat($("portableBankKwh")?.value) || null,
+     portableShorePower: $("portableShorePower")?.checked === true,
+-    touPeakRate: parseFloat($("touPeakRate")?.value) || null,
+-    touOffPeakRate: parseFloat($("touOffPeakRate")?.value) || null,
++    touPeakRate: rateInUsd("touPeakRate"),
++    touOffPeakRate: rateInUsd("touOffPeakRate"),
+     generatorAllowed: $("generatorAllowed")?.checked !== false,
+   };
+ }
+@@ -1019,7 +1025,6 @@ function renderUseCaseOutcome(p) {
+       },
+       t("useCaseVerdictFooter", {
+         useCase: t(c.labelKey),
+-        metric: t(o.labelKey),
+       }),
+     ),
+   );
+@@ -1031,24 +1036,33 @@ function renderUseCaseOutcome(p) {
+ function verdictParams(o) {
+   const m = o.measurement || {};
+   const round = (v) => Math.round(Number(v) || 0);
++  const touCostKnown =
++    Number.isFinite(m.touBatteryCostUsd20y) && m.touBatteryCostUsd20y > 0;
+   return {
+     // The status word is a parameter, so one sentence per case reads correctly
+     // whether it is saying yes, half, or no. Three words, six languages.
+-    status: t(
+-      o.status === "works"
+-        ? "statusWorks"
+-        : o.status === "partial"
+-          ? "statusPartial"
+-          : "statusNotHere",
+-    ),
++    status:
++      o.useCase === "tou" && !touCostKnown
++        ? t("statusNotHere")
++        : t(
++            o.status === "works"
++              ? "statusWorks"
++              : o.status === "partial"
++                ? "statusPartial"
++                : "statusNotHere",
++          ),
+     metric: t(o.labelKey),
+     pct: round(o.unit === "tradeoff" ? m.reserveSavingsLostPct : o.value),
+     hours: round(m.backupHoursP50 ?? m.reserveCoverHours),
+     targetHours: round(m.backupTargetHours ?? m.outageTargetHours),
+     coverHours: round(m.reserveCoverHours),
+-    saving: round(m.touSavingUsd20y),
+-    cost: round(m.touBatteryCostUsd20y),
+-    spread: (Number(m.touSpreadPerKwh) || 0).toFixed(2),
++    saving: money(m.touSavingUsd20y),
++    cost: touCostKnown ? money(m.touBatteryCostUsd20y) : t("pathsUnknown"),
++    costStatement: t(
++      touCostKnown ? "verdictTouCostKnown" : "verdictTouCostUnknown",
++      touCostKnown ? { cost: money(m.touBatteryCostUsd20y) } : {},
++    ),
++    spread: localRate(Number(m.touSpreadPerKwh) || 0),
+     unmetHours: round(m.unmetHoursWorstYear),
+     autonomy: (Number(m.autonomyDays) || 0).toFixed(1),
+     runtime: round(m.portableAutonomyHours),
+@@ -2214,6 +2228,7 @@ function setCoords(lat, lon, label, region, country, skipShareUpdate = false) {
+   tariffTouched = false;
+ 
+   currencyTouched = false;
++  fxRateTouched = false;
+ 
+   // Location selection only fills the pre-calc inputs. Weather is fetched
+   // after the visitor explicitly clicks the sizing button.
+@@ -2254,6 +2269,17 @@ let tariffTouched = false;
+ 
+ let currencyTouched = false;
+ 
++function convertDisplayCurrencyFields(ids, oldFx, nextFx) {
++  const oldRate = oldFx?.rate || 1;
++  const nextRate = nextFx?.rate || 1;
++  for (const id of ids) {
++    const node = $(id);
++    const value = parseFloat(node?.value);
++    if (!node || !Number.isFinite(value)) continue;
++    node.value = String(+((value / oldRate) * nextRate).toFixed(4));
++  }
++}
++
+ function setCurrency(code) {
+   const cur = CURRENCIES[code];
+ 
+@@ -2266,6 +2292,11 @@ function setCurrency(code) {
+ 
+   const oldFx = prevFxSnapshot;
+   prevFxSnapshot = fxActive();
++  convertDisplayCurrencyFields(
++    ["touPeakRate", "touOffPeakRate"],
++    oldFx,
++    prevFxSnapshot,
++  );
+ 
+   // If the user explicitly set their monthly bill and currency
+   // auto-switched to a new currency (e.g. USD -> CAD), convert the nominal bill amount
+@@ -6056,7 +6087,8 @@ function renderBomPanel() {
+   }
+   // Provenance: every price the visitor decides on gets a source.
+   const pricingSource =
+-    lastPayload?.pricing?.source || "cell market indications through PowMr catalog, Aug 2026";
++    lastPayload?.pricing?.source ||
++    "cell market indications through PowMr catalog, Aug 2026";
+   body.appendChild(
+     el(
+       "p",
+@@ -6712,7 +6744,8 @@ function adoptFrontierPoint(i, opts = {}) {
+   if (frontierSource) {
+     const weatherSrc = p.meta?.source || "NASA POWER";
+     const priceSrc =
+-      p.pricing?.source || "cell market indications through PowMr catalog, Aug 2026";
++      p.pricing?.source ||
++      "cell market indications through PowMr catalog, Aug 2026";
+     frontierSource.textContent = `Data: weather ${weatherSrc}; prices ${priceSrc}.`;
+   }
+ }
+@@ -7201,7 +7234,8 @@ function renderResults(p) {
+     `Charging blocked below chemistry's cold limit (LFP 0°C). Load basis: ${inp.basis}. ` +
+     `Costs span ${pr.basisLabel || "ex-factory China to PowMr-class budget retail"} (${pr.source || "cell market indications through PowMr catalog, Aug 2026"}) - ` +
+     `the low end is components before freight/duty/BMS, the high end is shipped retail with BMS and enclosure included. ` +
+-    t("financeOwnNote") + " " +
++    t("financeOwnNote") +
++    " " +
+     (a.money ? a.money + " " : "") +
+     (a.capacityNote ? a.capacityNote + " " : "") +
+     (fxNote() ? fxNote() + " " : "") +
+@@ -8344,38 +8378,34 @@ export async function initSizingUI() {
+ 
+       if (elNode)
+         elNode.addEventListener("input", () => {
+-          // Preserve USD value of tariff when currency switches: convert display
+-          // value from old rate to new so $0.42 doesn't become 0.46$ after toggle.
+-          // The export rate and generator fuel price are entered in the same
+-          // display currency, so they convert identically — otherwise switching
+-          // currency silently changes their effective USD value.
+-          const convertField = (id) => {
+-            const node = $(id);
+-            const curVal = parseFloat(node?.value);
+-            if (
+-              !node ||
+-              !Number.isFinite(curVal) ||
+-              !prevFxSnapshot ||
+-              !prevFxSnapshot.rate
+-            )
+-              return;
+-            const usd = curVal / prevFxSnapshot.rate;
+-            const nextFx = fxActive();
+-            if (nextFx && nextFx.rate) {
+-              node.value = String(+(usd * nextFx.rate).toFixed(4));
+-            } else if (!nextFx) {
+-              node.value = String(+usd.toFixed(4));
+-            }
+-          };
+-          convertField("customRateVal");
+-          convertField("exportRate");
+-          convertField("fixedChargeVal");
+-          convertField("genFuelPrice");
++          // Preserve the USD meaning of every entered energy price when its
++          // display currency changes. TOU prices share the tariff's currency;
++          // leaving them numerically unchanged would silently change the
++          // simulated arbitrage economics.
++          const nextFx = fxActive();
++          // A temporarily invalid rate displays base-USD values; retain that
++          // baseline so a pending live refresh can convert them into the
++          // selected currency without changing their USD meaning.
++          const displayFx =
++            id === "fxRate" && !nextFx ? { code: "USD", rate: 1 } : nextFx;
++          convertDisplayCurrencyFields(
++            [
++              "customRateVal",
++              "exportRate",
++              "fixedChargeVal",
++              "genFuelPrice",
++              "touPeakRate",
++              "touOffPeakRate",
++            ],
++            prevFxSnapshot,
++            displayFx,
++          );
+ 
+           currencyTouched = true;
++          if (id === "fxRate") fxRateTouched = true;
+ 
+           updateCurrencyUnitLabel();
+-          prevFxSnapshot = fxActive();
++          prevFxSnapshot = displayFx;
+           syncBillSlider();
+ 
+           if (lastPayload) {
+@@ -8681,24 +8711,29 @@ async function refreshFxRates() {
+     // fields convert with it so their USD meaning is preserved.
+     const fxInput = $("fxRate");
+     const code = ($("fxCode")?.value || "").trim().toUpperCase();
+-    if (fxInput && code && Number.isFinite(CURRENCIES[code]?.perUSD)) {
+-      const oldRate = parseFloat(fxInput.value);
+-      const newRate = CURRENCIES[code].perUSD;
+-      if (Number.isFinite(oldRate) && oldRate > 0 && oldRate !== newRate) {
+-        for (const id of [
++    if (
++      fxInput &&
++      code &&
++      Number.isFinite(CURRENCIES[code]?.perUSD) &&
++      (!fxRateTouched || !fxActive())
++    ) {
++      const oldFx = prevFxSnapshot;
++      fxInput.value = String(CURRENCIES[code].perUSD);
++      const nextFx = fxActive();
++      convertDisplayCurrencyFields(
++        [
+           "customRateVal",
+           "exportRate",
+           "fixedChargeVal",
+           "genFuelPrice",
+-        ]) {
+-          const node = $(id);
+-          const v = parseFloat(node?.value);
+-          if (node && Number.isFinite(v))
+-            node.value = String(+((v / oldRate) * newRate).toFixed(4));
+-        }
+-      }
+-      fxInput.value = String(newRate);
+-      prevFxSnapshot = fxActive();
++          "touPeakRate",
++          "touOffPeakRate",
++        ],
++        oldFx,
++        nextFx,
++      );
++      prevFxSnapshot = nextFx;
++      fxRateTouched = false;
+     }
+ 
+     if (lastPayload) renderResults(lastPayload);
+diff --git a/assets/js/sizing/usecases.js b/assets/js/sizing/usecases.js
+index e3a8db2..c3da960 100644
+--- a/assets/js/sizing/usecases.js
++++ b/assets/js/sizing/usecases.js
+@@ -162,7 +162,8 @@ export const USE_CASES = {
+       // pay for the kWh you would store, a battery alone does not pay back.
+       if (
+         !Number.isFinite(m.touSavingUsd20y) ||
+-        !Number.isFinite(m.touBatteryCostUsd20y)
++        !Number.isFinite(m.touBatteryCostUsd20y) ||
++        m.touBatteryCostUsd20y <= 0
+       )
+         return { status: "not-here", reasonKey: "verdictTou" };
+       if (m.touSavingUsd20y <= 0)
+@@ -245,11 +246,11 @@ export const USE_CASES = {
+         return { status: "not-here", reasonKey: "verdictReserve" };
+       // Half your bill savings is the line: past it the reserve has stopped
+       // being insurance and started being the price of the system.
+-      if (m.reserveSavingsLostPct > 0.5)
++      if (m.reserveSavingsLostPct > 50)
+         return { status: "not-here", reasonKey: "verdictReserve" };
+       if (!Number.isFinite(m.reserveCoverHours) || m.reserveCoverHours <= 0)
+         return { status: "partial", reasonKey: "verdictReserve" };
+-      if (m.reserveSavingsLostPct > 0.2)
++      if (m.reserveSavingsLostPct > 20)
+         return { status: "partial", reasonKey: "verdictReserve" };
+       return { status: "works", reasonKey: "verdictReserve" };
+     },
+@@ -371,8 +372,14 @@ export function deriveLegacy(id) {
+  * bill-cut), so the pair resolves to the case that owns it and the caller
+  * carries the explicit id in the link.
+  */
++export function isUseCaseMode(mode) {
++  return ["reserve", "tou", "backup", "portable"].includes(mode);
++}
++
+ export function useCaseForLegacy({ mode, hardwareConfig }) {
+-  if (mode === "offgrid") return "offgrid";
++  // The PR's new mode names refer to these same cases; resolve them here so
++  // runSizing never sends an unknown mode into the two-mode sizing core.
++  if (mode === "offgrid" || isUseCaseMode(mode)) return mode;
+   if (hardwareConfig === "battery") return "tou";
+   return "billcut";
+ }
+diff --git a/scripts/smoke/runtime.mjs b/scripts/smoke/runtime.mjs
+index e2eb184..6edea33 100644
+--- a/scripts/smoke/runtime.mjs
++++ b/scripts/smoke/runtime.mjs
+@@ -7,6 +7,7 @@ import {
+   existsSync,
+   mkdirSync,
+   mkdtempSync,
++  readFileSync,
+   rmSync,
+   writeFileSync,
+ } from "node:fs";
+@@ -93,7 +94,6 @@ export async function start() {
+   if (!exe) throw new Error("no Chrome/Edge binary found");
+   console.log(`SMOKE      browser: ${exe}`);
+   const profile = mkdtempSync(join(tmpdir(), "beco-smoke-"));
+-  const DEBUG_PORT = 19222;
+   const browser = spawn(
+     exe,
+     [
+@@ -101,7 +101,9 @@ export async function start() {
+       "--disable-gpu",
+       "--no-sandbox",
+       "--no-first-run",
+-      `--remote-debugging-port=${DEBUG_PORT}`,
++      // Port 0 asks Chrome for an OS-assigned port. A fixed port made parallel
++      // browser tests attach to one another's page or fail during startup.
++      "--remote-debugging-port=0",
+       `--user-data-dir=${profile}`,
+       "about:blank",
+     ],
+@@ -130,13 +132,20 @@ export async function start() {
+     let targets = null;
+     for (let i = 0; i < 100; i++) {
+       try {
+-        const r = await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/list`);
+-        if (r.ok) {
+-          targets = await r.json();
+-          break;
++        const [portText] = readFileSync(
++          join(profile, "DevToolsActivePort"),
++          "utf8",
++        ).split(/\r?\n/);
++        const debugPort = Number(portText);
++        if (Number.isInteger(debugPort) && debugPort > 0) {
++          const r = await fetch(`http://127.0.0.1:${debugPort}/json/list`);
++          if (r.ok) {
++            targets = await r.json();
++            break;
++          }
+         }
+       } catch {
+-        /* not up yet */
++        /* Chrome has not written its active-port file yet. */
+       }
+       await sleep(300);
+     }
+diff --git a/tests/usecase-backup.test.mjs b/tests/usecase-backup.test.mjs
+index 17b1a4f..551339d 100644
+--- a/tests/usecase-backup.test.mjs
++++ b/tests/usecase-backup.test.mjs
+@@ -1,78 +1,64 @@
+-// Tests for the Outage Backup use case.
+-// Run: node --test tests/usecase-backup.test.mjs
+-
+ import { test } from "node:test";
+ import assert from "node:assert/strict";
+ import { infeasibleReason } from "../assets/js/sizing/engine.js";
++import {
++  assertModeMatchesUseCase,
++  assertUseCase,
++  sizeUseCase,
++} from "./usecase-fixture.mjs";
+ 
+-test("backup mode requires a battery (solar-only is infeasible)", () => {
+-  const reason = infeasibleReason({
+-    mode: "backup",
+-    hardwareConfig: "solar",
+-  });
+-  assert.equal(reason, "needs-battery");
+-});
+-
+-test("backup mode works with battery-only hardware", () => {
+-  const reason = infeasibleReason({
+-    mode: "backup",
+-    hardwareConfig: "battery",
+-  });
+-  assert.equal(reason, null);
+-});
+-
+-test("backup mode works with solar+battery hardware", () => {
+-  const reason = infeasibleReason({
+-    mode: "backup",
+-    hardwareConfig: "both",
++for (const [hardwareConfig, expected] of [
++  ["solar", "needs-battery"],
++  ["battery", null],
++  ["both", null],
++]) {
++  test(`backup feasibility: ${hardwareConfig}`, () => {
++    assert.equal(
++      infeasibleReason({ mode: "backup", hardwareConfig }),
++      expected,
++    );
+   });
+-  assert.equal(reason, null);
+-});
++}
+ 
+-test("backup coverage math: sufficient battery covers target", () => {
+-  const battKwh = 20;
+-  const targetHrs = 8;
+-  const essentialKwhDay = 5;
+-  const essentialKwAvg = essentialKwhDay / 24;
+-  const usableKwh = battKwh * 0.9;
+-  const hoursOfBackup = usableKwh / essentialKwAvg;
+-  const coveragePct = Math.min(100, (hoursOfBackup / targetHrs) * 100);
+-
+-  assert.ok(hoursOfBackup > targetHrs, "battery should exceed target");
+-  assert.equal(coveragePct, 100);
++test("backup mode executes the canonical outage sizing path", async () => {
++  const p = await assertModeMatchesUseCase("backup");
++  const m = assertUseCase(p, "backup");
++  assert.equal(p.mode, "offgrid");
++  assert.equal(p.hardwareConfig, "both");
++  assert.equal(m.backupStartState, "measured-soc");
++  assert.equal(m.backupTargetHours, 8);
++  assert.equal(m.essentialKwhPerDay, 1.2);
++  assert.equal(p.useCaseOutcome.value, m.outageCoveragePct);
++  assert.ok(m.outageCoveragePct > 0 && m.outageCoveragePct <= 100);
+ });
+ 
+-test("backup coverage math: small battery gives partial coverage", () => {
+-  const battKwh = 5;
+-  const targetHrs = 24;
+-  const essentialKwhDay = 10;
+-  const essentialKwAvg = essentialKwhDay / 24;
+-  const usableKwh = battKwh * 0.9;
+-  const hoursOfBackup = usableKwh / essentialKwAvg;
+-  const coveragePct = Math.min(100, (hoursOfBackup / targetHrs) * 100);
+-
+-  assert.ok(coveragePct < 100, "coverage should be partial");
+-  assert.ok(coveragePct > 0, "coverage should be positive");
++test("backup sizes essentials rather than silently using the household load", async () => {
++  const smallHome = await sizeUseCase({ mode: "backup", dailyKwh: 10 });
++  const largeHome = await sizeUseCase({ mode: "backup", dailyKwh: 100 });
++  assert.deepEqual(smallHome.focus, largeHome.focus);
++  assert.deepEqual(smallHome.useCaseOutcome, largeHome.useCaseOutcome);
+ });
+ 
+-test("backup with no battery is not viable", () => {
+-  const battKwh = 0;
+-  const viable = battKwh > 0;
+-  assert.equal(viable, false);
++test("a longer outage target cannot increase measured coverage", async () => {
++  const short = await sizeUseCase({ mode: "backup", outageTargetHours: 1 });
++  const long = await sizeUseCase({ mode: "backup", outageTargetHours: 24 });
++  assertUseCase(short, "backup");
++  assertUseCase(long, "backup");
++  assert.ok(long.useCaseOutcome.value < short.useCaseOutcome.value);
+ });
+ 
+-test("backup with invalid target hours is not viable", () => {
+-  for (const targetHrs of [0, -5, NaN, Infinity]) {
+-    const viable =
+-      Number.isFinite(targetHrs) && targetHrs > 0;
+-    assert.equal(viable, false, `target ${targetHrs} should be invalid`);
++test("invalid outage targets use the canonical six-hour default", async () => {
++  for (const outageTargetHours of [0, -5, NaN, Infinity]) {
++    const p = await sizeUseCase({ mode: "backup", outageTargetHours });
++    assert.equal(assertUseCase(p, "backup").backupTargetHours, 6);
+   }
+ });
+ 
+-test("backup with invalid essential loads is not viable", () => {
+-  for (const essentialKwhDay of [0, -2, NaN]) {
+-    const viable =
+-      Number.isFinite(essentialKwhDay) && essentialKwhDay > 0;
+-    assert.equal(viable, false, `loads ${essentialKwhDay} should be invalid`);
++test("invalid essential loads use the disclosed canonical default", async () => {
++  for (const essentialKwh of [0, -2, NaN]) {
++    const p = await sizeUseCase({ mode: "backup", essentialKwh });
++    const m = assertUseCase(p, "backup");
++    assert.equal(m.essentialKwhDefaulted, true);
++    assert.equal(m.essentialKwhPerDay, 0.6);
+   }
+ });
+diff --git a/tests/usecase-portable.test.mjs b/tests/usecase-portable.test.mjs
+index 79f51e4..8dbe6b4 100644
+--- a/tests/usecase-portable.test.mjs
++++ b/tests/usecase-portable.test.mjs
+@@ -1,65 +1,76 @@
+ import { test } from "node:test";
+ import assert from "node:assert/strict";
++import {
++  assertModeMatchesUseCase,
++  assertUseCase,
++  sizeUseCase,
++} from "./usecase-fixture.mjs";
+ 
+-// Portable mode payload logic — mirrors run.js portable branch.
+-// Extracted here for unit testing without the full worker harness.
+-function portablePayload({ portableBankKwh, portableDailyKwh }) {
+-  const bankKwh = Number(portableBankKwh);
+-  const dailyKwh = Number(portableDailyKwh);
+-  if (
+-    !Number.isFinite(bankKwh) ||
+-    bankKwh <= 0 ||
+-    !Number.isFinite(dailyKwh) ||
+-    dailyKwh <= 0
+-  ) {
+-    return { viable: false, reason: "verdictPortable" };
+-  }
+-  const usableKwh = bankKwh * 0.9;
+-  const runtimeDays = usableKwh / dailyKwh;
+-  return {
+-    viable: true,
+-    bankKwh: Math.round(bankKwh * 10) / 10,
+-    dailyKwh: Math.round(dailyKwh * 10) / 10,
+-    runtimeDays: Math.round(runtimeDays * 10) / 10,
+-  };
+-}
+-
+-test("sufficient bank → works with runtime days", () => {
+-  const p = portablePayload({ portableBankKwh: 5, portableDailyKwh: 2 });
+-  assert.equal(p.viable, true);
+-  // 5 * 0.9 / 2 = 2.25 days
+-  assert.equal(p.runtimeDays, 2.3);
+-  assert.equal(p.bankKwh, 5);
+-  assert.equal(p.dailyKwh, 2);
++test("portable mode reaches the canonical trip simulator", async () => {
++  const p = await assertModeMatchesUseCase("portable");
++  const m = assertUseCase(p, "portable");
++  assert.equal(p.mode, "gridtie");
++  assert.equal(p.hardwareConfig, "battery");
++  assert.equal(m.portableBankKwh, 3);
++  assert.equal(m.portableDeviceKwh, 2.4);
++  assert.equal(m.portableTrips, 7);
++  assert.equal(p.useCaseOutcome.value, m.portableCoveragePct);
++  assert.ok(m.portableAutonomyHours > 24);
+ });
+ 
+-test("zero bank → not-here", () => {
+-  const p = portablePayload({ portableBankKwh: 0, portableDailyKwh: 2 });
+-  assert.equal(p.viable, false);
+-  assert.equal(p.reason, "verdictPortable");
++test("zero or negative portable banks use the existing two-kWh default", async () => {
++  for (const portableBankKwh of [0, -3]) {
++    const p = await sizeUseCase({ mode: "portable", portableBankKwh });
++    assert.equal(assertUseCase(p, "portable").portableBankKwh, 2);
++  }
+ });
+ 
+-test("negative bank → not-here", () => {
+-  const p = portablePayload({ portableBankKwh: -3, portableDailyKwh: 2 });
+-  assert.equal(p.viable, false);
++test("zero device consumption uses the canonical one-kWh default", async () => {
++  const p = await sizeUseCase({ mode: "portable", portableDeviceKwh: 0 });
++  assert.equal(assertUseCase(p, "portable").portableDeviceKwh, 1);
+ });
+ 
+-test("zero daily consumption → not-here", () => {
+-  const p = portablePayload({ portableBankKwh: 5, portableDailyKwh: 0 });
+-  assert.equal(p.viable, false);
+-  assert.equal(p.reason, "verdictPortable");
++test("non-finite portable inputs cannot produce non-finite runtime", async () => {
++  const p = await sizeUseCase({
++    mode: "portable",
++    portableBankKwh: NaN,
++    portableDeviceKwh: Infinity,
++  });
++  const m = assertUseCase(p, "portable");
++  assert.equal(m.portableBankKwh, 2);
++  assert.equal(m.portableDeviceKwh, 1);
++  assert.ok(Number.isFinite(m.portableAutonomyHours));
++  assert.ok(Number.isFinite(m.portableCoveragePct));
+ });
+ 
+-test("non-finite inputs → not-here", () => {
+-  const p = portablePayload({ portableBankKwh: NaN, portableDailyKwh: 2 });
+-  assert.equal(p.viable, false);
+-  const q = portablePayload({ portableBankKwh: 5, portableDailyKwh: Infinity });
+-  assert.equal(q.viable, false);
++test("the visitor's bank and device load change the real runtime", async () => {
++  const small = await sizeUseCase({
++    mode: "portable",
++    portableBankKwh: 1,
++    portableDeviceKwh: 0.5,
++    portablePvW: 0,
++  });
++  const big = await sizeUseCase({
++    mode: "portable",
++    portableBankKwh: 2,
++    portableDeviceKwh: 0.5,
++    portablePvW: 0,
++  });
++  assert.ok(
++    assertUseCase(big, "portable").portableAutonomyHours >
++      assertUseCase(small, "portable").portableAutonomyHours,
++  );
+ });
+ 
+-test("small bank, light load → fractional runtime", () => {
+-  const p = portablePayload({ portableBankKwh: 1, portableDailyKwh: 0.5 });
+-  assert.equal(p.viable, true);
+-  // 1 * 0.9 / 0.5 = 1.8 days
+-  assert.equal(p.runtimeDays, 1.8);
++test("shore power changes measured trip coverage rather than a copied formula", async () => {
++  const isolated = await sizeUseCase({ mode: "portable", portablePvW: 0 });
++  const shore = await sizeUseCase({
++    mode: "portable",
++    portablePvW: 0,
++    portableShorePower: true,
++  });
++  assertUseCase(isolated, "portable");
++  assertUseCase(shore, "portable");
++  assert.ok(isolated.useCaseOutcome.value < 100);
++  assert.equal(shore.useCaseOutcome.value, 100);
+ });
+diff --git a/tests/usecase-reserve.test.mjs b/tests/usecase-reserve.test.mjs
+index f4e202a..11076ed 100644
+--- a/tests/usecase-reserve.test.mjs
++++ b/tests/usecase-reserve.test.mjs
+@@ -1,58 +1,131 @@
+-// Tests for the Emergency Reserve use case.
+-// Run: node --test tests/usecase-reserve.test.mjs
+-
+ import { test } from "node:test";
+ import assert from "node:assert/strict";
+ import { infeasibleReason } from "../assets/js/sizing/engine.js";
++import { useCase } from "../assets/js/sizing/usecases.js";
++import {
++  assertModeMatchesUseCase,
++  assertUseCase,
++  sizeUseCase,
++} from "./usecase-fixture.mjs";
+ 
+-test("reserve mode requires a battery (solar-only is infeasible)", () => {
+-  const reason = infeasibleReason({
+-    mode: "reserve",
+-    hardwareConfig: "solar",
++for (const [hardwareConfig, expected] of [
++  ["solar", "needs-battery"],
++  ["battery", null],
++  ["both", null],
++]) {
++  test(`reserve feasibility: ${hardwareConfig}`, () => {
++    assert.equal(
++      infeasibleReason({ mode: "reserve", hardwareConfig }),
++      expected,
++    );
+   });
+-  assert.equal(reason, "needs-battery");
+-});
++}
+ 
+-test("reserve mode works with battery-only hardware", () => {
+-  const reason = infeasibleReason({
+-    mode: "reserve",
+-    hardwareConfig: "battery",
++test("reserve mode executes the canonical measured tradeoff", async () => {
++  const p = await assertModeMatchesUseCase("reserve");
++  const m = assertUseCase(p, "reserve");
++  assert.equal(p.mode, "gridtie");
++  assert.equal(m.reservePct, 0.2);
++  assert.ok(m.battKwh > 0);
++  assert.ok(m.reserveBillCutWithFloorPct <= m.reserveBillCutPct);
++  assert.ok(m.reserveCoverHours > 0);
++  assert.deepEqual(p.useCaseOutcome.value, {
++    savingsLostPct: m.reserveSavingsLostPct,
++    coverHours: m.reserveCoverHours,
+   });
+-  assert.equal(reason, null);
+ });
+ 
+-test("reserve mode works with solar+battery hardware", () => {
+-  const reason = infeasibleReason({
++test("zero reserve reports no held energy through the shipped simulator", async () => {
++  const p = await sizeUseCase({ mode: "reserve", reservePct: 0 });
++  const m = assertUseCase(p, "reserve");
++  assert.equal(m.reserveCoverHours, 0);
++  assert.equal(m.reserveSavingsLostPct, 0);
++  assert.notEqual(p.useCaseOutcome.status, "works");
++});
++
++test("a system with no battery is declined by the real reserve measurement", async () => {
++  const p = await sizeUseCase({
+     mode: "reserve",
+-    hardwareConfig: "both",
++    focusPvKw: 4,
++    focusBattKwh: 0,
++    focusChemistry: "lfp",
+   });
+-  assert.equal(reason, null);
+-});
+-
+-test("reserve tradeoff calculation: 20% reserve on 10kWh battery", () => {
+-  const battKwh = 10;
+-  const reservePct = 0.2;
+-  const reserveKwh = battKwh * reservePct;
+-  const usableKwh = battKwh - reserveKwh;
+-  
+-  assert.equal(reserveKwh, 2);
+-  assert.equal(usableKwh, 8);
+-  
+-  // Tradeoff ratio: (1 - reservePct) / reservePct
+-  // Higher reserve = lower tradeoff (more emergency value, less cycling value)
+-  const tradeoff = (1 - reservePct) / reservePct;
+-  assert.ok(tradeoff > 0, "tradeoff should be positive");
+-  assert.equal(Math.round(tradeoff * 100) / 100, 4);
+-});
+-
+-test("reserve with 0% is not viable (no reserve to measure)", () => {
+-  const reservePct = 0;
+-  const viable = reservePct > 0;
+-  assert.equal(viable, false);
+-});
+-
+-test("reserve with no battery is not viable", () => {
+-  const battKwh = 0;
+-  const viable = battKwh > 0;
+-  assert.equal(viable, false);
++  const m = assertUseCase(p, "reserve");
++  assert.equal(m.battKwh, 0);
++  assert.equal(m.reserveCoverHours, 0);
++  assert.equal(p.useCaseOutcome.status, "not-here");
++  assert.equal(p.useCaseOutcome.reasonKey, "verdictReserveNoBattery");
++});
++
++test("reserve inputs are normalized by the existing canonical policy", async () => {
++  for (const [reservePct, expected] of [
++    [NaN, 0],
++    [-1, 0],
++    [2, 0.9],
++  ]) {
++    const p = await sizeUseCase({ mode: "reserve", reservePct });
++    assert.equal(assertUseCase(p, "reserve").reservePct, expected);
++  }
++});
++
++test("an explicit useCase wins over a conflicting mode alias", async () => {
++  const p = await sizeUseCase({ useCase: "backup", mode: "reserve" });
++  assertUseCase(p, "backup");
++  assert.equal(p.mode, "offgrid");
++});
++
++test("reserve measurements are interpreted as percentages, not fractions", async () => {
++  for (const [reservePct, focusPvKw, expected] of [
++    [0.2, 2, "works"],
++    [0.8, 2, "partial"],
++    [0.9, 0.1, "not-here"],
++  ]) {
++    const p = await sizeUseCase({
++      mode: "reserve",
++      reservePct,
++      focusPvKw,
++      focusBattKwh: 6,
++    });
++    const m = assertUseCase(p, "reserve");
++    assert.ok(m.reserveSavingsLostPct > 0.5);
++    assert.equal(p.useCaseOutcome.status, expected);
++  }
++});
++
++test("reserve verdict boundaries are 20% and 50% of savings", () => {
++  for (const [lost, expected] of [
++    [19.99, "works"],
++    [20, "works"],
++    [20.01, "partial"],
++    [50, "partial"],
++    [50.01, "not-here"],
++  ]) {
++    assert.equal(
++      useCase("reserve").verdict({
++        battKwh: 6,
++        reserveSavingsLostPct: lost,
++        reserveCoverHours: 24,
++      }).status,
++      expected,
++    );
++  }
++});
++
++test("billcut is not a mode alias; valid legacy callers retain their hardware", async () => {
++  await assert.rejects(
++    sizeUseCase({ mode: "billcut", hardwareConfig: "solar" }),
++    /useCase.*billcut/,
++  );
++  const p = await sizeUseCase({ mode: "offgrid", hardwareConfig: "solar" });
++  assert.equal(p.hardwareConfig, "solar");
++  assert.equal(p.mode, "offgrid");
++  assert.equal(p.useCase, "offgrid");
++});
++
++test("legacy gridtie solar-only callers keep their hardware and bill-cut metric", async () => {
++  const p = await sizeUseCase({ mode: "gridtie", hardwareConfig: "solar" });
++  assertUseCase(p, "billcut");
++  assert.equal(p.mode, "gridtie");
++  assert.equal(p.hardwareConfig, "solar");
++  assert.equal(p.focus.battKwh, 0);
+ });
+diff --git a/tests/usecase-tou.test.mjs b/tests/usecase-tou.test.mjs
+index d9e5c78..ce648f7 100644
+--- a/tests/usecase-tou.test.mjs
++++ b/tests/usecase-tou.test.mjs
+@@ -1,57 +1,791 @@
+-// Tests for the Time-of-Use Savings use case.
+-// Run: node --test tests/usecase-tou.test.mjs
+-
+ import { test } from "node:test";
+ import assert from "node:assert/strict";
+ import { infeasibleReason } from "../assets/js/sizing/engine.js";
++import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
++import { OFFLINE_PROFILES } from "../assets/js/sizing/profiles.js";
++import { HORIZON_YEARS } from "../assets/js/sizing/money.js";
++import { useCase } from "../assets/js/sizing/usecases.js";
++import { fileURLToPath } from "node:url";
++import { serveStatic } from "../scripts/serve-static.mjs";
++import { start as startBrowser } from "../scripts/smoke/runtime.mjs";
++import {
++  assertModeMatchesUseCase,
++  assertUseCase,
++  sizeUseCase,
++} from "./usecase-fixture.mjs";
+ 
+-test("tou mode requires a battery (solar-only is infeasible)", () => {
+-  const reason = infeasibleReason({
+-    mode: "tou",
+-    hardwareConfig: "solar",
++for (const [hardwareConfig, expected] of [
++  ["solar", "needs-battery"],
++  ["battery", null],
++  ["both", null],
++]) {
++  test(`tou feasibility: ${hardwareConfig}`, () => {
++    assert.equal(infeasibleReason({ mode: "tou", hardwareConfig }), expected);
+   });
+-  assert.equal(reason, "needs-battery");
++}
++
++test("tou mode reaches battery-only peak-offset measurement, not an offgrid result", async () => {
++  const p = await assertModeMatchesUseCase("tou");
++  const m = assertUseCase(p, "tou");
++  assert.equal(p.mode, "gridtie");
++  assert.equal(p.hardwareConfig, "battery");
++  assert.equal(p.focus.pvKw, 0);
++  assert.ok(m.battKwh > 0);
++  assert.ok(m.touPeakOffsetPct > 0 && m.touPeakOffsetPct <= 100);
++  assert.equal(p.useCaseOutcome.value, m.touPeakOffsetPct);
++  assert.equal(m.touSpreadPerKwh, 0.5);
++  assert.ok(m.touSavingUsd20y > 0);
+ });
+ 
+-test("tou mode works with battery-only hardware", () => {
+-  const reason = infeasibleReason({
++test("flat rates are declined by the shipped TOU outcome", async () => {
++  const p = await sizeUseCase({
+     mode: "tou",
+-    hardwareConfig: "battery",
++    touPeakRate: 0.2,
++    touOffPeakRate: 0.2,
++  });
++  const m = assertUseCase(p, "tou");
++  assert.equal(m.touSavingUsd20y, 0);
++  assert.equal(p.useCaseOutcome.status, "not-here");
++});
++
++test("reversed, negative, non-finite, or unrepresentable TOU rates never invent savings", async () => {
++  for (const [touPeakRate, touOffPeakRate] of [
++    [0.1, 0.15],
++    [-0.1, -0.2],
++    [0.6, -0.1],
++    [-0.1, 0.2],
++    [Infinity, 0.1],
++    [0.6, NaN],
++    [Number.MAX_VALUE, 0],
++  ]) {
++    const p = await sizeUseCase({ mode: "tou", touPeakRate, touOffPeakRate });
++    const m = assertUseCase(p, "tou");
++    assert.equal(m.touSpreadPerKwh, 0);
++    assert.equal(m.touSavingUsd20y, 0);
++    assert.equal(p.useCaseOutcome.status, "not-here");
++  }
++});
++
++test("TOU rates cross the browser-to-worker boundary in USD after a currency switch", async (t) => {
++  const server = await serveStatic({
++    dir: fileURLToPath(new URL("..", import.meta.url)),
++    applyHeaders: false,
++  });
++  let browser;
++  t.after(async () => {
++    try {
++      await browser?.close();
++    } finally {
++      await server.close();
++    }
+   });
+-  assert.equal(reason, null);
++  browser = await startBrowser();
++  await browser.send("Page.enable");
++  await browser.send("Runtime.enable");
++  await browser.send("Page.addScriptToEvaluateOnNewDocument", {
++    source: `(() => {
++      window.__runMessages = [];
++      const postMessage = Worker.prototype.postMessage;
++      Worker.prototype.postMessage = function (message, ...args) {
++        if (message?.type === "run") window.__runMessages.push(message);
++        return postMessage.call(this, message, ...args);
++      };
++    })();`,
++  });
++  await browser.send("Page.navigate", { url: server.url });
++  const { evaluate, poll } = browser;
++  assert.equal(
++    await poll(
++      () => evaluate('document.getElementById("useCaseRow")?.hidden === false'),
++      15000,
++      100,
++    ),
++    true,
++    "the use-case controls should initialize",
++  );
++  await evaluate(`(() => {
++    const search = document.getElementById("citySearch");
++    search.value = "Honolulu";
++    search.dispatchEvent(new InputEvent("input", { bubbles: true }));
++  })()`);
++  assert.equal(
++    await poll(
++      () =>
++        evaluate('!!document.querySelector("#citySuggestions [role=option]")'),
++      15000,
++      100,
++    ),
++    true,
++    "Honolulu should be offered as a city suggestion",
++  );
++  await evaluate(
++    'document.querySelector("#citySuggestions [role=option]").click()',
++  );
++  await evaluate(`(() => {
++    const useCase = document.getElementById("useCase");
++    useCase.value = "tou";
++    useCase.dispatchEvent(new Event("change", { bubbles: true }));
++    const tariff = document.getElementById("customRateVal");
++    tariff.value = "0.4";
++    tariff.dispatchEvent(new Event("input", { bubbles: true }));
++    for (const [id, value] of [["touPeakRate", "0.9"], ["touOffPeakRate", "0.2"]]) {
++      const input = document.getElementById(id);
++      input.value = value;
++      input.dispatchEvent(new Event("input", { bubbles: true }));
++    }
++    const code = document.getElementById("fxCode");
++    code.value = "EUR";
++    code.dispatchEvent(new Event("input", { bubbles: true }));
++    const fxRate = document.getElementById("fxRate");
++    fxRate.value = "2";
++    fxRate.dispatchEvent(new Event("input", { bubbles: true }));
++  })()`);
++  await evaluate('document.getElementById("btnRunSizing").click()');
++  assert.equal(
++    await poll(
++      () => evaluate("window.__runMessages.length === 1"),
++      120000,
++      200,
++    ),
++    true,
++    "the real sizing worker should receive the run",
++  );
++  const message = await evaluate("window.__runMessages[0]");
++  assert.equal(message.tariff, 0.4);
++  assert.equal(message.touPeakRate, 0.9);
++  assert.equal(message.touOffPeakRate, 0.2);
++  assert.equal(
++    await evaluate('document.getElementById("touPeakRate").value'),
++    "1.8",
++  );
++  assert.equal(
++    await evaluate('document.getElementById("touOffPeakRate").value'),
++    "0.4",
++  );
++  assert.deepEqual(browser.errors, []);
++});
++
++test("live FX refresh preserves manual rates and recovers an invalid rate without changing USD prices", async (t) => {
++  const server = await serveStatic({
++    dir: fileURLToPath(new URL("..", import.meta.url)),
++    applyHeaders: false,
++  });
++  let browser;
++  t.after(async () => {
++    try {
++      await browser?.close();
++    } finally {
++      await server.close();
++    }
++  });
++  browser = await startBrowser();
++  await browser.send("Page.enable");
++  await browser.send("Runtime.enable");
++  await browser.send("Page.addScriptToEvaluateOnNewDocument", {
++    source: `(() => {
++      const originalFetch = window.fetch.bind(window);
++      window.__fxRefreshRequestCount = 0;
++      window.__fxRefreshState = { resolvers: [] };
++      window.fetch = (input, ...args) => {
++        const url = typeof input === "string" ? input : input.url;
++        if (!url.startsWith("https://open.er-api.com/"))
++          return originalFetch(input, ...args);
++        window.__fxRefreshRequestCount += 1;
++        return new Promise((resolve) => {
++          window.__fxRefreshState.resolvers.push(() =>
++            resolve(
++              new Response(
++                JSON.stringify({
++                  result: "success",
++                  rates: { EUR: 3.5, GBP: 0.8 },
++                  time_last_update_utc: "test-rate-refresh",
++                }),
++                {
++                  status: 200,
++                  headers: { "Content-Type": "application/json" },
++                },
++              ),
++            ),
++          );
++        });
++      };
++      window.__runMessages = [];
++      const postMessage = Worker.prototype.postMessage;
++      Worker.prototype.postMessage = function (message, ...args) {
++        if (message?.type === "run") window.__runMessages.push(message);
++        return postMessage.call(this, message, ...args);
++      };
++    })();`,
++  });
++  await browser.send("Page.navigate", { url: server.url });
++  const { evaluate, poll } = browser;
++  assert.equal(
++    await poll(
++      () =>
++        evaluate(
++          'document.getElementById("useCaseRow")?.hidden === false && window.__fxRefreshRequestCount === 1',
++        ),
++      15000,
++      100,
++    ),
++    true,
++    "the UI and deferred FX refresh should initialize",
++  );
++  await evaluate(`(() => {
++    const search = document.getElementById("citySearch");
++    search.value = "Madrid";
++    search.dispatchEvent(new InputEvent("input", { bubbles: true }));
++  })()`);
++  assert.equal(
++    await poll(
++      () =>
++        evaluate('!!document.querySelector("#citySuggestions [role=option]")'),
++      15000,
++      100,
++    ),
++    true,
++    "Madrid should be offered as a city suggestion",
++  );
++  await evaluate(
++    'document.querySelector("#citySuggestions [role=option]").click()',
++  );
++  assert.equal(
++    await evaluate('document.getElementById("fxCode").value'),
++    "EUR",
++  );
++  await evaluate(`(() => {
++    const select = document.getElementById("useCase");
++    select.value = "tou";
++    select.dispatchEvent(new Event("change", { bubbles: true }));
++    const tariff = document.getElementById("customRateVal");
++    tariff.value = "0.4";
++    tariff.dispatchEvent(new Event("input", { bubbles: true }));
++    for (const [id, value] of [["touPeakRate", "0.9"], ["touOffPeakRate", "0.2"]]) {
++      const input = document.getElementById(id);
++      input.value = value;
++      input.dispatchEvent(new Event("input", { bubbles: true }));
++    }
++  })()`);
++  const manualRates = await evaluate(`(() => {
++    const fx = document.getElementById("fxRate");
++    const initialRate = Number(fx.value);
++    fx.value = "2";
++    fx.dispatchEvent(new Event("input", { bubbles: true }));
++    return {
++      peakLocal: Number(document.getElementById("touPeakRate").value),
++      offPeakLocal: Number(document.getElementById("touOffPeakRate").value),
++      tariffLocal: Number(document.getElementById("customRateVal").value),
++      initialRate,
++    };
++  })()`);
++  assert.ok(manualRates.initialRate > 0 && manualRates.initialRate !== 2);
++  const expectedUsd = {
++    peak: manualRates.peakLocal / 2,
++    offPeak: manualRates.offPeakLocal / 2,
++    tariff: manualRates.tariffLocal / 2,
++  };
++  assert.ok(
++    Math.abs(expectedUsd.peak - 0.9 / manualRates.initialRate) < 0.0001,
++  );
++  assert.ok(
++    Math.abs(expectedUsd.offPeak - 0.2 / manualRates.initialRate) < 0.0001,
++  );
++
++  await evaluate("window.__fxRefreshState.resolvers[0]()");
++  assert.equal(
++    await poll(
++      () =>
++        evaluate(
++          'document.getElementById("fxRate").value === "2" && document.getElementById("fxAsOf").textContent.includes("test-rate-refresh")',
++        ),
++      15000,
++      100,
++    ),
++    true,
++    "the live FX refresh should preserve the manually entered rate",
++  );
++  const localizedRates = await evaluate(`({
++    peak: Number(document.getElementById("touPeakRate").value),
++    offPeak: Number(document.getElementById("touOffPeakRate").value),
++  })`);
++  assert.equal(localizedRates.peak, manualRates.peakLocal);
++  assert.equal(localizedRates.offPeak, manualRates.offPeakLocal);
++
++  await evaluate('document.getElementById("btnRunSizing").click()');
++  assert.equal(
++    await poll(
++      () => evaluate("window.__runMessages.length === 1"),
++      120000,
++      200,
++    ),
++    true,
++    "the sizing worker should receive the refreshed TOU prices",
++  );
++  const message = await evaluate("window.__runMessages[0]");
++  assert.ok(Math.abs(message.touPeakRate - expectedUsd.peak) < 0.0001);
++  assert.ok(Math.abs(message.touOffPeakRate - expectedUsd.offPeak) < 0.0001);
++  assert.ok(Math.abs(message.tariff - expectedUsd.tariff) < 0.0001);
++  assert.deepEqual(browser.errors, []);
++
++  const previousTimeOrigin = await evaluate("performance.timeOrigin");
++  await browser.send("Page.reload", { ignoreCache: true });
++  assert.equal(
++    await poll(
++      () =>
++        evaluate(
++          `performance.timeOrigin !== ${previousTimeOrigin} && document.getElementById("useCaseRow")?.hidden === false && window.__fxRefreshRequestCount === 1`,
++        ),
++      15000,
++      100,
++    ),
++    true,
++    "the reloaded UI should initialize",
++  );
++  await evaluate(`(() => {
++    const search = document.getElementById("citySearch");
++    search.value = "Madrid";
++    search.dispatchEvent(new InputEvent("input", { bubbles: true }));
++  })()`);
++  assert.equal(
++    await poll(
++      () =>
++        evaluate('!!document.querySelector("#citySuggestions [role=option]")'),
++      15000,
++      100,
++    ),
++    true,
++    "Madrid should be offered after the page reload",
++  );
++  await evaluate(
++    'document.querySelector("#citySuggestions [role=option]").click()',
++  );
++  await evaluate(`(() => {
++    const select = document.getElementById("useCase");
++    select.value = "tou";
++    select.dispatchEvent(new Event("change", { bubbles: true }));
++    const tariff = document.getElementById("customRateVal");
++    tariff.value = "0.4";
++    tariff.dispatchEvent(new Event("input", { bubbles: true }));
++    for (const [id, value] of [["touPeakRate", "0.9"], ["touOffPeakRate", "0.2"]]) {
++      const input = document.getElementById(id);
++      input.value = value;
++      input.dispatchEvent(new Event("input", { bubbles: true }));
++    }
++    const code = document.getElementById("fxCode");
++    code.value = "EUR";
++    code.dispatchEvent(new Event("input", { bubbles: true }));
++    const rate = document.getElementById("fxRate");
++    rate.value = "0";
++    rate.dispatchEvent(new Event("input", { bubbles: true }));
++  })()`);
++  const usdBeforeRefresh = await evaluate(`({
++    peak: Number(document.getElementById("touPeakRate").value),
++    offPeak: Number(document.getElementById("touOffPeakRate").value),
++    tariff: Number(document.getElementById("customRateVal").value),
++  })`);
++  assert.equal(await evaluate('document.getElementById("fxRate").value'), "0");
++
++  // Change the selected currency while the one live response is still
++  // pending. Recovery must use GBP from the latest code, not stale EUR.
++  await evaluate(`(() => {
++    const code = document.getElementById("fxCode");
++    code.value = "GBP";
++    code.dispatchEvent(new Event("input", { bubbles: true }));
++  })()`);
++  await evaluate("window.__fxRefreshState.resolvers.at(-1)()");
++  assert.equal(
++    await poll(
++      () =>
++        evaluate(
++          'document.getElementById("fxRate").value === "0.8" && document.getElementById("fxAsOf").textContent.includes("test-rate-refresh")',
++        ),
++      15000,
++      100,
++    ),
++    true,
++    "refresh should apply the latest selected currency's rate",
++  );
++  const recoveredDisplayRates = await evaluate(`({
++    code: document.getElementById("fxCode").value,
++    peak: Number(document.getElementById("touPeakRate").value),
++    offPeak: Number(document.getElementById("touOffPeakRate").value),
++    tariff: Number(document.getElementById("customRateVal").value),
++  })`);
++  assert.equal(recoveredDisplayRates.code, "GBP");
++  assert.ok(
++    Math.abs(recoveredDisplayRates.peak - usdBeforeRefresh.peak * 0.8) < 0.0001,
++  );
++  assert.ok(
++    Math.abs(recoveredDisplayRates.offPeak - usdBeforeRefresh.offPeak * 0.8) <
++      0.0001,
++  );
++  assert.ok(
++    Math.abs(recoveredDisplayRates.tariff - usdBeforeRefresh.tariff * 0.8) <
++      0.0001,
++  );
++  assert.deepEqual(browser.errors, []);
+ });
+ 
+-test("tou mode works with solar+battery hardware", () => {
+-  const reason = infeasibleReason({
++test("TOU savings subtract the off-peak energy needed to cover round-trip losses", async () => {
++  const p = await sizeUseCase({
++    mode: "tou",
++    chemistry: "lfp",
++    focusPvKw: 0,
++    focusBattKwh: 8,
++    touPeakRate: 0.6,
++    touOffPeakRate: 0.1,
++  });
++  const m = assertUseCase(p, "tou");
++  const noOffPeakCost = await sizeUseCase({
+     mode: "tou",
+-    hardwareConfig: "both",
++    chemistry: "lfp",
++    focusPvKw: 0,
++    focusBattKwh: 8,
++    touPeakRate: 0.6,
++    touOffPeakRate: 0,
++  });
++  const zeroRate = assertUseCase(noOffPeakCost, "tou");
++  assert.ok(
++    m.touSavingUsd20y < zeroRate.touSavingUsd20y,
++    "charging energy and round-trip losses must be charged at the off-peak rate",
++  );
++  assert.ok(zeroRate.touSavingUsd20y - m.touSavingUsd20y > 0);
++  assert.equal(m.touPeakOffsetPct, zeroRate.touPeakOffsetPct);
++  assert.equal(HORIZON_YEARS, 20);
++});
++
++test("TOU horizon is invariant for identical one- and five-year weather records", async () => {
++  const annual = synthesizeFromProfile(
++    OFFLINE_PROFILES.find((p) => p.name.includes("Honolulu")),
++  );
++  const outcomes = [];
++  for (const years of [1, 5]) {
++    const p = await sizeUseCase(
++      { mode: "tou", years },
++      {
++        hours: Array.from({ length: years }, () => annual).flat(),
++        meta: { years },
++      },
++    );
++    outcomes.push(p.useCaseOutcome);
++  }
++  const [one, five] = outcomes;
++  assert.ok(
++    one.measurement.touSavingUsd20y > 0,
++    "the annualized 20-year ToU saving should stay positive for the documented rates",
++  );
++  assert.ok(
++    Math.abs(
++      one.measurement.touSavingUsd20y - five.measurement.touSavingUsd20y,
++    ) < 2,
++  );
++  assert.equal(one.status, "works");
++  assert.equal(five.status, one.status);
++  assert.equal(HORIZON_YEARS, 20);
++});
++
++for (const chemistry of ["lfp", "auto"]) {
++  test(`TOU prices its measured bank, not a preset target (${chemistry})`, async () => {
++    const p = await sizeUseCase({
++      mode: "tou",
++      chemistry,
++      focusPvKw: 0,
++      focusBattKwh: 8,
++      focusChemistry: "lfp",
++    });
++    const exact = await sizeUseCase({
++      mode: "tou",
++      chemistry: "lfp",
++      focusPvKw: 0,
++      focusBattKwh: 8,
++    });
++    const m = assertUseCase(p, "tou");
++    assert.equal(m.battKwh, 8);
++    assert.equal(m.touBatteryCostUsd20y, exact.focusSystem.lifetimeCostMid);
++    assert.ok(m.touBatteryCostUsd20y > 0);
++    assert.ok(m.touSavingUsd20y >= 0);
++    assert.notEqual(m.touBatteryCostUsd20y, p.targets?.[0]?.lifetimeCostMid);
++  });
++}
++
++test("default Auto TOU has a positive lifetime cost and a payable verdict", async () => {
++  const hours = synthesizeFromProfile(
++    OFFLINE_PROFILES.find((p) => p.name.includes("Honolulu")),
++  );
++  const p = await sizeUseCase({ mode: "tou", chemistry: "auto" }, { hours });
++  const m = assertUseCase(p, "tou");
++  assert.equal(m.battKwh, p.focus.battKwh);
++  // The held reserve reduces cycling: this bank needs one swap, whereas
++  // the preset target (priced without that floor) needs two. Do not borrow it.
++  assert.equal(m.touBatteryCostUsd20y, 827);
++  assert.ok(m.touSavingUsd20y >= 0);
++  assert.equal(p.best.lifetimeCostMid, 1190);
++  const noReserve = await sizeUseCase(
++    { mode: "tou", chemistry: "auto", reservePct: 0 },
++    { hours },
++  );
++  assert.equal(
++    noReserve.useCaseOutcome.measurement.touBatteryCostUsd20y,
++    noReserve.best.lifetimeCostMid,
++  );
++  assert.ok(m.touBatteryCostUsd20y > 0);
++  assert.equal(p.useCaseOutcome.status, "works");
++});
++
++test("rendered TOU verdict never claims an unknown-cost battery is free", async (t) => {
++  const server = await serveStatic({
++    dir: fileURLToPath(new URL("..", import.meta.url)),
++    applyHeaders: false,
++  });
++  let browser;
++  t.after(async () => {
++    try {
++      await browser?.close();
++    } finally {
++      await server.close();
++    }
++  });
++  browser = await startBrowser();
++  await browser.send("Page.enable");
++  await browser.send("Runtime.enable");
++  await browser.send("Log.enable");
++  await browser.send("Page.addScriptToEvaluateOnNewDocument", {
++    source: `(() => {
++      const costs = ["null", "undefined", "nan", "infinity", "negative", "zero"];
++      let nextCost = 0;
++      const original = Object.getOwnPropertyDescriptor(Worker.prototype, "onmessage");
++      Object.defineProperty(Worker.prototype, "onmessage", {
++        configurable: true,
++        enumerable: original.enumerable,
++        get: original.get,
++        set(handler) {
++          const worker = this;
++          return original.set.call(worker, (event) => {
++            const outcome = event.data?.payload?.useCaseOutcome;
++            if (event.data?.type === "ok" && outcome?.useCase === "tou") {
++              const cost = costs[nextCost];
++              outcome.measurement.touSavingUsd20y = 1000;
++              outcome.measurement.touPeakOffsetPct = 100;
++              outcome.measurement.touBatteryCostUsd20y =
++                cost === "null" ? null : cost === "undefined" ? undefined :
++                  cost === "nan" ? NaN : cost === "infinity" ? Infinity :
++                    cost === "negative" ? -1 : 0;
++              outcome.status = "not-here";
++              outcome.reasonKey = "verdictTou";
++            }
++            handler.call(worker, event);
++            if (event.data?.type === "ok" && outcome?.useCase === "tou") {
++              window.__unknownTouRenders.push({
++                index: nextCost++,
++                text: document.getElementById("useCaseOutcomeWrap").innerText,
++              });
++            }
++          });
++        },
++      });
++      window.__unknownTouRenders = [];
++    })();`,
+   });
+-  assert.equal(reason, null);
++  await browser.send("Page.navigate", { url: server.url });
++  const { evaluate, poll } = browser;
++  assert.equal(
++    await poll(
++      () => evaluate('document.getElementById("useCaseRow")?.hidden === false'),
++      15000,
++      100,
++    ),
++    true,
++    "the use-case controls should initialize",
++  );
++
++  // Use the ordinary city and use-case controls. The real worker, sequence
++  // checks, renderResults, and outcome renderer stay in the path; only each
++  // completed TOU reply's measured cost is varied before the UI handler.
++  await evaluate(`(() => {
++    const search = document.getElementById("citySearch");
++    search.value = "Honolulu";
++    search.dispatchEvent(new InputEvent("input", { bubbles: true }));
++  })()`);
++  assert.equal(
++    await poll(
++      () =>
++        evaluate(
++          "!!document.querySelector('#citySuggestions [role=\"option\"]')",
++        ),
++      15000,
++      100,
++    ),
++    true,
++    "Honolulu should be offered as a city suggestion",
++  );
++  await evaluate(
++    "document.querySelector('#citySuggestions [role=\"option\"]').click()",
++  );
++  await evaluate(`(() => {
++    const select = document.getElementById("useCase");
++    select.value = "tou";
++    select.dispatchEvent(new Event("change", { bubbles: true }));
++  })()`);
++  for (let index = 0; index < 6; index++) {
++    await evaluate('document.getElementById("btnRunSizing").click()');
++    assert.equal(
++      await poll(
++        () => evaluate(`window.__unknownTouRenders.length > ${index}`),
++        120000,
++        200,
++      ),
++      true,
++      `worker result ${index} should render`,
++    );
++    const rendered = await evaluate(`window.__unknownTouRenders[${index}]`);
++    assert.equal(rendered.index, index);
++    assert.match(rendered.text, /unknown/i);
++    assert.match(rendered.text, /\$1,000\b/);
++    assert.doesNotMatch(
++      rendered.text,
++      /(?:worth about|against a) \$0(?:\.00)?\b/,
++    );
++    assert.doesNotMatch(rendered.text, /free/i);
++    assert.doesNotMatch(rendered.text, /against of\b/i);
++    assert.match(rendered.text, /battery's cost is unknown/i);
++  }
++  assert.deepEqual(browser.errors, []);
+ });
+ 
+-test("tou arbitrage math: high spread yields positive savings", () => {
+-  const battKwh = 10;
+-  const peak = 0.35;
+-  const offPeak = 0.12;
+-  const usableKwh = battKwh * 0.9;
+-  const spreadPerKwh = peak - offPeak;
+-  const dailySaving = usableKwh * spreadPerKwh * 0.9;
++test("rendered use-case footer is clean and TOU verdict amounts include currency", async (t) => {
++  const server = await serveStatic({
++    dir: fileURLToPath(new URL("..", import.meta.url)),
++    applyHeaders: false,
++  });
++  let browser;
++  t.after(async () => {
++    try {
++      await browser?.close();
++    } finally {
++      await server.close();
++    }
++  });
++  browser = await startBrowser();
++  await browser.send("Page.enable");
++  await browser.send("Runtime.enable");
++  await browser.send("Log.enable");
++  await browser.send("Page.navigate", { url: server.url });
++  const { evaluate, poll } = browser;
++  assert.equal(
++    await poll(
++      () => evaluate('document.getElementById("useCaseRow")?.hidden === false'),
++      15000,
++      100,
++    ),
++    true,
++    "the use-case controls should initialize",
++  );
++  await evaluate(`(() => {
++    const search = document.getElementById("citySearch");
++    search.value = "Honolulu";
++    search.dispatchEvent(new InputEvent("input", { bubbles: true }));
++  })()`);
++  assert.equal(
++    await poll(
++      () =>
++        evaluate('!!document.querySelector("#citySuggestions [role=option]")'),
++      15000,
++      100,
++    ),
++    true,
++    "Honolulu should be offered as a city suggestion",
++  );
++  await evaluate(
++    'document.querySelector("#citySuggestions [role=option]").click()',
++  );
++  for (const [useCase, forbidden] of [
++    ["tou", /against of|Measured for .* against/i],
++    ["backup", /against of|Measured for .* against/i],
++    ["portable", /against of|Measured for .* against/i],
++    ["reserve", /against what holding/i],
++  ]) {
++    await evaluate(`(() => {
++      const select = document.getElementById("useCase");
++      select.value = ${JSON.stringify(useCase)};
++      select.dispatchEvent(new Event("change", { bubbles: true }));
++      document.getElementById("btnRunSizing").click();
++    })()`);
++    assert.equal(
++      await poll(
++        () =>
++          evaluate(
++            `document.getElementById("useCaseOutcomeWrap")?.innerText.includes("${
++              useCase === "tou"
++                ? "Save with a battery"
++                : useCase === "backup"
++                  ? "Keep essentials"
++                  : useCase === "portable"
++                    ? "Portable power"
++                    : "Keep a backup reserve"
++            }")`,
++          ),
++        120000,
++        200,
++      ),
++      true,
++      `${useCase} result should render`,
++    );
++    const result = await evaluate(`(() => {
++      const wrap = document.getElementById("useCaseOutcomeWrap");
++      return {
++        text: wrap?.innerText || "",
++        footer: wrap?.lastElementChild?.lastElementChild?.innerText || "",
++        pending: document.getElementById("btnRunSizing")?.disabled === true,
++      };
++    })()`);
++    assert.equal(result.pending, false, `${useCase} run must settle`);
++    assert.match(
++      result.text,
++      /Measured for /,
++      `${useCase} outcome must be rendered`,
++    );
++    const footer = result.footer;
++    assert.match(footer, /^Measured for /);
++    assert.doesNotMatch(footer, forbidden);
++    if (useCase === "tou") {
++      assert.match(
++        result.text,
++        /worth about \$[\d,.]+ over 20 years against a \$[\d,.]+ battery/,
++      );
++      assert.match(result.text, /spread here is \$[\d,.]+ per kWh/);
++    }
++  }
++  assert.deepEqual(browser.errors, []);
++});
+ 
+-  assert.ok(spreadPerKwh > 0, "spread should be positive");
+-  assert.ok(dailySaving > 0, "daily saving should be positive");
+-  assert.equal(Math.round(spreadPerKwh * 1000) / 1000, 0.23);
++test("a measured system without a bank does not borrow a battery price", async () => {
++  const p = await sizeUseCase({ mode: "tou", focusPvKw: 4, focusBattKwh: 0 });
++  const m = assertUseCase(p, "tou");
++  assert.equal(m.battKwh, 0);
++  assert.equal(m.touBatteryCostUsd20y, null);
++  assert.equal(p.useCaseOutcome.status, "not-here");
+ });
+ 
+-test("tou with flat rate (no spread) is not viable", () => {
+-  const peak = 0.2;
+-  const offPeak = 0.2;
+-  const viable = Number.isFinite(peak) && Number.isFinite(offPeak) && peak > offPeak;
+-  assert.equal(viable, false);
++test("TOU payback verdict includes equality at the cost boundary", () => {
++  for (const [saving, status] of [
++    [645.99, "not-here"],
++    [646, "works"],
++    [646.01, "works"],
++  ]) {
++    assert.equal(
++      useCase("tou").verdict({
++        touPeakOffsetPct: 40,
++        touSavingUsd20y: saving,
++        touBatteryCostUsd20y: 646,
++      }).status,
++      status,
++    );
++  }
+ });
+ 
+-test("tou with peak <= off-peak is not viable", () => {
+-  const peak = 0.1;
+-  const offPeak = 0.15;
+-  const viable = Number.isFinite(peak) && Number.isFinite(offPeak) && peak > offPeak;
+-  assert.equal(viable, false);
++test("legacy gridtie battery-only requests retain the canonical TOU outcome", async () => {
++  const p = await sizeUseCase({ mode: "gridtie", hardwareConfig: "battery" });
++  assertUseCase(p, "tou");
++  assert.equal(p.mode, "gridtie");
++  assert.equal(p.hardwareConfig, "battery");
+ });
+diff --git a/tests/usecase-fixture.mjs b/tests/usecase-fixture.mjs
+new file mode 100644
+index 0000000..3ae515a
+--- /dev/null
++++ b/tests/usecase-fixture.mjs
+@@ -0,0 +1,76 @@
++import assert from "node:assert/strict";
++import { runSizing } from "../assets/js/sizing/run.js";
++import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
++import {
++  OFFLINE_PROFILES,
++  PROFILE_YEAR,
++} from "../assets/js/sizing/profiles.js";
++import { useCase } from "../assets/js/sizing/usecases.js";
++
++const site = OFFLINE_PROFILES.find((p) => p.name.includes("Honolulu"));
++// A week is enough to exercise routing, charge/discharge, seven portable trips,
++// and every outage start. Annual physics remain covered by usecases.test.mjs.
++const hours = synthesizeFromProfile(site).slice(0, 7 * 24);
++
++export async function sizeUseCase(request = {}, weather = {}) {
++  return runSizing(
++    {
++      latitude: site.lat,
++      longitude: site.lon,
++      dailyKwh: 10,
++      tariff: 0.42,
++      years: 1,
++      chemistry: "lfp",
++      noSwapMode: true,
++      pvMaxOverride: 4,
++      reservePct: 0.2,
++      outageTargetHours: 8,
++      essentialKwh: 1.2,
++      touPeakRate: 0.6,
++      touOffPeakRate: 0.1,
++      portableDeviceKwh: 2.4,
++      portableBankKwh: 3,
++      portablePvW: 200,
++      ...request,
++    },
++    {
++      fetchWeather: async () => ({
++        hours: weather.hours || hours,
++        meta: {
++          latitude: site.lat,
++          longitude: site.lon,
++          startYear: PROFILE_YEAR,
++          endYear: PROFILE_YEAR,
++          years: 1,
++          source: "seven-day routing fixture (not an annual yield validation)",
++          offline: false,
++          ...weather.meta,
++        },
++      }),
++    },
++  );
++}
++
++export function assertUseCase(payload, id) {
++  assert.equal(payload.useCase, id);
++  assert.equal(payload.useCaseOutcome.useCase, id);
++  assert.equal(payload.useCaseOutcome.metricId, useCase(id).metric.id);
++  assert.equal(payload.useCaseOutcome.measured, true);
++  assert.ok(
++    ["works", "partial", "not-here"].includes(payload.useCaseOutcome.status),
++  );
++  assert.equal(Object.hasOwn(payload, "__useCaseContext"), false);
++  // No second payload schema with a competing calculation or verdict.
++  for (const key of ["reserve", "tou", "backup", "portable"])
++    assert.equal(Object.hasOwn(payload, key), false);
++  return payload.useCaseOutcome.measurement;
++}
++
++export async function assertModeMatchesUseCase(id) {
++  const alias = await sizeUseCase({ mode: id });
++  const canonical = await sizeUseCase({ useCase: id });
++  assertUseCase(alias, id);
++  assertUseCase(canonical, id);
++  assert.deepEqual(alias, canonical);
++  return alias;
++}

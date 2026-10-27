@@ -7,6 +7,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -93,7 +94,6 @@ export async function start() {
   if (!exe) throw new Error("no Chrome/Edge binary found");
   console.log(`SMOKE      browser: ${exe}`);
   const profile = mkdtempSync(join(tmpdir(), "beco-smoke-"));
-  const DEBUG_PORT = 19222;
   const browser = spawn(
     exe,
     [
@@ -101,7 +101,9 @@ export async function start() {
       "--disable-gpu",
       "--no-sandbox",
       "--no-first-run",
-      `--remote-debugging-port=${DEBUG_PORT}`,
+      // Port 0 asks Chrome for an OS-assigned port. A fixed port made parallel
+      // browser tests attach to one another's page or fail during startup.
+      "--remote-debugging-port=0",
       `--user-data-dir=${profile}`,
       "about:blank",
     ],
@@ -130,13 +132,20 @@ export async function start() {
     let targets = null;
     for (let i = 0; i < 100; i++) {
       try {
-        const r = await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/list`);
-        if (r.ok) {
-          targets = await r.json();
-          break;
+        const [portText] = readFileSync(
+          join(profile, "DevToolsActivePort"),
+          "utf8",
+        ).split(/\r?\n/);
+        const debugPort = Number(portText);
+        if (Number.isInteger(debugPort) && debugPort > 0) {
+          const r = await fetch(`http://127.0.0.1:${debugPort}/json/list`);
+          if (r.ok) {
+            targets = await r.json();
+            break;
+          }
         }
       } catch {
-        /* not up yet */
+        /* Chrome has not written its active-port file yet. */
       }
       await sleep(300);
     }

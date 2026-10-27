@@ -1,0 +1,76 @@
+import assert from "node:assert/strict";
+import { runSizing } from "../assets/js/sizing/run.js";
+import { synthesizeFromProfile } from "../assets/js/sizing/nasa.js";
+import {
+  OFFLINE_PROFILES,
+  PROFILE_YEAR,
+} from "../assets/js/sizing/profiles.js";
+import { useCase } from "../assets/js/sizing/usecases.js";
+
+const site = OFFLINE_PROFILES.find((p) => p.name.includes("Honolulu"));
+// A week is enough to exercise routing, charge/discharge, seven portable trips,
+// and every outage start. Annual physics remain covered by usecases.test.mjs.
+const hours = synthesizeFromProfile(site).slice(0, 7 * 24);
+
+export async function sizeUseCase(request = {}, weather = {}) {
+  return runSizing(
+    {
+      latitude: site.lat,
+      longitude: site.lon,
+      dailyKwh: 10,
+      tariff: 0.42,
+      years: 1,
+      chemistry: "lfp",
+      noSwapMode: true,
+      pvMaxOverride: 4,
+      reservePct: 0.2,
+      outageTargetHours: 8,
+      essentialKwh: 1.2,
+      touPeakRate: 0.6,
+      touOffPeakRate: 0.1,
+      portableDeviceKwh: 2.4,
+      portableBankKwh: 3,
+      portablePvW: 200,
+      ...request,
+    },
+    {
+      fetchWeather: async () => ({
+        hours: weather.hours || hours,
+        meta: {
+          latitude: site.lat,
+          longitude: site.lon,
+          startYear: PROFILE_YEAR,
+          endYear: PROFILE_YEAR,
+          years: 1,
+          source: "seven-day routing fixture (not an annual yield validation)",
+          offline: false,
+          ...weather.meta,
+        },
+      }),
+    },
+  );
+}
+
+export function assertUseCase(payload, id) {
+  assert.equal(payload.useCase, id);
+  assert.equal(payload.useCaseOutcome.useCase, id);
+  assert.equal(payload.useCaseOutcome.metricId, useCase(id).metric.id);
+  assert.equal(payload.useCaseOutcome.measured, true);
+  assert.ok(
+    ["works", "partial", "not-here"].includes(payload.useCaseOutcome.status),
+  );
+  assert.equal(Object.hasOwn(payload, "__useCaseContext"), false);
+  // No second payload schema with a competing calculation or verdict.
+  for (const key of ["reserve", "tou", "backup", "portable"])
+    assert.equal(Object.hasOwn(payload, key), false);
+  return payload.useCaseOutcome.measurement;
+}
+
+export async function assertModeMatchesUseCase(id) {
+  const alias = await sizeUseCase({ mode: id });
+  const canonical = await sizeUseCase({ useCase: id });
+  assertUseCase(alias, id);
+  assertUseCase(canonical, id);
+  assert.deepEqual(alias, canonical);
+  return alias;
+}

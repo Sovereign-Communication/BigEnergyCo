@@ -351,7 +351,7 @@ export const LOCALES = {
     statusNotHere: "Does not work here",
     useCaseOutcomeTitle: "Your {useCase} result",
     useCaseVerdictFooter:
-      "Measured for {useCase} against {metric}, using this location's own hourly weather.",
+      "Measured for {useCase} using this location's own hourly weather.",
     useCaseNotMeasured:
       "Not measured: this combination cannot be sized at all, so there is no {metric} to report.",
     metricReserveTradeoffValue: "{lost}% of savings, {hours} h of cover",
@@ -371,7 +371,9 @@ export const LOCALES = {
     verdictBillCut:
       "{status}: this system removes {pct}% of your bill over 20 years.",
     verdictTou:
-      "{status}: the battery covers {pct}% of your peak-window energy, worth about {saving} over 20 years against a {cost} battery. Your peak-to-off-peak spread here is {spread} per kWh.",
+      "{status}: the battery covers {pct}% of your peak-window energy, worth about {saving} over 20 years {costStatement}. Your peak-to-off-peak spread here is {spread} per kWh.",
+    verdictTouCostKnown: "against a {cost} battery",
+    verdictTouCostUnknown: "the battery's cost is unknown",
     verdictBackup:
       "{status}: your essentials run for the full {targetHours} hours in {pct}% of the power cuts we simulated (typical night: {hours} hours).",
     verdictReserve:
@@ -569,7 +571,7 @@ export const LOCALES = {
     statusNotHere: "Aquí no funciona",
     useCaseOutcomeTitle: "Tu resultado de {useCase}",
     useCaseVerdictFooter:
-      "Medido para {useCase} frente a {metric}, con el clima horario de esta ubicación.",
+      "Medido para {useCase} con el clima horario de esta ubicación.",
     useCaseNotMeasured:
       "Sin medir: esta combinación no se puede dimensionar, así que no hay {metric} que informar.",
     metricReserveTradeoffValue: "{lost}% de ahorro, {hours} h de cobertura",
@@ -589,7 +591,9 @@ export const LOCALES = {
     verdictBillCut:
       "{status}: este sistema elimina el {pct}% de tu factura en 20 años.",
     verdictTou:
-      "{status}: la batería cubre el {pct}% de tu energía en horas punta, unos {saving} en 20 años frente a una batería de {cost}. Aquí la diferencia entre punta y valle es de {spread} por kWh.",
+      "{status}: la batería cubre el {pct}% de tu energía en horas punta, unos {saving} en 20 años {costStatement}. Aquí la diferencia entre punta y valle es de {spread} por kWh.",
+    verdictTouCostKnown: "frente a una batería de {cost}",
+    verdictTouCostUnknown: "pero se desconoce el coste de la batería",
     verdictBackup:
       "{status}: lo esencial aguanta las {targetHours} horas completas en el {pct}% de los apagones que simulamos (noche típica: {hours} horas).",
     verdictReserve:
@@ -1015,7 +1019,7 @@ export const LOCALES = {
     statusNotHere: "Aqui não funciona",
     useCaseOutcomeTitle: "Seu resultado de {useCase}",
     useCaseVerdictFooter:
-      "Medido para {useCase} em relação a {metric}, com o clima horário deste local.",
+      "Medido para {useCase} com o clima horário deste local.",
     useCaseNotMeasured:
       "Sem medir: esta combinação não pode ser dimensionada, então não há {metric} a informar.",
     metricReserveTradeoffValue: "{lost}% de economia, {hours} h de cobertura",
@@ -1036,7 +1040,9 @@ export const LOCALES = {
     verdictBillCut:
       "{status}: este sistema elimina {pct}% da sua conta em 20 anos.",
     verdictTou:
-      "{status}: a bateria cobre {pct}% da sua energia nas horas de pico, valendo cerca de {saving} em 20 anos contra uma bateria de {cost}. A diferença entre pico e fora do pico aqui é de {spread} por kWh.",
+      "{status}: a bateria cobre {pct}% da sua energia nas horas de pico, valendo cerca de {saving} em 20 anos {costStatement}. A diferença entre pico e fora do pico aqui é de {spread} por kWh.",
+    verdictTouCostKnown: "contra uma bateria de {cost}",
+    verdictTouCostUnknown: "mas o custo da bateria é desconhecido",
     verdictBackup:
       "{status}: o essencial funciona as {targetHours} horas completas em {pct}% dos apagões que simulamos (noite típica: {hours} horas).",
     verdictReserve:
@@ -1476,6 +1482,7 @@ export const LOCALES = {
     metricBillCut: "de votre facture supprimée sur 20 ans",
     metricTouOffset:
       "de votre énergie en heures pleines couverte par la batterie",
+
     metricOutageCoverage:
       "des coupures que l'essentiel traverse pendant toute la durée visée",
     metricReserveTradeoff: "ce que coûte la réserve, en économies et en heures",
@@ -1487,7 +1494,7 @@ export const LOCALES = {
     statusNotHere: "Ne fonctionne pas ici",
     useCaseOutcomeTitle: "Votre résultat : {useCase}",
     useCaseVerdictFooter:
-      "Mesuré pour {useCase} au regard de {metric}, avec la météo horaire de ce lieu.",
+      "Mesuré pour {useCase} avec la météo horaire de ce lieu.",
     useCaseNotMeasured:
       "Non mesuré : cette combinaison ne peut pas être dimensionnée, il n'y a donc pas de {metric} à annoncer.",
     metricReserveTradeoffValue: "{lost}% d'économies, {hours} h de couverture",
@@ -1510,7 +1517,9 @@ export const LOCALES = {
     verdictBillCut:
       "{status} : ce système supprime {pct}% de votre facture sur 20 ans.",
     verdictTou:
-      "{status} : la batterie couvre {pct}% de votre énergie en heures pleines, soit environ {saving} sur 20 ans face à une batterie de {cost}. L'écart entre pointe et creux ici est de {spread} par kWh.",
+      "{status} : la batterie couvre {pct}% de votre énergie en heures pleines, soit environ {saving} sur 20 ans {costStatement}. L'écart entre pointe et creux ici est de {spread} par kWh.",
+    verdictTouCostKnown: "face à une batterie de {cost}",
+    verdictTouCostUnknown: "mais le coût de la batterie est inconnu",
     verdictBackup:
       "{status} : l'essentiel tient les {targetHours} heures complètes dans {pct}% des coupures que nous avons simulées (nuit typique : {hours} heures).",
     verdictReserve:
@@ -2011,6 +2020,7 @@ export const LOCALES = {
     metricBillCut: "deiner Rechnung, über 20 Jahre eingespart",
     metricTouOffset:
       "deiner Energie in den Spitzenstunden, die die Batterie deckt",
+
     metricOutageCoverage:
       "der Stromausfälle, die dein Nötigstes über die volle Dauer übersteht",
     metricReserveTradeoff: "was die Reserve kostet, in Ersparnis und Stunden",
@@ -2022,7 +2032,7 @@ export const LOCALES = {
     statusNotHere: "Funktioniert hier nicht",
     useCaseOutcomeTitle: "Dein Ergebnis: {useCase}",
     useCaseVerdictFooter:
-      "Gemessen für {useCase} anhand von {metric}, mit dem stündlichen Wetter dieses Ortes.",
+      "Gemessen für {useCase} mit dem stündlichen Wetter dieses Ortes.",
     useCaseNotMeasured:
       "Nicht gemessen: Diese Kombination lässt sich überhaupt nicht auslegen, es gibt also kein {metric} zu nennen.",
     metricReserveTradeoffValue: "{lost}% Ersparnis, {hours} h Reserve",
@@ -2043,7 +2053,9 @@ export const LOCALES = {
     verdictBillCut:
       "{status}: Dieses System spart {pct}% deiner Rechnung über 20 Jahre.",
     verdictTou:
-      "{status}: Die Batterie deckt {pct}% deiner Energie in den Spitzenstunden, rund {saving} über 20 Jahre gegen eine {cost}-Batterie. Der Abstand zwischen Spitze und Tal beträgt hier {spread} pro kWh.",
+      "{status}: Die Batterie deckt {pct}% deiner Energie in den Spitzenstunden, rund {saving} über 20 Jahre {costStatement}. Der Abstand zwischen Spitze und Tal beträgt hier {spread} pro kWh.",
+    verdictTouCostKnown: "gegen eine {cost}-Batterie",
+    verdictTouCostUnknown: "die Batteriekosten sind jedoch unbekannt",
     verdictBackup:
       "{status}: Dein Nötigstes läuft die vollen {targetHours} Stunden in {pct}% der simulierten Stromausfälle (typische Nacht: {hours} Stunden).",
     verdictReserve:
@@ -2451,7 +2463,7 @@ export const LOCALES = {
     statusNotHere: "لا ينجح هنا",
     useCaseOutcomeTitle: "نتيجتك: {useCase}",
     useCaseVerdictFooter:
-      "قِيست لـ {useCase} مقابل {metric}، باستخدام بيانات الطقس الساعية لهذا الموقع.",
+      "قِيست لـ {useCase} باستخدام بيانات الطقس الساعية لهذا الموقع.",
     useCaseNotMeasured:
       "غير مقيس: هذا التركيب لا يمكن تحجيمه أصلًا، فلا يوجد {metric} للإبلاغ عنه.",
     metricReserveTradeoffValue: "{lost}% من الوفر، {hours} ساعة تغطية",
@@ -2471,7 +2483,9 @@ export const LOCALES = {
     verdictBillCut:
       "{status}: يزيل هذا النظام {pct}% من فاتورتك على مدى 20 عامًا.",
     verdictTou:
-      "{status}: تغطي البطارية {pct}% من طاقتك في ساعات الذروة، بقيمة نحو {saving} على مدى 20 عامًا مقابل بطارية تكلف {cost}. الفارق بين الذروة وخارج الذروة هنا {spread} لكل ك.و.س.",
+      "{status}: تغطي البطارية {pct}% من طاقتك في ساعات الذروة، بقيمة نحو {saving} على مدى 20 عامًا {costStatement}. الفارق بين الذروة وخارج الذروة هنا {spread} لكل ك.و.س.",
+    verdictTouCostKnown: "مقابل بطارية تكلف {cost}",
+    verdictTouCostUnknown: "لكن تكلفة البطارية غير معروفة",
     verdictBackup:
       "{status}: تعمل أساسياتك كاملة الساعات {targetHours} في {pct}% من انقطاعات الكهرباء التي حاكيناها (ليلة نموذجية: {hours} ساعات).",
     verdictReserve:

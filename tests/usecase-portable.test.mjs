@@ -1,65 +1,76 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import {
+  assertModeMatchesUseCase,
+  assertUseCase,
+  sizeUseCase,
+} from "./usecase-fixture.mjs";
 
-// Portable mode payload logic — mirrors run.js portable branch.
-// Extracted here for unit testing without the full worker harness.
-function portablePayload({ portableBankKwh, portableDailyKwh }) {
-  const bankKwh = Number(portableBankKwh);
-  const dailyKwh = Number(portableDailyKwh);
-  if (
-    !Number.isFinite(bankKwh) ||
-    bankKwh <= 0 ||
-    !Number.isFinite(dailyKwh) ||
-    dailyKwh <= 0
-  ) {
-    return { viable: false, reason: "verdictPortable" };
+test("portable mode reaches the canonical trip simulator", async () => {
+  const p = await assertModeMatchesUseCase("portable");
+  const m = assertUseCase(p, "portable");
+  assert.equal(p.mode, "gridtie");
+  assert.equal(p.hardwareConfig, "battery");
+  assert.equal(m.portableBankKwh, 3);
+  assert.equal(m.portableDeviceKwh, 2.4);
+  assert.equal(m.portableTrips, 7);
+  assert.equal(p.useCaseOutcome.value, m.portableCoveragePct);
+  assert.ok(m.portableAutonomyHours > 24);
+});
+
+test("zero or negative portable banks use the existing two-kWh default", async () => {
+  for (const portableBankKwh of [0, -3]) {
+    const p = await sizeUseCase({ mode: "portable", portableBankKwh });
+    assert.equal(assertUseCase(p, "portable").portableBankKwh, 2);
   }
-  const usableKwh = bankKwh * 0.9;
-  const runtimeDays = usableKwh / dailyKwh;
-  return {
-    viable: true,
-    bankKwh: Math.round(bankKwh * 10) / 10,
-    dailyKwh: Math.round(dailyKwh * 10) / 10,
-    runtimeDays: Math.round(runtimeDays * 10) / 10,
-  };
-}
-
-test("sufficient bank → works with runtime days", () => {
-  const p = portablePayload({ portableBankKwh: 5, portableDailyKwh: 2 });
-  assert.equal(p.viable, true);
-  // 5 * 0.9 / 2 = 2.25 days
-  assert.equal(p.runtimeDays, 2.3);
-  assert.equal(p.bankKwh, 5);
-  assert.equal(p.dailyKwh, 2);
 });
 
-test("zero bank → not-here", () => {
-  const p = portablePayload({ portableBankKwh: 0, portableDailyKwh: 2 });
-  assert.equal(p.viable, false);
-  assert.equal(p.reason, "verdictPortable");
+test("zero device consumption uses the canonical one-kWh default", async () => {
+  const p = await sizeUseCase({ mode: "portable", portableDeviceKwh: 0 });
+  assert.equal(assertUseCase(p, "portable").portableDeviceKwh, 1);
 });
 
-test("negative bank → not-here", () => {
-  const p = portablePayload({ portableBankKwh: -3, portableDailyKwh: 2 });
-  assert.equal(p.viable, false);
+test("non-finite portable inputs cannot produce non-finite runtime", async () => {
+  const p = await sizeUseCase({
+    mode: "portable",
+    portableBankKwh: NaN,
+    portableDeviceKwh: Infinity,
+  });
+  const m = assertUseCase(p, "portable");
+  assert.equal(m.portableBankKwh, 2);
+  assert.equal(m.portableDeviceKwh, 1);
+  assert.ok(Number.isFinite(m.portableAutonomyHours));
+  assert.ok(Number.isFinite(m.portableCoveragePct));
 });
 
-test("zero daily consumption → not-here", () => {
-  const p = portablePayload({ portableBankKwh: 5, portableDailyKwh: 0 });
-  assert.equal(p.viable, false);
-  assert.equal(p.reason, "verdictPortable");
+test("the visitor's bank and device load change the real runtime", async () => {
+  const small = await sizeUseCase({
+    mode: "portable",
+    portableBankKwh: 1,
+    portableDeviceKwh: 0.5,
+    portablePvW: 0,
+  });
+  const big = await sizeUseCase({
+    mode: "portable",
+    portableBankKwh: 2,
+    portableDeviceKwh: 0.5,
+    portablePvW: 0,
+  });
+  assert.ok(
+    assertUseCase(big, "portable").portableAutonomyHours >
+      assertUseCase(small, "portable").portableAutonomyHours,
+  );
 });
 
-test("non-finite inputs → not-here", () => {
-  const p = portablePayload({ portableBankKwh: NaN, portableDailyKwh: 2 });
-  assert.equal(p.viable, false);
-  const q = portablePayload({ portableBankKwh: 5, portableDailyKwh: Infinity });
-  assert.equal(q.viable, false);
-});
-
-test("small bank, light load → fractional runtime", () => {
-  const p = portablePayload({ portableBankKwh: 1, portableDailyKwh: 0.5 });
-  assert.equal(p.viable, true);
-  // 1 * 0.9 / 0.5 = 1.8 days
-  assert.equal(p.runtimeDays, 1.8);
+test("shore power changes measured trip coverage rather than a copied formula", async () => {
+  const isolated = await sizeUseCase({ mode: "portable", portablePvW: 0 });
+  const shore = await sizeUseCase({
+    mode: "portable",
+    portablePvW: 0,
+    portableShorePower: true,
+  });
+  assertUseCase(isolated, "portable");
+  assertUseCase(shore, "portable");
+  assert.ok(isolated.useCaseOutcome.value < 100);
+  assert.equal(shore.useCaseOutcome.value, 100);
 });

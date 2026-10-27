@@ -32,6 +32,7 @@ import {
 
 import {
   isUseCaseId,
+  isUseCaseMode,
   deriveLegacy,
   useCaseForLegacy,
   loadsFor,
@@ -65,6 +66,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
+  HORIZON_YEARS,
 } from "./money.js?v=20261008a";
 
 const TIER_BASIS = {
@@ -441,13 +443,6 @@ async function runSizingUncached(msg, deps = {}) {
     // #155: no-swap UI option. Default false = the oversize/swap strategy
     // stays on (existing behavior); true disables it engine-wide.
     noSwapMode = false,
-    reservePct = 0,
-    touPeakRate = 0,
-    touOffPeakRate = 0,
-    outageTargetHours = 0,
-    essentialLoadKwh = 0,
-    portableBankKwh = 0,
-    portableDailyKwh = 0,
     // ── Use-case inputs (D-16). Every one of these is asked of the visitor
     // for exactly one use case and read by exactly one measurement below.
     // They default to null so a caller that has never heard of a use case
@@ -1177,7 +1172,7 @@ async function runSizingUncached(msg, deps = {}) {
     const fChem =
       fChemOverride && CHEMISTRIES[fChemOverride] ? fChemOverride : defaultChem;
     const fScale = effectiveCapacityScale(fChem, meanTempC);
-    if (mode === "gridtie" || mode === "reserve" || mode === "tou") {
+    if (mode === "gridtie") {
       const fSized = {
         pvKw: fPv,
         battKwh: fBatt,
@@ -1714,6 +1709,8 @@ async function runSizingUncached(msg, deps = {}) {
           (effectiveTargets.find((t) => t.id === repTargetId) || {})
             .minFraction ?? null,
         effectiveCapacityScale,
+        lifetimeCostFor: (chemId, sizing) =>
+          moneyFor(chemId, sizing).lifetimeCostMid,
       },
       enumerable: false,
       writable: true,
@@ -2052,7 +2049,7 @@ async function runSizingUncached(msg, deps = {}) {
         }
       }
       const payload = basePayload();
-      payload.mode = mode; // "gridtie" or "reserve"
+      payload.mode = "gridtie";
       payload.auto = auto;
       payload.autoFallback = autoFallback;
       payload.effectiveTargetId = effectiveTarget;
@@ -2293,83 +2290,6 @@ async function runSizingUncached(msg, deps = {}) {
     };
     payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
     payload.assumptions.money = `Bill reduction simulated hour-by-hour across five years of weather: solar serves the load first, surplus charges the battery, the grid covers the rest, nothing is exported unless you enter a feed-in credit (then clipped surplus is valued at that rate). Lifetime cost includes bank swaps plus install labor each time. ${fixedMonthly > 0 ? `A fixed monthly charge is included in every bill figure (it cannot be cut).` : `Fixed connection fees not counted.`}`;
-    // Reserve mode: calculate emergency reserve analysis
-    if (mode === "reserve") {
-      const battKwh = payload.focus?.battKwh || 0;
-      if (battKwh <= 0) {
-        payload.reserve = { viable: false, reason: "verdictReserveNoBattery" };
-      } else {
-        const reserveKwh = battKwh * reservePct;
-        const usableKwh = battKwh - reserveKwh;
-        // Simple tradeoff: reserve provides emergency hours, costs cycling value
-        // Higher reserve = more emergency preparedness, less daily arbitrage
-        const reserveTradeoff = reservePct > 0 ? (1 - reservePct) / reservePct : Infinity;
-        payload.reserve = {
-          viable: true,
-          reservePct,
-          reserveKwh: Math.round(reserveKwh * 10) / 10,
-          usableKwh: Math.round(usableKwh * 10) / 10,
-          reserveTradeoff: Math.round(reserveTradeoff * 100) / 100,
-        };
-      }
-    }
-    // TOU mode: calculate time-of-use arbitrage
-    if (mode === "tou") {
-      const battKwh = payload.focus?.battKwh || 0;
-      if (battKwh <= 0) {
-        payload.tou = { viable: false, reason: "verdictTouNoBattery" };
-      } else if (!(touPeakRate > touOffPeakRate)) {
-        payload.tou = { viable: false, reason: "verdictTou" };
-      } else {
-        const spread = touPeakRate - touOffPeakRate;
-        // Simplified: assume 30% of daily load shifted
-        const dailyKwh = payload.focus?.dailyKwh || 10;
-        const shiftedKwh = dailyKwh * 0.3;
-        const dailySaving = shiftedKwh * spread;
-        payload.tou = {
-          viable: true,
-          peakRate: touPeakRate,
-          offPeakRate: touOffPeakRate,
-          dailySavingUsd: Math.round(dailySaving * 100) / 100,
-          annualSavingUsd: Math.round(dailySaving * 365 * 100) / 100,
-        };
-      }
-    }
-
-
-    // Backup mode: calculate outage coverage
-    if (mode === "backup") {
-      const battKwh = payload.focus?.battKwh || 0;
-      if (battKwh <= 0) {
-        payload.backup = { viable: false, reason: "verdictBackup" };
-      } else {
-        const avgKw = essentialLoadKwh / 24;
-        const hoursOfBackup = avgKw > 0 ? (battKwh * 0.9) / avgKw : 0;
-        const coveragePct = outageTargetHours > 0 ? Math.min(100, (hoursOfBackup / outageTargetHours) * 100) : 0;
-        payload.backup = {
-          viable: coveragePct > 0,
-          hoursOfBackup: Math.round(hoursOfBackup * 10) / 10,
-          coveragePct: Math.round(coveragePct),
-          reason: coveragePct <= 0 ? "verdictBackup" : undefined,
-        };
-      }
-    }
-
-    // Portable mode: calculate runtime days
-    if (mode === "portable") {
-      if (!(portableBankKwh > 0) || !(portableDailyKwh > 0)) {
-        payload.portable = { viable: false, reason: "verdictPortable" };
-      } else {
-        const runtimeDays = (portableBankKwh * 0.9) / portableDailyKwh;
-        payload.portable = {
-          viable: true,
-          bankKwh: portableBankKwh,
-          dailyKwh: portableDailyKwh,
-          runtimeDays: Math.round(runtimeDays * 10) / 10,
-        };
-      }
-    }
-
     return attachFrontier(payload);
   }
 
@@ -2773,7 +2693,7 @@ function measureUseCase(id, payload, ctx) {
   } = ctx;
   const n = e1kw.length;
   const years = Math.max(1, ctx.years);
-  const focus = payload.focus || null;
+  const focus = (id === "tou" && payload.focusSystem) || payload.focus || null;
   const chemId = (focus && focus.chemistry) || payload.chemistry || "lfp";
   const capScale = effectiveCapacityScale(chemId, meanTempC);
   const pvKw = (focus && focus.pvKw) || 0;
@@ -2846,31 +2766,44 @@ function measureUseCase(id, payload, ctx) {
           : null;
     }
     m.touPeakOffsetPct = sim.peakOffsetFraction * 100;
-    // peakLoadWh / peakImportedWh are already totals over the whole record,
-    // so the displaced energy needs no extra year multiplier. Multiplying here
-    // would have inflated a 5-year saving by 5x — the single easiest way to
-    // make a battery look profitable, so the comment stays.
+    // Totals span the weather record, not the financial horizon. Annualize
+    // before projecting to the same 20 years used by the lifetime cost.
     const displacedKwh = Math.max(
       0,
       (sim.peakLoadWh - sim.peakImportedWh) / 1000,
     );
     const peak = ctx.touPeakRate;
     const offPeak = ctx.touOffPeakRate;
-    const spread =
-      Number.isFinite(peak) && Number.isFinite(offPeak) && peak > offPeak
-        ? peak - offPeak
+    const validRates =
+      Number.isFinite(peak) &&
+      Number.isFinite(offPeak) &&
+      peak >= 0 &&
+      offPeak >= 0 &&
+      peak > offPeak;
+    const spread = validRates ? peak - offPeak : 0;
+    // Shifting one kWh costs more than the off-peak rate when round-trip
+    // losses require extra grid energy. Subtract the simulator's additional
+    // off-peak imports (household use excluded) at the rate actually paid;
+    // using only the spread silently treats the battery as lossless.
+    const offPeakChargeKwh = Math.max(
+      0,
+      (sim.importedWh - sim.peakImportedWh - (totalLoadWh - sim.peakLoadWh)) /
+        1000,
+    );
+    const savings =
+      validRates && Number.isFinite(spread)
+        ? ((displacedKwh * peak - offPeakChargeKwh * offPeak) / years) *
+          HORIZON_YEARS
         : 0;
-    m.touSpreadPerKwh = spread;
-    m.touSavingUsd20y = spread > 0 ? displacedKwh * spread : 0;
-    const cell =
-      (payload.targets || []).find((t) => t.solvable && t.minFraction) || null;
-    m.touBatteryCostUsd20y = cell
-      ? Number.isFinite(cell.lifetimeCostMid) && cell.lifetimeCostMid > 0
-        ? cell.lifetimeCostMid
-        : Number.isFinite(cell.costLo)
-          ? cell.costLo
-          : null
+    const representable = validRates && Number.isFinite(savings);
+    m.touSpreadPerKwh = representable ? spread : 0;
+    m.touSavingUsd20y = representable ? savings : 0;
+    // Price exactly the hardware and cycling just measured, including Auto
+    // chemistry and adopted systems. Never borrow another target's capex.
+    const cost = hasBank
+      ? ctx.lifetimeCostFor(chemId, { pvKw, battKwh, result: sim })
       : null;
+    m.touBatteryCostUsd20y = Number.isFinite(cost) && cost > 0 ? cost : null;
     m.battKwh = battKwh;
   }
 
@@ -3004,22 +2937,29 @@ function measureUseCase(id, payload, ctx) {
  *      resolved backwards, and in that case the pair is left ALONE — solar-only
  *      is a bill-cut configuration, and re-deriving it from "billcut" would
  *      silently add a battery to every solar-only run ever shipped.
- *   2. When a use case IS named, derive the legacy enum pair FROM IT. This is
+ *   2. When a use case IS named (useCase or a new mode alias), derive the
+ *      legacy enum pair FROM IT. This is
  *      the F-17 collapse: one vocabulary in, one enum pair out.
  *   3. Measure the case and attach its outcome, then delete the hourly context
  *      so it can never leave this module.
  */
 export async function runSizing(msg, deps = {}) {
   const explicit = isUseCaseId(msg && msg.useCase);
+  if (!explicit && msg?.mode === "billcut")
+    throw new Error('Use useCase: "billcut", not mode: "billcut".');
   const useCaseId = explicit
     ? msg.useCase
     : useCaseForLegacy({
         mode: msg && msg.mode,
         hardwareConfig: msg && msg.hardwareConfig,
       });
+  // New mode names are aliases for registry IDs, not extra engine modes.
+  // `offgrid` is also a legacy mode: keep its caller-selected hardware unless
+  // useCase was explicitly supplied, just as for legacy gridtie callers.
+  const modeAlias = isUseCaseMode(msg && msg.mode);
   const legacy = deriveLegacy(useCaseId);
   const forwarded = { ...msg };
-  if (explicit) {
+  if (explicit || modeAlias) {
     // Portable has no grid and no array (R-UC-06). The core still needs a
     // mode it understands to size the small system that fills the payload
     // shape the renderer expects; battery-only is the cheapest honest one,
