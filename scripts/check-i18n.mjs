@@ -1,0 +1,521 @@
+// Localization completeness gate. Run: node scripts/check-i18n.mjs
+//
+// The i18n layer falls back to English silently, which is the right product
+// behavior — a missing string shows English, never a raw key. That safety net
+// is exactly why the failure mode is invisible, so it is gated here instead:
+//
+//   1. PARITY      every `en` key exists in every locale (no half-migrations),
+//                  AND every translated string exists in English — parity in
+//                  BOTH directions, because a key only the translations carry
+//                  has no source to be checked against and drifts silently.
+//   2. HOOKS       every `data-i18n="key"` a shipped page declares resolves in
+//                  every non-English locale. English is exempt because the
+//                  English string IS the markup. A hook that resolves in NO
+//                  locale is a markup typo, and fails too.
+//   3. PLACEHOLDERS translated strings carry exactly the English placeholders;
+//                  a typo'd {count} renders literally to the user.
+//   4. NO LEAKS    no value equals its own key name (the tell-tale of a
+//                  half-finished translation shipped by accident).
+//   5. DIRECTION   likely script selects direction from the CLDR table.
+//   6. FAMILIES    strings composed at runtime (base + "Grid"/"Offgrid") must
+//                  exist in every locale, not only in the one that got them.
+//   7. RENDERED   every English key is named by shipped code or markup, so a
+//                  translation cannot sit in the file costing every locale
+//                  while no visitor can ever see it.
+//   8. BANNED     specific VALUES known to be wrong. Rules 1-7 prove a string
+//                  is PRESENT; none of them can see that it is BAD. Every one
+//                  of these shipped and passed every other rule, so they are
+//                  listed by value and the gate fails if any returns.
+//   9. UNKEYED    visible PROSE on a translated page must carry a hook. Every
+//                  other rule reads the dictionary; copy that was never put IN
+//                  it is invisible to all of them, which is how the hero
+//                  headline and the footer shipped in English on German and
+//                  Arabic browsers while the gate was green.
+//
+// An earlier version of this gate compared the *union* of the locale
+// dictionaries as a proxy for "what must be translated". That premise was
+// false: locale key names collide with payload field names and DOM ids, so the
+// proxy demanded translations for strings nothing renders. The rules below are
+// checked against what shipped markup and code actually reference.
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { brotliCompressSync } from "node:zlib";
+import { LOCALE_IDS, LOCALES } from "./lib/locale-data.mjs";
+import { directionForLocale } from "../assets/js/shared/direction.js";
+import { LANGS } from "../assets/js/shared/i18n.js";
+import {
+  claimsTranslation,
+  deployedFiles,
+  familyGaps,
+  hookCoverage,
+  placeholders,
+  unkeyedCopyAttributes,
+  unkeyedProse,
+  untranslatedLocaleValues,
+} from "./lib/gates.mjs";
+
+let failures = 0;
+const fail = (msg) => {
+  console.error(`FAIL ${msg}`);
+  failures++;
+};
+const ok = (msg) => console.log(`OK   ${msg}`);
+
+const langs = LOCALE_IDS;
+const en = LOCALES.en;
+if (!en) fail("assets/i18n/en.json is missing");
+if (!langs.length) fail("no locale dictionaries are registered");
+
+const localeDirectory = "assets/i18n";
+const localeFiles = readdirSync(localeDirectory)
+  .filter((name) => name.endsWith(".json") && name !== "script-directions.json")
+  .map((name) => name.slice(0, -5))
+  .sort();
+const expectedLocaleFiles = [...langs].sort();
+if (JSON.stringify(localeFiles) !== JSON.stringify(expectedLocaleFiles))
+  fail(`locale files do not match the picker: [${localeFiles.join(", ")}]`);
+else ok(`${localeFiles.length} locale JSON files match the picker`);
+
+if (existsSync("assets/js/shared/locales.js"))
+  fail("the retired all-locale JavaScript dictionary still exists");
+else ok("the all-locale JavaScript dictionary is retired");
+
+for (const locale of langs) {
+  const bytes = brotliCompressSync(
+    readFileSync(join(localeDirectory, `${locale}.json`)),
+  ).length;
+  if (bytes > 25 * 1024)
+    fail(`${locale}.json is ${bytes} Brotli bytes (maximum 25 KB)`);
+  else ok(`${locale}.json is ${bytes} Brotli bytes (maximum 25 KB)`);
+}
+
+// ── 1. parity with English ──────────────────────────────────────────────────
+const missing = [];
+for (const lang of langs) {
+  if (lang === "en") continue;
+  for (const key of Object.keys(en)) {
+    if (LOCALES[lang][key] === undefined) missing.push(`${lang}.${key}`);
+  }
+}
+if (missing.length)
+  fail(
+    `${missing.length} key(s) missing from a locale: ${missing.slice(0, 8).join(", ")}`,
+  );
+else ok(`every en key exists in all ${langs.length - 1} locales`);
+
+// ── 1b. parity the OTHER way ─────────────────────────────────────────────────
+// Rule 1 asks "can a locale miss something English has?". This asks the
+// question that let seven strings drift apart unnoticed: "can a locale carry
+// something English does not have?". A key that lives only in the translated
+// dictionaries has no English source to be checked against, so nothing ties its
+// translations to the copy a reader actually sees - which is exactly how
+// "Where is this system going?" and "¿Dónde se instalará el sistema?" ended up
+// asking different questions on the same page.
+//
+// Non-string values are exempt: `rtl` is a boolean locale flag driving
+// document.dir, and only Arabic carries it by design. Exempting by TYPE rather
+// than by a hand-kept allowlist means a new flag needs no list entry and a new
+// untranslated string cannot buy its way past this rule by being a string.
+const orphans = [];
+for (const lang of langs) {
+  if (lang === "en") continue;
+  for (const [key, value] of Object.entries(LOCALES[lang])) {
+    if (typeof value !== "string") continue;
+    if (typeof en[key] !== "string") orphans.push(`${lang}.${key}`);
+  }
+}
+if (orphans.length)
+  fail(
+    `${orphans.length} translated key(s) have no English source: ${orphans.slice(0, 8).join(", ")}`,
+  );
+else
+  ok("every translated string also exists in English (parity holds both ways)");
+
+const englishEqualValues = untranslatedLocaleValues(LOCALES);
+if (englishEqualValues.length)
+  fail(
+    `${englishEqualValues.length} untranslated locale value(s) equal English outside the unit/brand allowlist: ${englishEqualValues.slice(0, 10).join(", ")}`,
+  );
+else
+  ok(
+    "no translated locale value equals English outside the unit/brand allowlist",
+  );
+
+// ── 2. HTML hooks resolve everywhere ────────────────────────────────────────
+function shippedPages() {
+  return deployedFiles().filter((l) => l.endsWith(".html"));
+}
+
+const hooks = new Set();
+for (const page of shippedPages()) {
+  const html = readFileSync(page, "utf8");
+  for (const m of html.matchAll(
+    /data-i18n(?:-(?:placeholder|aria-label|title))?="([^"]+)"/g,
+  ))
+    hooks.add(m[1]);
+}
+if (!hooks.size) fail("no translation hooks found in shipped pages");
+
+const { gaps: hookGaps, unresolved } = hookCoverage(LOCALES, hooks);
+
+if (unresolved.length)
+  fail(
+    `${unresolved.length} translation hook(s) resolve in no locale (markup typo): ${unresolved.slice(0, 6).join(", ")}`,
+  );
+else
+  ok(`all ${hooks.size} markup/attribute hooks resolve in at least one locale`);
+
+for (const [lang, gaps] of Object.entries(hookGaps)) {
+  if (gaps.length)
+    fail(
+      `${lang}: ${gaps.length}/${hooks.size} HTML/attribute hook(s) untranslated: ${gaps.slice(0, 6).join(", ")}`,
+    );
+  else ok(`${lang}: all ${hooks.size} HTML/attribute hooks translated`);
+}
+
+// ── 3. placeholder parity ───────────────────────────────────────────────────
+const badPlaceholders = [];
+for (const lang of langs) {
+  if (lang === "en") continue;
+  for (const key of Object.keys(en)) {
+    const v = LOCALES[lang][key];
+    if (v === undefined) continue;
+    if (placeholders(v) !== placeholders(en[key]))
+      badPlaceholders.push(`${lang}.${key}`);
+  }
+}
+if (badPlaceholders.length)
+  fail(
+    `${badPlaceholders.length} placeholder mismatch(es): ${badPlaceholders.slice(0, 8).join(", ")}`,
+  );
+else ok("every translation carries the same placeholders as English");
+
+// ── 4. leaked key names ─────────────────────────────────────────────────────
+const leaks = [];
+for (const lang of langs) {
+  for (const [key, value] of Object.entries(LOCALES[lang])) {
+    if (typeof value === "string" && value === key)
+      leaks.push(`${lang}.${key}`);
+  }
+}
+if (leaks.length)
+  fail(
+    `value equals key name (untranslated leak): ${leaks.slice(0, 8).join(", ")}`,
+  );
+else ok("no locale ships a key name as its own text");
+
+// ── 5. RTL + picker wiring ──────────────────────────────────────────────────
+const directionCases = {
+  en: "ltr",
+  es: "ltr",
+  pt: "ltr",
+  fr: "ltr",
+  de: "ltr",
+  ar: "rtl",
+  he: "rtl",
+  fa: "rtl",
+  ur: "rtl",
+  ps: "rtl",
+  sd: "rtl",
+  dv: "rtl",
+  yi: "rtl",
+  ug: "rtl",
+  ckb: "rtl",
+};
+for (const [locale, expected] of Object.entries(directionCases)) {
+  const actual = directionForLocale(locale);
+  if (actual !== expected)
+    fail(`${locale} direction is ${actual}; expected ${expected}`);
+}
+ok(
+  `script-direction table resolves ${Object.keys(directionCases).length} locale tags`,
+);
+
+// Active calculator surfaces must format through an explicit locale helper and
+// use logical layout properties so script direction mirrors the whole UI.
+const formattingSources = [];
+function collectJavaScript(dir) {
+  for (const name of readdirSync(dir)) {
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) {
+      if (name !== "city-data") collectJavaScript(path);
+    } else if (name.endsWith(".js")) formattingSources.push(path);
+  }
+}
+collectJavaScript("assets/js");
+const implicitNumberFormats = [];
+const implicitFormatPattern =
+  /\.toLocaleString\s*\(\s*\)|new\s+Intl\.NumberFormat\s*\(\s*undefined\b/g;
+for (const file of formattingSources) {
+  const text = readFileSync(file, "utf8");
+  for (const match of text.matchAll(implicitFormatPattern))
+    implicitNumberFormats.push(`${file}: ${match[0]}`);
+}
+if (implicitNumberFormats.length)
+  fail(
+    `number formatting without an explicit locale: ${implicitNumberFormats.slice(0, 5).join(", ")}`,
+  );
+else
+  ok(
+    `no implicit-locale number formatting in ${formattingSources.length} browser modules`,
+  );
+
+const logicalLayoutFiles = [
+  "assets/site.css",
+  "index.html",
+  "assets/js/sizing/ui.js",
+  "assets/js/sizing/charts.js",
+  "assets/js/sizing/frontier-chart.js",
+];
+const physicalLogicalProperties =
+  /(?:text-align\s*:\s*(?:left|right)\b|(?:margin|padding|border)-(?:left|right)(?:-[\w-]+)?\s*:)/gi;
+const physicalLayout = [];
+for (const file of logicalLayoutFiles) {
+  const text = readFileSync(file, "utf8");
+  for (const match of text.matchAll(physicalLogicalProperties))
+    physicalLayout.push(`${file}: ${match[0]}`);
+}
+const physicalPositionPattern = /(?:^|[;{])\s*(?:left|right)\s*:/gim;
+for (const file of ["assets/site.css", "index.html"]) {
+  const text = readFileSync(file, "utf8");
+  for (const match of text.matchAll(physicalPositionPattern))
+    physicalLayout.push(`${file}: ${match[0].trim()}`);
+}
+if (physicalLayout.length)
+  fail(
+    `physical direction-dependent layout properties remain: ${physicalLayout.slice(0, 5).join(", ")}`,
+  );
+else ok(`calculator CSS and runtime styles use logical properties`);
+
+const pickerIds = LANGS.map((l) => l.id).filter(
+  (id) => id !== "auto" && id !== "en",
+);
+const unwired = pickerIds.filter((id) => !LOCALES[id]);
+if (unwired.length)
+  fail(
+    `language picker offers locales with no dictionary: ${unwired.join(", ")}`,
+  );
+else
+  ok(
+    `language picker exposes ${pickerIds.length} locales, all with dictionaries`,
+  );
+
+// ── 6. runtime-composed families ────────────────────────────────────────────
+// `frontierVerdict()` composes `base + a suffix` at runtime, so a variant
+// translated in one locale but not another renders English — or the raw key —
+// for that whole mode. Comparing suffix families catches it; counting
+// dictionary sizes cannot. "Battery" is the battery-only frontier: a grid-tie
+// sweep that found no PV at all, whose ceiling is a peak offset rather than a
+// bill cut, so its verdict must not say "% of your bill".
+const composedSuffixes = ["Grid", "Offgrid", "Battery"];
+const families = familyGaps(LOCALES, composedSuffixes);
+for (const [lang, gaps] of Object.entries(families)) {
+  if (gaps.length)
+    fail(
+      `${lang}: ${gaps.length} composed string(s) missing for a runtime mode: ${gaps.slice(0, 6).join(", ")}`,
+    );
+  else ok(`${lang}: every runtime-composed verdict string present`);
+}
+
+// ── 7. rendered keys ────────────────────────────────────────────────────────
+// The expensive failure is the invisible one: translations added ahead of the
+// code that renders them — or left behind when the markup changed. They cost
+// every locale, no visitor can ever see them, and the silent English fallback
+// makes them undetectable by every rule above. A key counts as rendered when a
+// shipped file mentions it (a t()/translate()/becoT() call, a data-i18n hook,
+// or a plain literal). The plain-literal net is deliberately generous: a name
+// that merely collides with a DOM id still counts, because a false "rendered"
+// only softens the guard, while a false "unrendered" would fail a good build.
+function renderedKeys() {
+  const sources = new Set(deployedFiles());
+  const collect = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) {
+        if (name !== "city-data") collect(p);
+      } else if (p.endsWith(".js") || p.endsWith(".mjs")) sources.add(p);
+    }
+  };
+  collect("assets/js");
+  // The whole worker directory, not a hardcoded worker/index.js. The worker
+  // ships dictionary key names to the client (the degraded reply names the
+  // keys it wants rendered in the visitor's language), so a module that owns
+  // that copy IS a render site even though the markup lives in the client.
+  // Naming one file here made this rule silently blind to every module the
+  // router was split into — a false green on unrendered keys.
+  collect("worker");
+  let text = "";
+  for (const file of sources) {
+    if (file.startsWith("assets/i18n/") || !existsSync(file)) continue;
+    text += readFileSync(file, "utf8");
+  }
+  const seen = new Set();
+  for (const m of text.matchAll(/["']([A-Za-z][A-Za-z0-9_]*)['"]/g))
+    seen.add(m[1]);
+  return seen;
+}
+
+const rendered = renderedKeys();
+// PARITY IN BOTH DIRECTIONS, and this used to be one-way. Keying the check off
+// `Object.keys(en)` meant a key that survived ONLY in a non-English dictionary
+// was invisible here — and that is the same dead string this rule exists to
+// catch, just filed in a locale nobody audits. Measured: four keys
+// (offlineCity, tariffSpend, noTariff, fxNote) sat in four locales each and
+// were asked for by no shipped code at all. The near-misses are the reason
+// they survived: `offlineCity` is a property on `meta`, `tariffSpend` is the
+// prefix of a real key family (tariffSpendLine/Battery/Fixed/Offgrid),
+// `noTariff` is a local variable, and `fxNote` is a local function — each name
+// appears in code, just never as a lookup.
+//
+// The union is the honest set: a key nobody renders is dead wherever it lives,
+// and the case that matters most is the one English cannot see, because
+// `translate()` falls back through English and would hand a visitor the raw key
+// name.
+const everyLocaleKey = [
+  ...new Set(langs.flatMap((l) => Object.keys(LOCALES[l]))),
+];
+const pluralKeyFamilies = ["timeUnitYear_", "timeUnitMonth_"];
+// `frontierVerdict()` composes base + a suffix at runtime, so those member names
+// never appear literally — rule 6 already proves each family is complete in
+// every locale. The list is shared with rule 6 so the two can never disagree
+// about which suffixes exist.
+const unrendered = everyLocaleKey.filter(
+  (k) =>
+    !rendered.has(k) &&
+    !composedSuffixes.some((s) => k.endsWith(s)) &&
+    !pluralKeyFamilies.some((prefix) => k.startsWith(prefix)),
+);
+if (unrendered.length)
+  fail(
+    `${unrendered.length} key(s) no shipped code or markup renders, in any locale: ${unrendered.slice(0, 8).join(", ")}`,
+  );
+else
+  ok(
+    `all ${everyLocaleKey.length} keys across ${langs.length} locales are rendered by shipped code or markup`,
+  );
+
+// ── 8. banned values ────────────────────────────────────────────────────────
+// Every entry here is a string that WAS shipped and passed rules 1-7. They are
+// listed by value rather than by key because the key was never the problem:
+// the key existed in all six locales, carried the right placeholders, and was
+// named by shipped code. It was the TEXT that was wrong — a garbled Arabic word
+// and a sentence left hanging on a dangling case ending. A presence gate is
+// blind to that by construction, so these are pinned as literals.
+//
+// Each entry names the defect, because "this string is banned" tells a future
+// editor nothing about what to write instead.
+const BANNED_VALUES = [
+  {
+    value: "دون اتصال · ليس الذكاء الطناعيا مباشرة",
+    why: "ar.advisorDegradedLabel shipped a non-word (الطناعيا)",
+  },
+  {
+    value: "لا مفتاح مدية، فالمشير منطقً عند الاتصال",
+    why: "ar.advisorDegradedWhyNoKey ended on a dangling tanwin, leaving the clause unfinished; it now says 'offline by design', which is what the English says",
+  },
+  {
+    // A mistranslation, not a garbled string: this one is well-formed Arabic
+    // that says "not the NATURAL one". All five siblings say "not the LIVE AI"
+    // (en directo / em directo / en direct / Live-KI), which is what tells a
+    // visitor this reply is canned rather than generated. It shipped because
+    // the first fix for the non-word above chose a replacement that was valid
+    // Arabic but meant something else — a reminder that "renders as Arabic" and
+    // "means what the siblings mean" are different properties, and only the
+    // second one is what a visitor needs.
+    value: "دون اتصال · ليس الذكاء الطبيعي مباشرة",
+    why: "ar.advisorDegradedLabel said 'not the natural AI'; it must say 'not the LIVE AI' (الحيّ), matching en/es/pt/fr/de",
+  },
+  {
+    // An untranslated fragment: the English word "plausible" was left sitting in
+    // the middle of an Arabic sentence. en/es/pt/fr/de all translate it. A
+    // visitor reading Arabic met a Latin word mid-clause.
+    value: "تم التحقق بشكل مستقل ✓ — plausible من الناحية الفيزيائية",
+    why: "ar.sanityOk carried the English word 'plausible' untranslated; the Arabic is now 'معقول فيزيائيًا', the same word sanityFlag already uses for this pair",
+  },
+  {
+    // A wrong CLAIM, which is worse than a wrong word. "التقليدي" is
+    // "traditional"; all five siblings say "typical-YEAR" (typical / típico /
+    // típico / typique / typisches Offline-Jahr). The badge tells a visitor the
+    // tool substituted a typical year of weather, and "traditional" misstates
+    // what the numbers actually represent.
+    value: " · 🌐 وضع عدم الاتصال التقليدي",
+    why: "ar.offlineNote said 'the traditional offline mode'; it must say 'typical-year', which is what all five siblings mean and what the badge asserts",
+  },
+];
+const bannedHits = [];
+for (const lang of langs) {
+  for (const [key, value] of Object.entries(LOCALES[lang])) {
+    for (const b of BANNED_VALUES) {
+      if (typeof value === "string" && value.includes(b.value))
+        bannedHits.push(`${lang}.${key}: ${b.why}`);
+    }
+  }
+}
+if (bannedHits.length)
+  fail(
+    `${bannedHits.length} known-bad value(s) shipped again: ${bannedHits
+      .slice(0, 4)
+      .join(" | ")}`,
+  );
+else ok(`none of the ${BANNED_VALUES.length} known-bad values are present`);
+
+// ?? 9. strict unkeyed prose gate ?????????????????????????????????????????????
+// R-I18N-05 permits only units and brand names to remain unkeyed. The root
+// marker names actual locale-runtime surfaces; inert attributes on English-only
+// pages do not expand the translated surface.
+const proseFindings = [];
+const attributeFindings = [];
+let translatedPageCount = 0;
+for (const page of shippedPages()) {
+  const html = readFileSync(page, "utf8");
+  if (!claimsTranslation(html)) continue;
+  translatedPageCount++;
+  for (const block of unkeyedProse(html))
+    proseFindings.push(
+      page + ": <" + block.tag + "> " + JSON.stringify(block.text.slice(0, 60)),
+    );
+  for (const attribute of unkeyedCopyAttributes(html))
+    attributeFindings.push(
+      page +
+        ": <" +
+        attribute.tag +
+        "> " +
+        attribute.attribute +
+        "=" +
+        JSON.stringify(attribute.text.slice(0, 60)),
+    );
+}
+if (proseFindings.length || attributeFindings.length) {
+  fail(
+    proseFindings.length +
+      " unapproved unkeyed prose block(s) and " +
+      attributeFindings.length +
+      " untranslated copy attribute(s) on " +
+      translatedPageCount +
+      " localized page(s): " +
+      [...proseFindings, ...attributeFindings].slice(0, 6).join(" | "),
+  );
+} else {
+  ok(
+    "0 unapproved unkeyed prose blocks or untranslated copy attributes across " +
+      translatedPageCount +
+      " localized page(s)",
+  );
+}
+
+// ── coverage summary (informational, keeps the trend visible) ───────────────
+const rows = langs
+  .filter((l) => l !== "en")
+  .map((l) => {
+    const keys = Object.keys(LOCALES[l]).length;
+    const hookCov = hooks.size
+      ? Math.round(
+          ((hooks.size - (hookGaps[l] || []).length) / hooks.size) * 100,
+        )
+      : 100;
+    return `${l}: ${keys} keys, ${hookCov}% of HTML hooks`;
+  });
+console.log(`     coverage — ${rows.join(" · ")}`);
+
+console.log(failures ? `\n${failures} I18N FAILURE(S)` : "\nI18N OK");
+process.exit(failures ? 1 : 0);
