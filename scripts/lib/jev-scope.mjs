@@ -1,66 +1,30 @@
-// Which plan item is this PR about? — flexible edition.
+// Which plan item is this PR about?
 //
-// The gate infers scope semantically, not syntactically. Wording variations
-// in the title ("blog post" vs "(P9.7)" vs "P9.7 content") must not trip it up.
-// The resolver tries, in order:
-//   1. Explicit P-item ID in the title (tolerant: "P9.7", "(P9.7)", "p9.7" all work)
-//   2. File-path inference (blog/** → P9.7, docs/plan/** → governance, etc.)
-//   3. Title keyword inference ("blog", "locale", "i18n", etc.)
-// Only when all three fail does it return null — and even then, the caller
-// decides whether that's fatal, not this module.
+// One concern: a PR's title, read as a scope. It is here rather than beside
+// the evidence rules because it has nothing to do with them — the jev-complete
+// CI job reads this module directly to decide which facets to judge, and the
+// evidence builder never touches it.
 import { SCOPE_FACETS } from "./jev-complete.mjs";
 
-// Plan item ids, tolerant: P9.7, (P9.7), p9.7, P9.7a all normalise.
-const PLAN_ITEM = /\bP(\d+)(?:\.(\d+))?([a-z])?\b/gi;
+// Plan item ids, with an optional sub-letter the plan does not actually use:
+// P0.3d normalises to P0.3 rather than inventing an id the plan never lists.
+const PLAN_ITEM = /\bP(\d+)(?:\.(\d+))?([a-z])?\b/g;
 function normalisePlanItem(match) {
   const [, major, minor] = match;
   return minor === undefined ? `P${major}` : `P${major}.${minor}`;
 }
 
-// File-path → scope inference. Order matters: more specific first.
-const PATH_SCOPE_RULES = [
-  { pattern: /^blog\//, scope: "P9.7", reason: "touches blog/" },
-  { pattern: /^docs\/plan\//, scope: "P0.1", reason: "touches docs/plan/" },
-  { pattern: /locales?\.js$/, scope: "P9.1", reason: "touches locale files" },
-  { pattern: /^assets\/js\/i18n/, scope: "P9.1", reason: "touches i18n files" },
-];
-
-// Title keyword → scope inference (case-insensitive).
-// Note: "plan" is deliberately NOT a keyword — "mentions the plan itself"
-// is too vague to infer P0.1. Use docs/plan/ path inference instead.
-const TITLE_KEYWORD_RULES = [
-  { pattern: /\bblog\b/i, scope: "P9.7", reason: 'title mentions "blog"' },
-  {
-    pattern: /\b(content|article|post)\b/i,
-    scope: "P9.7",
-    reason: "title mentions content",
-  },
-  {
-    pattern: /\b(locale|i18n|dutch|translation)\b/i,
-    scope: "P9.1",
-    reason: "title mentions locale",
-  },
-];
-
 /**
- * Resolve the CI scope for a PR, tolerantly.
- *
- * @param {object} input - { title: string, files?: string[] }
- * @returns {{ scope: string|null, how: string, considered: string[], error: string|null, coverageNote?: string }}
- *   how: "explicit" | "path-inferred" | "keyword-inferred" | null
- *   coverageNote: when scope was inferred (not explicit), notes that the plan
- *     may not fully encompass the PR's requirements — a finding for the
- *     judgment to consider, not a hard failure.
+ * Which plan item is this PR about? §9 rule 1 requires a PR to name its plan
+ * items, and that name is the only thing that tells the gate which facets to
+ * judge. A title that names none does not fall back to the whole program — that
+ * would silently judge the P10 exit bar on every PR.
  */
-export function resolveCiScope(input) {
-  const title = typeof input === "string" ? input : (input?.title ?? "");
-  const files =
-    typeof input === "object" && Array.isArray(input?.files) ? input.files : [];
+export function resolveCiScope(title) {
+  const text = typeof title === "string" ? title : "";
   const considered = [];
-
-  // 1. Explicit P-item in title (tolerant matching).
   const resolved = new Map();
-  for (const match of title.matchAll(PLAN_ITEM)) {
+  for (const match of text.matchAll(PLAN_ITEM)) {
     const id = normalisePlanItem(match);
     if (considered.includes(id)) continue;
     considered.push(id);
@@ -68,67 +32,26 @@ export function resolveCiScope(input) {
       resolved.set(id, match[0]);
     }
   }
-  if (resolved.size === 1) {
-    const [scope] = [...resolved.keys()];
-    return { scope, how: "explicit", considered, error: null };
+  if (resolved.size === 0) {
+    return {
+      scope: null,
+      considered,
+      error:
+        `no plan item id in the title (looked for ${considered.join(", ") || "none"}). ` +
+        'Name the item this PR delivers, e.g. "(P1.3)" — §9 rule 1, and the ' +
+        "gate cannot choose which facets to judge without it.",
+    };
   }
   if (resolved.size > 1) {
     return {
       scope: null,
-      how: null,
       considered: [...resolved.keys()],
       error:
         `the title names more than one plan item (${[...resolved.keys()].join(", ")}). ` +
-        "A scoped run judges one item's facets; split the PR, or set the scope explicitly.",
+        "A scoped run judges one item's facets; split the PR, or set the scope " +
+        "explicitly.",
     };
   }
-
-  // 2. File-path inference.
-  for (const { pattern, scope, reason } of PATH_SCOPE_RULES) {
-    if (files.some((f) => pattern.test(f))) {
-      if (Object.prototype.hasOwnProperty.call(SCOPE_FACETS, scope)) {
-        return {
-          scope,
-          how: "path-inferred",
-          considered,
-          error: null,
-          inferenceReason: reason,
-          coverageNote:
-            "Scope inferred from changed files, not explicit in title. " +
-            "The plan may not fully encompass this PR's requirements — " +
-            "treat as a finding, not a failure.",
-        };
-      }
-    }
-  }
-
-  // 3. Title keyword inference.
-  for (const { pattern, scope, reason } of TITLE_KEYWORD_RULES) {
-    if (pattern.test(title)) {
-      if (Object.prototype.hasOwnProperty.call(SCOPE_FACETS, scope)) {
-        return {
-          scope,
-          how: "keyword-inferred",
-          considered,
-          error: null,
-          inferenceReason: reason,
-          coverageNote:
-            "Scope inferred from title keywords, not an explicit plan item ID. " +
-            "The plan may not fully encompass this PR's requirements — " +
-            "treat as a finding, not a failure.",
-        };
-      }
-    }
-  }
-
-  // Truly cannot determine scope.
-  return {
-    scope: null,
-    how: null,
-    considered,
-    error:
-      "could not determine scope from title or changed files. " +
-      'Add a plan item ID to the title (e.g. "(P9.7)"), or ensure the PR touches ' +
-      "recognizable paths (blog/, docs/plan/).",
-  };
+  const [scope] = [...resolved.keys()];
+  return { scope, considered, error: null };
 }
