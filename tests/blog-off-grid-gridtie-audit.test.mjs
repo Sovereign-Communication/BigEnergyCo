@@ -9,8 +9,7 @@ const article = readFileSync(
 const listing = readFileSync("blog/index.html", "utf8");
 const sitemap = readFileSync("sitemap.xml", "utf8");
 const rss = readFileSync("rss.xml", "utf8");
-const title =
-  "Off-Grid vs. Grid-Tied Solar: Compare Payback and Resilience (2026)";
+const title = "Off-Grid vs. Grid-Tied Solar Payback (2026)";
 const jsonSource = article.match(
   /<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/i,
 )?.[1];
