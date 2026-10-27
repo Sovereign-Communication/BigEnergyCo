@@ -1,0 +1,127 @@
+// Validate JSON-LD blocks on every shippable page. Run: node scripts/validate-jsonld.mjs
+// Page list is driven by sitemap.xml (the same file submitted to search
+// consoles), so new city/post/heatmap pages are covered automatically —
+// never hand-maintain a page list here.
+import { readFileSync, existsSync } from "node:fs";
+
+import { sameOriginPath } from "./lib/gates.mjs";
+import { isFreeUsdOffer } from "./lib/seo.mjs";
+
+const ORIGIN = "https://freeoffgridcalculator.com";
+const sitemap = readFileSync("sitemap.xml", "utf8");
+const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+if (!locs.length) {
+  console.error("FAIL sitemap.xml: no <loc> entries found");
+  process.exit(1);
+}
+
+const pages = [];
+for (const url of locs) {
+  const path = sameOriginPath(url, ORIGIN) || "";
+  if (!path) {
+    console.error(`FAIL sitemap.xml: unexpected origin ${url}`);
+    process.exit(1);
+  }
+  if (!path.endsWith("/")) {
+    console.error(
+      `FAIL sitemap.xml: non-page URL ${url} (validator covers directory pages)`,
+    );
+    process.exit(1);
+  }
+  pages.push({
+    url,
+    file: path === "/" ? "index.html" : `${path.slice(1)}index.html`,
+  });
+}
+
+let failures = 0;
+for (const { url, file } of pages) {
+  if (!existsSync(file)) {
+    console.error(`FAIL ${url}: sitemap target missing on disk (${file})`);
+    failures++;
+    continue;
+  }
+  const html = readFileSync(file, "utf8");
+  const blocks = [
+    ...html.matchAll(
+      /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g,
+    ),
+  ];
+  if (!blocks.length) {
+    console.log(`${file}: NO JSON-LD (ok only for utility pages)`);
+    continue;
+  }
+  for (const [i, m] of blocks.entries()) {
+    try {
+      const data = JSON.parse(m[1]);
+      const nodes = data["@graph"] ? data["@graph"] : [data];
+      const types = nodes.map((n) => n["@type"]).flat();
+      console.log(`OK   ${file} [block ${i + 1}]: ${types.join(", ")}`);
+      // Required-field gate: a parsable but thin Article/BlogPosting (no
+      // dateModified, no image, no author) is a silent rich-result failure.
+      const all = [];
+      const walk = (n) => {
+        if (Array.isArray(n)) return n.forEach(walk);
+        if (n && typeof n === "object") {
+          all.push(n);
+          Object.values(n).forEach(walk);
+        }
+      };
+      walk(nodes);
+      for (const n of all) {
+        if (n["@type"] === "Article") {
+          for (const f of [
+            "headline",
+            "datePublished",
+            "dateModified",
+            "author",
+            "image",
+            "mainEntityOfPage",
+          ]) {
+            if (n[f] === undefined) {
+              console.error(
+                `FAIL ${file} [block ${i + 1}]: Article missing "${f}"`,
+              );
+              failures++;
+            }
+          }
+        }
+        if (n["@type"] === "BlogPosting") {
+          for (const f of [
+            "headline",
+            "datePublished",
+            "dateModified",
+            "url",
+            "author",
+            "image",
+          ]) {
+            if (n[f] === undefined) {
+              console.error(
+                `FAIL ${file} [block ${i + 1}]: BlogPosting missing "${f}"`,
+              );
+              failures++;
+            }
+          }
+        }
+      }
+      if (file === "index.html") {
+        const app = all.find((n) => n["@type"] === "WebApplication");
+        if (!app) {
+          console.error(
+            `FAIL ${file} [block ${i + 1}]: missing WebApplication schema`,
+          );
+          failures++;
+        } else if (!isFreeUsdOffer(app.offers)) {
+          console.error(
+            `FAIL ${file} [block ${i + 1}]: WebApplication must advertise a free USD Offer (price 0)`,
+          );
+          failures++;
+        }
+      }
+    } catch (e) {
+      console.error(`FAIL ${file} [block ${i + 1}]: ${e.message}`);
+      failures++;
+    }
+  }
+}
+process.exit(failures ? 1 : 0);
