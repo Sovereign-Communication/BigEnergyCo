@@ -66,12 +66,62 @@ export function changedFiles(range, cwd = process.cwd()) {
     .filter(Boolean);
 }
 
+/** Strict server-audit variant: a failed git command is not an empty diff. */
+export function changedFilesStrict(range, cwd = process.cwd()) {
+  return execFileSync("git", ["diff", "--name-only", range], {
+    cwd,
+    encoding: "utf8",
+    stdio: ["pipe", "pipe", "pipe"],
+  })
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
 /** Commit subject+body for a single revision. */
 export function commitMessage(rev, cwd = process.cwd()) {
   return git(["log", "-1", "--format=%B", rev], cwd);
 }
 
-/** Parent shas of one revision, first parent first. Empty when it cannot be read. */
+/** Whether GitHub associates this commit with a merged pull request. */
+export async function hasMergedPullRequest(
+  sha,
+  {
+    repository,
+    token,
+    apiUrl = "https://api.github.com",
+    targetBranch = "main",
+    fetchImpl = fetch,
+  } = {},
+) {
+  if (!repository || !token)
+    throw new Error("GITHUB_REPOSITORY and GITHUB_TOKEN are required");
+  if (
+    repository.split("/").length !== 2 ||
+    repository.split("/").some((part) => !part)
+  )
+    throw new Error("GITHUB_REPOSITORY must be owner/repository");
+  const url = `${apiUrl.replace(/\/+$/, "")}/repos/${repository}/commits/${encodeURIComponent(sha)}/pulls`;
+  const response = await fetchImpl(url, {
+    headers: {
+      accept: "application/vnd.github+json",
+      authorization: `Bearer ${token}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+  if (!response.ok)
+    throw new Error(
+      `GitHub commit-to-PR lookup failed (HTTP ${response.status})`,
+    );
+  const pulls = await response.json();
+  if (!Array.isArray(pulls))
+    throw new Error("GitHub commit-to-PR lookup returned an invalid response");
+  return pulls.some(
+    (pull) =>
+      typeof pull?.merged_at === "string" && pull.base?.ref === targetBranch,
+  );
+}
+
 export function commitParents(rev, cwd = process.cwd()) {
   const line = git(["rev-list", "--parents", "-n", "1", rev], cwd).trim();
   if (!line) return [];
@@ -93,13 +143,10 @@ export function commitParents(rev, cwd = process.cwd()) {
  * 10 most recent Main audit runs read that way, including the range that landed
  * PR #220.
  *
- * LIMIT, stated rather than hidden: a merge commit created locally with a
- * fabricated `Merge pull request #N` subject is indistinguishable from a
- * GitHub merge here, because the object graph and the commit message are all
- * this function can see. That ambiguity is older than this function — the merge
- * commit itself has always been forgiven by `hasPrReference`. Telling the two
- * apart needs the API (`/commits/{sha}/pulls`), which would make the audit
- * depend on a network call and a token, so it is deliberately not done.
+ * A squash commit has no merge graph, so its delivery cannot be inferred here;
+ * the server-side audit checks GitHub's commit-to-PR association for such a
+ * commit, including its target branch. Local pre-push checks remain offline
+ * and use the available git proof.
  */
 export function prDeliveredShas(commits, { cwd = process.cwd() } = {}) {
   const delivered = new Set();
@@ -122,11 +169,19 @@ export function prDeliveredShas(commits, { cwd = process.cwd() } = {}) {
  * Returns `{ ok, reason, files }` so callers can print something actionable
  * instead of a bare non-zero exit.
  */
-export function directPushVerdict({ range, message, cwd } = {}) {
-  const files = changedFiles(range, cwd);
+export function directPushVerdict({
+  range,
+  message,
+  cwd,
+  strict = false,
+  trustPrReference = true,
+} = {}) {
+  const files = strict
+    ? changedFilesStrict(range, cwd)
+    : changedFiles(range, cwd);
   if (!files.length)
     return { ok: true, reason: "no file changes detected", files };
-  if (hasPrReference(message))
+  if (trustPrReference && hasPrReference(message))
     return { ok: true, reason: "PR merge commit", files };
   if (isDocsOnly(files)) return { ok: true, reason: "docs-only change", files };
   const offending = files.filter((f) => !isDocsOnly([f]));

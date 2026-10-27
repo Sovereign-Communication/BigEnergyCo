@@ -10,12 +10,14 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   DOC_PATTERNS,
   blockMessage,
   directPushVerdict,
+  changedFilesStrict,
+  hasMergedPullRequest,
   hasPrReference,
   isDocsOnly,
   prDeliveredShas,
@@ -123,6 +125,11 @@ test("GATE: a docs-only range itself is judged without git", () => {
   assert.equal(directPushVerdict({ range: "", message: "" }).ok, true);
 });
 
+test("GATE: strict changed-file inspection throws on an invalid Git range", (t) => {
+  const { dir } = scratchRepo(t);
+  assert.throws(() => changedFilesStrict("missing^..missing", dir));
+});
+
 // ── the server-side audit's delivery rule ───────────────────────────────────
 //
 // scripts/direct-push-audit.mjs inspects EVERY commit in a pushed range, one
@@ -183,13 +190,268 @@ function scratchRepo(t) {
 }
 
 /** The real script, over a range, as .github/workflows/main-audit.yml runs it. */
-function audit(dir, before, after) {
+function audit(dir, before, after, env = {}, preload = null, flags = []) {
   return spawnSync(
     process.execPath,
-    [AUDIT, "--before", before, "--after", after],
-    { cwd: dir, encoding: "utf8" },
+    [
+      ...(preload ? ["--import", pathToFileURL(preload).href] : []),
+      AUDIT,
+      "--before",
+      before,
+      "--after",
+      after,
+      ...flags,
+    ],
+    {
+      cwd: dir,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        GITHUB_TOKEN: "",
+        GITHUB_REPOSITORY: "",
+        ...env,
+      },
+    },
   );
 }
+
+test("GATE: audit trusts only merged-PR metadata and still catches direct commits", (t) => {
+  const mergedRepo = scratchRepo(t);
+  const merged = mergedRepo.commit(
+    "assets/app.js",
+    "export const app = true;\\n",
+    "perf: heatmap redesign without PR number",
+  );
+  const mock = join(mergedRepo.dir, "mock-github.mjs");
+  writeFileSync(
+    mock,
+    `globalThis.fetch = async (url) => {
+      const sha = url.match(/\\/commits\\/([a-f0-9]+)\\/pulls$/)?.[1];
+      const pulls = sha === process.env.GITHUB_MERGED_SHA
+        ? [{
+            merged_at: "2026-10-17T01:12:41Z",
+            base: { ref: process.env.GITHUB_PR_BASE || "main" },
+          }]
+        : [];
+      return {
+        ok: process.env.GITHUB_API_STATUS !== "403",
+        status: Number(process.env.GITHUB_API_STATUS || 200),
+        json: async () => pulls,
+      };
+    };\n`,
+  );
+  const env = {
+    GITHUB_TOKEN: "test-token",
+    GITHUB_REPOSITORY: "owner/repo",
+    GITHUB_API_URL: "https://github.test/api/v3",
+    GITHUB_MERGED_SHA: merged,
+  };
+  const mergedResult = audit(
+    mergedRepo.dir,
+    mergedRepo.base,
+    merged,
+    env,
+    mock,
+  );
+  assert.equal(
+    mergedResult.status,
+    0,
+    mergedResult.stdout + mergedResult.stderr,
+  );
+  assert.match(mergedResult.stdout, /1 via PR, 0 docs-only, 0 violation/);
+
+  const directRepo = scratchRepo(t);
+  const direct = directRepo.commit(
+    "assets/app.js",
+    "export const app = true;\\n",
+    "perf: direct code change without PR metadata",
+  );
+  const directResult = audit(
+    directRepo.dir,
+    directRepo.base,
+    direct,
+    { ...env, GITHUB_MERGED_SHA: "" },
+    mock,
+  );
+  assert.equal(
+    directResult.status,
+    1,
+    directResult.stdout + directResult.stderr,
+  );
+  assert.match(directResult.stderr, /assets\/app\.js/);
+  assert.match(directResult.stdout, /0 via PR, 0 docs-only, 1 violation/);
+});
+
+test("GATE: GitHub metadata lookup requires a merged PR targeting main", async () => {
+  const response = (base, mergedAt = "2026-10-17T01:12:41Z") => ({
+    ok: true,
+    json: async () => [{ merged_at: mergedAt, base: { ref: base } }],
+  });
+  const options = {
+    repository: "owner/repo",
+    token: "test-token",
+    fetchImpl: async () => response("develop"),
+  };
+  assert.equal(await hasMergedPullRequest("sha", options), false);
+  assert.equal(
+    await hasMergedPullRequest("sha", {
+      ...options,
+      fetchImpl: async () => response("main"),
+    }),
+    true,
+  );
+  assert.equal(
+    await hasMergedPullRequest("sha", {
+      ...options,
+      fetchImpl: async () => response("main", null),
+    }),
+    false,
+  );
+  await assert.rejects(
+    hasMergedPullRequest("sha", {
+      ...options,
+      fetchImpl: async () => ({ ok: true, json: async () => ({}) }),
+    }),
+    /invalid response/,
+  );
+});
+
+test("GATE: PR-looking subjects cannot bypass server-side association checks", (t) => {
+  const { dir, commit, base } = scratchRepo(t);
+  const tip = commit(
+    "assets/app.js",
+    "export const forged = true;\\n",
+    "feat: forged title (#219)",
+  );
+  const mock = join(dir, "mock-github.mjs");
+  writeFileSync(
+    mock,
+    `globalThis.fetch = async () => ({
+      ok: true, status: 200, json: async () => [],
+    });\n`,
+  );
+  const r = audit(
+    dir,
+    base,
+    tip,
+    {
+      GITHUB_TOKEN: "test-token",
+      GITHUB_REPOSITORY: "owner/repo",
+      GITHUB_API_URL: "https://github.test/api/v3",
+    },
+    mock,
+  );
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.ok(r.stderr.includes("assets/app.js"), r.stdout + r.stderr);
+  assert.match(r.stdout, /0 via PR, 0 docs-only, 1 violation/);
+});
+
+test("GATE: merged PRs targeting another branch do not authorize main", (t) => {
+  const { dir, commit, base } = scratchRepo(t);
+  const tip = commit(
+    "assets/app.js",
+    "export const app = true;\\n",
+    "perf: squash subject without PR number",
+  );
+  const mock = join(dir, "mock-github.mjs");
+  writeFileSync(
+    mock,
+    `globalThis.fetch = async () => ({
+      ok: true, status: 200,
+      json: async () => [{ merged_at: "2026-10-17T01:12:41Z", base: { ref: "develop" } }],
+    });\n`,
+  );
+  const r = audit(
+    dir,
+    base,
+    tip,
+    {
+      GITHUB_TOKEN: "test-token",
+      GITHUB_REPOSITORY: "owner/repo",
+      GITHUB_API_URL: "https://github.test/api/v3",
+      GITHUB_MERGED_SHA: tip,
+      GITHUB_PR_BASE: "develop",
+    },
+    mock,
+  );
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.ok(r.stderr.includes("assets/app.js"), r.stdout + r.stderr);
+  assert.match(r.stdout, /0 via PR, 0 docs-only, 1 violation/);
+});
+
+test("GATE: API errors fail the real audit closed", (t) => {
+  const { dir, commit, base } = scratchRepo(t);
+  const tip = commit(
+    "assets/app.js",
+    "export const app = true;\\n",
+    "feat: app",
+  );
+  const mock = join(dir, "mock-github.mjs");
+  writeFileSync(
+    mock,
+    `globalThis.fetch = async () => ({ ok: false, status: 403 });\n`,
+  );
+  const r = audit(
+    dir,
+    base,
+    tip,
+    {
+      GITHUB_TOKEN: "test-token",
+      GITHUB_REPOSITORY: "owner/repo",
+      GITHUB_API_URL: "https://github.test/api/v3",
+    },
+    mock,
+  );
+  assert.equal(r.status, 2, r.stdout + r.stderr);
+  assert.match(r.stderr, /HTTP 403/);
+});
+
+test("GATE: invalid Git ranges fail closed instead of becoming empty audits", (t) => {
+  const { dir } = scratchRepo(t);
+  const r = audit(dir, "not-a-commit", "also-not-a-commit");
+  assert.equal(r.status, 2, r.stdout + r.stderr);
+  assert.match(r.stderr, /could not inspect commit range/);
+});
+
+test("GATE: required API mode fails closed when credentials are missing", (t) => {
+  const { dir, commit, base } = scratchRepo(t);
+  const tip = commit("scripts/app.mjs", "export {};\\n", "feat: app");
+  const missingToken = audit(
+    dir,
+    base,
+    tip,
+    { GITHUB_REPOSITORY: "owner/repo" },
+    null,
+    ["--require-api"],
+  );
+  assert.equal(
+    missingToken.status,
+    2,
+    missingToken.stdout + missingToken.stderr,
+  );
+  assert.match(
+    missingToken.stderr,
+    /requires both GITHUB_TOKEN and GITHUB_REPOSITORY/,
+  );
+
+  const missingRepository = audit(
+    dir,
+    base,
+    tip,
+    { GITHUB_TOKEN: "test-token" },
+    null,
+    ["--require-api"],
+  );
+  assert.equal(
+    missingRepository.status,
+    2,
+    missingRepository.stdout + missingRepository.stderr,
+  );
+  assert.match(
+    missingRepository.stderr,
+    /requires both GITHUB_TOKEN and GITHUB_REPOSITORY/,
+  );
+});
 
 test("GATE: a direct push of a non-documentation commit is still a violation", (t) => {
   const { dir, commit, base } = scratchRepo(t);
@@ -309,14 +571,11 @@ test("GATE: prDeliveredShas names the merge's side, and only that side", (t) => 
   assert.equal(delivered.has(base), false, "the base is outside the range");
 });
 
-test("LIMIT: a locally fabricated PR merge cannot be told from a real one", (t) => {
-  // Recorded rather than hidden. The delivery rule reads the object graph and
-  // the commit message, and a locally created merge whose subject claims a PR
-  // is indistinguishable from a GitHub merge by those two things alone — the
-  // same ambiguity that has always let such a merge commit itself through.
-  // Settling it needs /commits/{sha}/pulls, i.e. a token and a network call
-  // inside the audit; that trade was not taken. Bounded cost: commits under a
-  // fabricated merge trailer pass, and nothing else changes.
+test("LIMIT: offline fallback cannot authenticate a fabricated PR merge", (t) => {
+  // The server audit verifies each non-doc commit with GitHub metadata. The
+  // local audit has no network credentials and can only infer delivery from
+  // graph shape and commit text, so fabricated PR merge messages remain an
+  // explicit limitation of offline use.
   const { dir, g, commit, mergeIntoMain, base } = scratchRepo(t);
   g("checkout", "-q", "-b", "pr");
   commit("scripts/thing.mjs", "export const x = 1;\n", "feat: a thing");
