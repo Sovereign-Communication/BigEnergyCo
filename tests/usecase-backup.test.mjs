@@ -63,16 +63,14 @@ test("backup with no battery is not viable", () => {
 
 test("backup with invalid target hours is not viable", () => {
   for (const targetHrs of [0, -5, NaN, Infinity]) {
-    const viable =
-      Number.isFinite(targetHrs) && targetHrs > 0;
+    const viable = Number.isFinite(targetHrs) && targetHrs > 0;
     assert.equal(viable, false, `target ${targetHrs} should be invalid`);
   }
 });
 
 test("backup with invalid essential loads is not viable", () => {
   for (const essentialKwhDay of [0, -2, NaN]) {
-    const viable =
-      Number.isFinite(essentialKwhDay) && essentialKwhDay > 0;
+    const viable = Number.isFinite(essentialKwhDay) && essentialKwhDay > 0;
     assert.equal(viable, false, `loads ${essentialKwhDay} should be invalid`);
   }
 });

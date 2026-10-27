@@ -34,10 +34,10 @@ test("reserve tradeoff calculation: 20% reserve on 10kWh battery", () => {
   const reservePct = 0.2;
   const reserveKwh = battKwh * reservePct;
   const usableKwh = battKwh - reserveKwh;
-  
+
   assert.equal(reserveKwh, 2);
   assert.equal(usableKwh, 8);
-  
+
   // Tradeoff ratio: (1 - reservePct) / reservePct
   // Higher reserve = lower tradeoff (more emergency value, less cycling value)
   const tradeoff = (1 - reservePct) / reservePct;
