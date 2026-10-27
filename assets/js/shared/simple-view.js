@@ -4,7 +4,7 @@
 // no formatting — ui.js injects its formatters so currency/locale handling
 // stays single-owner. Anything missing or non-finite is dropped, never
 // rendered as "NaN".
-import { seriesBreakdown } from "../sizing/money.js?v=20261015b";
+import { seriesBreakdown } from "../sizing/money.js?v=20261015m";
 
 export function buildSimpleView({ p, entry, saved, fmt }) {
   if (!p || !entry || !entry.solvable) return { feasible: false };
@@ -56,11 +56,11 @@ export function buildSimpleView({ p, entry, saved, fmt }) {
           "% of peak hours onto the battery — your bill is unchanged";
   push(null, "What it does", goal);
 
-  if (Number.isFinite(saved) && saved > 0) {
+  if (p.mode === "gridtie" && Number.isFinite(saved) && saved > 0) {
     push(null, "Saved over 20 years", "~" + fmt.money(saved));
-  } else if (Number.isFinite(saved) && saved <= 0) {
+  } else if (p.mode === "gridtie" && Number.isFinite(saved) && saved <= 0) {
     push(null, "Saved over 20 years", "does not pay back in 20 years");
-  } else if (Number.isFinite(entry.paybackYearsLo)) {
+  } else if (p.mode === "gridtie" && Number.isFinite(entry.paybackYearsLo)) {
     push(
       null,
       "Payback",

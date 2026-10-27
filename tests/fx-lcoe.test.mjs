@@ -98,7 +98,7 @@ test("UI converts LCOE and grid rates into the selected currency", () => {
   // is built in one place instead of five. The currency contract is unchanged
   // and is asserted where it now lives: both figures the row shows go through
   // energyRate, which is the FX-aware formatter.
-  assert.match(ui, /function powerCostRow\(entry, tariff\)/);
+  assert.match(ui, /function powerCostRow\(entry, tariff, mode = "gridtie"\)/);
   assert.match(ui, /const lcoe = energyRate\(entry\.lcoeUsdPerKwh\)/);
   assert.match(ui, /lcoe \+ gridRate\(tariff\)/);
   assert.match(ui, /energyRate\(tariff\)/);

@@ -93,7 +93,7 @@ export const LOCALES = {
     frontierX: "Up-front system cost",
     frontierYGrid: "Share of your power bill cut",
     frontierYGridBattery: "Share of your peak hours shifted",
-    frontierYOffgrid: "Share of your energy covered, no generator",
+    frontierYOffgrid: "Share of energy demand served by solar + battery",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, no battery · {pct}% · {cost}",
     frontierLegendSel: "Selected option — click any point to choose it",
@@ -288,6 +288,8 @@ export const LOCALES = {
       "Starts from ~{bill} (≈{kwh} kWh/day). Set your real bill here, choose a location, then click Size My System. The bill-cut slider appears with results.",
     quickBillManual:
       "Quick estimate: ~{bill} (starts from ~{kwh} kWh/day) — switch to Manual to change your bill, appliances, or rate.",
+    quickOffgridSetup:
+      "Off-grid load: about {kwh} kWh/day. Choose a location and decide whether generator backup is allowed; results show reliability and installation paths without using a grid bill.",
     dailyEnergyNeed: "Daily energy need (kWh/day slider)",
     billPerMonth: "/mo",
     simpleHeadline: "At your location, this system gets you {goal}:",
@@ -442,12 +444,10 @@ export const LOCALES = {
     pathsOwnershipLease:
       "You rent it until the term ends, then you buy it out or hand it back.",
     pathsOwnershipSelf: "You own it once it is installed.",
-    pathsIncentiveTaxCredit: "Federal tax credit",
-    pathsIncentiveRebate: "Utility rebate",
     pathsIncentivesToProvider: "Incentives go to the provider, not to you.",
     pathsIncentivesGoToProvider: "The provider keeps them — you own nothing.",
     pathsNoIncentive: "None applies to this route.",
-    pathsNoVerifiedIncentive: "We have no verified incentive for your region.",
+    pathsNoVerifiedIncentive: "No incentives included; check local programs.",
     pathsUnknown: "Unknown",
     pathsNotWithinHorizon: "Not within 20 years",
     pathsBreakEvenYear: "Year {year}",
@@ -455,6 +455,40 @@ export const LOCALES = {
     pathsNoSystem: "There is no system to price.",
     pathsNoTariff:
       "A PPA needs a tariff to price against, so it is not shown here.",
+    pathsOffgridNotSupported: "Not modeled for a standalone off-grid system.",
+    pathsTitleOffgrid: "Four ways to install or pay for this off-grid system",
+    pathsSubOffgrid:
+      "Compare a turnkey installer, a system lease, parts plus an electrician, and DIY mounting with an electrician connection. These are regional planning estimates, not quotes; lease availability varies.",
+    pathsLabel_offgridLease: "System lease",
+    pathsEstimateTitle: "DIY vs installer price estimates",
+    pathsPartsOnlyLabel: "Equipment only (no installation)",
+    pathsEstimateDiyHigherReason:
+      "Parts plus fixed connection, permit and tool costs can outweigh the installation labor saved by mounting the system yourself.",
+    pathsPriceBasisNote:
+      "This range runs from ex-factory components (the low end may omit the battery BMS/enclosure) to shipped budget-retail equipment. It is not the installed DIY price; the comparison below uses a separate regional model that includes installation costs.",
+    pathsEstimateUnavailable:
+      "We cannot price both turnkey installation and DIY for this system. The cards below show any available regional planning estimates, not local quotes.",
+    pathsEstimateDiyLower:
+      "For the same system, modeled upfront ranges are {turnkey} for turnkey installation and {diy} for DIY mounting plus an electrician connection. The DIY midpoint is {gap} lower.",
+    pathsEstimateDiyHigher:
+      "For this system, the DIY range is {diy} and the turnkey range is {turnkey}; the DIY midpoint is {gap} higher than turnkey. The model adds {hardware} in parts, {labor} for the electrician connection, {fees} in permits/inspection/interconnection where applicable, and {tools} for tools and safety; the turnkey benchmark includes installation.",
+    pathsEstimateDiyTie:
+      "For the same system, DIY ({diy}) and turnkey installation ({turnkey}) have the same modeled midpoint.",
+    pathsEstimateBandsOverlap:
+      "The planning ranges overlap, so a local bid could reverse the midpoint comparison.",
+    pathsEstimateBandsSeparate:
+      "The planning ranges do not overlap in this model, though local bids may differ.",
+    pathsEstimateHorizon:
+      "These are regional planning estimates, not quotes. The cards below compare the same system over {years} years.",
+    pathsOffgridEstimateScope:
+      "Off-grid figures cover the selected PV, battery, and inverter system only. Generator hardware, transfer equipment, and fuel are excluded.",
+    offgridMatrixGeneratorAllowed:
+      "No utility-grid power is assumed. Unmet hours need an installed generator if you want them covered; generator equipment and fuel are not priced.",
+    offgridMatrixNoGenerator:
+      "No utility-grid or generator power is assumed. Any unmet hours are unserved.",
+    offgridTierServed: "{pct}% served by the array and battery",
+    pathsIncludesPermitsAndInspection:
+      "Permits and inspection (no grid interconnection fee)",
     pathsDiyNotPermitted:
       "Not offered here: where you are, a licensed installer has to do the electrical work.",
     pathsDiyRestricted:
@@ -642,7 +676,7 @@ export const LOCALES = {
     frontierX: "Coste inicial del sistema",
     frontierYGrid: "Parte de tu factura eliminada",
     frontierYGridBattery: "Parte de tus horas punta desplazadas",
-    frontierYOffgrid: "Parte de tu energía cubierta, sin generador",
+    frontierYOffgrid: "Parte de la demanda cubierta por paneles y batería",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, sin batería · {pct}% · {cost}",
     frontierLegendSel:
@@ -845,6 +879,8 @@ export const LOCALES = {
       "Empieza desde ~{bill} (≈{kwh} kWh/día). Pon aquí tu factura real, elige una ubicación y pulsa Dimensionar mi sistema. El control de recorte aparece con los resultados.",
     quickBillManual:
       "Estimación rápida: ~{bill} (empieza desde ~{kwh} kWh/día) — cambia a Manual para ajustar tu factura, electrodomésticos o tarifa.",
+    quickOffgridSetup:
+      "Carga aislada: unos {kwh} kWh/día. Elige una ubicación y decide si permites un generador de respaldo; los resultados muestran fiabilidad y opciones de instalación sin usar una factura de red.",
     dailyEnergyNeed: "Necesidad diaria de energía (control kWh/día)",
     billPerMonth: "/mes",
     simpleHeadline: "En tu ubicación, este sistema consigue {goal}:",
@@ -921,14 +957,12 @@ export const LOCALES = {
     pathsOwnershipLease:
       "Lo alquileres hasta que termine el contrato y luego lo compras o lo devuelves.",
     pathsOwnershipSelf: "Eres propietario una vez instalado.",
-    pathsIncentiveTaxCredit: "Crédito fiscal federal",
-    pathsIncentiveRebate: "Subvención de la compañía eléctrica",
     pathsIncentivesToProvider: "Los incentivos van al proveedor, no a ti.",
     pathsIncentivesGoToProvider:
       "El proveedor se los queda: no eres propietario de nada.",
     pathsNoIncentive: "Ninguno se aplica a esta vía.",
     pathsNoVerifiedIncentive:
-      "No tenemos un incentivo verificado para tu región.",
+      "No se incluyen incentivos; consulta los programas locales.",
     pathsUnknown: "Desconocido",
     pathsNotWithinHorizon: "No dentro de 20 años",
     pathsBreakEvenYear: "Año {year}",
@@ -936,6 +970,41 @@ export const LOCALES = {
     pathsNoSystem: "No hay ningún sistema que presupuestar.",
     pathsNoTariff:
       "Un PPA necesita una tarifa con la que comparar, así que no se muestra aquí.",
+    pathsOffgridNotSupported:
+      "No se modela para un sistema aislado sin conexión a la red.",
+    pathsTitleOffgrid: "Cuatro formas de instalar o pagar este sistema aislado",
+    pathsSubOffgrid:
+      "Compara un instalador llave en mano, un arrendamiento, las piezas más un electricista y el montaje DIY con conexión eléctrica profesional. Son estimaciones regionales, no cotizaciones; la disponibilidad del arrendamiento varía.",
+    pathsLabel_offgridLease: "Arrendamiento del sistema",
+    pathsEstimateTitle: "Estimaciones DIY frente a instalación",
+    pathsPartsOnlyLabel: "Solo equipos (sin instalación)",
+    pathsEstimateDiyHigherReason:
+      "El costo de las piezas y los costos fijos de conexión, permisos y herramientas pueden superar el ahorro de mano de obra al montar el sistema tú mismo.",
+    pathsPriceBasisNote:
+      "El rango va desde componentes de fábrica (el extremo bajo puede excluir el BMS y la carcasa de la batería) hasta equipos económicos con envío. No es el precio DIY instalado; la comparación de abajo usa un modelo regional aparte que incluye los costos de instalación.",
+    pathsEstimateUnavailable:
+      "No podemos comparar la instalación llave en mano y la opción DIY para este sistema. Las tarjetas muestran las estimaciones regionales disponibles, no cotizaciones locales.",
+    pathsEstimateDiyLower:
+      "Para el mismo sistema, los rangos iniciales estimados son {turnkey} para la instalación llave en mano y {diy} para el montaje DIY más la conexión de un electricista. El punto medio DIY es {gap} menor.",
+    pathsEstimateDiyHigher:
+      "Para este sistema, el rango DIY es {diy} y el de instalación llave en mano es {turnkey}; el punto medio DIY es {gap} mayor que el de la instalaci?n llave en mano. El modelo suma {hardware} en piezas, {labor} por la conexión eléctrica, {fees} en permisos/inspección/conexión cuando corresponda y {tools} en herramientas y seguridad; la referencia llave en mano incluye la instalación.",
+    pathsEstimateDiyTie:
+      "Para el mismo sistema, DIY ({diy}) e instalación llave en mano ({turnkey}) tienen el mismo punto medio estimado.",
+    pathsEstimateBandsOverlap:
+      "Los rangos estimados se solapan; una cotización local podría invertir la comparación de puntos medios.",
+    pathsEstimateBandsSeparate:
+      "Los rangos estimados no se solapan en este modelo, aunque las cotizaciones locales pueden variar.",
+    pathsEstimateHorizon:
+      "Son estimaciones regionales, no cotizaciones. Las tarjetas comparan el mismo sistema durante {years} años.",
+    pathsOffgridEstimateScope:
+      "Los precios aislados cubren solo el sistema elegido de paneles, batería e inversor. No incluyen generador, equipo de transferencia ni combustible.",
+    offgridMatrixGeneratorAllowed:
+      "No se supone energía de la red eléctrica. Las horas sin cubrir requieren un generador instalado si quieres atenderlas; no se incluyen su equipo ni combustible.",
+    offgridMatrixNoGenerator:
+      "No se supone energía de la red eléctrica ni de un generador. Las horas sin cubrir quedan sin servicio.",
+    offgridTierServed: "{pct}% cubierto por paneles y batería",
+    pathsIncludesPermitsAndInspection:
+      "Permisos e inspección (sin tarifa de interconexión a la red)",
     pathsDiyNotPermitted:
       "No se ofrece aquí: en tu zona, la instalación eléctrica la debe hacer un instalador con licencia.",
     pathsDiyRestricted:
@@ -1133,7 +1202,7 @@ export const LOCALES = {
     frontierX: "Custo inicial do sistema",
     frontierYGrid: "Parte da sua conta de luz cortada",
     frontierYGridBattery: "Parte das suas horas de ponta deslocadas",
-    frontierYOffgrid: "Parte da sua energia coberta, sem gerador",
+    frontierYOffgrid: "Parcela da demanda atendida por painéis e bateria",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, sem bateria · {pct}% · {cost}",
     frontierLegendSel:
@@ -1329,6 +1398,8 @@ export const LOCALES = {
       "Começa em ~{bill} (≈{kwh} kWh/dia). Coloque aqui sua conta real, escolha uma localização e clique em Dimensionar meu sistema. O controle de corte aparece com os resultados.",
     quickBillManual:
       "Estimativa rápida: ~{bill} (começa em ~{kwh} kWh/dia) — mude para Manual para alterar sua conta, eletrodomésticos ou tarifa.",
+    quickOffgridSetup:
+      "Carga fora da rede: cerca de {kwh} kWh/dia. Escolha um local e decida se permite gerador de reserva; os resultados mostram confiabilidade e opções de instalação sem usar uma conta da rede.",
     dailyEnergyNeed: "Necessidade diária de energia (controle kWh/dia)",
     billPerMonth: "/mês",
     simpleHeadline: "Na sua localização, este sistema consegue {goal}:",
@@ -1401,14 +1472,13 @@ export const LOCALES = {
     pathsOwnershipLease:
       "Você aluga até o fim do contrato e então compra ou devolve.",
     pathsOwnershipSelf: "Você é dono assim que está instalado.",
-    pathsIncentiveTaxCredit: "Crédito de imposto federal",
-    pathsIncentiveRebate: "Desconto da concessionária",
     pathsIncentivesToProvider:
       "Os incentivos vão para o provedor, não para você.",
     pathsIncentivesGoToProvider:
       "O provedor fica com eles — você não é dono de nada.",
     pathsNoIncentive: "Nenhum se aplica a esta via.",
-    pathsNoVerifiedIncentive: "Não temos incentivo verificado para sua região.",
+    pathsNoVerifiedIncentive:
+      "Nenhum incentivo incluído; consulte os programas locais.",
     pathsUnknown: "Desconhecido",
     pathsNotWithinHorizon: "Não em 20 anos",
     pathsBreakEvenYear: "Ano {year}",
@@ -1416,6 +1486,42 @@ export const LOCALES = {
     pathsNoSystem: "Não há sistema a precificar.",
     pathsNoTariff:
       "Um PPA precisa de uma tarifa para servir de referência, então não aparece aqui.",
+    pathsOffgridNotSupported:
+      "Não modelado para um sistema autônomo fora da rede.",
+    pathsTitleOffgrid:
+      "Quatro formas de instalar ou pagar este sistema isolado",
+    pathsSubOffgrid:
+      "Compare um instalador completo, o aluguel do sistema, peças mais eletricista e montagem DIY com conexão elétrica profissional. São estimativas regionais, não cotações; a disponibilidade do aluguel varia.",
+    pathsLabel_offgridLease: "Aluguel do sistema",
+    pathsEstimateTitle: "Estimativas DIY versus instalação",
+    pathsPartsOnlyLabel: "Somente equipamentos (sem instalação)",
+    pathsEstimateDiyHigherReason:
+      "O custo das peças e os custos fixos de conexão, licenças e ferramentas podem superar a mão de obra economizada na montagem por conta própria.",
+    pathsPriceBasisNote:
+      "A faixa vai de componentes de fábrica (o limite baixo pode não incluir o BMS e o gabinete da bateria) até equipamentos econômicos enviados. Este não é o preço DIY instalado; a comparação abaixo usa um modelo regional separado que inclui os custos de instalação.",
+    pathsEstimateUnavailable:
+      "Não podemos comparar a instalação completa e a opção DIY para este sistema. Os cartões mostram as estimativas regionais disponíveis, não cotações locais.",
+    pathsEstimateDiyLower:
+      "Para o mesmo sistema, as faixas iniciais estimadas são {turnkey} para instalação completa e {diy} para montagem DIY mais a conexão de um eletricista. O ponto médio DIY é {gap} menor.",
+    pathsEstimateDiyHigher:
+      "Neste sistema, a faixa DIY é {diy} e a faixa de instalação completa é {turnkey}; o ponto médio DIY fica {gap} acima da instala??o completa. O modelo soma {hardware} em peças, {labor} pela conexão elétrica, {fees} em licenças/inspeção/interconexão quando aplicável e {tools} em ferramentas e segurança; a referência de instalação completa inclui a instalação.",
+    pathsEstimateDiyTie:
+      "Para o mesmo sistema, DIY ({diy}) e instalação completa ({turnkey}) têm o mesmo ponto médio estimado.",
+    pathsEstimateBandsOverlap:
+      "As faixas estimadas se sobrepõem; uma cotação local pode inverter a comparação dos pontos médios.",
+    pathsEstimateBandsSeparate:
+      "As faixas estimadas não se sobrepõem neste modelo, embora as cotações locais possam variar.",
+    pathsEstimateHorizon:
+      "São estimativas regionais, não cotações. Os cartões comparam o mesmo sistema por {years} anos.",
+    pathsOffgridEstimateScope:
+      "Os valores isolados cobrem apenas o sistema escolhido de painéis, bateria e inversor. Gerador, transferência e combustível não estão incluídos.",
+    offgridMatrixGeneratorAllowed:
+      "Não se presume energia da rede. As horas não atendidas precisam de um gerador instalado se você quiser cobri-las; equipamento e combustível não estão precificados.",
+    offgridMatrixNoGenerator:
+      "Não se presume energia da rede nem de gerador. As horas não atendidas ficam sem serviço.",
+    offgridTierServed: "{pct}% atendido por painéis e bateria",
+    pathsIncludesPermitsAndInspection:
+      "Licenças e inspeção (sem taxa de conexão à rede)",
     pathsDiyNotPermitted:
       "Não oferecida aqui: na sua região, um instalador licenciado precisa fazer a parte elétrica.",
     pathsDiyRestricted:
@@ -1617,7 +1723,8 @@ export const LOCALES = {
     frontierX: "Coût initial du système",
     frontierYGrid: "Part de votre facture supprimée",
     frontierYGridBattery: "Part de vos heures pleines décalées",
-    frontierYOffgrid: "Part de votre énergie couverte, sans groupe électrogène",
+    frontierYOffgrid:
+      "Part de la demande servie par les panneaux et la batterie",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} kW, sans batterie · {pct}% · {cost}",
     frontierLegendSel:
@@ -1815,6 +1922,8 @@ export const LOCALES = {
       "Démarre à ~{bill} (≈{kwh} kWh/jour). Indiquez ici votre vraie facture, choisissez un lieu, puis cliquez sur Dimensionner mon système. Le curseur de réduction apparaît avec les résultats.",
     quickBillManual:
       "Estimation rapide : ~{bill} (démarre à ~{kwh} kWh/jour) — passez en Manuel pour changer votre facture, vos appareils ou votre tarif.",
+    quickOffgridSetup:
+      "Charge hors réseau : environ {kwh} kWh/jour. Choisissez un lieu et indiquez si un groupe électrogène de secours est autorisé ; les résultats présentent la fiabilité et les options d’installation sans facture du réseau.",
     dailyEnergyNeed: "Besoin énergétique quotidien (curseur kWh/jour)",
     billPerMonth: "/mois",
     simpleHeadline: "À votre lieu, ce système vous permet de {goal} :",
@@ -1889,15 +1998,13 @@ export const LOCALES = {
     pathsOwnershipLease:
       "Vous le louez jusqu'au terme, puis vous le rachetez ou le rendez.",
     pathsOwnershipSelf: "Il est à vous une fois installé.",
-    pathsIncentiveTaxCredit: "Crédit d'impôt fédéral",
-    pathsIncentiveRebate: "Subvention du distributeur",
     pathsIncentivesToProvider:
       "Les subventions vont au fournisseur, pas à vous.",
     pathsIncentivesGoToProvider:
       "Le fournisseur les conserve — vous ne possédez rien.",
     pathsNoIncentive: "Aucune ne s'applique à cette voie.",
     pathsNoVerifiedIncentive:
-      "Nous n'avons pas de subvention vérifiée pour votre région.",
+      "Aucune aide incluse ; vérifiez les programmes locaux.",
     pathsUnknown: "Inconnu",
     pathsNotWithinHorizon: "Pas sous 20 ans",
     pathsBreakEvenYear: "Année {year}",
@@ -1905,6 +2012,42 @@ export const LOCALES = {
     pathsNoSystem: "Aucun système à chiffrer.",
     pathsNoTariff:
       "Un PPA a besoin d'un tarif de référence ; il n'est donc pas affiché ici.",
+    pathsOffgridNotSupported:
+      "Non modélisé pour un système autonome hors réseau.",
+    pathsTitleOffgrid:
+      "Quatre façons d'installer ou de financer ce système autonome",
+    pathsSubOffgrid:
+      "Comparez un installateur clé en main, la location du système, les pièces avec un électricien et le montage DIY avec raccordement électrique par un professionnel. Ce sont des estimations régionales, pas des devis ; la location varie selon les régions.",
+    pathsLabel_offgridLease: "Location du système",
+    pathsEstimateTitle: "Estimations DIY et installation",
+    pathsPartsOnlyLabel: "Équipement seul (hors installation)",
+    pathsEstimateDiyHigherReason:
+      "Le coût des pièces et les frais fixes de raccordement, permis et outils peuvent dépasser la main-d'œuvre économisée en montant le système vous-même.",
+    pathsPriceBasisNote:
+      "La fourchette va des composants départ usine (la borne basse peut exclure le BMS et le boîtier de la batterie) à des équipements économiques livrés. Ce n’est pas le prix d’une installation DIY complète ; la comparaison ci-dessous utilise un modèle régional distinct qui inclut les coûts d’installation.",
+    pathsEstimateUnavailable:
+      "Nous ne pouvons pas comparer l'installation clé en main et l'option DIY pour ce système. Les cartes affichent les estimations régionales disponibles, pas des devis locaux.",
+    pathsEstimateDiyLower:
+      "Pour le même système, les fourchettes initiales estimées sont {turnkey} en clé en main et {diy} pour le montage DIY avec raccordement par un électricien. Le point médian DIY est inférieur de {gap}.",
+    pathsEstimateDiyHigher:
+      "Pour ce système, la fourchette DIY est {diy} et celle du clé en main {turnkey} ; le point médian DIY est supérieur de {gap} ? celui du cl? en main. Le modèle additionne {hardware} de matériel, {labor} de raccordement par l'électricien, {fees} de permis/inspection/raccordement au réseau si nécessaire et {tools} d'outils et sécurité ; la référence clé en main inclut l'installation.",
+    pathsEstimateDiyTie:
+      "Pour le même système, DIY ({diy}) et installation clé en main ({turnkey}) ont le même point médian estimé.",
+    pathsEstimateBandsOverlap:
+      "Les fourchettes estimées se chevauchent ; un devis local peut inverser la comparaison des points médians.",
+    pathsEstimateBandsSeparate:
+      "Les fourchettes estimées ne se chevauchent pas dans ce modèle, mais les devis locaux peuvent varier.",
+    pathsEstimateHorizon:
+      "Ce sont des estimations régionales, pas des devis. Les cartes comparent le même système sur {years} ans.",
+    pathsOffgridEstimateScope:
+      "Les montants hors réseau couvrent uniquement le système PV, batterie et onduleur choisi. Le générateur, le transfert et le carburant sont exclus.",
+    offgridMatrixGeneratorAllowed:
+      "Le réseau n'est jamais supposé disponible. Les heures non couvertes nécessitent un générateur installé si vous voulez les couvrir ; son équipement et son carburant ne sont pas chiffrés.",
+    offgridMatrixNoGenerator:
+      "Ni le réseau ni un générateur ne sont supposés. Les heures non couvertes restent sans service.",
+    offgridTierServed: "{pct}% servis par les panneaux et la batterie",
+    pathsIncludesPermitsAndInspection:
+      "Permis et inspection (sans frais de raccordement au réseau)",
     pathsDiyNotPermitted:
       "Non proposée ici : dans votre région, l'installation électrique exige un installateur agréé.",
     pathsDiyRestricted:
@@ -2104,7 +2247,7 @@ export const LOCALES = {
     frontierX: "Systemkosten zu Beginn",
     frontierYGrid: "Anteil der Rechnung gesenkt",
     frontierYGridBattery: "Anteil der verschobenen Spitzenlaststunden",
-    frontierYOffgrid: "Anteil der Energie ohne Generator",
+    frontierYOffgrid: "Anteil des Bedarfs, den PV und Batterie decken",
     frontierSelTag: "{pv} kW + {batt} kWh · {pct} % · {cost}",
     frontierSelNoBatt: "{pv} kW, ohne Batterie · {pct} % · {cost}",
     frontierLegendSel:
@@ -2306,6 +2449,8 @@ export const LOCALES = {
       "Beginnt bei ~{bill} (≈{kwh} kWh/Tag). Tragen Sie hier Ihre echte Rechnung ein, wählen Sie einen Standort und klicken Sie auf Mein System dimensionieren. Der Spar-Schieber erscheint mit den Ergebnissen.",
     quickBillManual:
       "Schnellschätzung: ~{bill} (beginnt bei ~{kwh} kWh/Tag) — wechseln Sie zu Manuell, um Rechnung, Geräte oder Tarif zu ändern.",
+    quickOffgridSetup:
+      "Autarker Bedarf: etwa {kwh} kWh/Tag. Wählen Sie einen Standort und legen Sie fest, ob ein Notstromgenerator zulässig ist; die Ergebnisse zeigen Versorgungssicherheit und Installationswege ohne Netzstromkosten.",
     dailyEnergyNeed: "Täglicher Energiebedarf (kWh/Tag-Schieber)",
     billPerMonth: "/Mon.",
     simpleHeadline: "An Ihrem Standort bringt Ihnen dieses System {goal}:",
@@ -2378,15 +2523,13 @@ export const LOCALES = {
     pathsOwnershipLease:
       "Sie mieten es bis zum Vertragsende und übernehmen es dann oder geben es zurück.",
     pathsOwnershipSelf: "Es gehört Ihnen, sobald es installiert ist.",
-    pathsIncentiveTaxCredit: "Bundessteuergutschrift",
-    pathsIncentiveRebate: "Zuschuss des Netzbetreibers",
     pathsIncentivesToProvider:
       "Förderungen gehen an den Anbieter, nicht an Sie.",
     pathsIncentivesGoToProvider:
       "Der Anbieter behält sie — Sie besitzen nichts.",
     pathsNoIncentive: "Für diesen Weg gilt keiner.",
     pathsNoVerifiedIncentive:
-      "Für Ihre Region haben wir keinen geprüften Anreiz.",
+      "Keine Förderungen enthalten; prüfen Sie lokale Programme.",
     pathsUnknown: "Unbekannt",
     pathsNotWithinHorizon: "Nicht in 20 Jahren",
     pathsBreakEvenYear: "Jahr {year}",
@@ -2394,6 +2537,42 @@ export const LOCALES = {
     pathsNoSystem: "Es gibt kein System zu bepreisen.",
     pathsNoTariff:
       "Ein PPA braucht einen Tarif als Bezugsgröße und wird hier deshalb nicht gezeigt.",
+    pathsOffgridNotSupported:
+      "Für ein eigenständiges netzunabhängiges System nicht modelliert.",
+    pathsTitleOffgrid:
+      "Vier Wege zur Installation oder Finanzierung dieses netzunabhängigen Systems",
+    pathsSubOffgrid:
+      "Vergleichen Sie Komplettinstallation, Systemmiete, selbst gekaufte Teile mit Elektriker und DIY-Montage mit elektrischem Anschluss durch einen Fachbetrieb. Das sind regionale Planungswerte, keine Angebote; die Miete ist regional unterschiedlich verfügbar.",
+    pathsLabel_offgridLease: "Systemmiete",
+    pathsEstimateTitle: "DIY- und Installationskostenschätzungen",
+    pathsPartsOnlyLabel: "Nur Geräte (ohne Installation)",
+    pathsEstimateDiyHigherReason:
+      "Die Teile sowie feste Anschluss-, Genehmigungs- und Werkzeugkosten können die durch Eigenmontage eingesparte Arbeit übersteigen.",
+    pathsPriceBasisNote:
+      "Die Spanne reicht von Komponenten ab Werk (am unteren Ende können BMS und Batteriegehäuse fehlen) bis zu gelieferten Budgetgeräten. Das ist kein Preis für eine installierte DIY-Anlage; der Vergleich unten verwendet ein separates regionales Modell mit Installationskosten.",
+    pathsEstimateUnavailable:
+      "Für dieses System können wir Komplettinstallation und DIY nicht beide bepreisen. Die Karten zeigen verfügbare regionale Planungswerte, keine lokalen Angebote.",
+    pathsEstimateDiyLower:
+      "Für dasselbe System liegen die modellierten Anfangskosten bei {turnkey} für die Komplettinstallation und {diy} für DIY-Montage plus Elektrikeranschluss. Der DIY-Mittelwert ist {gap} niedriger.",
+    pathsEstimateDiyHigher:
+      "Bei diesem System liegt die DIY-Spanne bei {diy} und die Spanne der Komplettinstallation bei {turnkey}; der DIY-Mittelwert ist {gap} höher als der der Komplettinstallation. Das Modell addiert {hardware} für Teile, {labor} für den Elektrikeranschluss, {fees} für Genehmigung/Abnahme/Netzanschluss soweit nötig und {tools} für Werkzeug und Sicherheit; der Komplettpreis enthält die Installation.",
+    pathsEstimateDiyTie:
+      "Für dasselbe System haben DIY ({diy}) und Komplettinstallation ({turnkey}) denselben modellierten Mittelwert.",
+    pathsEstimateBandsOverlap:
+      "Die Planungsspannen überschneiden sich; ein lokales Angebot kann den Vergleich der Mittelwerte umkehren.",
+    pathsEstimateBandsSeparate:
+      "Die Planungsspannen überschneiden sich in diesem Modell nicht; lokale Angebote können dennoch abweichen.",
+    pathsEstimateHorizon:
+      "Das sind regionale Planungswerte, keine Angebote. Die Karten vergleichen dasselbe System über {years} Jahre.",
+    pathsOffgridEstimateScope:
+      "Netzunabhängige Beträge decken nur das gewählte PV-, Batterie- und Wechselrichtersystem ab. Generator, Umschalttechnik und Kraftstoff sind ausgeschlossen.",
+    offgridMatrixGeneratorAllowed:
+      "Es wird kein Netzstrom angenommen. Nicht versorgte Stunden brauchen einen installierten Generator, wenn sie abgedeckt werden sollen; Gerät und Kraftstoff sind nicht eingepreist.",
+    offgridMatrixNoGenerator:
+      "Es werden weder Netzstrom noch Generator angenommen. Nicht versorgte Stunden bleiben unversorgt.",
+    offgridTierServed: "{pct}% durch PV und Batterie versorgt",
+    pathsIncludesPermitsAndInspection:
+      "Genehmigungen und Abnahme (keine Netzanschlussgebühr)",
     pathsDiyNotPermitted:
       "Hier nicht angeboten: Bei Ihnen muss die Elektroinstallation von einem zugelassenen Fachbetrieb ausgeführt werden.",
     pathsDiyRestricted:
@@ -2581,7 +2760,7 @@ export const LOCALES = {
     frontierX: "التكلفة الأولية للنظام",
     frontierYGrid: "نسبة فاتورتك المخفّضة",
     frontierYGridBattery: "نسبة ساعات الذروة المنقولة",
-    frontierYOffgrid: "نسبة طاقتك المغطّاة دون مولّد",
+    frontierYOffgrid: "نسبة الطلب التي تغطيها الألواح والبطارية",
     frontierSelTag: "{pv} كيلوواط + {batt} كيلوواط ساعة · {pct}% · {cost}",
     frontierSelNoBatt: "{pv} كيلوواط دون بطارية · {pct}% · {cost}",
     frontierLegendSel: "الخيار المحدد — انقر أي نقطة للاختيار",
@@ -2770,6 +2949,8 @@ export const LOCALES = {
       "يبدأ من ~{bill} (≈{kwh} كيلوواط·ساعة/يوم). ضع فاتورتك الحقيقية هنا، واختر موقعًا، ثم انقر على «حجم نظامي». يظهر منزلق خفض الفاتورة مع النتائج.",
     quickBillManual:
       "تقدير سريع: ~{bill} (يبدأ من ~{kwh} كيلوواط·ساعة/يوم) — بدّل إلى اليدوي لتغيير فاتورتك أو أجهزتك أو التعرفة.",
+    quickOffgridSetup:
+      "الحمل خارج الشبكة: حوالي {kwh} كيلوواط·ساعة يوميًا. اختر موقعًا وحدد ما إذا كان مولد احتياطي مسموحًا؛ تعرض النتائج الموثوقية ومسارات التركيب بدون استخدام فاتورة كهرباء الشبكة.",
     dailyEnergyNeed: "الحاجة اليومية من الطاقة (منزلق كيلوواط·ساعة/يوم)",
     billPerMonth: "/شهريًا",
     simpleHeadline: "في موقعك، يمنحك هذا النظام {goal}:",
@@ -2836,12 +3017,10 @@ export const LOCALES = {
     pathsOwnershipPpa: "المزوّد هو المالك ويتولى الصيانة.",
     pathsOwnershipLease: "تستأجره حتى نهاية العقد ثم تشتريه أو تعيده.",
     pathsOwnershipSelf: "تملكه بعد تركيبه.",
-    pathsIncentiveTaxCredit: "ائتمان ضريبي فيدرالي",
-    pathsIncentiveRebate: "خصم من شركة الكهرباء",
     pathsIncentivesToProvider: "الحوافز تذهب إلى المزوّد لا إليك.",
     pathsIncentivesGoToProvider: "المزوّد يحتفظ بها — وأنت لا تملك شيئًا.",
     pathsNoIncentive: "لا ينطبق أي منها على هذه الطريقة.",
-    pathsNoVerifiedIncentive: "لا يوجد لدينا حافز موثّق لمنطقتك.",
+    pathsNoVerifiedIncentive: "لم تُدرج أي حوافز؛ تحقّق من البرامج المحلية.",
     pathsUnknown: "غير معروف",
     pathsNotWithinHorizon: "ليس خلال 20 عامًا",
     pathsBreakEvenYear: "السنة {year}",
@@ -2849,6 +3028,40 @@ export const LOCALES = {
     pathsNoSystem: "لا يوجد نظام لتسعيره.",
     pathsNoTariff:
       "يحتاج عقد الشراء إلى سعر كهرباء ليُسعَّر بمقابله، لذلك لا يظهر هنا.",
+    pathsOffgridNotSupported: "لا تتم نمذجته لنظام مستقل خارج الشبكة.",
+    pathsTitleOffgrid: "أربع طرق لتركيب هذا النظام المستقل أو تمويله",
+    pathsSubOffgrid:
+      "قارن بين التركيب الكامل، واستئجار النظام، وشراء القطع مع كهربائي، والتركيب الذاتي مع توصيل كهربائي من مختص. هذه تقديرات تخطيطية إقليمية وليست عروض أسعار؛ وتختلف إتاحة الاستئجار حسب المنطقة.",
+    pathsLabel_offgridLease: "استئجار النظام",
+    pathsEstimateTitle: "تقديرات التركيب الذاتي مقابل التركيب الكامل",
+    pathsPartsOnlyLabel: "المعدات فقط (من دون تركيب)",
+    pathsEstimateDiyHigherReason:
+      "قد تتجاوز تكلفة القطع والتوصيل والتصاريح والأدوات الثابتة ما توفره من أجور عند تركيب النظام بنفسك.",
+    pathsPriceBasisNote:
+      "يمتد النطاق من مكوّنات المصنع (وقد لا يشمل الحد الأدنى نظام إدارة البطارية أو هيكلها) إلى معدات اقتصادية مشحونة. هذا ليس سعر تركيب ذاتي كامل؛ فالمقارنة أدناه تستخدم نموذجًا إقليميًا منفصلًا يشمل تكاليف التركيب.",
+    pathsEstimateUnavailable:
+      "لا يمكننا تسعير التركيب الكامل والتركيب الذاتي معًا لهذا النظام. تعرض البطاقات أي تقديرات تخطيطية إقليمية متاحة، وليست عروضًا محلية.",
+    pathsEstimateDiyLower:
+      "للنظام نفسه، النطاقات الأولية المقدرة هي {turnkey} للتركيب الكامل و{diy} للتركيب الذاتي مع توصيل كهربائي من مختص. متوسط التركيب الذاتي أقل بمقدار {gap}.",
+    pathsEstimateDiyHigher:
+      "لهذا النظام، نطاق التركيب الذاتي هو {diy} ونطاق التركيب الكامل هو {turnkey}؛ ومتوسط التركيب الذاتي أعلى من التركيب الكامل بمقدار {gap}. يجمع النموذج {hardware} للقطع و{labor} للتوصيل الكهربائي و{fees} للتصاريح/الفحص/الربط بالشبكة عند الحاجة و{tools} للأدوات والسلامة؛ ويشمل السعر المرجعي الكامل أعمال التركيب.",
+    pathsEstimateDiyTie:
+      "للنظام نفسه، يتساوى المتوسط المقدر للتركيب الذاتي ({diy}) والتركيب الكامل ({turnkey}).",
+    pathsEstimateBandsOverlap:
+      "تتداخل نطاقات التخطيط، لذا قد يعكس عرض محلي مقارنة المتوسطات.",
+    pathsEstimateBandsSeparate:
+      "لا تتداخل نطاقات التخطيط في هذا النموذج، لكن العروض المحلية قد تختلف.",
+    pathsEstimateHorizon:
+      "هذه تقديرات تخطيطية إقليمية وليست عروض أسعار. تقارن البطاقات النظام نفسه على مدى {years} عامًا.",
+    pathsOffgridEstimateScope:
+      "تغطي تقديرات النظام المستقل الألواح والبطارية والعاكس المختارة فقط. ولا تشمل المولد أو معدات التحويل أو الوقود.",
+    offgridMatrixGeneratorAllowed:
+      "لا نفترض توفر كهرباء الشبكة. تحتاج الساعات غير المخدومة إلى مولد مركب إذا أردت تغطيتها؛ ولا يشمل السعر المولد أو الوقود.",
+    offgridMatrixNoGenerator:
+      "لا نفترض توفر الشبكة أو مولد. وتبقى الساعات غير المخدومة بلا كهرباء.",
+    offgridTierServed: "{pct}% مخدومة بالألواح والبطارية",
+    pathsIncludesPermitsAndInspection:
+      "التصاريح والفحص (من دون رسوم ربط بالشبكة)",
     pathsDiyNotPermitted:
       "غير معروضة هنا: في منطقتك يجب أن ينفّذ العمل الكهربائي مُثبِّت مرخّص.",
     pathsDiyRestricted: "غير معروضة هنا: التركيب الذاتي مقيّد في منطقتك.",

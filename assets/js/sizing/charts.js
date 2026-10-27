@@ -5,7 +5,7 @@
 // `$` (DOM lookup), `el` (element factory), `t` (i18n), `fmt` (number format),
 // `money` (currency formatter). Chart state (socZoomRange, cachedChartState)
 // lives here as the single owner.
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261015b";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261015m";
 
 // ── injected boundary (set once by ui.js via initCharts) ──────────────────
 let _$;
@@ -543,6 +543,25 @@ export function drawCumCostChart(p, chosenEntry = null) {
   const wrap = $("cumCostChartWrap");
   const canvas = $("cumCostCanvas");
   if (!wrap || !canvas) return;
+
+  // This chart compares ownership cost with hypothetical utility bills. An
+  // off-grid estimate has no grid-bill baseline, so keep that comparison out
+  // of the standalone results instead of drawing a misleading savings story.
+  if (p.mode === "offgrid") {
+    wrap.style.display = "none";
+    canvas.style.display = "none";
+    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+    const box = $("cumSavingsBox");
+    const caption = $("cumCostCaption");
+    const legend = $("cumCostLegend");
+    if (box) box.style.display = "none";
+    if (caption) caption.textContent = "";
+    if (legend) {
+      legend.style.display = "none";
+      legend.textContent = "";
+    }
+    return;
+  }
 
   // The section's own question, decided by the RUN rather than by whatever the
   // chart ends up showing. "What does solar really save you?" is the right

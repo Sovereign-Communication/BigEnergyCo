@@ -28,7 +28,7 @@ import {
   billCutFraction,
   simulateOutage,
   simulatePortable,
-} from "./engine.js?v=20261015b";
+} from "./engine.js?v=20261015m";
 
 import {
   isUseCaseId,
@@ -39,22 +39,22 @@ import {
   normaliseReservePct,
   normaliseOutageTarget,
   outcomeFor,
-} from "./usecases.js?v=20261015b";
+} from "./usecases.js?v=20261015m";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20261015b";
-import { buildFrontier } from "./frontier.js?v=20261015b";
-import { oversizeCallout } from "./rescale.js?v=20261015b";
-import { climateSummary } from "./climate.js?v=20261015b";
+} from "./nasa.js?v=20261015m";
+import { buildFrontier } from "./frontier.js?v=20261015m";
+import { oversizeCallout } from "./rescale.js?v=20261015m";
+import { climateSummary } from "./climate.js?v=20261015m";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20261015b";
+} from "./pricing.js?v=20261015m";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -65,7 +65,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20261015b";
+} from "./money.js?v=20261015m";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -307,7 +307,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20261015b");
+      await import("./profiles.js?v=20261015m");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -424,6 +424,7 @@ async function runSizingUncached(msg, deps = {}) {
     tariff = null,
     exportRate = null,
     mode = "offgrid",
+    generatorAllowed = true,
     autoTier = "tier99",
     autoTargetId = "cut80",
     customCut = 0.8,
@@ -542,7 +543,11 @@ async function runSizingUncached(msg, deps = {}) {
       : hardwareConfig === "solar" && !hasExport
         ? "cut25"
         : "cut80";
-  const repTierId = VALID_AUTO_TIERS.has(autoTier) ? autoTier : "tier99";
+  const requestedTierId = VALID_AUTO_TIERS.has(autoTier) ? autoTier : "tier99";
+  const repTierId =
+    mode === "offgrid" && generatorAllowed === false
+      ? "tier100"
+      : requestedTierId;
   const repTargetId =
     autoTargetId && effectiveTargets.some((t) => t.id === autoTargetId)
       ? autoTargetId
@@ -2408,7 +2413,7 @@ async function runSizingUncached(msg, deps = {}) {
     let effectiveTier = repTierId;
     let auto = buildAuto(repTierId);
     let autoFallback = false;
-    if (!auto.length) {
+    if (!auto.length && generatorAllowed !== false) {
       const desiredIdx = RELIABILITY_TIERS.findIndex((t) => t.id === repTierId);
       for (let i = desiredIdx + 1; i < RELIABILITY_TIERS.length; i++) {
         const cand = RELIABILITY_TIERS[i].id;
@@ -2423,6 +2428,7 @@ async function runSizingUncached(msg, deps = {}) {
     }
     const payload = basePayload();
     payload.mode = "offgrid";
+    payload.generatorAllowed = generatorAllowed !== false;
     payload.auto = auto;
     payload.autoFallback = autoFallback;
     payload.effectiveTierId = effectiveTier;
@@ -2520,7 +2526,7 @@ async function runSizingUncached(msg, deps = {}) {
     payload.assumptions.cycleLifeTo80 = Object.fromEntries(
       ["naion", "lfp", "agm"].map((c) => [c, CHEMISTRIES[c].cyclesTo80]),
     );
-    payload.assumptions.money = `Auto mode sizes sodium-ion and LFP for the same job — lights stay on with a generator as rare backup — inside its depth-of-discharge window. Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended.`;
+    payload.assumptions.money = `Auto mode sizes sodium-ion and LFP for the same job — ${generatorAllowed === false ? "without generator backup; any unmet hours are unserved" : "with a generator as optional backup for unmet hours"} — inside its depth-of-discharge window. Sodium is modeled on standard LFP voltage settings: slightly less usable capacity than a native profile, but gentler discharge and longer life. Lifetime cost adds every bank swap PLUS install labor each time over 20 years; lead-acid is modeled WITHOUT active balancing (typical DIY strings) and shown only as a savings reference, never recommended.`;
     return attachFrontier(payload);
   }
 
@@ -2632,12 +2638,16 @@ async function runSizingUncached(msg, deps = {}) {
 
   const payload = basePayload();
   payload.mode = "offgrid";
+  payload.generatorAllowed = generatorAllowed !== false;
   payload.chemLabel = chem.label;
-  payload.tiers = tiers;
+  payload.tiers =
+    generatorAllowed === false
+      ? tiers.filter((entry) => entry.id === "tier100")
+      : tiers;
   payload.auto = null;
   const ogFocus =
     tiers.find((x) => x.id === repTierId && x.solvable) ||
-    tiers.find((x) => x.solvable) ||
+    (generatorAllowed === false ? null : tiers.find((x) => x.solvable)) ||
     null;
   payload.focus = ogFocus ? focusFor(chemistry, ogFocus) : null;
   const focusEntry = computeFocusSystem(
@@ -2659,10 +2669,13 @@ async function runSizingUncached(msg, deps = {}) {
     endYear: series.meta.endYear,
     days: Math.ceil(hours.length / 24),
     pvDaily,
-    tiers: historyTiers,
+    tiers:
+      generatorAllowed === false
+        ? historyTiers.filter((entry) => entry.id === "tier100")
+        : historyTiers,
   };
   payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
-  payload.assumptions.money = `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 20-year horizon, and assumes panels/inverter last the full 20 years. Lifetime figures include install labor on the first bank and every swap. Generator fuel is not counted${fixedMonthly > 0 ? `; a fixed monthly charge is included in every bill figure` : `, nor are grid fixed charges`}.`;
+  payload.assumptions.money = `Payback compares component cost against your current annual grid spend (tariff you entered). Levelized cost uses landed-mid capex, replaces battery banks as they wear out across a 20-year horizon, and assumes panels/inverter last the full 20 years. Lifetime figures include install labor on the first bank and every swap. Generator equipment and fuel are not counted${fixedMonthly > 0 ? `; a fixed monthly charge is included in every bill figure` : `, nor are grid fixed charges`}.`;
   return attachFrontier(payload);
 }
 

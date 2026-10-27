@@ -136,14 +136,15 @@ test("simple view: off-grid goal line reads coverage, not bill-cut", () => {
   const view = buildSimpleView({
     p: { mode: "offgrid" },
     entry: { ...ENTRY, unmetHoursPerYear: 876 },
-    saved: NaN,
+    saved: 21000,
     fmt: FMT,
   });
   const goal = view.heroes.find((h) => h.label === "What it does");
   assert.equal(goal.value, "90% of the year covered");
-  // No tariff-comparable series in this fixture -> payback instead of saved.
-  const payback = view.heroes.find((h) => h.label === "Payback");
-  assert.equal(payback.value, "4.2 years");
+  assert.equal(
+    view.heroes.some((h) => /Saved over 20 years|Payback/.test(h.label)),
+    false,
+  );
 });
 
 test("simple view: infeasible or unsized entries produce nothing to render", () => {

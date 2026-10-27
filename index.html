@@ -259,10 +259,10 @@
     <!-- Early Hints prep: these two are on every page's critical path. When
          the zone's Early Hints setting is on, Cloudflare turns them into a
          103 response so the browser starts fetching before the HTML lands. -->
-    <link rel="preload" href="./assets/site.css?v=20261015b" as="style" />
-    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261015b" />
+    <link rel="preload" href="./assets/site.css?v=20261015m" as="style" />
+    <link rel="modulepreload" href="./assets/js/sizing/ui.js?v=20261015m" />
 
-    <link rel="stylesheet" href="./assets/site.css?v=20261015b" />
+    <link rel="stylesheet" href="./assets/site.css?v=20261015m" />
 
     <!--
       Preconnect: every external origin the calculator talks to. Warming
@@ -1103,6 +1103,16 @@
                   value="10"
                   style="width: 100%; cursor: pointer"
                 />
+                <div id="offgridInputs" hidden>
+                  <div class="form-group offgrid-generator-control">
+                    <label for="generatorAllowed" class="uc-check">
+                      <input type="checkbox" id="generatorAllowed" checked />
+                      <span data-i18n="generatorLabel"
+                        >A generator is available for the worst weeks</span
+                      >
+                    </label>
+                  </div>
+                </div>
               </div>
 
               <!-- Everything below the location row is the "full form": hidden in
@@ -1622,17 +1632,6 @@
                       value="20"
                     />
                     <span id="reserveSliderVal" class="uc-value"></span>
-                  </div>
-                </div>
-
-                <div id="offgridInputs" hidden>
-                  <div class="form-group">
-                    <label for="generatorAllowed" class="uc-check">
-                      <input type="checkbox" id="generatorAllowed" checked />
-                      <span data-i18n="generatorLabel"
-                        >A generator is available for the worst weeks</span
-                      >
-                    </label>
                   </div>
                 </div>
 
@@ -3625,15 +3624,15 @@
 
     <!-- Browser helpers (classic script: advisor + modal globals) -->
 
-    <script type="module" src="./assets/js/sizing/ui.js?v=20261015b"></script>
+    <script type="module" src="./assets/js/sizing/ui.js?v=20261015m"></script>
 
     <!-- Turnstile client (B1/R-CF-02). Harmless with no site key configured;
          the advisor posts without a token in that case, exactly as before. -->
     <script
       type="module"
-      src="./assets/js/turnstile-client.js?v=20261015b"
+      src="./assets/js/turnstile-client.js?v=20261015m"
     ></script>
-    <script defer src="./assets/js/chat.js?v=20261015b"></script>
+    <script defer src="./assets/js/chat.js?v=20261015m"></script>
   </body>
 </html>
 

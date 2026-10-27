@@ -78,6 +78,22 @@ const SYSTEM = {
 const priced = (over = {}, ctx = { country: "US", instrument: "ppa" }) =>
   priceAllPaths({ ...SYSTEM, ...over }, ctx);
 
+test("US turnkey midpoint is calibrated against DOE's 2025Q1 residential PV+ESS benchmark", () => {
+  // U.S. DOE's modeled market price is $4.59/Wdc for its representative
+  // 8 kW PV + 13.5 kWh storage system. Keep our decomposed regional model
+  // within 1% for that same reference system.
+  const benchmark = 4.59 * 8000;
+  const paths = priceAllPaths(
+    { pvKw: 8, battKwh: 13.5 },
+    { country: "US", mode: "gridtie" },
+  );
+  const mid = paths.by.turnkey.year0;
+  assert.ok(
+    Math.abs(mid - benchmark) <= benchmark * 0.01,
+    `regional midpoint $${mid} should match the $${benchmark} DOE reference within 1%`,
+  );
+});
+
 // ── 1. the four routes, one owner ───────────────────────────────────────────
 
 test("D-01's four routes are declared once, in one registry", () => {
@@ -145,11 +161,56 @@ test("a route that cannot be priced says so, with a reason", () => {
   assert.equal(noTariff.by.selfpurchase.available, true);
 });
 
-test("legality removes the DIY route rather than offering it quietly (D-10)", () => {
-  // Unknown is neither permitted nor forbidden, and must not render as a
-  // green light — so it REMOVES the card. `legalityFor` answers null, not a
-  // third state string: there is no jurisdiction record, and inventing one
-  // ("mostly allowed") is how a green light appears by default.
+test("off-grid paths price a standalone system without grid bills or interconnection", () => {
+  const offgrid = priceAllPaths(SYSTEM, {
+    country: "US",
+    instrument: "lease",
+    mode: "offgrid",
+  });
+  assert.equal(offgrid.mode, "offgrid");
+  assert.equal(offgrid.instrument, "lease");
+  for (const id of ["turnkey", "lease", "selfpurchase", "diy"])
+    assert.equal(offgrid.by[id].available, true, `${id} remains a route`);
+  assert.equal(offgrid.system.annualBaselineBillsUsd, null);
+  assert.equal(offgrid.system.annualResidualBillsUsd, null);
+  assert.equal(offgrid.by.turnkey.billCutPct, null);
+  assert.equal(offgrid.by.turnkey.net20, null);
+  assert.ok(
+    offgrid.by.diy.included.includes("pathsIncludesPermitsAndInspection"),
+  );
+  assert.ok(
+    !offgrid.by.diy.included.includes("pathsIncludesPermitsAndInterconnection"),
+  );
+
+  const gridtie = priced({}, { country: "US", instrument: "lease" });
+  assert.equal(
+    gridtie.by.diy.fees - offgrid.by.diy.fees,
+    bandMid(offgrid.registry.interconnection),
+    "only the grid-connected DIY route pays the interconnection fee",
+  );
+  assert.equal(
+    gridtie.by.selfpurchase.fees - offgrid.by.selfpurchase.fees,
+    bandMid(offgrid.registry.interconnection),
+  );
+
+  const ppa = priceAllPaths(SYSTEM, {
+    country: "US",
+    instrument: "ppa",
+    mode: "offgrid",
+  });
+  assert.equal(ppa.by.lease.available, false);
+  assert.equal(ppa.by.lease.blockedBy, "offgrid-not-supported");
+  assert.equal(
+    describePaths(offgrid, (n) => String(n)).find((p) => p.id === "lease")
+      .labelKey,
+    "pathsLabel_offgridLease",
+  );
+});
+
+test("DIY mounting follows mounting legality while an electrician option remains available", () => {
+  // Unknown or restricted mounting is not offered as legal. Permission to do
+  // one's own electrical work does not remove a route that explicitly pays an
+  // electrician to make the connection.
   const unknown = legalityFor("AQ");
   assert.equal(unknown.diyMounting, null);
   assert.equal(unknown.electricalDiy, null);
@@ -160,14 +221,39 @@ test("legality removes the DIY route rather than offering it quietly (D-10)", ()
   const r = priced({}, { country: "AQ" });
   assert.equal(r.by.diy.available, false);
   assert.equal(r.by.diy.blockedBy, "diy-unknown");
-  // A jurisdiction that requires a licensed electrician for the electrical
-  // work is not the jurisdiction R-PATH-04 describes either.
   const us = priced({}, { country: "US" });
-  assert.equal(us.by.diy.available, false);
-  assert.equal(us.by.diy.blockedBy, "diy-not-permitted");
+  assert.equal(us.by.diy.available, true);
+  assert.ok(us.by.diy.included.includes("pathsIncludesElectricianConnects"));
+  const gb = priced({}, { country: "GB" });
+  assert.equal(gb.by.diy.available, false);
+  assert.equal(gb.by.diy.blockedBy, "diy-restricted");
   // A refusal still has to be explainable.
   for (const p of r.paths.filter((x) => !x.available))
     assert.ok(p.notes.length > 0, `${p.id} refuses without saying why`);
+});
+
+test("catalog country names use the same price region and legality rules as ISO codes", () => {
+  assert.equal(regionForCountry("United States"), "us");
+  assert.equal(regionForCountry("Germany"), "eu");
+  assert.equal(legalityFor("United States").diyMounting, "allowed");
+  assert.equal(legalityFor("Germany").diyMounting, "restricted");
+
+  const us = priceAllPaths(SYSTEM, {
+    country: "United States",
+    instrument: "lease",
+    mode: "offgrid",
+  });
+  assert.equal(us.region, "us");
+  assert.equal(us.by.diy.available, true);
+
+  const germany = priceAllPaths(SYSTEM, {
+    country: "Germany",
+    instrument: "lease",
+    mode: "offgrid",
+  });
+  assert.equal(germany.region, "eu");
+  assert.equal(germany.by.diy.available, false);
+  assert.equal(germany.by.diy.blockedBy, "diy-restricted");
 });
 
 // ── 3. one system, one horizon, one set of definitions ──────────────────────
@@ -237,6 +323,28 @@ test("incentives follow the OWNER, and a zero carries its reason (R-PATH-05)", (
   const lease = r.by.lease;
   assert.equal(lease.incentives, 0);
   assert.equal(lease.incentiveNoteKey, "pathsIncentivesToProvider");
+  assert.deepEqual(
+    INCENTIVES.us,
+    [],
+    "do not assume expired or generic US incentives",
+  );
+  for (const id of ["turnkey", "selfpurchase", "diy"]) {
+    assert.equal(r.by[id].incentives, 0, `${id} has no verified incentive`);
+    assert.deepEqual(r.by[id].incentiveEntries, []);
+  }
+  const descriptions = describePaths(
+    r,
+    (amount) => String(amount),
+    (key) => LOCALES.en[key] || key,
+  );
+  for (const card of descriptions.filter(
+    (p) => p.available && p.id !== "lease",
+  ))
+    assert.equal(
+      card.incentivesText,
+      LOCALES.en.pathsNoVerifiedIncentive,
+      `${card.id} discloses that incentives are excluded`,
+    );
   // The incentive registry names the paths it applies to, which is what stops
   // two cards being compared with different things counted.
   for (const [region, entries] of Object.entries(INCENTIVES))

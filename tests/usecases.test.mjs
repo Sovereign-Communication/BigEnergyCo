@@ -162,6 +162,39 @@ test("every declared input control exists in the shipped page", () => {
     );
 });
 
+test("the off-grid backup choice is available in quick setup", () => {
+  const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+  assert.equal((html.match(/id="generatorAllowed"/g) || []).length, 1);
+  assert.ok(
+    html.indexOf('id="offgridInputs"') < html.indexOf('id="fullControls"'),
+    "the single generator control must live outside the Manual-only controls",
+  );
+});
+
+test("segmented goal buttons sync the use-case id before sizing", () => {
+  const ui = fs.readFileSync(path.join(ROOT, "assets/js/sizing/ui.js"), "utf8");
+  const start = ui.indexOf("function setupGoalControls()");
+  const end = ui.indexOf("function setupOffgridControls()", start);
+  assert.ok(start >= 0 && end > start, "goal control owner is present");
+  const controls = ui.slice(start, end);
+  assert.match(
+    controls,
+    /const setGoal = \(goal, selectDefaultUseCase = false\)/,
+  );
+  assert.match(
+    controls,
+    /if \(selectDefaultUseCase\) applyUseCase\(isGt \? "billcut" : "offgrid"\)/,
+  );
+  assert.match(
+    controls,
+    /btnGt\.addEventListener\("click", \(\) => setGoal\("gridtie", true\)\)/,
+  );
+  assert.match(
+    controls,
+    /btnOff\.addEventListener\("click", \(\) => setGoal\("offgrid", true\)\)/,
+  );
+});
+
 test("the legacy pair is DERIVED from the use case, and hidden from the visitor", () => {
   assert.deepEqual(deriveLegacy("offgrid"), {
     mode: "offgrid",

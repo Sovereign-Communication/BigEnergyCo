@@ -279,11 +279,68 @@ const REGION_COUNTRIES = {
   ],
 };
 
-/** Region block for an ISO country code; unknown countries get the weak block. */
-export function regionForCountry(country) {
-  const c = String(country || "")
+const COUNTRY_ALIASES = {
+  "united states": "us",
+  "united states of america": "us",
+  usa: "us",
+  canada: "ca",
+  "united kingdom": "gb",
+  uk: "gb",
+  ireland: "ie",
+  germany: "de",
+  france: "fr",
+  spain: "es",
+  portugal: "pt",
+  italy: "it",
+  netherlands: "nl",
+  belgium: "be",
+  austria: "at",
+  switzerland: "ch",
+  denmark: "dk",
+  sweden: "se",
+  norway: "no",
+  finland: "fi",
+  poland: "pl",
+  hungary: "hu",
+  romania: "ro",
+  greece: "gr",
+  slovenia: "si",
+  slovakia: "sk",
+  croatia: "hr",
+  estonia: "ee",
+  latvia: "lv",
+  lithuania: "lt",
+  iceland: "is",
+  luxembourg: "lu",
+  malta: "mt",
+  cyprus: "cy",
+  australia: "au",
+  "czech republic": "cz",
+  czechia: "cz",
+  japan: "jp",
+  singapore: "sg",
+  india: "in",
+  philippines: "ph",
+  indonesia: "id",
+  malaysia: "my",
+  thailand: "th",
+  vietnam: "vn",
+  "south korea": "kr",
+  "republic of korea": "kr",
+  "new zealand": "nz",
+  "south africa": "za",
+};
+
+function countryCode(country) {
+  const value = String(country || "")
     .trim()
     .toLowerCase();
+  return COUNTRY_ALIASES[value] || value;
+}
+
+/** Region block for a country code or catalog name; unknown countries get the weak block. */
+export function regionForCountry(country) {
+  const c = countryCode(country);
   if (!c) return "row";
   for (const [region, list] of Object.entries(REGION_COUNTRIES))
     if (list.includes(c)) return region;
@@ -334,36 +391,12 @@ export const LEASE_INSTRUMENTS = ["ppa", "lease"];
  * installer-only rebate. Naming the eligible paths is what stops the four
  * cards being compared with different things counted.
  *
- * `eu`, `apac` and `row` are present and EMPTY on purpose: this repo has no
- * verified per-country incentive registry (the provenance finding, still
- * open), so those regions report the honest "no incentives included" line
- * rather than a borrowed US number.
+ * Every region is EMPTY until an incentive has a verified current validity
+ * window, eligibility rule, amount and source. A stale federal credit or a
+ * generic state/utility rebate is not a safe estimate.
  */
 export const INCENTIVES = {
-  us: [
-    {
-      id: "residential-credit",
-      type: "tax-credit",
-      labelKey: "pathsIncentiveTaxCredit",
-      amountPctOfYear0: [0.22, 0.3, 0.3],
-      capUsd: [3200, 8000, 8000],
-      eligiblePaths: ["selfpurchase", "diy"],
-      grade: "C",
-      source:
-        "US federal residential clean-energy credit; expiry and phase-down must be checked",
-    },
-    {
-      id: "utility-rebate",
-      type: "upfront-rebate",
-      labelKey: "pathsIncentiveRebate",
-      amountPctOfYear0: [0.03, 0.08, 0.15],
-      capUsd: [200, 1000, 3000],
-      eligiblePaths: ["turnkey"],
-      grade: "C",
-      source:
-        "Typical state and utility residential solar rebate bands, 2024-2026",
-    },
-  ],
+  us: [],
   eu: [],
   apac: [],
   row: [],
@@ -434,9 +467,7 @@ const UNKNOWN_SOURCE =
   "No verified rule for this jurisdiction; check with your local authority";
 
 export function legalityFor(country) {
-  const c = String(country || "")
-    .trim()
-    .toLowerCase();
+  const c = countryCode(country);
   const rule = LEGALITY_RULES[c];
   return {
     country: c || null,
@@ -485,6 +516,8 @@ export function blockedReasonKey(blockedBy) {
       return "pathsNoSystem";
     case "no-tariff":
       return "pathsNoTariff";
+    case "offgrid-not-supported":
+      return "pathsOffgridNotSupported";
     case "diy-not-permitted":
       return "pathsDiyNotPermitted";
     case "diy-restricted":
@@ -594,6 +627,12 @@ export function priceAllPaths(system, ctx = {}) {
   const registry = registryFor(region);
   const legality = legalityFor(ctx.country);
   const sys = normaliseSystem(system);
+  if (ctx.mode === "offgrid") {
+    sys.annualBaselineBillsUsd = null;
+    sys.annualResidualBillsUsd = null;
+    sys.billCutPct = null;
+    sys.tariff = null;
+  }
   const paths = PATH_IDS.map((id) =>
     priceOne(id, sys, ctx, region, registry, legality),
   );
@@ -605,11 +644,19 @@ export function priceAllPaths(system, ctx = {}) {
 
   return {
     system: sys,
+    mode: ctx.mode === "offgrid" ? "offgrid" : "gridtie",
     region,
     registry,
     legality,
     country: ctx.country || null,
-    instrument: ctx.instrument === "lease" ? "lease" : "ppa",
+    instrument:
+      ctx.mode === "offgrid"
+        ? ctx.instrument === "ppa"
+          ? "ppa"
+          : "lease"
+        : ctx.instrument === "lease"
+          ? "lease"
+          : "ppa",
     paths,
     by,
     // R-PATH-07, defined against the SAME system.
@@ -665,21 +712,23 @@ function normaliseSystem(system) {
 export function systemForPaths(entry, ctx = {}) {
   const e = entry || {};
   const num = (v) => (Number.isFinite(v) ? v : null);
-  const residual =
-    num(ctx.annualResidualBillsUsd) ??
-    (num(e.billAfterMonthlyUsd) !== null
-      ? e.billAfterMonthlyUsd * 12 + (num(e.exportValueAnnualUsd) || 0)
-      : null);
+  const offgrid = ctx.mode === "offgrid";
+  const residual = offgrid
+    ? null
+    : (num(ctx.annualResidualBillsUsd) ??
+      (num(e.billAfterMonthlyUsd) !== null
+        ? e.billAfterMonthlyUsd * 12 + (num(e.exportValueAnnualUsd) || 0)
+        : null));
   return {
     pvKw: Math.max(0, num(e.pvKw) || 0),
     battKwh: Math.max(0, num(e.battKwh) || 0),
     annualServedKwh: Math.max(0, num(e.servedKwhPerYear) || 0),
     replacements: Math.max(0, num(e.replacementsHorizon) || 0),
     batteryLifeYears: num(e.batteryLifeYears) ?? num(ctx.batteryLifeYears),
-    annualBaselineBillsUsd: num(ctx.annualBaselineBillsUsd),
+    annualBaselineBillsUsd: offgrid ? null : num(ctx.annualBaselineBillsUsd),
     annualResidualBillsUsd: residual,
-    billCutPct: num(e.cutPct),
-    tariff: num(e.tariff) ?? num(ctx.tariff),
+    billCutPct: offgrid ? null : num(e.cutPct),
+    tariff: offgrid ? null : (num(e.tariff) ?? num(ctx.tariff)),
   };
 }
 
@@ -724,6 +773,14 @@ function newPath(id, registry) {
 
 function priceOne(id, sys, ctx, region, registry, legality) {
   const p = newPath(id, registry);
+  const offgrid = ctx.mode === "offgrid";
+  if (offgrid && (id === "selfpurchase" || id === "diy")) {
+    p.included = p.included.map((key) =>
+      key === "pathsIncludesPermitsAndInterconnection"
+        ? "pathsIncludesPermitsAndInspection"
+        : key,
+    );
+  }
   if (sys.pvKw <= 0 && sys.battKwh <= 0) {
     p.blockedBy = "no-system";
     return p;
@@ -768,7 +825,17 @@ function priceOne(id, sys, ctx, region, registry, legality) {
   }
 
   if (id === "lease") {
-    const instrument = ctx.instrument === "lease" ? "lease" : "ppa";
+    const instrument = offgrid
+      ? ctx.instrument === "ppa"
+        ? "ppa"
+        : "lease"
+      : ctx.instrument === "lease"
+        ? "lease"
+        : "ppa";
+    if (offgrid && instrument === "ppa") {
+      p.blockedBy = "offgrid-not-supported";
+      return p;
+    }
     const installed =
       bandMid(registry.tkPvPerW) * sys.pvKw * 1000 +
       bandMid(registry.tkBattPerKwh) * sys.battKwh +
@@ -843,8 +910,9 @@ function priceOne(id, sys, ctx, region, registry, legality) {
   const fees = (idx) =>
     bandEnd(registry.permit, idx) +
     bandEnd(registry.inspection, idx) +
-    bandEnd(registry.interconnection, idx);
+    (offgrid ? 0 : bandEnd(registry.interconnection, idx));
   const toolsMid = id === "diy" ? bandMid(registry.diyTools) : 0;
+  const toolsLow = id === "diy" ? bandEnd(registry.diyTools, 0) : 0;
   const toolsHigh = id === "diy" ? bandEnd(registry.diyTools, 2) : 0;
 
   p.hardware = Math.round(hwMid);
@@ -853,7 +921,7 @@ function priceOne(id, sys, ctx, region, registry, legality) {
   p.tools = Math.round(toolsMid);
   p.year0 = p.hardware + p.labour + p.fees + p.tools;
   p.year0Low = Math.round(
-    hwLow + hours * bandEnd(registry.elecRate, 0) + fees(0),
+    hwLow + hours * bandEnd(registry.elecRate, 0) + fees(0) + toolsLow,
   );
   p.year0High = Math.round(
     hwHigh + hours * bandEnd(registry.elecRate, 2) + fees(2) + toolsHigh,
@@ -864,13 +932,10 @@ function priceOne(id, sys, ctx, region, registry, legality) {
   p.ownershipKey = "pathsOwnershipSelf";
 
   if (id === "diy") {
-    // D-10. `electricalDiy: "allowed"` is exactly the case where this path is
-    // NOT offered: R-PATH-04 pairs DIY mounting WITH an electrician doing the
-    // connection, so a jurisdiction where the owner may wire their own system
-    // is not the jurisdiction this path describes.
-    if (legality.electricalDiy === "allowed") p.blockedBy = "diy-not-permitted";
-    else if (legality.diyMounting === "restricted")
-      p.blockedBy = "diy-restricted";
+    // R-PATH-04 is DIY mounting with a paid electrician connection. A visitor
+    // who is also allowed to do electrical work may still choose that route;
+    // only the legality of the mounting work can make this path unavailable.
+    if (legality.diyMounting === "restricted") p.blockedBy = "diy-restricted";
     else if (legality.diyMounting !== "allowed") p.blockedBy = "diy-unknown";
     if (p.blockedBy) {
       p.notes.push(legality.source);
@@ -1072,11 +1137,15 @@ export function describePaths(result, moneyFn, tFn = (k) => k) {
     const notes = (p.notes || []).map((n) =>
       n.startsWith("paths") ? tr(n) : n,
     );
+    const labelKey =
+      p.id === "lease" && result.mode === "offgrid"
+        ? "pathsLabel_offgridLease"
+        : LABEL_KEYS[p.id] || "pathsUnavailable";
     if (!p.available)
       return {
         id: p.id,
         available: false,
-        labelKey: LABEL_KEYS[p.id] || "pathsUnavailable",
+        labelKey,
         reasonKey: blockedReasonKey(p.blockedBy),
         notes,
       };
@@ -1093,7 +1162,7 @@ export function describePaths(result, moneyFn, tFn = (k) => k) {
     return {
       id: p.id,
       available: true,
-      labelKey: LABEL_KEYS[p.id] || "pathsUnavailable",
+      labelKey,
       year0Text: moneyFn(p.year0),
       year0RangeText:
         p.year0Low === p.year0 && p.year0High === p.year0

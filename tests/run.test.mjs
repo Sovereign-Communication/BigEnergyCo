@@ -146,6 +146,45 @@ test("off-grid AUTO honors the independence submenu (tier100 → zero unmet)", a
   assert.ok(p100.autoNote.includes("100% independence"));
 });
 
+test("off-grid sizing honors a no-generator constraint instead of falling back to generator tiers", async () => {
+  const p = await runSizing(
+    {
+      ...MSG,
+      chemistry: "auto",
+      mode: "offgrid",
+      autoTier: "tier95",
+      generatorAllowed: false,
+    },
+    { fetchWeather: fakeWeather },
+  );
+  assert.equal(p.generatorAllowed, false);
+  assert.equal(p.effectiveTierId, "tier100");
+  assert.equal(p.autoFallback, false);
+  assert.ok(p.auto.length > 0, "the load can be sized without a generator");
+  assert.ok(p.auto.every((entry) => entry.unmetHoursPerYear === 0));
+  assert.match(p.autoNote, /100% independence/);
+
+  const singleChemistry = await runSizing(
+    {
+      ...MSG,
+      chemistry: "lfp",
+      mode: "offgrid",
+      autoTier: "tier95",
+      generatorAllowed: false,
+    },
+    { fetchWeather: fakeWeather },
+  );
+  assert.deepEqual(
+    singleChemistry.tiers.map((entry) => entry.id),
+    ["tier100"],
+  );
+  assert.equal(singleChemistry.tiers[0].unmetHoursPerYear, 0);
+  assert.deepEqual(
+    singleChemistry.history.tiers.map((entry) => entry.id),
+    ["tier100"],
+  );
+});
+
 test("autoNoteFor names exactly the chemistries that solved (count-aware copy)", () => {
   const basis = "an ~80% grid-bill cut";
   assert.equal(

@@ -385,7 +385,7 @@ if (walk.length) {
 
   // ONE price, two surfaces. The ELI5 sentence and the panel must both read
   // the priced model, or the page shows two different turnkey figures.
-  if (!/turnkeyQuoteText\(sys, money, moneyRange, paths\)/.test(ui))
+  if (!/turnkeyQuoteText\(paths, money, moneyRange, t\)/.test(ui))
     fail("the ELI5 sentence is not reading the priced comparison");
   else ok("the ELI5 sentence and the panel read one priced comparison");
 }
