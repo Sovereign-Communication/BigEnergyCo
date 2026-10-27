@@ -1,0 +1,701 @@
+// Builds static SEO city pages from the CITY_CATALOG in assets/js/sizing/cities.js.
+// Run: node scripts/build-city-pages.mjs [--check]
+//   --check: parse/validate only, do not write files
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { join, resolve } from "node:path";
+// Shared pricing/tariff sources (plain ESM, no browser deps): the worked
+// example below is computed from the same costs and tariffs as the tool, so a
+// pricing update regenerates honest pages instead of silently dating them.
+import { estimateTariff, costRange } from "../assets/js/sizing/pricing.js";
+
+const ROOT = resolve(
+  new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
+);
+const CHECK = process.argv.includes("--check");
+const OUT = join(ROOT, "solar-calculator");
+
+// Pull CITY_CATALOG out of cities.js without executing browser imports:
+// cities.js imports pricing.js (which imports content.js) — both are plain ESM,
+// but to stay dependency-free we extract the literal array via a tiny transform.
+function extractCatalog() {
+  const src = readFileSync(join(ROOT, "assets/js/sizing/cities.js"), "utf8");
+  const start = src.indexOf("export const CITY_CATALOG = [");
+  if (start < 0) throw new Error("CITY_CATALOG not found in cities.js");
+  const from = src.indexOf("[", start);
+  // find matching closing bracket
+  let depth = 0,
+    end = -1;
+  for (let i = from; i < src.length; i++) {
+    if (src[i] === "[") depth++;
+    else if (src[i] === "]") {
+      depth--;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+  if (end < 0) throw new Error("CITY_CATALOG array not terminated");
+  const literal = src.slice(from, end + 1);
+  // rows are ["Name", "Country", "Region", lat, lon]
+  return eval(literal).map(([name, country, region, lat, lon]) => ({
+    name,
+    country,
+    region,
+    lat,
+    lon,
+  }));
+}
+
+const cities = extractCatalog();
+if (cities.length < 50)
+  throw new Error(`expected ~66 cities, got ${cities.length}`);
+console.log(`Found ${cities.length} catalog cities.`);
+
+function slugify(s) {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+// Rough latitude-based sun context (educational, honest — no fake precision).
+function sunContext(lat) {
+  const a = Math.abs(lat);
+  if (a < 15)
+    return {
+      tier: "Tropical sun",
+      note: "near-constant day length and strong year-round sun; the least seasonal solar resource on Earth.",
+    };
+  if (a < 30)
+    return {
+      tier: "Subtropical sun",
+      note: "strong sun most of the year with a mild winter dip.",
+    };
+  if (a < 45)
+    return {
+      tier: "Temperate sun",
+      note: "good summer sun, a real winter dip, and month-to-month variation worth simulating.",
+    };
+  if (a < 60)
+    return {
+      tier: "High-latitude sun",
+      note: "long summer days, short winter ones — the seasonal spread is exactly what the simulator measures.",
+    };
+  return {
+    tier: "Polar-margin sun",
+    note: "extreme seasonal swing; winter sizing is decided by the darkest week, not the average.",
+  };
+}
+
+// Simple worked example from latitude: rough specific yield kWh/kWp/yr band.
+function yieldBand(lat) {
+  const a = Math.abs(lat);
+  if (a < 15) return [1500, 1900];
+  if (a < 30) return [1400, 1800];
+  if (a < 45) return [1100, 1500];
+  if (a < 60) return [850, 1200];
+  return [600, 950];
+}
+
+function fmtKwh(v) {
+  return v.toLocaleString("en-US");
+}
+
+// Worked example for a 10 kWh/day household, derived from the latitude yield
+// band and the SHARED tariff + landed-DIY costs — an illustration, not a
+// sizing (no hourly simulation; the dark-week margin is a flat ×1.5 on PV).
+// Returns { rows: [[label, pvRange, battRange]], paybackLine }.
+function workedExample(c, lo, hi) {
+  const yieldMid = (lo + hi) / 2;
+  const est = estimateTariff(c.lat, c.lon, c.region, c.country);
+  const landedF = est.landedF ?? 1.1;
+  const fracs = [0.6, 0.8, 0.95];
+  const rows = fracs.map((f) => {
+    // PV to displace fraction f of 3650 kWh/yr at band-mid yield, ×1.5
+    // dark-week margin, as a ±30% range in 0.5 kW steps.
+    const pvMid = ((3650 * f) / yieldMid) * 1.5;
+    const pvLo = Math.max(0.5, Math.round(pvMid * 0.7 * 2) / 2);
+    const pvHi = Math.max(pvLo, Math.round(pvMid * 1.3 * 2) / 2);
+    // Overnight + cloudy-day buffer scales with the cut ambition.
+    const bMid = 10 * f * 0.7;
+    const bLo = Math.max(1, Math.round(bMid * 0.7));
+    const bHi = Math.max(bLo + 1, Math.round(bMid * 1.3));
+    return [
+      `~${Math.round(f * 100)}%`,
+      `${pvLo}–${pvHi} kW`,
+      `${bLo}–${bHi} kWh`,
+    ];
+  });
+  // Payback illustration on the 60% row at the shared local tariff.
+  const pv60 = ((3650 * 0.6) / yieldMid) * 1.5;
+  const b60 = 10 * 0.6 * 0.7;
+  const cost = costRange(pv60, b60, "landed", "lfp");
+  const costMid = Math.round(((cost.lo + cost.hi) / 2) * landedF);
+  const savedYr = Math.round(3650 * 0.6 * est.rate);
+  const pb = savedYr > 0 ? costMid / savedYr : null;
+  const paybackLine = `Payback depends on your local tariff: at ~$${est.rate.toFixed(2)}/kWh a 60% cut on this load saves roughly $${fmtKwh(savedYr)}/year, which repays landed-DIY component costs (about $${fmtKwh(costMid)}) in ${pb === null ? "an uneconomic stretch — the tool will tell you plainly" : pb < 1 ? "under a year" : `about ${pb.toFixed(1)} years`}. Where power is cheap, payback stretches — the tool shows your personal number from your own rate.`;
+  return { rows, paybackLine };
+}
+
+function cityPage(c) {
+  const slug = slugify(c.name);
+  const url = `https://freeoffgridcalculator.com/solar-calculator/${slug}/`;
+  const sc = sunContext(c.lat);
+  const [lo, hi] = yieldBand(c.lat);
+  const wx = workedExample(c, lo, hi);
+  const coord = `${Math.abs(c.lat).toFixed(2)}° ${c.lat >= 0 ? "N" : "S"}, ${Math.abs(c.lon).toFixed(2)}° ${c.lon >= 0 ? "E" : "W"}`;
+  // SERP title, city first for local intent and hard-capped at 62 rendered
+  // characters (Google truncates around 580 px; a 76-character title is just a
+  // wasted opportunity). The country lives in the description, h1, breadcrumb
+  // and JSON-LD instead of eating the title budget. Written as `&amp;` because
+  // this is markup: the length gate measures the rendered text.
+  const title = `${c.name} Solar &amp; Battery Calculator — Free Sizing`;
+  const desc = `Free solar and battery sizing for ${c.name}, ${c.country} (${coord}). Five years of NASA weather. Nothing for sale.`;
+  const h1 = `Solar & Battery Sizing for ${c.name}, ${c.country}`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#090d16">
+  <title>${title}</title>
+  <meta name="description" content="${desc}">
+  <link rel="icon" type="image/svg+xml" href="../../assets/icon.svg">
+  <link rel="icon" type="image/png" sizes="48x48" href="../../assets/favicon-48.png">
+  <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
+  <link rel="manifest" href="../../manifest.webmanifest">
+  <link rel="canonical" href="${url}">
+  <!-- hreflang is intentionally en + x-default only: the ?lang= variants are
+       client-side translations that canonical here, so Google would discard
+       them as non-indexable targets. -->
+  <link rel="alternate" hreflang="en" href="${url}">
+  <link rel="alternate" hreflang="x-default" href="${url}">
+  <link rel="alternate" type="application/rss+xml" title="BigEnergyCo Blog" href="https://freeoffgridcalculator.com/rss.xml">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="BigEnergyCo">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:title" content="${title}">
+  <meta property="og:description" content="${desc}">
+  <meta property="og:url" content="${url}">
+  <meta property="article:published_time" content="2026-08-30">
+  <meta property="article:modified_time" content="2026-08-30">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${title}">
+  <meta name="twitter:description" content="${desc}">
+  <meta property="og:image" content="https://freeoffgridcalculator.com/assets/og-card.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:image" content="https://freeoffgridcalculator.com/assets/og-card.jpg">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Article",
+        "@id": "${url}#article",
+        "headline": "${h1}",
+        "image": ["https://freeoffgridcalculator.com/assets/og-card.jpg"],
+        "datePublished": "2026-08-30T00:00:00Z",
+        "dateModified": "2026-08-30T00:00:00Z",
+        "author": { "@type": "Person", "name": "Lucas Ballek", "url": "https://freeoffgridcalculator.com" },
+        "publisher": { "@type": "Organization", "name": "BigEnergyCo", "url": "https://freeoffgridcalculator.com" },
+        "mainEntityOfPage": "${url}",
+        "description": "${desc}"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "${url}#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://freeoffgridcalculator.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Solar Calculator by City", "item": "https://freeoffgridcalculator.com/solar-calculator/" },
+          { "@type": "ListItem", "position": 3, "name": "${c.name}, ${c.country}", "item": "${url}" }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "${url}#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How much solar do I need in ${c.name}?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It depends on your daily kWh use. As a rough band, ${c.name} sits in the ${sc.tier.toLowerCase()} zone with roughly ${lo}–${hi} kWh produced per kW of panels per year. A 10 kWh/day household typically lands between 3 and 6 kW of panels depending on the bill-cut target. The free calculator computes your exact numbers from five years of NASA satellite weather at your coordinates."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does solar work in ${c.country}?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes — ${sc.tier} at ${coord}. ${sc.note.charAt(0).toUpperCase() + sc.note.slice(1)} The simulator sizes against your worst week, not the average, so the result is honest about winter."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is the ${c.name} solar calculator free?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Completely. No signup, no email, nothing for sale. You type your city or coordinates, enter your bill or daily usage, and get off-grid tiers, bill-cut scenarios, payback, and a hardware parts list — all computed in your browser."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    :root {
+      color-scheme: dark;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.28) rgba(11, 15, 23, 0.85);
+      --accent: #00e699;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --bg: #0b0f17;
+      --card: rgba(255, 255, 255, 0.04);
+      --border: rgba(255, 255, 255, 0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(11, 15, 23, 0.85); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.38); }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .container { max-width: 820px; margin: 0 auto; padding: 0 1.25rem; }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      background: rgba(11, 15, 23, 0.92);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 5;
+    }
+    header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; }
+    .logo { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; color: #fff; }
+    .logo .highlight { color: var(--accent); }
+    nav { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+    nav a { color: var(--muted); text-decoration: none; font-size: .9rem; font-weight: 500; transition: color 0.2s; }
+    nav a:hover, nav a.active { color: #fff; }
+    .header-cta { display: flex; align-items: center; }
+    .header-cta .btn { margin-top: 0; padding: .5rem 1rem; font-size: .88rem; }
+    article { padding: 2.5rem 0 1rem; }
+    h1 { color: #fff; font-size: 2.1rem; line-height: 1.25; letter-spacing: -.5px; margin-bottom: .75rem; }
+    .meta { color: var(--muted); font-size: .85rem; margin-bottom: 2rem; }
+    h2 { color: #fff; font-size: 1.35rem; margin: 2.2rem 0 .8rem; }
+    p { margin-bottom: 1rem; }
+    ul { margin: 0 0 1rem 1.25rem; }
+    li { margin-bottom: .45rem; }
+    .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 1.2rem 0; }
+    table { width: 100%; border-collapse: collapse; font-size: .93rem; }
+    th, td { border: 1px solid var(--border); padding: .55rem .7rem; text-align: left; }
+    th { background: rgba(0, 230, 153, .08); color: #fff; }
+    td.num, th.num { text-align: right; font-family: ui-monospace, Menlo, monospace; }
+    strong { color: #fff; }
+    em.kicker { color: var(--accent); font-style: normal; font-weight: 700; }
+    .cta-box { border: 1px solid rgba(0, 230, 153, .4); background: rgba(0, 230, 153, .06); border-radius: 12px; padding: 1.2rem 1.4rem; margin: 2rem 0; }
+    .cta-box p:last-child { margin: 0; }
+    .btn { display: inline-block; background: linear-gradient(135deg, #00e699, #00b377); color: #04120c; font-weight: 700; text-decoration: none; padding: .65rem 1.3rem; border-radius: 8px; margin-top: .6rem; }
+    details { border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1.1rem; margin-bottom: .8rem; background: var(--card); }
+    summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+    details p { margin: .6rem 0 0; }
+    .citylinks { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1.5rem 0; }
+    .citylinks a { color: var(--accent); text-decoration: none; font-size: .85rem; border: 1px solid var(--border); border-radius: 20px; padding: .2rem .7rem; display: inline-flex; align-items: center; min-height: 44px; }
+    a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .skip-link { position: absolute; left: -9999px; top: .5rem; z-index: 20; padding: .7rem 1rem; background: var(--accent); color: #04120c; font-weight: 800; border-radius: 8px; }
+    .skip-link:focus { left: .75rem; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 0 max(3rem, env(safe-area-inset-bottom));
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      margin-top: 3rem;
+      color: var(--muted);
+      font-size: .85rem;
+      text-align: center;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    @media (max-width: 480px) {
+      h1 { font-size: 1.65rem; }
+      .container { padding: 0 1rem; }
+      nav a { margin-left: .65rem; font-size: .85rem; }
+    }
+  </style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header>
+    <div class="container">
+      <a class="logo" href="../../" aria-label="BigEnergyCo Home">
+        <span>⚡</span>
+        <span>BigEnergy<span class="highlight">Co</span></span>
+      </a>
+      <nav aria-label="Site">
+        <a href="../../solar-heatmap/">Heatmap</a>
+        <a href="../../#bom">Hardware Reference</a>
+        <a href="../../blog/">Guides &amp; Blog</a>
+        <a href="../../about/">About</a>
+        <a href="../../#legal">Terms &amp; Disclaimer</a>
+      </nav>
+      <div class="header-cta">
+        <a href="../../#sizing" class="btn">Size Your System</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="container">
+    <article>
+      <h1>${h1}</h1>
+      <p class="meta">📍 ${coord} · ${sc.tier} · updated Aug 30, 2026 · free, no signup, nothing for sale</p>
+
+      <!-- Worldwide Sizing Reassurance Callout -->
+      <div class="cta-box" style="margin: 1.5rem 0 2rem; border-color: rgba(0, 230, 153, 0.4); background: rgba(0, 230, 153, 0.08);">
+        <p style="font-weight:700;color:#fff;margin-bottom:0.4rem;">⚡ Sizing for a different location?</p>
+        <p style="color:var(--muted);font-size:0.92rem;margin-bottom:0.75rem;">This page is a benchmark reference for ${c.name}. The BigEnergyCo calculator works for <strong>any location worldwide</strong> using your exact coordinates.</p>
+        <a class="btn" href="../../#sizing">⚡ Size Any Location Worldwide &rarr;</a>
+      </div>
+
+      <p><em class="kicker">The short answer:</em> ${c.name} sits at ${coord} — ${sc.tier.toLowerCase()}. ${sc.note.charAt(0).toUpperCase() + sc.note.slice(1)} Roughly <strong>${lo}–${hi} kWh per kW of panels per year</strong> is a fair expectation band, and the exact number for your roof is what the simulator computes.</p>
+
+      <h2>What the calculator does for ${c.name}</h2>
+      <p>Type "${c.name}" (or use your exact GPS coordinates) into the estimator and it will:</p>
+      <ul>
+        <li><strong>Simulate five years of hourly NASA satellite weather</strong> for your location — not a yearly average, the actual hourly series including bad weeks.</li>
+        <li><strong>Size grid-tie bill-cutting systems</strong> at 60%, 80%, and 95% targets, with payback from your own tariff.</li>
+        <li><strong>Size fully off-grid systems</strong> at three reliability tiers — from "never needs a generator" to "a few generator hours a year".</li>
+        <li><strong>Compare battery chemistries</strong> by true lifetime cost: LiFePO4, sodium-ion, and lead-acid including replacement cadence.</li>
+        <li><strong>Produce a hardware parts list</strong> with panel count, bank configuration, inverter class, and cable gauges, exportable as CSV.</li>
+      </ul>
+
+      <h2>Worked example: a 10 kWh/day household</h2>
+      <p>Using the ${c.name} latitude band (${lo}–${hi} kWh/kWp/yr), a household using 10 kWh per day typically lands in this range — a rough illustration from the band (with a dark-week margin), not a simulation; your exact figures come from running it:</p>
+      <div class="table-container">
+      <table>
+        <caption>Worked sizing bands for a 10 kWh/day household in ${c.name}</caption>
+        <thead>
+          <tr><th scope="col">Bill cut</th><th scope="col">Typical panels</th><th scope="col">Typical battery</th></tr>
+        </thead>
+        <tbody>
+        ${wx.rows.map((r) => `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td></tr>`).join("\n        ")}
+        </tbody>
+      </table>
+      </div>
+      <p>${wx.paybackLine}</p>
+
+      <h2>Why simulate instead of estimate?</h2>
+      <p>Sun-hours maps and "average" figures hide the week that decides your battery size. In ${sc.tier.toLowerCase()} conditions, ${sc.note} A five-year hourly simulation catches that dark week, the cloudy month, and the seasonal swing — which is the difference between a system that works and one that leaves you in the dark in February.</p>
+
+      <div class="cta-box">
+        <p><strong>Run the ${c.name} simulation now.</strong> Free, no signup, nothing for sale. Every number computed in your browser from real satellite weather.</p>
+        <a class="btn" href="../../#sizing">⚡ Size my ${c.name} system</a>
+      </div>
+
+      <h2>Other cities</h2>
+      <div class="citylinks">
+${cities
+  .filter((o) => o.name !== c.name)
+  .slice(0, 23)
+  .map((o) => `        <a href="../${slugify(o.name)}/">${o.name}</a>`)
+  .join("\n")}
+      </div>
+      <p><a href="../">Browse all ${cities.length} benchmark cities →</a></p>
+
+      <h2>Related guides</h2>
+      <ul>
+        <li><a href="../../blog/how-to-cut-electricity-bill-with-solar/">How to cut your electricity bill with solar (honest math)</a></li>
+        <li><a href="../../blog/is-a-home-battery-worth-it/">Is a home battery worth it?</a></li>
+        <li><a href="../../blog/off-grid-vs-grid-tie-payback/">Off-grid vs grid-tied: which pays back faster?</a></li>
+        <li><a href="../../blog/what-size-solar-system-for-off-grid/">What size solar system for off-grid?</a></li>
+        <li><a href="../../about/">About the method (NASA weather, derates, update cadence)</a></li>
+      </ul>
+
+      <h2>Frequently asked</h2>
+      <details>
+        <summary>How much solar do I need in ${c.name}?</summary>
+        <p>It depends on your daily kWh use. As a rough band, ${c.name} sits in the ${sc.tier.toLowerCase()} zone with roughly ${lo}–${hi} kWh produced per kW of panels per year. A 10 kWh/day household typically lands between 3 and 6 kW of panels depending on the bill-cut target. The free calculator computes your exact numbers from five years of NASA satellite weather at your coordinates.</p>
+      </details>
+      <details>
+        <summary>Does solar work in ${c.country}?</summary>
+        <p>Yes — ${sc.tier} at ${coord}. ${sc.note.charAt(0).toUpperCase() + sc.note.slice(1)} The simulator sizes against your worst week, not the average, so the result is honest about winter.</p>
+      </details>
+      <details>
+        <summary>Is the ${c.name} solar calculator free?</summary>
+        <p>Completely. No signup, no email, nothing for sale. You type your city or coordinates, enter your bill or daily usage, and get off-grid tiers, bill-cut scenarios, payback, and a hardware parts list — all computed in your browser.</p>
+      </details>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building. Working with batteries and mains wiring can cause fire, injury, and death.</p>
+      <p style="margin-top:.75rem;">
+        <a href="../../#sizing">Size Your System</a> · <a href="../">66 City Benchmarks</a> · <a href="../../solar-heatmap/">Heatmap</a> · <a href="../../blog/">All Guides</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
+`;
+}
+
+function hubPage() {
+  const url = "https://freeoffgridcalculator.com/solar-calculator/";
+  const MACRO_REGIONS = {
+    Hawaii: "North America",
+    California: "North America",
+    Arizona: "North America",
+    Colorado: "North America",
+    Illinois: "North America",
+    Florida: "North America",
+    "New York": "North America",
+    Ontario: "North America",
+  };
+  const byRegion = {};
+  for (const c of cities) {
+    const reg = MACRO_REGIONS[c.region] || c.region;
+    (byRegion[reg] ||= []).push(c);
+  }
+  const regionBlocks = Object.entries(byRegion)
+    .map(([region, list]) => {
+      const items = list
+        .map((c) => `        <a href="./${slugify(c.name)}/">${c.name}</a>`)
+        .join("\n");
+      return `      <h2>${region}</h2>\n      <div class="citylinks">\n${items}\n      </div>`;
+    })
+    .join("\n");
+  const title =
+    "Solar & Battery Calculator by City — Free Sizing for 66 Cities";
+  const desc =
+    "Free solar and battery sizing pages for 66 cities worldwide. Simulated against five years of NASA satellite weather. Nothing for sale.";
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#090d16">
+  <title>${title}</title>
+  <meta name="description" content="${desc}">
+  <link rel="icon" type="image/svg+xml" href="../assets/icon.svg">
+  <link rel="icon" type="image/png" sizes="48x48" href="../assets/favicon-48.png">
+  <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="canonical" href="${url}">
+  <link rel="alternate" hreflang="en" href="${url}">
+  <link rel="alternate" hreflang="x-default" href="${url}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BigEnergyCo">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:title" content="${title}">
+  <meta property="og:description" content="${desc}">
+  <meta property="og:url" content="${url}">
+  <meta property="og:image" content="https://freeoffgridcalculator.com/assets/og-card.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${title}">
+  <meta name="twitter:description" content="${desc}">
+  <meta name="twitter:image" content="https://freeoffgridcalculator.com/assets/og-card.jpg">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": "${url}#hub",
+        "name": "Solar & Battery Calculator by City",
+        "description": "${desc}",
+        "url": "${url}",
+        "publisher": { "@type": "Organization", "name": "BigEnergyCo", "url": "https://freeoffgridcalculator.com" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "${url}#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://freeoffgridcalculator.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Solar Calculator by City", "item": "${url}" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    :root {
+      color-scheme: dark;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.28) rgba(11, 15, 23, 0.85);
+      --accent: #00e699;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --bg: #0b0f17;
+      --border: rgba(255, 255, 255, 0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(11, 15, 23, 0.85); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.38); }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .container { max-width: 980px; margin: 0 auto; padding: 0 1.25rem; }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      background: rgba(11, 15, 23, 0.92);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 5;
+    }
+    header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; }
+    .logo { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; color: #fff; }
+    .logo .highlight { color: var(--accent); }
+    nav { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+    nav a { color: var(--muted); text-decoration: none; font-size: .9rem; font-weight: 500; transition: color 0.2s; }
+    nav a:hover, nav a.active { color: #fff; }
+    .header-cta { display: flex; align-items: center; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; text-decoration: none !important; transition: all 0.2s ease; border: none; background: linear-gradient(135deg, #00e699 0%, #00b377 100%); color: #04120c; box-shadow: 0 0 12px rgba(0, 230, 153, 0.25); }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 0 18px rgba(0, 230, 153, 0.4); color: #04120c; }
+    article { padding: 2.5rem 0 1rem; }
+    h1 { color: #fff; font-size: 2.1rem; line-height: 1.25; letter-spacing: -.5px; margin-bottom:.75rem; }
+    h2 { color: #fff; font-size: 1.25rem; margin: 1.8rem 0 .8rem; }
+    p { margin-bottom: 1rem; }
+    .citylinks { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 1.5rem; }
+    .citylinks a { color: var(--accent); text-decoration: none; font-size: .85rem; border: 1px solid var(--border); border-radius: 20px; padding: .2rem .7rem; display: inline-flex; align-items: center; min-height: 44px; }
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .skip-link { position: absolute; left: -9999px; top: .5rem; z-index: 20; padding: .7rem 1rem; background: var(--accent); color: #04120c; font-weight: 800; border-radius: 8px; }
+    .skip-link:focus { left: .75rem; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+    @media (max-width: 480px) { .worldwide-notice .btn { white-space: normal !important; width: 100%; text-align: center; } }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 0 max(3rem, env(safe-area-inset-bottom));
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      margin-top: 3rem;
+      color: var(--muted);
+      font-size: .85rem;
+      text-align: center;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    @media (max-width: 480px) {
+      h1 { font-size: 1.65rem; }
+      .container { padding: 0 1rem; }
+      nav a { margin-left: .65rem; font-size: .85rem; }
+    }
+  </style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header>
+    <div class="container">
+      <a class="logo" href="../" aria-label="BigEnergyCo Home">
+        <span>⚡</span>
+        <span>BigEnergy<span class="highlight">Co</span></span>
+      </a>
+      <nav aria-label="Site">
+        <a href="../solar-heatmap/">Heatmap</a>
+        <a href="../#bom">Hardware Reference</a>
+        <a href="../blog/">Guides &amp; Blog</a>
+        <a href="../about/">About</a>
+        <a href="../#legal">Terms &amp; Disclaimer</a>
+      </nav>
+      <div class="header-cta">
+        <a href="../#sizing" class="btn">Size Your System</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="container">
+    <article>
+      <h1>Solar &amp; Battery Calculator by City</h1>
+      <!-- Worldwide Sizing Reassurance Callout -->
+      <div class="worldwide-notice" style="margin: 1.25rem 0 2rem; background: rgba(0, 230, 153, 0.08); border: 1px solid rgba(0, 230, 153, 0.35); border-radius: 12px; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <div style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 0.3rem;">⚡ Don't see your city? We size systems anywhere on Earth!</div>
+          <p style="margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.5; max-width: 620px;">
+            The BigEnergyCo calculator works for <strong>any city, town, or GPS coordinates worldwide</strong> using 5 years of hourly NASA satellite weather. The 66 benchmark cities below provide reference solar profiles and worked sizing examples.
+          </p>
+        </div>
+        <a href="../#sizing" class="btn">⚡ Size Any Location Worldwide &rarr;</a>
+      </div>
+
+      <p>Pick your city for a free, honest sizing overview — then run the exact simulation with your coordinates and your own tariff. Every page is powered by the same deterministic engine simulating <strong>five years of hourly NASA satellite weather</strong>. No signup, nothing for sale.</p>
+      <p>New here? <a href="../about/">How the method works</a> · <a href="../solar-heatmap/">Where payback is fastest (world map)</a> · <a href="../blog/">Guides: cut your bill, size off-grid, batteries</a></p>
+${regionBlocks}
+      <h2>Start with the guides</h2>
+      <ul>
+        <li><a href="../blog/how-to-cut-electricity-bill-with-solar/">How to cut your electricity bill with solar</a></li>
+        <li><a href="../blog/is-a-home-battery-worth-it/">Is a home battery worth it?</a></li>
+        <li><a href="../blog/what-size-solar-system-for-off-grid/">What size solar system for off-grid?</a></li>
+      </ul>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>Provided free, as-is, with no warranty. Educational estimates only — verify everything with a licensed professional before building.</p>
+      <p style="margin-top:.75rem;">
+        <a href="../#sizing">Size Your System</a> · <a href="../solar-heatmap/">Heatmap</a> · <a href="../blog/">All Guides</a> · <a href="../about/">About</a> · <a href="mailto:lucasballek@gmail.com">Contact</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
+`;
+}
+
+if (CHECK) {
+  // validate: every city produces a page with required SEO elements
+  for (const c of cities) {
+    const html = cityPage(c);
+    if (!html.includes(`Solar & Battery Sizing for ${c.name}`))
+      throw new Error(`bad h1 for ${c.name}`);
+    if (!html.includes("application/ld+json"))
+      throw new Error(`missing JSON-LD for ${c.name}`);
+  }
+  console.log(
+    `--check: ${cities.length} city pages + hub validate OK. Not writing files.`,
+  );
+  process.exit(0);
+}
+
+mkdirSync(OUT, { recursive: true });
+for (const c of cities) {
+  const dir = join(OUT, slugify(c.name));
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "index.html"), cityPage(c));
+}
+writeFileSync(join(OUT, "index.html"), hubPage());
+console.log(`Wrote ${cities.length} city pages + hub to ${OUT}/`);
