@@ -1,0 +1,1 @@
+test("blacksmith"; null) cannot be applied to: boolean (false)

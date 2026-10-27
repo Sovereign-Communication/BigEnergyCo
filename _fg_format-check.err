@@ -1,0 +1,8 @@
+npm warn allow-scripts .npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line
+[[31merror[39m] index.html: SyntaxError: Unexpected character "EOF" (156:1)
+[[31merror[39m]   154 |                 }
+[[31merror[39m]   155 |               },
+[[31merror[39m] > 156 |
+[[31merror[39m]       | ^
+format: FAILED (prettier exited 2) on the tracked tree as the runner sees it.
+        Fix with `npm run format`, then re-run `npm run format:check`.

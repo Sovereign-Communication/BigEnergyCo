@@ -1,0 +1,6 @@
+
+> bigenergyco@1.0.0 format:check
+> node scripts/check-format.mjs
+
+Checking formatting...
+Error occurred when checking code style in the above file.
