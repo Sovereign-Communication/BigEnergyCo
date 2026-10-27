@@ -1,0 +1,46 @@
+#!/bin/sh
+# Pre-push guard: main and gh-pages are published branches.
+#
+# Documentation-only pushes are allowed straight to main; anything else (code,
+# CI, config, assets) must go through a PR with green checks. Install once with
+# `npm run hooks:install` (this file is versioned; .git/hooks is not).
+#
+# git feeds the ref updates on stdin, one per line:
+#   <local ref> <local sha> <remote ref> <remote sha>
+#
+# The loop reads from a here-document rather than a pipe on purpose: a pipeline
+# would run it in a subshell, so the guard's exit status could never stop the
+# push. This is the difference between a guard and a decoration.
+
+protected_branch() {
+  case "$1" in
+    refs/heads/main | refs/heads/gh-pages) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+updates=$(cat)
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -z "$remote_ref" ] && continue
+  protected_branch "$remote_ref" || continue
+
+  # All-zero local sha = branch deletion; nothing to inspect.
+  if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+    continue
+  fi
+
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    range="$local_sha"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+
+  if ! node scripts/pre-push-guard.mjs "$range" "$remote_ref"; then
+    exit 1
+  fi
+done <<EOF
+$updates
+EOF
+
+exit 0
