@@ -114,7 +114,9 @@ async function checkAsyncLocaleBehavior(browser, engineName) {
       raced.events.length !== 1 ||
       raced.events[0] !== "ar"
     )
-      fail(`${engineName} stale locale response overwrote Arabic: ${JSON.stringify(raced)}`);
+      fail(
+        `${engineName} stale locale response overwrote Arabic: ${JSON.stringify(raced)}`,
+      );
     else console.log(`OK ${engineName} stale locale response is ignored`);
     await context.close();
 
@@ -170,7 +172,9 @@ async function checkAsyncLocaleBehavior(browser, engineName) {
       fail(`${engineName} expected two Spanish loads, got ${spanishRequests}`);
     else console.log(`OK ${engineName} failed locale load can be retried`);
   } catch (error) {
-    fail(`${engineName} async locale regression check errored: ${error.message}`);
+    fail(
+      `${engineName} async locale regression check errored: ${error.message}`,
+    );
   } finally {
     await context?.close();
   }
@@ -220,7 +224,7 @@ try {
   for (const engine of [chromium, webkit]) {
     const browser = await engine.launch({ headless: true });
     try {
-    await checkAsyncLocaleBehavior(browser, engine.name());
+      await checkAsyncLocaleBehavior(browser, engine.name());
       const englishByScenario = new Map();
       for (const locale of LOCALE_IDS) {
         const compareEnglishRuntime = (scenario, textNodes) => {

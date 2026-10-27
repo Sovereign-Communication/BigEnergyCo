@@ -1,6 +1,4 @@
-import scriptDirections from "../../i18n/script-directions.json" with {
-  type: "json",
-};
+import scriptDirections from "../../i18n/script-directions.json" with { type: "json" };
 
 const rightToLeftScripts = new Set(scriptDirections.rtlScripts);
 

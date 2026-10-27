@@ -722,7 +722,8 @@ export function unkeyedProse(html, { minWords = 1 } = {}) {
   // prose-bearing ancestors remain owned by BLOCK_RE, avoiding duplicate
   // reports for ordinary paragraphs and labels.
   const tags = [];
-  const token = /<\/?([a-z][\w:-]*)\b[^>"']*(?:"[^"]*"[^>"']*|'[^']*'[^>"']*)*>/gi;
+  const token =
+    /<\/?([a-z][\w:-]*)\b[^>"']*(?:"[^"]*"[^>"']*|'[^']*'[^>"']*)*>/gi;
   let cursor = 0;
   const inspectTextNode = (raw, start) => {
     if (
@@ -731,9 +732,7 @@ export function unkeyedProse(html, { minWords = 1 } = {}) {
         (entry) =>
           entry.surface || entry.tag === "body" || entry.tag === "main",
       ) ||
-      tags.some(
-        (entry) => entry.hooked || PROSE_TAG_SET.has(entry.tag),
-      )
+      tags.some((entry) => entry.hooked || PROSE_TAG_SET.has(entry.tag))
     )
       return;
     const finding = proseFinding(

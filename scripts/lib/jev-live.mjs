@@ -120,9 +120,16 @@ export async function liveJevCall(stateText, questions, keys) {
  * existing Jev transport so the probe cannot accidentally add hidden app state
  * or use a second provider.
  */
-export async function liveJevComprehensionCall(accessibilityTreeText, questions, keys) {
+export async function liveJevComprehensionCall(
+  accessibilityTreeText,
+  questions,
+  keys,
+) {
   const notes = [];
-  if (typeof accessibilityTreeText !== "string" || !accessibilityTreeText.trim()) {
+  if (
+    typeof accessibilityTreeText !== "string" ||
+    !accessibilityTreeText.trim()
+  ) {
     return {
       answers: null,
       usage: null,

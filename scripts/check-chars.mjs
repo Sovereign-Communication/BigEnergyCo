@@ -24,10 +24,14 @@ for (const f of [
     /(\u00e2\u20ac|\u00c3[\u0080-\u00ff]|\u00f0\u0178|\uFFFD)/.test(t) ||
     // CP1252 maps some UTF-8 continuation bytes to punctuation outside Latin-1.
     // The following check covers those forms that the Latin-1 range misses.
-    /\u00c3[\u0152\u0160\u0178\u017d\u017e\u0192\u02c6\u02dc\u2013-\u2014\u2018-\u201e\u2020-\u2021\u2022\u2026\u2030\u2039\u203a\u2122]/.test(t) ||
+    /\u00c3[\u0152\u0160\u0178\u017d\u017e\u0192\u02c6\u02dc\u2013-\u2014\u2018-\u201e\u2020-\u2021\u2022\u2026\u2030\u2039\u203a\u2122]/.test(
+      t,
+    ) ||
     // Arabic UTF-8 bytes D8/D9 can be misread as Latin letters plus CP1252 bytes.
-    (f === 'assets/i18n/ar.json' &&
-      /[\u00d8\u00d9][\u0080-\u00bf\u20ac\u201a\u0192\u201e\u2026\u2020\u2021\u02c6\u2030\u0160\u2039\u0152\u017d\u2018\u2019\u201c\u201d\u2022\u2013\u2014\u02dc\u2122\u0161\u203a\u0153\u017e\u0178]/.test(t));
+    (f === "assets/i18n/ar.json" &&
+      /[\u00d8\u00d9][\u0080-\u00bf\u20ac\u201a\u0192\u201e\u2026\u2020\u2021\u02c6\u2030\u0160\u2039\u0152\u017d\u2018\u2019\u201c\u201d\u2022\u2013\u2014\u02dc\u2122\u0161\u203a\u0153\u017e\u0178]/.test(
+        t,
+      ));
   if (bad) allClean = false;
   console.log(f, bad ? "STILL CORRUPT" : "CLEAN");
 }
