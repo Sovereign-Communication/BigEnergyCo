@@ -28,7 +28,7 @@ import {
   billCutFraction,
   simulateOutage,
   simulatePortable,
-} from "./engine.js?v=20261005h";
+} from "./engine.js?v=20261008a";
 
 import {
   isUseCaseId,
@@ -39,22 +39,22 @@ import {
   normaliseReservePct,
   normaliseOutageTarget,
   outcomeFor,
-} from "./usecases.js?v=20261005h";
+} from "./usecases.js?v=20261008a";
 
 import {
   fetchHourlyCached,
   synthesizeFromProfile,
-} from "./nasa.js?v=20261005h";
-import { buildFrontier } from "./frontier.js?v=20261005h";
-import { oversizeCallout } from "./rescale.js?v=20261005h";
-import { climateSummary } from "./climate.js?v=20261005h";
+} from "./nasa.js?v=20261008a";
+import { buildFrontier } from "./frontier.js?v=20261008a";
+import { oversizeCallout } from "./rescale.js?v=20261008a";
+import { climateSummary } from "./climate.js?v=20261008a";
 import {
   fullRange,
   getScope,
   POWMR_CATALOG,
   estimateTariff,
   landedMidBattKwhFor,
-} from "./pricing.js?v=20261005h";
+} from "./pricing.js?v=20261008a";
 import {
   annualGridSpendUsd,
   paybackYears,
@@ -65,7 +65,7 @@ import {
   trueBreakEvenYear,
   cumulativeCostSeries,
   INSTALL_LABOR_PER_KWH_USABLE,
-} from "./money.js?v=20261005h";
+} from "./money.js?v=20261008a";
 
 const TIER_BASIS = {
   tier100: "100% independence — never needs a generator",
@@ -307,7 +307,7 @@ async function fetchWeatherWithFallback(opts) {
     return await fetchWeatherDefault(opts);
   } catch (netErr) {
     const { OFFLINE_PROFILES, PROFILE_YEAR } =
-      await import("./profiles.js?v=20261005h");
+      await import("./profiles.js?v=20261008a");
     let best = null,
       bestD = Infinity;
     for (const p of OFFLINE_PROFILES) {
@@ -441,6 +441,13 @@ async function runSizingUncached(msg, deps = {}) {
     // #155: no-swap UI option. Default false = the oversize/swap strategy
     // stays on (existing behavior); true disables it engine-wide.
     noSwapMode = false,
+    reservePct = 0,
+    touPeakRate = 0,
+    touOffPeakRate = 0,
+    outageTargetHours = 0,
+    essentialLoadKwh = 0,
+    portableBankKwh = 0,
+    portableDailyKwh = 0,
     // ── Use-case inputs (D-16). Every one of these is asked of the visitor
     // for exactly one use case and read by exactly one measurement below.
     // They default to null so a caller that has never heard of a use case
@@ -1170,7 +1177,7 @@ async function runSizingUncached(msg, deps = {}) {
     const fChem =
       fChemOverride && CHEMISTRIES[fChemOverride] ? fChemOverride : defaultChem;
     const fScale = effectiveCapacityScale(fChem, meanTempC);
-    if (mode === "gridtie") {
+    if (mode === "gridtie" || mode === "reserve" || mode === "tou") {
       const fSized = {
         pvKw: fPv,
         battKwh: fBatt,
@@ -2045,7 +2052,7 @@ async function runSizingUncached(msg, deps = {}) {
         }
       }
       const payload = basePayload();
-      payload.mode = "gridtie";
+      payload.mode = mode; // "gridtie" or "reserve"
       payload.auto = auto;
       payload.autoFallback = autoFallback;
       payload.effectiveTargetId = effectiveTarget;
@@ -2286,6 +2293,83 @@ async function runSizingUncached(msg, deps = {}) {
     };
     payload.assumptions.cycleLifeTo80 = { [chemistry]: chem.cyclesTo80 };
     payload.assumptions.money = `Bill reduction simulated hour-by-hour across five years of weather: solar serves the load first, surplus charges the battery, the grid covers the rest, nothing is exported unless you enter a feed-in credit (then clipped surplus is valued at that rate). Lifetime cost includes bank swaps plus install labor each time. ${fixedMonthly > 0 ? `A fixed monthly charge is included in every bill figure (it cannot be cut).` : `Fixed connection fees not counted.`}`;
+    // Reserve mode: calculate emergency reserve analysis
+    if (mode === "reserve") {
+      const battKwh = payload.focus?.battKwh || 0;
+      if (battKwh <= 0) {
+        payload.reserve = { viable: false, reason: "verdictReserveNoBattery" };
+      } else {
+        const reserveKwh = battKwh * reservePct;
+        const usableKwh = battKwh - reserveKwh;
+        // Simple tradeoff: reserve provides emergency hours, costs cycling value
+        // Higher reserve = more emergency preparedness, less daily arbitrage
+        const reserveTradeoff = reservePct > 0 ? (1 - reservePct) / reservePct : Infinity;
+        payload.reserve = {
+          viable: true,
+          reservePct,
+          reserveKwh: Math.round(reserveKwh * 10) / 10,
+          usableKwh: Math.round(usableKwh * 10) / 10,
+          reserveTradeoff: Math.round(reserveTradeoff * 100) / 100,
+        };
+      }
+    }
+    // TOU mode: calculate time-of-use arbitrage
+    if (mode === "tou") {
+      const battKwh = payload.focus?.battKwh || 0;
+      if (battKwh <= 0) {
+        payload.tou = { viable: false, reason: "verdictTouNoBattery" };
+      } else if (!(touPeakRate > touOffPeakRate)) {
+        payload.tou = { viable: false, reason: "verdictTou" };
+      } else {
+        const spread = touPeakRate - touOffPeakRate;
+        // Simplified: assume 30% of daily load shifted
+        const dailyKwh = payload.focus?.dailyKwh || 10;
+        const shiftedKwh = dailyKwh * 0.3;
+        const dailySaving = shiftedKwh * spread;
+        payload.tou = {
+          viable: true,
+          peakRate: touPeakRate,
+          offPeakRate: touOffPeakRate,
+          dailySavingUsd: Math.round(dailySaving * 100) / 100,
+          annualSavingUsd: Math.round(dailySaving * 365 * 100) / 100,
+        };
+      }
+    }
+
+
+    // Backup mode: calculate outage coverage
+    if (mode === "backup") {
+      const battKwh = payload.focus?.battKwh || 0;
+      if (battKwh <= 0) {
+        payload.backup = { viable: false, reason: "verdictBackup" };
+      } else {
+        const avgKw = essentialLoadKwh / 24;
+        const hoursOfBackup = avgKw > 0 ? (battKwh * 0.9) / avgKw : 0;
+        const coveragePct = outageTargetHours > 0 ? Math.min(100, (hoursOfBackup / outageTargetHours) * 100) : 0;
+        payload.backup = {
+          viable: coveragePct > 0,
+          hoursOfBackup: Math.round(hoursOfBackup * 10) / 10,
+          coveragePct: Math.round(coveragePct),
+          reason: coveragePct <= 0 ? "verdictBackup" : undefined,
+        };
+      }
+    }
+
+    // Portable mode: calculate runtime days
+    if (mode === "portable") {
+      if (!(portableBankKwh > 0) || !(portableDailyKwh > 0)) {
+        payload.portable = { viable: false, reason: "verdictPortable" };
+      } else {
+        const runtimeDays = (portableBankKwh * 0.9) / portableDailyKwh;
+        payload.portable = {
+          viable: true,
+          bankKwh: portableBankKwh,
+          dailyKwh: portableDailyKwh,
+          runtimeDays: Math.round(runtimeDays * 10) / 10,
+        };
+      }
+    }
+
     return attachFrontier(payload);
   }
 
