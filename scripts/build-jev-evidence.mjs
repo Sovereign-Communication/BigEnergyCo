@@ -1,0 +1,337 @@
+#!/usr/bin/env node
+// Build the Jev gate's evidence file from CI job outcomes. Plan §8 P0.3(e) /
+// F-45: the evidence must come from real job results, never from a hand-edited
+// file, and a hand-written evidence file is never proof on its own (§13.3).
+//
+//   node scripts/build-jev-evidence.mjs --artifacts DIR --out FILE
+//                                  [--prose FILE] [--sha S] [--run-id N]
+//                                  [--now ISO] [--allow-problems]
+//
+// Artifacts are the per-job result files the jobs themselves write from the
+// runner's own step outcomes. Prose is the committed run record: the narrative
+// measurements a script cannot take (which gate covers which surface, what a
+// re-measurement found). Prose may describe a run; only an artifact may assert
+// one — the two never share a field.
+//
+// Exit codes:
+//   0  the evidence is complete and written
+//   1  the evidence could not be completed: an artifact is missing, a job did
+//      not succeed, a step never ran, or a step is red. The file is STILL
+//      written, with those fields red, so the failure is diagnosable — but the
+//      caller must not spend a live judgment scoring a run it cannot trust.
+//   2  usage error
+//
+// The provider key is never read here. This file is a committed artifact, so it
+// carries outcomes and provenance and nothing else.
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+import {
+  composeEvidence,
+  evidenceSourceKind,
+  parseJobResult,
+  requiredJobsFromWorkflow,
+  RUN_RECORD_FIELDS,
+} from "./lib/jev-evidence.mjs";
+import { COMPLETE_FACET_CLIP } from "./lib/jev-complete.mjs";
+import { exitWhenDrained } from "./lib/graceful-exit.mjs";
+
+// The workflow these artifacts came from, resolved against this script rather
+// than the caller's cwd: "CI was green" is defined by what the workflow runs,
+// and the one that runs it is this repository's own file. There is deliberately
+// no flag to point elsewhere — a required set is not an input an operator gets
+// to choose.
+const WORKFLOW = fileURLToPath(
+  new URL("../.github/workflows/test.yml", import.meta.url),
+);
+
+const USAGE =
+  "usage: node scripts/build-jev-evidence.mjs --artifacts DIR --out FILE " +
+  "[--prose FILE] [--sha S] [--run-id N] [--now ISO] [--allow-problems]";
+
+function usageError(msg) {
+  process.stderr.write(`build-jev-evidence: ${msg}\n${USAGE}\n`);
+  process.exit(2);
+}
+
+function parseArgs(argv) {
+  const opts = {
+    artifacts: null,
+    out: null,
+    prose: null,
+    sha: null,
+    runId: null,
+    runAttempt: null,
+    ref: null,
+    event: null,
+    repository: null,
+    now: null,
+    allowProblems: false,
+  };
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    const next = () => argv[++i] ?? usageError(`${arg} requires a value`);
+    if (arg === "--artifacts") opts.artifacts = next();
+    else if (arg === "--out") opts.out = next();
+    else if (arg === "--prose") opts.prose = next();
+    else if (arg === "--sha") opts.sha = next();
+    else if (arg === "--run-id") opts.runId = next();
+    else if (arg === "--run-attempt") opts.runAttempt = next();
+    else if (arg === "--ref") opts.ref = next();
+    else if (arg === "--event") opts.event = next();
+    else if (arg === "--repository") opts.repository = next();
+    else if (arg === "--now") opts.now = next();
+    else if (arg === "--allow-problems") opts.allowProblems = true;
+    else usageError(`unknown argument ${JSON.stringify(arg)}`);
+  }
+  if (!opts.artifacts) usageError("--artifacts is required");
+  if (!opts.out) usageError("--out is required");
+  return opts;
+}
+
+// Provenance is an explicit whitelist, never a spread of the environment: a
+// runner has TYPESAFE_API_KEY in its environment and this file is committed.
+function runProvenance(opts) {
+  const run = {};
+  if (opts.sha) run.sha = opts.sha;
+  if (opts.runId) run.run_id = opts.runId;
+  if (opts.runAttempt) run.run_attempt = opts.runAttempt;
+  if (opts.ref) run.ref = opts.ref;
+  if (opts.event) run.event = opts.event;
+  if (opts.repository) run.repository = opts.repository;
+  return run;
+}
+
+/**
+ * Gate REPORTS, as distinct from job results, in the same artifacts directory.
+ *
+ * A gate that measures something the judge should read puts its report here and
+ * declares which facet axes it speaks for. The builder then composes those
+ * axes' proof lines FROM THE RUN rather than reading them from the prose file,
+ * where a typed line can sit looking like a measurement while being one.
+ *
+ * Two properties this is built to have:
+ *
+ *   · DISCOVERED, NOT LISTED. The axes come from the reports themselves, so a
+ *     new gate that measures a facet becomes visible to the judge with no edit
+ *     here — the same derivation that replaced CI_GREEN_JOBS in #161. A list of
+ *     gate names kept beside this script is the defect that made ci_green read
+ *     true on a red quality-lab run, and it is not reintroduced here.
+ *   · A MISSING REPORT IS NOT A CLEAN ONE. When a report is absent the axis is
+ *     simply absent from the record, and an absent proof line reads as
+ *     "mixed — partial or unverified evidence", never as proven. The job being
+ *     a required gate already makes its missing artifact a named fatal problem,
+ *     so the two mechanisms agree: no report, no claim, and a named hole.
+ */
+function readGateReports(dir) {
+  const reports = [];
+  const problems = [];
+  if (!existsSync(dir)) return { reports, problems };
+  for (const name of readdirSync(dir).sort()) {
+    if (!name.endsWith(".json") || name === "evidence.json") continue;
+    let parsed;
+    try {
+      parsed = JSON.parse(readFileSync(join(dir, name), "utf8"));
+    } catch {
+      continue; // a job result, or unreadable: readArtifacts already rules on it
+    }
+    if (!parsed || typeof parsed !== "object") continue;
+    if (!Array.isArray(parsed.facet_axes) || parsed.facet_axes.length === 0)
+      continue;
+    if (typeof parsed.facet_line !== "string" || !parsed.facet_line.trim()) {
+      problems.push(
+        `${name} declares facet_axes [${parsed.facet_axes.join(", ")}] but ` +
+          "carries no facet_line, so those axes get no proof line from the run " +
+          "that measured them",
+      );
+      continue;
+    }
+    // The clip is enforced here, loudly. A line that overflows is SILENTLY cut
+    // on its way to the judge, and for this cluster the honest tail is exactly
+    // what gets cut — so an over-long line is a named problem, not a trim.
+    if (parsed.facet_line.length > COMPLETE_FACET_CLIP) {
+      problems.push(
+        `${name} facet_line is ${parsed.facet_line.length} chars, over the ` +
+          `${COMPLETE_FACET_CLIP}-char per-axis clip; it would be cut in transit, ` +
+          "which would silently drop the part that says how to read it",
+      );
+      continue;
+    }
+    for (const axis of parsed.facet_axes) {
+      reports.push({
+        axis,
+        line: parsed.facet_line,
+        source: name,
+        metric: parsed.metric,
+      });
+    }
+  }
+  return { reports, problems };
+}
+
+function readArtifacts(dir) {
+  if (!existsSync(dir)) {
+    usageError(`artifacts directory not found: ${dir}`);
+  }
+  const artifacts = {};
+  // A file that is not a job result is recorded and skipped, not treated as a
+  // broken artifact. The contract is JOB COVERAGE, not file parsing: if a file
+  // is unreadable, or carries the wrong job name, the job it was supposed to
+  // prove is simply absent — and a missing job is already a named, fatal
+  // problem. That way an unrelated file dropped into the directory cannot fail a
+  // run, and a corrupted one still cannot pass it.
+  const ignored = [];
+  for (const name of readdirSync(dir).sort()) {
+    if (!name.endsWith(".json") || name === "evidence.json") continue;
+    const parsed = parseJobResult(readFileSync(join(dir, name), "utf8"));
+    if (parsed.ok) {
+      artifacts[parsed.job] = {
+        job: parsed.job,
+        conclusion: parsed.conclusion,
+        steps: parsed.steps,
+      };
+    } else {
+      ignored.push(name);
+    }
+  }
+  return { artifacts, ignored };
+}
+
+export function main(argv = process.argv.slice(2)) {
+  const opts = parseArgs(argv);
+
+  // The prose record is required, not optional: without its facet proof lines
+  // the judge scores every facet from nothing, and "mixed — partial or
+  // unverified evidence" would read like a product defect rather than an empty
+  // record.
+  let prose = {};
+  if (opts.prose) {
+    if (!existsSync(opts.prose))
+      usageError(`prose file not found: ${opts.prose}`);
+    try {
+      prose = JSON.parse(readFileSync(opts.prose, "utf8"));
+    } catch (err) {
+      usageError(`prose file is not valid JSON: ${err.message}`);
+    }
+    if (typeof prose !== "object" || prose === null || Array.isArray(prose)) {
+      usageError("prose file must contain a JSON object");
+    }
+  } else {
+    process.stderr.write(
+      "build-jev-evidence: no --prose given, so the evidence carries no facet " +
+        "proof lines and every facet will be judged unverified\n",
+    );
+  }
+
+  let preReportNote = null;
+  const { artifacts, ignored } = readArtifacts(opts.artifacts);
+  // Facet proof lines DERIVED from the gate reports this run produced, rather
+  // than read from the prose file. Discovered, not listed: a new gate that
+  // declares facet_axes becomes visible to the judge with no edit here.
+  const { reports: derived, problems: reportProblems } = readGateReports(
+    opts.artifacts,
+  );
+  for (const d of derived) {
+    if (
+      typeof prose?.facet_evidence !== "object" ||
+      prose.facet_evidence === null
+    )
+      prose.facet_evidence = {};
+    // A typed line for a measured axis is overridden, never merged, and the
+    // override is recorded: two sources for one facet is how the record ended
+    // up describing a byte count while a browser measurement went unread.
+    if (Object.hasOwn(prose.facet_evidence, d.axis))
+      preReportNote =
+        `the prose file carried a hand-typed \`${d.axis}\` line, overridden by ` +
+        `the one composed from ${d.source}`;
+    prose.facet_evidence[d.axis] = d.line;
+  }
+  // The required set, from the workflow's own declarations rather than a list
+  // kept beside this script: a gate the workflow runs and the record has never
+  // heard of is exactly how ci_green came to read true on a red run.
+  const preProblems = [...reportProblems];
+  let requiredJobs = [];
+  try {
+    requiredJobs = requiredJobsFromWorkflow(readFileSync(WORKFLOW, "utf8"));
+    if (requiredJobs.length === 0) {
+      preProblems.push(
+        `no required jobs could be derived from ${WORKFLOW}, so ci_green is unproven`,
+      );
+    }
+  } catch (err) {
+    preProblems.push(
+      `the workflow ${WORKFLOW} could not be read (${err.message}), so the required job set is unproven`,
+    );
+  }
+  const { evidence, problems } = composeEvidence({
+    artifacts,
+    requiredJobs,
+    prose,
+    run: runProvenance(opts),
+    generatedAt: opts.now || new Date().toISOString(),
+    problems: preProblems,
+  });
+  if (ignored.length) {
+    evidence.ci.ignored_files = ignored;
+  }
+  if (derived.length) {
+    // Recorded so a reader of the file can see which facet proof lines came
+    // from which run's report, without re-deriving it.
+    evidence.derived_facet_lines = derived.map((d) => ({
+      axis: d.axis,
+      source: d.source,
+      metric: d.metric,
+      chars: d.line.length,
+    }));
+  }
+  if (preReportNote) evidence.derived_facet_line_note = preReportNote;
+  if (requiredJobs.length) {
+    // Recorded so a reader of the file can see which gates "CI was green"
+    // meant on this run, without re-deriving it from a workflow that has
+    // since gained a job.
+    evidence.ci.required_jobs = requiredJobs;
+  }
+
+  const outDir = dirname(opts.out);
+  if (outDir && !existsSync(outDir)) mkdirSync(outDir, { recursive: true });
+  writeFileSync(opts.out, `${JSON.stringify(evidence, null, 2)}\n`, "utf8");
+
+  const kind = evidenceSourceKind(evidence);
+  const green = problems.length === 0;
+  process.stdout.write(
+    `evidence: ${opts.out} (${kind})\n` +
+      `required jobs: ${requiredJobs.length ? requiredJobs.join(" ") : "none derived"}\n` +
+      // Every run record, named from the field list rather than guessed from a
+      // suffix: a `_clean` field would otherwise be silently left out of the
+      // very line that claims to report them all.
+      `records: ${RUN_RECORD_FIELDS.map((f) => `${f}=${evidence[f]}`).join(" ")}\n`,
+  );
+  if (!green) {
+    process.stderr.write(
+      `build-jev-evidence: ${problems.length} problem(s); the evidence is written ` +
+        `but the run cannot be trusted:\n${problems.map((p) => `  - ${p}`).join("\n")}\n`,
+    );
+  }
+  // `--allow-problems` exists for a human rebuilding a record by hand from
+  // known-red outcomes. It is not for CI: there, a red record must stop the
+  // job before it spends a judgment.
+  return green || opts.allowProblems ? 0 : 1;
+}
+
+const isDirectRun =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isDirectRun) {
+  try {
+    exitWhenDrained(main());
+  } catch (e) {
+    process.stderr.write(`build-jev-evidence: ${e.message}\n`);
+    exitWhenDrained(2);
+  }
+}
