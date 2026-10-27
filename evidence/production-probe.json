@@ -1,0 +1,47 @@
+{
+  "measured_at": "2026-10-14T11:03:17.356Z",
+  "command": "node scripts/probe-production.mjs",
+  "tree_stamp": "20261005h",
+  "targets": [
+    {
+      "name": "pages",
+      "base": "https://bigenergyco.pages.dev/",
+      "surface": "cloudflare",
+      "reachable": true,
+      "served_stamp": "20261005h",
+      "files_checked": 366,
+      "matched": 366,
+      "platform_rewrites": {
+        "files": 0,
+        "kinds": []
+      },
+      "parity": true,
+      "browser_smoke": true,
+      "verified": true,
+      "failures": [],
+      "notes": []
+    },
+    {
+      "name": "brand",
+      "base": "https://freeoffgridcalculator.com/",
+      "surface": "cloudflare",
+      "reachable": false,
+      "http_status": 403,
+      "cf_mitigated": "challenge",
+      "parity": null,
+      "files_checked": 0,
+      "matched": 0,
+      "browser_smoke": false,
+      "verified": false,
+      "failures": [
+        "no CSP violations — log.error: Executing inline script violates the following Content Security Policy directive 'script-src 'self' https://unpkg.com https://static.cloudflareinsights.com https://challenges.cloudflare.com'. Either the 'unsafe-inline' keyword, a hash ('sha256-c5Ybb5ukb7IOLIAgdO6Spxaq4rhkTZUQkhY6AqTUKcE='), or a non [https://freeoffgridcalculator.com/?smoke=1791976011634] | log.error: Executing inline script violates the following Content Security Policy directive 'script-src 'self' https://unpkg.com https://static.cloudflareinsights.com https://challenges.cloudflare.com'. Either the 'unsafe-inline' keyword, a hash ('sha256-bb7ikLoA3sonA85wrq8W+8qRI9iU5JmTHmGTqWq8Y4U='), or a non [https://freeoffgridcalculator.com/?location-playtest=1791976016193] | log.error: Executing inline script violates the following Content Security Policy directive 'script-src 'self' https://unpkg.com https://static.cloudflareinsights.com https://challenges.cloudflare.com'. Either the 'unsafe-inline' keyword, a hash ('sha256-X+JmX5pkC6g2RmEW7M/7yxe6Y5RLTeqpmzTiHqm4pKQ='), or a non [https://freeoffgridcalculator.com/?location-playtest=1791976016193#s=eyJ2IjoxLCJsYSI6MjEuMzEsImxvIjotMTU3Ljg2LCJrdyI6NjA] | no other console/page errors — log.error: Failed to load resource: the server responded with a status of 403 () [https://freeoffgridcalculator.com/?smoke=1791976011634] | log.error: Failed to load resource: the server responded with a status of 403 () [https://freeoffgridcalculator.com/manifest.webmanifest] | log.error: Manifest fetch from https://freeoffgridcalculator.com/manifest.webmanifest failed, code 403 [https://freeoffgridcalculator.com/?smoke=1791976011634] | deadline flow adds no console/page errors — log.error: Executing inline script violates the following Content Security Policy directive 'script-src 'self' https://unpkg.com https://static.cloudflareinsights.com https://challenges.cloudflare.com'. Either the 'unsafe-inline' keyword, a"
+      ],
+      "notes": [
+        "byte parity on this surface is NOT measured; only the functional half is"
+      ],
+      "refusal": "a non-browser client is answered HTTP 403 (cf-mitigated: challenge); a spoofed browser User-Agent is refused the same way, so no Node-side verifier can fetch its bytes",
+      "transient_retries": [],
+      "verified_scope": "not verified"
+    }
+  ]
+}
