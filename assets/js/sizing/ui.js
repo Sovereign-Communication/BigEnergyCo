@@ -3343,10 +3343,24 @@ function setupGoalControls() {
 
   const setGoal = (goal) => {
     const isGt = goal === "gridtie";
+    // Single writer: the goal buttons never touch systemGoal. They select a
+    // CASE and let applyUseCase derive the enum from it, so the highlighted
+    // button and the six-case chooser cannot drift apart. A case that already
+    // derives to this mode is left alone, which keeps this a no-op when the
+    // change came from the chooser itself (applyUseCase dispatches here).
+    // Choosing by mode rather than by label is deliberate: backup and
+    // offgrid share the mode, and backup sizes the essentials only, so
+    // defaulting a mode switch onto it would silently resize the system.
+    const chooser = $("useCase");
+    const current =
+      chooser && useCase(chooser.value) ? chooser.value : "billcut";
+    if (deriveLegacy(current).mode !== goal)
+      applyUseCase(goal === "gridtie" ? "billcut" : "offgrid", {
+        silent: true,
+      });
     if (isGt) {
       btnGt.classList.add("active");
       btnOff.classList.remove("active");
-      if (sysGoal) sysGoal.value = "gridtie";
       const title = document.querySelector(".section-title");
       if (title) title.textContent = t("modeTitleGt");
       const desc = document.querySelector(".section-desc");
@@ -3356,7 +3370,6 @@ function setupGoalControls() {
     } else {
       btnOff.classList.add("active");
       btnGt.classList.remove("active");
-      if (sysGoal) sysGoal.value = "offgrid";
       const title = document.querySelector(".section-title");
       if (title) title.textContent = t("modeTitleOff");
       const desc = document.querySelector(".section-desc");
@@ -7756,8 +7769,9 @@ function restoreFromShare() {
 
   setLoadPanel();
 
-  if ($("systemGoal"))
-    $("systemGoal").value = o.g === 1 ? "gridtie" : "offgrid";
+  // systemGoal is deliberately not written here: the case named below is the
+  // single source of truth and applyUseCase derives the enum from it, so a
+  // restored link cannot leave the two disagreeing.
 
   // A shared link names the use case explicitly (o.uc) because two of the six
   // share the same legacy pair with bill-cut and could not be recovered from
