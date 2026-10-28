@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261025b";
+import { HOME_COPY } from "./home-copy.js?v=20261026d";
 
 export const LOCALES = {
   en: {
@@ -592,6 +592,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Daily Energy Consumption (kWh / day):",
     advisorIntakeBillPh: "e.g. 400",
     advisorIntakeKwhPh: "e.g. 35",
+    engineOversizedCheaper:
+      "An oversized {battKwh} kWh battery avoids replacements and costs {savings} less over 20 years.",
+    engineSwapsCheaper:
+      "Standard sizing with {replacements} replacements costs {savings} less over 20 years than oversizing.",
   },
   es: {
     ...HOME_COPY.es,
@@ -1196,6 +1200,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Consumo energético diario (kWh / día):",
     advisorIntakeBillPh: "p. ej. 400",
     advisorIntakeKwhPh: "p. ej. 35",
+    engineOversizedCheaper:
+      "Una batería de {battKwh} kWh evita reemplazos y cuesta {savings} menos en 20 años.",
+    engineSwapsCheaper:
+      "El tamaño estándar con {replacements} reemplazos cuesta {savings} menos en 20 años que uno mayor.",
   },
   pt: {
     ...HOME_COPY.pt,
@@ -1792,6 +1800,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Consumo diário de energia (kWh / dia):",
     advisorIntakeBillPh: "ex. 400",
     advisorIntakeKwhPh: "ex. 35",
+    engineOversizedCheaper:
+      "Uma bateria de {battKwh} kWh evita trocas e custa {savings} menos em 20 anos.",
+    engineSwapsCheaper:
+      "O tamanho padrão com {replacements} trocas custa {savings} menos em 20 anos que um maior.",
   },
   fr: {
     ...HOME_COPY.fr,
@@ -2400,6 +2412,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Consommation d'énergie quotidienne (kWh / jour) :",
     advisorIntakeBillPh: "p. ex. 400",
     advisorIntakeKwhPh: "p. ex. 35",
+    engineOversizedCheaper:
+      "Une batterie de {battKwh} kWh évite les remplacements et coûte {savings} de moins sur 20 ans.",
+    engineSwapsCheaper:
+      "Le format standard avec {replacements} remplacements coûte {savings} de moins sur 20 ans qu'un format supérieur.",
   },
   de: {
     ...HOME_COPY.de,
@@ -3001,6 +3017,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Täglicher Energieverbrauch (kWh / Tag):",
     advisorIntakeBillPh: "z. B. 400",
     advisorIntakeKwhPh: "z. B. 35",
+    engineOversizedCheaper:
+      "Ein {battKwh}-kWh-Akku vermeidet Ersatz und kostet in 20 Jahren {savings} weniger.",
+    engineSwapsCheaper:
+      "Die Standardgröße mit {replacements} Akkuwechseln kostet in 20 Jahren {savings} weniger als Übergröße.",
   },
   nl: {
     navSizing: "Systeem dimensioneren",
@@ -3707,6 +3727,10 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "Dagelijks energieverbruik (kWh / dag):",
     advisorIntakeBillPh: "bijv. 400",
     advisorIntakeKwhPh: "bijv. 35",
+    engineOversizedCheaper:
+      "Een accu van {battKwh} kWh voorkomt vervanging en kost {savings} minder in 20 jaar.",
+    engineSwapsCheaper:
+      "Standaard met {replacements} accuwissels kost {savings} minder in 20 jaar dan groter.",
   },
   ar: {
     ...HOME_COPY.ar,
@@ -4271,5 +4295,9 @@ export const LOCALES = {
     advisorIntakeKwhLabel: "استهلاك الطاقة اليومي (كيلوواط ساعة / اليوم):",
     advisorIntakeBillPh: "مثال: 400",
     advisorIntakeKwhPh: "مثال: 35",
+    engineOversizedCheaper:
+      "بطارية {battKwh} ك.و.س تتجنب الاستبدال وتكلف {savings} أقل خلال 20 عامًا.",
+    engineSwapsCheaper:
+      "الحجم القياسي مع {replacements} استبدال يكلف {savings} أقل خلال 20 عامًا من الحجم الأكبر.",
   },
 };

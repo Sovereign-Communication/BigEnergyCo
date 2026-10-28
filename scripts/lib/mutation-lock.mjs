@@ -16,9 +16,34 @@
 // so a lock file inside the checkout would show up in those gates. The name is
 // derived from the repo path so two checkouts cannot block each other.
 import { createHash } from "node:crypto";
-import { existsSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+
+const MUTATION_LOCK_CONTEXT = "BECO_MUTATION_LOCK_CONTEXT";
+
+function inheritedMutationLock(path) {
+  try {
+    const contexts = JSON.parse(process.env[MUTATION_LOCK_CONTEXT] || "[]");
+    return contexts.find(
+      (context) =>
+        context?.path === path &&
+        Number.isSafeInteger(context.pid) &&
+        // The environment is process-wide in the owner. Only a different
+        // process may use that marker; same-process re-entry must be carried
+        // by the async operation context above.
+        context.pid !== process.pid &&
+        (context.delegatePid ?? context.pid) !== process.pid &&
+        readFileSync(path, "utf8").trim() === String(context.pid),
+    );
+  } catch {
+    return undefined;
+  }
+}
+
+function mutationBorrowerLockPath(path, delegatePid) {
+  return path + ".borrower-" + delegatePid;
+}
 
 /** Stable per-checkout lock path. */
 export function mutationLockPath(root = process.cwd()) {
@@ -38,7 +63,8 @@ export function mutationLockPath(root = process.cwd()) {
  *
  * The file holds the owning pid so a crash mid-tooth is diagnosable rather than
  * leaving a mystery block. Acquisition is bounded, so a crashed holder delays a
- * test rather than wedging the suite.
+ * test rather than wedging the suite. The ten-minute bound leaves room for slow
+ * CI readers to run serially, while still putting a firm ceiling on stale locks.
  *
  * ACQUISITION IS ATOMIC, and it has to be. The first version polled
  * `waitForMutationLockFree` and then created the lock file — a textbook
@@ -55,12 +81,72 @@ export function mutationLockPath(root = process.cwd()) {
  * file exists, which is the only test-and-set here that two processes cannot
  * both win.
  */
-export async function withMutationLock(fn, root = process.cwd()) {
+export async function withMutationLock(
+  fn,
+  root = process.cwd(),
+  lockOptions = {},
+) {
   const path = mutationLockPath(root);
-  await acquireMutationLock(path);
+  // A protected operation can spawn child scripts that also stage or read the
+  // tree. They inherit this marker, but sibling children need their own atomic
+  // gate: without it, both can borrow the parent's lock and mutate together.
+  // The gate is scoped to the process that delegated the work, so siblings
+  // serialize while a child can still delegate to its own children.
+  const inherited = inheritedMutationLock(path);
+  if (inherited) {
+    const delegatePid = inherited.delegatePid ?? inherited.pid;
+    const borrowerPath = mutationBorrowerLockPath(path, delegatePid);
+    if (!(await acquireMutationLock(borrowerPath, lockOptions))) {
+      throw new Error(
+        "Timed out waiting for the shared mutation lock; did not run the protected operation (" +
+          path +
+          ")",
+      );
+    }
+
+    const previousContext = process.env[MUTATION_LOCK_CONTEXT];
+    const contexts = JSON.parse(previousContext || "[]");
+    process.env[MUTATION_LOCK_CONTEXT] = JSON.stringify(
+      contexts.map((context) =>
+        context?.path === path && context.pid === inherited.pid
+          ? { ...context, delegatePid: process.pid }
+          : context,
+      ),
+    );
+    try {
+      return await fn();
+    } finally {
+      if (previousContext === undefined)
+        delete process.env[MUTATION_LOCK_CONTEXT];
+      else process.env[MUTATION_LOCK_CONTEXT] = previousContext;
+      rmSync(borrowerPath, { force: true });
+    }
+  }
+
+  if (!(await acquireMutationLock(path, lockOptions))) {
+    throw new Error(
+      `Timed out waiting for the shared mutation lock; did not run the protected operation (${path})`,
+    );
+  }
+  const previousContext = process.env[MUTATION_LOCK_CONTEXT];
+  let contexts = [];
+  try {
+    const parsed = JSON.parse(previousContext || "[]");
+    if (Array.isArray(parsed)) contexts = parsed;
+  } catch {
+    // A malformed inherited marker cannot grant borrowing, but it also cannot
+    // strand the lock we just acquired.
+  }
+  process.env[MUTATION_LOCK_CONTEXT] = JSON.stringify([
+    ...contexts,
+    { path, pid: process.pid, delegatePid: process.pid },
+  ]);
   try {
     return await fn();
   } finally {
+    if (previousContext === undefined)
+      delete process.env[MUTATION_LOCK_CONTEXT];
+    else process.env[MUTATION_LOCK_CONTEXT] = previousContext;
     rmSync(path, { force: true });
   }
 }
@@ -68,14 +154,13 @@ export async function withMutationLock(fn, root = process.cwd()) {
 /**
  * Take the lock, or wait for whoever holds it.
  *
- * Returns true when the lock was acquired. On timeout it proceeds anyway and
- * returns false, preserving the original "a crashed holder must not wedge the
- * suite" contract: the cost of giving up is a flake, the cost of not giving up
- * is a hung CI run.
+ * Returns true when acquired. On timeout it returns false without changing the
+ * existing owner's file. `withMutationLock` treats that as a failure and never
+ * runs an operation that assumes mutual exclusion without holding the lock.
  */
 export async function acquireMutationLock(
   path,
-  { timeoutMs = 30000, stepMs = 50 } = {},
+  { timeoutMs = 600000, stepMs = 50 } = {},
 ) {
   const start = Date.now();
   for (;;) {
@@ -86,9 +171,10 @@ export async function acquireMutationLock(
       });
       return true;
     } catch (err) {
-      if (err?.code !== "EEXIST") throw err;
+      const lockExists =
+        (err?.code === "EPERM" || err?.code === "EACCES") && existsSync(path);
+      if (err?.code !== "EEXIST" && !lockExists) throw err;
       if (Date.now() - start > timeoutMs) {
-        writeFileSync(path, String(process.pid), "utf8");
         return false;
       }
       await new Promise((r) => setTimeout(r, stepMs));
