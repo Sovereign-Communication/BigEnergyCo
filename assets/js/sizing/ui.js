@@ -8288,12 +8288,6 @@ function renderBom() {
 
     card.appendChild(el("h3", {}, item.name));
 
-    // Runtime-rendered copy carries BOTH the resolved string (so first paint
-    // is already localized) and the hook (so applyI18n() re-applies it on
-    // every language switch) — the same contract repaintRuntimeCopy() states
-    // for JS-built surfaces. Building this from the raw English `desc` was
-    // the leak the visual audit caught: the translated static markup below
-    // was overwritten by a card with no hook at all.
     card.appendChild(el("p", { "data-i18n": item.descKey }, t(item.descKey)));
 
     const price = el("div", { class: "bom-price" }, item.price + " ");
