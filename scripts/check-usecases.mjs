@@ -281,6 +281,87 @@ if (walk.length === 6) {
   else ok("all six declare how they reach the engine's enum pair");
 }
 
+// ── 6b. the derived goal enum has exactly one writer ─────────────────────────
+// Clause 6 only proved that ui.js calls deriveLegacy SOMEWHERE, so it stayed
+// green while a second writer shipped. Two writers is exactly how a visitor
+// gets two answers: the goal buttons wrote systemGoal directly and never
+// touched useCase, so choosing "Off-grid / Backup" left the six-case chooser on
+// "Cut my electricity bill" — the engine's mode and the selected case
+// disagreed, and which use case showed up was decided by whichever control was
+// touched last instead of by the registry.
+{
+  const ui = readFileSync(join(ROOT, "assets/js/sizing/ui.js"), "utf8");
+  const sel = "systemGoal";
+
+  // Aliases bound to the select: `const goal = $("systemGoal");`. The
+  // declaration must be the whole statement, so a read that merely starts the
+  // same way (`const goal = $("systemGoal") ? ... : ...`) is not an alias.
+  const aliases = [
+    ...ui.matchAll(
+      new RegExp(`const\\s+(\\w+)\\s*=\\s*\\$\\("${sel}"\\)\\s*;`, "g"),
+    ),
+  ].map((m) => m[1]);
+
+  // An assignment to `.value`, not a comparison: `.value === x` is a read and
+  // must never count as a write, or this clause fails on every mode check.
+  const writes = [];
+  for (
+    let i = ui.indexOf(".value");
+    i !== -1;
+    i = ui.indexOf(".value", i + 1)
+  ) {
+    let k = i + ".value".length;
+    while (k < ui.length && /\s/.test(ui[k])) k += 1;
+    if (ui[k] !== "=" || ui[k + 1] === "=" || ui[k - 1] === "=") continue;
+    const receiver = ui.slice(Math.max(0, i - 64), i);
+    const last = /([A-Za-z0-9_$]+)\s*$/.exec(receiver)?.[1] ?? "";
+    if (receiver.endsWith(`$("${sel}")`) || aliases.includes(last))
+      writes.push(i);
+  }
+
+  // Owner of a write = the last top-level `function ...(` before it. The goal
+  // buttons live in an inner arrow inside setupGoalControls, so they attribute
+  // to setupGoalControls — which is the point: they are not applyUseCase.
+  const decls = [...ui.matchAll(/^function\s+([A-Za-z0-9_$]+)\s*\(/gm)];
+  const ownerOf = (index) => {
+    let name = "<top level>";
+    for (const d of decls) {
+      if (d.index > index) break;
+      name = d[1];
+    }
+    return name;
+  };
+  const lineOf = (index) => ui.slice(0, index).split("\n").length;
+
+  const offenders = writes
+    .map((index) => ({ index, owner: ownerOf(index) }))
+    .filter((w) => w.owner !== "applyUseCase");
+
+  if (!writes.length)
+    fail(
+      `clause 6b found no write to ${sel} at all — the scan is broken, not the code`,
+    );
+  else if (offenders.length)
+    fail(
+      `${sel} has ${offenders.length} writer(s) outside applyUseCase, so the case is not the single source of truth: ` +
+        offenders
+          .map((w) => `${w.owner} at ui.js:${lineOf(w.index)}`)
+          .join(", "),
+    );
+  else ok(`ui.js writes ${sel} in exactly one place: applyUseCase`);
+
+  // The buttons must route through the case, not around it: setGoal changes the
+  // mode, so it has to reach applyUseCase or the chooser is left stale.
+  const setGoalBody = /const setGoal\s*=[\s\S]*?\n  \};/.exec(ui)?.[0] ?? "";
+  if (!setGoalBody)
+    fail("could not locate setGoal in ui.js to check how it routes");
+  else if (!/applyUseCase\(/.test(setGoalBody))
+    fail(
+      "setGoal changes the goal without routing through applyUseCase, so the six-case chooser goes stale",
+    );
+  else ok("setGoal routes the goal through applyUseCase, so the chooser never goes stale");
+}
+
 // ── 7. every verdict reason key is translated ───────────────────────────────
 // usecases.js owns the keys its verdicts emit; a visitor sees one of them the
 // moment a case declines. A key added there without a dictionary entry falls
