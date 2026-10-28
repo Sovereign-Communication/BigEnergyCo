@@ -343,7 +343,7 @@
   function ensureData() {
     if (gridData) return Promise.resolve(gridData);
     if (dataLoading) return dataLoading;
-    dataLoading = fetch("../assets/data/heatmap-grid.min.json?v=20261028b")
+    dataLoading = fetch("../assets/data/heatmap-grid.min.json?v=20261028d")
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to load heatmap data");
         return res.json();
@@ -608,13 +608,13 @@
     }
 
     var boot = Promise.all([
-      fetch("../assets/img/heatmap/manifest.json?v=20261028b").then(
+      fetch("../assets/img/heatmap/manifest.json?v=20261028d").then(
         function (r) {
           if (!r.ok) throw new Error("manifest");
           return r.json();
         },
       ),
-      fetch("../assets/data/heatmap-rankings.json?v=20261028b").then(
+      fetch("../assets/data/heatmap-rankings.json?v=20261028d").then(
         function (r) {
           if (!r.ok) throw new Error("rankings");
           return r.json();

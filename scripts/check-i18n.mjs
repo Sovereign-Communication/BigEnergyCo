@@ -40,6 +40,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { LOCALES } from "../assets/js/shared/locales.js";
+import { BOM_ITEMS } from "../assets/js/shared/content.js";
 import { LANGS } from "../assets/js/shared/i18n.js";
 import {
   checkMaterialQuantities,
@@ -462,6 +463,46 @@ if (proseFindings.length > PROSE_CEILING) {
       `(known, tracked, must fall)`,
   );
 }
+
+// ── 10. runtime-rendered copy carries its locale key and hook ────────────────
+// Rules 1-9 read the dictionary and the static markup; neither can see the
+// render path. Measured 2026-10-28 (visual audit): ui.js re-builds the BOM
+// grid from BOM_ITEMS after the markup pass, and each card was constructed
+// from the raw English `item.desc` with no hook — so all four spec paragraphs
+// rendered in English under lang="es" while every rule here stayed green.
+// The keys already exist in all seven locales; the render must ask for them
+// and keep the data-i18n hook so a language switch re-applies it.
+const uiRenderSrc = readFileSync(
+  join("assets", "js", "sizing", "ui.js"),
+  "utf8",
+);
+const runtimeFailuresBefore = failures;
+if (/el\("p",\s*\{\},\s*item\.desc\)/.test(uiRenderSrc))
+  fail(
+    "ui.js builds the BOM description from the raw English item.desc instead " +
+      "of the dictionary (runtime copy bypasses every rule above)",
+  );
+for (const item of BOM_ITEMS) {
+  if (typeof item.descKey !== "string" || !item.descKey) {
+    fail(
+      `BOM_ITEMS "${item.name}" carries no descKey — the render cannot localize it`,
+    );
+    continue;
+  }
+  for (const l of langs) {
+    if (typeof LOCALES[l][item.descKey] !== "string")
+      fail(`BOM key ${item.descKey} does not resolve in locale ${l}`);
+  }
+}
+if (!/"data-i18n":\s*item\.descKey/.test(uiRenderSrc))
+  fail(
+    "ui.js renders the BOM description without a data-i18n hook, so a " +
+      "language switch cannot re-apply it",
+  );
+if (failures === runtimeFailuresBefore)
+  ok(
+    "runtime-rendered BOM copy resolves through the dictionary in all locales",
+  );
 
 // ── coverage summary (informational, keeps the trend visible) ───────────────
 const rows = langs
