@@ -3345,16 +3345,19 @@ function setupGoalControls() {
     const isGt = goal === "gridtie";
     // Single writer: the goal buttons never touch systemGoal. They select a
     // CASE and let applyUseCase derive the enum from it, so the highlighted
-    // button and the six-case chooser cannot drift apart. A case that already
-    // derives to this mode is left alone, which keeps this a no-op when the
-    // change came from the chooser itself (applyUseCase dispatches here).
-    // Choosing by mode rather than by label is deliberate: backup and
-    // offgrid share the mode, and backup sizes the essentials only, so
+    // button and the six-case chooser cannot drift apart. The comparison is
+    // the SAME two-value mapping applyUseCase uses (portable derives no enum
+    // pair and lands on gridtie), so a change that came from applyUseCase
+    // itself can never re-enter here and switch the case out from under the
+    // visitor. Choosing by mode rather than by label is deliberate: backup
+    // and offgrid share the mode, and backup sizes the essentials only, so
     // defaulting a mode switch onto it would silently resize the system.
     const chooser = $("useCase");
     const current =
       chooser && useCase(chooser.value) ? chooser.value : "billcut";
-    if (deriveLegacy(current).mode !== goal)
+    const derived =
+      deriveLegacy(current).mode === "offgrid" ? "offgrid" : "gridtie";
+    if (derived !== goal)
       applyUseCase(goal === "gridtie" ? "billcut" : "offgrid", {
         silent: true,
       });
