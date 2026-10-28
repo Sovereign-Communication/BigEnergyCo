@@ -359,7 +359,10 @@ if (walk.length === 6) {
     fail(
       "setGoal changes the goal without routing through applyUseCase, so the six-case chooser goes stale",
     );
-  else ok("setGoal routes the goal through applyUseCase, so the chooser never goes stale");
+  else
+    ok(
+      "setGoal routes the goal through applyUseCase, so the chooser never goes stale",
+    );
 }
 
 // ── 7. every verdict reason key is translated ───────────────────────────────
