@@ -52,10 +52,11 @@ test("a child process borrows its parent's lock without releasing it", async () 
   try {
     await withMutationLock(async () => {
       const before = readFileSync(lock, "utf8");
-      const code = `import { withMutationLock } from ${JSON.stringify(lockModule)}; await withMutationLock(() => console.log("borrowed"), ${JSON.stringify(root)});`;
+      const code =
+        "const { withMutationLock } = await import(process.argv[1]); await withMutationLock(() => console.log('borrowed'), process.argv[2]);";
       const output = execFileSync(
         process.execPath,
-        ["--input-type=module", "-e", code],
+        ["--input-type=module", "-e", code, lockModule, root],
         { encoding: "utf8" },
       );
 
@@ -121,18 +122,29 @@ test("sibling child processes serialize while borrowing their parent lock", asyn
     await withMutationLock(async () => {
       const runBorrower = (name) => {
         const code = [
-          'import { appendFileSync } from "node:fs";',
-          `import { withMutationLock } from ${JSON.stringify(lockModule)};`,
+          "import { appendFileSync } from 'node:fs';",
+          "const { withMutationLock } = await import(process.argv[1]);",
+          "const eventsPath = process.argv[2];",
+          "const name = process.argv[3];",
+          "const lockRoot = process.argv[4];",
           "await withMutationLock(async () => {",
-          `  appendFileSync(${JSON.stringify(eventsPath)}, ${JSON.stringify(name + ":start\n")});`,
+          "  appendFileSync(eventsPath, name + ':start\\n');",
           "  await new Promise((resolve) => setTimeout(resolve, 100));",
-          `  appendFileSync(${JSON.stringify(eventsPath)}, ${JSON.stringify(name + ":end\n")});`,
-          `}, ${JSON.stringify(root)}, { timeoutMs: 3000, stepMs: 2 });`,
+          "  appendFileSync(eventsPath, name + ':end\\n');",
+          "}, lockRoot, { timeoutMs: 3000, stepMs: 2 });",
         ].join("\n");
         return new Promise((resolve, reject) => {
           const child = spawn(
             process.execPath,
-            ["--input-type=module", "-e", code],
+            [
+              "--input-type=module",
+              "-e",
+              code,
+              lockModule,
+              eventsPath,
+              name,
+              root,
+            ],
             {
               stdio: ["ignore", "ignore", "pipe"],
             },
