@@ -3,7 +3,7 @@
 // `ar` flips the document to RTL automatically.
 // Keys not present in a locale fall back to English silently.
 
-import { HOME_COPY } from "./home-copy.js?v=20261028d";
+import { HOME_COPY } from "./home-copy.js?v=20261029a";
 
 export const LOCALES = {
   en: {
@@ -254,6 +254,12 @@ export const LOCALES = {
     socVerdictOffgridOne:
       "Lowest: {low}%. Fully charged on {charged} of {total} days; the generator covered one empty-bank day.",
     chartDay: "Day {day}",
+    chartLabelSoc: "Battery charge chart for {chemLabel}.",
+    chartLabelCumCost: "Cumulative 20-year cost chart for {system} ({pv}).",
+    chartLabelAuto: "Battery charge comparison chart for {systems}.",
+    chartSolarKw: "{kw} kW solar",
+    chartBatteryOnly: "battery only",
+    chartSystemFallback: "the selected system",
     socCaptionGrid:
       "Each band is one day: its top is the highest charge and its bottom the deepest discharge, based on satellite weather from {startYear} to {endYear}. The red line marks an empty battery; the grid supplies power there, so it is not a blackout.",
     socCaptionOffgrid:
@@ -928,6 +934,14 @@ export const LOCALES = {
     socVerdictOffgridOne:
       "Mínimo: {low}%. Carga completa en {charged} de {total} días; el generador cubrió un día con la batería vacía.",
     chartDay: "Día {day}",
+    chartLabelSoc: "Gráfico de carga de la batería para {chemLabel}.",
+    chartLabelCumCost:
+      "Gráfico de coste acumulado a 20 años para {system} ({pv}).",
+    chartLabelAuto:
+      "Gráfico comparativo de carga de la batería para {systems}.",
+    chartSolarKw: "{kw} kW solares",
+    chartBatteryOnly: "solo batería",
+    chartSystemFallback: "el sistema seleccionado",
     socCaptionGrid:
       "Cada franja representa un día: arriba muestra la carga máxima y abajo la descarga más profunda, según datos satelitales de {startYear} a {endYear}. La línea roja marca una batería vacía; allí la red suministra energía, así que no hay apagón.",
     socCaptionOffgrid:
@@ -1531,6 +1545,13 @@ export const LOCALES = {
     socVerdictOffgridOne:
       "Mínimo: {low}%. Carga completa em {charged} de {total} dias; o gerador cobriu um dia com a bateria vazia.",
     chartDay: "Dia {day}",
+    chartLabelSoc: "Gráfico de carga da bateria para {chemLabel}.",
+    chartLabelCumCost:
+      "Gráfico de custo acumulado de 20 anos para {system} ({pv}).",
+    chartLabelAuto: "Gráfico comparativo de carga da bateria para {systems}.",
+    chartSolarKw: "{kw} kW solares",
+    chartBatteryOnly: "somente bateria",
+    chartSystemFallback: "o sistema selecionado",
     socCaptionGrid:
       "Cada faixa representa um dia: o topo mostra a carga máxima e a base, a descarga mais profunda, com base no clima de satélite de {startYear} a {endYear}. A linha vermelha marca uma bateria vazia; ali a rede fornece energia, portanto não há apagão.",
     socCaptionOffgrid:
@@ -2135,6 +2156,14 @@ export const LOCALES = {
     socVerdictOffgridOne:
       "Minimum : {low} %. Charge complète pendant {charged} jours sur {total} ; le générateur a couvert un jour où la batterie était vide.",
     chartDay: "Jour {day}",
+    chartLabelSoc: "Graphique de charge de la batterie pour {chemLabel}.",
+    chartLabelCumCost:
+      "Graphique du coût cumulé sur 20 ans pour {system} ({pv}).",
+    chartLabelAuto:
+      "Graphique comparatif de charge de la batterie pour {systems}.",
+    chartSolarKw: "{kw} kW solaires",
+    chartBatteryOnly: "batterie uniquement",
+    chartSystemFallback: "le système sélectionné",
     socCaptionGrid:
       "Chaque bande représente un jour : son bord supérieur indique la charge maximale et son bord inférieur la décharge la plus profonde, d'après les données météo satellitaires de {startYear} à {endYear}. La ligne rouge marque une batterie vide ; le réseau fournit alors l'électricité, il ne s'agit donc pas d'une panne.",
     socCaptionOffgrid:
@@ -2741,6 +2770,13 @@ export const LOCALES = {
     socVerdictOffgridOne:
       "Tiefster Stand: {low} %. An {charged} von {total} Tagen voll geladen; an einem Tag mit leerem Speicher sprang der Generator ein.",
     chartDay: "Tag {day}",
+    chartLabelSoc: "Batterieladeverlauf für {chemLabel}.",
+    chartLabelCumCost:
+      "Grafik der kumulierten 20-Jahres-Kosten für {system} ({pv}).",
+    chartLabelAuto: "Vergleichsgrafik der Batterieladung für {systems}.",
+    chartSolarKw: "{kw} kW Solar",
+    chartBatteryOnly: "nur Batterie",
+    chartSystemFallback: "das ausgewählte System",
     socCaptionGrid:
       "Jeder Streifen zeigt einen Tag: oben den höchsten Ladestand und unten die tiefste Entladung, basierend auf Satellitenwetterdaten von {startYear} bis {endYear}. Die rote Linie markiert einen leeren Speicher; dort liefert das Netz Strom, es gibt also keinen Stromausfall.",
     socCaptionOffgrid:
@@ -3634,6 +3670,13 @@ export const LOCALES = {
     roofAreaLabel: "Optioneel dak- of tuinoppervlak (m²)",
     siteAsIs:
       "DEZE SITE EN DE UITVOER WORDEN GELEVERD 'ZOALS ZE ZIJN' EN 'ZOALS ZE BESCHIKBAAR ZIJN', ZONDER ENIGE EXPLICIETE OF IMPLICIETE GARANTIE, INCLUSIEF MAAR NIET BEPERKT TOT GARANTIES VAN VERKOOPBAARHEID, GESCHIKTHEID VOOR EEN BEPAALD DOEL, NAUWKEURIGHEID EN NIET-INBREUK. Er is geen garantie op beschikbaarheid, juistheid of voortzetting; de site kan op elk moment zonder kennisgeving veranderen of verdwijnen.",
+    chartLabelSoc: "Batterijladingsgrafiek voor {chemLabel}.",
+    chartLabelCumCost:
+      "Grafiek van de cumulatieve 20-jarige kosten voor {system} ({pv}).",
+    chartLabelAuto: "Vergelijkende batterijladingsgrafiek voor {systems}.",
+    chartSolarKw: "{kw} kW zonne-energie",
+    chartBatteryOnly: "alleen batterij",
+    chartSystemFallback: "het geselecteerde systeem",
     socCaptionGrid:
       "Elke band staat voor één dag: de bovenkant is de hoogste lading en de onderkant de diepste ontlading, gebaseerd op satellietweer van {startYear} tot {endYear}. De rode lijn markeert een lege accu; het net levert daar stroom, dus er is geen stroomuitval.",
     socCaptionGridPattern:
@@ -4030,6 +4073,12 @@ export const LOCALES = {
     socVerdictOffgridOne:
       "أدنى مستوى: {low}%. شُحنت بالكامل في {charged} من {total} يومًا؛ غطى المولد يومًا واحدًا فرغت فيه البطارية.",
     chartDay: "اليوم {day}",
+    chartLabelSoc: "رسم شحن البطارية لـ {chemLabel}.",
+    chartLabelCumCost: "رسم التكلفة التراكمية على 20 عامًا لـ {system} ({pv}).",
+    chartLabelAuto: "رسم مقارنة شحن البطارية لـ {systems}.",
+    chartSolarKw: "{kw} كيلوواط من الطاقة الشمسية",
+    chartBatteryOnly: "بطارية فقط",
+    chartSystemFallback: "النظام المحدد",
     socCaptionGrid:
       "يمثل كل شريط يومًا واحدًا: يوضح أعلاه أعلى مستوى للشحن وأسفله أعمق تفريغ، وفق بيانات الطقس عبر الأقمار الصناعية من {startYear} إلى {endYear}. يشير الخط الأحمر إلى فراغ البطارية؛ عنده توفر الشبكة الطاقة، لذا لا يعني ذلك انقطاعًا للكهرباء.",
     socCaptionOffgrid:
