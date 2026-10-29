@@ -532,7 +532,7 @@ test("blog hub keeps a clean heading outline and rich postings", () => {
 
 test("thin post now matches the rich Article shape", () => {
   const html = read("blog/off-grid-vs-grid-tie-payback/index.html");
-  assert.match(html, /"dateModified": "2026-08-23T00:00:00Z"/);
+  assert.match(html, /"dateModified": "2026-10-22T00:00:00Z"/);
   assert.match(
     html,
     /"mainEntityOfPage": "https:\/\/freeoffgridcalculator\.com\/blog\/off-grid-vs-grid-tie-payback\/"/,
