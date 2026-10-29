@@ -5,7 +5,7 @@
 // `$` (DOM lookup), `el` (element factory), `t` (i18n), `fmt` (number format),
 // `money` (currency formatter). Chart state (socZoomRange, cachedChartState)
 // lives here as the single owner.
-import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261028d";
+import { savingsPanelState, seriesBreakdown } from "./money.js?v=20261029a";
 
 // ── injected boundary (set once by ui.js via initCharts) ──────────────────
 let _$;
@@ -36,6 +36,13 @@ function fmt(n) {
 }
 function money(usd) {
   return _money(usd);
+}
+// Every drawn canvas carries an accessible name (aria-label + text content)
+// assembled from the LOCALIZED dictionary, never hardcoded English — the same
+// contract as the captions below it.
+function updateCanvasCopy(canvas, label) {
+  canvas.setAttribute("aria-label", label);
+  canvas.textContent = label;
 }
 function localizedChemistry(label) {
   const value = String(label || "");
@@ -144,6 +151,10 @@ export function drawSocChart(history, chemLabel, hasPv = true) {
   }
 
   cachedChartState = { type: "soc", history, chemLabel };
+  updateCanvasCopy(
+    canvas,
+    t("chartLabelSoc", { chemLabel: localizedChemistry(chemLabel) }),
+  );
 
   wrap.style.display = "block";
 
@@ -652,6 +663,19 @@ export function drawCumCostChart(p, chosenEntry = null) {
 
   wrap.style.display = "block";
   canvas.style.display = "";
+  const pvLabel =
+    Number(seriesEntry.pvKw) > 0
+      ? t("chartSolarKw", { kw: fmt(Number(seriesEntry.pvKw)) })
+      : t("chartBatteryOnly");
+  updateCanvasCopy(
+    canvas,
+    t("chartLabelCumCost", {
+      system:
+        localizedChemistry(seriesEntry.chemLabel || seriesEntry.label) ||
+        t("chartSystemFallback"),
+      pv: pvLabel,
+    }),
+  );
   const dpr = window.devicePixelRatio || 1;
   const W = Math.max(
     200,
@@ -1091,6 +1115,12 @@ export function drawAutoChart(p) {
   cachedChartState = { type: "auto", p };
 
   wrap.style.display = "block";
+  updateCanvasCopy(
+    canvas,
+    t("chartLabelAuto", {
+      systems: entries.map((a) => localizedChemistry(a.chemLabel)).join(", "),
+    }),
+  );
 
   const dpr = window.devicePixelRatio || 1;
 

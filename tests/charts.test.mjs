@@ -183,6 +183,9 @@ test("rendered chart copy uses each locale for SOC, auto, and cost charts", () =
       this.childNodes.push(child);
       return child;
     },
+    setAttribute(name, value) {
+      this.attrs[name] = value;
+    },
     getContext: () => context,
   });
   const getNode = (id) => {
@@ -259,6 +262,13 @@ test("rendered chart copy uses each locale for SOC, auto, and cost charts", () =
       });
 
       charts.drawSocChart(history, "LFP", true);
+      assert.equal(
+        getNode("socCanvas").attrs["aria-label"],
+        render(locale, "chartLabelSoc", {
+          chemLabel: render(locale, "autoChemLfp"),
+        }),
+        "the SOC canvas must carry a localized accessible name",
+      );
       const socCaption =
         render(locale, "socCaptionGrid", {
           startYear: "2025",
@@ -358,6 +368,13 @@ test("rendered chart copy uses each locale for SOC, auto, and cost charts", () =
           render(locale, "autoSocSunStrip"),
       );
       assert.ok(texts.includes(render(locale, "autoSocAxis")));
+      assert.equal(
+        getNode("socCanvas").attrs["aria-label"],
+        render(locale, "chartLabelAuto", {
+          systems: render(locale, "autoChemLfp"),
+        }),
+        "the comparison canvas must carry a localized accessible name",
+      );
 
       charts.drawCumCostChart(
         {
@@ -394,6 +411,14 @@ test("rendered chart copy uses each locale for SOC, auto, and cost charts", () =
       assert.ok(
         texts.includes(render(locale, "cumCostBreakEven", { year: "1" })),
       );
+      assert.equal(
+        getNode("cumCostCanvas").attrs["aria-label"],
+        render(locale, "chartLabelCumCost", {
+          system: render(locale, "autoChemLfp"),
+          pv: render(locale, "chartSolarKw", { kw: "2" }),
+        }),
+        "the cumulative-cost canvas must carry a localized accessible name",
+      );
 
       const batteryEntry = { ...entry, pvKw: 0 };
       charts.drawCumCostChart(
@@ -408,6 +433,14 @@ test("rendered chart copy uses each locale for SOC, auto, and cost charts", () =
       assert.equal(
         getNode("cumCostTitle").textContent,
         render(locale, "cumCostTitleBattery"),
+      );
+      assert.equal(
+        getNode("cumCostCanvas").attrs["aria-label"],
+        render(locale, "chartLabelCumCost", {
+          system: render(locale, "autoChemLfp"),
+          pv: render(locale, "chartBatteryOnly"),
+        }),
+        "a battery-only run must say so in the accessible name",
       );
       const batteryLegend = getNode("cumCostLegend")
         .childNodes.map((row) => row.childNodes.at(-1)?.textContent)
